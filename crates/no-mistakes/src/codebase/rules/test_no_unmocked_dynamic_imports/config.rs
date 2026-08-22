@@ -45,7 +45,7 @@ fn precompute_setup_data_from_config_files(
 fn precompute_setup_data_from_config_files_from_visible(
     root: &Path,
     config_files: &[ConfigFile],
-    visible_files: &std::collections::HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<ConfigSetupData>> {
     precompute_setup_data_from_config_files_inner(
@@ -59,7 +59,7 @@ fn precompute_setup_data_from_config_files_from_visible(
 fn precompute_setup_data_from_config_files_inner(
     root: &Path,
     config_files: &[ConfigFile],
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<ConfigSetupData>> {
     let mut result = Vec::new();
@@ -137,7 +137,7 @@ fn normalize_matcher_pattern(root: &Path, base: &Path, pattern: String) -> Strin
 fn setup_files_from_configs_inner(
     root: &Path,
     config_files: Vec<PathBuf>,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<PathBuf>> {
     let mut files = Vec::new();

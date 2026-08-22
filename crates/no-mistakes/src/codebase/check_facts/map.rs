@@ -4,6 +4,7 @@ use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
 use crate::codebase::storybook::StorybookFileFacts;
 use crate::codebase::ts_source::facts::TsFileFacts;
 use crate::codebase::ts_symbols::FileSymbols;
+use crate::fx::FxHashMap;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
 use crate::playwright::analysis::text_types::AppTextTarget;
 use crate::playwright::selectors::{AppSelector, StaticExportValues};
@@ -36,7 +37,7 @@ pub struct CheckFactMap {
     pub(crate) files: Vec<PathBuf>,
     pub(crate) graph_files: Vec<PathBuf>,
     pub(crate) graph_files_complete: bool,
-    pub(crate) ts: HashMap<PathBuf, Arc<CheckFileFacts>>,
+    pub(crate) ts: FxHashMap<PathBuf, Arc<CheckFileFacts>>,
     pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
     pub(crate) integration_runner_configs: std::collections::BTreeMap<
         PathBuf,

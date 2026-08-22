@@ -32,7 +32,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     let graph_files = GraphFiles {
         all: vec![a.clone(), b.clone(), c.clone(), hidden.clone()],
         indexable: vec![a.clone(), b.clone(), c.clone(), hidden],
-        visible: [a.clone(), b.clone(), c.clone()].into(),
+        visible: [a.clone(), b.clone(), c.clone()].into_iter().collect(),
         canonical_visible: CanonicalVisible::empty(),
         resource_candidates: vec![],
     };
@@ -121,7 +121,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     let hidden_graph_files = GraphFiles {
         all: vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
         indexable: vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
-        visible: [hidden_root.join("a.mts")].into(),
+        visible: [hidden_root.join("a.mts")].into_iter().collect(),
         canonical_visible: CanonicalVisible::empty(),
         resource_candidates: vec![],
     };
@@ -148,7 +148,7 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
     let graph_files = GraphFiles {
         all: vec![package.clone(), web_entry.clone(), hidden],
         indexable: vec![web_entry.clone()],
-        visible: [package.clone(), web_entry.clone()].into(),
+        visible: [package.clone(), web_entry.clone()].into_iter().collect(),
         canonical_visible: CanonicalVisible::empty(),
         resource_candidates: vec![],
     };
@@ -379,7 +379,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     assert!(missing_forward.is_empty());
 
     let nested_root = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-nested-bin"));
-    let nested_visible = HashSet::from([nested_root.join("src/bin/nested/main.rs")]);
+    let nested_visible = [nested_root.join("src/bin/nested/main.rs")].into_iter().collect();
     assert_eq!(
         resolve_cargo_bin_source(&nested_root, "nested", "missing.rs", &nested_visible),
         Some(nested_root.join("src/bin/nested/main.rs"))
@@ -435,7 +435,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     );
     assert!(nested_forward.is_empty());
     let mut bins = CargoBinIndex::default();
-    let empty_visible = HashSet::new();
+    let empty_visible = crate::fx::PathSet::default();
     add_manifest_bins(
         Path::new("/"),
         "[[bin]]\nname = \"root\"\npath = \"main.rs\"\n",

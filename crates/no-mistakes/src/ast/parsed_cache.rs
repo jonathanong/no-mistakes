@@ -3,9 +3,10 @@ use oxc_ast::ast::Program;
 use oxc_span::SourceType;
 use self_cell::self_cell;
 use std::cell::RefCell;
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::rc::Rc;
+
+use crate::fx::FxHashMap;
 
 struct ProgramOwner {
     allocator: Allocator,
@@ -27,7 +28,7 @@ enum ParseMode {
     LegacySymbols,
 }
 
-type CachedPrograms = HashMap<(PathBuf, ParseMode), Result<Rc<CachedProgram>, String>>;
+type CachedPrograms = FxHashMap<(PathBuf, ParseMode), Result<Rc<CachedProgram>, String>>;
 
 self_cell! {
     struct CachedProgram {

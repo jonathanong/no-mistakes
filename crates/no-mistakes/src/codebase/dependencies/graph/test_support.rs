@@ -1,4 +1,5 @@
 use super::*;
+use crate::fx::fx_map;
 use std::collections::HashMap;
 use std::path::PathBuf;
 
@@ -48,7 +49,7 @@ pub(crate) fn from_raw_maps(
         vitest_setup_projects: Vec::new(),
         effective_edges: std::sync::OnceLock::new(),
         parse_errors: HashMap::new(),
-        resource_edge_details: HashMap::new(),
+        resource_edge_details: fx_map(),
         resource_diagnostics: Vec::new(),
     }
 }
@@ -61,7 +62,7 @@ pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap)
         vitest_setup_projects: Vec::new(),
         effective_edges: std::sync::OnceLock::new(),
         parse_errors: HashMap::new(),
-        resource_edge_details: HashMap::new(),
+        resource_edge_details: fx_map(),
         resource_diagnostics: Vec::new(),
     }
 }

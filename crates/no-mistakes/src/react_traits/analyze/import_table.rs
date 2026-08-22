@@ -2,7 +2,6 @@ use crate::import_shape::is_runtime_import;
 use crate::imports::resolve_import;
 use oxc_ast::ast::{ImportDeclarationSpecifier, Program};
 use std::collections::HashMap;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 #[derive(Debug, Clone)]
@@ -23,7 +22,7 @@ pub(crate) fn build_import_table(abs_path: &Path, program: &Program<'_>) -> Impo
 pub(crate) fn build_import_table_from_visible(
     abs_path: &Path,
     program: &Program<'_>,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> ImportTable {
     build_import_table_inner(abs_path, program, Some(visible_files))
 }
@@ -31,7 +30,7 @@ pub(crate) fn build_import_table_from_visible(
 fn build_import_table_inner(
     abs_path: &Path,
     program: &Program<'_>,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> ImportTable {
     let mut table = ImportTable::new();
     for stmt in &program.body {

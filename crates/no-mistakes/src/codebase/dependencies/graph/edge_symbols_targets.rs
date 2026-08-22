@@ -27,7 +27,7 @@ fn namespace_file_node(
 ) -> (NodeId, EdgeKind) {
     match target {
         ImportedSymbolTarget::Symbol { file, kind, .. } => {
-            (NodeId::file_in(interner, file.clone()), *kind)
+            (NodeId::file_in(interner, file), *kind)
         }
         ImportedSymbolTarget::Node { node, kind } => (node.clone(), *kind),
     }

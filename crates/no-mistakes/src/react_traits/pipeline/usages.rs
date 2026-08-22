@@ -16,7 +16,7 @@ use helpers::{
     prop_type_names, same_path, split_target,
 };
 use rayon::prelude::*;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 pub use helpers::UsagesInclude;
@@ -36,7 +36,7 @@ pub(crate) fn collect_usage_file_facts(
     file: &Path,
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> UsageFileFacts {
     let import_table = match visible_files {
         Some(visible) => build_import_table_from_visible(file, program, visible),

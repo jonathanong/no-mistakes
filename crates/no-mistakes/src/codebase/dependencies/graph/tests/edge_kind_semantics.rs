@@ -7,7 +7,9 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
     let current = p("/repo/packages/app/src/current.mts");
     let asset = p("/repo/packages/app/src/data.json");
     let target = p("/repo/packages/core/src/index.mts");
-    let visible = HashSet::from([current.clone(), asset.clone(), target.clone()]);
+    let visible: crate::fx::PathSet = [current.clone(), asset.clone(), target.clone()]
+        .into_iter()
+        .collect();
     let graph_files = GraphFiles::from_files(visible.iter().cloned().collect());
     let tsconfig = TsConfig {
         dir: p("/repo/packages/app"),

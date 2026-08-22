@@ -12,7 +12,7 @@ pub(crate) fn resolve_entry_file_from_shell_from_visible(
     cwd: Option<&str>,
     file_path: &Path,
     root: &Path,
-    visible_files: &std::collections::HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Option<PathBuf> {
     resolve_entry_file_from_shell_inner(cmd, cwd, file_path, root, Some(visible_files))
 }
@@ -22,7 +22,7 @@ fn resolve_entry_file_from_shell_inner(
     cwd: Option<&str>,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Option<PathBuf> {
     let tokens: Vec<&str> = cmd.split_whitespace().collect();
     let file_token = tokens
@@ -58,7 +58,7 @@ pub(crate) fn resolve_entry_file_from_visible(
     cwd: Option<&str>,
     file_path: &Path,
     root: &Path,
-    visible_files: &std::collections::HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Option<PathBuf> {
     resolve_entry_file_inner(token, cwd, file_path, root, Some(visible_files))
 }
@@ -68,7 +68,7 @@ fn resolve_entry_file_inner(
     cwd: Option<&str>,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Option<PathBuf> {
     let base = if let Some(cwd) = cwd {
         let cwd_path = PathBuf::from(cwd);
@@ -101,7 +101,7 @@ fn resolve_entry_file_inner(
 
 fn path_is_visible_file(
     path: &Path,
-    visible_files: Option<&std::collections::HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> bool {
     visible_files.map_or_else(
         || path.is_file(),

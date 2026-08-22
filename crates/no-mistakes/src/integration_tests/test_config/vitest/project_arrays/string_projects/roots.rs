@@ -1,7 +1,7 @@
 use super::{is_vitest_project_config, slash_path, Ctx};
 use crate::codebase::ts_resolver::ImportResolution;
 use globset::GlobBuilder;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 /// Vitest project strings may point at a folder without a local config. Keep
@@ -53,7 +53,7 @@ pub(in crate::integration_tests::test_config::vitest) fn string_project_roots_wi
     roots.into_iter().collect()
 }
 
-fn has_project_config(root: &Path, visible: &HashSet<PathBuf>) -> bool {
+fn has_project_config(root: &Path, visible: &crate::fx::PathSet) -> bool {
     visible
         .iter()
         .any(|path| path.parent() == Some(root) && is_vitest_project_config(path))

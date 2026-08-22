@@ -41,7 +41,7 @@ fn scoped_import_map(
     path: &Path,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> HashMap<String, Vec<(NodeId, EdgeKind)>> {
     let graph_files = GraphFiles::from_files(visible_files.iter().cloned().collect());
     super::scoped_import_map_with_graph_files(
@@ -60,7 +60,7 @@ fn import_target(
     path: &Path,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Option<(NodeId, EdgeKind)> {
     let graph_files = GraphFiles::from_files(visible_files.iter().cloned().collect());
     super::import_target_with_graph_files(
@@ -81,7 +81,7 @@ fn resolve_imported_callee(
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Option<(NodeId, EdgeKind)> {
     let graph_files = GraphFiles::from_files(visible_files.iter().cloned().collect());
     super::resolve_imported_callee_with_graph_files(

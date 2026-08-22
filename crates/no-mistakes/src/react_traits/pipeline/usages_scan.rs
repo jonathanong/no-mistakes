@@ -22,7 +22,7 @@ fn run_usages_from_visible(
     let visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let files = discover_react_files_from_visible(&root, file_config, scan_targets, visible_paths)?;
     let hits: Vec<FileHit> = files
         .par_iter()
@@ -66,7 +66,7 @@ fn analyze_one(
     root: &Path,
     target_abs: &Path,
     symbol: Option<&str>,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<FileHit> {
     let source = std::fs::read_to_string(file)?;
     ast::with_program(file, &source, |program, _src| {

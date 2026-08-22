@@ -2,7 +2,6 @@ use crate::codebase::dependencies::extract::is_tsx_file;
 use crate::codebase::ts_resolver::{normalize_path, TsConfig};
 use crate::codebase::ts_symbols::{extract_symbols_at_path, FileSymbols};
 use anyhow::{Context, Result};
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
@@ -21,7 +20,7 @@ pub(crate) struct Target {
     pub sources: Arc<crate::codebase::ts_source::SourceStore>,
     dataset: Arc<crate::codebase::analysis_dataset::AnalysisDataset>,
     explicit_tsconfig: Option<PathBuf>,
-    visible_files: Arc<OnceLock<HashSet<PathBuf>>>,
+    visible_files: Arc<OnceLock<crate::fx::PathSet>>,
     tsconfig: OnceLock<std::result::Result<TsConfig, String>>,
 }
 
@@ -50,7 +49,7 @@ impl Target {
         Ok(())
     }
 
-    pub(crate) fn visible_files(&self) -> &HashSet<PathBuf> {
+    pub(crate) fn visible_files(&self) -> &crate::fx::PathSet {
         self.visible_files.get_or_init(|| {
             self.dataset
                 .paths_for(&self.root)

@@ -25,7 +25,7 @@ impl<'a> ImportResolver<'a> {
     /// request-scoped analysis session.
     pub(crate) fn new_owned_in_session(
         tsconfig: std::sync::Arc<TsConfig>,
-        visible: std::sync::Arc<HashSet<PathBuf>>,
+        visible: std::sync::Arc<crate::fx::PathSet>,
         session: &crate::codebase::analysis_session::AnalysisSession,
     ) -> ImportResolver<'static> {
         let mut resolver = Self::new_owned(tsconfig);
@@ -72,7 +72,7 @@ impl<'a> ImportResolver<'a> {
 
     pub(crate) fn new_in_session(
         tsconfig: &'a TsConfig,
-        visible: Option<&'a HashSet<PathBuf>>,
+        visible: Option<&'a crate::fx::PathSet>,
         session: &crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
         let mut resolver = Self::new_observed(tsconfig, session.observer().cloned());
@@ -82,7 +82,7 @@ impl<'a> ImportResolver<'a> {
         resolver
     }
 
-    pub fn with_visible(mut self, visible: &'a HashSet<PathBuf>) -> Self {
+    pub fn with_visible(mut self, visible: &'a crate::fx::PathSet) -> Self {
         // Any entries cached before this call were resolved under different
         // visibility (real filesystem, or an earlier `visible` set) and would
         // otherwise leak stale answers into the new scope.
@@ -95,7 +95,7 @@ impl<'a> ImportResolver<'a> {
     /// Keep an owned frozen visibility universe with an owned resolver.
     /// This is intentionally separate from `with_visible` so common borrowed
     /// consumers retain their no-Arc fast path.
-    pub(crate) fn with_owned_visible(mut self, visible: std::sync::Arc<HashSet<PathBuf>>) -> Self {
+    pub(crate) fn with_owned_visible(mut self, visible: std::sync::Arc<crate::fx::PathSet>) -> Self {
         self.cache.clear();
         self.shared_cache = None;
         self.visible = Some(ResolverVisible::Owned(visible));
@@ -113,7 +113,7 @@ impl<'a> ImportResolver<'a> {
         self
     }
 
-    pub(crate) fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
+    pub(crate) fn visible_files(&self) -> Option<&crate::fx::PathSet> {
         self.visible.as_ref().map(ResolverVisible::files)
     }
 

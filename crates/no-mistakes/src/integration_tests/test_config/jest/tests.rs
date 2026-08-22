@@ -1,13 +1,12 @@
 use super::config_project;
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 fn project(source: &str, visible: &[&str]) -> crate::integration_tests::types::ConfigProject {
     let root = Path::new("/repo");
     let files = visible
         .iter()
         .map(|rel| root.join(rel))
-        .collect::<HashSet<PathBuf>>();
+        .collect::<crate::fx::PathSet>();
     config_project(root, "jest.config.js", root, source, Some(&files)).unwrap()
 }
 
@@ -57,7 +56,7 @@ fn test_regex_and_test_match_are_unioned() {
 #[test]
 fn root_dir_and_relative_test_match_patterns_normalize() {
     let root = Path::new("/repo");
-    let files = HashSet::new();
+    let files = crate::fx::PathSet::default();
     let parsed = config_project(
         root,
         "jest.config.js",
@@ -80,7 +79,7 @@ fn root_dir_and_relative_test_match_patterns_normalize() {
 fn nested_config_sets_scope() {
     let root = Path::new("/repo");
     let config_dir = root.join("packages/app");
-    let files = HashSet::new();
+    let files = crate::fx::PathSet::default();
     let parsed = config_project(
         root,
         "packages/app/jest.config.js",
@@ -113,7 +112,7 @@ fn missing_visible_files_skips_test_regex_matches() {
 #[test]
 fn invalid_test_regex_is_an_error() {
     let root = Path::new("/repo");
-    let files = HashSet::new();
+    let files = crate::fx::PathSet::default();
     let error = config_project(
         root,
         "jest.config.js",
@@ -129,7 +128,7 @@ fn invalid_test_regex_is_an_error() {
 fn nested_root_dir_test_match_is_not_double_prefixed() {
     let root = Path::new("/repo");
     let config_dir = root.join("packages/app");
-    let files = HashSet::new();
+    let files = crate::fx::PathSet::default();
     let parsed = config_project(
         root,
         "packages/app/jest.config.js",

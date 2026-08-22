@@ -5,7 +5,7 @@ fn analyze_file_inner(
     fetches: &mut Vec<FetchOccurrence>,
     cache: &mut Cache,
     inherited: (bool, bool),
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<bool> {
     let (inherited_is_client, inherited_is_route_handler) = inherited;
     if !path.exists() {

@@ -39,7 +39,7 @@ fn imported_symbol_map(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> HashMap<String, ImportedSymbolTarget> {
@@ -93,7 +93,7 @@ fn namespace_import_map(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> HashMap<String, ImportedSymbolTarget> {

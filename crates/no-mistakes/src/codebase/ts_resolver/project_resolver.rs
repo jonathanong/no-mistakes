@@ -7,7 +7,7 @@ impl<'a> ProjectImportResolver<'a> {
     pub(crate) fn new(
         tsconfig: &'a TsConfig,
         catalog: Option<&'a TsConfigCatalog>,
-        visible: &'a HashSet<PathBuf>,
+        visible: &'a crate::fx::PathSet,
         shared_cache: Option<&'a ImportResolutionCache>,
         session: &'a crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
@@ -49,7 +49,7 @@ impl ImportResolution for ProjectImportResolver<'_> {
         }
     }
 
-    fn visible_files(&self) -> Option<&HashSet<PathBuf>> {
+    fn visible_files(&self) -> Option<&crate::fx::PathSet> {
         match self {
             Self::Scoped(resolver) => ImportResolution::visible_files(resolver),
             Self::Legacy(resolver) => ImportResolution::visible_files(resolver),
@@ -61,7 +61,7 @@ impl ImportResolution for ProjectImportResolver<'_> {
         specifier: &str,
         importing_file: &Path,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        visible_files: &HashSet<PathBuf>,
+        visible_files: &crate::fx::PathSet,
     ) -> ImportClassification {
         match self {
             Self::Scoped(resolver) => {

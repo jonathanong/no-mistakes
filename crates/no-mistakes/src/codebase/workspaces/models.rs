@@ -51,12 +51,12 @@ impl WorkspaceMap {
 
     /// Resolve a bare workspace import specifier to the package entry or an exported subpath.
     pub fn resolve_specifier(&self, specifier: &str) -> Option<PathBuf> {
-        self.resolve_specifier_inner(specifier, None)
+        self.resolve_specifier_inner(specifier, None::<&crate::fx::PathSet>)
     }
     fn resolve_specifier_inner(
         &self,
         specifier: &str,
-        visible_files: Option<&std::collections::HashSet<PathBuf>>,
+        visible_files: Option<&crate::fx::PathSet>,
     ) -> Option<PathBuf> {
         let (name, subpath) = package_name_and_subpath(specifier)?;
         let package = self.package_by_name(&name)?;
@@ -74,14 +74,14 @@ impl WorkspaceMap {
         specifier: &str,
         importing_file: &Path,
     ) -> Option<PathBuf> {
-        self.resolve_specifier_from_inner(specifier, importing_file, None)
+        self.resolve_specifier_from_inner(specifier, importing_file, None::<&crate::fx::PathSet>)
     }
 
     pub(crate) fn resolve_specifier_from_file_visible(
         &self,
         specifier: &str,
         importing_file: &Path,
-        visible_files: &std::collections::HashSet<PathBuf>,
+        visible_files: &crate::fx::PathSet,
     ) -> Option<PathBuf> {
         self.resolve_specifier_from_inner(specifier, importing_file, Some(visible_files))
     }
@@ -89,7 +89,7 @@ impl WorkspaceMap {
         &self,
         specifier: &str,
         importing_file: &Path,
-        visible_files: Option<&std::collections::HashSet<PathBuf>>,
+        visible_files: Option<&crate::fx::PathSet>,
     ) -> Option<PathBuf> {
         if specifier.starts_with('#') {
             let package = self.nearest_package(importing_file)?;

@@ -1,5 +1,5 @@
 use globset::GlobSet;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -13,7 +13,7 @@ pub struct TsFactContext {
     pub queue_project_factory_names: Vec<String>,
     pub http_prefixes: Vec<String>,
     pub effect_functions: HashMap<String, Option<String>>,
-    pub visible_files: Option<Arc<HashSet<PathBuf>>>,
+    pub visible_files: Option<Arc<crate::fx::PathSet>>,
     pub(crate) server_route_filter: Option<ServerRouteFactFilter>,
 }
 
@@ -153,7 +153,7 @@ impl TsFactContext {
         let mut visible = self
             .visible_files
             .take()
-            .map(|files| files.iter().cloned().collect::<HashSet<_>>())
+            .map(|files| files.iter().cloned().collect::<crate::fx::PathSet>())
             .unwrap_or_default();
         if let Some(other_visible) = other.visible_files {
             visible.extend(other_visible.iter().cloned());

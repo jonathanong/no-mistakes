@@ -7,7 +7,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
     let barrel = p("/repo/src/barrel.mts");
     let mid = p("/repo/src/mid.mts");
     let source = p("/repo/src/source.mts");
-    let mut visible = HashSet::new();
+    let mut visible = crate::fx::fx_set();
     visible.insert(current.clone());
     visible.insert(barrel.clone());
     visible.insert(mid.clone());

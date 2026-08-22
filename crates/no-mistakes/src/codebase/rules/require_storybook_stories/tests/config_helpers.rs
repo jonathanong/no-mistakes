@@ -267,7 +267,9 @@ fn reachable_story_files_skip_unreadable_story_facts() {
                 ..Default::default()
             }
             .into(),
-        )]),
+        )])
+        .into_iter()
+        .collect(),
         ..Default::default()
     };
     let files = coverage::reachable_story_files(

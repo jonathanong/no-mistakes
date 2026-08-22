@@ -1,7 +1,7 @@
 pub(crate) struct GraphFiles {
     all: Vec<PathBuf>,
     indexable: Vec<PathBuf>,
-    visible: HashSet<PathBuf>,
+    visible: crate::fx::PathSet,
     canonical_visible: CanonicalVisible,
     /// The tracked (or non-Git fallback) files eligible for runtime resource
     /// edges. This intentionally excludes explicit request roots and merely
@@ -60,7 +60,7 @@ impl GraphFiles {
     ) -> Self {
         all.sort();
         all.dedup();
-        let visible: HashSet<PathBuf> = all.iter().cloned().collect();
+        let visible: crate::fx::PathSet = all.iter().cloned().collect();
         resource_candidates.sort();
         resource_candidates.dedup();
         let indexable = all
@@ -142,7 +142,7 @@ impl GraphFiles {
         &self.all
     }
 
-    pub(crate) fn visible(&self) -> &HashSet<PathBuf> {
+    pub(crate) fn visible(&self) -> &crate::fx::PathSet {
         &self.visible
     }
 
