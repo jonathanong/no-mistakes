@@ -8,7 +8,7 @@ pub(super) fn lint(config: &NoMistakesConfig, config_file: &str) -> Vec<RuleFind
     let mut findings = Vec::new();
     for (framework, plan) in frameworks(config) {
         for (env_name, env) in &plan.environments {
-            if has_effective_limit(&env.limit) && has_direct_group(env) {
+            if has_effective_limit(&env.limit) && !env.all && has_direct_group(env) {
                 findings.push(finding(
                     config_file,
                     format!(
