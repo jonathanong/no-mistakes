@@ -176,6 +176,9 @@ impl<'a> ScopedImportResolver<'a> {
             .clone();
         resolver.cache = cache;
         resolver.session_scoped = true;
+        if let Some(session) = self.session {
+            resolver.interner = Some(session.interner_arc());
+        }
         resolver
     }
 

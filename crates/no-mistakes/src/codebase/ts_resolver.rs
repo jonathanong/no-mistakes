@@ -3,6 +3,7 @@ use dashmap::mapref::entry::Entry;
 use dashmap::DashMap;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 include!("ts_resolver/config.rs");
 include!("ts_resolver/resolve_entry.rs");

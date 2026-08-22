@@ -8,6 +8,7 @@ pub struct ImportResolver<'a> {
     shared_cache: Option<&'a ImportResolutionCache>,
     session_scoped: bool,
     observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,
+    interner: Option<Arc<crate::codebase::analysis_session::PathInterner>>,
 }
 
 /// The ordinary resolver borrows its config. Long-lived, request-scoped
@@ -66,8 +67,8 @@ enum ImportResolutionPolicy<'a> {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub(crate) struct ResolveKey {
-    importing_file: PathBuf,
-    specifier: String,
+    importing_file: Arc<Path>,
+    specifier: Arc<str>,
 }
 
 pub(crate) type ResolverResultCache = DashMap<ResolveKey, Option<PathBuf>>;

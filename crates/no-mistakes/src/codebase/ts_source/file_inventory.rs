@@ -58,14 +58,13 @@ impl FileInventory {
             u32::try_from(entries.len()).is_ok(),
             "request file inventory exceeds the FileId address space"
         );
+        let (paths, classifications): (Vec<PathBuf>, Vec<FileClassification>) = entries
+            .into_iter()
+            .map(|entry| (entry.path, entry.classification))
+            .unzip();
         Self {
-            paths: Arc::new(entries.iter().map(|entry| entry.path.clone()).collect()),
-            classifications: Arc::new(
-                entries
-                    .into_iter()
-                    .map(|entry| entry.classification)
-                    .collect(),
-            ),
+            paths: Arc::new(paths),
+            classifications: Arc::new(classifications),
             metadata_stats,
         }
     }

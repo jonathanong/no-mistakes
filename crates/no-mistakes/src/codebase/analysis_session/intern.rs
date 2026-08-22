@@ -27,7 +27,7 @@ impl PathInterner {
         if let Some(hit) = self.paths.get(normalized.as_path()) {
             return Arc::clone(hit.key());
         }
-        self.insert_path_arc(Arc::from(normalized.as_path()))
+        self.insert_path_arc(Arc::<Path>::from(normalized))
     }
 
     /// Return the request-owned `Arc<str>` for `value`.

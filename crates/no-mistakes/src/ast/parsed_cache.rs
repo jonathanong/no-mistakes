@@ -3,8 +3,9 @@ use oxc_ast::ast::Program;
 use oxc_span::SourceType;
 use self_cell::self_cell;
 use std::cell::RefCell;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::fx::FxHashMap;
 
@@ -28,7 +29,7 @@ enum ParseMode {
     LegacySymbols,
 }
 
-type CachedPrograms = FxHashMap<(PathBuf, ParseMode), Result<Rc<CachedProgram>, String>>;
+type CachedPrograms = FxHashMap<(Arc<Path>, ParseMode), Result<Rc<CachedProgram>, String>>;
 
 self_cell! {
     struct CachedProgram {
@@ -43,12 +44,14 @@ self_cell! {
 /// thread boundary; only owned facts derived from them may leave the scope.
 #[derive(Clone, Default)]
 pub(crate) struct ParsedProgramCache {
+    interned_paths: Rc<RefCell<FxHashMap<Arc<Path>, ()>>>,
     entries: Rc<RefCell<CachedPrograms>>,
 }
 
 #[cfg(test)]
 pub(super) mod tests;
 
+mod intern;
 mod parse;
 use parse::parse_program;
 
@@ -78,6 +81,7 @@ impl ParsedProgramCache {
 
     pub(crate) fn clear(&self) {
         self.entries.borrow_mut().clear();
+        self.interned_paths.borrow_mut().clear();
     }
 
     pub(crate) fn remove_path(&self, path: &Path) {
@@ -93,10 +97,11 @@ impl ParsedProgramCache {
 
     pub(crate) fn parse_error(&self, path: &Path) -> Option<String> {
         let path = crate::codebase::ts_resolver::normalize_path(path);
+        let interned = self.interned_lookup(&path)?;
         let cached = self
             .entries
             .borrow()
-            .get(&(path, ParseMode::Standard))?
+            .get(&(interned, ParseMode::Standard))?
             .clone();
         match cached {
             Ok(cached) => cached.with_dependent(|_, parsed| parsed.strict_error.clone()),
@@ -170,8 +175,8 @@ impl ParsedProgramCache {
         mode: ParseMode,
         on_parse: impl FnOnce(),
     ) -> Result<Rc<CachedProgram>, String> {
-        let path = crate::codebase::ts_resolver::normalize_path(path);
-        let key = (path.clone(), mode);
+        let path = self.intern_path(crate::codebase::ts_resolver::normalize_path(path));
+        let key = (Arc::clone(&path), mode);
         if let Some(cached) = self.entries.borrow().get(&key) {
             return cached.clone();
         }
