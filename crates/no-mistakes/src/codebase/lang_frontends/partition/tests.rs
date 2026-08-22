@@ -15,10 +15,10 @@ fn partition_files_by_extension_buckets_go_mod_and_php_universe() {
         PathBuf::from("services.yml"),
         PathBuf::from("Main.java"),
         PathBuf::from("App.kt"),
-            PathBuf::from("lib/app.ex"),
-            PathBuf::from("test/app_test.exs"),
-            PathBuf::from("lib/api.dart"),
-            PathBuf::from("notes.md"),
+        PathBuf::from("lib/app.ex"),
+        PathBuf::from("test/app_test.exs"),
+        PathBuf::from("lib/api.dart"),
+        PathBuf::from("notes.md"),
     ];
     let parts = partition_files_by_extension(&files);
     assert_eq!(parts.py, vec![PathBuf::from("app.py")]);
