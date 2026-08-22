@@ -70,7 +70,7 @@ const {
     changedFiles: ["src/utils.mts"],
   });
   // Complete changed-file inventory, including paths that selected no tests.
-  console.log(plan.changed_files);
+  console.log(plan.changedFiles);
   const targetCommands = await testsTargets({
     root: process.cwd(),
     framework: "vitest",
