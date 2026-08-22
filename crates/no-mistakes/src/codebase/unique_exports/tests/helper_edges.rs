@@ -241,3 +241,37 @@ fn deferred_reexports_keep_named_reexports_lexically_visible() {
         &root.join("missing-package.json")
     ));
 }
+
+fn occurrence(file: &str, line: u32, suppressed: bool) -> ExportOccurrence {
+    let loc = suppressed.then(|| (file.to_string(), line));
+    ExportOccurrence {
+        name: "Dup".to_string(),
+        bucket: ExportBucket::Value,
+        file: file.to_string(),
+        line,
+        kind: "value".to_string(),
+        origin: ExportOrigin {
+            file: file.to_string(),
+            line,
+            name: "Dup".to_string(),
+            bucket: ExportBucket::Value,
+            suppressed,
+            suppression_location: loc.clone(),
+        },
+        suppressed,
+        suppression_location: loc,
+    }
+}
+
+#[test]
+fn unique_export_findings_keeps_all_suppressed_duplicates_as_sidecars() {
+    let findings = unique_export_findings(
+        vec![occurrence("a.ts", 1, true), occurrence("b.ts", 2, true)],
+        UniqueExportsOptions {
+            unique_across_types_and_values: false,
+        },
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].finding.file, "b.ts");
+}
