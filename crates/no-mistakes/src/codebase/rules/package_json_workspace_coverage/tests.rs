@@ -92,7 +92,7 @@ fn allowlist_normalizes_relative_package_json_paths() {
 }
 
 #[test]
-fn skips_non_package_files_and_unnamed_packages_when_required() {
+fn require_named_package_reports_unnamed_manifests() {
     let root = fixture_root("missing");
     let files = vec![
         root.join("package.json"),
@@ -107,7 +107,13 @@ fn skips_non_package_files_and_unnamed_packages_when_required() {
     )
     .unwrap();
 
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file == "packages/unnamed/package.json"
+                && finding.message.contains("must declare a name")
+        }),
+        "{findings:?}"
+    );
     assert_eq!(
         package_name(&root.join("packages/unnamed/package.json")),
         None
@@ -115,6 +121,44 @@ fn skips_non_package_files_and_unnamed_packages_when_required() {
     assert_eq!(
         package_name(&fixture_root("invalid-package-json").join("packages/bad/package.json")),
         None
+    );
+}
+
+#[test]
+fn require_named_package_does_not_treat_star_as_crossing_directories() {
+    let root = fixture_root("unnamed-covered");
+    let files = vec![
+        root.join("package.json"),
+        root.join("packages/unnamed/package.json"),
+        root.join("packages/group/app/package.json"),
+    ];
+    let findings = check_with_files(
+        &root,
+        &config("packageRoots: [packages]\nrequireNamedPackage: true\n"),
+        &files,
+    )
+    .unwrap();
+
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file == "packages/group/app/package.json"
+                && finding.message.contains("not covered")
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file == "packages/unnamed/package.json"
+                && finding.message.contains("must declare a name")
+        }),
+        "{findings:?}"
+    );
+    assert!(
+        findings.iter().all(|finding| {
+            finding.file != "packages/unnamed/package.json"
+                || !finding.message.contains("not covered")
+        }),
+        "{findings:?}"
     );
 }
 

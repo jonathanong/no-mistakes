@@ -12,8 +12,12 @@ rules:
       requireNamedPackage: true
 ```
 
+`requireNamedPackage: true` reports manifests that omit `name` instead of
+skipping them.
+
 Counterexample: `packages/api/package.json` exists, but the root `workspaces`
-or `pnpm-workspace.yaml` patterns do not include `packages/api`.
+or `pnpm-workspace.yaml` patterns do not include `packages/api`. An unnamed
+`package.json` (`{}`) is also a finding when `requireNamedPackage` is true.
 
 Fix: add the package directory to the workspace patterns, move the package
 outside the configured package roots, or add a deliberate `allowlist` entry.
