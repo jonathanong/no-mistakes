@@ -19,6 +19,15 @@ fn sources_for(paths: &[PathBuf]) -> crate::codebase::ts_source::SourceStore {
     ))
 }
 
+/// Copy into a unique directory so parallel tests that parse the shared
+/// `fixture/facts` tree cannot increment this session's parse counts.
+fn isolated_copy(name: &str) -> (tempfile::TempDir, PathBuf) {
+    let dir = tempfile::tempdir().expect("unique parse-count directory");
+    let path = crate::codebase::ts_resolver::normalize_path(&dir.path().join(name));
+    std::fs::copy(fixture(name), &path).expect("copy fixture into unique directory");
+    (dir, path)
+}
+
 fn collect_one(path: &Path, sources: &crate::codebase::ts_source::SourceStore, retain_parse: bool) {
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     collect_file_facts_with_sources_and_session(
@@ -66,7 +75,7 @@ fn sequential_batch_evicts_after_serial_files_loop() {
 
 #[test]
 fn sequential_same_path_reuses_parse_until_evicted() {
-    let path = fixture("imports.ts");
+    let (_dir, path) = isolated_copy("imports.ts");
     let root = path.parent().expect("fixture directory");
     let sources = sources_for(std::slice::from_ref(&path));
 
