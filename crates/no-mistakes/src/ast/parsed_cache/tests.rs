@@ -74,3 +74,26 @@ fn legacy_symbols_reuse_or_split_physical_cache_by_source_semantics() {
         assert_eq!(len(&cache), expected_entries, "{}", path.display());
     }
 }
+
+#[test]
+fn remove_path_drops_every_parse_mode_for_the_normalized_path() {
+    let cache = ParsedProgramCache::default();
+    let path = Path::new("source.js");
+    cache
+        .with_recovered_program_status_observed(
+            path,
+            "export const value = 1;",
+            || {},
+            |_, _, _, _| (),
+        )
+        .unwrap();
+    cache
+        .with_legacy_symbols_program_observed(path, "export const value = 1;", || {}, |_, _, _| ())
+        .unwrap();
+    assert_eq!(len(&cache), 2);
+
+    cache.remove_path(path);
+    assert_eq!(len(&cache), 0);
+    cache.remove_path(Path::new("./source.js"));
+    assert_eq!(len(&cache), 0);
+}

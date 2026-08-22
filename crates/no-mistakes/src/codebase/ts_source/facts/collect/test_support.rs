@@ -12,5 +12,7 @@ pub(crate) fn collect_file_facts_with_sources(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Option<TsFileFacts> {
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
-    super::collect_file_facts_with_sources_and_session(&session, path, plan, context, sources)
+    super::collect_file_facts_with_sources_and_session(
+        &session, path, plan, context, sources, false,
+    )
 }
