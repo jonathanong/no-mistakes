@@ -18,7 +18,7 @@ pub(crate) fn extract_http_paths(source: &str) -> Vec<String> {
 }
 
 fn static_path(raw: &str) -> Option<String> {
-    (!raw.contains('$')).then(|| raw).and_then(normalize_path)
+    (!raw.contains('$')).then_some(raw).and_then(normalize_path)
 }
 
 fn normalize_path(raw: &str) -> Option<String> {
