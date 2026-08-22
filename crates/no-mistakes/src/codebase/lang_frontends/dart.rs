@@ -138,7 +138,7 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
 fn dart_import_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"(?m)^\s*(?:import|export|part(?:\s+of)?)\s+['"]([^'"]+)['"]"#)
+        Regex::new(r#"(?m)^\s*(?:import|export|part(?:\s+of)?)\s+r?['"]([^'"]+)['"]"#)
             .expect("import")
     })
 }

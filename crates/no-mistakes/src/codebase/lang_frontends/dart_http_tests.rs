@@ -35,3 +35,9 @@ http.get(r"/api/health");
     assert!(paths.contains(&"/api/users".to_string()));
     assert!(paths.contains(&"/api/health".to_string()));
 }
+
+#[test]
+fn uri_fragments_are_stripped() {
+    assert!(extract_http_paths(r#"Uri.parse("/api/users#details");"#)
+        .contains(&"/api/users".to_string()));
+}

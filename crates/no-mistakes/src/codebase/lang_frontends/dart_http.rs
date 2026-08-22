@@ -24,7 +24,7 @@ fn normalize_path(raw: &str) -> Option<String> {
     } else {
         raw
     };
-    let path = path.split('?').next().unwrap_or(path);
+    let path = path.split(['?', '#']).next().unwrap_or(path);
     path.starts_with('/').then(|| path.to_string())
 }
 

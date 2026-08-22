@@ -23,6 +23,19 @@ part 'extra.dart';
 }
 
 #[test]
+fn raw_import_uris_extract() {
+    let path = Path::new("/app/lib/api.dart");
+    let root = Path::new("/app");
+    let imports = extract_dart_imports(
+        "import r'package:app/user.dart';\n",
+        path,
+        Some(root),
+        Some("app"),
+    );
+    assert_eq!(imports, vec!["package:app/user.dart"]);
+}
+
+#[test]
 fn import_uris_are_read_from_unmasked_strings() {
     let path = Path::new("/app/lib/api.dart");
     let root = Path::new("/app");
