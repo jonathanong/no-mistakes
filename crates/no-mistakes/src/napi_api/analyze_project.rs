@@ -25,6 +25,9 @@ use types::{
 #[path = "analyze_project/tests/architecture_override.rs"]
 mod architecture_override_tests;
 #[cfg(test)]
+#[path = "analyze_project/tests/cli_parity_framework.rs"]
+mod cli_parity_framework_tests;
+#[cfg(test)]
 #[path = "analyze_project/cli_parity_tests.rs"]
 mod cli_parity_tests;
 #[cfg(test)]

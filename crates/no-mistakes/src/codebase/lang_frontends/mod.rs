@@ -12,6 +12,8 @@ mod strip;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]
+mod tests_collect;
+#[cfg(test)]
 mod tests_extra;
 #[cfg(test)]
 mod tests_more;
