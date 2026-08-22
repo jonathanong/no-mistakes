@@ -9,6 +9,7 @@ fn language_phases_use_framework_names() {
         (TestFramework::Cargo, "discover.cargo", "select.cargo"),
         (TestFramework::Rails, "discover.rails", "select.rails"),
         (TestFramework::Php, "discover.php", "select.php"),
+        (TestFramework::Jest, "discover.jest", "select.jest"),
     ] {
         assert_eq!(discover_phase(framework), discover);
         assert_eq!(select_phase(framework), select);

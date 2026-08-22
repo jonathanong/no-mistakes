@@ -32,56 +32,41 @@ fn build_report_from_prepared(
         graph_files.visible().iter().cloned(),
     );
     let visible_files = graph_files.visible().clone();
-    let target = NodeId::symbol(target_file, symbol);
-    let definition = if let Some(location) =
-        export_location(facts, target_file, root, symbol, false)?
-    {
-        location
-    } else if graph.dependencies_of_node(&target).is_some()
-        || graph.dependents_of_node(&target).is_some()
-    {
-        let Some(location) = export_location(facts, target_file, root, symbol, true)? else {
+    let interner = session.interner();
+    let target = NodeId::symbol_in(interner, target_file, symbol);
+    let definition =
+        if let Some(location) = export_location(facts, target_file, root, symbol, false)? {
+            location
+        } else if graph.dependencies_of_node(&target).is_some()
+            || graph.dependents_of_node(&target).is_some()
+        {
+            let Some(location) = export_location(facts, target_file, root, symbol, true)? else {
+                bail!(
+                    "`{}` is not exported by `{}`",
+                    symbol,
+                    args.files[0].display()
+                );
+            };
+            location
+        } else {
             bail!(
                 "`{}` is not exported by `{}`",
                 symbol,
                 args.files[0].display()
             );
         };
-        location
-    } else {
-        bail!(
-            "`{}` is not exported by `{}`",
-            symbol,
-            args.files[0].display()
-        );
-    };
     let impact_edges = signature_impact_edges();
     let mut entries =
         graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, Some(&impact_edges));
     let (exports, export_nodes) =
-        export_paths(graph, facts, &target, symbol, root, &definition);
-    let target_symbols = signature_target_symbols(
-        target_file,
-        symbol,
-        &export_nodes,
-        &visible_files,
-        facts,
-    );
+        export_paths(graph, facts, &target, symbol, root, &definition, interner);
+    let target_symbols =
+        signature_target_symbols(target_file, symbol, &export_nodes, &visible_files, facts);
     let file_import_edges = HashSet::from([EdgeKind::DynamicImport, EdgeKind::Require]);
-    let mut file_roots: Vec<_> = export_nodes
-        .iter()
-        .filter_map(NodeId::as_file)
-        .map(NodeId::file)
-        .collect();
-    file_roots.push(NodeId::file(target_file));
-    file_roots.sort();
-    file_roots.dedup();
     let mut file_entry_target_symbols: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    for file_root in file_roots {
-        let Some(root_file) = file_root.as_file() else {
-            continue;
-        };
-        let symbols_for_root = target_symbols.get(root_file).cloned().unwrap_or_default();
+    for root_path in interned_file_root_paths(&export_nodes, target_file) {
+        let file_root = NodeId::file_in(interner, &root_path);
+        let symbols_for_root = target_symbols.get(&root_path).cloned().unwrap_or_default();
         let file_entries = graph.dependents_of(
             std::slice::from_ref(&file_root),
             Some(1),
@@ -131,6 +116,7 @@ fn build_report_from_prepared(
         root,
         &file_entry_target_symbols,
         facts,
+        interner,
     );
     let suggested_tests = suggested_tests(
         &suggested_entries,
@@ -199,8 +185,8 @@ fn prepare_local_caller_context<'a>(
 include!("impact_collect_exports.rs");
 
 #[cfg(test)]
-mod impact_collect_caller_tests;
-#[cfg(test)]
 mod impact_collect_caller_context_tests;
+#[cfg(test)]
+mod impact_collect_caller_tests;
 #[cfg(test)]
 mod impact_collect_tests;

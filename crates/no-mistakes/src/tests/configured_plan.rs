@@ -242,6 +242,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
             framework,
             TestFramework::Dotnet
                 | TestFramework::Vitest
+                | TestFramework::Jest
                 | TestFramework::Swift
                 | TestFramework::Python
                 | TestFramework::Go

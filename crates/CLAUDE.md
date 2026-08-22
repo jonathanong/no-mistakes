@@ -123,7 +123,7 @@ Option<&dyn TsFactLookup>` while siblings have it may duplicate a rule's
 parallel helper exists — keep per-file error tolerance when wiring facts in
 regardless, since an edge producer failing aborts the shared graph, unlike a
 rule failing only its own findings. `git_visible_files` is one
-`git ls-files -z -t --cached --others --exclude-standard` process — thread
+`git ls-files -z -t --stage --cached --others --deleted --exclude-standard` process — thread
 that snapshot through any path that would rediscover files, e.g. the
 `_from_git_files` variants of `discover_files`/`discover_files_preserving_roots`.
 

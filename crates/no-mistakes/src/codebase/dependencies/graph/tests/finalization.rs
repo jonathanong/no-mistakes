@@ -20,12 +20,16 @@ fn edge_maps_and_edge_index_use_fx_hash() {
 fn bfs_visited_sets_use_fx_hash() {
     let bfs = include_str!("../bfs.rs");
     assert!(
-        bfs.contains("let mut visited: FxHashSet<NodeId> = fx_set()"),
+        bfs.contains("let mut visited: FxHashSet<&NodeId> = fx_set()"),
         "BFS visited set must use rustc-hash FxHashSet"
     );
     assert!(
-        bfs.contains("let mut dynamic_import_files: FxHashSet<NodeId> = fx_set()"),
+        bfs.contains("let mut dynamic_import_files: FxHashSet<&NodeId> = fx_set()"),
         "BFS dynamic-import set must use rustc-hash FxHashSet"
+    );
+    assert!(
+        bfs.contains("let mut result_idx: FxHashMap<&NodeId, usize> = fx_map()"),
+        "BFS result index must use rustc-hash FxHashMap of borrowed NodeIds"
     );
     assert!(
         bfs.contains("let root_nodes: FxHashSet<NodeId>"),
@@ -87,6 +91,52 @@ fn leftover_path_keyed_maps_use_fx_hash() {
     assert!(
         cache.contains("type CachedPrograms = FxHashMap"),
         "ParsedProgramCache must use rustc-hash FxHashMap"
+    );
+}
+
+#[test]
+fn bfs_clones_neighbor_once_on_first_visit() {
+    let bfs = include_str!("../bfs.rs");
+    assert!(
+        bfs.contains("node: neighbor.clone()"),
+        "BFS must clone NodeId only when emitting an owned NodeEntry"
+    );
+    assert!(
+        bfs.contains("visited.insert(neighbor)"),
+        "BFS visited set must store borrowed NodeIds from the graph"
+    );
+    assert!(
+        bfs.contains("queue.push_back((neighbor, next_depth))"),
+        "BFS queue must store borrowed NodeIds instead of cloned owners"
+    );
+    assert!(
+        !bfs.contains("let next = neighbor.clone();"),
+        "BFS must not clone into a local just to clone that local again"
+    );
+    assert!(
+        !bfs.contains("visited.insert(neighbor.clone())"),
+        "BFS must not clone neighbor separately for visited insert"
+    );
+}
+
+#[test]
+fn lazy_import_clones_neighbor_once_on_first_visit() {
+    let lazy = include_str!("../lazy_imports.rs");
+    assert!(
+        lazy.contains("neighbor.clone(),"),
+        "lazy import traversal must clone NodeId once into the intern map"
+    );
+    assert!(
+        lazy.contains("next_frontier.push(neighbor)"),
+        "lazy import traversal must move the owned neighbor onto the next frontier"
+    );
+    assert!(
+        !lazy.contains("visited.insert(next.clone())"),
+        "lazy import traversal must not clone into visited, result, and result_idx separately"
+    );
+    assert!(
+        !lazy.contains("result_idx.insert(next.clone()"),
+        "lazy import traversal must not keep a cloned result_idx map"
     );
 }
 

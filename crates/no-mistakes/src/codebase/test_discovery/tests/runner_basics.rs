@@ -217,6 +217,22 @@ fn language_runners_round_trip_names_and_frameworks() {
 }
 
 #[test]
+fn jest_is_a_js_runner_not_a_language_frontend() {
+    assert_eq!(TestRunner::from_name("jest"), Some(TestRunner::Jest));
+    assert_eq!(TestRunner::Jest.as_str(), "jest");
+    assert!(!TestRunner::Jest.is_language_frontend());
+    assert_eq!(
+        TestRunner::Jest.framework(),
+        crate::integration_tests::types::Framework::Jest
+    );
+    assert_eq!(
+        crate::integration_tests::types::Framework::Jest.as_str(),
+        "jest"
+    );
+    assert!(crate::integration_tests::types::Framework::Jest.has_js_runner_config());
+}
+
+#[test]
 #[should_panic(expected = "language projects are handled before runner_config")]
 fn language_runner_config_is_unreachable() {
     let config = NoMistakesConfig::default();
@@ -261,7 +277,7 @@ fn framework_preparation_plan_expands_only_required_runner_dependencies() {
             tests: true,
             ..Default::default()
         });
-    assert_eq!(tests.runners().count(), 9);
+    assert_eq!(tests.runners().count(), 10);
 
     let vitest = FrameworkPreparationPlan::for_runners([TestRunner::Vitest]);
     assert!(vitest.contains(TestRunner::Vitest));
@@ -285,4 +301,20 @@ fn framework_preparation_plan_expands_only_required_runner_dependencies() {
         assert!(!plan.contains(TestRunner::Dotnet));
         assert!(!plan.contains(TestRunner::Swift));
     }
+}
+
+#[test]
+fn jest_discovers_from_explicit_config_and_skips_filename_fallback() {
+    let root = super::fixture_root("jest-test-plan");
+    let mut config = NoMistakesConfig::default();
+    config.tests.jest.configs = Some(StringOrList::One("jest.config.js".to_string()));
+    let discovered = discover_tests(&root, &config, TestRunner::Jest).unwrap();
+    assert!(discovered
+        .tests
+        .iter()
+        .any(|path| path.ends_with("value.test.ts")));
+
+    config.tests.jest.configs = Some(StringOrList::Many(Vec::new()));
+    let empty = discover_tests(&root, &config, TestRunner::Jest).unwrap();
+    assert!(empty.tests.is_empty());
 }

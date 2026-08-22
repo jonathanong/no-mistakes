@@ -8,9 +8,11 @@ use std::path::Path;
 mod discovery;
 mod globs;
 mod json;
+mod parse;
 pub(crate) use discovery::discovered_config_paths;
 pub(crate) use globs::{build_globset, prefix_globs};
 pub(super) use json::load_vitest_json_projects;
+pub(in crate::integration_tests) use parse::load_config_projects_from_program;
 
 pub(crate) fn load_projects(
     root: &Path,
@@ -53,10 +55,8 @@ pub(crate) fn load_projects_from_visible_with_catalog(
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
         .collect::<crate::fx::PathSet>();
     let config_values = if let Some(configs) = configs {
-        let config_values = configs.values();
-        // Explicit runner configs are authoritative even when Git ignores
-        // them. Authorize only those config paths in this local parse view;
-        // ignored helpers remain outside the frozen visible file set.
+        let config_values =
+            globs::expand_explicit_config_values(root, &configs.values(), &visible_files);
         visible_files.extend(
             config_values
                 .iter()
@@ -131,6 +131,15 @@ pub(super) fn load_config_projects_inner(
     if !framework.has_js_runner_config() {
         return Ok(Vec::new());
     }
+    if framework == Framework::Jest {
+        return Ok(vec![test_config::jest::config_project(
+            root,
+            raw,
+            config_dir,
+            source,
+            visible_files,
+        )?]);
+    }
     if framework == Framework::Vitest
         && path.extension().and_then(|value| value.to_str()) == Some("json")
     {
@@ -156,46 +165,6 @@ pub(super) fn load_config_projects_inner(
             visible_files,
         )
     })?
-}
-
-pub(super) fn load_config_projects_from_program(
-    input: ConfigProjectInput<'_>,
-    program: &oxc_ast::ast::Program<'_>,
-    _visible_files: Option<&crate::fx::PathSet>,
-) -> Result<Vec<ConfigProject>> {
-    let ConfigProjectInput {
-        root,
-        framework,
-        raw,
-        path,
-        source,
-        config_dir,
-        resolver,
-    } = input;
-    match framework {
-        Framework::Dotnet => Ok(Vec::new()),
-        Framework::Playwright => {
-            let parsed = test_config::playwright::parse_program_with_resolver(
-                program, source, path, config_dir, resolver,
-            )?;
-            Ok(parsed.into_projects(root, raw))
-        }
-        Framework::Vitest => {
-            let workspace = test_config::vitest::is_vitest_project_array_path(path);
-            let parsed = test_config::vitest::parse_program_with_resolver(
-                program, source, path, config_dir, root, resolver,
-            )?;
-            Ok(parsed
-                .into_iter()
-                .map(|mut project| {
-                    project.config = Some(raw.to_string());
-                    project.workspace = workspace;
-                    project
-                })
-                .collect())
-        }
-        _ => Ok(Vec::new()),
-    }
 }
 
 #[cfg(test)]

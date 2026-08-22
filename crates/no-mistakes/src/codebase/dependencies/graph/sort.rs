@@ -1,8 +1,12 @@
-fn add_via_kind(entry: &mut NodeEntry, kind: EdgeKind) {
-    if !entry.via.contains(&kind) {
-        entry.via.push(kind);
-        entry.via.sort_by_key(|k| k.sort_key());
+fn add_via_kind_to(via: &mut Vec<EdgeKind>, kind: EdgeKind) {
+    if !via.contains(&kind) {
+        via.push(kind);
+        via.sort_by_key(|k| k.sort_key());
     }
+}
+
+fn add_via_kind(entry: &mut NodeEntry, kind: EdgeKind) {
+    add_via_kind_to(&mut entry.via, kind);
 }
 
 /// Historical formatted sort key. Test oracle for `cached_node_sort_key`.
@@ -42,7 +46,11 @@ fn node_variant_rank(n: &NodeId) -> u8 {
 }
 
 fn adjacency_sort_key(n: &NodeId, kind: EdgeKind) -> (NodeSortKey, u8, (u8, u8)) {
-    (cached_node_sort_key(n), node_variant_rank(n), kind.sort_key())
+    (
+        cached_node_sort_key(n),
+        node_variant_rank(n),
+        kind.sort_key(),
+    )
 }
 
 fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {

@@ -1,6 +1,6 @@
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, GraphBuildPlan, NodeId};
 use crate::codebase::dependencies::{
-    parse_entrypoint, relationship_filter, workflow_node_from_suffix, RelationshipArg,
+    parse_entrypoint, relationship_filter, workflow_node_from_suffix_in, RelationshipArg,
 };
 use crate::codebase::ts_resolver::normalize_path;
 use anyhow::Result;
@@ -91,8 +91,9 @@ pub(crate) fn run_with_prepared_graph(
     options: &FlowOptions,
     root: &Path,
     graph: &DepGraph,
+    interner: &crate::codebase::analysis_session::PathInterner,
 ) -> Result<FlowReport> {
-    let target = resolve_target(root, &options.target);
+    let target = resolve_target_in(interner, root, &options.target);
     let allowed = relationship_filter(&options.relationships);
     let mut nodes = BTreeMap::new();
     let mut edges = BTreeSet::new();
@@ -123,6 +124,33 @@ pub(crate) fn run_with_prepared_graph(
         nodes: nodes.into_values().collect(),
         edges: edges.into_iter().collect(),
     })
+}
+
+fn resolve_target(root: &Path, raw: &str) -> NodeId {
+    resolve_target_in(
+        &crate::codebase::analysis_session::PathInterner::new(),
+        root,
+        raw,
+    )
+}
+
+fn resolve_target_in(
+    interner: &crate::codebase::analysis_session::PathInterner,
+    root: &Path,
+    raw: &str,
+) -> NodeId {
+    let (file, symbol) = parse_entrypoint(raw);
+    let path = if file.is_absolute() {
+        file
+    } else {
+        root.join(file)
+    };
+    let path = normalize_path(&path);
+    match symbol {
+        Some(symbol) => workflow_node_from_suffix_in(interner, &path, &symbol)
+            .unwrap_or_else(|| NodeId::symbol_in(interner, path, symbol)),
+        None => NodeId::file_in(interner, path),
+    }
 }
 
 include!("flow_query_traverse.rs");

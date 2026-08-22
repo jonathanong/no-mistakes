@@ -15,7 +15,8 @@ fn source_files_from_facts_skips_disabled_parse_errors() {
         },
     );
 
-    let source_files = scan::collect_source_files_from_facts(&root, &files, &facts, false).unwrap();
+    let source_files =
+        scan::collect_source_files_from_facts(&root, &files, &facts, false, &[]).unwrap();
 
     assert_eq!(source_files.len(), 1);
     assert!(source_files[0].disabled);

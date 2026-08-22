@@ -23,7 +23,13 @@ fn flow_query_returns_timeout_instead_of_a_partial_report() {
     };
     let _guard = crate::invocation::install_test_deadline(Duration::ZERO).unwrap();
 
-    let error = run_with_prepared_graph(&options, &root, &graph).unwrap_err();
+    let error = run_with_prepared_graph(
+        &options,
+        &root,
+        &graph,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    )
+    .unwrap_err();
 
     assert_eq!(crate::invocation::timeout_exit_code(&error), Some(124));
 }

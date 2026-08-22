@@ -63,7 +63,8 @@ pub(super) fn dependents_entries(
             ctx.build_plan,
             ctx.graph_files,
         )?;
-        let roots = roots_with_existing_queue_jobs(roots, entrypoints, &graph);
+        let roots =
+            roots_with_existing_queue_jobs(roots, entrypoints, &graph, &PathInterner::new());
         let roots = roots_with_exported_symbol_roots(&roots, &graph);
         return Ok(graph.dependents_of_symbol_nodes(&roots, depth, ctx.allowed));
     }

@@ -201,3 +201,64 @@ fn test_plan_vitest_fields_unchanged_when_language_packages_configured() {
         without_python["fallback_triggered"]
     );
 }
+
+#[test]
+fn test_plan_jest_selects_owning_import_test() {
+    let root = fixture("jest-test-plan");
+    let plan = plan("jest", &root, "src/value.ts");
+    assert_eq!(plan["fallback_triggered"], false);
+    assert_eq!(selected_files(&plan), vec!["src/value.test.ts"]);
+    let target = &plan["selected_tests"][0]["targets"][0];
+    assert_eq!(target["runner"], "jest");
+    assert_eq!(target["base_command"], serde_json::json!(["jest"]));
+    assert_eq!(target["config"], "jest.config.js");
+    assert_eq!(
+        target["runner_args"],
+        serde_json::json!(["--config", "jest.config.js", "src/value.test.ts"])
+    );
+}
+
+#[test]
+fn test_plan_jest_empty_configs_selects_nothing() {
+    let root = fixture("jest-test-plan");
+    let output = run(&[
+        "test",
+        "plan",
+        "jest",
+        "--root",
+        root.to_str().unwrap(),
+        "--config",
+        root.join("empty.no-mistakes.yml").to_str().unwrap(),
+        "--changed-file",
+        "src/value.ts",
+        "--json",
+    ]);
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert!(selected_files(&plan).is_empty());
+}
+
+#[test]
+fn test_plan_vitest_fields_unchanged_when_jest_configs_configured() {
+    let root = fixture("jest-test-plan");
+    let with_jest = plan("vitest", &root, "src/value.ts");
+    let output = run(&[
+        "test",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--config",
+        root.join("vitest-only.no-mistakes.yml").to_str().unwrap(),
+        "--changed-file",
+        "src/value.ts",
+        "--json",
+    ]);
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let without_jest: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(with_jest, without_jest);
+}

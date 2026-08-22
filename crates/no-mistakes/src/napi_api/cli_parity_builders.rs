@@ -69,6 +69,7 @@ pub(crate) fn parse_test_framework(value: &str) -> AnyhowResult<crate::tests::Te
         "cargo" => Ok(crate::tests::TestFramework::Cargo),
         "rails" => Ok(crate::tests::TestFramework::Rails),
         "php" => Ok(crate::tests::TestFramework::Php),
+        "jest" => Ok(crate::tests::TestFramework::Jest),
         _ => bail!("unknown test framework: {value}"),
     }
 }

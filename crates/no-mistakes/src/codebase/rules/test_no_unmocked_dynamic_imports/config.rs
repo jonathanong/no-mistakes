@@ -6,11 +6,11 @@ mod rule_targets;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use discovery::{
-    build_globset, build_regexes, config_files, extract_property_strings,
-    extract_test_property_strings, extract_test_regexes, ConfigFile,
+    build_globset, build_regexes, config_files, extract_test_property_strings, ConfigFile,
 };
 use std::path::{Path, PathBuf};
 
+pub(crate) use discovery::{extract_property_strings, extract_test_regexes};
 pub(crate) use filter::test_filter_from_visible;
 pub use filter::{test_filter, TestFilter};
 pub(super) use prepared::prepare_from_visible;

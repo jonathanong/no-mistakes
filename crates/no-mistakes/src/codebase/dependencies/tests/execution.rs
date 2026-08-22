@@ -23,8 +23,7 @@ fn get_entries_supports_import_only_dependencies() {
         symbols: false,
     };
 
-    let entries =
-        get_entries(Direction::Deps, &roots, &entrypoints, None, true, &ctx).unwrap();
+    let entries = get_entries(Direction::Deps, &roots, &entrypoints, None, true, &ctx).unwrap();
     assert!(!entries.is_empty());
 }
 
@@ -61,6 +60,53 @@ fn get_entries_supports_symbol_dependents() {
         build_plan: graph::GraphBuildPlan::all(),
         allowed: None,
         symbols: false,
+    };
+
+    let entries = get_entries(
+        Direction::Dependents,
+        &roots,
+        &entrypoints,
+        None,
+        false,
+        &ctx,
+    )
+    .unwrap();
+    assert!(!entries.is_empty());
+}
+
+#[test]
+fn get_entries_supports_symbol_dependents_with_symbols_plan() {
+    let root = fixture_root("symbol-export");
+    let entrypoints = vec![
+        Entrypoint {
+            file: root.join("source.mts"),
+            node: NodeId::file(root.join("source.mts")),
+            symbol: Some("alpha".into()),
+        },
+        Entrypoint {
+            file: root.join("source.mts"),
+            node: NodeId::file(root.join("source.mts")),
+            symbol: None,
+        },
+    ];
+    let roots = entrypoints
+        .iter()
+        .map(|ep| NodeId::file(ep.file.clone()))
+        .collect::<Vec<_>>();
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph_files = graph::GraphFiles::discover(&root);
+    let ctx = TraversalCtx {
+        root: &root,
+        tsconfig: &tsconfig,
+        graph_files: &graph_files,
+        build_plan: graph::GraphBuildPlan::all(),
+        allowed: None,
+        symbols: true,
     };
 
     let entries = get_entries(

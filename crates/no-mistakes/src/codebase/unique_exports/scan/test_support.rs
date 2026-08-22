@@ -32,6 +32,7 @@ pub(crate) fn collect_source_files(root: &Path, files: &[PathBuf]) -> Result<Vec
                 disabled,
                 defer_suppression: false,
                 is_nextjs_project: nextjs_projects.contains_file(path),
+                is_remix_route_module: false,
                 symbols: symbols.into(),
             })
         })

@@ -1,6 +1,6 @@
-fn bfs<A>(
-    starts: &[NodeId],
-    edges: &FxHashMap<NodeId, A>,
+fn bfs<'a, A>(
+    starts: &'a [NodeId],
+    edges: &'a FxHashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
 ) -> Vec<NodeEntry>
@@ -10,9 +10,9 @@ where
     bfs_with_file_universe(starts, edges, max_depth, allowed, None)
 }
 
-fn bfs_in_file_universe<A>(
-    starts: &[NodeId],
-    edges: &FxHashMap<NodeId, A>,
+fn bfs_in_file_universe<'a, A>(
+    starts: &'a [NodeId],
+    edges: &'a FxHashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
     file_universe: &crate::fx::PathSet,
@@ -23,9 +23,9 @@ where
     bfs_with_file_universe(starts, edges, max_depth, allowed, Some(file_universe))
 }
 
-fn bfs_with_file_universe<A>(
-    starts: &[NodeId],
-    edges: &FxHashMap<NodeId, A>,
+fn bfs_with_file_universe<'a, A>(
+    starts: &'a [NodeId],
+    edges: &'a FxHashMap<NodeId, A>,
     max_depth: Option<usize>,
     allowed: Option<&HashSet<EdgeKind>>,
     file_universe: Option<&crate::fx::PathSet>,
@@ -33,19 +33,21 @@ fn bfs_with_file_universe<A>(
 where
     A: AsRef<[(NodeId, EdgeKind)]>,
 {
-    let mut visited: FxHashSet<NodeId> = fx_set();
-    let mut queue: VecDeque<(NodeId, usize)> = VecDeque::new();
+    // Working sets borrow NodeIds from `starts` / `edges`. Clone only when
+    // emitting an owned NodeEntry — each extra HashSet/Vec insert would
+    // otherwise bump every interned Arc.
+    let mut visited: FxHashSet<&NodeId> = fx_set();
+    let mut queue: VecDeque<(&NodeId, usize)> = VecDeque::new();
     let mut result: Vec<NodeEntry> = Vec::new();
-    let mut result_idx: FxHashMap<NodeId, usize> = fx_map();
-    let mut dynamic_import_files: FxHashSet<NodeId> = fx_set();
+    let mut result_idx: FxHashMap<&NodeId, usize> = fx_map();
+    let mut dynamic_import_files: FxHashSet<&NodeId> = fx_set();
 
     for start in starts {
         if file_universe.is_some_and(|universe| !start.is_in_file_universe(universe)) {
             continue;
         }
-        if !visited.contains(start) {
-            visited.insert(start.clone());
-            queue.push_back((start.clone(), 0));
+        if visited.insert(start) {
+            queue.push_back((start, 0));
         }
     }
     let root_nodes: FxHashSet<NodeId> = starts.iter().cloned().collect();
@@ -59,45 +61,45 @@ where
             continue;
         }
 
-        if let Some(neighbors) = edges.get(&node) {
-            for (neighbor, kind) in neighbors.as_ref() {
+        if let Some(neighbors) = edges.get(node) {
+            let neighbors: &'a [(NodeId, EdgeKind)] = neighbors.as_ref();
+            for (neighbor, kind) in neighbors {
                 if file_universe.is_some_and(|universe| !neighbor.is_in_file_universe(universe)) {
                     continue;
                 }
-                if dynamic_import_files.contains(&node) && matches!(neighbor, NodeId::Symbol { .. })
-                {
+                let from_is_dynamic_import_file = dynamic_import_files.contains(node);
+                if from_is_dynamic_import_file && matches!(neighbor, NodeId::Symbol { .. }) {
                     continue;
                 }
                 let owner_bridge_allowed = symbol_owner_bridge_allowed(
-                    &node,
+                    node,
                     neighbor,
                     &root_nodes,
-                    &dynamic_import_files,
+                    from_is_dynamic_import_file,
                 );
-                if is_symbol_owner_bridge(&node, neighbor) && !owner_bridge_allowed {
+                if is_symbol_owner_bridge(node, neighbor) && !owner_bridge_allowed {
                     continue;
                 }
-                if !edge_allowed(&node, neighbor, *kind, allowed, owner_bridge_allowed) {
+                if !edge_allowed(node, neighbor, *kind, allowed, owner_bridge_allowed) {
                     continue;
                 }
 
-                if !visited.contains(neighbor) {
-                    visited.insert(neighbor.clone());
+                if visited.insert(neighbor) {
                     let next_depth = depth + 1;
-                    if should_emit_node(&node, neighbor, *kind, allowed, owner_bridge_allowed) {
+                    if should_emit_node(node, neighbor, *kind, allowed, owner_bridge_allowed) {
                         let index = result.len();
                         result.push(NodeEntry {
                             node: neighbor.clone(),
                             depth: next_depth,
                             via: vec![*kind],
                         });
-                        result_idx.insert(neighbor.clone(), index);
+                        result_idx.insert(neighbor, index);
                     }
                     if *kind == EdgeKind::DynamicImport && matches!(neighbor, NodeId::File(_)) {
-                        dynamic_import_files.insert(neighbor.clone());
+                        dynamic_import_files.insert(neighbor);
                     }
-                    if should_expand_node(&node, neighbor, owner_bridge_allowed) {
-                        queue.push_back((neighbor.clone(), next_depth));
+                    if should_expand_node(node, neighbor, owner_bridge_allowed) {
+                        queue.push_back((neighbor, next_depth));
                     }
                 } else if let Some(&index) = result_idx.get(neighbor) {
                     add_via_kind(&mut result[index], *kind);

@@ -97,6 +97,7 @@ fn framework_plan(
         TestFramework::Cargo => &config.test_plan.cargo,
         TestFramework::Rails => &config.test_plan.rails,
         TestFramework::Php => &config.test_plan.php,
+        TestFramework::Jest => &config.test_plan.jest,
     }
 }
 
@@ -166,6 +167,7 @@ fn ignored_changed_test_sets(
             TestPlanIgnoredChangedTestsFramework::Cargo => TestRunner::Cargo,
             TestPlanIgnoredChangedTestsFramework::Rails => TestRunner::Rails,
             TestPlanIgnoredChangedTestsFramework::Php => TestRunner::Php,
+            TestPlanIgnoredChangedTestsFramework::Jest => TestRunner::Jest,
         };
         let set = match prepared.discover_runner_tests(runner) {
             Ok(discovered) => discovered.tests.into_iter().collect(),
@@ -301,5 +303,6 @@ fn test_runner(framework: TestFramework) -> TestRunner {
         TestFramework::Cargo => TestRunner::Cargo,
         TestFramework::Rails => TestRunner::Rails,
         TestFramework::Php => TestRunner::Php,
+        TestFramework::Jest => TestRunner::Jest,
     }
 }

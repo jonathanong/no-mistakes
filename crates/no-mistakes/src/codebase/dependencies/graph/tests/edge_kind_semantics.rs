@@ -157,6 +157,7 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
         &workspace,
         &graph_files,
         None,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert_eq!(
         lazy_neighbors,

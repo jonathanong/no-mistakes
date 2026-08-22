@@ -66,11 +66,7 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
                         occurrence.suppression_location = Some(location);
                         occurrence.suppressed = true;
                     }
-                    if !super::nextjs::is_framework_export(
-                        &occurrence.file,
-                        &occurrence.name,
-                        file.is_nextjs_project,
-                    ) {
+                    if !skips_framework_export(file, &occurrence.file, &occurrence.name) {
                         out.push(occurrence);
                     }
                 }
@@ -148,7 +144,12 @@ pub(super) fn collect_file_exports<R: ImportResolverFacade>(
 pub(super) fn should_skip_export(file: &SourceFile, export: &Export) -> bool {
     export.name == "default"
         || (!file.defer_suppression && current_suppression_location(file, export).is_some())
-        || super::nextjs::is_framework_export(&file.rel, &export.name, file.is_nextjs_project)
+        || skips_framework_export(file, &file.rel, &export.name)
+}
+
+fn skips_framework_export(file: &SourceFile, rel: &str, name: &str) -> bool {
+    super::nextjs::is_framework_export(rel, name, file.is_nextjs_project)
+        || super::remix::is_framework_export(name, file.is_remix_route_module)
 }
 
 pub(super) fn current_suppression_location(

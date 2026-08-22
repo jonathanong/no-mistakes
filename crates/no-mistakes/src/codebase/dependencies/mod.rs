@@ -10,6 +10,7 @@ use std::io;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use crate::codebase::analysis_session::PathInterner;
 pub use crate::codebase::ts_resolver::TsConfig;
 pub use graph::{DepGraph, EdgeKind, NodeId};
 
