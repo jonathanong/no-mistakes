@@ -30,6 +30,9 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         POSTGRES_LOCK_ORDERING => {
             postgres_lock_ordering::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_NO_OFFSET => {
+            postgres_no_offset::check_with_files_and_sources(root, config, files, sources)
+        }
         INTEGRATION_TEST_NO_MOCKS => {
             integration_test_no_mocks::check_with_files_and_sources(root, config, files, sources)
         }

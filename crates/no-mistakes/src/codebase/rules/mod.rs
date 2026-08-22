@@ -37,6 +37,7 @@ pub mod postgres_constraint_validate;
 pub mod postgres_fk_index;
 pub mod postgres_lock_ordering;
 pub mod postgres_no_generated_column_writes;
+pub mod postgres_no_offset;
 pub mod postgres_redundant_index;
 pub mod production_dependency_declarations;
 pub mod require_files_in_subdirs;
