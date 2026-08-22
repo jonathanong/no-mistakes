@@ -41,7 +41,7 @@ fn parse_java_file(
         path: path.to_path_buf(),
         package,
         module,
-        imports: extract_java_imports(&text),
+        imports: extract_java_imports(&symbols),
         declarations,
         references: extract_named(&symbols, java_ref_re()),
         route_handlers: http::extract_http_routes(&text),

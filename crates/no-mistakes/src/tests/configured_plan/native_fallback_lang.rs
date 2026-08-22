@@ -158,7 +158,7 @@ fn is_java_test(rel: &str) -> bool {
     name.ends_with("Test.java")
         || name.ends_with("Tests.java")
         || name.ends_with("IT.java")
-        || rel.contains("/src/test/") && name.ends_with(".java")
+        || (rel.contains("/src/test/") || rel.starts_with("src/test/")) && name.ends_with(".java")
 }
 
 fn is_cargo_test(rel: &str) -> bool {

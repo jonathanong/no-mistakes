@@ -108,7 +108,7 @@ fn is_java_test_path(rel: &str) -> bool {
     name.ends_with("Test.java")
         || name.ends_with("Tests.java")
         || name.ends_with("IT.java")
-        || rel.contains("/src/test/") && name.ends_with(".java")
+        || (rel.contains("/src/test/") || rel.starts_with("src/test/")) && name.ends_with(".java")
 }
 
 fn has_path_segment_pair(path: &str, first: &str, second: &str) -> bool {

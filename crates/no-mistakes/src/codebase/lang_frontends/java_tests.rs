@@ -14,6 +14,19 @@ import static java.util.List.of;
 }
 
 #[test]
+fn string_literal_imports_are_skipped() {
+    let source = r#"
+public class App {
+  String s = """
+import com.example.User;
+""";
+}
+"#;
+    let symbols = crate::codebase::lang_frontends::strip::mask_strings(source);
+    assert!(extract_java_imports(&symbols).is_empty());
+}
+
+#[test]
 fn java_collects_package_imports_and_spring_routes() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
