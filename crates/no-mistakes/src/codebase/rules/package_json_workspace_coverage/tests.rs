@@ -92,7 +92,7 @@ fn allowlist_normalizes_relative_package_json_paths() {
 }
 
 #[test]
-fn skips_non_package_files_and_unnamed_packages_when_required() {
+fn require_named_package_reports_unnamed_manifests() {
     let root = fixture_root("missing");
     let files = vec![
         root.join("package.json"),
@@ -107,7 +107,13 @@ fn skips_non_package_files_and_unnamed_packages_when_required() {
     )
     .unwrap();
 
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file == "packages/unnamed/package.json"
+                && finding.message.contains("must declare a name")
+        }),
+        "{findings:?}"
+    );
     assert_eq!(
         package_name(&root.join("packages/unnamed/package.json")),
         None
