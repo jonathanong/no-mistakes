@@ -1,6 +1,8 @@
 "use strict";
 
 const fs = require("node:fs");
+const os = require("node:os");
+const path = require("node:path");
 const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
 
 async function callJson(fn, options) {
@@ -73,6 +75,27 @@ function decamelizePlanOptions(options = {}) {
   return next;
 }
 
+function materializeWhyPlan(options = {}) {
+  const next = { ...options };
+  let document = next.planJson;
+  if (document == null && typeof next.plan === "string") {
+    try {
+      document = JSON.parse(fs.readFileSync(next.plan, "utf8"));
+    } catch {
+      return next;
+    }
+  }
+  if (document == null) return next;
+  const tmp = path.join(
+    os.tmpdir(),
+    `no-mistakes-why-plan-${process.pid}-${Date.now().toString(36)}.json`,
+  );
+  fs.writeFileSync(tmp, JSON.stringify(loadPlanJson(document)));
+  next.plan = tmp;
+  delete next.planJson;
+  return next;
+}
+
 function camelizeWhy(value) {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
     return camelizeValue(value);
@@ -123,7 +146,7 @@ async function testsTargets(options) {
 }
 
 async function testsWhy(options) {
-  return camelizeWhy(await jsonApis.testsWhy(decamelizePlanOptions(options)));
+  return camelizeWhy(await jsonApis.testsWhy(materializeWhyPlan(options)));
 }
 
 async function testsGraph(options) {
@@ -134,6 +157,7 @@ module.exports = {
   camelizeValue,
   camelizeWhy,
   decamelizePlanOptions,
+  materializeWhyPlan,
   testsComment,
   testsGraphMermaid,
   ...jsonApis,
