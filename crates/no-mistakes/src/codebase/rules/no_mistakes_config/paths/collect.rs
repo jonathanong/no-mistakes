@@ -101,7 +101,7 @@ fn collect_test_plan(config: &NoMistakesConfig, refs: &mut Vec<Ref>) {
     }
 }
 
-pub(super) fn frameworks(
+pub(crate) fn frameworks(
     config: &NoMistakesConfig,
 ) -> [(&'static str, &TestPlanFrameworkConfig); 14] {
     [
