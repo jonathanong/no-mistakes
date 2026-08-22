@@ -335,3 +335,28 @@ fn legacy_symbol_parse_mode_memoizes_recovered_diagnostic() {
     assert_eq!(work["parse.files"], 1);
     assert_eq!(work["parse.errors"], 1);
 }
+
+#[test]
+fn recovered_typescript_parse_counts_diagnostics_and_hard_failures() {
+    let observer = InvocationObserver::new(true);
+    let session = AnalysisSession::new(Some(Arc::clone(&observer)));
+    let diagnostic_path = normalize_path(&PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/symbols-output/fixture/src/recoverable-diagnostic.mts",
+    ));
+    let diagnostic_source = session.read_source(&diagnostic_path).unwrap();
+
+    crate::ast::with_request_parse_cache(|| {
+        session
+            .with_recovered_typescript_program(
+                &diagnostic_path,
+                &diagnostic_source,
+                |_, _, error| {
+                    assert!(error.is_some());
+                },
+            )
+            .unwrap();
+    });
+
+    let work = observer.snapshot().work;
+    assert_eq!(work["parse.errors"], 1);
+}

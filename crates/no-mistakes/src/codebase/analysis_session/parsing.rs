@@ -22,9 +22,7 @@ impl AnalysisSession {
             },
             analyze,
         );
-        if parse_started.get() && result.is_err() {
-            self.increment("parse.errors", 1);
-        }
+        self.record_parse_error_if(parse_started.get(), result.is_err());
         result
     }
 
@@ -60,15 +58,11 @@ impl AnalysisSession {
                 self.record_parse(&path);
             },
             |program, source, parse_error, panicked| {
-                if parse_started.get() && parse_error.is_some() {
-                    self.increment("parse.errors", 1);
-                }
+                self.record_parse_error_if(parse_started.get(), parse_error.is_some());
                 analyze(program, source, parse_error, panicked)
             },
         );
-        if parse_started.get() && result.is_err() {
-            self.increment("parse.errors", 1);
-        }
+        self.record_parse_error_if(parse_started.get(), result.is_err());
         result
     }
 
@@ -91,15 +85,11 @@ impl AnalysisSession {
                 self.record_parse(&path);
             },
             |program, source, parse_error| {
-                if parse_started.get() && parse_error.is_some() {
-                    self.increment("parse.errors", 1);
-                }
+                self.record_parse_error_if(parse_started.get(), parse_error.is_some());
                 analyze(program, source, parse_error)
             },
         );
-        if parse_started.get() && result.is_err() {
-            self.increment("parse.errors", 1);
-        }
+        self.record_parse_error_if(parse_started.get(), result.is_err());
         result
     }
 
@@ -122,15 +112,11 @@ impl AnalysisSession {
                 self.record_parse(&path);
             },
             |program, source, parse_error| {
-                if parse_started.get() && parse_error.is_some() {
-                    self.increment("parse.errors", 1);
-                }
+                self.record_parse_error_if(parse_started.get(), parse_error.is_some());
                 analyze(program, source, parse_error)
             },
         );
-        if parse_started.get() && result.is_err() {
-            self.increment("parse.errors", 1);
-        }
+        self.record_parse_error_if(parse_started.get(), result.is_err());
         result
     }
 
@@ -153,6 +139,12 @@ impl AnalysisSession {
         self.increment("parse.files", 1);
         if let Some(attempts) = &self.parse_attempts {
             *attempts.entry(path.to_path_buf()).or_default() += 1;
+        }
+    }
+
+    fn record_parse_error_if(&self, started: bool, failed: bool) {
+        if started && failed {
+            self.increment("parse.errors", 1);
         }
     }
 

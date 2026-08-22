@@ -65,6 +65,7 @@ fn legacy_symbols_share_only_ordinary_typescript_cache_entries() {
         "source.d.mts",
         "source.d.cts",
         "index.d.css.ts",
+        "unsupported.runner-config",
     ] {
         assert!(
             !super::legacy_symbols_share_standard_parse(Path::new(path)),
@@ -79,6 +80,7 @@ fn legacy_symbols_reuse_or_split_physical_cache_by_source_semantics() {
         ("source.ts", 1),
         ("source.tsx", 1),
         ("source.js", 2),
+        ("source.jsx", 2),
         ("source.mts", 2),
         ("source.cts", 2),
         ("source.d.ts", 2),
