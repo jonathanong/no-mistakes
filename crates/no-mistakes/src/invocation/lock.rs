@@ -9,6 +9,14 @@ use std::time::Duration;
 const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(50);
 
 pub(super) fn lock_path() -> Result<PathBuf> {
+    // Cargo integration tests spawn this binary with `CARGO_BIN_EXE_*` set and
+    // run in parallel, so a shared user lock would print wait progress onto
+    // captured stderr. Isolate each test process instead.
+    if std::env::var_os("CARGO_BIN_EXE_no-mistakes").is_some() {
+        let directory = std::env::temp_dir().join("no-mistakes-test-locks");
+        create_lock_directory(&directory)?;
+        return Ok(directory.join(format!("{}.lock", std::process::id())));
+    }
     let project_dirs = ProjectDirs::from("", "", "no-mistakes")
         .context("could not determine the current user's invocation lock directory")?;
     let directory = project_dirs
