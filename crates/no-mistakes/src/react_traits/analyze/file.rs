@@ -1,4 +1,5 @@
 use crate::ast;
+use crate::codebase::ts_source::SourceStore;
 use crate::imports::{
     collect_identifier_references, collect_runtime_imports_from_program, relative_string,
 };
@@ -11,6 +12,7 @@ use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environme
 use crate::react_traits::traits;
 use anyhow::Result;
 use std::path::Path;
+use std::sync::Arc;
 
 pub(crate) struct FileAnalysis {
     pub(crate) components: std::sync::Arc<Vec<ComponentFacts>>,
@@ -20,23 +22,30 @@ pub(crate) struct FileAnalysis {
 mod tests;
 
 pub(crate) fn analyze_file(abs_path: &Path, root: &Path) -> Result<FileAnalysis> {
-    analyze_file_inner(abs_path, root, None)
+    analyze_file_inner(abs_path, root, None, None)
 }
 
 pub(crate) fn analyze_file_from_visible(
     abs_path: &Path,
     root: &Path,
     visible_files: &crate::fx::PathSet,
+    sources: Option<&SourceStore>,
 ) -> Result<FileAnalysis> {
-    analyze_file_inner(abs_path, root, Some(visible_files))
+    analyze_file_inner(abs_path, root, Some(visible_files), sources)
 }
 
 fn analyze_file_inner(
     abs_path: &Path,
     root: &Path,
     visible_files: Option<&crate::fx::PathSet>,
+    sources: Option<&SourceStore>,
 ) -> Result<FileAnalysis> {
-    let source = std::fs::read_to_string(abs_path)?;
+    let source: Arc<str> = match sources {
+        Some(store) => store
+            .read_path(abs_path)
+            .map_err(|error| anyhow::anyhow!("{error}"))?,
+        None => std::fs::read_to_string(abs_path)?.into(),
+    };
     ast::with_program(abs_path, &source, |program, _src| {
         analyze_program_inner(abs_path, root, &source, program, visible_files)
     })

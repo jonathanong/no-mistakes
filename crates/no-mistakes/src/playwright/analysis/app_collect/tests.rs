@@ -59,6 +59,7 @@ fn empty_selector_root_scans_the_whole_repository() {
 fn app_selector_and_text_collectors_read_through_snapshot_source_store() {
     let app_collect = include_str!("../app_collect.rs");
     let app_text = include_str!("../app_text.rs");
+    let cross_file = include_str!("../../selectors/dynamic_values/cross_file.rs");
     assert!(
         !app_collect.contains("std::fs::read_to_string"),
         "selector scans must reuse the snapshot SourceStore"
@@ -69,6 +70,10 @@ fn app_selector_and_text_collectors_read_through_snapshot_source_store() {
         "text scans must reuse the snapshot SourceStore"
     );
     assert!(app_text.contains("read_snapshot_source"));
+    assert!(
+        !cross_file.contains("std::fs::read_to_string"),
+        "imported selector sources must reuse the snapshot SourceStore"
+    );
 }
 
 /// Selector and text scans walk the same files. The second pass must hit the

@@ -87,6 +87,38 @@ fn multi_component_scopes_fetch_to_component_span() {
     );
 }
 
+#[test]
+fn analyze_file_from_visible_reuses_prepared_source_store() {
+    use crate::codebase::ts_source::{FileInventory, SourceStore};
+    use std::sync::Arc;
+
+    let root = fixture("react-traits-components", "basic");
+    let file = root.join("app/components/Greeting.tsx");
+    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&file)));
+    let store = SourceStore::new(inventory);
+    let visible: crate::fx::PathSet = [crate::codebase::ts_resolver::normalize_path(&file)]
+        .into_iter()
+        .collect();
+
+    let first = super::analyze_file_from_visible(&file, &root, &visible, Some(&store))
+        .expect("should succeed");
+    let reads = store.physical_read_count();
+    assert!(
+        reads >= 1,
+        "react file analysis must read through the prepared SourceStore"
+    );
+
+    let second = super::analyze_file_from_visible(&file, &root, &visible, Some(&store))
+        .expect("should succeed");
+    assert_eq!(first.components[0].name, "default");
+    assert_eq!(second.components[0].name, "default");
+    assert_eq!(
+        store.physical_read_count(),
+        reads,
+        "react file analysis must reuse the prepared SourceStore"
+    );
+}
+
 fn analyze_program_inner_source() -> &'static str {
     let source = include_str!("../file.rs");
     let start = source

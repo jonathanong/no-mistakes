@@ -10,7 +10,7 @@ pub(super) fn run_analyze_inner(
     let root = crate::codebase::ts_source::normalize_discovery_path(root);
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let visible_paths = snapshot.paths_for(&root);
-    run_analyze_inner_from_visible(&root, file_config, targets, depth, &visible_paths)
+    run_analyze_inner_from_visible(&root, file_config, targets, depth, &visible_paths, None)
 }
 
 pub(super) fn aggregate_children(
@@ -27,5 +27,15 @@ pub(super) fn aggregate_children(
             components,
         )
     }));
-    aggregate_children_inner(facts, file_cache, &root, None, visited)
+    aggregate_children_inner(facts, file_cache, &root, None, None, visited)
+}
+
+pub(super) fn aggregate_children_from_visible(
+    facts: &ComponentFacts,
+    file_cache: &mut HashMap<PathBuf, Vec<ComponentFacts>>,
+    root: &Path,
+    visible_files: &crate::fx::PathSet,
+    visited: &mut HashSet<String>,
+) -> AggregatedFacts {
+    aggregate_children_inner(facts, file_cache, root, Some(visible_files), None, visited)
 }

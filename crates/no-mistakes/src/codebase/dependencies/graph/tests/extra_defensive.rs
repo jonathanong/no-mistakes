@@ -60,13 +60,15 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
     assert!(collect_md_edges(
         &[PathBuf::from("/")],
         &graph_files,
-        &crate::codebase::analysis_session::PathInterner::new()
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     )
     .is_empty());
     assert!(collect_md_edges(
         &[PathBuf::from("README.md")],
         &graph_files,
-        &crate::codebase::analysis_session::PathInterner::new()
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     )
     .is_empty());
 
@@ -80,6 +82,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
         &mut forward,
         &mut reverse,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(forward.is_empty());
 

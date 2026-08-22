@@ -38,6 +38,7 @@ fn collect_workflow_topology_edges(
     parsed: &crate::codebase::ci_workflows::ParsedWorkflowSet,
     topology: &crate::codebase::workflow_topology::model::WorkflowTopology,
     interner: &PathInterner,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Vec<Edge> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let universe: HashSet<PathBuf> = all_files.iter().cloned().collect();
@@ -124,8 +125,17 @@ fn collect_workflow_topology_edges(
         }
     }
 
+    let mut all_files: Vec<PathBuf> = universe.iter().cloned().collect();
+    all_files.sort();
+    let bins = collect_cargo_bins(&root, &all_files, sources);
+    let mut resolver = WorkflowRunResolver::new(&root, &universe, &bins, sources);
     add_workflow_run_edges(
-        &root, &universe, parsed, &jobs, &steps, &mut edges, interner,
+        parsed,
+        &jobs,
+        &steps,
+        &mut edges,
+        interner,
+        &mut resolver,
     );
     edges.sort();
     edges.dedup();
@@ -133,18 +143,13 @@ fn collect_workflow_topology_edges(
 }
 
 fn add_workflow_run_edges(
-    root: &Path,
-    universe: &HashSet<PathBuf>,
     parsed: &crate::codebase::ci_workflows::ParsedWorkflowSet,
     jobs: &HashMap<String, NodeId>,
     steps: &HashMap<(String, usize), NodeId>,
     edges: &mut Vec<Edge>,
     interner: &PathInterner,
+    resolver: &mut WorkflowRunResolver<'_>,
 ) {
-    let mut all_files: Vec<PathBuf> = universe.iter().cloned().collect();
-    all_files.sort();
-    let bins = collect_cargo_bins(root, &all_files);
-    let mut resolver = WorkflowRunResolver::new(root, universe, &bins);
     for document in &parsed.documents {
         let Ok(workflow) = document.value.as_ref() else {
             continue;
@@ -174,7 +179,7 @@ fn add_workflow_run_edges(
                     continue;
                 };
                 let Some(working_directory) =
-                    workflow_run_working_directory(root, workflow, raw_job, raw_step)
+                    workflow_run_working_directory(&resolver.root, workflow, raw_job, raw_step)
                 else {
                     continue;
                 };

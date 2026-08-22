@@ -20,14 +20,15 @@ pub(super) fn filter_source_files(files: &[PathBuf]) -> Vec<PathBuf> {
         .collect()
 }
 
-pub(super) fn collect_source_files_from_facts(
+pub(super) fn collect_source_files_from_facts_with_sources(
     root: &Path,
     files: &[PathBuf],
     shared: &crate::codebase::check_facts::CheckFactMap,
     defer_suppression: bool,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
     remix_roots: &[PathBuf],
 ) -> Result<Vec<SourceFile>> {
-    let nextjs_projects = NextJsProjectLookup::new(root, files, shared.files());
+    let nextjs_projects = NextJsProjectLookup::with_sources(root, files, shared.files(), sources);
     let mut source_files = Vec::new();
     for path in files {
         let Some(facts) = shared.ts.get(path) else {
@@ -67,7 +68,12 @@ pub(super) struct NextJsProjectLookup {
 }
 
 impl NextJsProjectLookup {
-    pub(super) fn new(root: &Path, files: &[PathBuf], visible_files: &[PathBuf]) -> Self {
+    pub(super) fn with_sources(
+        root: &Path,
+        files: &[PathBuf],
+        visible_files: &[PathBuf],
+        sources: Option<&crate::codebase::ts_source::SourceStore>,
+    ) -> Self {
         let root = normalize_path(root);
         let visible_files = visible_files
             .iter()
@@ -101,7 +107,7 @@ impl NextJsProjectLookup {
                 directory,
                 parent_is_nextjs
                     || (visible_files.contains(&manifest)
-                        && package_json_has_next_dependency(&manifest)),
+                        && package_json_has_next_from(&manifest, sources)),
             );
         }
         Self { directories }
@@ -115,11 +121,13 @@ impl NextJsProjectLookup {
     }
 }
 
-pub(super) fn package_json_has_next_dependency(path: &Path) -> bool {
-    let Ok(source) = std::fs::read_to_string(path) else {
-        return false;
-    };
-    let Ok(package_json) = serde_json::from_str::<serde_json::Value>(&source) else {
+pub(super) fn package_json_has_next_from(
+    path: &Path,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> bool {
+    let Some(package_json) =
+        crate::codebase::ts_source::SourceStore::parse_json_optional(sources, path)
+    else {
         return false;
     };
     for field in ["dependencies", "devDependencies", "peerDependencies"] {

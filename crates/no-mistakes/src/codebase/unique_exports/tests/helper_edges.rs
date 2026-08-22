@@ -34,7 +34,7 @@ fn scan_helpers_cover_filter_and_parse_edges() {
     // PathBuf::from("/") has parent() == None, exercising the unwrap_or_else fallback.
     let lookup = scan::NextJsProjectLookup::new(&root, &[PathBuf::from("/")], &[]);
     assert!(!lookup.contains_file(Path::new("/")));
-    assert!(!scan::package_json_has_next_dependency(
+    assert!(!scan::test_support::package_json_has_next_dependency(
         &fixture("unique-exports-malformed-package").join("package.json")
     ));
 }
@@ -234,10 +234,44 @@ fn deferred_reexports_keep_named_reexports_lexically_visible() {
         Some(std::cmp::Ordering::Equal)
     );
 
-    assert!(!scan::package_json_has_next_dependency(
+    assert!(!scan::test_support::package_json_has_next_dependency(
         &root.join("package.json")
     ));
-    assert!(!scan::package_json_has_next_dependency(
+    assert!(!scan::test_support::package_json_has_next_dependency(
         &root.join("missing-package.json")
     ));
+}
+
+fn occurrence(file: &str, line: u32, suppressed: bool) -> ExportOccurrence {
+    let loc = suppressed.then(|| (file.to_string(), line));
+    ExportOccurrence {
+        name: "Dup".to_string(),
+        bucket: ExportBucket::Value,
+        file: file.to_string(),
+        line,
+        kind: "value".to_string(),
+        origin: ExportOrigin {
+            file: file.to_string(),
+            line,
+            name: "Dup".to_string(),
+            bucket: ExportBucket::Value,
+            suppressed,
+            suppression_location: loc.clone(),
+        },
+        suppressed,
+        suppression_location: loc,
+    }
+}
+
+#[test]
+fn unique_export_findings_keeps_all_suppressed_duplicates_as_sidecars() {
+    let findings = unique_export_findings(
+        vec![occurrence("a.ts", 1, true), occurrence("b.ts", 2, true)],
+        UniqueExportsOptions {
+            unique_across_types_and_values: false,
+        },
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1);
+    assert_eq!(findings[0].finding.file, "b.ts");
 }

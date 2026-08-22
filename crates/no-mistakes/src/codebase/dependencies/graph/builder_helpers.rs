@@ -1,3 +1,26 @@
+use crate::codebase::ts_source::SourceStore;
+
+fn graph_edge_sources(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    edge_inputs: &GraphEdgeBuildInputs<'_>,
+) -> Arc<SourceStore> {
+    session
+        .existing_sources_for(edge_inputs.root)
+        .or_else(|| {
+            edge_inputs
+                .visible_paths
+                .map(|snapshot| snapshot.source_store_for(edge_inputs.root))
+        })
+        .unwrap_or_else(|| {
+            Arc::new(SourceStore::new_observed(
+                Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
+                    &edge_inputs.graph_files.all,
+                )),
+                session.observer().cloned(),
+            ))
+        })
+}
+
 struct GraphEdgeBuildInputs<'a> {
     root: &'a Path,
     tsconfig: &'a TsConfig,
@@ -14,6 +37,12 @@ struct GraphEdgeBuildInputs<'a> {
     visible_paths: Option<&'a crate::codebase::ts_source::VisiblePathSnapshot>,
     workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
     interner: Arc<PathInterner>,
+}
+
+fn require_playwright_route_snapshot(
+    snapshot: Option<&crate::playwright::fsutil::VisiblePathSnapshot>,
+) -> Result<&crate::playwright::fsutil::VisiblePathSnapshot> {
+    snapshot.ok_or_else(|| anyhow::anyhow!("Playwright graph plan requires a visible-path snapshot"))
 }
 
 fn parsed_imports_for_plan<'a>(

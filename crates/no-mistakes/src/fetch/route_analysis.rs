@@ -177,7 +177,7 @@ impl FetchTraversal<'_> {
                 self.fetches,
                 self.cache,
                 inherited,
-                visible,
+                (visible, self.session),
             ),
             (None, _) => {
                 let (inherited_is_client, inherited_is_route_handler) = inherited;

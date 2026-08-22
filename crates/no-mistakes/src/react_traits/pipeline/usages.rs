@@ -13,7 +13,7 @@ use crate::react_traits::report::types::{Callsite, RootConfig, UsagesReport, Usa
 use anyhow::Result;
 use helpers::{
     callsite_symbol_matches, filter_importers, importer_symbol_matches, is_story, is_test,
-    prop_type_names, same_path, split_target,
+    prop_type_names_with_sources, same_path, split_target,
 };
 use rayon::prelude::*;
 use std::collections::BTreeSet;
@@ -139,6 +139,7 @@ pub fn run_usages(
     let root = crate::codebase::ts_source::normalize_discovery_path(root);
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let visible_paths = snapshot.paths_for(&root);
+    let sources = snapshot.source_store_for(&root);
     let root_config: RootConfig = crate::config::load_config_from_visible(
         &root,
         config_path,
@@ -153,6 +154,7 @@ pub fn run_usages(
         include,
         &file_config,
         &visible_paths,
+        Some(&sources),
     )
 }
 
