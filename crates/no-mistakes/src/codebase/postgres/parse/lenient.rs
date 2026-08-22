@@ -36,6 +36,10 @@ pub(super) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
     recover::concatenated_strings(&tokens)
 }
 
+pub(super) fn rewrite_chr_tokens(tokens: &mut Vec<Token>) {
+    rewrite_chr_calls(tokens);
+}
+
 fn looks_like_chr_call(sql: &str) -> bool {
     sql.to_ascii_lowercase()
         .split_whitespace()

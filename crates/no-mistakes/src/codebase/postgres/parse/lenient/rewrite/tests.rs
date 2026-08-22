@@ -29,3 +29,18 @@ fn rewrites_chr_to_a_string_literal() {
         Token::SingleQuotedString(value) if value == "\\"
     )));
 }
+
+#[test]
+fn leaves_chr_without_call_parens_or_a_numeric_arg() {
+    for sql in ["ESCAPE chr 92", "ESCAPE chr(id)"] {
+        let mut parsed = tokens(sql);
+        rewrite_chr_calls(&mut parsed);
+        assert!(
+            parsed.iter().any(|token| matches!(
+                token,
+                Token::Word(word) if word.value.eq_ignore_ascii_case("chr")
+            )),
+            "{sql}"
+        );
+    }
+}
