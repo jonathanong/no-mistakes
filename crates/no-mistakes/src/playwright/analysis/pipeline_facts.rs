@@ -17,7 +17,8 @@ pub(crate) fn standalone_facts(
         let sources = snapshot.source_store_for(root);
         let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
             None, root, &paths, &sources,
-        )?;
+        );
+        let tsconfig = tsconfig?;
         let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
             .unwrap_or_default();
         fact_plan.configure_module_resolution(
@@ -75,13 +76,15 @@ pub(crate) fn extend_standalone_fact_plan(
         &settings.playwright_configs,
         settings.project.as_deref(),
         Some(snapshot.source_store_for(root).as_ref()),
-    )?;
+    );
+    let playwright = playwright?;
     let test_files = crate::playwright::analysis::discover::discover_test_files_from_visible(
         root,
         settings,
         &playwright,
         snapshot,
-    )?;
+    );
+    let test_files = test_files?;
     for test_file in &test_files {
         let attributes = test_file.test_id_attributes();
         fact_plan.add_file(crate::codebase::check_facts::PlaywrightFactSelection {
@@ -100,11 +103,12 @@ pub(crate) fn extend_standalone_fact_plan(
         });
     }
     fact_plan.add_test_files_for_project(settings.project.clone(), std::sync::Arc::new(test_files));
-    fact_plan.add_source_settings(
+    let added = fact_plan.add_source_settings(
         root,
         settings.clone(),
         unique_selector_policy.html_ids && !settings.html_ids,
         snapshot,
-    )?;
+    );
+    added?;
     Ok(())
 }

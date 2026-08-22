@@ -73,7 +73,8 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftR
         &codebase_config,
         &config,
         &visible_paths,
-    )?;
+    );
+    let prepared_graph = prepared_graph?;
     let all_files = graph_files.all();
     let facts = collect_swift_facts(&root, all_files, &packages);
     crate::invocation::check_timeout()?;
@@ -85,7 +86,8 @@ pub fn analyze_project(root: &Path, config_path: Option<&Path>) -> Result<SwiftR
         config_path,
         &prepared_graph,
         &facts,
-    )?;
+    );
+    let graph = graph?;
     crate::invocation::check_timeout()?;
     let mut targets = HashMap::new();
     for package in &facts.packages {

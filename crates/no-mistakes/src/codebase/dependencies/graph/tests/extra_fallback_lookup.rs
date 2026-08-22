@@ -66,7 +66,7 @@ fn lazy_import_neighbors_skip_invisible_targets_and_keep_external_modules() {
         TsFileFacts {
             imports: vec![
                 ExtractedImport {
-                    specifier: "./missing-not-visible.mts".to_string(),
+                    specifier: "./b.mts".to_string(),
                     kind: ImportKind::Static,
                     line: 1,
                     function_scope: None,
@@ -105,6 +105,6 @@ fn lazy_import_neighbors_skip_invisible_targets_and_keep_external_modules() {
     assert!(
         neighbors
             .iter()
-            .all(|(node, _)| node.as_file() != Some(root.join("missing-not-visible.mts").as_path()))
+            .all(|(node, _)| node.as_file() != Some(root.join("b.mts").as_path()))
     );
 }
