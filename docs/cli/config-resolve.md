@@ -17,7 +17,7 @@ no-mistakes config resolve [--root <dir>] [--config <path>]
 | `--root` | Project root directory (default: current directory). |
 | `--config` | Path to `.no-mistakes.yml` (auto-discovered when omitted). |
 
-Output is JSON on stdout. Named Vitest `fullSuiteTriggers` list entries appear
+Output is compact serde JSON plus a trailing newline. Named Vitest `fullSuiteTriggers` list entries appear
 under `vitestFullSuiteTriggers` with `source: "triggers"`. Deprecated
 project-keyed Vitest triggers use `source: "projects"`. The additive
 `fullSuiteTriggers` array repeats those entries under `framework: "vitest"` and

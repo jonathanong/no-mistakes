@@ -35,7 +35,12 @@ fn config_resolve_prints_vitest_and_per_framework_triggers() {
         "config resolve should succeed: {}",
         stdout(&output)
     );
-    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let text = stdout(&output);
+    assert!(
+        !text.trim_end().contains('\n'),
+        "config resolve JSON must stay compact"
+    );
+    let report: serde_json::Value = serde_json::from_str(&text).unwrap();
     let vitest_names: Vec<&str> = report["vitestFullSuiteTriggers"]
         .as_array()
         .unwrap()

@@ -10,8 +10,8 @@ message: >-
   through callJson so the package facade has one parse/stringify implementation.
 rule:
   any:
-    - pattern: JSON.parse(await native.$NAME(JSON.stringify($OPTIONS || {})))
-    - pattern: JSON.parse(await native[$NAME](JSON.stringify($OPTIONS || {})))
+    - pattern: JSON.parse(await native.$NAME($INPUT))
+    - pattern: JSON.parse(await native[$NAME]($INPUT))
 files:
   - "packages/no-mistakes/index.js"
   - "packages/no-mistakes/planning.js"
