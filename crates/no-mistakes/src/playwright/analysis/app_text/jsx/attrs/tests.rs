@@ -113,4 +113,8 @@ fn jsx_attr_helpers_cover_static_dynamic_and_ts_wrapped_values() {
     assert_eq!(snapshots["size-dynamic"].size, None);
     assert_eq!(snapshots["size-negative"].size, None);
     assert_eq!(snapshots["size-element"].size, None);
+    assert!(!snapshots["label-jsx-child"].label_exists);
+    assert_eq!(snapshots["aria-jsx-child"].aria_hidden, None);
+    assert_eq!(snapshots["size-jsx-child"].size, None);
+    assert!(snapshots["label-spread"].label_exists);
 }

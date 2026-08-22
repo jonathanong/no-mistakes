@@ -85,6 +85,7 @@ include!("extra_symbol_defensive.rs");
 include!("extra_symbol_helpers.rs");
 include!("extra_symbol_visibility.rs");
 include!("extra_symbol.rs");
+include!("lang_emit.rs");
 include!("extra_symbol_gitignore.rs");
 include!("extra_symlink_visible_paths.rs");
 include!("extra_gitignore_pass3.rs");

@@ -84,3 +84,6 @@ pub(super) fn parse(
     }
     Ok(projects)
 }
+
+#[cfg(test)]
+mod tests;

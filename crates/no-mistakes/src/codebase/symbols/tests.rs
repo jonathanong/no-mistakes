@@ -507,4 +507,36 @@ fn import_with_unresolvable_source_omits_resolved() {
     assert!(imp.get("resolved").is_none());
 }
 
+#[test]
+fn collect_entries_with_timings_covers_phase_marks() {
+    let mut args = fixture_args(vec!["src/utils.mts"], Format::Json);
+    args.timings = true;
+    super::run(args).unwrap();
+}
+
+#[test]
+fn collect_entries_with_prepared_facts_requires_symbol_facts() {
+    let root = fixture_root();
+    let args = fixture_args(vec!["src/utils.mts"], Format::Json);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(None);
+    let visible: crate::fx::PathSet = std::iter::empty::<PathBuf>().collect();
+    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+        &root,
+        std::slice::from_ref(&root),
+        &[],
+    );
+    let facts = crate::codebase::check_facts::CheckFactMap::default();
+    let err = collect_entries_with_prepared_facts(
+        &args,
+        &root,
+        &catalog,
+        &visible,
+        &facts,
+        &facts,
+        session.as_ref(),
+    )
+    .unwrap_err();
+    assert!(format!("{err:#}").contains("utils.mts"));
+}
+
 include!("tests_output_extended.rs");
