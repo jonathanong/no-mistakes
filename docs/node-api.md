@@ -255,6 +255,11 @@ edges.
 `check(options)` returns the same structured check report as CLI JSON,
 including `warnings: string[]` for configured checks that could not run.
 
+`resolveConfig(options)` returns the same JSON as `config resolve`: frontend
+apps, Playwright coverage gates, Vitest `vitestFullSuiteTriggers`, and the
+additive `fullSuiteTriggers` array keyed by `TestPlanFramework`. Existing
+`vitestFullSuiteTriggers` contents stay unchanged.
+
 The Node declarations model the stable report DTOs for `fetches()`, `queues()`,
 `reactAnalyze()`, and `check()`. Fetch reports use `FetchOccurrence`,
 `DuplicateApiCall`, and `UnsupportedApiCall`; queue reports use typed producer,

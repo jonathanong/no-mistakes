@@ -1,5 +1,5 @@
 use super::resolve_config;
-use super::triggers::resolved_triggers;
+use super::triggers::{resolved_framework_triggers, resolved_vitest_triggers};
 use crate::config::v2::schema::{
     NamedFullSuiteTrigger, NoMistakesConfig, Project, TestPlanProjectDependency,
     TestPlanTargetedProjectDependency,
@@ -19,6 +19,13 @@ fn resolve_config_reports_named_triggers_and_coverage_gates() {
         .vitest_full_suite_triggers
         .iter()
         .any(|trigger| trigger.name == "postgres-resources" && trigger.source == "triggers"));
+    assert!(report.full_suite_triggers.iter().any(|entry| {
+        entry.framework == "vitest"
+            && entry
+                .triggers
+                .iter()
+                .any(|trigger| trigger.name == "postgres-resources")
+    }));
     assert!(report.playwright.coverage_routes);
     assert!(report.playwright.coverage_selectors);
 }
@@ -36,6 +43,14 @@ fn resolve_config_json_impl_returns_the_same_named_triggers() {
         .filter_map(|trigger| trigger["name"].as_str())
         .collect();
     assert!(names.contains(&"postgres-resources"));
+    assert_eq!(
+        report["fullSuiteTriggers"][0]["framework"].as_str(),
+        Some("vitest")
+    );
+    assert_eq!(
+        report["fullSuiteTriggers"][0]["triggers"][0]["name"].as_str(),
+        Some("postgres-resources")
+    );
 }
 
 #[test]
@@ -52,7 +67,7 @@ fn resolve_config_expands_project_keyed_trigger_paths() {
         "generated".to_string(),
         TestPlanProjectDependency::Patterns(vec!["src/**".to_string()]),
     );
-    let triggers = resolved_triggers(&config);
+    let triggers = resolved_vitest_triggers(&config);
     assert_eq!(triggers.len(), 1);
     assert_eq!(triggers[0].name, "generated");
     assert_eq!(triggers[0].source, "projects");
@@ -130,7 +145,7 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
             targets: vec!["backend".to_string()],
         });
 
-    let triggers = resolved_triggers(&config);
+    let triggers = resolved_vitest_triggers(&config);
     let by_name = triggers
         .iter()
         .map(|trigger| (trigger.name.as_str(), trigger))
@@ -157,4 +172,38 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
         vec!["db/**".to_string(), "!db/tmp/**".to_string()]
     );
     assert_eq!(by_name["resources"].source, "triggers");
+}
+
+#[test]
+fn resolve_config_reports_non_vitest_named_triggers() {
+    let mut config = NoMistakesConfig::default();
+    config
+        .test_plan
+        .python
+        .full_suite_triggers
+        .triggers
+        .push(NamedFullSuiteTrigger {
+            name: "schema".to_string(),
+            paths: vec!["./db/**".to_string()],
+            targets: Vec::new(),
+        });
+    config
+        .projects
+        .insert("bare".to_string(), Project::default());
+    config.test_plan.jest.full_suite_triggers.projects.insert(
+        "bare".to_string(),
+        TestPlanProjectDependency::Patterns(vec!["src/**".to_string()]),
+    );
+    let vitest = resolved_vitest_triggers(&config);
+    let frameworks = resolved_framework_triggers(&config);
+    assert!(vitest.is_empty());
+    assert_eq!(
+        frameworks
+            .iter()
+            .map(|entry| entry.framework)
+            .collect::<Vec<_>>(),
+        vec!["python", "jest"]
+    );
+    assert_eq!(frameworks[0].triggers[0].paths, vec!["db/**"]);
+    assert_eq!(frameworks[1].triggers[0].paths, vec!["bare/src/**"]);
 }

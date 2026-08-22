@@ -43,9 +43,14 @@ fn unresolved_repo_relative_wrappers_match_imported_path_suffixes() {
         None,
         Some(ModuleIdentity::External("web/app".to_string())),
     ));
-    assert!(!identities_match(
+    assert!(identities_match(
         "web/app",
         Some(ModuleIdentity::External("web/app".to_string())),
         Some(ModuleIdentity::Path(PathBuf::from("/repo/src/web/app.ts"))),
+    ));
+    assert!(!identities_match(
+        "web/app",
+        Some(ModuleIdentity::External("web/app".to_string())),
+        Some(ModuleIdentity::Path(PathBuf::from("/repo/src/other.ts"))),
     ));
 }

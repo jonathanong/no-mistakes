@@ -548,6 +548,17 @@ test("resolveCheck declarations mirror its mutually exclusive runtime inputs", (
   assert.match(declarations, /file\?: never;/);
 });
 
+test("resolveConfig declarations expose additive per-framework triggers", () => {
+  const declarations = readFileSync(join(packageRoot, "resolve-config-types.d.ts"), "utf8");
+
+  assert.match(declarations, /vitestFullSuiteTriggers: ResolvedTrigger\[\];/);
+  assert.match(declarations, /fullSuiteTriggers: ResolvedFrameworkTriggers\[\];/);
+  assert.match(
+    declarations,
+    /export interface ResolvedFrameworkTriggers \{\n  framework: TestPlanFramework;\n  triggers: ResolvedTrigger\[\];\n\}/,
+  );
+});
+
 test("test plan declarations require current results but accept saved legacy plan documents", () => {
   const declarations = readFileSync(join(packageRoot, "test-types.d.ts"), "utf8");
 

@@ -1,8 +1,11 @@
+import type { TestPlanFramework } from "./test-types";
+
 export interface ResolvedConfig {
   configPath?: string | null;
   frontendApps: ResolvedFrontendApp[];
   playwright: ResolvedPlaywright;
   vitestFullSuiteTriggers: ResolvedTrigger[];
+  fullSuiteTriggers: ResolvedFrameworkTriggers[];
 }
 
 export interface ResolvedFrontendApp {
@@ -32,4 +35,9 @@ export interface ResolvedTrigger {
   paths: string[];
   targets: string[];
   source: "triggers" | "projects";
+}
+
+export interface ResolvedFrameworkTriggers {
+  framework: TestPlanFramework;
+  triggers: ResolvedTrigger[];
 }

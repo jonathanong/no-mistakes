@@ -7,7 +7,7 @@ use super::v2::{frontend_apps, load_v2_config_with_path, FrontendApp};
 
 #[path = "resolve/triggers.rs"]
 mod triggers;
-use triggers::resolved_triggers;
+use triggers::{resolved_framework_triggers, resolved_vitest_triggers};
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -16,6 +16,7 @@ pub struct ResolvedConfig {
     pub frontend_apps: Vec<ResolvedFrontendApp>,
     pub playwright: ResolvedPlaywright,
     pub vitest_full_suite_triggers: Vec<ResolvedTrigger>,
+    pub full_suite_triggers: Vec<ResolvedFrameworkTriggers>,
 }
 
 #[derive(Debug, Serialize)]
@@ -55,6 +56,13 @@ pub struct ResolvedTrigger {
     pub source: &'static str,
 }
 
+#[derive(Debug, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct ResolvedFrameworkTriggers {
+    pub framework: &'static str,
+    pub triggers: Vec<ResolvedTrigger>,
+}
+
 pub fn resolve_config(root: &Path, config: Option<&Path>) -> Result<ResolvedConfig> {
     let (config, config_path) = load_v2_config_with_path(root, config)?;
     let visible = crate::codebase::ts_source::discover_visible_paths(root);
@@ -63,7 +71,8 @@ pub fn resolve_config(root: &Path, config: Option<&Path>) -> Result<ResolvedConf
         config_path: config_path.map(|path| display_rel(root, &path)),
         playwright: resolved_playwright(&config, &apps),
         frontend_apps: apps.into_iter().map(resolved_app).collect(),
-        vitest_full_suite_triggers: resolved_triggers(&config),
+        vitest_full_suite_triggers: resolved_vitest_triggers(&config),
+        full_suite_triggers: resolved_framework_triggers(&config),
     })
 }
 

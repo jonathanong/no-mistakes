@@ -1,18 +1,53 @@
-use super::ResolvedTrigger;
+use super::{ResolvedFrameworkTriggers, ResolvedTrigger};
 use crate::config::v2::schema::{
-    NamedFullSuiteTrigger, NoMistakesConfig, TestPlanProjectDependency,
+    NamedFullSuiteTrigger, NoMistakesConfig, TestPlanFrameworkConfig, TestPlanProjectDependency,
 };
 
-pub(super) fn resolved_triggers(config: &NoMistakesConfig) -> Vec<ResolvedTrigger> {
-    let mut triggers = config
-        .test_plan
-        .vitest
+pub(super) fn resolved_vitest_triggers(config: &NoMistakesConfig) -> Vec<ResolvedTrigger> {
+    resolved_triggers_for(config, &config.test_plan.vitest)
+}
+
+pub(super) fn resolved_framework_triggers(
+    config: &NoMistakesConfig,
+) -> Vec<ResolvedFrameworkTriggers> {
+    framework_plans(config)
+        .into_iter()
+        .filter_map(|(framework, plan)| {
+            let triggers = resolved_triggers_for(config, plan);
+            (!triggers.is_empty()).then_some(ResolvedFrameworkTriggers {
+                framework,
+                triggers,
+            })
+        })
+        .collect()
+}
+
+fn framework_plans(config: &NoMistakesConfig) -> [(&'static str, &TestPlanFrameworkConfig); 10] {
+    [
+        ("dotnet", &config.test_plan.dotnet),
+        ("playwright", &config.test_plan.playwright),
+        ("vitest", &config.test_plan.vitest),
+        ("swift", &config.test_plan.swift),
+        ("python", &config.test_plan.python),
+        ("go", &config.test_plan.go),
+        ("cargo", &config.test_plan.cargo),
+        ("rails", &config.test_plan.rails),
+        ("php", &config.test_plan.php),
+        ("jest", &config.test_plan.jest),
+    ]
+}
+
+fn resolved_triggers_for(
+    config: &NoMistakesConfig,
+    plan: &TestPlanFrameworkConfig,
+) -> Vec<ResolvedTrigger> {
+    let mut triggers = plan
         .full_suite_triggers
         .triggers
         .iter()
         .map(named_trigger)
         .collect::<Vec<_>>();
-    for (name, dependency) in &config.test_plan.vitest.full_suite_triggers.projects {
+    for (name, dependency) in &plan.full_suite_triggers.projects {
         if let Some(trigger) = project_trigger(config, name, dependency) {
             triggers.push(trigger);
         }
