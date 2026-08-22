@@ -34,17 +34,7 @@ impl super::SourceStore {
     #[doc(hidden)]
     pub fn parse_json_path(&self, path: &std::path::Path) -> JsonParseOutcome {
         let path = crate::codebase::ts_source::normalize_discovery_path(path);
-        let cell = {
-            let mut parses = self
-                .json_parses
-                .lock()
-                .expect("JSON parse cache mutex poisoned");
-            Arc::clone(
-                parses
-                    .entry(path.clone())
-                    .or_insert_with(|| Arc::new(std::sync::OnceLock::new())),
-            )
-        };
+        let cell = super::once_lock_slot(&self.json_parses, path.clone());
         self.increment("manifest.requests", 1);
         let parsed = std::cell::Cell::new(false);
         let result = cell

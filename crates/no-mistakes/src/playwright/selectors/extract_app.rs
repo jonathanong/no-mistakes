@@ -22,6 +22,14 @@ pub fn collect_app_selectors(
     frontend_root: &Path,
     attributes: &[String],
 ) -> Result<Vec<AppSelector>> {
+    collect_app_selectors_with_sources(frontend_root, attributes, None)
+}
+
+pub(crate) fn collect_app_selectors_with_sources(
+    frontend_root: &Path,
+    attributes: &[String],
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> Result<Vec<AppSelector>> {
     use super::is_source_file;
     let component_attributes = BTreeMap::new();
     if !frontend_root.exists() {
@@ -41,15 +49,15 @@ pub fn collect_app_selectors(
                 return None;
             }
             Some(
-                std::fs::read_to_string(&path)
-                    .map_err(|e| e.into())
+                crate::codebase::ts_source::SourceStore::read_prepared_or_open(sources, &path)
+                    .map_err(|error| anyhow::anyhow!("{error}"))
                     .and_then(|source| {
                         extract_app_selectors_with_regexes_from_visible(
                             &path,
                             &source,
                             &regexes,
                             &visible_files,
-                            None,
+                            sources,
                         )
                     }),
             )

@@ -61,13 +61,21 @@ pub fn relative_string(root: &Path, path: &Path) -> String {
 }
 
 pub fn is_client_route_file(path: &Path) -> anyhow::Result<bool> {
+    is_client_route_file_with_sources(path, None)
+}
+
+pub(crate) fn is_client_route_file_with_sources(
+    path: &Path,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> anyhow::Result<bool> {
     use crate::ast;
 
     if !path.exists() {
         return Ok(false);
     }
 
-    let source = std::fs::read_to_string(path)?;
+    let source = crate::codebase::ts_source::SourceStore::read_prepared_or_open(sources, path)
+        .map_err(|error| anyhow::anyhow!("{error}"))?;
     ast::with_program(path, &source, |program, _| {
         program
             .directives

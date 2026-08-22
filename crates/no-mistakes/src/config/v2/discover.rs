@@ -32,6 +32,8 @@ mod targeted_triggers;
 /// 2. `.no-mistakes.{yaml,yml,json,jsonc}` in `root`.
 /// 3. Empty default.
 pub fn load_v2_config(root: &Path, cli_config: Option<&Path>) -> Result<NoMistakesConfig> {
+    // Bootstrap path: config is loaded before AnalysisSession/SourceStore exist.
+    // Prepared requests use `load_v2_config_from_source_store`.
     load_v2_config_with_path(root, cli_config).map(|(config, _)| config)
 }
 
@@ -72,6 +74,8 @@ pub(crate) fn load_v2_config_with_path_from_visible(
         if !resolved.exists() {
             anyhow::bail!("config file does not exist: {}", resolved.display());
         }
+        // Snapshot-only bootstrap still precedes SourceStore; prepared analysis
+        // uses `load_v2_config_from_source_store`.
         let source = std::fs::read_to_string(&resolved)?;
         return Ok((parse_v2_config(&source, &resolved)?, Some(resolved)));
     }

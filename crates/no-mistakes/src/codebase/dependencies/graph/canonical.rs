@@ -5,14 +5,14 @@
 /// lookups. Eagerly filling it is a `realpath` per file and dominates
 /// `GraphFiles::from_files` on large monorepos.
 struct CanonicalVisible {
-    cache: std::sync::Mutex<Option<HashMap<PathBuf, PathBuf>>>,
+    cache: OnceLock<dashmap::DashMap<PathBuf, PathBuf>>,
     universe: std::sync::Arc<()>,
 }
 
 impl CanonicalVisible {
     fn empty() -> Self {
         Self {
-            cache: std::sync::Mutex::new(None),
+            cache: OnceLock::new(),
             universe: std::sync::Arc::new(()),
         }
     }
@@ -25,34 +25,30 @@ impl CanonicalVisible {
         self.universe = std::sync::Arc::new(());
     }
 
-    fn lock(&self) -> std::sync::MutexGuard<'_, Option<HashMap<PathBuf, PathBuf>>> {
-        self.cache
-            .lock()
-            .unwrap_or_else(std::sync::PoisonError::into_inner)
-    }
-
     fn insert_if_built(&self, canonical: PathBuf, original: PathBuf) {
-        if let Some(map) = self.lock().as_mut() {
-            match map.entry(canonical) {
-                std::collections::hash_map::Entry::Vacant(entry) => {
+        let Some(map) = self.cache.get() else {
+            return;
+        };
+        match map.entry(canonical) {
+            dashmap::mapref::entry::Entry::Vacant(entry) => {
+                entry.insert(original);
+            }
+            dashmap::mapref::entry::Entry::Occupied(mut entry) => {
+                // Same first-sorted-alias rule as `build_canonical_visible`.
+                if original < *entry.get() {
                     entry.insert(original);
-                }
-                std::collections::hash_map::Entry::Occupied(mut entry) => {
-                    // Same first-sorted-alias rule as `build_canonical_visible`.
-                    if original < *entry.get() {
-                        entry.insert(original);
-                    }
                 }
             }
         }
     }
 
     fn get(&self, all: &[PathBuf], visible: &[u8], canonical: &Path) -> Option<PathBuf> {
-        let mut guard = self.lock();
-        if guard.is_none() {
-            *guard = Some(build_canonical_visible(all, visible));
-        }
-        guard.as_ref()?.get(canonical).cloned()
+        let map = self.cache.get_or_init(|| {
+            build_canonical_visible(all, visible)
+                .into_iter()
+                .collect()
+        });
+        map.get(canonical).as_deref().cloned()
     }
 }
 
