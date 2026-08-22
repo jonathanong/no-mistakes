@@ -39,6 +39,9 @@ fn grouped_execution_targets(selected: &[super::SelectedTest]) -> Vec<GroupedExe
 
 fn runner_args_without_file(target: &TestExecutionTarget, test_file: &str) -> Vec<String> {
     let mut args = target.runner_args.clone();
+    if args.len() >= 2 && args[args.len() - 2] == "--test" {
+        return args;
+    }
     if args
         .last()
         .is_some_and(|last| last_arg_selects_test_file(last, test_file))
@@ -63,9 +66,7 @@ fn last_arg_selects_test_file(last: &str, test_file: &str) -> bool {
             return true;
         }
     }
-    std::path::Path::new(&file)
-        .file_stem()
-        .is_some_and(|stem| last == stem.to_string_lossy())
+    false
 }
 
 fn regex_escape(value: &str) -> String {

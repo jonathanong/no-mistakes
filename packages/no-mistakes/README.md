@@ -43,11 +43,8 @@ const {
     root: process.cwd(),
     files: ["src/main.mts"],
     relationships: ["import"],
-  const tests = await dependents({
-    root: process.cwd(),
-    files: ["src/utils.mts"],
-    tests: ["vitest"],
   });
+  const tests = await dependents({
     root: process.cwd(),
     files: ["src/utils.mts"],
     tests: ["vitest"],

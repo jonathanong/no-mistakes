@@ -30,7 +30,9 @@
       "types": "./index.d.ts",
       "import": "./index.mjs",
       "require": "./index.js"
-    }
+    },
+    "./planning.js": "./planning.js",
+    "./workflow-topology-index.js": "./workflow-topology-index.js"
   },
   "publishConfig": {
     "access": "public"
