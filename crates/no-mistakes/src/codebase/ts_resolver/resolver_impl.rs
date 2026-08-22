@@ -84,7 +84,7 @@ impl<'a> ImportResolver<'a> {
         resolver
     }
 
-    pub(crate) fn with_visible(self, visible: &'a dyn VisiblePathLookup) -> Self {
+    pub fn with_visible(self, visible: &'a crate::fx::PathSet) -> Self {
         self.with_visible_lookup(visible)
     }
 

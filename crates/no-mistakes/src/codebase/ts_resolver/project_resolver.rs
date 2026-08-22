@@ -13,7 +13,7 @@ impl<'a> ProjectImportResolver<'a> {
     ) -> Self {
         match catalog {
             Some(catalog) => {
-                let resolver = ScopedImportResolver::from_lookup(catalog, visible, Some(session));
+                let resolver = ScopedImportResolver::new_in_session(catalog, visible, session);
                 Self::Scoped(Box::new(match shared_cache {
                     Some(cache) => resolver.with_shared_cache(cache),
                     None => resolver,

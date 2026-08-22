@@ -60,3 +60,12 @@ fn path_set_lookups_match_hash_set_membership() {
     );
 }
 
+#[test]
+fn import_resolver_with_visible_stays_a_public_pathset_api() {
+    let source = include_str!("resolver_impl.rs");
+    assert!(
+        source.contains("pub fn with_visible(self, visible: &'a crate::fx::PathSet)"),
+        "ImportResolver::with_visible must stay a public PathSet API"
+    );
+}
+
