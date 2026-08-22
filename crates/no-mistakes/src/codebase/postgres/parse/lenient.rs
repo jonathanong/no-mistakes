@@ -8,8 +8,8 @@ mod rewrite;
 
 use rewrite::{rewrite_chr_calls, rewrite_drop_index_concurrently};
 
-/// Tokenize, rewrite PG18 virtual generated columns, `DROP INDEX CONCURRENTLY`,
-/// and `chr()` calls, then parse each statement.
+/// Tokenize, rewrite PG18 virtual generated columns and
+/// `DROP INDEX CONCURRENTLY`, then parse each statement.
 ///
 /// Unparseable `DO $tag$ … $tag$` statements are peeled so schema DDL inside
 /// the body can still parse. Remaining unparseable chunks recover `ALTER TABLE`,
@@ -21,12 +21,11 @@ pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     };
     rewrite_virtual_generated_columns(&mut tokens);
     rewrite_drop_index_concurrently(&mut tokens);
-    rewrite_chr_calls(&mut tokens);
     recover::parse_chunks(split_statement_tokens(tokens))
 }
 
 pub(super) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
-    if !sql.to_ascii_lowercase().contains("chr(") {
+    if !looks_like_chr_call(sql) {
         return None;
     }
     let dialect = PostgreSqlDialect {};
@@ -35,6 +34,13 @@ pub(super) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
     };
     rewrite_chr_calls(&mut tokens);
     recover::concatenated_strings(&tokens)
+}
+
+fn looks_like_chr_call(sql: &str) -> bool {
+    sql.to_ascii_lowercase()
+        .split_whitespace()
+        .collect::<String>()
+        .contains("chr(")
 }
 
 fn rewrite_virtual_generated_columns(tokens: &mut Vec<Token>) {

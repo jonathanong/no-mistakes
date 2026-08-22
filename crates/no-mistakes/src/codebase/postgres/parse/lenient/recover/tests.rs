@@ -79,12 +79,14 @@ fn recover_schema_ddl_parses_or_skips_trailing_junk() {
 fn recover_chr_concatenations_as_sql() {
     let sql =
         "chr(85)||chr(80)||chr(68)||chr(65)||chr(84)||chr(69)||' items SET created_at = now()'";
-    let statements = super::super::parse_postgres_sql_lenient(sql);
+    let expanded = super::super::expand_chr_encoded_sql(sql).expect("chr expansion");
+    let statements = super::super::parse_postgres_sql_lenient(&expanded);
     assert_eq!(statements.len(), 1, "{statements:#?}");
     assert!(matches!(
         statements[0],
         sqlparser::ast::Statement::Update { .. }
     ));
+    assert!(super::super::expand_chr_encoded_sql("chr (85)||' items SET x=1'").is_some());
 }
 
 #[test]
