@@ -2,7 +2,9 @@ use anyhow::Result;
 use serde::Serialize;
 use std::path::Path;
 
-use super::v2::schema::{NoMistakesConfig, PlaywrightAppBinding, RewriteRule};
+use super::v2::schema::{
+    NoMistakesConfig, PlaywrightAppBinding, PlaywrightTestConfig, RewriteRule,
+};
 use super::v2::{frontend_apps, load_v2_config_with_path, FrontendApp};
 
 #[path = "resolve/triggers.rs"]
@@ -97,9 +99,7 @@ fn resolved_playwright(config: &NoMistakesConfig, apps: &[FrontendApp]) -> Resol
         apps: playwright
             .apps
             .iter()
-            .map(|(name, binding)| {
-                resolved_playwright_app(name, binding, apps, playwright.ignore_routes.as_deref())
-            })
+            .map(|(name, binding)| resolved_playwright_app(name, binding, apps, playwright))
             .collect(),
     }
 }
@@ -108,7 +108,7 @@ fn resolved_playwright_app(
     name: &str,
     binding: &PlaywrightAppBinding,
     apps: &[FrontendApp],
-    fallback_ignore_routes: Option<&[String]>,
+    playwright: &PlaywrightTestConfig,
 ) -> ResolvedPlaywrightApp {
     let inherited = binding.project.as_ref().and_then(|project| {
         apps.iter()
@@ -120,13 +120,16 @@ fn resolved_playwright_app(
         frontend_root: binding
             .frontend_root
             .clone()
+            .or_else(|| playwright.frontend_root.clone())
             .or_else(|| inherited.map(|app| app.route_root.clone())),
-        selector_roots: if binding.selector_roots.is_empty() {
+        selector_roots: if !binding.selector_roots.is_empty() {
+            binding.selector_roots.clone()
+        } else if !playwright.selector_roots.is_empty() {
+            playwright.selector_roots.clone()
+        } else {
             inherited
                 .map(|app| app.selector_roots.clone())
                 .unwrap_or_default()
-        } else {
-            binding.selector_roots.clone()
         },
         rewrites: if binding.rewrites.is_empty() {
             inherited
@@ -138,7 +141,7 @@ fn resolved_playwright_app(
         ignore_routes: binding
             .ignore_routes
             .clone()
-            .or_else(|| fallback_ignore_routes.map(|routes| routes.to_vec()))
+            .or_else(|| playwright.ignore_routes.clone())
             .unwrap_or_default(),
     }
 }

@@ -125,6 +125,31 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
         TestPlanProjectDependency::Patterns(vec!["!./dist/**".to_string()]),
     );
     config.projects.insert(
+        "included".to_string(),
+        Project {
+            root: Some("packages/app".to_string()),
+            include: vec!["lib/**".to_string()],
+            ..Project::default()
+        },
+    );
+    config
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .projects
+        .insert("included".to_string(), TestPlanProjectDependency::All(true));
+    config.projects.insert(
+        "workspace".to_string(),
+        Project {
+            root: Some(".".to_string()),
+            ..Project::default()
+        },
+    );
+    config.test_plan.vitest.full_suite_triggers.projects.insert(
+        "workspace".to_string(),
+        TestPlanProjectDependency::All(true),
+    );
+    config.projects.insert(
         "prefixed".to_string(),
         Project {
             root: Some("packages/generated".to_string()),
@@ -153,7 +178,9 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
         .collect::<std::collections::BTreeMap<_, _>>();
     assert!(!by_name.contains_key("skip"));
     assert!(!by_name.contains_key("orphan"));
-    assert_eq!(by_name["generated"].paths.len(), 0);
+    assert_eq!(by_name["generated"].paths, vec!["packages/generated/**"]);
+    assert_eq!(by_name["included"].paths, vec!["packages/app/lib/**"]);
+    assert_eq!(by_name["workspace"].paths, vec!["**"]);
     assert_eq!(by_name["generated"].targets.len(), 0);
     assert_eq!(
         by_name["root-app"].paths,
@@ -212,6 +239,8 @@ fn resolve_config_reports_non_vitest_named_triggers() {
 #[test]
 fn resolve_playwright_apps_include_effective_rewrites_and_ignore_routes() {
     let mut config = NoMistakesConfig::default();
+    config.tests.playwright.frontend_root = Some("top/app".to_string());
+    config.tests.playwright.selector_roots = vec!["top/selectors".to_string()];
     config.tests.playwright.ignore_routes = Some(vec!["/admin/**".to_string()]);
     config.tests.playwright.apps.insert(
         "chromium".to_string(),
@@ -244,6 +273,8 @@ fn resolve_playwright_apps_include_effective_rewrites_and_ignore_routes() {
     }];
     let report = super::resolved_playwright(&config, &apps);
     assert_eq!(report.apps[0].playwright_project, "chromium");
+    assert_eq!(report.apps[0].frontend_root.as_deref(), Some("top/app"));
+    assert_eq!(report.apps[0].selector_roots, vec!["top/selectors"]);
     assert_eq!(report.apps[0].rewrites[0].source, "/from-app");
     assert_eq!(report.apps[0].ignore_routes, vec!["/admin/**"]);
     assert_eq!(report.apps[1].playwright_project, "override");

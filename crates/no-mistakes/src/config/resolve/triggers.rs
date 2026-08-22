@@ -1,6 +1,7 @@
 use super::{ResolvedFrameworkTriggers, ResolvedTrigger};
 use crate::config::v2::schema::{
-    NamedFullSuiteTrigger, NoMistakesConfig, TestPlanFrameworkConfig, TestPlanProjectDependency,
+    NamedFullSuiteTrigger, NoMistakesConfig, Project, TestPlanFrameworkConfig,
+    TestPlanProjectDependency,
 };
 
 pub(super) fn resolved_vitest_triggers(config: &NoMistakesConfig) -> Vec<ResolvedTrigger> {
@@ -73,14 +74,12 @@ fn project_trigger(
     name: &str,
     dependency: &TestPlanProjectDependency,
 ) -> Option<ResolvedTrigger> {
-    if !config.projects.contains_key(name) {
-        return None;
-    }
+    let project = config.projects.get(name)?;
     Some(match dependency {
         TestPlanProjectDependency::All(false) => return None,
         TestPlanProjectDependency::All(true) => ResolvedTrigger {
             name: name.to_string(),
-            paths: Vec::new(),
+            paths: expanded_all_project_paths(name, project),
             targets: Vec::new(),
             source: "projects",
         },
@@ -113,6 +112,28 @@ fn expand_project_paths(
         .iter()
         .map(|pattern| project_relative_pattern(root, pattern))
         .collect()
+}
+
+fn expanded_all_project_paths(project_name: &str, project: &Project) -> Vec<String> {
+    let root = project.root.as_deref().unwrap_or(project_name);
+    if project.include.is_empty() {
+        project_root_patterns(root)
+    } else {
+        project
+            .include
+            .iter()
+            .map(|pattern| project_relative_pattern(root, pattern))
+            .collect()
+    }
+}
+
+fn project_root_patterns(project_root: &str) -> Vec<String> {
+    let root = normalize_glob_part(project_root);
+    if root.is_empty() || root == "." {
+        vec!["**".to_string()]
+    } else {
+        vec![format!("{root}/**")]
+    }
 }
 
 fn project_relative_pattern(project_root: &str, raw_pattern: &str) -> String {
