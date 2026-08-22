@@ -1,7 +1,6 @@
+use super::{RewriteRule, StringOrList};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-
-use super::{RewriteRule, StringOrList};
 
 mod coverage;
 pub use coverage::PlaywrightCoverageConfig;
