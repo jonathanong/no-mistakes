@@ -79,11 +79,13 @@ fn pass4b_symbol_listing_skips_ignored_target_for_visible_fallback() {
             .all(|export| export["reExport"]["resolved"] == "query/target.ts"),
         "unexpected re-export rows: {reexports:#?}"
     );
-    assert!(value["files"][0]["imports"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .all(|import| import["resolved"] == "query/target.ts"));
+    assert!(
+        value["files"][0]["imports"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|import| import["resolved"] == "query/target.ts")
+    );
 }
 
 #[cfg(unix)]
@@ -539,4 +541,5 @@ fn collect_entries_with_prepared_facts_requires_symbol_facts() {
     assert!(format!("{err:#}").contains("utils.mts"));
 }
 
+include!("tests_pipeline_errors.rs");
 include!("tests_output_extended.rs");

@@ -120,9 +120,7 @@ fn bool_expr(expression: &oxc_ast::ast::JSXExpression<'_>) -> Option<bool> {
         oxc_ast::ast::JSXExpression::TSNonNullExpression(expression) => {
             bool_expression(&expression.expression)
         }
-        oxc_ast::ast::JSXExpression::TSTypeAssertion(expression) => {
-            bool_expression(&expression.expression)
-        }
+        // TSX cannot parse `<T>expr` type assertions; those are `as`/`satisfies`.
         _ => None,
     }
 }
@@ -142,9 +140,7 @@ fn jsx_expression_attribute_present(expression: &oxc_ast::ast::JSXExpression<'_>
         oxc_ast::ast::JSXExpression::TSNonNullExpression(expression) => {
             expression_attribute_present(&expression.expression)
         }
-        oxc_ast::ast::JSXExpression::TSTypeAssertion(expression) => {
-            expression_attribute_present(&expression.expression)
-        }
+        // TSX cannot parse `<T>expr` type assertions; those are `as`/`satisfies`.
         _ => true,
     }
 }
@@ -163,9 +159,7 @@ fn numeric_expr(expression: &oxc_ast::ast::JSXExpression<'_>) -> Option<u32> {
         oxc_ast::ast::JSXExpression::TSNonNullExpression(expression) => {
             numeric_expression(&expression.expression)
         }
-        oxc_ast::ast::JSXExpression::TSTypeAssertion(expression) => {
-            numeric_expression(&expression.expression)
-        }
+        // TSX cannot parse `<T>expr` type assertions; those are `as`/`satisfies`.
         _ => None,
     }
 }

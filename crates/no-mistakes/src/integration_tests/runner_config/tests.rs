@@ -56,14 +56,18 @@ fn prepared_runner_records_cached_parse_errors_as_project_results() {
         .parse_path_for_facts_with_session(&session, &path)
         .unwrap();
     assert_eq!(facts.results.len(), 1);
-    assert!(facts.results[0]
-        .projects
-        .as_ref()
-        .unwrap_err()
-        .contains("failed to parse"));
-    assert!(prepared
-        .parse_error(&root.join("unprepared.mts"), "ignored".to_string())
-        .is_none());
+    assert!(
+        facts.results[0]
+            .projects
+            .as_ref()
+            .unwrap_err()
+            .contains("failed to parse")
+    );
+    assert!(
+        prepared
+            .parse_error(&root.join("unprepared.mts"), "ignored".to_string())
+            .is_none()
+    );
 }
 
 #[test]
@@ -142,9 +146,11 @@ fn json_workspace_folder_strings_use_default_projects_and_global_negations() {
         scopes,
         ["string-project", "configless", "folder-projects/one"]
     );
-    assert!(projects
-        .iter()
-        .all(|project| { project.scope.as_deref() != Some("folder-projects/skip") }));
+    assert!(
+        projects
+            .iter()
+            .all(|project| { project.scope.as_deref() != Some("folder-projects/skip") })
+    );
     assert!(projects.iter().any(|project| {
         project.scope.as_deref() == Some("configless")
             && project
@@ -194,9 +200,11 @@ fn prepared_runner_uses_session_source_and_parser_gateways_once() {
 
     crate::ast::with_request_parse_cache(|| {
         for _ in 0..2 {
-            assert!(prepared
-                .parse_path_for_facts_with_session(&session, &path)
-                .is_some());
+            assert!(
+                prepared
+                    .parse_path_for_facts_with_session(&session, &path)
+                    .is_some()
+            );
         }
     });
 
@@ -312,9 +320,48 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
         visible_files: [missing_path].into_iter().collect(),
         ..plan
     };
-    assert!(parsed
-        .projects_for(&missing_plan, Framework::Vitest)
-        .unwrap_err()
-        .to_string()
-        .contains("missing prepared vitest config"));
+    assert!(
+        parsed
+            .projects_for(&missing_plan, Framework::Vitest)
+            .unwrap_err()
+            .to_string()
+            .contains("missing prepared vitest config")
+    );
+}
+
+#[test]
+fn prepared_runner_source_store_read_failures_surface() {
+    let root = fixture_root("parse-errors");
+    let dir_path = root.join("src");
+    let inventory =
+        crate::codebase::ts_source::FileInventory::from_paths(std::slice::from_ref(&dir_path));
+    let sources = Arc::new(crate::codebase::ts_source::SourceStore::new(Arc::new(
+        inventory,
+    )));
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("src".to_string()));
+    config
+        .tests
+        .vitest
+        .projects
+        .insert("unit".to_string(), integration_policy());
+    let visible_paths = vec![dir_path.clone()];
+    let tsconfig_catalog = Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+        &root,
+        std::slice::from_ref(&root),
+        &visible_paths,
+    ));
+    let prepared = super::prepare_with_catalog_and_sources(
+        &root,
+        &config,
+        &visible_paths,
+        tsconfig_catalog,
+        sources,
+    );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let facts = prepared
+        .parse_path_for_facts_with_session(&session, &dir_path)
+        .expect("the directory exists so parse_path should run");
+    assert!(facts.results[0].projects.is_err());
+    assert!(prepared.parse_all().is_err());
 }

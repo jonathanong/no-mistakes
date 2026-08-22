@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
-use dashmap::mapref::entry::Entry;
 use dashmap::DashMap;
+use dashmap::mapref::entry::Entry;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -25,6 +25,8 @@ mod scoped_test_support;
 
 #[cfg(test)]
 mod catalog_coverage_tests;
+#[cfg(test)]
+mod catalog_reference_tests;
 
 #[cfg(test)]
 mod tests;
