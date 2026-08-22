@@ -90,15 +90,24 @@ async function ciTopology(options) {
   } catch {
     mtime = 0;
   }
-  const key = `${root}\0${configPath}\0${mtime}`;
+  const workflows = JSON.stringify(
+    [...((options && options.workflows) || [])].map(String).sort(),
+  );
+  const identity = `${root}\0${configPath}\0`;
+  const key = `${identity}${mtime}\0${workflows}`;
+  for (const memoKey of [...topologyMemo.keys()]) {
+    if (!memoKey.startsWith(identity)) continue;
+    const memoMtime = memoKey.slice(identity.length).split("\0")[0];
+    if (memoMtime !== String(mtime)) topologyMemo.delete(memoKey);
+  }
   const cached = topologyMemo.get(key);
-  if (cached) return cached;
+  if (cached) return cached.then((value) => structuredClone(value));
   const pending = jsonApis.ciTopology(options).catch((error) => {
     topologyMemo.delete(key);
     throw error;
   });
   topologyMemo.set(key, pending);
-  return pending;
+  return pending.then((value) => structuredClone(value));
 }
 
 async function version() {

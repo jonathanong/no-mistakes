@@ -418,6 +418,6 @@ addon avoids UTF-16 string copies at the N-API boundary.
   so they share the machine-wide lock. `testsPlan()` / `testsImpact()` return
   camelCase `executionTargets` (optional `name` for Swift path-prefix groups).
   `includeGlob` is a `testsPlan()` option. `ciTopology()` is memoized
-  in-process by root and config mtime; pass `profile: "ci"` (or CLI
-  `--profile ci`) for unbounded timeouts.
+  in-process by root, config mtime, and workflows filter; pass `profile: "ci"`
+  (or CLI `--profile ci`) to clear command and lock timeouts.
 - Prefer structured API results over parsing human CLI output.

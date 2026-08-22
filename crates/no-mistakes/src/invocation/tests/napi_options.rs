@@ -42,7 +42,9 @@ fn napi_missing_controls_disable_timeouts() {
 
 #[test]
 fn napi_profile_ci_is_stripped() {
-    let (json, options) = extract_napi_options(r#"{"profile":"ci","root":"."}"#).unwrap();
+    let (json, options) =
+        extract_napi_options(r#"{"profile":"ci","timeout":10,"lockTimeout":5,"root":"."}"#)
+            .unwrap();
     assert_eq!(options.timeout, None);
     assert_eq!(options.lock_timeout, None);
     assert_eq!(

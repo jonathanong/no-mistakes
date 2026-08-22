@@ -327,6 +327,13 @@ test("programmatic API proxies object options through async native addon calls",
       "swiftTestTargets",
     );
     assert.equal((await api.ciTopology({ workflows: ["ci.yml"] })).options.workflows[0], "ci.yml");
+    assert.equal(
+      (await api.ciTopology({ workflows: ["deploy.yml"] })).options.workflows[0],
+      "deploy.yml",
+    );
+    const cached = await api.ciTopology({ workflows: ["ci.yml"] });
+    cached.options.workflows[0] = "mutated.yml";
+    assert.equal((await api.ciTopology({ workflows: ["ci.yml"] })).options.workflows[0], "ci.yml");
     assert.equal(await api.version(), "1.2.3");
   } finally {
     delete require.cache[require.resolve(indexPath)];
