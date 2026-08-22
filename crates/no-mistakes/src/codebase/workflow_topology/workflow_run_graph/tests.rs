@@ -96,3 +96,55 @@ fn diamond_keeps_the_longest_chain_witness() {
         .iter()
         .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunChainLimit));
 }
+
+#[test]
+fn equal_length_over_limit_chains_keep_the_lexicographically_smaller_witness() {
+    let workflows = [
+        workflow("w0.yml"),
+        workflow("w1.yml"),
+        workflow("a.yml"),
+        workflow("b.yml"),
+        workflow("c.yml"),
+        workflow("d.yml"),
+        workflow("e.yml"),
+        workflow("f.yml"),
+        workflow("end.yml"),
+    ];
+    let diagnostics = diagnose(
+        &workflows,
+        &[
+            edge("w0.yml", "a.yml"),
+            edge("a.yml", "b.yml"),
+            edge("b.yml", "c.yml"),
+            edge("c.yml", "end.yml"),
+            edge("w1.yml", "d.yml"),
+            edge("d.yml", "e.yml"),
+            edge("e.yml", "f.yml"),
+            edge("f.yml", "end.yml"),
+        ],
+    );
+    let chain = diagnostics
+        .iter()
+        .find(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunChainLimit)
+        .expect("equal-length over-limit chains still diagnose");
+    assert!(chain
+        .message
+        .contains("w0.yml -> a.yml -> b.yml -> c.yml -> end.yml"));
+}
+
+#[test]
+fn three_node_cycle_with_a_chord_still_reports_a_witness() {
+    let workflows = [workflow("a.yml"), workflow("b.yml"), workflow("c.yml")];
+    let diagnostics = diagnose(
+        &workflows,
+        &[
+            edge("a.yml", "b.yml"),
+            edge("b.yml", "c.yml"),
+            edge("c.yml", "a.yml"),
+            edge("c.yml", "b.yml"),
+        ],
+    );
+    assert!(diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle));
+}

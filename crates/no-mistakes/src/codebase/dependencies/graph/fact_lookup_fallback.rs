@@ -38,6 +38,18 @@ impl<'a> FallbackTsFactLookup<'a> {
     }
 }
 
+fn playwright_fetch_parse_error(
+    fallback: &TsFactMap,
+    path: &Path,
+) -> Option<Result<crate::fetch::file_facts::ParsedFileFacts, String>> {
+    let facts = fallback.get(path)?;
+    let error = facts.parse_error.as_ref()?;
+    Some(Err(format!(
+        "failed to parse {}: {error}",
+        path.display()
+    )))
+}
+
 fn same_graph_universe(
     primary_files: &[PathBuf],
     graph_visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
@@ -121,19 +133,12 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         if !self.reuse_primary_playwright_cache {
             return None;
         }
-        let fallback_error = || {
-            self.fallback.get(path).and_then(|facts| {
-                facts.parse_error.as_ref().map(|error| {
-                    Err(format!("failed to parse {}: {error}", path.display()))
-                })
-            })
-        };
+        let fallback = playwright_fetch_parse_error(self.fallback, path);
+        let primary = self.primary.get_playwright_fetch_facts(path);
         if self.prefer_fallback {
-            fallback_error().or_else(|| self.primary.get_playwright_fetch_facts(path))
+            fallback.or(primary)
         } else {
-            self.primary
-                .get_playwright_fetch_facts(path)
-                .or_else(fallback_error)
+            primary.or(fallback)
         }
     }
 

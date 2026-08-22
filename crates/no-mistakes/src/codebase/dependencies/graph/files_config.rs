@@ -153,10 +153,11 @@ fn graph_config_options_for_plan_with_config(
     plan: GraphBuildPlan,
     config_path: Option<&Path>,
 ) -> Option<GraphConfigOptions> {
-    graph_plan_needs_config(plan)
-        .then(|| match config_path {
-            Some(_) => graph_config_options_with_config(root, config_path),
-            None => graph_config_options(root),
-        })
-        .flatten()
+    if !graph_plan_needs_config(plan) {
+        return None;
+    }
+    match config_path {
+        Some(_) => graph_config_options_with_config(root, config_path),
+        None => graph_config_options(root),
+    }
 }

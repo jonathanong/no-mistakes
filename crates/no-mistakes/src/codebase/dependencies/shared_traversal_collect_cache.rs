@@ -1,3 +1,11 @@
+fn cache_traversal_error(error: anyhow::Error) -> std::sync::Arc<str> {
+    std::sync::Arc::<str>::from(format!("{error:#}"))
+}
+
+fn replay_cached_traversal_error(message: std::sync::Arc<str>) -> anyhow::Error {
+    anyhow::anyhow!("{message}")
+}
+
 fn cached_traversal_entries(
     shared: &SharedTraversalContext,
     key: TraversalCacheKey,
@@ -33,10 +41,10 @@ fn cached_traversal_entries(
                     runtime_diagnostics,
                     tsconfig_provenance,
                 })
-                .map_err(|error| std::sync::Arc::<str>::from(format!("{error:#}")))
+                .map_err(cache_traversal_error)
         })
         .clone()
-        .map_err(|message| anyhow::anyhow!("{message}"))?;
+        .map_err(replay_cached_traversal_error)?;
     if !computed {
         shared.session.record_work("traversal.reuses", 1);
     }

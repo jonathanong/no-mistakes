@@ -104,22 +104,13 @@ fn route_import_resolution_source(
 ) -> PathBuf {
     if let Ok(metadata) = std::fs::symlink_metadata(path) {
         if metadata.file_type().is_symlink() {
-            return match path.canonicalize() {
-                Ok(canonical) => canonical,
-                Err(_) => path.to_path_buf(),
-            };
+            return path.canonicalize().unwrap_or_else(|_| path.to_path_buf());
         }
     }
-    let Some(parent) = path.parent() else {
-        return path.to_path_buf();
-    };
-    let Some(canonical_parent) = canonical_directories.get(parent) else {
-        return path.to_path_buf();
-    };
-    let Some(name) = path.file_name() else {
-        return path.to_path_buf();
-    };
-    canonical_parent.join(name)
+    path.parent()
+        .and_then(|parent| canonical_directories.get(parent))
+        .and_then(|canonical_parent| path.file_name().map(|name| canonical_parent.join(name)))
+        .unwrap_or_else(|| path.to_path_buf())
 }
 
 fn route_import_visible_target(

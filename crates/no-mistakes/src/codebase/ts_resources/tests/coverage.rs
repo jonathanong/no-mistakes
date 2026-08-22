@@ -115,3 +115,23 @@ fn nested_assignment_targets_are_walked() {
         "nested assignment targets must invalidate rebound fs bindings: {facts:#?}"
     );
 }
+
+#[test]
+fn default_export_and_argumentless_resource_calls_are_walked() {
+    let prefix = "import * as fs from 'node:fs';\nimport { glob } from 'glob';\n";
+    for source in [
+        "export default function () { fs.readFile('anon-default.json'); }",
+        "export default () => { fs.readFile('arrow-default.json'); }",
+        "export default class C { read() { fs.readFile('class-default.json'); } }",
+        "export default (function () { fs.readFile('paren-fn.json'); });",
+        "export default (() => { fs.readFile('paren-arrow.json'); });",
+        "export default (1);\n(fs.readFile)('paren-callee.json');",
+        "fs.readFile();\nglob();",
+    ] {
+        let facts = facts(&format!("{prefix}{source}"));
+        assert!(
+            !facts.calls.is_empty() || !facts.diagnostics.is_empty(),
+            "{source}: {facts:#?}"
+        );
+    }
+}

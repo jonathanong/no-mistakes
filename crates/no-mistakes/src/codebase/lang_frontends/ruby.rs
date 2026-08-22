@@ -64,16 +64,14 @@ fn ruby_module_key(path: &Path, roots: &[PathBuf]) -> Option<String> {
 fn extract_requires(source: &str, path: &Path, roots: &[PathBuf]) -> Vec<String> {
     let mut imports = extract_named(source, ruby_require_re());
     for rel in extract_named(source, ruby_require_relative_re()) {
-        if let Some(parent) = path.parent() {
-            let resolved = crate::codebase::ts_resolver::normalize_path(
-                &parent.join(rel).with_extension("rb"),
-            );
-            if let Some(key) = ruby_module_key(&resolved, roots) {
-                imports.push(key);
-            }
-            if let Some(stem) = resolved.file_stem() {
-                imports.push(stem.to_string_lossy().into_owned());
-            }
+        let parent = path.parent().unwrap_or(path);
+        let resolved =
+            crate::codebase::ts_resolver::normalize_path(&parent.join(rel).with_extension("rb"));
+        if let Some(key) = ruby_module_key(&resolved, roots) {
+            imports.push(key);
+        }
+        if let Some(stem) = resolved.file_stem() {
+            imports.push(stem.to_string_lossy().into_owned());
         }
     }
     imports.sort();
@@ -84,11 +82,9 @@ fn extract_requires(source: &str, path: &Path, roots: &[PathBuf]) -> Vec<String>
 fn extract_static_consts(source: &str) -> Vec<String> {
     let mut names = Vec::new();
     for cap in ruby_const_re().captures_iter(source) {
-        let Some(matched) = cap.get(1) else {
-            continue;
-        };
-        let before = source.get(..matched.start()).unwrap_or("");
-        let after = source.get(matched.end()..).unwrap_or("");
+        let matched = cap.get(1).expect("ruby const capture includes group 1");
+        let before = &source[..matched.start()];
+        let after = &source[matched.end()..];
         if after.trim_start().starts_with(".constantize")
             || before.ends_with('"')
             || before.ends_with('\'')

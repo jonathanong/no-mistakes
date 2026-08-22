@@ -405,3 +405,76 @@ fn fallback_lookup_uses_primary_fetch_facts_before_parse_errors() {
     );
     assert!(lookup.get_playwright_fetch_facts(&path).is_some());
 }
+
+#[test]
+fn playwright_fetch_parse_error_keeps_missing_and_parse_channels() {
+    let path = PathBuf::from("/repo/file.ts");
+    assert!(super::playwright_fetch_parse_error(&TsFactMap::new(), &path).is_none());
+    let fallback = TsFactMap::from([(path.clone(), TsFileFacts::default())]);
+    assert!(super::playwright_fetch_parse_error(&fallback, &path).is_none());
+    let fallback = TsFactMap::from([(
+        path.clone(),
+        TsFileFacts {
+            parse_error: Some("boom".into()),
+            ..Default::default()
+        },
+    )]);
+    let error = super::playwright_fetch_parse_error(&fallback, &path)
+        .expect("parse errors become fetch errors");
+    let error = match error {
+        Err(error) => error,
+        Ok(_) => panic!("parse errors are Err"),
+    };
+    assert!(error.contains("boom"));
+}
+
+#[test]
+fn fallback_lookup_uses_fallback_fetch_when_primary_has_no_facts() {
+    use crate::codebase::check_facts::CheckFactMap;
+
+    let path = PathBuf::from("/repo/file.ts");
+    let primary = CheckFactMap {
+        graph_files: vec![path.clone()],
+        graph_files_complete: true,
+        ..CheckFactMap::default()
+    };
+    let fallback = TsFactMap::from([(
+        path.clone(),
+        TsFileFacts {
+            parse_error: Some("fallback".into()),
+            ..Default::default()
+        },
+    )]);
+    let visible: crate::fx::PathSet = [path.clone()].into_iter().collect();
+    let lookup = FallbackTsFactLookup::new(
+        &primary,
+        &fallback,
+        false,
+        std::slice::from_ref(&path),
+        &visible,
+    );
+    let error = lookup
+        .get_playwright_fetch_facts(&path)
+        .expect("matching graph universe reuses fallback parse errors");
+    let error = match error {
+        Err(error) => error,
+        Ok(_) => panic!("fallback parse error is retained"),
+    };
+    assert!(error.contains("fallback"));
+
+    let lookup = FallbackTsFactLookup::new(
+        &primary,
+        &fallback,
+        true,
+        std::slice::from_ref(&path),
+        &visible,
+    );
+    let error = lookup
+        .get_playwright_fetch_facts(&path)
+        .expect("prefer-fallback still surfaces parse errors");
+    let error = match error {
+        Err(error) => error,
+        Ok(_) => panic!("fallback parse error is retained"),
+    };
+    assert!(error.contains("fallback"));
+}

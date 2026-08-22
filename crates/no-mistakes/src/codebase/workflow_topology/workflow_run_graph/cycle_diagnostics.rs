@@ -77,9 +77,9 @@ fn search_cycle_witness(
     adjacency: &HashMap<String, HashSet<String>>,
     witness: &mut Vec<String>,
 ) -> bool {
-    let Some(targets) = adjacency.get(current) else {
-        return false;
-    };
+    let targets = adjacency
+        .get(current)
+        .expect("cycle search stays on known workflow nodes");
     let mut sorted_targets: Vec<&String> = targets.iter().collect();
     sorted_targets.sort();
     for target in sorted_targets {
@@ -147,9 +147,9 @@ fn diagnose_chain_limits(
         .collect();
 
     while let Some(source) = pending.pop_front() {
-        let Some(targets) = adjacency.get(&source) else {
-            continue;
-        };
+        let targets = adjacency
+            .get(&source)
+            .expect("Kahn sources are adjacency keys");
         let mut sorted_targets: Vec<&String> = targets.iter().collect();
         sorted_targets.sort();
         for target in sorted_targets {

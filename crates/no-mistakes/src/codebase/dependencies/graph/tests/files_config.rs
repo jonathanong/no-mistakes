@@ -96,3 +96,20 @@ fn files_config_session_helper_does_not_call_discover_when_snapshot_exists() {
     assert!(source.contains("session.visible_paths(root)"));
     assert!(!include_str!("../files_config.rs").contains("discover_visible_paths"));
 }
+
+#[test]
+fn graph_config_options_for_plan_skip_plans_that_do_not_need_config() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
+    let imports_only = GraphBuildPlan {
+        imports: true,
+        ..GraphBuildPlan::default()
+    };
+    assert!(graph_config_options_for_plan_with_config(&root, imports_only, None).is_none());
+    let routes = GraphBuildPlan {
+        routes: true,
+        ..GraphBuildPlan::default()
+    };
+    assert!(graph_config_options_for_plan_with_config(&root, routes, None).is_some());
+    let config = root.join(".no-mistakes.yml");
+    assert!(graph_config_options_for_plan_with_config(&root, routes, Some(&config)).is_some());
+}
