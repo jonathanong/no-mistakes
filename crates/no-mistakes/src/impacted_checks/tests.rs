@@ -436,7 +436,10 @@ fn impacted_checks_napi_matches_the_cli_engine_for_multi_framework_fanout() {
         "changedFiles": ["src/shared.ts"],
     });
 
-    let napi_json = crate::napi_api::impacted_checks_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let napi_json = crate::napi_api::impacted_checks_json_impl(
+        crate::napi_api::options::test_json_arg(options),
+    )
+    .unwrap();
     let napi_report: serde_json::Value = serde_json::from_str(&napi_json).unwrap();
 
     assert_eq!(napi_report, serde_json::to_value(cli_report).unwrap());

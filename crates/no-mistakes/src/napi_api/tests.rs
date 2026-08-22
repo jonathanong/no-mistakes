@@ -144,14 +144,14 @@ fn pass4b_symbols_cli_and_napi_reports_share_gitignore_visibility() {
         timings: false,
     })
     .unwrap();
-    let napi_output = symbols_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let napi_output = symbols_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root_string,
             "files": ["query/source.ts"],
             "include": "both",
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let cli_output: serde_json::Value = serde_json::from_str(&cli_output).unwrap();
     let napi_output: serde_json::Value = serde_json::from_str(&napi_output).unwrap();
@@ -194,85 +194,6 @@ fn fetches_json_returns_structured_report() {
 include!("tests_planning.rs");
 
 #[test]
-fn tests_plan_json_ignores_deleted_changed_files() {
-    let output = tests_plan_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
-            "framework": "vitest",
-            "root": fixture_root("test-plan-config"),
-            "changedFiles": ["web/app/deleted.tsx", "source.ts"],
-            "limitFiles": 1
-        })
-        .to_string(),)
-    )
-    .unwrap();
-    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
-
-    assert_eq!(plan["fallback_triggered"], false);
-    assert!(plan["fallback_reason"].is_null());
-    assert!(plan["warnings"].as_array().unwrap().is_empty());
-    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
-    assert!(plan["selected_tests"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .all(|test| test["reasons"]
-            .as_array()
-            .unwrap()
-            .iter()
-            .all(|reason| { reason["changed_file"] != "web/app/deleted.tsx" })));
-}
-
-#[test]
-fn playwright_json_exports_return_analyzer_reports() {
-    let root = fixture("nextjs-coverage", "covered");
-    let check = playwright_check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap();
-    let check: serde_json::Value = serde_json::from_str(&check).unwrap();
-    assert!(check["summary"]["totalRoutes"].as_u64().unwrap() > 0);
-
-    let root = fixture("nextjs-coverage", "covered");
-    let edges = playwright_edges_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap();
-    let edges: serde_json::Value = serde_json::from_str(&edges).unwrap();
-    assert!(!edges["edges"].as_array().unwrap().is_empty());
-
-    let root = fixture("nextjs-coverage", "covered");
-    let related = playwright_related_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
-            "root": root,
-            "files": ["web/app/settings/page.tsx"]
-        })
-        .to_string(),)
-    )
-    .unwrap();
-    let related: serde_json::Value = serde_json::from_str(&related).unwrap();
-    assert!(related["tests"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .any(|test| test == "tests/e2e/settings.spec.ts"));
-
-    let root = fixture("nextjs-coverage", "covered");
-    let tests = playwright_tests_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap();
-    let tests: serde_json::Value = serde_json::from_str(&tests).unwrap();
-    assert!(!tests["tests"].as_array().unwrap().is_empty());
-
-    let root = fixture("nextjs-coverage", "covered");
-    let error = playwright_related_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap_err();
-    assert!(error
-        .reason
-        .contains("files must contain at least one file"));
-}
-
-#[test]
-fn queues_json_returns_project_report() {
-    let options = json!({ "root": fixture_root("queue-dashboard/good") }).to_string();
-    let output = queues_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
-    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
-
-    assert!(value["jobs"].as_array().unwrap().is_empty());
-    assert!(value["diagnostics"].as_array().unwrap().is_empty());
-}
-
-#[test]
 fn queue_subcommand_json_returns_edges_and_checks() {
     let options = json!({
         "root": fixture("queue-ast-hop", "basic"),
@@ -280,8 +201,10 @@ fn queue_subcommand_json_returns_edges_and_checks() {
         "depth": 2
     })
     .to_string();
-    let edges: serde_json::Value =
-        serde_json::from_str(&queue_edges_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap()).unwrap();
+    let edges: serde_json::Value = serde_json::from_str(
+        &queue_edges_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
     assert!(!edges.as_array().unwrap().is_empty());
 
     let options = json!({
@@ -290,13 +213,17 @@ fn queue_subcommand_json_returns_edges_and_checks() {
         "direction": "deps"
     })
     .to_string();
-    let related: serde_json::Value =
-        serde_json::from_str(&queue_related_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap()).unwrap();
+    let related: serde_json::Value = serde_json::from_str(
+        &queue_related_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
     assert!(!related.as_array().unwrap().is_empty());
 
     let options = json!({ "root": fixture_root("queue-dashboard/good") }).to_string();
-    let check: serde_json::Value =
-        serde_json::from_str(&queue_check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap()).unwrap();
+    let check: serde_json::Value = serde_json::from_str(
+        &queue_check_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
     assert!(check.as_array().unwrap().is_empty());
 }
 
@@ -308,8 +235,10 @@ fn server_route_json_returns_reports_edges_and_related() {
     assert!(value["summary"]["totalRoutes"].as_u64().unwrap() > 0);
 
     let options = json!({ "root": fixture_root("routes/good") }).to_string();
-    let all_routes: serde_json::Value =
-        serde_json::from_str(&server_route_list_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap()).unwrap();
+    let all_routes: serde_json::Value = serde_json::from_str(
+        &server_route_list_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
     assert!(all_routes.as_array().unwrap().len() > 1);
 
     let options = json!({
@@ -317,8 +246,10 @@ fn server_route_json_returns_reports_edges_and_related() {
         "files": ["/api/v1/users"]
     })
     .to_string();
-    let routes: serde_json::Value =
-        serde_json::from_str(&server_route_list_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap()).unwrap();
+    let routes: serde_json::Value = serde_json::from_str(
+        &server_route_list_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
     assert_eq!(routes.as_array().unwrap().len(), 1);
 
     let options = json!({
@@ -326,8 +257,10 @@ fn server_route_json_returns_reports_edges_and_related() {
         "files": ["backend/api/v1/users.mts"]
     })
     .to_string();
-    let edges: serde_json::Value =
-        serde_json::from_str(&server_route_edges_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap()).unwrap();
+    let edges: serde_json::Value = serde_json::from_str(
+        &server_route_edges_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
     assert!(!edges.as_array().unwrap().is_empty());
 
     let options = json!({
@@ -336,8 +269,10 @@ fn server_route_json_returns_reports_edges_and_related() {
         "direction": "dependents"
     })
     .to_string();
-    let related: serde_json::Value =
-        serde_json::from_str(&server_route_related_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap()).unwrap();
+    let related: serde_json::Value = serde_json::from_str(
+        &server_route_related_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
     assert!(related.as_array().is_some());
 }
 
@@ -346,8 +281,10 @@ fn server_route_napi_projects_configured_client_call_edges() {
     let fixture = saved_fixture("server-routes", "canonical-relationships");
     let root = fixture.path().display().to_string();
     let options = json!({ "root": root }).to_string();
-    let edges: serde_json::Value =
-        serde_json::from_str(&server_route_edges_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap()).unwrap();
+    let edges: serde_json::Value = serde_json::from_str(
+        &server_route_edges_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
     assert!(edges.as_array().unwrap().iter().any(|edge| {
         edge["from"] == "backend/client.ts"
             && edge["to"] == "/api/v1/users/*"
@@ -360,8 +297,10 @@ fn server_route_napi_projects_configured_client_call_edges() {
         "direction": "deps"
     })
     .to_string();
-    let related: serde_json::Value =
-        serde_json::from_str(&server_route_related_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap()).unwrap();
+    let related: serde_json::Value = serde_json::from_str(
+        &server_route_related_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
     assert!(related.as_array().unwrap().iter().any(|edge| {
         edge["from"] == "backend/client.ts"
             && edge["to"] == "/api/v1/users/*"
@@ -409,12 +348,18 @@ include!("tests_query.rs");
 
 #[test]
 fn invalid_options_return_napi_errors() {
-    let error = dependencies_json_impl(crate::napi_api::options::test_json_arg(serde_json::json!({}))).unwrap_err();
+    let error = dependencies_json_impl(crate::napi_api::options::test_json_arg(serde_json::json!(
+        {}
+    )))
+    .unwrap_err();
     assert!(error
         .reason
         .contains("files must contain at least one file"));
 
-    let error = symbols_json_impl(crate::napi_api::options::test_json_arg(serde_json::json!({}))).unwrap_err();
+    let error = symbols_json_impl(crate::napi_api::options::test_json_arg(serde_json::json!(
+        {}
+    )))
+    .unwrap_err();
     assert!(error
         .reason
         .contains("files must contain at least one file"));
@@ -431,27 +376,40 @@ fn invalid_options_return_napi_errors() {
     let error = parse_options::<SymbolOptions>(r#"{"unknownKey":true}"#).unwrap_err();
     assert!(error.reason.contains("unknown field"));
 
-    let error = queue_related_json_impl(crate::napi_api::options::test_json_arg(json!({ "files": [] }).to_string())).unwrap_err();
+    let error = queue_related_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "files": [] }).to_string(),
+    ))
+    .unwrap_err();
     assert!(error
         .reason
         .contains("files must contain at least one file"));
 
-    let error = server_route_related_json_impl(crate::napi_api::options::test_json_arg(json!({}).to_string())).unwrap_err();
+    let error = server_route_related_json_impl(crate::napi_api::options::test_json_arg(
+        json!({}).to_string(),
+    ))
+    .unwrap_err();
     assert!(error
         .reason
         .contains("files or roots must contain at least one entry"));
 
-    let error =
-        tests_plan_json_impl(crate::napi_api::options::test_json_arg(json!({ "framework": "unknown", "changedFiles": [] }).to_string()))
-            .unwrap_err();
+    let error = tests_plan_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "framework": "unknown", "changedFiles": [] }).to_string(),
+    ))
+    .unwrap_err();
     assert!(error.reason.contains("unknown test framework"));
 
-    let error = tests_impact_json_impl(crate::napi_api::options::test_json_arg(json!({ "entrypoints": [] }).to_string())).unwrap_err();
+    let error = tests_impact_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "entrypoints": [] }).to_string(),
+    ))
+    .unwrap_err();
     assert!(error
         .reason
         .contains("entrypoints is required and must not be empty"));
 
-    let error = tests_why_json_impl(crate::napi_api::options::test_json_arg(json!({}).to_string())).unwrap_err();
+    let error = tests_why_json_impl(crate::napi_api::options::test_json_arg(
+        json!({}).to_string(),
+    ))
+    .unwrap_err();
     assert!(error.reason.contains("test is required"));
 
     let error = tests_comment_markdown_impl(crate::napi_api::options::test_json_arg(
@@ -463,7 +421,7 @@ fn invalid_options_return_napi_errors() {
     let error = tests_comment_markdown_impl(crate::napi_api::options::test_json_arg(
         json!({ "plan": "does-not-exist.json" }).to_string(),
     ))
-        .unwrap_err();
+    .unwrap_err();
     assert!(error.reason.contains("Failed to read plan"));
 }
 
@@ -568,6 +526,7 @@ mod analysis_session_tests;
 mod async_task_tests;
 mod check;
 mod ci;
+mod playwright_json_exports;
 mod react_usages;
 mod suppression_contract_tests;
 mod tests_entrypoints;

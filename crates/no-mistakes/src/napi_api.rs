@@ -22,8 +22,10 @@ macro_rules! json_binding {
     ($rust_name:ident, $js_name:literal, $implementation:path, string) => {
         #[cfg(not(coverage))]
         #[cfg_attr(not(test), napi(js_name = $js_name))]
-        pub fn $rust_name(options_json: napi::bindgen_prelude::Buffer) -> AsyncTask<JsonTask> {
-            AsyncTask::new(JsonTask::new(options_json, $implementation))
+        pub fn $rust_name(
+            options_json: napi::bindgen_prelude::Buffer,
+        ) -> AsyncTask<async_task::JsonTask> {
+            AsyncTask::new(async_task::JsonTask::new(options_json, $implementation))
         }
     };
 }
@@ -43,8 +45,7 @@ mod project;
 pub mod queries;
 
 #[cfg(not(coverage))]
-#[allow(unused_imports)]
-use async_task::{JsonTask, JsonValueTask, VersionTask};
+use async_task::{JsonValueTask, VersionTask};
 pub(crate) use cli_parity::{
     check_json_impl, ci_env_json_impl, ci_impact_json_impl, ci_topology_json_impl,
     fetches_json_impl, impacted_checks_json_impl, playwright_check_json_impl,

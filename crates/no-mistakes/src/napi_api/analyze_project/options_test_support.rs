@@ -1,5 +1,10 @@
 use anyhow::Result;
+use serde_json::{value::RawValue, Value};
 use std::path::{Path, PathBuf};
+
+pub(super) fn report_value(raw: Box<RawValue>) -> Value {
+    serde_json::from_str(raw.get()).expect("report JSON is valid")
+}
 
 pub(super) fn resolve_tsconfig(
     root: &Path,

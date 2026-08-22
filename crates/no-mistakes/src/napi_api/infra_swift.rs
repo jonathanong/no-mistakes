@@ -9,8 +9,6 @@ use napi_derive::napi;
 
 #[cfg(not(coverage))]
 use super::async_task::JsonValueTask;
-#[cfg(test)]
-use super::options::parse_options;
 use super::options::{parse_options_value, resolve_project_root, to_napi_error};
 
 #[derive(Debug, Default, Deserialize)]

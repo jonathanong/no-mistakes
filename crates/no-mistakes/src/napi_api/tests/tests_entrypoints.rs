@@ -119,7 +119,9 @@ fn tests_plan_json_preserves_structured_hash_file_entrypoints_without_symbol() {
 
 #[test]
 fn tests_targets_json_requires_framework() {
-    let error =
-        tests_targets_json_impl(crate::napi_api::options::test_json_arg(json!({ "files": ["tests/app.test.ts"] }).to_string())).unwrap_err();
+    let error = tests_targets_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "files": ["tests/app.test.ts"] }).to_string(),
+    ))
+    .unwrap_err();
     assert!(error.reason.contains("framework is required"));
 }

@@ -16,10 +16,7 @@ pub(crate) fn playwright_edges_json_impl(options: serde_json::Value) -> napi::Re
 }
 
 pub(crate) fn playwright_related_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    playwright_json(
-        options,
-        crate::playwright::PlaywrightReportKind::Related,
-    )
+    playwright_json(options, crate::playwright::PlaywrightReportKind::Related)
 }
 
 pub(crate) fn playwright_tests_json_impl(options: serde_json::Value) -> napi::Result<String> {

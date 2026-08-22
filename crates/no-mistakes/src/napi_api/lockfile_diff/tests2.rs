@@ -103,20 +103,21 @@ fn lockfile_diff_napi_ignores_worktree_lockfile_but_honors_explicit_path() {
         .output()
         .unwrap();
 
-    let automatic =
-        lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(serde_json::json!({ "root": root, "base": "HEAD" }).to_string()))
-            .unwrap();
+    let automatic = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({ "root": root, "base": "HEAD" }).to_string(),
+    ))
+    .unwrap();
     let automatic: Vec<serde_json::Value> = serde_json::from_str(&automatic).unwrap();
     assert!(automatic.is_empty());
 
-    let explicit = lockfile_diff_json_impl(
-        crate::napi_api::options::test_json_arg(serde_json::json!({
+    let explicit = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({
             "root": root,
             "base": "HEAD",
             "lockfile": "pnpm-lock.yaml"
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let explicit: Vec<serde_json::Value> = serde_json::from_str(&explicit).unwrap();
     assert_eq!(explicit.len(), 1);

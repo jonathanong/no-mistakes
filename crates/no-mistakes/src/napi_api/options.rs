@@ -104,9 +104,7 @@ pub(crate) fn parse_options<T: for<'de> Deserialize<'de>>(options_json: &str) ->
         .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))
 }
 
-pub(crate) fn parse_options_value<T: for<'de> Deserialize<'de>>(
-    options: Value,
-) -> napi::Result<T> {
+pub(crate) fn parse_options_value<T: for<'de> Deserialize<'de>>(options: Value) -> napi::Result<T> {
     serde_json::from_value(options)
         .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))
 }

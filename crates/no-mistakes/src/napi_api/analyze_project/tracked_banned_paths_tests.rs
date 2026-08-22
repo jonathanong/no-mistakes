@@ -28,16 +28,20 @@ fn prepared_check_matches_standalone_tracked_only_banned_paths() {
     .unwrap();
     crate::test_support::git_add_force(root, &[".gitignore"]);
 
-    let standalone =
-        parse_json(crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap());
+    let standalone = parse_json(
+        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root }).to_string(),
+        ))
+        .unwrap(),
+    );
     let aggregate = parse_json(
-        analyze_project_json_impl(
-            crate::napi_api::options::test_json_arg(json!({
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
                 "root": root,
                 "reports": [{ "type": "check" }]
             })
-            .to_string(),)
-        )
+            .to_string(),
+        ))
         .unwrap(),
     );
 

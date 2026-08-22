@@ -25,9 +25,10 @@ fn check_json_reports_suppressed_findings_from_prepared_root_fixtures() {
         let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/check")
             .join(fixture);
-        let output =
-            check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root, "includeSuppressed": true }).to_string()))
-                .unwrap();
+        let output = check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "includeSuppressed": true }).to_string(),
+        ))
+        .unwrap();
         let report: serde_json::Value = serde_json::from_str(&output).unwrap();
         assert!(
             report["suppressed"].as_array().is_some_and(|findings| {

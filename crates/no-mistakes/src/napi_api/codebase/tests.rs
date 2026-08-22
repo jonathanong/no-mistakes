@@ -136,7 +136,8 @@ fn dependencies_napi_honors_explicit_ignored_root_but_not_ignored_transitives() 
         if let Some(relationships) = relationships {
             options["relationships"] = relationships;
         }
-        let output = dependencies_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+        let output =
+            dependencies_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
         let value: serde_json::Value = serde_json::from_str(&output).unwrap();
         let paths = value["files"]
             .as_array()
@@ -158,8 +159,10 @@ fn queues_napi_ignores_automatic_tsconfig_but_honors_explicit_ignored_config() {
     let fixture = gitignore_tsconfig_fixture();
     let root = fixture.path().display().to_string();
 
-    let automatic =
-        crate::napi_api::queues_json_impl(crate::napi_api::options::test_json_arg(serde_json::json!({ "root": root }).to_string())).unwrap();
+    let automatic = crate::napi_api::queues_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({ "root": root }).to_string(),
+    ))
+    .unwrap();
     let automatic: serde_json::Value = serde_json::from_str(&automatic).unwrap();
     assert!(automatic["producers"]
         .as_array()
@@ -167,9 +170,9 @@ fn queues_napi_ignores_automatic_tsconfig_but_honors_explicit_ignored_config() {
         .iter()
         .any(|producer| { producer["file"] == "enqueue.ts" && producer["queueFile"].is_null() }));
 
-    let explicit = crate::napi_api::queues_json_impl(
-        crate::napi_api::options::test_json_arg(serde_json::json!({ "root": root, "tsconfig": "tsconfig.json" }).to_string(),)
-    )
+    let explicit = crate::napi_api::queues_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({ "root": root, "tsconfig": "tsconfig.json" }).to_string(),
+    ))
     .unwrap();
     let explicit: serde_json::Value = serde_json::from_str(&explicit).unwrap();
     assert!(explicit["producers"]
@@ -190,8 +193,10 @@ fn queues_napi_uses_package_tsconfig_aliases_automatically() {
     let root = root_path.display().to_string();
 
     crate::ast::begin_parse_count(&root_path);
-    let output =
-        crate::napi_api::queues_json_impl(crate::napi_api::options::test_json_arg(serde_json::json!({ "root": root }).to_string())).unwrap();
+    let output = crate::napi_api::queues_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({ "root": root }).to_string(),
+    ))
+    .unwrap();
     let parse_counts = crate::ast::finish_parse_count(&root_path);
     let report: serde_json::Value = serde_json::from_str(&output).unwrap();
 

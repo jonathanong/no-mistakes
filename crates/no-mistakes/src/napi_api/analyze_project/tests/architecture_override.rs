@@ -100,8 +100,8 @@ fn playwright_prepared_views_share_one_parse_per_indexable_file() {
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     let root = fixture.path().canonicalize().unwrap();
     crate::ast::begin_parse_count(&root);
-    let output = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "reports": [
                 { "type": "playwrightCheck", "id": "same-check" },
@@ -114,8 +114,8 @@ fn playwright_prepared_views_share_one_parse_per_indexable_file() {
                 }
             ]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
     let output = parse_json(output);
@@ -150,8 +150,8 @@ fn distinct_config_scopes_reuse_one_shared_playwright_config_parse() {
     // The two config paths intentionally form distinct effective scopes while both
     // scopes prepare and seed facts for the same Playwright configuration.
     crate::ast::begin_parse_count(&root);
-    let output = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "reports": [
                 {
@@ -168,8 +168,8 @@ fn distinct_config_scopes_reuse_one_shared_playwright_config_parse() {
                 }
             ]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
     let output = parse_json(output);
@@ -192,25 +192,25 @@ fn explicit_config_playwright_scope_reuses_canonical_manifest_and_sources() {
     let root = directory.path().canonicalize().unwrap();
     let config = root.join(".no-mistakes.yml");
     let standalone = parse_json(
-        crate::napi_api::playwright_check_json_impl(
-            crate::napi_api::options::test_json_arg(json!({ "root": root, "config": config }).to_string(),)
-        )
+        crate::napi_api::playwright_check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "config": config }).to_string(),
+        ))
         .unwrap(),
     );
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let output = {
         let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
         parse_json(
-            analyze_project_json_impl(
-                crate::napi_api::options::test_json_arg(json!({
+            analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+                json!({
                     "root": root,
                     "reports": [{
                         "type": "playwrightCheck",
                         "config": config
                     }]
                 })
-                .to_string(),)
-            )
+                .to_string(),
+            ))
             .unwrap(),
         )
     };
@@ -240,18 +240,23 @@ fn per_report_config_scopes_match_standalone_check_results() {
     let root = directory.path();
     let explicit_config = root.join("explicit.no-mistakes.yml");
     let standalone = [
-        parse_json(crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap()),
         parse_json(
-            crate::napi_api::check_json_impl(
-                crate::napi_api::options::test_json_arg(json!({ "root": root, "config": explicit_config }).to_string(),)
-            )
+            crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+                json!({ "root": root }).to_string(),
+            ))
+            .unwrap(),
+        ),
+        parse_json(
+            crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+                json!({ "root": root, "config": explicit_config }).to_string(),
+            ))
             .unwrap(),
         ),
     ];
 
     let output = parse_json(
-        analyze_project_json_impl(
-            crate::napi_api::options::test_json_arg(json!({
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
                 "root": root,
                 "reports": [
                     { "type": "check", "id": "automatic" },
@@ -262,8 +267,8 @@ fn per_report_config_scopes_match_standalone_check_results() {
                     }
                 ]
             })
-            .to_string(),)
-        )
+            .to_string(),
+        ))
         .unwrap(),
     );
 
@@ -296,8 +301,8 @@ fn equivalent_relative_and_absolute_roots_share_one_analysis_scope() {
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let output = {
         let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
-        analyze_project_json_impl(
-            crate::napi_api::options::test_json_arg(json!({
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
                 "root": root,
                 "reports": [
                     {
@@ -316,8 +321,8 @@ fn equivalent_relative_and_absolute_roots_share_one_analysis_scope() {
                     }
                 ]
             })
-            .to_string(),)
-        )
+            .to_string(),
+        ))
         .unwrap()
     };
     let output = parse_json(output);
@@ -340,8 +345,8 @@ fn inherited_and_report_relative_tsconfigs_anchor_to_their_own_roots() {
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let output = {
         let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
-        analyze_project_json_impl(
-            crate::napi_api::options::test_json_arg(json!({
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
                 "root": top_root,
                 "tsconfig": "core-analysis/tsconfig.json",
                 "reports": [
@@ -362,8 +367,8 @@ fn inherited_and_report_relative_tsconfigs_anchor_to_their_own_roots() {
                     }
                 ]
             })
-            .to_string(),)
-        )
+            .to_string(),
+        ))
         .unwrap()
     };
     let results = report_results(&parse_json(output));
@@ -379,20 +384,20 @@ fn inherited_and_report_relative_configs_anchor_to_their_own_roots() {
     let top_root = fixture(&["fixtures", "codebase", "forbidden-playwright-cached-error"]);
     let report_root = top_root.join("fixture");
     let standalone = parse_json(
-        crate::napi_api::check_json_impl(
-            crate::napi_api::options::test_json_arg(json!({
+        crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
                 "root": report_root,
                 "config": "route.no-mistakes.yml"
             })
-            .to_string(),)
-        )
+            .to_string(),
+        ))
         .unwrap(),
     );
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let output = {
         let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
-        analyze_project_json_impl(
-            crate::napi_api::options::test_json_arg(json!({
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
                 "root": top_root,
                 "config": "fixture/route.no-mistakes.yml",
                 "reports": [
@@ -409,8 +414,8 @@ fn inherited_and_report_relative_configs_anchor_to_their_own_roots() {
                     }
                 ]
             })
-            .to_string(),)
-        )
+            .to_string(),
+        ))
         .unwrap()
     };
     let results = report_results(&parse_json(output));
@@ -433,8 +438,8 @@ fn nested_root_report_override_succeeds_with_the_top_level_snapshot_scope() {
     let root = fixture(&["fixtures", "parser-count", "rsc"]);
     let nested_root = root.join("app");
     let output = parse_json(
-        analyze_project_json_impl(
-            crate::napi_api::options::test_json_arg(json!({
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
                 "root": root,
                 "reports": [{
                     "type": "dependencies",
@@ -443,8 +448,8 @@ fn nested_root_report_override_succeeds_with_the_top_level_snapshot_scope() {
                     "relationships": ["import"]
                 }]
             })
-            .to_string(),)
-        )
+            .to_string(),
+        ))
         .unwrap(),
     );
     let files = output["reports"][0]["result"]["files"].as_array().unwrap();
@@ -457,31 +462,31 @@ fn nested_root_report_override_succeeds_with_the_top_level_snapshot_scope() {
 fn playwright_preparation_surfaces_settings_and_fact_plan_errors() {
     let root = fixture(&["fixtures", "parser-count", "playwright"]);
 
-    let settings_error = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let settings_error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "reports": [{
                 "type": "playwrightCheck",
                 "config": "missing.no-mistakes.yml"
             }]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .expect_err("an explicit missing no-mistakes config must fail preparation");
     assert!(settings_error
         .to_string()
         .contains("config file does not exist"));
 
-    let fact_plan_error = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let fact_plan_error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "reports": [{
                 "type": "playwrightCheck",
                 "playwrightConfig": ["missing.playwright.config.ts"]
             }]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .expect_err("an explicit missing Playwright config must fail fact planning");
     assert!(fact_plan_error
         .to_string()
