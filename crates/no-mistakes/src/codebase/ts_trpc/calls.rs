@@ -1,23 +1,9 @@
-use oxc_allocator::Allocator;
 use oxc_ast::ast::{CallExpression, Expression, Program};
 use oxc_ast_visit::{walk, Visit};
-use oxc_span::SourceType;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct TrpcCallFact {
     pub path: String,
-}
-
-#[cfg(test)]
-pub fn extract_trpc_calls(source: &str) -> Vec<TrpcCallFact> {
-    let allocator = Allocator::default();
-    let ret = crate::ast::parse(
-        std::path::Path::new("trpc-calls.ts"),
-        &allocator,
-        source,
-        SourceType::ts(),
-    );
-    extract_trpc_calls_from_program(&ret.program)
 }
 
 pub fn extract_trpc_calls_from_program(program: &Program<'_>) -> Vec<TrpcCallFact> {

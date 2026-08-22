@@ -1,25 +1,11 @@
-use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     Argument, CallExpression, Expression, ObjectExpression, ObjectPropertyKind, Program,
 };
 use oxc_ast_visit::{walk, Visit};
-use oxc_span::SourceType;
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct TrpcRouterFacts {
     pub procedures: Vec<String>,
-}
-
-#[cfg(test)]
-pub fn extract_trpc_router(source: &str) -> TrpcRouterFacts {
-    let allocator = Allocator::default();
-    let ret = crate::ast::parse(
-        std::path::Path::new("trpc-router.ts"),
-        &allocator,
-        source,
-        SourceType::ts(),
-    );
-    extract_trpc_router_from_program(&ret.program)
 }
 
 pub fn extract_trpc_router_from_program(program: &Program<'_>) -> TrpcRouterFacts {

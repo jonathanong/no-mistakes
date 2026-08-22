@@ -184,22 +184,11 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
         NodeId::TrpcProcedure {
             router_file,
             procedure,
-        } => FlowNode {
-            id,
-            kind: "trpc-procedure",
-            depth,
-            file: None,
-            symbol: None,
-            module: None,
-            queue_file: None,
-            job: None,
-            workflow_file: None,
-            step: None,
-            router_file: Some(relative(root, router_file)),
-            procedure: Some(procedure.to_string()),
-        },
+        } => trpc_procedure_flow_node(id, depth, root, router_file, procedure),
     }
 }
+
+include!("flow_query_traverse_trpc.rs");
 
 fn node_key(node: &NodeId, root: &Path) -> String {
     node.display_name(root).replace('\\', "/")

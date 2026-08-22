@@ -1,4 +1,17 @@
-use super::{extract_trpc_router, TrpcRouterFacts};
+use super::{extract_trpc_router_from_program, TrpcRouterFacts};
+use oxc_allocator::Allocator;
+use oxc_span::SourceType;
+
+fn extract_trpc_router(source: &str) -> TrpcRouterFacts {
+    let allocator = Allocator::default();
+    let ret = crate::ast::parse(
+        std::path::Path::new("trpc-router.ts"),
+        &allocator,
+        source,
+        SourceType::ts(),
+    );
+    extract_trpc_router_from_program(&ret.program)
+}
 
 #[test]
 fn nested_static_router_keys_become_procedure_paths() {

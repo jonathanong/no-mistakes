@@ -1,4 +1,17 @@
-use super::{extract_trpc_calls, TrpcCallFact};
+use super::{extract_trpc_calls_from_program, TrpcCallFact};
+use oxc_allocator::Allocator;
+use oxc_span::SourceType;
+
+fn extract_trpc_calls(source: &str) -> Vec<TrpcCallFact> {
+    let allocator = Allocator::default();
+    let ret = crate::ast::parse(
+        std::path::Path::new("trpc-calls.ts"),
+        &allocator,
+        source,
+        SourceType::ts(),
+    );
+    extract_trpc_calls_from_program(&ret.program)
+}
 
 #[test]
 fn static_client_calls_capture_procedure_paths() {
