@@ -117,3 +117,86 @@ fn dotnet_project_edges_skip_missing_sources_and_references() {
         )]
     );
 }
+
+#[test]
+fn aspnet_map_get_emits_route_ref_to_handler_file() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/lang-frontends/dotnet-aspnet-routes"),
+    );
+    let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let mut options = empty_options();
+    options.dotnet_projects =
+        crate::codebase::dotnet::configured_projects(&root, &config.tests.dotnet);
+    let edges = collect_dotnet_edges(
+        &root,
+        &all_files,
+        Some(&options),
+        None,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+    assert!(edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("Program.cs"))
+            && to.as_file()
+                .is_some_and(|path| path.ends_with("UserHandlers.cs"))
+    }));
+    assert!(edges.iter().all(|(from, _, kind)| {
+        *kind != EdgeKind::RouteRef
+            || from
+                .as_file()
+                .is_none_or(|path| !path.ends_with("Computed.cs"))
+    }));
+}
+
+#[test]
+fn aspnet_route_globs_exclude_registration_files() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/lang-frontends/dotnet-aspnet-routes"),
+    );
+    let all_files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let mut options = empty_options();
+    options.dotnet_projects =
+        crate::codebase::dotnet::configured_projects(&root, &config.tests.dotnet);
+    let mut builder = globset::GlobSetBuilder::new();
+    builder.add(globset::Glob::new("**/UsersController.cs").unwrap());
+    options.project_route_globset = Some(builder.build().unwrap());
+    let edges = collect_dotnet_edges(
+        &root,
+        &all_files,
+        Some(&options),
+        None,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+    assert!(edges.iter().all(|(from, _, kind)| {
+        *kind != EdgeKind::RouteRef
+            || from
+                .as_file()
+                .is_none_or(|path| !path.ends_with("Program.cs"))
+    }));
+
+    let mut builder = globset::GlobSetBuilder::new();
+    builder.add(globset::Glob::new("**/Program.cs").unwrap());
+    options.project_route_globset = Some(builder.build().unwrap());
+    let edges = collect_dotnet_edges(
+        &root,
+        &all_files,
+        Some(&options),
+        None,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+    assert!(edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::RouteRef
+            && from
+                .as_file()
+                .is_some_and(|path| path.ends_with("Program.cs"))
+            && to
+                .as_file()
+                .is_some_and(|path| path.ends_with("UserHandlers.cs"))
+    }));
+}

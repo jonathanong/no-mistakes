@@ -24,6 +24,21 @@ fn csharp_parser_extracts_usings_declarations_refs_and_xunit_tests() {
 }
 
 #[test]
+fn csharp_parser_extracts_aspnet_routes_and_handler_methods() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/lang-frontends/dotnet-aspnet-routes");
+    let program = parse_csharp_file(&root.join("src/Api/Program.cs"), None).unwrap();
+    assert!(program
+        .route_handlers
+        .iter()
+        .any(|(path, handler)| { path == "/users" && handler == "UserHandlers.ListUsers" }));
+    let handlers = parse_csharp_file(&root.join("src/Api/UserHandlers.cs"), None).unwrap();
+    assert!(handlers.methods.contains(&"ListUsers".to_string()));
+    let computed = parse_csharp_file(&root.join("src/Api/Computed.cs"), None).unwrap();
+    assert!(computed.route_handlers.is_empty());
+}
+
+#[test]
 fn csharp_parser_ignores_comments_and_csharp_string_forms() {
     let path = fixture().join("dotnet-clients/tests/App.Tests/ParserEdgeCases.cs");
     let facts = parse_csharp_file(&path, None).expect("fixture should parse");

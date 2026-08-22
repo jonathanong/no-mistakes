@@ -114,3 +114,20 @@ fn rust_http_fixture_lists_literal_routes() {
         .iter()
         .all(|route| !route.file.ends_with("computed.rs")));
 }
+
+#[test]
+fn aspnet_fixture_lists_literal_routes() {
+    let report = analyze_project(&lang_fixture("dotnet-aspnet-routes"), None, &[]).unwrap();
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| route.route == "/users" && route.file.ends_with("Program.cs")));
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| route.route == "/orders" && route.file.ends_with("UsersController.cs")));
+    assert!(report
+        .routes
+        .iter()
+        .all(|route| !route.file.ends_with("Computed.cs")));
+}

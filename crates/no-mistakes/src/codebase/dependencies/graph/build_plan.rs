@@ -123,7 +123,8 @@ impl GraphBuildPlan {
             symbols: false,
             dotnet: allowed.contains(&EdgeKind::DotnetUsing)
                 || allowed.contains(&EdgeKind::DotnetReference)
-                || allowed.contains(&EdgeKind::DotnetProjectDependency),
+                || allowed.contains(&EdgeKind::DotnetProjectDependency)
+                || allowed.contains(&EdgeKind::RouteRef),
             swift: allowed.contains(&EdgeKind::SwiftImport)
                 || allowed.contains(&EdgeKind::SwiftReference)
                 || allowed.contains(&EdgeKind::SwiftPackageDependency),

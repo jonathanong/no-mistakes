@@ -23,7 +23,7 @@ CLIs are not started.
 | --- | --- | --- | --- | --- | --- |
 | TypeScript / JavaScript | yes | Vitest, Playwright, Jest | Express, Hono, Koa, Fastify, NestJS, Next.js, Remix file routes | BullMQ, glide-mq | shipped (tRPC procedures opt-in) |
 | Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
-| .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | no | no | shipped, narrower |
+| .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | ASP.NET `MapGet` / `[HttpGet]` literals | no | shipped (v1 extractors + plan) |
 | Python, Django, Celery | `python-import`, `python-ref` | `tests plan python` | Django `path(`, Flask, FastAPI | Celery `.delay(` / `@shared_task` | shipped (v1 extractors + plan) |
 | Go, Asynq | `go-import`, `go-ref` | `tests plan go` | net/http, Chi, Gin, Echo, Fiber literals | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors + plan) |
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
@@ -74,7 +74,8 @@ graph exists. Full-suite fallback remains explicit opt-in.
 **HTTP routes.** `server routes`, `server edges`, `server related`, and
 `server contracts` list configured TS/JS route definitions and static client
 calls. Language v1 extractors emit `route` edges into `DepGraph` for Django,
-Flask, FastAPI, Go HTTP, Rails, Laravel, Symfony, and Rust Axum/Actix/Rocket; query those with
+Flask, FastAPI, Go HTTP, Rails, Laravel, Symfony, Rust Axum/Actix/Rocket, and
+ASP.NET `MapGet` / `[HttpGet]`; query those with
 `dependents --relationship route`. `server routes|edges|related` also project
 those language `RouteRef` facts into the existing server report. Do not invent
 a second route graph.
@@ -131,6 +132,32 @@ Follow the Swift and .NET adapter shape, not a second analysis session.
 Counterexample: a `no-mistakes python` command that walks the tree, parses
 files again, and builds a standalone import graph. That violates prepared
 analysis ownership.
+
+## .NET, ASP.NET
+
+.NET already has the Swift-bar module graph and `tests plan dotnet`. HTTP v1
+extracts literal ASP.NET minimal APIs and MVC attributes inside configured
+`tests.dotnet.projects` / `tests.dotnet.solutions`.
+
+Static `app.MapGet("/users", ListUsers)` / `MapPost` / `MapPut` / `MapPatch` /
+`MapDelete` and `[HttpGet("/users")]` / `[HttpGet("users")]` (normalized to a
+leading `/`) emit `route` edges from the registration file to the file that
+declares the handler method. Handler names are the bare method ident after an
+optional type qualifier (`UserHandlers.ListUsers` → `ListUsers`).
+
+Computed paths, lambdas, `[HttpGet]` with no template, `[HttpGet(Name = …)]`,
+`MapGroup` prefixes, and conventional `{controller}/{action}` routing produce
+no edge. Same-file controller attributes still appear in `server routes`.
+
+```csharp
+app.MapGet("/users", UserHandlers.ListUsers);
+[HttpGet("/orders")]
+public object GetOrders() => new object();
+```
+
+Configure projects through `tests.dotnet.projects` the same way `tests plan
+dotnet` already does. Empty project lists disable the extractor; there is no
+hardcoded `Controllers/` glob.
 
 ## Python, Django, Flask, FastAPI, Celery
 

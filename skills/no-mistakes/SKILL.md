@@ -35,7 +35,7 @@ Configured `tests.python|go|rust|rails|php` and `tests.dotnet.projects` /
 prose). For structural graph questions outside TS/JS, see Command Selection:
 `.yml` → `ci` · `.tf` → `infra` · `.swift` → `swift` · Rust binary CI
 impact → `--relationship ci` · CSS/JSON asset imports →
-`--relationship asset`. Go/Python/Rust/Rails/PHP graphs require explicit `tests.<lang>` config — see https://github.com/jonathanong/no-mistakes/blob/main/docs/feature-parity.md.
+`--relationship asset`. Go/Python/Rust/Rails/PHP/.NET graphs require explicit `tests.<lang>` config — see https://github.com/jonathanong/no-mistakes/blob/main/docs/feature-parity.md.
 For "what directly imports this one TS/JS file?" in a single directory,
 `no-mistakes importers <file>` is faster than a full graph walk. Language
 graphs use `dependents --relationship <lang>` instead.
