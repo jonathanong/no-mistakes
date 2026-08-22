@@ -5,6 +5,14 @@ use crate::playwright::analysis::types::{
 };
 use std::sync::Arc;
 
+fn coverage_all(enabled: bool) -> CoverageFindingOptions {
+    CoverageFindingOptions {
+        enabled,
+        routes: true,
+        selectors: true,
+    }
+}
+
 fn report_findings(
     analysis: &Analysis,
     coverage: bool,
@@ -17,7 +25,7 @@ fn report_findings(
         unique_test_ids,
         unique_html_ids,
         prefer_test_id_locators,
-        CoverageFindingOptions::all(coverage),
+        coverage_all(coverage),
     )
 }
 

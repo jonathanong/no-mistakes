@@ -14,17 +14,6 @@ pub(crate) struct CoverageFindingOptions {
     pub(crate) selectors: bool,
 }
 
-impl CoverageFindingOptions {
-    #[cfg(test)]
-    pub(crate) fn all(enabled: bool) -> Self {
-        Self {
-            enabled,
-            routes: true,
-            selectors: true,
-        }
-    }
-}
-
 pub(crate) fn findings_from_report(
     analysis: &Analysis,
     unique_test_ids: bool,
