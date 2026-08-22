@@ -59,12 +59,7 @@ const jsonApis = createJsonApis({
   symbols: "symbolsJson",
 });
 
-const PLAN_INPUT_REPORTS = new Set([
-  "testsComment",
-  "testsGraph",
-  "testsGraphMermaid",
-  "testsWhy",
-]);
+const PLAN_INPUT_REPORTS = new Set(["testsComment", "testsGraph", "testsGraphMermaid", "testsWhy"]);
 const CAMELIZE_REPORTS = new Set(["testsPlan", "testsImpact", "testsTargets", "testsGraph"]);
 
 async function analyzeProject(options = {}) {
