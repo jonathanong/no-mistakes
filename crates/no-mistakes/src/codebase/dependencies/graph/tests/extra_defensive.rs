@@ -170,6 +170,7 @@ fn markdown_links_remap_canonical_targets_to_the_visible_spelling() {
         std::slice::from_ref(&notes),
         &files,
         &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert_eq!(
         edges,
