@@ -24,6 +24,7 @@ impl FileNode {
         }
     }
 
+    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn as_arc(&self) -> &Arc<Path> {
         &self.path
     }
