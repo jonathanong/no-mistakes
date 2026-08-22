@@ -33,10 +33,11 @@ pub(crate) fn discover_playwright_test_files(
     {
         return Ok(test_files.as_ref().clone());
     }
-    let playwright = playwright_config::load_many(
+    let playwright = playwright_config::load_many_with_sources(
         root,
         &settings.playwright_configs,
         settings.project.as_deref(),
+        Some(snapshot.source_store_for(root).as_ref()),
     )?;
     crate::perf_trace::trace("playwright.discover_test_files", || {
         discover_test_files_from_visible(root, settings, &playwright, snapshot)

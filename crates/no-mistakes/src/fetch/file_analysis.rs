@@ -149,3 +149,6 @@ pub(crate) fn analyze_file_from_visible_with_facts(
 }
 
 include!("file_analysis/legacy.rs");
+
+#[cfg(test)]
+mod tests;

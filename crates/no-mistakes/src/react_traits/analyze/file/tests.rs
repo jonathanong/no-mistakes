@@ -119,6 +119,13 @@ fn analyze_file_from_visible_reuses_prepared_source_store() {
     );
 }
 
+#[test]
+fn analyze_file_source_does_not_read_the_filesystem_directly() {
+    let source = include_str!("../file.rs");
+    assert!(!source.contains("std::fs::read_to_string"));
+    assert!(source.contains("read_prepared_or_open"));
+}
+
 fn analyze_program_inner_source() -> &'static str {
     let source = include_str!("../file.rs");
     let start = source

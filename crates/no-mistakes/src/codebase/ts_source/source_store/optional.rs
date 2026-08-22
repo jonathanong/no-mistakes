@@ -5,11 +5,19 @@ use std::sync::Arc;
 
 impl SourceStore {
     /// Read through a prepared store, or a one-file store when tests omit a session.
-    pub(crate) fn read_optional(sources: Option<&Self>, path: &Path) -> Option<Arc<str>> {
+    pub(crate) fn read_prepared_or_open(
+        sources: Option<&Self>,
+        path: &Path,
+    ) -> super::SourceReadOutcome {
         match sources {
-            Some(store) => store.read_path(path).ok(),
-            None => one_file_store(path).read_path(path).ok(),
+            Some(store) => store.read_path(path),
+            None => one_file_store(path).read_path(path),
         }
+    }
+
+    /// Read through a prepared store, or a one-file store when tests omit a session.
+    pub(crate) fn read_optional(sources: Option<&Self>, path: &Path) -> Option<Arc<str>> {
+        Self::read_prepared_or_open(sources, path).ok()
     }
 
     /// Parse JSON through a prepared store, or a one-file store when tests omit a session.

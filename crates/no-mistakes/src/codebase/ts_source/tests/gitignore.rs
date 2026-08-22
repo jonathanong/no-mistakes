@@ -365,3 +365,24 @@ fn function_body<'a>(source: &'a str, signature: &str) -> &'a str {
     }
     panic!("unterminated body for {signature}")
 }
+
+#[test]
+fn leftover_production_reads_go_through_source_store() {
+    for source in [
+        include_str!("../../../playwright/selectors/extract_app.rs"),
+        include_str!("../../../fetch/resolve.rs"),
+        include_str!("../../../fetch/imports.rs"),
+        include_str!("../../../fetch/file_analysis/legacy.rs"),
+        include_str!("../../../playwright/playwright_config/load.rs"),
+        include_str!("../../../react_traits/analyze/file.rs"),
+    ] {
+        assert!(
+            !source.contains("std::fs::read_to_string"),
+            "production readers must reuse SourceStore"
+        );
+        assert!(
+            source.contains("read_prepared_or_open") || source.contains("read_source("),
+            "production readers must call SourceStore or the session store"
+        );
+    }
+}

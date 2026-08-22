@@ -65,7 +65,7 @@ pub(crate) fn collect_fact_map_with_sources(
         .map(|path| {
             crate::invocation::check_timeout().ok().map(|()| {
                 super::collect_file_facts_with_session_and_sources(
-                    session, root, path, plan, playwright, sources,
+                    session, root, path, plan, playwright, sources, false,
                 )
                 .map(|facts| (path.clone(), facts))
             })
@@ -88,16 +88,20 @@ pub(super) fn collect_fact_map_sequential_with_sources(
             .iter()
             .filter(|path| is_indexable(path) || (plan.storybook && super::is_mdx_file(path))),
     );
-    files
+    let collected = files
         .iter()
         .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter_map(|path| {
             super::collect_file_facts_with_session_and_sources(
-                session, root, path, plan, playwright, sources,
+                session, root, path, plan, playwright, sources, true,
             )
             .map(|facts| (path.clone(), facts))
         })
-        .collect()
+        .collect();
+    for path in &files {
+        crate::ast::evict_request_parse_cache_path(path);
+    }
+    collected
 }
 
 pub(crate) fn graph_only_files(files: &[PathBuf], graph_files: &[PathBuf]) -> Vec<PathBuf> {

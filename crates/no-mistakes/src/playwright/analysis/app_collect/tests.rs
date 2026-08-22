@@ -74,6 +74,12 @@ fn app_selector_and_text_collectors_read_through_snapshot_source_store() {
         !cross_file.contains("std::fs::read_to_string"),
         "imported selector sources must reuse the snapshot SourceStore"
     );
+    let extract_app = include_str!("../../selectors/extract_app.rs");
+    assert!(
+        !extract_app.contains("std::fs::read_to_string"),
+        "standalone collect_app_selectors must reuse SourceStore"
+    );
+    assert!(extract_app.contains("read_prepared_or_open"));
 }
 
 /// Selector and text scans walk the same files. The second pass must hit the

@@ -52,13 +52,13 @@ pub(super) fn collect_fused_check_program(
 struct CheckProgramVisitor<'a> {
     dynamic: Option<Collector<'a>>,
     nextjs: Option<NextjsCachingVisitor<'a>>,
-    storybook_ids: Option<HashSet<String>>,
+    storybook_ids: Option<HashSet<&'a str>>,
 }
 
 impl<'a> Visit<'a> for CheckProgramVisitor<'a> {
     fn visit_identifier_reference(&mut self, ident: &IdentifierReference<'a>) {
         if let Some(ids) = &mut self.storybook_ids {
-            ids.insert(ident.name.to_string());
+            ids.insert(ident.name.as_str());
         }
         walk::walk_identifier_reference(self, ident);
     }
