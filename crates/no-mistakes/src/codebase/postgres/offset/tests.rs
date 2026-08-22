@@ -180,4 +180,17 @@ fn update_and_delete_subquery_offsets_are_detected() {
         sql_has_offset_clause("DELETE FROM users WHERE id IN (SELECT id FROM stale OFFSET 1)")
             .unwrap()
     );
+    assert!(sql_has_offset_clause(
+        "DELETE FROM users USING (SELECT id FROM stale OFFSET 1) AS s WHERE users.id = s.id"
+    )
+    .unwrap());
+}
+
+#[test]
+fn values_row_subquery_offset_is_detected() {
+    assert!(sql_has_offset_clause(
+        "INSERT INTO t(id) VALUES ((SELECT id FROM u OFFSET 1 LIMIT 1))"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause("VALUES ((SELECT id FROM u OFFSET 1 LIMIT 1))").unwrap());
 }

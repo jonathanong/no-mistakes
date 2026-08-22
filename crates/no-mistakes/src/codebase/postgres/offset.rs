@@ -1,7 +1,7 @@
 use super::parse::{parse_postgres_sql, PostgresParseError};
 use sqlparser::ast::{
     CreateTable, CreateView, Delete, Expr, Insert, JoinConstraint, JoinOperator, LimitClause,
-    Query, Select, SelectItem, SetExpr, Statement, TableFactor, TableWithJoins, Update,
+    Query, Select, SelectItem, SetExpr, Statement, TableFactor, TableWithJoins, Update, Values,
 };
 
 /// Parse `sql` and report whether any query uses an `OFFSET` clause.
@@ -28,8 +28,13 @@ fn statement_has_offset(statement: &Statement) -> bool {
                 || selection.as_ref().is_some_and(expr_has_offset_query)
                 || table_with_joins_has_offset(table)
         }
-        Statement::Delete(Delete { selection, .. }) => {
+        Statement::Delete(Delete {
+            selection, using, ..
+        }) => {
             selection.as_ref().is_some_and(expr_has_offset_query)
+                || using
+                    .as_ref()
+                    .is_some_and(|tables| tables.iter().any(table_with_joins_has_offset))
         }
         Statement::CreateTable(CreateTable { query, .. }) => {
             query.as_deref().is_some_and(query_has_offset)
@@ -76,6 +81,9 @@ fn set_expr_has_offset(expr: &SetExpr) -> bool {
         SetExpr::Query(query) => query_has_offset(query),
         SetExpr::SetOperation { left, right, .. } => {
             set_expr_has_offset(left) || set_expr_has_offset(right)
+        }
+        SetExpr::Values(Values { rows, .. }) => {
+            rows.iter().any(|row| row.iter().any(expr_has_offset_query))
         }
         _ => false,
     }
