@@ -12,6 +12,7 @@ use crate::queue::extract::FileFacts as QueueProjectFacts;
 use crate::react_traits::report::types::ComponentFacts;
 use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
 use dashmap::DashMap;
+use std::sync::atomic::AtomicU64;
 use std::sync::Arc;
 
 type PlaywrightScanKey = (u64, PlaywrightSettingsKey);
@@ -152,13 +153,15 @@ impl TsFactSlot {
     }
 }
 
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct TsFactMap {
     facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>,
     plan: TsFactPlan,
-    /// Copied on `Clone` so a mutated original can bump without invalidating
-    /// a clone that still describes the previous fact/graph universe. The
-    /// DashMap Arcs stay shared; lookups include this generation.
+    /// Shared by clones. `bump_playwright_scan_generation` takes the next
+    /// unique value so independently mutated clones cannot collide on
+    /// `(generation, settings)` while still sharing the DashMap Arcs.
+    playwright_scan_epoch: Arc<AtomicU64>,
+    /// Copied on `Clone` so an unmutated clone keeps the previous universe.
     pub(crate) playwright_scan_generation: u64,
     pub(crate) app_selector_occurrences_cache: AppSelectorOccurrencesCache,
     pub(crate) playwright_routes_cache: PlaywrightRoutesCache,

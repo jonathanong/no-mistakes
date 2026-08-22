@@ -262,3 +262,80 @@ fn ts_fact_map_bump_playwright_scan_generation_isolates_cache_keys() {
         "SharedTraversalContext invalidation bumps this generation so a rebuilt graph cannot reuse the prior universe's scan"
     );
 }
+
+/// Independently extended clones used to increment the same copied counter
+/// and share DashMaps, so the second clone could reuse the first clone's
+/// reachability for a different file universe.
+#[test]
+fn ts_fact_map_independent_clone_extends_use_unique_scan_generations() {
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use crate::codebase::ts_source::facts::{TsFactMap, TsFileFacts};
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let mut first = TsFactMap::new();
+    let mut second = first.clone();
+    let calls = AtomicUsize::new(0);
+    let compute = || -> anyhow::Result<_> {
+        calls.fetch_add(1, Ordering::SeqCst);
+        Ok(Default::default())
+    };
+    first.extend(TsFactMap::from([(
+        PathBuf::from("/repo/a.ts"),
+        TsFileFacts::default(),
+    )]));
+    second.extend(TsFactMap::from([(
+        PathBuf::from("/repo/b.ts"),
+        TsFileFacts::default(),
+    )]));
+    let from_first = first
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    let from_second = second
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    assert_eq!(
+        calls.load(Ordering::SeqCst),
+        2,
+        "independently extended clones must not share a scan generation"
+    );
+    assert!(
+        !std::sync::Arc::ptr_eq(&from_first, &from_second),
+        "each extended clone must cache its own universe's reachability"
+    );
+}
+
+/// insert/remove/get_mut change facts without going through `extend`.
+#[test]
+fn ts_fact_map_insert_remove_and_get_mut_invalidate_playwright_scan_caches() {
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use crate::codebase::ts_source::facts::{TsFactMap, TsFileFacts};
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let mut facts = TsFactMap::new();
+    let path = PathBuf::from("/repo/page.ts");
+    let calls = AtomicUsize::new(0);
+    let compute = || -> anyhow::Result<_> {
+        calls.fetch_add(1, Ordering::SeqCst);
+        Ok(Default::default())
+    };
+    facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    facts.insert(path.clone(), TsFileFacts::default());
+    facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    assert_eq!(calls.load(Ordering::SeqCst), 2, "insert must recompute");
+    facts.get_mut(&path).expect("inserted path is present");
+    facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    assert_eq!(calls.load(Ordering::SeqCst), 3, "get_mut must recompute");
+    facts.remove(&path);
+    facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    assert_eq!(calls.load(Ordering::SeqCst), 4, "remove must recompute");
+}
