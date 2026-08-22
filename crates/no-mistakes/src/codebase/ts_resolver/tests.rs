@@ -218,6 +218,36 @@ fn scoped_resolution_candidates_use_importer_workspace_aliases_for_deleted_targe
 }
 
 #[test]
+fn scoped_import_resolver_facade_classifies_workspace_aliases() {
+    let root = workspace_tsconfig_fixture();
+    let web = root.join("apps/web");
+    let importer = web.join("src/entry.ts");
+    let target = web.join("src/runtime/value.ts");
+    let visible = [
+        root.join("tsconfig.json"),
+        root.join("tsconfig.base.json"),
+        web.join("tsconfig.json"),
+        importer.clone(),
+        target.clone(),
+    ];
+    let catalog = TsConfigCatalog::from_visible(&root, &[root.clone(), web], &visible);
+    let visible = visible.into_iter().collect::<crate::fx::PathSet>();
+    let resolver = ScopedImportResolver::new(&catalog, &visible);
+    let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::default();
+
+    let classification = ImportResolverFacade::classify_import(
+        &resolver,
+        "@runtime/value",
+        &importer,
+        &workspace,
+        &visible,
+    );
+
+    assert_eq!(classification.resolver_path(), Some(target.as_path()));
+    assert!(classification.workspace_path().is_none());
+}
+
+#[test]
 fn scoped_catalog_session_reuses_dynamic_importer_scope_cache() {
     let root = workspace_tsconfig_fixture();
     let web = root.join("apps/web");
