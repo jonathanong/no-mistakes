@@ -111,6 +111,10 @@ pub(crate) fn parse_options_value<T: for<'de> Deserialize<'de>>(options: Value) 
 
 include!("options_test_json.rs");
 
+#[cfg(test)]
+#[path = "options_test_json_tests.rs"]
+mod options_test_json_tests;
+
 pub(crate) fn resolve_project_root(root: Option<&str>) -> AnyhowResult<PathBuf> {
     match root {
         Some(root) => Ok(PathBuf::from(root)),

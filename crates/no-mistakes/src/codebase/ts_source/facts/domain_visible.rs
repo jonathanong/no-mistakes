@@ -16,9 +16,4 @@ impl TsFactContext {
         }
         self.visible_files = Some(Arc::new(files));
     }
-
-    /// Share a previously built visible set across fact-context consumers.
-    pub fn share_visible_files(&mut self, files: Arc<crate::fx::PathSet>) {
-        self.visible_files = Some(files);
-    }
 }
