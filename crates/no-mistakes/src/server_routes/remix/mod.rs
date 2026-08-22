@@ -4,8 +4,7 @@ use crate::codebase::config::InferredRoots;
 use crate::codebase::test_filter::TestFileFilter;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::schema::{NoMistakesConfig, ProjectType};
-use crate::config::v2::ConfigView;
-use crate::server_routes::graph::{build_filter, PreparedServerAnalysis};
+use crate::server_routes::graph::PreparedServerAnalysis;
 use crate::server_routes::model::{FileFacts, RouteSite};
 use crate::server_routes::types::Framework;
 use globset::GlobSet;
@@ -24,24 +23,17 @@ pub(super) fn merge_remix_route_facts(
     if roots.is_empty() {
         return;
     }
-    let config_route_filter = build_filter(&ConfigView::new(config).server_route_globs())
-        .ok()
-        .flatten();
     let test_filter = TestFileFilter::new(&prepared.root, config);
     for path in prepared.source_files.iter() {
         let Some(site) = route_site(path, &roots) else {
             continue;
         };
         let rel = path.strip_prefix(&prepared.root).unwrap_or(path);
-        let matches_config = config_route_filter
-            .as_ref()
-            .map(|filter| filter.is_match(rel))
-            .unwrap_or(true);
         let matches_cli = cli_filter
             .map(|filter| filter.is_match(rel))
             .unwrap_or(true);
         let is_test = test_filter.is_match(&prepared.root, path);
-        if matches_config && matches_cli && !is_test {
+        if matches_cli && !is_test {
             facts.entry(path.clone()).or_default().routes.push(site);
         }
     }

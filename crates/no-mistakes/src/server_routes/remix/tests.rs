@@ -43,6 +43,14 @@ fn maps_flat_and_folder_route_files() {
         Some("/users")
     );
     assert_eq!(route_from_routes_rel("users.$id.server.ts"), None);
+    assert_eq!(
+        route_from_routes_rel("users.$id.cjs").as_deref(),
+        Some("/users/:id")
+    );
+    assert_eq!(
+        route_from_routes_rel("users\\$id.tsx").as_deref(),
+        Some("/users/:id")
+    );
     assert_eq!(route_from_app_root("app/root.tsx").as_deref(), Some("/"));
     assert_eq!(route_from_app_root("app/routes/users.tsx"), None);
 }
