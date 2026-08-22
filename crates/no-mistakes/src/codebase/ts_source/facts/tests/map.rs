@@ -212,3 +212,10 @@ fn fact_map_debug_and_owned_into_iter_visit_every_entry() {
     assert_eq!(owned[0].0, path);
     assert!(owned[0].1.fatal_parse_error);
 }
+
+#[test]
+#[should_panic(expected = "shared slots were materialized")]
+fn shared_slot_as_facts_mut_requires_materialization() {
+    let mut slot = TsFactSlot::Shared(Arc::new(TsFileFacts::default()));
+    let _ = slot.as_facts_mut();
+}
