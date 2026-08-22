@@ -2,7 +2,7 @@ use super::FileIdMap;
 use std::path::PathBuf;
 
 impl<T> FileIdMap<T> {
-    pub(crate) fn into_entries(self) -> impl Iterator<Item = (PathBuf, T)> {
+    pub(crate) fn into_entries(self) -> std::vec::IntoIter<(PathBuf, T)> {
         let Self {
             inventory,
             slots,
@@ -23,7 +23,7 @@ impl<T> IntoIterator for FileIdMap<T> {
     type IntoIter = std::vec::IntoIter<(PathBuf, T)>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.into_entries().collect::<Vec<_>>().into_iter()
+        self.into_entries()
     }
 }
 

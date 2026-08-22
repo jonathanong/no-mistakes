@@ -15,7 +15,7 @@ mod collect;
 pub(crate) mod domain;
 mod map;
 mod map_iter;
-pub use map_iter::{TsFactMapIter, TsFactMapIterMut};
+pub use map_iter::{TsFactMapIntoIter, TsFactMapIter, TsFactMapIterMut};
 mod plan;
 
 pub use call_sites::CallSiteFact;

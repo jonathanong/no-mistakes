@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 pub(super) fn folder_config_paths(
     specifier: &str,
     declaration_path: &Path,
-    visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
+    visible_paths: &[PathBuf],
 ) -> Vec<PathBuf> {
     let base = declaration_path.parent().unwrap_or(Path::new("."));
     let pattern = crate::codebase::ts_resolver::normalize_path(
@@ -18,8 +18,7 @@ pub(super) fn folder_config_paths(
         .contains(['*', '?', '[', '{'])
         .then(|| visible_folder_config_glob(&slash_path(&pattern)));
     let mut candidates = BTreeMap::<PathBuf, Vec<PathBuf>>::new();
-    for path in visible
-        .visible_cache_key()
+    for path in visible_paths
         .iter()
         .filter(|path| is_vitest_project_config(path))
     {

@@ -212,3 +212,25 @@ fn string_project_roots_reuse_one_visible_snapshot_for_config_checks() {
     );
     assert_eq!(resolver.visible.cache_key_calls.load(Ordering::Relaxed), 1);
 }
+
+#[test]
+fn string_project_paths_reuse_one_visible_snapshot_for_folder_configs() {
+    let resolver = CountingVisibleResolver {
+        visible: CountingVisible {
+            paths: vec![
+                PathBuf::from("/repo/packages/a/src/a.test.ts"),
+                PathBuf::from("/repo/packages/c/vitest.config.ts"),
+            ],
+            cache_key_calls: AtomicUsize::new(0),
+        },
+    };
+
+    let paths = string_project_paths_with_resolver(
+        "./packages/*",
+        Path::new("/repo/vitest.config.ts"),
+        &resolver,
+    );
+
+    assert_eq!(paths, [PathBuf::from("/repo/packages/c/vitest.config.ts")]);
+    assert_eq!(resolver.visible.cache_key_calls.load(Ordering::Relaxed), 1);
+}

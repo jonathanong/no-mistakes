@@ -40,16 +40,31 @@ impl<'a> Iterator for TsFactMapIterMut<'a> {
     }
 }
 
+fn owned_fact_entry((path, slot): (PathBuf, TsFactSlot)) -> (PathBuf, TsFileFacts) {
+    (path, slot.into_owned())
+}
+
+#[doc(hidden)]
+pub struct TsFactMapIntoIter {
+    inner: std::vec::IntoIter<(PathBuf, TsFactSlot)>,
+}
+
+impl Iterator for TsFactMapIntoIter {
+    type Item = (PathBuf, TsFileFacts);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        self.inner.next().map(owned_fact_entry)
+    }
+}
+
 impl IntoIterator for TsFactMap {
     type Item = (PathBuf, TsFileFacts);
-    type IntoIter = std::vec::IntoIter<(PathBuf, TsFileFacts)>;
+    type IntoIter = TsFactMapIntoIter;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.facts
-            .into_iter()
-            .map(|(path, slot)| (path, slot.into_owned()))
-            .collect::<Vec<_>>()
-            .into_iter()
+        TsFactMapIntoIter {
+            inner: self.facts.into_entries(),
+        }
     }
 }
 

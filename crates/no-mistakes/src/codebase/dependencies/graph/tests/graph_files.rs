@@ -330,18 +330,27 @@ fn scoped_session_visibility_keeps_canonical_aliases_from_graph_files() {
         .expect("symlink workspace tsconfig");
     let catalog = crate::codebase::ts_resolver::TsConfigCatalog::forced(&root, tsconfig, None);
     let session = crate::codebase::analysis_session::AnalysisSession::new(None);
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
-        &catalog,
-        &files,
-        session.as_ref(),
-    );
+    let resolvers = [
+        crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+            &catalog,
+            &files,
+            session.as_ref(),
+        ),
+        crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
+            &catalog,
+            &files,
+            Some(session.as_ref()),
+        ),
+    ];
 
     assert!(!files.contains_visible(&via_real));
-    let visible = ImportResolution::visible_files(&resolver)
-        .expect("session resolver has a visible universe");
-    assert!(visible.contains_visible(&via_link));
-    assert!(
-        visible.contains_visible(&via_real),
-        "new_in_session must own canonical aliases, not GraphFiles exact membership"
-    );
+    for resolver in resolvers {
+        let visible = ImportResolution::visible_files(&resolver)
+            .expect("session resolver has a visible universe");
+        assert!(visible.contains_visible(&via_link));
+        assert!(
+            visible.contains_visible(&via_real),
+            "scoped resolvers must own canonical aliases, not GraphFiles exact membership"
+        );
+    }
 }

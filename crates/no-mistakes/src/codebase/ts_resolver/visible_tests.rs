@@ -88,3 +88,20 @@ fn project_import_resolver_owns_normalized_session_visibility() {
         "from_lookup borrows GraphFiles exact membership and drops canonical spellings"
     );
 }
+
+#[test]
+fn prepared_symbol_flows_own_normalized_session_visibility() {
+    for (name, source) in [
+        ("pipeline", include_str!("../symbols/pipeline.rs")),
+        ("impact_collect", include_str!("../symbols/impact_collect.rs")),
+    ] {
+        assert!(
+            source.contains("ScopedImportResolver::new_in_session"),
+            "{name} must own canonical aliases via new_in_session"
+        );
+        assert!(
+            !source.contains("from_lookup"),
+            "{name} must not borrow GraphFiles exact membership via from_lookup"
+        );
+    }
+}

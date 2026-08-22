@@ -185,4 +185,12 @@ fn borrowed_fact_map_into_iter_stays_lazy() {
         source.contains("type IntoIter = TsFactMapIterMut<'a>;"),
         "mutable TsFactMap iteration must stay a lazy occupied-slot iterator"
     );
+    assert!(
+        source.contains("type IntoIter = TsFactMapIntoIter;"),
+        "consuming TsFactMap iteration must wrap into_entries without a second collect"
+    );
+    assert!(
+        !source.contains("collect::<Vec<_>"),
+        "TsFactMap iterators must not materialize an extra Vec of entries"
+    );
 }

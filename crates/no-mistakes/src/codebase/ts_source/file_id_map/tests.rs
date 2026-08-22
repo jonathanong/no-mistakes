@@ -109,3 +109,23 @@ fn borrowed_file_id_map_into_iter_stays_lazy() {
         "borrowed FileIdMap into_iter must not materialize a Vec"
     );
 }
+
+#[test]
+fn consuming_file_id_map_into_iter_reuses_into_entries() {
+    let source = include_str!("../file_id_map_iter.rs");
+    let body = source
+        .split("impl<T> IntoIterator for FileIdMap<T>")
+        .nth(1)
+        .expect("owned IntoIterator impl")
+        .split("impl<'a, T> IntoIterator for &'a FileIdMap<T>")
+        .next()
+        .expect("owned impl body");
+    assert!(
+        body.contains("self.into_entries()"),
+        "owned FileIdMap into_iter must return the into_entries Vec iterator"
+    );
+    assert!(
+        !body.contains("collect::<Vec<_>"),
+        "owned FileIdMap into_iter must not collect into_entries a second time"
+    );
+}

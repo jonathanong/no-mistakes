@@ -14,10 +14,10 @@ pub(crate) fn collect_entries_with_prepared_facts(
     let cwd = std::env::current_dir().context("reading current directory")?;
     let abs_files = resolve_input_files(&args.files, root, &cwd);
     let kind_filter = build_kind_filter(&args.kinds);
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
         catalog,
         visible_files,
-        Some(session),
+        session,
     );
     // Keep resolver targets in the same lexical namespace as the frozen facts.
     // In particular, a tsconfig alias below a symlinked root can resolve to its

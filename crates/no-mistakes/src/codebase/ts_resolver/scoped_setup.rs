@@ -14,7 +14,9 @@ impl<'a> ScopedImportResolver<'a> {
     ) -> Self {
         Self::build(
             catalog,
-            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(visible)))),
+            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
+                visible,
+            )))),
             None,
         )
     }
@@ -27,17 +29,25 @@ impl<'a> ScopedImportResolver<'a> {
     ) -> Self {
         Self::build(
             catalog,
-            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(visible)))),
+            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
+                visible,
+            )))),
             Some(session),
         )
     }
 
     pub(crate) fn from_lookup(
         catalog: &'a TsConfigCatalog,
-        visible: &'a dyn VisiblePathLookup,
+        visible: &dyn VisiblePathLookup,
         session: Option<&'a crate::codebase::analysis_session::AnalysisSession>,
     ) -> Self {
-        Self::build(catalog, Some(ResolverVisible::Borrowed(visible)), session)
+        Self::build(
+            catalog,
+            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
+                visible,
+            )))),
+            session,
+        )
     }
 
     fn build(
