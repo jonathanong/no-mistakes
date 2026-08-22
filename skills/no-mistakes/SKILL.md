@@ -44,6 +44,7 @@ graphs use `dependents --relationship <lang>` instead.
 planner before editing to discover affected tests first (for new files,
 rerun after creating them):
 - Vitest: `no-mistakes tests plan vitest --changed-file <file> --format paths`
+- Jest: `no-mistakes tests plan jest --changed-file <file> --format paths`
 - Playwright (route/page changes): `no-mistakes tests plan playwright --changed-file <file> --format paths`
 - Python / Go / Cargo / Rails / PHP: `no-mistakes tests plan python|go|cargo|rails|php --changed-file <file> --format paths`
 
@@ -145,7 +146,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | Why is an impacted-checks result empty? | Inspect `empty_result` in JSON/YAML, or opt into `no-mistakes impacted-checks --diagnose-empty` for a stderr note. |
 | Which queue producer/worker files are connected? | `no-mistakes queues related <file>` |
 | Are queue producers/workers unmatched? | `no-mistakes queues check` |
-| What server routes exist? | `no-mistakes server routes` |
+| What server routes exist? | `no-mistakes server routes` (includes Remix `app/routes` when `type: remix` is configured) |
 | Which server route files are related? | `no-mistakes server related <file>` |
 | Raw queue/server edges for debugging | `no-mistakes queues edges [file]` / `no-mistakes server edges [file]` |
 | Which Terraform/OpenTofu resources reference this resource? | `no-mistakes infra resource-refs <type>.<name>` |
@@ -262,7 +263,7 @@ with `includeSuppressed: true`.
 - `--depth <N>` to limit traversal depth.
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
-- `--test vitest|playwright|cargo|dotnet|swift|python|go|rails|php` to filter to test files.
+- `--test vitest|playwright|cargo|dotnet|swift|python|go|rails|php|jest` to filter to test files.
 - `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|resource|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|python|go|rust|ruby|php|all`.
 - `--direction deps|dependents|both` for `queues related` and `server related`.
 - `--format json|md|yml|paths|human`, `--json`, root-global `--timings` /

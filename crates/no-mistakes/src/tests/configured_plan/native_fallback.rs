@@ -190,7 +190,7 @@ pub(super) fn native_fallback_tests(
             all_tests,
             discovered,
         ),
-        TestFramework::Playwright | TestFramework::Vitest => Vec::new(),
+        TestFramework::Playwright | TestFramework::Vitest | TestFramework::Jest => Vec::new(),
     };
     if scoped.is_empty() && allow_full_suite_fallback {
         all_tests.to_vec()
@@ -226,7 +226,7 @@ fn is_native_source_or_project_change(
         | TestFramework::Php => {
             super::native_fallback_lang::is_language_native_change(framework, root, config, &rel)
         }
-        TestFramework::Playwright | TestFramework::Vitest => false,
+        TestFramework::Playwright | TestFramework::Vitest | TestFramework::Jest => false,
     }
 }
 
@@ -499,7 +499,7 @@ fn normalize_config_path(path: &str) -> String {
     }
 }
 
-fn framework_name(framework: TestFramework) -> &'static str {
+pub(super) fn framework_name(framework: TestFramework) -> &'static str {
     match framework {
         TestFramework::Playwright => "playwright",
         TestFramework::Vitest => "vitest",
@@ -510,6 +510,7 @@ fn framework_name(framework: TestFramework) -> &'static str {
         TestFramework::Cargo => "cargo",
         TestFramework::Rails => "rails",
         TestFramework::Php => "php",
+        TestFramework::Jest => "jest",
     }
 }
 

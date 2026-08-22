@@ -33,7 +33,7 @@ What are you trying to find?
 │   └─ no-mistakes queues check
 │
 ├─ Server route extraction / related files
-│   └─ no-mistakes server routes
+│   └─ no-mistakes server routes  (Express/Hono/Koa, language HTTP, Remix file routes)
 │   └─ no-mistakes server related <file> [--direction deps|dependents|both]
 │   └─ no-mistakes server edges [file] [--depth N]
 │

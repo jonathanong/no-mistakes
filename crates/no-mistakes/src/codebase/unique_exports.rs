@@ -10,6 +10,7 @@ mod collector;
 mod findings;
 mod nextjs;
 mod origin;
+mod remix;
 mod scan;
 mod types;
 mod with_facts;

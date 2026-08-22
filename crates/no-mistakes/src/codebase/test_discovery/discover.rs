@@ -49,10 +49,14 @@ fn discover_from_projects_from_files(
 ) -> Result<DiscoveredTests> {
     let mut tests = BTreeSet::new();
     let mut targets_by_path: BTreeMap<PathBuf, BTreeSet<TestExecutionTarget>> = BTreeMap::new();
-    let authoritative_projects = matches!(
-        request.runner,
-        TestRunner::Vitest | TestRunner::Playwright
-    ) && !projects.is_empty();
+    let authoritative_projects = match request.runner {
+        TestRunner::Vitest | TestRunner::Playwright => !projects.is_empty(),
+        // Jest never auto-discovers `jest.config.*`. Recovered configs, an
+        // explicit empty `tests.jest.configs` list, and filename fallback
+        // must not invent a default-on suite.
+        TestRunner::Jest => true,
+        _ => false,
+    };
     let compiled = projects
         .iter()
         .map(|project| Ok((project, ProjectTestFilter::from_project_ref(project)?)))
