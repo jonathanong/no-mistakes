@@ -1,0 +1,14 @@
+projects:
+  web:
+    type: remix
+    root: .
+  # Mixed workspace: type:server route globs must not hide Remix file routes.
+  api:
+    type: server
+    routes:
+      - src/**
+
+rules:
+  - rule: unique-exports
+    projects:
+      - web

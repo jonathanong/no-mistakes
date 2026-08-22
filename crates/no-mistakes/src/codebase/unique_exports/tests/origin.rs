@@ -31,6 +31,7 @@ fn source_file(root: &Path, rel: &str, source: &str) -> SourceFile {
         disabled: false,
         defer_suppression: false,
         is_nextjs_project: false,
+        is_remix_route_module: false,
     }
 }
 

@@ -146,7 +146,7 @@ scope the review and `rg` to inspect exact argument objects such as
 | Why is an impacted-checks result empty? | Inspect `empty_result` in JSON/YAML, or opt into `no-mistakes impacted-checks --diagnose-empty` for a stderr note. |
 | Which queue producer/worker files are connected? | `no-mistakes queues related <file>` |
 | Are queue producers/workers unmatched? | `no-mistakes queues check` |
-| What server routes exist? | `no-mistakes server routes` |
+| What server routes exist? | `no-mistakes server routes` (includes Remix `app/routes` when `type: remix` is configured) |
 | Which server route files are related? | `no-mistakes server related <file>` |
 | Raw queue/server edges for debugging | `no-mistakes queues edges [file]` / `no-mistakes server edges [file]` |
 | Which Terraform/OpenTofu resources reference this resource? | `no-mistakes infra resource-refs <type>.<name>` |

@@ -11,7 +11,7 @@ use std::path::Path;
 
 mod helpers;
 mod prepared;
-use helpers::{relative, shared_symbol_files, ApplicationProjectFilter};
+use helpers::{filter_application_files, shared_symbol_files};
 pub use prepared::{
     analyze_project_with_config_and_facts, analyze_project_with_prepared_facts,
     analyze_project_with_prepared_facts_and_inferred,
@@ -47,6 +47,7 @@ struct ProjectRootsAnalysis<'a> {
     options: UniqueExportsOptions,
     defer_suppression: bool,
     inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    config: &'a crate::codebase::config::Config,
 }
 
 fn analyze_project_roots_with_facts(
@@ -62,6 +63,7 @@ fn analyze_project_roots_with_facts(
         options,
         defer_suppression,
         inferred_roots,
+        config,
     } = inputs;
     if project_roots.is_empty() {
         return Ok(Vec::new());
@@ -99,11 +101,13 @@ fn analyze_project_roots_with_facts(
         .collect::<HashSet<_>>();
     let workspace = workspaces::load_from_files_with_session(root, &workspace_files, Some(session))
         .unwrap_or_default();
+    let remix_roots = super::remix::configured_roots(root, config, inferred_roots);
     let source_files = super::scan::collect_source_files_from_facts(
         root,
         &symbol_files,
         shared,
         defer_suppression,
+        &remix_roots,
     )?;
     if let Some(catalog) = resolution.catalog {
         let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
@@ -134,73 +138,6 @@ fn analyze_project_roots_with_facts(
             workspace,
         )
     }
-}
-
-fn filter_application_files(
-    root: &Path,
-    config: &crate::codebase::config::Config,
-    application: &crate::codebase::config::RuleApplicationConfig,
-    files: Vec<std::path::PathBuf>,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-) -> Result<Vec<std::path::PathBuf>> {
-    use crate::codebase::rules::path_filter::GlobMatcher;
-
-    let include = GlobMatcher::new(&application.include, "unique-exports rule include")?;
-    let exclude = GlobMatcher::new(&application.exclude, "unique-exports rule exclude")?;
-    let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
-    let mut projects = Vec::new();
-    for project_name in &application.projects {
-        let Some(project) = config.projects.get(project_name) else {
-            continue;
-        };
-        let project_root = match project.effective_root_with_cache(root, &mut inferred_roots) {
-            Some(project_root) => project_root,
-            None => root.to_path_buf(),
-        };
-        let project_root = normalize_path(&project_root);
-        let Ok(project_include) =
-            GlobMatcher::new(&project.include, "unique-exports project include")
-        else {
-            continue;
-        };
-        let Ok(project_exclude) =
-            GlobMatcher::new(&project.exclude, "unique-exports project exclude")
-        else {
-            continue;
-        };
-        projects.push(ApplicationProjectFilter {
-            root: project_root,
-            include: project_include,
-            exclude: project_exclude,
-        });
-    }
-    Ok(files
-        .into_iter()
-        .filter(|path| {
-            let repo_rel = relative(root, path);
-            let rule_match =
-                (include.is_empty() || include.is_match(&repo_rel)) && !exclude.is_match(&repo_rel);
-            if application.repository && rule_match {
-                return true;
-            }
-            projects.iter().any(|project| {
-                if !path.starts_with(&project.root) {
-                    return false;
-                }
-                let project_rel = relative(&project.root, path);
-                (project.include.is_empty()
-                    || project.include.is_match(&repo_rel)
-                    || project.include.is_match(&project_rel))
-                    && !project.exclude.is_match(&repo_rel)
-                    && !project.exclude.is_match(&project_rel)
-                    && (include.is_empty()
-                        || include.is_match(&repo_rel)
-                        || include.is_match(&project_rel))
-                    && !exclude.is_match(&repo_rel)
-                    && !exclude.is_match(&project_rel)
-            })
-        })
-        .collect())
 }
 
 #[cfg(test)]
