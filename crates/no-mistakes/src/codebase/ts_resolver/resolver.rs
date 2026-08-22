@@ -28,16 +28,33 @@ impl ResolverTsConfig<'_> {
 }
 
 enum ResolverVisible<'a> {
-    Borrowed(&'a crate::fx::PathSet),
-    Owned(std::sync::Arc<crate::fx::PathSet>),
+    Borrowed(&'a dyn VisiblePathLookup),
+    Owned(std::sync::Arc<dyn VisiblePathLookup>),
+}
+
+impl Clone for ResolverVisible<'_> {
+    fn clone(&self) -> Self {
+        match self {
+            Self::Borrowed(visible) => Self::Borrowed(*visible),
+            Self::Owned(visible) => Self::Owned(std::sync::Arc::clone(visible)),
+        }
+    }
 }
 
 impl ResolverVisible<'_> {
-    fn files(&self) -> &crate::fx::PathSet {
+    fn contains_visible(&self, path: &Path) -> bool {
+        self.lookup().contains_visible(path)
+    }
+
+    pub(crate) fn lookup(&self) -> &dyn VisiblePathLookup {
         match self {
-            Self::Borrowed(files) => files,
-            Self::Owned(files) => files,
+            Self::Borrowed(visible) => *visible,
+            Self::Owned(visible) => visible.as_ref(),
         }
+    }
+
+    pub(crate) fn cache_paths(&self) -> Vec<PathBuf> {
+        self.lookup().visible_cache_key()
     }
 }
 
@@ -69,9 +86,9 @@ pub(crate) struct ResolverScopeKey {
 }
 
 impl ResolverScopeKey {
-    pub(crate) fn new(tsconfig: &TsConfig, visible: Option<&crate::fx::PathSet>) -> Self {
+    pub(crate) fn new(tsconfig: &TsConfig, visible: Option<&[PathBuf]>) -> Self {
         let visible = visible.map(|paths| {
-            let mut paths = paths.iter().cloned().collect::<Vec<_>>();
+            let mut paths = paths.to_vec();
             paths.sort();
             paths
         });
@@ -98,7 +115,7 @@ pub(crate) struct ResolverCacheScopeKey {
 impl ResolverCacheScopeKey {
     pub(crate) fn new(
         tsconfig: &TsConfig,
-        visible: Option<&crate::fx::PathSet>,
+        visible: Option<&[PathBuf]>,
         module_resolution: Option<&str>,
         identity: &[PathBuf],
     ) -> Self {

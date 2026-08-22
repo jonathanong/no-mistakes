@@ -91,10 +91,10 @@ fn collect_check_facts_inner(
         files,
         graph_files,
         graph_files_complete,
-        ts: ts
-            .into_iter()
-            .map(|(path, facts)| (path, Arc::new(facts)))
-            .collect(),
+        ts: crate::codebase::ts_source::FileIdMap::from_iter_with_inventory(
+            ts.into_iter().map(|(path, facts)| (path, Arc::new(facts))),
+            Arc::clone(sources.inventory()),
+        ),
         graph_plan: collected_ts_plan,
         integration_runner_configs,
         playwright_source_files: Arc::new(Vec::new()),

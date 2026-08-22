@@ -1,5 +1,5 @@
 pub(crate) struct PreparedClientRelationships {
-    graph_files: crate::codebase::dependencies::graph::GraphFiles,
+    graph_files: std::sync::Arc<crate::codebase::dependencies::graph::GraphFiles>,
     resolver: ImportResolver<'static>,
 }
 
@@ -15,12 +15,13 @@ impl PreparedClientRelationships {
         tsconfig: &TsConfig,
         session: &crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
-        let graph_files = crate::codebase::dependencies::graph::GraphFiles::from_files(
-            source_files.to_vec(),
+        let graph_files = std::sync::Arc::new(
+            crate::codebase::dependencies::graph::GraphFiles::from_files(source_files.to_vec()),
         );
         let resolver = ImportResolver::new_owned_in_session(
             std::sync::Arc::new(tsconfig.clone()),
-            std::sync::Arc::new(graph_files.visible().clone()),
+            std::sync::Arc::clone(&graph_files)
+                as std::sync::Arc<dyn crate::codebase::ts_resolver::VisiblePathLookup>,
             session,
         );
         Self {

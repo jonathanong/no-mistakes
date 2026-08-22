@@ -12,7 +12,7 @@ pub(crate) fn resolve_entry_file_from_shell_from_visible(
     cwd: Option<&str>,
     file_path: &Path,
     root: &Path,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> Option<PathBuf> {
     resolve_entry_file_from_shell_inner(cmd, cwd, file_path, root, Some(visible_files))
 }
@@ -22,7 +22,7 @@ fn resolve_entry_file_from_shell_inner(
     cwd: Option<&str>,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
 ) -> Option<PathBuf> {
     let tokens: Vec<&str> = cmd.split_whitespace().collect();
     let file_token = tokens
@@ -58,7 +58,7 @@ pub(crate) fn resolve_entry_file_from_visible(
     cwd: Option<&str>,
     file_path: &Path,
     root: &Path,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> Option<PathBuf> {
     resolve_entry_file_inner(token, cwd, file_path, root, Some(visible_files))
 }
@@ -68,7 +68,7 @@ fn resolve_entry_file_inner(
     cwd: Option<&str>,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
 ) -> Option<PathBuf> {
     let base = if let Some(cwd) = cwd {
         let cwd_path = PathBuf::from(cwd);
@@ -101,11 +101,11 @@ fn resolve_entry_file_inner(
 
 fn path_is_visible_file(
     path: &Path,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
 ) -> bool {
     visible_files.map_or_else(
         || path.is_file(),
-        |visible| visible.contains(&crate::codebase::ts_resolver::normalize_path(path)),
+        |visible| visible.contains_visible(&crate::codebase::ts_resolver::normalize_path(path)),
     )
 }
 

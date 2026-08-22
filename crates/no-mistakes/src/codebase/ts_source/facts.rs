@@ -5,17 +5,17 @@ use crate::codebase::ts_queues::usage::QueueUsage;
 use crate::codebase::ts_resources::{ResourceCall, ResourceDiagnostic};
 use crate::codebase::ts_routes::refs::{RouteHelper, RouteHelperImport, RouteHelperRef, RouteRef};
 use crate::codebase::ts_symbols::FileSymbols;
-use crate::fx::FxHashMap;
 use crate::queue::extract::FileFacts as QueueProjectFacts;
 use crate::react_traits::report::types::ComponentFacts;
 use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
-use std::path::PathBuf;
 use std::sync::Arc;
 
 pub(crate) mod call_sites;
 mod collect;
 pub(crate) mod domain;
 mod map;
+mod map_iter;
+pub use map_iter::{TsFactMapIntoIter, TsFactMapIter, TsFactMapIterMut};
 mod plan;
 
 pub use call_sites::CallSiteFact;
@@ -97,11 +97,55 @@ pub struct TsFileFacts {
     pub trpc_calls: Vec<crate::codebase::ts_trpc::TrpcCallFact>,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Clone)]
+enum TsFactSlot {
+    Owned(Box<TsFileFacts>),
+    Shared(Arc<TsFileFacts>),
+}
+
+impl TsFactSlot {
+    fn as_facts(&self) -> &TsFileFacts {
+        match self {
+            Self::Owned(facts) => facts,
+            Self::Shared(facts) => facts.as_ref(),
+        }
+    }
+
+    fn into_owned(self) -> TsFileFacts {
+        match self {
+            Self::Owned(facts) => *facts,
+            Self::Shared(facts) => Arc::unwrap_or_clone(facts),
+        }
+    }
+
+    fn materialize_owned(&mut self) {
+        if matches!(self, Self::Owned(_)) {
+            return;
+        }
+        // Take the slot first so a uniquely owned Shared Arc can unwrap
+        // instead of cloning after a temporary extra strong count.
+        let taken = std::mem::replace(self, Self::Owned(Box::default()));
+        *self = Self::Owned(Box::new(taken.into_owned()));
+    }
+
+    fn as_facts_mut(&mut self) -> &mut TsFileFacts {
+        match self {
+            Self::Owned(facts) => facts,
+            Self::Shared(_) => unreachable!("shared slots were materialized"),
+        }
+    }
+}
+
+#[derive(Clone, Default)]
 pub struct TsFactMap {
-    owned: FxHashMap<PathBuf, TsFileFacts>,
-    shared: FxHashMap<PathBuf, std::sync::Arc<TsFileFacts>>,
+    facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>,
     plan: TsFactPlan,
+}
+
+impl std::fmt::Debug for TsFactMap {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.debug_map().entries(self.iter()).finish()
+    }
 }
 
 #[cfg(test)]

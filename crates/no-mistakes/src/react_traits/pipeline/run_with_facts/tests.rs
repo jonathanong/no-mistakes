@@ -49,7 +49,7 @@ fn facts(entries: Vec<(PathBuf, Vec<ComponentFacts>)>) -> CheckFactMap {
                     }),
                 )
             })
-            .collect(),
+            .collect::<crate::codebase::ts_source::FileIdMap<_>>(),
         stats: Default::default(),
         ..Default::default()
     }

@@ -110,7 +110,9 @@ fn process_spawn_edges_cover_source_fallback_without_precomputed_facts() {
     let spawn_target = root.join("packages/api/src/spawn-target.mts");
     let source = std::fs::read_to_string(&spawner).unwrap();
 
-    let visible = [spawn_target.clone()].into_iter().collect();
+    let visible = [spawn_target.clone()]
+        .into_iter()
+        .collect::<crate::fx::PathSet>();
     let edges = collect_process_spawn_edges(
         &root,
         None,
@@ -209,7 +211,11 @@ fn scoped_queue_edges_keep_symlink_root_targets_in_visible_namespace() {
         &catalog_visible,
     );
     let resolver =
-        crate::codebase::ts_resolver::ScopedImportResolver::new(&catalog, graph_files.visible());
+        crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
+            &catalog,
+            &graph_files,
+            None,
+        );
     let plan = GraphBuildPlan {
         queues: true,
         ..GraphBuildPlan::default()

@@ -46,9 +46,8 @@ fn bfs_visited_sets_use_fx_hash() {
 fn remaining_path_keyed_maps_use_fx_hash() {
     let graph_files = include_str!("../graph_files.rs");
     assert!(
-        graph_files.contains("visible: crate::fx::PathSet")
-            || graph_files.contains("visible: FxHashSet<PathBuf>"),
-        "GraphFiles.visible must use rustc-hash PathSet/FxHashSet"
+        graph_files.contains("visible: Vec<u8>"),
+        "GraphFiles.visible must store a dense FileId bitset instead of hashing PathBufs"
     );
     let types = include_str!("../types.rs");
     assert!(
@@ -63,14 +62,13 @@ fn remaining_path_keyed_maps_use_fx_hash() {
     );
     let facts = include_str!("../../../ts_source/facts.rs");
     assert!(
-        facts.contains("owned: FxHashMap<PathBuf, TsFileFacts>")
-            && facts.contains("shared: FxHashMap<PathBuf, std::sync::Arc<TsFileFacts>>"),
-        "TsFactMap owned/shared must use rustc-hash FxHashMap"
+        facts.contains("facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>"),
+        "TsFactMap must intern facts in a FileIdMap"
     );
     let check_facts = include_str!("../../../check_facts/map.rs");
     assert!(
-        check_facts.contains("ts: FxHashMap<PathBuf, Arc<CheckFileFacts>>"),
-        "CheckFactMap.ts must use rustc-hash FxHashMap"
+        check_facts.contains("ts: FileIdMap<Arc<CheckFileFacts>>"),
+        "CheckFactMap.ts must intern facts in a FileIdMap"
     );
 }
 
@@ -78,8 +76,8 @@ fn remaining_path_keyed_maps_use_fx_hash() {
 fn leftover_path_keyed_maps_use_fx_hash() {
     let facts = include_str!("../../../ts_source/facts.rs");
     assert!(
-        facts.contains("owned: FxHashMap<PathBuf, TsFileFacts>"),
-        "TsFactMap.owned must use rustc-hash FxHashMap"
+        facts.contains("facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>"),
+        "TsFactMap must intern facts in a FileIdMap"
     );
     let types = include_str!("../types.rs");
     assert!(

@@ -1,4 +1,5 @@
-use super::{ImportClassification, ImportResolver, ScopedImportResolver};
+use super::{ImportClassification, ImportResolver, ResolverVisible, ScopedImportResolver};
+use crate::codebase::ts_resolver::VisiblePathLookup;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
@@ -12,14 +13,14 @@ pub(crate) trait ImportResolverFacade: Sync {
     /// importer-scoped resolver's aliases and compiler options.
     fn resolution_candidates(&self, specifier: &str, importing_file: &Path) -> BTreeSet<PathBuf>;
 
-    fn visible_files(&self) -> Option<&crate::fx::PathSet>;
+    fn visible_files(&self) -> Option<&dyn VisiblePathLookup>;
 
     fn classify_import(
         &self,
         specifier: &str,
         importing_file: &Path,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        visible_files: &crate::fx::PathSet,
+        visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification;
 }
 
@@ -37,7 +38,7 @@ impl<'a> ImportResolverFacade for ImportResolver<'a> {
         ImportResolver::resolution_candidates(self, specifier, importing_file)
     }
 
-    fn visible_files(&self) -> Option<&crate::fx::PathSet> {
+    fn visible_files(&self) -> Option<&dyn VisiblePathLookup> {
         ImportResolver::visible_files(self)
     }
 
@@ -46,7 +47,7 @@ impl<'a> ImportResolverFacade for ImportResolver<'a> {
         specifier: &str,
         importing_file: &Path,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        visible_files: &crate::fx::PathSet,
+        visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification {
         ImportResolver::classify_import(self, specifier, importing_file, workspace, visible_files)
     }
@@ -61,8 +62,8 @@ impl ImportResolverFacade for ScopedImportResolver<'_> {
         ScopedImportResolver::resolution_candidates(self, specifier, importing_file)
     }
 
-    fn visible_files(&self) -> Option<&crate::fx::PathSet> {
-        self.visible.as_deref()
+    fn visible_files(&self) -> Option<&dyn VisiblePathLookup> {
+        self.visible.as_ref().map(ResolverVisible::lookup)
     }
 
     fn classify_import(
@@ -70,7 +71,7 @@ impl ImportResolverFacade for ScopedImportResolver<'_> {
         specifier: &str,
         importing_file: &Path,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        visible_files: &crate::fx::PathSet,
+        visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification {
         ScopedImportResolver::classify_import(
             self,

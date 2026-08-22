@@ -55,7 +55,7 @@ fn resolve_entrypoints_with_files_and_workspace(
                 &normalized,
                 workspace,
                 root_dependencies,
-                graph_files.visible(),
+                graph_files,
                 interner,
             );
             let file = match &node {
@@ -89,7 +89,7 @@ fn resolve_entrypoint_node(
     path: &Path,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     root_dependencies: &std::collections::HashSet<String>,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     interner: &PathInterner,
 ) -> NodeId {
     if path.is_dir() {
@@ -153,13 +153,13 @@ fn raw_package_name(raw: &str) -> Option<String> {
 fn package_dir_entry(
     dir: &Path,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> Option<PathBuf> {
     workspace
         .package_by_dir(dir)
         .and_then(|package| package.entry.clone())
         .filter(|entry| {
-            visible_files.contains(&crate::codebase::ts_resolver::normalize_path(entry))
+            visible_files.contains_visible(&crate::codebase::ts_resolver::normalize_path(entry))
         })
         .or_else(|| {
             [
@@ -182,6 +182,6 @@ fn package_dir_entry(
             ]
             .iter()
             .map(|candidate| dir.join(candidate))
-            .find(|candidate| visible_files.contains(candidate))
+            .find(|candidate| visible_files.contains_visible(candidate))
         })
 }

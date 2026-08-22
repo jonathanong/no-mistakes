@@ -165,7 +165,7 @@ fn collect_symbol_edges_for_core(
         SymbolGraphFiles {
             indexable: &edge_inputs.graph_files.indexable,
             all: &edge_inputs.graph_files.all,
-            visible: edge_inputs.graph_files.visible(),
+            visible: edge_inputs.graph_files,
             graph_files: edge_inputs.graph_files,
         },
         facts.expect("symbol plan requires TS facts"),

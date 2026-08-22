@@ -1,5 +1,5 @@
 pub(crate) enum ProjectImportResolver<'a> {
-    Scoped(ScopedImportResolver<'a>),
+    Scoped(Box<ScopedImportResolver<'a>>),
     Legacy(ImportResolver<'a>),
 }
 
@@ -7,17 +7,17 @@ impl<'a> ProjectImportResolver<'a> {
     pub(crate) fn new(
         tsconfig: &'a TsConfig,
         catalog: Option<&'a TsConfigCatalog>,
-        visible: &'a crate::fx::PathSet,
+        visible: &'a dyn VisiblePathLookup,
         shared_cache: Option<&'a ImportResolutionCache>,
         session: &'a crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
         match catalog {
             Some(catalog) => {
                 let resolver = ScopedImportResolver::new_in_session(catalog, visible, session);
-                Self::Scoped(match shared_cache {
+                Self::Scoped(Box::new(match shared_cache {
                     Some(cache) => resolver.with_shared_cache(cache),
                     None => resolver,
-                })
+                }))
             }
             None => {
                 let resolver = ImportResolver::new_in_session(tsconfig, Some(visible), session);
@@ -49,9 +49,9 @@ impl ImportResolution for ProjectImportResolver<'_> {
         }
     }
 
-    fn visible_files(&self) -> Option<&crate::fx::PathSet> {
+    fn visible_files(&self) -> Option<&dyn VisiblePathLookup> {
         match self {
-            Self::Scoped(resolver) => ImportResolution::visible_files(resolver),
+            Self::Scoped(resolver) => ImportResolution::visible_files(resolver.as_ref()),
             Self::Legacy(resolver) => ImportResolution::visible_files(resolver),
         }
     }
@@ -61,7 +61,7 @@ impl ImportResolution for ProjectImportResolver<'_> {
         specifier: &str,
         importing_file: &Path,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        visible_files: &crate::fx::PathSet,
+        visible_files: &dyn VisiblePathLookup,
     ) -> ImportClassification {
         match self {
             Self::Scoped(resolver) => {

@@ -93,7 +93,7 @@ fn import_neighbors_from_facts(
         .filter_map(|imp| {
             let kind = edge_kind_for_import(imp);
             let classification =
-                resolver.classify_import(&imp.specifier, path, workspace, graph_files.visible());
+                resolver.classify_import(&imp.specifier, path, workspace, graph_files);
             if let Some(target) = classification.workspace_path() {
                 let target = graph_files.visible_path(target)?;
                 let kind = match imp.kind {

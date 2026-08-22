@@ -3,7 +3,7 @@ fn collect_from_expr(
     source: &str,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     out: &mut Vec<SpawnEdge>,
 ) {
     let expr = unwrap_ts_wrappers(expr);

@@ -2,7 +2,7 @@ fn extract_web_server(
     expr: &Expression,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     out: &mut Vec<SpawnEdge>,
 ) {
     let expr = unwrap_ts_wrappers(expr);
@@ -26,7 +26,7 @@ fn extract_optional_web_server_entry(
     expr: Option<&Expression>,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     out: &mut Vec<SpawnEdge>,
 ) {
     let _ = expr.map(|expr| extract_web_server_entry(expr, file_path, root, visible_files, out));
@@ -36,7 +36,7 @@ fn extract_define_config_web_server(
     call: &oxc_ast::ast::CallExpression,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     out: &mut Vec<SpawnEdge>,
 ) {
     let Some(Argument::ObjectExpression(obj)) = call.arguments.first() else {
@@ -56,7 +56,7 @@ fn extract_web_server_entry(
     expr: &Expression,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     out: &mut Vec<SpawnEdge>,
 ) {
     let expr = unwrap_ts_wrappers(expr);
@@ -106,7 +106,7 @@ fn collect_from_export_named(
     source: &str,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     out: &mut Vec<SpawnEdge>,
 ) {
     match &e.declaration {
@@ -133,7 +133,7 @@ fn collect_from_try_stmt(
     source: &str,
     file_path: &Path,
     root: &Path,
-    visible_files: Option<&crate::fx::PathSet>,
+    visible_files: Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     out: &mut Vec<SpawnEdge>,
 ) {
     for s in &t.block.body {

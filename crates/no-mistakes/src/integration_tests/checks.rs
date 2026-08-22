@@ -46,7 +46,8 @@ pub(super) fn check_suites(
     analyses: &std::collections::BTreeMap<std::path::PathBuf, types::FileAnalysis>,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<Vec<IntegrationFinding>> {
-    let visible_files = analyses.keys().cloned().collect();
+    let visible_files: std::collections::HashSet<std::path::PathBuf> =
+        analyses.keys().cloned().collect();
     let import_resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
         tsconfig,
         Some(&visible_files),

@@ -39,7 +39,7 @@ fn imported_symbol_map(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> HashMap<String, ImportedSymbolTarget> {
@@ -68,7 +68,7 @@ fn imported_symbol_map(
         } else if let Some(target) =
             workspace.resolve_specifier_from_file_visible(&import.source, path, visible_files)
         {
-            if !visible_files.contains(&target) {
+            if !visible_files.contains_visible(&target) {
                 continue;
             }
             ImportedSymbolTarget::Symbol {
@@ -93,7 +93,7 @@ fn namespace_import_map(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     graph_files: &GraphFiles,
     interner: &PathInterner,
 ) -> HashMap<String, ImportedSymbolTarget> {
@@ -122,7 +122,7 @@ fn namespace_import_map(
         } else if let Some(file) =
             workspace.resolve_specifier_from_file_visible(&import.source, path, visible_files)
         {
-            if !visible_files.contains(&file) {
+            if !visible_files.contains_visible(&file) {
                 continue;
             }
             ImportedSymbolTarget::Symbol {

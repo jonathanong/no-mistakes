@@ -6,7 +6,7 @@ pub(crate) fn collect_entries_with_prepared_facts(
     args: &SymbolsArgs,
     root: &Path,
     catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
-    visible_files: &crate::fx::PathSet,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     facts: &crate::codebase::check_facts::CheckFactMap,
     supplemental: &crate::codebase::check_facts::CheckFactMap,
     session: &crate::codebase::analysis_session::AnalysisSession,
@@ -14,16 +14,16 @@ pub(crate) fn collect_entries_with_prepared_facts(
     let cwd = std::env::current_dir().context("reading current directory")?;
     let abs_files = resolve_input_files(&args.files, root, &cwd);
     let kind_filter = build_kind_filter(&args.kinds);
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
         catalog,
         visible_files,
-        session,
+        Some(session),
     );
     // Keep resolver targets in the same lexical namespace as the frozen facts.
     // In particular, a tsconfig alias below a symlinked root can resolve to its
     // real target even though the report's files are keyed by the symlink path.
     let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
-        visible_files.iter().cloned(),
+        visible_files.visible_cache_key(),
     );
     let entries = abs_files
         .iter()
@@ -95,7 +95,7 @@ fn collect_entries_with_timings(
     let visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<crate::fx::PathSet>();
+        .collect::<std::collections::HashSet<_>>();
     let abs_files = resolve_input_files(&args.files, &root, &cwd);
     if let Some(timings) = &mut timings {
         timings.mark("search");

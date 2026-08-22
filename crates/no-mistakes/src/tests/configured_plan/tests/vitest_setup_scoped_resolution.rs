@@ -51,9 +51,10 @@ fn project_scoped_tsconfig_resolves_setup_alias_after_catalog_finalization() {
             .as_deref(),
         Some(root.join("packages/unit/tsconfig.json").as_path())
     );
-    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new(
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
         shared.tsconfig_catalog(),
-        shared.graph_files().visible(),
+        shared.graph_files(),
+        None,
     );
     assert_eq!(
         crate::codebase::ts_resolver::ImportResolution::resolve(

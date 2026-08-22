@@ -362,7 +362,7 @@ impl PreparedTestPlanRequest {
                 if let Some(playwright) = playwright {
                     Box::new(no_mistakes::codebase::check_facts::collect_check_facts_with_precollected_graph_facts(
                         &self.root,
-                        self.graph_files.visible().iter().cloned().collect(),
+                        self.graph_files.iter_visible().cloned().collect(),
                         no_mistakes::codebase::check_facts::CheckFactPlan {
                             graph: fact_plan,
                             graph_context: fact_context,

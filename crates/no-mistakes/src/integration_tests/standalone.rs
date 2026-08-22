@@ -36,7 +36,8 @@ pub(super) fn check(
     let export_index = resolve::build_export_index(&analyses);
     let remapper =
         crate::codebase::ts_source::FrozenPathRemapper::from_paths(analyses.keys().cloned());
-    let visible_files = analyses.keys().cloned().collect();
+    let visible_files: std::collections::HashSet<std::path::PathBuf> =
+        analyses.keys().cloned().collect();
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     let import_resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(

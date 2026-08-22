@@ -83,15 +83,16 @@ fn collect_md_edges(
                     // Resolve `..` lexically (no filesystem access) so the path
                     // matches the normalized form used elsewhere in the graph.
                     let target = crate::codebase::ts_resolver::normalize_path(&target);
-                    if graph_files.is_visible(&target) {
-                        Some((
+                    // Canonical remapping belongs in `visible_path`, not exact
+                    // membership. Markdown targets may be the real path while
+                    // discovery recorded a symlink spelling.
+                    graph_files.visible_path(&target).map(|visible| {
+                        (
                             NodeId::file_in(interner, path.as_path()),
-                            NodeId::file_in(interner, target),
+                            NodeId::file_in(interner, visible),
                             EdgeKind::MarkdownLink,
-                        ))
-                    } else {
-                        None
-                    }
+                        )
+                    })
                 })
                 .collect::<Vec<_>>()
         })

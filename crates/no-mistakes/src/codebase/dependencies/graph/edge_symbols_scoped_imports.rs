@@ -66,7 +66,7 @@ fn import_target_with_graph_files(
         return Some((NodeId::file_in(interner, target), edge_kind));
     }
     if let Some(target) =
-        workspace.resolve_specifier_from_file_visible(specifier, path, graph_files.visible())
+        workspace.resolve_specifier_from_file_visible(specifier, path, graph_files)
     {
         let target = graph_files.visible_path(&target)?;
         let edge_kind = match kind {

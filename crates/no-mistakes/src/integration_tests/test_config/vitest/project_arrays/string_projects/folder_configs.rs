@@ -8,7 +8,7 @@ use std::path::{Path, PathBuf};
 pub(super) fn folder_config_paths(
     specifier: &str,
     declaration_path: &Path,
-    visible: &crate::fx::PathSet,
+    visible_paths: &[PathBuf],
 ) -> Vec<PathBuf> {
     let base = declaration_path.parent().unwrap_or(Path::new("."));
     let pattern = crate::codebase::ts_resolver::normalize_path(
@@ -18,20 +18,22 @@ pub(super) fn folder_config_paths(
         .contains(['*', '?', '[', '{'])
         .then(|| visible_folder_config_glob(&slash_path(&pattern)));
     let mut candidates = BTreeMap::<PathBuf, Vec<PathBuf>>::new();
-    for path in visible.iter().filter(|path| is_vitest_project_config(path)) {
-        let Some(root) = path.parent() else {
-            continue;
-        };
-        let matches = match &glob {
-            Some(Ok(glob)) => glob.is_match(slash_path(root)),
-            Some(Err(_)) => false,
-            None => root == pattern,
-        };
-        if matches {
-            candidates
-                .entry(root.to_path_buf())
-                .or_default()
-                .push(path.clone());
+    for path in visible_paths
+        .iter()
+        .filter(|path| is_vitest_project_config(path))
+    {
+        if let Some(root) = path.parent() {
+            let matches = match &glob {
+                Some(Ok(glob)) => glob.is_match(slash_path(root)),
+                Some(Err(_)) => false,
+                None => root == pattern,
+            };
+            if matches {
+                candidates
+                    .entry(root.to_path_buf())
+                    .or_default()
+                    .push(path.clone());
+            }
         }
     }
     candidates

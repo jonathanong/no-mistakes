@@ -74,7 +74,7 @@ impl SymbolIndex {
         let resolver = crate::codebase::ts_resolver::ProjectImportResolver::new(
             tsconfig,
             tsconfig_catalog,
-            graph_files.visible(),
+            graph_files,
             import_resolution_cache,
             session,
         );

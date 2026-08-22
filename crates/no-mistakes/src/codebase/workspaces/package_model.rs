@@ -3,7 +3,7 @@ impl WorkspacePackage {
     fn resolve_subpath(
         &self,
         subpath: &str,
-        visible_files: Option<&crate::fx::PathSet>,
+        visible_files: Option<&dyn VisiblePathLookup>,
     ) -> Option<PathBuf> {
         if let Some(exports) = &self.exports {
             let target = resolve_export_subpath(exports, subpath)?;
@@ -18,7 +18,7 @@ impl WorkspacePackage {
     fn resolve_import(
         &self,
         specifier: &str,
-        visible_files: Option<&crate::fx::PathSet>,
+        visible_files: Option<&dyn VisiblePathLookup>,
     ) -> Option<PathBuf> {
         let imports = self.imports.as_ref()?;
         let target = resolve_export_subpath(imports, specifier)?;
