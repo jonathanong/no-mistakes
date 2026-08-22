@@ -104,7 +104,9 @@ fn scan(
                 target: Some(dir_rel.clone()),
             });
         }
-        if workspace_dirs.contains(&dir_rel) || covered_workspace_dirs.contains(&dir_rel) {
+        if workspace_dirs.contains(&dir_rel)
+            || (!opts.require_named_package && covered_workspace_dirs.contains(&dir_rel))
+        {
             continue;
         }
         findings.push(RuleFinding {

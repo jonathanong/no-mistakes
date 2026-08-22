@@ -125,6 +125,30 @@ fn require_named_package_reports_unnamed_manifests() {
 }
 
 #[test]
+fn require_named_package_does_not_treat_star_as_crossing_directories() {
+    let root = fixture_root("unnamed-covered");
+    let files = vec![
+        root.join("package.json"),
+        root.join("packages/unnamed/package.json"),
+        root.join("packages/group/app/package.json"),
+    ];
+    let findings = check_with_files(
+        &root,
+        &config("packageRoots: [packages]\nrequireNamedPackage: true\n"),
+        &files,
+    )
+    .unwrap();
+
+    assert!(
+        findings.iter().any(|finding| {
+            finding.file == "packages/group/app/package.json"
+                && finding.message.contains("not covered")
+        }),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn covered_unnamed_packages_pass_when_names_are_not_required() {
     let root = fixture_root("unnamed-covered");
     let files = vec![
