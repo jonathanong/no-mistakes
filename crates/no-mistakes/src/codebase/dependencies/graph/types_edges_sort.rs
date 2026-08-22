@@ -46,7 +46,9 @@ pub(super) const fn key(kind: EdgeKind) -> (u8, u8) {
         | EdgeKind::PhpUse
         | EdgeKind::PhpPackage
         | EdgeKind::JavaImport
-        | EdgeKind::JavaReference => language(kind),
+        | EdgeKind::JavaReference
+        | EdgeKind::KotlinImport
+        | EdgeKind::KotlinReference => language(kind),
         EdgeKind::WorkflowJob
         | EdgeKind::WorkflowStep
         | EdgeKind::WorkflowNeeds
@@ -119,6 +121,8 @@ const fn language(kind: EdgeKind) -> (u8, u8) {
         EdgeKind::PhpPackage => (49, 0),
         EdgeKind::JavaImport => (52, 0),
         EdgeKind::JavaReference => (53, 0),
+        EdgeKind::KotlinImport => (54, 0),
+        EdgeKind::KotlinReference => (55, 0),
         _ => panic!("language edge group is exhaustive"),
     }
 }

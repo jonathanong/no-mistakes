@@ -28,6 +28,8 @@ fn public_sort_key_delegates_all_groups_and_non_vitest_detail_is_none() {
     assert_eq!(EdgeKind::TrpcProcedure.sort_key(), (51, 0));
     assert_eq!(EdgeKind::JavaImport.sort_key(), (52, 0));
     assert_eq!(EdgeKind::JavaReference.sort_key(), (53, 0));
+    assert_eq!(EdgeKind::KotlinImport.sort_key(), (54, 0));
+    assert_eq!(EdgeKind::KotlinReference.sort_key(), (55, 0));
 }
 
 #[test]

@@ -148,6 +148,8 @@ fn standard_relationship_edges() -> std::collections::HashSet<EdgeKind> {
         EdgeKind::PhpPackage,
         EdgeKind::JavaImport,
         EdgeKind::JavaReference,
+        EdgeKind::KotlinImport,
+        EdgeKind::KotlinReference,
         EdgeKind::Resource,
     ]
     .into_iter()

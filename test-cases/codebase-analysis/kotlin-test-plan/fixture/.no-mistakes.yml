@@ -1,0 +1,11 @@
+tests:
+  kotlin:
+    packages:
+      - .
+testPlan:
+  kotlin:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies

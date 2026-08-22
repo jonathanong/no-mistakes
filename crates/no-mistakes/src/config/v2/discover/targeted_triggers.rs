@@ -18,6 +18,7 @@ pub(super) fn validate(config: &NoMistakesConfig, path: &Path) -> Result<()> {
         ("rails", &config.test_plan.rails),
         ("php", &config.test_plan.php),
         ("java", &config.test_plan.java),
+        ("kotlin", &config.test_plan.kotlin),
         ("jest", &config.test_plan.jest),
     ] {
         validate_named_triggers(&plan.full_suite_triggers.triggers, path, framework)?;

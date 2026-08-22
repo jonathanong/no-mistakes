@@ -13,60 +13,68 @@ pub(super) fn framework_present(
     visible_paths: &[PathBuf],
 ) -> bool {
     match framework {
-        TestFramework::Dotnet => {
-            let c = &config.tests.dotnet;
-            !c.projects.is_empty()
-                || !c.solutions.is_empty()
-                || test_plan_configured(&config.test_plan.dotnet)
-        }
-        TestFramework::Vitest => {
-            let c = &config.tests.vitest;
-            c.configs.is_some()
-                || !c.projects.is_empty()
-                || test_plan_configured(&config.test_plan.vitest)
-                // Only `vitest.config.*` proves Vitest — a bare `vite.config.*`
-                // may belong to a Vite app that uses Jest/Mocha.
-                || config_file_present(root, &["vitest.config"], visible_paths)
-        }
-        TestFramework::Playwright => {
-            let c = &config.tests.playwright;
-            c.configs.is_some()
-                || !c.projects.is_empty()
-                || test_plan_configured(&config.test_plan.playwright)
-                || config_file_present(root, &["playwright.config"], visible_paths)
-        }
-        TestFramework::Swift => {
-            let c = &config.tests.swift;
-            !c.packages.is_empty()
-                || !c.projects.is_empty()
-                || test_plan_configured(&config.test_plan.swift)
-        }
+        TestFramework::Dotnet => dotnet_present(config),
+        TestFramework::Vitest => vitest_present(root, config, visible_paths),
+        TestFramework::Playwright => playwright_present(root, config, visible_paths),
+        TestFramework::Swift => swift_present(config),
         TestFramework::Python => {
-            !config.tests.python.packages.is_empty()
-                || test_plan_configured(&config.test_plan.python)
+            nonempty_or_plan(&config.tests.python.packages, &config.test_plan.python)
         }
-        TestFramework::Go => {
-            !config.tests.go.modules.is_empty() || test_plan_configured(&config.test_plan.go)
-        }
+        TestFramework::Go => nonempty_or_plan(&config.tests.go.modules, &config.test_plan.go),
         TestFramework::Cargo => {
-            !config.tests.rust.packages.is_empty() || test_plan_configured(&config.test_plan.cargo)
+            nonempty_or_plan(&config.tests.rust.packages, &config.test_plan.cargo)
         }
-        TestFramework::Rails => {
-            !config.tests.rails.apps.is_empty() || test_plan_configured(&config.test_plan.rails)
-        }
-        TestFramework::Php => {
-            !config.tests.php.apps.is_empty() || test_plan_configured(&config.test_plan.php)
-        }
+        TestFramework::Rails => nonempty_or_plan(&config.tests.rails.apps, &config.test_plan.rails),
+        TestFramework::Php => nonempty_or_plan(&config.tests.php.apps, &config.test_plan.php),
         TestFramework::Java => {
-            !config.tests.java.packages.is_empty() || test_plan_configured(&config.test_plan.java)
+            nonempty_or_plan(&config.tests.java.packages, &config.test_plan.java)
         }
-        TestFramework::Jest => {
-            let c = &config.tests.jest;
-            c.configs.is_some()
-                || !c.projects.is_empty()
-                || test_plan_configured(&config.test_plan.jest)
+        TestFramework::Kotlin => {
+            nonempty_or_plan(&config.tests.kotlin.packages, &config.test_plan.kotlin)
         }
+        TestFramework::Jest => jest_present(config),
     }
+}
+
+fn nonempty_or_plan<T>(items: &[T], plan: &TestPlanFrameworkConfig) -> bool {
+    !items.is_empty() || test_plan_configured(plan)
+}
+
+fn dotnet_present(config: &NoMistakesConfig) -> bool {
+    let c = &config.tests.dotnet;
+    !c.projects.is_empty()
+        || !c.solutions.is_empty()
+        || test_plan_configured(&config.test_plan.dotnet)
+}
+
+fn vitest_present(root: &Path, config: &NoMistakesConfig, visible_paths: &[PathBuf]) -> bool {
+    let c = &config.tests.vitest;
+    c.configs.is_some()
+        || !c.projects.is_empty()
+        || test_plan_configured(&config.test_plan.vitest)
+        // Only `vitest.config.*` proves Vitest — a bare `vite.config.*`
+        // may belong to a Vite app that uses Jest/Mocha.
+        || config_file_present(root, &["vitest.config"], visible_paths)
+}
+
+fn playwright_present(root: &Path, config: &NoMistakesConfig, visible_paths: &[PathBuf]) -> bool {
+    let c = &config.tests.playwright;
+    c.configs.is_some()
+        || !c.projects.is_empty()
+        || test_plan_configured(&config.test_plan.playwright)
+        || config_file_present(root, &["playwright.config"], visible_paths)
+}
+
+fn swift_present(config: &NoMistakesConfig) -> bool {
+    let c = &config.tests.swift;
+    !c.packages.is_empty()
+        || !c.projects.is_empty()
+        || test_plan_configured(&config.test_plan.swift)
+}
+
+fn jest_present(config: &NoMistakesConfig) -> bool {
+    let c = &config.tests.jest;
+    c.configs.is_some() || !c.projects.is_empty() || test_plan_configured(&config.test_plan.jest)
 }
 
 /// True when the framework has any `testPlan` configuration — environments or

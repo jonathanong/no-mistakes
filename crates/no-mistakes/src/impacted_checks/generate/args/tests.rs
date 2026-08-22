@@ -10,6 +10,7 @@ fn language_phases_use_framework_names() {
         (TestFramework::Rails, "discover.rails", "select.rails"),
         (TestFramework::Php, "discover.php", "select.php"),
         (TestFramework::Java, "discover.java", "select.java"),
+        (TestFramework::Kotlin, "discover.kotlin", "select.kotlin"),
         (TestFramework::Jest, "discover.jest", "select.jest"),
     ] {
         assert_eq!(discover_phase(framework), discover);

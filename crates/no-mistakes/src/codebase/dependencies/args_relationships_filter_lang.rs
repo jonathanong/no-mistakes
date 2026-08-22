@@ -6,6 +6,7 @@ fn language_relationship_edges(relationship: &RelationshipArg) -> Option<&'stati
         RelationshipArg::Ruby => &[EdgeKind::RubyRequire, EdgeKind::RubyReference],
         RelationshipArg::Php => &[EdgeKind::PhpUse, EdgeKind::PhpPackage],
         RelationshipArg::Java => &[EdgeKind::JavaImport, EdgeKind::JavaReference],
+        RelationshipArg::Kotlin => &[EdgeKind::KotlinImport, EdgeKind::KotlinReference],
         _ => return None,
     })
 }

@@ -12,6 +12,7 @@ export type TestPlanFramework =
   | "rails"
   | "php"
   | "java"
+  | "kotlin"
   | "jest";
 
 interface TestsPlanOptionsBase {

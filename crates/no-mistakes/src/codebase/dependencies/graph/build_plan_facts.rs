@@ -13,6 +13,8 @@ fn allowed_requests_language_frontends(allowed: &HashSet<EdgeKind>) -> bool {
         EdgeKind::PhpPackage,
         EdgeKind::JavaImport,
         EdgeKind::JavaReference,
+        EdgeKind::KotlinImport,
+        EdgeKind::KotlinReference,
     ]
     .into_iter()
     .any(|kind| allowed.contains(&kind))

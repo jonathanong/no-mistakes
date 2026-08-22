@@ -16,6 +16,7 @@ pub enum TestRunner {
     Rails,
     Php,
     Java,
+    Kotlin,
     Jest,
 }
 
@@ -32,6 +33,7 @@ impl TestRunner {
             "rails" => Some(Self::Rails),
             "php" => Some(Self::Php),
             "java" => Some(Self::Java),
+            "kotlin" => Some(Self::Kotlin),
             "jest" => Some(Self::Jest),
             _ => None,
         }
@@ -49,6 +51,7 @@ impl TestRunner {
             Self::Rails => "rails",
             Self::Php => "php",
             Self::Java => "java",
+            Self::Kotlin => "kotlin",
             Self::Jest => "jest",
         }
     }
@@ -56,7 +59,13 @@ impl TestRunner {
     pub(super) fn is_language_frontend(self) -> bool {
         matches!(
             self,
-            Self::Python | Self::Go | Self::Cargo | Self::Rails | Self::Php | Self::Java
+            Self::Python
+                | Self::Go
+                | Self::Cargo
+                | Self::Rails
+                | Self::Php
+                | Self::Java
+                | Self::Kotlin
         )
     }
 
@@ -72,6 +81,7 @@ impl TestRunner {
             Self::Rails => Framework::Rails,
             Self::Php => Framework::Php,
             Self::Java => Framework::Java,
+            Self::Kotlin => Framework::Kotlin,
             Self::Jest => Framework::Jest,
         }
     }

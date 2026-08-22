@@ -151,3 +151,16 @@ fn spring_fixture_lists_literal_routes() {
         .iter()
         .all(|route| !route.file.ends_with("Computed.java")));
 }
+
+#[test]
+fn kotlin_spring_fixture_lists_literal_routes() {
+    let report = analyze_project(&lang_fixture("kotlin-spring"), None, &[]).unwrap();
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| { route.route == "/api/users" && route.file.ends_with("Users.kt") }));
+    assert!(report
+        .routes
+        .iter()
+        .all(|route| !route.file.ends_with("Computed.kt")));
+}

@@ -84,6 +84,7 @@ pub(crate) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
         TestRunner::Rails => rel.ends_with("_spec.rb") || rel.ends_with("_test.rb"),
         TestRunner::Php => rel.ends_with("Test.php") || rel.contains("/tests/"),
         TestRunner::Java => is_java_test_path(rel),
+        TestRunner::Kotlin => is_kotlin_test_path(rel),
         TestRunner::Jest => fallback_test_path(rel),
     }
 }
@@ -106,6 +107,11 @@ fn is_cargo_test_path(rel: &str) -> bool {
 fn is_java_test_path(rel: &str) -> bool {
     let name = rel.rsplit('/').next().unwrap_or(rel);
     name.ends_with("Test.java") || name.ends_with("Tests.java") || name.ends_with("IT.java")
+}
+
+fn is_kotlin_test_path(rel: &str) -> bool {
+    let name = rel.rsplit('/').next().unwrap_or(rel);
+    name.ends_with("Test.kt") || name.ends_with("Tests.kt") || name.ends_with("IT.kt")
 }
 
 fn has_path_segment_pair(path: &str, first: &str, second: &str) -> bool {

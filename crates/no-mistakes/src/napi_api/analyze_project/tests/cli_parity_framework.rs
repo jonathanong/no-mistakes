@@ -37,6 +37,10 @@ fn cli_parity_framework_parser_covers_all_public_values() {
         crate::tests::TestFramework::Java
     );
     assert_eq!(
+        crate::napi_api::cli_parity::parse_test_framework("kotlin").unwrap(),
+        crate::tests::TestFramework::Kotlin
+    );
+    assert_eq!(
         crate::napi_api::cli_parity::parse_test_framework("jest").unwrap(),
         crate::tests::TestFramework::Jest
     );

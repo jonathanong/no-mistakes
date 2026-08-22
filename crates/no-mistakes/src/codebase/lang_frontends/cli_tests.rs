@@ -134,6 +134,8 @@ tests:
     framework: symfony
   java:
     packages: ["src"]
+  kotlin:
+    packages: ["kt"]
 "#,
     )
     .unwrap();
@@ -146,4 +148,5 @@ tests:
     assert_eq!(lang.php_apps, vec!["api"]);
     assert_eq!(lang.php_framework.as_deref(), Some("symfony"));
     assert_eq!(lang.java_packages, vec!["src"]);
+    assert_eq!(lang.kotlin_packages, vec!["kt"]);
 }
