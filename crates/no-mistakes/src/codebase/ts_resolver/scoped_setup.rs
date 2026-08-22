@@ -110,7 +110,7 @@ fn canonical_or_normalized(path: &Path) -> PathBuf {
     }
 }
 
-fn normalized_visible(visible: &dyn VisiblePathLookup) -> HashSet<PathBuf> {
+fn normalized_visible(visible: &dyn VisiblePathLookup) -> crate::fx::PathSet {
     visible
         .visible_cache_key()
         .into_iter()

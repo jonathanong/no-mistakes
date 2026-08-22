@@ -119,6 +119,25 @@ fn missing_paths_normalize_without_canonicalize() {
 }
 
 #[test]
+fn scoped_visibility_owns_an_fx_path_set() {
+    let source = include_str!("scoped_setup.rs");
+    assert!(
+        source.contains("fn normalized_visible(") && source.contains("-> crate::fx::PathSet"),
+        "scoped visibility membership must keep Fx hashing"
+    );
+}
+
+#[test]
+fn borrowed_resolver_visible_clones_by_reference() {
+    let visible: crate::fx::PathSet = sample_visible().into_iter().collect();
+    let borrowed = super::ResolverVisible::Borrowed(&visible);
+    let cloned = borrowed.clone();
+    let path = Path::new("/fixture/a.ts");
+    assert!(cloned.lookup().contains_visible(path));
+    assert_eq!(cloned.cache_paths(), borrowed.cache_paths());
+}
+
+#[test]
 fn prepared_symbol_flows_keep_session_scoped_resolution() {
     for (name, source) in [
         ("pipeline", include_str!("../symbols/pipeline.rs")),
