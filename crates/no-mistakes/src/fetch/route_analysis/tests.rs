@@ -112,3 +112,51 @@ fn visible_fetch_analysis_skips_unlisted_and_already_visited_files() {
     .unwrap();
     assert!(hidden.is_empty());
 }
+
+#[test]
+fn visible_fetch_analysis_propagates_imported_fact_load_errors() {
+    // A prepared parent can list a visible import whose facts failed to load.
+    // The recursive `?` must surface that cached error instead of skipping it.
+    let root = PathBuf::from("/repo");
+    let parent = crate::codebase::ts_resolver::normalize_path(&root.join("page.tsx"));
+    let child = crate::codebase::ts_resolver::normalize_path(&root.join("child.ts"));
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let mut cache = Cache {
+        files: HashMap::new(),
+        imports: HashMap::new(),
+    };
+    let mut parsed_files = ParsedFileCache::default();
+    parsed_files.insert(
+        parent.clone(),
+        crate::fetch::file_facts::ParsedFileFacts {
+            has_use_client_directive: false,
+            has_use_server_directive: false,
+            fetches: Vec::new(),
+            imports: vec![child.clone()],
+            used_imports: vec![child.clone()],
+        },
+    );
+    parsed_files.insert_error(child.clone(), "child source unreadable".to_string());
+    let visible = HashSet::from([parent.clone(), child]);
+    let mut visited = HashSet::new();
+    let mut fetches = Vec::new();
+
+    let error = analyze_file_from_visible_with_facts(
+        &parent,
+        (false, false),
+        &mut VisibleFileAnalysis {
+            session: &session,
+            root: &root,
+            visited: &mut visited,
+            fetches: &mut fetches,
+            cache: &mut cache,
+            parsed_files: &mut parsed_files,
+            visible_files: &visible,
+        },
+    )
+    .expect_err("imported fact load errors must surface");
+    assert!(
+        error.to_string().contains("child source unreadable"),
+        "{error}"
+    );
+}

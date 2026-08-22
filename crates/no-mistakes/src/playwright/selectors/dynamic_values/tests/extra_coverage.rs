@@ -272,6 +272,19 @@ fn static_export_collection_covers_default_and_destructured_declarations() {
 }
 
 #[test]
+fn static_export_collection_skips_named_functions_without_string_values() {
+    // Named function exports are still visited when their bodies have no
+    // collectable string leaves, so the empty-values skip stays covered.
+    let values = ast::with_program(
+        Path::new("empty-fn.ts"),
+        "export function noStrings() { return 1; }\n",
+        |program, _| super::super::cross_file::collect_static_export_values(program),
+    )
+    .unwrap();
+    assert!(values.values("noStrings", false).is_empty());
+}
+
+#[test]
 fn visible_cross_file_resolution_handles_missing_bindings_and_unreadable_targets() {
     let page_path = Path::new("/repo/page.tsx");
     // The visible universe can identify an import even when its saved source
