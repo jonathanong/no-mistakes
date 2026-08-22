@@ -2,8 +2,8 @@ use super::*;
 
 #[test]
 fn graph_reports_honor_per_report_scope_overrides() {
-    let output = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": fixture_root("exports"),
             "reports": [{
                 "type": "dependencies",
@@ -11,8 +11,8 @@ fn graph_reports_honor_per_report_scope_overrides() {
                 "files": ["a.mts"]
             }]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
     assert!(value["reports"][0]["result"]["files"]
@@ -24,14 +24,14 @@ fn graph_reports_honor_per_report_scope_overrides() {
 
 #[test]
 fn graph_reports_surface_traversal_errors() {
-    let error = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": fixture_root("simple"),
             "filters": ["["],
             "reports": [{ "type": "dependencies", "files": ["a.mts"] }]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap_err();
     assert!(error.reason.contains("glob"));
 }

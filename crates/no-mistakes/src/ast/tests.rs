@@ -127,10 +127,18 @@ fn parsed_program_cache_reuses_parse_and_source_type_errors() {
     let cache = ParsedProgramCache::default();
 
     let first = cache
-        .with_program(&syntax_error_path, Arc::from(syntax_error.as_str()), |_, _| ())
+        .with_program(
+            &syntax_error_path,
+            Arc::from(syntax_error.as_str()),
+            |_, _| (),
+        )
         .unwrap_err();
     let cached = cache
-        .with_program(&syntax_error_path, Arc::from("export default {}"), |_, _| ())
+        .with_program(
+            &syntax_error_path,
+            Arc::from("export default {}"),
+            |_, _| (),
+        )
         .unwrap_err();
     assert_eq!(cached, first, "a request cache is keyed by normalized path");
 

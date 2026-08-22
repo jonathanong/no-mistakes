@@ -173,3 +173,18 @@ pub(super) fn graph_config_options_for_plan(
         None
     }
 }
+
+impl DepGraph {
+    pub(crate) fn merge_canonical_edges(&mut self, edges: Vec<Edge>) {
+        let current = std::mem::take(&mut self.edges);
+        let nodes = current.forward().keys().cloned().collect::<Vec<_>>();
+        let combined = current.edges().iter().cloned().chain(
+            edges
+                .into_iter()
+                .map(|(from, to, kind)| CanonicalEdge::new(from, to, kind)),
+        );
+        self.edges = EdgeIndex::from_edges_and_nodes(combined, nodes);
+        sort_edge_index_adjacency(&mut self.edges);
+        self.effective_edges = OnceLock::new();
+    }
+}

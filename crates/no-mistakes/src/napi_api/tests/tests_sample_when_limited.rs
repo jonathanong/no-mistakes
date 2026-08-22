@@ -10,7 +10,9 @@ fn tests_plan_json_samples_limited_group_from_config() {
         "environment": "sampledSnake"
     })
     .to_string();
-    let output = crate::napi_api::tests_plan_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let output =
+        crate::napi_api::tests_plan_json_impl(crate::napi_api::options::test_json_arg(options))
+            .unwrap();
     let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert_eq!(plan["fallback_triggered"], false);

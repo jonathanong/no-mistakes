@@ -143,18 +143,20 @@ fn cli_parity_document_wrappers_accept_inline_plan_values() {
     let comment = crate::napi_api::cli_parity::tests_comment_markdown_impl(
         crate::napi_api::options::test_json_arg(options.clone()),
     )
-        .expect("inline plan should render markdown");
+    .expect("inline plan should render markdown");
     assert!(comment.contains("tests/app.test.ts"));
 
-    let graph = crate::napi_api::cli_parity::tests_graph_json_impl(crate::napi_api::options::test_json_arg(options.clone()))
-        .expect("inline plan should render graph JSON");
+    let graph = crate::napi_api::cli_parity::tests_graph_json_impl(
+        crate::napi_api::options::test_json_arg(options.clone()),
+    )
+    .expect("inline plan should render graph JSON");
     assert!(graph.contains("\"nodes\""));
     assert!(graph.contains("src/app.ts"));
 
     let mermaid = crate::napi_api::cli_parity::tests_graph_mermaid_impl(
         crate::napi_api::options::test_json_arg(options),
     )
-        .expect("inline plan should render Mermaid");
+    .expect("inline plan should render Mermaid");
     assert!(mermaid.contains("graph TD"));
 }
 
@@ -172,16 +174,18 @@ fn cli_parity_document_wrappers_cover_string_plan_and_required_input() {
     let comment = crate::napi_api::cli_parity::tests_comment_markdown_impl(
         crate::napi_api::options::test_json_arg(options),
     )
-        .expect("string plan JSON should render markdown");
+    .expect("string plan JSON should render markdown");
     assert!(comment.contains("Fallback Triggered"));
 
-    let error = crate::napi_api::cli_parity::tests_graph_json_impl(crate::napi_api::options::test_json_arg(serde_json::json!({})))
-        .expect_err("plan input is required");
+    let error = crate::napi_api::cli_parity::tests_graph_json_impl(
+        crate::napi_api::options::test_json_arg(serde_json::json!({})),
+    )
+    .expect_err("plan input is required");
     assert!(error.reason.contains("plan or planJson is required"));
 
     let error = crate::napi_api::cli_parity::tests_graph_mermaid_impl(
         crate::napi_api::options::test_json_arg("{}".to_string()),
     )
-        .expect_err("plan input is required");
+    .expect_err("plan input is required");
     assert!(error.reason.contains("plan or planJson is required"));
 }

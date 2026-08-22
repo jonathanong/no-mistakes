@@ -23,9 +23,7 @@ pub(super) fn record_effect(sink: EffectSink<'_>, callee: &Expression<'_>, byte_
     }
 }
 
-pub(super) fn declarator_function_name<'a>(
-    declarator: &VariableDeclarator<'a>,
-) -> Option<&'a str> {
+pub(super) fn declarator_function_name<'a>(declarator: &VariableDeclarator<'a>) -> Option<&'a str> {
     let is_function = matches!(
         declarator.init,
         Some(Expression::ArrowFunctionExpression(_)) | Some(Expression::FunctionExpression(_))

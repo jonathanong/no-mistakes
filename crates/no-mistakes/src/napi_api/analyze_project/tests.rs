@@ -1,3 +1,4 @@
+use super::options_test_support::report_value;
 use super::*;
 use serde_json::{json, Value};
 use std::path::PathBuf;
@@ -38,23 +39,23 @@ fn check_runner_fixture(name: &str) -> PathBuf {
 }
 
 fn analyze_project_check_result(root: &PathBuf) -> Value {
-    let output = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "config": ".no-mistakes.yml",
             "reports": [{ "type": "check" }]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     serde_json::from_str::<Value>(&output).unwrap()["reports"][0]["result"].clone()
 }
 
 fn standalone_check_result(root: &PathBuf) -> Value {
     serde_json::from_str(
-        &crate::napi_api::check_json_impl(
-            crate::napi_api::options::test_json_arg(json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),)
-        )
+        &crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),
+        ))
         .unwrap(),
     )
     .unwrap()
@@ -94,13 +95,13 @@ fn analyze_project_dynamic_import_check_respects_filesystem_skips_with_standalon
 fn analyze_project_check_applies_shared_suppression_accounting() {
     let root =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/suppression-react");
-    let output = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "reports": [{ "type": "check", "includeSuppressed": true }]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let result: Value = serde_json::from_str(&output).unwrap();
     let report = &result["reports"][0]["result"];
@@ -116,13 +117,13 @@ fn analyze_project_check_applies_shared_suppression_accounting() {
 fn analyze_project_react_analysis_reports_a_parse_error_despite_check_only_directive() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check/react-analyze-suppressed-parse-error");
-    let error = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "reports": [{ "type": "reactAnalyze" }]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap_err();
 
     assert!(error.to_string().contains("failed to parse"), "{error:#}");
@@ -131,13 +132,13 @@ fn analyze_project_react_analysis_reports_a_parse_error_despite_check_only_direc
 #[test]
 fn analyze_project_empty_check_includes_empty_suppression_array_in_audit_mode() {
     let root = check_runner_fixture("empty");
-    let output = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "reports": [{ "type": "check", "includeSuppressed": true }]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let result: Value = serde_json::from_str(&output).unwrap();
     assert_eq!(result["reports"][0]["result"]["suppressed"], json!([]));
@@ -296,22 +297,28 @@ fn analyze_project_queue_views_share_one_report_and_parse_pass() {
     let root = fixture.path().canonicalize().unwrap();
     let root_json = root.display().to_string();
     let standalone = [
-        crate::napi_api::queues_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root_json }).to_string())).unwrap(),
-        crate::napi_api::queue_edges_json_impl(
-            crate::napi_api::options::test_json_arg(json!({ "root": root_json, "files": ["enqueue.ts"], "depth": 2 }).to_string(),)
-        )
+        crate::napi_api::queues_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root_json }).to_string(),
+        ))
         .unwrap(),
-        crate::napi_api::queue_related_json_impl(
-            crate::napi_api::options::test_json_arg(json!({ "root": root_json, "files": ["enqueue.ts"], "direction": "deps" }).to_string(),)
-        )
+        crate::napi_api::queue_edges_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root_json, "files": ["enqueue.ts"], "depth": 2 }).to_string(),
+        ))
         .unwrap(),
-        crate::napi_api::queue_check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root_json }).to_string())).unwrap(),
+        crate::napi_api::queue_related_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root_json, "files": ["enqueue.ts"], "direction": "deps" }).to_string(),
+        ))
+        .unwrap(),
+        crate::napi_api::queue_check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root_json }).to_string(),
+        ))
+        .unwrap(),
     ]
     .map(|value| serde_json::from_str::<Value>(&value).unwrap());
 
     crate::ast::begin_parse_count(&root);
-    let output = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root_json,
             "reports": [
                 { "type": "queues" },
@@ -320,8 +327,8 @@ fn analyze_project_queue_views_share_one_report_and_parse_pass() {
                 { "type": "queueCheck" }
             ]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
     let value: Value = serde_json::from_str(&output).unwrap();
@@ -338,23 +345,27 @@ fn analyze_project_playwright_views_share_one_analysis_with_standalone_parity() 
     let root = parser_fixture("playwright");
     let root_json = root.display().to_string();
     let standalone = [
-        crate::napi_api::playwright_check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root_json }).to_string()))
-            .unwrap(),
-        crate::napi_api::playwright_edges_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root_json }).to_string()))
-            .unwrap(),
-        crate::napi_api::playwright_related_json_impl(
-            crate::napi_api::options::test_json_arg(json!({ "root": root_json, "files": ["app/page.tsx"] }).to_string(),)
-        )
+        crate::napi_api::playwright_check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root_json }).to_string(),
+        ))
         .unwrap(),
-        crate::napi_api::playwright_tests_json_impl(
-            crate::napi_api::options::test_json_arg(json!({ "root": root_json, "files": ["app/page.tsx"] }).to_string(),)
-        )
+        crate::napi_api::playwright_edges_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root_json }).to_string(),
+        ))
+        .unwrap(),
+        crate::napi_api::playwright_related_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root_json, "files": ["app/page.tsx"] }).to_string(),
+        ))
+        .unwrap(),
+        crate::napi_api::playwright_tests_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root_json, "files": ["app/page.tsx"] }).to_string(),
+        ))
         .unwrap(),
     ]
     .map(|value| serde_json::from_str::<Value>(&value).unwrap());
 
-    let output = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root_json,
             "reports": [
                 { "type": "playwrightCheck" },
@@ -363,8 +374,8 @@ fn analyze_project_playwright_views_share_one_analysis_with_standalone_parity() 
                 { "type": "playwrightTests", "files": ["app/page.tsx"] }
             ]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
 
@@ -377,29 +388,32 @@ fn analyze_project_playwright_views_share_one_analysis_with_standalone_parity() 
 fn analyze_project_server_views_share_one_report_with_standalone_parity() {
     let root = fixture_root("routes/good");
     let standalone = [
-        crate::napi_api::server_routes_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap(),
-        crate::napi_api::server_route_list_json_impl(
-            crate::napi_api::options::test_json_arg(json!({ "root": root, "files": ["/api/v1/users"] }).to_string(),)
-        )
+        crate::napi_api::server_routes_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root }).to_string(),
+        ))
         .unwrap(),
-        crate::napi_api::server_route_edges_json_impl(
-            crate::napi_api::options::test_json_arg(json!({ "root": root, "files": ["backend/api/v1/users.mts"] }).to_string(),)
-        )
+        crate::napi_api::server_route_list_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "files": ["/api/v1/users"] }).to_string(),
+        ))
         .unwrap(),
-        crate::napi_api::server_route_related_json_impl(
-            crate::napi_api::options::test_json_arg(json!({
+        crate::napi_api::server_route_edges_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "files": ["backend/api/v1/users.mts"] }).to_string(),
+        ))
+        .unwrap(),
+        crate::napi_api::server_route_related_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
                 "root": root,
                 "roots": ["backend/api/v1/users.mts"],
                 "direction": "dependents"
             })
-            .to_string(),)
-        )
+            .to_string(),
+        ))
         .unwrap(),
     ]
     .map(|value| serde_json::from_str::<Value>(&value).unwrap());
 
-    let output = analyze_project_json_impl(
-        crate::napi_api::options::test_json_arg(json!({
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
             "root": root,
             "reports": [
                 { "type": "serverRoutes" },
@@ -412,8 +426,8 @@ fn analyze_project_server_views_share_one_report_with_standalone_parity() {
                 }
             ]
         })
-        .to_string(),)
-    )
+        .to_string(),
+    ))
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
 

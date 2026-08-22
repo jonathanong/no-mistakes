@@ -4,9 +4,9 @@ use serde_json::{value::RawValue, Value};
 
 use super::codebase::build_traverse_args;
 #[cfg(any(test, feature = "test-instrumentation"))]
-use super::options::parse_options_value;
-#[cfg(test)]
 pub(super) use super::options::parse_options;
+#[cfg(any(test, feature = "test-instrumentation"))]
+use super::options::parse_options_value;
 use super::options::to_napi_error;
 use crate::codebase::dependencies::TraverseArgs;
 
@@ -100,11 +100,6 @@ fn json_raw_value(value: Value) -> Box<RawValue> {
     RawValue::from_string(value.to_string()).expect("JSON Value re-serialize never fails")
 }
 
-#[cfg(test)]
-pub(super) fn report_value(raw: Box<RawValue>) -> Value {
-    serde_json::from_str(raw.get()).expect("report JSON is valid")
-}
-
 fn run_report(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
@@ -122,9 +117,7 @@ fn run_report(
         ));
     }
     if is_playwright_report(&request.report_type) {
-        return Ok(json_raw_value(
-            context.playwright_report(request, options)?,
-        ));
+        return Ok(json_raw_value(context.playwright_report(request, options)?));
     }
     if request.report_type == "flow" {
         return Ok(json_raw_value(context.flow_report(request, options)?));

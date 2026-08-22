@@ -13,7 +13,10 @@ fn playwright_check_napi_parses_each_source_file_once() {
     let root = fixture.path().canonicalize().unwrap();
 
     crate::ast::begin_parse_count(&root);
-    let output = playwright_check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap();
+    let output = playwright_check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root }).to_string(),
+    ))
+    .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
     let report: serde_json::Value = serde_json::from_str(&output).unwrap();
     let expected = [

@@ -52,10 +52,9 @@ fn git_show_file_invalid_ref_returns_none() {
 
 #[test]
 fn lockfile_diff_json_impl_invalid_json_returns_err() {
-    let error = crate::napi_api::options::parse_options::<super::LockfileDiffOptions>(
-        "not valid json {{{",
-    )
-    .unwrap_err();
+    let error =
+        crate::napi_api::options::parse_options::<super::LockfileDiffOptions>("not valid json {{{")
+            .unwrap_err();
     assert!(error.reason.contains("invalid options JSON"));
 }
 

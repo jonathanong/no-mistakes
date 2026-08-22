@@ -77,7 +77,8 @@ fn ci_env_json_requires_var() {
 fn impacted_checks_json_returns_checks() {
     let options =
         json!({ "root": impacted_checks_root(), "changedFiles": ["src/foo.ts"] }).to_string();
-    let output = impacted_checks_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let output =
+        impacted_checks_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert!(value["checks"]
         .as_array()
@@ -90,8 +91,10 @@ fn impacted_checks_json_returns_checks() {
 #[test]
 fn impacted_checks_json_classifies_empty_results_without_stderr_side_effects() {
     let no_files = json!({ "root": impacted_checks_root() }).to_string();
-    let no_files: serde_json::Value =
-        serde_json::from_str(&impacted_checks_json_impl(crate::napi_api::options::test_json_arg(no_files)).unwrap()).unwrap();
+    let no_files: serde_json::Value = serde_json::from_str(
+        &impacted_checks_json_impl(crate::napi_api::options::test_json_arg(no_files)).unwrap(),
+    )
+    .unwrap();
     assert_eq!(no_files["empty_result"]["code"], "no-changed-files");
 
     let no_checks = json!({
@@ -99,8 +102,10 @@ fn impacted_checks_json_classifies_empty_results_without_stderr_side_effects() {
         "changedFiles": ["src/style.css"],
     })
     .to_string();
-    let no_checks: serde_json::Value =
-        serde_json::from_str(&impacted_checks_json_impl(crate::napi_api::options::test_json_arg(no_checks)).unwrap()).unwrap();
+    let no_checks: serde_json::Value = serde_json::from_str(
+        &impacted_checks_json_impl(crate::napi_api::options::test_json_arg(no_checks)).unwrap(),
+    )
+    .unwrap();
     assert_eq!(no_checks["empty_result"]["code"], "no-impacted-checks");
 }
 
@@ -117,8 +122,10 @@ fn impacted_checks_json_generic_only_skips_test_frameworks() {
         "timings": true,
     })
     .to_string();
-    let value: serde_json::Value =
-        serde_json::from_str(&impacted_checks_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap()).unwrap();
+    let value: serde_json::Value = serde_json::from_str(
+        &impacted_checks_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
 
     assert!(value["checks"]
         .as_array()
@@ -158,11 +165,15 @@ fn impacted_checks_json_timings_are_opt_in_and_ordered() {
     })
     .to_string();
 
-    let mut plain: serde_json::Value =
-        serde_json::from_str(&impacted_checks_json_impl(crate::napi_api::options::test_json_arg(plain_options)).unwrap()).unwrap();
+    let mut plain: serde_json::Value = serde_json::from_str(
+        &impacted_checks_json_impl(crate::napi_api::options::test_json_arg(plain_options)).unwrap(),
+    )
+    .unwrap();
     assert!(plain.get("timings").is_none());
-    let mut timed: serde_json::Value =
-        serde_json::from_str(&impacted_checks_json_impl(crate::napi_api::options::test_json_arg(timed_options)).unwrap()).unwrap();
+    let mut timed: serde_json::Value = serde_json::from_str(
+        &impacted_checks_json_impl(crate::napi_api::options::test_json_arg(timed_options)).unwrap(),
+    )
+    .unwrap();
     let timings = timed
         .get("timings")
         .and_then(serde_json::Value::as_array)
@@ -212,17 +223,28 @@ fn impacted_checks_json_timings_are_opt_in_and_ordered() {
 // point. The crate dir has no workflows/config, so results are empty but valid.
 #[test]
 fn ci_impact_json_defaults_root() {
-    assert!(ci_impact_json_impl(crate::napi_api::options::test_json_arg(json!({ "files": [] }).to_string())).is_ok());
+    assert!(ci_impact_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "files": [] }).to_string()
+    ))
+    .is_ok());
 }
 
 #[test]
 fn ci_env_json_defaults_root() {
-    assert!(ci_env_json_impl(crate::napi_api::options::test_json_arg(json!({ "var": "X" }).to_string())).is_ok());
+    assert!(ci_env_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "var": "X" }).to_string()
+    ))
+    .is_ok());
 }
 
 #[test]
 fn impacted_checks_json_defaults_root() {
-    assert!(impacted_checks_json_impl(crate::napi_api::options::test_json_arg(json!({}).to_string())).is_ok());
+    assert!(
+        impacted_checks_json_impl(crate::napi_api::options::test_json_arg(
+            json!({}).to_string()
+        ))
+        .is_ok()
+    );
 }
 
 #[test]
@@ -248,8 +270,10 @@ fn ci_topology_json_returns_the_parsed_graph() {
 
 #[test]
 fn ci_topology_json_exposes_enriched_job_and_step_metadata() {
-    let output =
-        ci_topology_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": workflow_metadata_fixture() }).to_string())).unwrap();
+    let output = ci_topology_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": workflow_metadata_fixture() }).to_string(),
+    ))
+    .unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     let job = value["jobs"]
         .as_array()
@@ -319,5 +343,10 @@ fn ci_topology_json_applies_workflow_filter() {
 
 #[test]
 fn ci_topology_json_defaults_root() {
-    assert!(ci_topology_json_impl(crate::napi_api::options::test_json_arg(json!({}).to_string())).is_ok());
+    assert!(
+        ci_topology_json_impl(crate::napi_api::options::test_json_arg(
+            json!({}).to_string()
+        ))
+        .is_ok()
+    );
 }

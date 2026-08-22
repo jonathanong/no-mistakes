@@ -6,12 +6,12 @@ mod go;
 mod java;
 mod kafka;
 mod kotlin;
+mod partition;
 mod php;
 mod python;
 mod ruby;
 mod rustlang;
 mod strip;
-mod partition;
 
 #[cfg(test)]
 mod tests;
