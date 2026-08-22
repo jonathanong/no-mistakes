@@ -208,3 +208,59 @@ testPlan:
         "{findings:?}"
     );
 }
+
+#[test]
+fn missing_file_and_glob_paths_use_kind_labels() {
+    let root = fixture("pass");
+    let config = enable(
+        serde_yaml::from_str(
+            r#"
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      - name: missing
+        paths:
+          - no-such-file.ts
+          - no-such-glob/**
+"#,
+        )
+        .unwrap(),
+    );
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("missing file `no-such-file.ts`")),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("missing path `no-such-glob/**`")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn invalid_include_and_exclude_globs_error() {
+    let root = fixture("pass");
+    let yaml_cases = [
+        "testPlan:\n  vitest:\n    environments:\n      prePush:\n        include:\n          - \"{\"\n",
+        "testPlan:\n  vitest:\n    environments:\n      prePush:\n        exclude:\n          - \"{\"\n",
+        "projects:\n  web:\n    root: web\n    include:\n      - \"{\"\n",
+        "projects:\n  web:\n    root: web\n    exclude:\n      - \"{\"\n",
+    ];
+    for yaml in yaml_cases {
+        let config = enable(serde_yaml::from_str(yaml).unwrap());
+        assert!(
+            check_with_files(&root, &config, &files(&root)).is_err(),
+            "{yaml}"
+        );
+    }
+    let mut config = enable(serde_yaml::from_str("projects:\n  web:\n    root: web\n").unwrap());
+    config.rules[0].include = vec!["{".to_string()];
+    assert!(check_with_files(&root, &config, &files(&root)).is_err());
+    config.rules[0].include.clear();
+    config.rules[0].exclude = vec!["{".to_string()];
+    assert!(check_with_files(&root, &config, &files(&root)).is_err());
+}
