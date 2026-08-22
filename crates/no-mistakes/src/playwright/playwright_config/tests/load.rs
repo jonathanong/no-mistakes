@@ -1,4 +1,6 @@
-use crate::playwright::playwright_config::load::{load, load_many, select_loaded};
+use crate::playwright::playwright_config::load::{
+    load, load_many, load_with_sources, select_loaded,
+};
 use crate::playwright::playwright_config::types::TestProject;
 use crate::playwright::test_support::fixture_path;
 use std::path::{Path, PathBuf};
@@ -203,4 +205,30 @@ fn load_bare_config_path_uses_root() {
     let bare = Path::new("playwright.config.ts");
     let parsed = load(&dir, bare).unwrap();
     assert_eq!(parsed.projects[0].test_dir, "tests");
+}
+
+#[test]
+fn load_with_sources_reuses_the_prepared_store() {
+    use crate::codebase::ts_source::{FileInventory, SourceStore};
+    use std::sync::Arc;
+
+    let dir = fixture_path(&["ast-snippets", "playwright_config", "load-existing"]);
+    let config = dir.join("playwright.config.ts");
+    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&config)));
+    let store = SourceStore::new(inventory);
+
+    let parsed = load_with_sources(&dir, &config, Some(&store)).unwrap();
+    let reads = store.physical_read_count();
+    assert_eq!(parsed.projects[0].test_dir, "./tests");
+    assert!(reads >= 1);
+
+    load_with_sources(&dir, &config, Some(&store)).unwrap();
+    assert_eq!(store.physical_read_count(), reads);
+}
+
+#[test]
+fn playwright_config_load_source_does_not_read_the_filesystem_directly() {
+    let source = include_str!("../load.rs");
+    assert!(!source.contains("std::fs::read_to_string"));
+    assert!(source.contains("read_prepared_or_open"));
 }

@@ -40,12 +40,8 @@ fn analyze_file_inner(
     visible_files: Option<&crate::fx::PathSet>,
     sources: Option<&SourceStore>,
 ) -> Result<FileAnalysis> {
-    let source: Arc<str> = match sources {
-        Some(store) => store
-            .read_path(abs_path)
-            .map_err(|error| anyhow::anyhow!("{error}"))?,
-        None => std::fs::read_to_string(abs_path)?.into(),
-    };
+    let source: Arc<str> = SourceStore::read_prepared_or_open(sources, abs_path)
+        .map_err(|error| anyhow::anyhow!("{error}"))?;
     ast::with_program(abs_path, &source, |program, _src| {
         analyze_program_inner(abs_path, root, &source, program, visible_files)
     })

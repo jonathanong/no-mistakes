@@ -518,6 +518,7 @@ fn custom_factory_respected_in_check_mode_shared_facts() {
         &plan,
         None,
         &sources,
+        false,
     )
     .expect("should collect facts for queue file");
     let queue_facts = facts

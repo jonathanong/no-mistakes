@@ -52,7 +52,7 @@ pub(super) fn collect_source_files_from_facts_with_sources(
         source_files.push(SourceFile {
             path: normalize_path(path),
             rel: relative_slash_path(root, path),
-            source: source.to_string(),
+            source,
             disabled,
             defer_suppression,
             is_nextjs_project: nextjs_projects.contains_file(path),

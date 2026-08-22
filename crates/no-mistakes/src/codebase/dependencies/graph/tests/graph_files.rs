@@ -258,18 +258,22 @@ fn graph_files_builds_reverse_map_skipping_uncanonicalizable_entries() {
 }
 
 #[test]
-fn graph_files_visible_path_recovers_from_poisoned_canonical_cache() {
+fn graph_files_visible_path_is_safe_for_concurrent_lookups() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/codebase/dependencies/selector-text-sparse-universe/fixture"),
     );
     let page = root.join("web/app/page.tsx");
     let files = GraphFiles::from_files(vec![page.clone()]);
-    let _ = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
-        let _guard = files.canonical_visible.cache.lock().unwrap();
-        panic!("poison canonical visible cache");
-    }));
-    assert_eq!(files.visible_path(&page), Some(page.as_path()));
+    std::thread::scope(|scope| {
+        for _ in 0..16 {
+            let files = &files;
+            let page = &page;
+            scope.spawn(move || {
+                assert_eq!(files.visible_path(page), Some(page.as_path()));
+            });
+        }
+    });
 }
 
 #[test]

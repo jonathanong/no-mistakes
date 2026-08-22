@@ -247,3 +247,39 @@ fn visible_facts_route_traversal_skips_unlisted_and_visited_files() {
     .unwrap();
     assert!(!already);
 }
+
+#[test]
+fn collect_imports_with_sources_reuses_the_prepared_store() {
+    use crate::codebase::ts_source::{FileInventory, SourceStore};
+    use std::sync::Arc;
+
+    let temp_dir = tempfile::tempdir().unwrap();
+    let pwd = temp_dir.path();
+    let path = pwd.join("dummy.ts");
+    std::fs::write(
+        &path,
+        "import { A } from './runtime_import';\nconsole.log(A);\n",
+    )
+    .unwrap();
+    std::fs::write(pwd.join("runtime_import.ts"), "").unwrap();
+    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&path)));
+    let store = SourceStore::new(inventory);
+    let mut cache = HashMap::new();
+
+    let first = collect_imports_with_sources(&path, &mut cache, Some(&store)).unwrap();
+    let reads = store.physical_read_count();
+    assert_eq!(first.len(), 1);
+    assert!(reads >= 1);
+
+    cache.clear();
+    let second = collect_imports_with_sources(&path, &mut cache, Some(&store)).unwrap();
+    assert_eq!(second, first);
+    assert_eq!(store.physical_read_count(), reads);
+}
+
+#[test]
+fn fetch_imports_source_does_not_read_the_filesystem_directly() {
+    let source = include_str!("../imports.rs");
+    assert!(!source.contains("std::fs::read_to_string"));
+    assert!(source.contains("read_prepared_or_open"));
+}

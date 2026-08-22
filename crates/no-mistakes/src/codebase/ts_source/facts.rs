@@ -107,7 +107,7 @@ pub struct TsFileFacts {
     pub http_calls: Vec<HttpCall>,
     pub process_spawns: Vec<SpawnEdge>,
     pub(crate) server_routes: Option<ServerRouteFileFacts>,
-    pub react_components: Vec<ComponentFacts>,
+    pub react_components: Arc<Vec<ComponentFacts>>,
     pub effect_calls: Vec<EffectCallFact>,
     pub rsc_environment: Option<RscEnvironmentFact>,
     pub trpc_procedures: Vec<String>,

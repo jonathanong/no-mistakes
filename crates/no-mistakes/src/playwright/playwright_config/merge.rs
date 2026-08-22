@@ -98,3 +98,51 @@ pub(super) fn default_test_match() -> Vec<String> {
         .map(|pattern| pattern.to_string())
         .collect()
 }
+
+pub(super) fn default_config(root: &Path) -> super::types::PlaywrightConfig {
+    super::types::PlaywrightConfig {
+        name: None,
+        projects: vec![super::types::TestProject {
+            name: None,
+            config_dir: root.to_path_buf(),
+            test_dir: ".".to_string(),
+            test_match: default_test_match(),
+            test_ignore: Vec::new(),
+            base_url: None,
+            // Synthesized fallback config: the attribute was not read from a real
+            // Playwright config, so leave it `None` to defer to `selectors.testIds`.
+            test_id_attribute: None,
+        }],
+    }
+}
+
+pub(super) fn missing_config_name_error(name: &str) -> anyhow::Error {
+    anyhow::Error::msg(format!("no Playwright config found with name {name}"))
+}
+
+pub(super) fn validate_config_names(
+    configs: &[(std::path::PathBuf, super::types::PlaywrightConfig)],
+    config_name_filter: Option<&str>,
+) -> anyhow::Result<()> {
+    if configs.len() <= 1 && config_name_filter.is_none() {
+        return Ok(());
+    }
+
+    let mut seen = std::collections::BTreeMap::new();
+    for (path, config) in configs {
+        let Some(name) = config.name.as_deref() else {
+            anyhow::bail!(
+                "Playwright config {} must define top-level name when multiple configs are analyzed or --project is used",
+                path.display()
+            );
+        };
+        if let Some(previous) = seen.insert(name.to_string(), path.display().to_string()) {
+            anyhow::bail!(
+                "Playwright config name {name} is duplicated by {} and {}",
+                previous,
+                path.display()
+            );
+        }
+    }
+    Ok(())
+}
