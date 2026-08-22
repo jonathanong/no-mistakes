@@ -5,6 +5,23 @@ use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use no_mistakes::config::v2::schema::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 
+pub(super) fn is_native_framework(framework: TestFramework) -> bool {
+    matches!(
+        framework,
+        TestFramework::Dotnet
+            | TestFramework::Swift
+            | TestFramework::Python
+            | TestFramework::Go
+            | TestFramework::Cargo
+            | TestFramework::Rails
+            | TestFramework::Php
+            | TestFramework::Java
+            | TestFramework::Kotlin
+            | TestFramework::Elixir
+            | TestFramework::Dart
+    )
+}
+
 pub(super) fn is_language_native_change(
     framework: TestFramework,
     root: &Path,

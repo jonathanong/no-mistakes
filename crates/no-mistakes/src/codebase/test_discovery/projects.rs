@@ -133,6 +133,6 @@ pub(super) fn runner_config(
         | TestRunner::Java
         | TestRunner::Kotlin
         | TestRunner::Elixir => unreachable!("language projects are handled before runner_config"),
-        | TestRunner::Dart => unreachable!("language projects are handled before runner_config"),
+        TestRunner::Dart => unreachable!("language projects are handled before runner_config"),
     }
 }

@@ -1,6 +1,6 @@
 mod cli;
-mod elixir;
 mod dart;
+mod elixir;
 mod facts;
 mod go;
 mod java;
