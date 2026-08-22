@@ -270,12 +270,9 @@ fn language_frontend_globs_are_explicit() {
     assert!(test_globs("kotlin")
         .iter()
         .any(|glob| glob.contains("Test.kt")));
-    assert!(test_globs("elixir")
-        .iter()
-        .any(|glob| glob.contains("_test.exs")));
-    assert!(test_globs("dart")
-        .iter()
-        .any(|glob| glob.contains("_test.dart")));
+    for (framework, needle) in [("elixir", "_test.exs"), ("dart", "_test.dart")] {
+        assert!(test_globs(framework).iter().any(|glob| glob.contains(needle)));
+    }
 }
 
 #[test]

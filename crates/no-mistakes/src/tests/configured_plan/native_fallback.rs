@@ -185,8 +185,7 @@ pub(super) fn native_fallback_tests(
         | TestFramework::Php
         | TestFramework::Java
         | TestFramework::Kotlin
-        | TestFramework::Elixir
-        | TestFramework::Dart => super::native_fallback_lang::language_fallback_tests(
+        | TestFramework::Elixir | TestFramework::Dart => super::native_fallback_lang::language_fallback_tests(
             framework,
             root,
             config,
@@ -230,8 +229,7 @@ fn is_native_source_or_project_change(
         | TestFramework::Php
         | TestFramework::Java
         | TestFramework::Kotlin
-        | TestFramework::Elixir
-        | TestFramework::Dart => {
+        | TestFramework::Elixir | TestFramework::Dart => {
             super::native_fallback_lang::is_language_native_change(framework, root, config, &rel)
         }
         TestFramework::Playwright | TestFramework::Vitest | TestFramework::Jest => false,
