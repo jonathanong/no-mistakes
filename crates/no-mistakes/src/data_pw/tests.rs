@@ -52,8 +52,11 @@ fn buffered_structured_and_paths_outputs_preserve_formats() {
     let yaml = String::from_utf8(render_report(&report(), Format::Yml).unwrap()).unwrap();
     let paths = String::from_utf8(render_report(&report(), Format::Paths).unwrap()).unwrap();
 
-    assert!(json.starts_with("{\n"));
-    assert!(json.ends_with("\n"));
+    let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+    assert_eq!(parsed["value"], "search-bar");
+    assert!(json.starts_with('{'));
+    assert!(json.ends_with('\n'));
+    assert_eq!(json.matches('\n').count(), 1);
     assert!(yaml.contains("value: search-bar"));
     assert!(yaml.ends_with("\n\n"));
     assert_eq!(paths, "app/search.tsx\n");

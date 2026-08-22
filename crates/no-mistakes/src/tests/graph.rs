@@ -33,7 +33,7 @@ pub(crate) fn run(args: GraphArgs) -> Result<ExitCode> {
     let plan: TestPlan = serde_json::from_str(&content).context("Failed to parse plan JSON.")?;
 
     let output = match args.format {
-        GraphFormat::Json => serde_json::to_string_pretty(&graph_json(&plan)?)?,
+        GraphFormat::Json => serde_json::to_string(&graph_json(&plan)?)?,
         GraphFormat::Mermaid => graph_mermaid(&plan)?,
     };
     crate::invocation::commit_timeout()?;

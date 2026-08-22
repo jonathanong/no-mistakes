@@ -135,7 +135,7 @@ fn run_diff(args: LockfileDiffArgs) -> Result<ExitCode> {
             }
         }
     } else {
-        println!("{}", serde_json::to_string_pretty(&outputs)?);
+        println!("{}", serde_json::to_string(&outputs)?);
     }
 
     Ok(ExitCode::SUCCESS)

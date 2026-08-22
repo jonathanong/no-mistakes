@@ -72,7 +72,7 @@ pub fn run(args: ImportUsagesArgs) -> Result<()> {
 
 pub fn run_json(args: ImportUsagesArgs) -> Result<String> {
     let report = collect(&args)?;
-    serde_json::to_string_pretty(&report).context("import usages JSON output must be UTF-8")
+    serde_json::to_string(&report).context("import usages JSON output must be UTF-8")
 }
 
 pub fn collect(args: &ImportUsagesArgs) -> Result<ImportUsagesReport> {

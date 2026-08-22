@@ -85,8 +85,8 @@ where
     let mut output = Vec::new();
     match format {
         Format::Json => {
-            let serialized = serde_json::to_string_pretty(&report)
-                .expect("serialization of Rust structs never fails");
+            let serialized =
+                serde_json::to_string(&report).expect("serialization of Rust structs never fails");
             output.extend_from_slice(serialized.as_bytes());
             output.push(b'\n');
         }

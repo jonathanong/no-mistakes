@@ -54,7 +54,7 @@ pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
             writeln!(output, "  {}\n", chain.join(" ➔ "))?;
         }
     } else {
-        writeln!(output, "{}", serde_json::to_string_pretty(&path_steps)?)?;
+        writeln!(output, "{}", serde_json::to_string(&path_steps)?)?;
     }
 
     crate::invocation::commit_timeout()?;

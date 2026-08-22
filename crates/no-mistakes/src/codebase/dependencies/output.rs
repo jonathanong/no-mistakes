@@ -13,7 +13,7 @@ pub fn write_json(
     w: &mut dyn Write,
 ) -> Result<()> {
     let out = build_output(roots, entries, root_dir);
-    serde_json::to_writer_pretty(&mut *w, &out)?;
+    serde_json::to_writer(&mut *w, &out)?;
     writeln!(w)?;
     Ok(())
 }
@@ -27,7 +27,7 @@ pub(crate) fn write_json_with_diagnostics(
     w: &mut dyn Write,
 ) -> Result<()> {
     let out = build_output_with_diagnostics(roots, entries, root_dir, diagnostics, provenance);
-    serde_json::to_writer_pretty(&mut *w, &out)?;
+    serde_json::to_writer(&mut *w, &out)?;
     writeln!(w)?;
     Ok(())
 }

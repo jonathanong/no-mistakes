@@ -62,7 +62,7 @@ pub(crate) fn run(args: SwiftArgs) -> Result<ExitCode> {
 
 fn print_importers(rows: &[ImporterRow], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(rows)?),
+        Format::Json => println!("{}", serde_json::to_string(rows)?),
         Format::Yml => println!("{}", serde_yaml::to_string(rows)?),
         Format::Md => {
             println!("# Importers");
@@ -86,7 +86,7 @@ fn print_importers(rows: &[ImporterRow], format: Format) -> Result<()> {
 
 fn print_test_targets(rows: &[TestTargetRow], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(rows)?),
+        Format::Json => println!("{}", serde_json::to_string(rows)?),
         Format::Yml => println!("{}", serde_yaml::to_string(rows)?),
         Format::Md => {
             println!("# Covering test targets");

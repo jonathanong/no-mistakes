@@ -19,7 +19,7 @@ pub(super) fn print(results: &CheckResults, format: Format) {
 fn print_check_json(results: &CheckResults) {
     println!(
         "{}",
-        serde_json::to_string_pretty(&check_runner::json_value(results))
+        serde_json::to_string(&check_runner::json_value(results))
             .expect("serialization of Rust structs never fails")
     );
 }

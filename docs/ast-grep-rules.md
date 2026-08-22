@@ -167,8 +167,9 @@ generic Rust/JS patterns can observe:
   Direct `AsyncTask::new(JsonTask::new(...))` functions must be registered via
   `json_binding!` so the libuv/task/name policy has one implementation.
 - `no-handwritten-js-json-wrapper` protects the two Node facades. A direct
-  static or computed `native.*` JSON parse/stringify wrapper must use the
-  shared `callJson`/`createJsonApis` descriptor path instead.
+  static or computed `native.*` JSON parse wrapper — including Buffer-based
+  native input — must use the shared `callJson`/`createJsonApis` descriptor
+  path instead.
 
 Prepared-symbol catalog reuse is protected primarily by fixture-backed
 observer tests because its ownership is semantic rather than a single stable

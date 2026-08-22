@@ -8,7 +8,7 @@ mod explain;
 pub(crate) fn render(plan: &TestPlan, format: PlanFormat, command_name: &str) -> Result<String> {
     let mut output = String::new();
     match format {
-        PlanFormat::Json => writeln!(output, "{}", serde_json::to_string_pretty(plan)?)?,
+        PlanFormat::Json => writeln!(output, "{}", serde_json::to_string(plan)?)?,
         PlanFormat::Paths => {
             for test in &plan.selected_tests {
                 writeln!(output, "{}", test.test_file)?;

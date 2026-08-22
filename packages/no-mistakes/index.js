@@ -7,7 +7,8 @@ const planning = require("./planning");
 const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
 
 async function callJson(fn, options) {
-  return JSON.parse(await fn(JSON.stringify(options || {})));
+  const input = Buffer.from(JSON.stringify(options || {}));
+  return JSON.parse(await fn(input));
 }
 
 function createJsonApis(descriptors) {

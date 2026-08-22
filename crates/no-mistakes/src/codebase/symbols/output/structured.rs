@@ -1,6 +1,6 @@
 pub fn write_json(roots: &[String], entries: &[FileEntry], w: &mut dyn Write) -> Result<()> {
     let out = build_output(roots, entries);
-    serde_json::to_writer_pretty(&mut *w, &out)?;
+    serde_json::to_writer(&mut *w, &out)?;
     writeln!(w)?;
     Ok(())
 }

@@ -102,7 +102,9 @@ support adds the ecosystem lockfile when agents need package-change impact:
 module graph from `go.mod`, not authentication hashes in `go.sum`.
 
 **Checks, CLI, and N-API.** Every stable CLI capability needs an async N-API
-equivalent, fixture-backed tests, and docs. Language-specific check rules
+equivalent, fixture-backed tests, and docs. CLI `--format json` emits compact
+serde JSON. N-API JSON entrypoints take and return UTF-8 `Buffer`s; the Node
+facade still accepts options objects. Language-specific check rules
 belong in `no-mistakes check` when they are repository-wide, not file-local.
 
 TS/JS-only product surfaces stay TS/JS-only: Playwright coverage, React

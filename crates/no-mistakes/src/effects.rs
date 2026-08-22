@@ -66,8 +66,7 @@ pub(crate) fn run(args: EffectsArgs) -> Result<ExitCode> {
         Format::Json => {
             println!(
                 "{}",
-                serde_json::to_string_pretty(&report)
-                    .expect("serialization of Rust structs never fails")
+                serde_json::to_string(&report).expect("serialization of Rust structs never fails")
             );
         }
         Format::Yml => {

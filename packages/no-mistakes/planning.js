@@ -3,7 +3,8 @@
 const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
 
 async function callJson(fn, options) {
-  return JSON.parse(await fn(JSON.stringify(options || {})));
+  const input = Buffer.from(JSON.stringify(options || {}));
+  return JSON.parse(await fn(input));
 }
 
 function createJsonApis(descriptors) {
@@ -16,11 +17,13 @@ function createJsonApis(descriptors) {
 }
 
 async function testsComment(options) {
-  return native.testsCommentMarkdown(JSON.stringify(options || {}));
+  const input = Buffer.from(JSON.stringify(options || {}));
+  return String(await native.testsCommentMarkdown(input));
 }
 
 async function testsGraphMermaid(options) {
-  return native.testsGraphMermaid(JSON.stringify(options || {}));
+  const input = Buffer.from(JSON.stringify(options || {}));
+  return String(await native.testsGraphMermaid(input));
 }
 
 const jsonApis = createJsonApis({

@@ -125,7 +125,7 @@ pub(crate) fn ensure_plan_commands_available(plan: &TestPlan, command: &str) -> 
 
 fn render_targets(report: &TestsTargetsReport, format: TargetsFormat) -> Result<String> {
     Ok(match format {
-        TargetsFormat::Json => format!("{}\n", serde_json::to_string_pretty(report)?),
+        TargetsFormat::Json => format!("{}\n", serde_json::to_string(report)?),
         TargetsFormat::Commands => {
             let mut commands = Vec::new();
             for row in &report.tests {

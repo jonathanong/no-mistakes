@@ -10,7 +10,7 @@ use anyhow::Result;
 
 pub(super) fn render_impact(report: &CiImpactReport, format: Format) -> Result<String> {
     Ok(match format {
-        Format::Json => format!("{}\n", serde_json::to_string_pretty(report)?),
+        Format::Json => format!("{}\n", serde_json::to_string(report)?),
         Format::Yml => serde_yaml::to_string(report)?,
         Format::Paths => report
             .workflows
@@ -76,7 +76,7 @@ fn level_str(level: PermissionLevel) -> &'static str {
 
 pub(super) fn render_env(report: &CiEnvReport, format: Format) -> Result<String> {
     Ok(match format {
-        Format::Json => format!("{}\n", serde_json::to_string_pretty(report)?),
+        Format::Json => format!("{}\n", serde_json::to_string(report)?),
         Format::Yml => serde_yaml::to_string(report)?,
         Format::Paths => report
             .files

@@ -1,18 +1,19 @@
+use napi::bindgen_prelude::Buffer;
 use napi::{Env, Task};
 
 pub struct JsonTask {
-    options_json: String,
+    options_json: Buffer,
     run: fn(String) -> napi::Result<String>,
 }
 
 pub struct JsonValueTask {
-    options_json: String,
+    options_json: Buffer,
     run: fn(serde_json::Value) -> napi::Result<String>,
 }
 
 impl JsonValueTask {
     pub(crate) fn new(
-        options_json: String,
+        options_json: Buffer,
         run: fn(serde_json::Value) -> napi::Result<String>,
     ) -> Self {
         Self { options_json, run }
@@ -20,12 +21,12 @@ impl JsonValueTask {
 }
 
 impl Task for JsonValueTask {
-    type Output = String;
-    type JsValue = String;
+    type Output = Buffer;
+    type JsValue = Buffer;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
         ensure_rayon_threads();
-        let options_json = std::mem::take(&mut self.options_json);
+        let options_json = utf8_json(&self.options_json)?;
         let (options, invocation_options) =
             crate::invocation::extract_napi_options_value(options_json).map_err(to_napi_error)?;
         let _guard = crate::invocation::InvocationGuard::acquire(invocation_options)
@@ -34,7 +35,7 @@ impl Task for JsonValueTask {
         crate::invocation::check_timeout().map_err(to_napi_error)?;
         let output = crate::ast::with_request_parse_cache(|| (self.run)(options));
         crate::invocation::check_timeout().map_err(to_napi_error)?;
-        output
+        output.map(Buffer::from)
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
@@ -43,18 +44,18 @@ impl Task for JsonValueTask {
 }
 
 impl JsonTask {
-    pub(crate) fn new(options_json: String, run: fn(String) -> napi::Result<String>) -> Self {
+    pub(crate) fn new(options_json: Buffer, run: fn(String) -> napi::Result<String>) -> Self {
         Self { options_json, run }
     }
 }
 
 impl Task for JsonTask {
-    type Output = String;
-    type JsValue = String;
+    type Output = Buffer;
+    type JsValue = Buffer;
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
         ensure_rayon_threads();
-        let options_json = std::mem::take(&mut self.options_json);
+        let options_json = utf8_json(&self.options_json)?;
         let (options_json, invocation_options) =
             crate::invocation::extract_napi_options(options_json).map_err(to_napi_error)?;
         let _guard = crate::invocation::InvocationGuard::acquire(invocation_options)
@@ -63,12 +64,17 @@ impl Task for JsonTask {
         crate::invocation::check_timeout().map_err(to_napi_error)?;
         let output = crate::ast::with_request_parse_cache(|| (self.run)(options_json));
         crate::invocation::check_timeout().map_err(to_napi_error)?;
-        output
+        output.map(Buffer::from)
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         Ok(output)
     }
+}
+
+fn utf8_json(options_json: &Buffer) -> napi::Result<String> {
+    String::from_utf8(options_json.to_vec())
+        .map_err(|error| napi::Error::from_reason(format!("options JSON must be UTF-8: {error}")))
 }
 
 fn ensure_rayon_threads() {
