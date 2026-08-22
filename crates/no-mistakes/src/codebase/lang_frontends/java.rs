@@ -32,9 +32,13 @@ fn parse_java_file(
     let package = owning_package(path, roots, packages);
     let namespace = extract_package(&text);
     let declarations = extract_named(&symbols, java_decl_re());
-    let module = match (namespace.as_deref(), declarations.first()) {
+    let type_name = primary_type(
+        &declarations,
+        path.file_stem().and_then(|stem| stem.to_str()),
+    );
+    let module = match (namespace.as_deref(), type_name.as_deref()) {
         (Some(namespace), Some(name)) => Some(format!("{namespace}.{name}")),
-        (None, Some(name)) => Some(name.clone()),
+        (None, Some(name)) => Some(name.to_string()),
         _ => None,
     };
     Some(LangFileFacts {
@@ -55,6 +59,13 @@ fn extract_package(source: &str) -> Option<String> {
     java_package_re()
         .captures(source)
         .and_then(|cap| cap.get(1).map(|m| m.as_str().to_string()))
+}
+
+fn primary_type(declarations: &[String], file_stem: Option<&str>) -> Option<String> {
+    file_stem
+        .filter(|stem| declarations.iter().any(|name| name == *stem))
+        .map(str::to_string)
+        .or_else(|| declarations.first().cloned())
 }
 
 fn extract_java_imports(source: &str) -> Vec<String> {

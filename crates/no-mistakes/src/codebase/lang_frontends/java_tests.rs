@@ -1,4 +1,4 @@
-use super::{collect_java_facts, extract_java_imports, extract_package};
+use super::{collect_java_facts, extract_java_imports, extract_package, primary_type};
 use std::path::PathBuf;
 
 #[test]
@@ -11,6 +11,14 @@ import static java.util.List.of;
 "#;
     assert_eq!(extract_package(source).as_deref(), Some("com.example"));
     assert_eq!(extract_java_imports(source), vec!["com.example.User"]);
+}
+
+#[test]
+fn primary_type_prefers_filename_over_nested_builder() {
+    assert_eq!(
+        primary_type(&["Builder".into(), "Widget".into()], Some("Widget")).as_deref(),
+        Some("Widget")
+    );
 }
 
 #[test]

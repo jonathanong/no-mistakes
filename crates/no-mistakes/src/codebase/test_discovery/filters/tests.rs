@@ -49,7 +49,7 @@ fn language_fallback_matches_configured_test_shapes() {
         TestRunner::Java,
         "src/test/java/com/example/UserTest.java"
     ));
-    assert!(fallback_runner_match(
+    assert!(!fallback_runner_match(
         TestRunner::Java,
         "src/test/java/com/example/Helper.java"
     ));

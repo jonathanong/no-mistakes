@@ -76,6 +76,12 @@ fn java_source_under_configured_package_is_native() {
         &config,
         "src/test/java/com/example/UserTest.java",
     ));
+    assert!(!is_language_native_change(
+        TestFramework::Java,
+        Path::new("/repo"),
+        &config,
+        "src/test/java/com/example/Helper.java",
+    ));
     assert!(is_language_native_change(
         TestFramework::Java,
         Path::new("/repo"),

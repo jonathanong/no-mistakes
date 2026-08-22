@@ -105,10 +105,7 @@ fn is_cargo_test_path(rel: &str) -> bool {
 
 fn is_java_test_path(rel: &str) -> bool {
     let name = rel.rsplit('/').next().unwrap_or(rel);
-    name.ends_with("Test.java")
-        || name.ends_with("Tests.java")
-        || name.ends_with("IT.java")
-        || (rel.contains("/src/test/") || rel.starts_with("src/test/")) && name.ends_with(".java")
+    name.ends_with("Test.java") || name.ends_with("Tests.java") || name.ends_with("IT.java")
 }
 
 fn has_path_segment_pair(path: &str, first: &str, second: &str) -> bool {
