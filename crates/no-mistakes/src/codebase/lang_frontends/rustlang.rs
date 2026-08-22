@@ -12,6 +12,9 @@ mod rust_path;
 mod rust_path_tests;
 #[path = "rust_use.rs"]
 mod rust_use;
+#[cfg(test)]
+#[path = "rust_use_tests.rs"]
+mod rust_use_tests;
 use crate::codebase::ts_source::SourceStore;
 use regex::Regex;
 use std::path::{Path, PathBuf};

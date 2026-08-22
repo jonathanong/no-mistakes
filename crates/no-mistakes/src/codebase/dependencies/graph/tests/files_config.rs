@@ -96,3 +96,49 @@ fn files_config_session_helper_does_not_call_discover_when_snapshot_exists() {
     assert!(source.contains("session.visible_paths(root)"));
     assert!(!include_str!("../files_config.rs").contains("discover_visible_paths"));
 }
+
+#[test]
+fn graph_config_options_from_loaded_builds_the_unprepared_test_filter() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
+    let config = crate::codebase::config::load_config(&root).unwrap();
+    let v2 = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let options = graph_config_options_from_loaded(&root, &config, &v2, &paths);
+    assert!(options.test_filter.is_some());
+
+    let rule = crate::config::v2::schema::RewriteRule {
+        source: "/from".into(),
+        destination: "/to".into(),
+    };
+    let other = crate::config::v2::schema::RewriteRule {
+        source: "/other".into(),
+        destination: "/dest".into(),
+    };
+    assert_eq!(
+        dedup_rewrites(vec![rule.clone(), other.clone(), rule]),
+        vec![
+            crate::config::v2::schema::RewriteRule {
+                source: "/from".into(),
+                destination: "/to".into(),
+            },
+            other,
+        ]
+    );
+}
+
+#[test]
+fn graph_config_options_for_plan_skip_plans_that_do_not_need_config() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
+    let imports_only = GraphBuildPlan {
+        imports: true,
+        ..GraphBuildPlan::default()
+    };
+    assert!(graph_config_options_for_plan_with_config(&root, imports_only, None).is_none());
+    let routes = GraphBuildPlan {
+        routes: true,
+        ..GraphBuildPlan::default()
+    };
+    assert!(graph_config_options_for_plan_with_config(&root, routes, None).is_some());
+    let config = root.join(".no-mistakes.yml");
+    assert!(graph_config_options_for_plan_with_config(&root, routes, Some(&config)).is_some());
+}

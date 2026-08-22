@@ -158,3 +158,54 @@ fn dart_http_calls_match_configured_ts_backend_routes() {
             || to.as_file().is_none_or(|path| !path.ends_with("admin.ts"))
     }));
 }
+
+#[test]
+fn lang_route_helpers_cover_alias_controller_and_module_views() {
+    let file = crate::codebase::lang_frontends::LangFileFacts {
+        path: PathBuf::from("/app/users.rb"),
+        package: Some("app".into()),
+        module: Some("Users".into()),
+        imports: vec!["Users=Admin.Users".into(), "mail".into()],
+        ..Default::default()
+    };
+    let other = crate::codebase::lang_frontends::LangFileFacts {
+        path: PathBuf::from("/app/admin.rb"),
+        package: Some("app".into()),
+        module: Some("Admin.Users".into()),
+        ..Default::default()
+    };
+    assert_eq!(
+        route_handler_names("users#index"),
+        vec!["UsersController".to_string()]
+    );
+    assert_eq!(
+        route_handler_names("Admin::UsersController::show"),
+        vec!["Admin".to_string(), "Admin".to_string()]
+    );
+    assert!(route_handler_names("Users.as_view()").contains(&"Users".to_string()));
+    assert_eq!(
+        rails_controller_names("admin/users"),
+        vec!["Admin::UsersController".to_string()]
+    );
+    assert_eq!(snake_to_pascal("user_mailer"), "UserMailer");
+    assert!(handler_module_matches("Admin.Users.index", &other));
+    let nested = crate::codebase::lang_frontends::LangFileFacts {
+        path: PathBuf::from("/app/nested.rb"),
+        package: Some("app".into()),
+        module: Some("pkg.Admin".into()),
+        ..Default::default()
+    };
+    assert!(handler_module_matches("Admin.Users", &nested));
+    assert!(aliased_route_names(&file, "Users".into()).contains(&"Admin.Users".to_string()));
+    assert_eq!(
+        remap_aliased_handler(&file, "Users.index"),
+        "Admin.Users.index"
+    );
+    assert!(reference_target_allowed(&file, &other, "Admin::Users"));
+    assert!(import_reaches_module("Admin.Users", "Admin.Users", "index"));
+    assert!(route_file_allowed(
+        Path::new("/repo"),
+        Path::new("/repo/app/users.rb"),
+        &GraphConfigOptions::default()
+    ));
+}

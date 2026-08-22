@@ -12,7 +12,7 @@ pub(super) fn extract_http_routes(source: &str) -> Vec<(String, String)> {
 fn extract_pairs(source: &str, re: &Regex) -> Vec<(String, String)> {
     re.captures_iter(source)
         .filter_map(|cap| {
-            let path = cap.get(1).or_else(|| cap.get(2))?.as_str();
+            let path = cap.get(1).or(cap.get(2))?.as_str();
             Some((path.to_string(), cap.get(3)?.as_str().to_string()))
         })
         .collect()

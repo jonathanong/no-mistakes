@@ -219,3 +219,6 @@ fn x_workspace_range_uses_dependency_name() {
         Some("@acme/app -> @acme/domain -> @acme/secret")
     );
 }
+
+#[path = "tests_manifest_wildcard.rs"]
+mod tests_manifest_wildcard;

@@ -55,9 +55,11 @@ fn ts_fact_map_get_or_compute_route_reachable_files_caches_compute_errors() {
     let second = facts
         .get_or_compute_route_reachable_files(&cache_settings(), &failing)
         .unwrap_err();
-    assert!(second
-        .to_string()
-        .contains("route reachability scan failed"));
+    assert!(
+        second
+            .to_string()
+            .contains("route reachability scan failed")
+    );
     assert_eq!(
         calls.load(Ordering::SeqCst),
         1,
@@ -338,4 +340,173 @@ fn ts_fact_map_insert_remove_and_get_mut_invalidate_playwright_scan_caches() {
         .get_or_compute_route_reachable_files(&cache_settings(), &compute)
         .unwrap();
     assert_eq!(calls.load(Ordering::SeqCst), 4, "remove must recompute");
+}
+
+#[test]
+fn ts_fact_map_get_or_compute_methods_report_compute_errors() {
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use crate::playwright::selectors::AppSelector;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let facts = crate::codebase::ts_source::facts::TsFactMap::new();
+
+    let selector_calls = AtomicUsize::new(0);
+    let failing_selectors = || -> anyhow::Result<Vec<AppSelector>> {
+        selector_calls.fetch_add(1, Ordering::SeqCst);
+        anyhow::bail!("selector scan failed")
+    };
+    let error = facts
+        .get_or_compute_app_selector_occurrences(&cache_settings(), false, &failing_selectors)
+        .unwrap_err();
+    assert!(error.to_string().contains("selector scan failed"));
+    facts
+        .get_or_compute_app_selector_occurrences(&cache_settings(), false, &failing_selectors)
+        .unwrap_err();
+    assert_eq!(selector_calls.load(Ordering::SeqCst), 1);
+
+    let text_calls = AtomicUsize::new(0);
+    let failing_text = || -> anyhow::Result<_> {
+        text_calls.fetch_add(1, Ordering::SeqCst);
+        anyhow::bail!("app text scan failed")
+    };
+    facts
+        .get_or_compute_app_text_targets(&cache_settings(), &failing_text)
+        .unwrap_err();
+    facts
+        .get_or_compute_app_text_targets(&cache_settings(), &failing_text)
+        .unwrap_err();
+    assert_eq!(text_calls.load(Ordering::SeqCst), 1);
+}
+
+#[test]
+fn fallback_lookup_uses_primary_fetch_facts_before_parse_errors() {
+    let path = PathBuf::from("/repo/file.ts");
+    let primary = crate::codebase::check_facts::collect_check_facts_with_graph_files_and_playwright(
+        Path::new("/repo"),
+        vec![path.clone()],
+        vec![path.clone()],
+        crate::codebase::check_facts::CheckFactPlan::default(),
+        None,
+    );
+    let fallback = crate::codebase::ts_source::facts::TsFactMap::from([(
+        path.clone(),
+        crate::codebase::ts_source::facts::TsFileFacts {
+            parse_error: Some("e".into()),
+            ..Default::default()
+        },
+    )]);
+    let visible: crate::fx::PathSet = [path.clone()].into_iter().collect();
+    let lookup = FallbackTsFactLookup::new(
+        &primary,
+        &fallback,
+        false,
+        std::slice::from_ref(&path),
+        &visible,
+    );
+    assert!(lookup.get_playwright_fetch_facts(&path).is_some());
+}
+
+#[test]
+fn playwright_fetch_parse_error_keeps_missing_and_parse_channels() {
+    let path = PathBuf::from("/repo/file.ts");
+    assert!(super::playwright_fetch_parse_error(&TsFactMap::new(), &path).is_none());
+    let fallback = TsFactMap::from([(path.clone(), TsFileFacts::default())]);
+    assert!(super::playwright_fetch_parse_error(&fallback, &path).is_none());
+    let fallback = TsFactMap::from([(
+        path.clone(),
+        TsFileFacts {
+            parse_error: Some("boom".into()),
+            ..Default::default()
+        },
+    )]);
+    let error = super::playwright_fetch_parse_error(&fallback, &path)
+        .expect("parse errors become fetch errors");
+    let error = match error {
+        Err(error) => error,
+        Ok(_) => panic!("parse errors are Err"),
+    };
+    assert!(error.contains("boom"));
+}
+
+#[test]
+fn fallback_lookup_uses_fallback_fetch_when_primary_has_no_facts() {
+    use crate::codebase::check_facts::CheckFactMap;
+
+    let path = PathBuf::from("/repo/file.ts");
+    let primary = CheckFactMap {
+        graph_files: vec![path.clone()],
+        graph_files_complete: true,
+        ..CheckFactMap::default()
+    };
+    let fallback = TsFactMap::from([(
+        path.clone(),
+        TsFileFacts {
+            parse_error: Some("fallback".into()),
+            ..Default::default()
+        },
+    )]);
+    let visible: crate::fx::PathSet = [path.clone()].into_iter().collect();
+    let lookup = FallbackTsFactLookup::new(
+        &primary,
+        &fallback,
+        false,
+        std::slice::from_ref(&path),
+        &visible,
+    );
+    let error = lookup
+        .get_playwright_fetch_facts(&path)
+        .expect("matching graph universe reuses fallback parse errors");
+    let error = match error {
+        Err(error) => error,
+        Ok(_) => panic!("fallback parse error is retained"),
+    };
+    assert!(error.contains("fallback"));
+
+    let lookup = FallbackTsFactLookup::new(
+        &primary,
+        &fallback,
+        true,
+        std::slice::from_ref(&path),
+        &visible,
+    );
+    let error = lookup
+        .get_playwright_fetch_facts(&path)
+        .expect("prefer-fallback still surfaces parse errors");
+    let error = match error {
+        Err(error) => error,
+        Ok(_) => panic!("fallback parse error is retained"),
+    };
+    assert!(error.contains("fallback"));
+}
+
+#[test]
+fn fallback_lookup_reuses_primary_playwright_cache_only_for_matching_universes() {
+    struct Files(TsFactMap, Vec<PathBuf>);
+    impl TsFactLookup for Files {
+        fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
+            self.0.get(path)
+        }
+        fn graph_files(&self) -> Option<&[PathBuf]> {
+            Some(&self.1)
+        }
+    }
+
+    let path = p("/repo/a.ts");
+    let files = vec![path.clone()];
+    let primary = Files(
+        TsFactMap::from([(path.clone(), TsFileFacts::default())]),
+        files.clone(),
+    );
+    let fallback = TsFactMap::new();
+    let visible: crate::fx::PathSet = files.clone().into_iter().collect();
+    assert!(same_graph_universe(&files, &visible));
+    let lookup = FallbackTsFactLookup::new(&primary, &fallback, false, &files, &visible);
+    assert!(lookup.playwright_source_files().is_none());
+    assert!(lookup
+        .get_or_compute_playwright_routes(&cache_settings(), &|| Vec::new())
+        .is_empty());
+
+    let mismatched: crate::fx::PathSet = [p("/repo/b.ts")].into_iter().collect();
+    let lookup = FallbackTsFactLookup::new(&primary, &fallback, true, &files, &mismatched);
+    assert!(lookup.playwright_source_files().is_none());
 }

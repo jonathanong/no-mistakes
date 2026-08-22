@@ -3,7 +3,7 @@ coverage:
     project:
       default: off
       rust:
-        target: 99%
+        target: 99.5%
         threshold: 0%
         flags:
           - rust
@@ -17,7 +17,7 @@ coverage:
     patch:
       default: off
       rust:
-        target: 99%
+        target: 99.5%
         threshold: 0%
         flags:
           - rust

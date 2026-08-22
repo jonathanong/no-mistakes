@@ -476,3 +476,6 @@ fn composite_run_working_directories_must_exist_in_the_checkout() {
         assert!(valid(&[("action", &ignored_missing)], &[], "action"));
     }
 }
+
+#[path = "tests_metadata_cache.rs"]
+mod tests_metadata_cache;

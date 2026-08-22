@@ -15,6 +15,9 @@
 //! by `fixtures/workflow-topology/job-metadata/expected.json`.
 
 mod artifact;
+mod artifact_ranges;
+mod call_contract;
+mod coverage;
 mod metadata;
 mod posix;
 mod schema_compat;

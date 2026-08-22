@@ -31,6 +31,14 @@ function resourceScope(dynamicPath: string, dynamicCwd: string) {
   require('node:fs').promises.readFile('inline-promises-require.json');
   require('glob')('inline-default-glob/**/*.txt');
   require('glob').sync('inline-glob-sync/**/*.txt');
+  const [readFile] = require('node:fs');
+  readFile('array-destructure-require.json');
+  const { readFile: namedRead = fallbackRead } = require('fs');
+  namedRead('assignment-pattern-require.json');
+  const { promises: { readFile: nestedPromise } } = require('fs');
+  nestedPromise('nested-promises-object.json');
+  const tiny = require('tinyglobby');
+  tiny.sync('tinyglobby/**/*.txt');
 
   fs.readFile(new URL('./url-resource.json', import.meta.url));
   fs.readFile(fileURLToPath(new URL('./file-url-resource.json', import.meta.url)));

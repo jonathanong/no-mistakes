@@ -101,6 +101,12 @@ fn strip_and_kafka_identity_cover_comment_and_empty_cluster_paths() {
             .contains("#[Route('/health')]")
     );
     assert!(!super::strip::mask_strings("const doc = `LegacyUser`").contains("LegacyUser"));
+    let escaped = super::strip::mask_strings("const s = \"a\\\\nb\\nz\"");
+    assert!(escaped.contains("\""));
+    let unclosed = super::strip::mask_strings("const s = \"open");
+    assert!(unclosed.starts_with("const s = \""));
+    let triple = super::strip::mask_triple_quoted_strings("'''keep\ncode''' after");
+    assert!(triple.contains("'''"));
     assert_eq!(topic_identity(None, "mail.welcome"), "mail.welcome");
     assert_eq!(topic_identity(Some(""), "mail.welcome"), "mail.welcome");
 }

@@ -50,6 +50,11 @@ pub(super) fn collect_file_facts_with_sources_and_session(
     // in standard recovered mode so runner-config analysis can share the same
     // request cache. The direct-file test/support path retains the historical
     // TypeScript fallback for unknown extensions.
+    let stored_source = if plan.source {
+        Some(Arc::clone(&source))
+    } else {
+        None
+    };
     let result = if is_indexable(path) {
         session.with_recovered_program_status(
             path,
@@ -62,7 +67,7 @@ pub(super) fn collect_file_facts_with_sources_and_session(
                     parsed,
                     program,
                     parse_error,
-                    plan.source.then(|| Arc::clone(&source)),
+                    stored_source.clone(),
                 );
                 facts.fatal_parse_error = panicked;
                 facts
@@ -77,7 +82,7 @@ pub(super) fn collect_file_facts_with_sources_and_session(
                 parsed,
                 program,
                 parse_error,
-                plan.source.then(|| Arc::clone(&source)),
+                stored_source,
             )
         })
     };
@@ -111,9 +116,11 @@ pub(crate) fn collect_file_facts_from_program(
     } else {
         Default::default()
     };
-    let symbols = plan
-        .symbols
-        .then(|| Arc::new(extract_symbols_from_program(program, source)));
+    let symbols = if plan.symbols {
+        Some(Arc::new(extract_symbols_from_program(program, source)))
+    } else {
+        None
+    };
     let domain = if plan.has_domain_facts() || plan.call_sites {
         domain::collect_domain_facts(program, path, source, plan, context)
     } else {
@@ -176,3 +183,6 @@ pub(crate) fn collect_file_facts_from_program(
         trpc_calls: domain.trpc_calls,
     }
 }
+
+#[cfg(test)]
+mod tests;

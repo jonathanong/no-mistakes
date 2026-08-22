@@ -25,6 +25,9 @@ fn get_entries_supports_import_only_dependencies() {
 
     let entries = get_entries(Direction::Deps, &roots, &entrypoints, None, true, &ctx).unwrap();
     assert!(!entries.is_empty());
+
+    let full_graph = get_entries(Direction::Deps, &roots, &entrypoints, None, false, &ctx).unwrap();
+    assert!(!full_graph.is_empty());
 }
 
 #[test]

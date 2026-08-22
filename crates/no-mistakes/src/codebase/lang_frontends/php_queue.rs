@@ -135,3 +135,7 @@ fn messenger_invoke_re() -> &'static Regex {
         Regex::new(r"function\s+__invoke\s*\(\s*([A-Za-z_\\][A-Za-z0-9_\\]*)").expect("invoke")
     })
 }
+
+#[cfg(test)]
+#[path = "php_queue_tests.rs"]
+mod tests;

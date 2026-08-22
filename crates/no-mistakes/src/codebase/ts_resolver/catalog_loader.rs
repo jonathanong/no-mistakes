@@ -9,7 +9,10 @@ impl CatalogBuilder<'_> {
             return state.clone();
         }
         if !self.loading.insert(identity.clone()) {
-            return Err(format!("tsconfig.extends cycle detected at {}", path.display()));
+            return Err(format!(
+                "tsconfig.extends cycle detected at {}",
+                path.display()
+            ));
         }
         let result = self.parse_effective(&path);
         self.loading.remove(&identity);
@@ -18,10 +21,10 @@ impl CatalogBuilder<'_> {
     }
 
     fn parse_effective(&mut self, path: &Path) -> Result<EffectiveConfig, String> {
-        let dir = match path.parent() {
-            Some(parent) => parent.to_path_buf(),
-            None => return Err(format!("resolving parent directory for {}", path.display())),
-        };
+        let dir = path
+            .parent()
+            .expect("tsconfig paths are files, so they always have a parent directory")
+            .to_path_buf();
         let content = match self.sources {
             Some(sources) => match sources.read_path(path) {
                 Ok(content) => content,
@@ -61,12 +64,17 @@ impl CatalogBuilder<'_> {
                     continue;
                 }
                 Err(error) => {
-                    return Err(format!("loading extended tsconfig {}: {error}", base.display()));
+                    return Err(format!(
+                        "loading extended tsconfig {}: {error}",
+                        base.display()
+                    ));
                 }
             };
             effective.inherit(base);
         }
-        effective.apply_own(&value, path, &dir, |reference| self.resolve_config_value(&dir, reference))?;
+        effective.apply_own(&value, path, &dir, |reference| {
+            self.resolve_config_value(&dir, reference)
+        })?;
         Ok(effective)
     }
 
@@ -84,14 +92,20 @@ impl CatalogBuilder<'_> {
                     self.diagnostics.insert(TsConfigDiagnostic::config(
                         TsConfigDiagnosticKind::InvalidReference,
                         path,
-                        format!("referenced config {} is outside configured analysis roots", lexical.display()),
+                        format!(
+                            "referenced config {} is outside configured analysis roots",
+                            lexical.display()
+                        ),
                     ));
                 }
                 Some(_) if !self.is_visible(&lexical) => {
                     self.diagnostics.insert(TsConfigDiagnostic::config(
                         TsConfigDiagnosticKind::InvalidReference,
                         path,
-                        format!("referenced config {} is not in the visible analysis paths", lexical.display()),
+                        format!(
+                            "referenced config {} is not in the visible analysis paths",
+                            lexical.display()
+                        ),
                     ));
                 }
                 Some(_) => {

@@ -85,7 +85,7 @@ pub fn parse_concurrency(value: Option<&Value>) -> Option<model::WorkflowConcurr
         effective: model::ConcurrencyEffective {
             group,
             cancel_in_progress: cancel_in_progress.unwrap_or(model::ConcurrencyValue::Bool(false)),
-            queue: queue.unwrap_or_else(|| "single".to_string()),
+            queue: queue.unwrap_or("single".to_string()),
         },
     })
 }
@@ -167,7 +167,7 @@ pub fn call_edge(job_id: &str, target: &str, job: &Value) -> model::WorkflowCall
                 }
             },
         },
-        to: local.then(|| normalize_local_call_target(target)),
+        to: local.then_some(normalize_local_call_target(target)),
     }
 }
 

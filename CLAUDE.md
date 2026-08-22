@@ -143,6 +143,6 @@ in that PR.
 
 ## Coverage
 
-- Coverage gates must enforce 99% line and function coverage.
+- Coverage gates must enforce 99.5% line and function coverage.
 - **Never** use `cargo llvm-cov --ignore-filename-regex` to suppress uncovered source files. The only files exempt from coverage are test files (`tests/`, sibling `tests.rs`) and test fixtures (`fixtures/`), which `cargo llvm-cov` already excludes by default.
-- If a file cannot be brought to 99%, refactor it (extract logic to a lib, thin the entry point) — do not add an exception.
+- If a file cannot be brought to 99.5%, refactor it (extract logic to a lib, thin the entry point) — do not add an exception.

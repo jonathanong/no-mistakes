@@ -169,3 +169,65 @@ fn tolerated_action_outcomes_and_local_docker_runners_remain_sound() {
     );
     assert!(!sparse_checkout.failed && !sparse_checkout.indeterminate);
 }
+
+#[test]
+fn run_steps_cover_empty_commands_dynamic_tolerance_and_static_success() {
+    let dynamic_continue = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: '${{ inputs.tolerate }}'\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    let success = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - run: echo hi",
+        BTreeSet::new(),
+    );
+    let tolerated_failure = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    run: exit 1",
+        BTreeSet::new(),
+    );
+    assert!(!success.failed);
+    assert!(
+        !tolerated_failure.failed || dynamic_continue.indeterminate || !dynamic_continue.failed
+    );
+
+    let tolerated_unresolved_run = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    run: echo '${{ matrix.x }}'",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_unresolved_run.failed && !tolerated_unresolved_run.indeterminate);
+
+    let tolerated_unresolved_shell = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    shell: '${{ vars.SHELL }}'\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_unresolved_shell.failed && !tolerated_unresolved_shell.indeterminate);
+
+    let nameless = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - working-directory: .\n    name: no-run",
+        BTreeSet::new(),
+    );
+    assert!(!nameless.failed);
+
+    let skipped = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - if: false\n    run: echo skip\n  - continue-on-error: true\n    uses: actions/checkout@v4\n  - run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(!skipped.failed);
+
+    let unknown_configuration = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - timeout-minutes: []\n    run: echo invalid",
+        BTreeSet::new(),
+    );
+    assert!(unknown_configuration.failed || unknown_configuration.indeterminate);
+
+    let unsafe_body = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - run: eval true",
+        BTreeSet::new(),
+    );
+    assert!(unsafe_body.indeterminate);
+
+    let unknown_shell = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - shell: fish\n    run: echo unknown",
+        BTreeSet::new(),
+    );
+    assert!(unknown_shell.indeterminate);
+}

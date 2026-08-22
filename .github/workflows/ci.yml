@@ -311,15 +311,22 @@ jobs:
           source <(cargo llvm-cov show-env --sh)
           cargo test --workspace --all-features --lib --bins --tests
 
-      - name: Enforce Rust coverage
-        id: rust-coverage
+      - name: Write Rust coverage lcov
         timeout-minutes: 5
         run: |
           mkdir -p target/llvm-cov
           # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
+          cargo llvm-cov report --lcov --output-path target/llvm-cov/lcov.info
+
+      - name: Enforce Rust coverage
+        id: rust-coverage
+        timeout-minutes: 5
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
           cargo llvm-cov report \
-            --fail-under-lines 99 --fail-under-functions 99 --show-missing-lines --lcov --output-path target/llvm-cov/lcov.info
+            --fail-under-lines 99.5 --fail-under-functions 99.5
 
       - name: Show Rust coverage table (debug)
         if: ${{ failure() && steps.rust-coverage.outcome == 'failure' }}
@@ -327,8 +334,8 @@ jobs:
         run: |
           # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
-          cargo llvm-cov report \
-            --show-missing-lines 2>&1 | tail -60
+          cargo llvm-cov report 2>&1 | tail -30
+          cargo llvm-cov report --show-missing-lines 2>&1 | tail -60
         continue-on-error: true
 
       - name: Install cargo-crap

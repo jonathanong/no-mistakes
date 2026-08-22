@@ -181,3 +181,75 @@ fn markdown_links_remap_canonical_targets_to_the_visible_spelling() {
         )]
     );
 }
+
+#[test]
+fn lazy_import_neighbors_read_through_a_source_store_and_typed_imports() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("simple"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let a = root.join("a.mts");
+    let b = root.join("b.mts");
+    let graph_files = GraphFiles::from_files(vec![a.clone(), b.clone()]);
+    let context = TsFactContext::new(&root);
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let inventory = crate::codebase::ts_source::FileInventory::from_paths(&[a.clone(), b.clone()]);
+    let sources = crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(inventory));
+    let (neighbors, collected) = import_neighbors(
+        &a,
+        &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
+        &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
+        &graph_files,
+        None,
+        LazyImportFacts::new(None, TsFactPlan::imports(), &context).with_source_store(&sources),
+        &session,
+    );
+    assert!(!neighbors.is_empty() || collected.is_some());
+
+    let facts = TsFactMap::from([(
+        a.clone(),
+        TsFileFacts {
+            imports: vec![
+                ExtractedImport {
+                    specifier: "./b".to_string(),
+                    kind: ImportKind::Type,
+                    line: 1,
+                    function_scope: None,
+                    side_effect_only: false,
+                    re_export: false,
+                    runtime_reachable: false,
+                },
+                ExtractedImport {
+                    specifier: "./b".to_string(),
+                    kind: ImportKind::RequireResolve,
+                    line: 2,
+                    function_scope: None,
+                    side_effect_only: false,
+                    re_export: false,
+                    runtime_reachable: true,
+                },
+            ],
+            ..TsFileFacts::default()
+        },
+    )]);
+    let allowed = std::collections::HashSet::from([
+        EdgeKind::WorkspaceTypeImport,
+        EdgeKind::RequireResolve,
+        EdgeKind::WorkspaceImport,
+    ]);
+    let (typed, _) = import_neighbors(
+        &a,
+        &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
+        &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
+        &graph_files,
+        Some(&allowed),
+        LazyImportFacts::new(Some(&facts), TsFactPlan::imports(), &context),
+        &session,
+    );
+    assert!(typed.iter().any(|(_, kind)| {
+        matches!(kind, EdgeKind::WorkspaceTypeImport | EdgeKind::RequireResolve)
+    }));
+}

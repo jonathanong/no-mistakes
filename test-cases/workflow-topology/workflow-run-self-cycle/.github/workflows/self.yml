@@ -1,0 +1,9 @@
+name: Self Cycle
+on:
+  workflow_run:
+    workflows: [Self Cycle]
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo self

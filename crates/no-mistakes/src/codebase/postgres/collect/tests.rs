@@ -180,3 +180,9 @@ fn fact_error_display_without_path() {
 fn default_schema_options_include_sql_files() {
     assert_eq!(PostgresSchemaOptions::default().sql_include, ["**/*.sql"]);
 }
+
+#[test]
+fn compile_sql_include_rejects_invalid_globs() {
+    let error = super::compile_sql_include(&["[".into()]).unwrap_err();
+    assert!(error.to_string().contains("invalid sqlInclude"));
+}

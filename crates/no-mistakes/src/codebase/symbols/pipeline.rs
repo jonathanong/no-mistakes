@@ -32,23 +32,23 @@ pub(crate) fn collect_entries_with_prepared_facts(
                 .ts
                 .get(path)
                 .filter(|facts| facts.symbols.is_some())
-                .or_else(|| supplemental.ts.get(path).filter(|facts| facts.symbols.is_some()))
-                .or_else(|| facts.ts.get(path))
-                .or_else(|| supplemental.ts.get(path))
+                .or(supplemental.ts.get(path).filter(|facts| facts.symbols.is_some()))
+                .or(facts.ts.get(path))
+                .or(supplemental.ts.get(path))
                 .with_context(|| format!("reading {}", path.display()))?;
-            let symbols = file
+            let symbols = if file.legacy_symbol_parse_error.is_none() {
+                file.legacy_symbols.clone().or(file.symbols.clone())
+            } else {
+                None
+            }
+            .with_context(|| match file
                 .legacy_symbol_parse_error
-                .is_none()
-                .then(|| file.legacy_symbols.clone().or_else(|| file.symbols.clone()))
-                .flatten()
-                .with_context(|| match file
-                    .legacy_symbol_parse_error
-                    .as_ref()
-                    .or(file.parse_error.as_ref())
-                {
-                    Some(error) => format!("extracting symbols from {}: {error}", path.display()),
-                    None => "shared analyzeProject facts are missing symbols".to_string(),
-                })?;
+                .as_ref()
+                .or(file.parse_error.as_ref())
+            {
+                Some(error) => format!("extracting symbols from {}: {error}", path.display()),
+                None => "shared analyzeProject facts are missing symbols".to_string(),
+            })?;
             build_entry_from_symbols(
                 path,
                 root,
@@ -78,20 +78,16 @@ fn collect_entries_with_timings(
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     let visible_snapshot = session.visible_paths(&root);
     let visible_paths = visible_snapshot.paths_for(&root);
-    let tsconfig = session
-        .tsconfig(&root, args.tsconfig.as_deref())
-        .or_else(|error| {
-            if args.tsconfig.is_some() {
-                Err(error)
-            } else {
-                Ok(std::sync::Arc::new(TsConfig {
-                    dir: root.clone(),
-                    paths: Vec::new(),
-                    paths_dir: root.clone(),
-                    base_url: None,
-                }))
-            }
-        })?;
+    let tsconfig = match session.tsconfig(&root, args.tsconfig.as_deref()) {
+        Ok(tsconfig) => tsconfig,
+        Err(error) if args.tsconfig.is_some() => return Err(error),
+        Err(_) => std::sync::Arc::new(TsConfig {
+            dir: root.clone(),
+            paths: Vec::new(),
+            paths_dir: root.clone(),
+            base_url: None,
+        }),
+    };
     let visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))

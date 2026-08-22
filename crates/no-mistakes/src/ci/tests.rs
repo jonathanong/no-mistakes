@@ -1,5 +1,6 @@
-use super::render::{render_env, render_impact};
+use super::render::{format_topology_diagnostic, render_env, render_impact, render_topology};
 use super::*;
+use crate::codebase::workflow_topology::model::{DiagnosticCode, WorkflowTopologyDiagnostic};
 
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
@@ -182,4 +183,83 @@ fn run_dispatches_both_subcommands() {
         }),
     })
     .unwrap();
+}
+
+fn topology_fixture(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/workflow-topology")
+            .join(name),
+    )
+}
+
+#[test]
+fn run_topology_prints_json_and_mermaid_when_clean() {
+    let root = topology_fixture("needs-basic");
+    let json = run(CiArgs {
+        command: CiCommand::Topology(CiTopologyArgs {
+            workflows: Vec::new(),
+            root: root.clone(),
+            config: None,
+            format: None,
+            json: true,
+        }),
+    })
+    .unwrap();
+    assert_eq!(json, ExitCode::SUCCESS);
+
+    let mermaid = run(CiArgs {
+        command: CiCommand::Topology(CiTopologyArgs {
+            workflows: Vec::new(),
+            root,
+            config: None,
+            format: Some(TopologyFormat::Mermaid),
+            json: false,
+        }),
+    })
+    .unwrap();
+    assert_eq!(mermaid, ExitCode::SUCCESS);
+}
+
+#[test]
+fn run_topology_fails_when_diagnostics_are_present() {
+    let code = run(CiArgs {
+        command: CiCommand::Topology(CiTopologyArgs {
+            workflows: Vec::new(),
+            root: topology_fixture("invalid"),
+            config: None,
+            format: Some(TopologyFormat::Json),
+            json: false,
+        }),
+    })
+    .unwrap();
+    assert_eq!(code, ExitCode::FAILURE);
+}
+
+#[test]
+fn render_topology_and_diagnostic_formatting_cover_optional_job_id() {
+    let report = topology_report(&topology_fixture("needs-basic"), None, &[]).unwrap();
+    assert!(render_topology(&report, TopologyFormat::Json)
+        .unwrap()
+        .contains("\"workflows\""));
+    assert!(render_topology(&report, TopologyFormat::Mermaid)
+        .unwrap()
+        .contains("flowchart LR"));
+
+    let with_job = WorkflowTopologyDiagnostic::new(
+        DiagnosticCode::MissingNeedsDependency,
+        "missing job",
+        "ci.yml",
+    )
+    .with_job("build");
+    assert_eq!(
+        format_topology_diagnostic(&with_job),
+        "[missing-needs-dependency] ci.yml (build): missing job"
+    );
+    let without_job =
+        WorkflowTopologyDiagnostic::new(DiagnosticCode::MalformedWorkflow, "bad yaml", "ci.yml");
+    assert_eq!(
+        format_topology_diagnostic(&without_job),
+        "[malformed-workflow] ci.yml: bad yaml"
+    );
 }

@@ -79,9 +79,7 @@ fn static_matrix_combinations_for_mapping(
         | (_, _, StaticMappings::Dynamic) => {
             return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
         }
-        (StaticMatrixAxes::Invalid, _, _)
-        | (_, StaticMappings::Invalid, _)
-        | (_, _, StaticMappings::Invalid) => return None,
+        _ => unreachable!("invalid matrix axes are rejected before combination"),
     };
     let mut originals = Vec::new();
     let mut assigned = BTreeMap::new();

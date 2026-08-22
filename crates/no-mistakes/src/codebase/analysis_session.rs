@@ -203,9 +203,10 @@ impl AnalysisSession {
             .max_by_key(|entry| entry.key().components().count())
             .map(|entry| (entry.key().clone(), Arc::clone(entry.value())));
 
-        matching_dataset
-            .map(|(root, cell)| self.dataset_from_cell(&root, &cell).sources_for(&root))
-            .unwrap_or_else(|| Arc::clone(&self.supplemental_sources))
+        match matching_dataset {
+            Some((root, cell)) => self.dataset_from_cell(&root, &cell).sources_for(&root),
+            None => Arc::clone(&self.supplemental_sources),
+        }
     }
 
     /// Memoize a request-owned registry-extension report projection for one

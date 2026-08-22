@@ -38,6 +38,18 @@ impl<'a> FallbackTsFactLookup<'a> {
     }
 }
 
+fn playwright_fetch_parse_error(
+    fallback: &TsFactMap,
+    path: &Path,
+) -> Option<Result<crate::fetch::file_facts::ParsedFileFacts, String>> {
+    let facts = fallback.get(path)?;
+    let error = facts.parse_error.as_ref()?;
+    Some(Err(format!(
+        "failed to parse {}: {error}",
+        path.display()
+    )))
+}
+
 fn same_graph_universe(
     primary_files: &[PathBuf],
     graph_visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
@@ -55,13 +67,15 @@ fn same_graph_universe(
 impl TsFactLookup for FallbackTsFactLookup<'_> {
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
         if self.prefer_fallback {
-            self.fallback
-                .get(path)
-                .or_else(|| self.primary.get_ts_facts(path))
+            match self.fallback.get(path) {
+                Some(facts) => Some(facts),
+                None => self.primary.get_ts_facts(path),
+            }
         } else {
-            self.primary
-                .get_ts_facts(path)
-                .or_else(|| self.fallback.get(path))
+            match self.primary.get_ts_facts(path) {
+                Some(facts) => Some(facts),
+                None => self.fallback.get(path),
+            }
         }
     }
 
@@ -82,16 +96,22 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
 
     fn get_playwright_parse_error(&self, path: &Path) -> Option<&str> {
         if self.prefer_fallback {
-            self.fallback
+            match self
+                .fallback
                 .get(path)
                 .and_then(|facts| facts.parse_error.as_deref())
-                .or_else(|| self.primary.get_playwright_parse_error(path))
+            {
+                Some(error) => Some(error),
+                None => self.primary.get_playwright_parse_error(path),
+            }
         } else {
-            self.primary.get_playwright_parse_error(path).or_else(|| {
-                self.fallback
+            match self.primary.get_playwright_parse_error(path) {
+                Some(error) => Some(error),
+                None => self
+                    .fallback
                     .get(path)
-                    .and_then(|facts| facts.parse_error.as_deref())
-            })
+                    .and_then(|facts| facts.parse_error.as_deref()),
+            }
         }
     }
 
@@ -121,19 +141,12 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         if !self.reuse_primary_playwright_cache {
             return None;
         }
-        let fallback_error = || {
-            self.fallback.get(path).and_then(|facts| {
-                facts.parse_error.as_ref().map(|error| {
-                    Err(format!("failed to parse {}: {error}", path.display()))
-                })
-            })
-        };
+        let fallback = playwright_fetch_parse_error(self.fallback, path);
+        let primary = self.primary.get_playwright_fetch_facts(path);
         if self.prefer_fallback {
-            fallback_error().or_else(|| self.primary.get_playwright_fetch_facts(path))
+            fallback.or(primary)
         } else {
-            self.primary
-                .get_playwright_fetch_facts(path)
-                .or_else(fallback_error)
+            primary.or(fallback)
         }
     }
 

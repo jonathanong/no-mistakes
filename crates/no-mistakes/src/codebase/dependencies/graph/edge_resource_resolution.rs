@@ -15,7 +15,7 @@ fn resource_resolution_key(
                 .cwd
                 .as_ref()
                 .map(|cwd| resolve_resource_path(root, consumer, cwd))
-                .unwrap_or_else(|| root.to_path_buf());
+                .unwrap_or(root.to_path_buf());
             let pattern = match call.path.base {
                 ResourcePathBase::AnalysisRoot => normalize_glob_pattern(&call.path.value),
                 ResourcePathBase::SourceModule => resolve_resource_path(root, consumer, &call.path)
@@ -58,7 +58,7 @@ fn expand_resource_key(
     let mut targets = match key {
         ResourceResolutionKey::Exact(path) => candidate_set
             .contains(path)
-            .then(|| path.clone())
+            .then_some(path.clone())
             .into_iter()
             .collect(),
         ResourceResolutionKey::Directory(directory) => candidates

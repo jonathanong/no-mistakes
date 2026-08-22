@@ -63,6 +63,8 @@ fn missing_project_root_returns_empty_report() {
     assert!(report.edges.is_empty());
     assert!(report.producers.is_empty());
     assert!(report.workers.is_empty());
+    let indexed = analyze_project_indexed(&fixture("does-not-exist"), None, &[]).unwrap();
+    assert!(indexed.report.producers.is_empty());
 }
 
 #[test]
