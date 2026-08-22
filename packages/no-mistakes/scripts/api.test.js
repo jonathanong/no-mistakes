@@ -572,11 +572,8 @@ test("test plan declarations require current results but accept saved legacy pla
     declarations,
     /export interface TestPlan \{\n  \/\*\* Complete deterministic changed-file inventory/,
   );
-  assert.match(declarations, /\n  changed_files: string\[\];/);
-  assert.match(
-    declarations,
-    /export type SavedTestPlan = Omit<TestPlan, "changed_files"> & \{\n  changed_files\?: string\[\];\n\};/,
-  );
+  assert.match(declarations, /\n  changedFiles: string\[\];/);
+  assert.match(declarations, /export type SavedTestPlan = TestPlan;/);
   assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
   assert.match(declarations, /export type TestsPlanOptions =/);
   assert.match(

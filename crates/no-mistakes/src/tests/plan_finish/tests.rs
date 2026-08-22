@@ -104,3 +104,16 @@ fn path_prefixes_split_and_name_execution_targets() {
         ]
     );
 }
+
+#[test]
+fn path_prefixes_name_only_swift_execution_targets() {
+    let groups = grouped_execution_targets(
+        &[selected(
+            "swift-clients/core/web.test.ts",
+            vec![target("vitest", None, &["vitest", "run"])],
+        )],
+        &["swift-clients/core".into()],
+    );
+    assert_eq!(groups.len(), 1);
+    assert_eq!(groups[0].name, None);
+}
