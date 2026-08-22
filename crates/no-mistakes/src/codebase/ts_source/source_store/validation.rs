@@ -1,13 +1,14 @@
+use super::once_lock_slot;
 use super::FileInventory;
-use std::collections::HashMap;
+use dashmap::DashMap;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex, OnceLock};
+use std::sync::{Arc, OnceLock};
 
-pub(super) type ValidatedPathCache = HashMap<(PathBuf, PathBuf), Arc<OnceLock<Option<PathBuf>>>>;
+pub(super) type ValidatedPathCache = DashMap<(PathBuf, PathBuf), Arc<OnceLock<Option<PathBuf>>>>;
 
 pub(super) fn validated_regular_path(
     inventory: &FileInventory,
-    validations: &Mutex<ValidatedPathCache>,
+    validations: &ValidatedPathCache,
     root: &Path,
     candidate: &Path,
 ) -> Option<PathBuf> {
@@ -18,16 +19,7 @@ pub(super) fn validated_regular_path(
         return Some(candidate.to_path_buf());
     }
     let key = (root.to_path_buf(), candidate.to_path_buf());
-    let cell = {
-        let mut validations = validations
-            .lock()
-            .expect("source path validation mutex poisoned");
-        Arc::clone(
-            validations
-                .entry(key.clone())
-                .or_insert_with(|| Arc::new(OnceLock::new())),
-        )
-    };
+    let cell = once_lock_slot(validations, key.clone());
     cell.get_or_init(|| {
         let canonical_root = std::fs::canonicalize(&key.0).ok()?;
         let canonical_candidate = std::fs::canonicalize(&key.1).ok()?;

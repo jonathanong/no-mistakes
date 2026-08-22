@@ -31,6 +31,7 @@ pub(super) fn collect_file_facts_with_sources_and_session(
     plan: TsFactPlan,
     context: &TsFactContext,
     sources: &crate::codebase::ts_source::SourceStore,
+    retain_parse: bool,
 ) -> Option<TsFileFacts> {
     let source = match sources.read_path(path) {
         Ok(source) => source,
@@ -80,7 +81,11 @@ pub(super) fn collect_file_facts_with_sources_and_session(
             )
         })
     };
-    Some(facts_from_collection_result(result))
+    let facts = Some(facts_from_collection_result(result));
+    if !retain_parse {
+        crate::ast::evict_request_parse_cache_path(path);
+    }
+    facts
 }
 
 pub(crate) fn collect_file_facts_from_program(
@@ -168,7 +173,7 @@ pub(crate) fn collect_file_facts_from_program(
         http_calls: domain.http_calls,
         process_spawns: domain.process_spawns,
         server_routes: domain.server_routes,
-        react_components: Arc::unwrap_or_clone(react_components),
+        react_components,
         effect_calls: domain.effect_calls,
         rsc_environment: domain.rsc_environment,
         trpc_procedures: domain.trpc_procedures,

@@ -51,6 +51,7 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
                 variant.plan,
                 variant.playwright,
                 Arc::clone(&source),
+                false,
             );
         } else {
             parse_variants.push((index, variant));

@@ -1,12 +1,20 @@
-use super::merge::default_test_match;
+use super::merge::{default_config, missing_config_name_error, validate_config_names};
 use super::parse::parse_from_path;
-use super::types::{PlaywrightConfig, TestProject};
+use super::types::PlaywrightConfig;
+use crate::codebase::ts_source::SourceStore;
 use anyhow::Result;
 use rayon::prelude::*;
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 pub fn load(root: &Path, config_path: &Path) -> Result<PlaywrightConfig> {
+    load_with_sources(root, config_path, None)
+}
+
+pub(crate) fn load_with_sources(
+    root: &Path,
+    config_path: &Path,
+    sources: Option<&SourceStore>,
+) -> Result<PlaywrightConfig> {
     // Resolve a bare config path (one with no parent directory component, like
     // "playwright.config.ts") against `root` so that filesystem operations use
     // an absolute path independent of the process working directory.
@@ -26,7 +34,8 @@ pub fn load(root: &Path, config_path: &Path) -> Result<PlaywrightConfig> {
         );
     }
 
-    let source = std::fs::read_to_string(config_path)?;
+    let source = SourceStore::read_prepared_or_open(sources, config_path)
+        .map_err(|error| anyhow::anyhow!("{error}"))?;
     let parent = config_path.parent().unwrap_or(root);
     parse_from_path(&source, config_path, parent)
 }
@@ -40,9 +49,27 @@ pub fn load_many(
     select_loaded(root, config_paths, config_name_filter, &configs)
 }
 
+pub(crate) fn load_many_with_sources(
+    root: &Path,
+    config_paths: &[PathBuf],
+    config_name_filter: Option<&str>,
+    sources: Option<&SourceStore>,
+) -> Result<PlaywrightConfig> {
+    let configs = load_configs_with_sources(root, config_paths, sources)?;
+    select_loaded(root, config_paths, config_name_filter, &configs)
+}
+
 pub(crate) fn load_configs(
     root: &Path,
     config_paths: &[PathBuf],
+) -> Result<Vec<(PathBuf, PlaywrightConfig)>> {
+    load_configs_with_sources(root, config_paths, None)
+}
+
+pub(crate) fn load_configs_with_sources(
+    root: &Path,
+    config_paths: &[PathBuf],
+    sources: Option<&SourceStore>,
 ) -> Result<Vec<(PathBuf, PlaywrightConfig)>> {
     if config_paths.is_empty() {
         return Ok(Vec::new());
@@ -54,12 +81,12 @@ pub(crate) fn load_configs(
         // them; standalone config loading remains parallel.
         config_paths
             .iter()
-            .map(|path| load_with_path(root, path))
+            .map(|path| load_with_path(root, path, sources))
             .collect()
     } else {
         config_paths
             .par_iter()
-            .map(|path| load_with_path(root, path))
+            .map(|path| load_with_path(root, path, sources))
             .collect()
     }
 }
@@ -133,11 +160,16 @@ pub(crate) fn select_loaded(
     })
 }
 
-fn load_with_path(root: &Path, config_path: &Path) -> Result<(PathBuf, PlaywrightConfig)> {
-    Ok((
-        resolved_config_path(root, config_path),
-        load(root, config_path)?,
-    ))
+fn load_with_path(
+    root: &Path,
+    config_path: &Path,
+    sources: Option<&SourceStore>,
+) -> Result<(PathBuf, PlaywrightConfig)> {
+    let config = match sources {
+        None => load(root, config_path)?,
+        Some(_) => load_with_sources(root, config_path, sources)?,
+    };
+    Ok((resolved_config_path(root, config_path), config))
 }
 
 fn resolved_config_path(root: &Path, config_path: &Path) -> PathBuf {
@@ -147,52 +179,4 @@ fn resolved_config_path(root: &Path, config_path: &Path) -> PathBuf {
         root.join(config_path)
     };
     crate::codebase::ts_resolver::normalize_path(&path)
-}
-
-fn missing_config_name_error(name: &str) -> anyhow::Error {
-    anyhow::Error::msg(format!("no Playwright config found with name {name}"))
-}
-
-fn default_config(root: &Path) -> PlaywrightConfig {
-    PlaywrightConfig {
-        name: None,
-        projects: vec![TestProject {
-            name: None,
-            config_dir: root.to_path_buf(),
-            test_dir: ".".to_string(),
-            test_match: default_test_match(),
-            test_ignore: Vec::new(),
-            base_url: None,
-            // Synthesized fallback config: the attribute was not read from a real
-            // Playwright config, so leave it `None` to defer to `selectors.testIds`.
-            test_id_attribute: None,
-        }],
-    }
-}
-
-fn validate_config_names(
-    configs: &[(PathBuf, PlaywrightConfig)],
-    config_name_filter: Option<&str>,
-) -> Result<()> {
-    if configs.len() <= 1 && config_name_filter.is_none() {
-        return Ok(());
-    }
-
-    let mut seen = BTreeMap::new();
-    for (path, config) in configs {
-        let Some(name) = config.name.as_deref() else {
-            anyhow::bail!(
-                "Playwright config {} must define top-level name when multiple configs are analyzed or --project is used",
-                path.display()
-            );
-        };
-        if let Some(previous) = seen.insert(name.to_string(), path.display().to_string()) {
-            anyhow::bail!(
-                "Playwright config name {name} is duplicated by {} and {}",
-                previous,
-                path.display()
-            );
-        }
-    }
-    Ok(())
 }

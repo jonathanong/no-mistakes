@@ -98,7 +98,11 @@ pub(super) fn prepare_with_settings(
         .collect::<Vec<_>>();
     config_paths.sort();
     config_paths.dedup();
-    let loaded_configs = playwright_config::load_configs(root, &config_paths)?;
+    let loaded_configs = playwright_config::load_configs_with_sources(
+        root,
+        &config_paths,
+        Some(snapshot.source_store_for(root).as_ref()),
+    )?;
 
     let mut fact_plan = PlaywrightFactPlan::default();
     let mut test_files_by_project = BTreeMap::new();

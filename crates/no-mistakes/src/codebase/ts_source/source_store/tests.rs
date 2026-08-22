@@ -258,6 +258,43 @@ fn concurrent_json_failures_have_exact_parse_and_cache_hit_metrics() {
 }
 
 #[test]
+fn concurrent_supplemental_reads_are_memoized_across_threads() {
+    let known = fixture("alpha.ts");
+    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&known)));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let store = SourceStore::new_observed(inventory, Some(Arc::clone(&observer)));
+    let supplemental = fixture("beta.ts");
+    let barrier = Arc::new(Barrier::new(CONCURRENT_CALLERS));
+
+    let sources = std::thread::scope(|scope| {
+        let handles = (0..CONCURRENT_CALLERS)
+            .map(|_| {
+                let barrier = Arc::clone(&barrier);
+                let supplemental = &supplemental;
+                let store = &store;
+                scope.spawn(move || {
+                    barrier.wait();
+                    store.read_path(supplemental).unwrap()
+                })
+            })
+            .collect::<Vec<_>>();
+        handles
+            .into_iter()
+            .map(|handle| handle.join().unwrap())
+            .collect::<Vec<_>>()
+    });
+
+    assert!(sources
+        .iter()
+        .all(|source| Arc::ptr_eq(source, &sources[0])));
+    assert_eq!(store.physical_read_count(), 1);
+    let work = observer.snapshot().work;
+    assert_eq!(work["source.requests"], CONCURRENT_CALLERS as u64);
+    assert_eq!(work["source.reads"], 1);
+    assert_eq!(work["source.cache_hits"], (CONCURRENT_CALLERS - 1) as u64);
+}
+
+#[test]
 fn optional_reads_use_a_one_file_store_when_no_session_is_prepared() {
     let path = fixture("alpha.ts");
     let source = SourceStore::read_optional(None, &path).unwrap();

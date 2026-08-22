@@ -39,4 +39,6 @@ pub(crate) use runner::{collect_prepared_runner_facts, runner_config_facts, Runn
 pub use stats::CheckFactStats;
 
 #[cfg(test)]
+mod parse_cache_tests;
+#[cfg(test)]
 pub(crate) mod tests;

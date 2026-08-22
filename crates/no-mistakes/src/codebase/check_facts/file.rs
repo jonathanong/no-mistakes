@@ -27,6 +27,7 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
     sources: &crate::codebase::ts_source::SourceStore,
+    retain_parse: bool,
 ) -> Option<CheckFileFacts> {
     let source = match sources.read_path(path) {
         Ok(source) => source,
@@ -45,7 +46,7 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
             });
         }
     };
-    collect_file_facts_from_source(session, root, path, plan, playwright, source)
+    collect_file_facts_from_source(session, root, path, plan, playwright, source, retain_parse)
 }
 
 fn collect_file_facts_from_source(
@@ -55,6 +56,7 @@ fn collect_file_facts_from_source(
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
     source: Arc<str>,
+    retain_parse: bool,
 ) -> Option<CheckFileFacts> {
     if plan.storybook && is_mdx_file(path) {
         let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
@@ -135,7 +137,7 @@ fn collect_file_facts_from_source(
     } else {
         session.with_recovered_program(path, &source, collect)
     };
-    match collected {
+    let facts = match collected {
         Ok(facts) => Some(facts),
         Err(error) => {
             let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
@@ -158,5 +160,9 @@ fn collect_file_facts_from_source(
                 ..CheckFileFacts::default()
             })
         }
+    };
+    if !retain_parse {
+        crate::ast::evict_request_parse_cache_path(path);
     }
+    facts
 }

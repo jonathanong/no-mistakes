@@ -33,7 +33,8 @@ fn analyze_file_inner(
         Some(session) => session
             .read_source(&abs_path)
             .map_err(|error| anyhow::anyhow!(error.to_string()))?,
-        None => std::fs::read_to_string(&abs_path)?.into(),
+        None => crate::codebase::ts_source::SourceStore::read_prepared_or_open(None, &abs_path)
+            .map_err(|error| anyhow::anyhow!("{error}"))?,
     };
     let rel_file = relative_string(root, &abs_path);
     let mut file_fetches = Vec::new();

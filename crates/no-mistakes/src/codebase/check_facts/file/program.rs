@@ -27,7 +27,7 @@ pub(crate) fn collect_file_facts_from_program(
     );
     let react = (plan.react || plan.graph.react).then(|| {
         Arc::new(crate::react_traits::analyze::file::FileAnalysis {
-            components: Arc::new(ts.react_components.clone()),
+            components: Arc::clone(&ts.react_components),
         })
     });
     let react_usages = plan.react_usages.then(|| {

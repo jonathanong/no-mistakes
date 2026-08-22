@@ -82,10 +82,11 @@ fn collect_playwright_route_edges_for_settings(
     {
         Some(test_files) => test_files,
         None => {
-            let Ok(playwright) = crate::playwright::playwright_config::load_many(
+            let Ok(playwright) = crate::playwright::playwright_config::load_many_with_sources(
                 root,
                 &settings.playwright_configs,
                 settings.project.as_deref(),
+                Some(snapshot.source_store_for(root).as_ref()),
             ) else {
                 return Vec::new();
             };
