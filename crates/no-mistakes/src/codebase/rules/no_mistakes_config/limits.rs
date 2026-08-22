@@ -35,9 +35,9 @@ fn has_effective_limit(limit: &Option<TestPlanLimit>) -> bool {
         return false;
     };
     limit.files.is_some()
-        ||     limit
-        .percent
-        .as_ref()
-        .and_then(|percent| percent.value())
-        .is_some()
+        || limit
+            .percent
+            .as_ref()
+            .and_then(|percent| percent.value())
+            .is_some()
 }
