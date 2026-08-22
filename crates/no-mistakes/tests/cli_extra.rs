@@ -30,6 +30,17 @@ fn stderr(output: &Output) -> String {
     String::from_utf8(output.stderr.clone()).expect("stderr should be utf8")
 }
 
+fn diagnostic_stderr(output: &Output) -> String {
+    stderr(output)
+        .lines()
+        .filter(|line| !line.starts_with("waiting for lock held by "))
+        .fold(String::new(), |mut acc, line| {
+            acc.push_str(line);
+            acc.push('\n');
+            acc
+        })
+}
+
 #[test]
 fn react_analyze_paths_outputs_component_files() {
     let root = fixture("react-traits-components", "basic");
@@ -207,7 +218,7 @@ fn global_check_skips_unconfigured_expensive_checks() {
 
     assert!(output.status.success());
     assert!(
-        stderr(&output).is_empty(),
+        diagnostic_stderr(&output).is_empty(),
         "unconfigured checks should not warn: {}",
         stderr(&output)
     );

@@ -28,6 +28,19 @@ fn stderr(output: &Output) -> String {
     String::from_utf8(output.stderr.clone()).expect("stderr should be utf8")
 }
 
+/// Lock-wait progress is stderr, but not a diagnostic. Parallel CLI tests share
+/// the process-wide invocation lock, so exact-stderr assertions ignore those lines.
+fn diagnostic_stderr(output: &Output) -> String {
+    stderr(output)
+        .lines()
+        .filter(|line| !line.starts_with("waiting for lock held by "))
+        .fold(String::new(), |mut acc, line| {
+            acc.push_str(line);
+            acc.push('\n');
+            acc
+        })
+}
+
 #[test]
 fn ci_impact_lists_triggered_workflows() {
     let root = case("ci-graph/triggers");
@@ -96,7 +109,7 @@ fn impacted_checks_empty_diagnostics_are_opt_in_and_format_stable() {
             }
             let silent = run(&args);
             assert!(silent.status.success(), "{}", stderr(&silent));
-            assert!(stderr(&silent).is_empty());
+            assert!(diagnostic_stderr(&silent).is_empty());
 
             let mut diagnosed_args = args.clone();
             diagnosed_args.push("--diagnose-empty");
@@ -108,7 +121,10 @@ fn impacted_checks_empty_diagnostics_are_opt_in_and_format_stable() {
             } else {
                 "No checks matched the changed files."
             };
-            assert_eq!(stderr(&diagnosed), format!("note[{code}]: {message}\n"));
+            assert_eq!(
+                diagnostic_stderr(&diagnosed),
+                format!("note[{code}]: {message}\n")
+            );
         }
     }
 }
@@ -180,7 +196,7 @@ fn impacted_checks_multi_file_json_covers_every_configured_framework() {
     ]);
 
     assert!(output.status.success(), "{}", stderr(&output));
-    assert!(stderr(&output).is_empty());
+    assert!(diagnostic_stderr(&output).is_empty());
     let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(report["checks"].as_array().unwrap().len(), 4);
     assert_eq!(
