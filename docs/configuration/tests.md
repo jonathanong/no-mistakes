@@ -101,11 +101,7 @@ Language test plans follow the same native shape. Configure
 `tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart` then emits `pytest` /
 `python -m unittest`, `go test`, `cargo test -p`, `bin/rails test` / `rspec`,
 `phpunit` / `php artisan test`, `mvn test [-f <package>/pom.xml] -Dtest=`,
-<<<<<<< HEAD
-`gradle [-p <package>] test --tests`, `mix test <path>`, or `dart test` targets. Untraceable source under those
-=======
-`gradle [-p <package>] test --tests`, or `dart test` / `dart pub --directory <package> run test` targets. Untraceable source under those
->>>>>>> 0a3717fa (fix(dart): run nested tests in-package and honor HTTP prefixes)
+`gradle [-p <package>] test --tests`, `mix test <path>`, or `dart test` / `dart pub --directory <package> run test` targets. Untraceable source under those
 roots falls back to discovered tests in the owning package, module, or app.
 
 ## Explicit Vitest projects
