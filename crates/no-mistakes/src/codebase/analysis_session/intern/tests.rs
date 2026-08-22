@@ -58,6 +58,7 @@ fn intern_str_miss_then_hit_and_insert_arms() {
     let owned: Arc<str> = Arc::from("send");
     let from_owned = interner.intern_str(owned.as_ref());
     assert!(Arc::ptr_eq(&miss, &from_owned));
+    assert_eq!(interner.interned_str_count(), 1);
 
     let vacant = interner.insert_str_arc(Arc::from("vacant"));
     let occupied = interner.insert_str_arc(Arc::from("vacant"));
