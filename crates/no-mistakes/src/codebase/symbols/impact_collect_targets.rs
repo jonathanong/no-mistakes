@@ -29,8 +29,7 @@ fn signature_target_symbols(
     let mut changed = true;
     while changed {
         changed = false;
-        let known_symbols: BTreeSet<String> =
-            target_symbols.values().flatten().cloned().collect();
+        let known_symbols: BTreeSet<String> = target_symbols.values().flatten().cloned().collect();
         for node in export_nodes {
             match node {
                 NodeId::Symbol { file, symbol } => {
@@ -73,6 +72,18 @@ fn signature_target_symbols(
     target_symbols
 }
 
+fn interned_file_root_paths(export_nodes: &BTreeSet<NodeId>, target_file: &Path) -> Vec<PathBuf> {
+    let mut file_roots: Vec<PathBuf> = export_nodes
+        .iter()
+        .filter_map(NodeId::as_file)
+        .map(Path::to_path_buf)
+        .collect();
+    file_roots.push(target_file.to_path_buf());
+    file_roots.sort();
+    file_roots.dedup();
+    file_roots
+}
+
 include!("impact_collect_target_helpers.rs");
 
 fn suggested_test_entries(
@@ -82,6 +93,7 @@ fn suggested_test_entries(
     root: &Path,
     file_target_symbols: &BTreeMap<String, BTreeSet<String>>,
     facts: &TsFactMap,
+    interner: &crate::codebase::analysis_session::PathInterner,
 ) -> Vec<NodeEntry> {
     let mut suggested_entries = entries.to_vec();
     let test_edges = HashSet::from([EdgeKind::TestOf]);
@@ -112,7 +124,7 @@ fn suggested_test_entries(
         production_files.insert(root.join(&caller.file));
     }
     for file in production_files {
-        let node = NodeId::file(file);
+        let node = NodeId::file_in(interner, file);
         suggested_entries.extend(graph.dependents_of(&[node], None, Some(&test_edges)));
     }
     suggested_entries

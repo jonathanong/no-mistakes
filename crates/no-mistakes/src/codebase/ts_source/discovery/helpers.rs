@@ -1,3 +1,21 @@
+pub(crate) fn normalize_discovery_path(path: &Path) -> PathBuf {
+    let normalized = crate::codebase::ts_resolver::normalize_path(path);
+    if normalized.as_os_str().is_empty() {
+        PathBuf::from(".")
+    } else {
+        normalized
+    }
+}
+
+pub(crate) fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &HashSet<&str>) -> bool {
+    path.strip_prefix(root).ok().is_some_and(|rel| {
+        rel.components().any(|component| {
+            let name = component.as_os_str().to_str();
+            name.is_some_and(|name| SKIP_DIRS.contains(&name) || extra_skip.contains(name))
+        })
+    })
+}
+
 pub fn discover_with_extensions(
     root: &Path,
     extra_skip: &[String],

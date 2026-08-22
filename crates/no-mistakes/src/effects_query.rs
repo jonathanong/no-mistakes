@@ -169,6 +169,7 @@ pub fn run(
         &config,
         &visible_paths,
     )?;
+    let interner = session.interner_arc();
     let graph = DepGraph::build_with_plan_files_prepared_config_facts_resolution_cache_and_session(
         PreparedGraphBuild {
             root: &root,
@@ -187,7 +188,7 @@ pub fn run(
         session,
     )?;
 
-    run_with_prepared(&root, &selection, entry, depth, &graph, &facts)
+    run_with_prepared(&root, &selection, entry, depth, &graph, &facts, &interner)
 }
 
 include!("effects_query/prepared.rs");

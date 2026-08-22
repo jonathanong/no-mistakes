@@ -79,5 +79,5 @@ fn import_target_with_graph_files(
     if workspace.recognizes_specifier_from(specifier, path) {
         return None;
     }
-    bare_module_node(specifier).map(|node| (node, edge_kind))
+    bare_module_node_in(interner, specifier).map(|node| (node, edge_kind))
 }

@@ -73,10 +73,8 @@ impl<T> FileIdMap<T> {
 
     pub(crate) fn get_mut(&mut self, path: &Path) -> Option<&mut T> {
         if let Some(index) = self.slot_index(path) {
-            if let Some(slot) = self.slots.get_mut(index) {
-                if slot.is_some() {
-                    return slot.as_mut();
-                }
+            if let Some(value) = self.slots[index].as_mut() {
+                return Some(value);
             }
         }
         self.overflow.get_mut(path)

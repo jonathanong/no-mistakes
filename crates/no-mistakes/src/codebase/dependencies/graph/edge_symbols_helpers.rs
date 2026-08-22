@@ -78,7 +78,7 @@ fn imported_symbol_map(
             }
         } else if workspace.recognizes_specifier_from(&import.source, path) {
             continue;
-        } else if let Some(node) = bare_module_node(&import.source) {
+        } else if let Some(node) = bare_module_node_in(interner, &import.source) {
             ImportedSymbolTarget::Node { node, kind }
         } else {
             continue;
@@ -132,7 +132,7 @@ fn namespace_import_map(
             }
         } else if workspace.recognizes_specifier_from(&import.source, path) {
             continue;
-        } else if let Some(node) = bare_module_node(&import.source) {
+        } else if let Some(node) = bare_module_node_in(interner, &import.source) {
             ImportedSymbolTarget::Node { node, kind }
         } else {
             continue;

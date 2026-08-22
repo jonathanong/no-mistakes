@@ -63,12 +63,12 @@ fn target_local_names_skips_type_only_imports_and_empty_export_sets() {
             is_type_only: true,
         }],
     };
-    let mut target_symbols = BTreeMap::from([(target.clone(), BTreeSet::from(["parseDate".to_string()]))]);
+    let mut target_symbols =
+        BTreeMap::from([(target.clone(), BTreeSet::from(["parseDate".to_string()]))]);
     let workspace = crate::codebase::workspaces::WorkspaceMap::default();
     let visible = HashSet::new();
-    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
-        visible.iter().cloned(),
-    );
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(visible.iter().cloned());
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
         &tsconfig,
@@ -143,10 +143,7 @@ fn pass4b_signature_local_names_resolve_visible_workspace_subpath_fallback() {
     let symbols =
         crate::codebase::ts_symbols::extract_symbols_at_path(&importer, &source, false).unwrap();
     let target = root.join("packages/pkg/src/feature.ts");
-    let target_symbols = BTreeMap::from([(
-        target,
-        BTreeSet::from(["feature".to_string()]),
-    )]);
+    let target_symbols = BTreeMap::from([(target, BTreeSet::from(["feature".to_string()]))]);
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),
         paths: Vec::new(),
@@ -154,9 +151,8 @@ fn pass4b_signature_local_names_resolve_visible_workspace_subpath_fallback() {
         base_url: None,
     };
     let workspace = crate::codebase::workspaces::load_from_files(&root, &visible_paths).unwrap();
-    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
-        visible.iter().cloned(),
-    );
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(visible.iter().cloned());
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
         &tsconfig,

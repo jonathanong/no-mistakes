@@ -93,10 +93,12 @@ fn classified_discovery_does_not_restat_inventory_paths() {
         classified.len() >= 2,
         "symlink fixture must contribute visible paths"
     );
-    assert_eq!(
-        classified.metadata_stat_count(),
-        0,
-        "snapshot inventory must reuse discovery classifications"
+    let symlink = crate::codebase::ts_resolver::normalize_path(&root.join("playwright.config.ts"));
+    let symlink_kind = classified.classification_for_path(&symlink).unwrap();
+    assert!(symlink_kind.is_lexical_symlink());
+    assert!(
+        classified.metadata_stat_count() < classified.len(),
+        "git index modes must skip stats for tracked regular files"
     );
 
     let restated = FileInventory::from_paths(classified.paths().as_slice());
@@ -105,6 +107,10 @@ fn classified_discovery_does_not_restat_inventory_paths() {
         restated.metadata_stat_count() >= classified.len(),
         "from_paths must stat each candidate; classified reuse must not"
     );
+    assert!(restated
+        .classification_for_path(&symlink)
+        .unwrap()
+        .is_lexical_symlink());
 }
 
 #[test]
@@ -172,7 +178,7 @@ fn serial_inventory(paths: &[PathBuf]) -> FileInventory {
             }
         })
         .collect();
-    FileInventory::from_classified_paths(entries)
+    FileInventory::from_classified_paths_counted(entries, 0)
 }
 
 fn assert_same_inventory(left: &FileInventory, right: &FileInventory) {
@@ -218,15 +224,221 @@ fn parallel_inventory_is_stable_across_runs() {
     );
 }
 
+fn saved_ts_source(name: &str) -> tempfile::TempDir {
+    crate::test_support::materialize_saved_fixture(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/ts-source")
+            .join(name),
+    )
+}
+
+#[test]
+fn git_tracked_regular_files_skip_inventory_metadata_stats() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    let inventory = sources.inventory();
+
+    assert!(
+        inventory.len() >= 3,
+        "git-index-classify fixture must contribute tracked files"
+    );
+    assert!(inventory.paths().iter().all(|path| inventory
+        .classification_for_path(path)
+        .unwrap()
+        .is_lexical_file()));
+    assert_eq!(
+        inventory.metadata_stat_count(),
+        0,
+        "tracked regular files must be classified from git index mode"
+    );
+
+    let restated = FileInventory::from_paths(inventory.paths().as_slice());
+    assert_eq!(restated.paths(), inventory.paths());
+    assert!(
+        restated.metadata_stat_count() >= inventory.len(),
+        "from_paths must still stat unclassified paths"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn git_index_mode_keeps_unstaged_symlink_replacement_as_regular_file() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    let path = dir.path().join("staged-regular.mts");
+    std::fs::remove_file(&path).unwrap();
+    std::os::unix::fs::symlink("regular.mts", &path).unwrap();
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let kind = snapshot
+        .classification_for(dir.path(), &path)
+        .expect("unstaged type-change must remain visible");
+    assert!(kind.is_lexical_file());
+    assert!(!kind.is_lexical_symlink());
+    assert!(kind.target_is_file());
+    assert_eq!(
+        snapshot
+            .source_store_for(dir.path())
+            .inventory()
+            .metadata_stat_count(),
+        0
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn git_tracked_symlink_still_consults_worktree_metadata() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    let link = dir.path().join("link.mts");
+    std::os::unix::fs::symlink("regular.mts", &link).unwrap();
+    crate::test_support::git_add_all(dir.path());
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    let inventory = sources.inventory();
+    let kind = inventory.classification_for_path(&link).unwrap();
+    assert!(!kind.is_lexical_file());
+    assert!(kind.is_lexical_symlink());
+    assert!(kind.target_is_file());
+    assert_eq!(inventory.metadata_stat_count(), 1);
+}
+
+#[cfg(unix)]
+#[test]
+fn git_tracked_symlink_replaced_by_regular_file_uses_worktree_type() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    let link = dir.path().join("link.mts");
+    std::os::unix::fs::symlink("regular.mts", &link).unwrap();
+    crate::test_support::git_add_all(dir.path());
+    std::fs::remove_file(&link).unwrap();
+    std::fs::write(&link, "export {}\n").unwrap();
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    let inventory = sources.inventory();
+    let kind = inventory.classification_for_path(&link).unwrap();
+    assert!(kind.is_lexical_file());
+    assert!(!kind.is_lexical_symlink());
+    assert!(kind.target_is_file());
+    assert_eq!(inventory.metadata_stat_count(), 1);
+}
+
+#[test]
+fn git_untracked_files_still_stat() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    std::fs::write(dir.path().join("untracked.mts"), "export {}\n").unwrap();
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    let inventory = sources.inventory();
+    assert!(inventory
+        .paths()
+        .iter()
+        .any(|path| path.ends_with("untracked.mts")));
+    assert_eq!(inventory.metadata_stat_count(), 1);
+}
+
+#[test]
+fn git_skip_worktree_missing_files_are_omitted() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    crate::test_support::git_skip_worktree(dir.path(), "extra.mts");
+    std::fs::remove_file(dir.path().join("extra.mts")).unwrap();
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    let inventory = sources.inventory();
+    assert!(
+        !inventory
+            .paths()
+            .iter()
+            .any(|path| path.ends_with("extra.mts")),
+        "absent skip-worktree files must not stay in the inventory"
+    );
+    assert_eq!(
+        inventory.metadata_stat_count(),
+        1,
+        "absent skip-worktree files still require a metadata attempt"
+    );
+}
+
+#[test]
+fn git_skip_worktree_present_files_still_stat() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    crate::test_support::git_skip_worktree(dir.path(), "extra.mts");
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    let inventory = sources.inventory();
+    assert!(inventory
+        .paths()
+        .iter()
+        .any(|path| path.ends_with("extra.mts")));
+    assert_eq!(inventory.metadata_stat_count(), 1);
+}
+
+#[cfg(unix)]
+#[test]
+fn git_untracked_stage_shaped_names_keep_the_literal_path() {
+    let dir = saved_ts_source("git-index-classify");
+    crate::test_support::git_init(dir.path());
+    crate::test_support::git_add_all(dir.path());
+    let spoofed = dir.path().join("100644 abcdef 0\tactual.mts");
+    std::fs::write(&spoofed, "export {}\n").unwrap();
+
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(dir.path());
+    let sources = snapshot.source_store_for(dir.path());
+    let inventory = sources.inventory();
+    assert!(
+        inventory.paths().iter().any(|path| path == &spoofed),
+        "untracked names that resemble --stage metadata must stay literal"
+    );
+}
+
 #[test]
 fn git_classify_drops_missing_relative_paths() {
     let root = fixture("alpha.ts").parent().unwrap().to_path_buf();
-    let classified = super::classify_relative_paths(
+    let (classified, stats) = super::classify_git_listed_paths(
         &root,
-        vec![PathBuf::from("alpha.ts"), PathBuf::from("missing.ts")],
+        vec![
+            (PathBuf::from("alpha.ts"), None),
+            (PathBuf::from("missing.ts"), None),
+            (
+                PathBuf::from("missing-link.ts"),
+                Some(super::GitIndexKind::Symlink),
+            ),
+        ],
     );
     assert_eq!(classified.len(), 1);
     assert!(classified[0].path.ends_with("alpha.ts"));
+    assert_eq!(stats, 3);
+}
+
+#[test]
+fn git_classify_tracked_regular_missing_paths_skip_metadata() {
+    let root = fixture("alpha.ts").parent().unwrap().to_path_buf();
+    let (classified, stats) = super::classify_git_listed_paths(
+        &root,
+        vec![(
+            PathBuf::from("missing-regular.ts"),
+            Some(super::GitIndexKind::RegularFile),
+        )],
+    );
+    assert_eq!(classified.len(), 1);
+    assert_eq!(stats, 0);
 }
 
 #[test]

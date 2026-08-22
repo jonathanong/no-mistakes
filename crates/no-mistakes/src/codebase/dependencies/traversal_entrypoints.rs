@@ -7,6 +7,7 @@ struct EntrypointResolution<'a> {
     graph_files: &'a graph::GraphFiles,
     include_symbols: bool,
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    interner: &'a PathInterner,
 }
 
 fn resolve_entrypoints_with_files_and_workspace(
@@ -21,6 +22,7 @@ fn resolve_entrypoints_with_files_and_workspace(
         graph_files,
         include_symbols,
         workspace,
+        interner,
     } = input;
     let root_dependencies = workspace.root_dependency_names();
     raw_entrypoints
@@ -54,6 +56,7 @@ fn resolve_entrypoints_with_files_and_workspace(
                 workspace,
                 root_dependencies,
                 graph_files,
+                interner,
             );
             let file = match &node {
                 NodeId::File(path) | NodeId::Symbol { file: path, .. } => path.to_path_buf(),
@@ -61,13 +64,13 @@ fn resolve_entrypoints_with_files_and_workspace(
             };
             if let Some(workflow_node) = symbol
                 .as_deref()
-                .and_then(|suffix| workflow_node_from_suffix(&file, suffix))
+                .and_then(|suffix| workflow_node_from_suffix_in(interner, &file, suffix))
             {
                 node = workflow_node;
                 symbol = None;
             } else if include_symbols {
                 if let (NodeId::File(file), Some(symbol)) = (&node, &symbol) {
-                    node = NodeId::symbol(file.clone(), symbol.clone());
+                    node = NodeId::symbol_in(interner, file.clone(), symbol.clone());
                 }
             }
             Entrypoint { file, node, symbol }
@@ -81,10 +84,11 @@ fn resolve_entrypoint_node(
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     root_dependencies: &std::collections::HashSet<String>,
     visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
+    interner: &PathInterner,
 ) -> NodeId {
     if path.is_dir() {
         if let Some(entry) = package_dir_entry(path, workspace, visible_files) {
-            return NodeId::file(entry);
+            return NodeId::file_in(interner, entry);
         }
     }
     if workspace
@@ -92,18 +96,18 @@ fn resolve_entrypoint_node(
         .is_none()
         && raw_package_name(raw).is_some_and(|name| root_dependencies.contains(&name))
     {
-        return NodeId::module(raw);
+        return NodeId::module_in(interner, raw);
     }
     if path.exists() || raw.starts_with('.') || Path::new(raw).is_absolute() {
-        return NodeId::file(path);
+        return NodeId::file_in(interner, path);
     }
     if let Some(entry) = workspace.resolve_specifier_from_visible(raw, visible_files) {
-        return NodeId::file(entry);
+        return NodeId::file_in(interner, entry);
     }
     if raw_looks_like_source_file(raw, path, root_dependencies) {
-        return NodeId::file(path);
+        return NodeId::file_in(interner, path);
     }
-    NodeId::module(raw)
+    NodeId::module_in(interner, raw)
 }
 
 fn raw_looks_like_source_file(

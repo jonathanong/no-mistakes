@@ -28,11 +28,9 @@ fn symbol_owner_bridge_allowed(
     from: &NodeId,
     to: &NodeId,
     root_nodes: &FxHashSet<NodeId>,
-    dynamic_import_files: &FxHashSet<NodeId>,
+    from_is_dynamic_import_file: bool,
 ) -> bool {
-    is_symbol_owner_bridge(from, to)
-        && !dynamic_import_files.contains(from)
-        && root_nodes.contains(from)
+    is_symbol_owner_bridge(from, to) && !from_is_dynamic_import_file && root_nodes.contains(from)
 }
 
 fn is_symbol_owner_bridge(from: &NodeId, to: &NodeId) -> bool {

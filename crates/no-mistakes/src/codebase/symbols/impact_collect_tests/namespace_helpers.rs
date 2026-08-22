@@ -21,13 +21,8 @@ fn signature_target_symbols_preserves_chained_namespace_reexport_names() {
             .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
             .collect();
     let facts = impact_test_support::signature_test_facts(&root);
-    let target_symbols = signature_target_symbols(
-        &target,
-        "parseDate",
-        &export_nodes,
-        &visible_files,
-        &facts,
-    );
+    let target_symbols =
+        signature_target_symbols(&target, "parseDate", &export_nodes, &visible_files, &facts);
 
     assert_eq!(
         target_symbols.get(&namespace_barrel),
@@ -39,7 +34,9 @@ fn signature_target_symbols_preserves_chained_namespace_reexport_names() {
     );
     assert_eq!(
         target_symbols.get(&extensionless_barrel),
-        Some(&BTreeSet::from(["extensionlessDates.parseDate".to_string()]))
+        Some(&BTreeSet::from(
+            ["extensionlessDates.parseDate".to_string()]
+        ))
     );
 }
 
@@ -75,13 +72,15 @@ fn namespace_target_helpers_handle_defensive_paths() {
         "dates.parseDate",
         &visible_files,
     ));
-    symbols.imports.push(crate::codebase::ts_symbols::NamedImport {
-        source: "./utils.mts".to_string(),
-        imported: "*".to_string(),
-        local: "dates".to_string(),
-        line: 1,
-        is_type_only: false,
-    });
+    symbols
+        .imports
+        .push(crate::codebase::ts_symbols::NamedImport {
+            source: "./utils.mts".to_string(),
+            imported: "*".to_string(),
+            local: "dates".to_string(),
+            line: 1,
+            is_type_only: false,
+        });
     assert!(namespace_tail_applies(
         &facts,
         &namespace_barrel,
@@ -126,6 +125,7 @@ fn suggested_test_entries_ignores_file_level_edges_without_file_nodes() {
         &root,
         &BTreeMap::new(),
         &TsFactMap::new(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert_eq!(suggested, entries);
 }

@@ -12,7 +12,15 @@ fn import_neighbors(
         .and_then(|facts| facts.get_ts_facts(path))
     {
         return (
-            import_neighbors_from_facts(path, facts, resolver, workspace, graph_files, allowed),
+            import_neighbors_from_facts(
+                path,
+                facts,
+                resolver,
+                workspace,
+                graph_files,
+                allowed,
+                session.interner(),
+            ),
             None,
         );
     }
@@ -56,8 +64,15 @@ fn import_neighbors(
         }
     };
 
-    let neighbors =
-        import_neighbors_from_facts(path, &facts, resolver, workspace, graph_files, allowed);
+    let neighbors = import_neighbors_from_facts(
+        path,
+        &facts,
+        resolver,
+        workspace,
+        graph_files,
+        allowed,
+        session.interner(),
+    );
     (neighbors, Some(facts))
 }
 
@@ -68,6 +83,7 @@ fn import_neighbors_from_facts(
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
+    interner: &PathInterner,
 ) -> Vec<(NodeId, EdgeKind)> {
     let reachable = reachable_function_scopes(file_facts);
     let mut neighbors: Vec<(NodeId, EdgeKind)> = file_facts
@@ -86,15 +102,15 @@ fn import_neighbors_from_facts(
                     _ => EdgeKind::WorkspaceImport,
                 };
                 return (is_indexable(target) || kind == EdgeKind::RequireResolve)
-                    .then(|| (NodeId::file(target), kind));
+                    .then(|| (NodeId::file_in(interner, target), kind));
             }
             if let Some(target) = classification.preferred_path() {
                 let target = graph_files.visible_path(target)?;
                 return (is_indexable(target) || kind == EdgeKind::RequireResolve)
-                    .then(|| (NodeId::file(target), kind));
+                    .then(|| (NodeId::file_in(interner, target), kind));
             }
             if classification.is_unresolved_external() {
-                return bare_module_node(&imp.specifier).map(|module| (module, kind));
+                return bare_module_node_in(interner, &imp.specifier).map(|module| (module, kind));
             }
             None
         })

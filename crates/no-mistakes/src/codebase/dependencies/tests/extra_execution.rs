@@ -406,7 +406,12 @@ fn traversal_queue_root_helpers_cover_missing_deps_and_module_entrypoints() {
         node: NodeId::module("queue-package"),
         symbol: Some("send".to_string()),
     }];
-    let queue_roots = roots_with_existing_queue_jobs_by(&expanded, &entrypoints, |_| true);
+    let queue_roots = roots_with_existing_queue_jobs_by(
+        &expanded,
+        &entrypoints,
+        |_| true,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert_eq!(queue_roots, expanded);
 }
 

@@ -2,8 +2,10 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 mod classify;
+mod kind;
 mod lookup;
-pub(crate) use classify::classify_relative_paths;
+pub(crate) use classify::{classify_git_listed_paths, GitIndexKind};
+pub use kind::FileClassification;
 
 /// Stable identity for a lexical path in a frozen request file inventory.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -13,42 +15,6 @@ impl FileId {
     /// Return the zero-based position of this file in its inventory.
     pub fn index(self) -> usize {
         self.0 as usize
-    }
-}
-
-/// Discovery-time file classification for one lexical inventory path.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-#[doc(hidden)]
-pub struct FileClassification {
-    lexical_file: bool,
-    lexical_symlink: bool,
-    target_file: bool,
-}
-
-impl FileClassification {
-    pub(crate) fn from_file_type(path: &Path, file_type: std::fs::FileType) -> Self {
-        let lexical_file = file_type.is_file();
-        let lexical_symlink = file_type.is_symlink();
-        Self {
-            lexical_file,
-            lexical_symlink,
-            target_file: lexical_file || (lexical_symlink && path.is_file()),
-        }
-    }
-
-    #[doc(hidden)]
-    pub fn is_lexical_file(self) -> bool {
-        self.lexical_file
-    }
-
-    #[doc(hidden)]
-    pub fn is_lexical_symlink(self) -> bool {
-        self.lexical_symlink
-    }
-
-    #[doc(hidden)]
-    pub fn target_is_file(self) -> bool {
-        self.target_file
     }
 }
 
@@ -81,7 +47,7 @@ impl FileInventory {
         Self::from_classified_paths_counted(entries, 0)
     }
 
-    fn from_classified_paths_counted(
+    pub(crate) fn from_classified_paths_counted(
         mut entries: Vec<ClassifiedPath>,
         metadata_stats: usize,
     ) -> Self {
@@ -177,8 +143,9 @@ impl FileInventory {
             .and_then(|id| self.classification(id))
     }
 
-    /// `symlink_metadata` calls performed while building this inventory.
-    /// Classified discovery reuse reports zero.
+    /// Worktree metadata calls performed while classifying this inventory.
+    /// Git-listed tracked regular files report zero; classified reuse keeps
+    /// the discovery-time count instead of restating.
     #[doc(hidden)]
     pub fn metadata_stat_count(&self) -> usize {
         self.metadata_stats
