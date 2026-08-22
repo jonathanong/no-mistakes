@@ -1,34 +1,36 @@
 pub use crate::codebase::ts_source::SKIP_DIRS;
 
+include!("types_file_node.rs");
+
 /// A node in the dependency graph: a source file, external module, or virtual node.
 ///
-/// File paths are interned as `Arc<Path>` and symbol/job/module names as `Arc<str>`
-/// so cloning a `NodeId` does not copy those bytes. Construct with
-/// `NodeId::file` / `symbol` / `module` / …; keep matching `NodeId::File(path)` and
-/// `NodeId::Symbol { file, .. }`.
+/// File paths are interned as [`FileNode`] (integer hash + `Arc<Path>`) and
+/// symbol/job/module names as `Arc<str>` so cloning a `NodeId` does not copy
+/// those bytes. Construct with `NodeId::file` / `symbol` / `module` / …; keep
+/// matching `NodeId::File(path)` and `NodeId::Symbol { file, .. }`.
 #[derive(Debug, Clone, PartialOrd, Ord)]
 pub enum NodeId {
-    File(Arc<Path>),
+    File(FileNode),
     Symbol {
-        file: Arc<Path>,
+        file: FileNode,
         symbol: Arc<str>,
     },
     Module(Arc<str>),
     QueueJob {
-        queue_file: Arc<Path>,
+        queue_file: FileNode,
         job: Arc<str>,
     },
     WorkflowJob {
-        workflow_file: Arc<Path>,
+        workflow_file: FileNode,
         job: Arc<str>,
     },
     WorkflowStep {
-        workflow_file: Arc<Path>,
+        workflow_file: FileNode,
         job: Arc<str>,
         step: usize,
     },
     TrpcProcedure {
-        router_file: Arc<Path>,
+        router_file: FileNode,
         procedure: Arc<str>,
     },
 }

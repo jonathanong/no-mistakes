@@ -2,7 +2,9 @@ fn normalize_nodes(nodes: &[NodeId]) -> Vec<NodeId> {
     nodes
         .iter()
         .map(|node| match node {
-            NodeId::File(path) => NodeId::file(crate::codebase::ts_resolver::normalize_path(path)),
+            NodeId::File(path) => {
+                NodeId::file(crate::codebase::ts_resolver::normalize_path(path.as_ref()))
+            }
             NodeId::Symbol { file, symbol } => NodeId::symbol(
                 crate::codebase::ts_resolver::normalize_path(file),
                 symbol.clone(),

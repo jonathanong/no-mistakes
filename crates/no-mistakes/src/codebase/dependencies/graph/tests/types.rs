@@ -216,4 +216,24 @@ mod tests_types {
             (36, 0)
         );
     }
+
+    #[test]
+    fn file_nodes_hash_by_path_bytes_and_clone_shares_the_arc() {
+        use std::sync::Arc;
+
+        let left = NodeId::file("src/widget.ts");
+        let right = NodeId::file(PathBuf::from("src/widget.ts"));
+        assert_eq!(left, right);
+        assert_eq!(hash_of(&left), hash_of(&right));
+        match (&left, &right) {
+            (NodeId::File(first), NodeId::File(second)) => {
+                assert_eq!(first.cmp(second), std::cmp::Ordering::Equal);
+                assert!(first.partial_cmp(second).is_some());
+                let cloned = first.clone_arc();
+                assert!(Arc::ptr_eq(first.as_arc(), &cloned));
+            }
+            other => panic!("expected File nodes, got {other:?}"),
+        }
+        assert!(left < NodeId::file("src/z.ts"));
+    }
 }
