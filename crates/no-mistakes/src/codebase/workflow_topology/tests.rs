@@ -11,8 +11,8 @@
 //! Regenerating a golden file after an intentional behavior change requires
 //! the vendored TS source, which is not part of this repository; see the
 //! PR/issue history for how it was produced. New first-party fields are
-//! removed before those comparisons; their byte-exact order is covered by
-//! `fixtures/workflow-topology/job-metadata/expected.json`.
+//! removed before those comparisons; their byte-exact compact JSON is covered
+//! by `fixtures/workflow-topology/job-metadata/expected.json`.
 
 mod artifact;
 mod metadata;
@@ -103,6 +103,16 @@ macro_rules! golden_test {
 }
 
 golden_test!(needs_basic_matches_ts_engine, "needs-basic");
+
+#[test]
+fn topology_json_is_compact_serde_with_trailing_newline() {
+    let actual = render(&fixture("needs-basic"), &[]);
+    assert!(actual.ends_with('\n'));
+    assert!(
+        !actual[..actual.len() - 1].contains('\n'),
+        "ci topology --format json must stay compact serde JSON"
+    );
+}
 
 #[test]
 fn shared_documents_preserve_schema_v1_topology_output() {

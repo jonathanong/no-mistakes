@@ -140,7 +140,8 @@ invocation isn't reported as true at all.
 ```
 
 This is a stable, versioned schema (`schemaVersion: 1`): field names, field
-order, and array/diagnostic sort order are part of the contract. Optional
+order, and array/diagnostic sort order are part of the contract. CLI
+`--format json` emits compact serde JSON plus a trailing newline. Optional
 fields (e.g. a job's `name`, a workflow's `concurrency`) are omitted rather
 than emitted as `null` when absent.
 
