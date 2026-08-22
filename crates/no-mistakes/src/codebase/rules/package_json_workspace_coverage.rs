@@ -95,7 +95,9 @@ fn scan(
             continue;
         }
         let unnamed = opts.require_named_package
-            && package_name_with_sources(path, sources).filter(|name| !name.is_empty()).is_none();
+            && package_name_with_sources(path, sources)
+                .filter(|name| !name.is_empty())
+                .is_none();
         if unnamed {
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
