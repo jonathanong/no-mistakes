@@ -4,8 +4,12 @@ use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, Tokenizer, Word};
 
 mod recover;
+mod rewrite;
 
-/// Tokenize, rewrite PG18 virtual generated columns, then parse each statement.
+use rewrite::{rewrite_chr_calls, rewrite_drop_index_concurrently};
+
+/// Tokenize, rewrite PG18 virtual generated columns, `DROP INDEX CONCURRENTLY`,
+/// and `chr()` calls, then parse each statement.
 ///
 /// Unparseable `DO $tag$ … $tag$` statements are peeled so schema DDL inside
 /// the body can still parse. Remaining unparseable chunks recover `ALTER TABLE`,
@@ -16,7 +20,21 @@ pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
         return Vec::new();
     };
     rewrite_virtual_generated_columns(&mut tokens);
+    rewrite_drop_index_concurrently(&mut tokens);
+    rewrite_chr_calls(&mut tokens);
     recover::parse_chunks(split_statement_tokens(tokens))
+}
+
+pub(super) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
+    if !sql.to_ascii_lowercase().contains("chr(") {
+        return None;
+    }
+    let dialect = PostgreSqlDialect {};
+    let Ok(mut tokens) = Tokenizer::new(&dialect, sql).tokenize() else {
+        return None;
+    };
+    rewrite_chr_calls(&mut tokens);
+    recover::concatenated_strings(&tokens)
 }
 
 fn rewrite_virtual_generated_columns(tokens: &mut Vec<Token>) {

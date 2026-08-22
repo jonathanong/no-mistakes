@@ -46,5 +46,9 @@ pub fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     lenient::parse_postgres_sql_lenient(sql)
 }
 
+pub(crate) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
+    lenient::expand_chr_encoded_sql(sql)
+}
+
 #[cfg(test)]
 mod tests;

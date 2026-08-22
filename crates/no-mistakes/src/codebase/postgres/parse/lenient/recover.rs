@@ -16,6 +16,10 @@ fn parse_chunk(chunk: Vec<Token>) -> Vec<Statement> {
             .filter(|statement| !is_begin_or_end(statement))
             .collect();
     }
+    let recovered = recover_chr_encoded(&chunk);
+    if !recovered.is_empty() {
+        return recovered;
+    }
     let dialect = PostgreSqlDialect {};
     let mut parser = Parser::new(&dialect).with_tokens(chunk.clone());
     match parser.parse_statement() {
@@ -53,6 +57,38 @@ fn peel_do_body(tokens: &[Token]) -> Option<String> {
     }
 }
 
+fn recover_chr_encoded(tokens: &[Token]) -> Vec<Statement> {
+    concatenated_strings(tokens)
+        .map(|sql| super::parse_postgres_sql_lenient(&sql))
+        .unwrap_or_default()
+}
+
+pub(super) fn concatenated_strings(tokens: &[Token]) -> Option<String> {
+    let mut sql = String::new();
+    let mut expect_string = true;
+    let mut saw_string = false;
+    for token in tokens {
+        if matches!(token, Token::Whitespace(_)) {
+            continue;
+        }
+        match token {
+            Token::SingleQuotedString(value) if expect_string => {
+                sql.push_str(value);
+                expect_string = false;
+                saw_string = true;
+            }
+            Token::DollarQuotedString(value) if expect_string => {
+                sql.push_str(&value.value);
+                expect_string = false;
+                saw_string = true;
+            }
+            Token::StringConcat if !expect_string => expect_string = true,
+            _ => return None,
+        }
+    }
+    (saw_string && !expect_string && !sql.is_empty()).then_some(sql)
+}
+
 fn recover_schema_ddl(tokens: &[Token]) -> Option<Statement> {
     let start = schema_ddl_start(tokens)?;
     Parser::new(&PostgreSqlDialect {})
@@ -76,6 +112,7 @@ fn ddl_start_at(tokens: &[Token], index: usize) -> Option<usize> {
     match keyword_of(&tokens[index]) {
         Some(Keyword::ALTER) => follows_keyword(tokens, index, Keyword::TABLE).then_some(index),
         Some(Keyword::CREATE) => create_ddl_start(tokens, index),
+        Some(Keyword::DROP) => drop_ddl_start(tokens, index),
         _ => None,
     }
 }
@@ -85,6 +122,14 @@ fn create_ddl_start(tokens: &[Token], index: usize) -> Option<usize> {
     match keyword_of(&tokens[next]) {
         Some(Keyword::TABLE) | Some(Keyword::INDEX) => Some(index),
         Some(Keyword::UNIQUE) => follows_keyword(tokens, next, Keyword::INDEX).then_some(index),
+        _ => None,
+    }
+}
+
+fn drop_ddl_start(tokens: &[Token], index: usize) -> Option<usize> {
+    let next = next_non_ws(tokens, index + 1)?;
+    match keyword_of(&tokens[next]) {
+        Some(Keyword::INDEX) | Some(Keyword::TABLE) => Some(index),
         _ => None,
     }
 }
