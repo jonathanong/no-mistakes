@@ -1,6 +1,9 @@
 "use strict";
 
-const { directCallerJobIdsForUses, stepOrderIndexes } = require("./workflow-topology-index-helpers");
+const {
+  directCallerJobIdsForUses,
+  stepOrderIndexes,
+} = require("./workflow-topology-index-helpers");
 
 // A pure-JS query index rebuilt from the `ciTopology()` JSON, ported from
 // the original engine's `topology-index.mts` + `frozen-topology.mts`. This
