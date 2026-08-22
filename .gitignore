@@ -18,3 +18,5 @@ lcov.info
 .DS_Store
 .jules/
 .workflow-topology-src/
+
+.playwright-mcp/
