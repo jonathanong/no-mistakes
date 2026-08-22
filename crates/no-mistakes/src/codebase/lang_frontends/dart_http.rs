@@ -30,13 +30,13 @@ fn normalize_path(raw: &str) -> Option<String> {
 
 fn dart_uri_parse_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r#"Uri\.parse\(\s*['"]([^'"]+)['"]"#).expect("uri"))
+    RE.get_or_init(|| Regex::new(r#"Uri\.parse\(\s*r?['"]([^'"]+)['"]"#).expect("uri"))
 }
 
 fn dart_http_verb_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r#"http\.(?:get|post|put|patch|delete)\(\s*['"]([^'"]+)['"]"#).expect("http")
+        Regex::new(r#"http\.(?:get|post|put|patch|delete)\(\s*r?['"]([^'"]+)['"]"#).expect("http")
     })
 }
 

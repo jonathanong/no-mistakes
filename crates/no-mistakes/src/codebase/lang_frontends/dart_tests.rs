@@ -75,3 +75,25 @@ fn dart_collects_package_imports() {
         .any(|import| import == "package:app/user.dart"));
     assert_eq!(api.module.as_deref(), Some("package:app/api.dart"));
 }
+
+#[test]
+fn pubspec_name_accepts_quotes_and_trailing_comments() {
+    let quoted = super::pubspec_name_re()
+        .captures("name: \"app\"\n")
+        .and_then(|cap| cap.get(1).map(|m| m.as_str().to_string()));
+    let commented = super::pubspec_name_re()
+        .captures("name: app # mobile package\n")
+        .and_then(|cap| cap.get(1).map(|m| m.as_str().to_string()));
+    assert_eq!(quoted.as_deref(), Some("app"));
+    assert_eq!(commented.as_deref(), Some("app"));
+}
+
+#[test]
+fn extension_type_declarations_are_indexed() {
+    let names = super::extract_named(
+        "extension type UserId(int value) {}\nextension Foo on Bar {}",
+        super::dart_decl_re(),
+    );
+    assert!(names.contains(&"UserId".to_string()));
+    assert!(names.contains(&"Foo".to_string()));
+}

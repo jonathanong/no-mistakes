@@ -146,7 +146,7 @@ fn dart_import_re() -> &'static Regex {
 fn dart_decl_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
-        Regex::new(r"\b(?:class|mixin|enum|extension|typedef)\s+([A-Z][A-Za-z0-9_]*)")
+        Regex::new(r"\b(?:class|mixin|enum|extension(?:\s+type)?|typedef)\s+([A-Z][A-Za-z0-9_]*)")
             .expect("decl")
     })
 }
@@ -158,7 +158,9 @@ fn dart_ref_re() -> &'static Regex {
 
 fn pubspec_name_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
-    RE.get_or_init(|| Regex::new(r"(?m)^\s*name:\s*([A-Za-z_][\w]*)\s*$").expect("pubspec"))
+    RE.get_or_init(|| {
+        Regex::new(r#"(?m)^\s*name:\s*['"]?([A-Za-z_][\w]*)['"]?\s*(?:#.*)?$"#).expect("pubspec")
+    })
 }
 
 #[cfg(test)]

@@ -23,3 +23,15 @@ fn computed_uris_are_skipped() {
 fn commented_http_calls_are_skipped() {
     assert!(extract_http_paths(r#"// http.get(Uri.parse("/api/users"));"#).is_empty());
 }
+
+#[test]
+fn raw_uri_literals_extract() {
+    let paths = extract_http_paths(
+        r#"
+Uri.parse(r'/api/users');
+http.get(r"/api/health");
+"#,
+    );
+    assert!(paths.contains(&"/api/users".to_string()));
+    assert!(paths.contains(&"/api/health".to_string()));
+}
