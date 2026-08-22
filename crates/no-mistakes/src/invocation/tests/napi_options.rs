@@ -41,6 +41,19 @@ fn napi_missing_controls_disable_timeouts() {
 }
 
 #[test]
+fn napi_profile_ci_is_stripped() {
+    let (json, options) =
+        extract_napi_options(r#"{"profile":"ci","timeout":10,"lockTimeout":5,"root":"."}"#)
+            .unwrap();
+    assert_eq!(options.timeout, None);
+    assert_eq!(options.lock_timeout, None);
+    assert_eq!(
+        serde_json::from_str::<Value>(&json).unwrap(),
+        serde_json::json!({"root":"."})
+    );
+}
+
+#[test]
 fn napi_jobs_parses_non_negative_integer_or_null() {
     let (_, options) = extract_napi_options(r#"{"jobs":4}"#).unwrap();
     assert_eq!(options.jobs, Some(4));
@@ -59,6 +72,7 @@ fn napi_controls_validate_types() {
         r#"{"failOnLock":1}"#,
         r#"{"jobs":-1}"#,
         r#"{"jobs":"4"}"#,
+        r#"{"profile":"local"}"#,
         "[]",
         "not-json",
     ] {
