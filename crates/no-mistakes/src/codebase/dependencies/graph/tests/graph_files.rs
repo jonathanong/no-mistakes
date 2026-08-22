@@ -34,10 +34,8 @@ fn graph_files_constructor_does_not_eagerly_canonicalize() {
         "from_files must not realpath every visible path"
     );
     let visible_path_source = include_str!("../graph_files_visible.rs");
-    let visible_path = graph_files_source_function_body(
-        visible_path_source,
-        "pub(crate) fn visible_path(",
-    );
+    let visible_path =
+        graph_files_source_function_body(visible_path_source, "pub(crate) fn visible_path(");
     assert!(
         visible_path.contains("canonicalize"),
         "visible_path must keep the lazy canonicalize fallback"
@@ -307,5 +305,43 @@ fn graph_files_trait_contains_visible_is_exact_membership() {
     assert!(!VisiblePathLookup::contains_visible(&files, &via_real));
     assert_eq!(files.visible_path(&via_real), Some(via_link.as_path()));
     assert!(same_graph_universe(std::slice::from_ref(&via_link), &files));
-    assert!(!same_graph_universe(std::slice::from_ref(&via_real), &files));
+    assert!(!same_graph_universe(
+        std::slice::from_ref(&via_real),
+        &files
+    ));
+}
+
+#[cfg(unix)]
+#[test]
+fn scoped_session_visibility_keeps_canonical_aliases_from_graph_files() {
+    use crate::codebase::ts_resolver::ImportResolution;
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    );
+    let via_link = crate::codebase::ts_resolver::normalize_path(&root.join("src/value.ts"));
+    let via_real = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/real/src/value.ts"),
+    );
+    let files = GraphFiles::from_files(vec![via_link.clone()]);
+    let tsconfig = crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json"))
+        .expect("symlink workspace tsconfig");
+    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::forced(&root, tsconfig, None);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(None);
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+        &catalog,
+        &files,
+        session.as_ref(),
+    );
+
+    assert!(!files.contains_visible(&via_real));
+    let visible = ImportResolution::visible_files(&resolver)
+        .expect("session resolver has a visible universe");
+    assert!(visible.contains_visible(&via_link));
+    assert!(
+        visible.contains_visible(&via_real),
+        "new_in_session must own canonical aliases, not GraphFiles exact membership"
+    );
 }

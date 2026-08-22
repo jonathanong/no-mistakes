@@ -4,7 +4,10 @@ use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 fn sample_visible() -> HashSet<PathBuf> {
-    HashSet::from([PathBuf::from("/fixture/a.ts"), PathBuf::from("/fixture/b.ts")])
+    HashSet::from([
+        PathBuf::from("/fixture/a.ts"),
+        PathBuf::from("/fixture/b.ts"),
+    ])
 }
 
 #[test]
@@ -14,7 +17,10 @@ fn reference_and_arc_lookups_delegate_to_the_inner_universe() {
     let by_arc = Arc::new(visible.clone());
     let path = Path::new("/fixture/a.ts");
     let missing = Path::new("/fixture/missing.ts");
-    let expected_key = vec![PathBuf::from("/fixture/a.ts"), PathBuf::from("/fixture/b.ts")];
+    let expected_key = vec![
+        PathBuf::from("/fixture/a.ts"),
+        PathBuf::from("/fixture/b.ts"),
+    ];
 
     assert!(<&HashSet<PathBuf> as VisiblePathLookup>::contains_visible(
         &by_ref, path
@@ -32,9 +38,7 @@ fn reference_and_arc_lookups_delegate_to_the_inner_universe() {
     );
 
     assert!(<Arc<HashSet<PathBuf>> as VisiblePathLookup>::contains_visible(&by_arc, path));
-    assert!(!<Arc<HashSet<PathBuf>> as VisiblePathLookup>::contains_visible(
-        &by_arc, missing
-    ));
+    assert!(!<Arc<HashSet<PathBuf>> as VisiblePathLookup>::contains_visible(&by_arc, missing));
     assert_eq!(
         <Arc<HashSet<PathBuf>> as VisiblePathLookup>::visible_len(&by_arc),
         2
@@ -56,7 +60,10 @@ fn path_set_lookups_match_hash_set_membership() {
     assert_eq!(VisiblePathLookup::visible_len(&visible), 2);
     assert_eq!(
         VisiblePathLookup::visible_cache_key(&visible),
-        vec![PathBuf::from("/fixture/a.ts"), PathBuf::from("/fixture/b.ts")]
+        vec![
+            PathBuf::from("/fixture/a.ts"),
+            PathBuf::from("/fixture/b.ts")
+        ]
     );
 }
 
@@ -69,3 +76,15 @@ fn import_resolver_with_visible_stays_a_public_pathset_api() {
     );
 }
 
+#[test]
+fn project_import_resolver_owns_normalized_session_visibility() {
+    let source = include_str!("project_resolver.rs");
+    assert!(
+        source.contains("ScopedImportResolver::new_in_session(catalog, visible, session)"),
+        "scoped graph resolution must own canonical aliases via new_in_session"
+    );
+    assert!(
+        !source.contains("from_lookup"),
+        "from_lookup borrows GraphFiles exact membership and drops canonical spellings"
+    );
+}
