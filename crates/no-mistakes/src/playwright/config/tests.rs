@@ -308,6 +308,13 @@ fn test_is_playwright_config_name_edge_cases() {
     assert!(!is_playwright_config_name(std::ffi::OsStr::new(
         "playwrightconfig"
     )));
+    #[cfg(unix)]
+    {
+        use std::os::unix::ffi::OsStrExt;
+        assert!(!is_playwright_config_name(std::ffi::OsStr::from_bytes(
+            b"playwright\xff.config.ts"
+        )));
+    }
 }
 
 #[test]

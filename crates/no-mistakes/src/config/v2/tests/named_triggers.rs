@@ -67,6 +67,37 @@ testPlan:
 }
 
 #[test]
+fn named_trigger_names_and_paths_must_not_be_blank() {
+    let blank_name = serde_yaml::from_str::<NoMistakesConfig>(
+        r#"
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      - name: " "
+        paths: [db/**]
+"#,
+    );
+    assert!(blank_name
+        .unwrap_err()
+        .to_string()
+        .contains("name must not be blank"));
+
+    let empty_paths = serde_yaml::from_str::<NoMistakesConfig>(
+        r#"
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      - name: resources
+        paths: []
+"#,
+    );
+    assert!(empty_paths
+        .unwrap_err()
+        .to_string()
+        .contains("paths must not be empty"));
+}
+
+#[test]
 fn playwright_coverage_gates_default_true_and_parse_false() {
     let default_cfg = NoMistakesConfig::default();
     assert!(default_cfg.tests.playwright.coverage.routes);

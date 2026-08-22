@@ -1,6 +1,8 @@
 use super::resolve_config;
 use super::triggers::resolved_triggers;
-use crate::config::v2::schema::{NoMistakesConfig, Project, TestPlanProjectDependency};
+use crate::config::v2::schema::{
+    NoMistakesConfig, Project, TestPlanProjectDependency, TestPlanTargetedProjectDependency,
+};
 use serde_json::json;
 use std::path::PathBuf;
 
@@ -54,4 +56,82 @@ fn resolve_config_expands_project_keyed_trigger_paths() {
     assert_eq!(triggers[0].name, "generated");
     assert_eq!(triggers[0].source, "projects");
     assert_eq!(triggers[0].paths, vec!["packages/generated/src/**"]);
+}
+
+#[test]
+fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
+    let mut config = NoMistakesConfig::default();
+    config.projects.insert(
+        "generated".to_string(),
+        Project {
+            root: Some("packages/generated".to_string()),
+            ..Project::default()
+        },
+    );
+    config.projects.insert(
+        "root-app".to_string(),
+        Project {
+            root: Some(".".to_string()),
+            ..Project::default()
+        },
+    );
+    config
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .projects
+        .insert("skip".to_string(), TestPlanProjectDependency::All(false));
+    config.test_plan.vitest.full_suite_triggers.projects.insert(
+        "generated".to_string(),
+        TestPlanProjectDependency::All(true),
+    );
+    config.test_plan.vitest.full_suite_triggers.projects.insert(
+        "root-app".to_string(),
+        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+            paths: vec![
+                "./src/**".to_string(),
+                " !./src/generated/**".to_string(),
+                "packages/generated/src/**".to_string(),
+            ],
+            targets: vec!["unit".to_string()],
+        }),
+    );
+    config.test_plan.vitest.full_suite_triggers.projects.insert(
+        "orphan".to_string(),
+        TestPlanProjectDependency::Patterns(vec!["!./dist/**".to_string()]),
+    );
+    config.projects.insert(
+        "prefixed".to_string(),
+        Project {
+            root: Some("packages/generated".to_string()),
+            ..Project::default()
+        },
+    );
+    config.test_plan.vitest.full_suite_triggers.projects.insert(
+        "prefixed".to_string(),
+        TestPlanProjectDependency::Patterns(vec!["packages/generated/src/**".to_string()]),
+    );
+
+    let triggers = resolved_triggers(&config);
+    let by_name = triggers
+        .iter()
+        .map(|trigger| (trigger.name.as_str(), trigger))
+        .collect::<std::collections::BTreeMap<_, _>>();
+    assert!(!by_name.contains_key("skip"));
+    assert_eq!(by_name["generated"].paths.len(), 0);
+    assert_eq!(by_name["generated"].targets.len(), 0);
+    assert_eq!(
+        by_name["root-app"].paths,
+        vec![
+            "src/**".to_string(),
+            "!src/generated/**".to_string(),
+            "packages/generated/src/**".to_string()
+        ]
+    );
+    assert_eq!(by_name["root-app"].targets, vec!["unit".to_string()]);
+    assert_eq!(by_name["orphan"].paths, vec!["!orphan/dist/**".to_string()]);
+    assert_eq!(
+        by_name["prefixed"].paths,
+        vec!["packages/generated/src/**".to_string()]
+    );
 }
