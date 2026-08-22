@@ -23,6 +23,7 @@ const jsonApis = createJsonApis({
   analyzeProject: "analyzeProjectJson",
   callSites: "callSitesJson",
   check: "checkJson",
+  resolveConfig: "resolveConfigJson",
   ciEnv: "ciEnvJson",
   ciImpact: "ciImpactJson",
   ciTopology: "ciTopologyJson",
@@ -66,6 +67,7 @@ module.exports.version = version;
 module.exports.analyzeProject = jsonApis.analyzeProject;
 module.exports.callSites = jsonApis.callSites;
 module.exports.check = jsonApis.check;
+module.exports.resolveConfig = jsonApis.resolveConfig;
 module.exports.ciEnv = jsonApis.ciEnv;
 module.exports.ciImpact = jsonApis.ciImpact;
 module.exports.ciTopology = jsonApis.ciTopology;

@@ -166,6 +166,7 @@ mod tests {
             }],
             fallback_triggered: false,
             fallback_reason: None,
+            ..Default::default()
         };
 
         assert_eq!(
@@ -193,6 +194,7 @@ mod tests {
             warnings: Vec::new(),
             fallback_triggered: false,
             fallback_reason: None,
+            ..Default::default()
         };
 
         let rendered = super::super::render(&plan, PlanFormat::Explain, "tests plan").unwrap();
@@ -223,6 +225,7 @@ mod tests {
             }],
             fallback_triggered: true,
             fallback_reason: Some("configuration changed".to_string()),
+            ..Default::default()
         };
         let rendered =
             super::super::render(&selected_plan, PlanFormat::Explain, "tests plan").unwrap();
@@ -237,6 +240,7 @@ mod tests {
             warnings: Vec::new(),
             fallback_triggered: false,
             fallback_reason: None,
+            ..Default::default()
         };
         assert_eq!(
             super::super::render(&empty_plan, PlanFormat::Explain, "tests plan").unwrap(),

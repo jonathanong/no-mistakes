@@ -5,6 +5,22 @@ use crate::playwright::analysis::types::{
 };
 use std::sync::Arc;
 
+fn report_findings(
+    analysis: &Analysis,
+    coverage: bool,
+    unique_test_ids: bool,
+    unique_html_ids: bool,
+    prefer_test_id_locators: bool,
+) -> Vec<crate::codebase::rules::RuleFinding> {
+    findings_from_report(
+        analysis,
+        unique_test_ids,
+        unique_html_ids,
+        prefer_test_id_locators,
+        CoverageFindingOptions::all(coverage),
+    )
+}
+
 #[test]
 fn findings_from_report_maps_routes_selectors_and_duplicates() {
     let report = CoverageReport {
@@ -61,7 +77,7 @@ fn findings_from_report_maps_routes_selectors_and_duplicates() {
         }],
     };
 
-    let findings = findings_from_report(&analysis(report, vec![]), true, true, true, false);
+    let findings = report_findings(&analysis(report, vec![]), true, true, true, false);
     let targets: Vec<_> = findings
         .iter()
         .map(|finding| (finding.rule.as_str(), finding.target.as_deref()))
@@ -105,7 +121,7 @@ fn findings_from_report_filters_disabled_duplicate_rules() {
         fetch_apis: vec![],
     };
 
-    let findings = findings_from_report(&analysis(report, vec![]), false, false, true, false);
+    let findings = report_findings(&analysis(report, vec![]), false, false, true, false);
 
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].rule, PLAYWRIGHT_UNIQUE_HTML_IDS);
@@ -157,7 +173,7 @@ fn findings_from_report_skips_unsupported_dynamic_selectors() {
         fetch_apis: vec![],
     };
 
-    let findings = findings_from_report(&analysis(report, vec![]), true, false, false, false);
+    let findings = report_findings(&analysis(report, vec![]), true, false, false, false);
     assert_eq!(
         findings.len(),
         1,
@@ -191,7 +207,7 @@ fn findings_from_report_maps_id_duplicates_to_test_ids_when_html_rule_is_disable
         fetch_apis: vec![],
     };
 
-    let findings = findings_from_report(&analysis(report, vec![]), false, true, false, false);
+    let findings = report_findings(&analysis(report, vec![]), false, true, false, false);
 
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].rule, PLAYWRIGHT_UNIQUE_TEST_IDS);
@@ -217,7 +233,7 @@ fn findings_from_report_flags_copy_coupled_locators_with_selector_refs() {
         line: 12,
     };
 
-    let findings = findings_from_report(
+    let findings = report_findings(
         &analysis(empty_report(), vec![edge]),
         false,
         false,
@@ -262,7 +278,7 @@ fn prefer_test_id_locator_uses_effective_test_id_attribute() {
         line: 12,
     };
 
-    let findings = findings_from_report(
+    let findings = report_findings(
         &analysis(empty_report(), vec![edge]),
         false,
         false,
@@ -294,7 +310,7 @@ fn prefer_test_id_locator_ignores_non_effective_selector_refs() {
         line: 12,
     };
 
-    let findings = findings_from_report(
+    let findings = report_findings(
         &analysis(empty_report(), vec![edge]),
         false,
         false,

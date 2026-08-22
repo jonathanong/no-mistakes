@@ -5,6 +5,10 @@ use crate::playwright::config::Settings;
 use anyhow::{anyhow, Result};
 use std::path::{Path, PathBuf};
 
+#[path = "loaded_v2/defaults.rs"]
+mod defaults;
+use defaults::{default_frontend_root, default_selector_test_excludes};
+
 /// Build [`Settings`] for one Playwright project, resolving which frontend
 /// app it exercises.
 ///
@@ -72,6 +76,12 @@ pub(super) fn settings_from_v2(
     let selector_roots = selector_roots_explicit
         .or_else(|| resolved_app.as_ref().map(|app| app.selector_roots.clone()))
         .unwrap_or_else(|| vec![frontend_root.clone()]);
+    let mut selector_exclude = playwright.selector_exclude.clone();
+    for pattern in default_selector_test_excludes() {
+        if !selector_exclude.iter().any(|existing| existing == pattern) {
+            selector_exclude.push(pattern.to_string());
+        }
+    }
     let rewrites = rewrites_explicit
         .or_else(|| resolved_app.as_ref().map(|app| app.rewrites.clone()))
         .unwrap_or_default();
@@ -96,7 +106,7 @@ pub(super) fn settings_from_v2(
         html_ids: playwright.selectors.html_ids,
         selector_roots,
         selector_include: playwright.selector_include.clone(),
-        selector_exclude: playwright.selector_exclude.clone(),
+        selector_exclude,
     })
 }
 
@@ -169,24 +179,6 @@ pub(super) fn settings_from_loaded_v2(
         )
     } else {
         settings_from_defaults(root, cli_playwright_configs, cli_project, visible_paths)
-    }
-}
-
-/// Legacy zero-signal fallback: no `type: nextjs` project is configured and
-/// none could be inferred at all, so there is no [`FrontendApp`] to derive a
-/// route root from. Retained unchanged (still only probes `<nextjs_root>/app`,
-/// not `<nextjs_root>/src/app`) because this deepest fallback tier is not the
-/// path #625 reported — that case always has a resolvable [`FrontendApp`],
-/// which already applies the `src/app`-preferred probe.
-fn default_frontend_root(root: &Path, nextjs_root: &str, visible_paths: &[PathBuf]) -> String {
-    let app_root = Path::new(nextjs_root).join("app");
-    let absolute_app_root = crate::codebase::ts_resolver::normalize_path(&root.join(&app_root));
-    if visible_paths.iter().any(|path| {
-        crate::codebase::ts_resolver::normalize_path(path).starts_with(&absolute_app_root)
-    }) {
-        app_root.to_string_lossy().into_owned()
-    } else {
-        nextjs_root.to_string()
     }
 }
 

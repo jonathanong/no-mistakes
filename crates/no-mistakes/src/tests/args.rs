@@ -126,6 +126,10 @@ pub(crate) struct PlanArgs {
     /// Shorthand for --format json.
     #[arg(long, default_value_t = false, conflicts_with = "format")]
     pub(crate) json: bool,
+
+    /// Include the markdown PR comment on the plan JSON (`comment` field).
+    #[arg(long = "include-comment", default_value_t = false)]
+    pub(crate) include_comment: bool,
 }
 
 #[derive(Args, Debug, Clone)]

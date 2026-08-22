@@ -160,6 +160,50 @@ fn conflicting_rule_projects_for_the_same_playwright_project_is_an_error() {
     assert!(message.contains("control-web"), "{message}");
 }
 
+/// An unbound rule with `tests.playwright.apps` fans out to each Playwright
+/// project instead of erroring on multiple frontend apps.
+#[test]
+fn unbound_rule_fans_out_over_configured_apps() {
+    let mut config = NoMistakesConfig {
+        rules: vec![rule(PLAYWRIGHT_COVERAGE, vec![], vec![])],
+        ..NoMistakesConfig::default()
+    };
+    config.tests.playwright.apps.insert(
+        "control".to_string(),
+        PlaywrightAppBinding {
+            project: Some("control-web".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    config.tests.playwright.apps.insert(
+        "agent".to_string(),
+        PlaywrightAppBinding {
+            project: Some("agent-web".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    let apps = vec![app("agent-web"), app("control-web")];
+
+    let selections = rule_selections(&config, &apps).unwrap();
+    let mut names: Vec<_> = selections
+        .iter()
+        .map(|selection| {
+            (
+                selection.playwright_project.as_deref(),
+                selection.app.as_deref(),
+            )
+        })
+        .collect();
+    names.sort();
+    assert_eq!(
+        names,
+        vec![
+            (Some("agent"), Some("agent-web")),
+            (Some("control"), Some("control-web")),
+        ]
+    );
+}
+
 /// `tests.playwright.apps.<project>.project` wins outright, even over
 /// ambiguous apps and even when no rule names any project at all.
 #[test]

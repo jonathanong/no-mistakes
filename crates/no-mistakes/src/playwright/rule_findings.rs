@@ -7,17 +7,39 @@ use crate::playwright::rules::{
 use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
 use std::collections::BTreeMap;
 
+#[derive(Clone, Copy)]
+pub(crate) struct CoverageFindingOptions {
+    pub(crate) enabled: bool,
+    pub(crate) routes: bool,
+    pub(crate) selectors: bool,
+}
+
+impl CoverageFindingOptions {
+    #[cfg(test)]
+    pub(crate) fn all(enabled: bool) -> Self {
+        Self {
+            enabled,
+            routes: true,
+            selectors: true,
+        }
+    }
+}
+
 pub(crate) fn findings_from_report(
     analysis: &Analysis,
-    coverage: bool,
     unique_test_ids: bool,
     unique_html_ids: bool,
     prefer_test_id_locators: bool,
+    coverage: CoverageFindingOptions,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     let report = &analysis.coverage;
-    if coverage {
-        findings.extend(coverage_findings(report));
+    if coverage.enabled {
+        findings.extend(coverage_findings(
+            report,
+            coverage.routes,
+            coverage.selectors,
+        ));
     }
     if unique_test_ids || unique_html_ids {
         findings.extend(unique_findings(
@@ -34,20 +56,25 @@ pub(crate) fn findings_from_report(
     findings
 }
 
-fn coverage_findings(report: &CoverageReport) -> Vec<RuleFinding> {
+fn coverage_findings(report: &CoverageReport, routes: bool, selectors: bool) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
-    for route in report.routes.iter().filter(|route| !route.covered) {
-        findings.push(RuleFinding {
-            rule: PLAYWRIGHT_COVERAGE.to_string(),
-            file: route.file.clone(),
-            line: 1,
-            message: format!(
-                "Next.js route `{}` is not covered by a Playwright navigation assertion",
-                route.route
-            ),
-            import: None,
-            target: Some(route.route.clone()),
-        });
+    if routes {
+        for route in report.routes.iter().filter(|route| !route.covered) {
+            findings.push(RuleFinding {
+                rule: PLAYWRIGHT_COVERAGE.to_string(),
+                file: route.file.clone(),
+                line: 1,
+                message: format!(
+                    "Next.js route `{}` is not covered by a Playwright navigation assertion",
+                    route.route
+                ),
+                import: None,
+                target: Some(route.route.clone()),
+            });
+        }
+    }
+    if !selectors {
+        return findings;
     }
     for selector in report
         .selectors

@@ -11,3 +11,4 @@ export * from "./workflow-topology-types";
 export * from "./query-types";
 export * from "./named-query-types";
 export * from "./mermaid-types";
+export * from "./resolve-config-types";

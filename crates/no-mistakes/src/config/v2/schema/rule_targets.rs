@@ -23,3 +23,14 @@ fn rule_supports_playwright_test_targets(rule_id: &str) -> bool {
             | "playwright-prefer-test-id-locators"
     )
 }
+
+/// Unbound Playwright rules still apply when `tests.playwright.apps` binds
+/// each Playwright project to a frontend app.
+pub(super) fn rule_has_playwright_apps_target(
+    rule: &RuleDef,
+    config: &super::NoMistakesConfig,
+) -> bool {
+    rule_supports_playwright_test_targets(&rule.rule)
+        && rule.tests.playwright.is_empty()
+        && !config.tests.playwright.apps.is_empty()
+}

@@ -110,6 +110,7 @@ pub(crate) fn generate_direct_test_owner_plan_with_prepared(
         warnings: direct_owner_warnings(framework, prepared, graph),
         fallback_triggered: false,
         fallback_reason: None,
+        ..Default::default()
     };
     attach_targets(&mut plan, root, &discovered_tests);
     Ok(plan)

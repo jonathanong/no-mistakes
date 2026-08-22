@@ -188,6 +188,7 @@ fn run_live_analysis(
         direct_test_owner: false,
         format: None,
         json: true,
+        include_comment: false,
     };
 
     let plan = generate_plan(&plan_args)?;
@@ -260,6 +261,7 @@ mod tests {
             warnings: Vec::<Warning>::new(),
             fallback_triggered: false,
             fallback_reason: None,
+            ..Default::default()
         };
         let result = steps_from_plan(&plan, "src/load.test.ts", None);
         let steps = result.get("resources/schema.sql").unwrap();

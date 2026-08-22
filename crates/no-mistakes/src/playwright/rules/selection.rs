@@ -3,10 +3,13 @@ use super::{
     PLAYWRIGHT_UNIQUE_TEST_IDS,
 };
 use crate::config::v2::{FrontendApp, NoMistakesConfig};
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
 
-#[derive(Clone, Debug, Default)]
+mod app;
+use app::resolve_selection_app;
+
+#[derive(Clone, Debug)]
 pub(super) struct RuleSelection {
     pub(super) playwright_project: Option<String>,
     /// The `.no-mistakes.yml` `projects:` key of the frontend app this
@@ -20,6 +23,23 @@ pub(super) struct RuleSelection {
     pub(super) unique_test_ids: bool,
     pub(super) unique_html_ids: bool,
     pub(super) prefer_test_id_locators: bool,
+    pub(super) cover_routes: bool,
+    pub(super) cover_selectors: bool,
+}
+
+impl Default for RuleSelection {
+    fn default() -> Self {
+        Self {
+            playwright_project: None,
+            app: None,
+            coverage: false,
+            unique_test_ids: false,
+            unique_html_ids: false,
+            prefer_test_id_locators: false,
+            cover_routes: true,
+            cover_selectors: true,
+        }
+    }
 }
 
 /// Resolve one [`RuleSelection`] per distinct Playwright project named across
@@ -90,20 +110,31 @@ fn add_rule_selections(
     app_bindings: &mut BTreeMap<Option<String>, BTreeSet<String>>,
 ) {
     for rule in config.rule_applications(rule_id) {
-        let projects: BTreeSet<Option<String>> = if rule.tests.playwright.is_empty() {
-            [None].into_iter().collect()
-        } else {
+        let projects: BTreeSet<Option<String>> = if !rule.tests.playwright.is_empty() {
             rule.tests
                 .playwright
                 .iter()
                 .map(|project| Some(project.clone()))
                 .collect()
+        } else if !config.tests.playwright.apps.is_empty() {
+            config
+                .tests
+                .playwright
+                .apps
+                .keys()
+                .cloned()
+                .map(Some)
+                .collect()
+        } else {
+            [None].into_iter().collect()
         };
         for project in projects {
             let selection = by_project
                 .entry(project.clone())
                 .or_insert_with(|| RuleSelection {
                     playwright_project: project.clone(),
+                    cover_routes: config.tests.playwright.coverage.routes,
+                    cover_selectors: config.tests.playwright.coverage.selectors,
                     ..RuleSelection::default()
                 });
             apply(selection);
@@ -114,86 +145,6 @@ fn add_rule_selections(
                     .extend(rule.projects.iter().cloned());
             }
         }
-    }
-}
-
-/// Resolve which single frontend app a Playwright-project selection
-/// exercises, in precedence order:
-///
-/// 1. `tests.playwright.apps.<playwright_project>.project` — fully explicit,
-///    always wins outright (no ambiguity check against rule bindings).
-/// 2. The frontend-app names collected from every contributing rule
-///    application's `projects:` list. Exactly one match binds; zero matches
-///    (the list named only non-frontend projects) or more than one match
-///    (rules disagree, or one rule names two apps) is an error rather than a
-///    silent guess.
-/// 3. No rule named a project at all: the sole configured frontend app, or
-///    `None` when there are zero apps (not ambiguous — nothing to choose
-///    between), or an error when there is more than one.
-fn resolve_selection_app(
-    config: &NoMistakesConfig,
-    playwright_project: Option<&str>,
-    rule_bound_names: BTreeSet<String>,
-    app_names: &BTreeSet<&str>,
-) -> Result<Option<String>> {
-    let label = playwright_project.unwrap_or("<default>");
-
-    if let Some(explicit) = playwright_project
-        .and_then(|project| config.tests.playwright.apps.get(project))
-        .and_then(|binding| binding.project.clone())
-    {
-        if !app_names.is_empty() && !app_names.contains(explicit.as_str()) {
-            return Err(anyhow!(
-                "`tests.playwright.apps.{label}.project` names `{explicit}`, which is not a \
-                 configured `type: nextjs` project ({}).\nFix one of:\n  \
-                 - correct the name\n  \
-                 - add `projects.{explicit}` with `type: nextjs`",
-                app_names.iter().copied().collect::<Vec<_>>().join(", "),
-            ));
-        }
-        return Ok(Some(explicit));
-    }
-
-    if !rule_bound_names.is_empty() {
-        let named: BTreeSet<&String> = rule_bound_names
-            .iter()
-            .filter(|name| app_names.contains(name.as_str()))
-            .collect();
-        return match named.len() {
-            0 => Err(anyhow!(
-                "rule `projects:` for Playwright project `{label}` ({}) does not name any \
-                 configured `type: nextjs` project; playwright-coverage, \
-                 playwright-unique-test-ids, playwright-unique-html-ids, and \
-                 playwright-prefer-test-id-locators need a frontend app to analyze.",
-                rule_bound_names
-                    .iter()
-                    .cloned()
-                    .collect::<Vec<_>>()
-                    .join(", "),
-            )),
-            1 => Ok(named.into_iter().next().cloned()),
-            _ => {
-                Err(anyhow!(
-                "Playwright project `{label}` is bound to more than one frontend app ({}) across \
-                 its rule applications; a Playwright project can exercise at most one app. Set \
-                 `tests.playwright.apps.{label}.project` to pick one explicitly.",
-                named.iter().map(|s| s.as_str()).collect::<Vec<_>>().join(", "),
-            ))
-            }
-        };
-    }
-
-    match app_names.len() {
-        0 => Ok(None),
-        1 => Ok(app_names.iter().next().map(|name| (*name).to_string())),
-        _ => Err(anyhow!(
-            "cannot resolve which frontend app Playwright project `{label}` exercises: {} \
-             `type: nextjs` projects are configured ({}).\nFix one of:\n  \
-             - add `projects: [<nextjs project>]` to the rule application\n  \
-             - set `tests.playwright.apps.{label}.project`",
-            app_names.len(),
-            app_names.iter().copied().collect::<Vec<_>>().join(", "),
-        )),
     }
 }
 

@@ -59,6 +59,7 @@ pub(crate) fn plan_args_for(
         direct_test_owner: false,
         format: None,
         json: false,
+        include_comment: false,
     }
 }
 

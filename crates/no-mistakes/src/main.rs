@@ -3,6 +3,7 @@ mod check_discovery;
 mod check_parallel;
 mod check_runner;
 mod check_tasks;
+mod config_cmd;
 mod data_pw;
 mod effects;
 mod fetches;
@@ -86,6 +87,8 @@ enum Command {
     Swift(swift::SwiftArgs),
     /// Run configured project checks.
     Check(check::CheckArgs),
+    /// Dump the effective resolved configuration.
+    Config(config_cmd::ConfigArgs),
     /// Plan, explain, and visualize test impacts based on changed files.
     #[command(alias = "test")]
     Tests(TestsArgs),
@@ -188,6 +191,7 @@ fn run_domain_command(command: Command) -> Result<CommandDispatch> {
         Command::Infra(args) => infra::run(args),
         Command::Swift(args) => swift::run(args),
         Command::Check(args) => check::run(args),
+        Command::Config(args) => config_cmd::run(args),
         Command::Tests(args) => tests_run(args),
         Command::Lockfile(args) => lockfile::run(args),
         Command::Ci(args) => ci_run(args),

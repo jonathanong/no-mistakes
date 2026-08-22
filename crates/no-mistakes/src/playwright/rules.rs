@@ -137,10 +137,14 @@ fn check_selection_with_facts(
     }?;
     let report_findings = findings_from_report(
         &analysis,
-        selection.coverage,
         selection.unique_test_ids,
         selection.unique_html_ids,
         selection.prefer_test_id_locators,
+        crate::playwright::rule_findings::CoverageFindingOptions {
+            enabled: selection.coverage,
+            routes: selection.cover_routes,
+            selectors: selection.cover_selectors,
+        },
     );
     filter_rule_findings(root, config, report_findings)
 }

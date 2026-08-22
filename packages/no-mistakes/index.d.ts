@@ -24,6 +24,7 @@ import type {
   ResolveCheckFilesOptions,
   ResolveCheckResult,
   ResolveCheckBatchResult,
+  ResolvedConfig,
   GraphEdge,
   PlaywrightOptions,
   PlaywrightRelatedOptions,
@@ -98,6 +99,9 @@ export function resolveCheck(
 export function fetches(options?: WithInvocationOptions<FetchesOptions>): Promise<FetchReport>;
 export function flow(options: WithInvocationOptions<FlowOptions>): Promise<FlowReport>;
 export function check(options?: WithInvocationOptions<CheckOptions>): Promise<CheckReport>;
+export function resolveConfig(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<ResolvedConfig>;
 export function validateMermaidMarkdown(
   options: WithInvocationOptions<MermaidValidationOptions>,
 ): Promise<MermaidValidationResult>;

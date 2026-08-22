@@ -1,4 +1,4 @@
-use super::{nonzero_seconds, InvocationArgs, DEFAULT_TIMEOUT_SECONDS};
+use super::{nonzero_seconds, InvocationArgs};
 use anyhow::{anyhow, Context, Result};
 use serde_json::{Map, Value};
 use std::time::Duration;
@@ -73,8 +73,7 @@ fn take_jobs(object: &mut Map<String, Value>) -> Result<Option<usize>> {
 
 fn take_timeout(object: &mut Map<String, Value>, key: &str) -> Result<Option<Duration>> {
     match object.remove(key) {
-        None => Ok(Some(Duration::from_secs(DEFAULT_TIMEOUT_SECONDS))),
-        Some(Value::Null) => Ok(None),
+        None | Some(Value::Null) => Ok(None),
         Some(Value::Number(value)) => {
             let seconds = value.as_u64().with_context(|| {
                 format!("invalid options JSON: {key} must be a non-negative integer or null")

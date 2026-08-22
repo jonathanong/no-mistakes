@@ -45,16 +45,20 @@ fn route_root_falls_back_to_app_layout() {
     assert_eq!(apps[0].route_root, "web/app");
 }
 
-/// Neither `src/app` nor `app` exists: the route root falls back to the
-/// package root itself, matching the pre-#625 default.
+/// Neither `src/app` nor `app` exists on a named `type: nextjs` project: fail
+/// closed instead of treating the package root as routes (#625).
 #[test]
-fn route_root_falls_back_to_package_root_when_no_app_dir() {
+fn named_project_without_app_dir_is_an_error() {
     let dir = fixture("frontend-apps-no-app-dir");
     let cfg = load_v2_config(&dir, None).unwrap();
     let visible = discover_visible_paths(&dir);
-    let apps = frontend_apps(&dir, &cfg, &visible).unwrap();
-    assert_eq!(apps.len(), 1);
-    assert_eq!(apps[0].route_root, "web");
+    let error = frontend_apps(&dir, &cfg, &visible).unwrap_err();
+    let message = format!("{error:#}");
+    assert!(message.contains("src/app"), "{message}");
+    assert!(
+        message.contains("frontendRoot") || message.contains("app"),
+        "{message}"
+    );
 }
 
 /// No `type: nextjs` project is configured at all: a single anonymous app is

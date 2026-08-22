@@ -1,7 +1,8 @@
 pub use super::test_plan::{
-    TestPlanConfig, TestPlanDependencies, TestPlanEnvironment, TestPlanFrameworkConfig,
-    TestPlanGroup, TestPlanGroupType, TestPlanIgnoredChangedTestsFramework, TestPlanLimit,
-    TestPlanPercent, TestPlanProjectDependency, TestPlanTargetedProjectDependency,
+    NamedFullSuiteTrigger, TestPlanConfig, TestPlanDependencies, TestPlanEnvironment,
+    TestPlanFrameworkConfig, TestPlanGroup, TestPlanGroupType,
+    TestPlanIgnoredChangedTestsFramework, TestPlanLimit, TestPlanPercent,
+    TestPlanProjectDependency, TestPlanTargetedProjectDependency,
 };
 
 use serde::{Deserialize, Serialize};
@@ -17,9 +18,9 @@ pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use tests_config::{
     DotnetConfig, DotnetProjectConfig, GoConfig, ImpactConfig, JestConfig, PhpConfig,
-    PlaywrightAppBinding, PlaywrightSelectorWrapper, PlaywrightSelectors, PlaywrightTestConfig,
-    PythonConfig, RailsConfig, RustLangConfig, StorybookConfig, SwiftConfig, TestProjectPolicy,
-    Tests, VitestConfig,
+    PlaywrightAppBinding, PlaywrightCoverageConfig, PlaywrightSelectorWrapper, PlaywrightSelectors,
+    PlaywrightTestConfig, PythonConfig, RailsConfig, RustLangConfig, StorybookConfig, SwiftConfig,
+    TestProjectPolicy, Tests, VitestConfig,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
@@ -236,5 +237,6 @@ impl NoMistakesConfig {
                 .iter()
                 .any(|project| self.projects.contains_key(project))
             || rule_targets::rule_has_effective_test_target(rule)
+            || rule_targets::rule_has_playwright_apps_target(rule, self)
     }
 }

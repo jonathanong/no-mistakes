@@ -43,10 +43,11 @@ const {
     root: process.cwd(),
     files: ["src/main.mts"],
     relationships: ["import"],
-    timeout: 30,
-    lockTimeout: 30,
-  });
   const tests = await dependents({
+    root: process.cwd(),
+    files: ["src/utils.mts"],
+    tests: ["vitest"],
+  });
     root: process.cwd(),
     files: ["src/utils.mts"],
     tests: ["vitest"],
@@ -121,10 +122,11 @@ const {
 
 CLI and Node analyses share a per-user machine-wide lock. CLI flags
 `--timeout`, `--lock-timeout`, and `--fail-on-lock` have Node equivalents
-`timeout`, `lockTimeout`, and `failOnLock`. Both timeouts default to 30 seconds;
-`0` disables either CLI timeout, while `0` or `null` disables it in Node.
-Waiting does not alter successful output, and Node lock/timeout failures reject
-the returned Promise.
+`timeout`, `lockTimeout`, and `failOnLock`. CLI timeouts default to 30 seconds;
+Node/N-API omits both deadlines unless you set them. `0` disables either CLI
+timeout, while `0` or `null` disables it in Node. While waiting, stderr reports
+the holder pid and elapsed seconds. Waiting does not alter successful output,
+and Node lock/timeout failures reject the returned Promise.
 
 Dependency graph, query, and test-planning resolution is per workspace by
 default: when `tsconfig` is omitted, each import uses the config that owns its

@@ -6,6 +6,11 @@ use std::sync::Arc;
 #[path = "module_resolution_catalog.rs"]
 mod catalog;
 use catalog::CatalogModuleResolver;
+#[path = "module_resolution_path.rs"]
+mod path_match;
+use path_match::{
+    identity_from_resolver, looks_like_repo_relative_module, path_ends_with_module, ModuleIdentity,
+};
 
 #[cfg(test)]
 #[path = "module_resolution_test_support.rs"]
@@ -73,7 +78,12 @@ impl PlaywrightModuleResolution {
             self.identity(configured, importing_file),
             self.identity(imported, importing_file),
         ) {
-            (Some(configured), Some(imported)) => configured == imported,
+            (Some(configured_id), Some(imported_id)) => configured_id == imported_id,
+            (_, Some(ModuleIdentity::Path(imported_path)))
+                if looks_like_repo_relative_module(configured) =>
+            {
+                path_ends_with_module(&imported_path, configured)
+            }
             _ => false,
         }
     }
@@ -107,39 +117,6 @@ impl PlaywrightModuleResolution {
             }
         }
     }
-}
-
-#[derive(PartialEq)]
-enum ModuleIdentity {
-    Path(PathBuf),
-    External(String),
-}
-
-fn identity_from_resolver(
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-    specifier: &str,
-    importing_file: &Path,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
-    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
-) -> Option<ModuleIdentity> {
-    let classification =
-        resolver.classify_import(specifier, importing_file, workspace, visible_files);
-    if let Some(path) = classification.preferred_path() {
-        return remapper.remap(path).map(ModuleIdentity::Path);
-    }
-    (classification.is_unresolved_external() && is_external_terminal(resolver, specifier))
-        .then(|| ModuleIdentity::External(specifier.to_string()))
-}
-
-fn is_external_terminal(
-    resolver: &crate::codebase::ts_resolver::ImportResolver<'_>,
-    specifier: &str,
-) -> bool {
-    !specifier.starts_with('.')
-        && !specifier.starts_with('/')
-        && !specifier.starts_with('#')
-        && !resolver.matches_alias(specifier)
 }
 
 impl PlaywrightFactPlan {

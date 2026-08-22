@@ -226,7 +226,15 @@ fn reads_yaml_and_finds_default_playwright_config() {
     assert!(settings.html_ids);
     assert_eq!(settings.selector_roots, vec!["web/components"]);
     assert_eq!(settings.selector_include, vec!["web/components/**/*.tsx"]);
-    assert_eq!(settings.selector_exclude, vec!["**/*.test.tsx"]);
+    assert_eq!(
+        settings.selector_exclude,
+        vec![
+            "**/*.test.tsx".to_string(),
+            "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts}".to_string(),
+            "**/*.test.*".to_string(),
+            "**/*.spec.*".to_string(),
+        ]
+    );
     assert_eq!(
         settings.playwright_configs,
         vec![root.join("playwright.config.mts")]

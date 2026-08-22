@@ -29,6 +29,7 @@ fn vitest_setup_args(root: PathBuf, changed_file: Vec<PathBuf>) -> PlanArgs {
         direct_test_owner: false,
         format: None,
         json: false,
+        include_comment: false,
     }
 }
 
@@ -383,6 +384,7 @@ fn dependency_trigger_ignores_changed_test_discovery_errors_for_source_changes()
         direct_test_owner: false,
         format: None,
         json: false,
+        include_comment: false,
     };
     let prepared = crate::tests::prepared_plan::PreparedTestPlanRequest::prepare(&plan_args)
         .expect("fixture request should prepare");
@@ -470,6 +472,7 @@ fn explicit_ignored_changed_sources_impact_visible_tests_without_ignored_shadows
             direct_test_owner: false,
             format: None,
             json: false,
+            include_comment: false,
         })
         .unwrap();
         let selected = plan

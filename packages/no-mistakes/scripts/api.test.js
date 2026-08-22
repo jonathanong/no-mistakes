@@ -102,6 +102,8 @@ test("programmatic API proxies object options through async native addon calls",
       fetchesJson: async (json) =>
         JSON.stringify({ command: "fetches", options: JSON.parse(json) }),
       checkJson: async (json) => JSON.stringify({ command: "check", options: JSON.parse(json) }),
+      resolveConfigJson: async (json) =>
+        JSON.stringify({ command: "resolveConfig", options: JSON.parse(json) }),
       validateMermaidMarkdownJson: async (json) =>
         JSON.stringify({ command: "validateMermaidMarkdown", options: JSON.parse(json) }),
       testsPlanJson: async (json) =>
@@ -258,6 +260,7 @@ test("programmatic API proxies object options through async native addon calls",
       command: "check",
       options: { tsconfig: "tsconfig.json", includeSuppressed: true },
     });
+    assert.equal((await api.resolveConfig({ root: "." })).command, "resolveConfig");
     assert.deepEqual(
       await api.validateMermaidMarkdown({ content: "diagram source", file: "docs/design.md" }),
       {

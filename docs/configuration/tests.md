@@ -32,6 +32,13 @@ tests:
 
 Selector settings feed Playwright coverage, route impact, and graph edges.
 
+`tests.playwright.coverage.routes` and `tests.playwright.coverage.selectors`
+default to `true`. Set `routes: false` to skip uncovered-route *findings*
+while keeping `[route]` graph edges used by `tests plan`. `ignoreRoutes`
+remains for specific path exceptions. Test-file globs
+(`**/*.{test,spec}.{ts,tsx}`) are excluded from selector *declaration* scans
+by default; they still count as coverage evidence.
+
 Language frontends are explicit. Empty lists disable analysis:
 
 ```yaml
@@ -195,8 +202,9 @@ rules:
       playwright: [agent]
 ```
 
-Or bind per Playwright project directly under `tests.playwright.apps`, which
-does not require `rules[].projects` at all:
+Or bind per Playwright project directly under `tests.playwright.apps`. A
+single unbound rule (`- rule: playwright-coverage` with no
+`tests.playwright` list) then applies once per `apps` entry:
 
 ```yaml
 tests:
@@ -206,6 +214,8 @@ tests:
         project: control-web
       agent:
         project: agent-web
+rules:
+  - rule: playwright-coverage
 ```
 
 Each entry under `tests.playwright.apps.<name>` accepts:

@@ -49,6 +49,17 @@ pub(crate) fn check_json_impl(options_json: String) -> napi::Result<String> {
     to_pretty_json(&crate::check_runner::json_value(&results))
 }
 
+pub(crate) fn resolve_config_json_impl(options_json: String) -> napi::Result<String> {
+    let options = parse_options::<ProjectOptions>(&options_json)?;
+    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
+    let report = crate::config::resolved::resolve_config(
+        &root,
+        options.config.map(PathBuf::from).as_deref(),
+    )
+    .map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
 pub(crate) fn tests_plan_json_impl(options_json: String) -> napi::Result<String> {
     let options = parse_options::<TestsPlanOptions>(&options_json)?;
     let args = build_plan_args(options).map_err(to_napi_error)?;

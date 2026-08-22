@@ -34,9 +34,12 @@ fn napi_zero_and_null_disable_timeouts() {
 }
 
 #[test]
-fn napi_missing_controls_use_defaults() {
+fn napi_missing_controls_disable_timeouts() {
     let (_, options) = extract_napi_options("{}".to_string()).unwrap();
-    assert_eq!(options, InvocationOptions::default());
+    assert_eq!(options.timeout, None);
+    assert_eq!(options.lock_timeout, None);
+    assert!(!options.fail_on_lock);
+    assert_eq!(options.jobs, None);
 }
 
 #[test]
