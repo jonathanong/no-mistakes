@@ -1,4 +1,6 @@
 use super::sql_has_offset_clause;
+use super::walk::set_expr_has_offset;
+use sqlparser::ast::{Ident, SetExpr, Statement, Table};
 
 #[test]
 fn offset_keyword_is_detected() {
@@ -302,4 +304,17 @@ fn function_args_and_modifying_cte_offsets_are_detected() {
         "SELECT * FROM generate_series(1, (SELECT id FROM limits OFFSET 1 LIMIT 1)) AS g"
     )
     .unwrap());
+}
+
+#[test]
+fn table_and_merge_set_exprs_are_clean() {
+    assert!(!set_expr_has_offset(&SetExpr::Table(Box::new(Table {
+        table_name: Some("posts".into()),
+        schema_name: None,
+    }))));
+    assert!(!set_expr_has_offset(&SetExpr::Merge(
+        Statement::Savepoint {
+            name: Ident::new("s"),
+        }
+    )));
 }
