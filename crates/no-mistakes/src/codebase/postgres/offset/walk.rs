@@ -16,12 +16,14 @@ pub(super) fn query_has_offset(query: &Query) -> bool {
     }) {
         return true;
     }
-    if let Some(order_by) = &query.order_by {
-        if let sqlparser::ast::OrderByKind::Expressions(exprs) = &order_by.kind {
-            if exprs.iter().any(|item| expr_has_offset_query(&item.expr)) {
-                return true;
-            }
-        }
+    if query.order_by.as_ref().is_some_and(|order_by| {
+        matches!(
+            &order_by.kind,
+            sqlparser::ast::OrderByKind::Expressions(exprs)
+                if exprs.iter().any(|item| expr_has_offset_query(&item.expr))
+        )
+    }) {
+        return true;
     }
     set_expr_has_offset(&query.body)
 }
@@ -111,9 +113,11 @@ fn table_factor_has_offset(factor: &TableFactor) -> bool {
         TableFactor::Table {
             args: Some(TableFunctionArgs { args, .. }),
             ..
-        } => args.iter().any(|arg| match arg {
-            FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => expr_has_offset_query(expr),
-            _ => false,
+        } => args.iter().any(|arg| {
+            matches!(
+                arg,
+                FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) if expr_has_offset_query(expr)
+            )
         }),
         _ => false,
     }
