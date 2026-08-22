@@ -16,15 +16,18 @@ fn parse_chunk(chunk: Vec<Token>) -> Vec<Statement> {
             .filter(|statement| !is_begin_or_end(statement))
             .collect();
     }
-    let recovered = recover_chr_encoded(&chunk);
-    if !recovered.is_empty() {
-        return recovered;
-    }
     let dialect = PostgreSqlDialect {};
     let mut parser = Parser::new(&dialect).with_tokens(chunk.clone());
     match parser.parse_statement() {
         Ok(statement) if matches!(parser.peek_token().token, Token::EOF) => vec![statement],
-        _ => recover_schema_ddl(&chunk).into_iter().collect(),
+        _ => {
+            let recovered = recover_chr_encoded(&chunk);
+            if recovered.is_empty() {
+                recover_schema_ddl(&chunk).into_iter().collect()
+            } else {
+                recovered
+            }
+        }
     }
 }
 
@@ -58,7 +61,9 @@ fn peel_do_body(tokens: &[Token]) -> Option<String> {
 }
 
 fn recover_chr_encoded(tokens: &[Token]) -> Vec<Statement> {
-    concatenated_strings(tokens)
+    let mut rewritten = tokens.to_vec();
+    super::rewrite_chr_tokens(&mut rewritten);
+    concatenated_strings(&rewritten)
         .map(|sql| super::parse_postgres_sql_lenient(&sql))
         .unwrap_or_default()
 }

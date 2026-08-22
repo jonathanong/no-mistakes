@@ -90,6 +90,25 @@ fn recover_chr_concatenations_as_sql() {
 }
 
 #[test]
+fn parse_chunks_recovers_chr_encoded_schema_after_ordinary_parse_fails() {
+    let sql = "chr(67)||chr(82)||chr(69)||chr(65)||chr(84)||chr(69)||' TABLE t (id int)'";
+    let statements = super::parse_chunks(vec![tokens(sql)]);
+    assert_eq!(statements.len(), 1, "{statements:#?}");
+    assert!(matches!(
+        statements[0],
+        sqlparser::ast::Statement::CreateTable(_)
+    ));
+}
+
+#[test]
+fn concatenated_strings_joins_dollar_quoted_literals() {
+    assert_eq!(
+        super::concatenated_strings(&tokens("$$CREATE$$ || $$ TABLE t (id int)$$")),
+        Some("CREATE TABLE t (id int)".to_string())
+    );
+}
+
+#[test]
 fn parse_chunks_recovers_alter_when_begin_would_swallow_the_body() {
     let statements = super::parse_chunks(vec![tokens(
         "BEGIN IF NOT EXISTS (SELECT 1) THEN ALTER TABLE t ADD CONSTRAINT c CHECK (true) NOT VALID",
