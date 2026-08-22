@@ -25,7 +25,7 @@ pub(super) fn identities_match(
 ) -> bool {
     match (configured, imported) {
         (Some(configured_id), Some(imported_id)) => configured_id == imported_id,
-        (_, Some(ModuleIdentity::Path(imported_path)))
+        (None, Some(ModuleIdentity::Path(imported_path)))
             if looks_like_repo_relative_module(configured_specifier) =>
         {
             path_ends_with_module(&imported_path, configured_specifier)
