@@ -136,6 +136,44 @@ fn collect_trpc_edges_skip_missing_config_facts_and_invalid_globs() {
 }
 
 #[test]
+fn collect_trpc_edges_skips_unmatched_globs_missing_facts_and_unknown_calls() {
+    let outside = PathBuf::from("/elsewhere/skip.ts");
+    let client = PathBuf::from("/repo/src/client.ts");
+    let unfacted = PathBuf::from("/repo/src/unfacted.ts");
+    let files = GraphFiles::from_files(vec![outside.clone(), client.clone(), unfacted]);
+    let facts = crate::codebase::ts_source::facts::TsFactMap::from([
+        (
+            outside.clone(),
+            crate::codebase::ts_source::facts::TsFileFacts {
+                trpc_procedures: vec!["user.get".into()],
+                ..crate::codebase::ts_source::facts::TsFileFacts::default()
+            },
+        ),
+        (
+            client.clone(),
+            crate::codebase::ts_source::facts::TsFileFacts {
+                trpc_calls: vec![crate::codebase::ts_trpc::TrpcCallFact {
+                    path: "missing".into(),
+                }],
+                ..crate::codebase::ts_source::facts::TsFileFacts::default()
+            },
+        ),
+    ]);
+    let options = GraphConfigOptions {
+        trpc_routers: vec!["src/**".into()],
+        ..GraphConfigOptions::default()
+    };
+    assert!(collect_trpc_edges(
+        std::path::Path::new("/repo"),
+        &files,
+        Some(&facts),
+        Some(&options),
+        &crate::codebase::analysis_session::PathInterner::new(),
+    )
+    .is_empty());
+}
+
+#[test]
 fn trpc_fact_context_is_opt_in_even_when_routers_are_configured() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("trpc-basic"));
     let options = graph_config_options(&root).unwrap();

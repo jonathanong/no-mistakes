@@ -59,6 +59,7 @@ router({
   ...extra,
 });
 notARouter({ skip: procedure.query(() => null) });
+(getRouter())({ health: procedure.query(() => null) });
 "#,
     );
     assert!(facts.procedures.is_empty());

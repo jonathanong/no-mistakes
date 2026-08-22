@@ -45,6 +45,9 @@ mod tests_types {
             trpc.display_name(Path::new("src")),
             "index.ts#procedure:user.get"
         );
+        let universe: crate::fx::PathSet = [PathBuf::from("src/index.ts")].into_iter().collect();
+        assert!(trpc.is_in_file_universe(&universe));
+        assert!(!NodeId::trpc_procedure("src/other.ts", "user.get").is_in_file_universe(&universe));
     }
 
     #[test]
