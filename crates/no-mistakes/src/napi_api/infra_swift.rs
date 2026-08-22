@@ -9,7 +9,9 @@ use napi_derive::napi;
 
 #[cfg(not(coverage))]
 use super::async_task::JsonValueTask;
-use super::options::{parse_options, parse_options_value, resolve_project_root, to_napi_error};
+#[cfg(test)]
+use super::options::parse_options;
+use super::options::{parse_options_value, resolve_project_root, to_napi_error};
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]

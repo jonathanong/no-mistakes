@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
-use no_mistakes::cli::{resolve_root, Format};
+use no_mistakes::cli::{print_json, resolve_root, Format};
 use no_mistakes::react_traits;
 use std::path::PathBuf;
 use std::process::ExitCode;
@@ -70,7 +70,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
             let results = react_traits::run_analyze(&root, config.as_deref(), targets, None)?;
             match effective_format {
                 Format::Json => {
-                    crate::cli::print_json(&results);
+                    print_json(&results);
                 }
                 Format::Yml => {
                     println!(
@@ -102,7 +102,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
             }
             match effective_format {
                 Format::Json => {
-                    crate::cli::print_json(&violations);
+                    print_json(&violations);
                 }
                 Format::Yml => {
                     println!(
@@ -133,7 +133,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
                 react_traits::run_usages(&root, config.as_deref(), target, scan, &include)?;
             match effective_format {
                 Format::Json => {
-                    crate::cli::print_json(&report);
+                    print_json(&report);
                 }
                 Format::Yml => {
                     println!(

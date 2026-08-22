@@ -25,6 +25,7 @@ pub fn run_json(args: TraverseArgs, direction: Direction) -> Result<String> {
     String::from_utf8(out).context("dependency JSON output must be UTF-8")
 }
 
+#[cfg(test)]
 pub(crate) fn result_json(args: &TraverseArgs, result: &TraversalResult) -> Result<String> {
     String::from_utf8(result_json_bytes(args, result)?)
         .context("dependency JSON output must be UTF-8")
