@@ -128,14 +128,14 @@ fn unconfigured_trpc_does_not_change_import_edges() {
     let (_, trpc_graph) = trpc_graph("trpc-unconfigured", trpc_plan);
     let client = NodeId::file(root.join("src/client.ts"));
     let import_filter: std::collections::HashSet<EdgeKind> = [EdgeKind::Import].into();
-    let left = import_graph.deps_of(&[client.clone()], None, Some(&import_filter));
-    let right = trpc_graph.deps_of(&[client.clone()], None, Some(&import_filter));
+    let left = import_graph.deps_of(std::slice::from_ref(&client), None, Some(&import_filter));
+    let right = trpc_graph.deps_of(std::slice::from_ref(&client), None, Some(&import_filter));
     assert_eq!(left, right);
 
     let trpc_filter: std::collections::HashSet<EdgeKind> =
         [EdgeKind::TrpcCall, EdgeKind::TrpcProcedure].into();
     assert!(trpc_graph
-        .deps_of(&[client], None, Some(&trpc_filter))
+        .deps_of(std::slice::from_ref(&client), None, Some(&trpc_filter))
         .is_empty());
 }
 
