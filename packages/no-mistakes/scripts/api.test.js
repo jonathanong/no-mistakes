@@ -592,6 +592,18 @@ test("graph declarations expose GitHub Actions workflow relationships and virtua
   assert.match(flowDeclarations, /step\?: number;/);
 });
 
+test("graph declarations expose tRPC relationships and virtual nodes", () => {
+  const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  const flowDeclarations = readFileSync(join(packageRoot, "flow-types.d.ts"), "utf8");
+
+  assert.match(traversalDeclarations, /\| "trpc"/);
+  assert.match(traversalDeclarations, /routerFile\?: string;/);
+  assert.match(traversalDeclarations, /procedure\?: string;/);
+  assert.match(flowDeclarations, /"trpc-procedure"/);
+  assert.match(flowDeclarations, /routerFile\?: string;/);
+  assert.match(flowDeclarations, /procedure\?: string;/);
+});
+
 test("declarations expose invocation controls on every analysis", () => {
   const indexDeclarations = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
   const invocationDeclarations = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");

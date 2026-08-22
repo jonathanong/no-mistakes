@@ -27,6 +27,10 @@ pub enum NodeId {
         job: Arc<str>,
         step: usize,
     },
+    TrpcProcedure {
+        router_file: Arc<Path>,
+        procedure: Arc<str>,
+    },
 }
 
 include!("types_node_id.rs");
@@ -36,7 +40,7 @@ impl NodeId {
         match self {
             NodeId::File(p) => Some(p.as_ref()),
             NodeId::Symbol { file, .. } => Some(file.as_ref()),
-            NodeId::Module(_) | NodeId::QueueJob { .. } => None,
+            NodeId::Module(_) | NodeId::QueueJob { .. } | NodeId::TrpcProcedure { .. } => None,
             NodeId::WorkflowJob { .. } | NodeId::WorkflowStep { .. } => None,
         }
     }
@@ -46,6 +50,7 @@ impl NodeId {
             Self::File(path) | Self::Symbol { file: path, .. } => universe.contains(path.as_ref()),
             Self::Module(_) => true,
             Self::QueueJob { queue_file, .. } => universe.contains(queue_file.as_ref()),
+            Self::TrpcProcedure { router_file, .. } => universe.contains(router_file.as_ref()),
             Self::WorkflowJob { workflow_file, .. } | Self::WorkflowStep { workflow_file, .. } => {
                 universe.contains(workflow_file.as_ref())
             }
@@ -82,6 +87,15 @@ impl NodeId {
                     .strip_prefix(root)
                     .unwrap_or(workflow_file.as_ref());
                 format!("{}#job:{job}/step:{step}", rel.display())
+            }
+            NodeId::TrpcProcedure {
+                router_file,
+                procedure,
+            } => {
+                let rel = router_file
+                    .strip_prefix(root)
+                    .unwrap_or(router_file.as_ref());
+                format!("{}#procedure:{procedure}", rel.display())
             }
         }
     }

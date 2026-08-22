@@ -55,6 +55,10 @@ pub struct FlowNode {
     pub workflow_file: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub step: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub router_file: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub procedure: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, PartialOrd, Ord)]

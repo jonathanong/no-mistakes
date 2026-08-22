@@ -154,7 +154,8 @@ fn check_rule_application(
                 }
                 NodeId::QueueJob { .. }
                 | NodeId::WorkflowJob { .. }
-                | NodeId::WorkflowStep { .. } => false,
+                | NodeId::WorkflowStep { .. }
+                | NodeId::TrpcProcedure { .. } => false,
             };
             if !matched {
                 continue;

@@ -96,6 +96,10 @@ pub enum EdgeKind {
     /// deliberately test → setup so reverse impact traversal reaches the
     /// owning tests after following ordinary setup-module imports.
     VitestSetup(VitestSetupField),
+    /// Caller file → virtual tRPC procedure node.
+    TrpcCall,
+    /// Virtual tRPC procedure node → router file that declared it.
+    TrpcProcedure,
 }
 
 /// The Vitest configuration field that declared a setup dependency.
@@ -146,6 +150,8 @@ impl EdgeKind {
             Self::WorkflowRun => Some("workflow-run"),
             Self::WorkflowArtifact => Some("workflow-artifact"),
             Self::VitestSetup(_) => Some("vitest-setup"),
+            Self::TrpcCall => Some("trpc-call"),
+            Self::TrpcProcedure => Some("trpc-procedure"),
             _ => None,
         }
     }

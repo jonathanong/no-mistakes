@@ -171,5 +171,7 @@ pub(crate) fn collect_file_facts_from_program(
         react_components: Arc::unwrap_or_clone(react_components),
         effect_calls: domain.effect_calls,
         rsc_environment: domain.rsc_environment,
+        trpc_procedures: domain.trpc_procedures,
+        trpc_calls: domain.trpc_calls,
     }
 }

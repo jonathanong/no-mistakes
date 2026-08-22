@@ -19,6 +19,8 @@ impl TsFactPlan {
         self.react |= other.react;
         self.effect_calls |= other.effect_calls;
         self.rsc_environment |= other.rsc_environment;
+        self.trpc_router |= other.trpc_router;
+        self.trpc_calls |= other.trpc_calls;
     }
 
     pub fn imports() -> Self {
@@ -57,6 +59,8 @@ impl TsFactPlan {
             && !self.react
             && !self.effect_calls
             && !self.rsc_environment
+            && !self.trpc_router
+            && !self.trpc_calls
     }
 
     pub fn has_domain_facts(self) -> bool {
@@ -70,6 +74,8 @@ impl TsFactPlan {
             || self.server_routes
             || self.effect_calls
             || self.rsc_environment
+            || self.trpc_router
+            || self.trpc_calls
     }
 
     pub fn covers(self, required: Self) -> bool {
@@ -102,5 +108,7 @@ impl TsFactPlan {
             && (!required.react || self.react)
             && (!required.effect_calls || self.effect_calls)
             && (!required.rsc_environment || self.rsc_environment)
+            && (!required.trpc_router || self.trpc_router)
+            && (!required.trpc_calls || self.trpc_calls)
     }
 }

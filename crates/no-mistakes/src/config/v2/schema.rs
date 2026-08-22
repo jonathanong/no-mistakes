@@ -92,6 +92,7 @@ pub struct Project {
     pub exclude: Vec<String>,
     pub routes: Vec<String>,
     pub queues: QueueConfig,
+    pub trpc: TrpcConfig,
     pub rewrites: Vec<RewriteRule>,
 }
 
@@ -121,6 +122,8 @@ pub struct QueueConfig {
     pub workers: Vec<String>,
     pub cluster: Option<String>,
 }
+
+include!("schema_trpc.rs");
 
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 #[serde(untagged)]

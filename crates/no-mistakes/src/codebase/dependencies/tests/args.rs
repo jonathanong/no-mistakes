@@ -316,6 +316,17 @@ fn workflow_virtual_entrypoint_suffixes_round_trip() {
 }
 
 #[test]
+fn trpc_virtual_entrypoint_suffixes_round_trip() {
+    let file = Path::new("/repo/src/router.ts");
+    assert_eq!(
+        trpc_procedure_from_suffix(file, "procedure:user.get"),
+        Some(NodeId::trpc_procedure(file, "user.get"))
+    );
+    assert!(trpc_procedure_from_suffix(file, "procedure:").is_none());
+    assert!(trpc_procedure_from_suffix(file, "user.get").is_none());
+}
+
+#[test]
 fn resolve_entrypoints_promotes_workflow_suffixes_to_virtual_nodes() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

@@ -178,6 +178,12 @@ same-run artifact upload -> download edges. It omits remote `uses`,
 targets outside the tracked graph universe. `ci` remains the separate legacy
 `CiInvocation` relationship from workflow file to supported Rust Cargo binary.
 
+The graph APIs also accept `trpc`. That opt-in relationship follows static
+tRPC router procedures and client calls through virtual nodes identified as
+`router.ts#procedure:user.get`. `DependencyFile` records expose `routerFile`
+and `procedure`; `FlowNode` uses `kind: "trpc-procedure"`. `all` does not
+include `trpc`. Empty `projects.*.trpc.routers` lists disable extraction.
+
 `testsPlan(options)` returns `changed_files`, the sorted, deduplicated
 changed-file inventory prepared by that same call, relative to the request root.
 The field is present even when no tests are selected and retains deleted paths

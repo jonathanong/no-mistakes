@@ -42,6 +42,7 @@ pub enum RelationshipArg {
     Ruby,
     Php,
     Resource,
+    Trpc,
     All,
 }
 
@@ -92,6 +93,7 @@ impl RelationshipArg {
             Self::Ruby => "ruby",
             Self::Php => "php",
             Self::Resource => "resource",
+            Self::Trpc => "trpc",
             Self::All => "all",
             Self::Workflow
             | Self::WorkflowJob
@@ -154,4 +156,9 @@ fn parsed_workflow_suffix(suffix: &str) -> Option<(&str, Option<usize>)> {
         return Some((job, Some(step.parse().ok()?)));
     }
     (!suffix.is_empty()).then_some((suffix, None))
+}
+
+pub(crate) fn trpc_procedure_from_suffix(file: &Path, suffix: &str) -> Option<NodeId> {
+    let procedure = suffix.strip_prefix("procedure:")?;
+    (!procedure.is_empty()).then(|| NodeId::trpc_procedure(file, procedure))
 }

@@ -264,7 +264,7 @@ with `includeSuppressed: true`.
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
 - `--test vitest|playwright|cargo|dotnet|swift|python|go|rails|php|jest` to filter to test files.
-- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|resource|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|python|go|rust|ruby|php|all`.
+- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|trpc|resource|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|python|go|rust|ruby|php|all`.
 - `--direction deps|dependents|both` for `queues related` and `server related`.
 - `--format json|md|yml|paths|human`, `--json`, root-global `--timings` /
   `--verbose-timings` (stderr), and `--jobs`.

@@ -83,6 +83,7 @@ fn non_workflow_relationship_edges(relationship: &RelationshipArg) -> &'static [
         RelationshipArg::Ruby => &[EdgeKind::RubyRequire, EdgeKind::RubyReference],
         RelationshipArg::Php => &[EdgeKind::PhpUse, EdgeKind::PhpPackage],
         RelationshipArg::Resource => &[EdgeKind::Resource],
+        RelationshipArg::Trpc => &[EdgeKind::TrpcCall, EdgeKind::TrpcProcedure],
         RelationshipArg::Workflow
         | RelationshipArg::WorkflowJob
         | RelationshipArg::WorkflowStep

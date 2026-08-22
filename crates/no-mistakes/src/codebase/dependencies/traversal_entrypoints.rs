@@ -68,6 +68,12 @@ fn resolve_entrypoints_with_files_and_workspace(
             {
                 node = workflow_node;
                 symbol = None;
+            } else if let Some(trpc_node) = symbol
+                .as_deref()
+                .and_then(|suffix| trpc_procedure_from_suffix(&file, suffix))
+            {
+                node = trpc_node;
+                symbol = None;
             } else if include_symbols {
                 if let (NodeId::File(file), Some(symbol)) = (&node, &symbol) {
                     node = NodeId::symbol_in(interner, file.clone(), symbol.clone());

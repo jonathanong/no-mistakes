@@ -104,6 +104,8 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             job: None,
             workflow_file: None,
             step: None,
+            router_file: None,
+            procedure: None,
         },
         NodeId::Symbol { file, symbol } => FlowNode {
             id,
@@ -116,6 +118,8 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             job: None,
             workflow_file: None,
             step: None,
+            router_file: None,
+            procedure: None,
         },
         NodeId::Module(module) => FlowNode {
             id,
@@ -128,6 +132,8 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             job: None,
             workflow_file: None,
             step: None,
+            router_file: None,
+            procedure: None,
         },
         NodeId::QueueJob { queue_file, job } => FlowNode {
             id,
@@ -140,6 +146,8 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             job: Some(job.to_string()),
             workflow_file: None,
             step: None,
+            router_file: None,
+            procedure: None,
         },
         NodeId::WorkflowJob { workflow_file, job } => FlowNode {
             id,
@@ -152,6 +160,8 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             job: Some(job.to_string()),
             workflow_file: Some(relative(root, workflow_file)),
             step: None,
+            router_file: None,
+            procedure: None,
         },
         NodeId::WorkflowStep {
             workflow_file,
@@ -168,6 +178,25 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             job: Some(job.to_string()),
             workflow_file: Some(relative(root, workflow_file)),
             step: Some(*step),
+            router_file: None,
+            procedure: None,
+        },
+        NodeId::TrpcProcedure {
+            router_file,
+            procedure,
+        } => FlowNode {
+            id,
+            kind: "trpc-procedure",
+            depth,
+            file: None,
+            symbol: None,
+            module: None,
+            queue_file: None,
+            job: None,
+            workflow_file: None,
+            step: None,
+            router_file: Some(relative(root, router_file)),
+            procedure: Some(procedure.to_string()),
         },
     }
 }
