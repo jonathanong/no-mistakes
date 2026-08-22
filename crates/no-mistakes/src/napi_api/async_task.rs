@@ -1,6 +1,7 @@
 use napi::bindgen_prelude::Buffer;
 use napi::{Env, Task};
 
+#[cfg_attr(not(test), allow(dead_code))]
 pub struct JsonTask {
     options_json: Buffer,
     run: fn(String) -> napi::Result<String>,
@@ -43,12 +44,14 @@ impl Task for JsonValueTask {
     }
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 impl JsonTask {
     pub(crate) fn new(options_json: Buffer, run: fn(String) -> napi::Result<String>) -> Self {
         Self { options_json, run }
     }
 }
 
+#[cfg_attr(not(test), allow(dead_code))]
 impl Task for JsonTask {
     type Output = Buffer;
     type JsValue = Buffer;
