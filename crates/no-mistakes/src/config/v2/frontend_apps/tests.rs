@@ -47,8 +47,8 @@ fn route_root_falls_back_to_app_layout() {
 
 /// Neither `src/app` nor `app` exists on a named `type: nextjs` project:
 /// `frontend_apps` still falls back to the package root so graph/check
-/// consumers keep working. Playwright `frontendRoot` overrides still win
-/// when configured.
+/// consumers keep working. Playwright `frontendRoot` is per binding and
+/// must not mutate this shared app.
 #[test]
 fn named_project_without_app_dir_falls_back_to_package_root() {
     let dir = fixture("frontend-apps-no-app-dir");
@@ -61,7 +61,7 @@ fn named_project_without_app_dir_falls_back_to_package_root() {
 }
 
 #[test]
-fn named_project_uses_playwright_frontend_root_override() {
+fn playwright_frontend_root_does_not_mutate_shared_app() {
     let dir = fixture("frontend-apps-no-app-dir");
     let mut cfg = load_v2_config(&dir, None).unwrap();
     cfg.tests.playwright.apps.insert(
@@ -72,10 +72,17 @@ fn named_project_uses_playwright_frontend_root_override() {
             ..PlaywrightAppBinding::default()
         },
     );
+    cfg.tests.playwright.apps.insert(
+        "firefox".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
     let visible = discover_visible_paths(&dir);
     let apps = frontend_apps(&dir, &cfg, &visible).unwrap();
     assert_eq!(apps.len(), 1);
-    assert_eq!(apps[0].route_root, "web/pages");
+    assert_eq!(apps[0].route_root, "web");
 }
 
 /// No `type: nextjs` project is configured at all: a single anonymous app is

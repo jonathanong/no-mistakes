@@ -1,5 +1,5 @@
 use super::*;
-use crate::config::v2::schema::{PlaywrightAppBinding, RuleDef, RuleTestTargets};
+use crate::config::v2::schema::{PlaywrightAppBinding, RewriteRule, RuleDef, RuleTestTargets};
 
 fn app(project: &str) -> FrontendApp {
     FrontendApp {
@@ -251,4 +251,34 @@ fn explicit_apps_binding_naming_an_unconfigured_project_is_an_error() {
     assert!(message.contains("typo-web"), "{message}");
     assert!(message.contains("agent-web"), "{message}");
     assert!(message.contains("control-web"), "{message}");
+}
+
+/// An apps entry that sets frontendRoot, selectorRoots, and rewrites without
+/// naming a `project` is fully explicit: settings resolution does not need
+/// a frontend app, so unbound-rule fan-out must not fail on app count.
+#[test]
+fn fully_explicit_apps_binding_skips_app_ambiguity() {
+    let mut config = NoMistakesConfig {
+        rules: vec![rule(PLAYWRIGHT_COVERAGE, vec![], vec![])],
+        ..NoMistakesConfig::default()
+    };
+    config.tests.playwright.apps.insert(
+        "control".to_string(),
+        PlaywrightAppBinding {
+            frontend_root: Some("explicit/route".to_string()),
+            selector_roots: vec!["explicit/selectors".to_string()],
+            rewrites: vec![RewriteRule {
+                source: "/a".to_string(),
+                destination: "/b".to_string(),
+            }],
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    let apps = vec![app("agent-web"), app("control-web")];
+
+    let selections = rule_selections(&config, &apps).unwrap();
+
+    assert_eq!(selections.len(), 1);
+    assert_eq!(selections[0].playwright_project.as_deref(), Some("control"));
+    assert_eq!(selections[0].app, None);
 }

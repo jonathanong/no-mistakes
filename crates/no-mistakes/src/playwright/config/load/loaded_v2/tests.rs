@@ -1,5 +1,7 @@
 use super::*;
-use crate::config::v2::schema::{Project, ProjectType, RewriteRule, RuleDef, RuleTestTargets};
+use crate::config::v2::schema::{
+    PlaywrightAppBinding, Project, ProjectType, RewriteRule, RuleDef, RuleTestTargets,
+};
 use crate::playwright::fsutil::VisiblePathSnapshot;
 use std::collections::BTreeMap;
 
@@ -192,4 +194,53 @@ fn apps_map_alone_opts_into_v2_resolution() {
     .unwrap();
 
     assert_eq!(settings.frontend_root, "web/src/app");
+}
+
+/// Two Playwright projects can bind the same Next.js project; a
+/// `frontendRoot` on one binding must not leak into the other's settings.
+#[test]
+fn playwright_frontend_root_override_stays_on_its_binding() {
+    let mut config = NoMistakesConfig {
+        projects: BTreeMap::from([("web".to_string(), nextjs_project("web"))]),
+        ..NoMistakesConfig::default()
+    };
+    config.tests.playwright.apps.insert(
+        "chromium".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            frontend_root: Some("web/pages".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    config.tests.playwright.apps.insert(
+        "firefox".to_string(),
+        PlaywrightAppBinding {
+            project: Some("web".to_string()),
+            ..PlaywrightAppBinding::default()
+        },
+    );
+    let root = Path::new("/repo");
+    let snapshot = VisiblePathSnapshot::from_paths(root, &[]);
+
+    let chromium = settings_from_v2(
+        root,
+        &config,
+        &[],
+        Some("chromium".to_string()),
+        None,
+        &snapshot,
+    )
+    .unwrap();
+    let firefox = settings_from_v2(
+        root,
+        &config,
+        &[],
+        Some("firefox".to_string()),
+        None,
+        &snapshot,
+    )
+    .unwrap();
+
+    assert_eq!(chromium.frontend_root, "web/pages");
+    assert_eq!(firefox.frontend_root, "web");
 }

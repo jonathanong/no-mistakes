@@ -7,12 +7,14 @@ use std::collections::BTreeSet;
 ///
 /// 1. `tests.playwright.apps.<playwright_project>.project` — fully explicit,
 ///    always wins outright (no ambiguity check against rule bindings).
-/// 2. The frontend-app names collected from every contributing rule
+/// 2. An apps entry that sets `frontendRoot`, `selectorRoots`, and `rewrites`
+///    without naming a `project` needs no frontend app; return `None`.
+/// 3. The frontend-app names collected from every contributing rule
 ///    application's `projects:` list. Exactly one match binds; zero matches
 ///    (the list named only non-frontend projects) or more than one match
 ///    (rules disagree, or one rule names two apps) is an error rather than a
 ///    silent guess.
-/// 3. No rule named a project at all: the sole configured frontend app, or
+/// 4. No rule named a project at all: the sole configured frontend app, or
 ///    `None` when there are zero apps (not ambiguous — nothing to choose
 ///    between), or an error when there is more than one.
 pub(super) fn resolve_selection_app(
@@ -39,6 +41,13 @@ pub(super) fn resolve_selection_app(
         return Ok(Some(explicit));
     }
 
+    if playwright_project
+        .and_then(|project| config.tests.playwright.apps.get(project))
+        .is_some_and(binding_is_fully_explicit)
+    {
+        return Ok(None);
+    }
+
     if !rule_bound_names.is_empty() {
         return named_rule_app(label, rule_bound_names, app_names);
     }
@@ -55,6 +64,13 @@ pub(super) fn resolve_selection_app(
             app_names.iter().copied().collect::<Vec<_>>().join(", "),
         )),
     }
+}
+
+fn binding_is_fully_explicit(binding: &crate::config::v2::schema::PlaywrightAppBinding) -> bool {
+    binding.project.is_none()
+        && binding.frontend_root.is_some()
+        && !binding.selector_roots.is_empty()
+        && !binding.rewrites.is_empty()
 }
 
 fn named_rule_app(

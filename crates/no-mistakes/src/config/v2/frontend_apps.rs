@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 use std::path::{Path, PathBuf};
 
 mod build;
-use build::{build_app, playwright_route_override, relative_string};
+use build::{build_app, relative_string};
 
 /// A single frontend (Next.js) application resolved from `.no-mistakes.yml`.
 ///
@@ -61,7 +61,7 @@ pub fn frontend_apps(
     }
     nextjs_projects
         .into_iter()
-        .map(|(name, project)| resolve_named_app(root, name, project, config, visible_paths))
+        .map(|(name, project)| resolve_named_app(root, name, project, visible_paths))
         .collect()
 }
 
@@ -86,9 +86,7 @@ pub fn frontend_apps_lenient(
     }
     nextjs_projects
         .into_iter()
-        .filter_map(|(name, project)| {
-            resolve_named_app(root, name, project, config, visible_paths).ok()
-        })
+        .filter_map(|(name, project)| resolve_named_app(root, name, project, visible_paths).ok())
         .collect()
 }
 
@@ -106,7 +104,7 @@ fn inferred_anonymous_app(root: &Path, visible_paths: &[PathBuf]) -> Option<Fron
         crate::codebase::config::infer_nextjs_root_from_visible(root, visible_paths)?;
     let package_root = relative_string(root, &package_root);
     Some(
-        build_app(root, None, package_root, visible_paths, &[], None)
+        build_app(root, None, package_root, visible_paths, &[])
             .expect("anonymous app package-root fallback never fails"),
     )
 }
@@ -115,7 +113,6 @@ fn resolve_named_app(
     root: &Path,
     name: &str,
     project: &Project,
-    config: &NoMistakesConfig,
     visible_paths: &[PathBuf],
 ) -> Result<FrontendApp> {
     let package_root = match project.root.as_deref() {
@@ -140,7 +137,6 @@ fn resolve_named_app(
         package_root,
         visible_paths,
         &project.rewrites,
-        playwright_route_override(config, name),
     )
 }
 

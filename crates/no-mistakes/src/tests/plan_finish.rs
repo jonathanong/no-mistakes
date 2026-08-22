@@ -12,14 +12,17 @@ impl TestPlan {
 }
 
 fn grouped_execution_targets(selected: &[super::SelectedTest]) -> Vec<GroupedExecutionTarget> {
-    let mut groups: BTreeMap<(String, Option<String>, Option<String>), GroupedExecutionTarget> =
-        BTreeMap::new();
+    let mut groups: BTreeMap<
+        (String, Option<String>, Option<String>, Vec<String>),
+        GroupedExecutionTarget,
+    > = BTreeMap::new();
     for test in selected {
         for target in &test.targets {
             let key = (
                 target.runner.clone(),
                 target.config.clone(),
                 target.project.clone(),
+                target.base_command.clone(),
             );
             let group = groups.entry(key).or_insert_with(|| GroupedExecutionTarget {
                 runner: target.runner.clone(),
@@ -68,6 +71,10 @@ fn last_arg_selects_test_file(last: &str, test_file: &str) -> bool {
     }
     false
 }
+
+#[cfg(test)]
+#[path = "plan_finish/tests.rs"]
+mod tests;
 
 fn regex_escape(value: &str) -> String {
     let mut escaped = String::with_capacity(value.len());

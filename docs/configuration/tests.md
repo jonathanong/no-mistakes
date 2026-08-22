@@ -244,10 +244,14 @@ Each entry under `tests.playwright.apps.<name>` accepts:
 | Field | Meaning |
 | --- | --- |
 | `project` | The `.no-mistakes.yml` `projects:` key this Playwright project exercises. |
-| `frontendRoot` | Overrides the resolved app's route root for this Playwright project only. |
+| `frontendRoot` | Overrides the resolved app's route root for this Playwright project only. Does not change the shared frontend-app resolution used by graph/check. |
 | `selectorRoots` | Overrides the resolved app's selector roots for this Playwright project only. |
 | `rewrites` | Overrides the resolved app's rewrites for this Playwright project only. |
 | `ignoreRoutes` | Overrides `tests.playwright.ignoreRoutes` for this Playwright project only. |
+
+An `apps` entry that sets `frontendRoot`, `selectorRoots`, and `rewrites`
+without `project` is fully explicit: Playwright settings do not resolve a
+frontend app, so the entry can coexist with multiple `type: nextjs` projects.
 
 `tests.playwright.apps.<name>.project` takes precedence over `rules[].projects`
 when both are set. `frontendRoot`/`selectorRoots`/`rewrites`/`ignoreRoutes`
