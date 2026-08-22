@@ -104,11 +104,11 @@ fn directory_and_json_suffix_extends_resolve() {
 fn source_store_read_failures_surface_as_invalid_config() {
     let root = fixture("unreadable-tsconfig");
     let tsconfig = root.join("tsconfig.json");
-    let inventory = FileInventory::from_paths(&[tsconfig.clone()]);
+    let inventory = FileInventory::from_paths(std::slice::from_ref(&tsconfig));
     let sources = SourceStore::new(Arc::new(inventory));
     let catalog = TsConfigCatalog::from_visible_and_sources(
         &root,
-        &[root.clone()],
+        std::slice::from_ref(&root),
         &[tsconfig.clone(), root.join("src/entry.ts")],
         &sources,
     );
