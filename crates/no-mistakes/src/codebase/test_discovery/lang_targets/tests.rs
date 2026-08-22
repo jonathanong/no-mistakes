@@ -178,7 +178,7 @@ fn elixir_target_uses_mix_test() {
 }
 
 #[test]
-fn elixir_nested_app_uses_mix_cmd_cd() {
+fn elixir_nested_app_keeps_repo_relative_mix_test_path() {
     let target = target_for(
         TestRunner::Elixir,
         Some("apps/web"),
@@ -186,11 +186,11 @@ fn elixir_nested_app_uses_mix_cmd_cd() {
         None,
         "apps/web/test/my_app/user_test.exs",
     );
+    assert_eq!(target.base_command, vec!["mix", "test"]);
     assert_eq!(
-        target.base_command,
-        vec!["mix", "cmd", "--cd", "apps/web", "mix", "test"]
+        target.runner_args,
+        vec!["apps/web/test/my_app/user_test.exs"]
     );
-    assert_eq!(target.runner_args, vec!["test/my_app/user_test.exs"]);
 }
 
 #[test]

@@ -99,7 +99,7 @@ Language test plans follow the same native shape. Configure
 `tests plan python|go|cargo|rails|php|java|kotlin|elixir` then emits `pytest` /
 `python -m unittest`, `go test`, `cargo test -p`, `bin/rails test` / `rspec`,
 `phpunit` / `php artisan test`, `mvn test [-f <package>/pom.xml] -Dtest=`,
-`gradle [-p <package>] test --tests`, or `mix test` / `mix cmd --cd <app> mix test` targets. Untraceable source under those
+`gradle [-p <package>] test --tests`, or `mix test <path>` targets. Untraceable source under those
 roots falls back to discovered tests in the owning package, module, or app.
 
 ## Explicit Vitest projects

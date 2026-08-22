@@ -154,12 +154,9 @@ fn route_handler_names(handler: &str) -> Vec<String> {
     let mut names = vec![view.clone()];
     if let Some((parent, last)) = view.rsplit_once('.') {
         names.push(last.to_string());
-        // Phoenix `Controller.action` must also resolve the controller module.
-        if last.starts_with(|ch: char| ch.is_ascii_lowercase()) {
+        if last.as_bytes().first().is_some_and(|b| b.is_ascii_lowercase()) {
             names.push(parent.to_string());
-            if let Some((_, type_name)) = parent.rsplit_once('.') {
-                names.push(type_name.to_string());
-            }
+            names.push(parent.rsplit('.').next().expect("parent").to_string());
         }
     }
     names

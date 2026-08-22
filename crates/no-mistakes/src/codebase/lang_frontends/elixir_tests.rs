@@ -82,4 +82,10 @@ fn elixir_collects_aliases_and_phoenix_routes() {
         .find(|file| file.path.ends_with("computed.ex"))
         .expect("computed");
     assert!(computed.route_handlers.is_empty());
+    let test_file = facts
+        .files
+        .values()
+        .find(|file| file.path.ends_with("user_test.exs"))
+        .expect("test");
+    assert!(test_file.route_handlers.is_empty());
 }

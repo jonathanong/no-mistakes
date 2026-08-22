@@ -54,7 +54,11 @@ fn parse_elixir_file(
         imports: extract_elixir_imports(&symbols),
         declarations,
         references: extract_named(&symbols, elixir_ref_re()),
-        route_handlers: http::extract_http_routes(&text),
+        route_handlers: if elixir_test_tree(path) {
+            Vec::new()
+        } else {
+            http::extract_http_routes(&text)
+        },
         queue_enqueues: Vec::new(),
         queue_workers: Vec::new(),
         mods: Vec::new(),
@@ -72,6 +76,11 @@ pub(super) fn primary_module(declarations: &[String], file_stem: Option<&str>) -
                 .cloned()
         })
         .or_else(|| declarations.first().cloned())
+}
+
+fn elixir_test_tree(path: &Path) -> bool {
+    path.components()
+        .any(|seg| seg.as_os_str() == std::ffi::OsStr::new("test"))
 }
 
 fn elixir_pascal_case(stem: &str) -> String {
