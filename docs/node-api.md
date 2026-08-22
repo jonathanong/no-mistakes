@@ -414,8 +414,10 @@ addon avoids UTF-16 string copies at the N-API boundary.
 - Omit `tsconfig` to use automatic per-workspace resolution; pass it explicitly
   only to force one config for debugging or compatibility.
 - Use `analyzeProject()` when several reports share the same root/config.
-  Batch `testsPlan` with other reports in one `analyzeProject({ reports })`
-  call so they share the machine-wide lock. `testsPlan()` / `testsImpact()`
-  return camelCase `executionTargets` (optional `name` for path-prefix
-  groups) and accept `includeGlob`.
+  Batch `testsPlan` and `ciTopology` in one `analyzeProject({ reports })` call
+  so they share the machine-wide lock. `testsPlan()` returns camelCase
+  `executionTargets` (optional `name` for path-prefix groups) and accepts
+  `includeGlob`. `ciTopology()` is memoized in-process by root and config
+  mtime; pass `profile: "ci"` (or CLI `--profile ci`) for unbounded
+  timeouts.
 - Prefer structured API results over parsing human CLI output.

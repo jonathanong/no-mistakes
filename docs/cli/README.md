@@ -23,6 +23,11 @@ or after the command name:
   is `30`; `0` waits indefinitely.
 - `--fail-on-lock` fails immediately when another invocation holds the lock,
   overriding `--lock-timeout`.
+- `--profile ci` sets `--timeout 0 --lock-timeout 0` for CI jobs that should
+  wait for the machine-wide lock and run without a command deadline. Node
+  `profile: "ci"` is stripped the same way; omitted Node timeouts are already
+  unbounded. `ciTopology()` memoizes in-process by resolved root and config
+  mtime so repeated calls in one process do not re-parse workflows.
 
 Command and lock-wait timeouts exit with status `124`. Immediate lock
 contention and lock setup errors exit with status `2`. Errors are written to

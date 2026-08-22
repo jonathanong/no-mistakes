@@ -50,6 +50,15 @@ pub fn extract_napi_options_value(
         }
     };
     let jobs = take_jobs(object)?;
+    match object.remove("profile") {
+        None | Some(Value::Null) => {}
+        Some(Value::String(value)) if value == "ci" => {}
+        Some(_) => {
+            return Err(anyhow!(
+                "invalid options JSON: profile must be \"ci\" when set"
+            ))
+        }
+    }
     Ok((
         value,
         InvocationOptions {

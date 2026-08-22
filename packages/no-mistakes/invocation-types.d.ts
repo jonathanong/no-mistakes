@@ -11,6 +11,8 @@ export interface InvocationOptions {
    * `0` uses the CPU count, matching CLI `--jobs 0`.
    */
   jobs?: number | null;
+  /** `ci` sets unbounded command and lock timeouts. CLI `--profile ci` does the same. */
+  profile?: "ci";
 }
 
 export type WithInvocationOptions<T> = T & InvocationOptions;

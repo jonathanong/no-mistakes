@@ -5,6 +5,8 @@
 const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
 const planning = require("./planning");
 const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
+const fs = require("node:fs");
+const path = require("node:path");
 
 async function callJson(fn, options) {
   const input = Buffer.from(JSON.stringify(options || {}));
@@ -69,6 +71,28 @@ async function analyzeProject(options) {
   return result;
 }
 
+const topologyMemo = new Map();
+
+async function ciTopology(options) {
+  const root = path.resolve((options && options.root) || process.cwd());
+  const configPath = path.resolve(root, (options && options.config) || ".no-mistakes.yml");
+  let mtime = 0;
+  try {
+    mtime = fs.statSync(configPath).mtimeMs;
+  } catch {
+    mtime = 0;
+  }
+  const key = `${root}\0${configPath}\0${mtime}`;
+  const cached = topologyMemo.get(key);
+  if (cached) return cached;
+  const pending = jsonApis.ciTopology(options).catch((error) => {
+    topologyMemo.delete(key);
+    throw error;
+  });
+  topologyMemo.set(key, pending);
+  return pending;
+}
+
 async function version() {
   return native.version();
 }
@@ -81,7 +105,7 @@ module.exports.check = jsonApis.check;
 module.exports.resolveConfig = jsonApis.resolveConfig;
 module.exports.ciEnv = jsonApis.ciEnv;
 module.exports.ciImpact = jsonApis.ciImpact;
-module.exports.ciTopology = jsonApis.ciTopology;
+module.exports.ciTopology = ciTopology;
 module.exports.dataPw = jsonApis.dataPw;
 module.exports.deadExports = jsonApis.deadExports;
 module.exports.dependencies = jsonApis.dependencies;
