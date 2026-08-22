@@ -60,21 +60,21 @@ fn adjacency_sort_key(n: &NodeId, kind: EdgeKind) -> (NodeSortKey, u8, (u8, u8))
 
 fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {
     match n {
-        NodeId::File(path) => NodeSortKey::new(Some(Arc::clone(path)), "", None, None),
+        NodeId::File(path) => NodeSortKey::new(Some(path.clone_arc()), "", None, None),
         NodeId::Symbol { file, symbol } => {
-            NodeSortKey::new(Some(Arc::clone(file)), "#", Some(Arc::clone(symbol)), None)
+            NodeSortKey::new(Some(file.clone_arc()), "#", Some(Arc::clone(symbol)), None)
         }
         NodeId::Module(specifier) => {
             NodeSortKey::new(None, "module:", Some(Arc::clone(specifier)), None)
         }
         NodeId::QueueJob { queue_file, job } => NodeSortKey::new(
-            Some(Arc::clone(queue_file)),
+            Some(queue_file.clone_arc()),
             "#",
             Some(Arc::clone(job)),
             None,
         ),
         NodeId::WorkflowJob { workflow_file, job } => NodeSortKey::new(
-            Some(Arc::clone(workflow_file)),
+            Some(workflow_file.clone_arc()),
             "#job:",
             Some(Arc::clone(job)),
             None,
@@ -84,7 +84,7 @@ fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {
             job,
             step,
         } => NodeSortKey::new(
-            Some(Arc::clone(workflow_file)),
+            Some(workflow_file.clone_arc()),
             "#job:",
             Some(Arc::clone(job)),
             Some(*step),
@@ -93,7 +93,7 @@ fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {
             router_file,
             procedure,
         } => NodeSortKey::new(
-            Some(Arc::clone(router_file)),
+            Some(router_file.clone_arc()),
             "#procedure:",
             Some(Arc::clone(procedure)),
             None,

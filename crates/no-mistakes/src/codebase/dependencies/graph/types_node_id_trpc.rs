@@ -2,7 +2,7 @@ impl NodeId {
     /// Construct a tRPC procedure node. Match `NodeId::TrpcProcedure { .. }`.
     pub fn trpc_procedure(path: impl AsRef<Path>, procedure: impl Into<Arc<str>>) -> Self {
         Self::TrpcProcedure {
-            router_file: intern_node_path(path),
+            router_file: FileNode::new(intern_node_path(path)),
             procedure: intern_node_str(procedure),
         }
     }
@@ -14,7 +14,7 @@ impl NodeId {
         procedure: impl AsRef<str>,
     ) -> Self {
         Self::TrpcProcedure {
-            router_file: interner.intern_path(path),
+            router_file: FileNode::new(interner.intern_path(path)),
             procedure: interner.intern_str(procedure),
         }
     }
