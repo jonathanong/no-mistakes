@@ -52,6 +52,14 @@ fn workflow_step_entry(workflow_file: &str, job: &str, step: usize, depth: usize
     }
 }
 
+fn trpc_procedure_entry(router_file: &str, procedure: &str, depth: usize) -> NodeEntry {
+    NodeEntry {
+        node: NodeId::trpc_procedure(p(router_file), procedure),
+        depth,
+        via: vec![EdgeKind::TrpcCall],
+    }
+}
+
 fn module_entry(specifier: &str, depth: usize, via: Vec<EdgeKind>) -> NodeEntry {
     NodeEntry {
         node: NodeId::module(specifier),
@@ -150,6 +158,22 @@ fn json_workflow_virtual_nodes() {
 }
 
 #[test]
+fn json_trpc_procedure_node() {
+    let root = p("/root");
+    let entries = vec![trpc_procedure_entry("/root/src/router.ts", "user.get", 1)];
+    let v = json_value(&["src/client.ts".to_string()], &entries, &root);
+    assert_eq!(
+        v,
+        serde_json::json!({
+            "roots": ["src/client.ts"],
+            "files": [
+                {"routerFile": "src/router.ts", "procedure": "user.get", "depth": 1, "via": ["trpc-call"]},
+            ],
+        })
+    );
+}
+
+#[test]
 fn json_module_node() {
     let root = p("/root");
     let entries = vec![module_entry("@react/client", 1, vec![EdgeKind::Import])];
@@ -229,6 +253,18 @@ fn paths_workflow_nodes_use_stable_virtual_identifiers() {
     assert_eq!(
         String::from_utf8(buf).unwrap(),
         ".github/workflows/ci.yml#job:build\n.github/workflows/ci.yml#job:build/step:0\n"
+    );
+}
+
+#[test]
+fn paths_trpc_procedure_uses_stable_virtual_identifiers() {
+    let root = p("/root");
+    let entries = vec![trpc_procedure_entry("/root/src/router.ts", "user.get", 1)];
+    let mut buf = Vec::new();
+    write_paths(&entries, &root, &mut buf).unwrap();
+    assert_eq!(
+        String::from_utf8(buf).unwrap(),
+        "src/router.ts#procedure:user.get\n"
     );
 }
 

@@ -32,6 +32,9 @@ What are you trying to find?
 │   └─ no-mistakes queues related <file> [--direction deps|dependents|both]
 │   └─ no-mistakes queues check
 │
+├─ tRPC procedure hops
+│   └─ no-mistakes dependents <file> --relationship trpc
+│
 ├─ Server route extraction / related files
 │   └─ no-mistakes server routes  (Express/Hono/Koa, language HTTP, Remix file routes)
 │   └─ no-mistakes server related <file> [--direction deps|dependents|both]
@@ -63,9 +66,10 @@ What are you trying to find?
 ├─ Which packages changed between two lockfile refs
 │   └─ no-mistakes lockfile diff --base <ref> --format json
 │
-├─ Which routes or queue jobs reach a file
+├─ Which routes, queue jobs, or tRPC procedures reach a file
 │   └─ no-mistakes dependents <file> --relationship route
 │   └─ no-mistakes dependents <file> --relationship queue
+│   └─ no-mistakes dependents <file> --relationship trpc
 │   (requires .no-mistakes.yml with the relevant project/rule config)
 │
 ├─ Which CI workflows invoke a Rust binary through supported Cargo commands
@@ -90,6 +94,7 @@ What are you trying to find?
 | `test` | source/test correspondence, Playwright route tests, Next layouts, and selector coverage |
 | `route` | route refs, Playwright route tests, and Next layouts |
 | `queue` | Queue enqueue/worker relationship → virtual queue job |
+| `trpc` | tRPC client call → virtual procedure → configured router file (opt-in; omitted from `all`) |
 | `md` | Markdown link → linked source file |
 | `ci` | CI workflow YAML → binary entry point |
 | `workflow` | GitHub Actions workflow → virtual job → virtual step, `needs`, local uses, static run targets, and same-run artifacts |
@@ -106,7 +111,7 @@ What are you trying to find?
 | `dotnet` | C# `using`/type reference/project reference edges |
 | `swift` | Swift import/type reference/SwiftPM target dependency edges |
 | `terraform` | Terraform/OpenTofu resource, module, and output reference edges |
-| `all` | All standard relationships, including `workflow`, except the opt-in `route-import` relationship (default) |
+| `all` | All standard relationships, including `workflow`, except the opt-in `route-import` and `trpc` relationships (default) |
 
 Repeatable — `--relationship import --relationship workspace` follows both kinds.
 

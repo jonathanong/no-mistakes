@@ -54,6 +54,9 @@ pub fn write_paths(entries: &[NodeEntry], root_dir: &Path, w: &mut dyn Write) ->
             NodeId::WorkflowJob { .. } | NodeId::WorkflowStep { .. } => {
                 writeln!(w, "{}", entry.node.display_name(root_dir))?;
             }
+            NodeId::TrpcProcedure { .. } => {
+                writeln!(w, "{}", entry.node.display_name(root_dir))?;
+            }
             NodeId::Module(specifier) => {
                 writeln!(w, "{specifier}")?;
             }

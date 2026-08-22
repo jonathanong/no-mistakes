@@ -35,6 +35,7 @@ pub mod ts_resources;
 pub mod ts_routes;
 pub mod ts_source;
 pub mod ts_symbols;
+pub(crate) mod ts_trpc;
 pub mod unique_exports;
 pub mod workflow_topology;
 pub mod workspaces;

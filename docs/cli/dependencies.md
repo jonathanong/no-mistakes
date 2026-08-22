@@ -26,6 +26,11 @@ pruning; it excludes type-only imports and `require()`. This is distinct from
 `--relationship route`, which follows URL route references, Playwright route
 tests, and Next.js layouts.
 
+Use `--relationship trpc` for static tRPC procedure calls. It follows
+`trpc-call` / `trpc-procedure` edges through `src/router.ts#procedure:user.get`
+virtual nodes. Empty `projects.*.trpc.routers` lists disable extraction;
+`--relationship all` and unfiltered `dependencies` omit these edges.
+
 Key options: `--tsconfig`, `--depth`/`--max-depth`, repeatable `--filter`,
 repeatable `--target-module`, repeatable `--relationship`, repeatable `--test`,
 `--format`, `--json`, and `--timings`.

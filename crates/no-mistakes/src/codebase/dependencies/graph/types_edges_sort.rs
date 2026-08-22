@@ -52,6 +52,7 @@ pub(super) const fn key(kind: EdgeKind) -> (u8, u8) {
         | EdgeKind::WorkflowRun
         | EdgeKind::WorkflowArtifact
         | EdgeKind::VitestSetup(_) => workflow(kind),
+        EdgeKind::TrpcCall | EdgeKind::TrpcProcedure => core(kind),
     }
 }
 
@@ -74,6 +75,8 @@ const fn core(kind: EdgeKind) -> (u8, u8) {
         EdgeKind::CiInvocation => (14, 0),
         EdgeKind::RequireResolve => (37, 0),
         EdgeKind::WorkspaceTypeImport => (38, 0),
+        EdgeKind::TrpcCall => (50, 0),
+        EdgeKind::TrpcProcedure => (51, 0),
         _ => panic!("core edge group is exhaustive"),
     }
 }

@@ -1,6 +1,7 @@
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, GraphBuildPlan, NodeId};
 use crate::codebase::dependencies::{
-    parse_entrypoint, relationship_filter, workflow_node_from_suffix_in, RelationshipArg,
+    parse_entrypoint, relationship_filter, trpc_procedure_from_suffix,
+    workflow_node_from_suffix_in, RelationshipArg,
 };
 use crate::codebase::ts_resolver::normalize_path;
 use anyhow::Result;
@@ -55,6 +56,10 @@ pub struct FlowNode {
     pub workflow_file: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub step: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub router_file: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub procedure: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -148,6 +153,7 @@ fn resolve_target_in(
     let path = normalize_path(&path);
     match symbol {
         Some(symbol) => workflow_node_from_suffix_in(interner, &path, &symbol)
+            .or_else(|| trpc_procedure_from_suffix(&path, &symbol))
             .unwrap_or_else(|| NodeId::symbol_in(interner, path, symbol)),
         None => NodeId::file_in(interner, path),
     }

@@ -1,0 +1,7 @@
+projects:
+  api:
+    type: server
+    root: .
+    trpc:
+      routers:
+        - src/router.ts

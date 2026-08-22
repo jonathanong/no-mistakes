@@ -157,6 +157,14 @@ fn plan_domain_fact_detection_tracks_domain_flags() {
             rsc_environment: true,
             ..TsFactPlan::default()
         },
+        TsFactPlan {
+            trpc_router: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            trpc_calls: true,
+            ..TsFactPlan::default()
+        },
     ] {
         assert!(plan.has_domain_facts());
     }
@@ -296,6 +304,14 @@ fn plan_empty_detection_tracks_all_flags() {
         },
         TsFactPlan {
             rsc_environment: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            trpc_router: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            trpc_calls: true,
             ..TsFactPlan::default()
         },
     ] {

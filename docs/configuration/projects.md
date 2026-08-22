@@ -30,8 +30,22 @@ project root from `vite.config.*`; it does not build a Vite SPA analyzer.
 `type: cloudflare-workers` is a scoping label only: there is no wrangler, KV,
 or Durable Object domain analyzer.
 
-Prefer explicit `root`, `include`, `exclude`, `routes`, and queue settings over
-repository conventions.
+Prefer explicit `root`, `include`, `exclude`, `routes`, queue settings, and
+`trpc.routers` over repository conventions.
+
+Empty `trpc.routers` lists disable tRPC procedure extraction. There is no
+hardcoded `src/trpc`. Request `--relationship trpc` to traverse
+`trpc-call` / `trpc-procedure` edges; they stay out of unfiltered
+`dependencies` and `--relationship all`.
+
+```yaml
+projects:
+  api:
+    type: server
+    root: backend
+    trpc:
+      routers: ["src/trpc/**/*.ts"]
+```
 
 ## Multiple `nextjs` projects
 

@@ -15,6 +15,7 @@ pub struct TsFactContext {
     pub effect_functions: HashMap<String, Option<String>>,
     pub visible_files: Option<Arc<crate::fx::PathSet>>,
     pub(crate) server_route_filter: Option<ServerRouteFactFilter>,
+    pub(crate) trpc_router_glob: Option<GlobSet>,
 }
 
 #[derive(Clone)]
@@ -150,6 +151,7 @@ impl TsFactContext {
             .server_route_filter
             .take()
             .or(other.server_route_filter);
+        self.trpc_router_glob = self.trpc_router_glob.take().or(other.trpc_router_glob);
         let mut visible = self
             .visible_files
             .take()
@@ -176,6 +178,12 @@ impl TsFactContext {
             .unwrap_or(true)
     }
 
+    pub fn matches_trpc_router(&self, path: &Path) -> bool {
+        self.trpc_router_glob
+            .as_ref()
+            .is_some_and(|glob| self.matches_glob(path, glob))
+    }
+
     pub fn matches_glob(&self, path: &Path, glob: &GlobSet) -> bool {
         path.strip_prefix(&self.root)
             .map(|rel| glob.is_match(rel))
@@ -196,6 +204,7 @@ impl Default for TsFactContext {
             effect_functions: HashMap::new(),
             visible_files: None,
             server_route_filter: None,
+            trpc_router_glob: None,
         }
     }
 }

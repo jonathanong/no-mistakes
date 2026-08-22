@@ -1,6 +1,7 @@
 struct FactDomainRemainingEdges {
     routes: Vec<Edge>,
     queues: Vec<Edge>,
+    trpc: Vec<Edge>,
     http_process: Vec<Edge>,
     react: Vec<Edge>,
     resources: Option<(Vec<Edge>, ResourceEdgeDetails, Vec<ResourceGraphDiagnostic>)>,
@@ -89,6 +90,7 @@ fn collect_fact_domain_remaining_edges(
     Ok(FactDomainRemainingEdges {
         routes,
         queues,
+        trpc: collect_trpc_edges_for_plan(edge_inputs, facts),
         http_process,
         react,
         resources: resources?,
@@ -104,6 +106,7 @@ fn merge_fact_domain_remaining_edges(
 ) {
     merge_edges(forward, reverse, edges.routes);
     merge_edges(forward, reverse, edges.queues);
+    merge_edges(forward, reverse, edges.trpc);
     merge_edges(forward, reverse, edges.http_process);
     merge_edges(forward, reverse, edges.react);
     if let Some((resource_edges, details, diagnostics)) = edges.resources {

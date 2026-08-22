@@ -65,7 +65,8 @@ fn signature_target_symbols(
                 NodeId::Module(_)
                 | NodeId::QueueJob { .. }
                 | NodeId::WorkflowJob { .. }
-                | NodeId::WorkflowStep { .. } => {}
+                | NodeId::WorkflowStep { .. }
+                | NodeId::TrpcProcedure { .. } => {}
             }
         }
     }

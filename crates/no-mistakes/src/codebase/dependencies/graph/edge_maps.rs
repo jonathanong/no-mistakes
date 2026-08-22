@@ -25,6 +25,13 @@ fn normalize_nodes(nodes: &[NodeId]) -> Vec<NodeId> {
                 job.clone(),
                 *step,
             ),
+            NodeId::TrpcProcedure {
+                router_file,
+                procedure,
+            } => NodeId::trpc_procedure(
+                crate::codebase::ts_resolver::normalize_path(router_file),
+                procedure.clone(),
+            ),
         })
         .collect()
 }
