@@ -1,6 +1,8 @@
 use super::*;
 use no_mistakes::cli::Format;
-use no_mistakes::server_routes::{Edge, EdgeKind, Framework, ProjectReport, ServerRoute};
+use no_mistakes::server_routes::{
+    Edge, EdgeKind, Framework, ProjectReport, ServerContractsReport, ServerRoute,
+};
 
 fn sample_route() -> ServerRoute {
     ServerRoute {
@@ -54,4 +56,40 @@ fn trace_server_analysis_runs_with_and_without_an_observer() {
     let traced = trace_server_analysis("analysis.server", || Ok::<_, anyhow::Error>(8)).unwrap();
     assert_eq!(traced, 8);
     drop(guard);
+}
+
+#[test]
+fn print_contracts_covers_each_format() {
+    let report = ServerContractsReport {
+        routes: vec![],
+        client_refs: vec![],
+        mismatches: vec![],
+    };
+    for format in [
+        Format::Json,
+        Format::Yml,
+        Format::Md,
+        Format::Paths,
+        Format::Human,
+    ] {
+        print_contracts(&report, format).unwrap();
+    }
+}
+
+#[test]
+fn run_contracts_prints_json_for_a_fixture_root() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/server-ast-routes/remix/fixture");
+    let code = run(ServerArgs {
+        root,
+        tsconfig: None,
+        filters: Vec::new(),
+        depth: None,
+        format: Format::Json,
+        json: true,
+        timings: false,
+        command: ServerCommand::Contracts,
+    })
+    .expect("contracts command runs");
+    assert_eq!(code, ExitCode::SUCCESS);
 }

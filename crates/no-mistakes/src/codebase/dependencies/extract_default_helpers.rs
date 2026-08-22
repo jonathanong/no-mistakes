@@ -76,8 +76,10 @@ fn parenthesized_arrow_expression<'a>(
 
 fn default_expression_creates_own_scope(declaration: &ExportDefaultDeclarationKind<'_>) -> bool {
     match declaration {
-        ExportDefaultDeclarationKind::FunctionExpression(_)
-        | ExportDefaultDeclarationKind::ArrowFunctionExpression(_) => true,
+        // Bare `export default () => …` is an expression; parenthesized functions
+        // are unwrapped before this helper runs, and `export default function`
+        // is a FunctionDeclaration rather than FunctionExpression.
+        ExportDefaultDeclarationKind::ArrowFunctionExpression(_) => true,
         ExportDefaultDeclarationKind::ParenthesizedExpression(_) => false,
         _ => false,
     }
@@ -98,7 +100,9 @@ fn default_object_expression<'a>(
 fn object_expression<'a>(expression: &'a Expression<'a>) -> Option<&'a ObjectExpression<'a>> {
     match expression {
         Expression::ObjectExpression(object) => Some(object),
-        Expression::ParenthesizedExpression(parenthesized) => object_expression(&parenthesized.expression),
+        Expression::ParenthesizedExpression(parenthesized) => {
+            object_expression(&parenthesized.expression)
+        }
         _ => None,
     }
 }
@@ -126,10 +130,6 @@ fn walk_default_function_with_scope<'a>(
     collector.callable_scopes.insert(scope.to_string());
     collector.add_type_parameter_names(function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
-    walk::walk_function(
-        collector,
-        function,
-        oxc_syntax::scope::ScopeFlags::empty(),
-    );
+    walk::walk_function(collector, function, oxc_syntax::scope::ScopeFlags::empty());
     collector.pop_function_scope(true);
 }

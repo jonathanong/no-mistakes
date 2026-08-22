@@ -2,10 +2,10 @@ use super::elements::is_component_jsx_element_name;
 use crate::playwright::analysis::types::SelectorRef;
 use crate::playwright::ast;
 use crate::playwright::config::Settings;
-use crate::playwright::selectors::scoped_defaults::{
-    scoped_static_default_for_identifier, ScopedStaticIdentifierDefault,
-};
 use crate::playwright::selectors::HTML_ID_ATTRIBUTE;
+use crate::playwright::selectors::scoped_defaults::{
+    ScopedStaticIdentifierDefault, scoped_static_default_for_identifier,
+};
 use oxc_span::GetSpan;
 
 mod attrs;
@@ -113,9 +113,8 @@ fn jsx_attr_string(
                 oxc_ast::ast::JSXExpression::TSNonNullExpression(expression) => {
                     jsx_expression_string(&expression.expression, source)
                 }
-                oxc_ast::ast::JSXExpression::TSTypeAssertion(expression) => {
-                    jsx_expression_string(&expression.expression, source)
-                }
+                // Angle-bracket assertions are JSX in `.tsx`, so they never reach
+                // this helper; `as` / `satisfies` / `!` cover the TSX wrappers.
                 _ => None,
             }
         }

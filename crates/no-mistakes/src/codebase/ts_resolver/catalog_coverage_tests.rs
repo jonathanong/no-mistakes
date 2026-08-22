@@ -53,10 +53,12 @@ fn relative_missing_extends_is_an_invalid_config() {
 fn extends_cycle_is_reported_without_hanging() {
     let root = fixture("extends-cycle");
     let catalog = catalog_for(&root);
-    assert!(catalog
-        .diagnostics()
-        .iter()
-        .any(|diagnostic| diagnostic.detail.contains("cycle")));
+    assert!(
+        catalog
+            .diagnostics()
+            .iter()
+            .any(|diagnostic| diagnostic.detail.contains("cycle"))
+    );
 }
 
 #[test]
@@ -157,4 +159,23 @@ fn apply_own_records_out_dir_files_and_boolean_compiler_flags() {
     assert!(config.out_dir.is_some());
     assert_eq!(config.allow_js, Some(false));
     assert_eq!(config.module_resolution.as_deref(), Some("bundler"));
+
+    let err = config
+        .apply_own(
+            &serde_json::json!({ "compilerOptions": "nope" }),
+            &path,
+            &root,
+            |value| Ok(root.join(value)),
+        )
+        .expect_err("compilerOptions must be an object");
+    assert!(err.contains("must be an object"));
+    let err = config
+        .apply_own(
+            &serde_json::json!({ "compilerOptions": { "allowJs": "yes" } }),
+            &path,
+            &root,
+            |value| Ok(root.join(value)),
+        )
+        .expect_err("allowJs must be a boolean");
+    assert!(err.contains("allowJs"));
 }

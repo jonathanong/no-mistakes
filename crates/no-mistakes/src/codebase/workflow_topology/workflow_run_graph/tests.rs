@@ -48,9 +48,11 @@ fn two_node_cycle_ignores_edges_to_acyclic_neighbors() {
             edge("a.yml", "c.yml"),
         ],
     );
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle)
+    );
 }
 
 #[test]
@@ -64,12 +66,16 @@ fn acyclic_predecessor_of_a_cycle_does_not_join_the_scc() {
             edge("c.yml", "b.yml"),
         ],
     );
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle));
-    assert!(diagnostics
-        .iter()
-        .all(|diagnostic| { diagnostic.code != DiagnosticCode::WorkflowRunChainLimit }));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle)
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .all(|diagnostic| { diagnostic.code != DiagnosticCode::WorkflowRunChainLimit })
+    );
 }
 
 #[test]
@@ -92,9 +98,11 @@ fn diamond_keeps_the_longest_chain_witness() {
             edge("w4.yml", "w5.yml"),
         ],
     );
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunChainLimit));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunChainLimit)
+    );
 }
 
 #[test]
@@ -127,9 +135,11 @@ fn equal_length_over_limit_chains_keep_the_lexicographically_smaller_witness() {
         .iter()
         .find(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunChainLimit)
         .expect("equal-length over-limit chains still diagnose");
-    assert!(chain
-        .message
-        .contains("w0.yml -> a.yml -> b.yml -> c.yml -> end.yml"));
+    assert!(
+        chain
+            .message
+            .contains("w0.yml -> a.yml -> b.yml -> c.yml -> end.yml")
+    );
 }
 
 #[test]
@@ -144,9 +154,11 @@ fn three_node_cycle_with_a_chord_still_reports_a_witness() {
             edge("c.yml", "b.yml"),
         ],
     );
-    assert!(diagnostics
-        .iter()
-        .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle));
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle)
+    );
 }
 
 #[test]
@@ -158,4 +170,29 @@ fn self_cycle_reports_a_two_node_witness() {
         .find(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle)
         .expect("self-cycle");
     assert!(cycle.message.contains("loop.yml -> loop.yml"));
+}
+
+#[test]
+fn search_skips_already_visited_scc_members_that_are_not_the_start() {
+    let workflows = [
+        workflow("a.yml"),
+        workflow("b.yml"),
+        workflow("c.yml"),
+        workflow("d.yml"),
+    ];
+    let diagnostics = diagnose(
+        &workflows,
+        &[
+            edge("a.yml", "b.yml"),
+            edge("b.yml", "c.yml"),
+            edge("c.yml", "a.yml"),
+            edge("b.yml", "d.yml"),
+            edge("d.yml", "b.yml"),
+        ],
+    );
+    assert!(
+        diagnostics
+            .iter()
+            .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle)
+    );
 }

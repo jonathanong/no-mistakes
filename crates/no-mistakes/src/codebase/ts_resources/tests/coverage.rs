@@ -42,12 +42,14 @@ fn records_static_url_forms_and_scoped_dynamic_diagnostics() {
         assert_eq!(call.path.base, ResourcePathBase::SourceModule, "{path}");
         assert_eq!(call.function_scope.as_deref(), Some("resourceScope"));
     }
-    assert!(facts
-        .calls
-        .iter()
-        .any(|call| call.path.value == "after-var-binding.json"
-            && call.path.base == ResourcePathBase::AnalysisRoot
-            && call.function_scope.as_deref() == Some("resourceScope")));
+    assert!(
+        facts
+            .calls
+            .iter()
+            .any(|call| call.path.value == "after-var-binding.json"
+                && call.path.base == ResourcePathBase::AnalysisRoot
+                && call.function_scope.as_deref() == Some("resourceScope"))
+    );
     for path in [
         "direct-import.json",
         "direct-sync-import.json",
@@ -84,10 +86,12 @@ fn records_static_url_forms_and_scoped_dynamic_diagnostics() {
                 .as_ref()
                 .is_some_and(|cwd| cwd.base == ResourcePathBase::SourceModule)
     }));
-    assert!(facts
-        .calls
-        .iter()
-        .all(|call| call.path.value != "must-not-be-recorded.json"));
+    assert!(
+        facts
+            .calls
+            .iter()
+            .all(|call| call.path.value != "must-not-be-recorded.json")
+    );
     assert_eq!(
         facts
             .diagnostics
@@ -121,6 +125,7 @@ fn default_export_and_argumentless_resource_calls_are_walked() {
     let prefix = "import * as fs from 'node:fs';\nimport { glob } from 'glob';\n";
     for source in [
         "export default function () { fs.readFile('anon-default.json'); }",
+        "export default function Named() { fs.readFile('named-default.json'); }",
         "export default () => { fs.readFile('arrow-default.json'); }",
         "export default class C { read() { fs.readFile('class-default.json'); } }",
         "export default (function () { fs.readFile('paren-fn.json'); });",
@@ -176,6 +181,7 @@ fn require_glob_and_destructure_shapes_are_extracted() {
         g.glob('computed-cwd/**/*.txt', { [k]: 1 });
         g.glob('dynamic-cwd/**/*.txt', { cwd: dynamic });
         g.glob('paren-cwd/**/*.txt', { cwd: ('static-cwd') });
+        g.glob('numeric-cwd/**/*.txt', 1);
         "#,
     );
     assert!(

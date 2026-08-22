@@ -1,6 +1,6 @@
 use super::*;
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::{
-    conditions::{direct_inputs, inputs_with_matrix_values, MatrixState},
+    conditions::{MatrixState, direct_inputs, inputs_with_matrix_values},
     reusable::model::{GithubEventContext, GithubRef},
 };
 use crate::codebase::{
@@ -230,4 +230,16 @@ fn run_steps_cover_empty_commands_dynamic_tolerance_and_static_success() {
         BTreeSet::new(),
     );
     assert!(unknown_shell.indeterminate);
+
+    let invalid_condition = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - if: \"${{ fromJSON('[]') }}\"\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(invalid_condition.failed || invalid_condition.indeterminate);
+
+    let uncertain_false_config = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - if: github.event.unknown\n    timeout-minutes: []\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(uncertain_false_config.indeterminate || uncertain_false_config.failed);
 }

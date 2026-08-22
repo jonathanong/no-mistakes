@@ -1,6 +1,6 @@
 use super::{
-    static_mappings, static_matrix_axes, static_matrix_job_count, StaticMappings, StaticMatrixAxes,
-    StaticMatrixJobCount, MATRIX_JOB_LIMIT, STATIC_MATRIX_ENUMERATION_LIMIT,
+    MATRIX_JOB_LIMIT, STATIC_MATRIX_ENUMERATION_LIMIT, StaticMappings, StaticMatrixAxes,
+    StaticMatrixJobCount, static_mappings, static_matrix_axes, static_matrix_job_count,
 };
 use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::InputState;
 use serde_yaml::Value;
@@ -68,18 +68,14 @@ fn static_matrix_combinations_for_mapping(
         mappings @ (StaticMappings::Static(_) | StaticMappings::Dynamic) => mappings,
         StaticMappings::Invalid => return None,
     };
-    let (axes, exclusions, includes) = match (axes, exclusions, includes) {
-        (
-            StaticMatrixAxes::Static(axes),
-            StaticMappings::Static(exclusions),
-            StaticMappings::Static(includes),
-        ) => (axes, exclusions, includes),
-        (StaticMatrixAxes::Dynamic, _, _)
-        | (_, StaticMappings::Dynamic, _)
-        | (_, _, StaticMappings::Dynamic) => {
-            return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
-        }
-        _ => unreachable!("invalid matrix axes are rejected before combination"),
+    let StaticMatrixAxes::Static(axes) = axes else {
+        return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
+    };
+    let StaticMappings::Static(exclusions) = exclusions else {
+        return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
+    };
+    let StaticMappings::Static(includes) = includes else {
+        return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
     };
     let mut originals = Vec::new();
     let mut assigned = BTreeMap::new();
