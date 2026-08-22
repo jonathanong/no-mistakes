@@ -77,6 +77,10 @@ fn flow_query_deps_edges_and_resolvers_cover_path_branches() {
         resolve_target(&root, ".github/workflows/main.yml#job:build/step:2"),
         NodeId::workflow_step(root.join(".github/workflows/main.yml"), "build", 2)
     );
+    assert_eq!(
+        resolve_target(&root, "src/router.ts#procedure:user.get"),
+        NodeId::trpc_procedure(root.join("src/router.ts"), "user.get")
+    );
     let aliased_root = fixture_root("aliased");
     assert!(resolve_tsconfig(&aliased_root, Some(Path::new("tsconfig.json"))).is_ok());
     assert!(resolve_tsconfig(&aliased_root, None).is_ok());

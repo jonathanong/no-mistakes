@@ -502,6 +502,7 @@ fn relationship_arg_as_str_all_variants() {
     assert_eq!(RelationshipArg::Dotnet.as_str(), "dotnet");
     assert_eq!(RelationshipArg::Swift.as_str(), "swift");
     assert_eq!(RelationshipArg::Terraform.as_str(), "terraform");
+    assert_eq!(RelationshipArg::Resource.as_str(), "resource");
     assert_eq!(RelationshipArg::All.as_str(), "all");
 }
 

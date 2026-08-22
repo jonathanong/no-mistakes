@@ -80,6 +80,17 @@ fn trpc_router_globs_prefix_project_roots_and_skip_invalid_patterns() {
         vec!["src.ts".to_string()]
     );
     assert_eq!(
+        prefix_project_globs(Some("./packages/api"), &["./src/router.ts".into()]),
+        vec!["packages/api/src/router.ts".to_string()]
+    );
+    assert_eq!(
+        prefix_project_globs(
+            Some("./packages/api"),
+            &["./packages/api/src/router.ts".into()]
+        ),
+        vec!["packages/api/src/router.ts".to_string()]
+    );
+    assert_eq!(
         prefix_project_globs(Some(""), &["src.ts".into()]),
         vec!["src.ts".to_string()]
     );

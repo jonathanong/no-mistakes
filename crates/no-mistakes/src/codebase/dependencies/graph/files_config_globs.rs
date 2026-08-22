@@ -40,13 +40,17 @@ fn flatten_trpc_routers(v2_config: &crate::config::v2::NoMistakesConfig) -> Vec<
 fn prefix_project_globs(root: Option<&str>, globs: &[String]) -> Vec<String> {
     let prefix = root
         .map(str::trim)
+        .map(|root| root.trim_start_matches("./").trim_end_matches('/'))
         .filter(|root| !root.is_empty() && *root != ".");
     globs
         .iter()
-        .map(|glob| match prefix {
-            Some(root) if glob_has_root_prefix(glob, root) => glob.clone(),
-            Some(root) => format!("{}/{glob}", root.trim_end_matches('/')),
-            None => glob.clone(),
+        .map(|glob| {
+            let glob = glob.trim_start_matches("./");
+            match prefix {
+                Some(root) if glob_has_root_prefix(glob, root) => glob.to_string(),
+                Some(root) => format!("{root}/{glob}"),
+                None => glob.to_string(),
+            }
         })
         .collect()
 }
