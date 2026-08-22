@@ -94,12 +94,17 @@ fn scan(
         if dir_rel.is_empty() || !path_under_package_roots(&dir_rel, &opts.package_roots) {
             continue;
         }
-        if workspace_dirs.contains(&dir_rel)
-            || (!opts.require_named_package && covered_workspace_dirs.contains(&dir_rel))
-        {
-            continue;
-        }
         if opts.require_named_package && package_name_with_sources(path, sources).is_none() {
+            findings.push(RuleFinding {
+                rule: RULE_ID.to_string(),
+                file: rel.clone(),
+                line: 1,
+                message: format!("{rel}: package.json must declare a name"),
+                import: None,
+                target: Some(dir_rel.clone()),
+            });
+        }
+        if workspace_dirs.contains(&dir_rel) || covered_workspace_dirs.contains(&dir_rel) {
             continue;
         }
         findings.push(RuleFinding {
