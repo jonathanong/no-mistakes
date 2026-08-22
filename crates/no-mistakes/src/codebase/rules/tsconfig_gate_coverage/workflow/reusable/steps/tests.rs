@@ -206,4 +206,28 @@ fn run_steps_cover_empty_commands_dynamic_tolerance_and_static_success() {
         BTreeSet::new(),
     );
     assert!(!nameless.failed);
+
+    let skipped = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - if: false\n    run: echo skip\n  - continue-on-error: true\n    uses: actions/checkout@v4\n  - run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(!skipped.failed);
+
+    let unknown_configuration = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - timeout-minutes: []\n    run: echo invalid",
+        BTreeSet::new(),
+    );
+    assert!(unknown_configuration.failed || unknown_configuration.indeterminate);
+
+    let unsafe_body = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - run: eval true",
+        BTreeSet::new(),
+    );
+    assert!(unsafe_body.indeterminate);
+
+    let unknown_shell = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - shell: fish\n    run: echo unknown",
+        BTreeSet::new(),
+    );
+    assert!(unknown_shell.indeterminate);
 }

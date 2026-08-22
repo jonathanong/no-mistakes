@@ -399,3 +399,84 @@ fn value_primitives_cover_list_scalar_and_lookup_fallbacks() {
     assert!(json.get("missing").is_none());
     assert!(json.as_str().is_none());
 }
+
+#[test]
+fn workflow_values_cover_other_steps_default_queue_and_remote_calls() {
+    use super::super::workflow_values::{
+        call_edge, matrix_from_job, parse_concurrency, parse_steps,
+    };
+
+    assert!(parse_steps(None, None).is_empty());
+    assert!(parse_steps(Some(&serde_yaml::Value::String("nope".into())), None).is_empty());
+    let steps = parse_steps(
+        Some(
+            &serde_yaml::from_str(
+                "[true, {name: setup}, {run: echo hi}, {uses: actions/checkout@v4}]",
+            )
+            .unwrap(),
+        ),
+        None,
+    );
+    assert!(steps
+        .iter()
+        .any(|step| step.kind == super::super::model::StepKind::Other));
+    assert!(steps
+        .iter()
+        .any(|step| step.kind == super::super::model::StepKind::Run));
+    assert!(steps
+        .iter()
+        .any(|step| step.kind == super::super::model::StepKind::Action));
+
+    let concurrency = parse_concurrency(Some(&serde_yaml::from_str("{group: checks}").unwrap()))
+        .expect("group-only concurrency");
+    assert_eq!(concurrency.effective.queue, "single");
+
+    let remote = call_edge(
+        "ci.yml#build",
+        "org/repo/.github/workflows/reuse.yml@v1",
+        &serde_yaml::from_str("{secrets: inherit}").unwrap(),
+    );
+    assert!(!remote.local);
+    assert!(remote.to.is_none());
+    assert!(matrix_from_job(&serde_yaml::from_str("runs-on: ubuntu-latest").unwrap()).is_none());
+    assert!(matrix_from_job(&serde_yaml::from_str("strategy: true").unwrap()).is_none());
+}
+
+#[test]
+fn workflow_filters_reject_dot_basenames_and_skip_remote_callees() {
+    use super::super::topology_graph::select_workflow_paths;
+    use super::super::topology_graph::WORKFLOWS_DIRECTORY;
+
+    let ci = ".github/workflows/ci.yml";
+    let mut workflows = std::collections::HashMap::new();
+    workflows.insert(ci.to_string(), workflow_node(ci, false));
+    let dirs = [WORKFLOWS_DIRECTORY.to_string()];
+    let remote = WorkflowTopologyEdge::Calls(WorkflowCallEdge {
+        from: format!("{ci}#job"),
+        target: "org/repo/.github/workflows/reuse.yml@v1".into(),
+        local: false,
+        bindings: WorkflowCallBindings {
+            inputs: BTreeMap::new(),
+            secrets: WorkflowCallSecretsBinding::Inherit,
+        },
+        to: None,
+    });
+    let selected = select_workflow_paths(
+        &[String::from("ci.yml")],
+        &workflows,
+        std::slice::from_ref(&remote),
+        &dirs,
+    );
+    assert!(selected.contains(ci));
+
+    let mut diagnostics = Vec::new();
+    super::super::topology_graph::diagnose_workflow_filters(
+        &[String::from("."), String::from("././ci.yml")],
+        &workflows,
+        &mut diagnostics,
+        &dirs,
+    );
+    assert!(diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code == DiagnosticCode::InvalidWorkflowFilter));
+}

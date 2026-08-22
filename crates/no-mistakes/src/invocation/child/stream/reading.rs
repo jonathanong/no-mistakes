@@ -55,3 +55,6 @@ pub(super) fn decode_line(line: &[u8]) -> std::borrow::Cow<'_, str> {
     let line = line.strip_suffix(b"\r").unwrap_or(line);
     String::from_utf8_lossy(line)
 }
+
+#[cfg(test)]
+mod tests;

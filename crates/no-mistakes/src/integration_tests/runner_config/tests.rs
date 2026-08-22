@@ -364,3 +364,34 @@ fn configured_runner_config_dirs_use_each_config_parent() {
     let dirs = super::configured_runner_config_dirs(Path::new("/repo"), &config);
     assert_eq!(dirs.len(), 2);
 }
+
+#[test]
+fn prepare_runner_configs_with_catalog_seeds_configured_specs() {
+    let root = fixture_root("basic");
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("vitest.config.mts".to_string()));
+    config
+        .tests
+        .vitest
+        .projects
+        .insert("unit".to_string(), integration_policy());
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let tsconfig_catalog = Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+        &root,
+        std::slice::from_ref(&root),
+        &visible_paths,
+    ));
+    let inventory = Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
+        &visible_paths,
+    ));
+    let sources = Arc::new(crate::codebase::ts_source::SourceStore::new(inventory));
+    let prepared = super::prepare_runner_configs_with_catalog(
+        &root,
+        &config,
+        &visible_paths,
+        tsconfig_catalog,
+        sources,
+    );
+    assert_eq!(prepared.specs.len(), 1);
+    assert!(prepared.contains(&root.join("vitest.config.mts")));
+}

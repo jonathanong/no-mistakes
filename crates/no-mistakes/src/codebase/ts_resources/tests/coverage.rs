@@ -125,6 +125,8 @@ fn default_export_and_argumentless_resource_calls_are_walked() {
         "export default class C { read() { fs.readFile('class-default.json'); } }",
         "export default (function () { fs.readFile('paren-fn.json'); });",
         "export default (() => { fs.readFile('paren-arrow.json'); });",
+        "export default (((function () { fs.readFile('nested-paren-fn.json'); })));",
+        "export default (((() => { fs.readFile('nested-paren-arrow.json'); })));",
         "export default (1);\n(fs.readFile)('paren-callee.json');",
         "fs.readFile();\nglob();",
     ] {
@@ -163,6 +165,17 @@ fn require_glob_and_destructure_shapes_are_extracted() {
         g.sync('g-sync/**/*.txt');
         globSync('glob-sync/**/*.txt');
         url.fileURLToPath(new URL('./ns-url.json', import.meta.url));
+        (fileURLToPath)(new URL('./paren-url.json', import.meta.url));
+        const { [computed]: skipped } = require('fs');
+        const { promises: { readFile: nestedRead } } = require('fs');
+        const { promises: { [dyn]: x } } = require('fs');
+        const { readFile: { inner } } = require('fs');
+        const other = require('other').promises;
+        const { foo } = require('fs');
+        g.glob('spread/**/*.txt', { ...opts });
+        g.glob('computed-cwd/**/*.txt', { [k]: 1 });
+        g.glob('dynamic-cwd/**/*.txt', { cwd: dynamic });
+        g.glob('paren-cwd/**/*.txt', { cwd: ('static-cwd') });
         "#,
     );
     assert!(

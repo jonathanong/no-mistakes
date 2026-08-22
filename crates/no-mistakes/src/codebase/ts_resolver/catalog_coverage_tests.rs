@@ -132,3 +132,29 @@ fn invalid_package_tsconfig_records_an_extends_diagnostic_and_continues() {
             || diagnostic.detail.contains("loading extended")
     }));
 }
+
+#[test]
+fn apply_own_records_out_dir_files_and_boolean_compiler_flags() {
+    let root = fixture("directory-extends");
+    let path = root.join("tsconfig.json");
+    let mut config = EffectiveConfig::new(path.clone(), root.clone());
+    config
+        .apply_own(
+            &serde_json::json!({
+                "compilerOptions": {
+                    "outDir": "dist",
+                    "baseUrl": ".",
+                    "allowJs": false,
+                    "moduleResolution": "bundler"
+                },
+                "files": ["src/entry.ts"]
+            }),
+            &path,
+            &root,
+            |value| Ok(root.join(value)),
+        )
+        .expect("valid compiler options apply");
+    assert!(config.out_dir.is_some());
+    assert_eq!(config.allow_js, Some(false));
+    assert_eq!(config.module_resolution.as_deref(), Some("bundler"));
+}

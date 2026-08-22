@@ -54,7 +54,7 @@ impl EffectiveConfig {
     }
 
     fn tsconfig(&self) -> TsConfig {
-        let (paths, paths_dir) = self.paths.clone().unwrap_or_else(|| (Vec::new(), self.dir.clone()));
+        let (paths, paths_dir) = self.paths.clone().unwrap_or((Vec::new(), self.dir.clone()));
         TsConfig {
             dir: self.dir.clone(),
             paths,
@@ -67,7 +67,7 @@ impl EffectiveConfig {
         let excludes = self.excludes.clone().unwrap_or_else(|| default_excludes(&self.dir));
         ConfigMatcher {
             dir: self.dir.clone(),
-            real_dir: real_path(&self.dir).unwrap_or_else(|| self.dir.clone()),
+            real_dir: real_path(&self.dir).unwrap_or(self.dir.clone()),
             files: self.files.clone(),
             includes: self.includes.as_ref().map(|rules| {
                 rules.iter().filter_map(|rule| GlobRule::new(&rule.base, &rule.value)).collect()
