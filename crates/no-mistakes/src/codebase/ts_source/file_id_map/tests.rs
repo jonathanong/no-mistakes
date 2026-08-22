@@ -50,3 +50,21 @@ fn mut_iter_skips_empty_slots_and_visits_overflow() {
     assert!(map.get_mut(&inventoried).is_none());
     assert_eq!(map.get_mut(&overflow), Some(&mut 7));
 }
+
+#[test]
+fn into_entries_yields_only_occupied_slots_and_overflow() {
+    let inventoried = path("inventoried.ts");
+    let occupied = path("occupied.ts");
+    let overflow = path("overflow.ts");
+    let inventory = Arc::new(FileInventory::from_lookup_paths([
+        inventoried,
+        occupied.clone(),
+    ]));
+    let mut map = FileIdMap::with_inventory(inventory);
+    map.insert(occupied.clone(), 1u32);
+    map.insert(overflow.clone(), 2u32);
+
+    let mut entries: Vec<_> = map.into_entries().collect();
+    entries.sort_by(|left, right| left.0.cmp(&right.0));
+    assert_eq!(entries, vec![(occupied, 1), (overflow, 2)]);
+}

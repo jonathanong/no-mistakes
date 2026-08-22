@@ -9,9 +9,11 @@ fn collect_workspace_manifest_edges(
         .iter()
         .filter_map(|package| {
             let entry = package.entry.as_ref()?;
+            // Canonical remapping belongs in `visible_path`, not exact membership.
+            // `package.entry` may be the real path while discovery recorded a symlink.
             graph_files
-                .contains_visible(entry)
-                .then(|| (package.name.as_str(), entry.clone()))
+                .visible_path(entry)
+                .map(|visible| (package.name.as_str(), visible.to_path_buf()))
         })
         .collect();
     all_files

@@ -3,12 +3,18 @@ use std::path::PathBuf;
 
 impl<T> FileIdMap<T> {
     pub(crate) fn into_entries(self) -> impl Iterator<Item = (PathBuf, T)> {
-        let paths = self.inventory.as_paths().to_vec();
-        paths
+        let Self {
+            inventory,
+            slots,
+            overflow,
+        } = self;
+        let mut entries: Vec<_> = slots
             .into_iter()
-            .zip(self.slots)
-            .filter_map(|(path, slot)| slot.map(|value| (path, value)))
-            .chain(self.overflow)
+            .zip(inventory.as_paths())
+            .filter_map(|(slot, path)| slot.map(|value| (path.clone(), value)))
+            .collect();
+        entries.extend(overflow);
+        entries.into_iter()
     }
 }
 
