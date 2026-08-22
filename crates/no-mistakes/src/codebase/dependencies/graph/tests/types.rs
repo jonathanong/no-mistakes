@@ -34,9 +34,20 @@ mod tests_types {
         assert_eq!(workflow_job.as_file(), None);
         assert_eq!(workflow_job.as_path(), Some(file_path.as_path()));
 
-        let workflow_step = NodeId::workflow_step(file_path, "build", 0);
+        let workflow_step = NodeId::workflow_step(file_path.clone(), "build", 0);
         assert_eq!(workflow_step.as_file(), None);
         assert_eq!(workflow_step.as_path(), Some(Path::new("src/index.ts")));
+
+        let trpc = NodeId::trpc_procedure(file_path, "user.get");
+        assert_eq!(trpc.as_file(), None);
+        assert_eq!(trpc.as_path(), Some(Path::new("src/index.ts")));
+        assert_eq!(
+            trpc.display_name(Path::new("src")),
+            "index.ts#procedure:user.get"
+        );
+        let universe: crate::fx::PathSet = [PathBuf::from("src/index.ts")].into_iter().collect();
+        assert!(trpc.is_in_file_universe(&universe));
+        assert!(!NodeId::trpc_procedure("src/other.ts", "user.get").is_in_file_universe(&universe));
     }
 
     #[test]
@@ -176,6 +187,11 @@ mod tests_types {
         assert_ne!(hash_of(&file), hash_of(&symbol));
         assert_ne!(hash_of(&file), hash_of(&queue));
         assert_ne!(hash_of(&symbol), hash_of(&queue));
+        let trpc = NodeId::trpc_procedure(path, "job");
+        assert_ne!(file, trpc);
+        assert_ne!(queue, trpc);
+        assert_ne!(hash_of(&file), hash_of(&trpc));
+        assert_ne!(hash_of(&queue), hash_of(&trpc));
     }
 
     #[test]

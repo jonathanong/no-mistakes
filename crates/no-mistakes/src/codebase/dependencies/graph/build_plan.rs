@@ -26,6 +26,8 @@ pub struct GraphBuildPlan {
     pub swift: bool,
     pub terraform: bool,
     pub language_frontends: bool,
+    /// Opt-in tRPC procedure virtual nodes. Absent from `all()`.
+    pub trpc: bool,
 }
 
 impl GraphBuildPlan {
@@ -56,6 +58,7 @@ impl GraphBuildPlan {
             swift: true,
             terraform: true,
             language_frontends: true,
+            trpc: false,
         }
     }
 
@@ -128,6 +131,8 @@ impl GraphBuildPlan {
                 || allowed.contains(&EdgeKind::TerraformModuleRef)
                 || allowed.contains(&EdgeKind::TerraformOutputRef),
             language_frontends: allowed_requests_language_frontends(allowed),
+            trpc: allowed.contains(&EdgeKind::TrpcCall)
+                || allowed.contains(&EdgeKind::TrpcProcedure),
         }
     }
 
@@ -154,6 +159,7 @@ impl GraphBuildPlan {
         self.swift |= other.swift;
         self.terraform |= other.terraform;
         self.language_frontends |= other.language_frontends;
+        self.trpc |= other.trpc;
     }
 
     pub fn with_symbols(mut self, symbols: bool) -> Self {
@@ -175,6 +181,8 @@ impl GraphBuildPlan {
             queue_project: self.queues,
             http_calls: self.http,
             process_spawns: self.process,
+            trpc_router: self.trpc,
+            trpc_calls: self.trpc,
             ..TsFactPlan::default()
         }
     }

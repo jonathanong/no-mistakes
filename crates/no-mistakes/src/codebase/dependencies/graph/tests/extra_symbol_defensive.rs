@@ -253,6 +253,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         queue_workers: vec![],
         queue_cluster: None,
         queue_glob_clusters: HashMap::new(),
+        trpc_routers: Vec::new(),
         terraform: Default::default(),
         ci: crate::config::v2::schema::CiConfig::default(),
     };

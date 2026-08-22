@@ -26,4 +26,8 @@ when only one semantic is needed; each retains only the structural job/step
 bridges required to traverse it. `ci` remains the separate legacy
 workflow-file-to-Rust-binary relationship.
 
+`--relationship trpc` includes static tRPC procedure virtual nodes
+(`src/router.ts#procedure:user.get`, Flow `kind: "trpc-procedure"`). Empty
+`projects.*.trpc.routers` lists disable extraction; `all` omits `trpc`.
+
 Node API: `flow(options)`.

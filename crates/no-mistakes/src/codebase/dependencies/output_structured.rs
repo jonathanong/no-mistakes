@@ -8,6 +8,7 @@ enum OutputNode {
     QueueJob(OutputQueueJob),
     WorkflowJob(OutputWorkflowJob),
     WorkflowStep(OutputWorkflowStep),
+    TrpcProcedure(OutputTrpcProcedure),
     Module(OutputModule),
 }
 
@@ -62,6 +63,16 @@ struct OutputWorkflowStep {
     workflow_file: String,
     job: String,
     step: usize,
+    depth: usize,
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    via: Vec<&'static str>,
+}
+
+#[derive(Serialize)]
+struct OutputTrpcProcedure {
+    #[serde(rename = "routerFile")]
+    router_file: String,
+    procedure: String,
     depth: usize,
     #[serde(skip_serializing_if = "Vec::is_empty")]
     via: Vec<&'static str>,
@@ -165,6 +176,20 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                         depth: entry.depth,
                         via,
                     }),
+                    NodeId::TrpcProcedure {
+                        router_file,
+                        procedure,
+                    } => {
+                        let rel = router_file
+                            .strip_prefix(root_dir)
+                            .unwrap_or(router_file.as_ref());
+                        OutputNode::TrpcProcedure(OutputTrpcProcedure {
+                            router_file: rel.to_string_lossy().into_owned(),
+                            procedure: procedure.to_string(),
+                            depth: entry.depth,
+                            via,
+                        })
+                    }
                 }
             })
             .collect(),

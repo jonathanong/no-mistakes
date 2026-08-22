@@ -32,6 +32,7 @@ export type Relationship =
   | "ruby"
   | "php"
   | "resource"
+  | "trpc"
   | "all";
 
 export interface TraverseOptions {
@@ -59,6 +60,10 @@ export interface DependencyFile {
   job?: string;
   /** Zero-based step index for a virtual GitHub Actions workflow step node. */
   step?: number;
+  /** Router file for a virtual tRPC procedure node. */
+  routerFile?: string;
+  /** Dotted procedure path for a virtual tRPC procedure node (`user.get`). */
+  procedure?: string;
   module?: string;
   depth: number;
   via?: string[];

@@ -48,6 +48,8 @@ pub struct TsFactPlan {
     pub react: bool,
     pub effect_calls: bool,
     pub rsc_environment: bool,
+    pub trpc_router: bool,
+    pub trpc_calls: bool,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -91,6 +93,8 @@ pub struct TsFileFacts {
     pub react_components: Vec<ComponentFacts>,
     pub effect_calls: Vec<EffectCallFact>,
     pub rsc_environment: Option<RscEnvironmentFact>,
+    pub trpc_procedures: Vec<String>,
+    pub trpc_calls: Vec<crate::codebase::ts_trpc::TrpcCallFact>,
 }
 
 #[derive(Debug, Clone, Default)]

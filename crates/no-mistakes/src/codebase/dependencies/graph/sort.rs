@@ -27,6 +27,10 @@ fn node_sort_key(n: &NodeId) -> String {
             job,
             step,
         } => format!("{}#job:{job}/step:{step}", workflow_file.to_string_lossy()),
+        NodeId::TrpcProcedure {
+            router_file,
+            procedure,
+        } => format!("{}#procedure:{procedure}", router_file.to_string_lossy()),
     }
 }
 
@@ -42,6 +46,7 @@ fn node_variant_rank(n: &NodeId) -> u8 {
         NodeId::QueueJob { .. } => 3,
         NodeId::WorkflowJob { .. } => 4,
         NodeId::WorkflowStep { .. } => 5,
+        NodeId::TrpcProcedure { .. } => 6,
     }
 }
 
@@ -83,6 +88,15 @@ fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {
             "#job:",
             Some(Arc::clone(job)),
             Some(*step),
+        ),
+        NodeId::TrpcProcedure {
+            router_file,
+            procedure,
+        } => NodeSortKey::new(
+            Some(Arc::clone(router_file)),
+            "#procedure:",
+            Some(Arc::clone(procedure)),
+            None,
         ),
     }
 }
@@ -135,6 +149,15 @@ fn node_sort_parts<'a>(
             "#job:".into(),
             std::borrow::Cow::Borrowed(job.as_ref()),
             std::borrow::Cow::Borrowed(write_step_suffix(*step, step_buf)),
+        ],
+        NodeId::TrpcProcedure {
+            router_file,
+            procedure,
+        } => [
+            router_file.to_string_lossy(),
+            "#procedure:".into(),
+            std::borrow::Cow::Borrowed(procedure.as_ref()),
+            "".into(),
         ],
     }
 }

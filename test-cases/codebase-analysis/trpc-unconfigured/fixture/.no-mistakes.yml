@@ -1,0 +1,4 @@
+projects:
+  api:
+    type: server
+    root: .

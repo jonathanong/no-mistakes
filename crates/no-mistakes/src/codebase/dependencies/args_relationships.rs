@@ -42,13 +42,15 @@ pub enum RelationshipArg {
     Ruby,
     Php,
     Resource,
+    Trpc,
     All,
 }
 
 impl RelationshipArg {
     pub fn as_str(&self) -> &'static str {
         self.workflow_str()
-            .unwrap_or_else(|| self.non_workflow_str())
+            .or_else(|| self.language_str())
+            .unwrap_or_else(|| self.core_str())
     }
 
     fn workflow_str(&self) -> Option<&'static str> {
@@ -64,7 +66,22 @@ impl RelationshipArg {
         }
     }
 
-    fn non_workflow_str(&self) -> &'static str {
+    fn language_str(&self) -> Option<&'static str> {
+        match self {
+            Self::Dotnet => Some("dotnet"),
+            Self::Swift => Some("swift"),
+            Self::Terraform => Some("terraform"),
+            Self::Python => Some("python"),
+            Self::Go => Some("go"),
+            Self::Rust => Some("rust"),
+            Self::Ruby => Some("ruby"),
+            Self::Php => Some("php"),
+            Self::Trpc => Some("trpc"),
+            _ => None,
+        }
+    }
+
+    fn core_str(&self) -> &'static str {
         match self {
             Self::Import => "import",
             Self::ImportStatic => "import-static",
@@ -83,23 +100,9 @@ impl RelationshipArg {
             Self::Process => "process",
             Self::Asset => "asset",
             Self::React => "react",
-            Self::Dotnet => "dotnet",
-            Self::Swift => "swift",
-            Self::Terraform => "terraform",
-            Self::Python => "python",
-            Self::Go => "go",
-            Self::Rust => "rust",
-            Self::Ruby => "ruby",
-            Self::Php => "php",
             Self::Resource => "resource",
             Self::All => "all",
-            Self::Workflow
-            | Self::WorkflowJob
-            | Self::WorkflowStep
-            | Self::WorkflowNeeds
-            | Self::WorkflowUses
-            | Self::WorkflowRun
-            | Self::WorkflowArtifact => unreachable!("workflow relationships are handled first"),
+            _ => unreachable!("workflow and language relationships are handled first"),
         }
     }
 }
@@ -154,4 +157,9 @@ fn parsed_workflow_suffix(suffix: &str) -> Option<(&str, Option<usize>)> {
         return Some((job, Some(step.parse().ok()?)));
     }
     (!suffix.is_empty()).then_some((suffix, None))
+}
+
+pub(crate) fn trpc_procedure_from_suffix(file: &Path, suffix: &str) -> Option<NodeId> {
+    let procedure = suffix.strip_prefix("procedure:")?;
+    (!procedure.is_empty()).then(|| NodeId::trpc_procedure(file, procedure))
 }

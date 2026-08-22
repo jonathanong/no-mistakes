@@ -21,7 +21,7 @@ CLIs are not started.
 
 | Domain | Module graph | Test plan | HTTP routes | Queues | Status |
 | --- | --- | --- | --- | --- | --- |
-| TypeScript / JavaScript | yes | Vitest, Playwright, Jest | Express, Hono, Koa, Fastify, NestJS, Next.js, Remix file routes | BullMQ, glide-mq | shipped |
+| TypeScript / JavaScript | yes | Vitest, Playwright, Jest | Express, Hono, Koa, Fastify, NestJS, Next.js, Remix file routes | BullMQ, glide-mq | shipped (tRPC procedures opt-in) |
 | Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
 | .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | no | no | shipped, narrower |
 | Python, Django, Celery | `python-import`, `python-ref` | `tests plan python` | Django `path(`, Flask, FastAPI | Celery `.delay(` / `@shared_task` | shipped (v1 extractors + plan) |
@@ -33,6 +33,14 @@ CLIs are not started.
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
+
+tRPC procedures are a TypeScript-only opt-in graph: configured
+`projects.*.trpc.routers` globs plus static `router({ user: { get: procedure.query() } })`
+and `trpc.user.get.query()` calls emit `trpc-call` / `trpc-procedure` edges
+through `src/router.ts#procedure:user.get` virtual nodes. Request
+`--relationship trpc`. Empty router lists disable the extractor; there is no
+hardcoded `src/trpc`. Unfiltered `dependencies` and `--relationship all` omit
+these edges. Do not reuse queue virtual nodes or `--relationship queue`.
 
 Rust v1 is a language frontend for configured `tests.rust.packages`: `use
 crate/super/self` and `pub` declarations emit `rust-use` / `rust-mod` edges.
@@ -357,6 +365,8 @@ projects:
       cluster: orders
       enqueues: ["app/**/tasks.py"]
       workers: ["app/**/tasks.py", "workers/**/*.py"]
+    trpc:
+      routers: ["src/trpc/**/*.ts"]
 tests:
   python:
     packages:

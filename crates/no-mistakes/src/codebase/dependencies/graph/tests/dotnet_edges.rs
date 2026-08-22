@@ -22,6 +22,7 @@ fn empty_options() -> GraphConfigOptions {
         queue_workers: Vec::new(),
         queue_cluster: None,
         queue_glob_clusters: HashMap::new(),
+        trpc_routers: Vec::new(),
         terraform: Default::default(),
         ci: crate::config::v2::schema::CiConfig::default(),
     }
