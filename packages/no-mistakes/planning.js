@@ -42,12 +42,31 @@ function decamelizeValue(value) {
   return mapKeys(value, decamelizeKey);
 }
 
-function decamelizePlanOptions(options) {
-  const next = { ...(options || {}) };
-  if (next.planJson && typeof next.planJson === "object") {
-    next.planJson = decamelizeValue(next.planJson);
+function decamelizePlanOptions(options = {}) {
+  const next = { ...options };
+  if (next.planJson != null) {
+    let parsed = next.planJson;
+    if (typeof parsed === "string") {
+      try {
+        parsed = JSON.parse(parsed);
+      } catch {
+        parsed = next.planJson;
+      }
+    }
+    if (parsed && typeof parsed === "object") {
+      next.planJson = decamelizeValue(parsed);
+    }
   }
   return next;
+}
+
+function camelizeWhy(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return camelizeValue(value);
+  }
+  return Object.fromEntries(
+    Object.entries(value).map(([key, nested]) => [key, camelizeValue(nested)]),
+  );
 }
 
 async function testsComment(options) {
@@ -91,7 +110,7 @@ async function testsTargets(options) {
 }
 
 async function testsWhy(options) {
-  return camelizeValue(await jsonApis.testsWhy(options));
+  return camelizeWhy(await jsonApis.testsWhy(options));
 }
 
 async function testsGraph(options) {
@@ -100,6 +119,7 @@ async function testsGraph(options) {
 
 module.exports = {
   camelizeValue,
+  decamelizePlanOptions,
   testsComment,
   testsGraphMermaid,
   ...jsonApis,
