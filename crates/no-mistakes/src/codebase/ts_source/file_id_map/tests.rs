@@ -68,3 +68,44 @@ fn into_entries_yields_only_occupied_slots_and_overflow() {
     entries.sort_by(|left, right| left.0.cmp(&right.0));
     assert_eq!(entries, vec![(occupied, 1), (overflow, 2)]);
 }
+
+#[test]
+fn borrowed_iter_skips_empty_slots_and_visits_overflow() {
+    let inventoried = path("inventoried.ts");
+    let occupied = path("occupied.ts");
+    let overflow = path("overflow.ts");
+    let inventory = Arc::new(FileInventory::from_lookup_paths([
+        inventoried,
+        occupied.clone(),
+    ]));
+    let mut map = FileIdMap::with_inventory(inventory);
+    map.insert(occupied.clone(), 1u32);
+    map.insert(overflow.clone(), 2u32);
+
+    let mut entries: Vec<_> = (&map)
+        .into_iter()
+        .map(|(got, value)| (got.clone(), *value))
+        .collect();
+    entries.sort_by(|left, right| left.0.cmp(&right.0));
+    assert_eq!(entries, vec![(occupied, 1), (overflow, 2)]);
+}
+
+#[test]
+fn borrowed_file_id_map_into_iter_stays_lazy() {
+    let source = include_str!("../file_id_map_iter.rs");
+    assert!(
+        source.contains("type IntoIter = FileIdMapIter<'a, T>;"),
+        "borrowed FileIdMap iteration must stay a lazy occupied-slot iterator"
+    );
+    assert!(
+        !source
+            .split("impl<'a, T> IntoIterator for &'a FileIdMap<T>")
+            .nth(1)
+            .expect("borrowed IntoIterator impl")
+            .split("impl<T> std::iter::FromIterator")
+            .next()
+            .expect("borrowed impl body")
+            .contains("collect::<Vec<_>"),
+        "borrowed FileIdMap into_iter must not materialize a Vec"
+    );
+}

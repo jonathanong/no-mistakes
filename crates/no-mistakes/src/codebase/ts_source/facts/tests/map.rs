@@ -173,3 +173,16 @@ fn fact_map_get_hits_by_path_after_file_id_indexing() {
     assert!(!facts.get(&second).unwrap().fatal_parse_error);
     assert!(facts.get(Path::new("/fixture/missing.ts")).is_none());
 }
+
+#[test]
+fn borrowed_fact_map_into_iter_stays_lazy() {
+    let source = include_str!("../map_iter.rs");
+    assert!(
+        source.contains("type IntoIter = TsFactMapIter<'a>;"),
+        "borrowed TsFactMap iteration must stay a lazy occupied-slot iterator"
+    );
+    assert!(
+        source.contains("type IntoIter = TsFactMapIterMut<'a>;"),
+        "mutable TsFactMap iteration must stay a lazy occupied-slot iterator"
+    );
+}

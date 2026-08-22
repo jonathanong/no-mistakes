@@ -29,10 +29,10 @@ impl<T> IntoIterator for FileIdMap<T> {
 
 impl<'a, T> IntoIterator for &'a FileIdMap<T> {
     type Item = (&'a PathBuf, &'a T);
-    type IntoIter = std::vec::IntoIter<(&'a PathBuf, &'a T)>;
+    type IntoIter = FileIdMapIter<'a, T>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.iter().collect::<Vec<_>>().into_iter()
+        FileIdMapIter::new(self)
     }
 }
 
@@ -73,6 +73,39 @@ impl<'a, T> IntoIterator for &'a mut FileIdMap<T> {
             overflow: self.overflow.iter_mut(),
             index: 0,
         }
+    }
+}
+
+pub(crate) struct FileIdMapIter<'a, T> {
+    paths: &'a [PathBuf],
+    slots: std::slice::Iter<'a, Option<T>>,
+    overflow: std::collections::hash_map::Iter<'a, PathBuf, T>,
+    index: usize,
+}
+
+impl<'a, T> FileIdMapIter<'a, T> {
+    pub(crate) fn new(map: &'a FileIdMap<T>) -> Self {
+        Self {
+            paths: map.inventory.as_paths(),
+            slots: map.slots.iter(),
+            overflow: map.overflow.iter(),
+            index: 0,
+        }
+    }
+}
+
+impl<'a, T> Iterator for FileIdMapIter<'a, T> {
+    type Item = (&'a PathBuf, &'a T);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        for slot in self.slots.by_ref() {
+            let path = &self.paths[self.index];
+            self.index += 1;
+            if let Some(value) = slot.as_ref() {
+                return Some((path, value));
+            }
+        }
+        self.overflow.next()
     }
 }
 

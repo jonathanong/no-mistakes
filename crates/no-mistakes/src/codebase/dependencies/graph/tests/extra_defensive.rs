@@ -150,3 +150,30 @@ fn lazy_import_facts_memoize_parse_errors() {
         .and_then(|facts| facts.parse_error)
         .is_some_and(|error| error.contains("failed to parse")));
 }
+
+#[cfg(unix)]
+#[test]
+fn markdown_links_remap_canonical_targets_to_the_visible_spelling() {
+    let via_link = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/markdown-canonical-link/link/src/value.ts"),
+    );
+    let notes = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/markdown-canonical-link/real/src/notes.md"),
+    );
+    let files = GraphFiles::from_files(vec![via_link.clone()]);
+    let edges = collect_md_edges(
+        &[notes.clone()],
+        &files,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+    assert_eq!(
+        edges,
+        vec![(
+            NodeId::file(notes),
+            NodeId::file(via_link),
+            EdgeKind::MarkdownLink,
+        )]
+    );
+}

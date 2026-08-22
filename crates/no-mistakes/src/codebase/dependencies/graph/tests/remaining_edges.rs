@@ -15,6 +15,10 @@ fn collect_remaining_edges_parallelizes_independent_kinds() {
         "independent panel must collect markdown edges"
     );
     assert!(
+        include_str!("../edge_tests_md.rs").contains("graph_files.visible_path(&target)"),
+        "markdown targets must remap through visible_path for symlink aliases"
+    );
+    assert!(
         independent.contains("collect_terraform_edges_for_plan")
             && independent.contains("collect_dotnet_edges_for_plan")
             && independent.contains("collect_swift_edges_for_plan"),

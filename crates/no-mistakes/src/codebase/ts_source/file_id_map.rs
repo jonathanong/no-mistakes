@@ -118,13 +118,8 @@ impl<T> FileIdMap<T> {
             .chain(self.overflow.keys())
     }
 
-    pub(crate) fn iter(&self) -> impl Iterator<Item = (&PathBuf, &T)> {
-        self.inventory
-            .as_paths()
-            .iter()
-            .zip(self.slots.iter())
-            .filter_map(|(path, slot)| slot.as_ref().map(|value| (path, value)))
-            .chain(self.overflow.iter())
+    pub(crate) fn iter(&self) -> FileIdMapIter<'_, T> {
+        self.into_iter()
     }
 
     pub(crate) fn values(&self) -> impl Iterator<Item = &T> {
@@ -143,6 +138,7 @@ impl<T> FileIdMap<T> {
 
 #[path = "file_id_map_iter.rs"]
 mod iter;
+pub(crate) use iter::{FileIdMapIter, FileIdMapIterMut};
 
 #[cfg(test)]
 mod tests;

@@ -12,7 +12,7 @@ mod file_inventory;
 mod parser_diagnostic;
 mod path_remapper;
 mod source_store;
-pub(crate) use file_id_map::FileIdMap;
+pub(crate) use file_id_map::{FileIdMap, FileIdMapIter, FileIdMapIterMut};
 pub(crate) use file_inventory::ClassifiedPath;
 #[doc(hidden)]
 pub use file_inventory::{FileClassification, FileId, FileInventory};
