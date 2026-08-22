@@ -1,7 +1,7 @@
 use sqlparser::ast::{
-    Distinct, Expr, GroupByExpr, JoinConstraint, JoinOperator, LimitClause, NamedWindowDefinition,
-    NamedWindowExpr, Query, Select, SelectItem, SetExpr, TableFactor, TableWithJoins, Values,
-    WindowSpec,
+    Distinct, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments, GroupByExpr,
+    JoinConstraint, JoinOperator, LimitClause, NamedWindowDefinition, NamedWindowExpr, Query,
+    Select, SelectItem, SetExpr, TableFactor, TableWithJoins, Values, WindowSpec,
 };
 
 pub(super) fn query_has_offset(query: &Query) -> bool {
@@ -50,6 +50,9 @@ fn set_expr_has_offset(expr: &SetExpr) -> bool {
         }
         SetExpr::Values(Values { rows, .. }) => {
             rows.iter().any(|row| row.iter().any(expr_has_offset_query))
+        }
+        SetExpr::Insert(stmt) | SetExpr::Update(stmt) | SetExpr::Delete(stmt) => {
+            super::statement_has_offset(stmt)
         }
         _ => false,
     }
@@ -137,7 +140,19 @@ pub(super) fn expr_has_offset_query(expr: &Expr) -> bool {
             expr_has_offset_query(left) || expr_has_offset_query(right)
         }
         Expr::UnaryOp { expr, .. } => expr_has_offset_query(expr),
+        Expr::Function(Function { args, .. }) => function_args_has_offset(args),
         _ => false,
+    }
+}
+
+fn function_args_has_offset(args: &FunctionArguments) -> bool {
+    match args {
+        FunctionArguments::List(list) => list.args.iter().any(|arg| match arg {
+            FunctionArg::Unnamed(FunctionArgExpr::Expr(expr)) => expr_has_offset_query(expr),
+            _ => false,
+        }),
+        FunctionArguments::Subquery(query) => query_has_offset(query),
+        FunctionArguments::None => false,
     }
 }
 

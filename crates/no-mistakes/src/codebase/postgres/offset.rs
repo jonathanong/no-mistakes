@@ -15,7 +15,7 @@ pub fn sql_has_offset_clause(sql: &str) -> Result<bool, PostgresParseError> {
     Ok(statements.iter().any(statement_has_offset))
 }
 
-fn statement_has_offset(statement: &Statement) -> bool {
+pub(super) fn statement_has_offset(statement: &Statement) -> bool {
     match statement {
         Statement::Query(query) => query_has_offset(query),
         Statement::Insert(Insert {

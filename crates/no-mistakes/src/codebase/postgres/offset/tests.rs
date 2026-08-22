@@ -274,3 +274,25 @@ fn nested_join_group_by_distinct_and_limit_offsets_are_detected() {
     )
     .unwrap());
 }
+
+#[test]
+fn function_args_and_modifying_cte_offsets_are_detected() {
+    assert!(
+        sql_has_offset_clause("SELECT COALESCE((SELECT id FROM pages OFFSET 1 LIMIT 1), 0)")
+            .unwrap()
+    );
+    assert!(!sql_has_offset_clause("SELECT COUNT(*) FROM t").unwrap());
+    assert!(sql_has_offset_clause(
+        "WITH changed AS (UPDATE users SET rank = (SELECT rank FROM rankings OFFSET 1) RETURNING id) SELECT * FROM changed"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "WITH removed AS (DELETE FROM users WHERE id IN (SELECT id FROM stale OFFSET 1) RETURNING id) SELECT * FROM removed"
+    )
+    .unwrap());
+    assert!(sql_has_offset_clause(
+        "WITH added AS (INSERT INTO t SELECT id FROM u OFFSET 1 RETURNING id) SELECT * FROM added"
+    )
+    .unwrap());
+    assert!(!sql_has_offset_clause("SELECT CURRENT_TIMESTAMP").unwrap());
+}
