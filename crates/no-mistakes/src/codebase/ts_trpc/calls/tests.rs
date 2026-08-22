@@ -1,5 +1,7 @@
-use super::{extract_trpc_calls_from_program, TrpcCallFact};
+use super::{finish_trpc_calls, procedure_path_from_call, TrpcCallFact};
 use oxc_allocator::Allocator;
+use oxc_ast::ast::CallExpression;
+use oxc_ast_visit::{walk, Visit};
 use oxc_span::SourceType;
 
 fn extract_trpc_calls(source: &str) -> Vec<TrpcCallFact> {
@@ -10,7 +12,23 @@ fn extract_trpc_calls(source: &str) -> Vec<TrpcCallFact> {
         source,
         SourceType::ts(),
     );
-    extract_trpc_calls_from_program(&ret.program)
+    let mut visitor = CallVisitor { calls: Vec::new() };
+    visitor.visit_program(&ret.program);
+    finish_trpc_calls(&mut visitor.calls);
+    visitor.calls
+}
+
+struct CallVisitor {
+    calls: Vec<TrpcCallFact>,
+}
+
+impl<'a> Visit<'a> for CallVisitor {
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        if let Some(path) = procedure_path_from_call(call) {
+            self.calls.push(TrpcCallFact { path });
+        }
+        walk::walk_call_expression(self, call);
+    }
 }
 
 #[test]

@@ -1,8 +1,6 @@
 use crate::codebase::ts_source::byte_offset_to_line;
-use oxc_ast::ast::{Argument, CallExpression, Expression, Function, Program};
-use oxc_ast_visit::{walk, Visit};
+use oxc_ast::ast::{Argument, CallExpression, Expression};
 use oxc_span::GetSpan;
-use oxc_syntax::scope::ScopeFlags;
 
 /// A direct identifier or one-level static member call recorded during the
 /// shared TypeScript fact pass. Query consumers select the relevant callee
@@ -18,24 +16,6 @@ pub struct CallSiteFact {
     pub arg_count: usize,
     pub has_spread: bool,
     pub args: Vec<&'static str>,
-}
-
-#[cfg(test)]
-pub(crate) fn collect_call_site_facts(program: &Program<'_>, source: &str) -> Vec<CallSiteFact> {
-    let mut visitor = CallSiteVisitor {
-        source,
-        scope: Vec::new(),
-        sites: Vec::new(),
-    };
-    visitor.visit_program(program);
-    visitor.sites
-}
-
-#[cfg(test)]
-struct CallSiteVisitor<'a> {
-    source: &'a str,
-    scope: Vec<String>,
-    sites: Vec<CallSiteFact>,
 }
 
 fn callee_name(callee: &Expression<'_>) -> Option<String> {
@@ -101,25 +81,6 @@ fn arg_tag(arg: &Argument<'_>) -> &'static str {
         Argument::ArrowFunctionExpression(_) | Argument::FunctionExpression(_) => "arrow",
         Argument::CallExpression(_) => "call",
         _ => "other",
-    }
-}
-
-#[cfg(test)]
-impl<'a> Visit<'a> for CallSiteVisitor<'a> {
-    fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
-        let name = function.id.as_ref().map(|id| id.name.as_str().to_string());
-        if let Some(name) = &name {
-            self.scope.push(name.clone());
-        }
-        walk::walk_function(self, function, flags);
-        if name.is_some() {
-            self.scope.pop();
-        }
-    }
-
-    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
-        record_call_site(self.source, self.scope.last(), call, &mut self.sites);
-        walk::walk_call_expression(self, call);
     }
 }
 
