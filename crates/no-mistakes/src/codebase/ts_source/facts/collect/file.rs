@@ -168,7 +168,7 @@ pub(crate) fn collect_file_facts_from_program(
         http_calls: domain.http_calls,
         process_spawns: domain.process_spawns,
         server_routes: domain.server_routes,
-        react_components: Arc::unwrap_or_clone(react_components),
+        react_components,
         effect_calls: domain.effect_calls,
         rsc_environment: domain.rsc_environment,
         trpc_procedures: domain.trpc_procedures,
