@@ -55,7 +55,9 @@ fn ts_fact_map_get_or_compute_route_reachable_files_caches_compute_errors() {
     let second = facts
         .get_or_compute_route_reachable_files(&cache_settings(), &failing)
         .unwrap_err();
-    assert!(second.to_string().contains("route reachability scan failed"));
+    assert!(second
+        .to_string()
+        .contains("route reachability scan failed"));
     assert_eq!(
         calls.load(Ordering::SeqCst),
         1,
@@ -154,4 +156,109 @@ fn ts_fact_map_get_or_compute_methods_cache_per_settings_key() {
         .unwrap();
     assert_eq!(text_calls.load(Ordering::SeqCst), 1);
     assert!(std::sync::Arc::ptr_eq(&first, &second));
+}
+
+/// Settings-only keys would return reachability computed for a previous
+/// fact/graph universe after `extend`. Generation is in the cache key so a
+/// later `compute` that sees newly reachable files cannot be skipped.
+#[test]
+fn ts_fact_map_extend_invalidates_playwright_scan_caches() {
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use crate::codebase::ts_source::facts::{TsFactMap, TsFileFacts};
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let mut facts = TsFactMap::new();
+    let calls = AtomicUsize::new(0);
+    let compute = || -> anyhow::Result<_> {
+        calls.fetch_add(1, Ordering::SeqCst);
+        Ok(Default::default())
+    };
+    let first = facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    facts.extend(TsFactMap::from([(
+        PathBuf::from("/repo/added.ts"),
+        TsFileFacts::default(),
+    )]));
+    let second = facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    assert_eq!(
+        calls.load(Ordering::SeqCst),
+        2,
+        "extending the fact universe must recompute route reachability"
+    );
+    assert!(
+        !std::sync::Arc::ptr_eq(&first, &second),
+        "the post-extend scan must be a new cached allocation, not the prior universe"
+    );
+}
+
+/// Clones copy the generation and share the DashMap. Extending the original
+/// must not evict the clone's memoization for the universe it still describes.
+#[test]
+fn ts_fact_map_clone_keeps_cached_scans_after_original_extends() {
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use crate::codebase::ts_source::facts::{TsFactMap, TsFileFacts};
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let mut facts = TsFactMap::new();
+    let cloned = facts.clone();
+    let calls = AtomicUsize::new(0);
+    let compute = || -> anyhow::Result<_> {
+        calls.fetch_add(1, Ordering::SeqCst);
+        Ok(Default::default())
+    };
+    let cached = facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    facts.extend(TsFactMap::from([(
+        PathBuf::from("/repo/added.ts"),
+        TsFileFacts::default(),
+    )]));
+    let from_clone = cloned
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    assert_eq!(
+        calls.load(Ordering::SeqCst),
+        1,
+        "a clone that still has the pre-extend universe must keep the cached scan"
+    );
+    assert!(std::sync::Arc::ptr_eq(&cached, &from_clone));
+    facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    assert_eq!(
+        calls.load(Ordering::SeqCst),
+        2,
+        "the extended original must miss the pre-extend generation"
+    );
+}
+
+#[test]
+fn ts_fact_map_bump_playwright_scan_generation_isolates_cache_keys() {
+    use crate::codebase::dependencies::graph::TsFactLookup;
+    use crate::codebase::ts_source::facts::TsFactMap;
+    use std::sync::atomic::{AtomicUsize, Ordering};
+
+    let mut facts = TsFactMap::new();
+    let calls = AtomicUsize::new(0);
+    let compute = || -> anyhow::Result<_> {
+        calls.fetch_add(1, Ordering::SeqCst);
+        Ok(Default::default())
+    };
+    facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    facts.bump_playwright_scan_generation();
+    facts
+        .get_or_compute_route_reachable_files(&cache_settings(), &compute)
+        .unwrap();
+    assert_eq!(
+        calls.load(Ordering::SeqCst),
+        2,
+        "SharedTraversalContext invalidation bumps this generation so a rebuilt graph cannot reuse the prior universe's scan"
+    );
 }

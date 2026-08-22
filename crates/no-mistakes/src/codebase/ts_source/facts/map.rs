@@ -59,6 +59,20 @@ impl TsFactMap {
         self.plan
     }
 
+    pub(crate) fn bump_playwright_scan_generation(&mut self) {
+        self.playwright_scan_generation = self.playwright_scan_generation.wrapping_add(1);
+    }
+
+    pub(crate) fn playwright_scan_cache_key(
+        &self,
+        settings: &crate::playwright::config::Settings,
+    ) -> (u64, crate::codebase::check_facts::PlaywrightSettingsKey) {
+        (
+            self.playwright_scan_generation,
+            crate::codebase::check_facts::PlaywrightSettingsKey::new(settings),
+        )
+    }
+
     pub fn get(&self, path: &Path) -> Option<&TsFileFacts> {
         self.facts.get(path).map(TsFactSlot::as_facts)
     }
@@ -106,7 +120,11 @@ impl TsFactMap {
     }
 
     pub(crate) fn extend(&mut self, other: Self) {
+        if other.is_empty() {
+            return;
+        }
         self.facts.extend(other.facts);
+        self.bump_playwright_scan_generation();
     }
 }
 

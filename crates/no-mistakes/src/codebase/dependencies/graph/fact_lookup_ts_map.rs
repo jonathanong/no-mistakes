@@ -14,10 +14,7 @@ impl TsFactLookup for TsFactMap {
         compute: &dyn Fn() -> Result<Vec<crate::playwright::selectors::AppSelector>>,
     ) -> Result<Arc<Vec<crate::playwright::selectors::AppSelector>>> {
         self.app_selector_occurrences_cache
-            .entry((
-                crate::codebase::check_facts::PlaywrightSettingsKey::new(settings),
-                scan_html_ids,
-            ))
+            .entry((self.playwright_scan_cache_key(settings), scan_html_ids))
             .or_insert_with(|| {
                 compute()
                     .map(Arc::new)
@@ -33,9 +30,7 @@ impl TsFactLookup for TsFactMap {
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
         self.playwright_routes_cache
-            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(
-                settings,
-            ))
+            .entry(self.playwright_scan_cache_key(settings))
             .or_insert_with(|| Arc::new(compute()))
             .clone()
     }
@@ -46,9 +41,7 @@ impl TsFactLookup for TsFactMap {
         compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
     ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
         self.app_text_targets_cache
-            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(
-                settings,
-            ))
+            .entry(self.playwright_scan_cache_key(settings))
             .or_insert_with(|| {
                 compute()
                     .map(Arc::new)
@@ -63,10 +56,11 @@ impl TsFactLookup for TsFactMap {
         settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
+        // Settings alone are not enough: SharedTraversalContext can extend
+        // this map, add explicit roots, and rebuild the graph. Generation is
+        // part of the key so a later universe cannot reuse the prior scan.
         self.route_reachable_files_cache
-            .entry(crate::codebase::check_facts::PlaywrightSettingsKey::new(
-                settings,
-            ))
+            .entry(self.playwright_scan_cache_key(settings))
             .or_insert_with(|| {
                 compute()
                     .map(Arc::new)

@@ -14,14 +14,14 @@ use crate::server_routes::model::FileFacts as ServerRouteFileFacts;
 use dashmap::DashMap;
 use std::sync::Arc;
 
+type PlaywrightScanKey = (u64, PlaywrightSettingsKey);
 type AppSelectorOccurrencesCache =
-    Arc<DashMap<(PlaywrightSettingsKey, bool), Result<Arc<Vec<AppSelector>>, String>>>;
-type PlaywrightRoutesCache = Arc<DashMap<PlaywrightSettingsKey, Arc<Vec<crate::routes::Route>>>>;
-type AppTextTargetsCache =
-    Arc<DashMap<PlaywrightSettingsKey, Result<Arc<Vec<AppTextTarget>>, String>>>;
+    Arc<DashMap<(PlaywrightScanKey, bool), Result<Arc<Vec<AppSelector>>, String>>>;
+type PlaywrightRoutesCache = Arc<DashMap<PlaywrightScanKey, Arc<Vec<crate::routes::Route>>>>;
+type AppTextTargetsCache = Arc<DashMap<PlaywrightScanKey, Result<Arc<Vec<AppTextTarget>>, String>>>;
 type RouteReachableFilesCache = Arc<
     DashMap<
-        PlaywrightSettingsKey,
+        PlaywrightScanKey,
         Result<Arc<crate::codebase::dependencies::graph::RouteReachableFiles>, String>,
     >,
 >;
@@ -156,6 +156,10 @@ impl TsFactSlot {
 pub struct TsFactMap {
     facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>,
     plan: TsFactPlan,
+    /// Copied on `Clone` so a mutated original can bump without invalidating
+    /// a clone that still describes the previous fact/graph universe. The
+    /// DashMap Arcs stay shared; lookups include this generation.
+    pub(crate) playwright_scan_generation: u64,
     pub(crate) app_selector_occurrences_cache: AppSelectorOccurrencesCache,
     pub(crate) playwright_routes_cache: PlaywrightRoutesCache,
     pub(crate) app_text_targets_cache: AppTextTargetsCache,
