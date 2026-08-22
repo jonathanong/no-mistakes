@@ -45,7 +45,7 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
         }),
     );
 
-    let visible = [file.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [file.clone()].into_iter().collect();
     let tsconfig = TsConfig {
         dir: root.clone(),
         paths: Vec::new(),

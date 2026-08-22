@@ -376,7 +376,8 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     assert!(missing_forward.is_empty());
 
     let nested_root = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-nested-bin"));
-    let nested_visible = HashSet::from([nested_root.join("src/bin/nested/main.rs")]);
+    let nested_visible: crate::fx::PathSet =
+        [nested_root.join("src/bin/nested/main.rs")].into_iter().collect();
     assert_eq!(
         resolve_cargo_bin_source(&nested_root, "nested", "missing.rs", &nested_visible),
         Some(nested_root.join("src/bin/nested/main.rs"))
@@ -432,7 +433,7 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     );
     assert!(nested_forward.is_empty());
     let mut bins = CargoBinIndex::default();
-    let empty_visible = HashSet::new();
+    let empty_visible = crate::fx::PathSet::default();
     add_manifest_bins(
         Path::new("/"),
         "[[bin]]\nname = \"root\"\npath = \"main.rs\"\n",

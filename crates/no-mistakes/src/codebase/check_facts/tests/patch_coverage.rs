@@ -25,7 +25,7 @@ fn aggregate_resolves_deferred_selectors_from_precollected_exports() {
         "page.tsx",
     ]);
     let exports_path = page.with_file_name("selectors.ts");
-    let visible = [page.clone(), exports_path.clone()].into_iter().collect();
+    let visible: crate::fx::PathSet = [page.clone(), exports_path.clone()].into_iter().collect();
     let regexes = crate::playwright::selectors::compile_selector_regexes(
         &["data-pw".to_string()],
         &BTreeMap::new(),

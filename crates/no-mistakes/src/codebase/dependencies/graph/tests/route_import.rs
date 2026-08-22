@@ -139,7 +139,7 @@ fn fact_lookup_defaults_and_sparse_fallback_are_complete() {
         },
     )]);
     let minimal = MinimalFacts(primary);
-    let graph_visible = [fallback_path.clone()].into_iter().collect();
+    let graph_visible: crate::fx::PathSet = [fallback_path.clone()].into_iter().collect();
 
     assert!(!minimal.covers_ts_fact_plan(TsFactPlan::imports()));
     assert!(minimal.graph_files().is_none());
@@ -184,7 +184,9 @@ fn fact_lookup_defaults_and_sparse_fallback_are_complete() {
 fn graph_universe_comparison_rejects_duplicate_false_matches() {
     assert!(!same_graph_universe(
         &[p("/repo/a.ts"), p("/repo/a.ts")],
-        &[p("/repo/a.ts"), p("/repo/b.ts")].into_iter().collect(),
+        &[p("/repo/a.ts"), p("/repo/b.ts")]
+            .into_iter()
+            .collect::<crate::fx::PathSet>(),
     ));
 }
 
@@ -221,7 +223,7 @@ fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
             ..TsFileFacts::default()
         },
     )]);
-    let graph_visible = graph_files.clone().into_iter().collect();
+    let graph_visible: crate::fx::PathSet = graph_files.clone().into_iter().collect();
     let lookup = FallbackTsFactLookup::new(
         &primary,
         &fallback,
@@ -326,7 +328,7 @@ fn sparse_fallback_prefers_primary_playwright_fetch_errors_when_requested() {
         &fallback,
         false,
         std::slice::from_ref(&path),
-        &[path.clone()].into_iter().collect(),
+        &[path.clone()].into_iter().collect::<crate::fx::PathSet>(),
     );
 
     let result = lookup
@@ -350,7 +352,7 @@ fn sparse_fallback_isolates_playwright_caches_for_a_different_graph_universe() {
     let mut primary = CheckFactMap::default();
     primary.files.push(primary_path);
     let fallback = TsFactMap::from([(graph_path.clone(), TsFileFacts::default())]);
-    let graph_visible = [graph_path.clone()].into_iter().collect();
+    let graph_visible: crate::fx::PathSet = [graph_path.clone()].into_iter().collect();
 
     let primary_selector_calls = Cell::new(0);
     primary

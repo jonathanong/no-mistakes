@@ -2,7 +2,7 @@ use super::*;
 
 impl<'a> ScopedImportResolver<'a> {
     /// Use only the request's visible universe when resolving files.
-    pub(crate) fn new(catalog: &'a TsConfigCatalog, visible: &HashSet<PathBuf>) -> Self {
+    pub(crate) fn new(catalog: &'a TsConfigCatalog, visible: &dyn VisiblePathLookup) -> Self {
         Self::build(
             catalog,
             Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
