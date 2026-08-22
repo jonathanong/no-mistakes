@@ -15,7 +15,14 @@ export interface FlowOptions {
 
 export interface FlowNode {
   id: string;
-  kind: "file" | "symbol" | "module" | "queue-job" | "workflow-job" | "workflow-step" | "trpc-procedure";
+  kind:
+    | "file"
+    | "symbol"
+    | "module"
+    | "queue-job"
+    | "workflow-job"
+    | "workflow-step"
+    | "trpc-procedure";
   depth: number;
   file?: string;
   symbol?: string;
