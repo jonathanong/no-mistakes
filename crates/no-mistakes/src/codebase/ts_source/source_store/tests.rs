@@ -256,3 +256,20 @@ fn concurrent_json_failures_have_exact_parse_and_cache_hit_metrics() {
     assert_eq!(work["manifest.cache_hits"], (CONCURRENT_CALLERS - 1) as u64);
     assert_eq!(work["manifest.errors"], 1);
 }
+
+#[test]
+fn optional_reads_use_a_one_file_store_when_no_session_is_prepared() {
+    let path = fixture("alpha.ts");
+    let source = SourceStore::read_optional(None, &path).unwrap();
+    assert!(source.contains("alpha"));
+    assert!(SourceStore::read_optional(None, &fixture("missing.ts")).is_none());
+}
+
+#[test]
+fn optional_json_parses_use_a_one_file_store_when_no_session_is_prepared() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/gitignore/workspace-symbol/package.json");
+    let json = SourceStore::parse_json_optional(None, &path).unwrap();
+    assert!(json.is_object());
+    assert!(SourceStore::parse_json_optional(None, &fixture("missing.json")).is_none());
+}
