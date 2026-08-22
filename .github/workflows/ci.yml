@@ -429,8 +429,11 @@ jobs:
     timeout-minutes: 60
     env:
       RAYON_NUM_THREADS: "4"
-      # Full LTO + one codegen unit is memory-heavy on shared runners.
-      CARGO_BUILD_JOBS: "1"
+      # CodSpeed simulation/memory do not need production fat LTO. The release
+      # profile's lto=true + codegen-units=1 OOMs or forces CARGO_BUILD_JOBS=1
+      # on ubuntu-latest (~16 min). Relative CodSpeed comparisons stay valid.
+      CARGO_PROFILE_BENCH_LTO: "false"
+      CARGO_PROFILE_BENCH_CODEGEN_UNITS: "16"
 
     steps:
       - name: Checkout
@@ -438,16 +441,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      - name: Add swap for instrumented rustc
-        timeout-minutes: 2
-        run: |
-          sudo swapoff -a || true
-          sudo fallocate -l 8G /swapfile
-          sudo chmod 600 /swapfile
-          sudo mkswap /swapfile
-          sudo swapon /swapfile
-          free -h
 
       - name: Install Rust
         timeout-minutes: 5
