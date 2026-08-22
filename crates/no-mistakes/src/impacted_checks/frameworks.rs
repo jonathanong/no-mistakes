@@ -35,6 +35,9 @@ pub(super) fn framework_present(
         TestFramework::Elixir => {
             nonempty_or_plan(&config.tests.elixir.apps, &config.test_plan.elixir)
         }
+        TestFramework::Dart => {
+            nonempty_or_plan(&config.tests.dart.packages, &config.test_plan.dart)
+        }
         TestFramework::Jest => jest_present(config),
     }
 }

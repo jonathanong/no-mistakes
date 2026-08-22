@@ -116,6 +116,8 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
         EdgeKind::KotlinReference,
         EdgeKind::ElixirImport,
         EdgeKind::ElixirReference,
+        EdgeKind::DartImport,
+        EdgeKind::DartReference,
     ] {
         let allowed: HashSet<_> = [kind].into();
         assert!(

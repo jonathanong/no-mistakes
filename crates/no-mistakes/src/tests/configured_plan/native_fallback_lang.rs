@@ -5,6 +5,23 @@ use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use no_mistakes::config::v2::schema::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 
+pub(super) fn is_native_framework(framework: TestFramework) -> bool {
+    matches!(
+        framework,
+        TestFramework::Dotnet
+            | TestFramework::Swift
+            | TestFramework::Python
+            | TestFramework::Go
+            | TestFramework::Cargo
+            | TestFramework::Rails
+            | TestFramework::Php
+            | TestFramework::Java
+            | TestFramework::Kotlin
+            | TestFramework::Elixir
+            | TestFramework::Dart
+    )
+}
+
 pub(super) fn is_language_native_change(
     framework: TestFramework,
     root: &Path,
@@ -21,6 +38,7 @@ pub(super) fn is_language_native_change(
         TestFramework::Java => is_java_native(&rel, root, config),
         TestFramework::Kotlin => is_kotlin_native(&rel, root, config),
         TestFramework::Elixir => is_elixir_native(&rel, root, config),
+        TestFramework::Dart => is_dart_native(&rel, root, config),
         _ => false,
     }
 }
@@ -98,6 +116,7 @@ fn is_java_native(rel: &str, root: &Path, config: &NoMistakesConfig) -> bool {
 
 include!("native_fallback_lang_kotlin.rs");
 include!("native_fallback_lang_elixir.rs");
+include!("native_fallback_lang_dart.rs");
 
 fn owning_root(
     framework: TestFramework,
@@ -129,6 +148,7 @@ fn configured_roots(framework: TestFramework, config: &NoMistakesConfig) -> &[St
         TestFramework::Java => &config.tests.java.packages,
         TestFramework::Kotlin => &config.tests.kotlin.packages,
         TestFramework::Elixir => &config.tests.elixir.apps,
+        TestFramework::Dart => &config.tests.dart.packages,
         _ => &[],
     }
 }

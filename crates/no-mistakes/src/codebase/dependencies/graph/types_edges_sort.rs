@@ -50,7 +50,9 @@ pub(super) const fn key(kind: EdgeKind) -> (u8, u8) {
         | EdgeKind::KotlinImport
         | EdgeKind::KotlinReference
         | EdgeKind::ElixirImport
-        | EdgeKind::ElixirReference => language(kind),
+        | EdgeKind::ElixirReference
+        | EdgeKind::DartImport
+        | EdgeKind::DartReference => language(kind),
         EdgeKind::WorkflowJob
         | EdgeKind::WorkflowStep
         | EdgeKind::WorkflowNeeds
@@ -127,6 +129,8 @@ const fn language(kind: EdgeKind) -> (u8, u8) {
         EdgeKind::KotlinReference => (55, 0),
         EdgeKind::ElixirImport => (56, 0),
         EdgeKind::ElixirReference => (57, 0),
+        EdgeKind::DartImport => (58, 0),
+        EdgeKind::DartReference => (59, 0),
         _ => panic!("language edge group is exhaustive"),
     }
 }

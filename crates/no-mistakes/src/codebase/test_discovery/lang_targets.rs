@@ -16,6 +16,7 @@ pub(super) fn language_target_for(
         TestRunner::Java => java_target_for(config, test_file),
         TestRunner::Kotlin => kotlin_target_for(config, test_file),
         TestRunner::Elixir => elixir_target_for(config, test_file),
+        TestRunner::Dart => dart_target_for(config, test_file),
         TestRunner::Dotnet
         | TestRunner::Playwright
         | TestRunner::Vitest
@@ -117,6 +118,7 @@ fn elixir_target_for(app: Option<&str>, test_file: &str) -> TestExecutionTarget 
 }
 
 include!("lang_targets_jvm.rs");
+include!("lang_targets_dart.rs");
 
 fn language_target(
     runner: TestRunner,

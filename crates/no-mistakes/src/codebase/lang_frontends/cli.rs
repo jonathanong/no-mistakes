@@ -15,6 +15,7 @@ pub(crate) fn lang_config_from_v2(config: &NoMistakesConfig) -> LangFrontendConf
         java_packages: config.tests.java.packages.clone(),
         kotlin_packages: config.tests.kotlin.packages.clone(),
         elixir_apps: config.tests.elixir.apps.clone(),
+        dart_packages: config.tests.dart.packages.clone(),
     }
 }
 
@@ -27,6 +28,7 @@ pub(crate) fn lang_config_is_empty(config: &LangFrontendConfig) -> bool {
         && config.java_packages.is_empty()
         && config.kotlin_packages.is_empty()
         && config.elixir_apps.is_empty()
+        && config.dart_packages.is_empty()
 }
 
 pub(crate) struct QueueGlobMatchers {
@@ -91,7 +93,7 @@ pub(crate) fn matching_cluster(
     })
 }
 
-pub(crate) fn each_lang_map(facts: &super::CollectedLangFacts) -> [&LangFactMap; 8] {
+pub(crate) fn each_lang_map(facts: &super::CollectedLangFacts) -> [&LangFactMap; 9] {
     [
         &facts.python,
         &facts.go,
@@ -101,6 +103,7 @@ pub(crate) fn each_lang_map(facts: &super::CollectedLangFacts) -> [&LangFactMap;
         &facts.java,
         &facts.kotlin,
         &facts.elixir,
+        &facts.dart,
     ]
 }
 

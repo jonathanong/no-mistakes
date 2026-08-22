@@ -152,6 +152,8 @@ fn standard_relationship_edges() -> std::collections::HashSet<EdgeKind> {
         EdgeKind::KotlinReference,
         EdgeKind::ElixirImport,
         EdgeKind::ElixirReference,
+        EdgeKind::DartImport,
+        EdgeKind::DartReference,
         EdgeKind::Resource,
     ]
     .into_iter()

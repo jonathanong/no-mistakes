@@ -8,6 +8,7 @@ fn language_relationship_edges(relationship: &RelationshipArg) -> Option<&'stati
         RelationshipArg::Java => &[EdgeKind::JavaImport, EdgeKind::JavaReference],
         RelationshipArg::Kotlin => &[EdgeKind::KotlinImport, EdgeKind::KotlinReference],
         RelationshipArg::Elixir => &[EdgeKind::ElixirImport, EdgeKind::ElixirReference],
+        RelationshipArg::Dart => &[EdgeKind::DartImport, EdgeKind::DartReference],
         _ => return None,
     })
 }

@@ -1,0 +1,5 @@
+tests:
+  dart:
+    packages:
+      - libs/shared
+      - services/app

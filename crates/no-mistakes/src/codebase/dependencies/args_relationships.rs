@@ -44,6 +44,7 @@ pub enum RelationshipArg {
     Java,
     Kotlin,
     Elixir,
+    Dart,
     Resource,
     Trpc,
     All,
@@ -82,6 +83,7 @@ impl RelationshipArg {
             Self::Java => Some("java"),
             Self::Kotlin => Some("kotlin"),
             Self::Elixir => Some("elixir"),
+            Self::Dart => Some("dart"),
             Self::Trpc => Some("trpc"),
             _ => None,
         }

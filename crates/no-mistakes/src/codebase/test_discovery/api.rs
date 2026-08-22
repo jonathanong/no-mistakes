@@ -52,6 +52,7 @@ pub fn discover_tests_from_prepared_projects(
             | TestRunner::Java
             | TestRunner::Kotlin
             | TestRunner::Elixir
+            | TestRunner::Dart
             | TestRunner::Jest => None,
         }
         .map(|reserved_runner| {
@@ -117,6 +118,7 @@ pub fn project_filters_from_visible(
         TestRunner::Java,
         TestRunner::Kotlin,
         TestRunner::Elixir,
+        TestRunner::Dart,
     ]
         .into_iter()
         .flat_map(|runner| {

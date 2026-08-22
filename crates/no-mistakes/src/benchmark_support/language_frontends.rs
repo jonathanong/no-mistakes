@@ -69,6 +69,7 @@ pub fn language_frontend_fixture() -> LanguageFrontendFixture {
             java_packages: vec!["java-spring".into()],
             kotlin_packages: vec!["kotlin-spring".into()],
             elixir_apps: vec!["phoenix-routes".into()],
+            dart_packages: vec![],
         },
         queue_enqueues: vec!["**/*".into()],
         queue_workers: vec!["**/*".into()],
@@ -90,6 +91,7 @@ pub fn collect_language_frontend_facts(
         &facts.java,
         &facts.kotlin,
         &facts.elixir,
+        &facts.dart,
     ];
     LanguageFrontendSummary {
         files: fixture.files.len(),
@@ -140,7 +142,7 @@ pub fn match_language_frontend_queue_globs(
 }
 
 fn fact_len(
-    maps: [&LangFactMap; 8],
+    maps: [&LangFactMap; 9],
     field: impl Fn(&crate::codebase::lang_frontends::LangFileFacts) -> usize,
 ) -> usize {
     maps.iter()

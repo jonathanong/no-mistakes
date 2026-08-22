@@ -20,6 +20,7 @@ pub(super) fn validate(config: &NoMistakesConfig, path: &Path) -> Result<()> {
         ("java", &config.test_plan.java),
         ("kotlin", &config.test_plan.kotlin),
         ("elixir", &config.test_plan.elixir),
+        ("dart", &config.test_plan.dart),
         ("jest", &config.test_plan.jest),
     ] {
         validate_named_triggers(&plan.full_suite_triggers.triggers, path, framework)?;

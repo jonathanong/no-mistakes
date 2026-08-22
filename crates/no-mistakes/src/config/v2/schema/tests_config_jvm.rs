@@ -17,3 +17,9 @@ pub struct KotlinConfig {
 pub struct ElixirConfig {
     pub apps: Vec<String>,
 }
+
+#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
+#[serde(rename_all = "camelCase", default)]
+pub struct DartConfig {
+    pub packages: Vec<String>,
+}

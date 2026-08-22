@@ -194,6 +194,36 @@ fn elixir_nested_app_keeps_repo_relative_mix_test_path() {
 }
 
 #[test]
+fn dart_target_uses_dart_test_relative_path() {
+    let target = target_for(
+        TestRunner::Dart,
+        Some("."),
+        false,
+        None,
+        "test/user_test.dart",
+    );
+    assert_eq!(target.base_command, vec!["dart", "test"]);
+    assert_eq!(target.runner_args, vec!["test/user_test.dart"]);
+    assert_eq!(target.runner, "dart");
+}
+
+#[test]
+fn dart_nested_package_runs_pub_test_in_package_directory() {
+    let target = target_for(
+        TestRunner::Dart,
+        Some("packages/app"),
+        false,
+        None,
+        "packages/app/test/user_test.dart",
+    );
+    assert_eq!(
+        target.base_command,
+        vec!["dart", "pub", "--directory", "packages/app", "run", "test"]
+    );
+    assert_eq!(target.runner_args, vec!["test/user_test.dart"]);
+}
+
+#[test]
 fn java_nested_package_passes_maven_file_flag() {
     let target = target_for(
         TestRunner::Java,

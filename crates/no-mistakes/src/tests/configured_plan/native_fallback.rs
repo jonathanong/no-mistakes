@@ -22,7 +22,7 @@ pub(super) fn native_traceable_changed_files(
     test_filter: &TestFileFilter,
     coverage_hints: &CoverageHints,
 ) -> HashSet<String> {
-    if !is_native_framework(framework) {
+    if !super::native_fallback_lang::is_native_framework(framework) {
         return HashSet::new();
     }
     let mut warnings: Vec<Warning> = Vec::new();
@@ -129,7 +129,7 @@ pub(super) fn untraced_native_changes(
     selected_map: &BTreeMap<PathBuf, SelectedTest>,
     extra_traced_changed_files: &HashSet<String>,
 ) -> Vec<PathBuf> {
-    if !is_native_framework(framework) {
+    if !super::native_fallback_lang::is_native_framework(framework) {
         return Vec::new();
     }
 
@@ -185,7 +185,8 @@ pub(super) fn native_fallback_tests(
         | TestFramework::Php
         | TestFramework::Java
         | TestFramework::Kotlin
-        | TestFramework::Elixir => super::native_fallback_lang::language_fallback_tests(
+        | TestFramework::Elixir
+        | TestFramework::Dart => super::native_fallback_lang::language_fallback_tests(
             framework,
             root,
             config,
@@ -229,27 +230,12 @@ fn is_native_source_or_project_change(
         | TestFramework::Php
         | TestFramework::Java
         | TestFramework::Kotlin
-        | TestFramework::Elixir => {
+        | TestFramework::Elixir
+        | TestFramework::Dart => {
             super::native_fallback_lang::is_language_native_change(framework, root, config, &rel)
         }
         TestFramework::Playwright | TestFramework::Vitest | TestFramework::Jest => false,
     }
-}
-
-fn is_native_framework(framework: TestFramework) -> bool {
-    matches!(
-        framework,
-        TestFramework::Dotnet
-            | TestFramework::Swift
-            | TestFramework::Python
-            | TestFramework::Go
-            | TestFramework::Cargo
-            | TestFramework::Rails
-            | TestFramework::Php
-            | TestFramework::Java
-            | TestFramework::Kotlin
-            | TestFramework::Elixir
-    )
 }
 
 fn is_configured_dotnet_solution(root: &Path, config: &NoMistakesConfig, rel: &str) -> bool {
@@ -522,6 +508,7 @@ pub(super) fn framework_name(framework: TestFramework) -> &'static str {
         TestFramework::Java => "java",
         TestFramework::Kotlin => "kotlin",
         TestFramework::Elixir => "elixir",
+        TestFramework::Dart => "dart",
         TestFramework::Jest => "jest",
     }
 }

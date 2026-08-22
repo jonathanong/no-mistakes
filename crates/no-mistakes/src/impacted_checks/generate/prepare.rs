@@ -104,6 +104,7 @@ fn configured_frameworks(
         TestFramework::Java,
         TestFramework::Kotlin,
         TestFramework::Elixir,
+        TestFramework::Dart,
         TestFramework::Jest,
     ]
     .into_iter()

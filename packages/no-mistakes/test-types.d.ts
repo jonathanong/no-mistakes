@@ -14,6 +14,7 @@ export type TestPlanFramework =
   | "java"
   | "kotlin"
   | "elixir"
+  | "dart"
   | "jest";
 
 interface TestsPlanOptionsBase {

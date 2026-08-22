@@ -18,6 +18,7 @@ pub enum TestRunner {
     Java,
     Kotlin,
     Elixir,
+    Dart,
     Jest,
 }
 
@@ -36,6 +37,7 @@ impl TestRunner {
             "java" => Some(Self::Java),
             "kotlin" => Some(Self::Kotlin),
             "elixir" => Some(Self::Elixir),
+            "dart" => Some(Self::Dart),
             "jest" => Some(Self::Jest),
             _ => None,
         }
@@ -55,6 +57,7 @@ impl TestRunner {
             Self::Java => "java",
             Self::Kotlin => "kotlin",
             Self::Elixir => "elixir",
+            Self::Dart => "dart",
             Self::Jest => "jest",
         }
     }
@@ -70,6 +73,7 @@ impl TestRunner {
                 | Self::Java
                 | Self::Kotlin
                 | Self::Elixir
+                | Self::Dart
         )
     }
 
@@ -87,6 +91,7 @@ impl TestRunner {
             Self::Java => Framework::Java,
             Self::Kotlin => Framework::Kotlin,
             Self::Elixir => Framework::Elixir,
+            Self::Dart => Framework::Dart,
             Self::Jest => Framework::Jest,
         }
     }

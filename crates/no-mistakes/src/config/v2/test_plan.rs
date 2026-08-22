@@ -19,6 +19,7 @@ pub struct TestPlanConfig {
     pub java: TestPlanFrameworkConfig,
     pub kotlin: TestPlanFrameworkConfig,
     pub elixir: TestPlanFrameworkConfig,
+    pub dart: TestPlanFrameworkConfig,
     pub jest: TestPlanFrameworkConfig,
 }
 
@@ -97,6 +98,7 @@ pub enum TestPlanIgnoredChangedTestsFramework {
     Java,
     Kotlin,
     Elixir,
+    Dart,
     Jest,
 }
 

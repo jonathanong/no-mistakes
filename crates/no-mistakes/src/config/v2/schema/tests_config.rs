@@ -6,7 +6,8 @@ mod coverage;
 pub use coverage::PlaywrightCoverageConfig;
 #[path = "tests_config_jvm.rs"]
 mod tests_config_jvm;
-pub use tests_config_jvm::{ElixirConfig, JavaConfig, KotlinConfig};
+pub use tests_config_jvm::{DartConfig, ElixirConfig, JavaConfig, KotlinConfig};
+
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Tests {
@@ -22,11 +23,11 @@ pub struct Tests {
     pub java: JavaConfig,
     pub kotlin: KotlinConfig,
     pub elixir: ElixirConfig,
+    pub dart: DartConfig,
     pub jest: JestConfig,
     pub storybook: StorybookConfig,
     pub impact: ImpactConfig,
 }
-
 /// Opt-in knobs for the `tests impact` query. Both lists default to empty, so
 /// without configuration `tests impact` behaves exactly as before.
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

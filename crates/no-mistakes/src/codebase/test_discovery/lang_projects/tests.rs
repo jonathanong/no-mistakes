@@ -23,6 +23,7 @@ fn empty_language_lists_discover_no_projects() {
         TestRunner::Java,
         TestRunner::Kotlin,
         TestRunner::Elixir,
+        TestRunner::Dart,
     ] {
         assert!(language_projects(&root, &config, runner).is_empty());
     }
@@ -129,4 +130,21 @@ fn elixir_projects_scope_configured_app_globs() {
         .include
         .iter()
         .any(|glob| glob.contains("_test.exs")));
+}
+
+#[test]
+fn dart_projects_scope_configured_package_globs() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/dart-test-plan/fixture"),
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.dart.packages = vec![".".to_string()];
+    let projects = language_projects(&root, &config, TestRunner::Dart);
+    assert_eq!(projects.len(), 1);
+    assert_eq!(projects[0].config.as_deref(), Some("."));
+    assert!(projects[0]
+        .include
+        .iter()
+        .any(|glob| glob.contains("_test.dart")));
 }
