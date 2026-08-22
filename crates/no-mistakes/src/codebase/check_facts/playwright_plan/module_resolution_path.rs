@@ -18,11 +18,27 @@ pub(super) fn path_ends_with_module(path: &Path, module: &str) -> bool {
             .any(|ext| has_component_suffix(&normalized, &format!("{module}{ext}")))
 }
 
+pub(super) fn identities_match(
+    configured_specifier: &str,
+    configured: Option<ModuleIdentity>,
+    imported: Option<ModuleIdentity>,
+) -> bool {
+    match (configured, imported) {
+        (Some(configured_id), Some(imported_id)) => configured_id == imported_id,
+        (_, Some(ModuleIdentity::Path(imported_path)))
+            if looks_like_repo_relative_module(configured_specifier) =>
+        {
+            path_ends_with_module(&imported_path, configured_specifier)
+        }
+        _ => false,
+    }
+}
+
 fn has_component_suffix(path: &str, suffix: &str) -> bool {
     path == suffix || path.ends_with(&format!("/{suffix}"))
 }
 
-#[derive(PartialEq)]
+#[derive(Clone, PartialEq)]
 pub(super) enum ModuleIdentity {
     Path(PathBuf),
     External(String),

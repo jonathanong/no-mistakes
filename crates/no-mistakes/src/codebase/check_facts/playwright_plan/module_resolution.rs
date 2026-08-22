@@ -8,9 +8,7 @@ mod catalog;
 use catalog::CatalogModuleResolver;
 #[path = "module_resolution_path.rs"]
 mod path_match;
-use path_match::{
-    identity_from_resolver, looks_like_repo_relative_module, path_ends_with_module, ModuleIdentity,
-};
+use path_match::{identities_match, identity_from_resolver, ModuleIdentity};
 
 #[cfg(test)]
 #[path = "module_resolution_test_support.rs"]
@@ -74,18 +72,11 @@ impl PlaywrightModuleResolution {
         imported: &str,
         importing_file: &Path,
     ) -> bool {
-        match (
+        identities_match(
+            configured,
             self.identity(configured, importing_file),
             self.identity(imported, importing_file),
-        ) {
-            (Some(configured_id), Some(imported_id)) => configured_id == imported_id,
-            (_, Some(ModuleIdentity::Path(imported_path)))
-                if looks_like_repo_relative_module(configured) =>
-            {
-                path_ends_with_module(&imported_path, configured)
-            }
-            _ => false,
-        }
+        )
     }
 
     fn identity(&self, specifier: &str, importing_file: &Path) -> Option<ModuleIdentity> {

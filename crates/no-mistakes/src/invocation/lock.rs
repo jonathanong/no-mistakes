@@ -9,10 +9,14 @@ use std::time::Duration;
 const LOCK_POLL_INTERVAL: Duration = Duration::from_millis(50);
 
 pub(super) fn lock_path() -> Result<PathBuf> {
+    lock_file_path(std::env::var_os("CARGO_BIN_EXE_no-mistakes").is_some())
+}
+
+pub(super) fn lock_file_path(cargo_test_bin: bool) -> Result<PathBuf> {
     // Cargo integration tests spawn this binary with `CARGO_BIN_EXE_*` set and
     // run in parallel, so a shared user lock would print wait progress onto
     // captured stderr. Isolate each test process instead.
-    if std::env::var_os("CARGO_BIN_EXE_no-mistakes").is_some() {
+    if cargo_test_bin {
         let directory = std::env::temp_dir().join("no-mistakes-test-locks");
         create_lock_directory(&directory)?;
         return Ok(directory.join(format!("{}.lock", std::process::id())));
@@ -57,20 +61,13 @@ pub(super) fn acquire_lock(
                 return Err(lock_timeout_error(timeout));
             }
         }
-        match file.try_lock() {
-            Ok(()) => {
+        match classify_try_lock(file.try_lock(), path, fail_on_lock) {
+            TryLockOutcome::Acquired => {
                 write_holder_pid(&file)?;
                 return Ok(file);
             }
-            Err(TryLockError::Error(error)) => return Err(lock_error(path, error)),
-            Err(TryLockError::WouldBlock) if fail_on_lock => {
-                return Err(InvocationError::new(
-                    InvocationErrorKind::LockBusy,
-                    "another no-mistakes invocation is already running",
-                )
-                .into());
-            }
-            Err(TryLockError::WouldBlock) => {
+            TryLockOutcome::Failed(error) => return Err(error),
+            TryLockOutcome::Wait => {
                 report_lock_wait(path, started.elapsed(), &mut last_reported_secs);
             }
         }
@@ -83,6 +80,31 @@ pub(super) fn acquire_lock(
             None => LOCK_POLL_INTERVAL,
         };
         std::thread::sleep(sleep_for);
+    }
+}
+
+enum TryLockOutcome {
+    Acquired,
+    Wait,
+    Failed(anyhow::Error),
+}
+
+fn classify_try_lock(
+    result: Result<(), TryLockError>,
+    path: &Path,
+    fail_on_lock: bool,
+) -> TryLockOutcome {
+    match result {
+        Ok(()) => TryLockOutcome::Acquired,
+        Err(TryLockError::Error(error)) => TryLockOutcome::Failed(lock_error(path, error)),
+        Err(TryLockError::WouldBlock) if fail_on_lock => TryLockOutcome::Failed(
+            InvocationError::new(
+                InvocationErrorKind::LockBusy,
+                "another no-mistakes invocation is already running",
+            )
+            .into(),
+        ),
+        Err(TryLockError::WouldBlock) => TryLockOutcome::Wait,
     }
 }
 
@@ -128,3 +150,7 @@ fn lock_timeout_error(timeout: Duration) -> anyhow::Error {
 pub(super) fn lock_error(path: &Path, error: std::io::Error) -> anyhow::Error {
     anyhow::Error::new(error).context(format!("locking invocation file {}", path.display()))
 }
+
+#[cfg(test)]
+#[path = "lock/tests.rs"]
+mod tests;
