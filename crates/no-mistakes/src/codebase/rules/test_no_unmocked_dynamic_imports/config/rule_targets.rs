@@ -30,14 +30,16 @@ pub(super) fn rule_test_project_globs(
         config.tests.vitest.configs.as_ref(),
         &config.tests.vitest.projects,
         &vitest_project_names,
-    )?;
+    );
+    let vitest_projects = vitest_projects?;
     let playwright_projects = load_target_projects(
         root,
         Framework::Playwright,
         config.tests.playwright.configs.as_ref(),
         &config.tests.playwright.projects,
         &playwright_project_names,
-    )?;
+    );
+    let playwright_projects = playwright_projects?;
     for rule in rules {
         append_rule_globs(config, rule, &mut includes, &mut excludes);
         for project_name in &rule.tests.vitest {

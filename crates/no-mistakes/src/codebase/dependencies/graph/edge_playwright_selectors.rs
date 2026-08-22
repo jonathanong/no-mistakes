@@ -45,7 +45,8 @@ pub(super) fn collect_playwright_selector_edges_with_graph(
             None,
             None,
             inputs.snapshot,
-        )?;
+        );
+        let settings = settings?;
         return collect_playwright_selector_edges_for_settings(root, &settings, &inputs);
     }
     // Apps are independent after the base graph exists: each settings

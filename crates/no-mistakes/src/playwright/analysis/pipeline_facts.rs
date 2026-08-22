@@ -54,13 +54,14 @@ pub(crate) fn standalone_fact_plan(
     snapshot: &VisiblePathSnapshot,
 ) -> Result<crate::codebase::check_facts::PlaywrightFactPlan> {
     let mut fact_plan = crate::codebase::check_facts::PlaywrightFactPlan::default();
-    extend_standalone_fact_plan(
+    let extended = extend_standalone_fact_plan(
         &mut fact_plan,
         root,
         settings,
         unique_selector_policy,
         snapshot,
-    )?;
+    );
+    extended?;
     Ok(fact_plan)
 }
 

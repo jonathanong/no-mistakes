@@ -80,14 +80,15 @@ pub fn run(options: &FlowOptions) -> Result<FlowReport> {
     if let Some(path) = resolve_target(&root, &options.target).as_file() {
         framework_plan.retain_indexable_path(path.to_path_buf());
     }
-    let mut traversal =
+    let traversal =
         crate::codebase::dependencies::SharedTraversalContext::prepare_with_framework_plan(
             root,
             options.tsconfig.as_deref(),
             options.config.as_deref(),
             plan,
             framework_plan,
-        )?;
+        );
+    let mut traversal = traversal?;
     traversal.ensure_facts();
     traversal.flow_report(options)
 }

@@ -92,12 +92,13 @@ pub(super) fn rule_selections(
         .collect();
     for (playwright_project, selection) in by_project.iter_mut() {
         let rule_bound_names = app_bindings.remove(playwright_project).unwrap_or_default();
-        selection.app = resolve_selection_app(
+        let app = resolve_selection_app(
             config,
             playwright_project.as_deref(),
             rule_bound_names,
             &app_names,
-        )?;
+        );
+        selection.app = app?;
     }
     Ok(by_project.into_values().collect())
 }

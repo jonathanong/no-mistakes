@@ -51,7 +51,8 @@ pub(crate) fn run(args: RscCallersArgs) -> Result<ExitCode> {
         tsconfig.as_deref(),
         &component,
         depth,
-    )?;
+    );
+    let report = report?;
     match effective_format {
         Format::Json => {
             println!(

@@ -49,7 +49,8 @@ impl SharedCheckContext {
             config.clone(),
             tsconfig.clone(),
             Some(workspace),
-        )?;
+        );
+        let prepared = prepared?;
         let config = &prepared.config;
         let queues_enabled = queues_configured(config);
         let unique_exports_enabled = unique_exports_configured(config);

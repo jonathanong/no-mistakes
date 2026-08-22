@@ -18,7 +18,8 @@ pub(crate) fn run_playwright_selector_analysis(
         None,
         None,
         &snapshot,
-    )?;
+    );
+    let settings = settings?;
     let test_policy = crate::playwright::playwright_tests::TestPolicy {
         assert_conditional_tests: false,
         allow_skipped_tests: false,

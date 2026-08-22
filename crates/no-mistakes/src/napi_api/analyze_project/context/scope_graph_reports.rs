@@ -12,7 +12,8 @@ impl PreparedScope {
             direction,
             &cwd,
             &self.traversal,
-        )?;
+        );
+        let result = result?;
         let bytes = crate::codebase::dependencies::result_json_bytes(&args, &result)?;
         json_raw_bytes(bytes)
     }
@@ -50,7 +51,7 @@ impl PreparedScope {
             return Ok(serde_json::from_str(&output)?);
         }
         let session = self.traversal.session_arc();
-        let (entries, roots) = crate::codebase::symbols::collect_entries_with_prepared_facts(
+        let collected = crate::codebase::symbols::collect_entries_with_prepared_facts(
             &args,
             self.traversal.root(),
             self.traversal.tsconfig_catalog(),
@@ -58,7 +59,8 @@ impl PreparedScope {
             &self.facts,
             &self.symbol_facts,
             &session,
-        )?;
+        );
+        let (entries, roots) = collected?;
         let mut output = Vec::new();
         crate::codebase::symbols::output::write_json(&roots, &entries, &mut output)?;
         Ok(serde_json::from_slice(&output)?)

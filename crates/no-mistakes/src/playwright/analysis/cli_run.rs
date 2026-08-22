@@ -24,7 +24,8 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
         cli.project.clone(),
         cli.app.clone(),
         &snapshot,
-    )?;
+    );
+    let settings = settings?;
     let analysis = crate::playwright::analysis::pipeline::analyze_with_policy_from_snapshot(
         &root,
         &settings,
@@ -39,7 +40,8 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
             configured_html_id_selector: false,
         },
         &snapshot,
-    )?;
+    );
+    let analysis = analysis?;
     crate::ast::clear_request_parse_cache();
     match cli.command {
         Command::Check => {

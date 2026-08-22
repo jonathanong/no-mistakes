@@ -24,11 +24,12 @@ pub fn run_filesystem_rules_with_visible_and_snapshot(
     visible_files: &[PathBuf],
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
 ) -> Result<Vec<RuleFinding>> {
-    let (config, effective_path) = crate::config::v2::load_v2_config_with_path_from_visible(
+    let loaded = crate::config::v2::load_v2_config_with_path_from_visible(
         root,
         config_path,
         &snapshot.paths_for(root),
-    )?;
+    );
+    let (config, effective_path) = loaded?;
     run_filesystem_rules_with_config_snapshot_and_path(
         root,
         &config,
@@ -43,11 +44,9 @@ pub fn run_filesystem_rules_with_visible_and_snapshot(
 pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<Vec<RuleFinding>> {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let visible_paths = snapshot.paths_for(root);
-    let (config, effective_path) = crate::config::v2::load_v2_config_with_path_from_visible(
-        root,
-        config_path,
-        &visible_paths,
-    )?;
+    let loaded =
+        crate::config::v2::load_v2_config_with_path_from_visible(root, config_path, &visible_paths);
+    let (config, effective_path) = loaded?;
     if !FILESYSTEM_RULE_IDS
         .iter()
         .any(|rule_id| rule_enabled(&config, rule_id))

@@ -160,7 +160,8 @@ fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
             call_sites: true,
             ..crate::codebase::ts_source::facts::TsFactPlan::default()
         },
-    )?;
+    );
+    let analysis = analysis?;
     let symbols = analysis.symbols(&target)?;
     // call-sites finds invocations, so the target must be a value export — a
     // type-only export (interface/type alias) has no runtime callee.

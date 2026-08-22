@@ -116,7 +116,8 @@ fn exported_object_options(
             },
             path,
             ctx,
-        )?;
+        );
+        let options = options?;
         let Some(options) = options else {
             continue;
         };

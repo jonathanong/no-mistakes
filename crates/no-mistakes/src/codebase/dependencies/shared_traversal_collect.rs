@@ -99,7 +99,8 @@ pub(crate) fn collect_and_filter_entries_prepared(
                     symbol_index: symbol_index.as_deref(),
                 },
                 shared,
-            )?;
+            );
+            let entries = entries?;
             let tsconfig_provenance = entrypoints
                 .iter()
                 .filter_map(|entrypoint| entrypoint.node.as_file())
@@ -127,7 +128,8 @@ pub(crate) fn collect_and_filter_entries_prepared(
         &shared.tsconfig,
         shared.dataset.visible_paths(),
         shared.prepared_test_projects.as_ref(),
-    )?;
+    );
+    let entries = entries?;
     shared
         .session
         .record_work("traversal.nodes", entries.len() as u64);

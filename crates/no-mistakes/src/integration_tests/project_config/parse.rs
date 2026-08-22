@@ -22,14 +22,16 @@ pub(in crate::integration_tests) fn load_config_projects_from_program(
         Framework::Playwright => {
             let parsed = test_config::playwright::parse_program_with_resolver(
                 program, source, path, config_dir, resolver,
-            )?;
+            );
+            let parsed = parsed?;
             Ok(parsed.into_projects(root, raw))
         }
         Framework::Vitest => {
             let workspace = test_config::vitest::is_vitest_project_array_path(path);
             let parsed = test_config::vitest::parse_program_with_resolver(
                 program, source, path, config_dir, root, resolver,
-            )?;
+            );
+            let parsed = parsed?;
             Ok(parsed
                 .into_iter()
                 .map(|mut project| {

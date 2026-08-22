@@ -99,7 +99,8 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
             visible_paths: Some(&visible_paths),
         },
         std::sync::Arc::clone(&session),
-    )?;
+    );
+    let graph = graph?;
     build_report_from_prepared(
         &PreparedReportContext {
             args,

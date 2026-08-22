@@ -42,7 +42,8 @@ pub fn run_check(
         None,
         &visible_paths,
         Some(sources.as_ref()),
-    )?;
+    );
+    let facts_list = facts_list?;
     Ok(assert_no_fetch_violations(&facts_list))
 }
 
@@ -104,7 +105,8 @@ pub fn run_check_with_prepared_facts(
         &prepared.file_config,
         targets,
         shared,
-    )?;
+    );
+    let facts_list = facts_list?;
     Ok(assert_no_fetch_violations(&facts_list))
 }
 
@@ -121,12 +123,14 @@ pub fn run_check_with_prepared_facts_for_aggregate(
             suppression_targets: Vec::new(),
         });
     }
-    let facts_list = crate::react_traits::pipeline::run_with_facts::run_analyze_inner_with_facts_and_suppression(
-        root,
-        &prepared.file_config,
-        targets,
-        shared,
-    )?;
+    let facts_list =
+        crate::react_traits::pipeline::run_with_facts::run_analyze_inner_with_facts_and_suppression(
+            root,
+            &prepared.file_config,
+            targets,
+            shared,
+        );
+    let facts_list = facts_list?;
     Ok(assert_no_fetch_violations_with_suppression(&facts_list))
 }
 

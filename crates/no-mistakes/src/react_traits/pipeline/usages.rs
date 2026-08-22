@@ -140,12 +140,13 @@ pub fn run_usages(
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let visible_paths = snapshot.paths_for(&root);
     let sources = snapshot.source_store_for(&root);
-    let root_config: RootConfig = crate::config::load_config_from_visible(
+    let root_config = crate::config::load_config_from_visible(
         &root,
         config_path,
         &[".no-mistakes"],
         &visible_paths,
-    )?;
+    );
+    let root_config: RootConfig = root_config?;
     let file_config = root_config.into_file_config();
     run_usages_from_visible(
         &root,

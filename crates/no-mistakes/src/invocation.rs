@@ -156,7 +156,8 @@ impl InvocationGuard {
         let deadline = DeadlineGuard::install_for_invocation(options.timeout, None)?;
         let parent_signals = child::ParentSignalForwardingGuard::install(
             forward_parent_signals && options.timeout.is_some(),
-        )?;
+        );
+        let parent_signals = parent_signals?;
         Ok(Self {
             _deadline: deadline,
             _parent_signals: parent_signals,

@@ -59,7 +59,8 @@ pub(crate) fn run(args: DataPwArgs) -> Result<ExitCode> {
         &attributes,
         &scan,
         &include,
-    )?;
+    );
+    let report = report?;
     let output = render_report(&report, effective_format)?;
     no_mistakes::invocation::check_timeout()?;
     std::io::stdout()

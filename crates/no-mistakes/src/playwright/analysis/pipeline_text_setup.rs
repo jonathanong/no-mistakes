@@ -89,7 +89,8 @@ pub(crate) fn build_text_resolution_setup(
             route_import_candidate,
             &source_files.graph_files,
             snapshot,
-        )?;
+        );
+        let supplied_graph = supplied_graph?;
         let owned_graph = match supplied_graph {
             Some(_) => None,
             None => {

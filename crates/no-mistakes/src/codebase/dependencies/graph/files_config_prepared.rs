@@ -152,7 +152,8 @@ fn prepare_graph_config_inner(
             root,
             config,
             &visible_paths.paths_for(root),
-        )?;
+        );
+        let apps = apps?;
         apps.iter()
             .map(|app| {
                 crate::playwright::config::settings_from_loaded_v2(

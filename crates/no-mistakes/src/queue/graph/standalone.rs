@@ -61,7 +61,8 @@ fn analyze_project_inner<T>(
                 root,
                 &visible_paths,
                 &sources,
-            )?;
+            );
+            let tsconfig = tsconfig?;
             crate::codebase::ts_resolver::TsConfigCatalog::forced(root, tsconfig, None)
         }
         None => crate::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources(

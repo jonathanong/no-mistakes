@@ -20,7 +20,8 @@ pub(super) fn check(
         &config,
         &runner_configs,
         &parsed_runner_configs,
-    )?;
+    );
+    let suites = suites?;
     if suites.is_empty() {
         return Ok(Vec::new());
     }

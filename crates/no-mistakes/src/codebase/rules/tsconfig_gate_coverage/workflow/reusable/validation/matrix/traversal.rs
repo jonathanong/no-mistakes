@@ -90,7 +90,8 @@ pub(super) fn has_applicable_combination(
             index + 1,
             values,
             states_remaining,
-        )?;
+        );
+        let applicable = applicable?;
         values.remove(name);
         if applicable {
             return Some(true);
