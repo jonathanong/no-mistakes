@@ -119,7 +119,7 @@ impl TsFactSlot {
         }
         // Take the slot first so a uniquely owned Shared Arc can unwrap
         // instead of cloning after a temporary extra strong count.
-        let taken = std::mem::replace(self, Self::Owned(Box::new(TsFileFacts::default())));
+        let taken = std::mem::replace(self, Self::Owned(Box::default()));
         *self = Self::Owned(Box::new(taken.into_owned()));
     }
 
