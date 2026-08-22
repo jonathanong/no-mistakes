@@ -1,4 +1,4 @@
-use super::{FrontendApp, RouteRootFallback};
+use super::FrontendApp;
 use crate::config::v2::schema::RewriteRule;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
@@ -9,26 +9,15 @@ pub(super) fn build_app(
     package_root: String,
     visible_paths: &[PathBuf],
     rewrites: &[RewriteRule],
-    fallback: RouteRootFallback,
     route_override: Option<String>,
 ) -> Result<FrontendApp> {
     let route_root = match (
         probe_route_root(root, &package_root, visible_paths),
-        fallback,
         route_override,
     ) {
-        (Some(route_root), _, _) => route_root,
-        (None, _, Some(override_root)) => override_root,
-        (None, RouteRootFallback::PackageRoot, None) => package_root.clone(),
-        (None, RouteRootFallback::Error, None) => {
-            let name = project.as_deref().unwrap_or("<anonymous>");
-            anyhow::bail!(
-                "cannot resolve the Next.js App Router directory for project `{name}` \
-                 (looked for `{package_root}/src/app` and `{package_root}/app`).\n\
-                 Add an `app` or `src/app` directory, or set \
-                 `tests.playwright.apps.<playwright-project>.frontendRoot`."
-            );
-        }
+        (Some(route_root), _) => route_root,
+        (None, Some(override_root)) => override_root,
+        (None, None) => package_root.clone(),
     };
     Ok(FrontendApp {
         project,

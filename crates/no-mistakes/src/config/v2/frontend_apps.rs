@@ -106,16 +106,8 @@ fn inferred_anonymous_app(root: &Path, visible_paths: &[PathBuf]) -> Option<Fron
         crate::codebase::config::infer_nextjs_root_from_visible(root, visible_paths)?;
     let package_root = relative_string(root, &package_root);
     Some(
-        build_app(
-            root,
-            None,
-            package_root,
-            visible_paths,
-            &[],
-            RouteRootFallback::PackageRoot,
-            None,
-        )
-        .expect("anonymous app package-root fallback never fails"),
+        build_app(root, None, package_root, visible_paths, &[], None)
+            .expect("anonymous app package-root fallback never fails"),
     )
 }
 
@@ -148,7 +140,6 @@ fn resolve_named_app(
         package_root,
         visible_paths,
         &project.rewrites,
-        RouteRootFallback::Error,
         playwright_route_override(config, name),
     )
 }
@@ -179,11 +170,6 @@ pub fn frontend_apps_or_default(
     } else {
         Ok(apps)
     }
-}
-
-pub(super) enum RouteRootFallback {
-    PackageRoot,
-    Error,
 }
 
 #[cfg(test)]

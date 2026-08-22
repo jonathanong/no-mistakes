@@ -45,20 +45,19 @@ fn route_root_falls_back_to_app_layout() {
     assert_eq!(apps[0].route_root, "web/app");
 }
 
-/// Neither `src/app` nor `app` exists on a named `type: nextjs` project: fail
-/// closed instead of treating the package root as routes (#625).
+/// Neither `src/app` nor `app` exists on a named `type: nextjs` project:
+/// `frontend_apps` still falls back to the package root so graph/check
+/// consumers keep working. Playwright `frontendRoot` overrides still win
+/// when configured.
 #[test]
-fn named_project_without_app_dir_is_an_error() {
+fn named_project_without_app_dir_falls_back_to_package_root() {
     let dir = fixture("frontend-apps-no-app-dir");
     let cfg = load_v2_config(&dir, None).unwrap();
     let visible = discover_visible_paths(&dir);
-    let error = frontend_apps(&dir, &cfg, &visible).unwrap_err();
-    let message = format!("{error:#}");
-    assert!(message.contains("src/app"), "{message}");
-    assert!(
-        message.contains("frontendRoot") || message.contains("app"),
-        "{message}"
-    );
+    let apps = frontend_apps(&dir, &cfg, &visible).unwrap();
+    assert_eq!(apps.len(), 1);
+    assert_eq!(apps[0].root, "web");
+    assert_eq!(apps[0].route_root, "web");
 }
 
 #[test]
