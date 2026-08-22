@@ -34,7 +34,7 @@ pub(super) fn read_bounded(mut pipe: impl Read, cap: usize) -> Vec<u8> {
                 let take = (cap - collected.len()).min(n);
                 collected.extend_from_slice(&buf[..take]);
             }
-            Ok(_) => {} // already at cap; keep draining so the pipe can't back up
+            Ok(_) => continue, // already at cap; keep draining so the pipe can't back up
             Err(_) => break,
         }
     }

@@ -254,4 +254,22 @@ fn run_steps_cover_empty_commands_dynamic_tolerance_and_static_success() {
         BTreeSet::new(),
     );
     assert!(!invalid_action_inputs.failed);
+
+    let tolerated_missing_cwd_interp = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    working-directory: '${{ matrix.missing }}'\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_missing_cwd_interp.failed && !tolerated_missing_cwd_interp.indeterminate);
+
+    let tolerated_windows_implicit = scan(
+        "runs-on: windows-latest\nsteps:\n  - continue-on-error: true\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_windows_implicit.failed);
+
+    let tolerated_unknown_shell = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    shell: fish\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_unknown_shell.failed && !tolerated_unknown_shell.indeterminate);
 }

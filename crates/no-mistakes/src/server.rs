@@ -121,7 +121,8 @@ pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
                 &prepared,
                 &report,
                 &args.filters,
-            )?;
+            );
+            let contracts = contracts?;
             print_contracts(&contracts, format)?;
         }
     }

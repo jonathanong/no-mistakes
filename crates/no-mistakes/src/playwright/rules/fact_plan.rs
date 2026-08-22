@@ -39,13 +39,17 @@ pub fn fact_plan_for_consumers(
                 selection.playwright_project,
                 selection.app,
                 &snapshot,
-            )?;
-            Ok((settings, true, selection.unique_html_ids))
+            );
+            Ok((settings?, true, selection.unique_html_ids))
         })
         .collect::<Result<Vec<_>>>()?;
     if consumers.graph_selectors || consumers.graph_routes {
         prepared.push((
-            config::settings_from_loaded_v2(root, config, &[], None, None, &snapshot)?,
+            {
+                let settings =
+                    config::settings_from_loaded_v2(root, config, &[], None, None, &snapshot);
+                settings?
+            },
             consumers.graph_selectors,
             false,
         ));
@@ -61,7 +65,8 @@ pub fn fact_plan_for_consumers(
         root,
         &config_paths,
         Some(snapshot.source_store_for(root).as_ref()),
-    )?;
+    );
+    let loaded_configs = loaded_configs?;
 
     let mut plan = PlaywrightFactPlan::default();
     let mut test_files_by_project = BTreeMap::new();
@@ -71,7 +76,8 @@ pub fn fact_plan_for_consumers(
             &settings.playwright_configs,
             settings.project.as_deref(),
             &loaded_configs,
-        )?;
+        );
+        let playwright = playwright?;
         let test_files = discover_test_files_from_visible(root, &settings, &playwright, &snapshot)?;
         for test_file in &test_files {
             let attributes = test_file.test_id_attributes();

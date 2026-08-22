@@ -320,6 +320,41 @@ fn playwright_fact_plan_covers_graph_consumers_without_rule_selections() {
 }
 
 #[test]
+fn playwright_fact_plan_for_consumers_surfaces_targeted_config_errors() {
+    let root = crate::playwright::test_support::fixture_path(&["playwright-configs", "multi-config"]);
+    let mut config = crate::config::v2::NoMistakesConfig {
+        rules: vec![crate::config::v2::schema::RuleDef {
+            rule: crate::playwright::rules::PLAYWRIGHT_COVERAGE.to_string(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            tests: crate::config::v2::schema::RuleTestTargets {
+                playwright: vec!["missing".to_string()],
+                ..crate::config::v2::schema::RuleTestTargets::default()
+            },
+            ..crate::config::v2::schema::RuleDef::default()
+        }],
+        ..crate::config::v2::NoMistakesConfig::default()
+    };
+    config.tests.playwright.configs = Some(crate::config::v2::schema::StringOrList::Many(vec![
+        "playwright.config.mts".to_string(),
+        "playwright.storybook.config.mts".to_string(),
+    ]));
+    let error = match crate::playwright::rules::fact_plan_for_consumers(
+        &root,
+        None,
+        &config,
+        crate::playwright::rules::PlaywrightFactConsumers::default(),
+    ) {
+        Ok(_) => panic!("expected targeted Playwright config validation error"),
+        Err(error) => error,
+    };
+    assert!(
+        error
+            .to_string()
+            .contains("no Playwright config found with name missing")
+    );
+}
+
+#[test]
 fn playwright_route_edges_cover_defensive_config_errors() {
     for name in [
         "playwright-route-edges-invalid-settings",

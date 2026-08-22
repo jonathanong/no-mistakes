@@ -30,7 +30,8 @@ impl PreparedScope {
                     &session,
                 )
             },
-        )?;
+        );
+        let report = report?;
         match report {
             CachedAnalysis::Plain(report) => {
                 render_queue_report(report_type, options, &report, None)
@@ -63,7 +64,8 @@ impl PreparedScope {
             traversal,
             || crate::server_routes::analyze_project_with_prepared(prepared, &filters),
             || crate::server_routes::analyze_project_with_prepared_indexed(prepared, &filters),
-        )?;
+        );
+        let report = report?;
         match report {
             CachedAnalysis::Plain(report) => {
                 render_server_report(report_type, options, prepared, &report, None, &filters)
@@ -90,7 +92,7 @@ impl PreparedScope {
                 .as_deref()
                 .context("target is required for react usages")?;
             let include = crate::react_traits::UsagesInclude::parse(options.include.as_deref())?;
-            return Ok(serde_json::to_value(
+            let usages =
                 crate::react_traits::pipeline::usages::run_usages_with_loaded_config_and_facts(
                     self.traversal.root(),
                     self.traversal.config(),
@@ -98,8 +100,9 @@ impl PreparedScope {
                     &options.targets,
                     &include,
                     &self.facts,
-                )?,
-            )?);
+                );
+            let usages = usages?;
+            return Ok(serde_json::to_value(usages)?);
         }
         let key = canonical_filter_key(&options.targets)?;
         let analysis = cached_once(&self.react_analyses, &key, || {
@@ -117,14 +120,13 @@ impl PreparedScope {
             self.traversal.config(),
             options.assert_no_fetch,
         );
-        Ok(serde_json::to_value(
-            crate::react_traits::run_check_with_prepared_facts(
-                self.traversal.root(),
-                &options.targets,
-                &self.facts,
-                &prepared,
-            )?,
-        )?)
+        let findings = crate::react_traits::run_check_with_prepared_facts(
+            self.traversal.root(),
+            &options.targets,
+            &self.facts,
+            &prepared,
+        );
+        Ok(serde_json::to_value(findings?)?)
     }
 }
 

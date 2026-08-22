@@ -13,9 +13,8 @@ impl PreparedScope {
             &cwd,
             &self.traversal,
         )?;
-        json_raw_bytes(crate::codebase::dependencies::result_json_bytes(
-            &args, &result,
-        )?)
+        let bytes = crate::codebase::dependencies::result_json_bytes(&args, &result)?;
+        json_raw_bytes(bytes)
     }
 
     pub(super) fn import_usages_report(
@@ -33,7 +32,8 @@ impl PreparedScope {
             &root,
             prepared,
             self.traversal.prepared_facts(),
-        )?;
+        );
+        let report = report?;
         Ok(serde_json::to_value(report)?)
     }
 
@@ -93,12 +93,12 @@ impl PreparedScope {
             self.traversal.config(),
             kind,
             &parsed.categories,
-        )?;
-        Ok(serde_json::to_value(self.traversal.effects_report(
-            &selection,
-            Path::new(entry),
-            parsed.depth,
-        )?)?)
+        );
+        let selection = selection?;
+        let report = self
+            .traversal
+            .effects_report(&selection, Path::new(entry), parsed.depth)?;
+        Ok(serde_json::to_value(report)?)
     }
 
     pub(super) fn rsc_callers_report(
@@ -111,9 +111,9 @@ impl PreparedScope {
             .component
             .as_deref()
             .context("component is required for rsc-callers")?;
-        Ok(serde_json::to_value(
-            self.traversal
-                .rsc_callers_report(Path::new(component), parsed.depth)?,
-        )?)
+        let report = self
+            .traversal
+            .rsc_callers_report(Path::new(component), parsed.depth)?;
+        Ok(serde_json::to_value(report)?)
     }
 }
