@@ -94,7 +94,9 @@ fn scan(
         if dir_rel.is_empty() || !path_under_package_roots(&dir_rel, &opts.package_roots) {
             continue;
         }
-        if opts.require_named_package && package_name_with_sources(path, sources).is_none() {
+        let unnamed =
+            opts.require_named_package && package_name_with_sources(path, sources).is_none();
+        if unnamed {
             findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
                 file: rel.clone(),
@@ -104,9 +106,9 @@ fn scan(
                 target: Some(dir_rel.clone()),
             });
         }
-        if workspace_dirs.contains(&dir_rel)
-            || (!opts.require_named_package && covered_workspace_dirs.contains(&dir_rel))
-        {
+        let canonical = workspace_dirs.contains(&dir_rel);
+        let loosely_covered = covered_workspace_dirs.contains(&dir_rel);
+        if canonical || (loosely_covered && (unnamed || !opts.require_named_package)) {
             continue;
         }
         findings.push(RuleFinding {
