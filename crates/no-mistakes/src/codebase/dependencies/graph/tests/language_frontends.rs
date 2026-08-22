@@ -48,6 +48,7 @@ fn lang_options() -> GraphConfigOptions {
         php_framework: Some("laravel".into()),
         java_packages: vec![".".into()],
         kotlin_packages: vec![".".into()],
+        elixir_apps: vec![".".into()],
         queue_enqueues: vec!["**/*".into()],
         queue_workers: vec!["**/*".into()],
         queue_cluster: Some("orders".into()),
@@ -277,6 +278,26 @@ fn language_frontend_edges_cover_configured_extractors() {
                 .is_none_or(|path| !path.ends_with("Computed.kt"))
     }));
 
+    let elixir = lang_fixture("phoenix-routes");
+    let elixir_edges =
+        collect_language_frontend_edges_for_test(&elixir, &lang_files(&elixir), Some(&options));
+    assert!(elixir_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::ElixirImport
+            && from.as_file().is_some_and(|path| path.ends_with("app.ex"))
+            && to.as_file().is_some_and(|path| path.ends_with("user.ex"))
+    }));
+    assert!(elixir_edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::ElixirReference
+            && from.as_file().is_some_and(|path| path.ends_with("app.ex"))
+            && to.as_file().is_some_and(|path| path.ends_with("user.ex"))
+    }));
+    assert!(elixir_edges.iter().all(|(from, _, kind)| {
+        *kind != EdgeKind::RouteRef
+            || from
+                .as_file()
+                .is_none_or(|path| !path.ends_with("computed.ex"))
+    }));
+
     let kafka = lang_fixture("kafka-topics");
     let kafka_edges =
         collect_language_frontend_edges_for_test(&kafka, &lang_files(&kafka), Some(&options));
@@ -436,5 +457,23 @@ fn kotlin_exact_imports_cross_configured_packages() {
         *kind == EdgeKind::KotlinImport
             && from.as_file().is_some_and(|path| path.ends_with("App.kt"))
             && to.as_file().is_some_and(|path| path.ends_with("User.kt"))
+    }));
+}
+
+#[test]
+fn elixir_exact_imports_cross_configured_packages() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/elixir-cross-package/fixture"),
+    );
+    let options = GraphConfigOptions {
+        elixir_apps: vec!["libs/shared".into(), "services/app".into()],
+        ..GraphConfigOptions::default()
+    };
+    let edges = collect_language_frontend_edges_for_test(&root, &lang_files(&root), Some(&options));
+    assert!(edges.iter().any(|(from, to, kind)| {
+        *kind == EdgeKind::ElixirImport
+            && from.as_file().is_some_and(|path| path.ends_with("run.ex"))
+            && to.as_file().is_some_and(|path| path.ends_with("user.ex"))
     }));
 }

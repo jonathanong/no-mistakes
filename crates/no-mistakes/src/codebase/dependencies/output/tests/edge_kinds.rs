@@ -98,6 +98,8 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::JavaReference,
         EdgeKind::KotlinImport,
         EdgeKind::KotlinReference,
+        EdgeKind::ElixirImport,
+        EdgeKind::ElixirReference,
         EdgeKind::TrpcCall,
         EdgeKind::TrpcProcedure,
         EdgeKind::WorkflowJob,
@@ -156,6 +158,8 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::JavaReference => {}
             EdgeKind::KotlinImport => {}
             EdgeKind::KotlinReference => {}
+            EdgeKind::ElixirImport => {}
+            EdgeKind::ElixirReference => {}
             EdgeKind::TrpcCall => {}
             EdgeKind::TrpcProcedure => {}
             EdgeKind::WorkflowJob => {}

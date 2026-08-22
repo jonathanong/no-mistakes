@@ -136,6 +136,8 @@ tests:
     packages: ["src"]
   kotlin:
     packages: ["kt"]
+  elixir:
+    apps: ["web"]
 "#,
     )
     .unwrap();
@@ -149,4 +151,5 @@ tests:
     assert_eq!(lang.php_framework.as_deref(), Some("symfony"));
     assert_eq!(lang.java_packages, vec!["src"]);
     assert_eq!(lang.kotlin_packages, vec!["kt"]);
+    assert_eq!(lang.elixir_apps, vec!["web"]);
 }

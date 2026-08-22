@@ -18,6 +18,7 @@ pub struct TestPlanConfig {
     pub php: TestPlanFrameworkConfig,
     pub java: TestPlanFrameworkConfig,
     pub kotlin: TestPlanFrameworkConfig,
+    pub elixir: TestPlanFrameworkConfig,
     pub jest: TestPlanFrameworkConfig,
 }
 
@@ -95,6 +96,7 @@ pub enum TestPlanIgnoredChangedTestsFramework {
     Php,
     Java,
     Kotlin,
+    Elixir,
     Jest,
 }
 

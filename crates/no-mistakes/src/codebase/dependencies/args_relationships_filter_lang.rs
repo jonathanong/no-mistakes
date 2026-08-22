@@ -7,6 +7,7 @@ fn language_relationship_edges(relationship: &RelationshipArg) -> Option<&'stati
         RelationshipArg::Php => &[EdgeKind::PhpUse, EdgeKind::PhpPackage],
         RelationshipArg::Java => &[EdgeKind::JavaImport, EdgeKind::JavaReference],
         RelationshipArg::Kotlin => &[EdgeKind::KotlinImport, EdgeKind::KotlinReference],
+        RelationshipArg::Elixir => &[EdgeKind::ElixirImport, EdgeKind::ElixirReference],
         _ => return None,
     })
 }

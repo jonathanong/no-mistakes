@@ -18,8 +18,8 @@ mod tests_config;
 pub use ci_checks::{CheckCommandDef, CheckFileArgs, ChecksConfig, CiConfig};
 pub use infra_config::{InfraConfig, TerraformConfig, TerraformTestConvention};
 pub use tests_config::{
-    DotnetConfig, DotnetProjectConfig, GoConfig, ImpactConfig, JavaConfig, JestConfig,
-    KotlinConfig, PhpConfig, PlaywrightAppBinding, PlaywrightCoverageConfig,
+    DotnetConfig, DotnetProjectConfig, ElixirConfig, GoConfig, ImpactConfig, JavaConfig,
+    JestConfig, KotlinConfig, PhpConfig, PlaywrightAppBinding, PlaywrightCoverageConfig,
     PlaywrightSelectorWrapper, PlaywrightSelectors, PlaywrightTestConfig, PythonConfig,
     RailsConfig, RustLangConfig, StorybookConfig, SwiftConfig, TestProjectPolicy, Tests,
     VitestConfig,

@@ -15,6 +15,7 @@ pub(super) fn language_target_for(
         TestRunner::Php => php_target_for(config, project, test_file),
         TestRunner::Java => java_target_for(config, test_file),
         TestRunner::Kotlin => kotlin_target_for(config, test_file),
+        TestRunner::Elixir => elixir_target_for(config, test_file),
         TestRunner::Dotnet
         | TestRunner::Playwright
         | TestRunner::Vitest
@@ -102,6 +103,20 @@ fn php_target_for(
         (vec!["phpunit".to_string()], vec![test_file.to_string()])
     };
     language_target(TestRunner::Php, app, framework, base_command, runner_args)
+}
+
+fn elixir_target_for(app: Option<&str>, test_file: &str) -> TestExecutionTarget {
+    let rel = relative_to_config(app, test_file);
+    let nested = app
+        .map(slash)
+        .filter(|value| !value.is_empty() && value != ".");
+    let mut base_command = vec!["mix".to_string()];
+    if let Some(app) = nested {
+        base_command.push("-C".into());
+        base_command.push(app);
+    }
+    base_command.push("test".into());
+    language_target(TestRunner::Elixir, app, None, base_command, vec![rel])
 }
 
 include!("lang_targets_jvm.rs");

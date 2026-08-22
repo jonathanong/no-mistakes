@@ -164,3 +164,16 @@ fn kotlin_spring_fixture_lists_literal_routes() {
         .iter()
         .all(|route| !route.file.ends_with("Computed.kt")));
 }
+
+#[test]
+fn phoenix_fixture_lists_literal_routes() {
+    let report = analyze_project(&lang_fixture("phoenix-routes"), None, &[]).unwrap();
+    assert!(report
+        .routes
+        .iter()
+        .any(|route| { route.route == "/users" && route.file.ends_with("router.ex") }));
+    assert!(report
+        .routes
+        .iter()
+        .all(|route| !route.file.ends_with("computed.ex")));
+}

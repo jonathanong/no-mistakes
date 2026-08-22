@@ -61,6 +61,14 @@ fn language_fallback_matches_configured_test_shapes() {
         TestRunner::Kotlin,
         "src/test/kotlin/com/example/Helper.kt"
     ));
+    assert!(fallback_runner_match(
+        TestRunner::Elixir,
+        "test/my_app/user_test.exs"
+    ));
+    assert!(!fallback_runner_match(
+        TestRunner::Elixir,
+        "lib/my_app/user.ex"
+    ));
     assert!(!fallback_runner_match(TestRunner::Python, "app/users.py"));
     assert!(!fallback_runner_match(TestRunner::Cargo, "app/src/lib.rs"));
     assert!(fallback_runner_match(TestRunner::Jest, "src/value.test.ts"));

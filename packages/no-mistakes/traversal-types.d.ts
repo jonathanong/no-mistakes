@@ -33,6 +33,7 @@ export type Relationship =
   | "php"
   | "java"
   | "kotlin"
+  | "elixir"
   | "resource"
   | "trpc"
   | "all";

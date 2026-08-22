@@ -14,6 +14,7 @@ pub(super) fn discover_phase(framework: TestFramework) -> &'static str {
         TestFramework::Php => "discover.php",
         TestFramework::Java => "discover.java",
         TestFramework::Kotlin => "discover.kotlin",
+        TestFramework::Elixir => "discover.elixir",
         TestFramework::Jest => "discover.jest",
     }
 }
@@ -31,6 +32,7 @@ pub(super) fn select_phase(framework: TestFramework) -> &'static str {
         TestFramework::Php => "select.php",
         TestFramework::Java => "select.java",
         TestFramework::Kotlin => "select.kotlin",
+        TestFramework::Elixir => "select.elixir",
         TestFramework::Jest => "select.jest",
     }
 }

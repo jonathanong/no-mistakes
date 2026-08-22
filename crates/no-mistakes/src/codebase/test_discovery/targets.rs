@@ -136,7 +136,8 @@ fn test_file_arg(runner: TestRunner, test_file: &str) -> String {
         | TestRunner::Rails
         | TestRunner::Php
         | TestRunner::Java
-        | TestRunner::Kotlin => test_file.to_string(),
+        | TestRunner::Kotlin
+        | TestRunner::Elixir => test_file.to_string(),
     }
 }
 

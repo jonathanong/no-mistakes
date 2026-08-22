@@ -60,6 +60,8 @@ tests:
     packages: [services/api]
   kotlin:
     packages: [services/api]
+  elixir:
+    apps: [apps/web]
 ```
 
 When `tests.playwright.configs` and `--playwright-config` are both omitted,
@@ -93,11 +95,11 @@ that package's discovered tests.
 
 Language test plans follow the same native shape. Configure
 `tests.python.packages`, `tests.go.modules`, `tests.rust.packages`,
-`tests.rails.apps`, `tests.php.apps`, `tests.java.packages`, or `tests.kotlin.packages`. Empty lists disable that frontend.
-`tests plan python|go|cargo|rails|php|java|kotlin` then emits `pytest` /
+`tests.rails.apps`, `tests.php.apps`, `tests.java.packages`, `tests.kotlin.packages`, or `tests.elixir.apps`. Empty lists disable that frontend.
+`tests plan python|go|cargo|rails|php|java|kotlin|elixir` then emits `pytest` /
 `python -m unittest`, `go test`, `cargo test -p`, `bin/rails test` / `rspec`,
-`phpunit` / `php artisan test`, `mvn test [-f <package>/pom.xml] -Dtest=`, or
-`gradle [-p <package>] test --tests` targets. Untraceable source under those
+`phpunit` / `php artisan test`, `mvn test [-f <package>/pom.xml] -Dtest=`,
+`gradle [-p <package>] test --tests`, or `mix [-C <app>] test` targets. Untraceable source under those
 roots falls back to discovered tests in the owning package, module, or app.
 
 ## Explicit Vitest projects

@@ -32,6 +32,9 @@ pub(super) fn framework_present(
         TestFramework::Kotlin => {
             nonempty_or_plan(&config.tests.kotlin.packages, &config.test_plan.kotlin)
         }
+        TestFramework::Elixir => {
+            nonempty_or_plan(&config.tests.elixir.apps, &config.test_plan.elixir)
+        }
         TestFramework::Jest => jest_present(config),
     }
 }

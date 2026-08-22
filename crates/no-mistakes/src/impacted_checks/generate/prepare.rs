@@ -103,6 +103,7 @@ fn configured_frameworks(
         TestFramework::Php,
         TestFramework::Java,
         TestFramework::Kotlin,
+        TestFramework::Elixir,
         TestFramework::Jest,
     ]
     .into_iter()

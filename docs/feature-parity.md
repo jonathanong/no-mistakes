@@ -12,8 +12,8 @@ do so without shelling out to `rg` for the graph itself.
 v1 is the Swift/.NET bar plus the named key feature for each stack: a module
 graph, `tests plan`, and either HTTP routes or queues. Playwright, React,
 Next.js fetches, call-sites, dead-exports, ecosystem lockfile diffs, and
-dedicated `no-mistakes python|go|rust|rails|php|java|kotlin` CLIs are later work. Agents
-use `dependents --relationship <lang>` now and `tests plan python|go|cargo|rails|php|java|kotlin`
+dedicated `no-mistakes python|go|rust|rails|php|java|kotlin|elixir` CLIs are later work. Agents
+use `dependents --relationship <lang>` now and `tests plan python|go|cargo|rails|php|java|kotlin|elixir`
 when those stacks are configured. Ecosystem lockfiles and dedicated language
 CLIs are not started.
 
@@ -32,6 +32,7 @@ CLIs are not started.
 | PHP | `php-use`, `php-package` | `tests plan php` | Laravel `Route::` / `Route::resource` or Symfony attribute/YAML | Laravel `::dispatch` / `ShouldQueue` or Symfony Messenger | shipped (v1 extractors + plan) |
 | Java, Spring | `java-import`, `java-ref` | `tests plan java` | Spring `@RequestMapping` / `@GetMapping` literals | no | shipped (v1 extractors + plan) |
 | Kotlin, Spring | `kotlin-import`, `kotlin-ref` | `tests plan kotlin` | Spring `@RequestMapping` / `@GetMapping` literals on `.kt` | no | shipped (v1 extractors + plan) |
+| Elixir, Phoenix | `elixir-import`, `elixir-ref` | `tests plan elixir` | Phoenix `get`/`post`/`put`/`patch`/`delete` literals | no | shipped (v1 extractors + plan) |
 
 CI workflows and Terraform/OpenTofu are adjacent graph domains, not language
 frontends. They stay available to every language once files are tracked.
@@ -444,6 +445,42 @@ non-edges. Native fallback is `build.gradle` / `build.gradle.kts` plus
 non-test `.kt` files; `settings.gradle*` is not a trigger. `--tests` uses the
 file stem, matching Java `-Dtest`.
 
+## Elixir, Phoenix
+
+Elixir support is a language frontend for configured `tests.elixir.apps`.
+Empty lists disable the extractor; there is no `mix.exs` inference.
+Exact `alias`/`import`/`use MyApp.User` statements emit `elixir-import`.
+Brace aliases `alias MyApp.{User, Role}` and wildcard imports are non-edges.
+Module names plus capitalized identifiers emit `elixir-ref`. Same-package
+refs without an `alias`/`import`/`use` are non-edges.
+
+Phoenix HTTP v1 matches literal `get "/users", Controller, :index` (and
+`post`/`put`/`patch`/`delete`) registrations. `resources` macros and
+`scope "/api"` prefix joining are non-edges.
+
+| Feature | TS/JS reference | Elixir equivalent |
+| --- | --- | --- |
+| Module graph | `import` | exact `alias`/`import`/`use MyApp.User` |
+| Package identity | workspace packages | configured `tests.elixir.apps` |
+| Tests | `tests plan vitest` | `tests plan elixir` over `*_test.exs`; `mix [-C <app>] test <rel-path>` |
+| HTTP routes | `server routes` | Phoenix `get`/`post`/`put`/`patch`/`delete` literals |
+| Queues | BullMQ | no |
+| Lockfile | npm-family | later (`mix.exs` native fallback only) |
+
+```elixir
+defmodule MyAppWeb.Router do
+  get "/users", MyAppWeb.UserController, :index
+  post "/users", MyAppWeb.UserController, :create
+end
+```
+
+Brace aliases, same-package refs without `alias`/`import`/`use`, Phoenix
+`resources` macros, `scope "/api"` prefix joining, `mix.lock` / `config.exs`
+native fallback, queues, and a dedicated `no-mistakes elixir` CLI are
+non-edges / later work. Native fallback is `mix.exs` plus non-test `.ex`
+files under configured apps. Any `.ex`/`.exs` under `/test/` is
+non-production. `*_test.exs` is the test suffix.
+
 ## Shared Domain Rules
 
 Route, queue, and Kafka extractors are language-specific visitors that emit
@@ -460,6 +497,7 @@ Relationship filters for the language graph itself follow Swift/.NET:
 - `php` — PHP `use` / Composer edges
 - `java` — Java import and reference edges
 - `kotlin` — Kotlin import and reference edges
+- `elixir` — Elixir import and reference edges
 
 Additive language flags must not change existing TS/JS report fields. When a
 broader resolver catalog is needed (for example tests that live outside the
@@ -506,6 +544,9 @@ tests:
   kotlin:
     packages:
       - services/api
+  elixir:
+    apps:
+      - apps/web
 ```
 
 Counterexample: defaulting to “every `urls.py`, every `go.mod`, every Rails
@@ -515,16 +556,16 @@ opt-in.
 ## Agent Fallback
 
 v1 module graphs, `tests plan <lang>`, and named route/queue extractors are
-shipped for configured Python, Go, Rust, Rails, PHP, Java, and Kotlin packages. Use
+shipped for configured Python, Go, Rust, Rails, PHP, Java, Kotlin, and Elixir packages. Use
 `dependents --relationship <lang|route|queue>` and
-`tests plan python|go|cargo|rails|php|java|kotlin` for those questions instead of `rg`.
+`tests plan python|go|cargo|rails|php|java|kotlin|elixir` for those questions instead of `rg`.
 
 Keep using `rg` for holes the status table still marks `no` or later:
 ecosystem lockfile diffs (`poetry.lock`, `uv.lock`, `Pipfile.lock`, `go.mod`,
 `Cargo.lock`, `Gemfile.lock`, `composer.lock`), language HTTP clients, Laravel
 `Route::resource` `only`/`except`, nested dotted names, named arguments, and `Route::apiResource`, Kafka
 outside TS/Python literal shapes, language `symbols`/`call-sites`, and
-dedicated `no-mistakes python|go|rust|rails|php|java|kotlin` CLIs.
+dedicated `no-mistakes python|go|rust|rails|php|java|kotlin|elixir` CLIs.
 
 See [Architecture](architecture.md) for the one-pass session rules,
 [Graph edges](graph-edges.md) for the current edge kinds, and

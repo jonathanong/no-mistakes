@@ -6,8 +6,7 @@ mod coverage;
 pub use coverage::PlaywrightCoverageConfig;
 #[path = "tests_config_jvm.rs"]
 mod tests_config_jvm;
-pub use tests_config_jvm::{JavaConfig, KotlinConfig};
-
+pub use tests_config_jvm::{ElixirConfig, JavaConfig, KotlinConfig};
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Tests {
@@ -22,6 +21,7 @@ pub struct Tests {
     pub php: PhpConfig,
     pub java: JavaConfig,
     pub kotlin: KotlinConfig,
+    pub elixir: ElixirConfig,
     pub jest: JestConfig,
     pub storybook: StorybookConfig,
     pub impact: ImpactConfig,
@@ -138,7 +138,6 @@ pub struct PythonConfig {
 pub struct GoConfig {
     pub modules: Vec<String>,
 }
-
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct RustLangConfig {

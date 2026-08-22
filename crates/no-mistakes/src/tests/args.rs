@@ -237,6 +237,7 @@ pub(crate) enum TestFramework {
     Php,
     Java,
     Kotlin,
+    Elixir,
     Jest,
 }
 

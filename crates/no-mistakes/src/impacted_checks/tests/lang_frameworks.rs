@@ -33,6 +33,11 @@ fn language_frameworks_emit_native_test_commands() {
             &["src/main/kotlin/com/example/User.kt"],
             "gradle test",
         ),
+        (
+            "elixir-test-plan",
+            &["lib/my_app/user.ex"],
+            "mix test",
+        ),
     ];
     for (name, files, needle) in cases {
         let mut a = args(files);
@@ -67,6 +72,11 @@ fn framework_present_detects_configured_language_packages() {
         (
             "kotlin-test-plan",
             TestFramework::Kotlin,
+            TestFramework::Php,
+        ),
+        (
+            "elixir-test-plan",
+            TestFramework::Elixir,
             TestFramework::Php,
         ),
     ];

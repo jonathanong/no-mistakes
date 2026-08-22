@@ -22,6 +22,7 @@ fn empty_language_lists_discover_no_projects() {
         TestRunner::Php,
         TestRunner::Java,
         TestRunner::Kotlin,
+        TestRunner::Elixir,
     ] {
         assert!(language_projects(&root, &config, runner).is_empty());
     }
@@ -111,4 +112,21 @@ fn kotlin_projects_scope_configured_package_globs() {
         .include
         .iter()
         .any(|glob| glob.contains("Test.kt")));
+}
+
+#[test]
+fn elixir_projects_scope_configured_app_globs() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/lang-frontends/phoenix-routes"),
+    );
+    let mut config = NoMistakesConfig::default();
+    config.tests.elixir.apps = vec![".".to_string()];
+    let projects = language_projects(&root, &config, TestRunner::Elixir);
+    assert_eq!(projects.len(), 1);
+    assert_eq!(projects[0].config.as_deref(), Some("."));
+    assert!(projects[0]
+        .include
+        .iter()
+        .any(|glob| glob.contains("_test.exs")));
 }

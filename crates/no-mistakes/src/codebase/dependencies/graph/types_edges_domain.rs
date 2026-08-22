@@ -27,6 +27,8 @@ fn language_frontend_str(kind: &EdgeKind) -> Option<&'static str> {
         EdgeKind::JavaReference => "java-ref",
         EdgeKind::KotlinImport => "kotlin-import",
         EdgeKind::KotlinReference => "kotlin-ref",
+        EdgeKind::ElixirImport => "elixir-import",
+        EdgeKind::ElixirReference => "elixir-ref",
         _ => return None,
     })
 }
