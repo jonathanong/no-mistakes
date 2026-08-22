@@ -13,7 +13,7 @@ pub fn collect_imports(
     path: &Path,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
 ) -> Result<Vec<PathBuf>> {
-    collect_imports_inner(path, import_cache, None)
+    collect_imports_with_sources(path, import_cache, None)
 }
 
 pub(crate) fn collect_imports_from_visible(
@@ -21,13 +21,22 @@ pub(crate) fn collect_imports_from_visible(
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
     visible_files: &crate::fx::PathSet,
 ) -> Result<Vec<PathBuf>> {
-    collect_imports_inner(path, import_cache, Some(visible_files))
+    collect_imports_inner(path, import_cache, Some(visible_files), None)
+}
+
+pub(crate) fn collect_imports_with_sources(
+    path: &Path,
+    import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> Result<Vec<PathBuf>> {
+    collect_imports_inner(path, import_cache, None, sources)
 }
 
 fn collect_imports_inner(
     path: &Path,
     import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
     visible_files: Option<&crate::fx::PathSet>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<Vec<PathBuf>> {
     let abs_path = match visible_files {
         Some(_) => crate::codebase::ts_resolver::normalize_path(path),
@@ -37,7 +46,8 @@ fn collect_imports_inner(
         return Ok(cached_imports.clone());
     }
 
-    let source = std::fs::read_to_string(&abs_path)?;
+    let source = crate::codebase::ts_source::SourceStore::read_prepared_or_open(sources, &abs_path)
+        .map_err(|error| anyhow::anyhow!("{error}"))?;
     let imports = ast::with_program(path, &source, |program, _source| {
         collect_imports_from_program_inner(&abs_path, program, import_cache, visible_files)
     })?;

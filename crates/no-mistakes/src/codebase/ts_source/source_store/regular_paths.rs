@@ -7,12 +7,7 @@ impl SourceStore {
     /// fallback; symlinks and other supplemental paths do.
     pub(crate) fn validated_regular_path(&self, root: &Path, candidate: &Path) -> Option<PathBuf> {
         let normalized = super::super::normalize_discovery_path(candidate);
-        if self
-            .trusted_regular_paths
-            .lock()
-            .expect("trusted regular paths mutex poisoned")
-            .contains(&normalized)
-        {
+        if self.trusted_regular_paths.contains(&normalized) {
             return Some(candidate.to_path_buf());
         }
         super::validation::validated_regular_path(
@@ -34,27 +29,29 @@ impl SourceStore {
             .iter()
             .filter_map(|root| std::fs::canonicalize(root).ok())
             .collect::<Vec<_>>();
-        let mut trusted = self
-            .trusted_regular_paths
-            .lock()
-            .expect("trusted regular paths mutex poisoned");
-        trusted.extend(paths.iter().filter_map(|path| {
-            let file_type = std::fs::symlink_metadata(path).ok()?.file_type();
+        for path in paths {
+            let Some(file_type) = std::fs::symlink_metadata(path)
+                .ok()
+                .map(|meta| meta.file_type())
+            else {
+                continue;
+            };
             let trusted_file = file_type.is_file()
                 || (file_type.is_symlink()
                     && std::fs::canonicalize(path).ok().is_some_and(|target| {
                         target.is_file()
                             && canonical_roots.iter().any(|root| target.starts_with(root))
                     }));
-            trusted_file.then(|| super::super::normalize_discovery_path(path))
-        }));
+            if trusted_file {
+                self.trusted_regular_paths
+                    .insert(super::super::normalize_discovery_path(path));
+            }
+        }
     }
 
     pub(crate) fn trusted_regular_path(&self, candidate: &Path) -> Option<PathBuf> {
         let normalized = super::super::normalize_discovery_path(candidate);
         self.trusted_regular_paths
-            .lock()
-            .expect("trusted regular paths mutex poisoned")
             .contains(&normalized)
             .then(|| candidate.to_path_buf())
     }
