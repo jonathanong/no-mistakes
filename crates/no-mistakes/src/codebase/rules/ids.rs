@@ -25,6 +25,7 @@ pub use super::nextjs_no_caching::RULE_ID as NEXTJS_NO_CACHING;
 pub use super::nextjs_redirect_destinations::RULE_ID as NEXTJS_REDIRECT_DESTINATIONS;
 pub use super::no_empty_or_comments_only_files::RULE_ID as NO_EMPTY_OR_COMMENTS_ONLY_FILES;
 pub use super::no_git_identity_mutation::RULE_ID as NO_GIT_IDENTITY_MUTATION;
+pub use super::no_mistakes_config::RULE_ID as NO_MISTAKES_CONFIG;
 pub use super::no_raw_ephemeral_port::RULE_ID as NO_RAW_EPHEMERAL_PORT;
 pub use super::package_json_registry_only::RULE_ID as PACKAGE_JSON_REGISTRY_ONLY;
 pub use super::package_json_workspace_coverage::RULE_ID as PACKAGE_JSON_WORKSPACE_COVERAGE;

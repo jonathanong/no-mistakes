@@ -1,0 +1,7 @@
+projects:
+  web:
+    root: web
+
+tests:
+  vitest:
+    configs: vitest.config.ts

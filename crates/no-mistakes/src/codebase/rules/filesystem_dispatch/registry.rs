@@ -17,6 +17,7 @@ macro_rules! filesystem_rules {
             TSCONFIG_ALIAS_FOLDER_MAPPING => tsconfig_alias_folder_mapping::check_with_files,
             TSCONFIG_FILE_COVERAGE => tsconfig_file_coverage::check_with_files,
             NO_GIT_IDENTITY_MUTATION => no_git_identity_mutation::check_with_files,
+            NO_MISTAKES_CONFIG => no_mistakes_config::check_with_files,
             NO_RAW_EPHEMERAL_PORT => no_raw_ephemeral_port::check_with_files,
             MARKDOWN_EVAL_TESTS => markdown_eval_tests::check_with_files,
             PACKAGE_JSON_REGISTRY_ONLY => package_json_registry_only::check_with_files,
