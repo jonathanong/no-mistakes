@@ -10,3 +10,4 @@ fn fixture(path: &str) -> PathBuf {
 mod diagnostics;
 mod reachability;
 mod resolution;
+mod resolution_globs;
