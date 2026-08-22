@@ -164,6 +164,36 @@ fn kotlin_nested_package_passes_gradle_project_flag() {
 }
 
 #[test]
+fn elixir_target_uses_mix_test() {
+    let target = target_for(
+        TestRunner::Elixir,
+        Some("."),
+        false,
+        None,
+        "test/my_app/user_test.exs",
+    );
+    assert_eq!(target.base_command, vec!["mix", "test"]);
+    assert_eq!(target.runner_args, vec!["test/my_app/user_test.exs"]);
+    assert_eq!(target.runner, "elixir");
+}
+
+#[test]
+fn elixir_nested_app_keeps_repo_relative_mix_test_path() {
+    let target = target_for(
+        TestRunner::Elixir,
+        Some("apps/web"),
+        false,
+        None,
+        "apps/web/test/my_app/user_test.exs",
+    );
+    assert_eq!(target.base_command, vec!["mix", "test"]);
+    assert_eq!(
+        target.runner_args,
+        vec!["apps/web/test/my_app/user_test.exs"]
+    );
+}
+
+#[test]
 fn java_nested_package_passes_maven_file_flag() {
     let target = target_for(
         TestRunner::Java,

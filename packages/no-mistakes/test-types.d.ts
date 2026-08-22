@@ -13,6 +13,7 @@ export type TestPlanFramework =
   | "php"
   | "java"
   | "kotlin"
+  | "elixir"
   | "jest";
 
 interface TestsPlanOptionsBase {

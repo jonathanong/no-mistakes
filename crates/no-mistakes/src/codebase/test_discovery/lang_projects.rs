@@ -36,6 +36,7 @@ pub(super) fn language_projects(
             kotlin_includes(),
             None,
         ),
+        TestRunner::Elixir => (config.tests.elixir.apps.as_slice(), elixir_includes(), None),
         _ => return Vec::new(),
     };
     if roots.is_empty() {
@@ -123,6 +124,11 @@ fn java_includes() -> &'static [String] {
 fn kotlin_includes() -> &'static [String] {
     static GLOBS: OnceLock<Vec<String>> = OnceLock::new();
     GLOBS.get_or_init(|| crate::codebase::dependencies::test_globs("kotlin"))
+}
+
+fn elixir_includes() -> &'static [String] {
+    static GLOBS: OnceLock<Vec<String>> = OnceLock::new();
+    GLOBS.get_or_init(|| crate::codebase::dependencies::test_globs("elixir"))
 }
 
 #[cfg(test)]

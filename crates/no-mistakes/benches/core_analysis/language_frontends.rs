@@ -5,15 +5,15 @@ use no_mistakes::benchmark_support::{
     match_language_frontend_queue_globs, LanguageFrontendSummary,
 };
 
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_FILES: usize = 109;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_PARSED: usize = 63;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_IMPORTS: usize = 64;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_FILES: usize = 117;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_PARSED: usize = 69;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_IMPORTS: usize = 66;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_ENQUEUES: usize = 7;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_WORKERS: usize = 6;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_ROUTES: usize = 39;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_EDGES: usize = 117;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_ROUTES: usize = 41;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_EDGES: usize = 125;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_QUEUE_EDGES: usize = 14;
-pub(super) const EXPECTED_LANGUAGE_FRONTEND_GLOB_MATCHES: usize = 109;
+pub(super) const EXPECTED_LANGUAGE_FRONTEND_GLOB_MATCHES: usize = 117;
 
 pub(super) fn bench_language_frontends(c: &mut Criterion) {
     if !shard::should_run(shard::GRAPH) {

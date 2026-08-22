@@ -251,6 +251,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         php_framework: None,
         java_packages: vec![],
         kotlin_packages: vec![],
+        elixir_apps: vec![],
         queue_enqueues: vec![],
         queue_workers: vec![],
         queue_cluster: None,

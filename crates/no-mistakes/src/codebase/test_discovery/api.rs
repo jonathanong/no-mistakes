@@ -51,6 +51,7 @@ pub fn discover_tests_from_prepared_projects(
             | TestRunner::Php
             | TestRunner::Java
             | TestRunner::Kotlin
+            | TestRunner::Elixir
             | TestRunner::Jest => None,
         }
         .map(|reserved_runner| {
@@ -115,6 +116,7 @@ pub fn project_filters_from_visible(
         TestRunner::Php,
         TestRunner::Java,
         TestRunner::Kotlin,
+        TestRunner::Elixir,
     ]
         .into_iter()
         .flat_map(|runner| {

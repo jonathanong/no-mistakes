@@ -131,6 +131,7 @@ pub(super) fn runner_config(
         | TestRunner::Rails
         | TestRunner::Php
         | TestRunner::Java
-        | TestRunner::Kotlin => unreachable!("language projects are handled before runner_config"),
+        | TestRunner::Kotlin
+        | TestRunner::Elixir => unreachable!("language projects are handled before runner_config"),
     }
 }

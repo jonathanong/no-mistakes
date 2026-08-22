@@ -119,3 +119,45 @@ fn kotlin_source_under_configured_package_is_native() {
         "build.gradle.kts",
     ));
 }
+
+#[test]
+fn elixir_source_under_configured_app_is_native() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.elixir.apps = vec![".".to_string()];
+    assert!(is_language_native_change(
+        TestFramework::Elixir,
+        Path::new("/repo"),
+        &config,
+        "lib/my_app/user.ex",
+    ));
+    assert!(!is_language_native_change(
+        TestFramework::Elixir,
+        Path::new("/repo"),
+        &config,
+        "test/my_app/user_test.exs",
+    ));
+    assert!(!is_language_native_change(
+        TestFramework::Elixir,
+        Path::new("/repo"),
+        &config,
+        "test/support/data_case.ex",
+    ));
+    assert!(is_language_native_change(
+        TestFramework::Elixir,
+        Path::new("/repo"),
+        &config,
+        "mix.exs",
+    ));
+    assert!(!is_language_native_change(
+        TestFramework::Elixir,
+        Path::new("/repo"),
+        &config,
+        "config/config.exs",
+    ));
+    assert!(!is_language_native_change(
+        TestFramework::Elixir,
+        Path::new("/repo"),
+        &config,
+        "mix.lock",
+    ));
+}

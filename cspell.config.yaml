@@ -26,6 +26,7 @@ words:
   - conrelid
   - cooldown
   - dedup
+  - defmodule
   - dtolnay
   - codebase
   - codecov

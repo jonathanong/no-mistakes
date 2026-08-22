@@ -27,6 +27,7 @@ pub(super) fn runner_reserved_tests_from_visible(
         | TestRunner::Php
         | TestRunner::Java
         | TestRunner::Kotlin
+        | TestRunner::Elixir
         | TestRunner::Jest => return BTreeSet::new(),
     };
     let reserved_projects = prepared_projects.unwrap_or_else(|| {

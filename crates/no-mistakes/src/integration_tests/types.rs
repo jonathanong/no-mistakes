@@ -17,7 +17,6 @@ pub struct IntegrationFinding {
     pub integration: Option<String>,
     pub message: String,
 }
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum Framework {
     Dotnet,
@@ -31,6 +30,7 @@ pub(crate) enum Framework {
     Php,
     Java,
     Kotlin,
+    Elixir,
     Jest,
 }
 
@@ -48,6 +48,7 @@ impl Framework {
             Self::Php => "php",
             Self::Java => "java",
             Self::Kotlin => "kotlin",
+            Self::Elixir => "elixir",
             Self::Jest => "jest",
         }
     }
@@ -56,7 +57,6 @@ impl Framework {
         matches!(self, Self::Playwright | Self::Vitest | Self::Jest)
     }
 }
-
 #[derive(Debug, Clone)]
 pub(super) struct Suite {
     pub framework: Framework,

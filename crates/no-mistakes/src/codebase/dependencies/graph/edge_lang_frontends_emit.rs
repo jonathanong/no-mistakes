@@ -13,7 +13,10 @@ fn emit_lang_edges(
                     .filter(|target| {
                         matches!(
                             import_kind,
-                            EdgeKind::GoImport | EdgeKind::JavaImport | EdgeKind::KotlinImport
+                            EdgeKind::GoImport
+                                | EdgeKind::JavaImport
+                                | EdgeKind::KotlinImport
+                                | EdgeKind::ElixirImport
                         )
                             || facts
                                 .files

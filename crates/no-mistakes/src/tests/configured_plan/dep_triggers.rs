@@ -113,6 +113,7 @@ pub(super) fn framework_plan(
         TestFramework::Php => &config.test_plan.php,
         TestFramework::Java => &config.test_plan.java,
         TestFramework::Kotlin => &config.test_plan.kotlin,
+        TestFramework::Elixir => &config.test_plan.elixir,
         TestFramework::Jest => &config.test_plan.jest,
     }
 }
@@ -137,6 +138,7 @@ fn ignored_changed_test_sets(
             TestPlanIgnoredChangedTestsFramework::Php => TestRunner::Php,
             TestPlanIgnoredChangedTestsFramework::Java => TestRunner::Java,
             TestPlanIgnoredChangedTestsFramework::Kotlin => TestRunner::Kotlin,
+            TestPlanIgnoredChangedTestsFramework::Elixir => TestRunner::Elixir,
             TestPlanIgnoredChangedTestsFramework::Jest => TestRunner::Jest,
         };
         let set = match prepared.discover_runner_tests(runner) {
@@ -284,6 +286,7 @@ pub(super) fn test_runner(framework: TestFramework) -> TestRunner {
         TestFramework::Php => TestRunner::Php,
         TestFramework::Java => TestRunner::Java,
         TestFramework::Kotlin => TestRunner::Kotlin,
+        TestFramework::Elixir => TestRunner::Elixir,
         TestFramework::Jest => TestRunner::Jest,
     }
 }

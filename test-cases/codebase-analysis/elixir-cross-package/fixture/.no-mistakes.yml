@@ -1,0 +1,5 @@
+tests:
+  elixir:
+    apps:
+      - libs/shared
+      - services/app

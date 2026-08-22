@@ -1,4 +1,5 @@
 mod cli;
+mod elixir;
 mod facts;
 mod go;
 mod java;
@@ -29,6 +30,7 @@ pub(crate) use cli::{
     each_lang_map, lang_config_from_v2, lang_config_is_empty, matching_cluster,
     queue_globs_from_v2, QueueGlobMatchers,
 };
+pub(crate) use elixir::collect_elixir_facts;
 pub(crate) use facts::{LangFactMap, LangFileFacts};
 pub(crate) use go::collect_go_facts;
 pub(crate) use java::collect_java_facts;
@@ -49,6 +51,7 @@ pub(crate) struct LangFrontendConfig {
     pub php_framework: Option<String>,
     pub java_packages: Vec<String>,
     pub kotlin_packages: Vec<String>,
+    pub elixir_apps: Vec<String>,
 }
 
 #[derive(Default)]
@@ -60,6 +63,7 @@ pub(crate) struct CollectedLangFacts {
     pub php: LangFactMap,
     pub java: LangFactMap,
     pub kotlin: LangFactMap,
+    pub elixir: LangFactMap,
 }
 
 pub(crate) fn collect_all_lang_facts(
@@ -68,7 +72,7 @@ pub(crate) fn collect_all_lang_facts(
     config: &LangFrontendConfig,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> CollectedLangFacts {
-    // Each collect_*_facts already file-parallelizes. Overlapping the seven
+    // Each collect_*_facts already file-parallelizes. Overlapping the eight
     // extractors with nested rayon::join raised language_frontends::extract
     // peak memory 260.8 KB → 688.5 KB, past the extra-join ≤10% memory gate.
     CollectedLangFacts {
@@ -85,5 +89,6 @@ pub(crate) fn collect_all_lang_facts(
         ),
         java: collect_java_facts(root, all_files, &config.java_packages, sources),
         kotlin: collect_kotlin_facts(root, all_files, &config.kotlin_packages, sources),
+        elixir: collect_elixir_facts(root, all_files, &config.elixir_apps, sources),
     }
 }

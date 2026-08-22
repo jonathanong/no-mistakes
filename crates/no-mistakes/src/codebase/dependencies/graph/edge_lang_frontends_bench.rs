@@ -22,6 +22,7 @@ pub(crate) fn collect_language_frontend_edges_for_bench(
         php_framework: request.languages.php_framework.clone(),
         java_packages: request.languages.java_packages.clone(),
         kotlin_packages: request.languages.kotlin_packages.clone(),
+        elixir_apps: request.languages.elixir_apps.clone(),
         queue_enqueues: request.queue_enqueues.to_vec(),
         queue_workers: request.queue_workers.to_vec(),
         queue_cluster: request.queue_cluster,

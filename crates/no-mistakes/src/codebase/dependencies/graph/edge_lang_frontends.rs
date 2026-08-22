@@ -90,6 +90,13 @@ fn collect_language_frontend_edges(
             &mut edges,
             interner,
         );
+        emit_lang_edges(
+            &facts.elixir,
+            EdgeKind::ElixirImport,
+            EdgeKind::ElixirReference,
+            &mut edges,
+            interner,
+        );
         emit_queue_edges(root, &facts.python, options, &mut edges, interner);
         emit_queue_edges(root, &facts.go, options, &mut edges, interner);
         emit_queue_edges(root, &facts.ruby, options, &mut edges, interner);
@@ -101,6 +108,7 @@ fn collect_language_frontend_edges(
         emit_route_edges(root, &facts.php, options, &mut edges, interner);
         emit_route_edges(root, &facts.java, options, &mut edges, interner);
         emit_route_edges(root, &facts.kotlin, options, &mut edges, interner);
+        emit_route_edges(root, &facts.elixir, options, &mut edges, interner);
     }
     if !options.queue_enqueues.is_empty() || !options.queue_workers.is_empty() {
         emit_kafka_edges(root, all_files, options, &sources, &mut edges, interner);
@@ -118,6 +126,7 @@ fn lang_config_from_options(options: &GraphConfigOptions) -> LangFrontendConfig 
         php_framework: options.php_framework.clone(),
         java_packages: options.java_packages.clone(),
         kotlin_packages: options.kotlin_packages.clone(),
+        elixir_apps: options.elixir_apps.clone(),
     }
 }
 
@@ -129,5 +138,6 @@ fn config_is_empty(config: &LangFrontendConfig) -> bool {
         && config.php_apps.is_empty()
         && config.java_packages.is_empty()
         && config.kotlin_packages.is_empty()
+        && config.elixir_apps.is_empty()
 }
 

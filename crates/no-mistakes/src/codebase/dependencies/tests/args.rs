@@ -228,6 +228,7 @@ fn python_relationship_enables_language_frontend_plan() {
         crate::codebase::dependencies::RelationshipArg::Php,
         crate::codebase::dependencies::RelationshipArg::Java,
         crate::codebase::dependencies::RelationshipArg::Kotlin,
+        crate::codebase::dependencies::RelationshipArg::Elixir,
     ] {
         let allowed = crate::codebase::dependencies::relationship_filter(&[relationship])
             .expect("language relationship");
@@ -268,6 +269,9 @@ fn language_frontend_globs_are_explicit() {
     assert!(test_globs("kotlin")
         .iter()
         .any(|glob| glob.contains("Test.kt")));
+    assert!(test_globs("elixir")
+        .iter()
+        .any(|glob| glob.contains("_test.exs")));
 }
 
 #[test]

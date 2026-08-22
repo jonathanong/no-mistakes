@@ -85,6 +85,7 @@ pub(crate) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
         TestRunner::Php => rel.ends_with("Test.php") || rel.contains("/tests/"),
         TestRunner::Java => is_java_test_path(rel),
         TestRunner::Kotlin => is_kotlin_test_path(rel),
+        TestRunner::Elixir => is_elixir_test_path(rel),
         TestRunner::Jest => fallback_test_path(rel),
     }
 }
@@ -112,6 +113,10 @@ fn is_java_test_path(rel: &str) -> bool {
 fn is_kotlin_test_path(rel: &str) -> bool {
     let name = rel.rsplit('/').next().unwrap_or(rel);
     name.ends_with("Test.kt") || name.ends_with("Tests.kt") || name.ends_with("IT.kt")
+}
+
+fn is_elixir_test_path(rel: &str) -> bool {
+    rel.rsplit('/').next().unwrap_or(rel).ends_with("_test.exs")
 }
 
 fn has_path_segment_pair(path: &str, first: &str, second: &str) -> bool {

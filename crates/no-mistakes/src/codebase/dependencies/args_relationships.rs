@@ -43,6 +43,7 @@ pub enum RelationshipArg {
     Php,
     Java,
     Kotlin,
+    Elixir,
     Resource,
     Trpc,
     All,
@@ -80,6 +81,7 @@ impl RelationshipArg {
             Self::Php => Some("php"),
             Self::Java => Some("java"),
             Self::Kotlin => Some("kotlin"),
+            Self::Elixir => Some("elixir"),
             Self::Trpc => Some("trpc"),
             _ => None,
         }

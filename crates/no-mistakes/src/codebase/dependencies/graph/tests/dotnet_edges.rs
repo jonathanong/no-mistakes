@@ -20,6 +20,7 @@ fn empty_options() -> GraphConfigOptions {
         php_framework: None,
         java_packages: Vec::new(),
         kotlin_packages: Vec::new(),
+        elixir_apps: Vec::new(),
         queue_enqueues: Vec::new(),
         queue_workers: Vec::new(),
         queue_cluster: None,

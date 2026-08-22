@@ -491,6 +491,7 @@ fn test_runner(framework: TestFramework) -> TestRunner {
         TestFramework::Php => TestRunner::Php,
         TestFramework::Java => TestRunner::Java,
         TestFramework::Kotlin => TestRunner::Kotlin,
+        TestFramework::Elixir => TestRunner::Elixir,
         TestFramework::Jest => TestRunner::Jest,
     }
 }
@@ -518,6 +519,7 @@ fn test_framework(runner: TestRunner) -> TestFramework {
         TestRunner::Php => TestFramework::Php,
         TestRunner::Java => TestFramework::Java,
         TestRunner::Kotlin => TestFramework::Kotlin,
+        TestRunner::Elixir => TestFramework::Elixir,
         TestRunner::Jest => TestFramework::Jest,
     }
 }

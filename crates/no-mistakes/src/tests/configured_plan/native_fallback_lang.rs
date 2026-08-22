@@ -20,6 +20,7 @@ pub(super) fn is_language_native_change(
         TestFramework::Php => is_php_native(&rel, root, config),
         TestFramework::Java => is_java_native(&rel, root, config),
         TestFramework::Kotlin => is_kotlin_native(&rel, root, config),
+        TestFramework::Elixir => is_elixir_native(&rel, root, config),
         _ => false,
     }
 }
@@ -96,6 +97,7 @@ fn is_java_native(rel: &str, root: &Path, config: &NoMistakesConfig) -> bool {
 }
 
 include!("native_fallback_lang_kotlin.rs");
+include!("native_fallback_lang_elixir.rs");
 
 fn owning_root(
     framework: TestFramework,
@@ -126,6 +128,7 @@ fn configured_roots(framework: TestFramework, config: &NoMistakesConfig) -> &[St
         TestFramework::Php => &config.tests.php.apps,
         TestFramework::Java => &config.tests.java.packages,
         TestFramework::Kotlin => &config.tests.kotlin.packages,
+        TestFramework::Elixir => &config.tests.elixir.apps,
         _ => &[],
     }
 }

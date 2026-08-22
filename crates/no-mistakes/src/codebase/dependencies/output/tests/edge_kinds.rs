@@ -36,6 +36,8 @@ fn edge_kind_str_all_variants() {
     assert_eq!(EdgeKind::SwiftImport.as_str(), "swift-import");
     assert_eq!(EdgeKind::SwiftReference.as_str(), "swift-ref");
     assert_eq!(EdgeKind::SwiftPackageDependency.as_str(), "swift-package");
+    assert_eq!(EdgeKind::ElixirImport.as_str(), "elixir-import");
+    assert_eq!(EdgeKind::ElixirReference.as_str(), "elixir-ref");
 }
 
 #[test]
@@ -98,6 +100,8 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::JavaReference,
         EdgeKind::KotlinImport,
         EdgeKind::KotlinReference,
+        EdgeKind::ElixirImport,
+        EdgeKind::ElixirReference,
         EdgeKind::TrpcCall,
         EdgeKind::TrpcProcedure,
         EdgeKind::WorkflowJob,
@@ -156,6 +160,8 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::JavaReference => {}
             EdgeKind::KotlinImport => {}
             EdgeKind::KotlinReference => {}
+            EdgeKind::ElixirImport => {}
+            EdgeKind::ElixirReference => {}
             EdgeKind::TrpcCall => {}
             EdgeKind::TrpcProcedure => {}
             EdgeKind::WorkflowJob => {}

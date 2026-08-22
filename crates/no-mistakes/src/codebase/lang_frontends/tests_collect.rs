@@ -48,6 +48,7 @@ fn collect_all_lang_facts_matches_independent_language_collectors() {
         php_framework: Some("laravel".into()),
         java_packages: vec!["java-spring".into()],
         kotlin_packages: vec!["kotlin-spring".into()],
+        elixir_apps: vec!["phoenix-routes".into()],
     };
     let store = store_for(&files);
     let collected = collect_all_lang_facts(&root, &files, &config, &store);
@@ -85,6 +86,10 @@ fn collect_all_lang_facts_matches_independent_language_collectors() {
         collected.kotlin,
         collect_kotlin_facts(&root, &files, &config.kotlin_packages, &store)
     );
+    assert_eq!(
+        collected.elixir,
+        collect_elixir_facts(&root, &files, &config.elixir_apps, &store)
+    );
     assert!(
         !collected.python.files.is_empty(),
         "composed fixture must produce python facts"
@@ -112,6 +117,10 @@ fn collect_all_lang_facts_matches_independent_language_collectors() {
     assert!(
         !collected.kotlin.files.is_empty(),
         "composed fixture must produce kotlin facts"
+    );
+    assert!(
+        !collected.elixir.files.is_empty(),
+        "composed fixture must produce elixir facts"
     );
 }
 
@@ -141,6 +150,7 @@ fn collect_all_lang_facts_with_partially_configured_languages() {
     assert!(collected.php.files.is_empty());
     assert!(collected.java.files.is_empty());
     assert!(collected.kotlin.files.is_empty());
+    assert!(collected.elixir.files.is_empty());
     assert!(!collected.python.files.is_empty());
     assert!(!collected.go.files.is_empty());
 }
@@ -158,4 +168,5 @@ fn collect_all_lang_facts_skips_unconfigured_languages() {
     assert!(collected.php.files.is_empty());
     assert!(collected.java.files.is_empty());
     assert!(collected.kotlin.files.is_empty());
+    assert!(collected.elixir.files.is_empty());
 }

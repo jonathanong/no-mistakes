@@ -36,6 +36,7 @@ fn framework_test_plan(
         TestFramework::Php => config.test_plan.php.clone(),
         TestFramework::Java => config.test_plan.java.clone(),
         TestFramework::Kotlin => config.test_plan.kotlin.clone(),
+        TestFramework::Elixir => config.test_plan.elixir.clone(),
         TestFramework::Jest => config.test_plan.jest.clone(),
     };
     // Compatibility warning bookkeeping is not behavior.
@@ -60,6 +61,7 @@ fn framework_tests(config: &NoMistakesConfig, framework: TestFramework) -> serde
         TestFramework::Php => serde_json::to_value(&config.tests.php),
         TestFramework::Java => serde_json::to_value(&config.tests.java),
         TestFramework::Kotlin => serde_json::to_value(&config.tests.kotlin),
+        TestFramework::Elixir => serde_json::to_value(&config.tests.elixir),
         TestFramework::Jest => serde_json::to_value(&config.tests.jest),
     }
     .expect("test configuration must serialize")
@@ -96,6 +98,7 @@ fn framework_trigger_projects(
         TestFramework::Php => &config.test_plan.php,
         TestFramework::Java => &config.test_plan.java,
         TestFramework::Kotlin => &config.test_plan.kotlin,
+        TestFramework::Elixir => &config.test_plan.elixir,
         TestFramework::Jest => &config.test_plan.jest,
     };
     plan.full_suite_triggers
@@ -193,6 +196,7 @@ fn global_graph_semantics(config: &NoMistakesConfig) -> GlobalGraphSemantics {
             "php": &config.tests.php,
             "java": &config.tests.java,
             "kotlin": &config.tests.kotlin,
+            "elixir": &config.tests.elixir,
         }),
     }
 }

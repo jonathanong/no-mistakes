@@ -152,8 +152,12 @@ fn route_handler_names(handler: &str) -> Vec<String> {
     }
     let view = normalize_route_handler(&trimmed);
     let mut names = vec![view.clone()];
-    if let Some((_, last)) = view.rsplit_once('.') {
+    if let Some((parent, last)) = view.rsplit_once('.') {
         names.push(last.to_string());
+        if last.as_bytes().first().is_some_and(|b| b.is_ascii_lowercase()) {
+            names.push(parent.to_string());
+            names.push(parent.rsplit('.').next().expect("parent").to_string());
+        }
     }
     names
 }
