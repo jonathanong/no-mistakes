@@ -42,6 +42,7 @@ impl GraphFiles {
         }
         if changed {
             self.canonical_visible.bump_universe();
+            self.scoped_visible.take();
         }
         changed
     }
@@ -99,6 +100,16 @@ impl crate::codebase::ts_resolver::VisiblePathLookup for GraphFiles {
 
     fn visible_cache_key(&self) -> Vec<PathBuf> {
         self.iter_visible().cloned().collect()
+    }
+
+    fn normalized_visible(&self) -> std::sync::Arc<crate::fx::PathSet> {
+        std::sync::Arc::clone(self.scoped_visible.get_or_init(|| {
+            std::sync::Arc::new(
+                crate::codebase::ts_resolver::normalized_visible_path_set(
+                    self.iter_visible().cloned(),
+                ),
+            )
+        }))
     }
 
     fn visible_len(&self) -> usize {

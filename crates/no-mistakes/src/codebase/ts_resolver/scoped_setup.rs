@@ -14,9 +14,7 @@ impl<'a> ScopedImportResolver<'a> {
     ) -> Self {
         Self::build(
             catalog,
-            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
-                visible,
-            )))),
+            Some(ResolverVisible::Owned(visible.normalized_visible())),
             None,
         )
     }
@@ -29,9 +27,7 @@ impl<'a> ScopedImportResolver<'a> {
     ) -> Self {
         Self::build(
             catalog,
-            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
-                visible,
-            )))),
+            Some(ResolverVisible::Owned(visible.normalized_visible())),
             Some(session),
         )
     }
@@ -43,9 +39,7 @@ impl<'a> ScopedImportResolver<'a> {
     ) -> Self {
         Self::build(
             catalog,
-            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
-                visible,
-            )))),
+            Some(ResolverVisible::Owned(visible.normalized_visible())),
             session,
         )
     }
@@ -109,18 +103,4 @@ fn canonical_or_normalized(path: &Path) -> PathBuf {
         Ok(path) => normalize_path(&path),
         Err(_) => normalize_path(path),
     }
-}
-
-fn normalized_visible(visible: &dyn VisiblePathLookup) -> crate::fx::PathSet {
-    visible
-        .visible_cache_key()
-        .into_iter()
-        .flat_map(|path| {
-            let normalized = normalize_path(&path);
-            path.canonicalize().ok().map_or_else(
-                || vec![normalized.clone()],
-                |real| vec![normalized.clone(), normalize_path(&real)],
-            )
-        })
-        .collect()
 }

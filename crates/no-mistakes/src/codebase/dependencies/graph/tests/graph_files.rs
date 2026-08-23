@@ -317,6 +317,35 @@ fn graph_files_trait_contains_visible_is_exact_membership() {
 
 #[cfg(unix)]
 #[test]
+fn scoped_visibility_projection_reuses_its_arc_and_invalidates_after_explicit_root() {
+    use crate::codebase::ts_resolver::VisiblePathLookup;
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    );
+    let via_link = root.join("src/value.ts");
+    let via_real = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/real/src/value.ts"),
+    );
+    let explicit = root.join("src/entry.ts");
+    let mut files = GraphFiles::from_files(vec![via_link.clone()]);
+
+    let first = VisiblePathLookup::normalized_visible(&files);
+    let second = VisiblePathLookup::normalized_visible(&files);
+    assert!(std::sync::Arc::ptr_eq(&first, &second));
+    assert!(first.contains(&via_link));
+    assert!(first.contains(&via_real));
+
+    assert!(files.add_explicit_root(&explicit));
+    let refreshed = VisiblePathLookup::normalized_visible(&files);
+    assert!(!std::sync::Arc::ptr_eq(&first, &refreshed));
+    assert!(refreshed.contains(&explicit));
+}
+
+#[cfg(unix)]
+#[test]
 fn scoped_session_visibility_keeps_canonical_aliases_from_graph_files() {
     use crate::codebase::ts_resolver::ImportResolution;
 

@@ -36,8 +36,9 @@ pub use relationships::{
     RelationshipConstructionFixture, RelationshipProjectionFixture, RelationshipProjectionSummary,
 };
 pub use scoped_resolver::{
-    resolve_repeated_scoped_imports, scoped_resolver_selection_fixture,
-    ScopedResolverSelectionFixture, ScopedResolverSelectionSummary,
+    build_repeated_scoped_resolvers, resolve_repeated_scoped_imports,
+    scoped_resolver_selection_fixture, ScopedResolverSelectionFixture,
+    ScopedResolverSelectionSummary,
 };
 
 /// Synthetic, deterministic adjacency input for measuring graph finalization.

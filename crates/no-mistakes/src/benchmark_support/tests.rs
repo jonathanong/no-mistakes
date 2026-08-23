@@ -221,6 +221,12 @@ fn scoped_resolver_fixture_caches_one_selection_per_importer() {
 }
 
 #[test]
+fn scoped_resolver_construction_benchmark_preserves_its_result_contract() {
+    let fixture = scoped_resolver_selection_fixture();
+    assert_eq!(build_repeated_scoped_resolvers(&fixture, 4), 4);
+}
+
+#[test]
 fn bench_shard_unset_and_general_memory_run_every_named_surface() {
     for current in [None, Some(""), Some(GENERAL_MEMORY)] {
         assert_eq!(parse_bench_shard(current), Ok(BenchShard::All));

@@ -5,6 +5,9 @@ pub(crate) struct GraphFiles {
     /// search paths without cloning them into a second set.
     visible: Vec<u8>,
     canonical_visible: CanonicalVisible,
+    /// Resolver visibility is normalized and canonicalized at most once per
+    /// graph universe, then shared by scoped resolver facades.
+    scoped_visible: std::sync::OnceLock<std::sync::Arc<crate::fx::PathSet>>,
     /// The tracked (or non-Git fallback) files eligible for runtime resource
     /// edges. This intentionally excludes explicit request roots and merely
     /// visible ignored files.
@@ -81,6 +84,7 @@ impl GraphFiles {
             indexable: std::sync::Arc::new(indexable),
             visible,
             canonical_visible: CanonicalVisible::empty(),
+            scoped_visible: std::sync::OnceLock::new(),
             resource_candidates,
         }
     }

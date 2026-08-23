@@ -125,5 +125,19 @@ pub(super) fn bench_scoped_resolver_selection(c: &mut Criterion) {
             ))
         });
     });
+    const RESOLVERS: usize = 128;
+    assert_eq!(
+        benchmark_support::build_repeated_scoped_resolvers(&fixture, RESOLVERS),
+        RESOLVERS
+    );
+    group.throughput(Throughput::Elements(RESOLVERS as u64));
+    group.bench_function("repeated_construction", |b| {
+        b.iter(|| {
+            black_box(benchmark_support::build_repeated_scoped_resolvers(
+                black_box(&fixture),
+                RESOLVERS,
+            ))
+        });
+    });
     group.finish();
 }
