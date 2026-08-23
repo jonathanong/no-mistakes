@@ -109,7 +109,7 @@ fn scan(
         };
         for key in &opts.keys {
             for reference in values_at_key(&value, key) {
-                if !reference_exists(root, &path, opts, &reference, &rel_files)? {
+                if !reference_exists(root, path, opts, &reference, &rel_files)? {
                     findings.push(missing_finding(&rel, &reference, key));
                 }
             }

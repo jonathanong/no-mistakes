@@ -14,6 +14,14 @@ mod types;
 pub(crate) use extract::{extract, matches_preset};
 use types::Extracted;
 
+struct ScanContext<'a> {
+    root: &'a Path,
+    config: &'a NoMistakesConfig,
+    rel_files: &'a [String],
+    sources: &'a crate::codebase::ts_source::SourceStore,
+    findings: &'a mut Vec<RuleFinding>,
+}
+
 pub(super) fn scan(
     root: &Path,
     config: &NoMistakesConfig,
@@ -26,6 +34,13 @@ pub(super) fn scan(
     if opts.presets.is_empty() {
         return Ok(());
     }
+    let mut context = ScanContext {
+        root,
+        config,
+        rel_files,
+        sources,
+        findings,
+    };
     for path in config_candidates {
         let filename = config_filename(path);
         let rel = crate::codebase::ts_source::relative_slash_path(root, path);
@@ -38,39 +53,47 @@ pub(super) fn scan(
         if matched.is_empty() {
             continue;
         }
-        scan_file(
-            root, config, path, &rel, &matched, rel_files, sources, findings,
-        )?;
+        scan_file(&mut context, path, &rel, &matched)?;
     }
     Ok(())
 }
 
 fn scan_file(
-    root: &Path,
-    config: &NoMistakesConfig,
+    context: &mut ScanContext<'_>,
     path: &Path,
     rel: &str,
     matched: &[&str],
-    rel_files: &[String],
-    sources: &crate::codebase::ts_source::SourceStore,
-    findings: &mut Vec<RuleFinding>,
 ) -> Result<()> {
-    let Some(source) = super::super::read_source(sources, path) else {
+    let Some(source) = super::super::read_source(context.sources, path) else {
         return Ok(());
     };
     for extracted in matched
         .iter()
         .filter(|preset| *preset == &"no-mistakes")
-        .flat_map(|_| extract::no_mistakes(config))
+        .flat_map(|_| extract::no_mistakes(context.config))
     {
-        push_missing(root, path, rel, rel_files, findings, extracted)?;
+        push_missing(
+            context.root,
+            path,
+            rel,
+            context.rel_files,
+            context.findings,
+            extracted,
+        )?;
     }
     for extracted in matched
         .iter()
         .filter(|preset| *preset == &"pnpm-workspace-filters")
         .flat_map(|_| pnpm::workspace_filters(&source))
     {
-        push_missing(root, path, rel, rel_files, findings, extracted)?;
+        push_missing(
+            context.root,
+            path,
+            rel,
+            context.rel_files,
+            context.findings,
+            extracted,
+        )?;
     }
     let structured: Vec<&str> = matched
         .iter()
@@ -83,7 +106,7 @@ fn scan_file(
     let value = match crate::codebase::structured_value::parse_structured_value(path, &source) {
         Ok(value) => value,
         Err(error) => {
-            findings.push(RuleFinding {
+            context.findings.push(RuleFinding {
                 rule: RULE_ID.to_string(),
                 file: rel.to_string(),
                 line: 1,
@@ -96,7 +119,14 @@ fn scan_file(
     };
     for preset in structured {
         for extracted in extract(preset, &value) {
-            push_missing(root, path, rel, rel_files, findings, extracted)?;
+            push_missing(
+                context.root,
+                path,
+                rel,
+                context.rel_files,
+                context.findings,
+                extracted,
+            )?;
         }
     }
     Ok(())
