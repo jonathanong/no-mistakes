@@ -47,6 +47,22 @@ fn markdown_child_links_passes_with_a_whole_file_link() {
 }
 
 #[test]
+fn markdown_child_links_counts_canonical_html_list_items() {
+    let root = fixture("markdown-child-links", "canonical-html-pass");
+    let out = check_fixture_config(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn markdown_child_links_rejects_canonical_html_fragment_only() {
+    let root = fixture("markdown-child-links", "canonical-html-fragment");
+    let out = check_fixture_config(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert!(body.contains("markdown-child-links"), "{body}");
+}
+
+#[test]
 fn markdown_eval_tests_fails_for_eval_spawn_heuristic() {
     let root = fixture("markdown-eval-tests", "fail");
     let out = check_fixture_config(&root);
