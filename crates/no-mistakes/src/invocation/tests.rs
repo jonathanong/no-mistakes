@@ -47,12 +47,32 @@ fn cli_defaults_and_zero_values_have_napi_parity() {
             timeout: 0,
             lock_timeout: 0,
             fail_on_lock: true,
+            profile: None,
         }
         .options(),
         InvocationOptions {
             timeout: None,
             lock_timeout: None,
             fail_on_lock: true,
+            jobs: None,
+        }
+    );
+}
+
+#[test]
+fn ci_profile_disables_timeouts() {
+    assert_eq!(
+        InvocationArgs {
+            timeout: DEFAULT_TIMEOUT_SECONDS,
+            lock_timeout: DEFAULT_TIMEOUT_SECONDS,
+            fail_on_lock: false,
+            profile: Some(InvocationProfile::Ci),
+        }
+        .options(),
+        InvocationOptions {
+            timeout: None,
+            lock_timeout: None,
+            fail_on_lock: false,
             jobs: None,
         }
     );
