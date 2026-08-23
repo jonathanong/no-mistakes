@@ -55,6 +55,7 @@ describe("docs coverage", () => {
       "executors",
       "includeFiles",
       "annotation",
+      "sqlTagModules",
     ]) {
       assert.ok(pluginDoc.includes(optionName), `missing option ${optionName}`);
     }

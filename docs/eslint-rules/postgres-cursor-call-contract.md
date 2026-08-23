@@ -12,10 +12,12 @@ Counterexample: `runCursor('SELECT 1')`, `const cursor = runCursor; cursor(sql)`
 or `export { runCursor } from '@db/cursors'`.
 
 Fix: import the helper by name or namespace member and pass a string,
-template, or `sql-template-strings` tag whose first static text is
-`/* rows */ …`. One immutable `const` binding is allowed. Discarded
-`.append(...)` chains on that binding are ignored.
+template, or a configured SQL tagged-template module (default
+`sql-template-strings`) whose first static text is `/* rows */ …`. One
+immutable `const` binding is allowed. Discarded `.append(...)` chains on that
+binding are ignored.
 
 Not in `configs.recommended` or `configs.strict`. Enable it with `modules` and
 `executors` for the project. Optional `include` / `exclude` / `includeFiles`
-scope the files; `annotation` replaces the default leading-comment regex.
+scope the files; `annotation` replaces the default leading-comment regex;
+`sqlTagModules` replaces the default SQL tag import.

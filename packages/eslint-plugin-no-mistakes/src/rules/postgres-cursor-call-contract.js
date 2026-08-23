@@ -93,6 +93,7 @@ module.exports = rule(
           exclude: { type: "array", items: { type: "string" } },
           includeFiles: { type: "array", items: { type: "string" } },
           annotation: { type: "string" },
+          sqlTagModules: { type: "array", items: { type: "string" } },
         },
       },
     ],

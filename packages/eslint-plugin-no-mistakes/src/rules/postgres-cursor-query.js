@@ -38,20 +38,22 @@ function firstQuasiText(template, allowRaw) {
   return quasi.value?.cooked ?? (allowRaw ? (quasi.value?.raw ?? null) : null);
 }
 
-function exactSqlTag(context, tag, helpers) {
+function exactSqlTag(context, tag, helpers, config) {
   const identifier = helpers.unwrap(tag);
   if (identifier?.type !== "Identifier") return false;
   const variable = helpers.findVariable(context, identifier);
   const definition = variable?.defs.find((candidate) => {
     const specifier = candidate.node;
     const declaration = candidate.parent || specifier.parent;
+    const source = declaration?.source?.value;
     return (
       candidate.type === "ImportBinding" &&
       specifier.type === "ImportDefaultSpecifier" &&
       specifier.importKind !== "type" &&
       declaration?.type === "ImportDeclaration" &&
       declaration.importKind !== "type" &&
-      declaration.source?.value === "sql-template-strings"
+      typeof source === "string" &&
+      config.sqlTagModules.has(source)
     );
   });
   return Boolean(
@@ -59,11 +61,14 @@ function exactSqlTag(context, tag, helpers) {
   );
 }
 
-function directQueryHead(context, node, helpers) {
+function directQueryHead(context, node, helpers, config) {
   const value = helpers.unwrap(node);
   if (value?.type === "Literal") return typeof value.value === "string" ? value.value : null;
   if (value?.type === "TemplateLiteral") return firstQuasiText(value, true);
-  if (value?.type === "TaggedTemplateExpression" && exactSqlTag(context, value.tag, helpers)) {
+  if (
+    value?.type === "TaggedTemplateExpression" &&
+    exactSqlTag(context, value.tag, helpers, config)
+  ) {
     return firstQuasiText(value.quasi, false);
   }
   return null;
@@ -81,7 +86,7 @@ function isCursorQueryArgument(context, identifier, helpers, config) {
 }
 
 function queryHead(context, node, helpers, config) {
-  const direct = directQueryHead(context, node, helpers);
+  const direct = directQueryHead(context, node, helpers, config);
   if (direct !== null) return direct;
   const value = helpers.unwrap(node);
   if (value?.type !== "Identifier") return null;
@@ -105,7 +110,7 @@ function queryHead(context, node, helpers, config) {
   ) {
     return null;
   }
-  return directQueryHead(context, declaration.init, helpers);
+  return directQueryHead(context, declaration.init, helpers, config);
 }
 
 module.exports = {

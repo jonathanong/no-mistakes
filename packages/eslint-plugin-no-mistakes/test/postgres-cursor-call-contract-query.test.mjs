@@ -13,7 +13,11 @@ const {
 } = require("../src/rules/postgres-cursor-query");
 
 const helpers = { findVariable, propertyName, unwrap };
-const config = { modules: new Set(["@db/cursors"]), executors: new Set(["runCursor"]) };
+const config = {
+  modules: new Set(["@db/cursors"]),
+  executors: new Set(["runCursor"]),
+  sqlTagModules: new Set(["sql-template-strings"]),
+};
 
 function identifier(name) {
   return { type: "Identifier", name };
@@ -76,6 +80,13 @@ describe("queryHead and wrappers", () => {
       },
     };
     assert.equal(queryHead(contextFor(sqlVar), tagged, helpers, config), "/* rows */ SELECT 1");
+    assert.equal(
+      queryHead(contextFor(sqlVar), tagged, helpers, {
+        ...config,
+        sqlTagModules: new Set(["@db/sql"]),
+      }),
+      null,
+    );
     sqlVar.references = [{ identifier: identifier("sql"), isWrite: () => true }];
     assert.equal(queryHead(contextFor(sqlVar), tagged, helpers, config), null);
     sqlVar.references = [{ identifier: identifier("sql"), isWrite: () => false }];

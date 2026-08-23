@@ -4,6 +4,7 @@ import { require } from "./helpers.mjs";
 
 const {
   DEFAULT_CURSOR_INCLUDE,
+  DEFAULT_SQL_TAG_MODULES,
   matchesCursorFile,
   resolveCursorContractOptions,
 } = require("../src/rules/postgres-cursor-options");
@@ -80,6 +81,7 @@ describe("resolveCursorContractOptions", () => {
     assert.equal(resolveCursorContractOptions({ ...base, include: [1] }), null);
     assert.equal(resolveCursorContractOptions({ ...base, exclude: {} }), null);
     assert.equal(resolveCursorContractOptions({ ...base, includeFiles: [1] }), null);
+    assert.equal(resolveCursorContractOptions({ ...base, sqlTagModules: [1] }), null);
     assert.equal(resolveCursorContractOptions({ ...base, annotation: 1 }), null);
   });
 
@@ -95,6 +97,11 @@ describe("resolveCursorContractOptions", () => {
     assert.deepEqual(resolved.include, DEFAULT_CURSOR_INCLUDE);
     assert.deepEqual(resolved.exclude, []);
     assert.deepEqual(resolved.includeFiles, ["lib/seed.js"]);
+    assert.deepEqual([...resolved.sqlTagModules], DEFAULT_SQL_TAG_MODULES);
+    assert.deepEqual(
+      [...resolveCursorContractOptions({ ...base, sqlTagModules: ["@db/sql"] }).sqlTagModules],
+      ["@db/sql"],
+    );
     assert.equal(resolved.annotation.test("/* rows */ SELECT 1"), true);
     assert.equal(resolved.annotation.test("SELECT 1"), false);
     assert.deepEqual(

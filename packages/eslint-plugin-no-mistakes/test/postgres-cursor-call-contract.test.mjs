@@ -322,6 +322,24 @@ describe("postgres-cursor-call-contract", () => {
   it("honors a custom annotation and ignores files outside include", () => {
     assert.deepEqual(
       messages(
+        `import { runCursor } from '@db/cursors'\nimport sql from '@db/sql'\nrunCursor(sql\`/* rows */ SELECT 1\`)`,
+        RULE,
+        { ...OPTIONS, sqlTagModules: ["@db/sql"] },
+        "src/custom-sql-tag.js",
+      ),
+      [],
+    );
+    assert.deepEqual(
+      messages(
+        `import { runCursor } from '@db/cursors'\nimport sql from 'sql-template-strings'\nrunCursor(sql\`/* rows */ SELECT 1\`)`,
+        RULE,
+        { ...OPTIONS, sqlTagModules: ["@db/sql"] },
+        "src/default-sql-tag-disabled.js",
+      ),
+      ["staticQuery"],
+    );
+    assert.deepEqual(
+      messages(
         `import { runCursor } from '@db/cursors'\nrunCursor('-- name SELECT 1')`,
         RULE,
         { ...OPTIONS, annotation: "^--" },

@@ -5,6 +5,7 @@ const { normalizeFilename } = require("./postgres-cursor-ast");
 
 const DEFAULT_CURSOR_INCLUDE = ["**/*.{ts,mts,tsx,js,mjs}"];
 const DEFAULT_CURSOR_ANNOTATION = "^\\s*/\\*\\s*\\S[^]*?\\*/";
+const DEFAULT_SQL_TAG_MODULES = ["sql-template-strings"];
 
 function expandBraces(pattern) {
   const start = pattern.indexOf("{");
@@ -42,7 +43,10 @@ function resolveCursorContractOptions(raw) {
   const include = optionalStringArray(raw.include, raw.include !== undefined);
   const exclude = optionalStringArray(raw.exclude, raw.exclude !== undefined);
   const includeFiles = optionalStringArray(raw.includeFiles, raw.includeFiles !== undefined);
-  if (include === null || exclude === null || includeFiles === null) return null;
+  const sqlTagModules = optionalStringArray(raw.sqlTagModules, raw.sqlTagModules !== undefined);
+  if (include === null || exclude === null || includeFiles === null || sqlTagModules === null) {
+    return null;
+  }
   let annotation;
   try {
     annotation = new RegExp(
@@ -59,6 +63,7 @@ function resolveCursorContractOptions(raw) {
     include: include ?? DEFAULT_CURSOR_INCLUDE,
     exclude: exclude ?? [],
     includeFiles: (includeFiles ?? []).map((file) => file.replace(/^(?:\.\/)+/, "")),
+    sqlTagModules: new Set(sqlTagModules ?? DEFAULT_SQL_TAG_MODULES),
     annotation,
   };
 }
@@ -72,6 +77,7 @@ function matchesCursorFile(context, options) {
 
 module.exports = {
   DEFAULT_CURSOR_INCLUDE,
+  DEFAULT_SQL_TAG_MODULES,
   matchesCursorFile,
   resolveCursorContractOptions,
 };
