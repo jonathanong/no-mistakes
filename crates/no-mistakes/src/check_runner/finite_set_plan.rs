@@ -21,11 +21,10 @@ impl PreparedFactDemand {
         if self.needs_other_facts {
             return discovered;
         }
-        self.call_site_files
-            .iter()
-            .filter(|path| discovered.contains(path))
-            .cloned()
-            .collect()
+        no_mistakes::codebase::check_facts::ordered_path_intersection(
+            &self.call_site_files,
+            &discovered,
+        )
     }
 
     /// Call-source files absent from the request's primary fact and graph scopes.
@@ -38,11 +37,11 @@ impl PreparedFactDemand {
         primary_files: &[PathBuf],
         graph_files: &[PathBuf],
     ) -> Vec<PathBuf> {
-        self.call_site_files
-            .iter()
-            .filter(|path| !primary_files.contains(path) && !graph_files.contains(path))
-            .cloned()
-            .collect()
+        no_mistakes::codebase::check_facts::ordered_path_exclusion(
+            &self.call_site_files,
+            primary_files,
+            graph_files,
+        )
     }
 }
 

@@ -10,6 +10,28 @@ use std::path::PathBuf;
 
 const EXPECTED_GRAPH_GATES_CHECK_KEYS: usize = 7;
 
+pub(super) fn bench_finite_set_membership(c: &mut Criterion) {
+    if !shard::should_run(shard::CHECK) {
+        return;
+    }
+    let scope: Vec<PathBuf> = (0..50_000)
+        .map(|index| PathBuf::from(format!("src/generated/{index}.ts")))
+        .collect();
+    let candidates: Vec<PathBuf> = (0..1_000)
+        .map(|index| scope[(index * 37) % scope.len()].clone())
+        .collect();
+    c.bench_function("check/finite_set_membership_50k_scope_1k_candidates", |b| {
+        b.iter(|| {
+            criterion::black_box(
+                no_mistakes::codebase::check_facts::ordered_path_intersection(
+                    criterion::black_box(&candidates),
+                    criterion::black_box(&scope),
+                ),
+            )
+        });
+    });
+}
+
 pub(super) fn bench_aggregate_and_multi_report(c: &mut Criterion) {
     if shard::should_run(shard::CHECK) {
         let root = fixture_root();

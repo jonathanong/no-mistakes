@@ -13,6 +13,77 @@ mod runner;
 mod staged_playwright;
 mod stats;
 
+use rustc_hash::FxHashSet;
+use std::path::{Path, PathBuf};
+
+/// Borrowed path membership used by request-scoped finite-set projections.
+#[doc(hidden)]
+pub struct PathMembership<'a> {
+    index: FxHashSet<&'a Path>,
+}
+
+impl<'a> PathMembership<'a> {
+    /// Build one index without cloning the existing path universe.
+    #[inline]
+    pub fn new(paths: &'a [PathBuf]) -> Self {
+        Self {
+            index: paths.iter().map(PathBuf::as_path).collect(),
+        }
+    }
+
+    /// Return whether `path` is present in the borrowed index.
+    #[inline]
+    pub fn contains(&self, path: &Path) -> bool {
+        self.index.contains(path)
+    }
+}
+
+/// Keep candidates in their original order, including duplicate matches.
+#[doc(hidden)]
+pub fn ordered_path_intersection(candidates: &[PathBuf], scope: &[PathBuf]) -> Vec<PathBuf> {
+    let scope = PathMembership::new(scope);
+    candidates
+        .iter()
+        .filter(|path| scope.contains(path))
+        .cloned()
+        .collect()
+}
+
+/// Exclude paths present in either indexed scope, preserving order/duplicates.
+#[doc(hidden)]
+pub fn ordered_path_exclusion(
+    candidates: &[PathBuf],
+    primary: &[PathBuf],
+    graph: &[PathBuf],
+) -> Vec<PathBuf> {
+    if candidates.is_empty() {
+        return Vec::new();
+    }
+    let primary = PathMembership::new(primary);
+    let graph = PathMembership::new(graph);
+    candidates
+        .iter()
+        .filter(|path| !primary.contains(path) && !graph.contains(path))
+        .cloned()
+        .collect()
+}
+
+pub(crate) fn into_ordered_path_exclusion(
+    candidates: Vec<PathBuf>,
+    primary: &[PathBuf],
+    graph: &[PathBuf],
+) -> Vec<PathBuf> {
+    if candidates.is_empty() {
+        return candidates;
+    }
+    let primary = PathMembership::new(primary);
+    let graph = PathMembership::new(graph);
+    candidates
+        .into_iter()
+        .filter(|path| !primary.contains(path) && !graph.contains(path))
+        .collect()
+}
+
 pub(crate) use aggregate::playwright_aggregate_facts;
 pub(crate) use batch::{collect_check_fact_batch_with_session, BatchCheckFactRequest};
 pub use collect::{
@@ -40,5 +111,7 @@ pub use stats::CheckFactStats;
 
 #[cfg(test)]
 mod parse_cache_tests;
+#[cfg(test)]
+mod path_membership_tests;
 #[cfg(test)]
 pub(crate) mod tests;

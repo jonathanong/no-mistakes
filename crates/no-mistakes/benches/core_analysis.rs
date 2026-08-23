@@ -21,7 +21,9 @@ mod reports;
 #[path = "core_analysis/shard.rs"]
 mod shard;
 
-use aggregate::{bench_aggregate_and_multi_report, bench_impacted_checks};
+use aggregate::{
+    bench_aggregate_and_multi_report, bench_finite_set_membership, bench_impacted_checks,
+};
 use criterion::{criterion_group, criterion_main};
 use graph::{bench_facts_graph_and_query, bench_high_fanout_finalization, bench_lazy_traversal};
 use graph_gates::bench_graph_gates;
@@ -49,6 +51,7 @@ criterion_group!(
     bench_workspace,
     bench_react_traits,
     bench_aggregate_and_multi_report,
+    bench_finite_set_membership,
     bench_impacted_checks,
     bench_observer_overhead,
     bench_relationship_projection,
