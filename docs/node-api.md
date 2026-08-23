@@ -151,7 +151,7 @@ does not have a one-to-one CLI command:
 
 `testsTargets()` and test-plan targets set `workspace: true` when a Vitest
 workspace/project-array source must be passed with `--workspace`; the emitted
-`runner_args` already contain the correct flag. This includes configured and
+`runnerArgs` already contain the correct flag. This includes configured and
 default-discovered `vitest.workspace.*` and `vitest.projects.*` sources,
 including JSON project arrays, matching the CLI. A default-discovered root
 workspace/project-array source takes precedence over sibling
@@ -186,7 +186,7 @@ tRPC router procedures and client calls through virtual nodes identified as
 and `procedure`; `FlowNode` uses `kind: "trpc-procedure"`. `all` does not
 include `trpc`. Empty `projects.*.trpc.routers` lists disable extraction.
 
-`testsPlan(options)` returns `changed_files`, the sorted, deduplicated
+`testsPlan(options)` returns `changedFiles`, the sorted, deduplicated
 changed-file inventory prepared by that same call, relative to the request root.
 The field is present even when no tests are selected and retains deleted paths
 plus both sides of detected renames and copies.
@@ -202,7 +202,7 @@ Set `directTestOwner: true` with an explicit `framework` to select only changed
 framework-owned tests and framework-owned tests one reverse canonical graph edge
 away. This bypasses test-plan environment policy (including groups, limits,
 samples, fallback, and include/exclude filtering), attaches normal execution
-targets, and returns a `direct-test-owner` group with `fallback_triggered:
+targets, and returns a `direct-test-owner` group with `fallbackTriggered:
 false`. `limitPercent`, `limitFiles`, and `globalConfigFallback` conflict with
 this option. `entrypoints` also conflicts with it: direct-owner selection is
 bounded to changed files and one reverse canonical graph edge, so use
@@ -214,7 +214,7 @@ The TypeScript declaration models this as a discriminated option: direct-owner
 plans require `framework`, while ordinary plans omit `directTestOwner` or set it
 to `false`.
 
-`testsPlan(options)` returns `fallback_triggered` and `fallback_reason` when a
+`testsPlan(options)` returns `fallbackTriggered` and `fallbackReason` when a
 `dotnet` or `swift` plan has to fall back from native graph tracing to
 framework-scoped discovered tests. Vitest plans also use this surface for a
 dynamic or unresolved `setupFiles`/`globalSetup` declaration: the result is
@@ -222,7 +222,7 @@ bounded to its known project owner when possible. Its helper closure follows
 ordinary static imports/re-exports and literal CommonJS `require(...)` or
 `require.resolve(...)` dependencies, retaining edits and deletions as owner
 triggers; computed or non-literal forms are not followed. Resolved setup paths
-use `via: ["vitest-setup"]` and may add `via_details`, an optional array aligned
+use `via: ["vitest-setup"]` and may add `viaDetails`, an optional array aligned
 with `via` whose setup edge detail is `{ type: "vitest-setup", field:
 "setupFiles" | "globalSetup" }`.
 
@@ -247,14 +247,14 @@ see `docs/cli/tests-plan.md`.
 The API uses the same target-scoped `fullSuiteTriggers.projects` behavior as the
 CLI. A `{ paths, targets }` match selects only tests owned by those runner
 projects, emits `configured-trigger` reasons and execution targets, and leaves
-`fallback_triggered` false. Semantic `.no-mistakes.yml`/`.yaml` invalidation is
+`fallbackTriggered` false. Semantic `.no-mistakes.yml`/`.yaml` invalidation is
 also identical for revision and inline-diff inputs.
 
 `testsPlan`, `testsImpact`, `testsWhy`, and `testsGraph` expose resource-edge
 provenance without a separate API: plan reasons use optional edge-aligned
-`via_details`, why steps use optional `detail`, and graph JSON edges use
-optional `detail`. Details are `{ type: "resource", consumer_file,
-call_sites: [{ call_kind, line }] }` for literal runtime filesystem edges or
+`viaDetails`, why steps use optional `detail`, and graph JSON edges use
+optional `detail`. Details are `{ type: "resource", consumerFile,
+callSites: [{ callKind, line }] }` for literal runtime filesystem edges or
 `{ type: "vitest-setup", field: "setupFiles" | "globalSetup" }` for setup
 edges.
 
@@ -414,4 +414,8 @@ addon avoids UTF-16 string copies at the N-API boundary.
 - Omit `tsconfig` to use automatic per-workspace resolution; pass it explicitly
   only to force one config for debugging or compatibility.
 - Use `analyzeProject()` when several reports share the same root/config.
+  Batch `testsPlan` with other reports in one `analyzeProject({ reports })`
+  call so they share the machine-wide lock. `testsPlan()` / `testsImpact()`
+  return camelCase `executionTargets` (optional `name` for Swift path-prefix
+  groups). `includeGlob` is a `testsPlan()` option.
 - Prefer structured API results over parsing human CLI output.
