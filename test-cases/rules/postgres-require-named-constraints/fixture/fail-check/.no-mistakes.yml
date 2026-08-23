@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-require-named-constraints
+    scope: repository
+    options:
+      sqlInclude: ["migrations/**/*.sql"]

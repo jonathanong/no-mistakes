@@ -1,6 +1,7 @@
 use super::{line_containing, relation};
 use crate::codebase::postgres::types::{
     SqlAddColumnMetadata, SqlForeignKeyMetadata, SqlNamedConstraint, SqlSchemaFileFacts,
+    SqlUnnamedConstraint,
 };
 use sqlparser::ast::{AlterTableOperation, ColumnOption, ForeignKeyConstraint, TableConstraint};
 
@@ -60,6 +61,13 @@ pub(super) fn collect_alter_table(
                             ));
                     }
                     _ => {}
+                }
+                if let Some(kind) = unnamed_fk_or_check_kind(constraint) {
+                    facts.unnamed_constraints.push(SqlUnnamedConstraint {
+                        table_name: table_name.clone(),
+                        kind: kind.to_string(),
+                        line: line_containing(sql, &["add", kind]),
+                    });
                 }
                 if *not_valid {
                     if let Some(name) = constraint_name(constraint) {
@@ -129,6 +137,14 @@ fn fk_metadata(
         referenced_table_name: relation(&fk.foreign_table),
         delete_action: fk.on_delete.as_ref().map(ToString::to_string),
         line,
+    }
+}
+
+fn unnamed_fk_or_check_kind(constraint: &TableConstraint) -> Option<&'static str> {
+    match constraint {
+        TableConstraint::ForeignKey(fk) if fk.name.is_none() => Some("FOREIGN KEY"),
+        TableConstraint::Check(check) if check.name.is_none() => Some("CHECK"),
+        _ => None,
     }
 }
 

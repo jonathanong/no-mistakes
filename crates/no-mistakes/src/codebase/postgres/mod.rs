@@ -35,6 +35,7 @@ pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,
     SqlColumnMetadata, SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDropIndexMetadata,
     SqlForeignKeyMetadata, SqlIndexParam, SqlNamedConstraint, SqlSchemaFileFacts,
+    SqlUnnamedConstraint,
 };
 
 #[cfg(test)]
