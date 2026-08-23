@@ -18,6 +18,7 @@ words:
   - aspnet
   - asynq
   - Basenames
+  - bullmq
   - callees
   - callsite
   - callsites
@@ -102,4 +103,5 @@ words:
   - vitest
   - walkdir
   - worktree
+  - worktrees
   - zeitwerk

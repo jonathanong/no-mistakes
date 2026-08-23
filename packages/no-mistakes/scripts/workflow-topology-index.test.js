@@ -142,3 +142,11 @@ test("deep-freezes enriched job and step metadata", () => {
   assert.deepEqual(groupOnlyJob.runsOn, { group: "restricted" });
   assert.equal(Object.isFrozen(groupOnlyJob.runsOn), true);
 });
+
+test("directCallerJobIdsForUses and stepOrderIndexes query steps", () => {
+  const index = createWorkflowTopologyIndex(fixtureTopology("needs-basic"));
+  const build = ".github/workflows/pipeline.yml#build";
+  assert.deepEqual(index.directCallerJobIdsForUses("actions/checkout@v4"), []);
+  assert.deepEqual(index.stepOrderIndexes(build, [{ name: "missing" }]), [-1]);
+  assert.throws(() => index.stepOrderIndexes("nope", []), /unknown workflow job: nope/);
+});

@@ -1,0 +1,11 @@
+testPlan:
+  vitest:
+    environments:
+      prePush:
+        limit:
+          files: 10
+        groups:
+          - type: direct
+          - type: dependencies
+            limit:
+              files: 10

@@ -250,6 +250,7 @@ fn no_mistakes_rules_have_docs() {
         rules::NEXTJS_REDIRECT_DESTINATIONS,
         rules::NO_EMPTY_OR_COMMENTS_ONLY_FILES,
         rules::NO_GIT_IDENTITY_MUTATION,
+        rules::NO_MISTAKES_CONFIG,
         rules::NO_RAW_EPHEMERAL_PORT,
         rules::PACKAGE_JSON_REGISTRY_ONLY,
         rules::PNPM_OVERRIDES_BAN,
@@ -289,6 +290,7 @@ fn no_mistakes_rules_have_docs() {
         rules::TSCONFIG_GATE_COVERAGE,
         unique_exports::RULE_ID,
         rules::VITEST_TEST_CORRESPONDENCE,
+        rules::WORKFLOW_TOPOLOGY_POLICY,
     ];
     for rule_id in rule_ids {
         let file = format!("{rule_id}.md");

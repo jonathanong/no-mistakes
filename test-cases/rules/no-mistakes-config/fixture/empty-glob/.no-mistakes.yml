@@ -1,0 +1,7 @@
+testPlan:
+  vitest:
+    environments:
+      prePush:
+        exclude: ["does-not-exist/**/*.ts"]
+        groups:
+          - type: dependencies

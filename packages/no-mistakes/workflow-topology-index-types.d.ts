@@ -24,6 +24,13 @@ export interface WorkflowTopologyIndex {
   directDownstreamJobIds(jobId: string): readonly string[];
   transitiveDownstreamJobIds(jobId: string): readonly string[];
   directCallerJobIds(workflowPath: string): readonly string[];
+  /** Job ids whose steps `uses:` this action or workflow path. */
+  directCallerJobIdsForUses(uses: string): readonly string[];
+  /** Step indexes for `selectors` in `jobId`, or `-1` when a selector is missing. */
+  stepOrderIndexes(
+    jobId: string,
+    selectors: ReadonlyArray<{ id?: string; uses?: string; name?: string }>,
+  ): readonly number[];
   directCallerWorkflowPaths(workflowPath: string): readonly string[];
   transitiveCallerWorkflowPaths(workflowPath: string): readonly string[];
   directCalleeWorkflowPaths(workflowPath: string): readonly string[];
