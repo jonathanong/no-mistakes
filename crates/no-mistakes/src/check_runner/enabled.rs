@@ -36,6 +36,9 @@ impl ConfiguredChecks {
             embedded_sql: rule_configured(
                 config,
                 no_mistakes::codebase::rules::POSTGRES_LOCK_ORDERING,
+            ) || rule_configured(
+                config,
+                no_mistakes::codebase::rules::POSTGRES_NO_OFFSET,
             ),
         }
     }
