@@ -130,6 +130,7 @@ pub(super) fn bench_scoped_resolver_selection(c: &mut Criterion) {
         benchmark_support::build_repeated_scoped_resolvers(&fixture, RESOLVERS),
         RESOLVERS
     );
+    group.throughput(Throughput::Elements(RESOLVERS as u64));
     group.bench_function("repeated_construction", |b| {
         b.iter(|| {
             black_box(benchmark_support::build_repeated_scoped_resolvers(

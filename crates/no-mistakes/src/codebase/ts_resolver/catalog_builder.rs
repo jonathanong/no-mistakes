@@ -2,6 +2,9 @@ struct CatalogBuilder<'a> {
     root: PathBuf,
     root_real: PathBuf,
     visible: BTreeSet<PathBuf>,
+    /// Original spellings whose lexical normalization changes the path.
+    /// Canonicalizing these lazily preserves symlink-before-`..` semantics.
+    visible_raw_aliases: Vec<PathBuf>,
     // Most config candidates are already present under their lexical spelling.
     // Canonical aliases matter only after that exact membership misses.
     visible_real: std::sync::OnceLock<BTreeSet<PathBuf>>,
@@ -30,6 +33,11 @@ impl<'a> CatalogBuilder<'a> {
         } else {
             candidate_roots.iter().map(|path| normalize_path(path)).collect()
         };
+        let visible_raw_aliases = visible_paths
+            .iter()
+            .filter(|path| normalize_path(path) != path.as_path())
+            .cloned()
+            .collect();
         // Prepared callers pass their request-owned workspace so manifest
         // parsing is shared. Compatibility callers without one retain the
         // historical filesystem-backed package-root discovery.
@@ -61,6 +69,7 @@ impl<'a> CatalogBuilder<'a> {
             root,
             root_real,
             visible: visible_paths.iter().map(|path| normalize_path(path)).collect(),
+            visible_raw_aliases,
             visible_real: std::sync::OnceLock::new(),
             candidate_roots,
             sources,
@@ -166,7 +175,13 @@ impl<'a> CatalogBuilder<'a> {
         self.visible.contains(path)
             || self
                 .visible_real
-                .get_or_init(|| self.visible.iter().filter_map(|path| real_path(path)).collect())
+                .get_or_init(|| {
+                    self.visible
+                        .iter()
+                        .chain(&self.visible_raw_aliases)
+                        .filter_map(|path| real_path(path))
+                        .collect()
+                })
                 .contains(path)
     }
 

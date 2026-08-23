@@ -1179,6 +1179,28 @@ fn catalog_builder_defers_canonical_visible_projection_until_a_lexical_miss() {
     );
 }
 
+#[cfg(unix)]
+#[test]
+fn catalog_builder_canonicalizes_original_paths_before_symlink_parent_components() {
+    let root = normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-parent-resolution"),
+    );
+    let real_config = root.join("real/tsconfig.json");
+    // `link` targets `real/nested`, so filesystem resolution of `link/..`
+    // reaches `real`; lexical normalization alone would incorrectly reach `root`.
+    let visible = vec![root.join("link/../tsconfig.json")];
+    let builder = CatalogBuilder::new(
+        &root,
+        std::slice::from_ref(&real_config),
+        &visible,
+        None,
+        None,
+    );
+
+    assert!(builder.is_visible(&real_config));
+}
+
 // ── load_tsconfig ─────────────────────────────────────────────────────
 
 #[test]

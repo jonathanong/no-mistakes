@@ -5,7 +5,7 @@ use std::path::PathBuf;
 /// repository discovery and parsing.
 pub struct ScopedResolverSelectionFixture {
     catalog: crate::codebase::ts_resolver::TsConfigCatalog,
-    visible: crate::fx::PathSet,
+    visible: crate::codebase::dependencies::graph::GraphFiles,
     importer: PathBuf,
 }
 
@@ -28,7 +28,7 @@ pub fn scoped_resolver_selection_fixture() -> ScopedResolverSelectionFixture {
     );
     ScopedResolverSelectionFixture {
         catalog,
-        visible: visible_paths.into_iter().collect(),
+        visible: crate::codebase::dependencies::graph::GraphFiles::from_files(visible_paths),
         importer: root.join("apps/web/src/entry.ts"),
     }
 }
@@ -82,7 +82,7 @@ pub fn build_repeated_scoped_resolvers(
 
 /// Build a catalog with a large lexical path list dominated by exact matches.
 ///
-/// The repeated spelling mirrors a monorepo candidate universe where the
+/// Distinct spellings model a large monorepo candidate universe where the
 /// configured root is already a lexical member, so canonical aliases should
 /// remain cold.
 pub fn build_catalog_with_large_lexical_visibility(paths: usize) -> usize {
@@ -91,7 +91,10 @@ pub fn build_catalog_with_large_lexical_visibility(paths: usize) -> usize {
         .canonicalize()
         .expect("catalog benchmark fixture should exist");
     let config = root.join("tsconfig.json");
-    let visible = std::iter::repeat_n(config, paths).collect::<Vec<_>>();
+    let visible = std::iter::once(config)
+        .chain((1..paths).map(|index| root.join(format!("benchmark-visible-{index}.ts"))))
+        .take(paths)
+        .collect::<Vec<_>>();
     let catalog = crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
         &root,
         std::slice::from_ref(&root),
