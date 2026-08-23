@@ -5,6 +5,9 @@ use anyhow::Result;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
+mod keys;
+use keys::{json_key_line, json_nested_key_line, yaml_has_key, yaml_top_level_key_line};
+
 pub const RULE_ID: &str = "pnpm-overrides-ban";
 
 const FIX: &str = "Fix dependency metadata upstream or upgrade the parent dependency instead.";
@@ -82,6 +85,7 @@ fn check_workspace(
                 vec![finding(
                     root,
                     path,
+                    yaml_top_level_key_line(&source, "overrides"),
                     format!("top-level \"overrides\" is banned. {FIX}"),
                 )]
             } else {
@@ -98,6 +102,7 @@ fn check_workspace(
             vec![finding(
                 root,
                 path,
+                1,
                 format!("failed to parse YAML: {detail}"),
             )]
         }
@@ -109,7 +114,10 @@ fn check_package_json(
     path: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<RuleFinding> {
-    let Ok(json) = sources.parse_json_path(path) else {
+    let Ok(source) = sources.read_path(path) else {
+        return Vec::new();
+    };
+    let Ok(json) = serde_json::from_str::<serde_json::Value>(&source) else {
         return Vec::new();
     };
     let Some(object) = json.as_object() else {
@@ -120,6 +128,7 @@ fn check_package_json(
         findings.push(finding(
             root,
             path,
+            json_key_line(&source, "overrides"),
             format!("top-level \"overrides\" is banned. {FIX}"),
         ));
     }
@@ -131,24 +140,19 @@ fn check_package_json(
         findings.push(finding(
             root,
             path,
+            json_nested_key_line(&source, "pnpm", "overrides"),
             format!("\"pnpm.overrides\" is banned. {FIX}"),
         ));
     }
     findings
 }
 
-fn yaml_has_key(value: &serde_yaml::Value, key: &str) -> bool {
-    value
-        .as_mapping()
-        .is_some_and(|mapping| mapping.contains_key(serde_yaml::Value::String(key.to_string())))
-}
-
-fn finding(root: &Path, path: &Path, message: impl Into<String>) -> RuleFinding {
+fn finding(root: &Path, path: &Path, line: usize, message: impl Into<String>) -> RuleFinding {
     let file = relative_slash_path(root, path);
     RuleFinding {
         rule: RULE_ID.to_string(),
         file: file.clone(),
-        line: 1,
+        line,
         message: format!("{file}: {}", message.into()),
         import: None,
         target: None,

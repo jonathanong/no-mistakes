@@ -47,15 +47,19 @@ fn fail_workspace_overrides() {
         .message
         .contains("top-level \"overrides\" is banned"));
     assert_eq!(findings[0].file, "pnpm-workspace.yaml");
+    assert_eq!(findings[0].line, 1);
 }
 
 #[test]
 fn fail_package_json_overrides() {
     let findings = findings_for("fail-package-overrides");
     assert!(
-        findings.iter().any(|finding| finding
-            .message
-            .contains("packages/app/package.json: top-level \"overrides\" is banned")),
+        findings.iter().any(|finding| {
+            finding
+                .message
+                .contains("packages/app/package.json: top-level \"overrides\" is banned")
+                && finding.line == 4
+        }),
         "{findings:?}"
     );
 }
@@ -64,9 +68,12 @@ fn fail_package_json_overrides() {
 fn fail_package_json_pnpm_overrides() {
     let findings = findings_for("fail-pnpm-overrides");
     assert!(
-        findings.iter().any(|finding| finding
-            .message
-            .contains("packages/web/package.json: \"pnpm.overrides\" is banned")),
+        findings.iter().any(|finding| {
+            finding
+                .message
+                .contains("packages/web/package.json: \"pnpm.overrides\" is banned")
+                && finding.line == 5
+        }),
         "{findings:?}"
     );
 }
@@ -76,6 +83,7 @@ fn fail_unparseable_workspace_yaml() {
     let findings = findings_for("fail-yaml");
     assert_eq!(findings.len(), 1);
     assert!(findings[0].message.contains("failed to parse YAML"));
+    assert_eq!(findings[0].line, 1);
 }
 
 #[test]
@@ -123,4 +131,35 @@ fn check_with_files_and_sources_flags_both_package_override_forms() {
     let sources = super::super::source_store_for_files(&files);
     let findings = check_with_files_and_sources(root, &config(), &files, &sources).unwrap();
     assert_eq!(findings.len(), 2);
+    assert!(
+        findings.iter().all(|finding| finding.line == 1),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn key_line_helpers_cover_fallbacks_and_quoted_yaml() {
+    use super::keys::{
+        json_key_line, json_nested_key_line, json_quoted_key_after, yaml_top_level_key_line,
+    };
+    assert_eq!(
+        yaml_top_level_key_line("packages:\n  overrides: 1\n", "overrides"),
+        1
+    );
+    assert_eq!(yaml_top_level_key_line("\toverrides: 1\n", "overrides"), 1);
+    assert_eq!(
+        yaml_top_level_key_line("\"overrides\": 1\n", "overrides"),
+        1
+    );
+    assert_eq!(yaml_top_level_key_line("overrides:\n", "overrides"), 1);
+    assert_eq!(json_key_line("{\"name\":\"app\"}\n", "overrides"), 1);
+    assert_eq!(
+        json_nested_key_line("{\"name\":\"app\"}\n", "pnpm", "overrides"),
+        1
+    );
+    assert_eq!(
+        json_nested_key_line("{\"pnpm\":{}}\n", "pnpm", "overrides"),
+        1
+    );
+    assert_eq!(json_quoted_key_after("{}", "\"x\"", 99), None);
 }
