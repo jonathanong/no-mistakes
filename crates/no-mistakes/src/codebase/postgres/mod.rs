@@ -2,6 +2,7 @@
 //!
 //! Check rules consume these facts instead of re-parsing SQL or TypeScript.
 
+mod annotation;
 mod collect;
 pub mod dml;
 mod embedded;
@@ -12,6 +13,7 @@ mod parse;
 mod schema;
 mod types;
 
+pub use annotation::sql_requires_query_annotation;
 pub use collect::{
     collect_postgres_facts, collect_schema_facts, extract_embedded_sql_facts, extract_schema_facts,
 };
