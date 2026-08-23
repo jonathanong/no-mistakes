@@ -34,6 +34,7 @@ pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;
 pub use super::postgres_no_generated_column_writes::RULE_ID as POSTGRES_NO_GENERATED_COLUMN_WRITES;
 pub use super::postgres_no_offset::RULE_ID as POSTGRES_NO_OFFSET;
 pub use super::postgres_redundant_index::RULE_ID as POSTGRES_REDUNDANT_INDEX;
+pub use super::postgres_require_query_annotation::RULE_ID as POSTGRES_REQUIRE_QUERY_ANNOTATION;
 pub use super::production_dependency_declarations::RULE_ID as PRODUCTION_DEPENDENCY_DECLARATIONS;
 pub use super::require_files_in_subdirs::RULE_ID as REQUIRE_FILES_IN_SUBDIRS;
 pub use super::require_storybook_stories::RULE_ID as REQUIRE_STORYBOOK_STORIES;
