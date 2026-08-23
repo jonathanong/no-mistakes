@@ -79,31 +79,3 @@ pub fn build_repeated_scoped_resolvers(
         })
         .sum()
 }
-
-/// Build a catalog with a large lexical path list dominated by exact matches.
-///
-/// Distinct spellings model a large monorepo candidate universe where the
-/// configured root is already a lexical member, so canonical aliases should
-/// remain cold.
-pub fn build_catalog_with_large_lexical_visibility(paths: usize) -> usize {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/tsconfig/workspace-resolution")
-        .canonicalize()
-        .expect("catalog benchmark fixture should exist");
-    let config = root.join("tsconfig.json");
-    let visible = std::iter::once(config)
-        .chain((1..paths).map(|index| root.join(format!("benchmark-visible-{index}.ts"))))
-        .take(paths)
-        .collect::<Vec<_>>();
-    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
-        &root,
-        std::slice::from_ref(&root),
-        &visible,
-    );
-    usize::from(
-        catalog
-            .provenance_for(&root.join("apps/web/src/entry.ts"))
-            .config
-            .is_some(),
-    )
-}

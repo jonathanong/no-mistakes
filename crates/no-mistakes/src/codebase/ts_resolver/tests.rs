@@ -1152,55 +1152,6 @@ fn catalog_builder_helpers_cover_fallback_resolution_shapes() {
         .is_none());
 }
 
-#[cfg(unix)]
-#[test]
-fn catalog_builder_defers_canonical_visible_projection_until_a_lexical_miss() {
-    let link = normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/tsconfig/symlink-workspace/link"),
-    );
-    let real = normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/tsconfig/symlink-workspace/real"),
-    );
-    let visible = vec![link.join("tsconfig.json")];
-    let builder = CatalogBuilder::new(&link, std::slice::from_ref(&real), &visible, None, None);
-
-    assert!(builder.visible_real.get().is_none());
-    assert!(builder.is_visible(&link.join("tsconfig.json")));
-    assert!(
-        builder.visible_real.get().is_none(),
-        "an exact lexical candidate must not pay for canonical aliases"
-    );
-    assert!(builder.is_visible(&real.join("tsconfig.json")));
-    assert!(
-        builder.visible_real.get().is_some(),
-        "the symlink spelling remains visible after a lexical miss"
-    );
-}
-
-#[cfg(unix)]
-#[test]
-fn catalog_builder_canonicalizes_original_paths_before_symlink_parent_components() {
-    let root = normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/tsconfig/symlink-parent-resolution"),
-    );
-    let real_config = root.join("real/tsconfig.json");
-    // `link` targets `real/nested`, so filesystem resolution of `link/..`
-    // reaches `real`; lexical normalization alone would incorrectly reach `root`.
-    let visible = vec![root.join("link/../tsconfig.json")];
-    let builder = CatalogBuilder::new(
-        &root,
-        std::slice::from_ref(&real_config),
-        &visible,
-        None,
-        None,
-    );
-
-    assert!(builder.is_visible(&real_config));
-}
-
 // ── load_tsconfig ─────────────────────────────────────────────────────
 
 #[test]

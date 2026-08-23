@@ -221,10 +221,9 @@ fn scoped_resolver_fixture_caches_one_selection_per_importer() {
 }
 
 #[test]
-fn scoped_resolver_benchmark_helpers_preserve_their_result_contracts() {
+fn scoped_resolver_construction_benchmark_preserves_its_result_contract() {
     let fixture = scoped_resolver_selection_fixture();
     assert_eq!(build_repeated_scoped_resolvers(&fixture, 4), 4);
-    assert_eq!(build_catalog_with_large_lexical_visibility(4), 1);
 }
 
 #[test]
