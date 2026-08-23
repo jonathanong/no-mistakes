@@ -56,15 +56,18 @@ pub(super) fn check(opts: &Options, snapshot: &Snapshot) -> Vec<Issue> {
 
 fn validated_temporary_selectors(opts: &Options, issues: &mut Vec<Issue>) -> HashSet<String> {
     let mut temporary = HashSet::new();
+    let mut seen = HashSet::new();
     for selector in &opts.temporary_selectors {
-        insert_temporary_selector(&mut temporary, issues, selector);
+        record_temporary_selector(&mut seen, issues, selector);
+        temporary.insert(selector.to_string());
     }
     for group in &opts.temporary_groups {
-        if !valid_group(group, issues) {
-            continue;
-        }
+        let valid = valid_group(group, issues);
         for selector in &group.selectors {
-            insert_temporary_selector(&mut temporary, issues, selector);
+            record_temporary_selector(&mut seen, issues, selector);
+            if valid {
+                temporary.insert(selector.to_string());
+            }
         }
     }
     temporary
@@ -113,12 +116,8 @@ fn valid_group(group: &TemporaryGroup, issues: &mut Vec<Issue>) -> bool {
     valid
 }
 
-fn insert_temporary_selector(
-    temporary: &mut HashSet<String>,
-    issues: &mut Vec<Issue>,
-    selector: &str,
-) {
-    if !temporary.insert(selector.to_string()) {
+fn record_temporary_selector(seen: &mut HashSet<String>, issues: &mut Vec<Issue>, selector: &str) {
+    if !seen.insert(selector.to_string()) {
         push(
             issues,
             FileKind::Workspace,

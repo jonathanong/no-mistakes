@@ -238,6 +238,12 @@ temporaryGroups:
       - demo-temporary-package@^9.9.9
     reason: stale selector
     eligibleForRemovalAt: '2027-02-30T03:04:05Z'
+  - selectors:
+      - demo-temporary-package@9.9.9
+    reason: duplicate in invalid group
+    eligibleForRemovalAt: invalid
+temporarySelectors:
+  - demo-temporary-package@9.9.9
 "#,
             )
             .unwrap(),
@@ -252,6 +258,10 @@ temporaryGroups:
     assert!(body.contains("selectors must contain"), "{body}");
     assert!(body.contains("reason must be non-empty"), "{body}");
     assert!(body.contains("canonical YYYY-MM-DDTHH:mm:ssZ"), "{body}");
+    assert!(
+        body.contains("duplicates another temporary selector"),
+        "{body}"
+    );
     assert!(!body.contains("absent from lockfile"), "{body}");
 }
 
