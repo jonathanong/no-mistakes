@@ -5,10 +5,11 @@ use std::path::{Path, PathBuf};
 
 mod extract;
 mod oxlint;
+mod pnpm;
+#[cfg(test)]
+mod tests;
 mod types;
 
-#[cfg(test)]
-pub(crate) use extract::pnpm_workspace_filters;
 pub(crate) use extract::{extract, matches_preset};
 use types::Extracted;
 
@@ -55,7 +56,7 @@ fn scan_file(
     for extracted in matched
         .iter()
         .filter(|preset| *preset == &"pnpm-workspace-filters")
-        .flat_map(|_| extract::pnpm_workspace_filters(&source))
+        .flat_map(|_| pnpm::workspace_filters(&source))
     {
         push_missing(root, path, rel, rel_files, findings, extracted)?;
     }
