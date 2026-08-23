@@ -87,10 +87,9 @@ fn check_package(
 }
 
 fn sibling_exists(files: &[PathBuf], package_json: &Path, name: &str) -> bool {
-    files.iter().any(|path| {
-        path.file_name().and_then(|n| n.to_str()) == Some(name)
-            && path.parent() == package_json.parent()
-    })
+    package_json
+        .parent()
+        .is_some_and(|dir| files.iter().any(|path| path == &dir.join(name)))
 }
 
 fn finding(rel: &str, message: String, target: &str) -> RuleFinding {

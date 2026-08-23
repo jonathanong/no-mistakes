@@ -120,3 +120,30 @@ fn invalid_json_is_skipped() {
     let findings = check_with_files(dir.path(), &config(), &[pkg]).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
 }
+
+#[test]
+fn nested_companion_path_is_resolved_from_manifest() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = crate::codebase::ts_resolver::normalize_path(dir.path());
+    let pkg = root.join("package.json");
+    let companion = root.join("src/index.js");
+    std::fs::create_dir(companion.parent().unwrap()).unwrap();
+    std::fs::write(&pkg, r#"{"name":"@scope/foo"}"#).unwrap();
+    std::fs::write(&companion, "export {}\n").unwrap();
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str("mainWhenFileExists: src/index.js\n").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let findings = check_with_files(&root, &config, &[pkg, companion]).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.target.as_deref() == Some("main")),
+        "{findings:?}"
+    );
+}
