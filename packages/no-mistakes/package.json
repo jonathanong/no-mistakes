@@ -18,6 +18,7 @@
     "index.mjs",
     "planning.js",
     "workflow-topology-index.js",
+    "workflow-topology-index-helpers.js",
     "scripts/install.js",
     "scripts/install/",
     "README.md",

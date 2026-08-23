@@ -1,0 +1,18 @@
+name: Needs Basic
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo build
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    if: needs.build.result == 'success'
+    steps:
+      - run: echo test
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo deploy
