@@ -31,7 +31,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     outputs:
-      base-sha: ${{ steps.bump.outputs.base-sha }}
+      release-sha: ${{ steps.bump.outputs.release-sha }}
       version: ${{ steps.bump.outputs.version }}
     steps:
       - name: Check RELEASE_TOKEN is set
@@ -67,7 +67,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Bump versions, commit, and tag
+      - name: Bump versions, commit, tag, and push
         id: bump
         timeout-minutes: 2
         env:
@@ -75,7 +75,6 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          base_sha="$(git rev-parse HEAD)"
           npm version "${{ inputs.bump }}" --no-git-tag-version
           version="$(node -p "require('./package.json').version")"
 
@@ -104,17 +103,26 @@ jobs:
           cargo update -w
           git add .
           git commit -m "chore(release): v$version" -m "Co-authored-by: Codex <noreply@openai.com>"
+          if ! git pull --rebase origin main; then
+            git rebase --abort >/dev/null 2>&1 || true
+            echo "::error::Could not rebase the release commit onto current main. Re-run the release workflow from current main." >&2
+            exit 1
+          fi
+          release_sha="$(git rev-parse HEAD)"
           git tag -a "v$version" -m "v$version"
-          echo "base-sha=$base_sha" >> "$GITHUB_OUTPUT"
+          if ! git push --atomic origin HEAD:main "v$version"; then
+            echo "::error::main moved while the release commit was being prepared. Re-run the release workflow from current main." >&2
+            exit 1
+          fi
+          echo "release-sha=$release_sha" >> "$GITHUB_OUTPUT"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
-      - name: Create prepared release artifacts
+      - name: Create prepared release source
         timeout-minutes: 2
         shell: bash
         run: |
           set -euo pipefail
-          git archive --format=tar HEAD | gzip > "$RUNNER_TEMP/release-source.tgz"
-          git format-patch -1 HEAD --stdout > "$RUNNER_TEMP/release.patch"
+          git archive --format=tar "${{ steps.bump.outputs.release-sha }}" | gzip > "$RUNNER_TEMP/release-source.tgz"
 
       - name: Upload prepared source
         timeout-minutes: 5
@@ -122,14 +130,6 @@ jobs:
         with:
           name: release-source
           path: ${{ runner.temp }}/release-source.tgz
-          if-no-files-found: error
-
-      - name: Upload release patch
-        timeout-minutes: 5
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
-        with:
-          name: release-patch
-          path: ${{ runner.temp }}/release.patch
           if-no-files-found: error
 
   validate:
@@ -412,59 +412,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
-      - name: Checkout main
+      - name: Checkout release commit
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
-          ref: main
+          ref: ${{ needs.prepare.outputs.release-sha }}
           token: ${{ secrets.RELEASE_TOKEN }}
-
-      - name: Download release patch
-        timeout-minutes: 5
-        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
-        with:
-          name: release-patch
-          path: prepared-release
-
-      - name: Configure git
-        timeout-minutes: 1
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-      - name: Apply release commit and tag
-        timeout-minutes: 2
-        shell: bash
-        run: |
-          set -euo pipefail
-          base_sha="${{ needs.prepare.outputs.base-sha }}"
-          version="${{ needs.prepare.outputs.version }}"
-          current_sha="$(git rev-parse HEAD)"
-          release_subject="chore(release): v$version"
-          if [ "$current_sha" = "$base_sha" ]; then
-            git am prepared-release/release.patch
-          elif [ "$(git log -1 --format=%s)" = "$release_subject" ] && [ "$(git rev-parse HEAD^)" = "$base_sha" ]; then
-            echo "Release commit v$version is already applied to main; continuing."
-          else
-            echo "::error::main moved from $base_sha to $current_sha while this release was running. Re-run the release workflow from current main." >&2
-            exit 1
-          fi
-          release_sha="$(git rev-parse HEAD)"
-          if git ls-remote --exit-code --tags origin "refs/tags/v$version" >/dev/null 2>&1; then
-            git fetch origin "refs/tags/v$version:refs/tags/v$version"
-          fi
-          if git rev-parse -q --verify "refs/tags/v$version" >/dev/null; then
-            tag_sha="$(git rev-list -n 1 "v$version")"
-            if [ "$tag_sha" != "$release_sha" ]; then
-              echo "::error::tag v$version points at $tag_sha, expected $release_sha." >&2
-              exit 1
-            fi
-            echo "Tag v$version already points at the release commit; continuing."
-          else
-            git tag -a "v$version" -m "v$version"
-          fi
-          git push origin HEAD:main "v$version"
 
       - name: Install Rust
         timeout-minutes: 5
