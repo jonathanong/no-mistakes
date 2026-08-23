@@ -20,3 +20,20 @@ fn comment_stripping_preserves_comment_markers_inside_strings() {
         vec!["/api/v1/feeds/rss_feed_items/*".to_string()]
     );
 }
+
+#[test]
+fn compiled_patterns_and_keyword_table_are_reused() {
+    assert!(std::ptr::eq(swift_import_regex(), swift_import_regex()));
+    assert!(std::ptr::eq(
+        swift_declaration_regex(),
+        swift_declaration_regex()
+    ));
+    assert!(std::ptr::eq(
+        swift_reference_regex(),
+        swift_reference_regex()
+    ));
+    assert!(std::ptr::eq(
+        swift_reference_keywords(),
+        swift_reference_keywords()
+    ));
+}

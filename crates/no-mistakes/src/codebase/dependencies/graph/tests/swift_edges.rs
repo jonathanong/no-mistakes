@@ -233,6 +233,7 @@ fn project_route_only_swift_http_edges_reuse_prepared_server_facts_once() {
             config_options: Some(&options),
             ts_facts: Some(&ts_facts),
             prepared_facts: Some(&swift_facts),
+            sources: None,
             session: &session,
         },
         &crate::codebase::analysis_session::PathInterner::new(),

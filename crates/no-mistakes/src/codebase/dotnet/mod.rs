@@ -11,7 +11,7 @@ use std::collections::{BTreeMap, HashMap};
 use std::path::{Path, PathBuf};
 
 pub(crate) use config::configured_projects;
-pub(crate) use csharp::parse_csharp_file;
+use csharp::parse_csharp_file_with_sources;
 use project::parse_project;
 pub(crate) use types::{DotnetConfigProject, DotnetFactMap, DotnetFileFacts, DotnetProjectFacts};
 
@@ -19,6 +19,15 @@ pub(crate) fn collect_dotnet_facts(
     root: &Path,
     all_files: &[PathBuf],
     projects: &[DotnetConfigProject],
+) -> DotnetFactMap {
+    collect_dotnet_facts_with_sources(root, all_files, projects, None)
+}
+
+pub(crate) fn collect_dotnet_facts_with_sources(
+    root: &Path,
+    all_files: &[PathBuf],
+    projects: &[DotnetConfigProject],
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> DotnetFactMap {
     #[cfg(any(test, feature = "test-instrumentation"))]
     test_support::record_fact_collection(root);
@@ -55,7 +64,9 @@ pub(crate) fn collect_dotnet_facts(
 
     let mut file_facts: Vec<DotnetFileFacts> = cs_files
         .par_iter()
-        .filter_map(|path| parse_csharp_file(path, project_by_file.get(path).cloned()))
+        .filter_map(|path| {
+            parse_csharp_file_with_sources(path, project_by_file.get(path).cloned(), sources)
+        })
         .collect();
     file_facts.sort_by(|a, b| a.path.cmp(&b.path));
 

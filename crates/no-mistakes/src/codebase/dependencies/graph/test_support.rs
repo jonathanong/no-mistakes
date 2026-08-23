@@ -152,6 +152,7 @@ pub(super) fn collect_swift_edges(
             config_options: Some(config_options),
             ts_facts: None,
             prepared_facts: None,
+            sources: None,
             session: &session,
         },
         session.interner(),

@@ -1,11 +1,16 @@
-use regex::Regex;
-use std::collections::HashSet;
 use std::path::Path;
+
+mod patterns;
+use patterns::*;
 
 use super::SwiftFileFacts;
 
-pub(super) fn parse_swift_file(path: &Path, target: Option<String>) -> Option<SwiftFileFacts> {
-    let source = std::fs::read_to_string(path).ok()?;
+pub(super) fn parse_swift_file_with_sources(
+    path: &Path,
+    target: Option<String>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> Option<SwiftFileFacts> {
+    let source = crate::codebase::ts_source::SourceStore::read_optional(sources, path)?;
     let stripped = strip_comments(&source);
     Some(SwiftFileFacts {
         path: path.to_path_buf(),
@@ -77,33 +82,27 @@ fn copy_string(chars: &mut std::iter::Peekable<std::str::CharIndices<'_>>, out: 
 }
 
 fn extract_imports(source: &str) -> Vec<String> {
-    let re = Regex::new(r"(?m)^\s*import\s+([A-Za-z_][A-Za-z0-9_]*)").expect("valid import regex");
     sorted_unique(
-        re.captures_iter(source)
+        swift_import_regex()
+            .captures_iter(source)
             .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string())),
     )
 }
 
 fn extract_declarations(source: &str) -> Vec<String> {
-    let decl_re = Regex::new(r"\b(?:public\s+|internal\s+|private\s+|fileprivate\s+|open\s+|final\s+|static\s+|class\s+)*\b(?:struct|class|actor|enum|protocol|extension|typealias)\s+([A-Za-z_][A-Za-z0-9_]*)")
-        .expect("valid declaration regex");
-    let func_re = Regex::new(r"\b(?:static\s+|class\s+)?func\s+([A-Za-z_][A-Za-z0-9_]*)")
-        .expect("valid function regex");
-    let let_re = Regex::new(r"\b(?:static\s+|class\s+)?(?:let|var)\s+([A-Za-z_][A-Za-z0-9_]*)")
-        .expect("valid property regex");
     let mut out = Vec::new();
     out.extend(
-        decl_re
+        swift_declaration_regex()
             .captures_iter(source)
             .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string())),
     );
     out.extend(
-        func_re
+        swift_function_regex()
             .captures_iter(source)
             .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string())),
     );
     out.extend(
-        let_re
+        swift_property_regex()
             .captures_iter(source)
             .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string())),
     );
@@ -111,46 +110,29 @@ fn extract_declarations(source: &str) -> Vec<String> {
 }
 
 fn extract_references(source: &str) -> Vec<String> {
-    let ident_re = Regex::new(r"\b[A-Z_][A-Za-z0-9_]*\b|\.[A-Za-z_][A-Za-z0-9_]*\b")
-        .expect("valid reference regex");
-    let keywords: HashSet<&str> = [
-        "Array",
-        "Bool",
-        "Data",
-        "Dictionary",
-        "Double",
-        "Error",
-        "False",
-        "Float",
-        "Int",
-        "Nil",
-        "Optional",
-        "Result",
-        "Self",
-        "Set",
-        "String",
-        "True",
-        "Void",
-    ]
-    .into_iter()
-    .collect();
-    sorted_unique(ident_re.captures_iter(source).filter_map(|cap| {
-        let raw = cap.get(0)?.as_str().trim_start_matches('.');
-        (!keywords.contains(raw)).then(|| raw.to_string())
-    }))
+    let keywords = swift_reference_keywords();
+    sorted_unique(
+        swift_reference_regex()
+            .captures_iter(source)
+            .filter_map(|cap| {
+                let raw = cap.get(0)?.as_str().trim_start_matches('.');
+                (!keywords.contains(raw)).then(|| raw.to_string())
+            }),
+    )
 }
 
 fn extract_endpoint_paths(source: &str) -> Vec<String> {
-    let re = Regex::new(r#"path\s*:\s*\"([^\"]+)\""#).expect("valid endpoint path regex");
     sorted_unique(
-        re.captures_iter(source)
+        swift_endpoint_path_regex()
+            .captures_iter(source)
             .filter_map(|cap| cap.get(1).map(|m| swift_path_pattern(m.as_str()))),
     )
 }
 
 fn swift_path_pattern(path: &str) -> String {
-    let interpolation = Regex::new(r#"\\\([^)]*\)"#).expect("valid interpolation regex");
-    interpolation.replace_all(path, "*").into_owned()
+    swift_interpolation_regex()
+        .replace_all(path, "*")
+        .into_owned()
 }
 
 fn sorted_unique<I>(values: I) -> Vec<String>

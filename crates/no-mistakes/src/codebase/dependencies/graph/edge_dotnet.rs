@@ -3,6 +3,7 @@ fn collect_dotnet_edges(
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
     prepared_facts: Option<&crate::codebase::dotnet::DotnetFactMap>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
     interner: &PathInterner,
 ) -> Vec<Edge> {
     let Some(config_options) = config_options else {
@@ -12,10 +13,11 @@ fn collect_dotnet_edges(
         return Vec::new();
     }
     let owned_facts = prepared_facts.is_none().then(|| {
-        crate::codebase::dotnet::collect_dotnet_facts(
+        crate::codebase::dotnet::collect_dotnet_facts_with_sources(
             root,
             all_files,
             &config_options.dotnet_projects,
+            sources,
         )
     });
     let facts = prepared_facts

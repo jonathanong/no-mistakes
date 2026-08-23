@@ -48,10 +48,11 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
         .runners
         .contains(&TestRunner::Dotnet)
         .then(|| {
-            let (projects, facts) = dotnet_projects::dotnet_projects_and_facts_from_visible(
+            let (projects, facts) = dotnet_projects::dotnet_projects_and_facts_from_visible_with_sources(
                 root,
                 config,
                 visible_paths,
+                Some(&sources),
             );
             (projects.map_err(|error| format!("{error:#}")), facts)
         });
@@ -59,10 +60,11 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
         .runners
         .contains(&TestRunner::Swift)
         .then(|| {
-            crate::codebase::swift::collect_swift_facts(
+            crate::codebase::swift::collect_swift_facts_with_sources(
                 root,
                 &discovery_files,
                 &config.tests.swift.packages,
+                Some(&sources),
             )
         });
     let runner_configs = crate::integration_tests::runner_config::prepare_with_catalog_and_sources(
