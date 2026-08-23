@@ -7,6 +7,7 @@ pub mod dml;
 mod embedded;
 mod locking;
 mod migration;
+mod offset;
 mod parse;
 mod schema;
 mod types;
@@ -25,6 +26,7 @@ pub use embedded::{
 };
 pub use locking::{extract_locking_select_metadata, LockingSelectMetadata};
 pub use migration::extract_migration_facts;
+pub use offset::sql_has_offset_clause;
 pub use parse::{parse_postgres_sql, PostgresParseError};
 pub use schema::extract_create_table_metadata;
 pub use types::{

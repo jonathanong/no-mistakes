@@ -57,6 +57,7 @@ rules:
 | [`postgres-fk-index`](postgres-fk-index.md)                                       | Require a leading btree/hash index on each foreign key column.              |
 | [`postgres-redundant-index`](postgres-redundant-index.md)                         | Flag btree indexes whose keys are a strict prefix of another live index.    |
 | [`postgres-no-generated-column-writes`](postgres-no-generated-column-writes.md) | Ban DML writes to PostgreSQL generated columns.                               |
+| [`postgres-no-offset`](postgres-no-offset.md)                                 | Ban SQL OFFSET in executed PostgreSQL queries.                                  |
 | [`playwright-coverage`](playwright-coverage.md)                               | Require Playwright route/selector coverage.                                     |
 | [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md) | Prefer test ID locators when matched app elements expose test IDs.              |
 | [`playwright-unique-html-ids`](playwright-unique-html-ids.md)                 | Require unique HTML `id` values in Playwright analysis.                         |
