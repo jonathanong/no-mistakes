@@ -30,12 +30,13 @@ pub(super) fn read_bounded(mut pipe: impl Read, cap: usize) -> Vec<u8> {
     loop {
         match pipe.read(&mut buf) {
             Ok(0) => break,
-            Ok(n) if collected.len() < cap => {
-                let take = (cap - collected.len()).min(n);
-                collected.extend_from_slice(&buf[..take]);
-            }
-            Ok(_) => continue, // already at cap; keep draining so the pipe can't back up
             Err(_) => break,
+            Ok(n) => {
+                if collected.len() < cap {
+                    let take = (cap - collected.len()).min(n);
+                    collected.extend_from_slice(&buf[..take]);
+                }
+            }
         }
     }
     collected
@@ -44,10 +45,7 @@ pub(super) fn read_bounded(mut pipe: impl Read, cap: usize) -> Vec<u8> {
 pub(super) fn line_too_long(max_line_bytes: usize) -> std::io::Error {
     std::io::Error::new(
         std::io::ErrorKind::InvalidData,
-        format!(
-            "git diff line exceeds {max_line_bytes} bytes without a newline; \
-             malformed or pathological unified diff"
-        ),
+        format!("git diff line exceeds {max_line_bytes} bytes without a newline; malformed or pathological unified diff"),
     )
 }
 

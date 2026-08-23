@@ -111,10 +111,10 @@ fn route_import_resolution_source(
         }
     }
     match path.parent().and_then(|parent| canonical_directories.get(parent)) {
-        Some(canonical_parent) => match path.file_name() {
-            Some(name) => canonical_parent.join(name),
-            None => path.to_path_buf(),
-        },
+        Some(canonical_parent) => path
+            .file_name()
+            .map(|name| canonical_parent.join(name))
+            .unwrap_or_else(|| path.to_path_buf()),
         None => path.to_path_buf(),
     }
 }

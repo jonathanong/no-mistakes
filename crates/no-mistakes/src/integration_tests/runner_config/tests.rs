@@ -413,6 +413,9 @@ fn parse_program_and_session_facts_ignore_paths_that_were_not_prepared() {
     .unwrap();
     assert!(facts.is_none());
     assert!(prepared
+        .paths()
+        .any(|path| path.ends_with("vitest.config.mts")));
+    assert!(prepared
         .parse_path_for_facts_with_session(
             &crate::codebase::analysis_session::AnalysisSession::disabled(),
             &other,

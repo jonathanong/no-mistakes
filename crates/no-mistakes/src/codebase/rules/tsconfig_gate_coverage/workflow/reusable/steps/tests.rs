@@ -293,12 +293,18 @@ fn run_steps_register_tracked_projects_when_triggers_match_source_inputs() {
         "app/tsconfig.json".to_string(),
         BTreeSet::from(["app/src/index.ts".to_string()]),
     )]);
-    let scan = scan_with_projects(
+    let scanned = scan_with_projects(
         "runs-on: ubuntu-latest\nsteps:\n  - working-directory: .\n    run: tsc --noEmit --project app/tsconfig.json",
         super::super::super::local_actions::LocalActionCatalog::non_docker(BTreeSet::new()),
         tracked,
         source_inputs,
     );
-    assert!(scan.projects.contains("app/tsconfig.json"));
-    assert!(!scan.failed && !scan.indeterminate);
+    assert!(scanned.projects.contains("app/tsconfig.json"));
+    assert!(!scanned.failed && !scanned.indeterminate);
+
+    let unknown_timeout = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - timeout-minutes: '${{ matrix.t }}'\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(unknown_timeout.indeterminate);
 }
