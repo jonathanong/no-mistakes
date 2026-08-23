@@ -402,3 +402,34 @@ fn records_omitted_and_no_action_delete() {
         Some("NO ACTION")
     );
 }
+
+#[test]
+fn records_schema_statement_kinds() {
+    let facts = extract_migration_facts(
+        "CREATE TABLE foo (id uuid);\n\
+         ALTER TABLE foo ADD COLUMN x text;\n\
+         CREATE UNIQUE INDEX idx ON foo (id);\n\
+         CREATE MATERIALIZED VIEW bar AS SELECT 1;\n\
+         TRUNCATE foo;\n\
+         DROP INDEX idx;\n\
+         DROP MATERIALIZED VIEW bar;\n\
+         INSERT INTO foo (id) VALUES ('x');\n",
+    );
+    assert_eq!(
+        facts
+            .statement_kinds
+            .iter()
+            .map(|statement| statement.kind.as_str())
+            .collect::<Vec<_>>(),
+        [
+            "CREATE TABLE",
+            "ALTER TABLE",
+            "CREATE INDEX",
+            "CREATE VIEW",
+            "TRUNCATE",
+            "DROP INDEX",
+            "DROP VIEW",
+        ],
+        "{facts:?}"
+    );
+}
