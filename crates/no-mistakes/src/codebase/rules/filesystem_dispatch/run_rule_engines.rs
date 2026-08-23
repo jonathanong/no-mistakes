@@ -89,6 +89,15 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
                 defer_suppression,
             )
         }
+        SWIFT_NO_RAW_PRINT => {
+            swift_no_raw_print::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR => {
             github_actions_action_timeout_pair::check_with_files_and_sources(
                 root,

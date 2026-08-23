@@ -1,0 +1,117 @@
+use super::*;
+use crate::config::v2::{
+    schema::{RuleDef, RuleScope},
+    NoMistakesConfig,
+};
+use std::path::{Path, PathBuf};
+
+fn fixture(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/swift-no-raw-print/fixture")
+            .join(name),
+    )
+}
+
+fn config(yaml: &str) -> NoMistakesConfig {
+    NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(yaml).unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    }
+}
+
+fn run(root: &Path, yaml: &str) -> Vec<RuleFinding> {
+    let files = crate::codebase::ts_source::discover_files(root, &[]);
+    check_with_files(root, &config(yaml), &files).unwrap()
+}
+
+fn run_deferred(root: &Path, yaml: &str, defer: bool) -> Vec<RuleFinding> {
+    let files = crate::codebase::ts_source::discover_files(root, &[]);
+    let sources = super::super::source_store_for_files(&files);
+    check_with_files_sources_and_deferred_suppression(root, &config(yaml), &files, &sources, defer)
+        .unwrap()
+}
+
+#[test]
+fn flags_print_and_swift_print() {
+    let findings = run(&fixture("fail"), "{}");
+    let files: Vec<_> = findings.iter().map(|f| f.file.as_str()).collect();
+    assert!(files.contains(&"FeedView.swift"), "{findings:?}");
+    assert!(files.contains(&"Qualified.swift"), "{findings:?}");
+    assert!(
+        findings.iter().all(|f| f.message == DEFAULT_MESSAGE),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn accepts_logger_and_method_named_print() {
+    assert!(run(&fixture("pass"), "{}").is_empty());
+}
+
+#[test]
+fn allow_globs_skip_files() {
+    assert!(run(&fixture("fail"), "allow: [\"Qualified.swift\"]")
+        .iter()
+        .all(|f| f.file != "Qualified.swift"));
+}
+
+#[test]
+fn ignore_non_swift_and_comments() {
+    let findings = run(&fixture("fail"), "{}");
+    assert!(
+        findings.iter().all(|f| f.file.ends_with(".swift")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn disable_comment_and_custom_message() {
+    let findings = run(&fixture("disabled"), "{}");
+    assert!(findings.is_empty(), "{findings:?}");
+    let findings = run(&fixture("fail"), "message: extra");
+    assert!(
+        findings
+            .iter()
+            .any(|f| f.message == format!("{DEFAULT_MESSAGE} extra")),
+        "{findings:?}"
+    );
+    let empty = run(&fixture("fail"), "message: \"\"");
+    assert!(
+        empty.iter().all(|f| f.message == DEFAULT_MESSAGE),
+        "{empty:?}"
+    );
+}
+
+#[test]
+fn deferred_suppression_keeps_disabled_file() {
+    let findings = run_deferred(&fixture("disabled"), "{}", true);
+    assert!(
+        findings.iter().any(|f| f.file.ends_with("Logging.swift")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn invalid_allow_glob_errors() {
+    let root = fixture("fail");
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let error = check_with_files(&root, &config("allow: [\"[\"]"), &files).unwrap_err();
+    assert!(
+        error.to_string().contains("swift-no-raw-print allow"),
+        "{error:#}"
+    );
+}
+
+#[test]
+fn skips_missing_source() {
+    let root = fixture("fail");
+    let missing = root.join("missing.swift");
+    let findings = check_with_files(&root, &config("{}"), &[missing]).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
