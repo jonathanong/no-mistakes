@@ -58,6 +58,13 @@ fn read_chunks_forwards_read_errors() {
 }
 
 #[test]
+fn read_chunks_forwards_read_errors_after_the_consumer_drops() {
+    let (tx, rx) = mpsc::sync_channel(1);
+    drop(rx);
+    read_chunks(FailRead, tx);
+}
+
+#[test]
 fn read_chunks_stops_when_the_consumer_drops() {
     let (tx, rx) = mpsc::sync_channel(1);
     drop(rx);
@@ -75,6 +82,7 @@ fn decode_line_strips_carriage_returns() {
     assert_eq!(decode_line(b"ok\r").as_ref(), "ok");
     assert_eq!(decode_line(b"ok").as_ref(), "ok");
     assert_eq!(line_too_long(4).kind(), io::ErrorKind::InvalidData);
+    assert!(line_too_long(4).to_string().contains("exceeds 4 bytes"));
 }
 
 #[test]

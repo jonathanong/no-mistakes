@@ -173,7 +173,7 @@ where
             }
         }
         _ => {
-            let _ = ();
+            std::hint::black_box(());
         }
     }
 }

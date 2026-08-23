@@ -108,3 +108,88 @@ fn lazy_import_neighbors_skip_invisible_targets_and_keep_external_modules() {
             .all(|(node, _)| node.as_file() != Some(root.join("b.mts").as_path()))
     );
 }
+
+#[test]
+fn lazy_import_neighbors_collect_source_type_and_non_indexable_targets() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("simple"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let a = root.join("a.mts");
+    let b = root.join("b.mts");
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let mut source_plan = TsFactPlan::imports();
+    source_plan.source = true;
+    let (from_disk, facts) = import_neighbors(
+        &a,
+        &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
+        &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
+        &GraphFiles::from_files(vec![a.clone(), b.clone()]),
+        None,
+        LazyImportFacts::new(None, source_plan, &TsFactContext::new(&root)),
+        &session,
+    );
+    assert!(facts.is_some());
+    assert!(
+        from_disk
+            .iter()
+            .any(|(node, _)| node.as_file() == Some(b.as_path()))
+    );
+
+    let facts = TsFactMap::from([(
+        a.clone(),
+        TsFileFacts {
+            imports: vec![
+                ExtractedImport {
+                    specifier: "./b.mts".to_string(),
+                    kind: ImportKind::Type,
+                    line: 1,
+                    function_scope: None,
+                    side_effect_only: false,
+                    re_export: false,
+                    runtime_reachable: true,
+                },
+                ExtractedImport {
+                    specifier: "./b.mts".to_string(),
+                    kind: ImportKind::RequireResolve,
+                    line: 2,
+                    function_scope: None,
+                    side_effect_only: false,
+                    re_export: false,
+                    runtime_reachable: true,
+                },
+            ],
+            ..TsFileFacts::default()
+        },
+    )]);
+    let (typed, _) = import_neighbors(
+        &a,
+        &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
+        &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
+        &GraphFiles::from_files(vec![a.clone(), b.clone()]),
+        None,
+        LazyImportFacts::new(
+            Some(&facts),
+            TsFactPlan::imports(),
+            &TsFactContext::new(&root),
+        ),
+        &session,
+    );
+    assert!(
+        typed
+            .iter()
+            .any(|(_, kind)| *kind == EdgeKind::WorkspaceTypeImport
+                || *kind == EdgeKind::RequireResolve)
+    );
+}
+
+#[test]
+fn route_import_visible_target_skips_canonical_files_without_visible_names() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("simple"));
+    let existing = root.join("a.mts");
+    let graph_files = GraphFiles::from_files(vec![root.join("c.mts")]);
+    assert!(route_import_visible_target(existing, &graph_files, &Default::default()).is_none());
+}

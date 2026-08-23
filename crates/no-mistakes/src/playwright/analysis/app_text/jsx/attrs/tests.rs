@@ -121,7 +121,7 @@ fn jsx_attr_helpers_cover_static_dynamic_and_ts_wrapped_values() {
 
 #[test]
 fn selector_refs_skip_non_string_jsx_expressions_and_keep_as_strings() {
-    let source = r#"export const Page = () => <div data-pw={true} data-ok={"hit" as const} data-none={1} />; "#;
+    let source = r#"export const Page = () => <div data-pw={true} data-ok={"hit" as const} data-none={1 as any} />; "#;
     crate::playwright::ast::with_program(Path::new("fixture.tsx"), source, |program, source| {
         let mut refs = Vec::new();
         struct Collector<'a, 'b> {
