@@ -1,0 +1,6 @@
+updates:
+  - package-ecosystem: 'npm'
+    directory: '/'
+    cooldown:
+      exclude:
+        - 'acme-lib'

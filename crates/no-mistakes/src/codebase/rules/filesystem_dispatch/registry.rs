@@ -24,6 +24,7 @@ macro_rules! filesystem_rules {
             PACKAGE_JSON_REQUIRED_FIELDS => package_json_required_fields::check_with_files,
             PACKAGE_JSON_WORKSPACE_COVERAGE => package_json_workspace_coverage::check_with_files,
             PNPM_OVERRIDES_BAN => pnpm_overrides_ban::check_with_files,
+            PNPM_RELEASE_AGE_POLICY => pnpm_release_age_policy::check_with_files,
             PRODUCTION_DEPENDENCY_DECLARATIONS => production_dependency_declarations::check_with_files,
             WORKSPACE_PACKAGE_CYCLES => workspace_package_cycles::check_with_files,
             REQUIRED_COMPANION_IMPORTS => required_companion_imports::check_with_files,
