@@ -150,6 +150,25 @@ fn run_prepared_filesystem_rules(
 }
 
 fn run_enabled_rules(inputs: &RuleRunInputs<'_>) {
-    macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let run = || run_rule::run_rule_with_sources(run_rule::RunRuleRequest { rule_id: $id, fallback: $call, root: inputs.root, config: inputs.config, files: inputs.candidates.candidates($id), sources: inputs.sources, facts: inputs.facts, defer_suppression: inputs.defer_suppression }); let result = match inputs.sources.observer().filter(|observer| observer.verbose()) { Some(observer) => observer.trace(&format!("filesystem_rule.{}", $id), crate::diagnostics::TimingKind::Parallel, run), None => run() }; inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; special::spawn(scope, inputs); }); }; }
+    macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = trace_rule(inputs.sources, $id, || run_rule::run_rule_with_sources(run_rule::RunRuleRequest { rule_id: $id, fallback: $call, root: inputs.root, config: inputs.config, files: inputs.candidates.candidates($id), sources: inputs.sources, facts: inputs.facts, defer_suppression: inputs.defer_suppression })); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; special::spawn(scope, inputs); }); }; }
     crate::filesystem_rules!(run_rules);
 }
+
+pub(super) fn trace_rule<T>(
+    sources: &crate::codebase::ts_source::SourceStore,
+    rule_id: &str,
+    run: impl FnOnce() -> T,
+) -> T {
+    match sources.observer().filter(|observer| observer.verbose()) {
+        Some(observer) => observer.trace(
+            &format!("filesystem_rule.{rule_id}"),
+            crate::diagnostics::TimingKind::Parallel,
+            run,
+        ),
+        None => run(),
+    }
+}
+
+#[cfg(test)]
+#[path = "execute/tests.rs"]
+mod tests;

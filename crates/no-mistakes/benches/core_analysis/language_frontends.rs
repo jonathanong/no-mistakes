@@ -1,8 +1,10 @@
 use super::shard;
 use criterion::{black_box, Criterion, Throughput};
 use no_mistakes::benchmark_support::{
-    collect_language_frontend_edges, collect_language_frontend_facts, language_frontend_fixture,
-    match_language_frontend_queue_globs, LanguageFrontendSummary,
+    collect_dotnet_frontend_facts, collect_language_frontend_edges,
+    collect_language_frontend_facts, collect_swift_frontend_facts, language_frontend_fixture,
+    match_language_frontend_queue_globs, native_frontend_fixture, LanguageFrontendSummary,
+    NativeFrontendSummary,
 };
 
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_FILES: usize = 117;
@@ -70,4 +72,35 @@ pub(super) fn bench_language_frontends(c: &mut Criterion) {
         b.iter(|| black_box(match_language_frontend_queue_globs(black_box(&fixture))));
     });
     group.finish();
+
+    let native_fixture = native_frontend_fixture();
+    let swift = collect_swift_frontend_facts(&native_fixture);
+    let dotnet = collect_dotnet_frontend_facts(&native_fixture);
+    assert_eq!(
+        swift,
+        NativeFrontendSummary {
+            files: 12,
+            parsed_files: 7,
+            physical_reads: 7,
+        },
+        "update the stable Swift benchmark preflight after intentional fixture changes"
+    );
+    assert_eq!(
+        dotnet,
+        NativeFrontendSummary {
+            files: 12,
+            parsed_files: 5,
+            physical_reads: 5,
+        },
+        "update the stable .NET benchmark preflight after intentional fixture changes"
+    );
+
+    let mut native_group = c.benchmark_group("native_frontends");
+    native_group.bench_function("swift_facts", |b| {
+        b.iter(|| black_box(collect_swift_frontend_facts(black_box(&native_fixture))));
+    });
+    native_group.bench_function("dotnet_facts", |b| {
+        b.iter(|| black_box(collect_dotnet_frontend_facts(black_box(&native_fixture))));
+    });
+    native_group.finish();
 }

@@ -10,6 +10,7 @@ use std::path::Path;
 
 mod bench_shard;
 mod language_frontends;
+mod native_frontends;
 mod production_graph;
 mod react_traits;
 mod relationships;
@@ -21,6 +22,10 @@ pub use bench_shard::{
 pub use language_frontends::{
     collect_language_frontend_edges, collect_language_frontend_facts, language_frontend_fixture,
     match_language_frontend_queue_globs, LanguageFrontendFixture, LanguageFrontendSummary,
+};
+pub use native_frontends::{
+    collect_dotnet_frontend_facts, collect_swift_frontend_facts, native_frontend_fixture,
+    NativeFrontendFixture, NativeFrontendSummary,
 };
 pub use production_graph::{
     append_production_selectors, finalize_production_graph, production_graph_fixture,
