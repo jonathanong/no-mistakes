@@ -86,10 +86,7 @@ function materializeWhyPlan(options = {}) {
     }
   }
   if (document == null) return next;
-  const tmp = path.join(
-    os.tmpdir(),
-    `no-mistakes-why-plan-${process.pid}-${Date.now().toString(36)}.json`,
-  );
+  const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "no-mistakes-why-")), "plan.json");
   fs.writeFileSync(tmp, JSON.stringify(loadPlanJson(document)));
   next.plan = tmp;
   delete next.planJson;
