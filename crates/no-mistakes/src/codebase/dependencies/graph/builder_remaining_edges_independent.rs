@@ -53,7 +53,7 @@ fn collect_independent_remaining_edges(
                                     with_observer_and_timing(observer.clone(), timing_kind, || {
                                         collect_unless_timed_out(|| {
                                             crate::perf_trace::trace("graph.dotnet", || {
-                                                collect_dotnet_edges_for_plan(edge_inputs)
+                                                collect_dotnet_edges_for_plan(edge_inputs, sources)
                                             })
                                         })
                                     })
@@ -66,6 +66,7 @@ fn collect_independent_remaining_edges(
                                                     edge_inputs,
                                                     facts,
                                                     session,
+                                                    sources,
                                                 )
                                             })
                                         })

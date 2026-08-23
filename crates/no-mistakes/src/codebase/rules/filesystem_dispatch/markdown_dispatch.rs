@@ -53,60 +53,97 @@ pub(super) fn spawn<'scope>(
     config: &'scope crate::config::v2::NoMistakesConfig,
     candidates: &'scope RuleCandidateIndex,
     facts: &'scope super::super::markdown_facts::MarkdownFactMap,
+    sources: &'scope crate::codebase::ts_source::SourceStore,
     results: &'scope RuleResults,
 ) {
-    spawn_rule(scope, config, MARKDOWN_CHILD_LINKS, results, || {
-        markdown_child_links::check_with_files_sources_and_facts(
-            root,
-            config,
-            candidates.candidates(MARKDOWN_CHILD_LINKS),
-            facts,
-        )
-    });
-    spawn_rule(scope, config, MARKDOWN_LINK_DISPLAY_TEXT, results, || {
-        markdown_link_display_text::check_with_files_sources_and_facts(
-            root,
-            config,
-            candidates.candidates(MARKDOWN_LINK_DISPLAY_TEXT),
-            facts,
-        )
-    });
-    spawn_rule(scope, config, MARKDOWN_MERMAID_VALIDATION, results, || {
-        markdown_mermaid_validation::check_with_files_and_facts(
-            root,
-            config,
-            candidates.candidates(MARKDOWN_MERMAID_VALIDATION),
-            facts,
-        )
-    });
-    spawn_rule(scope, config, MARKDOWN_REACHABILITY, results, || {
-        markdown_reachability::check_with_files_sources_and_facts(
-            root,
-            config,
-            candidates.candidates(MARKDOWN_REACHABILITY),
-            facts,
-        )
-    });
-    spawn_rule(scope, config, MARKDOWN_STRUCTURE_BUDGET, results, || {
-        markdown_structure_budget::check_with_files_sources_and_facts(
-            root,
-            config,
-            candidates.candidates(MARKDOWN_STRUCTURE_BUDGET),
-            facts,
-        )
-    });
+    spawn_rule(
+        scope,
+        config,
+        MARKDOWN_CHILD_LINKS,
+        sources,
+        results,
+        || {
+            markdown_child_links::check_with_files_sources_and_facts(
+                root,
+                config,
+                candidates.candidates(MARKDOWN_CHILD_LINKS),
+                facts,
+            )
+        },
+    );
+    spawn_rule(
+        scope,
+        config,
+        MARKDOWN_LINK_DISPLAY_TEXT,
+        sources,
+        results,
+        || {
+            markdown_link_display_text::check_with_files_sources_and_facts(
+                root,
+                config,
+                candidates.candidates(MARKDOWN_LINK_DISPLAY_TEXT),
+                facts,
+            )
+        },
+    );
+    spawn_rule(
+        scope,
+        config,
+        MARKDOWN_MERMAID_VALIDATION,
+        sources,
+        results,
+        || {
+            markdown_mermaid_validation::check_with_files_and_facts(
+                root,
+                config,
+                candidates.candidates(MARKDOWN_MERMAID_VALIDATION),
+                facts,
+            )
+        },
+    );
+    spawn_rule(
+        scope,
+        config,
+        MARKDOWN_REACHABILITY,
+        sources,
+        results,
+        || {
+            markdown_reachability::check_with_files_sources_and_facts(
+                root,
+                config,
+                candidates.candidates(MARKDOWN_REACHABILITY),
+                facts,
+            )
+        },
+    );
+    spawn_rule(
+        scope,
+        config,
+        MARKDOWN_STRUCTURE_BUDGET,
+        sources,
+        results,
+        || {
+            markdown_structure_budget::check_with_files_sources_and_facts(
+                root,
+                config,
+                candidates.candidates(MARKDOWN_STRUCTURE_BUDGET),
+                facts,
+            )
+        },
+    );
 }
 
 fn spawn_rule<'scope>(
     scope: &rayon::Scope<'scope>,
     config: &crate::config::v2::NoMistakesConfig,
     rule_id: &'static str,
+    sources: &'scope crate::codebase::ts_source::SourceStore,
     results: &'scope RuleResults,
     run: impl FnOnce() -> Result<Vec<RuleFinding>> + Send + 'scope,
 ) {
     if rule_enabled(config, rule_id) {
         scope.spawn(move |_| {
-            let result = run();
+            let result = super::execute::trace_rule(sources, rule_id, run);
             results
                 .lock()
                 .expect("mutex poisoned")

@@ -67,8 +67,13 @@ fn merge_dotnet_routes(
     }
     let dataset = prepared.session.dataset(&prepared.root);
     let all_files = dataset.paths_for(&prepared.root);
-    let collected =
-        crate::codebase::dotnet::collect_dotnet_facts(&prepared.root, &all_files, &projects);
+    let sources = dataset.sources_for(&prepared.root);
+    let collected = crate::codebase::dotnet::collect_dotnet_facts_with_sources(
+        &prepared.root,
+        &all_files,
+        &projects,
+        Some(&sources),
+    );
     let config_route_filter = build_filter(&ConfigView::new(config).server_route_globs())
         .ok()
         .flatten();

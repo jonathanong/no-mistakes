@@ -14,7 +14,7 @@ fn fixture() -> PathBuf {
 #[test]
 fn csharp_parser_extracts_usings_declarations_refs_and_xunit_tests() {
     let path = fixture().join("dotnet-clients/tests/App.Tests/FeedServiceTests.cs");
-    let facts = parse_csharp_file(&path, None).expect("fixture should parse");
+    let facts = parse_csharp_file_with_sources(&path, None, None).expect("fixture should parse");
 
     assert_eq!(facts.namespace.as_deref(), Some("Company.App.Tests"));
     assert!(facts.usings.contains(&"Company.App".to_string()));
@@ -27,21 +27,24 @@ fn csharp_parser_extracts_usings_declarations_refs_and_xunit_tests() {
 fn csharp_parser_extracts_aspnet_routes_and_handler_methods() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/dotnet-aspnet-routes/fixture");
-    let program = parse_csharp_file(&root.join("src/Api/Program.cs"), None).unwrap();
+    let program =
+        parse_csharp_file_with_sources(&root.join("src/Api/Program.cs"), None, None).unwrap();
     assert!(program
         .route_handlers
         .iter()
         .any(|(path, handler)| { path == "/users" && handler == "UserHandlers.ListUsers" }));
-    let handlers = parse_csharp_file(&root.join("src/Api/UserHandlers.cs"), None).unwrap();
+    let handlers =
+        parse_csharp_file_with_sources(&root.join("src/Api/UserHandlers.cs"), None, None).unwrap();
     assert!(handlers.methods.contains(&"ListUsers".to_string()));
-    let computed = parse_csharp_file(&root.join("src/Api/Computed.cs"), None).unwrap();
+    let computed =
+        parse_csharp_file_with_sources(&root.join("src/Api/Computed.cs"), None, None).unwrap();
     assert!(computed.route_handlers.is_empty());
 }
 
 #[test]
 fn csharp_parser_ignores_comments_and_csharp_string_forms() {
     let path = fixture().join("dotnet-clients/tests/App.Tests/ParserEdgeCases.cs");
-    let facts = parse_csharp_file(&path, None).expect("fixture should parse");
+    let facts = parse_csharp_file_with_sources(&path, None, None).expect("fixture should parse");
 
     assert_eq!(facts.namespace.as_deref(), Some("Company.App.Tests"));
     assert!(facts.usings.contains(&"System.Text".to_string()));
@@ -56,12 +59,37 @@ fn csharp_parser_ignores_comments_and_csharp_string_forms() {
 #[test]
 fn csharp_parser_handles_block_scoped_namespaces() {
     let path = fixture().join("dotnet-clients/src/App/BlockNamespace.cs");
-    let facts = parse_csharp_file(&path, None).expect("fixture should parse");
+    let facts = parse_csharp_file_with_sources(&path, None, None).expect("fixture should parse");
 
     assert_eq!(facts.namespace.as_deref(), Some("Company.App"));
     assert!(facts.usings.contains(&"Company.App".to_string()));
     assert!(facts.declarations.contains(&"BlockNamespace".to_string()));
     assert!(facts.references.contains(&"FeedService".to_string()));
+}
+
+#[test]
+fn csharp_compiled_patterns_and_keyword_table_are_reused() {
+    use super::csharp::{
+        csharp_declaration_regex, csharp_file_namespace_regex, csharp_reference_keywords,
+        csharp_reference_regex,
+    };
+
+    assert!(std::ptr::eq(
+        csharp_file_namespace_regex(),
+        csharp_file_namespace_regex()
+    ));
+    assert!(std::ptr::eq(
+        csharp_declaration_regex(),
+        csharp_declaration_regex()
+    ));
+    assert!(std::ptr::eq(
+        csharp_reference_regex(),
+        csharp_reference_regex()
+    ));
+    assert!(std::ptr::eq(
+        csharp_reference_keywords(),
+        csharp_reference_keywords()
+    ));
 }
 
 #[test]

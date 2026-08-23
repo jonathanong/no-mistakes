@@ -40,6 +40,7 @@ fn dotnet_edges_return_empty_without_config_or_files() {
         &[],
         None,
         None,
+        None,
         &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
@@ -59,6 +60,7 @@ fn dotnet_edges_return_empty_without_config_or_files() {
         &root,
         &[],
         Some(&options),
+        None,
         None,
         &crate::codebase::analysis_session::PathInterner::new()
     )
@@ -138,6 +140,7 @@ fn aspnet_map_get_emits_route_ref_to_handler_file() {
         &all_files,
         Some(&options),
         None,
+        None,
         &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(edges.iter().any(|(from, to, kind)| {
@@ -175,6 +178,7 @@ fn aspnet_route_globs_exclude_registration_files() {
         &all_files,
         Some(&options),
         None,
+        None,
         &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(edges.iter().all(|(from, _, kind)| {
@@ -191,6 +195,7 @@ fn aspnet_route_globs_exclude_registration_files() {
         &root,
         &all_files,
         Some(&options),
+        None,
         None,
         &crate::codebase::analysis_session::PathInterner::new(),
     );

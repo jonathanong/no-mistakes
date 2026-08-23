@@ -7,7 +7,7 @@ use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
 use manifest::parse_manifest_targets;
-use source::parse_swift_file;
+use source::parse_swift_file_with_sources;
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct SwiftPackageFacts {
@@ -46,6 +46,15 @@ pub(crate) fn collect_swift_facts(
     all_files: &[PathBuf],
     packages: &[String],
 ) -> SwiftFactMap {
+    collect_swift_facts_with_sources(root, all_files, packages, None)
+}
+
+pub(crate) fn collect_swift_facts_with_sources(
+    root: &Path,
+    all_files: &[PathBuf],
+    packages: &[String],
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> SwiftFactMap {
     #[cfg(any(test, feature = "test-instrumentation"))]
     test_support::record_fact_collection(root);
     if packages.is_empty() {
@@ -54,7 +63,7 @@ pub(crate) fn collect_swift_facts(
     let package_facts: Vec<SwiftPackageFacts> = packages
         .iter()
         .take_while(|_| crate::invocation::check_timeout().is_ok())
-        .filter_map(|package| parse_package(root, package))
+        .filter_map(|package| parse_package(root, package, sources))
         .collect();
     if package_facts.is_empty() {
         return SwiftFactMap::default();
@@ -75,9 +84,9 @@ pub(crate) fn collect_swift_facts(
     let mut file_facts: Vec<SwiftFileFacts> = swift_files
         .par_iter()
         .map(|path| {
-            crate::invocation::check_timeout()
-                .ok()
-                .map(|()| parse_swift_file(path, target_by_file.get(path).cloned()))
+            crate::invocation::check_timeout().ok().map(|()| {
+                parse_swift_file_with_sources(path, target_by_file.get(path).cloned(), sources)
+            })
         })
         .while_some()
         .flatten()
@@ -111,11 +120,15 @@ pub(crate) fn collect_swift_facts(
     facts
 }
 
-fn parse_package(root: &Path, package: &str) -> Option<SwiftPackageFacts> {
+fn parse_package(
+    root: &Path,
+    package: &str,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> Option<SwiftPackageFacts> {
     let package_rel = package.trim_end_matches('/').to_string();
     let package_root = root.join(&package_rel);
     let manifest = package_root.join("Package.swift");
-    let source = std::fs::read_to_string(manifest).ok()?;
+    let source = crate::codebase::ts_source::SourceStore::read_optional(sources, &manifest)?;
     let mut targets = BTreeMap::new();
     for target in parse_manifest_targets(&source) {
         targets.insert(target.name.clone(), target);

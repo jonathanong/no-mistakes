@@ -20,7 +20,19 @@ pub(super) fn dotnet_projects_and_facts_from_visible(
     Result<Vec<ConfigProject>>,
     crate::codebase::dotnet::DotnetFactMap,
 ) {
-    let (projects, missing, facts) = collect_projects(root, config, visible_paths);
+    dotnet_projects_and_facts_from_visible_with_sources(root, config, visible_paths, None)
+}
+
+pub(super) fn dotnet_projects_and_facts_from_visible_with_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+) -> (
+    Result<Vec<ConfigProject>>,
+    crate::codebase::dotnet::DotnetFactMap,
+) {
+    let (projects, missing, facts) = collect_projects(root, config, visible_paths, sources);
     if let Some(project) = missing.first() {
         return (
             Err(anyhow::anyhow!(
@@ -39,13 +51,14 @@ pub(super) fn dotnet_projects_lossy_from_visible(
     config: &NoMistakesConfig,
     visible_paths: &[PathBuf],
 ) -> Vec<ConfigProject> {
-    collect_projects(root, config, visible_paths).0
+    collect_projects(root, config, visible_paths, None).0
 }
 
 fn collect_projects(
     root: &Path,
     config: &NoMistakesConfig,
     visible_paths: &[PathBuf],
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> (
     Vec<ConfigProject>,
     Vec<crate::codebase::dotnet::DotnetConfigProject>,
@@ -57,7 +70,12 @@ fn collect_projects(
         visible_paths,
     );
     let configured = crate::codebase::dotnet::configured_projects(root, &config.tests.dotnet);
-    let facts = crate::codebase::dotnet::collect_dotnet_facts(root, &all_files, &configured);
+    let facts = crate::codebase::dotnet::collect_dotnet_facts_with_sources(
+        root,
+        &all_files,
+        &configured,
+        sources,
+    );
     let mut projects = Vec::new();
     let mut missing = Vec::new();
     for configured_project in configured {

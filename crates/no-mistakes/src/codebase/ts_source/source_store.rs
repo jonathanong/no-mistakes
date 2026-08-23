@@ -69,6 +69,10 @@ impl SourceStore {
         &self.inventory
     }
 
+    pub(crate) fn observer(&self) -> Option<&Arc<crate::diagnostics::InvocationObserver>> {
+        self.observer.as_ref()
+    }
+
     #[doc(hidden)]
     pub fn read(&self, id: FileId) -> Option<SourceReadOutcome> {
         let path = self.inventory.path(id)?;

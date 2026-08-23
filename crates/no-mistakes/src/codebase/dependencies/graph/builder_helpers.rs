@@ -97,6 +97,7 @@ fn collect_swift_edges_for_plan(
     inputs: &GraphEdgeBuildInputs<'_>,
     ts_facts: Option<&dyn TsFactLookup>,
     session: &crate::codebase::analysis_session::AnalysisSession,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Vec<Edge> {
     if !inputs.plan.swift {
         return Vec::new();
@@ -110,13 +111,17 @@ fn collect_swift_edges_for_plan(
             config_options: inputs.config_options,
             ts_facts,
             prepared_facts: inputs.swift_facts,
+            sources: Some(sources),
             session,
         },
         session.interner(),
     )
 }
 
-fn collect_dotnet_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge> {
+fn collect_dotnet_edges_for_plan(
+    inputs: &GraphEdgeBuildInputs<'_>,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Vec<Edge> {
     if !inputs.plan.dotnet {
         return Vec::new();
     }
@@ -125,6 +130,7 @@ fn collect_dotnet_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge>
         inputs.graph_files.all(),
         inputs.config_options,
         inputs.dotnet_facts,
+        Some(sources),
         &inputs.interner,
     )
 }
