@@ -34,6 +34,7 @@ pub mod no_mistakes_config;
 pub mod no_raw_ephemeral_port;
 pub mod package_json_registry_only;
 pub mod package_json_workspace_coverage;
+pub mod pnpm_overrides_ban;
 pub mod postgres_constraint_validate;
 pub mod postgres_fk_index;
 pub mod postgres_lock_ordering;

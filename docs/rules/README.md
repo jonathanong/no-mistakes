@@ -53,6 +53,7 @@ rules:
 | [`no-raw-ephemeral-port`](no-raw-ephemeral-port.md)                           | Ban raw ephemeral port 0 binds and Node `listen(0)` calls.                      |
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |
 | [`package-json-workspace-coverage`](package-json-workspace-coverage.md)       | Require package directories to be covered by workspace config.                  |
+| [`pnpm-overrides-ban`](pnpm-overrides-ban.md)                                 | Ban pnpm dependency version overrides; keep packageExtensions.                  |
 | [`postgres-constraint-validate`](postgres-constraint-validate.md)                 | Pair named NOT VALID constraint adds with VALIDATE CONSTRAINT.              |
 | [`postgres-no-add-column`](postgres-no-add-column.md)                             | Ban ALTER TABLE ADD COLUMN in schema SQL.                                   |
 | [`postgres-require-named-constraints`](postgres-require-named-constraints.md)     | Require names on ALTER TABLE ADD FOREIGN KEY and CHECK.                     |
