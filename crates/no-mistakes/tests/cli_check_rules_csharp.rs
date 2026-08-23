@@ -117,3 +117,41 @@ fn csharp_max_lines_per_file_uses_test_max() {
         stdout(&out)
     );
 }
+
+fn async_void_fixture(scenario: &str) -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/csharp-no-async-void-delegate/fixture")
+            .join(scenario),
+    )
+}
+
+#[test]
+fn csharp_no_async_void_delegate_cli_fails() {
+    let root = async_void_fixture("fail");
+    let out = check(
+        &root,
+        "rules:\n  - rule: csharp-no-async-void-delegate\n    scope: repository\n",
+    );
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(
+        stdout(&out).contains("csharp-no-async-void-delegate"),
+        "{}",
+        stdout(&out)
+    );
+    assert!(
+        stdout(&out).contains("LoadablePageBinding.cs"),
+        "{}",
+        stdout(&out)
+    );
+}
+
+#[test]
+fn csharp_no_async_void_delegate_cli_passes() {
+    let root = async_void_fixture("pass");
+    let out = check(
+        &root,
+        "rules:\n  - rule: csharp-no-async-void-delegate\n    scope: repository\n",
+    );
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}

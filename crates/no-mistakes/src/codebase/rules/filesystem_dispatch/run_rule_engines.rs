@@ -80,6 +80,15 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
                 defer_suppression,
             )
         }
+        CSHARP_NO_ASYNC_VOID_DELEGATE => {
+            csharp_no_async_void_delegate::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR => {
             github_actions_action_timeout_pair::check_with_files_and_sources(
                 root,

@@ -228,6 +228,7 @@ fn no_mistakes_rules_have_docs() {
         rules::AGENTS_MD_MAX_SIZE,
         rules::BANNED_RENAMED_FILES,
         rules::CSHARP_MAX_LINES_PER_FILE,
+        rules::CSHARP_NO_ASYNC_VOID_DELEGATE,
         rules::DOC_CONSISTENCY,
         rules::FILE_EXTENSION_POLICY,
         rules::GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR,

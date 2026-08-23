@@ -1,0 +1,3 @@
+rules:
+  - rule: csharp-no-async-void-delegate
+    scope: repository

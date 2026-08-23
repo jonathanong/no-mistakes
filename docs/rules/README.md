@@ -26,6 +26,7 @@ rules:
 | [`banned-renamed-files`](banned-renamed-files.md)                             | Ban legacy filenames that should be renamed.                                    |
 | [`config-path-references`](config-path-references.md)                         | Validate path strings in structured config files, including well-known presets. |
 | [`csharp-max-lines-per-file`](csharp-max-lines-per-file.md)                   | Cap C# source/test file length by physical lines.                               |
+| [`csharp-no-async-void-delegate`](csharp-no-async-void-delegate.md)           | Ban async lambdas passed to void Action APIs such as Command.                   |
 | [`doc-consistency`](doc-consistency.md)                                       | Require files, headings, substrings, and banned-substring checks.               |
 | [`file-extension-policy`](file-extension-policy.md)                           | Enforce allowed or banned extensions in configured scopes.                      |
 | [`finite-set-consistency`](finite-set-consistency.md)                         | Compare finite string sets extracted from source and paths.                     |
