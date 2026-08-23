@@ -39,9 +39,16 @@ fn fallback_lookup_forwards_scan_helpers_through_primary_and_fallback() {
             .unwrap()
             .is_empty()
     );
+    assert!(lookup
+        .get_or_compute_playwright_routes(&cache_settings(), &|| Vec::new())
+        .is_empty());
+    assert!(lookup.playwright_source_files().is_none());
 
     let mismatched: crate::fx::PathSet = [PathBuf::from("/repo/b.ts")].into_iter().collect();
     let lookup = FallbackTsFactLookup::new(&primary, &fallback, true, &files, &mismatched);
+    assert!(lookup.playwright_source_files().is_none());
+    assert!(lookup.get_playwright_test_files(None).is_none());
+    assert!(lookup.get_playwright_fetch_facts(&path).is_none());
     assert!(
         lookup
             .get_or_compute_app_selector_occurrences(&cache_settings(), true, &|| Ok(Vec::new()))
