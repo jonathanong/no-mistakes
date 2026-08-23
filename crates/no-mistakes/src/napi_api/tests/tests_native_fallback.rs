@@ -66,3 +66,41 @@ fn tests_plan_json_reports_configured_swift_source_impact() {
         test["test_file"] == "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift"
     }));
 }
+
+#[test]
+fn tests_plan_json_scopes_swift_accounting_and_execution_targets_with_include_glob() {
+    let swift_root = fixture_root("swift-test-plan");
+    let options = json!({
+        "framework": "swift",
+        "root": swift_root,
+        "changedFiles": ["backend/api/feeds.mts"],
+        "environment": "all",
+        "includeGlob": ["swift-clients/apps/android/**"],
+    })
+    .to_string();
+    let output = tests_plan_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert_eq!(
+        plan["groups"],
+        json!([{
+            "type": "all",
+            "selected": ["swift-clients/apps/android/Tests/VouchaAndroidTests/DeviceTests.swift"],
+            "remaining": 0,
+            "limit": null,
+        }])
+    );
+    assert!(plan["execution_targets"].as_array().unwrap().iter().any(|target| {
+        target["runner"] == "swift"
+            && target["config"] == "swift-clients/apps/android"
+            && target["project"] == "VouchaAndroidTests"
+            && target["name"] == "swift-clients/apps/android"
+            && target["runner_args"]
+                == json!([
+                    "--package-path",
+                    "swift-clients/apps/android",
+                    "--filter",
+                    "VouchaAndroidTests",
+                ])
+    }));
+}

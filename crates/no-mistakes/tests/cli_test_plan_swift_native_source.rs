@@ -99,3 +99,80 @@ fn test_plan_swift_native_source_commands_format_uses_package_filters() {
         ]
     );
 }
+
+#[test]
+fn test_plan_swift_include_glob_accounts_and_targets_only_selected_package() {
+    let root = fixture("swift-test-plan");
+    let output = run(&[
+        "test",
+        "plan",
+        "swift",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "backend/api/feeds.mts",
+        "--environment",
+        "all",
+        "--include-glob",
+        "swift-clients/apps/android/**",
+        "--json",
+    ]);
+
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let selected = plan["selected_tests"].as_array().unwrap();
+    assert_eq!(selected.len(), 1);
+    assert_eq!(
+        selected[0]["test_file"],
+        "swift-clients/apps/android/Tests/VouchaAndroidTests/DeviceTests.swift"
+    );
+    assert!(selected[0]["targets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|target| {
+            target["config"] == "swift-clients/apps/android"
+                && target["project"] == "VouchaAndroidTests"
+                && target["runner_args"]
+                    == serde_json::json!([
+                        "--package-path",
+                        "swift-clients/apps/android",
+                        "--filter",
+                        "VouchaAndroidTests"
+                    ])
+        }));
+    assert_eq!(
+        plan["groups"],
+        serde_json::json!([{
+            "type": "all",
+            "selected": ["swift-clients/apps/android/Tests/VouchaAndroidTests/DeviceTests.swift"],
+            "remaining": 0,
+            "limit": null
+        }])
+    );
+    assert!(plan["execution_targets"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|target| {
+            target["runner"] == "swift"
+                && target["config"] == "swift-clients/apps/android"
+                && target["project"] == "VouchaAndroidTests"
+                && target["name"] == "swift-clients/apps/android"
+                && target["runner_args"]
+                    == serde_json::json!([
+                        "--package-path",
+                        "swift-clients/apps/android",
+                        "--filter",
+                        "VouchaAndroidTests"
+                    ])
+                && target["test_files"]
+                    == serde_json::json!([
+                        "swift-clients/apps/android/Tests/VouchaAndroidTests/DeviceTests.swift"
+                    ])
+        }));
+}

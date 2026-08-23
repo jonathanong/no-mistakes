@@ -183,6 +183,9 @@ test_plan:
 Dependency groups use the canonical graph, including Swift imports, Swift symbol
 references, SwiftPM target dependencies, and HTTP edges from Swift endpoint
 literals to configured backend routes.
+Use `--include-glob` / Node `includeGlob` to plan one package or project slice.
+Configured Swift plans apply the filter before limits and fallback selection, so
+group counts and execution targets describe only the selected slice.
 If the configured package graph cannot trace a native source/project change but
 native tests are discoverable, the plan falls back to the framework-scoped
 discovered tests and sets `fallback_triggered`/`fallback_reason`.

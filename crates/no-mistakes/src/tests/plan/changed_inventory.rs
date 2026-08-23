@@ -8,7 +8,13 @@ pub(crate) fn generate_plan_with_prepared(
 ) -> Result<TestPlan> {
     let mut plan = generate_plan_with_prepared_inner(args, prepared, timing)?;
     plan.changed_files = prepared.changed_file_inventory();
-    retain_include_glob(&mut plan, &args.include_glob)?;
+    // Configured framework plans apply this filter while discovering tests so
+    // their groups, limits, fallback, and targets use the requested slice.
+    // Keep the established post-selection behavior for generic and direct-owner
+    // plans, which intentionally bypass configured framework policy.
+    if args.framework.is_none() || args.direct_test_owner {
+        retain_include_glob(&mut plan, &args.include_glob)?;
+    }
     plan.finish(args.include_comment, &prepared.config.tests.swift.packages);
     Ok(plan)
 }

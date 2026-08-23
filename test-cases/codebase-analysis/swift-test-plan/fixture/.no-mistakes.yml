@@ -12,6 +12,7 @@ tests:
     packages:
       - swift-clients/core
       - swift-clients/ui
+      - swift-clients/apps/android
     projects:
       swift-core:
         include:
@@ -19,6 +20,9 @@ tests:
       swift-ui:
         include:
           - swift-clients/ui/Tests/**/*.swift
+      swift-android:
+        include:
+          - swift-clients/apps/android/Tests/**/*.swift
 test_plan:
   swift:
     fullSuiteTriggers:
@@ -26,6 +30,7 @@ test_plan:
         swift-clients:
           - core/Package.swift
           - ui/Package.swift
+          - apps/android/Package.swift
     environments:
       pre-push:
         groups:
