@@ -4,7 +4,6 @@ use super::fixtures::{
 use super::shard;
 use criterion::{black_box, Criterion};
 use no_mistakes::benchmark_support;
-use no_mistakes::codebase::check_facts::PathMembership;
 use no_mistakes::impacted_checks::generate_impacted_checks;
 use serde_json::json;
 use std::path::PathBuf;
@@ -21,14 +20,14 @@ pub(super) fn bench_finite_set_membership(c: &mut Criterion) {
     let candidates: Vec<PathBuf> = (0..1_000)
         .map(|index| scope[(index * 37) % scope.len()].clone())
         .collect();
-    let membership = PathMembership::new(&scope);
     c.bench_function("check/finite_set_membership_50k_scope_1k_candidates", |b| {
         b.iter(|| {
-            let matched = candidates
-                .iter()
-                .filter(|path| membership.contains(path))
-                .count();
-            criterion::black_box(matched)
+            criterion::black_box(
+                no_mistakes::codebase::check_facts::ordered_path_intersection(
+                    criterion::black_box(&candidates),
+                    criterion::black_box(&scope),
+                ),
+            )
         });
     });
 }
