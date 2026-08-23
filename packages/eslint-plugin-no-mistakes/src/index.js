@@ -15,6 +15,7 @@ const rules = {
   "no-delete-property": require("./rules/no-delete-property"),
   "no-import-only-test-files": require("./rules/no-import-only-test-files"),
   "no-placeholder-never-type-exports": require("./rules/no-placeholder-never-type-exports"),
+  "no-three-sequential-awaits": require("./rules/no-three-sequential-awaits"),
   "no-vitest-sequential": require("./rules/no-vitest-sequential"),
   "playwright-consistent-attribute": require("./rules/playwright-consistent-attribute"),
   "playwright-defaults": require("./rules/playwright-defaults"),

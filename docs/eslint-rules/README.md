@@ -41,6 +41,7 @@ See [ESLint and Oxlint plugin](../eslint-plugin.md) for option schemas.
 | [`no-global-fetch-outside-helper`](no-global-fetch-outside-helper.md)                                   | Disallow global fetch outside configured helper paths.                 |
 | [`no-import-only-test-files`](no-import-only-test-files.md)                                             | Disallow aggregate test files that only import tests.                  |
 | [`no-placeholder-never-type-exports`](no-placeholder-never-type-exports.md)                             | Disallow exported `never` placeholder type aliases.                    |
+| [`no-three-sequential-awaits`](no-three-sequential-awaits.md)                                           | Disallow three sequential await statements in one block.               |
 | [`no-vitest-sequential`](no-vitest-sequential.md)                                                       | Disallow Vitest sequential modifiers.                                  |
 | [`playwright-assertion-timeout-cap`](playwright-assertion-timeout-cap.md)                               | Cap Playwright assertion timeouts.                                     |
 | [`playwright-consistent-attribute`](playwright-consistent-attribute.md)                                 | Require a canonical test ID attribute.                                 |
