@@ -125,5 +125,39 @@ pub(super) fn bench_scoped_resolver_selection(c: &mut Criterion) {
             ))
         });
     });
+    const RESOLVERS: usize = 128;
+    assert_eq!(
+        benchmark_support::build_repeated_scoped_resolvers(&fixture, RESOLVERS),
+        RESOLVERS
+    );
+    group.bench_function("repeated_construction", |b| {
+        b.iter(|| {
+            black_box(benchmark_support::build_repeated_scoped_resolvers(
+                black_box(&fixture),
+                RESOLVERS,
+            ))
+        });
+    });
+    group.finish();
+}
+
+pub(super) fn bench_catalog_visibility(c: &mut Criterion) {
+    if !shard::should_run(shard::QUERY) {
+        return;
+    }
+    const PATHS: usize = 10_000;
+    assert_eq!(
+        benchmark_support::build_catalog_with_large_lexical_visibility(PATHS),
+        1
+    );
+    let mut group = c.benchmark_group("catalog_visibility");
+    group.throughput(Throughput::Elements(PATHS as u64));
+    group.bench_function("large_lexical_catalog", |b| {
+        b.iter(|| {
+            black_box(
+                benchmark_support::build_catalog_with_large_lexical_visibility(black_box(PATHS)),
+            )
+        });
+    });
     group.finish();
 }

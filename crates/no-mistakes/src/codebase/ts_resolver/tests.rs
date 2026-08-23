@@ -1152,6 +1152,33 @@ fn catalog_builder_helpers_cover_fallback_resolution_shapes() {
         .is_none());
 }
 
+#[cfg(unix)]
+#[test]
+fn catalog_builder_defers_canonical_visible_projection_until_a_lexical_miss() {
+    let link = normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    );
+    let real = normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/real"),
+    );
+    let visible = vec![link.join("tsconfig.json")];
+    let builder = CatalogBuilder::new(&link, std::slice::from_ref(&real), &visible, None, None);
+
+    assert!(builder.visible_real.get().is_none());
+    assert!(builder.is_visible(&link.join("tsconfig.json")));
+    assert!(
+        builder.visible_real.get().is_none(),
+        "an exact lexical candidate must not pay for canonical aliases"
+    );
+    assert!(builder.is_visible(&real.join("tsconfig.json")));
+    assert!(
+        builder.visible_real.get().is_some(),
+        "the symlink spelling remains visible after a lexical miss"
+    );
+}
+
 // ── load_tsconfig ─────────────────────────────────────────────────────
 
 #[test]

@@ -26,6 +26,7 @@ impl GraphFiles {
             indexable: std::sync::Arc::new(indexable),
             visible: flags,
             canonical_visible: CanonicalVisible::empty(),
+            scoped_visible: std::sync::OnceLock::new(),
             resource_candidates: std::sync::Arc::new(resource_candidates),
         }
     }

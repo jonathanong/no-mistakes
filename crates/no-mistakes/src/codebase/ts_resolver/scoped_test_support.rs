@@ -5,9 +5,7 @@ impl<'a> ScopedImportResolver<'a> {
     pub(crate) fn new(catalog: &'a TsConfigCatalog, visible: &dyn VisiblePathLookup) -> Self {
         Self::build(
             catalog,
-            Some(ResolverVisible::Owned(ScopedArc::new(normalized_visible(
-                visible,
-            )))),
+            Some(ResolverVisible::Owned(visible.normalized_visible())),
             None,
         )
     }

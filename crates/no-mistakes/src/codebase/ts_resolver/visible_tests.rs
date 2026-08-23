@@ -120,9 +120,10 @@ fn missing_paths_normalize_without_canonicalize() {
 
 #[test]
 fn scoped_visibility_owns_an_fx_path_set() {
-    let source = include_str!("scoped_setup.rs");
+    let source = include_str!("visible.rs");
     assert!(
-        source.contains("fn normalized_visible(") && source.contains("-> crate::fx::PathSet"),
+        source.contains("fn normalized_visible_path_set(")
+            && source.contains("-> crate::fx::PathSet"),
         "scoped visibility membership must keep Fx hashing"
     );
 }

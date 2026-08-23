@@ -2,7 +2,9 @@ struct CatalogBuilder<'a> {
     root: PathBuf,
     root_real: PathBuf,
     visible: BTreeSet<PathBuf>,
-    visible_real: BTreeSet<PathBuf>,
+    // Most config candidates are already present under their lexical spelling.
+    // Canonical aliases matter only after that exact membership misses.
+    visible_real: std::sync::OnceLock<BTreeSet<PathBuf>>,
     candidate_roots: Vec<PathBuf>,
     sources: Option<&'a crate::codebase::ts_source::SourceStore>,
     // Parsed configs retain lexical paths because they define relative TypeScript semantics.
@@ -59,7 +61,7 @@ impl<'a> CatalogBuilder<'a> {
             root,
             root_real,
             visible: visible_paths.iter().map(|path| normalize_path(path)).collect(),
-            visible_real: visible_paths.iter().filter_map(|path| real_path(path)).collect(),
+            visible_real: std::sync::OnceLock::new(),
             candidate_roots,
             sources,
             states: BTreeMap::new(),
@@ -161,6 +163,11 @@ impl<'a> CatalogBuilder<'a> {
     }
 
     fn is_visible(&self, path: &Path) -> bool {
-        self.visible.contains(path) || self.visible_real.contains(path)
+        self.visible.contains(path)
+            || self
+                .visible_real
+                .get_or_init(|| self.visible.iter().filter_map(|path| real_path(path)).collect())
+                .contains(path)
     }
+
 }

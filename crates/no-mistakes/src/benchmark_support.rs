@@ -36,6 +36,7 @@ pub use relationships::{
     RelationshipConstructionFixture, RelationshipProjectionFixture, RelationshipProjectionSummary,
 };
 pub use scoped_resolver::{
+    build_catalog_with_large_lexical_visibility, build_repeated_scoped_resolvers,
     resolve_repeated_scoped_imports, scoped_resolver_selection_fixture,
     ScopedResolverSelectionFixture, ScopedResolverSelectionSummary,
 };

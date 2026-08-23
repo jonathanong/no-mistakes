@@ -28,7 +28,7 @@ use graph_gates::bench_graph_gates;
 use language_frontends::bench_language_frontends;
 use observer::bench_observer_overhead;
 use query_indexes::{
-    bench_scoped_resolver_selection, bench_symbol_index_build_and_lookup,
+    bench_catalog_visibility, bench_scoped_resolver_selection, bench_symbol_index_build_and_lookup,
     bench_symbol_index_distinct_target_build,
 };
 use react_traits::bench_react_traits;
@@ -45,6 +45,7 @@ criterion_group!(
     bench_symbol_index_build_and_lookup,
     bench_symbol_index_distinct_target_build,
     bench_scoped_resolver_selection,
+    bench_catalog_visibility,
     bench_symbols,
     bench_workspace,
     bench_react_traits,
