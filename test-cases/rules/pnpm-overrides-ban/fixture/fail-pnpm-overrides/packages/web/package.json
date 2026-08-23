@@ -1,0 +1,9 @@
+{
+  "name": "web",
+  "private": true,
+  "pnpm": {
+    "overrides": {
+      "@aws-sdk/core": "3.0.0"
+    }
+  }
+}

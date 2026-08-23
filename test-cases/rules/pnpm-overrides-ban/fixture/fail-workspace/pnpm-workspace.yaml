@@ -1,0 +1,4 @@
+overrides:
+  fast-uri: 1.2.3
+packages:
+  - packages/*

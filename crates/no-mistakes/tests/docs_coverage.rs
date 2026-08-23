@@ -254,6 +254,7 @@ fn no_mistakes_rules_have_docs() {
         rules::NO_RAW_EPHEMERAL_PORT,
         rules::PACKAGE_JSON_REGISTRY_ONLY,
         rules::PACKAGE_JSON_REQUIRED_FIELDS,
+        rules::PNPM_OVERRIDES_BAN,
         rules::POSTGRES_CONSTRAINT_VALIDATE,
         rules::POSTGRES_NO_ADD_COLUMN,
         rules::POSTGRES_REQUIRE_NAMED_CONSTRAINTS,
@@ -403,6 +404,11 @@ fn rule_docs_use_supported_option_examples() {
             "package-json-registry-only.md",
             ["scopes:", "lockfile:"].as_slice(),
             ["registry:"].as_slice(),
+        ),
+        (
+            "pnpm-overrides-ban.md",
+            ["packageExtensions"].as_slice(),
+            ["voucha"].as_slice(),
         ),
     ];
 
