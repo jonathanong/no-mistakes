@@ -56,12 +56,31 @@ pub fn ordered_path_exclusion(
     primary: &[PathBuf],
     graph: &[PathBuf],
 ) -> Vec<PathBuf> {
+    if candidates.is_empty() {
+        return Vec::new();
+    }
     let primary = PathMembership::new(primary);
     let graph = PathMembership::new(graph);
     candidates
         .iter()
         .filter(|path| !primary.contains(path) && !graph.contains(path))
         .cloned()
+        .collect()
+}
+
+pub(crate) fn into_ordered_path_exclusion(
+    candidates: Vec<PathBuf>,
+    primary: &[PathBuf],
+    graph: &[PathBuf],
+) -> Vec<PathBuf> {
+    if candidates.is_empty() {
+        return candidates;
+    }
+    let primary = PathMembership::new(primary);
+    let graph = PathMembership::new(graph);
+    candidates
+        .into_iter()
+        .filter(|path| !primary.contains(path) && !graph.contains(path))
         .collect()
 }
 
