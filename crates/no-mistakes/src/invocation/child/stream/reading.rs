@@ -7,7 +7,7 @@ use std::io::Read;
 use std::sync::mpsc::SyncSender;
 
 #[inline(never)]
-pub(super) fn read_chunks(mut pipe: impl Read, tx: SyncSender<std::io::Result<Vec<u8>>>) {
+pub(super) fn read_chunks(pipe: &mut dyn Read, tx: SyncSender<std::io::Result<Vec<u8>>>) {
     let mut buf = vec![0u8; super::CHUNK_BYTES];
     loop {
         match pipe.read(&mut buf) {
@@ -26,7 +26,7 @@ pub(super) fn read_chunks(mut pipe: impl Read, tx: SyncSender<std::io::Result<Ve
 }
 
 #[inline(never)]
-pub(super) fn read_bounded(mut pipe: impl Read, cap: usize) -> Vec<u8> {
+pub(super) fn read_bounded(pipe: &mut dyn Read, cap: usize) -> Vec<u8> {
     let mut buf = [0u8; super::CHUNK_BYTES];
     let mut collected = Vec::new();
     loop {

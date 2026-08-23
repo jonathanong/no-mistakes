@@ -70,10 +70,10 @@ pub(crate) fn stream_command_lines(
         }
     };
 
-    let stdout = child.stdout.take().expect("child stdout must be piped");
+    let mut stdout = child.stdout.take().expect("child stdout must be piped");
     let stderr = child.stderr.take().expect("child stderr must be piped");
     let (chunk_tx, chunk_rx) = mpsc::sync_channel(CHUNK_QUEUE_CAPACITY);
-    std::thread::spawn(move || read_chunks(stdout, chunk_tx));
+    std::thread::spawn(move || read_chunks(&mut stdout, chunk_tx));
     let stderr_reader = spawn_bounded_stderr_reader(stderr);
 
     if let Err(error) = drain_lines(&chunk_rx, max_line_bytes, &mut on_line) {
@@ -113,10 +113,10 @@ pub(crate) fn stream_command_lines(
 /// `recv_timeout` instead of an unbounded `join()`. `read_bounded` never
 /// itself errors — it always eventually returns whatever it collected — so
 /// this always sends `Ok`.
-fn spawn_bounded_stderr_reader(pipe: impl Read + Send + 'static) -> PipeReader {
+fn spawn_bounded_stderr_reader(mut pipe: impl Read + Send + 'static) -> PipeReader {
     let (sender, receiver) = mpsc::channel();
     std::thread::spawn(move || {
-        let _ = sender.send(Ok(read_bounded(pipe, STDERR_CAP_BYTES)));
+        let _ = sender.send(Ok(read_bounded(&mut pipe, STDERR_CAP_BYTES)));
     });
     receiver
 }

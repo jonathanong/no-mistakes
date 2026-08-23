@@ -73,7 +73,7 @@ impl Read for FiniteBytes {
 #[test]
 fn read_chunks_forwards_read_errors() {
     let (tx, rx) = mpsc::sync_channel(1);
-    read_chunks(FailRead, tx);
+    read_chunks(&mut FailRead, tx);
     assert!(rx.recv().unwrap().is_err());
 }
 
@@ -81,19 +81,19 @@ fn read_chunks_forwards_read_errors() {
 fn read_chunks_forwards_read_errors_after_the_consumer_drops() {
     let (tx, rx) = mpsc::sync_channel(1);
     drop(rx);
-    read_chunks(FailRead, tx);
+    read_chunks(&mut FailRead, tx);
 }
 
 #[test]
 fn read_chunks_stops_when_the_consumer_drops() {
     let (tx, rx) = mpsc::sync_channel(1);
     drop(rx);
-    read_chunks(AlwaysReady, tx);
+    read_chunks(&mut AlwaysReady, tx);
 }
 
 #[test]
 fn read_bounded_drains_past_the_cap_and_stops_on_error() {
-    let collected = read_bounded(OneChunkThenFail { sent: false }, 0);
+    let collected = read_bounded(&mut OneChunkThenFail { sent: false }, 0);
     assert!(collected.is_empty());
 }
 
@@ -108,15 +108,15 @@ fn decode_line_strips_carriage_returns() {
 #[test]
 fn read_chunks_and_bounded_stop_at_eof_and_keep_bytes_under_cap() {
     let (tx, rx) = mpsc::sync_channel(4);
-    read_chunks(FiniteBytes { data: b"ab" }, tx);
+    read_chunks(&mut FiniteBytes { data: b"ab" }, tx);
     assert_eq!(rx.recv().unwrap().unwrap(), b"ab");
     assert!(rx.recv().is_err());
 
-    let collected = read_bounded(FiniteBytes { data: b"abcdef" }, 3);
+    let collected = read_bounded(&mut FiniteBytes { data: b"abcdef" }, 3);
     assert_eq!(collected, b"abc");
 
     let drained = read_bounded(
-        ChunksThenEof {
+        &mut ChunksThenEof {
             chunks: vec![b"ab".to_vec(), b"cd".to_vec(), b"ef".to_vec()],
         },
         1,
