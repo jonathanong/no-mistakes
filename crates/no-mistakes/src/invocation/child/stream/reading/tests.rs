@@ -34,6 +34,26 @@ impl Read for AlwaysReady {
     }
 }
 
+struct ChunksThenEof {
+    chunks: Vec<Vec<u8>>,
+}
+
+impl Read for ChunksThenEof {
+    fn read(&mut self, buf: &mut [u8]) -> io::Result<usize> {
+        let Some(chunk) = self.chunks.first() else {
+            return Ok(0);
+        };
+        let n = chunk.len().min(buf.len());
+        buf[..n].copy_from_slice(&chunk[..n]);
+        if n == chunk.len() {
+            self.chunks.remove(0);
+        } else {
+            self.chunks[0] = chunk[n..].to_vec();
+        }
+        Ok(n)
+    }
+}
+
 struct FiniteBytes {
     data: &'static [u8],
 }
@@ -94,4 +114,12 @@ fn read_chunks_and_bounded_stop_at_eof_and_keep_bytes_under_cap() {
 
     let collected = read_bounded(FiniteBytes { data: b"abcdef" }, 3);
     assert_eq!(collected, b"abc");
+
+    let drained = read_bounded(
+        ChunksThenEof {
+            chunks: vec![b"ab".to_vec(), b"cd".to_vec(), b"ef".to_vec()],
+        },
+        1,
+    );
+    assert_eq!(drained, b"a");
 }

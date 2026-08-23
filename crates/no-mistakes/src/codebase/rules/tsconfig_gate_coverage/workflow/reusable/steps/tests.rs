@@ -18,12 +18,24 @@ fn scan_with_catalog(
     job: &str,
     local_actions: super::super::super::local_actions::LocalActionCatalog,
 ) -> StepScan {
+    scan_with_projects(
+        job,
+        local_actions,
+        BTreeSet::new(),
+        ProjectSourceInputs::new(),
+    )
+}
+
+fn scan_with_projects(
+    job: &str,
+    local_actions: super::super::super::local_actions::LocalActionCatalog,
+    tracked: BTreeSet<String>,
+    source_inputs: ProjectSourceInputs,
+) -> StepScan {
     let job = serde_yaml::from_str(job).unwrap();
     let workflow: Value = serde_yaml::from_str("'on': push").unwrap();
     let model = parse_workflow_value(&workflow, ".github/workflows/test.yml");
     let triggers = CompiledTriggers::for_event(&model, "push").unwrap();
-    let tracked = BTreeSet::new();
-    let source_inputs = ProjectSourceInputs::new();
     let context = ScanContext {
         workflows: Default::default(),
         tracked: &tracked,
@@ -272,4 +284,21 @@ fn run_steps_cover_empty_commands_dynamic_tolerance_and_static_success() {
         BTreeSet::new(),
     );
     assert!(!tolerated_unknown_shell.failed && !tolerated_unknown_shell.indeterminate);
+}
+
+#[test]
+fn run_steps_register_tracked_projects_when_triggers_match_source_inputs() {
+    let tracked = BTreeSet::from(["app/tsconfig.json".to_string()]);
+    let source_inputs = ProjectSourceInputs::from([(
+        "app/tsconfig.json".to_string(),
+        BTreeSet::from(["app/src/index.ts".to_string()]),
+    )]);
+    let scan = scan_with_projects(
+        "runs-on: ubuntu-latest\nsteps:\n  - working-directory: .\n    run: tsc --noEmit --project app/tsconfig.json",
+        super::super::super::local_actions::LocalActionCatalog::non_docker(BTreeSet::new()),
+        tracked,
+        source_inputs,
+    );
+    assert!(scan.projects.contains("app/tsconfig.json"));
+    assert!(!scan.failed && !scan.indeterminate);
 }

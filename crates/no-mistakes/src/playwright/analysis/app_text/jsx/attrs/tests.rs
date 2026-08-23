@@ -121,7 +121,7 @@ fn jsx_attr_helpers_cover_static_dynamic_and_ts_wrapped_values() {
 
 #[test]
 fn selector_refs_skip_non_string_jsx_expressions_and_keep_as_strings() {
-    let source = r#"export const Page = () => <div data-pw={true} data-ok={"hit" as const} data-none={1 as any} />; "#;
+    let source = r#"export const Page = () => <div data-pw={true} data-el=<span /> data-frag=<></> data-ok={"hit" as const} data-none={1 as any} />; "#;
     crate::playwright::ast::with_program(Path::new("fixture.tsx"), source, |program, source| {
         let mut refs = Vec::new();
         struct Collector<'a, 'b> {
@@ -130,7 +130,7 @@ fn selector_refs_skip_non_string_jsx_expressions_and_keep_as_strings() {
         }
         impl<'a> Visit<'a> for Collector<'a, '_> {
             fn visit_jsx_opening_element(&mut self, opening: &JSXOpeningElement<'a>) {
-                *self.refs = super::super::selector_refs(
+                let refs = super::super::selector_refs(
                     opening,
                     self.source,
                     &crate::playwright::config::Settings {
@@ -147,6 +147,8 @@ fn selector_refs_skip_non_string_jsx_expressions_and_keep_as_strings() {
                             "data-pw".into(),
                             "data-ok".into(),
                             "data-none".into(),
+                            "data-el".into(),
+                            "data-frag".into(),
                         ],
                         test_id_attribute_override: None,
                         component_selector_attributes: BTreeMap::new(),
@@ -157,6 +159,9 @@ fn selector_refs_skip_non_string_jsx_expressions_and_keep_as_strings() {
                     },
                     &[],
                 );
+                if !refs.is_empty() {
+                    *self.refs = refs;
+                }
                 walk::walk_jsx_opening_element(self, opening);
             }
         }
@@ -170,6 +175,10 @@ fn selector_refs_skip_non_string_jsx_expressions_and_keep_as_strings() {
             "{refs:#?}"
         );
         assert!(refs.iter().all(|selector| selector.value != "true"));
+        assert!(refs.iter().all(|selector| selector.attribute != "data-el"));
+        assert!(refs
+            .iter()
+            .all(|selector| selector.attribute != "data-frag"));
     })
     .expect("fixture parses");
 }

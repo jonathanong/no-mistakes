@@ -182,3 +182,26 @@ fn search_skips_already_visited_scc_members_that_are_not_the_start() {
         .iter()
         .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle));
 }
+
+#[test]
+fn search_skips_a_chord_back_to_an_already_visited_non_start_member() {
+    let workflows = [
+        workflow("a.yml"),
+        workflow("b.yml"),
+        workflow("c.yml"),
+        workflow("d.yml"),
+    ];
+    let diagnostics = diagnose(
+        &workflows,
+        &[
+            edge("a.yml", "b.yml"),
+            edge("b.yml", "d.yml"),
+            edge("d.yml", "c.yml"),
+            edge("c.yml", "a.yml"),
+            edge("d.yml", "b.yml"),
+        ],
+    );
+    assert!(diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code == DiagnosticCode::WorkflowRunCycle));
+}

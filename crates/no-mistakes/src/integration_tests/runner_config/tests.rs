@@ -399,3 +399,23 @@ fn prepare_runner_configs_with_catalog_seeds_configured_specs() {
     assert_eq!(prepared.specs.len(), 1);
     assert!(prepared.contains(&root.join("vitest.config.mts")));
 }
+
+#[test]
+fn parse_program_and_session_facts_ignore_paths_that_were_not_prepared() {
+    let root = fixture_root("basic");
+    let prepared = prepare_vitest(&root, StringOrList::One("vitest.config.mts".into()));
+    let path = root.join("vitest.config.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let other = root.join("missing.config.ts");
+    let facts = crate::ast::with_program(&path, &source, |program, source| {
+        prepared.parse_program(&other, program, source)
+    })
+    .unwrap();
+    assert!(facts.is_none());
+    assert!(prepared
+        .parse_path_for_facts_with_session(
+            &crate::codebase::analysis_session::AnalysisSession::disabled(),
+            &other,
+        )
+        .is_none());
+}
