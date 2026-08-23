@@ -64,21 +64,34 @@ const CAMELIZE_REPORTS = new Set(["testsPlan", "testsImpact", "testsTargets", "t
 
 async function analyzeProject(options = {}) {
   const request = { ...options };
-  if (Array.isArray(request.reports)) {
-    request.reports = request.reports.map((report) => {
-      if (report.type === "testsWhy") return planning.materializeWhyPlan(report);
-      return PLAN_INPUT_REPORTS.has(report.type) ? planning.decamelizePlanOptions(report) : report;
-    });
-  }
-  const result = await jsonApis.analyzeProject(request);
-  for (const report of result.reports || []) {
-    if (report.type === "testsWhy") {
-      report.result = planning.camelizeWhy(report.result);
-    } else if (CAMELIZE_REPORTS.has(report.type)) {
-      report.result = planning.camelizeValue(report.result);
+  const generatedDirs = [];
+  try {
+    if (Array.isArray(request.reports)) {
+      request.reports = await Promise.all(
+        request.reports.map(async (report) => {
+          if (report.type === "testsWhy") {
+            const prepared = await planning.prepareWhyPlan(report);
+            if (prepared.generatedDir) generatedDirs.push(prepared.generatedDir);
+            return prepared.request;
+          }
+          return PLAN_INPUT_REPORTS.has(report.type)
+            ? await planning.decamelizePlanOptions(report)
+            : report;
+        }),
+      );
     }
+    const result = await jsonApis.analyzeProject(request);
+    for (const report of result.reports || []) {
+      if (report.type === "testsWhy") {
+        report.result = planning.camelizeWhy(report.result);
+      } else if (CAMELIZE_REPORTS.has(report.type)) {
+        report.result = planning.camelizeValue(report.result);
+      }
+    }
+    return result;
+  } finally {
+    await Promise.all(generatedDirs.map((dir) => planning.removeGeneratedDir(dir)));
   }
-  return result;
 }
 
 async function version() {

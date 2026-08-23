@@ -1,6 +1,6 @@
 "use strict";
 
-const fs = require("node:fs");
+const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
 const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
@@ -60,37 +60,50 @@ function loadPlanJson(planJson) {
   return planJson;
 }
 
-function decamelizePlanOptions(options = {}) {
+async function readPlanFile(planPath) {
+  try {
+    return JSON.parse(await fs.readFile(planPath, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+async function decamelizePlanOptions(options = {}) {
   const next = { ...options };
   if (next.planJson != null) {
     next.planJson = loadPlanJson(next.planJson);
   } else if (typeof next.plan === "string") {
-    try {
-      next.planJson = loadPlanJson(fs.readFileSync(next.plan, "utf8"));
+    const document = await readPlanFile(next.plan);
+    if (document !== undefined) {
+      next.planJson = loadPlanJson(document);
       delete next.plan;
-    } catch {
-      // Native still loads missing or invalid plan paths.
     }
   }
   return next;
 }
 
-function materializeWhyPlan(options = {}) {
+async function prepareWhyPlan(options = {}) {
   const next = { ...options };
   let document = next.planJson;
   if (document == null && typeof next.plan === "string") {
-    try {
-      document = JSON.parse(fs.readFileSync(next.plan, "utf8"));
-    } catch {
-      return next;
-    }
+    document = await readPlanFile(next.plan);
+    if (document === undefined) return { request: next };
   }
-  if (document == null) return next;
-  const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), "no-mistakes-why-")), "plan.json");
-  fs.writeFileSync(tmp, JSON.stringify(loadPlanJson(document)));
-  next.plan = tmp;
+  if (document == null) return { request: next };
+  const generatedDir = await fs.mkdtemp(path.join(os.tmpdir(), "no-mistakes-why-"));
+  await fs.writeFile(path.join(generatedDir, "plan.json"), JSON.stringify(loadPlanJson(document)));
+  next.plan = path.join(generatedDir, "plan.json");
   delete next.planJson;
-  return next;
+  return { request: next, generatedDir };
+}
+
+async function materializeWhyPlan(options = {}) {
+  return (await prepareWhyPlan(options)).request;
+}
+
+async function removeGeneratedDir(generatedDir) {
+  if (!generatedDir) return;
+  await fs.rm(generatedDir, { recursive: true, force: true }).catch(() => {});
 }
 
 function camelizeWhy(value) {
@@ -103,12 +116,12 @@ function camelizeWhy(value) {
 }
 
 async function testsComment(options) {
-  const input = Buffer.from(JSON.stringify(decamelizePlanOptions(options)));
+  const input = Buffer.from(JSON.stringify(await decamelizePlanOptions(options)));
   return String(await native.testsCommentMarkdown(input));
 }
 
 async function testsGraphMermaid(options) {
-  const input = Buffer.from(JSON.stringify(decamelizePlanOptions(options)));
+  const input = Buffer.from(JSON.stringify(await decamelizePlanOptions(options)));
   return String(await native.testsGraphMermaid(input));
 }
 
@@ -143,11 +156,16 @@ async function testsTargets(options) {
 }
 
 async function testsWhy(options) {
-  return camelizeWhy(await jsonApis.testsWhy(materializeWhyPlan(options)));
+  const { request, generatedDir } = await prepareWhyPlan(options);
+  try {
+    return camelizeWhy(await jsonApis.testsWhy(request));
+  } finally {
+    await removeGeneratedDir(generatedDir);
+  }
 }
 
 async function testsGraph(options) {
-  return camelizeValue(await jsonApis.testsGraph(decamelizePlanOptions(options)));
+  return camelizeValue(await jsonApis.testsGraph(await decamelizePlanOptions(options)));
 }
 
 module.exports = {
@@ -155,6 +173,8 @@ module.exports = {
   camelizeWhy,
   decamelizePlanOptions,
   materializeWhyPlan,
+  prepareWhyPlan,
+  removeGeneratedDir,
   testsComment,
   testsGraphMermaid,
   ...jsonApis,
