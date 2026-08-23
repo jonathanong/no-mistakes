@@ -49,6 +49,7 @@ rules:
 | [`nextjs-redirect-destinations`](nextjs-redirect-destinations.md)             | Require Next.js redirect/rewrite destinations to match App Router pages.        |
 | [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md)       | Ban empty/comment-only files.                                                   |
 | [`no-git-identity-mutation`](no-git-identity-mutation.md)                     | Ban scripts that mutate git identity.                                           |
+| [`no-mistakes-config`](no-mistakes-config.md)                                 | Lint `.no-mistakes.yml` paths, empty globs, and env-level `limit` with `direct`. |
 | [`no-raw-ephemeral-port`](no-raw-ephemeral-port.md)                           | Ban raw ephemeral port 0 binds and Node `listen(0)` calls.                      |
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |
 | [`package-json-required-fields`](package-json-required-fields.md)             | Require configured package.json field-shape policy.                             |
@@ -94,6 +95,7 @@ rules:
 | [`vitest-ci-path-coverage`](vitest-ci-path-coverage.md)                       | Require Vitest inputs to be covered by CI path filters.                         |
 | [`vitest-project-mapping`](vitest-project-mapping.md)                         | Require Vitest tests to map to exactly one project.                             |
 | [`vitest-test-correspondence`](vitest-test-correspondence.md)                 | Enforce source/test correspondence for Vitest.                                  |
+| [`workflow-topology-policy`](workflow-topology-policy.md)                     | Declarative GitHub Actions topology inventory, edges, and step order.           |
 | [`workspace-package-cycles`](workspace-package-cycles.md)                     | Prevent dependency cycles between workspace packages.                           |
 
 ## Suppression
