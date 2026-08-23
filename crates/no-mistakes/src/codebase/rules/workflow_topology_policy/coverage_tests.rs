@@ -1,41 +1,4 @@
-use super::*;
-use crate::config::v2::{
-    schema::{RuleDef, RuleScope},
-    NoMistakesConfig,
-};
-use std::path::{Path, PathBuf};
-
-fn fixture(name: &str) -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules/workflow-topology-policy/fixture")
-            .join(name),
-    )
-}
-
-fn topology_fixture(name: &str) -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/workflow-topology")
-            .join(name),
-    )
-}
-
-fn config(yaml: &str) -> NoMistakesConfig {
-    NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(yaml).unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    }
-}
-
-fn run(root: &Path, yaml: &str) -> Vec<RuleFinding> {
-    check_with_files(root, &config(yaml), &[]).unwrap()
-}
+use super::coverage_support::{fixture, run, topology_fixture};
 
 #[test]
 fn workflow_inventory_missing_when_actual_path_is_unlisted() {
@@ -97,74 +60,6 @@ stepOrders:
 }
 
 #[test]
-fn step_order_invalid_and_missing_by_each_selector() {
-    let findings = run(
-        &fixture("diamond"),
-        r#"
-stepOrders:
-  - jobId: ".github/workflows/pipeline.yml#a"
-    steps:
-      - id: second
-      - id: first
-  - jobId: ".github/workflows/pipeline.yml#a"
-    steps:
-      - {}
-      - {}
-  - jobId: ".github/workflows/pipeline.yml#a"
-    steps:
-      - id: missing-id
-  - jobId: ".github/workflows/pipeline.yml#a"
-    steps:
-      - name: Missing Name
-  - jobId: ".github/workflows/pipeline.yml#a"
-    steps:
-      - uses: actions/missing@v1
-"#,
-    );
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("required step order invalid")),
-        "{findings:?}"
-    );
-    assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("required ordered step missing")),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn artifact_edges_present_absent_and_wrong_match_kind() {
-    let findings = run(
-        &topology_fixture("artifact-basic"),
-        r#"
-requiredArtifactEdges:
-  - from: ".github/workflows/main.yml#first"
-    to: ".github/workflows/main.yml#exact"
-    name: build-linux
-  - from: ".github/workflows/main.yml#first"
-    to: ".github/workflows/main.yml#exact"
-    name: build-linux
-    match: exact
-  - from: ".github/workflows/main.yml#first"
-    to: ".github/workflows/main.yml#exact"
-    name: build-linux
-    match: nope
-  - from: ".github/workflows/main.yml#first"
-    to: ".github/workflows/main.yml#exact"
-    name: missing-artifact
-"#,
-    );
-    let missing: Vec<_> = findings
-        .iter()
-        .filter(|finding| finding.message.contains("required artifact edge missing"))
-        .collect();
-    assert_eq!(missing.len(), 2, "{findings:?}");
-}
-
-#[test]
 fn caller_allowlist_missing_and_mismatch() {
     let findings = run(
         &topology_fixture("reusable-calls"),
@@ -222,9 +117,9 @@ requiredDirectEdges:
 "#,
     );
     assert!(
-        findings.iter().any(|finding| finding
-            .message
-            .contains("required transitive edge missing")),
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("required transitive edge missing")),
         "{findings:?}"
     );
     assert!(
