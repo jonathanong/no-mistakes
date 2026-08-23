@@ -1,0 +1,3 @@
+{
+  "jsPlugins": [{ "specifier": "./plugins/nested-missing.js" }]
+}

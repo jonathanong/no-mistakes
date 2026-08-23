@@ -1,0 +1,12 @@
+{
+  // knip workspace globs
+  "workspaces": {
+    ".": {
+      "entry": ["src/root-missing.ts", "!src/generated.ts"]
+    },
+    "packages/app": {
+      "entry": "src/missing.ts",
+      "project": ["**/node_modules/**"]
+    }
+  }
+}

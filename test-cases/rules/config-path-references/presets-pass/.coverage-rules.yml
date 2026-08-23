@@ -1,0 +1,3 @@
+rules:
+  - paths: src/**/*.ts
+  - paths: "!src/generated.ts"

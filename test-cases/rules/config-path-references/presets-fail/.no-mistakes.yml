@@ -1,0 +1,11 @@
+rules:
+  - rule: config-path-references
+    scope: repository
+    options:
+      presets:
+        - oxlintrc
+        - knip
+        - dependabot
+        - sgconfig
+        - syncpack
+        - coverage-rules
