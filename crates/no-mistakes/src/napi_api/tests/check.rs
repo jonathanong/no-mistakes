@@ -525,7 +525,7 @@ fn check_json_enforces_exact_postgres_add_column_migration_allowlist() {
         finding["rule"] == "postgres-no-add-column"
             && finding["message"].as_str().is_some_and(|message| {
                 message.contains("stale postgres-no-add-column allowedMigrations entry")
-        })
+            })
     }));
 }
 
