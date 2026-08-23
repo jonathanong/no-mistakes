@@ -447,3 +447,31 @@ function Page() {
     let b_entry = collected.iter().find(|e| e.name == "b").expect("b entry");
     assert_eq!(b_entry.values, vec!["val-b"]);
 }
+
+#[test]
+fn collect_object_string_values_non_object_returns_empty() {
+    let source = r#"const x = 42;"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::VariableDeclaration(decl) = stmt {
+                for d in &decl.declarations {
+                    if let Some(init) = d.init.as_ref() {
+                        let values = super::super::collect::collect_object_string_values(init);
+                        assert!(values.is_empty());
+                    }
+                }
+            }
+        }
+    })
+    .unwrap();
+}
+
+#[test]
+fn collect_function_return_strings_from_exported_declaration() {
+    let source = r#"export function getSelector() { return 'exported'; }"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        let values = super::super::collect::collect_function_return_strings("getSelector", program);
+        assert_eq!(values, vec!["exported"]);
+    })
+    .unwrap();
+}

@@ -132,3 +132,21 @@ rules:
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "build/repository.patch");
 }
+
+#[test]
+fn invalid_glob_patterns_are_reported() {
+    let root = fixture_root("fail");
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+rules:
+  - rule: banned-paths
+    scope: repository
+    options:
+      bannedPaths:
+        - glob: "[a-"
+"#,
+    )
+    .unwrap();
+    let error = check_with_files(&root, &config, &[]).unwrap_err();
+    assert!(error.to_string().contains("invalid glob"), "{error:#}");
+}

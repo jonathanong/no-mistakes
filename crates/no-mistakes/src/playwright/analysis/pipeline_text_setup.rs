@@ -51,9 +51,10 @@ pub(crate) fn build_text_resolution_setup(
     if !has_eligible_text_locator {
         return Ok(empty_text_setup());
     }
-    super::pipeline_setup::validate_prepared_selector_source_errors(
+    let validated = super::pipeline_setup::validate_prepared_selector_source_errors(
         root, settings, facts, snapshot,
-    )?;
+    );
+    validated?;
     let app_text_targets =
         crate::perf_trace::trace("playwright.app_text_targets", || match facts {
             Some(facts) => facts.get_or_compute_app_text_targets(settings, &|| {
@@ -88,17 +89,21 @@ pub(crate) fn build_text_resolution_setup(
             route_import_candidate,
             &source_files.graph_files,
             snapshot,
-        )?;
+        );
+        let supplied_graph = supplied_graph?;
         let owned_graph = match supplied_graph {
             Some(_) => None,
-            None => Some(build_route_import_graph_from_snapshot(
-                root,
-                settings,
-                prepared_graph_facts,
-                graph_file_universe,
-                &source_files.graph_files,
-                snapshot,
-            )?),
+            None => {
+                let graph = build_route_import_graph_from_snapshot(
+                    root,
+                    settings,
+                    prepared_graph_facts,
+                    graph_file_universe,
+                    &source_files.graph_files,
+                    snapshot,
+                );
+                Some(graph?)
+            }
         };
         collect_route_reachable_files(
             root,

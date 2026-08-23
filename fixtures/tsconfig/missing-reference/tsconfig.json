@@ -1,0 +1,4 @@
+{
+  "files": ["src/entry.ts"],
+  "references": [{ "path": "./nope" }]
+}

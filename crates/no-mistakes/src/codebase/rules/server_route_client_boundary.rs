@@ -113,7 +113,8 @@ where
             config,
             rule,
             &mut inferred_roots,
-        )?;
+        );
+        let filter = filter?;
         let Some(route_globset) = route_globset_for_rule(config, rule) else {
             continue;
         };

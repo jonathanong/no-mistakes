@@ -120,7 +120,8 @@ fn check_rule_application(
         config,
         rule,
         &mut inferred_roots,
-    )?;
+    );
+    let source_filter = source_filter?;
     let mut findings = Vec::new();
     for root_str in &opts.roots {
         let Some(resolved_path) = resolve_root_path(root, root_str) else {

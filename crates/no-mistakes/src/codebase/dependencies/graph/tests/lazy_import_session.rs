@@ -95,9 +95,11 @@ fn lazy_import_session_does_not_parse_files_twice() {
                 },
                 &session,
             );
-        assert!(first
-            .iter()
-            .any(|entry| entry.node.as_file() == Some(reached.as_path())));
+        assert!(
+            first
+                .iter()
+                .any(|entry| entry.node.as_file() == Some(reached.as_path()))
+        );
 
         let first_work = observer.snapshot().work;
         let parse_files = first_work["parse.files"];
@@ -135,4 +137,36 @@ fn lazy_import_session_does_not_parse_files_twice() {
             "{work:#?}"
         );
     });
+}
+
+#[test]
+fn import_neighbors_report_source_store_read_failures() {
+    let missing = PathBuf::from("/missing-lazy-import.mts");
+    let tsconfig = TsConfig {
+        dir: PathBuf::from("/"),
+        paths: vec![],
+        paths_dir: PathBuf::from("/"),
+        base_url: None,
+    };
+    let graph_files = GraphFiles::from_parts(vec![], vec![], Vec::<PathBuf>::new(), vec![]);
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let context = TsFactContext::default();
+    let inventory =
+        crate::codebase::ts_source::FileInventory::from_paths(std::slice::from_ref(&missing));
+    let sources = crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(inventory));
+    let (neighbors, collected) = import_neighbors(
+        &missing,
+        &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
+        &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
+        &graph_files,
+        None,
+        LazyImportFacts::new(None, TsFactPlan::imports(), &context).with_source_store(&sources),
+        &session,
+    );
+    assert!(neighbors.is_empty());
+    assert!(
+        collected
+            .and_then(|facts| facts.parse_error)
+            .is_some_and(|error| error.contains("failed to read"))
+    );
 }

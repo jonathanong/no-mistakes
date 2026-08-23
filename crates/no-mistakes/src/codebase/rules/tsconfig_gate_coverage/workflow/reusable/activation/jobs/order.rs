@@ -183,7 +183,8 @@ impl JobScanner<'_, '_> {
                     &state.failed,
                     &state.known_executed,
                     &state.outputs,
-                )?;
+                );
+                let inputs = inputs?;
                 let dependencies = DependencyState::from_needs(job, &needs, &inputs, &state);
                 let decision = JobDecision::new(job, &job_id, &inputs, &dependencies, self);
                 let result =

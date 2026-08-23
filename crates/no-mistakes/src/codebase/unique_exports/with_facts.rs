@@ -106,7 +106,8 @@ fn analyze_project_roots_with_facts(
         defer_suppression,
         session.existing_sources_for(root).as_deref(),
         &remix_roots,
-    )?;
+    );
+    let source_files = source_files?;
     if let Some(catalog) = resolution.catalog {
         let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
             catalog,

@@ -70,7 +70,8 @@ fn prepare_tsconfig_catalog_with_framework_projects_and_cache(
         visible_paths,
         crate::codebase::test_filter::TestFileFilter::fallback_only(),
         std::sync::Arc::clone(workspace),
-    )?;
+    );
+    let preliminary_graph = preliminary_graph?;
     let (fact_plan, fact_context) = graph::ts_fact_plan_and_context_for_plan_with_prepared(
         root,
         build_plan,

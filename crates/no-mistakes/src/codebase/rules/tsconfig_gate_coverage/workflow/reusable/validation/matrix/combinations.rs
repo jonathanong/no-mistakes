@@ -68,20 +68,14 @@ fn static_matrix_combinations_for_mapping(
         mappings @ (StaticMappings::Static(_) | StaticMappings::Dynamic) => mappings,
         StaticMappings::Invalid => return None,
     };
-    let (axes, exclusions, includes) = match (axes, exclusions, includes) {
-        (
-            StaticMatrixAxes::Static(axes),
-            StaticMappings::Static(exclusions),
-            StaticMappings::Static(includes),
-        ) => (axes, exclusions, includes),
-        (StaticMatrixAxes::Dynamic, _, _)
-        | (_, StaticMappings::Dynamic, _)
-        | (_, _, StaticMappings::Dynamic) => {
-            return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
-        }
-        (StaticMatrixAxes::Invalid, _, _)
-        | (_, StaticMappings::Invalid, _)
-        | (_, _, StaticMappings::Invalid) => return None,
+    let StaticMatrixAxes::Static(axes) = axes else {
+        return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
+    };
+    let StaticMappings::Static(exclusions) = exclusions else {
+        return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
+    };
+    let StaticMappings::Static(includes) = includes else {
+        return Some(MatrixCombinations::Dynamic(vec![BTreeMap::new()]));
     };
     let mut originals = Vec::new();
     let mut assigned = BTreeMap::new();

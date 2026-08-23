@@ -84,7 +84,8 @@ fn report_json_with_cache(
             configured_html_id_selector: false,
         },
         &snapshot,
-    )?;
+    );
+    let analysis = analysis?;
     crate::ast::clear_request_parse_cache();
 
     match kind {

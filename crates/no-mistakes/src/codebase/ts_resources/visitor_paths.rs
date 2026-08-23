@@ -29,7 +29,7 @@ impl<'a> ResourceVisitor<'a> {
         let name = callee.name.as_str();
         (!self.is_shadowed(name)
             && (name == "URL" || matches!(self.binding(name), Some(Binding::UrlConstructor))))
-        .then(|| static_new_module_url(new))
+        .then_some(static_new_module_url(new))
         .flatten()
     }
 

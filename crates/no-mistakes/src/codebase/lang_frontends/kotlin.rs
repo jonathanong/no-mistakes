@@ -62,10 +62,11 @@ fn extract_package(source: &str) -> Option<String> {
 }
 
 fn primary_type(declarations: &[String], file_stem: Option<&str>) -> Option<String> {
-    file_stem
-        .filter(|stem| declarations.iter().any(|name| name == *stem))
-        .map(str::to_string)
-        .or_else(|| declarations.first().cloned())
+    if let Some(stem) = file_stem.filter(|stem| declarations.iter().any(|name| name == *stem)) {
+        Some(stem.to_string())
+    } else {
+        declarations.first().cloned()
+    }
 }
 
 fn extract_kotlin_imports(source: &str) -> Vec<String> {
@@ -73,8 +74,11 @@ fn extract_kotlin_imports(source: &str) -> Vec<String> {
         .captures_iter(source)
         .filter_map(|cap| {
             let path = cap.get(1)?.as_str();
-            (!path.ends_with(".*") && !path.ends_with('.') && !path.contains('*'))
-                .then(|| path.to_string())
+            if path.ends_with(".*") || path.ends_with('.') || path.contains('*') {
+                None
+            } else {
+                Some(path.to_string())
+            }
         })
         .collect();
     values.sort();

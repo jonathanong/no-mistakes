@@ -248,6 +248,32 @@ fn vitest_inline_setup_inheritance_resolves_static_config_extends() {
         .vitest_setup
         .iter()
         .any(|setup| setup.config_extends_provenance));
+
+    let member = projects
+        .iter()
+        .find(|project| project.policy_name.as_deref() == Some("merged-member"))
+        .unwrap();
+    assert_eq!(member.scope.as_deref(), Some("merged-root"));
+    assert!(member
+        .vitest_setup
+        .iter()
+        .any(|setup| setup.specifier.as_deref() == Some("./merged-setup.ts")));
+
+    for name in ["merged-spread", "merged-no-default"] {
+        let conservative = projects
+            .iter()
+            .find(|project| project.policy_name.as_deref() == Some(name))
+            .unwrap();
+        assert!(
+            conservative.vitest_setup.iter().any(|setup| {
+                setup
+                    .unresolved_config_extends
+                    .as_deref()
+                    .is_some_and(|specifier| specifier.contains("vite."))
+            }),
+            "{name}"
+        );
+    }
 }
 
 fn assert_merged_provenance(

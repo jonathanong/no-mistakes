@@ -99,7 +99,8 @@ fn check_fact_plan(
                 traversal.config(),
                 kind,
                 &parsed.categories,
-            )?;
+            );
+            let selection = selection?;
             graph.0.effect_calls = true;
             graph.0.function_calls = true;
             for function in crate::effects_query::selection_fact_functions(&selection) {

@@ -22,7 +22,7 @@ impl<'a> CatalogBuilder<'a> {
         workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
     ) -> Self {
         let root = normalize_path(root);
-        let root_real = real_path(&root).unwrap_or_else(|| root.clone());
+        let root_real = real_path(&root).unwrap_or(root.clone());
         let mut candidate_roots = if candidate_roots.is_empty() {
             vec![root.clone()]
         } else {
@@ -155,7 +155,7 @@ impl<'a> CatalogBuilder<'a> {
                 } else {
                     root.join("tsconfig.json")
                 };
-                self.is_visible(&config).then(|| normalize_path(&config))
+                self.is_visible(&config).then_some(normalize_path(&config))
             })
             .collect()
     }

@@ -32,6 +32,19 @@ fn primary_module_matches_underscored_file_stem() {
 }
 
 #[test]
+fn primary_module_falls_back_to_the_first_declaration() {
+    assert_eq!(
+        primary_module(&["MyApp.Fallback".into()], Some("other")).as_deref(),
+        Some("MyApp.Fallback")
+    );
+    assert_eq!(
+        primary_module(&["MyApp.Only".into()], None).as_deref(),
+        Some("MyApp.Only")
+    );
+    assert!(primary_module(&[], Some("missing")).is_none());
+}
+
+#[test]
 fn elixir_collects_aliases_and_phoenix_routes() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

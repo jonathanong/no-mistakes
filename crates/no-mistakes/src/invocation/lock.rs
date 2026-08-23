@@ -25,8 +25,8 @@ pub(super) fn lock_file_path(cargo_test_bin: bool) -> Result<PathBuf> {
         .context("could not determine the current user's invocation lock directory")?;
     let directory = project_dirs
         .runtime_dir()
-        .map(Path::to_path_buf)
-        .unwrap_or_else(|| project_dirs.cache_dir().to_path_buf());
+        .unwrap_or(project_dirs.cache_dir())
+        .to_path_buf();
     create_lock_directory(&directory)?;
     Ok(directory.join("invocation.lock"))
 }
@@ -123,9 +123,10 @@ fn report_lock_wait(path: &Path, elapsed: Duration, last_reported_secs: &mut Opt
         return;
     }
     *last_reported_secs = Some(secs);
-    let holder = read_holder_pid(path)
-        .map(|pid| format!("pid {pid}"))
-        .unwrap_or_else(|| "another no-mistakes invocation".to_string());
+    let holder = match read_holder_pid(path) {
+        Some(pid) => format!("pid {pid}"),
+        None => "another no-mistakes invocation".to_string(),
+    };
     eprintln!("waiting for lock held by {holder} for {secs}s");
 }
 

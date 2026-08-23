@@ -99,13 +99,9 @@ pub(crate) fn analyze_file_from_visible_with_facts(
         return Ok(cached_fetches.is_client);
     }
 
-    let facts = parsed_files.load_with_session(
-        session,
-        &abs_path,
-        root,
-        &mut cache.imports,
-        visible_files,
-    )?;
+    let facts =
+        parsed_files.load_with_session(session, &abs_path, root, &mut cache.imports, visible_files);
+    let facts = facts?;
     let is_client = !inherited_is_route_handler
         && !facts.has_use_server_directive
         && (inherited_is_client || facts.has_use_client_directive);

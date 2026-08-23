@@ -33,10 +33,10 @@ fn supplemental_report_roots_cannot_bridge_primary_check_traversals() {
     let counts = crate::ast::finish_parse_count(&root);
 
     assert_eq!(aggregate["reports"][0]["result"], standalone);
-    assert!(standalone["rules"].as_array().unwrap().iter().all(|finding| {
-        finding["rule"] != "forbidden-dependencies"
-            && finding["rule"] != "test-no-unmocked-dynamic-imports"
-    }));
+    for finding in standalone["rules"].as_array().unwrap() {
+        assert_ne!(finding["rule"], "forbidden-dependencies");
+        assert_ne!(finding["rule"], "test-no-unmocked-dynamic-imports");
+    }
     // The ignored file is parsed for its explicit report only; it must not
     // become an intermediate node in either check traversal.
     assert_eq!(counts.get(&root.join("ignored/bridge.ts")), Some(&1));

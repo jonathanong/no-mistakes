@@ -38,7 +38,8 @@ pub(crate) fn discover_playwright_test_files(
         &settings.playwright_configs,
         settings.project.as_deref(),
         Some(snapshot.source_store_for(root).as_ref()),
-    )?;
+    );
+    let playwright = playwright?;
     crate::perf_trace::trace("playwright.discover_test_files", || {
         discover_test_files_from_visible(root, settings, &playwright, snapshot)
     })

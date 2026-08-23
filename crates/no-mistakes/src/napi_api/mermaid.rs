@@ -16,7 +16,7 @@ pub(crate) fn validate_mermaid_markdown_json_impl(
         &options.content,
         options.file.as_deref(),
     );
-    serde_json::to_string(&result).map_err(|error| napi::Error::from_reason(error.to_string()))
+    Ok(serde_json::to_string(&result).expect("mermaid validation is JSON-serializable"))
 }
 
 #[cfg(test)]

@@ -20,7 +20,8 @@ fn collect_playwright_selector_edges_for_settings(
         settings,
         inputs.facts,
         inputs.snapshot,
-    )?;
+    );
+    let test_files = test_files?;
     let app_setup = crate::playwright::analysis::pipeline_setup::collect_app_selectors(
         root,
         settings,
@@ -28,11 +29,12 @@ fn collect_playwright_selector_edges_for_settings(
         inputs.facts,
         inputs.snapshot,
         Some(&selector_regexes),
-    )?;
+    );
+    let app_setup = app_setup?;
     let wrapper_resolution =
         selector_wrapper_resolution(root, settings, inputs.snapshot, inputs.route_import())?;
     let sources = inputs.snapshot.source_store_for(root);
-    let (prepared, demand) = crate::playwright::analysis::pipeline_occurrences::prepare_test_files(
+    let prepared_files = crate::playwright::analysis::pipeline_occurrences::prepare_test_files(
         test_files,
         settings,
         &selector_regexes,
@@ -45,7 +47,8 @@ fn collect_playwright_selector_edges_for_settings(
             module_resolution: wrapper_resolution.as_ref(),
             sources: Some(sources.as_ref()),
         },
-    )?;
+    );
+    let (prepared, demand) = prepared_files?;
     finish_selector_edges_for_settings(
         root,
         settings,
@@ -81,7 +84,8 @@ fn finish_selector_edges_for_settings(
         finish.demand.routes,
         inputs.facts,
         inputs.snapshot,
-    )?;
+    );
+    let routes = routes?;
     let route_idx = crate::playwright::analysis::routes_index::route_index(root, routes.as_slice());
     let app_selector_targets = crate::playwright::analysis::selectors_index::app_selector_targets(
         root,

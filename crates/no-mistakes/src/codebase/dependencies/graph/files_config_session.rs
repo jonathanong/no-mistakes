@@ -58,9 +58,8 @@ fn graph_config_options_for_plan_with_config_and_session(
     session: Option<&crate::codebase::analysis_session::AnalysisSession>,
     visible_paths: Option<&[PathBuf]>,
 ) -> Option<GraphConfigOptions> {
-    graph_plan_needs_config(plan)
-        .then(|| {
-            graph_config_options_with_config_and_session(root, config_path, session, visible_paths)
-        })
-        .flatten()
+    if !graph_plan_needs_config(plan) {
+        return None;
+    }
+    graph_config_options_with_config_and_session(root, config_path, session, visible_paths)
 }

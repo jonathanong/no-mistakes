@@ -143,7 +143,8 @@ pub(super) fn scan(inputs: ScanInputs<'_>) -> Result<Vec<RuleFinding>> {
             } else {
                 files
             },
-        )?;
+        );
+        let paths = paths?;
         let filters = mapped_filters(opts, &unit.project, &by_name);
         if filters.is_empty() {
             if !paths.is_empty() {

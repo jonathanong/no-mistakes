@@ -17,7 +17,8 @@ pub(super) fn for_request(
         root,
         visible,
         sources,
-    )?;
+    );
+    let tsconfig = tsconfig?;
     let catalog = crate::codebase::rules::run::prepared_tsconfig_catalog(
         root,
         tsconfig_path,

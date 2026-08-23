@@ -61,7 +61,8 @@ pub(crate) fn run(args: EffectsArgs) -> Result<ExitCode> {
         &entry,
         &categories,
         depth,
-    )?;
+    );
+    let report = report?;
     match effective_format {
         Format::Json => {
             println!(

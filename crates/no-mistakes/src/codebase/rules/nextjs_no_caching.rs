@@ -67,7 +67,8 @@ fn check_with_optional_inferred(
             config,
             rule,
             &mut inferred_roots,
-        )?;
+        );
+        let filter = filter?;
         for path in shared.files() {
             let Some(facts) = shared.ts.get(path) else {
                 continue;
@@ -120,7 +121,8 @@ fn check_files(
             config,
             rule,
             &mut inferred_roots,
-        )?;
+        );
+        let filter = filter?;
         findings.extend(
             files
                 .par_iter()

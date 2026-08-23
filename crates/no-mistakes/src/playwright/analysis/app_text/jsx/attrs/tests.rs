@@ -113,4 +113,72 @@ fn jsx_attr_helpers_cover_static_dynamic_and_ts_wrapped_values() {
     assert_eq!(snapshots["size-dynamic"].size, None);
     assert_eq!(snapshots["size-negative"].size, None);
     assert_eq!(snapshots["size-element"].size, None);
+    assert!(!snapshots["label-jsx-child"].label_exists);
+    assert_eq!(snapshots["aria-jsx-child"].aria_hidden, None);
+    assert_eq!(snapshots["size-jsx-child"].size, None);
+    assert!(snapshots["label-spread"].label_exists);
+}
+
+#[test]
+fn selector_refs_skip_non_string_jsx_expressions_and_keep_as_strings() {
+    let source = r#"export const Page = () => <div data-pw={true} data-el=<span /> data-frag=<></> data-ok={"hit" as const} data-none={1 as any} />; "#;
+    crate::playwright::ast::with_program(Path::new("fixture.tsx"), source, |program, source| {
+        let mut refs = Vec::new();
+        struct Collector<'a, 'b> {
+            source: &'a str,
+            refs: &'b mut Vec<crate::playwright::analysis::types::SelectorRef>,
+        }
+        impl<'a> Visit<'a> for Collector<'a, '_> {
+            fn visit_jsx_opening_element(&mut self, opening: &JSXOpeningElement<'a>) {
+                let refs = super::super::selector_refs(
+                    opening,
+                    self.source,
+                    &crate::playwright::config::Settings {
+                        frontend_root: ".".into(),
+                        playwright_configs: vec![],
+                        project: None,
+                        test_include: vec![],
+                        test_exclude: vec![],
+                        ignore_routes: vec![],
+                        rewrites: vec![],
+                        navigation_helpers: vec![],
+                        selector_wrappers: vec![],
+                        selector_attributes: vec![
+                            "data-pw".into(),
+                            "data-ok".into(),
+                            "data-none".into(),
+                            "data-el".into(),
+                            "data-frag".into(),
+                        ],
+                        test_id_attribute_override: None,
+                        component_selector_attributes: BTreeMap::new(),
+                        html_ids: false,
+                        selector_roots: vec![],
+                        selector_include: vec![],
+                        selector_exclude: vec![],
+                    },
+                    &[],
+                );
+                if !refs.is_empty() {
+                    *self.refs = refs;
+                }
+                walk::walk_jsx_opening_element(self, opening);
+            }
+        }
+        Collector {
+            source,
+            refs: &mut refs,
+        }
+        .visit_program(program);
+        assert!(
+            refs.iter().any(|selector| selector.value == "hit"),
+            "{refs:#?}"
+        );
+        assert!(refs.iter().all(|selector| selector.value != "true"));
+        assert!(refs.iter().all(|selector| selector.attribute != "data-el"));
+        assert!(refs
+            .iter()
+            .all(|selector| selector.attribute != "data-frag"));
+    })
+    .expect("fixture parses");
 }

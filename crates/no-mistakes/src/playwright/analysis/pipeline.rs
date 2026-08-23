@@ -69,7 +69,8 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         facts,
         snapshot,
         Some(&selector_regexes),
-    )?;
+    );
+    let app_selector_setup = app_selector_setup?;
     let wrapper_resolution = if settings.selector_wrappers.is_empty() {
         None
     } else {
@@ -77,9 +78,13 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         let sources = snapshot.source_store_for(root);
         let tsconfig = match route_import_candidate {
             Some((_, tsconfig)) => tsconfig.clone(),
-            None => crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
-                None, root, &paths, &sources,
-            )?,
+            None => {
+                let resolved =
+                    crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
+                        None, root, &paths, &sources,
+                    );
+                resolved?
+            }
         };
         let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
             .unwrap_or_default();
@@ -154,7 +159,8 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
                 )
             },
         },
-    )?;
+    );
+    let text_setup = text_setup?;
     let text_context = text_setup
         .has_matching_text_candidate
         .then_some(TextEdgeContext {

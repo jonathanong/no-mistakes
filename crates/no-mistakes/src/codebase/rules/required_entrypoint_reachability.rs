@@ -43,7 +43,8 @@ pub(crate) fn check_with_graph_and_inferred(
             config,
             rule,
             &mut inferred_roots,
-        )?;
+        );
+        let source_filter = source_filter?;
         let scoped_files = files
             .iter()
             .filter(|path| source_filter.is_match(path))

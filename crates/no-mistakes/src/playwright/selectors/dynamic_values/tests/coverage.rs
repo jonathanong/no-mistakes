@@ -437,3 +437,24 @@ fn collect_assignments_non_assign_operator() {
     })
     .unwrap();
 }
+
+#[test]
+fn collect_assignments_from_stmt_ignores_if_statements() {
+    let source = r#"function f() { if (true) { x = 'val'; } }"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::FunctionDeclaration(f) = stmt {
+                if let Some(body) = &f.body {
+                    for s in &body.statements {
+                        let mut collected: Vec<(String, String)> = Vec::new();
+                        collect_assignments_from_stmt(s, &mut |name, value| {
+                            collected.push((name.to_string(), value.to_string()));
+                        });
+                        assert!(collected.is_empty());
+                    }
+                }
+            }
+        }
+    })
+    .unwrap();
+}

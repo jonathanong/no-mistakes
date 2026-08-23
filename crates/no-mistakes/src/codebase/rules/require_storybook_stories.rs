@@ -150,7 +150,8 @@ fn tsconfig_catalog(
             Some(&path),
             root,
             visible_paths,
-        )?;
+        );
+        let tsconfig = tsconfig?;
         return Ok(crate::codebase::ts_resolver::TsConfigCatalog::forced(
             root,
             tsconfig,

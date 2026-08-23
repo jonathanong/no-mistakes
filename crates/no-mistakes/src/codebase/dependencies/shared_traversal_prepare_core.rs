@@ -93,7 +93,8 @@ impl SharedTraversalContext {
             dataset.visible_paths(),
             test_filter.clone(),
             workspace,
-        )?;
+        );
+        let prepared_graph = prepared_graph?;
         let (fact_plan, mut fact_context) = graph::ts_fact_plan_and_context_for_plan_with_prepared(
             &root,
             build_plan,

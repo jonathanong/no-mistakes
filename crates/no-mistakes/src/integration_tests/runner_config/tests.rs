@@ -318,3 +318,107 @@ fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
         .to_string()
         .contains("missing prepared vitest config"));
 }
+
+#[test]
+fn prepared_runner_source_store_read_failures_surface() {
+    let root = fixture_root("parse-errors");
+    let dir_path = root.join("src");
+    let inventory =
+        crate::codebase::ts_source::FileInventory::from_paths(std::slice::from_ref(&dir_path));
+    let sources = Arc::new(crate::codebase::ts_source::SourceStore::new(Arc::new(
+        inventory,
+    )));
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("src".to_string()));
+    config
+        .tests
+        .vitest
+        .projects
+        .insert("unit".to_string(), integration_policy());
+    let visible_paths = vec![dir_path.clone()];
+    let tsconfig_catalog = Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+        &root,
+        std::slice::from_ref(&root),
+        &visible_paths,
+    ));
+    let prepared = super::prepare_with_catalog_and_sources(
+        &root,
+        &config,
+        &visible_paths,
+        tsconfig_catalog,
+        sources,
+    );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let facts = prepared
+        .parse_path_for_facts_with_session(&session, &dir_path)
+        .expect("the directory exists so parse_path should run");
+    assert!(facts.results[0].projects.is_err());
+    assert!(prepared.parse_all().is_err());
+}
+
+#[test]
+fn configured_runner_config_dirs_use_each_config_parent() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("apps/web/vitest.config.ts".into()));
+    config.tests.playwright.configs = Some(StringOrList::One("playwright.config.ts".into()));
+    let dirs = super::configured_runner_config_dirs(Path::new("/repo"), &config);
+    assert_eq!(dirs.len(), 2);
+
+    config.tests.vitest.configs = Some(StringOrList::One("/".into()));
+    let dirs = super::configured_runner_config_dirs(Path::new("/repo"), &config);
+    assert!(dirs.iter().all(|dir| dir.as_os_str() != "/"));
+}
+
+#[test]
+fn prepare_runner_configs_with_catalog_seeds_configured_specs() {
+    let root = fixture_root("basic");
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("vitest.config.mts".to_string()));
+    config
+        .tests
+        .vitest
+        .projects
+        .insert("unit".to_string(), integration_policy());
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let tsconfig_catalog = Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+        &root,
+        std::slice::from_ref(&root),
+        &visible_paths,
+    ));
+    let inventory = Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
+        &visible_paths,
+    ));
+    let sources = Arc::new(crate::codebase::ts_source::SourceStore::new(inventory));
+    let prepared = super::prepare_runner_configs_with_catalog(
+        &root,
+        &config,
+        &visible_paths,
+        tsconfig_catalog,
+        sources,
+    );
+    assert_eq!(prepared.specs.len(), 1);
+    assert!(prepared.contains(&root.join("vitest.config.mts")));
+}
+
+#[test]
+fn parse_program_and_session_facts_ignore_paths_that_were_not_prepared() {
+    let root = fixture_root("basic");
+    let prepared = prepare_vitest(&root, StringOrList::One("vitest.config.mts".into()));
+    let path = root.join("vitest.config.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let other = root.join("missing.config.ts");
+    let facts = crate::ast::with_program(&path, &source, |program, source| {
+        prepared.parse_program(&other, program, source)
+    })
+    .unwrap();
+    assert!(facts.is_none());
+    assert!(prepared
+        .paths()
+        .any(|path| path.ends_with("vitest.config.mts")));
+    assert!(prepared
+        .parse_path_for_facts_with_session(
+            &crate::codebase::analysis_session::AnalysisSession::disabled(),
+            &other,
+        )
+        .is_none());
+}

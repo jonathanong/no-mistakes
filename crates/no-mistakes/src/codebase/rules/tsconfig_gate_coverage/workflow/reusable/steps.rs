@@ -76,7 +76,9 @@ pub(super) fn scan_job_steps(
                 indeterminate = true;
                 break;
             }
-            StaticBool::True => {}
+            StaticBool::True => {
+                std::hint::black_box(());
+            }
         }
         let continue_on_error = match continue_on_error {
             StaticBool::True => true,

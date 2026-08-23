@@ -172,6 +172,8 @@ where
                 }
             }
         }
-        _ => {}
+        _ => {
+            std::hint::black_box(());
+        }
     }
 }

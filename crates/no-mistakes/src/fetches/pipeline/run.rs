@@ -69,7 +69,7 @@ pub(crate) fn run_with_base_root_and_session(
         let virtual_routes = routes::rewrites::expand_rewrites(&app.rewrites, &all_routes);
         all_routes.extend(virtual_routes);
 
-        let (app_reports, app_matched_targets) = analyze_routes(
+        let analyzed = analyze_routes(
             all_routes,
             AnalyzeRoutesContext {
                 target_specs: &target_specs,
@@ -80,7 +80,8 @@ pub(crate) fn run_with_base_root_and_session(
                 parsed_files: &mut parsed_files,
                 visible_files: &visible_files,
             },
-        )?;
+        );
+        let (app_reports, app_matched_targets) = analyzed?;
         reports.extend(app_reports);
         matched_targets.extend(app_matched_targets);
     }

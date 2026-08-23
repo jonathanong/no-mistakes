@@ -77,7 +77,8 @@ fn test_impact(
             session: &target.session,
             ordinary_graph_files: &ordinary_reverse.graph_files,
         },
-    )?;
+    );
+    let prepared_impact = prepared_impact?;
     let (impact_graph, facts) = prepared_impact.into_parts();
     let plan = generate_impact_plan_with_prepared(
         &ImpactArgs {
@@ -95,7 +96,8 @@ fn test_impact(
         &target.root,
         &config,
         impact_graph,
-    )?;
+    );
+    let plan = plan?;
     // The impact planner consumes its graph. Build the ordinary projection
     // afterwards so the large graph and SymbolIndex are not live together.
     let ordinary_index = build_reverse_index_from_prepared(target, ordinary_reverse, &facts);

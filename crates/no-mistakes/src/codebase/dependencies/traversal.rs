@@ -62,7 +62,8 @@ pub(super) fn dependents_entries(
             ctx.tsconfig,
             ctx.build_plan,
             ctx.graph_files,
-        )?;
+        );
+        let graph = graph?;
         let roots =
             roots_with_existing_queue_jobs(roots, entrypoints, &graph, &PathInterner::new());
         let roots = roots_with_exported_symbol_roots(&roots, &graph);

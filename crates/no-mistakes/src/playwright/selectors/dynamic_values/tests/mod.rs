@@ -164,6 +164,24 @@ fn collect_object_string_values_basic() {
 }
 
 #[test]
+fn collect_object_string_values_skips_spread_properties() {
+    let source = r#"const x = { ...extra, a: 'val-static' };"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::VariableDeclaration(decl) = stmt {
+                for d in &decl.declarations {
+                    if let Some(init) = d.init.as_ref() {
+                        let values = collect_object_string_values(init);
+                        assert_eq!(values, vec!["val-static"]);
+                    }
+                }
+            }
+        }
+    })
+    .unwrap();
+}
+
+#[test]
 fn collect_object_string_values_skips_computed() {
     let source = r#"const x = { [key]: 'val-computed', a: 'val-static' };"#;
     ast::with_program(Path::new("fixture.tsx"), source, |program, _| {

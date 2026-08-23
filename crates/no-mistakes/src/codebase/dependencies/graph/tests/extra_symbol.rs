@@ -45,6 +45,18 @@ fn graph_private_helpers_cover_noop_branches() {
     );
     assert!(forward.is_empty());
     assert!(reverse.is_empty());
+
+    let worker = p("/src/worker.mts");
+    let processor = p("/src/processor.mts");
+    test_support::add_distinct_worker_file_edges(
+        &mut forward,
+        &mut reverse,
+        &worker,
+        &processor,
+        &queue_job,
+    );
+    assert!(!forward.is_empty());
+    assert!(!reverse.is_empty());
 }
 
 #[test]

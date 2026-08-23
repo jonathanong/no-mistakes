@@ -164,6 +164,27 @@ fn route_import_resolution_tolerates_missing_source_directories() {
     );
 }
 
+#[test]
+fn route_import_resolution_source_joins_a_canonical_parent_or_keeps_dotdot() {
+    let mut dirs = std::collections::BTreeMap::new();
+    dirs.insert(PathBuf::from("foo"), PathBuf::from("/canonical"));
+    assert_eq!(
+        route_import_resolution_source(Path::new("foo/bar.ts"), &dirs),
+        PathBuf::from("/canonical/bar.ts")
+    );
+    assert_eq!(
+        route_import_resolution_source(Path::new("foo/.."), &dirs),
+        PathBuf::from("foo/..")
+    );
+    let graph_files = GraphFiles::from_files(vec![PathBuf::from("..")]);
+    assert!(route_import_visible_target(
+        PathBuf::from("/missing-target.ts"),
+        &graph_files,
+        &Default::default(),
+    )
+    .is_none());
+}
+
 #[cfg(unix)]
 #[test]
 fn route_import_resolution_tolerates_broken_source_symlink() {

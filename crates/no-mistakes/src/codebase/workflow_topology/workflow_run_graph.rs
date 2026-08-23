@@ -127,3 +127,6 @@ fn json_string_list(value: Option<&OrderedJson>) -> Vec<String> {
         _ => Vec::new(),
     }
 }
+
+#[cfg(test)]
+mod tests;

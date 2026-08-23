@@ -65,11 +65,7 @@ pub(super) fn ci_filters_from_parsed_with_sources(
     let mut findings = Vec::new();
     for document in &parsed.documents {
         let rel = &document.path;
-        if !selectors.is_empty()
-            && !selectors
-                .iter()
-                .any(|selector| selector.path.is_empty() || selector.path == *rel)
-        {
+        if !selector_allows(selectors, rel) {
             continue;
         }
         let value = match &document.value {
@@ -92,7 +88,7 @@ pub(super) fn ci_filters_from_parsed_with_sources(
         filters.extend(workflow_filters);
         findings.extend(workflow_findings);
     }
-    filters.sort_by(|a, b| (&a.workflow, &a.name).cmp(&(&b.workflow, &b.name)));
+    sort_filters(&mut filters);
     (filters, findings)
 }
 
@@ -106,11 +102,7 @@ fn ci_filters_from_paths(
     let mut findings = Vec::new();
     for path in workflow_files {
         let rel = crate::codebase::ci_graph::relative_slash(root, &path);
-        if !selectors.is_empty()
-            && !selectors
-                .iter()
-                .any(|selector| selector.path.is_empty() || selector.path == rel)
-        {
+        if !selector_allows(selectors, &rel) {
             continue;
         }
         let source = match sources.read_path(&path) {
@@ -129,8 +121,24 @@ fn ci_filters_from_paths(
         filters.extend(workflow_filters);
         findings.extend(workflow_findings);
     }
-    filters.sort_by(|a, b| (&a.workflow, &a.name).cmp(&(&b.workflow, &b.name)));
+    sort_filters(&mut filters);
     (filters, findings)
+}
+
+fn selector_allows(selectors: &[WorkflowSelector], rel: &str) -> bool {
+    if selectors.is_empty() {
+        return true;
+    }
+    for selector in selectors {
+        if selector.path.is_empty() || selector.path == rel {
+            return true;
+        }
+    }
+    false
+}
+
+fn sort_filters(filters: &mut [CiFilter]) {
+    filters.sort_by(|a, b| (&a.workflow, &a.name).cmp(&(&b.workflow, &b.name)));
 }
 
 pub(super) fn workflow_finding(file: &str, message: String, target: Option<String>) -> RuleFinding {

@@ -6,7 +6,8 @@
 use std::io::Read;
 use std::sync::mpsc::SyncSender;
 
-pub(super) fn read_chunks(mut pipe: impl Read, tx: SyncSender<std::io::Result<Vec<u8>>>) {
+#[inline(never)]
+pub(super) fn read_chunks(pipe: &mut dyn Read, tx: SyncSender<std::io::Result<Vec<u8>>>) {
     let mut buf = vec![0u8; super::CHUNK_BYTES];
     loop {
         match pipe.read(&mut buf) {
@@ -24,34 +25,38 @@ pub(super) fn read_chunks(mut pipe: impl Read, tx: SyncSender<std::io::Result<Ve
     }
 }
 
-pub(super) fn read_bounded(mut pipe: impl Read, cap: usize) -> Vec<u8> {
+#[inline(never)]
+pub(super) fn read_bounded(pipe: &mut dyn Read, cap: usize) -> Vec<u8> {
     let mut buf = [0u8; super::CHUNK_BYTES];
     let mut collected = Vec::new();
     loop {
         match pipe.read(&mut buf) {
             Ok(0) => break,
-            Ok(n) if collected.len() < cap => {
-                let take = (cap - collected.len()).min(n);
-                collected.extend_from_slice(&buf[..take]);
-            }
-            Ok(_) => {} // already at cap; keep draining so the pipe can't back up
             Err(_) => break,
+            Ok(n) => {
+                if collected.len() < cap {
+                    let take = (cap - collected.len()).min(n);
+                    collected.extend_from_slice(&buf[..take]);
+                }
+            }
         }
     }
     collected
 }
 
+#[inline(never)]
 pub(super) fn line_too_long(max_line_bytes: usize) -> std::io::Error {
-    std::io::Error::new(
-        std::io::ErrorKind::InvalidData,
-        format!(
-            "git diff line exceeds {max_line_bytes} bytes without a newline; \
-             malformed or pathological unified diff"
-        ),
-    )
+    let mut message = String::from("git diff line exceeds ");
+    message.push_str(&max_line_bytes.to_string());
+    message.push_str(" bytes without a newline; malformed or pathological unified diff");
+    std::io::Error::new(std::io::ErrorKind::InvalidData, message)
 }
 
+#[inline(never)]
 pub(super) fn decode_line(line: &[u8]) -> std::borrow::Cow<'_, str> {
     let line = line.strip_suffix(b"\r").unwrap_or(line);
     String::from_utf8_lossy(line)
 }
+
+#[cfg(test)]
+mod tests;

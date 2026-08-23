@@ -19,6 +19,8 @@ use serde_yaml::Value;
 use std::collections::HashMap;
 
 mod char_scan;
+#[cfg(test)]
+mod char_scan_tests;
 mod context_references;
 mod reference_scan;
 
