@@ -17,6 +17,9 @@ env:
   CARGO_TERM_COLOR: always
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
   RUSTFLAGS: "-D warnings"
+  # cargo llvm-cov fail-under percentages. Keep codecov.yml rust `target` in sync.
+  RUST_COVERAGE_FAIL_UNDER_LINES: "99"
+  RUST_COVERAGE_FAIL_UNDER_FUNCTIONS: "99"
 
 jobs:
   changes:
@@ -326,7 +329,8 @@ jobs:
           # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
           cargo llvm-cov report \
-            --fail-under-lines 99.5 --fail-under-functions 99.5
+            --fail-under-lines "${RUST_COVERAGE_FAIL_UNDER_LINES}" \
+            --fail-under-functions "${RUST_COVERAGE_FAIL_UNDER_FUNCTIONS}"
 
       - name: Show Rust coverage table (debug)
         if: ${{ failure() && steps.rust-coverage.outcome == 'failure' }}
