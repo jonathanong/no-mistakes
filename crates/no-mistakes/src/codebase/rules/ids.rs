@@ -28,6 +28,7 @@ pub use super::no_empty_or_comments_only_files::RULE_ID as NO_EMPTY_OR_COMMENTS_
 pub use super::no_git_identity_mutation::RULE_ID as NO_GIT_IDENTITY_MUTATION;
 pub use super::no_mistakes_config::RULE_ID as NO_MISTAKES_CONFIG;
 pub use super::no_raw_ephemeral_port::RULE_ID as NO_RAW_EPHEMERAL_PORT;
+pub use super::package_json_nested_workspace_coverage::RULE_ID as PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE;
 pub use super::package_json_registry_only::RULE_ID as PACKAGE_JSON_REGISTRY_ONLY;
 pub use super::package_json_required_fields::RULE_ID as PACKAGE_JSON_REQUIRED_FIELDS;
 pub use super::package_json_workspace_coverage::RULE_ID as PACKAGE_JSON_WORKSPACE_COVERAGE;

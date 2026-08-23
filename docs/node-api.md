@@ -275,7 +275,9 @@ callSites: [{ callKind, line }] }` for literal runtime filesystem edges or
 edges.
 
 `check(options)` returns the same structured check report as CLI JSON,
-including `warnings: string[]` for configured checks that could not run.
+including configured filesystem rules such as
+`package-json-nested-workspace-coverage`, and `warnings: string[]` for checks
+that could not run.
 
 `resolveConfig(options)` returns the same JSON as `config resolve`: frontend
 apps, Playwright coverage gates, effective per-app `rewrites`/`ignoreRoutes`,

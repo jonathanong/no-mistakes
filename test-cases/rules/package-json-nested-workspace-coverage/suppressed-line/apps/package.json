@@ -1,0 +1,5 @@
+{
+"name":"app",
+"// no-mistakes-disable-next-line package-json-nested-workspace-coverage":"intentional",
+"workspaces":[]
+}

@@ -1,0 +1,6 @@
+rules:
+  - rule: package-json-nested-workspace-coverage
+    scope: repository
+    options:
+      roots: [apps]
+      dependencyNamePrefixes: ['@shared/']

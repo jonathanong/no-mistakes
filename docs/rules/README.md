@@ -53,6 +53,7 @@ rules:
 | [`no-mistakes-config`](no-mistakes-config.md)                                 | Lint `.no-mistakes.yml` paths, empty globs, and env-level `limit` with `direct`. |
 | [`no-raw-ephemeral-port`](no-raw-ephemeral-port.md)                           | Ban raw ephemeral port 0 binds and Node `listen(0)` calls.                      |
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |
+| [`package-json-nested-workspace-coverage`](package-json-nested-workspace-coverage.md) | Require nested workspace entries to exactly cover configured dependency packages. |
 | [`package-json-required-fields`](package-json-required-fields.md)             | Require configured package.json field-shape policy.                             |
 | [`package-json-workspace-coverage`](package-json-workspace-coverage.md)       | Require package directories to be covered by workspace config.                  |
 | [`pnpm-overrides-ban`](pnpm-overrides-ban.md)                                 | Ban pnpm dependency version overrides; keep packageExtensions.                  |
