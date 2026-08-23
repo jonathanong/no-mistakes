@@ -447,7 +447,16 @@ jobs:
           elif [ "$(git log -1 --format=%s)" = "$release_subject" ] && [ "$(git rev-parse HEAD^)" = "$base_sha" ]; then
             echo "Release commit v$version is already applied to main; continuing."
           else
-            echo "::error::main moved from $base_sha to $current_sha while this release was running. Re-run the release workflow from current main." >&2
+            echo "main moved from $base_sha to $current_sha; attempting to apply the release patch onto current main."
+            if ! git am prepared-release/release.patch; then
+              git am --abort >/dev/null 2>&1 || true
+              echo "::error::main moved from $base_sha to $current_sha while this release was running. Re-run the release workflow from current main." >&2
+              exit 1
+            fi
+          fi
+          if ! git pull --rebase origin main; then
+            echo "::error::Rebase of the release commit onto origin/main failed. Re-run the release workflow from current main." >&2
+            git rebase --abort >/dev/null 2>&1 || true
             exit 1
           fi
           release_sha="$(git rev-parse HEAD)"
