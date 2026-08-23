@@ -68,11 +68,7 @@ pub(super) fn statement_has_offset(statement: &Statement) -> bool {
             source: CopySource::Query(query),
             ..
         } => query_has_offset(query),
-        Statement::Explain {
-            analyze: true,
-            statement,
-            ..
-        } => statement_has_offset(statement),
+        Statement::Explain { statement, .. } => statement_has_offset(statement),
         _ => false,
     }
 }
