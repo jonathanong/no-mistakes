@@ -3,30 +3,46 @@ use no_mistakes::codebase::test_discovery::TestExecutionTarget;
 use std::collections::BTreeMap;
 
 impl TestPlan {
-    pub(crate) fn finish(&mut self, include_comment: bool) {
-        self.execution_targets = grouped_execution_targets(&self.selected_tests);
+    pub(crate) fn finish(&mut self, include_comment: bool, prefixes: &[String]) {
+        self.execution_targets = grouped_execution_targets(&self.selected_tests, prefixes);
         if include_comment {
             self.comment = Some(super::comment::render_markdown_plan(self));
         }
     }
 }
 
-type ExecutionGroupKey = (String, Option<String>, Option<String>, Vec<String>);
+type ExecutionGroupKey = (
+    String,
+    Option<String>,
+    Option<String>,
+    Vec<String>,
+    Option<String>,
+);
 
-fn grouped_execution_targets(selected: &[super::SelectedTest]) -> Vec<GroupedExecutionTarget> {
+fn grouped_execution_targets(
+    selected: &[super::SelectedTest],
+    prefixes: &[String],
+) -> Vec<GroupedExecutionTarget> {
     let mut groups: BTreeMap<ExecutionGroupKey, GroupedExecutionTarget> = BTreeMap::new();
     for test in selected {
         for target in &test.targets {
+            let name = if target.runner == "swift" {
+                prefix_name(&test.test_file, prefixes)
+            } else {
+                None
+            };
             let key = (
                 target.runner.clone(),
                 target.config.clone(),
                 target.project.clone(),
                 target.base_command.clone(),
+                name.clone(),
             );
             let group = groups.entry(key).or_insert_with(|| GroupedExecutionTarget {
                 runner: target.runner.clone(),
                 config: target.config.clone(),
                 project: target.project.clone(),
+                name,
                 base_command: target.base_command.clone(),
                 runner_args: runner_args_without_file(target, &test.test_file),
                 test_files: Vec::new(),
@@ -37,6 +53,16 @@ fn grouped_execution_targets(selected: &[super::SelectedTest]) -> Vec<GroupedExe
         }
     }
     groups.into_values().collect()
+}
+
+fn prefix_name(file: &str, prefixes: &[String]) -> Option<String> {
+    prefixes
+        .iter()
+        .map(|prefix| prefix.trim_end_matches('/'))
+        .filter(|prefix| !prefix.is_empty())
+        .filter(|prefix| file == *prefix || file.starts_with(&format!("{prefix}/")))
+        .max_by_key(|prefix| prefix.len())
+        .map(str::to_string)
 }
 
 fn runner_args_without_file(target: &TestExecutionTarget, test_file: &str) -> Vec<String> {

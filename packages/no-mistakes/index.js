@@ -59,13 +59,48 @@ const jsonApis = createJsonApis({
   symbols: "symbolsJson",
 });
 
+const PLAN_INPUT_REPORTS = new Set(["testsComment", "testsGraph", "testsGraphMermaid"]);
+const CAMELIZE_REPORTS = new Set(["testsPlan", "testsImpact", "testsTargets", "testsGraph"]);
+
+async function analyzeProject(options = {}) {
+  const request = { ...options };
+  const generatedDirs = [];
+  try {
+    if (Array.isArray(request.reports)) {
+      request.reports = await Promise.all(
+        request.reports.map(async (report) => {
+          if (report.type === "testsWhy") {
+            const prepared = await planning.prepareWhyPlan(report);
+            if (prepared.generatedDir) generatedDirs.push(prepared.generatedDir);
+            return prepared.request;
+          }
+          return PLAN_INPUT_REPORTS.has(report.type)
+            ? await planning.decamelizePlanOptions(report)
+            : report;
+        }),
+      );
+    }
+    const result = await jsonApis.analyzeProject(request);
+    for (const report of result.reports || []) {
+      if (report.type === "testsWhy") {
+        report.result = planning.camelizeWhy(report.result);
+      } else if (CAMELIZE_REPORTS.has(report.type)) {
+        report.result = planning.camelizeValue(report.result);
+      }
+    }
+    return result;
+  } finally {
+    await Promise.all(generatedDirs.map((dir) => planning.removeGeneratedDir(dir)));
+  }
+}
+
 async function version() {
   return native.version();
 }
 
 module.exports.createWorkflowTopologyIndex = createWorkflowTopologyIndex;
 module.exports.version = version;
-module.exports.analyzeProject = jsonApis.analyzeProject;
+module.exports.analyzeProject = analyzeProject;
 module.exports.callSites = jsonApis.callSites;
 module.exports.check = jsonApis.check;
 module.exports.resolveConfig = jsonApis.resolveConfig;

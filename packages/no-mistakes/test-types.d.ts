@@ -43,6 +43,8 @@ interface TestsPlanOptionsBase {
   globalConfigFallback?: boolean;
   /** Include the markdown PR comment as `comment` on the returned plan. */
   includeComment?: boolean;
+  /** Keep only selected tests whose relative path matches one of these globs. */
+  includeGlob?: string[];
 }
 
 /**
@@ -92,18 +94,12 @@ export interface TestsTargetsOptions {
 
 export interface TestPlan {
   /** Complete deterministic changed-file inventory, relative to the request root. */
-  changed_files: string[];
-  /** @deprecated Prefer `changedFiles` once both keys are present. */
-  changedFiles?: string[];
-  selected_tests: SelectedTest[];
-  selectedTests?: SelectedTest[];
+  changedFiles: string[];
+  selectedTests: SelectedTest[];
   groups?: TestPlanGroup[];
   warnings: TestPlanWarning[];
-  fallback_triggered: boolean;
-  fallbackTriggered?: boolean;
-  fallback_reason?: string | null;
+  fallbackTriggered: boolean;
   fallbackReason?: string | null;
-  execution_targets?: GroupedExecutionTarget[];
   executionTargets?: GroupedExecutionTarget[];
   comment?: string | null;
 }
@@ -112,16 +108,15 @@ export interface GroupedExecutionTarget {
   runner: TestPlanFramework;
   config?: string | null;
   project?: string | null;
-  baseCommand?: string[];
-  base_command: string[];
-  runnerArgs?: string[];
-  runner_args: string[];
-  testFiles?: string[];
-  test_files: string[];
+  /** Path-prefix display name, such as a Swift package root. */
+  name?: string;
+  baseCommand: string[];
+  runnerArgs: string[];
+  testFiles: string[];
 }
 
 export interface SelectedTest {
-  test_file: string;
+  testFile: string;
   confidence: "low" | "medium" | "high";
   reasons: ImpactReason[];
   targets?: TestExecutionTarget[];
@@ -133,24 +128,26 @@ export interface TestExecutionTarget {
   /** True when config is a Vitest workspace/project-array source rendered with --workspace. */
   workspace?: boolean;
   project?: string | null;
-  base_command: string[];
-  runner_args: string[];
+  /** Path-prefix display name, such as a Swift package root. */
+  name?: string;
+  baseCommand: string[];
+  runnerArgs: string[];
 }
 
 export interface ImpactReason {
-  changed_file: string;
+  changedFile: string;
   path: string[];
   via: string[];
   /** When present, aligns index-for-index with `via`. */
-  via_details?: Array<ImpactEdgeDetail | null>;
+  viaDetails?: Array<ImpactEdgeDetail | null>;
 }
 
 export type ImpactEdgeDetail = ResourceImpactEdgeDetail | VitestSetupImpactEdgeDetail;
 
 export interface ResourceImpactEdgeDetail {
   type: "resource";
-  consumer_file: string;
-  call_sites: ResourceCallSite[];
+  consumerFile: string;
+  callSites: ResourceCallSite[];
 }
 
 export interface VitestSetupImpactEdgeDetail {
@@ -159,7 +156,7 @@ export interface VitestSetupImpactEdgeDetail {
 }
 
 export interface ResourceCallSite {
-  call_kind: ResourceCallKind;
+  callKind: ResourceCallKind;
   line: number;
 }
 
@@ -213,6 +210,7 @@ export interface TestsWhyOptions {
   test: string;
   changed?: string;
   plan?: string;
+  planJson?: SavedTestPlan | string;
 }
 
 export interface WhyStep {
@@ -221,10 +219,8 @@ export interface WhyStep {
   detail?: ImpactEdgeDetail | null;
 }
 
-/** A current or pre-`changed_files` plan accepted by saved-plan document APIs. */
-export type SavedTestPlan = Omit<TestPlan, "changed_files"> & {
-  changed_files?: string[];
-};
+/** A current or pre-`changedFiles` plan accepted by saved-plan document APIs. */
+export type SavedTestPlan = TestPlan;
 
 export interface TestsPlanDocumentOptions {
   plan?: string;

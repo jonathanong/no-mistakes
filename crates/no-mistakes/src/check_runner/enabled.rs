@@ -39,6 +39,9 @@ impl ConfiguredChecks {
             ) || rule_configured(
                 config,
                 no_mistakes::codebase::rules::POSTGRES_NO_OFFSET,
+            ) || rule_configured(
+                config,
+                no_mistakes::codebase::rules::POSTGRES_REQUIRE_QUERY_ANNOTATION,
             ),
         }
     }

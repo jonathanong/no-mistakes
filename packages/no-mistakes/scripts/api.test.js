@@ -1,7 +1,8 @@
 const assert = require("node:assert/strict");
 const test = globalThis.test || require("node:test").test;
-const { readFileSync } = require("node:fs");
+const { existsSync, readFileSync, writeFileSync, mkdtempSync } = require("node:fs");
 const { join } = require("node:path");
+const { tmpdir } = require("node:os");
 const { pathToFileURL } = require("node:url");
 
 const packageRoot = join(__dirname, "..");
@@ -283,6 +284,10 @@ test("programmatic API proxies object options through async native addon calls",
       "testsGraph",
     );
     assert.equal(await api.testsGraphMermaid({ planJson: { selected_tests: [] } }), "graph:0");
+    const planDir = mkdtempSync(join(tmpdir(), "no-mistakes-plan-"));
+    const planPath = join(planDir, "plan.json");
+    writeFileSync(planPath, JSON.stringify({ selectedTests: [] }));
+    assert.equal(await api.testsGraphMermaid({ plan: planPath }), "graph:0");
     assert.equal((await api.playwrightCheck({ root: "." })).command, "playwrightCheck");
     assert.equal((await api.playwrightEdges({ root: "." })).command, "playwrightEdges");
     assert.equal(
@@ -328,6 +333,72 @@ test("programmatic API proxies object options through async native addon calls",
     );
     assert.equal((await api.ciTopology({ workflows: ["ci.yml"] })).options.workflows[0], "ci.yml");
     assert.equal(await api.version(), "1.2.3");
+  } finally {
+    delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(planningPath)];
+    delete require.cache[addonPath];
+    if (previous) {
+      require.extensions[".node"] = previous;
+    } else {
+      delete require.extensions[".node"];
+    }
+  }
+});
+
+test("testsWhy and analyzeProject clean generated why-plan directories", async () => {
+  const previous = require.extensions[".node"];
+  const seen = [];
+  delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(planningPath)];
+  delete require.cache[addonPath];
+  require.extensions[".node"] = (module, filename) => {
+    assert.equal(filename, addonPath);
+    module.exports = {
+      testsWhyJson: async (json) => {
+        const options = JSON.parse(json);
+        seen.push(options.plan);
+        if (options.test === "__reject__") throw new Error("why failed");
+        return JSON.stringify({ command: "testsWhy", options });
+      },
+      analyzeProjectJson: async (json) => {
+        const options = JSON.parse(json);
+        for (const report of options.reports || []) seen.push(report.plan);
+        if (options.reports?.some((report) => report.test === "__reject__")) {
+          throw new Error("why failed");
+        }
+        return JSON.stringify({ command: "analyzeProject", options });
+      },
+    };
+  };
+  try {
+    const api = require(indexPath);
+    const planDir = mkdtempSync(join(tmpdir(), "no-mistakes-plan-"));
+    const planPath = join(planDir, "plan.json");
+    writeFileSync(planPath, JSON.stringify({ selectedTests: [] }));
+    await api.testsWhy({ test: "source.test.ts", planJson: { selectedTests: [] } });
+    await api.testsWhy({ test: "source.test.ts", plan: planPath });
+    await api.analyzeProject({
+      reports: [
+        { type: "testsWhy", test: "batched.test.ts", planJson: { selectedTests: [] } },
+        { type: "testsWhy", test: "file.test.ts", plan: planPath },
+      ],
+    });
+    await assert.rejects(
+      api.testsWhy({ test: "__reject__", planJson: { selectedTests: [] } }),
+      /why failed/,
+    );
+    await assert.rejects(
+      api.analyzeProject({
+        reports: [{ type: "testsWhy", test: "__reject__", planJson: { selectedTests: [] } }],
+      }),
+      /why failed/,
+    );
+    assert.equal(seen.length, 6);
+    for (const plan of seen) {
+      assert.match(plan, /no-mistakes-why-/);
+      assert.equal(existsSync(plan), false);
+    }
+    assert.equal(existsSync(planPath), true);
   } finally {
     delete require.cache[require.resolve(indexPath)];
     delete require.cache[require.resolve(planningPath)];
@@ -572,12 +643,13 @@ test("test plan declarations require current results but accept saved legacy pla
     declarations,
     /export interface TestPlan \{\n  \/\*\* Complete deterministic changed-file inventory/,
   );
-  assert.match(declarations, /\n  changed_files: string\[\];/);
+  assert.match(declarations, /\n  changedFiles: string\[\];/);
+  assert.match(declarations, /export type SavedTestPlan = TestPlan;/);
+  assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
   assert.match(
     declarations,
-    /export type SavedTestPlan = Omit<TestPlan, "changed_files"> & \{\n  changed_files\?: string\[\];\n\};/,
+    /export interface TestsWhyOptions \{[\s\S]*plan\?: string;\n  planJson\?: SavedTestPlan \| string;/,
   );
-  assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
   assert.match(declarations, /export type TestsPlanOptions =/);
   assert.match(
     declarations,
