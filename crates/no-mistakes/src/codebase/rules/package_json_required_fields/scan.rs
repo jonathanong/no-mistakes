@@ -6,11 +6,12 @@ use std::path::{Path, PathBuf};
 pub(super) fn scan(
     root: &Path,
     opts: &Options,
-    files: &[PathBuf],
+    manifests: &[PathBuf],
+    all_files: &[PathBuf],
     sources: &SourceStore,
 ) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
-    for path in files {
+    for path in manifests {
         if path.file_name().and_then(|name| name.to_str()) != Some("package.json") {
             continue;
         }
@@ -18,7 +19,7 @@ pub(super) fn scan(
             continue;
         };
         let rel = pkg_rel(root, path);
-        findings.extend(check_package(rel, path, files, opts, &json));
+        findings.extend(check_package(rel, path, all_files, opts, &json));
     }
     findings
 }
@@ -86,11 +87,10 @@ fn check_package(
 }
 
 fn sibling_exists(files: &[PathBuf], package_json: &Path, name: &str) -> bool {
-    let Some(dir) = package_json.parent() else {
-        return false;
-    };
-    let sibling = dir.join(name);
-    files.iter().any(|path| path == &sibling)
+    files.iter().any(|path| {
+        path.file_name().and_then(|n| n.to_str()) == Some(name)
+            && path.parent() == package_json.parent()
+    })
 }
 
 fn finding(rel: &str, message: String, target: &str) -> RuleFinding {

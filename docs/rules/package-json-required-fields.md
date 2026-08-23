@@ -39,5 +39,14 @@ Fix: declare the configured shape.
 }
 ```
 
-Use `no-mistakes-disable-file package-json-required-fields` when a whole
-manifest is an intentional exception.
+Exclude an intentional exception with a rule-level `exclude` glob. A valid
+`package.json` cannot contain `no-mistakes-disable-file` comments.
+
+```yaml
+rules:
+  - rule: package-json-required-fields
+    scope: repository
+    exclude: [packages/legacy/package.json]
+    options:
+      private: true
+```

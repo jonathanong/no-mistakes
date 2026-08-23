@@ -85,3 +85,38 @@ fn empty_options_report_nothing() {
     let files = vec![root.join("packages/foo/package.json")];
     assert!(check_with_files(&root, &config, &files).unwrap().is_empty());
 }
+
+#[test]
+fn include_filter_still_sees_companion_files() {
+    let root = fixture("fail");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            include: vec!["**/package.json".to_string()],
+            options: serde_yaml::from_str("mainWhenFileExists: index.mts\n").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let files = vec![
+        root.join("packages/foo/package.json"),
+        root.join("packages/foo/index.mts"),
+    ];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.target.as_deref() == Some("main")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn invalid_json_is_skipped() {
+    let dir = tempfile::tempdir().unwrap();
+    let pkg = dir.path().join("package.json");
+    std::fs::write(&pkg, "{").unwrap();
+    let findings = check_with_files(dir.path(), &config(), &[pkg]).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}

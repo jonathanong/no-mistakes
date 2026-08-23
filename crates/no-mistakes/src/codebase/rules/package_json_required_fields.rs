@@ -41,13 +41,13 @@ pub(crate) fn check_with_files_and_sources(
         let opts: Options = rule.rule_options();
         let target_roots = super::target_roots(root, config, rule);
         let skip = super::skip_dir_set(config);
-        let files: Vec<PathBuf> = all_files
+        let in_scope: Vec<PathBuf> = all_files
             .iter()
             .filter(|path| super::file_allowed_by_roots_and_skip(root, &skip, path, &target_roots))
             .cloned()
             .collect();
-        let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan::scan(root, &opts, &files, sources));
+        let manifests = super::path_filter::filter_rule_files(root, config, rule, &in_scope)?;
+        findings.extend(scan::scan(root, &opts, &manifests, &in_scope, sources));
     }
     super::sort_findings(&mut findings);
     Ok(findings)
