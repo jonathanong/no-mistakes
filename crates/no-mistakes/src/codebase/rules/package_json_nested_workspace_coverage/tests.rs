@@ -37,6 +37,18 @@ fn files(root: &Path) -> Vec<PathBuf> {
             paths.push(path);
         }
     }
+    let deploy_environment = root.join("ts-shared/deploy-environment/package.json");
+    if deploy_environment.exists() {
+        paths.push(deploy_environment);
+    }
+    for path in [
+        root.join("web/package.json"),
+        root.join("web-tools/package.json"),
+    ] {
+        if path.exists() {
+            paths.push(path);
+        }
+    }
     for path in [
         root.join("lambdas/image/package.json"),
         root.join("lambdas/image/task/package.json"),
@@ -58,6 +70,18 @@ const OPTIONS: &str = "roots: [apps, lambdas/*]\ndependencyNamePrefixes: ['@shar
 #[test]
 fn accepts_explicit_workspace_paths_for_root_and_nested_package_dependencies() {
     assert!(findings("valid", OPTIONS).is_empty());
+}
+#[test]
+fn accepts_consecutive_parent_segments_in_nested_workspace_paths() {
+    assert!(findings("parent-path", OPTIONS).is_empty());
+}
+#[test]
+fn excludes_sibling_directories_that_only_share_the_workspace_name_prefix() {
+    assert!(findings(
+        "sibling-prefix",
+        "roots: [web]\ndependencyNamePrefixes: ['@shared/']\n"
+    )
+    .is_empty());
 }
 #[test]
 fn reports_explicit_workspace_entries_without_a_matching_dependency() {
@@ -102,4 +126,28 @@ fn fails_closed_when_a_matching_dependency_has_no_visible_target_manifest() {
     assert!(findings[0]
         .message
         .contains("no unique visible package.json target"));
+}
+
+#[test]
+fn normalizes_workspace_entries_without_collapsing_unresolved_parent_segments() {
+    assert_eq!(
+        normalize_workspace_entry("../../ts-shared/deploy-environment"),
+        "../../ts-shared/deploy-environment"
+    );
+    assert_eq!(
+        normalize_workspace_entry("./../../ts-shared/unused/../deploy-environment"),
+        "../../ts-shared/deploy-environment"
+    );
+    assert_eq!(
+        normalize_workspace_entry(r"..\..\ts-shared\deploy-environment"),
+        "../../ts-shared/deploy-environment"
+    );
+}
+
+#[test]
+fn preserves_wildcard_parent_traversal_that_cannot_be_normalized_lexically() {
+    assert_eq!(
+        normalize_workspace_entry("../packages/*/../utils"),
+        "../packages/*/../utils"
+    );
 }

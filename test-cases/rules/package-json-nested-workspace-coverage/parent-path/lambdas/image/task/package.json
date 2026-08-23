@@ -1,0 +1,1 @@
+{"name":"task","dependencies":{"@shared/deploy-environment":"workspace:*"}}

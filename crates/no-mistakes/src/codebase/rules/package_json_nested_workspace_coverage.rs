@@ -271,7 +271,28 @@ fn workspace_entries(
 }
 
 fn normalize_workspace_entry(entry: &str) -> String {
-    crate::codebase::glob_normalize::normalize(entry)
+    let normalized = entry.replace('\\', "/");
+    let mut parts = Vec::new();
+    for part in normalized.split('/') {
+        match part {
+            "" | "." => {}
+            ".." => {
+                let can_pop = parts.last().is_some_and(|parent: &&str| {
+                    *parent != ".."
+                        && !parent
+                            .chars()
+                            .any(|ch| matches!(ch, '*' | '?' | '[' | ']' | '{' | '}'))
+                });
+                if can_pop {
+                    parts.pop();
+                } else {
+                    parts.push(part);
+                }
+            }
+            _ => parts.push(part),
+        }
+    }
+    parts.join("/")
 }
 
 fn relative_from(from: &Path, to: &Path) -> String {
