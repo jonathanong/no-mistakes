@@ -16,8 +16,11 @@ rules:
           reason: first-party published package
         - name: '@acme/core'
           reason: first-party published package
-      temporarySelectors:
-        - demo-temporary-package@9.9.9
+      temporaryGroups:
+        - selectors:
+            - demo-temporary-package@9.9.9
+          reason: upstream release regression
+          eligibleForRemovalAt: '2027-01-02T03:04:05Z'
       scopedPrefixes:
         - '@acme/'
       workspaceYaml: pnpm-workspace.yaml
@@ -32,6 +35,13 @@ minimumReleaseAgeExclude:
   - acme-lib
 ```
 
-Fix: keep the exclude list equal to `permanentPackages` plus
-`temporarySelectors`, cover permanent names in Dependabot npm
+Each `temporaryGroups` entry requires at least one exact `package@version`
+selector, a non-empty reason, and a canonical UTC
+`eligibleForRemovalAt` timestamp (`YYYY-MM-DDTHH:mm:ssZ`). The timestamp is
+audit metadata, so an elapsed date does not fail CI. `temporarySelectors`
+remains supported for compatibility, but a selector may appear only once across
+the flat list and all groups.
+
+Fix: keep the exclude list equal to `permanentPackages` plus flattened
+temporary selectors, cover permanent names in Dependabot npm
 `cooldown.exclude`, and keep those names in manifests or the lockfile.

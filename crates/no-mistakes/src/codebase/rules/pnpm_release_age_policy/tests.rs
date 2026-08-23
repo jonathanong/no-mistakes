@@ -27,6 +27,21 @@ scopedPrefixes:
 "#
 }
 
+fn grouped_options_yaml() -> &'static str {
+    r#"
+permanentPackages:
+  - name: acme-lib
+    reason: first-party
+  - name: '@acme/core'
+    reason: first-party
+temporaryGroups:
+  - selectors:
+      - demo-temporary-package@9.9.9
+    reason: upstream regression pending
+    eligibleForRemovalAt: '2027-01-02T03:04:05Z'
+"#
+}
+
 fn config() -> NoMistakesConfig {
     NoMistakesConfig {
         rules: vec![RuleDef {
@@ -158,4 +173,152 @@ fn lockfile_name_and_selector_helpers() {
         "demo-temporary-package@9.9.9(peer@1)",
         "demo-temporary-package@9.9.9"
     ));
+}
+
+#[test]
+fn temporary_group_selector_and_timestamp_validation_is_exact() {
+    assert!(super::policy::is_exact_selector(
+        "demo-temporary-package@9.9.9"
+    ));
+    assert!(super::policy::is_exact_selector(
+        "@acme/demo@1.0.0-beta+build"
+    ));
+    assert!(!super::policy::is_exact_selector(
+        "demo-temporary-package@^9.9.9"
+    ));
+    assert!(!super::policy::is_exact_selector("@acme@1.0.0"));
+    assert!(!super::policy::is_exact_selector("demo@temporary@1.0.0"));
+    assert!(!super::policy::is_exact_selector("demo-temporary-package"));
+
+    assert!(super::policy::is_canonical_timestamp(
+        "2027-04-30T23:59:59Z"
+    ));
+    assert!(super::policy::is_canonical_timestamp(
+        "2027-12-31T00:00:00Z"
+    ));
+    assert!(!super::policy::is_canonical_timestamp(
+        "2027-04-31T00:00:00Z"
+    ));
+    assert!(!super::policy::is_canonical_timestamp(
+        "2027-13-01T00:00:00Z"
+    ));
+}
+
+#[test]
+fn grouped_temporary_selectors_are_flattened_for_existing_drift_checks() {
+    let root = fixture("pass");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(grouped_options_yaml()).unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    assert!(check_with_files(&root, &config, &files(&root))
+        .unwrap()
+        .is_empty());
+}
+
+#[test]
+fn invalid_temporary_group_metadata_is_reported_without_using_its_selectors() {
+    let root = fixture("pass");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(
+                r#"
+temporaryGroups:
+  - selectors: []
+    reason: ''
+    eligibleForRemovalAt: '2027-01-02T03:04:05+00:00'
+  - selectors:
+      - demo-temporary-package@^9.9.9
+    reason: stale selector
+    eligibleForRemovalAt: '2027-02-30T03:04:05Z'
+"#,
+            )
+            .unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let body = format!(
+        "{:?}",
+        check_with_files(&root, &config, &files(&root)).unwrap()
+    );
+    assert!(body.contains("selectors must contain"), "{body}");
+    assert!(body.contains("reason must be non-empty"), "{body}");
+    assert!(body.contains("canonical YYYY-MM-DDTHH:mm:ssZ"), "{body}");
+    assert!(!body.contains("absent from lockfile"), "{body}");
+}
+
+#[test]
+fn duplicate_temporary_selectors_across_flat_and_grouped_configuration_are_reported() {
+    let root = fixture("pass");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(
+                r#"
+temporarySelectors:
+  - demo-temporary-package@9.9.9
+temporaryGroups:
+  - selectors:
+      - demo-temporary-package@9.9.9
+    reason: duplicate
+    eligibleForRemovalAt: '2027-01-02T03:04:05Z'
+  - selectors:
+      - demo-temporary-package@9.9.9
+    reason: duplicate across groups
+    eligibleForRemovalAt: '2027-01-03T03:04:05Z'
+"#,
+            )
+            .unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let body = format!(
+        "{:?}",
+        check_with_files(&root, &config, &files(&root)).unwrap()
+    );
+    assert!(
+        body.contains("duplicates another temporary selector"),
+        "{body}"
+    );
+}
+
+#[test]
+fn past_eligibility_date_is_audit_metadata_not_a_ci_failure() {
+    let root = fixture("pass");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(
+                r#"
+permanentPackages:
+  - name: acme-lib
+    reason: first-party
+  - name: '@acme/core'
+    reason: first-party
+temporaryGroups:
+  - selectors:
+      - demo-temporary-package@9.9.9
+    reason: expired audit entry
+    eligibleForRemovalAt: '2000-02-29T00:00:00Z'
+"#,
+            )
+            .unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    assert!(check_with_files(&root, &config, &files(&root))
+        .unwrap()
+        .is_empty());
 }
