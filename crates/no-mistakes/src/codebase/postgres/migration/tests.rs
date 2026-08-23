@@ -103,6 +103,10 @@ ALTER TABLE accounts DROP COLUMN unused;
         .iter()
         .any(|fk| fk.column_names == ["owner_id"] && fk.referenced_table_name == "users"));
     assert!(facts
+        .add_columns
+        .iter()
+        .any(|column| { column.table_name == "accounts" && column.column_name == "owner_id" }));
+    assert!(facts
         .not_valid_constraints
         .iter()
         .any(|constraint| constraint.name == "accounts_org_fk"));
@@ -350,4 +354,14 @@ fn qualified_relation_joins_identifiers_and_skips_functions() {
         },
     )]);
     assert_eq!(super::qualified_relation(&function), "");
+}
+
+#[test]
+fn extracts_add_column_inside_do_block() {
+    let facts =
+        extract_migration_facts("DO $$ BEGIN ALTER TABLE posts ADD COLUMN status text; END $$;");
+    assert!(facts
+        .add_columns
+        .iter()
+        .any(|column| column.table_name == "posts" && column.column_name == "status"));
 }

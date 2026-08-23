@@ -8,8 +8,8 @@ These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-lock-ordering`, `postgres-no-offset`,
 `postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
-`postgres-fk-index`, `postgres-redundant-index`, and
-`postgres-constraint-validate` consume
+`postgres-fk-index`, `postgres-redundant-index`,
+`postgres-constraint-validate`, and `postgres-no-add-column` consume
 the facts through `no-mistakes check`.
 
 ## Schema facts
@@ -56,6 +56,7 @@ request `SourceStore` and runs `extract_migration_facts`, which includes
   table's indexes
 - Foreign keys from `CREATE TABLE` and `ALTER TABLE`: table, columns,
   referenced table, optional `ON DELETE` action, and a source line
+- `ALTER TABLE … ADD COLUMN`: table, column name, and a source line
 - Named `ALTER TABLE … ADD CONSTRAINT … NOT VALID` rows
 - `ALTER TABLE … VALIDATE CONSTRAINT` rows
 

@@ -253,6 +253,7 @@ fn no_mistakes_rules_have_docs() {
         rules::NO_RAW_EPHEMERAL_PORT,
         rules::PACKAGE_JSON_REGISTRY_ONLY,
         rules::POSTGRES_CONSTRAINT_VALIDATE,
+        rules::POSTGRES_NO_ADD_COLUMN,
         rules::POSTGRES_FK_INDEX,
         rules::POSTGRES_LOCK_ORDERING,
         rules::POSTGRES_NO_OFFSET,
