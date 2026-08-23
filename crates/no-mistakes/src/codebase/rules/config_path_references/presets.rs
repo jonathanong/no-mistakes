@@ -1,5 +1,6 @@
 use super::references::reference_exists;
 use super::{Options, RuleFinding, RULE_ID};
+use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
@@ -15,6 +16,7 @@ use types::Extracted;
 
 pub(super) fn scan(
     root: &Path,
+    config: &NoMistakesConfig,
     opts: &Options,
     config_candidates: &[PathBuf],
     rel_files: &[String],
@@ -36,13 +38,16 @@ pub(super) fn scan(
         if matched.is_empty() {
             continue;
         }
-        scan_file(root, path, &rel, &matched, rel_files, sources, findings)?;
+        scan_file(
+            root, config, path, &rel, &matched, rel_files, sources, findings,
+        )?;
     }
     Ok(())
 }
 
 fn scan_file(
     root: &Path,
+    config: &NoMistakesConfig,
     path: &Path,
     rel: &str,
     matched: &[&str],
@@ -55,6 +60,13 @@ fn scan_file(
     };
     for extracted in matched
         .iter()
+        .filter(|preset| *preset == &"no-mistakes")
+        .flat_map(|_| extract::no_mistakes(config))
+    {
+        push_missing(root, path, rel, rel_files, findings, extracted)?;
+    }
+    for extracted in matched
+        .iter()
         .filter(|preset| *preset == &"pnpm-workspace-filters")
         .flat_map(|_| pnpm::workspace_filters(&source))
     {
@@ -63,7 +75,7 @@ fn scan_file(
     let structured: Vec<&str> = matched
         .iter()
         .copied()
-        .filter(|preset| *preset != "pnpm-workspace-filters")
+        .filter(|preset| *preset != "pnpm-workspace-filters" && *preset != "no-mistakes")
         .collect();
     if structured.is_empty() {
         return Ok(());

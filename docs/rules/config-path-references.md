@@ -22,6 +22,7 @@ rules:
         - syncpack
         - coverage-rules
         - pnpm-workspace-filters
+        - no-mistakes
 ```
 
 | Preset                   | Files                                                                       | Required paths                                                                        |
@@ -33,6 +34,7 @@ rules:
 | `syncpack`               | `.syncpackrc.json`                                                          | `source` globs                                                                        |
 | `coverage-rules`         | `.coverage-rules.yml`                                                       | `rules[].paths`                                                                       |
 | `pnpm-workspace-filters` | `.github/workflows/*.{yml,yaml}` and `.github/actions/**/action.{yml,yaml}` | `pnpm --filter ./path...` selectors in shell commands                                 |
+| `no-mistakes`            | root `.no-mistakes.yml` / `.no-mistakes.yaml`                              | schema-known project, test config, TestPlan trigger, and rule-option paths             |
 
 Counterexample: `config/app.yml` contains `paths.requiredFiles:
 ["missing.json"]`, and `config/missing.json` does not exist. Or
@@ -47,3 +49,9 @@ The `pnpm-workspace-filters` preset recognizes quoted and braced path selectors,
 ellipsis selectors, wildcard filters, and selectors split across YAML block-scalar
 commands. A selector guarded by `-f`, `-d`, or `test` is treated as optional and
 is ignored when its path is not present.
+
+The `no-mistakes` preset validates repository paths that the no-mistakes schema
+defines as required. It includes project roots, test runner configs, Playwright
+roots and helpers, TestPlan project and named-trigger paths, and path-valued rule
+options such as `tsconfig`, `roots`, and package roots. Negative selectors,
+optional globs, and exclusion-only paths are ignored.

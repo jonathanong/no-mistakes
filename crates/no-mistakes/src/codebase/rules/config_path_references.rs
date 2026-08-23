@@ -59,7 +59,15 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let config_files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &config_files, &files, &target_roots, sources)
+            scan(
+                root,
+                config,
+                &opts,
+                &config_files,
+                &files,
+                &target_roots,
+                sources,
+            )
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -69,6 +77,7 @@ pub(crate) fn check_with_files_and_sources(
 
 fn scan(
     root: &Path,
+    config: &NoMistakesConfig,
     opts: &Options,
     config_candidates: &[PathBuf],
     reference_candidates: &[PathBuf],
@@ -108,6 +117,7 @@ fn scan(
     }
     presets::scan(
         root,
+        config,
         opts,
         preset_candidates,
         &rel_files,

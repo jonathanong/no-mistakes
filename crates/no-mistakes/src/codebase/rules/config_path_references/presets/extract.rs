@@ -1,6 +1,8 @@
 use super::super::BaseDir;
 use super::oxlint;
 use super::types::{is_optional_glob, Extracted};
+use crate::codebase::rules::no_mistakes_config::paths::{self, Kind};
+use crate::config::v2::NoMistakesConfig;
 use serde_yaml::Value;
 
 pub(crate) fn matches_preset(preset: &str, filename: &str, rel: &str) -> bool {
@@ -17,8 +19,21 @@ pub(crate) fn matches_preset(preset: &str, filename: &str, rel: &str) -> bool {
                 || (rel.starts_with(".github/actions/") && rel.ends_with("/action.yml"))
                 || (rel.starts_with(".github/actions/") && rel.ends_with("/action.yaml"))
         }
+        "no-mistakes" => rel == ".no-mistakes.yml" || rel == ".no-mistakes.yaml",
         _ => false,
     }
+}
+
+pub(crate) fn no_mistakes(config: &NoMistakesConfig) -> Vec<Extracted> {
+    paths::references(config)
+        .into_iter()
+        .map(|reference| Extracted {
+            field: reference.field,
+            value: reference.value,
+            allow_globs: reference.kind == Kind::Glob,
+            base_dir: BaseDir::Root,
+        })
+        .collect()
 }
 
 pub(crate) fn extract(preset: &str, value: &Value) -> Vec<Extracted> {

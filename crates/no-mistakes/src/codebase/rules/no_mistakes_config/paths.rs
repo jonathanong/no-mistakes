@@ -9,16 +9,22 @@ mod collect;
 pub(super) use collect::frameworks;
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(super) enum Kind {
+pub(crate) enum Kind {
     File,
     Directory,
     Glob,
 }
 
-pub(super) struct Ref {
-    pub(super) field: String,
-    pub(super) kind: Kind,
-    pub(super) value: String,
+pub(crate) struct Ref {
+    pub(crate) field: String,
+    pub(crate) kind: Kind,
+    pub(crate) value: String,
+}
+
+pub(crate) fn references(config: &NoMistakesConfig) -> Vec<Ref> {
+    let mut refs = Vec::new();
+    collect::collect(config, &mut refs);
+    refs
 }
 
 pub(super) fn lint(
@@ -26,9 +32,7 @@ pub(super) fn lint(
     tracked: &BTreeSet<String>,
     config_file: &str,
 ) -> Result<Vec<RuleFinding>> {
-    let mut refs = Vec::new();
-    collect::collect(config, &mut refs);
-    Ok(refs
+    Ok(references(config)
         .into_iter()
         .filter_map(|item| missing(item, tracked, config_file))
         .collect())

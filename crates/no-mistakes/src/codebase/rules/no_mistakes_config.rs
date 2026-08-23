@@ -7,7 +7,7 @@ use std::path::{Path, PathBuf};
 
 mod globs;
 mod limits;
-mod paths;
+pub(crate) mod paths;
 
 pub const RULE_ID: &str = "no-mistakes-config";
 

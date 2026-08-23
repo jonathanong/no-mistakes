@@ -1,3 +1,17 @@
+projects:
+  app:
+    root: packages/app
+tests:
+  playwright:
+    configs: playwright.config.ts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        app: [src/index.ts, "!src/optional.ts"]
+      triggers:
+        - name: root
+          paths: [src/app.ts, "!src/optional.ts"]
 rules:
   - rule: config-path-references
     scope: repository
@@ -10,3 +24,7 @@ rules:
         - syncpack
         - coverage-rules
         - pnpm-workspace-filters
+        - no-mistakes
+      tsconfig: knip.jsonc
+      roots: [packages/app]
+      excludePaths: [missing-until-created/**]

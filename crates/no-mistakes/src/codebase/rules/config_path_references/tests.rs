@@ -318,11 +318,8 @@ fn can_resolve_references_from_repository_root() {
     .unwrap());
 }
 
-fn preset_opts() -> String {
-    r#"
-presets: [oxlintrc, knip, dependabot, sgconfig, syncpack, coverage-rules, pnpm-workspace-filters]
-"#
-    .to_string()
+fn preset_config(root: &Path) -> NoMistakesConfig {
+    serde_yaml::from_str(&std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap()).unwrap()
 }
 
 fn listed(root: &Path, rels: &[&str]) -> Vec<PathBuf> {
@@ -343,9 +340,10 @@ fn presets_report_missing_required_paths() {
             ".syncpackrc.json",
             ".coverage-rules.yml",
             ".github/workflows/pnpm-filters.yml",
+            ".no-mistakes.yml",
         ],
     );
-    let findings = check_with_files(&root, &config(&preset_opts()), &files).unwrap();
+    let findings = check_with_files(&root, &preset_config(&root), &files).unwrap();
     let messages: Vec<_> = findings
         .iter()
         .map(|finding| finding.message.clone())
@@ -387,9 +385,44 @@ fn presets_report_missing_required_paths() {
         "{messages:?}"
     );
     assert!(
-        !messages
+        messages
             .iter()
-            .any(|m| m.contains("generated") || m.contains("node_modules")),
+            .any(|m| m.contains("projects.app.root") && m.contains("missing-project")),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| {
+            m.contains("tests.playwright.configs") && m.contains("missing-playwright.config.ts")
+        }),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| {
+            m.contains("testPlan.vitest.fullSuiteTriggers.projects.app")
+                && m.contains("missing-project/src/missing.ts")
+        }),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| {
+            m.contains("testPlan.vitest.fullSuiteTriggers.triggers")
+                && m.contains("missing-trigger.ts")
+        }),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| {
+            m.contains("rules[0].options.tsconfig") && m.contains("missing-tsconfig.json")
+        }),
+        "{messages:?}"
+    );
+    assert!(
+        !messages.iter().any(|m| {
+            m.contains("generated")
+                || m.contains("node_modules")
+                || m.contains("optional")
+                || m.contains("missing-until-created")
+        }),
         "{messages:?}"
     );
 }
@@ -414,9 +447,11 @@ fn presets_pass_when_required_paths_exist() {
             ".syncpackrc.json",
             ".coverage-rules.yml",
             ".github/workflows/pnpm-filters.yml",
+            ".no-mistakes.yml",
+            "playwright.config.ts",
         ],
     );
-    let findings = check_with_files(&root, &config(&preset_opts()), &files).unwrap();
+    let findings = check_with_files(&root, &preset_config(&root), &files).unwrap();
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 
@@ -488,5 +523,15 @@ rules:
         "dependabot",
         "dependabot.yml",
         "dependabot.yml"
+    ));
+    assert!(presets::matches_preset(
+        "no-mistakes",
+        ".no-mistakes.yml",
+        ".no-mistakes.yml"
+    ));
+    assert!(!presets::matches_preset(
+        "no-mistakes",
+        ".no-mistakes.yml",
+        "packages/app/.no-mistakes.yml"
     ));
 }
