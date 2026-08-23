@@ -6,6 +6,7 @@ mod constraints;
 mod indexes;
 mod lines;
 mod predicate;
+mod statements;
 
 pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts {
@@ -16,6 +17,7 @@ pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
     let mut drop_index_n = 0usize;
     let mut drop_table_n = 0usize;
     for statement in super::parse::parse_postgres_sql_lenient(sql) {
+        statements::record(sql, &statement, &mut facts);
         match statement {
             Statement::CreateIndex(index) => {
                 create_index_n += 1;

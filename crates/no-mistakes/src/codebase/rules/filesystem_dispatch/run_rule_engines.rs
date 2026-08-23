@@ -51,6 +51,11 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
                 root, config, files, sources,
             )
         }
+        POSTGRES_SQL_STATEMENT_POLICY => {
+            postgres_sql_statement_policy::check_with_files_and_sources(
+                root, config, files, sources,
+            )
+        }
         INTEGRATION_TEST_NO_MOCKS => {
             integration_test_no_mocks::check_with_files_and_sources(root, config, files, sources)
         }

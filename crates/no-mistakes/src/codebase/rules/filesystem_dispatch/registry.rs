@@ -49,6 +49,7 @@ macro_rules! filesystem_rules {
             POSTGRES_REQUIRE_FK_ON_DELETE => postgres_require_fk_on_delete::check_with_files,
             POSTGRES_REQUIRE_NAMED_CONSTRAINTS => postgres_require_named_constraints::check_with_files,
             POSTGRES_REQUIRE_QUERY_ANNOTATION => postgres_require_query_annotation::check_with_files,
+            POSTGRES_SQL_STATEMENT_POLICY => postgres_sql_statement_policy::check_with_files,
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files,
             DOC_CONSISTENCY => doc_consistency::check_with_files,
             SHELLCHECK_RUNNER => shellcheck_runner::check_with_files,
