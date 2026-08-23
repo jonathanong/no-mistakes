@@ -40,6 +40,28 @@ pub(super) fn resolve_parent_links(
     links
 }
 
+pub(super) fn canonical_html_destinations(source: &str) -> Vec<String> {
+    source
+        .lines()
+        .filter_map(canonical_html_destination)
+        .collect()
+}
+
+fn canonical_html_destination(line: &str) -> Option<String> {
+    let rest = line.strip_prefix("- <a id=\"")?;
+    let rest = rest.split_once("\"></a>[")?.1;
+    let rest = rest.split_once("](")?.1;
+    let dest = rest.strip_suffix(')')?;
+    if dest.contains(char::is_whitespace) {
+        return None;
+    }
+    let path = dest.split(['#', '?']).next().unwrap_or(dest);
+    if path.starts_with('/') || path.contains(':') || !path.ends_with(".md") {
+        return None;
+    }
+    Some(dest.to_string())
+}
+
 fn split_destination(destination: &str) -> (&str, bool) {
     let path_part = destination.split(['#', '?']).next().unwrap_or_default();
     (path_part, !destination.contains('#'))

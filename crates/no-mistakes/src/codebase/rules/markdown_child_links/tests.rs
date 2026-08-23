@@ -44,6 +44,24 @@ fn run(root: &Path, require_whole_file: bool) -> Vec<RuleFinding> {
     check_with_files_sources_and_facts(root, &config(require_whole_file), &files, &facts).unwrap()
 }
 
+fn run_with_options(root: &Path, yaml: &str) -> Vec<RuleFinding> {
+    let files = vec![root.join("docs/README.md"), root.join("docs/guide.md")];
+    let sources = super::super::source_store_for_files(&files);
+    let mut plan = super::super::markdown_facts::MarkdownFactPlan::default();
+    plan.request_pulldown(super::super::markdown_scope::markdown_files(&files));
+    let facts = super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(yaml).unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    check_with_files_sources_and_facts(root, &config, &files, &facts).unwrap()
+}
+
 #[test]
 fn missing_child_link_is_a_finding() {
     let findings = run(&fixture("fail"), true);
@@ -127,4 +145,75 @@ fn normalize_inside_rejects_paths_that_escape_the_root() {
 fn option_defaults_are_empty() {
     assert!(Options::default().groups.is_empty());
     assert!(Group::default().parents.is_empty());
+    assert!(!Group::default().count_canonical_html_list_items);
+}
+
+#[test]
+fn canonical_html_whole_file_list_item_covers_the_child() {
+    let findings = run_with_options(
+        &fixture("canonical-html-pass"),
+        r#"
+groups:
+  - parents: ["docs/README.md"]
+    children: ["docs/*.md"]
+    requireWholeFile: true
+    countCanonicalHtmlListItems: true
+"#,
+    );
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn canonical_html_fragment_does_not_cover_when_whole_file_is_required() {
+    let findings = run_with_options(
+        &fixture("canonical-html-fragment"),
+        r#"
+groups:
+  - parents: ["docs/README.md"]
+    children: ["docs/*.md"]
+    requireWholeFile: true
+    countCanonicalHtmlListItems: true
+"#,
+    );
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("whole-file"), "{findings:?}");
+}
+
+#[test]
+fn canonical_html_destinations_resolve_like_markdown_links() {
+    let root = fixture("canonical-html-pass");
+    let readme = root.join("docs/README.md");
+    let guide = root.join("docs/guide.md");
+    let known = BTreeSet::from([readme.clone(), guide.clone()]);
+    let remapper = FrozenPathRemapper::from_paths([readme.clone(), guide.clone()]);
+    let dests = super::links::canonical_html_destinations(
+        "- <a id=\"guide\"></a>[Guide](guide.md)\n- <a id=\"section\"></a>[Section](guide.md#section)\n",
+    );
+    let links = super::links::resolve_parent_links(&root, &readme, &dests, &known, &remapper);
+    assert!(
+        links
+            .iter()
+            .any(|link| link.path == guide && link.whole_file),
+        "{links:?}"
+    );
+    assert!(
+        links
+            .iter()
+            .any(|link| link.path == guide && !link.whole_file),
+        "{links:?}"
+    );
+}
+
+#[test]
+fn canonical_html_destination_parser_skips_urls_and_absolute_paths() {
+    assert_eq!(
+        super::links::canonical_html_destinations(
+            "- <a id=\"guide\"></a>[Guide](guide.md)\n\
+             - <a id=\"abs\"></a>[Abs](/docs/guide.md)\n\
+             - <a id=\"url\"></a>[Url](https://example.com/guide.md)\n\
+             - <a id=\"txt\"></a>[Txt](guide.txt)\n\
+             - not a list item [Guide](guide.md)\n"
+        ),
+        vec!["guide.md".to_string()]
+    );
 }

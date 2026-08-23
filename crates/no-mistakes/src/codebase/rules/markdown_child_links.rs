@@ -23,12 +23,14 @@ pub(crate) struct Group {
     pub(crate) parents: Vec<String>,
     pub(crate) children: Vec<String>,
     pub(crate) require_whole_file: bool,
+    pub(crate) count_canonical_html_list_items: bool,
 }
 
 pub(crate) struct CompiledGroup {
     parents: GlobMatcher,
     children: GlobMatcher,
     require_whole_file: bool,
+    count_canonical_html_list_items: bool,
 }
 
 pub(crate) fn check_with_files_sources_and_facts(
@@ -58,6 +60,7 @@ fn compile_groups(options: &Options) -> Result<Vec<CompiledGroup>> {
                 parents: GlobMatcher::new(&group.parents, &format!("{RULE_ID} parents"))?,
                 children: GlobMatcher::new(&group.children, &format!("{RULE_ID} children"))?,
                 require_whole_file: group.require_whole_file,
+                count_canonical_html_list_items: group.count_canonical_html_list_items,
             })
         })
         .collect()

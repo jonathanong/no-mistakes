@@ -38,7 +38,7 @@ rules:
 | [`forbidden-workspace-closure`](forbidden-workspace-closure.md)               | Prevent workspace package closures from reaching forbidden packages.            |
 | [`integration-test-no-mocks`](integration-test-no-mocks.md)                   | Ban mocking libraries and mock helpers in integration tests.                    |
 | [`lockfile-allowlist`](lockfile-allowlist.md)                                 | Allow only configured package lock files.                                       |
-| [`markdown-child-links`](markdown-child-links.md)                                 | Require parent Markdown files to link every matching child.                 |
+| [`markdown-child-links`](markdown-child-links.md)                                 | Require parent Markdown files to link every matching child, including optional canonical HTML list items. |
 | [`markdown-eval-tests`](markdown-eval-tests.md)                                   | Ban tests that eval markdown shell blocks unless exact-path allowlisted.    |
 | [`markdown-link-display-text`](markdown-link-display-text.md)                 | Require Markdown link text to match the linked file basename.                   |
 | [`markdown-mermaid-validation`](markdown-mermaid-validation.md)               | Validate Mermaid diagrams embedded in Markdown fences.                          |

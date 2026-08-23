@@ -13,12 +13,15 @@ rules:
         - parents: ["docs/**/README.md"]
           children: ["docs/**/*.md", "docs/*.md"]
           requireWholeFile: true
+          countCanonicalHtmlListItems: true
 ```
 
 Links are resolved from shared Markdown facts (`link_destinations`). External
 URLs are ignored. The parent file itself is not required to link to itself.
 `requireWholeFile: true` ignores destinations that include a `#` fragment so a
-section link does not count as covering the child file.
+section link does not count as covering the child file. pulldown-cmark does not
+see HTML list items such as `- <a id="guide"></a>[Guide](guide.md)`; set
+`countCanonicalHtmlListItems: true` to count those as parent links.
 
 Counterexample: `docs/README.md` exists and `docs/guide.md` matches the child
 glob, but the README has no local link to `guide.md`.

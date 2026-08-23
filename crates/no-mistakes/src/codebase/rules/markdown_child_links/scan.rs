@@ -39,13 +39,12 @@ fn scan_group(
     let mut linked = BTreeSet::new();
     for parent in &parents {
         let facts = facts.get_for_rule(parent, RULE_ID)?;
-        for link in super::links::resolve_parent_links(
-            root,
-            parent,
-            &facts.link_destinations,
-            known,
-            remapper,
-        ) {
+        let mut destinations = facts.link_destinations.clone();
+        if group.count_canonical_html_list_items {
+            destinations.extend(super::links::canonical_html_destinations(&facts.source));
+        }
+        for link in super::links::resolve_parent_links(root, parent, &destinations, known, remapper)
+        {
             if group.require_whole_file && !link.whole_file {
                 continue;
             }
