@@ -19,10 +19,7 @@ pub(super) fn run_git(root: &Path, args: &[&str]) {
         .env_remove("GIT_INDEX_FILE")
         .output()
         .unwrap();
-    assert!(
-        output.status.success(),
-        "git {} failed: {}",
-        args.join(" "),
-        String::from_utf8_lossy(&output.stderr)
-    );
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let detail = format!("git {} failed: {stderr}", args.join(" "));
+    assert!(output.status.success(), "{detail}");
 }
