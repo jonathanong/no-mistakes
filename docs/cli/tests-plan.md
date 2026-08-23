@@ -56,6 +56,13 @@ returning an empty plan:
 Node's `testsPlan()` rejects with the same stable code and message instead of
 resolving to an empty plan.
 
+JSON plans from the CLI keep snake_case keys. The Node `testsPlan()` /
+`testsImpact()` APIs return camelCase only (`changedFiles`, `selectedTests`,
+`executionTargets`, `fallbackTriggered`). `executionTargets` is the CI
+contract: tests grouped by runner, config, project, and optional path-prefix
+`name` (Swift packages). `--include-glob` / `includeGlob` on `testsPlan()`
+keeps only selected tests whose relative path matches.
+
 JSON plans include `changed_files`, the sorted, deduplicated, root-relative
 inventory prepared by that invocation. It is present even when no tests are
 selected and retains deleted paths plus both sides of detected renames and
@@ -68,8 +75,8 @@ an in-root target keeps its lexical path in `changed_files`, while dependency
 analysis follows the resolved target.
 
 Key options: `--root`, `--config`, `--tsconfig`, `--environment`,
-`--limit-percent`, `--limit-files`, `--global-config-fallback`, `--format`, and
-`--json`.
+`--limit-percent`, `--limit-files`, `--global-config-fallback`,
+`--include-comment`, `--include-glob`, `--format`, and `--json`.
 
 `--format explain` renders a deterministic, human-readable plan: the normalized
 changed-file inventory (including files that selected no tests), selected test

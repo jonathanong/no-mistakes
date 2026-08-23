@@ -130,6 +130,10 @@ pub(crate) struct PlanArgs {
     /// Include the markdown PR comment on the plan JSON (`comment` field).
     #[arg(long = "include-comment", default_value_t = false)]
     pub(crate) include_comment: bool,
+
+    /// Keep only selected tests whose relative path matches one of these globs.
+    #[arg(long = "include-glob")]
+    pub(crate) include_glob: Vec<String>,
 }
 
 #[derive(Args, Debug, Clone)]

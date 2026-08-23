@@ -40,6 +40,7 @@ pub mod postgres_lock_ordering;
 pub mod postgres_no_generated_column_writes;
 pub mod postgres_no_offset;
 pub mod postgres_redundant_index;
+pub mod postgres_require_query_annotation;
 pub mod production_dependency_declarations;
 pub mod require_files_in_subdirs;
 pub mod require_storybook_stories;

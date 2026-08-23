@@ -70,6 +70,7 @@ pub(crate) fn plan_args_for(
         format: None,
         json: false,
         include_comment: false,
+        include_glob: Vec::new(),
     }
 }
 
