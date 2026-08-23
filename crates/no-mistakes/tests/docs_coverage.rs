@@ -255,6 +255,7 @@ fn no_mistakes_rules_have_docs() {
         rules::POSTGRES_CONSTRAINT_VALIDATE,
         rules::POSTGRES_FK_INDEX,
         rules::POSTGRES_LOCK_ORDERING,
+        rules::POSTGRES_NO_OFFSET,
         rules::POSTGRES_NO_GENERATED_COLUMN_WRITES,
         rules::POSTGRES_REDUNDANT_INDEX,
         playwright_rules::PLAYWRIGHT_COVERAGE,
