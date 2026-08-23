@@ -88,8 +88,8 @@ pub(super) fn prepare_with_settings(
                 selection.playwright_project.clone(),
                 selection.app.clone(),
                 snapshot.as_ref(),
-            )?;
-            Ok((selection, settings))
+            );
+            Ok((selection, settings?))
         })
         .collect::<Result<Vec<_>>>()?;
     let mut config_paths = prepared_settings
@@ -102,7 +102,8 @@ pub(super) fn prepare_with_settings(
         root,
         &config_paths,
         Some(snapshot.source_store_for(root).as_ref()),
-    )?;
+    );
+    let loaded_configs = loaded_configs?;
 
     let mut fact_plan = PlaywrightFactPlan::default();
     let mut test_files_by_project = BTreeMap::new();
@@ -115,7 +116,8 @@ pub(super) fn prepare_with_settings(
             snapshot.as_ref(),
             &mut fact_plan,
             selection.unique_html_ids,
-        )?;
+        );
+        let test_files = test_files?;
         test_files_by_project.insert(settings.project.clone(), test_files);
         prepared_selections.push(PreparedRuleSelection {
             selection,
@@ -156,7 +158,8 @@ fn add_settings_facts(
         &settings.playwright_configs,
         settings.project.as_deref(),
         loaded_configs,
-    )?;
+    );
+    let playwright = playwright?;
     let test_files = discover_test_files_from_visible(root, settings, &playwright, snapshot)?;
     for test_file in &test_files {
         let attributes = test_file.test_id_attributes();

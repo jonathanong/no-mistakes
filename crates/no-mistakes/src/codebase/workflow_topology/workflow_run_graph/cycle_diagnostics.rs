@@ -77,9 +77,9 @@ fn search_cycle_witness(
     adjacency: &HashMap<String, HashSet<String>>,
     witness: &mut Vec<String>,
 ) -> bool {
-    let Some(targets) = adjacency.get(current) else {
-        return false;
-    };
+    let targets = adjacency
+        .get(current)
+        .expect("cycle search stays on known workflow nodes");
     let mut sorted_targets: Vec<&String> = targets.iter().collect();
     sorted_targets.sort();
     for target in sorted_targets {
@@ -127,11 +127,12 @@ fn diagnose_chain_limits(
     let mut indegree: HashMap<String, u32> =
         acyclic_nodes.iter().map(|node| (node.clone(), 0)).collect();
     for source in &acyclic_nodes {
-        if let Some(targets) = adjacency.get(source) {
-            for target in targets {
-                if let Some(count) = indegree.get_mut(target) {
-                    *count += 1;
-                }
+        for target in adjacency
+            .get(source)
+            .expect("acyclic sources are adjacency keys")
+        {
+            if let Some(count) = indegree.get_mut(target) {
+                *count += 1;
             }
         }
     }
@@ -147,16 +148,19 @@ fn diagnose_chain_limits(
         .collect();
 
     while let Some(source) = pending.pop_front() {
-        let Some(targets) = adjacency.get(&source) else {
-            continue;
-        };
+        let targets = adjacency
+            .get(&source)
+            .expect("Kahn sources are adjacency keys");
         let mut sorted_targets: Vec<&String> = targets.iter().collect();
         sorted_targets.sort();
         for target in sorted_targets {
             if !indegree.contains_key(target) {
                 continue;
             }
-            let mut candidate = paths.get(&source).cloned().unwrap_or_default();
+            let mut candidate = paths
+                .get(&source)
+                .cloned()
+                .expect("Kahn sources start with a path");
             candidate.push(target.clone());
             let should_replace = match paths.get(target) {
                 None => true,

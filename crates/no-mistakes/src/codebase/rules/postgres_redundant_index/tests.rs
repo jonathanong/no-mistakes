@@ -105,6 +105,11 @@ fn later_drop_removes_the_prefix_index() {
 }
 
 #[test]
+fn concurrent_drop_index_removes_the_prefix_index() {
+    assert!(run(&fixture("concurrent-drop"), "").is_empty());
+}
+
+#[test]
 fn allowed_index_exempts_the_prefix() {
     assert!(run(
         &fixture("fail"),

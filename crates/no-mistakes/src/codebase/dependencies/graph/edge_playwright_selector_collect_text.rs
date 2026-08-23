@@ -50,7 +50,8 @@ fn finish_selector_text_edges(
                 )
             },
         },
-    )?;
+    );
+    let text_setup = text_setup?;
     let text_context = text_setup.has_matching_text_candidate.then_some(
         crate::playwright::analysis::text_edges::TextEdgeContext {
             app_text_targets: text_setup.app_text_targets.as_slice(),

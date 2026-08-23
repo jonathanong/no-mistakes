@@ -89,7 +89,8 @@ pub fn run(
         &codebase_config,
         &config,
         &visible_paths,
-    )?;
+    );
+    let prepared_graph = prepared_graph?;
     let interner = session.interner_arc();
     let graph = DepGraph::build_with_plan_files_prepared_config_facts_resolution_cache_and_session(
         PreparedGraphBuild {
@@ -107,7 +108,8 @@ pub fn run(
             visible_paths: Some(&visible_paths),
         },
         session,
-    )?;
+    );
+    let graph = graph?;
 
     run_with_prepared(&root, component, depth, &graph, &facts, &interner)
 }

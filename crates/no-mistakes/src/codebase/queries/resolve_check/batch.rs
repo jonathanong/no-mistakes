@@ -103,7 +103,8 @@ pub(super) fn compute_many(args: &ResolveCheckArgs) -> Result<Vec<ResolveCheckRe
         &args.files,
         args.root.as_deref(),
         args.tsconfig.as_deref(),
-    )?;
+    );
+    let targets = targets?;
     // `resolve_targets` rejects an empty request before preparing its session.
     // Indexing here keeps that boundary invariant explicit and avoids a second,
     // unreachable empty-batch branch in the analysis layer.

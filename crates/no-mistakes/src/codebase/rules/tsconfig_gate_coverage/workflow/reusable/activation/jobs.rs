@@ -105,7 +105,8 @@ impl<'a, 'workflow> JobScanner<'a, 'workflow> {
                 &callee_state,
                 self.context,
                 self.memo,
-            )?;
+            );
+            let callee_scan = callee_scan?;
             if has_instances && !skipped {
                 merge_reusable_outputs(&mut outputs, &callee_scan);
                 if !job_statically_not_enforcing(job, inputs) {

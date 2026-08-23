@@ -41,6 +41,8 @@ include!("output_args.rs");
 include!("run.rs");
 
 #[cfg(test)]
+mod shared_traversal_collect_cache_tests;
+#[cfg(test)]
 mod shared_traversal_facts_tests;
 #[cfg(test)]
 mod shared_traversal_test_api;
@@ -75,13 +77,14 @@ pub(crate) fn collect_and_filter_entries(
     let mut framework_plan =
         crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan);
     framework_plan.include_framework_names(args.tests.iter().map(String::as_str));
-    let mut shared = SharedTraversalContext::prepare_with_framework_plan(
+    let shared = SharedTraversalContext::prepare_with_framework_plan(
         root,
         args.tsconfig.as_deref(),
         None,
         build_plan,
         framework_plan,
-    )?;
+    );
+    let mut shared = shared?;
 
     timings.mark("search");
     timings.mark("ingest");

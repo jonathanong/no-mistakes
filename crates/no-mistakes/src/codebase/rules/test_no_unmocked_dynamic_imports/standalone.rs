@@ -76,7 +76,8 @@ pub(crate) fn check_inner(
             &file,
             &mocks,
             &dependency_cache,
-        )?;
+        );
+        let reachable = reachable?;
         reachable_findings.extend(reachable.findings);
         covered_reachable_imports.extend(reachable.covered);
     }

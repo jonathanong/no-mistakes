@@ -45,6 +45,8 @@ fn schema_ddl_start_finds_alter_create_and_unique_index() {
     assert!(schema_ddl_start(&tokens("BEGIN CREATE TABLE t (id int)")).is_some());
     assert!(schema_ddl_start(&tokens("BEGIN CREATE INDEX t_id ON t (id)")).is_some());
     assert!(schema_ddl_start(&tokens("BEGIN CREATE UNIQUE INDEX t_id ON t (id)")).is_some());
+    assert!(schema_ddl_start(&tokens("BEGIN DROP INDEX idx_t")).is_some());
+    assert!(schema_ddl_start(&tokens("BEGIN DROP TABLE t")).is_some());
 }
 
 #[test]
@@ -55,6 +57,8 @@ fn schema_ddl_start_skips_non_schema_ddl() {
     assert!(schema_ddl_start(&tokens("CREATE")).is_none());
     assert!(schema_ddl_start(&tokens("ALTER")).is_none());
     assert!(schema_ddl_start(&tokens("SELECT 1")).is_none());
+    assert!(schema_ddl_start(&tokens("DROP TYPE t")).is_none());
+    assert!(schema_ddl_start(&tokens("DROP")).is_none());
 }
 
 #[test]
@@ -69,6 +73,39 @@ fn recover_schema_ddl_parses_or_skips_trailing_junk() {
         recover_schema_ddl(&tokens("IF THEN CREATE UNIQUE INDEX t_id ON t (id)")).expect("index"),
         sqlparser::ast::Statement::CreateIndex(_)
     ));
+}
+
+#[test]
+fn recover_chr_concatenations_as_sql() {
+    let sql =
+        "chr(85)||chr(80)||chr(68)||chr(65)||chr(84)||chr(69)||' items SET created_at = now()'";
+    let expanded = super::super::expand_chr_encoded_sql(sql).expect("chr expansion");
+    let statements = super::super::parse_postgres_sql_lenient(&expanded);
+    assert_eq!(statements.len(), 1, "{statements:#?}");
+    assert!(matches!(
+        statements[0],
+        sqlparser::ast::Statement::Update { .. }
+    ));
+    assert!(super::super::expand_chr_encoded_sql("chr (85)||' items SET x=1'").is_some());
+}
+
+#[test]
+fn parse_chunks_recovers_chr_encoded_schema_after_ordinary_parse_fails() {
+    let sql = "chr(67)||chr(82)||chr(69)||chr(65)||chr(84)||chr(69)||' TABLE t (id int)'";
+    let statements = super::parse_chunks(vec![tokens(sql)]);
+    assert_eq!(statements.len(), 1, "{statements:#?}");
+    assert!(matches!(
+        statements[0],
+        sqlparser::ast::Statement::CreateTable(_)
+    ));
+}
+
+#[test]
+fn concatenated_strings_joins_dollar_quoted_literals() {
+    assert_eq!(
+        super::concatenated_strings(&tokens("$$CREATE$$ || $$ TABLE t (id int)$$")),
+        Some("CREATE TABLE t (id int)".to_string())
+    );
 }
 
 #[test]

@@ -3,6 +3,7 @@ use crate::playwright::playwright_urls::api::{
     extract_playwright_url_occurrences, extract_playwright_urls,
 };
 use crate::playwright::playwright_urls::callee::callee_has_not;
+use std::path::Path;
 
 #[test]
 fn page_url_to_match_requires_positive_page_url_expectation() {
@@ -46,6 +47,41 @@ fn ignores_negative_to_have_url_assertions() {
         "not".to_string(),
         "toHaveURL".to_string()
     ])));
+}
+
+#[test]
+fn expect_call_expression_unwraps_call_not_and_parentheses() {
+    use crate::playwright::playwright_urls::callee::expect_call_expression;
+    use oxc_ast::ast::Expression;
+    crate::playwright::ast::with_program(
+        Path::new("fixture.ts"),
+        "expect(page.url()).not.toMatch('/x');\nvoid (expect(page.url()));",
+        |program, _| {
+            let mut saw_call = false;
+            let mut saw_not = false;
+            for stmt in &program.body {
+                let oxc_ast::ast::Statement::ExpressionStatement(expr) = stmt else {
+                    continue;
+                };
+                match &expr.expression {
+                    Expression::CallExpression(call) => {
+                        if let Expression::StaticMemberExpression(member) = &call.callee {
+                            if member.property.name == "toMatch" {
+                                saw_not = expect_call_expression(&member.object).is_some();
+                            }
+                        }
+                    }
+                    Expression::UnaryExpression(unary) => {
+                        saw_call = expect_call_expression(&unary.argument).is_some();
+                    }
+                    _ => {}
+                }
+            }
+            assert!(saw_not, "`.not.toMatch` should unwrap onto expect()");
+            assert!(saw_call, "parenthesized expect() should unwrap");
+        },
+    )
+    .expect("fixture parses");
 }
 
 #[test]

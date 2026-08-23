@@ -69,7 +69,8 @@ pub(crate) fn collect_fetches_for_routes_from_snapshot(
             root,
             &mut cache,
             &visible_files,
-        )?;
+        );
+        let fetches = fetches?;
         let rel_file = relative_string(root, &route.file);
         index.insert(rel_file, fetches);
     }
@@ -112,7 +113,8 @@ pub(crate) fn collect_fetches_for_routes_from_snapshot_with_facts(
             &mut cache,
             &mut parsed_files,
             &visible_files,
-        )?;
+        );
+        let fetches = fetches?;
         index.insert(relative_string(root, &route.file), fetches);
     }
     Ok(index)

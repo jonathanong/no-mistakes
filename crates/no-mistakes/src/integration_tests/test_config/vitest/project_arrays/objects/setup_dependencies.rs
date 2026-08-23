@@ -63,13 +63,14 @@ fn setup_dependencies_bounded(
         Expression::ConditionalExpression(conditional) => {
             let branch_triggers =
                 super::dynamic_triggers::dynamic_trigger_paths(&conditional.test, ctx);
-            let mut dependencies = setup_dependencies_bounded(
+            let dependencies = setup_dependencies_bounded(
                 &conditional.consequent,
                 field,
                 ctx,
                 depth + 1,
                 remaining,
-            )?;
+            );
+            let mut dependencies = dependencies?;
             dependencies.extend(setup_dependencies_bounded(
                 &conditional.alternate,
                 field,

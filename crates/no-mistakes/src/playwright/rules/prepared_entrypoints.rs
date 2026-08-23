@@ -17,7 +17,8 @@ pub fn prepare(
     let sources = snapshot.source_store_for(root);
     let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
         None, root, &paths, &sources,
-    )?;
+    );
+    let tsconfig = tsconfig?;
     let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
         .unwrap_or_default();
     prepare_with_settings(

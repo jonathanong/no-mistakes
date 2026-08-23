@@ -1,3 +1,4 @@
 {
-  "include": ["src/**/*.ts"]
+  "files": ["src/outside.ts"],
+  "references": [{ "path": "../package-extends-file/tsconfig.json" }]
 }

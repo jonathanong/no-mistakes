@@ -25,6 +25,8 @@ mod tests_more;
 mod tests_p2;
 #[cfg(test)]
 mod tests_p3;
+#[cfg(test)]
+mod tests_php_uses;
 
 use std::path::{Path, PathBuf};
 

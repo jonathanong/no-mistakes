@@ -310,3 +310,17 @@ fn optional_json_parses_use_a_one_file_store_when_no_session_is_prepared() {
     assert!(json.is_object());
     assert!(SourceStore::parse_json_optional(None, &fixture("missing.json")).is_none());
 }
+
+#[test]
+fn invalid_utf8_source_reads_are_cached_as_invalid_data() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("invalid.ts");
+    std::fs::write(&path, [0xff, 0xfe, b'x']).unwrap();
+    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&path)));
+    let store = SourceStore::new(inventory);
+    let first = store.read_path(&path).unwrap_err();
+    let second = store.read_path(&path).unwrap_err();
+    assert_eq!(first.kind(), ErrorKind::InvalidData);
+    assert!(Arc::ptr_eq(&first, &second));
+    assert_eq!(store.physical_read_count(), 1);
+}

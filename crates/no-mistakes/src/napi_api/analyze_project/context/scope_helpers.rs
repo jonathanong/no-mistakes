@@ -47,7 +47,8 @@ fn effective_scope(
 ) -> Result<EffectiveScope> {
     let root = super::options::resolve_root(
         string_option(request, "root")?.or(options.root.as_deref()),
-    )?;
+    );
+    let root = root?;
     let inherited_root = super::options::resolve_root(options.root.as_deref())?;
     let request_tsconfig = string_option(request, "tsconfig")?;
     let automatic_tsconfig = request_tsconfig.is_none() && options.tsconfig.is_none();

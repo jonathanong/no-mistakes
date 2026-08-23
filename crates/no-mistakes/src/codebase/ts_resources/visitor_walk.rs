@@ -89,12 +89,9 @@ impl<'a> ResourceVisitor<'a> {
                     function,
                     oxc_syntax::scope::ScopeFlags::empty(),
                 ),
-            ExportDefaultDeclarationKind::FunctionExpression(function) => self
-                .visit_scoped_function(
-                    Some("default".to_string()),
-                    function,
-                    oxc_syntax::scope::ScopeFlags::empty(),
-                ),
+            // oxc parses `export default function …` as FunctionDeclaration, even
+            // when the function is anonymous. FunctionExpression only appears after
+            // parentheses, which `visit_parenthesized_default` already unwraps.
             ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
                 self.visit_scoped_arrow(Some("default".to_string()), arrow)
             }

@@ -90,7 +90,8 @@ fn precompute_setup_data_from_config_files_inner(
             vec![config_file.path.clone()],
             visible_files,
             sources,
-        )?;
+        );
+        let setup_files = setup_files?;
         result.push(ConfigSetupData {
             filter,
             setup_files,

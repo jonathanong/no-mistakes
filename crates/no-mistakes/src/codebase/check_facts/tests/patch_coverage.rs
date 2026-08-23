@@ -228,3 +228,42 @@ fn collect_file_facts_retains_prepared_runner_config_parse_errors() {
     .expect("batched prepared runner config parse error is retained as facts");
     assert!(batched.integration_runner_config.is_some());
 }
+
+#[test]
+fn batch_collection_covers_graph_only_files() {
+    use crate::codebase::check_facts::{
+        collect_check_fact_batch_with_session, BatchCheckFactRequest, CheckFactPlan,
+    };
+    use std::sync::Arc;
+
+    let root = super::fixture_path("");
+    let file = root.join("src/everything.tsx");
+    let extra = root.join("src/invalid.ts");
+    let inventory = Arc::new(crate::codebase::ts_source::FileInventory::from_paths(&[
+        file.clone(),
+        extra.clone(),
+    ]));
+    let sources = crate::codebase::ts_source::SourceStore::new(inventory);
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let maps = collect_check_fact_batch_with_session(
+        &session,
+        vec![BatchCheckFactRequest {
+            root,
+            files: vec![file.clone()],
+            graph_files: vec![file, extra.clone()],
+            plan: CheckFactPlan {
+                graph: crate::codebase::ts_source::facts::TsFactPlan {
+                    imports: true,
+                    ..Default::default()
+                },
+                ..CheckFactPlan::default()
+            },
+            playwright: None,
+            sources: Arc::new(sources),
+        }],
+    );
+    assert_eq!(maps.len(), 1);
+    assert!(
+        maps[0].ts.contains_key(&extra) || maps[0].graph_files.iter().any(|path| path == &extra)
+    );
+}

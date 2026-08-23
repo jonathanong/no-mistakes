@@ -54,14 +54,15 @@ pub(crate) fn check_with_prepared_facts(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for prepared_selection in &prepared.selections {
-        findings.extend(check_selection_with_facts(
+        let next = check_selection_with_facts(
             root,
             config,
             facts,
             prepared.snapshot.as_ref(),
             &prepared_selection.selection,
             &prepared_selection.settings,
-        )?);
+        );
+        findings.extend(next?);
     }
     findings.sort();
     findings.dedup();
@@ -93,7 +94,8 @@ fn check_with_facts_from_snapshot(
             selection.playwright_project.clone(),
             selection.app.clone(),
             snapshot,
-        )?;
+        );
+        let settings = settings?;
         findings.extend(check_selection_with_facts(
             root, config, facts, snapshot, &selection, &settings,
         )?);

@@ -57,7 +57,8 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
         args.config,
         args.tsconfig,
         args.include_suppressed,
-    )?;
+    );
+    let results = results?;
     record_missing_check_timings(&results);
     no_mistakes::invocation::commit_timeout()?;
     for warning in &results.warnings {

@@ -128,8 +128,10 @@ fn resolve_relative(module: &str, path: &Path, package_root: Option<&Path>) -> O
     } else {
         dir.join(rest.replace('.', std::path::MAIN_SEPARATOR_STR))
     };
-    module_from_path(package_root, &target.with_extension("py"))
-        .or_else(|| module_from_path(package_root, &target.join("__init__.py")))
+    match module_from_path(package_root, &target.with_extension("py")) {
+        Some(module) => Some(module),
+        None => module_from_path(package_root, &target.join("__init__.py")),
+    }
 }
 
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {

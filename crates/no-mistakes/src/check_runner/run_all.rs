@@ -23,7 +23,8 @@ pub(crate) fn run_all_with_suppressed(
         &root,
         config_path.as_deref(),
         tsconfig_path.as_deref(),
-    )?;
+    );
+    let prepared = prepared?;
     let config_path = prepared.config_path.clone();
     let config = &prepared.config;
     let queues_enabled = check_tasks::queues_configured(config);
@@ -89,7 +90,8 @@ pub(crate) fn run_all_with_suppressed(
         canonical_graph_plan,
         &mut playwright_fact_plan,
         &mut plan,
-    )?;
+    );
+    let prepared_graph = prepared_graph?;
     let fact_demand = finite_set_plan::prepare(
         &root,
         config,

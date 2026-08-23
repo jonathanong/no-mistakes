@@ -127,3 +127,39 @@ fn lockfile_diff_napi_ignores_worktree_lockfile_but_honors_explicit_path() {
         .iter()
         .any(|package| package == "lodash"));
 }
+
+#[test]
+fn find_git_root_returns_none_outside_a_repository() {
+    let dir = tempfile::tempdir().unwrap();
+    assert_eq!(find_git_root(dir.path()).unwrap(), None);
+}
+
+#[test]
+fn git_ref_exists_is_false_for_missing_refs() {
+    let dir = tempfile::tempdir().unwrap();
+    setup_git_repo(dir.path());
+    assert!(!git_ref_exists(dir.path(), "missing-ref").unwrap());
+    assert!(git_ref_exists(dir.path(), "HEAD").is_ok());
+}
+
+#[test]
+fn detect_lockfiles_from_head_uses_subdirectory_paths() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    setup_git_repo(root);
+    std::fs::create_dir_all(root.join("app")).unwrap();
+    std::fs::write(root.join("app/pnpm-lock.yaml"), "lockfileVersion: '9.0'\n").unwrap();
+    std::process::Command::new("git")
+        .args(["add", "app/pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "lock"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    let found = detect_lockfiles_from_head(root, "HEAD", &root.join("app")).unwrap();
+    assert_eq!(found.len(), 1);
+    assert!(found[0].ends_with("pnpm-lock.yaml"));
+}

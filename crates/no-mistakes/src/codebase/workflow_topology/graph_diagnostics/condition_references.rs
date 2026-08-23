@@ -138,3 +138,6 @@ fn diagnose_step_references(
         }
     }
 }
+
+#[cfg(test)]
+mod tests;

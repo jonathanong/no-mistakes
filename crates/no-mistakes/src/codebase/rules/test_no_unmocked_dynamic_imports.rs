@@ -37,7 +37,8 @@ pub fn check(
         &tsconfig,
         GraphBuildPlan::imports_and_workspace(),
         &graph_files,
-    )?;
+    );
+    let graph = graph?;
     let manual_mocks = manual_mocks::discover_from_files(root, &files);
     check_inner(root, config, &files, &tsconfig, &graph, &manual_mocks)
 }

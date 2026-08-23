@@ -23,8 +23,7 @@ fn playwright_layout_edges_use_discovered_file_set() {
 
 #[test]
 fn playwright_route_edges_use_app_root_and_filter_graph_files() {
-    let root =
-        crate::codebase::ts_resolver::normalize_path(&fixture("playwright-route-edges-v2"));
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("playwright-route-edges-v2"));
     let test_file = root.join("tests/e2e/home.spec.ts");
     let invalid_test_file = root.join("tests/e2e/invalid.spec.ts");
     let page = root.join("web/app/page.tsx");
@@ -54,7 +53,11 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
         )),
         "expected route edge, got {edges:?}"
     );
-    assert!(edges.contains(&(NodeId::file(page.clone()), NodeId::file(layout), EdgeKind::Layout)));
+    assert!(edges.contains(&(
+        NodeId::file(page.clone()),
+        NodeId::file(layout),
+        EdgeKind::Layout
+    )));
 
     let filtered_edges = collect_playwright_route_edges(
         &root,
@@ -103,7 +106,10 @@ fn playwright_route_edges_reuse_shared_route_cache_instead_of_rescanning() {
     // Pre-populate the shared route cache with an empty list before the producer ever runs,
     // so a correct implementation sees this stale-but-cached value instead of rescanning disk.
     let prepopulated = facts.get_or_compute_playwright_routes(&settings, &Vec::new);
-    assert!(prepopulated.is_empty(), "sanity check on the pre-populated cache value");
+    assert!(
+        prepopulated.is_empty(),
+        "sanity check on the pre-populated cache value"
+    );
 
     let edges = collect_playwright_route_edges(&root, None, &all_files, Some(&facts));
 
@@ -118,7 +124,7 @@ fn playwright_route_edges_reuse_shared_route_cache_instead_of_rescanning() {
 #[test]
 fn playwright_route_edges_borrow_cached_occurrences_across_repeated_analysis() {
     use crate::codebase::check_facts::{
-        collect_check_facts_with_graph_files_and_playwright, CheckFactPlan,
+        CheckFactPlan, collect_check_facts_with_graph_files_and_playwright,
     };
     use crate::codebase::dependencies::graph::TsFactLookup;
 
@@ -202,14 +208,12 @@ fn playwright_route_edges_honor_cached_parse_errors_without_rereading_disk() {
         parse_error_lookups: AtomicUsize::new(0),
     };
 
-    let edges = collect_playwright_route_edges(
-        &root,
-        None,
-        &[test_file, page],
-        Some(&facts),
-    );
+    let edges = collect_playwright_route_edges(&root, None, &[test_file, page], Some(&facts));
 
-    assert!(edges.is_empty(), "cached error must suppress the on-disk route edge");
+    assert!(
+        edges.is_empty(),
+        "cached error must suppress the on-disk route edge"
+    );
     assert_eq!(facts.parse_error_lookups.load(Ordering::Relaxed), 1);
 }
 
@@ -223,8 +227,7 @@ fn playwright_route_edges_honor_cached_parse_errors_without_rereading_disk() {
 /// internally, both calls would produce identical (non-empty) results.
 #[test]
 fn playwright_route_edges_load_settings_from_the_supplied_config_path() {
-    let root =
-        crate::codebase::ts_resolver::normalize_path(&fixture("playwright-route-edges-v2"));
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("playwright-route-edges-v2"));
     let test_file = root.join("tests/e2e/home.spec.ts");
     let page = root.join("web/app/page.tsx");
     let layout = root.join("web/app/layout.tsx");
@@ -298,6 +301,57 @@ fn playwright_route_edges_match_unresolved_interpolations_to_dynamic_segment() {
             spec.display()
         );
     }
+}
+
+#[test]
+fn playwright_fact_plan_covers_graph_consumers_without_rule_selections() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("playwright-route-edges-v2"));
+    let plan = crate::playwright::rules::fact_plan_for_consumers(
+        &root,
+        None,
+        &crate::config::v2::NoMistakesConfig::default(),
+        crate::playwright::rules::PlaywrightFactConsumers {
+            graph_selectors: true,
+            graph_routes: true,
+        },
+    )
+    .unwrap();
+    assert!(plan.is_some());
+}
+
+#[test]
+fn playwright_fact_plan_for_consumers_surfaces_targeted_config_errors() {
+    let root = crate::playwright::test_support::fixture_path(&["playwright-configs", "multi-config"]);
+    let mut config = crate::config::v2::NoMistakesConfig {
+        rules: vec![crate::config::v2::schema::RuleDef {
+            rule: crate::playwright::rules::PLAYWRIGHT_COVERAGE.to_string(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            tests: crate::config::v2::schema::RuleTestTargets {
+                playwright: vec!["missing".to_string()],
+                ..crate::config::v2::schema::RuleTestTargets::default()
+            },
+            ..crate::config::v2::schema::RuleDef::default()
+        }],
+        ..crate::config::v2::NoMistakesConfig::default()
+    };
+    config.tests.playwright.configs = Some(crate::config::v2::schema::StringOrList::Many(vec![
+        "playwright.config.mts".to_string(),
+        "playwright.storybook.config.mts".to_string(),
+    ]));
+    let error = match crate::playwright::rules::fact_plan_for_consumers(
+        &root,
+        None,
+        &config,
+        crate::playwright::rules::PlaywrightFactConsumers::default(),
+    ) {
+        Ok(_) => panic!("expected targeted Playwright config validation error"),
+        Err(error) => error,
+    };
+    assert!(
+        error
+            .to_string()
+            .contains("no Playwright config found with name missing")
+    );
 }
 
 #[test]

@@ -85,6 +85,26 @@ export default {
           include: ['**/*.test.ts'],
         },
       },
+      {
+        extends: './vite.merged-member.config.js',
+        test: {
+          name: 'merged-member',
+        },
+      },
+      {
+        extends: './vite.merged-spread.config.js',
+        test: {
+          name: 'merged-spread',
+          include: ['merged-root/owned/**/*.test.ts'],
+        },
+      },
+      {
+        extends: './vite.no-default.config.js',
+        test: {
+          name: 'merged-no-default',
+          include: ['merged-root/owned/**/*.test.ts'],
+        },
+      },
     ],
   },
 }

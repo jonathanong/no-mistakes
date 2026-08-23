@@ -94,3 +94,46 @@ fn vitest_setup_branch_expansion_has_a_depth_limit() {
         assert!(setup.trigger_paths.contains(&root));
     }
 }
+
+#[test]
+fn vitest_setup_resolves_exported_static_arrays_and_skips_cycles() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-config/vitest-static-setup-exports"),
+    );
+    let path = root.join("vitest.config.ts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let projects = parse_vitest_fixture(&source, &path, &root).unwrap();
+    let setup = |name: &str| {
+        &projects
+            .iter()
+            .find(|project| project.policy_name.as_deref() == Some(name))
+            .unwrap_or_else(|| panic!("missing project {name}"))
+            .vitest_setup
+    };
+
+    let specifiers = |name: &str| {
+        setup(name)
+            .iter()
+            .filter_map(|dependency| dependency.specifier.as_deref())
+            .collect::<Vec<_>>()
+    };
+    assert!(specifiers("spread-exported").contains(&"./inner-setup.ts"));
+    assert!(specifiers("named-exported").contains(&"./named-setup.ts"));
+    let root_setup = &projects[0].vitest_setup;
+    assert!(
+        root_setup.iter().any(|dependency| {
+            dependency.specifier.as_deref() == Some("./root-setup.ts")
+                || dependency.specifier.as_deref() == Some("./inner-setup.ts")
+        }),
+        "{root_setup:#?}"
+    );
+    assert!(
+        setup("cycle-exported").iter().all(|dependency| {
+            dependency.specifier.is_none()
+                || dependency.specifier.as_deref() != Some("./inner-setup.ts")
+        }),
+        "{:#?}",
+        setup("cycle-exported")
+    );
+}

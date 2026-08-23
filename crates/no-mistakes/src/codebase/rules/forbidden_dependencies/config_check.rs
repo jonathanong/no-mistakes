@@ -22,7 +22,8 @@ pub(crate) fn check_with_config(
         tsconfig_path,
         root,
         graph_files.all(),
-    )?;
+    );
+    let tsconfig = tsconfig?;
     check_with_config_tsconfig_and_files(root, config, config_path, &tsconfig, &graph_files)
 }
 

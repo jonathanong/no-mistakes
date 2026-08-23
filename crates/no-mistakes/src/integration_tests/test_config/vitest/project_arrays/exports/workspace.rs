@@ -93,7 +93,8 @@ pub(super) fn workspace_exported_options(
                 imported: exported.to_string(),
             },
             ctx,
-        )?;
+        );
+        let options = options?;
         if !options.is_empty() {
             return Ok(options);
         }

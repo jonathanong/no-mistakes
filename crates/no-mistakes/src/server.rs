@@ -121,7 +121,8 @@ pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
                 &prepared,
                 &report,
                 &args.filters,
-            )?;
+            );
+            let contracts = contracts?;
             print_contracts(&contracts, format)?;
         }
     }
@@ -219,3 +220,6 @@ fn print_related(roots: &[String], edges: &[Edge], format: Format) -> Result<()>
 
 include!("server_edge_paths.rs");
 include!("server_contracts_print.rs");
+
+#[cfg(test)]
+mod tests;

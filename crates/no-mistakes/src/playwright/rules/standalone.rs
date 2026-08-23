@@ -40,7 +40,8 @@ pub fn check(
             selection.playwright_project.clone(),
             selection.app.clone(),
             &snapshot,
-        )?;
+        );
+        let settings = settings?;
         let test_policy = playwright_tests::TestPolicy {
             assert_conditional_tests: false,
             allow_skipped_tests: false,

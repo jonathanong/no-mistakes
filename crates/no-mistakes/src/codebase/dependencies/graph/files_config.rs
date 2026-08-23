@@ -96,10 +96,10 @@ fn graph_config_options_from_loaded_with_test_filter(
     // so one app's ambiguous root no longer discards every other app's
     // rewrites too — this is a best-effort convenience list, not a
     // Playwright rule execution, so per-app skip-on-error is intentional.
-    let rewrites = crate::config::v2::frontend_apps_lenient(root, v2_config, visible_paths)
-        .into_iter()
-        .flat_map(|app| app.rewrites)
-        .collect::<Vec<_>>();
+    let mut rewrites = Vec::new();
+    for app in crate::config::v2::frontend_apps_lenient(root, v2_config, visible_paths) {
+        rewrites.extend(app.rewrites);
+    }
     let rewrites = dedup_rewrites(rewrites);
     GraphConfigOptions {
         route: config.rule_options("route-consistency"),
@@ -127,10 +127,16 @@ fn graph_config_options_from_loaded_with_test_filter(
         dart_packages: v2_config.tests.dart.packages.clone(),
         queue_enqueues: flatten_queue_globs(v2_config, prefixed_queue_globs_enqueues),
         queue_workers: flatten_queue_globs(v2_config, prefixed_queue_globs_workers),
-        queue_cluster: v2_config
-            .projects
-            .values()
-            .find_map(|project| project.queues.cluster.clone()),
+        queue_cluster: {
+            let mut cluster = None;
+            for project in v2_config.projects.values() {
+                if let Some(value) = project.queues.cluster.clone() {
+                    cluster = Some(value);
+                    break;
+                }
+            }
+            cluster
+        },
         queue_glob_clusters: flatten_queue_glob_clusters(v2_config),
         trpc_routers: flatten_trpc_routers(v2_config),
         terraform: v2_config.infra.terraform.clone(),
@@ -153,10 +159,11 @@ fn graph_config_options_for_plan_with_config(
     plan: GraphBuildPlan,
     config_path: Option<&Path>,
 ) -> Option<GraphConfigOptions> {
-    graph_plan_needs_config(plan)
-        .then(|| match config_path {
-            Some(_) => graph_config_options_with_config(root, config_path),
-            None => graph_config_options(root),
-        })
-        .flatten()
+    if !graph_plan_needs_config(plan) {
+        return None;
+    }
+    match config_path {
+        Some(_) => graph_config_options_with_config(root, config_path),
+        None => graph_config_options(root),
+    }
 }

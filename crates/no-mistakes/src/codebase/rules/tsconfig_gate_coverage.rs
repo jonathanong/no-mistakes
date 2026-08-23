@@ -92,7 +92,8 @@ pub(crate) fn check_with_prepared(
                     .iter()
                     .map(|candidate| root.join(candidate))
                     .collect::<Vec<_>>(),
-            )?;
+            );
+            let candidates = candidates?;
             let candidates = candidates
                 .iter()
                 .map(|path| relative_slash_path(root, path))

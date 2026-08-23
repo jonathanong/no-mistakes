@@ -48,6 +48,10 @@ export function JsxAttrsBranches(props: { label?: string }) {
       <select data-case="size-dynamic" size={props.label} />
       <select data-case="size-negative" size={-1} />
       <select data-case="size-element" size={<span />} />
+      <button data-case="label-jsx-child" aria-label=<span /> />
+      <div data-case="aria-jsx-child" aria-hidden=<span /> />
+      <select data-case="size-jsx-child" size=<span /> />
+      <button data-case="label-spread" {...props} aria-label="ok" />
     </>
   );
 }

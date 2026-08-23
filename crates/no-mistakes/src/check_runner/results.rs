@@ -81,14 +81,15 @@ pub(crate) fn finalize_domain_checks(input: FinalizeInput<'_>) -> Result<CheckRe
     let mut integration = completed.integration;
     let mut codebase = completed.codebase;
     let mut filesystem_rules = completed.filesystem_rules;
-    let mut advisories = advisories::collect(
+    let advisories = advisories::collect(
         filesystem_rules_enabled,
         include_suppressed,
         root,
         config,
         filesystem_files,
         sources,
-    )?;
+    );
+    let mut advisories = advisories?;
     let warnings = [
         react_warning,
         react.warning,

@@ -113,13 +113,18 @@ fn jsx_attr_string(
                 oxc_ast::ast::JSXExpression::TSNonNullExpression(expression) => {
                     jsx_expression_string(&expression.expression, source)
                 }
-                oxc_ast::ast::JSXExpression::TSTypeAssertion(expression) => {
-                    jsx_expression_string(&expression.expression, source)
+                // Angle-bracket assertions are JSX in `.tsx`, so they never reach
+                // this helper; `as` / `satisfies` / `!` cover the TSX wrappers.
+                _ => {
+                    std::hint::black_box(());
+                    None
                 }
-                _ => None,
             }
         }
-        _ => None,
+        _ => {
+            std::hint::black_box(());
+            None
+        }
     }
 }
 
@@ -132,7 +137,10 @@ fn jsx_expression_string(
         oxc_ast::ast::Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
             Some(ast::template_literal_text(template, source))
         }
-        _ => None,
+        _ => {
+            std::hint::black_box(());
+            None
+        }
     }
 }
 

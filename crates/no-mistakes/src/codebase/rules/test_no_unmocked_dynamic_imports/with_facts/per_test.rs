@@ -108,7 +108,8 @@ pub(super) fn analyze(request: Request<'_>, file: PathBuf) -> Result<PerTestResu
         &mocks,
         dependency_cache,
         defer_suppression,
-    )?;
+    );
+    let reachable = reachable?;
     Ok(PerTestResult {
         direct_findings,
         reachable_findings: reachable.findings,

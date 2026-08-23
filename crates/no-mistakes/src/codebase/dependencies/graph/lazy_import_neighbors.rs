@@ -50,10 +50,11 @@ fn import_neighbors(
                 parsed,
                 program,
                 None,
-                fact_source
-                    .collect_plan
-                    .source
-                    .then(|| std::sync::Arc::clone(&source)),
+                if fact_source.collect_plan.source {
+                    Some(std::sync::Arc::clone(&source))
+                } else {
+                    None
+                },
             )
         }) {
             Ok(facts) => facts,
@@ -101,13 +102,17 @@ fn import_neighbors_from_facts(
                     ImportKind::RequireResolve => EdgeKind::RequireResolve,
                     _ => EdgeKind::WorkspaceImport,
                 };
-                return (is_indexable(target) || kind == EdgeKind::RequireResolve)
-                    .then(|| (NodeId::file_in(interner, target), kind));
+                if is_indexable(target) || kind == EdgeKind::RequireResolve {
+                    return Some((NodeId::file_in(interner, target), kind));
+                }
+                return None;
             }
             if let Some(target) = classification.preferred_path() {
                 let target = graph_files.visible_path(target)?;
-                return (is_indexable(target) || kind == EdgeKind::RequireResolve)
-                    .then(|| (NodeId::file_in(interner, target), kind));
+                if is_indexable(target) || kind == EdgeKind::RequireResolve {
+                    return Some((NodeId::file_in(interner, target), kind));
+                }
+                return None;
             }
             if classification.is_unresolved_external() {
                 return bare_module_node_in(interner, &imp.specifier).map(|module| (module, kind));

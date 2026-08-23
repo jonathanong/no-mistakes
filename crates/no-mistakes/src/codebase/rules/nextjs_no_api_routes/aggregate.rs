@@ -123,7 +123,8 @@ where
             config,
             rule,
             &mut inferred_roots,
-        )?;
+        );
+        let filter = filter?;
         findings.extend(
             items
                 .par_iter()
