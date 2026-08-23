@@ -65,6 +65,10 @@ fn swift_and_dotnet_fact_collectors_reuse_prepared_source_store() {
     );
     assert!(!first_swift.files.is_empty());
     let swift_reads = swift_store.physical_read_count();
+    assert!(
+        swift_reads > 0,
+        "Swift collection must read through SourceStore"
+    );
     let _ = crate::codebase::swift::collect_swift_facts_with_sources(
         &swift_root,
         &swift_files,
@@ -86,6 +90,10 @@ fn swift_and_dotnet_fact_collectors_reuse_prepared_source_store() {
     );
     assert!(!first_dotnet.files.is_empty());
     let dotnet_reads = dotnet_store.physical_read_count();
+    assert!(
+        dotnet_reads > 0,
+        "Dotnet collection must read through SourceStore"
+    );
     let _ = crate::codebase::dotnet::collect_dotnet_facts_with_sources(
         &dotnet_root,
         &dotnet_files,

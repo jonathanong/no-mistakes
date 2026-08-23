@@ -32,6 +32,16 @@ fn compiled_patterns_and_keyword_table_are_reused() {
         swift_reference_regex(),
         swift_reference_regex()
     ));
+    assert!(std::ptr::eq(swift_function_regex(), swift_function_regex()));
+    assert!(std::ptr::eq(swift_property_regex(), swift_property_regex()));
+    assert!(std::ptr::eq(
+        swift_endpoint_path_regex(),
+        swift_endpoint_path_regex()
+    ));
+    assert!(std::ptr::eq(
+        swift_interpolation_regex(),
+        swift_interpolation_regex()
+    ));
     assert!(std::ptr::eq(
         swift_reference_keywords(),
         swift_reference_keywords()
