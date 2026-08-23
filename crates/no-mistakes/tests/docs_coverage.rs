@@ -285,6 +285,7 @@ fn no_mistakes_rules_have_docs() {
         rules::SERVER_ROUTE_CLIENT_BOUNDARY,
         rules::SHELLCHECK_RUNNER,
         rules::STRICT_PACKAGE_LAYOUT,
+        rules::SWIFT_NO_RAW_PRINT,
         rules::TEST_EMAIL_DOMAIN_POLICY,
         rules::TEST_NO_DEPENDENCY_PINS,
         rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,

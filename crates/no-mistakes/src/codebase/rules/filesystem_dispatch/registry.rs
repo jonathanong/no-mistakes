@@ -15,6 +15,7 @@ macro_rules! filesystem_rules {
             FINITE_SET_CONSISTENCY => finite_set_consistency::check_with_files,
             FORBIDDEN_WORKSPACE_CLOSURE => forbidden_workspace_closure::check_with_files,
             STRUCTURED_CONFIG_POLICY => structured_config_policy::check_with_files,
+            SWIFT_NO_RAW_PRINT => swift_no_raw_print::check_with_files,
             TSCONFIG_ALIAS_FOLDER_MAPPING => tsconfig_alias_folder_mapping::check_with_files,
             TSCONFIG_FILE_COVERAGE => tsconfig_file_coverage::check_with_files,
             NO_GIT_IDENTITY_MUTATION => no_git_identity_mutation::check_with_files,
