@@ -1,7 +1,7 @@
 const assert = require("node:assert/strict");
 const test = globalThis.test || require("node:test").test;
 const { existsSync, readFileSync, writeFileSync, mkdtempSync } = require("node:fs");
-const { join } = require("node:path");
+const { join, resolve } = require("node:path");
 const { tmpdir } = require("node:os");
 const { pathToFileURL } = require("node:url");
 
@@ -332,6 +332,10 @@ test("programmatic API proxies object options through async native addon calls",
       "swiftTestTargets",
     );
     assert.equal((await api.ciTopology({ workflows: ["ci.yml"] })).options.workflows[0], "ci.yml");
+    assert.equal(
+      (await api.ciTopology({ workflows: ["ci.yml"] })).options.root,
+      resolve(process.cwd()),
+    );
     assert.equal(
       (await api.ciTopology({ workflows: ["deploy.yml"] })).options.workflows[0],
       "deploy.yml",

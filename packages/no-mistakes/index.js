@@ -124,7 +124,7 @@ async function ciTopology(options) {
   for (const memoKey of stale) topologyMemo.delete(memoKey);
   const cached = topologyMemo.get(key);
   if (cached) return cached.then((value) => structuredClone(value));
-  const pending = jsonApis.ciTopology(options).catch((error) => {
+  const pending = jsonApis.ciTopology({ ...options, root }).catch((error) => {
     topologyMemo.delete(key);
     throw error;
   });
