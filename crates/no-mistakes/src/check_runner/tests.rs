@@ -316,8 +316,9 @@ fn run_all_surfaces_invalid_rule_option_types() {
     let root =
         PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/invalid-rule-options");
 
-    let error =
-        run_all(root, None, None).expect_err("invalid configured rule options must fail the check");
+    let error = run_all(root, None, None)
+        .err()
+        .expect("invalid configured rule options must fail the check");
     let message = format!("{error:#}");
 
     assert!(message.contains(
