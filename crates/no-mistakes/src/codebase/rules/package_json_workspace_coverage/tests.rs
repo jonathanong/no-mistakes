@@ -118,10 +118,29 @@ fn require_named_package_reports_unnamed_manifests() {
         package_name(&root.join("packages/unnamed/package.json")),
         None
     );
-    assert_eq!(
-        package_name(&fixture_root("invalid-package-json").join("packages/bad/package.json")),
-        None
+}
+
+#[test]
+fn require_named_package_does_not_report_malformed_json_as_unnamed() {
+    let root = fixture_root("invalid-package-json");
+    let files = vec![
+        root.join("package.json"),
+        root.join("packages/bad/package.json"),
+    ];
+    let findings = check_with_files(
+        &root,
+        &config("packageRoots: [packages]\nrequireNamedPackage: true\n"),
+        &files,
+    )
+    .unwrap();
+
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.message.contains("must declare a name")),
+        "{findings:?}"
     );
+    assert_eq!(package_name(&root.join("packages/bad/package.json")), None);
 }
 
 #[test]
