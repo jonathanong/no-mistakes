@@ -25,6 +25,23 @@ pub(super) fn scan(
     )
     .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let mut findings = Vec::new();
+    let mut seen_allowed_migrations = BTreeSet::new();
+    for migration in &opts.allowed_migrations {
+        if seen_allowed_migrations.insert(migration.clone()) {
+            continue;
+        }
+        findings.push(RuleFinding {
+            rule: RULE_ID.to_string(),
+            file: migration.path.clone(),
+            line: 1,
+            message: format!(
+                "duplicate postgres-no-add-column allowedMigrations entry: {}",
+                allowed_migration_target(migration)
+            ),
+            import: None,
+            target: Some(allowed_migration_target(migration)),
+        });
+    }
     let mut used_allowed_migrations = BTreeSet::new();
     for file in &facts.schema {
         let rel = sql_rel(root, &file.path);
@@ -72,15 +89,7 @@ pub(super) fn scan(
 }
 
 fn stale_allowed_migration(migration: &AllowedMigration) -> RuleFinding {
-    let target = format!(
-        "{}:{}:{}:{}:{}:{}",
-        migration.path,
-        migration.table,
-        migration.column,
-        migration.data_type,
-        migration.nullable,
-        migration.default.as_deref().unwrap_or("<none>")
-    );
+    let target = allowed_migration_target(migration);
     RuleFinding {
         rule: RULE_ID.to_string(),
         file: migration.path.clone(),
@@ -89,4 +98,16 @@ fn stale_allowed_migration(migration: &AllowedMigration) -> RuleFinding {
         import: None,
         target: Some(target),
     }
+}
+
+fn allowed_migration_target(migration: &AllowedMigration) -> String {
+    format!(
+        "{}:{}:{}:{}:{}:{}",
+        migration.path,
+        migration.table,
+        migration.column,
+        migration.data_type,
+        migration.nullable,
+        migration.default.as_deref().unwrap_or("<none>")
+    )
 }

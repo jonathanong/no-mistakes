@@ -145,3 +145,19 @@ fn reports_allowlist_entry_stale_when_dynamic_sql_is_not_analyzed() {
         .message
         .contains("stale postgres-no-add-column allowedMigrations entry"));
 }
+
+#[test]
+fn reports_duplicate_allowed_migrations() {
+    let root = fixture("allowed");
+    let mut config = config_with_allowed_migration("draft");
+    let duplicate = config.rules[0].options["allowedMigrations"][0].clone();
+    config.rules[0].options["allowedMigrations"]
+        .as_sequence_mut()
+        .unwrap()
+        .push(duplicate);
+    let findings = run_with_config(&root, config);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(findings[0]
+        .message
+        .contains("duplicate postgres-no-add-column allowedMigrations entry"));
+}
