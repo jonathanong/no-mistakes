@@ -140,7 +140,7 @@ fn check_package_json(
 fn yaml_has_key(value: &serde_yaml::Value, key: &str) -> bool {
     value
         .as_mapping()
-        .is_some_and(|mapping| mapping.contains_key(&serde_yaml::Value::String(key.to_string())))
+        .is_some_and(|mapping| mapping.contains_key(serde_yaml::Value::String(key.to_string())))
 }
 
 fn finding(root: &Path, path: &Path, message: impl Into<String>) -> RuleFinding {
