@@ -94,15 +94,11 @@ fn scan(
         if dir_rel.is_empty() || !path_under_package_roots(&dir_rel, &opts.package_roots) {
             continue;
         }
-        let parsed_json = sources.parse_json_path(path);
-        if parsed_json.is_err() && opts.require_named_package {
+        if sources.parse_json_path(path).is_err() && opts.require_named_package {
             continue;
         }
         let unnamed = opts.require_named_package
-            && parsed_json
-                .as_ref()
-                .ok()
-                .and_then(|json| json.get("name").and_then(|value| value.as_str()))
+            && package_name_with_sources(path, sources)
                 .filter(|name| !name.is_empty())
                 .is_none();
         if unnamed {
