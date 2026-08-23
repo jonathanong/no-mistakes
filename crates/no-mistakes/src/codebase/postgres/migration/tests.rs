@@ -365,3 +365,26 @@ fn extracts_add_column_inside_do_block() {
         .iter()
         .any(|column| column.table_name == "posts" && column.column_name == "status"));
 }
+
+#[test]
+fn records_unnamed_alter_table_fk_and_check() {
+    let facts = extract_migration_facts(
+        "ALTER TABLE children ADD CHECK (parent_id IS NOT NULL) NOT VALID;\n\
+         ALTER TABLE children ADD FOREIGN KEY (parent_id) REFERENCES parents(id) ON DELETE CASCADE NOT VALID;\n\
+         ALTER TABLE children ADD CONSTRAINT fk_named FOREIGN KEY (parent_id) REFERENCES parents(id) ON DELETE CASCADE;\n\
+         ALTER TABLE children ADD UNIQUE (parent_id);\n",
+    );
+    assert_eq!(
+        facts
+            .unnamed_constraints
+            .iter()
+            .map(|constraint| constraint.kind.as_str())
+            .collect::<Vec<_>>(),
+        ["CHECK", "FOREIGN KEY"],
+        "{facts:?}"
+    );
+    assert!(facts
+        .unnamed_constraints
+        .iter()
+        .all(|constraint| constraint.table_name == "children"));
+}

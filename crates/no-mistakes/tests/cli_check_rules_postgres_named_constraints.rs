@@ -1,0 +1,96 @@
+use std::path::PathBuf;
+use std::process::{Command, Output};
+
+fn bin() -> PathBuf {
+    PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
+}
+
+fn fixture(scenario: &str) -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/postgres-require-named-constraints/fixture")
+            .join(scenario),
+    )
+}
+
+fn check_fixture_config(root: &PathBuf) -> Output {
+    Command::new(bin())
+        .args(["check", "--root"])
+        .arg(root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .output()
+        .unwrap()
+}
+
+fn stdout(output: &Output) -> String {
+    String::from_utf8_lossy(&output.stdout).into_owned()
+}
+
+const RULE: &str = "postgres-require-named-constraints";
+
+#[test]
+fn postgres_require_named_constraints_fails_for_unnamed_fk() {
+    let root = fixture("fail-fk");
+    let out = check_fixture_config(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert!(body.contains(RULE), "{body}");
+    assert!(body.contains("FOREIGN KEY"), "{body}");
+}
+
+#[test]
+fn postgres_require_named_constraints_fails_for_unnamed_check() {
+    let root = fixture("fail-check");
+    let out = check_fixture_config(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert!(body.contains(RULE), "{body}");
+    assert!(body.contains("CHECK"), "{body}");
+}
+
+#[test]
+fn postgres_require_named_constraints_fails_inside_do_block() {
+    let root = fixture("fail-do-block");
+    let out = check_fixture_config(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert!(body.contains(RULE), "{body}");
+}
+
+#[test]
+fn postgres_require_named_constraints_passes_named() {
+    let root = fixture("pass");
+    let out = check_fixture_config(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_require_named_constraints_json_has_rule_id() {
+    let root = fixture("fail-fk");
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    assert!(body.contains(RULE), "{body}");
+    assert!(!out.status.success());
+}
+
+#[test]
+fn postgres_require_named_constraints_filesystem_runner_discovers_files() {
+    let root = fixture("fail-fk");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(
+        findings.iter().any(|finding| {
+            finding.rule == no_mistakes::codebase::rules::POSTGRES_REQUIRE_NAMED_CONSTRAINTS
+        }),
+        "{body}"
+    );
+}
