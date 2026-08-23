@@ -33,6 +33,7 @@ macro_rules! filesystem_rules {
             NO_EMPTY_OR_COMMENTS_ONLY_FILES => no_empty_or_comments_only_files::check_with_files,
             NEXTJS_REDIRECT_DESTINATIONS => nextjs_redirect_destinations::check_with_files,
             VITEST_TEST_CORRESPONDENCE => vitest_test_correspondence::check_with_files,
+            WORKFLOW_TOPOLOGY_POLICY => workflow_topology_policy::check_with_files,
             FILE_EXTENSION_POLICY => file_extension_policy::check_with_files,
             BANNED_PATHS => banned_paths::check_with_files,
             BANNED_RENAMED_FILES => banned_renamed_files::check_with_files,

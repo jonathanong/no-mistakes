@@ -90,6 +90,7 @@ rules:
 | [`vitest-ci-path-coverage`](vitest-ci-path-coverage.md)                       | Require Vitest inputs to be covered by CI path filters.                         |
 | [`vitest-project-mapping`](vitest-project-mapping.md)                         | Require Vitest tests to map to exactly one project.                             |
 | [`vitest-test-correspondence`](vitest-test-correspondence.md)                 | Enforce source/test correspondence for Vitest.                                  |
+| [`workflow-topology-policy`](workflow-topology-policy.md)                     | Declarative GitHub Actions topology inventory, edges, and step order.           |
 | [`workspace-package-cycles`](workspace-package-cycles.md)                     | Prevent dependency cycles between workspace packages.                           |
 
 ## Suppression

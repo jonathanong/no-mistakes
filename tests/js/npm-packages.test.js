@@ -54,7 +54,7 @@ test("native npm packages expose direct executable bin targets", () => {
 test("every local require() from a published entry point is covered by package.json's files list", () => {
   const packageDir = join(root, "packages", "no-mistakes");
   const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
-  const entryPoints = ["index.js", "planning.js"];
+  const entryPoints = ["index.js", "planning.js", "workflow-topology-index.js"];
   const requirePattern = /require\("\.\/([\w./-]+)"\)/g;
 
   const isCovered = (relativePath) =>

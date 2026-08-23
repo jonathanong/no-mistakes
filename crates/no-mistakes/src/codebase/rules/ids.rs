@@ -61,4 +61,5 @@ pub use super::version_pin_consistency::RULE_ID as VERSION_PIN_CONSISTENCY;
 pub use super::vitest_ci_path_coverage::RULE_ID as VITEST_CI_PATH_COVERAGE;
 pub use super::vitest_project_mapping::RULE_ID as VITEST_PROJECT_MAPPING;
 pub use super::vitest_test_correspondence::RULE_ID as VITEST_TEST_CORRESPONDENCE;
+pub use super::workflow_topology_policy::RULE_ID as WORKFLOW_TOPOLOGY_POLICY;
 pub use super::workspace_package_cycles::RULE_ID as WORKSPACE_PACKAGE_CYCLES;

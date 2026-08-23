@@ -285,6 +285,7 @@ fn no_mistakes_rules_have_docs() {
         rules::TSCONFIG_GATE_COVERAGE,
         unique_exports::RULE_ID,
         rules::VITEST_TEST_CORRESPONDENCE,
+        rules::WORKFLOW_TOPOLOGY_POLICY,
     ];
     for rule_id in rule_ids {
         let file = format!("{rule_id}.md");
