@@ -142,7 +142,7 @@ impl SharedCheckContext {
             &mut plan,
             graph_rules_enabled,
             playwright_fact_plan.is_some(),
-        );
+        )?;
         let skip_directories = config.filesystem.skip_directories.clone();
         let views = crate::check_discovery::discover_check_file_views_from_snapshot(
             &root,
