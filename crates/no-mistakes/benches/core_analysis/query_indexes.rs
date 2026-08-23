@@ -59,6 +59,48 @@ pub(super) fn bench_symbol_index_build_and_lookup(c: &mut Criterion) {
     group.finish();
 }
 
+pub(super) fn bench_symbol_index_distinct_target_build(c: &mut Criterion) {
+    if !shard::should_run(shard::QUERY) {
+        return;
+    }
+    const DISTINCT_TARGETS: usize = 2_048;
+
+    let imports: HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>> = (0..DISTINCT_TARGETS)
+        .map(|target| {
+            (
+                PathBuf::from("/benchmark/src/importer.ts"),
+                vec![(
+                    PathBuf::from(format!("/benchmark/src/target-{target}.ts")),
+                    format!("symbol-{target}"),
+                    format!("local-{target}"),
+                    false,
+                )],
+            )
+        })
+        .fold(HashMap::new(), |mut imports, (importer, mut entries)| {
+            imports.entry(importer).or_default().append(&mut entries);
+            imports
+        });
+    let index = no_mistakes::codebase::dependencies::graph::SymbolIndex::build(&imports);
+    assert_eq!(
+        index
+            .file_importers(&PathBuf::from("/benchmark/src/target-0.ts"))
+            .len(),
+        1
+    );
+
+    let mut group = c.benchmark_group("symbol_index");
+    group.throughput(Throughput::Elements(DISTINCT_TARGETS as u64));
+    group.bench_function("distinct_target_build", |b| {
+        b.iter(|| {
+            black_box(
+                no_mistakes::codebase::dependencies::graph::SymbolIndex::build(black_box(&imports)),
+            )
+        });
+    });
+    group.finish();
+}
+
 pub(super) fn bench_scoped_resolver_selection(c: &mut Criterion) {
     if !shard::should_run(shard::QUERY) {
         return;

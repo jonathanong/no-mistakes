@@ -20,13 +20,13 @@ impl SymbolIndex {
         for (importer, imports) in symbols_by_file {
             let importer = intern.path(importer);
             for (source, imported_name, local_name, is_reexport) in imports {
-                source_buckets
-                    .entry(intern.path(source))
-                    .or_insert_with(|| Vec::with_capacity(imports.len()))
-                    .push((
-                        intern.string(imported_name),
-                        (importer.clone(), intern.string(local_name), *is_reexport),
-                    ));
+                insert_source_bucket_entry(
+                    &mut source_buckets,
+                    intern.path(source),
+                    intern.string(imported_name),
+                    (importer.clone(), intern.string(local_name), *is_reexport),
+                    imports.len(),
+                );
             }
         }
 
