@@ -16,6 +16,9 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         POSTGRES_CONSTRAINT_VALIDATE => {
             postgres_constraint_validate::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_NO_ADD_COLUMN => {
+            postgres_no_add_column::check_with_files_and_sources(root, config, files, sources)
+        }
         POSTGRES_FK_INDEX => {
             postgres_fk_index::check_with_files_and_sources(root, config, files, sources)
         }

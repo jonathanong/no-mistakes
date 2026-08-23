@@ -32,9 +32,9 @@ pub use offset::sql_has_offset_clause;
 pub use parse::{parse_postgres_sql, PostgresParseError};
 pub use schema::extract_create_table_metadata;
 pub use types::{
-    PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlColumnMetadata,
-    SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDropIndexMetadata, SqlForeignKeyMetadata,
-    SqlIndexParam, SqlNamedConstraint, SqlSchemaFileFacts,
+    PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,
+    SqlColumnMetadata, SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDropIndexMetadata,
+    SqlForeignKeyMetadata, SqlIndexParam, SqlNamedConstraint, SqlSchemaFileFacts,
 };
 
 #[cfg(test)]

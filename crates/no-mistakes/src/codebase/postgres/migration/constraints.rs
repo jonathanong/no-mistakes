@@ -1,6 +1,6 @@
 use super::{line_containing, relation};
 use crate::codebase::postgres::types::{
-    SqlForeignKeyMetadata, SqlNamedConstraint, SqlSchemaFileFacts,
+    SqlAddColumnMetadata, SqlForeignKeyMetadata, SqlNamedConstraint, SqlSchemaFileFacts,
 };
 use sqlparser::ast::{AlterTableOperation, ColumnOption, ForeignKeyConstraint, TableConstraint};
 
@@ -79,6 +79,11 @@ pub(super) fn collect_alter_table(
                 });
             }
             AlterTableOperation::AddColumn { column_def, .. } => {
+                facts.add_columns.push(SqlAddColumnMetadata {
+                    table_name: table_name.clone(),
+                    column_name: column_def.name.value.clone(),
+                    line: line_containing(sql, &["add", &column_def.name.value]),
+                });
                 for option in &column_def.options {
                     if let ColumnOption::ForeignKey(fk) = &option.option {
                         facts.foreign_keys.push(fk_metadata(
