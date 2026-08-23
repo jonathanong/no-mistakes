@@ -5,6 +5,8 @@
 const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
 const planning = require("./planning");
 const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
+const fs = require("node:fs");
+const path = require("node:path");
 
 async function callJson(fn, options) {
   const input = Buffer.from(JSON.stringify(options || {}));
@@ -94,6 +96,42 @@ async function analyzeProject(options = {}) {
   }
 }
 
+const topologyMemo = new Map();
+
+async function ciTopology(options) {
+  const root = path.resolve((options && options.root) || process.cwd());
+  const configPath = path.resolve(root, (options && options.config) || ".no-mistakes.yml");
+  let mtime = 0;
+  try {
+    mtime = fs.statSync(configPath).mtimeMs;
+  } catch {
+    mtime = 0;
+  }
+  const workflows = JSON.stringify(
+    []
+      .concat((options && options.workflows) || [])
+      .map(String)
+      .sort(),
+  );
+  const identity = `${root}\0${configPath}\0`;
+  const key = `${identity}${mtime}\0${workflows}`;
+  const stale = [];
+  for (const memoKey of topologyMemo.keys()) {
+    if (!memoKey.startsWith(identity)) continue;
+    const memoMtime = memoKey.slice(identity.length).split("\0")[0];
+    if (memoMtime !== String(mtime)) stale.push(memoKey);
+  }
+  for (const memoKey of stale) topologyMemo.delete(memoKey);
+  const cached = topologyMemo.get(key);
+  if (cached) return cached.then((value) => structuredClone(value));
+  const pending = jsonApis.ciTopology({ ...options, root }).catch((error) => {
+    topologyMemo.delete(key);
+    throw error;
+  });
+  topologyMemo.set(key, pending);
+  return pending.then((value) => structuredClone(value));
+}
+
 async function version() {
   return native.version();
 }
@@ -106,7 +144,7 @@ module.exports.check = jsonApis.check;
 module.exports.resolveConfig = jsonApis.resolveConfig;
 module.exports.ciEnv = jsonApis.ciEnv;
 module.exports.ciImpact = jsonApis.ciImpact;
-module.exports.ciTopology = jsonApis.ciTopology;
+module.exports.ciTopology = ciTopology;
 module.exports.dataPw = jsonApis.dataPw;
 module.exports.deadExports = jsonApis.deadExports;
 module.exports.dependencies = jsonApis.dependencies;

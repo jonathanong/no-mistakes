@@ -32,6 +32,7 @@ pub use super::package_json_workspace_coverage::RULE_ID as PACKAGE_JSON_WORKSPAC
 pub use super::postgres_constraint_validate::RULE_ID as POSTGRES_CONSTRAINT_VALIDATE;
 pub use super::postgres_fk_index::RULE_ID as POSTGRES_FK_INDEX;
 pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;
+pub use super::postgres_no_add_column::RULE_ID as POSTGRES_NO_ADD_COLUMN;
 pub use super::postgres_no_generated_column_writes::RULE_ID as POSTGRES_NO_GENERATED_COLUMN_WRITES;
 pub use super::postgres_no_offset::RULE_ID as POSTGRES_NO_OFFSET;
 pub use super::postgres_redundant_index::RULE_ID as POSTGRES_REDUNDANT_INDEX;

@@ -4,7 +4,7 @@ The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it when an agent or tool needs repeated structured
 queries without subprocess overhead.
 
-```js
+````js
 const {
   analyzeProject,
   dependents,
@@ -18,7 +18,21 @@ const {
   const impact = await dependents({
     root: process.cwd(),
     files: ["src/api.mts#handler"],
-    tests: ["vitest", "dotnet", "swift", "python", "go", "cargo", "rails", "php", "java", "kotlin", "elixir", "dart", "jest"],
+    tests: [
+      "vitest",
+      "dotnet",
+      "swift",
+      "python",
+      "go",
+      "cargo",
+      "rails",
+      "php",
+      "java",
+      "kotlin",
+      "elixir",
+      "dart",
+      "jest",
+    ],
   });
 
   const report = await analyzeProject({
@@ -45,47 +59,47 @@ const {
 
   console.log({ impact, report, mermaid });
 })();
-```
+````
 
 ## CLI Mapping
 
-| CLI | Node API |
-| --- | --- |
-| `dependencies` | `dependencies(options)` |
-| `dependents` | `dependents(options)` |
-| `related` | `related(options)` |
-| `symbols` | `symbols(options)` |
-| `import-usages` | `importUsages(options)` |
-| `importers` | `importers(options)` |
-| `exports-of` | `exportsOf(options)` |
-| `dead-exports` | `deadExports(options)` |
-| `call-sites` | `callSites(options)` |
-| `resolve-check` | `resolveCheck(options)` |
-| `fetches` | `fetches(options)` |
-| `flow` | `flow(options)` |
-| `check` | `check(options)` |
-| `config resolve` | `resolveConfig(options)` |
-| `data-pw` | `dataPw(options)` |
-| `effects` | `effects(options)` |
-| `rsc-callers` | `rscCallers(options)` |
-| `registry-extension` | `registryExtension(options)` |
-| `tests plan` | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, `swift`, `python`, `go`, `cargo`, `rails`, `php`, `java`, `kotlin`, `elixir`, `dart`, or `jest`. Import `TestPlanFramework` for that union instead of indexing `TestExecutionTarget['runner']` |
-| `tests targets` | `testsTargets(options)` |
-| `tests impact` | `testsImpact(options)` |
-| `tests why` | `testsWhy(options)` |
-| `tests comment` | `testsComment(options)` |
-| `tests graph` | `testsGraph(options)` or `testsGraphMermaid(options)` |
-| `playwright check\|edges\|related\|tests` | `playwrightCheck`, `playwrightEdges`, `playwrightRelated`, `playwrightTests` |
-| `queues edges\|related\|check` | `queueEdges`, `queueRelated`, `queueCheck` |
-| `server routes\|edges\|related\|contracts` | `serverRouteList`, `serverRouteEdges`, `serverRouteRelated`, `serverContracts` |
-| `react analyze\|check\|usages` | `reactAnalyze`, `reactCheck`, `reactUsages` |
-| `infra resource-refs\|outputs\|test-for` | `infraResourceRefs`, `infraOutputs`, `infraTestFor` |
-| `swift importers\|test-targets` | `swiftImporters`, `swiftTestTargets` |
-| `lockfile diff` | `lockfileDiff(options)` |
-| `ci impact` | `ciImpact(options)` |
-| `ci env` | `ciEnv(options)` |
-| `ci topology` | `ciTopology(options)` |
-| `impacted-checks` | `impactedChecks(options)` |
+| CLI                                        | Node API                                                                                                                                                                                                                                                                   |
+| ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `dependencies`                             | `dependencies(options)`                                                                                                                                                                                                                                                    |
+| `dependents`                               | `dependents(options)`                                                                                                                                                                                                                                                      |
+| `related`                                  | `related(options)`                                                                                                                                                                                                                                                         |
+| `symbols`                                  | `symbols(options)`                                                                                                                                                                                                                                                         |
+| `import-usages`                            | `importUsages(options)`                                                                                                                                                                                                                                                    |
+| `importers`                                | `importers(options)`                                                                                                                                                                                                                                                       |
+| `exports-of`                               | `exportsOf(options)`                                                                                                                                                                                                                                                       |
+| `dead-exports`                             | `deadExports(options)`                                                                                                                                                                                                                                                     |
+| `call-sites`                               | `callSites(options)`                                                                                                                                                                                                                                                       |
+| `resolve-check`                            | `resolveCheck(options)`                                                                                                                                                                                                                                                    |
+| `fetches`                                  | `fetches(options)`                                                                                                                                                                                                                                                         |
+| `flow`                                     | `flow(options)`                                                                                                                                                                                                                                                            |
+| `check`                                    | `check(options)`                                                                                                                                                                                                                                                           |
+| `config resolve`                           | `resolveConfig(options)`                                                                                                                                                                                                                                                   |
+| `data-pw`                                  | `dataPw(options)`                                                                                                                                                                                                                                                          |
+| `effects`                                  | `effects(options)`                                                                                                                                                                                                                                                         |
+| `rsc-callers`                              | `rscCallers(options)`                                                                                                                                                                                                                                                      |
+| `registry-extension`                       | `registryExtension(options)`                                                                                                                                                                                                                                               |
+| `tests plan`                               | `testsPlan(options)`; `framework` accepts `vitest`, `playwright`, `dotnet`, `swift`, `python`, `go`, `cargo`, `rails`, `php`, `java`, `kotlin`, `elixir`, `dart`, or `jest`. Import `TestPlanFramework` for that union instead of indexing `TestExecutionTarget['runner']` |
+| `tests targets`                            | `testsTargets(options)`                                                                                                                                                                                                                                                    |
+| `tests impact`                             | `testsImpact(options)`                                                                                                                                                                                                                                                     |
+| `tests why`                                | `testsWhy(options)`                                                                                                                                                                                                                                                        |
+| `tests comment`                            | `testsComment(options)`                                                                                                                                                                                                                                                    |
+| `tests graph`                              | `testsGraph(options)` or `testsGraphMermaid(options)`                                                                                                                                                                                                                      |
+| `playwright check\|edges\|related\|tests`  | `playwrightCheck`, `playwrightEdges`, `playwrightRelated`, `playwrightTests`                                                                                                                                                                                               |
+| `queues edges\|related\|check`             | `queueEdges`, `queueRelated`, `queueCheck`                                                                                                                                                                                                                                 |
+| `server routes\|edges\|related\|contracts` | `serverRouteList`, `serverRouteEdges`, `serverRouteRelated`, `serverContracts`                                                                                                                                                                                             |
+| `react analyze\|check\|usages`             | `reactAnalyze`, `reactCheck`, `reactUsages`                                                                                                                                                                                                                                |
+| `infra resource-refs\|outputs\|test-for`   | `infraResourceRefs`, `infraOutputs`, `infraTestFor`                                                                                                                                                                                                                        |
+| `swift importers\|test-targets`            | `swiftImporters`, `swiftTestTargets`                                                                                                                                                                                                                                       |
+| `lockfile diff`                            | `lockfileDiff(options)`                                                                                                                                                                                                                                                    |
+| `ci impact`                                | `ciImpact(options)`                                                                                                                                                                                                                                                        |
+| `ci env`                                   | `ciEnv(options)`                                                                                                                                                                                                                                                           |
+| `ci topology`                              | `ciTopology(options)`                                                                                                                                                                                                                                                      |
+| `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
 
 The following inventory is the complete runtime export surface. Keeping this
 list exhaustive makes a newly added function visible to agents even when it
@@ -414,8 +428,10 @@ addon avoids UTF-16 string copies at the N-API boundary.
 - Omit `tsconfig` to use automatic per-workspace resolution; pass it explicitly
   only to force one config for debugging or compatibility.
 - Use `analyzeProject()` when several reports share the same root/config.
-  Batch `testsPlan` with other reports in one `analyzeProject({ reports })`
-  call so they share the machine-wide lock. `testsPlan()` / `testsImpact()`
-  return camelCase `executionTargets` (optional `name` for Swift path-prefix
-  groups). `includeGlob` is a `testsPlan()` option.
+  Batch `testsPlan` and `ciTopology` in one `analyzeProject({ reports })` call
+  so they share the machine-wide lock. `testsPlan()` / `testsImpact()` return
+  camelCase `executionTargets` (optional `name` for Swift path-prefix groups).
+  `includeGlob` is a `testsPlan()` option. `ciTopology()` is memoized
+  in-process by root, config mtime, and workflows filter; pass `profile: "ci"`
+  (or CLI `--profile ci`) to clear command and lock timeouts.
 - Prefer structured API results over parsing human CLI output.

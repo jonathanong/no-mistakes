@@ -45,6 +45,7 @@ pub struct SqlSchemaFileFacts {
     pub dropped_indexes: Vec<SqlDropIndexMetadata>,
     pub dropped_tables: Vec<SqlDropIndexMetadata>,
     pub foreign_keys: Vec<SqlForeignKeyMetadata>,
+    pub add_columns: Vec<SqlAddColumnMetadata>,
     pub not_valid_constraints: Vec<SqlNamedConstraint>,
     pub validated_constraints: Vec<SqlNamedConstraint>,
 }
@@ -97,6 +98,14 @@ impl Default for SqlCreateIndexMetadata {
             line: 1,
         }
     }
+}
+
+/// One `ALTER TABLE … ADD COLUMN`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlAddColumnMetadata {
+    pub table_name: String,
+    pub column_name: String,
+    pub line: usize,
 }
 
 /// One foreign key from `CREATE TABLE` or `ALTER TABLE`.

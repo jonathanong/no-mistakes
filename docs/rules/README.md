@@ -54,6 +54,7 @@ rules:
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |
 | [`package-json-workspace-coverage`](package-json-workspace-coverage.md)       | Require package directories to be covered by workspace config.                  |
 | [`postgres-constraint-validate`](postgres-constraint-validate.md)                 | Pair named NOT VALID constraint adds with VALIDATE CONSTRAINT.              |
+| [`postgres-no-add-column`](postgres-no-add-column.md)                             | Ban ALTER TABLE ADD COLUMN in schema SQL.                                   |
 | [`postgres-fk-index`](postgres-fk-index.md)                                       | Require a leading btree/hash index on each foreign key column.              |
 | [`postgres-redundant-index`](postgres-redundant-index.md)                         | Flag btree indexes whose keys are a strict prefix of another live index.    |
 | [`postgres-no-generated-column-writes`](postgres-no-generated-column-writes.md) | Ban DML writes to PostgreSQL generated columns.                               |

@@ -41,6 +41,7 @@ macro_rules! filesystem_rules {
             TEST_EMAIL_DOMAIN_POLICY => test_email_domain_policy::check_with_files,
             TEST_NO_DEPENDENCY_PINS => test_no_dependency_pins::check_with_files,
             POSTGRES_CONSTRAINT_VALIDATE => postgres_constraint_validate::check_with_files,
+            POSTGRES_NO_ADD_COLUMN => postgres_no_add_column::check_with_files,
             POSTGRES_FK_INDEX => postgres_fk_index::check_with_files,
             POSTGRES_REDUNDANT_INDEX => postgres_redundant_index::check_with_files,
             POSTGRES_NO_GENERATED_COLUMN_WRITES => postgres_no_generated_column_writes::check_with_files,
