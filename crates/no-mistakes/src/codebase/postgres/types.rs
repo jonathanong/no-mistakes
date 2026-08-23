@@ -46,6 +46,7 @@ pub struct SqlSchemaFileFacts {
     pub dropped_tables: Vec<SqlDropIndexMetadata>,
     pub foreign_keys: Vec<SqlForeignKeyMetadata>,
     pub add_columns: Vec<SqlAddColumnMetadata>,
+    pub unnamed_constraints: Vec<SqlUnnamedConstraint>,
     pub not_valid_constraints: Vec<SqlNamedConstraint>,
     pub validated_constraints: Vec<SqlNamedConstraint>,
 }
@@ -123,6 +124,14 @@ pub struct SqlForeignKeyMetadata {
 pub struct SqlNamedConstraint {
     pub table_name: String,
     pub name: String,
+    pub line: usize,
+}
+
+/// An unnamed `ALTER TABLE ADD` FOREIGN KEY or CHECK.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlUnnamedConstraint {
+    pub table_name: String,
+    pub kind: String,
     pub line: usize,
 }
 

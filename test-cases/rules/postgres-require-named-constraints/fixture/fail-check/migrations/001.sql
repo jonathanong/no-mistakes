@@ -1,0 +1,1 @@
+ALTER TABLE children ADD CHECK (parent_id IS NOT NULL) NOT VALID;

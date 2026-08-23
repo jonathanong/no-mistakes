@@ -36,6 +36,11 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         POSTGRES_NO_OFFSET => {
             postgres_no_offset::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_REQUIRE_NAMED_CONSTRAINTS => {
+            postgres_require_named_constraints::check_with_files_and_sources(
+                root, config, files, sources,
+            )
+        }
         POSTGRES_REQUIRE_QUERY_ANNOTATION => {
             postgres_require_query_annotation::check_with_files_and_sources(
                 root, config, files, sources,
