@@ -34,15 +34,17 @@ pub(super) fn scan_with_sources(
     )
     .with_context(|| format!("{} failed to collect PostgreSQL facts", super::RULE_ID))?;
     let catalog = super::catalog::catalog_from_facts(&facts.schema, &opts.extra_generated_columns);
+    let mut findings =
+        super::catalog::stale_extra_findings(&facts.schema, &opts.extra_generated_columns);
     if catalog.is_empty() {
-        return Ok(Vec::new());
+        crate::codebase::rules::sort_findings(&mut findings);
+        return Ok(findings);
     }
     let embedded_by_path: HashMap<&Path, &EmbeddedSqlFileFacts> = facts
         .embedded
         .iter()
         .map(|file| (file.path.as_path(), file))
         .collect();
-    let mut findings = Vec::new();
     for path in files {
         if !opts.includes_dml(root, path) {
             continue;
