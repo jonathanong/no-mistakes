@@ -207,6 +207,12 @@ no-mistakes queues check --format json
 no-mistakes server routes --format json
 ```
 
+For `pnpm-release-age-policy`, prefer `temporaryGroups` for temporary release
+age exclusions. Each group records exact `package@version` selectors, a reason,
+and canonical UTC `eligibleForRemovalAt` audit metadata; an elapsed eligibility
+date is informational and does not fail CI. Flat `temporarySelectors` remains
+compatible, but selectors cannot be duplicated across it and groups.
+
 Prefer `--format json` for agent parsing and `--format paths` for command
 substitution. Every command accepts root-global `--timings`; use
 `--verbose-timings` when deterministic discovery/read/parse/resolver/graph/

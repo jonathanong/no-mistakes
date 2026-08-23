@@ -16,6 +16,7 @@ pub const RULE_ID: &str = "pnpm-release-age-policy";
 pub(crate) struct Options {
     pub(crate) permanent_packages: Vec<PermanentPackage>,
     pub(crate) temporary_selectors: Vec<String>,
+    pub(crate) temporary_groups: Vec<TemporaryGroup>,
     pub(crate) scoped_prefixes: Vec<String>,
     pub(crate) workspace_yaml: Option<String>,
     pub(crate) dependabot_path: Option<String>,
@@ -29,9 +30,19 @@ pub(crate) struct PermanentPackage {
     pub(crate) reason: String,
 }
 
+#[derive(Deserialize, Default)]
+#[serde(default, rename_all = "camelCase")]
+pub(crate) struct TemporaryGroup {
+    pub(crate) selectors: Vec<String>,
+    pub(crate) reason: String,
+    pub(crate) eligible_for_removal_at: String,
+}
+
 impl Options {
     fn configured(&self) -> bool {
-        !self.permanent_packages.is_empty() || !self.temporary_selectors.is_empty()
+        !self.permanent_packages.is_empty()
+            || !self.temporary_selectors.is_empty()
+            || !self.temporary_groups.is_empty()
     }
 
     fn workspace_yaml(&self) -> &str {

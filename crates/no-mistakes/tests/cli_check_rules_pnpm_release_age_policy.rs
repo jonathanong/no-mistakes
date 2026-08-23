@@ -73,3 +73,10 @@ fn pnpm_release_age_policy_filesystem_runner_discovers_files() {
         "{findings:?}"
     );
 }
+
+#[test]
+fn pnpm_release_age_policy_honors_file_suppression_for_group_validation() {
+    let root = fixture("suppression");
+    let out = check_fixture_config(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}

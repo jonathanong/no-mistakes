@@ -1,0 +1,8 @@
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options:
+      temporaryGroups:
+        - selectors: []
+          reason: ''
+          eligibleForRemovalAt: invalid

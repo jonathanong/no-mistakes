@@ -483,6 +483,26 @@ fn check_json_returns_migrated_filesystem_rules() {
 }
 
 #[test]
+fn check_json_honors_release_age_group_validation_suppression() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/pnpm-release-age-policy/fixture/suppression");
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root, "includeSuppressed": true }).to_string(),
+    ))
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(value["rules"].as_array().unwrap().is_empty(), "{value}");
+    assert!(value["suppressed"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|finding| {
+            finding["rule"] == "pnpm-release-age-policy" && finding["file"] == "pnpm-workspace.yaml"
+        }));
+}
+
+#[test]
 fn check_json_reports_both_markdown_rule_ids() {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/markdown-report/fixture");
