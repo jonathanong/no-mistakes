@@ -273,6 +273,9 @@ jobs:
     name: Rust tests and coverage
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      # LLVM coverage maps do not require debugger symbols in ephemeral CI test binaries.
+      CARGO_PROFILE_TEST_DEBUG: "0"
 
     steps:
       - name: Checkout
@@ -314,21 +317,16 @@ jobs:
           source <(cargo llvm-cov show-env --sh)
           cargo test --workspace --all-features --lib --bins --tests
 
-      - name: Write Rust coverage lcov
+      - name: Write and enforce Rust coverage
+        id: rust-coverage
         timeout-minutes: 5
         run: |
           mkdir -p target/llvm-cov
           # shellcheck disable=SC1090
           source <(cargo llvm-cov show-env --sh)
-          cargo llvm-cov report --lcov --output-path target/llvm-cov/lcov.info
-
-      - name: Enforce Rust coverage
-        id: rust-coverage
-        timeout-minutes: 5
-        run: |
-          # shellcheck disable=SC1090
-          source <(cargo llvm-cov show-env --sh)
           cargo llvm-cov report \
+            --lcov \
+            --output-path target/llvm-cov/lcov.info \
             --fail-under-lines "${RUST_COVERAGE_FAIL_UNDER_LINES}" \
             --fail-under-functions "${RUST_COVERAGE_FAIL_UNDER_FUNCTIONS}"
 
