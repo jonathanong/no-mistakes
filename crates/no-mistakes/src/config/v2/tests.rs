@@ -364,10 +364,12 @@ fn rule_def_options_rejects_bad_nested_type_with_option_path() {
         ..RuleDef::default()
     };
 
+    #[allow(dead_code)]
     #[derive(Debug, serde::Deserialize, Default)]
     struct Entry {
         default: String,
     }
+    #[allow(dead_code)]
     #[derive(Debug, serde::Deserialize, Default)]
     struct Opts {
         entries: Vec<Entry>,
