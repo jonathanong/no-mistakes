@@ -51,6 +51,10 @@ describe("docs coverage", () => {
       "executorNames",
       "owners",
       "chunkFunctionNames",
+      "modules",
+      "executors",
+      "includeFiles",
+      "annotation",
     ]) {
       assert.ok(pluginDoc.includes(optionName), `missing option ${optionName}`);
     }

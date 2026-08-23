@@ -54,6 +54,7 @@ See [ESLint and Oxlint plugin](../eslint-plugin.md) for option schemas.
 | [`playwright-require-interactive-test-id`](playwright-require-interactive-test-id.md)                   | Require test IDs on interactive JSX elements.                          |
 | [`playwright-selector-priority`](playwright-selector-priority.md)                                       | Prefer semantic Playwright locators over raw selectors.                |
 | [`playwright-unique`](playwright-unique.md)                                                             | Require unique literal test IDs within a file.                         |
+| [`postgres-cursor-call-contract`](postgres-cursor-call-contract.md)                                     | Require direct annotated SQL for configured cursor helpers.            |
 | [`postgres-no-manual-transaction`](postgres-no-manual-transaction.md)                                   | Disallow manual BEGIN/COMMIT/ROLLBACK executor calls.                  |
 | [`postgres-no-unbounded-query-fanout`](postgres-no-unbounded-query-fanout.md)                           | Disallow unbounded Promise.all map fan-out of query executors.         |
 | [`react-no-iife-in-jsx`](react-no-iife-in-jsx.md)                                                       | Disallow immediately invoked functions inside JSX.                     |
