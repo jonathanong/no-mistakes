@@ -1,0 +1,15 @@
+{
+  "name": "app",
+  "private": true,
+  "pnpm": {
+    "packageExtensions": {
+      "example": {
+        "peerDependenciesMeta": {
+          "optional-peer": {
+            "optional": true
+          }
+        }
+      }
+    }
+  }
+}
