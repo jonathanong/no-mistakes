@@ -74,6 +74,9 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         PNPM_OVERRIDES_BAN => {
             pnpm_overrides_ban::check_with_files_and_sources(root, config, files, sources)
         }
+        PNPM_RELEASE_AGE_POLICY => {
+            pnpm_release_age_policy::check_with_files_and_sources(root, config, files, sources)
+        }
         PRODUCTION_DEPENDENCY_DECLARATIONS => {
             production_dependency_declarations::check_with_files_and_sources(
                 root, config, files, sources,

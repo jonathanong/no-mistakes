@@ -1,0 +1,13 @@
+rules:
+  - rule: pnpm-release-age-policy
+    scope: repository
+    options:
+      permanentPackages:
+        - name: acme-lib
+          reason: first-party
+        - name: '@acme/core'
+          reason: first-party
+      temporarySelectors:
+        - demo-temporary-package@9.9.9
+      scopedPrefixes:
+        - '@acme/'

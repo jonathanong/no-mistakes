@@ -31,6 +31,7 @@ pub use super::package_json_registry_only::RULE_ID as PACKAGE_JSON_REGISTRY_ONLY
 pub use super::package_json_required_fields::RULE_ID as PACKAGE_JSON_REQUIRED_FIELDS;
 pub use super::package_json_workspace_coverage::RULE_ID as PACKAGE_JSON_WORKSPACE_COVERAGE;
 pub use super::pnpm_overrides_ban::RULE_ID as PNPM_OVERRIDES_BAN;
+pub use super::pnpm_release_age_policy::RULE_ID as PNPM_RELEASE_AGE_POLICY;
 pub use super::postgres_constraint_validate::RULE_ID as POSTGRES_CONSTRAINT_VALIDATE;
 pub use super::postgres_fk_index::RULE_ID as POSTGRES_FK_INDEX;
 pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;

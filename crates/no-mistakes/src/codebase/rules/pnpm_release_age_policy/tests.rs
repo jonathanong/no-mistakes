@@ -1,0 +1,161 @@
+use super::*;
+use crate::config::v2::{
+    schema::{RuleDef, RuleScope},
+    NoMistakesConfig,
+};
+use std::path::{Path, PathBuf};
+
+fn fixture(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/pnpm-release-age-policy/fixture")
+            .join(name),
+    )
+}
+
+fn options_yaml() -> &'static str {
+    r#"
+permanentPackages:
+  - name: acme-lib
+    reason: first-party
+  - name: '@acme/core'
+    reason: first-party
+temporarySelectors:
+  - demo-temporary-package@9.9.9
+scopedPrefixes:
+  - '@acme/'
+"#
+}
+
+fn config() -> NoMistakesConfig {
+    NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(options_yaml()).unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    }
+}
+
+fn files(root: &Path) -> Vec<PathBuf> {
+    vec![
+        root.join("pnpm-workspace.yaml"),
+        root.join(".github/dependabot.yml"),
+        root.join("package.json"),
+        root.join("pnpm-lock.yaml"),
+    ]
+}
+
+fn run(root: &Path) -> Vec<RuleFinding> {
+    check_with_files(root, &config(), &files(root)).unwrap()
+}
+
+#[test]
+fn pass_fixture_is_clean() {
+    assert!(run(&fixture("pass")).is_empty());
+}
+
+#[test]
+fn flags_unregistered_and_missing_excludes() {
+    let findings = run(&fixture("fail-exclude"));
+    let body = format!("{findings:?}");
+    assert!(body.contains("unknown-package"), "{body}");
+    assert!(
+        body.contains("missing from minimumReleaseAgeExclude"),
+        "{body}"
+    );
+}
+
+#[test]
+fn flags_dependabot_cooldown_miss() {
+    let findings = run(&fixture("fail-dependabot"));
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("cooldown.exclude")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn flags_temporary_selector_missing_from_lockfile() {
+    let findings = run(&fixture("fail-lockfile"));
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("absent from lockfile")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn empty_options_report_nothing() {
+    let root = fixture("fail-exclude");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    assert!(check_with_files(&root, &config, &files(&root))
+        .unwrap()
+        .is_empty());
+}
+
+#[test]
+fn missing_workspace_yaml_is_clean() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = crate::codebase::ts_resolver::normalize_path(dir.path());
+    assert!(check_with_files(&root, &config(), &[]).unwrap().is_empty());
+}
+
+#[test]
+fn malformed_workspace_yaml_is_reported() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = crate::codebase::ts_resolver::normalize_path(dir.path());
+    let yaml = root.join("pnpm-workspace.yaml");
+    std::fs::write(&yaml, "{ invalid yaml: }}}\n").unwrap();
+    let findings = check_with_files(&root, &config(), &[yaml]).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("failed to parse YAML")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn scoped_prefix_discovers_unregistered_active_package() {
+    let root = fixture("fail-graph");
+    let findings = run(&root);
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("@acme/new-tool")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn lockfile_name_and_selector_helpers() {
+    assert_eq!(
+        super::lockfile::package_name_from_lock_key("@acme/core@1.0.0").as_deref(),
+        Some("@acme/core")
+    );
+    assert_eq!(
+        super::lockfile::package_name_from_lock_key("acme-lib@1.0.0").as_deref(),
+        Some("acme-lib")
+    );
+    assert!(super::lockfile::lock_key_matches_selector(
+        "demo-temporary-package@9.9.9",
+        "demo-temporary-package@9.9.9"
+    ));
+    assert!(super::lockfile::lock_key_matches_selector(
+        "demo-temporary-package@9.9.9(peer@1)",
+        "demo-temporary-package@9.9.9"
+    ));
+}

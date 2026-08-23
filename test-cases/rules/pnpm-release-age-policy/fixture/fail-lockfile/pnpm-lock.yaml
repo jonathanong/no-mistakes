@@ -1,0 +1,6 @@
+lockfileVersion: '9.0'
+packages:
+  'acme-lib@1.0.0':
+    resolution: {}
+  '@acme/core@1.0.0':
+    resolution: {}
