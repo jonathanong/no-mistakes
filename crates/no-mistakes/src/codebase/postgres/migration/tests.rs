@@ -388,3 +388,17 @@ fn records_unnamed_alter_table_fk_and_check() {
         .iter()
         .all(|constraint| constraint.table_name == "children"));
 }
+
+#[test]
+fn records_omitted_and_no_action_delete() {
+    let omitted =
+        extract_migration_facts("CREATE TABLE children (parent_id uuid REFERENCES parents(id));");
+    assert_eq!(omitted.foreign_keys[0].delete_action, None);
+    let no_action = extract_migration_facts(
+        "CREATE TABLE children (parent_id uuid REFERENCES parents(id) ON DELETE NO ACTION);",
+    );
+    assert_eq!(
+        no_action.foreign_keys[0].delete_action.as_deref(),
+        Some("NO ACTION")
+    );
+}
