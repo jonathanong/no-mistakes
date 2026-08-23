@@ -3,6 +3,7 @@ pub use super::banned_paths::RULE_ID as BANNED_PATHS;
 pub use super::banned_renamed_files::RULE_ID as BANNED_RENAMED_FILES;
 pub use super::config_path_references::RULE_ID as CONFIG_PATH_REFERENCES;
 pub use super::csharp_max_lines_per_file::RULE_ID as CSHARP_MAX_LINES_PER_FILE;
+pub use super::csharp_no_async_void_delegate::RULE_ID as CSHARP_NO_ASYNC_VOID_DELEGATE;
 pub use super::doc_consistency::RULE_ID as DOC_CONSISTENCY;
 pub use super::file_extension_policy::RULE_ID as FILE_EXTENSION_POLICY;
 pub use super::finite_set_consistency::RULE_ID as FINITE_SET_CONSISTENCY;

@@ -1,0 +1,1 @@
+This note mentions new Command(async () => {}) but is not C#.
