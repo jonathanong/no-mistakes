@@ -60,6 +60,7 @@ pub use super::shellcheck_runner::RULE_ID as SHELLCHECK_RUNNER;
 pub use super::strict_package_layout::RULE_ID as STRICT_PACKAGE_LAYOUT;
 pub use super::structured_config_policy::RULE_ID as STRUCTURED_CONFIG_POLICY;
 pub use super::swift_no_raw_print::RULE_ID as SWIFT_NO_RAW_PRINT;
+pub use super::swift_viewmodel_main_actor::RULE_ID as SWIFT_VIEWMODEL_MAIN_ACTOR;
 pub use super::test_email_domain_policy::RULE_ID as TEST_EMAIL_DOMAIN_POLICY;
 pub use super::test_no_dependency_pins::RULE_ID as TEST_NO_DEPENDENCY_PINS;
 pub use super::test_no_unmocked_dynamic_imports::RULE_ID as TEST_NO_UNMOCKED_DYNAMIC_IMPORTS;

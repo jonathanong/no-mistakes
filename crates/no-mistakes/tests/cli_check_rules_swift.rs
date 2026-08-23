@@ -54,3 +54,41 @@ fn swift_no_raw_print_cli_passes() {
     );
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
+
+fn viewmodel_fixture(scenario: &str) -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/swift-viewmodel-main-actor/fixture")
+            .join(scenario),
+    )
+}
+
+#[test]
+fn swift_viewmodel_main_actor_cli_fails() {
+    let root = viewmodel_fixture("fail");
+    let out = check(
+        &root,
+        "rules:\n  - rule: swift-viewmodel-main-actor\n    scope: repository\n",
+    );
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(
+        stdout(&out).contains("swift-viewmodel-main-actor"),
+        "{}",
+        stdout(&out)
+    );
+    assert!(
+        stdout(&out).contains("BrokenViewModel.swift"),
+        "{}",
+        stdout(&out)
+    );
+}
+
+#[test]
+fn swift_viewmodel_main_actor_cli_passes() {
+    let root = viewmodel_fixture("pass");
+    let out = check(
+        &root,
+        "rules:\n  - rule: swift-viewmodel-main-actor\n    scope: repository\n",
+    );
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}

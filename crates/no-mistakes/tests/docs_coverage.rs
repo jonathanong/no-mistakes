@@ -286,6 +286,7 @@ fn no_mistakes_rules_have_docs() {
         rules::SHELLCHECK_RUNNER,
         rules::STRICT_PACKAGE_LAYOUT,
         rules::SWIFT_NO_RAW_PRINT,
+        rules::SWIFT_VIEWMODEL_MAIN_ACTOR,
         rules::TEST_EMAIL_DOMAIN_POLICY,
         rules::TEST_NO_DEPENDENCY_PINS,
         rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,

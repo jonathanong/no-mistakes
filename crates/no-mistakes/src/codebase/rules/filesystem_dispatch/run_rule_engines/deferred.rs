@@ -39,6 +39,15 @@ pub(super) fn run(
                 defer_suppression,
             )
         }
+        SWIFT_VIEWMODEL_MAIN_ACTOR => {
+            swift_viewmodel_main_actor::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
         VERSION_PIN_CONSISTENCY => {
             version_pin_consistency::check_with_files_sources_and_deferred_suppression(
                 root,
