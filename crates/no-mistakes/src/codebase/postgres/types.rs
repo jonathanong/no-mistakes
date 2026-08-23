@@ -47,6 +47,7 @@ pub struct SqlSchemaFileFacts {
     pub foreign_keys: Vec<SqlForeignKeyMetadata>,
     pub add_columns: Vec<SqlAddColumnMetadata>,
     pub unnamed_constraints: Vec<SqlUnnamedConstraint>,
+    pub statement_kinds: Vec<SqlStatementKind>,
     pub not_valid_constraints: Vec<SqlNamedConstraint>,
     pub validated_constraints: Vec<SqlNamedConstraint>,
 }
@@ -131,6 +132,13 @@ pub struct SqlNamedConstraint {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlUnnamedConstraint {
     pub table_name: String,
+    pub kind: String,
+    pub line: usize,
+}
+
+/// One schema-level statement kind recorded from PostgreSQL SQL.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlStatementKind {
     pub kind: String,
     pub line: usize,
 }

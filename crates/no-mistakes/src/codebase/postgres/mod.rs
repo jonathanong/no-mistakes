@@ -34,7 +34,7 @@ pub use schema::extract_create_table_metadata;
 pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,
     SqlColumnMetadata, SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDropIndexMetadata,
-    SqlForeignKeyMetadata, SqlIndexParam, SqlNamedConstraint, SqlSchemaFileFacts,
+    SqlForeignKeyMetadata, SqlIndexParam, SqlNamedConstraint, SqlSchemaFileFacts, SqlStatementKind,
     SqlUnnamedConstraint,
 };
 
