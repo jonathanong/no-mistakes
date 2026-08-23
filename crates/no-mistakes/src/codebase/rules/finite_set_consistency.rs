@@ -80,7 +80,7 @@ pub(crate) fn check_with_files_sources_and_facts(
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.rule_options();
+            let opts: Options = rule.rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files
@@ -111,22 +111,28 @@ pub(crate) fn check_with_files_sources_and_facts(
 /// Request boundaries use this before collection so the finite-set rule can
 /// borrow the shared fact map instead of parsing its configured files itself.
 #[doc(hidden)]
-pub fn required_call_site_fact_files(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
-    let mut paths = config
+pub fn required_call_site_fact_files(
+    root: &Path,
+    config: &NoMistakesConfig,
+) -> Result<Vec<PathBuf>> {
+    let paths: Result<Vec<Vec<PathBuf>>> = config
         .rule_applications(RULE_ID)
         .into_iter()
-        .flat_map(|rule| {
-            let opts: Options = rule.rule_options();
+        .map(|rule| {
+            let opts: Options = rule.rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
-            opts.sets
+            Ok(opts
+                .sets
                 .into_iter()
                 .filter(|spec| spec.kind == TS_CALL_FIRST_STRING_ARGUMENT)
                 .flat_map(move |spec| extract::resolve_spec_files(root, &spec.file, &target_roots))
+                .collect())
         })
-        .collect::<Vec<_>>();
+        .collect();
+    let mut paths = paths?.into_iter().flatten().collect::<Vec<_>>();
     paths.sort();
     paths.dedup();
-    paths
+    Ok(paths)
 }
 
 pub(super) fn finding(

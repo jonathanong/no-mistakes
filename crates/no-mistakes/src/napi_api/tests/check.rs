@@ -464,6 +464,23 @@ fn check_json_returns_non_blocking_agent_doc_advisories() {
 }
 
 #[test]
+fn check_json_rejects_invalid_rule_option_types_with_the_cli_diagnostic() {
+    let root = static_check_fixture("invalid-rule-options");
+    let error = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root }).to_string(),
+    ))
+    .expect_err("invalid configured rule options must reject the N-API check");
+    let message = error.reason;
+
+    assert!(message.contains(
+        "invalid options for rule `postgres-no-add-column` application `strict SQL migrations`"
+    ));
+    assert!(message.contains("options.sqlInclude"));
+    assert!(message.contains("boolean"));
+    assert!(message.contains("expected a sequence"));
+}
+
+#[test]
 fn check_json_returns_migrated_filesystem_rules() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/markdown-link-display-text/fixture");

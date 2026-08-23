@@ -36,7 +36,7 @@ pub(crate) fn check_with_graph_and_inferred(
         .collect::<crate::fx::PathSet>();
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let options: Options = rule.rule_options();
+        let options: Options = rule.rule_options()?;
         let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
         let source_filter = super::path_filter::RulePathFilter::new_with_inferred(
             root,

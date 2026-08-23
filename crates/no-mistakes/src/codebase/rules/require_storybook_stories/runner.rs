@@ -78,7 +78,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         defer_suppression,
         sources,
     } = inputs;
-    let opts: Options = rule.rule_options();
+    let opts: Options = rule.rule_options()?;
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     let rule_filter = RulePathFilter::new_with_inferred(root, config, rule, &mut inferred_roots)?;
     let include = GlobMatcher::new(&opts.include)?;

@@ -351,20 +351,48 @@ fn rule_def_options_deserialized() {
     struct Opts {
         backend_pattern: String,
     }
-    let opts: Opts = rule.rule_options();
+    let opts: Opts = rule.rule_options().unwrap();
     assert_eq!(opts.backend_pattern, "backend/api/**");
 }
 
 #[test]
-fn rule_def_options_returns_default_on_bad_type() {
-    let rule = RuleDef::default();
+fn rule_def_options_rejects_bad_nested_type_with_option_path() {
+    let rule = RuleDef {
+        name: Some("strict SQL migrations".to_string()),
+        rule: "example-rule".to_string(),
+        options: serde_yaml::from_str("entries:\n  - default: false\n").unwrap(),
+        ..RuleDef::default()
+    };
 
+    #[derive(Debug, serde::Deserialize, Default)]
+    struct Entry {
+        default: String,
+    }
+    #[derive(Debug, serde::Deserialize, Default)]
+    struct Opts {
+        entries: Vec<Entry>,
+    }
+
+    let error = rule.rule_options::<Opts>().unwrap_err();
+    let message = error.to_string();
+    assert!(message
+        .contains("invalid options for rule `example-rule` application `strict SQL migrations`"));
+    assert!(message.contains("options.entries[0].default"));
+    assert!(message.contains("boolean"));
+    assert!(message.contains("expected a string"));
+}
+
+#[test]
+fn rule_def_omitted_options_still_use_defaults() {
     #[derive(serde::Deserialize, Default, PartialEq, Debug)]
     struct Opts {
         foo: String,
     }
-    let opts: Opts = rule.rule_options();
-    assert_eq!(opts, Opts::default());
+
+    assert_eq!(
+        RuleDef::default().rule_options::<Opts>().unwrap(),
+        Opts::default()
+    );
 }
 
 #[test]
@@ -377,7 +405,9 @@ fn rule_application_options_return_all_effective_applications() {
         src_max: Option<usize>,
     }
 
-    let opts = cfg.rule_application_options::<Opts>("rust-max-lines-per-file");
+    let opts = cfg
+        .rule_application_options::<Opts>("rust-max-lines-per-file")
+        .unwrap();
 
     assert_eq!(
         opts.iter().map(|opt| opt.src_max).collect::<Vec<_>>(),

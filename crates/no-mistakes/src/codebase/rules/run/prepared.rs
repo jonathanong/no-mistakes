@@ -38,7 +38,7 @@ pub struct PreparedRulesCheck<'a> {
 #[doc(hidden)]
 pub fn canonical_graph_plan(
     config: &crate::config::v2::NoMistakesConfig,
-) -> Option<GraphBuildPlan> {
+) -> Result<Option<GraphBuildPlan>> {
     let mut plan = GraphBuildPlan::default();
     let mut needed = false;
     if rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
@@ -49,11 +49,11 @@ pub fn canonical_graph_plan(
         plan.include(reachability_plan);
         needed = true;
     }
-    if let Some(forbidden_plan) = forbidden_dependencies::graph_plan(config) {
+    if let Some(forbidden_plan) = forbidden_dependencies::graph_plan(config)? {
         plan.include(forbidden_plan);
         needed = true;
     }
-    needed.then_some(plan)
+    Ok(needed.then_some(plan))
 }
 
 /// Whether configured graph-backed rules require files outside the filesystem check scope.
@@ -62,7 +62,7 @@ pub fn canonical_graph_requires_full_file_universe(
     config: &crate::config::v2::NoMistakesConfig,
 ) -> bool {
     required_entrypoint_reachability::graph_plan(config).is_some()
-        || forbidden_dependencies::graph_plan(config).is_some()
+        || config.rule_configured(FORBIDDEN_DEPENDENCIES)
 }
 
 pub fn run_check_with_config_and_facts_and_playwright(

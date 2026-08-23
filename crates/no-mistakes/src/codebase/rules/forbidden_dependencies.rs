@@ -37,14 +37,17 @@ pub fn check(
     check_with_config(root, config, None, tsconfig_path)
 }
 
-pub fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
+pub fn graph_plan(config: &NoMistakesConfig) -> Result<Option<GraphBuildPlan>> {
     let applications = config.rule_applications(RULE_ID);
     if applications.is_empty() {
-        return None;
+        return Ok(None);
     }
-    let opts_list: Vec<Options> = applications.iter().map(|r| r.rule_options()).collect();
+    let opts_list: Vec<Options> = applications
+        .iter()
+        .map(|rule| rule.rule_options())
+        .collect::<Result<_>>()?;
     let union_allowed = union_allowed_set(&opts_list);
-    Some(GraphBuildPlan::from_allowed(union_allowed.as_ref()))
+    Ok(Some(GraphBuildPlan::from_allowed(union_allowed.as_ref())))
 }
 
 fn union_allowed_set(opts_list: &[Options]) -> Option<HashSet<EdgeKind>> {

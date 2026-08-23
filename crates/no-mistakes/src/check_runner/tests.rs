@@ -312,6 +312,23 @@ fn run_all_surfaces_react_enabled_config_errors() {
 }
 
 #[test]
+fn run_all_surfaces_invalid_rule_option_types() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/invalid-rule-options");
+
+    let error =
+        run_all(root, None, None).expect_err("invalid configured rule options must fail the check");
+    let message = format!("{error:#}");
+
+    assert!(message.contains(
+        "invalid options for rule `postgres-no-add-column` application `strict SQL migrations`"
+    ));
+    assert!(message.contains("options.sqlInclude"));
+    assert!(message.contains("boolean"));
+    assert!(message.contains("expected a sequence"));
+}
+
+#[test]
 fn run_all_propagates_integration_check_error() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/integration-tests/missing-config/fixture");

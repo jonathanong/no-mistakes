@@ -44,7 +44,7 @@ pub(crate) fn check_required_doc_section_with_files_and_sources(
         .rule_applications(REQUIRED_DOC_SECTION_RULE_ID)
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: DocSectionOptions = rule.rule_options();
+            let opts: DocSectionOptions = rule.rule_options()?;
             let target_roots = crate::codebase::rules::target_roots(root, config, rule);
             let skip = crate::codebase::rules::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files

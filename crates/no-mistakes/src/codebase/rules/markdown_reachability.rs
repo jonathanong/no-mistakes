@@ -41,7 +41,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     let markdown = super::markdown_scope::markdown_files(all_files);
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let options: Options = rule.rule_options();
+        let options: Options = rule.rule_options()?;
         let roots = filenames(&options.root_filenames, DEFAULT_ROOT_FILENAMES);
         let indexes = filenames(&options.index_filenames, DEFAULT_INDEX_FILENAMES);
         let max_depth = validate_max_depth(options.max_depth)?;

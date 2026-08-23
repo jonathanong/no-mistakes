@@ -63,7 +63,7 @@ pub(crate) fn check_with_files_and_sources(
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.rule_options();
+            let opts: Options = rule.rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
             let files = candidate_files(root, config, all_files, &skip, &target_roots, rule);

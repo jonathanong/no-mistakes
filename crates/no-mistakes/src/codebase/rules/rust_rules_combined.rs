@@ -57,7 +57,7 @@ fn add_max_lines_work(
     work: &mut BTreeMap<PathBuf, RustWork>,
 ) -> Result<()> {
     for rule in config.rule_applications(RUST_MAX_LINES_PER_FILE) {
-        let opts: MaxLinesOptions = rule.rule_options();
+        let opts: MaxLinesOptions = rule.rule_options()?;
         let files =
             matching_rust_files(root, config, rule, all_files, &opts.excludes, &opts.roots)?;
         for path in files {
@@ -84,7 +84,7 @@ fn add_inline_tests_work(
     work: &mut BTreeMap<PathBuf, RustWork>,
 ) -> Result<()> {
     for rule in config.rule_applications(RUST_NO_INLINE_TESTS) {
-        let opts: MaxLinesOptions = rule.rule_options();
+        let opts: MaxLinesOptions = rule.rule_options()?;
         let files =
             matching_rust_files(root, config, rule, all_files, &opts.excludes, &opts.roots)?;
         for path in files
@@ -104,7 +104,7 @@ fn add_inline_allows_work(
     work: &mut BTreeMap<PathBuf, RustWork>,
 ) -> Result<()> {
     for rule in config.rule_applications(RUST_NO_INLINE_ALLOWS) {
-        let opts: MaxLinesOptions = rule.rule_options();
+        let opts: MaxLinesOptions = rule.rule_options()?;
         let files =
             matching_rust_files(root, config, rule, all_files, &opts.excludes, &opts.roots)?;
         for path in files

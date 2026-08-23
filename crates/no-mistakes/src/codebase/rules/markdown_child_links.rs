@@ -42,7 +42,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     let markdown = super::markdown_scope::markdown_files(all_files);
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let options: Options = rule.rule_options();
+        let options: Options = rule.rule_options()?;
         let groups = compile_groups(&options)?;
         let files = super::path_filter::filter_markdown_rule_files(root, config, rule, &markdown)?;
         findings.extend(scan::scan(root, &files, facts, &groups)?);

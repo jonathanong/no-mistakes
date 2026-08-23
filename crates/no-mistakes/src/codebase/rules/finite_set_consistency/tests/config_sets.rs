@@ -37,7 +37,7 @@ fn check_call_literal_fixture(case: &str, target: &str) -> anyhow::Result<Vec<Ru
     let config = call_literal_config(target);
     let facts = crate::codebase::check_facts::collect_check_facts(
         &root,
-        required_call_site_fact_files(&root, &config),
+        required_call_site_fact_files(&root, &config)?,
         crate::codebase::check_facts::CheckFactPlan {
             graph: crate::codebase::ts_source::facts::TsFactPlan {
                 call_sites: true,
@@ -177,7 +177,7 @@ fn call_fact_demand_resolves_each_configured_project_once() {
     config.rules[0].projects = vec!["app-a".to_string(), "app-b".to_string()];
 
     assert_eq!(
-        required_call_site_fact_files(&root, &config),
+        required_call_site_fact_files(&root, &config).unwrap(),
         vec![
             root.join("packages/app-a/schedules.mts"),
             root.join("packages/app-b/schedules.mts"),

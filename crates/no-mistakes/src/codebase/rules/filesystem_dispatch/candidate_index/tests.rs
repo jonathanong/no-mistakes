@@ -17,14 +17,16 @@ fn fixture() -> (PathBuf, NoMistakesConfig, Arc<Vec<PathBuf>>) {
 fn classification_matches_legacy_rule_views_and_reuses_owned_results() {
     let (root, config, files) = fixture();
     let index =
-        RuleCandidateIndex::prepare_with_inventory(&root, &config, &files, &files, &files, None);
+        RuleCandidateIndex::prepare_with_inventory(&root, &config, &files, &files, &files, None)
+            .unwrap();
 
     for rule_id in FILESYSTEM_RULE_IDS
         .iter()
         .copied()
         .filter(|rule_id| rule_enabled(&config, rule_id))
     {
-        let preserved_roots = preserved::filesystem_rule_preserved_roots(&root, &config, rule_id);
+        let preserved_roots =
+            preserved::filesystem_rule_preserved_roots(&root, &config, rule_id).unwrap();
         let skip = super::super::super::skip_dir_set(&config);
         let expected = files
             .iter()
@@ -87,7 +89,8 @@ fn rust_exclusivity_tracks_enabled_non_rust_candidate_overlap() {
         &files,
         &files,
         Some(Arc::clone(&files)),
-    );
+    )
+    .unwrap();
     let agents = exclusive
         .by_rule
         .get(super::super::AGENTS_MD_MAX_SIZE)
@@ -127,7 +130,8 @@ fn classification_normalizes_deduplicates_and_keeps_metadata_rule_context() {
     let metadata = vec![package.clone(), metadata_context.clone()];
 
     let index =
-        RuleCandidateIndex::prepare_with_inventory(&root, &config, &files, &files, &metadata, None);
+        RuleCandidateIndex::prepare_with_inventory(&root, &config, &files, &files, &metadata, None)
+            .unwrap();
     let candidates = index.candidates(FORBIDDEN_WORKSPACE_CLOSURE);
 
     assert_eq!(
@@ -167,7 +171,8 @@ fn banned_paths_uses_tracked_candidates_without_narrowing_other_rules() {
         &tracked_files,
         &[],
         None,
-    );
+    )
+    .unwrap();
 
     assert_eq!(
         index.candidates(BANNED_PATHS),
@@ -229,7 +234,8 @@ fn markdown_repository_rules_use_the_full_tracked_inventory_not_untracked_files(
         &tracked_files,
         &[],
         Some(inventory),
-    );
+    )
+    .unwrap();
     assert_eq!(
         index.candidates(super::super::MARKDOWN_MERMAID_VALIDATION),
         tracked_files
@@ -261,9 +267,11 @@ fn markdown_inventory_keeps_external_project_docs_but_skips_generated_directorie
     );
     let inventory = super::super::inventory::tracked_inventory_with_markdown_project_roots(
         &root, &config, &snapshot,
-    );
+    )
+    .unwrap();
     let index =
-        RuleCandidateIndex::prepare_with_inventory(&root, &config, &[], &[], &[], Some(inventory));
+        RuleCandidateIndex::prepare_with_inventory(&root, &config, &[], &[], &[], Some(inventory))
+            .unwrap();
 
     let external_docs = [
         fixture.path().join("external/CLAUDE.md"),
@@ -395,7 +403,8 @@ fn repository_banned_paths_uses_full_inventory_and_keeps_external_project_candid
         &files,
         &[],
         Some(inventory),
-    );
+    )
+    .unwrap();
 
     let mut expected_banned_paths = vec![skipped, source.clone(), external];
     expected_banned_paths.sort();
@@ -446,7 +455,8 @@ fn project_scoped_tsconfig_file_coverage_keeps_repository_inventory_tsconfig() {
         &files,
         &[],
         Some(inventory),
-    );
+    )
+    .unwrap();
 
     let mut expected = vec![source.clone(), tsconfig];
     expected.sort();

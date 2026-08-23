@@ -50,7 +50,7 @@ pub(crate) fn check_with_prepared_facts_and_graph(
     let opts_list: Vec<Options> = applications
         .iter()
         .map(|rule| rule.rule_options())
-        .collect();
+        .collect::<Result<_>>()?;
     let plan = GraphBuildPlan::from_allowed(union_allowed_set(&opts_list).as_ref());
     validate_shared_graph_plan(root, config_path, shared, prepared_graph, plan)?;
     let file_universe = shared

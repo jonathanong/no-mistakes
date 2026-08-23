@@ -44,7 +44,7 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
     // This legacy prepared entrypoint still owns the one request-scoped fact
     // pass for callers that did not supply one. Reuse its source store so the
     // finite-set rule can borrow call facts without reading or parsing again.
-    let facts = super::entrypoints::prepare_call_site_facts(root, config, &prepared.sources);
+    let facts = super::entrypoints::prepare_call_site_facts(root, config, &prepared.sources)?;
     run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
         root,
         config,
@@ -108,9 +108,9 @@ fn run_prepared_filesystem_rules(
         &metadata_files,
         Some(inventory::tracked_inventory_with_markdown_project_roots(
             root, config, snapshot,
-        )),
-    );
-    inventory::register_trusted_external_candidates(root, config, &candidates, &sources);
+        )?),
+    )?;
+    inventory::register_trusted_external_candidates(root, config, &candidates, &sources)?;
     let markdown_facts = markdown_dispatch::prepare(root, config, &candidates, &sources)?;
     run_enabled_rules(&RuleRunInputs {
         root,

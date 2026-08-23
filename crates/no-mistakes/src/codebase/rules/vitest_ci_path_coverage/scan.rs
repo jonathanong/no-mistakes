@@ -75,7 +75,7 @@ pub(crate) fn check_with_files_from_snapshot_catalog_sources_and_workflows(
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| {
-            let opts: Options = rule.rule_options();
+            let opts: Options = rule.rule_options()?;
             let roots = super::super::target_roots(root, config, rule);
             let skip = super::super::skip_dir_set(config);
             let files = all_files

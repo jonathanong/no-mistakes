@@ -278,6 +278,9 @@ edges.
 including configured filesystem rules such as
 `package-json-nested-workspace-coverage`, and `warnings: string[]` for checks
 that could not run.
+It rejects with the same rule application and `options` path diagnostic as the
+CLI when a configured option has the wrong type; invalid option objects are
+never replaced with rule defaults.
 
 `resolveConfig(options)` returns the same JSON as `config resolve`: frontend
 apps, Playwright coverage gates, effective per-app `rewrites`/`ignoreRoutes`,

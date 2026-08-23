@@ -22,7 +22,7 @@ pub(super) fn prepare(
             root,
             config,
             candidates.candidates(MARKDOWN_LINK_DISPLAY_TEXT),
-        ));
+        )?);
     }
     if rule_enabled(config, MARKDOWN_MERMAID_VALIDATION) {
         plan.request_pulldown(markdown_mermaid_validation::fact_candidate_files(

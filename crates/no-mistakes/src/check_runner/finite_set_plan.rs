@@ -1,3 +1,4 @@
+use anyhow::Result;
 use no_mistakes::codebase::check_facts::CheckFactPlan;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
@@ -51,19 +52,20 @@ pub(crate) fn prepare(
     plan: &mut CheckFactPlan,
     graph_configured: bool,
     playwright_configured: bool,
-) -> PreparedFactDemand {
+) -> Result<PreparedFactDemand> {
     let needs_other_facts =
         graph_configured || playwright_configured || super::enabled::plan_requests_facts(plan);
-    let files = no_mistakes::codebase::rules::finite_set_consistency::required_call_site_fact_files(
-        root, config,
-    );
+    let files =
+        no_mistakes::codebase::rules::finite_set_consistency::required_call_site_fact_files(
+            root, config,
+        )?;
     if !files.is_empty() {
         plan.graph.call_sites = true;
     }
-    PreparedFactDemand {
+    Ok(PreparedFactDemand {
         call_site_files: files,
         needs_other_facts,
-    }
+    })
 }
 
 pub(crate) fn no_analysis_requested(

@@ -17,7 +17,7 @@ impl SharedTraversalContext {
         let config = (*session.config(&root, config_path)?).clone();
         let mut build_plan = build_plan;
         if include_check_plan {
-            if let Some(check_plan) = crate::codebase::rules::canonical_graph_plan(&config) {
+            if let Some(check_plan) = crate::codebase::rules::canonical_graph_plan(&config)? {
                 build_plan.include(check_plan);
             }
         }

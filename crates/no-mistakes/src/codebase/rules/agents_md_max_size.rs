@@ -30,7 +30,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     let skip = &config.filesystem.skip_directories;
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
+        let opts: Options = rule.rule_options()?;
         let filenames = filenames_from_opts(&opts);
         let target_roots = super::target_roots(root, config, rule);
         let roots = roots_from_opts(&opts, root, &target_roots);
@@ -82,7 +82,7 @@ fn advisories_with_files_inner(
 ) -> Result<Vec<RuleFinding>> {
     let mut advisories = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
+        let opts: Options = rule.rule_options()?;
         if opts.advisory_chars_remaining.is_none() {
             continue;
         }
@@ -142,7 +142,7 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts = rule.rule_options();
+        let opts = rule.rule_options()?;
         let filenames = filenames_from_opts(&opts);
         let target_roots = super::target_roots(root, config, rule);
         let roots = roots_from_opts(&opts, root, &target_roots);
