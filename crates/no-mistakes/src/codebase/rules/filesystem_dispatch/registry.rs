@@ -47,6 +47,7 @@ macro_rules! filesystem_rules {
             POSTGRES_NO_GENERATED_COLUMN_WRITES => postgres_no_generated_column_writes::check_with_files,
             POSTGRES_LOCK_ORDERING => postgres_lock_ordering::check_with_files,
             POSTGRES_NO_OFFSET => postgres_no_offset::check_with_files,
+            POSTGRES_REQUIRE_FK_ON_DELETE => postgres_require_fk_on_delete::check_with_files,
             POSTGRES_REQUIRE_NAMED_CONSTRAINTS => postgres_require_named_constraints::check_with_files,
             POSTGRES_REQUIRE_QUERY_ANNOTATION => postgres_require_query_annotation::check_with_files,
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files,
