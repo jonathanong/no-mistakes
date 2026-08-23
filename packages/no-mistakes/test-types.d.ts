@@ -210,6 +210,7 @@ export interface TestsWhyOptions {
   test: string;
   changed?: string;
   plan?: string;
+  planJson?: SavedTestPlan | string;
 }
 
 export interface WhyStep {

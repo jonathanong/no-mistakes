@@ -653,6 +653,10 @@ test("test plan declarations require current results but accept saved legacy pla
   assert.match(declarations, /\n  changedFiles: string\[\];/);
   assert.match(declarations, /export type SavedTestPlan = TestPlan;/);
   assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
+  assert.match(
+    declarations,
+    /export interface TestsWhyOptions \{[\s\S]*plan\?: string;\n  planJson\?: SavedTestPlan \| string;/,
+  );
   assert.match(declarations, /export type TestsPlanOptions =/);
   assert.match(
     declarations,
