@@ -68,6 +68,23 @@ fn path_set_lookups_match_hash_set_membership() {
 }
 
 #[test]
+fn normalized_visibility_projects_paths_and_blanket_lookups_delegate() {
+    let visible = sample_visible();
+    let by_ref: &HashSet<PathBuf> = &visible;
+    let by_arc = Arc::new(visible.clone());
+    let missing = PathBuf::from("/definitely-not-a-real-no-mistakes-path");
+
+    let projected = VisiblePathLookup::normalized_visible(&visible);
+    assert!(projected.contains(Path::new("/fixture/a.ts")));
+    assert!(
+        super::normalized_visible_path_set([missing.clone()]).contains(&missing),
+        "non-canonicalizable paths retain normalized lexical membership"
+    );
+    assert!(VisiblePathLookup::normalized_visible(&by_ref).contains(Path::new("/fixture/b.ts")));
+    assert!(VisiblePathLookup::normalized_visible(&by_arc).contains(Path::new("/fixture/a.ts")));
+}
+
+#[test]
 fn import_resolver_with_visible_stays_a_public_pathset_api() {
     let source = include_str!("resolver_impl.rs");
     assert!(
