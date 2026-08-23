@@ -43,7 +43,7 @@ fn limit_clause_has_offset(clause: Option<&LimitClause>) -> bool {
     }
 }
 
-pub(super) fn set_expr_has_offset(expr: &SetExpr) -> bool {
+fn set_expr_has_offset(expr: &SetExpr) -> bool {
     match expr {
         SetExpr::Select(select) => select_has_offset(select),
         SetExpr::Query(query) => query_has_offset(query),
@@ -56,7 +56,7 @@ pub(super) fn set_expr_has_offset(expr: &SetExpr) -> bool {
         SetExpr::Insert(stmt) | SetExpr::Update(stmt) | SetExpr::Delete(stmt) => {
             super::statement_has_offset(stmt)
         }
-        SetExpr::Table(_) | SetExpr::Merge(_) => false,
+        _ => false,
     }
 }
 
