@@ -1,0 +1,27 @@
+name: Diamond
+on: push
+jobs:
+  a:
+    runs-on: ubuntu-latest
+    steps:
+      - id: first
+        name: First
+        uses: actions/checkout@v4
+      - id: second
+        name: Second
+        run: echo a
+  b:
+    needs: a
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo b
+  c:
+    needs: a
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo c
+  d:
+    needs: [b, c]
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo d

@@ -91,4 +91,6 @@ pub(super) fn finding(message: String) -> RuleFinding {
 }
 
 #[cfg(test)]
+mod coverage_tests;
+#[cfg(test)]
 mod tests;
