@@ -120,6 +120,7 @@ describe("no-three-sequential-awaits", () => {
         "example.ts",
       ),
       [],
+    );
     assert.deepEqual(
       messages(
         `
