@@ -37,13 +37,13 @@ impl SymbolIndex {
                             .preferred_path()
                             .and_then(|target| graph_files.visible_path(target))
                         {
-                            buckets
-                                .entry(intern.path(target))
-                                .or_insert_with(|| Vec::with_capacity(expected_entries))
-                                .push((
-                                    intern.string(&ni.imported),
-                                    (importer.clone(), intern.string(&ni.local), false),
-                                ));
+                            insert_source_bucket_entry(
+                                &mut buckets,
+                                intern.path(target),
+                                intern.string(&ni.imported),
+                                (importer.clone(), intern.string(&ni.local), false),
+                                expected_entries,
+                            );
                         }
                     }
                     for exp in &symbols.exports {
@@ -57,13 +57,13 @@ impl SymbolIndex {
                                 .preferred_path()
                                 .and_then(|target| graph_files.visible_path(target))
                             {
-                                buckets
-                                    .entry(intern.path(target))
-                                    .or_insert_with(|| Vec::with_capacity(expected_entries))
-                                    .push((
-                                        intern.string(imported),
-                                        (importer.clone(), intern.string(&exp.name), true),
-                                    ));
+                                insert_source_bucket_entry(
+                                    &mut buckets,
+                                    intern.path(target),
+                                    intern.string(imported),
+                                    (importer.clone(), intern.string(&exp.name), true),
+                                    expected_entries,
+                                );
                             }
                         }
                     }

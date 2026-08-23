@@ -131,3 +131,38 @@ fn symbol_index_interned_paths_from_distinct_pathbuf_allocations_sort_and_hash_e
         assert_eq!(index.file_importers(&lookup), vec![right]);
     }
 }
+
+#[test]
+fn symbol_index_wide_fanout_query_preserves_each_distinct_source() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/queries/symbol-index-wide-fanout"),
+    );
+    let tsconfig = crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let index = SymbolIndex::build_from_root(&root, &tsconfig).unwrap();
+    let importer = root.join("src/importer.mts");
+
+    // A wide fanout must retain one reverse-index row per source without
+    // changing the importer ordering or symbol-level query results.
+    for (source, symbol) in [
+        ("source-a.mts", "alpha"),
+        ("source-b.mts", "beta"),
+        ("source-c.mts", "gamma"),
+        ("source-d.mts", "delta"),
+        ("source-e.mts", "epsilon"),
+        ("source-f.mts", "zeta"),
+    ] {
+        let source = root.join("src").join(source);
+        let importers = index.importers_of(&source, symbol).unwrap();
+        assert_eq!(importers.len(), 1);
+        assert_eq!(importers[0].0.as_ref(), importer.as_path());
+        assert_eq!(index.file_importers(&source), vec![importer.clone()]);
+    }
+}
+
+#[test]
+fn symbol_index_bucket_initial_capacity_is_bounded_for_wide_fanout() {
+    assert_eq!(source_bucket_initial_capacity(0), 0);
+    assert_eq!(source_bucket_initial_capacity(8), 8);
+    assert_eq!(source_bucket_initial_capacity(2_048), MAX_SOURCE_BUCKET_INITIAL_CAPACITY);
+}

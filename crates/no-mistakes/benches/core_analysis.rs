@@ -27,7 +27,10 @@ use graph::{bench_facts_graph_and_query, bench_high_fanout_finalization, bench_l
 use graph_gates::bench_graph_gates;
 use language_frontends::bench_language_frontends;
 use observer::bench_observer_overhead;
-use query_indexes::{bench_scoped_resolver_selection, bench_symbol_index_build_and_lookup};
+use query_indexes::{
+    bench_scoped_resolver_selection, bench_symbol_index_build_and_lookup,
+    bench_symbol_index_distinct_target_build,
+};
 use react_traits::bench_react_traits;
 use relationships::bench_relationship_projection;
 use reports::{bench_symbols, bench_workspace};
@@ -40,6 +43,7 @@ criterion_group!(
     bench_language_frontends,
     bench_high_fanout_finalization,
     bench_symbol_index_build_and_lookup,
+    bench_symbol_index_distinct_target_build,
     bench_scoped_resolver_selection,
     bench_symbols,
     bench_workspace,
