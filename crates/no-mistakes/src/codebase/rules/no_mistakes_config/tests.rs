@@ -264,3 +264,22 @@ fn invalid_include_and_exclude_globs_error() {
     config.rules[0].exclude = vec!["{".to_string()];
     assert!(check_with_files(&root, &config, &files(&root)).is_err());
 }
+
+#[test]
+fn unconfigured_rule_reports_nothing() {
+    let root = fixture("missing-path");
+    let findings = check_with_files(&root, &NoMistakesConfig::default(), &files(&root)).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn config_rel_falls_back_without_a_discovered_manifest() {
+    let root = fixture("missing-path");
+    let findings = check_with_files(&root, &load(&root), &[]).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.file == ".no-mistakes.yml"),
+        "{findings:?}"
+    );
+}
