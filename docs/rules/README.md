@@ -88,6 +88,7 @@ rules:
 | [`strict-package-layout`](strict-package-layout.md)                           | Enforce configured package file layout.                                         |
 | [`structured-config-policy`](structured-config-policy.md)                     | Require or ban structured config keys.                                          |
 | [`swift-no-raw-print`](swift-no-raw-print.md)                                 | Ban raw print() and Swift.print() in Swift sources.                             |
+| [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md)                 | Require @MainActor on Swift classes whose names end with ViewModel.             |
 | [`test-email-domain-policy`](test-email-domain-policy.md)                     | Ban configured email domains in tracked fixtures and docs.                      |
 | [`test-no-dependency-pins`](test-no-dependency-pins.md)                       | Ban exact dependency-version assertions in tests.                               |
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)     | Require dynamic imports in tests to be mocked.                                  |
