@@ -1,5 +1,4 @@
 use super::RuleFinding;
-use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
@@ -7,7 +6,11 @@ use serde::{Deserialize, Deserializer};
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
+mod equals_file;
+mod scan;
 mod value_assertions;
+mod when;
+use scan::scan;
 use value_assertions::assert_value;
 
 pub const RULE_ID: &str = "structured-config-policy";
@@ -25,6 +28,13 @@ pub(crate) struct Policy {
     pub(crate) required_keys: Vec<String>,
     pub(crate) banned_keys: Vec<String>,
     pub(crate) value_assertions: Vec<ValueAssertion>,
+    pub(crate) when: Vec<PolicyWhen>,
+}
+
+#[derive(Deserialize, Default)]
+#[serde(default, rename_all = "camelCase")]
+pub(crate) struct PolicyWhen {
+    pub(crate) key: String,
 }
 
 #[derive(Deserialize, Default)]
@@ -37,8 +47,21 @@ pub(crate) struct ValueAssertion {
     pub(crate) glob: String,
     pub(crate) value: Option<Value>,
     pub(crate) required_keys: Vec<String>,
+    pub(crate) forbidden_keys: Vec<String>,
     pub(crate) required_values: std::collections::BTreeMap<String, Value>,
     pub(crate) message: Option<String>,
+    pub(crate) file: String,
+    pub(crate) from_key: String,
+    #[serde(rename = "match", default)]
+    pub(crate) match_mode: MatchMode,
+}
+
+#[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[serde(rename_all = "kebab-case")]
+pub(crate) enum MatchMode {
+    #[default]
+    All,
+    Any,
 }
 
 #[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq)]
@@ -52,6 +75,7 @@ pub(crate) enum AssertionKind {
     StringGlob,
     NotSingleFile,
     Equals,
+    EqualsFile,
     ObjectShape,
 }
 
@@ -66,6 +90,7 @@ impl AssertionKind {
             "string-glob" => Some(Self::StringGlob),
             "not-single-file" => Some(Self::NotSingleFile),
             "equals" => Some(Self::Equals),
+            "equals-file" => Some(Self::EqualsFile),
             "object-shape" => Some(Self::ObjectShape),
             _ => None,
         }
@@ -116,61 +141,20 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
-fn scan(
-    root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
-    target_roots: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let mut findings = Vec::new();
-    for policy in &opts.policies {
-        let matching = super::matching_files(root, &policy.files, files, target_roots)?;
-        for path in matching {
-            let rel = relative_slash_path(root, &path);
-            let Some(source) = super::read_source(sources, &path) else {
-                continue;
-            };
-            let Ok(value) = serde_yaml::from_str::<Value>(&source) else {
-                continue;
-            };
-            for key in &policy.required_keys {
-                if value_at_key(&value, key).is_none() {
-                    findings.push(RuleFinding {
-                        rule: RULE_ID.to_string(),
-                        file: rel.clone(),
-                        line: 1,
-                        message: format!("{rel}: required config key `{key}` is missing"),
-                        import: None,
-                        target: Some(key.clone()),
-                    });
-                }
-            }
-            for key in &policy.banned_keys {
-                if value_at_key(&value, key).is_some() {
-                    findings.push(RuleFinding {
-                        rule: RULE_ID.to_string(),
-                        file: rel.clone(),
-                        line: 1,
-                        message: format!("{rel}: banned config key `{key}` is present"),
-                        import: None,
-                        target: Some(key.clone()),
-                    });
-                }
-            }
-            for assertion in &policy.value_assertions {
-                findings.extend(assert_value(&rel, &value, assertion)?);
-            }
-        }
-    }
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
-    Ok(findings)
-}
-
 fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
     key.split('.')
         .try_fold(value, |current, part| current.get(part))
 }
 
+#[cfg(test)]
+mod bind_tests;
+#[cfg(test)]
+mod equals_file_tests;
+#[cfg(test)]
+mod jsonc_tests;
+#[cfg(test)]
+mod plugins_tests;
+#[cfg(test)]
+mod selector_tests;
 #[cfg(test)]
 mod tests;

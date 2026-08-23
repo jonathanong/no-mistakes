@@ -9,6 +9,10 @@ use crate::tests::TestFramework;
 use std::collections::BTreeSet;
 use std::path::Path;
 
+mod coverage;
+mod generic_checks;
+mod lang_frameworks;
+mod runner_isolation;
 mod timeout;
 
 fn fixture() -> PathBuf {
@@ -31,6 +35,13 @@ fn generic_only_fixture() -> PathBuf {
     )
 }
 
+fn generic_only_config() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/impacted-checks/generic-only.no-mistakes.yml"),
+    )
+}
+
 fn args(files: &[&str]) -> ImpactedChecksArgs {
     ImpactedChecksArgs {
         files: files.iter().map(PathBuf::from).collect(),
@@ -42,10 +53,14 @@ fn args(files: &[&str]) -> ImpactedChecksArgs {
         changed_file: Vec::new(),
         changed_files: None,
         diff: None,
+        diff_stdin: false,
+        diff_command: None,
         diff_content: None,
         format: None,
         json: false,
+        generic_only: false,
         timings: false,
+        diagnose_empty: false,
     }
 }
 
@@ -64,10 +79,14 @@ fn fanout_args(root: &Path) -> ImpactedChecksArgs {
         changed_file: Vec::new(),
         changed_files: None,
         diff: None,
+        diff_stdin: false,
+        diff_command: None,
         diff_content: None,
         format: None,
         json: false,
+        generic_only: false,
         timings: false,
+        diagnose_empty: false,
     }
 }
 
@@ -124,20 +143,6 @@ fn all_environments_skip_the_shared_graph() {
 }
 
 #[test]
-fn generic_only_repository_skips_test_file_discovery_and_graph() {
-    let mut a = args(&["src/value.ts"]);
-    a.root = generic_only_fixture();
-    // Test-only inputs remain irrelevant when no test framework is present.
-    a.tsconfig = Some(a.root.join("missing-tsconfig.json"));
-
-    let (report, stats) = generate_impacted_checks_with_stats(&a).unwrap();
-
-    assert_eq!(command_strings(&report), vec!["eslint src/value.ts"]);
-    assert_eq!(stats.framework_discoveries, 0);
-    assert_eq!(stats.graph_builds, 0);
-}
-
-#[test]
 fn source_change_yields_test_lint_and_typecheck() {
     let report = generate_impacted_checks(&args(&["src/foo.ts"])).unwrap();
     let commands = command_strings(&report);
@@ -188,6 +193,63 @@ fn renders_every_format() {
 }
 
 #[test]
+fn empty_results_are_classified_and_rendered_in_every_format() {
+    let no_files = generate_impacted_checks(&args(&[])).unwrap();
+    assert_eq!(
+        no_files.empty_result,
+        Some(ImpactedChecksEmptyResult {
+            code: "no-changed-files".to_string(),
+            message: "No changed files were provided.".to_string(),
+        })
+    );
+    let no_checks = generate_impacted_checks(&args(&["src/style.css"])).unwrap();
+    assert_eq!(
+        no_checks
+            .empty_result
+            .as_ref()
+            .map(|empty| empty.code.as_str()),
+        Some("no-impacted-checks")
+    );
+    assert!(generate_impacted_checks(&args(&["src/foo.ts"]))
+        .unwrap()
+        .empty_result
+        .is_none());
+
+    for report in [&no_files, &no_checks] {
+        assert!(render(report, Format::Json)
+            .unwrap()
+            .contains("empty_result"));
+        assert!(render(report, Format::Yml)
+            .unwrap()
+            .contains("empty_result:"));
+        assert!(render(report, Format::Paths).unwrap().is_empty());
+        assert!(render(report, Format::Md)
+            .unwrap()
+            .contains("No checks for the changed files."));
+        assert!(render(report, Format::Human)
+            .unwrap()
+            .contains("No checks for the changed files."));
+    }
+}
+
+#[test]
+fn empty_result_diagnosis_does_not_add_analysis_work() {
+    let mut empty = args(&[]);
+    empty.root = multi_framework_fixture();
+    let (report, stats) = generate_impacted_checks_with_stats(&empty).unwrap();
+    assert_eq!(
+        report.empty_result.as_ref().unwrap().code,
+        "no-changed-files"
+    );
+    // Empty-result classification is a projection over the prepared report;
+    // it must not trigger another framework discovery or graph build.
+    assert_eq!(stats.framework_discoveries, 4);
+    // The configured plan itself needs one graph even for an empty changed set;
+    // classification must not build a second one.
+    assert_eq!(stats.graph_builds, 1);
+}
+
+#[test]
 fn renders_empty_warnings_and_fallback() {
     let report = ImpactedChecksReport {
         changed_files: Vec::new(),
@@ -196,8 +258,10 @@ fn renders_empty_warnings_and_fallback() {
             r#type: "dynamic-import".to_string(),
             message: "uncertain".to_string(),
             file: "a.ts".to_string(),
+            line: None,
         }],
         fallback_triggered: true,
+        empty_result: None,
     };
     let human = render(&report, Format::Human).unwrap();
     assert!(human.contains("No checks for the changed files"));
@@ -224,73 +288,6 @@ fn dedupe_checks_merges_files_for_same_command() {
     let out = dedupe_checks(vec![mk(&["b.ts"]), mk(&["a.ts"])]);
     assert_eq!(out.len(), 1);
     assert_eq!(out[0].files, vec!["a.ts".to_string(), "b.ts".to_string()]);
-}
-
-#[test]
-fn generic_checks_excludes_deleted_from_append() {
-    use crate::config::v2::schema::{CheckCommandDef, CheckFileArgs};
-    let mut config = NoMistakesConfig::default();
-    config.checks.commands = vec![
-        CheckCommandDef {
-            name: "eslint".to_string(),
-            include: vec!["**/*.ts".to_string()],
-            command: vec!["eslint".to_string()],
-            file_args: CheckFileArgs::Append,
-            ..Default::default()
-        },
-        CheckCommandDef {
-            name: "only-deleted".to_string(),
-            include: vec!["gone/**".to_string()],
-            command: vec!["lint".to_string()],
-            file_args: CheckFileArgs::Append,
-            ..Default::default()
-        },
-        CheckCommandDef {
-            name: "tsc".to_string(),
-            include: vec!["**/*.ts".to_string()],
-            command: vec!["tsc".to_string()],
-            file_args: CheckFileArgs::None,
-            ..Default::default()
-        },
-    ];
-    let changed = vec![
-        "a.ts".to_string(),
-        "b.ts".to_string(),
-        "gone/x.ts".to_string(),
-    ];
-    let deleted: BTreeSet<String> = ["a.ts".to_string(), "gone/x.ts".to_string()]
-        .into_iter()
-        .collect();
-    let checks = generic_checks(&config, &changed, &deleted).unwrap();
-    // Append: deleted files are dropped from the per-file args.
-    let eslint = checks.iter().find(|c| c.name == "eslint").unwrap();
-    assert_eq!(
-        eslint.command,
-        vec!["eslint".to_string(), "b.ts".to_string()]
-    );
-    // Append where every match is deleted: skipped entirely.
-    assert!(!checks.iter().any(|c| c.name == "only-deleted"));
-    // Whole-project check still triggers despite the deletion.
-    assert!(checks.iter().any(|c| c.name == "tsc"));
-}
-
-#[test]
-fn generic_checks_normalizes_dot_slash_globs() {
-    use crate::config::v2::schema::{CheckCommandDef, CheckFileArgs};
-    let mut config = NoMistakesConfig::default();
-    config.checks.commands = vec![CheckCommandDef {
-        name: "eslint".to_string(),
-        include: vec!["./src/**/*.ts".to_string()],
-        command: vec!["eslint".to_string()],
-        file_args: CheckFileArgs::Append,
-        ..Default::default()
-    }];
-    let checks = generic_checks(&config, &["src/foo.ts".to_string()], &BTreeSet::new()).unwrap();
-    assert_eq!(checks.len(), 1);
-    assert_eq!(
-        checks[0].command,
-        vec!["eslint".to_string(), "src/foo.ts".to_string()]
-    );
 }
 
 #[test]
@@ -387,6 +384,7 @@ fn dedupe_warnings_collapses_and_sorts() {
         r#type: "dynamic-import".to_string(),
         message: "x".to_string(),
         file: file.to_string(),
+        line: None,
     };
     // Two distinct warnings (out of order) plus a duplicate: the dup collapses
     // and the remainder is sorted, exercising the comparator.
@@ -438,7 +436,10 @@ fn impacted_checks_napi_matches_the_cli_engine_for_multi_framework_fanout() {
         "changedFiles": ["src/shared.ts"],
     });
 
-    let napi_json = crate::napi_api::impacted_checks_json_impl(options.to_string()).unwrap();
+    let napi_json = crate::napi_api::impacted_checks_json_impl(
+        crate::napi_api::options::test_json_arg(options),
+    )
+    .unwrap();
     let napi_report: serde_json::Value = serde_json::from_str(&napi_json).unwrap();
 
     assert_eq!(napi_report, serde_json::to_value(cli_report).unwrap());
@@ -448,8 +449,14 @@ fn impacted_checks_napi_matches_the_cli_engine_for_multi_framework_fanout() {
 fn impacted_fanout_prepares_and_builds_the_graph_once() {
     let generate = include_str!("generate.rs");
     let impacted_prepare = include_str!("generate/prepare.rs");
-    let prepared = include_str!("../tests/prepared_plan.rs");
-    let plan = include_str!("../tests/plan.rs");
+    let prepared = concat!(
+        include_str!("../tests/prepared_plan.rs"),
+        include_str!("../tests/prepared_plan_discovery.rs"),
+    );
+    let plan = concat!(
+        include_str!("../tests/plan.rs"),
+        include_str!("../tests/plan/generate.rs"),
+    );
 
     assert_eq!(
         impacted_prepare
@@ -496,7 +503,18 @@ fn impacted_fanout_prepares_and_builds_the_graph_once() {
             .count(),
         1
     );
-    assert_eq!(prepared.matches(".get_or_init(|| {").count(), 1);
+    let graph_method = prepared
+        .split("pub(crate) fn graph(&self)")
+        .nth(1)
+        .and_then(|source| source.split("pub(crate) fn graph_is_initialized").next())
+        .expect("prepared graph method");
+    assert_eq!(graph_method.matches(".get_or_init(|| {").count(), 1);
+    assert_eq!(
+        prepared
+            .matches("self.config_invalidation.get_or_init(|| {")
+            .count(),
+        1
+    );
 
     let public_wrapper = plan
         .split("pub fn generate_plan(args: &PlanArgs)")

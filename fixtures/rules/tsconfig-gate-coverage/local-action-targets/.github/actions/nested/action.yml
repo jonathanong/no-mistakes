@@ -1,0 +1,5 @@
+name: Nested action
+description: A nested local action target
+runs:
+  using: node24
+  main: index.js

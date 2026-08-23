@@ -1,0 +1,10 @@
+name: Scalar defaults
+description: Scalar defaults are coerced to strings by Actions.
+inputs:
+  enabled: {description: Enabled, default: true}
+  retries: {description: Retries, default: 3}
+runs:
+  using: composite
+  steps:
+    - run: echo setup
+      shell: bash

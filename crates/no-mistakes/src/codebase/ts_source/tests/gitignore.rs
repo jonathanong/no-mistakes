@@ -69,10 +69,6 @@ fn pass5a_visible_adapters_preserve_fixture_backed_discovery_output() {
 fn pass5a_public_wrappers_create_one_request_snapshot() {
     let cases = [
         (
-            include_str!("../../../fetches/pipeline/run.rs"),
-            "pub(crate) fn run_with_base_root(",
-        ),
-        (
             include_str!("../../../queue/graph.rs"),
             "pub fn analyze_project(",
         ),
@@ -92,7 +88,6 @@ fn pass5a_public_wrappers_create_one_request_snapshot() {
             include_str!("../../../react_traits/pipeline/check.rs"),
             "pub fn check_enabled(",
         ),
-        (include_str!("../../../data_pw_query.rs"), "pub fn run("),
         (include_str!("../../../ci.rs"), "pub fn impact_report("),
         (include_str!("../../../ci.rs"), "pub fn env_report("),
         (
@@ -124,6 +119,55 @@ fn pass5a_public_wrappers_create_one_request_snapshot() {
             "{signature} must create exactly one request snapshot"
         );
     }
+}
+
+#[test]
+fn pass5a_session_owned_queries_do_not_restart_discovery_or_source_reads() {
+    let data_pw = include_str!("../../../data_pw_query.rs");
+    let data_pw_run = function_body(data_pw, "pub fn run(");
+    let data_pw_prepared = function_body(data_pw, "pub(crate) fn run_with_session(");
+    assert_eq!(data_pw_run.matches("AnalysisSession::new").count(), 1);
+    assert!(!data_pw_run.contains("VisiblePathSnapshot::new"));
+    for forbidden in [
+        "VisiblePathSnapshot::new",
+        "load_v2_config(",
+        "discover_visible_paths(",
+    ] {
+        assert!(
+            !data_pw_prepared.contains(forbidden),
+            "data-pw prepared run: {forbidden}"
+        );
+    }
+    let data_pw_scan = include_str!("../../../data_pw_query/scan.rs");
+    assert!(data_pw_scan.contains("session.read_source(path)"));
+    assert!(!data_pw_scan.contains("std::fs::read_to_string"));
+
+    let registry = include_str!("../../../registry_extension_query.rs");
+    let registry_run = function_body(registry, "pub fn run(");
+    let registry_prepared = function_body(registry, "pub(crate) fn run_with_session(");
+    assert_eq!(registry_run.matches("AnalysisSession::new").count(), 1);
+    assert!(!registry_run.contains("std::fs::read_to_string"));
+    assert!(registry_prepared.contains(".read_source(&path)"));
+    assert!(registry_prepared.contains(".with_program"));
+
+    let fetches = include_str!("../../../fetches/pipeline/run.rs");
+    let fetch_run = function_body(fetches, "pub(crate) fn run_with_base_root(");
+    let fetch_prepared = function_body(fetches, "pub(crate) fn run_with_base_root_and_session(");
+    assert_eq!(fetch_run.matches("AnalysisSession::new").count(), 1);
+    for forbidden in [
+        "VisiblePathSnapshot::new",
+        "load_v2_config(",
+        "discover_visible_paths(",
+    ] {
+        assert!(
+            !fetch_prepared.contains(forbidden),
+            "fetches prepared run: {forbidden}"
+        );
+    }
+    let fetch_facts = include_str!("../../../fetch/file_facts.rs");
+    assert!(fetch_facts.contains(".read_source(&abs_path)"));
+    assert!(fetch_facts.contains(".with_program"));
+    assert!(!fetch_facts.contains("std::fs::read_to_string"));
 }
 
 #[test]
@@ -182,7 +226,6 @@ fn pass5a_prepared_bodies_do_not_restart_discovery_or_config_loading() {
 fn pass5a_graph_queries_reuse_one_graph_file_discovery() {
     for (source, signature) in [
         (include_str!("../../../effects_query.rs"), "pub fn run("),
-        (include_str!("../../../flow_query.rs"), "pub fn run("),
         (
             concat!(
                 include_str!("../../../rsc_callers_query.rs"),
@@ -194,6 +237,16 @@ fn pass5a_graph_queries_reuse_one_graph_file_discovery() {
         let body = function_body(source, signature);
         assert_eq!(
             body.matches("VisiblePathSnapshot::new").count(),
+            0,
+            "{signature}"
+        );
+        assert_eq!(
+            body.matches("AnalysisSession::new").count(),
+            1,
+            "{signature}"
+        );
+        assert_eq!(
+            body.matches("dataset.visible_paths_arc").count(),
             1,
             "{signature}"
         );
@@ -210,6 +263,83 @@ fn pass5a_graph_queries_reuse_one_graph_file_discovery() {
         assert!(!body.contains("load_v2_config("), "{signature}");
         assert!(!body.contains("discover_visible_paths("), "{signature}");
     }
+
+    assert_flow_query_uses_one_shared_graph_file_discovery();
+}
+
+fn assert_flow_query_uses_one_shared_graph_file_discovery() {
+    let run = function_body(include_str!("../../../flow_query.rs"), "pub fn run(");
+    assert_eq!(
+        run.matches("SharedTraversalContext::prepare_with_framework_plan")
+            .count(),
+        1,
+    );
+    for forbidden in [
+        "VisiblePathSnapshot::new",
+        "discover_files_from_visible",
+        "GraphFiles::from_files",
+        "load_v2_config(",
+        "discover_visible_paths(",
+    ] {
+        assert!(
+            !run.contains(forbidden),
+            "flow query must delegate {forbidden}"
+        );
+    }
+
+    let prepare_source = include_str!("../../dependencies/shared_traversal_prepare.rs");
+    let prepare = function_body(prepare_source, "pub(crate) fn prepare_with_framework_plan(");
+    assert_eq!(
+        prepare
+            .matches("Self::prepare_with_session_and_framework_plan")
+            .count(),
+        1,
+    );
+    let session_prepare = function_body(
+        prepare_source,
+        "fn prepare_with_session_and_framework_plan(",
+    );
+    assert_eq!(
+        session_prepare
+            .matches("Self::prepare_with_dataset_session_and_framework_plan")
+            .count(),
+        1,
+    );
+
+    let shared_prepare = function_body(
+        include_str!("../../dependencies/shared_traversal_prepare_core.rs"),
+        "fn prepare_with_dataset_session_and_framework_plan(",
+    );
+    assert_eq!(
+        shared_prepare
+            .matches("discover_files_from_visible")
+            .count(),
+        1,
+    );
+    assert_eq!(
+        shared_prepare
+            .matches("GraphFiles::from_files_with_resource_candidates_excluding_indexable")
+            .count(),
+        1,
+    );
+
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/simple/fixture"),
+    );
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+    crate::flow_query::run(&crate::flow_query::FlowOptions {
+        target: "a.mts".to_string(),
+        root,
+        tsconfig: None,
+        config: None,
+        direction: crate::flow_query::FlowDirection::Deps,
+        depth: 1,
+        relationships: vec![crate::codebase::dependencies::RelationshipArg::Import],
+    })
+    .unwrap();
+    assert_eq!(observer.snapshot().work["discovery.roots"], 1);
 }
 
 fn function_body<'a>(source: &'a str, signature: &str) -> &'a str {
@@ -234,4 +364,25 @@ fn function_body<'a>(source: &'a str, signature: &str) -> &'a str {
         }
     }
     panic!("unterminated body for {signature}")
+}
+
+#[test]
+fn leftover_production_reads_go_through_source_store() {
+    for source in [
+        include_str!("../../../playwright/selectors/extract_app.rs"),
+        include_str!("../../../fetch/resolve.rs"),
+        include_str!("../../../fetch/imports.rs"),
+        include_str!("../../../fetch/file_analysis/legacy.rs"),
+        include_str!("../../../playwright/playwright_config/load.rs"),
+        include_str!("../../../react_traits/analyze/file.rs"),
+    ] {
+        assert!(
+            !source.contains("std::fs::read_to_string"),
+            "production readers must reuse SourceStore"
+        );
+        assert!(
+            source.contains("read_prepared_or_open") || source.contains("read_source("),
+            "production readers must call SourceStore or the session store"
+        );
+    }
 }

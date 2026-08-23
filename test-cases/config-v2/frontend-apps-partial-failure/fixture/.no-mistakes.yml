@@ -1,0 +1,9 @@
+projects:
+  good-web:
+    type: nextjs
+    root: services/good-web
+    rewrites:
+      - source: /good-posts/:slug*
+        destination: /posts/:slug*
+  bad-web:
+    type: nextjs

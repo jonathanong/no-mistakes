@@ -1,0 +1,9 @@
+on:
+  push:
+    branches: [main, '!m*']
+jobs:
+  wildcard-negation:
+    runs-on: ubuntu-latest
+    steps:
+      # A later wildcard negation removes the earlier exact `main` inclusion.
+      - run: pnpm exec tsc --noEmit --project wildcard-negation/tsconfig.json

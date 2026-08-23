@@ -1,0 +1,17 @@
+checks:
+  commands:
+    - name: typecheck-opened
+      command: [tsc, --noEmit, --project, opened/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-synchronized
+      command: [tsc, --noEmit, --project, synchronized/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: typecheck-unreachable
+      command: [tsc, --noEmit, --project, unreachable/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

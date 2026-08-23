@@ -1,0 +1,20 @@
+on:
+  workflow_call:
+    secrets:
+      token:
+        required: false
+jobs:
+  job-env:
+    env:
+      TOKEN: '${{ secrets.token }}'
+    runs-on: ubuntu-latest
+    steps:
+      - if: env.TOKEN != ''
+        run: tsc --noEmit --project omitted-job/tsconfig.json
+  step-env:
+    runs-on: ubuntu-latest
+    steps:
+      - env:
+          TOKEN: '${{ secrets.token }}'
+        if: env.TOKEN != ''
+        run: tsc --noEmit --project omitted-step/tsconfig.json

@@ -63,9 +63,13 @@ fn target_local_names_skips_type_only_imports_and_empty_export_sets() {
             is_type_only: true,
         }],
     };
-    let mut target_symbols = BTreeMap::from([(target.clone(), BTreeSet::from(["parseDate".to_string()]))]);
+    let mut target_symbols =
+        BTreeMap::from([(target.clone(), BTreeSet::from(["parseDate".to_string()]))]);
     let workspace = crate::codebase::workspaces::WorkspaceMap::default();
-    let visible = HashSet::new();
+    let visible = crate::fx::PathSet::default();
+    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
+        visible.iter().cloned(),
+    );
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
         &tsconfig,
@@ -79,6 +83,7 @@ fn target_local_names_skips_type_only_imports_and_empty_export_sets() {
         &target_symbols,
         &resolver,
         &workspace,
+        &remapper,
     )
     .is_empty());
 
@@ -91,6 +96,7 @@ fn target_local_names_skips_type_only_imports_and_empty_export_sets() {
         &target_symbols,
         &resolver,
         &workspace,
+        &remapper,
     )
     .is_empty());
 }
@@ -101,19 +107,16 @@ fn signature_target_symbols_keeps_file_entries_and_ignores_non_file_nodes() {
     let barrel = PathBuf::from("/repo/src/barrel.mts");
     let queue = PathBuf::from("/repo/src/queue.mts");
     let export_nodes = BTreeSet::from([
-        NodeId::File(barrel.clone()),
-        NodeId::Module("external".to_string()),
-        NodeId::QueueJob {
-            queue_file: queue,
-            job: "send".to_string(),
-        },
+        NodeId::file(barrel.clone()),
+        NodeId::module("external"),
+        NodeId::queue_job(queue, "send"),
     ]);
 
     let target_symbols = signature_target_symbols(
         &target,
         "parseDate",
         &export_nodes,
-        &HashSet::new(),
+        &crate::fx::PathSet::default(),
         &TsFactMap::new(),
     );
 
@@ -135,16 +138,13 @@ fn pass4b_signature_local_names_resolve_visible_workspace_subpath_fallback() {
     let visible = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let importer = root.join("impact/importer.ts");
     let source = std::fs::read_to_string(&importer).unwrap();
     let symbols =
         crate::codebase::ts_symbols::extract_symbols_at_path(&importer, &source, false).unwrap();
     let target = root.join("packages/pkg/src/feature.ts");
-    let target_symbols = BTreeMap::from([(
-        target,
-        BTreeSet::from(["feature".to_string()]),
-    )]);
+    let target_symbols = BTreeMap::from([(target, BTreeSet::from(["feature".to_string()]))]);
     let tsconfig = crate::codebase::ts_resolver::TsConfig {
         dir: root.clone(),
         paths: Vec::new(),
@@ -152,6 +152,8 @@ fn pass4b_signature_local_names_resolve_visible_workspace_subpath_fallback() {
         base_url: None,
     };
     let workspace = crate::codebase::workspaces::load_from_files(&root, &visible_paths).unwrap();
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(visible.iter().cloned());
     let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
         &tsconfig,
@@ -166,6 +168,7 @@ fn pass4b_signature_local_names_resolve_visible_workspace_subpath_fallback() {
             &target_symbols,
             &resolver,
             &workspace,
+            &remapper,
         ),
         BTreeSet::from(["feature".to_string()])
     );

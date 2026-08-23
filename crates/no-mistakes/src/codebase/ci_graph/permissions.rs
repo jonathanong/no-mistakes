@@ -34,17 +34,29 @@ pub struct ResolvedPermissions {
 
 /// Resolve the effective permissions for `job` within `workflow`.
 pub fn effective_permissions(workflow: &Workflow, job: &Job) -> ResolvedPermissions {
-    if !matches!(job.permissions, PermissionSpec::Unspecified) {
+    effective_permissions_from_specs(&workflow.permissions, &job.permissions)
+}
+
+/// Resolve effective permissions from already parsed workflow/job specs.
+///
+/// Topology parsing uses this projection directly so `ciImpact()` and
+/// `ciTopology()` cannot drift while still sharing the request's one YAML
+/// deserialization.
+pub(crate) fn effective_permissions_from_specs(
+    workflow: &PermissionSpec,
+    job: &PermissionSpec,
+) -> ResolvedPermissions {
+    if !matches!(job, PermissionSpec::Unspecified) {
         return ResolvedPermissions {
             source: PermissionSource::Job,
-            scopes: expand(&job.permissions),
+            scopes: expand(job),
             assumed_default: false,
         };
     }
-    if !matches!(workflow.permissions, PermissionSpec::Unspecified) {
+    if !matches!(workflow, PermissionSpec::Unspecified) {
         return ResolvedPermissions {
             source: PermissionSource::Workflow,
-            scopes: expand(&workflow.permissions),
+            scopes: expand(workflow),
             assumed_default: false,
         };
     }

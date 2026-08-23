@@ -1,6 +1,6 @@
 use super::types::component_key;
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
+use crate::codebase::ts_resolver::{normalize_path, ImportResolution};
 use crate::codebase::ts_source::relative_slash_path;
 use std::collections::{BTreeSet, HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
@@ -63,7 +63,7 @@ fn component_children(
 pub(super) fn dynamic_or_mock_boundary_files(
     project_root: &Path,
     shared: &CheckFactMap,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
 ) -> HashSet<PathBuf> {
     let mut out = HashSet::new();
     for (file, facts) in &shared.ts {

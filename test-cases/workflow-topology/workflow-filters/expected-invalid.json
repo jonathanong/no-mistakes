@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "workflows": [],
+  "jobs": [],
+  "edges": [],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "invalid-workflow-filter",
+      "message": "workflow filter must be a basename or a path inside .github/workflows: ../evil",
+      "workflowPath": "../evil"
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+[
+  {
+    "name": "outer-name-is-ignored",
+    "setupFiles": "./outer-setup-is-ignored.ts",
+    "test": {
+      "name": {
+        "label": "json-inline",
+        "color": "#00aaff"
+      },
+      "root": "./inline",
+      "include": ["**/*.test.ts"],
+      "globalSetup": "./setup.ts"
+    }
+  },
+  {
+    "root": "./inline",
+    "include": ["**/*.test.ts"],
+    "setupFiles": "./setup.ts"
+  }
+]

@@ -1,8 +1,11 @@
 #[test]
 fn aggregate_check_injects_prepared_config_into_every_domain() {
-    let runner = include_str!("../../check_runner.rs");
+    let runner = concat!(
+        include_str!("../../check_runner.rs"),
+        include_str!("../run_all.rs"),
+    );
     let prepared = include_str!("../prepared.rs");
-    let forbidden_plan = include_str!("../forbidden_plan.rs");
+    let graph_plan = include_str!("../graph_plan.rs");
     let parallel = include_str!("../../check_parallel.rs");
     let tasks = check_task_sources();
 
@@ -23,11 +26,12 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
     }
 
     for shared_entrypoint in [
-        "run_check_with_prepared_facts",
+        "run_check_with_prepared_facts_for_aggregate",
         "run_check_with_config_facts_playwright_and_graph",
-        "check_with_prepared_facts",
-        "analyze_project_with_prepared_facts",
-        "run_filesystem_rules_with_config_snapshot_catalog_and_sources",
+        "queue::analyze_project_with_prepared_facts_and_catalog_and_session",
+        "integration_tests::check_with_prepared_facts_catalog_and_session",
+        "unique_exports::analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check",
+        "run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts",
     ] {
         assert!(
             tasks.contains(shared_entrypoint),
@@ -40,7 +44,7 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
     // would bypass request-wide config/tsconfig reuse even though it looks locally self-contained.
     assert_eq!(
         prepared
-            .matches("session.config(root, config_path)?")
+            .matches("session.config_with_path(root, config_path)?")
             .count(),
         1
     );
@@ -51,11 +55,15 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
         1
     );
     assert!(!prepared.contains("resolve_tsconfig_from_visible"));
-    assert!(forbidden_plan.contains("prepare_graph_config"));
-    assert!(forbidden_plan.contains("ts_fact_plan_and_context_for_plan_with_prepared"));
+    assert!(include_str!("../fact_collection.rs").contains("clear_request_parse_cache"));
+    assert!(include_str!("../fact_collection.rs").contains("parse.files_after_extract"));
+    assert!(graph_plan.contains("prepare_graph_config_with_test_filter"));
+    assert!(graph_plan.contains("ts_fact_plan_and_context_for_plan_with_prepared"));
     assert!(!runner.contains("react_traits::check_enabled"));
-    assert!(tasks.contains("queue::analyze_project_with_prepared_facts"));
-    assert!(!tasks.contains("queue::analyze_project_with_facts"));
+    assert!(prepared.contains("prepare_from_snapshot_with_catalog"));
+    assert!(!tasks.contains("queue::analyze_project_with_prepared_facts("));
+    assert!(!tasks.contains("integration_tests::check_with_prepared_facts("));
+    assert!(!tasks.contains("unique_exports::analyze_project_with_prepared_facts("));
     assert!(!tasks.contains("load_v2_config"));
     assert!(!tasks.contains("discover_visible_paths"));
 }
@@ -63,12 +71,17 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
 #[test]
 fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
     let prepared = include_str!("../prepared.rs");
-    let runner = include_str!("../../check_runner.rs");
+    let runner = concat!(
+        include_str!("../../check_runner.rs"),
+        include_str!("../run_all.rs"),
+    );
     let discovery = include_str!("../../check_discovery.rs");
     let rules = concat!(
         include_str!("../../codebase/rules/run/prepared.rs"),
         include_str!("../../codebase/rules/run/prepared/execution.rs"),
         include_str!("../../codebase/rules/run/prepared/execution/helpers.rs"),
+        include_str!("../../codebase/rules/run/prepared/execution/independent.rs"),
+        include_str!("../../codebase/rules/run/prepared/execution/independent_collect.rs"),
     );
     let rule_roots = include_str!("../../codebase/rules/mod.rs");
     let unique_exports = include_str!("../../codebase/unique_exports/with_facts/prepared.rs");
@@ -77,10 +90,12 @@ fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
     assert_eq!(prepared.matches("InferredRoots::from_visible").count(), 1);
     assert!(runner.contains("&prepared.inferred_roots"));
     assert!(discovery.contains("unique_exports_project_roots_with_inferred"));
-    assert!(rules.contains("Some(inferred_roots)"));
+    assert!(
+        rules.contains("req.inferred_roots"),
+        "independent rule bodies must reuse the precomputed inferred_roots option"
+    );
     assert!(rule_roots.contains("target_roots_with_inferred"));
     assert!(unique_exports.contains("project_roots_for_rule_with_inferred"));
-    assert!(tasks.contains("analyze_project_with_prepared_facts_and_inferred"));
 
     for source in [discovery, rules, rule_roots, unique_exports, tasks.as_str()] {
         for discovery_wrapper in [
@@ -100,7 +115,11 @@ fn aggregate_framework_root_inference_reuses_precomputed_visible_roots() {
 fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
     let prepared = include_str!("../prepared.rs");
     let tasks = check_task_sources();
-    let dispatcher = include_str!("../../codebase/rules/filesystem_dispatch.rs");
+    let dispatcher = concat!(
+        include_str!("../../codebase/rules/filesystem_dispatch.rs"),
+        include_str!("../../codebase/rules/filesystem_dispatch/execute.rs"),
+        include_str!("../../codebase/rules/filesystem_dispatch/execute/special.rs"),
+    );
     let catalog = include_str!("../../codebase/rules/vitest_project_catalog.rs");
     let mapping = include_str!("../../codebase/rules/vitest_project_mapping/project_sources.rs");
     let coverage = include_str!("../../codebase/rules/vitest_ci_path_coverage/projects.rs");
@@ -111,10 +130,22 @@ fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
         prepared.matches("prepare_vitest_project_catalog(").count(),
         1
     );
-    assert!(tasks.contains("run_filesystem_rules_with_config_snapshot_catalog_and_sources"));
+    assert!(tasks.contains("run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts"));
     assert!(dispatcher.contains("check_with_files_and_catalog"));
-    assert!(dispatcher.contains("check_with_files_from_snapshot_catalog_and_sources"));
-    assert_eq!(catalog.matches("load_projects_from_visible(").count(), 1);
+    assert!(dispatcher.contains("check_with_files_from_snapshot_catalog_sources_and_workflows"));
+    assert_eq!(
+        prepared
+            .matches("ParsedWorkflowSet::load_from_snapshot_and_sources(")
+            .count(),
+        1
+    );
+    assert!(prepared.contains("TSCONFIG_GATE_COVERAGE"));
+    assert_eq!(
+        catalog
+            .matches("load_projects_from_visible_with_catalog(")
+            .count(),
+        1
+    );
     assert!(!mapping.contains("VisiblePathSnapshot::new"));
     assert!(!coverage.contains("VisiblePathSnapshot::new"));
     let aggregate_mapping = mapping
@@ -134,11 +165,12 @@ fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
 }
 
 fn check_task_sources() -> String {
-    // Architecture assertions must cover the complete production task module,
+    // Architecture assertions cover the complete production task module,
     // including helpers split out to keep each Rust source under the size gate.
     [
         include_str!("../../check_tasks.rs"),
         include_str!("../../check_tasks/filesystem.rs"),
+        include_str!("../../check_tasks/react.rs"),
     ]
     .concat()
 }
@@ -146,7 +178,10 @@ fn check_task_sources() -> String {
 #[test]
 fn aggregate_prepared_domains_do_not_reload_the_unified_config() {
     let aggregate = include_str!("../prepared.rs");
-    let playwright = include_str!("../../playwright/rules/prepared.rs");
+    let playwright = concat!(
+        include_str!("../../playwright/rules/prepared_entrypoints.rs"),
+        include_str!("../../playwright/rules/prepared.rs"),
+    );
     let graph = include_str!("../../codebase/dependencies/graph/files_config_prepared.rs");
     let rules = concat!(
         include_str!("../../codebase/rules/run/prepared.rs"),
@@ -158,7 +193,7 @@ fn aggregate_prepared_domains_do_not_reload_the_unified_config() {
     // value onward; direct loading here would split the cache from other request consumers.
     assert_eq!(
         aggregate
-            .matches("session.config(root, config_path)?")
+            .matches("session.config_with_path(root, config_path)?")
             .count(),
         1
     );
@@ -194,39 +229,121 @@ fn aggregate_react_filters_the_shared_snapshot_without_rediscovery() {
 }
 
 #[test]
-fn aggregate_storybook_prepares_visible_tsconfig_per_project_root() {
+fn aggregate_storybook_reuses_the_scoped_tsconfig_catalog() {
     let prepared = include_str!("../../codebase/rules/require_storybook_stories/prepared.rs");
 
-    assert!(prepared.contains("explicit_tsconfig_path.is_some()"));
-    assert!(prepared.contains("automatic_tsconfigs.get(project_root)"));
-    assert!(prepared.contains("resolve_tsconfig_from_visible"));
-    assert!(prepared.contains("shared.files()"));
+    assert!(prepared.contains("ScopedImportResolver::new_in_session"));
+    assert!(prepared.contains("prepared_tsconfig_catalog"));
+    assert!(prepared.contains(".files()"));
+    assert_eq!(
+        prepared
+            .matches("ScopedImportResolver::new_in_session")
+            .count(),
+        1
+    );
 }
 
 #[test]
 fn aggregate_rule_coordinator_delegates_variant_dispatch() {
     let execution = include_str!("../../codebase/rules/run/prepared/execution.rs");
     let helpers = include_str!("../../codebase/rules/run/prepared/execution/helpers.rs");
+    let independent_collect =
+        include_str!("../../codebase/rules/run/prepared/execution/independent_collect.rs");
     let coordinator = execution
         .split("pub(super) fn run")
         .nth(1)
         .expect("prepared rule coordinator");
-    let storybook_block = coordinator
-        .split("if rule_enabled(config, REQUIRE_STORYBOOK_STORIES)")
+    let storybook_block = independent_collect
+        .split("pub(super) fn storybook(")
         .nth(1)
-        .and_then(|source| {
-            source
-                .split("if crate::playwright::rules::configured")
-                .next()
-        })
-        .expect("Storybook coordinator block");
+        .and_then(|source| source.split("pub(super) fn playwright(").next())
+        .expect("Storybook independent collector");
 
     // Keep per-rule variant selection out of the aggregate coordinator so its
     // complexity remains bounded as additional rules are introduced.
     assert!(execution.contains("mod helpers;"));
-    assert!(execution.contains("use helpers::{storybook_findings, suppress_findings};"));
+    assert!(execution.contains("mod independent;"));
+    assert!(coordinator.contains("independent::collect"));
+    assert!(!coordinator.contains("REQUIRE_STORYBOOK_STORIES"));
+    assert!(!coordinator.contains("storybook_findings"));
     assert!(helpers.contains("pub(super) fn storybook_findings("));
-    assert!(helpers.contains("check_with_prepared_facts_and_inferred_and_session"));
+    assert!(helpers.contains("check_with_prepared_facts_for_aggregate"));
     assert_eq!(storybook_block.matches("storybook_findings(").count(), 1);
+    assert!(storybook_block.contains("prepared_tsconfig_catalog"));
+    assert!(!storybook_block.contains("prepared_tsconfig,"));
     assert!(!storybook_block.contains("check_with_prepared_facts_and_inferred"));
+}
+
+#[test]
+fn prepared_graph_config_reuses_a_supplied_test_filter() {
+    let files_config = include_str!("../../codebase/dependencies/graph/files_config.rs");
+    let prepared = include_str!("../../codebase/dependencies/graph/files_config_prepared.rs");
+    let graph_plan = include_str!("../graph_plan.rs");
+    let check_prepare = include_str!("../../napi_api/analyze_project/context/check_prepare.rs");
+    let standalone = include_str!("../../codebase/rules/run/standalone.rs");
+
+    let fallback = files_config
+        .split("fn graph_config_options_from_loaded_with_test_filter(")
+        .nth(1)
+        .and_then(|source| source.split("fn prefixed_queue_globs_enqueues(").next())
+        .expect("graph config test-filter helper");
+    assert!(
+        fallback.contains("unwrap_or_else"),
+        "supplied TestFileFilter must be kept"
+    );
+    assert_eq!(
+        fallback.matches("TestFileFilter::new(").count(),
+        1,
+        "TestFileFilter::new is only the unprepared fallback"
+    );
+
+    assert!(!prepared.contains("TestFileFilter::new("));
+    assert!(prepared.contains("graph_config_options_from_loaded_with_test_filter("));
+    for source in [graph_plan, check_prepare, standalone] {
+        assert!(
+            source.contains("prepare_graph_config_with_test_filter("),
+            "prepared check/graph path must pass a TestFileFilter"
+        );
+        assert!(
+            !source.contains("prepare_graph_config("),
+            "prepared check/graph path must not rebuild graph config without a filter"
+        );
+    }
+}
+
+#[test]
+fn check_facts_program_delegates_ts_extract_to_the_shared_collector() {
+    let program = include_str!("../../codebase/check_facts/file/program.rs");
+
+    assert!(program.contains("facts::collect_file_facts_from_program("));
+    assert!(!program.contains("extract_import_facts_from_program"));
+    assert!(!program.contains("extract_symbols_from_program"));
+    assert!(!program.contains("collect_call_site_facts"));
+    assert!(!program.contains("collect_domain_facts"));
+}
+
+#[test]
+fn prepared_check_and_analyze_graph_builders_require_complete_facts() {
+    let prepared = include_str!("../../codebase/dependencies/graph/builder.rs");
+    let check_facts = include_str!("../../codebase/dependencies/graph/builder_check_facts.rs");
+    let standalone = prepared
+        .split("pub(crate) fn build_with_plan_files_config_and_facts(")
+        .nth(1)
+        .and_then(|source| source.split("impl ").next())
+        .expect("standalone config-and-facts builder");
+
+    assert_eq!(
+        prepared
+            .matches("SuppliedFactPolicy::RequireComplete")
+            .count(),
+        2
+    );
+    assert_eq!(
+        check_facts
+            .matches("SuppliedFactPolicy::RequireComplete")
+            .count(),
+        2
+    );
+    assert!(standalone.contains("SuppliedFactPolicy::FillSparse"));
+    assert!(!standalone.contains("SuppliedFactPolicy::RequireComplete"));
 }

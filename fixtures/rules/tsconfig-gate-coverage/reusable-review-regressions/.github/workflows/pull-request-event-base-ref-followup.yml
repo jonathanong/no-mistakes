@@ -1,0 +1,10 @@
+on:
+  pull_request:
+    branches: [main]
+jobs:
+  pull-request-event-base-ref:
+    # The payload base ref is main, so this typecheck is never scheduled.
+    if: github.event.pull_request.base.ref != 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project pull-request-event-base-ref/tsconfig.json

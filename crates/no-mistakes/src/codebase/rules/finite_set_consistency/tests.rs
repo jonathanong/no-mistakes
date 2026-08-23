@@ -17,7 +17,7 @@ fn extract_set(
     target_roots: &[PathBuf],
 ) -> anyhow::Result<super::extract::ExtractedSet> {
     let sources = crate::codebase::rules::source_store_for_files(files);
-    super::extract::extract_set_with_sources(root, spec, files, target_roots, &sources)
+    super::extract::extract_set_with_sources(root, spec, files, target_roots, &sources, None)
 }
 
 fn fixture_root(name: &str) -> PathBuf {

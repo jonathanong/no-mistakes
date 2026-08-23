@@ -1,0 +1,6 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+  playwright:
+    configs: playwright.config.ts
+rules: []

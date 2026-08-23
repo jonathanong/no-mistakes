@@ -22,10 +22,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
+      - name: Checkout trusted base
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Evaluate Dependabot pull request
+        timeout-minutes: 3
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            const { fixtureOnlyDecision } = require(
+              `${process.env.GITHUB_WORKSPACE}/.github/scripts/dependabot-pr-policy.cjs`
+            );
             const owner = context.repo.owner;
             const repo = context.repo.repo;
             const pr = context.payload.pull_request;
@@ -64,6 +75,34 @@ jobs:
             }
 
             core.info(`Evaluating PR #${pr.number} (${pr.title})`);
+
+            const files = await github.paginate(github.rest.pulls.listFiles, {
+              owner,
+              repo,
+              pull_number: pr.number,
+              per_page: 100,
+            });
+            const changedPaths = files.map(file => file.filename);
+            const fixtureDecision = fixtureOnlyDecision(changedPaths, pr.changed_files);
+
+            if (fixtureDecision === 'incomplete') {
+              core.warning(
+                `Skipping fixture-only policy because GitHub returned ${files.length} `
+                + `of ${pr.changed_files} changed files`
+              );
+              return;
+            }
+
+            if (fixtureDecision === 'close') {
+              core.info('Closing fixture-only Dependabot pull request');
+              await github.rest.pulls.update({
+                owner,
+                repo,
+                pull_number: pr.number,
+                state: 'closed',
+              });
+              return;
+            }
 
             if (pr.draft) {
               core.info('Skipping draft pull request');

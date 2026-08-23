@@ -33,11 +33,13 @@ pub(crate) fn discover_playwright_test_files(
     {
         return Ok(test_files.as_ref().clone());
     }
-    let playwright = playwright_config::load_many(
+    let playwright = playwright_config::load_many_with_sources(
         root,
         &settings.playwright_configs,
         settings.project.as_deref(),
-    )?;
+        Some(snapshot.source_store_for(root).as_ref()),
+    );
+    let playwright = playwright?;
     crate::perf_trace::trace("playwright.discover_test_files", || {
         discover_test_files_from_visible(root, settings, &playwright, snapshot)
     })
@@ -82,14 +84,24 @@ pub(crate) fn collect_app_selectors(
     unique_selector_policy: &UniqueSelectorPolicy,
     facts: Option<&dyn TsFactLookup>,
     snapshot: &VisiblePathSnapshot,
+    prepared_regexes: Option<&selectors::SelectorRegexes>,
 ) -> Result<AppSelectorSetup> {
     validate_prepared_selector_source_errors(root, settings, facts, snapshot)?;
     let unique_html_id_scan = unique_selector_policy.html_ids && !settings.html_ids;
-    let app_selector_regexes = selectors::compile_selector_regexes_with_html_ids(
-        &settings.selector_attributes,
-        &settings.component_selector_attributes,
-        settings.html_ids || unique_html_id_scan,
-    );
+    let need_html_ids = settings.html_ids || unique_html_id_scan;
+    let compiled_regexes;
+    let app_selector_regexes = if let Some(regexes) =
+        prepared_regexes.filter(|regexes| regexes.includes_html_ids() == need_html_ids)
+    {
+        regexes
+    } else {
+        compiled_regexes = selectors::compile_selector_regexes_with_html_ids(
+            &settings.selector_attributes,
+            &settings.component_selector_attributes,
+            need_html_ids,
+        );
+        &compiled_regexes
+    };
     let scan_html_ids = settings.html_ids || unique_html_id_scan;
     let app_selector_occurrences: Arc<Vec<AppSelector>> = if settings.selector_attributes.is_empty()
         && settings.component_selector_attributes.is_empty()
@@ -104,7 +116,7 @@ pub(crate) fn collect_app_selectors(
                     collect_app_selector_occurrences_from_visible(
                         root,
                         settings,
-                        &app_selector_regexes,
+                        app_selector_regexes,
                         snapshot,
                     )
                 })
@@ -112,7 +124,7 @@ pub(crate) fn collect_app_selectors(
             None => collect_app_selector_occurrences_from_visible(
                 root,
                 settings,
-                &app_selector_regexes,
+                app_selector_regexes,
                 snapshot,
             )
             .map(Arc::new),

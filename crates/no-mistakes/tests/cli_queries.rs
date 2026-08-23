@@ -78,6 +78,26 @@ fn exports_of_lists_exports_and_importers() {
 }
 
 #[test]
+fn exports_of_no_importers_omits_reverse_consumers() {
+    let root = fixture("queries");
+    let output = run(&[
+        "exports-of",
+        "util.ts",
+        "--root",
+        root.to_str().unwrap(),
+        "--no-importers",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let exports = json(&output)["exports"].as_array().unwrap().clone();
+    assert!(!exports.is_empty());
+    assert!(exports
+        .iter()
+        .all(|export| export["importers"].as_array().unwrap().is_empty()));
+}
+
+#[test]
 fn dead_exports_exits_non_zero_when_dead() {
     let root = fixture("queries");
     let output = run(&[
@@ -89,6 +109,31 @@ fn dead_exports_exits_non_zero_when_dead() {
     ]);
     assert_eq!(output.status.code(), Some(1));
     assert_eq!(json(&output)["anyDead"], true);
+}
+
+#[test]
+fn dead_exports_marks_a_removed_positional_name_dead() {
+    let root = fixture("queries");
+    let output = run(&[
+        "dead-exports",
+        "util.ts",
+        "removed",
+        "--root",
+        root.to_str().unwrap(),
+        "--json",
+    ]);
+
+    assert_eq!(output.status.code(), Some(1));
+    let value = json(&output);
+    assert_eq!(value["anyDead"], true);
+    assert_eq!(
+        value["results"],
+        serde_json::json!([{
+            "name": "removed",
+            "referenced": false,
+            "importerCount": 0,
+        }])
+    );
 }
 
 #[test]
@@ -127,6 +172,33 @@ fn resolve_check_exit_codes() {
         "--json",
     ]);
     assert!(clean.status.success());
+}
+
+#[test]
+fn resolve_check_batch_is_deterministic_and_reports_partial_failure() {
+    let root = fixture("queries");
+    let output = run(&[
+        "resolve-check",
+        "consumer.ts",
+        "broken.ts",
+        "consumer.ts",
+        "--root",
+        root.to_str().unwrap(),
+        "--json",
+    ]);
+    assert_eq!(output.status.code(), Some(1));
+    let value = json(&output);
+    assert_eq!(value["allResolve"], false);
+    assert_eq!(value["unresolvedFiles"], serde_json::json!(["broken.ts"]));
+    assert_eq!(
+        value["results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|result| result["file"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["broken.ts", "consumer.ts"]
+    );
 }
 
 #[test]

@@ -1,6 +1,8 @@
 use super::code_only_text::code_only_text;
 use oxc_span::Span;
-use regex::Regex;
+
+mod bindings;
+use bindings::{function_destructure_binding_ends, has_declaration, has_destructuring_declaration};
 
 pub(super) fn identifier_may_be_shadowed_or_reassigned(
     name: &str,
@@ -12,21 +14,10 @@ pub(super) fn identifier_may_be_shadowed_or_reassigned(
     let end = span.start as usize;
     let prefix = source.get(start..end).unwrap_or("");
     let prefix = code_only_text(prefix);
-    let escaped = regex::escape(name);
-    let declaration = Regex::new(&format!(r"\b(?:const|let|var)\s+{escaped}\b"))
-        .expect("identifier declaration regex should compile");
-    let destructuring_declaration = Regex::new(&format!(
-        r"\b(?:const|let|var)\s+(?:\{{[^;]*\b{escaped}\b[^;]*\}}|\[[^;]*\b{escaped}\b[^;]*\])"
-    ))
-    .expect("identifier destructuring declaration regex should compile");
-    let destructuring_parameter = Regex::new(&format!(
-        r"\bfunction\b[^(]*\([^)]*(?:\{{[^)]*\b{escaped}\b[^)]*\}}|\[[^)]*\b{escaped}\b[^)]*\])"
-    ))
-    .expect("identifier destructuring parameter regex should compile");
     has_identifier_reassignment(&prefix, name)
-        || declaration.is_match(&prefix)
-        || destructuring_declaration.is_match(&prefix)
-        || has_enclosing_shadow_binding(&prefix, &destructuring_parameter)
+        || has_declaration(&prefix, name)
+        || has_destructuring_declaration(&prefix, name)
+        || has_enclosing_shadow_binding(&prefix, function_destructure_binding_ends(&prefix, name))
 }
 
 pub(super) fn has_identifier_reassignment(source: &str, name: &str) -> bool {
@@ -119,9 +110,12 @@ fn is_jsx_attribute_start(ch: char) -> bool {
     ch == '_' || ch == ':' || ch.is_ascii_alphabetic()
 }
 
-pub(super) fn has_enclosing_shadow_binding(prefix: &str, binding: &Regex) -> bool {
-    binding.find_iter(prefix).any(|matched| {
-        let rest = &prefix[matched.end()..];
+pub(super) fn has_enclosing_shadow_binding(
+    prefix: &str,
+    binding_ends: impl IntoIterator<Item = usize>,
+) -> bool {
+    binding_ends.into_iter().any(|binding_end| {
+        let rest = prefix.get(binding_end..).unwrap_or("");
         let Some(block_start) = rest.find('{') else {
             return false;
         };

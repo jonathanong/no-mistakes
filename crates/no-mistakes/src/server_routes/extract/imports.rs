@@ -1,12 +1,29 @@
 use super::{
-    bindings::is_client_http_module, commonjs::commonjs_property_is_framework, const_string,
-    helpers::binding_names, import_names, ServerRouteVisitor,
+    commonjs::{commonjs_property_is_framework, is_client_http_module},
+    const_string,
+    helpers::binding_names,
+    ServerRouteVisitor,
 };
 use crate::server_routes::model::ImportBinding;
 use oxc_ast::ast::{
     BindingPattern, Expression, ImportDeclarationSpecifier, TSImportEqualsDeclaration,
     TSModuleReference,
 };
+
+fn import_names(specifier: &ImportDeclarationSpecifier<'_>) -> (String, String) {
+    match specifier {
+        ImportDeclarationSpecifier::ImportDefaultSpecifier(spec) => {
+            (spec.local.name.to_string(), "default".to_string())
+        }
+        ImportDeclarationSpecifier::ImportNamespaceSpecifier(spec) => {
+            (spec.local.name.to_string(), "*".to_string())
+        }
+        ImportDeclarationSpecifier::ImportSpecifier(spec) => (
+            spec.local.name.to_string(),
+            super::module_export_name(&spec.imported),
+        ),
+    }
+}
 
 impl ServerRouteVisitor<'_> {
     pub(super) fn record_import(
@@ -18,6 +35,11 @@ impl ServerRouteVisitor<'_> {
         match source {
             "express" if imported == "default" || imported == "Router" || imported == "*" => {
                 self.express_names.insert(local.clone());
+            }
+            "fastify"
+                if imported == "default" || imported == "fastify" || imported == "Fastify" =>
+            {
+                self.fastify_names.insert(local.clone());
             }
             "hono" | "@hono/hono" if imported == "Hono" => {
                 self.hono_names.insert(local.clone());
@@ -48,6 +70,9 @@ impl ServerRouteVisitor<'_> {
             "express" => {
                 self.express_names.insert(local.to_string());
             }
+            "fastify" => {
+                self.fastify_names.insert(local.to_string());
+            }
             "hono" | "@hono/hono" => {
                 self.hono_names.insert(local.to_string());
             }
@@ -75,6 +100,13 @@ impl ServerRouteVisitor<'_> {
             for local in binding_names(&prop.value) {
                 if commonjs_property_is_framework(source, key.as_ref()) {
                     self.record_commonjs_module(&local, source);
+                }
+                if source == "@nestjs/common" {
+                    self.facts.imports.push(ImportBinding {
+                        local: local.clone(),
+                        imported: key.as_ref().to_string(),
+                        source: source.to_string(),
+                    });
                 }
                 if is_client_http_module(source) {
                     self.client_http_names.insert(local);

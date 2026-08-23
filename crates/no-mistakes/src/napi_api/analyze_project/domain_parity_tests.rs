@@ -1,3 +1,4 @@
+use super::options_test_support::{parse_options, report_value};
 use super::*;
 use serde_json::{json, Value};
 use std::path::{Path, PathBuf};
@@ -50,6 +51,7 @@ fn assert_each_indexable_file_parsed_once(
 }
 
 include!("domain_parity_tests/check_effects.rs");
+include!("domain_parity_tests/finite_set_consistency.rs");
 include!("domain_parity_tests/check_isolation.rs");
 include!("domain_parity_tests/repository_inventory.rs");
 include!("domain_parity_tests/playwright_react_server.rs");

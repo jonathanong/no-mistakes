@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-fk-index
+    scope: repository
+    options:
+      sqlInclude: ["migrations/**/*.sql"]
+      allowedColumns:
+        - comments.missing_id

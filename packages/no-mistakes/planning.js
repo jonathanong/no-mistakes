@@ -1,93 +1,184 @@
 "use strict";
 
-const native = require("./bin/no-mistakes.node");
+const fs = require("node:fs/promises");
+const os = require("node:os");
+const path = require("node:path");
+const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
 
 async function callJson(fn, options) {
-  return JSON.parse(await fn(JSON.stringify(options || {})));
+  const input = Buffer.from(JSON.stringify(options || {}));
+  return JSON.parse(await fn(input));
 }
 
-async function testsTargets(options) {
-  return callJson(native.testsTargetsJson, options);
+function createJsonApis(descriptors) {
+  return Object.fromEntries(
+    Object.entries(descriptors).map(([apiName, nativeName]) => [
+      apiName,
+      async (options) => callJson(native[nativeName], options),
+    ]),
+  );
 }
 
-async function testsPlan(options) {
-  return callJson(native.testsPlanJson, options);
+function camelizeKey(key) {
+  return key.replace(/_([a-z])/g, (_, letter) => letter.toUpperCase());
 }
 
-async function testsImpact(options) {
-  return callJson(native.testsImpactJson, options);
+function decamelizeKey(key) {
+  return key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
 }
 
-async function testsWhy(options) {
-  return callJson(native.testsWhyJson, options);
+function mapKeys(value, mapKey) {
+  if (Array.isArray(value)) return value.map((item) => mapKeys(item, mapKey));
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, nested]) => [mapKey(key), mapKeys(nested, mapKey)]),
+    );
+  }
+  return value;
+}
+
+function camelizeValue(value) {
+  return mapKeys(value, camelizeKey);
+}
+
+function decamelizeValue(value) {
+  return mapKeys(value, decamelizeKey);
+}
+
+function loadPlanJson(planJson) {
+  let parsed = planJson;
+  if (typeof parsed === "string") {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch {
+      return planJson;
+    }
+  }
+  if (parsed && typeof parsed === "object") {
+    return decamelizeValue(parsed);
+  }
+  return planJson;
+}
+
+async function readPlanFile(planPath) {
+  try {
+    return JSON.parse(await fs.readFile(planPath, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+async function decamelizePlanOptions(options = {}) {
+  const next = { ...options };
+  if (next.planJson != null) {
+    next.planJson = loadPlanJson(next.planJson);
+  } else if (typeof next.plan === "string") {
+    const document = await readPlanFile(next.plan);
+    if (document !== undefined) {
+      next.planJson = loadPlanJson(document);
+      delete next.plan;
+    }
+  }
+  return next;
+}
+
+async function prepareWhyPlan(options = {}) {
+  const next = { ...options };
+  let document = next.planJson;
+  if (document == null && typeof next.plan === "string") {
+    document = await readPlanFile(next.plan);
+    if (document === undefined) return { request: next };
+  }
+  if (document == null) return { request: next };
+  const generatedDir = await fs.mkdtemp(path.join(os.tmpdir(), "no-mistakes-why-"));
+  await fs.writeFile(path.join(generatedDir, "plan.json"), JSON.stringify(loadPlanJson(document)));
+  next.plan = path.join(generatedDir, "plan.json");
+  delete next.planJson;
+  return { request: next, generatedDir };
+}
+
+async function materializeWhyPlan(options = {}) {
+  return (await prepareWhyPlan(options)).request;
+}
+
+async function removeGeneratedDir(generatedDir) {
+  if (!generatedDir) return;
+  await fs.rm(generatedDir, { recursive: true, force: true }).catch(() => {});
+}
+
+function camelizeWhy(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return camelizeValue(value);
+  }
+  return Object.fromEntries(
+    Object.entries(value).map(([key, nested]) => [key, camelizeValue(nested)]),
+  );
 }
 
 async function testsComment(options) {
-  return native.testsCommentMarkdown(JSON.stringify(options || {}));
-}
-
-async function testsGraph(options) {
-  return callJson(native.testsGraphJson, options);
+  const input = Buffer.from(JSON.stringify(await decamelizePlanOptions(options)));
+  return String(await native.testsCommentMarkdown(input));
 }
 
 async function testsGraphMermaid(options) {
-  return native.testsGraphMermaid(JSON.stringify(options || {}));
+  const input = Buffer.from(JSON.stringify(await decamelizePlanOptions(options)));
+  return String(await native.testsGraphMermaid(input));
 }
 
-async function queues(options) {
-  return callJson(native.queuesJson, options);
+const jsonApis = createJsonApis({
+  flow: "flowJson",
+  queueCheck: "queueCheckJson",
+  queueEdges: "queueEdgesJson",
+  queueRelated: "queueRelatedJson",
+  queues: "queuesJson",
+  serverContracts: "serverContractsJson",
+  serverRouteEdges: "serverRouteEdgesJson",
+  serverRouteList: "serverRouteListJson",
+  serverRouteRelated: "serverRouteRelatedJson",
+  serverRoutes: "serverRoutesJson",
+  testsGraph: "testsGraphJson",
+  testsImpact: "testsImpactJson",
+  testsPlan: "testsPlanJson",
+  testsTargets: "testsTargetsJson",
+  testsWhy: "testsWhyJson",
+});
+
+async function testsPlan(options) {
+  return camelizeValue(await jsonApis.testsPlan(options));
 }
 
-async function queueEdges(options) {
-  return callJson(native.queueEdgesJson, options);
+async function testsImpact(options) {
+  return camelizeValue(await jsonApis.testsImpact(options));
 }
 
-async function queueRelated(options) {
-  return callJson(native.queueRelatedJson, options);
+async function testsTargets(options) {
+  return camelizeValue(await jsonApis.testsTargets(options));
 }
 
-async function queueCheck(options) {
-  return callJson(native.queueCheckJson, options);
+async function testsWhy(options) {
+  const { request, generatedDir } = await prepareWhyPlan(options);
+  try {
+    return camelizeWhy(await jsonApis.testsWhy(request));
+  } finally {
+    await removeGeneratedDir(generatedDir);
+  }
 }
 
-async function serverRoutes(options) {
-  return callJson(native.serverRoutesJson, options);
-}
-
-async function serverRouteList(options) {
-  return callJson(native.serverRouteListJson, options);
-}
-
-async function serverRouteEdges(options) {
-  return callJson(native.serverRouteEdgesJson, options);
-}
-
-async function serverRouteRelated(options) {
-  return callJson(native.serverRouteRelatedJson, options);
-}
-
-async function serverContracts(options) {
-  return callJson(native.serverContractsJson, options);
-}
-
-async function flow(options) {
-  return callJson(native.flowJson, options);
+async function testsGraph(options) {
+  return camelizeValue(await jsonApis.testsGraph(await decamelizePlanOptions(options)));
 }
 
 module.exports = {
-  flow,
-  queueCheck,
-  queueEdges,
-  queueRelated,
-  queues,
-  serverContracts,
-  serverRouteEdges,
-  serverRouteList,
-  serverRouteRelated,
-  serverRoutes,
+  camelizeValue,
+  camelizeWhy,
+  decamelizePlanOptions,
+  materializeWhyPlan,
+  prepareWhyPlan,
+  removeGeneratedDir,
   testsComment,
-  testsGraph,
   testsGraphMermaid,
+  ...jsonApis,
+  testsGraph,
   testsImpact,
   testsPlan,
   testsTargets,

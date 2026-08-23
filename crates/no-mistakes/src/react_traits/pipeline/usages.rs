@@ -13,10 +13,10 @@ use crate::react_traits::report::types::{Callsite, RootConfig, UsagesReport, Usa
 use anyhow::Result;
 use helpers::{
     callsite_symbol_matches, filter_importers, importer_symbol_matches, is_story, is_test,
-    prop_type_names, same_path, split_target,
+    prop_type_names_with_sources, same_path, split_target,
 };
 use rayon::prelude::*;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 pub use helpers::UsagesInclude;
@@ -36,7 +36,7 @@ pub(crate) fn collect_usage_file_facts(
     file: &Path,
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> UsageFileFacts {
     let import_table = match visible_files {
         Some(visible) => build_import_table_from_visible(file, program, visible),
@@ -139,12 +139,14 @@ pub fn run_usages(
     let root = crate::codebase::ts_source::normalize_discovery_path(root);
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let visible_paths = snapshot.paths_for(&root);
-    let root_config: RootConfig = crate::config::load_config_from_visible(
+    let sources = snapshot.source_store_for(&root);
+    let root_config = crate::config::load_config_from_visible(
         &root,
         config_path,
         &[".no-mistakes"],
         &visible_paths,
-    )?;
+    );
+    let root_config: RootConfig = root_config?;
     let file_config = root_config.into_file_config();
     run_usages_from_visible(
         &root,
@@ -153,6 +155,7 @@ pub fn run_usages(
         include,
         &file_config,
         &visible_paths,
+        Some(&sources),
     )
 }
 

@@ -1,11 +1,10 @@
-use crate::codebase::dependencies::graph::{
-    DepGraph, EdgeKind, GraphBuildPlan, GraphFiles, NodeId,
+use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, GraphBuildPlan, NodeId};
+use crate::codebase::dependencies::{
+    parse_entrypoint, relationship_filter, trpc_procedure_from_suffix,
+    workflow_node_from_suffix_in, RelationshipArg,
 };
-use crate::codebase::dependencies::{parse_entrypoint, relationship_filter, RelationshipArg};
-use crate::codebase::ts_resolver::{
-    find_tsconfig_from_visible, load_tsconfig, normalize_path, TsConfig,
-};
-use anyhow::{Context, Result};
+use crate::codebase::ts_resolver::normalize_path;
+use anyhow::Result;
 use serde::Serialize;
 use std::collections::{BTreeMap, BTreeSet, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
@@ -53,6 +52,14 @@ pub struct FlowNode {
     pub queue_file: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub job: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub workflow_file: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub step: Option<usize>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub router_file: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub procedure: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, PartialEq, Eq, PartialOrd, Ord)]
@@ -66,46 +73,33 @@ pub struct FlowEdge {
 pub fn run(options: &FlowOptions) -> Result<FlowReport> {
     let root = normalize_path(&options.root);
     let root = root.canonicalize().unwrap_or(root);
-    let visible_paths = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
-    let root_visible_paths = visible_paths.paths_for(&root);
-    let graph_files = GraphFiles::from_files(
-        crate::codebase::ts_source::discover_files_from_visible(&root, &[], &root_visible_paths),
-    );
-    let tsconfig =
-        resolve_tsconfig_from_visible(&root, options.tsconfig.as_deref(), &root_visible_paths)?;
     let allowed = relationship_filter(&options.relationships);
     let plan = GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(true);
-    let config = crate::config::v2::load_v2_config_from_visible(
-        &root,
-        options.config.as_deref(),
-        &root_visible_paths,
-    )?;
-    let codebase_config =
-        crate::codebase::config::config_from_loaded_v2(&root, options.config.as_deref(), &config);
-    let prepared_graph = crate::codebase::dependencies::graph::prepare_graph_config(
-        &root,
-        plan,
-        &codebase_config,
-        &config,
-        &visible_paths,
-    )?;
-    let graph = DepGraph::build_with_plan_files_prepared_config(
-        &root,
-        &tsconfig,
-        plan,
-        &graph_files,
-        options.config.as_deref(),
-        &prepared_graph,
-    )?;
-    run_with_prepared_graph(options, &root, &graph)
+    let mut framework_plan =
+        crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(plan);
+    if let Some(path) = resolve_target(&root, &options.target).as_file() {
+        framework_plan.retain_indexable_path(path.to_path_buf());
+    }
+    let traversal =
+        crate::codebase::dependencies::SharedTraversalContext::prepare_with_framework_plan(
+            root,
+            options.tsconfig.as_deref(),
+            options.config.as_deref(),
+            plan,
+            framework_plan,
+        );
+    let mut traversal = traversal?;
+    traversal.ensure_facts();
+    traversal.flow_report(options)
 }
 
 pub(crate) fn run_with_prepared_graph(
     options: &FlowOptions,
     root: &Path,
     graph: &DepGraph,
+    interner: &crate::codebase::analysis_session::PathInterner,
 ) -> Result<FlowReport> {
-    let target = resolve_target(root, &options.target);
+    let target = resolve_target_in(interner, root, &options.target);
     let allowed = relationship_filter(&options.relationships);
     let mut nodes = BTreeMap::new();
     let mut edges = BTreeSet::new();
@@ -138,6 +132,34 @@ pub(crate) fn run_with_prepared_graph(
     })
 }
 
+fn resolve_target(root: &Path, raw: &str) -> NodeId {
+    resolve_target_in(
+        &crate::codebase::analysis_session::PathInterner::new(),
+        root,
+        raw,
+    )
+}
+
+fn resolve_target_in(
+    interner: &crate::codebase::analysis_session::PathInterner,
+    root: &Path,
+    raw: &str,
+) -> NodeId {
+    let (file, symbol) = parse_entrypoint(raw);
+    let path = if file.is_absolute() {
+        file
+    } else {
+        root.join(file)
+    };
+    let path = normalize_path(&path);
+    match symbol {
+        Some(symbol) => workflow_node_from_suffix_in(interner, &path, &symbol)
+            .or_else(|| trpc_procedure_from_suffix(&path, &symbol))
+            .unwrap_or_else(|| NodeId::symbol_in(interner, path, symbol)),
+        None => NodeId::file_in(interner, path),
+    }
+}
+
 include!("flow_query_traverse.rs");
 
 #[cfg(test)]
@@ -145,34 +167,9 @@ include!("flow_query_traverse.rs");
 mod flow_query_tests;
 
 #[cfg(test)]
+#[path = "flow_query_resource_tests.rs"]
+mod flow_query_resource_tests;
+
+#[cfg(test)]
 #[path = "flow_query_timeout_tests.rs"]
 mod flow_query_timeout_tests;
-
-fn resolve_tsconfig_from_visible(
-    root: &Path,
-    explicit: Option<&Path>,
-    visible_paths: &[PathBuf],
-) -> Result<TsConfig> {
-    let explicit_path = explicit.is_some();
-    let path = match explicit {
-        Some(path) if path.is_absolute() => Some(path.to_path_buf()),
-        Some(path) => Some(root.join(path)),
-        None => find_tsconfig_from_visible(root, visible_paths),
-    };
-    match path {
-        Some(path) if explicit_path => {
-            load_tsconfig(&path).context(format!("loading tsconfig {}", path.display()))
-        }
-        Some(path) => Ok(load_tsconfig(&path).unwrap_or_else(|_| empty_tsconfig(root))),
-        None => Ok(empty_tsconfig(root)),
-    }
-}
-
-fn empty_tsconfig(root: &Path) -> TsConfig {
-    TsConfig {
-        dir: root.to_path_buf(),
-        paths_dir: root.to_path_buf(),
-        paths: Vec::new(),
-        base_url: None,
-    }
-}

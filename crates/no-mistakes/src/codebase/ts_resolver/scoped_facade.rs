@@ -1,0 +1,84 @@
+use super::{ImportClassification, ImportResolver, ResolverVisible, ScopedImportResolver};
+use crate::codebase::ts_resolver::VisiblePathLookup;
+use std::collections::BTreeSet;
+use std::path::{Path, PathBuf};
+
+/// Import resolution whose configuration is selected from the importing file.
+/// This is the shared graph boundary during automatic workspace resolution.
+pub(crate) trait ImportResolverFacade: Sync {
+    fn resolve(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf>;
+
+    /// Return conservative local resolution targets, including paths that no
+    /// longer exist. This keeps deleted-file planning aligned with the
+    /// importer-scoped resolver's aliases and compiler options.
+    fn resolution_candidates(&self, specifier: &str, importing_file: &Path) -> BTreeSet<PathBuf>;
+
+    fn visible_files(&self) -> Option<&dyn VisiblePathLookup>;
+
+    fn classify_import(
+        &self,
+        specifier: &str,
+        importing_file: &Path,
+        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        visible_files: &dyn VisiblePathLookup,
+    ) -> ImportClassification;
+}
+
+// Existing graph and runner-config call sites use this shorter name. New
+// generic consumers use `ImportResolverFacade` to avoid colliding with their
+// local `ImportResolution` context structs.
+pub(crate) use ImportResolverFacade as ImportResolution;
+
+impl<'a> ImportResolverFacade for ImportResolver<'a> {
+    fn resolve(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
+        ImportResolver::resolve(self, specifier, importing_file)
+    }
+
+    fn resolution_candidates(&self, specifier: &str, importing_file: &Path) -> BTreeSet<PathBuf> {
+        ImportResolver::resolution_candidates(self, specifier, importing_file)
+    }
+
+    fn visible_files(&self) -> Option<&dyn VisiblePathLookup> {
+        ImportResolver::visible_files(self)
+    }
+
+    fn classify_import(
+        &self,
+        specifier: &str,
+        importing_file: &Path,
+        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        visible_files: &dyn VisiblePathLookup,
+    ) -> ImportClassification {
+        ImportResolver::classify_import(self, specifier, importing_file, workspace, visible_files)
+    }
+}
+
+impl ImportResolverFacade for ScopedImportResolver<'_> {
+    fn resolve(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
+        ScopedImportResolver::resolve(self, specifier, importing_file)
+    }
+
+    fn resolution_candidates(&self, specifier: &str, importing_file: &Path) -> BTreeSet<PathBuf> {
+        ScopedImportResolver::resolution_candidates(self, specifier, importing_file)
+    }
+
+    fn visible_files(&self) -> Option<&dyn VisiblePathLookup> {
+        self.visible.as_ref().map(ResolverVisible::lookup)
+    }
+
+    fn classify_import(
+        &self,
+        specifier: &str,
+        importing_file: &Path,
+        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        visible_files: &dyn VisiblePathLookup,
+    ) -> ImportClassification {
+        ScopedImportResolver::classify_import(
+            self,
+            specifier,
+            importing_file,
+            workspace,
+            visible_files,
+        )
+    }
+}

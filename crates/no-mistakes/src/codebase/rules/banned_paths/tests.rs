@@ -89,7 +89,8 @@ fn respects_rule_include_and_suppression() {
         root.join("other/pages/index.tsx"),
     ];
     let mut findings = check_with_files(&root, &config, &files).unwrap();
-    super::super::suppress_rule_findings(&root, &mut findings);
+    let sources = super::super::source_store_for_files(&files);
+    super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "web/pages/index.tsx");
 }
@@ -117,7 +118,7 @@ rules:
       bannedPaths:
         - glob: build/project.patch
 "#,
-        external_root.display()
+        external_root.display().to_string().replace('\'', "''")
     ))
     .unwrap();
     let files = vec![
@@ -130,4 +131,22 @@ rules:
 
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "build/repository.patch");
+}
+
+#[test]
+fn invalid_glob_patterns_are_reported() {
+    let root = fixture_root("fail");
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+rules:
+  - rule: banned-paths
+    scope: repository
+    options:
+      bannedPaths:
+        - glob: "[a-"
+"#,
+    )
+    .unwrap();
+    let error = check_with_files(&root, &config, &[]).unwrap_err();
+    assert!(error.to_string().contains("invalid glob"), "{error:#}");
 }

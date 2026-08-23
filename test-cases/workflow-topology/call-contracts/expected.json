@@ -1,0 +1,375 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/callee.yml",
+      "path": ".github/workflows/callee.yml",
+      "name": "Callee",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {
+          "flag": {
+            "type": "boolean",
+            "required": false,
+            "default": false
+          },
+          "message": {
+            "type": "string",
+            "required": true
+          }
+        },
+        "secrets": {
+          "token": {
+            "required": true
+          }
+        },
+        "outputs": {
+          "result": {
+            "value": "${{ jobs.echo.outputs.result }}"
+          }
+        }
+      },
+      "triggers": [
+        {
+          "event": "workflow_call",
+          "config": {
+            "inputs": {
+              "message": {
+                "type": "string",
+                "required": true
+              },
+              "flag": {
+                "type": "boolean",
+                "required": false,
+                "default": false
+              }
+            },
+            "secrets": {
+              "token": {
+                "required": true
+              }
+            },
+            "outputs": {
+              "result": {
+                "value": "${{ jobs.echo.outputs.result }}"
+              }
+            }
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/callee.yml#echo"
+      ]
+    },
+    {
+      "id": ".github/workflows/caller.yml",
+      "path": ".github/workflows/caller.yml",
+      "name": "Caller",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/caller.yml#consumer",
+        ".github/workflows/caller.yml#expression-input",
+        ".github/workflows/caller.yml#happy",
+        ".github/workflows/caller.yml#inherited-secrets",
+        ".github/workflows/caller.yml#missing-input",
+        ".github/workflows/caller.yml#missing-secret",
+        ".github/workflows/caller.yml#type-mismatch",
+        ".github/workflows/caller.yml#unknown-input",
+        ".github/workflows/caller.yml#unknown-secret"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/callee.yml#echo",
+      "workflowId": ".github/workflows/callee.yml",
+      "key": "echo",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run",
+          "id": "set"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/caller.yml#consumer",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "consumer",
+      "kind": "job",
+      "condition": "needs.happy.outputs.result == 'ok'",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/caller.yml#expression-input",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "expression-input",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/caller.yml#happy",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "happy",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/caller.yml#inherited-secrets",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "inherited-secrets",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/caller.yml#missing-input",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "missing-input",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/caller.yml#missing-secret",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "missing-secret",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/caller.yml#type-mismatch",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "type-mismatch",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/caller.yml#unknown-input",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "unknown-input",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/caller.yml#unknown-secret",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "unknown-secret",
+      "kind": "job",
+      "steps": []
+    }
+  ],
+  "edges": [
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#expression-input",
+      "target": "./.github/workflows/callee.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {
+          "flag": "${{ vars.SOME_FLAG }}",
+          "message": "hi"
+        },
+        "secrets": {
+          "mode": "explicit",
+          "values": {
+            "token": "${{ secrets.TOKEN }}"
+          }
+        }
+      },
+      "to": ".github/workflows/callee.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#happy",
+      "target": "./.github/workflows/callee.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {
+          "message": "hi"
+        },
+        "secrets": {
+          "mode": "explicit",
+          "values": {
+            "token": "${{ secrets.TOKEN }}"
+          }
+        }
+      },
+      "to": ".github/workflows/callee.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#inherited-secrets",
+      "target": "./.github/workflows/callee.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {
+          "message": "hi"
+        },
+        "secrets": {
+          "mode": "inherit"
+        }
+      },
+      "to": ".github/workflows/callee.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#missing-input",
+      "target": "./.github/workflows/callee.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {
+            "token": "${{ secrets.TOKEN }}"
+          }
+        }
+      },
+      "to": ".github/workflows/callee.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#missing-secret",
+      "target": "./.github/workflows/callee.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {
+          "message": "hi"
+        },
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/callee.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#type-mismatch",
+      "target": "./.github/workflows/callee.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {
+          "flag": "not-a-boolean",
+          "message": "hi"
+        },
+        "secrets": {
+          "mode": "explicit",
+          "values": {
+            "token": "${{ secrets.TOKEN }}"
+          }
+        }
+      },
+      "to": ".github/workflows/callee.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#unknown-input",
+      "target": "./.github/workflows/callee.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {
+          "extra": "nope",
+          "message": "hi"
+        },
+        "secrets": {
+          "mode": "explicit",
+          "values": {
+            "token": "${{ secrets.TOKEN }}"
+          }
+        }
+      },
+      "to": ".github/workflows/callee.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#unknown-secret",
+      "target": "./.github/workflows/callee.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {
+          "message": "hi"
+        },
+        "secrets": {
+          "mode": "explicit",
+          "values": {
+            "bogus": "${{ secrets.BOGUS }}",
+            "token": "${{ secrets.TOKEN }}"
+          }
+        }
+      },
+      "to": ".github/workflows/callee.yml"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/caller.yml#happy",
+      "to": ".github/workflows/caller.yml#consumer"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "missing-workflow-call-input",
+      "message": ".github/workflows/caller.yml#missing-input does not provide required input message to .github/workflows/callee.yml",
+      "workflowPath": ".github/workflows/caller.yml",
+      "jobId": ".github/workflows/caller.yml#missing-input",
+      "callJobId": ".github/workflows/caller.yml#missing-input",
+      "calleeWorkflowPath": ".github/workflows/callee.yml"
+    },
+    {
+      "severity": "error",
+      "code": "missing-workflow-call-secret",
+      "message": ".github/workflows/caller.yml#missing-secret does not provide required secret token to .github/workflows/callee.yml",
+      "workflowPath": ".github/workflows/caller.yml",
+      "jobId": ".github/workflows/caller.yml#missing-secret",
+      "callJobId": ".github/workflows/caller.yml#missing-secret",
+      "calleeWorkflowPath": ".github/workflows/callee.yml"
+    },
+    {
+      "severity": "error",
+      "code": "unknown-workflow-call-input",
+      "message": ".github/workflows/caller.yml#unknown-input provides unknown input extra to .github/workflows/callee.yml",
+      "workflowPath": ".github/workflows/caller.yml",
+      "jobId": ".github/workflows/caller.yml#unknown-input",
+      "callJobId": ".github/workflows/caller.yml#unknown-input",
+      "calleeWorkflowPath": ".github/workflows/callee.yml"
+    },
+    {
+      "severity": "error",
+      "code": "unknown-workflow-call-output",
+      "message": ".github/workflows/caller.yml#consumer references unknown output bogus from .github/workflows/caller.yml#happy (.github/workflows/callee.yml)",
+      "workflowPath": ".github/workflows/caller.yml",
+      "jobId": ".github/workflows/caller.yml#consumer",
+      "callJobId": ".github/workflows/caller.yml#happy",
+      "calleeWorkflowPath": ".github/workflows/callee.yml"
+    },
+    {
+      "severity": "error",
+      "code": "unknown-workflow-call-secret",
+      "message": ".github/workflows/caller.yml#unknown-secret provides unknown secret bogus to .github/workflows/callee.yml",
+      "workflowPath": ".github/workflows/caller.yml",
+      "jobId": ".github/workflows/caller.yml#unknown-secret",
+      "callJobId": ".github/workflows/caller.yml#unknown-secret",
+      "calleeWorkflowPath": ".github/workflows/callee.yml"
+    },
+    {
+      "severity": "error",
+      "code": "workflow-call-input-type-mismatch",
+      "message": ".github/workflows/caller.yml#type-mismatch provides input flag as string, but .github/workflows/callee.yml declares boolean",
+      "workflowPath": ".github/workflows/caller.yml",
+      "jobId": ".github/workflows/caller.yml#type-mismatch",
+      "callJobId": ".github/workflows/caller.yml#type-mismatch",
+      "calleeWorkflowPath": ".github/workflows/callee.yml"
+    }
+  ]
+}

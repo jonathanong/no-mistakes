@@ -7,6 +7,9 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+#[cfg(test)]
+mod tests;
+
 #[derive(Debug, Clone, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "camelCase")]
 pub struct TestsTargetsReport {
@@ -122,7 +125,7 @@ pub(crate) fn ensure_plan_commands_available(plan: &TestPlan, command: &str) -> 
 
 fn render_targets(report: &TestsTargetsReport, format: TargetsFormat) -> Result<String> {
     Ok(match format {
-        TargetsFormat::Json => format!("{}\n", serde_json::to_string_pretty(report)?),
+        TargetsFormat::Json => format!("{}\n", serde_json::to_string(report)?),
         TargetsFormat::Commands => {
             let mut commands = Vec::new();
             for row in &report.tests {
@@ -207,6 +210,16 @@ fn runner_for(framework: TestFramework) -> TestRunner {
         TestFramework::Vitest => TestRunner::Vitest,
         TestFramework::Playwright => TestRunner::Playwright,
         TestFramework::Swift => TestRunner::Swift,
+        TestFramework::Python => TestRunner::Python,
+        TestFramework::Go => TestRunner::Go,
+        TestFramework::Cargo => TestRunner::Cargo,
+        TestFramework::Rails => TestRunner::Rails,
+        TestFramework::Php => TestRunner::Php,
+        TestFramework::Java => TestRunner::Java,
+        TestFramework::Kotlin => TestRunner::Kotlin,
+        TestFramework::Elixir => TestRunner::Elixir,
+        TestFramework::Dart => TestRunner::Dart,
+        TestFramework::Jest => TestRunner::Jest,
     }
 }
 
@@ -216,5 +229,15 @@ fn framework_name(framework: TestFramework) -> &'static str {
         TestFramework::Vitest => "vitest",
         TestFramework::Playwright => "playwright",
         TestFramework::Swift => "swift",
+        TestFramework::Python => "python",
+        TestFramework::Go => "go",
+        TestFramework::Cargo => "cargo",
+        TestFramework::Rails => "rails",
+        TestFramework::Php => "php",
+        TestFramework::Java => "java",
+        TestFramework::Kotlin => "kotlin",
+        TestFramework::Elixir => "elixir",
+        TestFramework::Dart => "dart",
+        TestFramework::Jest => "jest",
     }
 }

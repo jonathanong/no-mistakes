@@ -11,6 +11,8 @@ rules. `check` runs React, queue, integration, filesystem, Playwright, unique
 export, and codebase rules that are enabled in config.
 
 Key options: `--root`, `--config`, `--tsconfig`, `--format`, and `--json`.
+`--include-suppressed` is opt-in and adds deterministic directive accounting to
+JSON/YAML output without changing the default report schema.
 The root-global `--timings` and `--verbose-timings` flags work here and on every
 other CLI leaf. Verbose mode implies timings, includes rule/graph/Playwright
 sub-phases and work counts, and marks overlapping check-domain spans as
@@ -18,8 +20,11 @@ non-additive. See [Performance diagnostics](diagnostics.md).
 
 Rules must be explicitly configured. See [no-mistakes rules](../rules/README.md)
 and [configuration](../configuration/README.md).
+`path-regex-capture` matches visible symlink paths, including directory-target
+links; see [finite-set-consistency](../rules/finite-set-consistency.md).
 
 If a configured check cannot run, `check` prints a warning to stderr, includes it
 in structured output as `warnings`, and exits nonzero.
 
-Node API: `check(options)`.
+Node API: `check({ includeSuppressed: true })` exposes the same optional
+`suppressed` accounting.

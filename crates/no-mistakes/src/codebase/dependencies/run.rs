@@ -19,17 +19,19 @@ pub fn run_json(args: TraverseArgs, direction: Direction) -> Result<String> {
     let cwd_early = std::env::current_dir().context("reading current directory")?;
     let mut timings = crate::codebase::timing::PhaseTimings::start();
     let result = collect_and_filter_entries(&args, direction, &cwd_early, &mut timings)?;
-    let root_strings = output_root_strings(&args);
-    let mut out = Vec::new();
-    write_output_results(Format::Json, &root_strings, &result, &mut out)?;
-    String::from_utf8(out).context("dependency JSON output must be UTF-8")
+    result_json(&args, &result)
 }
 
 pub(crate) fn result_json(args: &TraverseArgs, result: &TraversalResult) -> Result<String> {
+    String::from_utf8(result_json_bytes(args, result)?)
+        .context("dependency JSON output must be UTF-8")
+}
+
+pub(crate) fn result_json_bytes(args: &TraverseArgs, result: &TraversalResult) -> Result<Vec<u8>> {
     let root_strings = output_root_strings(args);
     let mut out = Vec::new();
     write_output_results(Format::Json, &root_strings, result, &mut out)?;
-    String::from_utf8(out).context("dependency JSON output must be UTF-8")
+    Ok(out)
 }
 
 fn output_results(args: &TraverseArgs, result: &TraversalResult) -> Result<()> {

@@ -1,91 +1,70 @@
 impl SharedTraversalContext {
     pub(crate) fn signature_impact_json(
-        &mut self,
+        &self,
         args: &crate::codebase::symbols::SymbolsArgs,
     ) -> Result<String> {
         let test_filter = self.test_filter.clone();
         let session = self.session.clone();
-        self.graph()?;
-        let graph = self
-            .graph
-            .as_ref()
-            .context("dependency graph was not initialized")?;
-        let facts = self
-            .facts
-            .as_ref()
-            .context("TS facts were not initialized")?;
+        let graph = self.graph_shared()?;
         crate::codebase::symbols::signature_impact_json_with_prepared(
             args,
             &self.root,
-            &self.tsconfig,
             crate::codebase::symbols::PreparedSignatureImpact {
                 session: &session,
+                tsconfig_catalog: &self.tsconfig_catalog,
                 graph_files: &self.graph_files,
                 test_filter: &test_filter,
                 workspace: self.prepared_graph.workspace(),
-                graph,
-                facts,
+                graph: graph.as_ref(),
+                facts: self.prepared_facts(),
             },
         )
     }
 
     pub(crate) fn flow_report(
-        &mut self,
+        &self,
         options: &crate::flow_query::FlowOptions,
     ) -> Result<crate::flow_query::FlowReport> {
-        self.graph()?;
-        let graph = self
-            .graph
-            .as_ref()
-            .context("dependency graph was not initialized")?;
-        crate::flow_query::run_with_prepared_graph(options, &self.root, graph)
+        let graph = self.graph_shared()?;
+        crate::flow_query::run_with_prepared_graph(
+            options,
+            &self.root,
+            graph.as_ref(),
+            self.session.interner(),
+        )
     }
 
     pub(crate) fn effects_report(
-        &mut self,
+        &self,
         selection: &crate::effects_query::EffectsSelection,
         entry: &Path,
         depth: Option<usize>,
     ) -> Result<crate::effects_query::EffectsReport> {
-        self.graph()?;
-        let graph = self
-            .graph
-            .as_ref()
-            .context("dependency graph was not initialized")?;
-        let facts = self
-            .facts
-            .as_ref()
-            .context("TS facts were not initialized")?;
+        let graph = self.graph_shared()?;
         crate::effects_query::run_with_prepared(
             &self.root,
             selection,
             entry,
             depth,
-            graph,
-            facts,
+            graph.as_ref(),
+            self.prepared_facts(),
+            self.session.interner(),
         )
     }
 
     pub(crate) fn rsc_callers_report(
-        &mut self,
+        &self,
         component: &Path,
         depth: Option<usize>,
     ) -> Result<crate::rsc_callers_query::RscCallersReport> {
-        self.graph()?;
-        let graph = self
-            .graph
-            .as_ref()
-            .context("dependency graph was not initialized")?;
-        let facts = self
-            .facts
-            .as_ref()
-            .context("TS facts were not initialized")?;
+        let graph = self.graph_shared()?;
         crate::rsc_callers_query::run_with_prepared(
             &self.root,
             component,
             depth,
-            graph,
-            facts,
+            graph.as_ref(),
+            self.prepared_facts(),
+            self.session.interner(),
         )
     }
 }

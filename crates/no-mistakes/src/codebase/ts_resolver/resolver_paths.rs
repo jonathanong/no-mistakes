@@ -1,5 +1,9 @@
 impl<'a> ImportResolver<'a> {
     fn resolve_uncached(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
+        let specifier_path = Path::new(specifier);
+        if specifier_path.is_absolute() {
+            return self.try_path(specifier_path);
+        }
         let is_relative = match self.policy {
             ImportResolutionPolicy::Standard => {
                 specifier.starts_with("./") || specifier.starts_with("../")
@@ -12,15 +16,15 @@ impl<'a> ImportResolver<'a> {
         }
 
         for idx in &self.alias_order {
-            let (pattern, replacements) = &self.tsconfig.paths[*idx];
+            let (pattern, replacements) = &self.tsconfig().paths[*idx];
             if let Some(capture) = match_alias(pattern, specifier) {
                 for replacement in replacements {
                     let resolved = replacement.replace('*', &capture);
                     let base = self
-                        .tsconfig
+                        .tsconfig()
                         .base_url
                         .as_ref()
-                        .unwrap_or(&self.tsconfig.paths_dir)
+                        .unwrap_or(&self.tsconfig().paths_dir)
                         .join(&resolved);
                     if let Some(path) = self.try_path(&base) {
                         return Some(path);
@@ -29,7 +33,7 @@ impl<'a> ImportResolver<'a> {
             }
         }
 
-        if let Some(base_url) = &self.tsconfig.base_url {
+        if let Some(base_url) = &self.tsconfig().base_url {
             if let Some(path) = self.try_path(&base_url.join(specifier)) {
                 return Some(path);
             }
@@ -147,13 +151,15 @@ impl<'a> ImportResolver<'a> {
 
     fn path_exists(&self, path: &Path) -> bool {
         self.visible
-            .map(|visible| visible.contains(path))
+            .as_ref()
+            .map(|visible| visible.contains_visible(path))
             .unwrap_or_else(|| path.exists())
     }
 
     fn path_is_file(&self, path: &Path) -> bool {
         self.visible
-            .map(|visible| visible.contains(path))
+            .as_ref()
+            .map(|visible| visible.contains_visible(path))
             .unwrap_or_else(|| path.is_file())
     }
 }

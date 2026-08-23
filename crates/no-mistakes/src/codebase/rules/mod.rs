@@ -2,27 +2,54 @@ pub mod agents_md_max_size;
 pub mod banned_paths;
 pub mod banned_renamed_files;
 pub mod config_path_references;
+pub mod csharp_max_lines_per_file;
 pub mod doc_consistency;
 pub mod file_extension_policy;
 mod file_matching;
 pub mod finite_set_consistency;
 pub mod forbidden_dependencies;
 pub mod forbidden_workspace_closure;
+pub mod github_actions_action_timeout_pair;
+pub mod github_actions_composite_step_schema;
+pub mod github_actions_job_timeouts;
 pub mod github_actions_pinned_hash;
+pub mod github_actions_test_timeout_literals;
 mod ids;
 pub mod integration_test_no_mocks;
 pub mod lockfile_allowlist;
+pub mod markdown_child_links;
+pub mod markdown_eval_tests;
+pub(crate) mod markdown_facts;
 pub mod markdown_link_display_text;
+pub mod markdown_mermaid_validation;
+pub mod markdown_reachability;
+pub(crate) mod markdown_scope;
+pub mod markdown_structure_budget;
 pub mod nextjs_no_api_routes;
 pub mod nextjs_no_caching;
+pub mod nextjs_redirect_destinations;
 pub mod no_empty_or_comments_only_files;
 pub mod no_git_identity_mutation;
+pub mod no_raw_ephemeral_port;
 pub mod package_json_registry_only;
 pub mod package_json_workspace_coverage;
+pub mod postgres_constraint_validate;
+pub mod postgres_fk_index;
+pub mod postgres_lock_ordering;
+pub mod postgres_no_add_column;
+pub mod postgres_no_generated_column_writes;
+pub mod postgres_no_offset;
+pub mod postgres_redundant_index;
+pub mod postgres_require_fk_on_delete;
+pub mod postgres_require_named_constraints;
+pub mod postgres_require_query_annotation;
+pub mod postgres_sql_statement_policy;
+pub mod production_dependency_declarations;
 pub mod require_files_in_subdirs;
 pub mod require_storybook_stories;
 pub mod require_test_per_subdir;
 pub mod required_companion_imports;
+pub mod required_entrypoint_reachability;
 pub mod required_local_docs;
 pub mod rust_max_lines_per_file;
 pub mod rust_no_inline_allows;
@@ -33,8 +60,12 @@ pub mod shellcheck_runner;
 pub mod strict_package_layout;
 pub mod structured_config_policy;
 pub mod test_email_domain_policy;
+pub mod test_no_dependency_pins;
 pub mod test_no_unmocked_dynamic_imports;
 pub mod tsconfig_alias_folder_mapping;
+pub mod tsconfig_file_coverage;
+pub mod tsconfig_gate_coverage;
+pub mod version_pin_consistency;
 pub mod vitest_ci_path_coverage;
 mod vitest_project_catalog;
 pub mod vitest_project_mapping;
@@ -44,22 +75,27 @@ pub mod workspace_package_cycles;
 pub mod filesystem_dispatch;
 pub(crate) mod path_filter;
 mod run;
+mod source_access;
 mod suppression;
 
 use serde::Serialize;
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
 
 pub use filesystem_dispatch::{
     run_filesystem_rules, run_filesystem_rules_with_config,
     run_filesystem_rules_with_config_and_snapshot,
     run_filesystem_rules_with_config_snapshot_and_vitest_catalog,
-    run_filesystem_rules_with_config_snapshot_catalog_and_sources, run_filesystem_rules_with_files,
+    run_filesystem_rules_with_config_snapshot_catalog_and_sources,
+    run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts,
+    run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression,
+    run_filesystem_rules_with_files, run_filesystem_rules_with_visible_and_snapshot,
 };
 pub use ids::*;
-pub(crate) use run::canonical_graph_plan;
 #[doc(hidden)]
-pub use run::run_check_with_config_facts_playwright_and_graph;
+pub use run::{
+    canonical_graph_plan, canonical_graph_requires_full_file_universe,
+    run_check_with_config_facts_playwright_and_graph,
+    run_check_with_config_facts_playwright_and_graph_with_suppression,
+};
 pub use run::{
     run_check, run_check_with_config_and_facts_and_playwright, run_check_with_facts,
     run_check_with_facts_and_playwright, PreparedRulesCheck,
@@ -68,25 +104,16 @@ pub use run::{
 pub use vitest_project_catalog::{prepare_vitest_project_catalog, PreparedVitestProjectCatalog};
 
 pub(crate) use file_matching::matching_files;
-pub(crate) use suppression::{
-    suppress_rule_findings, suppress_rule_findings_with_source,
-    suppress_rule_findings_with_sources, suppress_rule_findings_with_sources_except,
+pub(crate) use source_access::{read_source, source_store_for_files};
+#[doc(hidden)]
+pub use suppression::{
+    suppress_domain_findings_with_source_files, suppress_domain_findings_with_source_locations,
+    suppress_domain_findings_with_sources, SuppressedFinding, SuppressionTarget,
 };
-
-pub(crate) fn source_store_for_files(
-    files: &[PathBuf],
-) -> std::sync::Arc<crate::codebase::ts_source::SourceStore> {
-    std::sync::Arc::new(crate::codebase::ts_source::SourceStore::new(
-        std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(files)),
-    ))
-}
-
-pub(crate) fn read_source(
-    sources: &crate::codebase::ts_source::SourceStore,
-    path: &Path,
-) -> Option<std::sync::Arc<str>> {
-    sources.read_path(path).ok()
-}
+pub(crate) use suppression::{
+    suppress_rule_findings_with_source, suppress_rule_findings_with_sources,
+    suppress_rule_findings_with_sources_except,
+};
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -105,95 +132,16 @@ pub(crate) fn rule_enabled(config: &crate::config::v2::NoMistakesConfig, rule_id
     config.rule_configured(rule_id)
 }
 
-pub(crate) fn target_roots(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    rule: &crate::config::v2::schema::RuleDef,
-) -> Vec<PathBuf> {
-    let mut inferred_roots = crate::codebase::config::InferredRoots::default();
-    target_roots_with_inferred(root, config, rule, &mut inferred_roots)
-}
+mod sort_findings;
+mod target_roots;
+pub(crate) use sort_findings::sort_findings;
+pub(crate) use target_roots::{
+    file_allowed_by_roots_and_skip, skip_dir_set, target_project_root, target_roots,
+    target_roots_with_inferred,
+};
 
-pub(crate) fn target_roots_with_inferred(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    rule: &crate::config::v2::schema::RuleDef,
-    inferred_roots: &mut crate::codebase::config::InferredRoots,
-) -> Vec<PathBuf> {
-    let mut roots = Vec::new();
-    if rule.applies_to_repository() {
-        roots.push(root.to_path_buf());
-    }
-    for project_name in &rule.projects {
-        let Some(project) = config.projects.get(project_name) else {
-            continue;
-        };
-        if let Some(project_root) = target_project_root(root, project, inferred_roots) {
-            roots.push(project_root);
-        }
-    }
-    roots.sort();
-    roots.dedup();
-    roots
-}
-
-pub(crate) fn file_allowed_by_roots_and_skip(
-    root: &Path,
-    skip: &HashSet<&str>,
-    path: &Path,
-    roots: &[PathBuf],
-) -> bool {
-    let mut matching_roots = roots.iter().filter(|rule_root| path.starts_with(rule_root));
-    let Some(first_root) = matching_roots.next() else {
-        return false;
-    };
-
-    if !crate::codebase::ts_source::is_under_skipped_dir(root, path, skip) {
-        return true;
-    }
-
-    if !crate::codebase::ts_source::is_under_skipped_dir(first_root, path, skip) {
-        return true;
-    }
-
-    matching_roots
-        .any(|rule_root| !crate::codebase::ts_source::is_under_skipped_dir(rule_root, path, skip))
-}
-
-pub(crate) fn skip_dir_set(config: &crate::config::v2::NoMistakesConfig) -> HashSet<&str> {
-    config
-        .filesystem
-        .skip_directories
-        .iter()
-        .map(String::as_str)
-        .collect()
-}
-
-fn target_project_root(
-    root: &Path,
-    project: &crate::config::v2::schema::Project,
-    inferred_roots: &mut crate::codebase::config::InferredRoots,
-) -> Option<PathBuf> {
-    if let Some(project_root) = project.root.as_deref() {
-        return Some(root.join(project_root));
-    }
-    if project.type_ == Some(crate::config::v2::schema::ProjectType::Nextjs) {
-        return inferred_roots.nextjs_root(root);
-    }
-    if project.type_ == Some(crate::config::v2::schema::ProjectType::Remix) {
-        return inferred_roots.remix_root(root);
-    }
-    if project.type_ == Some(crate::config::v2::schema::ProjectType::Vitejs) {
-        return inferred_roots.vitejs_root(root);
-    }
-    Some(root.to_path_buf())
-}
-
-pub(crate) fn sort_findings(findings: &mut Vec<RuleFinding>) {
-    findings.sort();
-    findings.dedup();
-}
-
+#[cfg(test)]
+mod suppression_absolute_paths_tests;
 #[cfg(test)]
 mod suppression_tests;
 #[cfg(test)]

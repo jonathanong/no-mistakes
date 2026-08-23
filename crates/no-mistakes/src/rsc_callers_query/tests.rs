@@ -1,5 +1,6 @@
-use super::test_support::*;
+use super::test_support::detect_environment;
 use super::*;
+use std::path::PathBuf;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -36,7 +37,9 @@ fn rsc_callers_reuses_one_parse_for_imports_and_directives() {
 
     let run_source = include_str!("prepare.rs");
     assert_eq!(
-        run_source.matches("collect_ts_facts_with_context(").count(),
+        run_source
+            .matches("collect_ts_facts_with_context_sources_and_session(")
+            .count(),
         1
     );
     let run_body = run_source
@@ -228,12 +231,6 @@ fn detect_environment_variants() {
         detect_environment(Path::new("/no/such/component.tsx")),
         Environment::Unknown
     );
-}
-
-#[test]
-fn resolve_tsconfig_falls_back_to_default() {
-    let cfg = resolve_tsconfig(Path::new("/nonexistent-root"), None).unwrap();
-    assert!(cfg.paths.is_empty());
 }
 
 #[test]

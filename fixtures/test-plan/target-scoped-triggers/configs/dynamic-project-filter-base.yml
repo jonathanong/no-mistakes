@@ -1,0 +1,16 @@
+projects:
+  dynamic-resources:
+    root: resources-a
+    include: [tests/**/*.test.ts]
+    exclude: [tests/**/*.mock.test.ts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    projects: [dynamic-resources]
+tests:
+  vitest: { configs: vitest.config.mts }
+  playwright: { configs: playwright.config.mts }
+testPlan:
+  vitest:
+    environments: { pre-push: { globalConfigFallback: true } }
+  playwright:
+    environments: { pre-push: { globalConfigFallback: true } }

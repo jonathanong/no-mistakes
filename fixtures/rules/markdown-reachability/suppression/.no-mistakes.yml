@@ -1,0 +1,4 @@
+rules:
+  - rule: markdown-reachability
+    scope: repository
+    include: ["**/*.md"]

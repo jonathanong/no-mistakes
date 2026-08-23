@@ -35,7 +35,7 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
         "**/playwright/**/*.spec.js",
         "**/playwright/**/*.spec.jsx",
     ];
-    const CARGO: &[&str] = &["**/tests/**/*.rs", "src/**/*_test.rs"];
+    const CARGO: &[&str] = &["**/tests/**/*.rs", "**/src/**/tests.rs", "src/**/*_test.rs"];
     const DOTNET: &[&str] = &["**/Tests/**/*.cs", "**/*.Tests/**/*.cs", "**/*Tests/**/*.cs"];
     const SWIFT: &[&str] = &["**/Tests/**/*.swift"];
 
@@ -46,6 +46,19 @@ pub(crate) fn test_globs(framework: &str) -> Vec<String> {
         "cargo" => globs_to_strings(CARGO),
         "dotnet" => globs_to_strings(DOTNET),
         "swift" => globs_to_strings(SWIFT),
+        "python" => globs_to_strings(&[
+            "**/test_*.py",
+            "**/*_test.py",
+            "**/tests.py",
+            "**/tests/**/*.py",
+        ]),
+        "go" => globs_to_strings(&["**/*_test.go"]),
+        "rails" => globs_to_strings(&["**/spec/**/*_spec.rb", "**/test/**/*_test.rb"]),
+        "php" => globs_to_strings(&["**/*Test.php", "**/tests/**/*.php"]),
+        "java" => globs_to_strings(&["**/*Test.java", "**/*Tests.java", "**/*IT.java"]),
+        "kotlin" => globs_to_strings(&["**/*Test.kt", "**/*Tests.kt", "**/*IT.kt"]),
+        "elixir" => globs_to_strings(&["**/*_test.exs"]),
+        "dart" => globs_to_strings(&["**/*_test.dart"]),
         _ => vec![],
     }
 }

@@ -7,7 +7,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
     let barrel = p("/repo/src/barrel.mts");
     let mid = p("/repo/src/mid.mts");
     let source = p("/repo/src/source.mts");
-    let mut visible = HashSet::new();
+    let mut visible = crate::fx::fx_set();
     visible.insert(current.clone());
     visible.insert(barrel.clone());
     visible.insert(mid.clone());
@@ -24,11 +24,14 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
 
     assert!(!target_export_is_type(&source, "missing", &facts));
     assert_eq!(
-        namespace_file_node(&ImportedSymbolTarget::Node {
-            node: NodeId::Module("pkg".to_string()),
-            kind: EdgeKind::Import,
-        }),
-        (NodeId::Module("pkg".to_string()), EdgeKind::Import)
+        namespace_file_node(
+            &ImportedSymbolTarget::Node {
+                node: NodeId::module("pkg"),
+                kind: EdgeKind::Import,
+            },
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
+        (NodeId::module("pkg"), EdgeKind::Import)
     );
 
     let non_reexport = Export {
@@ -41,10 +44,10 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
     facts.insert(
         current.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![non_reexport.clone()],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
@@ -54,6 +57,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         .symbols
         .as_ref()
         .unwrap();
+    let graph_files = GraphFiles::from_files(visible.iter().cloned().collect());
     let inputs = ExportEdgeInputs {
         path: &current,
         symbols: current_symbols,
@@ -61,6 +65,8 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         resolver: &resolver,
         workspace: &workspace,
         visible_files: &visible,
+        graph_files: &graph_files,
+        interner: &crate::codebase::analysis_session::PathInterner::new(),
     };
     let mut candidates = Vec::new();
     let mut visited = HashSet::new();
@@ -89,6 +95,8 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         resolver: &resolver,
         workspace: &workspace,
         visible_files: &visible,
+        graph_files: &graph_files,
+        interner: &crate::codebase::analysis_session::PathInterner::new(),
     };
     let star_self = Export {
         name: "*".to_string(),
@@ -101,13 +109,19 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         is_type_only: false,
     };
     let mut edges = Vec::new();
-    collect_direct_reexport_edge(&direct_inputs, &star_self, "*", &mut edges);
+    collect_direct_reexport_edge(
+        &direct_inputs,
+        &star_self,
+        "*",
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert!(edges.is_empty());
 
     facts.insert(
         barrel.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![Export {
                     name: "api".to_string(),
                     local: None,
@@ -119,14 +133,14 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                     is_type_only: false,
                 }],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
     facts.insert(
         mid.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![Export {
                     name: "api".to_string(),
                     local: None,
@@ -138,7 +152,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                     is_type_only: false,
                 }],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
@@ -153,24 +167,21 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                 resolver: &resolver,
                 workspace: &workspace,
                 visible_files: &visible,
+                graph_files: &graph_files,
+                interner: &crate::codebase::analysis_session::PathInterner::new(),
             },
         ),
-        Some((
-            NodeId::Symbol {
-                file: source.clone(),
-                symbol: "alpha".to_string(),
-            },
-            EdgeKind::Import,
-        ))
+        Some((NodeId::symbol(source.clone(), "alpha"), EdgeKind::Import,))
     );
 
     let cycle = p("/repo/src/cycle.mts");
     visible.insert(cycle.clone());
+    let cycle_graph_files = GraphFiles::from_files(visible.iter().cloned().collect());
     let resolver = ImportResolver::new(&tsconfig).with_visible(&visible);
     facts.insert(
         cycle.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![
                     Export {
                         name: "other".to_string(),
@@ -197,7 +208,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                     line: 3,
                     is_type_only: false,
                 }],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
@@ -212,6 +223,8 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
                 resolver: &resolver,
                 workspace: &workspace,
                 visible_files: &visible,
+                graph_files: &cycle_graph_files,
+                interner: &crate::codebase::analysis_session::PathInterner::new(),
             },
         ),
         None
@@ -230,7 +243,23 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         queue_project_factory_names: vec![],
         dotnet_projects: vec![],
         swift_packages: vec![],
+        python_packages: vec![],
+        go_modules: vec![],
+        rust_packages: vec![],
+        rails_apps: vec![],
+        php_apps: vec![],
+        php_framework: None,
+        java_packages: vec![],
+        kotlin_packages: vec![],
+        elixir_apps: vec![],
+        dart_packages: vec![],
+        queue_enqueues: vec![],
+        queue_workers: vec![],
+        queue_cluster: None,
+        queue_glob_clusters: HashMap::new(),
+        trpc_routers: Vec::new(),
         terraform: Default::default(),
+        ci: crate::config::v2::schema::CiConfig::default(),
     };
     assert!(collect_symbol_http_route_defs(
         Path::new("/repo"),

@@ -2,16 +2,38 @@ fn normalize_nodes(nodes: &[NodeId]) -> Vec<NodeId> {
     nodes
         .iter()
         .map(|node| match node {
-            NodeId::File(path) => NodeId::File(crate::codebase::ts_resolver::normalize_path(path)),
-            NodeId::Symbol { file, symbol } => NodeId::Symbol {
-                file: crate::codebase::ts_resolver::normalize_path(file),
-                symbol: symbol.clone(),
-            },
+            NodeId::File(path) => {
+                NodeId::file(crate::codebase::ts_resolver::normalize_path(path.as_ref()))
+            }
+            NodeId::Symbol { file, symbol } => NodeId::symbol(
+                crate::codebase::ts_resolver::normalize_path(file),
+                symbol.clone(),
+            ),
             NodeId::Module(specifier) => NodeId::Module(specifier.clone()),
-            NodeId::QueueJob { queue_file, job } => NodeId::QueueJob {
-                queue_file: crate::codebase::ts_resolver::normalize_path(queue_file),
-                job: job.clone(),
-            },
+            NodeId::QueueJob { queue_file, job } => NodeId::queue_job(
+                crate::codebase::ts_resolver::normalize_path(queue_file),
+                job.clone(),
+            ),
+            NodeId::WorkflowJob { workflow_file, job } => NodeId::workflow_job(
+                crate::codebase::ts_resolver::normalize_path(workflow_file),
+                job.clone(),
+            ),
+            NodeId::WorkflowStep {
+                workflow_file,
+                job,
+                step,
+            } => NodeId::workflow_step(
+                crate::codebase::ts_resolver::normalize_path(workflow_file),
+                job.clone(),
+                *step,
+            ),
+            NodeId::TrpcProcedure {
+                router_file,
+                procedure,
+            } => NodeId::trpc_procedure(
+                crate::codebase::ts_resolver::normalize_path(router_file),
+                procedure.clone(),
+            ),
         })
         .collect()
 }
@@ -27,34 +49,32 @@ fn merge_edges(forward: &mut EdgeMap, reverse: &mut EdgeMap, edges: Vec<Edge>) {
     }
 }
 
-fn edge_index_from_maps(mut forward: EdgeMap, mut reverse: EdgeMap) -> EdgeIndex<NodeId, EdgeKind> {
+/// Seed isolated endpoints in the forward map, then merge. Language collectors
+/// historically keep unused targets as graph members even without outgoing edges.
+fn merge_seeded_edges(forward: &mut EdgeMap, reverse: &mut EdgeMap, edges: Vec<Edge>) {
+    for (from, to, _) in &edges {
+        forward.entry(from.clone()).or_default();
+        forward.entry(to.clone()).or_default();
+    }
+    merge_edges(forward, reverse, edges);
+}
+
+pub(crate) fn edge_index_from_maps(
+    mut forward: EdgeMap,
+    mut reverse: EdgeMap,
+) -> EdgeIndex<NodeId, EdgeKind> {
     // Preserve the historical graph-membership boundary: only nodes present in
-    // the forward map count as graph nodes.
+    // the forward map count as graph nodes. Adjacency is normalized before a
+    // source-ordered flatten so canonical edge ordinals retain the exact order
+    // of the former global edge comparator without a repository-wide sort.
     sort_adjacency_lists(&mut forward, &mut reverse);
-    EdgeIndex::from_adjacency_maps_by(forward, reverse, |left, right| {
-        (
-            node_sort_key(&left.from),
-            &left.from,
-            node_sort_key(&left.to),
-            &left.to,
-            left.kind as u8,
-        )
-            .cmp(&(
-                node_sort_key(&right.from),
-                &right.from,
-                node_sort_key(&right.to),
-                &right.to,
-                right.kind as u8,
-            ))
+    EdgeIndex::from_normalized_adjacency_maps_by_source(forward, reverse, |left, right| {
+        // Source count is much smaller than adjacency length. Compare borrowed
+        // parts here so the flatten does not re-format a key on every compare.
+        cmp_node_sort_keys(left, right).then_with(|| left.cmp(right))
     })
 }
 
 fn sort_edge_index_adjacency(index: &mut EdgeIndex<NodeId, EdgeKind>) {
-    index.sort_adjacency_by(|(left_node, left_kind), (right_node, right_kind)| {
-        (node_sort_key(left_node), left_node, *left_kind as u8).cmp(&(
-            node_sort_key(right_node),
-            right_node,
-            *right_kind as u8,
-        ))
-    });
+    index.sort_adjacency_by_cached_key(|(node, kind)| adjacency_sort_key(node, *kind));
 }

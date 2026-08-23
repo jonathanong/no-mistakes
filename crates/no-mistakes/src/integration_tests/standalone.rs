@@ -20,7 +20,8 @@ pub(super) fn check(
         &config,
         &runner_configs,
         &parsed_runner_configs,
-    )?;
+    );
+    let suites = suites?;
     if suites.is_empty() {
         return Ok(Vec::new());
     }
@@ -34,7 +35,10 @@ pub(super) fn check(
     let analyses = analysis::analyze_files_with_seed(&files, runner_analyses)?;
     let function_index = resolve::build_function_index(&analyses);
     let export_index = resolve::build_export_index(&analyses);
-    let visible_files = analyses.keys().cloned().collect();
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(analyses.keys().cloned());
+    let visible_files: std::collections::HashSet<std::path::PathBuf> =
+        analyses.keys().cloned().collect();
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     let import_resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
@@ -46,6 +50,7 @@ pub(super) fn check(
         analyses: &analyses,
         export_index: &export_index,
         resolver: &import_resolver,
+        remapper: &remapper,
     };
 
     let mut findings = Vec::new();

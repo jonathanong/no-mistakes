@@ -1,0 +1,10 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      # A checkout can succeed even when its action failure is tolerated.
+      - uses: actions/checkout@v4
+        continue-on-error: true
+      - uses: ./.github/actions/valid
+      - run: pnpm exec tsc --noEmit --project checkout-tolerated/tsconfig.json

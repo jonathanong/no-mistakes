@@ -1,4 +1,6 @@
-use crate::napi_api::{ci_env_json_impl, ci_impact_json_impl, impacted_checks_json_impl};
+use crate::napi_api::{
+    ci_env_json_impl, ci_impact_json_impl, ci_topology_json_impl, impacted_checks_json_impl,
+};
 use serde_json::json;
 use std::path::PathBuf;
 
@@ -7,6 +9,25 @@ fn ci_graph(name: &str) -> String {
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/ci-graph")
             .join(name),
+    )
+    .display()
+    .to_string()
+}
+
+fn workflow_topology_fixture(name: &str) -> String {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/workflow-topology")
+            .join(name),
+    )
+    .display()
+    .to_string()
+}
+
+fn workflow_metadata_fixture() -> String {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/workflow-topology/job-metadata"),
     )
     .display()
     .to_string()
@@ -32,7 +53,7 @@ fn impacted_checks_multi_framework_root() -> String {
 #[test]
 fn ci_impact_json_returns_workflows() {
     let options = json!({ "root": ci_graph("triggers"), "files": ["src/app.ts"] }).to_string();
-    let output = ci_impact_json_impl(options).unwrap();
+    let output = ci_impact_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert!(!value["workflows"].as_array().unwrap().is_empty());
 }
@@ -40,7 +61,7 @@ fn ci_impact_json_returns_workflows() {
 #[test]
 fn ci_env_json_returns_locations() {
     let options = json!({ "root": ci_graph("env"), "var": "CIGRAPH_WORKFLOW_VAR" }).to_string();
-    let output = ci_env_json_impl(options).unwrap();
+    let output = ci_env_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert_eq!(value["variable"], "CIGRAPH_WORKFLOW_VAR");
     assert!(!value["files"].as_array().unwrap().is_empty());
@@ -49,20 +70,79 @@ fn ci_env_json_returns_locations() {
 #[test]
 fn ci_env_json_requires_var() {
     let options = json!({ "root": ci_graph("env") }).to_string();
-    assert!(ci_env_json_impl(options).is_err());
+    assert!(ci_env_json_impl(crate::napi_api::options::test_json_arg(options)).is_err());
 }
 
 #[test]
 fn impacted_checks_json_returns_checks() {
     let options =
         json!({ "root": impacted_checks_root(), "changedFiles": ["src/foo.ts"] }).to_string();
-    let output = impacted_checks_json_impl(options).unwrap();
+    let output =
+        impacted_checks_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
     assert!(value["checks"]
         .as_array()
         .unwrap()
         .iter()
         .any(|check| check["name"] == "vitest"));
+    assert!(value.get("empty_result").is_none());
+}
+
+#[test]
+fn impacted_checks_json_classifies_empty_results_without_stderr_side_effects() {
+    let no_files = json!({ "root": impacted_checks_root() }).to_string();
+    let no_files: serde_json::Value = serde_json::from_str(
+        &impacted_checks_json_impl(crate::napi_api::options::test_json_arg(no_files)).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(no_files["empty_result"]["code"], "no-changed-files");
+
+    let no_checks = json!({
+        "root": impacted_checks_root(),
+        "changedFiles": ["src/style.css"],
+    })
+    .to_string();
+    let no_checks: serde_json::Value = serde_json::from_str(
+        &impacted_checks_json_impl(crate::napi_api::options::test_json_arg(no_checks)).unwrap(),
+    )
+    .unwrap();
+    assert_eq!(no_checks["empty_result"]["code"], "no-impacted-checks");
+}
+
+#[test]
+fn impacted_checks_json_generic_only_skips_test_frameworks() {
+    let root = impacted_checks_multi_framework_root();
+    let config = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/impacted-checks/generic-only.no-mistakes.yml");
+    let options = json!({
+        "root": root,
+        "config": config,
+        "changedFiles": ["src/value.ts"],
+        "genericOnly": true,
+        "timings": true,
+    })
+    .to_string();
+    let value: serde_json::Value = serde_json::from_str(
+        &impacted_checks_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap(),
+    )
+    .unwrap();
+
+    assert!(value["checks"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|check| check["kind"] == "generic"));
+    assert_eq!(value["warnings"], json!([]));
+    assert_eq!(value["fallback_triggered"], false);
+    assert_eq!(
+        value["timings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|timing| timing["phase"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["prepare", "generic-checks", "total"],
+    );
 }
 
 #[test]
@@ -85,11 +165,15 @@ fn impacted_checks_json_timings_are_opt_in_and_ordered() {
     })
     .to_string();
 
-    let mut plain: serde_json::Value =
-        serde_json::from_str(&impacted_checks_json_impl(plain_options).unwrap()).unwrap();
+    let mut plain: serde_json::Value = serde_json::from_str(
+        &impacted_checks_json_impl(crate::napi_api::options::test_json_arg(plain_options)).unwrap(),
+    )
+    .unwrap();
     assert!(plain.get("timings").is_none());
-    let mut timed: serde_json::Value =
-        serde_json::from_str(&impacted_checks_json_impl(timed_options).unwrap()).unwrap();
+    let mut timed: serde_json::Value = serde_json::from_str(
+        &impacted_checks_json_impl(crate::napi_api::options::test_json_arg(timed_options)).unwrap(),
+    )
+    .unwrap();
     let timings = timed
         .get("timings")
         .and_then(serde_json::Value::as_array)
@@ -139,15 +223,130 @@ fn impacted_checks_json_timings_are_opt_in_and_ordered() {
 // point. The crate dir has no workflows/config, so results are empty but valid.
 #[test]
 fn ci_impact_json_defaults_root() {
-    assert!(ci_impact_json_impl(json!({ "files": [] }).to_string()).is_ok());
+    assert!(ci_impact_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "files": [] }).to_string()
+    ))
+    .is_ok());
 }
 
 #[test]
 fn ci_env_json_defaults_root() {
-    assert!(ci_env_json_impl(json!({ "var": "X" }).to_string()).is_ok());
+    assert!(ci_env_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "var": "X" }).to_string()
+    ))
+    .is_ok());
 }
 
 #[test]
 fn impacted_checks_json_defaults_root() {
-    assert!(impacted_checks_json_impl(json!({}).to_string()).is_ok());
+    assert!(
+        impacted_checks_json_impl(crate::napi_api::options::test_json_arg(
+            json!({}).to_string()
+        ))
+        .is_ok()
+    );
+}
+
+#[test]
+fn build_impact_args_defaults_root_when_omitted() {
+    let options = crate::napi_api::options::parse_options::<
+        crate::napi_api::options::TestsImpactOptions,
+    >(&json!({ "entrypoints": ["x.ts"] }).to_string())
+    .unwrap();
+    let args = crate::napi_api::cli_parity::build_impact_args(options).unwrap();
+    assert_eq!(args.root, PathBuf::from("."));
+}
+
+#[test]
+fn ci_topology_json_returns_the_parsed_graph() {
+    let options = json!({ "root": workflow_topology_fixture("needs-basic") }).to_string();
+    let output = ci_topology_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(value["schemaVersion"], 1);
+    assert_eq!(value["workflows"].as_array().unwrap().len(), 1);
+    assert_eq!(value["jobs"].as_array().unwrap().len(), 3);
+    assert!(value["diagnostics"].as_array().unwrap().is_empty());
+}
+
+#[test]
+fn ci_topology_json_exposes_enriched_job_and_step_metadata() {
+    let output = ci_topology_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": workflow_metadata_fixture() }).to_string(),
+    ))
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let job = value["jobs"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|job| job["key"] == "default")
+        .unwrap();
+    assert_eq!(job["environment"], "production");
+    assert_eq!(job["timeoutMinutes"], 45);
+    assert_eq!(job["runsOn"], "ubuntu-latest");
+    assert_eq!(job["permissions"]["assumed_default"], true);
+    assert_eq!(job["secretReferences"][0], "BARE_JOB_TOKEN");
+    assert_eq!(job["steps"][0]["with"]["enabled"], true);
+    assert_eq!(job["steps"][0]["secretReferences"][0], "STEP_ENV_TOKEN");
+}
+
+#[test]
+fn ci_topology_json_includes_same_run_artifact_dataflow_edges() {
+    let options = json!({ "root": workflow_topology_fixture("artifact-basic") }).to_string();
+    let output = ci_topology_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let artifact_edges: Vec<&serde_json::Value> = value["edges"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|edge| edge["kind"] == "artifact")
+        .collect();
+    assert!(artifact_edges
+        .iter()
+        .any(|edge| edge["match"] == "exact" && edge["name"] == "build-linux"));
+}
+
+#[test]
+fn ci_topology_json_reports_diagnostics_without_failing() {
+    // Unlike the CLI (which exits non-zero and prints nothing on error
+    // diagnostics), the N-API entry point always returns the full graph —
+    // callers decide what to do with a non-empty `diagnostics` array.
+    let options = json!({ "root": workflow_topology_fixture("job-cycle") }).to_string();
+    let output = ci_topology_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let diagnostics = value["diagnostics"].as_array().unwrap();
+    assert!(diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic["code"] == "job-dependency-cycle"));
+}
+
+#[test]
+fn ci_topology_json_applies_workflow_filter() {
+    let options = json!({
+        "root": workflow_topology_fixture("workflow-filters"),
+        "workflows": ["root.yml"],
+    })
+    .to_string();
+    let output = ci_topology_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let paths: Vec<&str> = value["workflows"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|w| w["path"].as_str().unwrap())
+        .collect();
+    assert_eq!(
+        paths,
+        vec![".github/workflows/callee.yml", ".github/workflows/root.yml"]
+    );
+}
+
+#[test]
+fn ci_topology_json_defaults_root() {
+    assert!(
+        ci_topology_json_impl(crate::napi_api::options::test_json_arg(
+            json!({}).to_string()
+        ))
+        .is_ok()
+    );
 }

@@ -24,6 +24,31 @@ impl crate::codebase::dependencies::graph::TsFactLookup for MissingPreparedFetch
     }
 }
 
+struct ErrPreparedFetchFacts {
+    source_files: Vec<PathBuf>,
+    error: String,
+}
+
+impl crate::codebase::dependencies::graph::TsFactLookup for ErrPreparedFetchFacts {
+    fn get_ts_facts(
+        &self,
+        _path: &Path,
+    ) -> Option<&crate::codebase::ts_source::facts::TsFileFacts> {
+        None
+    }
+
+    fn playwright_source_files(&self) -> Option<&[PathBuf]> {
+        Some(&self.source_files)
+    }
+
+    fn get_playwright_fetch_facts(
+        &self,
+        _path: &Path,
+    ) -> Option<Result<crate::fetch::file_facts::ParsedFileFacts, String>> {
+        Some(Err(self.error.clone()))
+    }
+}
+
 fn server_fetch(path: &str) -> FetchOccurrence {
     FetchOccurrence {
         method: "GET".to_string(),
@@ -91,6 +116,38 @@ fn collect_fetches_with_facts_rejects_missing_prepared_source_facts() {
     assert_eq!(
         error.to_string(),
         format!("missing prepared Playwright facts for {}", page.display())
+    );
+}
+
+#[test]
+fn collect_fetches_with_facts_surfaces_prepared_fetch_errors() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/parser-count/playwright"),
+    );
+    let frontend_root = root.join("app");
+    let page = frontend_root.join("page.tsx");
+    let routes = vec![Route {
+        file: page.clone(),
+        pattern: "/".to_string(),
+    }];
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
+    let facts = ErrPreparedFetchFacts {
+        source_files: vec![page],
+        error: "child source unreadable".to_string(),
+    };
+
+    let error =
+        crate::playwright::analysis::fetch::collect_fetches_for_routes_from_snapshot_with_facts(
+            &routes,
+            &frontend_root,
+            &root,
+            &snapshot,
+            &facts,
+        )
+        .expect_err("prepared fetch fact errors must surface");
+    assert!(
+        error.to_string().contains("child source unreadable"),
+        "{error}"
     );
 }
 

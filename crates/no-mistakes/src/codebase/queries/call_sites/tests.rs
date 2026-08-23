@@ -47,6 +47,19 @@ fn collects_sites_with_callers_and_spread() {
 }
 
 #[test]
+fn collects_optional_identifier_calls() {
+    let fixture = crate::codebase::queries::test_support::materialize_root_fixture(
+        "optional-identifier-call",
+    );
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let report = compute(&args(root, "target.ts", "used")).unwrap();
+
+    assert_eq!(report.call_sites.len(), 1);
+    assert_eq!(report.call_sites[0].file, "consumer.ts");
+    assert_eq!(report.call_sites[0].line, 3);
+}
+
+#[test]
 fn covers_every_argument_shape() {
     let json = run_json(args(fixture_root("queries-shapes"), "target.ts", "f")).unwrap();
     let value: serde_json::Value = serde_json::from_str(&json).unwrap();
@@ -82,8 +95,30 @@ fn export_without_importers_has_no_call_sites() {
 #[test]
 fn unreadable_file_yields_no_sites() {
     let names: HashSet<String> = ["used".to_string()].into_iter().collect();
-    let sites = sites_for_file(Path::new("/no/such/file.ts"), &names, Path::new("/"));
+    let sites = sites_for_file(Path::new("/no/such/file.ts"), &names, Path::new("/"), None);
     assert!(sites.is_empty());
+}
+
+#[test]
+fn reverse_preparation_parses_each_project_file_once() {
+    let source = fixture_root("queries");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    crate::ast::begin_parse_count(&root);
+
+    compute(&args(root.clone(), "util.ts", "used")).unwrap();
+
+    let counts = crate::ast::finish_parse_count(&root);
+    let files = crate::codebase::dependencies::graph::GraphFiles::from_files(
+        crate::codebase::ts_source::discover_files(&root, &[]),
+    )
+    .indexable()
+    .to_vec();
+    assert_eq!(counts.len(), files.len(), "{counts:#?}");
+    assert!(
+        files.iter().all(|file| counts.get(file) == Some(&1)),
+        "each source file must be parsed once: {counts:#?}"
+    );
 }
 
 #[test]
@@ -148,6 +183,20 @@ fn type_only_export_is_rejected() {
 }
 
 #[test]
+fn surfaces_explicit_tsconfig_errors_from_reverse_preparation() {
+    let root = fixture_root("symbols-output");
+    let mut query = args(root.clone(), "src/utils.mts", "unused");
+    query.tsconfig = Some(root.join("tsconfig-invalid.json"));
+
+    let error = match compute(&query) {
+        Err(error) => error,
+        Ok(_) => panic!("explicit malformed tsconfig must fail preparation"),
+    };
+
+    assert!(format!("{error:#}").contains("tsconfig-invalid.json"));
+}
+
+#[test]
 fn finds_default_export_callers() {
     // `def` is the declaration name of the default export; external callers
     // import it under `default`.
@@ -166,6 +215,21 @@ fn accepts_default_as_export_name() {
         .call_sites
         .iter()
         .any(|s| s.file == "default-consumer.ts"));
+}
+
+#[test]
+fn finds_callers_for_recovered_default_export() {
+    let fixture = crate::codebase::queries::test_support::materialize_root_fixture(
+        "recovered-target-symbols",
+    );
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    let report = compute(&args(root, "target.ts", "default")).unwrap();
+
+    assert!(report
+        .call_sites
+        .iter()
+        .any(|site| site.file == "consumer.ts"));
 }
 
 #[test]

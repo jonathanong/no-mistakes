@@ -2,15 +2,16 @@
 
 `DepGraph` is the canonical graph for `no-mistakes dependencies`,
 `dependents`, `related`, and test-impact traversal. Graph nodes are files,
-external modules, or virtual queue jobs. Every edge has an internal `EdgeKind`,
+external modules, virtual queue jobs, or virtual GitHub Actions workflow jobs
+and steps. Every edge has an internal `EdgeKind`,
 serialized in JSON/YAML/text output through the `via` field.
 
 The canonical in-memory edge index is also used by `queues edges|related` and
 `server edges|related`. Those commands retain their existing public edge DTOs:
 queue edges are file -> virtual job -> processor/worker relationships, while
-server edges are route-file -> normalized-route relationships. Server-route
-nodes are intentionally not added to unfiltered `dependencies --relationship
-all` output.
+server edges are route-file -> normalized-route relationships plus static
+client-call -> normalized-route relationships. Server-route nodes are
+intentionally not added to unfiltered `dependencies --relationship all` output.
 
 ## Supported Edges
 
@@ -19,22 +20,36 @@ all` output.
 | `import` | `Import` | `import`, `import-static` | TS/JS file -> statically imported TS/JS file | [`import-forms/static.mts`](../test-cases/codebase-analysis/import-forms/fixture/static.mts), asserted by `graph_edge_kind_acceptance` |
 | `type-import` | `TypeImport` | `import`, `import-type` | TS/JS file -> type-only dependency | [`import-forms/type-only.mts`](../test-cases/codebase-analysis/import-forms/fixture/type-only.mts), [`inline-type.mts`](../test-cases/codebase-analysis/import-forms/fixture/inline-type.mts), [`import-type.mts`](../test-cases/codebase-analysis/import-forms/fixture/import-type.mts) |
 | `dynamic-import` | `DynamicImport` | `import`, `import-dynamic` | TS/JS file -> string-literal `import("...")` target | [`import-forms/dynamic.mts`](../test-cases/codebase-analysis/import-forms/fixture/dynamic.mts) |
-| `require` | `Require` | `import`, `import-require` | JS/TS file -> string-literal `require("...")` or `require.resolve("...")` target | [`import-forms/require.js`](../test-cases/codebase-analysis/import-forms/fixture/require.js) |
+| `require` | `Require` | `import`, `import-require` | JS/TS file -> string-literal `require("...")` target | [`import-forms/require.js`](../test-cases/codebase-analysis/import-forms/fixture/require.js) |
+| `require-resolve` | `RequireResolve` | `import`, `import-require` | JS/TS file -> string-literal `require.resolve("...")` lookup target | [`import-forms/require-resolve.js`](../test-cases/codebase-analysis/import-forms/fixture/require-resolve.js) |
 | `route-import` | `RouteImport` | `route-import` | TS/JS file -> runtime static import/re-export or literal dynamic-import target, without function-reachability pruning | [`nextjs-selectors/frontend-tsconfig/page.tsx`](../test-cases/nextjs-selectors/frontend-tsconfig/fixture/web/app/page.tsx), asserted by route-reachability tests |
 | `workspace` | `WorkspaceImport` | `workspace` | TS/JS file -> workspace package entry/export/import target | [`cross-boundary-monorepo`](../test-cases/codebase-analysis/cross-boundary-monorepo), [`graph-missing-edges`](../test-cases/codebase-analysis/graph-missing-edges) |
+| `workspace-type-import` | `WorkspaceTypeImport` | `workspace` | TS/JS file -> type-only workspace package entry/export/import target | [`subpath.tsx`](../test-cases/codebase-analysis/cross-boundary-monorepo/fixture/apps/web/pages/subpath.tsx) |
 | `package` | `PackageDependency` | `package` | `package.json` -> declared workspace package entry or external module node | [`graph-modules`](../test-cases/codebase-analysis/graph-modules) |
 | `asset` | `AssetImport` | `asset` | TS/JS file -> explicit relative non-code asset import | [`graph-missing-edges/packages/app/src/entry.mts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/app/src/entry.mts) |
+| `resource` | `Resource` | `resource` | TS/JS consumer -> tracked runtime filesystem resource | fixture-backed resource-impact tests |
 | `test` | `TestOf` | `test` | test file -> corresponding source file | [`codebase-intel/packages/api/src/index.test.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/index.test.mts) |
-| `route` | `RouteRef` | `route` | frontend route reference file -> backend route definition file | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx) |
-| `http` | `HttpCall` | `http` | static HTTP caller -> matching backend or Next route-handler file | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`graph-missing-edges/packages/web/src/client.ts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/src/client.ts) |
-| `queue-enqueue` | `QueueEnqueue` | `queue` | producer file -> virtual queue job node | [`codebase-intel/packages/api/src/send-email.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/send-email.mts) |
-| `queue-worker` | `QueueWorker` | `queue` | virtual queue job node -> worker/processor file | [`codebase-intel/packages/api/src/worker.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/worker.mts) |
+| `vitest-setup` | `VitestSetup` | `test` | Vitest test file -> its effective `setupFiles` or `globalSetup` module; edge detail identifies the field | `fixtures/test-plan/vitest-setup-dependencies` |
+| `route` | `RouteRef` | `route` | frontend route reference file -> backend route definition file; also Django `path(` / Flask / FastAPI literal decorator handlers inside configured Python packages; also Go `net/http` / Chi / Gin / Echo / Fiber literal registrations inside configured modules; also Rails `to:` / bare `resources :name` / `resources "name"` routes, Laravel `Route::` / `Route::resource` / Symfony attribute/YAML routes, Rust Axum / Actix / Rocket literal registrations inside configured packages, and ASP.NET `MapGet` / `[HttpGet]` literals inside configured .NET projects, and Spring `@RequestMapping` / `@GetMapping` / `@PostMapping` literals inside configured Java and Kotlin packages, and Phoenix `get`/`post`/`put`/`patch`/`delete` literals inside configured Elixir apps | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`python-celery-django`](../fixtures/lang-frontends/python-celery-django), [`python-flask-fastapi`](../fixtures/lang-frontends/python-flask-fastapi), [`go-http`](../fixtures/lang-frontends/go-http), [`rails-jobs`](../fixtures/lang-frontends/rails-jobs), [`php-laravel`](../fixtures/lang-frontends/php-laravel), [`php-symfony`](../fixtures/lang-frontends/php-symfony), [`rust-http`](../fixtures/lang-frontends/rust-http), [`dotnet-aspnet-routes`](../test-cases/codebase-analysis/dotnet-aspnet-routes), [`java-spring`](../fixtures/lang-frontends/java-spring), [`kotlin-spring`](../fixtures/lang-frontends/kotlin-spring), [`phoenix-routes`](../fixtures/lang-frontends/phoenix-routes) |
+| `server-route` | server `ServerRoute` DTO kind | `server edges`, `server related` | configured server route file -> normalized route node; also Remix `app/routes` files under `type: remix` | [`canonical-relationships`](../fixtures/server-routes/canonical-relationships), [`remix`](../test-cases/server-ast-routes/remix) |
+| `client-call` | server `ClientCall` DTO kind | `server edges`, `server related` | static direct or local/imported route-helper client reference -> configured normalized route node; client sources honor filters and configured test exclusion | [`canonical-relationships`](../fixtures/server-routes/canonical-relationships) |
+| `http` | `HttpCall` | `http` | static HTTP caller -> matching backend or Next route-handler file; also Dart `Uri.parse("/api/...")` / `http.get("/api/...")` literals inside configured packages | [`codebase-intel/packages/web/src/api-client.tsx`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/web/src/api-client.tsx), [`graph-missing-edges/packages/web/src/client.ts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/src/client.ts), [`dart-flutter-http`](../test-cases/codebase-analysis/dart-flutter-http) |
+| `queue-enqueue` | `QueueEnqueue` | `queue` | producer file -> virtual queue job node | [`codebase-intel/packages/api/src/send-email.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/send-email.mts), [`rails-sidekiq`](../fixtures/lang-frontends/rails-sidekiq) |
+| `queue-worker` | `QueueWorker` | `queue` | virtual queue job node -> worker/processor file | [`codebase-intel/packages/api/src/worker.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/worker.mts), [`rails-sidekiq`](../fixtures/lang-frontends/rails-sidekiq) |
+| `trpc-call` | `TrpcCall` | `trpc` | caller file -> virtual tRPC procedure node | [`trpc-basic`](../test-cases/codebase-analysis/trpc-basic) |
+| `trpc-procedure` | `TrpcProcedure` | `trpc` | virtual tRPC procedure node -> router file that declared it | [`trpc-basic`](../test-cases/codebase-analysis/trpc-basic) |
 | `route-test` | `RouteTest` | `test`, `route` | Playwright test file -> Next.js page file; navigated paths with unresolved interpolations match dynamic route segments | [`codebase-intel/tests/e2e/users.spec.ts`](../test-cases/codebase-analysis/codebase-intel/fixture/tests/e2e/users.spec.ts), [`playwright-interpolated-routes`](../test-cases/codebase-analysis/playwright-interpolated-routes) |
 | `selector` | `Selector` | `test` | Playwright test file -> app/component file matched by selector analysis | `data-testid`, `data-pw`, configured component props, configured imported test-ID wrappers, text/role/label/placeholder locators |
 | `layout` | `Layout` | `test`, `route` | Next.js page file -> inherited layout/template/error/loading/not-found file | [`playwright-impact-routing`](../test-cases/codebase-analysis/playwright-impact-routing) |
 | `react-render` | `ReactRender` | `react` | React component file -> rendered child component file | [`graph-missing-edges/packages/web/app/components/Parent.tsx`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/web/app/components/Parent.tsx) |
 | `md` | `MarkdownLink` | `md` | Markdown file -> linked visible file | [`codebase-intel/README.md`](../test-cases/codebase-analysis/codebase-intel/fixture/README.md) |
 | `ci` | `CiInvocation` | `ci` | GitHub Actions workflow -> Rust binary source invoked by supported Cargo commands | [`codebase-intel/.github/workflows/ci.yml`](../test-cases/codebase-analysis/codebase-intel/fixture/.github/workflows/ci.yml) |
+| `workflow-job` | `WorkflowJob` | `workflow`, `workflow-job` | workflow file -> virtual job node | workflow graph fixtures |
+| `workflow-step` | `WorkflowStep` | `workflow`, `workflow-step` | virtual job node -> virtual zero-based step node | workflow graph fixtures |
+| `workflow-needs` | `WorkflowNeeds` | `workflow`, `workflow-needs` | prerequisite virtual job node -> dependent virtual job node | workflow graph fixtures |
+| `workflow-uses` | `WorkflowUses` | `workflow`, `workflow-uses` | virtual job -> local reusable workflow file, or virtual step -> local action descriptor | workflow graph fixtures |
+| `workflow-run` | `WorkflowRun` | `workflow`, `workflow-run` | virtual step -> package manifest and statically resolved local command/script targets | workflow graph fixtures |
+| `workflow-artifact` | `WorkflowArtifact` | `workflow`, `workflow-artifact` | same-run upload virtual step -> download virtual step | workflow graph fixtures |
 | `process` | `ProcessSpawn` | `process` | spawner/config file -> launched entry file | [`codebase-intel/packages/api/src/spawn-runner.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/spawn-runner.mts) |
 | `dotnet-using` | `DotnetUsing` | `dotnet` | C# file -> local files in the imported namespace | [`dotnet-test-plan`](../test-cases/codebase-analysis/dotnet-test-plan) |
 | `dotnet-ref` | `DotnetReference` | `dotnet` | C# file -> file declaring a referenced C# type | [`dotnet-test-plan`](../test-cases/codebase-analysis/dotnet-test-plan) |
@@ -45,6 +60,34 @@ all` output.
 | `terraform-ref` | `TerraformReference` | `terraform` | Terraform file referencing `<type>.<name>` -> file declaring that resource/data source | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
 | `terraform-module` | `TerraformModuleRef` | `terraform` | Terraform file with a `module` block -> files in the module's local source directory | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
 | `terraform-output` | `TerraformOutputRef` | `terraform` | Terraform file referencing `module.<name>.<output>` -> file declaring that output | [`terraform-basic`](../test-cases/codebase-analysis/terraform-basic) |
+| `python-import` | `PythonImport` | `python` | Python file -> module file of a static import | [`python-celery-django`](../fixtures/lang-frontends/python-celery-django) |
+| `python-ref` | `PythonReference` | `python` | Python file -> file declaring a referenced name | [`python-celery-django`](../fixtures/lang-frontends/python-celery-django) |
+| `go-import` | `GoImport` | `go` | Go file -> local files in an imported configured package | [`go-asynq`](../fixtures/lang-frontends/go-asynq) |
+| `go-ref` | `GoReference` | `go` | Go file -> file declaring an exported name | [`go-asynq`](../fixtures/lang-frontends/go-asynq) |
+| `rust-use` | `RustUse` | `rust` | Rust file -> file reached through `use crate/super/self` | [`rust-mods`](../fixtures/lang-frontends/rust-mods) |
+| `rust-mod` | `RustMod` | `rust` | Rust file -> sibling `mod` file or `#[path]` target | [`rust-mods`](../fixtures/lang-frontends/rust-mods), [`rust-path-deps`](../fixtures/lang-frontends/rust-path-deps) |
+| `rust-package` | `RustPackage` | `rust` | Rust crate -> files in a configured package, path-dep package, or `tests/` integration target | [`rust-mods`](../fixtures/lang-frontends/rust-mods), [`rust-path-deps`](../fixtures/lang-frontends/rust-path-deps) |
+| `ruby-require` | `RubyRequire` | `ruby` | Ruby file -> required local file | [`rails-jobs`](../fixtures/lang-frontends/rails-jobs) |
+| `ruby-ref` | `RubyReference` | `ruby` | Ruby file -> file declaring a referenced constant, including Zeitwerk path matches under configured `app/` | [`rails-jobs`](../fixtures/lang-frontends/rails-jobs) |
+| `php-use` | `PhpUse` | `php` | PHP file -> file declaring a used class | [`php-laravel`](../fixtures/lang-frontends/php-laravel) |
+| `php-package` | `PhpPackage` | `php` | PHP file -> files in a configured Composer app | [`php-laravel`](../fixtures/lang-frontends/php-laravel) |
+| `java-import` | `JavaImport` | `java` | Java file -> file of an exact `import com.example.User;` | [`java-spring`](../fixtures/lang-frontends/java-spring) |
+| `java-ref` | `JavaReference` | `java` | Java file -> file declaring a referenced type | [`java-spring`](../fixtures/lang-frontends/java-spring) |
+| `kotlin-import` | `KotlinImport` | `kotlin` | Kotlin file -> file of an exact `import com.example.User` | [`kotlin-spring`](../fixtures/lang-frontends/kotlin-spring) |
+| `kotlin-ref` | `KotlinReference` | `kotlin` | Kotlin file -> file declaring a referenced type | [`kotlin-spring`](../fixtures/lang-frontends/kotlin-spring) |
+| `elixir-import` | `ElixirImport` | `elixir` | Elixir file -> file of an exact `alias`/`import`/`use MyApp.User` | [`phoenix-routes`](../fixtures/lang-frontends/phoenix-routes) |
+| `elixir-ref` | `ElixirReference` | `elixir` | Elixir file -> file declaring a referenced module | [`phoenix-routes`](../fixtures/lang-frontends/phoenix-routes) |
+| `dart-import` | `DartImport` | `dart` | Dart file -> file of an exact `import` / `export` / `part` URI | [`dart-cross-package`](../test-cases/codebase-analysis/dart-cross-package) |
+| `dart-ref` | `DartReference` | `dart` | Dart file -> file declaring a referenced type | [`dart-flutter-http`](../test-cases/codebase-analysis/dart-flutter-http) |
+
+Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and Dart edges require matching `tests.<lang>` package,
+module, or app lists. Empty lists disable that frontend. See
+[Tests and selectors](configuration/tests.md).
+
+For `server edges` and `server related`, filters limit client-call source files;
+they do not narrow the prepared resolver/fact universe used to follow a static
+local or imported route helper. Server-route definitions remain constrained by
+their configured roots, mounts, test exclusions, and any explicit filter.
 
 ## Relationship Filters
 
@@ -52,27 +95,63 @@ all` output.
 
 | Filter | Included edge kinds |
 | --- | --- |
-| `import` | `import`, `type-import`, `dynamic-import`, `require` |
+| `import` | `import`, `type-import`, `dynamic-import`, `require`, `require-resolve` |
 | `import-static` | `import` |
 | `import-type` | `type-import` |
 | `import-dynamic` | `dynamic-import` |
-| `import-require` | `require` |
+| `import-require` | `require`, `require-resolve` |
 | `route-import` | `route-import` |
-| `workspace` | `workspace` |
+| `workspace` | `workspace`, `workspace-type-import` |
 | `package` | `package` |
-| `test` | `test`, `route-test`, `layout`, `selector` |
+| `test` | `test`, `vitest-setup`, `route-test`, `layout`, `selector` |
 | `route` | `route`, `route-test`, `layout` |
 | `queue` | `queue-enqueue`, `queue-worker` |
+| `trpc` | `trpc-call`, `trpc-procedure` |
 | `md` | `md` |
 | `ci` | `ci` |
+| `workflow` | `workflow-job`, `workflow-step`, `workflow-needs`, `workflow-uses`, `workflow-run`, `workflow-artifact` |
+| `workflow-job` | `workflow-job` |
+| `workflow-step` | `workflow-job`, `workflow-step` |
+| `workflow-needs` | `workflow-job`, `workflow-needs` |
+| `workflow-uses` | `workflow-job`, `workflow-step`, `workflow-uses` |
+| `workflow-run` | `workflow-job`, `workflow-step`, `workflow-run` |
+| `workflow-artifact` | `workflow-job`, `workflow-step`, `workflow-artifact` |
 | `http` | `http` |
 | `process` | `process` |
 | `asset` | `asset` |
+| `resource` | `resource` |
 | `react` | `react-render` |
 | `dotnet` | `dotnet-using`, `dotnet-ref`, `dotnet-project` |
 | `swift` | `swift-import`, `swift-ref`, `swift-package` |
 | `terraform` | `terraform-ref`, `terraform-module`, `terraform-output` |
-| `all` | all standard edge kinds; excludes the opt-in `route-import` alternate view |
+| `python` | `python-import`, `python-ref` |
+| `go` | `go-import`, `go-ref` |
+| `rust` | `rust-use`, `rust-mod`, `rust-package` |
+| `ruby` | `ruby-require`, `ruby-ref` |
+| `php` | `php-use`, `php-package` |
+| `java` | `java-import`, `java-ref` |
+| `kotlin` | `kotlin-import`, `kotlin-ref` |
+| `elixir` | `elixir-import`, `elixir-ref` |
+| `dart` | `dart-import`, `dart-ref` |
+| `all` | all standard edge kinds, including `workflow`; excludes the opt-in `route-import` and `trpc` views |
+
+Workflow virtual-node IDs are stable and project-relative:
+`path/to/workflow.yml#job:<job>` for a job and
+`path/to/workflow.yml#job:<job>/step:<zero-based-index>` for a step. JSON/YAML
+dependency records expose the same identity through `workflowFile`, `job`, and
+when applicable `step`; Flow nodes use the `workflow-job` and `workflow-step`
+kinds.
+
+tRPC procedure virtual-node IDs are `path/to/router.ts#procedure:<path>`,
+for example `src/router.ts#procedure:user.get`. JSON/YAML records expose
+`routerFile` and `procedure`; Flow nodes use `kind: "trpc-procedure"`.
+`--relationship trpc` is opt-in: unfiltered traversal and `--relationship all`
+omit these edges, the same way they omit `route-import`.
+
+The precise workflow filters include the structural edges listed above so a
+forward or reverse traversal can enter and leave the relevant virtual node.
+For example, `workflow-run` includes workflow-to-job and job-to-step bridges,
+then the run edge; it does not silently include unrelated workflow semantics.
 
 ## Examples And Counterexamples
 
@@ -144,6 +223,65 @@ await queue.add(jobName, payload);
 new Worker(prefix + queueName, processor);
 ```
 
+Static tRPC routers and client calls produce virtual procedure nodes:
+
+```ts
+export const appRouter = router({
+  user: { get: procedure.query(() => null) },
+});
+await trpc.user.get.query();
+```
+
+Computed procedure paths are not guessed:
+
+```ts
+await trpc[ns].get.query();
+await trpc.user[name].query();
+```
+
+GitHub Actions workflow edges describe static in-repository topology and
+execution targets. A workflow file connects to each job, a job to each step,
+and `needs` points from the prerequisite job to the dependent job. Local
+`uses: ./...` resolves from the repository root: a job may call a tracked local
+reusable workflow, while a step may use a tracked `action.yml` (preferred over
+`action.yaml`) beneath a configured `ci.actionDirs` root. Workflow discovery
+likewise uses only configured `ci.workflowDirs`. The action descriptor is
+terminal for this graph.
+
+For a literal `run:`, resolution applies workflow defaults, job defaults, then
+the step `working-directory`. Supported Cargo commands, literal executable
+paths, literal operands for common script runtimes, and literal package-manager
+scripts can produce edges. Package scripts first connect the step to the
+nearest tracked `package.json`, then recursively follow explicit static
+script-to-script calls with cycle protection. Quoted literals, static
+environment prefixes, newlines, `;`, `&&`, and `||` are supported; `cd`, pipes,
+substitutions, variables, globs, workspace/filter selectors, cwd flags, and
+generated paths are intentionally opaque. Paths escaping the tracked universe
+produce no edge.
+
+An upload-artifact step connects only to download-artifact steps in the same
+workflow run. Remote actions and reusable workflows, `workflow_run` dispatch
+boundaries, malformed YAML, and dangling topology endpoints remain outside the
+canonical graph.
+
+Literal runtime filesystem access produces `resource` edges. Plain relative
+paths resolve from the analysis root, while `new URL("./schema.sql",
+import.meta.url)` resolves from the calling module. `readFile`, `readdir`, and
+supported `glob` package calls only connect files already tracked by the
+prepared repository inventory; the analyzer never executes application code or
+walks a directory for each call.
+
+```ts
+import { readFileSync } from "node:fs";
+const schema = readFileSync("db/schema.sql", "utf8");
+```
+
+Computed paths, patterns, or cwd values intentionally produce no edge. Test
+planning reports a source-location warning (`dynamic-resource-path`,
+`dynamic-resource-pattern`, or `dynamic-resource-cwd`) when that call is on a
+selected impact path; configured triggers remain the explicit way to widen
+dynamic cases.
+
 Playwright navigation paths are an exception. An unresolved interpolation in a
 navigated path stands in for "any single value", so it is treated as a wildcard
 matching one dynamic route segment and still produces a `route-test` edge:
@@ -168,8 +306,11 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   argument is a supported literal. Wrapper module identity uses the shared
   TypeScript/workspace resolver; wrapper bodies and dynamic values are not
   inferred.
-- `ci` is intentionally narrow: it covers the current workflow-to-Rust-bin
-  support and is not a full shell, npm script, or workflow dependency graph.
+- `ci` is intentionally narrow and unchanged: it covers only the legacy
+  workflow-file-to-Rust-bin `CiInvocation` edge for supported Cargo commands.
+  Use `workflow` for job/step topology, local uses, static run targets, and
+  same-run artifacts; it deliberately excludes remote uses and `workflow_run`
+  dispatch boundaries.
 - External packages are terminal module nodes. They can be selected as roots,
   targets, or filtered with `--target-module`, but their `node_modules` source
   is not parsed. Node built-ins such as `node:path` remain excluded from the
@@ -180,6 +321,22 @@ not assumed to equal a concrete literal route such as `/user/settings`.
 - `route-import` deliberately does not apply that function-reachability pruning.
   It remains literal-only, so computed dynamic imports still require an `rg`
   fallback.
+- `resource` edges are literal-only. Files outside the tracked inventory,
+  untracked/ignored files, and symlinks resolving outside the analysis root are
+  excluded. `readdir` covers immediate tracked children; glob support is a
+  static-pattern heuristic and does not execute glob libraries.
+- `vitest-setup` is created only for statically resolved Vitest setup modules.
+  Dynamic or unresolved declarations do not guess an edge; test planning emits
+  a diagnostic and uses its bounded owner fallback instead. Its helper closure
+  follows ordinary static import/re-export and literal CommonJS `require(...)`
+  or `require.resolve(...)` dependencies, retaining edits and deletions as
+  owner triggers; computed or non-literal forms are not followed.
+- `trpc` is opt-in. It only follows static `router({ ... })` / `createTRPCRouter`
+  procedure keys and `trpc.user.get.query()`-style client calls whose path exists
+  in a configured router glob. Empty `projects.*.trpc.routers` lists disable the
+  extractor; there is no hardcoded `src/trpc`. Computed keys and
+  `trpc[ns][proc].query()` produce no edge. Unfiltered `dependencies` and
+  `--relationship all` omit these edges; request `--relationship trpc`.
 
 
 Swift endpoint literals such as `Endpoint(path: "/api/items/\(id)")` reuse

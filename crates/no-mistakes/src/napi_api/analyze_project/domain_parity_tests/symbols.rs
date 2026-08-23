@@ -17,13 +17,13 @@ fn prepared_symbols_signature_and_flow_match_standalone_and_parse_once() {
         "relationships": ["import"]
     });
     let standalone = [
-        parse_json(crate::napi_api::symbols_json_impl(list.to_string()).unwrap()),
-        parse_json(crate::napi_api::symbols_json_impl(impact.to_string()).unwrap()),
-        parse_json(crate::napi_api::flow_json_impl(flow.to_string()).unwrap()),
+        parse_json(crate::napi_api::symbols_json_impl(crate::napi_api::options::test_json_arg(list)).unwrap()),
+        parse_json(crate::napi_api::symbols_json_impl(crate::napi_api::options::test_json_arg(impact)).unwrap()),
+        parse_json(crate::napi_api::flow_json_impl(crate::napi_api::options::test_json_arg(flow)).unwrap()),
     ];
     crate::ast::begin_parse_count(&root);
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "reports": [
                 { "type": "symbols", "files": ["utils.mts"] },
@@ -41,7 +41,7 @@ fn prepared_symbols_signature_and_flow_match_standalone_and_parse_once() {
                 }
             ]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
@@ -68,14 +68,14 @@ fn mixed_check_and_symbols_keep_explicit_ignored_targets_in_the_one_parse_scope(
         "symbol": "IgnoredButton"
     });
     let standalone = [
-        parse_json(crate::napi_api::check_json_impl(json!({ "root": root }).to_string()).unwrap()),
-        parse_json(crate::napi_api::symbols_json_impl(list.to_string()).unwrap()),
-        parse_json(crate::napi_api::symbols_json_impl(impact.to_string()).unwrap()),
+        parse_json(crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(json!({ "root": root }).to_string())).unwrap()),
+        parse_json(crate::napi_api::symbols_json_impl(crate::napi_api::options::test_json_arg(list)).unwrap()),
+        parse_json(crate::napi_api::symbols_json_impl(crate::napi_api::options::test_json_arg(impact)).unwrap()),
     ];
 
     crate::ast::begin_parse_count(&root);
     let output = analyze_project_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "reports": [
                 { "type": "check" },
@@ -88,7 +88,7 @@ fn mixed_check_and_symbols_keep_explicit_ignored_targets_in_the_one_parse_scope(
                 }
             ]
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);

@@ -1,6 +1,6 @@
 ---
 name: no-mistakes
-description: "Core: TS/JS module graph (imports, dependents, exports, test impact, Playwright, React, queue/server, fetches, lockfile, no-mistakes checks). Also: CI-workflow, Terraform/OpenTofu, and Swift graphs. Prefer over rg when a question spans >2 workspace dirs or >5 import hops."
+description: "Core: TS/JS module graph (imports, dependents, exports, test impact, Playwright, React, queue/server, fetches, lockfile, no-mistakes checks). Also: CI, Terraform/OpenTofu, Swift/.NET, and configured Python/Go/Rust/Rails/PHP/Java/Kotlin/Elixir graphs plus tests plan. Prefer over rg when a question spans >2 workspace dirs or >5 import hops."
 allowed-tools: Bash(no-mistakes:*) Bash(rg:*) Read Glob
 ---
 
@@ -18,11 +18,13 @@ test impact, Playwright coverage, React traits, queue/server routes, Next.js
 fetches, lockfile diffs, and `no-mistakes check` rules.
 
 **Adjacent graph domains**:
-Dotnet/C# test-impact edges participate in the canonical graph via configured
-`tests.dotnet.projects`.
+Configured `tests.python|go|rust|rails|php|java|kotlin|elixir|dart` and `tests.dotnet.projects` /
+`tests.swift.packages` participate in the canonical graph. Query them with
+`dependents --relationship python|go|rust|ruby|php|java|kotlin|elixir|dart|dotnet|swift` and
+`tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart|dotnet|swift`.
 `no-mistakes ci` — GitHub Actions workflow graphs ·
 `no-mistakes infra` — Terraform/OpenTofu resource graphs ·
-`no-mistakes swift` — Swift package graphs.
+`no-mistakes swift` — Swift package importers and test targets.
 
 ## When To Reach For It
 
@@ -33,15 +35,18 @@ Dotnet/C# test-impact edges participate in the canonical graph via configured
 prose). For structural graph questions outside TS/JS, see Command Selection:
 `.yml` → `ci` · `.tf` → `infra` · `.swift` → `swift` · Rust binary CI
 impact → `--relationship ci` · CSS/JSON asset imports →
-`--relationship asset`. Go source files have no graph domain — use `rg`.
-For "what directly imports this one file?" in a single directory,
-`no-mistakes importers <file>` is faster than a full graph walk.
+`--relationship asset`. Go/Python/Rust/Rails/PHP/Java/Kotlin/Elixir/.NET graphs require explicit `tests.<lang>` config — see https://github.com/jonathanong/no-mistakes/blob/main/docs/feature-parity.md.
+For "what directly imports this one TS/JS file?" in a single directory,
+`no-mistakes importers <file>` is faster than a full graph walk. Language
+graphs use `dependents --relationship <lang>` instead.
 
 **Pre-implementation:** for existing TS/JS files, run the appropriate test
 planner before editing to discover affected tests first (for new files,
 rerun after creating them):
 - Vitest: `no-mistakes tests plan vitest --changed-file <file> --format paths`
+- Jest: `no-mistakes tests plan jest --changed-file <file> --format paths`
 - Playwright (route/page changes): `no-mistakes tests plan playwright --changed-file <file> --format paths`
+- Python / Go / Cargo / Rails / PHP / Java / Kotlin / Elixir / Dart: `no-mistakes tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart --changed-file <file> --format paths`
 
 See `references/tests.md`.
 For high-signal multi-command workflows around UI selectors, selector-root
@@ -103,16 +108,19 @@ scope the review and `rg` to inspect exact argument objects such as
 | What does this file transitively import? | `no-mistakes dependencies <file>` |
 | What runtime modules can a Playwright route conservatively reach? | `no-mistakes dependencies <route-file> --relationship route-import` |
 | Which files are affected by touching this file? | `no-mistakes dependents <file>` |
-| Which files directly import this one file? (fast) | `no-mistakes importers <file>` |
+| Which files directly import this one TS/JS file? (fast) | `no-mistakes importers <file>` (TS/JS static imports only) |
+| Which Python/Go/Rust/Ruby/PHP/Java/Kotlin/Elixir/Dart/Swift/.NET files depend on this file? | `no-mistakes dependents <file> --relationship python\|go\|rust\|ruby\|php\|java\|kotlin\|elixir\|dart\|swift\|dotnet --format json` |
 | Which files import this named export? | `no-mistakes dependents <file>#SYMBOL` |
 | What does this file export, and who imports each export? | `no-mistakes exports-of <file>` |
 | Is this export still used anywhere? (yes/no) | `no-mistakes dead-exports <file> [NAME...]` |
 | Where is this function called, and with what argument shapes? | `no-mistakes call-sites <file> SYMBOL` |
-| Do all imports in this file resolve? | `no-mistakes resolve-check <file>` |
+| Do all imports in these files resolve? | `no-mistakes resolve-check <file> [file...]` |
+| Are configured Mermaid fences valid? | `no-mistakes check --format json` |
 | What must I update before changing this function signature? | `no-mistakes symbols <file> --mode signature-impact --symbol SYMBOL --format json` |
 | What multi-step recipe fits a UI selector, selector-root, named export, workflow/static-analysis, diff test impact, API-shape fanout, package entrypoint, shared-helper test discovery, test deletion, or queue call-disposition question? | Read `references/impact-recipes.md` |
 | Which tests should rerun for everything changed in a diff? | `no-mistakes tests plan vitest --from-git-diff <base>...<head> --format paths` |
 | Which tests should rerun? | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
+| Which Python/Go/Cargo/Rails/PHP/Java/Kotlin/Elixir/Dart tests should rerun? | `no-mistakes tests plan python\|go\|cargo\|rails\|php\|java\|kotlin\|elixir\|dart --changed-file <file> --format paths` |
 | Which tests should rerun? (lower-level fallback) | `no-mistakes dependents <file> --test vitest --format paths` |
 | Why was this test selected? | `no-mistakes tests why <test> --plan plan.json` |
 | What does this module export/import? | `no-mistakes symbols <file> --include both` |
@@ -132,10 +140,13 @@ scope the review and `rg` to inspect exact argument objects such as
 | Which packages changed between two lockfile refs? | `no-mistakes lockfile diff --base <ref>` |
 | Which CI workflows/jobs does this changed file trigger, and with what permissions? | `no-mistakes ci impact <file> --format json` |
 | Which workflows define or reference this env var? | `no-mistakes ci env <VAR> --format json` |
+| What are the workflow edges, job runner/timeout/permission settings, env declarations, or static secret-name use sites? | `no-mistakes ci topology --format json` |
 | What local validation commands should I run for these changed files? | `no-mistakes impacted-checks <file...> --format paths` |
+| Which configured generic validation commands apply, without test selection? | `no-mistakes impacted-checks <file...> --generic-only --format json` |
+| Why is an impacted-checks result empty? | Inspect `empty_result` in JSON/YAML, or opt into `no-mistakes impacted-checks --diagnose-empty` for a stderr note. |
 | Which queue producer/worker files are connected? | `no-mistakes queues related <file>` |
 | Are queue producers/workers unmatched? | `no-mistakes queues check` |
-| What server routes exist? | `no-mistakes server routes` |
+| What server routes exist? | `no-mistakes server routes` (includes Remix `app/routes` when `type: remix` is configured) |
 | Which server route files are related? | `no-mistakes server related <file>` |
 | Raw queue/server edges for debugging | `no-mistakes queues edges [file]` / `no-mistakes server edges [file]` |
 | Which Terraform/OpenTofu resources reference this resource? | `no-mistakes infra resource-refs <type>.<name>` |
@@ -157,6 +168,8 @@ no-mistakes dependents src/utils.mts --root /path/to/project --format json
 # Test selection (preferred over dependents --test)
 no-mistakes tests plan vitest --changed-file src/utils.mts --format paths
 no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format paths
+no-mistakes tests plan python --changed-file app/users.py --format paths
+no-mistakes tests plan cargo --changed-file app/src/lib.rs --format commands
 
 # Explain why a test was selected
 no-mistakes tests why tests/users.test.mts --plan plan.json
@@ -165,6 +178,19 @@ no-mistakes tests why tests/users.test.mts --plan plan.json
 no-mistakes symbols src/api.mts --include both --format json
 no-mistakes import-usages --root . --filter 'src/**' --format json
 no-mistakes symbols src/api.mts --mode signature-impact --symbol handler --format json
+
+# Reuse one prepared analysis for related reports
+node --input-type=module - <<'NODE'
+import { analyzeProject } from "no-mistakes";
+const report = await analyzeProject({
+  root: process.cwd(),
+  reports: [
+    { type: "dependencies", files: ["src/api.mts"] },
+    { type: "symbols", files: ["src/api.mts"], include: "both" },
+  ],
+});
+console.log(report);
+NODE
 
 # Playwright coverage gate before finishing Next.js / Playwright work
 no-mistakes playwright check --json
@@ -189,34 +215,56 @@ timings, and parallel phase lines are explicitly non-additive. Ordinary runs do
 not start diagnostic clocks. `impacted-checks` reuses one in-memory graph across
 configured test frameworks.
 
+An empty `impacted-checks` report includes `empty_result` with the stable code
+`no-changed-files` or `no-impacted-checks`; reports with checks omit the field.
+The CLI is silent by default. Use `--diagnose-empty` when an agent needs the
+exact `note[<code>]: <message>` explanation on stderr. The async Node API
+returns the structured field and never writes diagnostics to stderr.
+
 All analysis invocations share a per-user machine-wide lock. By default,
 `--lock-timeout 30` waits up to 30 seconds to acquire it and `--timeout 30`
 allows 30 seconds of execution after acquisition. Use `--fail-on-lock` when an
 agent should fail immediately instead of queueing; use `0` to disable either
 CLI timeout. Lock waits are silent, failures go to stderr, and successful JSON
-output is unchanged. The async Node API accepts `timeout`, `lockTimeout`, and
-`failOnLock` with the same semantics; `0` or `null` disables a Node timeout,
-and failures reject the Promise.
+output is unchanged. The async Node API accepts `timeout`, `lockTimeout`, `failOnLock`, and `jobs`
+with the same semantics; `0` or `null` disables a Node timeout, `jobs: 0`
+matches CLI `--jobs 0`, and failures reject the Promise.
 
 For repeated graph/symbol/playwright/project queries in the same process,
 prefer `analyzeProject({reports:[…]})` from the async Node API documented at
 https://github.com/jonathanong/no-mistakes/blob/main/docs/node-api.md — it
 shares one request-scoped analysis dataset and one graph build per normalized
 effective plan and file universe across all requested
-reports. Note: `analyzeProject` does not support `testsPlan`, `fetches`, or
-`lockfileDiff`; call those dedicated Node API functions directly.
+reports. `analyzeProject` also batches the remaining dedicated Node APIs
+(`importers`, `exportsOf`, `deadExports`, `callSites`, `resolveCheck`,
+`fetches`, `dataPw`, `registryExtension`, `testsPlan`/`testsImpact`/
+`testsTargets`/`testsWhy`/`testsComment`/`testsGraph`/`testsGraphMermaid`,
+`lockfileDiff`, `ciImpact`/`ciEnv`/`ciTopology`, `impactedChecks`,
+`infraResourceRefs`/`infraOutputs`/`infraTestFor`, `swiftImporters`/
+`swiftTestTargets`, and `validateMermaidMarkdown`). Dedicated functions still
+work; they rebuild analysis instead of sharing the request session.
+
+The shipped Node declarations expose precise DTOs for `fetches()`, `queues()`,
+`reactAnalyze()`, and `check()` through the
+`packages/no-mistakes/report-types.d.ts` barrel. Use those typed report fields
+instead of treating report collections as `unknown[]`; omitted serialized Rust
+fields are optional and nullable fields are represented as `string | null`.
+Check callers can request the additive `suppressed` directive-audit collection
+with `includeSuppressed: true`.
 
 ## Graph Options
 
 `dependencies`, `dependents`, and `related` support:
 
 - `--root <PATH>` for the project root.
-- `--tsconfig <FILE>` for path aliases; pass this explicitly in monorepos.
+- `--tsconfig <FILE>` to force one config for an entire request. Omit it to use
+  automatic per-workspace ownership resolution, including package-local aliases
+  and referenced projects.
 - `--depth <N>` to limit traversal depth.
 - `--filter <GLOB>` to include only matching files; repeatable.
 - `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
-- `--test vitest|playwright|cargo|dotnet|swift` to filter to test files.
-- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|md|ci|http|process|asset|react|dotnet|swift|terraform|all`.
+- `--test vitest|playwright|cargo|dotnet|swift|python|go|rails|php|java|kotlin|elixir|dart|jest` to filter to test files.
+- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|trpc|resource|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|python|go|rust|ruby|php|java|kotlin|elixir|dart|all`.
 - `--direction deps|dependents|both` for `queues related` and `server related`.
 - `--format json|md|yml|paths|human`, `--json`, root-global `--timings` /
   `--verbose-timings` (stderr), and `--jobs`.
@@ -251,7 +299,9 @@ member usage.
 
 ## Hard Limits
 
-- `baseUrl`-only imports are not resolved; use `compilerOptions.paths`.
+- `baseUrl`-only imports are resolved when `compilerOptions.baseUrl` is set.
+  Prefer `compilerOptions.paths` for explicit aliases, especially when an
+  alias should be shared across workspace packages.
 - Dynamic `import()` and `require()` are tracked only with literals.
 - `route-import` is deliberately conservative: it includes runtime static
   imports/re-exports and literal dynamic imports inside functions, but excludes
@@ -259,6 +309,12 @@ member usage.
   URL-route, Playwright route-test, and Next.js layout edges instead.
 - `route-import` is explicit opt-in. Omitted relationships and `all` keep the
   standard call-pruned graph so test impact and dependency checks do not widen.
+- `workflow` traces static, tracked GitHub Actions topology and execution:
+  workflow -> job -> step, `needs`, local `uses`, literal run/package-script
+  targets, and same-run artifacts. Virtual IDs are `WORKFLOW#job:<job>` and
+  `WORKFLOW#job:<job>/step:<zero-based-index>`. `ci` remains only the legacy
+  workflow-file -> Rust-binary Cargo edge; remote `uses` and `workflow_run`
+  are intentionally outside `workflow`.
 - Bare external specifiers such as `react` are terminal module nodes; their
   `node_modules` sources are not parsed. Node built-ins such as `node:path`
   remain excluded from module nodes.
@@ -267,7 +323,7 @@ member usage.
   static when agent-readable analysis is required.
 - Selector text edges are approximate; exact configured test ID selector edges
   are stronger evidence.
-- Non-TS/JS files are not walked for import edges; use `rg` for Go, Rust, CSS, JSON.
+- Non-TS/JS files are not walked for import edges unless the matching language frontend is configured; use `rg` for CSS/JSON and unconfigured languages.
 - `tests plan` works without `testPlan` in `.no-mistakes.yml` (uses default
   direct + dependencies groups). Configure `testPlan` to add environments,
   custom limits, coverage groups (Playwright only), and global-config triggers.

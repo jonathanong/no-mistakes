@@ -1,17 +1,30 @@
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug)]
 struct GraphFileUniverseKey {
     generation: u64,
-    paths: std::sync::Arc<[PathBuf]>,
+    universe: std::sync::Arc<()>,
+}
+
+impl PartialEq for GraphFileUniverseKey {
+    fn eq(&self, other: &Self) -> bool {
+        self.generation == other.generation
+            && std::sync::Arc::ptr_eq(&self.universe, &other.universe)
+    }
+}
+
+impl Eq for GraphFileUniverseKey {}
+
+impl std::hash::Hash for GraphFileUniverseKey {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.generation.hash(state);
+        std::sync::Arc::as_ptr(&self.universe).hash(state);
+    }
 }
 
 impl GraphFileUniverseKey {
     fn new(files: &graph::GraphFiles, generation: u64) -> Self {
-        let mut paths = files.all().to_vec();
-        paths.sort();
-        paths.dedup();
         Self {
             generation,
-            paths: paths.into(),
+            universe: std::sync::Arc::clone(files.universe_identity()),
         }
     }
 }
@@ -50,6 +63,14 @@ impl<K, V> Default for SharedBuildCache<K, V> {
 
 impl<K: Eq + std::hash::Hash, V> SharedBuildCache<K, V> {
     fn get_or_build(&self, key: K, build: impl FnOnce() -> Result<V>) -> Result<std::sync::Arc<V>> {
+        Ok(self.get_or_build_status(key, build)?.0)
+    }
+
+    fn get_or_build_status(
+        &self,
+        key: K,
+        build: impl FnOnce() -> Result<V>,
+    ) -> Result<(std::sync::Arc<V>, bool)> {
         let cell = {
             let mut entries = self.entries.lock().expect("shared build cache is poisoned");
             entries
@@ -57,14 +78,19 @@ impl<K: Eq + std::hash::Hash, V> SharedBuildCache<K, V> {
                 .or_insert_with(|| std::sync::Arc::new(std::sync::OnceLock::new()))
                 .clone()
         };
+        let mut initialized = false;
         let result = cell.get_or_init(|| {
+            initialized = true;
             self.builds
                 .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
             build()
                 .map(std::sync::Arc::new)
                 .map_err(|error| std::sync::Arc::<str>::from(format!("{error:#}")))
         });
-        result.clone().map_err(|message| anyhow::anyhow!(message))
+        Ok((
+            result.clone().map_err(|message| anyhow::anyhow!(message))?,
+            initialized,
+        ))
     }
 
     fn clear(&self) {
@@ -82,6 +108,7 @@ impl<K: Eq + std::hash::Hash, V> SharedBuildCache<K, V> {
 struct CanonicalGraphBuild<'a> {
     root: &'a Path,
     tsconfig: &'a TsConfig,
+    tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     plan: graph::GraphBuildPlan,
     graph_files: &'a graph::GraphFiles,
     config_path: Option<&'a Path>,
@@ -90,6 +117,7 @@ struct CanonicalGraphBuild<'a> {
     import_resolution_cache: &'a crate::codebase::ts_resolver::ImportResolutionCache,
     dotnet_facts: Option<&'a crate::codebase::dotnet::DotnetFactMap>,
     swift_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,
+    vitest_setup_projects: Vec<graph::VitestSetupProject>,
     visible_paths: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
 }
@@ -99,6 +127,7 @@ fn build_canonical_graph(input: CanonicalGraphBuild<'_>) -> Result<graph::DepGra
         graph::PreparedGraphBuild {
             root: input.root,
             tsconfig: input.tsconfig,
+            tsconfig_catalog: Some(input.tsconfig_catalog),
             plan: input.plan,
             graph_files: input.graph_files,
             config_path: input.config_path,
@@ -111,4 +140,5 @@ fn build_canonical_graph(input: CanonicalGraphBuild<'_>) -> Result<graph::DepGra
         },
         input.session,
     )
+    .map(|graph| graph.with_vitest_setup_projects(input.vitest_setup_projects))
 }

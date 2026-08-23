@@ -34,6 +34,9 @@ fn ts_fact_context_from_options(
         context.queue_factory_glob = compile_graph_glob(&options.queue.queue_pattern);
         context.queue_project_factory_names = options.queue_project_factory_names.clone();
     }
+    if plan.trpc {
+        context.trpc_router_glob = compile_trpc_router_globset(&options.trpc_routers);
+    }
     context
 }
 
@@ -65,6 +68,10 @@ fn queue_facts_configured(options: &GraphConfigOptions) -> bool {
         && compile_graph_glob(&options.queue.queue_pattern).is_some()
 }
 
+fn trpc_facts_configured(options: &GraphConfigOptions) -> bool {
+    compile_trpc_router_globset(&options.trpc_routers).is_some()
+}
+
 fn add_backend_route_extractor(
     context: &mut TsFactContext,
     register_object: Option<String>,
@@ -90,4 +97,17 @@ fn compile_graph_glob(pattern: &str) -> Option<GlobSet> {
     let mut builder = GlobSetBuilder::new();
     builder.add(glob);
     builder.build().ok()
+}
+
+fn compile_trpc_router_globset(globs: &[String]) -> Option<GlobSet> {
+    let mut builder = GlobSetBuilder::new();
+    let mut any = false;
+    for glob in globs {
+        let Ok(compiled) = GlobBuilder::new(glob).literal_separator(false).build() else {
+            continue;
+        };
+        builder.add(compiled);
+        any = true;
+    }
+    any.then(|| builder.build().ok()).flatten()
 }

@@ -1,0 +1,55 @@
+on: push
+jobs:
+  checkout-root:
+    runs-on: ubuntu-latest
+    steps:
+      # path . still checks out the repository at the workspace root.
+      - uses: actions/checkout@v4
+        with: {path: .}
+      - uses: ./.github/actions/valid
+      - run: pnpm exec tsc --noEmit --project checkout-root/tsconfig.json
+  action-outcome:
+    runs-on: ubuntu-latest
+    steps:
+      - id: setup
+        uses: actions/checkout@v4
+      # A successful action makes this failure-only gate unreachable.
+      - if: steps.setup.outcome == 'failure'
+        run: pnpm exec tsc --noEmit --project action-outcome/tsconfig.json
+  strategy-index:
+    strategy: {matrix: {target: [one]}}
+    runs-on: ubuntu-latest
+    steps:
+      # The one static matrix instance has index zero.
+      - if: strategy.job-index == 1
+        run: pnpm exec tsc --noEmit --project strategy-index/tsconfig.json
+  ref-type:
+    runs-on: ubuntu-latest
+    steps:
+      # Source-change activation is always a branch, never a tag push.
+      - if: github.ref_type == 'tag'
+        run: pnpm exec tsc --noEmit --project ref-type/tsconfig.json
+  job-status:
+    runs-on: ubuntu-latest
+    steps:
+      # The first step starts while the job is successful.
+      - if: job.status == 'failure'
+        run: pnpm exec tsc --noEmit --project job-status/tsconfig.json
+  invalid-composite-remote:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/remote-invalid
+      - run: pnpm exec tsc --noEmit --project composite-remote/tsconfig.json
+  sparse-checkout:
+    runs-on: ubuntu-latest
+    steps:
+      # Sparse checkout does not prove the local action exists in the worktree.
+      - uses: actions/checkout@v4
+        with: {sparse-checkout: app}
+      - uses: ./.github/actions/valid
+      - run: pnpm exec tsc --noEmit --project sparse-checkout/tsconfig.json
+  pnpm-separator:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec -- tsc --noEmit --project pnpm-separator/tsconfig.json

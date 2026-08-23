@@ -1,9 +1,10 @@
-use super::{resolve_mounts_with_resolver, FileFacts, ImportResolver, ResolvedMount};
-use std::collections::{HashMap, HashSet};
+use super::{resolve_mounts_with_resolver, FileFacts, ResolvedMount};
+use crate::codebase::ts_resolver::ImportResolver;
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn resolve_mounts(facts: &HashMap<PathBuf, FileFacts>) -> Vec<ResolvedMount> {
-    let visible = facts.keys().cloned().collect::<HashSet<_>>();
+    let visible = facts.keys().cloned().collect::<crate::fx::PathSet>();
     let root = facts
         .keys()
         .filter_map(|path| path.parent())

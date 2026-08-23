@@ -5,10 +5,10 @@ pub(crate) fn trace_deleted_files(
     root: &Path,
     selected_map: &mut HashMap<PathBuf, SelectedTest>,
     warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<(String, String)>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) {
     for deleted in deleted_files {
-        let start_node = NodeId::File(deleted.clone());
+        let start_node = NodeId::file(deleted.clone());
         let rel_deleted = relative_path(root, deleted);
         if let Some(neighbors) = graph.dependents_of_node(&start_node) {
             for (neighbor, _kind) in neighbors {
@@ -38,8 +38,9 @@ pub(crate) fn trace_deleted_files(
             r#type: "deleted-file".to_string(),
             message: format!("File `{}` was deleted.", rel_deleted),
             file: rel_deleted,
+            line: None,
         };
-        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+        if warnings_seen.insert(warning_key(&warn)) {
             warnings.push(warn);
         }
     }
@@ -61,17 +62,17 @@ fn owner_widened_neighbor_allowed(
 
 fn has_symbol_neighbor_for_file(path: &Path, neighbors: &[(NodeId, EdgeKind)]) -> bool {
     neighbors.iter().any(
-        |(candidate, _)| matches!(candidate, NodeId::Symbol { file, .. } if file.as_path() == path),
+        |(candidate, _)| matches!(candidate, NodeId::Symbol { file, .. } if file.as_ref() == path),
     )
 }
 
 fn file_has_owned_symbol(graph: &DepGraph, path: &Path) -> bool {
     let file = path.to_path_buf();
     graph
-        .dependencies_of_node(&NodeId::File(file.clone()))
+        .dependencies_of_node(&NodeId::file(file.clone()))
         .is_some_and(|deps| {
             deps.iter().any(|(candidate, _)| {
-                matches!(candidate, NodeId::Symbol { file: symbol_file, .. } if *symbol_file == file)
+                matches!(candidate, NodeId::Symbol { file: symbol_file, .. } if symbol_file.as_ref() == file.as_path())
             })
         })
 }
@@ -87,6 +88,7 @@ fn add_deleted_direct(
         changed_file: rel_deleted.to_string(),
         path: vec![rel_deleted.to_string(), rel_test.clone()],
         via: vec!["deleted-dependency".to_string()],
+        via_details: Vec::new(),
     };
     let entry = selected_map
         .entry(neighbor_path.to_path_buf())
@@ -111,7 +113,7 @@ fn add_deleted_transitive(
 ) {
     let (reachable, parents) = bfs_path_find(
         graph,
-        &NodeId::File(neighbor_path.to_path_buf()),
+        &NodeId::file(neighbor_path),
         test_filter,
         root,
     );
@@ -140,9 +142,10 @@ fn add_deleted_transitive(
             changed_file: rel_deleted.to_string(),
             path: node_chain,
             via: via_strings,
+            via_details: deleted_transitive_via_details(&edge_path),
         };
         let entry = selected_map
-            .entry(test_path.clone())
+            .entry(test_path.to_path_buf())
             .or_insert_with(|| SelectedTest {
                 test_file: rel_test,
                 confidence: path_conf,
@@ -156,6 +159,12 @@ fn add_deleted_transitive(
             entry.reasons.push(reason);
         }
     }
+}
+
+fn deleted_transitive_via_details(edge_path: &[EdgeKind]) -> Vec<Option<ImpactEdgeDetail>> {
+    std::iter::once(None)
+        .chain(via_details_from_edges(edge_path))
+        .collect()
 }
 
 pub(crate) fn trace_entrypoints(
@@ -190,11 +199,8 @@ pub(crate) fn trace_entrypoints(
         };
         let normalized = no_mistakes::codebase::ts_resolver::normalize_path(&file);
         let display_start_node = symbol.as_ref().filter(|_| include_symbols).map_or_else(
-            || NodeId::File(normalized.clone()),
-            |symbol| NodeId::Symbol {
-                file: normalized.clone(),
-                symbol: symbol.clone(),
-            },
+            || NodeId::file(normalized.clone()),
+            |symbol| NodeId::symbol(normalized.clone(), symbol.clone()),
         );
         let start_nodes = symbol_aware_start_nodes(graph, &normalized, symbol.as_ref(), include_symbols);
         let rel_changed = symbol
@@ -218,6 +224,7 @@ pub(crate) fn trace_entrypoints(
                 changed_file: rel_changed,
                 path: vec![slash_node_name(&display_start_node, root)],
                 via: vec!["self".to_string()],
+                via_details: Vec::new(),
             };
             if !entry.reasons.contains(&reason) {
                 entry.reasons.push(reason);
@@ -231,7 +238,7 @@ pub(crate) fn trace_entrypoints(
 
             for (test_node, edge_path) in reachable_tests {
                 let test_path = match &test_node {
-                    NodeId::File(p) => p.clone(),
+                    NodeId::File(p) => p.to_path_buf(),
                     _ => continue,
                 };
                 let rel_test = relative_path(root, &test_path);
@@ -252,6 +259,7 @@ pub(crate) fn trace_entrypoints(
                     changed_file: rel_changed.clone(),
                     path: node_chain,
                     via: via_strings,
+                    via_details: via_details_from_edges(&edge_path),
                 };
                 let entry = selected_map
                     .entry(test_path)
@@ -271,4 +279,20 @@ pub(crate) fn trace_entrypoints(
         }
     }
     Ok(())
+}
+
+fn global_config_fallback(args: &PlanArgs) -> bool {
+    args.global_config_fallback.unwrap_or(false)
+}
+
+fn next_project_root(path: &Path) -> bool {
+    path.join("app").is_dir()
+        || path.join("pages").is_dir()
+        || path.join("src/app").is_dir()
+        || path.join("src/pages").is_dir()
+}
+
+#[cfg(test)]
+mod tests {
+    include!("plan_extra_inputs/tests.rs");
 }

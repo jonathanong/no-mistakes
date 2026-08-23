@@ -1,0 +1,3 @@
+[missing-local-workflow] .github/workflows/caller.yml (.github/workflows/caller.yml#missing): .github/workflows/caller.yml#missing calls missing workflow .github/workflows/does-not-exist.yml
+[non-callable-workflow] .github/workflows/caller.yml (.github/workflows/caller.yml#bad): .github/workflows/caller.yml#bad calls .github/workflows/not-callable.yml, which does not declare workflow_call
+[workflow-call-cycle] .github/workflows/cycle-a.yml: reusable workflow call cycle: .github/workflows/cycle-a.yml -> .github/workflows/cycle-b.yml -> .github/workflows/cycle-a.yml

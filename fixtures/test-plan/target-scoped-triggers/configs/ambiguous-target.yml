@@ -1,0 +1,15 @@
+projects:
+  database-resources:
+    root: .
+tests:
+  vitest:
+    configs:
+      - vitest.database-a.mts
+      - vitest.database-b.mts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        database-resources:
+          paths: [migrations/**/*.sql]
+          targets: [database]

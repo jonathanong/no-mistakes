@@ -1,7 +1,14 @@
-use std::fs;
 use std::path::PathBuf;
 use std::process::{Command, Output};
-use tempfile::tempdir;
+
+#[path = "cli_tests_impact/vitest_setup.rs"]
+mod vitest_setup;
+
+#[path = "cli_tests_impact/vitest_commonjs_projects.rs"]
+mod vitest_commonjs_projects;
+
+#[path = "cli_tests_impact/direct_owner_coverage.rs"]
+mod direct_owner_coverage;
 
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
@@ -100,6 +107,60 @@ fn tests_plan_json_outputs_impacted_tests() {
 }
 
 #[test]
+fn tests_plan_explain_renders_confidence_and_dependency_paths() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "c.mts",
+        "--format",
+        "explain",
+    ]);
+
+    assert!(output.status.success());
+    assert_eq!(
+        stdout(&output),
+        "Test plan: 2 selected test(s)\nFallback: not triggered\n\nChanged files (1):\n- c.mts\n\nTest: a.test.mts\nConfidence: 🟢 High\nReason: c.mts\n  Path: `c.mts` ➔ [dependency] ➔ `b.mts` ➔ [dependency] ➔ `a.mts` ➔ [dependency] ➔ `a.test.mts`\n\nTest: dynamic.test.mts\nConfidence: 🟡 Medium\nReason: c.mts\n  Path: `c.mts` ➔ [dependency] ➔ `dynamic.mts` ➔ [dependency] ➔ `dynamic.test.mts`\n\nWarnings (1):\n- dynamic-import (dynamic.mts): Dynamic import in `dynamic.mts` might not be fully resolved.\n"
+    );
+}
+
+#[test]
+fn tests_plan_direct_test_owner_selects_only_one_reverse_edge_and_attaches_targets() {
+    let root = fixture("test-plan-config");
+    let output = run(&[
+        "tests",
+        "plan",
+        "vitest",
+        "--root",
+        root.to_str().unwrap(),
+        "--changed-file",
+        "source.ts",
+        "--environment",
+        "all",
+        "--direct-test-owner",
+        "--json",
+    ]);
+
+    assert!(output.status.success());
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(plan["fallback_triggered"], false);
+    assert_eq!(plan["groups"][0]["type"], "direct-test-owner");
+    assert_eq!(plan["groups"][0]["limit"], serde_json::Value::Null);
+    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
+    let test = &plan["selected_tests"][0];
+    assert_eq!(test["test_file"], "source.test.mts");
+    assert_eq!(
+        test["reasons"][0]["path"],
+        serde_json::json!(["source.ts", "source.test.mts"])
+    );
+    assert_eq!(test["reasons"][0]["via"], serde_json::json!(["dependency"]));
+    assert_eq!(test["targets"][0]["runner"], "vitest");
+}
+
+#[test]
 fn tests_plan_commands_format_requires_execution_targets() {
     let root = fixture("tests-impact");
     let output = run(&[
@@ -139,6 +200,25 @@ fn tests_impact_commands_format_requires_execution_targets() {
     assert!(stderr.contains(
         "`tests impact --format commands` requires selected tests to include framework execution targets"
     ));
+    assert!(stdout(&output).is_empty());
+}
+
+#[test]
+fn tests_impact_rejects_plan_only_explain_format() {
+    let root = fixture("tests-impact");
+    let output = run(&[
+        "tests",
+        "impact",
+        "--root",
+        root.to_str().unwrap(),
+        "c.mts",
+        "--format",
+        "explain",
+    ]);
+
+    assert!(!output.status.success());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    assert!(stderr.contains("invalid value 'explain'"), "{stderr}");
     assert!(stdout(&output).is_empty());
 }
 
@@ -434,101 +514,6 @@ fn tests_why_displays_dependency_path() {
     assert!(text.contains("b.mts"));
     assert!(text.contains("a.mts"));
     assert!(text.contains("a.test.mts"));
-}
-
-#[test]
-fn tests_comment_formats_markdown() {
-    let tmp = tempdir().unwrap();
-    let plan_file = tmp.path().join("plan.json");
-
-    let sample_plan = serde_json::json!({
-        "selected_tests": [
-            {
-                "test_file": "a.test.mts",
-                "confidence": "high",
-                "reasons": [
-                    {
-                        "changed_file": "c.mts",
-                        "path": ["c.mts", "b.mts", "a.mts", "a.test.mts"],
-                        "via": ["Import", "Import", "Import"]
-                    }
-                ]
-            }
-        ],
-        "warnings": [],
-        "fallback_triggered": false,
-        "fallback_reason": null
-    });
-
-    fs::write(&plan_file, serde_json::to_string(&sample_plan).unwrap()).unwrap();
-
-    let output = run(&["tests", "comment", plan_file.to_str().unwrap()]);
-
-    assert!(output.status.success());
-    let md = stdout(&output);
-    assert!(md.contains("# 🧪 Test Impact Analysis"));
-    assert!(md.contains("a.test.mts"));
-    assert!(md.contains("🟢 High"));
-}
-
-#[test]
-fn tests_graph_mermaid_outputs_flowchart() {
-    let tmp = tempdir().unwrap();
-    let plan_file = tmp.path().join("plan.json");
-
-    let sample_plan = serde_json::json!({
-        "selected_tests": [
-            {
-                "test_file": "a.test.mts",
-                "confidence": "high",
-                "reasons": [
-                    {
-                        "changed_file": "c.mts",
-                        "path": ["c.mts", "b.mts", "a.mts", "a.test.mts"],
-                        "via": ["Import", "Import", "Import"]
-                    }
-                ]
-            }
-        ],
-        "warnings": [],
-        "fallback_triggered": false,
-        "fallback_reason": null
-    });
-
-    fs::write(&plan_file, serde_json::to_string(&sample_plan).unwrap()).unwrap();
-
-    // 1. Mermaid
-    let output_mermaid = run(&[
-        "tests",
-        "graph",
-        plan_file.to_str().unwrap(),
-        "--format",
-        "mermaid",
-    ]);
-
-    assert!(output_mermaid.status.success());
-    let mermaid = stdout(&output_mermaid);
-    assert!(mermaid.contains("graph TD"));
-    assert!(mermaid.contains("classDef changed"));
-    assert!(mermaid.contains("classDef test"));
-    assert!(mermaid.contains("c.mts"));
-    assert!(mermaid.contains("a.test.mts"));
-
-    // 2. JSON
-    let output_json = run(&[
-        "tests",
-        "graph",
-        plan_file.to_str().unwrap(),
-        "--format",
-        "json",
-    ]);
-
-    assert!(output_json.status.success());
-    let json_str = stdout(&output_json);
-    let graph: serde_json::Value = serde_json::from_str(&json_str).unwrap();
-    assert!(graph["nodes"].as_array().unwrap().len() >= 4);
-    let edges = graph["edges"].as_array().unwrap();
-    assert!(edges.iter().any(|e| e["via"] == "Import"));
 }
 
 #[test]

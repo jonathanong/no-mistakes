@@ -8,7 +8,16 @@ no-mistakes dependencies src/api.mts --root . --format json
 
 Use this when an agent needs upstream context before editing: imports,
 workspace/package edges, routes, queues, tests, markdown links, CI, HTTP,
-process, asset, and React edges can all be included.
+process, asset, resource, and React edges can all be included. Use
+`--relationship resource` to restrict output to literal runtime filesystem
+reads, directory reads, and supported static glob matches.
+
+Use `--relationship workflow` to traverse a tracked GitHub Actions workflow's
+jobs and zero-based steps, local reusable workflows/actions, static `run:`
+targets, and same-run artifact handoffs. Virtual IDs are
+`workflow.yml#job:<job>` and `workflow.yml#job:<job>/step:<index>`. The legacy
+`--relationship ci` filter remains only workflow-file-to-Rust-binary Cargo
+invocations; it does not include workflow topology or package scripts.
 
 Use `--relationship route-import` when you need the conservative runtime module
 closure used by Playwright route analysis. It follows runtime static
@@ -17,9 +26,23 @@ pruning; it excludes type-only imports and `require()`. This is distinct from
 `--relationship route`, which follows URL route references, Playwright route
 tests, and Next.js layouts.
 
+Use `--relationship trpc` for static tRPC procedure calls. It follows
+`trpc-call` / `trpc-procedure` edges through `src/router.ts#procedure:user.get`
+virtual nodes. Empty `projects.*.trpc.routers` lists disable extraction;
+`--relationship all` and unfiltered `dependencies` omit these edges.
+
 Key options: `--tsconfig`, `--depth`/`--max-depth`, repeatable `--filter`,
 repeatable `--target-module`, repeatable `--relationship`, repeatable `--test`,
 `--format`, `--json`, and `--timings`.
+
+Without `--tsconfig`, the resolver automatically uses the config owning each
+importing file, including referenced workspace projects. `--tsconfig <FILE>`
+instead forces one config across the request; use it to reproduce a legacy
+single-config result or to debug an alias.
+
+JSON and YAML reports include stable `diagnostics` plus `tsconfig_provenance`
+for requested entry files. Invalid automatic configs warn and fall back
+conservatively; an invalid explicit `--tsconfig` remains an error.
 
 `FILE#SYMBOL` is not meaningful for dependencies; symbol filtering is for
 [`dependents`](dependents.md) and [`related`](related.md).

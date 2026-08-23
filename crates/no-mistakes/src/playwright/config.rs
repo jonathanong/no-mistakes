@@ -7,7 +7,7 @@ mod load;
 #[cfg(test)]
 pub(crate) mod test_support;
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq)]
 pub struct Settings {
     pub frontend_root: String,
     pub playwright_configs: Vec<PathBuf>,
@@ -36,6 +36,7 @@ pub(crate) fn load_settings_from_visible(
     cli_config: Option<&Path>,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    app: Option<String>,
     visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
     load::load_settings_from_visible(
@@ -43,6 +44,7 @@ pub(crate) fn load_settings_from_visible(
         cli_config,
         cli_playwright_configs,
         cli_project,
+        app,
         visible_paths,
     )
 }
@@ -52,6 +54,7 @@ pub(crate) fn settings_from_loaded_v2(
     config: &crate::config::v2::NoMistakesConfig,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    app: Option<String>,
     visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
     load::settings_from_loaded_v2(
@@ -59,8 +62,19 @@ pub(crate) fn settings_from_loaded_v2(
         config,
         cli_playwright_configs,
         cli_project,
+        app,
         visible_paths,
     )
+}
+
+/// Whether `config` opts into per-app Playwright settings resolution at all
+/// (a top-level `tests.playwright.*` field, or any rule's `tests.playwright`
+/// list). When this is `false`, every Playwright settings call collapses to
+/// the same bare-defaults fallback regardless of which frontend app (if any)
+/// a caller names, so resolving that app first is wasted work — callers that
+/// fan out over multiple frontend apps should check this before doing so.
+pub(crate) fn has_v2_playwright_settings(config: &crate::config::v2::NoMistakesConfig) -> bool {
+    load::has_v2_playwright_settings(config)
 }
 
 pub(crate) fn has_configured_html_id_selector(settings: &Settings) -> bool {

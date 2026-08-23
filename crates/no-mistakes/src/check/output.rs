@@ -1,5 +1,5 @@
 use crate::check_runner::{self, CheckResults};
-use no_mistakes::cli::Format;
+use no_mistakes::cli::{print_json, Format};
 use no_mistakes::codebase::rules::RuleFinding;
 use no_mistakes::codebase::unique_exports::UniqueExportFinding;
 use no_mistakes::integration_tests::IntegrationFinding;
@@ -17,11 +17,7 @@ pub(super) fn print(results: &CheckResults, format: Format) {
 }
 
 fn print_check_json(results: &CheckResults) {
-    println!(
-        "{}",
-        serde_json::to_string_pretty(&check_runner::json_value(results))
-            .expect("serialization of Rust structs never fails")
-    );
+    print_json(&check_runner::json_value(results));
 }
 
 fn print_check_yml(results: &CheckResults) {

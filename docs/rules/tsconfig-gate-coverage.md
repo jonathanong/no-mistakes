@@ -1,0 +1,362 @@
+# `tsconfig-gate-coverage`
+
+Requires every tracked `tsconfig.json` or `tsconfig.*.json` outside
+`node_modules` to be registered in both a configured GitHub Actions workflow
+and a local whole-project typecheck command.
+
+```yaml
+checks:
+  commands:
+    - name: typecheck-web
+      command: [pnpm, --dir, web, exec, tsc, --noEmit]
+      fileArgs: none
+      always: true
+
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository
+    options:
+      allowProjects:
+        web/tsconfig.dependency-cruiser.json: Used only by dependency-cruiser, not tsc.
+```
+
+The rule recognizes static `tsc --noEmit` commands in workflow `run:` steps
+and `checks.commands`. It supports `--project <path>` and `-p <path>`, a
+default `tsconfig.json` relative to the effective
+working directory, sequential `cd` commands, and
+`pnpm --dir <path> exec tsc`. Workflow working directories
+may come from workflow/job `defaults.run.working-directory` or a step's
+`working-directory`. Context-free static step directory expressions are
+resolved; values that remain dynamic do not count. Static input, matrix, and
+environment expressions in `run:` scripts are resolved before command and
+failure analysis; a script with an unresolved dynamic expression is not
+interpreted heuristically. Every action-step `uses:` target, including
+`docker://` images, must be a literal static value; expressions and
+interpolations do not provide coverage.
+Step-based jobs need a non-empty, statically resolvable `runs-on` string,
+label array, or `group`/`labels` mapping. Static matrix and reusable-input
+runner selectors are resolved per generated job before runner platform and
+implicit-shell checks. A selector that resolves to an empty value, array, or
+object fails the job and its successful dependents cannot provide coverage;
+an unresolved selector does not provide coverage.
+Runner group names establish that a job can be scheduled but not its operating system. A
+group-only job therefore needs an explicit supported shell, and it cannot use
+containers or services for coverage unless `runs-on.labels` contains an exact
+self-hosted operating-system label such as `linux`; a hosted-looking label in
+a runner group can be a custom label and does not establish the operating system.
+Repository-local action steps (`uses: ./path` or `uses: ./` for the repository
+root) count only after an earlier successful `actions/checkout` step in the
+same job. Checkout at its default location, with a statically empty
+`with.repository`, or with `with.path: .` makes the repository root available,
+when the tracked target directory contains parseable
+`action.yml` or `action.yaml` metadata
+with only GitHub's supported top-level fields and correctly typed
+`inputs`, `outputs`, `runs`, and `branding` sections, plus the required name
+and description. Composite output expressions must be syntactically valid and
+use only the contexts GitHub exposes to action metadata; composite steps use
+the narrower metadata context set rather than workflow-only contexts such as
+`secrets`. Input defaults accept GitHub's scalar string coercions. A JavaScript action's
+`runs.main` must resolve to a tracked file under that action
+directory and use GitHub's supported `node20` or `node24` runtime; local
+JavaScript actions must not declare the unsupported `runs.pre`
+or `runs.pre-if` hooks; supported `runs.post` must resolve to a tracked file,
+and `runs.post-if` must be a valid action-context condition. Composite step IDs
+must be unique static identifiers. A Docker action's non-`docker://` `runs.image` is a repository-local
+build target and must resolve canonically to a tracked file; its optional
+`pre-entrypoint` must likewise resolve to a tracked action-directory file. External
+`docker://` references must contain a valid static OCI image reference. Local
+targets are checked in step execution order, so a statically
+skipped job or step does not invalidate an independent typecheck, while a
+missing action prevents later commands in the same executed job from counting.
+Composite-action traversal follows GitHub's ten-action nesting limit. A
+composite run-step working directory must resolve statically and exist in the
+tracked checkout, and a composite action with a statically failing run step
+cannot allow a later workflow typecheck to count unless that failing step is
+statically skipped.
+Static local reusable-workflow jobs (`uses: ./.github/workflows/*.yml`) are
+followed transitively and their step-based jobs are evaluated under the direct
+caller's file triggers. Remote, dynamic, missing, non-callable, and cyclic
+calls do not provide coverage. One complete, enforcing, acyclic caller path is
+sufficient; partial coverage from separate caller paths is never combined.
+Every declared reusable call, including a statically skipped call, still
+participates in cycle, nesting-depth, and unique-target validation; skipped
+callees are validated without crediting their commands.
+Statically known ordinary-job and reusable-workflow outputs propagate through
+the caller's `needs.<job>.outputs` context; divergent or dynamic output values
+remain unresolved rather than being guessed.
+For each direct workflow and triggering event, reusable activation evaluates at
+most 1,024 distinct path-sensitive input states. A graph that exceeds this
+budget provides no coverage for that root event, rather than allowing layered
+branching to consume unbounded analysis resources.
+The containing workflow must declare at least one file-triggered `push`,
+`pull_request`, or `pull_request_target` event whose path filters allow every
+visible TypeScript/JavaScript source selected by that project's
+`files`/`include`/`exclude` settings. Projects with no known source files fall
+back to the tracked tsconfig path. Input values and path coverage are evaluated
+for each direct caller event independently, so coverage from different events
+is never combined. Exact branch activations for the same event are also kept
+correlated, so projects reachable on separate branches are never combined into
+one enforcing gate. An explicitly activity-filtered `pull_request` or
+`pull_request_target` event must include `synchronize`, the event that runs when
+source commits are added to an open pull request. Manual, scheduled, reusable,
+empty, tag-only, and path-filtered-out workflows cannot provide a repository
+typecheck gate on their own. A `workflow_call` workflow can provide one when
+reached from an applicable caller. For
+example, `paths: [app/tsconfig.json]` cannot cover `app/src/index.ts`; add
+`app/**` or an
+unfiltered applicable event. Inclusive `branches`, `tags`, or `paths` filters
+that use `!` exclusions must also contain at least one positive pattern, as
+required by GitHub Actions. Tag refs never contribute source-change coverage,
+including when a `push` trigger declares both branch and tag filters.
+Unfiltered and wildcard-filtered push activations retain their known branch
+kind, so a condition that requires a tag ref cannot provide coverage. Mixed
+exact and wildcard branch filters retain both activation alternatives; an
+exact-ref condition must therefore also run for the wildcard-selected branches.
+
+Workflow commands run only when their effective shell is GitHub Actions'
+implicit shell or a static `bash`/`sh` form. The rule honors workflow and job
+`defaults.run.shell` plus a step-level `shell` override; static shell templates
+must invoke `bash` or `sh`, pass the script as `{0}`, and use only
+execution-preserving flags: `-e`, `-u`, `-x`, and Bash's `-o pipefail`,
+`--noprofile`, and `--norc`. This includes GitHub Actions' standard
+`bash --noprofile --norc -eo pipefail {0}` and `sh -e {0}` templates.
+Context-free literal shell expressions are reduced before this classification;
+shell expressions whose value remains dynamic do not count.
+Other shells (such as `python`, PowerShell, or `cmd`) and dynamic/custom shell
+forms do not count; an enabled non-tolerated step using one also leaves the job
+indeterminate, so later ordinary steps and dependents do not count. Neither do
+non-executing modes such as `bash -n {0}`.
+Implicit and built-in `bash`/`sh` shells propagate failures. Custom templates
+must include `-e` or `-o errexit` to credit a typecheck before a later command;
+without it, only a final `tsc` command counts.
+Shell command dispatch is credited only when `command` directly selects a
+static executable (optionally after `--`); `builtin`, query modes, `command -p`,
+unknown dispatcher options, and assignment targets do not prove that the
+project compiler ran. Dynamic shell-state or working-directory mutations also
+stop later commands from earning coverage. OR lists remain outside the static
+shell subset; statically failing `&&` and pipefail lists retain only commands
+that are provably reachable before the failure.
+Runtime shell-state changes such as `set`, `trap`, `export`, `hash`, and
+variable-mutating builtins are outside the supported subset; declare failure
+semantics in the static `shell:` template instead. Unquoted shell redirections
+are also unsupported because their setup can fail before the command runs.
+An implicit shell does not count for statically Windows-labeled runners
+(`windows-*` or a self-hosted `windows` label), because GitHub Actions defaults
+those runners to PowerShell; specify a supported `bash` or `sh` shell instead.
+A bare `self-hosted` label is also rejected with an implicit shell because its
+operating system is not statically known; add a `linux`/`macos` label or an
+explicit supported shell.
+Jobs that declare `container` or `services` count only with a statically Linux
+runner label. GitHub does not support those fields on Windows or macOS runners,
+and an unknown custom runner label cannot prove the required Linux host.
+Known Linux, macOS, and Windows runner labels also provide the corresponding
+`runner.os` value when the rule evaluates step conditions; unknown runner
+selectors leave that value unresolved.
+
+Literal YAML `if: false` and `continue-on-error: true` values, plus exact
+constant expressions `${{ false }}` and `${{ true }}`, on a workflow job or
+step do not count as CI registrations because they cannot enforce a typecheck.
+For reusable calls, the rule also resolves exact boolean input references and
+negations/comparisons in call-job, callee-job, and step conditions. It also
+short-circuits logical `&&` and `||` expressions when a known input operand
+determines the result. Literal call inputs, declared defaults, omitted values,
+and exact `${{ inputs.name }}` forwarding preserve boolean, string, and number
+values through transitive calls. This lets the rule resolve exact string
+equality/inequality and number equality/inequality or relational comparisons,
+as well as input truthiness. Static `contains`, `startsWith`, `endsWith`,
+`format`, and `join` calls are also resolved using GitHub's string coercion;
+missing properties coerce to an empty string. Static `format` calls support
+zero-based placeholders and doubled-brace escapes, including when composed
+inside the other supported string functions; malformed braces and missing
+replacement indexes are expression errors and do not provide coverage. The
+direct workflow's static `github.workflow` name (or workflow path when unnamed)
+is preserved through local reusable calls. Static `join` calls support
+literal arrays, scalar values, and the default comma separator.
+Static `toJSON` calls serialize known scalar values and arrays with GitHub's
+pretty-printed JSON representation; values whose object structure is not
+retained by the static model remain dynamic rather than gaining coverage.
+Expressions whose result remains dynamic fail open as potentially runnable.
+Known malformed `fromJSON` inputs are expression errors and do not provide
+coverage, including through comparisons, logical operators, or string functions.
+Condition evaluation is limited to 256 logical operands, bounding the recursive
+static evaluator even when a repository supplies a long flat `&&` or `||`
+chain. Conditions over that limit are invalid and do not provide coverage.
+Reusable input default expressions must match their declared scalar type and
+may use only `github`, `inputs`, and `vars`; malformed defaults or unavailable
+contexts invalidate the workflow before any command can provide coverage.
+Defaults can read caller event state and input values resolved earlier in the
+contract's canonical input order. References whose value is not yet resolved
+remain dynamic rather than being guessed.
+For static matrices, `${{ matrix.name }}` bindings, step conditions, and job or
+step `continue-on-error` expressions are evaluated once per generated
+combination after `exclude` and ordered `include` expansion. Execution and
+failure tolerance therefore stay correlated: a typecheck that runs only in an
+allowed-to-fail combination does not count. When fail-fast is enabled and a
+matrix instance is statically known to fail, only checks that ran in every
+such failing instance are retained; sibling-only checks may be cancelled.
+Each static combination also receives GitHub's zero-based `strategy.job-index`,
+`strategy.job-total`, `strategy.fail-fast`, and `strategy.max-parallel` values;
+`fail-fast` defaults to `true`, while an omitted `max-parallel` remains unknown
+because GitHub maximizes concurrency subject to runner availability.
+Literal complete expressions in static `include` and `exclude` entries retain
+their YAML scalar types; an entry
+whose value remains dynamic stops static enumeration conservatively. A missing
+property in a statically known matrix coerces to an empty string. Dynamic
+matrices and their properties remain unresolved and fail open as potentially
+enforcing, but a root matrix expression whose parser result is guaranteed
+scalar is rejected because Actions requires an object. Reusable root matrix
+expressions first resolve known caller input JSON; known mappings use the same
+256-job limit as literal matrices, a known non-object result is rejected, and
+an unknown result remains dynamic. Dot and single-quoted
+bracket property access share the same normalized parser for conditions and
+reusable-input forwarding. Repeated access to the same static matrix object
+retains its identity for equality, while distinct object-valued axes remain
+unequal.
+Condition expressions must also use contexts available at their location.
+For example, job conditions cannot read `secrets`, while step conditions can
+read `steps`, `runner`, and `env`. A malformed or unavailable context prevents
+the workflow from providing coverage. Step conditions merge static environment values with GitHub's workflow, job,
+then step precedence and string coercion; a step environment value that resolves
+to an array, object, or invalid expression fails before its command is scanned.
+An omitted reusable secret referenced by an environment value resolves to the
+empty string. Workflow `defaults.run` values must be static; job defaults may
+use their documented `github`, `needs`, `strategy`, `matrix`, `env`, `vars`,
+and `inputs` contexts. Workflow concurrency expressions may use `github`,
+`inputs`, and `vars`; job concurrency additionally permits `needs`, `strategy`,
+and `matrix`. Job and step `continue-on-error` expressions, plus environment
+names and URLs, use their own GitHub context/function sets; status functions are not
+accepted in `continue-on-error`. Strategy `fail-fast` expressions use the
+documented strategy contexts and must be boolean when their result type is
+statically known, including after reusable-input resolution; `max-parallel`
+must similarly be a positive integer.
+Reusable-input `max-parallel` expressions are rechecked with the active input
+values, so a value that resolves to zero or a non-integer cannot provide
+coverage.
+Environment names are rechecked for every active reusable-input and matrix
+state; a name that resolves to an empty string, array, or object cannot provide
+coverage.
+Workflow- and job-level concurrency groups are likewise rechecked for every
+active input or matrix state; a known empty or non-string result cannot provide
+coverage, while an unresolved dynamic result remains conservative.
+Both concurrency scopes also accept GitHub's static `queue: max` FIFO policy;
+other queue values and expressions invalidate the workflow schema.
+Action `with` values are rechecked for every active input, matrix, and
+environment state; statically known arrays or objects cannot be string action
+inputs and stop later steps from providing coverage.
+Job-level `timeout-minutes` is also rechecked for each active reusable input or
+matrix combination and must resolve to a positive integer.
+Job and step `timeout-minutes` expressions use their documented context sets,
+must resolve to positive integers, and do not admit status functions. Only
+step-level timeouts admit `hashFiles` and enforce the documented 360-minute
+maximum; job timeouts may be larger and are ultimately bounded by the selected
+runner.
+Workflow-dispatch choice options/defaults and container/service port
+declarations must also match their field-specific GitHub types and static
+Docker shape. Complete expressions in supported port components remain dynamic
+rather than being rejected as malformed mappings. Container and service image,
+environment, port, volume, option, and registry-credential expressions each
+accept only the contexts GitHub exposes at that field; a step-only context
+cannot validate an earlier container configuration. Runner labels and
+container/service images likewise reject contexts and functions unavailable at
+their own fields. A fully static image must be a valid Docker reference; known
+digest algorithms require their standard encoded hexadecimal length, while
+otherwise-valid extensible algorithms retain the conservative minimum length.
+An image that remains dynamic, including one that depends on a dynamic matrix,
+does not earn typecheck coverage because its Docker reference cannot be
+validated. Resolved registry usernames and passwords must be non-empty;
+available secret values remain opaque, while an omitted reusable secret
+resolves empty and cannot start the container. Container options reject
+GitHub's unsupported `--network` and `--entrypoint` flags, and service options
+reject `--network`; dynamically unresolved options remain conservative.
+Container and service volumes are likewise revalidated after static matrix and
+reusable-input substitution, so a resolved bind source must be absolute and a
+resolved named volume must satisfy Docker's volume-name shape.
+
+Reusable-workflow secret validation follows each call edge. A directly
+triggered workflow can inherit its available repository or organization
+secrets, except a `pull_request` activation, which may originate from a fork
+and therefore begins without repository secrets. `secrets: inherit` preserves
+that availability through nested calls, while an explicit secret mapping
+narrows it to the destination names supplied by that mapping. Required secrets
+must therefore be available at the immediate caller boundary rather than being
+inferred from an earlier ancestor.
+
+The rule evaluates the successful gate path: `success()`, `always()`, and
+`!cancelled()` are runnable there, while `failure()` and `cancelled()` are not.
+This prevents failure-handler or cancellation-only type checks from satisfying
+the required CI gate.
+
+A job blocked by a statically skipped `needs` dependency, including a
+zero-instance matrix resolved from reusable caller input and a transitive
+dependency, does not count. A prerequisite with a dynamic job condition makes
+an ordinary dependent indeterminate because the prerequisite may be skipped at
+runtime. A job condition that contains a status
+check such as `always()` or `!cancelled()` can explicitly continue after a
+skipped need when the whole condition is statically true. A dependency with
+`continue-on-error: true` is non-enforcing itself but is not treated as skipped
+for downstream jobs.
+An unconditional static step failure likewise publishes a `failure` job
+result, skips ordinary and transitive dependents, and propagates through local
+reusable-workflow calls. Failure handlers can affect later job status but do
+not themselves satisfy the successful-path gate. Known skipped and failed
+dependency results are available to these conditions through
+dot or single-quoted bracket `needs.<job>.result` access; other dependency
+results remain unresolved rather than being guessed. When a job is statically
+known to execute but its final result is otherwise unresolved, comparisons to
+`skipped` still resolve false without guessing `success`, `failure`, or
+`cancelled`.
+An unmodeled executed command similarly leaves the job result indeterminate:
+it neither manufactures a `failure` result nor permits ordinary downstream
+jobs to count. Only a status-conditioned continuation that is statically true
+for both success and failure, such as `always()`, can provide coverage.
+
+A project whose effective local `compilerOptions.noCheck` is `true` does not
+count as typechecked, even when both commands are registered. Remove or disable
+`noCheck`, or document an intentional non-typechecking project with
+`allowProjects`. Local and installed-package `extends` chains are resolved
+through the prepared source store; unresolved configs are left for `tsc` to
+reject.
+
+Counterexample: `packages/api/tsconfig.json` exists, but its `tsc --noEmit`
+command appears only in a local command catalog. CI can therefore miss type
+errors in that package.
+
+Fix: add the matching static typecheck command to a configured workflow and a
+`checks.commands` entry with `always: true` and `fileArgs: none`.
+Auxiliary configs that intentionally are not compiler projects need a
+non-empty reason in `options.allowProjects`; stale, blank, invalid, or
+normalization-colliding entries fail the rule.
+
+Dynamic shell expansion, command substitution, arbitrary wrapper scripts,
+paths outside the repository, and other unresolved command forms do not count
+as registrations. Express such a command statically if it is intended to
+provide this gate.
+Simple `exit`, `return`, `true`, and `false` outcomes are modeled so only a
+provably reachable prefix can count. Runtime failure-mode mutations such as
+`set +e` remain unsupported; declare the mode in `shell:` instead. Negated
+pipelines and bodies with unquoted shell comments, quoted command separators,
+shell function/group syntax, or non-executing shells such as `bash -n` are
+rejected rather than credited heuristically. A typecheck before another
+command in an `&&` list is rejected when a later top-level command could mask a
+failed or skipped typecheck. A final static `&&` list remains recognized.
+Across workflow steps, an unconditional static failure blocks later steps that
+retain the implicit `success()` condition. Explicit status continuations such
+as `always()` or `failure()` remain runnable, and `continue-on-error: true`
+keeps the following step on the successful path. In a custom non-errexit shell,
+a bare `exit` preserves the preceding static command status. A statically
+failing `pipefail` pipeline credits only reachable checks before that pipeline;
+later step `if` and `continue-on-error` expressions can resolve statically known
+`steps.<id>.outcome` and `steps.<id>.conclusion` values. A tolerated static
+failure keeps `outcome: failure` while exposing `conclusion: success`; successful
+action steps with an `id` expose success for both properties.
+
+Informational, setup, or config-bypassing commands (`--showConfig`,
+`--help`/`-h`, `--version`/`-v`, `--init`, enabled `--noCheck`,
+`--listFilesOnly`, and `--ignoreConfig`) do not count, even when combined with
+`--noEmit`, because they do not fully typecheck the project. Explicit
+`--noCheck false` and `--noCheck=false` forms remain typechecking modes.
+
+Findings use line 1 of the tsconfig, workflow, or configuration file. Use a
+top-of-file `no-mistakes-disable-file tsconfig-gate-coverage` directive only
+when an intentional exception cannot be represented with a reasoned
+`allowProjects` entry.

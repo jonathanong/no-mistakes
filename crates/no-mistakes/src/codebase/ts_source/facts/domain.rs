@@ -1,11 +1,10 @@
+use super::call_sites::CallSiteFact;
 use super::TsFactPlan;
-use crate::codebase::ts_http_calls::{extract_http_calls_from_program, HttpCall};
+use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::{
     extract_spawn_edges_from_program, extract_spawn_edges_from_program_from_visible, SpawnEdge,
 };
-use crate::codebase::ts_queues::factory::{
-    find_create_queue_line_from_program, find_queue_name_from_program,
-};
+use crate::codebase::ts_queues::factory::find_queue_factory_facts_from_program;
 use crate::codebase::ts_queues::usage::{extract_queue_usage_from_program, QueueUsage};
 use crate::codebase::ts_routes::defs_backend::extract_backend_routes_from_program;
 use crate::codebase::ts_routes::refs::{
@@ -16,6 +15,8 @@ use std::path::Path;
 
 #[path = "domain_types.rs"]
 mod domain_types;
+#[path = "domain_walk.rs"]
+mod domain_walk;
 #[path = "effect_calls.rs"]
 mod effect_calls;
 pub use domain_types::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactContext};
@@ -36,6 +37,9 @@ pub(crate) struct DomainFacts {
     pub server_routes: Option<crate::server_routes::model::FileFacts>,
     pub effect_calls: Vec<EffectCallFact>,
     pub rsc_environment: Option<RscEnvironmentFact>,
+    pub trpc_procedures: Vec<String>,
+    pub trpc_calls: Vec<crate::codebase::ts_trpc::TrpcCallFact>,
+    pub call_sites: Vec<CallSiteFact>,
 }
 
 pub(crate) fn collect_domain_facts<'a>(
@@ -81,11 +85,13 @@ pub(crate) fn collect_domain_facts<'a>(
         )
     });
     let http_prefixes: Vec<&str> = context.http_prefixes.iter().map(String::as_str).collect();
-    let http_calls = if plan.http_calls {
-        extract_http_calls_from_program(program, source, &http_prefixes)
-    } else {
-        Vec::new()
-    };
+    let fused = domain_walk::collect_fused_domain_calls(
+        program,
+        source,
+        plan,
+        &http_prefixes,
+        &context.effect_functions,
+    );
     let process_spawns = if plan.process_spawns {
         match context.visible_files.as_deref() {
             Some(visible) => extract_spawn_edges_from_program_from_visible(
@@ -102,14 +108,14 @@ pub(crate) fn collect_domain_facts<'a>(
     };
     let server_routes = (plan.server_routes && context.matches_server_route(path))
         .then(|| crate::server_routes::extract::extract_program(path, source, program));
-    let effect_calls = if plan.effect_calls {
-        effect_calls::extract(program, source, &context.effect_functions)
-    } else {
-        Vec::new()
-    };
     let rsc_environment = plan
         .rsc_environment
         .then(|| classify_rsc_environment(program));
+    let trpc_procedures = if plan.trpc_router && context.matches_trpc_router(path) {
+        crate::codebase::ts_trpc::extract_trpc_router_from_program(program).procedures
+    } else {
+        Vec::new()
+    };
     DomainFacts {
         route_refs: route_ref_facts.route_refs,
         route_helpers: route_ref_facts.route_helpers,
@@ -120,11 +126,14 @@ pub(crate) fn collect_domain_facts<'a>(
         queue_create_line,
         queue_name,
         queue_project,
-        http_calls,
+        http_calls: fused.http_calls,
         process_spawns,
         server_routes,
-        effect_calls,
+        effect_calls: fused.effect_calls,
         rsc_environment,
+        trpc_procedures,
+        trpc_calls: fused.trpc_calls,
+        call_sites: fused.call_sites,
     }
 }
 
@@ -158,14 +167,11 @@ fn queue_factory_facts<'a>(
         context.queue_factory_specifier.as_deref(),
         context.queue_factory_function.as_deref(),
     ) {
-        (Some(factory_specifier), Some(factory_function)) => (
-            find_create_queue_line_from_program(
-                program,
-                source,
-                factory_specifier,
-                factory_function,
-            ),
-            find_queue_name_from_program(program, factory_specifier, factory_function),
+        (Some(factory_specifier), Some(factory_function)) => find_queue_factory_facts_from_program(
+            program,
+            source,
+            factory_specifier,
+            factory_function,
         ),
         _ => (None, None),
     }

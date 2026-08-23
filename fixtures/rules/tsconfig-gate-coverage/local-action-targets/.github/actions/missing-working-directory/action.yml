@@ -1,0 +1,8 @@
+name: Missing working-directory action
+description: References a missing composite run-step directory
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: echo invalid
+      working-directory: missing-working-directory/missing-dir

@@ -1,0 +1,4 @@
+{
+  "extends": "@acme/tsconfig",
+  "include": ["src/**/*.ts"]
+}

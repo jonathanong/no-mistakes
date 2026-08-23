@@ -1,0 +1,10 @@
+{
+  "files": [],
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@fixture/*": ["src/root/*"]
+    }
+  },
+  "references": [{ "path": "apps/web" }]
+}

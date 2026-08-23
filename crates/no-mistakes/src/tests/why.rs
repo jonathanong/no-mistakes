@@ -1,5 +1,5 @@
 use crate::tests::plan::generate_plan;
-use crate::tests::TestPlan;
+use crate::tests::{ImpactEdgeDetail, TestPlan};
 use crate::tests::{PlanArgs, WhyArgs, WhyFormat};
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
@@ -13,6 +13,8 @@ use std::process::ExitCode;
 pub struct WhyStep {
     pub node: String,
     pub via: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub detail: Option<ImpactEdgeDetail>,
 }
 
 type WhyStepsByChangedFile = BTreeMap<String, Vec<WhyStep>>;
@@ -39,7 +41,11 @@ pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
                 .iter()
                 .map(|step| {
                     if let Some(ref via) = step.via {
-                        format!("`{}` ➔ [{}]", step.node, via)
+                        format!(
+                            "`{}` ➔ [{}]",
+                            step.node,
+                            display_via(via, step.detail.as_ref())
+                        )
                     } else {
                         format!("`{}`", step.node)
                     }
@@ -48,12 +54,19 @@ pub(crate) fn run(args: WhyArgs) -> Result<ExitCode> {
             writeln!(output, "  {}\n", chain.join(" ➔ "))?;
         }
     } else {
-        writeln!(output, "{}", serde_json::to_string_pretty(&path_steps)?)?;
+        writeln!(output, "{}", serde_json::to_string(&path_steps)?)?;
     }
 
     crate::invocation::commit_timeout()?;
     print!("{output}");
     Ok(ExitCode::SUCCESS)
+}
+
+fn display_via(via: &str, detail: Option<&ImpactEdgeDetail>) -> String {
+    match detail {
+        Some(ImpactEdgeDetail::VitestSetup { field }) => format!("{via} ({field})"),
+        Some(ImpactEdgeDetail::Resource { .. }) | None => via.to_string(),
+    }
 }
 
 const _: fn(WhyArgs) -> Result<ExitCode> = run;
@@ -106,6 +119,17 @@ fn read_from_plan(
         .with_context(|| format!("Failed to read plan from {}", plan_path.display()))?;
     let plan: TestPlan = serde_json::from_str(&content)?;
 
+    Ok(steps_from_plan(&plan, test_rel, changed_rel))
+}
+
+/// Convert a decoded plan into `tests why` steps. Keeping this pure lets
+/// provenance tests use saved fixtures instead of constructing files at run
+/// time, and keeps plan-backed output identical to live analysis.
+fn steps_from_plan(
+    plan: &TestPlan,
+    test_rel: &str,
+    changed_rel: Option<&str>,
+) -> BTreeMap<String, Vec<WhyStep>> {
     let mut result = BTreeMap::new();
 
     if let Some(selected) = plan.selected_tests.iter().find(|t| t.test_file == test_rel) {
@@ -124,13 +148,14 @@ fn read_from_plan(
                 } else {
                     None
                 };
-                steps.push(WhyStep { node, via });
+                let detail = reason.via_details.get(i).cloned().flatten();
+                steps.push(WhyStep { node, via, detail });
             }
             result.insert(reason.changed_file.clone(), steps);
         }
     }
 
-    Ok(result)
+    result
 }
 
 fn run_live_analysis(
@@ -160,8 +185,11 @@ fn run_live_analysis(
         limit_percent: None,
         limit_files: None,
         global_config_fallback: None,
+        direct_test_owner: false,
         format: None,
         json: true,
+        include_comment: false,
+        include_glob: Vec::new(),
     };
 
     let plan = generate_plan(&plan_args)?;
@@ -177,7 +205,8 @@ fn run_live_analysis(
                 } else {
                     None
                 };
-                steps.push(WhyStep { node, via });
+                let detail = reason.via_details.get(i).cloned().flatten();
+                steps.push(WhyStep { node, via, detail });
             }
             result.insert(reason.changed_file.clone(), steps);
         }
@@ -196,31 +225,55 @@ fn relative_path_str(root: &Path, path: &Path) -> String {
     no_mistakes::codebase::ts_source::relative_slash_path(root, &absolute_normalized)
 }
 
-pub(crate) fn resolve_tsconfig(
-    tsconfig_arg: Option<&Path>,
-    root: &Path,
-) -> Result<no_mistakes::codebase::ts_resolver::TsConfig> {
-    match tsconfig_arg {
-        Some(path) => {
-            let path = if path.is_absolute() {
-                path.to_path_buf()
-            } else {
-                root.join(path)
-            };
-            no_mistakes::codebase::ts_resolver::load_tsconfig(&path)
-                .with_context(|| format!("loading tsconfig {}", path.display()))
-        }
-        None => match no_mistakes::codebase::ts_resolver::find_tsconfig_from_visible(
-            root,
-            &no_mistakes::codebase::ts_source::discover_visible_paths(root),
-        ) {
-            Some(path) => no_mistakes::codebase::ts_resolver::load_tsconfig(&path),
-            None => Ok(no_mistakes::codebase::ts_resolver::TsConfig {
-                dir: root.to_path_buf(),
-                paths: vec![],
-                paths_dir: root.to_path_buf(),
-                base_url: None,
-            }),
-        },
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::tests::{Confidence, ImpactReason, ResourceCallSite, SelectedTest, Warning};
+
+    #[test]
+    fn plan_backed_why_preserves_resource_edge_detail() {
+        let plan = TestPlan {
+            changed_files: Vec::new(),
+            selected_tests: vec![SelectedTest {
+                test_file: "src/load.test.ts".to_string(),
+                confidence: Confidence::High,
+                targets: Vec::new(),
+                reasons: vec![ImpactReason {
+                    changed_file: "resources/schema.sql".to_string(),
+                    path: vec![
+                        "resources/schema.sql".to_string(),
+                        "src/load.ts".to_string(),
+                        "src/load.test.ts".to_string(),
+                    ],
+                    via: vec!["resource".to_string(), "dependency".to_string()],
+                    via_details: vec![
+                        Some(ImpactEdgeDetail::Resource {
+                            consumer_file: "src/load.ts".to_string(),
+                            call_sites: vec![ResourceCallSite {
+                                call_kind: "read-file-sync".to_string(),
+                                line: 5,
+                            }],
+                        }),
+                        None,
+                    ],
+                }],
+            }],
+            groups: Vec::new(),
+            warnings: Vec::<Warning>::new(),
+            fallback_triggered: false,
+            fallback_reason: None,
+            ..Default::default()
+        };
+        let result = steps_from_plan(&plan, "src/load.test.ts", None);
+        let steps = result.get("resources/schema.sql").unwrap();
+        assert!(matches!(
+            steps[0].detail,
+            Some(ImpactEdgeDetail::Resource { ref call_sites, .. })
+                if call_sites == &[ResourceCallSite {
+                    call_kind: "read-file-sync".to_string(),
+                    line: 5,
+                }]
+        ));
+        assert_eq!(steps[1].detail, None);
     }
 }

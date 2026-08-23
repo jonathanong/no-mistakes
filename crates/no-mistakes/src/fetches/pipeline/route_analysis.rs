@@ -8,10 +8,7 @@ pub(crate) fn check_route_matches(
     route: &no_mistakes::routes::Route,
     target_specs: &[TargetSpec],
     wrapper_files: &[PathBuf],
-    cache: &mut Cache,
-    parsed_files: &mut no_mistakes::fetch::ParsedFileCache,
-    root: &Path,
-    visible_files: &HashSet<PathBuf>,
+    mut context: RouteMatchContext<'_>,
 ) -> Result<(bool, Vec<String>)> {
     let mut newly_matched = Vec::new();
 
@@ -28,14 +25,7 @@ pub(crate) fn check_route_matches(
         }
 
         if let Some(target_file) = &target.file {
-            let reaches_route_target = reaches_target(
-                &route.file,
-                target_file,
-                root,
-                cache,
-                parsed_files,
-                visible_files,
-            )?;
+            let reaches_route_target = reaches_target(&route.file, target_file, &mut context)?;
             if reaches_route_target {
                 matched = true;
                 newly_matched.push(target.raw.clone());
@@ -49,14 +39,8 @@ pub(crate) fn check_route_matches(
                     break;
                 }
 
-                let reaches_wrapper_target = reaches_target(
-                    wrapper_file,
-                    target_file,
-                    root,
-                    cache,
-                    parsed_files,
-                    visible_files,
-                )?;
+                let reaches_wrapper_target =
+                    reaches_target(wrapper_file, target_file, &mut context)?;
                 if reaches_wrapper_target {
                     wrapper_file_matches = true;
                     break;
@@ -74,22 +58,31 @@ pub(crate) fn check_route_matches(
     Ok((matched, newly_matched))
 }
 
+pub(crate) struct RouteMatchContext<'a> {
+    pub(crate) cache: &'a mut Cache,
+    pub(crate) session: &'a no_mistakes::codebase::analysis_session::AnalysisSession,
+    pub(crate) parsed_files: &'a mut no_mistakes::fetch::ParsedFileCache,
+    pub(crate) root: &'a Path,
+    pub(crate) visible_files: &'a no_mistakes::fx::PathSet,
+}
+
 fn reaches_target(
     source_file: &Path,
     target_file: &Path,
-    root: &Path,
-    cache: &mut Cache,
-    parsed_files: &mut no_mistakes::fetch::ParsedFileCache,
-    visible_files: &HashSet<PathBuf>,
+    context: &mut RouteMatchContext<'_>,
 ) -> Result<bool> {
     let mut visited_targets = HashSet::new();
-    no_mistakes::fetch::route_reaches_target_from_visible_with_facts(
+    let mut facts = no_mistakes::fetch::RouteTargetFacts {
+        root: context.root,
+        visited: &mut visited_targets,
+        import_cache: &mut context.cache.imports,
+        parsed_files: &mut *context.parsed_files,
+        visible_files: context.visible_files,
+    };
+    no_mistakes::fetch::route_reaches_target_from_visible_with_facts_and_session(
+        context.session,
         source_file,
         target_file,
-        root,
-        &mut visited_targets,
-        &mut cache.imports,
-        parsed_files,
-        visible_files,
+        &mut facts,
     )
 }

@@ -1,0 +1,3 @@
+rules:
+  - rule: tsconfig-file-coverage
+    scope: repository

@@ -1,0 +1,8 @@
+on: push
+jobs:
+  # No producer in this root's run at all: `shared.yml#consume`'s download
+  # resolves differently depending on which caller reached it, so the
+  # (job, step) key's result is dropped entirely rather than picking one
+  # invocation's answer.
+  call:
+    uses: ./.github/workflows/shared.yml

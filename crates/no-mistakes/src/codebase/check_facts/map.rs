@@ -3,6 +3,7 @@ use crate::codebase::rules::nextjs_no_caching::NextjsCachingFinding;
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::ast::TestFacts;
 use crate::codebase::storybook::StorybookFileFacts;
 use crate::codebase::ts_source::facts::TsFileFacts;
+use crate::codebase::ts_source::FileIdMap;
 use crate::codebase::ts_symbols::FileSymbols;
 use crate::integration_tests::types::FileAnalysis as IntegrationFileAnalysis;
 use crate::playwright::analysis::text_types::AppTextTarget;
@@ -36,7 +37,7 @@ pub struct CheckFactMap {
     pub(crate) files: Vec<PathBuf>,
     pub(crate) graph_files: Vec<PathBuf>,
     pub(crate) graph_files_complete: bool,
-    pub(crate) ts: HashMap<PathBuf, Arc<CheckFileFacts>>,
+    pub(crate) ts: FileIdMap<Arc<CheckFileFacts>>,
     pub(crate) graph_plan: crate::codebase::ts_source::facts::TsFactPlan,
     pub(crate) integration_runner_configs: std::collections::BTreeMap<
         PathBuf,
@@ -102,14 +103,26 @@ impl CheckFactMap {
         self.view_with_supplemental(supplemental, graph_files)
     }
 
+    /// Add prepared facts without admitting their source paths to the primary
+    /// file or graph universes.
+    ///
+    /// This is used for configured, out-of-scope fact consumers such as
+    /// finite-set call sources. They need their facts to be addressable, but
+    /// must not widen filesystem-scoped checks or canonical graph traversal.
+    #[doc(hidden)]
+    pub fn fact_view_with_supplemental(&self, supplemental: &Self) -> Self {
+        self.view_with_supplemental(supplemental, self.graph_files.clone())
+    }
+
+    pub(crate) fn with_graph_file_universe(&self, graph_files: Vec<PathBuf>) -> Self {
+        self.view_with_supplemental(&Self::default(), graph_files)
+    }
+
     fn view_with_supplemental(&self, supplemental: &Self, graph_files: Vec<PathBuf>) -> Self {
         let mut ts = self.ts.clone();
-        ts.extend(
-            supplemental
-                .ts
-                .iter()
-                .map(|(path, facts)| (path.clone(), Arc::clone(facts))),
-        );
+        for (path, facts) in supplemental.ts.iter() {
+            ts.insert(path.clone(), Arc::clone(facts));
+        }
         let mut graph_plan = self.graph_plan;
         graph_plan.include(supplemental.graph_plan);
         Self {

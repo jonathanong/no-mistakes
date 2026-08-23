@@ -1,0 +1,1 @@
+export function SameLine() { return <div>same-line directive remains selected</div> } // no-mistakes-disable-line require-storybook-stories: this rule honors next-line and file directives during selection

@@ -1,11 +1,10 @@
 use crate::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-pub(super) fn runtime_deps(
+pub(crate) fn runtime_deps(
     graph: &DepGraph,
     target: PathBuf,
-    file_universe: Option<&HashSet<PathBuf>>,
+    file_universe: Option<&crate::fx::PathSet>,
 ) -> Vec<PathBuf> {
     let allowed = [
         EdgeKind::Import,
@@ -14,7 +13,7 @@ pub(super) fn runtime_deps(
         EdgeKind::WorkspaceImport,
     ]
     .into();
-    let roots = [NodeId::File(target)];
+    let roots = [NodeId::file(target)];
     let entries = match file_universe {
         Some(universe) => graph.deps_of_in_file_universe(&roots, None, Some(&allowed), universe),
         None => graph.deps_of(&roots, None, Some(&allowed)),

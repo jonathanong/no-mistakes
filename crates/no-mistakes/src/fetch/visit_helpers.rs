@@ -1,3 +1,4 @@
+use crate::codebase::ts_source::byte_offset_to_line;
 use crate::fetch::cache_opts::{
     cache_wrapper_name, extract_fetch_cache_options, infer_cached_wrapper_name,
 };
@@ -21,7 +22,7 @@ pub fn try_extract_fetch<'a>(
     let mut method = "GET".to_string();
     let mut cached = false;
     let mut cache_kind = CacheKind::None;
-    let line = visitor.source[..expr.span().start as usize].lines().count() + 1;
+    let line = byte_offset_to_line(visitor.source, expr.span().start as usize) as usize;
 
     let (path, raw_path, is_dynamic, is_unsupported) = if let Some(arg) = expr.arguments.first() {
         let result = extract_url_from_argument(arg, visitor.source);

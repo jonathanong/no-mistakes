@@ -1,0 +1,12 @@
+export { dataRecord0 } from './records/data-0';
+export type { DataRecord0 } from './records/data-0';
+export { dataRecord1 } from './records/data-1';
+export type { DataRecord1 } from './records/data-1';
+export { dataRecord2 } from './records/data-2';
+export type { DataRecord2 } from './records/data-2';
+export { dataRecord3 } from './records/data-3';
+export type { DataRecord3 } from './records/data-3';
+export { dataRecord4 } from './records/data-4';
+export type { DataRecord4 } from './records/data-4';
+export { dataRecord5 } from './records/data-5';
+export type { DataRecord5 } from './records/data-5';

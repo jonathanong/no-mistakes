@@ -20,7 +20,20 @@ pattern. The request snapshot also retains a tracked-only view for
 repository-state rules such as `banned-paths`; that view contains files present
 in both the Git index and working tree, including tracked files that now match
 an ignore pattern, but excludes all untracked files. Both views come from the
-same Git discovery command and are reused throughout the request.
+same `git ls-files -z -t --stage --cached --others --deleted --exclude-standard`
+command and are reused throughout the request.
+
+Tracked regular files (index mode `100644`/`100755`) tagged `H` are classified
+from that index mode without a worktree `lstat`. An unstaged replacement of a
+tracked file by a symlink is therefore still treated as a regular file. Missing
+worktree paths are omitted from the `--deleted` `R` records rather than by
+running `lstat` on every tracked file. Skip-worktree (`S`) and unmerged (`M`)
+entries, including sparse-checkout files, still consult worktree metadata
+because `--deleted` does not emit `R` for skip-worktree paths and unmerged
+stages can disagree. Tracked symlinks (`120000`) and untracked files also
+consult worktree metadata, including the lexical type of an unstaged
+symlink-to-file replacement. Untracked (`?`) records keep their literal path;
+stage fields are parsed only for index record tags.
 
 Outside a Git checkout, `.gitignore` and `.ignore` files are still applied by
 the fallback walker. Because there is no Git index, rules that normally use the
@@ -36,3 +49,8 @@ from the policy.
 Explicit paths supplied through CLI flags or configuration remain authoritative
 and may name an ignored file. This exception applies to explicit configuration,
 not to automatically discovered source, test, workflow, or runner-config files.
+
+Check and graph file views stay readable file targets. Path-existence extractors
+such as `finite-set-consistency` `path-regex-capture` use the snapshot
+inventory's lexical path entries, so directory-target and broken symlinks can
+match by path without becoming source or graph files.

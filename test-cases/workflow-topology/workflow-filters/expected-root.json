@@ -1,0 +1,77 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/callee.yml",
+      "path": ".github/workflows/callee.yml",
+      "name": "Callee",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call",
+          "config": {}
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/callee.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/root.yml",
+      "path": ".github/workflows/root.yml",
+      "name": "Root",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/root.yml#call"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/callee.yml#noop",
+      "workflowId": ".github/workflows/callee.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/root.yml#call",
+      "workflowId": ".github/workflows/root.yml",
+      "key": "call",
+      "kind": "job",
+      "steps": []
+    }
+  ],
+  "edges": [
+    {
+      "kind": "calls",
+      "from": ".github/workflows/root.yml#call",
+      "target": "./.github/workflows/callee.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/callee.yml"
+    }
+  ],
+  "diagnostics": []
+}

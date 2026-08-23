@@ -12,6 +12,12 @@ fn fixture(name: &str) -> PathBuf {
         .join("fixture")
 }
 
+fn root_fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/server-routes")
+        .join(name)
+}
+
 fn gitignore_fixture() -> tempfile::TempDir {
     let fixture = crate::test_support::materialize_gitignore_fixture("pass3-visibility");
     crate::test_support::git_init(fixture.path());
@@ -30,6 +36,170 @@ fn express_project_reports_route_edges() {
         .edges
         .iter()
         .any(|edge| edge.from == "backend/api/users.ts" && edge.to == "/api/v1/users/*"));
+}
+
+#[test]
+fn configured_mounts_and_client_calls_share_canonical_relationships() {
+    let fixture =
+        crate::test_support::materialize_saved_fixture(&root_fixture("canonical-relationships"));
+    let root = fixture.path().canonicalize().unwrap();
+    let prepared = prepare_analysis(&root, None).unwrap();
+    assert!(crate::codebase::test_filter::TestFileFilter::new(
+        &root,
+        prepared.config.as_ref().unwrap(),
+    )
+    .is_match(&root, &root.join("backend/client.test.ts")));
+    assert_eq!(
+        prepared.facts[&root.join("backend/client.ts")]
+            .route_refs
+            .len(),
+        1,
+        "client references must be collected in the route session"
+    );
+    let report = analyze_project_with_prepared(&prepared, &[]).unwrap();
+    let route = "/api/v1/users/*".to_string();
+    let server_edge = Edge {
+        from: "backend/api/users.ts".to_string(),
+        to: route.clone(),
+        kind: EdgeKind::ServerRoute,
+    };
+    assert!(report.edges.contains(&server_edge));
+    assert!(report
+        .edges
+        .iter()
+        .all(|edge| edge.from != "backend/client.test.ts"));
+    for route in ["/api/v1/imported/*", "/api/v1/local/*", "/api/v1/users/*"] {
+        assert!(
+            report.edges.contains(&Edge {
+                from: "backend/client.ts".to_string(),
+                to: route.to_string(),
+                kind: EdgeKind::ClientCall,
+            }),
+            "missing {route}: {:?}",
+            report.edges
+        );
+    }
+
+    let indexed = analyze_project_with_prepared_indexed(&prepared, &[]).unwrap();
+    assert_eq!(indexed.edge_view(&[], None), report.edges);
+    assert_eq!(
+        indexed.related(&["backend/client.ts".to_string()], RelatedDirection::Deps),
+        vec![
+            Edge {
+                from: "backend/client.ts".to_string(),
+                to: "/api/v1/imported/*".to_string(),
+                kind: EdgeKind::ClientCall,
+            },
+            Edge {
+                from: "backend/client.ts".to_string(),
+                to: "/api/v1/local/*".to_string(),
+                kind: EdgeKind::ClientCall,
+            },
+            Edge {
+                from: "backend/client.ts".to_string(),
+                to: "/api/v1/users/*".to_string(),
+                kind: EdgeKind::ClientCall,
+            },
+        ]
+    );
+    assert_eq!(
+        indexed.related(&[route], RelatedDirection::Dependents),
+        vec![
+            Edge {
+                from: "/api/v1/users/*".to_string(),
+                to: "backend/api/users.ts".to_string(),
+                kind: EdgeKind::ServerRoute,
+            },
+            Edge {
+                from: "/api/v1/users/*".to_string(),
+                to: "backend/client.ts".to_string(),
+                kind: EdgeKind::ClientCall,
+            },
+            Edge {
+                from: "/api/v1/users/*".to_string(),
+                to: "backend/excluded-client.ts".to_string(),
+                kind: EdgeKind::ClientCall,
+            },
+        ]
+    );
+}
+
+#[test]
+fn named_concise_arrow_handler_preserves_contract_query_params() {
+    let fixture =
+        crate::test_support::materialize_saved_fixture(&root_fixture("named-concise-handler"));
+    let root = fixture.path().canonicalize().unwrap();
+    let prepared = prepare_analysis(&root, None).unwrap();
+    let routes = analyze_project_with_prepared(&prepared, &[]).unwrap();
+    let contracts = analyze_contracts_with_prepared(&prepared, &routes, &[]).unwrap();
+
+    assert!(contracts
+        .routes
+        .iter()
+        .any(|route| route.route == "/search" && route.query_params == ["term"]));
+    assert!(contracts
+        .client_refs
+        .iter()
+        .any(|client| { client.route == "/search" && client.query_params == ["term", "unused"] }));
+    assert!(contracts.mismatches.iter().any(|mismatch| {
+        mismatch.matched_route == "/search" && mismatch.missing_params == ["unused"]
+    }));
+}
+
+#[test]
+fn filters_exclude_client_call_sources_without_broadening_route_definitions() {
+    let fixture =
+        crate::test_support::materialize_saved_fixture(&root_fixture("canonical-relationships"));
+    let root = fixture.path().canonicalize().unwrap();
+    let report = analyze_project(&root, None, &["backend/api/users.ts".to_string()]).unwrap();
+    assert!(report
+        .edges
+        .iter()
+        .all(|edge| edge.kind == EdgeKind::ServerRoute));
+    assert!(report
+        .edges
+        .iter()
+        .any(|edge| edge.from == "backend/api/users.ts"));
+}
+
+#[test]
+fn filtered_client_sources_keep_imported_helper_resolution() {
+    let fixture =
+        crate::test_support::materialize_saved_fixture(&root_fixture("canonical-relationships"));
+    let root = fixture.path().canonicalize().unwrap();
+    // `hrefs.ts` is intentionally omitted: filters select client callers,
+    // while the prepared resolver still sees imported helper modules.
+    let filters = [
+        "backend/api/users.ts".to_string(),
+        "backend/client.ts".to_string(),
+        "backend/index.ts".to_string(),
+    ];
+    let prepared = prepare_analysis(&root, None).unwrap();
+    let indexed = analyze_project_with_prepared_indexed(&prepared, &filters).unwrap();
+    let expected = vec![
+        Edge {
+            from: "backend/client.ts".to_string(),
+            to: "/api/v1/imported/*".to_string(),
+            kind: EdgeKind::ClientCall,
+        },
+        Edge {
+            from: "backend/client.ts".to_string(),
+            to: "/api/v1/local/*".to_string(),
+            kind: EdgeKind::ClientCall,
+        },
+        Edge {
+            from: "backend/client.ts".to_string(),
+            to: "/api/v1/users/*".to_string(),
+            kind: EdgeKind::ClientCall,
+        },
+    ];
+    assert_eq!(
+        indexed.related(&["backend/client.ts".to_string()], RelatedDirection::Deps),
+        expected
+    );
+    assert!(indexed.edge_view(&[], None).iter().all(|edge| {
+        edge.from != "backend/excluded-client.ts" && edge.to != "backend/excluded-client.ts"
+    }));
 }
 
 #[test]

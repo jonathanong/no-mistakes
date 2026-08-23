@@ -1,0 +1,15 @@
+# Interleaved Mermaid containers inside MDX JSX
+
+<DiagramCard>
+- > ~~~mermaid
+  > flowchart TD
+  > ListQuote --> Works
+  > ~~~
+</DiagramCard>
+
+<DiagramCard>
+> - > 1. ```mermaid
+>   >    sequenceDiagram
+>   >    Alice->>Bob: Works
+>   >    ```
+</DiagramCard>

@@ -1,0 +1,125 @@
+use super::{
+    expression_bool_with_status_and_environment, ConditionStatus, EnvironmentState, InputState,
+    StaticBool,
+};
+mod parsing;
+use parsing::{top_level_comparison, top_level_operator};
+
+#[derive(Clone, Copy)]
+pub(super) enum Comparison {
+    Equal,
+    NotEqual,
+    LessThan,
+    LessThanOrEqual,
+    GreaterThan,
+    GreaterThanOrEqual,
+}
+
+#[derive(Clone, Copy)]
+pub(super) enum LogicalOperator {
+    And,
+    Or,
+}
+
+pub(super) fn compound_bool(
+    expression: &str,
+    inputs: &InputState,
+    environment: &EnvironmentState,
+    status: ConditionStatus,
+) -> Option<StaticBool> {
+    if let Some((left, right, operator)) = logical_operands(expression) {
+        let left = expression_bool_with_status_and_environment(left, inputs, environment, status);
+        match (operator, left.truthiness()) {
+            (LogicalOperator::Or, StaticBool::True) => return Some(StaticBool::True),
+            (LogicalOperator::And, StaticBool::False) => return Some(StaticBool::False),
+            (_, StaticBool::Invalid) => return Some(StaticBool::Invalid),
+            _ => {}
+        }
+        let right = expression_bool_with_status_and_environment(right, inputs, environment, status);
+        return Some(match operator {
+            LogicalOperator::Or => or(left, right),
+            LogicalOperator::And => and(left, right),
+        });
+    }
+    outer_parentheses_body(expression)
+        .map(|body| expression_bool_with_status_and_environment(body, inputs, environment, status))
+}
+
+pub(super) fn logical_operands(expression: &str) -> Option<(&str, &str, LogicalOperator)> {
+    if let Some(index) = top_level_operator(expression, b"||") {
+        return Some((
+            &expression[..index],
+            &expression[index + 2..],
+            LogicalOperator::Or,
+        ));
+    }
+    let index = top_level_operator(expression, b"&&")?;
+    Some((
+        &expression[..index],
+        &expression[index + 2..],
+        LogicalOperator::And,
+    ))
+}
+
+pub(super) fn comparison_operands(expression: &str) -> Option<(&str, &str, Comparison)> {
+    let (index, width, comparison) = top_level_comparison(expression)?;
+    let right = &expression[index + width..];
+    if top_level_comparison(right).is_some() {
+        return None;
+    }
+    Some((&expression[..index], right, comparison))
+}
+
+fn and(left: StaticBool, right: StaticBool) -> StaticBool {
+    match (left.truthiness(), right.truthiness()) {
+        (StaticBool::Invalid, _) | (_, StaticBool::Invalid) => StaticBool::Invalid,
+        (StaticBool::False, _) | (_, StaticBool::False) => StaticBool::False,
+        (StaticBool::True, StaticBool::True) => StaticBool::True,
+        _ => StaticBool::Unknown,
+    }
+}
+
+fn or(left: StaticBool, right: StaticBool) -> StaticBool {
+    match (left.truthiness(), right.truthiness()) {
+        (StaticBool::Invalid, _) | (_, StaticBool::Invalid) => StaticBool::Invalid,
+        (StaticBool::True, _) | (_, StaticBool::True) => StaticBool::True,
+        (StaticBool::False, StaticBool::False) => StaticBool::False,
+        _ => StaticBool::Unknown,
+    }
+}
+
+pub(super) fn outer_parentheses_body(expression: &str) -> Option<&str> {
+    let body = expression.strip_prefix('(')?.strip_suffix(')')?;
+    top_level_closing_parenthesis(expression)
+        .is_some_and(|index| index + 1 == expression.len())
+        .then_some(body.trim())
+}
+
+fn top_level_closing_parenthesis(expression: &str) -> Option<usize> {
+    let bytes = expression.as_bytes();
+    let mut depth = 0;
+    let mut in_string = false;
+    let mut index = 0;
+    while index < bytes.len() {
+        match bytes[index] {
+            b'\'' if in_string && bytes.get(index + 1) == Some(&b'\'') => index += 2,
+            b'\'' => {
+                in_string = !in_string;
+                index += 1;
+            }
+            b'(' if !in_string => {
+                depth += 1;
+                index += 1;
+            }
+            b')' if !in_string => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(index);
+                }
+                index += 1;
+            }
+            _ => index += 1,
+        }
+    }
+    None
+}

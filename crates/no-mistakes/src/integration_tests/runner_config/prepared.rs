@@ -3,7 +3,6 @@ use super::{
     ParsedRunnerConfigs, PreparedIntegrationRunnerConfigs, ProjectResult, RunnerConfigFileFacts,
     RunnerConfigSpec,
 };
-use crate::codebase::ts_resolver::TsConfig;
 use crate::config::v2::schema::{NoMistakesConfig, StringOrList, TestProjectPolicy};
 use crate::integration_tests::project_config::{self, ConfigProjectInput};
 use crate::integration_tests::{analysis, types::Framework};
@@ -11,9 +10,45 @@ use anyhow::Result;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
 
+mod errors;
+mod json;
 mod setup;
 
-pub(crate) use setup::{prepare, prepare_with_sources};
+pub(crate) use setup::{prepare, prepare_with_catalog_and_sources};
+
+/// Prepare configured runner files with the request's importer-scoped
+/// TypeScript catalog and source store.
+#[doc(hidden)]
+pub fn prepare_runner_configs_with_catalog(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
+    tsconfig_catalog: std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
+    sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> PreparedIntegrationRunnerConfigs {
+    prepare_with_catalog_and_sources(root, config, visible_paths, tsconfig_catalog, sources)
+}
+
+/// Directories containing explicitly configured runner configs. These seed
+/// request-local TypeScript config discovery before the runner config itself
+/// is parsed, so its imports use the owning package's aliases even outside a
+/// declared workspace.
+#[doc(hidden)]
+pub fn configured_runner_config_dirs(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
+    [
+        config.tests.vitest.configs.as_ref(),
+        config.tests.playwright.configs.as_ref(),
+    ]
+    .into_iter()
+    .flatten()
+    .flat_map(StringOrList::values)
+    .filter_map(|path| {
+        crate::codebase::ts_resolver::normalize_path(&root.join(path))
+            .parent()
+            .map(Path::to_path_buf)
+    })
+    .collect()
+}
 
 impl PreparedIntegrationRunnerConfigs {
     pub(crate) fn paths(&self) -> impl Iterator<Item = &PathBuf> {
@@ -41,6 +76,10 @@ impl PreparedIntegrationRunnerConfigs {
             return None;
         }
         let config_dir = path.parent().unwrap_or(&self.root);
+        let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_visible(
+            &self.tsconfig_catalog,
+            &self.visible_files,
+        );
         let (results, mut analyses) = collect_analyses(|| {
             specs
                 .into_iter()
@@ -55,7 +94,7 @@ impl PreparedIntegrationRunnerConfigs {
                             path: &path,
                             source,
                             config_dir,
-                            tsconfig: &self.tsconfig,
+                            resolver: &resolver,
                         },
                         program,
                         Some(&self.visible_files),
@@ -69,28 +108,6 @@ impl PreparedIntegrationRunnerConfigs {
             analysis::analyze_program(&path, program, source),
         );
         Some(RunnerConfigFileFacts { results, analyses })
-    }
-
-    pub(crate) fn parse_error(
-        &self,
-        path: &Path,
-        message: String,
-    ) -> Option<RunnerConfigFileFacts> {
-        let path = crate::codebase::ts_resolver::normalize_path(path);
-        let results = self
-            .specs
-            .iter()
-            .filter(|spec| spec.path == path)
-            .map(|spec| ProjectResult {
-                framework: spec.framework,
-                raw: spec.raw.clone(),
-                projects: Err(message.clone()),
-            })
-            .collect::<Vec<_>>();
-        (!results.is_empty()).then_some(RunnerConfigFileFacts {
-            results,
-            analyses: BTreeMap::new(),
-        })
     }
 
     fn read_source(&self, path: &Path) -> Result<std::sync::Arc<str>> {
@@ -128,10 +145,14 @@ impl PreparedIntegrationRunnerConfigs {
                     error
                 )
             })?;
-            let facts = with_request_program(&spec.path, &source, |program, source| {
-                self.parse_program(&spec.path, program, source)
-                    .expect("runner config path was prepared")
-            })?;
+            let facts = if spec.path.extension().and_then(|value| value.to_str()) == Some("json") {
+                self.parse_json(&spec.path, &source)
+            } else {
+                with_request_program(&spec.path, &source, |program, source| {
+                    self.parse_program(&spec.path, program, source)
+                        .expect("runner config path was prepared")
+                })?
+            };
             parsed.analyses.extend(facts.analyses.clone());
             parsed.files.insert(spec.path.clone(), facts);
         }
@@ -155,6 +176,9 @@ impl PreparedIntegrationRunnerConfigs {
             Ok(source) => source,
             Err(error) => return self.parse_error(path, error.to_string()),
         };
+        if path.extension().and_then(|value| value.to_str()) == Some("json") {
+            return Some(self.parse_json(path, &source));
+        }
         match session.with_program(path, &source, |program, source| {
             self.parse_program(path, program, source)
                 .expect("runner config path was prepared")

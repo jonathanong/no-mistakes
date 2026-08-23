@@ -37,3 +37,35 @@ pub(super) fn is_project_report(report_type: &str) -> bool {
             | "check"
     )
 }
+
+pub(super) fn is_command_report(report_type: &str) -> bool {
+    matches!(
+        report_type,
+        "importers"
+            | "exportsOf"
+            | "deadExports"
+            | "callSites"
+            | "resolveCheck"
+            | "fetches"
+            | "dataPw"
+            | "registryExtension"
+            | "testsPlan"
+            | "testsImpact"
+            | "testsTargets"
+            | "testsWhy"
+            | "testsComment"
+            | "testsGraph"
+            | "testsGraphMermaid"
+            | "lockfileDiff"
+            | "ciImpact"
+            | "ciEnv"
+            | "ciTopology"
+            | "impactedChecks"
+            | "infraResourceRefs"
+            | "infraOutputs"
+            | "infraTestFor"
+            | "swiftImporters"
+            | "swiftTestTargets"
+            | "validateMermaidMarkdown"
+    )
+}

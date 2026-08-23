@@ -47,11 +47,12 @@ fn config_and_tsconfig_parses_are_memoized_exactly_once() {
 #[test]
 fn workspace_indexes_are_built_once_and_reused() {
     let root = repository_fixture("test-cases/codebase-analysis/large-graph-monorepo/fixture");
-    let dataset = dataset(&root);
+    let (dataset, observer) = observed_dataset(&root);
     let first = dataset.workspace();
     let second = dataset.workspace();
     assert!(std::sync::Arc::ptr_eq(&first, &second));
     assert!(first.shares_indexes_with(&second));
+    assert_eq!(observer.snapshot().work["workspace.builds"], 1);
 }
 
 #[test]
@@ -82,6 +83,24 @@ fn config_parse_failures_are_memoized_exactly_once() {
     assert_eq!(work["manifest.cache_hits"], 1);
     assert_eq!(work["manifest.errors"], 1);
     assert_eq!(dataset.sources_for(&root).physical_read_count(), 1);
+}
+
+#[test]
+fn config_path_selection_failures_are_memoized_and_accounted_for() {
+    let root = repository_fixture("test-cases/codebase-analysis/queries/fixture");
+    let (dataset, observer) = observed_dataset(&root);
+
+    let first = dataset.config(Some(Path::new("missing.no-mistakes.yml")));
+    let second = dataset.config(Some(Path::new("missing.no-mistakes.yml")));
+
+    assert!(first.is_err());
+    assert!(second.is_err());
+    let work = observer.snapshot().work;
+    assert_eq!(work["manifest.requests"], 2);
+    assert_eq!(work.get("manifest.parses"), None);
+    assert_eq!(work["manifest.errors"], 1);
+    assert_eq!(work["manifest.cache_hits"], 1);
+    assert_eq!(dataset.sources_for(&root).physical_read_count(), 0);
 }
 
 #[test]

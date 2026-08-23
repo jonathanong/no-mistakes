@@ -1,0 +1,7 @@
+name: Invalid Docker args
+description: Reject incomplete Docker action expressions.
+runs:
+  using: docker
+  image: docker://alpine:3.22
+  # An incomplete input expression must invalidate this local action.
+  args: ['${{ inputs. }}']

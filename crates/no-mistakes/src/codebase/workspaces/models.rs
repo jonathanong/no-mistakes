@@ -56,13 +56,13 @@ impl WorkspaceMap {
     fn resolve_specifier_inner(
         &self,
         specifier: &str,
-        visible_files: Option<&std::collections::HashSet<PathBuf>>,
+        visible_files: Option<&dyn VisiblePathLookup>,
     ) -> Option<PathBuf> {
         let (name, subpath) = package_name_and_subpath(specifier)?;
         let package = self.package_by_name(&name)?;
         if subpath.is_none() {
             return package.entry.clone().filter(|entry| {
-                visible_files.is_none_or(|visible| visible.contains(&normalize_path(entry)))
+                visible_files.is_none_or(|visible| visible.contains_visible(&normalize_path(entry)))
             });
         }
         package.resolve_subpath(subpath.as_deref()?, visible_files)
@@ -81,7 +81,7 @@ impl WorkspaceMap {
         &self,
         specifier: &str,
         importing_file: &Path,
-        visible_files: &std::collections::HashSet<PathBuf>,
+        visible_files: &dyn VisiblePathLookup,
     ) -> Option<PathBuf> {
         self.resolve_specifier_from_inner(specifier, importing_file, Some(visible_files))
     }
@@ -89,7 +89,7 @@ impl WorkspaceMap {
         &self,
         specifier: &str,
         importing_file: &Path,
-        visible_files: Option<&std::collections::HashSet<PathBuf>>,
+        visible_files: Option<&dyn VisiblePathLookup>,
     ) -> Option<PathBuf> {
         if specifier.starts_with('#') {
             let package = self.nearest_package(importing_file)?;

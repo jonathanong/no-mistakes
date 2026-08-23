@@ -2,8 +2,8 @@
 struct HelperDef<'a> {
     name: &'a str,
     params: &'a oxc_ast::ast::FormalParameters<'a>,
-    body: &'a oxc_ast::ast::FunctionBody<'a>,
-    expression_body: bool,
+    body: Option<&'a oxc_ast::ast::FunctionBody<'a>>,
+    expression: Option<&'a Expression<'a>>,
 }
 
 fn collect_route_helpers<'a>(
@@ -56,8 +56,8 @@ fn collect_helper_def_from_statement<'a>(
                     HelperDef {
                         name: id.name.as_str(),
                         params: &func.params,
-                        body,
-                        expression_body: false,
+                        body: Some(body),
+                        expression: None,
                     },
                 );
             }
@@ -65,21 +65,21 @@ fn collect_helper_def_from_statement<'a>(
         Statement::VariableDeclaration(var_decl) => {
             collect_helper_defs_from_var_decl(var_decl, defs);
         }
-        Statement::ExportNamedDeclaration(export) => match export.declaration.as_ref() {
-            Some(oxc_ast::ast::Declaration::FunctionDeclaration(func)) => {
+        Statement::ExportDeclaration(export) => match &export.declaration {
+            oxc_ast::ast::Declaration::FunctionDeclaration(func) => {
                 if let (Some(id), Some(body)) = (&func.id, &func.body) {
                     defs.insert(
                         id.name.as_str(),
                         HelperDef {
                             name: id.name.as_str(),
                             params: &func.params,
-                            body,
-                            expression_body: false,
+                            body: Some(body),
+                            expression: None,
                         },
                     );
                 }
             }
-            Some(oxc_ast::ast::Declaration::VariableDeclaration(var_decl)) => {
+            oxc_ast::ast::Declaration::VariableDeclaration(var_decl) => {
                 collect_helper_defs_from_var_decl(var_decl, defs);
             }
             _ => {}
@@ -93,16 +93,16 @@ fn collect_helper_def_from_statement<'a>(
                             HelperDef {
                                 name: id.name.as_str(),
                                 params: &func.params,
-                                body,
-                                expression_body: false,
+                                body: Some(body),
+                                expression: None,
                             },
                         );
                     }
-                    insert_default_helper_def(defs, &func.params, body, false);
+                    insert_default_helper_def(defs, &func.params, body);
                 }
             }
             oxc_ast::ast::ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-                insert_default_helper_def(defs, &arrow.params, &arrow.body, arrow.expression);
+                insert_default_arrow_helper_def(defs, arrow);
             }
             oxc_ast::ast::ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) => {
                 collect_default_helper_def_from_expression(&parenthesized.expression, defs);
@@ -122,12 +122,10 @@ fn collect_default_helper_def_from_expression<'a>(
     defs: &mut HashMap<&'a str, HelperDef<'a>>,
 ) {
     match expr {
-        Expression::ArrowFunctionExpression(arrow) => {
-            insert_default_helper_def(defs, &arrow.params, &arrow.body, arrow.expression);
-        }
+        Expression::ArrowFunctionExpression(arrow) => insert_default_arrow_helper_def(defs, arrow),
         Expression::FunctionExpression(func) => {
             if let Some(body) = &func.body {
-                insert_default_helper_def(defs, &func.params, body, false);
+                insert_default_helper_def(defs, &func.params, body);
             }
         }
         Expression::ParenthesizedExpression(parenthesized) => {
@@ -141,56 +139,14 @@ fn insert_default_helper_def<'a>(
     defs: &mut HashMap<&'a str, HelperDef<'a>>,
     params: &'a oxc_ast::ast::FormalParameters<'a>,
     body: &'a oxc_ast::ast::FunctionBody<'a>,
-    expression_body: bool,
 ) {
     defs.insert(
         "default",
         HelperDef {
             name: "default",
             params,
-            body,
-            expression_body,
+            body: Some(body),
+            expression: None,
         },
     );
-}
-
-fn collect_helper_defs_from_var_decl<'a>(
-    var_decl: &'a oxc_ast::ast::VariableDeclaration<'a>,
-    defs: &mut HashMap<&'a str, HelperDef<'a>>,
-) {
-    for decl in &var_decl.declarations {
-        let Some(name) = binding_identifier_name(&decl.id) else {
-            continue;
-        };
-        let Some(init) = &decl.init else {
-            continue;
-        };
-        match init {
-            Expression::ArrowFunctionExpression(arrow) => {
-                defs.insert(
-                    name,
-                    HelperDef {
-                        name,
-                        params: &arrow.params,
-                        body: &arrow.body,
-                        expression_body: arrow.expression,
-                    },
-                );
-            }
-            Expression::FunctionExpression(func) => {
-                if let Some(body) = &func.body {
-                    defs.insert(
-                        name,
-                        HelperDef {
-                            name,
-                            params: &func.params,
-                            body,
-                            expression_body: false,
-                        },
-                    );
-                }
-            }
-            _ => {}
-        }
-    }
 }

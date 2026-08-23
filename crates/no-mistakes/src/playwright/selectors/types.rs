@@ -9,6 +9,12 @@ pub struct SelectorRegexes {
     pub(super) html_ids: bool,
 }
 
+impl SelectorRegexes {
+    pub(crate) fn includes_html_ids(&self) -> bool {
+        self.html_ids
+    }
+}
+
 #[derive(Clone)]
 pub(super) struct AttributeRegex {
     pub(super) attribute: String,

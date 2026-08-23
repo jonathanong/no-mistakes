@@ -1,31 +1,4 @@
-#[test]
-fn symbol_index_basic_lookup() {
-    let mut map: HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>> = HashMap::new();
-    map.insert(
-        p("/src/b.mts"),
-        vec![(
-            p("/src/a.mts"),
-            "alpha".to_string(),
-            "alpha".to_string(),
-            false,
-        )],
-    );
-    let index = SymbolIndex::build(&map);
-    let importers = index
-        .importers_of(p("/src/a.mts").as_path(), "alpha")
-        .unwrap();
-    assert_eq!(importers.len(), 1);
-    assert_eq!(importers[0].0, p("/src/b.mts"));
-}
-
-#[test]
-fn symbol_index_missing_returns_none() {
-    let map: HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>> = HashMap::new();
-    let index = SymbolIndex::build(&map);
-    assert!(index
-        .importers_of(p("/src/a.mts").as_path(), "ghost")
-        .is_none());
-}
+include!("extra_symbol_index.rs");
 
 #[test]
 fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
@@ -36,11 +9,12 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     let asset = p("/repo/packages/app/src/data.json");
     let barrel = p("/repo/packages/app/src/barrel.mts");
     let workspace_target = p("/repo/packages/core/src/index.mts");
-    let mut visible = HashSet::new();
+    let mut visible = crate::fx::fx_set();
     visible.insert(current.clone());
     visible.insert(asset.clone());
     visible.insert(barrel.clone());
     visible.insert(workspace_target.clone());
+    let graph_files = GraphFiles::from_files(visible.iter().cloned().collect());
     let tsconfig = TsConfig {
         dir: p("/repo/packages/app"),
         paths: vec![],
@@ -113,41 +87,68 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
         ],
     };
 
-    let imported = imported_symbol_map(&current, &symbols, &resolver, &workspace, &visible);
+    let imported = imported_symbol_map(
+        &current,
+        &symbols,
+        &resolver,
+        &workspace,
+        &visible,
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert_eq!(
-        target_node(imported.get("workspaceValue").unwrap()),
+        target_node(
+            imported.get("workspaceValue").unwrap(),
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
         (
-            NodeId::Symbol {
-                file: workspace_target.clone(),
-                symbol: "workspaceValue".to_string()
-            },
+            NodeId::symbol(workspace_target.clone(), "workspaceValue"),
             EdgeKind::WorkspaceImport
         )
     );
     assert_eq!(
-        target_node(imported.get("payload").unwrap()),
-        (NodeId::File(asset), EdgeKind::AssetImport)
+        target_node(
+            imported.get("payload").unwrap(),
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
+        (NodeId::file(asset), EdgeKind::AssetImport)
     );
     assert_eq!(
-        target_node(imported.get("useMemo").unwrap()),
-        (NodeId::Module("react".to_string()), EdgeKind::Import)
+        target_node(
+            imported.get("useMemo").unwrap(),
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
+        (NodeId::module("react"), EdgeKind::Import)
     );
     assert!(!imported.contains_key("missing"));
 
-    let namespaces = namespace_import_map(&current, &symbols, &resolver, &workspace, &visible);
+    let namespaces = namespace_import_map(
+        &current,
+        &symbols,
+        &resolver,
+        &workspace,
+        &visible,
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert_eq!(
-        namespace_target_node(namespaces.get("core").unwrap(), "parse"),
+        namespace_target_node(
+            namespaces.get("core").unwrap(),
+            "parse",
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
         (
-            NodeId::Symbol {
-                file: workspace_target.clone(),
-                symbol: "parse".to_string()
-            },
-            EdgeKind::WorkspaceImport
+            NodeId::symbol(workspace_target.clone(), "parse"),
+            EdgeKind::WorkspaceTypeImport
         )
     );
     assert_eq!(
-        namespace_target_node(namespaces.get("z").unwrap(), "object"),
-        (NodeId::Module("zod".to_string()), EdgeKind::Import)
+        namespace_target_node(
+            namespaces.get("z").unwrap(),
+            "object",
+            &crate::codebase::analysis_session::PathInterner::new()
+        ),
+        (NodeId::module("zod"), EdgeKind::Import)
     );
     assert!(!namespaces.contains_key("nope"));
 
@@ -155,7 +156,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
     facts.insert(
         barrel.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![
                     Export {
                         name: "ignored".to_string(),
@@ -176,7 +177,7 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
                     },
                 ],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
@@ -200,11 +201,8 @@ fn symbol_edge_helpers_cover_defensive_and_workspace_paths() {
             &visible,
         ),
         Some((
-            NodeId::Symbol {
-                file: workspace_target,
-                symbol: "member".to_string()
-            },
-            EdgeKind::TypeImport
+            NodeId::symbol(workspace_target, "member"),
+            EdgeKind::WorkspaceTypeImport
         ))
     );
     assert!(resolve_imported_callee(
@@ -236,7 +234,7 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
 
     let current = p("/repo/src/current.mts");
     let target = p("/repo/src/target.mts");
-    let mut visible = HashSet::new();
+    let mut visible = crate::fx::fx_set();
     visible.insert(current.clone());
     visible.insert(target.clone());
     let tsconfig = TsConfig {
@@ -285,14 +283,14 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
     facts.insert(
         current.clone(),
         TsFileFacts {
-            symbols: Some(symbols),
+            symbols: Some(std::sync::Arc::new(symbols)),
             ..TsFileFacts::default()
         },
     );
     facts.insert(
         target.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![
                     Export {
                         name: "default".to_string(),
@@ -320,7 +318,7 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
                     },
                 ],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
@@ -331,31 +329,23 @@ fn star_reexport_edges_skip_invalid_default_and_unresolved_targets() {
             indexable: std::slice::from_ref(&current),
             all: &[current.clone(), target.clone()],
             visible: &visible,
+            graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
         },
         &facts,
         &resolver,
         &Default::default(),
         None,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
 
     assert!(edges.contains(&(
-        NodeId::Symbol {
-            file: current.clone(),
-            symbol: "keep".to_string(),
-        },
-        NodeId::Symbol {
-            file: target,
-            symbol: "keep".to_string(),
-        },
+        NodeId::symbol(current.clone(), "keep"),
+        NodeId::symbol(target, "keep"),
         EdgeKind::Import
     )));
-    assert!(!edges.iter().any(|(from, _, _)| {
-        *from
-            == NodeId::Symbol {
-                file: current.clone(),
-                symbol: "default".to_string(),
-            }
-    }));
+    assert!(!edges
+        .iter()
+        .any(|(from, _, _)| { *from == NodeId::symbol(current.clone(), "default") }));
 }
 
 #[test]
@@ -365,7 +355,7 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
 
     let current = p("/repo/src/current.mts");
     let barrel = p("/repo/src/barrel.mts");
-    let mut visible = HashSet::new();
+    let mut visible = crate::fx::fx_set();
     visible.insert(current.clone());
     visible.insert(barrel.clone());
     let tsconfig = TsConfig {
@@ -380,7 +370,7 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
     facts.insert(
         barrel.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![
                     Export {
                         name: "barrelValue".to_string(),
@@ -401,7 +391,7 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
                     },
                 ],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
@@ -417,6 +407,8 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
         resolver: &resolver,
         workspace: &workspace,
         visible_files: &visible,
+        graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
+        interner: &crate::codebase::analysis_session::PathInterner::new(),
     };
     let mut edges = Vec::new();
     collect_star_reexport_edges(&inputs, &mut edges);
@@ -447,20 +439,11 @@ fn symbol_edge_helpers_cover_unreachable_export_and_barrel_fallback_paths() {
 
 #[test]
 fn symbol_bfs_records_alternate_via_kinds_for_existing_nodes() {
-    let root = NodeId::Symbol {
-        file: p("/repo/src/root.mts"),
-        symbol: "root".to_string(),
-    };
-    let left = NodeId::Symbol {
-        file: p("/repo/src/left.mts"),
-        symbol: "left".to_string(),
-    };
-    let right = NodeId::Symbol {
-        file: p("/repo/src/right.mts"),
-        symbol: "right".to_string(),
-    };
-    let target = NodeId::Module("react".to_string());
-    let mut edges = EdgeMap::new();
+    let root = NodeId::symbol(p("/repo/src/root.mts"), "root");
+    let left = NodeId::symbol(p("/repo/src/left.mts"), "left");
+    let right = NodeId::symbol(p("/repo/src/right.mts"), "right");
+    let target = NodeId::module("react");
+    let mut edges = EdgeMap::default();
     edges.insert(
         root.clone(),
         vec![

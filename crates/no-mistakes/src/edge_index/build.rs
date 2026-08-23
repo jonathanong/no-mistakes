@@ -1,7 +1,13 @@
+use super::adjacency;
 use super::{CanonicalEdge, EdgeIndex};
-use std::cmp::Ordering;
-use std::collections::{HashMap, HashSet};
+#[cfg(debug_assertions)]
+use crate::fx::FxHashMap;
+use std::collections::HashSet;
 use std::hash::Hash;
+
+mod extend;
+mod flatten;
+mod unique;
 
 impl<Node, Kind> EdgeIndex<Node, Kind>
 where
@@ -28,78 +34,29 @@ where
                 continue;
             }
             let ordinal = index.edges.len();
-            index
-                .forward
-                .entry(edge.from.clone())
-                .or_default()
-                .push((edge.to.clone(), edge.kind.clone()));
-            index
-                .reverse
-                .entry(edge.to.clone())
-                .or_default()
-                .push((edge.from.clone(), edge.kind.clone()));
-            index
-                .forward_ordinals
-                .entry(edge.from.clone())
-                .or_default()
-                .push(ordinal);
-            index
-                .reverse_ordinals
-                .entry(edge.to.clone())
-                .or_default()
-                .push(ordinal);
+            adjacency::push_neighbor(
+                &mut index.forward,
+                &edge.from,
+                (edge.to.clone(), edge.kind.clone()),
+                ordinal,
+            );
+            adjacency::push_neighbor(
+                &mut index.reverse,
+                &edge.to,
+                (edge.from.clone(), edge.kind.clone()),
+                ordinal,
+            );
             index.edges.push(edge);
         }
         index.sort_adjacency_by(|left, right| left.cmp(right));
         index
     }
-
-    pub(crate) fn from_adjacency_maps_by(
-        forward: HashMap<Node, Vec<(Node, Kind)>>,
-        reverse: HashMap<Node, Vec<(Node, Kind)>>,
-        mut compare: impl FnMut(&CanonicalEdge<Node, Kind>, &CanonicalEdge<Node, Kind>) -> Ordering,
-    ) -> Self {
-        #[cfg(debug_assertions)]
-        assert_adjacency_maps_are_consistent(&forward, &reverse);
-
-        let mut edges = Vec::with_capacity(forward.values().map(Vec::len).sum());
-        for (from, adjacent) in &forward {
-            edges.extend(
-                adjacent
-                    .iter()
-                    .map(|(to, kind)| CanonicalEdge::new(from.clone(), to.clone(), kind.clone())),
-            );
-        }
-        edges.sort_by(&mut compare);
-        edges.dedup();
-
-        let mut forward_ordinals: HashMap<Node, Vec<usize>> = HashMap::new();
-        let mut reverse_ordinals: HashMap<Node, Vec<usize>> = HashMap::new();
-        for (ordinal, edge) in edges.iter().enumerate() {
-            forward_ordinals
-                .entry(edge.from.clone())
-                .or_default()
-                .push(ordinal);
-            reverse_ordinals
-                .entry(edge.to.clone())
-                .or_default()
-                .push(ordinal);
-        }
-
-        Self {
-            edges,
-            forward,
-            reverse,
-            forward_ordinals,
-            reverse_ordinals,
-        }
-    }
 }
 
 #[cfg(debug_assertions)]
-fn assert_adjacency_maps_are_consistent<Node, Kind>(
-    forward: &HashMap<Node, Vec<(Node, Kind)>>,
-    reverse: &HashMap<Node, Vec<(Node, Kind)>>,
+pub(super) fn assert_adjacency_maps_are_consistent<Node, Kind>(
+    forward: &FxHashMap<Node, Vec<(Node, Kind)>>,
+    reverse: &FxHashMap<Node, Vec<(Node, Kind)>>,
 ) where
     Node: Clone + Eq + Hash,
     Kind: Clone + Eq + Hash,

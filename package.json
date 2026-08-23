@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes-monorepo",
-  "version": "0.33.0",
+  "version": "0.48.0",
   "private": true,
   "description": "Deterministic AST-based codebase intelligence for humans and AI agents",
   "homepage": "https://github.com/jonathanong/no-mistakes#readme",
@@ -27,14 +27,15 @@
     "prepare": "husky"
   },
   "devDependencies": {
-    "@emnapi/core": "^1.11.2",
-    "@emnapi/runtime": "^1.11.2",
+    "@emnapi/core": "^1.11.3",
+    "@emnapi/runtime": "^1.11.3",
     "@vitest/coverage-v8": "^4.1.10",
     "cspell": "^10.0.1",
-    "eslint": "^10.7.0",
+    "eslint": "^10.8.1",
     "husky": "^9.1.7",
-    "oxfmt": "^0.58.0",
-    "oxlint": "^1.73.0",
+    "oxfmt": "^0.63.0",
+    "oxlint": "^1.78.0",
+    "pr-shepherd": "^0.34.0",
     "vitest": "^4.1.6"
   },
   "engines": {

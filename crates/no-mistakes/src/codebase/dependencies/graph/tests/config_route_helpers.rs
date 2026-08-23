@@ -13,6 +13,7 @@ fn route_edge_push_skips_missing_pattern_map_entries() {
         "/prefix/*",
         &all_patterns,
         &pattern_to_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
 
     assert!(edges.is_empty());
@@ -145,7 +146,19 @@ fn route_helper_ref_patterns_cover_local_and_imported_variants() {
     };
 
     assert_eq!(
-        route_helper_ref_patterns(&client, &file_facts, &facts, &resolver),
+        route_helper_ref_patterns(
+            &client,
+            &file_facts,
+            &facts,
+            &resolver,
+            &GraphFiles::from_files(
+                facts
+                    .keys()
+                    .cloned()
+                    .chain(std::iter::once(client.clone()))
+                    .collect(),
+            ),
+        ),
         vec![
             "/admin/prefix/*/suffix/*/settings".to_string(),
             "/local/*".to_string(),
@@ -219,7 +232,19 @@ fn route_helper_ref_patterns_follow_named_reexport_barrels() {
     };
 
     assert_eq!(
-        route_helper_ref_patterns(&client, &file_facts, &facts, &resolver),
+        route_helper_ref_patterns(
+            &client,
+            &file_facts,
+            &facts,
+            &resolver,
+            &GraphFiles::from_files(
+                facts
+                    .keys()
+                    .cloned()
+                    .chain(std::iter::once(client.clone()))
+                    .collect(),
+            ),
+        ),
         vec!["/prefix/*/suffix/*".to_string()]
     );
 }
@@ -272,7 +297,19 @@ fn route_helper_ref_patterns_follow_star_reexport_barrels() {
     };
 
     assert_eq!(
-        route_helper_ref_patterns(&client, &file_facts, &facts, &resolver),
+        route_helper_ref_patterns(
+            &client,
+            &file_facts,
+            &facts,
+            &resolver,
+            &GraphFiles::from_files(
+                facts
+                    .keys()
+                    .cloned()
+                    .chain(std::iter::once(client.clone()))
+                    .collect(),
+            ),
+        ),
         vec!["/prefix/*/suffix/*".to_string()]
     );
 }
@@ -334,7 +371,19 @@ fn route_helper_ref_patterns_try_all_star_reexport_barrels() {
     };
 
     assert_eq!(
-        route_helper_ref_patterns(&client, &file_facts, &facts, &resolver),
+        route_helper_ref_patterns(
+            &client,
+            &file_facts,
+            &facts,
+            &resolver,
+            &GraphFiles::from_files(
+                facts
+                    .keys()
+                    .cloned()
+                    .chain(std::iter::once(client.clone()))
+                    .collect(),
+            ),
+        ),
         vec!["/prefix/*/suffix/*".to_string()]
     );
 }
@@ -387,7 +436,19 @@ fn route_helper_ref_patterns_follow_namespace_reexport_barrels() {
     };
 
     assert_eq!(
-        route_helper_ref_patterns(&client, &file_facts, &facts, &resolver),
+        route_helper_ref_patterns(
+            &client,
+            &file_facts,
+            &facts,
+            &resolver,
+            &GraphFiles::from_files(
+                facts
+                    .keys()
+                    .cloned()
+                    .chain(std::iter::once(client.clone()))
+                    .collect(),
+            ),
+        ),
         vec!["/prefix/*/suffix/*".to_string()]
     );
 }
@@ -430,46 +491,20 @@ fn route_helper_ref_patterns_ignore_unresolved_named_reexport_barrels() {
         ..TsFileFacts::default()
     };
 
-    assert!(route_helper_ref_patterns(&client, &file_facts, &facts, &resolver).is_empty());
+    assert!(route_helper_ref_patterns(
+        &client,
+        &file_facts,
+        &facts,
+        &resolver,
+        &GraphFiles::from_files(
+            facts
+                .keys()
+                .cloned()
+                .chain(std::iter::once(client.clone()))
+                .collect(),
+        ),
+    )
+    .is_empty());
 }
 
-#[test]
-fn route_helper_ref_patterns_ignore_unresolved_namespace_reexport_barrels() {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
-    let tsconfig =
-        crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
-    let client = root.join("src/client.ts");
-    let barrel = root.join("src/links.ts");
-    let missing_file = root.join("src/missing-href.ts");
-
-    let mut facts = TsFactMap::new();
-    facts.insert(missing_file, TsFileFacts::default());
-    facts.insert(
-        barrel,
-        TsFileFacts {
-            route_helper_imports: vec![crate::codebase::ts_routes::refs::RouteHelperImport {
-                local: "links".to_string(),
-                imported: "*".to_string(),
-                source: "./missing-href".to_string(),
-            }],
-            ..TsFileFacts::default()
-        },
-    );
-    let file_facts = TsFileFacts {
-        route_helper_imports: vec![crate::codebase::ts_routes::refs::RouteHelperImport {
-            local: "links".to_string(),
-            imported: "links".to_string(),
-            source: "./links".to_string(),
-        }],
-        route_helper_refs: vec![crate::codebase::ts_routes::refs::RouteHelperRef {
-            callee: "links.entityHref".to_string(),
-            wrapper_pattern: None,
-            file: "src/client.ts".to_string(),
-            line: 1,
-        }],
-        ..TsFileFacts::default()
-    };
-
-    assert!(route_helper_ref_patterns(&client, &file_facts, &facts, &resolver).is_empty());
-}
+include!("config_route_helpers_unresolved_namespace.rs");

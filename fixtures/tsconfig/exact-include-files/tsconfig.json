@@ -1,0 +1,3 @@
+{
+  "include": ["src/entry.ts", "src/module.mts", "directory"]
+}

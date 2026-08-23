@@ -1,0 +1,11 @@
+name: Caller
+on: push
+jobs:
+  good:
+    uses: ./.github/workflows/reusable-callee.yml
+  missing:
+    uses: ./.github/workflows/does-not-exist.yml
+  bad:
+    uses: ./.github/workflows/not-callable.yml
+  remote:
+    uses: example/example/.github/workflows/check.yml@v1

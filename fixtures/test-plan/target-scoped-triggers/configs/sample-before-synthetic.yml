@@ -1,0 +1,24 @@
+projects:
+  database-resources:
+    root: .
+tests:
+  vitest:
+    configs: vitest.config.mts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        database-resources:
+          paths:
+            - migrations/**/*.sql
+          targets:
+            - database
+    environments:
+      sample-first:
+        exclude:
+          - src/shared.test.ts
+        limit:
+          files: 1
+        groups:
+          - type: sample
+            sampleWhenLimited: true

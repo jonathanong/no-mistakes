@@ -1,7 +1,7 @@
 use oxc_ast::ast::{Class, Expression};
 
 pub(crate) fn is_class_component(c: &Class<'_>) -> bool {
-    let Some(super_class) = &c.super_class else {
+    let Some(super_class) = c.heritage_expression() else {
         return false;
     };
     match super_class {

@@ -9,20 +9,82 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 env:
   CARGO_TERM_COLOR: always
   CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+  RUSTFLAGS: "-D warnings"
+  # cargo llvm-cov fail-under percentages. Keep codecov.yml rust `target` in sync.
+  RUST_COVERAGE_FAIL_UNDER_LINES: "99"
+  RUST_COVERAGE_FAIL_UNDER_FUNCTIONS: "99"
 
 jobs:
-  tests:
-    name: Tests with coverage
+  changes:
+    name: Detect benchmark changes
     runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      benchmarks: ${{ steps.benchmark-paths.outputs.changed }}
 
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 2
+
+      - name: Check benchmark paths
+        id: benchmark-paths
+        timeout-minutes: 2
+        shell: bash
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$BASE_SHA" || "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          for sha in "$BASE_SHA" "$HEAD_SHA"; do
+            if ! git cat-file -e "${sha}^{commit}" 2>/dev/null; then
+              git fetch --no-tags --depth=1 origin "$sha"
+            fi
+          done
+
+          changed_paths="$(mktemp)"
+          trap 'rm -f "$changed_paths"' EXIT
+          git diff --name-only -z "$BASE_SHA" "$HEAD_SHA" > "$changed_paths"
+
+          changed=false
+          while IFS= read -r -d '' path; do
+            case "$path" in
+              Cargo.toml|Cargo.lock|crates/*|fixtures/performance/*|fixtures/lang-frontends/*|.cargo/*|rust-toolchain*|.github/workflows/ci.yml)
+                changed=true
+                break
+                ;;
+            esac
+          done < "$changed_paths"
+
+          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+
+  quality:
+    name: Lint and package checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Check committed binary files
+        timeout-minutes: 2
         shell: bash
         run: |
           set -euo pipefail
@@ -37,64 +99,95 @@ jobs:
             printf '%s' "$value"
           }
 
+          matches="$(mktemp)"
+          trap 'rm -f "$matches"' EXIT
+
+          if git grep --cached -z -l -a -P '[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]' -- . > "$matches"; then
+            :
+          else
+            status=$?
+            if [[ "$status" -eq 1 ]]; then
+              exit 0
+            fi
+            exit "$status"
+          fi
+
           fail=0
           while IFS= read -r -d '' path; do
             metadata="$(git ls-files -s -- "$path")"
             mode="${metadata%% *}"
-            rest="${metadata#* }"
-            object="${rest%% *}"
 
             if [[ "$mode" != 100644 && "$mode" != 100755 ]]; then
               continue
             fi
 
-            if git cat-file blob "$object" | perl -e 'while (1) { my $n = sysread(STDIN, my $buffer, 65536); die "read failed: $!" unless defined $n; last if $n == 0; exit 1 if $buffer =~ /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/; }'; then
-              continue
-            else
-              escaped_path="$(escape_workflow_command_property "$path")"
-              printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$escaped_path"
-              fail=1
-            fi
-          done < <(git ls-files -z)
+            escaped_path="$(escape_workflow_command_property "$path")"
+            printf '::error file=%s::Committed binary file detected; remove it from Git or replace it with a text placeholder.\n' "$escaped_path"
+            fail=1
+          done < "$matches"
           exit "$fail"
 
       - name: Set up Node.js
+        timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version: 24
           cache: npm
 
       - name: Install Rust
+        timeout-minutes: 5
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
         with:
-          toolchain: "1.96.0"
           components: clippy, rustfmt
 
       - name: Cache Rust build artifacts
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@258712b0b7b1ddf8bddc9fc3b0faca682b2736c3 # v2
 
       - name: Install npm dependencies
+        timeout-minutes: 5
         run: npm ci --ignore-scripts
 
       - name: Validate Codecov config
+        timeout-minutes: 2
         run: curl --data-binary @codecov.yml https://codecov.io/validate
 
       - name: Check formatting
+        timeout-minutes: 5
         run: cargo fmt --all -- --check
 
       - name: Check JavaScript formatting
+        timeout-minutes: 2
         run: npm run fmt:js:check
 
       - name: Run Clippy
+        timeout-minutes: 10
         run: cargo clippy --all-targets --all-features -- -D warnings
 
+      - name: Deny rustc warnings in release
+        timeout-minutes: 10
+        run: >
+          cargo check --locked --workspace --release
+          --lib --bins --benches
+          --no-default-features
+          --features test-instrumentation
+
+      - name: Deny rustc warnings in coverage test builds
+        timeout-minutes: 10
+        env:
+          RUSTFLAGS: "-D warnings --cfg coverage"
+        run: cargo check --locked --workspace --lib --tests --all-features
+
       - name: Run Oxlint
+        timeout-minutes: 2
         run: npm run lint:js
 
       - name: Run CSpell
+        timeout-minutes: 5
         run: npm run lint:spell
 
       - name: Run Lychee
+        timeout-minutes: 5
         uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8 # v2.9.0
         with:
           args: >-
@@ -108,79 +201,67 @@ jobs:
             CLAUDE.md
           fail: true
 
-      - name: Build JavaScript packages
-        run: npm run build:js
-
-      - name: Run npm tests
-        run: npm run test:ci --ignore-scripts
-
       - name: Check Cargo packages
-        run: |
-          cargo publish --dry-run --locked -p no-mistakes
+        timeout-minutes: 10
+        run: cargo publish --dry-run --locked -p no-mistakes
 
       - name: Check npm packages
+        timeout-minutes: 2
         run: npm pack --dry-run --workspaces
 
-      - name: Install cargo-llvm-cov
-        uses: taiki-e/install-action@43aecc8d72668fbcfe75c31400bc4f890f1c5853 # v2.83.2
+  javascript-tests:
+    name: JavaScript tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
-          tool: cargo-llvm-cov
+          node-version: 24
+          cache: npm
 
-      - name: Clean Rust coverage artifacts
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+
+      - name: Cache Rust build artifacts
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@258712b0b7b1ddf8bddc9fc3b0faca682b2736c3 # v2
+
+      - name: Install npm dependencies
+        timeout-minutes: 5
+        run: npm ci --ignore-scripts
+
+      - name: Build JavaScript packages
+        timeout-minutes: 2
+        run: npm run build:js
+
+      - name: Build N-API addon
+        timeout-minutes: 10
         run: |
-          # shellcheck disable=SC1090
-          source <(cargo llvm-cov show-env --sh)
-          cargo llvm-cov clean --workspace
+          NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
+          cp target/debug/libno_mistakes.so target/debug/no-mistakes.node
 
-      - name: Build Rust tests for coverage
-        run: |
-          # shellcheck disable=SC1090
-          source <(cargo llvm-cov show-env --sh)
-          cargo test --workspace --all-features --lib --bins --tests --no-run
+      - name: Run npm tests
+        timeout-minutes: 5
+        run: npm run test:ci --ignore-scripts
 
-      - name: Run Rust tests for coverage
-        run: |
-          # shellcheck disable=SC1090
-          source <(cargo llvm-cov show-env --sh)
-          cargo test --workspace --all-features --lib --bins --tests
-
-      - name: Show Rust coverage table (debug)
-        run: |
-          # shellcheck disable=SC1090
-          source <(cargo llvm-cov show-env --sh)
-          cargo llvm-cov report \
-            --show-missing-lines 2>&1 | tail -60
-        continue-on-error: true
-
-      - name: Enforce Rust coverage
-        run: |
-          mkdir -p target/llvm-cov
-          # shellcheck disable=SC1090
-          source <(cargo llvm-cov show-env --sh)
-          cargo llvm-cov report \
-            --fail-under-lines 99 --fail-under-functions 99 --show-missing-lines --lcov --output-path target/llvm-cov/lcov.info
-
-      - name: Install cargo-crap
-        uses: taiki-e/install-action@43aecc8d72668fbcfe75c31400bc4f890f1c5853 # v2.83.2
-        with:
-          tool: cargo-crap
-
-      - name: Enforce CRAP threshold
-        run: cargo crap --lcov target/llvm-cov/lcov.info --fail-above --threshold 30 --missing skip
-
-      - name: Upload Rust coverage to Codecov
-        if: ${{ env.CODECOV_TOKEN != '' }}
-        continue-on-error: true
-        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6.0.2
-        with:
-          token: ${{ env.CODECOV_TOKEN }}
-          files: target/llvm-cov/lcov.info
-          flags: rust
-          fail_ci_if_error: true
+      - name: Run real N-API API test
+        timeout-minutes: 2
+        run: >-
+          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
+          npx vitest run packages/no-mistakes/scripts/real-napi-api.test.js --coverage=false
 
       - name: Upload JavaScript coverage to Codecov
         if: ${{ env.CODECOV_TOKEN != '' }}
         continue-on-error: true
+        timeout-minutes: 5
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6.0.2
         with:
           token: ${{ env.CODECOV_TOKEN }}
@@ -188,31 +269,153 @@ jobs:
           flags: javascript
           fail_ci_if_error: true
 
-  ast-analysis:
-    name: AST analysis
+  tests:
+    name: Rust tests and coverage
     runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Install Rust
+        timeout-minutes: 5
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
-        with:
-          toolchain: "1.96.0"
 
       - name: Cache Rust build artifacts
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@258712b0b7b1ddf8bddc9fc3b0faca682b2736c3 # v2
+
+      - name: Install cargo-llvm-cov
+        timeout-minutes: 5
+        uses: taiki-e/install-action@7f4eb899022d8fe70b20c4f3de697aa85c309026 # v2.85.11
+        with:
+          tool: cargo-llvm-cov
+
+      - name: Clean Rust coverage artifacts
+        timeout-minutes: 2
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo llvm-cov clean --workspace
+
+      - name: Build Rust tests for coverage
+        timeout-minutes: 15
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo test --workspace --all-features --lib --bins --tests --no-run
+
+      - name: Run Rust tests for coverage
+        timeout-minutes: 10
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo test --workspace --all-features --lib --bins --tests
+
+      - name: Write Rust coverage lcov
+        timeout-minutes: 5
+        run: |
+          mkdir -p target/llvm-cov
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo llvm-cov report --lcov --output-path target/llvm-cov/lcov.info
+
+      - name: Enforce Rust coverage
+        id: rust-coverage
+        timeout-minutes: 5
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo llvm-cov report \
+            --fail-under-lines "${RUST_COVERAGE_FAIL_UNDER_LINES}" \
+            --fail-under-functions "${RUST_COVERAGE_FAIL_UNDER_FUNCTIONS}"
+
+      - name: Show Rust coverage table (debug)
+        if: ${{ failure() && steps.rust-coverage.outcome == 'failure' }}
+        timeout-minutes: 5
+        run: |
+          # shellcheck disable=SC1090
+          source <(cargo llvm-cov show-env --sh)
+          cargo llvm-cov report 2>&1 | tail -30
+          cargo llvm-cov report --show-missing-lines 2>&1 | tail -60
+        continue-on-error: true
+
+      - name: Install cargo-crap
+        timeout-minutes: 5
+        uses: taiki-e/install-action@7f4eb899022d8fe70b20c4f3de697aa85c309026 # v2.85.11
+        with:
+          tool: cargo-crap
+
+      - name: Enforce CRAP threshold
+        timeout-minutes: 2
+        run: cargo crap --lcov target/llvm-cov/lcov.info --fail-above --threshold 30 --missing skip
+
+      - name: Upload Rust coverage to Codecov
+        if: ${{ env.CODECOV_TOKEN != '' }}
+        continue-on-error: true
+        timeout-minutes: 5
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v6.0.2
+        with:
+          token: ${{ env.CODECOV_TOKEN }}
+          files: target/llvm-cov/lcov.info
+          flags: rust
+          fail_ci_if_error: true
+
+  tests-gate:
+    name: Tests with coverage
+    needs:
+      - quality
+      - javascript-tests
+      - tests
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check test and quality results
+        timeout-minutes: 1
+        env:
+          QUALITY_RESULT: ${{ needs.quality.result }}
+          JAVASCRIPT_RESULT: ${{ needs.javascript-tests.result }}
+          RUST_RESULT: ${{ needs.tests.result }}
+        run: |
+          if [[ "$QUALITY_RESULT" != "success" || "$JAVASCRIPT_RESULT" != "success" || "$RUST_RESULT" != "success" ]]; then
+            echo "Quality checks, JavaScript tests, or Rust coverage failed." >&2
+            exit 1
+          fi
+
+  ast-analysis:
+    name: AST analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+
+      - name: Cache Rust build artifacts
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@258712b0b7b1ddf8bddc9fc3b0faca682b2736c3 # v2
         with:
           key: ast-analysis
 
       - name: Build no-mistakes check CLI
-        run: cargo build --release -p no-mistakes
+        timeout-minutes: 10
+        run: cargo build -p no-mistakes
 
       - name: Run no-mistakes check
-        run: target/release/no-mistakes check
+        timeout-minutes: 2
+        run: target/debug/no-mistakes check
 
       - name: Install ast-grep
+        timeout-minutes: 5
         run: |
           curl -sSfL -o ast-grep.zip https://github.com/ast-grep/ast-grep/releases/download/0.44.1/app-x86_64-unknown-linux-gnu.zip
           echo "611f9e5e76f2611ecea1a35dd3468ceedf600641a11224b80341d79c6ee7b9dd  ast-grep.zip" | sha256sum -c -
@@ -222,56 +425,210 @@ jobs:
           rm ast-grep.zip
 
       - name: Run ast-grep rule tests
+        timeout-minutes: 2
         run: ast-grep test --skip-snapshot-tests
 
       - name: Run ast-grep scan
+        timeout-minutes: 2
         run: ast-grep scan
 
   bench:
-    name: Benchmarks
+    name: Build benchmarks
+    needs: changes
+    if: ${{ needs.changes.outputs.benchmarks == 'true' }}
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
+    timeout-minutes: 60
     env:
       RAYON_NUM_THREADS: "4"
+      # CodSpeed simulation/memory do not need production fat LTO. The release
+      # profile's lto=true + codegen-units=1 OOMs or forces CARGO_BUILD_JOBS=1
+      # on ubuntu-latest (~16 min). Relative CodSpeed comparisons stay valid.
+      CARGO_PROFILE_BENCH_LTO: "false"
+      CARGO_PROFILE_BENCH_CODEGEN_UNITS: "16"
 
     steps:
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - name: Install Rust
+        timeout-minutes: 5
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
-        with:
-          toolchain: "1.96.0"
 
       - name: Cache Rust build artifacts
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@258712b0b7b1ddf8bddc9fc3b0faca682b2736c3 # v2
         with:
           key: bench
 
       - name: Install cargo-codspeed
+        timeout-minutes: 5
+        env:
+          RUSTFLAGS: ""
         run: cargo install cargo-codspeed --version 5.0.1 --locked
 
-      - name: Build CPU and memory benchmarks
+      - name: Build CPU benchmarks
+        timeout-minutes: 30
         run: >-
           cargo codspeed build
           -p no-mistakes
+          --no-default-features
           --features test-instrumentation
           --bench core_analysis
           -m simulation
+
+      - name: Build memory benchmarks
+        timeout-minutes: 5
+        run: >-
+          cargo codspeed build
+          -p no-mistakes
+          --no-default-features
+          --features test-instrumentation
+          --bench core_analysis
           -m memory
 
-      - name: Run CPU benchmarks
-        uses: CodSpeedHQ/action@f99becdce5e5d51fd556489ebef684f4ecfd6286 # v4.18.5
-        with:
-          mode: simulation
-          run: cargo codspeed run -m simulation
+      - name: Package benchmark executables
+        timeout-minutes: 2
+        run: tar -C target/codspeed -cf codspeed-analysis.tar analysis
 
-      # Keep memory execution separate: CodSpeed instruments the same in-process
-      # fixture workloads with allocation tracking instead of CPU simulation.
-      - name: Run memory benchmarks
-        uses: CodSpeedHQ/action@f99becdce5e5d51fd556489ebef684f4ecfd6286 # v4.18.5
+      - name: Upload benchmark executables
+        timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          mode: memory
-          run: cargo codspeed run -m memory
+          name: codspeed-analysis
+          path: codspeed-analysis.tar
+          compression-level: 0
+          retention-days: 1
+
+  benchmark-shards:
+    name: Benchmark (${{ matrix.name }})
+    needs:
+      - changes
+      - bench
+    if: ${{ needs.changes.outputs.benchmarks == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: ${{ matrix.timeout-minutes }}
+    permissions:
+      contents: read
+      id-token: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: CPU check
+            mode: simulation
+            filter: ""
+            benchmark-shard: check
+            timeout-minutes: 15
+            run-timeout-minutes: 12
+          - name: CPU tests-plan
+            mode: simulation
+            filter: ""
+            benchmark-shard: tests-plan
+            timeout-minutes: 10
+            run-timeout-minutes: 8
+          - name: CPU graph
+            mode: simulation
+            filter: ""
+            benchmark-shard: graph
+            timeout-minutes: 15
+            run-timeout-minutes: 12
+          - name: CPU query
+            mode: simulation
+            filter: ""
+            benchmark-shard: query
+            timeout-minutes: 15
+            run-timeout-minutes: 12
+          - name: memory
+            mode: memory
+            filter: ""
+            benchmark-shard: general-memory
+            timeout-minutes: 10
+            run-timeout-minutes: 8
+          - name: node memory
+            mode: memory
+            filter: "graph_production_finalization::node_id_finalization$"
+            benchmark-shard: graph-production
+            timeout-minutes: 8
+            run-timeout-minutes: 5
+          - name: selector memory
+            mode: memory
+            filter: "graph_production_finalization::selector_append$"
+            benchmark-shard: graph-production
+            timeout-minutes: 8
+            run-timeout-minutes: 5
+    env:
+      BENCHMARK_FILTER: ${{ matrix.filter }}
+      CODSPEED_CARGO_WORKSPACE_ROOT: ${{ github.workspace }}
+      NO_MISTAKES_BENCH_SHARD: ${{ matrix.benchmark-shard }}
+      RAYON_NUM_THREADS: "4"
+
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download benchmark executables
+        timeout-minutes: 5
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: codspeed-analysis
+
+      - name: Extract benchmark executables
+        timeout-minutes: 2
+        run: |
+          mkdir -p target/codspeed
+          tar -C target/codspeed -xf codspeed-analysis.tar
+
+      - name: Run benchmarks
+        timeout-minutes: ${{ matrix.run-timeout-minutes }}
+        uses: CodSpeedHQ/action@4296e51e7041e24dadb86d1d6e8b9320d223dbe8 # v5.0.3
+        with:
+          mode: ${{ matrix.mode }}
+          run: |
+            mapfile -t benchmarks < <(find target/codspeed/analysis -type f -perm -111)
+            if [[ "${#benchmarks[@]}" -ne 1 ]]; then
+              echo "Expected one benchmark executable, found ${#benchmarks[@]}" >&2
+              exit 1
+            fi
+            if [[ -n "$BENCHMARK_FILTER" ]]; then
+              "${benchmarks[0]}" "$BENCHMARK_FILTER"
+            else
+              "${benchmarks[0]}"
+            fi
+
+  benchmark-gate:
+    name: Benchmarks
+    needs:
+      - changes
+      - bench
+      - benchmark-shards
+    if: ${{ always() }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check benchmark results
+        timeout-minutes: 1
+        env:
+          BENCHMARKS_CHANGED: ${{ needs.changes.outputs.benchmarks }}
+          CHANGE_RESULT: ${{ needs.changes.result }}
+          BUILD_RESULT: ${{ needs.bench.result }}
+          SHARD_RESULT: ${{ needs.benchmark-shards.result }}
+        run: |
+          if [[ "$CHANGE_RESULT" != "success" ]]; then
+            echo "Benchmark change detection failed." >&2
+            exit 1
+          fi
+
+          if [[ "$BENCHMARKS_CHANGED" != "true" ]]; then
+            echo "No benchmark-relevant files changed."
+            exit 0
+          fi
+
+          if [[ "$BUILD_RESULT" != "success" || "$SHARD_RESULT" != "success" ]]; then
+            echo "Benchmark build or execution failed." >&2
+            exit 1
+          fi

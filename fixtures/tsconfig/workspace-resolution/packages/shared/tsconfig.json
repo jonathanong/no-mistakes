@@ -1,0 +1,5 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": { "baseUrl": "." },
+  "files": ["src/message.ts"]
+}

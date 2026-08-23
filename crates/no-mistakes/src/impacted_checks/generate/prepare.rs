@@ -51,8 +51,11 @@ impl PreparedImpactedChecks {
 pub(super) fn prepare_impacted_checks(args: &ImpactedChecksArgs) -> Result<PreparedImpactedChecks> {
     let plan_args = super::args::plan_args_for(args, None);
     let inputs = PreparedTestPlanInputs::prepare(&plan_args)?;
-    let frameworks =
-        configured_frameworks(&inputs.root, &inputs.config, inputs.root_visible_paths());
+    let frameworks = if args.generic_only {
+        Default::default()
+    } else {
+        configured_frameworks(&inputs.root, &inputs.config, inputs.root_visible_paths())
+    };
     let changed_files = sorted_unique(
         inputs
             .collected
@@ -69,7 +72,7 @@ pub(super) fn prepare_impacted_checks(args: &ImpactedChecksArgs) -> Result<Prepa
         .filter(|file| !file.exists())
         .map(|file| relative_slash(&inputs.root, file))
         .collect();
-    let request = if frameworks.is_empty() {
+    let request = if args.generic_only || frameworks.is_empty() {
         PreparedRequest::GenericOnly(Box::new(inputs))
     } else {
         PreparedRequest::Frameworks(Box::new(inputs.finish()?))
@@ -93,6 +96,16 @@ fn configured_frameworks(
         TestFramework::Vitest,
         TestFramework::Playwright,
         TestFramework::Swift,
+        TestFramework::Python,
+        TestFramework::Go,
+        TestFramework::Cargo,
+        TestFramework::Rails,
+        TestFramework::Php,
+        TestFramework::Java,
+        TestFramework::Kotlin,
+        TestFramework::Elixir,
+        TestFramework::Dart,
+        TestFramework::Jest,
     ]
     .into_iter()
     .filter(|framework| framework_present(root, config, *framework, visible_paths))

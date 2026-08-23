@@ -8,7 +8,7 @@ fn symbols_json_returns_signature_impact_report() {
     })
     .to_string();
 
-    let output = symbols_json_impl(options).unwrap();
+    let output = symbols_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let value: serde_json::Value = serde_json::from_str(&output).unwrap();
 
     assert_eq!(value["symbol"], "parseDate");
@@ -25,6 +25,32 @@ fn symbols_json_returns_signature_impact_report() {
 }
 
 #[test]
+fn signature_impact_uses_the_importing_packages_tsconfig_alias_for_dependents() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/monorepo-tsconfig-catalog");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    let output = symbols_json_impl(
+        crate::napi_api::options::test_json_arg(json!({
+            "root": root,
+            "files": ["packages/lib/src/forbidden.ts"],
+            "mode": "signature-impact",
+            "symbol": "forbidden"
+        })
+        .to_string(),)
+    )
+    .unwrap();
+    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(report["productionCallers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|entry| entry["file"] == "packages/app/src/api.ts"), "{report:#?}");
+}
+
+#[test]
 fn signature_impact_napi_parses_each_source_file_once() {
     let source = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -35,13 +61,13 @@ fn signature_impact_napi_parses_each_source_file_once() {
 
     crate::ast::begin_parse_count(&root);
     let output = symbols_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root,
             "files": ["utils.mts"],
             "mode": "signature-impact",
             "symbol": "parseDate"
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let counts = crate::ast::finish_parse_count(&root);
@@ -89,13 +115,13 @@ fn pass4b_signature_impact_cli_and_napi_reports_share_gitignore_visibility() {
     )
     .unwrap();
     let napi_output = symbols_json_impl(
-        json!({
+        crate::napi_api::options::test_json_arg(json!({
             "root": root_string,
             "files": ["packages/pkg/src/feature.ts"],
             "mode": "signature-impact",
             "symbol": "feature",
         })
-        .to_string(),
+        .to_string(),)
     )
     .unwrap();
     let cli_output: serde_json::Value = serde_json::from_str(&cli_output).unwrap();
@@ -116,3 +142,5 @@ fn pass4b_signature_impact_cli_and_napi_reports_share_gitignore_visibility() {
                 && entry["symbol"] == "namespaceCaller"
         }));
 }
+
+include!("tests_symbols_impact_framework.rs");

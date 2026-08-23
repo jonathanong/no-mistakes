@@ -1,83 +1,170 @@
-use super::{TsFactMap, TsFactPlan, TsFileFacts};
-use std::collections::HashMap;
-use std::path::PathBuf;
+use super::{TsFactMap, TsFactPlan, TsFactSlot, TsFileFacts};
+use crate::codebase::ts_source::FileIdMap;
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+
+impl Default for TsFactMap {
+    fn default() -> Self {
+        Self {
+            facts: FileIdMap::default(),
+            plan: TsFactPlan::default(),
+            // Start at 1 so the first bump cannot reuse generation 0.
+            playwright_scan_epoch: Arc::new(AtomicU64::new(1)),
+            playwright_scan_generation: 0,
+            app_selector_occurrences_cache: Default::default(),
+            playwright_routes_cache: Default::default(),
+            app_text_targets_cache: Default::default(),
+            route_reachable_files_cache: Default::default(),
+        }
+    }
+}
 
 impl TsFactMap {
     pub fn new() -> Self {
         Self::default()
     }
 
-    pub(super) fn with_plan(facts: HashMap<PathBuf, TsFileFacts>, plan: TsFactPlan) -> Self {
-        Self { facts, plan }
-    }
-
     pub(crate) fn from_iter_with_plan(
         facts: impl IntoIterator<Item = (PathBuf, TsFileFacts)>,
         plan: TsFactPlan,
     ) -> Self {
-        Self::with_plan(facts.into_iter().collect(), plan)
+        Self {
+            facts: FileIdMap::from_entries(
+                facts
+                    .into_iter()
+                    .map(|(path, facts)| (path, TsFactSlot::Owned(Box::new(facts)))),
+            ),
+            plan,
+            ..Self::default()
+        }
+    }
+
+    pub(crate) fn from_iter_with_plan_and_inventory(
+        facts: impl IntoIterator<Item = (PathBuf, TsFileFacts)>,
+        plan: TsFactPlan,
+        inventory: Arc<crate::codebase::ts_source::FileInventory>,
+    ) -> Self {
+        Self {
+            facts: FileIdMap::from_iter_with_inventory(
+                facts
+                    .into_iter()
+                    .map(|(path, facts)| (path, TsFactSlot::Owned(Box::new(facts)))),
+                inventory,
+            ),
+            plan,
+            ..Self::default()
+        }
     }
 
     pub(crate) fn from_shared_iter_with_plan(
-        facts: impl IntoIterator<Item = (PathBuf, std::sync::Arc<TsFileFacts>)>,
+        facts: impl IntoIterator<Item = (PathBuf, Arc<TsFileFacts>)>,
         plan: TsFactPlan,
     ) -> Self {
-        Self::from_iter_with_plan(
-            facts
-                .into_iter()
-                .map(|(path, facts)| (path, std::sync::Arc::unwrap_or_clone(facts))),
+        Self {
+            facts: FileIdMap::from_entries(
+                facts
+                    .into_iter()
+                    .map(|(path, facts)| (path, TsFactSlot::Shared(facts))),
+            ),
             plan,
-        )
+            ..Self::default()
+        }
     }
 
     pub(crate) fn plan(&self) -> TsFactPlan {
         self.plan
     }
-}
 
-impl std::ops::Deref for TsFactMap {
-    type Target = HashMap<PathBuf, TsFileFacts>;
+    pub(crate) fn bump_playwright_scan_generation(&mut self) {
+        self.playwright_scan_generation =
+            self.playwright_scan_epoch.fetch_add(1, Ordering::Relaxed);
+    }
 
-    fn deref(&self) -> &Self::Target {
-        &self.facts
+    pub(crate) fn playwright_scan_cache_key(
+        &self,
+        settings: &crate::playwright::config::Settings,
+    ) -> (u64, crate::codebase::check_facts::PlaywrightSettingsKey) {
+        (
+            self.playwright_scan_generation,
+            crate::codebase::check_facts::PlaywrightSettingsKey::new(settings),
+        )
+    }
+
+    pub fn get(&self, path: &Path) -> Option<&TsFileFacts> {
+        self.facts.get(path).map(TsFactSlot::as_facts)
+    }
+
+    pub fn get_mut(&mut self, path: &Path) -> Option<&mut TsFileFacts> {
+        if !self.facts.contains_key(path) {
+            return None;
+        }
+        self.bump_playwright_scan_generation();
+        let slot = self.facts.get_mut(path)?;
+        slot.materialize_owned();
+        Some(slot.as_facts_mut())
+    }
+
+    pub fn insert(&mut self, path: PathBuf, facts: TsFileFacts) -> Option<TsFileFacts> {
+        let previous = self
+            .facts
+            .insert(path, TsFactSlot::Owned(Box::new(facts)))
+            .map(TsFactSlot::into_owned);
+        self.bump_playwright_scan_generation();
+        previous
+    }
+
+    pub fn remove(&mut self, path: &Path) -> Option<TsFileFacts> {
+        let previous = self.facts.remove(path).map(TsFactSlot::into_owned)?;
+        self.bump_playwright_scan_generation();
+        Some(previous)
+    }
+
+    pub fn contains_key(&self, path: &Path) -> bool {
+        self.facts.contains_key(path)
+    }
+
+    pub fn is_empty(&self) -> bool {
+        self.facts.is_empty()
+    }
+
+    pub fn len(&self) -> usize {
+        self.facts.len()
+    }
+
+    pub fn keys(&self) -> impl Iterator<Item = &PathBuf> {
+        self.facts.keys()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&PathBuf, &TsFileFacts)> {
+        self.facts
+            .iter()
+            .map(|(path, slot)| (path, slot.as_facts()))
+    }
+
+    pub fn values(&self) -> impl Iterator<Item = &TsFileFacts> {
+        self.facts.values().map(TsFactSlot::as_facts)
+    }
+
+    pub(crate) fn extend(&mut self, other: Self) {
+        if other.is_empty() {
+            return;
+        }
+        self.facts.extend(other.facts);
+        self.bump_playwright_scan_generation();
     }
 }
 
-impl std::ops::DerefMut for TsFactMap {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.facts
+impl std::ops::Index<&PathBuf> for TsFactMap {
+    type Output = TsFileFacts;
+
+    fn index(&self, path: &PathBuf) -> &Self::Output {
+        self.get(path).expect("TS fact path is not present")
     }
 }
 
 impl<const N: usize> From<[(PathBuf, TsFileFacts); N]> for TsFactMap {
     fn from(entries: [(PathBuf, TsFileFacts); N]) -> Self {
-        Self::with_plan(HashMap::from(entries), TsFactPlan::default())
-    }
-}
-
-impl IntoIterator for TsFactMap {
-    type Item = (PathBuf, TsFileFacts);
-    type IntoIter = std::collections::hash_map::IntoIter<PathBuf, TsFileFacts>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.facts.into_iter()
-    }
-}
-
-impl<'a> IntoIterator for &'a TsFactMap {
-    type Item = (&'a PathBuf, &'a TsFileFacts);
-    type IntoIter = std::collections::hash_map::Iter<'a, PathBuf, TsFileFacts>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.facts.iter()
-    }
-}
-
-impl<'a> IntoIterator for &'a mut TsFactMap {
-    type Item = (&'a PathBuf, &'a mut TsFileFacts);
-    type IntoIter = std::collections::hash_map::IterMut<'a, PathBuf, TsFileFacts>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        self.facts.iter_mut()
+        Self::from_iter_with_plan(entries, TsFactPlan::default())
     }
 }

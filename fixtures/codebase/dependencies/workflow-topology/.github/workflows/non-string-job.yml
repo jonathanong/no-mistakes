@@ -1,0 +1,5 @@
+name: Non-string job key
+on: push
+jobs:
+  1:
+    runs-on: ubuntu-latest

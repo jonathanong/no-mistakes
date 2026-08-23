@@ -26,6 +26,7 @@ use oxc_ast_visit::{walk, Visit};
 use oxc_span::GetSpan;
 use serde::Serialize;
 
+use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::ts_source::{byte_offset_to_line, relative_slash_path};
 
 /// The import backing a registry entry.
@@ -65,19 +66,32 @@ pub struct RegistryExtensionReport {
 
 /// Run the `registry-extension` query against a single file.
 pub fn run(root: &Path, registry_file: &Path) -> Result<RegistryExtensionReport> {
+    let session = AnalysisSession::new(crate::diagnostics::current());
+    run_with_session(&session, root, registry_file)
+}
+
+/// Run the query using the caller-owned request analysis session.
+pub(crate) fn run_with_session(
+    session: &AnalysisSession,
+    root: &Path,
+    registry_file: &Path,
+) -> Result<RegistryExtensionReport> {
     let path = if registry_file.is_absolute() {
         registry_file.to_path_buf()
     } else {
         root.join(registry_file)
     };
-    let source = std::fs::read_to_string(&path)
-        .map_err(|error| anyhow::anyhow!("cannot read {}: {error}", path.display()))?;
-    let rel = relative_slash_path(root, &path);
-
-    crate::ast::with_program(&path, &source, |program, source| {
-        analyze(program, source, rel)
+    session.registry_extension_report(root, &path, || {
+        let source = session
+            .read_source(&path)
+            .map_err(|error| anyhow::anyhow!("cannot read {}: {error}", path.display()))?;
+        let rel = relative_slash_path(root, &path);
+        session
+            .with_program(&path, &source, |program, source| {
+                analyze(program, source, rel)
+            })
+            .map_err(|error| anyhow::anyhow!("{error}"))?
     })
-    .map_err(|error| anyhow::anyhow!("{error}"))?
 }
 
 fn analyze(

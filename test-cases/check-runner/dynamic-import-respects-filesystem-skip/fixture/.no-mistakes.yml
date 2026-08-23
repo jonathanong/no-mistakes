@@ -1,0 +1,14 @@
+filesystem:
+  skipDirectories:
+    - skipped
+tests:
+  vitest:
+    configs: "**/vitest.config.ts"
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository
+  - rule: required-entrypoint-reachability
+    scope: repository
+    options:
+      sourceGlobs: [skipped/target.ts]
+      entrypoints: [tests/scoped.test.ts]

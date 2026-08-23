@@ -2,56 +2,42 @@ import type {
   CheckReport,
   AnalyzeProjectOptions,
   AnalyzeProjectResult,
-  CiEnvOptions,
-  CiEnvReport,
-  CiImpactOptions,
-  CiImpactReport,
   CallSitesOptions,
   CallSitesResult,
-  DataPwOptions,
-  DataPwReport,
+  CheckOptions,
   DeadExportsOptions,
   DeadExportsResult,
-  EffectsOptions,
-  EffectsReport,
-  RscCallersOptions,
-  RscCallersReport,
-  RegistryExtensionOptions,
-  RegistryExtensionReport,
   DependencyResult,
   ExportsOfOptions,
   ExportsOfResult,
+  FetchReport,
   FetchesOptions,
   FlowOptions,
   FlowReport,
-  ImpactedChecksOptions,
-  ImpactedChecksReport,
   ImportUsagesOptions,
   ImportUsagesResult,
   ImportersOptions,
   ImportersResult,
+  MermaidValidationOptions,
+  MermaidValidationResult,
   ResolveCheckOptions,
+  ResolveCheckFilesOptions,
   ResolveCheckResult,
+  ResolveCheckBatchResult,
+  ResolvedConfig,
   GraphEdge,
-  InfraOptions,
-  LockfileDiffEntry,
-  LockfileDiffOptions,
-  ModuleOutputsResult,
   PlaywrightOptions,
   PlaywrightRelatedOptions,
   ProjectOptions,
+  QueueCheckFinding,
+  QueueEdge,
   QueueReport,
   ReactComponentFacts,
   ReactUsagesReport,
   ReactViolation,
-  ResourceRefRow,
   ServerRoutesReport,
   ServerContractsReport,
   SignatureImpactResult,
-  SwiftImporterRow,
-  SwiftOptions,
-  SwiftTestTargetRow,
-  TestForRow,
   SymbolsListOptions,
   SymbolsOptions,
   SymbolsResult,
@@ -70,6 +56,7 @@ import type {
 } from "./types";
 
 export * from "./types";
+export * from "./index-ci-infra";
 
 export function dependencies(
   options: WithInvocationOptions<TraverseOptions>,
@@ -106,9 +93,18 @@ export function callSites(
 export function resolveCheck(
   options: WithInvocationOptions<ResolveCheckOptions>,
 ): Promise<ResolveCheckResult>;
-export function fetches(options?: WithInvocationOptions<FetchesOptions>): Promise<unknown>;
+export function resolveCheck(
+  options: WithInvocationOptions<ResolveCheckFilesOptions>,
+): Promise<ResolveCheckBatchResult>;
+export function fetches(options?: WithInvocationOptions<FetchesOptions>): Promise<FetchReport>;
 export function flow(options: WithInvocationOptions<FlowOptions>): Promise<FlowReport>;
-export function check(options?: WithInvocationOptions<ProjectOptions>): Promise<CheckReport>;
+export function check(options?: WithInvocationOptions<CheckOptions>): Promise<CheckReport>;
+export function resolveConfig(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<ResolvedConfig>;
+export function validateMermaidMarkdown(
+  options: WithInvocationOptions<MermaidValidationOptions>,
+): Promise<MermaidValidationResult>;
 export function testsPlan(options: WithInvocationOptions<TestsPlanOptions>): Promise<TestPlan>;
 export function testsImpact(options: WithInvocationOptions<TestsImpactOptions>): Promise<TestPlan>;
 export function testsTargets(
@@ -139,9 +135,11 @@ export function playwrightTests(
   options?: WithInvocationOptions<PlaywrightOptions>,
 ): Promise<unknown>;
 export function queues(options?: WithInvocationOptions<ProjectOptions>): Promise<QueueReport>;
-export function queueEdges(options?: WithInvocationOptions<ProjectOptions>): Promise<GraphEdge[]>;
-export function queueRelated(options: WithInvocationOptions<ProjectOptions>): Promise<GraphEdge[]>;
-export function queueCheck(options?: WithInvocationOptions<ProjectOptions>): Promise<unknown[]>;
+export function queueEdges(options?: WithInvocationOptions<ProjectOptions>): Promise<QueueEdge[]>;
+export function queueRelated(options: WithInvocationOptions<ProjectOptions>): Promise<QueueEdge[]>;
+export function queueCheck(
+  options?: WithInvocationOptions<ProjectOptions>,
+): Promise<QueueCheckFinding[]>;
 export function serverRoutes(
   options?: WithInvocationOptions<ProjectOptions>,
 ): Promise<ServerRoutesReport>;
@@ -166,35 +164,3 @@ export function reactCheck(
 export function reactUsages(
   options: WithInvocationOptions<ProjectOptions & { target: string }>,
 ): Promise<ReactUsagesReport>;
-export function lockfileDiff(
-  options: WithInvocationOptions<LockfileDiffOptions>,
-): Promise<LockfileDiffEntry[]>;
-export function ciImpact(options: WithInvocationOptions<CiImpactOptions>): Promise<CiImpactReport>;
-export function ciEnv(options: WithInvocationOptions<CiEnvOptions>): Promise<CiEnvReport>;
-export function impactedChecks(
-  options: WithInvocationOptions<ImpactedChecksOptions>,
-): Promise<ImpactedChecksReport>;
-export function dataPw(options: WithInvocationOptions<DataPwOptions>): Promise<DataPwReport>;
-export function effects(options: WithInvocationOptions<EffectsOptions>): Promise<EffectsReport>;
-export function rscCallers(
-  options: WithInvocationOptions<RscCallersOptions>,
-): Promise<RscCallersReport>;
-export function registryExtension(
-  options: WithInvocationOptions<RegistryExtensionOptions>,
-): Promise<RegistryExtensionReport>;
-export function infraResourceRefs(
-  options: WithInvocationOptions<InfraOptions & { address: string }>,
-): Promise<ResourceRefRow[]>;
-export function infraOutputs(
-  options: WithInvocationOptions<InfraOptions & { moduleDir: string }>,
-): Promise<ModuleOutputsResult>;
-export function infraTestFor(
-  options: WithInvocationOptions<InfraOptions & { tfFile: string }>,
-): Promise<TestForRow[]>;
-export function swiftImporters(
-  options: WithInvocationOptions<SwiftOptions & { file: string }>,
-): Promise<SwiftImporterRow[]>;
-export function swiftTestTargets(
-  options: WithInvocationOptions<SwiftOptions & { file: string }>,
-): Promise<SwiftTestTargetRow[]>;
-export function version(): Promise<string>;

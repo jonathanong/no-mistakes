@@ -1,0 +1,15 @@
+projects:
+  database-resources:
+    root: .
+tests:
+  vitest:
+    configs: vitest.config.mts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        database-resources:
+          - migrations/**/*.sql
+    environments:
+      pre-push:
+        exclude: [src/shared.test.ts]

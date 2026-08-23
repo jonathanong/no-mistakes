@@ -3,13 +3,15 @@ use oxc_ast::ast::Program;
 use oxc_span::SourceType;
 use self_cell::self_cell;
 use std::cell::RefCell;
-use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::rc::Rc;
+use std::sync::Arc;
+
+use crate::fx::FxHashMap;
 
 struct ProgramOwner {
     allocator: Allocator,
-    source: String,
+    source: Arc<str>,
     source_type: SourceType,
 }
 
@@ -27,7 +29,7 @@ enum ParseMode {
     LegacySymbols,
 }
 
-type CachedPrograms = HashMap<(PathBuf, ParseMode), Result<Rc<CachedProgram>, String>>;
+type CachedPrograms = FxHashMap<(Arc<Path>, ParseMode), Result<Rc<CachedProgram>, String>>;
 
 self_cell! {
     struct CachedProgram {
@@ -42,12 +44,14 @@ self_cell! {
 /// thread boundary; only owned facts derived from them may leave the scope.
 #[derive(Clone, Default)]
 pub(crate) struct ParsedProgramCache {
+    interned_paths: Rc<RefCell<FxHashMap<Arc<Path>, ()>>>,
     entries: Rc<RefCell<CachedPrograms>>,
 }
 
 #[cfg(test)]
 pub(super) mod tests;
 
+mod intern;
 mod parse;
 use parse::parse_program;
 
@@ -55,7 +59,7 @@ impl ParsedProgramCache {
     pub(crate) fn with_program<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
     ) -> Result<T, String> {
         self.with_program_observed(path, source, || {}, analyze)
@@ -64,27 +68,40 @@ impl ParsedProgramCache {
     pub(crate) fn with_program_observed<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         on_parse: impl FnOnce(),
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
     ) -> Result<T, String> {
         let cached = self.cached_program(path, source, ParseMode::Standard, on_parse)?;
         cached.with_dependent(|owner, parsed| match &parsed.strict_error {
             Some(error) => Err(error.clone()),
-            None => Ok(analyze(&parsed.program, owner.source.as_str())),
+            None => Ok(analyze(&parsed.program, owner.source.as_ref())),
         })
     }
 
     pub(crate) fn clear(&self) {
         self.entries.borrow_mut().clear();
+        self.interned_paths.borrow_mut().clear();
+    }
+
+    pub(crate) fn remove_path(&self, path: &Path) {
+        let path = crate::codebase::ts_resolver::normalize_path(path);
+        self.entries
+            .borrow_mut()
+            .retain(|(cached, _), _| cached.as_ref() != path.as_path());
+    }
+
+    pub(crate) fn entry_count(&self) -> usize {
+        self.entries.borrow().len()
     }
 
     pub(crate) fn parse_error(&self, path: &Path) -> Option<String> {
         let path = crate::codebase::ts_resolver::normalize_path(path);
+        let interned = self.interned_lookup(&path)?;
         let cached = self
             .entries
             .borrow()
-            .get(&(path, ParseMode::Standard))?
+            .get(&(interned, ParseMode::Standard))?
             .clone();
         match cached {
             Ok(cached) => cached.with_dependent(|_, parsed| parsed.strict_error.clone()),
@@ -92,19 +109,21 @@ impl ParsedProgramCache {
         }
     }
 
-    pub(crate) fn with_recovered_program_observed<T>(
+    /// Exposes OXC's recovered program, diagnostic, and fatal-panic status.
+    pub(crate) fn with_recovered_program_status_observed<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         on_parse: impl FnOnce(),
-        analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+        analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>, bool) -> T,
     ) -> Result<T, String> {
         let cached = self.cached_program(path, source, ParseMode::Standard, on_parse)?;
         Ok(cached.with_dependent(|owner, parsed| {
             analyze(
                 &parsed.program,
-                owner.source.as_str(),
+                owner.source.as_ref(),
                 parsed.diagnostic_error.clone(),
+                parsed.panic_error.is_some(),
             )
         }))
     }
@@ -112,7 +131,7 @@ impl ParsedProgramCache {
     pub(crate) fn with_recovered_typescript_program_observed<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         on_parse: impl FnOnce(),
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
     ) -> Result<T, String> {
@@ -120,7 +139,7 @@ impl ParsedProgramCache {
         Ok(cached.with_dependent(|owner, parsed| {
             analyze(
                 &parsed.program,
-                owner.source.as_str(),
+                owner.source.as_ref(),
                 parsed.diagnostic_error.clone(),
             )
         }))
@@ -129,7 +148,7 @@ impl ParsedProgramCache {
     pub(crate) fn with_legacy_symbols_program_observed<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         on_parse: impl FnOnce(),
         analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
     ) -> Result<T, String> {
@@ -143,7 +162,7 @@ impl ParsedProgramCache {
             Some(error) => Err(error.clone()),
             None => Ok(analyze(
                 &parsed.program,
-                owner.source.as_str(),
+                owner.source.as_ref(),
                 parsed.diagnostic_error.clone(),
             )),
         })
@@ -152,12 +171,12 @@ impl ParsedProgramCache {
     fn cached_program(
         &self,
         path: &Path,
-        source: &str,
+        source: Arc<str>,
         mode: ParseMode,
         on_parse: impl FnOnce(),
     ) -> Result<Rc<CachedProgram>, String> {
-        let path = crate::codebase::ts_resolver::normalize_path(path);
-        let key = (path.clone(), mode);
+        let path = self.intern_path(crate::codebase::ts_resolver::normalize_path(path));
+        let key = (Arc::clone(&path), mode);
         if let Some(cached) = self.entries.borrow().get(&key) {
             return cached.clone();
         }
@@ -168,7 +187,9 @@ impl ParsedProgramCache {
     }
 }
 
-pub(super) fn legacy_symbols_share_standard_parse(path: &Path) -> bool {
+/// Whether the regular file-backed parser uses exactly the legacy
+/// `extract_symbols_at_path` source type for `path`.
+pub(crate) fn legacy_symbols_share_standard_parse(path: &Path) -> bool {
     let Ok(source_type) = SourceType::from_path(path) else {
         return false;
     };

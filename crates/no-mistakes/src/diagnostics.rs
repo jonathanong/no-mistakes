@@ -10,10 +10,17 @@ mod observer;
 use std::sync::Arc;
 
 pub use context::{
-    current, current_timing_kind, measure_if_enabled, with_observer, InvocationGuard,
-    LegacyDiagnosticsGuard,
+    current, current_timing_kind, measure_if_enabled, with_observer, with_timing_kind,
+    InvocationGuard, LegacyDiagnosticsGuard,
 };
 pub use observer::{DiagnosticsSnapshot, InvocationObserver, TimingDiagnostic, TimingKind};
+
+/// Count one AST visitor walk when verbose timings are enabled.
+pub fn record_ast_walk() {
+    if let Some(observer) = current() {
+        observer.increment("ast.walks", 1);
+    }
+}
 
 #[derive(clap::Args, Debug, Clone, Copy, Default)]
 pub struct DiagnosticsArgs {

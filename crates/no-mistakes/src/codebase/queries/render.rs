@@ -37,7 +37,7 @@ where
     let mut output = Vec::new();
     match format {
         Format::Json => {
-            serde_json::to_writer_pretty(&mut output, report).context("serializing query JSON")?;
+            serde_json::to_writer(&mut output, report).context("serializing query JSON")?;
             writeln!(output).context("writing query JSON")?;
         }
         Format::Yml => {
@@ -58,9 +58,9 @@ where
     Ok(())
 }
 
-/// Serialize a report as pretty JSON (the N-API parity surface).
+/// Serialize a report as compact JSON (the N-API parity surface).
 pub(crate) fn to_json<R: Report>(report: &R) -> Result<String> {
-    serde_json::to_string_pretty(report).context("serializing query JSON")
+    serde_json::to_string(report).context("serializing query JSON")
 }
 
 /// Pick the effective format: `--json` wins, then `--format`, then human on a

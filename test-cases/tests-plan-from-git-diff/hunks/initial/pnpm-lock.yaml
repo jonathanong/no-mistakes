@@ -1,0 +1,5 @@
+lockfileVersion: '9.0'
+
+packages:
+  lib@1.0.0:
+    resolution: {directory: packages/lib, type: directory}

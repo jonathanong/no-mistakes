@@ -1,9 +1,10 @@
-fn scoped_import_map(
+fn scoped_import_map_with_graph_files(
     imports: &[ExtractedImport],
     path: &Path,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
+    graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> HashMap<String, Vec<(NodeId, EdgeKind)>> {
     const TOP_LEVEL_SIDE_EFFECT_SCOPE: &str = "";
     let mut map: HashMap<String, Vec<(NodeId, EdgeKind)>> = HashMap::new();
@@ -15,13 +16,14 @@ fn scoped_import_map(
         } else {
             continue;
         };
-        let Some((node, kind)) = import_target(
+        let Some((node, kind)) = import_target_with_graph_files(
             &import.specifier,
             import.kind,
             path,
             resolver,
             workspace,
-            visible_files,
+            graph_files,
+            interner,
         ) else {
             continue;
         };
@@ -34,38 +36,48 @@ fn scoped_import_map(
     map
 }
 
-fn import_target(
+fn import_target_with_graph_files(
     specifier: &str,
     kind: ImportKind,
     path: &Path,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &HashSet<PathBuf>,
+    graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> Option<(NodeId, EdgeKind)> {
     let edge_kind = match kind {
         ImportKind::Static => EdgeKind::Import,
         ImportKind::Type => EdgeKind::TypeImport,
         ImportKind::Dynamic => EdgeKind::DynamicImport,
-        ImportKind::Require | ImportKind::RequireResolve => EdgeKind::Require,
+        ImportKind::Require => EdgeKind::Require,
+        ImportKind::RequireResolve => EdgeKind::RequireResolve,
     };
     if let Some(target) = resolver.resolve(specifier, path) {
-        let edge_kind = if is_indexable(&target) {
+        let target = graph_files.visible_path(&target)?;
+        let edge_kind = if is_indexable(target) {
             edge_kind
+        } else if kind == ImportKind::Type {
+            return None;
+        } else if kind == ImportKind::RequireResolve {
+            EdgeKind::RequireResolve
         } else {
             EdgeKind::AssetImport
         };
-        return Some((NodeId::File(target), edge_kind));
+        return Some((NodeId::file_in(interner, target), edge_kind));
     }
     if let Some(target) =
-        workspace.resolve_specifier_from_file_visible(specifier, path, visible_files)
+        workspace.resolve_specifier_from_file_visible(specifier, path, graph_files)
     {
-        if !visible_files.contains(&target) {
-            return None;
-        }
-        return Some((NodeId::File(target), EdgeKind::WorkspaceImport));
+        let target = graph_files.visible_path(&target)?;
+        let edge_kind = match kind {
+            ImportKind::Type => EdgeKind::WorkspaceTypeImport,
+            ImportKind::RequireResolve => EdgeKind::RequireResolve,
+            _ => EdgeKind::WorkspaceImport,
+        };
+        return Some((NodeId::file_in(interner, target), edge_kind));
     }
     if workspace.recognizes_specifier_from(specifier, path) {
         return None;
     }
-    bare_module_node(specifier).map(|node| (node, edge_kind))
+    bare_module_node_in(interner, specifier).map(|node| (node, edge_kind))
 }

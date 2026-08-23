@@ -14,6 +14,28 @@ Playwright coverage.
 
 Fix: add coverage, adjust selector config, or exclude intentional gaps.
 
+## Multiple frontend apps
+
+With more than one `type: nextjs` project configured, each rule application
+must be bound to the app it covers — either via `projects:`:
+
+```yaml
+rules:
+  - rule: playwright-coverage
+    projects: [web]
+    tests:
+      playwright: [web]
+```
+
+or via [`tests.playwright.apps.<project>.project`](../configuration/tests.md#multiple-frontend-apps).
+When `tests.playwright.apps` binds every Playwright project, a single unbound
+rule application fans out over those apps. An unbound rule with more than one
+candidate app and no `apps` map fails with an error naming the candidates.
+
+Set `tests.playwright.coverage.routes: false` to disable uncovered-route
+findings without dropping route selection edges. Selector findings stay on
+unless `coverage.selectors` is also false.
+
 ## HTML IDs
 
 HTML `id` values are coverage candidates only when

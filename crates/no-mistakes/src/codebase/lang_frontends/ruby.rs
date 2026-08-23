@@ -1,0 +1,165 @@
+use super::facts::{configured_roots, files_under, owning_package, LangFactMap, LangFileFacts};
+use super::strip::strip_comments_keep_strings;
+#[path = "ruby_http.rs"]
+mod http;
+#[path = "ruby_queue.rs"]
+mod queue;
+#[path = "ruby_zeitwerk.rs"]
+mod zeitwerk;
+use crate::codebase::ts_source::SourceStore;
+use regex::Regex;
+use std::path::{Path, PathBuf};
+use std::sync::OnceLock;
+
+pub(crate) fn collect_ruby_facts(
+    root: &Path,
+    all_files: &[PathBuf],
+    apps: &[String],
+    sources: &SourceStore,
+) -> LangFactMap {
+    let roots = configured_roots(root, apps);
+    let files = files_under(all_files, &roots, "rb");
+    let mut facts = super::facts::collect_files_parallel(files, |path| {
+        parse_ruby_file(path, &roots, apps, sources)
+    });
+    zeitwerk::attach_zeitwerk_refs(&mut facts, &roots, all_files);
+    facts
+}
+
+fn parse_ruby_file(
+    path: &Path,
+    roots: &[PathBuf],
+    apps: &[String],
+    sources: &SourceStore,
+) -> Option<LangFileFacts> {
+    let source = sources.read_path(path).ok()?;
+    let text = strip_comments_keep_strings(&source);
+    Some(LangFileFacts {
+        path: path.to_path_buf(),
+        package: owning_package(path, roots, apps),
+        // `files_under` already scoped this path to a configured root, so the
+        // module key is always present.
+        module: ruby_module_key(path, roots),
+        imports: extract_requires(&text, path, roots),
+        declarations: extract_ruby_declarations(&text),
+        references: extract_static_consts(&text),
+        route_handlers: http::extract_routes(&text),
+        queue_enqueues: queue::extract_enqueues(&text),
+        queue_workers: queue::extract_workers(&text),
+        mods: Vec::new(),
+    })
+}
+
+fn ruby_module_key(path: &Path, roots: &[PathBuf]) -> Option<String> {
+    let root = roots
+        .iter()
+        .filter(|candidate| path.starts_with(candidate))
+        .max_by_key(|candidate| candidate.components().count())?;
+    let rel = path.strip_prefix(root).ok()?;
+    let key = rel.to_string_lossy().replace('\\', "/");
+    Some(key.trim_end_matches(".rb").to_string())
+}
+
+fn extract_requires(source: &str, path: &Path, roots: &[PathBuf]) -> Vec<String> {
+    let mut imports = extract_named(source, ruby_require_re());
+    for rel in extract_named(source, ruby_require_relative_re()) {
+        let parent = path.parent().unwrap_or(path);
+        let resolved =
+            crate::codebase::ts_resolver::normalize_path(&parent.join(rel).with_extension("rb"));
+        if let Some(key) = ruby_module_key(&resolved, roots) {
+            imports.push(key);
+        }
+        if let Some(stem) = resolved.file_stem() {
+            imports.push(stem.to_string_lossy().into_owned());
+        }
+    }
+    imports.sort();
+    imports.dedup();
+    imports
+}
+
+fn extract_static_consts(source: &str) -> Vec<String> {
+    let mut names = Vec::new();
+    for cap in ruby_const_re().captures_iter(source) {
+        let matched = cap.get(1).expect("ruby const capture includes group 1");
+        let before = &source[..matched.start()];
+        let after = &source[matched.end()..];
+        if after.trim_start().starts_with(".constantize")
+            || before.ends_with('"')
+            || before.ends_with('\'')
+        {
+            continue;
+        }
+        names.push(matched.as_str().to_string());
+    }
+    names.sort();
+    names.dedup();
+    names
+}
+
+fn extract_named(source: &str, re: &Regex) -> Vec<String> {
+    let mut values: Vec<String> = re
+        .captures_iter(source)
+        .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string()))
+        .collect();
+    values.sort();
+    values.dedup();
+    values
+}
+
+fn ruby_require_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"\brequire\s+["']([^"']+)["']"#).expect("require"))
+}
+
+fn ruby_require_relative_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r#"\brequire_relative\s+["']([^"']+)["']"#).expect("rel"))
+}
+
+fn extract_ruby_declarations(source: &str) -> Vec<String> {
+    let mut stack: Vec<(usize, String)> = Vec::new();
+    let mut names = Vec::new();
+    for line in source.lines() {
+        let indent = line.chars().take_while(|ch| ch.is_whitespace()).count();
+        while stack.last().is_some_and(|(depth, _)| *depth >= indent) {
+            stack.pop();
+        }
+        if let Some(name) = ruby_decl_re()
+            .captures(line)
+            .and_then(|cap| cap.get(1))
+            .map(|m| m.as_str().to_string())
+        {
+            let qualified = if stack.is_empty() || name.contains("::") {
+                name.clone()
+            } else {
+                format!(
+                    "{}::{name}",
+                    stack
+                        .iter()
+                        .map(|(_, part)| part.as_str())
+                        .collect::<Vec<_>>()
+                        .join("::")
+                )
+            };
+            names.push(qualified);
+            names.push(name.clone());
+            stack.push((indent, name));
+        }
+    }
+    names.sort();
+    names.dedup();
+    names
+}
+
+fn ruby_decl_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| Regex::new(r"(?m)^\s*(?:class|module)\s+([A-Z][\w:]*)").expect("decl"))
+}
+
+fn ruby_const_re() -> &'static Regex {
+    static RE: OnceLock<Regex> = OnceLock::new();
+    RE.get_or_init(|| {
+        Regex::new(r"\b([A-Z][A-Za-z0-9_]*(?:::[A-Z][A-Za-z0-9_]*)*)\b").expect("const")
+    })
+}

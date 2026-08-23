@@ -1,7 +1,15 @@
-use super::extract_program;
+use super::extract_program_with_references;
+use crate::imports::collect_identifier_references;
 use oxc_allocator::Allocator;
 use oxc_parser::Parser;
 use oxc_span::SourceType;
+use std::collections::HashSet;
+
+fn extract_program(source: &str, program: &oxc_ast::ast::Program<'_>) -> super::StorybookFileFacts {
+    let referenced = collect_identifier_references(program);
+    let referenced: HashSet<&str> = referenced.iter().map(String::as_str).collect();
+    extract_program_with_references(source, program, &referenced)
+}
 
 #[test]
 fn extracts_used_and_side_effect_story_imports() {

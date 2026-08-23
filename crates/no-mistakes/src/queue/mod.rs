@@ -9,14 +9,17 @@ mod graph_entities;
 mod graph_model;
 mod graph_related;
 mod graph_resolution;
+mod lang;
 mod resolver;
 mod source;
 mod types;
 
 pub use graph::{
     analyze_project, analyze_project_indexed, analyze_project_with_facts,
-    analyze_project_with_prepared_facts, analyze_project_with_prepared_facts_indexed,
-    RelatedDirection,
+    analyze_project_with_prepared_facts,
+    analyze_project_with_prepared_facts_and_catalog_and_session,
+    analyze_project_with_prepared_facts_indexed,
+    analyze_project_with_prepared_facts_indexed_and_catalog_and_session, RelatedDirection,
 };
 pub use graph_model::{CheckFinding, PreparedProjectReport, ProjectReport};
 pub use graph_related::related;

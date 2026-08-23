@@ -1,0 +1,3 @@
+[duplicate-step-id] .github/workflows/pipeline.yml (.github/workflows/pipeline.yml#build): .github/workflows/pipeline.yml#build declares duplicate step id setup
+[non-prior-step-reference] .github/workflows/pipeline.yml (.github/workflows/pipeline.yml#build): .github/workflows/pipeline.yml#build references step later before it has executed
+[unknown-step-reference] .github/workflows/pipeline.yml (.github/workflows/pipeline.yml#build): .github/workflows/pipeline.yml#build references unknown step missing

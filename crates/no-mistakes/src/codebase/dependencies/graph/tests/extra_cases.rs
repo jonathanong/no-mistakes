@@ -77,7 +77,7 @@ fn lazy_import_deps_walks_only_reachable_import_graph() {
         base_url: None,
     };
 
-    let deps = lazy_import_deps_of(&[NodeId::File(entry)], &root, &tsconfig, None).unwrap();
+    let deps = lazy_import_deps_of(&[NodeId::file(entry)], &root, &tsconfig, None).unwrap();
 
     assert_eq!(
         deps.iter()
@@ -107,7 +107,7 @@ fn lazy_import_deps_filters_granular_relationships() {
     // Test static only
     let static_allowed = Some([EdgeKind::Import].into());
     let static_deps = lazy_import_deps_of_with_files(
-        &[NodeId::File(entry.clone())],
+        &[NodeId::file(entry.clone())],
         &root,
         &tsconfig,
         None,
@@ -123,7 +123,7 @@ fn lazy_import_deps_filters_granular_relationships() {
     // Test dynamic only
     let dynamic_allowed = Some([EdgeKind::DynamicImport].into());
     let dynamic_deps = lazy_import_deps_of_with_files(
-        &[NodeId::File(entry.clone())],
+        &[NodeId::file(entry.clone())],
         &root,
         &tsconfig,
         None,
@@ -139,7 +139,7 @@ fn lazy_import_deps_filters_granular_relationships() {
     // Test type only
     let type_allowed = Some([EdgeKind::TypeImport].into());
     let type_deps = lazy_import_deps_of_with_files(
-        &[NodeId::File(entry.clone())],
+        &[NodeId::file(entry.clone())],
         &root,
         &tsconfig,
         None,
@@ -152,7 +152,7 @@ fn lazy_import_deps_filters_granular_relationships() {
     // Test require only
     let require_allowed = Some([EdgeKind::Require].into());
     let require_deps = lazy_import_deps_of_with_files(
-        &[NodeId::File(entry.clone())],
+        &[NodeId::file(entry.clone())],
         &root,
         &tsconfig,
         None,
@@ -167,7 +167,7 @@ fn lazy_import_deps_filters_granular_relationships() {
 
     // Test all allowed (None)
     let all_deps = lazy_import_deps_of_with_files(
-        &[NodeId::File(entry)],
+        &[NodeId::file(entry)],
         &root,
         &tsconfig,
         None,
@@ -219,55 +219,60 @@ fn test_of_edges_do_not_make_source_depend_on_test() {
     // made `dependencies foo.mts` return its test file as a forward dep.
     let src = p("/root/foo.mts");
     let test = p("/root/foo.test.mts");
-    let mut forward: EdgeMap = HashMap::new();
-    let mut reverse: EdgeMap = HashMap::new();
+    let mut forward: EdgeMap = EdgeMap::default();
+    let mut reverse: EdgeMap = EdgeMap::default();
     merge_edges(
         &mut forward,
         &mut reverse,
-        collect_test_edges(Path::new("/root"), &[src.clone(), test.clone()], None),
+        collect_test_edges(
+            Path::new("/root"),
+            &[src.clone(), test.clone()],
+            None,
+            &crate::codebase::analysis_session::PathInterner::new(),
+        ),
     );
 
     // forward: test→src only (test depends on source)
     let test_fwd: Vec<_> = forward
-        .get(&NodeId::File(test.clone()))
+        .get(&NodeId::file(test.clone()))
         .unwrap_or(&vec![])
         .iter()
         .map(|(n, _)| n.clone())
         .collect();
     assert!(
-        test_fwd.contains(&NodeId::File(src.clone())),
+        test_fwd.contains(&NodeId::file(src.clone())),
         "forward test→src"
     );
     let src_fwd: Vec<_> = forward
-        .get(&NodeId::File(src.clone()))
+        .get(&NodeId::file(src.clone()))
         .unwrap_or(&vec![])
         .iter()
         .map(|(n, _)| n.clone())
         .collect();
     assert!(
-        !src_fwd.contains(&NodeId::File(test.clone())),
+        !src_fwd.contains(&NodeId::file(test.clone())),
         "forward src→test must NOT exist"
     );
 
     // reverse: src→test only (source is tested by test file)
     let src_rev: Vec<_> = reverse
-        .get(&NodeId::File(src.clone()))
+        .get(&NodeId::file(src.clone()))
         .unwrap_or(&vec![])
         .iter()
         .map(|(n, _)| n.clone())
         .collect();
     assert!(
-        src_rev.contains(&NodeId::File(test.clone())),
+        src_rev.contains(&NodeId::file(test.clone())),
         "reverse src→test"
     );
     let test_rev: Vec<_> = reverse
-        .get(&NodeId::File(test.clone()))
+        .get(&NodeId::file(test.clone()))
         .unwrap_or(&vec![])
         .iter()
         .map(|(n, _)| n.clone())
         .collect();
     assert!(
-        !test_rev.contains(&NodeId::File(src.clone())),
+        !test_rev.contains(&NodeId::file(src.clone())),
         "reverse test→src must NOT exist"
     );
 }
@@ -307,10 +312,7 @@ fn apply_filter_passes_queue_job_nodes() {
         .unwrap();
     let root = p("/root");
     let queue_job = NodeEntry {
-        node: NodeId::QueueJob {
-            queue_file: p("/root/src/queues.mts"),
-            job: "sendWelcome".to_string(),
-        },
+        node: NodeId::queue_job(p("/root/src/queues.mts"), "sendWelcome"),
         depth: 1,
         via: vec![],
     };

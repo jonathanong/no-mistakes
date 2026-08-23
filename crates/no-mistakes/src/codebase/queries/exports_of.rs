@@ -1,5 +1,5 @@
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::{build_index, export_importer_paths, export_kind_str};
+use super::reverse::{build_reverse_analysis, export_importer_paths, export_kind_str};
 use super::shared::{read_symbols, rel_str, resolve_target};
 use crate::cli::Format;
 use crate::codebase::ts_resolver::ImportResolver;
@@ -59,13 +59,27 @@ pub struct ExportsOfReport {
 
 fn compute(args: &ExportsOfArgs) -> Result<ExportsOfReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
-    let symbols = read_symbols(&target.abs_file)?;
-    let index = if args.no_importers {
-        None
+    let (symbols, analysis) = if args.no_importers {
+        (read_symbols(&target.abs_file, &target.sources)?, None)
     } else {
-        Some(build_index(&target)?)
+        let analysis = build_reverse_analysis(&target)?;
+        (analysis.symbols(&target)?, Some(analysis))
     };
-    let resolver = ImportResolver::new(&target.tsconfig).with_visible(&target.visible_files);
+    // Explicit configuration is authoritative even when the target has no
+    // re-exports. Automatic configuration remains lazy for ordinary exports.
+    target.validate_explicit_tsconfig()?;
+    // Target re-export rendering retains the single-file command's nearest
+    // visible-tsconfig semantics. Ordinary exports do not need a resolver.
+    let resolver = symbols
+        .exports
+        .iter()
+        .any(|export| matches!(export.kind, ExportKind::ReExport { .. }))
+        .then(|| {
+            target
+                .tsconfig()
+                .map(|config| ImportResolver::new(config).with_visible(target.visible_files()))
+        })
+        .transpose()?;
 
     let exports = symbols
         .exports
@@ -73,14 +87,18 @@ fn compute(args: &ExportsOfArgs) -> Result<ExportsOfReport> {
         .map(|export| {
             let resolved = if let ExportKind::ReExport { source, .. } = &export.kind {
                 resolver
+                    .as_ref()
+                    .expect("re-export resolver is prepared")
                     .resolve(source, &target.abs_file)
                     .map(|abs| rel_str(&abs, &target.root))
             } else {
                 None
             };
-            let importers = index
+            let importers = analysis
                 .as_ref()
-                .map(|idx| export_importer_paths(idx, &target.abs_file, export, &target.root))
+                .map(|analysis| {
+                    export_importer_paths(&analysis.index, &target.abs_file, export, &target.root)
+                })
                 .unwrap_or_default();
             ExportRow {
                 name: export.name.clone(),

@@ -17,7 +17,8 @@ pub(crate) fn standalone_facts(
         let sources = snapshot.source_store_for(root);
         let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
             None, root, &paths, &sources,
-        )?;
+        );
+        let tsconfig = tsconfig?;
         let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
             .unwrap_or_default();
         fact_plan.configure_module_resolution(
@@ -52,18 +53,39 @@ pub(crate) fn standalone_fact_plan(
     unique_selector_policy: UniqueSelectorPolicy,
     snapshot: &VisiblePathSnapshot,
 ) -> Result<crate::codebase::check_facts::PlaywrightFactPlan> {
-    let playwright = crate::playwright::playwright_config::load_many(
+    let mut fact_plan = crate::codebase::check_facts::PlaywrightFactPlan::default();
+    let extended = extend_standalone_fact_plan(
+        &mut fact_plan,
+        root,
+        settings,
+        unique_selector_policy,
+        snapshot,
+    );
+    extended?;
+    Ok(fact_plan)
+}
+
+pub(crate) fn extend_standalone_fact_plan(
+    fact_plan: &mut crate::codebase::check_facts::PlaywrightFactPlan,
+    root: &Path,
+    settings: &config::Settings,
+    unique_selector_policy: UniqueSelectorPolicy,
+    snapshot: &VisiblePathSnapshot,
+) -> Result<()> {
+    let playwright = crate::playwright::playwright_config::load_many_with_sources(
         root,
         &settings.playwright_configs,
         settings.project.as_deref(),
-    )?;
+        Some(snapshot.source_store_for(root).as_ref()),
+    );
+    let playwright = playwright?;
     let test_files = crate::playwright::analysis::discover::discover_test_files_from_visible(
         root,
         settings,
         &playwright,
         snapshot,
-    )?;
-    let mut fact_plan = crate::codebase::check_facts::PlaywrightFactPlan::default();
+    );
+    let test_files = test_files?;
     for test_file in &test_files {
         let attributes = test_file.test_id_attributes();
         fact_plan.add_file(crate::codebase::check_facts::PlaywrightFactSelection {
@@ -81,15 +103,13 @@ pub(crate) fn standalone_fact_plan(
             demands_text_imports: true,
         });
     }
-    fact_plan.set_test_files_by_project(vec![(
-        settings.project.clone(),
-        std::sync::Arc::new(test_files),
-    )]);
-    fact_plan.add_source_settings(
+    fact_plan.add_test_files_for_project(settings.project.clone(), std::sync::Arc::new(test_files));
+    let added = fact_plan.add_source_settings(
         root,
         settings.clone(),
         unique_selector_policy.html_ids && !settings.html_ids,
         snapshot,
-    )?;
-    Ok(fact_plan)
+    );
+    added?;
+    Ok(())
 }

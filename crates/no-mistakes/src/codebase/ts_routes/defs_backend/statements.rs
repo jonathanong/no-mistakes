@@ -55,9 +55,8 @@ fn collect_from_statement(
                 results,
             );
         }
-        Statement::ExportNamedDeclaration(export) => {
-            if let Some(decl) = &export.declaration {
-                match decl {
+        Statement::ExportDeclaration(export) => {
+                match &export.declaration {
                     oxc_ast::ast::Declaration::VariableDeclaration(var_decl) => {
                         let register_object_in_scope = register_object_in_scope
                             && !var_decl.declarations.iter().any(|decl| {
@@ -86,7 +85,6 @@ fn collect_from_statement(
                     }
                     _ => {}
                 }
-            }
         }
         _ => {}
     }

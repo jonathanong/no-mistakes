@@ -15,7 +15,9 @@ pub(crate) fn analyze_test_file(
         context.selector_regexes,
         context.selector_wrappers,
         None,
-    )?;
+        None,
+    );
+    let occurrences = occurrences?;
     Ok(analyze_prepared_test_occurrences(
         test_file,
         context,

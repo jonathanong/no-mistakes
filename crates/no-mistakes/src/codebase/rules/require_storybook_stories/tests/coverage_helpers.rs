@@ -15,7 +15,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
     let component_keys = HashSet::from([component_key.clone()]);
     let shared = CheckFactMap {
         files: vec![story.clone(), linked_story.clone()],
-        ts: HashMap::from([
+        ts: crate::codebase::ts_source::FileIdMap::from([
             (
                 story.clone(),
                 CheckFileFacts {
@@ -199,7 +199,7 @@ fn coverage_helpers_handle_unresolved_and_reexport_edges() {
 
     let cycle_story = CheckFactMap {
         files: vec![story.clone()],
-        ts: HashMap::from([
+        ts: crate::codebase::ts_source::FileIdMap::from([
             (
                 story.clone(),
                 CheckFileFacts {
@@ -277,7 +277,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
             no_source.clone(),
             included.clone(),
         ],
-        ts: HashMap::from([
+        ts: crate::codebase::ts_source::FileIdMap::from([
             (
                 outside,
                 CheckFileFacts {
@@ -380,7 +380,10 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
         &root,
         project_root,
         &shared,
-        &opts,
+        selection::SelectionOptions {
+            options: &opts,
+            defer_suppression: false,
+        },
         &include,
         &exclude,
         &test_filter,
@@ -429,7 +432,7 @@ fn selection_and_transitive_helpers_cover_skip_paths() {
     let same_project = root.join("components/SameProject.tsx");
     let other_project = root.parent().unwrap().join("OtherProject.tsx");
     let boundary_shared = CheckFactMap {
-        ts: HashMap::from([
+        ts: crate::codebase::ts_source::FileIdMap::from([
             (
                 root.join("loader.ts"),
                 CheckFileFacts {

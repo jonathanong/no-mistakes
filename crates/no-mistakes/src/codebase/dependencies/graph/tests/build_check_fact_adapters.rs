@@ -9,10 +9,16 @@ impl DepGraph {
         facts: &crate::codebase::check_facts::CheckFactMap,
         prepared: &PreparedGraphConfig,
     ) -> Result<Self> {
+        let tsconfig_catalog = crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            root,
+            tsconfig.clone(),
+            None,
+        );
         Self::build_with_prepared_check_facts_and_session(
             PreparedCheckFactGraphBuildRequest {
                 root,
                 tsconfig,
+                tsconfig_catalog: &tsconfig_catalog,
                 plan,
                 files,
                 config_path,
@@ -33,10 +39,16 @@ impl DepGraph {
         config_path: Option<&Path>,
         facts: &crate::codebase::check_facts::CheckFactMap,
     ) -> Result<Self> {
+        let tsconfig_catalog = crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            root,
+            tsconfig.clone(),
+            None,
+        );
         Self::build_with_complete_check_facts_and_session(
             CompleteCheckFactGraphBuildRequest {
                 root,
                 tsconfig,
+                tsconfig_catalog: &tsconfig_catalog,
                 plan,
                 files,
                 config_path,

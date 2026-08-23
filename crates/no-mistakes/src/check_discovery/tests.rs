@@ -5,6 +5,8 @@ use tempfile::TempDir;
 
 #[path = "tests/mixed_availability.rs"]
 mod mixed_availability;
+#[path = "tests/path_entries.rs"]
+mod path_entries;
 
 fn discover_check_file_views(
     root: &Path,
@@ -30,14 +32,25 @@ fn discover_check_file_views_from_git_files(
     unique_exports_enabled: bool,
     root_files: Option<Vec<String>>,
 ) -> super::views::CheckFileViews {
-    super::views::discover_check_file_views_with_external_lookup(
+    let root_files = root_files.map(|files| absolute_paths(root, files));
+    super::views::discover_check_file_views_with_absolute_lookup(
         root,
         config,
         skip_directories,
         unique_exports_enabled,
         root_files,
-        no_mistakes::codebase::ts_source::git_visible_files,
+        |base| {
+            no_mistakes::codebase::ts_source::git_visible_files(base)
+                .map(|files| absolute_paths(base, files))
+        },
     )
+}
+
+fn absolute_paths(root: &Path, files: Vec<String>) -> Vec<PathBuf> {
+    files
+        .into_iter()
+        .map(|relative| no_mistakes::codebase::ts_resolver::normalize_path(&root.join(relative)))
+        .collect()
 }
 
 fn fixture(path: &str) -> PathBuf {

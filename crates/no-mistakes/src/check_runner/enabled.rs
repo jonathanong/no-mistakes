@@ -7,6 +7,7 @@ pub(crate) struct ConfiguredChecks {
     pub(crate) nextjs_api_routes: bool,
     pub(crate) nextjs_caching: bool,
     pub(crate) storybook_stories: bool,
+    pub(crate) embedded_sql: bool,
 }
 
 impl ConfiguredChecks {
@@ -32,6 +33,16 @@ impl ConfiguredChecks {
                 config,
                 no_mistakes::codebase::rules::REQUIRE_STORYBOOK_STORIES,
             ),
+            embedded_sql: rule_configured(
+                config,
+                no_mistakes::codebase::rules::POSTGRES_LOCK_ORDERING,
+            ) || rule_configured(
+                config,
+                no_mistakes::codebase::rules::POSTGRES_NO_OFFSET,
+            ) || rule_configured(
+                config,
+                no_mistakes::codebase::rules::POSTGRES_REQUIRE_QUERY_ANNOTATION,
+            ),
         }
     }
 }
@@ -48,6 +59,7 @@ pub(crate) struct EnabledChecks {
     pub(crate) storybook_stories: bool,
     pub(crate) integration: bool,
     pub(crate) unique_exports: bool,
+    pub(crate) embedded_sql: bool,
 }
 
 pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
@@ -66,10 +78,16 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
         storybook: enabled.storybook_stories,
         server_route_client_boundary: enabled.boundary_rules,
         raw_source: enabled.nextjs_api_routes,
-        source: enabled.dynamic_import_rules
+        // Integration parse failures must retain their directive text so the
+        // prepared integration projection can distinguish disabled suite
+        // tests from malformed imported helpers without a second source read.
+        source: enabled.integration
+            || enabled.dynamic_import_rules
             || enabled.nextjs_caching
             || enabled.unique_exports
             || enabled.storybook_stories,
+        postgres_schema: false,
+        embedded_sql: enabled.embedded_sql,
         graph: if enabled.dynamic_import_rules {
             no_mistakes::codebase::ts_source::facts::TsFactPlan::imports()
         } else {

@@ -3,11 +3,13 @@ use super::*;
 fn scoped_project(config: &str, scope: Option<&str>) -> ConfigProject {
     ConfigProject {
         config: Some(config.to_string()),
+        workspace: false,
         policy_name: None,
         runner_project_arg: Some("chromium".to_string()),
         scope: scope.map(str::to_string),
         include: Vec::new(),
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     }
 }
 

@@ -159,7 +159,7 @@ pub(super) fn with_request_program<T>(
     });
     match cache {
         Some(cache) => cache
-            .with_program(path, source, analyze)
+            .with_program(path, std::sync::Arc::from(source), analyze)
             .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display())),
         None => crate::ast::with_program(path, source, analyze),
     }

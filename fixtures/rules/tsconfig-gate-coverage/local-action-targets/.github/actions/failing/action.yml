@@ -1,0 +1,7 @@
+name: Failing action
+description: Exits before a later workflow typecheck can run
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: exit 1

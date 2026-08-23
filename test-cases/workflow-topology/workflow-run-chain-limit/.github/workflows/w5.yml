@@ -1,0 +1,9 @@
+name: W5
+on:
+  workflow_run:
+    workflows: [W4]
+jobs:
+  noop:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo w5

@@ -4,20 +4,21 @@ mod helpers;
 mod imports;
 mod literals;
 mod named_handlers;
+mod nestjs;
 mod query_params;
 mod records;
 mod shape;
 
 use crate::server_routes::model::FileFacts;
 use oxc_ast::ast::{
-    CallExpression, ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier,
-    ImportOrExportKind, ModuleExportName, TSImportEqualsDeclaration,
+    CallExpression, ExportDefaultDeclarationKind, Expression, ImportOrExportKind, ModuleExportName,
+    TSImportEqualsDeclaration,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::{BTreeSet, HashMap, HashSet};
 use std::path::Path;
 
-pub(crate) use bindings::is_client_http_module;
+pub(crate) use commonjs::is_client_http_module;
 pub(crate) use shape::has_server_route_shape_from_program;
 
 pub(super) const VERBS: &[&str] = &[
@@ -41,6 +42,7 @@ pub(super) struct ServerRouteVisitor<'a> {
     pub(super) facts: FileFacts,
     pub(super) const_strings: HashMap<String, String>,
     pub(super) express_names: HashSet<String>,
+    pub(super) fastify_names: HashSet<String>,
     pub(super) hono_names: HashSet<String>,
     pub(super) koa_router_names: HashSet<String>,
     pub(super) path_match_names: HashSet<String>,
@@ -101,20 +103,23 @@ impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
         &mut self,
         export: &oxc_ast::ast::ExportNamedDeclaration<'a>,
     ) {
-        if let Some(oxc_ast::ast::Declaration::VariableDeclaration(var_decl)) = &export.declaration
-        {
-            for decl in &var_decl.declarations {
-                if let Some(name) = helpers::binding_name(&decl.id) {
-                    self.facts.exports.insert(name.clone(), name);
-                }
-            }
-        }
         for specifier in &export.specifiers {
             let exported = module_export_name(&specifier.exported);
             let local = module_export_name(&specifier.local);
             self.facts.exports.insert(exported, local);
         }
         walk::walk_export_named_declaration(self, export);
+    }
+
+    fn visit_export_declaration(&mut self, export: &oxc_ast::ast::ExportDeclaration<'a>) {
+        if let oxc_ast::ast::Declaration::VariableDeclaration(var_decl) = &export.declaration {
+            for decl in &var_decl.declarations {
+                if let Some(name) = helpers::binding_name(&decl.id) {
+                    self.facts.exports.insert(name.clone(), name);
+                }
+            }
+        }
+        walk::walk_export_declaration(self, export);
     }
 
     fn visit_export_default_declaration(
@@ -131,9 +136,14 @@ impl<'a> Visit<'a> for ServerRouteVisitor<'a> {
         self.record_call(call);
         walk::walk_call_expression(self, call);
     }
+
+    fn visit_class(&mut self, class: &oxc_ast::ast::Class<'a>) {
+        self.record_nestjs_class(class);
+        walk::walk_class(self, class);
+    }
 }
 
-fn module_export_name(name: &ModuleExportName<'_>) -> String {
+pub(super) fn module_export_name(name: &ModuleExportName<'_>) -> String {
     match name {
         ModuleExportName::IdentifierName(id) => id.name.to_string(),
         ModuleExportName::IdentifierReference(id) => id.name.to_string(),
@@ -148,7 +158,7 @@ fn default_export_name(decl: &ExportDefaultDeclarationKind<'_>) -> Option<String
     }
 }
 
-fn const_string(expr: &Expression<'_>) -> Option<String> {
+pub(super) fn const_string(expr: &Expression<'_>) -> Option<String> {
     match expr {
         Expression::StringLiteral(value) => Some(value.value.as_str().to_string()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => Some(
@@ -171,6 +181,7 @@ impl<'a> ServerRouteVisitor<'a> {
             facts: FileFacts::default(),
             const_strings: HashMap::new(),
             express_names: HashSet::new(),
+            fastify_names: HashSet::new(),
             hono_names: HashSet::new(),
             koa_router_names: HashSet::new(),
             path_match_names: HashSet::new(),
@@ -178,21 +189,6 @@ impl<'a> ServerRouteVisitor<'a> {
             client_http_names: HashSet::new(),
             named_handler_query_params: HashMap::new(),
         }
-    }
-}
-
-pub(super) fn import_names(specifier: &ImportDeclarationSpecifier<'_>) -> (String, String) {
-    match specifier {
-        ImportDeclarationSpecifier::ImportDefaultSpecifier(spec) => {
-            (spec.local.name.to_string(), "default".to_string())
-        }
-        ImportDeclarationSpecifier::ImportNamespaceSpecifier(spec) => {
-            (spec.local.name.to_string(), "*".to_string())
-        }
-        ImportDeclarationSpecifier::ImportSpecifier(spec) => (
-            spec.local.name.to_string(),
-            module_export_name(&spec.imported),
-        ),
     }
 }
 

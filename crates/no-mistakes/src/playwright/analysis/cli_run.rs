@@ -22,8 +22,10 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
         cli.config.as_deref(),
         &cli.playwright_config,
         cli.project.clone(),
+        cli.app.clone(),
         &snapshot,
-    )?;
+    );
+    let settings = settings?;
     let analysis = crate::playwright::analysis::pipeline::analyze_with_policy_from_snapshot(
         &root,
         &settings,
@@ -38,12 +40,13 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
             configured_html_id_selector: false,
         },
         &snapshot,
-    )?;
+    );
+    let analysis = analysis?;
     crate::ast::clear_request_parse_cache();
     match cli.command {
         Command::Check => {
             if cli.json {
-                println!("{}", serde_json::to_string_pretty(&analysis.coverage)?);
+                crate::cli::print_json(&analysis.coverage);
             } else {
                 print_coverage_text(&analysis.coverage);
             }
@@ -58,7 +61,7 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
         }
         Command::Edges => {
             if cli.json {
-                println!("{}", serde_json::to_string_pretty(&analysis.edges)?);
+                crate::cli::print_json(&analysis.edges);
             } else {
                 print_edges_text(&analysis.edges);
             }
@@ -67,7 +70,7 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
         Command::Related { files } => {
             let related = build_related_report(&root, &analysis.edges.edges, &files);
             if cli.json {
-                println!("{}", serde_json::to_string_pretty(&related)?);
+                crate::cli::print_json(&related);
             } else {
                 print_related_text(&related);
             }
@@ -76,7 +79,7 @@ fn run_with_cache(cli: PlaywrightArgs) -> Result<ExitCode> {
         Command::Tests { files } => {
             let report = build_tests_report(&analysis.edges.edges, &files, &root);
             if cli.json {
-                println!("{}", serde_json::to_string_pretty(&report)?);
+                crate::cli::print_json(&report);
             } else {
                 print_tests_text(&report);
             }

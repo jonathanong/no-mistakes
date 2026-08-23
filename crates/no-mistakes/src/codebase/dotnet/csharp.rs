@@ -2,7 +2,11 @@ use regex::Regex;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-use super::{csharp_strip::strip_comments_and_strings, DotnetFileFacts};
+use super::{
+    csharp_http,
+    csharp_strip::{strip_comments_and_strings, strip_comments_keep_strings},
+    DotnetFileFacts,
+};
 
 pub(crate) fn parse_csharp_file(path: &Path, project: Option<PathBuf>) -> Option<DotnetFileFacts> {
     let source = std::fs::read_to_string(path).ok()?;
@@ -15,6 +19,8 @@ pub(crate) fn parse_csharp_file(path: &Path, project: Option<PathBuf>) -> Option
         declarations: extract_declarations(&stripped),
         references: extract_references(&stripped),
         has_xunit_tests: has_xunit_tests(&stripped),
+        methods: extract_methods(&stripped),
+        route_handlers: csharp_http::extract_http_routes(&strip_comments_keep_strings(&source)),
     })
 }
 
@@ -32,6 +38,17 @@ fn extract_namespace(source: &str) -> Option<String> {
 fn extract_usings(source: &str) -> Vec<String> {
     let re = Regex::new(
         r"(?m)^\s*(?:global\s+)?using\s+(?:static\s+)?(?:[A-Za-z_][A-Za-z0-9_]*\s*=\s*)?([A-Za-z_][A-Za-z0-9_.]*)\s*;",
+    )
+    .expect("valid regex");
+    sorted_unique(
+        re.captures_iter(source)
+            .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string())),
+    )
+}
+
+fn extract_methods(source: &str) -> Vec<String> {
+    let re = Regex::new(
+        r"(?:public|internal|private|protected)\s+(?:(?:static|async|virtual|override|new|partial|extern|unsafe|sealed|abstract)\s+)*[\w.<>,\[\]?]+\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(",
     )
     .expect("valid regex");
     sorted_unique(

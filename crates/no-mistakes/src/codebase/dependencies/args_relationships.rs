@@ -22,6 +22,13 @@ pub enum RelationshipArg {
     Queue,
     Md,
     Ci,
+    Workflow,
+    WorkflowJob,
+    WorkflowStep,
+    WorkflowNeeds,
+    WorkflowUses,
+    WorkflowRun,
+    WorkflowArtifact,
     Http,
     Process,
     Asset,
@@ -29,144 +36,86 @@ pub enum RelationshipArg {
     Dotnet,
     Swift,
     Terraform,
+    Python,
+    Go,
+    Rust,
+    Ruby,
+    Php,
+    Java,
+    Kotlin,
+    Elixir,
+    Dart,
+    Resource,
+    Trpc,
     All,
 }
 
 impl RelationshipArg {
     pub fn as_str(&self) -> &'static str {
+        self.workflow_str()
+            .or_else(|| self.language_str())
+            .unwrap_or_else(|| self.core_str())
+    }
+
+    fn workflow_str(&self) -> Option<&'static str> {
         match self {
-            RelationshipArg::Import => "import",
-            RelationshipArg::ImportStatic => "import-static",
-            RelationshipArg::ImportDynamic => "import-dynamic",
-            RelationshipArg::ImportType => "import-type",
-            RelationshipArg::ImportRequire => "import-require",
-            RelationshipArg::RouteImport => "route-import",
-            RelationshipArg::Workspace => "workspace",
-            RelationshipArg::Package => "package",
-            RelationshipArg::Test => "test",
-            RelationshipArg::Route => "route",
-            RelationshipArg::Queue => "queue",
-            RelationshipArg::Md => "md",
-            RelationshipArg::Ci => "ci",
-            RelationshipArg::Http => "http",
-            RelationshipArg::Process => "process",
-            RelationshipArg::Asset => "asset",
-            RelationshipArg::React => "react",
-            RelationshipArg::Dotnet => "dotnet",
-            RelationshipArg::Swift => "swift",
-            RelationshipArg::Terraform => "terraform",
-            RelationshipArg::All => "all",
+            Self::Workflow => Some("workflow"),
+            Self::WorkflowJob => Some("workflow-job"),
+            Self::WorkflowStep => Some("workflow-step"),
+            Self::WorkflowNeeds => Some("workflow-needs"),
+            Self::WorkflowUses => Some("workflow-uses"),
+            Self::WorkflowRun => Some("workflow-run"),
+            Self::WorkflowArtifact => Some("workflow-artifact"),
+            _ => None,
+        }
+    }
+
+    fn language_str(&self) -> Option<&'static str> {
+        match self {
+            Self::Dotnet => Some("dotnet"),
+            Self::Swift => Some("swift"),
+            Self::Terraform => Some("terraform"),
+            Self::Python => Some("python"),
+            Self::Go => Some("go"),
+            Self::Rust => Some("rust"),
+            Self::Ruby => Some("ruby"),
+            Self::Php => Some("php"),
+            Self::Java => Some("java"),
+            Self::Kotlin => Some("kotlin"),
+            Self::Elixir => Some("elixir"),
+            Self::Dart => Some("dart"),
+            Self::Trpc => Some("trpc"),
+            _ => None,
+        }
+    }
+
+    fn core_str(&self) -> &'static str {
+        match self {
+            Self::Import => "import",
+            Self::ImportStatic => "import-static",
+            Self::ImportDynamic => "import-dynamic",
+            Self::ImportType => "import-type",
+            Self::ImportRequire => "import-require",
+            Self::RouteImport => "route-import",
+            Self::Workspace => "workspace",
+            Self::Package => "package",
+            Self::Test => "test",
+            Self::Route => "route",
+            Self::Queue => "queue",
+            Self::Md => "md",
+            Self::Ci => "ci",
+            Self::Http => "http",
+            Self::Process => "process",
+            Self::Asset => "asset",
+            Self::React => "react",
+            Self::Resource => "resource",
+            Self::All => "all",
+            _ => unreachable!("workflow and language relationships are handled first"),
         }
     }
 }
 
-/// Convert `--relationship` values into a `HashSet<EdgeKind>` filter.
-/// Empty input and `all` expand to the standard public edge set; the
-/// conservative `route-import` relationship remains explicit opt-in.
-#[inline(never)]
-pub(crate) fn relationship_filter(
-    relationships: &[RelationshipArg],
-) -> Option<std::collections::HashSet<EdgeKind>> {
-    if relationships.is_empty() {
-        return Some(standard_relationship_edges());
-    }
-    let mut set = std::collections::HashSet::new();
-    for r in relationships {
-        let edges: &[EdgeKind] = match r {
-            RelationshipArg::Import => &[
-                EdgeKind::Import,
-                EdgeKind::TypeImport,
-                EdgeKind::DynamicImport,
-                EdgeKind::Require,
-            ],
-            RelationshipArg::ImportStatic => &[EdgeKind::Import],
-            RelationshipArg::ImportDynamic => &[EdgeKind::DynamicImport],
-            RelationshipArg::ImportType => &[EdgeKind::TypeImport],
-            RelationshipArg::ImportRequire => &[EdgeKind::Require],
-            RelationshipArg::RouteImport => &[EdgeKind::RouteImport],
-            RelationshipArg::Workspace => &[EdgeKind::WorkspaceImport],
-            RelationshipArg::Package => &[EdgeKind::PackageDependency],
-            // Selector edges connect tests to covered app components.
-            RelationshipArg::Test => &[
-                EdgeKind::TestOf,
-                EdgeKind::RouteTest,
-                EdgeKind::Layout,
-                EdgeKind::Selector,
-            ],
-            RelationshipArg::Route => {
-                &[EdgeKind::RouteRef, EdgeKind::RouteTest, EdgeKind::Layout]
-            }
-            RelationshipArg::Queue => &[EdgeKind::QueueEnqueue, EdgeKind::QueueWorker],
-            RelationshipArg::Md => &[EdgeKind::MarkdownLink],
-            RelationshipArg::Ci => &[EdgeKind::CiInvocation],
-            RelationshipArg::Http => &[EdgeKind::HttpCall],
-            RelationshipArg::Process => &[EdgeKind::ProcessSpawn],
-            RelationshipArg::Asset => &[EdgeKind::AssetImport],
-            RelationshipArg::React => &[EdgeKind::ReactRender],
-            RelationshipArg::Dotnet => &[
-                EdgeKind::DotnetUsing,
-                EdgeKind::DotnetReference,
-                EdgeKind::DotnetProjectDependency,
-            ],
-            RelationshipArg::Swift => &[
-                EdgeKind::SwiftImport,
-                EdgeKind::SwiftReference,
-                EdgeKind::SwiftPackageDependency,
-            ],
-            RelationshipArg::Terraform => &[
-                EdgeKind::TerraformReference,
-                EdgeKind::TerraformModuleRef,
-                EdgeKind::TerraformOutputRef,
-            ],
-            RelationshipArg::All => {
-                set.extend(standard_relationship_edges());
-                &[]
-            }
-        };
-        for edge in edges {
-            set.insert(*edge);
-        }
-    }
-    Some(set)
-}
-
-/// Edge kinds included by legacy unfiltered traversal and `--relationship all`.
-/// `RouteImport` is intentionally absent: it is a conservative alternate view
-/// that must be requested explicitly to avoid weakening ordinary call pruning.
-fn standard_relationship_edges() -> std::collections::HashSet<EdgeKind> {
-    [
-        EdgeKind::Import,
-        EdgeKind::TypeImport,
-        EdgeKind::DynamicImport,
-        EdgeKind::Require,
-        EdgeKind::TestOf,
-        EdgeKind::RouteRef,
-        EdgeKind::QueueEnqueue,
-        EdgeKind::QueueWorker,
-        EdgeKind::RouteTest,
-        EdgeKind::Layout,
-        EdgeKind::MarkdownLink,
-        EdgeKind::WorkspaceImport,
-        EdgeKind::PackageDependency,
-        EdgeKind::CiInvocation,
-        EdgeKind::HttpCall,
-        EdgeKind::ProcessSpawn,
-        EdgeKind::AssetImport,
-        EdgeKind::ReactRender,
-        EdgeKind::Selector,
-        EdgeKind::SwiftImport,
-        EdgeKind::SwiftReference,
-        EdgeKind::SwiftPackageDependency,
-        EdgeKind::DotnetUsing,
-        EdgeKind::DotnetReference,
-        EdgeKind::DotnetProjectDependency,
-        EdgeKind::TerraformReference,
-        EdgeKind::TerraformModuleRef,
-        EdgeKind::TerraformOutputRef,
-    ]
-    .into_iter()
-    .collect()
-}
+include!("args_relationships_filter.rs");
 
 fn relationships_are_import_only(relationships: &[RelationshipArg]) -> bool {
     !relationships.is_empty()
@@ -194,4 +143,31 @@ pub fn parse_entrypoint(s: &str) -> (PathBuf, Option<String>) {
         Some((file, symbol)) => (PathBuf::from(file), Some(symbol.to_string())),
         None => (PathBuf::from(s), None),
     }
+}
+
+pub(crate) fn workflow_node_from_suffix_in(
+    interner: &PathInterner,
+    file: &Path,
+    suffix: &str,
+) -> Option<NodeId> {
+    parsed_workflow_suffix(suffix).map(|(job, step)| match step {
+        Some(step) => NodeId::workflow_step_in(interner, file, job, step),
+        None => NodeId::workflow_job_in(interner, file, job),
+    })
+}
+
+fn parsed_workflow_suffix(suffix: &str) -> Option<(&str, Option<usize>)> {
+    let suffix = suffix.strip_prefix("job:")?;
+    if let Some((job, step)) = suffix.split_once("/step:") {
+        if job.is_empty() {
+            return None;
+        }
+        return Some((job, Some(step.parse().ok()?)));
+    }
+    (!suffix.is_empty()).then_some((suffix, None))
+}
+
+pub(crate) fn trpc_procedure_from_suffix(file: &Path, suffix: &str) -> Option<NodeId> {
+    let procedure = suffix.strip_prefix("procedure:")?;
+    (!procedure.is_empty()).then(|| NodeId::trpc_procedure(file, procedure))
 }

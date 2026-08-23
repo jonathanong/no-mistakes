@@ -18,7 +18,8 @@ pub(super) fn graph_report(
     let cwd = std::env::current_dir().context("reading current directory")?;
     let result = crate::codebase::dependencies::collect_and_filter_entries_shared(
         &args, direction, &cwd, shared,
-    )?;
+    );
+    let result = result?;
     let json = crate::codebase::dependencies::result_json(&args, &result)?;
     Ok(serde_json::from_str(&json)?)
 }
@@ -84,13 +85,14 @@ pub(super) fn prepare_shared_traversal(
     let mut framework_plan =
         crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan);
     framework_plan.include_framework_names(requested_frameworks.iter().map(String::as_str));
-    Ok(Some(SharedTraversalContext::prepare_with_framework_plan(
+    let prepared = SharedTraversalContext::prepare_with_framework_plan(
         root,
         options.tsconfig.as_deref().map(std::path::Path::new),
         options.config.as_deref().map(std::path::Path::new),
         build_plan,
         framework_plan,
-    )?))
+    );
+    Ok(Some(prepared?))
 }
 
 fn traverse_args(

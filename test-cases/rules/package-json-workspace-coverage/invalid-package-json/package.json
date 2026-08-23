@@ -1,0 +1,6 @@
+{
+  "name": "fixture-root",
+  "workspaces": [
+    "packages/api"
+  ]
+}

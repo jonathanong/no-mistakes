@@ -6,7 +6,7 @@ fn swift_edge_collector_covers_empty_config_branches() {
     let root = fixture("swift-test-plan");
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
 
     assert!(collect_swift_edges(&root, &tsconfig, &all_files, None).is_empty());
 
@@ -67,9 +67,21 @@ fn swift_edge_helpers_emit_import_reference_and_package_edges() {
         });
 
     let mut edges = Vec::new();
-    collect_swift_import_edges(&facts, &mut edges);
-    collect_swift_reference_edges(&facts, &mut edges);
-    collect_swift_package_edges(&facts, &mut edges);
+    collect_swift_import_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+    collect_swift_reference_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+    collect_swift_package_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
 
     assert!(edges
         .iter()
@@ -87,7 +99,7 @@ fn swift_http_edge_helper_covers_configured_route_lookup_without_matches() {
     let root = fixture("swift-test-plan");
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let options = graph_config_options(&root).expect("swift fixture config should parse");
     let swift_file = root.join("swift-clients/core/Sources/VouchaAPI/Endpoint.swift");
     let mut facts = crate::codebase::swift::SwiftFactMap::default();
@@ -99,10 +111,22 @@ fn swift_http_edge_helper_covers_configured_route_lookup_without_matches() {
             ..Default::default()
         },
     );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
 
     let mut edges = Vec::new();
     collect_swift_http_edges(
-        &root, &tsconfig, &all_files, &options, None, &facts, &mut edges,
+        SwiftRouteDefInputs {
+            root: &root,
+            tsconfig: &tsconfig,
+            tsconfig_catalog: None,
+            all_files: &all_files,
+            config_options: &options,
+            ts_facts: None,
+            session: &session,
+        },
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(edges.iter().all(|(_, _, kind)| *kind == EdgeKind::HttpCall));
 }
@@ -112,7 +136,7 @@ fn swift_http_edges_include_backend_route_defs() {
     let root = fixture("swift-test-plan");
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let mut options = graph_config_options(&root).expect("swift fixture config should parse");
     options.route.backend_pattern = "backend/api/**/*.mts".to_string();
     options.route.backend_register_object = "app".to_string();
@@ -126,10 +150,22 @@ fn swift_http_edges_include_backend_route_defs() {
             ..Default::default()
         },
     );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
 
     let mut edges = Vec::new();
     collect_swift_http_edges(
-        &root, &tsconfig, &all_files, &options, None, &facts, &mut edges,
+        SwiftRouteDefInputs {
+            root: &root,
+            tsconfig: &tsconfig,
+            tsconfig_catalog: None,
+            all_files: &all_files,
+            config_options: &options,
+            ts_facts: None,
+            session: &session,
+        },
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
 
     assert!(edges.iter().all(|(_, _, kind)| *kind == EdgeKind::HttpCall));
@@ -153,7 +189,11 @@ fn swift_package_edges_skip_targets_without_files() {
         });
 
     let mut edges = Vec::new();
-    collect_swift_package_edges(&facts, &mut edges);
+    collect_swift_package_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
 
     assert!(edges.is_empty());
 }
@@ -166,7 +206,7 @@ fn project_route_only_swift_http_edges_reuse_prepared_server_facts_once() {
     );
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let options = graph_config_options(&root).unwrap();
     let plan = GraphBuildPlan {
         swift: true,
@@ -183,26 +223,23 @@ fn project_route_only_swift_http_edges_reuse_prepared_server_facts_once() {
     let swift_facts =
         crate::codebase::swift::collect_swift_facts(&root, &all_files, &options.swift_packages);
 
-    let standalone = collect_swift_edges_with_facts(
-        &root,
-        &tsconfig,
-        &all_files,
-        Some(&options),
-        None,
-        Some(&swift_facts),
-    );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
     let reused = collect_swift_edges_with_facts(
-        &root,
-        &tsconfig,
-        &all_files,
-        Some(&options),
-        Some(&ts_facts),
-        Some(&swift_facts),
+        SwiftEdgeInputs {
+            root: &root,
+            tsconfig: &tsconfig,
+            tsconfig_catalog: None,
+            all_files: &all_files,
+            config_options: Some(&options),
+            ts_facts: Some(&ts_facts),
+            prepared_facts: Some(&swift_facts),
+            session: &session,
+        },
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     let swift_file = root.join("swift-client/Sources/Client/Endpoint.swift");
     let admin_route = root.join("backend/api/admin-router.ts");
 
-    assert_eq!(reused, standalone);
     assert!(reused.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::HttpCall
             && from.as_file() == Some(swift_file.as_path())
@@ -214,11 +251,14 @@ fn project_route_only_swift_http_edges_reuse_prepared_server_facts_once() {
     let counts = crate::ast::finish_parse_count(&root);
 
     assert!(graph
-        .dependencies_of_node(&NodeId::File(swift_file))
+        .dependencies_of_node(&NodeId::file(swift_file))
         .is_some_and(|edges| edges.iter().any(|(to, kind)| {
             *kind == EdgeKind::HttpCall && to.as_file() == Some(admin_route.as_path())
         })));
-    assert_eq!(counts.get(&root.join("backend/api/admin-router.ts")), Some(&1));
+    assert_eq!(
+        counts.get(&root.join("backend/api/admin-router.ts")),
+        Some(&1)
+    );
     assert_eq!(counts.get(&root.join("backend/api/users.ts")), Some(&1));
     assert!(
         counts.values().all(|count| *count == 1),

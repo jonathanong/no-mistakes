@@ -7,7 +7,7 @@ use crate::fetch::types::FetchOccurrence;
 use crate::fetch::visitor::FetchVisitor;
 use anyhow::Result;
 use oxc_ast_visit::Visit;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 #[derive(Clone)]
@@ -25,12 +25,13 @@ pub struct ParsedFileCache {
 }
 
 impl ParsedFileCache {
-    pub(crate) fn load(
+    pub(crate) fn load_with_session(
         &mut self,
+        session: &crate::codebase::analysis_session::AnalysisSession,
         path: &Path,
         root: &Path,
         import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-        visible_files: &HashSet<PathBuf>,
+        visible_files: &crate::fx::PathSet,
     ) -> Result<ParsedFileFacts> {
         let abs_path = crate::codebase::ts_resolver::normalize_path(path);
         if let Some(facts) = self.files.get(&abs_path) {
@@ -38,8 +39,10 @@ impl ParsedFileCache {
         }
 
         let result = (|| {
-            let source = std::fs::read_to_string(&abs_path)?;
-            crate::ast::with_program(&abs_path, &source, |program, _| {
+            let source = session
+                .read_source(&abs_path)
+                .map_err(|error| anyhow::anyhow!(error.to_string()))?;
+            session.with_program(&abs_path, &source, |program, _| {
                 ParsedFileFacts::from_program(
                     &abs_path,
                     root,
@@ -71,7 +74,7 @@ impl ParsedFileFacts {
         source: &str,
         program: &oxc_ast::ast::Program<'_>,
         import_cache: &mut HashMap<PathBuf, Vec<PathBuf>>,
-        visible_files: &HashSet<PathBuf>,
+        visible_files: &crate::fx::PathSet,
     ) -> Self {
         let referenced_identifiers = collect_identifier_references(program);
         let used_imports = collect_runtime_imports_from_program_from_visible(

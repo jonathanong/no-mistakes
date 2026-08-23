@@ -1,7 +1,9 @@
 //! Report generation for `impacted-checks`: reuse one prepared test-plan
 //! request across frameworks and apply the configured generic checks.
 
-use super::{CheckCommand, CheckKind, ImpactedChecksArgs, ImpactedChecksReport};
+use super::{
+    CheckCommand, CheckKind, ImpactedChecksArgs, ImpactedChecksEmptyResult, ImpactedChecksReport,
+};
 use crate::tests::Warning;
 use anyhow::Result;
 
@@ -32,6 +34,15 @@ pub(crate) fn generate_impacted_checks_with_stats(
 }
 
 pub(crate) fn generate_impacted_checks_with_timing(
+    args: &ImpactedChecksArgs,
+    timing: &mut super::timing::TimingTracker,
+) -> Result<(ImpactedChecksReport, PlanStats)> {
+    crate::ast::with_request_parse_cache(|| {
+        generate_impacted_checks_with_timing_and_cache(args, timing)
+    })
+}
+
+fn generate_impacted_checks_with_timing_and_cache(
     args: &ImpactedChecksArgs,
     timing: &mut super::timing::TimingTracker,
 ) -> Result<(ImpactedChecksReport, PlanStats)> {
@@ -85,8 +96,26 @@ pub(crate) fn generate_impacted_checks_with_timing(
         checks: dedupe_checks(checks),
         warnings: dedupe_warnings(warnings),
         fallback_triggered,
+        empty_result: None,
     };
+    let mut report = report;
+    report.empty_result = empty_result(&report);
     Ok((report, stats))
+}
+
+fn empty_result(report: &ImpactedChecksReport) -> Option<ImpactedChecksEmptyResult> {
+    if !report.checks.is_empty() {
+        return None;
+    }
+    let (code, message) = if report.changed_files.is_empty() {
+        ("no-changed-files", "No changed files were provided.")
+    } else {
+        ("no-impacted-checks", "No checks matched the changed files.")
+    };
+    Some(ImpactedChecksEmptyResult {
+        code: code.to_string(),
+        message: message.to_string(),
+    })
 }
 
 fn append_test_checks(checks: &mut Vec<CheckCommand>, plan: &crate::tests::TestPlan) {

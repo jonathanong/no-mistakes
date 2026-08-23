@@ -40,5 +40,7 @@ pub fn extract_http_calls_from_program<'a>(
     walk::extract_http_calls_from_program(program, source, prefixes)
 }
 
+pub(crate) use walk::{export_default_allows_http, record_http_call};
+
 #[cfg(test)]
 mod tests;

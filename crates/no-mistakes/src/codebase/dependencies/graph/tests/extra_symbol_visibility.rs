@@ -6,7 +6,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
 
     let current = p("/repo/packages/app/src/current.mts");
     let hidden_target = p("/repo/packages/core/dist/index.mts");
-    let visible = HashSet::from([current.clone()]);
+    let visible: crate::fx::PathSet = [current.clone()].into_iter().collect();
     let tsconfig = TsConfig {
         dir: p("/repo/packages/app"),
         paths: vec![],
@@ -77,7 +77,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
     facts.insert(
         current.clone(),
         TsFileFacts {
-            symbols: Some(symbols),
+            symbols: Some(std::sync::Arc::new(symbols)),
             imports: vec![ExtractedImport {
                 specifier: "@fixture/hidden".to_string(),
                 kind: ImportKind::Dynamic,
@@ -93,7 +93,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
     facts.insert(
         hidden_target.clone(),
         TsFileFacts {
-            symbols: Some(FileSymbols {
+            symbols: Some(std::sync::Arc::new(FileSymbols {
                 exports: vec![Export {
                     name: "hiddenNamed".to_string(),
                     local: None,
@@ -102,7 +102,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
                     is_type_only: false,
                 }],
                 imports: vec![],
-            }),
+            })),
             ..TsFileFacts::default()
         },
     );
@@ -113,11 +113,13 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
             indexable: std::slice::from_ref(&current),
             all: std::slice::from_ref(&current),
             visible: &visible,
+            graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
         },
         &facts,
         &resolver,
         &workspace,
         None,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
 
     assert!(!edges.iter().any(|(from, to, _)| {
@@ -126,7 +128,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
     }));
     assert!(!edges
         .iter()
-        .any(|(_, to, _)| { *to == NodeId::Module("@fixture/hidden".to_string()) }));
+        .any(|(_, to, _)| { *to == NodeId::module("@fixture/hidden") }));
     assert_eq!(
         import_target(
             "@fixture/hidden",
@@ -149,6 +151,8 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
                 resolver: &resolver,
                 workspace: &workspace,
                 visible_files: &visible,
+                graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
+                interner: &crate::codebase::analysis_session::PathInterner::new(),
             },
         ),
         None

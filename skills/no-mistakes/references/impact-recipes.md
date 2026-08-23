@@ -56,9 +56,10 @@ no-mistakes playwright check --json
 no-mistakes check --format json
 ```
 
-`no-mistakes check` only runs rules configured in `.no-mistakes.yml`; for
-Storybook coverage, look for a configured `require-storybook-stories` rule or
-use `react usages` to confirm story imports directly.
+`no-mistakes check` only runs rules configured in `.no-mistakes.yml`. Look for
+`markdown-mermaid-validation` before relying on it to validate Mermaid fences;
+for Storybook coverage, look for a configured `require-storybook-stories` rule
+or use `react usages` to confirm story imports directly.
 
 ## Selector-root expansion preview
 
@@ -148,10 +149,22 @@ no-mistakes ci impact .github/workflows/ci.yml --format json
 no-mistakes ci impact crates/no-mistakes/src/codebase/ci_graph/mod.rs --format json
 ```
 
+For the workflow/job/reusable-call graph itself (not path-filter impact):
+
+```bash
+no-mistakes ci topology --workflow ci.yml --format json
+```
+
 For Rust binaries invoked by supported Cargo commands in GitHub Actions:
 
 ```bash
 no-mistakes dependents src/bin/pg_schema.rs --relationship ci --format json
+```
+
+For local GitHub Actions control flow and static execution impact instead:
+
+```bash
+no-mistakes dependents src/bin/pg_schema.rs --relationship workflow --format json
 ```
 
 Use the results as:
@@ -161,9 +174,21 @@ Use the results as:
 - `ci impact` maps changed files to workflows/jobs whose path filters match and
   reports resolved permissions; it is branch-agnostic and intentionally does not
   recursively evaluate called reusable workflows.
+- `ci topology` is the tool for that recursive structure: it parses every
+  workflow into typed `needs`/`calls`/`workflow-run` edges plus diagnostics
+  for dangling, cyclic, or contract-violating definitions. Use `--workflow`
+  to scope to one workflow and its transitive local reusable-workflow
+  callees. Workflow/job/step nodes also carry runner, timeout, effective
+  permission, environment, output, `run`/`with`, and `env` metadata. Static
+  `secretReferences` are names-only; the command never fetches or evaluates
+  secret values.
 - `--relationship ci` is narrow: it maps GitHub Actions workflow files to Rust
   binary sources invoked by supported Cargo command shapes. It is not a general
-  shell, npm script, or workflow dependency graph.
+  shell, npm script, or workflow dependency graph. Use `--relationship
+  workflow` for static local jobs/steps, local uses, supported literal
+  run/package scripts, and same-run artifacts. Its virtual IDs are
+  `WORKFLOW#job:<job>` and `WORKFLOW#job:<job>/step:<zero-based-index>`;
+  remote `uses` and `workflow_run` remain outside that graph.
 
 ## Diff test impact planning
 

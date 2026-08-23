@@ -61,8 +61,10 @@ fn prepared_vitest_catalog_matches_standalone_project_loading() {
     let visible = snapshot.paths_for(&root);
     let tsconfig =
         crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, &root, &visible).unwrap();
+    let tsconfig_catalog =
+        crate::codebase::ts_resolver::TsConfigCatalog::forced(&root, tsconfig, None);
     let catalog =
-        super::super::prepare_vitest_project_catalog(&root, &config, &snapshot, &tsconfig);
+        super::super::prepare_vitest_project_catalog(&root, &config, &snapshot, &tsconfig_catalog);
 
     let standalone = check_with_files(&root, &config, &files).unwrap();
     let prepared = check_with_files_and_catalog(&root, &config, &files, Some(&catalog)).unwrap();

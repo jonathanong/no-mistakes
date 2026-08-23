@@ -15,13 +15,9 @@ pub fn discover_tests_from_visible(
 ) -> Result<DiscoveredTests> {
     let projects = projects::runner_projects_from_visible(root, config, runner, visible_paths, tsconfig)?;
     discover_from_projects_from_visible(
-        root,
-        config,
-        runner,
+        DiscoveryRequest::new(root, config, runner, visible_paths, tsconfig),
         projects,
         None,
-        visible_paths,
-        tsconfig,
     )
 }
 
@@ -40,21 +36,33 @@ pub fn discover_tests_from_prepared_projects(
     let projects = prepared.requested_projects(runner).transpose()?.unwrap_or_else(|| {
         projects::explicit_policy_projects(root, config, runner)
     });
-    discover_from_projects_from_visible(
-        root,
-        config,
-        runner,
+    discover_from_projects_from_files(
+        DiscoveryRequest::new(root, config, runner, visible_paths, tsconfig),
         projects,
-        (runner == TestRunner::Vitest)
-            .then(|| {
-                prepared
-                    .projects_if_prepared(TestRunner::Playwright)
-                    .unwrap_or_else(|| {
-                        projects::explicit_policy_projects(root, config, TestRunner::Playwright)
-                    })
-            }),
-        visible_paths,
-        tsconfig,
+        match runner {
+            TestRunner::Vitest => Some(TestRunner::Playwright),
+            TestRunner::Playwright => Some(TestRunner::Vitest),
+            TestRunner::Dotnet
+            | TestRunner::Swift
+            | TestRunner::Python
+            | TestRunner::Go
+            | TestRunner::Cargo
+            | TestRunner::Rails
+            | TestRunner::Php
+            | TestRunner::Java
+            | TestRunner::Kotlin
+            | TestRunner::Elixir
+            | TestRunner::Dart
+            | TestRunner::Jest => None,
+        }
+        .map(|reserved_runner| {
+            prepared
+                .projects_if_prepared(reserved_runner)
+                .unwrap_or_else(|| {
+                    projects::explicit_policy_projects(root, config, reserved_runner)
+                })
+        }),
+        prepared.discovery_files(),
     )
 }
 
@@ -96,7 +104,22 @@ pub fn project_filters_from_visible(
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Vec<(TestRunner, ProjectTestFilter)> {
-    [TestRunner::Dotnet, TestRunner::Vitest, TestRunner::Playwright, TestRunner::Swift]
+    [
+        TestRunner::Dotnet,
+        TestRunner::Vitest,
+        TestRunner::Playwright,
+        TestRunner::Jest,
+        TestRunner::Swift,
+        TestRunner::Python,
+        TestRunner::Go,
+        TestRunner::Cargo,
+        TestRunner::Rails,
+        TestRunner::Php,
+        TestRunner::Java,
+        TestRunner::Kotlin,
+        TestRunner::Elixir,
+        TestRunner::Dart,
+    ]
         .into_iter()
         .flat_map(|runner| {
             projects::runner_projects_lossy_from_visible(root, config, runner, visible_paths, tsconfig)

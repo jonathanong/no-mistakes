@@ -6,7 +6,7 @@ fn cargo_ci_edges_exclude_ignored_manifests_and_bin_targets() {
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
     let graph_files = GraphFiles::discover(&root);
 
-    let bins = collect_cargo_bins(&root, graph_files.all());
+    let bins = collect_cargo_bins(&root, graph_files.all(), None);
     assert_eq!(
         bins.by_name.get("visible"),
         Some(&root.join("src/bin/visible.rs"))
@@ -16,14 +16,23 @@ fn cargo_ci_edges_exclude_ignored_manifests_and_bin_targets() {
 
     let ignored_root = root.join("ignored-root");
     let ignored_root_files = GraphFiles::discover(&ignored_root);
-    assert!(collect_cargo_bins(&ignored_root, ignored_root_files.all())
+    assert!(collect_cargo_bins(&ignored_root, ignored_root_files.all(), None)
         .by_name
         .is_empty());
 
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
-    add_ci_edges(&root, graph_files.all(), &mut forward, &mut reverse);
-    let workflow = NodeId::File(root.join(".github/workflows/ci.yml"));
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
+    let parsed = parsed_workflow_set(&root, graph_files.all());
+    add_ci_edges(
+        &root,
+        graph_files.all(),
+        &parsed,
+        &mut forward,
+        &mut reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
+    );
+    let workflow = NodeId::file(root.join(".github/workflows/ci.yml"));
     let targets = forward.get(&workflow).cloned().unwrap_or_default();
     assert!(targets.iter().any(|(target, kind)| {
         *kind == EdgeKind::CiInvocation
@@ -56,9 +65,11 @@ fn process_spawn_edges_exclude_ignored_targets_from_file_and_symbol_graphs() {
     .unwrap();
     let ignored = root.join("ignored-worker.ts");
 
-    assert!(graph.all_files().all(|node| node.as_file() != Some(&ignored)));
     assert!(graph
-        .dependencies_of_node(&NodeId::File(root.join("spawn.ts")))
+        .all_files()
+        .all(|node| node.as_file() != Some(&ignored)));
+    assert!(graph
+        .dependencies_of_node(&NodeId::file(root.join("spawn.ts")))
         .into_iter()
         .flatten()
         .all(|(target, _)| target.as_file() != Some(&ignored)));
@@ -77,7 +88,7 @@ fn public_lazy_import_traversal_honors_only_the_explicit_ignored_root() {
         base_url: None,
     };
     let entries = lazy_import_deps_of(
-        &[NodeId::File(root.join("ignored-explicit/effect-entry.ts"))],
+        &[NodeId::file(root.join("ignored-explicit/effect-entry.ts"))],
         &root,
         &tsconfig,
         None,

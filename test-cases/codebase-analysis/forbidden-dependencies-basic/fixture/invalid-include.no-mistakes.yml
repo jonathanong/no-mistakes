@@ -1,0 +1,7 @@
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    include: ['[']
+    options:
+      roots: [entrypoints/api.mts]
+      forbiddenModules: [sharp]

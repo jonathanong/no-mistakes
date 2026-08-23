@@ -75,7 +75,7 @@ fn later_named_value_exports<'a>(
         let Statement::ExportNamedDeclaration(export) = statement else {
             continue;
         };
-        if export.source.is_some() || export.export_kind.is_type() {
+        if export.export_kind.is_type() {
             continue;
         }
         for specifier in &export.specifiers {
@@ -102,9 +102,6 @@ fn later_named_type_exports<'a>(
         let Statement::ExportNamedDeclaration(export) = statement else {
             continue;
         };
-        if export.source.is_some() {
-            continue;
-        }
         for specifier in &export.specifiers {
             if let Some(name) = module_export_name_name(&specifier.local) {
                 if !export.export_kind.is_type()

@@ -1,0 +1,10 @@
+on:
+  push:
+    tags: [v1]
+jobs:
+  typecheck:
+    # A tag ref is distinct from a branch ref.
+    if: github.ref == 'refs/tags/v1'
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project tag-ref/tsconfig.json

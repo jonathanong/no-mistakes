@@ -1,0 +1,8 @@
+name: Same Line Disable
+runs:
+  using: composite
+  steps:
+    - name: Run
+      timeout-minutes: 5 # no-mistakes-disable-line github-actions-composite-step-schema
+      run: echo ok
+      shell: bash

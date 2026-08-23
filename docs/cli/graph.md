@@ -4,8 +4,11 @@
 graph. They share root, tsconfig, depth, relationship, test, module, and output
 filters.
 
-Use explicit `--tsconfig` in monorepos when aliases depend on package-local
-config.
+When `--tsconfig` is omitted, graph commands select the TypeScript config that
+owns each importing file. This lets package-local aliases remain isolated while
+a traversal crosses workspace projects. Pass `--tsconfig <FILE>` only to force
+that one config for the entire request, for debugging or compatibility with an
+existing single-config workflow.
 
 | Need | Command |
 | --- | --- |
@@ -20,6 +23,19 @@ excluding type-only imports and `require()`. This differs from `route`, which
 selects URL-route references, Playwright route tests, and Next.js layouts.
 It is explicit opt-in: omitted relationships and `--relationship all` retain
 the standard call-pruned graph and exclude `route-import`.
+
+`workflow` adds canonical GitHub Actions edges: workflow file -> virtual job ->
+virtual step, `needs`, local `uses`, literal `run:` targets, and same-run
+artifact producers/consumers. Workflow virtual IDs are
+`workflow.yml#job:<job>` and `workflow.yml#job:<job>/step:<zero-based-index>`.
+`all` includes workflow edges. `ci` remains the legacy, narrow workflow-file ->
+Rust-binary Cargo-invocation edge; it does not imply `workflow`.
+
+Workflow resolution is deliberately static and local. Literal commands and
+package scripts resolve using workflow/job/step working-directory defaults;
+dynamic shell constructs, remote `uses`, `workflow_run`, and paths outside the
+tracked graph are skipped. See [Graph edges](../graph-edges.md) for the exact
+filter bridge mapping and command-resolution limits.
 
 ## Examples And Counterexamples
 

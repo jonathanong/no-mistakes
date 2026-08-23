@@ -1,0 +1,5 @@
+name: Invalid Docker action
+description: The external image must be a valid Docker reference.
+runs:
+  using: docker
+  image: docker://bad image

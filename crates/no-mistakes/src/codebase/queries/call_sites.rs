@@ -1,7 +1,6 @@
-use super::call_sites_visit::collect_call_sites;
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::{build_index, export_lookup_symbol, find_export};
-use super::shared::{read_symbols, rel_str, resolve_target};
+use super::reverse::{build_reverse_analysis_with_plan, export_lookup_symbol, find_export};
+use super::shared::{rel_str, resolve_target};
 use crate::cli::Format;
 use crate::codebase::dependencies::graph::SymbolIndex;
 use crate::codebase::ts_symbols::{ExportKind, FileSymbols};
@@ -104,12 +103,12 @@ fn local_names_by_file(
             for (importer, local, is_reexport) in records {
                 if *is_reexport {
                     // Named re-export forwards the symbol under the barrel's name.
-                    worklist.push((importer.clone(), local.clone()));
+                    worklist.push((importer.to_path_buf(), local.to_string()));
                 } else {
                     by_file
-                        .entry(importer.clone())
+                        .entry(importer.to_path_buf())
                         .or_default()
-                        .insert(local.clone());
+                        .insert(local.to_string());
                 }
             }
         }
@@ -119,8 +118,8 @@ fn local_names_by_file(
         if name != "default" {
             if let Some(records) = index.importers_of(&file, "*") {
                 for (importer, local, is_reexport) in records {
-                    if *is_reexport && local == "*" {
-                        worklist.push((importer.clone(), name.clone()));
+                    if *is_reexport && local.as_ref() == "*" {
+                        worklist.push((importer.to_path_buf(), name.clone()));
                     }
                 }
             }
@@ -129,29 +128,41 @@ fn local_names_by_file(
     by_file
 }
 
-fn sites_for_file(path: &Path, names: &HashSet<String>, root: &Path) -> Vec<CallSite> {
-    let Ok(source) = std::fs::read_to_string(path) else {
+fn sites_for_file(
+    path: &Path,
+    names: &HashSet<String>,
+    root: &Path,
+    facts: Option<&crate::codebase::ts_source::facts::TsFileFacts>,
+) -> Vec<CallSite> {
+    let Some(facts) = facts.filter(|facts| facts.parse_error.is_none()) else {
         return Vec::new();
     };
-    crate::ast::with_program(path, &source, |program, src| {
-        collect_call_sites(program, src, names)
-            .into_iter()
-            .map(|raw| CallSite {
-                file: rel_str(path, root),
-                line: raw.line,
-                caller: raw.caller,
-                arg_count: raw.arg_count,
-                has_spread: raw.has_spread,
-                args: raw.args,
-            })
-            .collect()
-    })
-    .unwrap_or_default()
+    facts
+        .call_sites
+        .iter()
+        .filter(|raw| names.contains(&raw.callee))
+        .map(|raw| CallSite {
+            file: rel_str(path, root),
+            line: raw.line,
+            caller: raw.caller.clone(),
+            arg_count: raw.arg_count,
+            has_spread: raw.has_spread,
+            args: raw.args.clone(),
+        })
+        .collect()
 }
 
 fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
-    let symbols = read_symbols(&target.abs_file)?;
+    let analysis = build_reverse_analysis_with_plan(
+        &target,
+        crate::codebase::ts_source::facts::TsFactPlan {
+            call_sites: true,
+            ..crate::codebase::ts_source::facts::TsFactPlan::default()
+        },
+    );
+    let analysis = analysis?;
+    let symbols = analysis.symbols(&target)?;
     // call-sites finds invocations, so the target must be a value export — a
     // type-only export (interface/type alias) has no runtime callee.
     anyhow::ensure!(
@@ -160,12 +171,18 @@ fn compute(args: &CallSitesArgs) -> Result<CallSitesReport> {
         args.export_name,
         args.file.display()
     );
-    let index = build_index(&target)?;
-    let by_file = local_names_by_file(&index, &symbols, &target.abs_file, &args.export_name);
+    let by_file = local_names_by_file(
+        &analysis.index,
+        &symbols,
+        &target.abs_file,
+        &args.export_name,
+    );
 
     let mut call_sites: Vec<CallSite> = by_file
         .par_iter()
-        .flat_map(|(path, names)| sites_for_file(path, names, &target.root))
+        .flat_map(|(path, names)| {
+            sites_for_file(path, names, &target.root, analysis.facts_at(path))
+        })
         .collect();
     call_sites.sort_by(|a, b| (&a.file, a.line).cmp(&(&b.file, b.line)));
 

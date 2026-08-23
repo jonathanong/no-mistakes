@@ -30,7 +30,7 @@ fn load_workspace_metadata_from_files(
     let visible = files
         .iter()
         .map(|path| normalize_path(path))
-        .collect::<std::collections::HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let pnpm_path = normalize_path(&root.join("pnpm-workspace.yaml"));
     if visible.contains(&pnpm_path) {
         let content = sources.read(&pnpm_path)?;
@@ -69,7 +69,7 @@ fn load_workspace_metadata_from_files(
 
 fn load_optional_root_dependency_names(
     root: &Path,
-    visible: &std::collections::HashSet<PathBuf>,
+    visible: &crate::fx::PathSet,
     sources: WorkspaceSources<'_>,
 ) -> std::collections::HashSet<String> {
     let pkg_path = normalize_path(&root.join("package.json"));

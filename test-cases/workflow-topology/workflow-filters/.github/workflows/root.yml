@@ -1,0 +1,5 @@
+name: Root
+on: push
+jobs:
+  call:
+    uses: ./.github/workflows/callee.yml

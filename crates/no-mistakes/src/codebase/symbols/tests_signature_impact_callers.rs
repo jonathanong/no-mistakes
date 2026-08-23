@@ -66,9 +66,9 @@ fn signature_impact_suggests_recovered_private_test_callers() {
     assert!(v["suggestedTests"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "private-caller-with-export.test.mts"
     }));
-    assert!(!v["warnings"].as_array().unwrap().iter().any(|entry| {
-        entry["type"] == "no-suggested-tests"
-    }));
+    for entry in v["warnings"].as_array().unwrap() {
+        assert_ne!(entry["type"], "no-suggested-tests");
+    }
 }
 
 #[test]
@@ -99,6 +99,30 @@ fn signature_impact_recovers_private_callers_imported_through_barrels() {
     assert!(v["productionCallers"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "private-barrel-caller-with-export.mts" && entry.get("symbol").is_none()
     }));
+}
+
+#[cfg(unix)]
+#[test]
+fn signature_impact_remaps_scoped_alias_callers_to_the_symlink_namespace() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    );
+    let mut args = args_for(&root, vec!["src/symbol-target.ts"], Format::Json);
+    args.mode = SymbolsMode::SignatureImpact;
+    args.symbol = Some("linkedSymbol".to_string());
+
+    let output = run_capture(args);
+    let report: serde_json::Value = serde_json::from_str(&output).unwrap();
+
+    assert!(report["productionCallers"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|entry| {
+            entry["file"] == "src/symbol-hidden-client.ts"
+                && entry["symbol"] == "executeWithoutVisibleTarget"
+        }), "{report:#?}");
 }
 
 #[test]
@@ -191,10 +215,10 @@ fn signature_impact_does_not_reclassify_excluded_tests_as_production() {
     let out = run_capture(args);
     let v: serde_json::Value = serde_json::from_str(&out).unwrap();
 
-    assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
-        entry["file"] == "excluded-private-caller.test.mts"
-    }));
-    assert!(!v["testCallers"].as_array().unwrap().iter().any(|entry| {
-        entry["file"] == "excluded-private-caller.test.mts"
-    }));
+    for entry in v["productionCallers"].as_array().unwrap() {
+        assert_ne!(entry["file"], "excluded-private-caller.test.mts");
+    }
+    for entry in v["testCallers"].as_array().unwrap() {
+        assert_ne!(entry["file"], "excluded-private-caller.test.mts");
+    }
 }

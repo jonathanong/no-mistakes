@@ -1,0 +1,1 @@
+default eager root resource

@@ -66,6 +66,7 @@ fn print_results_with_fetches() {
         file: "app/components/Fetcher.tsx".to_string(),
         exported_name: None,
         shape: Some("GET /api/users".to_string()),
+        line: 1,
     }];
     print_results(&[facts], 0);
 }
@@ -90,4 +91,37 @@ fn print_violations_no_detail() {
         detail: None,
     }];
     print_violations(&violations);
+}
+
+#[test]
+fn violation_json_shape_remains_public_four_fields() {
+    let violation = Violation {
+        component: "Fetcher".to_string(),
+        file: "app/components/Fetcher.tsx".to_string(),
+        rule: "assert-no-fetch".to_string(),
+        detail: None,
+    };
+
+    assert_eq!(
+        serde_json::to_value(violation).unwrap(),
+        serde_json::json!({
+            "component": "Fetcher",
+            "file": "app/components/Fetcher.tsx",
+            "rule": "assert-no-fetch",
+            "detail": null,
+        })
+    );
+}
+
+#[test]
+fn aggregated_facts_keeps_the_public_seven_field_literal_shape() {
+    let _facts = AggregatedFacts {
+        has_state: false,
+        has_props: false,
+        passes_props: false,
+        uses_memo: false,
+        uses_context_provider: false,
+        uses_suspense: false,
+        has_fetch: false,
+    };
 }

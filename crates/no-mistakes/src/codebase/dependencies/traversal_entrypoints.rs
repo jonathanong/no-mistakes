@@ -7,6 +7,7 @@ struct EntrypointResolution<'a> {
     graph_files: &'a graph::GraphFiles,
     include_symbols: bool,
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    interner: &'a PathInterner,
 }
 
 fn resolve_entrypoints_with_files_and_workspace(
@@ -21,6 +22,7 @@ fn resolve_entrypoints_with_files_and_workspace(
         graph_files,
         include_symbols,
         workspace,
+        interner,
     } = input;
     let root_dependencies = workspace.root_dependency_names();
     raw_entrypoints
@@ -35,7 +37,7 @@ fn resolve_entrypoints_with_files_and_workspace(
             } else {
                 parse_entrypoint(&raw_str)
             };
-            let symbol = structured_symbol.or(parsed_symbol);
+            let mut symbol = structured_symbol.or(parsed_symbol);
             let raw_for_node = raw_file.to_string_lossy().to_string();
             let file = if raw_file.is_absolute() {
                 raw_file
@@ -53,18 +55,28 @@ fn resolve_entrypoints_with_files_and_workspace(
                 &normalized,
                 workspace,
                 root_dependencies,
-                graph_files.visible(),
+                graph_files,
+                interner,
             );
             let file = match &node {
-                NodeId::File(path) | NodeId::Symbol { file: path, .. } => path.clone(),
+                NodeId::File(path) | NodeId::Symbol { file: path, .. } => path.to_path_buf(),
                 _ => normalized,
             };
-            if include_symbols {
+            if let Some(workflow_node) = symbol
+                .as_deref()
+                .and_then(|suffix| workflow_node_from_suffix_in(interner, &file, suffix))
+            {
+                node = workflow_node;
+                symbol = None;
+            } else if let Some(trpc_node) = symbol
+                .as_deref()
+                .and_then(|suffix| trpc_procedure_from_suffix(&file, suffix))
+            {
+                node = trpc_node;
+                symbol = None;
+            } else if include_symbols {
                 if let (NodeId::File(file), Some(symbol)) = (&node, &symbol) {
-                    node = NodeId::Symbol {
-                        file: file.clone(),
-                        symbol: symbol.clone(),
-                    };
+                    node = NodeId::symbol_in(interner, file.clone(), symbol.clone());
                 }
             }
             Entrypoint { file, node, symbol }
@@ -77,11 +89,12 @@ fn resolve_entrypoint_node(
     path: &Path,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     root_dependencies: &std::collections::HashSet<String>,
-    visible_files: &std::collections::HashSet<PathBuf>,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
+    interner: &PathInterner,
 ) -> NodeId {
     if path.is_dir() {
         if let Some(entry) = package_dir_entry(path, workspace, visible_files) {
-            return NodeId::File(entry);
+            return NodeId::file_in(interner, entry);
         }
     }
     if workspace
@@ -89,18 +102,18 @@ fn resolve_entrypoint_node(
         .is_none()
         && raw_package_name(raw).is_some_and(|name| root_dependencies.contains(&name))
     {
-        return NodeId::Module(raw.to_string());
+        return NodeId::module_in(interner, raw);
     }
     if path.exists() || raw.starts_with('.') || Path::new(raw).is_absolute() {
-        return NodeId::File(path.to_path_buf());
+        return NodeId::file_in(interner, path);
     }
     if let Some(entry) = workspace.resolve_specifier_from_visible(raw, visible_files) {
-        return NodeId::File(entry);
+        return NodeId::file_in(interner, entry);
     }
     if raw_looks_like_source_file(raw, path, root_dependencies) {
-        return NodeId::File(path.to_path_buf());
+        return NodeId::file_in(interner, path);
     }
-    NodeId::Module(raw.to_string())
+    NodeId::module_in(interner, raw)
 }
 
 fn raw_looks_like_source_file(
@@ -140,13 +153,13 @@ fn raw_package_name(raw: &str) -> Option<String> {
 fn package_dir_entry(
     dir: &Path,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    visible_files: &std::collections::HashSet<PathBuf>,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> Option<PathBuf> {
     workspace
         .package_by_dir(dir)
         .and_then(|package| package.entry.clone())
         .filter(|entry| {
-            visible_files.contains(&crate::codebase::ts_resolver::normalize_path(entry))
+            visible_files.contains_visible(&crate::codebase::ts_resolver::normalize_path(entry))
         })
         .or_else(|| {
             [
@@ -169,6 +182,6 @@ fn package_dir_entry(
             ]
             .iter()
             .map(|candidate| dir.join(candidate))
-            .find(|candidate| visible_files.contains(candidate))
+            .find(|candidate| visible_files.contains_visible(candidate))
         })
 }

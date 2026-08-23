@@ -3,7 +3,8 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{Expression, TemplateLiteral};
 use oxc_parser::Parser;
 use oxc_span::{SourceType, Span};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 #[test]
 fn parser_reports_invalid_sources_and_extensions() {
@@ -58,6 +59,21 @@ fn parser_chokepoint_observes_synthetic_parses_from_rayon_workers() {
 }
 
 #[test]
+fn owner_only_parse_count_ignores_other_threads() {
+    let root = PathBuf::from("owner-only-parse-count");
+    let file = root.join("file.ts");
+    begin_parse_count_this_thread(&root);
+    std::thread::scope(|scope| {
+        scope.spawn(|| {
+            assert!(with_program(&file, "export const value = 1;", |_, _| ()).is_ok());
+        });
+    });
+    assert!(with_program(&file, "export const value = 1;", |_, _| ()).is_ok());
+    let counts = finish_parse_count(&root);
+    assert_eq!(counts.get(&file), Some(&1), "{counts:#?}");
+}
+
+#[test]
 fn production_oxc_parses_use_the_observable_chokepoint() {
     let src = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("src");
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&src);
@@ -81,9 +97,12 @@ fn production_oxc_parses_use_the_observable_chokepoint() {
         .filter_map(|path| {
             let source = sources.read_path(path).ok()?;
             let lines = source.lines().collect::<Vec<_>>();
+            let imports_oxc_parser = source.contains("oxc_parser");
             let has_production_reference = lines.iter().enumerate().any(|(index, line)| {
-                let references_parser =
-                    line.contains("oxc_parser") || line.contains("Parser::new(");
+                // sqlparser also exposes Parser::new; only OXC parses must
+                // go through crate::ast::parse.
+                let references_parser = line.contains("oxc_parser")
+                    || (imports_oxc_parser && line.contains("Parser::new("));
                 let test_only_import = index > 0
                     && lines[index - 1].trim() == "#[cfg(test)]"
                     && line.trim_start().starts_with("use ");
@@ -108,22 +127,54 @@ fn parsed_program_cache_reuses_parse_and_source_type_errors() {
     let cache = ParsedProgramCache::default();
 
     let first = cache
-        .with_program(&syntax_error_path, &syntax_error, |_, _| ())
+        .with_program(
+            &syntax_error_path,
+            Arc::from(syntax_error.as_str()),
+            |_, _| (),
+        )
         .unwrap_err();
     let cached = cache
-        .with_program(&syntax_error_path, "export default {}", |_, _| ())
+        .with_program(
+            &syntax_error_path,
+            Arc::from("export default {}"),
+            |_, _| (),
+        )
         .unwrap_err();
     assert_eq!(cached, first, "a request cache is keyed by normalized path");
 
     let unsupported_path = root.join("../README.md");
     let first = cache
-        .with_program(&unsupported_path, "", |_, _| ())
+        .with_program(&unsupported_path, Arc::from(""), |_, _| ())
         .unwrap_err();
     let cached = cache
-        .with_program(&unsupported_path, "", |_, _| ())
+        .with_program(&unsupported_path, Arc::from(""), |_, _| ())
         .unwrap_err();
     assert_eq!(cached, first);
     assert!(first.contains("unsupported JavaScript/TypeScript file"));
+}
+
+#[test]
+fn owned_request_parse_cache_does_not_inherit_active_cache() {
+    with_request_parse_cache(|| {
+        with_program(
+            Path::new("owned-cache.ts"),
+            "export const a = 1;",
+            |_, _| (),
+        )
+        .unwrap();
+        assert_eq!(request_parse_cache_len(), 1);
+        with_owned_request_parse_cache(|| {
+            assert_eq!(request_parse_cache_len(), 0);
+            with_program(
+                Path::new("owned-cache.ts"),
+                "export const a = 2;",
+                |_, _| (),
+            )
+            .unwrap();
+            assert_eq!(request_parse_cache_len(), 1);
+        });
+        assert_eq!(request_parse_cache_len(), 1);
+    });
 }
 
 #[test]
@@ -131,11 +182,11 @@ fn parsed_program_cache_clear_releases_cached_programs() {
     let cache = ParsedProgramCache::default();
     let path = Path::new("fixture.ts");
     cache
-        .with_program(path, "export default {};", |_, _| ())
+        .with_program(path, Arc::from("export default {};"), |_, _| ())
         .unwrap();
     cache.clear();
     assert!(cache
-        .with_program(path, "export default (", |_, _| ())
+        .with_program(path, Arc::from("export default ("), |_, _| ())
         .is_err());
 }
 
@@ -290,5 +341,5 @@ fn test_expression_path() {
     );
 }
 pub(crate) fn request_parse_cache_len() -> usize {
-    super::current_request_parse_cache().map_or(0, |cache| super::parsed_cache::tests::len(&cache))
+    super::request_parse_cache_len()
 }

@@ -1,4 +1,16 @@
 impl ImportCollector {
+    fn record_exported_resource_root(&mut self, name: &str) {
+        if self.collect_resource_roots {
+            self.exported_resource_roots.insert(name.to_string());
+        }
+    }
+
+    fn record_exported_resource_scope(&mut self, scope: String) {
+        if self.collect_resource_roots {
+            self.exported_resource_scopes.insert(scope);
+        }
+    }
+
     fn push(&mut self, specifier: &str, kind: ImportKind, byte_offset: usize) {
         self.push_with_side_effect(specifier, kind, byte_offset, false, false);
     }
@@ -43,11 +55,7 @@ impl ImportCollector {
             self.imports.push(ExtractedImport {
                 specifier: specifier.to_string(),
                 kind,
-                line: if self.source.is_empty() {
-                    1
-                } else {
-                    crate::codebase::ts_source::byte_offset_to_line(&self.source, byte_offset)
-                },
+                line: import_line_at(&self.line_starts, byte_offset),
                 function_scope: self.function_stack.last().cloned(),
                 side_effect_only,
                 re_export,

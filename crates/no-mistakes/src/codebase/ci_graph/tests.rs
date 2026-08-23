@@ -9,6 +9,7 @@ use super::parse::parse_workflow;
 use super::permissions::{effective_permissions, PermissionSource};
 use super::triggers::{evaluate_trigger, TriggerMatch};
 use super::{discover_workflow_files, relative_slash, WorkflowSet};
+use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};
 use crate::config::v2::load_v2_config;
 use crate::config::v2::schema::CiConfig;
 use std::path::{Path, PathBuf};
@@ -341,6 +342,28 @@ fn malformed_workflow_produces_warning() {
     // env analysis surfaces the same parse warning.
     let report = analyze_env(&fixture("malformed"), &CiConfig::default(), "X");
     assert_eq!(report.warnings.len(), 1);
+}
+
+/// The raw YAML failure is retained once and each consumer renders its own
+/// legacy diagnostic contract from that shared result.
+#[test]
+fn shared_workflow_documents_preserve_consumer_failure_contracts() {
+    let root = fixture("malformed");
+    let parsed = ParsedWorkflowSet::load(&root, &CiConfig::default());
+    assert_eq!(parsed.documents.len(), 1);
+    assert!(matches!(
+        parsed.documents[0].value.as_ref(),
+        Err(error) if error.kind == WorkflowDocumentErrorKind::Parse
+    ));
+
+    let impact = WorkflowSet::from_parsed(&parsed);
+    let env = super::analyze_env_from_parsed(&parsed, "X");
+    assert_eq!(impact.warnings.len(), 1);
+    assert_eq!(env.warnings.len(), 1);
+    assert_eq!(impact.warnings[0], env.warnings[0]);
+    assert!(impact.warnings[0]
+        .message
+        .starts_with("could not parse workflow YAML:"));
 }
 
 #[test]

@@ -3,7 +3,7 @@ include!("impact_collect_entry.rs");
 struct PreparedReportContext<'a> {
     args: &'a SymbolsArgs,
     root: &'a Path,
-    tsconfig: &'a crate::codebase::ts_resolver::TsConfig,
+    tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     session: &'a crate::codebase::analysis_session::AnalysisSession,
     graph_files: &'a GraphFiles,
     test_filter: &'a TestFileFilter,
@@ -20,7 +20,7 @@ fn build_report_from_prepared(
     let PreparedReportContext {
         args,
         root,
-        tsconfig,
+        tsconfig_catalog,
         session,
         graph_files,
         test_filter,
@@ -28,60 +28,45 @@ fn build_report_from_prepared(
         graph,
         facts,
     } = context;
-    let visible_files = graph_files.visible().clone();
-    let target = NodeId::Symbol {
-        file: target_file.to_path_buf(),
-        symbol: symbol.to_string(),
-    };
-    let definition = if let Some(location) =
-        export_location(facts, target_file, root, symbol, false)?
-    {
-        location
-    } else if graph.dependencies_of_node(&target).is_some()
-        || graph.dependents_of_node(&target).is_some()
-    {
-        let Some(location) = export_location(facts, target_file, root, symbol, true)? else {
+    let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
+        graph_files.iter_visible().cloned(),
+    );
+    let visible_files = graph_files;
+    let interner = session.interner();
+    let target = NodeId::symbol_in(interner, target_file, symbol);
+    let definition =
+        if let Some(location) = export_location(facts, target_file, root, symbol, false)? {
+            location
+        } else if graph.dependencies_of_node(&target).is_some()
+            || graph.dependents_of_node(&target).is_some()
+        {
+            let Some(location) = export_location(facts, target_file, root, symbol, true)? else {
+                bail!(
+                    "`{}` is not exported by `{}`",
+                    symbol,
+                    args.files[0].display()
+                );
+            };
+            location
+        } else {
             bail!(
                 "`{}` is not exported by `{}`",
                 symbol,
                 args.files[0].display()
             );
         };
-        location
-    } else {
-        bail!(
-            "`{}` is not exported by `{}`",
-            symbol,
-            args.files[0].display()
-        );
-    };
     let impact_edges = signature_impact_edges();
     let mut entries =
         graph.dependents_of_symbol_nodes(std::slice::from_ref(&target), None, Some(&impact_edges));
     let (exports, export_nodes) =
-        export_paths(graph, facts, &target, symbol, root, &definition);
-    let target_symbols = signature_target_symbols(
-        target_file,
-        symbol,
-        &export_nodes,
-        &visible_files,
-        facts,
-    );
+        export_paths(graph, facts, &target, symbol, root, &definition, interner);
+    let target_symbols =
+        signature_target_symbols(target_file, symbol, &export_nodes, &visible_files, facts);
     let file_import_edges = HashSet::from([EdgeKind::DynamicImport, EdgeKind::Require]);
-    let mut file_roots: Vec<_> = export_nodes
-        .iter()
-        .filter_map(NodeId::as_file)
-        .map(|path| NodeId::File(path.to_path_buf()))
-        .collect();
-    file_roots.push(NodeId::File(target_file.to_path_buf()));
-    file_roots.sort();
-    file_roots.dedup();
     let mut file_entry_target_symbols: BTreeMap<String, BTreeSet<String>> = BTreeMap::new();
-    for file_root in file_roots {
-        let Some(root_file) = file_root.as_file() else {
-            continue;
-        };
-        let symbols_for_root = target_symbols.get(root_file).cloned().unwrap_or_default();
+    for root_path in interned_file_root_paths(&export_nodes, target_file) {
+        let file_root = NodeId::file_in(interner, &root_path);
+        let symbols_for_root = target_symbols.get(&root_path).cloned().unwrap_or_default();
         let file_entries = graph.dependents_of(
             std::slice::from_ref(&file_root),
             Some(1),
@@ -101,11 +86,12 @@ fn build_report_from_prepared(
         }
         entries.extend(file_entries);
     }
-    let local_caller_context = prepare_local_caller_context(facts, workspace, &visible_files);
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
-        tsconfig,
-        Some(local_caller_context.visible_files),
-        session,
+    let local_caller_context =
+        prepare_local_caller_context(facts, workspace, &visible_files, &remapper);
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
+        tsconfig_catalog,
+        local_caller_context.visible_files,
+        Some(session),
     );
     let production_extra_callers = local_caller_entries(
         &local_caller_context,
@@ -130,6 +116,7 @@ fn build_report_from_prepared(
         root,
         &file_entry_target_symbols,
         facts,
+        interner,
     );
     let suggested_tests = suggested_tests(
         &suggested_entries,
@@ -169,7 +156,8 @@ fn build_report_from_prepared(
 struct LocalCallerContext<'a> {
     facts: &'a TsFactMap,
     workspace: &'a crate::codebase::workspaces::WorkspaceMap,
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
+    remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
 }
 
 /// Resolves the workspace map once and pairs it with the already-collected import/symbol
@@ -183,20 +171,22 @@ struct LocalCallerContext<'a> {
 fn prepare_local_caller_context<'a>(
     facts: &'a TsFactMap,
     workspace: &'a crate::codebase::workspaces::WorkspaceMap,
-    visible_files: &'a HashSet<PathBuf>,
+    visible_files: &'a dyn crate::codebase::ts_resolver::VisiblePathLookup,
+    remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
 ) -> LocalCallerContext<'a> {
     LocalCallerContext {
         facts,
         workspace,
         visible_files,
+        remapper,
     }
 }
 
 include!("impact_collect_exports.rs");
 
 #[cfg(test)]
-mod impact_collect_caller_tests;
-#[cfg(test)]
 mod impact_collect_caller_context_tests;
+#[cfg(test)]
+mod impact_collect_caller_tests;
 #[cfg(test)]
 mod impact_collect_tests;

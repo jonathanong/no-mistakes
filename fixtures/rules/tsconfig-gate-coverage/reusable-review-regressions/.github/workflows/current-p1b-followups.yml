@@ -1,0 +1,22 @@
+on: push
+jobs:
+  non-pipefail-pipeline:
+    runs-on: ubuntu-latest
+    steps:
+      # Without pipefail, the final false makes this pipeline fail.
+      - run: true | false
+      - run: pnpm exec tsc --noEmit --project non-pipefail-pipeline/tsconfig.json
+  file-working-directory:
+    runs-on: ubuntu-latest
+    steps:
+      # A tracked file is not a directory that GitHub can enter.
+      - working-directory: README.md
+        run: true
+      - run: pnpm exec tsc --noEmit --project file-working-directory/tsconfig.json
+  docker-args-invalid:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # Metadata validation fails before this local Docker action can run.
+      - uses: ./.github/actions/docker-args-invalid
+      - run: pnpm exec tsc --noEmit --project docker-args-invalid/tsconfig.json

@@ -1,0 +1,5 @@
+name: Missing Dockerfile
+description: References a local Dockerfile that is not tracked
+runs:
+  using: docker
+  image: Dockerfile

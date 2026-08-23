@@ -1,7 +1,7 @@
 use super::{
-    any_codebase_rule_enabled, forbidden_dependencies, rule_enabled, PreparedRulesCheck,
-    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES,
-    SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    any_codebase_rule_enabled, canonical_graph_plan, canonical_graph_requires_full_file_universe,
+    rule_enabled, PreparedRulesCheck, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
+    REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use crate::codebase::check_facts::{
     collect_check_facts_with_graph_files_playwright_and_sources, CheckFactPlan,
@@ -27,27 +27,29 @@ pub(super) fn run_check(
         tsconfig_path,
         root,
         &visible_paths,
-    )?;
+    );
+    let prepared_tsconfig = prepared_tsconfig?;
     let prepared_playwright = crate::playwright::rules::prepare_from_snapshot(
         root,
         config_path,
         &config,
         Arc::clone(&snapshot),
         Arc::new(prepared_tsconfig.clone()),
-    )?;
-    let graph_plan = rule_enabled(&config, FORBIDDEN_DEPENDENCIES)
-        .then(|| forbidden_dependencies::graph_plan(&config))
-        .flatten();
+    );
+    let prepared_playwright = prepared_playwright?;
+    let graph_plan = canonical_graph_plan(&config);
     let codebase_config =
         crate::codebase::config::config_from_loaded_v2(root, config_path, &config);
     let prepared_graph = graph_plan
         .map(|plan| {
-            crate::codebase::dependencies::graph::prepare_graph_config(
+            let test_filter = crate::codebase::test_filter::TestFileFilter::new(root, &config);
+            crate::codebase::dependencies::graph::prepare_graph_config_with_test_filter(
                 root,
                 plan,
                 &codebase_config,
                 &config,
                 snapshot.as_ref(),
+                test_filter,
             )
         })
         .transpose()?;
@@ -66,17 +68,19 @@ pub(super) fn run_check(
         &config.filesystem.skip_directories,
         &visible_paths,
     );
-    let graph_files = if graph_plan.is_some() {
-        crate::codebase::ts_source::discover_files_from_visible(root, &[], &visible_paths)
-    } else if rule_enabled(&config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
-        files.clone()
-    } else {
-        Vec::new()
-    };
+    let graph_files = standalone_graph_files(root, &config, graph_plan, &visible_paths, &files);
     let playwright_fact_plan = prepared_playwright
         .as_ref()
         .map(crate::playwright::rules::PreparedPlaywrightRules::fact_plan);
     let sources = snapshot.source_store_for(root);
+    let prepared_tsconfig_catalog = super::prepared_tsconfig_catalog(
+        root,
+        tsconfig_path,
+        &prepared_tsconfig,
+        &visible_paths,
+        &sources,
+        Some(&config),
+    );
     let shared = collect_check_facts_with_graph_files_playwright_and_sources(
         root,
         files,
@@ -98,10 +102,30 @@ pub(super) fn run_check(
         config: &config,
         prepared_graph: prepared_graph.as_ref(),
         prepared_tsconfig: &prepared_tsconfig,
+        prepared_tsconfig_catalog: &prepared_tsconfig_catalog,
         inferred_roots: Some(&inferred_roots),
         sources: Some(&sources),
     })
 }
+
+fn standalone_graph_files(
+    root: &Path,
+    config: &crate::config::v2::NoMistakesConfig,
+    graph_plan: Option<crate::codebase::dependencies::graph::GraphBuildPlan>,
+    visible_paths: &[std::path::PathBuf],
+    scoped_files: &[std::path::PathBuf],
+) -> Vec<std::path::PathBuf> {
+    if canonical_graph_requires_full_file_universe(config) {
+        crate::codebase::ts_source::discover_files_from_visible(root, &[], visible_paths)
+    } else if graph_plan.is_some() {
+        scoped_files.to_vec()
+    } else {
+        Vec::new()
+    }
+}
+
+#[cfg(test)]
+mod tests;
 
 fn standalone_fact_plan(config: &crate::config::v2::NoMistakesConfig) -> CheckFactPlan {
     let dynamic_imports = rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS);

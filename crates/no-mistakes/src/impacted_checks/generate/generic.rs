@@ -14,15 +14,19 @@ pub(in crate::impacted_checks) fn generic_checks(
     for def in &config.checks.commands {
         let include = build_globset(&def.include)?;
         let exclude = build_globset(&def.exclude)?;
-        let matched: Vec<String> = changed_files
-            .iter()
-            .filter(|file| {
-                include.as_ref().is_some_and(|set| set.is_match(file))
-                    && exclude.as_ref().is_none_or(|set| !set.is_match(file))
-            })
-            .cloned()
-            .collect();
-        if matched.is_empty() {
+        let matched: Vec<String> = if def.always {
+            changed_files.to_vec()
+        } else {
+            changed_files
+                .iter()
+                .filter(|file| {
+                    include.as_ref().is_some_and(|set| set.is_match(file))
+                        && exclude.as_ref().is_none_or(|set| !set.is_match(file))
+                })
+                .cloned()
+                .collect()
+        };
+        if matched.is_empty() && !def.always {
             continue;
         }
         let mut command = def.command.clone();

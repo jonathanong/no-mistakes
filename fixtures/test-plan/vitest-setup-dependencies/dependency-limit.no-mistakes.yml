@@ -1,0 +1,12 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+testPlan:
+  vitest:
+    environments:
+      pre-push:
+        groups:
+          - type: dependencies
+            limit:
+              files: 1
+rules: []

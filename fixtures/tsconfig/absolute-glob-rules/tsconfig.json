@@ -1,0 +1,4 @@
+{
+  "include": ["${configDir}/src/**/*.ts"],
+  "exclude": ["${configDir}/src/excluded/**"]
+}

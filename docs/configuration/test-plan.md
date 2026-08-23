@@ -19,8 +19,104 @@ testPlan:
 Environment names default to `pre-push`. `prePush` and `pre_push` are accepted
 where supported by the parser.
 
+Group types:
+
+- `direct` — changed tests (`via: self`) plus tests one reverse import-family
+  or same-directory `TestOf` hop from a changed file. Import-family edges are
+  `import`, `type-import`, `dynamic-import`, `require`, `require-resolve`,
+  and `workspace`. Native module/namespace fan-out (`dotnet-using`,
+  `swift-import`) stays in `dependencies`. This group runs first so a
+  percent/file limit cannot evict a direct importer in favor of a longer
+  `dependencies` path.
+- `dependencies` — remaining graph-reachable tests, including multi-hop
+  imports and markdown/resource/route/http/queue hops.
+- `coverage` — Playwright selector/route/layout coverage (Playwright only).
+- `sample` — remaining discovered tests, used to fill leftover budget.
+
 Global full-suite fallback is explicit opt-in through config or
 `--global-config-fallback true`.
+
+## Named triggers
+
+Prefer a list of named triggers when the matching paths are not owned by a
+real top-level `projects:` entry. Paths are repository-relative. Empty
+`targets` is a framework-wide fallback for those paths:
+
+```yaml
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      - name: postgres-resources
+        paths:
+          - db/schema.sql
+          - db/migrations/**
+        targets:
+          - backend
+      - name: root-config
+        paths:
+          - package.json
+          - vitest.config.ts
+```
+
+`vitest-ci-path-coverage` `projectFilters` keys off runner-project `targets`
+when a trigger has them, and off the trigger `name` only when `targets` is
+empty. Do not list both the alias and the runner project for the same paths.
+
+The object form `fullSuiteTriggers.projects.<name>` still works and still
+requires a matching top-level `projects:` key. Treat it as deprecated for
+dummy `root: .` buckets.
+
+## Project-keyed triggers (deprecated)
+
+`fullSuiteTriggers.projects` accepts legacy broad triggers and target-scoped
+triggers. A target-scoped trigger selects only tests owned by the named runner
+projects:
+
+```yaml
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        database-resources:
+          paths:
+            - migrations/**/*.sql
+            - "!migrations/archive/**"
+          targets:
+            - database
+```
+
+`targets` are Vitest or Playwright runner project names, not top-level
+`.no-mistakes.yml` project names. Every target must resolve to exactly one
+discovered project for the selected framework. Unknown and ambiguous names are
+configuration errors and include the config path in the diagnostic. Target
+names use exact matching and each `targets` list must not repeat an exact name.
+A matched target-scoped trigger reports reason `configured-trigger` and does not set
+`fallback_triggered`. Environment include/exclude filters and limits are
+applied after target expansion.
+
+Legacy boolean and path-list forms remain broad full-suite fallbacks:
+
+```yaml
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        shared: true
+        generated:
+          - generated/**
+          - "!generated/fixtures/**"
+```
+
+Legacy path lists and target-scoped `paths` use ordered gitignore-style
+matching: a later `!` pattern excludes an earlier match, and a still-later
+positive pattern can include it again.
+
+Changes to `.no-mistakes.yml` or `.no-mistakes.yaml` invalidate only frameworks
+whose effective `testPlan` or `tests` configuration changed. Formatting-only
+edits do not trigger a suite. Revision and inline-diff inputs compare the old
+and new semantic configuration when both versions can be read; changed-file-only
+inputs and unreadable or malformed historical versions fail open to the normal
+global-config fallback behavior.
 
 Dotnet and Swift plans use explicit config for source-graph targeting. When
 `tests plan dotnet` or `tests plan swift` can discover native tests but cannot

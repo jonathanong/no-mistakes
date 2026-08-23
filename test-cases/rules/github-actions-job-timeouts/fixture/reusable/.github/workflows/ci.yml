@@ -1,0 +1,5 @@
+name: ci
+on: push
+jobs:
+  reuse:
+    uses: org/repo/.github/workflows/ci.yml@v1

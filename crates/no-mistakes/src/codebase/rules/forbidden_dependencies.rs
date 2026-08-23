@@ -70,7 +70,7 @@ fn check_rule_application(
     opts: &Options,
     graph: &DepGraph,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-    file_universe: Option<&HashSet<std::path::PathBuf>>,
+    file_universe: Option<&crate::fx::PathSet>,
 ) -> Result<Vec<RuleFinding>> {
     if opts.roots.is_empty()
         || (opts.forbidden_modules.is_empty() && opts.forbidden_files.is_empty())
@@ -120,7 +120,8 @@ fn check_rule_application(
         config,
         rule,
         &mut inferred_roots,
-    )?;
+    );
+    let source_filter = source_filter?;
     let mut findings = Vec::new();
     for root_str in &opts.roots {
         let Some(resolved_path) = resolve_root_path(root, root_str) else {
@@ -134,7 +135,7 @@ fn check_rule_application(
             .unwrap_or(&resolved_path)
             .to_string_lossy()
             .replace('\\', "/");
-        let root_node = NodeId::File(resolved_path);
+        let root_node = NodeId::file(resolved_path);
         let entries = match file_universe {
             Some(universe) => {
                 graph.deps_of_in_file_universe(&[root_node], None, allowed.as_ref(), universe)
@@ -143,14 +144,19 @@ fn check_rule_application(
         };
         for entry in &entries {
             let matched = match &entry.node {
-                NodeId::Module(spec) => module_matcher.as_ref().is_some_and(|m| m.is_match(spec)),
+                NodeId::Module(spec) => module_matcher
+                    .as_ref()
+                    .is_some_and(|m| m.is_match(spec.as_ref())),
                 NodeId::File(path) | NodeId::Symbol { file: path, .. } => {
                     file_matcher.as_ref().is_some_and(|m| {
                         let rel = path.strip_prefix(root).unwrap_or(path);
                         m.is_match(rel.to_string_lossy().replace('\\', "/"))
                     })
                 }
-                NodeId::QueueJob { .. } => false,
+                NodeId::QueueJob { .. }
+                | NodeId::WorkflowJob { .. }
+                | NodeId::WorkflowStep { .. }
+                | NodeId::TrpcProcedure { .. } => false,
             };
             if !matched {
                 continue;

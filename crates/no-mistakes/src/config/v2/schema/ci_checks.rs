@@ -7,8 +7,8 @@ pub struct CiConfig {
     /// Directories (relative to root) to scan for GitHub Actions workflow YAML.
     /// Defaults to `.github/workflows`.
     pub workflow_dirs: Vec<String>,
-    /// Directories (relative to root) holding local composite actions. Recorded
-    /// for future use; their internal env/permissions are not yet inlined.
+    /// Directories (relative to root) holding local action descriptors.
+    /// Dependency graphs resolve local `uses:` only beneath these roots.
     pub action_dirs: Vec<String>,
 }
 
@@ -43,6 +43,8 @@ pub struct CheckCommandDef {
     pub command: Vec<String>,
     /// How matched file paths are added to the command invocation.
     pub file_args: CheckFileArgs,
+    /// Run this whole-project command even when no changed files match it.
+    pub always: bool,
 }
 
 impl Default for CheckCommandDef {
@@ -53,6 +55,7 @@ impl Default for CheckCommandDef {
             exclude: Vec::new(),
             command: Vec::new(),
             file_args: CheckFileArgs::Append,
+            always: false,
         }
     }
 }

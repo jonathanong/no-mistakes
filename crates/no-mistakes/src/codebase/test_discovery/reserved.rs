@@ -15,22 +15,35 @@ pub(super) fn runner_reserved_tests_from_visible(
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> BTreeSet<PathBuf> {
-    if runner != TestRunner::Vitest {
-        return BTreeSet::new();
-    }
-    let playwright_projects = prepared_projects.unwrap_or_else(|| {
+    let reserved_runner = match runner {
+        TestRunner::Vitest => TestRunner::Playwright,
+        TestRunner::Playwright => TestRunner::Vitest,
+        TestRunner::Dotnet
+        | TestRunner::Swift
+        | TestRunner::Python
+        | TestRunner::Go
+        | TestRunner::Cargo
+        | TestRunner::Rails
+        | TestRunner::Php
+        | TestRunner::Java
+        | TestRunner::Kotlin
+        | TestRunner::Elixir
+        | TestRunner::Dart
+        | TestRunner::Jest => return BTreeSet::new(),
+    };
+    let reserved_projects = prepared_projects.unwrap_or_else(|| {
         projects::runner_projects_lossy_from_visible(
             root,
             config,
-            TestRunner::Playwright,
+            reserved_runner,
             visible_paths,
             tsconfig,
         )
     });
-    if playwright_projects.is_empty() {
+    if reserved_projects.is_empty() {
         return BTreeSet::new();
     }
-    let playwright_filters = playwright_projects
+    let reserved_filters = reserved_projects
         .into_iter()
         .filter_map(ProjectTestFilter::from_project)
         .collect::<Vec<_>>();
@@ -38,9 +51,7 @@ pub(super) fn runner_reserved_tests_from_visible(
         .iter()
         .filter(|path| {
             let rel = crate::codebase::ts_source::relative_slash_path(root, path);
-            playwright_filters
-                .iter()
-                .any(|filter| filter.is_match(&rel))
+            reserved_filters.iter().any(|filter| filter.is_match(&rel))
         })
         .cloned()
         .collect()

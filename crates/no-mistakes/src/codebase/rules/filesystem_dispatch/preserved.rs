@@ -49,6 +49,7 @@ fn rule_supports_discovery_roots(rule_id: &str) -> bool {
     matches!(
         rule_id,
         super::AGENTS_MD_MAX_SIZE
+            | super::CSHARP_MAX_LINES_PER_FILE
             | super::RUST_MAX_LINES_PER_FILE
             | super::RUST_NO_INLINE_ALLOWS
             | super::RUST_NO_INLINE_TESTS

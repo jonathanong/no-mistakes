@@ -1,0 +1,13 @@
+projects:
+  docs:
+    root: docs
+rules:
+  - rule: markdown-reachability
+    projects: [docs]
+    options:
+      baselineFile: baselines/reachability.json
+  - rule: markdown-structure-budget
+    projects: [docs]
+    options:
+      maxLines: 1
+      baselineFile: baselines/structure.json

@@ -10,6 +10,8 @@ pub struct TestExecutionTarget {
     pub runner: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub config: Option<String>,
+    #[serde(default, skip_serializing_if = "is_false")]
+    pub workspace: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub project: Option<String>,
     pub base_command: Vec<String>,
@@ -19,6 +21,7 @@ pub struct TestExecutionTarget {
 pub(super) fn target_for(
     runner: TestRunner,
     config: Option<&str>,
+    workspace: bool,
     project: Option<&str>,
     test_file: &str,
 ) -> TestExecutionTarget {
@@ -28,10 +31,19 @@ pub(super) fn target_for(
     if runner == TestRunner::Swift {
         return swift_target_for(config, project, test_file);
     }
+    if let Some(target) =
+        super::lang_targets::language_target_for(runner, config, project, test_file)
+    {
+        return target;
+    }
 
     let mut runner_args = Vec::new();
     if let Some(config) = config {
-        runner_args.push("--config".to_string());
+        runner_args.push(if runner == TestRunner::Vitest && workspace {
+            "--workspace".to_string()
+        } else {
+            "--config".to_string()
+        });
         runner_args.push(config.to_string());
     }
     if let Some(project) = project {
@@ -40,15 +52,16 @@ pub(super) fn target_for(
     }
     runner_args.push(test_file_arg(runner, test_file));
 
-    let base_command = if runner == TestRunner::Playwright {
-        vec!["playwright".to_string(), "test".to_string()]
-    } else {
-        vec!["vitest".to_string()]
+    let base_command = match runner {
+        TestRunner::Playwright => vec!["playwright".to_string(), "test".to_string()],
+        TestRunner::Jest => vec!["jest".to_string()],
+        _ => vec!["vitest".to_string()],
     };
 
     TestExecutionTarget {
         runner: runner.as_str().to_string(),
         config: config.map(str::to_string),
+        workspace,
         project: project.map(str::to_string),
         base_command,
         runner_args,
@@ -69,6 +82,7 @@ fn dotnet_target_for(
     TestExecutionTarget {
         runner: TestRunner::Dotnet.as_str().to_string(),
         config: project_path.map(str::to_string),
+        workspace: false,
         project: project.map(str::to_string),
         base_command: vec!["dotnet".to_string(), "test".to_string()],
         runner_args,
@@ -95,10 +109,15 @@ fn swift_target_for(
     TestExecutionTarget {
         runner: TestRunner::Swift.as_str().to_string(),
         config: package.map(str::to_string),
+        workspace: false,
         project: project.map(str::to_string),
         base_command: vec!["swift".to_string(), "test".to_string()],
         runner_args,
     }
+}
+
+fn is_false(value: &bool) -> bool {
+    !value
 }
 
 fn swift_filter_from_path(test_file: &str) -> &str {
@@ -109,8 +128,17 @@ fn test_file_arg(runner: TestRunner, test_file: &str) -> String {
     match runner {
         TestRunner::Dotnet => test_file.to_string(),
         TestRunner::Playwright => regex_escape(test_file),
-        TestRunner::Vitest => test_file.to_string(),
-        TestRunner::Swift => test_file.to_string(),
+        TestRunner::Vitest | TestRunner::Jest => test_file.to_string(),
+        TestRunner::Swift
+        | TestRunner::Python
+        | TestRunner::Go
+        | TestRunner::Cargo
+        | TestRunner::Rails
+        | TestRunner::Php
+        | TestRunner::Java
+        | TestRunner::Kotlin
+        | TestRunner::Elixir => test_file.to_string(),
+        TestRunner::Dart => test_file.to_string(),
     }
 }
 

@@ -1,7 +1,19 @@
 use crate::tests::configured_plan_candidates::{first_take, stable_take};
-use crate::tests::{SelectedTest, TestPlanGroupResult, Warning};
+use crate::tests::{SelectedTest, TestPlan, TestPlanGroupResult, Warning};
+use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use std::collections::BTreeMap;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+pub(super) fn attach_targets(plan: &mut TestPlan, root: &Path, discovered: &DiscoveredTests) {
+    for test in &mut plan.selected_tests {
+        if test.targets.is_empty() {
+            let path = root.join(&test.test_file);
+            if let Some(targets) = discovered.targets_by_path.get(&path) {
+                test.targets = targets.clone();
+            }
+        }
+    }
+}
 
 pub(super) fn sorted_selected_tests(
     selected_map: BTreeMap<PathBuf, SelectedTest>,
@@ -16,7 +28,9 @@ pub(super) fn sorted_selected_tests(
 }
 
 pub(super) fn sorted_warnings(mut warnings: Vec<Warning>) -> Vec<Warning> {
-    warnings.sort_by(|a, b| (&a.file, &a.message).cmp(&(&b.file, &b.message)));
+    warnings.sort_by(|a, b| {
+        (&a.file, a.line, &a.r#type, &a.message).cmp(&(&b.file, b.line, &b.r#type, &b.message))
+    });
     warnings
 }
 
@@ -45,4 +59,29 @@ pub(super) fn select_limited_group_candidates(
     } else {
         first_take(candidates, limit)
     }
+}
+
+/// Spend the `direct` budget on changed tests first so `sampleWhenLimited`
+/// hashing cannot evict a self-selected test in favor of a 1-hop importer.
+pub(super) fn select_limited_direct_candidates(
+    candidates: Vec<SelectedTest>,
+    limit: usize,
+    sample_when_limited: bool,
+) -> Vec<SelectedTest> {
+    if limit == 0 {
+        return Vec::new();
+    }
+    let (selves, hops): (Vec<SelectedTest>, Vec<SelectedTest>) = candidates
+        .into_iter()
+        .partition(|test| test.reasons.iter().any(|reason| reason.via == ["self"]));
+    let mut picked = select_limited_group_candidates(selves, limit, sample_when_limited);
+    let remaining = limit.saturating_sub(picked.len());
+    if remaining > 0 {
+        picked.extend(select_limited_group_candidates(
+            hops,
+            remaining,
+            sample_when_limited,
+        ));
+    }
+    picked
 }

@@ -1,5 +1,7 @@
 use super::*;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+
+mod map;
 
 fn collect_file_facts(
     path: &Path,
@@ -13,66 +15,14 @@ fn collect_file_facts(
     super::collect::test_support::collect_file_facts_with_sources(path, plan, context, &sources)
 }
 
-impl TsFactMap {
-    pub(crate) fn extend_shared(
-        &mut self,
-        facts: impl IntoIterator<Item = (PathBuf, std::sync::Arc<TsFileFacts>)>,
-    ) {
-        self.facts.extend(
-            facts
-                .into_iter()
-                .map(|(path, facts)| (path, std::sync::Arc::unwrap_or_clone(facts))),
-        );
-    }
-}
-
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/ast-snippets/ts-source/fixture/facts")
         .join(name)
 }
 
-#[test]
-fn plan_constructors_select_expected_fact_sets() {
-    let imports = TsFactPlan::imports();
-    assert!(imports.imports);
-    assert!(!imports.symbols);
-
-    let both = TsFactPlan::imports_and_symbols();
-    assert!(both.imports);
-    assert!(both.symbols);
-}
-
-#[test]
-fn source_facts_preserve_owned_public_api_and_reuse_physical_read() {
-    let file = fixture("imports.ts");
-    let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
-        std::slice::from_ref(&file),
-    ));
-    let sources = crate::codebase::ts_source::SourceStore::new(inventory);
-    let expected = sources.read_path(&file).unwrap();
-
-    let mut facts = super::collect::collect_ts_facts_with_context_and_sources(
-        std::slice::from_ref(&file),
-        TsFactPlan {
-            source: true,
-            ..TsFactPlan::default()
-        },
-        &TsFactContext::default(),
-        &sources,
-    );
-
-    let source: &String = facts[&file].source.as_ref().unwrap();
-    assert_eq!(source, expected.as_ref());
-    let symbols: Option<crate::codebase::ts_symbols::FileSymbols> = facts[&file].symbols.clone();
-    assert!(symbols.is_none());
-    let components: &mut Vec<crate::react_traits::report::types::ComponentFacts> =
-        &mut facts.get_mut(&file).unwrap().react_components;
-    components.clear();
-    let owned: Vec<(PathBuf, TsFileFacts)> = facts.into_iter().collect();
-    assert_eq!(owned.len(), 1);
-    assert_eq!(sources.physical_read_count(), 1);
-}
+include!("tests/collection.rs");
+include!("tests/session_reuse.rs");
 
 #[test]
 fn pass4b_react_graph_facts_skip_ignored_child_for_visible_fallback() {
@@ -207,6 +157,14 @@ fn plan_domain_fact_detection_tracks_domain_flags() {
             rsc_environment: true,
             ..TsFactPlan::default()
         },
+        TsFactPlan {
+            trpc_router: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            trpc_calls: true,
+            ..TsFactPlan::default()
+        },
     ] {
         assert!(plan.has_domain_facts());
     }
@@ -251,9 +209,31 @@ fn collected_fact_map_retains_its_plan_and_read_errors() {
 
     assert!(facts.plan().covers(plan));
     assert!(facts[&missing]
+        .operational_error
+        .as_deref()
+        .is_some_and(|error| error.contains("failed to read")));
+    assert!(facts[&missing]
         .parse_error
         .as_deref()
         .is_some_and(|error| error.contains("failed to read")));
+}
+
+#[test]
+fn failed_collection_result_becomes_operational_error_facts() {
+    let facts = super::collect::test_support::facts_from_collection_result(Err(anyhow::anyhow!(
+        "synthetic parse failure"
+    )));
+
+    assert_eq!(
+        facts.operational_error.as_deref(),
+        Some("synthetic parse failure")
+    );
+    assert_eq!(
+        facts.parse_error.as_deref(),
+        Some("synthetic parse failure")
+    );
+    assert!(!facts.fatal_parse_error);
+    assert!(facts.symbols.is_none());
 }
 
 #[test]
@@ -291,6 +271,10 @@ fn plan_empty_detection_tracks_all_flags() {
             ..TsFactPlan::default()
         },
         TsFactPlan {
+            call_sites: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
             route_refs: true,
             ..TsFactPlan::default()
         },
@@ -322,6 +306,14 @@ fn plan_empty_detection_tracks_all_flags() {
             rsc_environment: true,
             ..TsFactPlan::default()
         },
+        TsFactPlan {
+            trpc_router: true,
+            ..TsFactPlan::default()
+        },
+        TsFactPlan {
+            trpc_calls: true,
+            ..TsFactPlan::default()
+        },
     ] {
         assert!(!plan.is_empty());
     }
@@ -349,6 +341,22 @@ fn plan_coverage_tracks_effect_and_rsc_facts() {
     }));
     assert!(!TsFactPlan::default().covers(TsFactPlan {
         rsc_environment: true,
+        ..TsFactPlan::default()
+    }));
+}
+
+#[test]
+fn plan_coverage_tracks_call_site_facts() {
+    let available = TsFactPlan {
+        call_sites: true,
+        ..TsFactPlan::default()
+    };
+    assert!(available.covers(TsFactPlan {
+        call_sites: true,
+        ..TsFactPlan::default()
+    }));
+    assert!(!TsFactPlan::default().covers(TsFactPlan {
+        call_sites: true,
         ..TsFactPlan::default()
     }));
 }
@@ -412,6 +420,10 @@ fn collect_ts_facts_skips_non_indexable_files_and_preserves_read_errors() {
     assert_eq!(facts[&ts].imports.len(), 1);
     assert!(facts[&ts].symbols.is_none());
     assert!(facts[&missing]
+        .operational_error
+        .as_deref()
+        .is_some_and(|error| error.contains("failed to read")));
+    assert!(facts[&missing]
         .parse_error
         .as_deref()
         .is_some_and(|error| error.contains("failed to read")));
@@ -427,6 +439,40 @@ fn collect_ts_facts_uses_tsx_parser_and_symbols_when_requested() {
 
     assert_eq!(facts[&tsx].imports.len(), 1);
     assert!(facts[&tsx].symbols.is_some());
+}
+
+#[test]
+fn exported_resource_roots_are_collected_only_for_resource_plans() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/resource-impact/exported-member-consumer.ts");
+    let imports_and_symbols = collect_ts_facts(
+        std::slice::from_ref(&source),
+        TsFactPlan::imports_and_symbols(),
+    );
+    assert!(imports_and_symbols[&source]
+        .exported_resource_roots
+        .is_empty());
+    assert!(imports_and_symbols[&source]
+        .exported_resource_scopes
+        .is_empty());
+
+    let resources = collect_ts_facts(
+        std::slice::from_ref(&source),
+        TsFactPlan {
+            imports: true,
+            function_calls: true,
+            resources: true,
+            ..TsFactPlan::default()
+        },
+    );
+    assert_eq!(
+        resources[&source].exported_resource_roots,
+        ["NamedService", "Service", "api", "default", "eagerApi"]
+    );
+    assert!(resources[&source]
+        .exported_resource_scopes
+        .iter()
+        .any(|scope| scope == "api/nested/load"));
 }
 
 #[test]

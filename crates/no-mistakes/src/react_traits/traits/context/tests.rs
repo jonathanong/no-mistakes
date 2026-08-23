@@ -1,6 +1,39 @@
-use super::detect_context_provider;
+use super::jsx_is_context_provider;
 use crate::ast;
+use oxc_ast::ast::Program;
+use oxc_ast_visit::{walk, Visit};
+use oxc_span::Span;
 use std::path::PathBuf;
+
+struct ContextVisitor {
+    has_provider: bool,
+    span: Span,
+}
+
+fn within(node_span: Span, component_span: Span) -> bool {
+    node_span.start >= component_span.start && node_span.end <= component_span.end
+}
+
+impl<'a> Visit<'a> for ContextVisitor {
+    fn visit_jsx_opening_element(&mut self, elem: &oxc_ast::ast::JSXOpeningElement<'a>) {
+        if !within(elem.span, self.span) {
+            return;
+        }
+        if jsx_is_context_provider(elem) {
+            self.has_provider = true;
+        }
+        walk::walk_jsx_opening_element(self, elem);
+    }
+}
+
+fn detect_context_provider(program: &Program<'_>, span: Span) -> bool {
+    let mut visitor = ContextVisitor {
+        has_provider: false,
+        span,
+    };
+    visitor.visit_program(program);
+    visitor.has_provider
+}
 
 fn fixture_source(name: &str) -> (PathBuf, String) {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

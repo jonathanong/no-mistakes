@@ -94,7 +94,7 @@ fn direct_resolution_covers_cycles_and_import_shapes() {
     let mut export_index = HashMap::new();
     export_index.insert((helper, "default".into()), imported_key);
     let tsconfig = test_support::tsconfig_without_config(&root);
-    let visible_files = analyses.keys().cloned().collect();
+    let visible_files: std::collections::HashSet<PathBuf> = analyses.keys().cloned().collect();
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
     let import_resolver = crate::codebase::ts_resolver::ImportResolver::new_in_session(
@@ -102,10 +102,13 @@ fn direct_resolution_covers_cycles_and_import_shapes() {
         Some(&visible_files),
         &session,
     );
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(analyses.keys().cloned());
     let resolver = resolve::ImportResolution {
         analyses: &analyses,
         export_index: &export_index,
         resolver: &import_resolver,
+        remapper: &remapper,
     };
 
     assert_eq!(
@@ -133,7 +136,7 @@ fn pass4b_call_tracing_skips_ignored_helper_for_visible_fallback() {
     let analyses = test_support::analyze_files(&files).unwrap();
     let function_index = resolve::build_function_index(&analyses);
     let export_index = resolve::build_export_index(&analyses);
-    let visible_files = files.into_iter().collect();
+    let visible_files: std::collections::HashSet<PathBuf> = files.into_iter().collect();
     let tsconfig = test_support::tsconfig_without_config(&root);
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
@@ -142,10 +145,13 @@ fn pass4b_call_tracing_skips_ignored_helper_for_visible_fallback() {
         Some(&visible_files),
         &session,
     );
+    let remapper =
+        crate::codebase::ts_source::FrozenPathRemapper::from_paths(analyses.keys().cloned());
     let resolver = resolve::ImportResolution {
         analyses: &analyses,
         export_index: &export_index,
         resolver: &import_resolver,
+        remapper: &remapper,
     };
 
     let integrations = resolve::resolved_integrations(

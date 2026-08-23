@@ -4,6 +4,8 @@ use anyhow::Result;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+mod facts_only;
+
 pub(crate) fn run_analyze_with_loaded_config_and_facts(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
@@ -20,6 +22,20 @@ pub(crate) fn run_analyze_inner_with_facts(
     targets: &[String],
     shared: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<ComponentFacts>> {
+    facts_only::run(root, file_config, targets, shared)
+}
+
+pub(crate) struct PreparedComponentFacts {
+    pub(crate) facts: ComponentFacts,
+    pub(crate) inherited_fetch_locations: Vec<(String, usize)>,
+}
+
+pub(crate) fn run_analyze_inner_with_facts_and_suppression(
+    root: &Path,
+    file_config: &FileConfig,
+    targets: &[String],
+    shared: &crate::codebase::check_facts::CheckFactMap,
+) -> Result<Vec<PreparedComponentFacts>> {
     let root = crate::codebase::ts_source::normalize_discovery_path(root);
     let files = target_files(&root, file_config, targets, shared.files())?;
     let mut file_cache = HashMap::new();
@@ -30,7 +46,12 @@ pub(crate) fn run_analyze_inner_with_facts(
             file_cache.insert(path.clone(), analysis.components.clone());
         }
         if let Some(error) = &facts.parse_error {
-            parse_errors.insert(path, error);
+            let file_disabled = facts.source.as_deref().is_some_and(|source| {
+                crate::codebase::ts_source::has_disable_file_comment(source, "assert-no-fetch")
+            });
+            if !file_disabled {
+                parse_errors.insert(path, error);
+            }
         }
     }
     let child_path_index = child_path_index(&root, &file_cache);
@@ -49,10 +70,13 @@ pub(crate) fn run_analyze_inner_with_facts(
                 &child_path_index,
                 &mut HashSet::new(),
             );
-            if agg != AggregatedFacts::default() {
-                facts.inherited_from_children = Some(agg);
+            if agg.facts != AggregatedFacts::default() {
+                facts.inherited_from_children = Some(agg.facts);
             }
-            all_results.push(facts);
+            all_results.push(PreparedComponentFacts {
+                facts,
+                inherited_fetch_locations: agg.fetch_locations,
+            });
         }
     }
     Ok(all_results)
@@ -92,8 +116,8 @@ fn aggregate_children_cached(
     file_cache: &HashMap<PathBuf, std::sync::Arc<Vec<ComponentFacts>>>,
     child_path_index: &HashMap<String, PathBuf>,
     visited: &mut HashSet<String>,
-) -> AggregatedFacts {
-    let mut agg = AggregatedFacts::default();
+) -> AggregateResult {
+    let mut agg = AggregateResult::default();
     for child_ref in &facts.children {
         let key = format!("{}#{}", child_ref.file, child_ref.name);
         if !visited.insert(key) {
@@ -103,7 +127,7 @@ fn aggregate_children_cached(
             crate::codebase::ts_source::normalize_discovery_path(Path::new(&child_ref.file));
         let child_facts_opt = child_path_index
             .get(&child_ref.file)
-            .or_else(|| child_path_index.get(normalized_child_file.to_string_lossy().as_ref()))
+            .or(child_path_index.get(normalized_child_file.to_string_lossy().as_ref()))
             .and_then(|path| file_cache.get(path))
             .and_then(|comps| comps.iter().find(|c| c.name == child_ref.name));
         if let Some(child_facts) = child_facts_opt {
@@ -116,7 +140,13 @@ fn aggregate_children_cached(
     agg
 }
 
-fn child_path_index(
+#[derive(Default)]
+struct AggregateResult {
+    facts: AggregatedFacts,
+    fetch_locations: Vec<(String, usize)>,
+}
+
+pub(super) fn child_path_index(
     root: &Path,
     file_cache: &HashMap<PathBuf, std::sync::Arc<Vec<ComponentFacts>>>,
 ) -> HashMap<String, PathBuf> {
@@ -131,24 +161,32 @@ fn child_path_index(
     index
 }
 
-fn merge_component(agg: &mut AggregatedFacts, facts: &ComponentFacts) {
-    agg.has_state |= facts.has_state;
-    agg.has_props |= facts.has_props;
-    agg.passes_props |= facts.passes_props;
-    agg.uses_memo |= facts.uses_memo;
-    agg.uses_context_provider |= facts.uses_context_provider;
-    agg.uses_suspense |= facts.uses_suspense;
-    agg.has_fetch |= !facts.fetches.is_empty();
+fn merge_component(agg: &mut AggregateResult, facts: &ComponentFacts) {
+    agg.facts.has_state |= facts.has_state;
+    agg.facts.has_props |= facts.has_props;
+    agg.facts.passes_props |= facts.passes_props;
+    agg.facts.uses_memo |= facts.uses_memo;
+    agg.facts.uses_context_provider |= facts.uses_context_provider;
+    agg.facts.uses_suspense |= facts.uses_suspense;
+    agg.facts.has_fetch |= !facts.fetches.is_empty();
+    agg.fetch_locations.extend(
+        facts
+            .fetches
+            .iter()
+            .map(|fetch| (fetch.file.clone(), fetch.line)),
+    );
 }
 
-fn merge_aggregate(agg: &mut AggregatedFacts, child: &AggregatedFacts) {
-    agg.has_state |= child.has_state;
-    agg.has_fetch |= child.has_fetch;
-    agg.uses_suspense |= child.uses_suspense;
-    agg.uses_context_provider |= child.uses_context_provider;
-    agg.uses_memo |= child.uses_memo;
-    agg.has_props |= child.has_props;
-    agg.passes_props |= child.passes_props;
+fn merge_aggregate(agg: &mut AggregateResult, child: &AggregateResult) {
+    agg.facts.has_state |= child.facts.has_state;
+    agg.facts.has_fetch |= child.facts.has_fetch;
+    agg.facts.uses_suspense |= child.facts.uses_suspense;
+    agg.facts.uses_context_provider |= child.facts.uses_context_provider;
+    agg.facts.uses_memo |= child.facts.uses_memo;
+    agg.facts.has_props |= child.facts.has_props;
+    agg.facts.passes_props |= child.facts.passes_props;
+    agg.fetch_locations
+        .extend(child.fetch_locations.iter().cloned());
 }
 
 #[cfg(test)]

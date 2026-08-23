@@ -1,7 +1,25 @@
 pub struct DepGraph {
     root: PathBuf,
+    /// Base canonical graph built from source facts. Vitest setup edges stay
+    /// compact until a graph traversal requests adjacency.
     edges: EdgeIndex<NodeId, EdgeKind>,
+    vitest_setup_projects: Vec<VitestSetupProject>,
+    effective_edges: OnceLock<EdgeIndex<NodeId, EdgeKind>>,
     parse_errors: HashMap<PathBuf, String>,
+    resource_edge_details: ResourceEdgeDetails,
+    resource_diagnostics: Vec<ResourceGraphDiagnostic>,
+}
+
+/// Compact Vitest project ownership retained until test-edge traversal.
+pub(crate) struct VitestSetupProject {
+    pub(crate) config: Option<String>,
+    pub(crate) scope: Option<String>,
+    pub(crate) filter: crate::codebase::test_discovery::ProjectTestFilter,
+    /// Visible files explicitly matched by this project's Vitest globs. These
+    /// may be non-TS/JS tests, so they do not necessarily have a base graph
+    /// node before lazy setup edges are materialized.
+    pub(crate) tests: Vec<PathBuf>,
+    pub(crate) setups: Vec<(PathBuf, VitestSetupField)>,
 }
 
 #[derive(Clone, Copy)]
@@ -13,6 +31,7 @@ enum SuppliedFactPolicy {
 pub(crate) struct PreparedGraphBuild<'a> {
     pub(crate) root: &'a Path,
     pub(crate) tsconfig: &'a TsConfig,
+    pub(crate) tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) plan: GraphBuildPlan,
     pub(crate) graph_files: &'a GraphFiles,
     pub(crate) config_path: Option<&'a Path>,
@@ -26,27 +45,7 @@ pub(crate) struct PreparedGraphBuild<'a> {
 }
 
 impl DepGraph {
-    /// Build from request-scoped files and config that the caller prepared
-    /// before entering a multi-consumer analysis fanout.
-    pub(crate) fn build_with_plan_files_prepared_config(
-        root: &Path,
-        tsconfig: &TsConfig,
-        plan: GraphBuildPlan,
-        graph_files: &GraphFiles,
-        config_path: Option<&Path>,
-        prepared: &PreparedGraphConfig,
-    ) -> Result<Self> {
-        Self::build_with_plan_files_prepared_config_and_facts(
-            root,
-            tsconfig,
-            plan,
-            graph_files,
-            config_path,
-            prepared,
-            None,
-        )
-    }
-
+    #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn build_with_plan_files_prepared_config_and_facts(
         root: &Path,
         tsconfig: &TsConfig,
@@ -86,6 +85,7 @@ impl DepGraph {
         let PreparedGraphBuild {
             root,
             tsconfig,
+            tsconfig_catalog,
             plan,
             graph_files,
             config_path,
@@ -100,16 +100,19 @@ impl DepGraph {
             GraphEdgeBuildInputs {
                 root,
                 tsconfig,
+                tsconfig_catalog,
                 plan,
                 graph_files,
                 workspace: Some(prepared.workspace()),
                 config_options: prepared.options.as_ref(),
-                playwright_settings: prepared.playwright_settings.as_ref(),
+                playwright_settings: prepared.playwright_settings.as_slice(),
                 config_path,
                 dotnet_facts,
                 swift_facts,
                 import_resolution_cache,
                 visible_paths,
+                workflow_documents: prepared.workflow_documents(),
+                interner: session.interner_arc(),
             },
             facts,
             SuppliedFactPolicy::RequireComplete,
@@ -126,27 +129,34 @@ impl DepGraph {
         prepared: &PreparedGraphConfig,
         swift_facts: &crate::codebase::swift::SwiftFactMap,
     ) -> Result<Self> {
+        let session =
+            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
         Self::build_with_plan_files_options_and_facts(
             GraphEdgeBuildInputs {
                 root,
                 tsconfig,
+                tsconfig_catalog: None,
                 plan,
                 graph_files,
                 workspace: Some(prepared.workspace()),
                 config_options: prepared.options.as_ref(),
-                playwright_settings: prepared.playwright_settings.as_ref(),
+                playwright_settings: prepared.playwright_settings.as_slice(),
                 config_path,
                 dotnet_facts: None,
                 swift_facts: Some(swift_facts),
                 import_resolution_cache: None,
                 visible_paths: None,
+                workflow_documents: prepared.workflow_documents(),
+                interner: session.interner_arc(),
             },
             None,
             SuppliedFactPolicy::RequireComplete,
-            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current()),
+            session,
         )
     }
 
+    /// Standalone/lazy graph build. Check, analyzeProject, and prepared-rule
+    /// builders require complete supplied facts instead of filling sparse gaps.
     pub(crate) fn build_with_plan_files_config_and_facts(
         root: &Path,
         tsconfig: &TsConfig,
@@ -155,25 +165,36 @@ impl DepGraph {
         config_path: Option<&Path>,
         facts: Option<&dyn TsFactLookup>,
     ) -> Result<Self> {
-        let config_options = graph_config_options_for_plan_with_config(root, plan, config_path);
+        let session =
+            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+        let config_options = graph_config_options_for_plan_with_config_and_session(
+            root,
+            plan,
+            config_path,
+            Some(&session),
+            Some(graph_files.all()),
+        );
         Self::build_with_plan_files_options_and_facts(
             GraphEdgeBuildInputs {
                 root,
                 tsconfig,
+                tsconfig_catalog: None,
                 plan,
                 graph_files,
                 workspace: None,
                 config_options: config_options.as_ref(),
-                playwright_settings: None,
+                playwright_settings: &[],
                 config_path,
                 dotnet_facts: None,
                 swift_facts: None,
                 import_resolution_cache: None,
                 visible_paths: None,
+                workflow_documents: None,
+                interner: session.interner_arc(),
             },
             facts,
             SuppliedFactPolicy::FillSparse,
-            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current()),
+            session,
         )
     }
 }

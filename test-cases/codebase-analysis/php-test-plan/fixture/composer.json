@@ -1,0 +1,6 @@
+{
+  "name": "example/api",
+  "require": {
+    "php": "^8.2"
+  }
+}

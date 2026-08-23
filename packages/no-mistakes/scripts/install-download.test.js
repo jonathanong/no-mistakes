@@ -204,6 +204,41 @@ test("download retries on transient 502 then succeeds", async () => {
   }
 });
 
+test("download absorbs a longer run of transient 502s under the default budget", async () => {
+  const root = await mkdtemp(join(tmpdir(), "no-mistakes-download-retry-"));
+  const destination = join(root, "asset.bin");
+  let hits = 0;
+  const server = createServer((_request, response) => {
+    hits += 1;
+    if (hits < 6) {
+      response.writeHead(502);
+      response.end("bad gateway");
+      return;
+    }
+    response.writeHead(200);
+    response.end("ok-bytes");
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const address = server.address();
+  const logger = { warn: () => {} };
+
+  try {
+    // No maxAttempts override: exercises the real DEFAULT_MAX_ATTEMPTS budget,
+    // which must be large enough to survive 5 consecutive transient failures
+    // (the old default of 4 attempts would have exhausted after hit 4).
+    await download(`http://127.0.0.1:${address.port}/asset`, destination, 0, () => {}, {
+      baseDelayMs: 1,
+      delay: () => Promise.resolve(),
+      logger,
+    });
+    assert.equal(await readFile(destination, "utf8"), "ok-bytes");
+    assert.equal(hits, 6);
+  } finally {
+    await new Promise((resolve) => server.close(resolve));
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("download exhausts retries on persistent 503", async () => {
   const root = await mkdtemp(join(tmpdir(), "no-mistakes-download-retry-"));
   const destination = join(root, "asset.bin");
@@ -424,8 +459,8 @@ test("withRetry falls back to defaults on invalid env values", async () => {
         ),
       /HTTP 502/,
     );
-    // default DEFAULT_MAX_ATTEMPTS is 4
-    assert.equal(calls, 4);
+    // default DEFAULT_MAX_ATTEMPTS is 6
+    assert.equal(calls, 6);
   } finally {
     if (prevAttempts === undefined) delete process.env.NO_MISTAKES_DOWNLOAD_MAX_ATTEMPTS;
     else process.env.NO_MISTAKES_DOWNLOAD_MAX_ATTEMPTS = prevAttempts;
@@ -493,10 +528,10 @@ test("computeBackoffMs respects cap and jitter", () => {
     computeBackoffMs(1, 500, () => 0.999),
     Math.floor(0.999 * 500),
   );
-  // attempt 10: very large, capped at 4000
+  // attempt 10: very large, capped at 30000
   assert.equal(
     computeBackoffMs(10, 500, () => 0.5),
-    Math.floor(0.5 * 4000),
+    Math.floor(0.5 * 30_000),
   );
   // random=0 → 0
   assert.equal(

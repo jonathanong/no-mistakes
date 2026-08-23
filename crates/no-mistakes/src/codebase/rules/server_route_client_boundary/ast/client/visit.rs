@@ -114,8 +114,10 @@ impl<'a> Visit<'a> for ClientHttpVisitor<'a> {
         if let Some(rest) = &arrow.params.rest {
             self.mark_binding_pattern_shadowed(&rest.rest.argument);
         }
-        self.mark_var_declarations_shadowed(&arrow.body.statements);
-        self.mark_lexical_declarations_shadowed(&arrow.body.statements);
+        if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
+            self.mark_var_declarations_shadowed(statements);
+            self.mark_lexical_declarations_shadowed(statements);
+        }
         walk::walk_arrow_function_expression(self, arrow);
         self.leave_scope();
     }

@@ -1,0 +1,12 @@
+name: ci
+on: push
+jobs:
+  deploy:
+    runs-on: ubuntu-slim
+    steps:
+      - name: Direct third-party
+        uses: aws-actions/configure-aws-credentials@v4
+        timeout-minutes: 2
+        with:
+          role-to-assume: ${{ vars.ROLE_ARN }}
+          action-timeout-s: "90"

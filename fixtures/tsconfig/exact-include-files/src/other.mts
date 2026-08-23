@@ -1,0 +1,1 @@
+export const otherModule = true;

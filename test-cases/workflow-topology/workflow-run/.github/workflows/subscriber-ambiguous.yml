@@ -1,0 +1,9 @@
+name: Subscriber Ambiguous
+on:
+  workflow_run:
+    workflows: ["Dup Source"]
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo report

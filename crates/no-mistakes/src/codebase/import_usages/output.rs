@@ -22,7 +22,7 @@ pub fn write_report(
 ) -> Result<()> {
     match format {
         Format::Json => {
-            serde_json::to_writer_pretty(&mut *out, report)?;
+            serde_json::to_writer(&mut *out, report)?;
             writeln!(out)?;
         }
         Format::Yml => {

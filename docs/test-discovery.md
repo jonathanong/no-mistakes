@@ -18,6 +18,7 @@ own discovery before any generic runner fallback runs.
 - Playwright top-level config `name` is policy metadata only. It is not a
   Playwright CLI `--project` value.
 - `TestExecutionTarget` describes executable command metadata: runner, config,
+  whether a Vitest source uses `--workspace`,
   optional executable project argument, base command, and runner arguments.
 
 ## Internal Project Metadata

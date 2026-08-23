@@ -1,85 +1,3 @@
-pub(crate) fn normalize_discovery_path(path: &Path) -> PathBuf {
-    let normalized = crate::codebase::ts_resolver::normalize_path(path);
-    if normalized.as_os_str().is_empty() {
-        PathBuf::from(".")
-    } else {
-        normalized
-    }
-}
-
-pub(crate) fn is_under_skipped_dir(root: &Path, path: &Path, extra_skip: &HashSet<&str>) -> bool {
-    path.strip_prefix(root).ok().is_some_and(|rel| {
-        rel.components().any(|component| {
-            let name = component.as_os_str().to_str();
-            name.is_some_and(|name| SKIP_DIRS.contains(&name) || extra_skip.contains(name))
-        })
-    })
-}
-
-struct DiscoveredPathViews {
-    visible: Vec<PathBuf>,
-    tracked: Vec<PathBuf>,
-}
-
-fn git_ls_path_views(root: &Path) -> std::io::Result<Option<DiscoveredPathViews>> {
-    let mut cmd = Command::new("git");
-    cmd.current_dir(root);
-    cmd.arg("ls-files").arg("-z").arg("-t");
-    cmd.env_remove("GIT_DIR")
-        .env_remove("GIT_COMMON_DIR")
-        .env_remove("GIT_WORK_TREE")
-        .env_remove("GIT_INDEX_FILE");
-    cmd.arg("--cached")
-        .arg("--others")
-        .arg("--exclude-standard");
-    let out = match crate::invocation::command_output(&mut cmd) {
-        Ok(output) => output,
-        Err(error) if error.kind() == std::io::ErrorKind::TimedOut => return Err(error),
-        Err(_) => return Ok(None),
-    };
-    if !out.status.success() {
-        return Ok(None);
-    }
-    Ok(Some(parse_git_tagged_paths(&out.stdout)))
-}
-
-fn parse_git_tagged_paths(output: &[u8]) -> DiscoveredPathViews {
-    let mut visible = Vec::new();
-    let mut tracked = Vec::new();
-    for record in output
-        .split(|byte| *byte == 0)
-        .filter(|record| !record.is_empty())
-    {
-        let [tag, b' ', path @ ..] = record else {
-            continue;
-        };
-        if path.is_empty() {
-            continue;
-        }
-        let path = git_output_path(path);
-        visible.push(path.clone());
-        if !matches!(*tag, b'?' | b'K') {
-            tracked.push(path);
-        }
-    }
-    visible.sort();
-    visible.dedup();
-    tracked.sort();
-    tracked.dedup();
-    DiscoveredPathViews { visible, tracked }
-}
-
-#[cfg(unix)]
-fn git_output_path(bytes: &[u8]) -> PathBuf {
-    use std::os::unix::ffi::OsStringExt;
-    std::ffi::OsString::from_vec(bytes.to_vec()).into()
-}
-
-#[cfg(not(unix))]
-fn git_output_path(bytes: &[u8]) -> PathBuf {
-    String::from_utf8_lossy(bytes).into_owned().into()
-}
-
 pub fn byte_offset_to_line(source: &str, byte_offset: usize) -> u32 {
     let end = byte_offset.min(source.len());
     let line = source[..end].bytes().filter(|&b| b == b'\n').count();
@@ -135,10 +53,14 @@ pub fn has_disable_line_comment(source: &str, stmt_line: u32, rule_id: &str) -> 
 /// - `// no-mistakes-disable-file <rule_id>: <reason>`
 /// - `// no-mistakes-disable-file <rule_id> <reason>`
 pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
+    disable_file_directive_line(source, rule_id).is_some()
+}
+
+fn disable_file_directive_line(source: &str, rule_id: &str) -> Option<u32> {
     let mut in_block_comment = false;
     let mut saw_hash_attribute = false;
 
-    for line in source.trim_start_matches('\u{FEFF}').lines() {
+    for (index, line) in source.trim_start_matches('\u{FEFF}').lines().enumerate() {
         let mut rest = line.trim();
 
         loop {
@@ -166,24 +88,22 @@ pub fn has_disable_file_comment(source: &str, rule_id: &str) -> bool {
 
             let comment_prefix_is_slash = rest.starts_with("//");
             saw_hash_attribute |= hash_attribute_comment_line(rest);
-            let Some(rest) = leading_comment_text(rest) else {
-                return false;
-            };
+            let rest = leading_comment_text(rest)?;
             let Some(after_directive) = rest.strip_prefix("no-mistakes-disable-file ") else {
                 break;
             };
             if saw_hash_attribute && comment_prefix_is_slash {
-                return false;
+                return None;
             }
             let rule_part = after_directive.trim();
             if rule_part_matches(rule_part, rule_id) {
-                return true;
+                return Some((index + 1) as u32);
             }
             break;
         }
     }
 
-    false
+    None
 }
 
 fn hash_attribute_comment_line(line: &str) -> bool {
@@ -227,3 +147,6 @@ fn rule_part_matches(rule_part: &str, rule_id: &str) -> bool {
         suffix.is_empty() || suffix.starts_with(':') || suffix.starts_with(char::is_whitespace)
     })
 }
+#[path = "disable_comments/directives.rs"]
+mod directives;
+pub use directives::{matching_disable_directive, DisableDirective};

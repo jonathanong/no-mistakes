@@ -3,7 +3,6 @@ use super::super::{
     RunnerConfigFacts,
 };
 use dashmap::DashMap;
-use std::collections::HashMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -14,7 +13,7 @@ pub(super) struct FinishMapInput {
     pub(super) plan: CheckFactPlan,
     pub(super) has_indexable_graph_only: bool,
     pub(super) files_discovered: usize,
-    pub(super) ts: HashMap<PathBuf, CheckFileFacts>,
+    pub(super) ts: crate::codebase::ts_source::FileIdMap<CheckFileFacts>,
     pub(super) playwright_source_files: Arc<Vec<PathBuf>>,
     pub(super) playwright_test_files_by_project: PlaywrightTestFilesByProject,
     pub(super) integration_runner_configs: RunnerConfigFacts,
@@ -49,10 +48,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         files,
         graph_files,
         graph_files_complete,
-        ts: ts
-            .into_iter()
-            .map(|(path, facts)| (path, Arc::new(facts)))
-            .collect(),
+        ts: ts.map_values(Arc::new),
         graph_plan: if has_indexable_graph_only {
             plan.graph
         } else {

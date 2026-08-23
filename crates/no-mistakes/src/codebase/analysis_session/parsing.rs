@@ -7,7 +7,7 @@ impl AnalysisSession {
     pub(crate) fn with_program<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: &Arc<str>,
         analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str) -> T,
     ) -> anyhow::Result<T> {
         let path = normalize_path(path);
@@ -15,16 +15,14 @@ impl AnalysisSession {
         let parse_started = Cell::new(false);
         let result = crate::ast::with_program_observed(
             &path,
-            source,
+            Arc::clone(source),
             || {
                 parse_started.set(true);
                 self.record_parse(&path);
             },
             analyze,
         );
-        if parse_started.get() && result.is_err() {
-            self.increment("parse.errors", 1);
-        }
+        self.record_parse_error_if(parse_started.get(), result.is_err());
         result
     }
 
@@ -33,38 +31,47 @@ impl AnalysisSession {
     pub(crate) fn with_recovered_program<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: &Arc<str>,
         analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str, Option<String>) -> T,
+    ) -> anyhow::Result<T> {
+        self.with_recovered_program_status(path, source, |program, source, diagnostic, _| {
+            analyze(program, source, diagnostic)
+        })
+    }
+
+    /// Recovered parser access with an explicit fatal-panic marker for fact
+    /// collectors that expose partial AST-derived results to sound queries.
+    pub(crate) fn with_recovered_program_status<T>(
+        &self,
+        path: &Path,
+        source: &Arc<str>,
+        analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str, Option<String>, bool) -> T,
     ) -> anyhow::Result<T> {
         let path = normalize_path(path);
         self.increment("parse.requests", 1);
         let parse_started = Cell::new(false);
-        let result = crate::ast::with_recovered_program_observed(
+        let result = crate::ast::with_recovered_program_status_observed(
             &path,
-            source,
+            Arc::clone(source),
             || {
                 parse_started.set(true);
                 self.record_parse(&path);
             },
-            |program, source, parse_error| {
-                if parse_started.get() && parse_error.is_some() {
-                    self.increment("parse.errors", 1);
-                }
-                analyze(program, source, parse_error)
+            |program, source, parse_error, panicked| {
+                self.record_parse_error_if(parse_started.get(), parse_error.is_some());
+                analyze(program, source, parse_error, panicked)
             },
         );
-        if parse_started.get() && result.is_err() {
-            self.increment("parse.errors", 1);
-        }
+        self.record_parse_error_if(parse_started.get(), result.is_err());
         result
     }
 
-    /// Parse through the recovered-program gateway while preserving the TS
-    /// fact collector's explicit unknown-extension fallback.
+    /// Parse unknown extensions as TypeScript while retaining recovered
+    /// diagnostics. This preserves the fact collector's direct-file fallback.
     pub(crate) fn with_recovered_typescript_program<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: &Arc<str>,
         analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str, Option<String>) -> T,
     ) -> anyhow::Result<T> {
         let path = normalize_path(path);
@@ -72,21 +79,17 @@ impl AnalysisSession {
         let parse_started = Cell::new(false);
         let result = crate::ast::with_recovered_typescript_program_observed(
             &path,
-            source,
+            Arc::clone(source),
             || {
                 parse_started.set(true);
                 self.record_parse(&path);
             },
             |program, source, parse_error| {
-                if parse_started.get() && parse_error.is_some() {
-                    self.increment("parse.errors", 1);
-                }
+                self.record_parse_error_if(parse_started.get(), parse_error.is_some());
                 analyze(program, source, parse_error)
             },
         );
-        if parse_started.get() && result.is_err() {
-            self.increment("parse.errors", 1);
-        }
+        self.record_parse_error_if(parse_started.get(), result.is_err());
         result
     }
 
@@ -95,7 +98,7 @@ impl AnalysisSession {
     pub(crate) fn with_legacy_symbols_program<T>(
         &self,
         path: &Path,
-        source: &str,
+        source: &Arc<str>,
         analyze: impl for<'a> FnOnce(&'a oxc_ast::ast::Program<'a>, &'a str, Option<String>) -> T,
     ) -> anyhow::Result<T> {
         let path = normalize_path(path);
@@ -103,21 +106,17 @@ impl AnalysisSession {
         let parse_started = Cell::new(false);
         let result = crate::ast::with_legacy_symbols_program_observed(
             &path,
-            source,
+            Arc::clone(source),
             || {
                 parse_started.set(true);
                 self.record_parse(&path);
             },
             |program, source, parse_error| {
-                if parse_started.get() && parse_error.is_some() {
-                    self.increment("parse.errors", 1);
-                }
+                self.record_parse_error_if(parse_started.get(), parse_error.is_some());
                 analyze(program, source, parse_error)
             },
         );
-        if parse_started.get() && result.is_err() {
-            self.increment("parse.errors", 1);
-        }
+        self.record_parse_error_if(parse_started.get(), result.is_err());
         result
     }
 
@@ -140,6 +139,12 @@ impl AnalysisSession {
         self.increment("parse.files", 1);
         if let Some(attempts) = &self.parse_attempts {
             *attempts.entry(path.to_path_buf()).or_default() += 1;
+        }
+    }
+
+    fn record_parse_error_if(&self, started: bool, failed: bool) {
+        if started && failed {
+            self.increment("parse.errors", 1);
         }
     }
 

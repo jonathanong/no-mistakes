@@ -1,10 +1,11 @@
 use super::HttpCall;
 use crate::codebase::ts_routes::refs::normalize_template;
 use crate::codebase::ts_source::{byte_offset_to_line, unwrap_ts_wrappers};
-use oxc_ast::ast::{Argument, Expression, Program};
-
-mod assignment_target;
-mod stmt;
+use oxc_ast::ast::{
+    Argument, CallExpression, ExportDefaultDeclaration, ExportDefaultDeclarationKind, Expression,
+    Program,
+};
+use oxc_ast_visit::{walk, Visit};
 
 const HTTP_VERBS: &[&str] = &["get", "post", "put", "patch", "delete", "head", "options"];
 
@@ -13,67 +14,74 @@ pub(super) fn extract_http_calls_from_program<'a>(
     source: &str,
     prefixes: &[&str],
 ) -> Vec<HttpCall> {
-    let mut results = Vec::new();
-    program
-        .body
-        .iter()
-        .for_each(|stmt| stmt::collect_from_stmt(stmt, source, prefixes, &mut results));
-    results
+    let mut visitor = HttpCallVisitor {
+        source,
+        prefixes,
+        http_ok: true,
+        results: Vec::new(),
+    };
+    visitor.visit_program(program);
+    visitor.results
 }
 
-fn collect_from_expr(expr: &Expression, source: &str, prefixes: &[&str], out: &mut Vec<HttpCall>) {
-    let expr = unwrap_ts_wrappers(expr);
-    match expr {
-        Expression::CallExpression(call) => {
-            let line = byte_offset_to_line(source, call.span.start as usize);
-            let is_http_verb_call = match &call.callee {
-                Expression::StaticMemberExpression(member) => {
-                    HTTP_VERBS.contains(&member.property.name.as_str())
-                }
-                _ => false,
-            };
-            let is_fetch_call = matches!(
-                unwrap_ts_wrappers(&call.callee),
-                Expression::Identifier(id) if id.name.as_str() == "fetch"
-            );
-            if is_http_verb_call || is_fetch_call {
-                if let Some(path) = static_path_arg(&call.arguments, 0) {
-                    if prefixes.iter().any(|p| path.starts_with(*p)) {
-                        out.push(HttpCall { path, line });
-                    }
-                }
-            }
-            collect_from_expr(&call.callee, source, prefixes, out);
-            for arg in &call.arguments {
-                if let Some(e) = arg.as_expression() {
-                    collect_from_expr(e, source, prefixes, out);
-                }
-            }
+pub(crate) fn record_http_call(
+    call: &CallExpression<'_>,
+    source: &str,
+    prefixes: &[&str],
+    out: &mut Vec<HttpCall>,
+) {
+    let line = byte_offset_to_line(source, call.span.start as usize);
+    let is_http_verb_call = match &call.callee {
+        Expression::StaticMemberExpression(member) => {
+            HTTP_VERBS.contains(&member.property.name.as_str())
         }
-        Expression::AwaitExpression(a) => collect_from_expr(&a.argument, source, prefixes, out),
-        Expression::ArrowFunctionExpression(arrow) => {
-            for s in &arrow.body.statements {
-                stmt::collect_from_stmt(s, source, prefixes, out);
-            }
+        _ => false,
+    };
+    let is_fetch_call = matches!(
+        unwrap_ts_wrappers(&call.callee),
+        Expression::Identifier(id) if id.name.as_str() == "fetch"
+    );
+    if !(is_http_verb_call || is_fetch_call) {
+        return;
+    }
+    let Some(path) = static_path_arg(&call.arguments, 0) else {
+        return;
+    };
+    if prefixes.iter().any(|prefix| path.starts_with(*prefix)) {
+        out.push(HttpCall { path, line });
+    }
+}
+
+pub(crate) fn export_default_allows_http(decl: &ExportDefaultDeclaration<'_>) -> bool {
+    matches!(
+        &decl.declaration,
+        ExportDefaultDeclarationKind::FunctionDeclaration(_)
+            | ExportDefaultDeclarationKind::ArrowFunctionExpression(_)
+    )
+}
+
+struct HttpCallVisitor<'a, 'b> {
+    source: &'a str,
+    prefixes: &'b [&'a str],
+    http_ok: bool,
+    results: Vec<HttpCall>,
+}
+
+impl<'a> Visit<'a> for HttpCallVisitor<'a, '_> {
+    fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        if self.http_ok {
+            record_http_call(call, self.source, self.prefixes, &mut self.results);
         }
-        Expression::ConditionalExpression(cond) => {
-            collect_from_expr(&cond.test, source, prefixes, out);
-            collect_from_expr(&cond.consequent, source, prefixes, out);
-            collect_from_expr(&cond.alternate, source, prefixes, out);
+        walk::walk_call_expression(self, call);
+    }
+
+    fn visit_export_default_declaration(&mut self, decl: &ExportDefaultDeclaration<'a>) {
+        let previous = self.http_ok;
+        if !export_default_allows_http(decl) {
+            self.http_ok = false;
         }
-        Expression::LogicalExpression(logical) => {
-            collect_from_expr(&logical.left, source, prefixes, out);
-            collect_from_expr(&logical.right, source, prefixes, out);
-        }
-        Expression::StaticMemberExpression(m) => {
-            collect_from_expr(&m.object, source, prefixes, out)
-        }
-        Expression::SequenceExpression(s) => {
-            for e in &s.expressions {
-                collect_from_expr(e, source, prefixes, out);
-            }
-        }
-        _ => {}
+        walk::walk_export_default_declaration(self, decl);
+        self.http_ok = previous;
     }
 }
 

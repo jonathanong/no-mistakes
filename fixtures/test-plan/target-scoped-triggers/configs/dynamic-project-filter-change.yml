@@ -1,0 +1,17 @@
+# The targeted dynamic-import rule consumes this project's root/include/exclude.
+projects:
+  dynamic-resources:
+    root: resources-b
+    include: [spec/**/*.test.ts]
+    exclude: [spec/**/*.flaky.test.ts]
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    projects: [dynamic-resources]
+tests:
+  vitest: { configs: vitest.config.mts }
+  playwright: { configs: playwright.config.mts }
+testPlan:
+  vitest:
+    environments: { pre-push: { globalConfigFallback: true } }
+  playwright:
+    environments: { pre-push: { globalConfigFallback: true } }

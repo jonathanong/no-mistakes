@@ -1,5 +1,5 @@
 use globset::GlobSet;
-use std::collections::{HashMap, HashSet};
+use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -13,8 +13,9 @@ pub struct TsFactContext {
     pub queue_project_factory_names: Vec<String>,
     pub http_prefixes: Vec<String>,
     pub effect_functions: HashMap<String, Option<String>>,
-    pub visible_files: Option<Arc<HashSet<PathBuf>>>,
+    pub visible_files: Option<Arc<crate::fx::PathSet>>,
     pub(crate) server_route_filter: Option<ServerRouteFactFilter>,
+    pub(crate) trpc_router_glob: Option<GlobSet>,
 }
 
 #[derive(Clone)]
@@ -112,15 +113,6 @@ impl TsFactContext {
         });
     }
 
-    pub fn set_visible_files(&mut self, files: impl IntoIterator<Item = PathBuf>) {
-        self.visible_files = Some(Arc::new(
-            files
-                .into_iter()
-                .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-                .collect(),
-        ));
-    }
-
     pub(crate) fn include(&mut self, other: Self) {
         for extractor in other.backend_route_extractors {
             self.add_backend_route_extractor(
@@ -150,10 +142,11 @@ impl TsFactContext {
             .server_route_filter
             .take()
             .or(other.server_route_filter);
+        self.trpc_router_glob = self.trpc_router_glob.take().or(other.trpc_router_glob);
         let mut visible = self
             .visible_files
             .take()
-            .map(|files| files.iter().cloned().collect::<HashSet<_>>())
+            .map(|files| files.iter().cloned().collect::<crate::fx::PathSet>())
             .unwrap_or_default();
         if let Some(other_visible) = other.visible_files {
             visible.extend(other_visible.iter().cloned());
@@ -176,6 +169,12 @@ impl TsFactContext {
             .unwrap_or(true)
     }
 
+    pub fn matches_trpc_router(&self, path: &Path) -> bool {
+        self.trpc_router_glob
+            .as_ref()
+            .is_some_and(|glob| self.matches_glob(path, glob))
+    }
+
     pub fn matches_glob(&self, path: &Path, glob: &GlobSet) -> bool {
         path.strip_prefix(&self.root)
             .map(|rel| glob.is_match(rel))
@@ -196,6 +195,9 @@ impl Default for TsFactContext {
             effect_functions: HashMap::new(),
             visible_files: None,
             server_route_filter: None,
+            trpc_router_glob: None,
         }
     }
 }
+
+include!("domain_visible.rs");

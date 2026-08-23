@@ -1,6 +1,12 @@
 # `no-mistakes queues`
 
-Analyze queue producer/worker relationships for BullMQ and glide-mq patterns.
+Analyze queue producer/worker relationships for configured queue frameworks.
+
+Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony Messenger
+sites emit the same canonical `queue-enqueue` / `queue-worker` graph edges.
+`queues edges|related|check` projects those language edges from the same
+facts as the dependency graph. TypeScript baseline fields stay identical
+when language packages are configured on a TypeScript-only tree.
 
 | Leaf command | Purpose |
 | --- | --- |

@@ -3,28 +3,42 @@
 // snake_case to match the serde-serialized output.
 
 export interface CiImpactOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   /** Changed file paths (relative to root or absolute). */
   files: string[];
 }
 
 export interface CiEnvOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   /** Environment variable name (case-sensitive). */
   var: string;
 }
 
 export interface ImpactedChecksOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
   base?: string;
   head?: string;
   changedFiles?: string[];
   changedFilesFile?: string;
+  /** Unified diff file path. Conflicts with `diffStdin` and `diffCommand`. */
   diff?: string;
+  /** Read a unified diff from stdin. Conflicts with `diff` and `diffCommand`. */
+  diffStdin?: boolean;
+  /** Shell command whose stdout is a unified diff. Conflicts with `diff` and `diffStdin`. */
+  diffCommand?: string;
+  /** Return configured generic commands only; skip test-framework discovery and selection. */
+  genericOnly?: boolean;
   /** Include ordered analysis phase timings in the returned report. */
   timings?: boolean;
 }
@@ -106,11 +120,18 @@ export interface ImpactedChecksTiming {
   duration_ms: number;
 }
 
+export interface ImpactedChecksEmptyResult {
+  code: "no-changed-files" | "no-impacted-checks";
+  message: string;
+}
+
 export interface ImpactedChecksReport {
   changed_files: string[];
   checks: CheckCommand[];
   warnings: Array<{ type: string; message: string; file: string }>;
   fallback_triggered: boolean;
+  /** Present only when no changed files or impacted checks were found. */
+  empty_result?: ImpactedChecksEmptyResult;
   /** Present only when `timings: true` was requested. */
   timings?: ImpactedChecksTiming[];
 }

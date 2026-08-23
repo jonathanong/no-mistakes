@@ -1,0 +1,11 @@
+on: push
+jobs:
+  left:
+    uses: ./.github/workflows/level-1.yml
+  right:
+    uses: ./.github/workflows/level-1.yml
+  consume:
+    needs: [left, right]
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: shared}

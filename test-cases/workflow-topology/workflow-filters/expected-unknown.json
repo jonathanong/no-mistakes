@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "workflows": [],
+  "jobs": [],
+  "edges": [],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "unknown-workflow-filter",
+      "message": "workflow filter does not match a repository workflow: unknown.yml",
+      "workflowPath": ".github/workflows/unknown.yml"
+    }
+  ]
+}

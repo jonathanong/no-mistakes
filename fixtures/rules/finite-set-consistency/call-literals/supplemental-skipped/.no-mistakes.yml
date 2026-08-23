@@ -1,0 +1,31 @@
+version: 2
+filesystem:
+  skipDirectories: [generated]
+tests:
+  vitest:
+    configs: vitest.config.mts
+rules:
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [generated/schedules.test.mts]
+      forbiddenFiles: [src/lazy.mts]
+      relationships: [import]
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: schedulerIds
+          file: generated/schedules.test.mts
+          kind: ts-call-first-string-argument
+          target: ai_agents.upsertJobScheduler
+        - name: registryIds
+          file: registry.mts
+          kind: ts-const-array-property
+          target: AI_AGENTS_SCHEDULED_JOBS
+          property: id
+      comparisons:
+        - left: schedulerIds
+          right: registryIds
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository

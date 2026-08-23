@@ -12,6 +12,7 @@ pub(crate) fn load_settings(
         cli_config,
         cli_playwright_configs,
         cli_project,
+        None,
         &visible_paths,
     )
 }

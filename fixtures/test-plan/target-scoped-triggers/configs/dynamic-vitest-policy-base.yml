@@ -1,0 +1,17 @@
+projects:
+  database-resources: { root: . }
+  union-resources: { root: . }
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    tests: { vitest: [database] }
+tests:
+  vitest:
+    configs: vitest.config.mts
+    projects:
+      database: { include: [src/db/db.test.ts] }
+  playwright: { configs: playwright.config.mts }
+testPlan:
+  vitest:
+    environments: { pre-push: { globalConfigFallback: true } }
+  playwright:
+    environments: { pre-push: { globalConfigFallback: true } }

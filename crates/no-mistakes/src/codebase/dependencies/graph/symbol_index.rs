@@ -1,23 +1,36 @@
-pub type ImporterRecord = (PathBuf, String, bool);
+/// Public importer row. Interned as `Arc<Path>` / `Arc<str>` so clones stay
+/// pointer-sized; convert to `PathBuf` / `String` at output boundaries.
+pub type ImporterRecord = (Arc<Path>, Arc<str>, bool);
 
 /// Index mapping (source_file, exported_symbol) → list of files importing that symbol.
 pub struct SymbolIndex {
-    map: HashMap<(PathBuf, String), Vec<ImporterRecord>>,
+    sources: HashMap<Arc<Path>, SourceIndex>,
+}
+
+struct SourceIndex {
+    by_symbol: HashMap<Arc<str>, Vec<ImporterRecord>>,
+    file_importers: Vec<Arc<Path>>,
 }
 
 impl SymbolIndex {
     pub fn build(symbols_by_file: &HashMap<PathBuf, Vec<(PathBuf, String, String, bool)>>) -> Self {
-        let mut map: HashMap<(PathBuf, String), Vec<ImporterRecord>> = HashMap::new();
+        let mut intern = SymbolIndexInterner::default();
+        let mut source_buckets = SourceBuckets::with_capacity(symbols_by_file.len());
 
         for (importer, imports) in symbols_by_file {
+            let importer = intern.path(importer);
             for (source, imported_name, local_name, is_reexport) in imports {
-                map.entry((source.clone(), imported_name.clone()))
-                    .or_default()
-                    .push((importer.clone(), local_name.clone(), *is_reexport));
+                source_buckets
+                    .entry(intern.path(source))
+                    .or_insert_with(|| Vec::with_capacity(imports.len()))
+                    .push((
+                        intern.string(imported_name),
+                        (importer.clone(), intern.string(local_name), *is_reexport),
+                    ));
             }
         }
 
-        Self { map }
+        Self::from_source_buckets(source_buckets)
     }
 
     /// Build a symbol import index for every indexable file under `root`.
@@ -44,26 +57,27 @@ impl SymbolIndex {
         graph_files: &GraphFiles,
         facts: &TsFactMap,
     ) -> Self {
-        let session = crate::codebase::analysis_session::AnalysisSession::new(
-            crate::diagnostics::current(),
-        );
+        let session =
+            crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
         Self::build_from_facts_with_session(root, tsconfig, graph_files, facts, &session)
     }
 
     pub(crate) fn build_from_facts_workspace_resolution_cache_and_session(
         tsconfig: &TsConfig,
+        tsconfig_catalog: Option<&crate::codebase::ts_resolver::TsConfigCatalog>,
         graph_files: &GraphFiles,
         facts: &dyn TsFactLookup,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
         import_resolution_cache: Option<&crate::codebase::ts_resolver::ImportResolutionCache>,
         session: &crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
-        let resolver = ImportResolver::new_observed(tsconfig, session.observer().cloned())
-            .with_visible(graph_files.visible());
-        let resolver = match import_resolution_cache {
-            Some(cache) => resolver.with_shared_cache(cache),
-            None => resolver,
-        };
+        let resolver = crate::codebase::ts_resolver::ProjectImportResolver::new(
+            tsconfig,
+            tsconfig_catalog,
+            graph_files,
+            import_resolution_cache,
+            session,
+        );
         session.record_work("symbol_index.builds", 1);
         Self::build_index(&resolver, graph_files, facts, workspace)
     }
@@ -82,6 +96,7 @@ impl SymbolIndex {
         let workspace = dataset.workspace();
         Self::build_from_facts_workspace_resolution_cache_and_session(
             tsconfig,
+            None,
             graph_files,
             facts,
             &workspace,
@@ -90,80 +105,50 @@ impl SymbolIndex {
         )
     }
 
-    fn build_index(
-        resolver: &ImportResolver<'_>,
-        graph_files: &GraphFiles,
-        facts: &dyn TsFactLookup,
-        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    ) -> Self {
-        type SymEntry = (PathBuf, String, String, bool);
+    fn from_source_buckets(source_buckets: SourceBuckets) -> Self {
+        let mut sources = HashMap::with_capacity(source_buckets.len());
 
-        let per_file: Vec<(PathBuf, Vec<SymEntry>)> = graph_files
-            .indexable()
-            .par_iter()
-            .filter_map(|path| {
-                let symbols = facts.get_ts_facts(path)?.symbols.as_ref()?;
+        for (source, entries) in source_buckets {
+            let mut importers = Vec::with_capacity(entries.len());
+            let mut by_symbol = HashMap::with_capacity(entries.len());
+            for (imported_name, importer) in entries {
+                importers.push(importer.0.clone());
+                by_symbol
+                    .entry(imported_name)
+                    .or_insert_with(Vec::new)
+                    .push(importer);
+            }
+            importers.sort_by(|left, right| left.as_os_str().cmp(right.as_os_str()));
+            importers.dedup();
+            sources.insert(
+                source,
+                SourceIndex {
+                    by_symbol,
+                    file_importers: importers,
+                },
+            );
+        }
 
-                let mut imports_for_file = Vec::new();
-                for ni in &symbols.imports {
-                    if let Some(target) = resolver
-                        .classify_import(&ni.source, path, workspace, graph_files.visible())
-                        .preferred_path() {
-                        imports_for_file.push((
-                            target.to_path_buf(),
-                            ni.imported.clone(),
-                            ni.local.clone(),
-                            false,
-                        ));
-                    }
-                }
-                for exp in &symbols.exports {
-                    if let crate::codebase::ts_symbols::ExportKind::ReExport { source, imported } =
-                        &exp.kind
-                    {
-                        if let Some(target) = resolver
-                            .classify_import(source, path, workspace, graph_files.visible())
-                            .preferred_path() {
-                            imports_for_file.push((
-                                target.to_path_buf(),
-                                imported.clone(),
-                                exp.name.clone(),
-                                true,
-                            ));
-                        }
-                    }
-                }
-
-                if imports_for_file.is_empty() {
-                    None
-                } else {
-                    Some((path.clone(), imports_for_file))
-                }
-            })
-            .collect();
-
-        let symbols_by_file: HashMap<PathBuf, Vec<SymEntry>> = per_file.into_iter().collect();
-
-        Self::build(&symbols_by_file)
+        Self { sources }
     }
 
     pub fn importers_of(&self, source: &Path, symbol: &str) -> Option<&Vec<ImporterRecord>> {
-        self.map.get(&(source.to_path_buf(), symbol.to_string()))
+        self.sources.get(source)?.by_symbol.get(symbol)
     }
 
     /// Files that import any exported symbol from `source`, regardless of which
     /// symbol. Deduplicated and sorted. Powers file-level reverse queries
     /// (`importers`, `exports-of`) without building the full dependency graph.
     pub fn file_importers(&self, source: &Path) -> Vec<PathBuf> {
-        let source = source.to_path_buf();
-        let mut importers: Vec<PathBuf> = self
-            .map
-            .iter()
-            .filter(|((file, _), _)| file == &source)
-            .flat_map(|(_, records)| records.iter().map(|(importer, _, _)| importer.clone()))
-            .collect();
-        importers.sort();
-        importers.dedup();
-        importers
+        self.sources
+            .get(source)
+            .map(|index| {
+                index
+                    .file_importers
+                    .iter()
+                    .map(|path| path.to_path_buf())
+                    .collect()
+            })
+            .unwrap_or_default()
     }
 }

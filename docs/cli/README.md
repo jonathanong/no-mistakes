@@ -11,8 +11,9 @@ Global `--jobs <N>` controls rayon worker count for commands that parallelize
 analysis.
 
 Every analysis invocation takes a per-user, machine-wide lock so CPU-intensive
-CLI and Node/N-API work cannot overlap, even across repositories. Lock waiting
-is silent and does not change successful stdout or JSON output. The following
+CLI and Node/N-API work cannot overlap, even across repositories. While waiting,
+stderr reports `waiting for lock held by pid <pid> for <n>s`. Successful stdout
+or JSON output is unchanged. The following
 root-global options are inherited by every nested command and may appear before
 or after the command name:
 
@@ -22,6 +23,11 @@ or after the command name:
   is `30`; `0` waits indefinitely.
 - `--fail-on-lock` fails immediately when another invocation holds the lock,
   overriding `--lock-timeout`.
+- `--profile ci` sets `--timeout 0 --lock-timeout 0` for CI jobs that should
+  wait for the machine-wide lock and run without a command deadline. Node
+  `profile: "ci"` clears any supplied `timeout` / `lockTimeout` the same way.
+  `ciTopology()` memoizes in-process by resolved root, config mtime, and
+  workflows filter so repeated calls in one process do not re-parse workflows.
 
 Command and lock-wait timeouts exit with status `124`. Immediate lock
 contention and lock setup errors exit with status `2`. Errors are written to
@@ -45,25 +51,33 @@ command name. See [Performance diagnostics](diagnostics.md).
 | [`exports-of`](exports-of.md) | A file's named exports and who imports each. |
 | [`dead-exports`](dead-exports.md) | Whether any file still imports the given exports. |
 | [`call-sites`](call-sites.md) | Call sites of an exported function with argument shapes. |
-| [`resolve-check`](resolve-check.md) | Whether all imports in a file resolve. |
+| [`resolve-check`](resolve-check.md) | Whether all imports in one or more files resolve. |
 | [`fetches`](fetches.md) | Next.js routes mapped to static fetch API calls. |
 | [`flow`](flow.md) | Compact dependency/symbol flow around one file or export. |
+| [`data-pw`](data-pw.md) | Find selector-attribute usages of a value across source and tests. |
+| [`effects`](effects.md) | Find configured transitive effect call sites from an entry file. |
+| [`rsc-callers`](rsc-callers.md) | Find server components/pages that import a component. |
+| [`registry-extension`](registry-extension.md) | Summarize how entries register in a registry file. |
 | [`check`](check.md) | Configured project-wide checks. |
+| [`config`](config.md) | Dump the effective resolved configuration ([`config resolve`](config-resolve.md)). |
 | [`lockfile`](lockfile.md) | Show which packages changed between two lockfile versions. |
 | [`tests`](tests.md) | Test plan, impact, explanation, comments, and graphs. |
 | [`playwright`](playwright.md) | Playwright route, selector, and assertion coverage. |
 | [`react`](react.md) | React component trait analysis and fetch checks. |
 | [`queues`](queues.md) | Queue producer/worker graph checks. |
-| [`server`](server.md) | Express, Hono, and Koa route graphs. |
-| [`ci`](ci.md) | GitHub Actions impact ([`ci-impact`](ci-impact.md)) and env usage ([`ci-env`](ci-env.md)). |
+| [`server`](server.md) | Express, Hono, Fastify, and Koa route graphs. |
+| [`ci`](ci.md) | GitHub Actions impact ([`ci-impact`](ci-impact.md)), env usage ([`ci-env`](ci-env.md)), and workflow topology ([`ci-topology`](ci-topology.md)). |
 | [`impacted-checks`](impacted-checks.md) | Minimal local validation commands for changed files. |
 | [`infra`](infra.md) | Terraform/OpenTofu resource, module, and output relationships. |
 | [`swift`](swift.md) | Swift package importers and covering test targets. |
 
+The [graph reference](graph.md) explains shared options and relationship
+filters used by the graph commands.
+
 ## Shared Output Formats
 
 Most commands accept `--format json|yml|md|paths|human` plus `--json`.
-`human` is for reading, `json` is for agents, and `paths` is for follow-up test
+`human` is for reading, `json` is compact JSON for agents, and `paths` is for follow-up test
 or lint commands.
 
 ## Examples And Counterexamples

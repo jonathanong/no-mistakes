@@ -1,24 +1,25 @@
 impl PreparedScope {
     pub(super) fn graph_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
         direction: Direction,
-    ) -> Result<Value> {
+    ) -> Result<Box<RawValue>> {
         let args = super::traverse_args(request, options)?;
         let cwd = std::env::current_dir().context("reading current directory")?;
-        let result = crate::codebase::dependencies::collect_and_filter_entries_shared(
+        let result = crate::codebase::dependencies::collect_and_filter_entries_prepared(
             &args,
             direction,
             &cwd,
-            &mut self.traversal,
-        )?;
-        let json = crate::codebase::dependencies::result_json(&args, &result)?;
-        Ok(serde_json::from_str(&json)?)
+            &self.traversal,
+        );
+        let result = result?;
+        let bytes = crate::codebase::dependencies::result_json_bytes(&args, &result)?;
+        json_raw_bytes(bytes)
     }
 
     pub(super) fn import_usages_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -31,13 +32,14 @@ impl PreparedScope {
         let report = crate::codebase::import_usages::collect_with_facts(
             &root,
             prepared,
-            self.traversal.facts(),
-        )?;
+            self.traversal.prepared_facts(),
+        );
+        let report = report?;
         Ok(serde_json::to_value(report)?)
     }
 
     pub(super) fn symbols_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -49,22 +51,23 @@ impl PreparedScope {
             return Ok(serde_json::from_str(&output)?);
         }
         let session = self.traversal.session_arc();
-        let (entries, roots) = crate::codebase::symbols::collect_entries_with_prepared_facts(
+        let collected = crate::codebase::symbols::collect_entries_with_prepared_facts(
             &args,
             self.traversal.root(),
-            self.traversal.tsconfig(),
-            self.traversal.graph_files().visible(),
+            self.traversal.tsconfig_catalog(),
+            self.traversal.graph_files(),
             &self.facts,
             &self.symbol_facts,
             &session,
-        )?;
+        );
+        let (entries, roots) = collected?;
         let mut output = Vec::new();
         crate::codebase::symbols::output::write_json(&roots, &entries, &mut output)?;
         Ok(serde_json::from_slice(&output)?)
     }
 
     pub(super) fn flow_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -75,7 +78,7 @@ impl PreparedScope {
     }
 
     pub(super) fn effects_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -92,16 +95,16 @@ impl PreparedScope {
             self.traversal.config(),
             kind,
             &parsed.categories,
-        )?;
-        Ok(serde_json::to_value(self.traversal.effects_report(
-            &selection,
-            Path::new(entry),
-            parsed.depth,
-        )?)?)
+        );
+        let selection = selection?;
+        let report = self
+            .traversal
+            .effects_report(&selection, Path::new(entry), parsed.depth)?;
+        Ok(serde_json::to_value(report)?)
     }
 
     pub(super) fn rsc_callers_report(
-        &mut self,
+        &self,
         request: &AnalyzeReportRequest,
         options: &AnalyzeProjectOptions,
     ) -> Result<Value> {
@@ -110,9 +113,9 @@ impl PreparedScope {
             .component
             .as_deref()
             .context("component is required for rsc-callers")?;
-        Ok(serde_json::to_value(
-            self.traversal
-                .rsc_callers_report(Path::new(component), parsed.depth)?,
-        )?)
+        let report = self
+            .traversal
+            .rsc_callers_report(Path::new(component), parsed.depth)?;
+        Ok(serde_json::to_value(report)?)
     }
 }

@@ -1,0 +1,20 @@
+[
+  {
+    "extends": true,
+    "test": {
+      "name": "json-extends-true",
+      "root": "./true",
+      "include": ["**/*.test.ts"],
+      "setupFiles": "./setup.ts"
+    }
+  },
+  {
+    "extends": false,
+    "test": {
+      "name": "json-extends-false",
+      "root": "./false",
+      "include": ["**/*.test.ts"],
+      "globalSetup": "./global.ts"
+    }
+  }
+]

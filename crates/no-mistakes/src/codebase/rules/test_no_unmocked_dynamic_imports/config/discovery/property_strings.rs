@@ -1,10 +1,7 @@
 use regex::Regex;
 
-pub(in crate::codebase::rules::test_no_unmocked_dynamic_imports::config) fn extract_property_strings(
-    source: &str,
-    property: &str,
-) -> Vec<String> {
-    let re = Regex::new(&format!(r#"\b{}\s*:\s*"#, regex::escape(property)))
+pub(crate) fn extract_property_strings(source: &str, property: &str) -> Vec<String> {
+    let re = Regex::new(&format!(r#"(?:\b{0}|"{0}")\s*:"#, regex::escape(property)))
         .expect("property regex compiles");
     let mut strings = Vec::new();
     for mat in re.find_iter(source) {

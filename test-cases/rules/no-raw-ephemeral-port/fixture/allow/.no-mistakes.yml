@@ -1,0 +1,6 @@
+rules:
+  - rule: no-raw-ephemeral-port
+    scope: repository
+    options:
+      allow:
+        - binder.ts

@@ -273,7 +273,11 @@ keys: [paths.required]
     )
     .unwrap();
 
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("failed to parse YAML"),
+        "{findings:?}"
+    );
 }
 
 #[test]

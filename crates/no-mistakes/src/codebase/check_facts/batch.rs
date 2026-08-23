@@ -1,6 +1,6 @@
 use super::{CheckFactMap, CheckFactPlan, PlaywrightFactPlan};
 use rayon::prelude::*;
-use std::collections::{BTreeMap, HashMap};
+use std::collections::BTreeMap;
 use std::path::PathBuf;
 use std::sync::Arc;
 
@@ -51,7 +51,11 @@ pub(crate) fn collect_check_fact_batch_with_session(
         .while_some()
         .collect::<Vec<_>>();
     let mut precollected = (0..requests.len())
-        .map(|_| HashMap::new())
+        .map(|index| {
+            crate::codebase::ts_source::FileIdMap::with_inventory(Arc::clone(
+                requests[index].sources.inventory(),
+            ))
+        })
         .collect::<Vec<_>>();
     for (path, demands, facts) in collected
         .into_iter()
@@ -99,20 +103,14 @@ fn demands_by_path(requests: &[BatchCheckFactRequest]) -> BTreeMap<PathBuf, Vec<
             plans.insert(normalize(path), request.plan.clone());
         }
         for path in graph_only {
-            plans
-                .entry(normalize(&path))
-                .or_insert_with(|| graph_plan.clone());
+            plans.entry(normalize(&path)).or_insert(graph_plan.clone());
         }
         if let Some(playwright) = &request.playwright {
             for path in playwright.paths() {
-                plans
-                    .entry(normalize(path))
-                    .or_insert_with(|| graph_plan.clone());
+                plans.entry(normalize(path)).or_insert(graph_plan.clone());
             }
             for path in playwright.source_files().iter() {
-                let plan = plans
-                    .entry(normalize(path))
-                    .or_insert_with(|| graph_plan.clone());
+                let plan = plans.entry(normalize(path)).or_insert(graph_plan.clone());
                 // Staged Playwright decides whether source imports are needed
                 // after test facts exist. Collect that request-local superset
                 // in the same parse; map assembly retains the exact graph plan.

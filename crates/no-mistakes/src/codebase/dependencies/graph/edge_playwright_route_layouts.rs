@@ -1,4 +1,4 @@
-use super::{Edge, EdgeKind, NodeId};
+use super::{Edge, EdgeKind, NodeId, PathInterner};
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
@@ -31,10 +31,11 @@ pub(super) fn route_and_layout_edges(
     page_file: PathBuf,
     frontend_root: &Path,
     all_files: &HashSet<PathBuf>,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     let mut edges = vec![(
-        NodeId::File(test_file),
-        NodeId::File(page_file.clone()),
+        NodeId::file_in(interner, test_file),
+        NodeId::file_in(interner, page_file.as_path()),
         EdgeKind::RouteTest,
     )];
     edges.extend(
@@ -42,8 +43,8 @@ pub(super) fn route_and_layout_edges(
             .into_iter()
             .map(|layout_file| {
                 (
-                    NodeId::File(page_file.clone()),
-                    NodeId::File(layout_file),
+                    NodeId::file_in(interner, page_file.as_path()),
+                    NodeId::file_in(interner, layout_file),
                     EdgeKind::Layout,
                 )
             }),

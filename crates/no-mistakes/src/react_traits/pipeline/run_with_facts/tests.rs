@@ -2,7 +2,8 @@ use super::*;
 use crate::codebase::check_facts::{CheckFactMap, CheckFileFacts};
 use crate::react_traits::analyze::file::FileAnalysis;
 use crate::react_traits::report::types::{ComponentRef, Environment, FetchCall};
-use std::collections::HashMap;
+
+mod suppression;
 
 fn fixture(name: &str) -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -48,7 +49,7 @@ fn facts(entries: Vec<(PathBuf, Vec<ComponentFacts>)>) -> CheckFactMap {
                     }),
                 )
             })
-            .collect::<HashMap<_, _>>(),
+            .collect::<crate::codebase::ts_source::FileIdMap<_>>(),
         stats: Default::default(),
         ..Default::default()
     }
@@ -75,6 +76,7 @@ fn run_analyze_inner_with_facts_uses_root_matches_and_cached_children() {
         file: child.file.clone(),
         exported_name: None,
         shape: None,
+        line: 1,
     });
     let shared = facts(vec![(parent_path, vec![parent]), (child_path, vec![child])]);
     let file_config = FileConfig {
@@ -137,7 +139,8 @@ fn run_analyze_inner_with_facts_covers_fallback_missing_cache_and_errors() {
         frontend_root: Some("app".to_string()),
         assert_no_fetch: None,
     };
-    let shared = facts(Vec::new());
+    let mut shared = facts(Vec::new());
+    shared.files.push(root.join("app/components/Child.tsx"));
 
     let missing_cache = run_analyze_inner_with_facts(
         &root,

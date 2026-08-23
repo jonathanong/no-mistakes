@@ -21,7 +21,7 @@ fn walk_expression(expr: &Expression, v: &mut dyn Visitor) {
             walk_member_expression(a.left.as_member_expression(), v);
             walk_expression(&a.right, v);
         }
-        Expression::ArrowFunctionExpression(a) => walk_statements(&a.body.statements, v),
+        Expression::ArrowFunctionExpression(a) => walk_arrow_function_expression(a, v),
         Expression::FunctionExpression(f) => {
             walk_function_body(f.body.as_deref(), v);
         }
@@ -55,6 +55,19 @@ fn walk_expression(expr: &Expression, v: &mut dyn Visitor) {
         Expression::JSXElement(elem) => walk_jsx_element(elem, v),
         Expression::JSXFragment(frag) => walk_jsx_children(&frag.children, v),
         _ => {}
+    }
+}
+
+fn walk_arrow_function_expression(
+    arrow: &oxc_ast::ast::ArrowFunctionExpression,
+    v: &mut dyn Visitor,
+) {
+    if let Some(expression) = arrow.body.as_expression() {
+        walk_expression(expression, v);
+        return;
+    }
+    if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
+        walk_statements(statements, v);
     }
 }
 
@@ -136,10 +149,6 @@ fn walk_optional_statement(stmt: Option<&Statement>, v: &mut dyn Visitor) {
     let _ = stmt.map(|stmt| walk_statement(stmt, v));
 }
 
-fn walk_optional_declaration(decl: Option<&Declaration>, v: &mut dyn Visitor) {
-    let _ = decl.map(|decl| walk_declaration(decl, v));
-}
-
 fn walk_jsx_element(elem: &JSXElement, v: &mut dyn Visitor) {
     v.visit_jsx_opening(&elem.opening_element);
     for attr in &elem.opening_element.attributes {
@@ -174,4 +183,3 @@ fn walk_jsx_child(child: &JSXChild, v: &mut dyn Visitor) {
         _ => {}
     }
 }
-

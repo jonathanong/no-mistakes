@@ -1,13 +1,12 @@
 use super::{shared, Options};
-use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
+use crate::codebase::ts_resolver::ImportResolution;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use anyhow::Result;
-use oxc_ast::ast::Statement::ExpressionStatement;
 use oxc_ast::ast::{
-    ArrayExpression, ArrayExpressionElement, Expression, FunctionBody, ObjectExpression, Program,
-    Statement,
+    ArrayExpression, ArrayExpressionElement, ArrowFunctionBody, Expression, FunctionBody,
+    ObjectExpression, Program, Statement,
 };
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 mod calls;
@@ -24,7 +23,7 @@ mod root_spreads;
 use function_returns::body_return_options;
 use functions::top_level_function_bodies;
 use imports::{import_bindings, ImportBinding};
-pub(super) use root_options::{root_options, root_options_from_visible};
+pub(super) use root_options::root_options;
 
 type ExprMap<'a> = BTreeMap<String, &'a Expression<'a>>;
 type FnMap<'a> = BTreeMap<String, &'a FunctionBody<'a>>;
@@ -34,7 +33,7 @@ pub(super) struct Ctx<'a, 'r> {
     bindings: ExprMap<'a>,
     functions: FnMap<'a>,
     imports: BTreeMap<String, ImportBinding>,
-    resolver: &'r ImportResolver<'r>,
+    resolver: &'r dyn ImportResolution,
     path: &'r Path,
     seen: &'r mut BTreeSet<PathBuf>,
     local_seen: &'r mut BTreeSet<String>,
@@ -46,20 +45,9 @@ pub(super) fn project_options(
     object: &ObjectExpression<'_>,
     source: &str,
     path: &Path,
-    tsconfig: &TsConfig,
+    resolver: &dyn ImportResolution,
 ) -> Result<Vec<Options>> {
-    project_options_inner(program, object, source, path, tsconfig, None)
-}
-
-pub(super) fn project_options_from_visible(
-    program: &Program<'_>,
-    object: &ObjectExpression<'_>,
-    source: &str,
-    path: &Path,
-    tsconfig: &TsConfig,
-    visible_files: &HashSet<PathBuf>,
-) -> Result<Vec<Options>> {
-    project_options_inner(program, object, source, path, tsconfig, Some(visible_files))
+    project_options_inner(program, object, source, path, resolver)
 }
 
 fn project_options_inner(
@@ -67,13 +55,8 @@ fn project_options_inner(
     object: &ObjectExpression<'_>,
     source: &str,
     path: &Path,
-    tsconfig: &TsConfig,
-    visible_files: Option<&HashSet<PathBuf>>,
+    resolver: &dyn ImportResolution,
 ) -> Result<Vec<Options>> {
-    let resolver = match visible_files {
-        Some(visible) => ImportResolver::new(tsconfig).with_visible(visible),
-        None => ImportResolver::new(tsconfig),
-    };
     let mut seen = BTreeSet::new();
     let mut local_seen = BTreeSet::new();
     let mut object_seen = BTreeSet::new();
@@ -82,7 +65,7 @@ fn project_options_inner(
         bindings: shared::top_level_object_bindings(program),
         functions: top_level_function_bodies(program),
         imports: import_bindings(program),
-        resolver: &resolver,
+        resolver,
         path,
         seen: &mut seen,
         local_seen: &mut local_seen,
@@ -157,25 +140,16 @@ pub(super) fn helper_expression_options(
 ) -> Result<Vec<Options>> {
     let expression = unwrap_ts_wrappers(expression);
     match expression {
-        Expression::ArrowFunctionExpression(arrow) if arrow.expression => {
-            expression_statement_options(&arrow.body, ctx)
-        }
-        Expression::ArrowFunctionExpression(arrow) => body_return_options(&arrow.body, ctx),
+        Expression::ArrowFunctionExpression(arrow) => match &arrow.body {
+            ArrowFunctionBody::FunctionBody(body) => body_return_options(body, ctx),
+            _ => expression_options(arrow.body.to_expression(), ctx),
+        },
         Expression::FunctionExpression(function) => match function.body.as_deref() {
             Some(body) => body_return_options(body, ctx),
             None => Ok(Vec::new()),
         },
         _ => expression_options(expression, ctx),
     }
-}
-
-#[rustfmt::skip]
-pub(super) fn expression_statement_options(
-    body: &FunctionBody<'_>,
-    ctx: &mut Ctx<'_, '_>,
-) -> Result<Vec<Options>> {
-    let Some(ExpressionStatement(statement)) = body.statements.first() else { return Ok(Vec::new()) };
-    expression_options(&statement.expression, ctx)
 }
 
 pub(in crate::integration_tests::test_config::playwright::project_arrays) fn imported_options(

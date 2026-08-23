@@ -153,6 +153,7 @@ fn route_import_resolution_tolerates_missing_source_directories() {
         std::slice::from_ref(&source),
         &facts,
         &tsconfig,
+        None,
         &graph_files,
         &session,
     )
@@ -161,6 +162,27 @@ fn route_import_resolution_tolerates_missing_source_directories() {
         route_import_resolution_source(Path::new("/"), &Default::default()),
         PathBuf::from("/")
     );
+}
+
+#[test]
+fn route_import_resolution_source_joins_a_canonical_parent_or_keeps_dotdot() {
+    let mut dirs = std::collections::BTreeMap::new();
+    dirs.insert(PathBuf::from("foo"), PathBuf::from("/canonical"));
+    assert_eq!(
+        route_import_resolution_source(Path::new("foo/bar.ts"), &dirs),
+        PathBuf::from("/canonical/bar.ts")
+    );
+    assert_eq!(
+        route_import_resolution_source(Path::new("foo/.."), &dirs),
+        PathBuf::from("foo/..")
+    );
+    let graph_files = GraphFiles::from_files(vec![PathBuf::from("..")]);
+    assert!(route_import_visible_target(
+        PathBuf::from("/missing-target.ts"),
+        &graph_files,
+        &Default::default(),
+    )
+    .is_none());
 }
 
 #[cfg(unix)]
@@ -235,7 +257,7 @@ fn route_import_edges_resolve_from_direct_symlink_target() {
     .expect("symlink route-import graph builds");
     let allowed = HashSet::from([EdgeKind::RouteImport]);
     let dependencies = graph.deps_of(
-        &[NodeId::File(root.join("playwright.config.ts"))],
+        &[NodeId::file(root.join("playwright.config.ts"))],
         None,
         Some(&allowed),
     );

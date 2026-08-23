@@ -21,3 +21,8 @@ This rule scans HTML IDs independently of
 [`tests.playwright.selectors.htmlIds`](../configuration/tests.md). Setting
 `htmlIds: false` keeps IDs out of `playwright-coverage`, but does not suppress
 duplicate-ID findings from `playwright-unique-html-ids`.
+
+When `tests.playwright: [<project>]` targets a Playwright project and more
+than one `type: nextjs` project is configured, that Playwright project needs
+a frontend-app binding — see
+[Multiple frontend apps](../configuration/tests.md#multiple-frontend-apps).

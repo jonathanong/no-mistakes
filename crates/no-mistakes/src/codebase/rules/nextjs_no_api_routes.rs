@@ -8,7 +8,7 @@ use anyhow::Result;
 use std::path::{Path, PathBuf};
 
 mod aggregate;
-pub(crate) use aggregate::{check_with_facts, check_with_facts_and_inferred};
+pub(crate) use aggregate::check_with_facts_for_aggregate;
 
 pub const RULE_ID: &str = "nextjs-no-api-routes";
 
@@ -36,8 +36,12 @@ fn finding_for_file(
     target_roots: &[PathBuf],
     path: &Path,
     source: &str,
+    defer_suppression: bool,
 ) -> Option<RuleFinding> {
-    if has_disable_file_comment(source, RULE_ID) || has_disable_line_comment(source, 1, RULE_ID) {
+    if !defer_suppression
+        && (has_disable_file_comment(source, RULE_ID)
+            || has_disable_line_comment(source, 1, RULE_ID))
+    {
         return None;
     }
     if !target_roots

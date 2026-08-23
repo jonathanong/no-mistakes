@@ -137,6 +137,36 @@ fn type_import_relationship_fires_on_type_import() {
 }
 
 #[test]
+fn import_workspace_relationships_exclude_resource_only_paths() {
+    let root = fixture("forbidden-dependencies-import-workspace");
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let findings = check(&root, &config, None).unwrap();
+    let targets = findings
+        .iter()
+        .filter_map(|finding| finding.target.as_deref())
+        .collect::<Vec<_>>();
+
+    assert!(
+        targets.contains(&"sharp"),
+        "expected import finding: {findings:?}"
+    );
+    assert!(
+        targets
+            .iter()
+            .any(|target| target.ends_with("packages/local/src/worker.mts")),
+        "expected workspace-chain finding: {findings:?}"
+    );
+    // The fixture intentionally contains a resource edge so broadening this
+    // import boundary back to the default relationship set fails loudly.
+    assert!(
+        !targets
+            .iter()
+            .any(|target| target.ends_with("resource-only.txt")),
+        "resource-only target must stay outside the import boundary: {findings:?}"
+    );
+}
+
+#[test]
 fn multiple_applications_each_fire_independently() {
     let root = fixture("forbidden-dependencies-multi");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
@@ -317,19 +347,20 @@ fn queue_job_nodes_are_not_matched() {
     let root = fixture("forbidden-dependencies-basic");
     let root_file = crate::codebase::ts_resolver::normalize_path(&root.join("entrypoints/api.mts"));
     let queue_file = crate::codebase::ts_resolver::normalize_path(&root.join("jobs/queue.mts"));
-    let root_node = NodeId::File(root_file.clone());
-    let queue_node = NodeId::QueueJob {
-        queue_file: queue_file.clone(),
-        job: "process".to_string(),
-    };
-    let forward = std::collections::HashMap::from([(
+    let root_node = NodeId::file(root_file.clone());
+    let queue_node = NodeId::queue_job(queue_file.clone(), "process");
+    let forward = [(
         root_node.clone(),
         vec![(queue_node.clone(), EdgeKind::QueueEnqueue)],
-    )]);
-    let reverse = std::collections::HashMap::from([(
+    )]
+    .into_iter()
+    .collect();
+    let reverse = [(
         queue_node.clone(),
         vec![(root_node.clone(), EdgeKind::QueueEnqueue)],
-    )]);
+    )]
+    .into_iter()
+    .collect();
     let graph = from_typed_maps(root.clone(), forward, reverse);
     let opts = Options {
         roots: vec!["entrypoints/api.mts".to_string()],

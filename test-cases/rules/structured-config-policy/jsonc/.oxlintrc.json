@@ -1,0 +1,13 @@
+{
+  // oxlint accepts JSONC comments
+  "legacy": true,
+  "rules": {
+    "no-restricted-properties": [
+      "error",
+      {
+        "property": "bind",
+        "message": "Function.prototype.bind is banned"
+      }
+    ]
+  }
+}

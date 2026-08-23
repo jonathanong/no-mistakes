@@ -1,0 +1,522 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/main.yml",
+      "path": ".github/workflows/main.yml",
+      "name": "main.yml",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/main.yml#ambiguous-matrix",
+        ".github/workflows/main.yml#build-matrix",
+        ".github/workflows/main.yml#call-matrix",
+        ".github/workflows/main.yml#conditional-matrix",
+        ".github/workflows/main.yml#consume-ambiguous",
+        ".github/workflows/main.yml#consume-call-matrix",
+        ".github/workflows/main.yml#consume-conditional",
+        ".github/workflows/main.yml#consume-pattern",
+        ".github/workflows/main.yml#consume-unique",
+        ".github/workflows/main.yml#unique-per-cell"
+      ]
+    },
+    {
+      "id": ".github/workflows/upload.yml",
+      "path": ".github/workflows/upload.yml",
+      "name": "upload.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/upload.yml#upload"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/main.yml#ambiguous-matrix",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "ambiguous-matrix",
+      "kind": "matrix-template",
+      "matrix": {
+        "os": [
+          "linux",
+          "macos"
+        ]
+      },
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "shared-matrix",
+              "value": "shared-matrix",
+              "instanceCount": 2
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#build-matrix",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "build-matrix",
+      "kind": "matrix-template",
+      "matrix": {
+        "os": [
+          "linux",
+          "macos"
+        ]
+      },
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "finite",
+              "raw": "build-${{ matrix.os }}",
+              "values": [
+                "build-linux",
+                "build-macos"
+              ],
+              "instanceCounts": {
+                "build-linux": 1,
+                "build-macos": 1
+              }
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#call-matrix",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "call-matrix",
+      "kind": "matrix-template",
+      "matrix": {
+        "os": [
+          "linux",
+          "macos"
+        ]
+      },
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/main.yml#conditional-matrix",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "conditional-matrix",
+      "kind": "matrix-template",
+      "condition": "${{ inputs.enabled }}",
+      "matrix": {
+        "os": [
+          "linux",
+          "macos"
+        ]
+      },
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "conditional-shared",
+              "value": "conditional-shared",
+              "instanceCount": 2
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-ambiguous",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-ambiguous",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "shared-matrix",
+                "value": "shared-matrix"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-call-matrix",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-call-matrix",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "reusable-shared",
+                "value": "reusable-shared"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-conditional",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-conditional",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "conditional-shared",
+                "value": "conditional-shared"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-pattern",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-pattern",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "pattern",
+              "pattern": {
+                "kind": "static",
+                "raw": "build-*",
+                "value": "build-*"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-unique",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-unique",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "build-linux-22",
+                "value": "build-linux-22"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#unique-per-cell",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "unique-per-cell",
+      "kind": "matrix-template",
+      "matrix": {
+        "os": [
+          "linux",
+          "macos"
+        ],
+        "node": [
+          22,
+          24
+        ]
+      },
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "finite",
+              "raw": "build-${{ matrix.os }}-${{ matrix.node }}",
+              "values": [
+                "build-linux-22",
+                "build-linux-24",
+                "build-macos-22",
+                "build-macos-24"
+              ],
+              "instanceCounts": {
+                "build-linux-22": 1,
+                "build-linux-24": 1,
+                "build-macos-22": 1,
+                "build-macos-24": 1
+              }
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/upload.yml#upload",
+      "workflowId": ".github/workflows/upload.yml",
+      "key": "upload",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "reusable-shared",
+              "value": "reusable-shared"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#build-matrix",
+      "to": ".github/workflows/main.yml#consume-pattern",
+      "name": "build-linux",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "pattern"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#build-matrix",
+      "to": ".github/workflows/main.yml#consume-pattern",
+      "name": "build-macos",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "pattern"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#conditional-matrix",
+      "to": ".github/workflows/main.yml#consume-conditional",
+      "name": "conditional-shared",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#unique-per-cell",
+      "to": ".github/workflows/main.yml#consume-pattern",
+      "name": "build-linux-22",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#unique-per-cell",
+      "to": ".github/workflows/main.yml#consume-pattern",
+      "name": "build-linux-24",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#unique-per-cell",
+      "to": ".github/workflows/main.yml#consume-pattern",
+      "name": "build-macos-22",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#unique-per-cell",
+      "to": ".github/workflows/main.yml#consume-pattern",
+      "name": "build-macos-24",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#unique-per-cell",
+      "to": ".github/workflows/main.yml#consume-unique",
+      "name": "build-linux-22",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "exact"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/main.yml#call-matrix",
+      "target": "./.github/workflows/upload.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/upload.yml"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#ambiguous-matrix",
+      "to": ".github/workflows/main.yml#consume-ambiguous"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#build-matrix",
+      "to": ".github/workflows/main.yml#consume-pattern"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#call-matrix",
+      "to": ".github/workflows/main.yml#consume-call-matrix"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#conditional-matrix",
+      "to": ".github/workflows/main.yml#consume-conditional"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#unique-per-cell",
+      "to": ".github/workflows/main.yml#consume-unique"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "ambiguous-artifact-producer",
+      "message": ".github/workflows/main.yml#consume-ambiguous step 0 has competing artifact producers: shared-matrix: .github/workflows/main.yml#ambiguous-matrix step 0 (2 matrix instances)",
+      "workflowPath": ".github/workflows/main.yml",
+      "jobId": ".github/workflows/main.yml#consume-ambiguous",
+      "stepIndex": 0
+    },
+    {
+      "severity": "error",
+      "code": "ambiguous-artifact-producer",
+      "message": ".github/workflows/main.yml#consume-call-matrix step 0 has competing artifact producers: reusable-shared: .github/workflows/upload.yml#upload step 0 (2 matrix instances)",
+      "workflowPath": ".github/workflows/main.yml",
+      "jobId": ".github/workflows/main.yml#consume-call-matrix",
+      "stepIndex": 0
+    }
+  ]
+}

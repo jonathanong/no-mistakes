@@ -77,6 +77,7 @@ fn native_source_detection_handles_backslash_paths() {
         .dotnet
         .solutions
         .push("dotnet-clients/App.sln".to_string());
+    config.tests.rust.packages.push("crates/tool".to_string());
     assert!(is_native_source_or_project_change(
         TestFramework::Swift,
         root,
@@ -94,6 +95,24 @@ fn native_source_detection_handles_backslash_paths() {
         root,
         &config,
         r"swift-clients\core\tests\AppTests\ConfigTests.swift"
+    ));
+    assert!(is_native_source_or_project_change(
+        TestFramework::Cargo,
+        root,
+        &config,
+        r"crates\tool\src\lib.rs"
+    ));
+    assert!(is_native_source_or_project_change(
+        TestFramework::Cargo,
+        root,
+        &config,
+        r"crates\tool\Cargo.toml"
+    ));
+    assert!(!is_native_source_or_project_change(
+        TestFramework::Cargo,
+        root,
+        &config,
+        r"crates\tool\tests\plan.rs"
     ));
     assert!(is_native_source_or_project_change(
         TestFramework::Dotnet,
@@ -152,6 +171,7 @@ fn native_fallback_does_not_trigger_when_every_candidate_is_already_used() {
             vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                 runner: "swift".to_string(),
                 config: Some(String::new()),
+                workspace: false,
                 project: Some("RootTests".to_string()),
                 base_command: vec!["swift".to_string(), "test".to_string()],
                 runner_args: Vec::new(),
@@ -169,6 +189,7 @@ fn native_fallback_does_not_trigger_when_every_candidate_is_already_used() {
                 changed_file: relative_path(root, &root.join("Package.swift")),
                 path: vec!["Package.swift".to_string(), relative_path(root, &test)],
                 via: vec!["direct".to_string()],
+                via_details: Vec::new(),
             }],
             targets: Vec::new(),
         },
@@ -207,6 +228,7 @@ fn root_swift_manifest_scopes_to_root_package_tests() {
                 vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                     runner: "swift".to_string(),
                     config: Some(".".to_string()),
+                    workspace: false,
                     project: Some("RootTests".to_string()),
                     base_command: vec!["swift".to_string(), "test".to_string()],
                     runner_args: Vec::new(),
@@ -217,6 +239,7 @@ fn root_swift_manifest_scopes_to_root_package_tests() {
                 vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                     runner: "swift".to_string(),
                     config: Some("clients".to_string()),
+                    workspace: false,
                     project: Some("ClientTests".to_string()),
                     base_command: vec!["swift".to_string(), "test".to_string()],
                     runner_args: Vec::new(),
@@ -268,6 +291,7 @@ fn target_config_matching_normalizes_dot_prefixes() {
             vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                 runner: "dotnet".to_string(),
                 config: Some("./clients/tests/App.Tests/App.Tests.csproj".to_string()),
+                workspace: false,
                 project: Some("Company.App.Tests".to_string()),
                 base_command: vec!["dotnet".to_string(), "test".to_string()],
                 runner_args: Vec::new(),
@@ -300,6 +324,7 @@ fn scoped_fallback_preserves_unscoped_discovered_tests() {
                 vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                     runner: "dotnet".to_string(),
                     config: Some("clients/tests/App.Tests/App.Tests.csproj".to_string()),
+                    workspace: false,
                     project: Some("Company.App.Tests".to_string()),
                     base_command: vec!["dotnet".to_string(), "test".to_string()],
                     runner_args: Vec::new(),
@@ -310,6 +335,7 @@ fn scoped_fallback_preserves_unscoped_discovered_tests() {
                 vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                     runner: "dotnet".to_string(),
                     config: None,
+                    workspace: false,
                     project: None,
                     base_command: vec!["dotnet".to_string(), "test".to_string()],
                     runner_args: Vec::new(),
@@ -341,6 +367,7 @@ fn empty_scoped_configs_do_not_select_unscoped_tests() {
             vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
                 runner: "dotnet".to_string(),
                 config: None,
+                workspace: false,
                 project: None,
                 base_command: vec!["dotnet".to_string(), "test".to_string()],
                 runner_args: Vec::new(),
@@ -353,4 +380,9 @@ fn empty_scoped_configs_do_not_select_unscoped_tests() {
         tests_with_nonempty_target_configs(&all_tests, &discovered, Vec::<String>::new())
             .is_empty()
     );
+}
+
+#[test]
+fn framework_name_includes_jest() {
+    assert_eq!(framework_name(TestFramework::Jest), "jest");
 }

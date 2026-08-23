@@ -17,7 +17,8 @@ pub fn collect_route_fetches(
     root: &Path,
     cache: &mut Cache,
 ) -> Result<Vec<FetchOccurrence>> {
-    collect_route_fetches_inner(route, frontend_root, root, cache, None, None)
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    collect_route_fetches_inner(&session, route, frontend_root, root, cache, None, None)
 }
 
 pub fn collect_route_fetches_from_visible(
@@ -25,9 +26,18 @@ pub fn collect_route_fetches_from_visible(
     frontend_root: &Path,
     root: &Path,
     cache: &mut Cache,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<Vec<FetchOccurrence>> {
-    collect_route_fetches_inner(route, frontend_root, root, cache, Some(visible_files), None)
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    collect_route_fetches_inner(
+        &session,
+        route,
+        frontend_root,
+        root,
+        cache,
+        Some(visible_files),
+        None,
+    )
 }
 
 #[doc(hidden)]
@@ -37,9 +47,33 @@ pub fn collect_route_fetches_from_visible_with_facts(
     root: &Path,
     cache: &mut Cache,
     parsed_files: &mut ParsedFileCache,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
+) -> Result<Vec<FetchOccurrence>> {
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    collect_route_fetches_from_visible_with_facts_and_session(
+        &session,
+        route,
+        frontend_root,
+        root,
+        cache,
+        parsed_files,
+        visible_files,
+    )
+}
+
+/// Traverse prepared fetch facts using the caller-owned source/parse session.
+#[doc(hidden)]
+pub fn collect_route_fetches_from_visible_with_facts_and_session(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    route: &Route,
+    frontend_root: &Path,
+    root: &Path,
+    cache: &mut Cache,
+    parsed_files: &mut ParsedFileCache,
+    visible_files: &crate::fx::PathSet,
 ) -> Result<Vec<FetchOccurrence>> {
     collect_route_fetches_inner(
+        session,
         route,
         frontend_root,
         root,
@@ -50,11 +84,12 @@ pub fn collect_route_fetches_from_visible_with_facts(
 }
 
 fn collect_route_fetches_inner(
+    session: &crate::codebase::analysis_session::AnalysisSession,
     route: &Route,
     frontend_root: &Path,
     root: &Path,
     cache: &mut Cache,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
     parsed_files: Option<&mut ParsedFileCache>,
 ) -> Result<Vec<FetchOccurrence>> {
     let route_is_page = route.file.file_stem().and_then(|s| s.to_str()) == Some("page");
@@ -62,7 +97,6 @@ fn collect_route_fetches_inner(
 
     let mut visited = HashSet::new();
     let mut fetches = Vec::new();
-
     let mut traversal = FetchTraversal {
         root,
         visited: &mut visited,
@@ -70,6 +104,7 @@ fn collect_route_fetches_inner(
         cache,
         visible_files,
         parsed_files,
+        session,
     };
     let _route_is_client = traversal.analyze(&route.file, (false, route_is_route_handler))?;
 
@@ -114,8 +149,9 @@ struct FetchTraversal<'a> {
     visited: &'a mut HashSet<(PathBuf, bool, bool)>,
     fetches: &'a mut Vec<FetchOccurrence>,
     cache: &'a mut Cache,
-    visible_files: Option<&'a HashSet<PathBuf>>,
+    visible_files: Option<&'a crate::fx::PathSet>,
     parsed_files: Option<&'a mut ParsedFileCache>,
+    session: &'a crate::codebase::analysis_session::AnalysisSession,
 }
 
 impl FetchTraversal<'_> {
@@ -125,6 +161,7 @@ impl FetchTraversal<'_> {
                 path,
                 inherited,
                 &mut VisibleFileAnalysis {
+                    session: self.session,
                     root: self.root,
                     visited: self.visited,
                     fetches: self.fetches,
@@ -140,7 +177,7 @@ impl FetchTraversal<'_> {
                 self.fetches,
                 self.cache,
                 inherited,
-                visible,
+                (visible, self.session),
             ),
             (None, _) => {
                 let (inherited_is_client, inherited_is_route_handler) = inherited;

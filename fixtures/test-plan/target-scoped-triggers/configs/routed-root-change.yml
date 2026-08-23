@@ -1,0 +1,16 @@
+# The route glob is unchanged; resolving it from a different root changes graph edges.
+projects:
+  api:
+    type: server
+    root: backend
+    routes: [routes/**/*.ts]
+  database-resources: { root: . }
+  union-resources: { root: . }
+tests:
+  vitest: { configs: vitest.config.mts }
+  playwright: { configs: playwright.config.mts }
+testPlan:
+  vitest:
+    environments: { pre-push: { globalConfigFallback: true } }
+  playwright:
+    environments: { pre-push: { globalConfigFallback: true } }

@@ -1,0 +1,10 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      # The later step is valid only if this request-owned directory inventory proves setup runnable.
+      - working-directory: missing-directory
+        run: echo setup
+      - working-directory: .
+        run: tsc --noEmit --project app/tsconfig.json

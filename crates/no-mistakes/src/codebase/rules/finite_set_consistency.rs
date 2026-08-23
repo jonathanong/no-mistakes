@@ -1,23 +1,26 @@
 mod comments;
 mod comparison;
 mod extract;
+mod extraction_completeness;
 mod literals;
 mod markdown;
 mod object;
+mod scan;
 mod ts_array;
 mod ts_union;
 mod yaml;
 
 use super::RuleFinding;
+use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use extract::extract_set_with_sources;
 use rayon::prelude::*;
+use scan::{scan, ScanInput};
 use serde::Deserialize;
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "finite-set-consistency";
+pub(crate) const TS_CALL_FIRST_STRING_ARGUMENT: &str = "ts-call-first-string-argument";
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -36,6 +39,7 @@ pub(crate) struct SetSpec {
     pub(crate) property: String,
     pub(crate) pattern: String,
     pub(crate) key: String,
+    pub(crate) min_size: usize,
 }
 
 #[derive(Deserialize, Default)]
@@ -62,6 +66,16 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    check_with_files_sources_and_facts(root, config, all_files, sources, None)
+}
+
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: Option<&dyn TsFactLookup>,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -75,7 +89,16 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files, &target_roots, sources)
+            scan(ScanInput {
+                root,
+                config,
+                rule,
+                opts: &opts,
+                files: &files,
+                target_roots: &target_roots,
+                sources,
+                facts,
+            })
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -83,34 +106,27 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
-fn scan(
-    root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
-    target_roots: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let mut sets = BTreeMap::new();
-    for spec in &opts.sets {
-        if spec.name.is_empty() {
-            continue;
-        }
-        sets.insert(
-            spec.name.clone(),
-            extract_set_with_sources(root, spec, files, target_roots, sources)?,
-        );
-    }
-
-    let mut findings = Vec::new();
-    for comparison in &opts.comparisons {
-        let (Some(left), Some(right)) = (sets.get(&comparison.left), sets.get(&comparison.right))
-        else {
-            continue;
-        };
-        comparison::compare(left, right, comparison, &mut findings);
-    }
-    findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
-    Ok(findings)
+/// TypeScript files that must have function-call facts prepared for this rule.
+///
+/// Request boundaries use this before collection so the finite-set rule can
+/// borrow the shared fact map instead of parsing its configured files itself.
+#[doc(hidden)]
+pub fn required_call_site_fact_files(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
+    let mut paths = config
+        .rule_applications(RULE_ID)
+        .into_iter()
+        .flat_map(|rule| {
+            let opts: Options = rule.rule_options();
+            let target_roots = super::target_roots(root, config, rule);
+            opts.sets
+                .into_iter()
+                .filter(|spec| spec.kind == TS_CALL_FIRST_STRING_ARGUMENT)
+                .flat_map(move |spec| extract::resolve_spec_files(root, &spec.file, &target_roots))
+        })
+        .collect::<Vec<_>>();
+    paths.sort();
+    paths.dedup();
+    paths
 }
 
 pub(super) fn finding(
@@ -133,6 +149,9 @@ pub(super) fn finding(
 #[path = "finite_set_consistency/tests/config_sets.rs"]
 mod config_set_tests;
 #[cfg(test)]
+#[path = "finite_set_consistency/tests/min_size.rs"]
+mod min_size_tests;
+#[cfg(test)]
 #[path = "finite_set_consistency/tests/object_comment.rs"]
 mod object_comment_tests;
 #[cfg(test)]
@@ -141,6 +160,9 @@ mod object_property_tests;
 #[cfg(test)]
 #[path = "finite_set_consistency/tests/object.rs"]
 mod object_tests;
+#[cfg(test)]
+#[path = "finite_set_consistency/tests/path_regex.rs"]
+mod path_regex_tests;
 #[cfg(test)]
 mod tests;
 #[cfg(test)]

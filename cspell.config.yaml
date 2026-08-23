@@ -12,44 +12,94 @@ ignorePaths:
   - "test-cases/**"
   - "crates/**/target/**"
 words:
+  - ABBA
+  - Actix
   - arm64
+  - aspnet
+  - asynq
   - Basenames
+  - callees
   - callsite
   - callsites
+  - constantize
+  - conname
+  - conrelid
   - cooldown
+  - dedup
+  - defmodule
   - dtolnay
   - codebase
   - codecov
   - emnapi
   - eprintln
+  - errexit
   - extglob
+  - fanout
+  - fastapi
+  - FastAPI
+  - GetMapping
+  - PostMapping
+  - PutMapping
+  - PatchMapping
+  - DeleteMapping
+  - Dtest
+  - RequestMapping
+  - frontends
+  - funcs
   - gitignore
   - glibc
   - globset
+  - greppable
   - guardrailsrc
   - invalidators
   - jsonc
+  - Laravel
   - linecount
+  - libuv
   - lockfiles
   - markdown
+  - napi
   - nextjs
+  - NestJS
+  - noprofile
+  - norc
   - Ong
+  - opclass
   - oxlint
+  - oxlintrc
   - PCRE
+  - phpunit
+  - pipefail
+  - Pipfile
   - pnpm
+  - pubspec
+  - pytest
+  - pyproject
   - refspec
   - refspecs
+  - Remix
+  - redirections
+  - regclass
   - rustfmt
   - serde
+  - sqlparser
+  - quasis
+  - unparseable
   - sgconfig
   - shellcheck
   - shasum
+  - Sidekiq
+  - Symfony
   - subdirs
   - subpaths
   - tokei
+  - timestamptz
   - tsconfig
   - ungated
+  - urlpatterns
+  - unmodeled
   - valkey
   - vitest
   - walkdir
   - worktree
+  - zeitwerk

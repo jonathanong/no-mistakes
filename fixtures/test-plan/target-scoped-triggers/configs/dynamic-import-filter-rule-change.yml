@@ -1,0 +1,16 @@
+# This rule's include glob feeds TestFileFilter during tests-plan preparation.
+projects:
+  database-resources: { root: . }
+  union-resources: { root: . }
+rules:
+  - rule: test-no-unmocked-dynamic-imports
+    scope: repository
+    include: [src/db/**/*.test.ts]
+tests:
+  vitest: { configs: vitest.config.mts }
+  playwright: { configs: playwright.config.mts }
+testPlan:
+  vitest:
+    environments: { pre-push: { globalConfigFallback: true } }
+  playwright:
+    environments: { pre-push: { globalConfigFallback: true } }

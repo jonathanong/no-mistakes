@@ -5,7 +5,7 @@ fn collect_helper_alias_exports_from_statement<'a>(
     let Statement::ExportNamedDeclaration(export) = stmt else {
         return;
     };
-    if export.source.is_some() || export.export_kind.is_type() {
+    if export.export_kind.is_type() {
         return;
     }
     for specifier in &export.specifiers {

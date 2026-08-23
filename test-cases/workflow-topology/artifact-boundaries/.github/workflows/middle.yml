@@ -1,0 +1,4 @@
+on: workflow_call
+jobs:
+  call:
+    uses: ./.github/workflows/leaf.yml

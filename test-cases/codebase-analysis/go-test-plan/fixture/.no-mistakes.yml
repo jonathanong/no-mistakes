@@ -1,0 +1,20 @@
+projects:
+  worker:
+    type: server
+    root: worker
+    queues:
+      enqueues:
+        - "**/enqueue.go"
+      workers:
+        - "**/tasks.go"
+tests:
+  go:
+    modules:
+      - "."
+testPlan:
+  go:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies

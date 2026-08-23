@@ -1,78 +1,69 @@
-pub(super) fn build_report(
-    root: &Path,
+fn build_report_with_session(
+    prepared: &PreparedServerAnalysis,
     facts: &HashMap<PathBuf, FileFacts>,
-    tsconfig: &TsConfig,
+    client_paths: &[PathBuf],
 ) -> ProjectReport {
-    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
-    build_report_with_session(root, facts, tsconfig, &session)
+    let visible = facts.keys().cloned().collect::<crate::fx::PathSet>();
+    let resolver = ImportResolver::new_in_session(&prepared.tsconfig, Some(&visible), &prepared.session);
+    build_report_with_resolver(
+        &prepared.root,
+        facts,
+        Some(ClientRelationshipInputs {
+            source_paths: client_paths,
+            facts: &prepared.facts,
+            prepared: &prepared.client_relationships,
+        }),
+        &resolver,
+    )
 }
 
-fn build_report_with_session(
+pub(super) fn build_report_with_resolver(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
-    tsconfig: &TsConfig,
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    client_inputs: Option<ClientRelationshipInputs<'_>>,
+    resolver: &dyn ImportResolution,
 ) -> ProjectReport {
-    build_report_and_relationships(root, facts, tsconfig, session).0
+    build_report_and_relationships(root, facts, client_inputs, resolver).0
 }
 
 pub(super) fn build_prepared_report(
-    root: &Path,
+    prepared: &PreparedServerAnalysis,
     facts: &HashMap<PathBuf, FileFacts>,
-    tsconfig: &TsConfig,
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    client_paths: &[PathBuf],
 ) -> PreparedProjectReport {
-    let (report, mut relationships) =
-        build_report_and_relationships(root, facts, tsconfig, session);
-    relationships.sort_by_key(|edge| {
-        (
-            public_node(root, &edge.from),
-            public_node(root, &edge.to),
-            edge.kind,
-            edge.clone(),
-        )
-    });
-    relationships.dedup();
-    let mut nodes_by_name = HashMap::<String, Vec<RelationshipNode>>::new();
-    for relationship in &relationships {
-        for node in [&relationship.from, &relationship.to] {
-            let nodes = nodes_by_name.entry(public_node(root, node)).or_default();
-            if !nodes.contains(node) {
-                nodes.push(node.clone());
-            }
-        }
-    }
-    for nodes in nodes_by_name.values_mut() {
-        nodes.sort();
-    }
-    let aliases = NodeAliases::from_groups(nodes_by_name.values().cloned());
-    let index = EdgeIndex::from_edges(
-        relationships
-            .into_iter()
-            .map(|edge| CanonicalEdge::new(edge.from, edge.to, edge.kind)),
+    let visible = facts.keys().cloned().collect::<crate::fx::PathSet>();
+    let resolver = ImportResolver::new_in_session(&prepared.tsconfig, Some(&visible), &prepared.session);
+    let (report, relationships) = build_report_and_relationships(
+        &prepared.root,
+        facts,
+        Some(ClientRelationshipInputs {
+            source_paths: client_paths,
+            facts: &prepared.facts,
+            prepared: &prepared.client_relationships,
+        }),
+        &resolver,
     );
     PreparedProjectReport {
-        root: root.to_path_buf(),
         report,
-        index,
-        nodes_by_name,
-        aliases,
+        relationships: PreparedRelationshipIndex::from_edges(
+            relationships
+                .into_iter()
+                .map(|edge| CanonicalEdge::new(edge.from, edge.to, edge.kind)),
+            |node| public_node(&prepared.root, node),
+        ),
     }
 }
 
 fn build_report_and_relationships(
     root: &Path,
     facts: &HashMap<PathBuf, FileFacts>,
-    tsconfig: &TsConfig,
-    session: &crate::codebase::analysis_session::AnalysisSession,
+    client_inputs: Option<ClientRelationshipInputs<'_>>,
+    resolver: &dyn ImportResolution,
 ) -> (ProjectReport, Vec<RelationshipEdge>) {
     let mut routes = Vec::new();
-    let mut edges = Vec::new();
     let mut relationships = Vec::new();
     let mut diagnostics = Vec::new();
-    let visible = facts.keys().cloned().collect::<HashSet<_>>();
-    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible), session);
-    let mounts = resolve_mounts_with_resolver(facts, &resolver);
+    let mounts = resolve_mounts_with_resolver(facts, resolver);
     for (path, file_facts) in facts {
         diagnostics.extend(
             file_facts
@@ -92,11 +83,6 @@ fn build_report_and_relationships(
                     to: RelationshipNode::Route(route.route.clone()),
                     kind: EdgeKind::ServerRoute,
                 };
-                edges.push(Edge {
-                    from: public_node(root, &relationship.from),
-                    to: public_node(root, &relationship.to),
-                    kind: relationship.kind,
-                });
                 relationships.push(relationship);
                 routes.push(route);
             }
@@ -104,6 +90,19 @@ fn build_report_and_relationships(
     }
     routes.sort();
     routes.dedup();
+    if let Some(inputs) = client_inputs {
+        relationships.extend(client_call_relationships(inputs, &routes));
+    }
+    relationships.sort();
+    relationships.dedup();
+    let mut edges = relationships
+        .iter()
+        .map(|relationship| Edge {
+            from: public_node(root, &relationship.from),
+            to: public_node(root, &relationship.to),
+            kind: relationship.kind,
+        })
+        .collect::<Vec<_>>();
     edges.sort();
     edges.dedup();
     diagnostics.sort();
@@ -112,7 +111,7 @@ fn build_report_and_relationships(
         .iter()
         .filter(|route| route.route.contains('*'))
         .count();
-    let report = ProjectReport {
+    (ProjectReport {
         summary: Summary {
             total_routes: routes.len(),
             total_files: facts.len(),
@@ -121,9 +120,10 @@ fn build_report_and_relationships(
         routes,
         edges,
         diagnostics,
-    };
-    (report, relationships)
+    }, relationships)
 }
+
+include!("graph_client_calls.rs");
 
 pub(crate) fn public_node(root: &Path, node: &RelationshipNode) -> String {
     match node {

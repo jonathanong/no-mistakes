@@ -19,6 +19,7 @@ pub(crate) struct ProjectOptions {
     pub(crate) roots: Vec<String>,
     pub(crate) depth: Option<usize>,
     pub(crate) assert_no_fetch: bool,
+    pub(crate) include_suppressed: bool,
     pub(crate) direction: Option<String>,
     /// `react usages` target component (`path` or `path#Symbol`).
     pub(crate) target: Option<String>,
@@ -47,6 +48,11 @@ pub(crate) struct PlaywrightOptions {
     pub(crate) config: Option<String>,
     pub(crate) playwright_config: Vec<String>,
     pub(crate) project: Option<String>,
+    /// The `.no-mistakes.yml` `projects:` key of the frontend app to
+    /// analyze. Only needed when the repository configures more than one
+    /// `type: nextjs` project and `tests.playwright.apps.<project>.project`
+    /// is not set.
+    pub(crate) app: Option<String>,
     pub(crate) files: Vec<String>,
     pub(crate) assert_conditional_tests: bool,
     pub(crate) allow_skipped_tests: bool,
@@ -92,10 +98,22 @@ pub(crate) struct ImportUsagesOptions {
 
 include!("options_entrypoint.rs");
 
+#[cfg_attr(not(test), allow(dead_code))]
 pub(crate) fn parse_options<T: for<'de> Deserialize<'de>>(options_json: &str) -> napi::Result<T> {
     serde_json::from_str(options_json)
         .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))
 }
+
+pub(crate) fn parse_options_value<T: for<'de> Deserialize<'de>>(options: Value) -> napi::Result<T> {
+    serde_json::from_value(options)
+        .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))
+}
+
+include!("options_test_json.rs");
+
+#[cfg(test)]
+#[path = "options_test_json_tests.rs"]
+mod options_test_json_tests;
 
 pub(crate) fn resolve_project_root(root: Option<&str>) -> AnyhowResult<PathBuf> {
     match root {
@@ -113,30 +131,8 @@ pub(crate) fn project_roots(options: &ProjectOptions) -> Vec<String> {
 }
 
 pub(crate) fn parse_relationship(value: &str) -> AnyhowResult<RelationshipArg> {
-    match value {
-        "import" => Ok(RelationshipArg::Import),
-        "import-static" => Ok(RelationshipArg::ImportStatic),
-        "import-dynamic" => Ok(RelationshipArg::ImportDynamic),
-        "import-type" => Ok(RelationshipArg::ImportType),
-        "import-require" => Ok(RelationshipArg::ImportRequire),
-        "route-import" => Ok(RelationshipArg::RouteImport),
-        "workspace" => Ok(RelationshipArg::Workspace),
-        "package" => Ok(RelationshipArg::Package),
-        "test" => Ok(RelationshipArg::Test),
-        "route" => Ok(RelationshipArg::Route),
-        "queue" => Ok(RelationshipArg::Queue),
-        "md" => Ok(RelationshipArg::Md),
-        "ci" => Ok(RelationshipArg::Ci),
-        "http" => Ok(RelationshipArg::Http),
-        "process" => Ok(RelationshipArg::Process),
-        "asset" => Ok(RelationshipArg::Asset),
-        "react" => Ok(RelationshipArg::React),
-        "dotnet" => Ok(RelationshipArg::Dotnet),
-        "swift" => Ok(RelationshipArg::Swift),
-        "terraform" => Ok(RelationshipArg::Terraform),
-        "all" => Ok(RelationshipArg::All),
-        _ => bail!("unknown relationship: {value}"),
-    }
+    <RelationshipArg as clap::ValueEnum>::from_str(value, false)
+        .map_err(|_| anyhow::anyhow!("unknown relationship: {value}"))
 }
 
 pub(crate) fn parse_export_kind(value: &str) -> AnyhowResult<ExportKindArg> {

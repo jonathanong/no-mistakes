@@ -1,0 +1,7 @@
+on: push
+jobs:
+  typecheck:
+    if: case(true, true, false)
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project app/tsconfig.json

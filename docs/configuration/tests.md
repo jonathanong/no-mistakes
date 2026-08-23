@@ -17,6 +17,8 @@ tests:
     selectorExclude: ["web/generated/**"]
   vitest:
     configs: vitest.config.mts
+  jest:
+    configs: jest.config.js
   swift:
     packages:
       - swift-clients/core
@@ -25,9 +27,44 @@ tests:
       swift-core:
         include:
           - swift-clients/core/Tests/**/*.swift
+  cargo:
+    packages:
+      - crates/tool
 ```
 
 Selector settings feed Playwright coverage, route impact, and graph edges.
+
+`tests.playwright.coverage.routes` and `tests.playwright.coverage.selectors`
+default to `true`. Set `routes: false` to skip uncovered-route *findings*
+while keeping `[route]` graph edges used by `tests plan`. `ignoreRoutes`
+remains for specific path exceptions. Test-file globs
+(`**/*.{test,spec}.{ts,tsx}`) are excluded from selector *declaration* scans
+by default; they still count as coverage evidence.
+
+Language frontends are explicit. Empty lists disable analysis:
+
+```yaml
+tests:
+  python:
+    packages: [backend]
+  go:
+    modules: [services/worker]
+  rust:
+    packages: [crates/api]
+  rails:
+    apps: [apps/web]
+  php:
+    framework: laravel
+    apps: [services/api]
+  java:
+    packages: [services/api]
+  kotlin:
+    packages: [services/api]
+  elixir:
+    apps: [apps/web]
+  dart:
+    packages: [apps/mobile]
+```
 
 When `tests.playwright.configs` and `--playwright-config` are both omitted,
 `no-mistakes` automatically discovers Git-visible `playwright*.config.*` files
@@ -35,13 +72,37 @@ directly under `--root`. Outside a Git checkout, `.gitignore` and `.ignore`
 files are still applied. Explicit config paths remain authoritative and may
 refer to ignored files.
 
-Dotnet and Swift test plans use explicit config for source-graph targeting.
-`tests.dotnet.projects` or `tests.dotnet.solutions`, and
-`tests.swift.packages`, are the explicit inputs; `no-mistakes` does not infer
-repository-wide project or package scans. When `tests plan dotnet` or
-`tests plan swift` can discover native tests but cannot trace the native
-source/project change, the plan falls back to framework-scoped discovered tests
-and sets `fallback_triggered`/`fallback_reason`.
+`tests.vitest.configs` explicitly accepts `vitest.workspace.*` and
+`vitest.projects.*` for the extensions `ts`, `mts`, `cts`, `js`, `mjs`, `cjs`,
+and `json`. When omitted, default discovery includes Git-visible root
+`vitest.config.*`, `vitest.workspace.*`, and `vitest.projects.*` files,
+including JSON project arrays. Project-array sources export project arrays
+directly; JSON arrays support static inline project objects and string project
+paths/globs and are parsed as JSON, not JavaScript. When a root
+`vitest.workspace.*` or `vitest.projects.*` source exists, it takes precedence
+over sibling default `vitest.config.*` files; list a root config in that array
+when it must also run as a project. Explicit `tests.vitest.configs` remains
+authoritative.
+
+Dotnet, Swift, and Cargo test plans use explicit config for source-graph
+targeting. `tests.dotnet.projects` or `tests.dotnet.solutions`,
+`tests.swift.packages`, and `tests.cargo.packages` are the explicit inputs;
+`no-mistakes` does not infer repository-wide project or package scans. When
+`tests plan dotnet`, `tests plan swift`, or `tests plan cargo` can discover
+native tests but cannot trace the native source/project change, the plan falls
+back to framework-scoped discovered tests and sets
+`fallback_triggered`/`fallback_reason`. Cargo has no import graph, so a changed
+`.rs` file outside `tests/` (or a `Cargo.toml`) in a configured package selects
+that package's discovered tests.
+
+Language test plans follow the same native shape. Configure
+`tests.python.packages`, `tests.go.modules`, `tests.rust.packages`,
+`tests.rails.apps`, `tests.php.apps`, `tests.java.packages`, `tests.kotlin.packages`, `tests.elixir.apps`, or `tests.dart.packages`. Empty lists disable that frontend.
+`tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart` then emits `pytest` /
+`python -m unittest`, `go test`, `cargo test -p`, `bin/rails test` / `rspec`,
+`phpunit` / `php artisan test`, `mvn test [-f <package>/pom.xml] -Dtest=`,
+`gradle [-p <package>] test --tests`, `mix test <path>`, or `dart test` / `dart pub --directory <package> run test` targets. Untraceable source under those
+roots falls back to discovered tests in the owning package, module, or app.
 
 ## Explicit Vitest projects
 
@@ -62,6 +123,33 @@ tests:
 
 These policies are also used by `vitest-project-mapping` when that rule sets
 `explicitProjectsOnly: true`.
+
+## Jest
+
+`tests.jest.configs` lists explicit Jest config files for `tests plan jest`.
+Empty lists disable discovery; `no-mistakes` does not scan for `jest.config.*`
+at the repo root. Static `testMatch` string/array literals become include
+globs. Static `testRegex` literals match visible files into the same include
+list. When neither matcher is present, the shared Vitest/Jest test globs
+apply. Jest does not copy Vitest `setupFiles` / `globalSetup` edges.
+
+```yaml
+tests:
+  jest:
+    configs: jest.config.js
+    projects:
+      unit:
+        include: [src/**/*.test.ts]
+```
+
+Recovered Vitest/Playwright/Jest config projects and explicit project policies are
+authoritative test universes. Generic filename fallback is used only when that
+runner has no recovered projects; it does not add tests outside configured
+`include`/`exclude` globs. Vitest and Playwright also reserve each other's owned
+files before applying that fallback, while an explicit overlapping policy for
+the requested runner remains authoritative. Jest never uses filename fallback.
+Dotnet and Swift keep their documented explicit native full-suite fallback
+behavior.
 
 ## Dotnet
 
@@ -96,6 +184,96 @@ attributed to the config with the deepest (most specific) `testDir`. The spec
 gets a single target carrying that config's `--config` path, instead of a
 duplicate target for the broader config. Configs with sibling or identical
 `testDir`s, and explicit `projects` policies, still emit a target each.
+
+## Multiple frontend apps
+
+`playwright-coverage` and `playwright-unique-test-ids` resolve a Playwright
+project's route root (`frontendRoot`, defaulting to `<root>/src/app` then
+`<root>/app`, whichever exists) and selector root (`selectorRoots`,
+defaulting to the whole app package, not just the route directory — so
+sibling directories like `src/components` keep selector coverage) from the
+repository's `type: nextjs` projects.
+
+With exactly one `type: nextjs` project configured (or none, with a unique
+`next.config.*` discoverable at the repository root), this happens
+automatically. With more than one `type: nextjs` project, each Playwright
+project needs an explicit binding to a specific app; leaving one unbound is a
+configuration error rather than a fallback to whichever project happened to
+sort first.
+
+When there is no `type: nextjs` project *and* no discoverable `next.config.*`
+at all — no frontend-app signal whatsoever — no app can be resolved, so none
+of the above applies. `frontendRoot` falls back to the bare `app` literal (or
+`<root>/app` when it exists), and `selectorRoots` falls back to matching
+`frontendRoot` exactly rather than the whole package — the same defaults
+`no-mistakes` used before per-app resolution existed. Configure a
+`type: nextjs` project (with an explicit `root:` if it can't be inferred) to
+get the wider, decoupled default described above.
+
+Bind via the rule's own `projects:` list — the default mechanism:
+
+```yaml
+projects:
+  control-web:
+    type: nextjs
+    root: services/web
+  agent-web:
+    type: nextjs
+    root: services/agent-web
+
+rules:
+  - rule: playwright-coverage
+    projects: [control-web]
+    tests:
+      playwright: [control]
+  - rule: playwright-coverage
+    projects: [agent-web]
+    tests:
+      playwright: [agent]
+```
+
+Or bind per Playwright project directly under `tests.playwright.apps`. A
+single unbound rule (`- rule: playwright-coverage` with no
+`tests.playwright` list) then applies once per `apps` entry:
+
+```yaml
+tests:
+  playwright:
+    apps:
+      control:
+        project: control-web
+      agent:
+        project: agent-web
+rules:
+  - rule: playwright-coverage
+```
+
+Each entry under `tests.playwright.apps.<name>` accepts:
+
+| Field | Meaning |
+| --- | --- |
+| `project` | The `.no-mistakes.yml` `projects:` key this Playwright project exercises. |
+| `frontendRoot` | Overrides the resolved app's route root for this Playwright project only. Does not change the shared frontend-app resolution used by graph/check. |
+| `selectorRoots` | Overrides the resolved app's selector roots for this Playwright project only. |
+| `rewrites` | Overrides the resolved app's rewrites for this Playwright project only. |
+| `ignoreRoutes` | Overrides `tests.playwright.ignoreRoutes` for this Playwright project only. |
+
+An `apps` entry that sets `frontendRoot`, `selectorRoots`, and `rewrites`
+without `project` is fully explicit: Playwright settings do not resolve a
+frontend app, so the entry can coexist with multiple `type: nextjs` projects.
+
+`tests.playwright.apps.<name>.project` takes precedence over `rules[].projects`
+when both are set. `frontendRoot`/`selectorRoots`/`rewrites`/`ignoreRoutes`
+set here take precedence over both the resolved app's defaults and the
+top-level `tests.playwright.frontendRoot`/`selectorRoots`/`ignoreRoutes`. A
+Playwright project can exercise at most one app; binding it to two (via
+conflicting `rules[].projects` lists, or a rule naming more than one app) is
+an error.
+
+`tests.playwright.projects` (the map of named Playwright-project test-file
+policies) and `tests.playwright.apps` (this frontend-app binding) are
+independent: the former scopes which test files belong to a Playwright
+project, the latter answers which frontend app that project exercises.
 
 ## `testIdAttribute`
 

@@ -1,8 +1,9 @@
 impl PreparedScopePlan {
-    fn fact_requests(&self) -> [crate::codebase::check_facts::BatchCheckFactRequest; 2] {
+    fn fact_requests(&self) -> [crate::codebase::check_facts::BatchCheckFactRequest; 3] {
         [
             self.primary.batch_request(&self.root),
             self.supplemental.batch_request(&self.root),
+            self.supplemental_call_sites.batch_request(&self.root),
         ]
     }
 
@@ -10,17 +11,27 @@ impl PreparedScopePlan {
         mut self,
         facts: crate::codebase::check_facts::CheckFactMap,
         symbol_facts: crate::codebase::check_facts::CheckFactMap,
+        call_site_facts: crate::codebase::check_facts::CheckFactMap,
     ) -> Result<PreparedScope> {
         let graph_facts = facts.graph_view_with_supplemental(&symbol_facts);
+        let check_facts = facts.fact_view_with_supplemental(&call_site_facts);
         self.traversal.use_check_facts(&graph_facts);
         // Config facts were prepared before the batch. Seed them before the
         // canonical graph so invalidation retains Playwright occurrences.
         self.traversal.seed_cached_program_facts(&self.configs);
+        let traversal_graph = self.traversal.graph_files();
+        let graph_fact_files = graph_facts.graph_file_universe();
+        let check_shares_traversal_graph_universe = graph_fact_files.len()
+            == traversal_graph.visible_len()
+            && graph_fact_files
+                .iter()
+                .all(|path| traversal_graph.contains_visible(path));
         if self
             .check
             .as_ref()
             .and_then(SharedCheckContext::graph_plan)
             .is_some()
+            && check_shares_traversal_graph_universe
         {
             self.traversal
                 .prepare_canonical_graph_with_check_facts(&graph_facts)?;
@@ -39,19 +50,21 @@ impl PreparedScopePlan {
             options: self.options,
             traversal: self.traversal,
             facts,
+            check_facts,
             symbol_facts,
             import_usages: self.import_usages,
             server,
             check: self.check,
+            check_uses_traversal_graph: check_shares_traversal_graph_universe,
             playwright: self.playwright,
-            queue_reports: HashMap::new(),
-            queue_indexed_reports: HashMap::new(),
+            queue_reports: std::sync::Mutex::new(HashMap::new()),
+            queue_indexed_reports: std::sync::Mutex::new(HashMap::new()),
             queue_traversal_keys: self.queue_traversal_keys,
-            server_indexed_reports: HashMap::new(),
+            server_indexed_reports: std::sync::Mutex::new(HashMap::new()),
             server_traversal_keys: self.server_traversal_keys,
-            server_reports: HashMap::new(),
-            playwright_analyses: HashMap::new(),
-            react_analyses: HashMap::new(),
+            server_reports: std::sync::Mutex::new(HashMap::new()),
+            playwright_analyses: std::sync::Mutex::new(HashMap::new()),
+            react_analyses: std::sync::Mutex::new(HashMap::new()),
         })
     }
 }

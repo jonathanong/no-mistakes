@@ -173,6 +173,7 @@ impl<'a> Visit<'a> for FetchVisitor<'a> {
 
         if in_scope {
             if let Some(occurrence) = try_extract_fetch(expr, self) {
+                self.fetch_spans.push(expr.span);
                 self.fetches.push(occurrence);
             }
         }

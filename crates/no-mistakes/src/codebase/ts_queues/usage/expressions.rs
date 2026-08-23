@@ -91,9 +91,12 @@ fn scan_expr(
             scan_expr(&a.argument, source, namespace_imports, usage);
         }
         Expression::ArrowFunctionExpression(arrow) => {
-            let oxc_ast::ast::FunctionBody { statements, .. } = arrow.body.as_ref();
-            for s in statements {
-                scan_stmt(s, source, namespace_imports, usage);
+            if let Some(expression) = arrow.body.as_expression() {
+                scan_expr(expression, source, namespace_imports, usage);
+            } else {
+                for s in crate::ast::arrow_function_body_statements(&arrow.body).unwrap_or_default() {
+                    scan_stmt(s, source, namespace_imports, usage);
+                }
             }
         }
         Expression::TSAsExpression(ts_as) => {
@@ -135,4 +138,3 @@ fn literal_str_expr(expr: &Expression) -> Option<String> {
     }
     None
 }
-

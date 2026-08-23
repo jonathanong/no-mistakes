@@ -1,0 +1,223 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/source-dup-a.yml",
+      "path": ".github/workflows/source-dup-a.yml",
+      "name": "Dup Source",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/source-dup-a.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/source-dup-b.yml",
+      "path": ".github/workflows/source-dup-b.yml",
+      "name": "Dup Source",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/source-dup-b.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/source.yml",
+      "path": ".github/workflows/source.yml",
+      "name": "Source",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/source.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/subscriber-ambiguous.yml",
+      "path": ".github/workflows/subscriber-ambiguous.yml",
+      "name": "Subscriber Ambiguous",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "workflow_run",
+          "config": {
+            "workflows": [
+              "Dup Source"
+            ]
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/subscriber-ambiguous.yml#report"
+      ]
+    },
+    {
+      "id": ".github/workflows/subscriber-missing.yml",
+      "path": ".github/workflows/subscriber-missing.yml",
+      "name": "Subscriber Missing",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "workflow_run",
+          "config": {
+            "workflows": [
+              "Does Not Exist"
+            ]
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/subscriber-missing.yml#report"
+      ]
+    },
+    {
+      "id": ".github/workflows/subscriber-ok.yml",
+      "path": ".github/workflows/subscriber-ok.yml",
+      "name": "Subscriber OK",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "workflow_run",
+          "config": {
+            "workflows": [
+              "Source"
+            ],
+            "types": [
+              "completed"
+            ],
+            "branches": [
+              "main"
+            ]
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/subscriber-ok.yml#report"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/source-dup-a.yml#noop",
+      "workflowId": ".github/workflows/source-dup-a.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/source-dup-b.yml#noop",
+      "workflowId": ".github/workflows/source-dup-b.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/source.yml#noop",
+      "workflowId": ".github/workflows/source.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/subscriber-ambiguous.yml#report",
+      "workflowId": ".github/workflows/subscriber-ambiguous.yml",
+      "key": "report",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/subscriber-missing.yml#report",
+      "workflowId": ".github/workflows/subscriber-missing.yml",
+      "key": "report",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/subscriber-ok.yml#report",
+      "workflowId": ".github/workflows/subscriber-ok.yml",
+      "key": "report",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "workflow-run",
+      "from": ".github/workflows/source.yml",
+      "to": ".github/workflows/subscriber-ok.yml",
+      "types": [
+        "completed"
+      ],
+      "branches": [
+        "main"
+      ]
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "duplicate-workflow-name",
+      "message": "workflow name \"Dup Source\" conflicts across .github/workflows/source-dup-a.yml, .github/workflows/source-dup-b.yml",
+      "workflowPath": ".github/workflows/source-dup-a.yml"
+    },
+    {
+      "severity": "error",
+      "code": "duplicate-workflow-name",
+      "message": "workflow name \"Dup Source\" conflicts across .github/workflows/source-dup-a.yml, .github/workflows/source-dup-b.yml",
+      "workflowPath": ".github/workflows/source-dup-b.yml"
+    },
+    {
+      "severity": "error",
+      "code": "ambiguous-workflow-run-source",
+      "message": ".github/workflows/subscriber-ambiguous.yml subscribes to ambiguous workflow \"Dup Source\" across .github/workflows/source-dup-a.yml, .github/workflows/source-dup-b.yml",
+      "workflowPath": ".github/workflows/subscriber-ambiguous.yml"
+    },
+    {
+      "severity": "error",
+      "code": "missing-workflow-run-source",
+      "message": ".github/workflows/subscriber-missing.yml subscribes to missing workflow \"Does Not Exist\"",
+      "workflowPath": ".github/workflows/subscriber-missing.yml"
+    }
+  ]
+}

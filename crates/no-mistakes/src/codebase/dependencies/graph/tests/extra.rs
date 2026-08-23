@@ -29,26 +29,21 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     let b = root.join("b.mts");
     let c = root.join("c.mts");
     let hidden = root.join("hidden.mts");
-    let graph_files = GraphFiles {
-        all: vec![a.clone(), b.clone(), c.clone(), hidden.clone()],
-        indexable: vec![a.clone(), b.clone(), c.clone(), hidden],
-        visible: [a.clone(), b.clone(), c.clone()].into(),
-    };
+    let graph_files = GraphFiles::from_parts(
+        vec![a.clone(), b.clone(), c.clone(), hidden.clone()],
+        vec![a.clone(), b.clone(), c.clone(), hidden],
+        [a.clone(), b.clone(), c.clone()],
+        vec![],
+    );
 
-    let roots = vec![
-        NodeId::QueueJob {
-            queue_file: a.clone(),
-            job: "send".to_string(),
-        },
-        NodeId::File(a),
-    ];
+    let roots = vec![NodeId::queue_job(a.clone(), "send"), NodeId::file(a)];
     let limited =
         lazy_import_deps_of_with_files(&roots, &root, &tsconfig, Some(1), &graph_files, None);
     assert!(has_file(&limited, &b));
     assert!(!has_file(&limited, &c));
 
     let full = lazy_import_deps_of_with_files(
-        &[NodeId::File(root.join("a.mts"))],
+        &[NodeId::file(root.join("a.mts"))],
         &root,
         &tsconfig,
         None,
@@ -57,6 +52,20 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     );
     assert!(has_file(&full, &b));
     assert!(has_file(&full, &c));
+
+    let overlapping = lazy_import_deps_of_with_files(
+        &[
+            NodeId::file(root.join("a.mts")),
+            NodeId::file(root.join("a.mts")),
+            NodeId::file(b.clone()),
+        ],
+        &root,
+        &tsconfig,
+        None,
+        &graph_files,
+        None,
+    );
+    assert!(has_file(&overlapping, &c));
 
     let duplicate_root = crate::codebase::ts_resolver::normalize_path(&fixture("lazy-duplicates"));
     let duplicate_tsconfig = TsConfig {
@@ -67,7 +76,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     };
     let duplicate_files = GraphFiles::discover(&duplicate_root);
     let duplicate = lazy_import_deps_of_with_files(
-        &[NodeId::File(duplicate_root.join("a.mts"))],
+        &[NodeId::file(duplicate_root.join("a.mts"))],
         &duplicate_root,
         &duplicate_tsconfig,
         None,
@@ -90,7 +99,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     };
     let module_files = GraphFiles::discover(&module_root);
     let module_deps = lazy_import_deps_of_with_files(
-        &[NodeId::File(module_root.join("src/entry.mts"))],
+        &[NodeId::file(module_root.join("src/entry.mts"))],
         &module_root,
         &module_tsconfig,
         None,
@@ -99,7 +108,7 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
     );
     assert!(!module_deps
         .iter()
-        .any(|entry| entry.node == NodeId::Module("@local/pkg".to_string())));
+        .any(|entry| entry.node == NodeId::module("@local/pkg")));
 
     let hidden_root = crate::codebase::ts_resolver::normalize_path(&fixture("lazy-hidden"));
     let hidden_tsconfig = TsConfig {
@@ -108,13 +117,14 @@ fn lazy_import_handles_depth_virtual_roots_hidden_targets_and_duplicate_kinds() 
         paths_dir: hidden_root.clone(),
         base_url: None,
     };
-    let hidden_graph_files = GraphFiles {
-        all: vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
-        indexable: vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
-        visible: [hidden_root.join("a.mts")].into(),
-    };
+    let hidden_graph_files = GraphFiles::from_parts(
+        vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
+        vec![hidden_root.join("a.mts"), hidden_root.join("hidden.mts")],
+        [hidden_root.join("a.mts")],
+        vec![],
+    );
     assert!(lazy_import_deps_of_with_files(
-        &[NodeId::File(hidden_root.join("a.mts"))],
+        &[NodeId::file(hidden_root.join("a.mts"))],
         &hidden_root,
         &hidden_tsconfig,
         None,
@@ -133,34 +143,39 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
     let package = root.join("package.json");
     let web_entry = root.join("packages/web/src/index.tsx");
     let hidden = root.join("packages/api/src/index.mts");
-    let graph_files = GraphFiles {
-        all: vec![package.clone(), web_entry.clone(), hidden],
-        indexable: vec![web_entry.clone()],
-        visible: [package.clone(), web_entry.clone()].into(),
-    };
+    let graph_files = GraphFiles::from_parts(
+        vec![package.clone(), web_entry.clone(), hidden],
+        vec![web_entry.clone()],
+        [package.clone(), web_entry.clone()],
+        vec![],
+    );
     let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
-            crate::codebase::workspaces::WorkspacePackage {
-                name: "@x/web".to_string(),
-                dir: root.join("packages/web"),
-                entry: Some(web_entry.clone()),
-                exports: None,
-                imports: None,
-            },
-            crate::codebase::workspaces::WorkspacePackage {
-                name: "@x/hidden".to_string(),
-                dir: root.join("hidden"),
-                entry: Some(root.join("hidden/index.ts")),
-                exports: None,
-                imports: None,
-            },
-        ])
-        .with_manifest_dependency_names(package.clone(), vec!["@x/web".to_string()]);
+        crate::codebase::workspaces::WorkspacePackage {
+            name: "@x/web".to_string(),
+            dir: root.join("packages/web"),
+            entry: Some(web_entry.clone()),
+            exports: None,
+            imports: None,
+        },
+        crate::codebase::workspaces::WorkspacePackage {
+            name: "@x/hidden".to_string(),
+            dir: root.join("hidden"),
+            entry: Some(root.join("hidden/index.ts")),
+            exports: None,
+            imports: None,
+        },
+    ])
+    .with_manifest_dependency_names(package.clone(), vec!["@x/web".to_string()]);
 
     let empty_imports = Vec::new();
-    assert!(
-        collect_workspace_edges(&empty_imports, &resolver, &Default::default(), &graph_files)
-            .is_empty()
-    );
+    assert!(collect_workspace_edges(
+        &empty_imports,
+        &resolver,
+        &Default::default(),
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
     let imports_path = root.join("packages/api/src/users.mts");
     let imports_items = vec![ExtractedImport {
         specifier: "@x/web".to_string(),
@@ -176,7 +191,13 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         ..Default::default()
     };
     let imports = vec![(&imports_path, &imports_facts, Default::default())];
-    let edges = collect_workspace_edges(&imports, &resolver, &workspace, &graph_files);
+    let edges = collect_workspace_edges(
+        &imports,
+        &resolver,
+        &workspace,
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert_eq!(edges.len(), 1);
     let hidden_workspace_path = root.join("packages/api/src/users.mts");
     let hidden_workspace_items = vec![ExtractedImport {
@@ -201,7 +222,8 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         &hidden_workspace_import,
         &resolver,
         &workspace,
-        &graph_files
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
 
@@ -214,13 +236,21 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         ],
         &workspace,
         &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(manifest_edges.iter().any(|(_, to, kind)| {
         *kind == EdgeKind::PackageDependency && to.as_file() == Some(web_entry.as_path())
     }));
 
     assert_eq!(
-        collect_import_edges(&imports, &resolver, &Default::default(), &graph_files).len(),
+        collect_import_edges(
+            &imports,
+            &resolver,
+            &Default::default(),
+            &graph_files,
+            &crate::codebase::analysis_session::PathInterner::new()
+        )
+        .len(),
         1
     );
     let hidden_imports_path = root.join("packages/api/src/users.mts");
@@ -246,7 +276,8 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         &hidden_imports,
         &resolver,
         &Default::default(),
-        &graph_files
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
     assert_eq!(package_name_from_spec("@scope/pkg/path"), "@scope/pkg");
@@ -272,10 +303,19 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         Some(&[EdgeKind::QueueEnqueue].into()),
         &symbol_index,
     );
+    assert!(graph
+        .dependents_of_symbol(
+            &emails,
+            "sendWelcomeEmail",
+            Some(0),
+            Some(&[EdgeKind::QueueEnqueue].into()),
+            &symbol_index,
+        )
+        .is_empty());
     assert!(dependents.iter().any(|entry| {
         matches!(
             entry.node,
-            NodeId::File(ref path) if path == &send_email
+            NodeId::File(ref path) if path.as_ref() == send_email.as_path()
         )
     }));
 
@@ -295,80 +335,121 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
 
     let graph_files = GraphFiles::discover(&root);
     let missing = root.join("missing.md");
-    assert!(collect_md_edges(&[missing], &graph_files).is_empty());
-    let md_edges = collect_md_edges(&[root.join("README.md")], &graph_files);
+    assert!(collect_md_edges(
+        &[missing],
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
+    )
+    .is_empty());
+    let md_edges = collect_md_edges(
+        &[root.join("README.md")],
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
+    );
     assert!(md_edges.iter().any(|(_, to, kind)| {
         *kind == EdgeKind::MarkdownLink
             && to.as_file() == Some(root.join("packages/api/src/index.mts").as_path())
     }));
 
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
-    add_ci_edges(&root, &graph_files.all, &mut forward, &mut reverse);
-    assert!(!forward.is_empty());
-
-    let mut missing_forward = EdgeMap::new();
-    let mut missing_reverse = EdgeMap::new();
-    let missing_workflow = root.join(".github/workflows/missing.yml");
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
+    let parsed = parsed_workflow_set(&root, graph_files.all());
     add_ci_edges(
         &root,
-        &[
-            root.join("Cargo.toml"),
-            root.join("src/bin/guardrails.rs"),
-            missing_workflow,
-            root.join(".github/workflows/not-yaml.txt"),
-        ],
+        graph_files.all(),
+        &parsed,
+        &mut forward,
+        &mut reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
+    );
+    assert!(!forward.is_empty());
+
+    let mut missing_forward = EdgeMap::default();
+    let mut missing_reverse = EdgeMap::default();
+    let missing_workflow = root.join(".github/workflows/missing.yml");
+    let missing_files = [
+        root.join("Cargo.toml"),
+        root.join("src/bin/guardrails.rs"),
+        missing_workflow,
+        root.join(".github/workflows/not-yaml.txt"),
+    ];
+    let missing_parsed = parsed_workflow_set(&root, &missing_files);
+    add_ci_edges(
+        &root,
+        &missing_files,
+        &missing_parsed,
         &mut missing_forward,
         &mut missing_reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(missing_forward.is_empty());
 
     let nested_root = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-nested-bin"));
-    let nested_visible = HashSet::from([nested_root.join("src/bin/nested/main.rs")]);
+    let nested_visible: crate::fx::PathSet =
+        [nested_root.join("src/bin/nested/main.rs")].into_iter().collect();
     assert_eq!(
         resolve_cargo_bin_source(&nested_root, "nested", "missing.rs", &nested_visible),
         Some(nested_root.join("src/bin/nested/main.rs"))
     );
-    let mut nested_forward = EdgeMap::new();
-    let mut nested_reverse = EdgeMap::new();
+    let mut nested_forward = EdgeMap::default();
+    let mut nested_reverse = EdgeMap::default();
+    let nested_files = [
+        nested_root.join("Cargo.toml"),
+        nested_root.join("src/bin/nested/main.rs"),
+        nested_root.join(".github/workflows/bad.yml"),
+    ];
+    let nested_parsed = parsed_workflow_set(&nested_root, &nested_files);
     add_ci_edges(
         &nested_root,
-        &[
-            nested_root.join("Cargo.toml"),
-            nested_root.join("src/bin/nested/main.rs"),
-            nested_root.join(".github/workflows/bad.yml"),
-        ],
+        &nested_files,
+        &nested_parsed,
         &mut nested_forward,
         &mut nested_reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(nested_forward.is_empty());
 
     let no_workflows_root =
         crate::codebase::ts_resolver::normalize_path(&fixture("cargo-no-workflows"));
-    let mut no_workflows_forward = EdgeMap::new();
-    let mut no_workflows_reverse = EdgeMap::new();
+    let mut no_workflows_forward = EdgeMap::default();
+    let mut no_workflows_reverse = EdgeMap::default();
+    let no_workflow_files = [
+        no_workflows_root.join("Cargo.toml"),
+        no_workflows_root.join("src/bin/standalone.rs"),
+    ];
+    let no_workflow_parsed = parsed_workflow_set(&no_workflows_root, &no_workflow_files);
     add_ci_edges(
         &no_workflows_root,
-        &[
-            no_workflows_root.join("Cargo.toml"),
-            no_workflows_root.join("src/bin/standalone.rs"),
-        ],
+        &no_workflow_files,
+        &no_workflow_parsed,
         &mut no_workflows_forward,
         &mut no_workflows_reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(no_workflows_forward.is_empty());
+    let nested_without_workflow = [
+        nested_root.join("Cargo.toml"),
+        nested_root.join("src/bin/nested/main.rs"),
+    ];
+    let nested_without_parsed = parsed_workflow_set(&nested_root, &nested_without_workflow);
     add_ci_edges(
         &nested_root,
-        &[
-            nested_root.join("Cargo.toml"),
-            nested_root.join("src/bin/nested/main.rs"),
-        ],
+        &nested_without_workflow,
+        &nested_without_parsed,
         &mut nested_forward,
         &mut nested_reverse,
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
     );
     assert!(nested_forward.is_empty());
     let mut bins = CargoBinIndex::default();
-    let empty_visible = HashSet::new();
+    let empty_visible = crate::fx::PathSet::default();
     add_manifest_bins(
         Path::new("/"),
         "[[bin]]\nname = \"root\"\npath = \"main.rs\"\n",
@@ -381,135 +462,17 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
         &empty_visible,
         &mut bins,
     );
-    let outside = collect_cargo_bins(&root, &[PathBuf::from("/outside/Cargo.toml")]);
+    let outside = collect_cargo_bins(&root, &[PathBuf::from("/outside/Cargo.toml")], None);
     assert!(outside.by_name.is_empty());
-    let missing_member_manifest = collect_cargo_bins(&root, &[root.join("missing/Cargo.toml")]);
+    let missing_member_manifest =
+        collect_cargo_bins(&root, &[root.join("missing/Cargo.toml")], None);
     assert!(missing_member_manifest.by_name.is_empty());
     let invalid_root = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-invalid"));
     assert!(
-        collect_cargo_bins(&invalid_root, &[invalid_root.join("Cargo.toml")])
+        collect_cargo_bins(&invalid_root, &[invalid_root.join("Cargo.toml")], None)
             .by_name
             .is_empty()
     );
 }
 
-#[test]
-fn graph_collectors_cover_defensive_empty_and_error_paths() {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture("codebase-intel"));
-    let tsconfig =
-        crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let graph_files = GraphFiles {
-        all: vec![],
-        indexable: vec![],
-        visible: HashSet::new(),
-    };
-    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
-    let fact_context = TsFactContext::default();
-
-    assert!(lazy_import_deps_of_with_files(
-        &[NodeId::File(root.join("packages/api/src/index.mts"))],
-        &root,
-        &tsconfig,
-        None,
-        &graph_files,
-        None,
-    )
-    .is_empty());
-    assert!(import_neighbors(
-        &root.join("missing.mts"),
-        &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
-        &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
-        &graph_files,
-        None,
-        LazyImportFacts::new(None, TsFactPlan::imports(), &fact_context),
-        &session,
-    )
-    .0
-    .is_empty());
-
-    assert!(collect_workspace_manifest_edges(
-        &[root.join("missing/package.json")],
-        &crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
-            crate::codebase::workspaces::WorkspacePackage {
-                name: "@x/missing".to_string(),
-                dir: root.join("packages/missing"),
-                entry: Some(root.join("packages/missing/index.ts")),
-                exports: None,
-                imports: None,
-            },
-        ]),
-        &graph_files,
-    )
-    .is_empty());
-    assert!(collect_test_edges(Path::new("."), &[PathBuf::from("/")], None).is_empty());
-    assert!(collect_test_edges(Path::new("."), &[PathBuf::from("no-parent.ts")], None).is_empty());
-    assert!(collect_md_edges(&[PathBuf::from("/")], &graph_files).is_empty());
-    assert!(collect_md_edges(&[PathBuf::from("README.md")], &graph_files).is_empty());
-
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
-    add_ci_edges(&root.join("missing"), &[], &mut forward, &mut reverse);
-    assert!(forward.is_empty());
-
-    assert!(collect_route_edges(
-        &root.join("missing"),
-        &tsconfig,
-        &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
-        &[],
-        None,
-        None,
-    )
-    .is_empty());
-    test_support::add_queue_edges(
-        &root.join("missing"),
-        &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
-        &[],
-        None,
-        None,
-        &mut forward,
-        &mut reverse,
-    );
-    assert!(
-        collect_http_call_edges(&root.join("missing"), &tsconfig, None, &[], &[], &[], None)
-            .is_empty()
-    );
-}
-#[test]
-fn lazy_import_facts_memoize_parse_errors() {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-            "../../fixtures/codebase/dependencies/selector-malformed-app-source/fixture",
-        ),
-    );
-    let malformed = root.join("web/components/save-button.tsx");
-    let tsconfig = TsConfig {
-        dir: root.clone(),
-        paths: vec![],
-        paths_dir: root.clone(),
-        base_url: None,
-    };
-    let graph_files = GraphFiles {
-        all: vec![malformed.clone()],
-        indexable: vec![malformed.clone()],
-        visible: [malformed.clone()].into(),
-    };
-    let context = TsFactContext::new(&root);
-    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
-
-    let (neighbors, collected) = import_neighbors(
-        &malformed,
-        &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
-        &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
-        &graph_files,
-        None,
-        LazyImportFacts::new(None, TsFactPlan::imports(), &context),
-        &session,
-    );
-
-    assert!(neighbors.is_empty());
-    assert!(
-        collected
-            .and_then(|facts| facts.parse_error)
-            .is_some_and(|error| error.contains("failed to parse"))
-    );
-}
+include!("extra_defensive.rs");

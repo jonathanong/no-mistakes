@@ -1,15 +1,66 @@
 const assert = require("node:assert/strict");
 const test = globalThis.test || require("node:test").test;
-const { readFileSync } = require("node:fs");
-const { join } = require("node:path");
+const { existsSync, readFileSync, writeFileSync, mkdtempSync } = require("node:fs");
+const { join, resolve } = require("node:path");
+const { tmpdir } = require("node:os");
+const { pathToFileURL } = require("node:url");
 
 const packageRoot = join(__dirname, "..");
 const addonPath = join(packageRoot, "bin", "no-mistakes.node");
 const indexPath = join(packageRoot, "index.js");
+const planningPath = join(packageRoot, "planning.js");
+const repositoryRoot = join(packageRoot, "..", "..");
+
+const RUST_NAPI_BINDING_FILES = [
+  "crates/no-mistakes/src/napi_api.rs",
+  "crates/no-mistakes/src/napi_api/codebase_bindings.rs",
+  "crates/no-mistakes/src/napi_api/planning_bindings.rs",
+  "crates/no-mistakes/src/napi_api/wrappers_query.rs",
+  "crates/no-mistakes/src/napi_api/ci_bindings.rs",
+  "crates/no-mistakes/src/napi_api/queries.rs",
+  "crates/no-mistakes/src/napi_api/infra_swift.rs",
+];
+
+const RAW_NATIVE_EXPORTS = {
+  testsComment: "testsCommentMarkdown",
+  testsGraphMermaid: "testsGraphMermaid",
+  version: "version",
+};
+
+function nativeExportNames() {
+  const exports = new Set(["version"]);
+
+  for (const relativePath of RUST_NAPI_BINDING_FILES) {
+    const source = readFileSync(join(repositoryRoot, relativePath), "utf8");
+    for (const match of source.matchAll(/json_binding!\(\s*\w+,\s*"([^"]+)"/g)) {
+      exports.add(match[1]);
+    }
+    for (const match of source.matchAll(/napi\(js_name = "([^"]+)"\)/g)) {
+      exports.add(match[1]);
+    }
+  }
+
+  return [...exports].sort();
+}
+
+function declarationExportNames() {
+  const declarations = ["index.d.ts", "index-ci-infra.d.ts"]
+    .map((file) => readFileSync(join(packageRoot, file), "utf8"))
+    .join("\n");
+  return [
+    ...new Set([...declarations.matchAll(/export function (\w+)\(/g)].map((match) => match[1])),
+  ].sort();
+}
+
+function nativeExportNameForApi(apiName) {
+  return RAW_NATIVE_EXPORTS[apiName] || `${apiName}Json`;
+}
 
 test("programmatic API proxies object options through async native addon calls", async () => {
   const previous = require.extensions[".node"];
   delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(planningPath)];
+  delete require.cache[addonPath];
 
   require.extensions[".node"] = (module, filename) => {
     assert.equal(filename, addonPath);
@@ -39,11 +90,23 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "deadExports", options: JSON.parse(json) }),
       callSitesJson: async (json) =>
         JSON.stringify({ command: "callSites", options: JSON.parse(json) }),
-      resolveCheckJson: async (json) =>
-        JSON.stringify({ command: "resolveCheck", options: JSON.parse(json) }),
+      resolveCheckJson: async (json) => {
+        const options = JSON.parse(json);
+        if (Array.isArray(options.files) && options.files.length === 0) {
+          throw new Error("files must contain at least one path");
+        }
+        if (Object.hasOwn(options, "file") && Object.hasOwn(options, "files")) {
+          throw new Error("exactly one of file or files is required");
+        }
+        return JSON.stringify({ command: "resolveCheck", options });
+      },
       fetchesJson: async (json) =>
         JSON.stringify({ command: "fetches", options: JSON.parse(json) }),
       checkJson: async (json) => JSON.stringify({ command: "check", options: JSON.parse(json) }),
+      resolveConfigJson: async (json) =>
+        JSON.stringify({ command: "resolveConfig", options: JSON.parse(json) }),
+      validateMermaidMarkdownJson: async (json) =>
+        JSON.stringify({ command: "validateMermaidMarkdown", options: JSON.parse(json) }),
       testsPlanJson: async (json) =>
         JSON.stringify({ command: "testsPlan", options: JSON.parse(json) }),
       testsTargetsJson: async (json) =>
@@ -98,6 +161,8 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "swiftImporters", options: JSON.parse(json) }),
       swiftTestTargetsJson: async (json) =>
         JSON.stringify({ command: "swiftTestTargets", options: JSON.parse(json) }),
+      ciTopologyJson: async (json) =>
+        JSON.stringify({ command: "ciTopology", options: JSON.parse(json) }),
       version: async () => "1.2.3",
     };
   };
@@ -142,6 +207,17 @@ test("programmatic API proxies object options through async native addon calls",
         },
       },
     );
+    assert.deepEqual(
+      await api.analyzeProject({
+        reports: [{ type: "check", includeSuppressed: true }],
+      }),
+      {
+        command: "analyzeProject",
+        options: {
+          reports: [{ type: "check", includeSuppressed: true }],
+        },
+      },
+    );
     assert.equal(
       (await api.symbols({ files: ["d.mts"], include: "both" })).options.include,
       "both",
@@ -171,8 +247,28 @@ test("programmatic API proxies object options through async native addon calls",
       "foo",
     );
     assert.equal((await api.resolveCheck({ file: "a.ts" })).command, "resolveCheck");
+    assert.deepEqual((await api.resolveCheck({ files: ["a.ts", "b.ts"] })).options.files, [
+      "a.ts",
+      "b.ts",
+    ]);
+    await assert.rejects(api.resolveCheck({ files: [] }), /files must contain at least one path/);
+    await assert.rejects(
+      api.resolveCheck({ file: "a.ts", files: ["b.ts"] }),
+      /exactly one of file or files is required/,
+    );
     assert.equal((await api.fetches({ targets: ["/users"] })).command, "fetches");
-    assert.equal((await api.check({ tsconfig: "tsconfig.json" })).command, "check");
+    assert.deepEqual(await api.check({ tsconfig: "tsconfig.json", includeSuppressed: true }), {
+      command: "check",
+      options: { tsconfig: "tsconfig.json", includeSuppressed: true },
+    });
+    assert.equal((await api.resolveConfig({ root: "." })).command, "resolveConfig");
+    assert.deepEqual(
+      await api.validateMermaidMarkdown({ content: "diagram source", file: "docs/design.md" }),
+      {
+        command: "validateMermaidMarkdown",
+        options: { content: "diagram source", file: "docs/design.md" },
+      },
+    );
     assert.deepEqual(
       (await api.testsPlan({ framework: "swift", globalConfigFallback: false })).options,
       { framework: "swift", globalConfigFallback: false },
@@ -188,6 +284,10 @@ test("programmatic API proxies object options through async native addon calls",
       "testsGraph",
     );
     assert.equal(await api.testsGraphMermaid({ planJson: { selected_tests: [] } }), "graph:0");
+    const planDir = mkdtempSync(join(tmpdir(), "no-mistakes-plan-"));
+    const planPath = join(planDir, "plan.json");
+    writeFileSync(planPath, JSON.stringify({ selectedTests: [] }));
+    assert.equal(await api.testsGraphMermaid({ plan: planPath }), "graph:0");
     assert.equal((await api.playwrightCheck({ root: "." })).command, "playwrightCheck");
     assert.equal((await api.playwrightEdges({ root: "." })).command, "playwrightEdges");
     assert.equal(
@@ -231,9 +331,179 @@ test("programmatic API proxies object options through async native addon calls",
       (await api.swiftTestTargets({ file: "Sources/A.swift" })).command,
       "swiftTestTargets",
     );
+    assert.equal((await api.ciTopology({ workflows: ["ci.yml"] })).options.workflows[0], "ci.yml");
+    assert.equal(
+      (await api.ciTopology({ workflows: ["ci.yml"] })).options.root,
+      resolve(process.cwd()),
+    );
+    assert.equal(
+      (await api.ciTopology({ workflows: ["deploy.yml"] })).options.workflows[0],
+      "deploy.yml",
+    );
+    const cached = await api.ciTopology({ workflows: ["ci.yml"] });
+    cached.options.workflows[0] = "mutated.yml";
+    assert.equal((await api.ciTopology({ workflows: ["ci.yml"] })).options.workflows[0], "ci.yml");
     assert.equal(await api.version(), "1.2.3");
   } finally {
     delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(planningPath)];
+    delete require.cache[addonPath];
+    if (previous) {
+      require.extensions[".node"] = previous;
+    } else {
+      delete require.extensions[".node"];
+    }
+  }
+});
+
+test("testsWhy and analyzeProject clean generated why-plan directories", async () => {
+  const previous = require.extensions[".node"];
+  const seen = [];
+  delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(planningPath)];
+  delete require.cache[addonPath];
+  require.extensions[".node"] = (module, filename) => {
+    assert.equal(filename, addonPath);
+    module.exports = {
+      testsWhyJson: async (json) => {
+        const options = JSON.parse(json);
+        seen.push(options.plan);
+        if (options.test === "__reject__") throw new Error("why failed");
+        return JSON.stringify({ command: "testsWhy", options });
+      },
+      analyzeProjectJson: async (json) => {
+        const options = JSON.parse(json);
+        for (const report of options.reports || []) seen.push(report.plan);
+        if (options.reports?.some((report) => report.test === "__reject__")) {
+          throw new Error("why failed");
+        }
+        return JSON.stringify({ command: "analyzeProject", options });
+      },
+    };
+  };
+  try {
+    const api = require(indexPath);
+    const planDir = mkdtempSync(join(tmpdir(), "no-mistakes-plan-"));
+    const planPath = join(planDir, "plan.json");
+    writeFileSync(planPath, JSON.stringify({ selectedTests: [] }));
+    await api.testsWhy({ test: "source.test.ts", planJson: { selectedTests: [] } });
+    await api.testsWhy({ test: "source.test.ts", plan: planPath });
+    await api.analyzeProject({
+      reports: [
+        { type: "testsWhy", test: "batched.test.ts", planJson: { selectedTests: [] } },
+        { type: "testsWhy", test: "file.test.ts", plan: planPath },
+      ],
+    });
+    await assert.rejects(
+      api.testsWhy({ test: "__reject__", planJson: { selectedTests: [] } }),
+      /why failed/,
+    );
+    await assert.rejects(
+      api.analyzeProject({
+        reports: [{ type: "testsWhy", test: "__reject__", planJson: { selectedTests: [] } }],
+      }),
+      /why failed/,
+    );
+    assert.equal(seen.length, 6);
+    for (const plan of seen) {
+      assert.match(plan, /no-mistakes-why-/);
+      assert.equal(existsSync(plan), false);
+    }
+    assert.equal(existsSync(planPath), true);
+  } finally {
+    delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(planningPath)];
+    delete require.cache[addonPath];
+    if (previous) {
+      require.extensions[".node"] = previous;
+    } else {
+      delete require.extensions[".node"];
+    }
+  }
+});
+
+test("native exports, JavaScript exports, and declarations stay in parity", async () => {
+  const previous = require.extensions[".node"];
+  const nativeExports = nativeExportNames();
+  const observedExports = new Set();
+  delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(planningPath)];
+  delete require.cache[addonPath];
+
+  require.extensions[".node"] = (module, filename) => {
+    assert.equal(filename, addonPath);
+    module.exports = Object.fromEntries(
+      nativeExports.map((name) => [
+        name,
+        async (json) => {
+          observedExports.add(name);
+          if (Object.values(RAW_NATIVE_EXPORTS).includes(name)) return name;
+          return JSON.stringify({ name, options: JSON.parse(json) });
+        },
+      ]),
+    );
+  };
+
+  try {
+    const api = require(indexPath);
+    const declaredExports = declarationExportNames();
+    assert.deepEqual(Object.keys(api).sort(), declaredExports);
+
+    // This export is intentionally pure JS; every other declared function
+    // must cross the N-API boundary and keep returning a promise.
+    for (const name of declaredExports) {
+      if (name === "createWorkflowTopologyIndex") continue;
+      const expectedNativeExport = nativeExportNameForApi(name);
+      const result = api[name]({});
+      assert.equal(typeof result.then, "function", `${name} must remain async`);
+      const value = await result;
+      if (Object.hasOwn(RAW_NATIVE_EXPORTS, name)) {
+        assert.equal(value, expectedNativeExport);
+      } else {
+        assert.equal(value.name, expectedNativeExport);
+      }
+    }
+
+    assert.deepEqual([...observedExports].sort(), nativeExports);
+  } finally {
+    delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(planningPath)];
+    delete require.cache[addonPath];
+    if (previous) {
+      require.extensions[".node"] = previous;
+    } else {
+      delete require.extensions[".node"];
+    }
+  }
+});
+
+test("native ESM imports expose every declared root API", async () => {
+  const previous = require.extensions[".node"];
+  delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(planningPath)];
+  delete require.cache[require.resolve(addonPath)];
+
+  require.extensions[".node"] = (module, filename) => {
+    assert.equal(filename, addonPath);
+    module.exports = { version: async () => "1.2.3" };
+  };
+
+  try {
+    const esm = await import(pathToFileURL(indexPath).href);
+    const declaredExports = declarationExportNames();
+
+    for (const name of declaredExports) {
+      assert.equal(typeof esm[name], "function", `${name} must support native ESM named imports`);
+    }
+
+    assert.equal(typeof esm.ciTopology, "function");
+    assert.equal(typeof esm.testsPlan, "function");
+    assert.equal(typeof esm.createWorkflowTopologyIndex, "function");
+    assert.equal(typeof esm.version, "function");
+  } finally {
+    delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(planningPath)];
+    delete require.cache[require.resolve(addonPath)];
     if (previous) {
       require.extensions[".node"] = previous;
     } else {
@@ -257,6 +527,18 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
     /options: WithInvocationOptions<SymbolsOptions>,\n\): Promise<SymbolsResult \| SignatureImpactResult>;/,
   );
   assert.match(traversalDeclarations, /mode: "signature-impact";\n  symbol: string;/);
+  assert.match(
+    traversalDeclarations,
+    /export interface CheckOptions extends ProjectOptions \{[\s\S]*?includeSuppressed\?: boolean;/,
+  );
+  assert.doesNotMatch(
+    traversalDeclarations,
+    /export interface ProjectOptions \{[^}]*includeSuppressed/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "index.d.ts"), "utf8"),
+    /check\(options\?: WithInvocationOptions<CheckOptions>\): Promise<CheckReport>;/,
+  );
   assert.match(
     analyzeProjectDeclarations,
     /type: "symbols"; id\?: string } & \(SymbolsListOptions \| SymbolsSignatureImpactOptions\)/,
@@ -303,13 +585,127 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type BatchedCheckOptions = Pick<ProjectOptions, "root" \| "tsconfig" \| "config">/,
+    /type BatchedCheckOptions = Pick<[\s\S]*?"root" \| "tsconfig" \| "config" \| "includeSuppressed"[\s\S]*?>/,
+  );
+  assert.doesNotMatch(
+    analyzeProjectDeclarations,
+    /type BatchedCheckOptions = Pick<[\s\S]*?"include" \| "includeSuppressed"/,
   );
   assert.match(analyzeProjectDeclarations, /type: "check"; id\?: string } & BatchedCheckOptions/);
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "importers"; id\?: string } & BatchedQueryFileOptions<ImportersOptions>/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "fetches"; id\?: string } & BatchedRootConfigOptions<FetchesOptions>/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "testsPlan"; id\?: string } & BatchedRootTsConfigOptions<TestsPlanOptions>/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "lockfileDiff"; id\?: string } & Omit<LockfileDiffOptions, "root">/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "validateMermaidMarkdown"; id\?: string } & MermaidValidationOptions/,
+  );
+  assert.match(
+    readFileSync(join(packageRoot, "check-report-types.d.ts"), "utf8"),
+    /domain:[\s\S]*\| "advisories";/,
+  );
   assert.match(
     readFileSync(join(packageRoot, "types.d.ts"), "utf8"),
     /export \* from "\.\/analyze-project-types";/,
   );
+});
+
+test("resolveCheck declarations mirror its mutually exclusive runtime inputs", () => {
+  const declarations = readFileSync(join(packageRoot, "query-types.d.ts"), "utf8");
+
+  assert.match(declarations, /ResolveCheckOptions = QueryFileOptions & \{\n  files\?: never;/);
+  assert.match(declarations, /files: \[string, \.\.\.string\[\]\];/);
+  assert.match(declarations, /file\?: never;/);
+});
+
+test("resolveConfig declarations expose additive per-framework triggers", () => {
+  const declarations = readFileSync(join(packageRoot, "resolve-config-types.d.ts"), "utf8");
+
+  assert.match(declarations, /vitestFullSuiteTriggers: ResolvedTrigger\[\];/);
+  assert.match(declarations, /fullSuiteTriggers: ResolvedFrameworkTriggers\[\];/);
+  assert.match(
+    declarations,
+    /export interface ResolvedFrameworkTriggers \{\n  framework: TestPlanFramework;\n  triggers: ResolvedTrigger\[\];\n\}/,
+  );
+  assert.match(declarations, /rewrites: ResolvedRewrite\[\];/);
+  assert.match(declarations, /ignoreRoutes: string\[\];/);
+  assert.match(
+    declarations,
+    /export interface ResolvedRewrite \{\n  source: string;\n  destination: string;\n\}/,
+  );
+});
+
+test("test plan declarations require current results but accept saved legacy plan documents", () => {
+  const declarations = readFileSync(join(packageRoot, "test-types.d.ts"), "utf8");
+
+  assert.match(
+    declarations,
+    /export interface TestPlan \{\n  \/\*\* Complete deterministic changed-file inventory/,
+  );
+  assert.match(declarations, /\n  changedFiles: string\[\];/);
+  assert.match(declarations, /export type SavedTestPlan = TestPlan;/);
+  assert.match(declarations, /planJson\?: SavedTestPlan \| string;/);
+  assert.match(
+    declarations,
+    /export interface TestsWhyOptions \{[\s\S]*plan\?: string;\n  planJson\?: SavedTestPlan \| string;/,
+  );
+  assert.match(declarations, /export type TestsPlanOptions =/);
+  assert.match(
+    declarations,
+    /export type TestPlanFramework =\n  \| "vitest"\n  \| "playwright"\n  \| "dotnet"\n  \| "swift"\n  \| "python"\n  \| "go"\n  \| "cargo"\n  \| "rails"\n  \| "php"\n  \| "java"\n  \| "kotlin"\n  \| "elixir"\n  \| "dart"\n  \| "jest";/,
+  );
+  assert.match(declarations, /directTestOwner: true;[\s\S]*framework: TestPlanFramework;/);
+  assert.match(declarations, /framework: TestPlanFramework;[\s\S]*entrypoints\?: never;/);
+  assert.match(declarations, /limitPercent\?: never;[\s\S]*limitFiles\?: never;/);
+  assert.match(declarations, /globalConfigFallback\?: never;[\s\S]*directTestOwner\?: false;/);
+});
+
+test("graph declarations expose GitHub Actions workflow relationships and virtual nodes", () => {
+  const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  const flowDeclarations = readFileSync(join(packageRoot, "flow-types.d.ts"), "utf8");
+
+  for (const relationship of [
+    "workflow",
+    "workflow-job",
+    "workflow-step",
+    "workflow-needs",
+    "workflow-uses",
+    "workflow-run",
+    "workflow-artifact",
+  ]) {
+    assert.match(traversalDeclarations, new RegExp(`\\| "${relationship}"`));
+  }
+  assert.match(traversalDeclarations, /workflowFile\?: string;/);
+  assert.match(traversalDeclarations, /job\?: string;/);
+  assert.match(traversalDeclarations, /step\?: number;/);
+  assert.match(flowDeclarations, /"workflow-job"/);
+  assert.match(flowDeclarations, /"workflow-step"/);
+  assert.match(flowDeclarations, /workflowFile\?: string;/);
+  assert.match(flowDeclarations, /step\?: number;/);
+});
+
+test("graph declarations expose tRPC relationships and virtual nodes", () => {
+  const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  const flowDeclarations = readFileSync(join(packageRoot, "flow-types.d.ts"), "utf8");
+
+  assert.match(traversalDeclarations, /\| "trpc"/);
+  assert.match(traversalDeclarations, /routerFile\?: string;/);
+  assert.match(traversalDeclarations, /procedure\?: string;/);
+  assert.match(flowDeclarations, /"trpc-procedure"/);
+  assert.match(flowDeclarations, /routerFile\?: string;/);
+  assert.match(flowDeclarations, /procedure\?: string;/);
 });
 
 test("declarations expose invocation controls on every analysis", () => {
@@ -319,6 +715,7 @@ test("declarations expose invocation controls on every analysis", () => {
   assert.match(invocationDeclarations, /timeout\?: number \| null;/);
   assert.match(invocationDeclarations, /lockTimeout\?: number \| null;/);
   assert.match(invocationDeclarations, /failOnLock\?: boolean;/);
+  assert.match(invocationDeclarations, /jobs\?: number \| null;/);
   assert.match(
     indexDeclarations,
     /analyzeProject\(\n  options: WithInvocationOptions<AnalyzeProjectOptions>/,

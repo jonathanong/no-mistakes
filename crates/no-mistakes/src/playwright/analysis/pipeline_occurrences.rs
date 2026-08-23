@@ -32,6 +32,7 @@ pub(crate) struct PrepareTestFilesOptions<'a> {
     pub(crate) selection: CachedOccurrenceSelection,
     pub(crate) module_resolution:
         Option<&'a crate::codebase::check_facts::PlaywrightModuleResolution>,
+    pub(crate) sources: Option<&'a crate::codebase::ts_source::SourceStore>,
 }
 
 pub(crate) fn prepare_test_files(
@@ -46,65 +47,69 @@ pub(crate) fn prepare_test_files(
         facts,
         selection,
         module_resolution,
+        sources,
     } = options;
     let prepared: Vec<_> = test_files
         .into_par_iter()
         .map(|test_file| {
-            let occurrences =
-                match facts.and_then(|facts| facts.get_playwright_facts(&test_file.path)) {
-                    Some(playwright) => match selection {
-                        CachedOccurrenceSelection::Exact => {
-                            let attributes = test_file.test_id_attributes();
-                            let key = PlaywrightOccurrenceKey::new(
-                                &settings.navigation_helpers,
-                                &settings.selector_wrappers,
-                                &settings.selector_attributes,
-                                &settings.component_selector_attributes,
-                                settings.html_ids,
-                                &attributes,
-                            );
-                            vec![playwright.select(&key).ok_or_else(|| {
-                                anyhow::anyhow!(
-                                    "cached Playwright facts lack the requested variant for {}",
-                                    test_file.path.display()
-                                )
-                            })?]
-                        }
-                    },
-                    None => {
-                        if let Some(error) = facts
-                            .and_then(|facts| facts.get_playwright_parse_error(&test_file.path))
-                        {
-                            if skip_test_file_errors {
-                                return Ok(None);
+            crate::ast::with_request_parse_cache(|| {
+                let occurrences =
+                    match facts.and_then(|facts| facts.get_playwright_facts(&test_file.path)) {
+                        Some(playwright) => match selection {
+                            CachedOccurrenceSelection::Exact => {
+                                let attributes = test_file.test_id_attributes();
+                                let key = PlaywrightOccurrenceKey::new(
+                                    &settings.navigation_helpers,
+                                    &settings.selector_wrappers,
+                                    &settings.selector_attributes,
+                                    &settings.component_selector_attributes,
+                                    settings.html_ids,
+                                    &attributes,
+                                );
+                                vec![playwright.select(&key).ok_or_else(|| {
+                                    anyhow::anyhow!(
+                                        "cached Playwright facts lack the requested variant for {}",
+                                        test_file.path.display()
+                                    )
+                                })?]
                             }
-                            return Err(anyhow::anyhow!(
-                                "failed to parse {}: {error}",
-                                test_file.path.display()
-                            ));
+                        },
+                        None => {
+                            if let Some(error) = facts
+                                .and_then(|facts| facts.get_playwright_parse_error(&test_file.path))
+                            {
+                                if skip_test_file_errors {
+                                    return Ok(None);
+                                }
+                                return Err(anyhow::anyhow!(
+                                    "failed to parse {}: {error}",
+                                    test_file.path.display()
+                                ));
+                            }
+                            match extract_test_file_occurrences(
+                                &test_file,
+                                &settings.navigation_helpers,
+                                selector_regexes,
+                                &settings.selector_wrappers,
+                                module_resolution,
+                                sources,
+                            ) {
+                                Ok(occurrences) => vec![occurrences],
+                                Err(_) if skip_test_file_errors => return Ok(None),
+                                Err(error) => return Err(error),
+                            }
                         }
-                        match extract_test_file_occurrences(
-                            &test_file,
-                            &settings.navigation_helpers,
-                            selector_regexes,
-                            &settings.selector_wrappers,
-                            module_resolution,
-                        ) {
-                            Ok(occurrences) => vec![occurrences],
-                            Err(_) if skip_test_file_errors => return Ok(None),
-                            Err(error) => return Err(error),
-                        }
-                    }
-                };
-            Ok(Some(
-                occurrences
-                    .into_iter()
-                    .map(|occurrences| PreparedTestFile {
-                        test_file: test_file.clone(),
-                        occurrences,
-                    })
-                    .collect::<Vec<_>>(),
-            ))
+                    };
+                Ok(Some(
+                    occurrences
+                        .into_iter()
+                        .map(|occurrences| PreparedTestFile {
+                            test_file: test_file.clone(),
+                            occurrences,
+                        })
+                        .collect::<Vec<_>>(),
+                ))
+            })
         })
         .collect::<Result<Vec<_>>>()?
         .into_iter()
@@ -135,8 +140,9 @@ pub(crate) fn extract_test_file_occurrences(
     selector_regexes: &SelectorRegexes,
     selector_wrappers: &[crate::config::v2::schema::PlaywrightSelectorWrapper],
     module_resolution: Option<&crate::codebase::check_facts::PlaywrightModuleResolution>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Result<TestFileOccurrences> {
-    let source = std::fs::read_to_string(&test_file.path)
+    let source = crate::playwright::fsutil::read_source_text(&test_file.path, sources)
         .context(format!("reading test file {}", test_file.path.display()))?;
     let test_id_attributes = test_file.test_id_attributes();
     crate::playwright::ast::with_program(&test_file.path, &source, |program, source| {

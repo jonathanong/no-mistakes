@@ -3,7 +3,7 @@ fn print_contracts(
     format: Format,
 ) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(report)?),
+        Format::Json => print_json(report),
         Format::Yml => println!("{}", serde_yaml::to_string(report)?),
         Format::Md => {
             println!("# Server contracts");

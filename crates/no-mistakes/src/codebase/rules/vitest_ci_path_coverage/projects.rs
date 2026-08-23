@@ -1,4 +1,5 @@
 mod merge;
+mod named;
 mod patterns;
 
 use super::Options;
@@ -59,16 +60,7 @@ pub(super) fn coverage_units_with_catalog(
         }
     }
     if opts.include_full_suite_triggers.unwrap_or(true) {
-        for (project_name, trigger) in &config.test_plan.vitest.full_suite_triggers.projects {
-            let Some(project) = config.projects.get(project_name) else {
-                continue;
-            };
-            units.push(CoverageUnit {
-                project: project_name.clone(),
-                source: CoverageSource::FullSuiteTrigger,
-                patterns: project_dependency_patterns(project_name, project, trigger),
-            });
-        }
+        named::push_full_suite_trigger_units(config, &mut units);
     }
     for (project, patterns) in &opts.source_globs_by_project {
         units.push(CoverageUnit {
@@ -175,6 +167,16 @@ fn project_dependency_patterns(
         TestPlanProjectDependency::Patterns(patterns) => {
             let root = project.root.as_deref().unwrap_or(project_name);
             patterns
+                .iter()
+                .map(|pattern| project_relative_pattern(root, pattern))
+                .collect()
+        }
+        // Structured triggers are still source-path coverage requirements;
+        // their runner-target restriction is irrelevant to CI path filters.
+        TestPlanProjectDependency::Targeted(targeted) => {
+            let root = project.root.as_deref().unwrap_or(project_name);
+            targeted
+                .paths
                 .iter()
                 .map(|pattern| project_relative_pattern(root, pattern))
                 .collect()

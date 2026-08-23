@@ -170,6 +170,17 @@ fn non_impact_filter_ignores_always_include_globs() {
 }
 
 #[test]
+fn prepared_impact_filter_keeps_always_include_globs() {
+    let root = fixture_root();
+    let mut config = NoMistakesConfig::default();
+    config.tests.impact.always_include_tests = vec!["**/*.mock.test.mts".to_string()];
+
+    let filter = TestFileFilter::for_impact_from_prepared_projects(&root, &config, &[], Vec::new());
+
+    assert!(filter.is_match_rel("backend/api/users.mock.test.mts"));
+}
+
+#[test]
 fn empty_always_include_globs_leave_suite_excludes_intact() {
     let root = fixture_root();
     let mut config = NoMistakesConfig::default();

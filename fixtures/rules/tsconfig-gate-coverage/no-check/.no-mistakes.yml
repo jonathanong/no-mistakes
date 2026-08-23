@@ -1,0 +1,21 @@
+checks:
+  commands:
+    - name: direct
+      command: [tsc, --noEmit, --project, direct/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: inherited
+      command: [tsc, --noEmit, --project, inherited/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: override
+      command: [tsc, --noEmit, --project, override/tsconfig.json]
+      fileArgs: none
+      always: true
+    - name: invalid
+      command: [tsc, --noEmit, --project, invalid/tsconfig.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

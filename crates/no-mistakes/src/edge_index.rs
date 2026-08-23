@@ -1,15 +1,24 @@
 use std::cmp::Ordering;
-use std::collections::HashMap;
 use std::hash::Hash;
 
+use crate::fx::{fx_map, FxHashMap};
+
+mod adjacency;
 mod aliases;
 mod build;
+mod prepared;
 mod traversal;
 
+pub(crate) use adjacency::Adjacency;
 pub(crate) use aliases::NodeAliases;
+pub(crate) use prepared::PreparedRelationshipIndex;
 
 #[cfg(test)]
+mod test_support;
+#[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_extend;
 
 /// One canonical, typed relationship in a request-scoped edge index.
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -41,20 +50,16 @@ pub(crate) enum EdgeDirection {
 #[derive(Debug, Clone)]
 pub(crate) struct EdgeIndex<Node, Kind> {
     edges: Vec<CanonicalEdge<Node, Kind>>,
-    forward: HashMap<Node, Vec<(Node, Kind)>>,
-    reverse: HashMap<Node, Vec<(Node, Kind)>>,
-    forward_ordinals: HashMap<Node, Vec<usize>>,
-    reverse_ordinals: HashMap<Node, Vec<usize>>,
+    forward: FxHashMap<Node, Adjacency<Node, Kind>>,
+    reverse: FxHashMap<Node, Adjacency<Node, Kind>>,
 }
 
 impl<Node, Kind> Default for EdgeIndex<Node, Kind> {
     fn default() -> Self {
         Self {
             edges: Vec::new(),
-            forward: HashMap::new(),
-            reverse: HashMap::new(),
-            forward_ordinals: HashMap::new(),
-            reverse_ordinals: HashMap::new(),
+            forward: fx_map(),
+            reverse: fx_map(),
         }
     }
 }
@@ -68,11 +73,11 @@ where
         &self.edges
     }
 
-    pub(crate) fn forward(&self) -> &HashMap<Node, Vec<(Node, Kind)>> {
+    pub(crate) fn forward(&self) -> &FxHashMap<Node, Adjacency<Node, Kind>> {
         &self.forward
     }
 
-    pub(crate) fn reverse(&self) -> &HashMap<Node, Vec<(Node, Kind)>> {
+    pub(crate) fn reverse(&self) -> &FxHashMap<Node, Adjacency<Node, Kind>> {
         &self.reverse
     }
 
@@ -82,7 +87,17 @@ where
     ) {
         for adjacent in self.forward.values_mut().chain(self.reverse.values_mut()) {
             adjacent.sort_by(&mut compare);
-            adjacent.dedup();
+        }
+    }
+
+    pub(crate) fn sort_adjacency_by_cached_key<K>(
+        &mut self,
+        mut key: impl FnMut(&(Node, Kind)) -> K,
+    ) where
+        K: Ord,
+    {
+        for adjacent in self.forward.values_mut().chain(self.reverse.values_mut()) {
+            adjacent.sort_by_cached_key(&mut key);
         }
     }
 }

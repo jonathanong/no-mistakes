@@ -62,7 +62,7 @@ fn resolve_format_prefers_flags_then_tty_default() {
 
 #[test]
 fn merge_node_entries_keeps_min_depth_and_dedupes_edge_kinds() {
-    let node = NodeId::File(PathBuf::from("shared.ts"));
+    let node = NodeId::file(PathBuf::from("shared.ts"));
     let mut merged = HashMap::new();
     merge_node_entries(
         &mut merged,
@@ -89,22 +89,20 @@ fn merge_node_entries_keeps_min_depth_and_dedupes_edge_kinds() {
 #[test]
 fn symbol_roots_keep_matching_queue_job_roots() {
     let queue_file = PathBuf::from("/repo/src/queues.ts");
-    let symbol_root = NodeId::Symbol {
-        file: queue_file.clone(),
-        symbol: "sendWelcome".to_string(),
-    };
-    let queue_job = NodeId::QueueJob {
-        queue_file: queue_file.clone(),
-        job: "sendWelcome".to_string(),
-    };
+    let symbol_root = NodeId::symbol(queue_file.clone(), "sendWelcome");
+    let queue_job = NodeId::queue_job(queue_file.clone(), "sendWelcome");
     let entrypoints = vec![Entrypoint {
         file: queue_file,
         node: symbol_root.clone(),
         symbol: Some("sendWelcome".to_string()),
     }];
 
-    let roots =
-        roots_with_existing_queue_jobs_by(&[symbol_root], &entrypoints, |node| node == &queue_job);
+    let roots = roots_with_existing_queue_jobs_by(
+        &[symbol_root],
+        &entrypoints,
+        |node| node == &queue_job,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
 
     assert!(roots.contains(&queue_job));
 }
@@ -113,17 +111,17 @@ fn symbol_roots_keep_matching_queue_job_roots() {
 fn target_module_filter_keeps_only_matching_module_nodes() {
     let entries = vec![
         graph::NodeEntry {
-            node: NodeId::Module("@react/client".to_string()),
+            node: NodeId::module("@react/client"),
             depth: 1,
             via: vec![EdgeKind::Import],
         },
         graph::NodeEntry {
-            node: NodeId::Module("lodash".to_string()),
+            node: NodeId::module("lodash"),
             depth: 1,
             via: vec![EdgeKind::Import],
         },
         graph::NodeEntry {
-            node: NodeId::File(PathBuf::from("src/local.mts")),
+            node: NodeId::file(PathBuf::from("src/local.mts")),
             depth: 1,
             via: vec![EdgeKind::Import],
         },
@@ -132,10 +130,7 @@ fn target_module_filter_keeps_only_matching_module_nodes() {
     let filtered = apply_target_module_filters(entries, &["@react/*".to_string()]).unwrap();
 
     assert_eq!(filtered.len(), 1);
-    assert_eq!(
-        filtered[0].node,
-        NodeId::Module("@react/client".to_string())
-    );
+    assert_eq!(filtered[0].node, NodeId::module("@react/client"));
 }
 
 #[test]
@@ -158,7 +153,7 @@ fn file_filters_exclude_module_nodes_without_target_module_filter() {
     assert_eq!(filtered.len(), 2);
     assert!(filtered
         .iter()
-        .any(|entry| entry.node == NodeId::File(PathBuf::from("/repo/src/local.mts"))));
+        .any(|entry| entry.node == NodeId::file(PathBuf::from("/repo/src/local.mts"))));
     assert!(filtered
         .iter()
         .any(|entry| matches!(entry.node, NodeId::QueueJob { .. })));
@@ -176,14 +171,14 @@ fn node_entries_fixture(name: &str) -> Vec<graph::NodeEntry> {
 fn node_entry_from_json(value: serde_json::Value) -> graph::NodeEntry {
     let node = value.get("node").unwrap();
     let node = if let Some(module) = node.get("module").and_then(|value| value.as_str()) {
-        NodeId::Module(module.to_string())
+        NodeId::module(module)
     } else if let Some(file) = node.get("file").and_then(|value| value.as_str()) {
-        NodeId::File(PathBuf::from(file))
+        NodeId::file(PathBuf::from(file))
     } else {
-        NodeId::QueueJob {
-            queue_file: PathBuf::from(node["queue_file"].as_str().unwrap()),
-            job: node["job"].as_str().unwrap().to_string(),
-        }
+        NodeId::queue_job(
+            PathBuf::from(node["queue_file"].as_str().unwrap()),
+            node["job"].as_str().unwrap(),
+        )
     };
     let via = value["via"]
         .as_array()
@@ -273,6 +268,22 @@ fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
         json: false,
         timings: false,
     }
+}
+
+#[test]
+fn resolve_entrypoints_promotes_trpc_suffixes_to_virtual_nodes() {
+    let root = super::fixture_root("trpc-basic");
+    let entrypoints = super::resolve_entrypoints(
+        &[PathBuf::from("src/router.ts#procedure:user.get")],
+        &root,
+        &root,
+    );
+
+    assert_eq!(entrypoints[0].symbol, None);
+    assert_eq!(
+        entrypoints[0].node,
+        NodeId::trpc_procedure(root.join("src/router.ts"), "user.get")
+    );
 }
 
 include!("extra_execution.rs");

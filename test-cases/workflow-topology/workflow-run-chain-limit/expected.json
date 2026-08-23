@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/w1.yml",
+      "path": ".github/workflows/w1.yml",
+      "name": "W1",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/w1.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/w1b.yml",
+      "path": ".github/workflows/w1b.yml",
+      "name": "W1b",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/w1b.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/w2.yml",
+      "path": ".github/workflows/w2.yml",
+      "name": "W2",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "workflow_run",
+          "config": {
+            "workflows": [
+              "W1",
+              "W1b"
+            ]
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/w2.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/w3.yml",
+      "path": ".github/workflows/w3.yml",
+      "name": "W3",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "workflow_run",
+          "config": {
+            "workflows": [
+              "W2"
+            ]
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/w3.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/w4.yml",
+      "path": ".github/workflows/w4.yml",
+      "name": "W4",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "workflow_run",
+          "config": {
+            "workflows": [
+              "W3"
+            ]
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/w4.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/w5.yml",
+      "path": ".github/workflows/w5.yml",
+      "name": "W5",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "workflow_run",
+          "config": {
+            "workflows": [
+              "W4"
+            ]
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/w5.yml#noop"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/w1.yml#noop",
+      "workflowId": ".github/workflows/w1.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/w1b.yml#noop",
+      "workflowId": ".github/workflows/w1b.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/w2.yml#noop",
+      "workflowId": ".github/workflows/w2.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/w3.yml#noop",
+      "workflowId": ".github/workflows/w3.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/w4.yml#noop",
+      "workflowId": ".github/workflows/w4.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/w5.yml#noop",
+      "workflowId": ".github/workflows/w5.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "workflow-run",
+      "from": ".github/workflows/w1.yml",
+      "to": ".github/workflows/w2.yml"
+    },
+    {
+      "kind": "workflow-run",
+      "from": ".github/workflows/w1b.yml",
+      "to": ".github/workflows/w2.yml"
+    },
+    {
+      "kind": "workflow-run",
+      "from": ".github/workflows/w2.yml",
+      "to": ".github/workflows/w3.yml"
+    },
+    {
+      "kind": "workflow-run",
+      "from": ".github/workflows/w3.yml",
+      "to": ".github/workflows/w4.yml"
+    },
+    {
+      "kind": "workflow-run",
+      "from": ".github/workflows/w4.yml",
+      "to": ".github/workflows/w5.yml"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "workflow-run-chain-limit",
+      "message": "workflow_run chain exceeds 3 levels: .github/workflows/w1.yml -> .github/workflows/w2.yml -> .github/workflows/w3.yml -> .github/workflows/w4.yml -> .github/workflows/w5.yml",
+      "workflowPath": ".github/workflows/w5.yml"
+    }
+  ]
+}

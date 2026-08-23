@@ -115,18 +115,18 @@ fn shared_traversal_reuses_equivalent_traversal_results_before_filtering() {
         session,
     )
     .unwrap();
-    let args = traverse_args(root.clone(), vec![PathBuf::from("a.mts")]);
-    let mut filtered = traverse_args(root, vec![PathBuf::from("a.mts")]);
+    let mut filtered = traverse_args(root.clone(), vec![PathBuf::from("a.mts")]);
     filtered.filters = vec!["does-not-exist/**".to_string()];
+    let args = traverse_args(root, vec![PathBuf::from("a.mts")]);
 
     let first =
-        collect_and_filter_entries_shared(&args, Direction::Deps, &cwd, &mut shared).unwrap();
-    let second =
         collect_and_filter_entries_shared(&filtered, Direction::Deps, &cwd, &mut shared).unwrap();
+    let second =
+        collect_and_filter_entries_shared(&args, Direction::Deps, &cwd, &mut shared).unwrap();
 
     let work = observer.snapshot().work;
-    assert!(!first.entries.is_empty());
-    assert!(second.entries.is_empty());
+    assert!(first.entries.is_empty());
+    assert!(!second.entries.is_empty());
     assert_eq!(work["graph.builds"], 1);
     assert_eq!(work["traversal.requests"], 2);
     assert_eq!(work["traversal.computations"], 1);

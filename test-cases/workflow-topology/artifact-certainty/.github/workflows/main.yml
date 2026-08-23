@@ -1,0 +1,47 @@
+on: push
+jobs:
+  # No `needs:` between build-unordered and consume-unordered: the upload
+  # is an eligible candidate (it could run first) but not guaranteed, so
+  # the edge stays "possible" even with an otherwise-exact name match.
+  build-unordered:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: report}
+  consume-unordered:
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: report}
+  build-ordered:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: report-ordered}
+  consume-ordered:
+    needs: build-ordered
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: report-ordered}
+  first-overwrite:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: shared-overwrite}
+  overwrite:
+    needs: first-overwrite
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: shared-overwrite, overwrite: true}
+  # Only needs first-overwrite, not overwrite: the two producers race for
+  # this consumer, so neither is guaranteed and the earlier one is kept
+  # possible rather than being superseded.
+  consume-race:
+    needs: first-overwrite
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: shared-overwrite}
+  # Needs overwrite (which itself needs first-overwrite): the overwrite is
+  # guaranteed before this consumer, so it supersedes first-overwrite and
+  # collapses to a single exact edge.
+  consume-guaranteed:
+    needs: overwrite
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: shared-overwrite}

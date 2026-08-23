@@ -1,5 +1,6 @@
 use super::super::{CheckFactPlan, PlaywrightFactPlan};
-use std::collections::{HashMap, HashSet};
+use crate::codebase::ts_source::FileIdMap;
+use std::collections::HashSet;
 use std::path::Path;
 use std::path::PathBuf;
 
@@ -11,12 +12,12 @@ pub(super) fn cached_config_file_facts(
     plan: &CheckFactPlan,
     playwright: &PlaywrightFactPlan,
     sources: &crate::codebase::ts_source::SourceStore,
-) -> HashMap<PathBuf, super::super::CheckFileFacts> {
+) -> FileIdMap<super::super::CheckFileFacts> {
     if !crate::ast::request_parse_cache_active() {
-        return HashMap::new();
+        return FileIdMap::with_inventory(std::sync::Arc::clone(sources.inventory()));
     }
     let universe = files.iter().chain(graph_files).collect::<HashSet<_>>();
-    playwright
+    let collected = playwright
         .config_files()
         .iter()
         .filter(|path| universe.contains(path) || plan.legacy_symbol_paths.contains(*path))
@@ -34,6 +35,6 @@ pub(super) fn cached_config_file_facts(
             .next()
             .flatten()?;
             Some((path.clone(), facts))
-        })
-        .collect()
+        });
+    FileIdMap::from_iter_with_inventory(collected, std::sync::Arc::clone(sources.inventory()))
 }

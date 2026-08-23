@@ -35,7 +35,11 @@ fn legacy_symbol_target_files(
         if args.mode == crate::codebase::symbols::SymbolsMode::SignatureImpact {
             continue;
         }
-        files.extend(args.files.into_iter().map(|file| authoritative_path(root, file)));
+        files.extend(
+            args.files
+                .into_iter()
+                .map(|file| authoritative_path(root, file)),
+        );
     }
     Ok(files)
 }
@@ -78,12 +82,20 @@ fn authoritative_report_files(
     let mut files = symbol_target_files(options, root)?;
     for request in &options.reports {
         if super::graph_direction(&request.report_type).is_some() {
-            files.extend(
-                super::traverse_args(request, options)?
-                    .files
-                    .into_iter()
-                    .map(|path| authoritative_path(root, path)),
-            );
+            let args = super::traverse_args(request, options)?;
+            files.extend(args.files.into_iter().enumerate().map(|(index, path)| {
+                let structured = args
+                    .file_entrypoints_are_structured
+                    .get(index)
+                    .copied()
+                    .unwrap_or(false);
+                let raw = if structured {
+                    path
+                } else {
+                    crate::codebase::dependencies::parse_entrypoint(&path.to_string_lossy()).0
+                };
+                authoritative_path(root, raw)
+            }));
         } else if request.report_type == "effects" {
             if let Some(entry) = super::options::effects_options(request, options)?.entry {
                 files.push(authoritative_path(root, PathBuf::from(entry)));
@@ -102,11 +114,23 @@ fn authoritative_report_files(
     Ok(files)
 }
 
-fn authoritative_path(root: &Path, path: PathBuf) -> PathBuf {
+pub(crate) fn authoritative_path(root: &Path, path: PathBuf) -> PathBuf {
     let path = if path.is_absolute() {
         path
     } else {
-        root.join(path)
+        let from_root = root.join(&path);
+        if from_root.exists() {
+            from_root
+        } else if let Ok(cwd) = std::env::current_dir() {
+            let from_cwd = cwd.join(&path);
+            if from_cwd.exists() {
+                from_cwd
+            } else {
+                from_root
+            }
+        } else {
+            from_root
+        }
     };
     crate::codebase::ts_resolver::normalize_path(&path)
 }

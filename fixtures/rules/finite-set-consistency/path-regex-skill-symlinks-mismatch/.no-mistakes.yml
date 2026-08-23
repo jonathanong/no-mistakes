@@ -1,0 +1,16 @@
+version: 2
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: skillFiles
+          kind: path-regex-capture
+          pattern: "^\\.agents/skills/(?<value>[^/]+)/SKILL\\.md$"
+        - name: skillLinks
+          kind: path-regex-capture
+          pattern: "^\\.claude/skills/(?<value>[^/]+)$"
+      comparisons:
+        - left: skillFiles
+          right: skillLinks
+          mode: equal-set

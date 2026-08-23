@@ -1,0 +1,1 @@
+deferred class method resource

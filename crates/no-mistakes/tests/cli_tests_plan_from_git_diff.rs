@@ -1,6 +1,9 @@
 //! Covers `tests plan --from-git-diff`: single-argument sugar over
-//! `--base`/`--head` that desugars to the same `git diff --name-status
-//! <base>...<head>` lookup (see `tests/changed_files.rs::parse_git_diff_refspec`).
+//! `--base`/`--head` that desugars to the same streamed `git diff
+//! <base>...<head>` lookup (see `tests/changed_files.rs::parse_git_diff_refspec`
+//! and `tests/git_diff.rs::stream_git_diff`). See
+//! `cli_tests_plan_git_diff_hunks.rs` for hunk/selector-hint/error-code
+//! coverage of the streaming producer itself.
 
 use std::path::PathBuf;
 use std::process::{Command, Output};

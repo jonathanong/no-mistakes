@@ -1,37 +1,41 @@
 use super::{ExportBucket, ExportOrigin, SourceFile};
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver};
+use crate::codebase::ts_resolver::ImportResolverFacade;
+use crate::codebase::ts_source::{has_disable_comment, has_disable_line_comment};
 use crate::codebase::ts_symbols::{Export, ExportKind};
 use crate::codebase::workspaces::WorkspaceMap;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
-pub(super) fn find_target_export_origin(
+pub(super) fn find_target_export_origin<R: ImportResolverFacade>(
     target: &Path,
     imported: &str,
     files: &HashMap<PathBuf, SourceFile>,
-    resolver: &ImportResolver<'_>,
+    resolver: &R,
     workspace: &WorkspaceMap,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
     visiting: &mut HashSet<PathBuf>,
 ) -> Option<ExportOrigin> {
     OriginSearch {
         files,
         resolver,
         workspace,
+        remapper,
         visiting,
     }
     .find(target, imported)
 }
 
-struct OriginSearch<'a, 'b> {
+struct OriginSearch<'a, R: ImportResolverFacade> {
     files: &'a HashMap<PathBuf, SourceFile>,
-    resolver: &'a ImportResolver<'b>,
+    resolver: &'a R,
     workspace: &'a WorkspaceMap,
+    remapper: &'a crate::codebase::ts_source::FrozenPathRemapper,
     visiting: &'a mut HashSet<PathBuf>,
 }
 
-impl OriginSearch<'_, '_> {
+impl<R: ImportResolverFacade> OriginSearch<'_, R> {
     fn find(&mut self, target: &Path, imported: &str) -> Option<ExportOrigin> {
-        let target = normalize_path(target);
+        let target = self.remapper.remap(target)?;
         if !self.visiting.insert(target.clone()) {
             return None;
         }
@@ -39,6 +43,9 @@ impl OriginSearch<'_, '_> {
             self.visiting.remove(&target);
             return None;
         };
+        // A disabled re-export target is absent from ordinary analysis. Keep
+        // that fallback identity when accounting is requested as well, so the
+        // additive audit flag cannot change active duplicate findings.
         if file.disabled {
             self.visiting.remove(&target);
             return None;
@@ -48,7 +55,10 @@ impl OriginSearch<'_, '_> {
             .symbols
             .exports
             .iter()
-            .filter(|export| !super::collector::should_skip_export(file, export))
+            // Origin lookup carries directive provenance to a re-export even
+            // for ordinary checks. The caller suppresses that re-export
+            // consistently with audit mode; only file-disabled sources stay
+            // absent through the early return above.
             .find_map(|export| self.find_export(file, export, imported));
         self.visiting.remove(&target);
         found
@@ -75,10 +85,15 @@ impl OriginSearch<'_, '_> {
             ExportKind::ReExport {
                 source,
                 imported: reimported,
-            } if export.name == "*" && reimported == "*" => {
-                resolve_export_source(source, &file.path, self.resolver, self.workspace)
-                    .and_then(|resolved| self.find(&resolved, imported))
-            }
+            } if export.name == "*" && reimported == "*" => resolve_export_source(
+                source,
+                &file.path,
+                self.resolver,
+                self.workspace,
+                self.remapper,
+            )
+            .and_then(|resolved| self.find(&resolved, imported))
+            .map(|origin| self.with_current_suppression(file, export, origin)),
             _ if export.name == imported => Some(origin_for_export(
                 file,
                 export,
@@ -95,27 +110,52 @@ impl OriginSearch<'_, '_> {
         source: &str,
         reimported: &str,
     ) -> Option<ExportOrigin> {
-        let resolved_origin =
-            match resolve_export_source(source, &file.path, self.resolver, self.workspace) {
-                Some(resolved) => self.find(&resolved, reimported),
-                None => None,
-            };
+        let resolved_origin = match resolve_export_source(
+            source,
+            &file.path,
+            self.resolver,
+            self.workspace,
+            self.remapper,
+        ) {
+            Some(resolved) => self.find(&resolved, reimported),
+            None => None,
+        };
         if export.is_type_only {
             if let Some(origin) = resolved_origin {
-                Some(ExportOrigin {
-                    bucket: ExportBucket::Type,
-                    ..origin
-                })
+                Some(self.with_current_suppression(
+                    file,
+                    export,
+                    ExportOrigin {
+                        bucket: ExportBucket::Type,
+                        ..origin
+                    },
+                ))
             } else {
                 Some(origin_for_export(file, export, ExportBucket::Type))
             }
         } else {
-            if resolved_origin.is_some() {
-                resolved_origin
+            if let Some(origin) = resolved_origin {
+                Some(self.with_current_suppression(file, export, origin))
             } else {
                 Some(origin_for_export(file, export, ExportBucket::Value))
             }
         }
+    }
+
+    fn with_current_suppression(
+        &self,
+        file: &SourceFile,
+        export: &Export,
+        mut origin: ExportOrigin,
+    ) -> ExportOrigin {
+        if file.disabled
+            || has_disable_comment(&file.source, export.line, super::RULE_ID)
+            || has_disable_line_comment(&file.source, export.line, super::RULE_ID)
+        {
+            origin.suppressed = true;
+            origin.suppression_location = Some((file.rel.clone(), export.line));
+        }
+        origin
     }
 }
 
@@ -129,17 +169,25 @@ pub(super) fn origin_for_export(
         line: export.line,
         name: export.name.clone(),
         bucket,
+        suppressed: file.disabled
+            || has_disable_comment(&file.source, export.line, super::RULE_ID)
+            || has_disable_line_comment(&file.source, export.line, super::RULE_ID),
+        suppression_location: (file.disabled
+            || has_disable_comment(&file.source, export.line, super::RULE_ID)
+            || has_disable_line_comment(&file.source, export.line, super::RULE_ID))
+        .then(|| (file.rel.clone(), export.line)),
     }
 }
 
-pub(super) fn resolve_export_source(
+pub(super) fn resolve_export_source<R: ImportResolverFacade>(
     source: &str,
     importing_file: &Path,
-    resolver: &ImportResolver<'_>,
+    resolver: &R,
     workspace: &WorkspaceMap,
+    remapper: &crate::codebase::ts_source::FrozenPathRemapper,
 ) -> Option<PathBuf> {
     if let Some(path) = resolver.resolve(source, importing_file) {
-        return Some(normalize_path(&path));
+        return remapper.remap(&path);
     }
     let workspace_path = match resolver.visible_files() {
         Some(visible) => {
@@ -148,7 +196,7 @@ pub(super) fn resolve_export_source(
         None => workspace.resolve_specifier(source),
     };
     if let Some(path) = workspace_path {
-        return Some(normalize_path(&path));
+        return remapper.remap(&path);
     }
     None
 }

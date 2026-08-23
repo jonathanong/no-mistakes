@@ -109,6 +109,42 @@ fn run_check_with_facts_executes_valid_shared_facts() {
 }
 
 #[test]
+fn dynamic_import_check_uses_authoritative_source_fact_for_suppression() {
+    let root = dynamic_import_fixture();
+    let test = root.join("tests/bad.test.mts");
+    let mut facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_files(&root, &[]),
+        crate::codebase::check_facts::CheckFactPlan {
+            imports: true,
+            dynamic_imports: true,
+            source: true,
+            ..Default::default()
+        },
+    );
+    let physical_source = facts
+        .ts
+        .get(&test)
+        .and_then(|file_facts| file_facts.source.as_deref())
+        .expect("collected source fact for the physical fixture")
+        .to_owned();
+    // The prepared source is the request snapshot. Its directive differs from
+    // disk so a lower-level reread would incorrectly restore these findings.
+    let snapshot_source =
+        format!("// no-mistakes-disable-file test-no-unmocked-dynamic-imports\n{physical_source}");
+    facts.ts.insert(
+        test,
+        dynamic_import_test_facts(&root.join("tests/bad.test.mts"), &snapshot_source),
+    );
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let findings =
+        test_no_unmocked_dynamic_imports::check_with_facts(&root, &config, None, &facts).unwrap();
+    assert!(!findings
+        .iter()
+        .any(|finding| finding.file == "tests/bad.test.mts"));
+}
+
+#[test]
 fn run_check_with_facts_resolves_setup_mocks() {
     let root = dynamic_import_fixture();
     let test = root.join("tests/setup-good.test.mts");
@@ -183,7 +219,7 @@ fn run_check_with_facts_reports_missing_setup_fact_shapes() {
     let test = root.join("tests/setup-good.test.mts");
     let setup = root.join("tests/setup-vitest.mts");
     let mut shared = crate::codebase::check_facts::CheckFactMap {
-        files: vec![test.clone()],
+        files: vec![test.clone(), setup.clone()],
         graph_files: vec![test.clone(), setup.clone()],
         graph_files_complete: true,
         graph_plan: crate::codebase::ts_source::facts::TsFactPlan::imports(),
@@ -250,11 +286,13 @@ fn run_check_with_facts_reports_test_file_parse_error() {
 fn filesystem_rule_ids_are_distinct() {
     let ids = [
         AGENTS_MD_MAX_SIZE,
+        CSHARP_MAX_LINES_PER_FILE,
         RUST_MAX_LINES_PER_FILE,
         RUST_NO_INLINE_TESTS,
         RUST_NO_INLINE_ALLOWS,
         NEXTJS_NO_API_ROUTES,
         NEXTJS_NO_CACHING,
+        NEXTJS_REDIRECT_DESTINATIONS,
     ];
     for (index, id) in ids.iter().enumerate() {
         assert!(!ids[index + 1..].contains(id));
@@ -274,6 +312,10 @@ fn run_filesystem_rules_execute_enabled_rules() {
         (
             "codebase-analysis/filesystem-rules/agents-md-max-size",
             AGENTS_MD_MAX_SIZE,
+        ),
+        (
+            "rules/csharp-max-lines-per-file/fail",
+            CSHARP_MAX_LINES_PER_FILE,
         ),
         (
             "codebase-analysis/filesystem-rules/rust-max-lines-per-file",

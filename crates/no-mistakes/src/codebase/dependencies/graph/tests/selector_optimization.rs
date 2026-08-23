@@ -13,8 +13,8 @@ fn repository_fixture(name: &str) -> PathBuf {
 
 fn assert_selector_edge(edges: &[Edge], root: &Path, app_file: &str) {
     assert!(edges.iter().any(|(from, to, kind)| {
-        from == &NodeId::File(root.join("tests/e2e/app.spec.ts"))
-            && to == &NodeId::File(root.join(app_file))
+        from == &NodeId::file(root.join("tests/e2e/app.spec.ts"))
+            && to == &NodeId::file(root.join(app_file))
             && *kind == EdgeKind::Selector
     }));
 }
@@ -22,13 +22,13 @@ fn assert_selector_edge(edges: &[Edge], root: &Path, app_file: &str) {
 fn assert_graph_selector_edge(graph: &DepGraph, root: &Path, app_file: &str) {
     let allowed = HashSet::from([EdgeKind::Selector]);
     let dependencies = graph.deps_of(
-        &[NodeId::File(root.join("tests/e2e/app.spec.ts"))],
+        &[NodeId::file(root.join("tests/e2e/app.spec.ts"))],
         None,
         Some(&allowed),
     );
     assert!(dependencies
         .iter()
-        .any(|entry| entry.node == NodeId::File(root.join(app_file))));
+        .any(|entry| entry.node == NodeId::file(root.join(app_file))));
 }
 
 #[test]
@@ -72,7 +72,12 @@ fn text_locator_edges_match_without_facts_and_with_default_or_sparse_facts() {
         locator_test_files,
         std::collections::BTreeSet::from(["tests/e2e/app.spec.ts", "tests/e2e/secondary.spec.ts",])
     );
-    let mut expected = selector_edges_from_analysis(&root, &all_files, &analysis);
+    let mut expected = selector_edges_from_analysis(
+        &root,
+        &all_files,
+        &analysis,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     let mut with_default =
         collect_playwright_selector_edges(&root, None, &all_files, Some(&default_facts));
     let mut with_sparse =

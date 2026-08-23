@@ -2,8 +2,8 @@ use crate::codebase::ts_source::byte_offset_to_line;
 use anyhow::{bail, Result};
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    BindingPattern, Declaration, ExportAllDeclaration, ExportDefaultDeclaration,
-    ExportDefaultDeclarationKind, ExportNamedDeclaration, ImportDeclaration,
+    BindingPattern, Declaration, ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration,
+    ExportDefaultDeclarationKind, ExportFromDeclaration, ExportNamedDeclaration, ImportDeclaration,
     ImportDeclarationSpecifier, Program, Statement, VariableDeclarationKind,
 };
 use oxc_span::SourceType;

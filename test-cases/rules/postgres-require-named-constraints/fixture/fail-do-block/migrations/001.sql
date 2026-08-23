@@ -1,0 +1,3 @@
+DO $$ BEGIN
+  ALTER TABLE children ADD FOREIGN KEY (parent_id) REFERENCES parents(id) ON DELETE CASCADE NOT VALID;
+END $$;

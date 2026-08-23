@@ -86,8 +86,20 @@ fn scan(
         let Some(source) = super::read_source(sources, &path) else {
             continue;
         };
-        let Ok(value) = serde_yaml::from_str::<Value>(&source) else {
-            continue;
+        let value = match crate::codebase::structured_value::parse_structured_value(&path, &source)
+        {
+            Ok(value) => value,
+            Err(error) => {
+                findings.push(RuleFinding {
+                    rule: RULE_ID.to_string(),
+                    file: rel.clone(),
+                    line: 1,
+                    message: format!("{rel}: {error}"),
+                    import: None,
+                    target: None,
+                });
+                continue;
+            }
         };
         for key in &opts.keys {
             for reference in values_at_key(&value, key) {

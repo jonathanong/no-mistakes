@@ -1,11 +1,28 @@
-pub(crate) fn build_plan_args(
-    options: TestsPlanOptions,
-) -> AnyhowResult<crate::tests::PlanArgs> {
+pub(crate) fn build_plan_args(options: TestsPlanOptions) -> AnyhowResult<crate::tests::PlanArgs> {
     let framework = options
         .framework
         .as_deref()
         .map(parse_test_framework)
         .transpose()?;
+    if options.direct_test_owner && framework.is_none() {
+        bail!(
+            "directTestOwner requires framework (for example, framework: \"vitest\") because direct ownership requires framework-specific test ownership"
+        );
+    }
+    if options.direct_test_owner && !options.entrypoints.is_empty() {
+        bail!(
+            "directTestOwner conflicts with entrypoints: direct-owner selection only follows changed files and one reverse canonical graph edge; use testsImpact for explicit entrypoint traversal"
+        );
+    }
+    if options.direct_test_owner
+        && (options.limit_percent.is_some()
+            || options.limit_files.is_some()
+            || options.global_config_fallback.is_some())
+    {
+        bail!(
+            "directTestOwner conflicts with limitPercent, limitFiles, and globalConfigFallback; remove those policy overrides because direct ownership bypasses configured plan policy"
+        );
+    }
 
     let (entrypoints, entrypoint_symbols) = entrypoint_parts(options.entrypoints);
 
@@ -35,8 +52,11 @@ pub(crate) fn build_plan_args(
         limit_percent: options.limit_percent,
         limit_files: options.limit_files,
         global_config_fallback: options.global_config_fallback,
+        direct_test_owner: options.direct_test_owner,
         format: Some(crate::tests::PlanFormat::Json),
         json: true,
+        include_comment: options.include_comment,
+        include_glob: options.include_glob,
     })
 }
 
@@ -46,13 +66,21 @@ pub(crate) fn parse_test_framework(value: &str) -> AnyhowResult<crate::tests::Te
         "playwright" => Ok(crate::tests::TestFramework::Playwright),
         "vitest" => Ok(crate::tests::TestFramework::Vitest),
         "swift" => Ok(crate::tests::TestFramework::Swift),
+        "python" => Ok(crate::tests::TestFramework::Python),
+        "go" => Ok(crate::tests::TestFramework::Go),
+        "cargo" => Ok(crate::tests::TestFramework::Cargo),
+        "rails" => Ok(crate::tests::TestFramework::Rails),
+        "php" => Ok(crate::tests::TestFramework::Php),
+        "java" => Ok(crate::tests::TestFramework::Java),
+        "kotlin" => Ok(crate::tests::TestFramework::Kotlin),
+        "elixir" => Ok(crate::tests::TestFramework::Elixir),
+        "dart" => Ok(crate::tests::TestFramework::Dart),
+        "jest" => Ok(crate::tests::TestFramework::Jest),
         _ => bail!("unknown test framework: {value}"),
     }
 }
 
-pub(crate) fn build_why_args(
-    options: TestsWhyOptions,
-) -> AnyhowResult<crate::tests::WhyArgs> {
+pub(crate) fn build_why_args(options: TestsWhyOptions) -> AnyhowResult<crate::tests::WhyArgs> {
     let test = options.test.context("test is required")?;
     Ok(crate::tests::WhyArgs {
         root: options
@@ -86,7 +114,7 @@ pub(crate) fn build_impact_args(
             .unwrap_or_else(|| ".".into()),
         config: options.config.map(PathBuf::from),
         tsconfig: options.tsconfig.map(PathBuf::from),
-        format: Some(crate::tests::PlanFormat::Json),
+        format: Some(crate::tests::ImpactFormat::Json),
         json: true,
     })
 }
@@ -100,7 +128,10 @@ pub(crate) fn build_impacted_checks_args(
 ) -> crate::impacted_checks::ImpactedChecksArgs {
     crate::impacted_checks::ImpactedChecksArgs {
         files: Vec::new(),
-        root: options.root.map(PathBuf::from).unwrap_or_else(|| ".".into()),
+        root: options
+            .root
+            .map(PathBuf::from)
+            .unwrap_or_else(|| ".".into()),
         config: options.config.map(PathBuf::from),
         tsconfig: options.tsconfig.map(PathBuf::from),
         base: options.base,
@@ -109,12 +140,16 @@ pub(crate) fn build_impacted_checks_args(
         changed_files: options.changed_files_file.map(PathBuf::from),
         // Match `testsPlan`: the N-API `diff` option is inline diff content.
         diff: None,
+        diff_stdin: options.diff_stdin,
+        diff_command: options.diff_command,
         diff_content: options.diff,
         format: None,
         json: false,
+        generic_only: options.generic_only,
         // N-API timings are collected into the structured response by the
         // binding; they must never print CLI progress to the Node process.
         timings: false,
+        diagnose_empty: false,
     }
 }
 

@@ -7,7 +7,8 @@ struct AppSelectorVisitor<'a, 'r> {
     scoped_static_identifier_defaults: &'r [ScopedStaticIdentifierDefault],
     dynamic_identifier_values: &'r [DynamicIdentifierValues],
     program: &'a oxc_ast::ast::Program<'a>,
-    visible_files: Option<&'r HashSet<PathBuf>>,
+    visible_files: Option<&'r crate::fx::PathSet>,
+    sources: Option<&'r crate::codebase::ts_source::SourceStore>,
     selectors: Vec<AppSelector>,
 }
 
@@ -30,11 +31,14 @@ impl<'a> oxc_ast_visit::Visit<'a> for AppSelectorVisitor<'a, '_> {
                 Some(visible) => app_selector_values_from_visible(
                     attribute.value.as_ref(),
                     self.source,
-                    self.path,
                     self.scoped_static_identifier_defaults,
                     self.dynamic_identifier_values,
                     self.program,
-                    visible,
+                    SelectorFileContext {
+                        file: self.path,
+                        visible_files: Some(visible),
+                        sources: self.sources,
+                    },
                 ),
                 None => app_selector_values(
                     attribute.value.as_ref(),

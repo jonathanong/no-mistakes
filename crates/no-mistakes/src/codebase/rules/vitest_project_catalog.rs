@@ -13,16 +13,16 @@ pub fn prepare_vitest_project_catalog(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
     visible_paths: &crate::codebase::ts_source::VisiblePathSnapshot,
-    tsconfig: &crate::codebase::ts_resolver::TsConfig,
+    tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
 ) -> PreparedVitestProjectCatalog {
     let config_projects = if config_projects_required(root, config) {
         let root_visible_paths = visible_paths.paths_for(root);
-        project_config::load_projects_from_visible(
+        project_config::load_projects_from_visible_with_catalog(
             root,
             Framework::Vitest,
             config.tests.vitest.configs.as_ref(),
             &root_visible_paths,
-            tsconfig,
+            tsconfig_catalog,
         )
         .map_err(|error| format!("{error:#}"))
     } else {

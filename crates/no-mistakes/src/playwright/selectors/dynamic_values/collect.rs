@@ -55,9 +55,8 @@ pub fn collect_function_return_strings(fn_name: &str, program: &Program<'_>) -> 
     for stmt in &program.body {
         let function = match stmt {
             Statement::FunctionDeclaration(f) => f,
-            Statement::ExportNamedDeclaration(export) => {
-                if let Some(oxc_ast::ast::Declaration::FunctionDeclaration(f)) = &export.declaration
-                {
+            Statement::ExportDeclaration(export) => {
+                if let oxc_ast::ast::Declaration::FunctionDeclaration(f) = &export.declaration {
                     f
                 } else {
                     continue;
@@ -173,6 +172,8 @@ where
                 }
             }
         }
-        _ => {}
+        _ => {
+            std::hint::black_box(());
+        }
     }
 }

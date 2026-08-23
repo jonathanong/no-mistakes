@@ -7,6 +7,16 @@ impl SharedTraversalContext {
         &self.tsconfig
     }
 
+    pub(crate) fn tsconfig_catalog(&self) -> &crate::codebase::ts_resolver::TsConfigCatalog {
+        &self.tsconfig_catalog
+    }
+
+    pub(crate) fn tsconfig_catalog_arc(
+        &self,
+    ) -> std::sync::Arc<crate::codebase::ts_resolver::TsConfigCatalog> {
+        std::sync::Arc::clone(&self.tsconfig_catalog)
+    }
+
     pub(crate) fn graph_files(&self) -> &graph::GraphFiles {
         &self.graph_files
     }
@@ -17,6 +27,12 @@ impl SharedTraversalContext {
 
     pub(crate) fn source_store(&self) -> std::sync::Arc<crate::codebase::ts_source::SourceStore> {
         self.dataset.sources_for(&self.root)
+    }
+
+    pub(crate) fn workspace_arc(
+        &self,
+    ) -> std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap> {
+        self.dataset.workspace()
     }
 
     pub(crate) fn visible_paths_arc(
@@ -35,10 +51,6 @@ impl SharedTraversalContext {
 
     pub(crate) fn build_plan(&self) -> graph::GraphBuildPlan {
         self.build_plan
-    }
-
-    pub(crate) fn canonical_graph(&mut self) -> Result<std::sync::Arc<graph::DepGraph>> {
-        self.request_graph(self.build_plan)
     }
 
     pub(crate) fn prepared_graph(&self) -> &graph::PreparedGraphConfig {

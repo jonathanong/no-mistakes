@@ -1,0 +1,24 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Reverse query commands are projections of a semantically compatible prepared
+# symbol catalog. They must not restore their old private discovery/fact/index
+# pipeline, but a broader runner/project catalog is not interchangeable with an
+# ordinary reverse-query catalog; CLAUDE.md requires parity tests for such flags.
+id: no-reverse-query-standalone-index
+language: rust
+severity: error
+message: >-
+  Reverse queries must not rediscover their own file universe. Build canonical
+  prepared facts and reverse indexes from semantically compatible request-owned
+  inputs; resolver/catalog scope is part of the result contract.
+rule:
+  any:
+    - pattern: GraphFiles::discover($$$)
+    - pattern: crate::codebase::dependencies::graph::GraphFiles::discover($$$)
+files:
+  - "crates/no-mistakes/src/codebase/queries/**"
+ignores:
+  - "crates/no-mistakes/src/codebase/queries/**/tests/**"
+  - "crates/no-mistakes/src/codebase/queries/**/*_tests.rs"
+  - "crates/no-mistakes/src/codebase/queries/**/tests.rs"
+  - "crates/no-mistakes/src/codebase/queries/**/test_support.rs"

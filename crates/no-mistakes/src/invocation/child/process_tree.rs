@@ -101,14 +101,10 @@ impl ProcessTree {
     pub(crate) fn terminate(&self, child: &mut std::process::Child) -> std::io::Result<()> {
         #[cfg(unix)]
         {
-            use nix::errno::Errno;
             use nix::sys::signal::{killpg, Signal};
             use nix::unistd::Pid;
 
-            match killpg(Pid::from_raw(child.id() as i32), Signal::SIGKILL) {
-                Ok(()) | Err(Errno::ESRCH) => Ok(()),
-                Err(error) => Err(std::io::Error::from_raw_os_error(error as i32)),
-            }
+            classify_killpg_result(killpg(Pid::from_raw(child.id() as i32), Signal::SIGKILL))
         }
         #[cfg(windows)]
         {
@@ -124,6 +120,23 @@ impl ProcessTree {
         {
             child.kill()
         }
+    }
+}
+
+/// Maps a `killpg` outcome to the `terminate()` contract: success and "the
+/// process group is already gone" (`ESRCH`, the overwhelmingly common case —
+/// the child already exited) both count as a successful termination; any
+/// other signal-delivery failure (e.g. `EPERM`) surfaces as an `io::Error`
+/// preserving the OS error code. Split out as a pure function — separate
+/// from the syscall itself — so this mapping is unit-testable with a
+/// synthetic `Err`, since a real `killpg` failure isn't reliably producible
+/// in a portable test.
+#[cfg(unix)]
+fn classify_killpg_result(result: Result<(), nix::errno::Errno>) -> std::io::Result<()> {
+    use nix::errno::Errno;
+    match result {
+        Ok(()) | Err(Errno::ESRCH) => Ok(()),
+        Err(error) => Err(std::io::Error::from_raw_os_error(error as i32)),
     }
 }
 
@@ -145,3 +158,7 @@ mod windows;
 
 #[cfg(windows)]
 use windows::resume_initial_thread;
+
+#[cfg(all(test, unix))]
+#[path = "process_tree/tests.rs"]
+mod tests;

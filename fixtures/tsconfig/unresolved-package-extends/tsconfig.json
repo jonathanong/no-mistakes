@@ -1,0 +1,10 @@
+{
+  "extends": "@missing/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@local/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

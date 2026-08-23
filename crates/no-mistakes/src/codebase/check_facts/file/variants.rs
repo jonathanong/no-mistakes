@@ -51,6 +51,7 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
                 variant.plan,
                 variant.playwright,
                 Arc::clone(&source),
+                false,
             );
         } else {
             parse_variants.push((index, variant));
@@ -102,11 +103,8 @@ fn collect_variant(
         variant.playwright,
         parsed_source,
         program,
+        should_store_source(variant.plan).then(|| Arc::clone(source)),
     );
-    if should_store_source(variant.plan) {
-        Arc::make_mut(&mut facts.ts).source = Some(source.to_string());
-        facts.source = Some(Arc::clone(source));
-    }
     if recover_symbols {
         facts.legacy_symbols = facts.symbols.clone();
     }
@@ -136,7 +134,7 @@ fn recovered_error_facts(
         ))
     });
     if let Some(symbols) = &symbols {
-        ts.symbols = Some(symbols.as_ref().clone());
+        ts.symbols = Some(Arc::clone(symbols));
     }
     let integration_runner_config = plan.integration_runner_configs.as_ref().and_then(|runner| {
         runner.parse_error(

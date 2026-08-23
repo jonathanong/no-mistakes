@@ -63,9 +63,7 @@ fn walk_statement(stmt: &Statement, v: &mut dyn Visitor) {
             walk_function_body(f.body.as_deref(), v);
         }
         Statement::ClassDeclaration(class) => walk_class_body(&class.body, v),
-        Statement::ExportNamedDeclaration(e) => {
-            walk_optional_declaration(e.declaration.as_ref(), v);
-        }
+        Statement::ExportDeclaration(e) => walk_declaration(&e.declaration, v),
         Statement::ExportDefaultDeclaration(e) => match &e.declaration {
             ExportDefaultDeclarationKind::FunctionDeclaration(f) => {
                 walk_function_body(f.body.as_deref(), v);

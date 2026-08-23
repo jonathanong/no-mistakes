@@ -24,6 +24,13 @@ fn codebase_fixture(scenario: &str) -> PathBuf {
     )
 }
 
+fn markdown_report_fixture() -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/markdown-report/fixture"),
+    )
+}
+
 fn check(root: &PathBuf, yaml: &str) -> Output {
     let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
     std::fs::write(config.path(), yaml).unwrap();
@@ -45,17 +52,50 @@ fn stdout(o: &Output) -> String {
     String::from_utf8_lossy(&o.stdout).into_owned()
 }
 
-fn git(root: &std::path::Path, args: &[&str]) -> bool {
-    Command::new("git")
-        .args(["-C", root.to_str().unwrap()])
-        .args(args)
-        .env_remove("GIT_DIR")
-        .env_remove("GIT_COMMON_DIR")
-        .env_remove("GIT_INDEX_FILE")
-        .env_remove("GIT_WORK_TREE")
-        .status()
-        .unwrap()
-        .success()
+#[test]
+fn markdown_rules_check_json_reports_both_rule_ids() {
+    let root = markdown_report_fixture();
+    let output = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .args([
+            "--config",
+            root.join(".no-mistakes.yml").to_str().unwrap(),
+            "--format",
+            "json",
+        ])
+        .output()
+        .unwrap();
+    let body = stdout(&output);
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "stdout: {body}\nstderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let report: serde_json::Value = serde_json::from_str(&body).unwrap_or_else(|error| {
+        panic!(
+            "expected JSON report: {error}; stdout: {body:?}; stderr: {:?}",
+            String::from_utf8_lossy(&output.stderr)
+        )
+    });
+    let findings = report["rules"].as_array().unwrap();
+    let rule_ids = findings
+        .iter()
+        .filter_map(|finding| finding["rule"].as_str())
+        .collect::<Vec<_>>();
+
+    assert!(rule_ids.contains(&"markdown-reachability"), "{body}");
+    assert!(rule_ids.contains(&"markdown-structure-budget"), "{body}");
+    for rule_id in ["markdown-reachability", "markdown-structure-budget"] {
+        let finding = findings
+            .iter()
+            .find(|finding| finding["rule"] == rule_id)
+            .unwrap_or_else(|| panic!("missing {rule_id}: {body}"));
+        assert!(finding["file"].is_string(), "{finding:#?}");
+        assert!(finding["line"].is_u64(), "{finding:#?}");
+        assert!(finding["message"].is_string(), "{finding:#?}");
+    }
 }
 
 // ── server-route-client-boundary ─────────────────────────────────────────────
@@ -290,43 +330,6 @@ fn no_git_identity_mutation_fails_for_identity_config() {
     assert!(body.contains("setup.sh"), "{body}");
 }
 
-// ── no-empty-or-comments-only-files ─────────────────────────────────────────
-
-#[test]
-fn no_empty_or_comments_only_files_fails_for_comment_only_fixture() {
-    let root = fixture("no-empty-or-comments-only-files", "fail");
-    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
-    let body = format!("{findings:?}");
-
-    assert!(!findings.is_empty(), "expected findings");
-    assert!(body.contains("no-empty-or-comments-only-files"), "{body}");
-    assert!(body.contains("placeholder.ts"), "{body}");
-}
-
-#[test]
-fn no_empty_or_comments_only_files_cli_fails_for_comment_only_fixture() {
-    let root = fixture("no-empty-or-comments-only-files", "fail");
-    let out = check_fixture_config(&root, ".no-mistakes.yml");
-    let body = stdout(&out);
-
-    assert!(!out.status.success(), "expected exit 1");
-    assert!(body.contains("no-empty-or-comments-only-files"), "{body}");
-    assert!(body.contains("placeholder.ts"), "{body}");
-}
-
-// ── package-json-registry-only ──────────────────────────────────────────────
-
-#[test]
-fn package_json_registry_only_fails_for_non_registry_dependency() {
-    let root = fixture("package-json-registry-only", "fail");
-    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
-    let body = format!("{findings:?}");
-
-    assert!(!findings.is_empty(), "expected findings");
-    assert!(body.contains("package-json-registry-only"), "{body}");
-    assert!(body.contains("package.json"), "{body}");
-}
-
 // ── rust-no-inline-tests ──────────────────────────────────────────────────────
 
 #[test]
@@ -473,105 +476,64 @@ fn rust_no_inline_allows_filesystem_runner_accepts_absolute_roots() {
     assert_eq!(findings[1].file, "src/b.rs");
 }
 
-// ── gitignored files are skipped ─────────────────────────────────────────────
+// ── test-no-dependency-pins ──────────────────────────────────────────────────
 
 #[test]
-fn agents_md_max_size_skips_gitignored_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+fn test_no_dependency_pins_fails_for_exact_pins() {
+    let root = fixture("test-no-dependency-pins", "fail");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
 
-    // Over-limit file in a gitignored directory
-    std::fs::create_dir_all(root.join("ignored")).unwrap();
-    let big: String = "line\n".repeat(300);
-    std::fs::write(root.join("ignored/AGENTS.md"), &big).unwrap();
-
-    // Passing tracked file
-    std::fs::write(root.join("CLAUDE.md"), "# ok\n").unwrap();
-
-    // .gitignore excludes the directory
-    std::fs::write(root.join(".gitignore"), "ignored/\n").unwrap();
-
-    // Initialise a git repo and commit so git ls-files is the source of truth
-    assert!(git(root, &["init", "-q"]));
-    assert!(git(root, &["add", "."]));
-    assert!(git(
-        root,
-        &[
-            "-c",
-            "user.email=t@t",
-            "-c",
-            "user.name=t",
-            "commit",
-            "-qm",
-            "init"
-        ]
-    ));
-
-    let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
-    std::fs::write(
-        config.path(),
-        "rules:\n  - rule: agents-md-max-size\n    scope: repository\n    options:\n      maxLines: 5\n",
-    )
-    .unwrap();
-    let out = Command::new(bin())
-        .args(["check", "--root"])
-        .arg(root)
-        .arg("--config")
-        .arg(config.path())
-        .output()
-        .unwrap();
-    assert!(
-        out.status.success(),
-        "gitignored files must not be flagged: {}",
-        stdout(&out)
-    );
+    assert!(!out.status.success(), "expected exit 1");
+    assert!(body.contains("test-no-dependency-pins"), "{body}");
+    assert!(body.contains("action-ref.test.mts"), "{body}");
+    assert!(body.contains("tool-version.test.mts"), "{body}");
+    assert!(body.contains("release-url.test.mts"), "{body}");
+    assert!(body.contains("release-asset.test.mts"), "{body}");
+    assert!(body.contains("tool-log.test.mts"), "{body}");
 }
 
 #[test]
-fn rust_no_inline_tests_skips_gitignored_files() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+fn test_no_dependency_pins_passes_for_negatives_and_suppressions() {
+    let root = fixture("test-no-dependency-pins", "pass");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
 
-    std::fs::create_dir_all(root.join("generated")).unwrap();
-    std::fs::write(
-        root.join("generated/lib.rs"),
-        "#[cfg(test)]\nmod tests {\n}\n",
-    )
-    .unwrap();
-    std::fs::write(root.join("clean.rs"), "pub fn ok() {}\n").unwrap();
-    std::fs::write(root.join(".gitignore"), "generated/\n").unwrap();
-
-    assert!(git(root, &["init", "-q"]));
-    assert!(git(root, &["add", "."]));
-    assert!(git(
-        root,
-        &[
-            "-c",
-            "user.email=t@t",
-            "-c",
-            "user.name=t",
-            "commit",
-            "-qm",
-            "init"
-        ]
-    ));
-
+#[test]
+fn test_no_dependency_pins_json_has_rule_id() {
+    let root = fixture("test-no-dependency-pins", "fail");
     let config = tempfile::Builder::new().suffix(".yml").tempfile().unwrap();
     std::fs::write(
         config.path(),
-        "rules:\n  - rule: rust-no-inline-tests\n    scope: repository\n",
+        "rules:\n  - rule: test-no-dependency-pins\n    scope: repository\n",
     )
     .unwrap();
     let out = Command::new(bin())
         .args(["check", "--root"])
-        .arg(root)
+        .arg(&root)
         .arg("--config")
         .arg(config.path())
+        .args(["--format", "json"])
         .output()
         .unwrap();
+    let body = stdout(&out);
+    assert!(body.contains("test-no-dependency-pins"), "{body}");
+    assert!(!out.status.success());
+}
+
+#[test]
+fn test_no_dependency_pins_filesystem_runner_discovers_files() {
+    let root = fixture("test-no-dependency-pins", "fail");
+    let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();
+    let body = format!("{findings:?}");
+
+    assert!(!findings.is_empty(), "expected findings");
+    assert!(body.contains("test-no-dependency-pins"), "{body}");
     assert!(
-        out.status.success(),
-        "gitignored files must not be flagged: {}",
-        stdout(&out)
+        findings
+            .iter()
+            .any(|finding| finding.rule == no_mistakes::codebase::rules::TEST_NO_DEPENDENCY_PINS),
+        "{body}"
     );
 }

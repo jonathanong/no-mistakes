@@ -1,0 +1,29 @@
+projects:
+  web:
+    type: nextjs
+    root: web
+tests:
+  vitest:
+    configs: vitest.config.ts
+  playwright:
+    coverage:
+      routes: true
+      selectors: true
+    apps:
+      chromium:
+        project: web
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      - name: postgres-resources
+        paths:
+          - db/schema.sql
+          - db/migrations/**
+        targets:
+          - backend
+      - name: root-config
+        paths:
+          - package.json
+          - vitest.config.ts
+rules:
+  - rule: playwright-coverage

@@ -19,11 +19,14 @@ pub(super) fn check_with_prepared_facts_and_session(
         .collect::<Vec<Options>>();
     let plan = GraphBuildPlan::from_allowed(union_allowed_set(&options).as_ref());
     shared::validate_shared_graph_plan(root, config_path, shared, prepared_graph, plan)?;
+    let tsconfig_catalog =
+        crate::codebase::ts_resolver::TsConfigCatalog::forced(root, tsconfig.clone(), None);
     let graph = match prepared_graph {
         Some(prepared) => DepGraph::build_with_prepared_check_facts_and_session(
             crate::codebase::dependencies::graph::PreparedCheckFactGraphBuildRequest {
                 root,
                 tsconfig,
+                tsconfig_catalog: &tsconfig_catalog,
                 plan,
                 files: shared.graph_file_universe().to_vec(),
                 config_path,
@@ -36,6 +39,7 @@ pub(super) fn check_with_prepared_facts_and_session(
             crate::codebase::dependencies::graph::CompleteCheckFactGraphBuildRequest {
                 root,
                 tsconfig,
+                tsconfig_catalog: &tsconfig_catalog,
                 plan,
                 files: shared.graph_file_universe().to_vec(),
                 config_path,

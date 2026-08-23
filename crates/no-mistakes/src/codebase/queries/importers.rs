@@ -1,8 +1,8 @@
 use super::render::{render, resolve_format, to_json, Report};
-use super::reverse::build_index;
-use super::shared::{rel_str, resolve_target, Target};
+use super::reverse::{build_reverse_analysis, build_reverse_index_from_prepared};
+use super::shared::{rel_str, resolve_target, ReversePrepared, Target};
 use crate::cli::Format;
-use crate::tests::impact::generate_impact_plan;
+use crate::tests::impact::generate_impact_plan_with_prepared;
 use crate::tests::ImpactArgs;
 use anyhow::Result;
 use is_terminal::IsTerminal;
@@ -57,43 +57,87 @@ pub struct ImportersReport {
     test_impact: Option<TestImpact>,
 }
 
-fn test_impact(args: &ImportersArgs, target: &Target) -> Result<TestImpact> {
-    let plan = generate_impact_plan(&ImpactArgs {
-        entrypoints: vec![target.abs_file.display().to_string()],
-        // Pass an empty structured symbol so a literal `#` in the path is not
-        // parsed as a `file#symbol` entrypoint.
-        entrypoint_symbols: vec![Some(String::new())],
-        include_symbols: false,
-        root: target.root.clone(),
-        config: None,
-        tsconfig: args.tsconfig.clone(),
-        format: None,
-        json: false,
-    })?;
+fn test_impact(
+    args: &ImportersArgs,
+    target: &Target,
+    ordinary_reverse: &ReversePrepared,
+) -> Result<(
+    TestImpact,
+    crate::codebase::dependencies::graph::SymbolIndex,
+)> {
+    let config = target.config(None)?;
+    let prepared_impact = crate::tests::build_test_impact_graph_for_reverse_query_with_prepared(
+        crate::tests::ReverseQueryImpactRequest {
+            root: &target.root,
+            tsconfig_path: args.tsconfig.as_deref(),
+            config: config.as_ref(),
+            config_path: None,
+            visible: &target.visible_paths,
+            sources: &target.sources,
+            session: &target.session,
+            ordinary_graph_files: &ordinary_reverse.graph_files,
+        },
+    );
+    let prepared_impact = prepared_impact?;
+    let (impact_graph, facts) = prepared_impact.into_parts();
+    let plan = generate_impact_plan_with_prepared(
+        &ImpactArgs {
+            entrypoints: vec![target.abs_file.display().to_string()],
+            // Pass an empty structured symbol so a literal `#` in the path is not
+            // parsed as a `file#symbol` entrypoint.
+            entrypoint_symbols: vec![Some(String::new())],
+            include_symbols: false,
+            root: target.root.clone(),
+            config: None,
+            tsconfig: args.tsconfig.clone(),
+            format: None,
+            json: false,
+        },
+        &target.root,
+        &config,
+        impact_graph,
+    );
+    let plan = plan?;
+    // The impact planner consumes its graph. Build the ordinary projection
+    // afterwards so the large graph and SymbolIndex are not live together.
+    let ordinary_index = build_reverse_index_from_prepared(target, ordinary_reverse, &facts);
     let tests: Vec<String> = plan
         .selected_tests
         .into_iter()
         .map(|test| test.test_file)
         .collect();
-    Ok(TestImpact {
-        count: tests.len(),
-        tests,
-    })
+    Ok((
+        TestImpact {
+            count: tests.len(),
+            tests,
+        },
+        ordinary_index,
+    ))
 }
 
 fn compute(args: &ImportersArgs) -> Result<ImportersReport> {
     let target = resolve_target(&args.file, args.root.as_deref(), args.tsconfig.as_deref())?;
-    let index = build_index(&target)?;
-    let direct_importers: Vec<String> = index
-        .file_importers(&target.abs_file)
-        .iter()
-        .map(|importer| rel_str(importer, &target.root))
-        .collect();
-
-    let test_impact = if args.tests {
-        Some(test_impact(args, &target)?)
+    let (direct_importers, test_impact) = if args.tests {
+        // Test impact adds runner/project resolver scopes. Collect a single
+        // union fact map, then project it through the ordinary reverse catalog
+        // so pre-existing importer fields keep their original semantics.
+        let ordinary_reverse = target.prepare_reverse()?;
+        let (impact, index) = test_impact(args, &target, &ordinary_reverse)?;
+        let importers: Vec<String> = index
+            .file_importers(&target.abs_file)
+            .iter()
+            .map(|importer| rel_str(importer, &target.root))
+            .collect();
+        (importers, Some(impact))
     } else {
-        None
+        let analysis = build_reverse_analysis(&target)?;
+        let importers: Vec<String> = analysis
+            .index
+            .file_importers(&target.abs_file)
+            .iter()
+            .map(|importer| rel_str(importer, &target.root))
+            .collect();
+        (importers, None)
     };
 
     Ok(ImportersReport {

@@ -24,6 +24,7 @@ use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols, NamedImport};
 include!("types.rs");
 include!("resolve.rs");
 include!("pipeline.rs");
+include!("pipeline_output.rs");
 include!("entry.rs");
 include!("filters.rs");
 
@@ -39,6 +40,7 @@ pub(crate) fn signature_impact_graph_plan() -> crate::codebase::dependencies::gr
 
 pub(crate) struct PreparedSignatureImpact<'a> {
     pub(crate) session: &'a crate::codebase::analysis_session::AnalysisSession,
+    pub(crate) tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     pub(crate) graph_files: &'a crate::codebase::dependencies::graph::GraphFiles,
     pub(crate) test_filter: &'a crate::codebase::test_filter::TestFileFilter,
     pub(crate) workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
@@ -49,10 +51,9 @@ pub(crate) struct PreparedSignatureImpact<'a> {
 pub(crate) fn signature_impact_json_with_prepared(
     args: &SymbolsArgs,
     root: &Path,
-    tsconfig: &crate::codebase::ts_resolver::TsConfig,
     prepared: PreparedSignatureImpact<'_>,
 ) -> Result<String> {
-    let report = impact::collect_report_with_prepared(args, root, tsconfig, prepared)?;
+    let report = impact::collect_report_with_prepared(args, root, prepared)?;
     let mut output = Vec::new();
     impact::write_report(&report, Format::Json, &mut output)?;
     String::from_utf8(output).context("signature-impact JSON output must be UTF-8")

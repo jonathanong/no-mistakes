@@ -56,7 +56,7 @@ pub(crate) fn collect_fetches_for_routes_from_snapshot(
         .paths_for(root)
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<std::collections::HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let mut cache = Cache {
         files: std::collections::HashMap::new(),
         imports: std::collections::HashMap::new(),
@@ -69,7 +69,8 @@ pub(crate) fn collect_fetches_for_routes_from_snapshot(
             root,
             &mut cache,
             &visible_files,
-        )?;
+        );
+        let fetches = fetches?;
         let rel_file = relative_string(root, &route.file);
         index.insert(rel_file, fetches);
     }
@@ -87,7 +88,7 @@ pub(crate) fn collect_fetches_for_routes_from_snapshot_with_facts(
         .paths_for(root)
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<std::collections::HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let mut cache = Cache {
         files: std::collections::HashMap::new(),
         imports: std::collections::HashMap::new(),
@@ -112,7 +113,8 @@ pub(crate) fn collect_fetches_for_routes_from_snapshot_with_facts(
             &mut cache,
             &mut parsed_files,
             &visible_files,
-        )?;
+        );
+        let fetches = fetches?;
         index.insert(relative_string(root, &route.file), fetches);
     }
     Ok(index)

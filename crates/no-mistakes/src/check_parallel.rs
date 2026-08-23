@@ -1,51 +1,10 @@
 use crate::check_tasks::{
-    run_codebase_check, run_filesystem_rules_check, run_integration_check, run_queue_check,
-    run_react_check, run_rules_check, CheckTask,
+    run_codebase_check_with_catalog, run_filesystem_rules_check_with_facts, run_integration_check,
+    run_queue_check, run_rules_check, CodebaseCheckInputs,
 };
-use no_mistakes::codebase::check_facts::CheckFactMap;
-use no_mistakes::codebase::rules::RuleFinding;
-use no_mistakes::codebase::unique_exports::UniqueExportFinding;
-use no_mistakes::integration_tests::IntegrationFinding;
-use no_mistakes::queue::CheckFinding;
-use no_mistakes::react_traits;
-use std::path::{Path, PathBuf};
-
-pub(crate) type DomainResults = (
-    anyhow::Result<CheckTask<Vec<react_traits::Violation>>>,
-    anyhow::Result<CheckTask<Vec<CheckFinding>>>,
-    anyhow::Result<CheckTask<Vec<RuleFinding>>>,
-    anyhow::Result<CheckTask<Vec<IntegrationFinding>>>,
-    anyhow::Result<CheckTask<Vec<UniqueExportFinding>>>,
-    anyhow::Result<CheckTask<Vec<RuleFinding>>>,
-);
-
-pub(crate) struct DomainCheckInputs<'a> {
-    pub(crate) session: std::sync::Arc<no_mistakes::codebase::analysis_session::AnalysisSession>,
-    pub(crate) root: &'a Path,
-    pub(crate) config_path: &'a Option<PathBuf>,
-    pub(crate) tsconfig_path: &'a Option<PathBuf>,
-    pub(crate) react_enabled: bool,
-    pub(crate) queues_enabled: bool,
-    pub(crate) unique_exports_enabled: bool,
-    pub(crate) filesystem_rules_enabled: bool,
-    pub(crate) discovered_files: Vec<PathBuf>,
-    pub(crate) facts: &'a CheckFactMap,
-    pub(crate) prepared_playwright:
-        Option<&'a no_mistakes::playwright::rules::PreparedPlaywrightRules>,
-    pub(crate) prepared_react: &'a no_mistakes::react_traits::PreparedReactCheck,
-    pub(crate) prepared_graph:
-        Option<&'a no_mistakes::codebase::dependencies::graph::PreparedGraphConfig>,
-    pub(crate) dependency_graph:
-        Option<std::sync::Arc<no_mistakes::codebase::dependencies::graph::DepGraph>>,
-    pub(crate) prepared_tsconfig: &'a no_mistakes::codebase::ts_resolver::TsConfig,
-    pub(crate) visible_paths: &'a no_mistakes::codebase::ts_source::VisiblePathSnapshot,
-    pub(crate) sources: std::sync::Arc<no_mistakes::codebase::ts_source::SourceStore>,
-    pub(crate) inferred_roots: &'a no_mistakes::codebase::config::InferredRoots,
-    pub(crate) config: &'a no_mistakes::config::v2::NoMistakesConfig,
-    pub(crate) codebase_config: &'a no_mistakes::codebase::config::Config,
-    pub(crate) vitest_projects:
-        Option<&'a no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
-}
+mod inputs;
+mod react_dispatch;
+pub(crate) use inputs::{DomainCheckInputs, DomainResults};
 
 pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults {
     let observer = no_mistakes::diagnostics::current();
@@ -55,6 +14,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let tsconfig_path = inputs.tsconfig_path;
     let react_enabled = inputs.react_enabled;
     let queues_enabled = inputs.queues_enabled;
+    let integration_enabled = inputs.integration_enabled;
     let unique_exports_enabled = inputs.unique_exports_enabled;
     let filesystem_rules_enabled = inputs.filesystem_rules_enabled;
     let discovered_files = inputs.discovered_files;
@@ -64,25 +24,40 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let prepared_graph = inputs.prepared_graph;
     let dependency_graph = inputs.dependency_graph;
     let prepared_tsconfig = inputs.prepared_tsconfig;
+    let prepared_tsconfig_catalog = inputs.prepared_tsconfig_catalog;
     let visible_paths = inputs.visible_paths;
     let sources = inputs.sources;
-    let rule_sources = std::sync::Arc::clone(&sources);
     let inferred_roots = inputs.inferred_roots;
     let config = inputs.config;
-    let codebase_config = inputs.codebase_config;
-    let vitest_projects = inputs.vitest_projects;
+    let (codebase_config, vitest_projects) = (inputs.codebase_config, inputs.vitest_projects);
+    let workflow_documents = inputs.workflow_documents;
+    let tsconfig_gate_project_inputs = inputs.tsconfig_gate_project_inputs;
+    let defer_suppression = inputs.defer_suppression;
 
     let ((react, queues), (rules, (integration, (codebase, filesystem_rules)))) = rayon::join(
         || {
             rayon::join(
                 || {
                     no_mistakes::diagnostics::with_observer(observer.clone(), || {
-                        run_react_check(root, react_enabled, facts, prepared_react)
+                        react_dispatch::run(react_dispatch::Inputs {
+                            root,
+                            enabled: react_enabled,
+                            facts,
+                            prepared: prepared_react,
+                            sources: sources.as_ref(),
+                            defer_suppression,
+                        })
                     })
                 },
                 || {
                     no_mistakes::diagnostics::with_observer(observer.clone(), || {
-                        run_queue_check(root, prepared_tsconfig, queues_enabled, facts)
+                        run_queue_check(
+                            root,
+                            prepared_tsconfig_catalog,
+                            queues_enabled,
+                            facts,
+                            &session,
+                        )
                     })
                 },
             )
@@ -102,10 +77,13 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                 config,
                                 prepared_graph,
                                 prepared_tsconfig,
+                                prepared_tsconfig_catalog,
                                 inferred_roots: Some(inferred_roots),
-                                sources: Some(&rule_sources),
+                                sources: Some(sources.as_ref()),
                             },
                             dependency_graph.as_deref(),
+                            sources.as_ref(),
+                            defer_suppression,
                         )
                     })
                 },
@@ -116,9 +94,10 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                 run_integration_check(
                                     &session,
                                     root,
+                                    integration_enabled,
                                     config,
                                     facts,
-                                    prepared_tsconfig,
+                                    prepared_tsconfig_catalog,
                                     visible_paths,
                                 )
                             })
@@ -129,15 +108,16 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                     no_mistakes::diagnostics::with_observer(
                                         observer.clone(),
                                         || {
-                                            run_codebase_check(
-                                                &session,
+                                            run_codebase_check_with_catalog(CodebaseCheckInputs {
+                                                session: &session,
                                                 root,
-                                                codebase_config,
-                                                prepared_tsconfig,
-                                                unique_exports_enabled,
+                                                config: codebase_config,
+                                                prepared_tsconfig_catalog,
+                                                enabled: unique_exports_enabled,
                                                 facts,
                                                 inferred_roots,
-                                            )
+                                                defer_suppression,
+                                            })
                                         },
                                     )
                                 },
@@ -145,14 +125,21 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                     no_mistakes::diagnostics::with_observer(
                                         observer.clone(),
                                         || {
-                                            run_filesystem_rules_check(
+                                            run_filesystem_rules_check_with_facts(
                                                 root,
                                                 config,
                                                 filesystem_rules_enabled,
-                                                &discovered_files,
-                                                visible_paths,
-                                                sources,
-                                                vitest_projects,
+                                                discovered_files,
+                                                no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+                                                    snapshot: visible_paths,
+                                                    sources: std::sync::Arc::clone(&sources),
+                                                    vitest_catalog: vitest_projects,
+                                                    workflow_documents,
+                                                    tsconfig_gate_project_inputs,
+                                                    config_path: config_path.as_deref(),
+                                                },
+                                                Some(facts),
+                                                defer_suppression,
                                             )
                                         },
                                     )

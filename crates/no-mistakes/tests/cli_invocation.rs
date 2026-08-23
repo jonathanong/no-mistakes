@@ -68,6 +68,7 @@ fn invocation_help_documents_independent_timeouts_and_lock_failure() {
     assert!(help.contains("--timeout <SECONDS>"));
     assert!(help.contains("--lock-timeout <SECONDS>"));
     assert!(help.contains("--fail-on-lock"));
+    assert!(help.contains("--profile"));
     assert!(help.contains("[default: 30]"));
 }
 

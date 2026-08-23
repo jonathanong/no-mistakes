@@ -6,16 +6,34 @@ fn collect_route_import_edges(
     files: &[PathBuf],
     facts: &dyn TsFactLookup,
     tsconfig: &TsConfig,
+    tsconfig_catalog: Option<&crate::codebase::ts_resolver::TsConfigCatalog>,
     graph_files: &GraphFiles,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Vec<Edge> {
     // Route imports intentionally resolve through the real filesystem before
     // mapping symlink targets back to the visible universe. Keep that `None`
     // scope distinct from ordinary graph resolution.
-    let resolver = ImportResolver::new_in_session(tsconfig, None, session);
+    let scoped_resolver =
+        tsconfig_catalog.map(crate::codebase::ts_resolver::ScopedImportResolver::unbounded);
+    let legacy_resolver = if tsconfig_catalog.is_none() {
+        Some(ImportResolver::new_in_session(tsconfig, None, session))
+    } else {
+        None
+    };
+    let resolver: &dyn ImportResolution = if let Some(resolver) = scoped_resolver.as_ref() {
+        resolver
+    } else if let Some(resolver) = legacy_resolver.as_ref() {
+        resolver
+    } else {
+        unreachable!("a scoped or legacy route-import resolver is initialized")
+    };
     let import_files = files
         .par_iter()
-        .filter_map(|path| facts.get_ts_facts(path).map(|file_facts| (path, file_facts)))
+        .filter_map(|path| {
+            facts
+                .get_ts_facts(path)
+                .map(|file_facts| (path, file_facts))
+        })
         .filter(|(_, file_facts)| file_facts.parse_error.is_none())
         .filter(|(_, file_facts)| {
             file_facts
@@ -43,10 +61,7 @@ fn collect_route_import_edges(
     // A symlink-resolved target may live in a directory with no imports of its
     // own. Index all visible files by name in memory, then touch only the small
     // same-name candidate set when a real-to-visible remap is actually needed.
-    let mut visible_by_name = std::collections::BTreeMap::<
-        std::ffi::OsString,
-        Vec<PathBuf>,
-    >::new();
+    let mut visible_by_name = std::collections::BTreeMap::<std::ffi::OsString, Vec<PathBuf>>::new();
     let mut visible_files = graph_files.indexable().to_vec();
     visible_files.sort();
     for visible in visible_files {
@@ -61,8 +76,7 @@ fn collect_route_import_edges(
     import_files
         .par_iter()
         .flat_map_iter(|(path, file_facts)| {
-            let resolution_source =
-                route_import_resolution_source(path, &canonical_directories);
+            let resolution_source = route_import_resolution_source(path, &canonical_directories);
             file_facts
                 .imports
                 .iter()
@@ -74,8 +88,8 @@ fn collect_route_import_edges(
                 .filter(|target| is_indexable(target))
                 .map(|target| {
                     (
-                        NodeId::File((*path).clone()),
-                        NodeId::File(target),
+                        NodeId::file_in(session.interner(), (*path).clone()),
+                        NodeId::file_in(session.interner(), target),
                         EdgeKind::RouteImport,
                     )
                 })
@@ -96,16 +110,13 @@ fn route_import_resolution_source(
             };
         }
     }
-    let Some(parent) = path.parent() else {
-        return path.to_path_buf();
-    };
-    let Some(canonical_parent) = canonical_directories.get(parent) else {
-        return path.to_path_buf();
-    };
-    let Some(name) = path.file_name() else {
-        return path.to_path_buf();
-    };
-    canonical_parent.join(name)
+    match path.parent().and_then(|parent| canonical_directories.get(parent)) {
+        Some(canonical_parent) => path
+            .file_name()
+            .map(|name| canonical_parent.join(name))
+            .unwrap_or_else(|| path.to_path_buf()),
+        None => path.to_path_buf(),
+    }
 }
 
 fn route_import_visible_target(
@@ -113,8 +124,8 @@ fn route_import_visible_target(
     graph_files: &GraphFiles,
     visible_by_name: &std::collections::BTreeMap<std::ffi::OsString, Vec<PathBuf>>,
 ) -> Option<PathBuf> {
-    if graph_files.is_visible(&target) {
-        return Some(target);
+    if let Some(target) = graph_files.visible_path(&target) {
+        return Some(target.to_path_buf());
     }
     let canonical_target = target.canonicalize().ok()?;
     let candidates = visible_by_name.get(target.file_name()?)?;

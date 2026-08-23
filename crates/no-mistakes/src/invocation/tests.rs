@@ -7,53 +7,12 @@ use std::process::Command;
 use std::time::Instant;
 use wait_timeout::ChildExt;
 
+mod napi_options;
+
 fn fixture_path(name: &str) -> std::path::PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/invocation")
         .join(name)
-}
-
-#[test]
-fn napi_options_default_and_strip_controls() {
-    let (json, options) = extract_napi_options(
-        r#"{"timeout":4,"lockTimeout":5,"failOnLock":true,"root":"."}"#.to_string(),
-    )
-    .unwrap();
-    assert_eq!(options.timeout, Some(Duration::from_secs(4)));
-    assert_eq!(options.lock_timeout, Some(Duration::from_secs(5)));
-    assert!(options.fail_on_lock);
-    assert_eq!(
-        serde_json::from_str::<Value>(&json).unwrap(),
-        serde_json::json!({"root":"."})
-    );
-}
-
-#[test]
-fn napi_zero_and_null_disable_timeouts() {
-    let (_, options) =
-        extract_napi_options(r#"{"timeout":0,"lockTimeout":null}"#.to_string()).unwrap();
-    assert_eq!(options.timeout, None);
-    assert_eq!(options.lock_timeout, None);
-}
-
-#[test]
-fn napi_missing_controls_use_defaults() {
-    let (_, options) = extract_napi_options("{}".to_string()).unwrap();
-    assert_eq!(options, InvocationOptions::default());
-}
-
-#[test]
-fn napi_controls_validate_types() {
-    for json in [
-        r#"{"timeout":-1}"#,
-        r#"{"timeout":1.5}"#,
-        r#"{"lockTimeout":"30"}"#,
-        r#"{"failOnLock":1}"#,
-        "[]",
-        "not-json",
-    ] {
-        assert!(extract_napi_options(json.to_string()).is_err(), "{json}");
-    }
 }
 
 #[test]
@@ -88,12 +47,33 @@ fn cli_defaults_and_zero_values_have_napi_parity() {
             timeout: 0,
             lock_timeout: 0,
             fail_on_lock: true,
+            profile: None,
         }
         .options(),
         InvocationOptions {
             timeout: None,
             lock_timeout: None,
             fail_on_lock: true,
+            jobs: None,
+        }
+    );
+}
+
+#[test]
+fn ci_profile_disables_timeouts() {
+    assert_eq!(
+        InvocationArgs {
+            timeout: DEFAULT_TIMEOUT_SECONDS,
+            lock_timeout: DEFAULT_TIMEOUT_SECONDS,
+            fail_on_lock: false,
+            profile: Some(InvocationProfile::Ci),
+        }
+        .options(),
+        InvocationOptions {
+            timeout: None,
+            lock_timeout: None,
+            fail_on_lock: false,
+            jobs: None,
         }
     );
 }
@@ -170,6 +150,7 @@ fn invocation_guard_installs_deadline_after_lock_acquisition() {
             timeout: Some(Duration::from_secs(5)),
             lock_timeout: Some(Duration::from_secs(1)),
             fail_on_lock: false,
+            jobs: None,
         },
         &directory.path().join("invocation.lock"),
         true,

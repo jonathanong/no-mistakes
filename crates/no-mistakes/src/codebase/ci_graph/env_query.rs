@@ -9,11 +9,10 @@
 //! `rg 'env.VAR' <file>` for those.
 
 use super::model::CiWarning;
-use super::{discover_workflow_files, discover_workflow_files_from_snapshot, relative_slash};
+use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};
 use crate::codebase::ts_source::VisiblePathSnapshot;
 use crate::config::v2::schema::CiConfig;
 use serde::Serialize;
-use serde_yaml::Value;
 use std::path::Path;
 
 mod collect;
@@ -74,7 +73,8 @@ pub enum EnvScope {
 
 /// Analyze all workflows under `ci.workflow_dirs` for `var`.
 pub fn analyze_env(root: &Path, ci: &CiConfig, var: &str) -> CiEnvReport {
-    analyze_env_files(root, var, discover_workflow_files(root, ci))
+    let parsed = ParsedWorkflowSet::load(root, ci);
+    analyze_env_from_parsed(&parsed, var)
 }
 
 /// Analyze CI environment usage with a request-scoped visibility snapshot.
@@ -85,51 +85,38 @@ pub fn analyze_env_from_snapshot(
     var: &str,
     snapshot: &VisiblePathSnapshot,
 ) -> CiEnvReport {
-    analyze_env_files(
-        root,
-        var,
-        discover_workflow_files_from_snapshot(root, ci, snapshot),
-    )
+    let parsed = ParsedWorkflowSet::load_from_snapshot(root, ci, snapshot);
+    analyze_env_from_parsed(&parsed, var)
 }
 
-fn analyze_env_files(
-    root: &Path,
-    var: &str,
-    workflow_files: Vec<std::path::PathBuf>,
-) -> CiEnvReport {
+/// Analyze environment usage from the shared parsed workflow documents.
+pub fn analyze_env_from_parsed(parsed: &ParsedWorkflowSet, var: &str) -> CiEnvReport {
     let reference_re = reference_regex(var);
     let mut files = Vec::new();
     let mut warnings = Vec::new();
 
-    for path in workflow_files {
-        let rel = relative_slash(root, &path);
-        // Distinguish I/O failures from parse errors so the warning is accurate.
-        let content = match std::fs::read_to_string(&path) {
-            Ok(content) => content,
-            Err(error) => {
-                warnings.push(CiWarning {
-                    path: rel,
-                    message: format!("could not read workflow file: {error}"),
-                });
-                continue;
+    for document in &parsed.documents {
+        match &document.value {
+            Ok(value) => {
+                let locations = collect_locations(value, var, &reference_re);
+                if !locations.is_empty() {
+                    files.push(CiEnvFile {
+                        path: document.path.clone(),
+                        locations,
+                    });
+                }
             }
-        };
-        let value: Value = match serde_yaml::from_str(&content) {
-            Ok(value) => value,
-            Err(error) => {
-                warnings.push(CiWarning {
-                    path: rel,
-                    message: format!("could not parse workflow YAML: {error}"),
-                });
-                continue;
-            }
-        };
-        let locations = collect_locations(&value, var, &reference_re);
-        if !locations.is_empty() {
-            files.push(CiEnvFile {
-                path: rel,
-                locations,
-            });
+            Err(error) => warnings.push(CiWarning {
+                path: document.path.clone(),
+                message: match error.kind {
+                    WorkflowDocumentErrorKind::Read => {
+                        format!("could not read workflow file: {}", error.message)
+                    }
+                    WorkflowDocumentErrorKind::Parse => {
+                        format!("could not parse workflow YAML: {}", error.message)
+                    }
+                },
+            }),
         }
     }
 

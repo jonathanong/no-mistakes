@@ -15,9 +15,10 @@ fn collect_parsed_imports_from_facts<'a>(
 
 fn collect_import_edges(
     parsed_imports: &ParsedImports<'_>,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     parsed_imports
         .par_iter()
@@ -32,20 +33,24 @@ fn collect_import_edges(
                         &imp.specifier,
                         path,
                         workspace,
-                        graph_files.visible(),
+                        graph_files,
                     );
                     if let Some(target) = classification.resolver_path() {
-                        return (graph_files.is_visible(target) && is_indexable(target)).then(|| {
-                            (
-                                NodeId::File((*path).clone()),
-                                NodeId::File(target.to_path_buf()),
-                                kind,
-                            )
-                        });
+                        let target = graph_files.visible_path(target)?;
+                        return (is_indexable(target) || kind == EdgeKind::RequireResolve).then(
+                            || {
+                                (
+                                    NodeId::file_in(interner, *path),
+                                    NodeId::file_in(interner, target),
+                                    kind,
+                                )
+                            },
+                        );
                     }
                     if classification.is_unresolved_external() {
-                        return bare_module_node(&imp.specifier)
-                            .map(|module| (NodeId::File((*path).clone()), module, kind));
+                        return bare_module_node_in(interner, &imp.specifier).map(|module| {
+                            (NodeId::file_in(interner, *path), module, kind)
+                        });
                     }
                     None
                 })
@@ -56,8 +61,9 @@ fn collect_import_edges(
 
 fn collect_asset_edges(
     parsed_imports: &ParsedImports<'_>,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     parsed_imports
         .par_iter()
@@ -66,15 +72,17 @@ fn collect_asset_edges(
                 .imports
                 .iter()
                 .filter(|imp| import_is_reachable(imp, facts, reachable))
+                .filter(|imp| !matches!(imp.kind, ImportKind::Type | ImportKind::RequireResolve))
                 .filter(|imp| imp.specifier.starts_with('.') || imp.specifier.starts_with('/'))
                 .filter_map(|imp| {
                     resolver.resolve(&imp.specifier, path).and_then(|target| {
-                        if !graph_files.is_visible(&target) || is_indexable(&target) {
+                        let target = graph_files.visible_path(&target)?;
+                        if is_indexable(target) {
                             return None;
                         }
                         Some((
-                            NodeId::File((*path).clone()),
-                            NodeId::File(target),
+                            NodeId::file_in(interner, *path),
+                            NodeId::file_in(interner, target),
                             EdgeKind::AssetImport,
                         ))
                     })
@@ -86,9 +94,10 @@ fn collect_asset_edges(
 
 fn collect_workspace_edges(
     parsed_imports: &ParsedImports<'_>,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     if workspace.packages.is_empty() {
         return vec![];
@@ -107,14 +116,19 @@ fn collect_workspace_edges(
                         return None;
                     }
                     resolver
-                        .classify_import(spec, path, workspace, graph_files.visible())
+                        .classify_import(spec, path, workspace, graph_files)
                         .workspace_path()
-                        .filter(|entry| graph_files.is_visible(entry))
+                        .and_then(|entry| graph_files.visible_path(entry))
                         .map(|entry| {
+                            let kind = match imp.kind {
+                                ImportKind::Type => EdgeKind::WorkspaceTypeImport,
+                                ImportKind::RequireResolve => EdgeKind::RequireResolve,
+                                _ => EdgeKind::WorkspaceImport,
+                            };
                             (
-                                NodeId::File((*path).clone()),
-                                NodeId::File(entry.to_path_buf()),
-                                EdgeKind::WorkspaceImport,
+                                NodeId::file_in(interner, *path),
+                                NodeId::file_in(interner, entry),
+                                kind,
                             )
                         })
                 })

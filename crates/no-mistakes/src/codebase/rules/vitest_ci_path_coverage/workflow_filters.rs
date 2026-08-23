@@ -1,3 +1,4 @@
+mod extract;
 mod step;
 mod values;
 mod workflow_paths;
@@ -6,12 +7,11 @@ use super::{
     globs::{selected_by, PredicateQuantifier},
     RuleFinding, RULE_ID,
 };
-use crate::codebase::ci_graph::{discover_workflow_files_from_snapshot, relative_slash};
+use crate::codebase::ci_graph::discover_workflow_files_from_snapshot;
+use crate::codebase::ci_workflows::{ParsedWorkflowSet, WorkflowDocumentErrorKind};
 use crate::config::v2::schema::NoMistakesConfig;
 use serde::Deserialize;
-use serde_yaml::Value;
 use std::path::Path;
-use step::{collect_step_filters_with_sources, StepContext};
 use workflow_paths::{workflow_path_filters, WorkflowPathFilters};
 
 #[cfg(test)]
@@ -55,6 +55,43 @@ pub(super) fn ci_filters_from_snapshot_with_sources(
     )
 }
 
+pub(super) fn ci_filters_from_parsed_with_sources(
+    root: &Path,
+    selectors: &[WorkflowSelector],
+    parsed: &ParsedWorkflowSet,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> (Vec<CiFilter>, Vec<RuleFinding>) {
+    let mut filters = Vec::new();
+    let mut findings = Vec::new();
+    for document in &parsed.documents {
+        let rel = &document.path;
+        if !selector_allows(selectors, rel) {
+            continue;
+        }
+        let value = match &document.value {
+            Ok(value) => value,
+            Err(error) => {
+                let action = match error.kind {
+                    WorkflowDocumentErrorKind::Read => "read workflow file",
+                    WorkflowDocumentErrorKind::Parse => "parse workflow YAML",
+                };
+                findings.push(workflow_finding(
+                    rel,
+                    format!("{rel}: could not {action}: {}", error.message),
+                    None,
+                ));
+                continue;
+            }
+        };
+        let (workflow_filters, workflow_findings) =
+            extract::from_value(root, rel, value, selectors, sources);
+        filters.extend(workflow_filters);
+        findings.extend(workflow_findings);
+    }
+    sort_filters(&mut filters);
+    (filters, findings)
+}
+
 fn ci_filters_from_paths(
     root: &Path,
     selectors: &[WorkflowSelector],
@@ -64,12 +101,8 @@ fn ci_filters_from_paths(
     let mut filters = Vec::new();
     let mut findings = Vec::new();
     for path in workflow_files {
-        let rel = relative_slash(root, &path);
-        if !selectors.is_empty()
-            && !selectors
-                .iter()
-                .any(|selector| selector.path.is_empty() || selector.path == rel)
-        {
+        let rel = crate::codebase::ci_graph::relative_slash(root, &path);
+        if !selector_allows(selectors, &rel) {
             continue;
         }
         let source = match sources.read_path(&path) {
@@ -84,72 +117,28 @@ fn ci_filters_from_paths(
             }
         };
         let (workflow_filters, workflow_findings) =
-            extract_filters_from_workflow_with_sources(root, &rel, &source, selectors, sources);
+            extract::from_workflow(root, &rel, &source, selectors, sources);
         filters.extend(workflow_filters);
         findings.extend(workflow_findings);
     }
-    filters.sort_by(|a, b| (&a.workflow, &a.name).cmp(&(&b.workflow, &b.name)));
+    sort_filters(&mut filters);
     (filters, findings)
 }
 
-fn extract_filters_from_workflow_with_sources(
-    root: &Path,
-    rel: &str,
-    source: &str,
-    selectors: &[WorkflowSelector],
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> (Vec<CiFilter>, Vec<RuleFinding>) {
-    let value: Value = match serde_yaml::from_str(source) {
-        Ok(value) => value,
-        Err(error) => {
-            return (
-                Vec::new(),
-                vec![workflow_finding(
-                    rel,
-                    format!("{rel}: could not parse workflow YAML: {error}"),
-                    None,
-                )],
-            );
-        }
-    };
-    let mut filters = Vec::new();
-    let mut findings = Vec::new();
-    let workflow_paths = workflow_path_filters(&value);
-    let Some(jobs) = value.get("jobs").and_then(Value::as_mapping) else {
-        return (filters, findings);
-    };
-    for (job_key, job) in jobs {
-        let job_id = job_key.as_str().unwrap_or_default();
-        let Some(steps) = job.get("steps").and_then(Value::as_sequence) else {
-            continue;
-        };
-        for step in steps {
-            let step_id = step.get("id").and_then(Value::as_str).unwrap_or_default();
-            if !selectors.is_empty()
-                && !selectors.iter().any(|selector| {
-                    (selector.path.is_empty() || selector.path == rel)
-                        && (selector.job.is_empty() || selector.job == job_id)
-                        && (selector.step_id.is_empty() || selector.step_id == step_id)
-                })
-            {
-                continue;
-            }
-            collect_step_filters_with_sources(
-                root,
-                StepContext {
-                    rel,
-                    job_id,
-                    step_id,
-                    workflow_paths: &workflow_paths,
-                },
-                step,
-                sources,
-                &mut filters,
-                &mut findings,
-            );
+fn selector_allows(selectors: &[WorkflowSelector], rel: &str) -> bool {
+    if selectors.is_empty() {
+        return true;
+    }
+    for selector in selectors {
+        if selector.path.is_empty() || selector.path == rel {
+            return true;
         }
     }
-    (filters, findings)
+    false
+}
+
+fn sort_filters(filters: &mut [CiFilter]) {
+    filters.sort_by(|a, b| (&a.workflow, &a.name).cmp(&(&b.workflow, &b.name)));
 }
 
 pub(super) fn workflow_finding(file: &str, message: String, target: Option<String>) -> RuleFinding {

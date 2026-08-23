@@ -21,12 +21,14 @@ pub fn fact_plan_for_consumers(
     config: &NoMistakesConfig,
     consumers: PlaywrightFactConsumers,
 ) -> Result<Option<PlaywrightFactPlan>> {
-    let selections = rule_selections(config);
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(root);
+    let root_paths = snapshot.paths_for(root);
+    let apps = crate::config::v2::frontend_apps(root, config, &root_paths)?;
+    let selections = rule_selections(config, &apps)?;
     if selections.is_empty() && !consumers.graph_selectors && !consumers.graph_routes {
         return Ok(None);
     }
 
-    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(root);
     let mut prepared = selections
         .into_iter()
         .map(|selection| {
@@ -35,14 +37,19 @@ pub fn fact_plan_for_consumers(
                 config,
                 &[],
                 selection.playwright_project,
+                selection.app,
                 &snapshot,
-            )?;
-            Ok((settings, true, selection.unique_html_ids))
+            );
+            Ok((settings?, true, selection.unique_html_ids))
         })
         .collect::<Result<Vec<_>>>()?;
     if consumers.graph_selectors || consumers.graph_routes {
         prepared.push((
-            config::settings_from_loaded_v2(root, config, &[], None, &snapshot)?,
+            {
+                let settings =
+                    config::settings_from_loaded_v2(root, config, &[], None, None, &snapshot);
+                settings?
+            },
             consumers.graph_selectors,
             false,
         ));
@@ -54,7 +61,12 @@ pub fn fact_plan_for_consumers(
         .collect::<Vec<_>>();
     config_paths.sort();
     config_paths.dedup();
-    let loaded_configs = playwright_config::load_configs(root, &config_paths)?;
+    let loaded_configs = playwright_config::load_configs_with_sources(
+        root,
+        &config_paths,
+        Some(snapshot.source_store_for(root).as_ref()),
+    );
+    let loaded_configs = loaded_configs?;
 
     let mut plan = PlaywrightFactPlan::default();
     let mut test_files_by_project = BTreeMap::new();
@@ -64,7 +76,8 @@ pub fn fact_plan_for_consumers(
             &settings.playwright_configs,
             settings.project.as_deref(),
             &loaded_configs,
-        )?;
+        );
+        let playwright = playwright?;
         let test_files = discover_test_files_from_visible(root, &settings, &playwright, &snapshot)?;
         for test_file in &test_files {
             let attributes = test_file.test_id_attributes();

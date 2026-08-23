@@ -29,10 +29,6 @@ stories: ["stories/**/*.stories.tsx"]
 
     let findings = check(&root, &unknown, None).unwrap();
     assert!(findings.is_empty());
-
-    let facts = CheckFactMap::default();
-    let direct = check_with_facts(&root, &unknown, None, &facts).unwrap();
-    assert!(direct.is_empty());
 }
 
 #[test]
@@ -178,9 +174,7 @@ export default {
     let expression_patterns = config::extract_storybook_story_patterns(
         r#"
 export default {
-  stories: () => {
-    ("../expression/**/*.stories.tsx");
-  },
+  stories: () => "../expression/**/*.stories.tsx",
 };
 "#,
     );
@@ -266,14 +260,16 @@ fn reachable_story_files_skip_unreadable_story_facts() {
 
     let mut parse_error_facts = CheckFactMap {
         files: vec![story.clone()],
-        ts: HashMap::from([(
+        ts: crate::codebase::ts_source::FileIdMap::from([(
             story.clone(),
             CheckFileFacts {
                 parse_error: Some("bad syntax".to_string()),
                 ..Default::default()
             }
             .into(),
-        )]),
+        )])
+        .into_iter()
+        .collect(),
         ..Default::default()
     };
     let files = coverage::reachable_story_files(
@@ -302,7 +298,7 @@ fn reachable_story_files_skip_unreadable_story_facts() {
     );
     assert_eq!(files, [story.clone()].into_iter().collect());
 
-    parse_error_facts.ts.clear();
+    parse_error_facts.ts = Default::default();
     let files = coverage::reachable_story_files(
         &root,
         &parse_error_facts,

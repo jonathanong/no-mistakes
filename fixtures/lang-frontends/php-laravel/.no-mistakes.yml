@@ -1,0 +1,12 @@
+tests:
+  php:
+    framework: laravel
+    apps:
+      - .
+projects:
+  app:
+    type: server
+    root: .
+    queues:
+      enqueues: ["**/*"]
+      workers: ["**/*"]

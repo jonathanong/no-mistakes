@@ -10,6 +10,20 @@ use crate::config::{
 
 const V2_STEMS: &[&str] = &[".no-mistakes"];
 
+pub(crate) fn automatic_v2_config_paths(root: &Path) -> Vec<PathBuf> {
+    V2_STEMS
+        .iter()
+        .flat_map(|stem| {
+            crate::config::CONFIG_EXTENSIONS
+                .iter()
+                .map(move |extension| root.join(format!("{stem}.{extension}")))
+        })
+        .collect()
+}
+
+mod check_commands;
+mod targeted_triggers;
+
 /// Load the unified `.no-mistakes.yml` (or a recognized legacy config) from
 /// `root`, returning a [`NoMistakesConfig`].
 ///
@@ -18,15 +32,24 @@ const V2_STEMS: &[&str] = &[".no-mistakes"];
 /// 2. `.no-mistakes.{yaml,yml,json,jsonc}` in `root`.
 /// 3. Empty default.
 pub fn load_v2_config(root: &Path, cli_config: Option<&Path>) -> Result<NoMistakesConfig> {
+    // Bootstrap path: config is loaded before AnalysisSession/SourceStore exist.
+    // Prepared requests use `load_v2_config_from_source_store`.
+    load_v2_config_with_path(root, cli_config).map(|(config, _)| config)
+}
+
+pub(crate) fn load_v2_config_with_path(
+    root: &Path,
+    cli_config: Option<&Path>,
+) -> Result<(NoMistakesConfig, Option<PathBuf>)> {
     if cli_config.is_some() {
-        return load_v2_config_from_visible(root, cli_config, &[]);
+        return load_v2_config_with_path_from_visible(root, cli_config, &[]);
     }
 
     if let Some((path, source)) = find_by_stems(root, V2_STEMS)? {
-        return parse_v2_config(&source, &path);
+        return Ok((parse_v2_config(&source, &path)?, Some(path)));
     }
 
-    Ok(NoMistakesConfig::default())
+    Ok((NoMistakesConfig::default(), None))
 }
 
 /// Load config while reusing a request's canonical visible-path candidates.
@@ -38,21 +61,31 @@ pub fn load_v2_config_from_visible(
     cli_config: Option<&Path>,
     visible_paths: &[PathBuf],
 ) -> Result<NoMistakesConfig> {
+    load_v2_config_with_path_from_visible(root, cli_config, visible_paths).map(|(config, _)| config)
+}
+
+pub(crate) fn load_v2_config_with_path_from_visible(
+    root: &Path,
+    cli_config: Option<&Path>,
+    visible_paths: &[PathBuf],
+) -> Result<(NoMistakesConfig, Option<PathBuf>)> {
     if let Some(path) = cli_config {
         let resolved = resolve(root, path);
         if !resolved.exists() {
             anyhow::bail!("config file does not exist: {}", resolved.display());
         }
+        // Snapshot-only bootstrap still precedes SourceStore; prepared analysis
+        // uses `load_v2_config_from_source_store`.
         let source = std::fs::read_to_string(&resolved)?;
-        return parse_v2_config(&source, &resolved);
+        return Ok((parse_v2_config(&source, &resolved)?, Some(resolved)));
     }
 
     if let Some(path) = find_automatic_config_path_from_visible(root, V2_STEMS, visible_paths)? {
         let source = std::fs::read_to_string(&path)?;
-        return parse_v2_config(&source, &path);
+        return Ok((parse_v2_config(&source, &path)?, Some(path)));
     }
 
-    Ok(NoMistakesConfig::default())
+    Ok((NoMistakesConfig::default(), None))
 }
 
 #[doc(hidden)]
@@ -63,13 +96,20 @@ pub(crate) fn load_v2_config_from_source_store(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<NoMistakesConfig> {
     let path = effective_v2_config_path_from_visible(root, cli_config, visible_paths)?;
+    load_v2_config_from_selected_source_store(path.as_deref(), sources)
+}
+
+pub(crate) fn load_v2_config_from_selected_source_store(
+    path: Option<&Path>,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<NoMistakesConfig> {
     let Some(path) = path else {
         return Ok(NoMistakesConfig::default());
     };
     let source = sources
-        .read_path(&path)
+        .read_path(path)
         .map_err(|error| anyhow::anyhow!("reading {}: {}", path.display(), error))?;
-    parse_v2_config(&source, &path)
+    parse_v2_config(&source, path)
 }
 
 pub(crate) fn effective_v2_config_path_from_visible(
@@ -89,9 +129,17 @@ pub(crate) fn effective_v2_config_path_from_visible(
 }
 
 fn parse_v2_config(source: &str, path: &Path) -> Result<NoMistakesConfig> {
-    let config = parse_config::<NoMistakesConfig>(source, path)?;
-    validate_v2_config(&config)?;
+    let config = parse_v2_config_quiet(source, path)?;
     emit_v2_deprecation_warnings(&config, path);
+    Ok(config)
+}
+
+/// Parse and validate v2 config without emitting compatibility warnings.
+/// Historical config comparisons use this so one request does not print a
+/// warning for a revision that is not its active configuration.
+pub(crate) fn parse_v2_config_quiet(source: &str, path: &Path) -> Result<NoMistakesConfig> {
+    let config = parse_config::<NoMistakesConfig>(source, path)?;
+    validate_v2_config(&config, path)?;
     Ok(config)
 }
 
@@ -111,7 +159,7 @@ fn emit_v2_deprecation_warnings(config: &NoMistakesConfig, path: &Path) {
     }
 }
 
-fn validate_v2_config(config: &NoMistakesConfig) -> Result<()> {
+fn validate_v2_config(config: &NoMistakesConfig, path: &Path) -> Result<()> {
     for (name, project) in &config.projects {
         validate_globs(&project.include, &format!("projects.{name}.include"))?;
         validate_globs(&project.exclude, &format!("projects.{name}.exclude"))?;
@@ -123,6 +171,8 @@ fn validate_v2_config(config: &NoMistakesConfig) -> Result<()> {
         validate_globs(&rule.include, &format!("rules[{index}].include"))?;
         validate_globs(&rule.exclude, &format!("rules[{index}].exclude"))?;
     }
+    check_commands::validate(config)?;
+    targeted_triggers::validate(config, path)?;
     validate_playwright_selector_wrappers(&config.tests.playwright.selectors.wrappers)?;
     Ok(())
 }

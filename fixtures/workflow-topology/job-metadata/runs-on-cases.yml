@@ -1,0 +1,21 @@
+label-array:
+  - self-hosted
+  - linux
+  - false
+
+group-label-array:
+  group: restricted
+  labels:
+    - self-hosted
+    - linux
+    - false
+
+missing-group:
+  labels: ubuntu-latest
+
+invalid-labels:
+  group: restricted
+  labels:
+    nested: true
+
+invalid-type: false

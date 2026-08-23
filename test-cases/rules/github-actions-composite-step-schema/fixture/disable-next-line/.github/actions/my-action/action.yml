@@ -1,0 +1,9 @@
+name: Next Line Disable
+runs:
+  using: composite
+  steps:
+    - name: Run
+      # no-mistakes-disable-next-line github-actions-composite-step-schema
+      timeout-minutes: 5
+      run: echo ok
+      shell: bash

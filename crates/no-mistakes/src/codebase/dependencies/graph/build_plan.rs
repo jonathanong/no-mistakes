@@ -8,6 +8,8 @@ pub struct GraphBuildPlan {
     pub tests: bool,
     pub markdown: bool,
     pub ci: bool,
+    /// Build canonical GitHub Actions workflow topology edges.
+    pub workflow_topology: bool,
     pub routes: bool,
     pub queues: bool,
     pub playwright_routes: bool,
@@ -16,11 +18,16 @@ pub struct GraphBuildPlan {
     pub http: bool,
     pub process: bool,
     pub assets: bool,
+    /// Runtime filesystem resource reads and static glob calls in TS/JS.
+    pub resources: bool,
     pub react: bool,
     pub symbols: bool,
     pub dotnet: bool,
     pub swift: bool,
     pub terraform: bool,
+    pub language_frontends: bool,
+    /// Opt-in tRPC procedure virtual nodes. Absent from `all()`.
+    pub trpc: bool,
 }
 
 impl GraphBuildPlan {
@@ -36,6 +43,7 @@ impl GraphBuildPlan {
             tests: true,
             markdown: true,
             ci: true,
+            workflow_topology: true,
             routes: true,
             queues: true,
             playwright_routes: true,
@@ -43,11 +51,14 @@ impl GraphBuildPlan {
             http: true,
             process: true,
             assets: true,
+            resources: true,
             react: true,
             symbols: false,
             dotnet: true,
             swift: true,
             terraform: true,
+            language_frontends: true,
+            trpc: false,
         }
     }
 
@@ -80,13 +91,24 @@ impl GraphBuildPlan {
             imports: allowed.contains(&EdgeKind::Import)
                 || allowed.contains(&EdgeKind::TypeImport)
                 || allowed.contains(&EdgeKind::DynamicImport)
-                || allowed.contains(&EdgeKind::Require),
+                || allowed.contains(&EdgeKind::Require)
+                || allowed.contains(&EdgeKind::RequireResolve),
             route_imports: allowed.contains(&EdgeKind::RouteImport),
-            workspace: allowed.contains(&EdgeKind::WorkspaceImport),
+            workspace: allowed.contains(&EdgeKind::WorkspaceImport)
+                || allowed.contains(&EdgeKind::WorkspaceTypeImport)
+                || allowed.contains(&EdgeKind::RequireResolve),
             package: allowed.contains(&EdgeKind::PackageDependency),
-            tests: allowed.contains(&EdgeKind::TestOf),
+            tests: allowed.contains(&EdgeKind::TestOf)
+                || allowed.contains(&EdgeKind::VitestSetup(VitestSetupField::SetupFiles))
+                || allowed.contains(&EdgeKind::VitestSetup(VitestSetupField::GlobalSetup)),
             markdown: allowed.contains(&EdgeKind::MarkdownLink),
             ci: allowed.contains(&EdgeKind::CiInvocation),
+            workflow_topology: allowed.contains(&EdgeKind::WorkflowJob)
+                || allowed.contains(&EdgeKind::WorkflowStep)
+                || allowed.contains(&EdgeKind::WorkflowNeeds)
+                || allowed.contains(&EdgeKind::WorkflowUses)
+                || allowed.contains(&EdgeKind::WorkflowRun)
+                || allowed.contains(&EdgeKind::WorkflowArtifact),
             routes: allowed.contains(&EdgeKind::RouteRef),
             queues: allowed.contains(&EdgeKind::QueueEnqueue)
                 || allowed.contains(&EdgeKind::QueueWorker),
@@ -96,17 +118,22 @@ impl GraphBuildPlan {
             http: allowed.contains(&EdgeKind::HttpCall),
             process: allowed.contains(&EdgeKind::ProcessSpawn),
             assets: allowed.contains(&EdgeKind::AssetImport),
+            resources: allowed.contains(&EdgeKind::Resource),
             react: allowed.contains(&EdgeKind::ReactRender),
             symbols: false,
             dotnet: allowed.contains(&EdgeKind::DotnetUsing)
                 || allowed.contains(&EdgeKind::DotnetReference)
-                || allowed.contains(&EdgeKind::DotnetProjectDependency),
+                || allowed.contains(&EdgeKind::DotnetProjectDependency)
+                || allowed.contains(&EdgeKind::RouteRef),
             swift: allowed.contains(&EdgeKind::SwiftImport)
                 || allowed.contains(&EdgeKind::SwiftReference)
                 || allowed.contains(&EdgeKind::SwiftPackageDependency),
             terraform: allowed.contains(&EdgeKind::TerraformReference)
                 || allowed.contains(&EdgeKind::TerraformModuleRef)
                 || allowed.contains(&EdgeKind::TerraformOutputRef),
+            language_frontends: allowed_requests_language_frontends(allowed),
+            trpc: allowed.contains(&EdgeKind::TrpcCall)
+                || allowed.contains(&EdgeKind::TrpcProcedure),
         }
     }
 
@@ -118,6 +145,7 @@ impl GraphBuildPlan {
         self.tests |= other.tests;
         self.markdown |= other.markdown;
         self.ci |= other.ci;
+        self.workflow_topology |= other.workflow_topology;
         self.routes |= other.routes;
         self.queues |= other.queues;
         self.playwright_routes |= other.playwright_routes;
@@ -125,11 +153,14 @@ impl GraphBuildPlan {
         self.http |= other.http;
         self.process |= other.process;
         self.assets |= other.assets;
+        self.resources |= other.resources;
         self.react |= other.react;
         self.symbols |= other.symbols;
         self.dotnet |= other.dotnet;
         self.swift |= other.swift;
         self.terraform |= other.terraform;
+        self.language_frontends |= other.language_frontends;
+        self.trpc |= other.trpc;
     }
 
     pub fn with_symbols(mut self, symbols: bool) -> Self {
@@ -140,7 +171,8 @@ impl GraphBuildPlan {
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.route_imports || self.workspace || self.assets,
-            function_calls: self.imports || self.workspace || self.assets || self.symbols,
+            function_calls: self.imports || self.workspace || self.assets || self.symbols || self.resources,
+            resources: self.resources,
             symbols: self.symbols || self.queues,
             react: self.react,
             route_refs: self.routes,
@@ -150,40 +182,9 @@ impl GraphBuildPlan {
             queue_project: self.queues,
             http_calls: self.http,
             process_spawns: self.process,
+            trpc_router: self.trpc,
+            trpc_calls: self.trpc,
             ..TsFactPlan::default()
         }
     }
-}
-
-fn graph_plan_needs_config(plan: GraphBuildPlan) -> bool {
-    plan.routes
-        || plan.queues
-        || plan.http
-        || plan.tests
-        || plan.dotnet
-        || plan.swift
-        || plan.terraform
-}
-
-fn effective_ts_fact_plan(
-    plan: GraphBuildPlan,
-    options: Option<&GraphConfigOptions>,
-) -> TsFactPlan {
-    let mut fact_plan = plan.ts_fact_plan();
-    let route_refs_configured = options.is_some_and(route_ref_facts_configured);
-    let route_backend_configured = options.is_some_and(route_backend_facts_configured);
-    let http_configured = options.is_some_and(http_facts_configured);
-    let queue_configured = options.is_some_and(queue_facts_configured);
-
-    fact_plan.route_refs &= route_refs_configured;
-    fact_plan.backend_routes &= route_backend_configured || http_configured;
-    fact_plan.http_calls &= http_configured;
-    fact_plan.symbols = plan.symbols || (fact_plan.symbols && queue_configured);
-    fact_plan.queue_usage &= queue_configured;
-    fact_plan.queue_factory &= queue_configured;
-    fact_plan.queue_project &= queue_configured;
-    fact_plan.server_routes = options.is_some_and(|options| {
-        options.project_route_globset.is_some() && (plan.routes || plan.swift)
-    });
-    fact_plan
 }

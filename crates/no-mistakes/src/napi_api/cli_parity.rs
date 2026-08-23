@@ -1,16 +1,23 @@
 use std::path::{Path, PathBuf};
 
 use super::options::{
-    parse_options, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
-    FetchesOptions, ImpactedChecksOptions, PlaywrightOptions, ProjectOptions, TestsImpactOptions,
+    parse_options_value, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
+    CiTopologyOptions, FetchesOptions, ImpactedChecksOptions, ProjectOptions, TestsImpactOptions,
     TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 
 include!("cli_parity_builders.rs");
 
-pub(crate) fn fetches_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<FetchesOptions>(&options_json)?;
+mod playwright_wrappers;
+
+pub(crate) use playwright_wrappers::{
+    playwright_check_json_impl, playwright_edges_json_impl, playwright_related_json_impl,
+    playwright_tests_json_impl,
+};
+
+pub(crate) fn fetches_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<FetchesOptions>(options)?;
     let base_root = std::env::current_dir()
         .map_err(anyhow::Error::from)
         .map_err(to_napi_error)?;
@@ -29,34 +36,46 @@ pub(crate) fn fetches_json_impl(options_json: String) -> napi::Result<String> {
     to_pretty_json(&report)
 }
 
-pub(crate) fn check_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<ProjectOptions>(&options_json)?;
+pub(crate) fn check_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<ProjectOptions>(options)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let results = crate::check_runner::run_all(
+    let results = crate::check_runner::run_all_with_suppressed(
         root,
         options.config.map(PathBuf::from),
         options.tsconfig.map(PathBuf::from),
+        options.include_suppressed,
     )
     .map_err(to_napi_error)?;
     to_pretty_json(&crate::check_runner::json_value(&results))
 }
 
-pub(crate) fn tests_plan_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<TestsPlanOptions>(&options_json)?;
+pub(crate) fn resolve_config_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<ProjectOptions>(options)?;
+    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
+    let report = crate::config::resolved::resolve_config(
+        &root,
+        options.config.map(PathBuf::from).as_deref(),
+    )
+    .map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
+pub(crate) fn tests_plan_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<TestsPlanOptions>(options)?;
     let args = build_plan_args(options).map_err(to_napi_error)?;
     let plan = crate::tests::plan::generate_plan(&args).map_err(to_napi_error)?;
     to_pretty_json(&plan)
 }
 
-pub(crate) fn tests_impact_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<TestsImpactOptions>(&options_json)?;
+pub(crate) fn tests_impact_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<TestsImpactOptions>(options)?;
     let args = build_impact_args(options).map_err(to_napi_error)?;
     let plan = crate::tests::impact::generate_impact_plan(&args).map_err(to_napi_error)?;
     to_pretty_json(&plan)
 }
 
-pub(crate) fn tests_targets_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<TestsTargetsOptions>(&options_json)?;
+pub(crate) fn tests_targets_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<TestsTargetsOptions>(options)?;
     let framework = options
         .framework
         .as_deref()
@@ -83,8 +102,8 @@ pub(crate) fn tests_targets_json_impl(options_json: String) -> napi::Result<Stri
     to_pretty_json(&report)
 }
 
-pub(crate) fn ci_impact_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<CiImpactOptions>(&options_json)?;
+pub(crate) fn ci_impact_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<CiImpactOptions>(options)?;
     let root = options.root.unwrap_or(String::from("."));
     let files: Vec<PathBuf> = options.files.into_iter().map(PathBuf::from).collect();
     let report = crate::ci::impact_report(
@@ -96,8 +115,8 @@ pub(crate) fn ci_impact_json_impl(options_json: String) -> napi::Result<String> 
     to_pretty_json(&report)
 }
 
-pub(crate) fn ci_env_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<CiEnvOptions>(&options_json)?;
+pub(crate) fn ci_env_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<CiEnvOptions>(options)?;
     let var = options
         .var
         .context("var is required")
@@ -112,8 +131,20 @@ pub(crate) fn ci_env_json_impl(options_json: String) -> napi::Result<String> {
     to_pretty_json(&report)
 }
 
-pub(crate) fn impacted_checks_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<ImpactedChecksOptions>(&options_json)?;
+pub(crate) fn ci_topology_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<CiTopologyOptions>(options)?;
+    let root = options.root.unwrap_or(String::from("."));
+    let report = crate::ci::topology_report(
+        Path::new(&root),
+        options.config.as_deref().map(Path::new),
+        &options.workflows,
+    )
+    .map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
+pub(crate) fn impacted_checks_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<ImpactedChecksOptions>(options)?;
     let collect_timings = options.timings;
     let args = build_impacted_checks_args(options);
     let mut timing = crate::impacted_checks::timing::TimingTracker::new(false, collect_timings);
@@ -124,77 +155,39 @@ pub(crate) fn impacted_checks_json_impl(options_json: String) -> napi::Result<St
     let Some(timings) = timing.into_timings() else {
         return to_pretty_json(&report);
     };
-    let mut value = serde_json::to_value(&report).map_err(|error| to_napi_error(error.into()))?;
-    value["timings"] =
-        serde_json::to_value(timings).map_err(|error| to_napi_error(error.into()))?;
+    let mut value = serde_json::to_value(&report)
+        .map_err(anyhow::Error::from)
+        .map_err(to_napi_error)?;
+    value["timings"] = serde_json::to_value(timings)
+        .map_err(anyhow::Error::from)
+        .map_err(to_napi_error)?;
     to_pretty_json(&value)
 }
 
-pub(crate) fn tests_why_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<TestsWhyOptions>(&options_json)?;
+pub(crate) fn tests_why_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<TestsWhyOptions>(options)?;
     let args = build_why_args(options).map_err(to_napi_error)?;
     let steps = crate::tests::why::why_steps(&args).map_err(to_napi_error)?;
     to_pretty_json(&steps)
 }
 
-pub(crate) fn tests_comment_markdown_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<TestsPlanDocumentOptions>(&options_json)?;
+pub(crate) fn tests_comment_markdown_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<TestsPlanDocumentOptions>(options)?;
     let plan = load_plan_document(options).map_err(to_napi_error)?;
     Ok(crate::tests::comment::render_markdown_plan(&plan))
 }
 
-pub(crate) fn tests_graph_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<TestsPlanDocumentOptions>(&options_json)?;
+pub(crate) fn tests_graph_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<TestsPlanDocumentOptions>(options)?;
     let plan = load_plan_document(options).map_err(to_napi_error)?;
     let graph = crate::tests::graph::graph_json(&plan).map_err(to_napi_error)?;
     to_pretty_json(&graph)
 }
 
-pub(crate) fn tests_graph_mermaid_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<TestsPlanDocumentOptions>(&options_json)?;
+pub(crate) fn tests_graph_mermaid_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<TestsPlanDocumentOptions>(options)?;
     let plan = load_plan_document(options).map_err(to_napi_error)?;
     crate::tests::graph::graph_mermaid(&plan).map_err(to_napi_error)
-}
-
-pub(crate) fn playwright_check_json_impl(options_json: String) -> napi::Result<String> {
-    playwright_json(options_json, crate::playwright::PlaywrightReportKind::Check)
-}
-
-pub(crate) fn playwright_edges_json_impl(options_json: String) -> napi::Result<String> {
-    playwright_json(options_json, crate::playwright::PlaywrightReportKind::Edges)
-}
-
-pub(crate) fn playwright_related_json_impl(options_json: String) -> napi::Result<String> {
-    playwright_json(
-        options_json,
-        crate::playwright::PlaywrightReportKind::Related,
-    )
-}
-
-pub(crate) fn playwright_tests_json_impl(options_json: String) -> napi::Result<String> {
-    playwright_json(options_json, crate::playwright::PlaywrightReportKind::Tests)
-}
-
-fn playwright_json(
-    options_json: String,
-    kind: crate::playwright::PlaywrightReportKind,
-) -> napi::Result<String> {
-    let options = parse_options::<PlaywrightOptions>(&options_json)?;
-    let report_options = crate::playwright::PlaywrightReportOptions {
-        root: options
-            .root
-            .map(PathBuf::from)
-            .unwrap_or(PathBuf::from(".")),
-        config: options.config.map(PathBuf::from),
-        playwright_config: strings_to_paths(options.playwright_config),
-        project: options.project,
-        files: strings_to_paths(options.files),
-        assert_conditional_tests: options.assert_conditional_tests,
-        allow_skipped_tests: options.allow_skipped_tests,
-        assert_unique_test_ids: options.assert_unique_test_ids,
-        assert_unique_html_ids: options.assert_unique_html_ids,
-    };
-    crate::playwright::report_json(kind, report_options).map_err(to_napi_error)
 }
 
 fn load_plan_document(options: TestsPlanDocumentOptions) -> AnyhowResult<crate::tests::TestPlan> {
@@ -211,5 +204,5 @@ fn load_plan_document(options: TestsPlanDocumentOptions) -> AnyhowResult<crate::
 }
 
 fn to_pretty_json<T: serde::Serialize>(value: &T) -> napi::Result<String> {
-    Ok(serde_json::to_string_pretty(value).expect("N-API report serialization never fails"))
+    Ok(serde_json::to_string(value).expect("N-API report serialization never fails"))
 }

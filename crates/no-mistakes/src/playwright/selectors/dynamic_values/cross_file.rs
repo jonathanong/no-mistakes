@@ -3,7 +3,6 @@ use oxc_ast::ast::{
     Declaration, ExportDefaultDeclarationKind, Expression, ImportDeclarationSpecifier,
     ObjectPropertyKind, Program, Statement,
 };
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 const DEFERRED_IMPORT_PREFIX: &str = "\0no-mistakes-playwright-import:";
@@ -32,23 +31,30 @@ pub(crate) fn resolve_imported_values(
     program: &Program<'_>,
     importing_file: &Path,
 ) -> Vec<String> {
-    resolve_imported_values_inner(local_name, program, importing_file, None)
+    resolve_imported_values_inner(local_name, program, importing_file, None, None)
 }
 
 pub(crate) fn resolve_imported_values_from_visible(
     local_name: &str,
     program: &Program<'_>,
     importing_file: &Path,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Vec<String> {
-    resolve_imported_values_inner(local_name, program, importing_file, Some(visible_files))
+    resolve_imported_values_inner(
+        local_name,
+        program,
+        importing_file,
+        Some(visible_files),
+        sources,
+    )
 }
 
 pub(crate) fn defer_imported_values_from_visible(
     local_name: &str,
     program: &Program<'_>,
     importing_file: &Path,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &crate::fx::PathSet,
 ) -> Vec<String> {
     let Some((source, exported_name, is_default)) = find_import_info(local_name, program) else {
         return Vec::new();
@@ -86,36 +92,32 @@ pub(crate) fn collect_static_export_values(program: &Program<'_>) -> StaticExpor
     let mut facts = StaticExportValues::default();
     for statement in &program.body {
         match statement {
-            Statement::ExportNamedDeclaration(export) => {
-                let Some(declaration) = &export.declaration else {
-                    continue;
-                };
-                match declaration {
-                    Declaration::VariableDeclaration(variable) => {
-                        for declarator in &variable.declarations {
-                            let Some(name) = binding_ident_name(&declarator.id) else {
-                                continue;
-                            };
-                            let mut values = Vec::new();
-                            collect_from_named_declaration(declaration, &name, &mut values);
-                            if !values.is_empty() {
-                                facts.named.insert(name, values);
-                            }
-                        }
-                    }
-                    Declaration::FunctionDeclaration(function) => {
-                        let Some(name) = function.id.as_ref().map(|id| id.name.to_string()) else {
+            Statement::ExportDeclaration(export) => match &export.declaration {
+                Declaration::VariableDeclaration(variable) => {
+                    for declarator in &variable.declarations {
+                        let Some(name) = binding_ident_name(&declarator.id) else {
                             continue;
                         };
                         let mut values = Vec::new();
-                        collect_from_named_declaration(declaration, &name, &mut values);
+                        collect_from_named_declaration(&export.declaration, &name, &mut values);
                         if !values.is_empty() {
                             facts.named.insert(name, values);
                         }
                     }
-                    _ => {}
                 }
-            }
+                Declaration::FunctionDeclaration(function) => {
+                    record_named_function_export(
+                        function.id.as_ref().map(|id| id.name.to_string()),
+                        |name| {
+                            let mut values = Vec::new();
+                            collect_from_named_declaration(&export.declaration, name, &mut values);
+                            values
+                        },
+                        &mut facts,
+                    );
+                }
+                _ => {}
+            },
             Statement::ExportDefaultDeclaration(export) => {
                 collect_from_default_export(&export.declaration, &mut facts.default);
             }
@@ -125,11 +127,26 @@ pub(crate) fn collect_static_export_values(program: &Program<'_>) -> StaticExpor
     facts
 }
 
+pub(crate) fn record_named_function_export(
+    name: Option<String>,
+    collect_values: impl FnOnce(&str) -> Vec<String>,
+    facts: &mut StaticExportValues,
+) {
+    let Some(name) = name else {
+        return;
+    };
+    let values = collect_values(&name);
+    if !values.is_empty() {
+        facts.named.insert(name, values);
+    }
+}
+
 fn resolve_imported_values_inner(
     local_name: &str,
     program: &Program<'_>,
     importing_file: &Path,
-    visible_files: Option<&HashSet<PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> Vec<String> {
     let Some((source_str, exported_name, is_default)) = find_import_info(local_name, program)
     else {
@@ -146,7 +163,7 @@ fn resolve_imported_values_inner(
         return vec![];
     };
 
-    let Ok(source) = std::fs::read_to_string(&resolved_path) else {
+    let Ok(source) = crate::playwright::fsutil::read_source_text(&resolved_path, sources) else {
         return vec![];
     };
 
@@ -154,36 +171,6 @@ fn resolve_imported_values_inner(
         collect_exported_values(target_program, &exported_name, is_default)
     })
     .unwrap_or_default()
-}
-
-fn find_import_info(local_name: &str, program: &Program<'_>) -> Option<(String, String, bool)> {
-    program.body.iter().find_map(|stmt| {
-        let Statement::ImportDeclaration(import) = stmt else {
-            return None;
-        };
-
-        import
-            .specifiers
-            .as_ref()?
-            .iter()
-            .find_map(|specifier| match specifier {
-                ImportDeclarationSpecifier::ImportSpecifier(named)
-                    if named.local.name == local_name =>
-                {
-                    Some((
-                        import.source.value.to_string(),
-                        named.imported.name().to_string(),
-                        false,
-                    ))
-                }
-                ImportDeclarationSpecifier::ImportDefaultSpecifier(default)
-                    if default.local.name == local_name =>
-                {
-                    Some((import.source.value.to_string(), "default".to_string(), true))
-                }
-                _ => None,
-            })
-    })
 }
 
 fn collect_exported_values(
@@ -195,10 +182,8 @@ fn collect_exported_values(
 
     for stmt in &program.body {
         match stmt {
-            Statement::ExportNamedDeclaration(export) => {
-                if let Some(decl) = &export.declaration {
-                    collect_from_named_declaration(decl, exported_name, &mut values);
-                }
+            Statement::ExportDeclaration(export) => {
+                collect_from_named_declaration(&export.declaration, exported_name, &mut values);
             }
             Statement::ExportDefaultDeclaration(export) if is_default => {
                 collect_from_default_export(&export.declaration, &mut values);

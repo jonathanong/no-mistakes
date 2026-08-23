@@ -7,29 +7,29 @@ fn process_export_named_declaration(
     let line = byte_offset_to_line(source, export.span.start as usize);
     let export_is_type = export.export_kind.is_type();
 
-    // Re-export with source: `export { X } from './y'`
-    if let Some(src) = &export.source {
-        let source_str = src.value.as_str().to_string();
-        for spec in &export.specifiers {
-            let imported = spec.local.name().to_string();
-            let name = spec.exported.name().to_string();
-            out.exports.push(Export {
-                name,
-                local: None,
-                kind: ExportKind::ReExport {
-                    source: source_str.clone(),
-                    imported,
-                },
-                line,
-                is_type_only: export_is_type || spec.export_kind.is_type(),
-            });
-        }
-        return;
+    // Specifier exports without source: `export { a, b }` (local re-bindings)
+    for spec in &export.specifiers {
+        let name = spec.exported.name().to_string();
+        let local = spec.local.name().to_string();
+        out.exports.push(Export {
+            name,
+            local: (local != spec.exported.name().as_str()).then_some(local),
+            kind: ExportKind::Const,
+            line,
+            is_type_only: export_is_type
+                || spec.export_kind.is_type()
+                || local_type_names.contains(spec.local.name().as_str()),
+        });
     }
+}
 
-    // Inline declaration: `export function foo()`, `export const x = ...`
-    if let Some(decl) = &export.declaration {
-        match decl {
+fn process_export_declaration(
+    export: &ExportDeclaration<'_>,
+    source: &str,
+    out: &mut FileSymbols,
+) {
+    let line = byte_offset_to_line(source, export.span.start as usize);
+    match &export.declaration {
             Declaration::FunctionDeclaration(func) => {
                 push_export_if_named(
                     out,
@@ -88,22 +88,28 @@ fn process_export_named_declaration(
                 });
             }
             _ => {}
-        }
-        return;
     }
+}
 
-    // Specifier exports without source: `export { a, b }` (local re-bindings)
+fn process_export_from_declaration(
+    export: &ExportFromDeclaration<'_>,
+    source: &str,
+    out: &mut FileSymbols,
+) {
+    let line = byte_offset_to_line(source, export.span.start as usize);
+    let source_str = export.source.value.as_str().to_string();
     for spec in &export.specifiers {
+        let imported = spec.local.name().to_string();
         let name = spec.exported.name().to_string();
-        let local = spec.local.name().to_string();
         out.exports.push(Export {
             name,
-            local: (local != spec.exported.name().as_str()).then_some(local),
-            kind: ExportKind::Const,
+            local: None,
+            kind: ExportKind::ReExport {
+                source: source_str.clone(),
+                imported,
+            },
             line,
-            is_type_only: export_is_type
-                || spec.export_kind.is_type()
-                || local_type_names.contains(spec.local.name().as_str()),
+            is_type_only: export.export_kind.is_type() || spec.export_kind.is_type(),
         });
     }
 }

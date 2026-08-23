@@ -1,4 +1,8 @@
 use super::*;
+use crate::config::v2::{
+    schema::{RuleDef, RuleScope},
+    NoMistakesConfig,
+};
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -108,4 +112,22 @@ fn covers_custom_extensions_no_replacement_invalid_regex_and_missing_files() {
 
     assert_eq!(email_domain("not-an-email"), "");
     assert_eq!(email_domain("person%40EXAMPLE%2ECOM%26otp"), "example.com");
+}
+
+#[test]
+fn check_with_files_scans_the_source_store_wrapper() {
+    let root = fixture("raw");
+    let file = root.join("src/send.test.mts");
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str(
+            "{bannedDomains: [example.com], allowedEmailPatterns: [], replacement: tests@voucha.ai}",
+        )
+        .unwrap(),
+        ..Default::default()
+    });
+    let findings = check_with_files(&root, &config, &[file]).unwrap();
+    assert!(!findings.is_empty(), "{findings:#?}");
 }

@@ -1,0 +1,13 @@
+projects:
+  agent-web:
+    type: nextjs
+    root: services/agent-web
+    rewrites:
+      - source: "/agent-posts/:slug*"
+        destination: "/content/agent-posts/:slug*"
+  control-web:
+    type: nextjs
+    root: services/control-web
+    rewrites:
+      - source: "/control-posts/:slug*"
+        destination: "/content/control-posts/:slug*"

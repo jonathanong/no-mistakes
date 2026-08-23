@@ -132,6 +132,10 @@ fn visit_variable_declarator_with_scope<'a>(
                     .as_deref()
                     .is_some_and(|name| collector.is_exported_top_level_name(name));
             if exported {
+                if let Some(name) = name.as_deref() {
+                    collector.record_exported_resource_root(name);
+                    record_object_resource_scopes(collector, name, object);
+                }
                 visit_exported_variable_declarator_reference(collector, declarator, name);
             } else {
                 if let Some(name) = name.as_deref() {
@@ -145,6 +149,10 @@ fn visit_variable_declarator_with_scope<'a>(
         Some(Expression::ClassExpression(class)) if name.is_some() && collector.function_stack.is_empty() => {
             if let Some(name) = name.as_deref() {
                 record_class_member_calls(collector, name, class);
+                if collector.is_exported_top_level_name(name) {
+                    collector.record_exported_resource_root(name);
+                    record_class_resource_scopes(collector, name, class);
+                }
             }
             visit_exported_variable_declarator_reference(collector, declarator, name);
             walk::walk_variable_declarator(collector, declarator);

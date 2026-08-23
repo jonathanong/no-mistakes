@@ -6,6 +6,7 @@
 #[derive(Debug, Clone, Default)]
 pub struct FrameworkPreparationPlan {
     runners: std::collections::BTreeSet<TestRunner>,
+    retained_indexable_paths: std::collections::BTreeSet<PathBuf>,
 }
 
 impl FrameworkPreparationPlan {
@@ -15,7 +16,17 @@ impl FrameworkPreparationPlan {
             TestRunner::Dotnet,
             TestRunner::Playwright,
             TestRunner::Vitest,
+            TestRunner::Jest,
             TestRunner::Swift,
+            TestRunner::Python,
+            TestRunner::Go,
+            TestRunner::Cargo,
+            TestRunner::Rails,
+            TestRunner::Php,
+            TestRunner::Java,
+            TestRunner::Kotlin,
+            TestRunner::Elixir,
+            TestRunner::Dart,
         ])
     }
 
@@ -55,11 +66,20 @@ impl FrameworkPreparationPlan {
         for runner in other.runners {
             self.insert(runner);
         }
+        self.retained_indexable_paths
+            .extend(other.retained_indexable_paths);
+    }
+
+    /// Keep an explicitly requested runner config available to the canonical
+    /// graph without preparing that runner's test projects.
+    pub(crate) fn retain_indexable_path(&mut self, path: PathBuf) {
+        self.retained_indexable_paths.insert(path);
     }
 
     fn insert(&mut self, runner: TestRunner) {
         self.runners.insert(runner);
-        if runner == TestRunner::Vitest {
+        if matches!(runner, TestRunner::Vitest | TestRunner::Playwright) {
+            self.runners.insert(TestRunner::Vitest);
             self.runners.insert(TestRunner::Playwright);
         }
     }
@@ -91,6 +111,7 @@ impl FrameworkPreparationPlan {
                 )
             })
             .map(|path| crate::codebase::ts_resolver::normalize_path(&root.join(path)))
+            .filter(|path| !self.retained_indexable_paths.contains(path))
             .collect()
     }
 

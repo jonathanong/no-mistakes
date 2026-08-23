@@ -1,6 +1,7 @@
 use super::{
     commonjs::{
-        commonjs_framework_binding, commonjs_property_is_framework, server_module_from_require,
+        commonjs_framework_binding, commonjs_property_is_framework, is_client_http_module,
+        server_module_from_require,
     },
     helpers::first_object_prefix,
     ServerRouteVisitor,
@@ -89,6 +90,9 @@ impl ServerRouteVisitor<'_> {
         match &call.callee {
             Expression::Identifier(id) if self.express_names.contains(id.name.as_str()) => {
                 Some(Binding::new(Framework::Express, None))
+            }
+            Expression::Identifier(id) if self.fastify_names.contains(id.name.as_str()) => {
+                Some(Binding::new(Framework::Fastify, None))
             }
             Expression::Identifier(id) if self.api_server_names.contains(id.name.as_str()) => {
                 Some(Binding::new(Framework::ApiServer, None))
@@ -179,22 +183,4 @@ impl ServerRouteVisitor<'_> {
         }
         self.binding_from_expr(object)
     }
-}
-
-pub(crate) fn is_client_http_module(source: &str) -> bool {
-    matches!(
-        source,
-        "axios"
-            | "got"
-            | "ky"
-            | "supertest"
-            | "superagent"
-            | "undici"
-            | "node-fetch"
-            | "http"
-            | "https"
-            | "node:http"
-            | "node:https"
-            | "@playwright/test"
-    )
 }

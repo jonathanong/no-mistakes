@@ -23,16 +23,19 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
+  RUSTFLAGS: "-D warnings"
 
 jobs:
   prepare:
     name: Prepare release
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       base-sha: ${{ steps.bump.outputs.base-sha }}
       version: ${{ steps.bump.outputs.version }}
     steps:
       - name: Check RELEASE_TOKEN is set
+        timeout-minutes: 1
         run: |
           if [ -z "${{ secrets.RELEASE_TOKEN }}" ]; then
             echo "::error::RELEASE_TOKEN secret is not set. This workflow requires a PAT that can push release commits and tags to main." >&2
@@ -40,30 +43,33 @@ jobs:
           fi
 
       - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           ref: main
           token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Install Rust
+        timeout-minutes: 5
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
-        with:
-          toolchain: "1.96.0"
 
       - name: Install Node.js
+        timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
       - name: Configure git
+        timeout-minutes: 1
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Bump versions, commit, and tag
         id: bump
+        timeout-minutes: 2
         env:
           SKIP_BINARY_DOWNLOAD: "1"
         shell: bash
@@ -103,6 +109,7 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
       - name: Create prepared release artifacts
+        timeout-minutes: 2
         shell: bash
         run: |
           set -euo pipefail
@@ -110,6 +117,7 @@ jobs:
           git format-patch -1 HEAD --stdout > "$RUNNER_TEMP/release.patch"
 
       - name: Upload prepared source
+        timeout-minutes: 5
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: release-source
@@ -117,6 +125,7 @@ jobs:
           if-no-files-found: error
 
       - name: Upload release patch
+        timeout-minutes: 5
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: release-patch
@@ -127,10 +136,12 @@ jobs:
     name: Validate
     needs: prepare
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     permissions:
       contents: read
     steps:
       - name: Reclaim runner disk space
+        timeout-minutes: 10
         uses: insightsengineering/disk-space-reclaimer@dae9fabcb8febe09f6585471948acf9dc9a57489 # v1.1.2
         with:
           android: true
@@ -142,36 +153,42 @@ jobs:
           tools-cache: false
 
       - name: Download prepared source
+        timeout-minutes: 5
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: release-source
           path: prepared-release
 
       - name: Extract prepared source
+        timeout-minutes: 2
         run: tar -xzf prepared-release/release-source.tgz
 
       - name: Install Rust
+        timeout-minutes: 5
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
         with:
-          toolchain: "1.96.0"
           components: clippy, rustfmt
 
       - name: Install Node.js
+        timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
       - name: Cache Rust build artifacts
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@258712b0b7b1ddf8bddc9fc3b0faca682b2736c3 # v2
         with:
           prefix-key: v1-rust-release
           cache-bin: "false"
 
       - name: Install npm dependencies
+        timeout-minutes: 5
         run: npm ci --ignore-scripts
 
       - name: Verify versions
+        timeout-minutes: 2
         shell: bash
         run: |
           set -euo pipefail
@@ -210,33 +227,43 @@ jobs:
           NODE
 
       - name: Check formatting
+        timeout-minutes: 5
         run: cargo fmt --all -- --check
 
       - name: Check JavaScript formatting
+        timeout-minutes: 2
         run: npm run fmt:js:check
 
       - name: Run Clippy
+        timeout-minutes: 10
         run: cargo clippy --all-targets --all-features -- -D warnings
 
       - name: Run Oxlint
+        timeout-minutes: 2
         run: npm run lint:js
 
       - name: Run CSpell
+        timeout-minutes: 5
         run: npm run lint:spell
 
       - name: Build JavaScript packages
+        timeout-minutes: 2
         run: npm run build:js
 
       - name: Run Rust tests
+        timeout-minutes: 15
         run: cargo test --all-features
 
       - name: Run npm tests
+        timeout-minutes: 5
         run: npm test
 
       - name: Check Cargo packages
+        timeout-minutes: 10
         run: cargo publish --dry-run --locked -p no-mistakes
 
       - name: Check npm packages
+        timeout-minutes: 2
         run: |
           for pkg in no-mistakes eslint-plugin-no-mistakes; do
             npm pack --dry-run --workspace "$pkg"
@@ -265,29 +292,34 @@ jobs:
           - target: x86_64-pc-windows-msvc
             os: windows-2025
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 50
     steps:
       - name: Download prepared source
+        timeout-minutes: 5
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: release-source
           path: prepared-release
 
       - name: Extract prepared source
+        timeout-minutes: 2
         run: tar -xzf prepared-release/release-source.tgz
 
       - name: Install Rust
+        timeout-minutes: 5
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
         with:
-          toolchain: "1.96.0"
           targets: ${{ matrix.target }}
 
       - name: Cache Rust build artifacts
-        uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@258712b0b7b1ddf8bddc9fc3b0faca682b2736c3 # v2
         with:
           prefix-key: v1-rust-release
           cache-bin: "false"
 
       - name: Build binary
+        timeout-minutes: 40
         shell: bash
         run: |
           cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
@@ -300,6 +332,7 @@ jobs:
           NO_MISTAKES_BUILD_NAPI=1 cargo rustc --release --locked --target ${{ matrix.target }} -p no-mistakes --lib --crate-type cdylib
 
       - name: Stage assets
+        timeout-minutes: 2
         shell: bash
         run: |
           case "${{ matrix.target }}" in
@@ -342,6 +375,7 @@ jobs:
 
       - name: Generate checksum (Unix)
         if: runner.os != 'Windows'
+        timeout-minutes: 2
         shell: bash
         working-directory: release-assets
         run: |
@@ -352,6 +386,7 @@ jobs:
 
       - name: Generate checksum (Windows)
         if: runner.os == 'Windows'
+        timeout-minutes: 2
         shell: pwsh
         working-directory: release-assets
         run: |
@@ -361,6 +396,7 @@ jobs:
           }
 
       - name: Upload asset artifact
+        timeout-minutes: 5
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: release-assets-${{ matrix.target }}
@@ -374,26 +410,31 @@ jobs:
       - validate
       - build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout main
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
           ref: main
           token: ${{ secrets.RELEASE_TOKEN }}
 
       - name: Download release patch
+        timeout-minutes: 5
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: release-patch
           path: prepared-release
 
       - name: Configure git
+        timeout-minutes: 1
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
       - name: Apply release commit and tag
+        timeout-minutes: 2
         shell: bash
         run: |
           set -euo pipefail
@@ -426,26 +467,30 @@ jobs:
           git push origin HEAD:main "v$version"
 
       - name: Install Rust
+        timeout-minutes: 5
         uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
-        with:
-          toolchain: "1.96.0"
 
       - name: Install Node.js
+        timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
       - name: Install latest npm
+        timeout-minutes: 2
         run: npm install -g npm@latest
 
       - name: Install npm dependencies
+        timeout-minutes: 5
         run: SKIP_BINARY_DOWNLOAD=1 npm ci --ignore-scripts
 
       - name: Build JavaScript packages
+        timeout-minutes: 2
         run: npm run build:js
 
       - name: Publish Cargo crates
+        timeout-minutes: 10
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
         shell: bash
@@ -469,6 +514,7 @@ jobs:
           done
 
       - name: Download release assets
+        timeout-minutes: 5
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           pattern: release-assets-*
@@ -476,6 +522,7 @@ jobs:
           merge-multiple: true
 
       - name: Create GitHub release
+        timeout-minutes: 5
         env:
           GH_TOKEN: ${{ secrets.RELEASE_TOKEN }}
         shell: bash
@@ -489,6 +536,7 @@ jobs:
           fi
 
       - name: Publish npm packages
+        timeout-minutes: 10
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         shell: bash

@@ -7,7 +7,11 @@ pub(crate) fn selection_from_config(
         let available: Vec<&str> = config.effects.keys().map(String::as_str).collect();
         bail!(
             "unknown effects kind: {kind} (configured kinds: {})",
-            if available.is_empty() { "<none>".to_string() } else { available.join(", ") }
+            if available.is_empty() {
+                "<none>".to_string()
+            } else {
+                available.join(", ")
+            }
         );
     };
     let mut names = HashMap::new();
@@ -27,10 +31,15 @@ pub(crate) fn selection_from_config(
     if names.is_empty() {
         bail!("effects kind `{kind}` has no functions for the requested categories");
     }
-    Ok(EffectsSelection { kind: kind.to_string(), names })
+    Ok(EffectsSelection {
+        kind: kind.to_string(),
+        names,
+    })
 }
 
-pub(crate) fn selection_fact_functions(selection: &EffectsSelection) -> impl Iterator<Item = String> + '_ {
+pub(crate) fn selection_fact_functions(
+    selection: &EffectsSelection,
+) -> impl Iterator<Item = String> + '_ {
     selection.names.keys().cloned()
 }
 
@@ -41,21 +50,26 @@ pub(crate) fn run_with_prepared(
     depth: Option<usize>,
     graph: &DepGraph,
     facts: &crate::codebase::ts_source::facts::TsFactMap,
+    interner: &crate::codebase::analysis_session::PathInterner,
 ) -> Result<EffectsReport> {
-    let entry_abs = if entry.is_absolute() { entry.to_path_buf() } else { root.join(entry) };
+    let entry_abs = if entry.is_absolute() {
+        entry.to_path_buf()
+    } else {
+        root.join(entry)
+    };
     if !entry_abs.is_file() {
         bail!("entry file not found: {}", entry_abs.display());
     }
-    let entry_node = NodeId::File(normalize_path(&entry_abs));
+    let entry_node = NodeId::file_in(interner, normalize_path(&entry_abs));
     let allowed = runtime_edges();
     let reachable = graph.deps_of(std::slice::from_ref(&entry_node), depth, Some(&allowed));
     let mut file_depths: HashMap<PathBuf, usize> = HashMap::new();
     if let NodeId::File(path) = &entry_node {
-        file_depths.insert(path.clone(), 0);
+        file_depths.insert(path.to_path_buf(), 0);
     }
     for entry in &reachable {
         if let NodeId::File(path) = &entry.node {
-            file_depths.entry(path.clone()).or_insert(entry.depth);
+            file_depths.entry(path.to_path_buf()).or_insert(entry.depth);
         }
     }
     let mut call_sites: Vec<EffectCallSite> = file_depths
@@ -64,21 +78,27 @@ pub(crate) fn run_with_prepared(
         .flat_map(|(path, file, depth)| {
             let relative_path = relative_slash_path(root, path);
             file.effect_calls.iter().filter_map(move |call| {
-                selection.names.get(&call.callee).map(|category| EffectCallSite {
-                    file: relative_path.clone(),
-                    line: call.line,
-                    callee: call.callee.clone(),
-                    category: category.clone(),
-                    caller: call.caller.clone(),
-                    depth,
-                })
+                selection
+                    .names
+                    .get(&call.callee)
+                    .map(|category| EffectCallSite {
+                        file: relative_path.clone(),
+                        line: call.line,
+                        callee: call.callee.clone(),
+                        category: category.clone(),
+                        caller: call.caller.clone(),
+                        depth,
+                    })
             })
         })
         .collect();
     call_sites.sort();
     let mut by_category: BTreeMap<String, usize> = BTreeMap::new();
     for site in &call_sites {
-        let label = site.category.clone().unwrap_or_else(|| "uncategorized".to_string());
+        let label = site
+            .category
+            .clone()
+            .unwrap_or_else(|| "uncategorized".to_string());
         *by_category.entry(label).or_insert(0) += 1;
     }
     Ok(EffectsReport {

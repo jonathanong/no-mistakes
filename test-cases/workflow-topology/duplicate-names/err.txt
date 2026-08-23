@@ -1,0 +1,2 @@
+[duplicate-workflow-name] .github/workflows/ci-one.yml: workflow name "CI" conflicts across .github/workflows/ci-one.yml, .github/workflows/ci-two.yml
+[duplicate-workflow-name] .github/workflows/ci-two.yml: workflow name "ci" conflicts across .github/workflows/ci-one.yml, .github/workflows/ci-two.yml

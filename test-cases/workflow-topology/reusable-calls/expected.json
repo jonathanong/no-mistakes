@@ -1,0 +1,271 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/caller.yml",
+      "path": ".github/workflows/caller.yml",
+      "name": "Caller",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/caller.yml#bad",
+        ".github/workflows/caller.yml#good",
+        ".github/workflows/caller.yml#missing",
+        ".github/workflows/caller.yml#remote"
+      ]
+    },
+    {
+      "id": ".github/workflows/cycle-a.yml",
+      "path": ".github/workflows/cycle-a.yml",
+      "name": "Cycle A",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call",
+          "config": {}
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/cycle-a.yml#x"
+      ]
+    },
+    {
+      "id": ".github/workflows/cycle-b.yml",
+      "path": ".github/workflows/cycle-b.yml",
+      "name": "Cycle B",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call",
+          "config": {}
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/cycle-b.yml#y"
+      ]
+    },
+    {
+      "id": ".github/workflows/not-callable.yml",
+      "path": ".github/workflows/not-callable.yml",
+      "name": "Not Callable",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/not-callable.yml#noop"
+      ]
+    },
+    {
+      "id": ".github/workflows/reusable-callee.yml",
+      "path": ".github/workflows/reusable-callee.yml",
+      "name": "Reusable Callee",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call",
+          "config": {}
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/reusable-callee.yml#echo"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/caller.yml#bad",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "bad",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/caller.yml#good",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "good",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/caller.yml#missing",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "missing",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/caller.yml#remote",
+      "workflowId": ".github/workflows/caller.yml",
+      "key": "remote",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/cycle-a.yml#x",
+      "workflowId": ".github/workflows/cycle-a.yml",
+      "key": "x",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/cycle-b.yml#y",
+      "workflowId": ".github/workflows/cycle-b.yml",
+      "key": "y",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/not-callable.yml#noop",
+      "workflowId": ".github/workflows/not-callable.yml",
+      "key": "noop",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/reusable-callee.yml#echo",
+      "workflowId": ".github/workflows/reusable-callee.yml",
+      "key": "echo",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#bad",
+      "target": "./.github/workflows/not-callable.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/not-callable.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#good",
+      "target": "./.github/workflows/reusable-callee.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/reusable-callee.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#missing",
+      "target": "./.github/workflows/does-not-exist.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/does-not-exist.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller.yml#remote",
+      "target": "example/example/.github/workflows/check.yml@v1",
+      "local": false,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      }
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/cycle-a.yml#x",
+      "target": "./.github/workflows/cycle-b.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/cycle-b.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/cycle-b.yml#y",
+      "target": "./.github/workflows/cycle-a.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/cycle-a.yml"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "missing-local-workflow",
+      "message": ".github/workflows/caller.yml#missing calls missing workflow .github/workflows/does-not-exist.yml",
+      "workflowPath": ".github/workflows/caller.yml",
+      "jobId": ".github/workflows/caller.yml#missing"
+    },
+    {
+      "severity": "error",
+      "code": "non-callable-workflow",
+      "message": ".github/workflows/caller.yml#bad calls .github/workflows/not-callable.yml, which does not declare workflow_call",
+      "workflowPath": ".github/workflows/caller.yml",
+      "jobId": ".github/workflows/caller.yml#bad"
+    },
+    {
+      "severity": "error",
+      "code": "workflow-call-cycle",
+      "message": "reusable workflow call cycle: .github/workflows/cycle-a.yml -> .github/workflows/cycle-b.yml -> .github/workflows/cycle-a.yml",
+      "workflowPath": ".github/workflows/cycle-a.yml"
+    }
+  ]
+}

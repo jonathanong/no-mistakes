@@ -7,8 +7,9 @@ mod lock;
 mod napi_options;
 
 pub use child::command_output;
+pub(crate) use child::stream::stream_command_lines;
 pub use deadline::{check_timeout, commit_timeout};
-pub use napi_options::extract_napi_options;
+pub use napi_options::{extract_napi_options, extract_napi_options_value, InvocationOptions};
 
 use anyhow::Result;
 use deadline::DeadlineGuard;
@@ -50,6 +51,12 @@ fn deadline_test_lock() -> &'static std::sync::Mutex<()> {
     LOCK.get_or_init(|| std::sync::Mutex::new(()))
 }
 
+#[derive(clap::ValueEnum, Debug, Clone, Copy, PartialEq, Eq)]
+enum InvocationProfile {
+    /// Unbounded command and lock wait (`timeout: 0`, `lock-timeout: 0`).
+    Ci,
+}
+
 #[derive(clap::Args, Debug, Clone, Copy)]
 pub struct InvocationArgs {
     /// Maximum command execution time in seconds; 0 disables the deadline.
@@ -66,6 +73,9 @@ pub struct InvocationArgs {
     /// Fail immediately when another no-mistakes invocation holds the lock.
     #[arg(long, global = true)]
     fail_on_lock: bool,
+    /// Named timeout defaults. `ci` sets `--timeout 0 --lock-timeout 0`.
+    #[arg(long, value_enum, global = true)]
+    profile: Option<InvocationProfile>,
 }
 
 impl Default for InvocationArgs {
@@ -74,30 +84,23 @@ impl Default for InvocationArgs {
             timeout: DEFAULT_TIMEOUT_SECONDS,
             lock_timeout: DEFAULT_TIMEOUT_SECONDS,
             fail_on_lock: false,
+            profile: None,
         }
     }
 }
 
 impl InvocationArgs {
     pub fn options(self) -> InvocationOptions {
+        let (timeout, lock_timeout) = match self.profile {
+            Some(InvocationProfile::Ci) => (0, 0),
+            None => (self.timeout, self.lock_timeout),
+        };
         InvocationOptions {
-            timeout: nonzero_seconds(self.timeout),
-            lock_timeout: nonzero_seconds(self.lock_timeout),
+            timeout: nonzero_seconds(timeout),
+            lock_timeout: nonzero_seconds(lock_timeout),
             fail_on_lock: self.fail_on_lock,
+            jobs: None,
         }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct InvocationOptions {
-    pub timeout: Option<Duration>,
-    pub lock_timeout: Option<Duration>,
-    pub fail_on_lock: bool,
-}
-
-impl Default for InvocationOptions {
-    fn default() -> Self {
-        InvocationArgs::default().options()
     }
 }
 
@@ -167,7 +170,8 @@ impl InvocationGuard {
         let deadline = DeadlineGuard::install_for_invocation(options.timeout, None)?;
         let parent_signals = child::ParentSignalForwardingGuard::install(
             forward_parent_signals && options.timeout.is_some(),
-        )?;
+        );
+        let parent_signals = parent_signals?;
         Ok(Self {
             _deadline: deadline,
             _parent_signals: parent_signals,

@@ -9,6 +9,8 @@ config block.
 no-mistakes impacted-checks src/api/handler.ts --format paths
 no-mistakes impacted-checks --base origin/main --json
 no-mistakes impacted-checks src/api/handler.ts --json --timings
+no-mistakes impacted-checks src/api/handler.ts --generic-only --format json
+no-mistakes impacted-checks --diagnose-empty --format human
 ```
 
 ## Options
@@ -22,10 +24,14 @@ no-mistakes impacted-checks src/api/handler.ts --json --timings
 | `--changed-file` | Specific changed file (repeatable). |
 | `--changed-files` | File listing changed files, one per line. |
 | `--diff` | Unified diff file. |
+| `--diff-stdin` | Read a unified diff from stdin. Conflicts with `--diff` and `--diff-command`. |
+| `--diff-command` | Run a command and parse its stdout as a unified diff. |
+| `--generic-only` | Return configured `checks.commands` entries only; skip test-framework discovery and selection. |
 | `--format` | Output format: `json`, `md`, `yml`, `paths`, `human`. |
 | `--json` | Shorthand for `--format json`. |
 | `--timings` | Emit analysis phase durations to stderr. |
 | `--verbose-timings` | Also emit deterministic one-pass work counters; implies timings. |
+| `--diagnose-empty` | On a successful empty result, emit `note[<code>]: <message>` to stderr. |
 
 Changed files may also be passed as positional arguments.
 
@@ -33,14 +39,31 @@ Changed files may also be passed as positional arguments.
 
 - Changed files, repository files, parsed facts, and the dependency graph are
   prepared once per invocation and reused across the
-  configured frameworks (`dotnet`, `vitest`, `playwright`, and `swift`). Each
+  configured frameworks (`dotnet`, `vitest`, `playwright`, `swift`, `python`,
+  `go`, `cargo`, `rails`, `php`, `java`, `kotlin`, `elixir`, and `dart`). Each
   selected `TestExecutionTarget` becomes a `test` check; emitted commands match
-  `tests plan` exactly.
+  `tests plan` exactly. Runner ownership is preserved, so a Vitest-owned
+  `.test.*` path is never rewritten into a Playwright command merely because
+  Playwright generic discovery could match its filename.
 - Each `checks.commands` entry whose `include` globs match a changed file
   produces a `generic` check. `fileArgs: append` adds the matched files as
-  trailing arguments; `fileArgs: none` runs the command once.
+  trailing arguments; `fileArgs: none` runs the command once. An `always: true`
+  command runs even when no files changed and must use `fileArgs: none` without
+  include/exclude globs.
 - Commands are deduped and sorted. If the test-plan engine triggers a
   full-suite fallback (e.g. a global config change), `fallback_triggered` is set.
+
+When a successful report contains no checks, JSON/YAML include an `empty_result`
+object with a stable `code` (`no-changed-files` or `no-impacted-checks`) and
+human-readable `message`. The field is omitted from reports with checks. The
+CLI is silent by default; `--diagnose-empty` opts into the exact stderr note
+`note[<code>]: <message>`. This never changes stdout or the exit status.
+
+`--generic-only` still collects and normalizes changed files, but bypasses all
+configured test frameworks and the test-plan finish step. Its report contains
+only `generic` checks, an empty `warnings` array, and `fallback_triggered: false`.
+With timings enabled, its stable phases are `prepare`, `generic-checks`, and
+`total`.
 
 `--timings` emits one deterministic diagnostics block after analysis. Stable
 phase names include `prepare`,
@@ -52,8 +75,9 @@ parse or pipe. If a phase fails, stderr reports the phase and elapsed time befor
 the normal actionable error. See [Performance diagnostics](diagnostics.md) for
 the shared stderr contract and verbose work counters.
 
-`--diff-stdin` / `--diff-command` are not supported by this command; use a
-reusable `--diff <file>` input instead.
+`--diff`, `--diff-stdin`, and `--diff-command` match [`tests plan`](tests-plan.md):
+supply a unified diff file, pipe a diff on stdin, or run a command whose stdout
+is a unified diff. The three flags conflict with each other.
 
 Known limitation: an explicit changed path that is a symlink is canonicalized to
 its target before glob matching (the shared change-collection step resolves

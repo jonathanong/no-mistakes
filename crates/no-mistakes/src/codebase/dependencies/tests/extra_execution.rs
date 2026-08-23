@@ -140,6 +140,8 @@ fn dataset_shared_traversal_extends_absent_facts_and_seeds_cached_program_facts(
         shared.facts.as_ref().unwrap()[&unit].imports.len(),
     );
 
+    // Cached-program seeding must retain source text when the union plan requests it.
+    shared.fact_plan.source = true;
     shared.seed_cached_program_facts(&std::collections::HashSet::from([
         unit.clone(),
         excluded.clone(),
@@ -148,6 +150,7 @@ fn dataset_shared_traversal_extends_absent_facts_and_seeds_cached_program_facts(
     let facts = shared.facts.as_ref().unwrap();
     assert!(facts.contains_key(&unit));
     assert!(facts.contains_key(&excluded));
+    assert!(facts[&excluded].source.is_some());
     assert!(!facts.contains_key(&missing));
 
     shared.facts = None;
@@ -160,7 +163,8 @@ fn traversal_stages_graph_configuration_around_one_prepared_test_project_pass() 
     let shared = concat!(
         include_str!("../shared_traversal.rs"),
         include_str!("../shared_traversal_prepare.rs"),
-        include_str!("../shared_traversal_prepare_core.rs")
+        include_str!("../shared_traversal_prepare_core.rs"),
+        include_str!("../shared_traversal_prepare_catalog.rs")
     );
     let shared_graph = concat!(
         include_str!("../shared_traversal_graph.rs"),
@@ -178,7 +182,7 @@ fn traversal_stages_graph_configuration_around_one_prepared_test_project_pass() 
     );
     assert_eq!(
         shared
-            .matches("session.tsconfig(&root, tsconfig_path)?")
+            .matches(".tsconfig(&root, tsconfig_path)")
             .count(),
         1
     );
@@ -391,18 +395,23 @@ fn shared_lazy_import_facts_are_reused_by_later_symbol_queries() {
 fn traversal_queue_root_helpers_cover_missing_deps_and_module_entrypoints() {
     let file = PathBuf::from("/repo/src/queue.ts");
     let roots = vec![
-        NodeId::File(file.clone()),
-        NodeId::Module("queue-package".to_string()),
+        NodeId::file(file.clone()),
+        NodeId::module("queue-package"),
     ];
     let expanded = roots_with_exported_symbol_roots_by(&roots, |_| None);
     assert_eq!(expanded, roots);
 
     let entrypoints = vec![Entrypoint {
         file,
-        node: NodeId::Module("queue-package".to_string()),
+        node: NodeId::module("queue-package"),
         symbol: Some("send".to_string()),
     }];
-    let queue_roots = roots_with_existing_queue_jobs_by(&expanded, &entrypoints, |_| true);
+    let queue_roots = roots_with_existing_queue_jobs_by(
+        &expanded,
+        &entrypoints,
+        |_| true,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert_eq!(queue_roots, expanded);
 }
 
@@ -476,8 +485,16 @@ fn relationship_arg_as_str_all_variants() {
     assert_eq!(RelationshipArg::Test.as_str(), "test");
     assert_eq!(RelationshipArg::Route.as_str(), "route");
     assert_eq!(RelationshipArg::Queue.as_str(), "queue");
+    assert_eq!(RelationshipArg::Trpc.as_str(), "trpc");
     assert_eq!(RelationshipArg::Md.as_str(), "md");
     assert_eq!(RelationshipArg::Ci.as_str(), "ci");
+    assert_eq!(RelationshipArg::Workflow.as_str(), "workflow");
+    assert_eq!(RelationshipArg::WorkflowJob.as_str(), "workflow-job");
+    assert_eq!(RelationshipArg::WorkflowStep.as_str(), "workflow-step");
+    assert_eq!(RelationshipArg::WorkflowNeeds.as_str(), "workflow-needs");
+    assert_eq!(RelationshipArg::WorkflowUses.as_str(), "workflow-uses");
+    assert_eq!(RelationshipArg::WorkflowRun.as_str(), "workflow-run");
+    assert_eq!(RelationshipArg::WorkflowArtifact.as_str(), "workflow-artifact");
     assert_eq!(RelationshipArg::Http.as_str(), "http");
     assert_eq!(RelationshipArg::Process.as_str(), "process");
     assert_eq!(RelationshipArg::Asset.as_str(), "asset");
@@ -485,6 +502,7 @@ fn relationship_arg_as_str_all_variants() {
     assert_eq!(RelationshipArg::Dotnet.as_str(), "dotnet");
     assert_eq!(RelationshipArg::Swift.as_str(), "swift");
     assert_eq!(RelationshipArg::Terraform.as_str(), "terraform");
+    assert_eq!(RelationshipArg::Resource.as_str(), "resource");
     assert_eq!(RelationshipArg::All.as_str(), "all");
 }
 

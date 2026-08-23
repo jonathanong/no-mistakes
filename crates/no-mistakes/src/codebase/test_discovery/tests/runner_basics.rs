@@ -10,18 +10,74 @@ pub(super) fn prepare_test_projects_from_visible(
     graph_context: crate::codebase::ts_source::facts::TsFactContext,
 ) -> PreparedTestProjects {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, visible_paths);
+    let discovery_files = crate::codebase::ts_source::discover_files_from_visible(
+        root,
+        &config.filesystem.skip_directories,
+        visible_paths,
+    );
     prepare_test_projects_from_visible_with_sources_and_plan(
         root,
         config,
         visible_paths,
-        tsconfig,
+        std::sync::Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            root,
+            tsconfig.clone(),
+            None,
+        )),
         PreparedTestProjectRequest {
+            discovery_files: &discovery_files,
             graph: (graph_indexable_files, graph_plan, graph_context),
             sources: snapshot.source_store_for(root),
             collect_graph_facts: true,
             preparation_plan: &FrameworkPreparationPlan::all(),
         },
     )
+}
+
+#[test]
+fn requested_dotnet_project_errors_are_retained_in_the_prepared_catalog() {
+    let root = fixture_root("prepared-test-projects");
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let tsconfig = resolve_tsconfig_lossy(&root, &visible_paths);
+    let mut config = NoMistakesConfig::default();
+    config.tests.dotnet.projects.insert(
+        "missing".to_string(),
+        crate::config::v2::schema::DotnetProjectConfig {
+            project: "missing/Missing.csproj".to_string(),
+            include: Vec::new(),
+            exclude: Vec::new(),
+            test: true,
+        },
+    );
+    let snapshot =
+        crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &visible_paths);
+    let plan = FrameworkPreparationPlan::for_runners([TestRunner::Dotnet]);
+
+    let prepared = prepare_test_projects_from_visible_with_sources_and_plan(
+        &root,
+        &config,
+        &visible_paths,
+        std::sync::Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            &root, tsconfig, None,
+        )),
+        PreparedTestProjectRequest {
+            discovery_files: &[],
+            graph: (
+                &[],
+                crate::codebase::ts_source::facts::TsFactPlan::default(),
+                crate::codebase::ts_source::facts::TsFactContext::default(),
+            ),
+            sources: snapshot.source_store_for(&root),
+            collect_graph_facts: false,
+            preparation_plan: &plan,
+        },
+    );
+
+    assert!(prepared
+        .requested_runner_projects(TestRunner::Dotnet)
+        .unwrap_err()
+        .to_string()
+        .contains("missing/Missing.csproj"));
 }
 
 #[test]
@@ -123,16 +179,99 @@ fn test_runner_framework_maps_dotnet_and_swift() {
 }
 
 #[test]
+fn language_runners_round_trip_names_and_frameworks() {
+    for (name, runner, framework) in [
+        (
+            "python",
+            TestRunner::Python,
+            crate::integration_tests::types::Framework::Python,
+        ),
+        (
+            "go",
+            TestRunner::Go,
+            crate::integration_tests::types::Framework::Go,
+        ),
+        (
+            "cargo",
+            TestRunner::Cargo,
+            crate::integration_tests::types::Framework::Cargo,
+        ),
+        (
+            "rails",
+            TestRunner::Rails,
+            crate::integration_tests::types::Framework::Rails,
+        ),
+        (
+            "php",
+            TestRunner::Php,
+            crate::integration_tests::types::Framework::Php,
+        ),
+        (
+            "java",
+            TestRunner::Java,
+            crate::integration_tests::types::Framework::Java,
+        ),
+        (
+            "kotlin",
+            TestRunner::Kotlin,
+            crate::integration_tests::types::Framework::Kotlin,
+        ),
+        (
+            "elixir",
+            TestRunner::Elixir,
+            crate::integration_tests::types::Framework::Elixir,
+        ),
+        (
+            "dart",
+            TestRunner::Dart,
+            crate::integration_tests::types::Framework::Dart,
+        ),
+    ] {
+        assert_eq!(TestRunner::from_name(name), Some(runner));
+        assert_eq!(runner.as_str(), name);
+        assert!(runner.is_language_frontend());
+        assert_eq!(runner.framework(), framework);
+        assert_eq!(framework.as_str(), name);
+        assert!(!framework.has_js_runner_config());
+    }
+}
+
+#[test]
+fn jest_is_a_js_runner_not_a_language_frontend() {
+    assert_eq!(TestRunner::from_name("jest"), Some(TestRunner::Jest));
+    assert_eq!(TestRunner::Jest.as_str(), "jest");
+    assert!(!TestRunner::Jest.is_language_frontend());
+    assert_eq!(
+        TestRunner::Jest.framework(),
+        crate::integration_tests::types::Framework::Jest
+    );
+    assert_eq!(
+        crate::integration_tests::types::Framework::Jest.as_str(),
+        "jest"
+    );
+    assert!(crate::integration_tests::types::Framework::Jest.has_js_runner_config());
+}
+
+#[test]
+#[should_panic(expected = "language projects are handled before runner_config")]
+fn language_runner_config_is_unreachable() {
+    let config = NoMistakesConfig::default();
+    let _ = super::super::projects::runner_config(&config, TestRunner::Python);
+}
+
+#[test]
 fn vitest_project_discovery_without_playwright_projects_keeps_matching_tests() {
     let root = fixture_root("symbols-output");
     let config = NoMistakesConfig::default();
     let projects = vec![ConfigProject {
         config: Some("vitest.config.mts".to_string()),
+        workspace: false,
         policy_name: Some("all-specs".to_string()),
         runner_project_arg: Some("all-specs".to_string()),
         scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     }];
     let discovered = discover_from_projects(&root, &config, TestRunner::Vitest, projects).unwrap();
     let rel_tests: Vec<String> = discovered
@@ -158,7 +297,7 @@ fn framework_preparation_plan_expands_only_required_runner_dependencies() {
             tests: true,
             ..Default::default()
         });
-    assert_eq!(tests.runners().count(), 4);
+    assert_eq!(tests.runners().count(), 14);
 
     let vitest = FrameworkPreparationPlan::for_runners([TestRunner::Vitest]);
     assert!(vitest.contains(TestRunner::Vitest));
@@ -182,4 +321,20 @@ fn framework_preparation_plan_expands_only_required_runner_dependencies() {
         assert!(!plan.contains(TestRunner::Dotnet));
         assert!(!plan.contains(TestRunner::Swift));
     }
+}
+
+#[test]
+fn jest_discovers_from_explicit_config_and_skips_filename_fallback() {
+    let root = super::fixture_root("jest-test-plan");
+    let mut config = NoMistakesConfig::default();
+    config.tests.jest.configs = Some(StringOrList::One("jest.config.js".to_string()));
+    let discovered = discover_tests(&root, &config, TestRunner::Jest).unwrap();
+    assert!(discovered
+        .tests
+        .iter()
+        .any(|path| path.ends_with("value.test.ts")));
+
+    config.tests.jest.configs = Some(StringOrList::Many(Vec::new()));
+    let empty = discover_tests(&root, &config, TestRunner::Jest).unwrap();
+    assert!(empty.tests.is_empty());
 }

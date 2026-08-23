@@ -1,12 +1,21 @@
 use super::*;
 use crate::codebase::dependencies::graph::test_support::from_raw_maps;
-use crate::codebase::ts_resolver::load_tsconfig;
+use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+use crate::codebase::rules::test_no_unmocked_dynamic_imports::checker::{
+    check_dynamic_import, DynamicCheckContext,
+};
+use crate::codebase::ts_resolver::{load_tsconfig, ImportResolver, TsConfig};
+use crate::codebase::ts_source::has_disable_comment;
+use anyhow::Result;
 use dashmap::DashMap;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
+mod mock_specifiers;
 mod visibility;
 
-fn fixture() -> PathBuf {
+pub(super) fn fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/codebase-analysis/test-no-unmocked-dynamic-imports/fixture"),
@@ -148,6 +157,7 @@ fn next_line_disable_and_unresolved_import_branches_are_reported() {
         file: &disabled,
         resolver: &resolver,
         graph: &graph,
+        graph_files: None,
         file_universe: None,
         mocks: &mocks,
         dependency_cache: &dependency_cache,
@@ -170,6 +180,7 @@ fn next_line_disable_and_unresolved_import_branches_are_reported() {
         file: &disabled,
         resolver: &resolver,
         graph: &graph,
+        graph_files: None,
         file_universe: None,
         mocks: &mocks,
         dependency_cache: &dependency_cache,
@@ -207,6 +218,7 @@ fn mocked_dynamic_import_target_skips_transitive_dependency_checks() {
         file: &test_file,
         resolver: &resolver,
         graph: &graph,
+        graph_files: None,
         file_universe: None,
         mocks: &mocks,
         dependency_cache: &dependency_cache,
@@ -260,6 +272,7 @@ fn reachable_dependencies_respect_skips_and_disable_comments() {
                 config: &config,
                 resolver: &resolver,
                 graph: &graph,
+                graph_files: None,
                 file_universe: None,
                 shared: None,
                 file_cache: None,
@@ -290,6 +303,7 @@ fn repeated_dynamic_import_target_uses_dependency_cache() {
         file: &test_file,
         resolver: &resolver,
         graph: &graph,
+        graph_files: None,
         file_universe: None,
         mocks: &mocks,
         dependency_cache: &dependency_cache,
@@ -351,7 +365,7 @@ fn reachable_check_shared_skips_dep_with_disable_file_comment() {
     );
     let shared = crate::codebase::check_facts::CheckFactMap {
         files: vec![dep],
-        ts: shared_ts,
+        ts: shared_ts.into(),
         ..Default::default()
     };
     let mocks = HashSet::new();
@@ -363,6 +377,7 @@ fn reachable_check_shared_skips_dep_with_disable_file_comment() {
             config: &config,
             resolver: &resolver,
             graph: &graph,
+            graph_files: None,
             file_universe: None,
             shared: Some(&shared),
             file_cache: None,
@@ -404,7 +419,7 @@ fn reachable_check_uses_shared_facts_without_disk_read() {
     );
     let shared = crate::codebase::check_facts::CheckFactMap {
         files: vec![fake_dep.clone()],
-        ts: shared_ts,
+        ts: shared_ts.into(),
         ..Default::default()
     };
     let mocks = HashSet::new();
@@ -416,6 +431,7 @@ fn reachable_check_uses_shared_facts_without_disk_read() {
             config: &config,
             resolver: &resolver,
             graph: &graph,
+            graph_files: None,
             file_universe: None,
             shared: Some(&shared),
             file_cache: None,
@@ -429,9 +445,10 @@ fn reachable_check_uses_shared_facts_without_disk_read() {
 }
 
 #[test]
-fn reachable_check_falls_back_to_disk_when_dep_facts_incomplete() {
-    // reachable.rs:54 — closing `}` of `if let (Some(source), Some(facts))`.
-    // When a dep is in shared.ts but source/dynamic_imports is None, fall through to disk.
+fn reachable_check_does_not_fall_back_to_disk_when_shared_facts_incomplete() {
+    // A prepared entry is authoritative even when its source or extracted
+    // dynamic-import facts are incomplete; only shared=None uses legacy disk
+    // parsing. This protects one-pass request ownership.
     let root = fixture();
     let tsconfig = TsConfig {
         dir: root.clone(),
@@ -441,12 +458,14 @@ fn reachable_check_falls_back_to_disk_when_dep_facts_incomplete() {
     };
     let resolver = ImportResolver::new(&tsconfig);
     let test_file = root.join("tests").join("good.test.mts");
-    let dep = root.join("src").join("child.mts");
+    let dep = root.join("src").join("unmocked-next-dynamic-component.mts");
     let mut forward = HashMap::new();
     forward.insert(test_file.clone(), vec![dep.clone()]);
     let graph = from_raw_maps(root.clone(), forward, Default::default());
     let mut shared_ts = HashMap::new();
-    // dep is in shared.ts but with source=None (incomplete facts)
+    // dep is in shared.ts but with source=None (incomplete facts). The file
+    // also exists in the fixture and has an unmocked import, so a disk
+    // fallback would produce a finding.
     shared_ts.insert(
         dep.clone(),
         crate::codebase::check_facts::CheckFileFacts {
@@ -458,7 +477,7 @@ fn reachable_check_falls_back_to_disk_when_dep_facts_incomplete() {
     );
     let shared = crate::codebase::check_facts::CheckFactMap {
         files: vec![dep],
-        ts: shared_ts,
+        ts: shared_ts.into(),
         ..Default::default()
     };
     let mocks = HashSet::new();
@@ -470,6 +489,7 @@ fn reachable_check_falls_back_to_disk_when_dep_facts_incomplete() {
             config: &config,
             resolver: &resolver,
             graph: &graph,
+            graph_files: None,
             file_universe: None,
             shared: Some(&shared),
             file_cache: None,
@@ -509,19 +529,4 @@ fn resolve_tsconfig_covers_explicit_and_default_paths() {
         .unwrap()
         .base_url
         .is_none());
-}
-
-#[test]
-fn resolve_mock_specifiers_keeps_unresolved_specifier_keys() {
-    let root = fixture();
-    let tsconfig = TsConfig {
-        dir: root.clone(),
-        paths: vec![],
-        paths_dir: root.clone(),
-        base_url: None,
-    };
-    let resolver = ImportResolver::new(&tsconfig);
-    let mocks =
-        resolve_mock_specifiers(&["external".to_string()], &root.join("test.mts"), &resolver);
-    assert!(mocks.contains(&PathBuf::from("external")));
 }

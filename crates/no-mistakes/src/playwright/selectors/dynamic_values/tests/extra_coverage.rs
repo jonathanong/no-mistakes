@@ -30,7 +30,9 @@ fn deferred_cross_file_exports_resolve_against_precollected_static_values() {
         "page.tsx",
     ]));
     let selectors_path = page_path.with_file_name("selectors.ts");
-    let visible = std::collections::HashSet::from([page_path.clone(), selectors_path.clone()]);
+    let visible: crate::fx::PathSet = [page_path.clone(), selectors_path.clone()]
+        .into_iter()
+        .collect();
     let page_source = std::fs::read_to_string(&page_path).unwrap();
     let marker = ast::with_program(&page_path, &page_source, |program, _| {
         super::super::cross_file::defer_imported_values_from_visible(
@@ -82,12 +84,12 @@ fn visible_collector_resolves_imported_function_and_object_values() {
         "page.tsx",
     ]));
     let selectors_path = page_path.with_file_name("selectors.ts");
-    let visible = std::collections::HashSet::from([page_path.clone(), selectors_path]);
+    let visible: crate::fx::PathSet = [page_path.clone(), selectors_path].into_iter().collect();
     let source = std::fs::read_to_string(&page_path).unwrap();
 
     let collected = ast::with_program(&page_path, &source, |program, source| {
         super::collect_dynamic_identifier_values_with_file_from_visible(
-            program, source, &page_path, &visible,
+            program, source, &page_path, &visible, None,
         )
     })
     .unwrap();
@@ -102,6 +104,65 @@ fn visible_collector_resolves_imported_function_and_object_values() {
 }
 
 #[test]
+fn visible_cross_file_resolution_reuses_prepared_source_store() {
+    let page_path = crate::codebase::ts_resolver::normalize_path(&fixture_path(&[
+        "ast-snippets",
+        "selectors",
+        "dynamic-cross-file",
+        "page.tsx",
+    ]));
+    let selectors_path = page_path.with_file_name("selectors.ts");
+    let visible: crate::fx::PathSet = [page_path.clone(), selectors_path.clone()]
+        .into_iter()
+        .collect();
+    let inventory = std::sync::Arc::new(crate::codebase::ts_source::FileInventory::from_paths(&[
+        page_path.clone(),
+        selectors_path.clone(),
+    ]));
+    let store = crate::codebase::ts_source::SourceStore::new(inventory);
+    let page_source = store.read_path(&page_path).unwrap();
+    let after_page = store.physical_read_count();
+
+    let collected = ast::with_program(&page_path, &page_source, |program, source| {
+        super::collect_dynamic_identifier_values_with_file_from_visible(
+            program,
+            source,
+            &page_path,
+            &visible,
+            Some(&store),
+        )
+    })
+    .unwrap();
+    let after_import = store.physical_read_count();
+    assert!(
+        after_import > after_page,
+        "imported selector source must be read through the prepared SourceStore"
+    );
+
+    let _ = ast::with_program(&page_path, &page_source, |program, source| {
+        super::collect_dynamic_identifier_values_with_file_from_visible(
+            program,
+            source,
+            &page_path,
+            &visible,
+            Some(&store),
+        )
+    })
+    .unwrap();
+    let values = collected
+        .into_iter()
+        .flat_map(|entry| entry.values)
+        .collect::<std::collections::HashSet<_>>();
+
+    assert!(values.contains("imported-fn-val"));
+    assert_eq!(
+        store.physical_read_count(),
+        after_import,
+        "imported selector source must hit the prepared SourceStore"
+    );
+}
+
+#[test]
 fn deferred_collector_preserves_imports_local_returns_and_direct_values() {
     let imported_path = crate::codebase::ts_resolver::normalize_path(&fixture_path(&[
         "ast-snippets",
@@ -110,7 +171,9 @@ fn deferred_collector_preserves_imports_local_returns_and_direct_values() {
         "page.tsx",
     ]));
     let selectors_path = imported_path.with_file_name("selectors.ts");
-    let visible = std::collections::HashSet::from([imported_path.clone(), selectors_path]);
+    let visible: crate::fx::PathSet = [imported_path.clone(), selectors_path]
+        .into_iter()
+        .collect();
     let source = std::fs::read_to_string(&imported_path).unwrap();
     let imported = ast::with_program(&imported_path, &source, |program, source| {
         super::collect_dynamic_identifier_values_with_file_from_visible_deferred(
@@ -137,7 +200,7 @@ fn deferred_collector_preserves_imports_local_returns_and_direct_values() {
             program,
             source,
             &local_path,
-            &std::collections::HashSet::new(),
+            &crate::fx::PathSet::default(),
         )
     })
     .unwrap();
@@ -150,7 +213,7 @@ fn deferred_collector_preserves_imports_local_returns_and_direct_values() {
             program,
             source,
             &literal_path,
-            &std::collections::HashSet::new(),
+            &crate::fx::PathSet::default(),
         )
     })
     .unwrap();
@@ -174,6 +237,33 @@ fn static_export_collection_covers_default_and_destructured_declarations() {
         &["obj-a-val".to_string(), "obj-b-val".to_string()]
     );
 
+    let computed_path = root.join("default-obj-computed.ts");
+    let computed_source = std::fs::read_to_string(&computed_path).unwrap();
+    let computed_values = ast::with_program(&computed_path, &computed_source, |program, _| {
+        super::super::cross_file::collect_static_export_values(program)
+    })
+    .unwrap();
+    assert_eq!(
+        computed_values.values("ignored", true),
+        &["static-val".to_string()]
+    );
+
+    let anonymous = ast::with_program(
+        Path::new("anon-default.ts"),
+        "export default function() { return { a: 'anon-val' }; }",
+        |program, _| super::super::cross_file::collect_static_export_values(program),
+    )
+    .unwrap();
+    assert!(anonymous.values("ignored", true).is_empty());
+
+    let spread = ast::with_program(
+        Path::new("spread-default.ts"),
+        "const extra = { b: 'spread-val' }; export default { ...extra, a: 'static-val' };",
+        |program, _| super::super::cross_file::collect_static_export_values(program),
+    )
+    .unwrap();
+    assert_eq!(spread.values("ignored", true), &["static-val".to_string()]);
+
     let extras_path = root.join("extras.ts");
     let extras_source = std::fs::read_to_string(&extras_path).unwrap();
     let extras = ast::with_program(&extras_path, &extras_source, |program, _| {
@@ -188,11 +278,44 @@ fn static_export_collection_covers_default_and_destructured_declarations() {
 }
 
 #[test]
+fn static_export_collection_skips_named_functions_without_string_values() {
+    // Named function exports are still visited when their bodies have no
+    // collectable string leaves, so the empty-values skip stays covered.
+    let values = ast::with_program(
+        Path::new("empty-fn.ts"),
+        "export function noStrings() { return 1; }\n",
+        |program, _| super::super::cross_file::collect_static_export_values(program),
+    )
+    .unwrap();
+    assert!(values.values("noStrings", false).is_empty());
+}
+
+#[test]
+fn named_function_export_recorder_covers_missing_names_and_empty_values() {
+    let mut facts = super::super::cross_file::StaticExportValues::default();
+    super::super::cross_file::record_named_function_export(None, |_| vec!["x".into()], &mut facts);
+    super::super::cross_file::record_named_function_export(
+        Some("empty".into()),
+        |_| Vec::new(),
+        &mut facts,
+    );
+    super::super::cross_file::record_named_function_export(
+        Some("hit".into()),
+        |_| vec!["v".into()],
+        &mut facts,
+    );
+    assert!(facts.values("empty", false).is_empty());
+    assert_eq!(facts.values("hit", false), &["v".to_string()]);
+}
+
+#[test]
 fn visible_cross_file_resolution_handles_missing_bindings_and_unreadable_targets() {
     let page_path = Path::new("/repo/page.tsx");
     // The visible universe can identify an import even when its saved source
     // is unavailable; selector analysis must degrade to no static values.
-    let visible = std::collections::HashSet::from([Path::new("/repo/selectors.ts").to_path_buf()]);
+    let visible: crate::fx::PathSet = [Path::new("/repo/selectors.ts").to_path_buf()]
+        .into_iter()
+        .collect();
     let source = "import { value } from './selectors';";
     ast::with_program(page_path, source, |program, _| {
         assert!(
@@ -203,7 +326,7 @@ fn visible_cross_file_resolution_handles_missing_bindings_and_unreadable_targets
         );
         assert!(
             super::super::cross_file::resolve_imported_values_from_visible(
-                "value", program, page_path, &visible,
+                "value", program, page_path, &visible, None,
             )
             .is_empty()
         );
@@ -323,4 +446,32 @@ function Page() {
     assert_eq!(a_entry.values, vec!["val-a"]);
     let b_entry = collected.iter().find(|e| e.name == "b").expect("b entry");
     assert_eq!(b_entry.values, vec!["val-b"]);
+}
+
+#[test]
+fn collect_object_string_values_non_object_returns_empty() {
+    let source = r#"const x = 42;"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        for stmt in &program.body {
+            if let oxc_ast::ast::Statement::VariableDeclaration(decl) = stmt {
+                for d in &decl.declarations {
+                    if let Some(init) = d.init.as_ref() {
+                        let values = super::super::collect::collect_object_string_values(init);
+                        assert!(values.is_empty());
+                    }
+                }
+            }
+        }
+    })
+    .unwrap();
+}
+
+#[test]
+fn collect_function_return_strings_from_exported_declaration() {
+    let source = r#"export function getSelector() { return 'exported'; }"#;
+    ast::with_program(Path::new("fixture.tsx"), source, |program, _| {
+        let values = super::super::collect::collect_function_return_strings("getSelector", program);
+        assert_eq!(values, vec!["exported"]);
+    })
+    .unwrap();
 }

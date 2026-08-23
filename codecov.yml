@@ -3,6 +3,7 @@ coverage:
     project:
       default: off
       rust:
+        # Keep in sync with RUST_COVERAGE_FAIL_UNDER_* in .github/workflows/ci.yml
         target: 99%
         threshold: 0%
         flags:
@@ -17,6 +18,7 @@ coverage:
     patch:
       default: off
       rust:
+        # Keep in sync with RUST_COVERAGE_FAIL_UNDER_* in .github/workflows/ci.yml
         target: 99%
         threshold: 0%
         flags:

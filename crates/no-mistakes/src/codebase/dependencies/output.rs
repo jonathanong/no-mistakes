@@ -13,13 +13,27 @@ pub fn write_json(
     w: &mut dyn Write,
 ) -> Result<()> {
     let out = build_output(roots, entries, root_dir);
-    serde_json::to_writer_pretty(&mut *w, &out)?;
+    serde_json::to_writer(&mut *w, &out)?;
+    writeln!(w)?;
+    Ok(())
+}
+
+pub(crate) fn write_json_with_diagnostics(
+    roots: &[String],
+    entries: &[NodeEntry],
+    root_dir: &Path,
+    diagnostics: &[crate::codebase::ts_resolver::TsConfigDiagnostic],
+    provenance: &[crate::codebase::ts_resolver::TsConfigProvenance],
+    w: &mut dyn Write,
+) -> Result<()> {
+    let out = build_output_with_diagnostics(roots, entries, root_dir, diagnostics, provenance);
+    serde_json::to_writer(&mut *w, &out)?;
     writeln!(w)?;
     Ok(())
 }
 
 /// Write one relative path per line — suitable for shell `$()` substitution.
-/// QueueJob virtual nodes are rendered as `queueFile#job`.
+/// Virtual nodes use their stable display identifiers.
 pub fn write_paths(entries: &[NodeEntry], root_dir: &Path, w: &mut dyn Write) -> Result<()> {
     for entry in entries {
         match &entry.node {
@@ -34,8 +48,14 @@ pub fn write_paths(entries: &[NodeEntry], root_dir: &Path, w: &mut dyn Write) ->
             NodeId::QueueJob { queue_file, job } => {
                 let rel = queue_file
                     .strip_prefix(root_dir)
-                    .unwrap_or(queue_file.as_path());
+                    .unwrap_or(queue_file.as_ref());
                 writeln!(w, "{}#{}", rel.display(), job)?;
+            }
+            NodeId::WorkflowJob { .. } | NodeId::WorkflowStep { .. } => {
+                writeln!(w, "{}", entry.node.display_name(root_dir))?;
+            }
+            NodeId::TrpcProcedure { .. } => {
+                writeln!(w, "{}", entry.node.display_name(root_dir))?;
             }
             NodeId::Module(specifier) => {
                 writeln!(w, "{specifier}")?;
@@ -113,6 +133,19 @@ pub fn write_yml(
     let out = build_output(roots, entries, root_dir);
     let s = serde_yaml::to_string(&out)?;
     w.write_all(s.as_bytes())?;
+    Ok(())
+}
+
+pub(crate) fn write_yml_with_diagnostics(
+    roots: &[String],
+    entries: &[NodeEntry],
+    root_dir: &Path,
+    diagnostics: &[crate::codebase::ts_resolver::TsConfigDiagnostic],
+    provenance: &[crate::codebase::ts_resolver::TsConfigProvenance],
+    w: &mut dyn Write,
+) -> Result<()> {
+    let out = build_output_with_diagnostics(roots, entries, root_dir, diagnostics, provenance);
+    w.write_all(serde_yaml::to_string(&out)?.as_bytes())?;
     Ok(())
 }
 

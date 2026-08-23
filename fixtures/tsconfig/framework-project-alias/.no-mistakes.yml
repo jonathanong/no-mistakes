@@ -1,0 +1,7 @@
+tests:
+  vitest:
+    configs: apps/web/vitest.config.ts
+    projects:
+      web:
+        integration_suites:
+          unit: [aws]

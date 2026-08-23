@@ -1,0 +1,429 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/caller-a.yml",
+      "path": ".github/workflows/caller-a.yml",
+      "name": "caller-a.yml",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/caller-a.yml#call",
+        ".github/workflows/caller-a.yml#produce"
+      ]
+    },
+    {
+      "id": ".github/workflows/caller-b.yml",
+      "path": ".github/workflows/caller-b.yml",
+      "name": "caller-b.yml",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/caller-b.yml#call"
+      ]
+    },
+    {
+      "id": ".github/workflows/leaf.yml",
+      "path": ".github/workflows/leaf.yml",
+      "name": "leaf.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/leaf.yml#consume"
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml",
+      "path": ".github/workflows/main.yml",
+      "name": "main.yml",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/main.yml#call",
+        ".github/workflows/main.yml#produce"
+      ]
+    },
+    {
+      "id": ".github/workflows/middle.yml",
+      "path": ".github/workflows/middle.yml",
+      "name": "middle.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/middle.yml#call"
+      ]
+    },
+    {
+      "id": ".github/workflows/shared.yml",
+      "path": ".github/workflows/shared.yml",
+      "name": "shared.yml",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {},
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/shared.yml#consume"
+      ]
+    },
+    {
+      "id": ".github/workflows/source.yml",
+      "path": ".github/workflows/source.yml",
+      "name": "Source",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/source.yml#produce"
+      ]
+    },
+    {
+      "id": ".github/workflows/triggered.yml",
+      "path": ".github/workflows/triggered.yml",
+      "name": "triggered.yml",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "workflow_run",
+          "config": {
+            "workflows": [
+              "Source"
+            ]
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/triggered.yml#consume"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/caller-a.yml#call",
+      "workflowId": ".github/workflows/caller-a.yml",
+      "key": "call",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/caller-a.yml#produce",
+      "workflowId": ".github/workflows/caller-a.yml",
+      "key": "produce",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "shared",
+              "value": "shared"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/caller-b.yml#call",
+      "workflowId": ".github/workflows/caller-b.yml",
+      "key": "call",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/leaf.yml#consume",
+      "workflowId": ".github/workflows/leaf.yml",
+      "key": "consume",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "nested",
+                "value": "nested"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#call",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "call",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/main.yml#produce",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "produce",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "nested",
+              "value": "nested"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/middle.yml#call",
+      "workflowId": ".github/workflows/middle.yml",
+      "key": "call",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/shared.yml#consume",
+      "workflowId": ".github/workflows/shared.yml",
+      "key": "consume",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "shared",
+                "value": "shared"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/source.yml#produce",
+      "workflowId": ".github/workflows/source.yml",
+      "key": "produce",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "cross-run",
+              "value": "cross-run"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/triggered.yml#consume",
+      "workflowId": ".github/workflows/triggered.yml",
+      "key": "consume",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "cross-run",
+                "value": "cross-run"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#produce",
+      "to": ".github/workflows/leaf.yml#consume",
+      "name": "nested",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "exact"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller-a.yml#call",
+      "target": "./.github/workflows/shared.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/shared.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/caller-b.yml#call",
+      "target": "./.github/workflows/shared.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/shared.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/main.yml#call",
+      "target": "./.github/workflows/middle.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/middle.yml"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/middle.yml#call",
+      "target": "./.github/workflows/leaf.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/leaf.yml"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/caller-a.yml#produce",
+      "to": ".github/workflows/caller-a.yml#call"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#produce",
+      "to": ".github/workflows/main.yml#call"
+    },
+    {
+      "kind": "workflow-run",
+      "from": ".github/workflows/source.yml",
+      "to": ".github/workflows/triggered.yml"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "missing-artifact-producer",
+      "message": ".github/workflows/triggered.yml#consume step 0 downloads cross-run but no same-run producer can precede it",
+      "workflowPath": ".github/workflows/triggered.yml",
+      "jobId": ".github/workflows/triggered.yml#consume",
+      "stepIndex": 0
+    }
+  ]
+}

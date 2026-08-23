@@ -26,7 +26,7 @@ fn injected_facts_cannot_resolve_route_helpers_outside_visible_files() {
             .collect(),
     );
     assert!(helper.exists());
-    assert!(!graph_files.visible().contains(&helper));
+    assert!(!graph_files.contains_visible(&helper));
 
     let graph = DepGraph::build_with_plan_files_config_and_facts(
         &root,
@@ -37,7 +37,7 @@ fn injected_facts_cannot_resolve_route_helpers_outside_visible_files() {
         Some(&facts),
     )
     .unwrap();
-    let client = NodeId::File(client);
+    let client = NodeId::file(client);
     assert!(graph
         .dependencies_of_node(&client)
         .into_iter()

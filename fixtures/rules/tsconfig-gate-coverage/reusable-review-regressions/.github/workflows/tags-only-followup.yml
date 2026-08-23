@@ -1,0 +1,10 @@
+on:
+  push:
+    branches-ignore: ['**']
+    tags: [v1]
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      # Tag pushes do not get changed-file source coverage.
+      - run: pnpm exec tsc --noEmit --project tags-only/tsconfig.json

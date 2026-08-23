@@ -48,10 +48,8 @@ pub fn collect_import_specifiers(source: &str) -> Vec<String> {
             Statement::ImportDeclaration(import_decl) => {
                 specifiers.push(import_decl.source.value.to_string());
             }
-            Statement::ExportNamedDeclaration(export) => {
-                if let Some(src) = &export.source {
-                    specifiers.push(src.value.to_string());
-                }
+            Statement::ExportFromDeclaration(export) => {
+                specifiers.push(export.source.value.to_string());
             }
             Statement::ExportAllDeclaration(export) => {
                 specifiers.push(export.source.value.to_string());

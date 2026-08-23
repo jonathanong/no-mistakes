@@ -14,38 +14,41 @@ pub(crate) fn discover_check_file_views_from_snapshot(
     unique_exports_enabled: bool,
     snapshot: &no_mistakes::codebase::ts_source::VisiblePathSnapshot,
 ) -> views::CheckFileViews {
-    let root_files = Some(relative_visible_paths(snapshot, root));
-    views::discover_check_file_views_with_external_lookup(
+    let root_files = Some(visible_file_paths(snapshot, root));
+    views::discover_check_file_views_with_absolute_lookup(
         root,
         config,
         skip_directories,
         unique_exports_enabled,
         root_files,
-        |base| Some(relative_visible_paths(snapshot, base)),
+        |base| Some(visible_file_paths(snapshot, base)),
     )
 }
 
-fn relative_visible_paths(
+pub(crate) fn select_graph_files(
+    views: views::CheckFileViews,
+    needs_shared_facts: bool,
+    graph_requires_full_file_universe: bool,
+    playwright_facts_configured: bool,
+    dynamic_import_rules: bool,
+) -> (Vec<PathBuf>, Vec<PathBuf>) {
+    let needs_full_graph_files = graph_requires_full_file_universe || playwright_facts_configured;
+    if needs_full_graph_files {
+        return (views.filesystem, views.graph);
+    }
+    if needs_shared_facts && dynamic_import_rules {
+        return (views.filesystem.clone(), views.filesystem);
+    }
+    (views.filesystem, Vec::new())
+}
+
+fn visible_file_paths(
     snapshot: &no_mistakes::codebase::ts_source::VisiblePathSnapshot,
     root: &Path,
-) -> Vec<String> {
+) -> Vec<PathBuf> {
     let root = no_mistakes::codebase::ts_resolver::normalize_path(root);
     let sources = snapshot.source_store_for(&root);
-    let inventory = sources.inventory();
-    inventory
-        .paths()
-        .iter()
-        .filter(|path| {
-            inventory
-                .classification_for_path(path)
-                .is_some_and(no_mistakes::codebase::ts_source::FileClassification::target_is_file)
-        })
-        .filter_map(|path| {
-            path.strip_prefix(&root)
-                .ok()
-                .map(|relative| relative.to_string_lossy().into_owned())
-        })
-        .collect()
+    sources.inventory().target_file_paths()
 }
 
 fn unique_exports_project_roots_with_inferred(

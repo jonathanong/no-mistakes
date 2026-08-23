@@ -1,0 +1,13 @@
+name: Input condition
+description: Input-controlled failure
+inputs:
+  enabled:
+    description: Enable failure
+    default: "true"
+runs:
+  using: composite
+  steps:
+    # The default is known true to Actions, despite catalog-time absence.
+    - if: inputs.enabled
+      run: exit 1
+      shell: bash

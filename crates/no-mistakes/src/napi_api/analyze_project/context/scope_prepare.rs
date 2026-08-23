@@ -19,6 +19,10 @@ impl PreparedScopePlan {
         let (import_usages, import_usage_files) =
             prepare_import_usage_views(options, &root, &session)?;
         let build_plan = graph_build_plan(options)?;
+        let has_non_check_report = options
+            .reports
+            .iter()
+            .any(|request| request.report_type != "check");
         let framework_plan = framework_preparation_plan(options, build_plan)?;
         let include_check_plan = options
             .reports
@@ -51,13 +55,14 @@ impl PreparedScopePlan {
                     traversal.visible_paths_arc(),
                     traversal.config(),
                     traversal.tsconfig(),
+                    traversal.workspace_arc(),
                 )
             })
             .transpose()?;
         let mut report_plan = check_fact_plan(options, &traversal)?;
         report_plan
             .graph_context
-            .set_visible_files(traversal.graph_files().visible().iter().cloned());
+            .set_visible_file_set(traversal.graph_files().visible_path_set());
         let mut check_plan = if let Some(check) = &check {
             check.fact_plan()
         } else {
@@ -116,13 +121,19 @@ impl PreparedScopePlan {
             files.sort();
             files.dedup();
         }
-        check_plan
-            .graph_context
-            .set_visible_files(traversal.graph_files().visible().iter().cloned());
         let graph_files = check
             .as_ref()
-            .map(|check| check.graph_files().to_vec())
-            .unwrap_or_default();
+            .map(|check| {
+                if has_non_check_report {
+                    traversal.graph_files().iter_visible().cloned().collect()
+                } else {
+                    check.graph_files().to_vec()
+                }
+            })
+            .unwrap_or_else(|| traversal.graph_files().iter_visible().cloned().collect());
+        check_plan
+            .graph_context
+            .set_visible_file_set(graph_files.iter().cloned().collect());
         let primary_paths = files
             .iter()
             .chain(graph_files.iter())
@@ -143,6 +154,12 @@ impl PreparedScopePlan {
         supplemental_report_files.sort();
         supplemental_report_files.dedup();
         let sources = traversal.source_store();
+        let supplemental_call_sites = supplemental_call_site_plan(
+            check.as_ref(),
+            &files,
+            &graph_files,
+            std::sync::Arc::clone(&sources),
+        );
         let mut supplemental_plan = report_plan;
         supplemental_plan.dynamic_imports |= check_plan.dynamic_imports;
         supplemental_plan.source |= check_plan.source;
@@ -163,8 +180,11 @@ impl PreparedScopePlan {
                 graph_files: Vec::new(),
                 plan: supplemental_plan,
                 playwright: None,
-                sources,
+                sources: std::sync::Arc::clone(&sources),
             },
+            // Configured finite-set call sources can intentionally sit outside
+            // the discovered check scope, so the helper keeps them fact-only.
+            supplemental_call_sites,
             configs,
             import_usages,
             check,

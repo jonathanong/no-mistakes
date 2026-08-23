@@ -27,18 +27,26 @@ fn should_emit_node(
 fn symbol_owner_bridge_allowed(
     from: &NodeId,
     to: &NodeId,
-    root_nodes: &HashSet<NodeId>,
-    dynamic_import_files: &HashSet<NodeId>,
+    root_nodes: &FxHashSet<NodeId>,
+    from_is_dynamic_import_file: bool,
 ) -> bool {
-    is_symbol_owner_bridge(from, to)
-        && !dynamic_import_files.contains(from)
-        && root_nodes.contains(from)
+    is_symbol_owner_bridge(from, to) && !from_is_dynamic_import_file && root_nodes.contains(from)
 }
 
 fn is_symbol_owner_bridge(from: &NodeId, to: &NodeId) -> bool {
     match (from, to) {
-        (NodeId::File(file), NodeId::Symbol { file: symbol_file, .. })
-        | (NodeId::Symbol { file: symbol_file, .. }, NodeId::File(file)) => file == symbol_file,
+        (
+            NodeId::File(file),
+            NodeId::Symbol {
+                file: symbol_file, ..
+            },
+        )
+        | (
+            NodeId::Symbol {
+                file: symbol_file, ..
+            },
+            NodeId::File(file),
+        ) => file == symbol_file,
         _ => false,
     }
 }

@@ -1,6 +1,22 @@
 use super::link_target::{finding_for_link, href_basename, href_destination};
 use super::*;
+use crate::config::v2::{
+    schema::{RuleDef, RuleScope},
+    NoMistakesConfig,
+};
 use std::path::PathBuf;
+
+fn config_with_options(options: &str) -> NoMistakesConfig {
+    NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(options).unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    }
+}
 
 fn scan(
     root: &std::path::Path,
@@ -8,7 +24,10 @@ fn scan(
     files: &[PathBuf],
 ) -> anyhow::Result<Vec<RuleFinding>> {
     let sources = crate::codebase::rules::source_store_for_files(files);
-    scan_with_sources(root, opts, files, &sources)
+    let mut plan = super::super::markdown_facts::MarkdownFactPlan::default();
+    plan.request_display_links(files.iter().cloned());
+    let facts = super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
+    scan_with_facts(root, opts, files, &facts)
 }
 
 fn check_file(
@@ -17,7 +36,10 @@ fn check_file(
     extensions: &[&str],
 ) -> Vec<RuleFinding> {
     let sources = crate::codebase::rules::source_store_for_files(&[path.to_path_buf()]);
-    check_file_with_sources(root, path, extensions, &sources)
+    let mut plan = super::super::markdown_facts::MarkdownFactPlan::default();
+    plan.request_display_links([path.to_path_buf()]);
+    let facts = super::super::markdown_facts::MarkdownFactMap::prepare(&plan, &sources);
+    check_file_with_facts(root, path, extensions, &facts).unwrap()
 }
 
 fn fixture(name: &str) -> PathBuf {
@@ -363,7 +385,7 @@ fn ignores_links_after_invalid_closing_fence_text() {
 }
 
 #[test]
-fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links() {
+fn covers_custom_extensions_non_matching_files_and_malformed_links() {
     let root = fixture("custom");
     let mdx = root.join("docs/page.mdx");
 
@@ -372,7 +394,7 @@ fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links
         &Options {
             extensions: vec![".mdx".to_string()],
         },
-        &[mdx.clone(), root.join("docs/missing.mdx")],
+        std::slice::from_ref(&mdx),
     )
     .unwrap();
     assert_eq!(findings.len(), 1, "{findings:#?}");
@@ -384,6 +406,38 @@ fn covers_custom_extensions_non_matching_files_missing_files_and_malformed_links
     assert!(parser::parse_inline_link("[text] no href", 0).is_none());
     assert!(parser::parse_inline_link("[text", 0).is_none());
     assert_eq!(href_destination("<docs/new.md"), "<docs/new.md");
+}
+
+#[test]
+fn reports_missing_configured_extension_sources() {
+    let root = fixture("custom");
+    let missing = root.join("docs/missing.mdx");
+
+    let error = scan(
+        &root,
+        &Options {
+            extensions: vec![".mdx".to_string()],
+        },
+        &[missing],
+    )
+    .unwrap_err();
+
+    assert!(error.to_string().contains(RULE_ID));
+    assert!(error.to_string().contains("could not read Markdown file"));
+}
+
+#[test]
+fn source_store_entrypoint_prepares_configured_extension_facts() {
+    let root = fixture("custom");
+    let mdx = root.join("docs/page.mdx");
+    let files = vec![mdx];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let config = config_with_options("extensions: [.mdx]");
+
+    let findings = check_with_files_and_sources(&root, &config, &files, &sources).unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "docs/page.mdx");
 }
 
 #[test]

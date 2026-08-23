@@ -4,12 +4,9 @@ impl<'a> ImportResolver<'a> {
         specifier: &str,
         importing_file: &Path,
         workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-        visible_files: &HashSet<PathBuf>,
+        visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     ) -> ImportClassification {
-        let key = ResolveKey {
-            importing_file: normalize_path(importing_file),
-            specifier: specifier.to_string(),
-        };
+        let key = self.resolve_key(specifier, importing_file);
         let classify = || {
             let resolver_target = self.resolve(specifier, importing_file);
             let workspace_target = workspace.resolve_specifier_from_file_visible(
@@ -55,21 +52,27 @@ impl<'a> ImportResolver<'a> {
             return resolved;
         }
 
-        let importing_file = normalize_path(importing_file);
-        let key = ResolveKey {
-            importing_file: importing_file.clone(),
-            specifier: specifier.to_string(),
-        };
+        let key = self.resolve_key(specifier, importing_file);
 
         if let Some(cache) = self.shared_cache {
-            return self.resolve_cached(
-                &cache.raw_entries,
-                key,
-                specifier,
-                importing_file.as_path(),
-            );
+            return self.resolve_cached(&cache.raw_entries, key, specifier);
         }
-        self.resolve_cached(&self.cache, key, specifier, importing_file.as_path())
+        self.resolve_cached(&self.cache, key, specifier)
+    }
+
+    fn resolve_key(&self, specifier: &str, importing_file: &Path) -> ResolveKey {
+        let importing_file = match &self.interner {
+            Some(interner) => interner.intern_path(importing_file),
+            None => Arc::<Path>::from(normalize_path(importing_file)),
+        };
+        let specifier = match &self.interner {
+            Some(interner) => interner.intern_str(specifier),
+            None => Arc::from(specifier),
+        };
+        ResolveKey {
+            importing_file,
+            specifier,
+        }
     }
 
     fn resolve_cached(
@@ -77,7 +80,6 @@ impl<'a> ImportResolver<'a> {
         cache: &ResolverResultCache,
         key: ResolveKey,
         specifier: &str,
-        importing_file: &Path,
     ) -> Option<PathBuf> {
         if let Some(cached) = cache.get(&key) {
             let resolved = cached.clone();
@@ -95,7 +97,7 @@ impl<'a> ImportResolver<'a> {
             Entry::Vacant(entry) => {
                 // Hold the shard entry while resolving so concurrent requests
                 // cannot repeat successful or failed filesystem work.
-                let resolved = self.resolve_uncached(specifier, importing_file);
+                let resolved = self.resolve_uncached(specifier, &entry.key().importing_file);
                 drop(entry.insert(resolved.clone()));
                 self.increment("resolver.computations", 1);
                 if self.session_scoped || self.shared_cache.is_some() {

@@ -19,14 +19,24 @@ pub struct UniqueExportFinding {
     pub message: String,
 }
 
+/// Internal aggregate-check sidecar; the public finding remains six fields.
+#[doc(hidden)]
+#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+pub struct PreparedUniqueExportFinding {
+    pub finding: UniqueExportFinding,
+    pub suppression_source_location: Option<(String, u32)>,
+}
+
 #[derive(Debug, Clone)]
 pub(super) struct SourceFile {
     pub(super) path: PathBuf,
     pub(super) rel: String,
-    pub(super) source: String,
+    pub(super) source: std::sync::Arc<str>,
     pub(super) symbols: std::sync::Arc<FileSymbols>,
     pub(super) disabled: bool,
+    pub(super) defer_suppression: bool,
     pub(super) is_nextjs_project: bool,
+    pub(super) is_remix_route_module: bool,
 }
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Ord, PartialOrd)]
@@ -78,12 +88,46 @@ pub(super) struct ExportOccurrence {
     pub(super) line: u32,
     pub(super) kind: String,
     pub(super) origin: ExportOrigin,
+    /// Deferred aggregate analysis needs this to keep a suppressed occurrence
+    /// from becoming the canonical export for a visible duplicate.
+    pub(super) suppressed: bool,
+    /// The source location whose directive suppressed this occurrence. Origin
+    /// directives must remain auditable even when a re-export is the duplicate.
+    pub(super) suppression_location: Option<(String, u32)>,
 }
 
-#[derive(Debug, Clone, Eq, PartialEq, Ord, PartialOrd)]
+#[derive(Debug, Clone)]
 pub(super) struct ExportOrigin {
     pub(super) file: String,
     pub(super) line: u32,
     pub(super) name: String,
     pub(super) bucket: ExportBucket,
+    pub(super) suppressed: bool,
+    pub(super) suppression_location: Option<(String, u32)>,
+}
+
+impl ExportOrigin {
+    fn identity(&self) -> (&str, u32, &str, ExportBucket) {
+        (&self.file, self.line, &self.name, self.bucket)
+    }
+}
+
+impl PartialEq for ExportOrigin {
+    fn eq(&self, other: &Self) -> bool {
+        self.identity() == other.identity()
+    }
+}
+
+impl Eq for ExportOrigin {}
+
+impl PartialOrd for ExportOrigin {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for ExportOrigin {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.identity().cmp(&other.identity())
+    }
 }

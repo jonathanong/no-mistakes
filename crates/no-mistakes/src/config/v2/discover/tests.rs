@@ -1,5 +1,9 @@
-use super::validate_playwright_selector_wrappers;
-use crate::config::v2::schema::PlaywrightSelectorWrapper;
+use super::{validate_playwright_selector_wrappers, validate_v2_config};
+use crate::config::v2::schema::{
+    NamedFullSuiteTrigger, NoMistakesConfig, PlaywrightSelectorWrapper, Project, RuleDef,
+    TestPlanProjectDependency, TestPlanTargetedProjectDependency,
+};
+use std::path::{Path, PathBuf};
 
 fn wrapper(module: &str, export: &str, test_id_argument: usize) -> PlaywrightSelectorWrapper {
     PlaywrightSelectorWrapper {
@@ -37,4 +41,209 @@ fn selector_wrapper_duplicate_arguments_must_not_conflict() {
     .unwrap_err()
     .to_string();
     assert!(error.contains("conflicting testIdArgument values 0 and 1"));
+}
+
+#[test]
+fn targeted_full_suite_trigger_validates_paths_and_targets() {
+    let cases = [
+        (
+            Vec::new(),
+            vec!["unit".to_string()],
+            "paths must not be empty",
+        ),
+        (
+            vec!["src/**".to_string()],
+            Vec::new(),
+            "targets must not be empty",
+        ),
+        (
+            vec!["src/**".to_string()],
+            vec![" ".to_string()],
+            "targets[0] must not be blank",
+        ),
+        (
+            vec!["[".to_string()],
+            vec!["unit".to_string()],
+            "contains invalid glob",
+        ),
+        (
+            vec!["!".to_string()],
+            vec!["unit".to_string()],
+            "paths[0] must not be blank",
+        ),
+    ];
+    for (paths, targets, expected) in cases {
+        let mut config = NoMistakesConfig::default();
+        config
+            .projects
+            .insert("app".to_string(), Project::default());
+        config.test_plan.vitest.full_suite_triggers.projects.insert(
+            "app".to_string(),
+            TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+                paths,
+                targets,
+            }),
+        );
+        let error = validate_v2_config(&config, Path::new("config.yml"))
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains(expected), "{error}");
+        assert!(error.contains("config.yml.testPlan.vitest.fullSuiteTriggers.projects.app"));
+    }
+
+    let mut config = NoMistakesConfig::default();
+    config.test_plan.vitest.full_suite_triggers.projects.insert(
+        "missing".to_string(),
+        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+            paths: vec!["src/**".to_string()],
+            targets: vec!["unit".to_string()],
+        }),
+    );
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(
+        "config.yml.testPlan.vitest.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
+    ));
+
+    let mut legacy = NoMistakesConfig::default();
+    legacy
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .projects
+        .insert("missing".to_string(), TestPlanProjectDependency::All(true));
+    validate_v2_config(&legacy, Path::new("config.yml")).unwrap();
+}
+
+#[test]
+fn project_and_rule_globs_surface_validation_context() {
+    let mut project_config = NoMistakesConfig::default();
+    project_config.projects.insert(
+        "app".to_string(),
+        Project {
+            include: vec!["[".to_string()],
+            ..Default::default()
+        },
+    );
+    let project_error = validate_v2_config(&project_config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(
+        project_error.contains("projects.app.include contains invalid glob `[`"),
+        "{project_error}"
+    );
+
+    let mut rule_config = NoMistakesConfig::default();
+    rule_config.rules.push(RuleDef {
+        rule: "unrelated-rule".to_string(),
+        exclude: vec!["[".to_string()],
+        ..Default::default()
+    });
+    let rule_error = validate_v2_config(&rule_config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(
+        rule_error.contains("rules[0].exclude contains invalid glob `[`"),
+        "{rule_error}"
+    );
+}
+
+#[test]
+fn source_store_config_loading_uses_the_request_snapshot_and_validates_globs() {
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let root = manifest_dir.join("../../fixtures/napi/analyze-project-dynamic-import-reachability");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let visible_paths = snapshot.paths_for(&root);
+    let sources = snapshot.source_store_for(&root);
+
+    let config = super::load_v2_config_from_source_store(&root, None, &visible_paths, &sources)
+        .expect("fixture config should load from the canonical source store");
+    assert_eq!(config.rules.len(), 1);
+    assert_eq!(sources.physical_read_count(), 1);
+
+    let invalid_root =
+        manifest_dir.join("../../test-cases/config-v2/invalid-rule-path-filter/fixture");
+    let error = super::load_v2_config(&invalid_root, None)
+        .expect_err("an invalid path glob must be rejected during config validation");
+    assert!(error
+        .to_string()
+        .contains("rules[0].exclude contains invalid glob `[`"));
+}
+
+#[test]
+fn named_triggers_are_validated_for_every_test_plan_framework() {
+    let mut config = NoMistakesConfig::default();
+    config
+        .test_plan
+        .python
+        .full_suite_triggers
+        .triggers
+        .push(NamedFullSuiteTrigger {
+            name: "resources".to_string(),
+            paths: vec!["[".to_string()],
+            targets: Vec::new(),
+        });
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.contains("config.yml.testPlan.python.fullSuiteTriggers.triggers[0]"),
+        "{error}"
+    );
+    assert!(error.contains("contains invalid glob"), "{error}");
+}
+
+#[test]
+fn kotlin_targeted_project_triggers_require_a_top_level_project() {
+    let mut config = NoMistakesConfig::default();
+    config.test_plan.kotlin.full_suite_triggers.projects.insert(
+        "missing".to_string(),
+        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+            paths: vec!["src/**".to_string()],
+            targets: vec!["unit".to_string()],
+        }),
+    );
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(
+        "config.yml.testPlan.kotlin.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
+    ));
+}
+
+#[test]
+fn elixir_targeted_project_triggers_require_a_top_level_project() {
+    let mut config = NoMistakesConfig::default();
+    config.test_plan.elixir.full_suite_triggers.projects.insert(
+        "missing".to_string(),
+        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+            paths: vec!["src/**".to_string()],
+            targets: vec!["unit".to_string()],
+        }),
+    );
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(
+        "config.yml.testPlan.elixir.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
+    ));
+}
+
+#[test]
+fn dart_targeted_project_triggers_require_a_top_level_project() {
+    let mut config = NoMistakesConfig::default();
+    config.test_plan.dart.full_suite_triggers.projects.insert(
+        "missing".to_string(),
+        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+            paths: vec!["src/**".to_string()],
+            targets: vec!["unit".to_string()],
+        }),
+    );
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(
+        "config.yml.testPlan.dart.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
+    ));
 }

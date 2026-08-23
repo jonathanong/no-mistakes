@@ -1,0 +1,11 @@
+name: Subscriber OK
+on:
+  workflow_run:
+    workflows: [Source]
+    types: [completed]
+    branches: [main]
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo report

@@ -1,0 +1,9 @@
+on: push
+jobs:
+  produce:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: nested}
+  call:
+    needs: produce
+    uses: ./.github/workflows/middle.yml

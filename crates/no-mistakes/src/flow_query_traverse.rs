@@ -102,16 +102,24 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             module: None,
             queue_file: None,
             job: None,
+            workflow_file: None,
+            step: None,
+            router_file: None,
+            procedure: None,
         },
         NodeId::Symbol { file, symbol } => FlowNode {
             id,
             kind: "symbol",
             depth,
             file: Some(relative(root, file)),
-            symbol: Some(symbol.clone()),
+            symbol: Some(symbol.to_string()),
             module: None,
             queue_file: None,
             job: None,
+            workflow_file: None,
+            step: None,
+            router_file: None,
+            procedure: None,
         },
         NodeId::Module(module) => FlowNode {
             id,
@@ -119,9 +127,13 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             depth,
             file: None,
             symbol: None,
-            module: Some(module.clone()),
+            module: Some(module.to_string()),
             queue_file: None,
             job: None,
+            workflow_file: None,
+            step: None,
+            router_file: None,
+            procedure: None,
         },
         NodeId::QueueJob { queue_file, job } => FlowNode {
             id,
@@ -131,24 +143,52 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             symbol: None,
             module: None,
             queue_file: Some(relative(root, queue_file)),
-            job: Some(job.clone()),
+            job: Some(job.to_string()),
+            workflow_file: None,
+            step: None,
+            router_file: None,
+            procedure: None,
         },
+        NodeId::WorkflowJob { workflow_file, job } => FlowNode {
+            id,
+            kind: "workflow-job",
+            depth,
+            file: None,
+            symbol: None,
+            module: None,
+            queue_file: None,
+            job: Some(job.to_string()),
+            workflow_file: Some(relative(root, workflow_file)),
+            step: None,
+            router_file: None,
+            procedure: None,
+        },
+        NodeId::WorkflowStep {
+            workflow_file,
+            job,
+            step,
+        } => FlowNode {
+            id,
+            kind: "workflow-step",
+            depth,
+            file: None,
+            symbol: None,
+            module: None,
+            queue_file: None,
+            job: Some(job.to_string()),
+            workflow_file: Some(relative(root, workflow_file)),
+            step: Some(*step),
+            router_file: None,
+            procedure: None,
+        },
+        NodeId::TrpcProcedure {
+            router_file,
+            procedure,
+        } => trpc_procedure_flow_node(id, depth, root, router_file, procedure),
     }
 }
 
-fn resolve_target(root: &Path, raw: &str) -> NodeId {
-    let (file, symbol) = parse_entrypoint(raw);
-    let path = if file.is_absolute() {
-        file
-    } else {
-        root.join(file)
-    };
-    let path = normalize_path(&path);
-    match symbol {
-        Some(symbol) => NodeId::Symbol { file: path, symbol },
-        None => NodeId::File(path),
-    }
-}
+include!("flow_query_traverse_trpc.rs");
 
 fn node_key(node: &NodeId, root: &Path) -> String {
     node.display_name(root).replace('\\', "/")

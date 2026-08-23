@@ -1,0 +1,17 @@
+name: Clean Action
+runs:
+  using: composite
+  steps:
+    - name: Setup
+      uses: actions/checkout@main
+      with:
+        fetch-depth: 0
+    - name: Run script
+      if: runner.os == 'Linux'
+      id: install
+      run: pnpm install
+      shell: bash
+      env:
+        CI: "true"
+      working-directory: .
+      continue-on-error: false

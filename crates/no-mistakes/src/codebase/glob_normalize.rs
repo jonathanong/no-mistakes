@@ -1,20 +1,27 @@
 pub(crate) fn normalize(pattern: &str) -> String {
-    let mut parts = Vec::new();
+    let mut parts: Vec<&str> = Vec::new();
     for part in pattern.split('/') {
         match part {
             "" | "." => {}
-            ".." if parts.last().is_some_and(is_literal_segment) => {
-                parts.pop();
+            ".." => {
+                let mut literal_parent = false;
+                if let Some(parent) = parts.last() {
+                    literal_parent = true;
+                    for ch in parent.chars() {
+                        if matches!(ch, '*' | '?' | '[' | ']' | '{' | '}' | '\\') {
+                            literal_parent = false;
+                            break;
+                        }
+                    }
+                }
+                if literal_parent {
+                    parts.pop();
+                } else {
+                    parts.push(part);
+                }
             }
-            ".." => parts.push(part),
             _ => parts.push(part),
         }
     }
     parts.join("/")
-}
-
-fn is_literal_segment(segment: &&str) -> bool {
-    !segment
-        .chars()
-        .any(|ch| matches!(ch, '*' | '?' | '[' | ']' | '{' | '}' | '\\'))
 }

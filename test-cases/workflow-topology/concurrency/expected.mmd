@@ -1,0 +1,11 @@
+flowchart LR
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3MvcGlwZWxpbmUueW1s["Concurrency"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3MvcGlwZWxpbmUueW1s([".github/workflows/pipeline.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3MvcGlwZWxpbmUueW1sI2J1aWxk["build"]
+    job_LmdpdGh1Yi93b3JrZmxvd3MvcGlwZWxpbmUueW1sI3Rlc3Q["test"]
+  end
+  lock_ZGVjbGFyYXRpb246d29ya2Zsb3dfTG1kcGRHaDFZaTkzYjNKclpteHZkM012Y0dsd1pXeHBibVV1ZVcxcw{{"lock: ci-${{ github.ref }}"}}
+  workflow_LmdpdGh1Yi93b3JrZmxvd3MvcGlwZWxpbmUueW1s -. "queue=single; cancel=true" .-> lock_ZGVjbGFyYXRpb246d29ya2Zsb3dfTG1kcGRHaDFZaTkzYjNKclpteHZkM012Y0dsd1pXeHBibVV1ZVcxcw
+  lock_bGl0ZXJhbDpzaGFyZWQtbG9jaw{{"lock: shared-lock"}}
+  job_LmdpdGh1Yi93b3JrZmxvd3MvcGlwZWxpbmUueW1sI2J1aWxk -. "queue=single; cancel=false" .-> lock_bGl0ZXJhbDpzaGFyZWQtbG9jaw
+  job_LmdpdGh1Yi93b3JrZmxvd3MvcGlwZWxpbmUueW1sI3Rlc3Q -. "queue=single; cancel=false" .-> lock_bGl0ZXJhbDpzaGFyZWQtbG9jaw

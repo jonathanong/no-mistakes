@@ -18,3 +18,7 @@ copy-coupled locator is intentional.
 This rule is graph-backed. It only reports when Playwright route or adjacent
 selector analysis can connect the locator to an app element with a configured
 test ID.
+
+With more than one `type: nextjs` project configured, `tests.playwright:
+[web]` needs a frontend-app binding for `web`, the same as
+[`playwright-coverage`](playwright-coverage.md#multiple-frontend-apps).

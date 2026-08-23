@@ -1,0 +1,22 @@
+on: push
+jobs:
+  matrix-object:
+    strategy:
+      matrix: {cfg: [{enabled: false}]}
+    runs-on: ubuntu-latest
+    steps:
+      # A nested static object property is false, so this step never runs.
+      - if: matrix.cfg.enabled
+        run: pnpm exec tsc --noEmit --project matrix-object/tsconfig.json
+  to-json:
+    runs-on: ubuntu-latest
+    steps:
+      # toJSON(false) is the string "false", never the string "true".
+      - if: toJSON(false) == 'true'
+        run: pnpm exec tsc --noEmit --project to-json/tsconfig.json
+  to-json-structured:
+    runs-on: ubuntu-latest
+    steps:
+      # Pretty JSON cannot contain the opposite static property value.
+      - if: 'contains(toJSON(fromJSON(''{"enabled":false}'')), ''"enabled": true'')'
+        run: pnpm exec tsc --noEmit --project to-json-structured/tsconfig.json

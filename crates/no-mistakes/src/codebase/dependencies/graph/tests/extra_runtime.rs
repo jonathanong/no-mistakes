@@ -9,8 +9,8 @@ fn queue_edges_use_precomputed_shared_facts() {
     let graph_files = GraphFiles::discover(&root);
     let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
     let config_options = graph_config_options(&root);
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     let send_email = root.join("packages/api/src/send-email.mts");
     let emails = root.join("packages/api/src/emails.mts");
     let processors = root.join("packages/api/src/processors.mts");
@@ -34,14 +34,12 @@ fn queue_edges_use_precomputed_shared_facts() {
     let relationships = collect_dashboard_queue_relationships(
         &root,
         &resolver,
-        graph_files.indexable(),
+        &graph_files,
         Some(&facts),
         config_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
-    let queue_job = NodeId::QueueJob {
-        queue_file: emails.clone(),
-        job: "sendWelcomeEmail".to_string(),
-    };
+    let queue_job = NodeId::queue_job(emails.clone(), "sendWelcomeEmail");
 
     // Two identical worker registrations intentionally produce two raw copies
     // of every relationship; the canonical graph index performs deduplication.
@@ -49,7 +47,7 @@ fn queue_edges_use_precomputed_shared_facts() {
         relationships
             .iter()
             .filter(|edge| {
-                edge.from == NodeId::File(send_email.clone())
+                edge.from == NodeId::file(send_email.clone())
                     && edge.to == queue_job
                     && edge.kind == EdgeKind::QueueEnqueue
             })
@@ -62,7 +60,7 @@ fn queue_edges_use_precomputed_shared_facts() {
                 .iter()
                 .filter(|edge| {
                     edge.from == queue_job
-                        && edge.to == NodeId::File(target.clone())
+                        && edge.to == NodeId::file(target.clone())
                         && edge.kind == EdgeKind::QueueWorker
                 })
                 .count(),
@@ -81,7 +79,7 @@ fn queue_edges_use_precomputed_shared_facts() {
     );
 
     assert!(forward
-        .get(&NodeId::File(send_email))
+        .get(&NodeId::file(send_email))
         .map(|edges| {
             edges.iter().any(|(node, kind)| {
                 matches!(
@@ -89,15 +87,12 @@ fn queue_edges_use_precomputed_shared_facts() {
                     (
                         NodeId::QueueJob { queue_file, job },
                         EdgeKind::QueueEnqueue
-                    ) if queue_file == &emails && job == "sendWelcomeEmail"
+                    ) if queue_file.as_ref() == emails.as_path() && job.as_ref() == "sendWelcomeEmail"
                 )
             })
         })
         .unwrap_or(false));
-    let queue_job = NodeId::QueueJob {
-        queue_file: emails,
-        job: "sendWelcomeEmail".to_string(),
-    };
+    let queue_job = NodeId::queue_job(emails, "sendWelcomeEmail");
     assert!(forward
         .get(&queue_job)
         .map(|edges| {
@@ -115,9 +110,17 @@ fn process_spawn_edges_cover_source_fallback_without_precomputed_facts() {
     let spawn_target = root.join("packages/api/src/spawn-target.mts");
     let source = std::fs::read_to_string(&spawner).unwrap();
 
-    let visible = HashSet::from([spawn_target.clone()]);
-    let edges =
-        collect_process_spawn_edges(&root, None, &[(spawner.clone(), source)], &[], &visible);
+    let visible = [spawn_target.clone()]
+        .into_iter()
+        .collect::<crate::fx::PathSet>();
+    let edges = collect_process_spawn_edges(
+        &root,
+        None,
+        &[(spawner.clone(), source)],
+        &[],
+        &visible,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
 
     assert!(edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::ProcessSpawn
@@ -155,8 +158,8 @@ fn queue_edges_skip_files_missing_shared_queue_facts() {
     let config_options = graph_config_options(&root);
     let emails = root.join("packages/api/src/emails.mts");
     let processors = root.join("packages/api/src/processors.mts");
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     let facts = TsFactMap::new();
 
     test_support::add_queue_edges(
@@ -190,4 +193,57 @@ fn queue_edges_skip_files_missing_shared_queue_facts() {
         &mut reverse,
     );
     assert!(forward.is_empty());
+}
+
+#[cfg(unix)]
+#[test]
+fn scoped_queue_edges_keep_symlink_root_targets_in_visible_namespace() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    );
+    let graph_files = GraphFiles::discover(&root);
+    let mut catalog_visible = graph_files.all().to_vec();
+    catalog_visible.push(root.join("tsconfig.json"));
+    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+        &root,
+        std::slice::from_ref(&root),
+        &catalog_visible,
+    );
+    let resolver =
+        crate::codebase::ts_resolver::ScopedImportResolver::from_lookup(
+            &catalog,
+            &graph_files,
+            None,
+        );
+    let plan = GraphBuildPlan {
+        queues: true,
+        ..GraphBuildPlan::default()
+    };
+    let options = graph_config_options(&root).expect("symlink fixture queue configuration loads");
+    let facts = collect_ts_facts_with_context(
+        graph_files.indexable(),
+        effective_ts_fact_plan(plan, Some(&options)),
+        &ts_fact_context_for_plan(&root, plan),
+    );
+
+    let relationships = collect_dashboard_queue_relationships(
+        &root,
+        &resolver,
+        &graph_files,
+        Some(&facts),
+        Some(&options),
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+    let queue_job = NodeId::queue_job(root.join("src/queues.ts"), "sendEmail");
+    assert!(relationships.iter().any(|edge| {
+        edge.from == NodeId::file(root.join("src/producer.ts"))
+            && edge.to == queue_job
+            && edge.kind == EdgeKind::QueueEnqueue
+    }));
+    assert!(relationships.iter().any(|edge| {
+        edge.from == queue_job
+            && edge.to == NodeId::file(root.join("src/processors.ts"))
+            && edge.kind == EdgeKind::QueueWorker
+    }));
 }

@@ -29,6 +29,10 @@ pub(crate) struct CheckArgs {
     /// Shorthand for --format json.
     #[arg(long, global = true, conflicts_with = "format")]
     json: bool,
+    /// Include deterministic accounting for findings hidden by no-mistakes
+    /// suppression directives. Disabled by default to preserve existing output.
+    #[arg(long, global = true)]
+    include_suppressed: bool,
     /// Legacy programmatic timing switch. CLI timing flags are root-global.
     #[arg(skip)]
     timings: bool,
@@ -48,7 +52,13 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     );
     let cwd = std::env::current_dir().context("cwd must be accessible")?;
     let root = resolve_root(&args.root, &cwd);
-    let results = check_runner::run_all(root, args.config, args.tsconfig)?;
+    let results = check_runner::run_all_with_suppressed(
+        root,
+        args.config,
+        args.tsconfig,
+        args.include_suppressed,
+    );
+    let results = results?;
     record_missing_check_timings(&results);
     no_mistakes::invocation::commit_timeout()?;
     for warning in &results.warnings {
@@ -77,39 +87,45 @@ fn record_missing_check_timings(results: &check_runner::CheckResults) {
         .map(|entry| entry.label)
         .collect::<std::collections::HashSet<_>>();
     for (label, duration) in &results.timings {
-        let (label, kind) = match *label {
-            "discover" => ("discovery", no_mistakes::diagnostics::TimingKind::Serial),
-            "parse_extract" => ("parse", no_mistakes::diagnostics::TimingKind::Serial),
-            "react" => (
-                "analysis.react",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            "queues" => (
-                "analysis.queues",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            "rules" => (
-                "analysis.rules",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            "integration" => (
-                "analysis.integration",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            "codebase" => (
-                "analysis.codebase",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            "filesystem_rules" => (
-                "analysis.filesystem_rules",
-                no_mistakes::diagnostics::TimingKind::Parallel,
-            ),
-            _ => continue,
+        let Some((label, kind)) = timing_metadata(label) else {
+            continue;
         };
         if !existing.contains(label) {
             observer.record_duration(label, *duration, kind);
         }
     }
+}
+
+fn timing_metadata(label: &str) -> Option<(&'static str, no_mistakes::diagnostics::TimingKind)> {
+    Some(match label {
+        "discover" => ("discovery", no_mistakes::diagnostics::TimingKind::Serial),
+        "parse_extract" => ("parse", no_mistakes::diagnostics::TimingKind::Serial),
+        "react" => (
+            "analysis.react",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        "queues" => (
+            "analysis.queues",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        "rules" => (
+            "analysis.rules",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        "integration" => (
+            "analysis.integration",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        "codebase" => (
+            "analysis.codebase",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        "filesystem_rules" => (
+            "analysis.filesystem_rules",
+            no_mistakes::diagnostics::TimingKind::Parallel,
+        ),
+        _ => return None,
+    })
 }
 
 fn has_failures(results: &check_runner::CheckResults) -> bool {
@@ -120,3 +136,6 @@ fn has_failures(results: &check_runner::CheckResults) -> bool {
         || !results.codebase.is_empty()
         || !results.warnings.is_empty()
 }
+
+#[cfg(test)]
+mod tests;

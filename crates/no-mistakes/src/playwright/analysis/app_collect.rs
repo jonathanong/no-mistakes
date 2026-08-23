@@ -5,7 +5,7 @@ use crate::playwright::fsutil::{
 use crate::playwright::selectors;
 use anyhow::{Context, Result};
 use rayon::prelude::*;
-use std::collections::{BTreeSet, HashSet};
+use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn collect_app_selector_occurrences_from_visible(
@@ -29,19 +29,23 @@ pub(crate) fn collect_app_selector_occurrences_from_visible(
         .paths_for(root)
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
+    let sources = snapshot.source_store_for(root);
     let app_selectors = source_files
         .par_iter()
         .try_fold(Vec::new, |mut app_selectors, path| -> Result<_> {
-            let source = std::fs::read_to_string(path)
-                .context(format!("reading selector source {}", path.display()))?;
-            app_selectors.extend(selectors::extract_app_selectors_with_regexes_from_visible(
-                path,
-                &source,
-                selector_regexes,
-                &visible_files,
-            )?);
-            Ok(app_selectors)
+            crate::ast::with_request_parse_cache(|| {
+                let source = crate::playwright::fsutil::read_snapshot_source(snapshot, root, path)
+                    .context(format!("reading selector source {}", path.display()))?;
+                app_selectors.extend(selectors::extract_app_selectors_with_regexes_from_visible(
+                    path,
+                    &source,
+                    selector_regexes,
+                    &visible_files,
+                    Some(sources.as_ref()),
+                )?);
+                Ok(app_selectors)
+            })
         })
         .try_reduce(Vec::new, |mut left, mut right| -> Result<_> {
             left.append(&mut right);
@@ -80,3 +84,6 @@ pub(crate) fn collect_selector_source_files_from_visible(
 
     source_files.into_iter().collect()
 }
+
+#[cfg(test)]
+mod tests;

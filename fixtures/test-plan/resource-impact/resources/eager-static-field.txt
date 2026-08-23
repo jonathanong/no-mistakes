@@ -1,0 +1,1 @@
+eager static field resource

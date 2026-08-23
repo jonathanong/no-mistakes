@@ -1,0 +1,8 @@
+name: Pull request checks
+on:
+  pull_request:
+    types: [synchronize, opened]
+    paths: ['**']
+jobs:
+  checks:
+    uses: ./.github/workflows/checks.yml

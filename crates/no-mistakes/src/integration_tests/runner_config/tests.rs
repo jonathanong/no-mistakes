@@ -13,6 +13,13 @@ fn fixture_root(name: &str) -> PathBuf {
     )
 }
 
+fn saved_config_fixture(name: &str) -> tempfile::TempDir {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-config")
+        .join(name);
+    crate::test_support::materialize_saved_fixture(&source)
+}
+
 fn integration_policy() -> TestProjectPolicy {
     TestProjectPolicy {
         integration_suites: BTreeMap::from([("integration".to_string(), Vec::new())]),
@@ -92,6 +99,91 @@ fn prepared_runner_deduplicates_config_parsing_and_supports_direct_fact_parsing(
 }
 
 #[test]
+fn prepared_runner_parses_json_workspace_through_batch_and_direct_apis() {
+    let fixture = saved_config_fixture("vitest-workspace-json");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let path = root.join("vitest.workspace.json");
+    let prepared = prepare_vitest(
+        &root,
+        StringOrList::One("vitest.workspace.json".to_string()),
+    );
+
+    let parsed = prepared.parse_all().unwrap();
+    let projects = parsed.projects_for(&prepared, Framework::Vitest).unwrap();
+    assert_eq!(projects.len(), 2);
+    assert_eq!(projects[0].policy_name.as_deref(), Some("json-inline"));
+    assert!(projects[0].workspace);
+
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let facts = prepared
+        .parse_path_for_facts_with_session(&session, &path)
+        .unwrap();
+    assert_eq!(facts.results.len(), 1);
+    assert!(facts.results[0].projects.is_ok());
+    assert!(facts.analyses.is_empty());
+}
+
+#[test]
+fn json_workspace_folder_strings_use_default_projects_and_global_negations() {
+    let fixture = saved_config_fixture("vitest-workspace-json");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let prepared = prepare_vitest(&root, StringOrList::One("vitest.projects.json".to_string()));
+
+    let projects = prepared
+        .parse_all()
+        .unwrap()
+        .projects_for(&prepared, Framework::Vitest)
+        .unwrap();
+    let scopes = projects
+        .iter()
+        .filter_map(|project| project.scope.as_deref())
+        .collect::<Vec<_>>();
+    assert_eq!(
+        scopes,
+        ["string-project", "configless", "folder-projects/one"]
+    );
+    assert!(projects
+        .iter()
+        .all(|project| { project.scope.as_deref() != Some("folder-projects/skip") }));
+    assert!(projects.iter().any(|project| {
+        project.scope.as_deref() == Some("configless")
+            && project
+                .include
+                .iter()
+                .any(|include| include == "configless/**/*.test.ts")
+    }));
+}
+
+#[test]
+fn prepared_runner_reports_named_and_unsupported_json_errors() {
+    let fixture = saved_config_fixture("vitest-workspace-json-errors");
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    for (raw, expected) in [
+        (
+            "vitest.workspace.json",
+            "expected `extends` to be a boolean",
+        ),
+        (
+            "vitest.projects.json",
+            "expected `globalSetup` to be a string or string array",
+        ),
+        (
+            "unsupported.json",
+            "unsupported vitest JSON config filename",
+        ),
+    ] {
+        let prepared = prepare_vitest(&root, StringOrList::One(raw.to_string()));
+        let parsed = prepared.parse_all().unwrap();
+        let error = parsed
+            .projects_for(&prepared, Framework::Vitest)
+            .unwrap_err()
+            .to_string();
+        assert!(error.contains(expected), "{raw}: {error}");
+    }
+}
+
+#[test]
 fn prepared_runner_uses_session_source_and_parser_gateways_once() {
     let root = fixture_root("basic");
     let path = root.join("vitest.config.mts");
@@ -120,7 +212,7 @@ fn prepared_runner_uses_session_source_and_parser_gateways_once() {
 }
 
 #[test]
-fn runner_config_request_cache_does_not_recollect_prepared_config_facts() {
+fn runner_config_request_cache_reuses_program_for_graph_facts() {
     let root = fixture_root("basic");
     let path = root.join("vitest.config.mts");
     let prepared = prepare_vitest(&root, StringOrList::One("vitest.config.mts".to_string()));
@@ -142,5 +234,191 @@ fn runner_config_request_cache_does_not_recollect_prepared_config_facts() {
         with_program(&path, &source, |_, _| ()).unwrap()
     });
 
-    assert!(helper_facts.is_empty());
+    let facts = helper_facts
+        .get(&path)
+        .expect("the runner parse should also supply ordinary graph facts");
+    assert!(facts.integration_runner_config.is_none());
+    assert!(facts.parsed);
+}
+
+#[test]
+fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
+    let root = PathBuf::from("fixture");
+    let config_path = root.join("vitest.config.ts");
+    let retained_analysis = root.join("helpers/retained.ts");
+    let omitted_analysis = root.join("helpers/omitted.ts");
+    let project = ConfigProject {
+        config: Some("vitest.config.ts".to_string()),
+        workspace: false,
+        policy_name: Some("unit".to_string()),
+        runner_project_arg: Some("unit".to_string()),
+        scope: Some("tests".to_string()),
+        include: vec!["tests/**/*.test.ts".to_string()],
+        exclude: Vec::new(),
+        vitest_setup: Vec::new(),
+    };
+    let parsed = ParsedRunnerConfigs::with_files(BTreeMap::from([(
+        config_path.clone(),
+        RunnerConfigFileFacts {
+            results: vec![ProjectResult {
+                framework: Framework::Vitest,
+                raw: "vitest.config.ts".to_string(),
+                projects: Ok(vec![project.clone()]),
+            }],
+            analyses: BTreeMap::from([
+                (retained_analysis.clone(), FileAnalysis::default()),
+                (omitted_analysis, FileAnalysis::default()),
+            ]),
+        },
+    )]));
+    let tsconfig_catalog = Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+        &root,
+        crate::codebase::ts_resolver::TsConfig {
+            dir: root.clone(),
+            paths: Vec::new(),
+            paths_dir: root.clone(),
+            base_url: None,
+        },
+        None,
+    ));
+    let plan = PreparedIntegrationRunnerConfigs {
+        root: root.clone(),
+        specs: vec![RunnerConfigSpec {
+            framework: Framework::Vitest,
+            raw: "vitest.config.ts".to_string(),
+            path: config_path,
+        }],
+        tsconfig_catalog,
+        visible_files: [root.join("vitest.config.ts")].into_iter().collect(),
+        sources: None,
+    };
+
+    let analyses = parsed.analyses_for(std::slice::from_ref(&retained_analysis));
+    assert_eq!(analyses.len(), 1);
+    assert!(analyses.contains_key(&retained_analysis));
+    assert_eq!(
+        parsed.projects_for(&plan, Framework::Vitest).unwrap().len(),
+        1
+    );
+    assert!(parsed.covers(&plan));
+
+    let missing_path = root.join("missing.vitest.config.ts");
+    let missing_plan = PreparedIntegrationRunnerConfigs {
+        specs: vec![RunnerConfigSpec {
+            framework: Framework::Vitest,
+            raw: "missing.vitest.config.ts".to_string(),
+            path: missing_path.clone(),
+        }],
+        visible_files: [missing_path].into_iter().collect(),
+        ..plan
+    };
+    assert!(parsed
+        .projects_for(&missing_plan, Framework::Vitest)
+        .unwrap_err()
+        .to_string()
+        .contains("missing prepared vitest config"));
+}
+
+#[test]
+fn prepared_runner_source_store_read_failures_surface() {
+    let root = fixture_root("parse-errors");
+    let dir_path = root.join("src");
+    let inventory =
+        crate::codebase::ts_source::FileInventory::from_paths(std::slice::from_ref(&dir_path));
+    let sources = Arc::new(crate::codebase::ts_source::SourceStore::new(Arc::new(
+        inventory,
+    )));
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("src".to_string()));
+    config
+        .tests
+        .vitest
+        .projects
+        .insert("unit".to_string(), integration_policy());
+    let visible_paths = vec![dir_path.clone()];
+    let tsconfig_catalog = Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+        &root,
+        std::slice::from_ref(&root),
+        &visible_paths,
+    ));
+    let prepared = super::prepare_with_catalog_and_sources(
+        &root,
+        &config,
+        &visible_paths,
+        tsconfig_catalog,
+        sources,
+    );
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let facts = prepared
+        .parse_path_for_facts_with_session(&session, &dir_path)
+        .expect("the directory exists so parse_path should run");
+    assert!(facts.results[0].projects.is_err());
+    assert!(prepared.parse_all().is_err());
+}
+
+#[test]
+fn configured_runner_config_dirs_use_each_config_parent() {
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("apps/web/vitest.config.ts".into()));
+    config.tests.playwright.configs = Some(StringOrList::One("playwright.config.ts".into()));
+    let dirs = super::configured_runner_config_dirs(Path::new("/repo"), &config);
+    assert_eq!(dirs.len(), 2);
+
+    config.tests.vitest.configs = Some(StringOrList::One("/".into()));
+    let dirs = super::configured_runner_config_dirs(Path::new("/repo"), &config);
+    assert!(dirs.iter().all(|dir| dir.as_os_str() != "/"));
+}
+
+#[test]
+fn prepare_runner_configs_with_catalog_seeds_configured_specs() {
+    let root = fixture_root("basic");
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("vitest.config.mts".to_string()));
+    config
+        .tests
+        .vitest
+        .projects
+        .insert("unit".to_string(), integration_policy());
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let tsconfig_catalog = Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+        &root,
+        std::slice::from_ref(&root),
+        &visible_paths,
+    ));
+    let inventory = Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
+        &visible_paths,
+    ));
+    let sources = Arc::new(crate::codebase::ts_source::SourceStore::new(inventory));
+    let prepared = super::prepare_runner_configs_with_catalog(
+        &root,
+        &config,
+        &visible_paths,
+        tsconfig_catalog,
+        sources,
+    );
+    assert_eq!(prepared.specs.len(), 1);
+    assert!(prepared.contains(&root.join("vitest.config.mts")));
+}
+
+#[test]
+fn parse_program_and_session_facts_ignore_paths_that_were_not_prepared() {
+    let root = fixture_root("basic");
+    let prepared = prepare_vitest(&root, StringOrList::One("vitest.config.mts".into()));
+    let path = root.join("vitest.config.mts");
+    let source = std::fs::read_to_string(&path).unwrap();
+    let other = root.join("missing.config.ts");
+    let facts = crate::ast::with_program(&path, &source, |program, source| {
+        prepared.parse_program(&other, program, source)
+    })
+    .unwrap();
+    assert!(facts.is_none());
+    assert!(prepared
+        .paths()
+        .any(|path| path.ends_with("vitest.config.mts")));
+    assert!(prepared
+        .parse_path_for_facts_with_session(
+            &crate::codebase::analysis_session::AnalysisSession::disabled(),
+            &other,
+        )
+        .is_none());
 }

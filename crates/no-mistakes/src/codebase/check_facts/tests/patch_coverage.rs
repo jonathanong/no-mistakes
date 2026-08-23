@@ -9,9 +9,9 @@ use std::path::{Path, PathBuf};
 fn legacy_symbol_plan(path: &Path) -> CheckFactPlan {
     CheckFactPlan {
         symbols: true,
-        legacy_symbol_paths: std::collections::HashSet::from([
-            crate::codebase::ts_resolver::normalize_path(path),
-        ]),
+        legacy_symbol_paths: [crate::codebase::ts_resolver::normalize_path(path)]
+            .into_iter()
+            .collect(),
         ..CheckFactPlan::default()
     }
 }
@@ -25,7 +25,7 @@ fn aggregate_resolves_deferred_selectors_from_precollected_exports() {
         "page.tsx",
     ]);
     let exports_path = page.with_file_name("selectors.ts");
-    let visible = std::collections::HashSet::from([page.clone(), exports_path.clone()]);
+    let visible: crate::fx::PathSet = [page.clone(), exports_path.clone()].into_iter().collect();
     let regexes = crate::playwright::selectors::compile_selector_regexes(
         &["data-pw".to_string()],
         &BTreeMap::new(),
@@ -61,25 +61,24 @@ fn aggregate_resolves_deferred_selectors_from_precollected_exports() {
         selector_exclude: Vec::new(),
     };
     let settings_key = PlaywrightSettingsKey::new(&settings);
-    let facts = std::collections::HashMap::from([
-        (
-            page,
-            CheckFileFacts {
-                playwright_app_selectors: std::collections::HashMap::from([(
-                    (settings_key.clone(), false),
-                    deferred,
-                )]),
-                ..Default::default()
-            },
-        ),
-        (
-            exports_path,
-            CheckFileFacts {
-                playwright_static_exports: Some(static_exports),
-                ..Default::default()
-            },
-        ),
-    ]);
+    let mut facts = crate::codebase::ts_source::FileIdMap::default();
+    facts.insert(
+        page,
+        CheckFileFacts {
+            playwright_app_selectors: std::collections::HashMap::from([(
+                (settings_key.clone(), false),
+                deferred,
+            )]),
+            ..Default::default()
+        },
+    );
+    facts.insert(
+        exports_path,
+        CheckFileFacts {
+            playwright_static_exports: Some(static_exports),
+            ..Default::default()
+        },
+    );
 
     let (selectors, _) = playwright_aggregate_facts(&facts);
     let resolved = selectors
@@ -147,6 +146,33 @@ fn legacy_symbol_facts_retain_a_meaningful_fatal_parse_error() {
 }
 
 #[test]
+fn collect_file_facts_populates_call_sites_for_the_graph_plan() {
+    let root = super::fixture_path("");
+    let file = root.join("src/everything.tsx");
+    let facts = collect_file_facts(
+        &root,
+        &file,
+        &CheckFactPlan {
+            graph: crate::codebase::ts_source::facts::TsFactPlan {
+                call_sites: true,
+                ..Default::default()
+            },
+            ..CheckFactPlan::default()
+        },
+        None,
+    )
+    .expect("fixture facts are collected");
+
+    let call_site = facts
+        .ts
+        .call_sites
+        .iter()
+        .find(|site| site.callee == "Widget")
+        .expect("graph call-site demand preserves the Widget call");
+    assert_eq!(call_site.arg_count, 0);
+}
+
+#[test]
 fn collect_file_facts_retains_prepared_runner_config_parse_errors() {
     use crate::config::v2::schema::{NoMistakesConfig, StringOrList, TestProjectPolicy};
 
@@ -201,4 +227,43 @@ fn collect_file_facts_retains_prepared_runner_config_parse_errors() {
     .flatten()
     .expect("batched prepared runner config parse error is retained as facts");
     assert!(batched.integration_runner_config.is_some());
+}
+
+#[test]
+fn batch_collection_covers_graph_only_files() {
+    use crate::codebase::check_facts::{
+        collect_check_fact_batch_with_session, BatchCheckFactRequest, CheckFactPlan,
+    };
+    use std::sync::Arc;
+
+    let root = super::fixture_path("");
+    let file = root.join("src/everything.tsx");
+    let extra = root.join("src/invalid.ts");
+    let inventory = Arc::new(crate::codebase::ts_source::FileInventory::from_paths(&[
+        file.clone(),
+        extra.clone(),
+    ]));
+    let sources = crate::codebase::ts_source::SourceStore::new(inventory);
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let maps = collect_check_fact_batch_with_session(
+        &session,
+        vec![BatchCheckFactRequest {
+            root,
+            files: vec![file.clone()],
+            graph_files: vec![file, extra.clone()],
+            plan: CheckFactPlan {
+                graph: crate::codebase::ts_source::facts::TsFactPlan {
+                    imports: true,
+                    ..Default::default()
+                },
+                ..CheckFactPlan::default()
+            },
+            playwright: None,
+            sources: Arc::new(sources),
+        }],
+    );
+    assert_eq!(maps.len(), 1);
+    assert!(
+        maps[0].ts.contains_key(&extra) || maps[0].graph_files.iter().any(|path| path == &extra)
+    );
 }

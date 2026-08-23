@@ -1,5 +1,8 @@
 use super::plan::{impact_reason_label, path_confidence, relative_path, slash_node_name};
-use super::{Confidence, ImpactReason, SelectedTest, Warning};
+use super::{
+    push_resource_diagnostics, warning_key, Confidence, ImpactReason, SelectedTest, Warning,
+    WarningKey,
+};
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::test_filter::TestFileFilter;
 use no_mistakes::config::v2::schema::TestPlanGroupType;
@@ -10,6 +13,9 @@ mod hint_emit;
 use hint_emit::{
     append_queue_hint_candidates, append_removed_id_candidates, append_route_hint_candidates,
 };
+
+#[cfg(test)]
+mod tests;
 
 /// `(binding, kind, name)` triple shared with the hint pipeline. Re-exported
 /// here so the public field types stay readable instead of expanding to the
@@ -74,10 +80,18 @@ pub(super) fn group_candidates(
     used: &HashSet<String>,
     hints: &CoverageHints,
     warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<(String, String)>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) -> Vec<SelectedTest> {
     match group {
-        TestPlanGroupType::Direct => direct_candidates(root, changed_files, all_test_set, used),
+        TestPlanGroupType::Direct => direct_candidates(
+            root,
+            changed_files,
+            graph,
+            all_test_set,
+            used,
+            warnings,
+            warnings_seen,
+        ),
         TestPlanGroupType::Coverage | TestPlanGroupType::Dependencies => graph_candidates(
             group,
             root,
@@ -97,26 +111,104 @@ pub(super) fn group_candidates(
 fn direct_candidates(
     root: &Path,
     changed_files: &[PathBuf],
+    graph: &DepGraph,
     all_test_set: &HashSet<PathBuf>,
     used: &HashSet<String>,
+    warnings: &mut Vec<Warning>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) -> Vec<SelectedTest> {
-    changed_files
-        .iter()
-        .filter(|changed| all_test_set.contains(*changed))
-        .filter_map(|changed| {
+    let mut self_selected: BTreeMap<String, SelectedTest> = BTreeMap::new();
+    let mut hop_selected: BTreeMap<String, SelectedTest> = BTreeMap::new();
+    for changed in changed_files {
+        if all_test_set.contains(changed) {
             let rel = relative_path(root, changed);
-            (!used.contains(&rel)).then(|| SelectedTest {
-                test_file: rel.clone(),
-                confidence: Confidence::High,
+            if !used.contains(&rel) {
+                self_selected
+                    .entry(rel.clone())
+                    .or_insert_with(|| SelectedTest {
+                        test_file: rel.clone(),
+                        confidence: Confidence::High,
+                        targets: Vec::new(),
+                        reasons: vec![ImpactReason {
+                            changed_file: rel.clone(),
+                            path: vec![rel.clone()],
+                            via: vec!["self".to_string()],
+                            via_details: Vec::new(),
+                        }],
+                    });
+                if let Some(hop) = hop_selected.remove(&rel) {
+                    merge_selected(self_selected.get_mut(&rel).expect("just inserted"), &hop);
+                }
+            }
+        }
+
+        let start = NodeId::file(changed);
+        let Some(dependents) = graph.dependents_of_node(&start) else {
+            continue;
+        };
+        let rel_changed = relative_path(root, changed);
+        for (dependent, kind) in dependents {
+            if !is_direct_owner_edge(*kind) {
+                continue;
+            }
+            let NodeId::File(test_path) = dependent else {
+                continue;
+            };
+            if !all_test_set.contains(test_path.as_ref()) {
+                continue;
+            }
+            let rel_test = relative_path(root, test_path);
+            if used.contains(&rel_test) {
+                continue;
+            }
+            push_resource_diagnostics(graph, root, test_path.as_ref(), warnings, warnings_seen);
+            push_edge_warning(root, dependent, &start, *kind, warnings, warnings_seen);
+            let next = SelectedTest {
+                test_file: rel_test.clone(),
+                confidence: path_confidence(&[*kind]),
                 targets: Vec::new(),
                 reasons: vec![ImpactReason {
-                    changed_file: rel.clone(),
-                    path: vec![rel],
-                    via: vec!["self".to_string()],
+                    changed_file: rel_changed.clone(),
+                    path: vec![rel_changed.clone(), rel_test.clone()],
+                    via: vec![impact_reason_label(*kind).to_string()],
+                    via_details: vec![crate::tests::plan::resource_edge_detail(
+                        graph, dependent, &start, *kind, root,
+                    )],
                 }],
-            })
-        })
-        .collect()
+            };
+            if let Some(existing) = self_selected.get_mut(&rel_test) {
+                merge_selected(existing, &next);
+                continue;
+            }
+            hop_selected
+                .entry(rel_test)
+                .and_modify(|existing| merge_selected(existing, &next))
+                .or_insert(next);
+        }
+    }
+    // Self-selected changed tests keep the first-take budget ahead of
+    // alphabetically earlier 1-hop importers.
+    let mut selected: Vec<SelectedTest> = self_selected.into_values().collect();
+    selected.extend(hop_selected.into_values());
+    selected
+}
+
+/// One reverse hop that should win over multi-hop `dependencies` under a limit.
+/// Import-family and same-directory `TestOf` edges are the direct owners;
+/// markdown/resource/route hops and native module/namespace fan-out stay in
+/// `dependencies`.
+fn is_direct_owner_edge(kind: EdgeKind) -> bool {
+    matches!(
+        kind,
+        EdgeKind::Import
+            | EdgeKind::TypeImport
+            | EdgeKind::DynamicImport
+            | EdgeKind::Require
+            | EdgeKind::RequireResolve
+            | EdgeKind::WorkspaceImport
+            | EdgeKind::WorkspaceTypeImport
+            | EdgeKind::TestOf
+    )
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -130,7 +222,7 @@ fn graph_candidates(
     used: &HashSet<String>,
     hints: &CoverageHints,
     warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<(String, String)>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) -> Vec<SelectedTest> {
     let mut selected: BTreeMap<String, SelectedTest> = BTreeMap::new();
     for changed in changed_files {
@@ -138,7 +230,7 @@ fn graph_candidates(
             continue;
         }
         let rel_changed = relative_path(root, changed);
-        let start_node = NodeId::File(changed.clone());
+        let start_node = NodeId::file(changed.clone());
         let (reachable_tests, path_parents) = bfs_path_find_set(graph, &start_node, all_test_set);
         for (test_node, edge_path) in reachable_tests {
             let NodeId::File(test_path) = &test_node else {
@@ -158,13 +250,16 @@ fn graph_candidates(
                 continue;
             }
             let reason = reason_from_path(
-                root,
                 &rel_changed,
                 &test_node,
                 &path_parents,
                 &edge_path,
-                warnings,
-                warnings_seen,
+                &mut ReasonContext {
+                    root,
+                    graph,
+                    warnings,
+                    warnings_seen,
+                },
             );
             let entry = selected
                 .entry(rel_test.clone())
@@ -243,6 +338,7 @@ fn sample_candidates(
                     changed_file: "*sample*".to_string(),
                     path: vec![rel],
                     via: vec!["sample".to_string()],
+                    via_details: Vec::new(),
                 }],
             })
         })
@@ -291,6 +387,7 @@ pub(super) fn selected_from_paths(
                     changed_file: changed.clone(),
                     path: vec![changed.clone(), rel],
                     via: vec![via.to_string()],
+                    via_details: Vec::new(),
                 }],
             }
         })
@@ -314,25 +411,47 @@ pub(super) fn merge_selected(existing: &mut SelectedTest, next: &SelectedTest) {
     existing.targets.sort();
 }
 
+struct ReasonContext<'a> {
+    root: &'a Path,
+    graph: &'a DepGraph,
+    warnings: &'a mut Vec<Warning>,
+    warnings_seen: &'a mut HashSet<WarningKey>,
+}
+
 fn reason_from_path(
-    root: &Path,
     rel_changed: &str,
     test_node: &NodeId,
     path_parents: &HashMap<NodeId, (NodeId, EdgeKind)>,
     edge_path: &[EdgeKind],
-    warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<(String, String)>,
+    context: &mut ReasonContext<'_>,
 ) -> ImpactReason {
+    let ReasonContext {
+        root,
+        graph,
+        warnings,
+        warnings_seen,
+    } = context;
     let mut node_chain = Vec::new();
+    let mut reverse_details = Vec::new();
     let mut curr = test_node.clone();
     node_chain.push(slash_node_name(&curr, root));
 
     while let Some((parent, kind)) = path_parents.get(&curr) {
+        if let Some(file) = curr.as_file() {
+            push_resource_diagnostics(graph, root, file, warnings, warnings_seen);
+        }
         node_chain.push(slash_node_name(parent, root));
+        reverse_details.push(crate::tests::plan::resource_edge_detail(
+            graph, &curr, parent, *kind, root,
+        ));
         push_edge_warning(root, &curr, parent, *kind, warnings, warnings_seen);
         curr = parent.clone();
     }
+    if let Some(file) = curr.as_file() {
+        push_resource_diagnostics(graph, root, file, warnings, warnings_seen);
+    }
     node_chain.reverse();
+    reverse_details.reverse();
 
     ImpactReason {
         changed_file: rel_changed.to_string(),
@@ -341,6 +460,7 @@ fn reason_from_path(
             .iter()
             .map(|kind| impact_reason_label(*kind).to_string())
             .collect(),
+        via_details: reverse_details,
     }
 }
 
@@ -350,7 +470,7 @@ fn push_edge_warning(
     parent: &NodeId,
     kind: EdgeKind,
     warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<(String, String)>,
+    warnings_seen: &mut HashSet<WarningKey>,
 ) {
     let (r#type, message, file) = match kind {
         EdgeKind::DynamicImport => {
@@ -387,8 +507,9 @@ fn push_edge_warning(
         r#type: r#type.to_string(),
         message,
         file,
+        line: None,
     };
-    if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+    if warnings_seen.insert(warning_key(&warn)) {
         warnings.push(warn);
     }
 }
@@ -412,7 +533,7 @@ pub(super) fn bfs_path_find_set(
 
     while let Some(current) = queue.pop_front() {
         if let NodeId::File(path) = &current {
-            if current != *start && test_files.contains(path) {
+            if current != *start && test_files.contains(path.as_ref()) {
                 let mut edge_path = Vec::new();
                 let mut curr_node = current.clone();
                 while let Some((parent, kind)) = parents.get(&curr_node) {

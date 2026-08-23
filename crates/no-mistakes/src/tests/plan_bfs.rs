@@ -5,10 +5,29 @@ pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
             let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, file);
             format!("{}#{}", rel, symbol)
         }
-        NodeId::Module(specifier) => specifier.clone(),
+        NodeId::Module(specifier) => specifier.to_string(),
         NodeId::QueueJob { queue_file, job } => {
             let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, queue_file);
             format!("{}#{}", rel, job)
+        }
+        NodeId::WorkflowJob { workflow_file, job } => {
+            let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, workflow_file);
+            format!("{}#job:{job}", rel)
+        }
+        NodeId::WorkflowStep {
+            workflow_file,
+            job,
+            step,
+        } => {
+            let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, workflow_file);
+            format!("{}#job:{job}/step:{step}", rel)
+        }
+        NodeId::TrpcProcedure {
+            router_file,
+            procedure,
+        } => {
+            let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, router_file);
+            format!("{}#procedure:{procedure}", rel)
         }
     }
 }
@@ -28,19 +47,16 @@ pub(crate) fn symbol_aware_start_nodes(
     include_symbols: bool,
 ) -> Vec<NodeId> {
     if let Some(symbol) = symbol.filter(|_| include_symbols) {
-        return vec![NodeId::Symbol {
-            file: file.to_path_buf(),
-            symbol: symbol.clone(),
-        }];
+        return vec![NodeId::symbol(file, symbol.clone())];
     }
-    let file_node = NodeId::File(file.to_path_buf());
+    let file_node = NodeId::file(file);
     let mut starts = vec![file_node.clone()];
     if include_symbols {
         if let Some(neighbors) = graph.dependencies_of_node(&file_node) {
             starts.extend(neighbors.iter().filter_map(|(node, _)| match node {
                 NodeId::Symbol {
                     file: symbol_file, ..
-                } if symbol_file == file => Some(node.clone()),
+                } if symbol_file.as_ref() == file => Some(node.clone()),
                 _ => None,
             }));
         }
@@ -162,17 +178,21 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         | EdgeKind::DynamicImport
         | EdgeKind::RouteImport
         | EdgeKind::Require
-        | EdgeKind::WorkspaceImport => "dependency",
+        | EdgeKind::RequireResolve
+        | EdgeKind::WorkspaceImport
+        | EdgeKind::WorkspaceTypeImport => "dependency",
         EdgeKind::PackageDependency => "package-json dependency",
         EdgeKind::RouteRef | EdgeKind::RouteTest => "route",
         EdgeKind::Layout => "layout",
         EdgeKind::TestOf => "test",
+        EdgeKind::VitestSetup(_) => "vitest-setup",
         EdgeKind::QueueEnqueue | EdgeKind::QueueWorker => "queue",
         EdgeKind::MarkdownLink => "md",
         EdgeKind::CiInvocation => "ci",
         EdgeKind::HttpCall => "http",
         EdgeKind::ProcessSpawn => "process",
         EdgeKind::AssetImport => "asset",
+        EdgeKind::Resource => "resource",
         EdgeKind::ReactRender => "react-render",
         EdgeKind::Selector => "selector",
             EdgeKind::SwiftImport | EdgeKind::SwiftReference => "swift",
@@ -182,5 +202,21 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
             EdgeKind::TerraformReference => "terraform-ref",
         EdgeKind::TerraformModuleRef => "terraform-module",
         EdgeKind::TerraformOutputRef => "terraform-output",
+        EdgeKind::PythonImport | EdgeKind::PythonReference => "python",
+        EdgeKind::GoImport | EdgeKind::GoReference => "go",
+        EdgeKind::RustUse | EdgeKind::RustMod | EdgeKind::RustPackage => "rust",
+        EdgeKind::RubyRequire | EdgeKind::RubyReference => "ruby",
+        EdgeKind::PhpUse | EdgeKind::PhpPackage => "php",
+        EdgeKind::JavaImport | EdgeKind::JavaReference => "java",
+        EdgeKind::KotlinImport | EdgeKind::KotlinReference => "kotlin",
+        EdgeKind::ElixirImport | EdgeKind::ElixirReference => "elixir",
+        EdgeKind::DartImport | EdgeKind::DartReference => "dart",
+        EdgeKind::TrpcCall | EdgeKind::TrpcProcedure => "trpc",
+        EdgeKind::WorkflowJob => "workflow-job",
+        EdgeKind::WorkflowStep => "workflow-step",
+        EdgeKind::WorkflowNeeds => "workflow-needs",
+        EdgeKind::WorkflowUses => "workflow-uses",
+        EdgeKind::WorkflowRun => "workflow-run",
+        EdgeKind::WorkflowArtifact => "workflow-artifact",
     }
 }

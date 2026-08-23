@@ -4,6 +4,7 @@ fn collect_terraform_edges(
     root: &Path,
     all_files: &[PathBuf],
     config_options: Option<&GraphConfigOptions>,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     let Some(config_options) = config_options else {
         return Vec::new();
@@ -21,9 +22,9 @@ fn collect_terraform_edges(
     }
 
     let mut edges = Vec::new();
-    collect_terraform_reference_edges(&facts, &mut edges);
-    collect_terraform_module_edges(&facts, &mut edges);
-    collect_terraform_output_edges(&facts, &mut edges);
+    collect_terraform_reference_edges(&facts, &mut edges, interner);
+    collect_terraform_module_edges(&facts, &mut edges, interner);
+    collect_terraform_output_edges(&facts, &mut edges, interner);
     edges
 }
 
@@ -32,7 +33,11 @@ fn collect_terraform_edges(
 ///
 /// Terraform addresses are unique only within a module, so a reference resolves
 /// only to declarations in the referencing file's own module directory.
-fn collect_terraform_reference_edges(facts: &TerraformFactMap, edges: &mut Vec<Edge>) {
+fn collect_terraform_reference_edges(
+    facts: &TerraformFactMap,
+    edges: &mut Vec<Edge>,
+    interner: &PathInterner,
+) {
     for refs in facts.refs_to.values() {
         for reference in refs {
             if reference.module_output.is_some() || !is_module_local_addr(&reference.to_addr) {
@@ -53,6 +58,7 @@ fn collect_terraform_reference_edges(facts: &TerraformFactMap, edges: &mut Vec<E
                     &reference.from_file,
                     target,
                     EdgeKind::TerraformReference,
+                    interner,
                 );
             }
         }
@@ -64,18 +70,27 @@ fn module_dir_of<'a>(facts: &'a TerraformFactMap, file: &Path) -> Option<&'a Pat
 }
 
 /// `module` blocks → files in the module's local source directory.
-fn collect_terraform_module_edges(facts: &TerraformFactMap, edges: &mut Vec<Edge>) {
+fn collect_terraform_module_edges(
+    facts: &TerraformFactMap,
+    edges: &mut Vec<Edge>,
+    interner: &PathInterner,
+) {
     for file in facts.files.values() {
         for block in &file.blocks {
             if !matches!(block.kind, TfBlockKind::Module) {
                 continue;
             }
-            push_module_source_edges(facts, block, edges);
+            push_module_source_edges(facts, block, edges, interner);
         }
     }
 }
 
-fn push_module_source_edges(facts: &TerraformFactMap, block: &TerraformBlock, edges: &mut Vec<Edge>) {
+fn push_module_source_edges(
+    facts: &TerraformFactMap,
+    block: &TerraformBlock,
+    edges: &mut Vec<Edge>,
+    interner: &PathInterner,
+) {
     let Some(source_dir) = &block.module_source_dir else {
         return;
     };
@@ -83,14 +98,24 @@ fn push_module_source_edges(facts: &TerraformFactMap, block: &TerraformBlock, ed
         return;
     };
     for target in target_files {
-        push_terraform_edge(edges, &block.file, target, EdgeKind::TerraformModuleRef);
+        push_terraform_edge(
+            edges,
+            &block.file,
+            target,
+            EdgeKind::TerraformModuleRef,
+            interner,
+        );
     }
 }
 
 /// References to a child module: `module.<name>.<output>` links to the file
 /// declaring that output; a bare `module.<name>` (e.g. `depends_on`) links to all
 /// of the module's files so whole-module dependencies are not lost.
-fn collect_terraform_output_edges(facts: &TerraformFactMap, edges: &mut Vec<Edge>) {
+fn collect_terraform_output_edges(
+    facts: &TerraformFactMap,
+    edges: &mut Vec<Edge>,
+    interner: &PathInterner,
+) {
     for refs in facts.refs_to.values() {
         for reference in refs {
             let Some(source_dir) = facts.module_sources.get(&reference.to_addr) else {
@@ -111,6 +136,7 @@ fn collect_terraform_output_edges(facts: &TerraformFactMap, edges: &mut Vec<Edge
                             &reference.from_file,
                             target,
                             EdgeKind::TerraformOutputRef,
+                            interner,
                         );
                     }
                 }
@@ -121,6 +147,7 @@ fn collect_terraform_output_edges(facts: &TerraformFactMap, edges: &mut Vec<Edge
                             &reference.from_file,
                             target,
                             EdgeKind::TerraformModuleRef,
+                            interner,
                         );
                     }
                 }
@@ -136,11 +163,17 @@ fn is_module_local_addr(addr: &str) -> bool {
     !addr.starts_with("module.") && !addr.starts_with("output.")
 }
 
-fn push_terraform_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path, kind: EdgeKind) {
+fn push_terraform_edge(
+    edges: &mut Vec<Edge>,
+    source: &Path,
+    target: &Path,
+    kind: EdgeKind,
+    interner: &PathInterner,
+) {
     if source != target {
         edges.push((
-            NodeId::File(source.to_path_buf()),
-            NodeId::File(target.to_path_buf()),
+            NodeId::file_in(interner, source),
+            NodeId::file_in(interner, target),
             kind,
         ));
     }

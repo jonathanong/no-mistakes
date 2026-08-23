@@ -20,3 +20,5 @@ include!("impact_output.rs");
 
 #[cfg(test)]
 mod impact_test_support;
+#[cfg(test)]
+mod impact_collect_targets_tests;

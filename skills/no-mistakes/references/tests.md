@@ -22,6 +22,16 @@ Select tests to run from changed files, diffs, and configured environments.
 # Changed-file selection (preferred)
 no-mistakes tests plan vitest --changed-file src/utils.mts --format paths
 no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format paths
+no-mistakes tests plan python --changed-file app/users.py --format paths
+no-mistakes tests plan go --changed-file pkg/ping.go --format commands
+no-mistakes tests plan cargo --changed-file app/src/lib.rs --format commands
+no-mistakes tests plan rails --changed-file app/models/user.rb --format paths
+no-mistakes tests plan php --changed-file app/Http/Controllers/UserController.php --format commands
+no-mistakes tests plan java --changed-file src/main/java/com/example/User.java --format commands
+no-mistakes tests plan kotlin --changed-file src/main/kotlin/com/example/User.kt --format commands
+no-mistakes tests plan elixir --changed-file lib/my_app/user.ex --format commands
+no-mistakes tests plan dart --changed-file lib/user.dart --format commands
+no-mistakes tests plan jest --changed-file src/value.ts --format commands
 
 # Diff-based (from git)
 no-mistakes tests plan vitest --base origin/main --format json
@@ -30,6 +40,13 @@ no-mistakes tests plan vitest --from-git-diff origin/main...HEAD --format json
 # Named environment (from .no-mistakes.yml testPlan)
 no-mistakes tests plan vitest --environment prePush --changed-file src/api.mts --format paths
 ```
+
+Runner selection is applied to test endpoints before impact traversal:
+Vitest plans terminate only at Vitest-owned tests and Playwright plans only at
+Playwright-owned tests. Configured Vitest/Playwright project globs are closed
+and authoritative; generic filename fallback runs only when that runner has no
+recovered projects. Non-code dependencies still count—static Markdown or
+workflow resources referenced by a Vitest test remain valid impact paths.
 
 Key flags:
 - `--changed-file <FILE>` — explicit changed file path; repeatable.
@@ -49,7 +66,40 @@ Key flags:
   config file changes (package.json, tsconfig.json, etc.) or when a lockfile
   diff cannot be parsed; does not trigger for ordinary source files that happen
   to have no test dependents.
-- `--format paths|json` — `paths` for shell substitution, `json` for agents.
+- `--format paths|json|explain` — `paths` for shell substitution, `json` for
+  agents, and `explain` for deterministic changed-file inventory (including
+  files with no selected tests), confidence, dependency-path, edge provenance,
+  fallback, and warning output.
+- `--direct-test-owner` — requires a framework; selects changed framework-owned
+  tests plus only tests one reverse canonical graph edge away, with normal
+  execution targets. It bypasses test-plan groups, environment include/exclude,
+  limits, sampling, fallback, and explicit entrypoint traversal. Do not combine
+  it with `--entrypoint`, limit, or global fallback overrides; use `tests impact`
+  for an explicit entrypoint query. Canonical graph warnings are still reported
+  when dynamic resource calls could make reverse ownership incomplete.
+
+`fullSuiteTriggers.projects` can scope a configured trigger to runner projects:
+
+```yaml
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        database-resources:
+          paths: ["migrations/**/*.sql", "!migrations/archive/**"]
+          targets: [database]
+```
+
+Here `database` is a Vitest project name. A match selects only tests owned by
+that target, reports `configured-trigger`, and does not mark the plan as a
+fallback. Environment filters and limits run afterward. Legacy `true` and path
+list entries remain broad fallbacks. Trigger paths are ordered: later `!`
+patterns exclude earlier matches and later positive patterns can re-include.
+
+Revision and inline-diff plans compare `.no-mistakes.yml`/`.yaml` semantically
+per framework, so formatting-only edits and unrelated framework changes do not
+invalidate the selected framework. Changed-file-only input and unreadable old
+configuration fail open to the normal global-config fallback.
 
 For Playwright, a changed Next.js page selects specs that navigate to it — including
 specs whose navigation path interpolates an unresolvable value (e.g.
@@ -57,6 +107,64 @@ specs whose navigation path interpolates an unresolvable value (e.g.
 `[param]` segment.
 
 Node API: `testsPlan(options)`.
+
+JSON plans and `testsPlan()` results expose `changed_files`, the complete
+sorted, deduplicated, root-relative inventory prepared by the same invocation.
+It is available even when `selected_tests` is empty and retains deleted paths
+plus both sides of detected renames and copies.
+
+In a TypeScript/JavaScript workspace, omit `tsconfig` so test impact follows
+the config owning each importing file. Passing `tsconfig` deliberately forces a
+single config for the whole plan.
+### Vitest setup dependency tracing
+
+`tests plan vitest` and `testsPlan()` statically trace each project's effective
+`setupFiles` and `globalSetup`, including their ordinary import/re-export
+closure. A changed setup dependency selects only tests owned by that Vitest
+project. Inline project fields inherit a root field only with `extends: true`;
+the default and `extends: false` keep the project independent. A string config
+in `test.projects` is likewise independent of its referencing config. A static
+inline `extends: './vite.config.js'` inherits the referenced config's setup
+fields before local values. Explicit values replace inherited fields and `[]`
+clears them.
+For supported inline objects, nested `test` owns `setupFiles` and
+`globalSetup`; same-named outer fields are ignored regardless of direct or
+static-spread declaration order.
+Workspace configs may export projects directly or through
+`defineWorkspace([...])`. Without `tests.vitest.configs`, root
+`vitest.workspace.*` and `vitest.projects.*` files, including `.json`, are
+discovered by default. Config globs include suffixes such as
+`vitest.config.unit.ts` and `vite.config.e2e.js`.
+When a root workspace/project-array source exists, it takes precedence over a
+sibling default `vitest.config.*`; list the config in the workspace to include
+it as a project.
+Exact folder project strings remain folders rather than resolving an `index`
+module. CommonJS workspace files may use direct literal
+`module.exports = require('./projects.cjs')`; chained or dynamic requires stay
+unsupported.
+`defineWorkspace` is static through named ESM imports, ESM namespaces, or a
+direct `require('vitest/config')` namespace; ESM defaults and CommonJS
+`.default` members remain unsupported dynamic forms.
+
+Dynamic or unresolved setup declarations emit `vitest-setup-dynamic` or
+`vitest-setup-unresolved` warnings. An unavailable static inline config
+`extends` emits `vitest-config-extends-unresolved`. If relevant, planning safely selects the
+known owner scope (or the discovered Vitest framework set if no owner is known)
+and sets `fallback_triggered` without relying on `globalConfigFallback`. Its
+bounded helper closure follows ordinary static imports/re-exports and literal
+CommonJS `require(...)` or `require.resolve(...)` dependencies, retaining
+edits and deletions as owner triggers. Static CommonJS bindings support direct
+members, destructured aliases, and named `module.exports = { ... }` values;
+computed or non-literal forms are not followed.
+
+For `tests impact`, a malformed or unavailable optional Vitest config does not
+block unrelated native test impact. A successfully prepared Vitest config is
+still strict: discovery errors such as invalid include patterns are returned.
+
+Resolved setup edges use `via: ["vitest-setup"]`; optional aligned
+`via_details` records `{ type: "vitest-setup", field: "setupFiles" |
+"globalSetup" }`. `tests why` and `tests graph` expose the same structured
+`detail`.
 
 ## `tests why`
 
@@ -82,6 +190,10 @@ Impacted tests for specific changed files (no `testPlan` config required).
 no-mistakes tests impact src/utils.mts --format paths
 ```
 
+Formats: `json`, `paths`, `commands`, `markdown`, and `md`. Use `tests plan
+--format explain` when changed-file provenance needs a human-readable
+explanation; `tests impact` does not accept `explain`.
+
 Traversal follows `next/dynamic(() => import('./Foo'))` boundaries (Foo's tests
 surface at `medium` confidence). Two opt-in `tests.impact` config knobs refine
 output: `alwaysIncludeTests` surfaces suite-excluded stub tests (e.g.
@@ -89,6 +201,13 @@ output: `alwaysIncludeTests` surfaces suite-excluded stub tests (e.g.
 changed file is imported by a registry file (e.g. `auth-gated-code-splitting.mts`).
 
 Node API: `testsImpact(options)`.
+
+Literal runtime filesystem resources (`fs` reads/directories and supported
+static glob calls) are part of ordinary test impact. A plan JSON reason with
+`via: ["resource"]` may carry edge-aligned `via_details` containing the
+structured `{ type: "resource", consumer_file, call_sites: [{ call_kind,
+line }] }` detail. Dynamic paths, patterns, or cwd values are warnings, not
+guessed dependencies or implicit fallback triggers.
 
 ## `tests comment`
 
@@ -139,5 +258,8 @@ testPlan:
 Group types: `direct`, `dependencies`, `sample` — for `vitest`;
 `direct`, `dependencies`, `coverage`, `sample` — for `playwright`.
 (`coverage` is a Playwright-only group type; vitest does not support it.)
+`direct` is changed tests plus tests one reverse import/`TestOf` hop from a
+changed file; it runs before `dependencies` so a tight limit cannot drop a
+direct importer in favor of a longer markdown or resource path.
 Consult https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/test-plan.md
 for the full schema.

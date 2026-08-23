@@ -3,7 +3,7 @@ use super::lockfile_changes::{analyze_lockfile_changes, LockfileAnalysis};
 use super::{PlanArgs, TestFramework};
 use anyhow::{Context, Result};
 use no_mistakes::codebase::dependencies::graph::{
-    DepGraph, GraphBuildPlan, GraphFiles, PreparedGraphConfig,
+    DepGraph, GraphBuildPlan, GraphFiles, PreparedGraphBuild, PreparedGraphConfig,
 };
 use no_mistakes::codebase::test_discovery::{DiscoveredTests, TestRunner};
 use no_mistakes::codebase::ts_resolver::TsConfig;
@@ -23,6 +23,7 @@ pub(crate) struct PreparedTestPlanInputs {
     pub(crate) visible_paths: Arc<VisiblePathSnapshot>,
     root_visible_paths: Arc<Vec<PathBuf>>,
     pub(crate) config: NoMistakesConfig,
+    config_path: Option<PathBuf>,
     pub(crate) collected: ChangedFiles,
 }
 
@@ -32,7 +33,9 @@ pub(crate) struct PreparedTestPlanRequest {
     pub(crate) visible_paths: Arc<VisiblePathSnapshot>,
     root_visible_paths: Arc<Vec<PathBuf>>,
     pub(crate) config: NoMistakesConfig,
+    config_path: Option<PathBuf>,
     pub(crate) tsconfig: TsConfig,
+    tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) collected: ChangedFiles,
     pub(crate) changed_files: Vec<PathBuf>,
     pub(crate) lockfile_analysis: LockfileAnalysis,
@@ -45,6 +48,9 @@ pub(crate) struct PreparedTestPlanRequest {
     test_filter: no_mistakes::codebase::test_filter::TestFileFilter,
     graph: OnceLock<std::result::Result<DepGraph, String>>,
     discovered_tests: Mutex<HashMap<TestFramework, std::result::Result<DiscoveredTests, String>>>,
+    config_invalidation: OnceLock<
+        std::result::Result<Option<super::config_invalidation::ConfigInvalidation>, String>,
+    >,
     graph_builds: AtomicUsize,
     framework_discoveries: AtomicUsize,
 }
@@ -59,6 +65,11 @@ impl PreparedTestPlanInputs {
 
         let visible_paths = Arc::new(VisiblePathSnapshot::new(&root));
         let root_visible_paths = visible_paths.paths_for(&root);
+        let config_path = no_mistakes::config::v2::effective_v2_config_path_from_visible(
+            &root,
+            args.config.as_deref(),
+            &root_visible_paths,
+        )?;
         let config = no_mistakes::config::v2::load_v2_config_from_visible(
             &root,
             args.config.as_deref(),
@@ -72,6 +83,7 @@ impl PreparedTestPlanInputs {
             visible_paths,
             root_visible_paths,
             config,
+            config_path,
             collected,
         })
     }
@@ -87,19 +99,67 @@ impl PreparedTestPlanInputs {
             visible_paths,
             root_visible_paths,
             config,
+            config_path,
             collected,
         } = self;
         let tsconfig = no_mistakes::codebase::ts_resolver::resolve_tsconfig_from_visible(
             args.tsconfig.as_deref(),
             &root,
             &root_visible_paths,
-        )?;
+        )
+        .or_else(|error| {
+            if args.tsconfig.is_some() {
+                Err(error)
+            } else {
+                Ok(TsConfig {
+                    dir: root.clone(),
+                    paths: Vec::new(),
+                    paths_dir: root.clone(),
+                    base_url: None,
+                })
+            }
+        })?;
         let changed_files = existing_changed_files(&collected);
         let lockfile_analysis = analyze_lockfile_changes(&args, &root, &collected.files);
         let lockfile_changed_packages = lockfile_packages(&root, &lockfile_analysis);
         let workspace_map =
             no_mistakes::codebase::workspaces::load_from_files(&root, &root_visible_paths)
                 .unwrap_or_default();
+        let mut tsconfig_candidate_roots = Vec::with_capacity(workspace_map.packages.len() + 1);
+        tsconfig_candidate_roots.push(root.clone());
+        tsconfig_candidate_roots.extend(
+            workspace_map
+                .packages
+                .iter()
+                .map(|package| package.dir.clone()),
+        );
+        tsconfig_candidate_roots
+            .extend(no_mistakes::integration_tests::configured_runner_config_dirs(&root, &config));
+        let preliminary_tsconfig_roots = tsconfig_candidate_roots.clone();
+        let sources = visible_paths.source_store_for(&root);
+        // Test-runner configs are parsed before their project scopes can
+        // contribute more roots. Explicit runner config parents are candidate
+        // roots too, so aliases resolve from a configured package even when
+        // the repository does not declare it as a workspace.
+        let preliminary_tsconfig_catalog = Arc::new(if let Some(path) = args.tsconfig.as_deref() {
+            let path = if path.is_absolute() {
+                path.to_path_buf()
+            } else {
+                root.join(path)
+            };
+            no_mistakes::codebase::ts_resolver::TsConfigCatalog::forced(
+                &root,
+                tsconfig.clone(),
+                Some(no_mistakes::codebase::ts_resolver::normalize_path(&path)),
+            )
+        } else {
+            no_mistakes::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources(
+                &root,
+                &tsconfig_candidate_roots,
+                &root_visible_paths,
+                &sources,
+            )
+        });
         let framework_plan = args.framework.map_or_else(
             no_mistakes::codebase::test_discovery::FrameworkPreparationPlan::all,
             |framework| {
@@ -110,12 +170,27 @@ impl PreparedTestPlanInputs {
         );
         let excluded_configs =
             framework_plan.excluded_config_paths(&root, &config, &root_visible_paths);
-        let mut graph_files = GraphFiles::from_files_excluding_indexable(
-            no_mistakes::codebase::ts_source::discover_files_from_visible(
+        let graph_all_files = no_mistakes::codebase::ts_source::discover_files_from_visible(
+            &root,
+            &[],
+            &root_visible_paths,
+        );
+        let discovery_files =
+            no_mistakes::codebase::ts_source::filter_discovered_files_by_skip_directories(
                 &root,
-                &[],
-                &root_visible_paths,
-            ),
+                &config.filesystem.skip_directories,
+                &graph_all_files,
+            );
+        let mut resource_candidates = visible_paths.tracked_paths_for(&root).as_ref().clone();
+        // The post-change snapshot cannot contain deleted tracked resources,
+        // but reverse impact still needs their phantom nodes. Reuse the diff
+        // inventory collected for this request; do not perform another walk.
+        resource_candidates.extend(collected.deleted.iter().cloned());
+        let mut graph_files = GraphFiles::from_files_with_resource_candidates_excluding_indexable(
+            graph_all_files.clone(),
+            // Preserve tracked runtime inputs under source-skipped directories
+            // such as `fixtures/`; they are resource targets, not parse roots.
+            resource_candidates,
             &excluded_configs,
         );
         for path in &collected.authoritative_files {
@@ -147,20 +222,50 @@ impl PreparedTestPlanInputs {
                 graph_plan,
                 &preliminary_graph_config,
             );
-        let prepared_test_projects = Arc::new(
+        let mut prepared_test_projects =
             no_mistakes::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
                 &root,
                 &config,
                 &root_visible_paths,
-                &tsconfig,
+                Arc::clone(&preliminary_tsconfig_catalog),
                 no_mistakes::codebase::test_discovery::PreparedTestProjectRequest {
+                    discovery_files: &discovery_files,
                     graph: (graph_files.indexable(), runner_graph_plan, runner_graph_context),
-                    sources: visible_paths.source_store_for(&root),
+                    sources: Arc::clone(&sources),
                     collect_graph_facts: true,
                     preparation_plan: &framework_plan,
                 },
-            ),
+            );
+        tsconfig_candidate_roots.extend(prepared_test_projects.tsconfig_candidate_roots(&root));
+        let tsconfig_catalog =
+            no_mistakes::codebase::test_discovery::reuse_or_rebuild_prepared_catalog(
+                preliminary_tsconfig_catalog,
+                &preliminary_tsconfig_roots,
+                &mut tsconfig_candidate_roots,
+                |candidate_roots| {
+                    Arc::new(
+                        no_mistakes::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources(
+                            &root,
+                            candidate_roots,
+                            &root_visible_paths,
+                            &sources,
+                        ),
+                    )
+                },
+            );
+        prepared_test_projects.reparse_vitest_with_final_catalog(
+            &root,
+            &config,
+            &root_visible_paths,
+            Arc::clone(&tsconfig_catalog),
+            Arc::clone(&sources),
         );
+        prepared_test_projects.reresolve_vitest_setups(
+            &root,
+            &tsconfig_catalog,
+            &root_visible_paths,
+        );
+        let prepared_test_projects = Arc::new(prepared_test_projects);
         let test_filter =
             no_mistakes::codebase::test_filter::TestFileFilter::from_prepared_projects(
                 &root,
@@ -184,7 +289,9 @@ impl PreparedTestPlanInputs {
             visible_paths,
             root_visible_paths,
             config,
+            config_path,
             tsconfig,
+            tsconfig_catalog,
             collected,
             changed_files,
             lockfile_analysis,
@@ -197,6 +304,7 @@ impl PreparedTestPlanInputs {
             test_filter,
             graph: OnceLock::new(),
             discovered_tests: Mutex::new(HashMap::new()),
+            config_invalidation: OnceLock::new(),
             graph_builds: AtomicUsize::new(0),
             framework_discoveries: AtomicUsize::new(0),
         })
@@ -214,6 +322,22 @@ impl PreparedTestPlanRequest {
 
     pub(crate) fn root_visible_paths(&self) -> &[PathBuf] {
         &self.root_visible_paths
+    }
+
+    pub(crate) fn changed_file_inventory(&self) -> Vec<String> {
+        let mut files: Vec<String> = self
+            .collected
+            .inventory_files
+            .iter()
+            .map(|path| no_mistakes::codebase::ts_source::relative_slash_path(&self.root, path))
+            .collect();
+        files.sort();
+        files.dedup();
+        files
+    }
+
+    pub(crate) fn config_path(&self) -> Option<&Path> {
+        self.config_path.as_deref()
     }
 
     pub(crate) fn graph(&self) -> Result<&DepGraph> {
@@ -238,7 +362,7 @@ impl PreparedTestPlanRequest {
                 if let Some(playwright) = playwright {
                     Box::new(no_mistakes::codebase::check_facts::collect_check_facts_with_precollected_graph_facts(
                         &self.root,
-                        self.graph_files.visible().iter().cloned().collect(),
+                        self.graph_files.iter_visible().cloned().collect(),
                         no_mistakes::codebase::check_facts::CheckFactPlan {
                             graph: fact_plan,
                             graph_context: fact_context,
@@ -253,7 +377,7 @@ impl PreparedTestPlanRequest {
                         .graph_files
                         .indexable()
                         .iter()
-                        .filter(|path| !facts.contains_key(*path))
+                        .filter(|path| !facts.contains_key(path))
                         .cloned()
                         .collect::<Vec<_>>();
                     facts.extend(no_mistakes::codebase::ts_source::facts::collect_ts_facts_with_context_and_sources(
@@ -264,20 +388,27 @@ impl PreparedTestPlanRequest {
                     ));
                     Box::new(facts)
                 };
-            DepGraph::build_with_plan_files_prepared_config_and_all_facts(
-                &self.root,
-                &self.tsconfig,
-                self.graph_plan,
-                &self.graph_files,
-                self.args.config.as_deref(),
-                &self.prepared_graph_config,
-                no_mistakes::codebase::dependencies::graph::PreparedGraphFacts {
-                    ts: Some(facts.as_ref()),
-                    dotnet: self.prepared_test_projects.dotnet_facts(),
-                    swift: self.prepared_test_projects.swift_facts(),
+            let graph = DepGraph::build_with_plan_files_prepared_config_and_all_facts(
+                PreparedGraphBuild {
+                    root: &self.root,
+                    tsconfig: &self.tsconfig,
+                    tsconfig_catalog: Some(&self.tsconfig_catalog),
+                    plan: self.graph_plan,
+                    graph_files: &self.graph_files,
+                    config_path: self.args.config.as_deref(),
+                    prepared: &self.prepared_graph_config,
+                    facts: Some(facts.as_ref()),
+                    import_resolution_cache: None,
+                    dotnet_facts: self.prepared_test_projects.dotnet_facts(),
+                    swift_facts: self.prepared_test_projects.swift_facts(),
+                    visible_paths: None,
                 },
             )
-            .map_err(|error| format!("{error:#}"))
+            .map_err(|error| format!("{error:#}"))?;
+            let graph = graph.with_vitest_setup_projects(
+                self.prepared_test_projects.vitest_setup_projects(),
+            );
+            Ok(graph)
         })
             .as_ref()
             .map_err(|error| anyhow::Error::msg(error.clone()))
@@ -291,57 +422,37 @@ impl PreparedTestPlanRequest {
         self.graph_builds.load(Ordering::Relaxed)
     }
 
-    pub(crate) fn framework_discovery_count(&self) -> usize {
-        self.framework_discoveries.load(Ordering::Relaxed)
-    }
-
-    pub(crate) fn test_filter(&self) -> &no_mistakes::codebase::test_filter::TestFileFilter {
-        &self.test_filter
-    }
-
-    pub(crate) fn discover_tests(&self, framework: TestFramework) -> Result<DiscoveredTests> {
-        let mut cache = self
-            .discovered_tests
-            .lock()
-            .expect("prepared test-discovery cache mutex poisoned");
-        cache
-            .entry(framework)
-            .or_insert_with(|| {
-                self.framework_discoveries.fetch_add(1, Ordering::Relaxed);
-                no_mistakes::codebase::test_discovery::discover_tests_from_prepared_projects(
-                    &self.root,
-                    &self.config,
-                    test_runner(framework),
-                    &self.prepared_test_projects,
-                    &self.root_visible_paths,
-                    &self.tsconfig,
-                )
-                .map(|mut discovered| {
-                    // Automatic test discovery follows regular files, matching the pre-snapshot
-                    // behavior without a live `is_file` pass. Explicit changed paths remain
-                    // authoritative and are handled separately by the planner.
-                    discovered.tests.retain(|path| {
-                        self.visible_paths
-                            .classification_for(&self.root, path)
-                            .is_some_and(|classification| classification.target_is_file())
-                    });
-                    discovered
-                        .targets_by_path
-                        .retain(|path, _| discovered.tests.binary_search(path).is_ok());
-                    discovered
-                })
-                .map_err(|error| format!("{error:#}"))
-            })
-            .clone()
-            .map_err(anyhow::Error::msg)
-    }
-
-    pub(crate) fn discover_runner_tests(&self, runner: TestRunner) -> Result<DiscoveredTests> {
-        self.discover_tests(test_framework(runner))
+    /// Parsed Vitest project metadata from the request's single runner-config
+    /// pass. Callers use this for conservative setup diagnostics and must not
+    /// reparse configuration when Vitest was not requested.
+    pub(crate) fn vitest_projects(
+        &self,
+    ) -> Option<&[no_mistakes::integration_tests::types::ConfigProject]> {
+        self.prepared_test_projects
+            .prepared_projects(TestRunner::Vitest)
     }
 }
 
 fn resolve_args(args: &PlanArgs) -> Result<PlanArgs> {
+    if args.direct_test_owner && args.framework.is_none() {
+        anyhow::bail!(
+            "--direct-test-owner requires a framework (for example, `tests plan vitest --direct-test-owner`) because direct ownership requires framework-specific test ownership"
+        );
+    }
+    if args.direct_test_owner && !args.entrypoints.is_empty() {
+        anyhow::bail!(
+            "--direct-test-owner conflicts with --entrypoint: direct-owner selection only follows changed files and one reverse canonical graph edge; use `tests impact` for explicit entrypoint traversal"
+        );
+    }
+    if args.direct_test_owner
+        && (args.limit_percent.is_some()
+            || args.limit_files.is_some()
+            || args.global_config_fallback.is_some())
+    {
+        anyhow::bail!(
+            "--direct-test-owner conflicts with --limit-percent, --limit-files, and --global-config-fallback; remove those policy overrides because direct ownership bypasses configured plan policy"
+        );
+    }
     if args.from_git_diff.is_some() && (args.base.is_some() || args.head.is_some()) {
         anyhow::bail!("--from-git-diff conflicts with --base/--head; provide only one");
     }
@@ -373,6 +484,16 @@ fn test_runner(framework: TestFramework) -> TestRunner {
         TestFramework::Playwright => TestRunner::Playwright,
         TestFramework::Vitest => TestRunner::Vitest,
         TestFramework::Swift => TestRunner::Swift,
+        TestFramework::Python => TestRunner::Python,
+        TestFramework::Go => TestRunner::Go,
+        TestFramework::Cargo => TestRunner::Cargo,
+        TestFramework::Rails => TestRunner::Rails,
+        TestFramework::Php => TestRunner::Php,
+        TestFramework::Java => TestRunner::Java,
+        TestFramework::Kotlin => TestRunner::Kotlin,
+        TestFramework::Elixir => TestRunner::Elixir,
+        TestFramework::Dart => TestRunner::Dart,
+        TestFramework::Jest => TestRunner::Jest,
     }
 }
 
@@ -392,8 +513,21 @@ fn test_framework(runner: TestRunner) -> TestFramework {
         TestRunner::Playwright => TestFramework::Playwright,
         TestRunner::Vitest => TestFramework::Vitest,
         TestRunner::Swift => TestFramework::Swift,
+        TestRunner::Python => TestFramework::Python,
+        TestRunner::Go => TestFramework::Go,
+        TestRunner::Cargo => TestFramework::Cargo,
+        TestRunner::Rails => TestFramework::Rails,
+        TestRunner::Php => TestFramework::Php,
+        TestRunner::Java => TestFramework::Java,
+        TestRunner::Kotlin => TestFramework::Kotlin,
+        TestRunner::Elixir => TestFramework::Elixir,
+        TestRunner::Dart => TestFramework::Dart,
+        TestRunner::Jest => TestFramework::Jest,
     }
 }
+
+#[path = "prepared_plan_discovery.rs"]
+mod prepared_plan_discovery;
 
 #[cfg(test)]
 #[path = "prepared_plan/tests.rs"]

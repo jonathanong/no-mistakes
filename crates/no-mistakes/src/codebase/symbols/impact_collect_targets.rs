@@ -11,6 +11,7 @@ fn signature_impact_edges() -> HashSet<EdgeKind> {
         EdgeKind::DynamicImport,
         EdgeKind::Require,
         EdgeKind::WorkspaceImport,
+        EdgeKind::WorkspaceTypeImport,
     ])
 }
 
@@ -18,7 +19,7 @@ fn signature_target_symbols(
     target_file: &Path,
     target_symbol: &str,
     export_nodes: &BTreeSet<NodeId>,
-    visible_files: &HashSet<PathBuf>,
+    visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     facts: &TsFactMap,
 ) -> BTreeMap<PathBuf, BTreeSet<String>> {
     let mut target_symbols = BTreeMap::from([(
@@ -28,8 +29,7 @@ fn signature_target_symbols(
     let mut changed = true;
     while changed {
         changed = false;
-        let known_symbols: BTreeSet<String> =
-            target_symbols.values().flatten().cloned().collect();
+        let known_symbols: BTreeSet<String> = target_symbols.values().flatten().cloned().collect();
         for node in export_nodes {
             match node {
                 NodeId::Symbol { file, symbol } => {
@@ -47,11 +47,11 @@ fn signature_target_symbols(
                         .max_by_key(|candidate| candidate.matches('.').count())
                         .or_else(|| {
                             (!is_namespace_reexport_symbol(facts, file, symbol))
-                                .then(|| symbol.clone())
+                                .then(|| symbol.to_string())
                         });
                     if let Some(symbol_name) = symbol_name {
                         if target_symbols
-                            .entry(file.clone())
+                            .entry(file.to_path_buf())
                             .or_default()
                             .insert(symbol_name)
                         {
@@ -60,13 +60,29 @@ fn signature_target_symbols(
                     }
                 }
                 NodeId::File(file) => {
-                    target_symbols.entry(file.clone()).or_default();
+                    target_symbols.entry(file.to_path_buf()).or_default();
                 }
-                NodeId::Module(_) | NodeId::QueueJob { .. } => {}
+                NodeId::Module(_)
+                | NodeId::QueueJob { .. }
+                | NodeId::WorkflowJob { .. }
+                | NodeId::WorkflowStep { .. }
+                | NodeId::TrpcProcedure { .. } => {}
             }
         }
     }
     target_symbols
+}
+
+fn interned_file_root_paths(export_nodes: &BTreeSet<NodeId>, target_file: &Path) -> Vec<PathBuf> {
+    let mut file_roots: Vec<PathBuf> = export_nodes
+        .iter()
+        .filter_map(NodeId::as_file)
+        .map(Path::to_path_buf)
+        .collect();
+    file_roots.push(target_file.to_path_buf());
+    file_roots.sort();
+    file_roots.dedup();
+    file_roots
 }
 
 include!("impact_collect_target_helpers.rs");
@@ -78,6 +94,7 @@ fn suggested_test_entries(
     root: &Path,
     file_target_symbols: &BTreeMap<String, BTreeSet<String>>,
     facts: &TsFactMap,
+    interner: &crate::codebase::analysis_session::PathInterner,
 ) -> Vec<NodeEntry> {
     let mut suggested_entries = entries.to_vec();
     let test_edges = HashSet::from([EdgeKind::TestOf]);
@@ -108,7 +125,7 @@ fn suggested_test_entries(
         production_files.insert(root.join(&caller.file));
     }
     for file in production_files {
-        let node = NodeId::File(file);
+        let node = NodeId::file_in(interner, file);
         suggested_entries.extend(graph.dependents_of(&[node], None, Some(&test_edges)));
     }
     suggested_entries

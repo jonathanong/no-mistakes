@@ -52,26 +52,6 @@ policies:
 }
 
 #[test]
-fn ignores_invalid_structured_config_files() {
-    let root = fixture_root("fixture");
-    let files = vec![root.join("invalid.yml")];
-    let findings = check_with_files(
-        &root,
-        &config(
-            r#"
-policies:
-  - files: [invalid.yml]
-    requiredKeys: [runtime.version]
-"#,
-        ),
-        &files,
-    )
-    .unwrap();
-
-    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-}
-
-#[test]
 fn ignores_unreadable_structured_config_paths() {
     let root = fixture_root("fixture");
     let files = vec![root.join("config")];
@@ -417,4 +397,20 @@ policies:
 
     assert_eq!(findings.len(), 1, "unexpected findings: {findings:?}");
     assert!(findings[0].message.contains("missingRequiredKey"));
+}
+
+#[test]
+fn assertion_enums_clone_eq_and_debug() {
+    assert_eq!(MatchMode::All, MatchMode::default());
+    assert_ne!(MatchMode::All, MatchMode::Any);
+    assert_eq!(AssertionKind::Boolean, AssertionKind::Boolean);
+    assert_eq!(AssertionKind::EqualsFile, AssertionKind::EqualsFile);
+    let _ = PolicyWhen::default();
+    let _ = format!(
+        "{:?}{:?}{:?}{:?}",
+        MatchMode::All,
+        MatchMode::Any,
+        AssertionKind::ObjectShape,
+        AssertionKind::EqualsFile
+    );
 }

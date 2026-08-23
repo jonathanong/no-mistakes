@@ -1,0 +1,7 @@
+[missing-needs-dependency] .github/workflows/dangling.yml (.github/workflows/dangling.yml#test): .github/workflows/dangling.yml#test needs missing job .github/workflows/dangling.yml#missing
+[malformed-workflow] .github/workflows/malformed.yml: deficient indentation (3:1)
+
+ 1 | name: Malformed
+ 2 | jobs: [
+ 3 | 
+-----^

@@ -18,7 +18,7 @@ impl ProjectTestFilter {
         Self::from_project_ref(&project).ok()
     }
 
-    pub(super) fn from_project_ref(project: &ConfigProject) -> Result<Self> {
+    pub(crate) fn from_project_ref(project: &ConfigProject) -> Result<Self> {
         Ok(Self {
             include: compile_globset(&project.include)?,
             exclude: compile_optional_globset(&project.exclude)?,
@@ -78,7 +78,53 @@ pub(crate) fn fallback_runner_match(runner: TestRunner, rel: &str) -> bool {
                     || rel.starts_with("specs/"))
         }
         TestRunner::Swift => rel.contains("/Tests/") && rel.ends_with(".swift"),
+        TestRunner::Python => is_python_test_path(rel),
+        TestRunner::Go => rel.ends_with("_test.go"),
+        TestRunner::Cargo => is_cargo_test_path(rel),
+        TestRunner::Rails => rel.ends_with("_spec.rb") || rel.ends_with("_test.rb"),
+        TestRunner::Php => rel.ends_with("Test.php") || rel.contains("/tests/"),
+        TestRunner::Java => is_java_test_path(rel),
+        TestRunner::Kotlin => is_kotlin_test_path(rel),
+        TestRunner::Elixir => is_elixir_test_path(rel),
+        TestRunner::Dart => is_dart_test_path(rel),
+        TestRunner::Jest => fallback_test_path(rel),
     }
+}
+
+fn is_python_test_path(rel: &str) -> bool {
+    let name = rel.rsplit('/').next().unwrap_or(rel);
+    name.starts_with("test_") && name.ends_with(".py")
+        || name.ends_with("_test.py")
+        || name == "tests.py"
+        || rel.contains("/tests/") && name.ends_with(".py")
+}
+
+fn is_cargo_test_path(rel: &str) -> bool {
+    let slash = rel.replace('\\', "/");
+    slash.contains("/tests/") && slash.ends_with(".rs")
+        || slash.ends_with("/tests.rs")
+        || slash.ends_with("_test.rs")
+}
+
+fn is_java_test_path(rel: &str) -> bool {
+    let name = rel.rsplit('/').next().unwrap_or(rel);
+    name.ends_with("Test.java") || name.ends_with("Tests.java") || name.ends_with("IT.java")
+}
+
+fn is_kotlin_test_path(rel: &str) -> bool {
+    let name = rel.rsplit('/').next().unwrap_or(rel);
+    name.ends_with("Test.kt") || name.ends_with("Tests.kt") || name.ends_with("IT.kt")
+}
+
+fn is_elixir_test_path(rel: &str) -> bool {
+    rel.rsplit('/').next().unwrap_or(rel).ends_with("_test.exs")
+}
+
+fn is_dart_test_path(rel: &str) -> bool {
+    rel.rsplit('/')
+        .next()
+        .unwrap_or(rel)
+        .ends_with("_test.dart")
 }
 
 fn has_path_segment_pair(path: &str, first: &str, second: &str) -> bool {

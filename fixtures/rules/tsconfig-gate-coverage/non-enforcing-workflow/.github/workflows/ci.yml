@@ -1,0 +1,57 @@
+name: CI
+on: push
+jobs:
+  disabled-job:
+    if: false
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project disabled-job/tsconfig.json
+  disabled-step:
+    runs-on: ubuntu-latest
+    steps:
+      - if: false
+        run: tsc --noEmit --project disabled-step/tsconfig.json
+  nonblocking-job:
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project nonblocking-job/tsconfig.json
+  nonblocking-step:
+    runs-on: ubuntu-latest
+    steps:
+      - continue-on-error: true
+        run: tsc --noEmit --project nonblocking-step/tsconfig.json
+  expression:
+    if: '${{ false }}'
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project expression/tsconfig.json
+  constant-nonblocking-step:
+    runs-on: ubuntu-latest
+    steps:
+      - continue-on-error: '${{ true }}'
+        run: tsc --noEmit --project constant-nonblocking-step/tsconfig.json
+  dynamic-expression:
+    if: "${{ github.ref == 'refs/heads/main' }}"
+    runs-on: ubuntu-latest
+    steps:
+      - run: tsc --noEmit --project dynamic-expression/tsconfig.json
+  failure-mode-mutated:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          set +e
+          tsc --noEmit --project failure-mode-mutated/tsconfig.json
+  non-posix-shell:
+    runs-on: ubuntu-latest
+    steps:
+      - shell: python
+        run: tsc --noEmit --project non-posix-shell/tsconfig.json
+  dynamic-runner:
+    runs-on: '${{ matrix.runner }}'
+    steps:
+      - run: tsc --noEmit --project dynamic-runner/tsconfig.json
+  implicit-windows-shell:
+    runs-on: windows-latest
+    steps:
+      - run: tsc --noEmit --project implicit-windows-shell/tsconfig.json

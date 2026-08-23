@@ -1,0 +1,2 @@
+[job-dependency-cycle] .github/workflows/pipeline.yml (.github/workflows/pipeline.yml#a): job dependency cycle: .github/workflows/pipeline.yml#a, .github/workflows/pipeline.yml#b
+[job-dependency-cycle] .github/workflows/pipeline.yml (.github/workflows/pipeline.yml#self): job dependency cycle: .github/workflows/pipeline.yml#self

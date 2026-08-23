@@ -1,0 +1,11 @@
+tests:
+  php:
+    framework: symfony
+    apps: ["."]
+projects:
+  app:
+    type: server
+    root: .
+    queues:
+      enqueues: ["**/*"]
+      workers: ["**/*"]

@@ -1,0 +1,8 @@
+version: 2
+tests:
+  playwright:
+    configs: playwright.config.ts
+testPlan:
+  playwright:
+    fullSuiteTriggers:
+      ignoreChangedTests: []

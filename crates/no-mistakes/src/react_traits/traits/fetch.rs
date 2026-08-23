@@ -4,16 +4,18 @@ use oxc_ast::ast::Program;
 use oxc_ast_visit::Visit;
 use oxc_span::Span;
 
-pub(crate) fn collect_fetch_calls(
+pub(crate) fn collect_fetch_calls_in_file(
     program: &Program<'_>,
     source: &str,
     rel_file: &str,
-    span: Span,
-) -> Vec<FetchOccurrence> {
+) -> Vec<(Span, FetchOccurrence)> {
     let mut visitor = FetchVisitor::new(source, rel_file, false, false);
-    visitor.component_span = Some(span);
     visitor.visit_program(program);
-    visitor.fetches
+    visitor
+        .fetch_spans
+        .into_iter()
+        .zip(visitor.fetches)
+        .collect()
 }
 
 #[cfg(test)]

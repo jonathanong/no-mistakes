@@ -22,6 +22,23 @@ fn package_name_from_spec(spec: &str) -> &str {
     }
 }
 
+fn parsed_workflow_set(
+    root: &Path,
+    all_files: &[PathBuf],
+) -> crate::codebase::ci_workflows::ParsedWorkflowSet {
+    crate::codebase::ci_workflows::ParsedWorkflowSet::from_paths(
+        root,
+        all_files
+            .iter()
+            .filter(|path| {
+                path.extension()
+                    .and_then(std::ffi::OsStr::to_str)
+                    .is_some_and(|extension| matches!(extension, "yml" | "yaml"))
+            })
+            .cloned(),
+    )
+}
+
 #[test]
 fn playwright_graph_build_has_one_snapshot_construction_site() {
     let builder = [
@@ -43,24 +60,46 @@ fn playwright_graph_build_has_one_snapshot_construction_site() {
 }
 
 include!("build_check_fact_adapters.rs");
+include!("compatibility_adapters.rs");
+include!("core_resolution.rs");
 include!("core.rs");
+include!("language_frontends.rs");
+include!("language_frontends_more.rs");
+mod node_sort;
 include!("scoped_universe.rs");
 include!("legacy_symbol_channel.rs");
 include!("session_resolver_cache.rs");
 include!("route_import.rs");
 include!("route_import_prepared.rs");
+include!("graph_files.rs");
 include!("extra_cases.rs");
 include!("lazy_import_session.rs");
 include!("extra_playwright_routes.rs");
 include!("extra_selector.rs");
+include!("extra_selector_cache.rs");
+include!("extra_ts_fact_map_cache.rs");
+include!("extra_fallback_lookup.rs");
+include!("extra_selector_multi_app.rs");
+include!("extra_selector_work.rs");
 include!("extra_symbol_scoped.rs");
 include!("extra_symbol_defensive.rs");
 include!("extra_symbol_helpers.rs");
 include!("extra_symbol_visibility.rs");
 include!("extra_symbol.rs");
+include!("lang_emit.rs");
 include!("extra_symbol_gitignore.rs");
+include!("extra_symlink_visible_paths.rs");
 include!("extra_gitignore_pass3.rs");
 include!("types.rs");
+include!("trpc_edges.rs");
+include!("vitest_setup.rs");
 
+mod core_independent_edges;
+mod edge_kind_semantics;
+mod finalization;
+mod remaining_edges;
 mod selector_fact_plan;
 mod selector_optimization;
+mod source_store_reuse;
+mod workflow_topology_edges;
+mod workflow_topology_run;

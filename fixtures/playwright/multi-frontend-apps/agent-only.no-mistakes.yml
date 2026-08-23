@@ -1,0 +1,19 @@
+# Isolated run: only `agent-web` is registered. See control-only.no-mistakes.yml.
+projects:
+  agent-web:
+    type: nextjs
+    root: services/agent-web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-pw]
+
+rules:
+  - rule: playwright-coverage
+    tests:
+      playwright: [agent]
+  - rule: playwright-unique-test-ids
+    tests:
+      playwright: [agent]

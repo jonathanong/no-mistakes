@@ -13,19 +13,10 @@ impl DepGraph {
         let config_options = edge_inputs.config_options;
         let config_path = edge_inputs.config_path;
         let supplied_workspace = edge_inputs.workspace;
-        let resolver = match edge_inputs.import_resolution_cache {
-            Some(cache) => ImportResolver::new_observed(tsconfig, session.observer().cloned())
-                .with_visible(graph_files.visible())
-                .with_shared_cache(cache),
-            None => ImportResolver::new_in_session(
-                tsconfig,
-                Some(graph_files.visible()),
-                &session,
-            ),
-        };
+        let resolver = graph_import_resolver(&edge_inputs, &session);
         let fact_plan = effective_ts_fact_plan(plan, config_options);
         let mut fact_context = ts_fact_context_from_options(root, plan, config_options);
-        fact_context.set_visible_files(graph_files.visible().iter().cloned());
+        fact_context.set_visible_file_set(graph_files.visible_path_set());
         let owned_facts = if !fact_plan.is_empty() && facts.is_none() {
             Some(collect_ts_facts_with_session_and_context(
                 &session,
@@ -42,7 +33,7 @@ impl DepGraph {
                 let covers_plan = primary.covers_ts_fact_plan(fact_plan);
                 let universe_mismatch = primary
                     .graph_files()
-                    .is_some_and(|files| !same_graph_universe(files, graph_files.visible()));
+                    .is_some_and(|files| !same_graph_universe(files, graph_files));
                 let missing = if fact_plan.is_empty() {
                     Vec::new()
                 } else {
@@ -99,7 +90,7 @@ impl DepGraph {
                     fallback,
                     !primary.covers_ts_fact_plan(fact_plan),
                     graph_files.all(),
-                    graph_files.visible(),
+                    graph_files,
                 )
             });
         let facts: Option<&dyn TsFactLookup> = fallback_lookup
@@ -108,19 +99,23 @@ impl DepGraph {
             .or(facts)
             .or_else(|| owned_facts.as_ref().map(|facts| facts as &dyn TsFactLookup));
 
-        let mut forward: EdgeMap = HashMap::new();
-        let mut reverse: EdgeMap = HashMap::new();
-        let files = &graph_files.indexable;
+        let mut forward: EdgeMap = EdgeMap::default();
+        let mut reverse: EdgeMap = EdgeMap::default();
+        let mut resource_edge_details: ResourceEdgeDetails = fx_map();
+        let mut resource_diagnostics = Vec::new();
+        let files = graph_files.indexable();
 
         for file in files {
-            forward.entry(NodeId::File(file.clone())).or_default();
+            forward
+                .entry(NodeId::file_in(&edge_inputs.interner, file))
+                .or_default();
         }
 
         let parsed_imports = parsed_imports_for_plan(plan, files, facts)?;
         crate::invocation::check_timeout()?;
         let needs_workspace = plan.imports || plan.workspace || plan.package || plan.symbols;
         let owned_workspace = (needs_workspace && supplied_workspace.is_none()).then(|| {
-            crate::codebase::workspaces::load_indexed_from_files(root, &graph_files.all)
+            crate::codebase::workspaces::load_indexed_from_files(root, graph_files.all())
                 .unwrap_or_default()
         });
         let empty_workspace = crate::codebase::workspaces::IndexedWorkspaceMap::default();
@@ -156,13 +151,19 @@ impl DepGraph {
             EdgeMaps {
                 forward: &mut forward,
                 reverse: &mut reverse,
+                resource_edge_details: &mut resource_edge_details,
+                resource_diagnostics: &mut resource_diagnostics,
             },
         )?;
         crate::invocation::check_timeout()?;
         let mut graph = Self {
             root: root.to_path_buf(),
             edges: edge_index_from_maps(forward, reverse),
+            vitest_setup_projects: Vec::new(),
+            effective_edges: OnceLock::new(),
             parse_errors,
+            resource_edge_details,
+            resource_diagnostics,
         };
         if plan.playwright_selectors {
             let snapshot = playwright_snapshot
@@ -173,16 +174,22 @@ impl DepGraph {
                     root,
                     config_path,
                     PlaywrightSelectorEdgeInputs {
-                        all_files: &graph_files.all,
+                        all_files: graph_files.all(),
                         facts,
                         partial_graph: plan.route_imports.then_some(&graph),
                         graph_tsconfig: plan.route_imports.then_some(tsconfig),
                         snapshot,
                         prepared_settings: edge_inputs.playwright_settings,
+                        interner: &edge_inputs.interner,
                     },
                 )
             })?;
-            graph.merge_canonical_edges(selector_edges);
+            // Route-import selector analysis reads the partial graph, so keep
+            // its historical reconstruction path. Direct selectors can append
+            // to the finished index without renumbering the base graph.
+            crate::perf_trace::trace("graph.playwright_selector_merge", || {
+                graph.append_canonical_edges(selector_edges);
+            });
         }
         record_graph_observability(&graph, &session);
         Ok(graph)

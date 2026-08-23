@@ -1,0 +1,31 @@
+flowchart LR
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3MvY2FsbGVyLnltbA["Caller"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3MvY2FsbGVyLnltbA([".github/workflows/caller.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3MvY2FsbGVyLnltbCNiYWQ["bad"]
+    job_LmdpdGh1Yi93b3JrZmxvd3MvY2FsbGVyLnltbCNnb29k["good"]
+    job_LmdpdGh1Yi93b3JrZmxvd3MvY2FsbGVyLnltbCNtaXNzaW5n["missing"]
+    job_LmdpdGh1Yi93b3JrZmxvd3MvY2FsbGVyLnltbCNyZW1vdGU["remote"]
+  end
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3MvY3ljbGUtYS55bWw["Cycle A"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3MvY3ljbGUtYS55bWw([".github/workflows/cycle-a.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3MvY3ljbGUtYS55bWwjeA["x"]
+  end
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3MvY3ljbGUtYi55bWw["Cycle B"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3MvY3ljbGUtYi55bWw([".github/workflows/cycle-b.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3MvY3ljbGUtYi55bWwjeQ["y"]
+  end
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3Mvbm90LWNhbGxhYmxlLnltbA["Not Callable"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3Mvbm90LWNhbGxhYmxlLnltbA([".github/workflows/not-callable.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3Mvbm90LWNhbGxhYmxlLnltbCNub29w["noop"]
+  end
+  subgraph workflow_group_LmdpdGh1Yi93b3JrZmxvd3MvcmV1c2FibGUtY2FsbGVlLnltbA["Reusable Callee"]
+    workflow_LmdpdGh1Yi93b3JrZmxvd3MvcmV1c2FibGUtY2FsbGVlLnltbA([".github/workflows/reusable-callee.yml"])
+    job_LmdpdGh1Yi93b3JrZmxvd3MvcmV1c2FibGUtY2FsbGVlLnltbCNlY2hv["echo"]
+  end
+  job_LmdpdGh1Yi93b3JrZmxvd3MvY2FsbGVyLnltbCNiYWQ -. calls .-> workflow_LmdpdGh1Yi93b3JrZmxvd3Mvbm90LWNhbGxhYmxlLnltbA
+  job_LmdpdGh1Yi93b3JrZmxvd3MvY2FsbGVyLnltbCNnb29k -. calls .-> workflow_LmdpdGh1Yi93b3JrZmxvd3MvcmV1c2FibGUtY2FsbGVlLnltbA
+  job_LmdpdGh1Yi93b3JrZmxvd3MvY2FsbGVyLnltbCNtaXNzaW5n -. calls .-> workflow_LmdpdGh1Yi93b3JrZmxvd3MvZG9lcy1ub3QtZXhpc3QueW1s
+  remote_ZXhhbXBsZS9leGFtcGxlLy5naXRodWIvd29ya2Zsb3dzL2NoZWNrLnltbEB2MQ["example/example/.github/workflows/check.yml@v1"]
+  job_LmdpdGh1Yi93b3JrZmxvd3MvY2FsbGVyLnltbCNyZW1vdGU -. calls .-> remote_ZXhhbXBsZS9leGFtcGxlLy5naXRodWIvd29ya2Zsb3dzL2NoZWNrLnltbEB2MQ
+  job_LmdpdGh1Yi93b3JrZmxvd3MvY3ljbGUtYS55bWwjeA -. calls .-> workflow_LmdpdGh1Yi93b3JrZmxvd3MvY3ljbGUtYi55bWw
+  job_LmdpdGh1Yi93b3JrZmxvd3MvY3ljbGUtYi55bWwjeQ -. calls .-> workflow_LmdpdGh1Yi93b3JrZmxvd3MvY3ljbGUtYS55bWw

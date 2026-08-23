@@ -68,6 +68,16 @@ fn cli_parity_builders_cover_defaults_and_validation() {
         Some("diff --git a/src/app.ts b/src/app.ts".to_string())
     );
 
+    let stdin_impacted = crate::napi_api::cli_parity::build_impacted_checks_args(
+        crate::napi_api::options::ImpactedChecksOptions {
+            diff_stdin: true,
+            diff_command: Some("git diff".to_string()),
+            ..Default::default()
+        },
+    );
+    assert!(stdin_impacted.diff_stdin);
+    assert_eq!(stdin_impacted.diff_command.as_deref(), Some("git diff"));
+
     let impact = crate::napi_api::cli_parity::build_impact_args(
         crate::napi_api::options::TestsImpactOptions {
             root: Some("project".to_string()),
@@ -86,15 +96,23 @@ fn cli_parity_builders_cover_defaults_and_validation() {
     assert_eq!(impact.entrypoint_symbols, vec![Some("handler".to_string())]);
     assert!(impact.include_symbols);
 
-    let invalid_framework =
+    let jest =
         crate::napi_api::cli_parity::build_plan_args(crate::napi_api::options::TestsPlanOptions {
             framework: Some("jest".to_string()),
+            ..Default::default()
+        })
+        .unwrap();
+    assert_eq!(jest.framework, Some(crate::tests::TestFramework::Jest));
+
+    let invalid_framework =
+        crate::napi_api::cli_parity::build_plan_args(crate::napi_api::options::TestsPlanOptions {
+            framework: Some("mocha".to_string()),
             ..Default::default()
         })
         .unwrap_err();
     assert!(invalid_framework
         .to_string()
-        .contains("unknown test framework: jest"));
+        .contains("unknown test framework: mocha"));
 
     let missing_test = crate::napi_api::cli_parity::build_why_args(Default::default()).unwrap_err();
     assert!(missing_test.to_string().contains("test is required"));
@@ -122,17 +140,23 @@ fn cli_parity_document_wrappers_accept_inline_plan_values() {
     });
     let options = serde_json::json!({ "planJson": plan }).to_string();
 
-    let comment = crate::napi_api::cli_parity::tests_comment_markdown_impl(options.clone())
-        .expect("inline plan should render markdown");
+    let comment = crate::napi_api::cli_parity::tests_comment_markdown_impl(
+        crate::napi_api::options::test_json_arg(options.clone()),
+    )
+    .expect("inline plan should render markdown");
     assert!(comment.contains("tests/app.test.ts"));
 
-    let graph = crate::napi_api::cli_parity::tests_graph_json_impl(options.clone())
-        .expect("inline plan should render graph JSON");
+    let graph = crate::napi_api::cli_parity::tests_graph_json_impl(
+        crate::napi_api::options::test_json_arg(options.clone()),
+    )
+    .expect("inline plan should render graph JSON");
     assert!(graph.contains("\"nodes\""));
     assert!(graph.contains("src/app.ts"));
 
-    let mermaid = crate::napi_api::cli_parity::tests_graph_mermaid_impl(options)
-        .expect("inline plan should render Mermaid");
+    let mermaid = crate::napi_api::cli_parity::tests_graph_mermaid_impl(
+        crate::napi_api::options::test_json_arg(options),
+    )
+    .expect("inline plan should render Mermaid");
     assert!(mermaid.contains("graph TD"));
 }
 
@@ -147,31 +171,21 @@ fn cli_parity_document_wrappers_cover_string_plan_and_required_input() {
     .to_string();
     let options = serde_json::json!({ "planJson": raw_plan }).to_string();
 
-    let comment = crate::napi_api::cli_parity::tests_comment_markdown_impl(options)
-        .expect("string plan JSON should render markdown");
+    let comment = crate::napi_api::cli_parity::tests_comment_markdown_impl(
+        crate::napi_api::options::test_json_arg(options),
+    )
+    .expect("string plan JSON should render markdown");
     assert!(comment.contains("Fallback Triggered"));
 
-    let error = crate::napi_api::cli_parity::tests_graph_json_impl("{}".to_string())
-        .expect_err("plan input is required");
+    let error = crate::napi_api::cli_parity::tests_graph_json_impl(
+        crate::napi_api::options::test_json_arg(serde_json::json!({})),
+    )
+    .expect_err("plan input is required");
     assert!(error.reason.contains("plan or planJson is required"));
 
-    let error = crate::napi_api::cli_parity::tests_graph_mermaid_impl("{}".to_string())
-        .expect_err("plan input is required");
+    let error = crate::napi_api::cli_parity::tests_graph_mermaid_impl(
+        crate::napi_api::options::test_json_arg("{}".to_string()),
+    )
+    .expect_err("plan input is required");
     assert!(error.reason.contains("plan or planJson is required"));
-}
-
-#[test]
-fn cli_parity_framework_parser_covers_all_public_values() {
-    assert_eq!(
-        crate::napi_api::cli_parity::parse_test_framework("dotnet").unwrap(),
-        crate::tests::TestFramework::Dotnet
-    );
-    assert_eq!(
-        crate::napi_api::cli_parity::parse_test_framework("playwright").unwrap(),
-        crate::tests::TestFramework::Playwright
-    );
-    assert_eq!(
-        crate::napi_api::cli_parity::parse_test_framework("swift").unwrap(),
-        crate::tests::TestFramework::Swift
-    );
 }

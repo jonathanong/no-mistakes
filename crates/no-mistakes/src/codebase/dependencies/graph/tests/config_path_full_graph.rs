@@ -24,7 +24,7 @@ fn build_with_plan_file_list_config_and_check_facts_uses_explicit_config_path() 
     let empty_config = crate::codebase::ts_resolver::normalize_path(
         &fixture("graph-empty-route-config").join(".no-mistakes.yml"),
     );
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let plan = GraphBuildPlan {
         routes: true,
         ..GraphBuildPlan::default()
@@ -41,8 +41,8 @@ fn build_with_plan_file_list_config_and_check_facts_uses_explicit_config_path() 
         },
     );
 
-    let client = NodeId::File(root.join("src/client.ts"));
-    let route = NodeId::File(root.join("backend/api/users.mts"));
+    let client = NodeId::file(root.join("src/client.ts"));
+    let route = NodeId::file(root.join("backend/api/users.mts"));
     let has_route_ref = |graph: &DepGraph| {
         graph.dependents_of_node(&route).is_some_and(|deps| {
             deps.iter()
@@ -124,10 +124,9 @@ fn ts_fact_plan_and_context_for_plan_with_config_uses_explicit_config_path() {
 
 #[test]
 fn prepared_graph_playwright_edges_use_explicit_loaded_config() {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
-        "playwright-config-path-graph",
-    ));
-    let all_files = GraphFiles::discover(&root).all;
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("playwright-config-path-graph"));
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let plan = GraphBuildPlan {
         playwright_routes: true,
         playwright_selectors: true,
@@ -156,6 +155,13 @@ fn prepared_graph_playwright_edges_use_explicit_loaded_config() {
         paths_dir: root.clone(),
         base_url: None,
     };
+    assert!(
+        prepared
+            .playwright_fact_plan(&root, &tsconfig, &visible)
+            .unwrap()
+            .is_some(),
+        "prepared graph settings must build a reusable Playwright fact plan"
+    );
     let graph = DepGraph::build_with_plan_file_list_prepared_config_and_check_facts(
         &root,
         &tsconfig,
@@ -167,9 +173,9 @@ fn prepared_graph_playwright_edges_use_explicit_loaded_config() {
     )
     .unwrap();
 
-    let test = NodeId::File(root.join("tests/e2e/app.spec.ts"));
-    let page = NodeId::File(root.join("web/app/page.tsx"));
-    let layout = NodeId::File(root.join("web/app/layout.tsx"));
+    let test = NodeId::file(root.join("tests/e2e/app.spec.ts"));
+    let page = NodeId::file(root.join("web/app/page.tsx"));
+    let layout = NodeId::file(root.join("web/app/layout.tsx"));
     let test_dependencies = graph
         .dependencies_of_node(&test)
         .expect("test file is present in prepared graph");
@@ -180,25 +186,203 @@ fn prepared_graph_playwright_edges_use_explicit_loaded_config() {
         .is_some_and(|edges| edges.contains(&(layout, EdgeKind::Layout))));
 }
 
+/// Regression test for a review finding on this change: `no-mistakes graph`
+/// previously resolved Playwright settings via a single, unbound
+/// `settings_from_loaded_v2(..., None, None, ...)` call, which — once #624's
+/// fix made an unbound ambiguous app an error instead of a silent guess —
+/// meant the entire graph build failed outright for any repository with two
+/// or more `type: nextjs` projects (there is no Playwright-project/rule
+/// context at this call site to bind against, so no config change could
+/// route around it). `PreparedGraphConfig` now resolves one `Settings` per
+/// app instead, so both apps' route/selector edges are present.
+#[test]
+fn prepared_graph_playwright_edges_cover_every_frontend_app() {
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("graph-multi-frontend-apps"));
+    let all_files = GraphFiles::discover(&root).all().to_vec();
+    let plan = GraphBuildPlan {
+        playwright_routes: true,
+        playwright_selectors: true,
+        ..GraphBuildPlan::default()
+    };
+    let loaded = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let codebase_config = crate::codebase::config::config_from_loaded_v2(&root, None, &loaded);
+    let visible = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let prepared = prepare_graph_config(&root, plan, &codebase_config, &loaded, &visible).unwrap();
+    let (graph_fact_plan, graph_context) =
+        ts_fact_plan_and_context_for_plan_with_prepared(&root, plan, &prepared);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        all_files.clone(),
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: graph_fact_plan,
+            graph_context,
+            ..Default::default()
+        },
+    );
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan_file_list_prepared_config_and_check_facts(
+        &root,
+        &tsconfig,
+        plan,
+        all_files,
+        None,
+        &facts,
+        &prepared,
+    )
+    .unwrap();
+
+    let control_test = NodeId::file(root.join("tests/e2e/control.spec.ts"));
+    let control_page = NodeId::file(root.join("control-web/app/control/page.tsx"));
+    let agent_test = NodeId::file(root.join("tests/e2e/agent.spec.ts"));
+    let agent_page = NodeId::file(root.join("agent-web/app/agent/page.tsx"));
+
+    let control_dependencies = graph
+        .dependencies_of_node(&control_test)
+        .expect("control spec is present in prepared graph");
+    assert!(control_dependencies.contains(&(control_page.clone(), EdgeKind::RouteTest)));
+    assert!(control_dependencies.contains(&(control_page, EdgeKind::Selector)));
+
+    let agent_dependencies = graph
+        .dependencies_of_node(&agent_test)
+        .expect("agent spec is present in prepared graph");
+    assert!(agent_dependencies.contains(&(agent_page.clone(), EdgeKind::RouteTest)));
+    assert!(agent_dependencies.contains(&(agent_page, EdgeKind::Selector)));
+}
+
+/// `PreparedGraphConfig::playwright_fact_plan` builds one fact plan per
+/// resolved frontend app and propagates the first one that fails to load —
+/// here, a `tests.playwright.configs` path that doesn't exist on disk. Both
+/// apps in this fixture share the same (missing) config, so the very first
+/// app in the per-app loop already fails.
+#[test]
+fn playwright_fact_plan_propagates_a_missing_playwright_config() {
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("graph-multi-frontend-apps"));
+    let plan = GraphBuildPlan {
+        playwright_routes: true,
+        ..GraphBuildPlan::default()
+    };
+    let missing_config = root.join("missing-config.no-mistakes.yml");
+    let loaded = crate::config::v2::load_v2_config(&root, Some(&missing_config)).unwrap();
+    let codebase_config =
+        crate::codebase::config::config_from_loaded_v2(&root, Some(&missing_config), &loaded);
+    let visible = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let prepared =
+        prepare_graph_config(&root, plan, &codebase_config, &loaded, &visible).unwrap();
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+
+    let result = prepared.playwright_fact_plan(&root, &tsconfig, &visible);
+    let error = match result {
+        Ok(_) => panic!("expected a missing Playwright config to fail fact-plan construction"),
+        Err(error) => error,
+    };
+    assert!(
+        format!("{error:#}").contains("does-not-exist.playwright.config.mts"),
+        "{error:#}"
+    );
+}
+
+/// A `type: nextjs` project whose root can't be inferred (no `root:`, no
+/// discoverable `next.config.*`) must fail `prepare_graph_config` outright
+/// when Playwright edges are requested — the graph's per-app settings
+/// resolution surfaces the same actionable error a Playwright rule would,
+/// rather than silently building zero Playwright edges.
+#[test]
+fn prepare_graph_config_surfaces_an_unresolvable_frontend_app() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
+        "graph-playwright-app-resolution-error",
+    ));
+    let plan = GraphBuildPlan {
+        playwright_routes: true,
+        ..GraphBuildPlan::default()
+    };
+    let loaded = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let codebase_config = crate::codebase::config::config_from_loaded_v2(&root, None, &loaded);
+    let visible = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+
+    let result = prepare_graph_config(&root, plan, &codebase_config, &loaded, &visible);
+    let error = match result {
+        Ok(_) => panic!("expected prepare_graph_config to fail for an unresolvable frontend app"),
+        Err(error) => error,
+    };
+
+    let message = format!("{error:#}");
+    assert!(message.contains("web"), "{message}");
+    assert!(message.contains("projects.web.root"), "{message}");
+}
+
+/// A `type: nextjs` project whose root can't be inferred must NOT fail (or
+/// even attempt) frontend-app resolution when the repository has zero
+/// `tests.playwright.*` configuration and no rule binds a Playwright project
+/// to an app — `has_v2_playwright_settings` being false means every
+/// `settings_from_loaded_v2` call collapses to the app-agnostic
+/// `settings_from_defaults` fallback regardless of which app (if any) is
+/// named, so resolving the (here, unresolvable) app set first would only
+/// discard the result unused. Disagreement test for a review finding: before
+/// gating on `has_v2_playwright_settings`, `prepare_graph_config` called
+/// `frontend_apps_or_default` unconditionally whenever Playwright edges were
+/// requested, so this exact repository — real-world shape: `type: nextjs`
+/// projects configured for reasons unrelated to Playwright, no Playwright
+/// testing set up at all — failed the whole graph build outright.
+#[test]
+fn prepare_graph_config_skips_app_resolution_when_playwright_is_unconfigured() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
+        "graph-nextjs-project-without-playwright",
+    ));
+    let plan = GraphBuildPlan {
+        playwright_routes: true,
+        playwright_selectors: true,
+        ..GraphBuildPlan::default()
+    };
+    let loaded = crate::config::v2::load_v2_config(&root, None).unwrap();
+    assert!(
+        !crate::playwright::config::has_v2_playwright_settings(&loaded),
+        "sanity check: this fixture must have zero tests.playwright.* signal"
+    );
+    let codebase_config = crate::codebase::config::config_from_loaded_v2(&root, None, &loaded);
+    let visible = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+
+    let prepared = prepare_graph_config(&root, plan, &codebase_config, &loaded, &visible)
+        .expect("app resolution must be skipped, not attempted and failed");
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: Vec::new(),
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    assert!(
+        prepared
+            .playwright_fact_plan(&root, &tsconfig, &visible)
+            .unwrap()
+            .is_some(),
+        "the app-agnostic bare-defaults Settings must still build a fact plan"
+    );
+}
+
 #[test]
 fn playwright_route_edges_use_explicit_config_path() {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture(
-        "playwright-config-path-graph",
-    ));
-    let all_files = GraphFiles::discover(&root).all;
+    let root =
+        crate::codebase::ts_resolver::normalize_path(&fixture("playwright-config-path-graph"));
+    let all_files = GraphFiles::discover(&root).all().to_vec();
 
     assert!(collect_playwright_route_edges(&root, None, &all_files, None).is_empty());
 
     let custom_config = root.join("custom.no-mistakes.yml");
-    let edges = collect_playwright_route_edges(
-        &root,
-        Some(&custom_config),
-        &all_files,
-        None,
-    );
-    let test = NodeId::File(root.join("tests/e2e/app.spec.ts"));
-    let page = NodeId::File(root.join("web/app/page.tsx"));
-    let layout = NodeId::File(root.join("web/app/layout.tsx"));
+    let edges = collect_playwright_route_edges(&root, Some(&custom_config), &all_files, None);
+    let test = NodeId::file(root.join("tests/e2e/app.spec.ts"));
+    let page = NodeId::file(root.join("web/app/page.tsx"));
+    let layout = NodeId::file(root.join("web/app/layout.tsx"));
     assert!(edges.contains(&(test, page.clone(), EdgeKind::RouteTest)));
     assert!(edges.contains(&(page, layout, EdgeKind::Layout)));
 }

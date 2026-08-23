@@ -6,7 +6,7 @@ use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
 use crate::codebase::ts_symbols::{Export, ExportKind, FileSymbols};
 use crate::config::v2::schema::{Project, ProjectType, RuleDef, StringOrList};
 use crate::react_traits::report::types::{ComponentFacts, ComponentRef, Environment};
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> PathBuf {
@@ -65,7 +65,7 @@ fn pass4b_storybook_import_skips_ignored_component_for_visible_fallback() {
     let visible = crate::codebase::ts_source::discover_visible_paths(&root)
         .into_iter()
         .map(|path| normalize_path(&path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let tsconfig = TsConfig {
         dir: root.clone(),
         paths: Vec::new(),
@@ -96,6 +96,91 @@ fn react_component(name: &str, file: &str, children: Vec<ComponentRef>) -> Compo
         children,
         inherited_from_children: None,
     }
+}
+
+#[test]
+fn deferred_suppression_sources_use_prepared_component_text() {
+    let root = fixture("comments");
+    let component = types::Component {
+        key: "components/DisabledFile.tsx#DisabledFile".to_string(),
+        file: PathBuf::from("components/DisabledFile.tsx"),
+        repo_file: "components/DisabledFile.tsx".to_string(),
+        project_file: "components/DisabledFile.tsx".to_string(),
+        export_name: "DisabledFile".to_string(),
+        line: 2,
+        explicit: true,
+    };
+    let path = normalize_path(&root.join(&component.file));
+    let prepared_without_directive = CheckFactMap {
+        ts: crate::codebase::ts_source::FileIdMap::from([(
+            path.clone(),
+            std::sync::Arc::new(CheckFileFacts {
+                source: Some("export function DisabledFile() { return <div />; }".into()),
+                ..Default::default()
+            }),
+        )])
+        .into_iter()
+        .collect(),
+        ..Default::default()
+    };
+
+    let indexed = suppression::component_suppression_sources(
+        &root,
+        std::slice::from_ref(&component),
+        &prepared_without_directive,
+    );
+    // The fixture on disk is disabled, but the prepared source is authoritative.
+    assert!(!suppression::component_is_suppressed(
+        &root, &indexed, &component,
+    ));
+
+    let prepared_with_directive = CheckFactMap {
+        ts: crate::codebase::ts_source::FileIdMap::from([(
+            path,
+            std::sync::Arc::new(CheckFileFacts {
+                source: Some(
+                    "// no-mistakes-disable-file require-storybook-stories: prepared exemption\n\
+                     export function DisabledFile() { return <div />; }"
+                        .into(),
+                ),
+                ..Default::default()
+            }),
+        )])
+        .into_iter()
+        .collect(),
+        ..Default::default()
+    };
+    let indexed = suppression::component_suppression_sources(
+        &root,
+        std::slice::from_ref(&component),
+        &prepared_with_directive,
+    );
+
+    assert!(suppression::component_is_suppressed(
+        &root, &indexed, &component,
+    ));
+}
+
+#[test]
+fn missing_project_target_is_ignored() {
+    let root = fixture("comments");
+    let mut config = config("");
+    config.projects.remove("web");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = snapshot.source_store_for(&root);
+
+    let findings = super::runner::check_with_resolver(
+        &root,
+        &config,
+        &CheckFactMap::default(),
+        &empty_resolver(&root),
+        None,
+        false,
+        &sources,
+    )
+    .unwrap();
+
+    assert!(findings.is_empty());
 }
 
 fn react_facts(

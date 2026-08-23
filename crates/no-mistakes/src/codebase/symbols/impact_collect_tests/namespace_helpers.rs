@@ -11,31 +11,18 @@ fn signature_target_symbols_preserves_chained_namespace_reexport_names() {
     let outer_barrel = root.join("namespace-outer-date-barrel.mts");
     let extensionless_barrel = root.join("namespace-extensionless-date-barrel.mts");
     let export_nodes = BTreeSet::from([
-        NodeId::Symbol {
-            file: namespace_barrel.clone(),
-            symbol: "dates".to_string(),
-        },
-        NodeId::Symbol {
-            file: outer_barrel.clone(),
-            symbol: "outer".to_string(),
-        },
-        NodeId::Symbol {
-            file: extensionless_barrel.clone(),
-            symbol: "extensionlessDates".to_string(),
-        },
+        NodeId::symbol(namespace_barrel.clone(), "dates"),
+        NodeId::symbol(outer_barrel.clone(), "outer"),
+        NodeId::symbol(extensionless_barrel.clone(), "extensionlessDates"),
     ]);
-    let visible_files = crate::codebase::ts_source::discover_visible_paths(&root)
-        .into_iter()
-        .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-        .collect();
+    let visible_files: std::collections::HashSet<PathBuf> =
+        crate::codebase::ts_source::discover_visible_paths(&root)
+            .into_iter()
+            .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
+            .collect();
     let facts = impact_test_support::signature_test_facts(&root);
-    let target_symbols = signature_target_symbols(
-        &target,
-        "parseDate",
-        &export_nodes,
-        &visible_files,
-        &facts,
-    );
+    let target_symbols =
+        signature_target_symbols(&target, "parseDate", &export_nodes, &visible_files, &facts);
 
     assert_eq!(
         target_symbols.get(&namespace_barrel),
@@ -47,7 +34,9 @@ fn signature_target_symbols_preserves_chained_namespace_reexport_names() {
     );
     assert_eq!(
         target_symbols.get(&extensionless_barrel),
-        Some(&BTreeSet::from(["extensionlessDates.parseDate".to_string()]))
+        Some(&BTreeSet::from(
+            ["extensionlessDates.parseDate".to_string()]
+        ))
     );
 }
 
@@ -63,10 +52,11 @@ fn namespace_target_helpers_handle_defensive_paths() {
     );
     let namespace_barrel = root.join("namespace-date-barrel.mts");
     let mut symbols = crate::codebase::ts_symbols::FileSymbols::default();
-    let visible_files = crate::codebase::ts_source::discover_visible_paths(&root)
-        .into_iter()
-        .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-        .collect();
+    let visible_files: std::collections::HashSet<PathBuf> =
+        crate::codebase::ts_source::discover_visible_paths(&root)
+            .into_iter()
+            .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
+            .collect();
     let facts = impact_test_support::signature_test_facts(&root);
     assert!(!is_namespace_reexport_symbol(
         &facts,
@@ -82,13 +72,15 @@ fn namespace_target_helpers_handle_defensive_paths() {
         "dates.parseDate",
         &visible_files,
     ));
-    symbols.imports.push(crate::codebase::ts_symbols::NamedImport {
-        source: "./utils.mts".to_string(),
-        imported: "*".to_string(),
-        local: "dates".to_string(),
-        line: 1,
-        is_type_only: false,
-    });
+    symbols
+        .imports
+        .push(crate::codebase::ts_symbols::NamedImport {
+            source: "./utils.mts".to_string(),
+            imported: "*".to_string(),
+            local: "dates".to_string(),
+            line: 1,
+            is_type_only: false,
+        });
     assert!(namespace_tail_applies(
         &facts,
         &namespace_barrel,
@@ -118,11 +110,11 @@ fn suggested_test_entries_ignores_file_level_edges_without_file_nodes() {
     let root = PathBuf::from("/repo");
     let graph = crate::codebase::dependencies::graph::test_support::from_typed_maps(
         root.clone(),
-        std::collections::HashMap::new(),
-        std::collections::HashMap::new(),
+        Default::default(),
+        Default::default(),
     );
     let entries = vec![NodeEntry {
-        node: NodeId::Module("pkg".to_string()),
+        node: NodeId::module("pkg"),
         depth: 1,
         via: vec![EdgeKind::DynamicImport],
     }];
@@ -133,6 +125,7 @@ fn suggested_test_entries_ignores_file_level_edges_without_file_nodes() {
         &root,
         &BTreeMap::new(),
         &TsFactMap::new(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert_eq!(suggested, entries);
 }

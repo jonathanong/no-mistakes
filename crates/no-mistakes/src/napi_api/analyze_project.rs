@@ -1,8 +1,11 @@
 use anyhow::{bail, Result as AnyhowResult};
-use serde_json::Value;
+use rayon::prelude::*;
+use serde_json::{value::RawValue, Value};
 
 use super::codebase::build_traverse_args;
-use super::options::{parse_options, to_napi_error};
+#[cfg(any(test, feature = "test-instrumentation"))]
+use super::options::parse_options_value;
+use super::options::to_napi_error;
 use crate::codebase::dependencies::TraverseArgs;
 
 mod context;
@@ -10,7 +13,9 @@ mod dispatch;
 mod options;
 mod types;
 
-use dispatch::{graph_direction, is_playwright_report, is_project_report, is_symbols_report};
+use dispatch::{
+    graph_direction, is_command_report, is_playwright_report, is_project_report, is_symbols_report,
+};
 use options::{flow_options, import_usages_options, symbols_options};
 use types::{
     AnalyzeProjectOptions, AnalyzeProjectResult, AnalyzeReportRequest, AnalyzeReportResult,
@@ -20,8 +25,14 @@ use types::{
 #[path = "analyze_project/tests/architecture_override.rs"]
 mod architecture_override_tests;
 #[cfg(test)]
+#[path = "analyze_project/tests/cli_parity_framework.rs"]
+mod cli_parity_framework_tests;
+#[cfg(test)]
 #[path = "analyze_project/cli_parity_tests.rs"]
 mod cli_parity_tests;
+#[cfg(test)]
+#[path = "analyze_project/command_report_tests.rs"]
+mod command_report_tests;
 #[cfg(test)]
 #[path = "analyze_project/domain_parity_tests.rs"]
 mod domain_parity_tests;
@@ -45,57 +56,83 @@ mod tests_dispatch;
 #[path = "analyze_project/tracked_banned_paths_tests.rs"]
 mod tracked_banned_paths_tests;
 
-pub(crate) fn analyze_project_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<AnalyzeProjectOptions>(&options_json)?;
+#[cfg(any(test, feature = "test-instrumentation"))]
+pub(crate) fn analyze_project_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<AnalyzeProjectOptions>(options)?;
+    analyze_project_options_impl(options)
+}
+
+pub(crate) fn analyze_project_value_impl(options: Value) -> napi::Result<String> {
+    let options = serde_json::from_value::<AnalyzeProjectOptions>(options)
+        .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))?;
+    analyze_project_options_impl(options)
+}
+
+fn analyze_project_options_impl(options: AnalyzeProjectOptions) -> napi::Result<String> {
     let output = analyze_project(options).map_err(to_napi_error)?;
-    Ok(serde_json::to_string_pretty(&output)
-        .expect("analyzeProject result serialization never fails"))
+    Ok(serde_json::to_string(&output).expect("analyzeProject result serialization never fails"))
 }
 
 fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjectResult> {
-    let mut context = context::AnalyzeProjectContext::prepare(&options)?;
-    let mut reports = Vec::with_capacity(options.reports.len());
-
-    for request in &options.reports {
-        let result = run_report(request, &options, &mut context)?;
-        reports.push(AnalyzeReportResult {
-            id: request.id.clone(),
-            report_type: request.report_type.clone(),
-            result,
-        });
-    }
+    let context = context::AnalyzeProjectContext::prepare(&options)?;
+    let observer = crate::diagnostics::current();
+    let reports = options
+        .reports
+        .par_iter()
+        .map(|request| {
+            crate::diagnostics::with_observer(observer.clone(), || {
+                run_report(request, &options, &context).map(|result| AnalyzeReportResult {
+                    id: request.id.clone(),
+                    report_type: request.report_type.clone(),
+                    result,
+                })
+            })
+        })
+        .collect::<Vec<_>>();
+    let reports = reports.into_iter().collect::<AnyhowResult<Vec<_>>>()?;
 
     Ok(AnalyzeProjectResult { reports })
+}
+
+fn json_raw_value(value: Value) -> Box<RawValue> {
+    RawValue::from_string(value.to_string()).expect("JSON Value re-serialize never fails")
 }
 
 fn run_report(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
-    context: &mut context::AnalyzeProjectContext,
-) -> AnyhowResult<Value> {
+    context: &context::AnalyzeProjectContext,
+) -> AnyhowResult<Box<RawValue>> {
     if let Some(direction) = graph_direction(&request.report_type) {
         return context.graph_report(request, options, direction);
     }
     if is_symbols_report(&request.report_type) {
-        return context.symbols_report(request, options);
+        return Ok(json_raw_value(context.symbols_report(request, options)?));
     }
     if request.report_type == "importUsages" {
-        return context.import_usages_report(request, options);
+        return Ok(json_raw_value(
+            context.import_usages_report(request, options)?,
+        ));
     }
     if is_playwright_report(&request.report_type) {
-        return context.playwright_report(request, options);
+        return Ok(json_raw_value(context.playwright_report(request, options)?));
     }
     if request.report_type == "flow" {
-        return context.flow_report(request, options);
+        return Ok(json_raw_value(context.flow_report(request, options)?));
     }
     if request.report_type == "effects" {
-        return context.effects_report(request, options);
+        return Ok(json_raw_value(context.effects_report(request, options)?));
     }
     if request.report_type == "rscCallers" {
-        return context.rsc_callers_report(request, options);
+        return Ok(json_raw_value(
+            context.rsc_callers_report(request, options)?,
+        ));
     }
     if is_project_report(&request.report_type) {
-        return context.project_report(request, options);
+        return Ok(json_raw_value(context.project_report(request, options)?));
+    }
+    if is_command_report(&request.report_type) {
+        return context.command_report(request, options);
     }
     bail!(
         "unknown analyzeProject report type: {}",

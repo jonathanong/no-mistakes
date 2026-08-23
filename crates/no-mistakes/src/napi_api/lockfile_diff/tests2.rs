@@ -28,7 +28,7 @@ fn lockfile_diff_json_impl_binary_lockfile_explicit_returns_err() {
         r#"{{"root": "{}", "base": "HEAD", "lockfile": "bun.lockb"}}"#,
         dir.path().to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options);
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(result.is_err(), "binary lockfile should return an error");
     let err = result.unwrap_err();
     assert!(
@@ -48,7 +48,7 @@ fn lockfile_diff_json_impl_invalid_head_without_explicit_lockfile_returns_err() 
         r#"{{"root": "{}", "base": "HEAD", "head": "nonexistent-ref-xyz"}}"#,
         dir.path().to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options);
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(result.is_err(), "invalid head ref should return an error");
     let err = result.unwrap_err();
     assert!(
@@ -77,7 +77,7 @@ fn lockfile_diff_json_impl_newly_added_no_head_reports_all_added() {
         r#"{{"root": "{}", "base": "HEAD"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options).unwrap();
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(entries.len(), 1, "should detect newly added lockfile");
     let added = entries[0]["added"].as_array().unwrap();
@@ -103,20 +103,21 @@ fn lockfile_diff_napi_ignores_worktree_lockfile_but_honors_explicit_path() {
         .output()
         .unwrap();
 
-    let automatic =
-        lockfile_diff_json_impl(serde_json::json!({ "root": root, "base": "HEAD" }).to_string())
-            .unwrap();
+    let automatic = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({ "root": root, "base": "HEAD" }).to_string(),
+    ))
+    .unwrap();
     let automatic: Vec<serde_json::Value> = serde_json::from_str(&automatic).unwrap();
     assert!(automatic.is_empty());
 
-    let explicit = lockfile_diff_json_impl(
+    let explicit = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(
         serde_json::json!({
             "root": root,
             "base": "HEAD",
             "lockfile": "pnpm-lock.yaml"
         })
         .to_string(),
-    )
+    ))
     .unwrap();
     let explicit: Vec<serde_json::Value> = serde_json::from_str(&explicit).unwrap();
     assert_eq!(explicit.len(), 1);
@@ -125,4 +126,40 @@ fn lockfile_diff_napi_ignores_worktree_lockfile_but_honors_explicit_path() {
         .unwrap()
         .iter()
         .any(|package| package == "lodash"));
+}
+
+#[test]
+fn find_git_root_returns_none_outside_a_repository() {
+    let dir = tempfile::tempdir().unwrap();
+    assert_eq!(find_git_root(dir.path()).unwrap(), None);
+}
+
+#[test]
+fn git_ref_exists_is_false_for_missing_refs() {
+    let dir = tempfile::tempdir().unwrap();
+    setup_git_repo(dir.path());
+    assert!(!git_ref_exists(dir.path(), "missing-ref").unwrap());
+    assert!(git_ref_exists(dir.path(), "HEAD").is_ok());
+}
+
+#[test]
+fn detect_lockfiles_from_head_uses_subdirectory_paths() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = dir.path();
+    setup_git_repo(root);
+    std::fs::create_dir_all(root.join("app")).unwrap();
+    std::fs::write(root.join("app/pnpm-lock.yaml"), "lockfileVersion: '9.0'\n").unwrap();
+    std::process::Command::new("git")
+        .args(["add", "app/pnpm-lock.yaml"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    std::process::Command::new("git")
+        .args(["commit", "-m", "lock"])
+        .current_dir(root)
+        .output()
+        .unwrap();
+    let found = detect_lockfiles_from_head(root, "HEAD", &root.join("app")).unwrap();
+    assert_eq!(found.len(), 1);
+    assert!(found[0].ends_with("pnpm-lock.yaml"));
 }

@@ -1,4 +1,4 @@
-use crate::edge_index::{EdgeIndex, NodeAliases};
+use crate::edge_index::PreparedRelationshipIndex;
 use crate::queue::extract::FileFacts;
 use crate::queue::source::relative_string;
 use crate::queue::types::{
@@ -40,11 +40,8 @@ pub struct ProjectReport {
 #[doc(hidden)]
 #[derive(Debug, Clone)]
 pub struct PreparedProjectReport {
-    pub(crate) root: PathBuf,
     pub(crate) report: ProjectReport,
-    pub(crate) index: EdgeIndex<RelationshipNode, EdgeKind>,
-    pub(crate) nodes_by_name: HashMap<String, Vec<RelationshipNode>>,
-    pub(crate) aliases: NodeAliases<RelationshipNode>,
+    pub(crate) relationships: PreparedRelationshipIndex<RelationshipNode, EdgeKind>,
 }
 
 impl PreparedProjectReport {

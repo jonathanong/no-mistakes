@@ -1,3 +1,4 @@
+use super::suppression::{component_is_suppressed, component_suppression_sources};
 use super::{
     all_react_component_keys, colocated_test_covered_components, component_disabled,
     directly_covered_components, dynamic_or_mock_boundary_files, effective_story_patterns,
@@ -7,7 +8,7 @@ use super::{
 };
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::rules::{path_filter::RulePathFilter, sort_findings};
-use crate::codebase::ts_resolver::{normalize_path, ImportResolver, TsConfig};
+use crate::codebase::ts_resolver::{normalize_path, ImportResolution};
 use crate::config::v2::schema::{NoMistakesConfig, RuleDef};
 use anyhow::{bail, Result};
 use std::collections::HashSet;
@@ -19,18 +20,20 @@ struct RuleCheck<'a> {
     config: &'a NoMistakesConfig,
     rule: &'a RuleDef,
     shared: &'a CheckFactMap,
-    tsconfig: &'a TsConfig,
+    resolver: &'a dyn ImportResolution,
     inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
-    session: &'a crate::codebase::analysis_session::AnalysisSession,
+    defer_suppression: bool,
+    sources: &'a crate::codebase::ts_source::SourceStore,
 }
 
-pub(super) fn check_with_tsconfig(
+pub(super) fn check_with_resolver(
     root: &Path,
     config: &NoMistakesConfig,
     shared: &CheckFactMap,
-    session: &crate::codebase::analysis_session::AnalysisSession,
-    mut resolve: impl FnMut(&Path) -> Result<TsConfig>,
+    resolver: &dyn ImportResolution,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    defer_suppression: bool,
+    sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let root = normalize_path(root);
     let mut findings = Vec::new();
@@ -47,16 +50,16 @@ pub(super) fn check_with_tsconfig(
             .map(|path| root.join(path))
             .unwrap_or_else(|| root.to_path_buf());
         let project_root = normalize_path(&project_root);
-        let tsconfig = resolve(&project_root)?;
         findings.extend(check_rule(RuleCheck {
             root: &root,
             project_root: &project_root,
             config,
             rule,
             shared,
-            tsconfig: &tsconfig,
+            resolver,
             inferred_roots,
-            session,
+            defer_suppression,
+            sources,
         })?);
     }
     sort_findings(&mut findings);
@@ -70,22 +73,17 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         config,
         rule,
         shared,
-        tsconfig,
+        resolver,
         inferred_roots,
-        session,
+        defer_suppression,
+        sources,
     } = inputs;
-    let visible_files = shared
-        .files()
-        .iter()
-        .map(|path| normalize_path(path))
-        .collect::<HashSet<_>>();
-    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible_files), session);
     let opts: Options = rule.rule_options();
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     let rule_filter = RulePathFilter::new_with_inferred(root, config, rule, &mut inferred_roots)?;
     let include = GlobMatcher::new(&opts.include)?;
     let exclude = GlobMatcher::new(&opts.exclude)?;
-    let story_patterns = effective_story_patterns(root, project_root, config, &opts);
+    let story_patterns = effective_story_patterns(root, project_root, config, &opts, sources);
     let stories = GlobMatcher::new(&story_patterns)?;
     let allow_files = GlobMatcher::new(opts.allow_files.keys())?;
     let test_filter = crate::codebase::test_filter::TestFileFilter::new(root, config);
@@ -94,7 +92,10 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         root,
         project_root,
         shared,
-        &opts,
+        super::selection::SelectionOptions {
+            options: &opts,
+            defer_suppression,
+        },
         &include,
         &exclude,
         &test_filter,
@@ -103,21 +104,27 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
     .filter(|component| rule_filter.is_match(&component.file))
     .collect::<Vec<_>>();
     let component_keys: HashSet<String> = components.iter().map(|c| c.key.clone()).collect();
+    let suppression_sources = component_suppression_sources(root, &components, shared);
+    let suppression_filtered_component_keys: HashSet<String> = components
+        .iter()
+        .filter(|component| !component_is_suppressed(root, &suppression_sources, component))
+        .map(|component| component.key.clone())
+        .collect();
     let all_component_keys = all_react_component_keys(project_root, shared);
     let story_files = reachable_story_files(
         project_root,
         shared,
         &stories,
-        &resolver,
+        resolver,
         &all_component_keys,
     );
     let mut namespace_findings =
-        namespace_import_findings(root, project_root, shared, &story_files, &resolver);
+        namespace_import_findings(root, project_root, shared, &story_files, resolver);
     let direct = directly_covered_components(
         project_root,
         shared,
         &story_files,
-        &resolver,
+        resolver,
         &all_component_keys,
     );
     let covered =
@@ -127,7 +134,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
     } else {
         Default::default()
     };
-    let boundary_files = dynamic_or_mock_boundary_files(project_root, shared, &resolver);
+    let boundary_files = dynamic_or_mock_boundary_files(project_root, shared, resolver);
 
     let mut findings = Vec::new();
     findings.append(&mut namespace_findings);
@@ -135,7 +142,7 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         root,
         project_root,
         &opts,
-        &component_keys,
+        &suppression_filtered_component_keys,
         &allow_files,
         shared,
     ));
@@ -152,8 +159,9 @@ fn check_rule(inputs: RuleCheck<'_>) -> Result<Vec<RuleFinding>> {
         }
         if opts.allow_components.contains_key(&component.key)
             || allow_files.is_match(&component.project_file)
-            || file_disabled(shared, &component.file)
-            || component_disabled(shared, &component.file, component.line)
+            || (!defer_suppression
+                && (file_disabled(shared, &component.file)
+                    || component_disabled(shared, &component.file, component.line)))
         {
             continue;
         }

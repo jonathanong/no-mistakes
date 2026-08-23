@@ -1,0 +1,8 @@
+on: pull_request_target
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      # Default checkout is the trusted base, not the changed pull-request head.
+      - uses: actions/checkout@v4
+      - run: pnpm exec tsc --noEmit --project pr-target/tsconfig.json

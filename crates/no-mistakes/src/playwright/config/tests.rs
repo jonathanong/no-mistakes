@@ -28,7 +28,7 @@ fn selector_wrappers_activate_and_load_v2_playwright_settings() {
     config.tests.playwright.selectors.wrappers = vec![wrapper.clone()];
     let visible = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
 
-    let settings = settings_from_loaded_v2(&root, &config, &[], None, &visible).unwrap();
+    let settings = settings_from_loaded_v2(&root, &config, &[], None, None, &visible).unwrap();
 
     assert_eq!(settings.selector_wrappers, vec![wrapper]);
 }
@@ -37,8 +37,7 @@ fn selector_wrappers_activate_and_load_v2_playwright_settings() {
 fn explicit_missing_config_errors() {
     let root = fixture_path(&["scan-config", "missing-default"]);
     let err = load_settings(&root, Some(Path::new("missing.yaml")), &[], None)
-        .err()
-        .expect("expected missing config to fail");
+        .expect_err("expected missing config to fail");
     assert!(err.to_string().contains("config file does not exist"));
 }
 
@@ -212,9 +211,8 @@ fn cli_playwright_configs_override_file_settings() {
 #[test]
 fn duplicate_no_mistakes_configs_error() {
     let root = fixture_path(&["scan-config", "multiple-no-mistakes"]);
-    let err = load_settings(&root, None, &[], None)
-        .err()
-        .expect("expected duplicate config files to fail");
+    let err =
+        load_settings(&root, None, &[], None).expect_err("expected duplicate config files to fail");
     assert!(err.to_string().contains("multiple config files found"));
 }
 
@@ -228,7 +226,15 @@ fn reads_yaml_and_finds_default_playwright_config() {
     assert!(settings.html_ids);
     assert_eq!(settings.selector_roots, vec!["web/components"]);
     assert_eq!(settings.selector_include, vec!["web/components/**/*.tsx"]);
-    assert_eq!(settings.selector_exclude, vec!["**/*.test.tsx"]);
+    assert_eq!(
+        settings.selector_exclude,
+        vec![
+            "**/*.test.tsx".to_string(),
+            "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts}".to_string(),
+            "**/*.test.*".to_string(),
+            "**/*.spec.*".to_string(),
+        ]
+    );
     assert_eq!(
         settings.playwright_configs,
         vec![root.join("playwright.config.mts")]
@@ -302,6 +308,13 @@ fn test_is_playwright_config_name_edge_cases() {
     assert!(!is_playwright_config_name(std::ffi::OsStr::new(
         "playwrightconfig"
     )));
+    #[cfg(unix)]
+    {
+        use std::os::unix::ffi::OsStrExt;
+        assert!(!is_playwright_config_name(std::ffi::OsStr::from_bytes(
+            b"playwright\xff.config.ts"
+        )));
+    }
 }
 
 #[test]

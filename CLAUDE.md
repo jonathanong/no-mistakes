@@ -39,6 +39,47 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Heuristics — can't be perfect, but we'll try our best
 - All CLIs must also be available through the N-API API for node.js
 
+## Prepared analysis ownership
+
+- A public CLI, N-API entrypoint, or integration runner creates exactly one
+  request-scoped analysis session. It owns the visible-file inventory,
+  `SourceStore`, requested TS facts, and canonical relationship data for that
+  request. Lower layers borrow those prepared inputs; they do not create a
+  competing session, inventory, store, fact pass, or equivalent graph.
+- Semantically distinct resolver/catalog projections may coexist inside that
+  ownership boundary when one request needs them (for example, ordinary
+  codebase resolution plus broader test-runner project resolution). They must
+  share the request inventory, sources, and union fact pass, and each output
+  field must use the projection whose scope defines its public semantics.
+- Declare the complete fact and relationship demand at the boundary before
+  collection. Domain checks and graph edge producers consume the prepared
+  `TsFactLookup`/fact map, including failure entries, instead of collecting
+  domain facts or parsing a second time.
+- The session is also the ownership boundary for source text. Every source
+  consumer reads through its session-provided `SourceStore`, so a successful
+  read and an I/O failure both have one request-wide identity and accounting
+  path. A helper that accepts a path but not prepared sources is a design smell
+  for any TS/JS source consumer.
+- Relationship analyzers emit typed relationships once into the canonical
+  dependency graph (or its prepared symbol/reverse projection). Commands,
+  checks, and reports project/filter those relationships; they must not each
+  rebuild an equivalent reverse index or a private graph shape.
+- Treat the resolver catalog, candidate-file universe, configuration fallback,
+  and relationship filters as part of a prepared analysis's semantics, not just
+  implementation details. Reuse a prepared graph or reverse projection only
+  when those inputs are equivalent for the fields being produced; a broader
+  runner/project catalog must not answer an ordinary codebase query.
+- Additive CLI flags must not change pre-existing report fields. For example,
+  requesting test impact may add `testImpact`, but it must not change ordinary
+  `directImporters` or `dependentsCount`. When an additive analysis uses broader
+  resolver scope, add a fixture-backed parity test that compares the baseline
+  fields with the flag both off and on.
+- Keep bindings declarative per layer: extract syntactic imports, exports, and
+  domain occurrences into facts; resolve paths and ownership in the prepared
+  resolver/catalog layer; then project graph/query relationships. Do not blend
+  file reads, parsing, resolution, and output-specific traversal in a command
+  handler just because it is convenient locally.
+
 ## Context Management
 
 - By default, show minimum output
@@ -65,16 +106,31 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   Shepherd Journal before resolving the thread.
 - Rule suppression must work consistently for every `no-mistakes` rule. Use `no-mistakes` suppression directives, never `guardrails`, and support top-of-file opt-outs (`no-mistakes-disable-file`) plus line-specific opt-outs (`no-mistakes-disable-line` and `no-mistakes-disable-next-line`) where findings have line numbers.
 - All shared Rust code belongs in `no-mistakes`. Crates must not depend on one another directly. If two crates need the same helper, lift it into `no-mistakes` first.
-- When adding or changing a CLI-facing capability, update the Rust library entrypoint,
-  N-API binding, JS exports/types, and fixture-backed tests in the same change.
-- When adding or changing a CLI command, update `docs/cli/*`, the Node API docs
-  when there is programmatic parity, and the `skills/no-mistakes` references.
-- When adding or changing a `no-mistakes check` rule, update `docs/rules/*`
-  with a clear example, counterexample, fix guidance, and any suppression caveats.
-- When adding or changing an ESLint/Oxlint rule, update
-  `docs/eslint-rules/*` with a clear example, counterexample, and fix guidance.
-- When adding a graph edge kind or relationship filter, update
-  `docs/graph-edges.md` with direction, filter mapping, examples, and caveats.
+
+### Public surface checklist
+
+A feature is not done until the matching rows land in the same change. Do not
+land a CLI or N-API capability without the binding, types, docs, and fixtures
+in that PR.
+
+- **Rust library** — the entrypoint, rule, or planner that implements the
+  behavior.
+- **N-API** — async binding (`json_binding!`), JS facade, and
+  `packages/no-mistakes/*.d.ts`. New or widened unions, option fields, and
+  report types that callers need to name must be `export`ed. Do not leave a
+  public contract only as `SomeType['field']`.
+- **Docs (required, not optional)** — `docs/cli/*` for commands,
+  `docs/node-api.md` (CLI mapping and runtime export table) for any
+  programmatic API, `docs/rules/*` for check rules (example, counterexample,
+  fix, suppression, new options), `docs/eslint-rules/*` for lint rules,
+  `docs/graph-edges.md` for new edge kinds or filters, `docs/configuration/*`
+  for new config knobs, `docs/feature-parity.md` when language or framework
+  surface changes, and `skills/no-mistakes` references for agent-facing
+  commands.
+- **Tests** — fixture-backed behavior, plus declaration locks in
+  `packages/no-mistakes/scripts/api.test.js` when `.d.ts` contracts change,
+  plus `crates/no-mistakes/tests/docs_coverage.rs` when adding a CLI command
+  or rule page.
 
 ## Agent Best Practices
 
@@ -87,6 +143,9 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 
 ## Coverage
 
-- Coverage gates must enforce 99% line and function coverage.
+- Coverage gates must enforce 99% line and function coverage by default.
+  Change `RUST_COVERAGE_FAIL_UNDER_LINES` and
+  `RUST_COVERAGE_FAIL_UNDER_FUNCTIONS` in `.github/workflows/ci.yml`, and keep
+  Codecov rust `target` values in `codecov.yml` in sync.
 - **Never** use `cargo llvm-cov --ignore-filename-regex` to suppress uncovered source files. The only files exempt from coverage are test files (`tests/`, sibling `tests.rs`) and test fixtures (`fixtures/`), which `cargo llvm-cov` already excludes by default.
-- If a file cannot be brought to 99%, refactor it (extract logic to a lib, thin the entry point) — do not add an exception.
+- If a file cannot be brought to the configured gate, refactor it (extract logic to a lib, thin the entry point) — do not add an exception.

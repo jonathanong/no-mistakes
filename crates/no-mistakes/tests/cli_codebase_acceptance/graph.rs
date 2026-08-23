@@ -16,6 +16,7 @@ fn import_forms_report_expected_edge_kinds() {
         ("import-type.mts", "type-import"),
         ("dynamic.mts", "dynamic-import"),
         ("require.js", "require"),
+        ("require-resolve.js", "require-resolve"),
         ("reexport.mts", "import"),
     ];
 
@@ -38,6 +39,7 @@ fn import_forms_report_expected_edge_kinds() {
             "import-type.mts",
             "inline-type.mts",
             "reexport.mts",
+            "require-resolve.js",
             "require.js",
             "static.mts",
             "type-only.mts",
@@ -48,6 +50,10 @@ fn import_forms_report_expected_edge_kinds() {
         vec!["dynamic-import"]
     );
     assert_eq!(via_kinds(&dependents, "require.js"), vec!["require"]);
+    assert_eq!(
+        via_kinds(&dependents, "require-resolve.js"),
+        vec!["require-resolve"]
+    );
     assert_eq!(
         via_kinds(&dependents, "inline-type.mts"),
         vec!["type-import"]
@@ -404,7 +410,7 @@ fn large_graph_monorepo_exercises_all_relationships() {
     let files = value["files"].as_array().expect("files should be an array");
     assert_eq!(
         files.len(),
-        178,
+        182,
         "large fixture traversal should stay stable"
     );
     assert!(
@@ -439,6 +445,8 @@ fn large_graph_monorepo_exercises_all_relationships() {
         "test",
         "type-import",
         "workspace",
+        "workflow-job",
+        "workflow-step",
     ] {
         assert!(
             kinds.contains(expected),

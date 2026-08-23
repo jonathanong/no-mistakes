@@ -1,0 +1,8 @@
+name: Other
+runs:
+  using: composite
+  steps:
+    - name: Set up credentials
+      uses: ./.github/actions/setup-aws
+      with:
+        role-arn: ${{ inputs.role-arn }}

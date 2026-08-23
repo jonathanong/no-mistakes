@@ -24,7 +24,11 @@ impl SharedCheckContext {
             .prepared
             .playwright
             .as_ref()?
-            .report_view(options.project.as_deref(), options.assert_unique_html_ids)?;
+            .report_view(
+                options.project.as_deref(),
+                options.app.as_deref(),
+                options.assert_unique_html_ids,
+            )?;
         Some(PreparedPlaywrightView {
             settings,
             fact_plan,
@@ -33,6 +37,10 @@ impl SharedCheckContext {
 
     fn fact_files(&self) -> &[PathBuf] {
         &self.fact_files
+    }
+
+    fn supplemental_call_site_files(&self) -> &[PathBuf] {
+        &self.supplemental_call_site_files
     }
 
     fn graph_files(&self) -> &[PathBuf] {
@@ -48,18 +56,23 @@ impl SharedCheckContext {
         facts: &crate::codebase::check_facts::CheckFactMap,
         dependency_graph: Option<&std::sync::Arc<crate::codebase::dependencies::graph::DepGraph>>,
         session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+        include_suppressed: bool,
     ) -> Result<crate::check_runner::CheckResults> {
         use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
-        use crate::codebase::rules::agents_md_max_size::advisories_with_files_and_sources;
-
         if self.fact_files.is_empty()
             && self.graph_files.is_empty()
             && !self.filesystem_rules_enabled
             && !self.playwright_rules_enabled
-            && !self.forbidden_deps_enabled
+            && !self.graph_rules_enabled
         {
-            return Ok(crate::check_runner::empty_results([None]));
+            let mut results = crate::check_runner::empty_results([None]);
+            results.include_suppressed = include_suppressed;
+            return Ok(results);
         }
+        let scoped_facts = self
+            .graph_plan
+            .map(|_| facts.with_graph_file_universe(self.graph_files.clone()));
+        let facts = scoped_facts.as_ref().unwrap_or(facts);
         let config = &self.prepared.config;
         let sources = self.prepared.visible_paths.source_store_for(&self.root);
         let (react, queues, rules, integration, codebase, filesystem_rules) =
@@ -70,21 +83,31 @@ impl SharedCheckContext {
                 tsconfig_path: &self.tsconfig_path,
                 react_enabled: self.react_enabled,
                 queues_enabled: self.queues_enabled,
+                integration_enabled: self.plan.integration,
                 unique_exports_enabled: self.unique_exports_enabled,
                 filesystem_rules_enabled: self.filesystem_rules_enabled,
-                discovered_files: self.fs_files.clone(),
+                discovered_files: &self.fs_files,
                 facts,
                 prepared_playwright: self.prepared.playwright.as_ref(),
                 prepared_react: &self.prepared.react,
                 prepared_graph: self.prepared_graph.as_ref(),
                 dependency_graph: dependency_graph.cloned(),
                 prepared_tsconfig: &self.prepared.tsconfig,
+                prepared_tsconfig_catalog: &self.prepared.tsconfig_catalog,
                 visible_paths: self.prepared.visible_paths.as_ref(),
                 sources: std::sync::Arc::clone(&sources),
                 inferred_roots: &self.prepared.inferred_roots,
                 config,
                 codebase_config: &self.prepared.codebase_config,
                 vitest_projects: self.prepared.vitest_projects.as_ref(),
+                workflow_documents: self.prepared.workflow_documents.as_deref(),
+                tsconfig_gate_project_inputs: self
+                    .prepared
+                    .tsconfig_gate_project_inputs
+                    .as_ref(),
+                // Preserve ordinary check behavior; defer only when this
+                // additive report requests suppression accounting.
+                defer_suppression: include_suppressed,
             });
         let completed = crate::check_runner::complete_domain_checks((
             react,
@@ -94,42 +117,19 @@ impl SharedCheckContext {
             codebase,
             filesystem_rules,
         ))?;
-        let mut rules = completed.rules.findings;
-        rules.extend(completed.filesystem_rules.findings);
-        let warnings = [
-            completed.react.warning,
-            completed.queues.warning,
-            completed.rules.warning,
-            completed.integration.warning,
-            completed.codebase.warning,
-            completed.filesystem_rules.warning,
-        ]
-        .into_iter()
-        .flatten()
-        .collect();
-        let advisories = if self.filesystem_rules_enabled {
-            advisories_with_files_and_sources(&self.root, config, &self.fs_files, &sources)?
-        } else {
-            Vec::new()
-        };
-        Ok(crate::check_runner::CheckResults {
-            timings: vec![
-                ("discover", std::time::Duration::ZERO),
-                ("parse_extract", std::time::Duration::ZERO),
-                ("react", completed.react.duration),
-                ("queues", completed.queues.duration),
-                ("rules", completed.rules.duration),
-                ("integration", completed.integration.duration),
-                ("codebase", completed.codebase.duration),
-                ("filesystem_rules", completed.filesystem_rules.duration),
-            ],
-            react: completed.react.findings,
-            queues: completed.queues.findings,
-            rules,
-            integration: completed.integration.findings,
-            codebase: completed.codebase.findings,
-            warnings,
-            advisories,
-        })
+        crate::check_runner::results::finalize_domain_checks(
+            crate::check_runner::results::FinalizeInput {
+                root: &self.root,
+                config,
+                filesystem_files: &self.fs_files,
+                sources: &sources,
+                filesystem_rules_enabled: self.filesystem_rules_enabled,
+                react_warning: None,
+                discover_duration: std::time::Duration::ZERO,
+                facts_duration: std::time::Duration::ZERO,
+                completed,
+                include_suppressed,
+            },
+        )
     }
 }

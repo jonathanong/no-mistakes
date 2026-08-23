@@ -256,3 +256,71 @@ fn concurrent_json_failures_have_exact_parse_and_cache_hit_metrics() {
     assert_eq!(work["manifest.cache_hits"], (CONCURRENT_CALLERS - 1) as u64);
     assert_eq!(work["manifest.errors"], 1);
 }
+
+#[test]
+fn concurrent_supplemental_reads_are_memoized_across_threads() {
+    let known = fixture("alpha.ts");
+    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&known)));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let store = SourceStore::new_observed(inventory, Some(Arc::clone(&observer)));
+    let supplemental = fixture("beta.ts");
+    let barrier = Arc::new(Barrier::new(CONCURRENT_CALLERS));
+
+    let sources = std::thread::scope(|scope| {
+        let handles = (0..CONCURRENT_CALLERS)
+            .map(|_| {
+                let barrier = Arc::clone(&barrier);
+                let supplemental = &supplemental;
+                let store = &store;
+                scope.spawn(move || {
+                    barrier.wait();
+                    store.read_path(supplemental).unwrap()
+                })
+            })
+            .collect::<Vec<_>>();
+        handles
+            .into_iter()
+            .map(|handle| handle.join().unwrap())
+            .collect::<Vec<_>>()
+    });
+
+    assert!(sources
+        .iter()
+        .all(|source| Arc::ptr_eq(source, &sources[0])));
+    assert_eq!(store.physical_read_count(), 1);
+    let work = observer.snapshot().work;
+    assert_eq!(work["source.requests"], CONCURRENT_CALLERS as u64);
+    assert_eq!(work["source.reads"], 1);
+    assert_eq!(work["source.cache_hits"], (CONCURRENT_CALLERS - 1) as u64);
+}
+
+#[test]
+fn optional_reads_use_a_one_file_store_when_no_session_is_prepared() {
+    let path = fixture("alpha.ts");
+    let source = SourceStore::read_optional(None, &path).unwrap();
+    assert!(source.contains("alpha"));
+    assert!(SourceStore::read_optional(None, &fixture("missing.ts")).is_none());
+}
+
+#[test]
+fn optional_json_parses_use_a_one_file_store_when_no_session_is_prepared() {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/gitignore/workspace-symbol/package.json");
+    let json = SourceStore::parse_json_optional(None, &path).unwrap();
+    assert!(json.is_object());
+    assert!(SourceStore::parse_json_optional(None, &fixture("missing.json")).is_none());
+}
+
+#[test]
+fn invalid_utf8_source_reads_are_cached_as_invalid_data() {
+    let tmp = tempfile::tempdir().unwrap();
+    let path = tmp.path().join("invalid.ts");
+    std::fs::write(&path, [0xff, 0xfe, b'x']).unwrap();
+    let inventory = Arc::new(FileInventory::from_paths(std::slice::from_ref(&path)));
+    let store = SourceStore::new(inventory);
+    let first = store.read_path(&path).unwrap_err();
+    let second = store.read_path(&path).unwrap_err();
+    assert_eq!(first.kind(), ErrorKind::InvalidData);
+    assert!(Arc::ptr_eq(&first, &second));
+    assert_eq!(store.physical_read_count(), 1);
+}

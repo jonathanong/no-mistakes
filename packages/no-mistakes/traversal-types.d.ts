@@ -12,6 +12,13 @@ export type Relationship =
   | "queue"
   | "md"
   | "ci"
+  | "workflow"
+  | "workflow-job"
+  | "workflow-step"
+  | "workflow-needs"
+  | "workflow-uses"
+  | "workflow-run"
+  | "workflow-artifact"
   | "http"
   | "process"
   | "asset"
@@ -19,11 +26,24 @@ export type Relationship =
   | "dotnet"
   | "swift"
   | "terraform"
+  | "python"
+  | "go"
+  | "rust"
+  | "ruby"
+  | "php"
+  | "java"
+  | "kotlin"
+  | "elixir"
+  | "dart"
+  | "resource"
+  | "trpc"
   | "all";
 
 export interface TraverseOptions {
   files: Array<string | SymbolEntrypoint>;
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
   depth?: number;
   filters?: string[];
@@ -38,7 +58,16 @@ export interface DependencyFile {
   file?: string;
   symbol?: string;
   queueFile?: string;
+  /** Workflow file for a virtual GitHub Actions job or step node. */
+  workflowFile?: string;
+  /** GitHub Actions job identifier for a virtual workflow job or step node. */
   job?: string;
+  /** Zero-based step index for a virtual GitHub Actions workflow step node. */
+  step?: number;
+  /** Router file for a virtual tRPC procedure node. */
+  routerFile?: string;
+  /** Dotted procedure path for a virtual tRPC procedure node (`user.get`). */
+  procedure?: string;
   module?: string;
   depth: number;
   via?: string[];
@@ -49,9 +78,25 @@ export interface SymbolEntrypoint {
   symbol?: string;
 }
 
+export interface TsConfigDiagnostic {
+  kind: "ambiguous-ownership" | "invalid-config" | "invalid-extends" | "invalid-reference";
+  config: string | null;
+  file: string | null;
+  detail: string;
+  candidates: string[];
+}
+
+export interface TsConfigProvenance {
+  importer: string;
+  config: string | null;
+  forced: boolean;
+}
+
 export interface DependencyResult {
   roots: string[];
   files: DependencyFile[];
+  diagnostics: TsConfigDiagnostic[];
+  tsconfig_provenance: TsConfigProvenance[];
 }
 
 export type ExportKind =
@@ -68,8 +113,11 @@ export type ExportKind =
 
 export interface SymbolsOptions {
   files: string[];
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   mode?: "list" | "signature-impact";
   symbol?: string;
@@ -155,8 +203,11 @@ export interface SignatureImpactResult {
 }
 
 export interface ProjectOptions {
+  /** Project root. Defaults to the current working directory. */
   root?: string;
+  /** Path to tsconfig.json for alias resolution. Searched upward if omitted. */
   tsconfig?: string;
+  /** Path to the no-mistakes config file (e.g. .no-mistakes.yml). Auto-discovered in root if omitted. */
   config?: string;
   filters?: string[];
   targets?: string[];
@@ -169,4 +220,9 @@ export interface ProjectOptions {
   target?: string;
   /** `reactUsages` `--include` spec: comma-separated `stories,tests,props`. */
   include?: string;
+}
+
+export interface CheckOptions extends ProjectOptions {
+  /** Add deterministic accounting for findings hidden by no-mistakes directives. */
+  includeSuppressed?: boolean;
 }

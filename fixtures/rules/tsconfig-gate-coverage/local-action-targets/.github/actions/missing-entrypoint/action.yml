@@ -1,0 +1,5 @@
+name: Missing entrypoint
+description: References a JavaScript file that is not tracked
+runs:
+  using: node24
+  main: dist/index.js

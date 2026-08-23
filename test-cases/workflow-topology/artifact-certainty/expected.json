@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/main.yml",
+      "path": ".github/workflows/main.yml",
+      "name": "main.yml",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/main.yml#build-ordered",
+        ".github/workflows/main.yml#build-unordered",
+        ".github/workflows/main.yml#consume-guaranteed",
+        ".github/workflows/main.yml#consume-ordered",
+        ".github/workflows/main.yml#consume-race",
+        ".github/workflows/main.yml#consume-unordered",
+        ".github/workflows/main.yml#first-overwrite",
+        ".github/workflows/main.yml#overwrite"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/main.yml#build-ordered",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "build-ordered",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "report-ordered",
+              "value": "report-ordered"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#build-unordered",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "build-unordered",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "report",
+              "value": "report"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-guaranteed",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-guaranteed",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "shared-overwrite",
+                "value": "shared-overwrite"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-ordered",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-ordered",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "report-ordered",
+                "value": "report-ordered"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-race",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-race",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "shared-overwrite",
+                "value": "shared-overwrite"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-unordered",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-unordered",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "report",
+                "value": "report"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#first-overwrite",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "first-overwrite",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "shared-overwrite",
+              "value": "shared-overwrite"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#overwrite",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "overwrite",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "shared-overwrite",
+              "value": "shared-overwrite"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "raw": "true",
+              "effective": true
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#build-ordered",
+      "to": ".github/workflows/main.yml#consume-ordered",
+      "name": "report-ordered",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "exact"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#build-unordered",
+      "to": ".github/workflows/main.yml#consume-unordered",
+      "name": "report",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#first-overwrite",
+      "to": ".github/workflows/main.yml#consume-race",
+      "name": "shared-overwrite",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#overwrite",
+      "to": ".github/workflows/main.yml#consume-guaranteed",
+      "name": "shared-overwrite",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "exact"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#overwrite",
+      "to": ".github/workflows/main.yml#consume-race",
+      "name": "shared-overwrite",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#build-ordered",
+      "to": ".github/workflows/main.yml#consume-ordered"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#first-overwrite",
+      "to": ".github/workflows/main.yml#consume-race"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#first-overwrite",
+      "to": ".github/workflows/main.yml#overwrite"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#overwrite",
+      "to": ".github/workflows/main.yml#consume-guaranteed"
+    }
+  ],
+  "diagnostics": []
+}

@@ -1,182 +1,193 @@
 "use strict";
 
-const native = require("./bin/no-mistakes.node");
+// CI real-addon tests point this at the freshly compiled cdylib without
+// overwriting the package's checked-in install placeholder.
+const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
 const planning = require("./planning");
+const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
+const fs = require("node:fs");
+const path = require("node:path");
 
 async function callJson(fn, options) {
-  return JSON.parse(await fn(JSON.stringify(options || {})));
+  const input = Buffer.from(JSON.stringify(options || {}));
+  return JSON.parse(await fn(input));
 }
 
-async function dependencies(options) {
-  return callJson(native.dependenciesJson, options);
+function createJsonApis(descriptors) {
+  return Object.fromEntries(
+    Object.entries(descriptors).map(([apiName, nativeName]) => [
+      apiName,
+      async (options) => callJson(native[nativeName], options),
+    ]),
+  );
 }
 
-async function dependents(options) {
-  return callJson(native.dependentsJson, options);
+const jsonApis = createJsonApis({
+  analyzeProject: "analyzeProjectJson",
+  callSites: "callSitesJson",
+  check: "checkJson",
+  resolveConfig: "resolveConfigJson",
+  ciEnv: "ciEnvJson",
+  ciImpact: "ciImpactJson",
+  ciTopology: "ciTopologyJson",
+  dataPw: "dataPwJson",
+  deadExports: "deadExportsJson",
+  dependencies: "dependenciesJson",
+  dependents: "dependentsJson",
+  effects: "effectsJson",
+  exportsOf: "exportsOfJson",
+  fetches: "fetchesJson",
+  impactedChecks: "impactedChecksJson",
+  importUsages: "importUsagesJson",
+  importers: "importersJson",
+  infraOutputs: "infraOutputsJson",
+  infraResourceRefs: "infraResourceRefsJson",
+  infraTestFor: "infraTestForJson",
+  lockfileDiff: "lockfileDiffJson",
+  validateMermaidMarkdown: "validateMermaidMarkdownJson",
+  playwrightCheck: "playwrightCheckJson",
+  playwrightEdges: "playwrightEdgesJson",
+  playwrightRelated: "playwrightRelatedJson",
+  playwrightTests: "playwrightTestsJson",
+  reactAnalyze: "reactAnalyzeJson",
+  reactCheck: "reactCheckJson",
+  reactUsages: "reactUsagesJson",
+  registryExtension: "registryExtensionJson",
+  related: "relatedJson",
+  resolveCheck: "resolveCheckJson",
+  rscCallers: "rscCallersJson",
+  swiftImporters: "swiftImportersJson",
+  swiftTestTargets: "swiftTestTargetsJson",
+  symbols: "symbolsJson",
+});
+
+const PLAN_INPUT_REPORTS = new Set(["testsComment", "testsGraph", "testsGraphMermaid"]);
+const CAMELIZE_REPORTS = new Set(["testsPlan", "testsImpact", "testsTargets", "testsGraph"]);
+
+async function analyzeProject(options = {}) {
+  const request = { ...options };
+  const generatedDirs = [];
+  try {
+    if (Array.isArray(request.reports)) {
+      request.reports = await Promise.all(
+        request.reports.map(async (report) => {
+          if (report.type === "testsWhy") {
+            const prepared = await planning.prepareWhyPlan(report);
+            if (prepared.generatedDir) generatedDirs.push(prepared.generatedDir);
+            return prepared.request;
+          }
+          return PLAN_INPUT_REPORTS.has(report.type)
+            ? await planning.decamelizePlanOptions(report)
+            : report;
+        }),
+      );
+    }
+    const result = await jsonApis.analyzeProject(request);
+    for (const report of result.reports || []) {
+      if (report.type === "testsWhy") {
+        report.result = planning.camelizeWhy(report.result);
+      } else if (CAMELIZE_REPORTS.has(report.type)) {
+        report.result = planning.camelizeValue(report.result);
+      }
+    }
+    return result;
+  } finally {
+    await Promise.all(generatedDirs.map((dir) => planning.removeGeneratedDir(dir)));
+  }
 }
 
-async function related(options) {
-  return callJson(native.relatedJson, options);
-}
+const topologyMemo = new Map();
 
-async function analyzeProject(options) {
-  return callJson(native.analyzeProjectJson, options);
-}
-
-async function symbols(options) {
-  return callJson(native.symbolsJson, options);
-}
-
-async function importUsages(options) {
-  return callJson(native.importUsagesJson, options);
-}
-
-async function importers(options) {
-  return callJson(native.importersJson, options);
-}
-
-async function exportsOf(options) {
-  return callJson(native.exportsOfJson, options);
-}
-
-async function deadExports(options) {
-  return callJson(native.deadExportsJson, options);
-}
-
-async function callSites(options) {
-  return callJson(native.callSitesJson, options);
-}
-
-async function resolveCheck(options) {
-  return callJson(native.resolveCheckJson, options);
-}
-
-async function fetches(options) {
-  return callJson(native.fetchesJson, options);
-}
-
-async function check(options) {
-  return callJson(native.checkJson, options);
-}
-
-async function playwrightCheck(options) {
-  return callJson(native.playwrightCheckJson, options);
-}
-
-async function playwrightEdges(options) {
-  return callJson(native.playwrightEdgesJson, options);
-}
-
-async function playwrightRelated(options) {
-  return callJson(native.playwrightRelatedJson, options);
-}
-
-async function playwrightTests(options) {
-  return callJson(native.playwrightTestsJson, options);
-}
-
-async function reactAnalyze(options) {
-  return callJson(native.reactAnalyzeJson, options);
-}
-
-async function reactCheck(options) {
-  return callJson(native.reactCheckJson, options);
-}
-
-async function reactUsages(options) {
-  return callJson(native.reactUsagesJson, options);
-}
-
-async function dataPw(options) {
-  return callJson(native.dataPwJson, options);
-}
-
-async function effects(options) {
-  return callJson(native.effectsJson, options);
-}
-
-async function rscCallers(options) {
-  return callJson(native.rscCallersJson, options);
-}
-
-async function registryExtension(options) {
-  return callJson(native.registryExtensionJson, options);
-}
-
-async function lockfileDiff(options) {
-  return callJson(native.lockfileDiffJson, options);
-}
-
-async function ciImpact(options) {
-  return callJson(native.ciImpactJson, options);
-}
-
-async function ciEnv(options) {
-  return callJson(native.ciEnvJson, options);
-}
-
-async function impactedChecks(options) {
-  return callJson(native.impactedChecksJson, options);
-}
-
-async function infraResourceRefs(options) {
-  return callJson(native.infraResourceRefsJson, options);
-}
-
-async function infraOutputs(options) {
-  return callJson(native.infraOutputsJson, options);
-}
-
-async function infraTestFor(options) {
-  return callJson(native.infraTestForJson, options);
-}
-
-async function swiftImporters(options) {
-  return callJson(native.swiftImportersJson, options);
-}
-
-async function swiftTestTargets(options) {
-  return callJson(native.swiftTestTargetsJson, options);
+async function ciTopology(options) {
+  const root = path.resolve((options && options.root) || process.cwd());
+  const configPath = path.resolve(root, (options && options.config) || ".no-mistakes.yml");
+  let mtime = 0;
+  try {
+    mtime = fs.statSync(configPath).mtimeMs;
+  } catch {
+    mtime = 0;
+  }
+  const workflows = JSON.stringify(
+    []
+      .concat((options && options.workflows) || [])
+      .map(String)
+      .sort(),
+  );
+  const identity = `${root}\0${configPath}\0`;
+  const key = `${identity}${mtime}\0${workflows}`;
+  const stale = [];
+  for (const memoKey of topologyMemo.keys()) {
+    if (!memoKey.startsWith(identity)) continue;
+    const memoMtime = memoKey.slice(identity.length).split("\0")[0];
+    if (memoMtime !== String(mtime)) stale.push(memoKey);
+  }
+  for (const memoKey of stale) topologyMemo.delete(memoKey);
+  const cached = topologyMemo.get(key);
+  if (cached) return cached.then((value) => structuredClone(value));
+  const pending = jsonApis.ciTopology({ ...options, root }).catch((error) => {
+    topologyMemo.delete(key);
+    throw error;
+  });
+  topologyMemo.set(key, pending);
+  return pending.then((value) => structuredClone(value));
 }
 
 async function version() {
   return native.version();
 }
 
-module.exports = {
-  analyzeProject,
-  callSites,
-  check,
-  ciEnv,
-  ciImpact,
-  dataPw,
-  deadExports,
-  dependencies,
-  dependents,
-  effects,
-  exportsOf,
-  fetches,
-  impactedChecks,
-  importUsages,
-  importers,
-  infraOutputs,
-  infraResourceRefs,
-  infraTestFor,
-  lockfileDiff,
-  playwrightCheck,
-  playwrightEdges,
-  playwrightRelated,
-  playwrightTests,
-  reactAnalyze,
-  reactCheck,
-  reactUsages,
-  registryExtension,
-  related,
-  resolveCheck,
-  rscCallers,
-  swiftImporters,
-  swiftTestTargets,
-  symbols,
-  version,
-  ...planning,
-};
+module.exports.createWorkflowTopologyIndex = createWorkflowTopologyIndex;
+module.exports.version = version;
+module.exports.analyzeProject = analyzeProject;
+module.exports.callSites = jsonApis.callSites;
+module.exports.check = jsonApis.check;
+module.exports.resolveConfig = jsonApis.resolveConfig;
+module.exports.ciEnv = jsonApis.ciEnv;
+module.exports.ciImpact = jsonApis.ciImpact;
+module.exports.ciTopology = ciTopology;
+module.exports.dataPw = jsonApis.dataPw;
+module.exports.deadExports = jsonApis.deadExports;
+module.exports.dependencies = jsonApis.dependencies;
+module.exports.dependents = jsonApis.dependents;
+module.exports.effects = jsonApis.effects;
+module.exports.exportsOf = jsonApis.exportsOf;
+module.exports.fetches = jsonApis.fetches;
+module.exports.impactedChecks = jsonApis.impactedChecks;
+module.exports.importUsages = jsonApis.importUsages;
+module.exports.importers = jsonApis.importers;
+module.exports.infraOutputs = jsonApis.infraOutputs;
+module.exports.infraResourceRefs = jsonApis.infraResourceRefs;
+module.exports.infraTestFor = jsonApis.infraTestFor;
+module.exports.lockfileDiff = jsonApis.lockfileDiff;
+module.exports.validateMermaidMarkdown = jsonApis.validateMermaidMarkdown;
+module.exports.playwrightCheck = jsonApis.playwrightCheck;
+module.exports.playwrightEdges = jsonApis.playwrightEdges;
+module.exports.playwrightRelated = jsonApis.playwrightRelated;
+module.exports.playwrightTests = jsonApis.playwrightTests;
+module.exports.reactAnalyze = jsonApis.reactAnalyze;
+module.exports.reactCheck = jsonApis.reactCheck;
+module.exports.reactUsages = jsonApis.reactUsages;
+module.exports.registryExtension = jsonApis.registryExtension;
+module.exports.related = jsonApis.related;
+module.exports.resolveCheck = jsonApis.resolveCheck;
+module.exports.rscCallers = jsonApis.rscCallers;
+module.exports.swiftImporters = jsonApis.swiftImporters;
+module.exports.swiftTestTargets = jsonApis.swiftTestTargets;
+module.exports.symbols = jsonApis.symbols;
+module.exports.testsComment = planning.testsComment;
+module.exports.testsGraphMermaid = planning.testsGraphMermaid;
+module.exports.flow = planning.flow;
+module.exports.queueCheck = planning.queueCheck;
+module.exports.queueEdges = planning.queueEdges;
+module.exports.queueRelated = planning.queueRelated;
+module.exports.queues = planning.queues;
+module.exports.serverContracts = planning.serverContracts;
+module.exports.serverRouteEdges = planning.serverRouteEdges;
+module.exports.serverRouteList = planning.serverRouteList;
+module.exports.serverRouteRelated = planning.serverRouteRelated;
+module.exports.serverRoutes = planning.serverRoutes;
+module.exports.testsGraph = planning.testsGraph;
+module.exports.testsImpact = planning.testsImpact;
+module.exports.testsPlan = planning.testsPlan;
+module.exports.testsTargets = planning.testsTargets;
+module.exports.testsWhy = planning.testsWhy;

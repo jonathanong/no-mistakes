@@ -14,8 +14,10 @@ fn walk_default_expression<'a>(
         walk::walk_export_default_declaration(collector, export);
         return;
     }
+    collector.record_exported_resource_root("default");
     if let Some(object) = default_object_expression(&export.declaration) {
         record_object_member_calls(collector, "default", object);
+        record_object_resource_scopes(collector, "default", object);
     }
     collector.push_function_scope(Some("default".to_string()));
     // Flag the runtime import in the callback directly forming the default value —
@@ -74,8 +76,10 @@ fn parenthesized_arrow_expression<'a>(
 
 fn default_expression_creates_own_scope(declaration: &ExportDefaultDeclarationKind<'_>) -> bool {
     match declaration {
-        ExportDefaultDeclarationKind::FunctionExpression(_)
-        | ExportDefaultDeclarationKind::ArrowFunctionExpression(_) => true,
+        // Bare `export default () => …` is an expression; parenthesized functions
+        // are unwrapped before this helper runs, and `export default function`
+        // is a FunctionDeclaration rather than FunctionExpression.
+        ExportDefaultDeclarationKind::ArrowFunctionExpression(_) => true,
         ExportDefaultDeclarationKind::ParenthesizedExpression(_) => false,
         _ => false,
     }
@@ -96,7 +100,9 @@ fn default_object_expression<'a>(
 fn object_expression<'a>(expression: &'a Expression<'a>) -> Option<&'a ObjectExpression<'a>> {
     match expression {
         Expression::ObjectExpression(object) => Some(object),
-        Expression::ParenthesizedExpression(parenthesized) => object_expression(&parenthesized.expression),
+        Expression::ParenthesizedExpression(parenthesized) => {
+            object_expression(&parenthesized.expression)
+        }
         _ => None,
     }
 }
@@ -124,10 +130,6 @@ fn walk_default_function_with_scope<'a>(
     collector.callable_scopes.insert(scope.to_string());
     collector.add_type_parameter_names(function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
-    walk::walk_function(
-        collector,
-        function,
-        oxc_syntax::scope::ScopeFlags::empty(),
-    );
+    walk::walk_function(collector, function, oxc_syntax::scope::ScopeFlags::empty());
     collector.pop_function_scope(true);
 }

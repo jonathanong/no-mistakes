@@ -1,0 +1,13 @@
+checks:
+  commands:
+    - name: typecheck-app
+      command: [pnpm, --dir, app, exec, tsc, --noEmit]
+      fileArgs: none
+      always: true
+    - name: typecheck-tools
+      command: [pnpm, exec, tsc, --noEmit, --project, tools/tsconfig.tools.json]
+      fileArgs: none
+      always: true
+rules:
+  - rule: tsconfig-gate-coverage
+    scope: repository

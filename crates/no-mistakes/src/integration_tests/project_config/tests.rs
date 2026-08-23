@@ -1,4 +1,8 @@
 use super::*;
+use std::path::PathBuf;
+
+mod discovery_precedence;
+mod folder_strings;
 
 fn load_config_projects(
     root: &Path,
@@ -9,6 +13,7 @@ fn load_config_projects(
     config_dir: &Path,
     tsconfig: &TsConfig,
 ) -> Result<Vec<ConfigProject>> {
+    let resolver = crate::codebase::ts_resolver::ImportResolver::new(tsconfig);
     load_config_projects_inner(
         ConfigProjectInput {
             root,
@@ -17,7 +22,7 @@ fn load_config_projects(
             path,
             source,
             config_dir,
-            tsconfig,
+            resolver: &resolver,
         },
         None,
     )
@@ -29,6 +34,25 @@ fn glob_normalization_preserves_parent_segments_after_wildcards() {
 
     assert!(wildcard_parent_glob.is_match("pkg/../foo"));
     assert!(!wildcard_parent_glob.is_match("foo"));
+}
+
+#[test]
+fn python_load_projects_has_no_js_config_discovery() {
+    let root = Path::new("");
+    let tsconfig = super::super::test_support::tsconfig_without_config(root);
+    assert!(discovered_config_paths(root, Framework::Python, &[]).is_empty());
+    assert!(!Framework::Python.has_js_runner_config());
+    assert!(load_config_projects(
+        root,
+        Framework::Python,
+        "pyproject.toml",
+        root,
+        "",
+        root,
+        &tsconfig,
+    )
+    .unwrap()
+    .is_empty());
 }
 
 #[test]
@@ -135,4 +159,46 @@ fn explicit_ignored_runner_config_is_authorized_without_exposing_ignored_helpers
         Some("playwright.ignored.config.ts")
     );
     assert!(!visible_paths.contains(&ignored_config));
+}
+
+#[test]
+fn default_vitest_discovery_includes_workspace_and_projects_configs() {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-config/vitest-workspace-export-forms");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+
+    let projects = load_projects(&root, Framework::Vitest, None).unwrap();
+    assert_eq!(
+        projects
+            .iter()
+            .filter_map(|project| project.policy_name.as_deref())
+            .collect::<Vec<_>>(),
+        ["star-export-project", "named-export-project"]
+    );
+    assert!(projects.iter().all(|project| project.workspace));
+    assert_eq!(
+        projects
+            .iter()
+            .filter_map(|project| project.config.as_deref())
+            .collect::<Vec<_>>(),
+        ["vitest.workspace.ts", "vitest.projects.ts"]
+    );
+}
+
+#[test]
+fn jest_invalid_regex_through_config_loader_is_an_error() {
+    let root = Path::new("/nm-jest-invalid-regex");
+    let tsconfig = super::super::test_support::tsconfig_without_config(root);
+    let error = load_config_projects(
+        root,
+        Framework::Jest,
+        "jest.config.js",
+        root,
+        r#"module.exports = { testRegex: "(" };"#,
+        root,
+        &tsconfig,
+    )
+    .unwrap_err();
+    assert!(error.to_string().contains("invalid Jest testRegex"));
 }

@@ -1,15 +1,20 @@
 use anyhow::Result;
 use oxc_allocator::Allocator;
-use oxc_ast::ast::Program;
+use oxc_ast::ast::{ArrowFunctionBody, FunctionBody, Program, Statement};
 use oxc_parser::{Parser, ParserReturn};
 use oxc_span::SourceType;
 use std::cell::RefCell;
 use std::path::Path;
+use std::sync::Arc;
 
 mod expression;
+#[cfg(any(test, feature = "test-instrumentation"))]
+mod parse_count;
 mod parsed_cache;
 pub use expression::{binary_concat_path_text, expression_path, span_text, template_literal_text};
-pub(crate) use parsed_cache::ParsedProgramCache;
+#[cfg(any(test, feature = "test-instrumentation"))]
+pub use parse_count::{begin_parse_count, begin_parse_count_this_thread, finish_parse_count};
+pub(crate) use parsed_cache::{legacy_symbols_share_standard_parse, ParsedProgramCache};
 
 thread_local! {
     static REQUEST_PARSE_CACHES: RefCell<Vec<ParsedProgramCache>> = const { RefCell::new(Vec::new()) };
@@ -32,14 +37,50 @@ pub(crate) fn current_request_parse_cache() -> Option<ParsedProgramCache> {
     REQUEST_PARSE_CACHES.with(|caches| caches.borrow().last().cloned())
 }
 
+/// Oxc 0.143 represents concise arrow bodies as expressions rather than an
+/// empty `FunctionBody`. Callers that scan statements must ignore those bodies.
+pub(crate) fn arrow_function_body<'a>(
+    body: &'a ArrowFunctionBody<'a>,
+) -> Option<&'a FunctionBody<'a>> {
+    match body {
+        ArrowFunctionBody::FunctionBody(body) => Some(body),
+        _ => None,
+    }
+}
+
+pub(crate) fn arrow_function_body_statements<'a>(
+    body: &'a ArrowFunctionBody<'a>,
+) -> Option<&'a [Statement<'a>]> {
+    arrow_function_body(body).map(|body| body.statements.as_slice())
+}
+
 pub(crate) fn request_parse_cache_active() -> bool {
     REQUEST_PARSE_CACHES.with(|caches| !caches.borrow().is_empty())
 }
 
-pub(crate) fn clear_request_parse_cache() {
+/// Drop programs retained by the current request parse cache.
+///
+/// Public so the CLI binary's check runner can release extract ASTs after
+/// fact collection. Library callers already share this crate.
+#[doc(hidden)]
+pub fn clear_request_parse_cache() {
     if let Some(cache) = current_request_parse_cache() {
         cache.clear();
     }
+}
+
+/// Drop every cached parse mode for one path on the current request.
+#[doc(hidden)]
+pub fn evict_request_parse_cache_path(path: &Path) {
+    if let Some(cache) = current_request_parse_cache() {
+        cache.remove_path(path);
+    }
+}
+
+/// Number of programs retained by the current request parse cache.
+#[doc(hidden)]
+pub fn request_parse_cache_len() -> usize {
+    current_request_parse_cache().map_or(0, |cache| cache.entry_count())
 }
 
 #[doc(hidden)]
@@ -50,61 +91,16 @@ pub fn with_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
     collect()
 }
 
-#[cfg(any(test, feature = "test-instrumentation"))]
-struct ParseCountSession {
-    owner: std::thread::ThreadId,
-    counts: std::collections::HashMap<std::path::PathBuf, usize>,
-}
-
-#[cfg(any(test, feature = "test-instrumentation"))]
-type ParseCounts = std::collections::HashMap<std::path::PathBuf, ParseCountSession>;
-
-#[cfg(any(test, feature = "test-instrumentation"))]
-fn parse_counts() -> &'static std::sync::Mutex<ParseCounts> {
-    static COUNTS: std::sync::OnceLock<std::sync::Mutex<ParseCounts>> = std::sync::OnceLock::new();
-    COUNTS.get_or_init(|| std::sync::Mutex::new(ParseCounts::new()))
-}
-
+/// Install a parse cache owned by this call.
+///
+/// Unlike [`with_request_parse_cache`], this never clones a cache already on
+/// the worker. Nested Rayon work on the shared pool can otherwise inherit
+/// another request's path-keyed programs.
 #[doc(hidden)]
-#[cfg(any(test, feature = "test-instrumentation"))]
-pub fn begin_parse_count(root: &Path) {
-    parse_counts()
-        .lock()
-        .expect("parse-count mutex poisoned")
-        .insert(
-            root.to_path_buf(),
-            ParseCountSession {
-                owner: std::thread::current().id(),
-                counts: std::collections::HashMap::new(),
-            },
-        );
-}
-
-#[doc(hidden)]
-#[cfg(any(test, feature = "test-instrumentation"))]
-pub fn finish_parse_count(root: &Path) -> std::collections::HashMap<std::path::PathBuf, usize> {
-    parse_counts()
-        .lock()
-        .expect("parse-count mutex poisoned")
-        .remove(root)
-        .map(|session| session.counts)
-        .unwrap_or_default()
-}
-
-#[cfg(any(test, feature = "test-instrumentation"))]
-pub(crate) fn record_parse_path(path: &Path) {
-    let mut counts = parse_counts().lock().expect("parse-count mutex poisoned");
-    let current_thread = std::thread::current().id();
-    for (root, session) in counts.iter_mut() {
-        // Synthetic parses conventionally use relative sentinel paths and may run on a
-        // worker rather than the thread that opened the request observation. Only the owning
-        // thread may attribute relative sentinels; observed worker parses must use paths rooted
-        // in their request so parallel sessions cannot contaminate one another.
-        let owns_relative_parse = path.is_relative() && session.owner == current_thread;
-        if path.starts_with(root) || owns_relative_parse {
-            *session.counts.entry(path.to_path_buf()).or_insert(0) += 1;
-        }
-    }
+pub fn with_owned_request_parse_cache<T>(collect: impl FnOnce() -> T) -> T {
+    REQUEST_PARSE_CACHES.with(|caches| caches.borrow_mut().push(ParsedProgramCache::default()));
+    let _guard = RequestParseCacheGuard;
+    collect()
 }
 
 /// The single production entrypoint for invoking the OXC parser.
@@ -119,7 +115,7 @@ pub(crate) fn parse<'a>(
     source_type: SourceType,
 ) -> ParserReturn<'a> {
     #[cfg(any(test, feature = "test-instrumentation"))]
-    record_parse_path(path);
+    parse_count::record_parse_path(path);
     #[cfg(not(any(test, feature = "test-instrumentation")))]
     let _ = path;
     Parser::new(allocator, source, source_type).parse()
@@ -132,11 +128,11 @@ pub fn with_program<T>(
 ) -> Result<T> {
     if let Some(cache) = current_request_parse_cache() {
         return cache
-            .with_program(path, source, analyze)
+            .with_program(path, Arc::from(source), analyze)
             .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()));
     }
     ParsedProgramCache::default()
-        .with_program(path, source, analyze)
+        .with_program(path, Arc::from(source), analyze)
         .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
@@ -144,7 +140,7 @@ pub fn with_program<T>(
 /// `on_parse`.
 pub(crate) fn with_program_observed<T>(
     path: &Path,
-    source: &str,
+    source: Arc<str>,
     on_parse: impl FnOnce(),
     analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str) -> T,
 ) -> Result<T> {
@@ -154,18 +150,19 @@ pub(crate) fn with_program_observed<T>(
         .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
-/// Parse a JavaScript or TypeScript source while preserving OXC's recovered
-/// program when diagnostics are present. `on_parse` runs only for a physical
-/// parser invocation, not for a request-cache hit.
-pub(crate) fn with_recovered_program_observed<T>(
+/// Recovered parse that additionally reports whether the parser panicked.
+/// `on_parse` runs only for a physical parser invocation, not for a
+/// request-cache hit. General recovered consumers may use partial ASTs; fact
+/// collectors can preserve the panic distinction for sound consumers.
+pub(crate) fn with_recovered_program_status_observed<T>(
     path: &Path,
-    source: &str,
+    source: Arc<str>,
     on_parse: impl FnOnce(),
-    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
+    analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>, bool) -> T,
 ) -> Result<T> {
     let cache = current_request_parse_cache().unwrap_or_default();
     cache
-        .with_recovered_program_observed(path, source, on_parse, analyze)
+        .with_recovered_program_status_observed(path, source, on_parse, analyze)
         .map_err(|detail| anyhow::anyhow!("failed to parse {}: {detail}", path.display()))
 }
 
@@ -173,7 +170,7 @@ pub(crate) fn with_recovered_program_observed<T>(
 /// extensions. `on_parse` has the same physical-work semantics as above.
 pub(crate) fn with_recovered_typescript_program_observed<T>(
     path: &Path,
-    source: &str,
+    source: Arc<str>,
     on_parse: impl FnOnce(),
     analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
 ) -> Result<T> {
@@ -188,7 +185,7 @@ pub(crate) fn with_recovered_typescript_program_observed<T>(
 /// available to the caller; only a parser panic is fatal.
 pub(crate) fn with_legacy_symbols_program_observed<T>(
     path: &Path,
-    source: &str,
+    source: Arc<str>,
     on_parse: impl FnOnce(),
     analyze: impl for<'a> FnOnce(&'a Program<'a>, &'a str, Option<String>) -> T,
 ) -> Result<T> {

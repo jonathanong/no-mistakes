@@ -14,3 +14,7 @@ Key options: positional plan JSON path, `--format mermaid|json`, and optional
 `--out`.
 
 Node APIs: `testsGraph(options)` and `testsGraphMermaid(options)`.
+
+JSON graph edges retain optional `detail` provenance for `resource` edges,
+including their consumer file and literal call-site line. Mermaid output stays
+compact and renders only the edge label.

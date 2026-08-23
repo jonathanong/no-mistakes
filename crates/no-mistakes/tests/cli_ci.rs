@@ -28,6 +28,19 @@ fn stderr(output: &Output) -> String {
     String::from_utf8(output.stderr.clone()).expect("stderr should be utf8")
 }
 
+/// Lock-wait progress is stderr, but not a diagnostic. Parallel CLI tests share
+/// the process-wide invocation lock, so exact-stderr assertions ignore those lines.
+fn diagnostic_stderr(output: &Output) -> String {
+    stderr(output)
+        .lines()
+        .filter(|line| !line.starts_with("waiting for lock held by "))
+        .fold(String::new(), |mut acc, line| {
+            acc.push_str(line);
+            acc.push('\n');
+            acc
+        })
+}
+
 #[test]
 fn ci_impact_lists_triggered_workflows() {
     let root = case("ci-graph/triggers");
@@ -77,6 +90,98 @@ fn impacted_checks_lists_commands() {
 }
 
 #[test]
+fn impacted_checks_empty_diagnostics_are_opt_in_and_format_stable() {
+    let root = case("impacted-checks/basic");
+    for (file, code) in [
+        (None, "no-changed-files"),
+        (Some("src/style.css"), "no-impacted-checks"),
+    ] {
+        for format in ["json", "yml", "paths", "md", "human"] {
+            let mut args = vec![
+                "impacted-checks",
+                "--root",
+                root.to_str().unwrap(),
+                "--format",
+                format,
+            ];
+            if let Some(file) = file {
+                args.push(file);
+            }
+            let silent = run(&args);
+            assert!(silent.status.success(), "{}", stderr(&silent));
+            assert!(diagnostic_stderr(&silent).is_empty());
+
+            let mut diagnosed_args = args.clone();
+            diagnosed_args.push("--diagnose-empty");
+            let diagnosed = run(&diagnosed_args);
+            assert!(diagnosed.status.success(), "{}", stderr(&diagnosed));
+            assert_eq!(diagnosed.stdout, silent.stdout);
+            let message = if code == "no-changed-files" {
+                "No changed files were provided."
+            } else {
+                "No checks matched the changed files."
+            };
+            assert_eq!(
+                diagnostic_stderr(&diagnosed),
+                format!("note[{code}]: {message}\n")
+            );
+        }
+    }
+}
+
+#[test]
+fn impacted_checks_diagnose_empty_does_not_mask_failures() {
+    let root = case("impacted-checks/multi-framework");
+    let config = root.join("invalid.no-mistakes.yml");
+    let output = run(&[
+        "impacted-checks",
+        "--root",
+        root.to_str().unwrap(),
+        "--config",
+        config.to_str().unwrap(),
+        "--diagnose-empty",
+        "--format",
+        "json",
+    ]);
+    assert!(!output.status.success());
+    assert!(stdout(&output).is_empty());
+    let err = stderr(&output);
+    assert!(err.contains("invalid.no-mistakes.yml"), "{err}");
+    assert!(!err.contains("note["), "{err}");
+}
+
+#[test]
+fn impacted_checks_generic_only_skips_test_commands() {
+    let root = case("impacted-checks/multi-framework");
+    let config = case("../fixtures/impacted-checks/generic-only.no-mistakes.yml");
+    let output = run(&[
+        "impacted-checks",
+        "src/value.ts",
+        "--root",
+        root.to_str().unwrap(),
+        "--config",
+        config.to_str().unwrap(),
+        "--generic-only",
+        "--format",
+        "json",
+    ]);
+
+    assert!(output.status.success(), "{}", stderr(&output));
+    let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    assert_eq!(report["warnings"], serde_json::json!([]));
+    assert_eq!(report["fallback_triggered"], false);
+    assert_eq!(
+        report["checks"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .map(|check| check["kind"].as_str().unwrap())
+            .collect::<Vec<_>>(),
+        vec!["generic", "generic"]
+    );
+}
+
+#[test]
 fn impacted_checks_multi_file_json_covers_every_configured_framework() {
     let root = case("impacted-checks/multi-framework");
     let output = run(&[
@@ -91,7 +196,7 @@ fn impacted_checks_multi_file_json_covers_every_configured_framework() {
     ]);
 
     assert!(output.status.success(), "{}", stderr(&output));
-    assert!(stderr(&output).is_empty());
+    assert!(diagnostic_stderr(&output).is_empty());
     let report: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
     assert_eq!(report["checks"].as_array().unwrap().len(), 4);
     assert_eq!(

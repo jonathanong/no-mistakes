@@ -1,0 +1,15 @@
+on: pull_request
+jobs:
+  dynamic-shell:
+    runs-on: ubuntu-latest
+    steps:
+      # A dynamic shell could enforce this failure before the following gate.
+      - shell: '${{ vars.SHELL }}'
+        run: exit 1
+      - run: pnpm exec tsc --noEmit --project dynamic-shell/tsconfig.json
+  pull-request-merged:
+    # Source-change pull-request activations model synchronize, never merged.
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project pull-request-merged/tsconfig.json

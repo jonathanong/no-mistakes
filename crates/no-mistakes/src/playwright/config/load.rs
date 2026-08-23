@@ -7,7 +7,8 @@ use std::path::{Path, PathBuf};
 
 #[path = "load/helpers.rs"]
 pub(super) mod helpers;
-use helpers::{default_selector_attributes, has_v2_playwright_settings};
+pub(super) use helpers::has_v2_playwright_settings;
+use helpers::{default_selector_attributes, default_selector_test_excludes};
 
 #[path = "load/loaded_v2.rs"]
 mod loaded_v2;
@@ -19,6 +20,7 @@ pub(super) fn load_settings_from_visible(
     cli_config: Option<&Path>,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    app: Option<String>,
     visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
     if let Some(path) = cli_config {
@@ -27,6 +29,7 @@ pub(super) fn load_settings_from_visible(
             path,
             cli_playwright_configs,
             cli_project,
+            app,
             visible_paths,
         );
     }
@@ -34,6 +37,7 @@ pub(super) fn load_settings_from_visible(
         root,
         cli_playwright_configs,
         cli_project.clone(),
+        app.clone(),
         visible_paths,
     )? {
         return Ok(settings);
@@ -46,6 +50,7 @@ fn load_explicit(
     path: &Path,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    app: Option<String>,
     visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
     let resolved = resolve(root, path);
@@ -59,6 +64,7 @@ fn load_explicit(
             &v2,
             cli_playwright_configs,
             cli_project,
+            app,
             visible_paths,
         );
     }
@@ -69,6 +75,7 @@ fn load_discovered_v2(
     root: &Path,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    app: Option<String>,
     visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Option<Settings>> {
     let paths = visible_paths.paths_for(root);
@@ -82,6 +89,7 @@ fn load_discovered_v2(
             &v2,
             cli_playwright_configs,
             cli_project,
+            app,
             visible_paths,
         )
         .map(Some);
@@ -94,6 +102,7 @@ pub(super) fn settings_from_loaded_v2(
     config: &crate::config::v2::schema::NoMistakesConfig,
     cli_playwright_configs: &[PathBuf],
     cli_project: Option<String>,
+    app: Option<String>,
     visible_paths: &crate::playwright::fsutil::VisiblePathSnapshot,
 ) -> Result<Settings> {
     loaded_v2::settings_from_loaded_v2(
@@ -101,6 +110,7 @@ pub(super) fn settings_from_loaded_v2(
         config,
         cli_playwright_configs,
         cli_project,
+        app,
         visible_paths,
     )
 }
@@ -136,6 +146,9 @@ fn settings_from_defaults(
         html_ids: false,
         selector_roots: vec![frontend_root],
         selector_include: Vec::new(),
-        selector_exclude: Vec::new(),
+        selector_exclude: default_selector_test_excludes()
+            .iter()
+            .map(|pattern| (*pattern).to_string())
+            .collect(),
     })
 }

@@ -53,7 +53,9 @@ pub fn collect_check_facts_with_graph_files_playwright_and_session(
     plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
 ) -> CheckFactMap {
-    let sources = super::request_sources(&files, &graph_files, &plan, playwright.as_ref());
+    let sources = session.existing_sources_for(root).unwrap_or_else(|| {
+        super::request_sources(&files, &graph_files, &plan, playwright.as_ref())
+    });
     collect_check_facts_with_graph_files_playwright_sources_and_session(
         session,
         root,
@@ -144,7 +146,7 @@ pub(crate) fn collect_check_facts_with_precollected_file_facts(
     plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<crate::codebase::ts_source::SourceStore>,
-    precollected: std::collections::HashMap<PathBuf, super::super::CheckFileFacts>,
+    precollected: crate::codebase::ts_source::FileIdMap<super::super::CheckFileFacts>,
 ) -> CheckFactMap {
     collect_with_scope(
         session,
@@ -164,7 +166,7 @@ fn collect_with_scope(
     mut plan: CheckFactPlan,
     playwright: Option<PlaywrightFactPlan>,
     sources: Arc<crate::codebase::ts_source::SourceStore>,
-    precollected: std::collections::HashMap<PathBuf, super::super::CheckFileFacts>,
+    precollected: crate::codebase::ts_source::FileIdMap<super::super::CheckFileFacts>,
 ) -> CheckFactMap {
     let (files, graph_files, graph_files_complete) = file_scope;
     if plan.graph_context.visible_files.is_none() {

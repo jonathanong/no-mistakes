@@ -30,7 +30,7 @@ pub fn analyze_file(
         fetches,
         cache,
         (inherited_is_client, inherited_is_route_handler),
-        None,
+        (None, None),
     )
 }
 
@@ -41,7 +41,10 @@ pub(crate) fn analyze_file_from_visible(
     fetches: &mut Vec<FetchOccurrence>,
     cache: &mut Cache,
     inherited: (bool, bool),
-    visible_files: &HashSet<PathBuf>,
+    visible: (
+        &crate::fx::PathSet,
+        &crate::codebase::analysis_session::AnalysisSession,
+    ),
 ) -> Result<bool> {
     analyze_file_inner(
         path,
@@ -50,17 +53,18 @@ pub(crate) fn analyze_file_from_visible(
         fetches,
         cache,
         inherited,
-        Some(visible_files),
+        (Some(visible.0), Some(visible.1)),
     )
 }
 
 pub(crate) struct VisibleFileAnalysis<'a> {
+    pub session: &'a crate::codebase::analysis_session::AnalysisSession,
     pub root: &'a Path,
     pub visited: &'a mut HashSet<(PathBuf, bool, bool)>,
     pub fetches: &'a mut Vec<FetchOccurrence>,
     pub cache: &'a mut Cache,
     pub parsed_files: &'a mut ParsedFileCache,
-    pub visible_files: &'a HashSet<PathBuf>,
+    pub visible_files: &'a crate::fx::PathSet,
 }
 
 pub(crate) fn analyze_file_from_visible_with_facts(
@@ -69,6 +73,7 @@ pub(crate) fn analyze_file_from_visible_with_facts(
     context: &mut VisibleFileAnalysis<'_>,
 ) -> Result<bool> {
     let VisibleFileAnalysis {
+        session,
         root,
         visited,
         fetches,
@@ -94,7 +99,9 @@ pub(crate) fn analyze_file_from_visible_with_facts(
         return Ok(cached_fetches.is_client);
     }
 
-    let facts = parsed_files.load(&abs_path, root, &mut cache.imports, visible_files)?;
+    let facts =
+        parsed_files.load_with_session(session, &abs_path, root, &mut cache.imports, visible_files);
+    let facts = facts?;
     let is_client = !inherited_is_route_handler
         && !facts.has_use_server_directive
         && (inherited_is_client || facts.has_use_client_directive);
@@ -112,6 +119,7 @@ pub(crate) fn analyze_file_from_visible_with_facts(
             &import,
             (is_client, inherited_is_route_handler),
             &mut VisibleFileAnalysis {
+                session,
                 root,
                 visited,
                 fetches: &mut file_fetches,
@@ -137,3 +145,6 @@ pub(crate) fn analyze_file_from_visible_with_facts(
 }
 
 include!("file_analysis/legacy.rs");
+
+#[cfg(test)]
+mod tests;

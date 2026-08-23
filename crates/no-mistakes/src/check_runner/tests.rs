@@ -1,10 +1,10 @@
-use super::enabled::EnabledChecks;
+use super::enabled::{fact_plan, integration_configured, EnabledChecks};
 use super::*;
 use crate::check_parallel::DomainResults;
 use crate::check_tasks::CheckTask;
 use anyhow::anyhow;
 use no_mistakes::codebase::rules::{RuleFinding, RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_TESTS};
-use no_mistakes::codebase::unique_exports::UniqueExportFinding;
+use no_mistakes::codebase::unique_exports::PreparedUniqueExportFinding;
 use no_mistakes::integration_tests::IntegrationFinding;
 use no_mistakes::queue::CheckFinding;
 use no_mistakes::react_traits;
@@ -13,10 +13,22 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 mod architecture;
+mod config_path;
+mod graph_scope;
 mod integration_gitignore;
+mod parse_cache;
 #[cfg(feature = "test-instrumentation")]
 mod prepared_parser_cache;
 mod prepared_tsconfig;
+mod tsconfig_catalog;
+
+fn run_all(
+    root: PathBuf,
+    config_path: Option<PathBuf>,
+    tsconfig_path: Option<PathBuf>,
+) -> anyhow::Result<CheckResults> {
+    super::run_all_with_suppressed(root, config_path, tsconfig_path, false)
+}
 
 fn aggregate_html_id_rule_composition(name: &str) -> Vec<RuleFinding> {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -80,15 +92,47 @@ fn aggregate_html_id_rule_targets_keep_coverage_isolated() {
 }
 
 #[test]
-fn empty_results_records_cli_side_channels() {
-    let results = results::empty_results([Some("warning".to_string())]);
-    assert!(!results.warnings.is_empty());
-    assert!(!results.timings.is_empty());
-    assert!(results.react.is_empty());
-    assert!(results.queues.is_empty());
-    assert!(results.rules.is_empty());
-    assert!(results.integration.is_empty());
-    assert!(results.codebase.is_empty());
+fn run_all_contextualizes_playwright_fact_plan_preparation_failures() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check-runner/invalid-playwright-fact-plan");
+
+    let error = match run_all(root, None, None) {
+        Ok(_) => panic!("missing Playwright config unexpectedly produced a check result"),
+        Err(error) => error,
+    };
+
+    assert!(
+        error
+            .to_string()
+            .contains("failed to prepare Playwright shared facts"),
+        "{error:#}"
+    );
+}
+
+#[test]
+fn disabled_filesystem_check_returns_no_findings_without_dispatching_rules() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check-runner/empty");
+    let config = no_mistakes::config::v2::NoMistakesConfig::default();
+    let snapshot = no_mistakes::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &[]);
+    let task = crate::check_tasks::run_filesystem_rules_check_with_facts(
+        &root,
+        &config,
+        false,
+        &[],
+        no_mistakes::codebase::rules::filesystem_dispatch::PreparedFilesystemRuleInputs {
+            snapshot: &snapshot,
+            vitest_catalog: None,
+            sources: snapshot.source_store_for(&root),
+            workflow_documents: None,
+            tsconfig_gate_project_inputs: None,
+            config_path: None,
+        },
+        None,
+        false,
+    )
+    .unwrap();
+
+    assert!(task.findings.is_empty());
 }
 
 #[test]
@@ -243,44 +287,6 @@ fn run_all_includes_filesystem_rule_advisories() {
 }
 
 #[test]
-fn run_codebase_check_uses_explicit_tsconfig_with_shared_facts() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/codebase-analysis/unique-exports-basic/fixture");
-    let config = root.join(".no-mistakes.yml");
-    let files = no_mistakes::codebase::ts_source::discover_files(&root, &[]);
-    let facts = no_mistakes::codebase::check_facts::collect_check_facts(
-        &root,
-        files,
-        no_mistakes::codebase::check_facts::CheckFactPlan {
-            source: true,
-            symbols: true,
-            ..Default::default()
-        },
-    );
-
-    let tsconfig = root.join("tsconfig.json");
-    let prepared_tsconfig = no_mistakes::codebase::ts_resolver::load_tsconfig(&tsconfig).unwrap();
-    let loaded_config = no_mistakes::codebase::config::load_codebase_config_with_path(
-        &root,
-        Some(config.as_path()),
-    )
-    .unwrap();
-    let session = no_mistakes::codebase::analysis_session::AnalysisSession::new(None);
-    let results = crate::check_tasks::run_codebase_check(
-        &session,
-        &root,
-        &loaded_config,
-        &prepared_tsconfig,
-        true,
-        &facts,
-        &no_mistakes::codebase::config::InferredRoots::default(),
-    )
-    .unwrap();
-
-    assert!(!results.findings.is_empty());
-}
-
-#[test]
 fn run_codebase_check_propagates_unique_exports_errors() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/unique-exports-basic/fixture");
@@ -334,39 +340,6 @@ fn run_all_skips_discovery_for_forbidden_deps_only() {
             .any(|f| f.rule == no_mistakes::codebase::rules::FORBIDDEN_DEPENDENCIES),
         "expected forbidden-dependencies finding via discovery-skip path"
     );
-}
-
-#[test]
-fn run_all_keeps_forbidden_graph_files_outside_filesystem_skips() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/check-runner/forbidden-deps-ignores-filesystem-skip/fixture");
-    let config = root.join(".no-mistakes.yml");
-    let results = run_all(root, Some(config), None).unwrap();
-
-    assert!(
-        results
-            .rules
-            .iter()
-            .any(|f| f.rule == no_mistakes::codebase::rules::FORBIDDEN_DEPENDENCIES),
-        "expected forbidden-dependencies finding for file under filesystem skip"
-    );
-}
-
-#[test]
-fn run_all_keeps_playwright_graph_files_outside_filesystem_skips() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/check-runner/playwright-graph-ignores-filesystem-skip/fixture");
-    let config = root.join(".no-mistakes.yml");
-    let results = run_all(root, Some(config), None).unwrap();
-
-    assert!(!results.rules.iter().any(|finding| {
-        finding.rule == no_mistakes::playwright::rules::PLAYWRIGHT_COVERAGE
-            && finding.target.as_deref() == Some("data-testid=save")
-    }));
-    assert!(results.rules.iter().any(|finding| {
-        finding.rule == no_mistakes::playwright::rules::PLAYWRIGHT_COVERAGE
-            && finding.target.as_deref() == Some("data-testid=delete")
-    }));
 }
 
 #[test]
@@ -453,6 +426,13 @@ fn fact_plan_keeps_boundary_only_rules_to_boundary_facts() {
     assert!(nextjs_api_routes.raw_source);
     assert!(!nextjs_api_routes.source);
     assert!(!nextjs_api_routes.nextjs_caching);
+
+    let lock_ordering = fact_plan(EnabledChecks {
+        embedded_sql: true,
+        ..Default::default()
+    });
+    assert!(lock_ordering.embedded_sql);
+    assert!(!lock_ordering.postgres_schema);
 }
 
 #[test]
@@ -475,6 +455,8 @@ fn assert_domain_error(results: DomainResults, expected: &str) {
 fn empty_task<T>(findings: T) -> CheckTask<T> {
     CheckTask {
         findings,
+        react_suppression_targets: Vec::new(),
+        suppression_sources: Vec::new(),
         warning: None,
         duration: Duration::ZERO,
     }
@@ -496,7 +478,7 @@ fn ok_integration() -> anyhow::Result<CheckTask<Vec<IntegrationFinding>>> {
     Ok(empty_task(Vec::new()))
 }
 
-fn ok_codebase() -> anyhow::Result<CheckTask<Vec<UniqueExportFinding>>> {
+fn ok_codebase() -> anyhow::Result<CheckTask<Vec<PreparedUniqueExportFinding>>> {
     Ok(empty_task(Vec::new()))
 }
 

@@ -40,16 +40,13 @@ fn discover_from_projects(
     let visible_paths = crate::codebase::ts_source::discover_visible_paths(root);
     let tsconfig = resolve_tsconfig_lossy(root, &visible_paths);
     discover_from_projects_from_visible(
-        root,
-        config,
-        runner,
+        DiscoveryRequest::new(root, config, runner, &visible_paths, &tsconfig),
         projects,
         None,
-        &visible_paths,
-        &tsconfig,
     )
 }
 
+mod prepared_catalog_reuse;
 mod runner_basics;
 use runner_basics::prepare_test_projects_from_visible;
 
@@ -66,11 +63,13 @@ fn vitest_explicit_project_matches_playwright_owned_file() {
     );
     let projects = vec![ConfigProject {
         config: Some("vitest.config.mts".to_string()),
+        workspace: false,
         policy_name: Some("browser".to_string()),
         runner_project_arg: Some("browser".to_string()),
         scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     }];
 
     let discovered = discover_from_projects(&root, &config, TestRunner::Vitest, projects).unwrap();
@@ -89,11 +88,13 @@ fn target_metadata_uses_executable_project_name_only() {
     let config = NoMistakesConfig::default();
     let projects = vec![ConfigProject {
         config: Some("playwright.config.ts".to_string()),
+        workspace: false,
         policy_name: Some("top-level-config-name".to_string()),
         runner_project_arg: None,
         scope: None,
         include: vec!["src/utils.mts".to_string()],
         exclude: Vec::new(),
+        vitest_setup: Vec::new(),
     }];
 
     let discovered =
@@ -136,6 +137,7 @@ fn policy_only_project_inherits_single_explicit_runner_config() {
         project.config.as_deref(),
         Some("configs/vitest.workspace.mts")
     );
+    assert!(project.workspace);
 }
 
 #[test]
@@ -165,7 +167,7 @@ fn policy_only_project_does_not_guess_from_multiple_explicit_configs() {
 }
 
 #[test]
-fn policy_only_project_discovery_preserves_fallback_tests_outside_policy() {
+fn policy_only_project_discovery_is_authoritative() {
     let root = fixture_root("test-discovery-policy-fallback");
     let mut config = NoMistakesConfig::default();
     config.tests.vitest.projects.insert(
@@ -184,8 +186,8 @@ fn policy_only_project_discovery_preserves_fallback_tests_outside_policy() {
         .iter()
         .map(|path| crate::codebase::ts_source::relative_slash_path(&root, path))
         .collect();
-    assert!(rel_tests.contains(&"src/policy.test.mts".to_string()));
-    assert!(rel_tests.contains(&"src/fallback.test.mts".to_string()));
+    assert_eq!(rel_tests, vec!["src/policy.test.mts"]);
+    assert!(!discovered.used_fallback);
 }
 
 #[test]
@@ -252,6 +254,29 @@ fn vitest_fallback_skips_playwright_policy_tests() {
 }
 
 #[test]
+fn playwright_fallback_skips_vitest_policy_tests() {
+    let root = fixture_root("test-discovery-policy-fallback");
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.projects.insert(
+        "browser".to_string(),
+        TestProjectPolicy {
+            include: vec!["e2e/**/*.spec.ts".to_string()],
+            ..Default::default()
+        },
+    );
+
+    let discovered = discover_tests(&root, &config, TestRunner::Playwright).unwrap();
+
+    let rel_tests: Vec<String> = discovered
+        .tests
+        .iter()
+        .map(|path| crate::codebase::ts_source::relative_slash_path(&root, path))
+        .collect();
+    assert!(!rel_tests.contains(&"e2e/home.spec.ts".to_string()));
+    assert!(rel_tests.contains(&"tests/e2e/home.spec.ts".to_string()));
+}
+
+#[test]
 fn playwright_policy_exclude_prevents_generic_fallback() {
     let root = fixture_root("test-discovery-policy-fallback");
     let mut config = NoMistakesConfig::default();
@@ -273,6 +298,7 @@ fn playwright_policy_exclude_prevents_generic_fallback() {
         .collect();
     assert!(rel_tests.contains(&"e2e/home.spec.ts".to_string()));
     assert!(!rel_tests.contains(&"e2e/flaky.spec.ts".to_string()));
+    assert!(!discovered.used_fallback);
 }
 
 #[test]
@@ -327,7 +353,7 @@ fn prepared_projects_share_runner_helpers_with_graph_facts_and_test_filters() {
             graph_plan,
             &preliminary,
         );
-    fact_context.set_visible_files(graph_files.visible().iter().cloned());
+    fact_context.set_visible_file_set(graph_files.visible_path_set());
 
     crate::ast::begin_parse_count(&root);
     let prepared = prepare_test_projects_from_visible(
@@ -340,7 +366,7 @@ fn prepared_projects_share_runner_helpers_with_graph_facts_and_test_filters() {
         fact_context.clone(),
     );
     let config_file = root.join("vitest.config.ts");
-    let helper_file = root.join("vitest.projects.ts");
+    let helper_file = root.join("project-list.ts");
     assert!(prepared.graph_facts().contains_key(&config_file));
     assert!(prepared.graph_facts().contains_key(&helper_file));
 
@@ -378,7 +404,7 @@ fn prepared_projects_share_runner_helpers_with_graph_facts_and_test_filters() {
     let remaining = graph_files
         .indexable()
         .iter()
-        .filter(|path| !facts.contains_key(*path))
+        .filter(|path| !facts.contains_key(path))
         .cloned()
         .collect::<Vec<_>>();
     facts.extend(
@@ -402,14 +428,14 @@ fn prepared_projects_share_runner_helpers_with_graph_facts_and_test_filters() {
 
     let test_edges = [crate::codebase::dependencies::graph::EdgeKind::TestOf].into();
     let included = graph.deps_of(
-        &[crate::codebase::dependencies::graph::NodeId::File(
+        &[crate::codebase::dependencies::graph::NodeId::file(
             root.join("src/unit.test.ts"),
         )],
         Some(1),
         Some(&test_edges),
     );
     let excluded = graph.deps_of(
-        &[crate::codebase::dependencies::graph::NodeId::File(
+        &[crate::codebase::dependencies::graph::NodeId::file(
             root.join("src/excluded.test.ts"),
         )],
         Some(1),
@@ -445,8 +471,13 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
         &root,
         &config,
         &visible_paths,
-        &tsconfig,
+        std::sync::Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            &root,
+            tsconfig.clone(),
+            None,
+        )),
         PreparedTestProjectRequest {
+            discovery_files: &[],
             graph: (&[], graph_plan, graph_context.clone()),
             sources: std::sync::Arc::clone(&sources),
             collect_graph_facts: false,
@@ -454,6 +485,12 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
         },
     );
     assert!(unrequested.project_filters().is_empty());
+    let error = unrequested
+        .requested_runner_projects(TestRunner::Vitest)
+        .unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("vitest runner projects were not prepared"));
     assert_eq!(sources.physical_read_count(), reads_before);
 
     let mut requested = FrameworkPreparationPlan::default();
@@ -462,8 +499,13 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
         &root,
         &config,
         &visible_paths,
-        &tsconfig,
+        std::sync::Arc::new(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            &root,
+            tsconfig.clone(),
+            None,
+        )),
         PreparedTestProjectRequest {
+            discovery_files: &[],
             graph: (&[], graph_plan, graph_context),
             sources,
             collect_graph_facts: false,
@@ -473,8 +515,14 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
     assert!(prepared
         .project_filters()
         .iter()
-        .all(|(runner, _)| *runner == TestRunner::Vitest));
+        .all(|(runner, _)| matches!(runner, TestRunner::Vitest | TestRunner::Playwright)));
+    assert!(prepared
+        .requested_runner_projects(TestRunner::Vitest)
+        .is_ok());
+    assert!(prepared
+        .requested_runner_projects(TestRunner::Playwright)
+        .is_ok());
     let counts = crate::ast::finish_parse_count(&root);
     assert_eq!(counts.get(&root.join("vitest.config.ts")), Some(&1));
-    assert_eq!(counts.get(&root.join("vitest.projects.ts")), Some(&1));
+    assert_eq!(counts.get(&root.join("project-list.ts")), Some(&1));
 }

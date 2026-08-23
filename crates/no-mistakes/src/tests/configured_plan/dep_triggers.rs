@@ -1,56 +1,122 @@
 // Full-suite trigger logic for configured test plans.
-// Determines whether a changed file matches a project-level dependency pattern
-// that should force a full-suite run.
+//
+// Legacy triggers request a framework-wide fallback. Structured triggers
+// select named runner projects. Pattern lists deliberately use ordered
+// last-match-wins semantics so a later positive pattern can re-include a path
+// excluded by `!pattern`.
 
 use super::super::plan::relative_path;
-use super::{compile_globset, TestFramework};
+use super::TestFramework;
 use anyhow::Result;
+use globset::{GlobBuilder, GlobMatcher};
 use no_mistakes::codebase::test_discovery::TestRunner;
 use no_mistakes::config::v2::schema::{
     NoMistakesConfig, Project, TestPlanIgnoredChangedTestsFramework, TestPlanProjectDependency,
 };
-use std::collections::HashSet;
+use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
 
-pub(super) fn dependency_trigger(
+#[path = "dep_triggers_named.rs"]
+mod dep_triggers_named;
+#[path = "dep_triggers_validate.rs"]
+mod dep_triggers_validate;
+
+#[derive(Debug, Default)]
+pub(super) struct DependencyTriggers {
+    pub(super) fallback: Option<(String, PathBuf)>,
+    /// Changed files that selected each runner-project name. A `BTree*` shape
+    /// makes both selection and rendered reasons deterministic.
+    pub(super) targeted: BTreeMap<PathBuf, BTreeSet<String>>,
+}
+
+pub(super) fn dependency_triggers(
     root: &Path,
     config: &NoMistakesConfig,
     framework: TestFramework,
     changed_files: &[PathBuf],
     prepared: &crate::tests::prepared_plan::PreparedTestPlanRequest,
-) -> Result<Option<(String, PathBuf)>> {
-    let plan = match framework {
-        TestFramework::Dotnet => &config.test_plan.dotnet,
-        TestFramework::Playwright => &config.test_plan.playwright,
-        TestFramework::Vitest => &config.test_plan.vitest,
-        TestFramework::Swift => &config.test_plan.swift,
-    };
+) -> Result<DependencyTriggers> {
+    let plan = framework_plan(config, framework);
+    dep_triggers_validate::validate_targeted_targets(config, framework, prepared)?;
     let ignored_sets = ignored_changed_test_sets(
         root,
         &plan.full_suite_triggers.ignore_changed_tests,
         changed_files,
         prepared,
     )?;
+    let mut result = DependencyTriggers::default();
+    let mut legacy_match = None;
+    if let Some(named) = dep_triggers_named::apply_named_triggers(
+        root,
+        &plan.full_suite_triggers.triggers,
+        changed_files,
+        &ignored_sets,
+        &mut result,
+    )? {
+        legacy_match = Some(named);
+    }
     for (project_name, trigger) in &plan.full_suite_triggers.projects {
         let Some(project) = config.projects.get(project_name) else {
             continue;
         };
         let patterns = project_dependency_patterns(project_name, project, trigger);
-        let globset = compile_globset(&patterns)?;
+        let compiled_patterns = compile_ordered_patterns(&patterns)?;
         for changed in changed_files {
-            let rel = relative_path(root, changed);
             if ignored_sets.iter().any(|set| set.contains(changed)) {
                 continue;
             }
-            if globset.as_ref().is_some_and(|set| set.is_match(&rel)) {
-                return Ok(Some((
-                    format!("{} project dependency changed: {}", project_name, rel),
-                    changed.clone(),
-                )));
+            let rel = relative_path(root, changed);
+            if !matches_ordered(&compiled_patterns, &rel) {
+                continue;
+            }
+            match trigger {
+                TestPlanProjectDependency::Targeted(targeted) => {
+                    result
+                        .targeted
+                        .entry(changed.clone())
+                        .or_default()
+                        .extend(targeted.targets.iter().cloned());
+                }
+                // A matching legacy trigger always wins over every targeted
+                // trigger, regardless of resource-project map order.
+                TestPlanProjectDependency::All(_) | TestPlanProjectDependency::Patterns(_) => {
+                    legacy_match.get_or_insert_with(|| {
+                        (
+                            format!("{} project dependency changed: {}", project_name, rel),
+                            changed.clone(),
+                        )
+                    });
+                }
             }
         }
     }
-    Ok(None)
+    if legacy_match.is_some() {
+        result.targeted.clear();
+    }
+    result.fallback = legacy_match;
+    Ok(result)
+}
+
+pub(super) fn framework_plan(
+    config: &NoMistakesConfig,
+    framework: TestFramework,
+) -> &no_mistakes::config::v2::schema::TestPlanFrameworkConfig {
+    match framework {
+        TestFramework::Dotnet => &config.test_plan.dotnet,
+        TestFramework::Playwright => &config.test_plan.playwright,
+        TestFramework::Vitest => &config.test_plan.vitest,
+        TestFramework::Swift => &config.test_plan.swift,
+        TestFramework::Python => &config.test_plan.python,
+        TestFramework::Go => &config.test_plan.go,
+        TestFramework::Cargo => &config.test_plan.cargo,
+        TestFramework::Rails => &config.test_plan.rails,
+        TestFramework::Php => &config.test_plan.php,
+        TestFramework::Java => &config.test_plan.java,
+        TestFramework::Kotlin => &config.test_plan.kotlin,
+        TestFramework::Elixir => &config.test_plan.elixir,
+        TestFramework::Dart => &config.test_plan.dart,
+        TestFramework::Jest => &config.test_plan.jest,
+    }
 }
 
 fn ignored_changed_test_sets(
@@ -66,6 +132,16 @@ fn ignored_changed_test_sets(
             TestPlanIgnoredChangedTestsFramework::Playwright => TestRunner::Playwright,
             TestPlanIgnoredChangedTestsFramework::Vitest => TestRunner::Vitest,
             TestPlanIgnoredChangedTestsFramework::Swift => TestRunner::Swift,
+            TestPlanIgnoredChangedTestsFramework::Python => TestRunner::Python,
+            TestPlanIgnoredChangedTestsFramework::Go => TestRunner::Go,
+            TestPlanIgnoredChangedTestsFramework::Cargo => TestRunner::Cargo,
+            TestPlanIgnoredChangedTestsFramework::Rails => TestRunner::Rails,
+            TestPlanIgnoredChangedTestsFramework::Php => TestRunner::Php,
+            TestPlanIgnoredChangedTestsFramework::Java => TestRunner::Java,
+            TestPlanIgnoredChangedTestsFramework::Kotlin => TestRunner::Kotlin,
+            TestPlanIgnoredChangedTestsFramework::Elixir => TestRunner::Elixir,
+            TestPlanIgnoredChangedTestsFramework::Dart => TestRunner::Dart,
+            TestPlanIgnoredChangedTestsFramework::Jest => TestRunner::Jest,
         };
         let set = match prepared.discover_runner_tests(runner) {
             Ok(discovered) => discovered.tests.into_iter().collect(),
@@ -83,7 +159,7 @@ fn ignored_changed_test_sets(
     Ok(sets)
 }
 
-fn project_dependency_patterns(
+pub(super) fn project_dependency_patterns(
     project_name: &str,
     project: &Project,
     trigger: &TestPlanProjectDependency,
@@ -109,7 +185,56 @@ fn project_dependency_patterns(
                 .map(|pattern| project_relative_pattern(root, pattern))
                 .collect()
         }
+        TestPlanProjectDependency::Targeted(targeted) => {
+            let root = project.root.as_deref().unwrap_or(project_name);
+            targeted
+                .paths
+                .iter()
+                .map(|pattern| project_relative_pattern(root, pattern))
+                .collect()
+        }
     }
+}
+
+pub(super) struct OrderedPattern {
+    negated: bool,
+    matcher: GlobMatcher,
+}
+
+pub(super) fn compile_ordered_patterns(patterns: &[String]) -> Result<Vec<OrderedPattern>> {
+    patterns
+        .iter()
+        .map(|pattern| {
+            let trimmed = pattern.trim();
+            let (negated, pattern) = trimmed
+                .strip_prefix('!')
+                .map_or((false, trimmed), |pattern| (true, pattern.trim()));
+            let matcher = GlobBuilder::new(&normalize_trigger_glob(pattern))
+                .literal_separator(false)
+                .build()?
+                .compile_matcher();
+            Ok(OrderedPattern { negated, matcher })
+        })
+        .collect()
+}
+
+/// Apply every matching entry in order; the final matching entry decides.
+pub(super) fn matches_ordered(patterns: &[OrderedPattern], path: &str) -> bool {
+    let mut matched = false;
+    for pattern in patterns {
+        if pattern.matcher.is_match(path) {
+            matched = !pattern.negated;
+        }
+    }
+    matched
+}
+
+fn normalize_trigger_glob(pattern: &str) -> String {
+    let mut part = pattern.trim().to_string();
+    while let Some(rest) = part.strip_prefix("./") {
+        part = rest.trim().to_string();
+    }
+    part
 }
 
 fn project_root_patterns(project_root: &str) -> Vec<String> {
@@ -121,13 +246,24 @@ fn project_root_patterns(project_root: &str) -> Vec<String> {
     }
 }
 
-fn project_relative_pattern(project_root: &str, pattern: &str) -> String {
+/// Split `!` before root-prefixing. Prefixing first produces invalid globs
+/// such as `pkg/!dist/**` and makes negated entries impossible to re-include.
+pub(super) fn project_relative_pattern(project_root: &str, raw_pattern: &str) -> String {
+    let (negated, pattern) = raw_pattern
+        .trim()
+        .strip_prefix('!')
+        .map_or((false, raw_pattern.trim()), |pattern| (true, pattern));
     let root = normalize_project_glob_part(project_root);
     let pattern = normalize_project_glob_part(pattern);
-    if root.is_empty() || root == "." || pattern.starts_with(&format!("{root}/")) {
+    let joined = if root.is_empty() || root == "." || pattern.starts_with(&format!("{root}/")) {
         pattern
     } else {
         format!("{root}/{pattern}")
+    };
+    if negated {
+        format!("!{joined}")
+    } else {
+        joined
     }
 }
 
@@ -137,4 +273,23 @@ fn normalize_project_glob_part(raw: &str) -> String {
         part = rest.to_string();
     }
     part
+}
+
+pub(super) fn test_runner(framework: TestFramework) -> TestRunner {
+    match framework {
+        TestFramework::Dotnet => TestRunner::Dotnet,
+        TestFramework::Playwright => TestRunner::Playwright,
+        TestFramework::Vitest => TestRunner::Vitest,
+        TestFramework::Swift => TestRunner::Swift,
+        TestFramework::Python => TestRunner::Python,
+        TestFramework::Go => TestRunner::Go,
+        TestFramework::Cargo => TestRunner::Cargo,
+        TestFramework::Rails => TestRunner::Rails,
+        TestFramework::Php => TestRunner::Php,
+        TestFramework::Java => TestRunner::Java,
+        TestFramework::Kotlin => TestRunner::Kotlin,
+        TestFramework::Elixir => TestRunner::Elixir,
+        TestFramework::Dart => TestRunner::Dart,
+        TestFramework::Jest => TestRunner::Jest,
+    }
 }

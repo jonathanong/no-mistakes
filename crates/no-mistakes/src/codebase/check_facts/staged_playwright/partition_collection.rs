@@ -1,8 +1,9 @@
 use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
 use super::helpers::{collect_test_partition, graph_plan, needs_scoped_facts, with_imports};
 use super::partitions::FilePartitions;
-use std::collections::{BTreeMap, HashMap};
-use std::path::{Path, PathBuf};
+use crate::codebase::ts_source::FileIdMap;
+use std::collections::BTreeMap;
+use std::path::Path;
 
 pub(super) fn collect_partitions(
     session: &crate::codebase::analysis_session::AnalysisSession,
@@ -11,7 +12,7 @@ pub(super) fn collect_partitions(
     plan: &mut CheckFactPlan,
     playwright: &PlaywrightFactPlan,
     sources: &crate::codebase::ts_source::SourceStore,
-    facts: &mut HashMap<PathBuf, CheckFileFacts>,
+    facts: &mut FileIdMap<CheckFileFacts>,
 ) {
     let test_partitions = [
         (&partitions.scoped_tests, with_imports(plan.clone())),

@@ -1,16 +1,48 @@
+use crate::codebase::ts_source::SourceStore;
+
+fn graph_edge_sources(
+    session: &crate::codebase::analysis_session::AnalysisSession,
+    edge_inputs: &GraphEdgeBuildInputs<'_>,
+) -> Arc<SourceStore> {
+    session
+        .existing_sources_for(edge_inputs.root)
+        .or_else(|| {
+            edge_inputs
+                .visible_paths
+                .map(|snapshot| snapshot.source_store_for(edge_inputs.root))
+        })
+        .unwrap_or_else(|| {
+            Arc::new(SourceStore::new_observed(
+                Arc::new(crate::codebase::ts_source::FileInventory::from_paths(
+                    edge_inputs.graph_files.all(),
+                )),
+                session.observer().cloned(),
+            ))
+        })
+}
+
 struct GraphEdgeBuildInputs<'a> {
     root: &'a Path,
     tsconfig: &'a TsConfig,
+    tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
     plan: GraphBuildPlan,
     workspace: Option<&'a crate::codebase::workspaces::IndexedWorkspaceMap>,
     graph_files: &'a GraphFiles,
     config_options: Option<&'a GraphConfigOptions>,
-    playwright_settings: Option<&'a crate::playwright::config::Settings>,
+    playwright_settings: &'a [crate::playwright::config::Settings],
     config_path: Option<&'a Path>,
     dotnet_facts: Option<&'a crate::codebase::dotnet::DotnetFactMap>,
     swift_facts: Option<&'a crate::codebase::swift::SwiftFactMap>,
     import_resolution_cache: Option<&'a crate::codebase::ts_resolver::ImportResolutionCache>,
     visible_paths: Option<&'a crate::codebase::ts_source::VisiblePathSnapshot>,
+    workflow_documents: Option<&'a crate::codebase::ci_workflows::ParsedWorkflowSet>,
+    interner: Arc<PathInterner>,
+}
+
+fn require_playwright_route_snapshot(
+    snapshot: Option<&crate::playwright::fsutil::VisiblePathSnapshot>,
+) -> Result<&crate::playwright::fsutil::VisiblePathSnapshot> {
+    snapshot.ok_or_else(|| anyhow::anyhow!("Playwright graph plan requires a visible-path snapshot"))
 }
 
 fn parsed_imports_for_plan<'a>(
@@ -29,117 +61,133 @@ fn parsed_imports_for_plan<'a>(
     Ok(collect_parsed_imports_from_facts(files, facts))
 }
 
-fn merge_http_process_edges(
+fn collect_http_process_edges(
     inputs: &GraphEdgeBuildInputs<'_>,
     facts: Option<&dyn TsFactLookup>,
-    forward: &mut EdgeMap,
-    reverse: &mut EdgeMap,
-) {
+) -> Vec<Edge> {
     // HTTP and process collectors consume shared TS facts in this path.
     // Keep the file-content fallback empty so graph builds do not add a
     // second source read pass.
+    let mut edges = Vec::new();
     if inputs.plan.http {
-        let http_call_edges = collect_http_call_edges(
+        edges.extend(collect_http_call_edges(
             inputs.root,
-            inputs.tsconfig,
             facts,
             &[],
             inputs.graph_files.indexable(),
-            &inputs.graph_files.all,
+            inputs.graph_files.all(),
             inputs.config_options,
-        );
-        merge_edges(forward, reverse, http_call_edges);
+            &inputs.interner,
+        ));
     }
-
     if inputs.plan.process {
-        let spawn_edges = collect_process_spawn_edges(
+        edges.extend(collect_process_spawn_edges(
             inputs.root,
             facts,
             &[],
             inputs.graph_files.indexable(),
-            inputs.graph_files.visible(),
-        );
-        merge_edges(forward, reverse, spawn_edges);
+            inputs.graph_files,
+            &inputs.interner,
+        ));
     }
+    edges
 }
 
-fn merge_swift_edges(
+fn collect_swift_edges_for_plan(
     inputs: &GraphEdgeBuildInputs<'_>,
     ts_facts: Option<&dyn TsFactLookup>,
-    forward: &mut EdgeMap,
-    reverse: &mut EdgeMap,
-) {
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> Vec<Edge> {
     if !inputs.plan.swift {
-        return;
+        return Vec::new();
     }
-
-    let swift_edges = collect_swift_edges_with_facts(
-        inputs.root,
-        inputs.tsconfig,
-        &inputs.graph_files.all,
-        inputs.config_options,
-        ts_facts,
-        inputs.swift_facts,
-    );
-    for (from, to, _) in &swift_edges {
-        forward.entry(from.clone()).or_default();
-        forward.entry(to.clone()).or_default();
-    }
-    merge_edges(forward, reverse, swift_edges);
+    collect_swift_edges_with_facts(
+        SwiftEdgeInputs {
+            root: inputs.root,
+            tsconfig: inputs.tsconfig,
+            tsconfig_catalog: inputs.tsconfig_catalog,
+            all_files: inputs.graph_files.all(),
+            config_options: inputs.config_options,
+            ts_facts,
+            prepared_facts: inputs.swift_facts,
+            session,
+        },
+        session.interner(),
+    )
 }
 
-fn merge_dotnet_edges(
-    inputs: &GraphEdgeBuildInputs<'_>,
-    forward: &mut EdgeMap,
-    reverse: &mut EdgeMap,
-) {
+fn collect_dotnet_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge> {
     if !inputs.plan.dotnet {
-        return;
+        return Vec::new();
     }
-
-    let dotnet_edges = collect_dotnet_edges(
+    collect_dotnet_edges(
         inputs.root,
-        &inputs.graph_files.all,
+        inputs.graph_files.all(),
         inputs.config_options,
         inputs.dotnet_facts,
-    );
-    for (from, to, _) in &dotnet_edges {
-        forward.entry(from.clone()).or_default();
-        forward.entry(to.clone()).or_default();
-    }
-    merge_edges(forward, reverse, dotnet_edges);
+        &inputs.interner,
+    )
 }
 
-fn merge_terraform_edges(
+fn merge_language_frontend_edges(
     inputs: &GraphEdgeBuildInputs<'_>,
     forward: &mut EdgeMap,
     reverse: &mut EdgeMap,
 ) {
-    if !inputs.plan.terraform {
-        return;
-    }
-
-    let terraform_edges =
-        collect_terraform_edges(inputs.root, &inputs.graph_files.all, inputs.config_options);
-    for (from, to, _) in &terraform_edges {
+    let edges = collect_language_frontend_edges(
+        inputs.root,
+        inputs.graph_files.all(),
+        inputs.config_options,
+        inputs.visible_paths,
+        &inputs.interner,
+    );
+    for (from, to, _) in &edges {
         forward.entry(from.clone()).or_default();
         forward.entry(to.clone()).or_default();
     }
-    merge_edges(forward, reverse, terraform_edges);
+    merge_edges(forward, reverse, edges);
+}
+
+fn collect_terraform_edges_for_plan(inputs: &GraphEdgeBuildInputs<'_>) -> Vec<Edge> {
+    if !inputs.plan.terraform {
+        return Vec::new();
+    }
+    collect_terraform_edges(
+        inputs.root,
+        inputs.graph_files.all(),
+        inputs.config_options,
+        &inputs.interner,
+    )
 }
 
 fn sort_adjacency_lists(forward: &mut EdgeMap, reverse: &mut EdgeMap) {
-    // Sort adjacency lists for deterministic BFS output.
-    for adj in forward.values_mut().chain(reverse.values_mut()) {
-        adj.sort_by_cached_key(|(n, k)| (node_sort_key(n), n.clone(), *k as u8));
+    // Each map entry is independent, so normalize both directional views in
+    // parallel before the final source-ordered flatten assigns ordinals.
+    let normalize = |adj: &mut Vec<(NodeId, EdgeKind)>| {
+        adj.sort_by_cached_key(|(n, k)| adjacency_sort_key(n, *k));
         adj.dedup();
-    }
+    };
+    crate::perf_trace::trace("graph.forward_adjacency_normalization", || {
+        forward
+            .par_iter_mut()
+            .for_each(|(_, adjacent)| normalize(adjacent));
+    });
+    crate::perf_trace::trace("graph.reverse_adjacency_normalization", || {
+        reverse
+            .par_iter_mut()
+            .for_each(|(_, adjacent)| normalize(adjacent));
+    });
 }
 
-fn push_route_ref_edge(edges: &mut Vec<Edge>, source: &Path, target: &Path) {
+fn push_route_ref_edge(
+    edges: &mut Vec<Edge>,
+    source: &Path,
+    target: &Path,
+    interner: &PathInterner,
+) {
     edges.push((
-        NodeId::File(source.to_path_buf()),
-        NodeId::File(target.to_path_buf()),
+        NodeId::file_in(interner, source),
+        NodeId::file_in(interner, target),
         EdgeKind::RouteRef,
     ));
 }

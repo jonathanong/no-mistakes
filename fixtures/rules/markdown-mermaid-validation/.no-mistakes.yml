@@ -1,0 +1,4 @@
+rules:
+  - rule: markdown-mermaid-validation
+    scope: repository
+    exclude: ["excluded.md"]

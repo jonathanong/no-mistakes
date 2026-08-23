@@ -22,25 +22,22 @@ impl SharedTraversalContext {
                 .filter(|path| {
                     self.facts
                         .as_ref()
-                        .is_none_or(|facts| !facts.contains_key(*path))
+                        .is_none_or(|facts| !facts.contains_key(path))
                 })
                 .filter_map(|path| {
                     let source = sources.read_path(path).ok()?;
                     session
-                        .with_recovered_program(path, &source, |program, source, error| {
+                        .with_recovered_program(path, &source, |program, parsed, error| {
                             error.is_none().then(|| {
-                                let mut facts = crate::codebase::ts_source::facts::collect_file_facts_from_program(
+                                crate::codebase::ts_source::facts::collect_file_facts_from_program(
                                     path,
                                     self.fact_plan,
                                     &context,
-                                    source,
+                                    parsed,
                                     program,
                                     None,
-                                );
-                                if self.fact_plan.source {
-                                    facts.source = Some(source.to_string());
-                                }
-                                facts
+                                    self.fact_plan.source.then(|| std::sync::Arc::clone(&source)),
+                                )
                             })
                         })
                         .ok()
@@ -75,7 +72,14 @@ impl SharedTraversalContext {
                 )
             })
             .extend(collected);
-        self.invalidate_analysis_caches();
+        // Keep the traversal we just published. Graph/symbol caches must still
+        // rebuild against the merged facts, but the generation stays so the
+        // freshly cached traversal remains addressable.
+        self.graph = None;
+        self.graph_cache.clear();
+        self.symbol_index_cache.clear();
+        self.graph_builds = self.graph_cache.build_count();
+        self.symbol_index_builds = self.symbol_index_cache.build_count();
     }
 
     pub(crate) fn add_explicit_roots(&mut self, paths: &[PathBuf]) {
@@ -89,7 +93,7 @@ impl SharedTraversalContext {
         }
         self.import_resolution_cache.clear();
         self.fact_context
-            .set_visible_files(self.graph_files.visible().iter().cloned());
+            .set_visible_file_set(self.graph_files.visible_path_set());
         self.invalidate_analysis_caches();
         // Keep discovery authoritative without eagerly reparsing explicit
         // ignored roots. A prepared supplemental fact view may still supply

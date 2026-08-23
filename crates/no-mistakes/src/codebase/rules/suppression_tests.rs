@@ -1,5 +1,9 @@
 use super::*;
 
+fn suppress_rule_findings(root: &std::path::Path, findings: &mut Vec<RuleFinding>) {
+    super::suppression::suppress_rule_findings_inner(root, findings, None, &[]);
+}
+
 #[test]
 fn shared_suppression_only_reads_repo_relative_paths() {
     let temp = tempfile::tempdir().unwrap();
@@ -165,4 +169,28 @@ fn shared_suppression_uses_frozen_source_after_file_deletion() {
 
     assert!(findings.is_empty());
     assert_eq!(sources.physical_read_count(), 1);
+}
+
+#[test]
+fn request_sources_reject_parent_paths_outside_the_frozen_inventory() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/suppression/non-inventory");
+    let root = fixture.join("request");
+    let sources = super::source_store_for_files(&[root.join("safe.md")]);
+    let mut findings = vec![RuleFinding {
+        rule: "my-rule".to_string(),
+        file: "../outside.md".to_string(),
+        line: 1,
+        message: "outside inventory".to_string(),
+        import: None,
+        target: None,
+    }];
+
+    suppress_rule_findings_with_sources(&root, &mut findings, &sources);
+
+    assert_eq!(
+        findings.len(),
+        1,
+        "untracked parent traversal stays visible"
+    );
 }

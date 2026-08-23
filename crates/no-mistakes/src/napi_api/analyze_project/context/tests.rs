@@ -1,10 +1,10 @@
 use super::{
     cached_analysis, canonical_filter_key, framework_preparation_plan, graph_build_plan,
-    same_config_path, CachedAnalysis,
+    same_config_path, CachedAnalysis, ReportCache,
 };
 use std::cell::Cell;
 use std::collections::HashMap;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 
 impl super::AnalyzeProjectContext {
     pub(in crate::napi_api::analyze_project) fn root_source_read_count(&self) -> usize {
@@ -83,6 +83,45 @@ fn filter_cache_keys_ignore_order_and_duplicates() {
 }
 
 #[test]
+fn authoritative_report_files_strip_legacy_symbol_suffixes() {
+    let source = include_str!("target_helpers.rs");
+    let body = source
+        .split("fn authoritative_report_files(")
+        .nth(1)
+        .and_then(|source| source.split("fn authoritative_path(").next())
+        .expect("authoritative_report_files is defined");
+    assert!(
+        body.contains("parse_entrypoint"),
+        "legacy files#symbol targets must strip the suffix before is_file"
+    );
+}
+
+#[test]
+fn authoritative_path_falls_back_to_cwd_when_missing_under_root() {
+    let workspace = Path::new(env!("CARGO_MANIFEST_DIR")).join("../..");
+    let cargo = PathBuf::from("Cargo.toml");
+    let under_root = super::authoritative_path(&workspace, cargo.clone());
+    assert!(under_root.ends_with("Cargo.toml"));
+    assert!(under_root.is_file());
+
+    let missing_root = Path::new("/no-mistakes-missing-graph-root");
+    let from_cwd = super::authoritative_path(missing_root, cargo);
+    assert!(from_cwd.is_file());
+    assert_eq!(
+        from_cwd,
+        crate::codebase::ts_resolver::normalize_path(
+            &std::env::current_dir().unwrap().join("Cargo.toml")
+        )
+    );
+
+    let missing = super::authoritative_path(missing_root, PathBuf::from("no-such-entry.ts"));
+    assert_eq!(
+        missing,
+        crate::codebase::ts_resolver::normalize_path(&missing_root.join("no-such-entry.ts"))
+    );
+}
+
+#[test]
 fn report_caches_call_each_analyzer_once_per_canonical_key() {
     let key = canonical_filter_key(&[
         "src/**".to_string(),
@@ -96,13 +135,13 @@ fn report_caches_call_each_analyzer_once_per_canonical_key() {
     for domain in ["queue", "server"] {
         let plain_calls = Cell::new(0);
         let indexed_calls = Cell::new(0);
-        let mut plain = HashMap::new();
-        let mut indexed = HashMap::new();
+        let plain = ReportCache::new(HashMap::new());
+        let indexed = ReportCache::new(HashMap::new());
 
         for traversal in [false, false, true, true] {
             let report = cached_analysis(
-                &mut plain,
-                &mut indexed,
+                &plain,
+                &indexed,
                 if traversal { &equivalent_key } else { &key },
                 traversal,
                 || {
@@ -117,10 +156,10 @@ fn report_caches_call_each_analyzer_once_per_canonical_key() {
             .unwrap();
             match (traversal, report) {
                 (false, CachedAnalysis::Plain(report)) => {
-                    assert_eq!(report, &format!("{domain}-plain"));
+                    assert_eq!(report, format!("{domain}-plain"));
                 }
                 (true, CachedAnalysis::Indexed(report)) => {
-                    assert_eq!(report, &format!("{domain}-indexed"));
+                    assert_eq!(report, format!("{domain}-indexed"));
                 }
                 _ => panic!("{domain} selected the wrong analyzer"),
             }
@@ -132,7 +171,7 @@ fn report_caches_call_each_analyzer_once_per_canonical_key() {
 }
 
 #[test]
-fn omitted_and_explicit_automatic_paths_share_one_scope() {
+fn omitted_automatic_and_explicit_tsconfig_use_separate_scopes() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/codebase-analysis/forbidden-dependencies-passes/fixture"),
@@ -151,6 +190,33 @@ fn omitted_and_explicit_automatic_paths_share_one_scope() {
     .unwrap();
 
     let context = super::AnalyzeProjectContext::prepare(&options).unwrap();
-    assert_eq!(context.scopes.len(), 1);
+    assert_eq!(context.scopes.len(), 2);
     assert_eq!(context.scope_aliases.len(), 2);
+    let mut automatic_modes = context
+        .scopes
+        .keys()
+        .map(|scope| scope.automatic_tsconfig)
+        .collect::<Vec<_>>();
+    automatic_modes.sort();
+    assert_eq!(automatic_modes, vec![false, true]);
+}
+
+#[test]
+fn command_report_rejects_unknown_type() {
+    let request = super::super::types::AnalyzeReportRequest {
+        id: None,
+        report_type: "missing".to_string(),
+        options: serde_json::Map::new(),
+    };
+    let options = super::super::types::AnalyzeProjectOptions {
+        root: None,
+        tsconfig: None,
+        config: None,
+        filters: Vec::new(),
+        reports: Vec::new(),
+    };
+    let error = super::run_command_report(&request, &options).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("unknown analyzeProject report type: missing"));
 }

@@ -1,15 +1,18 @@
 use super::test_config;
 use super::types::{ConfigProject, Framework};
-use crate::codebase::ts_resolver::TsConfig;
+use crate::codebase::ts_resolver::{ImportResolution, TsConfig};
 use crate::config::v2::schema::StringOrList;
 use anyhow::{Context, Result};
-use std::collections::HashSet;
 use std::path::Path;
 
 mod discovery;
 mod globs;
+mod json;
+mod parse;
 pub(crate) use discovery::discovered_config_paths;
 pub(crate) use globs::{build_globset, prefix_globs};
+pub(super) use json::load_vitest_json_projects;
+pub(in crate::integration_tests) use parse::load_config_projects_from_program;
 
 pub(crate) fn load_projects(
     root: &Path,
@@ -30,6 +33,18 @@ pub(crate) fn load_projects_from_visible(
     visible_paths: &[std::path::PathBuf],
     tsconfig: &TsConfig,
 ) -> Result<Vec<ConfigProject>> {
+    let catalog =
+        crate::codebase::ts_resolver::TsConfigCatalog::forced(root, tsconfig.clone(), None);
+    load_projects_from_visible_with_catalog(root, framework, configs, visible_paths, &catalog)
+}
+
+pub(crate) fn load_projects_from_visible_with_catalog(
+    root: &Path,
+    framework: Framework,
+    configs: Option<&StringOrList>,
+    visible_paths: &[std::path::PathBuf],
+    tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+) -> Result<Vec<ConfigProject>> {
     // Keep every path used for config-relative glob prefixing in the same
     // lexical form. Callers may pass roots containing `..`, while the frozen
     // visible inventory is canonicalized during discovery.
@@ -38,12 +53,10 @@ pub(crate) fn load_projects_from_visible(
     let mut visible_files = visible_paths
         .iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let config_values = if let Some(configs) = configs {
-        let config_values = configs.values();
-        // Explicit runner configs are authoritative even when Git ignores
-        // them. Authorize only those config paths in this local parse view;
-        // ignored helpers remain outside the frozen visible file set.
+        let config_values =
+            globs::expand_explicit_config_values(root, &configs.values(), &visible_files);
         visible_files.extend(
             config_values
                 .iter()
@@ -54,6 +67,10 @@ pub(crate) fn load_projects_from_visible(
         discovered_config_paths(root, framework, visible_paths)
     };
     let mut projects = Vec::new();
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::from_visible(
+        tsconfig_catalog,
+        &visible_files,
+    );
     for raw in config_values {
         let path = crate::codebase::ts_resolver::normalize_path(&root.join(&raw));
         if !visible_files.contains(&path) {
@@ -80,7 +97,7 @@ pub(crate) fn load_projects_from_visible(
                 path: &path,
                 source: &source,
                 config_dir,
-                tsconfig,
+                resolver: &resolver,
             },
             Some(&visible_files),
         )?);
@@ -95,12 +112,12 @@ pub(super) struct ConfigProjectInput<'a> {
     pub(super) path: &'a Path,
     pub(super) source: &'a str,
     pub(super) config_dir: &'a Path,
-    pub(super) tsconfig: &'a TsConfig,
+    pub(super) resolver: &'a dyn ImportResolution,
 }
 
 pub(super) fn load_config_projects_inner(
     input: ConfigProjectInput<'_>,
-    visible_files: Option<&HashSet<std::path::PathBuf>>,
+    visible_files: Option<&crate::fx::PathSet>,
 ) -> Result<Vec<ConfigProject>> {
     let ConfigProjectInput {
         root,
@@ -109,10 +126,29 @@ pub(super) fn load_config_projects_inner(
         path,
         source,
         config_dir,
-        tsconfig,
+        resolver,
     } = input;
-    if matches!(framework, Framework::Dotnet | Framework::Swift) {
+    if !framework.has_js_runner_config() {
         return Ok(Vec::new());
+    }
+    if framework == Framework::Jest {
+        return Ok(vec![test_config::jest::config_project(
+            root,
+            raw,
+            config_dir,
+            source,
+            visible_files,
+        )?]);
+    }
+    if framework == Framework::Vitest
+        && path.extension().and_then(|value| value.to_str()) == Some("json")
+    {
+        anyhow::ensure!(
+            test_config::vitest::is_vitest_project_array_path(path),
+            "unsupported Vitest JSON config filename: {}; use vitest.workspace.json or vitest.projects.json",
+            path.display()
+        );
+        return json::load_vitest_json_projects(input);
     }
     crate::integration_tests::runner_config::with_program(path, source, |program, _| {
         load_config_projects_from_program(
@@ -123,61 +159,12 @@ pub(super) fn load_config_projects_inner(
                 path,
                 source,
                 config_dir,
-                tsconfig,
+                resolver,
             },
             program,
             visible_files,
         )
     })?
-}
-
-pub(super) fn load_config_projects_from_program(
-    input: ConfigProjectInput<'_>,
-    program: &oxc_ast::ast::Program<'_>,
-    visible_files: Option<&HashSet<std::path::PathBuf>>,
-) -> Result<Vec<ConfigProject>> {
-    let ConfigProjectInput {
-        root,
-        framework,
-        raw,
-        path,
-        source,
-        config_dir,
-        tsconfig,
-    } = input;
-    match framework {
-        Framework::Dotnet => Ok(Vec::new()),
-        Framework::Playwright => {
-            let parsed = test_config::playwright::parse_program(
-                program,
-                source,
-                path,
-                config_dir,
-                tsconfig,
-                visible_files,
-            )?;
-            Ok(parsed.into_projects(root, raw))
-        }
-        Framework::Vitest => {
-            let parsed = test_config::vitest::parse_program(
-                program,
-                source,
-                path,
-                config_dir,
-                root,
-                tsconfig,
-                visible_files,
-            )?;
-            Ok(parsed
-                .into_iter()
-                .map(|mut project| {
-                    project.config = Some(raw.to_string());
-                    project
-                })
-                .collect())
-        }
-        Framework::Swift => Ok(Vec::new()),
-    }
 }
 
 #[cfg(test)]

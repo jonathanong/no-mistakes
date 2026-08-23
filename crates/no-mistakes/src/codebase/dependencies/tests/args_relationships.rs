@@ -24,6 +24,7 @@ fn empty_relationships_returns_standard_edges() {
     let set = relationship_filter(&[]).expect("unfiltered traversal has an explicit standard set");
     assert!(set.contains(&EdgeKind::Import));
     assert!(!set.contains(&EdgeKind::RouteImport));
+    assert!(!set.contains(&EdgeKind::TrpcCall));
 }
 
 #[test]
@@ -32,6 +33,7 @@ fn all_keyword_returns_standard_edges() {
         .expect("all excludes opt-in alternate edges");
     assert!(set.contains(&EdgeKind::Selector));
     assert!(!set.contains(&EdgeKind::RouteImport));
+    assert!(!set.contains(&EdgeKind::TrpcCall));
 }
 
 #[test]
@@ -43,7 +45,10 @@ fn standard_edges_include_every_non_opt_in_relationship_mapping() {
         .iter()
         .copied()
         .filter(|relationship| {
-            !matches!(relationship, RelationshipArg::RouteImport | RelationshipArg::All)
+            !matches!(
+                relationship,
+                RelationshipArg::RouteImport | RelationshipArg::Trpc | RelationshipArg::All
+            )
         })
     {
         let edges = relationship_filter(&[relationship]).expect("relationship filter is explicit");
@@ -75,6 +80,7 @@ fn import_maps_to_all_import_forms() {
     assert!(set.contains(&EdgeKind::TypeImport));
     assert!(set.contains(&EdgeKind::DynamicImport));
     assert!(set.contains(&EdgeKind::Require));
+    assert!(set.contains(&EdgeKind::RequireResolve));
     assert!(!set.contains(&EdgeKind::TestOf));
 }
 
@@ -103,6 +109,7 @@ fn granular_imports_map_to_respective_edge_kinds() {
     assert!(!require_set.contains(&EdgeKind::TypeImport));
     assert!(!require_set.contains(&EdgeKind::DynamicImport));
     assert!(require_set.contains(&EdgeKind::Require));
+    assert!(require_set.contains(&EdgeKind::RequireResolve));
 }
 
 #[test]
@@ -134,6 +141,7 @@ fn granular_import_cli_flags_parsed() {
 fn workspace_maps_to_workspace_import() {
     let set = relationship_filter(&[RelationshipArg::Workspace]).unwrap();
     assert!(set.contains(&EdgeKind::WorkspaceImport));
+    assert!(set.contains(&EdgeKind::WorkspaceTypeImport));
 }
 
 #[test]
@@ -169,6 +177,16 @@ fn queue_maps_to_queue_enqueue_and_queue_worker() {
 }
 
 #[test]
+fn trpc_maps_to_trpc_call_and_trpc_procedure() {
+    let set = relationship_filter(&[RelationshipArg::Trpc]).unwrap();
+    assert!(set.contains(&EdgeKind::TrpcCall));
+    assert!(set.contains(&EdgeKind::TrpcProcedure));
+    let standard = relationship_filter(&[]).unwrap();
+    assert!(!standard.contains(&EdgeKind::TrpcCall));
+    assert!(!standard.contains(&EdgeKind::TrpcProcedure));
+}
+
+#[test]
 fn md_maps_to_markdown_link() {
     let set = relationship_filter(&[RelationshipArg::Md]).unwrap();
     assert!(set.contains(&EdgeKind::MarkdownLink));
@@ -178,6 +196,38 @@ fn md_maps_to_markdown_link() {
 fn ci_maps_to_ci_invocation() {
     let set = relationship_filter(&[RelationshipArg::Ci]).unwrap();
     assert!(set.contains(&EdgeKind::CiInvocation));
+}
+
+#[test]
+fn workflow_relationships_include_their_structural_bridges() {
+    let workflow = relationship_filter(&[RelationshipArg::Workflow]).unwrap();
+    for edge in [
+        EdgeKind::WorkflowJob,
+        EdgeKind::WorkflowStep,
+        EdgeKind::WorkflowNeeds,
+        EdgeKind::WorkflowUses,
+        EdgeKind::WorkflowRun,
+        EdgeKind::WorkflowArtifact,
+    ] {
+        assert!(workflow.contains(&edge));
+    }
+
+    let run = relationship_filter(&[RelationshipArg::WorkflowRun]).unwrap();
+    assert_eq!(
+        run,
+        [
+            EdgeKind::WorkflowJob,
+            EdgeKind::WorkflowStep,
+            EdgeKind::WorkflowRun,
+        ]
+        .into()
+    );
+
+    let needs = relationship_filter(&[RelationshipArg::WorkflowNeeds]).unwrap();
+    assert_eq!(needs, [EdgeKind::WorkflowJob, EdgeKind::WorkflowNeeds].into());
+
+    let ci = relationship_filter(&[RelationshipArg::Ci]).unwrap();
+    assert_eq!(ci, [EdgeKind::CiInvocation].into());
 }
 
 #[test]

@@ -1,4 +1,4 @@
-use crate::codebase::ts_resolver::ImportResolver;
+use crate::codebase::ts_resolver::ImportResolution;
 use crate::server_routes::model::{FileFacts, ImportBinding, RouteSite};
 use crate::server_routes::normalize::join_paths;
 use std::collections::{HashMap, HashSet};
@@ -17,7 +17,7 @@ pub(crate) struct ResolvedMount {
 }
 pub(crate) fn resolve_mounts_with_resolver(
     facts: &HashMap<PathBuf, FileFacts>,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
 ) -> Vec<ResolvedMount> {
     let mut mounts = Vec::new();
     for (path, file_facts) in facts {
@@ -71,7 +71,7 @@ fn resolve_child(
     file_facts: &FileFacts,
     child: &str,
     facts: &HashMap<PathBuf, FileFacts>,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
 ) -> Option<(PathBuf, String)> {
     if file_facts.bindings.contains_key(child) {
         return Some((path.to_path_buf(), child.to_string()));

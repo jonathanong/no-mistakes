@@ -5,7 +5,7 @@ use crate::playwright::selectors::{
     SelectorMatcher,
 };
 use crate::playwright::test_support::{fixture_path, fixture_source};
-use std::collections::{BTreeMap, BTreeSet, HashSet};
+use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
 
 fn attrs() -> Vec<String> {
@@ -23,11 +23,12 @@ fn pass4b_selector_import_skips_ignored_candidate_for_visible_fallback() {
     let visible = crate::codebase::ts_source::discover_visible_paths(&root)
         .into_iter()
         .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-        .collect::<HashSet<_>>();
+        .collect::<crate::fx::PathSet>();
     let regexes = compile_selector_regexes(&["data-testid".to_string()], &BTreeMap::new());
 
     let selectors =
-        extract_app_selectors_with_regexes_from_visible(&app, &source, &regexes, &visible).unwrap();
+        extract_app_selectors_with_regexes_from_visible(&app, &source, &regexes, &visible, None)
+            .unwrap();
 
     assert_eq!(selectors.len(), 1);
     assert_eq!(selectors[0].display_value(), "visible-selector");

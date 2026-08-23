@@ -1,0 +1,6 @@
+name: Invalid local action
+description: References a missing nested action
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/missing

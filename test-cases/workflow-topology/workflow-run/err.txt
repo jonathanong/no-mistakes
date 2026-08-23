@@ -1,0 +1,4 @@
+[duplicate-workflow-name] .github/workflows/source-dup-a.yml: workflow name "Dup Source" conflicts across .github/workflows/source-dup-a.yml, .github/workflows/source-dup-b.yml
+[duplicate-workflow-name] .github/workflows/source-dup-b.yml: workflow name "Dup Source" conflicts across .github/workflows/source-dup-a.yml, .github/workflows/source-dup-b.yml
+[ambiguous-workflow-run-source] .github/workflows/subscriber-ambiguous.yml: .github/workflows/subscriber-ambiguous.yml subscribes to ambiguous workflow "Dup Source" across .github/workflows/source-dup-a.yml, .github/workflows/source-dup-b.yml
+[missing-workflow-run-source] .github/workflows/subscriber-missing.yml: .github/workflows/subscriber-missing.yml subscribes to missing workflow "Does Not Exist"

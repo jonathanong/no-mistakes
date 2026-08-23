@@ -24,3 +24,57 @@ fn playwright_fallback_requires_test_shaped_file() {
 fn path_segment_pair_handles_empty_paths() {
     assert!(!has_path_segment_pair("", "tests", "e2e"));
 }
+
+#[test]
+fn language_fallback_matches_configured_test_shapes() {
+    assert!(fallback_runner_match(
+        TestRunner::Python,
+        "app/test_users.py"
+    ));
+    assert!(fallback_runner_match(TestRunner::Go, "pkg/ping_test.go"));
+    assert!(fallback_runner_match(TestRunner::Cargo, "app/src/tests.rs"));
+    assert!(fallback_runner_match(
+        TestRunner::Cargo,
+        "app/tests/integration.rs"
+    ));
+    assert!(fallback_runner_match(
+        TestRunner::Rails,
+        "spec/jobs/welcome_job_spec.rb"
+    ));
+    assert!(fallback_runner_match(
+        TestRunner::Php,
+        "tests/UserControllerTest.php"
+    ));
+    assert!(fallback_runner_match(
+        TestRunner::Java,
+        "src/test/java/com/example/UserTest.java"
+    ));
+    assert!(!fallback_runner_match(
+        TestRunner::Java,
+        "src/test/java/com/example/Helper.java"
+    ));
+    assert!(fallback_runner_match(
+        TestRunner::Kotlin,
+        "src/test/kotlin/com/example/UserTest.kt"
+    ));
+    assert!(!fallback_runner_match(
+        TestRunner::Kotlin,
+        "src/test/kotlin/com/example/Helper.kt"
+    ));
+    assert!(fallback_runner_match(
+        TestRunner::Elixir,
+        "test/my_app/user_test.exs"
+    ));
+    assert!(!fallback_runner_match(
+        TestRunner::Elixir,
+        "lib/my_app/user.ex"
+    ));
+    assert!(fallback_runner_match(
+        TestRunner::Dart,
+        "test/user_test.dart"
+    ));
+    assert!(!fallback_runner_match(TestRunner::Dart, "lib/user.dart"));
+    assert!(!fallback_runner_match(TestRunner::Python, "app/users.py"));
+    assert!(!fallback_runner_match(TestRunner::Cargo, "app/src/lib.rs"));
+    assert!(fallback_runner_match(TestRunner::Jest, "src/value.test.ts"));
+}

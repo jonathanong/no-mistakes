@@ -1,0 +1,18 @@
+projects:
+  api:
+    type: server
+    root: backend
+    routes:
+      - src/**/*.ts
+rules:
+  - rule: route-consistency
+    scope: repository
+    options:
+      backendPattern: backend/src/**/*.ts
+      backendRegisterObject: app
+      backendPrefixes:
+        - /api/
+tests:
+  dart:
+    packages:
+      - .

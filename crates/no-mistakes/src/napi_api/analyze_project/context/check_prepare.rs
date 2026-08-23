@@ -6,6 +6,7 @@ struct SharedCheckContext {
     plan: crate::codebase::check_facts::CheckFactPlan,
     playwright_fact_plan: Option<crate::codebase::check_facts::PlaywrightFactPlan>,
     fact_files: Vec<PathBuf>,
+    supplemental_call_site_files: Vec<PathBuf>,
     graph_files: Vec<PathBuf>,
     fs_files: Vec<PathBuf>,
     prepared_graph: Option<crate::codebase::dependencies::graph::PreparedGraphConfig>,
@@ -13,7 +14,7 @@ struct SharedCheckContext {
     queues_enabled: bool,
     unique_exports_enabled: bool,
     filesystem_rules_enabled: bool,
-    forbidden_deps_enabled: bool,
+    graph_rules_enabled: bool,
     playwright_rules_enabled: bool,
     graph_plan: Option<crate::codebase::dependencies::graph::GraphBuildPlan>,
 }
@@ -26,13 +27,13 @@ impl SharedCheckContext {
         visible_paths: std::sync::Arc<crate::codebase::ts_source::VisiblePathSnapshot>,
         config: &crate::config::v2::NoMistakesConfig,
         tsconfig: &crate::codebase::ts_resolver::TsConfig,
+        workspace: std::sync::Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
     ) -> Result<Self> {
         use crate::check_runner::enabled::{
-            fact_plan, integration_configured, plan_requests_facts, ConfiguredChecks, EnabledChecks,
+            fact_plan, integration_configured, ConfiguredChecks, EnabledChecks,
         };
         use crate::check_tasks::{
-            filesystem_rules_configured, forbidden_dependencies_configured, queues_configured,
-            unique_exports_configured,
+            filesystem_rules_configured, queues_configured, unique_exports_configured,
         };
 
         // The aggregate request establishes one normalized root for discovery, graph nodes,
@@ -43,26 +44,27 @@ impl SharedCheckContext {
         let prepared = crate::check_runner::prepared::prepare_from_shared(
             &root,
             config_path,
+            tsconfig_path,
             visible_paths,
             config.clone(),
             tsconfig.clone(),
-        )?;
+            Some(workspace),
+        );
+        let prepared = prepared?;
         let config = &prepared.config;
         let queues_enabled = queues_configured(config);
         let unique_exports_enabled = unique_exports_configured(config);
         let enabled = ConfiguredChecks::from_config(config);
         let filesystem_rules_enabled = filesystem_rules_configured(config);
-        let forbidden_deps_enabled = forbidden_dependencies_configured(config);
         let playwright_rules_enabled = crate::playwright::rules::configured(config);
-        let forbidden_graph_plan = forbidden_deps_enabled
-            .then(|| crate::codebase::rules::forbidden_dependencies::graph_plan(config))
-            .flatten();
         let graph_plan = crate::codebase::rules::canonical_graph_plan(config);
+        let graph_requires_full_file_universe =
+            crate::codebase::rules::canonical_graph_requires_full_file_universe(config);
+        let graph_rules_enabled = graph_plan.is_some();
         let mut playwright_fact_plan = prepared
             .playwright
             .as_ref()
             .map(crate::playwright::rules::PreparedPlaywrightRules::fact_plan);
-        let playwright_facts_enabled = playwright_fact_plan.is_some();
         let integration_enabled = integration_configured(config);
         let react_enabled = prepared.react.enabled();
         let mut plan = fact_plan(EnabledChecks {
@@ -76,28 +78,35 @@ impl SharedCheckContext {
             storybook_stories: enabled.storybook_stories,
             integration: integration_enabled,
             unique_exports: unique_exports_enabled,
+            embedded_sql: enabled.embedded_sql,
         });
         if integration_enabled {
             plan.integration_runner_configs = Some(std::sync::Arc::new(
-                crate::integration_tests::prepare_runner_configs(
+                crate::integration_tests::prepare_runner_configs_with_catalog(
                     &root,
                     config,
                     prepared.visible_paths.paths_for(&root).as_ref(),
-                    &prepared.tsconfig,
+                    std::sync::Arc::clone(&prepared.tsconfig_catalog),
+                    prepared.visible_paths.source_store_for(&root),
                 ),
             ));
         }
-        let prepared_graph = forbidden_graph_plan
+        let mut prepared_graph = graph_plan
             .map(|graph_plan| {
-                crate::codebase::dependencies::graph::prepare_graph_config(
+                let test_filter = crate::codebase::test_filter::TestFileFilter::new(&root, config);
+                crate::codebase::dependencies::graph::prepare_graph_config_with_test_filter(
                     &root,
                     graph_plan,
                     &prepared.codebase_config,
                     config,
                     prepared.visible_paths.as_ref(),
+                    test_filter,
                 )
             })
             .transpose()?;
+        if let Some(graph) = prepared_graph.as_mut() {
+            graph.set_workflow_documents(prepared.workflow_documents.clone());
+        }
         if let Some(graph_playwright) = prepared_graph
             .as_ref()
             .map(|graph| {
@@ -116,7 +125,7 @@ impl SharedCheckContext {
             }
         }
         if let (Some(graph_plan), Some(prepared_graph)) =
-            (forbidden_graph_plan, prepared_graph.as_ref())
+            (graph_plan, prepared_graph.as_ref())
         {
             let (fact_plan, fact_context) =
                 crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_prepared(
@@ -127,6 +136,13 @@ impl SharedCheckContext {
             plan.graph.include(fact_plan);
             plan.graph_context = fact_context;
         }
+        let fact_demand = crate::check_runner::finite_set_plan::prepare(
+            &root,
+            config,
+            &mut plan,
+            graph_rules_enabled,
+            playwright_fact_plan.is_some(),
+        );
         let skip_directories = config.filesystem.skip_directories.clone();
         let views = crate::check_discovery::discover_check_file_views_from_snapshot(
             &root,
@@ -135,27 +151,21 @@ impl SharedCheckContext {
             unique_exports_enabled,
             prepared.visible_paths.as_ref(),
         );
-        let needs_shared_facts =
-            plan_requests_facts(&plan) || playwright_fact_plan.is_some() || forbidden_deps_enabled;
-        let needs_full_graph_files = forbidden_graph_plan.is_some() || playwright_facts_enabled;
-        let needs_graph_files =
-            needs_shared_facts && (needs_full_graph_files || enabled.dynamic_import_rules);
-        let (discovered, graph_files) = if needs_full_graph_files {
-            (views.filesystem, views.graph)
-        } else if needs_graph_files {
-            // The dynamic-import rule traverses the same filesystem-scoped
-            // visible universe it analyzes. Supplying that universe explicitly
-            // keeps prepared graph construction strict without a fallback parse.
-            let graph_files = views.filesystem.clone();
-            (views.filesystem, graph_files)
-        } else {
-            (views.filesystem, Vec::new())
-        };
+        let needs_shared_facts = fact_demand.needs_shared_facts();
+        let (discovered, graph_files) = crate::check_discovery::select_graph_files(
+            views,
+            needs_shared_facts,
+            graph_requires_full_file_universe,
+            playwright_fact_plan.is_some(),
+            enabled.dynamic_import_rules,
+        );
         let fact_files = if needs_shared_facts {
-            discovered.clone()
+            fact_demand.primary_files(discovered.clone())
         } else {
             Default::default()
         };
+        let supplemental_call_site_files =
+            fact_demand.supplemental_call_site_files(&fact_files, &graph_files);
         let fs_files = if filesystem_rules_enabled {
             discovered
         } else {
@@ -169,6 +179,7 @@ impl SharedCheckContext {
             plan,
             playwright_fact_plan,
             fact_files,
+            supplemental_call_site_files,
             graph_files,
             fs_files,
             prepared_graph,
@@ -176,7 +187,7 @@ impl SharedCheckContext {
             queues_enabled,
             unique_exports_enabled,
             filesystem_rules_enabled,
-            forbidden_deps_enabled,
+            graph_rules_enabled,
             playwright_rules_enabled,
             graph_plan,
         })

@@ -1,0 +1,275 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/ci.yml",
+      "path": ".github/workflows/ci.yml",
+      "name": "CI",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/ci.yml#build",
+        ".github/workflows/ci.yml#consume",
+        ".github/workflows/ci.yml#remote",
+        ".github/workflows/ci.yml#reusable"
+      ],
+      "concurrency": {
+        "raw": {
+          "group": "ci-${{ github.ref }}",
+          "cancelInProgress": true
+        },
+        "effective": {
+          "group": "ci-${{ github.ref }}",
+          "cancelInProgress": true,
+          "queue": "single"
+        }
+      }
+    },
+    {
+      "id": ".github/workflows/follow-up.yml",
+      "path": ".github/workflows/follow-up.yml",
+      "name": "Follow-up",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "workflow_run",
+          "config": {
+            "workflows": [
+              "CI"
+            ],
+            "types": [
+              "completed"
+            ],
+            "branches": [
+              "main"
+            ]
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/follow-up.yml#report"
+      ]
+    },
+    {
+      "id": ".github/workflows/reusable.yml",
+      "path": ".github/workflows/reusable.yml",
+      "name": "Reusable",
+      "callable": true,
+      "workflowCall": {
+        "inputs": {
+          "message": {
+            "type": "string",
+            "required": true
+          }
+        },
+        "secrets": {},
+        "outputs": {}
+      },
+      "triggers": [
+        {
+          "event": "workflow_call",
+          "config": {
+            "inputs": {
+              "message": {
+                "type": "string",
+                "required": true
+              }
+            }
+          }
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/reusable.yml#echo"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/ci.yml#build",
+      "workflowId": ".github/workflows/ci.yml",
+      "key": "build",
+      "kind": "matrix-template",
+      "matrix": {
+        "os": [
+          "ubuntu-latest",
+          "windows-latest"
+        ]
+      },
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/checkout@v7"
+        },
+        {
+          "index": 1,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "finite",
+              "raw": "build-${{ matrix.os }}",
+              "values": [
+                "build-ubuntu-latest",
+                "build-windows-latest"
+              ],
+              "instanceCounts": {
+                "build-ubuntu-latest": 1,
+                "build-windows-latest": 1
+              }
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/ci.yml#consume",
+      "workflowId": ".github/workflows/ci.yml",
+      "key": "consume",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "pattern",
+              "pattern": {
+                "kind": "static",
+                "raw": "build-*",
+                "value": "build-*"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/ci.yml#remote",
+      "workflowId": ".github/workflows/ci.yml",
+      "key": "remote",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/ci.yml#reusable",
+      "workflowId": ".github/workflows/ci.yml",
+      "key": "reusable",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/follow-up.yml#report",
+      "workflowId": ".github/workflows/follow-up.yml",
+      "key": "report",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/reusable.yml#echo",
+      "workflowId": ".github/workflows/reusable.yml",
+      "key": "echo",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "run"
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/ci.yml#build",
+      "to": ".github/workflows/ci.yml#consume",
+      "name": "build-ubuntu-latest",
+      "producerStep": 1,
+      "consumerStep": 0,
+      "match": "pattern"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/ci.yml#build",
+      "to": ".github/workflows/ci.yml#consume",
+      "name": "build-windows-latest",
+      "producerStep": 1,
+      "consumerStep": 0,
+      "match": "pattern"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/ci.yml#remote",
+      "target": "example/example/.github/workflows/check.yml@v1",
+      "local": false,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      }
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/ci.yml#reusable",
+      "target": "./.github/workflows/reusable.yml",
+      "local": true,
+      "bindings": {
+        "inputs": {
+          "message": "ready"
+        },
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      },
+      "to": ".github/workflows/reusable.yml"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/ci.yml#build",
+      "to": ".github/workflows/ci.yml#consume"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/ci.yml#consume",
+      "to": ".github/workflows/ci.yml#reusable"
+    },
+    {
+      "kind": "workflow-run",
+      "from": ".github/workflows/ci.yml",
+      "to": ".github/workflows/follow-up.yml",
+      "types": [
+        "completed"
+      ],
+      "branches": [
+        "main"
+      ]
+    }
+  ],
+  "diagnostics": []
+}

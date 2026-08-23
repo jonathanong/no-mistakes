@@ -2,8 +2,14 @@ fn roots_with_existing_queue_jobs(
     roots: &[NodeId],
     entrypoints: &[Entrypoint],
     graph: &graph::DepGraph,
+    interner: &PathInterner,
 ) -> Vec<NodeId> {
-    roots_with_existing_queue_jobs_by(roots, entrypoints, |node| graph.has_reverse_node(node))
+    roots_with_existing_queue_jobs_by(
+        roots,
+        entrypoints,
+        |node| graph.has_reverse_node(node),
+        interner,
+    )
 }
 
 fn roots_with_exported_symbol_roots(roots: &[NodeId], graph: &graph::DepGraph) -> Vec<NodeId> {
@@ -47,6 +53,7 @@ fn roots_with_existing_queue_jobs_by<F>(
     roots: &[NodeId],
     entrypoints: &[Entrypoint],
     has_reverse_node: F,
+    interner: &PathInterner,
 ) -> Vec<NodeId>
 where
     F: Fn(&NodeId) -> bool,
@@ -59,10 +66,7 @@ where
         if matches!(entrypoint.node, NodeId::Module(_)) {
             continue;
         }
-        let queue_job = NodeId::QueueJob {
-            queue_file: entrypoint.file.clone(),
-            job: symbol.clone(),
-        };
+        let queue_job = NodeId::queue_job_in(interner, entrypoint.file.clone(), symbol.clone());
         if has_reverse_node(&queue_job) {
             roots.push(queue_job);
         }

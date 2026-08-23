@@ -1,5 +1,5 @@
 use super::super::{CheckFactPlan, CheckFileFacts, PlaywrightFactPlan};
-use std::collections::HashMap;
+use crate::codebase::ts_source::FileIdMap;
 use std::path::{Path, PathBuf};
 
 pub(super) fn collect_test_partition(
@@ -9,11 +9,11 @@ pub(super) fn collect_test_partition(
     plan: CheckFactPlan,
     playwright: &PlaywrightFactPlan,
     sources: &crate::codebase::ts_source::SourceStore,
-    facts: &mut HashMap<PathBuf, CheckFileFacts>,
+    facts: &mut FileIdMap<CheckFileFacts>,
 ) {
     let files = files
         .iter()
-        .filter(|path| !facts.contains_key(*path))
+        .filter(|path| !facts.contains_key(path))
         .cloned()
         .collect::<Vec<_>>();
     facts.extend(super::super::collect::collect_fact_map_with_sources(

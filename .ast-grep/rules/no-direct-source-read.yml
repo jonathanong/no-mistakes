@@ -17,6 +17,7 @@ rule:
     - pattern: read_to_string($PATH)
 files:
   - "crates/no-mistakes/src/codebase/check_facts/**"
+  - "crates/no-mistakes/src/codebase/queries/**"
   - "crates/no-mistakes/src/codebase/dependencies/graph/lazy_import_neighbors.rs"
   - "crates/no-mistakes/src/codebase/dependencies/shared_traversal_facts.rs"
   - "crates/no-mistakes/src/codebase/ts_source/**"

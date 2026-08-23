@@ -28,8 +28,12 @@ pub(super) fn playwright_configs_from_v2(
     find_default_playwright_configs_from_snapshot(root, visible_paths)
 }
 
-pub(super) fn has_v2_playwright_settings(config: &NoMistakesConfig) -> bool {
+pub(crate) fn has_v2_playwright_settings(config: &NoMistakesConfig) -> bool {
     is_v2_playwright_configured(&config.tests.playwright)
+        || config
+            .rules
+            .iter()
+            .any(|rule| !rule.tests.playwright.is_empty())
 }
 
 fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {
@@ -47,6 +51,7 @@ fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {
         || !playwright.navigation_helpers.is_empty()
         || playwright.frontend_root.is_some()
         || playwright.ignore_routes.is_some()
+        || !playwright.apps.is_empty()
 }
 
 pub(super) fn find_default_playwright_configs_from_snapshot(
@@ -104,4 +109,13 @@ pub(super) fn default_selector_attributes() -> Vec<String> {
         .iter()
         .map(|attribute| attribute.to_string())
         .collect()
+}
+
+pub(in crate::playwright::config::load) fn default_selector_test_excludes(
+) -> &'static [&'static str] {
+    &[
+        "**/*.{test,spec}.{ts,tsx,js,jsx,mts,cts}",
+        "**/*.test.*",
+        "**/*.spec.*",
+    ]
 }

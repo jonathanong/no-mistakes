@@ -117,7 +117,11 @@ fn global_check_verbose_timings_reports_fine_grained_labels() {
 fn without_diagnostics(stderr: &[u8]) -> Vec<u8> {
     String::from_utf8_lossy(stderr)
         .lines()
-        .filter(|line| !line.starts_with("[timing] ") && !line.starts_with("[work] "))
+        .filter(|line| {
+            !line.starts_with("[timing] ")
+                && !line.starts_with("[work] ")
+                && !line.starts_with("waiting for lock held by ")
+        })
         .flat_map(|line| [line.as_bytes(), b"\n"].concat())
         .collect()
 }
@@ -149,7 +153,11 @@ fn diagnostics_preserve_public_output_status_and_errors() {
         assert_eq!(plain.stdout, expected, "frozen {format} public output");
         assert_eq!(timed.status.code(), plain.status.code(), "{format}");
         assert_eq!(timed.stdout, plain.stdout, "{format}");
-        assert_eq!(without_diagnostics(&timed.stderr), plain.stderr, "{format}");
+        assert_eq!(
+            without_diagnostics(&timed.stderr),
+            without_diagnostics(&plain.stderr),
+            "{format}"
+        );
     }
 
     let success_root = fixture("codebase-analysis", "check-configured-only");
@@ -163,7 +171,10 @@ fn diagnostics_preserve_public_output_status_and_errors() {
     ]);
     assert_eq!(timed.status.code(), plain.status.code());
     assert_eq!(timed.stdout, plain.stdout);
-    assert_eq!(without_diagnostics(&timed.stderr), plain.stderr);
+    assert_eq!(
+        without_diagnostics(&timed.stderr),
+        without_diagnostics(&plain.stderr)
+    );
 
     let invalid_root = fixture("react-traits-config", "invalid");
     let plain = run(&["check", "--root", invalid_root.to_str().unwrap(), "--json"]);
@@ -177,7 +188,10 @@ fn diagnostics_preserve_public_output_status_and_errors() {
     assert_eq!(plain.status.code(), Some(2));
     assert_eq!(timed.status.code(), plain.status.code());
     assert_eq!(timed.stdout, plain.stdout);
-    assert_eq!(without_diagnostics(&timed.stderr), plain.stderr);
+    assert_eq!(
+        without_diagnostics(&timed.stderr),
+        without_diagnostics(&plain.stderr)
+    );
     assert!(stderr(&timed).contains("[work] output.errors: 1"));
     assert!(!stderr(&timed).contains("[work] output.renders:"));
 }

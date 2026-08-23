@@ -230,6 +230,7 @@ fn cached_malformed_test_error_is_reused_or_skipped() {
             facts: Some(&facts),
             selection: CachedOccurrenceSelection::Exact,
             module_resolution: None,
+            sources: None,
         },
     )
     .err()
@@ -245,6 +246,7 @@ fn cached_malformed_test_error_is_reused_or_skipped() {
             facts: Some(&facts),
             selection: CachedOccurrenceSelection::Exact,
             module_resolution: None,
+            sources: None,
         },
     )
     .expect("optional graph analysis skips cached parse error");
@@ -259,6 +261,7 @@ fn cached_malformed_test_error_is_reused_or_skipped() {
             facts: None,
             selection: CachedOccurrenceSelection::Exact,
             module_resolution: None,
+            sources: None,
         },
     )
     .expect("optional analysis skips a standalone parse error");

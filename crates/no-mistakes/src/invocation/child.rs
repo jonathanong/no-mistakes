@@ -13,6 +13,8 @@ pub(super) use process_tree::configure_process_group;
 pub(super) use process_tree::ParentSignalForwardingGuard;
 pub(super) use process_tree::ProcessTree;
 
+pub(super) mod stream;
+
 const CLEANUP_TIMEOUT: Duration = Duration::from_millis(100);
 type PipeReader = Receiver<std::io::Result<Vec<u8>>>;
 
@@ -90,12 +92,27 @@ pub(super) fn cleanup_result(
     error: std::io::Error,
     cleanup_error: Option<std::io::Error>,
 ) -> std::io::Result<Output> {
+    Err(fold_cleanup_error(error, cleanup_error))
+}
+
+/// Fold a best-effort process-tree cleanup failure into the error that
+/// triggered the cleanup, preserving the original error's kind (so callers
+/// like the CLI's timeout-exit-code detection keep matching on it) while
+/// still surfacing the cleanup failure's detail. Shared by every cleanup
+/// path in this module (`cleanup_result` here, and the streaming child
+/// helper in `child::stream`) so the fold logic — the one branch a real
+/// process-tree termination can't realistically be made to fail in a
+/// portable test — is unit-tested once, not duplicated per call site.
+pub(super) fn fold_cleanup_error(
+    error: std::io::Error,
+    cleanup_error: Option<std::io::Error>,
+) -> std::io::Error {
     match cleanup_error {
-        Some(cleanup_error) => Err(std::io::Error::new(
+        Some(cleanup_error) => std::io::Error::new(
             error.kind(),
             format!("{error}; terminating the child process tree failed: {cleanup_error}"),
-        )),
-        None => Err(error),
+        ),
+        None => error,
     }
 }
 

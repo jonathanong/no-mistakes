@@ -1,5 +1,5 @@
 use crate::codebase::ts_resolver::{
-    normalize_path, ResolverResultCache, ResolverScopeKey, TsConfig,
+    normalize_path, ResolverCacheScopeKey, ResolverResultCache, TsConfig,
 };
 use crate::codebase::ts_source::{FileInventory, SourceStore, VisiblePathSnapshot};
 use crate::diagnostics::InvocationObserver;
@@ -10,8 +10,11 @@ use std::fmt;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
+mod intern;
 mod io;
 mod parsing;
+
+pub use intern::PathInterner;
 
 /// Invocation-owned analysis gateways and memoized work.
 ///
@@ -24,13 +27,24 @@ pub struct AnalysisSession {
     observer: Option<Arc<InvocationObserver>>,
     datasets: DashMap<PathBuf, Arc<DatasetCell>>,
     supplemental_sources: Arc<SourceStore>,
-    resolver_caches: DashMap<ResolverScopeKey, Arc<ResolverResultCache>>,
+    resolver_caches: DashMap<ResolverCacheScopeKey, Arc<ResolverResultCache>>,
+    registry_extension_reports: DashMap<RegistryExtensionKey, RegistryExtensionCell>,
     parse_attempts: Option<DashMap<PathBuf, u64>>,
+    interner: Arc<PathInterner>,
 }
 
 type AnalysisDataset = crate::codebase::analysis_dataset::AnalysisDataset;
 type DatasetCell = OnceLock<Arc<AnalysisDataset>>;
 type SourceReadResult = Result<Arc<str>, SourceReadError>;
+type RegistryExtensionResult =
+    Result<Arc<crate::registry_extension_query::RegistryExtensionReport>, Arc<str>>;
+type RegistryExtensionCell = Arc<OnceLock<RegistryExtensionResult>>;
+
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+struct RegistryExtensionKey {
+    root: PathBuf,
+    path: PathBuf,
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SourceReadError {
@@ -64,7 +78,9 @@ impl AnalysisSession {
             datasets: DashMap::new(),
             supplemental_sources,
             resolver_caches: DashMap::new(),
+            registry_extension_reports: DashMap::new(),
             parse_attempts: collect_keyed_work.then(DashMap::new),
+            interner: Arc::new(PathInterner::new()),
         })
     }
 
@@ -82,9 +98,15 @@ impl AnalysisSession {
     pub(crate) fn resolver_cache(
         &self,
         tsconfig: &TsConfig,
-        visible: Option<&std::collections::HashSet<PathBuf>>,
+        visible: Option<&[std::path::PathBuf]>,
     ) -> Arc<ResolverResultCache> {
-        let scope = ResolverScopeKey::new(tsconfig, visible);
+        self.resolver_cache_for_scope(ResolverCacheScopeKey::new(tsconfig, visible, None, &[]))
+    }
+
+    pub(crate) fn resolver_cache_for_scope(
+        &self,
+        scope: ResolverCacheScopeKey,
+    ) -> Arc<ResolverResultCache> {
         match self.resolver_caches.entry(scope) {
             Entry::Occupied(entry) => Arc::clone(entry.get()),
             Entry::Vacant(entry) => {
@@ -106,6 +128,15 @@ impl AnalysisSession {
             self.increment("discovery.cache_hits", 1);
         }
         dataset.visible_paths_arc()
+    }
+
+    /// Return the invocation-owned workspace projection for `root`.
+    ///
+    /// The projection is built at most once for the exact analysis dataset and
+    /// is shared by catalogs, graph preparation, and domain checks.
+    #[doc(hidden)]
+    pub fn workspace(&self, root: &Path) -> Arc<crate::codebase::workspaces::IndexedWorkspaceMap> {
+        self.dataset(root).workspace()
     }
 
     /// Seed a snapshot prepared by an enclosing pipeline. This is used by
@@ -172,9 +203,42 @@ impl AnalysisSession {
             .max_by_key(|entry| entry.key().components().count())
             .map(|entry| (entry.key().clone(), Arc::clone(entry.value())));
 
-        matching_dataset
-            .map(|(root, cell)| self.dataset_from_cell(&root, &cell).sources_for(&root))
-            .unwrap_or_else(|| Arc::clone(&self.supplemental_sources))
+        match matching_dataset {
+            Some((root, cell)) => self.dataset_from_cell(&root, &cell).sources_for(&root),
+            None => Arc::clone(&self.supplemental_sources),
+        }
+    }
+
+    /// Memoize a request-owned registry-extension report projection for one
+    /// root/file pair. This is not a canonical TS fact because it is the
+    /// query's rendered report, but it owns no OXC data and can therefore be
+    /// reused without parsing the same source again.
+    pub(crate) fn registry_extension_report(
+        &self,
+        root: &Path,
+        path: &Path,
+        build: impl FnOnce() -> anyhow::Result<crate::registry_extension_query::RegistryExtensionReport>,
+    ) -> anyhow::Result<crate::registry_extension_query::RegistryExtensionReport> {
+        let key = RegistryExtensionKey {
+            root: normalize_path(root),
+            path: normalize_path(path),
+        };
+        let cell = match self.registry_extension_reports.entry(key) {
+            Entry::Occupied(entry) => Arc::clone(entry.get()),
+            Entry::Vacant(entry) => {
+                let cell = Arc::new(OnceLock::new());
+                entry.insert(Arc::clone(&cell));
+                cell
+            }
+        };
+        cell.get_or_init(|| {
+            build()
+                .map(Arc::new)
+                .map_err(|error| Arc::<str>::from(format!("{error:#}")))
+        })
+        .clone()
+        .map(|report| (*report).clone())
+        .map_err(|error| anyhow::anyhow!(error))
     }
 }
 

@@ -1,0 +1,4 @@
+tests:
+  vitest:
+    configs:
+      - packages/foo/vitest.config.ts

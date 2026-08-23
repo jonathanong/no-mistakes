@@ -86,6 +86,51 @@ fn pass4b_symbol_listing_skips_ignored_target_for_visible_fallback() {
         .all(|import| import["resolved"] == "query/target.ts"));
 }
 
+#[cfg(unix)]
+#[test]
+fn symbols_remap_scoped_aliases_from_a_symlink_root_before_json_and_yaml_output() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    );
+    let mut args = args_for(
+        &root,
+        vec!["src/symbol-client.ts", "src/reexport-direct.ts"],
+        Format::Json,
+    );
+    args.include = Include::Both;
+
+    let json = run_capture(args);
+    let json: serde_json::Value = serde_json::from_str(&json).unwrap();
+    for file in json["files"].as_array().unwrap() {
+        for import in file["imports"].as_array().into_iter().flatten() {
+            assert_eq!(import["resolved"], "src/symbol-target.ts", "{file:#?}");
+        }
+        for export in file["exports"].as_array().unwrap() {
+            if export["kind"] == "re-export" {
+                assert_eq!(
+                    export["reExport"]["resolved"], "src/symbol-target.ts",
+                    "{file:#?}"
+                );
+            }
+        }
+    }
+
+    let mut args = args_for(
+        &root,
+        vec!["src/symbol-client.ts", "src/reexport-direct.ts"],
+        Format::Yml,
+    );
+    args.include = Include::Both;
+    let yaml = run_capture(args);
+    assert_eq!(
+        yaml.matches("resolved: src/symbol-target.ts").count(),
+        2,
+        "{yaml}"
+    );
+    assert!(!yaml.contains("../real/"), "{yaml}");
+}
+
 include!("tests_signature_impact.rs");
 include!("tests_signature_impact_callers.rs");
 include!("tests_signature_impact_dynamic.rs");
@@ -462,4 +507,37 @@ fn import_with_unresolvable_source_omits_resolved() {
     assert!(imp.get("resolved").is_none());
 }
 
+#[test]
+fn collect_entries_with_timings_covers_phase_marks() {
+    let mut args = fixture_args(vec!["src/utils.mts"], Format::Json);
+    args.timings = true;
+    super::run(args).unwrap();
+}
+
+#[test]
+fn collect_entries_with_prepared_facts_requires_symbol_facts() {
+    let root = fixture_root();
+    let args = fixture_args(vec!["src/utils.mts"], Format::Json);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(None);
+    let visible: crate::fx::PathSet = std::iter::empty::<PathBuf>().collect();
+    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+        &root,
+        std::slice::from_ref(&root),
+        &[],
+    );
+    let facts = crate::codebase::check_facts::CheckFactMap::default();
+    let err = collect_entries_with_prepared_facts(
+        &args,
+        &root,
+        &catalog,
+        &visible,
+        &facts,
+        &facts,
+        session.as_ref(),
+    )
+    .unwrap_err();
+    assert!(format!("{err:#}").contains("utils.mts"));
+}
+
+include!("tests_pipeline_errors.rs");
 include!("tests_output_extended.rs");

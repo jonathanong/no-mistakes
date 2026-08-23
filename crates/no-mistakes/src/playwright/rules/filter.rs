@@ -29,7 +29,8 @@ pub(super) fn filter_rule_findings(
             config,
             rule_id,
             rule_findings,
-        )?;
+        );
+        let filtered_rule_findings = filtered_rule_findings?;
         filtered.extend(filtered_rule_findings);
     }
     filtered.sort();

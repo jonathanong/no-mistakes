@@ -1,5 +1,8 @@
 use super::RuleFinding;
-use crate::codebase::check_facts::{CheckFactMap, CheckFactPlan};
+use crate::codebase::check_facts::{
+    collect_check_facts_with_graph_files_playwright_sources_and_session, CheckFactMap,
+    CheckFactPlan,
+};
 use crate::config::v2::schema::NoMistakesConfig;
 use anyhow::Result;
 use std::path::Path;
@@ -12,6 +15,7 @@ mod findings;
 mod prepared;
 mod runner;
 mod selection;
+mod suppression;
 mod types;
 
 use colocated_tests::covered_components as colocated_test_covered_components;
@@ -19,24 +23,71 @@ use config::effective_story_patterns;
 use coverage::{all_react_component_keys, directly_covered_components, reachable_story_files};
 use coverage_graph::{dynamic_or_mock_boundary_files, transitive_covered_components};
 use findings::{namespace_import_findings, stale_or_blank_allow_findings};
-pub(crate) use prepared::{
-    check_with_prepared_facts_and_inferred_and_session, check_with_prepared_facts_and_session,
-};
+pub(crate) use prepared::{check_with_prepared_facts_for_aggregate, PreparedStorybookCheck};
 use selection::{component_disabled, file_disabled, selected_components};
 use types::{GlobMatcher, Options};
 
 pub const RULE_ID: &str = "require-storybook-stories";
+
+/// Catalog roots explicitly selected by Storybook rule applications.
+///
+/// These projects may be standalone directories rather than workspace
+/// packages, so they cannot rely on workspace discovery to surface their
+/// package-local tsconfig aliases.
+#[doc(hidden)]
+pub fn configured_project_roots(root: &Path, config: &NoMistakesConfig) -> Vec<std::path::PathBuf> {
+    let mut roots = config
+        .rule_applications(RULE_ID)
+        .iter()
+        .flat_map(|rule| rule.projects.iter())
+        .filter_map(|name| config.projects.get(name))
+        .map(|project| {
+            project
+                .root
+                .as_deref()
+                .map(|path| root.join(path))
+                .unwrap_or_else(|| root.to_path_buf())
+        })
+        .collect::<Vec<_>>();
+    roots.sort();
+    roots.dedup();
+    roots
+}
+
+#[doc(hidden)]
+pub fn authorize_configured_sources(
+    root: &Path,
+    config: &NoMistakesConfig,
+    sources: &crate::codebase::ts_source::SourceStore,
+) {
+    config::authorize_configured_sources(
+        root,
+        config,
+        &configured_project_roots(root, config),
+        sources,
+    );
+}
 
 pub fn check(
     root: &Path,
     config: &NoMistakesConfig,
     tsconfig_path: Option<&Path>,
 ) -> Result<Vec<RuleFinding>> {
-    let files =
-        crate::codebase::ts_source::discover_files(root, &config.filesystem.skip_directories);
-    let facts = crate::codebase::check_facts::collect_check_facts(
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    let snapshot = session.visible_paths(root);
+    let visible_paths = snapshot.paths_for(root);
+    let files = crate::codebase::ts_source::discover_files_from_visible(
         root,
-        files,
+        &config.filesystem.skip_directories,
+        &visible_paths,
+    );
+    let sources = snapshot.source_store_for(root);
+    authorize_configured_sources(root, config, &sources);
+    let facts = collect_check_facts_with_graph_files_playwright_sources_and_session(
+        &session,
+        root,
+        (files, Vec::new()),
         CheckFactPlan {
             react: true,
             symbols: true,
@@ -45,31 +96,77 @@ pub fn check(
             source: true,
             ..Default::default()
         },
+        None,
+        std::sync::Arc::clone(&sources),
     );
-    check_with_facts(root, config, tsconfig_path, &facts)
+    let catalog = tsconfig_catalog(root, config, tsconfig_path, &visible_paths, &sources)?;
+    check_with_facts_and_catalog(root, config, &facts, &catalog, None, &sources, &session)
 }
 
-pub(crate) fn check_with_facts(
+fn check_with_facts_and_catalog(
     root: &Path,
     config: &NoMistakesConfig,
-    tsconfig_path: Option<&Path>,
     shared: &CheckFactMap,
+    catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    sources: &crate::codebase::ts_source::SourceStore,
+    session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<Vec<RuleFinding>> {
-    let session =
-        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    runner::check_with_tsconfig(
+    let visible_files = shared
+        .files()
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<crate::fx::PathSet>();
+    let resolver = crate::codebase::ts_resolver::ScopedImportResolver::new_in_session(
+        catalog,
+        &visible_files,
+        session,
+    );
+    runner::check_with_resolver(
         root,
         config,
         shared,
-        &session,
-        |project_root| {
-            crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-                tsconfig_path,
-                project_root,
-                shared.files(),
-            )
-        },
-        None,
+        &resolver,
+        inferred_roots,
+        false,
+        sources,
+    )
+}
+
+fn tsconfig_catalog(
+    root: &Path,
+    config: &NoMistakesConfig,
+    tsconfig_path: Option<&Path>,
+    visible_paths: &[std::path::PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<crate::codebase::ts_resolver::TsConfigCatalog> {
+    if let Some(path) = tsconfig_path {
+        let path = if path.is_absolute() {
+            path.to_path_buf()
+        } else {
+            root.join(path)
+        };
+        let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
+            Some(&path),
+            root,
+            visible_paths,
+        );
+        let tsconfig = tsconfig?;
+        return Ok(crate::codebase::ts_resolver::TsConfigCatalog::forced(
+            root,
+            tsconfig,
+            Some(crate::codebase::ts_resolver::normalize_path(&path)),
+        ));
+    }
+    let mut candidate_roots = vec![root.to_path_buf()];
+    candidate_roots.extend(configured_project_roots(root, config));
+    Ok(
+        crate::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources(
+            root,
+            &candidate_roots,
+            visible_paths,
+            sources,
+        ),
     )
 }
 

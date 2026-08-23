@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes",
-  "version": "0.33.0",
+  "version": "0.48.0",
   "description": "Static codebase analysis tools for TS/JS dependencies, dependents, and symbols",
   "license": "MIT",
   "repository": {
@@ -15,7 +15,9 @@
     "bin/",
     "*.d.ts",
     "index.js",
+    "index.mjs",
     "planning.js",
+    "workflow-topology-index.js",
     "scripts/install.js",
     "scripts/install/",
     "README.md",
@@ -23,6 +25,15 @@
   ],
   "main": "index.js",
   "types": "index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.mjs",
+      "require": "./index.js"
+    },
+    "./planning.js": "./planning.js",
+    "./workflow-topology-index.js": "./workflow-topology-index.js"
+  },
   "publishConfig": {
     "access": "public"
   },

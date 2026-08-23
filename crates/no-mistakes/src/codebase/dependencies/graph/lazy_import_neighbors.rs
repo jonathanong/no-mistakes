@@ -1,6 +1,6 @@
 fn import_neighbors(
     path: &Path,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
@@ -19,6 +19,7 @@ fn import_neighbors(
                 workspace,
                 graph_files,
                 allowed,
+                session.interner(),
             ),
             None,
         );
@@ -26,12 +27,8 @@ fn import_neighbors(
 
     let facts = {
         let source_result = match fact_source.sources {
-            Some(sources) => sources
-                .read_path(path)
-                .map_err(|error| error.to_string()),
-            None => session
-                .read_source(path)
-                .map_err(|error| error.to_string()),
+            Some(sources) => sources.read_path(path).map_err(|error| error.to_string()),
+            None => session.read_source(path).map_err(|error| error.to_string()),
         };
         let source = match source_result {
             Ok(source) => source,
@@ -45,14 +42,19 @@ fn import_neighbors(
                 );
             }
         };
-        match session.with_program(path, &source, |program, source| {
+        match session.with_program(path, &source, |program, parsed| {
             crate::codebase::ts_source::facts::collect_file_facts_from_program(
                 path,
                 fact_source.collect_plan,
                 fact_source.context,
-                source,
+                parsed,
                 program,
                 None,
+                if fact_source.collect_plan.source {
+                    Some(std::sync::Arc::clone(&source))
+                } else {
+                    None
+                },
             )
         }) {
             Ok(facts) => facts,
@@ -70,6 +72,7 @@ fn import_neighbors(
         workspace,
         graph_files,
         allowed,
+        session.interner(),
     );
     (neighbors, Some(facts))
 }
@@ -77,10 +80,11 @@ fn import_neighbors(
 fn import_neighbors_from_facts(
     path: &Path,
     file_facts: &TsFileFacts,
-    resolver: &ImportResolver<'_>,
+    resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
     allowed: Option<&HashSet<EdgeKind>>,
+    interner: &PathInterner,
 ) -> Vec<(NodeId, EdgeKind)> {
     let reachable = reachable_function_scopes(file_facts);
     let mut neighbors: Vec<(NodeId, EdgeKind)> = file_facts
@@ -89,25 +93,37 @@ fn import_neighbors_from_facts(
         .filter(|imp| import_is_reachable(imp, file_facts, &reachable))
         .filter_map(|imp| {
             let kind = edge_kind_for_import(imp);
-            let classification = resolver.classify_import(
-                &imp.specifier,
-                path,
-                workspace,
-                graph_files.visible(),
-            );
+            let classification =
+                resolver.classify_import(&imp.specifier, path, workspace, graph_files);
+            if let Some(target) = classification.workspace_path() {
+                let target = graph_files.visible_path(target)?;
+                let kind = match imp.kind {
+                    ImportKind::Type => EdgeKind::WorkspaceTypeImport,
+                    ImportKind::RequireResolve => EdgeKind::RequireResolve,
+                    _ => EdgeKind::WorkspaceImport,
+                };
+                if is_indexable(target) || kind == EdgeKind::RequireResolve {
+                    return Some((NodeId::file_in(interner, target), kind));
+                }
+                return None;
+            }
             if let Some(target) = classification.preferred_path() {
-                return (graph_files.is_visible(target) && is_indexable(target))
-                    .then(|| (NodeId::File(target.to_path_buf()), kind));
+                let target = graph_files.visible_path(target)?;
+                if is_indexable(target) || kind == EdgeKind::RequireResolve {
+                    return Some((NodeId::file_in(interner, target), kind));
+                }
+                return None;
             }
             if classification.is_unresolved_external() {
-                return bare_module_node(&imp.specifier).map(|module| (module, kind));
+                return bare_module_node_in(interner, &imp.specifier).map(|module| (module, kind));
             }
             None
         })
         .filter(|(_, kind)| allowed.is_none_or(|a| a.contains(kind)))
         .collect();
-    // ⚡ Bolt: Use `sort_by_cached_key` instead of `sort_by_key` to avoid repeatedly calling
-    // `node_sort_key` (which involves allocation and formatting) during the sort operations.
-    neighbors.sort_by_cached_key(|(node, kind)| (node_sort_key(node), *kind as u8));
+    neighbors.sort_by(|(left_node, left_kind), (right_node, right_kind)| {
+        cmp_node_sort_keys(left_node, right_node)
+            .then_with(|| left_kind.sort_key().cmp(&right_kind.sort_key()))
+    });
     neighbors
 }

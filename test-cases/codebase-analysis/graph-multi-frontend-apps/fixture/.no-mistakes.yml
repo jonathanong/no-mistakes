@@ -1,0 +1,14 @@
+projects:
+  control-web:
+    type: nextjs
+    root: control-web
+  agent-web:
+    type: nextjs
+    root: agent-web
+
+tests:
+  playwright:
+    configs: playwright.config.mts
+    selectors:
+      testIds:
+        - data-testid

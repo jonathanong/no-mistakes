@@ -1,1 +1,3 @@
-export const unit = (): string => 'unit'
+import { projectFactsMarker } from '../project-list'
+
+export const unit = (): string => (projectFactsMarker ? 'unit' : 'unreachable')

@@ -1,0 +1,28 @@
+# Route topology contributes edges to the shared impact graph, so it must not
+# be treated as a Vitest-only project-root adjustment.
+projects:
+  database-resources:
+    root: .
+    routes: [api/**]
+  union-resources:
+    root: .
+tests:
+  vitest:
+    configs: vitest.config.mts
+  playwright:
+    configs: playwright.config.mts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        database-resources:
+          paths: [migrations/**/*.sql, "!migrations/ignored/**", migrations/ignored/reinclude.sql]
+          targets: [database]
+        union-resources: { paths: [migrations/union.sql], targets: [web] }
+    environments:
+      pre-push: { globalConfigFallback: true, exclude: [src/shared.test.ts] }
+      shared: { globalConfigFallback: true }
+      limited: { globalConfigFallback: true, limit: { files: 1 } }
+  playwright:
+    environments:
+      pre-push: { globalConfigFallback: true }

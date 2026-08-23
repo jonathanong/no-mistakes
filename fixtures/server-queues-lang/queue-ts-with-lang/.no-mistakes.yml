@@ -1,0 +1,4 @@
+root: .
+tests:
+  python:
+    packages: ["no-such-pkg"]

@@ -6,6 +6,7 @@ use std::sync::Arc;
 mod plan;
 mod playwright_source;
 mod program;
+mod program_walk;
 mod variants;
 
 use plan::{requires_parse, should_store_source, ts_source};
@@ -26,6 +27,7 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
     sources: &crate::codebase::ts_source::SourceStore,
+    retain_parse: bool,
 ) -> Option<CheckFileFacts> {
     let source = match sources.read_path(path) {
         Ok(source) => source,
@@ -44,7 +46,7 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
             });
         }
     };
-    collect_file_facts_from_source(session, root, path, plan, playwright, source)
+    collect_file_facts_from_source(session, root, path, plan, playwright, source, retain_parse)
 }
 
 fn collect_file_facts_from_source(
@@ -54,6 +56,7 @@ fn collect_file_facts_from_source(
     plan: &CheckFactPlan,
     playwright: Option<&PlaywrightFactPlan>,
     source: Arc<str>,
+    retain_parse: bool,
 ) -> Option<CheckFileFacts> {
     if plan.storybook && is_mdx_file(path) {
         let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
@@ -80,60 +83,61 @@ fn collect_file_facts_from_source(
     let legacy_symbols = plan
         .legacy_symbol_paths
         .contains(&crate::codebase::ts_resolver::normalize_path(path));
-    let collect = |program: &oxc_ast::ast::Program<'_>,
-                   parsed_source: &str,
-                   parse_error: Option<String>| {
-        if let Some(parse_error) = parse_error {
-            let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
-            let mut ts = super::file_parse_error::ts_facts(
-                plan,
-                stored_source.clone(),
-                program,
-                parse_error.clone(),
-            );
-            let symbols = (legacy_symbols && (plan.symbols || plan.graph.symbols)).then(|| {
-                Arc::new(crate::codebase::ts_symbols::extract_symbols_from_program(
+    let collect =
+        |program: &oxc_ast::ast::Program<'_>, parsed_source: &str, parse_error: Option<String>| {
+            if let Some(parse_error) = parse_error {
+                let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
+                let mut ts = super::file_parse_error::ts_facts(
+                    plan,
+                    stored_source.clone(),
                     program,
-                    parsed_source,
-                ))
-            });
-            if let Some(symbols) = &symbols {
-                ts.symbols = Some(symbols.as_ref().clone());
-            }
-            let integration_runner_config =
-                plan.integration_runner_configs.as_ref().and_then(|plan| {
-                    plan.parse_error(
-                        path,
-                        format!("failed to parse {}: {parse_error}", path.display()),
-                    )
+                    parse_error.clone(),
+                );
+                let symbols = (legacy_symbols && (plan.symbols || plan.graph.symbols)).then(|| {
+                    Arc::new(crate::codebase::ts_symbols::extract_symbols_from_program(
+                        program,
+                        parsed_source,
+                    ))
                 });
-            return CheckFileFacts {
-                ts: Arc::new(ts),
-                source: stored_source,
-                symbols,
-                integration_runner_config,
-                parse_error: Some(parse_error),
-                parsed: true,
-                server_route_client_boundary: plan
-                    .server_route_client_boundary
-                    .then(Default::default),
-                ..CheckFileFacts::default()
-            };
-        }
-        let mut facts =
-            collect_file_facts_from_program(root, path, plan, playwright, parsed_source, program);
-        if should_store_source(plan) {
-            Arc::make_mut(&mut facts.ts).source = Some(source.to_string());
-            facts.source = Some(Arc::clone(&source));
-        }
-        facts
-    };
+                if let Some(symbols) = &symbols {
+                    ts.symbols = Some(Arc::clone(symbols));
+                }
+                let integration_runner_config =
+                    plan.integration_runner_configs.as_ref().and_then(|plan| {
+                        plan.parse_error(
+                            path,
+                            format!("failed to parse {}: {parse_error}", path.display()),
+                        )
+                    });
+                return CheckFileFacts {
+                    ts: Arc::new(ts),
+                    source: stored_source,
+                    symbols,
+                    integration_runner_config,
+                    parse_error: Some(parse_error),
+                    parsed: true,
+                    server_route_client_boundary: plan
+                        .server_route_client_boundary
+                        .then(Default::default),
+                    ..CheckFileFacts::default()
+                };
+            }
+            collect_file_facts_from_program(
+                root,
+                path,
+                plan,
+                playwright,
+                parsed_source,
+                program,
+                should_store_source(plan).then(|| Arc::clone(&source)),
+            )
+        };
     let collected = if legacy_symbols {
         session.with_legacy_symbols_program(path, &source, collect)
     } else {
         session.with_recovered_program(path, &source, collect)
     };
-    match collected {
+    let facts = match collected {
         Ok(facts) => Some(facts),
         Err(error) => {
             let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
@@ -145,7 +149,7 @@ fn collect_file_facts_from_source(
             Some(CheckFileFacts {
                 ts: Arc::new(TsFileFacts {
                     parse_error: Some(parse_error.clone()),
-                    source: stored_source.as_deref().map(str::to_owned),
+                    source: stored_source.clone(),
                     ..TsFileFacts::default()
                 }),
                 source: stored_source,
@@ -156,5 +160,9 @@ fn collect_file_facts_from_source(
                 ..CheckFileFacts::default()
             })
         }
+    };
+    if !retain_parse {
+        crate::ast::evict_request_parse_cache_path(path);
     }
+    facts
 }

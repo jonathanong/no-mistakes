@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "no-restricted-properties": [
+      "error",
+      {
+        "object": "Function",
+        "property": "bind",
+        "message": "too narrow"
+      }
+    ]
+  }
+}

@@ -48,6 +48,29 @@ fn rule_enabled_accepts_project_rule_without_top_level_options() {
 }
 
 #[test]
+fn full_graph_universe_is_explicit_per_graph_rule() {
+    fn configured(rule: &str) -> crate::config::v2::NoMistakesConfig {
+        let mut config = crate::config::v2::NoMistakesConfig::default();
+        config.rules.push(RuleDef {
+            rule: rule.to_string(),
+            scope: Some(RuleScope::Repository),
+            ..Default::default()
+        });
+        config
+    }
+
+    assert!(!canonical_graph_requires_full_file_universe(&configured(
+        TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    )));
+    assert!(canonical_graph_requires_full_file_universe(&configured(
+        FORBIDDEN_DEPENDENCIES,
+    )));
+    assert!(canonical_graph_requires_full_file_universe(&configured(
+        REQUIRED_ENTRYPOINT_REACHABILITY,
+    )));
+}
+
+#[test]
 fn run_check_returns_empty_when_rule_is_not_enabled() {
     let root = std::path::Path::new("/tmp/no-mistakes-empty-rules");
     let findings = run_check(root, None, None).unwrap();
@@ -127,6 +150,173 @@ fn run_check_with_facts_executes_storybook_rule() {
 }
 
 #[test]
+fn run_check_with_facts_uses_package_tsconfig_aliases() {
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/monorepo-tsconfig-catalog");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().to_path_buf();
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let graph_plan = canonical_graph_plan(&config).unwrap();
+    let (graph, graph_context) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_config(
+            &root, graph_plan, None,
+        );
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        files,
+        crate::codebase::check_facts::CheckFactPlan {
+            imports: true,
+            dynamic_imports: true,
+            source: true,
+            graph,
+            graph_context,
+            ..Default::default()
+        },
+    );
+
+    let findings = run_check_with_facts(&root, None, None, &facts).unwrap();
+    assert!(findings.iter().any(|finding| {
+        finding.rule == FORBIDDEN_DEPENDENCIES
+            && finding.file == "packages/app/src/api.ts"
+            && finding.target.as_deref() == Some("sharp")
+    }));
+    assert!(findings.iter().any(|finding| {
+        finding.rule == TEST_NO_UNMOCKED_DYNAMIC_IMPORTS
+            && finding.target.as_deref() == Some("packages/lib/src/lazy.ts")
+    }));
+}
+
+#[test]
+fn run_check_with_facts_uses_the_caller_tsconfig_universe() {
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/prepared-facts-tsconfig-universe");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().to_path_buf();
+    let generated_tsconfig = root.join("packages/app/tsconfig.json");
+
+    // The generated config is ignored by live discovery, but the caller
+    // deliberately included it in the frozen prepared-facts universe.
+    let mut caller_files = crate::codebase::ts_source::discover_files(&root, &[]);
+    assert!(!caller_files.contains(&generated_tsconfig));
+    caller_files.push(generated_tsconfig);
+    caller_files.sort();
+
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let graph_plan = canonical_graph_plan(&config).unwrap();
+    let (graph, graph_context) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_config(
+            &root, graph_plan, None,
+        );
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        caller_files,
+        crate::codebase::check_facts::CheckFactPlan {
+            imports: true,
+            graph,
+            graph_context,
+            ..Default::default()
+        },
+    );
+
+    let findings = run_check_with_facts(&root, None, None, &facts).unwrap();
+    assert!(findings.iter().any(|finding| {
+        finding.rule == FORBIDDEN_DEPENDENCIES
+            && finding.file == "packages/app/src/api.ts"
+            && finding.target.as_deref() == Some("sharp")
+    }));
+}
+
+#[test]
+fn dynamic_import_facts_do_not_discover_ignored_generated_tsconfigs() {
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/prepared-dynamic-tsconfig-universe");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().to_path_buf();
+    let generated_tsconfig = root.join("packages/app/tsconfig.json");
+    let mut caller_files = crate::codebase::ts_source::discover_files(&root, &[]);
+
+    // The config is normally visible, but this caller deliberately omitted it
+    // from the frozen fact universe. The direct public API must not rediscover
+    // it through a live snapshot.
+    assert!(caller_files.contains(&generated_tsconfig));
+    caller_files.retain(|path| path != &generated_tsconfig);
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        caller_files,
+        crate::codebase::check_facts::CheckFactPlan {
+            imports: true,
+            dynamic_imports: true,
+            source: true,
+            ..Default::default()
+        },
+    );
+
+    let findings =
+        test_no_unmocked_dynamic_imports::check_with_facts(&root, &config, None, &facts).unwrap();
+    assert!(findings.iter().any(|finding| {
+        finding.file == "packages/app/tests/lazy.test.ts"
+            && finding.import.as_deref() == Some("@app/lazy")
+            && finding.target.is_none()
+    }));
+}
+
+#[test]
+fn dynamic_import_facts_use_package_scoped_aliases_for_manual_mocks() {
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/monorepo-tsconfig-catalog");
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().to_path_buf();
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_files(&root, &[]),
+        crate::codebase::check_facts::CheckFactPlan {
+            imports: true,
+            dynamic_imports: true,
+            source: true,
+            ..Default::default()
+        },
+    );
+
+    let findings =
+        test_no_unmocked_dynamic_imports::check_with_facts(&root, &config, None, &facts).unwrap();
+    assert!(findings
+        .iter()
+        .all(|finding| { finding.file != "packages/app/tests/manual-mock.test.ts" }));
+}
+
+#[test]
+fn dynamic_import_facts_remap_symlinked_alias_manual_mocks_to_graph_paths() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    );
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_files(&root, &[]),
+        crate::codebase::check_facts::CheckFactPlan {
+            imports: true,
+            dynamic_imports: true,
+            source: true,
+            ..Default::default()
+        },
+    );
+
+    let findings = test_no_unmocked_dynamic_imports::check_with_facts(
+        &root,
+        &crate::config::v2::NoMistakesConfig::default(),
+        None,
+        &facts,
+    )
+    .unwrap();
+    assert!(findings
+        .iter()
+        .all(|finding| { finding.file != "tests/dynamic-manual-mock.test.ts" }));
+}
+
+#[test]
 fn run_check_executes_forbidden_dependencies_rule() {
     let root = fixture("codebase-analysis/forbidden-dependencies-basic");
     let findings = run_check(&root, None, None).unwrap();
@@ -156,7 +346,12 @@ fn standalone_rules_prepare_one_request_without_nested_rule_discovery() {
     assert_eq!(source.matches("InferredRoots::from_visible(").count(), 1);
     assert_eq!(source.matches("resolve_tsconfig_from_visible(").count(), 1);
     assert_eq!(source.matches("prepare_from_snapshot(").count(), 1);
-    assert_eq!(source.matches("prepare_graph_config(").count(), 1);
+    assert_eq!(
+        source
+            .matches("prepare_graph_config_with_test_filter(")
+            .count(),
+        1
+    );
     assert_eq!(source.matches("standalone_fact_plan(&config)").count(), 1);
     assert_eq!(
         source
@@ -192,6 +387,17 @@ fn run_check_surfaces_forbidden_dependencies_tsconfig_error() {
     let missing_tsconfig = root.join("does-not-exist.tsconfig.json");
     let error = run_check(&root, None, Some(&missing_tsconfig)).unwrap_err();
     assert!(format!("{error:#}").contains("does-not-exist.tsconfig.json"));
+}
+
+#[test]
+fn run_check_propagates_forbidden_dependencies_filter_error() {
+    let root = fixture("codebase-analysis/forbidden-dependencies-basic");
+    let config = root.join("invalid-include.no-mistakes.yml");
+    let error = run_check(&root, Some(&config), Some(&root.join("tsconfig.json"))).unwrap_err();
+    assert!(
+        error.to_string().contains("include contains invalid glob"),
+        "unexpected error: {error:#}"
+    );
 }
 
 #[test]

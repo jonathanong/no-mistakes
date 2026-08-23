@@ -1,0 +1,336 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/main.yml",
+      "path": ".github/workflows/main.yml",
+      "name": "main.yml",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/main.yml#consume-dynamic",
+        ".github/workflows/main.yml#consume-opaque",
+        ".github/workflows/main.yml#consume-path-derived",
+        ".github/workflows/main.yml#consume-suppressed",
+        ".github/workflows/main.yml#dynamic-producer",
+        ".github/workflows/main.yml#opaque-caller",
+        ".github/workflows/main.yml#path-derived-producer",
+        ".github/workflows/main.yml#static",
+        ".github/workflows/main.yml#suppress-missing"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/main.yml#consume-dynamic",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-dynamic",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "bundle-found",
+                "value": "bundle-found"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-opaque",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-opaque",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "bundle-found",
+                "value": "bundle-found"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-path-derived",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-path-derived",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "bundle-found",
+                "value": "bundle-found"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#consume-suppressed",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "consume-suppressed",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "absent",
+                "value": "absent"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#dynamic-producer",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "dynamic-producer",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "dynamic",
+              "raw": "${{ inputs.name }}"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#opaque-caller",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "opaque-caller",
+      "kind": "job",
+      "steps": []
+    },
+    {
+      "id": ".github/workflows/main.yml#path-derived-producer",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "path-derived-producer",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "path-derived",
+              "reason": "archive-disabled"
+            },
+            "archive": {
+              "kind": "static",
+              "raw": "false",
+              "effective": false
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#static",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "static",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "bundle-found",
+              "value": "bundle-found"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#suppress-missing",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "suppress-missing",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "dynamic",
+              "raw": "${{ inputs.name }}"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#static",
+      "to": ".github/workflows/main.yml#consume-dynamic",
+      "name": "bundle-found",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#static",
+      "to": ".github/workflows/main.yml#consume-opaque",
+      "name": "bundle-found",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "artifact",
+      "from": ".github/workflows/main.yml#static",
+      "to": ".github/workflows/main.yml#consume-path-derived",
+      "name": "bundle-found",
+      "producerStep": 0,
+      "consumerStep": 0,
+      "match": "possible"
+    },
+    {
+      "kind": "calls",
+      "from": ".github/workflows/main.yml#opaque-caller",
+      "target": "owner/repository/.github/workflows/upload.yml@main",
+      "local": false,
+      "bindings": {
+        "inputs": {},
+        "secrets": {
+          "mode": "explicit",
+          "values": {}
+        }
+      }
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#dynamic-producer",
+      "to": ".github/workflows/main.yml#consume-dynamic"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#opaque-caller",
+      "to": ".github/workflows/main.yml#consume-opaque"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#path-derived-producer",
+      "to": ".github/workflows/main.yml#consume-path-derived"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#static",
+      "to": ".github/workflows/main.yml#consume-dynamic"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#static",
+      "to": ".github/workflows/main.yml#consume-opaque"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#static",
+      "to": ".github/workflows/main.yml#consume-path-derived"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#suppress-missing",
+      "to": ".github/workflows/main.yml#consume-suppressed"
+    }
+  ],
+  "diagnostics": []
+}

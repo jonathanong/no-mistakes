@@ -1,39 +1,28 @@
 use crate::tests::{
-    Confidence, ImpactReason, PlanArgs, PlanFormat, SelectedTest, TestPlan, Warning,
+    push_resource_diagnostics, via_details_from_edges, warning_key, Confidence, ImpactEdgeDetail,
+    ImpactReason, PlanArgs, ResourceCallSite, SelectedTest, TestPlan, Warning, WarningKey,
 };
 use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{DepGraph, EdgeKind, NodeId};
 use no_mistakes::codebase::test_filter::TestFileFilter;
 use std::collections::{HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
-use std::process::ExitCode;
 
 include!("plan_extra_inputs.rs");
 
-pub(crate) fn run(args: PlanArgs) -> Result<ExitCode> {
-    let plan = generate_plan(&args)?;
+#[path = "plan_vitest_setup.rs"]
+mod plan_vitest_setup;
 
-    let format = if args.json {
-        PlanFormat::Json
-    } else {
-        args.format.unwrap_or(PlanFormat::Json)
-    };
-    let output = super::plan_output::render(&plan, format, "tests plan")?;
-    crate::invocation::commit_timeout()?;
-    print!("{output}");
+mod changed_inventory;
+pub(crate) use changed_inventory::generate_plan_with_prepared;
+mod global_config;
+mod run;
+pub(crate) use global_config::global_config_trigger;
+pub(crate) use run::run;
 
-    Ok(ExitCode::SUCCESS)
-}
+include!("plan/generate.rs");
 
-const _: fn(PlanArgs) -> Result<ExitCode> = run;
-
-pub fn generate_plan(args: &PlanArgs) -> Result<TestPlan> {
-    let prepared = super::prepared_plan::PreparedTestPlanRequest::prepare(args)?;
-    generate_plan_with_prepared(prepared.args(), &prepared, None)
-}
-
-/// Generate a framework or union plan from immutable request-scoped inputs.
-pub(crate) fn generate_plan_with_prepared(
+fn generate_plan_with_prepared_inner(
     args: &PlanArgs,
     prepared: &super::prepared_plan::PreparedTestPlanRequest,
     timing: Option<&mut crate::impacted_checks::timing::TimingTracker>,
@@ -46,22 +35,30 @@ pub(crate) fn generate_plan_with_prepared(
     let lockfile_analysis = &prepared.lockfile_analysis;
 
     if let Some(framework) = args.framework {
+        if args.direct_test_owner {
+            return super::configured_plan::generate_direct_test_owner_plan_with_prepared(
+                framework, prepared,
+            );
+        }
         // Compute lockfile changed packages for BFS tracing in framework plans — same
         // structure as the non-framework §4b path below. Parseable lockfile diffs no
         // longer force an unconditional full-suite fallback; we wire the packages into
         // the configured-plan dependencies group instead.
         // fallback_triggered means binary / invalid-ref / diff-only — no parseable diff available.
         // Full-suite selection still requires the effective global fallback opt-in.
-        let forced_fallback = global_config_trigger(root, changed_files).or_else(|| {
-            if lockfile_analysis.fallback_triggered {
-                lockfile_analysis
-                    .warnings
-                    .first()
-                    .map(|w| (w.message.clone(), root.join(&w.file)))
-            } else {
-                None
-            }
-        });
+        let forced_fallback = prepared
+            .framework_config_trigger(framework)
+            .or_else(|| global_config::excluding_v2_config(root, &collected.files))
+            .or_else(|| {
+                if lockfile_analysis.fallback_triggered {
+                    lockfile_analysis
+                        .warnings
+                        .first()
+                        .map(|w| (w.message.clone(), root.join(&w.file)))
+                } else {
+                    None
+                }
+            });
         let discovered_tests = super::configured_plan::discover_framework_tests_from_prepared(
             args, framework, prepared,
         )?;
@@ -102,7 +99,7 @@ pub(crate) fn generate_plan_with_prepared(
 
     if let Some((reason, trigger_file)) = fallback_reason {
         let relative_changed = relative_path(root, &trigger_file);
-        let all_test_files = discover_all_tests_from_prepared(prepared);
+        let all_test_files = global_config::discover_all_tests_from_prepared(prepared);
         let mut selected_tests = Vec::new();
         for test in all_test_files {
             let rel_test = relative_path(root, &test);
@@ -114,16 +111,23 @@ pub(crate) fn generate_plan_with_prepared(
                     changed_file: relative_changed.clone(),
                     path: vec![relative_changed.clone(), rel_test],
                     via: vec!["global configuration".to_string()],
+                    via_details: Vec::new(),
                 }],
             });
         }
         selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
         return Ok(TestPlan {
+            changed_files: Vec::new(),
             selected_tests,
             groups: Vec::new(),
-            warnings: lockfile_analysis.warnings.clone(),
+            warnings: {
+                let mut warnings = lockfile_analysis.warnings.clone();
+                warnings.extend(prepared.tsconfig_warnings());
+                warnings
+            },
             fallback_triggered: true,
             fallback_reason: Some(reason),
+            ..Default::default()
         });
     }
 
@@ -133,8 +137,8 @@ pub(crate) fn generate_plan_with_prepared(
     let test_filter = prepared.test_filter().clone();
 
     let mut selected_map: HashMap<PathBuf, SelectedTest> = HashMap::new();
-    let mut warnings = Vec::new();
-    let mut warnings_seen = HashSet::new();
+    let mut warnings = prepared.tsconfig_warnings();
+    let mut warnings_seen: HashSet<WarningKey> = warnings.iter().map(warning_key).collect();
 
     // 4. Trace each changed file
     for changed in changed_files {
@@ -146,6 +150,10 @@ pub(crate) fn generate_plan_with_prepared(
         }
 
         let rel_changed = relative_path(root, changed);
+
+        // Dynamic resource calls are intentionally edge-less. A changed
+        // consumer remains relevant even when no static path reaches a test.
+        push_resource_diagnostics(graph, root, changed, &mut warnings, &mut warnings_seen);
 
         // If the changed file is a test file itself, select it directly
         if test_filter.is_match(root, changed) {
@@ -162,6 +170,7 @@ pub(crate) fn generate_plan_with_prepared(
                 changed_file: rel_changed.clone(),
                 path: vec![rel_changed.clone()],
                 via: vec!["self".to_string()],
+                via_details: Vec::new(),
             };
             if !entry.reasons.contains(&reason) {
                 entry.reasons.push(reason);
@@ -178,7 +187,7 @@ pub(crate) fn generate_plan_with_prepared(
 
             for (test_node, edge_path) in reachable_tests {
                 let test_path = match &test_node {
-                    NodeId::File(p) => p.clone(),
+                    NodeId::File(p) => p.to_path_buf(),
                     _ => continue,
                 };
                 let rel_test = relative_path(root, &test_path);
@@ -188,11 +197,22 @@ pub(crate) fn generate_plan_with_prepared(
 
                 // Reconstruct path node chain and collect warnings in a single pass
                 let mut node_chain = Vec::new();
+                let mut reverse_details = Vec::new();
                 let mut curr = test_node.clone();
                 node_chain.push(slash_node_name(&curr, root));
 
                 while let Some((parent, kind)) = path_parents.get(&curr) {
+                    if let Some(file) = curr.as_file() {
+                        push_resource_diagnostics(
+                            graph,
+                            root,
+                            file,
+                            &mut warnings,
+                            &mut warnings_seen,
+                        );
+                    }
                     node_chain.push(slash_node_name(parent, root));
+                    reverse_details.push(resource_edge_detail(graph, &curr, parent, *kind, root));
 
                     match kind {
                         EdgeKind::DynamicImport => {
@@ -203,8 +223,9 @@ pub(crate) fn generate_plan_with_prepared(
                                     slash_node_name(&curr, root)
                                 ),
                                 file: slash_node_name(&curr, root),
+                                line: None,
                             };
-                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                            if warnings_seen.insert(warning_key(&warn)) {
                                 warnings.push(warn);
                             }
                         }
@@ -217,8 +238,9 @@ pub(crate) fn generate_plan_with_prepared(
                                     slash_node_name(parent, root)
                                 ),
                                 file: slash_node_name(&curr, root),
+                                line: None,
                             };
-                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                            if warnings_seen.insert(warning_key(&warn)) {
                                 warnings.push(warn);
                             }
                         }
@@ -230,8 +252,9 @@ pub(crate) fn generate_plan_with_prepared(
                                     slash_node_name(&curr, root)
                                 ),
                                 file: slash_node_name(&curr, root),
+                                line: None,
                             };
-                            if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+                            if warnings_seen.insert(warning_key(&warn)) {
                                 warnings.push(warn);
                             }
                         }
@@ -239,7 +262,11 @@ pub(crate) fn generate_plan_with_prepared(
                     }
                     curr = parent.clone();
                 }
+                if let Some(file) = curr.as_file() {
+                    push_resource_diagnostics(graph, root, file, &mut warnings, &mut warnings_seen);
+                }
                 node_chain.reverse();
+                reverse_details.reverse();
 
                 let via_strings: Vec<String> = edge_path
                     .iter()
@@ -250,6 +277,7 @@ pub(crate) fn generate_plan_with_prepared(
                     changed_file: rel_changed.clone(),
                     path: node_chain,
                     via: via_strings,
+                    via_details: reverse_details,
                 };
 
                 let entry = selected_map
@@ -281,11 +309,11 @@ pub(crate) fn generate_plan_with_prepared(
         // (collect_workspace_manifest_edges resolves the specifier to a file). Try the
         // module node first; fall back to the workspace entry when the module is absent.
         let start_node = {
-            let module_node = NodeId::Module(pkg_name.clone());
+            let module_node = NodeId::module(pkg_name.clone());
             if graph.has_reverse_node(&module_node) {
                 module_node
             } else if let Some(entry) = workspace_map.resolve_package(pkg_name) {
-                NodeId::File(entry.clone())
+                NodeId::file(entry.clone())
             } else {
                 if !untraceable_lockfile_files.contains(lockfile_rel) {
                     untraceable_lockfile_files.push(lockfile_rel.clone());
@@ -308,7 +336,7 @@ pub(crate) fn generate_plan_with_prepared(
 
         for (test_node, edge_path) in reachable_tests {
             let test_path = match &test_node {
-                NodeId::File(p) => p.clone(),
+                NodeId::File(p) => p.to_path_buf(),
                 _ => continue,
             };
             let rel_test = relative_path(root, &test_path);
@@ -332,6 +360,7 @@ pub(crate) fn generate_plan_with_prepared(
                 changed_file: lockfile_rel.clone(),
                 path: node_chain,
                 via: via_strings,
+                via_details: via_details_from_edges(&edge_path),
             };
 
             let entry = selected_map
@@ -360,7 +389,7 @@ pub(crate) fn generate_plan_with_prepared(
             "`{}` changed a transitive dependency; falling back to full test suite",
             file
         );
-        let all_test_files = discover_all_tests_from_prepared(prepared);
+        let all_test_files = global_config::discover_all_tests_from_prepared(prepared);
         let mut selected_tests: Vec<SelectedTest> = all_test_files
             .into_iter()
             .map(|test| {
@@ -373,23 +402,26 @@ pub(crate) fn generate_plan_with_prepared(
                         changed_file: file.clone(),
                         path: vec![file.clone(), rel_test],
                         via: vec!["transitive dependency".to_string()],
+                        via_details: Vec::new(),
                     }],
                 }
             })
             .collect();
         selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
         return Ok(TestPlan {
+            changed_files: Vec::new(),
             selected_tests,
             groups: Vec::new(),
-            warnings: Vec::new(),
+            warnings: prepared.tsconfig_warnings(),
             fallback_triggered: true,
             fallback_reason: Some(msg),
+            ..Default::default()
         });
     }
 
     // Merge lockfile analysis warnings
     for warn in lockfile_analysis.warnings.iter().cloned() {
-        if warnings_seen.insert((warn.r#type.clone(), warn.file.clone())) {
+        if warnings_seen.insert(warning_key(&warn)) {
             warnings.push(warn);
         }
     }
@@ -416,101 +448,40 @@ pub(crate) fn generate_plan_with_prepared(
         args.include_symbols,
     )?;
 
+    let vitest_fallback_reason = plan_vitest_setup::apply_union_fallback(
+        prepared,
+        root,
+        changed_files,
+        deleted_files,
+        &mut selected_map,
+        &mut warnings,
+        &mut warnings_seen,
+    )?;
+
     let mut selected_tests: Vec<SelectedTest> = selected_map.into_values().collect();
     for test in &mut selected_tests {
         test.reasons
             .sort_by(|a, b| a.changed_file.cmp(&b.changed_file));
     }
     selected_tests.sort_by(|a, b| a.test_file.cmp(&b.test_file));
-    warnings.sort_by(|a, b| (&a.file, &a.message).cmp(&(&b.file, &b.message)));
+    warnings.sort_by(|a, b| {
+        (&a.file, a.line, &a.r#type, &a.message).cmp(&(&b.file, b.line, &b.r#type, &b.message))
+    });
 
     Ok(TestPlan {
+        changed_files: Vec::new(),
         selected_tests,
         groups: Vec::new(),
         warnings,
-        fallback_triggered: false,
-        fallback_reason: None,
+        fallback_triggered: vitest_fallback_reason.is_some(),
+        fallback_reason: vitest_fallback_reason,
+        ..Default::default()
     })
-}
-
-fn global_config_fallback(args: &PlanArgs) -> bool {
-    args.global_config_fallback.unwrap_or(false)
-}
-
-pub(crate) fn global_config_trigger(
-    root: &Path,
-    changed_files: &[PathBuf],
-) -> Option<(String, PathBuf)> {
-    changed_files.iter().find_map(|file| {
-        let relative_changed = relative_path(root, file);
-        is_global_config_path(root, file, &relative_changed).then(|| {
-            (
-                format!("Global configuration file changed: {}", relative_changed),
-                file.clone(),
-            )
-        })
-    })
-}
-
-fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
-    if matches!(
-        relative,
-        "package.json" | "tsconfig.json" | ".no-mistakes.yml" | ".no-mistakes.yaml"
-    ) {
-        return true;
-    }
-
-    let Some(name) = absolute.file_name().and_then(|name| name.to_str()) else {
-        return false;
-    };
-    if !matches!(
-        name,
-        "next.config.js"
-            | "next.config.mjs"
-            | "next.config.ts"
-            | "next.config.mts"
-            | "proxy.js"
-            | "proxy.mjs"
-            | "proxy.ts"
-            | "proxy.mts"
-            | "middleware.js"
-            | "middleware.mjs"
-            | "middleware.ts"
-            | "middleware.mts"
-    ) {
-        return false;
-    }
-
-    let Some(parent) = absolute.parent() else {
-        return false;
-    };
-    parent == root || next_project_root(parent)
-}
-
-fn next_project_root(path: &Path) -> bool {
-    path.join("app").is_dir()
-        || path.join("pages").is_dir()
-        || path.join("src/app").is_dir()
-        || path.join("src/pages").is_dir()
-}
-
-fn discover_all_tests_from_prepared(
-    prepared: &super::prepared_plan::PreparedTestPlanRequest,
-) -> Vec<PathBuf> {
-    no_mistakes::codebase::ts_source::discover_files_from_visible(
-        &prepared.root,
-        &prepared.config.filesystem.skip_directories,
-        prepared.root_visible_paths(),
-    )
-    .into_iter()
-    .filter(|file| {
-        prepared
-            .visible_paths
-            .classification_for(&prepared.root, file)
-            .is_some_and(|classification| classification.target_is_file())
-    })
-    .filter(|file| prepared.test_filter().is_match(&prepared.root, file))
-    .collect()
 }
 
 include!("plan_bfs.rs");
+#[cfg(test)]
+include!("plan_resources_tests.rs");
+#[cfg(test)]
+include!("plan_resource_aggregate_tests.rs");
+include!("plan_resource_details.rs");

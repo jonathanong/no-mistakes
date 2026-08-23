@@ -32,6 +32,7 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(GraphBuildPlan::all().imports);
     assert!(!GraphBuildPlan::all().route_imports);
     assert!(GraphBuildPlan::all().workspace);
+    assert!(GraphBuildPlan::all().workflow_topology);
     assert_eq!(GraphBuildPlan::from_allowed(None), GraphBuildPlan::all());
 
     let route_import_only: HashSet<_> = [EdgeKind::RouteImport].into();
@@ -61,12 +62,18 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(plan.markdown);
     assert!(plan.ci);
     assert!(plan.routes);
+    assert!(plan.dotnet);
     assert!(plan.queues);
     assert!(plan.playwright_routes);
     assert!(plan.http);
     assert!(plan.process);
     assert!(plan.assets);
     assert!(plan.react);
+
+    let workflow_only: HashSet<_> = [EdgeKind::WorkflowRun].into();
+    let plan = GraphBuildPlan::from_allowed(Some(&workflow_only));
+    assert!(plan.workflow_topology);
+    assert!(!plan.ci);
 
     let import_only: HashSet<_> = [EdgeKind::Require].into();
     let plan = GraphBuildPlan::from_allowed(Some(&import_only));
@@ -82,6 +89,42 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     assert!(!plan.process);
     assert!(!plan.assets);
     assert!(!plan.react);
+
+    let require_resolve_only: HashSet<_> = [EdgeKind::RequireResolve].into();
+    let plan = GraphBuildPlan::from_allowed(Some(&require_resolve_only));
+    assert!(plan.imports);
+    assert!(plan.workspace);
+
+    let workspace_type_only: HashSet<_> = [EdgeKind::WorkspaceTypeImport].into();
+    assert!(GraphBuildPlan::from_allowed(Some(&workspace_type_only)).workspace);
+
+    for kind in [
+        EdgeKind::PythonImport,
+        EdgeKind::PythonReference,
+        EdgeKind::GoImport,
+        EdgeKind::GoReference,
+        EdgeKind::RustUse,
+        EdgeKind::RustMod,
+        EdgeKind::RustPackage,
+        EdgeKind::RubyRequire,
+        EdgeKind::RubyReference,
+        EdgeKind::PhpUse,
+        EdgeKind::PhpPackage,
+        EdgeKind::JavaImport,
+        EdgeKind::JavaReference,
+        EdgeKind::KotlinImport,
+        EdgeKind::KotlinReference,
+        EdgeKind::ElixirImport,
+        EdgeKind::ElixirReference,
+        EdgeKind::DartImport,
+        EdgeKind::DartReference,
+    ] {
+        let allowed: HashSet<_> = [kind].into();
+        assert!(
+            GraphBuildPlan::from_allowed(Some(&allowed)).language_frontends,
+            "{kind:?}"
+        );
+    }
 }
 
 #[test]
@@ -105,7 +148,7 @@ fn fact_lookup_defaults_and_sparse_fallback_are_complete() {
         },
     )]);
     let minimal = MinimalFacts(primary);
-    let graph_visible = HashSet::from([fallback_path.clone()]);
+    let graph_visible: crate::fx::PathSet = [fallback_path.clone()].into_iter().collect();
 
     assert!(!minimal.covers_ts_fact_plan(TsFactPlan::imports()));
     assert!(minimal.graph_files().is_none());
@@ -150,7 +193,9 @@ fn fact_lookup_defaults_and_sparse_fallback_are_complete() {
 fn graph_universe_comparison_rejects_duplicate_false_matches() {
     assert!(!same_graph_universe(
         &[p("/repo/a.ts"), p("/repo/a.ts")],
-        &HashSet::from([p("/repo/a.ts"), p("/repo/b.ts")]),
+        &[p("/repo/a.ts"), p("/repo/b.ts")]
+            .into_iter()
+            .collect::<crate::fx::PathSet>(),
     ));
 }
 
@@ -187,7 +232,7 @@ fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
             ..TsFileFacts::default()
         },
     )]);
-    let graph_visible = HashSet::from(graph_files.clone());
+    let graph_visible: crate::fx::PathSet = graph_files.clone().into_iter().collect();
     let lookup = FallbackTsFactLookup::new(
         &primary,
         &fallback,
@@ -292,7 +337,7 @@ fn sparse_fallback_prefers_primary_playwright_fetch_errors_when_requested() {
         &fallback,
         false,
         std::slice::from_ref(&path),
-        &HashSet::from([path.clone()]),
+        &[path.clone()].into_iter().collect::<crate::fx::PathSet>(),
     );
 
     let result = lookup
@@ -316,7 +361,7 @@ fn sparse_fallback_isolates_playwright_caches_for_a_different_graph_universe() {
     let mut primary = CheckFactMap::default();
     primary.files.push(primary_path);
     let fallback = TsFactMap::from([(graph_path.clone(), TsFileFacts::default())]);
-    let graph_visible = HashSet::from([graph_path.clone()]);
+    let graph_visible: crate::fx::PathSet = [graph_path.clone()].into_iter().collect();
 
     let primary_selector_calls = Cell::new(0);
     primary
@@ -390,10 +435,14 @@ fn sparse_fallback_isolates_playwright_caches_for_a_different_graph_universe() {
             .expect("isolated reachability computes");
     }
 
-    assert_eq!(selector_calls.get(), 2);
-    assert_eq!(route_calls.get(), 2);
-    assert_eq!(text_calls.get(), 2);
-    assert_eq!(reachability_calls.get(), 2);
+    assert_eq!(
+        selector_calls.get(),
+        1,
+        "isolated fallback TsFactMap must cache selector scans instead of forwarding to primary"
+    );
+    assert_eq!(route_calls.get(), 1);
+    assert_eq!(text_calls.get(), 1);
+    assert_eq!(reachability_calls.get(), 1);
     assert_eq!(primary_selector_calls.get(), 1);
     assert_eq!(primary_route_calls.get(), 1);
     assert_eq!(primary_text_calls.get(), 1);
@@ -419,7 +468,7 @@ fn route_import_edges_are_runtime_only_and_do_not_prune_uncalled_functions() {
     .expect("route-import graph builds");
     let allowed: HashSet<_> = [EdgeKind::RouteImport].into();
     let dependencies = graph.deps_of(
-        &[NodeId::File(root.join("web/app/page.tsx"))],
+        &[NodeId::file(root.join("web/app/page.tsx"))],
         None,
         Some(&allowed),
     );
@@ -463,7 +512,7 @@ fn route_import_edges_fill_present_but_sparse_check_facts() {
     .expect("route-import graph builds");
     let allowed: HashSet<_> = [EdgeKind::RouteImport].into();
     let dependencies = graph.deps_of(
-        &[NodeId::File(root.join("web/app/page.tsx"))],
+        &[NodeId::file(root.join("web/app/page.tsx"))],
         None,
         Some(&allowed),
     );

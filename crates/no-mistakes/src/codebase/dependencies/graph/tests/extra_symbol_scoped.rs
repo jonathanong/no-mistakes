@@ -9,7 +9,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
         base_url: None,
     };
     let resolver = ImportResolver::new(&tsconfig);
-    let visible = HashSet::from([current.clone(), target.clone()]);
+    let visible: crate::fx::PathSet = [current.clone(), target.clone()].into_iter().collect();
     let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(vec![
         crate::codebase::workspaces::WorkspacePackage {
             name: "@fixture/core".to_string(),
@@ -29,7 +29,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
             &workspace,
             &visible,
         ),
-        Some((NodeId::File(target.clone()), EdgeKind::WorkspaceImport)),
+        Some((NodeId::file(target.clone()), EdgeKind::WorkspaceImport)),
     );
 
     let scoped = scoped_import_map(
@@ -50,7 +50,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
 
     assert_eq!(
         scoped.get("run"),
-        Some(&vec![(NodeId::File(target), EdgeKind::WorkspaceImport)]),
+        Some(&vec![(NodeId::file(target), EdgeKind::WorkspaceImport)]),
     );
 }
 
@@ -104,13 +104,26 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         },
     ];
 
-    let selected = fallback_imported_symbols(false, &calls, &[], &imports);
+    let selected = fallback_imported_symbols(
+        false,
+        &calls,
+        &[],
+        &imports,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert_eq!(selected.len(), 2);
-    assert!(selected
-        .iter()
-        .any(|target| target_node(target) == target_node(&alpha)));
+    assert!(selected.iter().any(|target| {
+        let interner = crate::codebase::analysis_session::PathInterner::new();
+        target_node(target, &interner) == target_node(&alpha, &interner)
+    }));
 
     imports.insert("alpha_alias".to_string(), alpha.clone());
-    let all = fallback_imported_symbols(true, &[], &[], &imports);
+    let all = fallback_imported_symbols(
+        true,
+        &[],
+        &[],
+        &imports,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
     assert_eq!(all.len(), 2);
 }

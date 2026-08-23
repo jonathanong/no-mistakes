@@ -1,0 +1,400 @@
+use super::*;
+
+fn workflow_topology_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/workflow-topology"),
+    )
+}
+
+fn workflow_node(root: &Path, job: &str) -> NodeId {
+    NodeId::workflow_job(root.join(".github/workflows/main.yml"), job)
+}
+
+fn workflow_step(root: &Path, job: &str, step: usize) -> NodeId {
+    NodeId::workflow_step(root.join(".github/workflows/main.yml"), job, step)
+}
+
+fn graph_has_edge(graph: &DepGraph, from: NodeId, to: NodeId, kind: EdgeKind) -> bool {
+    graph
+        .edges
+        .edges()
+        .iter()
+        .any(|edge| edge.from == from && edge.to == to && edge.kind == kind)
+}
+
+#[test]
+fn workflow_virtual_nodes_normalize_display_and_track_their_file_universe() {
+    let root = workflow_topology_fixture();
+    let workflow_file = root.join(".github/workflows/../workflows/main.yml");
+    let normalized_file =
+        crate::codebase::ts_resolver::normalize_path(&root.join(".github/workflows/main.yml"));
+    let nodes = normalize_nodes(&[
+        NodeId::workflow_job(workflow_file.clone(), "build"),
+        NodeId::workflow_step(workflow_file, "build", 2),
+    ]);
+
+    assert_eq!(
+        nodes[0].display_name(&root),
+        ".github/workflows/main.yml#job:build"
+    );
+    assert_eq!(
+        nodes[1].display_name(&root),
+        ".github/workflows/main.yml#job:build/step:2"
+    );
+    let universe = [normalized_file].into_iter().collect();
+    assert!(nodes.iter().all(|node| node.is_in_file_universe(&universe)));
+}
+
+#[test]
+fn workflow_topology_builds_job_step_uses_and_run_edges() {
+    let root = workflow_topology_fixture();
+    let files = GraphFiles::discover(&root);
+    assert!(
+        files
+            .all()
+            .contains(&root.join(".github/workflows/main.yml")),
+        "workflow fixture must be part of the graph file universe: {:?}",
+        files.all()
+    );
+    let graph = DepGraph::build_with_plan(&root, &TsConfig::default(), GraphBuildPlan::all())
+        .expect("workflow fixture graph");
+    let workflow = NodeId::file(root.join(".github/workflows/main.yml"));
+    let build = workflow_node(&root, "build");
+    let consume = workflow_node(&root, "consume");
+
+    assert!(graph_has_edge(
+        &graph,
+        workflow,
+        build.clone(),
+        EdgeKind::WorkflowJob
+    ));
+    assert!(graph_has_edge(
+        &graph,
+        build.clone(),
+        consume,
+        EdgeKind::WorkflowNeeds
+    ));
+    assert!(graph_has_edge(
+        &graph,
+        workflow_node(&root, "call"),
+        NodeId::file(root.join(".github/workflows/reusable.yml")),
+        EdgeKind::WorkflowUses
+    ));
+    assert!(graph_has_edge(
+        &graph,
+        build.clone(),
+        workflow_step(&root, "build", 0),
+        EdgeKind::WorkflowStep
+    ));
+    assert!(graph_has_edge(
+        &graph,
+        workflow_step(&root, "build", 0),
+        NodeId::file(root.join("scripts/direct.mjs")),
+        EdgeKind::WorkflowRun
+    ));
+    assert!(graph_has_edge(
+        &graph,
+        workflow_step(&root, "build", 1),
+        NodeId::file(root.join("package.json")),
+        EdgeKind::WorkflowRun
+    ));
+    assert!(graph_has_edge(
+        &graph,
+        workflow_step(&root, "build", 1),
+        NodeId::file(root.join("scripts/build.mjs")),
+        EdgeKind::WorkflowRun
+    ));
+    assert!(graph_has_edge(
+        &graph,
+        workflow_step(&root, "build", 2),
+        NodeId::file(root.join("packages/tool/check.mjs")),
+        EdgeKind::WorkflowRun
+    ));
+    assert!(graph_has_edge(
+        &graph,
+        workflow_step(&root, "build", 3),
+        NodeId::file(root.join(".github/actions/local/action.yml")),
+        EdgeKind::WorkflowUses
+    ));
+}
+
+#[test]
+fn prepared_check_fact_graph_reuses_preparsed_workflows() {
+    let source = workflow_topology_fixture();
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
+    let all_files = GraphFiles::discover(&root).all().to_vec();
+    let plan = GraphBuildPlan {
+        workflow_topology: true,
+        ..GraphBuildPlan::default()
+    };
+    let visible = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let sources = visible.source_store_for(&root);
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let codebase_config = crate::codebase::config::config_from_loaded_v2(&root, None, &config);
+    let mut prepared = prepare_graph_config(&root, plan, &codebase_config, &config, &visible)
+        .expect("workflow graph config prepares");
+    let workflows = std::sync::Arc::new(
+        crate::codebase::ci_workflows::ParsedWorkflowSet::load_from_snapshot_and_sources(
+            &root, &config.ci, &visible, &sources,
+        ),
+    );
+    let reads_after_workflow_preparation = sources.physical_read_count();
+    prepared.set_workflow_documents(Some(workflows));
+
+    // The graph's file universe was already fixed above. If this entrypoint
+    // reparses workflows, the removed document has no jobs and loses this edge.
+    std::fs::remove_file(root.join(".github/workflows/main.yml")).unwrap();
+
+    let (fact_plan, fact_context) =
+        ts_fact_plan_and_context_for_plan_with_prepared(&root, plan, &prepared);
+    let facts = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        all_files.clone(),
+        crate::codebase::check_facts::CheckFactPlan {
+            graph: fact_plan,
+            graph_context: fact_context,
+            ..Default::default()
+        },
+    );
+    let graph = DepGraph::build_with_plan_file_list_prepared_config_and_check_facts(
+        &root,
+        &TsConfig::default(),
+        plan,
+        all_files,
+        None,
+        &facts,
+        &prepared,
+    )
+    .expect("prepared workflow graph builds after its source file is unavailable");
+
+    assert_eq!(
+        sources.physical_read_count(),
+        reads_after_workflow_preparation,
+        "graph construction must reuse the request's parsed workflow documents"
+    );
+    assert!(graph_has_edge(
+        &graph,
+        workflow_step(&root, "build", 0),
+        NodeId::file(root.join("scripts/direct.mjs")),
+        EdgeKind::WorkflowRun,
+    ));
+}
+
+#[test]
+fn workflow_artifacts_connect_exact_producer_and_consumer_steps() {
+    let root = workflow_topology_fixture();
+    let graph = DepGraph::build_with_plan(&root, &TsConfig::default(), GraphBuildPlan::all())
+        .expect("workflow fixture graph");
+
+    assert!(graph_has_edge(
+        &graph,
+        workflow_step(&root, "build", 5),
+        workflow_step(&root, "consume", 0),
+        EdgeKind::WorkflowArtifact
+    ));
+}
+
+#[test]
+fn workflow_graph_uses_configured_workflow_directories() {
+    let root = workflow_topology_fixture();
+    let graph = DepGraph::build_with_plan(&root, &TsConfig::default(), GraphBuildPlan::all())
+        .expect("configured workflow graph");
+    let workflow = root.join("custom/workflows/custom.yml");
+
+    assert!(graph_has_edge(
+        &graph,
+        NodeId::file(workflow.clone()),
+        NodeId::workflow_job(workflow, "configured"),
+        EdgeKind::WorkflowJob
+    ));
+}
+
+#[test]
+fn workflow_topology_excludes_jobs_outside_the_graph_file_universe() {
+    let root = workflow_topology_fixture();
+    let all_files = vec![root.join("scripts/direct.mjs")];
+    let parsed = crate::codebase::ci_workflows::ParsedWorkflowSet::from_paths(
+        &root,
+        [root.join(".github/workflows/main.yml")],
+    );
+    let topology = crate::codebase::workflow_topology::load_workflow_topology(
+        &root,
+        &crate::config::v2::schema::CiConfig::default(),
+        &[],
+    );
+
+    assert!(collect_workflow_topology_edges(
+        &root,
+        &all_files,
+        &crate::config::v2::schema::CiConfig::default(),
+        &parsed,
+        &topology,
+        &crate::codebase::analysis_session::PathInterner::new(),
+        None,
+    )
+    .is_empty());
+}
+
+#[test]
+fn workflow_run_collection_skips_steps_absent_from_the_topology_graph() {
+    let root = workflow_topology_fixture();
+    let parsed = crate::codebase::ci_workflows::ParsedWorkflowSet::from_paths(
+        &root,
+        [root.join(".github/workflows/main.yml")],
+    );
+    let jobs = HashMap::from([(
+        ".github/workflows/main.yml#build".to_string(),
+        workflow_node(&root, "build"),
+    )]);
+    let universe = [root.join("package.json")].into_iter().collect();
+    let mut edges = Vec::new();
+    let bins = CargoBinIndex::default();
+    let mut resolver = WorkflowRunResolver::new(&root, &universe, &bins, None);
+
+    add_workflow_run_edges(
+        &parsed,
+        &jobs,
+        &HashMap::new(),
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+        &mut resolver,
+    );
+
+    assert!(edges.is_empty());
+}
+
+#[test]
+fn workflow_edges_support_relative_graph_roots() {
+    let root = workflow_topology_fixture();
+    let current = std::env::current_dir().unwrap();
+    let current_parts: Vec<_> = current.components().collect();
+    let root_parts: Vec<_> = root.components().collect();
+    let common = current_parts
+        .iter()
+        .zip(&root_parts)
+        .take_while(|(left, right)| left == right)
+        .count();
+    let mut relative_root = PathBuf::new();
+    for _ in common..current_parts.len() {
+        relative_root.push("..");
+    }
+    for component in &root_parts[common..] {
+        relative_root.push(component.as_os_str());
+    }
+    let graph = DepGraph::build_with_plan(
+        &relative_root,
+        &TsConfig::default(),
+        GraphBuildPlan {
+            workflow_topology: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .expect("relative-root workflow graph");
+    let expected_root = crate::codebase::ts_resolver::normalize_path(&relative_root);
+
+    assert!(graph_has_edge(
+        &graph,
+        workflow_step(&expected_root, "build", 0),
+        NodeId::file(expected_root.join("scripts/direct.mjs")),
+        EdgeKind::WorkflowRun
+    ));
+    assert!(graph_has_edge(
+        &graph,
+        workflow_step(&expected_root, "build", 3),
+        NodeId::file(expected_root.join(".github/actions/local/action.yml")),
+        EdgeKind::WorkflowUses
+    ));
+}
+
+#[test]
+fn workflow_command_parsing_is_literal_and_conservative() {
+    assert_eq!(
+        static_command_segments(
+            "FOO=bar node 'scripts/direct.mjs'; npm run nested && ./scripts/build.mjs"
+        ),
+        vec![
+            vec!["FOO=bar", "node", "scripts/direct.mjs"],
+            vec!["npm", "run", "nested"],
+            vec!["./scripts/build.mjs"],
+        ]
+    );
+    assert!(static_command_segments("node x | tee out").is_empty());
+    assert!(static_command_segments("node $(dynamic)").is_empty());
+    assert!(static_command_segments("cd scripts && node direct.mjs").is_empty());
+    assert!(static_command_segments("MODE=test \"cd\" scripts; node direct.mjs").is_empty());
+    assert!(static_command_segments("# disabled; node scripts/old.mjs").is_empty());
+    assert_eq!(
+        static_command_segments("node scripts/direct.mjs;# disabled; node scripts/old.mjs"),
+        vec![vec!["node", "scripts/direct.mjs"]]
+    );
+    assert_eq!(
+        static_command_segments("echo ok # && node scripts/old.mjs\nnode scripts/direct.mjs"),
+        vec![vec!["echo", "ok"], vec!["node", "scripts/direct.mjs"]]
+    );
+    assert_eq!(
+        static_command_segments(r"node scripts/direct\ file.mjs"),
+        vec![vec!["node", "scripts/direct file.mjs"]]
+    );
+    assert!(static_command_segments("cd scripts # stop").is_empty());
+    assert!(static_command_segments("''").is_empty());
+    assert!(static_command_segments("'unterminated").is_empty());
+    assert_eq!(
+        shellish_literal_words(r#""double's quote" escaped\ space"#),
+        Some(vec![
+            "double's quote".to_string(),
+            "escaped space".to_string()
+        ])
+    );
+    assert!(shellish_literal_words("'unterminated").is_none());
+    assert!(shellish_literal_words("trailing\\").is_none());
+    assert!(!is_static_path_token("${SCRIPT}"));
+    assert!(is_environment_assignment("_NAME=value"));
+    assert!(!is_environment_assignment("9NAME=value"));
+    assert_eq!(
+        interpreter_script(&["node".into(), "--".into(), "script.mjs".into()]),
+        Some("script.mjs")
+    );
+    assert_eq!(interpreter_script(&["node".into(), "--check".into()]), None);
+    assert_eq!(
+        interpreter_script(&[
+            "node".into(),
+            "--enable-source-maps".into(),
+            "script.mjs".into()
+        ]),
+        Some("script.mjs")
+    );
+    assert_eq!(
+        interpreter_script(&["deno".into(), "run".into(), "script.ts".into()]),
+        Some("script.ts")
+    );
+    assert_eq!(
+        interpreter_script(&["deno".into(), "script.ts".into()]),
+        None
+    );
+    assert_eq!(
+        interpreter_script(&["python".into(), "-m".into(), "module".into()]),
+        None
+    );
+    assert_eq!(
+        package_script_command(&["npm".into(), "test".into()]),
+        Some("test")
+    );
+    assert_eq!(
+        package_script_command(&["yarn".into(), "build".into()]),
+        Some("build")
+    );
+    assert_eq!(
+        package_script_command(&["pnpm".into(), "build".into()]),
+        Some("build")
+    );
+    assert_eq!(
+        package_script_command(&["pnpm".into(), "run".into(), "build".into()]),
+        Some("build")
+    );
+    assert_eq!(
+        package_script_command(&["yarn".into(), "run".into(), "build".into()]),
+        Some("build")
+    );
+}

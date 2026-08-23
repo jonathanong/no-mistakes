@@ -1,7 +1,7 @@
 use super::root_dependency_test_helpers::root_dependency_names;
+use super::traversal::*;
 use super::traversal_entrypoint_test_helpers::resolve_entrypoints_with_files;
 use super::*;
-use super::traversal::*;
 use clap::Parser;
 
 mod extra;
@@ -32,15 +32,7 @@ fn fixture_root(name: &str) -> PathBuf {
 
 fn resolve_entrypoints(raw_entrypoints: &[PathBuf], root: &Path, cwd: &Path) -> Vec<Entrypoint> {
     let graph_files = graph::GraphFiles::discover(root);
-    resolve_entrypoints_with_files(
-        raw_entrypoints,
-        &[],
-        &[],
-        root,
-        cwd,
-        &graph_files,
-        false,
-    )
+    resolve_entrypoints_with_files(raw_entrypoints, &[], &[], root, cwd, &graph_files, false)
 }
 
 #[test]
@@ -198,14 +190,10 @@ fn project_discovery_test_filters_escape_literal_paths_and_fallback_when_empty()
 fn prepared_test_filters(root: &Path, framework: &str) -> Vec<String> {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let visible = snapshot.paths_for(root);
-    let config = crate::config::v2::load_v2_config_from_visible(root, None, &visible)
-        .unwrap_or_default();
-    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-        None,
-        root,
-        &visible,
-    )
-    .unwrap();
+    let config =
+        crate::config::v2::load_v2_config_from_visible(root, None, &visible).unwrap_or_default();
+    let tsconfig =
+        crate::codebase::ts_resolver::resolve_tsconfig_from_visible(None, root, &visible).unwrap();
     test_filters_from_prepared(root, framework, &config, &tsconfig, &snapshot, None)
 }
 
@@ -221,6 +209,70 @@ fn playwright_globs_include_e2e() {
 fn cargo_globs_include_tests_dir() {
     let globs = test_globs("cargo");
     assert!(globs.iter().any(|g| g.contains("tests/**/*.rs")));
+    assert!(globs.iter().any(|g| g.contains("src/**/tests.rs")));
+}
+
+#[test]
+fn python_relationship_enables_language_frontend_plan() {
+    let allowed = crate::codebase::dependencies::relationship_filter(&[
+        crate::codebase::dependencies::RelationshipArg::Python,
+    ])
+    .expect("python relationship");
+    let plan = crate::codebase::dependencies::graph::GraphBuildPlan::from_allowed(Some(&allowed));
+    assert!(plan.language_frontends);
+    assert!(!plan.imports);
+    for relationship in [
+        crate::codebase::dependencies::RelationshipArg::Go,
+        crate::codebase::dependencies::RelationshipArg::Rust,
+        crate::codebase::dependencies::RelationshipArg::Ruby,
+        crate::codebase::dependencies::RelationshipArg::Php,
+        crate::codebase::dependencies::RelationshipArg::Java,
+        crate::codebase::dependencies::RelationshipArg::Kotlin,
+        crate::codebase::dependencies::RelationshipArg::Elixir,
+        crate::codebase::dependencies::RelationshipArg::Dart,
+    ] {
+        let allowed = crate::codebase::dependencies::relationship_filter(&[relationship])
+            .expect("language relationship");
+        let plan =
+            crate::codebase::dependencies::graph::GraphBuildPlan::from_allowed(Some(&allowed));
+        assert!(plan.language_frontends, "{relationship:?}");
+        assert_eq!(
+            relationship.as_str(),
+            format!("{relationship:?}").to_ascii_lowercase()
+        );
+    }
+    assert_eq!(
+        crate::codebase::dependencies::RelationshipArg::Python.as_str(),
+        "python"
+    );
+}
+
+#[test]
+fn language_frontend_globs_are_explicit() {
+    assert!(test_globs("python")
+        .iter()
+        .any(|glob| glob.contains("test_*.py")));
+    assert!(test_globs("python")
+        .iter()
+        .any(|glob| glob.ends_with("tests.py")));
+    assert!(test_globs("go")
+        .iter()
+        .any(|glob| glob.contains("*_test.go")));
+    assert!(test_globs("rails")
+        .iter()
+        .any(|glob| glob.contains("_spec.rb")));
+    assert!(test_globs("php")
+        .iter()
+        .any(|glob| glob.contains("Test.php")));
+    assert!(test_globs("java")
+        .iter()
+        .any(|glob| glob.contains("Test.java")));
+    assert!(test_globs("kotlin")
+        .iter()
+        .any(|glob| glob.contains("Test.kt")));
+    for (framework, needle) in [("elixir", "_test.exs"), ("dart", "_test.dart")] {
+        assert!(test_globs(framework).iter().any(|glob| glob.contains(needle)));
+    }
 }
 
 #[test]
@@ -258,6 +310,53 @@ fn parse_path_with_symbol() {
 fn parse_path_multiple_hashes_splits_on_first() {
     let (_file, symbol) = parse_entrypoint("src/foo.mts#sym#extra");
     assert_eq!(symbol.as_deref(), Some("sym#extra"));
+}
+
+#[test]
+fn workflow_virtual_entrypoint_suffixes_round_trip() {
+    let file = Path::new("/repo/.github/workflows/main.yml");
+    let interner = crate::codebase::analysis_session::PathInterner::new();
+    assert_eq!(
+        workflow_node_from_suffix_in(&interner, file, "job:build"),
+        Some(NodeId::workflow_job(file, "build"))
+    );
+    assert_eq!(
+        workflow_node_from_suffix_in(&interner, file, "job:build/step:3"),
+        Some(NodeId::workflow_step(file, "build", 3))
+    );
+    assert!(workflow_node_from_suffix_in(&interner, file, "job:/step:3").is_none());
+    assert!(workflow_node_from_suffix_in(&interner, file, "job:build/step:nope").is_none());
+    assert!(workflow_node_from_suffix_in(&interner, file, "ordinary-symbol").is_none());
+}
+
+#[test]
+fn trpc_virtual_entrypoint_suffixes_round_trip() {
+    let file = Path::new("/repo/src/router.ts");
+    assert_eq!(
+        trpc_procedure_from_suffix(file, "procedure:user.get"),
+        Some(NodeId::trpc_procedure(file, "user.get"))
+    );
+    assert!(trpc_procedure_from_suffix(file, "procedure:").is_none());
+    assert!(trpc_procedure_from_suffix(file, "user.get").is_none());
+}
+
+#[test]
+fn resolve_entrypoints_promotes_workflow_suffixes_to_virtual_nodes() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/workflow-topology"),
+    );
+    let entrypoints = resolve_entrypoints(
+        &[PathBuf::from(".github/workflows/main.yml#job:build/step:0")],
+        &root,
+        &root,
+    );
+
+    assert_eq!(entrypoints[0].symbol, None);
+    assert_eq!(
+        entrypoints[0].node,
+        NodeId::workflow_step(root.join(".github/workflows/main.yml"), "build", 0)
+    );
 }
 
 #[test]
@@ -302,7 +401,7 @@ fn resolve_entrypoints_prefers_root_before_cwd_fallback() {
     assert_eq!(entrypoints[1].file, cwd.join("does-not-exist.mts"));
     assert_eq!(
         entrypoints[1].node,
-        graph::NodeId::File(cwd.join("does-not-exist.mts"))
+        graph::NodeId::file(cwd.join("does-not-exist.mts"))
     );
     assert_eq!(entrypoints[1].symbol, None);
     assert_eq!(
@@ -320,7 +419,7 @@ fn resolve_entrypoints_infers_workspace_package_directory_entry() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(root.join("packages/local/src/index.mts"))
+        graph::NodeId::file(root.join("packages/local/src/index.mts"))
     );
     assert_eq!(
         entrypoints[0].file,
@@ -336,7 +435,7 @@ fn resolve_entrypoints_infers_plain_directory_index_entry() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(root.join("src/index.ts"))
+        graph::NodeId::file(root.join("src/index.ts"))
     );
     assert_eq!(entrypoints[0].file, root.join("src/index.ts"));
 }
@@ -349,7 +448,7 @@ fn resolve_entrypoints_infers_plain_directory_cjs_index_entry() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(root.join("index.cjs"))
+        graph::NodeId::file(root.join("index.cjs"))
     );
     assert_eq!(entrypoints[0].file, root.join("index.cjs"));
 }
@@ -360,7 +459,7 @@ fn resolve_entrypoints_keeps_directory_without_entry_as_file_node() {
     let args = parse(&["deps", "empty"]);
     let entrypoints = resolve_entrypoints(&args.files, &root, &root);
 
-    assert_eq!(entrypoints[0].node, graph::NodeId::File(root.join("empty")));
+    assert_eq!(entrypoints[0].node, graph::NodeId::file(root.join("empty")));
     assert_eq!(entrypoints[0].file, root.join("empty"));
 }
 
@@ -372,7 +471,7 @@ fn resolve_entrypoints_accepts_workspace_package_specifier() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(root.join("packages/local/src/index.mts"))
+        graph::NodeId::file(root.join("packages/local/src/index.mts"))
     );
     assert_eq!(
         entrypoints[0].file,
@@ -386,10 +485,7 @@ fn resolve_entrypoints_strips_symbol_suffix_from_module_node() {
     let args = parse(&["dependents", "@external/pkg#handler"]);
     let entrypoints = resolve_entrypoints(&args.files, &root, &root);
 
-    assert_eq!(
-        entrypoints[0].node,
-        graph::NodeId::Module("@external/pkg".to_string())
-    );
+    assert_eq!(entrypoints[0].node, graph::NodeId::module("@external/pkg"));
     assert_eq!(entrypoints[0].symbol.as_deref(), Some("handler"));
 }
 
@@ -399,14 +495,8 @@ fn resolve_entrypoints_keeps_package_subpath_with_extension_as_module_node() {
     let args = parse(&["dependents", "lodash", "lodash/fp.js"]);
     let entrypoints = resolve_entrypoints(&args.files, &root, &root);
 
-    assert_eq!(
-        entrypoints[0].node,
-        graph::NodeId::Module("lodash".to_string())
-    );
-    assert_eq!(
-        entrypoints[1].node,
-        graph::NodeId::Module("lodash/fp.js".to_string())
-    );
+    assert_eq!(entrypoints[0].node, graph::NodeId::module("lodash"));
+    assert_eq!(entrypoints[1].node, graph::NodeId::module("lodash/fp.js"));
 }
 
 #[test]
@@ -417,7 +507,7 @@ fn resolve_entrypoints_treats_missing_source_path_with_existing_parent_as_file_n
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(root.join("src/new-file.ts"))
+        graph::NodeId::file(root.join("src/new-file.ts"))
     );
 }
 
@@ -437,7 +527,7 @@ fn explicit_directory_does_not_infer_a_gitignored_index_file() {
 
     assert_eq!(
         entrypoints[0].node,
-        graph::NodeId::File(fixture.path().join("explicit-dir"))
+        graph::NodeId::file(fixture.path().join("explicit-dir"))
     );
     assert_ne!(entrypoints[0].file, ignored_index);
 }
@@ -463,10 +553,7 @@ fn entrypoint_package_helpers_cover_relative_scoped_and_invalid_roots() {
     assert!(!root_dependency_names(&simple_root, simple_files.all()).contains("lodash"));
     let malformed_root = fixture_root("unique-exports-malformed-package");
     let malformed_files = graph::GraphFiles::discover(&malformed_root);
-    assert!(
-        !root_dependency_names(&malformed_root, malformed_files.all())
-            .contains("lodash")
-    );
+    assert!(!root_dependency_names(&malformed_root, malformed_files.all()).contains("lodash"));
 }
 
 #[test]

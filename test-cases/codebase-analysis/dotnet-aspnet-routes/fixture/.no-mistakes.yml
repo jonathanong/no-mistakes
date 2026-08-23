@@ -1,0 +1,5 @@
+tests:
+  dotnet:
+    projects:
+      api:
+        project: src/Api/Api.csproj

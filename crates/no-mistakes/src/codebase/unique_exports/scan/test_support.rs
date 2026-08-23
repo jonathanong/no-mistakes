@@ -1,10 +1,37 @@
 use super::{NextJsProjectLookup, RULE_ID};
+use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{has_disable_file_comment, relative_slash_path};
 use crate::codebase::unique_exports::SourceFile;
 use anyhow::{Context, Result};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
+
+impl NextJsProjectLookup {
+    pub(crate) fn new(root: &Path, files: &[PathBuf], visible_files: &[PathBuf]) -> Self {
+        Self::with_sources(root, files, visible_files, None)
+    }
+}
+
+pub(crate) fn collect_source_files_from_facts(
+    root: &Path,
+    files: &[PathBuf],
+    shared: &CheckFactMap,
+    defer_suppression: bool,
+) -> Result<Vec<SourceFile>> {
+    super::collect_source_files_from_facts_with_sources(
+        root,
+        files,
+        shared,
+        defer_suppression,
+        None,
+        &[],
+    )
+}
+
+pub(crate) fn package_json_has_next_dependency(path: &Path) -> bool {
+    super::package_json_has_next_from(path, None)
+}
 
 pub(crate) fn collect_source_files(root: &Path, files: &[PathBuf]) -> Result<Vec<SourceFile>> {
     let visible_files = crate::codebase::ts_source::discover_visible_paths(root);
@@ -28,9 +55,11 @@ pub(crate) fn collect_source_files(root: &Path, files: &[PathBuf]) -> Result<Vec
             Ok(SourceFile {
                 path: normalize_path(path),
                 rel: relative_slash_path(root, path),
+                source: source.into(),
                 disabled,
+                defer_suppression: false,
                 is_nextjs_project: nextjs_projects.contains_file(path),
-                source,
+                is_remix_route_module: false,
                 symbols: symbols.into(),
             })
         })

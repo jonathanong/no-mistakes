@@ -1,0 +1,166 @@
+{
+  "schemaVersion": 1,
+  "workflows": [
+    {
+      "id": ".github/workflows/main.yml",
+      "path": ".github/workflows/main.yml",
+      "name": "main.yml",
+      "callable": false,
+      "triggers": [
+        {
+          "event": "push"
+        }
+      ],
+      "jobIds": [
+        ".github/workflows/main.yml#a",
+        ".github/workflows/main.yml#ambiguous-consumer",
+        ".github/workflows/main.yml#b",
+        ".github/workflows/main.yml#missing-consumer"
+      ]
+    }
+  ],
+  "jobs": [
+    {
+      "id": ".github/workflows/main.yml#a",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "a",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "shared",
+              "value": "shared"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#ambiguous-consumer",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "ambiguous-consumer",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "shared",
+                "value": "shared"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#b",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "b",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/upload-artifact@v7",
+          "artifact": {
+            "kind": "upload",
+            "name": {
+              "kind": "static",
+              "raw": "shared",
+              "value": "shared"
+            },
+            "archive": {
+              "kind": "static",
+              "effective": true
+            },
+            "overwrite": {
+              "kind": "static",
+              "effective": false
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": ".github/workflows/main.yml#missing-consumer",
+      "workflowId": ".github/workflows/main.yml",
+      "key": "missing-consumer",
+      "kind": "job",
+      "steps": [
+        {
+          "index": 0,
+          "kind": "action",
+          "uses": "actions/download-artifact@v8",
+          "artifact": {
+            "kind": "download",
+            "selector": {
+              "kind": "name",
+              "name": {
+                "kind": "static",
+                "raw": "absent",
+                "value": "absent"
+              }
+            },
+            "source": {
+              "kind": "current-run"
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "edges": [
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#a",
+      "to": ".github/workflows/main.yml#ambiguous-consumer"
+    },
+    {
+      "kind": "needs",
+      "from": ".github/workflows/main.yml#b",
+      "to": ".github/workflows/main.yml#ambiguous-consumer"
+    }
+  ],
+  "diagnostics": [
+    {
+      "severity": "error",
+      "code": "ambiguous-artifact-producer",
+      "message": ".github/workflows/main.yml#ambiguous-consumer step 0 has competing artifact producers: shared: .github/workflows/main.yml#a step 0; shared: .github/workflows/main.yml#b step 0",
+      "workflowPath": ".github/workflows/main.yml",
+      "jobId": ".github/workflows/main.yml#ambiguous-consumer",
+      "stepIndex": 0
+    },
+    {
+      "severity": "error",
+      "code": "missing-artifact-producer",
+      "message": ".github/workflows/main.yml#missing-consumer step 0 downloads absent but no same-run producer can precede it",
+      "workflowPath": ".github/workflows/main.yml",
+      "jobId": ".github/workflows/main.yml#missing-consumer",
+      "stepIndex": 0
+    }
+  ]
+}

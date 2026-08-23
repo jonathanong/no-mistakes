@@ -1,0 +1,9 @@
+name: Invalid literal fail-fast
+on: push
+jobs:
+  typecheck:
+    strategy:
+      fail-fast: "${{ fromJSON('1') }}"
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm exec tsc --noEmit --project invalid-literal-fail-fast/tsconfig.json

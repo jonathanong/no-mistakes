@@ -1,13 +1,9 @@
-use super::checker::{check_dynamic_import, DynamicCheckContext};
-use super::{
-    config, manual_mocks, matching_test_files_with_filter, reachable, resolve_mock_specifiers,
-};
-use super::{RuleFinding, RULE_ID};
+use super::RuleFinding;
+use super::{config, manual_mocks, matching_test_files_with_filter, reachable};
 use crate::codebase::check_facts::CheckFactMap;
-use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
+use crate::codebase::dependencies::graph::{DepGraph, GraphFiles};
 use crate::codebase::rules::test_no_unmocked_dynamic_imports::runtime::runtime_deps;
-use crate::codebase::ts_resolver::{ImportResolver, TsConfig};
-use crate::codebase::ts_source::{has_disable_comment, has_disable_file_comment};
+use crate::codebase::ts_resolver::{ScopedImportResolver, TsConfig};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use dashmap::DashMap;
@@ -16,12 +12,24 @@ use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod graph;
+mod per_test;
 mod setup_mocks;
+mod tsconfig_catalog;
 
+pub(crate) use graph::check_with_prepared_facts_and_session;
+
+#[derive(Default)]
 struct PerTestResult {
     direct_findings: Vec<RuleFinding>,
     reachable_findings: Vec<reachable::ReachableFinding>,
     covered_reachable_imports: HashSet<super::checker::DynamicImportKey>,
+    reachable_suppression_file: Option<String>,
+}
+
+pub(crate) struct PreparedDynamicFindings {
+    pub(crate) findings: Vec<RuleFinding>,
+    pub(crate) suppression_sources: Vec<Option<String>>,
 }
 
 pub fn check_with_facts(
@@ -30,12 +38,20 @@ pub fn check_with_facts(
     tsconfig_path: Option<&Path>,
     shared: &CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible(
-        tsconfig_path,
+    let session =
+        crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+    session.insert_visible_paths(
         root,
-        shared.files(),
-    )?;
-    check_with_prepared_facts(root, config, &tsconfig, shared)
+        std::sync::Arc::new(crate::codebase::ts_source::VisiblePathSnapshot::from_paths(
+            root,
+            shared.files(),
+        )),
+    );
+    let sources = session.visible_paths(root).source_store_for(root);
+    let (tsconfig, catalog) = tsconfig_catalog::for_request(root, tsconfig_path, shared, &sources)?;
+    check_with_prepared_facts_and_session(
+        root, config, &tsconfig, &catalog, shared, &session, &sources,
+    )
 }
 
 #[doc(hidden)]
@@ -45,56 +61,65 @@ pub fn check_with_prepared_facts(
     tsconfig: &TsConfig,
     shared: &CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
+    let catalog = tsconfig_catalog::forced(root, tsconfig);
     let session =
         crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
-    check_with_prepared_facts_and_session(root, config, tsconfig, shared, &session)
+    session.insert_visible_paths(
+        root,
+        std::sync::Arc::new(crate::codebase::ts_source::VisiblePathSnapshot::from_paths(
+            root,
+            shared.files(),
+        )),
+    );
+    let sources = session.visible_paths(root).source_store_for(root);
+    check_with_prepared_facts_and_session(
+        root, config, tsconfig, &catalog, shared, &session, &sources,
+    )
 }
 
-pub(crate) fn check_with_prepared_facts_and_session(
-    root: &Path,
-    config: &NoMistakesConfig,
-    tsconfig: &TsConfig,
-    shared: &CheckFactMap,
-    session: &std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
-) -> Result<Vec<RuleFinding>> {
-    let graph = crate::perf_trace::trace("test_no_unmocked_dynamic_imports.graph_build", || {
-        DepGraph::build_with_complete_check_facts_and_session(
-            crate::codebase::dependencies::graph::CompleteCheckFactGraphBuildRequest {
-                root,
-                tsconfig,
-                plan: GraphBuildPlan::imports_and_workspace(),
-                files: shared.graph_file_universe().to_vec(),
-                config_path: None,
-                facts: shared,
-            },
-            session.clone(),
-        )
-    })?;
-    check_with_prepared_facts_graph_and_session(root, config, tsconfig, shared, &graph, session)
+pub(crate) struct PreparedFactsGraphRequest<'a> {
+    pub(crate) root: &'a Path,
+    pub(crate) config: &'a NoMistakesConfig,
+    pub(crate) tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
+    pub(crate) shared: &'a CheckFactMap,
+    pub(crate) graph: &'a DepGraph,
+    pub(crate) session: &'a std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+    pub(crate) sources: &'a crate::codebase::ts_source::SourceStore,
+    pub(crate) defer_suppression: bool,
 }
 
 pub(crate) fn check_with_prepared_facts_graph_and_session(
-    root: &Path,
-    config: &NoMistakesConfig,
-    tsconfig: &TsConfig,
-    shared: &CheckFactMap,
-    graph: &DepGraph,
-    session: &std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+    request: PreparedFactsGraphRequest<'_>,
 ) -> Result<Vec<RuleFinding>> {
+    Ok(check_with_prepared_facts_graph_and_session_with_suppression(request)?.findings)
+}
+
+pub(crate) fn check_with_prepared_facts_graph_and_session_with_suppression(
+    request: PreparedFactsGraphRequest<'_>,
+) -> Result<PreparedDynamicFindings> {
+    let PreparedFactsGraphRequest {
+        root,
+        config,
+        tsconfig_catalog,
+        shared,
+        graph,
+        session,
+        sources,
+        defer_suppression,
+    } = request;
     let files = shared.files().to_vec();
-    let visible_files = shared
-        .graph_file_universe()
-        .iter()
-        .cloned()
-        .collect::<HashSet<_>>();
-    let resolver = ImportResolver::new_in_session(tsconfig, Some(&visible_files), session);
+    let visible_files = files.iter().cloned().collect::<crate::fx::PathSet>();
+    // Dynamic-import policy is filesystem-scoped even when another consumer
+    // shares a graph built from the complete repository universe.
+    let graph_files = GraphFiles::from_files(files.clone());
+    let resolver = ScopedImportResolver::new_in_session(tsconfig_catalog, &visible_files, session);
     let manual_mocks =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.manual_mocks", || {
             manual_mocks::discover_from_files(root, &files)
         });
     let prepared =
         crate::perf_trace::trace("test_no_unmocked_dynamic_imports.prepare_config", || {
-            config::prepare_from_visible(root, config, shared.graph_file_universe())
+            config::prepare_from_visible(root, config, &files, sources)
         })?;
     let test_files = matching_test_files_with_filter(root, &files, prepared.test_filter());
     let setup_data = prepared.setup_data();
@@ -116,71 +141,22 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
             test_files
                 .into_par_iter()
                 .map(|file| {
-                    let Some(file_facts) = shared.ts.get(&file) else {
-                        anyhow::bail!("missing shared facts for {}", file.display());
-                    };
-                    let Some(source) = file_facts.source.as_deref() else {
-                        anyhow::bail!("missing source facts for {}", file.display());
-                    };
-                    if has_disable_file_comment(source, RULE_ID) {
-                        return Ok(PerTestResult {
-                            direct_findings: Vec::new(),
-                            reachable_findings: Vec::new(),
-                            covered_reachable_imports: HashSet::new(),
-                        });
-                    }
-                    if let Some(error) = &file_facts.parse_error {
-                        anyhow::bail!("failed to parse {}: {error}", file.display());
-                    }
-                    let Some(facts) = file_facts.dynamic_imports.as_ref() else {
-                        anyhow::bail!("missing dynamic import facts for {}", file.display());
-                    };
-                    let mut mocks = manual_mocks.clone();
-                    mocks.extend(setup_mocks::with_facts(
-                        root, setup_data, &file, &resolver, shared,
-                    )?);
-                    mocks.extend(resolve_mock_specifiers(
-                        &facts.mock_specifiers,
-                        &file,
-                        &resolver,
-                    ));
-                    let mut local_findings = Vec::new();
-                    {
-                        let mut check_context = DynamicCheckContext {
-                            root,
-                            file: &file,
-                            resolver: &resolver,
-                            graph,
-                            file_universe: Some(&visible_files),
-                            mocks: &mocks,
-                            dependency_cache: &dependency_cache,
-                            findings: &mut local_findings,
-                        };
-                        for import in &facts.dynamic_imports {
-                            if !has_disable_comment(source, import.line as u32, RULE_ID) {
-                                check_dynamic_import(&mut check_context, import.clone());
-                            }
-                        }
-                    }
-                    let reachable = reachable::collect(
-                        reachable::ReachableContext {
+                    per_test::analyze(
+                        per_test::Request {
                             root,
                             config,
                             resolver: &resolver,
                             graph,
-                            file_universe: Some(&visible_files),
-                            shared: Some(shared),
-                            file_cache: None,
+                            graph_files: &graph_files,
+                            visible_files: &visible_files,
+                            manual_mocks: &manual_mocks,
+                            setup_data,
+                            shared,
+                            dependency_cache: &dependency_cache,
+                            defer_suppression,
                         },
-                        &file,
-                        &mocks,
-                        &dependency_cache,
-                    )?;
-                    Ok(PerTestResult {
-                        direct_findings: local_findings,
-                        reachable_findings: reachable.findings,
-                        covered_reachable_imports: reachable.covered,
-                    })
+                        file,
+                    )
                 })
                 .collect::<Result<Vec<_>>>()
         })?;
@@ -189,18 +165,37 @@ pub(crate) fn check_with_prepared_facts_graph_and_session(
     for result in &per_test {
         covered_reachable_imports.extend(result.covered_reachable_imports.iter().cloned());
     }
-    let mut findings: Vec<RuleFinding> = per_test
+    let mut findings = Vec::new();
+    let mut suppression_sources = Vec::new();
+    for result in per_test {
+        let reachable_suppression_file = result.reachable_suppression_file;
+        for finding in result.direct_findings {
+            findings.push(finding);
+            suppression_sources.push(None);
+        }
+        for entry in result.reachable_findings {
+            if covered_reachable_imports.contains(&entry.key) {
+                continue;
+            }
+            findings.push(entry.finding);
+            suppression_sources.push(reachable_suppression_file.clone());
+        }
+    }
+    // Keep the internal provenance aligned with findings after deterministic
+    // ordering. Public findings retain their helper location; only the
+    // suppression source lookup may use the originating disabled test.
+    let mut paired = findings
         .into_iter()
-        .flat_map(|result| {
-            result.direct_findings.into_iter().chain(
-                result
-                    .reachable_findings
-                    .into_iter()
-                    .filter(|entry| !covered_reachable_imports.contains(&entry.key))
-                    .map(|entry| entry.finding),
-            )
-        })
-        .collect();
-    findings.sort_by(|a, b| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
-    Ok(findings)
+        .zip(suppression_sources)
+        .collect::<Vec<_>>();
+    paired
+        .sort_by(|(a, _), (b, _)| (&a.file, a.line, &a.target).cmp(&(&b.file, b.line, &b.target)));
+    let (findings, suppression_sources): (Vec<_>, Vec<_>) = paired.into_iter().unzip();
+    Ok(PreparedDynamicFindings {
+        findings,
+        suppression_sources,
+    })
 }
+
+#[cfg(test)]
+mod tests;

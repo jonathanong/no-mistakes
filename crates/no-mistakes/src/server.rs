@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
 use clap::{Args, Subcommand};
-use no_mistakes::cli::{resolve_root, root_scoped_edge_depth, Format};
+use no_mistakes::cli::{print_json, resolve_root, root_scoped_edge_depth, Format};
 use no_mistakes::server_routes::{
     analyze_project_with_prepared, analyze_project_with_prepared_indexed, prepare_analysis, Edge,
     ProjectReport, RelatedDirection, ServerRoute,
@@ -121,7 +121,8 @@ pub(crate) fn run(args: ServerArgs) -> Result<ExitCode> {
                 &prepared,
                 &report,
                 &args.filters,
-            )?;
+            );
+            let contracts = contracts?;
             print_contracts(&contracts, format)?;
         }
     }
@@ -153,7 +154,7 @@ fn print_routes(report: &ProjectReport, files: &[String], format: Format) -> Res
             .collect()
     };
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(&routes)?),
+        Format::Json => print_json(&routes),
         Format::Yml => println!("{}", serde_yaml::to_string(&routes)?),
         Format::Md => {
             println!("# Server routes");
@@ -178,7 +179,7 @@ fn print_routes(report: &ProjectReport, files: &[String], format: Format) -> Res
 
 fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(edges)?),
+        Format::Json => print_json(edges),
         Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
         Format::Md => {
             println!("# Server route edges");
@@ -198,7 +199,7 @@ fn print_edges(edges: &[Edge], format: Format) -> Result<()> {
 
 fn print_related(roots: &[String], edges: &[Edge], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(edges)?),
+        Format::Json => print_json(edges),
         Format::Yml => println!("{}", serde_yaml::to_string(edges)?),
         Format::Md => {
             println!("# Related server routes");
@@ -219,3 +220,6 @@ fn print_related(roots: &[String], edges: &[Edge], format: Format) -> Result<()>
 
 include!("server_edge_paths.rs");
 include!("server_contracts_print.rs");
+
+#[cfg(test)]
+mod tests;

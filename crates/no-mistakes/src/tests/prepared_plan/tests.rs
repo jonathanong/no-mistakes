@@ -23,9 +23,27 @@ fn framework_args(root: &Path, framework: TestFramework) -> PlanArgs {
         limit_percent: None,
         limit_files: None,
         global_config_fallback: None,
+        direct_test_owner: false,
         format: None,
         json: false,
+        include_comment: false,
+        include_glob: Vec::new(),
     }
+}
+
+#[test]
+fn direct_test_owner_rejects_explicit_entrypoints_before_preparing_analysis() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/test-plan-config/fixture");
+    let mut args = framework_args(&root, TestFramework::Vitest);
+    args.direct_test_owner = true;
+    args.entrypoints = vec!["source.ts".to_string()];
+
+    let error = super::resolve_args(&args).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("--direct-test-owner conflicts with --entrypoint"));
+    assert!(error.to_string().contains("tests impact"));
 }
 
 #[test]
@@ -64,9 +82,9 @@ fn complete_prepared_graph_keeps_standard_skipped_playwright_sources_outside_its
     crate::ast::begin_parse_count(&root);
     let graph = prepared.graph().unwrap();
     let counts = crate::ast::finish_parse_count(&root);
-    assert!(graph.dependencies_of_node(&NodeId::File(changed)).is_some());
+    assert!(graph.dependencies_of_node(&NodeId::file(changed)).is_some());
     assert!(graph
-        .dependencies_of_node(&NodeId::File(root.join("web/fixtures/included.ts")))
+        .dependencies_of_node(&NodeId::file(root.join("web/fixtures/included.ts")))
         .is_none());
     assert!(!counts.contains_key(&root.join("web/fixtures/included.ts")));
 }
@@ -93,6 +111,137 @@ fn framework_plan_leaves_invalid_unrequested_runner_untouched() {
 }
 
 #[test]
+fn framework_plans_pre_filter_endpoints_and_parse_each_config_once() {
+    let source = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/runner-isolation"),
+    );
+
+    for (framework, expected_test) in [
+        (TestFramework::Vitest, "tests/unit.test.mts"),
+        (TestFramework::Playwright, "e2e/unit.spec.mts"),
+    ] {
+        let fixture = crate::test_support::materialize_saved_fixture(&source);
+        let root = fixture.path().canonicalize().unwrap();
+        let args = framework_args(&root, framework);
+        crate::ast::begin_parse_count(&root);
+        let plan = crate::tests::plan::generate_plan(&args).unwrap();
+        let counts = crate::ast::finish_parse_count(&root);
+
+        assert_eq!(
+            plan.selected_tests
+                .iter()
+                .map(|test| test.test_file.as_str())
+                .collect::<Vec<_>>(),
+            [expected_test],
+            "{framework:?} must terminate only at its own discovered tests"
+        );
+        assert!(
+            plan.selected_tests
+                .iter()
+                .all(|test| !test.reasons.is_empty()),
+            "every selected test must retain explainable graph provenance"
+        );
+        assert_eq!(
+            counts.get(&root.join("vitest.config.ts")),
+            Some(&1),
+            "{counts:#?}"
+        );
+        assert_eq!(
+            counts.get(&root.join("playwright.config.ts")),
+            Some(&1),
+            "{counts:#?}"
+        );
+        assert!(
+            counts.values().all(|count| *count == 1),
+            "one prepared plan must parse every TypeScript file at most once: {counts:#?}"
+        );
+
+        if framework == TestFramework::Vitest {
+            let why = crate::tests::why::why_steps(&crate::tests::WhyArgs {
+                root: root.clone(),
+                config: None,
+                tsconfig: None,
+                test: root.join(expected_test),
+                changed: Some(root.join("src/unit.ts")),
+                plan: None,
+                format: crate::tests::WhyFormat::Text,
+            })
+            .unwrap();
+            assert!(
+                why.values().all(|steps| !steps.is_empty()) && !why.is_empty(),
+                "tests why must explain the configured Vitest selection"
+            );
+        }
+    }
+}
+
+#[test]
+fn requested_runner_projects_reuses_the_prepared_vitest_catalog() {
+    let source = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/parser-count/framework-demand-invalid-unrequested"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let args = framework_args(&root, TestFramework::Vitest);
+    let prepared = PreparedTestPlanRequest::prepare(&args).unwrap();
+
+    let projects = prepared
+        .requested_runner_projects(TestRunner::Vitest)
+        .unwrap();
+
+    assert_eq!(projects.len(), 1);
+    assert_eq!(projects[0].config.as_deref(), Some("vitest.config.ts"));
+    assert!(prepared
+        .requested_runner_projects(TestRunner::Playwright)
+        .is_err());
+}
+
+#[test]
+fn prepared_vitest_setup_projects_retain_visible_test_candidates() {
+    let source = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/vitest-setup-dependencies"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let mut args = framework_args(&root, TestFramework::Vitest);
+    args.changed_file = vec![root.join("setup/root.ts")];
+    let prepared = PreparedTestPlanRequest::prepare(&args).unwrap();
+
+    let projects = prepared.prepared_test_projects.vitest_setup_projects();
+    let arbitrary_project = projects
+        .iter()
+        .find(|project| {
+            project
+                .setups
+                .iter()
+                .any(|(path, _)| path == &root.join("arbitrary-project-match/setup/arbitrary.ts"))
+        })
+        .expect("explicit project retains its static setup file");
+    assert!(arbitrary_project
+        .tests
+        .contains(&root.join("arbitrary-project-match/arbitrary.fixture")));
+}
+
+#[test]
+fn prepared_vitest_setup_projects_skip_builtin_and_configured_directories() {
+    let source = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/test-plan/vitest-setup-skipped"),
+    );
+    let fixture = crate::test_support::materialize_saved_fixture(&source);
+    let root = fixture.path().canonicalize().unwrap();
+    let mut args = framework_args(&root, TestFramework::Vitest);
+    args.config = Some(root.join(".no-mistakes.yml"));
+    let prepared = PreparedTestPlanRequest::prepare(&args).unwrap();
+    let projects = prepared.prepared_test_projects.vitest_setup_projects();
+
+    assert!(projects.is_empty());
+}
+
+#[test]
 fn requested_runner_failure_is_memoized() {
     let source = no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -113,7 +262,7 @@ fn requested_runner_failure_is_memoized() {
     assert_eq!(first.to_string(), second.to_string());
     assert_eq!(prepared.framework_discovery_count(), 1);
     assert_eq!(counts.get(&root.join("playwright.config.ts")), Some(&1));
-    assert!(!counts.contains_key(&root.join("vitest.config.ts")));
+    assert_eq!(counts.get(&root.join("vitest.config.ts")), Some(&1));
 }
 
 #[test]

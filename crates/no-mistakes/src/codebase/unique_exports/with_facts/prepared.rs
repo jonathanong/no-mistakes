@@ -3,9 +3,21 @@ use crate::codebase::analysis_session::AnalysisSession;
 use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::config::Config;
 use crate::codebase::ts_resolver::normalize_path;
-use crate::codebase::unique_exports::{UniqueExportFinding, RULE_ID};
+use crate::codebase::unique_exports::{PreparedUniqueExportFinding, UniqueExportFinding, RULE_ID};
 use anyhow::Result;
 use std::path::Path;
+
+mod aggregate;
+mod public;
+pub use aggregate::analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_check;
+use public::analyze_project_with_optional_prepared_facts;
+
+#[derive(Clone, Copy, Default)]
+pub(super) struct PreparedResolution<'a> {
+    pub(super) tsconfig_path: Option<&'a Path>,
+    pub(super) tsconfig: Option<&'a crate::codebase::ts_resolver::TsConfig>,
+    pub(super) catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
+}
 
 #[doc(hidden)]
 pub fn analyze_project_with_config_and_facts(
@@ -18,11 +30,14 @@ pub fn analyze_project_with_config_and_facts(
     analyze_project_with_optional_prepared_facts(
         root,
         config,
-        tsconfig_path,
-        None,
+        PreparedResolution {
+            tsconfig_path,
+            ..Default::default()
+        },
         shared,
         None,
         &session,
+        false,
     )
 }
 
@@ -37,11 +52,14 @@ pub fn analyze_project_with_prepared_facts(
     analyze_project_with_optional_prepared_facts(
         root,
         config,
-        None,
-        Some(tsconfig),
+        PreparedResolution {
+            tsconfig: Some(tsconfig),
+            ..Default::default()
+        },
         shared,
         None,
         &session,
+        false,
     )
 }
 
@@ -76,23 +94,50 @@ pub fn analyze_project_with_prepared_facts_and_inferred_and_session(
     analyze_project_with_optional_prepared_facts(
         root,
         config,
-        None,
-        Some(tsconfig),
+        PreparedResolution {
+            tsconfig: Some(tsconfig),
+            ..Default::default()
+        },
         shared,
         Some(inferred_roots),
         session,
+        false,
     )
 }
 
-fn analyze_project_with_optional_prepared_facts(
+/// Analyze aggregate facts with the request's per-importer tsconfig catalog.
+#[doc(hidden)]
+pub fn analyze_project_with_prepared_facts_catalog_and_inferred_and_session(
     root: &Path,
     config: &Config,
-    tsconfig_path: Option<&Path>,
-    prepared_tsconfig: Option<&crate::codebase::ts_resolver::TsConfig>,
+    tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
+    shared: &CheckFactMap,
+    inferred_roots: &crate::codebase::config::InferredRoots,
+    session: &AnalysisSession,
+) -> Result<Vec<UniqueExportFinding>> {
+    analyze_project_with_optional_prepared_facts(
+        root,
+        config,
+        PreparedResolution {
+            catalog: Some(tsconfig_catalog),
+            ..Default::default()
+        },
+        shared,
+        Some(inferred_roots),
+        session,
+        false,
+    )
+}
+
+pub(super) fn analyze_project_with_optional_prepared_facts_prepared(
+    root: &Path,
+    config: &Config,
+    resolution: PreparedResolution<'_>,
     shared: &CheckFactMap,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
     session: &AnalysisSession,
-) -> Result<Vec<UniqueExportFinding>> {
+    defer_suppression: bool,
+) -> Result<Vec<PreparedUniqueExportFinding>> {
     let normalized_root = normalize_path(root);
     let root = normalized_root.as_path();
     let applications = config.rule_applications_for(RULE_ID);
@@ -115,12 +160,13 @@ fn analyze_project_with_optional_prepared_facts(
                 session,
                 root,
                 application_filter: Some((config, application)),
-                tsconfig_path,
-                prepared_tsconfig,
+                resolution,
                 shared,
                 project_roots,
                 options,
+                defer_suppression,
                 inferred_roots,
+                config,
             })?);
         }
         findings.sort();
@@ -140,11 +186,12 @@ fn analyze_project_with_optional_prepared_facts(
         session,
         root,
         application_filter: None,
-        tsconfig_path,
-        prepared_tsconfig,
+        resolution,
         shared,
         project_roots,
         options: config.rule_options(RULE_ID),
+        defer_suppression,
         inferred_roots,
+        config,
     })
 }

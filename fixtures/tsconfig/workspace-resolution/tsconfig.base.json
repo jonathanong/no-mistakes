@@ -1,0 +1,7 @@
+{
+  // The child configs inherit this JSONC file to exercise origin-relative paths.
+  "compilerOptions": {
+    "target": "ES2022",
+    "moduleResolution": "bundler"
+  }
+}

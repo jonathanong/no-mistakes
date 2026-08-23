@@ -16,18 +16,12 @@ fn workspace_symbol_graph_includes_visible_entry_and_excludes_gitignored_entry()
         GraphBuildPlan::imports_and_workspace().with_symbols(true),
     )
     .unwrap();
-    let execute = NodeId::Symbol {
-        file: dir.path().join("packages/app/src/consumer.mts"),
-        symbol: "execute".to_string(),
-    };
+    let execute = NodeId::symbol(dir.path().join("packages/app/src/consumer.mts"), "execute");
     let ignored_entry = dir
         .path()
         .join("packages/core/generated-output/index.mts");
     let visible_entry = dir.path().join("packages/visible/src/index.mts");
-    let visible_run = NodeId::Symbol {
-        file: visible_entry.clone(),
-        symbol: "visibleRun".to_string(),
-    };
+    let visible_run = NodeId::symbol(visible_entry.clone(), "visibleRun");
 
     assert!(ignored_entry.exists());
     assert!(graph
@@ -50,11 +44,50 @@ fn workspace_symbol_graph_includes_visible_entry_and_excludes_gitignored_entry()
         .into_iter()
         .flatten()
         .any(|(importer, local, is_reexport)| {
-            importer == &dir.path().join("packages/app/src/consumer.mts")
-                && local == "visibleRun"
+            importer.as_ref() == dir.path().join("packages/app/src/consumer.mts").as_path()
+                && local.as_ref() == "visibleRun"
                 && !is_reexport
         }));
     assert!(symbol_index
         .importers_of(&ignored_entry, "hiddenRun")
         .is_none());
+}
+
+#[cfg(unix)]
+#[test]
+fn scoped_symbol_index_keeps_symlink_root_importers_in_visible_namespace() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    );
+    let graph_files = GraphFiles::discover(&root);
+    let tsconfig = crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json"))
+        .expect("symlink fixture tsconfig loads");
+    let mut catalog_visible = graph_files.all().to_vec();
+    catalog_visible.push(root.join("tsconfig.json"));
+    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::from_visible(
+        &root,
+        std::slice::from_ref(&root),
+        &catalog_visible,
+    );
+    let facts = collect_ts_facts(graph_files.indexable(), TsFactPlan::imports_and_symbols());
+    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::from_packages(Vec::new());
+    let symbol_index = SymbolIndex::build_from_facts_workspace_resolution_cache_and_session(
+        &tsconfig,
+        Some(&catalog),
+        &graph_files,
+        &facts,
+        &workspace,
+        None,
+        &session,
+    );
+
+    let value = root.join("src/value.ts");
+    let importer = root.join("src/entry.ts");
+    assert!(symbol_index
+        .importers_of(&value, "value")
+        .into_iter()
+        .flatten()
+        .any(|(path, _, _)| path.as_ref() == importer.as_path()));
 }

@@ -1,6 +1,6 @@
 use anyhow::Result;
 use clap::{Args, ValueEnum};
-use no_mistakes::cli::Format;
+use no_mistakes::cli::{print_json, Format};
 use no_mistakes::codebase::dependencies::RelationshipArg;
 use no_mistakes::flow_query::{self, FlowDirection, FlowOptions};
 use std::path::PathBuf;
@@ -59,13 +59,17 @@ pub(crate) fn run(args: FlowArgs) -> Result<ExitCode> {
         relationships: args.relationships,
     };
     let report = flow_query::run(&options)?;
+    if matches!(format, Format::Json) {
+        print_json(&report);
+        return Ok(ExitCode::SUCCESS);
+    }
     print!("{}", render(&report, format)?);
     Ok(ExitCode::SUCCESS)
 }
 
 fn render(report: &flow_query::FlowReport, format: Format) -> Result<String> {
     Ok(match format {
-        Format::Json => format!("{}\n", serde_json::to_string_pretty(report)?),
+        Format::Json => format!("{}\n", serde_json::to_string(report)?),
         Format::Yml => serde_yaml::to_string(report)?,
         Format::Paths => report
             .nodes

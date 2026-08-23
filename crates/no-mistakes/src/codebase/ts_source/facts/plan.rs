@@ -4,6 +4,8 @@ impl TsFactPlan {
     pub fn include(&mut self, other: Self) {
         self.imports |= other.imports;
         self.function_calls |= other.function_calls;
+        self.call_sites |= other.call_sites;
+        self.resources |= other.resources;
         self.symbols |= other.symbols;
         self.source |= other.source;
         self.route_refs |= other.route_refs;
@@ -17,6 +19,8 @@ impl TsFactPlan {
         self.react |= other.react;
         self.effect_calls |= other.effect_calls;
         self.rsc_environment |= other.rsc_environment;
+        self.trpc_router |= other.trpc_router;
+        self.trpc_calls |= other.trpc_calls;
     }
 
     pub fn imports() -> Self {
@@ -40,6 +44,8 @@ impl TsFactPlan {
     pub fn is_empty(self) -> bool {
         !self.imports
             && !self.function_calls
+            && !self.call_sites
+            && !self.resources
             && !self.symbols
             && !self.source
             && !self.route_refs
@@ -53,6 +59,8 @@ impl TsFactPlan {
             && !self.react
             && !self.effect_calls
             && !self.rsc_environment
+            && !self.trpc_router
+            && !self.trpc_calls
     }
 
     pub fn has_domain_facts(self) -> bool {
@@ -66,23 +74,41 @@ impl TsFactPlan {
             || self.server_routes
             || self.effect_calls
             || self.rsc_environment
+            || self.trpc_router
+            || self.trpc_calls
     }
 
     pub fn covers(self, required: Self) -> bool {
+        self.covers_syntax_facts(required)
+            & self.covers_backend_facts(required)
+            & self.covers_runtime_facts(required)
+    }
+
+    fn covers_syntax_facts(self, required: Self) -> bool {
         (!required.imports || self.imports)
             && (!required.function_calls || self.function_calls)
+            && (!required.call_sites || self.call_sites)
+            && (!required.resources || self.resources)
             && (!required.symbols || self.symbols)
             && (!required.source || self.source)
-            && (!required.route_refs || self.route_refs)
+    }
+
+    fn covers_backend_facts(self, required: Self) -> bool {
+        (!required.route_refs || self.route_refs)
             && (!required.backend_routes || self.backend_routes)
             && (!required.queue_usage || self.queue_usage)
             && (!required.queue_factory || self.queue_factory)
             && (!required.queue_project || self.queue_project)
-            && (!required.http_calls || self.http_calls)
-            && (!required.process_spawns || self.process_spawns)
             && (!required.server_routes || self.server_routes)
+    }
+
+    fn covers_runtime_facts(self, required: Self) -> bool {
+        (!required.http_calls || self.http_calls)
+            && (!required.process_spawns || self.process_spawns)
             && (!required.react || self.react)
             && (!required.effect_calls || self.effect_calls)
             && (!required.rsc_environment || self.rsc_environment)
+            && (!required.trpc_router || self.trpc_router)
+            && (!required.trpc_calls || self.trpc_calls)
     }
 }

@@ -13,6 +13,23 @@ impl AnalysisSession {
             })
     }
 
+    /// Return the prepared dataset source store for `root` when discovery has
+    /// already run. Missing roots stay `None` so callers can keep a file-list
+    /// inventory instead of discovering the whole tree.
+    pub(crate) fn existing_sources_for(
+        &self,
+        root: &Path,
+    ) -> Option<Arc<crate::codebase::ts_source::SourceStore>> {
+        if root.as_os_str().is_empty() {
+            return None;
+        }
+        let root = normalize_path(root);
+        self.datasets
+            .get(&root)
+            .and_then(|cell| cell.get().cloned())
+            .map(|dataset| dataset.sources_for(&root))
+    }
+
     /// Return the invocation's canonical, memoized configuration.
     #[doc(hidden)]
     pub fn config(
@@ -21,6 +38,16 @@ impl AnalysisSession {
         config_path: Option<&Path>,
     ) -> anyhow::Result<Arc<crate::config::v2::NoMistakesConfig>> {
         self.dataset(root).config(config_path)
+    }
+
+    /// Return the invocation's canonical configuration and selected source path.
+    #[doc(hidden)]
+    pub fn config_with_path(
+        &self,
+        root: &Path,
+        config_path: Option<&Path>,
+    ) -> anyhow::Result<(Arc<crate::config::v2::NoMistakesConfig>, Option<PathBuf>)> {
+        self.dataset(root).config_with_path(config_path)
     }
 
     /// Return the invocation's canonical, memoized TypeScript configuration.

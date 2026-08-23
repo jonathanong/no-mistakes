@@ -16,6 +16,7 @@ export interface ImportUsageFile {
 
 export interface ImportUsagesOptions {
   files?: string[];
+  /** Project root. Defaults to the current working directory. */
   root?: string;
   scanRoots?: string[];
   filters?: string[];

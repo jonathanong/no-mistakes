@@ -1,0 +1,2 @@
+testPlan:
+  vitest: [this is not a framework config]

@@ -1,0 +1,20 @@
+on: push
+jobs:
+  matrix:
+    uses: ./.github/workflows/matrix.yml
+    with:
+      matrix: 'null'
+  script:
+    uses: ./.github/workflows/script.yml
+    with:
+      prefix: exit 1
+  env:
+    uses: ./.github/workflows/env.yml
+  json-error:
+    uses: ./.github/workflows/json-error.yml
+    with:
+      payload: not-json
+  strategy:
+    uses: ./.github/workflows/strategy.yml
+    with:
+      parallel: 0

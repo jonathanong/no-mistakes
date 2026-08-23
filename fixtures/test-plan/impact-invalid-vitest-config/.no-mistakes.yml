@@ -1,0 +1,6 @@
+tests:
+  dotnet:
+    projects:
+      impact-tests:
+        project: tests/Impact.Tests.csproj
+        test: true

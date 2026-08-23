@@ -3,7 +3,7 @@ use std::path::PathBuf;
 use anyhow::{bail, Result as AnyhowResult};
 
 use super::options::{
-    parse_export_kind, parse_include, parse_options, parse_relationship, parse_symbols_mode,
+    parse_export_kind, parse_include, parse_options_value, parse_relationship, parse_symbols_mode,
     to_napi_error, ImportUsagesOptions, SymbolOptions, TraverseOptions,
 };
 use crate::cli::Format;
@@ -11,32 +11,32 @@ use crate::codebase::dependencies::{Direction, TraverseArgs};
 use crate::codebase::import_usages::ImportUsagesArgs;
 use crate::codebase::symbols::SymbolsArgs;
 
-pub(crate) fn dependencies_json_impl(options_json: String) -> napi::Result<String> {
-    traverse_json(options_json, Direction::Deps)
+pub(crate) fn dependencies_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    traverse_json(options, Direction::Deps)
 }
 
-pub(crate) fn dependents_json_impl(options_json: String) -> napi::Result<String> {
-    traverse_json(options_json, Direction::Dependents)
+pub(crate) fn dependents_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    traverse_json(options, Direction::Dependents)
 }
 
-pub(crate) fn related_json_impl(options_json: String) -> napi::Result<String> {
-    traverse_json(options_json, Direction::Dependents)
+pub(crate) fn related_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    traverse_json(options, Direction::Dependents)
 }
 
-pub(crate) fn symbols_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<SymbolOptions>(&options_json)?;
+pub(crate) fn symbols_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<SymbolOptions>(options)?;
     let args = build_symbols_args(options).map_err(to_napi_error)?;
     crate::codebase::symbols::run_json(args).map_err(to_napi_error)
 }
 
-pub(crate) fn import_usages_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<ImportUsagesOptions>(&options_json)?;
+pub(crate) fn import_usages_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<ImportUsagesOptions>(options)?;
     let args = build_import_usages_args(options);
     crate::codebase::import_usages::run_json(args).map_err(to_napi_error)
 }
 
-fn traverse_json(options_json: String, direction: Direction) -> napi::Result<String> {
-    let options = parse_options::<TraverseOptions>(&options_json)?;
+fn traverse_json(options: serde_json::Value, direction: Direction) -> napi::Result<String> {
+    let options = parse_options_value::<TraverseOptions>(options)?;
     let args = build_traverse_args(options).map_err(to_napi_error)?;
     crate::codebase::dependencies::run_json(args, direction).map_err(to_napi_error)
 }

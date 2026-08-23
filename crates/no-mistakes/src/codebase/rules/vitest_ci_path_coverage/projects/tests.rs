@@ -7,7 +7,10 @@ fn coverage_units(
 ) -> Result<Vec<CoverageUnit>> {
     coverage_units_with_catalog(root, config, opts, None)
 }
-use crate::config::v2::schema::{StringOrList, TestProjectPolicy};
+use crate::config::v2::schema::{
+    NamedFullSuiteTrigger, StringOrList, TestPlanProjectDependency,
+    TestPlanTargetedProjectDependency, TestProjectPolicy,
+};
 use std::collections::BTreeMap;
 
 fn fixture_root(name: &str) -> std::path::PathBuf {
@@ -27,7 +30,7 @@ fn project_pattern_helpers_cover_roots_relative_patterns_and_excludes() {
     );
     assert_eq!(
         project_relative_pattern("packages/api", "!./src/**/*.ts"),
-        "packages/api/!./src/**/*.ts"
+        "!packages/api/src/**/*.ts"
     );
     assert_eq!(
         project_relative_pattern("packages/api", "packages/api/src/**/*.ts"),
@@ -36,11 +39,13 @@ fn project_pattern_helpers_cover_roots_relative_patterns_and_excludes() {
 
     let project = ConfigProject {
         config: None,
+        workspace: false,
         policy_name: None,
         runner_project_arg: None,
         scope: None,
         include: vec!["./src/**/*.test.ts".to_string()],
         exclude: vec!["./src/generated/**".to_string()],
+        vitest_setup: Vec::new(),
     };
     assert_eq!(project_name(&project), "default");
     assert_eq!(
@@ -85,7 +90,110 @@ fn project_dependency_patterns_cover_all_trigger_shapes() {
             },
             &TestPlanProjectDependency::Patterns(vec!["!dist/**".to_string()])
         ),
-        vec!["pkg/!dist/**"]
+        vec!["!pkg/dist/**"]
+    );
+    assert_eq!(
+        project_dependency_patterns(
+            "pkg",
+            &Project {
+                root: Some("pkg".to_string()),
+                ..Project::default()
+            },
+            &TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+                paths: vec!["!dist/**".to_string(), "src/**".to_string()],
+                targets: vec!["unit".to_string()],
+            })
+        ),
+        vec!["!pkg/dist/**", "pkg/src/**"]
+    );
+}
+
+#[test]
+fn targeted_trigger_coverage_is_attributed_to_runner_targets() {
+    let root = fixture_root("fixture");
+    let mut config = NoMistakesConfig::default();
+    config.projects.insert(
+        "database-resources".to_string(),
+        Project {
+            root: Some("migrations".to_string()),
+            ..Project::default()
+        },
+    );
+    config.test_plan.vitest.full_suite_triggers.projects.insert(
+        "database-resources".to_string(),
+        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
+            paths: vec!["**/*.sql".to_string()],
+            targets: vec!["database".to_string(), "replica".to_string()],
+        }),
+    );
+
+    let units = coverage_units(
+        &root,
+        &config,
+        &Options {
+            include_vitest_project_globs: Some(false),
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        units
+            .iter()
+            .map(|unit| unit.project.as_str())
+            .collect::<Vec<_>>(),
+        vec!["database", "replica"]
+    );
+    assert!(units
+        .iter()
+        .all(|unit| unit.patterns == ["migrations/**/*.sql"]));
+}
+
+#[test]
+fn named_trigger_coverage_uses_targets_or_the_trigger_name() {
+    let root = fixture_root("fixture");
+    let mut config = NoMistakesConfig::default();
+    config
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .triggers
+        .push(NamedFullSuiteTrigger {
+            name: "postgres-resources".to_string(),
+            paths: vec!["src/**".to_string(), "!./src/generated/**".to_string()],
+            targets: vec!["backend".to_string()],
+        });
+    config
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .triggers
+        .push(NamedFullSuiteTrigger {
+            name: "root-config".to_string(),
+            paths: vec!["package.json".to_string()],
+            targets: Vec::new(),
+        });
+
+    let units = coverage_units(
+        &root,
+        &config,
+        &Options {
+            include_vitest_project_globs: Some(false),
+            ..Options::default()
+        },
+    )
+    .unwrap();
+    assert_eq!(
+        units
+            .iter()
+            .map(|unit| (unit.project.as_str(), unit.patterns.clone()))
+            .collect::<Vec<_>>(),
+        vec![
+            (
+                "backend",
+                vec!["src/**".to_string(), "!src/generated/**".to_string()]
+            ),
+            ("root-config", vec!["package.json".to_string()]),
+        ]
     );
 }
 

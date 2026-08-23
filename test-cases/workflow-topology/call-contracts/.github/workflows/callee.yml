@@ -1,0 +1,25 @@
+name: Callee
+on:
+  workflow_call:
+    inputs:
+      message:
+        type: string
+        required: true
+      flag:
+        type: boolean
+        required: false
+        default: false
+    secrets:
+      token:
+        required: true
+    outputs:
+      result:
+        value: ${{ jobs.echo.outputs.result }}
+jobs:
+  echo:
+    runs-on: ubuntu-latest
+    outputs:
+      result: ${{ steps.set.outputs.result }}
+    steps:
+      - id: set
+        run: echo "result=ok" >> "$GITHUB_OUTPUT"

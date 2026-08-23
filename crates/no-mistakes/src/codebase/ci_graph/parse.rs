@@ -11,6 +11,12 @@ pub(super) const PATH_FILTERABLE_EVENTS: &[&str] = &["push", "pull_request", "pu
 /// Parse a single workflow YAML document.
 pub fn parse_workflow(yaml: &str, rel_path: &str) -> Result<Workflow> {
     let value: Value = serde_yaml::from_str(yaml)?;
+    Ok(parse_workflow_value(&value, rel_path))
+}
+
+/// Build the typed impact model from a workflow YAML document parsed by the
+/// request-scoped shared workflow loader.
+pub fn parse_workflow_value(value: &Value, rel_path: &str) -> Workflow {
     let mut warnings = Vec::new();
 
     let name = value
@@ -22,7 +28,7 @@ pub fn parse_workflow(yaml: &str, rel_path: &str) -> Result<Workflow> {
     let permissions = parse_permission_spec(value.get("permissions"));
     let jobs = parse_jobs(value.get("jobs"));
 
-    Ok(Workflow {
+    Workflow {
         path: rel_path.to_string(),
         name,
         triggers,
@@ -30,7 +36,7 @@ pub fn parse_workflow(yaml: &str, rel_path: &str) -> Result<Workflow> {
         jobs,
         is_reusable,
         warnings,
-    })
+    }
 }
 
 /// Parse the `on:` value in its string / list / map forms. Returns the triggers
@@ -142,7 +148,7 @@ fn string_list(value: Option<&Value>) -> Vec<String> {
 /// best-effort analysis, so an unknown shorthand string is treated as `Empty`
 /// and an unknown level is dropped rather than erroring. Use `actionlint` for
 /// schema validation.
-pub(super) fn parse_permission_spec(value: Option<&Value>) -> PermissionSpec {
+pub(crate) fn parse_permission_spec(value: Option<&Value>) -> PermissionSpec {
     match value {
         None | Some(Value::Null) => PermissionSpec::Unspecified,
         Some(Value::String(s)) => match s.as_str() {

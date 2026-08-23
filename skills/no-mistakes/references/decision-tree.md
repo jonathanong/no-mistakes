@@ -32,8 +32,11 @@ What are you trying to find?
 │   └─ no-mistakes queues related <file> [--direction deps|dependents|both]
 │   └─ no-mistakes queues check
 │
+├─ tRPC procedure hops
+│   └─ no-mistakes dependents <file> --relationship trpc
+│
 ├─ Server route extraction / related files
-│   └─ no-mistakes server routes
+│   └─ no-mistakes server routes  (Express/Hono/Koa, language HTTP, Remix file routes)
 │   └─ no-mistakes server related <file> [--direction deps|dependents|both]
 │   └─ no-mistakes server edges [file] [--depth N]
 │
@@ -63,13 +66,17 @@ What are you trying to find?
 ├─ Which packages changed between two lockfile refs
 │   └─ no-mistakes lockfile diff --base <ref> --format json
 │
-├─ Which routes or queue jobs reach a file
+├─ Which routes, queue jobs, or tRPC procedures reach a file
 │   └─ no-mistakes dependents <file> --relationship route
 │   └─ no-mistakes dependents <file> --relationship queue
+│   └─ no-mistakes dependents <file> --relationship trpc
 │   (requires .no-mistakes.yml with the relevant project/rule config)
 │
-└─ Which CI workflows invoke a binary
-    └─ no-mistakes dependents src/bin/mybinary.rs --relationship ci
+├─ Which CI workflows invoke a Rust binary through supported Cargo commands
+│   └─ no-mistakes dependents src/bin/mybinary.rs --relationship ci
+│
+└─ Which local GitHub Actions jobs/steps, scripts, or artifacts reach a file
+    └─ no-mistakes dependents <file> --relationship workflow
 ```
 
 ## Choosing a --relationship flag
@@ -87,8 +94,16 @@ What are you trying to find?
 | `test` | source/test correspondence, Playwright route tests, Next layouts, and selector coverage |
 | `route` | route refs, Playwright route tests, and Next layouts |
 | `queue` | Queue enqueue/worker relationship → virtual queue job |
+| `trpc` | tRPC client call → virtual procedure → configured router file (opt-in; omitted from `all`) |
 | `md` | Markdown link → linked source file |
 | `ci` | CI workflow YAML → binary entry point |
+| `workflow` | GitHub Actions workflow → virtual job → virtual step, `needs`, local uses, static run targets, and same-run artifacts |
+| `workflow-job` | Workflow file → virtual job only |
+| `workflow-step` | Job/step structural path |
+| `workflow-needs` | Job structural path plus `needs` |
+| `workflow-uses` | Job/step structural path plus local reusable workflow/action use |
+| `workflow-run` | Job/step structural path plus static run/package-script targets |
+| `workflow-artifact` | Job/step structural path plus same-run artifact upload → download |
 | `http` | HTTP client call with a static path → backend route definition |
 | `process` | `spawn`/`exec`/Playwright `webServer` → spawned entry file |
 | `asset` | Explicit non-code asset import |
@@ -96,7 +111,7 @@ What are you trying to find?
 | `dotnet` | C# `using`/type reference/project reference edges |
 | `swift` | Swift import/type reference/SwiftPM target dependency edges |
 | `terraform` | Terraform/OpenTofu resource, module, and output reference edges |
-| `all` | All standard relationships except the opt-in `route-import` relationship (default) |
+| `all` | All standard relationships, including `workflow`, except the opt-in `route-import` and `trpc` relationships (default) |
 
 Repeatable — `--relationship import --relationship workspace` follows both kinds.
 
@@ -146,7 +161,9 @@ no-mistakes dependents src/auth.mts --filter 'backend/**' --filter 'integration-
   `no-mistakes dependents <file>`.
 
 **When to pass --tsconfig explicitly:**
-In a monorepo with per-package tsconfigs and no root `tsconfig.json`, auto-discovery may pick the wrong one. Pass `--tsconfig <pkg>/tsconfig.json` whenever you get empty or wrong results from a file inside a specific package.
+Use `--tsconfig <pkg>/tsconfig.json` to force a single config while debugging an
+alias or reproducing a legacy result. Omit it for normal monorepo analysis so
+each source uses its owning package config.
 
 **When no-mistakes dependents returns fewer results than expected:**
 Check if the import uses a bare external specifier, a non-literal dynamic `import()` / `require()`, or an alias that requires a specific package `tsconfig`. See `limits-and-fallbacks.md` for workarounds.
@@ -159,3 +176,10 @@ selector coverage is approximate; exact configured test ID edges are stronger.
 `route-import` and `route` are different: the former follows the conservative
 runtime module closure used by Playwright, while the latter follows URL-route,
 route-test, and layout relationships.
+
+`workflow` is local and static: virtual nodes use `WORKFLOW#job:<job>` and
+`WORKFLOW#job:<job>/step:<zero-based-index>`, commands resolve only supported
+literal forms, and artifacts connect upload/download steps in the same run.
+Remote `uses`, `workflow_run`, dynamic shell syntax, and targets outside the
+tracked graph require a fallback such as `rg`. `ci` remains the separate
+legacy workflow-file-to-Rust-binary Cargo relationship.

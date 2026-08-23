@@ -3,7 +3,7 @@ pub(crate) use crate::playwright::analysis::pipeline_entrypoints::{
     analyze_with_policy_and_facts_from_snapshot, analyze_with_policy_from_snapshot,
 };
 pub(crate) use crate::playwright::analysis::pipeline_facts::{
-    standalone_fact_plan, standalone_facts,
+    extend_standalone_fact_plan, standalone_fact_plan, standalone_facts,
 };
 use crate::playwright::analysis::pipeline_occurrences::{
     prepare_test_files, PrepareTestFilesOptions,
@@ -62,8 +62,15 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         .then(|| collect_playwright_routes(root, settings, true, false, facts, snapshot))
         .transpose()?;
     let test_files = discover_playwright_test_files(root, settings, facts, snapshot)?;
-    let app_selector_setup =
-        collect_app_selectors(root, settings, &unique_selector_policy, facts, snapshot)?;
+    let app_selector_setup = collect_app_selectors(
+        root,
+        settings,
+        &unique_selector_policy,
+        facts,
+        snapshot,
+        Some(&selector_regexes),
+    );
+    let app_selector_setup = app_selector_setup?;
     let wrapper_resolution = if settings.selector_wrappers.is_empty() {
         None
     } else {
@@ -71,9 +78,13 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         let sources = snapshot.source_store_for(root);
         let tsconfig = match route_import_candidate {
             Some((_, tsconfig)) => tsconfig.clone(),
-            None => crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
-                None, root, &paths, &sources,
-            )?,
+            None => {
+                let resolved =
+                    crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
+                        None, root, &paths, &sources,
+                    );
+                resolved?
+            }
         };
         let workspace = crate::codebase::workspaces::load_indexed_from_source_store(root, &sources)
             .unwrap_or_default();
@@ -86,6 +97,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
         )
     };
     let (prepared, demand) = crate::perf_trace::trace("playwright.test_occurrences", || {
+        let sources = snapshot.source_store_for(root);
         prepare_test_files(
             test_files,
             settings,
@@ -96,6 +108,7 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
                 facts,
                 selection: occurrence_selection,
                 module_resolution: wrapper_resolution.as_ref(),
+                sources: Some(sources.as_ref()),
             },
         )
     })?;
@@ -146,7 +159,8 @@ pub(crate) fn analyze_with_policy_and_optional_facts(
                 )
             },
         },
-    )?;
+    );
+    let text_setup = text_setup?;
     let text_context = text_setup
         .has_matching_text_candidate
         .then_some(TextEdgeContext {

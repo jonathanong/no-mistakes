@@ -1,0 +1,30 @@
+# The alternate binding mechanism: `tests.playwright.apps.<project>.project`
+# instead of `rules[].projects`. Proves the two mechanisms are independent —
+# a rule application needs neither `projects:` nor `scope:` to resolve
+# unambiguously once its Playwright project has an explicit app binding.
+projects:
+  control-web:
+    type: nextjs
+    root: services/control-web
+  agent-web:
+    type: nextjs
+    root: services/agent-web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectors:
+      testIds: [data-pw]
+    apps:
+      control:
+        project: control-web
+      agent:
+        project: agent-web
+
+rules:
+  - rule: playwright-coverage
+    tests:
+      playwright: [control]
+  - rule: playwright-coverage
+    tests:
+      playwright: [agent]

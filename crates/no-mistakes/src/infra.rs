@@ -72,7 +72,7 @@ pub(crate) fn run(args: InfraArgs) -> Result<ExitCode> {
 
 fn print_resource_refs(address: &str, rows: &[ResourceRefRow], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(rows)?),
+        Format::Json => println!("{}", serde_json::to_string(rows)?),
         Format::Yml => println!("{}", serde_yaml::to_string(rows)?),
         Format::Md => {
             println!("# References to `{address}`");
@@ -96,7 +96,7 @@ fn print_resource_refs(address: &str, rows: &[ResourceRefRow], format: Format) -
 
 fn print_outputs(result: &ModuleOutputsResult, format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(result)?),
+        Format::Json => println!("{}", serde_json::to_string(result)?),
         Format::Yml => println!("{}", serde_yaml::to_string(result)?),
         Format::Md => {
             println!("# Outputs of `{}`", result.module);
@@ -140,7 +140,7 @@ fn join_names(result: &ModuleOutputsResult) -> String {
 
 fn print_test_for(rows: &[TestForRow], format: Format) -> Result<()> {
     match format {
-        Format::Json => println!("{}", serde_json::to_string_pretty(rows)?),
+        Format::Json => println!("{}", serde_json::to_string(rows)?),
         Format::Yml => println!("{}", serde_yaml::to_string(rows)?),
         Format::Md => {
             println!("# Covering tests");

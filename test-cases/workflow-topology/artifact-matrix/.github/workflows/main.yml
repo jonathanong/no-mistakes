@@ -1,0 +1,67 @@
+on: push
+jobs:
+  build-matrix:
+    strategy:
+      matrix: {os: [linux, macos]}
+    steps:
+      - uses: actions/upload-artifact@v7
+        with:
+          name: build-${{ matrix.os }}
+  consume-pattern:
+    needs: build-matrix
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {pattern: build-*}
+  # Same literal name from every matrix cell, no axis referenced in the
+  # name: an unordered download can't tell which of the 2 matrix instances
+  # it would get, so this is ambiguous (with a "2 matrix instances" hint).
+  ambiguous-matrix:
+    strategy:
+      matrix: {os: [linux, macos]}
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: shared-matrix}
+  consume-ambiguous:
+    needs: ambiguous-matrix
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: shared-matrix}
+  unique-per-cell:
+    strategy:
+      matrix: {os: [linux, macos], node: [22, 24]}
+    steps:
+      - uses: actions/upload-artifact@v7
+        with:
+          name: build-${{ matrix.os }}-${{ matrix.node }}
+  consume-unique:
+    needs: unique-per-cell
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: build-linux-22}
+  # A conditional matrix producer stays possible without an ambiguity
+  # diagnostic — it might not even run.
+  conditional-matrix:
+    if: ${{ inputs.enabled }}
+    strategy:
+      matrix: {os: [linux, macos]}
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: conditional-shared}
+  consume-conditional:
+    needs: conditional-matrix
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: conditional-shared}
+  # A job's matrix multiplicity propagates through a local reusable-workflow
+  # call: 2 matrix instances of `call-matrix` each expand to one occurrence
+  # of `upload.yml#upload`, so the producer has invocationCount 2 — an
+  # unordered exact download can't disambiguate which instance wins.
+  call-matrix:
+    strategy:
+      matrix: {os: [linux, macos]}
+    uses: ./.github/workflows/upload.yml
+  consume-call-matrix:
+    needs: call-matrix
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: reusable-shared}

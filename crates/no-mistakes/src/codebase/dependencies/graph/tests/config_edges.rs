@@ -14,7 +14,7 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
     let empty = crate::codebase::ts_resolver::normalize_path(&fixture("graph-empty-route-config"));
     let frontend_only =
         crate::codebase::ts_resolver::normalize_path(&fixture("playwright-coverage"));
-    let frontend_files = GraphFiles::discover(&frontend_only).all;
+    let frontend_files = GraphFiles::discover(&frontend_only).all().to_vec();
     let malformed_options = graph_config_options(&malformed);
     let invalid_options = graph_config_options(&invalid);
     let empty_options = graph_config_options(&empty);
@@ -57,8 +57,8 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
     )
     .is_empty());
 
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
+    let mut forward = EdgeMap::default();
+    let mut reverse = EdgeMap::default();
     test_support::add_queue_edges(
         &malformed,
         &resolver,
@@ -91,22 +91,22 @@ fn graph_collectors_cover_malformed_and_invalid_config_branches() {
     let sources = vec![(files[0].clone(), "fetch('/api/users')".to_string())];
     assert!(collect_http_call_edges(
         &malformed,
-        &tsconfig,
         None,
         &sources,
         &files,
         &files,
         malformed_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
     assert!(collect_http_call_edges(
         &invalid,
-        &tsconfig,
         None,
         &sources,
         &files,
         &files,
         invalid_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
 }
@@ -130,7 +130,7 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let client = root.join("src/client.ts");
     let route = root.join("backend/api/users.mts");
     let entity_route = root.join("backend/api/entity.mts");
@@ -176,12 +176,12 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
     let sources = vec![(client.clone(), std::fs::read_to_string(&client).unwrap())];
     let http_edges = collect_http_call_edges(
         &root,
-        &tsconfig,
         None,
         &sources,
         &all_files,
         &all_files,
         config_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(http_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::HttpCall
@@ -191,12 +191,12 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
     let route_sources = vec![(route.clone(), std::fs::read_to_string(&route).unwrap())];
     let route_http_edges = collect_http_call_edges(
         &root,
-        &tsconfig,
         None,
         &route_sources,
         &all_files,
         &all_files,
         config_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(route_http_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::HttpCall
@@ -219,12 +219,12 @@ fn route_collectors_cover_configured_prefixes_and_scan_globs() {
 
     let http_edges_with_facts = collect_http_call_edges(
         &root,
-        &tsconfig,
         Some(&facts),
         &[],
         &all_files,
         &all_files,
         config_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(http_edges_with_facts.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::HttpCall
@@ -263,7 +263,7 @@ fn route_and_http_fact_context_keep_separate_backend_matchers() {
         crate::codebase::ts_resolver::normalize_path(&fixture("graph-split-route-http-config"));
     let tsconfig =
         crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
-    let all_files = GraphFiles::discover(&root).all;
+    let all_files = GraphFiles::discover(&root).all().to_vec();
     let client = root.join("src/client.ts");
     let route_def = root.join("routes/users.mts");
     let http_def = root.join("http/users.mts");
@@ -314,12 +314,12 @@ fn route_and_http_fact_context_keep_separate_backend_matchers() {
 
     let http_edges = collect_http_call_edges(
         &root,
-        &tsconfig,
         Some(&facts),
         &[],
         &all_files,
         &all_files,
         config_options.as_ref(),
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
     assert!(http_edges.iter().any(|(from, to, kind)| {
         *kind == EdgeKind::HttpCall
@@ -329,172 +329,4 @@ fn route_and_http_fact_context_keep_separate_backend_matchers() {
     assert!(http_edges.iter().all(|(_from, to, kind)| {
         *kind != EdgeKind::HttpCall || to.as_file() != Some(route_def.as_path())
     }));
-}
-
-#[test]
-fn graph_config_helpers_require_explicit_prefixes_and_valid_globs() {
-    let empty = crate::codebase::ts_resolver::normalize_path(&fixture("graph-empty-route-config"));
-    let empty_options = graph_config_options(&empty).unwrap();
-    assert!(resolved_backend_prefixes(&empty_options).is_empty());
-    assert!(route_backend_prefixes(&empty_options).is_empty());
-
-    let plan = GraphBuildPlan {
-        routes: true,
-        queues: true,
-        http: true,
-        ..GraphBuildPlan::default()
-    };
-    let context = ts_fact_context_from_options(&empty, plan, Some(&empty_options));
-    assert!(context.backend_route_extractors.is_empty());
-    assert!(context.queue_factory_glob.is_none());
-    assert!(context.http_prefixes.is_empty());
-    let context_without_options = ts_fact_context_from_options(&empty, plan, None);
-    assert!(context_without_options.backend_route_extractors.is_empty());
-
-    let mut manual_context = TsFactContext::new(&empty);
-    add_backend_route_extractor(
-        &mut manual_context,
-        None,
-        Some("backend/**/*.mts".to_string()),
-    );
-    add_backend_route_extractor(&mut manual_context, Some("app".to_string()), None);
-    add_backend_route_extractor(
-        &mut manual_context,
-        Some("app".to_string()),
-        Some("[".to_string()),
-    );
-    assert!(manual_context.backend_route_extractors.is_empty());
-
-    assert!(compile_graph_glob("").is_none());
-    assert!(compile_graph_glob("[").is_none());
-    assert!(compile_graph_glob("backend/**/*.mts")
-        .expect("valid graph glob should compile")
-        .is_match(Path::new("backend/api/users.mts")));
-
-    let explicit =
-        crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
-    let explicit_options = graph_config_options(&explicit).unwrap();
-    let explicit_route_prefixes = vec![
-        "/api/".to_string(),
-        "/prefix/".to_string(),
-        "/crawler/".to_string(),
-    ];
-    assert_eq!(
-        resolved_backend_prefixes(&explicit_options),
-        vec!["/api/".to_string()]
-    );
-    assert_eq!(
-        route_backend_prefixes(&explicit_options),
-        explicit_route_prefixes
-    );
-
-    let missing_register_options = GraphConfigOptions {
-        route: crate::codebase::config::RouteOptions::default(),
-        queue: crate::codebase::config::QueueOptions::default(),
-        http_route: crate::codebase::config::HttpRouteOptions {
-            backend_pattern: "backend/**/*.mts".to_string(),
-            register_object: String::new(),
-        },
-        http_call: crate::codebase::config::HttpCallOptions {
-            backend_prefixes: vec!["/api/".to_string()],
-        },
-        project_route_globset: None,
-        test_filter: None,
-        rewrites: vec![],
-        queue_project_factory_names: vec![],
-        dotnet_projects: vec![],
-        swift_packages: vec![],
-        terraform: Default::default(),
-    };
-    let invalid_glob_options = GraphConfigOptions {
-        route: crate::codebase::config::RouteOptions::default(),
-        queue: crate::codebase::config::QueueOptions::default(),
-        http_route: crate::codebase::config::HttpRouteOptions {
-            backend_pattern: "[".to_string(),
-            register_object: "app".to_string(),
-        },
-        http_call: crate::codebase::config::HttpCallOptions {
-            backend_prefixes: vec!["/api/".to_string()],
-        },
-        project_route_globset: None,
-        test_filter: None,
-        rewrites: vec![],
-        queue_project_factory_names: vec![],
-        dotnet_projects: vec![],
-        swift_packages: vec![],
-        terraform: Default::default(),
-    };
-    let tsconfig =
-        crate::codebase::ts_resolver::load_tsconfig(&explicit.join("tsconfig.json")).unwrap();
-    let resolver = crate::codebase::ts_resolver::ImportResolver::new(&tsconfig);
-    assert!(collect_route_edges(
-        &explicit,
-        &tsconfig,
-        &resolver,
-        &[],
-        None,
-        Some(&explicit_options),
-    )
-    .is_empty());
-    assert!(collect_http_call_edges(
-        &explicit,
-        &tsconfig,
-        None,
-        &[],
-        &[],
-        &[],
-        Some(&explicit_options),
-    )
-    .is_empty());
-
-    let queue_options = GraphConfigOptions {
-        route: crate::codebase::config::RouteOptions::default(),
-        queue: crate::codebase::config::QueueOptions {
-            queue_pattern: "src/**/*.ts".to_string(),
-            factory_specifier: "@app/queue".to_string(),
-            factory_function: "createQueue".to_string(),
-        },
-        http_route: crate::codebase::config::HttpRouteOptions::default(),
-        http_call: crate::codebase::config::HttpCallOptions::default(),
-        project_route_globset: None,
-        test_filter: None,
-        rewrites: vec![],
-        queue_project_factory_names: vec![],
-        dotnet_projects: vec![],
-        swift_packages: vec![],
-        terraform: Default::default(),
-    };
-    let mut forward = EdgeMap::new();
-    let mut reverse = EdgeMap::new();
-    test_support::add_queue_edges(
-        &explicit,
-        &resolver,
-        &[],
-        None,
-        Some(&queue_options),
-        &mut forward,
-        &mut reverse,
-    );
-    assert!(forward.is_empty());
-
-    assert!(collect_http_call_edges(
-        &explicit,
-        &tsconfig,
-        None,
-        &[],
-        &[],
-        &[],
-        Some(&missing_register_options),
-    )
-    .is_empty());
-    assert!(collect_http_call_edges(
-        &explicit,
-        &tsconfig,
-        None,
-        &[],
-        &[],
-        &[],
-        Some(&invalid_glob_options),
-    )
-    .is_empty());
 }

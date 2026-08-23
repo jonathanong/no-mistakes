@@ -268,14 +268,33 @@ When adding a new analyzer:
 
 `crates/no-mistakes/benches/core_analysis.rs` is the single checked-in
 Criterion-compatible harness. It uses `fixtures/performance/core-analysis`
-and measures only in-process APIs: lazy traversal, fact extraction, canonical
-graph build/query, workspace load/resolution, symbols, aggregate checks, reused
-multi-report analysis, impacted checks, and disabled/timings/verbose observer
-overhead. Every workload runs a preflight that validates stable, fixture-specific
+for the existing small in-process APIs and
+`fixtures/performance/graph-gates` for a larger checked-in synthetic graph.
+The 14-file core-analysis corpus is too small for honest visitor-fusion and
+outer-graph-parallelism gates: CodSpeed noise can dominate
+`graph/forward_reverse_query` there. The graph-gates fixture is a step up
+(~75 TypeScript sources, configured queue/HTTP/route rules, and a
+`GraphBuildPlan::all().with_symbols(true)` end-to-end build) rather than a
+10x blowup of `test-cases/codebase-analysis/large-graph-monorepo`, so fusion
+(≥5% e2e) and outer graph parallelism (≥10% speed, ≤10% peak memory,
+byte-identical output) can be measured without OOMing CI bench jobs.
+
+The harness measures only in-process APIs: lazy traversal, fact extraction,
+canonical graph build/query, workspace load/resolution, symbols, aggregate
+checks, reused multi-report analysis, impacted checks,
+disabled/timings/verbose observer overhead, composed language-frontend
+extract/edges/queue-glob matching on `fixtures/lang-frontends`, full-domain
+fact extract on graph-gates, and an aggregate `check` of that same fixture.
+Every workload runs a preflight that validates stable, fixture-specific
 output invariants before the measured loop.
 
-CI builds the harness once for CodSpeed CPU simulation and memory instrumentation
-and runs those modes serially. New workloads must use checked-in fixtures,
+CI builds the harness once, then runs CodSpeed CPU simulation in four
+function-type shards (`check`, `tests-plan`, `graph`, `query`) plus the
+existing memory shards. `NO_MISTAKES_BENCH_SHARD` skips unused `bench_*`
+preflight work; unset or `general-memory` still runs every non-production
+workload locally. Node and selector memory jobs use `graph-production` so
+they do not construct unrelated graph fixtures. Unknown shard names fail
+fast. New workloads must use checked-in fixtures,
 `BenchmarkId` for meaningful variants, `Throughput` where a stable unit exists,
 and must not generate repositories or launch the CLI as a subprocess.
 

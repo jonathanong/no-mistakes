@@ -4,7 +4,9 @@
 
 use super::super::configured_plan_candidates::{bfs_path_find_set, merge_selected};
 use super::super::plan::{impact_reason_label, path_confidence, relative_path, slash_node_name};
-use super::super::{ImpactReason, SelectedTest, TestPlan, TestPlanGroupResult};
+use super::super::{
+    via_details_from_edges, ImpactReason, SelectedTest, TestPlan, TestPlanGroupResult,
+};
 use super::fallback::{fallback_plan, FallbackRequest};
 use anyhow::Result;
 use no_mistakes::codebase::dependencies::graph::{DepGraph, NodeId};
@@ -12,6 +14,9 @@ use no_mistakes::codebase::test_discovery::DiscoveredTests;
 use no_mistakes::codebase::workspaces::WorkspaceMap;
 use std::collections::{BTreeMap, HashSet};
 use std::path::{Path, PathBuf};
+
+#[cfg(test)]
+mod tests;
 
 pub(super) struct LockfileSeedResult {
     pub(super) candidates: Vec<SelectedTest>,
@@ -37,11 +42,11 @@ pub(super) fn lockfile_seed_candidates(
         // Fall back to File(workspace_entry) for workspace packages whose graph edges
         // point at the entry file rather than a Module node.
         let start_node = {
-            let module_node = NodeId::Module(pkg_name.clone());
+            let module_node = NodeId::module(pkg_name.clone());
             if graph.has_reverse_node(&module_node) {
                 module_node
             } else if let Some(entry) = workspace_map.resolve_package(pkg_name) {
-                NodeId::File(entry.clone())
+                NodeId::file(entry.clone())
             } else {
                 // Package referenced in lockfile but absent from graph and workspace map.
                 // Could be a transitive dep or a tooling dep with no import-graph path.
@@ -92,6 +97,7 @@ pub(super) fn lockfile_seed_candidates(
                 changed_file: lockfile_rel.clone(),
                 path: node_chain,
                 via: via_strings,
+                via_details: via_details_from_edges(&edge_path),
             };
 
             let entry = candidates_map
@@ -114,6 +120,35 @@ pub(super) fn lockfile_seed_candidates(
     LockfileSeedResult {
         candidates: candidates_map.into_values().collect(),
         untraceable_lockfiles,
+    }
+}
+
+pub(super) fn merge_lockfile_seed_candidates(
+    root: &Path,
+    seeds: &[SelectedTest],
+    candidates: &mut Vec<SelectedTest>,
+    used: &HashSet<String>,
+    selected: &mut BTreeMap<PathBuf, SelectedTest>,
+) {
+    for seed in seeds {
+        if used.contains(&seed.test_file) {
+            if let Some(existing) = selected.get_mut(&root.join(&seed.test_file)) {
+                merge_selected(existing, seed);
+                existing.targets.clear();
+            }
+            continue;
+        }
+        if let Some(existing) = candidates
+            .iter_mut()
+            .find(|candidate| candidate.test_file == seed.test_file)
+        {
+            // Lockfile tracing independently selected this test, so retain
+            // every owning runner target while merging its reason.
+            merge_selected(existing, seed);
+            existing.targets.clear();
+        } else {
+            candidates.push(seed.clone());
+        }
     }
 }
 
@@ -174,8 +209,19 @@ pub(super) fn apply_lockfile_seeds(
     // Merge traceable seeds into selected_map and the dependencies group result.
     let mut added: Vec<String> = Vec::new();
     for test in &seed_result.candidates {
+        if used.contains(&test.test_file) {
+            if let Some(existing) = selected_map.get_mut(&root.join(&test.test_file)) {
+                merge_selected(existing, test);
+                // Lockfile tracing selected this test independently, so its
+                // execution is no longer restricted to a targeted subset.
+                existing.targets.clear();
+            }
+            continue;
+        }
         if added.len() >= max_to_add {
-            break;
+            // Keep scanning: later seeds may already be selected and still
+            // need their independent lockfile reasons merged at zero budget.
+            continue;
         }
         if used.insert(test.test_file.clone()) {
             selected_map

@@ -1,0 +1,51 @@
+on: push
+jobs:
+  static:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: bundle-found}
+  # A dynamic (unresolvable) name could theoretically collide, so a
+  # download naming the static producer downgrades from exact to possible
+  # instead of being treated as an unambiguous match.
+  dynamic-producer:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.name }}
+  consume-dynamic:
+    needs: [static, dynamic-producer]
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: bundle-found}
+  # archive: false makes the uploaded name path-derived (unresolvable),
+  # same downgrade as a dynamic name.
+  path-derived-producer:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with: {name: ignored, archive: false}
+  consume-path-derived:
+    needs: [static, path-derived-producer]
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: bundle-found}
+  # A remote (opaque) reusable-workflow call could upload anything under
+  # any name — same downgrade.
+  opaque-caller:
+    uses: owner/repository/.github/workflows/upload.yml@main
+  consume-opaque:
+    needs: [static, opaque-caller]
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: bundle-found}
+  # An unresolved producer can also SUPPRESS a missing-producer diagnostic
+  # for a name it might supply, even though nothing here proves it does.
+  suppress-missing:
+    steps:
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ inputs.name }}
+  consume-suppressed:
+    needs: suppress-missing
+    steps:
+      - uses: actions/download-artifact@v8
+        with: {name: absent}

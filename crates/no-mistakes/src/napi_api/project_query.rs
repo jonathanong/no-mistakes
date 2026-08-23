@@ -1,8 +1,8 @@
 // Included into `napi_api::project` via `include!`; shares that module's
 // imports. JSON impls for the issue-419 query commands.
 
-pub(crate) fn data_pw_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<DataPwOptions>(&options_json)?;
+pub(crate) fn data_pw_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<DataPwOptions>(options)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
     let config = options.config.as_deref().map(PathBuf::from);
     let value = options
@@ -21,11 +21,11 @@ pub(crate) fn data_pw_json_impl(options_json: String) -> napi::Result<String> {
     .map_err(to_napi_error)?;
     // Serialization of these report structs is infallible (string keys, no
     // floats), so avoid an unreachable error branch here.
-    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
+    Ok(serde_json::to_string(&report).expect("report serialization never fails"))
 }
 
-pub(crate) fn effects_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<EffectsOptions>(&options_json)?;
+pub(crate) fn effects_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<EffectsOptions>(options)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
     let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
     let config = options.config.as_deref().map(PathBuf::from);
@@ -47,11 +47,11 @@ pub(crate) fn effects_json_impl(options_json: String) -> napi::Result<String> {
     .map_err(to_napi_error)?;
     // Serialization of these report structs is infallible (string keys, no
     // floats), so avoid an unreachable error branch here.
-    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
+    Ok(serde_json::to_string(&report).expect("report serialization never fails"))
 }
 
-pub(crate) fn rsc_callers_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<RscCallersOptions>(&options_json)?;
+pub(crate) fn rsc_callers_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<RscCallersOptions>(options)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
     let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
     let config = options.config.as_deref().map(PathBuf::from);
@@ -68,11 +68,11 @@ pub(crate) fn rsc_callers_json_impl(options_json: String) -> napi::Result<String
     .map_err(to_napi_error)?;
     // Serialization of these report structs is infallible (string keys, no
     // floats), so avoid an unreachable error branch here.
-    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
+    Ok(serde_json::to_string(&report).expect("report serialization never fails"))
 }
 
-pub(crate) fn registry_extension_json_impl(options_json: String) -> napi::Result<String> {
-    let options = parse_options::<RegistryExtensionOptions>(&options_json)?;
+pub(crate) fn registry_extension_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<RegistryExtensionOptions>(options)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
     let registry_file = options.registry_file.ok_or_else(|| {
         napi::Error::from_reason("registryFile is required for registry-extension".to_string())
@@ -81,5 +81,5 @@ pub(crate) fn registry_extension_json_impl(options_json: String) -> napi::Result
         .map_err(to_napi_error)?;
     // Serialization of these report structs is infallible (string keys, no
     // floats), so avoid an unreachable error branch here.
-    Ok(serde_json::to_string_pretty(&report).expect("report serialization never fails"))
+    Ok(serde_json::to_string(&report).expect("report serialization never fails"))
 }

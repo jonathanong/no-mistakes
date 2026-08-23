@@ -10,6 +10,7 @@ use std::io;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 
+use crate::codebase::analysis_session::PathInterner;
 pub use crate::codebase::ts_resolver::TsConfig;
 pub use graph::{DepGraph, EdgeKind, NodeId};
 
@@ -25,16 +26,26 @@ include!("symbol_resolution.rs");
 include!("shared_traversal.rs");
 include!("shared_traversal_prepare.rs");
 include!("shared_traversal_facts.rs");
+include!("shared_traversal_prepare_catalog.rs");
 include!("shared_traversal_reports.rs");
+include!("output_results.rs");
 include!("shared_graph_cache.rs");
 include!("shared_traversal_graph.rs");
+include!("shared_traversal_graph_shared.rs");
 include!("shared_traversal_collect.rs");
+include!("shared_traversal_collect_cache.rs");
+include!("shared_traversal_collect_roots.rs");
+include!("shared_traversal_provenance.rs");
 include!("shared_traversal_uncached.rs");
 include!("output_args.rs");
 include!("run.rs");
 
 #[cfg(test)]
+mod shared_traversal_collect_cache_tests;
+#[cfg(test)]
 mod shared_traversal_facts_tests;
+#[cfg(test)]
+mod shared_traversal_test_api;
 #[cfg(test)]
 mod traversal;
 
@@ -45,18 +56,11 @@ mod tests;
 #[cfg(test)]
 mod traversal_entrypoint_test_helpers;
 
-fn write_output_results(
-    format: Format,
-    root_strs: &[String],
-    result: &TraversalResult,
-    out: &mut dyn Write,
-) -> Result<()> {
-    write_entries(format, root_strs, &result.entries, &result.root, out)
-}
-
 pub(crate) struct TraversalResult {
     entries: Vec<graph::NodeEntry>,
     root: PathBuf,
+    diagnostics: Vec<crate::codebase::ts_resolver::TsConfigDiagnostic>,
+    tsconfig_provenance: Vec<crate::codebase::ts_resolver::TsConfigProvenance>,
 }
 
 pub(crate) fn collect_and_filter_entries(
@@ -73,13 +77,14 @@ pub(crate) fn collect_and_filter_entries(
     let mut framework_plan =
         crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan);
     framework_plan.include_framework_names(args.tests.iter().map(String::as_str));
-    let mut shared = SharedTraversalContext::prepare_with_framework_plan(
+    let shared = SharedTraversalContext::prepare_with_framework_plan(
         root,
         args.tsconfig.as_deref(),
         None,
         build_plan,
         framework_plan,
-    )?;
+    );
+    let mut shared = shared?;
 
     timings.mark("search");
     timings.mark("ingest");
@@ -187,7 +192,7 @@ fn apply_target_module_filters(
     Ok(entries
         .into_iter()
         .filter(|entry| match &entry.node {
-            graph::NodeId::Module(specifier) => filter.is_match(specifier),
+            graph::NodeId::Module(specifier) => filter.is_match(specifier.as_ref()),
             _ => false,
         })
         .collect())

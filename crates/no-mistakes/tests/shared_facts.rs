@@ -1,3 +1,4 @@
+use no_mistakes::codebase::analysis_session::AnalysisSession;
 use no_mistakes::codebase::check_facts::{collect_check_facts, CheckFactPlan};
 use no_mistakes::codebase::ts_source::discover_files;
 use no_mistakes::codebase::unique_exports;
@@ -46,4 +47,35 @@ fn queue_public_api_uses_shared_facts() {
         .edges
         .iter()
         .any(|edge| edge.from == "enqueue.ts" && edge.to == "queues.ts#sendWelcome"));
+}
+
+#[test]
+fn public_session_and_integration_apis_reuse_canonical_config_and_runner_facts() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/parser-count/playwright");
+    let session = AnalysisSession::disabled();
+    let snapshot = std::sync::Arc::new(no_mistakes::codebase::ts_source::VisiblePathSnapshot::new(
+        &root,
+    ));
+
+    session.insert_visible_paths(&root, std::sync::Arc::clone(&snapshot));
+    assert!(std::sync::Arc::ptr_eq(
+        &session.visible_paths(&root),
+        &snapshot
+    ));
+    let config = session
+        .config(&root, None)
+        .expect("fixture config should load through the session source store");
+    assert_eq!(
+        config.tests.playwright.configs.as_ref().unwrap().values(),
+        ["playwright.config.ts"]
+    );
+
+    let integration_root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/integration-tests/basic/fixture"),
+    );
+    let findings = no_mistakes::integration_tests::check(&integration_root, None)
+        .expect("runner configuration should be reusable by the public integration API");
+    assert_eq!(findings.len(), 6);
 }

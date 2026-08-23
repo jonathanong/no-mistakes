@@ -62,8 +62,10 @@ pub(super) fn dependents_entries(
             ctx.tsconfig,
             ctx.build_plan,
             ctx.graph_files,
-        )?;
-        let roots = roots_with_existing_queue_jobs(roots, entrypoints, &graph);
+        );
+        let graph = graph?;
+        let roots =
+            roots_with_existing_queue_jobs(roots, entrypoints, &graph, &PathInterner::new());
         let roots = roots_with_exported_symbol_roots(&roots, &graph);
         return Ok(graph.dependents_of_symbol_nodes(&roots, depth, ctx.allowed));
     }
@@ -73,7 +75,7 @@ pub(super) fn dependents_entries(
         fact_plan.symbols = true;
         let mut fact_context =
             graph::test_support::ts_fact_context_for_plan(ctx.root, ctx.build_plan);
-        fact_context.set_visible_files(ctx.graph_files.visible().iter().cloned());
+        fact_context.set_visible_file_set(ctx.graph_files.visible_path_set());
         crate::codebase::ts_source::facts::collect_ts_facts_with_context(
             ctx.graph_files.indexable(),
             fact_plan,

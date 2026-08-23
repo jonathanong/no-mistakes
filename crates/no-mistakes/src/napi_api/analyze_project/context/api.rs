@@ -70,10 +70,12 @@ impl AnalyzeProjectContext {
                 .expect("effective scope snapshot is prepared");
             let scoped_options = AnalyzeProjectOptions {
                 root: Some(effective.root.display().to_string()),
-                tsconfig: effective
+                tsconfig: (!effective.automatic_tsconfig)
+                    .then(|| effective
                     .tsconfig
                     .as_ref()
-                    .map(|path| path.display().to_string()),
+                    .map(|path| path.display().to_string()))
+                    .flatten(),
                 config: effective
                     .config
                     .as_ref()
@@ -101,7 +103,10 @@ impl AnalyzeProjectContext {
             let supplemental = collected
                 .next()
                 .expect("supplemental scope facts are collected");
-            scopes.insert(key, plan.materialize(facts, supplemental)?);
+            let call_site_facts = collected
+                .next()
+                .expect("supplemental call-site facts are collected");
+            scopes.insert(key, plan.materialize(facts, supplemental, call_site_facts)?);
         }
         // Every effective scope may seed facts from programs parsed while the
         // scope plans were prepared. Retain those programs until all scopes

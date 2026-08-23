@@ -31,16 +31,19 @@ fn prepare_playwright_views(
                     traversal.config(),
                     &playwright_configs,
                     parsed.project.clone(),
+                    parsed.app.clone(),
                     traversal.visible_paths(),
-                )?;
-                let mut fact_plan = crate::playwright::analysis::pipeline::standalone_fact_plan(
+                );
+                let settings = settings?;
+                let fact_plan = crate::playwright::analysis::pipeline::standalone_fact_plan(
                     root,
                     &settings,
                     playwright_unique_policy(&parsed),
                     traversal.visible_paths(),
-                )?;
-                fact_plan.configure_module_resolution(
-                    std::sync::Arc::new(traversal.tsconfig().clone()),
+                );
+                let mut fact_plan = fact_plan?;
+                fact_plan.configure_module_resolution_with_catalog(
+                    traversal.tsconfig_catalog_arc(),
                     std::sync::Arc::new(traversal.workspace().clone()),
                     traversal.visible_paths(),
                     root,

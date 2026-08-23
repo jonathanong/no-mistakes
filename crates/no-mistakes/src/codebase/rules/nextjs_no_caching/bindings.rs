@@ -24,8 +24,8 @@ pub(super) fn top_level_bindings(program: &Program<'_>, segment_config: bool) ->
             Statement::VariableDeclaration(var) => {
                 collect_top_level_var(var, &mut bindings, segment_config);
             }
-            Statement::ExportNamedDeclaration(export) => {
-                if let Some(Declaration::VariableDeclaration(var)) = export.declaration.as_ref() {
+            Statement::ExportDeclaration(export) => {
+                if let Declaration::VariableDeclaration(var) = &export.declaration {
                     collect_top_level_var(var, &mut bindings, segment_config);
                 }
             }

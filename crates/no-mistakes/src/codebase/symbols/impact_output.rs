@@ -5,7 +5,7 @@ pub fn write_report(
 ) -> Result<()> {
     match format {
         Format::Json => {
-            serde_json::to_writer_pretty(&mut *out, report)?;
+            serde_json::to_writer(&mut *out, report)?;
             writeln!(out)?;
         }
         Format::Yml => serde_yaml::to_writer(out, report)?,
@@ -156,9 +156,13 @@ fn caller_parts(node: &NodeId, root: &Path) -> Option<(String, Option<String>)> 
     match node {
         NodeId::File(path) => Some((relative_slash_path(root, path), None)),
         NodeId::Symbol { file, symbol } => {
-            Some((relative_slash_path(root, file), Some(symbol.clone())))
+            Some((relative_slash_path(root, file), Some(symbol.to_string())))
         }
-        NodeId::Module(_) | NodeId::QueueJob { .. } => None,
+        NodeId::Module(_)
+        | NodeId::QueueJob { .. }
+        | NodeId::WorkflowJob { .. }
+        | NodeId::WorkflowStep { .. }
+        | NodeId::TrpcProcedure { .. } => None,
     }
 }
 

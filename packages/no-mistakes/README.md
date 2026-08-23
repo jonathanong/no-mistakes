@@ -14,7 +14,7 @@ npx no-mistakes check --json
 
 Programmatic Node usage loads the same Rust analysis through N-API:
 
-```js
+````js
 const {
   dependencies,
   dependents,
@@ -35,6 +35,7 @@ const {
   serverContracts,
   reactAnalyze,
   reactCheck,
+  validateMermaidMarkdown,
 } = require("no-mistakes");
 
 (async () => {
@@ -42,8 +43,6 @@ const {
     root: process.cwd(),
     files: ["src/main.mts"],
     relationships: ["import"],
-    timeout: 30,
-    lockTimeout: 30,
   });
   const tests = await dependents({
     root: process.cwd(),
@@ -67,9 +66,11 @@ const {
   });
   const plan = await testsPlan({
     root: process.cwd(),
-    framework: "vitest", // also supports "playwright", "dotnet", and "swift"
+    framework: "vitest", // also python, go, cargo, rails, php, playwright, dotnet, swift
     changedFiles: ["src/utils.mts"],
   });
+  // Complete changed-file inventory, including paths that selected no tests.
+  console.log(plan.changedFiles);
   const targetCommands = await testsTargets({
     root: process.cwd(),
     framework: "vitest",
@@ -77,7 +78,13 @@ const {
   });
   const projectCheck = await check({
     root: process.cwd(),
+    // Path to tsconfig.json for alias resolution; searched upward if omitted.
+    // In monorepos, pass the workspace-scoped tsconfig (e.g. "web/tsconfig.json").
     tsconfig: "tsconfig.json",
+  });
+  const mermaid = await validateMermaidMarkdown({
+    content: "```mermaid\nflowchart LR\n  A --> B\n```",
+    file: "docs/design.md",
   });
   const localFlow = await flow({
     root: process.cwd(),
@@ -108,14 +115,34 @@ const {
     targets: ["app/**/*.tsx"],
   });
 })();
-```
+````
 
 CLI and Node analyses share a per-user machine-wide lock. CLI flags
 `--timeout`, `--lock-timeout`, and `--fail-on-lock` have Node equivalents
-`timeout`, `lockTimeout`, and `failOnLock`. Both timeouts default to 30 seconds;
-`0` disables either CLI timeout, while `0` or `null` disables it in Node.
-Waiting does not alter successful output, and Node lock/timeout failures reject
-the returned Promise.
+`timeout`, `lockTimeout`, and `failOnLock`. CLI timeouts default to 30 seconds;
+Node/N-API omits both deadlines unless you set them. `0` disables either CLI
+timeout, while `0` or `null` disables it in Node. While waiting, stderr reports
+the holder pid and elapsed seconds. Waiting does not alter successful output,
+and Node lock/timeout failures reject the returned Promise.
+
+Dependency graph, query, and test-planning resolution is per workspace by
+default: when `tsconfig` is omitted, each import uses the config that owns its
+importing file, including referenced projects. This keeps conflicting package
+aliases isolated while shared code can still select all importing tests. Pass
+`tsconfig` explicitly to force one config for a whole invocation when debugging
+or preserving a legacy single-config workflow.
+
+Graph queries also support `relationships: ["workflow"]` for canonical local
+GitHub Actions traversal: workflow file -> virtual job -> virtual step,
+`needs`, local reusable workflows/actions, supported literal `run:` targets and
+package scripts, and same-run artifact handoffs. Virtual IDs are
+`workflow.yml#job:<job>` and `workflow.yml#job:<job>/step:<zero-based-index>`.
+Use the precise `workflow-job`, `workflow-step`, `workflow-needs`,
+`workflow-uses`, `workflow-run`, or `workflow-artifact` filters to select a
+semantic while retaining its required structural bridge edges. The legacy `ci`
+relationship stays separate: it covers only workflow-file-to-Rust-binary Cargo
+invocations. Remote actions/workflows, `workflow_run`, dynamic shell commands,
+and paths outside the tracked graph are intentionally excluded.
 
 External `no-mistakes-*` executables on `PATH` can be invoked as subcommands.
 For example, after installing `no-mistakes-scripts`:

@@ -2,15 +2,18 @@ fn collect_workspace_manifest_edges(
     all_files: &[PathBuf],
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
     graph_files: &GraphFiles,
+    interner: &PathInterner,
 ) -> Vec<Edge> {
     let workspace_entries: HashMap<_, _> = workspace
         .packages
         .iter()
         .filter_map(|package| {
             let entry = package.entry.as_ref()?;
+            // Canonical remapping belongs in `visible_path`, not exact membership.
+            // `package.entry` may be the real path while discovery recorded a symlink.
             graph_files
-                .is_visible(entry)
-                .then(|| (package.name.as_str(), entry.clone()))
+                .visible_path(entry)
+                .map(|visible| (package.name.as_str(), visible.to_path_buf()))
         })
         .collect();
     all_files
@@ -26,10 +29,10 @@ fn collect_workspace_manifest_edges(
             for name in dependency_names {
                 let target = workspace_entries
                     .get(name.as_str())
-                    .map(|entry| NodeId::File(entry.clone()))
-                    .unwrap_or_else(|| NodeId::Module(name.clone()));
+                    .map(|entry| NodeId::file_in(interner, entry))
+                    .unwrap_or_else(|| NodeId::module_in(interner, name.clone()));
                 edges.push((
-                    NodeId::File(path.clone()),
+                    NodeId::file_in(interner, path),
                     target,
                     EdgeKind::PackageDependency,
                 ));
@@ -38,8 +41,6 @@ fn collect_workspace_manifest_edges(
         })
         .collect()
 }
-
-
 
 #[cfg(test)]
 mod edge_package_manifest_tests;

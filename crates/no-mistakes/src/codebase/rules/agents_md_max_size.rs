@@ -8,7 +8,9 @@ use std::path::{Path, PathBuf};
 pub const RULE_ID: &str = "agents-md-max-size";
 
 mod agents_md_max_size_budget;
-use agents_md_max_size_budget::{scan, scan_advisories_with_sources, scan_with_sources};
+use agents_md_max_size_budget::{
+    scan, scan_advisories_with_sources, scan_advisories_with_sources_deferred, scan_with_sources,
+};
 
 const DEFAULT_MAX_LINES: usize = 200;
 const DEFAULT_MAX_CHARS: usize = 12_000;
@@ -49,7 +51,7 @@ pub fn advisories_with_files(
     all_files: &[PathBuf],
 ) -> Result<Vec<RuleFinding>> {
     let sources = super::source_store_for_files(all_files);
-    advisories_with_files_inner(root, config, all_files, &sources)
+    advisories_with_files_inner(root, config, all_files, &sources, false)
 }
 
 pub fn advisories_with_files_and_sources(
@@ -58,7 +60,17 @@ pub fn advisories_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    advisories_with_files_inner(root, config, all_files, sources)
+    advisories_with_files_inner(root, config, all_files, sources, false)
+}
+
+#[doc(hidden)]
+pub fn advisories_with_files_sources_and_deferred_suppression(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
+    advisories_with_files_inner(root, config, all_files, sources, true)
 }
 
 fn advisories_with_files_inner(
@@ -66,6 +78,7 @@ fn advisories_with_files_inner(
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
 ) -> Result<Vec<RuleFinding>> {
     let mut advisories = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
@@ -88,10 +101,16 @@ fn advisories_with_files_inner(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        advisories.extend(scan_advisories_with_sources(root, &opts, &files, sources)?);
+        advisories.extend(if defer_suppression {
+            scan_advisories_with_sources_deferred(root, &opts, &files, sources, true)?
+        } else {
+            scan_advisories_with_sources(root, &opts, &files, sources)?
+        });
     }
     super::sort_findings(&mut advisories);
-    super::suppress_rule_findings_with_sources(root, &mut advisories, sources);
+    if !defer_suppression {
+        super::suppress_rule_findings_with_sources(root, &mut advisories, sources);
+    }
     Ok(advisories)
 }
 
@@ -111,6 +130,16 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    check_with_files_sources_and_deferred_suppression(root, config, all_files, sources, false)
+}
+
+pub(crate) fn check_with_files_sources_and_deferred_suppression(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    defer_suppression: bool,
+) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts = rule.rule_options();
@@ -129,7 +158,13 @@ pub(crate) fn check_with_files_and_sources(
             .cloned()
             .collect();
         let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-        findings.extend(scan_with_sources(root, &opts, &files, sources)?);
+        findings.extend(scan_with_sources(
+            root,
+            &opts,
+            &files,
+            sources,
+            defer_suppression,
+        )?);
     }
     super::sort_findings(&mut findings);
     Ok(findings)

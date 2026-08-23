@@ -1,0 +1,36 @@
+name: Main
+on:
+  push:
+defaults:
+  run:
+    working-directory: .
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Direct tracked script
+        run: node scripts/direct.mjs
+      - name: Nested package script
+        run: npm run nested
+      - name: Package working directory
+        working-directory: packages/tool
+        run: npm run check
+      - name: Local action
+        uses: ./.github/actions/local
+      - name: Remote action stays opaque
+        uses: actions/checkout@v4
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: built
+          path: dist
+  consume:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download
+        uses: actions/download-artifact@v4
+        with:
+          name: built
+  call:
+    uses: ./.github/workflows/reusable.yml

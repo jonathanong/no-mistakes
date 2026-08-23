@@ -1,17 +1,26 @@
 use super::{FileId, FileInventory};
+use dashmap::{DashMap, DashSet};
 use std::cell::Cell;
+use std::hash::Hash;
 use std::io;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, OnceLock};
 
 mod json;
 pub use json::{JsonLoadError, JsonParseOutcome};
+mod optional;
+mod read;
+mod regular_paths;
 mod validation;
+use read::read_utf8_arc;
 use validation::ValidatedPathCache;
 
 /// Memoized result of a strict UTF-8 source read.
 pub type SourceReadOutcome = Result<Arc<str>, Arc<io::Error>>;
+
+type JsonParseSlots = DashMap<PathBuf, Arc<OnceLock<JsonParseOutcome>>>;
+type SupplementalReadSlots = DashMap<PathBuf, Arc<OnceLock<SourceReadOutcome>>>;
 
 /// Lazy request-scoped source storage for a frozen file inventory.
 ///
@@ -22,13 +31,10 @@ pub struct SourceStore {
     inventory: Arc<FileInventory>,
     observer: Option<Arc<crate::diagnostics::InvocationObserver>>,
     reads: Vec<OnceLock<SourceReadOutcome>>,
-    json_parses: std::sync::Mutex<
-        std::collections::HashMap<std::path::PathBuf, Arc<OnceLock<JsonParseOutcome>>>,
-    >,
-    supplemental_reads: std::sync::Mutex<
-        std::collections::HashMap<std::path::PathBuf, Arc<OnceLock<SourceReadOutcome>>>,
-    >,
-    validated_regular_paths: std::sync::Mutex<ValidatedPathCache>,
+    json_parses: JsonParseSlots,
+    supplemental_reads: SupplementalReadSlots,
+    validated_regular_paths: ValidatedPathCache,
+    trusted_regular_paths: DashSet<PathBuf>,
     physical_reads: AtomicUsize,
     json_parse_count: AtomicUsize,
 }
@@ -49,9 +55,10 @@ impl SourceStore {
             inventory,
             observer,
             reads,
-            json_parses: std::sync::Mutex::new(std::collections::HashMap::new()),
-            supplemental_reads: std::sync::Mutex::new(std::collections::HashMap::new()),
-            validated_regular_paths: std::sync::Mutex::new(std::collections::HashMap::new()),
+            json_parses: DashMap::new(),
+            supplemental_reads: DashMap::new(),
+            validated_regular_paths: DashMap::new(),
+            trusted_regular_paths: DashSet::new(),
             physical_reads: AtomicUsize::new(0),
             json_parse_count: AtomicUsize::new(0),
         }
@@ -72,10 +79,10 @@ impl SourceStore {
             .get_or_init(|| {
                 physical_read.set(true);
                 self.record_source_read(path);
-                match std::fs::read_to_string(path) {
+                match read_utf8_arc(path) {
                     Ok(source) => {
                         self.increment("source.bytes", source.len() as u64);
-                        Ok(Arc::<str>::from(source))
+                        Ok(source)
                     }
                     Err(error) => {
                         self.increment("source.read_errors", 1);
@@ -103,27 +110,17 @@ impl SourceStore {
                 .read(id)
                 .expect("inventory IDs always resolve to their source slot");
         }
-        let cell = {
-            let mut reads = self
-                .supplemental_reads
-                .lock()
-                .expect("supplemental source-store reads mutex poisoned");
-            Arc::clone(
-                reads
-                    .entry(path.clone())
-                    .or_insert_with(|| Arc::new(OnceLock::new())),
-            )
-        };
+        let cell = once_lock_slot(&self.supplemental_reads, path.clone());
         self.increment("source.requests", 1);
         let physical_read = Cell::new(false);
         let result = cell
             .get_or_init(|| {
                 physical_read.set(true);
                 self.record_source_read(&path);
-                match std::fs::read_to_string(&path) {
+                match read_utf8_arc(&path) {
                     Ok(source) => {
                         self.increment("source.bytes", source.len() as u64);
-                        Ok(Arc::<str>::from(source))
+                        Ok(source)
                     }
                     Err(error) => {
                         self.increment("source.read_errors", 1);
@@ -139,67 +136,6 @@ impl SourceStore {
     }
 
     #[doc(hidden)]
-    pub fn parse_json_path(&self, path: &Path) -> JsonParseOutcome {
-        let path = super::normalize_discovery_path(path);
-        let cell = {
-            let mut parses = self
-                .json_parses
-                .lock()
-                .expect("JSON parse cache mutex poisoned");
-            Arc::clone(
-                parses
-                    .entry(path.clone())
-                    .or_insert_with(|| Arc::new(OnceLock::new())),
-            )
-        };
-        self.increment("manifest.requests", 1);
-        let parsed = Cell::new(false);
-        let result = cell
-            .get_or_init(|| {
-                parsed.set(true);
-                self.json_parse_count.fetch_add(1, Ordering::Relaxed);
-                self.increment("manifest.parses", 1);
-                match self.read_path(&path) {
-                    Ok(source) => serde_json::from_str(&source)
-                        .map(Arc::new)
-                        .map_err(|error| {
-                            self.increment("manifest.errors", 1);
-                            JsonLoadError::Syntax(Arc::new(error))
-                        }),
-                    Err(error) => {
-                        self.increment("manifest.errors", 1);
-                        Err(JsonLoadError::Io(error))
-                    }
-                }
-            })
-            .clone();
-        if !parsed.get() {
-            self.increment("manifest.cache_hits", 1);
-        }
-        result
-    }
-
-    /// Validate a lexical candidate once for suppression consumers. Regular
-    /// inventory entries were already classified at discovery; symlinks and
-    /// supplemental paths additionally require canonical containment.
-    pub(crate) fn validated_regular_path(
-        &self,
-        root: &Path,
-        candidate: &Path,
-    ) -> Option<std::path::PathBuf> {
-        validation::validated_regular_path(
-            &self.inventory,
-            &self.validated_regular_paths,
-            root,
-            candidate,
-        )
-    }
-
-    #[doc(hidden)]
-    pub fn json_parse_count(&self) -> usize {
-        self.json_parse_count.load(Ordering::Relaxed)
-    }
-
     pub fn physical_read_count(&self) -> usize {
         self.physical_reads.load(Ordering::Relaxed)
     }
@@ -217,6 +153,20 @@ impl SourceStore {
             observer.increment(metric, amount);
         }
     }
+}
+
+fn once_lock_slot<K, T>(map: &DashMap<K, Arc<OnceLock<T>>>, key: K) -> Arc<OnceLock<T>>
+where
+    K: Eq + Hash,
+{
+    if let Some(existing) = map.get(&key) {
+        return Arc::clone(existing.value());
+    }
+    Arc::clone(
+        map.entry(key)
+            .or_insert_with(|| Arc::new(OnceLock::new()))
+            .value(),
+    )
 }
 
 #[cfg(test)]

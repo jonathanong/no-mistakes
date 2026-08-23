@@ -11,7 +11,7 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
     let file = root.join("types.js");
     assert!(file.is_file(), "fixture must remain on disk");
 
-    let standard = FileSymbols {
+    let standard = Arc::new(FileSymbols {
         exports: vec![Export {
             name: "javascriptValue".to_string(),
             local: None,
@@ -20,7 +20,7 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
             is_type_only: false,
         }],
         imports: Vec::new(),
-    };
+    });
     let legacy = FileSymbols {
         exports: vec![Export {
             name: "JavaScriptShape".to_string(),
@@ -36,16 +36,16 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
         file.clone(),
         Arc::new(CheckFileFacts {
             ts: Arc::new(TsFileFacts {
-                symbols: Some(standard.clone()),
+                symbols: Some(Arc::clone(&standard)),
                 ..TsFileFacts::default()
             }),
-            symbols: Some(Arc::new(standard)),
+            symbols: Some(Arc::clone(&standard)),
             legacy_symbols: Some(Arc::new(legacy)),
             ..CheckFileFacts::default()
         }),
     );
 
-    let visible = HashSet::from([file.clone()]);
+    let visible: crate::fx::PathSet = [file.clone()].into_iter().collect();
     let tsconfig = TsConfig {
         dir: root.clone(),
         paths: Vec::new(),
@@ -59,28 +59,25 @@ fn graph_uses_standard_symbols_instead_of_legacy_list_symbols() {
             indexable: std::slice::from_ref(&file),
             all: std::slice::from_ref(&file),
             visible: &visible,
+            graph_files: &GraphFiles::from_files(visible.iter().cloned().collect()),
         },
         &facts,
         &resolver,
         &Default::default(),
         None,
+        &crate::codebase::analysis_session::PathInterner::new(),
     );
 
-    let standard_node = NodeId::Symbol {
-        file: file.clone(),
-        symbol: "javascriptValue".to_string(),
-    };
-    assert!(edges.contains(&(
-        NodeId::File(file.clone()),
-        standard_node,
-        EdgeKind::Import,
-    )));
+    let standard_node = NodeId::symbol(file.clone(), "javascriptValue");
+    assert!(edges.contains(&(NodeId::file(file.clone()), standard_node, EdgeKind::Import,)));
     assert!(edges.iter().any(|(_, node, _)| matches!(
         node,
-        NodeId::Symbol { symbol, .. } if symbol == "javascriptValue"
+        NodeId::Symbol { symbol, .. } if symbol.as_ref() == "javascriptValue"
     )));
-    assert!(!edges.iter().any(|(from, to, _)| [from, to].iter().any(|node| matches!(
-        node,
-        NodeId::Symbol { symbol, .. } if symbol == "JavaScriptShape"
-    ))));
+    assert!(!edges
+        .iter()
+        .any(|(from, to, _)| [from, to].iter().any(|node| matches!(
+            node,
+            NodeId::Symbol { symbol, .. } if symbol.as_ref() == "JavaScriptShape"
+        ))));
 }

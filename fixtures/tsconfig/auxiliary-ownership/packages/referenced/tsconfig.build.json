@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@referenced/*": ["src/runtime/*"]
+    }
+  },
+  "include": ["src"]
+}

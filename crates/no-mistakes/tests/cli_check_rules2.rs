@@ -232,6 +232,41 @@ rules:
 }
 
 #[test]
+fn finite_set_call_sources_under_skipped_directories_stay_out_of_other_checks() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/finite-set-consistency/call-literals/supplemental-skipped"),
+    );
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    let json: serde_json::Value = serde_json::from_str(&body).expect("stdout should be json");
+
+    assert!(!out.status.success(), "the finite-set mismatch should fail");
+    assert!(json["rules"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "finite-set-consistency" && finding["target"] == "missing"
+    }));
+    // The skipped generated source is also a graph root. Its configured
+    // call-site demand must not replace graph import facts with a sparse view.
+    assert!(json["rules"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "forbidden-dependencies" && finding["target"] == "src/lazy.mts"
+    }));
+    // `generated/` is a configured finite-set input, but it is outside the
+    // dynamic-import check's filesystem scope.
+    assert!(json["rules"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|finding| { finding["rule"] != "test-no-unmocked-dynamic-imports" }));
+}
+
+#[test]
 fn vitest_ci_path_coverage_appears_in_cli_json() {
     let root = rule_fixture_scenario("vitest-ci-path-coverage", "fixture");
     let out = check_fixture_config(&root, ".no-mistakes.yml");
@@ -362,4 +397,112 @@ fn vitest_ci_path_coverage_supports_no_mistakes_suppression() {
     .unwrap();
 
     assert!(findings.is_empty(), "{findings:#?}");
+}
+
+fn finite_set_symlink_fixture(name: &str) -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/finite-set-consistency")
+            .join(name),
+    )
+}
+
+#[cfg(unix)]
+#[test]
+fn finite_set_path_regex_matches_directory_and_file_target_symlinks() {
+    let root = finite_set_symlink_fixture("path-regex-directory-symlink");
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    let json: serde_json::Value = serde_json::from_str(&body).expect("stdout should be json");
+    let rules = json["rules"].as_array().unwrap();
+
+    assert!(out.status.success(), "{body}");
+    assert!(
+        rules
+            .iter()
+            .all(|finding| finding["rule"] != "finite-set-consistency"),
+        "{body}"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn finite_set_path_regex_matches_hidden_skill_directory_symlinks() {
+    let root = finite_set_symlink_fixture("path-regex-skill-symlinks");
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    let json: serde_json::Value = serde_json::from_str(&body).expect("stdout should be json");
+    let rules = json["rules"].as_array().unwrap();
+
+    assert!(out.status.success(), "{body}");
+    assert!(
+        rules
+            .iter()
+            .all(|finding| finding["rule"] != "finite-set-consistency"),
+        "{body}"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn finite_set_path_regex_reports_skill_file_without_matching_symlink() {
+    let root = finite_set_symlink_fixture("path-regex-skill-symlinks-mismatch");
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    let json: serde_json::Value = serde_json::from_str(&body).expect("stdout should be json");
+
+    assert!(!out.status.success(), "{body}");
+    assert!(
+        json["rules"].as_array().unwrap().iter().any(|finding| {
+            finding["rule"] == "finite-set-consistency" && finding["target"] == "orphan-skill"
+        }),
+        "{body}"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn finite_set_path_regex_matches_broken_symlink_path_existence() {
+    let root = finite_set_symlink_fixture("path-regex-broken-symlink");
+    let out = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&root)
+        .arg("--config")
+        .arg(root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&out);
+    let json: serde_json::Value = serde_json::from_str(&body).expect("stdout should be json");
+
+    assert!(out.status.success(), "{body}");
+    assert!(
+        json["rules"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|finding| finding["rule"] != "finite-set-consistency"),
+        "{body}"
+    );
 }

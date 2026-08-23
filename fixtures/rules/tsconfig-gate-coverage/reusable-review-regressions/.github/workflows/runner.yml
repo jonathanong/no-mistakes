@@ -1,0 +1,7 @@
+on: push
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - if: runner.os == 'Windows'
+        run: pnpm exec tsc --noEmit --project runner/tsconfig.json

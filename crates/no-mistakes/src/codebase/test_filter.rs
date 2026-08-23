@@ -70,6 +70,21 @@ impl TestFileFilter {
         }
     }
 
+    #[doc(hidden)]
+    pub fn for_impact_from_prepared_projects(
+        root: &Path,
+        config: &NoMistakesConfig,
+        visible_paths: &[std::path::PathBuf],
+        filters: Vec<(
+            crate::codebase::test_discovery::TestRunner,
+            crate::codebase::test_discovery::ProjectTestFilter,
+        )>,
+    ) -> Self {
+        let mut filter = Self::from_prepared_projects(root, config, visible_paths, filters);
+        filter.always_include = compile_optional_globset(&config.tests.impact.always_include_tests);
+        filter
+    }
+
     /// Filter variant for the `tests impact` query: additionally always-surfaces
     /// the stub/mock tests configured under `tests.impact.alwaysIncludeTests`,
     /// even when a suite `exclude` would drop them. This is scoped to impact and

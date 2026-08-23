@@ -1,0 +1,6 @@
+on: workflow_call
+jobs:
+  left:
+    uses: ./.github/workflows/level-11.yml
+  right:
+    uses: ./.github/workflows/level-11.yml

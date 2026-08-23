@@ -1,0 +1,9 @@
+rules:
+  - rule: queue-dashboard-reachability
+    scope: repository
+    options:
+      queuePattern: src/queues.ts
+      factorySpecifier: queue-factory
+      factoryFunction: createQueue
+  - rule: unique-exports
+    scope: repository

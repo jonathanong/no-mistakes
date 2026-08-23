@@ -7,14 +7,14 @@ mod indent;
 mod inline_code;
 mod references;
 
-#[derive(Debug, PartialEq, Eq)]
-pub(super) struct InlineLink {
-    pub(super) text: String,
-    pub(super) href: String,
-    pub(super) offset: usize,
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct InlineLink {
+    pub(crate) text: String,
+    pub(crate) href: String,
+    pub(crate) offset: usize,
 }
 
-pub(super) fn markdown_links_outside_code(source: &str) -> Vec<InlineLink> {
+pub(crate) fn markdown_links_outside_code(source: &str) -> Vec<InlineLink> {
     let fenced = strip_fenced_code(source);
     let code = inline_code::mask(&fenced);
     let comments = html_comments::mask(&code);

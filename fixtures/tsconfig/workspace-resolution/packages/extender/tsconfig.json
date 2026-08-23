@@ -1,0 +1,8 @@
+{
+  "extends": "../base-owner/tsconfig.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": { "@ext/*": ["src/*"] }
+  },
+  "include": ["src/**/*.ts"]
+}

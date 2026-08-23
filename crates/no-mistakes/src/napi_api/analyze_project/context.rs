@@ -6,7 +6,7 @@ use crate::codebase::dependencies::{
 };
 use crate::napi_api::options::{PlaywrightOptions, ProjectOptions};
 use anyhow::{bail, Context, Result};
-use serde_json::Value;
+use serde_json::{value::RawValue, Value};
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
@@ -14,11 +14,13 @@ include!("context/check_prepare.rs");
 include!("context/check_run.rs");
 include!("context/scope_types.rs");
 include!("context/scope_prepare.rs");
+include!("context/supplemental_call_sites.rs");
 include!("context/scope_materialize.rs");
 include!("context/traversal_report_keys.rs");
 include!("context/scope_graph_reports.rs");
 include!("context/scope_project_reports.rs");
 include!("context/scope_cached_reports.rs");
+include!("context/command_reports.rs");
 include!("context/api.rs");
 include!("context/api_reports.rs");
 include!("context/scope_helpers.rs");
@@ -26,6 +28,10 @@ include!("context/plan_helpers.rs");
 include!("context/target_helpers.rs");
 include!("context/playwright_helpers.rs");
 include!("context_render.rs");
+
+fn json_raw_bytes(bytes: Vec<u8>) -> Result<Box<RawValue>> {
+    Ok(RawValue::from_string(String::from_utf8(bytes)?)?)
+}
 
 #[cfg(test)]
 mod api_tests;

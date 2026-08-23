@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@fixture/*": ["src/workspace/*"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

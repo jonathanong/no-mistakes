@@ -15,7 +15,7 @@ impl<'a> FallbackTsFactLookup<'a> {
         fallback: &'a TsFactMap,
         prefer_fallback: bool,
         graph_files: &'a [PathBuf],
-        graph_visible: &HashSet<PathBuf>,
+        graph_visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
     ) -> Self {
         let reuse_primary_playwright_cache = primary
             .graph_files()
@@ -28,26 +28,54 @@ impl<'a> FallbackTsFactLookup<'a> {
             reuse_primary_playwright_cache,
         }
     }
+
+    fn playwright_scan_lookup(&self) -> &dyn TsFactLookup {
+        if self.reuse_primary_playwright_cache {
+            self.primary
+        } else {
+            self.fallback
+        }
+    }
 }
 
-fn same_graph_universe(primary_files: &[PathBuf], graph_visible: &HashSet<PathBuf>) -> bool {
+fn playwright_fetch_parse_error(
+    fallback: &TsFactMap,
+    path: &Path,
+) -> Option<Result<crate::fetch::file_facts::ParsedFileFacts, String>> {
+    let facts = fallback.get(path)?;
+    let error = facts.parse_error.as_ref()?;
+    Some(Err(format!(
+        "failed to parse {}: {error}",
+        path.display()
+    )))
+}
+
+fn same_graph_universe(
+    primary_files: &[PathBuf],
+    graph_visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
+) -> bool {
     let primary_visible: HashSet<&Path> = primary_files.iter().map(PathBuf::as_path).collect();
-    primary_visible.len() == graph_visible.len()
-        && primary_visible
-            .iter()
-            .all(|path| graph_visible.contains(*path))
+    if primary_visible.len() != graph_visible.visible_len() {
+        return false;
+    }
+    let graph_paths = graph_visible.visible_cache_key();
+    graph_paths
+        .iter()
+        .all(|path| primary_visible.contains(path.as_path()))
 }
 
 impl TsFactLookup for FallbackTsFactLookup<'_> {
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
         if self.prefer_fallback {
-            self.fallback
-                .get(path)
-                .or_else(|| self.primary.get_ts_facts(path))
+            match self.fallback.get(path) {
+                Some(facts) => Some(facts),
+                None => self.primary.get_ts_facts(path),
+            }
         } else {
-            self.primary
-                .get_ts_facts(path)
-                .or_else(|| self.fallback.get(path))
+            match self.primary.get_ts_facts(path) {
+                Some(facts) => Some(facts),
+                None => self.fallback.get(path),
+            }
         }
     }
 
@@ -68,16 +96,22 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
 
     fn get_playwright_parse_error(&self, path: &Path) -> Option<&str> {
         if self.prefer_fallback {
-            self.fallback
+            match self
+                .fallback
                 .get(path)
                 .and_then(|facts| facts.parse_error.as_deref())
-                .or_else(|| self.primary.get_playwright_parse_error(path))
+            {
+                Some(error) => Some(error),
+                None => self.primary.get_playwright_parse_error(path),
+            }
         } else {
-            self.primary.get_playwright_parse_error(path).or_else(|| {
-                self.fallback
+            match self.primary.get_playwright_parse_error(path) {
+                Some(error) => Some(error),
+                None => self
+                    .fallback
                     .get(path)
-                    .and_then(|facts| facts.parse_error.as_deref())
-            })
+                    .and_then(|facts| facts.parse_error.as_deref()),
+            }
         }
     }
 
@@ -107,19 +141,12 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         if !self.reuse_primary_playwright_cache {
             return None;
         }
-        let fallback_error = || {
-            self.fallback.get(path).and_then(|facts| {
-                facts.parse_error.as_ref().map(|error| {
-                    Err(format!("failed to parse {}: {error}", path.display()))
-                })
-            })
-        };
+        let fallback = playwright_fetch_parse_error(self.fallback, path);
+        let primary = self.primary.get_playwright_fetch_facts(path);
         if self.prefer_fallback {
-            fallback_error().or_else(|| self.primary.get_playwright_fetch_facts(path))
+            fallback.or(primary)
         } else {
-            self.primary
-                .get_playwright_fetch_facts(path)
-                .or_else(fallback_error)
+            primary.or(fallback)
         }
     }
 
@@ -129,12 +156,8 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         scan_html_ids: bool,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::selectors::AppSelector>>,
     ) -> Result<Arc<Vec<crate::playwright::selectors::AppSelector>>> {
-        if self.reuse_primary_playwright_cache {
-            self.primary
-                .get_or_compute_app_selector_occurrences(settings, scan_html_ids, compute)
-        } else {
-            compute().map(Arc::new)
-        }
+        self.playwright_scan_lookup()
+            .get_or_compute_app_selector_occurrences(settings, scan_html_ids, compute)
     }
 
     fn get_or_compute_playwright_routes(
@@ -142,11 +165,8 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Vec<crate::routes::Route>,
     ) -> Arc<Vec<crate::routes::Route>> {
-        if self.reuse_primary_playwright_cache {
-            self.primary.get_or_compute_playwright_routes(settings, compute)
-        } else {
-            Arc::new(compute())
-        }
+        self.playwright_scan_lookup()
+            .get_or_compute_playwright_routes(settings, compute)
     }
 
     fn get_or_compute_app_text_targets(
@@ -154,11 +174,8 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Result<Vec<crate::playwright::analysis::text_types::AppTextTarget>>,
     ) -> Result<Arc<Vec<crate::playwright::analysis::text_types::AppTextTarget>>> {
-        if self.reuse_primary_playwright_cache {
-            self.primary.get_or_compute_app_text_targets(settings, compute)
-        } else {
-            compute().map(Arc::new)
-        }
+        self.playwright_scan_lookup()
+            .get_or_compute_app_text_targets(settings, compute)
     }
 
     fn get_or_compute_route_reachable_files(
@@ -166,11 +183,7 @@ impl TsFactLookup for FallbackTsFactLookup<'_> {
         settings: &crate::playwright::config::Settings,
         compute: &dyn Fn() -> Result<RouteReachableFiles>,
     ) -> Result<Arc<RouteReachableFiles>> {
-        if self.reuse_primary_playwright_cache {
-            self.primary
-                .get_or_compute_route_reachable_files(settings, compute)
-        } else {
-            compute().map(Arc::new)
-        }
+        self.playwright_scan_lookup()
+            .get_or_compute_route_reachable_files(settings, compute)
     }
 }

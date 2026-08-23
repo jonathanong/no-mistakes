@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@custom-setup": ["setup/custom.ts"]
+    }
+  }
+}

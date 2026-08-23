@@ -1,6 +1,12 @@
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod classify;
+mod kind;
+mod lookup;
+pub(crate) use classify::{classify_git_listed_paths, GitIndexKind};
+pub use kind::FileClassification;
+
 /// Stable identity for a lexical path in a frozen request file inventory.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct FileId(u32);
@@ -9,42 +15,6 @@ impl FileId {
     /// Return the zero-based position of this file in its inventory.
     pub fn index(self) -> usize {
         self.0 as usize
-    }
-}
-
-/// Discovery-time file classification for one lexical inventory path.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
-#[doc(hidden)]
-pub struct FileClassification {
-    lexical_file: bool,
-    lexical_symlink: bool,
-    target_file: bool,
-}
-
-impl FileClassification {
-    pub(crate) fn from_file_type(path: &Path, file_type: std::fs::FileType) -> Self {
-        let lexical_file = file_type.is_file();
-        let lexical_symlink = file_type.is_symlink();
-        Self {
-            lexical_file,
-            lexical_symlink,
-            target_file: lexical_file || (lexical_symlink && path.is_file()),
-        }
-    }
-
-    #[doc(hidden)]
-    pub fn is_lexical_file(self) -> bool {
-        self.lexical_file
-    }
-
-    #[doc(hidden)]
-    pub fn is_lexical_symlink(self) -> bool {
-        self.lexical_symlink
-    }
-
-    #[doc(hidden)]
-    pub fn target_is_file(self) -> bool {
-        self.target_file
     }
 }
 
@@ -63,31 +33,24 @@ pub(crate) struct ClassifiedPath {
 pub struct FileInventory {
     paths: Arc<Vec<PathBuf>>,
     classifications: Arc<Vec<FileClassification>>,
+    metadata_stats: usize,
 }
 
 impl FileInventory {
     #[doc(hidden)]
     pub fn from_paths(paths: &[PathBuf]) -> Self {
-        let paths = paths
-            .iter()
-            .take_while(|_| crate::invocation::check_timeout().is_ok())
-            .map(|path| {
-                let path = super::normalize_discovery_path(path);
-                let classification = std::fs::symlink_metadata(&path)
-                    .ok()
-                    .map_or_else(FileClassification::default, |metadata| {
-                        FileClassification::from_file_type(&path, metadata.file_type())
-                    });
-                ClassifiedPath {
-                    path,
-                    classification,
-                }
-            })
-            .collect::<Vec<_>>();
-        Self::from_classified_paths(paths)
+        let (entries, metadata_stats) = classify::inventory_paths(paths);
+        Self::from_classified_paths_counted(entries, metadata_stats)
     }
 
-    pub(crate) fn from_classified_paths(mut entries: Vec<ClassifiedPath>) -> Self {
+    pub(crate) fn from_classified_paths(entries: Vec<ClassifiedPath>) -> Self {
+        Self::from_classified_paths_counted(entries, 0)
+    }
+
+    pub(crate) fn from_classified_paths_counted(
+        mut entries: Vec<ClassifiedPath>,
+        metadata_stats: usize,
+    ) -> Self {
         entries.sort_by(|left, right| left.path.cmp(&right.path));
         entries.dedup_by(|left, right| left.path == right.path);
 
@@ -95,14 +58,14 @@ impl FileInventory {
             u32::try_from(entries.len()).is_ok(),
             "request file inventory exceeds the FileId address space"
         );
+        let (paths, classifications): (Vec<PathBuf>, Vec<FileClassification>) = entries
+            .into_iter()
+            .map(|entry| (entry.path, entry.classification))
+            .unzip();
         Self {
-            paths: Arc::new(entries.iter().map(|entry| entry.path.clone()).collect()),
-            classifications: Arc::new(
-                entries
-                    .into_iter()
-                    .map(|entry| entry.classification)
-                    .collect(),
-            ),
+            paths: Arc::new(paths),
+            classifications: Arc::new(classifications),
+            metadata_stats,
         }
     }
 
@@ -119,6 +82,29 @@ impl FileInventory {
     #[doc(hidden)]
     pub fn paths(&self) -> Arc<Vec<PathBuf>> {
         Arc::clone(&self.paths)
+    }
+
+    /// Return paths whose live targets were files when this inventory was frozen.
+    #[doc(hidden)]
+    pub fn target_file_paths(&self) -> Vec<PathBuf> {
+        self.paths
+            .iter()
+            .zip(self.classifications.iter())
+            .filter(|(_, classification)| classification.target_is_file())
+            .map(|(path, _)| path.clone())
+            .collect()
+    }
+
+    /// Return lexical symlinks whose live targets are not readable files.
+    #[doc(hidden)]
+    pub fn non_file_path_entry_paths(&self) -> Vec<PathBuf> {
+        let mut extras = Vec::new();
+        for (path, classification) in self.paths.iter().zip(self.classifications.iter()) {
+            if classification.is_lexical_symlink() && !classification.target_is_file() {
+                extras.push(path.clone());
+            }
+        }
+        extras
     }
 
     #[doc(hidden)]
@@ -154,6 +140,14 @@ impl FileInventory {
     pub fn classification_for_path(&self, path: &Path) -> Option<FileClassification> {
         self.id_for_path(path)
             .and_then(|id| self.classification(id))
+    }
+
+    /// Worktree metadata calls performed while classifying this inventory.
+    /// Git-listed tracked regular files report zero; classified reuse keeps
+    /// the discovery-time count instead of restating.
+    #[doc(hidden)]
+    pub fn metadata_stat_count(&self) -> usize {
+        self.metadata_stats
     }
 }
 

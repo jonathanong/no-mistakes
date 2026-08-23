@@ -12,20 +12,6 @@ fn config_view_projects_of_type_filter() {
 }
 
 #[test]
-fn config_view_nextjs_root() {
-    let cfg = load_v2_config(&fixture("multi-project"), None).unwrap();
-    let view = ConfigView::new(&cfg);
-    assert_eq!(view.nextjs_root(), "web");
-}
-
-#[test]
-fn config_view_nextjs_root_default() {
-    let cfg = NoMistakesConfig::default();
-    let view = ConfigView::new(&cfg);
-    assert_eq!(view.nextjs_root(), "app");
-}
-
-#[test]
 fn config_view_server_route_globs_are_project_root_relative() {
     let cfg = load_v2_config(&fixture("server-route-globs"), None).unwrap();
     let view = ConfigView::new(&cfg);
@@ -119,17 +105,9 @@ fn config_view_project_rules() {
 fn config_view_unknown_project_targets_are_empty() {
     let cfg = load_v2_config(&fixture("unknown-rule-project-target"), None).unwrap();
     let view = ConfigView::new(&cfg);
-    assert!(view.rule("unique-exports").is_none());
+    assert!(cfg.rule_applications("unique-exports").is_empty());
     assert!(view.project_rules("missing").is_empty());
     assert!(view.enabled_rules_for("missing").is_empty());
-}
-
-#[test]
-fn config_view_rule_lookup() {
-    let cfg = load_v2_config(&fixture("multi-project"), None).unwrap();
-    let view = ConfigView::new(&cfg);
-    assert!(view.rule("http-route-static-paths").is_some());
-    assert!(view.rule("nonexistent-rule").is_none());
 }
 
 #[test]
@@ -162,6 +140,25 @@ rules:
 "#;
     let cfg: NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
     assert!(!cfg.rule_configured("playwright-unique-test-ids"));
+}
+
+#[test]
+fn playwright_apps_do_not_activate_unbound_generic_test_rules() {
+    let yaml = r#"
+tests:
+  playwright:
+    apps:
+      web:
+        project: web
+rules:
+  - rule: integration-test-no-mocks
+  - rule: test-no-unmocked-dynamic-imports
+  - rule: playwright-coverage
+"#;
+    let cfg: NoMistakesConfig = serde_yaml::from_str(yaml).unwrap();
+    assert!(!cfg.rule_configured("integration-test-no-mocks"));
+    assert!(!cfg.rule_configured("test-no-unmocked-dynamic-imports"));
+    assert!(cfg.rule_configured("playwright-coverage"));
 }
 
 #[test]

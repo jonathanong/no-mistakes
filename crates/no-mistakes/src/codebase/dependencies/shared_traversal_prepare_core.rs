@@ -26,56 +26,59 @@ impl SharedTraversalContext {
         );
         let excluded_configs =
             framework_plan.excluded_config_paths(&root, &config, &root_visible_paths);
-        let graph_files = graph::GraphFiles::from_files_excluding_indexable(
-            crate::codebase::ts_source::discover_files_from_visible(
-                &root,
-                &[],
-                &root_visible_paths,
-            ),
+        let graph_all_files = crate::codebase::ts_source::discover_files_from_visible(
+            &root,
+            &[],
+            &root_visible_paths,
+        );
+        // Keep tracked runtime inputs that source discovery intentionally
+        // skips (for example `fixtures/schema.sql`). They are not added to
+        // the parse/import universe, only to resource-edge resolution.
+        let graph_resource_candidates = dataset
+            .visible_paths()
+            .tracked_paths_for(&root)
+            .as_ref()
+            .clone();
+        let graph_files = graph::GraphFiles::from_files_with_resource_candidates_excluding_indexable(
+            graph_all_files,
+            graph_resource_candidates,
             &excluded_configs,
         );
-        let tsconfig = (*session.tsconfig(&root, tsconfig_path)?).clone();
+        let tsconfig = session
+            .tsconfig(&root, tsconfig_path)
+            .map(|config| (*config).clone())
+            .or_else(|error| {
+                if tsconfig_path.is_some() {
+                    Err(error)
+                } else {
+                    Ok(TsConfig {
+                        dir: root.clone(),
+                        paths: Vec::new(),
+                        paths_dir: root.clone(),
+                        base_url: None,
+                    })
+                }
+            })?;
         let codebase_config =
             crate::codebase::config::config_from_loaded_v2(&root, config_path, &config);
         let workspace = dataset.workspace();
-        let preliminary_graph = graph::prepare_graph_config_with_test_filter_and_workspace(
-            &root,
-            build_plan,
-            &codebase_config,
-            &config,
-            dataset.visible_paths(),
-            crate::codebase::test_filter::TestFileFilter::fallback_only(),
-            std::sync::Arc::clone(&workspace),
-        )?;
-        let (preliminary_fact_plan, preliminary_fact_context) =
-            graph::ts_fact_plan_and_context_for_plan_with_prepared(
-                &root,
+        let (tsconfig_catalog, prepared_test_projects) =
+            prepare_tsconfig_catalog_with_framework_projects(FrameworkCatalogPreparation {
+                root: &root,
+                tsconfig_path,
+                tsconfig: &tsconfig,
+                config: &config,
+                codebase_config: &codebase_config,
+                workspace: &workspace,
+                root_visible_paths: &root_visible_paths,
+                visible_paths: dataset.visible_paths(),
+                sources: dataset.sources_for(&root),
                 build_plan,
-                &preliminary_graph,
-            );
-        let collect_graph_facts = !include_check_plan;
-        let preliminary_graph_files = if collect_graph_facts {
-            graph_files.indexable()
-        } else {
-            &[]
-        };
-        let prepared_test_projects =
-            crate::codebase::test_discovery::prepare_test_projects_from_visible_with_sources_and_plan(
-                &root,
-                &config,
-                &root_visible_paths,
-                &tsconfig,
-                crate::codebase::test_discovery::PreparedTestProjectRequest {
-                    graph: (
-                        preliminary_graph_files,
-                        preliminary_fact_plan,
-                        preliminary_fact_context,
-                    ),
-                    sources: dataset.sources_for(&root),
-                    collect_graph_facts,
-                    preparation_plan: &framework_plan,
-                },
-            );
+                graph_files: &graph_files,
+                collect_graph_facts: !include_check_plan,
+                framework_plan: &framework_plan,
+            })?;
+        let tsconfig_build_diagnostics = tsconfig_catalog.diagnostics();
         let test_filter = crate::codebase::test_filter::TestFileFilter::from_prepared_projects(
             &root,
             &config,
@@ -90,17 +93,20 @@ impl SharedTraversalContext {
             dataset.visible_paths(),
             test_filter.clone(),
             workspace,
-        )?;
+        );
+        let prepared_graph = prepared_graph?;
         let (fact_plan, mut fact_context) = graph::ts_fact_plan_and_context_for_plan_with_prepared(
             &root,
             build_plan,
             &prepared_graph,
         );
-        fact_context.set_visible_files(graph_files.visible().iter().cloned());
+        fact_context.set_visible_file_set(graph_files.visible_path_set());
         Ok(Self {
             session,
             root,
             tsconfig,
+            tsconfig_catalog,
+            tsconfig_build_diagnostics,
             graph_files,
             dataset,
             config,
@@ -116,7 +122,8 @@ impl SharedTraversalContext {
             graph_cache: SharedBuildCache::default(),
             symbol_index_cache: SharedBuildCache::default(),
             import_resolution_cache: Default::default(),
-            traversal_results: Vec::new(),
+            traversal_results: std::sync::Mutex::new(HashMap::new()),
+            pending_lazy_facts: std::sync::Mutex::new(None),
             analysis_generation: 0,
             graph_builds: 0,
             symbol_index_builds: 0,

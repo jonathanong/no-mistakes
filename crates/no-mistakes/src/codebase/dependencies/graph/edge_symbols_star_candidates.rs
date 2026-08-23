@@ -10,23 +10,15 @@ fn push_star_reexport_candidate_edges(
     candidate: StarReexportCandidate,
     edges: &mut Vec<Edge>,
 ) {
+    let interner = inputs.interner;
     edges.push((
-        NodeId::File(inputs.path.to_path_buf()),
-        NodeId::Symbol {
-            file: inputs.path.to_path_buf(),
-            symbol: candidate.symbol.clone(),
-        },
+        NodeId::file_in(interner, inputs.path),
+        NodeId::symbol_in(interner, inputs.path, candidate.symbol.clone()),
         candidate.kind,
     ));
     edges.push((
-        NodeId::Symbol {
-            file: inputs.path.to_path_buf(),
-            symbol: candidate.symbol.clone(),
-        },
-        NodeId::Symbol {
-            file: candidate.target,
-            symbol: candidate.symbol,
-        },
+        NodeId::symbol_in(interner, inputs.path, candidate.symbol.clone()),
+        NodeId::symbol_in(interner, candidate.target, candidate.symbol),
         candidate.kind,
     ));
 }

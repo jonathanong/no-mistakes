@@ -1,6 +1,7 @@
 use super::pipeline::{analyze_with_policy_and_optional_facts, standalone_facts};
 use super::pipeline_options::AnalysisOptions;
 use super::types::{Analysis, UniqueSelectorPolicy};
+use crate::codebase::dependencies::graph::TsFactLookup;
 use crate::playwright::fsutil::VisiblePathSnapshot;
 use crate::playwright::{config, playwright_tests};
 use anyhow::Result;
@@ -24,7 +25,7 @@ pub(crate) fn analyze_with_policy_from_snapshot(
             skip_test_file_errors: false,
             facts: Some(&facts),
             route_import_candidate: None,
-            graph_file_universe: None,
+            graph_file_universe: facts.graph_files(),
             occurrence_selection: super::pipeline_occurrences::CachedOccurrenceSelection::Exact,
             snapshot,
         },
@@ -49,7 +50,7 @@ pub(crate) fn analyze_with_policy_and_facts_from_snapshot(
             skip_test_file_errors: false,
             facts: Some(facts),
             route_import_candidate: None,
-            graph_file_universe: None,
+            graph_file_universe: facts.graph_files(),
             occurrence_selection: super::pipeline_occurrences::CachedOccurrenceSelection::Exact,
             snapshot,
         },

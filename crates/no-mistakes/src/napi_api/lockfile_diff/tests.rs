@@ -52,8 +52,10 @@ fn git_show_file_invalid_ref_returns_none() {
 
 #[test]
 fn lockfile_diff_json_impl_invalid_json_returns_err() {
-    let result = lockfile_diff_json_impl("not valid json {{{".to_string());
-    assert!(result.is_err());
+    let error =
+        crate::napi_api::options::parse_options::<super::LockfileDiffOptions>("not valid json {{{")
+            .unwrap_err();
+    assert!(error.reason.contains("invalid options JSON"));
 }
 
 #[test]
@@ -66,7 +68,7 @@ fn lockfile_diff_json_impl_root_with_no_lockfiles_returns_empty_array() {
         r#"{{"root": "{}", "base": "HEAD"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options).unwrap();
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let parsed: serde_json::Value = serde_json::from_str(&result).unwrap();
     assert_eq!(parsed.as_array().unwrap().len(), 0);
 }
@@ -122,7 +124,7 @@ fn lockfile_diff_json_impl_pnpm_changed_package() {
         r#"{{"root": "{}", "base": "HEAD"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options).unwrap();
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(entries.len(), 1);
     assert_eq!(entries[0]["manager"], "pnpm");
@@ -160,7 +162,7 @@ fn lockfile_diff_json_impl_invalid_base_returns_err() {
         r#"{{"root": "{}", "base": "nonexistent-ref-xyz"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options);
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     // git_show_file returns None → should return Err
     assert!(result.is_err());
 }
@@ -205,7 +207,7 @@ fn lockfile_diff_json_impl_head_option_reads_from_git() {
         r#"{{"root": "{}", "base": "HEAD~1", "head": "HEAD"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options).unwrap();
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(entries.len(), 1);
     let changed = entries[0]["changed"].as_array().unwrap();
@@ -241,7 +243,7 @@ fn lockfile_diff_json_impl_subdirectory_root_uses_git_relative_path() {
         r#"{{"root": "{}", "base": "HEAD"}}"#,
         sub.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options).unwrap();
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(
         entries.len(),
@@ -262,7 +264,7 @@ fn lockfile_diff_json_impl_missing_base_returns_err() {
         r#"{{"root": "{}"}}"#,
         dir.path().to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options);
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(result.is_err(), "missing base should be an error");
     let err = result.unwrap_err();
     assert!(
@@ -279,7 +281,7 @@ fn lockfile_diff_json_impl_empty_base_returns_err() {
         r#"{{"root": "{}", "base": ""}}"#,
         dir.path().to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options);
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(result.is_err(), "empty base should be an error");
 }
 
@@ -308,7 +310,7 @@ fn lockfile_diff_json_impl_invalid_head_returns_err() {
         r#"{{"root": "{}", "base": "HEAD", "head": "nonexistent-ref-xyz", "lockfile": "pnpm-lock.yaml"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options);
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(
         result.is_err(),
         "invalid head ref should be an error when lockfile is explicit"
@@ -356,7 +358,7 @@ fn lockfile_diff_json_impl_head_autodetect_new_lockfile() {
         r#"{{"root": "{}", "base": "HEAD~2", "head": "HEAD"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options).unwrap();
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(
         entries.len(),
@@ -393,7 +395,7 @@ fn lockfile_diff_json_impl_invalid_head_no_lockfile_returns_err() {
         r#"{{"root": "{}", "base": "HEAD", "head": "nonexistent-ref-xyz"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options);
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(result.is_err(), "invalid head ref should return an error");
     assert!(
         result.unwrap_err().reason.contains("does not exist"),
@@ -424,7 +426,7 @@ fn lockfile_diff_json_impl_invalid_base_with_head_returns_err() {
         r#"{{"root": "{}", "base": "nonexistent-base-xyz", "head": "HEAD", "lockfile": "pnpm-lock.yaml"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options);
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options));
     assert!(
         result.is_err(),
         "invalid base with head should return an error"
@@ -440,7 +442,7 @@ fn lockfile_diff_json_impl_unknown_lockfile_name_skipped() {
         r#"{{"root": "{}", "base": "HEAD", "lockfile": "custom-lock.txt"}}"#,
         dir.path().to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options).unwrap();
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert!(
         entries.is_empty(),
@@ -485,7 +487,7 @@ fn lockfile_diff_json_impl_head_with_subdirectory_root() {
         r#"{{"root": "{}", "base": "HEAD~1", "head": "HEAD"}}"#,
         sub.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options).unwrap();
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(
         entries.len(),
@@ -532,7 +534,7 @@ fn lockfile_diff_json_impl_deleted_lockfile_at_head_reports_removed() {
         r#"{{"root": "{}", "base": "HEAD~1", "head": "HEAD", "lockfile": "pnpm-lock.yaml"}}"#,
         root.to_str().unwrap().replace('\\', "/")
     );
-    let result = lockfile_diff_json_impl(options).unwrap();
+    let result = lockfile_diff_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
     let entries: Vec<serde_json::Value> = serde_json::from_str(&result).unwrap();
     assert_eq!(
         entries.len(),

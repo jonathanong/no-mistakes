@@ -1,0 +1,75 @@
+use crate::fx::PathSet;
+use std::collections::HashMap;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+
+/// Maps resolver results back into one frozen visible-path namespace.
+///
+/// Resolvers may return a real target below a symlink while facts retain the
+/// lexical symlink path. Build this once per consumer so every lookup, cache
+/// key, traversal, and rendered path uses the same request-local identity.
+pub(crate) struct FrozenPathRemapper {
+    visible: PathSet,
+    normalized_visible: Arc<PathSet>,
+    canonical_visible: HashMap<PathBuf, Option<PathBuf>>,
+}
+
+impl FrozenPathRemapper {
+    pub(crate) fn from_paths(paths: impl IntoIterator<Item = PathBuf>) -> Self {
+        let mut paths = paths.into_iter().collect::<Vec<_>>();
+        paths.sort();
+        paths.dedup();
+        let visible: PathSet = paths.iter().cloned().collect();
+        let mut normalized_visible = PathSet::default();
+        let mut canonical_visible = HashMap::<PathBuf, Option<PathBuf>>::new();
+        for path in &paths {
+            normalized_visible.insert(crate::codebase::ts_resolver::normalize_path(path));
+            let Some(canonical) = path.canonicalize().ok() else {
+                continue;
+            };
+            let canonical = crate::codebase::ts_resolver::normalize_path(&canonical);
+            normalized_visible.insert(canonical.clone());
+            // A non-exact lookup may only select a lexical identity when the
+            // filesystem target has exactly one visible spelling. Selecting
+            // the first of two case/symlink aliases would make graph output
+            // depend on discovery order.
+            canonical_visible
+                .entry(canonical)
+                .and_modify(|existing| {
+                    if existing.as_ref().is_some_and(|first| first != path) {
+                        *existing = None;
+                    }
+                })
+                .or_insert_with(|| Some(path.clone()));
+        }
+        Self {
+            visible,
+            normalized_visible: Arc::new(normalized_visible),
+            canonical_visible,
+        }
+    }
+
+    /// The resolver's logical-and-canonical membership set. It is frozen in
+    /// the same pass as the remapping table so consumers never canonicalize
+    /// the full visible universe a second time.
+    pub(crate) fn shared_normalized_visible(&self) -> Arc<PathSet> {
+        Arc::clone(&self.normalized_visible)
+    }
+
+    /// Return a frozen visible identity for `path`. An unresolved or
+    /// ambiguous filesystem alias is deliberately rejected rather than
+    /// leaking a path outside the request's visible namespace.
+    pub(crate) fn remap(&self, path: &Path) -> Option<PathBuf> {
+        if let Some(path) = self.visible.get(path) {
+            return Some(path.clone());
+        }
+        let normalized = crate::codebase::ts_resolver::normalize_path(path);
+        if let Some(Some(path)) = self.canonical_visible.get(&normalized) {
+            return Some(path.clone());
+        }
+        path.canonicalize()
+            .ok()
+            .map(|canonical| crate::codebase::ts_resolver::normalize_path(&canonical))
+            .and_then(|canonical| self.canonical_visible.get(&canonical).cloned().flatten())
+    }
+}

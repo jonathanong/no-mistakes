@@ -63,10 +63,20 @@ fn agents_md_max_size_json_output_includes_advisories() {
         out_json.status.success(),
         "advisory must not fail check: {body}"
     );
-    assert!(body.contains("\"advisories\""), "{body}");
-    assert!(body.contains("\"agents-md-max-size\""), "{body}");
-    assert!(body.contains("8 remaining"), "{body}");
-    assert!(body.contains("\"rules\": []"), "{body}");
+    let value: serde_json::Value =
+        serde_json::from_str(&body).unwrap_or_else(|err| panic!("{err}: {body}"));
+    assert!(
+        value["advisories"].as_array().is_some_and(|rows| {
+            rows.iter().any(|row| {
+                row["rule"] == "agents-md-max-size"
+                    && row["message"]
+                        .as_str()
+                        .is_some_and(|message| message.contains("8 remaining"))
+            })
+        }),
+        "{body}"
+    );
+    assert_eq!(value["rules"], serde_json::json!([]), "{body}");
 }
 
 #[test]

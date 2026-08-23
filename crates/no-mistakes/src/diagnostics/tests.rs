@@ -107,6 +107,11 @@ fn stable_timing_order_covers_every_phase_family() {
         "analysis.codebase",
         "analysis.filesystem_rules",
         "graph.imports",
+        "graph.forward_adjacency_normalization",
+        "graph.reverse_adjacency_normalization",
+        "graph.canonical_flatten",
+        "graph.ordinal_construction",
+        "graph.playwright_selector_merge",
         "traversal.dependencies",
         "analysis.server",
         "rules.config",
@@ -149,6 +154,41 @@ fn concurrent_observers_are_thread_isolated() {
 
     assert_eq!(first.snapshot().timings[0].label, "first");
     assert_eq!(second.snapshot().timings[0].label, "second");
+}
+
+#[test]
+fn with_observer_none_masks_an_inherited_observer() {
+    let observer = InvocationObserver::new(true);
+    with_observer(Some(Arc::clone(&observer)), || {
+        assert!(current().is_some());
+        with_observer(None, || {
+            assert!(current().is_none());
+            measure_if_enabled("masked", TimingKind::Serial, || ());
+            let inner = InvocationObserver::new(true);
+            with_observer(Some(Arc::clone(&inner)), || {
+                assert!(current().is_some());
+                measure_if_enabled("inner", TimingKind::Serial, || ());
+            });
+            assert!(current().is_none());
+            assert_eq!(inner.snapshot().timings[0].label, "inner");
+        });
+        assert!(current().is_some());
+    });
+    assert!(observer.snapshot().timings.is_empty());
+}
+
+#[test]
+fn with_observer_resets_inherited_parallel_timing() {
+    with_timing_kind(TimingKind::Parallel, || {
+        assert_eq!(current_timing_kind(), TimingKind::Parallel);
+        with_observer(None, || {
+            assert_eq!(current_timing_kind(), TimingKind::Serial);
+        });
+        with_observer(Some(InvocationObserver::new(false)), || {
+            assert_eq!(current_timing_kind(), TimingKind::Serial);
+        });
+        assert_eq!(current_timing_kind(), TimingKind::Parallel);
+    });
 }
 
 #[test]
@@ -233,4 +273,15 @@ fn timing_order_uses_unknown_fallback_rank() {
 fn timing_order_prefers_exact_rank_over_matching_prefix() {
     assert_eq!(timing_order("analysis.react"), 200);
     assert_eq!(timing_order("analysis.react.child"), 500);
+}
+
+#[test]
+fn record_ast_walk_increments_only_when_an_observer_is_installed() {
+    record_ast_walk();
+    let observer = InvocationObserver::new(true);
+    let guard = InvocationGuard::install(observer.clone());
+    record_ast_walk();
+    record_ast_walk();
+    drop(guard);
+    assert_eq!(observer.snapshot().work["ast.walks"], 2);
 }

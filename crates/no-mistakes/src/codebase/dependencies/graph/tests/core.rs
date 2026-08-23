@@ -1,7 +1,8 @@
-use super::*;
 use super::test_support::*;
+use super::*;
 
 mod config_edges;
+mod config_edges_helpers;
 mod config_fact_plan;
 mod config_path_full_graph;
 mod config_plan;
@@ -12,6 +13,7 @@ mod config_route_helpers;
 mod dotnet_edges;
 mod extra;
 mod extra_runtime;
+mod files_config;
 mod module_cases;
 mod swift_edges;
 mod terraform_edges;
@@ -21,7 +23,7 @@ fn p(s: &str) -> PathBuf {
 }
 
 fn n(s: &str) -> NodeId {
-    NodeId::File(p(s))
+    NodeId::file(p(s))
 }
 
 fn raw_fwd(pairs: &[(&str, &[&str])]) -> HashMap<PathBuf, Vec<PathBuf>> {
@@ -37,7 +39,7 @@ fn raw_rev(pairs: &[(&str, &[&str])]) -> HashMap<PathBuf, Vec<PathBuf>> {
 
 fn mk_entry(path: &str, depth: usize) -> NodeEntry {
     NodeEntry {
-        node: NodeId::File(p(path)),
+        node: NodeId::file(p(path)),
         depth,
         via: vec![],
     }
@@ -57,12 +59,9 @@ fn build_graph(root: &Path, tsconfig: &TsConfig) -> DepGraph {
 #[test]
 fn node_display_and_normalization_cover_file_and_queue_nodes() {
     let root = p("/repo");
-    let file = NodeId::File(p("/repo/src/file.ts"));
-    let module = NodeId::Module("@react/client".to_string());
-    let queue = NodeId::QueueJob {
-        queue_file: p("/repo/src/queues.ts"),
-        job: "send".to_string(),
-    };
+    let file = NodeId::file(p("/repo/src/file.ts"));
+    let module = NodeId::module("@react/client");
+    let queue = NodeId::queue_job(p("/repo/src/queues.ts"), "send");
 
     assert_eq!(file.display_name(&root), "src/file.ts");
     assert_eq!(module.display_name(&root), "@react/client");
@@ -84,13 +83,19 @@ fn react_render_edges_cover_empty_and_same_file_children() {
     let root = p("/repo");
     let parent = root.join("src/Parent.tsx");
 
-    assert!(collect_react_render_edges(&root, None, std::slice::from_ref(&parent)).is_empty());
+    assert!(collect_react_render_edges(
+        &root,
+        None,
+        std::slice::from_ref(&parent),
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
 
     let mut facts = TsFactMap::new();
     facts.insert(
         parent.clone(),
         TsFileFacts {
-            react_components: vec![ComponentFacts {
+            react_components: std::sync::Arc::new(vec![ComponentFacts {
                 name: "Parent".to_string(),
                 file: "src/Parent.tsx".to_string(),
                 environment: Environment::Server,
@@ -113,19 +118,25 @@ fn react_render_edges_cover_empty_and_same_file_children() {
                     },
                 ],
                 inherited_from_children: None,
-            }],
+            }]),
             ..Default::default()
         },
     );
 
-    assert!(collect_react_render_edges(&root, Some(&facts), &[parent]).is_empty());
+    assert!(collect_react_render_edges(
+        &root,
+        Some(&facts),
+        &[parent],
+        &crate::codebase::analysis_session::PathInterner::new()
+    )
+    .is_empty());
 }
 
 // ── bfs ─────────────────────────────────────────────────────────────────
 
 #[test]
 fn bfs_linear_chain() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(n("/a"), vec![(n("/b"), EdgeKind::Import)]);
     fwd.insert(n("/b"), vec![(n("/c"), EdgeKind::Import)]);
     fwd.insert(n("/c"), vec![]);
@@ -140,7 +151,7 @@ fn bfs_linear_chain() {
 
 #[test]
 fn bfs_depth_limit() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(n("/a"), vec![(n("/b"), EdgeKind::Import)]);
     fwd.insert(n("/b"), vec![(n("/c"), EdgeKind::Import)]);
     fwd.insert(n("/c"), vec![]);
@@ -152,7 +163,7 @@ fn bfs_depth_limit() {
 
 #[test]
 fn bfs_diamond_no_duplicates() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(
         n("/a"),
         vec![(n("/b"), EdgeKind::Import), (n("/c"), EdgeKind::Import)],
@@ -170,7 +181,7 @@ fn bfs_diamond_no_duplicates() {
 
 #[test]
 fn bfs_multiple_roots() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(n("/a"), vec![(n("/c"), EdgeKind::Import)]);
     fwd.insert(n("/b"), vec![(n("/d"), EdgeKind::Import)]);
     fwd.insert(n("/c"), vec![]);
@@ -182,7 +193,7 @@ fn bfs_multiple_roots() {
 
 #[test]
 fn bfs_cycle_terminates() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(n("/a"), vec![(n("/b"), EdgeKind::Import)]);
     fwd.insert(n("/b"), vec![(n("/a"), EdgeKind::Import)]);
 
@@ -193,14 +204,14 @@ fn bfs_cycle_terminates() {
 
 #[test]
 fn bfs_empty_starts() {
-    let fwd: EdgeMap = HashMap::new();
+    let fwd: EdgeMap = EdgeMap::default();
     let entries = bfs(&[], &fwd, None, None);
     assert!(entries.is_empty());
 }
 
 #[test]
 fn bfs_node_with_no_edges() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(n("/a"), vec![]);
     let entries = bfs(&[n("/a")], &fwd, None, None);
     assert!(entries.is_empty());
@@ -208,7 +219,7 @@ fn bfs_node_with_no_edges() {
 
 #[test]
 fn bfs_relationship_filter_excludes_wrong_kind() {
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(
         n("/a"),
         vec![(n("/b"), EdgeKind::Import), (n("/c"), EdgeKind::TestOf)],
@@ -225,7 +236,7 @@ fn bfs_relationship_filter_excludes_wrong_kind() {
 #[test]
 fn bfs_via_accumulated_from_two_paths() {
     // a → b via Import; a → b via TestOf (same destination, different kinds)
-    let mut fwd: EdgeMap = HashMap::new();
+    let mut fwd: EdgeMap = EdgeMap::default();
     fwd.insert(
         n("/a"),
         vec![(n("/b"), EdgeKind::Import), (n("/b"), EdgeKind::TestOf)],
@@ -246,7 +257,7 @@ fn dep_graph_deps_of() {
     let fwd = raw_fwd(&[("/root/a.mts", &["/root/b.mts"]), ("/root/b.mts", &[])]);
     let rev = raw_rev(&[]);
     let g = test_support::from_raw_maps(p("/root"), fwd, rev);
-    let entries = g.deps_of(&[NodeId::File(p("/root/a.mts"))], None, None);
+    let entries = g.deps_of(&[NodeId::file(p("/root/a.mts"))], None, None);
     assert_eq!(entries.len(), 1);
     assert_eq!(
         entries[0].node.as_file().unwrap(),
@@ -259,7 +270,7 @@ fn dep_graph_dependents_of() {
     let fwd = raw_fwd(&[]);
     let rev = raw_rev(&[("/root/b.mts", &["/root/a.mts"])]);
     let g = test_support::from_raw_maps(p("/root"), fwd, rev);
-    let entries = g.dependents_of(&[NodeId::File(p("/root/b.mts"))], None, None);
+    let entries = g.dependents_of(&[NodeId::file(p("/root/b.mts"))], None, None);
     assert_eq!(entries.len(), 1);
     assert_eq!(
         entries[0].node.as_file().unwrap(),
@@ -288,12 +299,12 @@ fn build_graph_from_fixture() {
     let b = root.join("b.mts");
     let c = root.join("c.mts");
 
-    let deps_a = graph.deps_of(&[NodeId::File(a.clone())], None, None);
+    let deps_a = graph.deps_of(&[NodeId::file(a.clone())], None, None);
     let dep_paths: Vec<_> = deps_a.iter().filter_map(|e| e.node.as_file()).collect();
     assert!(dep_paths.contains(&b.as_path()));
     assert!(dep_paths.contains(&c.as_path()));
 
-    let dependents_c = graph.dependents_of(&[NodeId::File(c.clone())], None, None);
+    let dependents_c = graph.dependents_of(&[NodeId::file(c.clone())], None, None);
     let dep_paths: Vec<_> = dependents_c
         .iter()
         .filter_map(|e| e.node.as_file())
@@ -316,7 +327,7 @@ fn build_graph_aliased_fixture() {
     let main = root.join("main.mts");
     let helpers = root.join("utils").join("helpers.mts");
 
-    let deps = graph.deps_of(&[NodeId::File(main)], None, None);
+    let deps = graph.deps_of(&[NodeId::file(main)], None, None);
     let dep_paths: Vec<_> = deps.iter().filter_map(|e| e.node.as_file()).collect();
     assert!(dep_paths.contains(&helpers.as_path()));
 }
@@ -366,7 +377,7 @@ fn ci_edges_include_workspace_member_bins() {
         .join("src")
         .join("main.rs");
     let deps = graph.deps_of(
-        &[NodeId::File(workflow)],
+        &[NodeId::file(workflow)],
         None,
         Some(&[EdgeKind::CiInvocation].into()),
     );
@@ -417,7 +428,7 @@ fn ci_edges_include_implicit_workspace_member_bins() {
         .join("src")
         .join("main.rs");
     let deps = graph.deps_of(
-        &[NodeId::File(workflow)],
+        &[NodeId::file(workflow)],
         None,
         Some(&[EdgeKind::CiInvocation].into()),
     );
@@ -448,7 +459,7 @@ fn build_graph_excludes_skipped_fixture_files() {
     };
     let graph = build_graph(&root, &tsconfig);
 
-    let dependents = graph.dependents_of(&[NodeId::File(source)], None, None);
+    let dependents = graph.dependents_of(&[NodeId::file(source)], None, None);
     let paths: Vec<_> = dependents.iter().filter_map(|e| e.node.as_file()).collect();
     assert_eq!(paths, vec![visible.as_path()]);
     assert!(!paths.contains(&skipped.as_path()));
@@ -466,10 +477,10 @@ fn test_graph_methods_lazy() {
     };
     let graph = build_graph(&root, &tsconfig);
 
-    let node = NodeId::File(source);
+    let node = NodeId::file(source);
     let deps = graph.dependencies_of_node(&node);
-    let deps_none = graph.dependencies_of_node(&NodeId::File(PathBuf::from("/nonexistent")));
-    let deps_none_2 = graph.dependents_of_node(&NodeId::File(PathBuf::from("/nonexistent")));
+    let deps_none = graph.dependencies_of_node(&NodeId::file(PathBuf::from("/nonexistent")));
+    let deps_none_2 = graph.dependents_of_node(&NodeId::file(PathBuf::from("/nonexistent")));
 
     assert!(deps_none.is_none());
     assert!(deps_none_2.is_none());
@@ -492,20 +503,14 @@ fn node_sorting_breaks_display_collisions_by_typed_identity() {
     // still make graph output independent of insertion order.
     let source = n("/repo/source.ts");
     let targets = vec![
-        NodeId::File(p("/repo/item#job")),
-        NodeId::Symbol {
-            file: p("/repo/item"),
-            symbol: "job".to_string(),
-        },
-        NodeId::QueueJob {
-            queue_file: p("/repo/item"),
-            job: "job".to_string(),
-        },
+        NodeId::file(p("/repo/item#job")),
+        NodeId::symbol(p("/repo/item"), "job"),
+        NodeId::queue_job(p("/repo/item"), "job"),
     ];
 
     let build = |ordered: Vec<NodeId>| {
-        let mut forward = HashMap::new();
-        let mut reverse = HashMap::new();
+        let mut forward = EdgeMap::default();
+        let mut reverse = EdgeMap::default();
         forward.insert(
             source.clone(),
             ordered
@@ -530,7 +535,19 @@ fn node_sorting_breaks_display_collisions_by_typed_identity() {
         .map(|target| (target, EdgeKind::Import))
         .collect::<Vec<_>>();
 
-    assert_eq!(first.forward().get(&source), Some(&expected));
-    assert_eq!(second.forward().get(&source), Some(&expected));
+    assert_eq!(
+        first
+            .forward()
+            .get(&source)
+            .map(|adj| adj.neighbors.as_slice()),
+        Some(expected.as_slice())
+    );
+    assert_eq!(
+        second
+            .forward()
+            .get(&source)
+            .map(|adj| adj.neighbors.as_slice()),
+        Some(expected.as_slice())
+    );
     assert_eq!(first.edges(), second.edges());
 }

@@ -3,16 +3,10 @@ fn scoped_dependency_traversal_rejects_file_bridges_before_expansion() {
     let source = n("/repo/source.ts");
     let bridge = n("/repo/ignored/bridge.ts");
     let target = n("/repo/target.ts");
-    let symbol = NodeId::Symbol {
-        file: p("/repo/owner.ts"),
-        symbol: "owned".to_string(),
-    };
-    let queue = NodeId::QueueJob {
-        queue_file: p("/repo/queue.ts"),
-        job: "work".to_string(),
-    };
-    let module = NodeId::Module("external".to_string());
-    let mut forward = EdgeMap::new();
+    let symbol = NodeId::symbol(p("/repo/owner.ts"), "owned");
+    let queue = NodeId::queue_job(p("/repo/queue.ts"), "work");
+    let module = NodeId::module("external");
+    let mut forward = EdgeMap::default();
     forward.insert(
         source.clone(),
         vec![
@@ -23,7 +17,7 @@ fn scoped_dependency_traversal_rejects_file_bridges_before_expansion() {
         ],
     );
     forward.insert(bridge, vec![(target.clone(), EdgeKind::Import)]);
-    let graph = from_typed_maps(p("/repo"), forward, EdgeMap::new());
+    let graph = from_typed_maps(p("/repo"), forward, EdgeMap::default());
     let universe = [
         p("/repo/source.ts"),
         p("/repo/target.ts"),

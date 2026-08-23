@@ -1,0 +1,19 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# TsFileFacts.symbols is Arc<FileSymbols>. Cloning the inner FileSymbols into
+# that field (or wrapping a cloned owned table in a new Arc) duplicates export
+# and import tables that check and graph facts should share.
+id: no-temporary-arc-symbol-facts
+language: rust
+severity: error
+message: >-
+  TsFileFacts.symbols stores Arc<FileSymbols>. Clone the Arc instead of
+  deep-cloning FileSymbols into both check and standalone facts.
+rule:
+  any:
+    - pattern: ts.symbols = Some($S.as_ref().clone())
+    - pattern: $FACTS.symbols.clone().map(Arc::new)
+    - pattern: $FACTS.symbols.clone().map(std::sync::Arc::new)
+files:
+  - "crates/no-mistakes/src/codebase/check_facts/**"
+  - "crates/no-mistakes/src/codebase/ts_source/facts/**"

@@ -10,11 +10,13 @@ fn project(
 ) -> ConfigProject {
     ConfigProject {
         config: config.map(str::to_string),
+        workspace: false,
         policy_name: Some(name.to_string()),
         runner_project_arg: runner.map(str::to_string),
         scope: scope.map(str::to_string),
         include: include.iter().map(|item| item.to_string()).collect(),
         exclude: exclude.iter().map(|item| item.to_string()).collect(),
+        vitest_setup: Vec::new(),
     }
 }
 

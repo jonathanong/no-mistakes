@@ -3,7 +3,7 @@ use super::{
     PlaywrightOccurrenceKey, PlaywrightSettingsKey,
 };
 use crate::playwright::playwright_tests::TestPolicy;
-use std::collections::{BTreeSet, HashMap, HashSet};
+use std::collections::{BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -29,6 +29,39 @@ fn selector_wrapper_module_resolution() -> super::PlaywrightModuleResolution {
         Arc::new(tsconfig),
         Arc::new(workspace),
         Arc::new(paths.iter().cloned().collect()),
+    )
+}
+
+fn catalog_module_resolution(root: &Path) -> super::PlaywrightModuleResolution {
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
+    let paths = snapshot.paths_for(root);
+    let sources = snapshot.source_store_for(root);
+    let catalog = crate::codebase::ts_resolver::TsConfigCatalog::from_visible_and_sources(
+        root,
+        &[root.to_path_buf()],
+        &paths,
+        &sources,
+    );
+    let workspace =
+        crate::codebase::workspaces::load_indexed_from_source_store(root, &sources).unwrap();
+    super::PlaywrightModuleResolution::with_catalog(
+        Arc::new(catalog),
+        Arc::new(workspace),
+        Arc::new(paths.iter().cloned().collect()),
+    )
+}
+
+fn symlinked_catalog_resolution_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link"),
+    )
+}
+
+fn workspace_catalog_resolution_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/workspace-resolution"),
     )
 }
 
@@ -68,6 +101,37 @@ fn wrapper_module_resolution_keeps_external_packages_as_terminal_identities() {
         "external-locators",
         "other-external-locators",
         &importing_file,
+    ));
+}
+
+#[test]
+fn catalog_wrapper_resolution_preserves_symlinked_alias_identity_without_rebuilding_scopes() {
+    let root = symlinked_catalog_resolution_fixture();
+    let importer = root.join("tests/dynamic-manual-mock.test.ts");
+    let resolution = catalog_module_resolution(&root);
+
+    for _ in 0..16 {
+        assert!(resolution.modules_match("@linked/value", "../src/value", &importer));
+    }
+
+    // The facade shares the outer remapping universe. Repeated wrapper
+    // comparisons only reuse its importer selection and owned scope resolver.
+    assert_eq!(resolution.catalog_instrumentation(), Some((true, 1, 1, 2)));
+}
+
+#[test]
+fn catalog_wrapper_resolution_does_not_treat_unresolved_workspace_packages_as_external() {
+    let root = workspace_catalog_resolution_fixture();
+    let importer = root.join("apps/web/src/entry.ts");
+    let resolution = catalog_module_resolution(&root);
+
+    // `@fixture/shared` is a known workspace package but this subpath is not
+    // exported. It must not become a terminal external identity merely
+    // because both configured and imported spellings are equal.
+    assert!(!resolution.modules_match(
+        "@fixture/shared/not-exported",
+        "@fixture/shared/not-exported",
+        &importer,
     ));
 }
 
@@ -137,7 +201,7 @@ impl PlaywrightFactPlan {
             files
                 .into_iter()
                 .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
-                .collect::<HashSet<_>>(),
+                .collect::<crate::fx::PathSet>(),
         );
         for plan in &mut self.source_plans {
             plan.app_source_files = Arc::clone(&files);
@@ -252,10 +316,10 @@ fn source_plans_coalesce_when_only_selector_wrappers_differ() {
     let source_plan = |settings: crate::playwright::config::Settings, file: &str| {
         let settings_key = PlaywrightSettingsKey::new(&settings);
         super::PlaywrightSourceFactPlan {
-            app_source_files: Arc::new(HashSet::from([PathBuf::from(file)])),
+            app_source_files: Arc::new([PathBuf::from(file)].into_iter().collect()),
             selector_regexes: Arc::clone(&regexes),
             settings: Arc::new(settings),
-            visible_files: Arc::new(HashSet::new()),
+            visible_files: Arc::new(crate::fx::PathSet::default()),
             scan_html_ids: false,
             settings_key,
         }
@@ -266,4 +330,103 @@ fn source_plans_coalesce_when_only_selector_wrappers_differ() {
 
     assert_eq!(plan.source_plans.len(), 1);
     assert_eq!(plan.source_plans[0].app_source_files.len(), 2);
+}
+
+#[test]
+fn fact_plan_reuses_compiled_selector_regexes_by_attribute_set() {
+    let files = include_str!("files.rs");
+    let source = include_str!("source.rs");
+    let merge = include_str!("merge.rs");
+    let cache = include_str!("regex_cache.rs");
+    assert!(files.contains("regex_cache.get_or_compile("));
+    assert!(source.contains("regex_cache.get_or_compile("));
+    assert!(merge.contains("regex_cache.get_or_compile("));
+    assert!(cache.contains("compile_selector_regexes_with_html_ids("));
+    assert!(!files.contains("compile_selector_regexes_with_html_ids("));
+    assert!(!source.contains("compile_selector_regexes_with_html_ids("));
+    assert!(!merge.contains("compile_selector_regexes_with_html_ids("));
+
+    let attrs = vec!["data-pw".to_string()];
+    let mut plan = PlaywrightFactPlan::default();
+    for path in ["a.spec.ts", "b.spec.ts"] {
+        plan.add_file(PlaywrightFactSelection {
+            path: PathBuf::from(path),
+            navigation_helpers: &[],
+            selector_wrappers: &[],
+            selector_attributes: &attrs,
+            component_selector_attributes: &BTreeMap::new(),
+            html_ids: false,
+            test_id_attributes: &attrs,
+            policy: TestPolicy::default(),
+            demands_text_imports: false,
+        });
+    }
+    let left = &plan
+        .file(Path::new("a.spec.ts"))
+        .unwrap()
+        .variants()
+        .next()
+        .unwrap()
+        .1
+        .selector_regexes;
+    let right = &plan
+        .file(Path::new("b.spec.ts"))
+        .unwrap()
+        .variants()
+        .next()
+        .unwrap()
+        .1
+        .selector_regexes;
+    assert!(Arc::ptr_eq(left, right));
+}
+
+fn discovered(path: &str) -> crate::playwright::analysis::context::DiscoveredTestFile {
+    crate::playwright::analysis::context::DiscoveredTestFile {
+        path: PathBuf::from(path),
+        contexts: Vec::new(),
+    }
+}
+
+#[test]
+fn fact_plan_merges_test_files_per_project_and_ignores_unknown_html_id_settings() {
+    let mut plan = PlaywrightFactPlan::default();
+    plan.add_test_files_for_project(Some("web".into()), Arc::new(vec![discovered("a.spec.ts")]));
+    plan.add_test_files_for_project(
+        Some("web".into()),
+        Arc::new(vec![discovered("b.spec.ts"), discovered("a.spec.ts")]),
+    );
+    plan.add_test_files_for_project(Some("api".into()), Arc::new(vec![discovered("c.spec.ts")]));
+
+    let web_files = plan
+        .test_files_by_project()
+        .iter()
+        .find(|(project, _)| project.as_deref() == Some("web"))
+        .expect("web project")
+        .1
+        .clone();
+    assert_eq!(
+        web_files
+            .iter()
+            .map(|file| file.path.as_path())
+            .collect::<Vec<_>>(),
+        [Path::new("a.spec.ts"), Path::new("b.spec.ts")]
+    );
+
+    let mut other = PlaywrightFactPlan::default();
+    other.add_test_files_for_project(
+        Some("mobile".into()),
+        Arc::new(vec![discovered("d.spec.ts")]),
+    );
+    other.add_test_files_for_project(Some("web".into()), Arc::new(vec![discovered("e.spec.ts")]));
+    plan.include(other);
+
+    let projects = plan
+        .test_files_by_project()
+        .iter()
+        .map(|(project, files)| (project.clone(), files.len()))
+        .collect::<Vec<_>>();
+    assert!(projects.contains(&(Some("mobile".into()), 1)));
+    assert!(projects.contains(&(Some("web".into()), 3)));
+
+    plan.require_html_id_scan(&base_settings());
 }

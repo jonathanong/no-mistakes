@@ -8,9 +8,12 @@ pub(super) const EXPECTED_SOURCE_FILES: usize = 14;
 pub(super) const EXPECTED_IMPACTED_CHECKS: usize = 1;
 // Nine graph-scope keys plus two session-scoped legacy-symbol keys.
 pub(super) const EXPECTED_MULTI_REPORT_RESOLVER_KEYS: u64 = 11;
-// Fourteen source files plus four configuration and manifest reads.
-pub(super) const EXPECTED_CHECK_SOURCE_READS: u64 = 18;
+// Fourteen TS sources, one Rust rule source, and four config/manifest parses.
+// Graph edge collectors now reuse those manifests, so requests/cache-hits rise.
+pub(super) const EXPECTED_CHECK_SOURCE_READS: u64 = 19;
 pub(super) const EXPECTED_CHECK_MANIFEST_PARSES: u64 = 4;
+pub(super) const EXPECTED_CHECK_MANIFEST_REQUESTS: u64 = 10;
+pub(super) const EXPECTED_CHECK_MANIFEST_CACHE_HITS: u64 = 6;
 pub(super) const EXPECTED_CHECK_RESOLVER_KEYS: u64 = 14;
 
 pub(super) fn fixture_root() -> PathBuf {

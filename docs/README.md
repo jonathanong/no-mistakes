@@ -16,15 +16,20 @@ request structured output, understand config, and keep source code analyzable.
 | Keep file-local code analyzable | [ESLint rules](eslint-rules/README.md) |
 | Understand static-analysis limits | [AST analysis behavior](ast-analysis.md) |
 | Use the tool as an AI agent | [Agent guide](agent-guide.md) |
+| Compare language and framework coverage | [Feature parity](feature-parity.md) |
 
 ## Reference
 
+- [PostgreSQL facts](postgres-facts.md) describes the schema and embedded-SQL fact sources used by later SQL rules.
 - [Architecture](architecture.md) describes the one-pass, in-memory, graph-based
   execution model.
 - [AST-grep regression rules](ast-grep-rules.md) guard the source shapes that
   would bypass the one-pass gateways.
 - [Graph edges](graph-edges.md) lists dependency edge kinds with fixture-backed
   examples, counterexamples, relationship filters, and caveats.
+- [Feature parity](feature-parity.md) is the contract for Python, Django,
+  Celery, Go, Asynq, Kafka, Rust, Rails, and PHP support relative to the TS/JS
+  surface.
 - [Test planning](test-plan.md) explains configured test selection in more
   depth.
 - [Legacy CLI reference](cli-reference.md) and [legacy ESLint reference](eslint-plugin.md)

@@ -1,0 +1,23 @@
+projects:
+  database-resources:
+    root: .
+  union-resources:
+    root: .
+tests:
+  vitest:
+    configs: vitest.config.mts
+  playwright:
+    configs: playwright.config.mts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        database-resources:
+          paths:
+            - migrations/**/*.sql
+          targets:
+            - database
+    environments:
+      direct-only:
+        groups:
+          - type: direct
