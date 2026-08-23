@@ -1,7 +1,9 @@
 # `no-mistakes-config`
 
 Lints the loaded `.no-mistakes.yml` against tracked files: schema path
-fields must exist, ignore/exclude globs must match something, and an
+fields must exist, project `include`/`exclude` globs are resolved relative to
+their project root, positive full-suite trigger paths must match,
+ignore/exclude globs must match something, and an
 environment-level `limit` must not share a budget with a `direct` group
 (issue #9440).
 
@@ -12,7 +14,9 @@ rules:
 ```
 
 Counterexample: `projects.web.root` points at a directory that is not in
-the tree, an `exclude` glob matches nothing, or `prePush` sets `limit`
+the tree, `projects.web.include` points outside the project root, a positive
+full-suite trigger path is missing, an `exclude` glob matches nothing, or
+`prePush` sets `limit`
 while also listing a `direct` group.
 
 ```yaml

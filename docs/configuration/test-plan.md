@@ -64,7 +64,9 @@ empty. Do not list both the alias and the runner project for the same paths.
 
 The object form `fullSuiteTriggers.projects.<name>` still works and still
 requires a matching top-level `projects:` key. Treat it as deprecated for
-dummy `root: .` buckets.
+dummy `root: .` buckets. Its path patterns are resolved relative to the
+referenced project's `root`; named `fullSuiteTriggers` list entries remain
+repository-relative.
 
 ## Project-keyed triggers (deprecated)
 

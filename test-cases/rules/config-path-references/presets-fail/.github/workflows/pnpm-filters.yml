@@ -1,0 +1,5 @@
+name: pnpm filters
+jobs:
+  test:
+    steps:
+      - run: pnpm install --filter '{./missing-app}...'

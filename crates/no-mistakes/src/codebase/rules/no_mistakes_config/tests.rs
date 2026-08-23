@@ -283,3 +283,110 @@ fn config_rel_falls_back_without_a_discovered_manifest() {
         "{findings:?}"
     );
 }
+
+#[test]
+fn project_include_and_exclude_globs_are_relative_to_project_root() {
+    let root = fixture("pass");
+    let config = enable(
+        serde_yaml::from_str(
+            r#"
+projects:
+  web:
+    root: web
+    include: ["src/**/*.ts"]
+    exclude: ["generated/**/*.ts"]
+"#,
+        )
+        .unwrap(),
+    );
+    let mut tracked = files(&root);
+    tracked.push(root.join("web/src/index.ts"));
+    tracked.push(root.join("web/generated/index.ts"));
+    let findings = check_with_files(&root, &config, &tracked).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn full_suite_project_paths_use_project_root_and_skip_negative_patterns() {
+    let root = fixture("pass");
+    let config = enable(
+        serde_yaml::from_str(
+            r#"
+projects:
+  web:
+    root: web
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        web: ["src/missing.ts", "!src/optional.ts"]
+      triggers:
+        - name: root
+          paths: ["missing-config.ts", "!optional-config.ts"]
+"#,
+        )
+        .unwrap(),
+    );
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+    let messages: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect();
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("web/src/missing.ts")),
+        "{messages:?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("missing-config.ts")),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().all(|message| !message.contains("optional")),
+        "{messages:?}"
+    );
+}
+
+#[test]
+fn schema_known_rule_option_paths_are_checked_but_exclusions_are_not() {
+    let root = fixture("pass");
+    let config = enable(
+        serde_yaml::from_str(
+            r#"
+rules:
+  - rule: forbidden-dependencies
+    options:
+      roots: [missing-entry.mts]
+      tsconfig: missing-tsconfig.json
+      excludePaths: [missing-until-created/**]
+"#,
+        )
+        .unwrap(),
+    );
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+    let messages: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect();
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("rules[1].options.roots[0]")),
+        "{messages:?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("rules[1].options.tsconfig[0]")),
+        "{messages:?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .all(|message| !message.contains("excludePaths")),
+        "{messages:?}"
+    );
+}

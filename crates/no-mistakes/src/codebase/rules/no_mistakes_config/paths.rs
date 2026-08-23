@@ -8,7 +8,7 @@ mod collect;
 
 pub(super) use collect::frameworks;
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub(super) enum Kind {
     File,
     Directory,

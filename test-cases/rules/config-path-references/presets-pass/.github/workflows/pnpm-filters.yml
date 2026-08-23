@@ -1,0 +1,8 @@
+name: pnpm filters
+jobs:
+  test:
+    steps:
+      - run: |
+          pnpm install --filter '{./packages/app}...'
+          pnpm install --filter './src/*...'
+          if [ -d "./optional" ]; then pnpm install --filter './optional...'; fi

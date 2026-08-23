@@ -320,7 +320,7 @@ fn can_resolve_references_from_repository_root() {
 
 fn preset_opts() -> String {
     r#"
-presets: [oxlintrc, knip, dependabot, sgconfig, syncpack, coverage-rules]
+presets: [oxlintrc, knip, dependabot, sgconfig, syncpack, coverage-rules, pnpm-workspace-filters]
 "#
     .to_string()
 }
@@ -342,6 +342,7 @@ fn presets_report_missing_required_paths() {
             "sgconfig.yml",
             ".syncpackrc.json",
             ".coverage-rules.yml",
+            ".github/workflows/pnpm-filters.yml",
         ],
     );
     let findings = check_with_files(&root, &config(&preset_opts()), &files).unwrap();
@@ -412,6 +413,7 @@ fn presets_pass_when_required_paths_exist() {
             "rules/keep.yml",
             ".syncpackrc.json",
             ".coverage-rules.yml",
+            ".github/workflows/pnpm-filters.yml",
         ],
     );
     let findings = check_with_files(&root, &config(&preset_opts()), &files).unwrap();
@@ -486,5 +488,24 @@ rules:
         "dependabot",
         "dependabot.yml",
         "dependabot.yml"
+    ));
+}
+
+#[test]
+fn pnpm_workspace_filter_preset_handles_braces_wildcards_and_guards() {
+    let extracted = presets::pnpm_workspace_filters(
+        r#"
+pnpm install --filter '{./packages/app}...' \
+  --filter "./src/*..."
+if [ -d "./optional" ]; then pnpm install --filter './optional...'; fi
+test -f ./another/package.json && pnpm install --filter './another...'
+"#,
+    );
+    let values: Vec<_> = extracted.into_iter().map(|item| item.value).collect();
+    assert_eq!(values, vec!["./packages/app", "./src/*"]);
+    assert!(presets::matches_preset(
+        "pnpm-workspace-filters",
+        "action.yml",
+        ".github/actions/setup/action.yml"
     ));
 }

@@ -7,6 +7,8 @@ mod extract;
 mod oxlint;
 mod types;
 
+#[cfg(test)]
+pub(crate) use extract::pnpm_workspace_filters;
 pub(crate) use extract::{extract, matches_preset};
 use types::Extracted;
 
@@ -50,6 +52,21 @@ fn scan_file(
     let Some(source) = super::super::read_source(sources, path) else {
         return Ok(());
     };
+    for extracted in matched
+        .iter()
+        .filter(|preset| *preset == &"pnpm-workspace-filters")
+        .flat_map(|_| extract::pnpm_workspace_filters(&source))
+    {
+        push_missing(root, path, rel, rel_files, findings, extracted)?;
+    }
+    let structured: Vec<&str> = matched
+        .iter()
+        .copied()
+        .filter(|preset| *preset != "pnpm-workspace-filters")
+        .collect();
+    if structured.is_empty() {
+        return Ok(());
+    }
     let value = match crate::codebase::structured_value::parse_structured_value(path, &source) {
         Ok(value) => value,
         Err(error) => {
@@ -64,7 +81,7 @@ fn scan_file(
             return Ok(());
         }
     };
-    for preset in matched {
+    for preset in structured {
         for extracted in extract(preset, &value) {
             push_missing(root, path, rel, rel_files, findings, extracted)?;
         }

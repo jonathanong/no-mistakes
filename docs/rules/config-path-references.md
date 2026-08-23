@@ -21,16 +21,18 @@ rules:
         - sgconfig
         - syncpack
         - coverage-rules
+        - pnpm-workspace-filters
 ```
 
-| Preset | Files | Required paths |
-| --- | --- | --- |
-| `oxlintrc` | `.oxlintrc.json` / `.oxlintrc.jsonc` (including nested) | relative `jsPlugins[].specifier`, non-glob `overrides.files`, `rules.*.baseline[][0]` |
-| `knip` | `knip.json` / `knip.jsonc` | `workspaces.{name}.entry` and `.project`, prefixed by the workspace path unless `.` |
-| `dependabot` | `.github/dependabot.yml` | `updates[].directory` |
-| `sgconfig` | `sgconfig.yml` | `ruleDirs` |
-| `syncpack` | `.syncpackrc.json` | `source` globs |
-| `coverage-rules` | `.coverage-rules.yml` | `rules[].paths` |
+| Preset                   | Files                                                                       | Required paths                                                                        |
+| ------------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| `oxlintrc`               | `.oxlintrc.json` / `.oxlintrc.jsonc` (including nested)                     | relative `jsPlugins[].specifier`, non-glob `overrides.files`, `rules.*.baseline[][0]` |
+| `knip`                   | `knip.json` / `knip.jsonc`                                                  | `workspaces.{name}.entry` and `.project`, prefixed by the workspace path unless `.`   |
+| `dependabot`             | `.github/dependabot.yml`                                                    | `updates[].directory`                                                                 |
+| `sgconfig`               | `sgconfig.yml`                                                              | `ruleDirs`                                                                            |
+| `syncpack`               | `.syncpackrc.json`                                                          | `source` globs                                                                        |
+| `coverage-rules`         | `.coverage-rules.yml`                                                       | `rules[].paths`                                                                       |
+| `pnpm-workspace-filters` | `.github/workflows/*.{yml,yaml}` and `.github/actions/**/action.{yml,yaml}` | `pnpm --filter ./path...` selectors in shell commands                                 |
 
 Counterexample: `config/app.yml` contains `paths.requiredFiles:
 ["missing.json"]`, and `config/missing.json` does not exist. Or
@@ -40,3 +42,8 @@ absent.
 Fix: create the referenced file, update the config value, or remove the stale
 reference. JSON configs cannot use `no-mistakes-disable-file`; use rule-level
 `exclude` instead.
+
+The `pnpm-workspace-filters` preset recognizes quoted and braced path selectors,
+ellipsis selectors, wildcard filters, and selectors split across YAML block-scalar
+commands. A selector guarded by `-f`, `-d`, or `test` is treated as optional and
+is ignored when its path is not present.

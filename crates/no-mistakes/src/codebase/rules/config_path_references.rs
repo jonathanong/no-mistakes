@@ -76,18 +76,22 @@ fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let config_files = super::matching_files(root, &opts.files, config_candidates, target_roots)?;
+    let preset_candidates = if opts.files.is_empty() {
+        reference_candidates
+    } else {
+        &config_files
+    };
     let rel_files = reference_candidates
         .iter()
         .map(|path| relative_slash_path(root, path))
         .collect::<Vec<_>>();
     let mut findings = Vec::new();
-    for path in config_files {
-        let rel = relative_slash_path(root, &path);
-        let Some(source) = super::read_source(sources, &path) else {
+    for path in &config_files {
+        let rel = relative_slash_path(root, path);
+        let Some(source) = super::read_source(sources, path) else {
             continue;
         };
-        let value = match crate::codebase::structured_value::parse_structured_value(&path, &source)
-        {
+        let value = match crate::codebase::structured_value::parse_structured_value(path, &source) {
             Ok(value) => value,
             Err(error) => {
                 findings.push(parse_finding(&rel, error));
@@ -105,7 +109,7 @@ fn scan(
     presets::scan(
         root,
         opts,
-        config_candidates,
+        preset_candidates,
         &rel_files,
         sources,
         &mut findings,
