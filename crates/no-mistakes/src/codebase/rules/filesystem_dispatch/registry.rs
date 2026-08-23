@@ -20,6 +20,7 @@ macro_rules! filesystem_rules {
             NO_RAW_EPHEMERAL_PORT => no_raw_ephemeral_port::check_with_files,
             MARKDOWN_EVAL_TESTS => markdown_eval_tests::check_with_files,
             PACKAGE_JSON_REGISTRY_ONLY => package_json_registry_only::check_with_files,
+            PACKAGE_JSON_REQUIRED_FIELDS => package_json_required_fields::check_with_files,
             PACKAGE_JSON_WORKSPACE_COVERAGE => package_json_workspace_coverage::check_with_files,
             PRODUCTION_DEPENDENCY_DECLARATIONS => production_dependency_declarations::check_with_files,
             WORKSPACE_PACKAGE_CYCLES => workspace_package_cycles::check_with_files,

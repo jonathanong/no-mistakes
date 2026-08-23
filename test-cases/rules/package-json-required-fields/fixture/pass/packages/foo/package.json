@@ -1,0 +1,7 @@
+{
+  "name": "@scope/foo",
+  "private": true,
+  "type": "module",
+  "license": "UNLICENSED",
+  "main": "index.mts"
+}

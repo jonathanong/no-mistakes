@@ -51,6 +51,7 @@ rules:
 | [`no-git-identity-mutation`](no-git-identity-mutation.md)                     | Ban scripts that mutate git identity.                                           |
 | [`no-raw-ephemeral-port`](no-raw-ephemeral-port.md)                           | Ban raw ephemeral port 0 binds and Node `listen(0)` calls.                      |
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |
+| [`package-json-required-fields`](package-json-required-fields.md)             | Require configured package.json field-shape policy.                             |
 | [`package-json-workspace-coverage`](package-json-workspace-coverage.md)       | Require package directories to be covered by workspace config.                  |
 | [`postgres-constraint-validate`](postgres-constraint-validate.md)                 | Pair named NOT VALID constraint adds with VALIDATE CONSTRAINT.              |
 | [`postgres-no-add-column`](postgres-no-add-column.md)                             | Ban ALTER TABLE ADD COLUMN in schema SQL.                                   |

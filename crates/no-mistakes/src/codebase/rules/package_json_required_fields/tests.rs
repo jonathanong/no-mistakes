@@ -1,0 +1,87 @@
+use super::*;
+use crate::config::v2::{
+    schema::{RuleDef, RuleScope},
+    NoMistakesConfig,
+};
+use std::path::{Path, PathBuf};
+
+fn fixture(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/package-json-required-fields/fixture")
+            .join(name),
+    )
+}
+
+fn config_yaml() -> &'static str {
+    r#"
+private: true
+type: module
+license: UNLICENSED
+requireScopedName: true
+unscopedNameExceptions: [web]
+mainWhenFileExists: index.mts
+"#
+}
+
+fn config() -> NoMistakesConfig {
+    NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(config_yaml()).unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    }
+}
+
+fn run(root: &Path) -> Vec<RuleFinding> {
+    let files = vec![
+        root.join("packages/foo/package.json"),
+        root.join("packages/foo/index.mts"),
+    ];
+    check_with_files(root, &config(), &files).unwrap()
+}
+
+#[test]
+fn flags_shape_violations() {
+    let findings = run(&fixture("fail"));
+    let targets: Vec<_> = findings
+        .iter()
+        .filter_map(|finding| finding.target.as_deref())
+        .collect();
+    assert!(targets.contains(&"name"), "{findings:?}");
+    assert!(targets.contains(&"private"), "{findings:?}");
+    assert!(targets.contains(&"type"), "{findings:?}");
+    assert!(targets.contains(&"license"), "{findings:?}");
+    assert!(targets.contains(&"main"), "{findings:?}");
+}
+
+#[test]
+fn pass_fixture_is_clean() {
+    assert!(run(&fixture("pass")).is_empty());
+}
+
+#[test]
+fn unscoped_exception_skips_name_check() {
+    let root = fixture("exception");
+    let files = vec![root.join("packages/web/package.json")];
+    let findings = check_with_files(&root, &config(), &files).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn empty_options_report_nothing() {
+    let root = fixture("fail");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let files = vec![root.join("packages/foo/package.json")];
+    assert!(check_with_files(&root, &config, &files).unwrap().is_empty());
+}

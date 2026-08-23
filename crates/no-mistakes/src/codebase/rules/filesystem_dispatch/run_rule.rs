@@ -57,6 +57,9 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         SHELLCHECK_RUNNER => {
             shellcheck_runner::check_with_files_and_sources(root, config, files, sources)
         }
+        PACKAGE_JSON_REQUIRED_FIELDS => {
+            package_json_required_fields::check_with_files_and_sources(root, config, files, sources)
+        }
         PACKAGE_JSON_WORKSPACE_COVERAGE => {
             package_json_workspace_coverage::check_with_files_and_sources(
                 root, config, files, sources,
