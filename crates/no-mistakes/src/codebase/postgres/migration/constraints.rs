@@ -90,6 +90,18 @@ pub(super) fn collect_alter_table(
                 facts.add_columns.push(SqlAddColumnMetadata {
                     table_name: table_name.clone(),
                     column_name: column_def.name.value.clone(),
+                    data_type: column_def.data_type.to_string(),
+                    nullable: !column_def
+                        .options
+                        .iter()
+                        .any(|option| matches!(&option.option, ColumnOption::NotNull)),
+                    default: column_def.options.iter().find_map(|option| {
+                        if let ColumnOption::Default(default) = &option.option {
+                            Some(default.to_string())
+                        } else {
+                            None
+                        }
+                    }),
                     line: line_containing(sql, &["add", &column_def.name.value]),
                 });
                 for option in &column_def.options {

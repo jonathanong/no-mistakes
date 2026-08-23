@@ -503,6 +503,33 @@ fn check_json_honors_release_age_group_validation_suppression() {
 }
 
 #[test]
+fn check_json_enforces_exact_postgres_add_column_migration_allowlist() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-no-add-column/fixture/mismatch");
+    let output = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root, "config": ".no-mistakes.yml" }).to_string(),
+    ))
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let findings = value["rules"].as_array().unwrap();
+
+    assert_eq!(findings.len(), 2, "{value:#?}");
+    assert!(findings.iter().any(|finding| {
+        finding["rule"] == "postgres-no-add-column"
+            && finding["target"] == "posts.status"
+            && finding["message"].as_str().is_some_and(|message| {
+                message.contains("does not match an allowedMigrations entry")
+            })
+    }));
+    assert!(findings.iter().any(|finding| {
+        finding["rule"] == "postgres-no-add-column"
+            && finding["message"].as_str().is_some_and(|message| {
+                message.contains("stale postgres-no-add-column allowedMigrations entry")
+        })
+    }));
+}
+
+#[test]
 fn check_json_reports_both_markdown_rule_ids() {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/markdown-report/fixture");
