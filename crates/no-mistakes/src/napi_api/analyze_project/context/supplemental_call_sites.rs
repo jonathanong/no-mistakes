@@ -11,8 +11,12 @@ fn supplemental_call_site_plan(
         // Playwright report inputs are already primary facts. Graph-only
         // inputs likewise already have richer import facts. Do not collect a
         // sparse call-site-only variant for either kind of source.
-        .filter(|path| !primary_files.contains(path) && !graph_files.contains(path))
-        .collect();
+        .collect::<Vec<_>>();
+    let files = crate::codebase::check_facts::ordered_path_exclusion(
+        &files,
+        primary_files,
+        graph_files,
+    );
     ScopeFactPlan {
         files,
         graph_files: Vec::new(),
