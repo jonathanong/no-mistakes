@@ -1,0 +1,10 @@
+rules:
+  - rule: package-json-required-fields
+    scope: repository
+    options:
+      private: true
+      type: module
+      license: UNLICENSED
+      requireScopedName: true
+      unscopedNameExceptions: [web]
+      mainWhenFileExists: index.mts
