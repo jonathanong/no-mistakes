@@ -1,4 +1,7 @@
 use super::*;
+use crate::codebase::ts_resolver::normalize_path;
+use crate::codebase::ts_source::relative_slash_path;
+use globset::Glob;
 
 pub(super) fn reference_exists(
     root: &Path,

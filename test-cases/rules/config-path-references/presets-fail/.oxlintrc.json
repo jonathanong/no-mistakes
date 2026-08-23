@@ -1,0 +1,15 @@
+{
+  "jsPlugins": [
+    { "specifier": "./plugins/missing.js" },
+    { "specifier": "eslint-plugin-oxlint" }
+  ],
+  "overrides": [
+    { "files": ["src/missing.ts", "src/**/*.ts"] }
+  ],
+  "rules": {
+    "custom/rule": [
+      "error",
+      { "baseline": [["src/missing-baseline.ts"]] }
+    ]
+  }
+}

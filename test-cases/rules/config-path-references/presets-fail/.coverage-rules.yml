@@ -1,0 +1,3 @@
+rules:
+  - paths: missing/**/*.rs
+  - paths: "!src/generated.rs"

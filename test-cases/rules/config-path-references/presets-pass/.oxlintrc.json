@@ -1,0 +1,15 @@
+{
+  "jsPlugins": [
+    { "specifier": "./plugins/local.js" },
+    { "specifier": "eslint-plugin-oxlint" }
+  ],
+  "overrides": [
+    { "files": ["src/app.ts", "src/**/*.ts"] }
+  ],
+  "rules": {
+    "custom/rule": [
+      "error",
+      { "baseline": [["src/app.ts"]] }
+    ]
+  }
+}

@@ -317,3 +317,174 @@ fn can_resolve_references_from_repository_root() {
     )
     .unwrap());
 }
+
+fn preset_opts() -> String {
+    r#"
+presets: [oxlintrc, knip, dependabot, sgconfig, syncpack, coverage-rules]
+"#
+    .to_string()
+}
+
+fn listed(root: &Path, rels: &[&str]) -> Vec<PathBuf> {
+    rels.iter().map(|rel| root.join(rel)).collect()
+}
+
+#[test]
+fn presets_report_missing_required_paths() {
+    let root = fixture_root("presets-fail");
+    let files = listed(
+        &root,
+        &[
+            ".oxlintrc.json",
+            "packages/app/.oxlintrc.json",
+            "knip.jsonc",
+            ".github/dependabot.yml",
+            "sgconfig.yml",
+            ".syncpackrc.json",
+            ".coverage-rules.yml",
+        ],
+    );
+    let findings = check_with_files(&root, &config(&preset_opts()), &files).unwrap();
+    let messages: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.message.clone())
+        .collect();
+    assert!(
+        messages.iter().any(|m| m.contains("plugins/missing.js")),
+        "{messages:?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .any(|m| m.contains("packages/app/.oxlintrc.json") && m.contains("nested-missing.js")),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| m.contains("src/missing.ts")),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| m.contains("src/root-missing.ts")),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| m.contains("missing-app")),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| m.contains("missing-rules")),
+        "{messages:?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .any(|m| m.contains("missing/*/package.json")),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| m.contains("missing/**/*.rs")),
+        "{messages:?}"
+    );
+    assert!(
+        !messages
+            .iter()
+            .any(|m| m.contains("generated") || m.contains("node_modules")),
+        "{messages:?}"
+    );
+}
+
+#[test]
+fn presets_pass_when_required_paths_exist() {
+    let root = fixture_root("presets-pass");
+    let files = listed(
+        &root,
+        &[
+            ".oxlintrc.json",
+            "plugins/local.js",
+            "src/app.ts",
+            "packages/app/.oxlintrc.json",
+            "packages/app/plugin.js",
+            "packages/app/src/index.ts",
+            "packages/app/package.json",
+            "knip.jsonc",
+            ".github/dependabot.yml",
+            "sgconfig.yml",
+            "rules/keep.yml",
+            ".syncpackrc.json",
+            ".coverage-rules.yml",
+        ],
+    );
+    let findings = check_with_files(&root, &config(&preset_opts()), &files).unwrap();
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
+fn unknown_presets_are_ignored() {
+    let root = fixture_root("presets-fail");
+    let files = listed(&root, &[".oxlintrc.json", "knip.jsonc"]);
+    let findings = check_with_files(&root, &config("presets: [unknown]"), &files).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn invalid_preset_config_surfaces_parse_errors() {
+    let dir = tempfile::tempdir().unwrap();
+    let path = dir.path().join("sgconfig.yml");
+    std::fs::write(&path, ":\n  -").unwrap();
+    let findings = check_with_files(dir.path(), &config("presets: [sgconfig]"), &[path]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("failed to parse YAML"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn extract_covers_optional_and_empty_preset_shapes() {
+    let knip: serde_yaml::Value = serde_yaml::from_str(
+        r#"
+workspaces:
+  ".":
+    entry: ["src/index.ts", "!src/generated.ts", "**/node_modules/**"]
+  1: { entry: skipped }
+"#,
+    )
+    .unwrap();
+    let knip_refs: Vec<_> = presets::extract("knip", &knip)
+        .into_iter()
+        .map(|extracted| extracted.value)
+        .collect();
+    assert_eq!(knip_refs, vec!["src/index.ts".to_string()]);
+
+    let empty: serde_yaml::Value = serde_yaml::from_str("updates: []").unwrap();
+    assert!(presets::extract("dependabot", &empty).is_empty());
+    assert!(presets::extract("unknown", &empty).is_empty());
+    assert!(presets::extract("coverage-rules", &empty).is_empty());
+    assert!(presets::extract("knip", &empty).is_empty());
+
+    let coverage: serde_yaml::Value = serde_yaml::from_str(
+        r#"
+rules:
+  - paths: src/**/*.ts
+  - paths: "!vendor/**"
+  - paths: { nested: true }
+"#,
+    )
+    .unwrap();
+    let coverage_refs: Vec<_> = presets::extract("coverage-rules", &coverage)
+        .into_iter()
+        .map(|extracted| extracted.value)
+        .collect();
+    assert_eq!(coverage_refs, vec!["src/**/*.ts".to_string()]);
+
+    assert!(presets::matches_preset(
+        "oxlintrc",
+        ".oxlintrc.json",
+        "pkg/.oxlintrc.json"
+    ));
+    assert!(!presets::matches_preset(
+        "dependabot",
+        "dependabot.yml",
+        "dependabot.yml"
+    ));
+}

@@ -1,9 +1,7 @@
 use super::RuleFinding;
-use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
-use globset::Glob;
 use rayon::prelude::*;
 use serde::Deserialize;
 use serde_yaml::Value;
@@ -11,6 +9,7 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "config-path-references";
 
+mod presets;
 mod references;
 use references::reference_exists;
 
@@ -21,6 +20,7 @@ pub(crate) struct Options {
     pub(crate) keys: Vec<String>,
     pub(crate) base_dir: BaseDir,
     pub(crate) allow_globs: bool,
+    pub(crate) presets: Vec<String>,
 }
 
 #[derive(Clone, Copy, Deserialize, Default, PartialEq, Eq)]
@@ -90,36 +90,50 @@ fn scan(
         {
             Ok(value) => value,
             Err(error) => {
-                findings.push(RuleFinding {
-                    rule: RULE_ID.to_string(),
-                    file: rel.clone(),
-                    line: 1,
-                    message: format!("{rel}: {error}"),
-                    import: None,
-                    target: None,
-                });
+                findings.push(parse_finding(&rel, error));
                 continue;
             }
         };
         for key in &opts.keys {
             for reference in values_at_key(&value, key) {
                 if !reference_exists(root, &path, opts, &reference, &rel_files)? {
-                    findings.push(RuleFinding {
-                        rule: RULE_ID.to_string(),
-                        file: rel.clone(),
-                        line: 1,
-                        message: format!(
-                            "{rel}: config path `{reference}` from `{key}` does not exist"
-                        ),
-                        import: None,
-                        target: Some(reference),
-                    });
+                    findings.push(missing_finding(&rel, &reference, key));
                 }
             }
         }
     }
+    presets::scan(
+        root,
+        opts,
+        config_candidates,
+        &rel_files,
+        sources,
+        &mut findings,
+    )?;
     findings.sort_by(|a, b| a.file.cmp(&b.file).then(a.message.cmp(&b.message)));
     Ok(findings)
+}
+
+fn parse_finding(rel: &str, error: String) -> RuleFinding {
+    RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: rel.to_string(),
+        line: 1,
+        message: format!("{rel}: {error}"),
+        import: None,
+        target: None,
+    }
+}
+
+fn missing_finding(rel: &str, reference: &str, key: &str) -> RuleFinding {
+    RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: rel.to_string(),
+        line: 1,
+        message: format!("{rel}: config path `{reference}` from `{key}` does not exist"),
+        import: None,
+        target: Some(reference.to_string()),
+    }
 }
 
 fn values_at_key(value: &Value, key: &str) -> Vec<String> {

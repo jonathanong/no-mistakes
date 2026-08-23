@@ -1,0 +1,12 @@
+{
+  // knip workspace globs
+  "workspaces": {
+    ".": {
+      "entry": ["src/app.ts", "!src/generated.ts"]
+    },
+    "packages/app": {
+      "entry": "src/index.ts",
+      "project": ["**/node_modules/**"]
+    }
+  }
+}

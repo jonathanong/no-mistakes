@@ -90,6 +90,8 @@ words:
   - shellcheck
   - shasum
   - Sidekiq
+  - syncpack
+  - syncpackrc
   - Symfony
   - subdirs
   - subpaths
