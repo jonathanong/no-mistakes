@@ -6,6 +6,7 @@ TypeScript.
 
 These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-lock-ordering`, `postgres-no-offset`,
+`postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`, and
 `postgres-constraint-validate` consume
@@ -135,11 +136,18 @@ nested queries, and MySQL `LIMIT offset, limit` form. String literals that
 mention the word "offset" are not clauses. Unparseable SQL returns an error.
 `postgres-no-offset` consumes this helper.
 
+## Query annotation facts
+
+`sql_requires_query_annotation(sql)` reports whether executed SQL is missing a
+leading `/* name */` block comment. `BEGIN` / `COMMIT` / `ROLLBACK` are
+exempt, including when they already carry a leading block comment. Line
+comments (`-- name`) and empty `/* */` comments are not annotations.
+`postgres-require-query-annotation` consumes this helper.
+
 ## Out of scope
 
 Lock-ordering and runtime-query *rules* are not part of this fact layer.
-Query-name annotations, election-schema vote tables, and UUIDv7 predicates
-are also out of scope.
+Election-schema vote tables and UUIDv7 predicates are also out of scope.
 
 `postgres-redundant-index` v1 also leaves these migration index transitions
 unmodeled: quoted mixed-case identifier quote semantics (`"Events"` versus
