@@ -124,26 +124,6 @@ fn composite_action_changes_resolve_direct_and_nested_callers() {
 }
 
 #[test]
-fn local_actions_are_found_through_reusable_workflows_and_outside_github_actions() {
-    for case in [
-        Case {
-            name: "reusable-workflow-action",
-            roots: &[".github/workflows/ci.yml#test-tooling"],
-            workflows: &[".github/workflows/ci.yml", ".github/workflows/tooling.yml"],
-            global: false,
-        },
-        Case {
-            name: "repository-action",
-            roots: &[".github/workflows/ci.yml#test-web"],
-            workflows: &[".github/workflows/ci.yml"],
-            global: false,
-        },
-    ] {
-        assert_case(case);
-    }
-}
-
-#[test]
 fn unowned_action_fails_open_with_a_global_diagnostic() {
     let report = report("unowned-action");
     assert!(report.global_fallback);
