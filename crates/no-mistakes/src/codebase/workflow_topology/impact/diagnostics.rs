@@ -24,21 +24,24 @@ pub(super) fn topology_diagnostic(
         .flatten()
         .cloned()
         .collect::<BTreeSet<_>>();
-    if diagnostic.workflow_path == entry {
-        if let Some(job_id) = &diagnostic.job_id {
-            if base
-                .jobs
+    let entry_job_is_bound = diagnostic.workflow_path == entry
+        && diagnostic.job_id.as_ref().is_some_and(|job_id| {
+            base.jobs
                 .iter()
                 .chain(&head.jobs)
                 .any(|job| job.id == *job_id && job.workflow_id == entry)
-            {
-                roots.insert(job_id.clone());
-            }
-        }
+        });
+    if let Some(job_id) = diagnostic.job_id.as_ref().filter(|_| entry_job_is_bound) {
+        roots.insert(job_id.clone());
     }
     let localized = !roots.is_empty()
         && !requires_unbound_global(diagnostic.code)
-        && endpoint_roots.iter().all(|roots| !roots.is_empty())
+        && endpoints
+            .iter()
+            .zip(&endpoint_roots)
+            .all(|(endpoint, roots)| {
+                (endpoint == entry && entry_job_is_bound) || !roots.is_empty()
+            })
         && endpoints.iter().all(|endpoint| {
             endpoint == entry
                 || base

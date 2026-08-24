@@ -54,26 +54,36 @@ pub(super) fn add_needs_closure(
     base: &WorkflowTopology,
     head: &WorkflowTopology,
 ) {
-    let mut neighbors = HashMap::<String, Vec<String>>::new();
+    let mut prerequisites = HashMap::<String, Vec<String>>::new();
+    let mut dependents = HashMap::<String, Vec<String>>::new();
     for topology in [base, head] {
         for edge in &topology.edges {
             if let WorkflowTopologyEdge::Needs(edge) = edge {
-                neighbors
-                    .entry(edge.from.clone())
-                    .or_default()
-                    .push(edge.to.clone());
-                neighbors
+                prerequisites
                     .entry(edge.to.clone())
                     .or_default()
                     .push(edge.from.clone());
+                dependents
+                    .entry(edge.from.clone())
+                    .or_default()
+                    .push(edge.to.clone());
             }
         }
     }
-    let mut pending: Vec<String> = selected.iter().cloned().collect();
+    let changed = selected.clone();
+    let mut pending: Vec<String> = changed.iter().cloned().collect();
     while let Some(job) = pending.pop() {
-        for neighbor in neighbors.remove(&job).unwrap_or_default() {
-            if selected.insert(neighbor.clone()) {
-                pending.push(neighbor);
+        for prerequisite in prerequisites.remove(&job).unwrap_or_default() {
+            if selected.insert(prerequisite.clone()) {
+                pending.push(prerequisite);
+            }
+        }
+    }
+    let mut pending: Vec<String> = changed.into_iter().collect();
+    while let Some(job) = pending.pop() {
+        for dependent in dependents.remove(&job).unwrap_or_default() {
+            if selected.insert(dependent.clone()) {
+                pending.push(dependent);
             }
         }
     }

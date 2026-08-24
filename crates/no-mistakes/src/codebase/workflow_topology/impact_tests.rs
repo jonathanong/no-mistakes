@@ -124,6 +124,26 @@ fn topology_diagnostics_are_local_only_with_bound_root_evidence() {
 }
 
 #[test]
+fn entry_job_diagnostic_localizes_to_its_verified_job() {
+    let report = report("entry-job-diagnostic");
+    assert!(!report.global_fallback);
+    assert_eq!(
+        report.affected_root_job_ids,
+        [".github/workflows/ci.yml#test-web"]
+    );
+    let diagnostic = report
+        .diagnostics
+        .iter()
+        .find(|diagnostic| diagnostic.code == "duplicate-step-id")
+        .expect("entry job diagnostic");
+    assert_eq!(format!("{:?}", diagnostic.scope), "Localized");
+    assert_eq!(
+        diagnostic.root_job_ids,
+        Some(vec![".github/workflows/ci.yml#test-web".into()])
+    );
+}
+
+#[test]
 fn reports_are_deterministic_across_identical_revision_queries() {
     let fixture = fixture("reusable-renamed");
     let root = fixture.path().join("base");

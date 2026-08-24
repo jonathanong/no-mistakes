@@ -1,0 +1,17 @@
+name: CI
+on: push
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo prepare
+  test-web:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test:web --changed
+  lint:
+    needs: prepare
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm lint

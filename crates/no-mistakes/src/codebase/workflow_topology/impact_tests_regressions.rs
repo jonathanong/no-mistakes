@@ -90,6 +90,19 @@ fn needs_closure_unions_both_revisions_and_both_directions() {
 }
 
 #[test]
+fn needs_closure_does_not_pull_siblings_through_a_prerequisite() {
+    assert_case(Case {
+        name: "needs-sibling",
+        roots: &[
+            ".github/workflows/ci.yml#prepare",
+            ".github/workflows/ci.yml#test-web",
+        ],
+        workflows: &[".github/workflows/ci.yml"],
+        global: false,
+    });
+}
+
+#[test]
 fn composite_action_changes_resolve_direct_and_nested_callers() {
     for (name, roots) in [
         ("direct-action", &[".github/workflows/ci.yml#test-web"][..]),
@@ -107,6 +120,26 @@ fn composite_action_changes_resolve_direct_and_nested_callers() {
             workflows: &[".github/workflows/ci.yml"],
             global: false,
         });
+    }
+}
+
+#[test]
+fn local_actions_are_found_through_reusable_workflows_and_outside_github_actions() {
+    for case in [
+        Case {
+            name: "reusable-workflow-action",
+            roots: &[".github/workflows/ci.yml#test-tooling"],
+            workflows: &[".github/workflows/ci.yml", ".github/workflows/tooling.yml"],
+            global: false,
+        },
+        Case {
+            name: "repository-action",
+            roots: &[".github/workflows/ci.yml#test-web"],
+            workflows: &[".github/workflows/ci.yml"],
+            global: false,
+        },
+    ] {
+        assert_case(case);
     }
 }
 

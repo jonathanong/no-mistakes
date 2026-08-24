@@ -55,7 +55,7 @@ fn collect_workflows(
             format!("{prefix}/{name}")
         };
         if entry.kind() == Some(git2::ObjectType::Tree) {
-            if name == ".github" || prefix.starts_with(".github") {
+            if is_workflow_tree(&path) {
                 collect_workflows(
                     repo,
                     &entry.to_object(repo)?.peel_to_tree()?,
@@ -78,4 +78,22 @@ fn collect_workflows(
         documents.push(ParsedWorkflowDocument { path, value });
     }
     Ok(())
+}
+
+fn is_workflow_tree(path: &str) -> bool {
+    path == ".github" || path == ".github/workflows" || path.starts_with(".github/workflows/")
+}
+
+#[cfg(test)]
+mod tests {
+    use super::is_workflow_tree;
+
+    #[test]
+    fn descends_only_to_workflow_directories() {
+        assert!(is_workflow_tree(".github"));
+        assert!(is_workflow_tree(".github/workflows"));
+        assert!(is_workflow_tree(".github/workflows/reusable"));
+        assert!(!is_workflow_tree(".github/actions"));
+        assert!(!is_workflow_tree(".github/ISSUE_TEMPLATE"));
+    }
 }
