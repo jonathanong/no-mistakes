@@ -330,6 +330,22 @@ fn run_all_surfaces_invalid_rule_option_types() {
 }
 
 #[test]
+fn run_all_surfaces_invalid_unique_exports_option_types() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/invalid-unique-exports-options");
+
+    let error = run_all(root, None, None)
+        .err()
+        .expect("invalid configured unique-exports options must fail the check");
+    let message = format!("{error:#}");
+
+    assert!(message.contains("invalid options for rule `unique-exports`"));
+    assert!(message.contains("options.uniqueAcrossTypesAndValues"));
+    assert!(message.contains("string"));
+    assert!(message.contains("expected a boolean"));
+}
+
+#[test]
 fn run_all_propagates_integration_check_error() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/integration-tests/missing-config/fixture");

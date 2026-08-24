@@ -25,9 +25,9 @@ pub(super) fn scan(
     )
     .context(format!("{RULE_ID} failed to collect PostgreSQL facts"))?;
     let mut findings = Vec::new();
-    let mut seen_allowed_migrations = BTreeSet::new();
+    let mut unique_allowed_migrations = BTreeSet::new();
     for migration in &opts.allowed_migrations {
-        if seen_allowed_migrations.insert(migration.clone()) {
+        if unique_allowed_migrations.insert(migration.clone()) {
             continue;
         }
         findings.push(RuleFinding {
@@ -42,7 +42,9 @@ pub(super) fn scan(
             target: Some(allowed_migration_target(migration)),
         });
     }
-    let mut remaining_allowed_migrations = opts.allowed_migrations.clone();
+    // Duplicate entries are findings, not additional one-to-one allowances. Keeping
+    // only unique entries here prevents a duplicate from also being reported stale.
+    let mut remaining_allowed_migrations = unique_allowed_migrations;
     for file in &facts.schema {
         let rel = sql_rel(root, &file.path);
         for column in &file.add_columns {
@@ -54,11 +56,7 @@ pub(super) fn scan(
                 nullable: column.nullable,
                 default: column.default.clone(),
             };
-            if let Some(index) = remaining_allowed_migrations
-                .iter()
-                .position(|migration| migration == &actual)
-            {
-                remaining_allowed_migrations.remove(index);
+            if remaining_allowed_migrations.remove(&actual) {
                 continue;
             }
             let message = if opts.allowed_migrations.is_empty() {

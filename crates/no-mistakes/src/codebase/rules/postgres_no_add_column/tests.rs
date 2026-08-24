@@ -161,3 +161,20 @@ fn reports_duplicate_allowed_migrations() {
         .message
         .contains("duplicate postgres-no-add-column allowedMigrations entry"));
 }
+
+#[test]
+fn duplicate_allowed_migration_does_not_also_report_as_stale() {
+    let root = fixture("allowed");
+    let mut config = config_with_allowed_migration("draft");
+    let duplicate = config.rules[0].options["allowedMigrations"][0].clone();
+    config.rules[0].options["allowedMigrations"]
+        .as_sequence_mut()
+        .unwrap()
+        .push(duplicate);
+
+    let findings = run_with_config(&root, config);
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(findings[0]
+        .message
+        .contains("duplicate postgres-no-add-column allowedMigrations entry"));
+}
