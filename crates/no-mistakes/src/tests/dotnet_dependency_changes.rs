@@ -3,7 +3,7 @@ use super::prepared_plan::revisions::RevisionSources;
 use super::Warning;
 use no_mistakes::codebase::dotnet::{
     dependency_only_central_packages_change, dependency_only_lockfile_change,
-    dependency_only_project_change, DotnetDependencyDiagnostic,
+    dependency_only_project_change, is_dotnet_lockfile, DotnetDependencyDiagnostic,
 };
 use std::collections::{BTreeSet, HashSet};
 use std::path::{Path, PathBuf};
@@ -43,7 +43,7 @@ pub(crate) fn analyze_dotnet_dependency_changes(
     for path in changed {
         let kind = match path.file_name().and_then(|x| x.to_str()) {
             Some("Directory.Packages.props") => DotnetArtifactKind::CentralPackages,
-            Some("packages.lock.json") => DotnetArtifactKind::Lockfile,
+            Some(_) if is_dotnet_lockfile(path) => DotnetArtifactKind::Lockfile,
             _ if path.extension().and_then(|x| x.to_str()) == Some("csproj") => {
                 DotnetArtifactKind::Project
             }
@@ -273,5 +273,19 @@ mod tests {
         let ignored_revisions = revisions(&root, &ignored_args);
         let ignored = analyze_dotnet_dependency_changes(&root, &[unrelated], &ignored_revisions);
         assert!(ignored.artifacts.is_empty() && ignored.warnings.is_empty());
+    }
+
+    #[test]
+    fn recognizes_rid_lockfiles_as_semantic_dependency_artifacts() {
+        let lock = analysis(
+            "lock-version.json",
+            "packages.net10.0-maccatalyst.arm64.lock.json",
+        );
+        assert_eq!(lock.artifacts.len(), 1);
+        assert_eq!(lock.artifacts[0].kind, DotnetArtifactKind::Lockfile);
+        assert_eq!(
+            lock.artifacts[0].changed_dependencies,
+            BTreeSet::from(["net9.0:Alpha".to_string()])
+        );
     }
 }

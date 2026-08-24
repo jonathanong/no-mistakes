@@ -24,6 +24,18 @@ pub(crate) use dependency_diff::{
 use project::parse_project;
 pub(crate) use types::{DotnetConfigProject, DotnetFactMap, DotnetFileFacts, DotnetProjectFacts};
 
+pub(crate) fn is_dotnet_lockfile(path: &Path) -> bool {
+    let Some(name) = path.file_name().and_then(|name| name.to_str()) else {
+        return false;
+    };
+    if name == "packages.lock.json" {
+        return true;
+    }
+    name.strip_prefix("packages.")
+        .and_then(|suffix| suffix.strip_suffix(".lock.json"))
+        .is_some_and(|variant| !variant.is_empty())
+}
+
 pub(crate) fn collect_dotnet_facts(
     root: &Path,
     all_files: &[PathBuf],

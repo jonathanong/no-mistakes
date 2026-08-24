@@ -163,7 +163,8 @@ selected.
 
 Swift and Dotnet dependency files use the same policy. Static `Package.swift`
 dependency declarations, `Package.resolved` pins, `.csproj` package references,
-`Directory.Packages.props`, and `packages.lock.json` changes seed their owning
+`Directory.Packages.props`, and `packages.lock.json` (including TFM/RID variants
+such as `packages.net10.0-maccatalyst.arm64.lock.json`) changes seed their owning
 projects and downstream dependents. Unsupported dynamic declarations,
 malformed files, and missing revisions emit typed warnings and require explicit
 global fallback opt-in for full-suite selection.

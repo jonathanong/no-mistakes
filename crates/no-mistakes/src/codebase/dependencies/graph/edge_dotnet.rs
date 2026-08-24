@@ -56,11 +56,13 @@ fn collect_dotnet_dependency_file_edges(
             ));
         }
 
-        let lock = project.project_dir.join("packages.lock.json");
-        if all_files.contains(&lock) {
+        for lock in all_files.iter().filter(|path| {
+            path.parent() == Some(project.project_dir.as_path())
+                && crate::codebase::dotnet::is_dotnet_lockfile(path)
+        }) {
             edges.push((
                 NodeId::file_in(interner, &project.project_path),
-                NodeId::file_in(interner, &lock),
+                NodeId::file_in(interner, lock),
                 EdgeKind::DotnetProjectDependency,
             ));
         }
