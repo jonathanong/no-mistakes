@@ -4,7 +4,7 @@ jobs:
   test-web:
     runs-on: ubuntu-latest
     steps:
-      - run: pnpm test:web
+      - uses: ./.github/actions/opencode-code-review
   test-backend:
     runs-on: ubuntu-latest
     steps:

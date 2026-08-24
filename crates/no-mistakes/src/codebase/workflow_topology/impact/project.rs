@@ -89,23 +89,7 @@ pub(super) fn project_impact(inputs: ImpactInputs<'_>) -> CiTopologyImpactReport
         .filter(|path| reachable.contains(*path))
         .cloned()
         .collect::<BTreeSet<_>>();
-    let unknown_changed_workflow = changed_paths.iter().any(|path| {
-        (path.starts_with(".github/workflows/")
-            && (path.ends_with(".yml") || path.ends_with(".yaml")))
-            && !known_workflow_paths.contains(path.as_str())
-    });
     global_fallback |= entry_global_change;
-    if unknown_changed_workflow {
-        global_fallback = true;
-        diagnostics.push(CiTopologyImpactDiagnostic {
-            code: "unrecognized-workflow".into(),
-            message: "a changed workflow descriptor is absent or unparseable in both revisions"
-                .into(),
-            workflow_path: None,
-            scope: CiTopologyImpactDiagnosticScope::Global,
-            root_job_ids: None,
-        });
-    }
     if unowned_action {
         global_fallback = true;
         diagnostics.push(CiTopologyImpactDiagnostic {

@@ -1,4 +1,4 @@
-name: web action
+name: opencode code review
 runs:
   using: composite
   steps:
