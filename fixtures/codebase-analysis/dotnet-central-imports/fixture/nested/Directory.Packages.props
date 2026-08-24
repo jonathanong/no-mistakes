@@ -1,0 +1,1 @@
+<Project><![CDATA[<Import Project="../ignored.props" />]]><!-- <Import Project="../ignored.props" /> --><Import Condition="'false' == 'true'" Project="$([MSBuild]::GetPathOfFileAbove('Directory.Packages.props', '$(MSBuildThisFileDirectory)..'))" /></Project>

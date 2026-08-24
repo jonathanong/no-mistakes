@@ -176,6 +176,7 @@ fn dotnet_dependency_files_connect_only_actual_project_consumers() {
     collect_dotnet_dependency_file_edges(
         &facts,
         &[central.clone(), lock.clone()],
+        None,
         &mut edges,
         &crate::codebase::analysis_session::PathInterner::new(),
     );
@@ -218,6 +219,7 @@ fn dotnet_central_package_edges_use_only_the_nearest_ancestor() {
     collect_dotnet_dependency_file_edges(
         &facts,
         &[root_central.clone(), app_central.clone()],
+        None,
         &mut edges,
         &crate::codebase::analysis_session::PathInterner::new(),
     );
@@ -253,6 +255,7 @@ fn dotnet_central_package_edges_include_projects_without_package_references() {
     collect_dotnet_dependency_file_edges(
         &facts,
         std::slice::from_ref(&central),
+        None,
         &mut edges,
         &crate::codebase::analysis_session::PathInterner::new(),
     );
@@ -262,6 +265,57 @@ fn dotnet_central_package_edges_include_projects_without_package_references() {
         NodeId::file(central),
         EdgeKind::DotnetProjectDependency,
     )));
+}
+
+#[test]
+fn dotnet_central_package_import_edges_follow_configured_project_closure() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis/dotnet-central-imports/fixture"),
+    );
+    let parent = root.join("Directory.Packages.props");
+    let nested = root.join("nested/Directory.Packages.props");
+    let deeper = root.join("nested/deeper/Directory.Packages.props");
+    let malformed = root.join("malformed/Directory.Packages.props");
+    let unrelated = root.join("unrelated/Directory.Packages.props");
+    let files = crate::codebase::ts_source::discover_files(&root, &[]);
+    let sources = crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(
+        crate::codebase::ts_source::FileInventory::from_paths(&files),
+    ));
+    let mut facts = crate::codebase::dotnet::DotnetFactMap::default();
+    for project in [
+        root.join("nested/deeper/Configured.csproj"),
+        root.join("malformed/Configured.csproj"),
+    ] {
+        facts.projects.insert(
+            project.clone(),
+            crate::codebase::dotnet::DotnetProjectFacts {
+                project_dir: project.parent().unwrap().to_path_buf(),
+                project_path: project,
+                ..Default::default()
+            },
+        );
+    }
+
+    let mut edges = Vec::new();
+    collect_dotnet_central_import_edges(
+        &facts,
+        &files,
+        Some(&sources),
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+
+    assert_eq!(
+        edges,
+        vec![
+            (NodeId::file(malformed), NodeId::file(parent.clone()), EdgeKind::DotnetProjectDependency),
+            (NodeId::file(deeper), NodeId::file(nested.clone()), EdgeKind::DotnetProjectDependency),
+            (NodeId::file(nested), NodeId::file(parent), EdgeKind::DotnetProjectDependency),
+        ]
+    );
+    let unrelated = NodeId::file(unrelated);
+    assert!(edges.iter().all(|(from, _, _)| from != &unrelated));
 }
 
 #[test]

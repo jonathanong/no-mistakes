@@ -34,6 +34,7 @@ pub(super) fn dotnet_dependency_seed_candidates(
                         &artifact.changed_dependencies,
                         facts,
                         visible_paths,
+                        Some(graph),
                     )
                 })
                 .unwrap_or_default(),
@@ -128,6 +129,7 @@ mod dotnet_semantic_seed_tests {
                 &BTreeSet::from(["App.Only".to_string()]),
                 &facts,
                 &central_files,
+                None,
             ),
             vec![root.join("app/app.csproj")]
         );
@@ -138,6 +140,7 @@ mod dotnet_semantic_seed_tests {
                 &BTreeSet::from(["Core.Only".to_string()]),
                 &facts,
                 &central_files,
+                None,
             ),
             vec![root.join("core/core.csproj")]
         );
@@ -147,6 +150,7 @@ mod dotnet_semantic_seed_tests {
             &BTreeSet::from(["App.Only".to_string()]),
             &facts,
             &central_files,
+            None,
         )
         .is_empty());
         assert_eq!(
@@ -156,6 +160,7 @@ mod dotnet_semantic_seed_tests {
                 &BTreeSet::from(["app.only".to_string()]),
                 &facts,
                 &central_files,
+                None,
             ),
             vec![root.join("app/app.csproj")],
             "NuGet package identities are case-insensitive"
@@ -166,6 +171,7 @@ mod dotnet_semantic_seed_tests {
             &BTreeSet::from(["Other".to_string()]),
             &facts,
             &central_files,
+            None,
         )
         .is_empty());
     }
@@ -208,6 +214,7 @@ pub(super) fn central_package_seed_roots(
     packages: &std::collections::BTreeSet<String>,
     facts: &no_mistakes::codebase::dotnet::DotnetFactMap,
     visible_paths: &[PathBuf],
+    graph: Option<&DepGraph>,
 ) -> Vec<PathBuf> {
     facts
         .projects
@@ -217,11 +224,27 @@ pub(super) fn central_package_seed_roots(
                 packages
                     .iter()
                     .any(|package| reference.eq_ignore_ascii_case(package))
-            }) && nearest_central_props(root, &project.project_dir, visible_paths).as_deref()
-                == Some(props)
+            }) && nearest_central_props(root, &project.project_dir, visible_paths)
+                .is_some_and(|nearest| central_import_chain_contains(&nearest, props, graph))
         })
         .map(|project| project.project_path.clone())
         .collect()
+}
+
+fn central_import_chain_contains(central: &Path, sought: &Path, graph: Option<&DepGraph>) -> bool {
+    central == sought
+        || graph.is_some_and(|graph| {
+            graph
+            .deps_of(
+                &[NodeId::file(central.to_path_buf())],
+                None,
+                Some(&HashSet::from([
+                    no_mistakes::codebase::dependencies::graph::EdgeKind::DotnetProjectDependency,
+                ])),
+            )
+            .iter()
+            .any(|entry| entry.node.as_file() == Some(sought))
+        })
 }
 fn nearest_central_props(root: &Path, dir: &Path, visible_paths: &[PathBuf]) -> Option<PathBuf> {
     let mut current = dir.to_path_buf();

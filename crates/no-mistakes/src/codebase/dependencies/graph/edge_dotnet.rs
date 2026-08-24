@@ -31,7 +31,7 @@ fn collect_dotnet_edges(
     collect_dotnet_using_edges(facts, &mut edges, interner);
     collect_dotnet_reference_edges(facts, &mut edges, interner);
     collect_dotnet_project_edges(facts, &mut edges, interner);
-    collect_dotnet_dependency_file_edges(facts, all_files, &mut edges, interner);
+    collect_dotnet_dependency_file_edges(facts, all_files, sources, &mut edges, interner);
     collect_dotnet_route_edges(root, facts, config_options, &mut edges, interner);
     edges
 }
@@ -43,6 +43,7 @@ fn collect_dotnet_edges(
 fn collect_dotnet_dependency_file_edges(
     facts: &crate::codebase::dotnet::DotnetFactMap,
     all_files: &[PathBuf],
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
     edges: &mut Vec<Edge>,
     interner: &PathInterner,
 ) {
@@ -84,11 +85,13 @@ fn collect_dotnet_dependency_file_edges(
         if let Some(central) = central {
             edges.push((
                 NodeId::file_in(interner, &project.project_path),
-                NodeId::file_in(interner, central),
+                NodeId::file_in(interner, &central),
                 EdgeKind::DotnetProjectDependency,
             ));
         }
     }
+
+    collect_dotnet_central_import_edges(facts, all_files, sources, edges, interner);
 }
 
 fn collect_dotnet_route_edges(

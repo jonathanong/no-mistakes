@@ -155,10 +155,15 @@ testPlan:
 Dependency groups use the canonical graph, including C# namespace imports, type
 references, and `.csproj` `ProjectReference` edges. The `coverage` group is
 Playwright-only; Dotnet plans reject it with a framework-specific error.
-Dependency-only `.csproj`, nearest-ancestor `Directory.Packages.props`, and
+Dependency-only `.csproj`, nearest-ancestor `Directory.Packages.props` (plus
+an explicitly imported ancestor central manifest), and
 per-project `packages.lock.json` changes seed the exact consuming project and
 its downstream tests. Configured test projects are discovered independently of
 solution membership, so their execution target remains the test `.csproj`.
+Literal imports and the standard parent-search `GetPathOfFileAbove` import are
+recognized; conditional imports are included conservatively, while XML comments
+and CDATA are ignored. An unterminated ignored region conservatively retains
+all ancestor central manifests rather than silently omitting their consumers.
 `Directory.Build.props`, `Directory.Build.targets`, `NuGet.config`, and
 `global.json` retain broad native fallback behavior.
 If the configured project graph cannot trace a native source/project change but

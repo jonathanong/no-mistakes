@@ -100,6 +100,52 @@ fn test_plan_dotnet_global_package_reference_reaches_project_without_package_ref
 }
 
 #[test]
+fn test_plan_dotnet_parent_central_import_reaches_nested_project_without_global_fallback() {
+    // The root central manifest has a direct consumer, so the changed artifact
+    // is globally traceable even if a nested consumer is accidentally omitted.
+    let fixture = saved_fixture::materialize("test-plan", "dotnet-central-parent-import/fixture");
+    let root = fixture.path();
+    git_init(root);
+    replace_from_change(root, "Directory.Packages.props", "Directory.Packages.props");
+
+    let plan = semantic_plan(root, "Directory.Packages.props", false);
+    assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
+    assert_eq!(
+        group(&plan, "dependencies"),
+        vec![
+            "nested/tests/NestedServiceTests.cs",
+            "root/tests/RootServiceTests.cs",
+        ],
+        "{plan:#}"
+    );
+    assert!(
+        !group(&plan, "dependencies").contains(&"isolated/tests/IsolatedServiceTests.cs"),
+        "{plan:#}"
+    );
+}
+
+#[test]
+fn test_plan_dotnet_parent_central_import_is_seeded_without_a_direct_parent_consumer() {
+    let fixture = saved_fixture::materialize("test-plan", "dotnet-central-parent-import/fixture");
+    let root = fixture.path();
+    std::fs::copy(
+        root.join("changes/no-direct.yml"),
+        root.join(".no-mistakes.yml"),
+    )
+    .unwrap();
+    git_init(root);
+    replace_from_change(root, "Directory.Packages.props", "Directory.Packages.props");
+
+    let plan = semantic_plan(root, "Directory.Packages.props", false);
+    assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
+    assert_eq!(
+        group(&plan, "dependencies"),
+        vec!["nested/tests/NestedServiceTests.cs"],
+        "{plan:#}"
+    );
+}
+
+#[test]
 fn test_plan_dotnet_semantic_project_and_lock_changes_select_only_owner_tests() {
     for (change, target) in [
         ("app-lock.json", "app/packages.lock.json"),
