@@ -58,7 +58,9 @@ jobs:
             fi
           done
 
-          git diff --name-only -z "$BASE_SHA" "$HEAD_SHA" |
+          # Disable rename detection so fixture moves emit both the deleted source
+          # and added destination paths, selecting both semantic shards.
+          git diff --no-renames --name-only -z "$BASE_SHA" "$HEAD_SHA" |
             node .github/scripts/benchmark-change-scope.cjs >> "$GITHUB_OUTPUT"
 
   quality:

@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 
 const { benchmarkChangeScope } = require(
@@ -48,4 +49,12 @@ test("ignores unrelated changes and supports an explicit full fallback", () => {
     scope: "none",
   });
   assert.deepEqual(benchmarkChangeScope([], true), { changed: true, scope: "all" });
+});
+
+test("change discovery preserves both sides of fixture renames", () => {
+  const workflow = readFileSync(
+    join(__dirname, "..", "..", ".github", "workflows", "ci.yml"),
+    "utf8",
+  );
+  assert.match(workflow, /git diff --no-renames --name-only -z/);
 });
