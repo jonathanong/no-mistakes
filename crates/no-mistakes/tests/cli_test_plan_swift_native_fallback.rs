@@ -50,9 +50,7 @@ fn test_plan_swift_falls_back_when_source_graph_is_unconfigured() {
         .as_array()
         .unwrap()
         .iter()
-        .find(|test| {
-            test["test_file"] == "core/Tests/VouchaCoreTests/APIClientTests.swift"
-        })
+        .find(|test| test["test_file"] == "core/Tests/VouchaCoreTests/APIClientTests.swift")
         .unwrap();
     assert_eq!(
         core["targets"][0]["base_command"],
