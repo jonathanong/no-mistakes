@@ -7,6 +7,8 @@ fn workspace_filters_only_read_executable_yaml_run_scalars() {
     assert_eq!(
         values,
         vec![
+            "./env-wrapper",
+            "./command-wrapper",
             "./unconditional",
             "./optional",
             "./packages/app",

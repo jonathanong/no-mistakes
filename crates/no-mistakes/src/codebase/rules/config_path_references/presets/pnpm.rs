@@ -60,9 +60,10 @@ fn is_pnpm_invocation(source: &str, filter_offset: usize) -> bool {
         })
         .unwrap_or(0);
     let command = source[command_start..filter_offset].trim();
-    let invocation =
-        Regex::new(r"^(?:(?:[A-Za-z_][A-Za-z0-9_]*=[^\s]+)\s+)*(?:then\s+)?pnpm(?:\s|$)")
-            .expect("pnpm invocation pattern is valid");
+    let invocation = Regex::new(
+        r"^(?:(?:[A-Za-z_][A-Za-z0-9_]*=[^\s]+)\s+)*(?:(?:then\s+|command(?:\s+--)?\s+)|env(?:\s+(?:-[A-Za-z]+|--[A-Za-z-]+(?:=[^\s]+)?|[A-Za-z_][A-Za-z0-9_]*=[^\s]+))*\s+)?pnpm(?:\s|$)",
+    )
+    .expect("pnpm invocation pattern is valid");
     invocation.is_match(command)
 }
 
