@@ -141,8 +141,13 @@ impl PreparedTestPlanInputs {
         let workspace_map =
             no_mistakes::codebase::workspaces::load_from_source_store(&root, &sources)
                 .unwrap_or_default();
-        let package_manifest_analysis =
-            analyze_package_manifest_changes(&root, &collected.files, &revisions, &workspace_map);
+        let package_manifest_analysis = analyze_package_manifest_changes(
+            &root,
+            &collected.files,
+            &revisions,
+            &workspace_map,
+            &sources,
+        );
         let lockfile_analysis = analyze_lockfile_changes(&root, &collected.files, &revisions);
         let swift_resolved_analysis =
             analyze_swift_resolved_changes(&root, &config, &collected.files, &revisions);

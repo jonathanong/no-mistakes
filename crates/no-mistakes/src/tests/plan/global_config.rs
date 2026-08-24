@@ -86,6 +86,25 @@ fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
         .is_some_and(|parent| parent == root || super::next_project_root(parent))
 }
 
+pub(super) fn discover_all_tests_from_prepared(
+    prepared: &super::super::prepared_plan::PreparedTestPlanRequest,
+) -> Vec<PathBuf> {
+    no_mistakes::codebase::ts_source::discover_files_from_visible(
+        &prepared.root,
+        &prepared.config.filesystem.skip_directories,
+        prepared.root_visible_paths(),
+    )
+    .into_iter()
+    .filter(|file| {
+        prepared
+            .visible_paths
+            .classification_for(&prepared.root, file)
+            .is_some_and(|classification| classification.target_is_file())
+    })
+    .filter(|file| prepared.test_filter().is_match(&prepared.root, file))
+    .collect()
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -104,23 +123,4 @@ mod tests {
             "packages/app/pnpm-workspace.yaml"
         ));
     }
-}
-
-pub(super) fn discover_all_tests_from_prepared(
-    prepared: &super::super::prepared_plan::PreparedTestPlanRequest,
-) -> Vec<PathBuf> {
-    no_mistakes::codebase::ts_source::discover_files_from_visible(
-        &prepared.root,
-        &prepared.config.filesystem.skip_directories,
-        prepared.root_visible_paths(),
-    )
-    .into_iter()
-    .filter(|file| {
-        prepared
-            .visible_paths
-            .classification_for(&prepared.root, file)
-            .is_some_and(|classification| classification.target_is_file())
-    })
-    .filter(|file| prepared.test_filter().is_match(&prepared.root, file))
-    .collect()
 }

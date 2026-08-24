@@ -1,0 +1,17 @@
+lockfileVersion: '6.0'
+importers:
+  react-app:
+    dependencies:
+      middle: /middle/1.0.0_react@1.0.0_redux@4.2.1
+  vue-app:
+    dependencies:
+      middle: /middle/1.0.0_vue@1.0.0_redux@4.2.1
+packages:
+  /middle/1.0.0_react@1.0.0_redux@4.2.1:
+    dependencies:
+      leaf: /leaf/1.0.0_react@1.0.0_redux@4.2.1
+  /middle/1.0.0_vue@1.0.0_redux@4.2.1:
+    dependencies:
+      leaf: /leaf/1.0.0_vue@1.0.0_redux@4.2.1
+  /leaf/1.0.0_react@1.0.0_redux@4.2.1: { resolution: { integrity: old } }
+  /leaf/1.0.0_vue@1.0.0_redux@4.2.1: { resolution: { integrity: stable } }

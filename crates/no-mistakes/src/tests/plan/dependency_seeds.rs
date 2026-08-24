@@ -12,17 +12,38 @@ use no_mistakes::codebase::test_filter::TestFileFilter;
 use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
+pub(super) struct DependencySeedContext<'a> {
+    pub(super) args: &'a PlanArgs,
+    pub(super) prepared: &'a PreparedTestPlanRequest,
+    pub(super) graph: &'a DepGraph,
+    pub(super) test_filter: &'a TestFileFilter,
+    pub(super) all_test_files: &'a [PathBuf],
+    pub(super) native_semantic_seeds: &'a NativeSemanticSeedResult,
+}
+
+pub(super) struct DependencySeedState<'a> {
+    pub(super) selected_map: &'a mut HashMap<PathBuf, SelectedTest>,
+    pub(super) warnings: &'a mut Vec<Warning>,
+    pub(super) warnings_seen: &'a mut HashSet<WarningKey>,
+}
+
 pub(super) fn trace_and_fallback(
-    args: &PlanArgs,
-    prepared: &PreparedTestPlanRequest,
-    graph: &DepGraph,
-    test_filter: &TestFileFilter,
-    all_test_files: &[PathBuf],
-    native_semantic_seeds: &NativeSemanticSeedResult,
-    selected_map: &mut HashMap<PathBuf, SelectedTest>,
-    warnings: &mut Vec<Warning>,
-    warnings_seen: &mut HashSet<WarningKey>,
+    context: DependencySeedContext<'_>,
+    state: DependencySeedState<'_>,
 ) -> Option<TestPlan> {
+    let DependencySeedContext {
+        args,
+        prepared,
+        graph,
+        test_filter,
+        all_test_files,
+        native_semantic_seeds,
+    } = context;
+    let DependencySeedState {
+        selected_map,
+        warnings,
+        warnings_seen,
+    } = state;
     let root = &prepared.root;
     let workspace_map = &prepared.workspace_map;
     let mut untraceable_lockfile_files = Vec::new();
@@ -40,14 +61,18 @@ pub(super) fn trace_and_fallback(
         let mut seeded_any_test = false;
         for scoped_start in start_nodes {
             trace_lockfile_seed(
-                graph,
-                test_filter,
-                root,
+                LockfileSeedContext {
+                    graph,
+                    test_filter,
+                    root,
+                    lockfile_rel,
+                },
+                LockfileSeedState {
+                    selected_map,
+                    seeded_any_test: &mut seeded_any_test,
+                },
                 &scoped_start.node,
                 scoped_start.prefix.as_ref(),
-                lockfile_rel,
-                selected_map,
-                &mut seeded_any_test,
             );
         }
         if !seeded_any_test && !untraceable_lockfile_files.contains(lockfile_rel) {
@@ -171,16 +196,34 @@ fn path_matches_manifest_scope(
     })
 }
 
+struct LockfileSeedContext<'a> {
+    graph: &'a DepGraph,
+    test_filter: &'a TestFileFilter,
+    root: &'a std::path::Path,
+    lockfile_rel: &'a str,
+}
+
+struct LockfileSeedState<'a> {
+    selected_map: &'a mut HashMap<PathBuf, SelectedTest>,
+    seeded_any_test: &'a mut bool,
+}
+
 fn trace_lockfile_seed(
-    graph: &DepGraph,
-    test_filter: &TestFileFilter,
-    root: &std::path::Path,
+    context: LockfileSeedContext<'_>,
+    state: LockfileSeedState<'_>,
     start: &NodeId,
     prefix: Option<&(NodeId, EdgeKind)>,
-    lockfile_rel: &str,
-    selected_map: &mut HashMap<PathBuf, SelectedTest>,
-    seeded_any_test: &mut bool,
 ) {
+    let LockfileSeedContext {
+        graph,
+        test_filter,
+        root,
+        lockfile_rel,
+    } = context;
+    let LockfileSeedState {
+        selected_map,
+        seeded_any_test,
+    } = state;
     if let Some(test_path) = start
         .as_file()
         .filter(|path| test_filter.is_match(root, path))

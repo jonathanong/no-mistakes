@@ -11,9 +11,9 @@ fn request_scoped_revision_projection_reuses_the_working_tree_source_store() {
     git_init(&root);
     git_commit_all(&root, "base");
     let package = root.join("package.json");
-    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(&[
-        package.clone(),
-    ]))));
+    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
+        std::slice::from_ref(&package),
+    ))));
     let args = plan_args(&root, None);
     let revisions = RevisionSources::prepare(&root, &args, Arc::clone(&sources));
 
@@ -31,9 +31,9 @@ fn diff_only_projection_never_substitutes_the_checkout_for_requested_head_conten
     git_init(&root);
     git_commit_all(&root, "base");
     let package = root.join("package.json");
-    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(&[
-        package.clone(),
-    ]))));
+    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(
+        std::slice::from_ref(&package),
+    ))));
     let args = plan_args(&root, Some("diff --git a/package.json b/package.json\n"));
     let revisions = RevisionSources::prepare(&root, &args, Arc::clone(&sources));
 

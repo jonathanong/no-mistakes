@@ -220,7 +220,11 @@ mod tests {
         let path = root.join("base.csproj");
         let no_base_args = args(&root, path.clone(), None);
         let no_base_revisions = revisions(&root, &no_base_args);
-        let no_base = analyze_dotnet_dependency_changes(&root, &[path.clone()], &no_base_revisions);
+        let no_base = analyze_dotnet_dependency_changes(
+            &root,
+            std::slice::from_ref(&path),
+            &no_base_revisions,
+        );
         assert!(no_base.handles(&path));
         assert_eq!(no_base.warnings[0].r#type, "dotnet-dependency-no-baseline");
         let malformed = analysis("malformed.csproj", "base.csproj");

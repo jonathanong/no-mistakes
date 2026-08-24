@@ -1,8 +1,10 @@
 use super::super::DotnetDependencyDiagnostic;
 
+type XmlAttributes = Vec<(String, String)>;
+
 pub(in crate::codebase::dotnet) fn parse_open_tag(
     tag: &str,
-) -> Result<(String, Vec<(String, String)>, bool), DotnetDependencyDiagnostic> {
+) -> Result<(String, XmlAttributes, bool), DotnetDependencyDiagnostic> {
     let mut cursor = 0;
     let bytes = tag.as_bytes();
     while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {

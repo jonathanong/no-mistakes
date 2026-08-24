@@ -21,9 +21,11 @@ pub(super) fn classify_change(before: &str, after: &str) -> Result<PackageManife
         .map_err(|_| ())?;
     for manifest in [&before, &after] {
         if DEPENDENCY_FIELDS.iter().any(|field| {
-            manifest
-                .get(*field)
-                .is_some_and(|dependencies| !dependencies.is_object())
+            manifest.get(*field).is_some_and(|dependencies| {
+                dependencies.as_object().is_none_or(|dependencies| {
+                    dependencies.values().any(|value| !value.is_string())
+                })
+            })
         }) {
             return Err(());
         }

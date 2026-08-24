@@ -1,11 +1,13 @@
 use super::plan::relative_path;
 use super::prepared_plan::revisions::RevisionSources;
 use super::Warning;
+use no_mistakes::codebase::ts_source::SourceStore;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
 mod classify;
 use classify::{classify_change, PackageManifestChange};
+mod scope;
 
 #[derive(Clone, Default)]
 pub(crate) struct PackageManifestAnalysis {
@@ -34,18 +36,14 @@ pub(crate) fn analyze_package_manifest_changes(
     changed_files: &[PathBuf],
     revisions: &RevisionSources,
     workspace_map: &no_mistakes::codebase::workspaces::WorkspaceMap,
+    sources: &SourceStore,
 ) -> PackageManifestAnalysis {
     let mut analysis = PackageManifestAnalysis::default();
+    let workspace_scope = scope::WorkspaceManifestScope::prepare(root, workspace_map, sources);
     for manifest in changed_files
         .iter()
         .filter(|path| path.file_name().and_then(|name| name.to_str()) == Some("package.json"))
-        .filter(|path| {
-            **path == root.join("package.json")
-                || workspace_map
-                    .packages
-                    .iter()
-                    .any(|package| **path == package.dir.join("package.json"))
-        })
+        .filter(|path| workspace_scope.contains(path))
     {
         let file = relative_path(root, manifest);
         let Some(base) = revisions.base_name() else {
@@ -210,6 +208,14 @@ mod tests {
         );
         assert_eq!(
             classify_change(r#"{"name":"fixture","dependencies":"invalid"}"#, &base),
+            Err(())
+        );
+        assert_eq!(
+            classify_change(&base, r#"{"name":"fixture","dependencies":{"alpha":1}}"#),
+            Err(())
+        );
+        assert_eq!(
+            classify_change(r#"{"name":"fixture","dependencies":{"alpha":1}}"#, &base),
             Err(())
         );
     }

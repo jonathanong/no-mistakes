@@ -420,15 +420,19 @@ fn generate_plan_with_prepared_inner(
     }
 
     if let Some(fallback_plan) = dependency_seeds::trace_and_fallback(
-        args,
-        prepared,
-        graph,
-        &test_filter,
-        &all_test_files,
-        &native_semantic_seeds,
-        &mut selected_map,
-        &mut warnings,
-        &mut warnings_seen,
+        dependency_seeds::DependencySeedContext {
+            args,
+            prepared,
+            graph,
+            test_filter: &test_filter,
+            all_test_files: &all_test_files,
+            native_semantic_seeds: &native_semantic_seeds,
+        },
+        dependency_seeds::DependencySeedState {
+            selected_map: &mut selected_map,
+            warnings: &mut warnings,
+            warnings_seen: &mut warnings_seen,
+        },
     ) {
         return Ok(fallback_plan);
     }

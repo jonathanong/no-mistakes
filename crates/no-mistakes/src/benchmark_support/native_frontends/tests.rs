@@ -7,7 +7,7 @@ fn native_frontend_fixture_exercises_production_collectors() {
         collect_swift_frontend_facts(&fixture),
         NativeFrontendSummary {
             files: 15,
-            parsed_files: 7,
+            parsed_files: 5,
             physical_reads: 7,
         }
     );

@@ -51,7 +51,7 @@ fn target_index_prefers_the_deepest_matching_target_root() {
 #[test]
 fn package_manifests_are_not_indexed_as_swift_source_symbols() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/codebase-analysis/swift-test-plan/fixture");
+        .join("../../fixtures/test-plan/swift-native-topology/fixture");
     let manifest = root.join("swift-clients/core/Package.swift");
     let source = root.join("swift-clients/core/Sources/VouchaCore/APIClient.swift");
     let facts = collect_swift_facts(

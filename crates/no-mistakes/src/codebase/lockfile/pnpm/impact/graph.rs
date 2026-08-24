@@ -86,16 +86,32 @@ fn reverse_closure(
 }
 
 fn locator_from_key(key: &str) -> Option<PnpmLocator> {
-    let peer_context = key
-        .split_once('(')
-        .map_or("", |(_, context)| context.trim_end_matches(')'))
-        .to_string();
     let (name, version) = split_name_version(key);
+    let peer_context = peer_context(key, name, version);
     (!name.is_empty() && !version.is_empty()).then_some(PnpmLocator {
         name: name.to_string(),
         version: version.to_string(),
         peer_context,
     })
+}
+
+fn peer_context(key: &str, name: &str, version: &str) -> String {
+    if let Some((_, context)) = key.split_once('(') {
+        return context.trim_end_matches(')').to_string();
+    }
+    // pnpm v5/v6 encode peer contexts as `/name/version_peer@version`.
+    key.strip_prefix('/')
+        .unwrap_or(key)
+        .strip_prefix(name)
+        .and_then(|suffix| {
+            suffix
+                .strip_prefix('@')
+                .or_else(|| suffix.strip_prefix('/'))
+        })
+        .and_then(|suffix| suffix.strip_prefix(version))
+        .and_then(|suffix| suffix.strip_prefix('_'))
+        .unwrap_or_default()
+        .to_string()
 }
 
 fn locator_from_dependency(name: &str, value: &serde_yaml::Value) -> Option<PnpmLocator> {
