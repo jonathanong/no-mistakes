@@ -4,6 +4,8 @@ use sqlparser::parser::{Parser, ParserError};
 use std::fmt;
 
 mod lenient;
+pub(super) mod unicode;
+mod unicode_decode;
 
 /// Parse failure for PostgreSQL SQL. Never panics.
 #[derive(Debug, Clone, PartialEq, Eq)]

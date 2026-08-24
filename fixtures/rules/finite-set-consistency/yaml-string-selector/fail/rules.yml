@@ -1,0 +1,5 @@
+rules:
+  - options:
+      permanentPackages:
+        - name: "@acme/api"
+        - name: "@acme/web"

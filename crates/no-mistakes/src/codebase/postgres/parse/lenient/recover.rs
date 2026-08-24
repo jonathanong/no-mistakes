@@ -118,6 +118,7 @@ fn ddl_start_at(tokens: &[Token], index: usize) -> Option<usize> {
         Some(Keyword::ALTER) => follows_keyword(tokens, index, Keyword::TABLE).then_some(index),
         Some(Keyword::CREATE) => create_ddl_start(tokens, index),
         Some(Keyword::DROP) => drop_ddl_start(tokens, index),
+        Some(Keyword::TRUNCATE) => Some(index),
         _ => None,
     }
 }
@@ -125,8 +126,11 @@ fn ddl_start_at(tokens: &[Token], index: usize) -> Option<usize> {
 fn create_ddl_start(tokens: &[Token], index: usize) -> Option<usize> {
     let next = next_non_ws(tokens, index + 1)?;
     match keyword_of(&tokens[next]) {
-        Some(Keyword::TABLE) | Some(Keyword::INDEX) => Some(index),
+        Some(Keyword::TABLE) | Some(Keyword::INDEX) | Some(Keyword::VIEW) => Some(index),
         Some(Keyword::UNIQUE) => follows_keyword(tokens, next, Keyword::INDEX).then_some(index),
+        Some(Keyword::MATERIALIZED) => {
+            follows_keyword(tokens, next, Keyword::VIEW).then_some(index)
+        }
         _ => None,
     }
 }
@@ -134,7 +138,10 @@ fn create_ddl_start(tokens: &[Token], index: usize) -> Option<usize> {
 fn drop_ddl_start(tokens: &[Token], index: usize) -> Option<usize> {
     let next = next_non_ws(tokens, index + 1)?;
     match keyword_of(&tokens[next]) {
-        Some(Keyword::INDEX) | Some(Keyword::TABLE) => Some(index),
+        Some(Keyword::INDEX) | Some(Keyword::TABLE) | Some(Keyword::VIEW) => Some(index),
+        Some(Keyword::MATERIALIZED) => {
+            follows_keyword(tokens, next, Keyword::VIEW).then_some(index)
+        }
         _ => None,
     }
 }

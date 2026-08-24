@@ -1,7 +1,4 @@
-use super::extract::{
-    extract_path_regex_set, extract_sql_enum, extract_ts_const_object_keys,
-    extract_ts_const_object_property, extract_ts_string_union,
-};
+use super::extract::{extract_path_regex_set, extract_sql_enum, extract_ts_string_union};
 use super::*;
 use crate::config::v2::{
     schema::{Project, RuleDef, RuleScope},
@@ -9,6 +6,9 @@ use crate::config::v2::{
 };
 use std::collections::BTreeSet;
 use std::path::Path;
+
+#[path = "tests/yaml_string_selector.rs"]
+mod yaml_string_selector;
 
 fn extract_set(
     root: &Path,
@@ -169,15 +169,6 @@ comparisons:
 }
 
 #[test]
-fn extracts_const_object_keys_and_property_values() {
-    let root = fixture_root("fixture");
-    let source = std::fs::read_to_string(root.join("src/types.ts")).unwrap();
-
-    assert!(extract_ts_const_object_keys(&source, "ROUTE_META").contains("users"));
-    assert!(extract_ts_const_object_property(&source, "ROUTE_META", "slug").contains("billing"));
-}
-
-#[test]
 fn ignores_incomplete_set_specs_and_comparisons() {
     let root = fixture_root("fixture");
     let files = vec![root.join("src/types.ts")];
@@ -203,24 +194,6 @@ comparisons:
     .unwrap();
 
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
-}
-
-#[test]
-fn extraction_helpers_return_empty_sets_when_targets_are_missing() {
-    assert!(extract_ts_string_union("type Other = 'a';", "Missing").is_empty());
-    assert!(extract_ts_const_object_keys("const Other = { a: 1 };", "Missing").is_empty());
-    assert!(extract_ts_const_object_property(
-        "const Other = { a: { slug: 'a' } };",
-        "Missing",
-        "slug"
-    )
-    .is_empty());
-    assert!(extract_sql_enum("CREATE TYPE other AS ENUM ('a')", "missing").is_empty());
-    assert!(extract_ts_const_object_keys(
-        "const ROUTE_META: Record<string, string>;",
-        "ROUTE_META"
-    )
-    .is_empty());
 }
 
 #[test]

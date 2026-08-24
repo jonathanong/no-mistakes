@@ -1,0 +1,14 @@
+rules:
+  - options:
+      permanentPackages:
+        - name: "@acme/api"
+        - name: "@acme/web"
+  - options:
+      permanentPackages: not-a-sequence
+updates:
+  - name: first
+  - name: second
+literal:
+  "dotted.key": dotted
+  "[]": brackets
+  "0": zero

@@ -41,11 +41,13 @@ rules:
 compare exactly against the analyzer's canonical PostgreSQL parser output. Each
 entry permits one matching operation; repeated identical `ADD COLUMN`
 statements require distinct entries, and duplicate entries are rejected. For a
-column with no default, omit `default`. Static `DO $$ … $$` statements are
-analyzed like other migration SQL. Dynamic SQL constructed at runtime is
-outside the parser's existing visibility, so it cannot satisfy an allowlist
-entry and is reported as stale; write the migration as static SQL when this
-contract is required.
+column with no default, omit `default`. Direct schema statements in executable
+PL/pgSQL `DO`, function, and procedure bodies are analyzed like other migration
+SQL, including dollar, plain, escaped, Unicode (with custom `UESCAPE`), and
+newline-concatenated body strings. Statically recoverable `EXECUTE` strings,
+qualified or unqualified `format()` templates, and variables assigned one of
+those expressions are also analyzed. Runtime-built expressions remain
+intentionally opaque and cannot satisfy an allowlist entry.
 
 `sqlInclude` defaults to `**/*.sql`.
 

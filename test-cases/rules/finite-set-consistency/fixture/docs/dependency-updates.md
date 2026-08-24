@@ -1,6 +1,6 @@
 # Dependency Updates
 
-| Package | Policy |
+| Also in `allowBuilds`? | Policy |
 | --- | --- |
 | `@acme/api` | excluded |
 | `@acme/web` | excluded |

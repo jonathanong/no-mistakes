@@ -1,7 +1,6 @@
 use sqlparser::ast::Statement;
-use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
-use sqlparser::tokenizer::{Token, Tokenizer, Word};
+use sqlparser::tokenizer::{Token, Word};
 
 mod recover;
 mod rewrite;
@@ -15,10 +14,7 @@ use rewrite::{rewrite_chr_calls, rewrite_drop_index_concurrently};
 /// the body can still parse. Remaining unparseable chunks recover `ALTER TABLE`,
 /// `CREATE TABLE`, and `CREATE [UNIQUE] INDEX` after PL/pgSQL wrappers.
 pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
-    let dialect = PostgreSqlDialect {};
-    let Ok(mut tokens) = Tokenizer::new(&dialect, sql).tokenize() else {
-        return Vec::new();
-    };
+    let mut tokens = super::unicode::tokenize(sql);
     rewrite_virtual_generated_columns(&mut tokens);
     rewrite_drop_index_concurrently(&mut tokens);
     recover::parse_chunks(split_statement_tokens(tokens))
@@ -28,10 +24,10 @@ pub(super) fn expand_chr_encoded_sql(sql: &str) -> Option<String> {
     if !looks_like_chr_call(sql) {
         return None;
     }
-    let dialect = PostgreSqlDialect {};
-    let Ok(mut tokens) = Tokenizer::new(&dialect, sql).tokenize() else {
+    let mut tokens = super::unicode::tokenize(sql);
+    if tokens.is_empty() {
         return None;
-    };
+    }
     rewrite_chr_calls(&mut tokens);
     recover::concatenated_strings(&tokens)
 }
