@@ -47,6 +47,20 @@ fn collect_dotnet_dependency_file_edges(
     edges: &mut Vec<Edge>,
     interner: &PathInterner,
 ) {
+    let mut lockfiles_by_directory: HashMap<&Path, Vec<&Path>> = HashMap::new();
+    for lock in all_files
+        .iter()
+        .filter(|path| crate::codebase::dotnet::is_dotnet_lockfile(path))
+    {
+        let directory = lock
+            .parent()
+            .expect("a visible NuGet lockfile path has a parent");
+        lockfiles_by_directory
+            .entry(directory)
+            .or_default()
+            .push(lock);
+    }
+
     for project in facts.projects.values() {
         for source in &project.compile_files {
             edges.push((
@@ -56,15 +70,14 @@ fn collect_dotnet_dependency_file_edges(
             ));
         }
 
-        for lock in all_files.iter().filter(|path| {
-            path.parent() == Some(project.project_dir.as_path())
-                && crate::codebase::dotnet::is_dotnet_lockfile(path)
-        }) {
-            edges.push((
-                NodeId::file_in(interner, &project.project_path),
-                NodeId::file_in(interner, lock),
-                EdgeKind::DotnetProjectDependency,
-            ));
+        if let Some(lockfiles) = lockfiles_by_directory.get(project.project_dir.as_path()) {
+            for lock in lockfiles {
+                edges.push((
+                    NodeId::file_in(interner, &project.project_path),
+                    NodeId::file_in(interner, lock),
+                    EdgeKind::DotnetProjectDependency,
+                ));
+            }
         }
 
         // A central file can declare GlobalPackageReference items, which apply
