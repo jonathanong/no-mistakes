@@ -4,6 +4,11 @@ use serde::de::IntoDeserializer;
 
 impl RuleDef {
     pub fn rule_options<T: for<'de> serde::Deserialize<'de> + Default>(&self) -> Result<T> {
+        if matches!(&self.options, serde_yaml::Value::Null)
+            || matches!(&self.options, serde_yaml::Value::Mapping(options) if options.is_empty())
+        {
+            return Ok(T::default());
+        }
         let deserializer = self.options.clone().into_deserializer();
         serde_path_to_error::deserialize(deserializer).map_err(|error| {
             let path = error.path().to_string();

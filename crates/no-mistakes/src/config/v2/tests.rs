@@ -395,6 +395,15 @@ fn rule_def_omitted_options_still_use_defaults() {
         RuleDef::default().rule_options::<Opts>().unwrap(),
         Opts::default()
     );
+    assert_eq!(
+        RuleDef {
+            options: serde_yaml::Value::Null,
+            ..RuleDef::default()
+        }
+        .rule_options::<Opts>()
+        .unwrap(),
+        Opts::default()
+    );
 }
 
 #[test]
