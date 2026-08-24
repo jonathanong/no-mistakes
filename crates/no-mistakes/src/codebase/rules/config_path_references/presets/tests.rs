@@ -62,10 +62,6 @@ jobs:
           pnpm install --filter ./
           pnpm install --filter packages/missing-prefix
           pnpm install --filter '!./negated'
-runs:
-  using: composite
-  steps:
-    - run: pnpm install --filter ./composite-action...
 "#,
     )
     .unwrap();
@@ -82,7 +78,25 @@ runs:
             "./unconditional",
             "./target",
             "./trailing-semicolon",
-            "./composite-action",
         ]
     );
+}
+
+#[test]
+fn composite_action_filters_do_not_require_a_jobs_mapping() {
+    let document = serde_yaml::from_str(
+        r#"
+runs:
+  using: composite
+  steps:
+    - run: pnpm install --filter ./composite-action...
+"#,
+    )
+    .unwrap();
+
+    let values: Vec<_> = super::pnpm::workspace_filters(&document)
+        .into_iter()
+        .map(|item| item.value)
+        .collect();
+    assert_eq!(values, vec!["./composite-action"]);
 }
