@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "pins": [
+    { "identity": "orphan-example", "location": "https://example.com/orphan.git", "state": { "version": "1.0.0", "revision": "base", "checksum": "base" } }
+  ]
+}

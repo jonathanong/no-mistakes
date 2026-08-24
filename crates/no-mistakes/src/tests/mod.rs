@@ -13,14 +13,18 @@ pub(crate) mod config_invalidation;
 pub(crate) mod configured_plan;
 pub(crate) mod configured_plan_candidates;
 pub(crate) mod diff_parser;
+pub(crate) mod dotnet_dependency_changes;
 pub(crate) mod git_diff;
 pub(crate) mod graph;
 pub(crate) mod impact;
 mod impact_graph;
 pub(crate) mod lockfile_changes;
+pub(crate) mod package_manifest_changes;
 pub(crate) mod plan;
 pub(crate) mod plan_output;
 pub(crate) mod prepared_plan;
+pub(crate) mod swift_manifest_changes;
+pub(crate) mod swift_resolved_changes;
 pub(crate) mod targets;
 pub(crate) mod why;
 

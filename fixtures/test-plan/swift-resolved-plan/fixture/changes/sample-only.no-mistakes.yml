@@ -1,0 +1,23 @@
+tests:
+  swift:
+    packages:
+      - swift-clients/core
+      - swift-clients/ui
+      - swift-clients/android
+      - swift-clients/orphan
+    projects:
+      core:
+        include:
+          - swift-clients/core/Tests/**/*.swift
+      ui:
+        include:
+          - swift-clients/ui/Tests/**/*.swift
+      android:
+        include:
+          - swift-clients/android/Tests/**/*.swift
+test_plan:
+  swift:
+    environments:
+      pre-push:
+        groups:
+          - type: sample

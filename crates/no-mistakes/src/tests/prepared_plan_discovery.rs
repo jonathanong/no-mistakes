@@ -6,6 +6,52 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::Ordering;
 
 impl PreparedTestPlanRequest {
+    pub(crate) fn planning_changed_files(&self, framework: Option<TestFramework>) -> Vec<PathBuf> {
+        self.changed_files
+            .iter()
+            .filter(|path| {
+                let swift_handled = matches!(framework, None | Some(TestFramework::Swift))
+                    && (self.swift_resolved_analysis.handles(path)
+                        || self.swift_manifest_analysis.handles(path));
+                let dotnet_handled = matches!(framework, None | Some(TestFramework::Dotnet))
+                    && self.dotnet_dependency_analysis.handles(path);
+                let plain_seed = framework.is_none()
+                    && (self
+                        .swift_resolved_analysis
+                        .seeds
+                        .iter()
+                        .any(|(resolved, _)| resolved == *path)
+                        || self
+                            .swift_manifest_analysis
+                            .seeds
+                            .iter()
+                            .any(|seed| seed == *path)
+                        || self
+                            .dotnet_dependency_analysis
+                            .artifacts
+                            .iter()
+                            .any(|artifact| artifact.path == **path));
+                let package_handled = super::javascript_dependency_framework(framework)
+                    && self.package_manifest_analysis.handles(path);
+                (!(swift_handled || dotnet_handled) || plain_seed) && !package_handled
+            })
+            .cloned()
+            .collect()
+    }
+    pub(crate) fn is_dependency_only_manifest(
+        &self,
+        path: &Path,
+        framework: Option<TestFramework>,
+    ) -> bool {
+        (super::javascript_dependency_framework(framework)
+            && self.package_manifest_analysis.excludes_broad_trigger(path))
+            || (matches!(framework, None | Some(TestFramework::Swift))
+                && self
+                    .swift_manifest_analysis
+                    .dependency_only_files()
+                    .contains(path))
+    }
+
     pub(crate) fn tsconfig_warnings(&self) -> Vec<Warning> {
         self.tsconfig_catalog
             .diagnostics()

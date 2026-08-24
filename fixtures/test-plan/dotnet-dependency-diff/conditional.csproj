@@ -1,0 +1,1 @@
+<Project><ItemGroup Condition="'$(Configuration)' == 'Release'"><PackageReference Include="Alpha" Version="2.0.0" /></ItemGroup></Project>

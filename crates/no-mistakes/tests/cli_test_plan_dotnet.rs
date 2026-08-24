@@ -1,6 +1,91 @@
 mod common;
+#[path = "common/saved_fixture.rs"]
+mod saved_fixture;
+#[path = "cli_test_plan_dotnet/semantic.rs"]
+mod semantic;
 
 use common::{fixture, run, stdout};
+use std::path::Path;
+use std::process::Command;
+
+fn semantic_fixture() -> tempfile::TempDir {
+    saved_fixture::materialize("test-plan", "dotnet-semantic-plan/fixture")
+}
+
+fn git(root: &Path, args: &[&str]) {
+    let output = Command::new("git")
+        .args(args)
+        .current_dir(root)
+        .output()
+        .unwrap();
+    assert!(
+        output.status.success(),
+        "git {args:?}: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+}
+
+fn git_init(root: &Path) {
+    git(root, &["init", "-q", "-b", "main"]);
+    git(root, &["add", "-A"]);
+    git(
+        root,
+        &[
+            "-c",
+            "user.name=no-mistakes tests",
+            "-c",
+            "user.email=no-mistakes-tests@example.invalid",
+            "commit",
+            "-q",
+            "-m",
+            "base",
+        ],
+    );
+}
+
+fn semantic_plan(root: &Path, changed: &str, global_fallback: bool) -> serde_json::Value {
+    let output = run(&[
+        "test",
+        "plan",
+        "dotnet",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD",
+        "--changed-file",
+        changed,
+        "--global-config-fallback",
+        if global_fallback { "true" } else { "false" },
+        "--json",
+    ]);
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    serde_json::from_str(&stdout(&output)).unwrap()
+}
+
+fn replace_from_change(root: &Path, change: &str, target: &str) {
+    std::fs::copy(root.join("changes").join(change), root.join(target)).unwrap();
+}
+
+fn group<'a>(plan: &'a serde_json::Value, kind: &str) -> Vec<&'a str> {
+    plan["groups"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|group| group["type"] == kind)
+        .map(|group| {
+            group["selected"]
+                .as_array()
+                .unwrap()
+                .iter()
+                .map(|selected| selected.as_str().unwrap())
+                .collect()
+        })
+        .unwrap_or_default()
+}
 
 #[test]
 fn test_plan_dotnet_uses_projects_and_dependency_graph() {
@@ -183,7 +268,7 @@ fn test_plan_dotnet_falls_back_when_source_graph_is_unconfigured() {
 }
 
 #[test]
-fn test_plan_dotnet_scopes_project_file_fallback_to_referencing_tests() {
+fn test_plan_dotnet_project_file_without_baseline_warns_without_causal_selection() {
     let root = fixture("dotnet-scoped-fallback");
     let output = run(&[
         "test",
@@ -202,18 +287,19 @@ fn test_plan_dotnet_scopes_project_file_fallback_to_referencing_tests() {
         String::from_utf8_lossy(&output.stderr)
     );
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert_eq!(plan["fallback_triggered"], true);
+    assert_eq!(plan["fallback_triggered"], false);
     let selected: Vec<&str> = plan["selected_tests"]
         .as_array()
         .unwrap()
         .iter()
         .map(|test| test["test_file"].as_str().unwrap())
         .collect();
-    assert_eq!(selected, vec!["clients/tests/App.Tests/AppServiceTests.cs"]);
-    assert_eq!(
-        plan["selected_tests"][0]["targets"][0]["config"],
-        "clients/tests/App.Tests/App.Tests.csproj"
-    );
+    assert!(selected.is_empty(), "{plan:#}");
+    assert!(plan["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|warning| warning["type"] == "dotnet-dependency-no-baseline"));
 }
 
 #[test]
@@ -254,7 +340,7 @@ fn test_plan_dotnet_deleted_solution_file_triggers_native_fallback() {
 }
 
 #[test]
-fn test_plan_dotnet_unions_multiple_native_fallback_triggers() {
+fn test_plan_dotnet_multiple_project_files_without_baseline_warn_without_fallback() {
     let root = fixture("dotnet-scoped-fallback");
     let output = run(&[
         "test",
@@ -275,24 +361,27 @@ fn test_plan_dotnet_unions_multiple_native_fallback_triggers() {
         String::from_utf8_lossy(&output.stderr)
     );
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert_eq!(plan["fallback_triggered"], true);
+    assert_eq!(plan["fallback_triggered"], false);
     let selected: Vec<&str> = plan["selected_tests"]
         .as_array()
         .unwrap()
         .iter()
         .map(|test| test["test_file"].as_str().unwrap())
         .collect();
+    assert!(selected.is_empty(), "{plan:#}");
     assert_eq!(
-        selected,
-        vec![
-            "clients/tests/App.Tests/AppServiceTests.cs",
-            "clients/tests/Other.Tests/OtherServiceTests.cs",
-        ]
+        plan["warnings"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .filter(|warning| warning["type"] == "dotnet-dependency-no-baseline")
+            .count(),
+        2
     );
 }
 
 #[test]
-fn test_plan_dotnet_native_fallback_preserves_existing_selections() {
+fn test_plan_dotnet_no_baseline_project_warning_preserves_existing_selections() {
     let root = fixture("dotnet-scoped-fallback");
     let output = run(&[
         "test",
@@ -313,7 +402,7 @@ fn test_plan_dotnet_native_fallback_preserves_existing_selections() {
         String::from_utf8_lossy(&output.stderr)
     );
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert_eq!(plan["fallback_triggered"], true);
+    assert_eq!(plan["fallback_triggered"], false);
     let selected: Vec<&str> = plan["selected_tests"]
         .as_array()
         .unwrap()
@@ -322,11 +411,13 @@ fn test_plan_dotnet_native_fallback_preserves_existing_selections() {
         .collect();
     assert_eq!(
         selected,
-        vec![
-            "clients/tests/App.Tests/AppServiceTests.cs",
-            "clients/tests/Other.Tests/OtherServiceTests.cs",
-        ]
+        vec!["clients/tests/Other.Tests/OtherServiceTests.cs"]
     );
+    assert!(plan["warnings"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|warning| warning["type"] == "dotnet-dependency-no-baseline"));
 }
 
 #[test]
@@ -361,50 +452,6 @@ fn test_plan_dotnet_solution_file_triggers_native_fallback() {
         vec![
             "dotnet-clients/tests/App.Tests/FeedServiceTests.cs",
             "dotnet-clients/tests/App.Tests/ParserEdgeCases.cs",
-        ]
-    );
-}
-
-#[test]
-fn test_plan_dotnet_deleted_native_source_triggers_fallback() {
-    let root = fixture("dotnet-scoped-fallback");
-    // Deleted source cannot be associated with a project from current files,
-    // so selecting every discovered test remains an explicit caller choice.
-    let output = run(&[
-        "test",
-        "plan",
-        "dotnet",
-        "--root",
-        root.to_str().unwrap(),
-        "--diff",
-        root.join("delete-app-service.diff").to_str().unwrap(),
-        "--global-config-fallback",
-        "true",
-        "--json",
-    ]);
-
-    assert!(
-        output.status.success(),
-        "stderr: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert_eq!(plan["fallback_triggered"], true);
-    assert!(plan["fallback_reason"]
-        .as_str()
-        .unwrap()
-        .contains("clients/src/App/DeletedService.cs"));
-    let selected: Vec<&str> = plan["selected_tests"]
-        .as_array()
-        .unwrap()
-        .iter()
-        .map(|test| test["test_file"].as_str().unwrap())
-        .collect();
-    assert_eq!(
-        selected,
-        vec![
-            "clients/tests/App.Tests/AppServiceTests.cs",
-            "clients/tests/Other.Tests/OtherServiceTests.cs",
         ]
     );
 }

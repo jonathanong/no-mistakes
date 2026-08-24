@@ -1,0 +1,29 @@
+importers:
+  packages/app:
+    dependencies:
+      workspace-lib:
+        specifier: link:../workspace-lib
+        version: link:../workspace-lib
+      stable-dep: 1
+    devDependencies:
+      removed-dev: 1
+    optionalDependencies:
+      removed-optional: 1
+    peerDependencies:
+      removed-peer: 1
+packages:
+  app@1: {}
+  middle@1: {}
+  leaf@1: {}
+  removed-dev@1: {}
+  removed-optional@1: {}
+  removed-peer@1: {}
+  stable-dep@1: {}
+snapshots:
+  app@1:
+    dependencies:
+      middle: 1
+  middle@1:
+    dependencies:
+      leaf: 1
+  leaf@1: {}

@@ -1,0 +1,22 @@
+lockfileVersion: '6.0'
+importers:
+  app-v1:
+    dependencies:
+      middle: /middle@1.0.0
+  app-v2:
+    dependencies:
+      middle: /middle@2.0.0
+  alias-app:
+    dependencies:
+      local-middle:
+        specifier: npm:middle@1.0.0
+        version: /middle@1.0.0
+packages:
+  /middle@1.0.0:
+    dependencies:
+      leaf: /leaf@1.0.0
+  /middle@2.0.0:
+    dependencies:
+      leaf: /leaf@2.0.0
+  /leaf@1.0.0: { resolution: { integrity: new } }
+  /leaf@2.0.0: { resolution: { integrity: stable } }

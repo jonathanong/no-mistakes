@@ -103,7 +103,9 @@ include!("edge_resources.rs");
 include!("edge_resource_resolution.rs");
 #[cfg(test)]
 mod edge_resources_tests;
+include!("edge_dotnet_scope.rs");
 include!("edge_dotnet.rs");
+include!("edge_dotnet_projects.rs");
 include!("edge_swift.rs");
 include!("edge_swift_collect.rs");
 include!("edge_terraform.rs");

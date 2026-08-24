@@ -1,0 +1,1 @@
+<Project><ItemGroup><PackageReference Include="Alpha;Beta" /></ItemGroup></Project>

@@ -3,8 +3,13 @@ use std::path::{Path, PathBuf};
 pub(crate) fn global_config_trigger(
     root: &Path,
     changed_files: &[PathBuf],
+    framework: Option<crate::tests::TestFramework>,
+    prepared: &super::super::prepared_plan::PreparedTestPlanRequest,
 ) -> Option<(String, PathBuf)> {
     changed_files.iter().find_map(|file| {
+        if prepared.is_dependency_only_manifest(file, framework) {
+            return None;
+        }
         let relative_changed = super::relative_path(root, file);
         is_global_config_path(root, file, &relative_changed).then(|| {
             (
@@ -22,8 +27,13 @@ pub(crate) fn global_config_trigger(
 pub(super) fn excluding_v2_config(
     root: &Path,
     changed_files: &[PathBuf],
+    framework: Option<crate::tests::TestFramework>,
+    prepared: &super::super::prepared_plan::PreparedTestPlanRequest,
 ) -> Option<(String, PathBuf)> {
     changed_files.iter().find_map(|file| {
+        if prepared.is_dependency_only_manifest(file, framework) {
+            return None;
+        }
         let relative_changed = super::relative_path(root, file);
         (!matches!(
             relative_changed.as_str(),
@@ -41,7 +51,11 @@ pub(super) fn excluding_v2_config(
 fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
     if matches!(
         relative,
-        "package.json" | "tsconfig.json" | ".no-mistakes.yml" | ".no-mistakes.yaml"
+        "package.json"
+            | "pnpm-workspace.yaml"
+            | "tsconfig.json"
+            | ".no-mistakes.yml"
+            | ".no-mistakes.yaml"
     ) {
         return true;
     }
@@ -70,6 +84,26 @@ fn is_global_config_path(root: &Path, absolute: &Path, relative: &str) -> bool {
     absolute
         .parent()
         .is_some_and(|parent| parent == root || super::next_project_root(parent))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn pnpm_workspace_configuration_is_a_root_scoped_broad_trigger() {
+        let root = Path::new("/repo");
+        assert!(is_global_config_path(
+            root,
+            &root.join("pnpm-workspace.yaml"),
+            "pnpm-workspace.yaml"
+        ));
+        assert!(!is_global_config_path(
+            root,
+            &root.join("packages/app/pnpm-workspace.yaml"),
+            "packages/app/pnpm-workspace.yaml"
+        ));
+    }
 }
 
 pub(super) fn discover_all_tests_from_prepared(

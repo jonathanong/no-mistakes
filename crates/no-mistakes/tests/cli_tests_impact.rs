@@ -10,6 +10,9 @@ mod vitest_commonjs_projects;
 #[path = "cli_tests_impact/direct_owner_coverage.rs"]
 mod direct_owner_coverage;
 
+#[path = "cli_tests_impact/package_manifest.rs"]
+mod package_manifest;
+
 fn bin() -> PathBuf {
     PathBuf::from(env!("CARGO_BIN_EXE_no-mistakes"))
 }
@@ -411,67 +414,6 @@ fn tests_plan_md_outputs_markdown_table() {
 }
 
 #[test]
-fn tests_plan_does_not_fallback_on_package_json_by_default() {
-    let root = fixture("tests-impact");
-    let output = run(&[
-        "tests",
-        "plan",
-        "--root",
-        root.to_str().unwrap(),
-        "--changed-file",
-        "package.json",
-        "--json",
-    ]);
-
-    assert!(output.status.success());
-    let json_str = stdout(&output);
-    let plan: serde_json::Value = serde_json::from_str(&json_str).unwrap();
-
-    assert_eq!(plan["fallback_triggered"], false);
-    assert!(plan["fallback_reason"].is_null());
-    assert!(plan["selected_tests"].as_array().unwrap().is_empty());
-}
-
-#[test]
-fn tests_plan_can_opt_into_global_config_fallback() {
-    let root = fixture("tests-impact");
-    let output = run(&[
-        "tests",
-        "plan",
-        "--root",
-        root.to_str().unwrap(),
-        "--changed-file",
-        "package.json",
-        "--global-config-fallback",
-        "true",
-        "--json",
-    ]);
-
-    assert!(output.status.success());
-    let json_str = stdout(&output);
-    let plan: serde_json::Value = serde_json::from_str(&json_str).unwrap();
-
-    assert_eq!(plan["fallback_triggered"], true);
-    assert!(plan["fallback_reason"]
-        .as_str()
-        .unwrap()
-        .contains("Global configuration file changed"));
-
-    let selected = plan["selected_tests"].as_array().unwrap();
-    // It should select all tests in this fixture
-    assert_eq!(selected.len(), 2);
-    let mut names: Vec<&str> = selected
-        .iter()
-        .map(|t| t["test_file"].as_str().unwrap())
-        .collect();
-    names.sort_unstable();
-    assert_eq!(names, vec!["a.test.mts", "dynamic.test.mts"]);
-    for t in selected {
-        assert_eq!(t["confidence"], "high");
-    }
-}
-
-#[test]
 fn tests_plan_global_config_fallback_disabled_without_framework() {
     let root = fixture("tests-impact");
     let output = run(&[
@@ -514,27 +456,6 @@ fn tests_why_displays_dependency_path() {
     assert!(text.contains("b.mts"));
     assert!(text.contains("a.mts"));
     assert!(text.contains("a.test.mts"));
-}
-
-#[test]
-fn tests_plan_nested_package_json_does_not_trigger_fallback() {
-    let root = fixture("tests-impact");
-    let output = run(&[
-        "tests",
-        "plan",
-        "--root",
-        root.to_str().unwrap(),
-        "--changed-file",
-        "nested/package.json",
-        "--json",
-    ]);
-
-    assert!(output.status.success());
-    let json_str = stdout(&output);
-    let plan: serde_json::Value = serde_json::from_str(&json_str).unwrap();
-
-    assert_eq!(plan["fallback_triggered"], false);
-    assert!(plan["warnings"].as_array().unwrap().is_empty());
 }
 
 #[test]

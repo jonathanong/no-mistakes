@@ -1,0 +1,6 @@
+{
+  "name": "workspace-c",
+  "dependencies": {
+    "alpha": "1.0.0"
+  }
+}

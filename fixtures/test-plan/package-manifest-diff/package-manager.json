@@ -1,0 +1,8 @@
+{
+  "name": "fixture",
+  "packageManager": "pnpm@10.17.1",
+  "dependencies": { "alpha": "1.0.0" },
+  "devDependencies": { "dev": "1.0.0" },
+  "optionalDependencies": { "optional": "1.0.0" },
+  "peerDependencies": { "peer": "1.0.0" }
+}

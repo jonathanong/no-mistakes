@@ -1,10 +1,20 @@
+use super::resolution::resolution_info;
 use super::*;
+use crate::codebase::lockfile::ResolutionKind;
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> String {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/lockfile/pnpm")
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let semantic_path = manifest_dir
+        .join("../../fixtures/test-plan/pnpm-impact")
         .join(name);
+    let path = if semantic_path.exists() {
+        semantic_path
+    } else {
+        manifest_dir
+            .join("../../test-cases/lockfile/pnpm")
+            .join(name)
+    };
     std::fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("failed to read {}: {}", path.display(), e))
 }
@@ -110,6 +120,63 @@ fn parse_importers_groups_by_dependency_type() {
     );
     assert_eq!(app.optional_dependencies.len(), 1);
     assert_eq!(app.optional_dependencies[0].alias, "@scope/optional");
+}
+
+#[test]
+fn parse_importers_includes_peer_dependencies() {
+    assert!(impact_names("", &fixture("peer-importer.yaml"), []).contains(&"react".to_string()));
+}
+
+#[test]
+fn impact_names_walks_transitive_package_dependents_and_link_importers() {
+    let names = impact_names(
+        &fixture("impact-old.yaml"),
+        &fixture("impact-new.yaml"),
+        ["leaf".to_string()],
+    );
+    assert!(names.contains(&"middle".to_string()));
+    assert!(names.contains(&"app".to_string()), "{names:?}");
+    assert!(names.contains(&"workspace-lib".to_string()));
+    assert!(names.contains(&"added-dep".to_string()));
+    assert!(names.contains(&"removed-dev".to_string()));
+    assert!(names.contains(&"removed-optional".to_string()));
+    assert!(names.contains(&"removed-peer".to_string()));
+    assert!(!names.contains(&"stable-dep".to_string()));
+}
+
+#[test]
+fn impact_importer_paths_preserve_exact_transitive_versions() {
+    let old = fixture("exact-old.yaml");
+    let new = fixture("exact-new.yaml");
+    let names = impact_names(&old, &new, ["leaf".to_string()]);
+    assert_eq!(names, vec!["leaf".to_string(), "middle".to_string()]);
+    assert_eq!(
+        impact_importer_paths(&old, &new, &names).get("middle"),
+        Some(&vec!["app-v1".to_string()])
+    );
+}
+
+#[test]
+fn impact_importer_paths_preserve_exact_v6_and_alias_resolutions() {
+    let old = fixture("exact-v6-old.yaml");
+    let new = fixture("exact-v6-new.yaml");
+    let names = impact_names(&old, &new, ["leaf".to_string()]);
+    let paths = impact_importer_paths(&old, &new, &names);
+    assert_eq!(
+        paths.get("middle"),
+        Some(&vec!["alias-app".to_string(), "app-v1".to_string()])
+    );
+    assert!(!paths.values().flatten().any(|path| path == "app-v2"));
+}
+
+#[test]
+fn impact_importer_paths_do_not_cross_independent_changed_locators() {
+    let old = fixture("exact-multiple-old.yaml");
+    let new = fixture("exact-multiple-new.yaml");
+    let names = impact_names(&old, &new, std::iter::empty());
+    let paths = impact_importer_paths(&old, &new, &names);
+    assert_eq!(paths.get("alpha"), Some(&vec!["app-alpha".to_string()]));
+    assert_eq!(paths.get("beta"), Some(&vec!["app-beta".to_string()]));
 }
 
 #[test]

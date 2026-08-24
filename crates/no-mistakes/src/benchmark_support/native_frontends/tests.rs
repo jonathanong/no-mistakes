@@ -16,7 +16,7 @@ fn native_frontend_fixture_exercises_production_collectors() {
         NativeFrontendSummary {
             files: 12,
             parsed_files: 5,
-            physical_reads: 5,
+            physical_reads: 7,
         }
     );
 }

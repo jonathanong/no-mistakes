@@ -1,0 +1,21 @@
+lockfileVersion: '9.0'
+importers:
+  app-v1:
+    dependencies:
+      middle:
+        specifier: '1.0.0'
+        version: 1.0.0
+  app-v2:
+    dependencies:
+      middle:
+        specifier: '2.0.0'
+        version: 2.0.0
+packages:
+  middle@1.0.0:
+    dependencies:
+      leaf: 1.0.0
+  middle@2.0.0:
+    dependencies:
+      leaf: 2.0.0
+  leaf@1.0.0: { resolution: { integrity: old } }
+  leaf@2.0.0: { resolution: { integrity: stable } }

@@ -6,8 +6,8 @@
     <IsTestProject>true</IsTestProject>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\App\App.csproj" />
-    <PackageReference Include="xunit.v3" Version="3.0.0" />
+    <ProjectReference Include='..\..\src\App\App.csproj' />
+    <PackageReference Include='xunit.v3' Version='3.0.0' />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="18.0.0" />
     <PackageReference Include="xunit.runner.visualstudio" Version="3.0.0" />
   </ItemGroup>

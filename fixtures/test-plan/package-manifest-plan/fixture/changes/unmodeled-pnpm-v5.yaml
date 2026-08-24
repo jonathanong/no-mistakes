@@ -1,0 +1,11 @@
+lockfileVersion: '5.4'
+settings:
+  autoInstallPeers: false
+importers:
+  .:
+    dependencies:
+      alpha: 1.0.0
+packages:
+  /alpha/1.0.0:
+    resolution:
+      integrity: old

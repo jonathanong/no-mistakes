@@ -141,6 +141,33 @@ no-mistakes test plan --changed-file pnpm-lock.yaml --global-config-fallback=tru
 no-mistakes test plan playwright --changed-file pnpm-lock.yaml --base main --global-config-fallback=true
 ```
 
+### Semantic dependency manifests
+
+With complete `--base`/`--head` content, dependency-only `package.json`
+changes are analyzed before configured broad triggers. Changes to
+`dependencies`, `devDependencies`, `optionalDependencies`, and
+`peerDependencies` seed only the package names whose declarations changed.
+Mixed edits, including `peerDependenciesMeta`, retain the configured broad
+trigger behavior. Formatting-only edits select no causal tests.
+
+For pnpm, importer ownership includes all four dependency maps and workspace
+links. A changed transitive package walks back through the lock graph to every
+workspace importer that consumes it. When the same package changes in both a
+manifest and lockfile, selected tests are deduplicated and retain both reasons.
+`pnpm-workspace.yaml` remains a broad configuration input.
+
+Malformed manifests and changes without a readable baseline emit typed
+warnings. They select only the configured safety groups unless
+`globalConfigFallback` is enabled, in which case the framework suite is
+selected.
+
+Swift and Dotnet dependency files use the same policy. Static `Package.swift`
+dependency declarations, `Package.resolved` pins, `.csproj` package references,
+`Directory.Packages.props`, and `packages.lock.json` changes seed their owning
+projects and downstream dependents. Unsupported dynamic declarations,
+malformed files, and missing revisions emit typed warnings and require explicit
+global fallback opt-in for full-suite selection.
+
 ## Breaking Change: Implicit Git Removed
 
 Previously, running `no-mistakes test plan` with no input arguments would implicitly run

@@ -2,7 +2,10 @@ mod config;
 mod csharp;
 mod csharp_http;
 mod csharp_strip;
+mod dependency_diff;
+mod dependency_fingerprint;
 mod project;
+mod project_items;
 mod project_static;
 mod types;
 
@@ -12,6 +15,10 @@ use std::path::{Path, PathBuf};
 
 pub(crate) use config::configured_projects;
 use csharp::parse_csharp_file_with_sources;
+pub(crate) use dependency_diff::{
+    dependency_only_central_packages_change, dependency_only_lockfile_change,
+    dependency_only_project_change, DotnetDependencyDiagnostic,
+};
 use project::parse_project;
 pub(crate) use types::{DotnetConfigProject, DotnetFactMap, DotnetFileFacts, DotnetProjectFacts};
 
@@ -37,7 +44,7 @@ pub(crate) fn collect_dotnet_facts_with_sources(
 
     let project_facts: Vec<(Option<DotnetProjectFacts>, Vec<String>)> = projects
         .par_iter()
-        .map(|project| parse_project(root, all_files, project))
+        .map(|project| parse_project(root, all_files, project, sources))
         .collect();
 
     let mut facts = DotnetFactMap::default();

@@ -1,0 +1,1 @@
+<Project><Import Project="deps.props" /><ItemGroup><PackageReference Include="Alpha" Version="2.0.0" /></ItemGroup></Project>

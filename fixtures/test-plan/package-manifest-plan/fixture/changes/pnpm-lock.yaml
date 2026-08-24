@@ -1,0 +1,11 @@
+lockfileVersion: '9.0'
+importers:
+  .:
+    dependencies:
+      alpha:
+        specifier: 2.0.0
+        version: 2.0.0
+packages:
+  alpha@2.0.0:
+    resolution:
+      integrity: new

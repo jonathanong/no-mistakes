@@ -1,0 +1,11 @@
+lockfileVersion: '6.0'
+patchedDependencies:
+  alpha@1.0.0: patches/alpha.patch
+importers:
+  .:
+    dependencies:
+      alpha: 1.0.0
+packages:
+  /alpha@1.0.0:
+    resolution:
+      integrity: old

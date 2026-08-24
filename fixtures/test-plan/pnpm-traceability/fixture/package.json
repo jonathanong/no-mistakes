@@ -1,0 +1,6 @@
+{
+  "name": "pnpm-traceability",
+  "dependencies": {
+    "reachable": "1.0.0"
+  }
+}

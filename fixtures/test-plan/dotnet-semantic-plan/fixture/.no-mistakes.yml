@@ -1,0 +1,29 @@
+tests:
+  dotnet:
+    solutions:
+      - Core.sln
+    projects:
+      core:
+        project: core/Core.csproj
+      core-tests:
+        project: core/tests/Core.Tests.csproj
+        test: true
+      app:
+        project: app/App.csproj
+      app-tests:
+        project: app/tests/App.Tests.csproj
+        test: true
+      orphan:
+        project: orphan/Orphan.csproj
+testPlan:
+  dotnet:
+    environments:
+      pre-push:
+        limit:
+          files: 2
+        groups:
+          - type: direct
+          - type: dependencies
+          - type: sample
+            limit:
+              files: 1

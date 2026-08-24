@@ -9,9 +9,9 @@ use std::path::{Path, PathBuf};
 
 pub(super) fn insert_synthesized_dependency_group(
     groups: &mut Vec<TestPlanGroup>,
-    has_targeted_candidates: bool,
+    has_dependency_candidates: bool,
 ) -> Option<usize> {
-    if !has_targeted_candidates
+    if !has_dependency_candidates
         || groups
             .iter()
             .any(|group| group.type_ == TestPlanGroupType::Dependencies)

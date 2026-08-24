@@ -1,0 +1,6 @@
+<Project>
+ <ItemGroup>
+  <PackageReference Version = '1.0.0' Include = "Alpha"></PackageReference>
+  <ProjectReference Include = '../Core/Core.csproj'></ProjectReference>
+ </ItemGroup>
+</Project>

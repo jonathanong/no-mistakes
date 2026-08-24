@@ -3,9 +3,11 @@ pub(super) fn string_arg(source: &str, label: &str) -> Option<String> {
     let quote = source[colon + 1..]
         .char_indices()
         .find_map(|(offset, ch)| (!ch.is_whitespace()).then_some((colon + 1 + offset, ch)))?;
-    (quote.1 == '"')
-        .then(|| read_quoted_string(source, quote.0).map(|(value, _)| value))
-        .flatten()
+    if quote.1 != '"' || source[quote.0..].starts_with("\"\"\"") {
+        return None;
+    }
+    read_quoted_string(source, quote.0)
+        .and_then(|(value, _)| (!value.contains("\\(") && !value.contains('\n')).then_some(value))
 }
 
 pub(super) fn find_label_colon(source: &str, label: &str) -> Option<usize> {

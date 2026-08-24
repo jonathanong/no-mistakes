@@ -1,0 +1,22 @@
+importers:
+  packages/app:
+    dependencies:
+      workspace-lib:
+        specifier: link:../workspace-lib-next
+        version: link:../workspace-lib-next
+      added-dep: 1
+      stable-dep: 1
+packages:
+  app@1: {}
+  middle@1: {}
+  leaf@2: {}
+  added-dep@1: {}
+  stable-dep@1: {}
+snapshots:
+  app@1:
+    dependencies:
+      middle: 1
+  middle@1:
+    dependencies:
+      leaf: 2
+  leaf@2: {}

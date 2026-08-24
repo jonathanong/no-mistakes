@@ -9,6 +9,15 @@ pub struct PnpmImporter {
     pub optional_dependencies: Vec<PnpmImporterDependency>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+pub(crate) struct PnpmImpactImporter {
+    pub(super) path: String,
+    pub(super) dependencies: Vec<PnpmImporterDependency>,
+    pub(super) dev_dependencies: Vec<PnpmImporterDependency>,
+    pub(super) optional_dependencies: Vec<PnpmImporterDependency>,
+    pub(super) peer_dependencies: Vec<PnpmImporterDependency>,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PnpmImporterDependency {
     pub alias: String,
@@ -18,6 +27,18 @@ pub struct PnpmImporterDependency {
 }
 
 pub fn parse_importers(content: &str) -> Vec<PnpmImporter> {
+    parse_importers_for_impact(content)
+        .into_iter()
+        .map(|importer| PnpmImporter {
+            path: importer.path,
+            dependencies: importer.dependencies,
+            dev_dependencies: importer.dev_dependencies,
+            optional_dependencies: importer.optional_dependencies,
+        })
+        .collect()
+}
+
+pub(crate) fn parse_importers_for_impact(content: &str) -> Vec<PnpmImpactImporter> {
     let Ok(root) = serde_yaml::from_str::<serde_yaml::Value>(content) else {
         return Vec::new();
     };
@@ -25,18 +46,19 @@ pub fn parse_importers(content: &str) -> Vec<PnpmImporter> {
         return Vec::new();
     };
 
-    let mut importers: Vec<PnpmImporter> = importers_map
+    let mut importers: Vec<PnpmImpactImporter> = importers_map
         .iter()
         .filter_map(|(key, value)| {
             let path = yaml_key_to_string(key);
             if path.is_empty() {
                 return None;
             }
-            Some(PnpmImporter {
+            Some(PnpmImpactImporter {
                 path,
                 dependencies: importer_dependencies(value, "dependencies"),
                 dev_dependencies: importer_dependencies(value, "devDependencies"),
                 optional_dependencies: importer_dependencies(value, "optionalDependencies"),
+                peer_dependencies: importer_dependencies(value, "peerDependencies"),
             })
         })
         .collect();

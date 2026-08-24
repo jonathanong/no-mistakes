@@ -1,0 +1,9 @@
+packages:
+  - workspaces/*
+catalogs:
+  default:
+    alpha: 2.0.0
+overrides:
+  beta: 3.0.0
+patchedDependencies:
+  gamma@1.0.0: patches/gamma.patch

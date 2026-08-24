@@ -38,10 +38,15 @@ pub(super) fn dependency_triggers(
 ) -> Result<DependencyTriggers> {
     let plan = framework_plan(config, framework);
     dep_triggers_validate::validate_targeted_targets(config, framework, prepared)?;
+    let dependency_only_changed_files: Vec<PathBuf> = changed_files
+        .iter()
+        .filter(|path| !prepared.is_dependency_only_manifest(path, Some(framework)))
+        .cloned()
+        .collect();
     let ignored_sets = ignored_changed_test_sets(
         root,
         &plan.full_suite_triggers.ignore_changed_tests,
-        changed_files,
+        &dependency_only_changed_files,
         prepared,
     )?;
     let mut result = DependencyTriggers::default();
@@ -49,7 +54,7 @@ pub(super) fn dependency_triggers(
     if let Some(named) = dep_triggers_named::apply_named_triggers(
         root,
         &plan.full_suite_triggers.triggers,
-        changed_files,
+        &dependency_only_changed_files,
         &ignored_sets,
         &mut result,
     )? {
@@ -61,7 +66,7 @@ pub(super) fn dependency_triggers(
         };
         let patterns = project_dependency_patterns(project_name, project, trigger);
         let compiled_patterns = compile_ordered_patterns(&patterns)?;
-        for changed in changed_files {
+        for changed in &dependency_only_changed_files {
             if ignored_sets.iter().any(|set| set.contains(changed)) {
                 continue;
             }
