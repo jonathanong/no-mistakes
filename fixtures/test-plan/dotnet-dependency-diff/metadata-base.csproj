@@ -1,0 +1,1 @@
+<Project><ItemGroup><PackageReference Include="Alpha" Version="1.0.0"><PrivateAssets>all</PrivateAssets><IncludeAssets>runtime</IncludeAssets></PackageReference></ItemGroup></Project>

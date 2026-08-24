@@ -23,6 +23,8 @@ mod hints_domains;
 mod lockfile_seeds;
 mod native_fallback;
 mod native_fallback_lang;
+mod native_semantic_fallback;
+pub(crate) mod native_semantic_seeds;
 mod targeted_triggers;
 #[cfg(test)]
 mod tests;
@@ -45,6 +47,8 @@ use lockfile_seeds::{
     apply_lockfile_seeds, lockfile_seed_candidates, merge_lockfile_seed_candidates,
 };
 use native_fallback::{native_fallback_selection, native_traceable_changed_files};
+use native_semantic_fallback::native_semantic_fallback_plan;
+use native_semantic_seeds::native_semantic_seed_candidates;
 use targeted_triggers::{
     insert_synthesized_dependency_group, merge_targeted_candidates, targeted_dependency_candidates,
     TargetedOverlapRecovery,
@@ -60,7 +64,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
     changed_files: &[PathBuf],
     deleted_files: &[PathBuf],
     diff_files: &[DiffFile],
-    lockfile_changed_packages: &[(String, String)], // (pkg_name, lockfile_rel)
+    lockfile_changed_packages: &[(String, String, Vec<PathBuf>)],
     workspace_map: &WorkspaceMap,
     forced_fallback: Option<(String, PathBuf)>,
     discovered_tests: DiscoveredTests,
@@ -76,8 +80,6 @@ pub(crate) fn generate_configured_plan_with_prepared(
     let has_global_limit = effective_limit.is_some();
     let global_limit =
         limit_count(effective_limit.as_ref(), all_tests.len()).unwrap_or(all_tests.len());
-    // Validate every structured target before any fallback or `all` environment
-    // can return a plan successfully.
     let dependency_triggers =
         dependency_triggers(root, config, framework, changed_files, prepared)?;
 
@@ -175,8 +177,6 @@ pub(crate) fn generate_configured_plan_with_prepared(
         &test_filter,
         &coverage_hints,
     );
-    // §lockfile: pre-compute seeds before the group loop so they can be injected during
-    // the dependencies group turn — before later groups (e.g. sample) consume the budget.
     let lockfile_seed_result = if lockfile_changed_packages.is_empty() {
         None
     } else {
@@ -189,6 +189,8 @@ pub(crate) fn generate_configured_plan_with_prepared(
             &HashSet::new(), // filter against `used` during injection, not pre-compute
         ))
     };
+    let native_semantic_seeds =
+        native_semantic_seed_candidates(root, prepared, graph, &all_test_set, Some(framework));
     let mut lockfile_seeds_injected = false;
     let targeted_candidates = targeted_dependency_candidates(
         root,
@@ -197,8 +199,13 @@ pub(crate) fn generate_configured_plan_with_prepared(
         &dependency_triggers.targeted,
     );
     let mut groups = configured_groups(&env, framework);
+    let has_semantic_dependency_candidates = !targeted_candidates.is_empty()
+        || lockfile_seed_result
+            .as_ref()
+            .is_some_and(|result| !result.candidates.is_empty())
+        || !native_semantic_seeds.candidates.is_empty();
     let target_only_group_index =
-        insert_synthesized_dependency_group(&mut groups, !targeted_candidates.is_empty());
+        insert_synthesized_dependency_group(&mut groups, has_semantic_dependency_candidates);
     let mut targeted_overlaps = TargetedOverlapRecovery::new(&targeted_candidates);
     let mut fallback_reasons = Vec::new();
     let mut vitest_setup_fallback = VitestSetupFallback::new(VitestSetupFallbackInputs {
@@ -283,8 +290,6 @@ pub(crate) fn generate_configured_plan_with_prepared(
         if recover_targeted_overlaps {
             targeted_overlaps.merge_existing(root, &mut candidates, &used, &mut selected_map);
         }
-        // Inject lockfile-seeded candidates during the dependencies group turn so they
-        // compete for budget before later groups (e.g. sample) can consume it.
         if group.type_ == TestPlanGroupType::Dependencies {
             merge_targeted_candidates(
                 root,
@@ -303,6 +308,13 @@ pub(crate) fn generate_configured_plan_with_prepared(
                     &mut selected_map,
                 );
             }
+            merge_lockfile_seed_candidates(
+                root,
+                &native_semantic_seeds.candidates,
+                &mut candidates,
+                &used,
+                &mut selected_map,
+            );
         }
         let group_limit = group
             .limit
@@ -351,17 +363,44 @@ pub(crate) fn generate_configured_plan_with_prepared(
         targeted_overlaps.finish_group(group.type_);
     }
 
+    native_semantic_seeds.extend_warnings(&mut warnings, &mut warnings_seen);
+    if let Some(plan) = native_semantic_fallback_plan(
+        root,
+        &all_tests,
+        &native_semantic_seeds,
+        effective_global_config_fallback(&env, args),
+        global_limit,
+        has_global_limit,
+        &warnings,
+        &discovered_tests,
+    ) {
+        return Ok(plan);
+    }
+
     if let Some(seed_result) = lockfile_seed_result {
+        for dependency in &seed_result.untraceable_dependencies {
+            let warning = Warning {
+                r#type: "package-dependency-untraceable".to_string(),
+                message: format!(
+                    "`{}` changed `{}` without a causal path to a configured test; full-suite selection requires global fallback opt-in",
+                    dependency.lockfile, dependency.package_name,
+                ),
+                file: dependency.lockfile.clone(),
+                line: None,
+            };
+            if warnings_seen.insert(warning_key(&warning)) {
+                warnings.push(warning);
+            }
+        }
         if lockfile_seeds_injected {
-            // Seeds were merged during the dependencies group turn.
-            // Only handle the untraceable-dep fallback here.
-            if !seed_result.untraceable_lockfiles.is_empty()
+            if !seed_result.untraceable_dependencies.is_empty()
                 && effective_global_config_fallback(&env, args)
             {
-                let lf = &seed_result.untraceable_lockfiles[0];
+                let dependency = &seed_result.untraceable_dependencies[0];
+                let changed_file = root.join(&dependency.lockfile);
                 let msg = format!(
-                    "`{}` changed a transitive dependency; falling back to full test suite",
-                    lf
+                    "`{}` changed transitive dependency `{}`; falling back to full test suite",
+                    dependency.lockfile, dependency.package_name,
                 );
                 let mut plan = fallback_plan(
                     root,
@@ -369,20 +408,17 @@ pub(crate) fn generate_configured_plan_with_prepared(
                     FallbackRequest {
                         group_type: "dependencies",
                         via: "transitive dependency",
-                        changed_file: None,
+                        changed_file: Some(&changed_file),
                         limit: global_limit,
                         has_limit: has_global_limit,
                         reason: msg,
                     },
                 );
-                // This return occurs after normal warning initialization, so
-                // retain diagnostics for unsafe Vitest setup declarations.
                 plan.warnings.extend(warnings);
                 attach_targets(&mut plan, root, &discovered_tests);
                 return Ok(plan);
             }
         } else {
-            // Custom config without a dependencies group: fall back to post-loop injection.
             if let Some(mut fallback) = apply_lockfile_seeds(
                 root,
                 seed_result,
@@ -395,8 +431,6 @@ pub(crate) fn generate_configured_plan_with_prepared(
                 &mut group_results,
                 &discovered_tests,
             )? {
-                // `apply_lockfile_seeds` owns its fallback plan; attach the
-                // request-scoped setup diagnostics before its early return.
                 fallback.warnings.extend(warnings);
                 return Ok(fallback);
             }

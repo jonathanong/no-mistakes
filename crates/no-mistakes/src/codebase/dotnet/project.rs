@@ -1,6 +1,7 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+use super::project_items::{default_compile_files, item_values};
 use super::{
     msbuild_path, normalize_path, project_static::parse_project_static, DotnetConfigProject,
     DotnetProjectFacts,
@@ -10,12 +11,16 @@ pub(in crate::codebase::dotnet) fn parse_project(
     root: &Path,
     all_files: &[PathBuf],
     config: &DotnetConfigProject,
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
 ) -> (Option<DotnetProjectFacts>, Vec<String>) {
     let root = normalize_path(root);
     let project_path = normalize_path(&root.join(&config.project));
     let project_dir = project_path.parent().unwrap_or(&root).to_path_buf();
     let mut warnings = Vec::new();
-    let source = match std::fs::read_to_string(&project_path) {
+    let source = match crate::codebase::ts_source::SourceStore::read_prepared_or_open(
+        sources,
+        &project_path,
+    ) {
         Ok(source) => source,
         Err(error) => {
             warnings.push(format!(
@@ -182,28 +187,5 @@ fn item_names(items: Option<&serde_json::Value>, item_name: &str) -> BTreeSet<St
                 .and_then(|value| value.as_str())
                 .map(str::to_string)
         })
-        .collect()
-}
-
-fn item_values<'a>(
-    items: Option<&'a serde_json::Value>,
-    item_name: &str,
-) -> Vec<&'a serde_json::Value> {
-    let Some(items) = items else {
-        return Vec::new();
-    };
-    items
-        .get(item_name)
-        .and_then(|value| value.as_array())
-        .map(|values| values.iter().collect())
-        .unwrap_or_default()
-}
-
-fn default_compile_files(all_files: &[PathBuf], project_dir: &Path) -> BTreeSet<PathBuf> {
-    all_files
-        .iter()
-        .filter(|path| path.starts_with(project_dir))
-        .filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("cs"))
-        .cloned()
         .collect()
 }

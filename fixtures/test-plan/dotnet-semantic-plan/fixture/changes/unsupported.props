@@ -1,0 +1,1 @@
+<Project><ItemGroup><PackageVersion Include="$(DynamicPackage)" Version="2.0.0" /></ItemGroup></Project>

@@ -1,0 +1,1 @@
+<Project><ItemGroup Condition = "'true' == 'true'"><PackageReference Include="Alpha" Version="2.0.0" /></ItemGroup></Project>

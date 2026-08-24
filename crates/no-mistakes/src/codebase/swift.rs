@@ -1,4 +1,5 @@
 mod manifest;
+mod resolved;
 mod scanner;
 mod source;
 
@@ -6,12 +7,22 @@ use rayon::prelude::*;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
-use manifest::parse_manifest_targets;
+pub(crate) use manifest::{
+    dependency_only_manifest_change, formatting_only_manifest_change, SwiftManifestDiagnostic,
+};
+use manifest::{
+    parse_local_package_bindings, parse_local_package_paths, parse_manifest_products,
+    parse_manifest_targets,
+};
+pub(crate) use resolved::{diff_resolved_pins, parse_resolved_pins, SwiftResolvedDiagnostic};
 use source::parse_swift_file_with_sources;
 
 #[derive(Debug, Clone, Default)]
 pub(crate) struct SwiftPackageFacts {
     pub package_root: PathBuf,
+    pub local_package_paths: Vec<String>,
+    pub local_package_bindings: BTreeMap<String, String>,
+    pub products: BTreeMap<String, Vec<String>>,
     pub targets: BTreeMap<String, SwiftTargetFacts>,
 }
 
@@ -20,6 +31,7 @@ pub(crate) struct SwiftTargetFacts {
     pub name: String,
     pub is_test: bool,
     pub dependencies: Vec<String>,
+    pub product_packages: BTreeMap<String, String>,
     pub roots: Vec<PathBuf>,
 }
 
@@ -72,6 +84,7 @@ pub(crate) fn collect_swift_facts_with_sources(
         .iter()
         .take_while(|_| crate::invocation::check_timeout().is_ok())
         .filter(|path| path.extension().and_then(|ext| ext.to_str()) == Some("swift"))
+        .filter(|path| path.file_name().and_then(|name| name.to_str()) != Some("Package.swift"))
         .filter(|path| {
             package_facts
                 .iter()
@@ -134,15 +147,15 @@ fn parse_package(
         targets.insert(target.name.clone(), target);
     }
     for target in targets.values_mut() {
-        let default_root = if target.is_test {
-            package_root.join("Tests").join(&target.name)
-        } else {
-            package_root.join("Sources").join(&target.name)
-        };
-        target.roots.push(default_root);
+        for root in &mut target.roots {
+            *root = package_root.join(crate::codebase::ts_resolver::normalize_path(root.as_path()));
+        }
     }
     Some(SwiftPackageFacts {
         package_root,
+        local_package_paths: parse_local_package_paths(&source),
+        local_package_bindings: parse_local_package_bindings(&source),
+        products: parse_manifest_products(&source),
         targets,
     })
 }

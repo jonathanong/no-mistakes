@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net9.0</TargetFramework><RootNamespace>Root</RootNamespace></PropertyGroup><ItemGroup><PackageReference Include="Parent.Package" /></ItemGroup></Project>

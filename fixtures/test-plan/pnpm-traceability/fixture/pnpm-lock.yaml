@@ -1,0 +1,14 @@
+lockfileVersion: '9.0'
+importers:
+  .:
+    dependencies:
+      reachable:
+        specifier: 1.0.0
+        version: 1.0.0
+packages:
+  reachable@1.0.0:
+    resolution:
+      integrity: old-reachable
+  untraceable-leaf@1.0.0:
+    resolution:
+      integrity: old-leaf

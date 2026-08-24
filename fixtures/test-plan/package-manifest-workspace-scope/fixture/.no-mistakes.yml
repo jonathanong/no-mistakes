@@ -1,0 +1,16 @@
+projects:
+  examples:
+    type: server
+    root: examples
+tests:
+  vitest: {}
+test_plan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        examples:
+          - "**/package.json"
+    environments:
+      prePush:
+        groups:
+          - type: dependencies

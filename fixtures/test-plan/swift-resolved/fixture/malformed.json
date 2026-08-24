@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "pins": [
+    { "identity": "missing-state", "location": "https://example.com/missing-state.git" }
+  ]
+}

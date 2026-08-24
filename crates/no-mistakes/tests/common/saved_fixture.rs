@@ -1,5 +1,6 @@
 use std::path::{Path, PathBuf};
 
+#[allow(dead_code)]
 pub fn materialize(category: &str, name: &str) -> tempfile::TempDir {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures")

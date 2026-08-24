@@ -1,0 +1,6 @@
+{
+  "name": "tool",
+  "dependencies": {
+    "alpha": "2.0.0"
+  }
+}

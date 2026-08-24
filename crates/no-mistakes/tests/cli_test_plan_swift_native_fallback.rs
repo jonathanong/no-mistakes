@@ -63,7 +63,7 @@ fn test_plan_swift_falls_back_when_source_graph_is_unconfigured() {
 }
 
 #[test]
-fn test_plan_swift_scopes_package_manifest_fallback_to_package_tests() {
+fn test_plan_swift_manifest_without_global_opt_in_does_not_expand_to_package_tests() {
     let root = fixture("swift-test-plan");
     let config = root.join("no-trigger.no-mistakes.yml");
     let output = run(&[
@@ -85,25 +85,18 @@ fn test_plan_swift_scopes_package_manifest_fallback_to_package_tests() {
         String::from_utf8_lossy(&output.stderr)
     );
     let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
-    assert_eq!(plan["fallback_triggered"], true);
+    assert_eq!(plan["fallback_triggered"], false);
     let selected: Vec<&str> = plan["selected_tests"]
         .as_array()
         .unwrap()
         .iter()
         .map(|test| test["test_file"].as_str().unwrap())
         .collect();
-    assert_eq!(
-        selected,
-        vec!["swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift"]
-    );
-    assert_eq!(
-        plan["selected_tests"][0]["targets"][0]["config"],
-        "swift-clients/core"
-    );
+    assert!(selected.is_empty());
 }
 
 #[test]
-fn test_plan_swift_deleted_package_manifest_triggers_native_fallback() {
+fn test_plan_swift_deleted_package_manifest_scopes_native_fallback_to_package_tests() {
     let root = fixture("swift-test-plan");
     let diff_path = root.join("delete-core-package.diff");
     let output = run(&[
@@ -132,10 +125,6 @@ fn test_plan_swift_deleted_package_manifest_triggers_native_fallback() {
         .collect();
     assert_eq!(
         selected,
-        vec![
-            "swift-clients/apps/android/Tests/VouchaAndroidTests/DeviceTests.swift",
-            "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
-            "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
-        ]
+        vec!["swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift"]
     );
 }

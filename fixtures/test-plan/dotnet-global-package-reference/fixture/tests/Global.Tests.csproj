@@ -1,0 +1,1 @@
+<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net9.0</TargetFramework><IsTestProject>true</IsTestProject><RootNamespace>Example.Global.Tests</RootNamespace></PropertyGroup><ItemGroup><ProjectReference Include="../src/Global.csproj" /></ItemGroup></Project>

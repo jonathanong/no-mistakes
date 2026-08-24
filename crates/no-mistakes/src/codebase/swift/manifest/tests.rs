@@ -1,6 +1,51 @@
 use super::test_support::extract_test_target_names;
 use super::*;
 
+const EXTERNAL_BASE: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/external-base.swift"
+);
+const EXTERNAL_CHANGED: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/external-changed.swift"
+);
+const LOCAL_BASE: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/local-base.swift"
+);
+const LOCAL_CHANGED: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/local-changed.swift"
+);
+const PRODUCT_BASE: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/product-base.swift"
+);
+const PRODUCT_CHANGED: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/product-changed.swift"
+);
+const PLUGIN_BASE: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/plugin-base.swift"
+);
+const PLUGIN_CHANGED: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/plugin-changed.swift"
+);
+const MIXED_BASE: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/mixed-base.swift"
+);
+const MIXED_CHANGED: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/mixed-changed.swift"
+);
+const FORMATTING_BASE: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/formatting-base.swift"
+);
+const FORMATTING_CHANGED: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/formatting-changed.swift"
+);
+const DYNAMIC: &str =
+    include_str!("../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/dynamic.swift");
+const TOOLS_VERSION_BASE: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/tools-version-base.swift"
+);
+const TOOLS_VERSION_CHANGED: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/tools-version-changed.swift"
+);
+
 #[test]
 fn manifest_targets_handle_nested_dependency_parentheses() {
     let source = r#"
@@ -34,6 +79,10 @@ fn manifest_targets_handle_nested_dependency_parentheses() {
         features.dependencies,
         vec!["VouchaCore".to_string(), "VouchaAPI".to_string()]
     );
+    assert_eq!(
+        features.product_packages.get("VouchaCore"),
+        Some(&"core".to_string())
+    );
 
     let ui_tests = targets
         .iter()
@@ -47,6 +96,105 @@ fn manifest_targets_handle_nested_dependency_parentheses() {
     assert_eq!(
         extract_test_target_names(source),
         vec!["VouchaUITests".to_string()]
+    );
+}
+
+#[test]
+fn manifest_targets_record_executable_and_custom_source_roots() {
+    let source = r#"
+        let package = Package(targets: [
+            .executableTarget(name: "Runner", path: "Tools/Runner"),
+            .testTarget(name: "CustomTests", path: "Checks/Integration"),
+            .macro(name: "Macros"),
+            .plugin(name: "Formatter", capability: .buildTool()),
+            .target(name: "App", plugins: [.plugin(name: "Formatter", package: "tools")]),
+        ])
+    "#;
+
+    let targets = parse_manifest_targets(source);
+    let runner = targets
+        .iter()
+        .find(|target| target.name == "Runner")
+        .expect("executable target should parse");
+    assert_eq!(runner.roots, vec![std::path::PathBuf::from("Tools/Runner")]);
+    let custom_tests = targets
+        .iter()
+        .find(|target| target.name == "CustomTests")
+        .expect("custom test target should parse");
+    assert!(custom_tests.is_test);
+    assert_eq!(
+        custom_tests.roots,
+        vec![std::path::PathBuf::from("Checks/Integration")]
+    );
+    assert_eq!(
+        targets
+            .iter()
+            .find(|target| target.name == "Macros")
+            .expect("macro target should parse")
+            .roots,
+        vec![std::path::PathBuf::from("Sources/Macros")]
+    );
+    assert_eq!(
+        targets
+            .iter()
+            .find(|target| target.name == "Formatter")
+            .expect("plugin target should parse")
+            .roots,
+        vec![std::path::PathBuf::from("Plugins/Formatter")]
+    );
+    assert_eq!(
+        targets
+            .iter()
+            .filter(|target| target.name == "Formatter")
+            .count(),
+        1,
+        "plugin dependency bindings must not become source targets"
+    );
+}
+
+#[test]
+fn manifest_products_map_product_names_to_module_targets() {
+    let source = r#"
+        let package = Package(products: [
+            .library(name: "CoreProduct", targets: ["CoreModule", "Models"]),
+            .executable(name: "Tool", targets: ["ToolMain"]),
+        ])
+    "#;
+
+    assert_eq!(
+        parse_manifest_products(source),
+        std::collections::BTreeMap::from([
+            (
+                "CoreProduct".to_string(),
+                vec!["CoreModule".to_string(), "Models".to_string()],
+            ),
+            ("Tool".to_string(), vec!["ToolMain".to_string()]),
+        ])
+    );
+}
+
+#[test]
+fn local_package_and_product_identities_are_case_insensitive() {
+    let source = r#"
+        let package = Package(
+            dependencies: [.package(path: "../Core")],
+            targets: [
+                .target(name: "App", dependencies: [
+                    .product(name: "CoreProduct", package: "CORE"),
+                ]),
+            ]
+        )
+    "#;
+
+    assert_eq!(
+        parse_local_package_bindings(source).get("../Core"),
+        Some(&"core".to_string())
+    );
+    assert_eq!(
+        parse_manifest_targets(source)[0]
+            .product_packages
+            .get("CoreProduct"),
+        Some(&"core".to_string())
     );
 }
 
@@ -68,4 +216,107 @@ fn manifest_targets_ignore_malformed_dependency_lists_and_calls() {
         .find(|target| target.name == "NoDeps")
         .expect("valid target should still parse");
     assert!(no_deps.dependencies.is_empty());
+}
+
+#[test]
+fn manifest_dependency_only_diff_accepts_static_dependency_surfaces() {
+    for (before, after) in [
+        (EXTERNAL_BASE, EXTERNAL_CHANGED),
+        (LOCAL_BASE, LOCAL_CHANGED),
+        (PRODUCT_BASE, PRODUCT_CHANGED),
+        (PLUGIN_BASE, PLUGIN_CHANGED),
+    ] {
+        assert!(dependency_only_manifest_change(before, after).unwrap());
+    }
+    assert!(!dependency_only_manifest_change(FORMATTING_BASE, FORMATTING_CHANGED).unwrap());
+}
+
+#[test]
+fn manifest_dependency_only_diff_keeps_mixed_configuration_broad() {
+    assert!(!dependency_only_manifest_change(MIXED_BASE, MIXED_CHANGED).unwrap());
+}
+
+#[test]
+fn manifest_normalization_preserves_whitespace_inside_static_strings() {
+    let path_before = r#"let package = Package(dependencies: [.package(path: "../core lib")])"#;
+    let path_after = r#"let package = Package(dependencies: [.package(path: "../core  lib")])"#;
+    assert!(!formatting_only_manifest_change(path_before, path_after));
+    assert!(dependency_only_manifest_change(path_before, path_after).unwrap());
+
+    let name_before = r#"let package = Package(name: "Core Lib")"#;
+    let name_after = r#"let package = Package(name: "Core  Lib")"#;
+    assert!(!formatting_only_manifest_change(name_before, name_after));
+    assert!(!dependency_only_manifest_change(name_before, name_after).unwrap());
+}
+
+#[test]
+fn manifest_dependency_only_diff_diagnoses_dynamic_declarations() {
+    assert_eq!(
+        dependency_only_manifest_change(DYNAMIC, DYNAMIC).unwrap_err(),
+        SwiftManifestDiagnostic::UnsupportedDynamicDeclaration
+    );
+}
+
+#[test]
+fn tools_version_changes_remain_structural_and_broad() {
+    assert!(!formatting_only_manifest_change(
+        TOOLS_VERSION_BASE,
+        TOOLS_VERSION_CHANGED
+    ));
+    assert!(!dependency_only_manifest_change(TOOLS_VERSION_BASE, TOOLS_VERSION_CHANGED).unwrap());
+}
+
+#[test]
+fn manifest_rejects_invalid_static_declarations_and_bindings() {
+    for source in [
+        r#"let package = Package(dependencies: [.package(path: dynamic)])"#,
+        r#"let package = Package(dependencies: [.package(path: "../Core", condition: .when(platforms: [.iOS]))])"#,
+    ] {
+        assert_eq!(
+            dependency_only_manifest_change(source, source),
+            Err(SwiftManifestDiagnostic::UnsupportedDynamicDeclaration)
+        );
+    }
+    for binding in [
+        "\"unterminated",
+        ".target(name: \"Core\"",
+        ".target(name: \"Core\") extra",
+        ".target()",
+        ".product(name: \"Core\")",
+        ".unsupported(name: \"Core\")",
+    ] {
+        assert_eq!(
+            validate_binding(binding),
+            Err(SwiftManifestDiagnostic::UnsupportedDynamicDeclaration),
+            "{binding}"
+        );
+    }
+}
+
+#[test]
+fn manifest_parser_tolerates_unclosed_strings_and_overlapping_declarations() {
+    assert_eq!(
+        normalize_manifest("let name = \"unterminated"),
+        "letname=\"unterminated"
+    );
+
+    let source = r#"
+        let package = Package(dependencies: [
+            .package(path: "../Core", targets: [
+                .target(name: "App", dependencies: ["Core"])
+            ])
+        ])
+    "#;
+    assert!(manifest_projection(source).is_ok());
+}
+
+#[test]
+fn manifest_readers_ignore_unclosed_or_pathless_declarations() {
+    assert!(parse_manifest_products(".library(name: \"Core\"").is_empty());
+    assert_eq!(
+        parse_local_package_bindings(
+            r#".package(name: "NoPath").package(path: "../Core") .package(path: "../Broken""#
+        ),
+        std::collections::BTreeMap::from([("../Core".to_string(), "core".to_string())])
+    );
 }

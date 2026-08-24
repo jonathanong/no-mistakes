@@ -1,0 +1,4 @@
+packages:
+  - workspaces/*
+catalog:
+  alpha: 1.0.0

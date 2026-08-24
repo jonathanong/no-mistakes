@@ -1,0 +1,12 @@
+tests:
+  vitest: {}
+test_plan:
+  vitest:
+    environments:
+      prePush:
+        groups:
+          - type: dependencies
+          - type: sample
+            limit:
+              files: 1
+rules: []

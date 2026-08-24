@@ -1,0 +1,6 @@
+{
+  "name": "renamed-package-manifest-plan",
+  "dependencies": {
+    "alpha": "2.0.0"
+  }
+}

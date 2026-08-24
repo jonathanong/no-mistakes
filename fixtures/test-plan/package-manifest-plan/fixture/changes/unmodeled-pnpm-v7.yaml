@@ -1,0 +1,11 @@
+lockfileVersion: '7.0'
+onlyBuiltDependencies:
+  - alpha
+importers:
+  .:
+    dependencies:
+      alpha: 1.0.0
+packages:
+  /alpha@1.0.0:
+    resolution:
+      integrity: old

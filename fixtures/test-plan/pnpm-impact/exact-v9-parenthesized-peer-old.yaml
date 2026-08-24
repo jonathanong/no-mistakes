@@ -1,0 +1,21 @@
+lockfileVersion: '9.0'
+importers:
+  react-app:
+    dependencies:
+      middle:
+        specifier: '1.0.0'
+        version: 1.0.0(react@1.0.0)
+  vue-app:
+    dependencies:
+      middle:
+        specifier: '1.0.0'
+        version: 1.0.0(vue@1.0.0)
+packages:
+  middle@1.0.0(react@1.0.0):
+    dependencies:
+      leaf: 1.0.0(react@1.0.0)
+  middle@1.0.0(vue@1.0.0):
+    dependencies:
+      leaf: 1.0.0(vue@1.0.0)
+  leaf@1.0.0(react@1.0.0): { resolution: { integrity: old } }
+  leaf@1.0.0(vue@1.0.0): { resolution: { integrity: stable } }

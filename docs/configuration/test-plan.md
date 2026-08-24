@@ -155,6 +155,17 @@ testPlan:
 Dependency groups use the canonical graph, including C# namespace imports, type
 references, and `.csproj` `ProjectReference` edges. The `coverage` group is
 Playwright-only; Dotnet plans reject it with a framework-specific error.
+Dependency-only `.csproj`, nearest-ancestor `Directory.Packages.props` (plus
+an explicitly imported ancestor central manifest), and
+per-project `packages.lock.json` changes seed the exact consuming project and
+its downstream tests. Configured test projects are discovered independently of
+solution membership, so their execution target remains the test `.csproj`.
+Literal imports and the standard parent-search `GetPathOfFileAbove` import are
+recognized; conditional imports are included conservatively, while XML comments
+and CDATA are ignored. An unterminated ignored region conservatively retains
+all ancestor central manifests rather than silently omitting their consumers.
+`Directory.Build.props`, `Directory.Build.targets`, `NuGet.config`, and
+`global.json` retain broad native fallback behavior.
 If the configured project graph cannot trace a native source/project change but
 native tests are discoverable, the plan falls back to the framework-scoped
 discovered tests and sets `fallback_triggered`/`fallback_reason`.
@@ -188,6 +199,10 @@ literals to configured backend routes.
 Use `--include-glob` / Node `includeGlob` to plan one package or project slice.
 Configured Swift plans apply the filter before limits and fallback selection, so
 group counts and execution targets describe only the selected slice.
+Static dependency-only `Package.swift` changes and `Package.resolved` pin
+changes seed the owning package. Local package dependencies propagate that
+impact to downstream configured packages; target names are resolved within
+their owning package rather than globally.
 If the configured package graph cannot trace a native source/project change but
 native tests are discoverable, the plan falls back to the framework-scoped
 discovered tests and sets `fallback_triggered`/`fallback_reason`.

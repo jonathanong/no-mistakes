@@ -1,0 +1,7 @@
+{
+  "name": "workspace-a",
+  "main": "index.ts",
+  "dependencies": {
+    "alpha": "2.0.0"
+  }
+}

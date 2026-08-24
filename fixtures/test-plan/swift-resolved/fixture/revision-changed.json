@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "pins": [
+    { "identity": "example", "location": "https://example.com/example.git", "state": { "version": "1.0.0", "revision": "changed-revision", "checksum": "base-checksum" } },
+    { "identity": "removed", "location": "https://example.com/removed.git", "state": { "version": "1.0.0", "revision": "removed-revision", "checksum": "removed-checksum" } }
+  ]
+}

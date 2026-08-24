@@ -1,0 +1,1 @@
+<Project><PropertyGroup><TreatWarningsAsErrors>true</TreatWarningsAsErrors></PropertyGroup><ItemGroup><PackageVersion Include="App.Only" Version="2.0.0" /></ItemGroup></Project>

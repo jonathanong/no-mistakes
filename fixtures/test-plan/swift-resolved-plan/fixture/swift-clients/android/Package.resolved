@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "pins": [
+    { "identity": "android-example", "location": "https://example.com/android.git", "state": { "version": "1.0.0", "revision": "base", "checksum": "base" } }
+  ]
+}

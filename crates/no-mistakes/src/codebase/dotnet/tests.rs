@@ -93,7 +93,7 @@ fn csharp_compiled_patterns_and_keyword_table_are_reused() {
 }
 
 #[test]
-fn project_static_parser_extracts_test_project_references_and_packages() {
+fn project_static_parser_extracts_test_project_references_and_single_quoted_packages() {
     let path = fixture().join("dotnet-clients/tests/App.Tests/App.Tests.csproj");
     let source = std::fs::read_to_string(&path).unwrap();
     let facts = parse_project_static(&path, &source);
@@ -347,7 +347,7 @@ fn parse_project_falls_back_to_static_defaults_and_file_discovery() {
         test: false,
     };
 
-    let (facts, warnings) = parse_project(&root, std::slice::from_ref(&source_file), &config);
+    let (facts, warnings) = parse_project(&root, std::slice::from_ref(&source_file), &config, None);
     let facts = facts.expect("fixture project should parse");
 
     assert_eq!(facts.assembly_name, "Fallback");
@@ -359,6 +359,27 @@ fn parse_project_falls_back_to_static_defaults_and_file_discovery() {
                 .iter()
                 .any(|warning| warning.contains("dotnet msbuild"))
     );
+}
+
+#[test]
+fn parse_project_reads_configured_project_through_prepared_source_store() {
+    let root = fixture();
+    let project_path = normalize_path(&root.join("dotnet-clients/src/Fallback/Fallback.csproj"));
+    let config = DotnetConfigProject {
+        name: "fallback".to_string(),
+        project: "dotnet-clients/src/Fallback/Fallback.csproj".to_string(),
+        include: Vec::new(),
+        exclude: Vec::new(),
+        test: false,
+    };
+    let sources = crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(
+        crate::codebase::ts_source::FileInventory::from_paths(&[project_path]),
+    ));
+
+    let (facts, _) = parse_project(&root, &[], &config, Some(&sources));
+
+    assert!(facts.is_some());
+    assert_eq!(sources.physical_read_count(), 1);
 }
 
 #[test]

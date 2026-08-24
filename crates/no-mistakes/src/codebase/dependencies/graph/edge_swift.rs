@@ -50,6 +50,7 @@ fn collect_swift_edges_with_facts(
     collect_swift_import_edges(facts, &mut edges, interner);
     collect_swift_reference_edges(facts, &mut edges, interner);
     collect_swift_package_edges(facts, &mut edges, interner);
+    collect_swift_manifest_edges(facts, inputs.all_files, &mut edges, interner);
     collect_swift_http_edges(
         SwiftRouteDefInputs {
             root: inputs.root,

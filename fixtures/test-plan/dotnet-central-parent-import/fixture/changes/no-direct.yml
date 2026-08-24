@@ -1,0 +1,19 @@
+tests:
+  dotnet:
+    projects:
+      nested:
+        project: nested/Nested.csproj
+      nested-tests:
+        project: nested/tests/Nested.Tests.csproj
+        test: true
+      isolated:
+        project: isolated/Isolated.csproj
+      isolated-tests:
+        project: isolated/tests/Isolated.Tests.csproj
+        test: true
+testPlan:
+  dotnet:
+    environments:
+      pre-push:
+        groups:
+          - type: dependencies

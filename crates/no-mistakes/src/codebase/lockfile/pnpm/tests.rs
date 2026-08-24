@@ -1,10 +1,20 @@
+use super::resolution::resolution_info;
 use super::*;
+use crate::codebase::lockfile::ResolutionKind;
 use std::path::PathBuf;
 
 fn fixture(name: &str) -> String {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/lockfile/pnpm")
+    let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let semantic_path = manifest_dir
+        .join("../../fixtures/test-plan/pnpm-impact")
         .join(name);
+    let path = if semantic_path.exists() {
+        semantic_path
+    } else {
+        manifest_dir
+            .join("../../test-cases/lockfile/pnpm")
+            .join(name)
+    };
     std::fs::read_to_string(&path)
         .unwrap_or_else(|e| panic!("failed to read {}: {}", path.display(), e))
 }
@@ -113,6 +123,129 @@ fn parse_importers_groups_by_dependency_type() {
 }
 
 #[test]
+fn parse_importers_includes_peer_dependencies() {
+    assert!(impact_names("", &fixture("peer-importer.yaml"), []).contains(&"react".to_string()));
+}
+
+#[test]
+fn impact_names_walks_transitive_package_dependents_and_link_importers() {
+    let names = impact_names(
+        &fixture("impact-old.yaml"),
+        &fixture("impact-new.yaml"),
+        ["leaf".to_string()],
+    );
+    assert!(names.contains(&"middle".to_string()));
+    assert!(names.contains(&"app".to_string()), "{names:?}");
+    assert!(names.contains(&"workspace-lib".to_string()));
+    assert!(names.contains(&"added-dep".to_string()));
+    assert!(names.contains(&"removed-dev".to_string()));
+    assert!(names.contains(&"removed-optional".to_string()));
+    assert!(names.contains(&"removed-peer".to_string()));
+    assert!(!names.contains(&"stable-dep".to_string()));
+}
+
+#[test]
+fn impact_importer_paths_preserve_exact_transitive_versions() {
+    let old = fixture("exact-old.yaml");
+    let new = fixture("exact-new.yaml");
+    let names = impact_names(&old, &new, ["leaf".to_string()]);
+    assert_eq!(names, vec!["leaf".to_string(), "middle".to_string()]);
+    assert_eq!(
+        impact_importer_paths(&old, &new, &names).get("middle"),
+        Some(&vec!["app-v1".to_string()])
+    );
+}
+
+#[test]
+fn impact_importer_paths_preserve_exact_v6_and_alias_resolutions() {
+    let old = fixture("exact-v6-old.yaml");
+    let new = fixture("exact-v6-new.yaml");
+    let names = impact_names(&old, &new, ["leaf".to_string()]);
+    let paths = impact_importer_paths(&old, &new, &names);
+    assert_eq!(
+        paths.get("middle"),
+        Some(&vec!["alias-app".to_string(), "app-v1".to_string()])
+    );
+    assert!(!paths.values().flatten().any(|path| path == "app-v2"));
+}
+
+#[test]
+fn impact_importer_paths_scope_transitive_aliases_to_matching_importers() {
+    let old = fixture("alias-scope-old.yaml");
+    let new = fixture("alias-scope-new.yaml");
+    let names = impact_names(&old, &new, std::iter::empty());
+    let paths = impact_importer_paths(&old, &new, &names);
+
+    assert!(names.contains(&"feature".to_string()));
+    assert!(names.contains(&"feature-alias".to_string()));
+    assert_eq!(
+        paths.get("feature-alias"),
+        Some(&vec!["apps/changed".to_string()])
+    );
+}
+
+#[test]
+fn impact_importer_paths_preserve_v6_multi_peer_underscore_contexts() {
+    let old = fixture("exact-v6-peer-context-old.yaml");
+    let new = fixture("exact-v6-peer-context-new.yaml");
+    let names = impact_names(&old, &new, std::iter::empty());
+    let paths = impact_importer_paths(&old, &new, &names);
+    assert_eq!(names, vec!["leaf".to_string(), "middle".to_string()]);
+    assert_eq!(paths.get("middle"), Some(&vec!["react-app".to_string()]));
+}
+
+#[test]
+fn impact_importer_paths_skip_unresolvable_importer_dependencies() {
+    let old = fixture("unresolvable-importer-old.yaml");
+    let new = fixture("unresolvable-importer-new.yaml");
+    let names = impact_names(&old, &new, std::iter::empty());
+    assert_eq!(names, vec!["leaf".to_string(), "middle".to_string()]);
+    assert!(!impact_importer_paths(&old, &new, &names).contains_key("middle"));
+}
+
+#[test]
+fn impact_graph_ignores_malformed_and_non_mapping_package_sections() {
+    assert!(impact_names("[", "[", std::iter::empty()).is_empty());
+
+    let empty_sections = "lockfileVersion: '9.0'\npackages: []\nsnapshots: []\n";
+    assert!(impact_names(empty_sections, empty_sections, std::iter::empty()).is_empty());
+}
+
+#[test]
+fn impact_importer_paths_preserve_parenthesized_peer_contexts() {
+    let old = fixture("exact-v9-parenthesized-peer-old.yaml");
+    let new = fixture("exact-v9-parenthesized-peer-new.yaml");
+    let names = impact_names(&old, &new, std::iter::empty());
+    let paths = impact_importer_paths(&old, &new, &names);
+    assert_eq!(names, vec!["leaf".to_string(), "middle".to_string()]);
+    assert_eq!(paths.get("middle"), Some(&vec!["react-app".to_string()]));
+}
+
+#[test]
+fn impact_importer_paths_propagate_base_package_changes_to_peer_context_snapshots() {
+    let old = fixture("v9-base-package-peer-snapshots-old.yaml");
+    let new = fixture("v9-base-package-peer-snapshots-new.yaml");
+    let names = impact_names(&old, &new, std::iter::empty());
+    let paths = impact_importer_paths(&old, &new, &names);
+
+    assert_eq!(names, vec!["middle".to_string()]);
+    assert_eq!(
+        paths.get("middle"),
+        Some(&vec!["react-app".to_string(), "vue-app".to_string()])
+    );
+}
+
+#[test]
+fn impact_importer_paths_do_not_cross_independent_changed_locators() {
+    let old = fixture("exact-multiple-old.yaml");
+    let new = fixture("exact-multiple-new.yaml");
+    let names = impact_names(&old, &new, std::iter::empty());
+    let paths = impact_importer_paths(&old, &new, &names);
+    assert_eq!(paths.get("alpha"), Some(&vec!["app-alpha".to_string()]));
+    assert_eq!(paths.get("beta"), Some(&vec!["app-beta".to_string()]));
+}
+
+#[test]
 fn parse_importers_empty_content() {
     assert!(parse_importers("").is_empty());
 }
@@ -191,6 +324,46 @@ fn parse_importers_resolves_scalar_aliases_from_specifiers_and_version_path() {
     assert_eq!(deps[8].alias, "x-workspace-range");
     assert_eq!(deps[8].specifier, "workspace:1.x");
     assert_eq!(deps[8].resolution_name, None);
+}
+
+#[test]
+fn planning_validation_rejects_invalid_versions_and_sections() {
+    for content in [
+        "[]",
+        "lockfileVersion: not-a-version\npackages: {}\n",
+        "lockfileVersion: 4\npackages: {}\n",
+        "lockfileVersion: true\npackages: {}\n",
+        "lockfileVersion: '9.0'\npackages: []\n",
+        "lockfileVersion: '9.0'\nmetadata: {}\n",
+    ] {
+        assert!(
+            matches!(
+                validate_for_planning(content),
+                Err(PnpmValidationError::UnsupportedSchema)
+            ),
+            "unexpected validation result for {content:?}"
+        );
+    }
+    assert!(validate_for_planning("lockfileVersion: 9\npackages: {}\n").is_ok());
+}
+
+#[test]
+fn unmodeled_installation_sections_ignore_malformed_and_non_mapping_inputs() {
+    let valid = "lockfileVersion: '9.0'\npackages: {}\n";
+    for (old, new) in [("[", valid), (valid, "["), ("[]", valid), (valid, "[]")] {
+        assert!(changed_unmodeled_installation_sections(old, new).is_empty());
+    }
+    assert_eq!(
+        changed_unmodeled_installation_sections(
+            valid,
+            "lockfileVersion: '9.0'\npackages: {}\nsettings: {frozen: true}\n"
+        ),
+        vec!["settings".to_string()]
+    );
+    assert_eq!(
+        changed_unmodeled_installation_sections(valid, "lockfileVersion: '8.0'\npackages: {}\n"),
+        vec!["lockfileVersion".to_string()]
+    );
 }
 
 #[test]

@@ -1,5 +1,11 @@
 use super::changed_files::{collect_changed_files, existing_changed_files, ChangedFiles};
+use super::dotnet_dependency_changes::{
+    analyze_dotnet_dependency_changes, DotnetDependencyAnalysis,
+};
 use super::lockfile_changes::{analyze_lockfile_changes, LockfileAnalysis};
+use super::package_manifest_changes::{analyze_package_manifest_changes, PackageManifestAnalysis};
+use super::swift_manifest_changes::{analyze_swift_manifest_changes, SwiftManifestAnalysis};
+use super::swift_resolved_changes::{analyze_swift_resolved_changes, SwiftResolvedAnalysis};
 use super::{PlanArgs, TestFramework};
 use anyhow::{Context, Result};
 use no_mistakes::codebase::dependencies::graph::{
@@ -7,13 +13,18 @@ use no_mistakes::codebase::dependencies::graph::{
 };
 use no_mistakes::codebase::test_discovery::{DiscoveredTests, TestRunner};
 use no_mistakes::codebase::ts_resolver::TsConfig;
-use no_mistakes::codebase::ts_source::VisiblePathSnapshot;
+use no_mistakes::codebase::ts_source::{SourceStore, VisiblePathSnapshot};
 use no_mistakes::codebase::workspaces::WorkspaceMap;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex, OnceLock};
+
+mod helpers;
+use helpers::{framework_graph_plan, lockfile_packages, resolve_args, test_framework, test_runner};
+pub(crate) mod revisions;
+use revisions::RevisionSources;
 
 /// Immutable, request-scoped inputs shared by direct test plans and the
 /// multi-framework impacted-check fanout.
@@ -31,6 +42,7 @@ pub(crate) struct PreparedTestPlanRequest {
     args: PlanArgs,
     pub(crate) root: PathBuf,
     pub(crate) visible_paths: Arc<VisiblePathSnapshot>,
+    sources: Arc<SourceStore>,
     root_visible_paths: Arc<Vec<PathBuf>>,
     pub(crate) config: NoMistakesConfig,
     config_path: Option<PathBuf>,
@@ -38,8 +50,12 @@ pub(crate) struct PreparedTestPlanRequest {
     tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) collected: ChangedFiles,
     pub(crate) changed_files: Vec<PathBuf>,
+    pub(crate) package_manifest_analysis: PackageManifestAnalysis,
     pub(crate) lockfile_analysis: LockfileAnalysis,
-    pub(crate) lockfile_changed_packages: Vec<(String, String)>,
+    pub(crate) swift_resolved_analysis: SwiftResolvedAnalysis,
+    pub(crate) swift_manifest_analysis: SwiftManifestAnalysis,
+    pub(crate) dotnet_dependency_analysis: DotnetDependencyAnalysis,
+    pub(crate) lockfile_changed_packages: Vec<(String, String, Vec<PathBuf>)>,
     pub(crate) workspace_map: WorkspaceMap,
     graph_files: GraphFiles,
     graph_plan: GraphBuildPlan,
@@ -119,12 +135,36 @@ impl PreparedTestPlanInputs {
                 })
             }
         })?;
+        let sources = visible_paths.source_store_for(&root);
+        let revisions = RevisionSources::prepare(&root, &args, Arc::clone(&sources));
         let changed_files = existing_changed_files(&collected);
-        let lockfile_analysis = analyze_lockfile_changes(&args, &root, &collected.files);
-        let lockfile_changed_packages = lockfile_packages(&root, &lockfile_analysis);
         let workspace_map =
-            no_mistakes::codebase::workspaces::load_from_files(&root, &root_visible_paths)
+            no_mistakes::codebase::workspaces::load_from_source_store(&root, &sources)
                 .unwrap_or_default();
+        let package_manifest_analysis = analyze_package_manifest_changes(
+            &root,
+            &collected.files,
+            &revisions,
+            &workspace_map,
+            &sources,
+        );
+        let lockfile_analysis = analyze_lockfile_changes(&root, &collected.files, &revisions);
+        let swift_resolved_analysis =
+            analyze_swift_resolved_changes(&root, &config, &collected.files, &revisions);
+        let swift_manifest_analysis =
+            analyze_swift_manifest_changes(&root, &config, &collected.files, &revisions);
+        let dotnet_dependency_analysis =
+            analyze_dotnet_dependency_changes(&root, &collected.files, &revisions);
+        let mut lockfile_changed_packages = lockfile_packages(&root, &lockfile_analysis);
+        lockfile_changed_packages.extend(package_manifest_analysis.changed_packages.iter().map(
+            |(package, changed_file, manifest)| {
+                (
+                    package.clone(),
+                    changed_file.clone(),
+                    vec![manifest.clone()],
+                )
+            },
+        ));
         let mut tsconfig_candidate_roots = Vec::with_capacity(workspace_map.packages.len() + 1);
         tsconfig_candidate_roots.push(root.clone());
         tsconfig_candidate_roots.extend(
@@ -136,7 +176,6 @@ impl PreparedTestPlanInputs {
         tsconfig_candidate_roots
             .extend(no_mistakes::integration_tests::configured_runner_config_dirs(&root, &config));
         let preliminary_tsconfig_roots = tsconfig_candidate_roots.clone();
-        let sources = visible_paths.source_store_for(&root);
         // Test-runner configs are parsed before their project scopes can
         // contribute more roots. Explicit runner config parents are candidate
         // roots too, so aliases resolve from a configured package even when
@@ -287,6 +326,7 @@ impl PreparedTestPlanInputs {
             args,
             root,
             visible_paths,
+            sources,
             root_visible_paths,
             config,
             config_path,
@@ -294,7 +334,11 @@ impl PreparedTestPlanInputs {
             tsconfig_catalog,
             collected,
             changed_files,
+            package_manifest_analysis,
             lockfile_analysis,
+            swift_resolved_analysis,
+            swift_manifest_analysis,
+            dotnet_dependency_analysis,
             lockfile_changed_packages,
             workspace_map,
             graph_files,
@@ -318,6 +362,10 @@ impl PreparedTestPlanRequest {
 
     pub(crate) fn args(&self) -> &PlanArgs {
         &self.args
+    }
+
+    pub(crate) fn dotnet_facts(&self) -> Option<&no_mistakes::codebase::dotnet::DotnetFactMap> {
+        self.prepared_test_projects.dotnet_facts()
     }
 
     pub(crate) fn root_visible_paths(&self) -> &[PathBuf] {
@@ -384,7 +432,7 @@ impl PreparedTestPlanRequest {
                         &remaining,
                         fact_plan,
                         &fact_context,
-                        &self.visible_paths.source_store_for(&self.root),
+                        &self.sources,
                     ));
                     Box::new(facts)
                 };
@@ -433,97 +481,13 @@ impl PreparedTestPlanRequest {
     }
 }
 
-fn resolve_args(args: &PlanArgs) -> Result<PlanArgs> {
-    if args.direct_test_owner && args.framework.is_none() {
-        anyhow::bail!(
-            "--direct-test-owner requires a framework (for example, `tests plan vitest --direct-test-owner`) because direct ownership requires framework-specific test ownership"
-        );
-    }
-    if args.direct_test_owner && !args.entrypoints.is_empty() {
-        anyhow::bail!(
-            "--direct-test-owner conflicts with --entrypoint: direct-owner selection only follows changed files and one reverse canonical graph edge; use `tests impact` for explicit entrypoint traversal"
-        );
-    }
-    if args.direct_test_owner
-        && (args.limit_percent.is_some()
-            || args.limit_files.is_some()
-            || args.global_config_fallback.is_some())
-    {
-        anyhow::bail!(
-            "--direct-test-owner conflicts with --limit-percent, --limit-files, and --global-config-fallback; remove those policy overrides because direct ownership bypasses configured plan policy"
-        );
-    }
-    if args.from_git_diff.is_some() && (args.base.is_some() || args.head.is_some()) {
-        anyhow::bail!("--from-git-diff conflicts with --base/--head; provide only one");
-    }
-    let mut args = args.clone();
-    if let Some(spec) = args.from_git_diff.take() {
-        let (base, head) = super::changed_files::parse_git_diff_refspec(&spec)?;
-        args.base = Some(base);
-        args.head = Some(head.unwrap_or_else(|| "HEAD".to_string()));
-    }
-    Ok(args)
-}
-
-fn lockfile_packages(root: &Path, analysis: &LockfileAnalysis) -> Vec<(String, String)> {
-    analysis
-        .diff_by_lockfile
-        .iter()
-        .flat_map(|(lockfile_path, diff)| {
-            let relative = super::plan::relative_path(root, lockfile_path);
-            diff.all_changed_names()
-                .map(|name| (name.to_string(), relative.clone()))
-                .collect::<Vec<_>>()
-        })
-        .collect()
-}
-
-fn test_runner(framework: TestFramework) -> TestRunner {
-    match framework {
-        TestFramework::Dotnet => TestRunner::Dotnet,
-        TestFramework::Playwright => TestRunner::Playwright,
-        TestFramework::Vitest => TestRunner::Vitest,
-        TestFramework::Swift => TestRunner::Swift,
-        TestFramework::Python => TestRunner::Python,
-        TestFramework::Go => TestRunner::Go,
-        TestFramework::Cargo => TestRunner::Cargo,
-        TestFramework::Rails => TestRunner::Rails,
-        TestFramework::Php => TestRunner::Php,
-        TestFramework::Java => TestRunner::Java,
-        TestFramework::Kotlin => TestRunner::Kotlin,
-        TestFramework::Elixir => TestRunner::Elixir,
-        TestFramework::Dart => TestRunner::Dart,
-        TestFramework::Jest => TestRunner::Jest,
-    }
-}
-
-fn framework_graph_plan(framework: TestFramework) -> GraphBuildPlan {
-    let mut plan = GraphBuildPlan::test_impact();
-    plan.dotnet = framework == TestFramework::Dotnet;
-    plan.swift = framework == TestFramework::Swift;
-    let playwright = framework == TestFramework::Playwright;
-    plan.playwright_routes = playwright;
-    plan.playwright_selectors = playwright;
-    plan
-}
-
-fn test_framework(runner: TestRunner) -> TestFramework {
-    match runner {
-        TestRunner::Dotnet => TestFramework::Dotnet,
-        TestRunner::Playwright => TestFramework::Playwright,
-        TestRunner::Vitest => TestFramework::Vitest,
-        TestRunner::Swift => TestFramework::Swift,
-        TestRunner::Python => TestFramework::Python,
-        TestRunner::Go => TestFramework::Go,
-        TestRunner::Cargo => TestFramework::Cargo,
-        TestRunner::Rails => TestFramework::Rails,
-        TestRunner::Php => TestFramework::Php,
-        TestRunner::Java => TestFramework::Java,
-        TestRunner::Kotlin => TestFramework::Kotlin,
-        TestRunner::Elixir => TestFramework::Elixir,
-        TestRunner::Dart => TestFramework::Dart,
-        TestRunner::Jest => TestFramework::Jest,
-    }
+pub(crate) fn javascript_dependency_framework(framework: Option<TestFramework>) -> bool {
+    matches!(
+        framework,
+        None | Some(TestFramework::Vitest)
+            | Some(TestFramework::Playwright)
+            | Some(TestFramework::Jest)
+    )
 }
 
 #[path = "prepared_plan_discovery.rs"]

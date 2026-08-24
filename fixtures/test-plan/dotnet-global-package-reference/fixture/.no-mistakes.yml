@@ -1,0 +1,15 @@
+tests:
+  dotnet:
+    projects:
+      global:
+        project: src/Global.csproj
+      global-tests:
+        project: tests/Global.Tests.csproj
+        test: true
+testPlan:
+  dotnet:
+    environments:
+      pre-push:
+        groups:
+          - type: direct
+          - type: dependencies

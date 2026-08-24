@@ -1,0 +1,6 @@
+{
+  "version": 3,
+  "pins": [
+    { "identity": "example", "location": "https://example.com/example.git", "state": { "version": "1.0.0", "revision": "base-revision", "checksum": "base-checksum" } }
+  ]
+}

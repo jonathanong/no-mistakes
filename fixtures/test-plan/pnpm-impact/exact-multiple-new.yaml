@@ -1,0 +1,15 @@
+lockfileVersion: '9.0'
+importers:
+  app-alpha:
+    dependencies:
+      alpha:
+        specifier: '1.0.0'
+        version: 1.0.0
+  app-beta:
+    dependencies:
+      beta:
+        specifier: '1.0.0'
+        version: 1.0.0
+packages:
+  alpha@1.0.0: { resolution: { integrity: alpha-new } }
+  beta@1.0.0: { resolution: { integrity: beta-new } }

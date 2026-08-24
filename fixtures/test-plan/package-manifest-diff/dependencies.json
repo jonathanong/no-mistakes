@@ -1,0 +1,7 @@
+{
+  "name": "fixture",
+  "dependencies": { "alpha": "2.0.0" },
+  "devDependencies": { "dev": "2.0.0" },
+  "optionalDependencies": { "optional": "2.0.0" },
+  "peerDependencies": { "peer": "2.0.0" }
+}

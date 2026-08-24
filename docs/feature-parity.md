@@ -10,20 +10,21 @@ questions it already asks of TS/JS, get deterministic structured output, and
 do so without shelling out to `rg` for the graph itself.
 
 v1 is the Swift/.NET bar plus the named key feature for each stack: a module
-graph, `tests plan`, and either HTTP routes or queues. Playwright, React,
-Next.js fetches, call-sites, dead-exports, ecosystem lockfile diffs, and
+graph, `tests plan`, and either HTTP routes or queues. SwiftPM and NuGet
+dependency artifacts participate in semantic native test planning. Playwright, React,
+Next.js fetches, call-sites, dead-exports, other ecosystem lockfile diffs, and
 dedicated `no-mistakes python|go|rust|rails|php|java|kotlin|elixir|dart` CLIs are later work. Agents
 use `dependents --relationship <lang>` now and `tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart`
-when those stacks are configured. Ecosystem lockfiles and dedicated language
-CLIs are not started.
+when those stacks are configured. Other ecosystem lockfiles and dedicated
+language CLIs are not started.
 
 ## Current Status
 
 | Domain | Module graph | Test plan | HTTP routes | Queues | Status |
 | --- | --- | --- | --- | --- | --- |
 | TypeScript / JavaScript | yes | Vitest, Playwright, Jest | Express, Hono, Koa, Fastify, NestJS, Next.js, Remix file routes | BullMQ, glide-mq | shipped (tRPC procedures opt-in) |
-| Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift` | no (client `http` edges only) | no | shipped, narrower |
-| .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet` | ASP.NET `MapGet` / `[HttpGet]` literals | no | shipped (v1 extractors + plan) |
+| Swift | `swift-import`, `swift-ref`, `swift-package` | `tests plan swift`, semantic `Package.swift` / `Package.resolved` impact | no (client `http` edges only) | no | shipped, narrower |
+| .NET / C# | `dotnet-using`, `dotnet-ref`, `dotnet-project` | `tests plan dotnet`, semantic project / central NuGet / lock impact | ASP.NET `MapGet` / `[HttpGet]` literals | no | shipped (v1 extractors + plan) |
 | Python, Django, Celery | `python-import`, `python-ref` | `tests plan python` | Django `path(`, Flask, FastAPI | Celery `.delay(` / `@shared_task` | shipped (v1 extractors + plan) |
 | Go, Asynq | `go-import`, `go-ref` | `tests plan go` | net/http, Chi, Gin, Echo, Fiber literals | Asynq `NewTask` / `HandleFunc` | shipped (v1 extractors + plan) |
 | Kafka | n/a | n/a | n/a | static topic produce/consume | shipped (v1 extractors) |
@@ -97,7 +98,9 @@ shapes.
 **HTTP clients.** Static client calls produce `http` edges to matching route
 files, the same way TS `fetch` and Swift `Endpoint` literals do.
 
-**Lockfiles.** `lockfile diff` today parses npm-family lockfiles. Language
+**Lockfiles.** `lockfile diff` parses npm-family lockfiles. Test planning also
+understands SwiftPM `Package.resolved` pins and NuGet `packages.lock.json`,
+project `PackageReference`, and central `PackageVersion` changes. Future language
 support adds the ecosystem lockfile when agents need package-change impact:
 `poetry.lock` / `uv.lock` / `Pipfile.lock`, `go.mod`, `Cargo.lock`,
 `Gemfile.lock`, `composer.lock`. Go package-change impact reads the selected

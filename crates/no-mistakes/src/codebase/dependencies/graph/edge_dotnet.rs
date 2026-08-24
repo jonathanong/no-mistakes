@@ -31,8 +31,67 @@ fn collect_dotnet_edges(
     collect_dotnet_using_edges(facts, &mut edges, interner);
     collect_dotnet_reference_edges(facts, &mut edges, interner);
     collect_dotnet_project_edges(facts, &mut edges, interner);
+    collect_dotnet_dependency_file_edges(facts, all_files, sources, &mut edges, interner);
     collect_dotnet_route_edges(root, facts, config_options, &mut edges, interner);
     edges
+}
+
+/// Model the project file, central package versions, and per-project lockfile as
+/// canonical dependencies. A change to any of those files is therefore traced
+/// through only the projects which consume it instead of forcing a framework
+/// fallback.
+fn collect_dotnet_dependency_file_edges(
+    facts: &crate::codebase::dotnet::DotnetFactMap,
+    all_files: &[PathBuf],
+    sources: Option<&crate::codebase::ts_source::SourceStore>,
+    edges: &mut Vec<Edge>,
+    interner: &PathInterner,
+) {
+    for project in facts.projects.values() {
+        for source in &project.compile_files {
+            edges.push((
+                NodeId::file_in(interner, source),
+                NodeId::file_in(interner, &project.project_path),
+                EdgeKind::DotnetProjectDependency,
+            ));
+        }
+
+        let lock = project.project_dir.join("packages.lock.json");
+        if all_files.contains(&lock) {
+            edges.push((
+                NodeId::file_in(interner, &project.project_path),
+                NodeId::file_in(interner, &lock),
+                EdgeKind::DotnetProjectDependency,
+            ));
+        }
+
+        // A central file can declare GlobalPackageReference items, which apply
+        // to every descendant project even when that project has no ordinary
+        // PackageReference. Keep the project-to-nearest-central edge for all
+        // descendants so an unmodelled central declaration remains scoped to
+        // the projects it can affect.
+        let central = all_files
+            .iter()
+            .filter(|path| {
+                path.file_name().and_then(|name| name.to_str()) == Some("Directory.Packages.props")
+                    && project
+                        .project_path
+                        .starts_with(path.parent().unwrap_or(path))
+            })
+            .max_by_key(|path| {
+                path.parent()
+                    .map_or(0, |parent| parent.components().count())
+            });
+        if let Some(central) = central {
+            edges.push((
+                NodeId::file_in(interner, &project.project_path),
+                NodeId::file_in(interner, central),
+                EdgeKind::DotnetProjectDependency,
+            ));
+        }
+    }
+
+    collect_dotnet_central_import_edges(facts, all_files, sources, edges, interner);
 }
 
 fn collect_dotnet_route_edges(
@@ -69,12 +128,18 @@ fn collect_dotnet_using_edges(
     interner: &PathInterner,
 ) {
     for file in facts.files.values() {
+        let allowed_projects = file
+            .project
+            .as_ref()
+            .map(|project| dotnet_project_scope(facts, project))
+            .unwrap_or_default();
         for using in &file.usings {
             if let Some(target_files) = facts.files_by_namespace.get(using) {
+                let target_files = scoped_dotnet_target_files(facts, target_files, &allowed_projects);
                 push_dotnet_file_edges(
                     edges,
                     &file.path,
-                    target_files,
+                    &target_files,
                     EdgeKind::DotnetUsing,
                     interner,
                 );
@@ -89,65 +154,22 @@ fn collect_dotnet_reference_edges(
     interner: &PathInterner,
 ) {
     for file in facts.files.values() {
+        let allowed_projects = file
+            .project
+            .as_ref()
+            .map(|project| dotnet_project_scope(facts, project))
+            .unwrap_or_default();
         for reference in &file.references {
             if let Some(target_files) = facts.declarations.get(reference) {
+                let target_files = scoped_dotnet_target_files(facts, target_files, &allowed_projects);
                 push_dotnet_file_edges(
                     edges,
                     &file.path,
-                    target_files,
+                    &target_files,
                     EdgeKind::DotnetReference,
                     interner,
                 );
             }
-        }
-    }
-}
-
-fn collect_dotnet_project_edges(
-    facts: &crate::codebase::dotnet::DotnetFactMap,
-    edges: &mut Vec<Edge>,
-    interner: &PathInterner,
-) {
-    for project in facts.projects.values() {
-        let Some(source_files) = facts.files_by_project.get(&project.project_path) else {
-            continue;
-        };
-        let test_files = source_files.iter().filter(|path| {
-            facts
-                .files
-                .get(*path)
-                .is_some_and(|file| file.has_xunit_tests)
-        });
-        for reference in &project.project_references {
-            if let Some(target_files) = facts.files_by_project.get(reference) {
-                for source in test_files.clone() {
-                    push_dotnet_file_edges(
-                        edges,
-                        source,
-                        target_files,
-                        EdgeKind::DotnetProjectDependency,
-                        interner,
-                    );
-                }
-            }
-        }
-    }
-}
-
-fn push_dotnet_file_edges(
-    edges: &mut Vec<Edge>,
-    source: &Path,
-    target_files: &std::collections::BTreeSet<PathBuf>,
-    kind: EdgeKind,
-    interner: &PathInterner,
-) {
-    for target in target_files {
-        if target != source {
-            edges.push((
-                NodeId::file_in(interner, source),
-                NodeId::file_in(interner, target),
-                kind,
-            ));
         }
     }
 }

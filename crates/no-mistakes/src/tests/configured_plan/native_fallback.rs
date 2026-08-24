@@ -1,3 +1,4 @@
+use super::environment::framework_name;
 use super::relative_path;
 use crate::tests::configured_plan_candidates::{
     group_candidates, merge_selected, selected_from_paths, stable_take, CoverageHints,
@@ -17,6 +18,8 @@ use dotnet::{
     explicit_test_projects as explicit_dotnet_test_projects,
     project_is_test as dotnet_project_is_test,
 };
+mod path;
+use path::normalize_config_path;
 
 #[allow(clippy::too_many_arguments)]
 pub(super) fn native_traceable_changed_files(
@@ -221,6 +224,7 @@ fn is_native_source_or_project_change(
         TestFramework::Dotnet => {
             rel.ends_with(".csproj")
                 || dotnet::is_configured_solution(root, config, &rel)
+                || is_dotnet_global_configuration(&rel)
                 || (rel.ends_with(".cs") && !dotnet::is_test_path(&rel))
         }
         TestFramework::Swift => {
@@ -243,6 +247,13 @@ fn is_native_source_or_project_change(
         }
         TestFramework::Playwright | TestFramework::Vitest | TestFramework::Jest => false,
     }
+}
+
+fn is_dotnet_global_configuration(rel: &str) -> bool {
+    matches!(
+        rel.rsplit('/').next(),
+        Some("Directory.Build.props" | "Directory.Build.targets" | "NuGet.config" | "global.json")
+    )
 }
 
 fn swift_manifest_fallback_tests(
@@ -387,37 +398,6 @@ fn tests_with_target_config_set(
 
 pub(super) fn slash_path(path: &str) -> String {
     path.replace('\\', "/")
-}
-
-fn normalize_config_path(path: &str) -> String {
-    let mut path = slash_path(path);
-    while let Some(rest) = path.strip_prefix("./") {
-        path = rest.to_string();
-    }
-    if path == "." {
-        String::new()
-    } else {
-        path
-    }
-}
-
-pub(super) fn framework_name(framework: TestFramework) -> &'static str {
-    match framework {
-        TestFramework::Playwright => "playwright",
-        TestFramework::Vitest => "vitest",
-        TestFramework::Dotnet => "dotnet",
-        TestFramework::Swift => "swift",
-        TestFramework::Python => "python",
-        TestFramework::Go => "go",
-        TestFramework::Cargo => "cargo",
-        TestFramework::Rails => "rails",
-        TestFramework::Php => "php",
-        TestFramework::Java => "java",
-        TestFramework::Kotlin => "kotlin",
-        TestFramework::Elixir => "elixir",
-        TestFramework::Dart => "dart",
-        TestFramework::Jest => "jest",
-    }
 }
 
 #[cfg(test)]

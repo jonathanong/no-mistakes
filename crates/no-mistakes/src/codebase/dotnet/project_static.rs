@@ -43,17 +43,15 @@ fn is_test_project(source: &str) -> bool {
 }
 
 fn static_compile_includes(project_dir: &Path, source: &str) -> BTreeSet<PathBuf> {
-    let re = Regex::new(r#"(?is)<Compile[^>]+Include\s*=\s*"([^"]+)""#).expect("valid regex");
-    static_path_includes(project_dir, source, &re)
+    static_path_includes(project_dir, source, "Compile")
 }
 
 fn static_project_references(project_dir: &Path, source: &str) -> BTreeSet<PathBuf> {
-    let re =
-        Regex::new(r#"(?is)<ProjectReference[^>]+Include\s*=\s*"([^"]+)""#).expect("valid regex");
-    static_path_includes(project_dir, source, &re)
+    static_path_includes(project_dir, source, "ProjectReference")
 }
 
-fn static_path_includes(project_dir: &Path, source: &str, re: &Regex) -> BTreeSet<PathBuf> {
+fn static_path_includes(project_dir: &Path, source: &str, element: &str) -> BTreeSet<PathBuf> {
+    let re = static_include_regex(element);
     re.captures_iter(source)
         .filter_map(|cap| {
             cap.get(1)
@@ -63,9 +61,15 @@ fn static_path_includes(project_dir: &Path, source: &str, re: &Regex) -> BTreeSe
 }
 
 fn static_package_references(source: &str) -> BTreeSet<String> {
-    let re =
-        Regex::new(r#"(?is)<PackageReference[^>]+Include\s*=\s*"([^"]+)""#).expect("valid regex");
+    let re = static_include_regex("PackageReference");
     re.captures_iter(source)
         .filter_map(|cap| cap.get(1).map(|m| m.as_str().to_string()))
         .collect()
+}
+
+fn static_include_regex(element: &str) -> Regex {
+    Regex::new(&format!(
+        r#"(?is)<{element}\b[^>]*\bInclude\s*=\s*["']([^"']+)["']"#
+    ))
+    .expect("valid static MSBuild include regex")
 }
