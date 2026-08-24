@@ -42,7 +42,7 @@ fn revision_matrix_projects_only_reachable_owners() {
         Case {
             name: "unrelated-workflow",
             roots: &[],
-            workflows: &[],
+            workflows: &[".github/workflows/unrelated.yml"],
             global: false,
         },
         Case {

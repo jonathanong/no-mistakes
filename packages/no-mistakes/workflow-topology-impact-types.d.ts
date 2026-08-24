@@ -25,7 +25,9 @@ export interface CiTopologyImpactReport {
   baseRevision: string;
   headRevision: string;
   changedPaths: string[];
+  /** Changed recognized workflows plus their reusable-workflow callers. */
   affectedWorkflows: string[];
+  /** Directly affected entry jobs plus transitive `needs` prerequisites. */
   affectedRootJobIds: string[];
   diagnostics: CiTopologyImpactDiagnostic[];
   globalFallback: boolean;

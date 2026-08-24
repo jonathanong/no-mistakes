@@ -55,7 +55,6 @@ pub(super) fn add_needs_closure(
     head: &WorkflowTopology,
 ) {
     let mut prerequisites = HashMap::<String, Vec<String>>::new();
-    let mut dependents = HashMap::<String, Vec<String>>::new();
     for topology in [base, head] {
         for edge in &topology.edges {
             if let WorkflowTopologyEdge::Needs(edge) = edge {
@@ -63,25 +62,12 @@ pub(super) fn add_needs_closure(
                     .entry(edge.to.clone())
                     .or_default()
                     .push(edge.from.clone());
-                dependents
-                    .entry(edge.from.clone())
-                    .or_default()
-                    .push(edge.to.clone());
             }
         }
     }
-    let changed = selected.clone();
-    let mut pending: Vec<String> = changed.iter().cloned().collect();
-    while let Some(job) = pending.pop() {
-        for dependent in dependents.remove(&job).unwrap_or_default() {
-            if selected.insert(dependent.clone()) {
-                pending.push(dependent);
-            }
-        }
-    }
-    // A downstream job can introduce its own prerequisite. Expand upstream
-    // only after the affected dependent closure is complete, while never
-    // revisiting dependents of those prerequisites.
+    // Routing a job requires its transitive `needs` prerequisites. Its
+    // dependents are not selected: an aggregate can fan in unrelated jobs,
+    // which would otherwise wake an entire CI matrix from one changed seed.
     let mut pending: Vec<String> = selected.iter().cloned().collect();
     while let Some(job) = pending.pop() {
         for prerequisite in prerequisites.remove(&job).unwrap_or_default() {
