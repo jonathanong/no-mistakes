@@ -65,13 +65,26 @@ pub(super) fn project_impact(inputs: ImpactInputs<'_>) -> CiTopologyImpactReport
         // file rather than the entry-reachable reusable workflow it shadows.
         if reachable.contains(&diagnostic.workflow_path)
             || diagnostic.code.as_str() == "duplicate-workflow-name"
+            || (diagnostic.code.as_str() == "malformed-workflow"
+                && changed_paths.contains(&diagnostic.workflow_path))
         {
             let diagnostic = topology_diagnostic(diagnostic, &entry, base, head);
             global_fallback |= diagnostic.scope == CiTopologyImpactDiagnosticScope::Global;
             diagnostics.push(diagnostic);
         }
     }
+    let known_workflow_paths = base
+        .workflows
+        .iter()
+        .chain(&head.workflows)
+        .map(|workflow| workflow.path.as_str())
+        .collect::<BTreeSet<_>>();
     let changed_workflows = changed_paths
+        .iter()
+        .filter(|path| known_workflow_paths.contains(path.as_str()))
+        .cloned()
+        .collect::<BTreeSet<_>>();
+    let reachable_changed_workflows = changed_workflows
         .iter()
         .filter(|path| reachable.contains(*path))
         .cloned()
@@ -116,7 +129,7 @@ pub(super) fn project_impact(inputs: ImpactInputs<'_>) -> CiTopologyImpactReport
             .map(|job| job.id.clone())
             .collect()
     } else {
-        let mut roots = root_callers(&entry, &changed_workflows, base, head);
+        let mut roots = root_callers(&entry, &reachable_changed_workflows, base, head);
         roots.extend(entry_job_ids(&entry, changed_entry_jobs, base, head));
         if !reachable_actions.is_disjoint(changed_actions) {
             roots.extend(action_roots);
