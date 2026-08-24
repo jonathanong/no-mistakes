@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes-monorepo",
-  "version": "0.48.3",
+  "version": "0.49.0",
   "private": true,
   "description": "Deterministic AST-based codebase intelligence for humans and AI agents",
   "homepage": "https://github.com/jonathanong/no-mistakes#readme",
