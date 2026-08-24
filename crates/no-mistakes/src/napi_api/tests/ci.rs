@@ -1,5 +1,6 @@
 use crate::napi_api::{
-    ci_env_json_impl, ci_impact_json_impl, ci_topology_json_impl, impacted_checks_json_impl,
+    ci_env_json_impl, ci_impact_json_impl, ci_topology_impact_json_impl, ci_topology_json_impl,
+    impacted_checks_json_impl,
 };
 use serde_json::json;
 use std::path::PathBuf;
@@ -349,4 +350,13 @@ fn ci_topology_json_defaults_root() {
         ))
         .is_ok()
     );
+}
+
+#[test]
+fn ci_topology_impact_json_requires_exact_revision_inputs() {
+    let error = ci_topology_impact_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": workflow_topology_fixture("needs-basic") }).to_string(),
+    ))
+    .unwrap_err();
+    assert!(error.reason.contains("base is required"));
 }

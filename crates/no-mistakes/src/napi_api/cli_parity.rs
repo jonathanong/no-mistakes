@@ -2,8 +2,9 @@ use std::path::{Path, PathBuf};
 
 use super::options::{
     parse_options_value, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
-    CiTopologyOptions, FetchesOptions, ImpactedChecksOptions, ProjectOptions, TestsImpactOptions,
-    TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
+    CiTopologyImpactOptions, CiTopologyOptions, FetchesOptions, ImpactedChecksOptions,
+    ProjectOptions, TestsImpactOptions, TestsPlanDocumentOptions, TestsPlanOptions,
+    TestsTargetsOptions, TestsWhyOptions,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 
@@ -140,6 +141,26 @@ pub(crate) fn ci_topology_json_impl(options: serde_json::Value) -> napi::Result<
         &options.workflows,
     )
     .map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
+pub(crate) fn ci_topology_impact_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<CiTopologyImpactOptions>(options)?;
+    let root = options.root.unwrap_or_else(|| ".".to_string());
+    let base = options
+        .base
+        .context("base is required")
+        .map_err(to_napi_error)?;
+    let head = options
+        .head
+        .context("head is required")
+        .map_err(to_napi_error)?;
+    let entry_workflow = options
+        .entry_workflow
+        .context("entryWorkflow is required")
+        .map_err(to_napi_error)?;
+    let report = crate::ci::topology_impact_report(Path::new(&root), &base, &head, &entry_workflow)
+        .map_err(to_napi_error)?;
     to_pretty_json(&report)
 }
 

@@ -30,6 +30,15 @@ pub(crate) struct CiTopologyOptions {
 
 #[derive(Debug, Default, Deserialize)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
+pub(crate) struct CiTopologyImpactOptions {
+    pub(crate) root: Option<String>,
+    pub(crate) base: Option<String>,
+    pub(crate) head: Option<String>,
+    pub(crate) entry_workflow: Option<String>,
+}
+
+#[derive(Debug, Default, Deserialize)]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct ImpactedChecksOptions {
     pub(crate) root: Option<String>,
     pub(crate) config: Option<String>,
