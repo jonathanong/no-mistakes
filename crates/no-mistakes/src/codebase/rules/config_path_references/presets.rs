@@ -11,7 +11,7 @@ mod pnpm;
 mod tests;
 mod types;
 
-pub(crate) use extract::{extract, matches_preset};
+pub(crate) use extract::{extract, is_supported_preset, matches_preset};
 use types::Extracted;
 
 struct ScanContext<'a> {

@@ -51,6 +51,7 @@ pub(crate) fn check_with_files_and_sources(
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
+            opts.validate()?;
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files
@@ -73,6 +74,27 @@ pub(crate) fn check_with_files_and_sources(
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
     super::sort_findings(&mut findings);
     Ok(findings)
+}
+
+impl Options {
+    fn validate(&self) -> Result<()> {
+        let unknown: Vec<_> = self
+            .presets
+            .iter()
+            .filter(|preset| !presets::is_supported_preset(preset))
+            .collect();
+        if unknown.is_empty() {
+            return Ok(());
+        }
+        anyhow::bail!(
+            "config-path-references: unsupported preset(s): {}; supported presets: oxlintrc, knip, dependabot, sgconfig, syncpack, coverage-rules, pnpm-workspace-filters, no-mistakes",
+            unknown
+                .into_iter()
+                .map(String::as_str)
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+    }
 }
 
 fn scan(

@@ -25,6 +25,4 @@ rules:
         - coverage-rules
         - pnpm-workspace-filters
         - no-mistakes
-      tsconfig: missing-tsconfig.json
-      roots: [missing-entry.mts]
       excludePaths: [missing-until-created/**]

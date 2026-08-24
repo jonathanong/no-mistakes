@@ -24,6 +24,20 @@ pub(crate) fn matches_preset(preset: &str, filename: &str, rel: &str) -> bool {
     }
 }
 
+pub(crate) fn is_supported_preset(preset: &str) -> bool {
+    matches!(
+        preset,
+        "oxlintrc"
+            | "knip"
+            | "dependabot"
+            | "sgconfig"
+            | "syncpack"
+            | "coverage-rules"
+            | "pnpm-workspace-filters"
+            | "no-mistakes"
+    )
+}
+
 pub(crate) fn no_mistakes(config: &NoMistakesConfig) -> Vec<Extracted> {
     paths::references(config)
         .into_iter()

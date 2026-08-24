@@ -208,7 +208,7 @@ fn existing_literal_paths_with_glob_metacharacters_win_before_glob_matching() {
         &root.join("config/app.yml"),
         &opts,
         "schemas/[tenant].json",
-        &[]
+        &["schemas/[tenant].json".to_string()]
     )
     .unwrap());
 }
@@ -253,6 +253,33 @@ fn literal_references_outside_the_repository_do_not_exist_for_this_rule() {
         &opts,
         "../../../../../Cargo.toml",
         &[]
+    )
+    .unwrap());
+}
+
+#[test]
+fn literal_references_ignore_untracked_files_and_directories() {
+    let root = tempfile::tempdir().unwrap();
+    let config = root.path().join("config.yml");
+    std::fs::write(&config, "paths: []\n").unwrap();
+    std::fs::write(root.path().join("untracked.json"), "{}\n").unwrap();
+    std::fs::create_dir(root.path().join("untracked-dir")).unwrap();
+    std::fs::write(root.path().join("untracked-dir/file.json"), "{}\n").unwrap();
+
+    assert!(!reference_exists(
+        root.path(),
+        &config,
+        &Options::default(),
+        "untracked.json",
+        &[]
+    )
+    .unwrap());
+    assert!(!reference_exists(
+        root.path(),
+        &config,
+        &Options::default(),
+        "untracked-dir",
+        &[],
     )
     .unwrap());
 }
@@ -313,7 +340,7 @@ fn can_resolve_references_from_repository_root() {
         &root.join("config/app.yml"),
         &opts,
         "config/existing.json",
-        &[]
+        &["config/existing.json".to_string()]
     )
     .unwrap());
 }
@@ -411,12 +438,6 @@ fn presets_report_missing_required_paths() {
         "{messages:?}"
     );
     assert!(
-        messages.iter().any(|m| {
-            m.contains("rules[0].options.tsconfig") && m.contains("missing-tsconfig.json")
-        }),
-        "{messages:?}"
-    );
-    assert!(
         !messages.iter().any(|m| {
             m.contains("generated")
                 || m.contains("node_modules")
@@ -456,11 +477,93 @@ fn presets_pass_when_required_paths_exist() {
 }
 
 #[test]
-fn unknown_presets_are_ignored() {
+fn unknown_presets_are_rejected() {
     let root = fixture_root("presets-fail");
     let files = listed(&root, &[".oxlintrc.json", "knip.jsonc"]);
-    let findings = check_with_files(&root, &config("presets: [unknown]"), &files).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
+    let error = check_with_files(&root, &config("presets: [typo]"), &files).unwrap_err();
+    assert!(
+        error.to_string().contains("unsupported preset(s): typo"),
+        "{error:#}"
+    );
+}
+
+#[test]
+fn no_mistakes_preset_only_extracts_rule_aware_path_options() {
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+rules:
+  - rule: workspace-package-cycles
+    options:
+      allowlist: ["@x/domain -> @x/api -> @x/domain"]
+  - rule: package-json-workspace-coverage
+    options:
+      packageRoots: [packages]
+      allowlist: [packages/allowed/package.json]
+"#,
+    )
+    .unwrap();
+
+    let extracted = crate::codebase::rules::no_mistakes_config::paths::references(&config);
+    let values: Vec<_> = extracted
+        .into_iter()
+        .map(|reference| reference.value)
+        .collect();
+    assert_eq!(
+        values,
+        vec!["packages", "packages/allowed/package.json"],
+        "workspace cycle identities are not paths"
+    );
+}
+
+#[test]
+fn no_mistakes_preset_extracts_documented_rule_option_paths() {
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+rules:
+  - rule: shellcheck-runner
+    options:
+      shellFiles: [scripts/check.sh]
+      shebangDirs: [scripts]
+      skillsLockfile: skills.lock
+  - rule: package-json-workspace-coverage
+    options:
+      packageRoots: [packages]
+  - rule: pnpm-release-age-policy
+    options:
+      workspaceYaml: pnpm-workspace.yaml
+      dependabotPath: .github/dependabot.yml
+      lockfilePath: pnpm-lock.yaml
+  - rule: tsconfig-file-coverage
+    options:
+      allow: [{ path: scripts/generate.ts, reason: generated }]
+      auxiliaryConfigs: [{ path: tsconfig.tools.json, reason: tools }]
+  - rule: strict-package-layout
+    options:
+      packages: [{ root: packages }]
+"#,
+    )
+    .unwrap();
+
+    let extracted = crate::codebase::rules::no_mistakes_config::paths::references(&config);
+    let values: Vec<_> = extracted
+        .into_iter()
+        .map(|reference| reference.value)
+        .collect();
+    assert_eq!(
+        values,
+        vec![
+            "scripts/check.sh",
+            "scripts",
+            "skills.lock",
+            "packages",
+            "pnpm-workspace.yaml",
+            ".github/dependabot.yml",
+            "pnpm-lock.yaml",
+            "scripts/generate.ts",
+            "tsconfig.tools.json",
+            "packages",
+        ]
+    );
 }
 
 #[test]

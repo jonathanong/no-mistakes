@@ -4,94 +4,130 @@ use serde_yaml::Value;
 
 pub(super) fn collect(config: &NoMistakesConfig, refs: &mut Vec<Ref>) {
     for (index, rule) in config.rules.iter().enumerate() {
-        collect_paths(&rule.options, &format!("rules[{index}].options"), refs);
+        let field = format!("rules[{index}].options");
+        collect_rule_paths(&rule.rule, &rule.options, &field, refs);
     }
 }
 
-fn collect_paths(value: &Value, field: &str, refs: &mut Vec<Ref>) {
-    let Some(map) = value.as_mapping() else {
+// Rule options are deliberately not traversed by key name. Several rules use
+// names such as `allowlist` for package identities rather than filesystem
+// paths, so only each rule's declared path-bearing schema fields belong here.
+fn collect_rule_paths(rule: &str, value: &Value, field: &str, refs: &mut Vec<Ref>) {
+    match rule {
+        "agents-md-max-size"
+        | "required-local-docs"
+        | "require-test-per-subdir"
+        | "rust-max-lines-per-file"
+        | "rust-no-inline-allows" => {
+            paths_at(value, "roots", field, Kind::Directory, refs);
+        }
+        "csharp-max-lines-per-file" => {
+            paths_at(value, "roots", field, Kind::Directory, refs);
+            paths_at(value, "testRoots", field, Kind::Glob, refs);
+        }
+        "doc-consistency" => {
+            paths_at(value, "requiredFiles", field, Kind::File, refs);
+            object_paths_at(value, "requiredSubstrings", "file", field, Kind::File, refs);
+        }
+        "file-extension-policy" => {
+            paths_at(value, "allowlist", field, Kind::File, refs);
+            object_paths_at(value, "scopes", "path", field, Kind::Directory, refs);
+        }
+        "forbidden-dependencies" => {
+            paths_at(value, "roots", field, Kind::Directory, refs);
+            paths_at(value, "forbiddenFiles", field, Kind::File, refs);
+        }
+        "forbidden-workspace-closure" => paths_at(value, "lockfile", field, Kind::File, refs),
+        "markdown-reachability" | "markdown-structure-budget" => {
+            paths_at(value, "baselineFile", field, Kind::File, refs);
+        }
+        "nextjs-redirect-destinations" => {
+            paths_at(value, "configPath", field, Kind::File, refs);
+            paths_at(value, "appRoot", field, Kind::Directory, refs);
+        }
+        "package-json-registry-only" => {
+            paths_at(value, "lockfile", field, Kind::File, refs);
+            paths_at(value, "scopes", field, Kind::Directory, refs);
+        }
+        "package-json-workspace-coverage" => {
+            paths_at(value, "packageRoots", field, Kind::Directory, refs);
+            paths_at(value, "allowlist", field, Kind::File, refs);
+        }
+        "pnpm-release-age-policy" => {
+            paths_at(value, "workspaceYaml", field, Kind::File, refs);
+            paths_at(value, "dependabotPath", field, Kind::File, refs);
+            paths_at(value, "lockfilePath", field, Kind::File, refs);
+        }
+        "shellcheck-runner" => {
+            paths_at(value, "shellFiles", field, Kind::File, refs);
+            paths_at(value, "shebangDirs", field, Kind::Directory, refs);
+            paths_at(value, "skillsLockfile", field, Kind::File, refs);
+        }
+        "strict-package-layout" => {
+            object_paths_at(value, "packages", "root", field, Kind::Directory, refs);
+        }
+        "tsconfig-alias-folder-mapping" => {
+            paths_at(value, "tsconfig", field, Kind::File, refs);
+            paths_at(value, "baseDir", field, Kind::Directory, refs);
+        }
+        "tsconfig-file-coverage" => {
+            object_paths_at(value, "allow", "path", field, Kind::File, refs);
+            object_paths_at(value, "auxiliaryConfigs", "path", field, Kind::File, refs);
+        }
+        _ => {}
+    }
+}
+
+fn paths_at(value: &Value, key: &str, field: &str, kind: Kind, refs: &mut Vec<Ref>) {
+    let Some(value) = value.get(key) else {
         return;
     };
-    for (key, value) in map {
-        let Some(key) = key.as_str() else {
-            continue;
-        };
-        let child = format!("{field}.{key}");
-        match key {
-            "tsconfig" | "lockfile" | "shellFiles" | "allowlist" => {
-                for (index, path) in string_values(value).into_iter().enumerate() {
-                    if let Some(path) = required_path(&path) {
-                        push(refs, format!("{child}[{index}]"), Kind::File, &path);
-                    }
-                }
-            }
-            "roots" | "selectorRoots" | "shebangDirs" => {
-                for (index, path) in string_values(value).into_iter().enumerate() {
-                    if let Some(path) = required_path(&path) {
-                        push(
-                            refs,
-                            format!("{child}[{index}]"),
-                            if source_file_path(&path) {
-                                Kind::File
-                            } else {
-                                Kind::Directory
-                            },
-                            &path,
-                        );
-                    }
-                }
-            }
-            "packages" => collect_packages(value, &child, refs),
-            // Exclusions are deliberately not validated: a defensive exclude may
-            // refer to a path that is absent until a later feature is introduced.
-            "excludePaths" | "conditionallyAllowedWorkflows" => {}
-            _ => collect_paths(value, &child, refs),
-        }
+    for (index, path) in string_values(value).into_iter().enumerate() {
+        push_path(refs, format!("{field}.{key}[{index}]"), kind, path);
     }
 }
 
-fn collect_packages(value: &Value, field: &str, refs: &mut Vec<Ref>) {
-    let Some(packages) = value.as_sequence() else {
+fn object_paths_at(
+    value: &Value,
+    key: &str,
+    nested_key: &str,
+    field: &str,
+    kind: Kind,
+    refs: &mut Vec<Ref>,
+) {
+    let Some(values) = value.get(key).and_then(Value::as_sequence) else {
         return;
     };
-    for (index, package) in packages.iter().enumerate() {
-        let Some(root) = package.get("root").and_then(Value::as_str) else {
+    for (index, item) in values.iter().enumerate() {
+        let Some(path) = item.get(nested_key).and_then(Value::as_str) else {
             continue;
         };
-        if let Some(root) = required_path(root) {
-            push(
-                refs,
-                format!("{field}[{index}].root"),
-                Kind::Directory,
-                &root,
-            );
-        }
+        push_path(
+            refs,
+            format!("{field}.{key}[{index}].{nested_key}"),
+            kind,
+            path,
+        );
     }
 }
 
-fn string_values(value: &Value) -> Vec<String> {
+fn push_path(refs: &mut Vec<Ref>, field: String, kind: Kind, value: &str) {
+    let value = value.trim();
+    if value.is_empty() || value.starts_with('!') {
+        return;
+    }
+    let kind = if path_kind(value) == Kind::Glob {
+        Kind::Glob
+    } else {
+        kind
+    };
+    push(refs, field, kind, value);
+}
+
+fn string_values(value: &Value) -> Vec<&str> {
     match value {
-        Value::String(value) => vec![value.clone()],
-        Value::Sequence(values) => values
-            .iter()
-            .filter_map(Value::as_str)
-            .map(str::to_string)
-            .collect(),
+        Value::String(value) => vec![value],
+        Value::Sequence(values) => values.iter().filter_map(Value::as_str).collect(),
         _ => Vec::new(),
     }
-}
-
-fn required_path(value: &str) -> Option<String> {
-    let value = value.trim();
-    (!value.is_empty() && !value.starts_with('!') && !path_kind(value).eq(&Kind::Glob))
-        .then(|| value.to_string())
-}
-
-fn source_file_path(value: &str) -> bool {
-    let value = value.to_ascii_lowercase();
-    [
-        ".js", ".jsx", ".ts", ".tsx", ".mjs", ".cjs", ".mts", ".cts", ".json",
-    ]
-    .iter()
-    .any(|suffix| value.ends_with(suffix))
 }

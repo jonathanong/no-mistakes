@@ -52,6 +52,27 @@ is ignored when its path is not present.
 
 The `no-mistakes` preset validates repository paths that the no-mistakes schema
 defines as required. It includes project roots, test runner configs, Playwright
-roots and helpers, TestPlan project and named-trigger paths, and path-valued rule
-options such as `tsconfig`, `roots`, and package roots. Negative selectors,
-optional globs, and exclusion-only paths are ignored.
+roots and helpers, TestPlan project and named-trigger paths, plus these
+rule-specific option fields:
+
+| Rule | Path fields |
+| --- | --- |
+| `agents-md-max-size`, `required-local-docs`, `require-test-per-subdir`, `rust-max-lines-per-file`, `rust-no-inline-allows` | `roots` |
+| `csharp-max-lines-per-file` | `roots`, `testRoots` |
+| `doc-consistency` | `requiredFiles`, `requiredSubstrings[].file` |
+| `file-extension-policy` | `allowlist`, `scopes[].path` |
+| `forbidden-dependencies` | `roots`, `forbiddenFiles` |
+| `forbidden-workspace-closure` | `lockfile` |
+| `markdown-reachability`, `markdown-structure-budget` | `baselineFile` |
+| `nextjs-redirect-destinations` | `configPath`, `appRoot` |
+| `package-json-registry-only` | `lockfile`, `scopes` |
+| `package-json-workspace-coverage` | `packageRoots`, `allowlist` |
+| `pnpm-release-age-policy` | `workspaceYaml`, `dependabotPath`, `lockfilePath` |
+| `shellcheck-runner` | `shellFiles`, `shebangDirs`, `skillsLockfile` |
+| `strict-package-layout` | `packages[].root` |
+| `tsconfig-alias-folder-mapping` | `tsconfig`, `baseDir` |
+| `tsconfig-file-coverage` | `allow[].path`, `auxiliaryConfigs[].path` |
+
+Rule option names are not treated as paths globally. For example,
+`workspace-package-cycles.allowlist` contains package-cycle identities and is
+not path-validated. Negative selectors and empty values are ignored.

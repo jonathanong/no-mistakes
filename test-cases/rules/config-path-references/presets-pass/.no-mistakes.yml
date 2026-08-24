@@ -25,6 +25,4 @@ rules:
         - coverage-rules
         - pnpm-workspace-filters
         - no-mistakes
-      tsconfig: knip.jsonc
-      roots: [packages/app]
       excludePaths: [missing-until-created/**]
