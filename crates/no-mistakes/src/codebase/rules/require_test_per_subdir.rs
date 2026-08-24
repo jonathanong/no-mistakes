@@ -27,7 +27,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.rule_options();
+            let opts: Options = rule.try_rule_options()?;
             if opts.roots.is_empty() {
                 return Ok(vec![]);
             }
@@ -54,7 +54,7 @@ pub(crate) fn check_with_files(
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.rule_options();
+            let opts: Options = rule.try_rule_options()?;
             if opts.roots.is_empty() {
                 return Ok(vec![]);
             }

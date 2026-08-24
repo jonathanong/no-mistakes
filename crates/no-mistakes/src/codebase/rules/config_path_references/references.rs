@@ -16,7 +16,7 @@ pub(super) fn reference_exists(
         config_file.parent().unwrap_or(root).to_path_buf()
     };
     let target = normalize_path(&base.join(reference));
-    if target.starts_with(root) && target.exists() {
+    if target.starts_with(root) && tracked_reference_exists(root, &target, rel_files) {
         return Ok(true);
     }
     if opts.allow_globs && has_glob_metachar(reference) {
@@ -26,6 +26,17 @@ pub(super) fn reference_exists(
         return Ok(rel_files.iter().any(|rel| matcher.is_match(rel)));
     }
     Ok(false)
+}
+
+fn tracked_reference_exists(root: &Path, target: &Path, rel_files: &[String]) -> bool {
+    let rel = relative_slash_path(root, target);
+    let rel = rel.trim_start_matches("./").trim_end_matches('/');
+    if rel.is_empty() || rel == "." {
+        return !rel_files.is_empty();
+    }
+    rel_files
+        .iter()
+        .any(|candidate| candidate == rel || candidate.starts_with(&format!("{rel}/")))
 }
 
 pub(super) fn has_glob_metachar(reference: &str) -> bool {

@@ -61,6 +61,10 @@ Key flags:
   directly.
 - `--entrypoint <FILE>` — treat a file as the root regardless of changes.
 - `--environment <NAME>` — pick an env group from `testPlan.environments`.
+- `--include-glob <GLOB>` — for configured framework plans, scope discovered
+  tests before planning. Use this when CI runs one package slice: limits,
+  fallback selection, group accounting, and execution targets then describe
+  only that slice.
 - `--limit-percent <N>` / `--limit-files <N>` — override `testPlan` limits.
 - `--global-config-fallback true|false` — run the full suite when a global
   config file changes (package.json, tsconfig.json, etc.) or when a lockfile

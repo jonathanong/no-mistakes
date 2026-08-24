@@ -17,6 +17,7 @@ pub(super) struct PreparedResolution<'a> {
     pub(super) tsconfig_path: Option<&'a Path>,
     pub(super) tsconfig: Option<&'a crate::codebase::ts_resolver::TsConfig>,
     pub(super) catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
+    pub(super) strict_rule_options: bool,
 }
 
 #[doc(hidden)]
@@ -155,7 +156,11 @@ pub(super) fn analyze_project_with_optional_prepared_facts_prepared(
             .into_iter()
             .map(|path| normalize_path(&path))
             .collect::<Vec<_>>();
-            let options = application.rule_options();
+            let options = if resolution.strict_rule_options {
+                application.try_rule_options()?
+            } else {
+                application.rule_options()
+            };
             findings.extend(analyze_project_roots_with_facts(ProjectRootsAnalysis {
                 session,
                 root,

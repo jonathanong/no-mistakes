@@ -107,6 +107,9 @@ impl Default for SqlCreateIndexMetadata {
 pub struct SqlAddColumnMetadata {
     pub table_name: String,
     pub column_name: String,
+    pub data_type: String,
+    pub nullable: bool,
+    pub default: Option<String>,
     pub line: usize,
 }
 

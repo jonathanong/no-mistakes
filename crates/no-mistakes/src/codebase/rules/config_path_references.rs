@@ -50,7 +50,8 @@ pub(crate) fn check_with_files_and_sources(
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.rule_options();
+            let opts: Options = rule.try_rule_options()?;
+            opts.validate()?;
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files
@@ -59,7 +60,15 @@ pub(crate) fn check_with_files_and_sources(
                 .cloned()
                 .collect();
             let config_files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &config_files, &files, &target_roots, sources)
+            scan(
+                root,
+                config,
+                &opts,
+                &config_files,
+                &files,
+                &target_roots,
+                sources,
+            )
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -67,8 +76,30 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
+impl Options {
+    fn validate(&self) -> Result<()> {
+        let unknown: Vec<_> = self
+            .presets
+            .iter()
+            .filter(|preset| !presets::is_supported_preset(preset))
+            .collect();
+        if unknown.is_empty() {
+            return Ok(());
+        }
+        anyhow::bail!(
+            "config-path-references: unsupported preset(s): {}; supported presets: oxlintrc, knip, dependabot, sgconfig, syncpack, coverage-rules, pnpm-workspace-filters, no-mistakes",
+            unknown
+                .into_iter()
+                .map(String::as_str)
+                .collect::<Vec<_>>()
+                .join(", ")
+        );
+    }
+}
+
 fn scan(
     root: &Path,
+    config: &NoMistakesConfig,
     opts: &Options,
     config_candidates: &[PathBuf],
     reference_candidates: &[PathBuf],
@@ -76,18 +107,22 @@ fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let config_files = super::matching_files(root, &opts.files, config_candidates, target_roots)?;
+    let preset_candidates = if opts.files.is_empty() {
+        reference_candidates
+    } else {
+        &config_files
+    };
     let rel_files = reference_candidates
         .iter()
         .map(|path| relative_slash_path(root, path))
         .collect::<Vec<_>>();
     let mut findings = Vec::new();
-    for path in config_files {
-        let rel = relative_slash_path(root, &path);
-        let Some(source) = super::read_source(sources, &path) else {
+    for path in &config_files {
+        let rel = relative_slash_path(root, path);
+        let Some(source) = super::read_source(sources, path) else {
             continue;
         };
-        let value = match crate::codebase::structured_value::parse_structured_value(&path, &source)
-        {
+        let value = match crate::codebase::structured_value::parse_structured_value(path, &source) {
             Ok(value) => value,
             Err(error) => {
                 findings.push(parse_finding(&rel, error));
@@ -96,7 +131,7 @@ fn scan(
         };
         for key in &opts.keys {
             for reference in values_at_key(&value, key) {
-                if !reference_exists(root, &path, opts, &reference, &rel_files)? {
+                if !reference_exists(root, path, opts, &reference, &rel_files)? {
                     findings.push(missing_finding(&rel, &reference, key));
                 }
             }
@@ -104,8 +139,9 @@ fn scan(
     }
     presets::scan(
         root,
+        config,
         opts,
-        config_candidates,
+        preset_candidates,
         &rel_files,
         sources,
         &mut findings,

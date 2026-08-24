@@ -283,3 +283,207 @@ fn config_rel_falls_back_without_a_discovered_manifest() {
         "{findings:?}"
     );
 }
+
+#[test]
+fn project_include_and_exclude_globs_are_relative_to_project_root() {
+    let root = fixture("pass");
+    let config = enable(
+        serde_yaml::from_str(
+            r#"
+projects:
+  web:
+    root: web
+    include: ["src/**/*.ts"]
+    exclude: ["generated/**/*.ts"]
+"#,
+        )
+        .unwrap(),
+    );
+    let mut tracked = files(&root);
+    tracked.push(root.join("web/src/index.ts"));
+    tracked.push(root.join("web/generated/index.ts"));
+    let findings = check_with_files(&root, &config, &tracked).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn full_suite_project_paths_use_project_root_and_skip_negative_patterns() {
+    let root = fixture("pass");
+    let config = enable(
+        serde_yaml::from_str(
+            r#"
+projects:
+  web:
+    root: web
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        web: ["src/missing.ts", "!src/optional.ts"]
+      triggers:
+        - name: root
+          paths: ["missing-config.ts", "!optional-config.ts"]
+"#,
+        )
+        .unwrap(),
+    );
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+    let messages: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect();
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("web/src/missing.ts")),
+        "{messages:?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("missing-config.ts")),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().all(|message| !message.contains("optional")),
+        "{messages:?}"
+    );
+}
+
+#[test]
+fn schema_known_rule_option_paths_are_checked_but_non_path_options_are_not() {
+    let root = fixture("pass");
+    let config = enable(
+        serde_yaml::from_str(
+            r#"
+rules:
+  - rule: forbidden-dependencies
+    options:
+      roots: [missing-entry.mts]
+      nonexistentPath: missing-non-schema-path.json
+      excludePaths: [missing-until-created/**]
+"#,
+        )
+        .unwrap(),
+    );
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+    let messages: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect();
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("rules[1].options.roots[0]")),
+        "{messages:?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .all(|message| !message.contains("nonexistentPath")),
+        "{messages:?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .all(|message| !message.contains("excludePaths")),
+        "{messages:?}"
+    );
+}
+
+#[test]
+fn nested_workspace_roots_must_match_tracked_directories_or_globs() {
+    let root = fixture("pass");
+    let config = enable(
+        serde_yaml::from_str(
+            r#"
+rules:
+  - rule: package-json-nested-workspace-coverage
+    options:
+      roots: [missing-root, web/*]
+      dependencyNamePrefixes: ['@shared/']
+"#,
+        )
+        .unwrap(),
+    );
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+    let messages: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect();
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("rules[1].options.roots[0]")
+                && message.contains("missing-root")),
+        "{messages:?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .all(|message| !message.contains("rules[1].options.roots[1]")),
+        "the tracked web/src/index.ts satisfies the directory glob: {messages:?}"
+    );
+}
+
+#[test]
+fn schema_path_options_collect_only_declared_path_fields() {
+    let config: NoMistakesConfig = serde_yaml::from_str(
+        r#"
+projects:
+  app: { root: apps/app }
+  root: { root: . }
+  all: { root: apps/all }
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        app: { paths: [src/**/*.ts, "!src/generated/**"], targets: [web] }
+        root: [root/**/*.ts]
+        all: true
+      triggers:
+        - { name: config, paths: [config/**/*.ts, "!config/generated/**"] }
+rules:
+  - rule: csharp-max-lines-per-file
+    options: { roots: [src, 42], testRoots: tests/**/*.cs }
+  - rule: doc-consistency
+    options: { requiredFiles: [README.md, ""], requiredSubstrings: [{ file: docs/a.md }, { file: 42 }] }
+  - rule: file-extension-policy
+    options: { allowlist: allow.txt, scopes: [{ path: web }] }
+  - rule: forbidden-dependencies
+    options: { roots: src, forbiddenFiles: banned.ts }
+  - rule: forbidden-workspace-closure
+    options: { lockfile: pnpm-lock.yaml }
+  - rule: nextjs-redirect-destinations
+    options: { configPath: next.config.ts, appRoot: app }
+  - rule: package-json-workspace-coverage
+    options: { packageRoots: packages, allowlist: packages/a/package.json }
+  - rule: pnpm-release-age-policy
+    options: { workspaceYaml: pnpm-workspace.yaml, dependabotPath: .github/dependabot.yml, lockfilePath: pnpm-lock.yaml }
+  - rule: shellcheck-runner
+    options: { shellFiles: script.sh, shebangDirs: bin, skillsLockfile: skills.lock }
+  - rule: strict-package-layout
+    options: { packages: [{ root: packages/a }] }
+  - rule: tsconfig-alias-folder-mapping
+    options: { tsconfig: tsconfig.json, baseDir: src }
+  - rule: tsconfig-file-coverage
+    options: { allow: [{ path: src/a.ts }], auxiliaryConfigs: [{ path: tsconfig.test.json }] }
+"#,
+    )
+    .unwrap();
+    let refs = super::paths::references(&config);
+    let fields: Vec<_> = refs
+        .iter()
+        .map(|reference| reference.field.as_str())
+        .collect();
+    for field in [
+        "rules[0].options.roots[0]",
+        "rules[1].options.requiredSubstrings[0].file",
+        "rules[5].options.appRoot[0]",
+        "rules[7].options.dependabotPath[0]",
+        "rules[10].options.baseDir[0]",
+        "rules[11].options.auxiliaryConfigs[0].path",
+    ] {
+        assert!(fields.contains(&field), "missing {field}: {fields:?}");
+    }
+}

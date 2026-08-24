@@ -1,6 +1,8 @@
 use super::{Kind, Ref};
-use crate::config::v2::schema::{StringOrList, TestPlanFrameworkConfig};
+use crate::codebase::workflow_topology::posix_path::normalize;
+use crate::config::v2::schema::{StringOrList, TestPlanFrameworkConfig, TestPlanProjectDependency};
 use crate::config::v2::NoMistakesConfig;
+mod rule_options;
 
 pub(super) fn collect(config: &NoMistakesConfig, refs: &mut Vec<Ref>) {
     push_opt(
@@ -19,6 +21,7 @@ pub(super) fn collect(config: &NoMistakesConfig, refs: &mut Vec<Ref>) {
     }
     collect_tests(config, refs);
     collect_test_plan(config, refs);
+    rule_options::collect(config, refs);
 }
 
 fn collect_tests(config: &NoMistakesConfig, refs: &mut Vec<Ref>) {
@@ -81,24 +84,68 @@ fn collect_tests(config: &NoMistakesConfig, refs: &mut Vec<Ref>) {
 
 fn collect_test_plan(config: &NoMistakesConfig, refs: &mut Vec<Ref>) {
     for (framework, plan) in frameworks(config) {
+        for (project_name, dependency) in &plan.full_suite_triggers.projects {
+            let root = config
+                .projects
+                .get(project_name)
+                .and_then(|project| project.root.as_deref())
+                .unwrap_or("");
+            let paths = match dependency {
+                TestPlanProjectDependency::Patterns(paths) => paths,
+                TestPlanProjectDependency::Targeted(targeted) => &targeted.paths,
+                TestPlanProjectDependency::All(_) => continue,
+            };
+            for (path_index, path) in paths.iter().enumerate() {
+                let Some(path) = project_relative(root, path) else {
+                    continue;
+                };
+                push(
+                    refs,
+                    format!(
+                        "testPlan.{framework}.fullSuiteTriggers.projects.{project_name}[{path_index}]"
+                    ),
+                    path_kind(&path),
+                    &path,
+                );
+            }
+        }
         for (index, trigger) in plan.full_suite_triggers.triggers.iter().enumerate() {
             for (path_index, path) in trigger.paths.iter().enumerate() {
-                let kind = if path.contains('*') {
-                    Kind::Glob
-                } else {
-                    Kind::File
-                };
+                if path.starts_with('!') {
+                    continue;
+                }
                 push(
                     refs,
                     format!(
                         "testPlan.{framework}.fullSuiteTriggers.triggers[{index}].paths[{path_index}]"
                     ),
-                    kind,
+                    path_kind(path),
                     path,
                 );
             }
         }
     }
+}
+
+pub(super) fn path_kind(value: &str) -> Kind {
+    if value.contains('*') || value.contains('?') || value.contains('{') {
+        Kind::Glob
+    } else {
+        Kind::File
+    }
+}
+
+fn project_relative(root: &str, value: &str) -> Option<String> {
+    if value.trim().is_empty() || value.starts_with('!') {
+        return None;
+    }
+    let root = root.trim().trim_matches('/');
+    let value = value.trim().trim_start_matches("./");
+    Some(normalize(&if root.is_empty() || root == "." {
+        value.to_string()
+    } else {
+        format!("{root}/{value}")
+    }))
 }
 
 pub(crate) fn frameworks(
@@ -137,8 +184,8 @@ fn push_opt(refs: &mut Vec<Ref>, field: &str, kind: Kind, value: Option<&str>) {
     }
 }
 
-fn push(refs: &mut Vec<Ref>, field: String, kind: Kind, value: &str) {
-    if !value.is_empty() {
+pub(super) fn push(refs: &mut Vec<Ref>, field: String, kind: Kind, value: &str) {
+    if !value.is_empty() && !value.starts_with('!') {
         refs.push(Ref {
             field,
             kind,

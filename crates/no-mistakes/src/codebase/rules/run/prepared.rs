@@ -56,13 +56,35 @@ pub fn canonical_graph_plan(
     needed.then_some(plan)
 }
 
+/// Fallible graph-plan construction for check, CLI, and N-API request paths.
+#[doc(hidden)]
+pub fn try_canonical_graph_plan(
+    config: &crate::config::v2::NoMistakesConfig,
+) -> Result<Option<GraphBuildPlan>> {
+    let mut plan = GraphBuildPlan::default();
+    let mut needed = false;
+    if rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
+        plan.include(GraphBuildPlan::imports_and_workspace());
+        needed = true;
+    }
+    if let Some(reachability_plan) = required_entrypoint_reachability::graph_plan(config) {
+        plan.include(reachability_plan);
+        needed = true;
+    }
+    if let Some(forbidden_plan) = forbidden_dependencies::try_graph_plan(config)? {
+        plan.include(forbidden_plan);
+        needed = true;
+    }
+    Ok(needed.then_some(plan))
+}
+
 /// Whether configured graph-backed rules require files outside the filesystem check scope.
 #[doc(hidden)]
 pub fn canonical_graph_requires_full_file_universe(
     config: &crate::config::v2::NoMistakesConfig,
 ) -> bool {
     required_entrypoint_reachability::graph_plan(config).is_some()
-        || forbidden_dependencies::graph_plan(config).is_some()
+        || config.rule_configured(FORBIDDEN_DEPENDENCIES)
 }
 
 pub fn run_check_with_config_and_facts_and_playwright(

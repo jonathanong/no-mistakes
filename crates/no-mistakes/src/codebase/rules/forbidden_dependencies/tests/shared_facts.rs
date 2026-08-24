@@ -15,8 +15,8 @@ pub(super) fn check_with_prepared_facts_and_session(
     }
     let options = applications
         .iter()
-        .map(|rule| rule.rule_options())
-        .collect::<Vec<Options>>();
+        .map(|rule| rule.try_rule_options())
+        .collect::<Result<Vec<Options>>>()?;
     let plan = GraphBuildPlan::from_allowed(union_allowed_set(&options).as_ref());
     shared::validate_shared_graph_plan(root, config_path, shared, prepared_graph, plan)?;
     let tsconfig_catalog =

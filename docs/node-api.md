@@ -275,7 +275,12 @@ callSites: [{ callKind, line }] }` for literal runtime filesystem edges or
 edges.
 
 `check(options)` returns the same structured check report as CLI JSON,
-including `warnings: string[]` for configured checks that could not run.
+including configured filesystem rules such as
+`package-json-nested-workspace-coverage`, and `warnings: string[]` for checks
+that could not run.
+It rejects with the same rule application and `options` path diagnostic as the
+CLI when a configured option has the wrong type; invalid option objects are
+never replaced with rule defaults.
 
 `resolveConfig(options)` returns the same JSON as `config resolve`: frontend
 apps, Playwright coverage gates, effective per-app `rewrites`/`ignoreRoutes`,
@@ -433,7 +438,10 @@ addon avoids UTF-16 string copies at the N-API boundary.
   Batch `testsPlan` and `ciTopology` in one `analyzeProject({ reports })` call
   so they share the machine-wide lock. `testsPlan()` / `testsImpact()` return
   camelCase `executionTargets` (optional `name` for Swift path-prefix groups).
-  `includeGlob` is a `testsPlan()` option. `ciTopology()` is memoized
+  `includeGlob` is a `testsPlan()` option that scopes configured framework
+  discovery before planning, so group accounting and execution targets contain
+  only matching tests.
+  `ciTopology()` is memoized
   in-process by root, config mtime, and workflows filter; pass `profile: "ci"`
   (or CLI `--profile ci`) to clear command and lock timeouts.
 - Prefer structured API results over parsing human CLI output.

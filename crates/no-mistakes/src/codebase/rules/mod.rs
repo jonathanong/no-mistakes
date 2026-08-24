@@ -33,6 +33,7 @@ pub mod no_empty_or_comments_only_files;
 pub mod no_git_identity_mutation;
 pub mod no_mistakes_config;
 pub mod no_raw_ephemeral_port;
+pub mod package_json_nested_workspace_coverage;
 pub mod package_json_registry_only;
 pub mod package_json_required_fields;
 pub mod package_json_workspace_coverage;
@@ -102,7 +103,7 @@ pub use ids::*;
 pub use run::{
     canonical_graph_plan, canonical_graph_requires_full_file_universe,
     run_check_with_config_facts_playwright_and_graph,
-    run_check_with_config_facts_playwright_and_graph_with_suppression,
+    run_check_with_config_facts_playwright_and_graph_with_suppression, try_canonical_graph_plan,
 };
 pub use run::{
     run_check, run_check_with_config_and_facts_and_playwright, run_check_with_facts,

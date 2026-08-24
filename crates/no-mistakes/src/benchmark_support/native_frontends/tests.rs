@@ -6,7 +6,7 @@ fn native_frontend_fixture_exercises_production_collectors() {
     assert_eq!(
         collect_swift_frontend_facts(&fixture),
         NativeFrontendSummary {
-            files: 12,
+            files: 15,
             parsed_files: 7,
             physical_reads: 7,
         }

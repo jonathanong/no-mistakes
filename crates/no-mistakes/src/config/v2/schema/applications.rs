@@ -1,8 +1,44 @@
 use super::{rule_targets, NoMistakesConfig, RuleDef, RuleScope};
+use anyhow::Result;
+use serde::de::IntoDeserializer;
 
 impl RuleDef {
+    /// Deserializes configured options, preserving the historical fallback-to-default
+    /// behavior for library callers.
     pub fn rule_options<T: for<'de> serde::Deserialize<'de> + Default>(&self) -> T {
-        serde_yaml::from_value(self.options.clone()).unwrap_or_default()
+        self.try_rule_options().unwrap_or_default()
+    }
+
+    /// Deserializes configured options with an actionable diagnostic.
+    ///
+    /// Check entrypoints use this fallible variant so a typo never silently
+    /// disables a configured rule. The original [`Self::rule_options`] API
+    /// intentionally remains infallible for existing programmatic callers.
+    pub fn try_rule_options<T: for<'de> serde::Deserialize<'de> + Default>(&self) -> Result<T> {
+        if matches!(&self.options, serde_yaml::Value::Null)
+            || matches!(&self.options, serde_yaml::Value::Mapping(options) if options.is_empty())
+        {
+            return Ok(T::default());
+        }
+        let deserializer = self.options.clone().into_deserializer();
+        serde_path_to_error::deserialize(deserializer).map_err(|error| {
+            let path = error.path().to_string();
+            let location = if path.is_empty() {
+                "options".to_string()
+            } else {
+                format!("options.{path}")
+            };
+            let name = self
+                .name
+                .as_deref()
+                .map(|name| format!(" application `{name}`"))
+                .unwrap_or_default();
+            anyhow::anyhow!(
+                "invalid options for rule `{}`{name} at {location}: {}",
+                self.rule,
+                error.inner()
+            )
+        })
     }
 
     pub fn applies_to_project(&self, project: &str) -> bool {
@@ -35,6 +71,18 @@ impl NoMistakesConfig {
         self.rule_applications(rule_id)
             .into_iter()
             .map(RuleDef::rule_options)
+            .collect()
+    }
+
+    /// Fallible counterpart for check entrypoints that must reject malformed
+    /// configured rule options instead of using the legacy default fallback.
+    pub fn try_rule_application_options<T: for<'de> serde::Deserialize<'de> + Default>(
+        &self,
+        rule_id: &str,
+    ) -> Result<Vec<T>> {
+        self.rule_applications(rule_id)
+            .into_iter()
+            .map(RuleDef::try_rule_options)
             .collect()
     }
 

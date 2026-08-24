@@ -1,3 +1,17 @@
+projects:
+  app:
+    root: missing-project
+tests:
+  playwright:
+    configs: missing-playwright.config.ts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      projects:
+        app: [src/missing.ts, "!src/optional.ts"]
+      triggers:
+        - name: root
+          paths: [missing-trigger.ts, "!optional-trigger.ts"]
 rules:
   - rule: config-path-references
     scope: repository
@@ -9,3 +23,6 @@ rules:
         - sgconfig
         - syncpack
         - coverage-rules
+        - pnpm-workspace-filters
+        - no-mistakes
+      excludePaths: [missing-until-created/**]

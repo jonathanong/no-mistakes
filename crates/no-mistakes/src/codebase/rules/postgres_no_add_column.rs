@@ -14,10 +14,24 @@ pub const RULE_ID: &str = "postgres-no-add-column";
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct Options {
     pub(crate) sql_include: Vec<String>,
+    pub(crate) allowed_migrations: Vec<AllowedMigration>,
+}
+
+#[derive(Clone, Deserialize, Eq, Ord, PartialEq, PartialOrd)]
+#[serde(rename_all = "camelCase")]
+pub(crate) struct AllowedMigration {
+    pub(crate) path: String,
+    pub(crate) table: String,
+    pub(crate) column: String,
+    #[serde(rename = "type")]
+    pub(crate) data_type: String,
+    pub(crate) nullable: bool,
+    pub(crate) default: Option<String>,
 }
 
 struct CompiledOptions {
     schema: PostgresSchemaOptions,
+    allowed_migrations: Vec<AllowedMigration>,
 }
 
 pub(crate) fn check_with_files(
@@ -37,7 +51,7 @@ pub(crate) fn check_with_files_and_sources(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
+        let opts: Options = rule.try_rule_options()?;
         let compiled = compile_options(&opts);
         let target_roots = super::target_roots(root, config, rule);
         let skip = super::skip_dir_set(config);
@@ -62,6 +76,7 @@ fn compile_options(opts: &Options) -> CompiledOptions {
                 opts.sql_include.clone()
             },
         },
+        allowed_migrations: opts.allowed_migrations.clone(),
     }
 }
 

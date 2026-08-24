@@ -79,7 +79,7 @@ pub(super) fn bench_language_frontends(c: &mut Criterion) {
     assert_eq!(
         swift,
         NativeFrontendSummary {
-            files: 12,
+            files: 15,
             parsed_files: 7,
             physical_reads: 7,
         },

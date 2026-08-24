@@ -23,6 +23,7 @@ pub fn analyze_project_with_prepared_facts_catalog_and_inferred_and_session_for_
         config,
         PreparedResolution {
             catalog: Some(tsconfig_catalog),
+            strict_rule_options: true,
             ..Default::default()
         },
         shared,

@@ -26,5 +26,10 @@ links; see [finite-set-consistency](../rules/finite-set-consistency.md).
 If a configured check cannot run, `check` prints a warning to stderr, includes it
 in structured output as `warnings`, and exits nonzero.
 
+Invalid rule option values are configuration errors, not implicit defaults.
+`check` exits with a diagnostic naming the rule application and the exact
+`options` path whose YAML type does not match the rule's schema. Omitted options
+continue to use that rule's documented defaults.
+
 Node API: `check({ includeSuppressed: true })` exposes the same optional
 `suppressed` accounting.

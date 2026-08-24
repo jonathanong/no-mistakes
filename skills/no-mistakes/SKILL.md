@@ -26,6 +26,10 @@ Configured `tests.python|go|rust|rails|php|java|kotlin|elixir|dart` and `tests.d
 `no-mistakes infra` — Terraform/OpenTofu resource graphs ·
 `no-mistakes swift` — Swift package importers and test targets.
 
+For package manifests that own nested workspaces, configure the
+`package-json-nested-workspace-coverage` check rule. It keeps explicit
+workspace entries aligned with configured dependency-name prefixes.
+
 ## When To Reach For It
 
 ✅ **Use `no-mistakes`** when the question spans >2 workspace dirs, involves
@@ -206,6 +210,12 @@ no-mistakes lockfile diff --base origin/main --format json
 no-mistakes queues check --format json
 no-mistakes server routes --format json
 ```
+
+For `pnpm-release-age-policy`, prefer `temporaryGroups` for temporary release
+age exclusions. Each group records exact `package@version` selectors, a reason,
+and canonical UTC `eligibleForRemovalAt` audit metadata; an elapsed eligibility
+date is informational and does not fail CI. Flat `temporarySelectors` remains
+compatible, but selectors cannot be duplicated across it and groups.
 
 Prefer `--format json` for agent parsing and `--format paths` for command
 substitution. Every command accepts root-global `--timings`; use

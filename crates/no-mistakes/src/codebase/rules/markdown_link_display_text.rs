@@ -24,32 +24,33 @@ pub(crate) fn fact_candidate_files(
     root: &Path,
     config: &NoMistakesConfig,
     files: &[PathBuf],
-) -> Vec<PathBuf> {
-    let mut extensions = config
+) -> Result<Vec<PathBuf>> {
+    let extensions: Result<Vec<Vec<String>>> = config
         .rule_applications(RULE_ID)
         .into_iter()
-        .flat_map(|rule| {
-            let opts: Options = rule.rule_options();
+        .map(|rule| {
+            let opts: Options = rule.try_rule_options()?;
             if opts.extensions.is_empty() {
-                DEFAULT_EXTENSIONS
+                Ok(DEFAULT_EXTENSIONS
                     .iter()
                     .map(|extension| (*extension).to_string())
-                    .collect()
+                    .collect())
             } else {
-                opts.extensions
+                Ok(opts.extensions)
             }
         })
-        .collect::<Vec<_>>();
+        .collect();
+    let mut extensions = extensions?.into_iter().flatten().collect::<Vec<_>>();
     extensions.sort();
     extensions.dedup();
-    files
+    Ok(files
         .iter()
         .filter(|path| {
             let rel = relative_slash_path(root, path);
             extensions.iter().any(|extension| rel.ends_with(extension))
         })
         .cloned()
-        .collect()
+        .collect())
 }
 
 pub(crate) fn check_with_files_and_sources(
@@ -59,7 +60,7 @@ pub(crate) fn check_with_files_and_sources(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let mut plan = super::markdown_facts::MarkdownFactPlan::default();
-    plan.request_display_links(fact_candidate_files(root, config, all_files));
+    plan.request_display_links(fact_candidate_files(root, config, all_files)?);
     let facts = super::markdown_facts::MarkdownFactMap::prepare(&plan, sources);
     check_with_files_sources_and_facts(root, config, all_files, &facts)
 }
@@ -74,7 +75,7 @@ pub(crate) fn check_with_files_sources_and_facts(
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.rule_options();
+            let opts: Options = rule.try_rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files

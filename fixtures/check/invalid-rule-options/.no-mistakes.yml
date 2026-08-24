@@ -1,0 +1,6 @@
+rules:
+  - name: strict SQL migrations
+    rule: postgres-no-add-column
+    scope: repository
+    options:
+      sqlInclude: false

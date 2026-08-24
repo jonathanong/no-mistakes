@@ -37,14 +37,33 @@ pub fn check(
     check_with_config(root, config, None, tsconfig_path)
 }
 
+/// Builds the graph plan with the historical default fallback for malformed
+/// options. Check entrypoints should use [`try_graph_plan`] instead.
 pub fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     let applications = config.rule_applications(RULE_ID);
     if applications.is_empty() {
         return None;
     }
-    let opts_list: Vec<Options> = applications.iter().map(|r| r.rule_options()).collect();
+    let opts_list: Vec<Options> = applications
+        .iter()
+        .map(|rule| rule.rule_options())
+        .collect();
     let union_allowed = union_allowed_set(&opts_list);
     Some(GraphBuildPlan::from_allowed(union_allowed.as_ref()))
+}
+
+/// Fallible graph-plan construction for check, CLI, and N-API request paths.
+pub fn try_graph_plan(config: &NoMistakesConfig) -> Result<Option<GraphBuildPlan>> {
+    let applications = config.rule_applications(RULE_ID);
+    if applications.is_empty() {
+        return Ok(None);
+    }
+    let opts_list: Vec<Options> = applications
+        .iter()
+        .map(|rule| rule.try_rule_options())
+        .collect::<Result<_>>()?;
+    let union_allowed = union_allowed_set(&opts_list);
+    Ok(Some(GraphBuildPlan::from_allowed(union_allowed.as_ref())))
 }
 
 fn union_allowed_set(opts_list: &[Options]) -> Option<HashSet<EdgeKind>> {

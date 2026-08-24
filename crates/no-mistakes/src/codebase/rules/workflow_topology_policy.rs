@@ -70,7 +70,7 @@ pub(crate) fn check_with_files_and_sources(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
+        let opts: Options = rule.try_rule_options()?;
         let topology =
             crate::codebase::workflow_topology::load_workflow_topology(root, &config.ci, &[]);
         findings.extend(evaluate::lint(&topology, &opts));

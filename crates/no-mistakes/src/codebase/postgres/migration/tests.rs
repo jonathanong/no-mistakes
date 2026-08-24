@@ -102,10 +102,13 @@ ALTER TABLE accounts DROP COLUMN unused;
         .foreign_keys
         .iter()
         .any(|fk| fk.column_names == ["owner_id"] && fk.referenced_table_name == "users"));
-    assert!(facts
-        .add_columns
-        .iter()
-        .any(|column| { column.table_name == "accounts" && column.column_name == "owner_id" }));
+    assert!(facts.add_columns.iter().any(|column| {
+        column.table_name == "accounts"
+            && column.column_name == "owner_id"
+            && column.data_type == "UUID"
+            && column.nullable
+            && column.default.is_none()
+    }));
     assert!(facts
         .not_valid_constraints
         .iter()
@@ -364,6 +367,25 @@ fn extracts_add_column_inside_do_block() {
         .add_columns
         .iter()
         .any(|column| column.table_name == "posts" && column.column_name == "status"));
+}
+
+#[test]
+fn records_add_column_contract_fields() {
+    let facts = extract_migration_facts(
+        "ALTER TABLE posts ADD COLUMN status text NOT NULL DEFAULT 'draft';",
+    );
+    assert_eq!(facts.add_columns.len(), 1, "{facts:?}");
+    assert_eq!(
+        facts.add_columns[0],
+        super::super::SqlAddColumnMetadata {
+            table_name: "posts".to_string(),
+            column_name: "status".to_string(),
+            data_type: "TEXT".to_string(),
+            nullable: false,
+            default: Some("'draft'".to_string()),
+            line: 1,
+        }
+    );
 }
 
 #[test]

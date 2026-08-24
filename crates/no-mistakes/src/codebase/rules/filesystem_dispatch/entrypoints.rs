@@ -54,7 +54,7 @@ pub fn run_filesystem_rules(root: &Path, config_path: Option<&Path>) -> Result<V
         return Ok(Vec::new());
     }
     let preserved_roots =
-        preserved::filesystem_rule_target_roots(root, &config, FILESYSTEM_RULE_IDS);
+        preserved::filesystem_rule_target_roots(root, &config, FILESYSTEM_RULE_IDS)?;
     let files = crate::codebase::ts_source::discover_files_preserving_roots_from_visible(
         root,
         &config.filesystem.skip_directories,
@@ -127,7 +127,7 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
 ) -> Result<Vec<RuleFinding>> {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let sources = snapshot.source_store_for(&root);
-    let facts = prepare_call_site_facts(&root, config, &sources);
+    let facts = prepare_call_site_facts(&root, config, &sources)?;
     let workflows =
         rule_enabled(config, crate::codebase::rules::TSCONFIG_GATE_COVERAGE).then(|| {
             crate::codebase::ci_workflows::ParsedWorkflowSet::load_from_snapshot_and_sources(
@@ -168,9 +168,9 @@ pub(super) fn prepare_call_site_facts(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
     sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
-) -> Option<crate::codebase::check_facts::CheckFactMap> {
-    let call_site_files = finite_set_consistency::required_call_site_fact_files(root, config);
-    (!call_site_files.is_empty()).then(|| {
+) -> Result<Option<crate::codebase::check_facts::CheckFactMap>> {
+    let call_site_files = finite_set_consistency::try_required_call_site_fact_files(root, config)?;
+    Ok((!call_site_files.is_empty()).then(|| {
         crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
             root,
             call_site_files,
@@ -185,7 +185,7 @@ pub(super) fn prepare_call_site_facts(
             None,
             std::sync::Arc::clone(sources),
         )
-    })
+    }))
 }
 
 #[doc(hidden)]

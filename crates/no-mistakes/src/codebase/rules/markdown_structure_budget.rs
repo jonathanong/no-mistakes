@@ -35,7 +35,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     let markdown = super::markdown_scope::markdown_files(files);
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options();
+        let opts: Options = rule.try_rule_options()?;
         let max_lines = opts.max_lines.unwrap_or(DEFAULT_MAX_LINES);
         let max_chars = opts.max_chars.unwrap_or(DEFAULT_MAX_CHARS);
         let max_tables = opts.max_tables.unwrap_or(DEFAULT_MAX_TABLES);

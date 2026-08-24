@@ -36,7 +36,7 @@ fn graph_files_for(config: &crate::config::v2::NoMistakesConfig) -> Vec<std::pat
     standalone_graph_files(
         root,
         config,
-        canonical_graph_plan(config),
+        crate::codebase::rules::canonical_graph_plan(config),
         &visible_paths,
         &scoped,
     )

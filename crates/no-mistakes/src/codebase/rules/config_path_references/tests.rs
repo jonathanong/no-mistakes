@@ -208,7 +208,7 @@ fn existing_literal_paths_with_glob_metacharacters_win_before_glob_matching() {
         &root.join("config/app.yml"),
         &opts,
         "schemas/[tenant].json",
-        &[]
+        &["schemas/[tenant].json".to_string()]
     )
     .unwrap());
 }
@@ -253,6 +253,33 @@ fn literal_references_outside_the_repository_do_not_exist_for_this_rule() {
         &opts,
         "../../../../../Cargo.toml",
         &[]
+    )
+    .unwrap());
+}
+
+#[test]
+fn literal_references_ignore_untracked_files_and_directories() {
+    let root = tempfile::tempdir().unwrap();
+    let config = root.path().join("config.yml");
+    std::fs::write(&config, "paths: []\n").unwrap();
+    std::fs::write(root.path().join("untracked.json"), "{}\n").unwrap();
+    std::fs::create_dir(root.path().join("untracked-dir")).unwrap();
+    std::fs::write(root.path().join("untracked-dir/file.json"), "{}\n").unwrap();
+
+    assert!(!reference_exists(
+        root.path(),
+        &config,
+        &Options::default(),
+        "untracked.json",
+        &[]
+    )
+    .unwrap());
+    assert!(!reference_exists(
+        root.path(),
+        &config,
+        &Options::default(),
+        "untracked-dir",
+        &[],
     )
     .unwrap());
 }
@@ -313,16 +340,13 @@ fn can_resolve_references_from_repository_root() {
         &root.join("config/app.yml"),
         &opts,
         "config/existing.json",
-        &[]
+        &["config/existing.json".to_string()]
     )
     .unwrap());
 }
 
-fn preset_opts() -> String {
-    r#"
-presets: [oxlintrc, knip, dependabot, sgconfig, syncpack, coverage-rules]
-"#
-    .to_string()
+fn preset_config(root: &Path) -> NoMistakesConfig {
+    serde_yaml::from_str(&std::fs::read_to_string(root.join(".no-mistakes.yml")).unwrap()).unwrap()
 }
 
 fn listed(root: &Path, rels: &[&str]) -> Vec<PathBuf> {
@@ -342,9 +366,11 @@ fn presets_report_missing_required_paths() {
             "sgconfig.yml",
             ".syncpackrc.json",
             ".coverage-rules.yml",
+            ".github/workflows/pnpm-filters.yml",
+            ".no-mistakes.yml",
         ],
     );
-    let findings = check_with_files(&root, &config(&preset_opts()), &files).unwrap();
+    let findings = check_with_files(&root, &preset_config(&root), &files).unwrap();
     let messages: Vec<_> = findings
         .iter()
         .map(|finding| finding.message.clone())
@@ -386,9 +412,38 @@ fn presets_report_missing_required_paths() {
         "{messages:?}"
     );
     assert!(
-        !messages
+        messages
             .iter()
-            .any(|m| m.contains("generated") || m.contains("node_modules")),
+            .any(|m| m.contains("projects.app.root") && m.contains("missing-project")),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| {
+            m.contains("tests.playwright.configs") && m.contains("missing-playwright.config.ts")
+        }),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| {
+            m.contains("testPlan.vitest.fullSuiteTriggers.projects.app")
+                && m.contains("missing-project/src/missing.ts")
+        }),
+        "{messages:?}"
+    );
+    assert!(
+        messages.iter().any(|m| {
+            m.contains("testPlan.vitest.fullSuiteTriggers.triggers")
+                && m.contains("missing-trigger.ts")
+        }),
+        "{messages:?}"
+    );
+    assert!(
+        !messages.iter().any(|m| {
+            m.contains("generated")
+                || m.contains("node_modules")
+                || m.contains("optional")
+                || m.contains("missing-until-created")
+        }),
         "{messages:?}"
     );
 }
@@ -412,79 +467,13 @@ fn presets_pass_when_required_paths_exist() {
             "rules/keep.yml",
             ".syncpackrc.json",
             ".coverage-rules.yml",
+            ".github/workflows/pnpm-filters.yml",
+            ".no-mistakes.yml",
+            "playwright.config.ts",
         ],
     );
-    let findings = check_with_files(&root, &config(&preset_opts()), &files).unwrap();
+    let findings = check_with_files(&root, &preset_config(&root), &files).unwrap();
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 
-#[test]
-fn unknown_presets_are_ignored() {
-    let root = fixture_root("presets-fail");
-    let files = listed(&root, &[".oxlintrc.json", "knip.jsonc"]);
-    let findings = check_with_files(&root, &config("presets: [unknown]"), &files).unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
-#[test]
-fn invalid_preset_config_surfaces_parse_errors() {
-    let dir = tempfile::tempdir().unwrap();
-    let path = dir.path().join("sgconfig.yml");
-    std::fs::write(&path, ":\n  -").unwrap();
-    let findings = check_with_files(dir.path(), &config("presets: [sgconfig]"), &[path]).unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert!(
-        findings[0].message.contains("failed to parse YAML"),
-        "{findings:?}"
-    );
-}
-
-#[test]
-fn extract_covers_optional_and_empty_preset_shapes() {
-    let knip: serde_yaml::Value = serde_yaml::from_str(
-        r#"
-workspaces:
-  ".":
-    entry: ["src/index.ts", "!src/generated.ts", "**/node_modules/**"]
-  1: { entry: skipped }
-"#,
-    )
-    .unwrap();
-    let knip_refs: Vec<_> = presets::extract("knip", &knip)
-        .into_iter()
-        .map(|extracted| extracted.value)
-        .collect();
-    assert_eq!(knip_refs, vec!["src/index.ts".to_string()]);
-
-    let empty: serde_yaml::Value = serde_yaml::from_str("updates: []").unwrap();
-    assert!(presets::extract("dependabot", &empty).is_empty());
-    assert!(presets::extract("unknown", &empty).is_empty());
-    assert!(presets::extract("coverage-rules", &empty).is_empty());
-    assert!(presets::extract("knip", &empty).is_empty());
-
-    let coverage: serde_yaml::Value = serde_yaml::from_str(
-        r#"
-rules:
-  - paths: src/**/*.ts
-  - paths: "!vendor/**"
-  - paths: { nested: true }
-"#,
-    )
-    .unwrap();
-    let coverage_refs: Vec<_> = presets::extract("coverage-rules", &coverage)
-        .into_iter()
-        .map(|extracted| extracted.value)
-        .collect();
-    assert_eq!(coverage_refs, vec!["src/**/*.ts".to_string()]);
-
-    assert!(presets::matches_preset(
-        "oxlintrc",
-        ".oxlintrc.json",
-        "pkg/.oxlintrc.json"
-    ));
-    assert!(!presets::matches_preset(
-        "dependabot",
-        "dependabot.yml",
-        "dependabot.yml"
-    ));
-}
+mod preset_paths;

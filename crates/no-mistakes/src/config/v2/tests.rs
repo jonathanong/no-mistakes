@@ -2,7 +2,8 @@ use std::path::Path;
 
 use super::discover::{find_config_root, load_v2_config, load_v2_config_from_visible};
 use super::schema::{
-    NoMistakesConfig, Project, ProjectType, RewriteRule, RuleDef, StringOrList, TestPlanPercent,
+    NoMistakesConfig, Project, ProjectType, RewriteRule, RuleDef, RuleScope, StringOrList,
+    TestPlanPercent,
 };
 use super::view::ConfigView;
 
@@ -356,15 +357,50 @@ fn rule_def_options_deserialized() {
 }
 
 #[test]
-fn rule_def_options_returns_default_on_bad_type() {
-    let rule = RuleDef::default();
+fn rule_def_options_rejects_bad_nested_type_with_option_path() {
+    let rule = RuleDef {
+        name: Some("strict SQL migrations".to_string()),
+        rule: "example-rule".to_string(),
+        options: serde_yaml::from_str("entries:\n  - default: false\n").unwrap(),
+        ..RuleDef::default()
+    };
 
+    #[allow(dead_code)]
+    #[derive(Debug, serde::Deserialize, Default)]
+    struct Entry {
+        default: String,
+    }
+    #[allow(dead_code)]
+    #[derive(Debug, serde::Deserialize, Default)]
+    struct Opts {
+        entries: Vec<Entry>,
+    }
+
+    let error = rule.try_rule_options::<Opts>().unwrap_err();
+    let message = error.to_string();
+    assert!(message
+        .contains("invalid options for rule `example-rule` application `strict SQL migrations`"));
+    assert!(message.contains("options.entries[0].default"));
+    assert!(message.contains("boolean"));
+    assert!(message.contains("expected a string"));
+}
+
+#[test]
+fn rule_def_omitted_options_still_use_defaults() {
     #[derive(serde::Deserialize, Default, PartialEq, Debug)]
     struct Opts {
         foo: String,
     }
-    let opts: Opts = rule.rule_options();
-    assert_eq!(opts, Opts::default());
+
+    assert_eq!(RuleDef::default().rule_options::<Opts>(), Opts::default());
+    assert_eq!(
+        RuleDef {
+            options: serde_yaml::Value::Null,
+            ..RuleDef::default()
+        }
+        .rule_options::<Opts>(),
+        Opts::default()
+    );
 }
 
 #[test]
@@ -383,6 +419,36 @@ fn rule_application_options_return_all_effective_applications() {
         opts.iter().map(|opt| opt.src_max).collect::<Vec<_>>(),
         vec![Some(100), Some(80)]
     );
+}
+
+#[test]
+fn legacy_rule_option_apis_keep_default_fallbacks() {
+    #[derive(serde::Deserialize, Default, PartialEq, Debug)]
+    struct Opts {
+        required: String,
+    }
+
+    let rule = RuleDef {
+        rule: "example-rule".to_string(),
+        options: serde_yaml::from_str("required: false").unwrap(),
+        ..RuleDef::default()
+    };
+    assert_eq!(rule.rule_options::<Opts>(), Opts::default());
+
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            scope: Some(RuleScope::Repository),
+            ..rule
+        }],
+        ..NoMistakesConfig::default()
+    };
+    assert_eq!(
+        config.rule_application_options::<Opts>("example-rule"),
+        vec![Opts::default()]
+    );
+    assert!(config
+        .try_rule_application_options::<Opts>("example-rule")
+        .is_err());
 }
 
 #[test]

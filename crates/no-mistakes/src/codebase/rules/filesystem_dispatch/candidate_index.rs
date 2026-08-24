@@ -1,10 +1,12 @@
 use super::{preserved, FILESYSTEM_RULE_IDS};
 use crate::codebase::rules::{
-    rule_enabled, BANNED_PATHS, FORBIDDEN_WORKSPACE_CLOSURE, MARKDOWN_MERMAID_VALIDATION,
-    MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET, PRODUCTION_DEPENDENCY_DECLARATIONS,
+    rule_enabled, BANNED_PATHS, CONFIG_PATH_REFERENCES, FORBIDDEN_WORKSPACE_CLOSURE,
+    MARKDOWN_MERMAID_VALIDATION, MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,
+    NO_MISTAKES_CONFIG, PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE, PRODUCTION_DEPENDENCY_DECLARATIONS,
     RUST_MAX_LINES_PER_FILE, RUST_NO_INLINE_ALLOWS, RUST_NO_INLINE_TESTS, TSCONFIG_FILE_COVERAGE,
 };
 use crate::config::v2::NoMistakesConfig;
+use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -29,7 +31,7 @@ impl RuleCandidateIndex {
         tracked_files: &[PathBuf],
         metadata_files: &[PathBuf],
         inventory_paths: Option<Arc<Vec<PathBuf>>>,
-    ) -> Self {
+    ) -> Result<Self> {
         let root = crate::codebase::ts_resolver::normalize_path(root);
         let mut plans =
             BTreeMap::<(Vec<PathBuf>, bool, bool, bool, bool), Vec<&'static str>>::new();
@@ -40,7 +42,7 @@ impl RuleCandidateIndex {
         {
             plans
                 .entry((
-                    preserved::filesystem_rule_preserved_roots(&root, config, rule_id)
+                    preserved::filesystem_rule_preserved_roots(&root, config, rule_id)?
                         .into_iter()
                         .map(|path| crate::codebase::ts_resolver::normalize_path(&path))
                         .collect(),
@@ -48,7 +50,16 @@ impl RuleCandidateIndex {
                         || rule_id == PRODUCTION_DEPENDENCY_DECLARATIONS,
                     rule_id == BANNED_PATHS
                         || rule_id == TSCONFIG_FILE_COVERAGE
-                        || rule_id == super::VERSION_PIN_CONSISTENCY,
+                        || rule_id == super::VERSION_PIN_CONSISTENCY
+                        // These rules validate configuration references against
+                        // the repository's tracked inventory. Generated or
+                        // otherwise visible files must not satisfy them.
+                        || matches!(
+                            rule_id,
+                            CONFIG_PATH_REFERENCES
+                                | NO_MISTAKES_CONFIG
+                                | PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE
+                        ),
                     (rule_id == BANNED_PATHS
                         && config
                             .rule_applications(rule_id)
@@ -164,10 +175,10 @@ impl RuleCandidateIndex {
         .collect::<Vec<_>>();
         rust.sort();
         rust.dedup();
-        Self {
+        Ok(Self {
             by_rule,
             rust: Arc::new(rust),
-        }
+        })
     }
 
     pub(super) fn candidates(&self, rule_id: &str) -> &[PathBuf] {

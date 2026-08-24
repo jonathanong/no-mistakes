@@ -10,6 +10,22 @@ fn prepared_forbidden_dependencies_never_enters_legacy_discovery_fallback() {
 
     assert!(!body.contains("return super::check_with_config"));
 }
+
+#[test]
+fn legacy_graph_plan_keeps_default_fallback() {
+    let config = NoMistakesConfig {
+        rules: vec![crate::config::v2::schema::RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            options: serde_yaml::from_str("relationships: false").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+
+    assert!(graph_plan(&config).is_some());
+    assert!(try_graph_plan(&config).is_err());
+}
 use std::path::{Path, PathBuf};
 
 mod shared_facts;

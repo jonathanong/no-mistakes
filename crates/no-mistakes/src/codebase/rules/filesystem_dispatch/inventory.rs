@@ -2,6 +2,7 @@ use super::{
     candidate_index::RuleCandidateIndex, preserved, rule_enabled, MARKDOWN_CHILD_LINKS,
     MARKDOWN_MERMAID_VALIDATION, MARKDOWN_REACHABILITY, MARKDOWN_STRUCTURE_BUDGET,
 };
+use anyhow::Result;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -12,7 +13,7 @@ pub(super) fn tracked_inventory_with_markdown_project_roots(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
     snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
-) -> Arc<Vec<PathBuf>> {
+) -> Result<Arc<Vec<PathBuf>>> {
     let mut inventory = snapshot.tracked_paths_for(root).as_ref().clone();
     for rule_id in [
         MARKDOWN_CHILD_LINKS,
@@ -23,13 +24,13 @@ pub(super) fn tracked_inventory_with_markdown_project_roots(
         if !rule_enabled(config, rule_id) {
             continue;
         }
-        for project_root in preserved::filesystem_rule_preserved_roots(root, config, rule_id) {
+        for project_root in preserved::filesystem_rule_preserved_roots(root, config, rule_id)? {
             inventory.extend(snapshot.tracked_paths_for(&project_root).iter().cloned());
         }
     }
     inventory.sort();
     inventory.dedup();
-    Arc::new(inventory)
+    Ok(Arc::new(inventory))
 }
 
 pub(super) fn register_trusted_external_candidates(
@@ -37,7 +38,7 @@ pub(super) fn register_trusted_external_candidates(
     config: &crate::config::v2::NoMistakesConfig,
     candidates: &RuleCandidateIndex,
     sources: &crate::codebase::ts_source::SourceStore,
-) {
+) -> Result<()> {
     let trusted_roots = preserved::filesystem_rule_target_roots(
         root,
         config,
@@ -47,7 +48,7 @@ pub(super) fn register_trusted_external_candidates(
             MARKDOWN_REACHABILITY,
             MARKDOWN_STRUCTURE_BUDGET,
         ],
-    )
+    )?
     .into_iter()
     .filter(|path| !path.starts_with(root))
     .collect::<Vec<_>>();
@@ -57,4 +58,5 @@ pub(super) fn register_trusted_external_candidates(
         .cloned()
         .collect::<Vec<_>>();
     sources.register_trusted_regular_paths(&external, &trusted_roots);
+    Ok(())
 }

@@ -236,7 +236,7 @@ fn standalone_filesystem_rules_share_one_discovered_file_list() {
 
     let loaded = crate::config::v2::load_v2_config(&root, Some(&config)).unwrap();
     let preserved_roots =
-        preserved::filesystem_rule_target_roots(&root, &loaded, FILESYSTEM_RULE_IDS);
+        preserved::filesystem_rule_target_roots(&root, &loaded, FILESYSTEM_RULE_IDS).unwrap();
     let files = crate::codebase::ts_source::discover_files_preserving_roots(
         &root,
         &loaded.filesystem.skip_directories,

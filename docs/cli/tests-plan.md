@@ -60,8 +60,10 @@ JSON plans from the CLI keep snake_case keys. The Node `testsPlan()` /
 `testsImpact()` APIs return camelCase only (`changedFiles`, `selectedTests`,
 `executionTargets`, `fallbackTriggered`). `executionTargets` is the CI
 contract: tests grouped by runner, config, project, and optional path-prefix
-`name` (Swift packages). `--include-glob` / `includeGlob` on `testsPlan()`
-keeps only selected tests whose relative path matches.
+`name` (Swift packages). For configured framework plans, `--include-glob` /
+`includeGlob` on `testsPlan()` scopes discovered tests before planning: limits,
+fallback selection, group `remaining` counts, and execution targets all
+describe only matching tests.
 
 JSON plans include `changed_files`, the sorted, deduplicated, root-relative
 inventory prepared by that invocation. It is present even when no tests are

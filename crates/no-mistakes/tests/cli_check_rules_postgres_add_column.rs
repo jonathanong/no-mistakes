@@ -56,6 +56,43 @@ fn postgres_no_add_column_passes_create_table() {
 }
 
 #[test]
+fn postgres_no_add_column_allows_exact_configured_migration() {
+    let root = fixture("allowed");
+    let out = check_fixture_config(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_no_add_column_reports_mismatched_and_stale_allowed_migrations() {
+    let root = fixture("mismatch");
+    let out = check_fixture_config(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert!(
+        body.contains("does not match an allowedMigrations entry"),
+        "{body}"
+    );
+    assert!(
+        body.contains("stale postgres-no-add-column allowedMigrations entry"),
+        "{body}"
+    );
+}
+
+#[test]
+fn postgres_no_add_column_consumes_qualified_allowances_once() {
+    let root = fixture("qualified-repeat");
+    let out = check_fixture_config(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert_eq!(
+        body.matches("does not match an allowedMigrations entry")
+            .count(),
+        2,
+        "{body}"
+    );
+}
+
+#[test]
 fn postgres_no_add_column_json_has_rule_id() {
     let root = fixture("fail");
     let out = Command::new(bin())

@@ -156,7 +156,7 @@ fn run_check_with_facts_uses_package_tsconfig_aliases() {
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     let root = fixture.path().to_path_buf();
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let graph_plan = canonical_graph_plan(&config).unwrap();
+    let graph_plan = try_canonical_graph_plan(&config).unwrap().unwrap();
     let (graph, graph_context) =
         crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_config(
             &root, graph_plan, None,
@@ -203,7 +203,7 @@ fn run_check_with_facts_uses_the_caller_tsconfig_universe() {
     caller_files.sort();
 
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let graph_plan = canonical_graph_plan(&config).unwrap();
+    let graph_plan = try_canonical_graph_plan(&config).unwrap().unwrap();
     let (graph, graph_context) =
         crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_config(
             &root, graph_plan, None,

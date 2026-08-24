@@ -11,19 +11,19 @@ pub(super) fn filesystem_rule_target_roots(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
     rule_ids: &[&str],
-) -> Vec<PathBuf> {
+) -> anyhow::Result<Vec<PathBuf>> {
     let mut roots = Vec::new();
     for rule_id in rule_ids {
-        roots.extend(filesystem_rule_preserved_roots(root, config, rule_id));
+        roots.extend(filesystem_rule_preserved_roots(root, config, rule_id)?);
     }
-    sort_dedup_roots(roots)
+    Ok(sort_dedup_roots(roots))
 }
 
 pub(super) fn filesystem_rule_preserved_roots(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
     rule_id: &str,
-) -> Vec<PathBuf> {
+) -> anyhow::Result<Vec<PathBuf>> {
     let mut roots = Vec::new();
     for rule in config.rule_applications(rule_id) {
         if rule_id == super::FORBIDDEN_WORKSPACE_CLOSURE {
@@ -33,7 +33,7 @@ pub(super) fn filesystem_rule_preserved_roots(
         if !rule_supports_discovery_roots(rule_id) {
             continue;
         }
-        let opts: PreserveRootOptions = rule.rule_options();
+        let opts: PreserveRootOptions = rule.try_rule_options()?;
         if let Some(option_roots) = opts.roots {
             roots.extend(
                 option_roots
@@ -42,7 +42,7 @@ pub(super) fn filesystem_rule_preserved_roots(
             );
         }
     }
-    sort_dedup_roots(roots)
+    Ok(sort_dedup_roots(roots))
 }
 
 fn rule_supports_discovery_roots(rule_id: &str) -> bool {

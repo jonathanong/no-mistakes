@@ -40,8 +40,8 @@ fn check_with_config_tsconfig_and_files(
     }
     let opts_list: Vec<Options> = applications
         .iter()
-        .map(|rule| rule.rule_options())
-        .collect();
+        .map(|rule| rule.try_rule_options())
+        .collect::<Result<_>>()?;
     let union_allowed = union_allowed_set(&opts_list);
     let plan = GraphBuildPlan::from_allowed(union_allowed.as_ref());
     let graph =

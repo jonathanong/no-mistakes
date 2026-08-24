@@ -14,6 +14,7 @@ use std::time::Duration;
 
 mod architecture;
 mod config_path;
+mod finite_set_plan;
 mod graph_scope;
 mod integration_gitignore;
 mod parse_cache;
@@ -309,6 +310,40 @@ fn run_all_surfaces_react_enabled_config_errors() {
         .expect("expected react config error");
 
     assert!(err.to_string().contains("failed to parse"));
+}
+
+#[test]
+fn run_all_surfaces_invalid_rule_option_types() {
+    let root =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/check/invalid-rule-options");
+
+    let error = run_all(root, None, None)
+        .err()
+        .expect("invalid configured rule options must fail the check");
+    let message = format!("{error:#}");
+
+    assert!(message.contains(
+        "invalid options for rule `postgres-no-add-column` application `strict SQL migrations`"
+    ));
+    assert!(message.contains("options.sqlInclude"));
+    assert!(message.contains("boolean"));
+    assert!(message.contains("expected a sequence"));
+}
+
+#[test]
+fn run_all_surfaces_invalid_unique_exports_option_types() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/check/invalid-unique-exports-options");
+
+    let error = run_all(root, None, None)
+        .err()
+        .expect("invalid configured unique-exports options must fail the check");
+    let message = format!("{error:#}");
+
+    assert!(message.contains("invalid options for rule `unique-exports`"));
+    assert!(message.contains("options.uniqueAcrossTypesAndValues"));
+    assert!(message.contains("string"));
+    assert!(message.contains("expected a boolean"));
 }
 
 #[test]

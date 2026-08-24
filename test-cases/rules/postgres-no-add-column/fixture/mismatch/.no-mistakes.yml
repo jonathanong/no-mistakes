@@ -1,0 +1,12 @@
+rules:
+  - rule: postgres-no-add-column
+    scope: repository
+    options:
+      sqlInclude: ["migrations/**/*.sql"]
+      allowedMigrations:
+        - path: migrations/001.sql
+          table: posts
+          column: status
+          type: TEXT
+          nullable: false
+          default: "'published'"
