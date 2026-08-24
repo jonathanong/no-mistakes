@@ -1,6 +1,20 @@
 use super::*;
 
 #[test]
+fn canonical_graph_plan_preserves_legacy_fallback_while_try_is_strict() {
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(crate::config::v2::schema::RuleDef {
+        rule: crate::codebase::rules::FORBIDDEN_DEPENDENCIES.to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        options: serde_yaml::from_str("relationships: invalid").unwrap(),
+        ..Default::default()
+    });
+
+    assert!(canonical_graph_plan(&config).is_some());
+    assert!(try_canonical_graph_plan(&config).is_err());
+}
+
+#[test]
 fn legacy_prepared_request_without_sources_uses_the_request_session() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check-runner/empty");

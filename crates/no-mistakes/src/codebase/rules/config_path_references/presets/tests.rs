@@ -1,15 +1,19 @@
 #[test]
-fn workspace_filters_handle_braces_wildcards_and_guards() {
-    let extracted = super::pnpm::workspace_filters(
-        r#"
-pnpm install --filter '{./packages/app}...' \
-  --filter "./src/*..."
-if [ -d "./optional" ]; then pnpm install --filter './optional...'; fi
-test -f ./another/package.json && pnpm install --filter './another...'
-"#,
-    );
+fn workspace_filters_only_read_executable_yaml_run_scalars() {
+    let workflow = include_str!("../../../../../../../fixtures/rules/config-path-references/pnpm-workspace-filters/.github/workflows/filters.yml");
+    let document = serde_yaml::from_str(workflow).unwrap();
+    let extracted = super::pnpm::workspace_filters(&document);
     let values: Vec<_> = extracted.into_iter().map(|item| item.value).collect();
-    assert_eq!(values, vec!["./packages/app", "./src/*"]);
+    assert_eq!(
+        values,
+        vec![
+            "./unconditional",
+            "./optional",
+            "./packages/app",
+            "./src/*",
+            "./multiline"
+        ]
+    );
     assert!(super::matches_preset(
         "pnpm-workspace-filters",
         "action.yml",
@@ -19,14 +23,20 @@ test -f ./another/package.json && pnpm install --filter './another...'
 
 #[test]
 fn workspace_filters_scope_guards_and_accept_continued_selectors() {
-    let extracted = super::pnpm::workspace_filters(
+    let document = serde_yaml::from_str(
         r#"
-if [ -d ./packages/app ]; then pnpm install --filter ./packages/app...; fi
-pnpm install --filter \
-  {./packages/app}...
-pnpm install --filter './src/*...'
+jobs:
+  check:
+    steps:
+      - run: |
+          if [ -d ./packages/app ]; then pnpm install --filter ./packages/app...; fi
+          pnpm install --filter \
+            {./packages/app}...
+          pnpm install --filter './src/*...'
 "#,
-    );
+    )
+    .unwrap();
+    let extracted = super::pnpm::workspace_filters(&document);
     let values: Vec<_> = extracted.into_iter().map(|item| item.value).collect();
     assert_eq!(values, vec!["./packages/app", "./src/*"]);
 }

@@ -38,6 +38,28 @@ pub struct PreparedRulesCheck<'a> {
 #[doc(hidden)]
 pub fn canonical_graph_plan(
     config: &crate::config::v2::NoMistakesConfig,
+) -> Option<GraphBuildPlan> {
+    let mut plan = GraphBuildPlan::default();
+    let mut needed = false;
+    if rule_enabled(config, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS) {
+        plan.include(GraphBuildPlan::imports_and_workspace());
+        needed = true;
+    }
+    if let Some(reachability_plan) = required_entrypoint_reachability::graph_plan(config) {
+        plan.include(reachability_plan);
+        needed = true;
+    }
+    if let Some(forbidden_plan) = forbidden_dependencies::graph_plan(config) {
+        plan.include(forbidden_plan);
+        needed = true;
+    }
+    needed.then_some(plan)
+}
+
+/// Fallible graph-plan construction for check, CLI, and N-API request paths.
+#[doc(hidden)]
+pub fn try_canonical_graph_plan(
+    config: &crate::config::v2::NoMistakesConfig,
 ) -> Result<Option<GraphBuildPlan>> {
     let mut plan = GraphBuildPlan::default();
     let mut needed = false;

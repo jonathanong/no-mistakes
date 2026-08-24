@@ -81,19 +81,31 @@ fn scan_file(
             extracted,
         )?;
     }
-    for extracted in matched
-        .iter()
-        .filter(|preset| *preset == &"pnpm-workspace-filters")
-        .flat_map(|_| pnpm::workspace_filters(&source))
-    {
-        push_missing(
-            context.root,
-            path,
-            rel,
-            context.rel_files,
-            context.findings,
-            extracted,
-        )?;
+    if matched.contains(&"pnpm-workspace-filters") {
+        let value = match crate::codebase::structured_value::parse_structured_value(path, &source) {
+            Ok(value) => value,
+            Err(error) => {
+                context.findings.push(RuleFinding {
+                    rule: RULE_ID.to_string(),
+                    file: rel.to_string(),
+                    line: 1,
+                    message: format!("{rel}: {error}"),
+                    import: None,
+                    target: None,
+                });
+                return Ok(());
+            }
+        };
+        for extracted in pnpm::workspace_filters(&value) {
+            push_missing(
+                context.root,
+                path,
+                rel,
+                context.rel_files,
+                context.findings,
+                extracted,
+            )?;
+        }
     }
     let structured: Vec<&str> = matched
         .iter()

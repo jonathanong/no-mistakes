@@ -40,7 +40,7 @@ pub(super) fn run(
             suppression_sources: Vec::new(),
         });
     }
-    if let Some(graph_plan) = canonical_graph_plan(config)? {
+    if let Some(graph_plan) = try_canonical_graph_plan(config)? {
         let (required_facts, _) =
             required_graph_facts(root, graph_plan, config_path, prepared_graph, &session);
         if !shared.graph_plan().covers(required_facts) {
@@ -52,7 +52,7 @@ pub(super) fn run(
     let owned_graph;
     let dependency_graph = if let Some(graph) = dependency_graph {
         Some(graph)
-    } else if let Some(plan) = canonical_graph_plan(config)? {
+    } else if let Some(plan) = try_canonical_graph_plan(config)? {
         owned_graph =
             crate::perf_trace::trace(
                 "rules.canonical_dependency_graph",

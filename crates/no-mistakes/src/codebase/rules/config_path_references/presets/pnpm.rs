@@ -1,12 +1,24 @@
 use super::super::BaseDir;
 use super::types::Extracted;
 use regex::Regex;
+use serde_yaml::Value;
 
-pub(crate) fn workspace_filters(source: &str) -> Vec<Extracted> {
+pub(crate) fn workspace_filters(document: &Value) -> Vec<Extracted> {
+    run_scripts(document)
+        .into_iter()
+        .flat_map(workspace_filters_in_script)
+        .enumerate()
+        .map(|(index, mut extracted)| {
+            extracted.field = format!("pnpm filter {index}");
+            extracted
+        })
+        .collect()
+}
+
+fn workspace_filters_in_script(source: &str) -> Vec<Extracted> {
     let filter = Regex::new(r#"--filter\s+(?:\\\s*)?(?:"([^"]+)"|'([^']+)'|([^\s'"]+))"#)
         .expect("pnpm filter pattern is valid");
     let mut extracted = Vec::new();
-    let mut index = 0;
     for capture in filter.captures_iter(source) {
         let raw = capture
             .get(1)
@@ -17,41 +29,40 @@ pub(crate) fn workspace_filters(source: &str) -> Vec<Extracted> {
         let Some(path) = normalize_filter(raw) else {
             continue;
         };
-        if is_guarded(
-            command_scope(source, capture.get(0).unwrap().start()),
-            &path,
-        ) || path.starts_with('!')
-        {
+        if is_guarded(source, capture.get(0).unwrap().start(), &path) || path.starts_with('!') {
             continue;
         }
         extracted.push(Extracted {
-            field: format!("pnpm filter {index}"),
+            field: String::new(),
             allow_globs: path.contains('*') || path.contains('?') || path.contains('{'),
             base_dir: BaseDir::Root,
             value: path,
         });
-        index += 1;
     }
     extracted
 }
 
-fn command_scope(source: &str, offset: usize) -> &str {
-    let line_start = source[..offset].rfind('\n').map_or(0, |index| index + 1);
-    let mut line_end = source[offset..]
-        .find('\n')
-        .map_or(source.len(), |index| offset + index);
-    while source[line_start..line_end].trim_end().ends_with('\\') {
-        let next_start = line_end.saturating_add(1);
-        let Some(next_end) = source[next_start..]
-            .find('\n')
-            .map(|index| next_start + index)
-        else {
-            line_end = source.len();
-            break;
-        };
-        line_end = next_end;
+fn run_scripts(document: &Value) -> Vec<&str> {
+    let mut scripts = Vec::new();
+    if let Some(jobs) = document.get("jobs").and_then(Value::as_mapping) {
+        for job in jobs.values() {
+            scripts.extend(step_run_scripts(job));
+        }
     }
-    &source[line_start..line_end]
+    if let Some(runs) = document.get("runs") {
+        scripts.extend(step_run_scripts(runs));
+    }
+    scripts
+}
+
+fn step_run_scripts(value: &Value) -> Vec<&str> {
+    value
+        .get("steps")
+        .and_then(Value::as_sequence)
+        .into_iter()
+        .flatten()
+        .filter_map(|step| step.get("run").and_then(Value::as_str))
+        .collect()
 }
 
 fn normalize_filter(raw: &str) -> Option<String> {
@@ -68,7 +79,7 @@ fn normalize_filter(raw: &str) -> Option<String> {
     Some(path.to_string())
 }
 
-fn is_guarded(source: &str, path: &str) -> bool {
+fn is_guarded(source: &str, filter_offset: usize, path: &str) -> bool {
     if path.contains('*') || path.contains('?') || path.contains('{') {
         return false;
     }
@@ -82,9 +93,20 @@ fn is_guarded(source: &str, path: &str) -> bool {
         format!(r#"test\s+-f\s+[\"']?{file}[\"']?"#),
         format!(r#"test\s+-d\s+[\"']?{directory}[\"']?"#),
     ];
+    let pnpm_start = source[..filter_offset]
+        .rfind("pnpm")
+        .unwrap_or(filter_offset);
     patterns.iter().any(|pattern| {
-        Regex::new(pattern)
-            .expect("pnpm filter guard pattern is valid")
-            .is_match(source)
+        let guard = Regex::new(pattern).expect("pnpm filter guard pattern is valid");
+        let guarded = guard.find_iter(&source[..pnpm_start]).any(|matched| {
+            let after_guard = &source[matched.end()..pnpm_start];
+            // `test -d path; pnpm …` is not conditional. The guard controls
+            // this pnpm invocation only through shell `&&` or an unclosed if.
+            after_guard.trim().trim_end_matches('\\').trim() == "&&"
+                || (source[..matched.start()].trim_end().ends_with("if")
+                    && after_guard.contains("then")
+                    && !after_guard.contains("fi"))
+        });
+        guarded
     })
 }

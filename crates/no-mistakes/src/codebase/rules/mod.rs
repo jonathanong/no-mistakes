@@ -103,7 +103,7 @@ pub use ids::*;
 pub use run::{
     canonical_graph_plan, canonical_graph_requires_full_file_universe,
     run_check_with_config_facts_playwright_and_graph,
-    run_check_with_config_facts_playwright_and_graph_with_suppression,
+    run_check_with_config_facts_playwright_and_graph_with_suppression, try_canonical_graph_plan,
 };
 pub use run::{
     run_check, run_check_with_config_and_facts_and_playwright, run_check_with_facts,

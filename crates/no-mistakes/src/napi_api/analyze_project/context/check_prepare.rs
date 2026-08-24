@@ -57,7 +57,7 @@ impl SharedCheckContext {
         let enabled = ConfiguredChecks::from_config(config);
         let filesystem_rules_enabled = filesystem_rules_configured(config);
         let playwright_rules_enabled = crate::playwright::rules::configured(config);
-        let graph_plan = crate::codebase::rules::canonical_graph_plan(config)?;
+        let graph_plan = crate::codebase::rules::try_canonical_graph_plan(config)?;
         let graph_requires_full_file_universe =
             crate::codebase::rules::canonical_graph_requires_full_file_universe(config);
         let graph_rules_enabled = graph_plan.is_some();
