@@ -62,6 +62,10 @@ jobs:
           pnpm install --filter ./
           pnpm install --filter packages/missing-prefix
           pnpm install --filter '!./negated'
+runs:
+  using: composite
+  steps:
+    - run: pnpm install --filter ./composite-action...
 "#,
     )
     .unwrap();
@@ -78,6 +82,7 @@ jobs:
             "./unconditional",
             "./target",
             "./trailing-semicolon",
+            "./composite-action",
         ]
     );
 }

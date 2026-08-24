@@ -2,6 +2,8 @@ use super::*;
 use crate::config::v2::NoMistakesConfig;
 use std::path::PathBuf;
 
+mod rule_application;
+
 fn v2_config_fixture(name: &str) -> NoMistakesConfig {
     let yaml = std::fs::read_to_string(
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))

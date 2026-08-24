@@ -38,7 +38,7 @@ impl RuleApplicationConfig {
         let deserializer = self.options.clone().into_deserializer();
         serde_path_to_error::deserialize(deserializer).map_err(|error| {
             let path = error.path().to_string();
-            let location = if path.is_empty() {
+            let location = if path.is_empty() || path == "." {
                 "options".to_string()
             } else {
                 format!("options.{path}")
