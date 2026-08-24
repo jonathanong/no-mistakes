@@ -7,10 +7,7 @@ use std::path::{Path, PathBuf};
 mod comparison;
 mod manifests;
 mod scan;
-mod workspace;
-
-#[cfg(test)]
-pub(super) use workspace::normalize_entry as normalize_workspace_entry;
+pub(super) mod workspace;
 
 pub const RULE_ID: &str = "package-json-nested-workspace-coverage";
 

@@ -3,10 +3,7 @@ use super::Options;
 use std::collections::HashSet;
 
 mod checks;
-mod validation;
-
-#[cfg(test)]
-pub(super) use validation::{is_canonical_timestamp, is_exact_selector};
+pub(super) mod validation;
 
 pub(super) struct Issue {
     pub(super) file: FileKind,

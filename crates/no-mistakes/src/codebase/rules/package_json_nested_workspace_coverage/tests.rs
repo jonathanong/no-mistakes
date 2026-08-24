@@ -1,3 +1,4 @@
+use super::workspace::normalize_entry;
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},
@@ -137,15 +138,15 @@ fn fails_closed_when_a_matching_dependency_has_no_visible_target_manifest() {
 #[test]
 fn normalizes_workspace_entries_without_collapsing_unresolved_parent_segments() {
     assert_eq!(
-        normalize_workspace_entry("../../ts-shared/deploy-environment"),
+        normalize_entry("../../ts-shared/deploy-environment"),
         "../../ts-shared/deploy-environment"
     );
     assert_eq!(
-        normalize_workspace_entry("./../../ts-shared/unused/../deploy-environment"),
+        normalize_entry("./../../ts-shared/unused/../deploy-environment"),
         "../../ts-shared/deploy-environment"
     );
     assert_eq!(
-        normalize_workspace_entry(r"..\..\ts-shared\deploy-environment"),
+        normalize_entry(r"..\..\ts-shared\deploy-environment"),
         "../../ts-shared/deploy-environment"
     );
 }
@@ -153,7 +154,7 @@ fn normalizes_workspace_entries_without_collapsing_unresolved_parent_segments() 
 #[test]
 fn preserves_wildcard_parent_traversal_that_cannot_be_normalized_lexically() {
     assert_eq!(
-        normalize_workspace_entry("../packages/*/../utils"),
+        normalize_entry("../packages/*/../utils"),
         "../packages/*/../utils"
     );
 }

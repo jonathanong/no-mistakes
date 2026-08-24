@@ -177,29 +177,33 @@ fn lockfile_name_and_selector_helpers() {
 
 #[test]
 fn temporary_group_selector_and_timestamp_validation_is_exact() {
-    assert!(super::policy::is_exact_selector(
+    assert!(super::policy::validation::is_exact_selector(
         "demo-temporary-package@9.9.9"
     ));
-    assert!(super::policy::is_exact_selector(
+    assert!(super::policy::validation::is_exact_selector(
         "@acme/demo@1.0.0-beta+build"
     ));
-    assert!(!super::policy::is_exact_selector(
+    assert!(!super::policy::validation::is_exact_selector(
         "demo-temporary-package@^9.9.9"
     ));
-    assert!(!super::policy::is_exact_selector("@acme@1.0.0"));
-    assert!(!super::policy::is_exact_selector("demo@temporary@1.0.0"));
-    assert!(!super::policy::is_exact_selector("demo-temporary-package"));
+    assert!(!super::policy::validation::is_exact_selector("@acme@1.0.0"));
+    assert!(!super::policy::validation::is_exact_selector(
+        "demo@temporary@1.0.0"
+    ));
+    assert!(!super::policy::validation::is_exact_selector(
+        "demo-temporary-package"
+    ));
 
-    assert!(super::policy::is_canonical_timestamp(
+    assert!(super::policy::validation::is_canonical_timestamp(
         "2027-04-30T23:59:59Z"
     ));
-    assert!(super::policy::is_canonical_timestamp(
+    assert!(super::policy::validation::is_canonical_timestamp(
         "2027-12-31T00:00:00Z"
     ));
-    assert!(!super::policy::is_canonical_timestamp(
+    assert!(!super::policy::validation::is_canonical_timestamp(
         "2027-04-31T00:00:00Z"
     ));
-    assert!(!super::policy::is_canonical_timestamp(
+    assert!(!super::policy::validation::is_canonical_timestamp(
         "2027-13-01T00:00:00Z"
     ));
 }
