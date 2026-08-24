@@ -351,7 +351,7 @@ testPlan:
 }
 
 #[test]
-fn schema_known_rule_option_paths_are_checked_but_exclusions_are_not() {
+fn schema_known_rule_option_paths_are_checked_but_non_path_options_are_not() {
     let root = fixture("pass");
     let config = enable(
         serde_yaml::from_str(
@@ -360,7 +360,7 @@ rules:
   - rule: forbidden-dependencies
     options:
       roots: [missing-entry.mts]
-      tsconfig: missing-tsconfig.json
+      nonexistentPath: missing-non-schema-path.json
       excludePaths: [missing-until-created/**]
 "#,
         )
@@ -380,7 +380,7 @@ rules:
     assert!(
         messages
             .iter()
-            .any(|message| message.contains("rules[1].options.tsconfig[0]")),
+            .all(|message| !message.contains("nonexistentPath")),
         "{messages:?}"
     );
     assert!(
@@ -388,5 +388,40 @@ rules:
             .iter()
             .all(|message| !message.contains("excludePaths")),
         "{messages:?}"
+    );
+}
+
+#[test]
+fn nested_workspace_roots_must_match_tracked_directories_or_globs() {
+    let root = fixture("pass");
+    let config = enable(
+        serde_yaml::from_str(
+            r#"
+rules:
+  - rule: package-json-nested-workspace-coverage
+    options:
+      roots: [missing-root, web/*]
+      dependencyNamePrefixes: ['@shared/']
+"#,
+        )
+        .unwrap(),
+    );
+    let findings = check_with_files(&root, &config, &files(&root)).unwrap();
+    let messages: Vec<_> = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect();
+    assert!(
+        messages
+            .iter()
+            .any(|message| message.contains("rules[1].options.roots[0]")
+                && message.contains("missing-root")),
+        "{messages:?}"
+    );
+    assert!(
+        messages
+            .iter()
+            .all(|message| !message.contains("rules[1].options.roots[1]")),
+        "the tracked web/src/index.ts satisfies the directory glob: {messages:?}"
     );
 }

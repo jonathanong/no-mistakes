@@ -193,6 +193,65 @@ fn banned_paths_uses_tracked_candidates_without_narrowing_other_rules() {
 }
 
 #[test]
+fn tracked_reference_rules_reject_visible_untracked_candidates() {
+    let root = crate::codebase::ts_resolver::normalize_path(Path::new(env!("CARGO_MANIFEST_DIR")));
+    let tracked = root.join("tracked.json");
+    let untracked_exact = root.join("generated.json");
+    let untracked_directory_child = root.join("generated-dir/file.json");
+    let untracked_nested_workspace = root.join("generated/package.json");
+    let files = vec![
+        tracked.clone(),
+        untracked_exact,
+        untracked_directory_child,
+        untracked_nested_workspace,
+    ];
+    let tracked_files = vec![tracked.clone()];
+    let repository_rule = |rule: &str| RuleDef {
+        rule: rule.to_string(),
+        scope: Some(RuleScope::Repository),
+        ..Default::default()
+    };
+    let config = NoMistakesConfig {
+        rules: vec![
+            repository_rule(super::super::CONFIG_PATH_REFERENCES),
+            repository_rule(super::super::NO_MISTAKES_CONFIG),
+            repository_rule(super::super::PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE),
+            repository_rule(super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES),
+        ],
+        ..Default::default()
+    };
+
+    let index = RuleCandidateIndex::prepare_with_inventory(
+        &root,
+        &config,
+        &files,
+        &tracked_files,
+        &[],
+        None,
+    )
+    .unwrap();
+
+    for rule_id in [
+        super::super::CONFIG_PATH_REFERENCES,
+        super::super::NO_MISTAKES_CONFIG,
+        super::super::PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE,
+    ] {
+        assert_eq!(
+            index.candidates(rule_id),
+            std::slice::from_ref(&tracked),
+            "{rule_id} accepts only tracked candidates"
+        );
+    }
+    let mut visible_candidates = files.clone();
+    visible_candidates.sort();
+    assert_eq!(
+        index.candidates(super::super::NO_EMPTY_OR_COMMENTS_ONLY_FILES),
+        visible_candidates,
+        "unrelated rules retain the visible source universe"
+    );
+}
+
+#[test]
 fn markdown_repository_rules_use_the_full_tracked_inventory_not_untracked_files() {
     let root = crate::codebase::ts_resolver::normalize_path(Path::new(env!("CARGO_MANIFEST_DIR")));
     let tracked_root = root.join("CLAUDE.md");

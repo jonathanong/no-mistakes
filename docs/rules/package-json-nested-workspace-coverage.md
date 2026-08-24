@@ -18,6 +18,10 @@ rules:
 `package.json` is a separate root. `dependencyFields` is optional and defaults
 to `dependencies`, `devDependencies`, and `optionalDependencies`.
 
+`no-mistakes-config` validates every `roots` entry against the tracked
+repository inventory, so a deleted directory or a glob that matches nothing
+fails before it can silently disable nested-workspace coverage.
+
 Counterexample: `apps/api/package.json` declares `@shared/utils`, but
 `apps/package.json` omits `../packages/utils` from `workspaces`. A wildcard
 such as `../packages/*` that covers a matching dependency package is also

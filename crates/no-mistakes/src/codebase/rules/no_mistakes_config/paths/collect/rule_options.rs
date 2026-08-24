@@ -49,6 +49,9 @@ fn collect_rule_paths(rule: &str, value: &Value, field: &str, refs: &mut Vec<Ref
             paths_at(value, "lockfile", field, Kind::File, refs);
             paths_at(value, "scopes", field, Kind::Directory, refs);
         }
+        "package-json-nested-workspace-coverage" => {
+            paths_at(value, "roots", field, Kind::Directory, refs);
+        }
         "package-json-workspace-coverage" => {
             paths_at(value, "packageRoots", field, Kind::Directory, refs);
             paths_at(value, "allowlist", field, Kind::File, refs);
