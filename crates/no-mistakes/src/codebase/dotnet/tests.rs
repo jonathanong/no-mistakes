@@ -25,6 +25,7 @@ fn csharp_parser_extracts_usings_declarations_refs_and_xunit_tests() {
 
 #[test]
 fn dotnet_lockfile_names_allow_generic_and_variant_locks_only() {
+    assert!(!is_dotnet_lockfile(Path::new("/")));
     for name in [
         "packages.lock.json",
         "packages.net10.0-maccatalyst.arm64.lock.json",
