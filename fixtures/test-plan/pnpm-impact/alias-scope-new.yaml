@@ -1,0 +1,21 @@
+lockfileVersion: '9.0'
+importers:
+  apps/changed:
+    dependencies:
+      feature-alias:
+        specifier: npm:feature@2.0.0
+        version: feature@2.0.0
+  apps/unrelated:
+    dependencies:
+      feature-alias:
+        specifier: npm:feature@1.0.0
+        version: feature@1.0.0
+packages:
+  feature@1.0.0:
+    dependencies:
+      leaf: 1.0.0
+  feature@2.0.0:
+    dependencies:
+      leaf: 2.0.0
+  leaf@1.0.0: { resolution: { integrity: old } }
+  leaf@2.0.0: { resolution: { integrity: new } }

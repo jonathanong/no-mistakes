@@ -170,6 +170,21 @@ fn impact_importer_paths_preserve_exact_v6_and_alias_resolutions() {
 }
 
 #[test]
+fn impact_importer_paths_scope_transitive_aliases_to_matching_importers() {
+    let old = fixture("alias-scope-old.yaml");
+    let new = fixture("alias-scope-new.yaml");
+    let names = impact_names(&old, &new, std::iter::empty());
+    let paths = impact_importer_paths(&old, &new, &names);
+
+    assert!(names.contains(&"feature".to_string()));
+    assert!(names.contains(&"feature-alias".to_string()));
+    assert_eq!(
+        paths.get("feature-alias"),
+        Some(&vec!["apps/changed".to_string()])
+    );
+}
+
+#[test]
 fn impact_importer_paths_preserve_v6_multi_peer_underscore_contexts() {
     let old = fixture("exact-v6-peer-context-old.yaml");
     let new = fixture("exact-v6-peer-context-new.yaml");

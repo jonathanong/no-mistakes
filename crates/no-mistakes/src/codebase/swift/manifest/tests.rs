@@ -39,6 +39,12 @@ const FORMATTING_CHANGED: &str = include_str!(
 );
 const DYNAMIC: &str =
     include_str!("../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/dynamic.swift");
+const TOOLS_VERSION_BASE: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/tools-version-base.swift"
+);
+const TOOLS_VERSION_CHANGED: &str = include_str!(
+    "../../../../../../fixtures/test-plan/swift-manifest-diff/fixture/tools-version-changed.swift"
+);
 
 #[test]
 fn manifest_targets_handle_nested_dependency_parentheses() {
@@ -196,6 +202,15 @@ fn manifest_dependency_only_diff_diagnoses_dynamic_declarations() {
         dependency_only_manifest_change(DYNAMIC, DYNAMIC).unwrap_err(),
         SwiftManifestDiagnostic::UnsupportedDynamicDeclaration
     );
+}
+
+#[test]
+fn tools_version_changes_remain_structural_and_broad() {
+    assert!(!formatting_only_manifest_change(
+        TOOLS_VERSION_BASE,
+        TOOLS_VERSION_CHANGED
+    ));
+    assert!(!dependency_only_manifest_change(TOOLS_VERSION_BASE, TOOLS_VERSION_CHANGED).unwrap());
 }
 
 #[test]

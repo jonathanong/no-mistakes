@@ -242,9 +242,15 @@ mod tests;
 
 pub(super) struct LockfileSeedResult {
     pub(super) candidates: Vec<SelectedTest>,
-    /// Relative lockfile paths that had no import-graph path to any test
+    /// Changed dependencies that had no import-graph path to any test
     /// (e.g. tooling deps like `typescript`, `eslint`).
-    pub(super) untraceable_lockfiles: Vec<String>,
+    pub(super) untraceable_dependencies: Vec<UntraceableLockfileDependency>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub(super) struct UntraceableLockfileDependency {
+    pub(super) package_name: String,
+    pub(super) lockfile: String,
 }
 
 pub(super) fn lockfile_seed_candidates(
@@ -257,11 +263,7 @@ pub(super) fn lockfile_seed_candidates(
 ) -> LockfileSeedResult {
     let mut candidates_map: std::collections::BTreeMap<String, SelectedTest> =
         std::collections::BTreeMap::new();
-    let lockfiles: std::collections::BTreeSet<_> = lockfile_changed_packages
-        .iter()
-        .map(|(_, file, _)| file.clone())
-        .collect();
-    let mut traceable_lockfiles = std::collections::BTreeSet::new();
+    let mut untraceable_dependencies = std::collections::BTreeSet::new();
 
     for (pkg_name, lockfile_rel, manifest_scope) in lockfile_changed_packages {
         // External modules use Module(name); workspace packages use their entry file.
@@ -272,8 +274,10 @@ pub(super) fn lockfile_seed_candidates(
             } else if let Some(entry) = workspace_map.resolve_package(pkg_name) {
                 NodeId::file(entry.clone())
             } else {
-                // An absent transitive leaf must not override another changed
-                // locator in this lockfile that has a causal test path.
+                untraceable_dependencies.insert(UntraceableLockfileDependency {
+                    package_name: pkg_name.clone(),
+                    lockfile: lockfile_rel.clone(),
+                });
                 continue;
             }
         };
@@ -321,17 +325,17 @@ pub(super) fn lockfile_seed_candidates(
                 insert_lockfile_candidate(&mut candidates_map, rel_test, lockfile_rel, path, edges);
             }
         }
-        if seeded_any_test {
-            traceable_lockfiles.insert(lockfile_rel.clone());
+        if !seeded_any_test {
+            untraceable_dependencies.insert(UntraceableLockfileDependency {
+                package_name: pkg_name.clone(),
+                lockfile: lockfile_rel.clone(),
+            });
         }
     }
 
     LockfileSeedResult {
         candidates: candidates_map.into_values().collect(),
-        untraceable_lockfiles: lockfiles
-            .difference(&traceable_lockfiles)
-            .cloned()
-            .collect(),
+        untraceable_dependencies: untraceable_dependencies.into_iter().collect(),
     }
 }
 

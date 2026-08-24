@@ -378,13 +378,14 @@ pub(crate) fn generate_configured_plan_with_prepared(
     }
 
     if let Some(seed_result) = lockfile_seed_result {
-        for file in &seed_result.untraceable_lockfiles {
+        for dependency in &seed_result.untraceable_dependencies {
             let warning = Warning {
                 r#type: "package-dependency-untraceable".to_string(),
                 message: format!(
-                    "`{file}` changed a dependency without a causal path to a configured test; full-suite selection requires global fallback opt-in"
+                    "`{}` changed `{}` without a causal path to a configured test; full-suite selection requires global fallback opt-in",
+                    dependency.lockfile, dependency.package_name,
                 ),
-                file: file.clone(),
+                file: dependency.lockfile.clone(),
                 line: None,
             };
             if warnings_seen.insert(warning_key(&warning)) {
@@ -392,14 +393,14 @@ pub(crate) fn generate_configured_plan_with_prepared(
             }
         }
         if lockfile_seeds_injected {
-            if !seed_result.untraceable_lockfiles.is_empty()
+            if !seed_result.untraceable_dependencies.is_empty()
                 && effective_global_config_fallback(&env, args)
             {
-                let lf = &seed_result.untraceable_lockfiles[0];
-                let changed_file = root.join(lf);
+                let dependency = &seed_result.untraceable_dependencies[0];
+                let changed_file = root.join(&dependency.lockfile);
                 let msg = format!(
-                    "`{}` changed a transitive dependency; falling back to full test suite",
-                    lf
+                    "`{}` changed transitive dependency `{}`; falling back to full test suite",
+                    dependency.lockfile, dependency.package_name,
                 );
                 let mut plan = fallback_plan(
                     root,

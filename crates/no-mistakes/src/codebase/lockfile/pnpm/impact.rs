@@ -54,19 +54,29 @@ pub(crate) fn impact_importer_paths(
             };
             if exact.contains(&locator) {
                 paths
-                    .entry(locator.name)
+                    .entry(locator.name.clone())
                     .or_default()
                     .insert(importer.path.clone());
+                if dependency.alias != locator.name {
+                    paths
+                        .entry(dependency.alias)
+                        .or_default()
+                        .insert(importer.path.clone());
+                }
             }
         }
     }
     let importer_names: BTreeSet<_> = importer_change_names(old, new, std::iter::empty())
         .into_iter()
         .collect();
+    let changed_importers = changed_importer_paths(old, new);
     for importer in parse_importers_for_impact(new)
         .into_iter()
         .chain(parse_importers_for_impact(old))
     {
+        if !changed_importers.contains(&importer.path) {
+            continue;
+        }
         for dependency in importer
             .dependencies
             .into_iter()
@@ -87,5 +97,27 @@ pub(crate) fn impact_importer_paths(
     paths
         .into_iter()
         .map(|(name, paths)| (name, paths.into_iter().collect()))
+        .collect()
+}
+
+fn changed_importer_paths(old: &str, new: &str) -> BTreeSet<String> {
+    let old_importers = parse_importers_for_impact(old);
+    let new_importers = parse_importers_for_impact(new);
+    let old_by_path: BTreeMap<_, _> = old_importers
+        .iter()
+        .map(|importer| (&importer.path, importer))
+        .collect();
+    let new_by_path: BTreeMap<_, _> = new_importers
+        .iter()
+        .map(|importer| (&importer.path, importer))
+        .collect();
+    old_by_path
+        .keys()
+        .chain(new_by_path.keys())
+        .copied()
+        .collect::<BTreeSet<_>>()
+        .into_iter()
+        .filter(|path| old_by_path.get(path) != new_by_path.get(path))
+        .cloned()
         .collect()
 }

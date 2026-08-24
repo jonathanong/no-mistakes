@@ -64,7 +64,7 @@ fn post_loop_seed_merges_into_used_targeted_test_at_zero_budget() {
                 reasons: vec![lockfile_reason.clone()],
                 targets: Vec::new(),
             }],
-            untraceable_lockfiles: Vec::new(),
+            untraceable_dependencies: Vec::new(),
         },
         false,
         &discovered.tests,

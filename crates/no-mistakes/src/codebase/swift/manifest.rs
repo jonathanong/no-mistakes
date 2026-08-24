@@ -32,6 +32,11 @@ pub(crate) fn formatting_only_manifest_change(before: &str, after: &str) -> bool
 
 fn normalize_manifest(source: &str) -> String {
     let mut normalized = String::new();
+    if let Some(version) = tools_version_directive(source) {
+        normalized.push_str("swift-tools-version:");
+        normalized.push_str(&version);
+        normalized.push('\n');
+    }
     let mut scanner = Scanner::new(source);
     while let Some(index) = scanner.next_code_index() {
         let ch = source[index..]
@@ -50,6 +55,18 @@ fn normalize_manifest(source: &str) -> String {
         }
     }
     normalized
+}
+
+fn tools_version_directive(source: &str) -> Option<String> {
+    source.lines().next().and_then(|line| {
+        let line = line.trim();
+        let version = line
+            .strip_prefix("//")?
+            .trim_start()
+            .strip_prefix("swift-tools-version:")?
+            .trim();
+        (!version.is_empty()).then(|| version.to_string())
+    })
 }
 
 fn manifest_projection(source: &str) -> Result<String, SwiftManifestDiagnostic> {

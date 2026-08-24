@@ -3,7 +3,7 @@ use crate::tests::{PlanArgs, TestFramework};
 use std::path::PathBuf;
 
 #[test]
-fn reachable_lockfile_package_prevents_fallback_for_an_untraceable_transitive_leaf() {
+fn untraceable_lockfile_dependency_falls_back_even_when_another_dependency_is_reachable() {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/test-plan/pnpm-traceability/fixture");
     let fixture = materialize_saved_fixture(&source);
@@ -42,17 +42,9 @@ fn reachable_lockfile_package_prevents_fallback_for_an_untraceable_transitive_le
     })
     .unwrap();
 
-    assert!(!plan.fallback_triggered, "{plan:#?}");
-    assert_eq!(
-        plan.groups
-            .iter()
-            .find(|group| group.r#type == "dependencies")
-            .map(|group| group.selected.as_slice()),
-        Some(&["reachable.test.ts".to_string()][..]),
-        "{plan:#?}"
-    );
-    assert!(!plan
-        .warnings
-        .iter()
-        .any(|warning| { warning.r#type == "package-dependency-untraceable" }));
+    assert!(plan.fallback_triggered, "{plan:#?}");
+    assert!(plan.warnings.iter().any(|warning| {
+        warning.r#type == "package-dependency-untraceable"
+            && warning.message.contains("untraceable-leaf")
+    }));
 }

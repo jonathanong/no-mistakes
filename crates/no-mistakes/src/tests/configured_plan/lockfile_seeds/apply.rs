@@ -16,12 +16,12 @@ pub(in crate::tests::configured_plan) fn apply_lockfile_seeds(
     group_results: &mut Vec<TestPlanGroupResult>,
     discovered_tests: &DiscoveredTests,
 ) -> Result<Option<TestPlan>> {
-    if !seed_result.untraceable_lockfiles.is_empty() && global_config_fallback {
-        let lf = &seed_result.untraceable_lockfiles[0];
-        let changed_file = root.join(lf);
+    if !seed_result.untraceable_dependencies.is_empty() && global_config_fallback {
+        let dependency = &seed_result.untraceable_dependencies[0];
+        let changed_file = root.join(&dependency.lockfile);
         let msg = format!(
-            "`{}` changed a transitive dependency; falling back to full test suite",
-            lf
+            "`{}` changed transitive dependency `{}`; falling back to full test suite",
+            dependency.lockfile, dependency.package_name,
         );
         let mut plan = fallback_plan(
             root,
