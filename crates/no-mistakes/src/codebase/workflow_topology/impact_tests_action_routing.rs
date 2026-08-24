@@ -34,3 +34,14 @@ fn local_actions_are_found_through_reusable_workflows_and_outside_github_actions
         assert_case(case);
     }
 }
+
+#[test]
+fn unresolved_nested_reachable_actions_fail_open_even_when_the_parent_resolves() {
+    for name in ["nested-action-missing", "nested-action-malformed"] {
+        let report = super::tests::report(name);
+        assert!(report.global_fallback, "{name}");
+        assert!(report.diagnostics.iter().any(|diagnostic| {
+            diagnostic.code == "unowned-local-action" && diagnostic.root_job_ids.is_none()
+        }));
+    }
+}

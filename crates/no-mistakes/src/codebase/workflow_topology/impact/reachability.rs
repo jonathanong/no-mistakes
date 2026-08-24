@@ -3,16 +3,33 @@ use super::yaml::yaml_at;
 use git2::{Repository, Tree};
 use std::collections::BTreeSet;
 
+pub(super) struct ReachableActions {
+    pub(super) paths: BTreeSet<String>,
+    pub(super) unresolved: BTreeSet<String>,
+}
+
 pub(super) fn reachable_actions(
     repo: &Repository,
     base: &Tree<'_>,
     head: &Tree<'_>,
     entry: &str,
-) -> BTreeSet<String> {
-    [base, head]
+) -> ReachableActions {
+    let paths = [base, head]
         .into_iter()
         .flat_map(|tree| reachable_actions_in_tree(repo, tree, entry))
-        .collect()
+        .collect::<BTreeSet<_>>();
+    let unresolved = paths
+        .iter()
+        .filter(|action| {
+            ![base, head].into_iter().any(|tree| {
+                action_descriptor_paths(action)
+                    .iter()
+                    .any(|descriptor| yaml_at(repo, tree, descriptor).is_some())
+            })
+        })
+        .cloned()
+        .collect();
+    ReachableActions { paths, unresolved }
 }
 
 fn reachable_actions_in_tree(repo: &Repository, tree: &Tree<'_>, entry: &str) -> BTreeSet<String> {

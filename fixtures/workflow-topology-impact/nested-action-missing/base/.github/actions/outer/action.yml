@@ -1,0 +1,6 @@
+name: outer
+runs:
+  using: composite
+  steps:
+    # The nested target has no descriptor, so the parent must not mask it.
+    - uses: ./.github/actions/outer/missing

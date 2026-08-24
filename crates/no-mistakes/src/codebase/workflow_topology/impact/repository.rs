@@ -55,18 +55,19 @@ pub(crate) fn topology_impact_report(
         &repo,
         &base_tree,
         &head_tree,
-        &reachable_actions,
+        &reachable_actions.paths,
         &changed_actions,
         &base_topology,
         &head_topology,
     );
-    let unowned_action = changed_paths.iter().any(|path| {
-        let is_action_path = path.starts_with(".github/actions/")
-            || reachable_actions.iter().any(|action| {
-                action.is_empty() || path == action || path.starts_with(&format!("{action}/"))
-            });
-        is_action_path && action_descriptors_for_path(&base_tree, &head_tree, path).is_empty()
-    });
+    let unowned_action = !reachable_actions.unresolved.is_empty()
+        || changed_paths.iter().any(|path| {
+            let is_action_path = path.starts_with(".github/actions/")
+                || reachable_actions.paths.iter().any(|action| {
+                    action.is_empty() || path == action || path.starts_with(&format!("{action}/"))
+                });
+            is_action_path && action_descriptors_for_path(&base_tree, &head_tree, path).is_empty()
+        });
     let entry_global_change = changed_paths.iter().any(|path| path == &entry)
         && entry_change_is_global(&repo, &base_tree, &head_tree, &entry);
     let changed_entry_jobs = entry_changed_jobs(&repo, &base_tree, &head_tree, &entry);
@@ -77,7 +78,7 @@ pub(crate) fn topology_impact_report(
         entry_workflow,
         base: &base_topology,
         head: &head_topology,
-        reachable_actions: &reachable_actions,
+        reachable_actions: &reachable_actions.paths,
         changed_actions: &changed_actions,
         action_jobs: &action_jobs,
         changed_entry_jobs: &changed_entry_jobs,

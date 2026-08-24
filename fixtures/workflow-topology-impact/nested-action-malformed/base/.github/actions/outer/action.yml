@@ -1,0 +1,6 @@
+name: outer
+runs:
+  using: composite
+  steps:
+    # The nested target is malformed in both revisions.
+    - uses: ./.github/actions/outer/broken
