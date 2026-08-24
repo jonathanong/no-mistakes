@@ -244,13 +244,17 @@ fn generate_plan_with_prepared_inner(
     let graph = prepared.graph()?;
     let test_filter = prepared.test_filter().clone();
     let all_test_files = global_config::discover_all_tests_from_prepared(prepared);
-    let all_test_set = all_test_files.iter().cloned().collect();
+    let all_test_set: HashSet<PathBuf> = all_test_files.iter().cloned().collect();
+    let mut native_test_set = all_test_set.clone();
+    for framework in [super::TestFramework::Swift, super::TestFramework::Dotnet] {
+        native_test_set.extend(prepared.discover_tests(framework)?.tests);
+    }
     let native_semantic_seeds =
         crate::tests::configured_plan::native_semantic_seeds::native_semantic_seed_candidates(
             root,
             prepared,
             graph,
-            &all_test_set,
+            &native_test_set,
             None,
         );
 
@@ -417,6 +421,15 @@ fn generate_plan_with_prepared_inner(
                 }
             }
         }
+    }
+
+    for candidate in &native_semantic_seeds.candidates {
+        selected_map
+            .entry(root.join(&candidate.test_file))
+            .and_modify(|existing| {
+                crate::tests::configured_plan_candidates::merge_selected(existing, candidate)
+            })
+            .or_insert_with(|| candidate.clone());
     }
 
     if let Some(fallback_plan) = dependency_seeds::trace_and_fallback(

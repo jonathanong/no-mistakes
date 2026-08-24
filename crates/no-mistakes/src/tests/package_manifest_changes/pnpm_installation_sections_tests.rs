@@ -10,6 +10,7 @@ fn unmodeled_pnpm_installation_sections_warn_and_obey_fallback_policy_across_v5_
         "unmodeled-pnpm-v7.yaml",
         "unmodeled-pnpm-v8.yaml",
         "unmodeled-pnpm-v9.yaml",
+        "unmodeled-pnpm-lockfile-version.yaml",
     ] {
         for fallback in [false, true] {
             let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))

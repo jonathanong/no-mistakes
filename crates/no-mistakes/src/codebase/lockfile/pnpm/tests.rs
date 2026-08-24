@@ -222,6 +222,20 @@ fn impact_importer_paths_preserve_parenthesized_peer_contexts() {
 }
 
 #[test]
+fn impact_importer_paths_propagate_base_package_changes_to_peer_context_snapshots() {
+    let old = fixture("v9-base-package-peer-snapshots-old.yaml");
+    let new = fixture("v9-base-package-peer-snapshots-new.yaml");
+    let names = impact_names(&old, &new, std::iter::empty());
+    let paths = impact_importer_paths(&old, &new, &names);
+
+    assert_eq!(names, vec!["middle".to_string()]);
+    assert_eq!(
+        paths.get("middle"),
+        Some(&vec!["react-app".to_string(), "vue-app".to_string()])
+    );
+}
+
+#[test]
 fn impact_importer_paths_do_not_cross_independent_changed_locators() {
     let old = fixture("exact-multiple-old.yaml");
     let new = fixture("exact-multiple-new.yaml");
@@ -345,6 +359,10 @@ fn unmodeled_installation_sections_ignore_malformed_and_non_mapping_inputs() {
             "lockfileVersion: '9.0'\npackages: {}\nsettings: {frozen: true}\n"
         ),
         vec!["settings".to_string()]
+    );
+    assert_eq!(
+        changed_unmodeled_installation_sections(valid, "lockfileVersion: '8.0'\npackages: {}\n"),
+        vec!["lockfileVersion".to_string()]
     );
 }
 

@@ -89,12 +89,7 @@ pub(crate) fn changed_unmodeled_installation_sections(old: &str, new: &str) -> V
     old.keys()
         .chain(new.keys())
         .filter_map(serde_yaml::Value::as_str)
-        .filter(|key| {
-            !matches!(
-                *key,
-                "lockfileVersion" | "importers" | "packages" | "snapshots"
-            )
-        })
+        .filter(|key| !matches!(*key, "importers" | "packages" | "snapshots"))
         .filter(|key| old.get(*key) != new.get(*key))
         .map(str::to_string)
         .collect::<std::collections::BTreeSet<_>>()

@@ -263,6 +263,40 @@ fn plain_plan_dotnet_untraceable_semantic_dependency_obeys_global_fallback_polic
 }
 
 #[test]
+fn plain_plan_central_package_change_uses_only_semantic_dependency_seeds() {
+    let fixture = semantic_fixture();
+    let root = fixture.path();
+    git_init(root);
+    replace_from_change(root, "app-central.props", "app/Directory.Packages.props");
+    let output = run(&[
+        "test",
+        "plan",
+        "--root",
+        root.to_str().unwrap(),
+        "--base",
+        "HEAD",
+        "--changed-file",
+        "app/Directory.Packages.props",
+        "--global-config-fallback",
+        "false",
+        "--json",
+    ]);
+    assert!(
+        output.status.success(),
+        "stderr: {}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    let plan: serde_json::Value = serde_json::from_str(&stdout(&output)).unwrap();
+    let selected: Vec<&str> = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|test| test["test_file"].as_str().unwrap())
+        .collect();
+    assert_eq!(selected, vec!["app/tests/AppServiceTests.cs"], "{plan:#}");
+}
+
+#[test]
 fn test_plan_dotnet_mixed_and_native_configuration_files_remain_broad() {
     let fixture = semantic_fixture();
     let root = fixture.path();

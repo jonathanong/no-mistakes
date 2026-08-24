@@ -44,10 +44,32 @@ fn locator_graph(content: &str) -> LocatorGraph {
                 .entry(parent.clone())
                 .or_default()
                 .push(value.clone());
+            if section == "snapshots" {
+                add_snapshot_base_package_edge(&mut graph, &parent);
+            }
             add_dependency_edges(&mut graph, &parent, value);
         }
     }
     graph
+}
+
+/// pnpm v9 stores the resolved package record without peer context under
+/// `packages`, then stores each peer-specific resolution under `snapshots`.
+/// A base package change therefore affects every peer-context snapshot that
+/// resolves that base package.
+fn add_snapshot_base_package_edge(graph: &mut LocatorGraph, snapshot: &PnpmLocator) {
+    if snapshot.peer_context.is_empty() {
+        return;
+    }
+    graph
+        .reverse
+        .entry(PnpmLocator {
+            name: snapshot.name.clone(),
+            version: snapshot.version.clone(),
+            peer_context: String::new(),
+        })
+        .or_default()
+        .insert(snapshot.clone());
 }
 
 fn add_dependency_edges(graph: &mut LocatorGraph, parent: &PnpmLocator, value: &serde_yaml::Value) {

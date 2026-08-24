@@ -15,25 +15,9 @@ impl PreparedTestPlanRequest {
                         || self.swift_manifest_analysis.handles(path));
                 let dotnet_handled = matches!(framework, None | Some(TestFramework::Dotnet))
                     && self.dotnet_dependency_analysis.handles(path);
-                let plain_seed = framework.is_none()
-                    && (self
-                        .swift_resolved_analysis
-                        .seeds
-                        .iter()
-                        .any(|(resolved, _)| resolved == *path)
-                        || self
-                            .swift_manifest_analysis
-                            .seeds
-                            .iter()
-                            .any(|seed| seed == *path)
-                        || self
-                            .dotnet_dependency_analysis
-                            .artifacts
-                            .iter()
-                            .any(|artifact| artifact.path == **path));
                 let package_handled = super::javascript_dependency_framework(framework)
                     && self.package_manifest_analysis.handles(path);
-                (!(swift_handled || dotnet_handled) || plain_seed) && !package_handled
+                !(swift_handled || dotnet_handled || package_handled)
             })
             .cloned()
             .collect()
