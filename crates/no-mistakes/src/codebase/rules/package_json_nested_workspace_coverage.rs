@@ -317,7 +317,7 @@ fn relative_from(from: &Path, to: &Path) -> String {
 }
 
 fn contains_wildcard(entry: &str) -> bool {
-    entry.contains('*') || entry.contains('?') || entry.contains('[')
+    entry.contains('*') || entry.contains('?') || entry.contains('[') || entry.contains('{')
 }
 
 fn wildcard_targets_dependency<'a>(

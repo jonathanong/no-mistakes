@@ -106,6 +106,12 @@ fn rejects_wildcards_that_cover_configured_dependency_packages() {
     assert!(findings[0].message.contains("uses a wildcard"));
 }
 #[test]
+fn rejects_brace_globs_that_cover_configured_dependency_packages() {
+    let findings = findings("brace-glob", OPTIONS);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("uses a wildcard"));
+}
+#[test]
 fn expands_configured_root_globs_for_independent_nested_workspaces() {
     let findings = findings("lambda", OPTIONS);
     assert_eq!(findings.len(), 1, "{findings:?}");
