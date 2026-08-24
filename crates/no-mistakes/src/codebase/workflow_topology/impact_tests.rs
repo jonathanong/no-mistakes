@@ -1,6 +1,5 @@
 use super::yaml::normalize_entry;
 use super::{topology_impact_report, CiTopologyImpactReport};
-use std::path::{Path, PathBuf};
 
 pub(super) struct Case {
     pub(super) name: &'static str,
@@ -10,58 +9,7 @@ pub(super) struct Case {
 }
 
 fn fixture(name: &str) -> tempfile::TempDir {
-    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/workflow-topology-impact")
-        .join(name);
-    let fixture = crate::test_support::materialize_saved_fixture(&source);
-    let root = fixture.path().join("base");
-    crate::test_support::git_init(&root);
-    crate::test_support::git_commit_all(&root, "base");
-    replace_tree(&root, &fixture.path().join("head"));
-    crate::test_support::git_commit_all(&root, "head");
-    fixture
-}
-
-// The base/head trees are checked in. This harness only materializes those
-// saved revisions into a temporary Git worktree, keeping the test cases
-// reviewable without constructing YAML inline at runtime.
-fn replace_tree(root: &Path, source: &Path) {
-    let git_dir = root.join(".git");
-    let mut paths = ignore::WalkBuilder::new(root)
-        .hidden(false)
-        .require_git(false)
-        .build()
-        .map(Result::unwrap)
-        .map(|entry| entry.into_path())
-        .filter(|path| path != root && !path.starts_with(&git_dir))
-        .collect::<Vec<_>>();
-    paths.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
-    for path in paths {
-        if path.is_dir() {
-            std::fs::remove_dir(path).unwrap();
-        } else {
-            std::fs::remove_file(path).unwrap();
-        }
-    }
-    copy_tree(source, root);
-}
-
-fn copy_tree(source: &Path, destination: &Path) {
-    for entry in ignore::WalkBuilder::new(source)
-        .hidden(false)
-        .require_git(false)
-        .build()
-        .map(Result::unwrap)
-        .filter(|entry| entry.path() != source)
-    {
-        let target = destination.join(entry.path().strip_prefix(source).unwrap());
-        if entry.file_type().is_some_and(|kind| kind.is_dir()) {
-            std::fs::create_dir_all(target).unwrap();
-        } else {
-            std::fs::create_dir_all(target.parent().unwrap()).unwrap();
-            std::fs::copy(entry.path(), target).unwrap();
-        }
-    }
+    crate::test_support::materialize_workflow_topology_impact_fixture(name)
 }
 
 pub(super) fn report(name: &str) -> CiTopologyImpactReport {
