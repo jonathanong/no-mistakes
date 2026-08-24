@@ -26,15 +26,21 @@ fn fixture(name: &str) -> tempfile::TempDir {
 // saved revisions into a temporary Git worktree, keeping the test cases
 // reviewable without constructing YAML inline at runtime.
 fn replace_tree(root: &Path, source: &Path) {
-    for entry in std::fs::read_dir(root).unwrap() {
-        let entry = entry.unwrap();
-        if entry.file_name() == ".git" {
-            continue;
-        }
-        if entry.file_type().unwrap().is_dir() {
-            std::fs::remove_dir_all(entry.path()).unwrap();
+    let git_dir = root.join(".git");
+    let mut paths = ignore::WalkBuilder::new(root)
+        .hidden(false)
+        .require_git(false)
+        .build()
+        .map(Result::unwrap)
+        .map(|entry| entry.into_path())
+        .filter(|path| path != root && !path.starts_with(&git_dir))
+        .collect::<Vec<_>>();
+    paths.sort_by_key(|path| std::cmp::Reverse(path.components().count()));
+    for path in paths {
+        if path.is_dir() {
+            std::fs::remove_dir(path).unwrap();
         } else {
-            std::fs::remove_file(entry.path()).unwrap();
+            std::fs::remove_file(path).unwrap();
         }
     }
     copy_tree(source, root);
