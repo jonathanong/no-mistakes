@@ -1,0 +1,21 @@
+use super::tests::{assert_case, Case};
+
+#[test]
+fn local_actions_are_found_through_reusable_workflows_and_outside_github_actions() {
+    for case in [
+        Case {
+            name: "reusable-workflow-action",
+            roots: &[".github/workflows/ci.yml#test-tooling"],
+            workflows: &[".github/workflows/ci.yml", ".github/workflows/tooling.yml"],
+            global: false,
+        },
+        Case {
+            name: "repository-action",
+            roots: &[".github/workflows/ci.yml#test-web"],
+            workflows: &[".github/workflows/ci.yml"],
+            global: false,
+        },
+    ] {
+        assert_case(case);
+    }
+}

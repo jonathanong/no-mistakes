@@ -1,6 +1,5 @@
 use super::super::model::WorkflowTopology;
 use super::yaml::yaml_at;
-use anyhow::Result;
 use git2::{Repository, Tree};
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -9,17 +8,17 @@ pub(super) fn action_job_users(
     repo: &Repository,
     base: &Tree<'_>,
     head: &Tree<'_>,
+    reachable: &BTreeSet<String>,
     changed: &BTreeSet<String>,
     base_topology: &WorkflowTopology,
     head_topology: &WorkflowTopology,
-) -> Result<BTreeSet<String>> {
+) -> BTreeSet<String> {
     let mut impacted = changed.clone();
     for tree in [base, head] {
-        let descriptors = action_descriptors(repo, tree)?;
         let mut expanded = true;
         while expanded {
             expanded = false;
-            for action in &descriptors {
+            for action in reachable {
                 if !impacted.contains(action)
                     && action_uses(repo, tree, action)
                         .iter()
@@ -30,7 +29,7 @@ pub(super) fn action_job_users(
             }
         }
     }
-    Ok(base_topology
+    base_topology
         .jobs
         .iter()
         .chain(&head_topology.jobs)
@@ -43,49 +42,7 @@ pub(super) fn action_job_users(
             })
         })
         .map(|job| job.id.clone())
-        .collect())
-}
-
-fn action_descriptors(repo: &Repository, tree: &Tree<'_>) -> Result<BTreeSet<String>> {
-    let mut paths = BTreeSet::new();
-    collect_action_descriptors(repo, tree, "", &mut paths)?;
-    Ok(paths)
-}
-
-fn collect_action_descriptors(
-    repo: &Repository,
-    tree: &Tree<'_>,
-    prefix: &str,
-    paths: &mut BTreeSet<String>,
-) -> Result<()> {
-    for entry in tree {
-        let name = entry.name().unwrap_or_default();
-        let path = if prefix.is_empty() {
-            name.to_owned()
-        } else {
-            format!("{prefix}/{name}")
-        };
-        if entry.kind() == Some(git2::ObjectType::Tree) {
-            if path == ".github" || path.starts_with(".github/actions") {
-                collect_action_descriptors(
-                    repo,
-                    &entry.to_object(repo)?.peel_to_tree()?,
-                    &path,
-                    paths,
-                )?;
-            }
-        } else if path.starts_with(".github/actions/")
-            && (path.ends_with("/action.yml") || path.ends_with("/action.yaml"))
-        {
-            paths.insert(
-                path.rsplit_once('/')
-                    .expect("action descriptor parent")
-                    .0
-                    .to_owned(),
-            );
-        }
-    }
-    Ok(())
+        .collect()
 }
 
 fn action_uses(repo: &Repository, tree: &Tree<'_>, action: &str) -> BTreeSet<String> {
@@ -141,9 +98,6 @@ pub(super) fn action_descriptors_for_path(
     while let Some(directory_path) = cursor {
         let next = directory_path.parent().map(Path::to_path_buf);
         let directory = directory_path.to_string_lossy().replace('\\', "/");
-        if !directory.starts_with(".github/actions/") {
-            break;
-        }
         if [base, head].iter().any(|tree| {
             ["action.yml", "action.yaml"].iter().any(|name| {
                 tree.get_path(Path::new(&format!("{directory}/{name}")))
