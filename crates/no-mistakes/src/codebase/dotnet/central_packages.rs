@@ -91,9 +91,7 @@ fn without_xml_ignored_regions(source: &str) -> Option<String> {
     while let Some((start, terminator, prefix_len)) = ignored_region_start(remaining) {
         result.push_str(&remaining[..start]);
         let after_start = &remaining[start + prefix_len..];
-        let Some(end) = after_start.find(terminator) else {
-            return None;
-        };
+        let end = after_start.find(terminator)?;
         remaining = &after_start[end + terminator.len()..];
     }
     result.push_str(remaining);

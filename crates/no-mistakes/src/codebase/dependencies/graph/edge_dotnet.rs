@@ -85,7 +85,7 @@ fn collect_dotnet_dependency_file_edges(
         if let Some(central) = central {
             edges.push((
                 NodeId::file_in(interner, &project.project_path),
-                NodeId::file_in(interner, &central),
+                NodeId::file_in(interner, central),
                 EdgeKind::DotnetProjectDependency,
             ));
         }

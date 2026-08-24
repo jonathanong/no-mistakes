@@ -236,7 +236,7 @@ fn central_import_chain_contains(central: &Path, sought: &Path, graph: Option<&D
         || graph.is_some_and(|graph| {
             graph
             .deps_of(
-                &[NodeId::file(central.to_path_buf())],
+                &[NodeId::file(central)],
                 None,
                 Some(&HashSet::from([
                     no_mistakes::codebase::dependencies::graph::EdgeKind::DotnetProjectDependency,
