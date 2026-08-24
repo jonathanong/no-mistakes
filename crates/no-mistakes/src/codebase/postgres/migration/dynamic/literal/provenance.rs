@@ -119,3 +119,6 @@ fn unicode_escape_width(raw: &[char], at: usize, escape: char) -> usize {
         width
     }
 }
+
+#[cfg(test)]
+mod tests;

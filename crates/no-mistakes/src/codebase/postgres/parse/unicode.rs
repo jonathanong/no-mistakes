@@ -79,9 +79,9 @@ fn mask_literals(sql: &str) -> Option<(String, Vec<RawUnicodeLiteral>)> {
         .ok()?;
     let mut literals = Vec::new();
     for (index, window) in tokens.windows(3).enumerate() {
-        let [prefix, ampersand, literal] = window else {
-            continue;
-        };
+        let prefix = &window[0];
+        let ampersand = &window[1];
+        let literal = &window[2];
         if !word(prefix, "U")
             || !matches!(ampersand.token, Token::Ampersand)
             || prefix.span.end != ampersand.span.start
@@ -155,3 +155,6 @@ fn location_offset(sql: &str, line: u64, column: u64) -> Option<usize> {
 pub(crate) fn decode_unicode_string(value: &str, escape: char) -> Option<String> {
     super::unicode_decode::decode(value, escape)
 }
+
+#[cfg(test)]
+mod tests;

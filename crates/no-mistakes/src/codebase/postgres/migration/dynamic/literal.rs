@@ -142,12 +142,14 @@ pub(super) fn normalize_format(template: &str) -> String {
         while let Some(next) = chars.peek().copied() {
             if matches!(next, 'I' | 'L' | 's') {
                 chars.next();
-                out.push_str(match next {
-                    'I' => "dynamic_identifier",
-                    'L' => "'dynamic_literal'",
-                    's' => "dynamic_value",
-                    _ => unreachable!("format type was matched above"),
-                });
+                let replacement = if next == 'I' {
+                    "dynamic_identifier"
+                } else if next == 'L' {
+                    "'dynamic_literal'"
+                } else {
+                    "dynamic_value"
+                };
+                out.push_str(replacement);
                 replaced = true;
                 break;
             }

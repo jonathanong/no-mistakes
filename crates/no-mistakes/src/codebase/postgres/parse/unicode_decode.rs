@@ -39,3 +39,6 @@ fn codepoint(chars: &mut impl Iterator<Item = char>, digits: usize) -> Option<u3
         .then(|| u32::from_str_radix(&codepoint, 16).ok())
         .flatten()
 }
+
+#[cfg(test)]
+mod tests;

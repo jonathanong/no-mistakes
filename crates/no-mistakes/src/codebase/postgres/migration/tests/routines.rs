@@ -111,3 +111,14 @@ fn routine_string_forms_preserve_schema_facts_and_physical_lines() {
         "{facts:#?}"
     );
 }
+
+#[test]
+fn dynamic_sql_remaps_constraint_and_drop_table_fact_lines() {
+    let facts = extract_migration_facts(
+        "DO $$\nBEGIN\n  EXECUTE 'DROP TABLE obsolete_table';\n  EXECUTE 'ALTER TABLE posts ADD CHECK (id IS NOT NULL)';\n  EXECUTE 'ALTER TABLE posts ADD CONSTRAINT posts_check CHECK (id IS NOT NULL) NOT VALID';\n  EXECUTE 'ALTER TABLE posts VALIDATE CONSTRAINT posts_check';\nEND\n$$;",
+    );
+    assert_eq!(facts.dropped_tables[0].line, 3);
+    assert_eq!(facts.unnamed_constraints[0].line, 4);
+    assert_eq!(facts.not_valid_constraints[0].line, 5);
+    assert_eq!(facts.validated_constraints[0].line, 6);
+}

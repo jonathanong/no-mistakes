@@ -40,12 +40,30 @@ fn extracts_terminal_strings_and_ignores_invalid_paths() {
     assert!(extract_yaml_string_selector(&source, "rules.[].options.mode").is_empty());
     for invalid in [
         "",
+        "rules.",
         "literal..key",
         "literal.[unterminated]",
         "literal.[\"unterminated]",
+        "literal.[\"dotted.key\"].",
     ] {
         assert!(extract_yaml_string_selector(&source, invalid).is_empty());
     }
+}
+
+#[test]
+fn ignores_malformed_sources_non_string_terminals_and_indexes_on_mappings() {
+    assert!(extract_yaml_string_selector("rules: [", "rules.[]").is_empty());
+    let source = "mapping:\n  nested: value\nlist:\n  - name: first\n";
+    assert!(extract_yaml_string_selector(source, "mapping.0").is_empty());
+    assert!(extract_yaml_string_selector(source, "list.0").is_empty());
+    assert_eq!(
+        extract_yaml_string_selector(source, "list.0.name"),
+        BTreeSet::from(["first".to_string()])
+    );
+    assert_eq!(
+        extract_yaml_string_selector("literal:\n  'a\"b': quoted\n", "literal.[\"a\\\"b\"]"),
+        BTreeSet::from(["quoted".to_string()])
+    );
 }
 
 #[test]

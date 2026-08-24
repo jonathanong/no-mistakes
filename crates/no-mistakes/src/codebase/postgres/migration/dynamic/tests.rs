@@ -141,3 +141,27 @@ fn ignores_commented_routines_and_tracks_assignments_after_control_words() {
     assert_eq!(extracted[0].sql, "CREATE TABLE visible (id uuid)");
     assert_eq!(extracted[0].line, 2);
 }
+
+#[test]
+fn retains_assignment_provenance_and_ignores_non_static_execute_expressions() {
+    let sql = "DO $$\nDECLARE\n  ddl text := 'CREATE TABLE assigned (id uuid)';\nBEGIN\n  EXECUTE ddl USING value;\n  EXECUTE unknown_variable;\n  EXECUTE 'CREATE TABLE literal (id uuid)' || value;\nEND\n$$;";
+    let extracted = extract(sql);
+    assert_eq!(extracted.len(), 1, "{extracted:#?}");
+    assert_eq!(extracted[0].sql, "CREATE TABLE assigned (id uuid)");
+    assert_eq!(extracted[0].line, 3);
+}
+
+#[test]
+fn rejects_invalid_literal_suffixes_and_preserves_unknown_format_directives() {
+    let tokens = tokenize("'same' 'line'");
+    let code = significant(&tokens);
+    assert!(literal::string_expression(&code, None).is_none());
+
+    for sql in ["'plain' UESCAPE '!'", "U&'!0041' UESCAPE identifier"] {
+        let tokens = tokenize(sql);
+        let code = significant(&tokens);
+        assert!(literal::string_expression(&code, None).is_none());
+    }
+    assert_eq!(literal::normalize_format("%q %1q"), "%q %1q");
+    assert!(schema_bodies("DO ' '").is_empty());
+}
