@@ -88,5 +88,5 @@ fn diff_result(
 }
 
 #[cfg(test)]
-#[path = "dependency_diff_tests.rs"]
-mod dependency_diff_tests;
+#[path = "dependency_diff/tests.rs"]
+mod tests;
