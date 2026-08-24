@@ -66,7 +66,7 @@ pub(crate) fn check_with_files_and_sources(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options()?;
+        let opts: Options = rule.try_rule_options()?;
         let compiled = compile_options(&opts);
         let target_roots = super::target_roots(root, config, rule);
         let skip = super::skip_dir_set(config);

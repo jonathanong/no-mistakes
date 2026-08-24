@@ -17,7 +17,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     let skip = &config.filesystem.skip_directories;
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts = rule.rule_options()?;
+        let opts = rule.try_rule_options()?;
         let prepared = PreparedRule::new(&opts, root, &super::target_roots(root, config, rule))?;
         let files: Vec<PathBuf> = prepared
             .roots
@@ -60,7 +60,7 @@ pub(crate) fn check_with_files_sources_and_deferred_suppression(
     let skip = super::skip_dir_set(config);
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts = rule.rule_options()?;
+        let opts = rule.try_rule_options()?;
         let prepared = PreparedRule::new(&opts, root, &super::target_roots(root, config, rule))?;
         let files: Vec<PathBuf> = all_files
             .iter()

@@ -80,7 +80,7 @@ pub(crate) fn check_with_files_and_sources(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let mut opts = compile_options(rule.rule_options()?);
+        let mut opts = compile_options(rule.try_rule_options()?);
         if opts.uses.is_empty() {
             continue;
         }

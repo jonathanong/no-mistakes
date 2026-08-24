@@ -33,7 +33,7 @@ pub(super) fn filesystem_rule_preserved_roots(
         if !rule_supports_discovery_roots(rule_id) {
             continue;
         }
-        let opts: PreserveRootOptions = rule.rule_options()?;
+        let opts: PreserveRootOptions = rule.try_rule_options()?;
         if let Some(option_roots) = opts.roots {
             roots.extend(
                 option_roots

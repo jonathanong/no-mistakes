@@ -24,7 +24,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     let skip = &config.filesystem.skip_directories;
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
-        let opts = rule.rule_options()?;
+        let opts = rule.try_rule_options()?;
         let target_roots = super::target_roots(root, config, rule);
         let roots = normalize_roots(&opts, root, &target_roots);
         let files: Vec<PathBuf> = roots

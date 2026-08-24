@@ -15,7 +15,7 @@ pub(super) fn check_with_prepared_facts_and_session(
     }
     let options = applications
         .iter()
-        .map(|rule| rule.rule_options())
+        .map(|rule| rule.try_rule_options())
         .collect::<Result<Vec<Options>>>()?;
     let plan = GraphBuildPlan::from_allowed(union_allowed_set(&options).as_ref());
     shared::validate_shared_graph_plan(root, config_path, shared, prepared_graph, plan)?;
@@ -63,9 +63,7 @@ pub(super) fn check_with_prepared_facts_and_session(
 fn shared_facts_path_matches_standalone_check() {
     let root = fixture("forbidden-dependencies-basic");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let graph_plan = graph_plan(&config)
-        .unwrap()
-        .expect("fixture config enables forbidden dependencies");
+    let graph_plan = graph_plan(&config).expect("fixture config enables forbidden dependencies");
     let (fact_plan, fact_context) =
         crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(&root, graph_plan);
     let files =
@@ -155,9 +153,7 @@ fn shared_facts_path_preserves_known_empty_graph_universe() {
 fn shared_facts_path_preserves_valid_findings_despite_parse_errors() {
     let root = fixture("forbidden-dependencies-parse-error");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let graph_plan = graph_plan(&config)
-        .unwrap()
-        .expect("fixture config enables forbidden dependencies");
+    let graph_plan = graph_plan(&config).expect("fixture config enables forbidden dependencies");
     let (fact_plan, fact_context) =
         crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(&root, graph_plan);
     let files = crate::codebase::ts_source::discover_files(&root, &[]);
@@ -192,7 +188,7 @@ fn playwright_graph_consumers_do_not_reread_cached_parse_errors() {
     ] {
         let config_path = root.join(config_name);
         let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
-        let graph_plan = graph_plan(&config).unwrap().expect("forbidden graph plan");
+        let graph_plan = graph_plan(&config).expect("forbidden graph plan");
         let (fact_plan, fact_context) =
             crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_config(
                 &root,
@@ -258,7 +254,7 @@ fn shared_facts_path_propagates_graph_build_errors() {
     );
     let config_path = root.join("selector.no-mistakes.yml");
     let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
-    let graph_plan = graph_plan(&config).unwrap().expect("forbidden graph plan");
+    let graph_plan = graph_plan(&config).expect("forbidden graph plan");
     let (fact_plan, fact_context) =
         crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan_with_config(
             &root,
@@ -295,7 +291,7 @@ fn graph_plan_and_shared_facts_empty_when_rule_is_not_configured() {
     let config = NoMistakesConfig::default();
     let shared = crate::codebase::check_facts::CheckFactMap::default();
 
-    assert!(graph_plan(&config).unwrap().is_none());
+    assert!(graph_plan(&config).is_none());
     let findings = check_with_facts(&root, &config, None, None, &shared).unwrap();
     assert!(findings.is_empty());
 }

@@ -405,9 +405,7 @@ fn run_check_with_facts_executes_forbidden_dependencies_rule() {
     let root = fixture("codebase-analysis/forbidden-dependencies-basic");
     let tsconfig = root.join("tsconfig.json");
     let config = crate::config::v2::load_v2_config(&root, None).unwrap();
-    let graph_plan = forbidden_dependencies::graph_plan(&config)
-        .unwrap()
-        .unwrap();
+    let graph_plan = forbidden_dependencies::graph_plan(&config).unwrap();
     let (graph, graph_context) =
         crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(&root, graph_plan);
     let shared = crate::codebase::check_facts::collect_check_facts(

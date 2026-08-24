@@ -37,7 +37,7 @@ fn check_call_literal_fixture(case: &str, target: &str) -> anyhow::Result<Vec<Ru
     let config = call_literal_config(target);
     let facts = crate::codebase::check_facts::collect_check_facts(
         &root,
-        required_call_site_fact_files(&root, &config)?,
+        try_required_call_site_fact_files(&root, &config)?,
         crate::codebase::check_facts::CheckFactPlan {
             graph: crate::codebase::ts_source::facts::TsFactPlan {
                 call_sites: true,
@@ -177,7 +177,7 @@ fn call_fact_demand_resolves_each_configured_project_once() {
     config.rules[0].projects = vec!["app-a".to_string(), "app-b".to_string()];
 
     assert_eq!(
-        required_call_site_fact_files(&root, &config).unwrap(),
+        required_call_site_fact_files(&root, &config),
         vec![
             root.join("packages/app-a/schedules.mts"),
             root.join("packages/app-b/schedules.mts"),
@@ -200,6 +200,15 @@ fn call_first_string_arguments_catch_missing_scheduler_registry_entries() {
             && finding.message.contains("registryIds does not"),
         "{finding:?}"
     );
+}
+
+#[test]
+fn legacy_call_site_fact_planner_keeps_default_fallback() {
+    let root = fixture_root("fixture");
+    let config = config("sets: false");
+
+    assert!(required_call_site_fact_files(&root, &config).is_empty());
+    assert!(try_required_call_site_fact_files(&root, &config).is_err());
 }
 
 #[test]

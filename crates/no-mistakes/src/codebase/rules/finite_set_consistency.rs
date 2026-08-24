@@ -80,7 +80,7 @@ pub(crate) fn check_with_files_sources_and_facts(
         .rule_applications(RULE_ID)
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
-            let opts: Options = rule.rule_options()?;
+            let opts: Options = rule.try_rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
             let files: Vec<PathBuf> = all_files
@@ -111,7 +111,13 @@ pub(crate) fn check_with_files_sources_and_facts(
 /// Request boundaries use this before collection so the finite-set rule can
 /// borrow the shared fact map instead of parsing its configured files itself.
 #[doc(hidden)]
-pub fn required_call_site_fact_files(
+pub fn required_call_site_fact_files(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
+    try_required_call_site_fact_files(root, config).unwrap_or_default()
+}
+
+/// Fallible counterpart used by request boundaries that must surface malformed
+/// rule options as configuration errors.
+pub fn try_required_call_site_fact_files(
     root: &Path,
     config: &NoMistakesConfig,
 ) -> Result<Vec<PathBuf>> {
@@ -119,7 +125,7 @@ pub fn required_call_site_fact_files(
         .rule_applications(RULE_ID)
         .into_iter()
         .map(|rule| {
-            let opts: Options = rule.rule_options()?;
+            let opts: Options = rule.try_rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
             Ok(opts
                 .sets

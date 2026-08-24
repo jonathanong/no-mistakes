@@ -49,7 +49,7 @@ pub fn canonical_graph_plan(
         plan.include(reachability_plan);
         needed = true;
     }
-    if let Some(forbidden_plan) = forbidden_dependencies::graph_plan(config)? {
+    if let Some(forbidden_plan) = forbidden_dependencies::try_graph_plan(config)? {
         plan.include(forbidden_plan);
         needed = true;
     }

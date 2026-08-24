@@ -106,7 +106,7 @@ where
     let mut findings = Vec::new();
     let mut inferred_roots = inferred_roots.cloned().unwrap_or_default();
     for rule in config.rule_applications(RULE_ID) {
-        let opts: Options = rule.rule_options()?;
+        let opts: Options = rule.try_rule_options()?;
         let exclude_matcher = ExcludeMatcher::new(&opts.excludes);
         let filter = super::path_filter::RulePathFilter::new_with_inferred(
             root,

@@ -169,7 +169,7 @@ pub(super) fn prepare_call_site_facts(
     config: &crate::config::v2::NoMistakesConfig,
     sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
 ) -> Result<Option<crate::codebase::check_facts::CheckFactMap>> {
-    let call_site_files = finite_set_consistency::required_call_site_fact_files(root, config)?;
+    let call_site_files = finite_set_consistency::try_required_call_site_fact_files(root, config)?;
     Ok((!call_site_files.is_empty()).then(|| {
         crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
             root,

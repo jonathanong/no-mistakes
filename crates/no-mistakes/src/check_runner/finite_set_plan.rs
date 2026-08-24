@@ -56,7 +56,7 @@ pub(crate) fn prepare(
     let needs_other_facts =
         graph_configured || playwright_configured || super::enabled::plan_requests_facts(plan);
     let files =
-        no_mistakes::codebase::rules::finite_set_consistency::required_call_site_fact_files(
+        no_mistakes::codebase::rules::finite_set_consistency::try_required_call_site_fact_files(
             root, config,
         )?;
     if !files.is_empty() {
