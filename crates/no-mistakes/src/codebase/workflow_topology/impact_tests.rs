@@ -131,4 +131,5 @@ fn reports_are_deterministic_across_identical_revision_queries() {
     let second = topology_impact_report(&root, "HEAD~", "HEAD", "ci.yml").unwrap();
     assert_eq!(first, second);
     assert_eq!(normalize_entry("ci.yml"), ".github/workflows/ci.yml");
+    assert_eq!(normalize_entry("./ci.yml"), ".github/workflows/ci.yml");
 }

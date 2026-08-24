@@ -58,7 +58,7 @@ pub(crate) fn topology_impact_report(
         &changed_actions,
         &base_topology,
         &head_topology,
-    );
+    )?;
     let unowned_action = changed_paths.iter().any(|path| {
         path.starts_with(".github/actions/")
             && action_descriptors_for_path(&base_tree, &head_tree, path).is_empty()

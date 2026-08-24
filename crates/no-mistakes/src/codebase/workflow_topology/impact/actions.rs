@@ -1,5 +1,6 @@
 use super::super::model::WorkflowTopology;
 use super::yaml::yaml_at;
+use anyhow::Result;
 use git2::{Repository, Tree};
 use std::collections::BTreeSet;
 use std::path::Path;
@@ -11,10 +12,10 @@ pub(super) fn action_job_users(
     changed: &BTreeSet<String>,
     base_topology: &WorkflowTopology,
     head_topology: &WorkflowTopology,
-) -> BTreeSet<String> {
+) -> Result<BTreeSet<String>> {
     let mut impacted = changed.clone();
     for tree in [base, head] {
-        let descriptors = action_descriptors(repo, tree);
+        let descriptors = action_descriptors(repo, tree)?;
         let mut expanded = true;
         while expanded {
             expanded = false;
@@ -29,7 +30,7 @@ pub(super) fn action_job_users(
             }
         }
     }
-    base_topology
+    Ok(base_topology
         .jobs
         .iter()
         .chain(&head_topology.jobs)
@@ -42,13 +43,13 @@ pub(super) fn action_job_users(
             })
         })
         .map(|job| job.id.clone())
-        .collect()
+        .collect())
 }
 
-fn action_descriptors(repo: &Repository, tree: &Tree<'_>) -> BTreeSet<String> {
+fn action_descriptors(repo: &Repository, tree: &Tree<'_>) -> Result<BTreeSet<String>> {
     let mut paths = BTreeSet::new();
-    collect_action_descriptors(repo, tree, "", &mut paths);
-    paths
+    collect_action_descriptors(repo, tree, "", &mut paths)?;
+    Ok(paths)
 }
 
 fn collect_action_descriptors(
@@ -56,7 +57,7 @@ fn collect_action_descriptors(
     tree: &Tree<'_>,
     prefix: &str,
     paths: &mut BTreeSet<String>,
-) {
+) -> Result<()> {
     for entry in tree {
         let name = entry.name().unwrap_or_default();
         let path = if prefix.is_empty() {
@@ -68,14 +69,10 @@ fn collect_action_descriptors(
             if path == ".github" || path.starts_with(".github/actions") {
                 collect_action_descriptors(
                     repo,
-                    &entry
-                        .to_object(repo)
-                        .ok()
-                        .and_then(|object| object.peel_to_tree().ok())
-                        .expect("tree entry"),
+                    &entry.to_object(repo)?.peel_to_tree()?,
                     &path,
                     paths,
-                );
+                )?;
             }
         } else if path.starts_with(".github/actions/")
             && (path.ends_with("/action.yml") || path.ends_with("/action.yaml"))
@@ -88,6 +85,7 @@ fn collect_action_descriptors(
             );
         }
     }
+    Ok(())
 }
 
 fn action_uses(repo: &Repository, tree: &Tree<'_>, action: &str) -> BTreeSet<String> {
