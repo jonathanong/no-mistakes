@@ -237,6 +237,23 @@ fn run_topology_fails_when_diagnostics_are_present() {
 }
 
 #[test]
+fn run_topology_impact_prints_a_revision_aware_report() {
+    let fixture =
+        crate::test_support::materialize_workflow_topology_impact_fixture("reusable-edit");
+    let code = run(CiArgs {
+        command: CiCommand::TopologyImpact(CiTopologyImpactArgs {
+            base: "HEAD~".to_string(),
+            head: "HEAD".to_string(),
+            entry_workflow: "ci.yml".to_string(),
+            root: fixture.path().join("base"),
+        }),
+    })
+    .unwrap();
+
+    assert_eq!(code, ExitCode::SUCCESS);
+}
+
+#[test]
 fn render_topology_and_diagnostic_formatting_cover_optional_job_id() {
     let report = topology_report(&topology_fixture("needs-basic"), None, &[]).unwrap();
     assert!(render_topology(&report, TopologyFormat::Json)
