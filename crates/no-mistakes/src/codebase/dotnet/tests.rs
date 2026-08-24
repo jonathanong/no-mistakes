@@ -24,6 +24,26 @@ fn csharp_parser_extracts_usings_declarations_refs_and_xunit_tests() {
 }
 
 #[test]
+fn dotnet_lockfile_names_allow_generic_and_variant_locks_only() {
+    assert!(!is_dotnet_lockfile(Path::new("/")));
+    for name in [
+        "packages.lock.json",
+        "packages.net10.0-maccatalyst.arm64.lock.json",
+        "packages.net10.0-maccatalyst.x64.lock.json",
+    ] {
+        assert!(is_dotnet_lockfile(Path::new(name)), "{name}");
+    }
+    for name in [
+        "packages..lock.json",
+        "packages.lock.json.bak",
+        "packages.json",
+        "other.net10.0.lock.json",
+    ] {
+        assert!(!is_dotnet_lockfile(Path::new(name)), "{name}");
+    }
+}
+
+#[test]
 fn csharp_parser_extracts_aspnet_routes_and_handler_methods() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/codebase-analysis/dotnet-aspnet-routes/fixture");

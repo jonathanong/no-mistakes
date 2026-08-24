@@ -149,6 +149,10 @@ fn test_plan_dotnet_parent_central_import_is_seeded_without_a_direct_parent_cons
 fn test_plan_dotnet_semantic_project_and_lock_changes_select_only_owner_tests() {
     for (change, target) in [
         ("app-lock.json", "app/packages.lock.json"),
+        (
+            "app-lock.json",
+            "app/packages.net10.0-maccatalyst.arm64.lock.json",
+        ),
         ("app-project.csproj", "app/App.csproj"),
     ] {
         let fixture = semantic_fixture();

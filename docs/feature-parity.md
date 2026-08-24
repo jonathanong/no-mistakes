@@ -99,7 +99,8 @@ shapes.
 files, the same way TS `fetch` and Swift `Endpoint` literals do.
 
 **Lockfiles.** `lockfile diff` parses npm-family lockfiles. Test planning also
-understands SwiftPM `Package.resolved` pins and NuGet `packages.lock.json`,
+understands SwiftPM `Package.resolved` pins and NuGet `packages.lock.json`
+(including TFM/RID variants),
 project `PackageReference`, and central `PackageVersion` changes. Future language
 support adds the ecosystem lockfile when agents need package-change impact:
 `poetry.lock` / `uv.lock` / `Pipfile.lock`, `go.mod`, `Cargo.lock`,

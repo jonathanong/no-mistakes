@@ -159,7 +159,8 @@ fn dotnet_dependency_files_connect_only_actual_project_consumers() {
     let project = root.join("src/App/App.csproj");
     let source = root.join("src/App/App.cs");
     let central = root.join("Directory.Packages.props");
-    let lock = root.join("src/App/packages.lock.json");
+    let generic_lock = root.join("src/App/packages.lock.json");
+    let rid_lock = root.join("src/App/packages.net10.0-maccatalyst.arm64.lock.json");
     let mut facts = crate::codebase::dotnet::DotnetFactMap::default();
     facts.projects.insert(
         project.clone(),
@@ -175,7 +176,7 @@ fn dotnet_dependency_files_connect_only_actual_project_consumers() {
     let mut edges = Vec::new();
     collect_dotnet_dependency_file_edges(
         &facts,
-        &[central.clone(), lock.clone()],
+        &[central.clone(), generic_lock.clone(), rid_lock.clone()],
         None,
         &mut edges,
         &crate::codebase::analysis_session::PathInterner::new(),
@@ -192,8 +193,13 @@ fn dotnet_dependency_files_connect_only_actual_project_consumers() {
         EdgeKind::DotnetProjectDependency
     )));
     assert!(edges.contains(&(
+        NodeId::file(project.clone()),
+        NodeId::file(generic_lock),
+        EdgeKind::DotnetProjectDependency
+    )));
+    assert!(edges.contains(&(
         NodeId::file(project),
-        NodeId::file(lock),
+        NodeId::file(rid_lock),
         EdgeKind::DotnetProjectDependency
     )));
 }

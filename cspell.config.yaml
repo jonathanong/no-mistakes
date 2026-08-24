@@ -61,6 +61,7 @@ words:
   - libuv
   - lockfiles
   - markdown
+  - maccatalyst
   - napi
   - nextjs
   - NestJS

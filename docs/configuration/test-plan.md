@@ -157,7 +157,8 @@ references, and `.csproj` `ProjectReference` edges. The `coverage` group is
 Playwright-only; Dotnet plans reject it with a framework-specific error.
 Dependency-only `.csproj`, nearest-ancestor `Directory.Packages.props` (plus
 an explicitly imported ancestor central manifest), and
-per-project `packages.lock.json` changes seed the exact consuming project and
+per-project `packages.lock.json` changes, including TFM/RID variants such as
+`packages.net10.0-maccatalyst.arm64.lock.json`, seed the exact consuming project and
 its downstream tests. Configured test projects are discovered independently of
 solution membership, so their execution target remains the test `.csproj`.
 Literal imports and the standard parent-search `GetPathOfFileAbove` import are
