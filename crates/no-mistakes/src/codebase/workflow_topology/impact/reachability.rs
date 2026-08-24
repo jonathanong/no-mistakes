@@ -1,3 +1,4 @@
+use super::actions::action_descriptor_paths;
 use super::yaml::yaml_at;
 use git2::{Repository, Tree};
 use std::collections::BTreeSet;
@@ -69,7 +70,7 @@ fn collect_local_use(
             }
         }
     } else if actions.insert(path.to_owned()) {
-        for descriptor in [format!("{path}/action.yml"), format!("{path}/action.yaml")] {
+        for descriptor in action_descriptor_paths(path) {
             if let Some(action) = yaml_at(repo, tree, &descriptor) {
                 collect_reachable_uses(&action, tree, repo, workflows, actions);
             }

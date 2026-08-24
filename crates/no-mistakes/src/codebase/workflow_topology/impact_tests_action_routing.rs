@@ -15,6 +15,21 @@ fn local_actions_are_found_through_reusable_workflows_and_outside_github_actions
             workflows: &[".github/workflows/ci.yml"],
             global: false,
         },
+        Case {
+            name: "root-action",
+            roots: &[".github/workflows/ci.yml#test-web"],
+            workflows: &[".github/workflows/ci.yml"],
+            global: false,
+        },
+        Case {
+            name: "root-action-missing",
+            roots: &[
+                ".github/workflows/ci.yml#test-backend",
+                ".github/workflows/ci.yml#test-web",
+            ],
+            workflows: &[],
+            global: true,
+        },
     ] {
         assert_case(case);
     }

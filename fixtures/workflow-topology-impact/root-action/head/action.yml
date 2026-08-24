@@ -1,0 +1,5 @@
+name: root action
+runs:
+  using: composite
+  steps:
+    - run: echo after

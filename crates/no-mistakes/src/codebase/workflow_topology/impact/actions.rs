@@ -46,14 +46,19 @@ pub(super) fn action_job_users(
 }
 
 fn action_uses(repo: &Repository, tree: &Tree<'_>, action: &str) -> BTreeSet<String> {
+    action_descriptor_paths(action)
+        .iter()
+        .filter_map(|path| yaml_at(repo, tree, path))
+        .flat_map(|value| local_uses(&value))
+        .collect()
+}
+
+pub(super) fn action_descriptor_paths(action: &str) -> [String; 2] {
+    let separator = if action.is_empty() { "" } else { "/" };
     [
-        format!("{action}/action.yml"),
-        format!("{action}/action.yaml"),
+        format!("{action}{separator}action.yml"),
+        format!("{action}{separator}action.yaml"),
     ]
-    .iter()
-    .filter_map(|path| yaml_at(repo, tree, path))
-    .flat_map(|value| local_uses(&value))
-    .collect()
 }
 
 fn local_uses(value: &serde_yaml::Value) -> BTreeSet<String> {
@@ -99,10 +104,9 @@ pub(super) fn action_descriptors_for_path(
         let next = directory_path.parent().map(Path::to_path_buf);
         let directory = directory_path.to_string_lossy().replace('\\', "/");
         if [base, head].iter().any(|tree| {
-            ["action.yml", "action.yaml"].iter().any(|name| {
-                tree.get_path(Path::new(&format!("{directory}/{name}")))
-                    .is_ok()
-            })
+            action_descriptor_paths(&directory)
+                .iter()
+                .any(|path| tree.get_path(Path::new(path)).is_ok())
         }) {
             result.insert(directory);
             break;

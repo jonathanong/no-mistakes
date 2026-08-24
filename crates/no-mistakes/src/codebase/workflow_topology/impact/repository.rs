@@ -62,7 +62,7 @@ pub(crate) fn topology_impact_report(
     );
     let unowned_action = changed_paths.iter().any(|path| {
         reachable_actions.iter().any(|action| {
-            (path == action || path.starts_with(&format!("{action}/")))
+            (action.is_empty() || path == action || path.starts_with(&format!("{action}/")))
                 && action_descriptors_for_path(&base_tree, &head_tree, path).is_empty()
         })
     });
