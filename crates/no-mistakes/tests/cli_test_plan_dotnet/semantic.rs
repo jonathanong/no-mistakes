@@ -76,6 +76,30 @@ fn test_plan_dotnet_project_reference_reaches_dependents_without_csharp_symbol_u
 }
 
 #[test]
+fn test_plan_dotnet_global_package_reference_reaches_project_without_package_reference() {
+    let fixture =
+        saved_fixture::materialize("test-plan", "dotnet-global-package-reference/fixture");
+    let root = fixture.path();
+    git_init(root);
+    replace_from_change(root, "Directory.Packages.props", "Directory.Packages.props");
+
+    let plan = semantic_plan(root, "Directory.Packages.props", false);
+    assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
+    assert_eq!(
+        group(&plan, "dependencies"),
+        vec!["tests/GlobalServiceTests.cs"],
+        "{plan:#}"
+    );
+    let reason = &plan["selected_tests"][0]["reasons"][0];
+    assert_eq!(reason["changed_file"], "Directory.Packages.props");
+    assert!(reason["via"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .all(|edge| edge == "dotnet project dependency"));
+}
+
+#[test]
 fn test_plan_dotnet_semantic_project_and_lock_changes_select_only_owner_tests() {
     for (change, target) in [
         ("app-lock.json", "app/packages.lock.json"),
@@ -97,6 +121,24 @@ fn test_plan_dotnet_semantic_project_and_lock_changes_select_only_owner_tests() 
             vec!["core/tests/CoreServiceTests.cs"]
         );
     }
+}
+
+#[test]
+fn test_plan_dotnet_formatting_only_dependency_file_selects_no_tests() {
+    let fixture = semantic_fixture();
+    let root = fixture.path();
+    git_init(root);
+    replace_from_change(root, "app-formatting.props", "app/Directory.Packages.props");
+
+    let plan = semantic_plan(root, "app/Directory.Packages.props", false);
+    assert_eq!(plan["fallback_triggered"], false, "{plan:#}");
+    assert!(group(&plan, "dependencies").is_empty(), "{plan:#}");
+    assert!(plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .flat_map(|test| test["reasons"].as_array().unwrap())
+        .all(|reason| reason["changed_file"] == "*sample*"));
 }
 
 #[test]

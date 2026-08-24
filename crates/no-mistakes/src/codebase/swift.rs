@@ -147,12 +147,9 @@ fn parse_package(
         targets.insert(target.name.clone(), target);
     }
     for target in targets.values_mut() {
-        let default_root = if target.is_test {
-            package_root.join("Tests").join(&target.name)
-        } else {
-            package_root.join("Sources").join(&target.name)
-        };
-        target.roots.push(default_root);
+        for root in &mut target.roots {
+            *root = package_root.join(crate::codebase::ts_resolver::normalize_path(root.as_path()));
+        }
     }
     Some(SwiftPackageFacts {
         package_root,

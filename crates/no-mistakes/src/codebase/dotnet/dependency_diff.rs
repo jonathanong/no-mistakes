@@ -8,6 +8,7 @@ pub(in crate::codebase::dotnet) use xml::parse_open_tag;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub(crate) struct DotnetDependencyDiff {
     pub(crate) dependency_only: bool,
+    pub(crate) formatting_only: bool,
     pub(crate) changed_dependencies: BTreeSet<String>,
 }
 
@@ -44,23 +45,33 @@ pub(crate) fn dependency_only_lockfile_change(
     before: &str,
     after: &str,
 ) -> Result<DotnetDependencyDiff, DotnetDependencyDiagnostic> {
-    let before = lock::lock_projection(before)?;
-    let after = lock::lock_projection(after)?;
+    let before = (
+        lock::lock_projection(before)?,
+        lock::canonical_lockfile(before)?,
+        lock::non_dependency_lock_projection(before)?,
+    );
+    let after = (
+        lock::lock_projection(after)?,
+        lock::canonical_lockfile(after)?,
+        lock::non_dependency_lock_projection(after)?,
+    );
     let changed_dependencies = before
+        .0
         .keys()
-        .chain(after.keys())
-        .filter(|key| before.get(*key) != after.get(*key))
+        .chain(after.0.keys())
+        .filter(|key| before.0.get(*key) != after.0.get(*key))
         .cloned()
         .collect();
     Ok(DotnetDependencyDiff {
-        dependency_only: before != after,
+        dependency_only: before.2 == after.2 && before.0 != after.0,
+        formatting_only: before.1 == after.1,
         changed_dependencies,
     })
 }
 
 fn diff_result(
-    before: (String, BTreeMap<String, String>),
-    after: (String, BTreeMap<String, String>),
+    before: (String, BTreeMap<String, String>, String),
+    after: (String, BTreeMap<String, String>, String),
 ) -> DotnetDependencyDiff {
     let changed_dependencies = before
         .1
@@ -71,6 +82,7 @@ fn diff_result(
         .collect();
     DotnetDependencyDiff {
         dependency_only: before.0 == after.0 && before.1 != after.1,
+        formatting_only: before.2 == after.2,
         changed_dependencies,
     }
 }

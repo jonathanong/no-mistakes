@@ -39,12 +39,16 @@ fn prepared_request_keeps_dotnet_semantic_records_and_filters_only_handled_paths
         .join("../../fixtures/test-plan/dotnet-dependency-diff");
     let fixture = crate::test_support::materialize_saved_fixture(&source);
     let root = fixture.path().canonicalize().unwrap();
+    let mixed = root.join("mixed.csproj");
+    let mixed_after = std::fs::read(&mixed).unwrap();
+    std::fs::copy(root.join("base.csproj"), &mixed).unwrap();
     crate::test_support::git_init(&root);
     crate::test_support::git_commit_all(&root, "base");
     std::fs::copy(root.join("project-add.csproj"), root.join("base.csproj")).unwrap();
+    std::fs::write(&mixed, mixed_after).unwrap();
     let mut args = framework_args(&root, TestFramework::Dotnet);
     args.base = Some("HEAD".to_string());
-    args.changed_file = vec![root.join("base.csproj"), root.join("mixed.csproj")];
+    args.changed_file = vec![root.join("base.csproj"), mixed.clone()];
     let prepared = PreparedTestPlanRequest::prepare(&args).unwrap();
     assert_eq!(prepared.dotnet_dependency_analysis.artifacts.len(), 1);
     assert_eq!(
@@ -53,7 +57,7 @@ fn prepared_request_keeps_dotnet_semantic_records_and_filters_only_handled_paths
     );
     let planning = prepared.planning_changed_files(Some(TestFramework::Dotnet));
     assert!(!planning.contains(&root.join("base.csproj")));
-    assert!(planning.contains(&root.join("mixed.csproj")));
+    assert!(planning.contains(&mixed));
 }
 
 #[test]

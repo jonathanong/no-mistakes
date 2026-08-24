@@ -74,3 +74,102 @@ fn swift_import_edges_resolve_duplicate_target_names_only_in_declared_packages()
     assert!(edges.contains(&(NodeId::file(app.clone()), NodeId::file(declared_core), EdgeKind::SwiftImport)));
     assert!(!edges.contains(&(NodeId::file(app), NodeId::file(unrelated_core), EdgeKind::SwiftImport)));
 }
+
+#[test]
+fn swift_import_edges_keep_same_package_targets_for_unowned_sources() {
+    let generated = p("Client/Generated/Runner.swift");
+    let package_core = p("Client/Sources/Core/Core.swift");
+    let unrelated_core = p("Other/Sources/Core/Core.swift");
+    let mut facts = crate::codebase::swift::SwiftFactMap::default();
+    facts.files.insert(
+        generated.clone(),
+        crate::codebase::swift::SwiftFileFacts {
+            path: generated.clone(),
+            imports: vec!["Core".to_string()],
+            ..Default::default()
+        },
+    );
+    for path in [&package_core, &unrelated_core] {
+        facts.files.insert(
+            path.clone(),
+            crate::codebase::swift::SwiftFileFacts {
+                path: path.clone(),
+                target: Some("Core".to_string()),
+                ..Default::default()
+            },
+        );
+    }
+    facts.files_by_target.insert(
+        "Core".to_string(),
+        BTreeSet::from([package_core.clone(), unrelated_core.clone()]),
+    );
+    facts.packages.extend([
+        crate::codebase::swift::SwiftPackageFacts {
+            package_root: p("Client"),
+            targets: BTreeMap::from([(
+                "Core".to_string(),
+                crate::codebase::swift::SwiftTargetFacts {
+                    name: "Core".to_string(),
+                    ..Default::default()
+                },
+            )]),
+            ..Default::default()
+        },
+        crate::codebase::swift::SwiftPackageFacts {
+            package_root: p("Other"),
+            targets: BTreeMap::from([(
+                "Core".to_string(),
+                crate::codebase::swift::SwiftTargetFacts {
+                    name: "Core".to_string(),
+                    ..Default::default()
+                },
+            )]),
+            ..Default::default()
+        },
+    ]);
+
+    let mut edges = Vec::new();
+    collect_swift_import_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+
+    assert!(edges.contains(&(
+        NodeId::file(generated.clone()),
+        NodeId::file(package_core),
+        EdgeKind::SwiftImport,
+    )));
+    assert!(!edges.contains(&(
+        NodeId::file(generated), NodeId::file(unrelated_core), EdgeKind::SwiftImport,)));
+}
+
+#[test]
+fn swift_import_edges_keep_custom_and_executable_target_imports() {
+    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/swift-target-ownership/fixture");
+    let core = root.join("Sources/Core/Core.swift");
+    let runner = root.join("Tools/Runner/Runner.swift");
+    let custom_test = root.join("Checks/Integration/CustomTests.swift");
+    let plugin = root.join("Tooling/Plugin/Plugin.swift");
+    let facts = crate::codebase::swift::collect_swift_facts(
+        &root,
+        &[core.clone(), runner.clone(), custom_test.clone(), plugin.clone()],
+        &[".".to_string()],
+    );
+
+    let mut edges = Vec::new();
+    collect_swift_import_edges(
+        &facts,
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+
+    for source in [runner, custom_test, plugin] {
+        assert!(edges.contains(&(
+            NodeId::file(source),
+            NodeId::file(core.clone()),
+            EdgeKind::SwiftImport,
+        )));
+    }
+}

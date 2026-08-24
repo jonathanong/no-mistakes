@@ -64,9 +64,11 @@ fn collect_dotnet_dependency_file_edges(
             ));
         }
 
-        if project.package_references.is_empty() {
-            continue;
-        }
+        // A central file can declare GlobalPackageReference items, which apply
+        // to every descendant project even when that project has no ordinary
+        // PackageReference. Keep the project-to-nearest-central edge for all
+        // descendants so an unmodelled central declaration remains scoped to
+        // the projects it can affect.
         let central = all_files
             .iter()
             .filter(|path| {

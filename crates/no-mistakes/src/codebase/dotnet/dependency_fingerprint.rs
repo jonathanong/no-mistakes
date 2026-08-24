@@ -10,14 +10,29 @@ struct CanonicalElement {
 }
 
 pub(super) fn dependency_fingerprint(source: &str) -> Result<String, DotnetDependencyDiagnostic> {
+    fingerprint(source, true)
+}
+
+/// Canonicalize a complete XML document while retaining element order, which
+/// can be semantically meaningful to MSBuild. This is intentionally separate
+/// from dependency item fingerprints, whose metadata children are a set.
+pub(in crate::codebase::dotnet) fn full_document_fingerprint(
+    source: &str,
+) -> Result<String, DotnetDependencyDiagnostic> {
+    fingerprint(source, false)
+}
+
+fn fingerprint(source: &str, sort_children: bool) -> Result<String, DotnetDependencyDiagnostic> {
     let mut roots = Vec::new();
     let mut stack = Vec::new();
     let mut cursor = 0;
     while cursor < source.len() {
-        let start = source[cursor..]
-            .find('<')
-            .map(|offset| cursor + offset)
-            .ok_or(DotnetDependencyDiagnostic::MalformedXml)?;
+        let Some(start) = source[cursor..].find('<').map(|offset| cursor + offset) else {
+            if source[cursor..].trim().is_empty() {
+                break;
+            }
+            return Err(DotnetDependencyDiagnostic::MalformedXml);
+        };
         push_text(&mut stack, &source[cursor..start]);
         if source[start..].starts_with("<!--") {
             cursor = source[start + 4..]
@@ -26,13 +41,30 @@ pub(super) fn dependency_fingerprint(source: &str) -> Result<String, DotnetDepen
                 .ok_or(DotnetDependencyDiagnostic::MalformedXml)?;
             continue;
         }
+        if source[start..].starts_with("<?") {
+            cursor = source[start + 2..]
+                .find("?>")
+                .map(|offset| start + offset + 4)
+                .ok_or(DotnetDependencyDiagnostic::MalformedXml)?;
+            continue;
+        }
+        if source[start..].starts_with("<![CDATA[") {
+            let content_start = start + "<![CDATA[".len();
+            let content_end = source[content_start..]
+                .find("]]>")
+                .map(|offset| content_start + offset)
+                .ok_or(DotnetDependencyDiagnostic::MalformedXml)?;
+            push_text(&mut stack, &source[content_start..content_end]);
+            cursor = content_end + 3;
+            continue;
+        }
         let end = source[start..]
             .find('>')
             .map(|offset| start + offset + 1)
             .ok_or(DotnetDependencyDiagnostic::MalformedXml)?;
         let tag = &source[start + 1..end - 1];
         if let Some(name) = tag.strip_prefix('/') {
-            close_element(&mut stack, &mut roots, name.trim())?;
+            close_element(&mut stack, &mut roots, name.trim(), sort_children)?;
         } else {
             let (name, mut attributes, self_closing) = parse_open_tag(tag)?;
             attributes.sort();
@@ -67,14 +99,17 @@ fn close_element(
     stack: &mut Vec<CanonicalElement>,
     roots: &mut Vec<CanonicalElement>,
     name: &str,
+    sort_children: bool,
 ) -> Result<(), DotnetDependencyDiagnostic> {
-    let mut element = stack
-        .pop()
-        .ok_or(DotnetDependencyDiagnostic::MalformedXml)?;
+    let Some(mut element) = stack.pop() else {
+        return Err(DotnetDependencyDiagnostic::MalformedXml);
+    };
     if element.name != name {
         return Err(DotnetDependencyDiagnostic::MalformedXml);
     }
-    element.children.sort();
+    if sort_children {
+        element.children.sort();
+    }
     append_element(stack, roots, element);
     Ok(())
 }

@@ -100,6 +100,59 @@ fn manifest_targets_handle_nested_dependency_parentheses() {
 }
 
 #[test]
+fn manifest_targets_record_executable_and_custom_source_roots() {
+    let source = r#"
+        let package = Package(targets: [
+            .executableTarget(name: "Runner", path: "Tools/Runner"),
+            .testTarget(name: "CustomTests", path: "Checks/Integration"),
+            .macro(name: "Macros"),
+            .plugin(name: "Formatter", capability: .buildTool()),
+            .target(name: "App", plugins: [.plugin(name: "Formatter", package: "tools")]),
+        ])
+    "#;
+
+    let targets = parse_manifest_targets(source);
+    let runner = targets
+        .iter()
+        .find(|target| target.name == "Runner")
+        .expect("executable target should parse");
+    assert_eq!(runner.roots, vec![std::path::PathBuf::from("Tools/Runner")]);
+    let custom_tests = targets
+        .iter()
+        .find(|target| target.name == "CustomTests")
+        .expect("custom test target should parse");
+    assert!(custom_tests.is_test);
+    assert_eq!(
+        custom_tests.roots,
+        vec![std::path::PathBuf::from("Checks/Integration")]
+    );
+    assert_eq!(
+        targets
+            .iter()
+            .find(|target| target.name == "Macros")
+            .expect("macro target should parse")
+            .roots,
+        vec![std::path::PathBuf::from("Sources/Macros")]
+    );
+    assert_eq!(
+        targets
+            .iter()
+            .find(|target| target.name == "Formatter")
+            .expect("plugin target should parse")
+            .roots,
+        vec![std::path::PathBuf::from("Plugins/Formatter")]
+    );
+    assert_eq!(
+        targets
+            .iter()
+            .filter(|target| target.name == "Formatter")
+            .count(),
+        1,
+        "plugin dependency bindings must not become source targets"
+    );
+}
+
+#[test]
 fn manifest_products_map_product_names_to_module_targets() {
     let source = r#"
         let package = Package(products: [

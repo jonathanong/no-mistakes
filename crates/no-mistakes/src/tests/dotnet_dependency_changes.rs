@@ -71,23 +71,28 @@ pub(crate) fn analyze_dotnet_dependency_changes(
             DotnetArtifactKind::Lockfile => dependency_only_lockfile_change(&before, &after),
         };
         match result {
-            Ok(diff) if diff.dependency_only => {
-                analysis.handled.insert(path.clone());
-                analysis.artifacts.push(DotnetDependencyArtifact {
-                    path: path.clone(),
-                    kind,
-                    changed_dependencies: diff.changed_dependencies,
-                    owning_project: match kind {
-                        DotnetArtifactKind::Project => Some(path.clone()),
-                        DotnetArtifactKind::Lockfile => path.parent().map(Path::to_path_buf),
-                        DotnetArtifactKind::CentralPackages => None,
-                    },
-                })
+            Ok(diff) => {
+                if diff.dependency_only {
+                    analysis.handled.insert(path.clone());
+                    analysis.artifacts.push(DotnetDependencyArtifact {
+                        path: path.clone(),
+                        kind,
+                        changed_dependencies: diff.changed_dependencies,
+                        owning_project: match kind {
+                            DotnetArtifactKind::Project => Some(path.clone()),
+                            DotnetArtifactKind::Lockfile => path.parent().map(Path::to_path_buf),
+                            DotnetArtifactKind::CentralPackages => None,
+                        },
+                    })
+                } else if !diff.changed_dependencies.is_empty() {
+                    push_warning(&mut analysis, "dotnet-dependency-mixed-configuration", file)
+                } else if diff.formatting_only {
+                    // The full normalized document is equal, so this edit is
+                    // formatting-only. Do not let the raw dependency-file graph edge
+                    // select its owning tests.
+                    analysis.handled.insert(path.clone());
+                }
             }
-            Ok(diff) if !diff.changed_dependencies.is_empty() => {
-                push_warning(&mut analysis, "dotnet-dependency-mixed-configuration", file)
-            }
-            Ok(_) => {}
             Err(d) => warning(&mut analysis, path, diagnostic_type(d), file),
         }
     }
@@ -209,8 +214,39 @@ mod tests {
             mixed.warnings[0].r#type,
             "dotnet-dependency-mixed-configuration"
         );
-        let formatting = analysis("formatting.csproj", "base.csproj");
-        assert!(formatting.artifacts.is_empty());
+        for (change, target) in [
+            ("formatting.csproj", "base.csproj"),
+            ("central-formatting.props", "Directory.Packages.props"),
+            ("lock-formatting.json", "packages.lock.json"),
+        ] {
+            let formatting = analysis(change, target);
+            assert!(formatting.artifacts.is_empty(), "{target}");
+            assert!(formatting.warnings.is_empty(), "{target}");
+            assert_eq!(formatting.handled.len(), 1, "{target}");
+            assert!(
+                formatting.handled.iter().any(|path| path.ends_with(target)),
+                "{target}"
+            );
+        }
+        for (change, target) in [
+            ("target-framework.csproj", "base.csproj"),
+            ("lock-root-version.json", "packages.lock.json"),
+        ] {
+            let semantic = analysis(change, target);
+            assert!(semantic.artifacts.is_empty(), "{target}");
+            assert!(semantic.warnings.is_empty(), "{target}");
+            assert!(semantic.handled.is_empty(), "{target}");
+        }
+        let mixed_lock = analysis(
+            "lock-root-version-and-dependency.json",
+            "packages.lock.json",
+        );
+        assert!(mixed_lock.artifacts.is_empty());
+        assert_eq!(
+            mixed_lock.warnings[0].r#type,
+            "dotnet-dependency-mixed-configuration"
+        );
+        assert!(mixed_lock.handled.is_empty());
     }
 
     #[test]

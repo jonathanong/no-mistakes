@@ -4,17 +4,9 @@ fn collect_swift_import_edges(
     interner: &PathInterner,
 ) {
     for file in facts.files.values() {
-        let source_package = swift_owning_package(facts, &file.path);
+        let allowed_roots = swift_allowed_roots(facts, file);
         for import in &file.imports {
             if let Some(target_files) = facts.files_by_target.get(import) {
-                let allowed_roots = source_package
-                    .and_then(|package| {
-                        file.target
-                            .as_ref()
-                            .and_then(|target| package.targets.get(target))
-                            .map(|target| swift_dependency_roots(facts, package, target))
-                    })
-                    .unwrap_or_default();
                 let target_files = target_files
                     .iter()
                     .filter(|target| allowed_roots.iter().any(|root| target.starts_with(root)))
@@ -38,15 +30,7 @@ fn collect_swift_reference_edges(
     interner: &PathInterner,
 ) {
     for file in facts.files.values() {
-        let source_package = swift_owning_package(facts, &file.path);
-        let allowed_roots = source_package
-            .and_then(|package| {
-                file.target
-                    .as_ref()
-                    .and_then(|target| package.targets.get(target))
-                    .map(|target| swift_dependency_roots(facts, package, target))
-            })
-            .unwrap_or_default();
+        let allowed_roots = swift_allowed_roots(facts, file);
         for reference in &file.references {
             if let Some(target_files) = facts.declarations.get(reference) {
                 let target_files = target_files
@@ -64,4 +48,20 @@ fn collect_swift_reference_edges(
             }
         }
     }
+}
+
+fn swift_allowed_roots(
+    facts: &crate::codebase::swift::SwiftFactMap,
+    file: &crate::codebase::swift::SwiftFileFacts,
+) -> Vec<PathBuf> {
+    let Some(package) = swift_owning_package(facts, &file.path) else {
+        return Vec::new();
+    };
+    file.target
+        .as_ref()
+        .and_then(|target| package.targets.get(target))
+        .map(|target| swift_dependency_roots(facts, package, target))
+        // A Swift file can be in a custom or unsupported target layout. Keep
+        // imports within its package causal instead of dropping every edge.
+        .unwrap_or_else(|| vec![package.package_root.clone()])
 }

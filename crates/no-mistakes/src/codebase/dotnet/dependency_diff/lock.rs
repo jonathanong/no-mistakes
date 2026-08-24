@@ -40,3 +40,25 @@ pub(super) fn lock_projection(
     }
     Ok(records)
 }
+
+/// Canonical JSON preserves every semantic lockfile field while ignoring
+/// whitespace and object-key order.
+pub(super) fn canonical_lockfile(source: &str) -> Result<String, DotnetDependencyDiagnostic> {
+    let value = parse_lockfile(source)?;
+    serde_json::to_string(&value).map_err(|_| DotnetDependencyDiagnostic::MalformedLockfile)
+}
+
+pub(super) fn non_dependency_lock_projection(
+    source: &str,
+) -> Result<String, DotnetDependencyDiagnostic> {
+    let mut value = parse_lockfile(source)?;
+    value
+        .as_object_mut()
+        .ok_or(DotnetDependencyDiagnostic::UnsupportedLockSchema)?
+        .remove("dependencies");
+    serde_json::to_string(&value).map_err(|_| DotnetDependencyDiagnostic::MalformedLockfile)
+}
+
+fn parse_lockfile(source: &str) -> Result<Value, DotnetDependencyDiagnostic> {
+    serde_json::from_str(source).map_err(|_| DotnetDependencyDiagnostic::MalformedLockfile)
+}

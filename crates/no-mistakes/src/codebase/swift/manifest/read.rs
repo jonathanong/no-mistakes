@@ -10,12 +10,15 @@ pub(crate) fn parse_manifest_targets(source: &str) -> Vec<SwiftTargetFacts> {
             let (dependencies, product_packages) = dependencies_body(call.body)
                 .map(manifest_dependencies)
                 .unwrap_or_default();
+            let root = string_arg(call.body, "path")
+                .map(std::path::PathBuf::from)
+                .unwrap_or_else(|| std::path::PathBuf::from(call.default_source_root).join(&name));
             Some(SwiftTargetFacts {
                 name,
                 is_test: call.is_test,
                 dependencies,
                 product_packages,
-                roots: Vec::new(),
+                roots: vec![root],
             })
         })
         .collect()

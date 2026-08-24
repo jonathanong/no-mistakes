@@ -62,3 +62,31 @@ fn package_manifests_are_not_indexed_as_swift_source_symbols() {
     assert!(!facts.files.contains_key(&manifest));
     assert!(facts.files.contains_key(&source));
 }
+
+#[test]
+fn executable_and_custom_targets_own_their_configured_source_roots() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-plan/swift-target-ownership/fixture");
+    let core = root.join("Sources/Core/Core.swift");
+    let runner = root.join("Tools/Runner/Runner.swift");
+    let custom_test = root.join("Checks/Integration/CustomTests.swift");
+    let plugin = root.join("Tooling/Plugin/Plugin.swift");
+    let facts = collect_swift_facts(
+        &root,
+        &[
+            core.clone(),
+            runner.clone(),
+            custom_test.clone(),
+            plugin.clone(),
+        ],
+        &[".".to_string()],
+    );
+
+    assert_eq!(facts.files[&core].target.as_deref(), Some("Core"));
+    assert_eq!(facts.files[&runner].target.as_deref(), Some("Runner"));
+    assert_eq!(
+        facts.files[&custom_test].target.as_deref(),
+        Some("CustomTests")
+    );
+    assert_eq!(facts.files[&plugin].target.as_deref(), Some("Plugin"));
+}

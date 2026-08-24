@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup>
+    <PackageVersion Version = '1.0.0' Include = "App.Only"></PackageVersion>
+  </ItemGroup>
+</Project>

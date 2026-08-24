@@ -235,6 +235,36 @@ fn dotnet_central_package_edges_use_only_the_nearest_ancestor() {
 }
 
 #[test]
+fn dotnet_central_package_edges_include_projects_without_package_references() {
+    let root = p("/repo");
+    let project = root.join("apps/App/App.csproj");
+    let central = root.join("Directory.Packages.props");
+    let mut facts = crate::codebase::dotnet::DotnetFactMap::default();
+    facts.projects.insert(
+        project.clone(),
+        crate::codebase::dotnet::DotnetProjectFacts {
+            project_path: project.clone(),
+            project_dir: root.join("apps/App"),
+            ..Default::default()
+        },
+    );
+
+    let mut edges = Vec::new();
+    collect_dotnet_dependency_file_edges(
+        &facts,
+        std::slice::from_ref(&central),
+        &mut edges,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+
+    assert!(edges.contains(&(
+        NodeId::file(project),
+        NodeId::file(central),
+        EdgeKind::DotnetProjectDependency,
+    )));
+}
+
+#[test]
 fn aspnet_map_get_emits_route_ref_to_handler_file() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))

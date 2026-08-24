@@ -4,6 +4,7 @@ use super::super::scanner::{
 
 pub(super) struct TargetCall<'a> {
     pub(super) is_test: bool,
+    pub(super) default_source_root: &'static str,
     pub(super) body: &'a str,
 }
 
@@ -12,17 +13,30 @@ pub(super) fn target_calls(source: &str) -> Vec<TargetCall<'_>> {
     let mut scanner = Scanner::new(source);
     while let Some(index) = scanner.next_code_index() {
         let rest = &source[index..];
-        let (is_test, open_index) = if rest.starts_with(".testTarget(") {
-            (true, index + ".testTarget".len())
-        } else if rest.starts_with(".target(") {
-            (false, index + ".target".len())
-        } else {
-            continue;
-        };
+        let (is_test, default_source_root, requires_capability, open_index) =
+            if rest.starts_with(".testTarget(") {
+                (true, "Tests", false, index + ".testTarget".len())
+            } else if rest.starts_with(".executableTarget(") {
+                (false, "Sources", false, index + ".executableTarget".len())
+            } else if rest.starts_with(".macro(") {
+                (false, "Sources", false, index + ".macro".len())
+            } else if rest.starts_with(".plugin(") {
+                (false, "Plugins", true, index + ".plugin".len())
+            } else if rest.starts_with(".target(") {
+                (false, "Sources", false, index + ".target".len())
+            } else {
+                continue;
+            };
         if let Some(close_index) = find_matching_delimiter(source, open_index, '(', ')') {
+            let body = &source[open_index + 1..close_index];
+            if requires_capability && find_label_colon(body, "capability").is_none() {
+                scanner.skip_to(close_index + 1);
+                continue;
+            }
             calls.push(TargetCall {
                 is_test,
-                body: &source[open_index + 1..close_index],
+                default_source_root,
+                body,
             });
             scanner.skip_to(close_index + 1);
         }
