@@ -29,7 +29,7 @@ Configured `tests.python|go|rust|rails|php|java|kotlin|elixir|dart` and `tests.d
 For package manifests that own nested workspaces, configure the
 `package-json-nested-workspace-coverage` check rule. It keeps explicit
 workspace entries aligned with configured dependency-name prefixes; see
-`docs/rules/package-json-nested-workspace-coverage.md`.
+https://github.com/jonathanong/no-mistakes/blob/main/docs/rules/package-json-nested-workspace-coverage.md.
 
 ## When To Reach For It
 
