@@ -504,6 +504,7 @@ test("native ESM imports expose every declared root API", async () => {
     }
 
     assert.equal(typeof esm.ciTopology, "function");
+    assert.equal(typeof esm.ciTopologyImpact, "function");
     assert.equal(typeof esm.testsPlan, "function");
     assert.equal(typeof esm.createWorkflowTopologyIndex, "function");
     assert.equal(typeof esm.version, "function");

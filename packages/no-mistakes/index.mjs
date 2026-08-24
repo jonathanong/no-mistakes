@@ -10,6 +10,7 @@ export const {
   ciEnv,
   ciImpact,
   ciTopology,
+  ciTopologyImpact,
   createWorkflowTopologyIndex,
   dataPw,
   deadExports,
