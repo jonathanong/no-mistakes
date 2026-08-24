@@ -2,8 +2,9 @@ use git2::{Repository, Tree};
 use std::path::Path;
 
 pub(super) fn normalize_entry(entry: &str) -> String {
+    let entry = entry.trim_start_matches("./");
     if entry.contains('/') {
-        entry.trim_start_matches("./").to_string()
+        entry.to_string()
     } else {
         format!(".github/workflows/{entry}")
     }
