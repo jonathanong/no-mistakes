@@ -42,6 +42,7 @@ pub mod case_insensitive_lookup;
 pub mod expression_references;
 pub mod graph_algorithms;
 pub mod graph_diagnostics;
+pub mod impact;
 pub mod model;
 pub mod parse;
 pub mod posix_path;

@@ -99,6 +99,7 @@ const {
 | `ci impact`                                | `ciImpact(options)`                                                                                                                                                                                                                                                        |
 | `ci env`                                   | `ciEnv(options)`                                                                                                                                                                                                                                                           |
 | `ci topology`                              | `ciTopology(options)`                                                                                                                                                                                                                                                      |
+| `ci topology-impact`                       | `ciTopologyImpact(options)`                                                                                                                                                                                                                                                |
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
 
 The following inventory is the complete runtime export surface. Keeping this
@@ -115,6 +116,7 @@ does not have a one-to-one CLI command:
 | `ciEnv` | `ciEnv(options)` |
 | `ciImpact` | `ciImpact(options)` |
 | `ciTopology` | `ciTopology(options)` |
+| `ciTopologyImpact` | `ciTopologyImpact(options)` |
 | `dataPw` | `dataPw(options)` |
 | `deadExports` | `deadExports(options)` |
 | `dependencies` | `dependencies(options)` |

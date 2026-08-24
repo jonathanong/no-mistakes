@@ -163,6 +163,8 @@ test("programmatic API proxies object options through async native addon calls",
         JSON.stringify({ command: "swiftTestTargets", options: JSON.parse(json) }),
       ciTopologyJson: async (json) =>
         JSON.stringify({ command: "ciTopology", options: JSON.parse(json) }),
+      ciTopologyImpactJson: async (json) =>
+        JSON.stringify({ command: "ciTopologyImpact", options: JSON.parse(json) }),
       version: async () => "1.2.3",
     };
   };
@@ -339,6 +341,11 @@ test("programmatic API proxies object options through async native addon calls",
     assert.equal(
       (await api.ciTopology({ workflows: ["deploy.yml"] })).options.workflows[0],
       "deploy.yml",
+    );
+    assert.equal(
+      (await api.ciTopologyImpact({ base: "base", head: "head", entryWorkflow: "ci.yml" }))
+        .options.entryWorkflow,
+      "ci.yml",
     );
     const cached = await api.ciTopology({ workflows: ["ci.yml"] });
     cached.options.workflows[0] = "mutated.yml";
