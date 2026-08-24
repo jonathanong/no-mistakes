@@ -7,13 +7,29 @@ pub enum BenchShard {
 }
 
 pub const CHECK: &str = "check";
+pub const OBSERVER: &str = "observer";
 pub const TESTS_PLAN: &str = "tests-plan";
-pub const GRAPH: &str = "graph";
+pub const GRAPH_CORE: &str = "graph-core";
+pub const GRAPH_GATES: &str = "graph-gates";
+pub const LANGUAGE_FRONTENDS: &str = "language-frontends";
+pub const NATIVE_FRONTENDS: &str = "native-frontends";
+pub const GRAPH_FINALIZATION: &str = "graph-finalization";
 pub const GRAPH_PRODUCTION: &str = "graph-production";
 pub const QUERY: &str = "query";
 pub const GENERAL_MEMORY: &str = "general-memory";
 
-const NAMED_SHARDS: &[&str] = &[CHECK, TESTS_PLAN, GRAPH, GRAPH_PRODUCTION, QUERY];
+const NAMED_SHARDS: &[&str] = &[
+    CHECK,
+    OBSERVER,
+    TESTS_PLAN,
+    GRAPH_CORE,
+    GRAPH_GATES,
+    LANGUAGE_FRONTENDS,
+    NATIVE_FRONTENDS,
+    GRAPH_FINALIZATION,
+    GRAPH_PRODUCTION,
+    QUERY,
+];
 
 pub fn parse_bench_shard(value: Option<&str>) -> Result<BenchShard, String> {
     match value {

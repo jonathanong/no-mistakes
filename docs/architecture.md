@@ -288,13 +288,17 @@ fact extract on graph-gates, and an aggregate `check` of that same fixture.
 Every workload runs a preflight that validates stable, fixture-specific
 output invariants before the measured loop.
 
-CI builds the harness once, then runs CodSpeed CPU simulation in four
-function-type shards (`check`, `tests-plan`, `graph`, `query`) plus the
-existing memory shards. `NO_MISTAKES_BENCH_SHARD` skips unused `bench_*`
+CI builds the harness once, then runs each semantic shard in both CodSpeed CPU
+simulation and memory modes: `check`, `observer`, `tests-plan`, `graph-core`,
+`graph-gates`, `language-frontends`, `native-frontends`, `graph-finalization`,
+`graph-production`, and `query`. Production node and selector finalization use
+separate filtered jobs. `NO_MISTAKES_BENCH_SHARD` skips unused setup and
 preflight work; unset or `general-memory` still runs every non-production
-workload locally. Node and selector memory jobs use `graph-production` so
-they do not construct unrelated graph fixtures. Unknown shard names fail
-fast. New workloads must use checked-in fixtures,
+workload locally. Swift/.NET fixture-only changes select `native-frontends`,
+while `fixtures/lang-frontends` changes select `language-frontends`, so the two
+CodSpeed histories do not perturb one another. Shared code and configuration
+changes conservatively run every shard. Unknown shard names fail fast. New
+workloads must use checked-in fixtures,
 `BenchmarkId` for meaningful variants, `Throughput` where a stable unit exists,
 and must not generate repositories or launch the CLI as a subprocess.
 

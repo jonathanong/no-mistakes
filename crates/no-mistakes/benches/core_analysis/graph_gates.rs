@@ -22,7 +22,7 @@ use support::{
 };
 
 pub(super) fn bench_graph_gates(c: &mut Criterion) {
-    if !shard::should_run(shard::GRAPH) {
+    if !shard::should_run(shard::GRAPH_GATES) {
         return;
     }
     let root = fixture_root();

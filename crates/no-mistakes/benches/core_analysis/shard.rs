@@ -3,7 +3,8 @@
 //! the full suite.
 
 pub(super) use no_mistakes::benchmark_support::{
-    CHECK, GENERAL_MEMORY, GRAPH, GRAPH_PRODUCTION, QUERY, TESTS_PLAN,
+    CHECK, GENERAL_MEMORY, GRAPH_CORE, GRAPH_FINALIZATION, GRAPH_GATES, GRAPH_PRODUCTION,
+    LANGUAGE_FRONTENDS, NATIVE_FRONTENDS, OBSERVER, QUERY, TESTS_PLAN,
 };
 
 pub(super) fn should_run(shard: &str) -> bool {
@@ -14,8 +15,4 @@ pub(super) fn should_run(shard: &str) -> bool {
         Ok(run) => run,
         Err(err) => panic!("{err}"),
     }
-}
-
-pub(super) fn should_run_any(shards: &[&str]) -> bool {
-    shards.iter().any(|shard| should_run(shard))
 }
