@@ -56,6 +56,9 @@ pub struct CiTopologyImpactReport {
 #[path = "impact_tests_action_routing.rs"]
 mod action_routing_tests;
 #[cfg(test)]
+#[path = "impact_tests_needs.rs"]
+mod needs_tests;
+#[cfg(test)]
 #[path = "impact_tests_regressions.rs"]
 mod regression_tests;
 #[cfg(test)]
