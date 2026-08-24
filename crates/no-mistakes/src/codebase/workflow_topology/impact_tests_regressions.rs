@@ -103,6 +103,20 @@ fn needs_closure_does_not_pull_siblings_through_a_prerequisite() {
 }
 
 #[test]
+fn needs_closure_includes_prerequisites_of_affected_dependents() {
+    assert_case(Case {
+        name: "needs-dependent-prerequisite",
+        roots: &[
+            ".github/workflows/ci.yml#release-notes",
+            ".github/workflows/ci.yml#test-web",
+            ".github/workflows/ci.yml#publish",
+        ],
+        workflows: &[".github/workflows/ci.yml"],
+        global: false,
+    });
+}
+
+#[test]
 fn composite_action_changes_resolve_direct_and_nested_callers() {
     for (name, roots) in [
         ("direct-action", &[".github/workflows/ci.yml#test-web"][..]),

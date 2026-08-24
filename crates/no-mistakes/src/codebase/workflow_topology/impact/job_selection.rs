@@ -73,17 +73,20 @@ pub(super) fn add_needs_closure(
     let changed = selected.clone();
     let mut pending: Vec<String> = changed.iter().cloned().collect();
     while let Some(job) = pending.pop() {
-        for prerequisite in prerequisites.remove(&job).unwrap_or_default() {
-            if selected.insert(prerequisite.clone()) {
-                pending.push(prerequisite);
-            }
-        }
-    }
-    let mut pending: Vec<String> = changed.into_iter().collect();
-    while let Some(job) = pending.pop() {
         for dependent in dependents.remove(&job).unwrap_or_default() {
             if selected.insert(dependent.clone()) {
                 pending.push(dependent);
+            }
+        }
+    }
+    // A downstream job can introduce its own prerequisite. Expand upstream
+    // only after the affected dependent closure is complete, while never
+    // revisiting dependents of those prerequisites.
+    let mut pending: Vec<String> = selected.iter().cloned().collect();
+    while let Some(job) = pending.pop() {
+        for prerequisite in prerequisites.remove(&job).unwrap_or_default() {
+            if selected.insert(prerequisite.clone()) {
+                pending.push(prerequisite);
             }
         }
     }
