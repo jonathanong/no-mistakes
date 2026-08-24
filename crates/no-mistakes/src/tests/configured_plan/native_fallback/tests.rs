@@ -56,11 +56,14 @@ fn unscoped_native_full_suite_fallback_requires_explicit_opt_in() {
 
 #[test]
 fn dotnet_project_fallback_reuses_prepared_visible_paths() {
-    let source = include_str!("../native_fallback.rs");
+    let source = include_str!("dotnet.rs");
     let body = source
-        .split("fn dotnet_project_fallback_tests(")
+        .split("pub(super) fn project_fallback_tests(")
         .nth(1)
-        .and_then(|body| body.split("\nfn dotnet_fallback_tests(").next())
+        .and_then(|body| {
+            body.split("\npub(super) fn solution_fallback_tests(")
+                .next()
+        })
         .expect("dotnet project fallback body");
 
     assert!(body.contains("visible_paths"));
