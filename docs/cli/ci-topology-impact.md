@@ -12,3 +12,7 @@ The output is schema version 1 and includes normalized revision IDs, changed
 paths, affected workflows and root job IDs, diagnostics, and `globalFallback`.
 Consumers must treat `globalFallback: true` or a missing report as permission
 to run every otherwise eligible CI producer.
+
+Each diagnostic carries a `scope`. A `localized` diagnostic includes sorted
+`rootJobIds` only when every implicated endpoint maps to entry-workflow jobs;
+all parser, Git, malformed, ambiguous, and unbound cases are `global`.

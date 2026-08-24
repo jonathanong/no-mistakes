@@ -1,0 +1,6 @@
+name: tooling
+# Changed content keeps the recursive-call diagnostic while exercising impact routing.
+on: workflow_call
+jobs:
+  recurse:
+    uses: ./.github/workflows/other.yml

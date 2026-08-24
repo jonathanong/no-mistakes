@@ -1,0 +1,7 @@
+name: tooling
+on: push
+jobs:
+  unrelated:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo unrelated

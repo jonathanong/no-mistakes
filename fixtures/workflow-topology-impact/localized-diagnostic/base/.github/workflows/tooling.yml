@@ -1,0 +1,5 @@
+name: tooling
+on: workflow_call
+jobs:
+  recurse:
+    uses: ./.github/workflows/other.yml

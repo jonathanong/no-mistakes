@@ -1,0 +1,5 @@
+name: inner
+runs:
+  using: composite
+  steps:
+    - run: echo after

@@ -1,0 +1,7 @@
+name: CI
+on: push
+jobs:
+  test-a:
+    uses: ./.github/workflows/a.yml
+  test-b:
+    uses: ./.github/workflows/b.yml

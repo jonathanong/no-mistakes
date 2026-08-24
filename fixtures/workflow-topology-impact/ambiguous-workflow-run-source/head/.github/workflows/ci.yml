@@ -1,0 +1,13 @@
+name: CI
+on:
+  workflow_run:
+    workflows: [source]
+jobs:
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo changed
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo backend

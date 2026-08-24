@@ -1,0 +1,9 @@
+name: CI
+on: push
+jobs:
+  test-web:
+    uses: ./.github/workflows/missing.yml
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo backend

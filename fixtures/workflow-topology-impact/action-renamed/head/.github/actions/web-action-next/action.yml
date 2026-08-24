@@ -1,0 +1,5 @@
+name: web action
+runs:
+  using: composite
+  steps:
+    - run: pnpm test:web
