@@ -1,6 +1,79 @@
-use super::super::model::DiagnosticCode;
-use super::diagnostics::requires_unbound_global;
+use super::super::model::{DiagnosticCode, WorkflowTopology, WorkflowTopologyDiagnostic};
+use super::diagnostics::{requires_unbound_global, topology_diagnostic};
+use super::project::{project_impact, ImpactInputs};
 use super::tests::{assert_case, report, Case};
+use super::yaml::normalize_entry;
+use super::CiTopologyImpactDiagnosticScope;
+use std::collections::BTreeSet;
+
+fn empty_topology() -> WorkflowTopology {
+    WorkflowTopology {
+        schema_version: 1,
+        workflows: Vec::new(),
+        jobs: Vec::new(),
+        edges: Vec::new(),
+        diagnostics: Vec::new(),
+    }
+}
+
+#[test]
+fn projection_fails_open_when_entry_or_action_callers_cannot_be_resolved() {
+    let topology = empty_topology();
+    let changed_actions = BTreeSet::from([".github/actions/check".into()]);
+    let report = project_impact(ImpactInputs {
+        base_revision: "base".into(),
+        head_revision: "head".into(),
+        changed_paths: vec![".github/actions/check/action.yml".into()],
+        entry_workflow: "ci.yml",
+        base: &topology,
+        head: &topology,
+        reachable_actions: &changed_actions,
+        changed_actions: &changed_actions,
+        action_jobs: &BTreeSet::new(),
+        changed_entry_jobs: &BTreeSet::new(),
+        entry_global_change: false,
+        unowned_action: false,
+    });
+
+    assert!(report.global_fallback);
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code == "missing-entry-workflow"));
+    assert!(report
+        .diagnostics
+        .iter()
+        .any(|diagnostic| diagnostic.code == "unresolved-local-action-caller"));
+}
+
+#[test]
+fn diagnostic_callee_and_explicit_entry_paths_are_preserved() {
+    let topology = empty_topology();
+    let diagnostic = topology_diagnostic(
+        &WorkflowTopologyDiagnostic::new(
+            DiagnosticCode::NonCallableWorkflow,
+            "callee cannot be called",
+            ".github/workflows/ci.yml",
+        )
+        .with_callee(".github/workflows/tooling.yml"),
+        ".github/workflows/ci.yml",
+        &topology,
+        &topology,
+    );
+
+    assert_eq!(diagnostic.scope, CiTopologyImpactDiagnosticScope::Global);
+    assert_eq!(diagnostic.root_job_ids, None);
+    assert_eq!(
+        normalize_entry("./.github/workflows/ci.yml"),
+        ".github/workflows/ci.yml"
+    );
+}
+
+#[test]
+fn non_mapping_entry_and_external_action_remain_safe_to_inspect() {
+    assert!(report("entry-root-nonmapping").global_fallback);
+    assert!(!report("external-action").global_fallback);
+}
 
 #[test]
 fn needs_closure_unions_both_revisions_and_both_directions() {
