@@ -197,3 +197,58 @@ fn manifest_dependency_only_diff_diagnoses_dynamic_declarations() {
         SwiftManifestDiagnostic::UnsupportedDynamicDeclaration
     );
 }
+
+#[test]
+fn manifest_rejects_invalid_static_declarations_and_bindings() {
+    for source in [
+        r#"let package = Package(dependencies: [.package(path: dynamic)])"#,
+        r#"let package = Package(dependencies: [.package(path: "../Core", condition: .when(platforms: [.iOS]))])"#,
+    ] {
+        assert_eq!(
+            dependency_only_manifest_change(source, source),
+            Err(SwiftManifestDiagnostic::UnsupportedDynamicDeclaration)
+        );
+    }
+    for binding in [
+        "\"unterminated",
+        ".target(name: \"Core\"",
+        ".target(name: \"Core\") extra",
+        ".target()",
+        ".product(name: \"Core\")",
+        ".unsupported(name: \"Core\")",
+    ] {
+        assert_eq!(
+            validate_binding(binding),
+            Err(SwiftManifestDiagnostic::UnsupportedDynamicDeclaration),
+            "{binding}"
+        );
+    }
+}
+
+#[test]
+fn manifest_parser_tolerates_unclosed_strings_and_overlapping_declarations() {
+    assert_eq!(
+        normalize_manifest("let name = \"unterminated"),
+        "letname=\"unterminated"
+    );
+
+    let source = r#"
+        let package = Package(dependencies: [
+            .package(path: "../Core", targets: [
+                .target(name: "App", dependencies: ["Core"])
+            ])
+        ])
+    "#;
+    assert!(manifest_projection(source).is_ok());
+}
+
+#[test]
+fn manifest_readers_ignore_unclosed_or_pathless_declarations() {
+    assert!(parse_manifest_products(".library(name: \"Core\"").is_empty());
+    assert_eq!(
+        parse_local_package_bindings(
+            r#".package(name: "NoPath").package(path: "../Core") .package(path: "../Broken""#
+        ),
+        std::collections::BTreeMap::from([("../Core".to_string(), "core".to_string())])
+    );
+}

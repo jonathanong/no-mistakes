@@ -173,6 +173,48 @@ fn swift_manifest_edges_normalize_local_package_paths_without_source_imports() {
 }
 
 #[test]
+fn swift_manifest_edges_skip_absent_own_and_local_dependency_manifests() {
+    let app_root = p("Client/App");
+    let source = app_root.join("Sources/App/App.swift");
+    let manifest = app_root.join("Package.swift");
+    let local_manifest = p("Client/Core/Package.swift");
+    let mut facts = crate::codebase::swift::SwiftFactMap::default();
+    facts.files.insert(
+        source.clone(),
+        crate::codebase::swift::SwiftFileFacts {
+            path: source.clone(),
+            ..Default::default()
+        },
+    );
+    facts
+        .packages
+        .push(crate::codebase::swift::SwiftPackageFacts {
+            package_root: app_root,
+            local_package_paths: vec!["../Core".to_string()],
+            ..Default::default()
+        });
+    let mut edges = Vec::new();
+    let interner = crate::codebase::analysis_session::PathInterner::new();
+
+    collect_swift_manifest_edges(&facts, &[], &mut edges, &interner);
+    assert!(edges.is_empty());
+
+    collect_swift_manifest_edges(&facts, std::slice::from_ref(&manifest), &mut edges, &interner);
+
+    assert_eq!(
+        edges,
+        vec![(
+            NodeId::file(source),
+            NodeId::file(manifest),
+            EdgeKind::SwiftPackageDependency,
+        )]
+    );
+    assert!(!edges.iter().any(|(_, target, _)| {
+        target.as_file() == Some(local_manifest.as_path())
+    }));
+}
+
+#[test]
 fn swift_edges_assign_nested_files_only_to_their_deepest_package() {
     let parent_root = p("Client");
     let nested_root = p("Client/Vendor/Core");

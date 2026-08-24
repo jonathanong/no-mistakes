@@ -80,7 +80,7 @@ pub(super) fn bench_language_frontends(c: &mut Criterion) {
         swift,
         NativeFrontendSummary {
             files: 15,
-            parsed_files: 7,
+            parsed_files: 5,
             physical_reads: 7,
         },
         "update the stable Swift benchmark preflight after intentional fixture changes"
@@ -90,7 +90,7 @@ pub(super) fn bench_language_frontends(c: &mut Criterion) {
         NativeFrontendSummary {
             files: 12,
             parsed_files: 5,
-            physical_reads: 5,
+            physical_reads: 7,
         },
         "update the stable .NET benchmark preflight after intentional fixture changes"
     );

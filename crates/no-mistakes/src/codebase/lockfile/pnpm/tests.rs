@@ -180,6 +180,33 @@ fn impact_importer_paths_preserve_v6_multi_peer_underscore_contexts() {
 }
 
 #[test]
+fn impact_importer_paths_skip_unresolvable_importer_dependencies() {
+    let old = fixture("unresolvable-importer-old.yaml");
+    let new = fixture("unresolvable-importer-new.yaml");
+    let names = impact_names(&old, &new, std::iter::empty());
+    assert_eq!(names, vec!["leaf".to_string(), "middle".to_string()]);
+    assert!(!impact_importer_paths(&old, &new, &names).contains_key("middle"));
+}
+
+#[test]
+fn impact_graph_ignores_malformed_and_non_mapping_package_sections() {
+    assert!(impact_names("[", "[", std::iter::empty()).is_empty());
+
+    let empty_sections = "lockfileVersion: '9.0'\npackages: []\nsnapshots: []\n";
+    assert!(impact_names(empty_sections, empty_sections, std::iter::empty()).is_empty());
+}
+
+#[test]
+fn impact_importer_paths_preserve_parenthesized_peer_contexts() {
+    let old = fixture("exact-v9-parenthesized-peer-old.yaml");
+    let new = fixture("exact-v9-parenthesized-peer-new.yaml");
+    let names = impact_names(&old, &new, std::iter::empty());
+    let paths = impact_importer_paths(&old, &new, &names);
+    assert_eq!(names, vec!["leaf".to_string(), "middle".to_string()]);
+    assert_eq!(paths.get("middle"), Some(&vec!["react-app".to_string()]));
+}
+
+#[test]
 fn impact_importer_paths_do_not_cross_independent_changed_locators() {
     let old = fixture("exact-multiple-old.yaml");
     let new = fixture("exact-multiple-new.yaml");
@@ -268,6 +295,42 @@ fn parse_importers_resolves_scalar_aliases_from_specifiers_and_version_path() {
     assert_eq!(deps[8].alias, "x-workspace-range");
     assert_eq!(deps[8].specifier, "workspace:1.x");
     assert_eq!(deps[8].resolution_name, None);
+}
+
+#[test]
+fn planning_validation_rejects_invalid_versions_and_sections() {
+    for content in [
+        "[]",
+        "lockfileVersion: not-a-version\npackages: {}\n",
+        "lockfileVersion: 4\npackages: {}\n",
+        "lockfileVersion: true\npackages: {}\n",
+        "lockfileVersion: '9.0'\npackages: []\n",
+        "lockfileVersion: '9.0'\nmetadata: {}\n",
+    ] {
+        assert!(
+            matches!(
+                validate_for_planning(content),
+                Err(PnpmValidationError::UnsupportedSchema)
+            ),
+            "unexpected validation result for {content:?}"
+        );
+    }
+    assert!(validate_for_planning("lockfileVersion: 9\npackages: {}\n").is_ok());
+}
+
+#[test]
+fn unmodeled_installation_sections_ignore_malformed_and_non_mapping_inputs() {
+    let valid = "lockfileVersion: '9.0'\npackages: {}\n";
+    for (old, new) in [("[", valid), (valid, "["), ("[]", valid), (valid, "[]")] {
+        assert!(changed_unmodeled_installation_sections(old, new).is_empty());
+    }
+    assert_eq!(
+        changed_unmodeled_installation_sections(
+            valid,
+            "lockfileVersion: '9.0'\npackages: {}\nsettings: {frozen: true}\n"
+        ),
+        vec!["settings".to_string()]
+    );
 }
 
 #[test]
