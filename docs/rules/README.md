@@ -29,7 +29,7 @@ rules:
 | [`csharp-no-async-void-delegate`](csharp-no-async-void-delegate.md)           | Ban async lambdas passed to void Action APIs such as Command.                   |
 | [`doc-consistency`](doc-consistency.md)                                       | Require files, headings, substrings, and banned-substring checks.               |
 | [`file-extension-policy`](file-extension-policy.md)                           | Enforce allowed or banned extensions in configured scopes.                      |
-| [`finite-set-consistency`](finite-set-consistency.md)                         | Compare finite string sets extracted from source and paths.                     |
+| [`finite-set-consistency`](finite-set-consistency.md)                         | Compare finite string sets from source, paths, and YAML selectors.              |
 | [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)     | Require paired step and nested action timeouts for configured `uses`.       |
 | [`github-actions-composite-step-schema`](github-actions-composite-step-schema.md) | Validate composite-action steps against GitHub's documented step keys.     |
 | [`github-actions-job-timeouts`](github-actions-job-timeouts.md)                   | Require literal job `timeout-minutes` and optional caps.                    |

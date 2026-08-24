@@ -3,6 +3,7 @@ use super::types::SqlSchemaFileFacts;
 use sqlparser::ast::{ObjectName, ObjectNamePart, ObjectType, Statement};
 
 mod constraints;
+mod dynamic;
 mod indexes;
 mod lines;
 mod predicate;
@@ -64,7 +65,66 @@ pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
             _ => {}
         }
     }
+    // Analyze direct body DDL and static EXECUTE SQL through the same extractor,
+    // so every downstream PostgreSQL rule consumes identical schema facts.
+    for dynamic_sql in dynamic::schema_bodies(sql)
+        .into_iter()
+        .chain(dynamic::extract(sql))
+    {
+        let mut dynamic_facts = extract_migration_facts(&dynamic_sql.sql);
+        remap_dynamic_fact_lines(&mut dynamic_facts, &dynamic_sql);
+        merge_dynamic_facts(&mut facts, dynamic_facts);
+    }
     facts
+}
+
+fn remap_dynamic_fact_lines(facts: &mut SqlSchemaFileFacts, dynamic: &dynamic::DynamicSql) {
+    for index in &mut facts.indexes {
+        index.line = dynamic.source_line(index.line);
+    }
+    for index in &mut facts.dropped_indexes {
+        index.line = dynamic.source_line(index.line);
+    }
+    for table in &mut facts.dropped_tables {
+        table.line = dynamic.source_line(table.line);
+    }
+    for key in &mut facts.foreign_keys {
+        key.line = dynamic.source_line(key.line);
+    }
+    for column in &mut facts.add_columns {
+        column.line = dynamic.source_line(column.line);
+    }
+    for constraint in &mut facts.unnamed_constraints {
+        constraint.line = dynamic.source_line(constraint.line);
+    }
+    for statement in &mut facts.statement_kinds {
+        statement.line = dynamic.source_line(statement.line);
+    }
+    for constraint in &mut facts.not_valid_constraints {
+        constraint.line = dynamic.source_line(constraint.line);
+    }
+    for constraint in &mut facts.validated_constraints {
+        constraint.line = dynamic.source_line(constraint.line);
+    }
+}
+
+fn merge_dynamic_facts(facts: &mut SqlSchemaFileFacts, dynamic: SqlSchemaFileFacts) {
+    facts.tables.extend(dynamic.tables);
+    facts.indexes.extend(dynamic.indexes);
+    facts.dropped_indexes.extend(dynamic.dropped_indexes);
+    facts.dropped_tables.extend(dynamic.dropped_tables);
+    facts.foreign_keys.extend(dynamic.foreign_keys);
+    facts.add_columns.extend(dynamic.add_columns);
+    facts
+        .unnamed_constraints
+        .extend(dynamic.unnamed_constraints);
+    facts.statement_kinds.extend(dynamic.statement_kinds);
+    facts
+        .not_valid_constraints
+        .extend(dynamic.not_valid_constraints);
+    facts
+        .validated_constraints
+        .extend(dynamic.validated_constraints);
 }
 
 pub(super) fn relation(name: &ObjectName) -> String {

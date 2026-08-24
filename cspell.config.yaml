@@ -101,6 +101,7 @@ words:
   - tokei
   - timestamptz
   - tsconfig
+  - UESCAPE
   - ungated
   - urlpatterns
   - unmodeled

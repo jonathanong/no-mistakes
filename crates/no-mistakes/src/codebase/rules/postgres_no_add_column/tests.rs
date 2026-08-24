@@ -137,13 +137,21 @@ fn reports_unexpected_and_stale_allowed_migrations_bidirectionally() {
 }
 
 #[test]
-fn reports_allowlist_entry_stale_when_dynamic_sql_is_not_analyzed() {
+fn reports_static_format_shape_and_stale_concrete_allowlist_entry() {
     let root = fixture("dynamic");
     let findings = run_with_config(&root, config_with_allowed_migration("draft"));
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert!(findings[0]
-        .message
-        .contains("stale postgres-no-add-column allowedMigrations entry"));
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert!(findings.iter().any(|finding| {
+        finding.target.as_deref() == Some("dynamic_identifier.dynamic_identifier")
+            && finding
+                .message
+                .contains("does not match an allowedMigrations entry")
+    }));
+    assert!(findings.iter().any(|finding| {
+        finding
+            .message
+            .contains("stale postgres-no-add-column allowedMigrations entry")
+    }));
 }
 
 #[test]

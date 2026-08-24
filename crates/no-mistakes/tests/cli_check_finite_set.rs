@@ -60,3 +60,38 @@ fn finite_set_path_regex_min_size_fails_closed_for_empty_captures() {
                 .is_some_and(|message| message.contains("contains"))
     }));
 }
+
+#[test]
+fn finite_set_yaml_string_selector_passes_and_reports_missing_values() {
+    let pass_root = finite_set_fixture("yaml-string-selector/pass");
+    let pass = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&pass_root)
+        .arg("--config")
+        .arg(pass_root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert!(pass.status.success(), "{}", stdout(&pass));
+
+    let fail_root = finite_set_fixture("yaml-string-selector/fail");
+    let fail = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&fail_root)
+        .arg("--config")
+        .arg(fail_root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&fail);
+    let json: serde_json::Value = serde_json::from_str(&body).expect("stdout should be json");
+
+    assert!(!fail.status.success(), "{body}");
+    assert!(json["rules"].as_array().unwrap().iter().any(|finding| {
+        finding["rule"] == "finite-set-consistency"
+            && finding["target"] == "@acme/web"
+            && finding["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("permanentPackages contains"))
+    }));
+}

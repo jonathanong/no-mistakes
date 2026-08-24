@@ -25,6 +25,10 @@ rules:
           file: .github/dependabot.yml
           kind: yaml-sequence
           key: updates.0.cooldown.exclude
+        - name: permanentPackages
+          file: .no-mistakes.yml
+          kind: yaml-string-selector
+          key: rules.[].options.permanentPackages.[].name
         - name: schedulerIds
           file: backend/queues/ai-agents/enqueues/schedules.mts
           kind: ts-call-first-string-argument
@@ -47,7 +51,25 @@ rules:
 Supported set kinds are `ts-string-union`, `ts-const-object-keys`,
 `ts-const-object-property`, `ts-array-literal`, `ts-const-array-property`,
 `ts-call-first-string-argument`, `yaml-sequence`,
-`markdown-table-code-cells`, `sql-enum`, and `path-regex-capture`.
+`yaml-string-selector`, `markdown-table-code-cells`, `sql-enum`, and
+`path-regex-capture`.
+
+`yaml-string-selector` collects terminal YAML strings at a dot-separated
+selector. Bare mapping-key segments select keys, numeric segments select a
+sequence index, and `[]` traverses every sequence member. For example,
+`rules.[].options.permanentPackages.[].name` collects every package name from
+every matching rule option. Use a bracketed JSON string segment for a literal
+mapping key that would otherwise be structural: `["a.b"]` selects a key with a
+dot, `["[]"]` selects a key named `[]`, and `["0"]` selects a numeric-string
+key. JSON escapes work inside bracketed segments, such as `["a\\\"b"]`.
+
+A missing selector, invalid selector syntax, invalid traversal, or non-string
+terminal value extracts no values. Pair required selectors with `minSize: 1`
+so a renamed YAML path fails closed.
+
+`markdown-table-code-cells` collects inline-code values from table body cells
+only; inline code in table headers is descriptive metadata rather than a set
+member.
 
 `path-regex-capture` matches visible lexical path entries from the request
 inventory: regular files, file-target symlinks, directory-target symlinks
@@ -92,12 +114,15 @@ file exists, a workspace YAML allowlist names a package missing from a TS
 registry, a registry package is not covered by any dependabot glob, a package
 is missing from a markdown policy table, a scheduler registration is missing
 from its registry, or two `path-regex-capture` sets both extract nothing and
-would pass `equal-set` without `minSize: 1`.
+would pass `equal-set` without `minSize: 1`. Likewise, a
+`yaml-string-selector` that no longer reaches `permanentPackages` silently
+extracts no values unless it has `minSize: 1`.
 
 Fix: add the missing value to the other set, remove stale values, replace a
 dynamic call argument with a static string when it is part of the checked
 finite set, restore the files or pattern that should populate a `minSize`
-set, or narrow the configured extraction.
+set, restore the YAML selector path and its `minSize: 1`, or narrow the
+configured extraction.
 
 Suppression: use `no-mistakes` suppression directives. Findings currently report
 line 1 for finite set mismatches.

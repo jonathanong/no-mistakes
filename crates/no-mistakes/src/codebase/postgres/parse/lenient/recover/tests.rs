@@ -47,6 +47,11 @@ fn schema_ddl_start_finds_alter_create_and_unique_index() {
     assert!(schema_ddl_start(&tokens("BEGIN CREATE UNIQUE INDEX t_id ON t (id)")).is_some());
     assert!(schema_ddl_start(&tokens("BEGIN DROP INDEX idx_t")).is_some());
     assert!(schema_ddl_start(&tokens("BEGIN DROP TABLE t")).is_some());
+    assert!(schema_ddl_start(&tokens("BEGIN CREATE VIEW v AS SELECT 1")).is_some());
+    assert!(schema_ddl_start(&tokens("BEGIN CREATE MATERIALIZED VIEW v AS SELECT 1")).is_some());
+    assert!(schema_ddl_start(&tokens("BEGIN TRUNCATE TABLE t")).is_some());
+    assert!(schema_ddl_start(&tokens("BEGIN DROP VIEW v")).is_some());
+    assert!(schema_ddl_start(&tokens("BEGIN DROP MATERIALIZED VIEW v")).is_some());
 }
 
 #[test]

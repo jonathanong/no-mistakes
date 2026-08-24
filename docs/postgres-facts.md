@@ -28,13 +28,16 @@ Primary keys are recognized from both `col TYPE PRIMARY KEY` and table-level
 (including `STORED` and PostgreSQL 18 `VIRTUAL`). Constraint tokens are
 stable strings such as `CONSTR_PRIMARY` and `CONSTR_GENERATED`.
 
-Unparseable statements are skipped. `DO $tag$` bodies are peeled so
-parseable schema DDL inside them (`CREATE TABLE`, `CREATE [UNIQUE] INDEX`,
-`ALTER TABLE`) is collected, including `ALTER TABLE` after PL/pgSQL
-`IF/THEN` wrappers. `CREATE FUNCTION` / `CREATE PROCEDURE` bodies are not
-peeled. `chr(n)` calls are rewritten to string literals, and concatenations
-of those literals (`chr(85)||chr(80)||…`) are recovered as SQL when the
-chunk is otherwise unparseable. `DROP INDEX CONCURRENTLY` is accepted.
+Unparseable statements are skipped. Executable PL/pgSQL `DO`, `CREATE
+FUNCTION`, and `CREATE PROCEDURE` bodies are peeled so parseable schema DDL
+inside them (`CREATE TABLE`, `CREATE [UNIQUE] INDEX`, `ALTER TABLE`) is
+collected, including `ALTER TABLE` after PL/pgSQL `IF/THEN` wrappers. Routine
+bodies may be dollar-quoted, plain single-quoted, escaped, Unicode (including a
+custom `UESCAPE` character), or newline-concatenated strings. Non-PL/pgSQL
+function/procedure bodies remain inert. `chr(n)` calls are rewritten to string
+literals, and concatenations of
+those literals (`chr(85)||chr(80)||…`) are recovered as SQL when the chunk is
+otherwise unparseable. `DROP INDEX CONCURRENTLY` is accepted.
 Incomplete statements are still skipped. PostgreSQL 18
 `GENERATED ALWAYS AS (...) VIRTUAL` is accepted (rewritten to `STORED`
 for the parser). A file that cannot be tokenized yields no tables. The
@@ -63,8 +66,12 @@ request `SourceStore` and runs `extract_migration_facts`, which includes
 - `ALTER TABLE … VALIDATE CONSTRAINT` rows
 
 Unparseable statements are skipped, except schema DDL recovered from `DO
-$tag$` bodies as described above. `collect_schema_facts` first filters
-candidates with `PostgresSchemaOptions.sql_include` (default `['**/*.sql']`).
+$tag$` and PL/pgSQL function/procedure bodies as described above. Statically
+recoverable `EXECUTE` literals, qualified or unqualified `format` templates,
+and assigned SQL variables contribute every applicable schema-fact family with
+lines anchored at the literal/assignment; runtime concatenation remains opaque.
+`collect_schema_facts` first filters candidates with
+`PostgresSchemaOptions.sql_include` (default `['**/*.sql']`).
 There is no hardcoded `backend/migrations/` root.
 
 `postgres-fk-index`, `postgres-redundant-index`, and

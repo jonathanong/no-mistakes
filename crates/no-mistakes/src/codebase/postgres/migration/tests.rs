@@ -1,5 +1,7 @@
 use super::extract_migration_facts;
 
+mod routines;
+
 #[test]
 fn extracts_indexes_foreign_keys_and_constraint_pairing() {
     let sql = r#"

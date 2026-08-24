@@ -1,0 +1,18 @@
+version: 2
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: permanentPackages
+          file: rules.yml
+          kind: yaml-string-selector
+          key: rules.[].options.permanentPackages.[].name
+          minSize: 1
+        - name: expectedPackages
+          file: expected.yml
+          kind: yaml-sequence
+          key: names
+      comparisons:
+        - left: permanentPackages
+          right: expectedPackages
