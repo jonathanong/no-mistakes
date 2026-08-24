@@ -88,7 +88,7 @@ pub(super) fn collect_alter_table(
             }
             AlterTableOperation::AddColumn { column_def, .. } => {
                 facts.add_columns.push(SqlAddColumnMetadata {
-                    table_name: table_name.clone(),
+                    table_name: index_table.clone(),
                     column_name: column_def.name.value.clone(),
                     data_type: column_def.data_type.to_string(),
                     nullable: !column_def

@@ -37,12 +37,15 @@ rules:
           default: "'draft'"
 ```
 
-`path`, `table`, `column`, `type`, `nullable`, and `default` compare exactly
-against the analyzer's canonical PostgreSQL parser output. For a column with no
-default, omit `default`. Static `DO $$ … $$` statements are analyzed like other
-migration SQL. Dynamic SQL constructed at runtime is outside the parser's
-existing visibility, so it cannot satisfy an allowlist entry and is reported as
-stale; write the migration as static SQL when this contract is required.
+`path`, schema-qualified `table`, `column`, `type`, `nullable`, and `default`
+compare exactly against the analyzer's canonical PostgreSQL parser output. Each
+entry permits one matching operation; repeated identical `ADD COLUMN`
+statements require distinct entries, and duplicate entries are rejected. For a
+column with no default, omit `default`. Static `DO $$ … $$` statements are
+analyzed like other migration SQL. Dynamic SQL constructed at runtime is
+outside the parser's existing visibility, so it cannot satisfy an allowlist
+entry and is reported as stale; write the migration as static SQL when this
+contract is required.
 
 `sqlInclude` defaults to `**/*.sql`.
 

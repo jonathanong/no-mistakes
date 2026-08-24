@@ -42,7 +42,7 @@ pub(super) fn scan(
             target: Some(allowed_migration_target(migration)),
         });
     }
-    let mut used_allowed_migrations = BTreeSet::new();
+    let mut remaining_allowed_migrations = opts.allowed_migrations.clone();
     for file in &facts.schema {
         let rel = sql_rel(root, &file.path);
         for column in &file.add_columns {
@@ -54,8 +54,11 @@ pub(super) fn scan(
                 nullable: column.nullable,
                 default: column.default.clone(),
             };
-            if opts.allowed_migrations.contains(&actual) {
-                used_allowed_migrations.insert(actual);
+            if let Some(index) = remaining_allowed_migrations
+                .iter()
+                .position(|migration| migration == &actual)
+            {
+                remaining_allowed_migrations.remove(index);
                 continue;
             }
             let message = if opts.allowed_migrations.is_empty() {
@@ -80,9 +83,8 @@ pub(super) fn scan(
         }
     }
     findings.extend(
-        opts.allowed_migrations
+        remaining_allowed_migrations
             .iter()
-            .filter(|migration| !used_allowed_migrations.contains(*migration))
             .map(stale_allowed_migration),
     );
     Ok(findings)

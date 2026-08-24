@@ -79,6 +79,20 @@ fn postgres_no_add_column_reports_mismatched_and_stale_allowed_migrations() {
 }
 
 #[test]
+fn postgres_no_add_column_consumes_qualified_allowances_once() {
+    let root = fixture("qualified-repeat");
+    let out = check_fixture_config(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert_eq!(
+        body.matches("does not match an allowedMigrations entry")
+            .count(),
+        2,
+        "{body}"
+    );
+}
+
+#[test]
 fn postgres_no_add_column_json_has_rule_id() {
     let root = fixture("fail");
     let out = Command::new(bin())
