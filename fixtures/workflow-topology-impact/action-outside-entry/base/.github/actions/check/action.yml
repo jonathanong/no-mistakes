@@ -1,0 +1,5 @@
+name: check
+runs:
+  using: composite
+  steps:
+    - run: echo base

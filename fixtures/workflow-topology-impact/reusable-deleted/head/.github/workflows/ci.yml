@@ -1,0 +1,11 @@
+name: CI
+on: push
+jobs:
+  test-tooling:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test:tooling
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test:web

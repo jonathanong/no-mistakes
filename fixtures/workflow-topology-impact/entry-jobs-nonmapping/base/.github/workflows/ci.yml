@@ -1,0 +1,7 @@
+name: CI
+on: push
+jobs:
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test:web

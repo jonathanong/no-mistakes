@@ -1,5 +1,6 @@
 use crate::napi_api::{
-    ci_env_json_impl, ci_impact_json_impl, ci_topology_json_impl, impacted_checks_json_impl,
+    ci_env_json_impl, ci_impact_json_impl, ci_topology_impact_json_impl, ci_topology_json_impl,
+    impacted_checks_json_impl,
 };
 use serde_json::json;
 use std::path::PathBuf;
@@ -349,4 +350,53 @@ fn ci_topology_json_defaults_root() {
         ))
         .is_ok()
     );
+}
+
+#[test]
+fn ci_topology_impact_json_requires_exact_revision_inputs() {
+    let error = ci_topology_impact_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": workflow_topology_fixture("needs-basic") }).to_string(),
+    ))
+    .unwrap_err();
+    assert!(error.reason.contains("base is required"));
+}
+
+#[test]
+fn ci_topology_impact_json_returns_the_revision_aware_report() {
+    let fixture =
+        crate::test_support::materialize_workflow_topology_impact_fixture("reusable-edit");
+    let options = json!({
+        "root": fixture.path().join("base"),
+        "base": "HEAD~",
+        "head": "HEAD",
+        "entryWorkflow": "ci.yml",
+    })
+    .to_string();
+
+    let output =
+        ci_topology_impact_json_impl(crate::napi_api::options::test_json_arg(options)).unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    assert_eq!(value["schemaVersion"], 1);
+    assert_eq!(
+        value["affectedRootJobIds"],
+        json!([".github/workflows/ci.yml#test-tooling"])
+    );
+}
+
+#[test]
+fn ci_topology_impact_json_requires_head_and_entry_workflow() {
+    let root = workflow_topology_fixture("needs-basic");
+    for (options, message) in [
+        (json!({ "root": root, "base": "HEAD~" }), "head is required"),
+        (
+            json!({ "root": root, "base": "HEAD~", "head": "HEAD" }),
+            "entryWorkflow is required",
+        ),
+    ] {
+        let error = ci_topology_impact_json_impl(crate::napi_api::options::test_json_arg(
+            options.to_string(),
+        ))
+        .unwrap_err();
+        assert!(error.reason.contains(message));
+    }
 }

@@ -1,0 +1,9 @@
+name: CI
+on: push
+jobs:
+  test-tooling:
+    uses: ./.github/workflows/tooling.yml
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test:web

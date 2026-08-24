@@ -1,0 +1,16 @@
+name: CI
+on: push
+jobs:
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test:web
+  release-notes:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm release:notes
+  publish:
+    needs: [test-web, release-notes]
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm publish

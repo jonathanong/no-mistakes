@@ -2,8 +2,9 @@ use std::path::{Path, PathBuf};
 
 use super::options::{
     parse_options_value, resolve_project_root, to_napi_error, CiEnvOptions, CiImpactOptions,
-    CiTopologyOptions, FetchesOptions, ImpactedChecksOptions, ProjectOptions, TestsImpactOptions,
-    TestsPlanDocumentOptions, TestsPlanOptions, TestsTargetsOptions, TestsWhyOptions,
+    CiTopologyImpactOptions, CiTopologyOptions, FetchesOptions, ImpactedChecksOptions,
+    ProjectOptions, TestsImpactOptions, TestsPlanDocumentOptions, TestsPlanOptions,
+    TestsTargetsOptions, TestsWhyOptions,
 };
 use anyhow::{bail, Context, Result as AnyhowResult};
 
@@ -143,6 +144,26 @@ pub(crate) fn ci_topology_json_impl(options: serde_json::Value) -> napi::Result<
     to_pretty_json(&report)
 }
 
+pub(crate) fn ci_topology_impact_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let options = parse_options_value::<CiTopologyImpactOptions>(options)?;
+    let root = options.root.unwrap_or_else(|| ".".to_string());
+    let base = options
+        .base
+        .context("base is required")
+        .map_err(to_napi_error)?;
+    let head = options
+        .head
+        .context("head is required")
+        .map_err(to_napi_error)?;
+    let entry_workflow = options
+        .entry_workflow
+        .context("entryWorkflow is required")
+        .map_err(to_napi_error)?;
+    let report = crate::ci::topology_impact_report(Path::new(&root), &base, &head, &entry_workflow)
+        .map_err(to_napi_error)?;
+    to_pretty_json(&report)
+}
+
 pub(crate) fn impacted_checks_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<ImpactedChecksOptions>(options)?;
     let collect_timings = options.timings;
@@ -164,44 +185,7 @@ pub(crate) fn impacted_checks_json_impl(options: serde_json::Value) -> napi::Res
     to_pretty_json(&value)
 }
 
-pub(crate) fn tests_why_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<TestsWhyOptions>(options)?;
-    let args = build_why_args(options).map_err(to_napi_error)?;
-    let steps = crate::tests::why::why_steps(&args).map_err(to_napi_error)?;
-    to_pretty_json(&steps)
-}
-
-pub(crate) fn tests_comment_markdown_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<TestsPlanDocumentOptions>(options)?;
-    let plan = load_plan_document(options).map_err(to_napi_error)?;
-    Ok(crate::tests::comment::render_markdown_plan(&plan))
-}
-
-pub(crate) fn tests_graph_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<TestsPlanDocumentOptions>(options)?;
-    let plan = load_plan_document(options).map_err(to_napi_error)?;
-    let graph = crate::tests::graph::graph_json(&plan).map_err(to_napi_error)?;
-    to_pretty_json(&graph)
-}
-
-pub(crate) fn tests_graph_mermaid_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<TestsPlanDocumentOptions>(options)?;
-    let plan = load_plan_document(options).map_err(to_napi_error)?;
-    crate::tests::graph::graph_mermaid(&plan).map_err(to_napi_error)
-}
-
-fn load_plan_document(options: TestsPlanDocumentOptions) -> AnyhowResult<crate::tests::TestPlan> {
-    match (options.plan_json, options.plan) {
-        (Some(serde_json::Value::String(raw)), _) => Ok(serde_json::from_str(&raw)?),
-        (Some(value), _) => Ok(serde_json::from_value(value)?),
-        (None, Some(path)) => {
-            let content = std::fs::read_to_string(&path)
-                .with_context(|| format!("Failed to read plan from {path}"))?;
-            Ok(serde_json::from_str(&content)?)
-        }
-        (None, None) => bail!("plan or planJson is required"),
-    }
-}
+include!("cli_parity_test_documents.rs");
 
 fn to_pretty_json<T: serde::Serialize>(value: &T) -> napi::Result<String> {
     Ok(serde_json::to_string(value).expect("N-API report serialization never fails"))

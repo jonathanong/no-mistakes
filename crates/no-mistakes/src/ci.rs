@@ -6,6 +6,7 @@ use crate::codebase::ci_graph::impact::CiImpactReport;
 use crate::codebase::ci_graph::{
     analyze_env_from_snapshot, analyze_impact, relative_slash, WorkflowSet,
 };
+use crate::codebase::workflow_topology::impact::CiTopologyImpactReport;
 use crate::codebase::workflow_topology::load_workflow_topology_from_snapshot;
 use crate::codebase::workflow_topology::model::WorkflowTopology;
 use crate::config::v2::load_v2_config_from_visible;
@@ -33,6 +34,9 @@ enum CiCommand {
     /// `needs`/reusable-call/`workflow_run` edges, with diagnostics for
     /// malformed, dangling, cyclic, or contract-violating definitions.
     Topology(CiTopologyArgs),
+    /// Compare two exact revisions and report the entry workflow jobs that
+    /// can be affected by workflow or local-action changes.
+    TopologyImpact(CiTopologyImpactArgs),
 }
 
 #[derive(Clone, Copy, ValueEnum)]
@@ -60,6 +64,18 @@ struct CiTopologyArgs {
     /// Shorthand for --format json.
     #[arg(long, default_value_t = false, conflicts_with = "format")]
     json: bool,
+}
+
+#[derive(Args)]
+struct CiTopologyImpactArgs {
+    #[arg(long)]
+    base: String,
+    #[arg(long)]
+    head: String,
+    #[arg(long = "entry-workflow")]
+    entry_workflow: String,
+    #[arg(long, default_value = ".")]
+    root: PathBuf,
 }
 
 #[derive(Args)]
@@ -105,7 +121,14 @@ pub fn run(args: CiArgs) -> Result<ExitCode> {
         CiCommand::Impact(sub) => run_impact(sub),
         CiCommand::Env(sub) => run_env(sub),
         CiCommand::Topology(sub) => run_topology(sub),
+        CiCommand::TopologyImpact(sub) => run_topology_impact(sub),
     }
+}
+
+fn run_topology_impact(args: CiTopologyImpactArgs) -> Result<ExitCode> {
+    let report = topology_impact_report(&args.root, &args.base, &args.head, &args.entry_workflow)?;
+    print!("{}", serde_json::to_string_pretty(&report)?);
+    Ok(ExitCode::SUCCESS)
 }
 
 const _: fn(CiArgs) -> Result<ExitCode> = run;
@@ -183,6 +206,23 @@ pub fn topology_report(
     Ok(load_workflow_topology_from_snapshot(
         &root, &config.ci, &snapshot, workflows,
     ))
+}
+
+/// Revision-aware, fail-open topology impact report. This is deliberately
+/// separate from schema-v1 `topology_report` so existing consumers retain an
+/// immutable snapshot contract.
+pub fn topology_impact_report(
+    root: &Path,
+    base_revision: &str,
+    head_revision: &str,
+    entry_workflow: &str,
+) -> Result<CiTopologyImpactReport> {
+    crate::codebase::workflow_topology::impact::topology_impact_report(
+        root,
+        base_revision,
+        head_revision,
+        entry_workflow,
+    )
 }
 
 fn resolve_root(root: &Path) -> Result<PathBuf> {

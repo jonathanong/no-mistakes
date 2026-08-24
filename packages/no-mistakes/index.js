@@ -30,6 +30,7 @@ const jsonApis = createJsonApis({
   ciEnv: "ciEnvJson",
   ciImpact: "ciImpactJson",
   ciTopology: "ciTopologyJson",
+  ciTopologyImpact: "ciTopologyImpactJson",
   dataPw: "dataPwJson",
   deadExports: "deadExportsJson",
   dependencies: "dependenciesJson",
@@ -145,6 +146,7 @@ module.exports.resolveConfig = jsonApis.resolveConfig;
 module.exports.ciEnv = jsonApis.ciEnv;
 module.exports.ciImpact = jsonApis.ciImpact;
 module.exports.ciTopology = ciTopology;
+module.exports.ciTopologyImpact = jsonApis.ciTopologyImpact;
 module.exports.dataPw = jsonApis.dataPw;
 module.exports.deadExports = jsonApis.deadExports;
 module.exports.dependencies = jsonApis.dependencies;

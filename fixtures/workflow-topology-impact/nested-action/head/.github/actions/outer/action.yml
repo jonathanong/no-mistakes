@@ -1,0 +1,5 @@
+name: outer
+runs:
+  using: composite
+  steps:
+    - uses: ./.github/actions/inner

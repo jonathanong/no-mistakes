@@ -11,6 +11,8 @@ the dependency graph cannot:
 - [`ci topology`](ci-topology.md) — a typed graph of workflows, jobs, and
   `needs`/reusable-call/`workflow_run` edges, with diagnostics for malformed,
   dangling, cyclic, or contract-violating definitions.
+- [`ci topology-impact`](ci-topology-impact.md) — exact base/head revision
+  routing for one entry workflow, with an explicit fail-open result.
 
 Workflow directories come from the [`ci`](../configuration/ci.md) config block
 and default to `.github/workflows`.
@@ -25,4 +27,5 @@ documented limitations (filter-glob approximation, assumed default permissions,
 textual env reference scan). For exact line numbers of an env reference, follow
 up with `rg 'env.VAR' <file>`.
 
-Node API: `ciImpact(options)`, `ciEnv(options)`, `ciTopology(options)`.
+Node API: `ciImpact(options)`, `ciEnv(options)`, `ciTopology(options)`,
+`ciTopologyImpact(options)`.

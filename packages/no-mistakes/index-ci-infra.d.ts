@@ -7,6 +7,8 @@ import type {
   CiImpactOptions,
   CiImpactReport,
   CiTopologyOptions,
+  CiTopologyImpactOptions,
+  CiTopologyImpactReport,
   DataPwOptions,
   DataPwReport,
   EffectsOptions,
@@ -39,6 +41,9 @@ export function ciEnv(options: WithInvocationOptions<CiEnvOptions>): Promise<CiE
 export function ciTopology(
   options?: WithInvocationOptions<CiTopologyOptions>,
 ): Promise<WorkflowTopology>;
+export function ciTopologyImpact(
+  options: WithInvocationOptions<CiTopologyImpactOptions>,
+): Promise<CiTopologyImpactReport>;
 /** Builds a query index over a `ciTopology()` result. Pure JS — never crosses the N-API boundary. */
 export function createWorkflowTopologyIndex(topology: WorkflowTopology): WorkflowTopologyIndex;
 export function impactedChecks(

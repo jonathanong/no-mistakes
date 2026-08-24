@@ -1,0 +1,11 @@
+name: CI changed trigger
+on: pull_request
+jobs:
+  test-web:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test:web
+  test-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - run: pnpm test:backend

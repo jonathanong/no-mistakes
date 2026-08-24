@@ -7,6 +7,7 @@
 
 import type { ArtifactDeclaration, ArtifactEdge } from "./workflow-topology-artifact-types";
 import type { ResolvedPermissions } from "./ci-types";
+export * from "./workflow-topology-impact-types";
 
 export * from "./workflow-topology-artifact-types";
 export * from "./workflow-topology-index-types";

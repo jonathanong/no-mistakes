@@ -4,6 +4,7 @@
 json_binding!(ci_impact_json, "ciImpactJson", ci_impact_json_impl);
 json_binding!(ci_env_json, "ciEnvJson", ci_env_json_impl);
 json_binding!(ci_topology_json, "ciTopologyJson", ci_topology_json_impl);
+json_binding!(ci_topology_impact_json, "ciTopologyImpactJson", ci_topology_impact_json_impl);
 json_binding!(
     impacted_checks_json,
     "impactedChecksJson",
