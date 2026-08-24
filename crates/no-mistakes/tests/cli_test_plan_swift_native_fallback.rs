@@ -41,16 +41,25 @@ fn test_plan_swift_falls_back_when_source_graph_is_unconfigured() {
     assert_eq!(
         selected,
         vec![
+            "apps/android/Tests/VouchaAndroidTests/DeviceTests.swift",
             "core/Tests/VouchaCoreTests/APIClientTests.swift",
             "ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
         ]
     );
+    let core = plan["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|test| {
+            test["test_file"] == "core/Tests/VouchaCoreTests/APIClientTests.swift"
+        })
+        .unwrap();
     assert_eq!(
-        plan["selected_tests"][0]["targets"][0]["base_command"],
+        core["targets"][0]["base_command"],
         serde_json::json!(["swift", "test"])
     );
     assert_eq!(
-        plan["selected_tests"][0]["targets"][0]["runner_args"],
+        core["targets"][0]["runner_args"],
         serde_json::json!(["--filter", "VouchaCoreTests"])
     );
 }
@@ -126,6 +135,7 @@ fn test_plan_swift_deleted_package_manifest_triggers_native_fallback() {
     assert_eq!(
         selected,
         vec![
+            "swift-clients/apps/android/Tests/VouchaAndroidTests/DeviceTests.swift",
             "swift-clients/core/Tests/VouchaCoreTests/APIClientTests.swift",
             "swift-clients/ui/Tests/VouchaUITests/RSSFeedListViewModelTests.swift",
         ]

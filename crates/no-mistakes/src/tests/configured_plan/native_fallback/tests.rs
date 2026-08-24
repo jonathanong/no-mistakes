@@ -219,7 +219,12 @@ fn root_swift_manifest_scopes_to_root_package_tests() {
     let root = Path::new("/repo");
     let root_test = root.join("Tests/RootTests/APIClientTests.swift");
     let client_test = root.join("clients/Tests/ClientTests/APIClientTests.swift");
-    let all_tests = vec![root_test.clone(), client_test.clone()];
+    let unconfigured_test = root.join("other/Tests/OtherTests.swift");
+    let all_tests = vec![
+        root_test.clone(),
+        client_test.clone(),
+        unconfigured_test.clone(),
+    ];
     let discovered = DiscoveredTests {
         tests: all_tests.clone(),
         targets_by_path: BTreeMap::from([
@@ -241,6 +246,17 @@ fn root_swift_manifest_scopes_to_root_package_tests() {
                     config: Some("clients".to_string()),
                     workspace: false,
                     project: Some("ClientTests".to_string()),
+                    base_command: vec!["swift".to_string(), "test".to_string()],
+                    runner_args: Vec::new(),
+                }],
+            ),
+            (
+                unconfigured_test,
+                vec![no_mistakes::codebase::test_discovery::TestExecutionTarget {
+                    runner: "swift".to_string(),
+                    config: None,
+                    workspace: false,
+                    project: Some("OtherTests".to_string()),
                     base_command: vec!["swift".to_string(), "test".to_string()],
                     runner_args: Vec::new(),
                 }],

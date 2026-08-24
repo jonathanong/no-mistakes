@@ -269,7 +269,7 @@ fn swift_manifest_fallback_tests(
         };
         package
     };
-    tests_with_target_configs(all_tests, discovered, [package.to_string()])
+    tests_with_strict_target_configs(all_tests, discovered, [package.to_string()])
 }
 
 fn explicit_dotnet_test_projects(root: &Path, config: &NoMistakesConfig) -> BTreeSet<PathBuf> {
@@ -434,6 +434,40 @@ where
         return Vec::new();
     }
     tests_with_target_config_set(all_tests, discovered, &configs)
+}
+
+fn tests_with_strict_target_configs<I>(
+    all_tests: &[PathBuf],
+    discovered: &DiscoveredTests,
+    configs: I,
+) -> Vec<PathBuf>
+where
+    I: IntoIterator<Item = String>,
+{
+    let configs: BTreeSet<String> = configs
+        .into_iter()
+        .map(|config| normalize_config_path(&config))
+        .collect();
+    if configs.is_empty() {
+        return Vec::new();
+    }
+    all_tests
+        .iter()
+        .filter(|test| {
+            discovered
+                .targets_by_path
+                .get(*test)
+                .is_some_and(|targets| {
+                    targets.iter().any(|target| {
+                        target
+                            .config
+                            .as_ref()
+                            .is_some_and(|config| configs.contains(&normalize_config_path(config)))
+                    })
+                })
+        })
+        .cloned()
+        .collect()
 }
 
 fn tests_with_nonempty_target_configs<I>(
