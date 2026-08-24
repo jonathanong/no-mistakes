@@ -66,7 +66,7 @@ rule-specific option fields:
 | `markdown-reachability`, `markdown-structure-budget` | `baselineFile` |
 | `nextjs-redirect-destinations` | `configPath`, `appRoot` |
 | `package-json-registry-only` | `lockfile`, `scopes` |
-| `package-json-workspace-coverage` | `packageRoots`, `allowlist` |
+| `package-json-workspace-coverage`, `package-json-nested-workspace-coverage` | `packageRoots`, `allowlist`, `roots` |
 | `pnpm-release-age-policy` | `workspaceYaml`, `dependabotPath`, `lockfilePath` |
 | `shellcheck-runner` | `shellFiles`, `shebangDirs`, `skillsLockfile` |
 | `strict-package-layout` | `packages[].root` |

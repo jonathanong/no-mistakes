@@ -20,6 +20,10 @@ fn workspace_filters_in_script(source: &str) -> Vec<Extracted> {
         .expect("pnpm filter pattern is valid");
     let mut extracted = Vec::new();
     for capture in filter.captures_iter(source) {
+        let filter_offset = capture.get(0).unwrap().start();
+        if !is_pnpm_invocation(source, filter_offset) {
+            continue;
+        }
         let raw = capture
             .get(1)
             .or_else(|| capture.get(2))
@@ -29,7 +33,7 @@ fn workspace_filters_in_script(source: &str) -> Vec<Extracted> {
         let Some(path) = normalize_filter(raw) else {
             continue;
         };
-        if is_guarded(source, capture.get(0).unwrap().start(), &path) || path.starts_with('!') {
+        if is_guarded(source, filter_offset, &path) || path.starts_with('!') {
             continue;
         }
         extracted.push(Extracted {
@@ -40,6 +44,26 @@ fn workspace_filters_in_script(source: &str) -> Vec<Extracted> {
         });
     }
     extracted
+}
+
+fn is_pnpm_invocation(source: &str, filter_offset: usize) -> bool {
+    let prefix = &source[..filter_offset];
+    let command_start = prefix
+        .char_indices()
+        .rev()
+        .find_map(|(offset, character)| match character {
+            ';' | '|' | '&' => Some(offset + character.len_utf8()),
+            '\n' if !prefix[..offset].trim_end().ends_with('\\') => {
+                Some(offset + character.len_utf8())
+            }
+            _ => None,
+        })
+        .unwrap_or(0);
+    let command = source[command_start..filter_offset].trim();
+    let invocation =
+        Regex::new(r"^(?:(?:[A-Za-z_][A-Za-z0-9_]*=[^\s]+)\s+)*(?:then\s+)?pnpm(?:\s|$)")
+            .expect("pnpm invocation pattern is valid");
+    invocation.is_match(command)
 }
 
 fn run_scripts(document: &Value) -> Vec<&str> {
@@ -88,8 +112,8 @@ fn is_guarded(source: &str, filter_offset: usize, path: &str) -> bool {
     let directory = format!(r#"(?:\./)?{escaped}"#);
     let file = format!(r#"(?:\./)?{escaped}(?:/package\.json)?"#);
     let patterns = [
-        format!(r#"\[\s+-f\s+[\"']?{file}[\"']?\s*\]"#),
-        format!(r#"\[\s+-d\s+[\"']?{directory}[\"']?\s*\]"#),
+        format!(r#"\[\[?\s+-f\s+[\"']?{file}[\"']?\s*\]\]?"#),
+        format!(r#"\[\[?\s+-d\s+[\"']?{directory}[\"']?\s*\]\]?"#),
         format!(r#"test\s+-f\s+[\"']?{file}[\"']?"#),
         format!(r#"test\s+-d\s+[\"']?{directory}[\"']?"#),
     ];
