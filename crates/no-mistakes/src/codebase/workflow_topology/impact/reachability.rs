@@ -2,6 +2,7 @@ use super::actions::action_descriptor_paths;
 use super::yaml::yaml_at;
 use git2::{Repository, Tree};
 use std::collections::BTreeSet;
+use std::path::Path;
 
 pub(super) struct ReachableActions {
     pub(super) paths: BTreeSet<String>,
@@ -21,15 +22,57 @@ pub(super) fn reachable_actions(
     let unresolved = paths
         .iter()
         .filter(|action| {
-            ![base, head].into_iter().any(|tree| {
-                action_descriptor_paths(action)
-                    .iter()
-                    .any(|descriptor| yaml_at(repo, tree, descriptor).is_some())
-            })
+            let statuses = [base, head].map(|tree| action_descriptor_status(repo, tree, action));
+            statuses.contains(&ActionDescriptorStatus::Invalid)
+                || !statuses.contains(&ActionDescriptorStatus::Valid)
         })
         .cloned()
         .collect();
     ReachableActions { paths, unresolved }
+}
+
+#[derive(Clone, Copy, PartialEq, Eq)]
+enum ActionDescriptorStatus {
+    Absent,
+    Valid,
+    Invalid,
+}
+
+fn action_descriptor_status(
+    repo: &Repository,
+    tree: &Tree<'_>,
+    action: &str,
+) -> ActionDescriptorStatus {
+    let mut found = false;
+    for descriptor in action_descriptor_paths(action) {
+        let Ok(entry) = tree.get_path(Path::new(&descriptor)) else {
+            continue;
+        };
+        found = true;
+        let Ok(object) = entry.to_object(repo) else {
+            return ActionDescriptorStatus::Invalid;
+        };
+        let Ok(blob) = object.peel_to_blob() else {
+            return ActionDescriptorStatus::Invalid;
+        };
+        let Ok(value) = serde_yaml::from_slice::<serde_yaml::Value>(blob.content()) else {
+            return ActionDescriptorStatus::Invalid;
+        };
+        let Some(mapping) = value.as_mapping() else {
+            return ActionDescriptorStatus::Invalid;
+        };
+        if !mapping
+            .iter()
+            .any(|(key, value)| key.as_str() == Some("runs") && value.is_mapping())
+        {
+            return ActionDescriptorStatus::Invalid;
+        }
+    }
+    if found {
+        ActionDescriptorStatus::Valid
+    } else {
+        ActionDescriptorStatus::Absent
+    }
 }
 
 fn reachable_actions_in_tree(repo: &Repository, tree: &Tree<'_>, entry: &str) -> BTreeSet<String> {
