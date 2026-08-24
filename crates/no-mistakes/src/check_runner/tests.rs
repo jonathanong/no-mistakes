@@ -14,6 +14,7 @@ use std::time::Duration;
 
 mod architecture;
 mod config_path;
+mod finite_set_plan;
 mod graph_scope;
 mod integration_gitignore;
 mod parse_cache;

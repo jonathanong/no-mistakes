@@ -104,6 +104,58 @@ fn invalid_preset_config_surfaces_parse_errors() {
 }
 
 #[test]
+fn preset_scanning_surfaces_parse_and_glob_errors() {
+    let dir = tempfile::tempdir().unwrap();
+    let workflow = dir.path().join(".github/workflows/check.yml");
+    std::fs::create_dir_all(workflow.parent().unwrap()).unwrap();
+    std::fs::write(&workflow, ":\n  -").unwrap();
+    let findings = check_with_files(
+        dir.path(),
+        &config("presets: [pnpm-workspace-filters]"),
+        std::slice::from_ref(&workflow),
+    )
+    .unwrap();
+    assert!(findings[0].message.contains("failed to parse YAML"));
+
+    std::fs::write(
+        &workflow,
+        "jobs:\n  check:\n    steps:\n      - run: pnpm install --filter './{'\n",
+    )
+    .unwrap();
+    assert!(check_with_files(
+        dir.path(),
+        &config("presets: [pnpm-workspace-filters]"),
+        std::slice::from_ref(&workflow),
+    )
+    .is_err());
+
+    let syncpack = dir.path().join(".syncpackrc.json");
+    std::fs::write(&syncpack, r#"{"source":["{"]}"#).unwrap();
+    assert!(check_with_files(
+        dir.path(),
+        &config("presets: [syncpack]"),
+        std::slice::from_ref(&syncpack),
+    )
+    .is_err());
+
+    let no_mistakes_path = dir.path().join(".no-mistakes.yml");
+    std::fs::write(&no_mistakes_path, "version: 2\n").unwrap();
+    let mut no_mistakes_config = config("presets: [no-mistakes]");
+    no_mistakes_config.rules.push(RuleDef {
+        rule: "package-json-workspace-coverage".to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("packageRoots: ['{']").unwrap(),
+        ..Default::default()
+    });
+    assert!(check_with_files(
+        dir.path(),
+        &no_mistakes_config,
+        std::slice::from_ref(&no_mistakes_path),
+    )
+    .is_err());
+}
+
+#[test]
 fn extract_covers_optional_and_empty_preset_shapes() {
     let knip: serde_yaml::Value = serde_yaml::from_str(
         r#"
