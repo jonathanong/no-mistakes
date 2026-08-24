@@ -7,7 +7,7 @@ use no_mistakes::codebase::dependencies::{self, Direction, RelationshipArg};
 use no_mistakes::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
 
 pub(super) fn bench_lazy_traversal(c: &mut Criterion) {
-    if !shard::should_run(shard::GRAPH) {
+    if !shard::should_run(shard::GRAPH_CORE) {
         return;
     }
     let root = fixture_root();
@@ -39,7 +39,7 @@ pub(super) fn bench_lazy_traversal(c: &mut Criterion) {
 }
 
 pub(super) fn bench_facts_graph_and_query(c: &mut Criterion) {
-    if !shard::should_run(shard::GRAPH) {
+    if !shard::should_run(shard::GRAPH_CORE) {
         return;
     }
     let root = fixture_root();
@@ -100,7 +100,7 @@ pub(super) fn bench_facts_graph_and_query(c: &mut Criterion) {
 }
 
 pub(super) fn bench_high_fanout_finalization(c: &mut Criterion) {
-    if shard::should_run(shard::GRAPH) {
+    if shard::should_run(shard::GRAPH_FINALIZATION) {
         let mut group = c.benchmark_group("graph_finalization");
         for (name, nodes, fanout) in [("large", 4_096, 16), ("high_fanout", 1_024, 128)] {
             let fixture = benchmark_support::high_fanout_finalization_fixture(nodes, fanout);
@@ -130,7 +130,7 @@ pub(super) fn bench_high_fanout_finalization(c: &mut Criterion) {
         group.finish();
     }
 
-    if !shard::should_run_any(&[shard::GRAPH, shard::GRAPH_PRODUCTION]) {
+    if !shard::should_run(shard::GRAPH_PRODUCTION) {
         return;
     }
     // The general memory shard excludes the two expensive production cases;

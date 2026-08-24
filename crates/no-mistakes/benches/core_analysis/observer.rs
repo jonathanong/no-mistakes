@@ -29,7 +29,7 @@ fn observed_check(root: &Path, mode: &str) -> (String, Option<DiagnosticsSnapsho
 }
 
 pub(super) fn bench_observer_overhead(c: &mut Criterion) {
-    if !shard::should_run(shard::CHECK) {
+    if !shard::should_run(shard::OBSERVER) {
         return;
     }
     let root = fixture_root();

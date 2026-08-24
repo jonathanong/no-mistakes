@@ -18,9 +18,18 @@ pub(super) const EXPECTED_LANGUAGE_FRONTEND_QUEUE_EDGES: usize = 14;
 pub(super) const EXPECTED_LANGUAGE_FRONTEND_GLOB_MATCHES: usize = 117;
 
 pub(super) fn bench_language_frontends(c: &mut Criterion) {
-    if !shard::should_run(shard::GRAPH) {
-        return;
+    // Keep this wrapper stable: criterion_group includes its name in CodSpeed
+    // identities. The shard gates only isolate setup and measurement work.
+    if shard::should_run(shard::LANGUAGE_FRONTENDS) {
+        register_language_frontends(c);
     }
+
+    if shard::should_run(shard::NATIVE_FRONTENDS) {
+        register_native_frontends(c);
+    }
+}
+
+fn register_language_frontends(c: &mut Criterion) {
     let fixture = language_frontend_fixture();
     let facts = collect_language_frontend_facts(&fixture);
     let edges = collect_language_frontend_edges(&fixture);
@@ -72,7 +81,9 @@ pub(super) fn bench_language_frontends(c: &mut Criterion) {
         b.iter(|| black_box(match_language_frontend_queue_globs(black_box(&fixture))));
     });
     group.finish();
+}
 
+fn register_native_frontends(c: &mut Criterion) {
     let native_fixture = native_frontend_fixture();
     let swift = collect_swift_frontend_facts(&native_fixture);
     let dotnet = collect_dotnet_frontend_facts(&native_fixture);

@@ -16,8 +16,9 @@ mod react_traits;
 mod relationships;
 mod scoped_resolver;
 pub use bench_shard::{
-    parse_bench_shard, shard_should_run, BenchShard, CHECK, GENERAL_MEMORY, GRAPH,
-    GRAPH_PRODUCTION, QUERY, TESTS_PLAN,
+    parse_bench_shard, shard_should_run, BenchShard, CHECK, GENERAL_MEMORY, GRAPH_CORE,
+    GRAPH_FINALIZATION, GRAPH_GATES, GRAPH_PRODUCTION, LANGUAGE_FRONTENDS, NATIVE_FRONTENDS,
+    OBSERVER, QUERY, TESTS_PLAN,
 };
 pub use language_frontends::{
     collect_language_frontend_edges, collect_language_frontend_facts, language_frontend_fixture,

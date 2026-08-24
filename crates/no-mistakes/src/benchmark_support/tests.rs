@@ -228,9 +228,21 @@ fn scoped_resolver_construction_benchmark_preserves_its_result_contract() {
 
 #[test]
 fn bench_shard_unset_and_general_memory_run_every_named_surface() {
+    let named = [
+        CHECK,
+        OBSERVER,
+        TESTS_PLAN,
+        GRAPH_CORE,
+        GRAPH_GATES,
+        LANGUAGE_FRONTENDS,
+        NATIVE_FRONTENDS,
+        GRAPH_FINALIZATION,
+        GRAPH_PRODUCTION,
+        QUERY,
+    ];
     for current in [None, Some(""), Some(GENERAL_MEMORY)] {
         assert_eq!(parse_bench_shard(current), Ok(BenchShard::All));
-        for requested in [CHECK, TESTS_PLAN, GRAPH, GRAPH_PRODUCTION, QUERY] {
+        for requested in named {
             assert_eq!(shard_should_run(requested, current), Ok(true));
         }
     }
@@ -238,13 +250,25 @@ fn bench_shard_unset_and_general_memory_run_every_named_surface() {
 
 #[test]
 fn bench_shard_named_values_isolate_one_surface() {
-    for requested in [CHECK, TESTS_PLAN, GRAPH, GRAPH_PRODUCTION, QUERY] {
+    let named = [
+        CHECK,
+        OBSERVER,
+        TESTS_PLAN,
+        GRAPH_CORE,
+        GRAPH_GATES,
+        LANGUAGE_FRONTENDS,
+        NATIVE_FRONTENDS,
+        GRAPH_FINALIZATION,
+        GRAPH_PRODUCTION,
+        QUERY,
+    ];
+    for requested in named {
         assert_eq!(
             parse_bench_shard(Some(requested)),
             Ok(BenchShard::Named(requested))
         );
         assert_eq!(shard_should_run(requested, Some(requested)), Ok(true));
-        for other in [CHECK, TESTS_PLAN, GRAPH, GRAPH_PRODUCTION, QUERY] {
+        for other in named {
             if other != requested {
                 assert_eq!(shard_should_run(other, Some(requested)), Ok(false));
             }
@@ -257,6 +281,6 @@ fn bench_shard_rejects_unknown_values() {
     for current in [Some("grap"), Some("GRAPH"), Some("cpu")] {
         let err = parse_bench_shard(current).expect_err("unknown shard names must fail");
         assert!(err.contains("unknown NO_MISTAKES_BENCH_SHARD"));
-        assert!(shard_should_run(GRAPH, current).is_err());
+        assert!(shard_should_run(GRAPH_CORE, current).is_err());
     }
 }

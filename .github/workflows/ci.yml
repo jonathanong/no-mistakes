@@ -28,6 +28,7 @@ jobs:
     timeout-minutes: 5
     outputs:
       benchmarks: ${{ steps.benchmark-paths.outputs.changed }}
+      benchmark-scope: ${{ steps.benchmark-paths.outputs.scope }}
 
     steps:
       - name: Checkout
@@ -47,7 +48,7 @@ jobs:
           set -euo pipefail
 
           if [[ -z "$BASE_SHA" || "$BASE_SHA" == "0000000000000000000000000000000000000000" ]]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
+            node .github/scripts/benchmark-change-scope.cjs --all >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
@@ -57,21 +58,8 @@ jobs:
             fi
           done
 
-          changed_paths="$(mktemp)"
-          trap 'rm -f "$changed_paths"' EXIT
-          git diff --name-only -z "$BASE_SHA" "$HEAD_SHA" > "$changed_paths"
-
-          changed=false
-          while IFS= read -r -d '' path; do
-            case "$path" in
-              Cargo.toml|Cargo.lock|crates/*|fixtures/performance/*|fixtures/lang-frontends/*|.cargo/*|rust-toolchain*|.github/workflows/ci.yml)
-                changed=true
-                break
-                ;;
-            esac
-          done < "$changed_paths"
-
-          echo "changed=$changed" >> "$GITHUB_OUTPUT"
+          git diff --name-only -z "$BASE_SHA" "$HEAD_SHA" |
+            node .github/scripts/benchmark-change-scope.cjs >> "$GITHUB_OUTPUT"
 
   quality:
     name: Lint and package checks
@@ -507,7 +495,7 @@ jobs:
       - bench
     if: ${{ needs.changes.outputs.benchmarks == 'true' }}
     runs-on: ubuntu-latest
-    timeout-minutes: ${{ matrix.timeout-minutes }}
+    timeout-minutes: 8
     permissions:
       contents: read
       id-token: write
@@ -519,69 +507,120 @@ jobs:
             mode: simulation
             filter: ""
             benchmark-shard: check
-            timeout-minutes: 15
-            run-timeout-minutes: 12
+          - name: CPU observer
+            mode: simulation
+            filter: ""
+            benchmark-shard: observer
           - name: CPU tests-plan
             mode: simulation
             filter: ""
             benchmark-shard: tests-plan
-            timeout-minutes: 10
-            run-timeout-minutes: 8
-          - name: CPU graph
+          - name: CPU graph core
             mode: simulation
             filter: ""
-            benchmark-shard: graph
-            timeout-minutes: 15
-            run-timeout-minutes: 12
+            benchmark-shard: graph-core
+          - name: CPU graph gates
+            mode: simulation
+            filter: ""
+            benchmark-shard: graph-gates
+          - name: CPU language frontends
+            mode: simulation
+            filter: ""
+            benchmark-shard: language-frontends
+          - name: CPU native frontends
+            mode: simulation
+            filter: ""
+            benchmark-shard: native-frontends
+          - name: CPU graph finalization
+            mode: simulation
+            filter: ""
+            benchmark-shard: graph-finalization
+          - name: CPU graph production node
+            mode: simulation
+            filter: "graph_production_finalization::node_id_finalization$"
+            benchmark-shard: graph-production
+          - name: CPU graph production selector
+            mode: simulation
+            filter: "graph_production_finalization::selector_append$"
+            benchmark-shard: graph-production
           - name: CPU query
             mode: simulation
             filter: ""
             benchmark-shard: query
-            timeout-minutes: 15
-            run-timeout-minutes: 12
-          - name: memory
+          - name: memory check
             mode: memory
             filter: ""
-            benchmark-shard: general-memory
-            timeout-minutes: 10
-            run-timeout-minutes: 8
-          - name: node memory
+            benchmark-shard: check
+          - name: memory observer
+            mode: memory
+            filter: ""
+            benchmark-shard: observer
+          - name: memory tests-plan
+            mode: memory
+            filter: ""
+            benchmark-shard: tests-plan
+          - name: memory graph core
+            mode: memory
+            filter: ""
+            benchmark-shard: graph-core
+          - name: memory graph gates
+            mode: memory
+            filter: ""
+            benchmark-shard: graph-gates
+          - name: memory language frontends
+            mode: memory
+            filter: ""
+            benchmark-shard: language-frontends
+          - name: memory native frontends
+            mode: memory
+            filter: ""
+            benchmark-shard: native-frontends
+          - name: memory graph finalization
+            mode: memory
+            filter: ""
+            benchmark-shard: graph-finalization
+          - name: memory graph production node
             mode: memory
             filter: "graph_production_finalization::node_id_finalization$"
             benchmark-shard: graph-production
-            timeout-minutes: 8
-            run-timeout-minutes: 5
-          - name: selector memory
+          - name: memory graph production selector
             mode: memory
             filter: "graph_production_finalization::selector_append$"
             benchmark-shard: graph-production
-            timeout-minutes: 8
-            run-timeout-minutes: 5
+          - name: memory query
+            mode: memory
+            filter: ""
+            benchmark-shard: query
     env:
       BENCHMARK_FILTER: ${{ matrix.filter }}
+      BENCHMARK_SELECTED: ${{ needs.changes.outputs.benchmark-scope == 'all' || contains(needs.changes.outputs.benchmark-scope, matrix.benchmark-shard) }}
       CODSPEED_CARGO_WORKSPACE_ROOT: ${{ github.workspace }}
       NO_MISTAKES_BENCH_SHARD: ${{ matrix.benchmark-shard }}
       RAYON_NUM_THREADS: "4"
 
     steps:
       - name: Checkout
+        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - name: Download benchmark executables
+        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
         timeout-minutes: 5
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
           name: codspeed-analysis
 
       - name: Extract benchmark executables
+        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
         timeout-minutes: 2
         run: |
           mkdir -p target/codspeed
           tar -C target/codspeed -xf codspeed-analysis.tar
 
       - name: Run benchmarks
-        timeout-minutes: ${{ matrix.run-timeout-minutes }}
+        if: ${{ env.BENCHMARK_SELECTED == 'true' }}
+        timeout-minutes: 2
         uses: CodSpeedHQ/action@4296e51e7041e24dadb86d1d6e8b9320d223dbe8 # v5.0.3
         with:
           mode: ${{ matrix.mode }}
