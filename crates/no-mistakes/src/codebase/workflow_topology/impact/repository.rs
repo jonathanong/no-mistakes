@@ -61,10 +61,11 @@ pub(crate) fn topology_impact_report(
         &head_topology,
     );
     let unowned_action = changed_paths.iter().any(|path| {
-        reachable_actions.iter().any(|action| {
-            (action.is_empty() || path == action || path.starts_with(&format!("{action}/")))
-                && action_descriptors_for_path(&base_tree, &head_tree, path).is_empty()
-        })
+        let is_action_path = path.starts_with(".github/actions/")
+            || reachable_actions.iter().any(|action| {
+                action.is_empty() || path == action || path.starts_with(&format!("{action}/"))
+            });
+        is_action_path && action_descriptors_for_path(&base_tree, &head_tree, path).is_empty()
     });
     let entry_global_change = changed_paths.iter().any(|path| path == &entry)
         && entry_change_is_global(&repo, &base_tree, &head_tree, &entry);
