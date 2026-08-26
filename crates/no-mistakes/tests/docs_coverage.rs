@@ -3,6 +3,8 @@ use std::path::{Path, PathBuf};
 
 #[path = "support/docs_coverage_cli_helpers.rs"]
 mod cli_docs_helpers;
+#[path = "support/docs_review_regressions.rs"]
+mod docs_review_regressions;
 use cli_docs_helpers::{
     enum_block, enum_variants, kebab_case, reachable_cli_pages, rust_sources, subcommand_enums,
 };

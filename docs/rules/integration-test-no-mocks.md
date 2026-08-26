@@ -12,9 +12,10 @@ in selected integration tests while retaining explicit allowlists.
 
 ## Options
 
-`include`, `exclude`, `mockModules`, `mockCalls`, `allowModules`, and
-`allowCalls` select the tests and recognized mock shapes. Omitted lists use the
-documented built-in mock-library and helper defaults.
+`forbiddenCalls` and `forbiddenModules` are the only rule-local options. When
+either list is empty, the rule uses its built-in defaults: Vitest/Jest mock and
+spy helpers for calls, and `msw`, `nock`, and `sinon` for modules. Shared rule
+`include`/`exclude` filters and the selected test project determine the files.
 
 ## Valid example
 

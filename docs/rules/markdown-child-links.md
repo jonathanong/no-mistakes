@@ -12,9 +12,11 @@ the supported canonical HTML-list form.
 
 ## Options
 
-`parents`, `children`, `exclude`, and `allowHtmlListItems` select the parent,
-child, exclusions, and optional HTML form. Omitted values use the documented
-Markdown/index defaults.
+`groups` is the only rule-local option. Each group contains `parents`,
+`children`, and optional `requireWholeFile` and
+`countCanonicalHtmlListItems` booleans. Both booleans default to `false`, and
+all lists default to empty; an empty group list performs no checks.
+Shared rule `include`/`exclude` filters further scope Markdown files.
 
 ## Valid example
 

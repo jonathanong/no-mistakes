@@ -60,7 +60,8 @@ asset, or log version strings matched by the configured pin patterns.
 
 ## Options and defaults
 
-The default include is Filaments `TEST_FILE_RE`: `__tests__/` and
+There is no user-facing `defaultInclude` option. Internally, when `include` is
+omitted, the default include is Filaments `TEST_FILE_RE`: `__tests__/` and
 `*.test.{mts,ts,tsx,mjs,js,cts,cjs}`, including mocks. `include` replaces that
 set; `patterns` replaces the default pin regexes. Both options default to the
 shown behavior when omitted.

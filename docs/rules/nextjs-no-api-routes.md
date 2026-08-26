@@ -21,7 +21,8 @@ omitted values use the documented Pages Router root defaults.
 
 ## Valid example
 
-`app/api/users/route.ts` passes because it is an App Router route handler.
+`app/users/page.tsx` passes because it is a page rather than an App Router
+route handler or a Pages Router API route.
 
 ## Related rules
 

@@ -85,10 +85,21 @@ calls and included SQL files are both analyzed where configured.
 
 ## Options and defaults
 
-`sqlInclude` defaults to `**/*.sql`; `include` selects DML source files and
-defaults to the supported source universe; `importSpecifier` defaults to
-`@data-stores/psql`; `executorNames` defaults to `[query, read, write]`; and
-`extraGeneratedColumns` defaults to an empty list.
+The rule compiles its options into two internal inputs, not nested YAML
+objects: the schema catalog and embedded-SQL matcher. There are no direct
+`schema` or `embedded` options.
+
+- `sqlInclude` supplies the schema catalog's SQL-file globs. An omitted or
+  empty list defaults to `**/*.sql`.
+- `include` selects files containing DML. When omitted or empty, it analyzes
+  `.ts`, `.mts`, `.tsx`, `.js`, and `.sql` files; otherwise its glob list is
+  used.
+- `importSpecifier` supplies the embedded-SQL matcher's import source. When
+  omitted or empty, it defaults to `@data-stores/psql`.
+- `executorNames` supplies the imported executor names that contain SQL. An
+  omitted or empty list defaults to `[query, read, write]`.
+- `extraGeneratedColumns` adds `{ table, column }` pairs to the generated
+  column catalog. It defaults to an empty list.
 
 ## Valid example
 

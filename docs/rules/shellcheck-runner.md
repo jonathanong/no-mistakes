@@ -25,8 +25,19 @@ does not fabricate diagnostics when ShellCheck is unavailable.
 
 ## Options and defaults
 
-There are no rule-local options. The runner uses the repository's configured
-file universe and the installed `shellcheck` executable.
+`shellFiles` adds explicit existing repository-relative script paths; it
+defaults to `[]`. `shebangDirs` adds non-`.sh` files below the listed
+repository-relative directories when their first line is a supported Bash or
+sh shebang; it also defaults to `[]`. Selected `.sh` files are always checked.
+
+`skillsLockfile` optionally names a repository-relative skills lockfile for the
+rule's path-bearing configuration. It defaults to unset and does not add files
+to the ShellCheck candidate set; candidates still come from `.sh`, supported
+shebangs, and `shellFiles`.
+
+`shellcheck.severity` sets ShellCheck's minimum severity and defaults to
+`warning`; accepted values are `error`, `warning`, `info`, and `style`.
+The runner still requires the installed `shellcheck` executable.
 
 ## Valid example
 

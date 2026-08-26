@@ -3,7 +3,8 @@
 ## Suppression
 
 Use a line directive for a deliberate external or dynamic destination. Prefer
-an `allow` or `ignorePrefixes` entry when that route class is intentional.
+the rule-level `exclude` filter when the whole config file is outside policy;
+there are no rule-local destination allowlists.
 
 ## Why and when
 
@@ -17,8 +18,10 @@ configured route inventory; dynamic destinations remain outside the heuristic.
 
 ## Options
 
-`configFiles`, `routeRoots`, `allow`, and `ignorePrefixes` select configuration,
-pages, and exceptions. Omitted values use the documented Next.js defaults.
+`configPath`, `appRoot`, and `includeRewrites` are the rule's options.
+`configPath` and `appRoot` are optional; when omitted, the rule discovers the
+standard `next.config.{ts,mjs,js}` and uses `app`. `includeRewrites` defaults
+to `true`.
 
 ## Valid example
 

@@ -55,9 +55,22 @@ unlocked workflows.
 
 ## Options and defaults
 
-All options are declarative and default to empty: `jobInventory`, edge maps,
-artifact assertions, step orders, and `unlockedWorkflowReasons`. Empty maps do
-not assert that every possible workflow is listed.
+All collections default to empty, so omitted assertions impose no requirement:
+
+- `jobInventory`: workflow path to the exact expected job IDs.
+- `requiredJobs` / `forbiddenJobs`: job IDs that must exist or must not exist.
+- `requiredDirectEdges` / `forbiddenDirectEdges`: `[from, to]` pairs for direct
+  `needs` edges.
+- `requiredTransitiveEdges` / `forbiddenTransitiveEdges`: `[from, to]` pairs
+  checked across any dependency path.
+- `requiredArtifactEdges`: objects with `from`, `to`, `name`, and optional
+  `match` artifact-kind selector.
+- `exactFanIns`: job ID to the complete sorted list of direct upstream jobs.
+- `exactCallerJobs`, `stepOrders`, and `unlockedWorkflowReasons`: reusable
+  caller, ordered-step, and documented-unlocked-workflow policies.
+
+Empty maps do not assert that every possible workflow is listed; each supplied
+job or edge is checked and stale required targets are findings.
 
 ## Valid example
 

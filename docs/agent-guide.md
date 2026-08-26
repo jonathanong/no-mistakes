@@ -37,7 +37,7 @@ reduce missed tests, hidden dependencies, or fragile dynamic patterns.
 | Does this queue job have a worker? | `no-mistakes queues check --format json` |
 | What server route file owns this endpoint? | `no-mistakes server routes --format json` |
 | Does this component tree call fetch? | `no-mistakes react check <glob> --assert-no-fetch --format json` |
-| Which workflows or jobs can this change trigger? | `no-mistakes ci topology-impact --base <ref> --head HEAD --format json` |
+| Which local workflow jobs can a revision change affect? | `no-mistakes ci topology-impact --base <ref> --head HEAD --entry-workflow <workflow>` |
 | Which Terraform resources depend on this one? | `no-mistakes infra resource-refs <type.name> --format json` |
 | Which packages changed in the lockfile? | `no-mistakes lockfile diff --base <ref> --format json` |
 

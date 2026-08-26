@@ -12,9 +12,11 @@ or workspace entries that do not correspond to a package directory.
 
 ## Options
 
-`packageRoots`, `workspaceFile`, `workspaceField`, `include`, and `exclude`
-select the package inventory and manifest representation; defaults are the
-documented root `package.json` workspace conventions.
+`packageRoots` selects package directories, `allowlist` names intentional
+non-workspace package manifests, and `requireNamedPackage` defaults to `false`.
+The rule reads the repository workspace configuration; it has no
+`workspaceFile` or `workspaceField` rule options. Shared rule `include`/`exclude`
+filters still apply.
 
 ## Valid example
 

@@ -28,8 +28,13 @@ Each selected code directory under `roots` must contain `requiredFile`.
 
 ## Options and defaults
 
-`roots`, `requiredFile`, and `codeExtensions` are required; there are no
-implicit roots, filename, or language defaults. Common excludes still apply.
+`roots` is required; an empty list disables the rule. `requiredFile` defaults
+to `README.md`; `codeExtensions` defaults to `ts`, `mts`, `cts`, `js`, `jsx`,
+`tsx`, `sql`, and `rs`; and `testExcludePatterns` defaults to `*.test.*`,
+`*.spec.*`, and `__tests__`. Common excludes still apply.
+
+`glob` and `requiredHeading` are not options for this rule: they belong only to
+the sibling [`required-doc-section`](required-doc-section.md) rule.
 
 ## Valid example
 

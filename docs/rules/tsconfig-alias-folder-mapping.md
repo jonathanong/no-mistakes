@@ -33,8 +33,9 @@ are findings.
 ## Options and defaults
 
 `tsconfig` identifies the config to inspect, `baseDir` anchors relative target
-folders, and `mappings` supplies `prefix`/`root` pairs. These are explicit
-policy options; there are no inferred alias conventions.
+folders, and `mappings` supplies `prefix`/`root` pairs. `checkExists` defaults
+to `false`; enable it to require each expected target directory on disk. These
+are explicit policy options; there are no inferred alias conventions.
 
 ## Valid example
 

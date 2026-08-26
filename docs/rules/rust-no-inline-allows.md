@@ -27,8 +27,10 @@ function-, module-, and item-level attributes.
 
 ## Options and defaults
 
-There are no rule-local options. The rule scans the configured Rust source
-universe.
+`roots` optionally replaces the rule's target roots; relative paths are
+resolved from the repository root. `excludes` omits files whose root-relative
+path contains one of its strings. By default, `roots` uses the rule's target
+roots and `excludes` is empty. Test files are not scanned by this rule.
 
 ## Valid example
 

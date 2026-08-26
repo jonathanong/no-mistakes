@@ -27,8 +27,10 @@ one file under `testGlob`.
 
 ## Options and defaults
 
-`roots` and `testGlob` are required; there are no inferred source roots or test
-patterns. Common include/exclude filters still apply.
+`roots` is required; an empty list disables the rule. `testGlob` defaults to
+`*.test.*`. `excludeDirs` omits named first-level directories, and
+`directChild` defaults to `false`, so nested tests count unless it is enabled.
+Common include/exclude filters still apply.
 
 ## Valid example
 

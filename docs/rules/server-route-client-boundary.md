@@ -26,8 +26,11 @@ route directories. The project configuration supplies the route scope.
 
 ## Options and defaults
 
-There are no rule-local options. Configure the target server project and its
-route globs; the rule does not infer a client directory convention.
+`excludes` is an optional list of route folders or files to leave outside the
+boundary. Entries may be globs, root-relative paths, or literal path
+components. It defaults to an empty list. Configure the target server project
+and its route globs separately; the rule does not infer a client directory
+convention.
 
 ## Valid example
 

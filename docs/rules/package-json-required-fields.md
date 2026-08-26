@@ -12,8 +12,24 @@ configured field has the wrong value shape.
 
 ## Options
 
-`include`, `exclude`, and `fields` select manifests and field requirements;
-each field policy uses the documented name, kind, and optional values/defaults.
+Rule-level `include` and `exclude` select manifests. Its direct option fields
+are `private`, `type`, `license`, `requireScopedName`,
+`unscopedNameExceptions`, and `mainWhenFileExists`. All checks are opt-in:
+
+- `private` requires the manifest's boolean `private` value to equal the
+  configured boolean. It defaults to unset.
+- `type` requires the manifest's string `type` value to equal the configured
+  string. It defaults to unset. The configuration key is `type`; `typeValue`
+  is only the implementation's field name, not an additional option.
+- `license` requires the manifest's string `license` value to equal the
+  configured string. It defaults to unset.
+- `requireScopedName` requires `name` to start with `@`, unless it exactly
+  matches an `unscopedNameExceptions` entry. It defaults to `false`.
+- `unscopedNameExceptions` defaults to an empty list and has no effect unless
+  `requireScopedName` is enabled.
+- `mainWhenFileExists` requires `main` to equal its configured string only
+  when a file with that exact name exists beside `package.json`. It defaults to
+  unset.
 
 ## Valid example
 

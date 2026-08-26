@@ -430,7 +430,8 @@ jobs:
       RAYON_NUM_THREADS: "4"
       # CodSpeed simulation/memory do not need production fat LTO. The release
       # profile's lto=true + codegen-units=1 OOMs or forces CARGO_BUILD_JOBS=1
-      # on ubuntu-latest (~16 min). Relative CodSpeed comparisons stay valid.
+      # on ubuntu-latest (~16 min). Relative CodSpeed comparisons are meaningful
+      # only when base and head use the same hosted-runner CPU environment.
       CARGO_PROFILE_BENCH_LTO: "false"
       CARGO_PROFILE_BENCH_CODEGEN_UNITS: "16"
 

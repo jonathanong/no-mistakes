@@ -33,9 +33,14 @@ test stem under the test policy; duplicate stem handling follows
 
 ## Options and defaults
 
-`duplicateStemGroup` defaults to exact stems; set `first-dot-segment` when
-variants such as `index.edge.test.mts` should share a stem and move under the
-configured test directory.
+`scopes` limits source/test paths; an empty list uses the rule application.
+`testExtensions` defaults to `.test.mts`, `.test.ts`, and `.test.tsx`.
+`testsDir` defaults to `__tests__`. `direction` defaults to `both`:
+`source-to-test` reports selected sources without a test, `test-to-source`
+reports tests without a source, and `both` performs both checks.
+`stemSuffixesToStrip` removes configured source-name suffixes before matching.
+`duplicateStemGroup` defaults to `exact`; set `first-dot-segment` when variants
+such as `index.edge.test.mts` should share a stem and move under `testsDir`.
 
 ## Valid example
 

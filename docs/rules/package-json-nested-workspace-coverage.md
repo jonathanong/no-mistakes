@@ -17,9 +17,11 @@ the configured dependency package inventory.
 
 ## Options
 
-`roots`, `workspaceField`, `dependencyFields`, `include`, and `exclude` select
-packages and the compared manifest fields; omitted values use the documented
-workspace/dependency defaults.
+`roots` selects package manifests, `dependencyNamePrefixes` limits dependency
+names, and `dependencyFields` selects manifest fields. `dependencyFields`
+defaults to `dependencies`, `devDependencies`, and `optionalDependencies`;
+the other lists default to empty. Shared rule `include`/`exclude` filters still
+apply.
 
 ## Valid example
 

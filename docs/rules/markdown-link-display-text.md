@@ -12,8 +12,10 @@ basename under the configured normalization rules.
 
 ## Options
 
-`include`, `exclude`, and `allow` select documents and intentional exceptions;
-omitted rule-specific lists use the documented defaults.
+`extensions` is the only rule-local option. It defaults to `.md`; set it to a
+complete extension list such as `[.md, .mdx]` when MDX should also be checked.
+Generic rule `include` and `exclude` filters select files separately; there is
+no rule-local `allow` option.
 
 ## Valid example
 

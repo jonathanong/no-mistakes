@@ -17,8 +17,10 @@ that would make a selected route or component cacheable.
 
 ## Options
 
-`include`, `exclude`, `allow`, and the documented cache API/import lists scope
-the rule; omitted lists use its built-in Next.js cache-pattern defaults.
+There are no rule-local options. Consequently, there are no rule-local
+defaults. The rule uses the selected project and the shared rule
+`include`/`exclude` path filters; its Next.js cache patterns are fixed by the
+analyzer.
 
 ## Valid example
 

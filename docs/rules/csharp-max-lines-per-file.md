@@ -11,9 +11,11 @@ appropriate source or test limit.
 
 ## Options
 
-`maxLines`, `maxTestLines`, `roots`, `exclude`, and `testRoots` control limits
-and selection; omitted values use the documented defaults and built-in test
-root detection.
+`srcMax`, `testMax`, `roots`, `excludes`, and `testRoots` control limits and
+selection. `srcMax` defaults to 200, `testMax` to 500, and `roots` defaults to
+the rule's target roots. `excludes` defaults to `**/*.g.cs`; its entries match
+path globs or literal path substrings. `testRoots` defaults to `**/tests/**`
+and `**/*.Tests/**`; paths under `tests/` also use the test limit.
 
 ## Valid example
 

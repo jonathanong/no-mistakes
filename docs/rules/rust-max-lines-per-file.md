@@ -27,8 +27,10 @@ Non-test Rust files must stay within `srcMax`; test files must stay within
 
 ## Options and defaults
 
-`srcMax` and `testMax` are required limits for the rule application; the rule
-does not choose a project-specific default budget.
+`srcMax` defaults to `200` code lines and `testMax` defaults to `500`.
+`excludes` skips files whose repository-relative path contains an entry, and
+`roots` defaults to the rule application's target roots. There are no other
+rule-local options.
 
 ## Valid example
 

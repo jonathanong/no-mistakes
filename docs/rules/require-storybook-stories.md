@@ -31,9 +31,17 @@ exports should be excluded explicitly.
 
 ## Options and defaults
 
-`stories` selects story files; `includeAllReactNamedExports` defaults to `false`;
-`exclude` defaults to empty. Colocated test allowances follow the configured
-rule options when present.
+`stories` selects candidate story files; an empty list matches no stories.
+`include` and `exclude` are rule-local component path globs and both default to
+empty lists. `includeAllReactNamedExports` and
+`includeAllReactDefaultExports` both default to `false`; enable either to treat
+the corresponding React exports as components without an explicit marker.
+`requiredProps` defaults to empty and limits coverage to components whose source
+contains one of the listed prop names. `allowComponents` and `allowFiles` map
+an exempt component key or file path to its required reason and default empty.
+`allowColocatedTests` defaults to `false`. `ignoreIndexAndPrivateFiles` also
+defaults to `false`; enable it to skip `index` and underscore-private source
+files. Generic rule filters remain separate from these rule-local globs.
 
 ## Valid example
 

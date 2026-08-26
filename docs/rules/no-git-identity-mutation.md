@@ -13,9 +13,12 @@ selected scripts; read-only identity queries remain allowed.
 
 ## Options
 
-`include`, `exclude`, `allow`, and `message` select scripts, known exceptions,
-and an optional finding hint. The documented script extension set is the
-default include scope.
+The only rule-local options are `excludePaths` and
+`conditionallyAllowedWorkflows`; both default to empty lists. `excludePaths`
+skips matching files entirely. `conditionallyAllowedWorkflows` permits an
+otherwise matching workflow only when its contents satisfy the managed-runner
+condition. Generic rule `include`/`exclude` filters are separate from these
+rule-local exceptions.
 
 ## Valid example
 

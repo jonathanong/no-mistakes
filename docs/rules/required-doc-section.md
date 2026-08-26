@@ -27,8 +27,10 @@ heading. Content below the heading is not inferred or validated by this rule.
 
 ## Options and defaults
 
-`glob` and `requiredHeading` are required options; there are no defaults because
-silently choosing a document set or heading would create a false policy.
+`glob` and `requiredHeading` are this rule's only options. Both default to an
+empty string, which disables the rule application rather than inferring a
+document set or heading. `roots`, `requiredFile`, `codeExtensions`, and
+`testExcludePatterns` belong to sibling `required-local-docs`, not this rule.
 
 ## Valid example
 
