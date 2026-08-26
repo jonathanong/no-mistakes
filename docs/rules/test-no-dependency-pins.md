@@ -47,3 +47,48 @@ Use `no-mistakes-disable-next-line test-no-dependency-pins` or
 `no-mistakes-disable-line` for a one-off fixture, or
 `no-mistakes-disable-file` when a whole test file is an intentional snapshot
 of pinned versions.
+
+## Why and when
+
+Use this rule when tests assert generated workflows, installers, or release
+metadata that changes independently of the behavior under test.
+
+## What it catches/requires
+
+Selected test files must not assert exact dependency, action, tool, release URL,
+asset, or log version strings matched by the configured pin patterns.
+
+## Options and defaults
+
+The default include is Filaments `TEST_FILE_RE`: `__tests__/` and
+`*.test.{mts,ts,tsx,mjs,js,cts,cjs}`, including mocks. `include` replaces that
+set; `patterns` replaces the default pin regexes. Both options default to the
+shown behavior when omitted.
+
+## Valid example
+
+```ts
+expect(workflow).toContain("uses: actions/checkout@");
+```
+
+## Counterexample
+
+```ts
+expect(workflow).toContain("uses: actions/checkout@v6.0.2");
+```
+
+## Fix
+
+Assert the stable prefix or behavior, compare against the current source pin,
+or move the exact version assertion into a focused production-release check.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line test-no-dependency-pins` for a single fixture
+exception, or the file directive for a test intentionally snapshotting pins.
+
+## Related rules
+
+[`version-pin-consistency`](version-pin-consistency.md) checks that a source pin
+and its anchors agree; [`test-email-domain-policy`](test-email-domain-policy.md)
+keeps test fixtures synthetic.

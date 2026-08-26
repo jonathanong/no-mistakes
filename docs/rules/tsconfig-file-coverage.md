@@ -63,3 +63,54 @@ allow:
 Findings use line 1 of the uncovered file or option path. Use a top-of-file
 `no-mistakes-disable-file tsconfig-file-coverage` directive, or
 `no-mistakes-disable-line` on line 1, for a one-off exception.
+
+## Why and when
+
+Use this rule when every tracked TypeScript source file must belong to a
+compiler program, independent of whether CI happens to run that program.
+
+## What it catches/requires
+
+Every tracked `.ts`, `.mts`, `.cts`, and `.tsx` file must match at least one
+tracked tsconfig `files`/`include` set or a reasoned `allow` entry.
+
+## Options and defaults
+
+`allow` and `auxiliaryConfigs` default to empty. `requiredBasename` defaults to
+`tsconfig.dependency-cruiser.json` for auxiliary configs. Auxiliary configs may
+not declare compiler `files`, `include`, `exclude`, or `references`; paths must
+be repository-relative and reasons non-empty.
+
+## Valid example
+
+```json
+{"include":["src/**/*.ts"]}
+```
+
+```text
+src/index.ts
+```
+
+## Counterexample
+
+```text
+orphan.ts
+```
+
+The file is tracked beside a config that includes only `src`.
+
+## Fix
+
+Add the file to a compiler `include`/`files` set or add a precise `allow` entry
+with why it intentionally stays outside the program.
+
+## Suppression
+
+Prefer a reasoned `allow` entry. Use a top-of-file file directive for a
+one-off generated file; findings point to line 1.
+
+## Related rules
+
+[`tsconfig-gate-coverage`](tsconfig-gate-coverage.md) checks CI and local
+typecheck registration; [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)
+checks alias targets.

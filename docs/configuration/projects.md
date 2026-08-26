@@ -13,6 +13,9 @@ projects:
     root: web
     include: ["app/**/*.tsx"]
     exclude: ["app/generated/**"]
+    rewrites:
+      - source: /posts/:slug*
+        destination: /content/posts/:slug*
 ```
 
 Supported project types include `server`, `nextjs`, `remix`, `vitejs`,
@@ -32,6 +35,12 @@ or Durable Object domain analyzer.
 
 Prefer explicit `root`, `include`, `exclude`, `routes`, queue settings, and
 `trpc.routers` over repository conventions.
+
+`rewrites` belongs to the project that owns the routes. Each rule maps a
+browser-facing source path to the destination path used by the application;
+the fetch and route analyzers use these declarations to connect those paths.
+Keep rewrite globs and parameters static so the relationship remains
+deterministic.
 
 Empty `trpc.routers` lists disable tRPC procedure extraction. There is no
 hardcoded `src/trpc`. Request `--relationship trpc` to traverse

@@ -14,9 +14,33 @@ describe("docs coverage", () => {
       assert.ok(existsSync(path), `missing docs for ${ruleId}`);
       assert.ok(index.includes(file), `docs/eslint-rules/README.md must link ${file}`);
       const body = readFileSync(path, "utf8");
-      assert.match(body, /Why:/, `${file} needs a Why section`);
-      assert.match(body, /Counterexample:/, `${file} needs a counterexample`);
-      assert.match(body, /Fix:/, `${file} needs fix guidance`);
+      for (const section of [
+        "Why",
+        "Disallowed",
+        "Allowed",
+        "Options",
+        "Fix",
+        "Suppression",
+        "Related rules",
+      ]) {
+        assert.match(body, new RegExp(`^## ${section}$`, "m"), `${file} needs ${section}`);
+      }
+      assert.ok(
+        (body.match(/```/g) ?? []).length >= 6,
+        `${file} needs invalid, valid, and suppression examples`,
+      );
+
+      const optionNames = schemaPropertyNames(plugin.rules[ruleId].meta.schema);
+      for (const optionName of optionNames) {
+        assert.ok(body.includes(`\`${optionName}\``), `${file} must document ${optionName}`);
+      }
+      if (optionNames.length === 0) {
+        assert.match(
+          body,
+          /This rule has no options\.|The schema accepts an options object\./,
+          `${file} must state whether it has options`,
+        );
+      }
     }
   });
 
@@ -30,34 +54,35 @@ describe("docs coverage", () => {
       assert.ok(pluginDoc.includes(`configs.${preset}`), `missing configs.${preset} in plugin doc`);
     }
 
-    for (const optionName of [
-      "selectorAttributes",
-      "interactiveComponents",
-      "canonicalAttribute",
-      "allowInlineScriptIds",
-      "allowInlineScriptIdPatterns",
-      "includePathPatterns",
-      "checkedPathPatterns",
-      "allowedPathPatterns",
-      "allowDefaultReExports",
-      "allowDefaultedProps",
-      "allowStaticTemplates",
-      "allowBeforeAllAssignments",
-      "targets",
-      "handlers",
-      "sourceSpecifierPatterns",
-      "calleeNamePatterns",
-      "importSpecifier",
-      "executorNames",
-      "owners",
-      "chunkFunctionNames",
-      "modules",
-      "executors",
-      "includeFiles",
-      "annotation",
-      "sqlTagModules",
-    ]) {
-      assert.ok(pluginDoc.includes(optionName), `missing option ${optionName}`);
+    for (const [ruleId, rule] of Object.entries(plugin.rules)) {
+      const optionNames = schemaPropertyNames(rule.meta.schema);
+      if (optionNames.length === 0) continue;
+      assert.ok(pluginDoc.includes(`\`${ruleId}\``), `missing ${ruleId} option entry`);
+      for (const optionName of optionNames) {
+        assert.ok(
+          pluginDoc.includes(`\`${optionName}`),
+          `missing ${optionName} in central option reference`,
+        );
+      }
     }
+
+    assert.match(pluginDoc, /Only two rules expose editor suggestions\./);
+    assert.match(pluginDoc, /`async-call-disposition` offers a\n`void` prefix/);
+    assert.match(pluginDoc, /`async-try-catch-return-await`\noffers `await`/);
   });
 });
+
+function schemaPropertyNames(schema) {
+  const names = new Set();
+  const visit = (value) => {
+    if (!value || typeof value !== "object") return;
+    for (const [name, child] of Object.entries(value.properties ?? {})) {
+      names.add(name);
+      visit(child);
+    }
+    if (Array.isArray(value.items)) value.items.forEach(visit);
+    else visit(value.items);
+  };
+  schema.forEach(visit);
+  return [...names].sort();
+}

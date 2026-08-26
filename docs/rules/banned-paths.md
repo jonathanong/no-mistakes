@@ -1,5 +1,29 @@
 # `banned-paths`
 
+## Why and when
+
+Use this rule for migration or architecture boundaries expressed as path globs,
+especially when a file must disappear rather than merely stop being imported.
+
+## What it catches
+
+It reports tracked or visible files matching a configured `bannedPaths` glob,
+including repository-scoped matches below normal source-discovery skips.
+
+## Options
+
+Each `bannedPaths` entry requires `glob` and may set a custom `message`.
+There are no defaults or other rule-specific options.
+
+## Valid example
+
+A repository without `web/pages/**` files passes the configuration below.
+
+## Related rules
+
+[`banned-renamed-files`](banned-renamed-files.md) is for legacy basenames;
+[`file-extension-policy`](file-extension-policy.md) is for extension policy.
+
 Bans tracked files whose repository-relative paths match configured globs. In a
 Git worktree, the rule examines files present in the index and working tree. It
 does not report untracked files, whether or not Git ignores them. A tracked file

@@ -1,5 +1,33 @@
 # `finite-set-consistency`
 
+## Why and when
+
+Use this rule when two explicit inventories must remain synchronized without
+maintaining a private script or a hand-reviewed diff.
+
+## What it catches
+
+It extracts configured finite string sets and reports missing, stale, empty, or
+non-static members according to the selected comparison mode.
+
+## Options
+
+`sets` entries require `name` and `kind` plus that extractor's documented
+fields (`file`, `target`, `key`, `pattern`, `property`, or `minSize`).
+`comparisons` entries require `left` and `right` and default `mode` to
+`equal-set`; supported modes are documented below.
+
+## Valid example
+
+Two configured route inventories containing the same static values pass an
+`equal-set` comparison.
+
+## Related rules
+
+[`pnpm-release-age-policy`](pnpm-release-age-policy.md) uses policy-specific
+cross-file consistency; [`structured-config-policy`](structured-config-policy.md)
+checks individual config shapes.
+
 Compares named finite string sets extracted from source files, structured
 config, docs, and file paths.
 

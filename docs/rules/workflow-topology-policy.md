@@ -42,6 +42,54 @@ jobs:
       - run: pnpm test
 ```
 
+## Why and when
+
+Use this rule when CI's job, artifact, reusable-workflow, and step ordering are
+part of the delivery contract and should be checked as a graph.
+
+## What it catches/requires
+
+Configured inventory and assertions must match workflow topology: required or
+forbidden edges, exact fan-in, artifacts, callers, step order, and documented
+unlocked workflows.
+
+## Options and defaults
+
+All options are declarative and default to empty: `jobInventory`, edge maps,
+artifact assertions, step orders, and `unlockedWorkflowReasons`. Empty maps do
+not assert that every possible workflow is listed.
+
+## Valid example
+
+```yaml
+jobs:
+  test:
+    needs: lint
+```
+
+## Counterexample
+
+```yaml
+jobs:
+  test:
+    steps: [{run: pnpm test}]
+```
+
+## Fix
+
+Add the missing topology edge or ordered step, or update the policy with the
+intended graph and a reason for an intentionally unlocked workflow.
+
+## Suppression
+
+Prefer an `unlockedWorkflowReasons` entry for a deliberate exception. Use a
+file directive only when the workflow is owned by an external generator.
+
+## Related rules
+
+[`tsconfig-gate-coverage`](tsconfig-gate-coverage.md) checks typecheck gates;
+[`vitest-ci-path-coverage`](vitest-ci-path-coverage.md) checks test path filters.
+
 Fix: add the `needs` edge and ordered steps the policy names, or update
 the YAML options to match the intended graph.
 

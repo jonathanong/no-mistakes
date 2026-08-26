@@ -42,3 +42,47 @@ query(`/* posts/list */ SELECT id FROM posts ORDER BY id DESC`);
 Use `no-mistakes-disable-next-line postgres-require-query-annotation` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
 when a whole file is an intentional exception.
+
+## Why and when
+
+Use this rule when query logs, slow-query reports, and `EXPLAIN ANALYZE` output
+need a stable operation name rather than an opaque SQL string.
+
+## What it catches/requires
+
+Executed PostgreSQL SQL must begin with a non-empty block comment. `BEGIN`,
+`COMMIT`, and `ROLLBACK` are exempt; line comments do not satisfy the contract.
+
+## Options and defaults
+
+`include` and `exclude` select source files. `importSpecifier` defaults to
+`@data-stores/psql`, and `executorNames` defaults to `[query, read, write]`.
+
+## Valid example
+
+```ts
+query(`/* posts/list */ SELECT id FROM posts ORDER BY id DESC`);
+```
+
+## Counterexample
+
+```ts
+query(`SELECT id FROM posts ORDER BY id DESC`);
+```
+
+## Fix
+
+Add a short operation identifier as the first block comment inside the SQL
+string passed to the configured executor.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-require-query-annotation` or
+`no-mistakes-disable-line`; use the file directive for a deliberately opaque
+administrative script.
+
+## Related rules
+
+[`postgres-no-offset`](postgres-no-offset.md) discourages unstable pagination;
+[`postgres-lock-ordering`](postgres-lock-ordering.md) protects concurrent row
+locks.

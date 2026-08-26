@@ -6,334 +6,114 @@ allowed-tools: Bash(no-mistakes:*) Bash(rg:*) Read Glob
 
 # No Mistakes
 
-Use `no-mistakes` before `rg` when the question is structural: what a TS/JS file
-imports, who imports it, what it exports, which tests are related, whether a
-queue job is connected, which server route owns an endpoint, what a Next.js
-route fetches, or what React traits a component has.
+Use `no-mistakes` for structural codebase questions: import and test impact,
+public symbols, static route/fetch/queue relationships, or configured project
+checks. Use `rg` after a graph query for exact call lines, comments, strings,
+or unsupported/dynamic forms.
 
-## Scope
+## When to activate
 
-**Core:** TypeScript/JavaScript module graphs — imports, dependents, exports,
-test impact, Playwright coverage, React traits, queue/server routes, Next.js
-fetches, lockfile diffs, and `no-mistakes check` rules.
+Use `no-mistakes` when the answer crosses more than two workspace directories,
+more than five import hops, or needs transitive test impact. For one local
+TS/JS file's direct static importers, use `no-mistakes importers <file>`;
+otherwise use the graph command below. For non-code text and exact syntax use
+`rg` directly.
 
-**Adjacent graph domains**:
-Configured `tests.python|go|rust|rails|php|java|kotlin|elixir|dart` and `tests.dotnet.projects` /
-`tests.swift.packages` participate in the canonical graph. Query them with
-`dependents --relationship python|go|rust|ruby|php|java|kotlin|elixir|dart|dotnet|swift` and
-`tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart|dotnet|swift`.
-`no-mistakes ci` — GitHub Actions workflow graphs ·
-`no-mistakes infra` — Terraform/OpenTofu resource graphs ·
-`no-mistakes swift` — Swift package importers and test targets.
+## Change lifecycle
 
-For package manifests that own nested workspaces, configure the
-`package-json-nested-workspace-coverage` check rule. It keeps explicit
-workspace entries aligned with configured dependency-name prefixes.
-
-## When To Reach For It
-
-✅ **Use `no-mistakes`** when the question spans >2 workspace dirs, involves
->5 import hops, or requires transitive test-impact across a large graph.
-
-⚡ **Use `rg`** for: exact call lines or text content (comments, strings,
-prose). For structural graph questions outside TS/JS, see Command Selection:
-`.yml` → `ci` · `.tf` → `infra` · `.swift` → `swift` · Rust binary CI
-impact → `--relationship ci` · CSS/JSON asset imports →
-`--relationship asset`. Go/Python/Rust/Rails/PHP/Java/Kotlin/Elixir/.NET graphs require explicit `tests.<lang>` config — see https://github.com/jonathanong/no-mistakes/blob/main/docs/feature-parity.md.
-For "what directly imports this one TS/JS file?" in a single directory,
-`no-mistakes importers <file>` is faster than a full graph walk. Language
-graphs use `dependents --relationship <lang>` instead.
-
-**Pre-implementation:** for existing TS/JS files, run the appropriate test
-planner before editing to discover affected tests first (for new files,
-rerun after creating them):
-- Vitest: `no-mistakes tests plan vitest --changed-file <file> --format paths`
-- Jest: `no-mistakes tests plan jest --changed-file <file> --format paths`
-- Playwright (route/page changes): `no-mistakes tests plan playwright --changed-file <file> --format paths`
-- Python / Go / Cargo / Rails / PHP / Java / Kotlin / Elixir / Dart: `no-mistakes tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart --changed-file <file> --format paths`
-
-See `references/tests.md`.
-For high-signal multi-command workflows around UI selectors, selector-root
-expansion, named-export impact, workflow/static-analysis changes, diff test
-impact planning, API response-shape fanout, package entrypoints,
-shared-helper dependent tests, deleting a test, and queue enqueue call
-disposition, see `references/impact-recipes.md`.
-
-## Common Failure-Mode Recipes
-
-Use these when the task sounds like a known review failure, not just a generic
-graph question.
-
-**When you add a new workspace package:** verify both code importers and owning
-manifests before pushing.
+For an existing file, plan before editing; for a new file, rerun after it
+exists. Recheck changed files after editing, then validate before handoff.
 
 ```bash
-# Direct files that import the new package entrypoint.
-no-mistakes dependents ts-shared/feed-capabilities/index.mts --relationship import --relationship workspace --depth 1 --format paths
+# Before editing: scope impact and focused tests.
+no-mistakes dependents <file> --format json
+no-mistakes tests plan vitest --changed-file <file> --format json
 
-# package.json files that already declare the package edge.
-no-mistakes dependents ts-shared/feed-capabilities/index.mts --relationship package --format json
+# After editing: request the complete local validation set.
+no-mistakes impacted-checks <file...> --format json
+
+# Before handoff: resolve imports and run configured checks.
+no-mistakes resolve-check <file...> --format json
+no-mistakes check --format json
 ```
 
-Then compare the direct importer files with each file's nearest `package.json`.
-Every package that imports the workspace entrypoint should declare the
-dependency directly.
+For Next.js routes, pages, selectors, or Playwright tests, also run
+`no-mistakes tests plan playwright --changed-file <file> --format json` and
+`no-mistakes playwright check --json`. See
+[lifecycle recipes](references/lifecycle.md) for package additions, hook
+context, option propagation, and safe command execution.
 
-**When you add a hook that needs context to an existing component:** find render
-and test hosts before editing, especially for hooks such as `useRouter`,
-`usePathname`, or providers required by app context.
+## Output and scope contract
 
-```bash
-no-mistakes react usages web/components/news/news-item-actions.tsx#NewsItemActions --format json
-no-mistakes tests plan vitest --changed-file web/components/news/news-item-actions.tsx --format paths
-```
+- Use `--format json` (or `--json`) for parsing; CLI JSON is the authoritative
+  structured result. Inspect warnings and fallback fields before assuming an
+  empty or narrow plan is complete.
+- Use `--format paths` only for reviewing or piping trusted path lists. Prefer
+  JSON `command` arrays to execute configured validation commands; do not
+  `eval` command text from an untrusted source.
+- `--timings` and `--verbose-timings` write diagnostics to stderr, leaving
+  successful stdout machine-readable.
+- Pass `--root <workspace>` explicitly. In normal monorepos omit `--tsconfig`
+  so each importing file uses its owning config; pass a package tsconfig only
+  to force one resolver for debugging or a deliberately scoped request.
+- Static literals produce the strongest results. Dynamic imports, route paths,
+  selectors, queue names, fetch URLs, and process commands require inspection
+  or `rg`; see [limits and fallbacks](references/limits-and-fallbacks.md).
 
-Check the returned call sites, stories, and tests for hosts that render the
-component without the new context. If a parent component is the actual test
-entry, run `react usages` on that parent too.
+For several related reports in one Node process, use the async N-API
+`analyzeProject({ root, reports: [...] })` rather than repeated CLI calls. It
+shares one request-scoped inventory, fact pass, and canonical graph. Dedicated
+API calls rebuild analysis; see the upstream Node API documentation linked from
+the repository docs.
 
-**When you add fire-and-forget work around a suppression option:** first find
-callers structurally, then grep exact option literals and verify each bypassed
-invariant is rebuilt where needed.
+## Quick command selection
 
-```bash
-no-mistakes call-sites backend/services/urls/add-url.mts addUrl --format json
-rg -n 'addUrl\(|skipCreatedEvents' backend/
-```
-
-`no-mistakes` does not model option propagation. Use the call site report to
-scope the review and `rg` to inspect exact argument objects such as
-`skipCreatedEvents: true`.
-
-## Command Selection
-
-| Question | Tool |
+| Need | Command |
 | --- | --- |
-| What does this file transitively import? | `no-mistakes dependencies <file>` |
-| What runtime modules can a Playwright route conservatively reach? | `no-mistakes dependencies <route-file> --relationship route-import` |
-| Which files are affected by touching this file? | `no-mistakes dependents <file>` |
-| Which files directly import this one TS/JS file? (fast) | `no-mistakes importers <file>` (TS/JS static imports only) |
-| Which Python/Go/Rust/Ruby/PHP/Java/Kotlin/Elixir/Dart/Swift/.NET files depend on this file? | `no-mistakes dependents <file> --relationship python\|go\|rust\|ruby\|php\|java\|kotlin\|elixir\|dart\|swift\|dotnet --format json` |
-| Which files import this named export? | `no-mistakes dependents <file>#SYMBOL` |
-| What does this file export, and who imports each export? | `no-mistakes exports-of <file>` |
-| Is this export still used anywhere? (yes/no) | `no-mistakes dead-exports <file> [NAME...]` |
-| Where is this function called, and with what argument shapes? | `no-mistakes call-sites <file> SYMBOL` |
-| Do all imports in these files resolve? | `no-mistakes resolve-check <file> [file...]` |
-| Are configured Mermaid fences valid? | `no-mistakes check --format json` |
-| What must I update before changing this function signature? | `no-mistakes symbols <file> --mode signature-impact --symbol SYMBOL --format json` |
-| What multi-step recipe fits a UI selector, selector-root, named export, workflow/static-analysis, diff test impact, API-shape fanout, package entrypoint, shared-helper test discovery, test deletion, or queue call-disposition question? | Read `references/impact-recipes.md` |
-| Which tests should rerun for everything changed in a diff? | `no-mistakes tests plan vitest --from-git-diff <base>...<head> --format paths` |
-| Which tests should rerun? | `no-mistakes tests plan vitest --changed-file <file> --format paths` |
-| Which Python/Go/Cargo/Rails/PHP/Java/Kotlin/Elixir/Dart tests should rerun? | `no-mistakes tests plan python\|go\|cargo\|rails\|php\|java\|kotlin\|elixir\|dart --changed-file <file> --format paths` |
-| Which tests should rerun? (lower-level fallback) | `no-mistakes dependents <file> --test vitest --format paths` |
-| Why was this test selected? | `no-mistakes tests why <test> --plan plan.json` |
-| What does this module export/import? | `no-mistakes symbols <file> --include both` |
-| Which packages/specifiers are directly imported by source files? | `no-mistakes import-usages --root <root> --filter 'src/**' --format json` |
-| What React traits does this component have? | `no-mistakes react analyze <glob>` |
-| Does this component tree call fetch? | `no-mistakes react check <glob> --assert-no-fetch` |
-| Which callsites render this component, and with what props? | `no-mistakes react usages <file>#SYMBOL` |
-| Where is this test id (e.g. data-pw) used across source and tests? | `no-mistakes data-pw <value>` |
-| Which cache/pubsub/queue effects does this entry reach? | `no-mistakes effects <kind> --entry <file>` |
-| Which server components/pages render this component (RSC)? | `no-mistakes rsc-callers <component-file>` |
-| How do existing entries register in this registry file? | `no-mistakes registry-extension <registry-file>` |
-| Structural blast-radius ("which .tsx have onClick without cursor-pointer")? | `ast-grep` directly (see `references/limits-and-fallbacks.md`) |
-| Are all App Router routes/selectors covered by Playwright? | `no-mistakes playwright check` |
-| Which Playwright tests cover this page/component? | `no-mistakes playwright related <file>` |
-| What does this Playwright test assert? | `no-mistakes playwright tests <test-file>` |
-| Which API calls does this Next.js route make? | `no-mistakes fetches <route-or-file>` |
-| Which packages changed between two lockfile refs? | `no-mistakes lockfile diff --base <ref>` |
-| Which CI workflows/jobs does this changed file trigger, and with what permissions? | `no-mistakes ci impact <file> --format json` |
-| Which workflows define or reference this env var? | `no-mistakes ci env <VAR> --format json` |
-| What are the workflow edges, job runner/timeout/permission settings, env declarations, or static secret-name use sites? | `no-mistakes ci topology --format json` |
-| What local validation commands should I run for these changed files? | `no-mistakes impacted-checks <file...> --format paths` |
-| Which configured generic validation commands apply, without test selection? | `no-mistakes impacted-checks <file...> --generic-only --format json` |
-| Why is an impacted-checks result empty? | Inspect `empty_result` in JSON/YAML, or opt into `no-mistakes impacted-checks --diagnose-empty` for a stderr note. |
-| Which queue producer/worker files are connected? | `no-mistakes queues related <file>` |
-| Are queue producers/workers unmatched? | `no-mistakes queues check` |
-| What server routes exist? | `no-mistakes server routes` (includes Remix `app/routes` when `type: remix` is configured) |
-| Which server route files are related? | `no-mistakes server related <file>` |
-| Raw queue/server edges for debugging | `no-mistakes queues edges [file]` / `no-mistakes server edges [file]` |
-| Which Terraform/OpenTofu resources reference this resource? | `no-mistakes infra resource-refs <type>.<name>` |
-| What outputs does this Terraform module export and who consumes them? | `no-mistakes infra outputs <module-dir>` |
-| Which tests cover this `.tf` file? | `no-mistakes infra test-for <tf-file>` |
-| Which Swift files import this file/type? | `no-mistakes swift importers <file>` |
-| Which dotnet tests should rerun? | `no-mistakes tests plan dotnet --changed-file <file> --format paths` |
-| Which Swift test targets cover this file? | `no-mistakes swift test-targets <file>` |
-| Run configured project checks in parallel | `no-mistakes check` |
-| What edge kinds are supported? | Read `references/decision-tree.md` or https://github.com/jonathanong/no-mistakes/blob/main/docs/graph-edges.md |
-| Plain text, comments, log messages, exact call lines | `rg` |
+| File/module dependencies | `no-mistakes dependencies <file> --format json` |
+| Files or named-export consumers | `no-mistakes dependents <file>[#SYMBOL] --format json` |
+| Direct static importers | `no-mistakes importers <file> --format json` |
+| Public API, imports, or signature blast radius | `no-mistakes symbols <file> --include both --format json`; add `--mode signature-impact --symbol NAME` |
+| Named exports and their consumers | `no-mistakes exports-of <file> --format json` |
+| Is an export unused? | `no-mistakes dead-exports <file> [NAME...]` |
+| Function calls and static argument shapes | `no-mistakes call-sites <file> NAME --format json` |
+| Tests for a changed file or diff | `no-mistakes tests plan <framework> --changed-file <file> --format json`; use `--from-git-diff base...head` for a diff |
+| Explain selected tests | `no-mistakes tests why <test> --plan plan.json --format json` |
+| Exact runner commands | `no-mistakes tests plan <framework> --changed-file <file> --format commands` |
+| Combined tests, lint, typecheck, and configured checks | `no-mistakes impacted-checks <file...> --format json` |
+| Playwright coverage or related tests | `no-mistakes playwright check --json`; `no-mistakes playwright related <file> --json` |
+| React callers and component traits | `no-mistakes react usages <file>#Component --format json`; `no-mistakes react analyze <glob> --format json` |
+| Next.js page-to-API coupling | `no-mistakes fetches <route-or-file> --format json` |
+| Queue/server graph | `no-mistakes queues related <file> --format json`; `no-mistakes server related <file> --format json` |
+| CI or workflow impact | `no-mistakes ci impact <file> --format json`; `no-mistakes ci topology --format json` |
+| Terraform/OpenTofu or Swift | `no-mistakes infra resource-refs <type.name> --format json`; `no-mistakes swift importers <file> --format json` |
+| Configured language graph | `no-mistakes dependents <file> --relationship <lang> --format json` |
 
-## Quick Workflow
+`tests plan` supports `vitest`, `playwright`, `jest`, `dotnet`, `swift`,
+`python`, `go`, `cargo`, `rails`, `php`, `java`, `kotlin`, `elixir`, and `dart`
+when the matching language/test configuration is present. `dependents --test`
+is a lower-level fallback; prefer the planner because it includes configured
+groups, limits, diffs, and deleted-file behavior.
 
-```bash
-# Machine-readable graph query
-no-mistakes dependents src/utils.mts --root /path/to/project --format json
+## Reference routing
 
-# Test selection (preferred over dependents --test)
-no-mistakes tests plan vitest --changed-file src/utils.mts --format paths
-no-mistakes tests plan playwright --changed-file web/app/users/page.tsx --format paths
-no-mistakes tests plan python --changed-file app/users.py --format paths
-no-mistakes tests plan cargo --changed-file app/src/lib.rs --format commands
-
-# Explain why a test was selected
-no-mistakes tests why tests/users.test.mts --plan plan.json
-
-# Public API and imports
-no-mistakes symbols src/api.mts --include both --format json
-no-mistakes import-usages --root . --filter 'src/**' --format json
-no-mistakes symbols src/api.mts --mode signature-impact --symbol handler --format json
-
-# Reuse one prepared analysis for related reports
-node --input-type=module - <<'NODE'
-import { analyzeProject } from "no-mistakes";
-const report = await analyzeProject({
-  root: process.cwd(),
-  reports: [
-    { type: "dependencies", files: ["src/api.mts"] },
-    { type: "symbols", files: ["src/api.mts"], include: "both" },
-  ],
-});
-console.log(report);
-NODE
-
-# Playwright coverage gate before finishing Next.js / Playwright work
-no-mistakes playwright check --json
-no-mistakes playwright related web/app/users/page.tsx --json
-
-# Page-to-API coupling
-no-mistakes fetches web/app/users/page.tsx --format json
-
-# Lockfile diff (integrates with tests plan)
-no-mistakes lockfile diff --base origin/main --format json
-
-# Queue and server graph checks
-no-mistakes queues check --format json
-no-mistakes server routes --format json
-```
-
-For `pnpm-release-age-policy`, prefer `temporaryGroups` for temporary release
-age exclusions. Each group records exact `package@version` selectors, a reason,
-and canonical UTC `eligibleForRemovalAt` audit metadata; an elapsed eligibility
-date is informational and does not fail CI. Flat `temporarySelectors` remains
-compatible, but selectors cannot be duplicated across it and groups.
-
-Prefer `--format json` for agent parsing and `--format paths` for command
-substitution. Every command accepts root-global `--timings`; use
-`--verbose-timings` when deterministic discovery/read/parse/resolver/graph/
-traversal/output work counts are needed. Both are stderr-only, verbose implies
-timings, and parallel phase lines are explicitly non-additive. Ordinary runs do
-not start diagnostic clocks. `impacted-checks` reuses one in-memory graph across
-configured test frameworks.
-
-An empty `impacted-checks` report includes `empty_result` with the stable code
-`no-changed-files` or `no-impacted-checks`; reports with checks omit the field.
-The CLI is silent by default. Use `--diagnose-empty` when an agent needs the
-exact `note[<code>]: <message>` explanation on stderr. The async Node API
-returns the structured field and never writes diagnostics to stderr.
-
-All analysis invocations share a per-user machine-wide lock. By default,
-`--lock-timeout 30` waits up to 30 seconds to acquire it and `--timeout 30`
-allows 30 seconds of execution after acquisition. Use `--fail-on-lock` when an
-agent should fail immediately instead of queueing; use `0` to disable either
-CLI timeout. Lock waits are silent, failures go to stderr, and successful JSON
-output is unchanged. The async Node API accepts `timeout`, `lockTimeout`, `failOnLock`, and `jobs`
-with the same semantics; `0` or `null` disables a Node timeout, `jobs: 0`
-matches CLI `--jobs 0`, and failures reject the Promise.
-
-For repeated graph/symbol/playwright/project queries in the same process,
-prefer `analyzeProject({reports:[…]})` from the async Node API documented at
-https://github.com/jonathanong/no-mistakes/blob/main/docs/node-api.md — it
-shares one request-scoped analysis dataset and one graph build per normalized
-effective plan and file universe across all requested
-reports. `analyzeProject` also batches the remaining dedicated Node APIs
-(`importers`, `exportsOf`, `deadExports`, `callSites`, `resolveCheck`,
-`fetches`, `dataPw`, `registryExtension`, `testsPlan`/`testsImpact`/
-`testsTargets`/`testsWhy`/`testsComment`/`testsGraph`/`testsGraphMermaid`,
-`lockfileDiff`, `ciImpact`/`ciEnv`/`ciTopology`, `impactedChecks`,
-`infraResourceRefs`/`infraOutputs`/`infraTestFor`, `swiftImporters`/
-`swiftTestTargets`, and `validateMermaidMarkdown`). Dedicated functions still
-work; they rebuild analysis instead of sharing the request session.
-
-The shipped Node declarations expose precise DTOs for `fetches()`, `queues()`,
-`reactAnalyze()`, and `check()` through the
-`packages/no-mistakes/report-types.d.ts` barrel. Use those typed report fields
-instead of treating report collections as `unknown[]`; omitted serialized Rust
-fields are optional and nullable fields are represented as `string | null`.
-Check callers can request the additive `suppressed` directive-audit collection
-with `includeSuppressed: true`.
-
-## Graph Options
-
-`dependencies`, `dependents`, and `related` support:
-
-- `--root <PATH>` for the project root.
-- `--tsconfig <FILE>` to force one config for an entire request. Omit it to use
-  automatic per-workspace ownership resolution, including package-local aliases
-  and referenced projects.
-- `--depth <N>` to limit traversal depth.
-- `--filter <GLOB>` to include only matching files; repeatable.
-- `--target-module <GLOB>` to include only matching external module nodes (useful with `--relationship package`).
-- `--test vitest|playwright|cargo|dotnet|swift|python|go|rails|php|java|kotlin|elixir|dart|jest` to filter to test files.
-- `--relationship import|import-static|import-dynamic|import-type|import-require|route-import|workspace|package|test|route|queue|trpc|resource|md|ci|workflow|workflow-job|workflow-step|workflow-needs|workflow-uses|workflow-run|workflow-artifact|http|process|asset|react|dotnet|swift|terraform|python|go|rust|ruby|php|java|kotlin|elixir|dart|all`.
-- `--direction deps|dependents|both` for `queues related` and `server related`.
-- `--format json|md|yml|paths|human`, `--json`, root-global `--timings` /
-  `--verbose-timings` (stderr), and `--jobs`.
-
-`FILE#SYMBOL` works only for `dependents`/`related`, not `dependencies`.
-Namespace imports match all symbols; use `rg` on returned files to confirm exact
-member usage.
-
-## When To Read References
-
-- `references/decision-tree.md`: choosing commands, relationships, filters, and
-  outputs.
-- `references/dependencies.md`: full `dependencies` reference.
-- `references/dependents.md`: full `dependents`/`related` reference and
-  `FILE#SYMBOL` behavior.
-- `references/impact-recipes.md`: multi-command recipes for React selector
-  impact, selector-root expansion, TS helper impact, workflow/static-analysis
-  changes, diff test impact planning, API response-shape fanout audits,
-  package entrypoint/direct-subpath reports, shared-helper dependent test
-  discovery, pre-deletion test coverage checks, and queue enqueue
-  call-disposition audits.
-- `references/symbols.md`: full `symbols` reference.
-- `references/lightweight-queries.md`: full `importers`, `exports-of`,
-  `dead-exports`, `call-sites`, and `resolve-check` reference.
-- `references/tests.md`: full `tests plan/why` reference and `testPlan` config.
-- `references/playwright.md`: full `playwright` command reference.
-- `references/monorepo-resolution.md`: tsconfig paths and workspace packages.
-- `references/limits-and-fallbacks.md`: unsupported forms and `rg` fallbacks.
-- Upstream repository docs (not vendored with this skill): the `docs/` tree at
-  https://github.com/jonathanong/no-mistakes/tree/main/docs — see the agent-guide,
-  cli, graph-edges, rules, eslint-rules, and configuration pages there.
-
-## Hard Limits
-
-- `baseUrl`-only imports are resolved when `compilerOptions.baseUrl` is set.
-  Prefer `compilerOptions.paths` for explicit aliases, especially when an
-  alias should be shared across workspace packages.
-- Dynamic `import()` and `require()` are tracked only with literals.
-- `route-import` is deliberately conservative: it includes runtime static
-  imports/re-exports and literal dynamic imports inside functions, but excludes
-  type-only imports, `require()`, and computed dynamic imports. Use `route` for
-  URL-route, Playwright route-test, and Next.js layout edges instead.
-- `route-import` is explicit opt-in. Omitted relationships and `all` keep the
-  standard call-pruned graph so test impact and dependency checks do not widen.
-- `workflow` traces static, tracked GitHub Actions topology and execution:
-  workflow -> job -> step, `needs`, local `uses`, literal run/package-script
-  targets, and same-run artifacts. Virtual IDs are `WORKFLOW#job:<job>` and
-  `WORKFLOW#job:<job>/step:<zero-based-index>`. `ci` remains only the legacy
-  workflow-file -> Rust-binary Cargo edge; remote `uses` and `workflow_run`
-  are intentionally outside `workflow`.
-- Bare external specifiers such as `react` are terminal module nodes; their
-  `node_modules` sources are not parsed. Node built-ins such as `node:path`
-  remain excluded from module nodes.
-- Graph tools answer file/symbol relationships, not exact call locations.
-- Dynamic queue names, route paths, fetch URLs, and selectors should be made
-  static when agent-readable analysis is required.
-- Selector text edges are approximate; exact configured test ID selector edges
-  are stronger evidence.
-- Non-TS/JS files are not walked for import edges unless the matching language frontend is configured; use `rg` for CSS/JSON and unconfigured languages.
-- `tests plan` works without `testPlan` in `.no-mistakes.yml` (uses default
-  direct + dependencies groups). Configure `testPlan` to add environments,
-  custom limits, coverage groups (Playwright only), and global-config triggers.
+- [lifecycle.md](references/lifecycle.md): before-edit, after-edit, and
+  handoff recipes.
+- [decision-tree.md](references/decision-tree.md): command, relationship, and
+  output selection.
+- [dependencies.md](references/dependencies.md) and
+  [dependents.md](references/dependents.md): graph traversal, filtering, and
+  `FILE#SYMBOL` semantics.
+- [symbols.md](references/symbols.md) and
+  [lightweight-queries.md](references/lightweight-queries.md): symbols,
+  importers, exports, call sites, and resolution checks.
+- [tests.md](references/tests.md): planners, diffs, environments, fallbacks,
+  explain output, and runner commands.
+- [playwright.md](references/playwright.md): selector, route, and assertion
+  coverage commands.
+- [impact-recipes.md](references/impact-recipes.md): selector, API shape,
+  package-entrypoint, workflow, test-deletion, and queue recipes.
+- [monorepo-resolution.md](references/monorepo-resolution.md): workspace
+  aliases and resolver ownership.
+- [limits-and-fallbacks.md](references/limits-and-fallbacks.md): unsupported
+  forms, confidence limits, and `rg` fallbacks.

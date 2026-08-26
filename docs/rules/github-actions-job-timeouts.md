@@ -1,5 +1,39 @@
 # `github-actions-job-timeouts`
 
+## Why and when
+
+Use this rule when every executable job needs a bounded failure time instead of
+GitHub's long default ceiling.
+
+## What it requires
+
+It requires a literal job `timeout-minutes`, optionally caps it, and can reject
+a literal step timeout that exceeds its containing job timeout.
+
+## Options
+
+`include` defaults to workflow `.yml` and `.yaml` files. `maxMinutes` is an
+optional cap, `rejectStepExceedingJob` defaults to `false`, and `allow` entries
+contain a `path#jobId` plus optional higher `maxMinutes`.
+
+## Valid example
+
+The fixed `test` job below is valid because its literal timeout is within the
+configured cap.
+
+## Related rules
+
+[`github-actions-test-timeout-literals`](github-actions-test-timeout-literals.md)
+keeps tests from duplicating this policy, while
+[`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)
+covers nested action limits.
+
+## Suppression
+
+Use a line directive for one job or a file directive for an exceptional
+workflow. Prefer a reasoned `allow` entry for a known job that legitimately
+needs a higher cap.
+
 Requires each GitHub Actions job to set a literal `timeout-minutes` so the
 job cannot sit on the default 6-hour ceiling. Optional `maxMinutes` caps that
 literal. Jobs that call a reusable workflow with `uses:` are skipped because

@@ -27,7 +27,7 @@ tests:
       swift-core:
         include:
           - swift-clients/core/Tests/**/*.swift
-  cargo:
+  rust:
     packages:
       - crates/tool
 ```
@@ -84,9 +84,9 @@ over sibling default `vitest.config.*` files; list a root config in that array
 when it must also run as a project. Explicit `tests.vitest.configs` remains
 authoritative.
 
-Dotnet, Swift, and Cargo test plans use explicit config for source-graph
+Dotnet, Swift, and Rust/Cargo test plans use explicit config for source-graph
 targeting. `tests.dotnet.projects` or `tests.dotnet.solutions`,
-`tests.swift.packages`, and `tests.cargo.packages` are the explicit inputs;
+`tests.swift.packages`, and `tests.rust.packages` are the explicit inputs;
 `no-mistakes` does not infer repository-wide project or package scans. When
 `tests plan dotnet`, `tests plan swift`, or `tests plan cargo` can discover
 native tests but cannot trace the native source/project change, the plan falls
@@ -98,6 +98,8 @@ that package's discovered tests.
 Language test plans follow the same native shape. Configure
 `tests.python.packages`, `tests.go.modules`, `tests.rust.packages`,
 `tests.rails.apps`, `tests.php.apps`, `tests.java.packages`, `tests.kotlin.packages`, `tests.elixir.apps`, or `tests.dart.packages`. Empty lists disable that frontend.
+See [feature parity](../feature-parity.md) for the current language/framework
+matrix and known narrower surfaces.
 `tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart` then emits `pytest` /
 `python -m unittest`, `go test`, `cargo test -p`, `bin/rails test` / `rspec`,
 `phpunit` / `php artisan test`, `mvn test [-f <package>/pom.xml] -Dtest=`,

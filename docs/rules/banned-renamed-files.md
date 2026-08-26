@@ -1,5 +1,31 @@
 # `banned-renamed-files`
 
+## Why and when
+
+Use this rule during a filename migration when the legacy name must not return,
+including when source imports have already been updated.
+
+## What it catches
+
+It reports configured legacy basenames in their selected scope, with optional
+compound-extension and regular-expression matching.
+
+## Options
+
+`bannedBasenames` entries define `name`, optional `message`, `extensions`,
+`scope`, `matchCompoundExtensions`, and `pattern`; omitted optional fields use
+their documented simple-basename behavior.
+
+## Valid example
+
+A `jest.config.ts` renamed to the configured replacement and absent from the
+selected scope passes.
+
+## Suppression and related rules
+
+Findings are on line 1, so use file suppression only for an intentional legacy
+file. See [`banned-paths`](banned-paths.md) for whole-path bans.
+
 Bans configured legacy filenames and reports the replacement name.
 
 ```yaml

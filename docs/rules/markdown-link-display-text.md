@@ -1,5 +1,30 @@
 # `markdown-link-display-text`
 
+## Why and when
+
+Use this rule when Markdown link labels should remain searchable, accurate file
+names instead of stale descriptions.
+
+## What it catches
+
+It reports local Markdown links whose display text does not match the target
+basename under the configured normalization rules.
+
+## Options
+
+`include`, `exclude`, and `allow` select documents and intentional exceptions;
+omitted rule-specific lists use the documented defaults.
+
+## Valid example
+
+`[feature-parity.md](feature-parity.md)` passes because its visible label names
+the destination.
+
+## Related rules
+
+[`markdown-child-links`](markdown-child-links.md) requires missing links;
+[`markdown-reachability`](markdown-reachability.md) validates their graph.
+
 Requires local Markdown link text to match the linked file basename.
 
 ```yaml

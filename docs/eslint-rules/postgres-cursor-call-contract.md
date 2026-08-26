@@ -1,23 +1,48 @@
 # `no-mistakes/postgres-cursor-call-contract`
 
-Require configured PostgreSQL cursor helpers to be called directly with SQL
-that starts with a static `/* name */` annotation.
+## Why
 
-Why: cursor executors hold a client for the life of the stream. Aliases,
-dependency containers, and dynamic SQL hide the statement from static review,
-so idle-in-transaction and unlabeled query plans cannot be attributed to one
-callsite.
+Cursor executors hold a database client for a stream's lifetime. Direct,
+annotated static SQL lets review attribute that cost to one callsite.
 
-Counterexample: `runCursor('SELECT 1')`, `const cursor = runCursor; cursor(sql)`,
-or `export { runCursor } from '@db/cursors'`.
+## Disallowed
 
-Fix: import the helper by name or namespace member and pass a string,
-template, or a configured SQL tagged-template module (default
-`sql-template-strings`) whose first static text is `/* rows */ …`. One
-immutable `const` binding is allowed. Discarded `.append(...)` chains on that
-binding are ignored.
+```ts
+const cursor = runCursor;
+cursor(sql);
+runCursor("SELECT * FROM users");
+```
 
-Not in `configs.recommended` or `configs.strict`. Enable it with `modules` and
-`executors` for the project. Optional `include` / `exclude` / `includeFiles`
-scope the files; `annotation` replaces the default leading-comment regex;
-`sqlTagModules` replaces the default SQL tag import.
+## Allowed
+
+```ts
+import { runCursor } from "@app/db/cursors";
+runCursor("/* users */ SELECT * FROM users");
+```
+
+## Options
+
+- `modules` and `executors` identify cursor imports and required executor names;
+  either empty list disables the rule.
+- `include`, `exclude`, and `includeFiles` scope files. `include` defaults to
+  `**/*.{ts,mts,tsx,js,mjs}`; `includeFiles` wins over `exclude`.
+- `annotation` replaces the leading `/* name */` requirement.
+- `sqlTagModules` lists supported SQL tag modules and defaults to
+  `["sql-template-strings"]`.
+
+## Fix
+
+Call a configured imported executor directly with an annotated literal, static
+template, supported SQL tag, or one immutable local binding.
+
+## Suppression
+
+```ts
+// eslint-disable-next-line no-mistakes/postgres-cursor-call-contract -- compatibility adapter passes a validated query object
+runCursor(query);
+```
+
+## Related rules
+
+- [`postgres-no-manual-transaction`](postgres-no-manual-transaction.md) keeps
+  transaction lifecycle in the owning helper.

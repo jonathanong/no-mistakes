@@ -19,3 +19,49 @@ Fix: add a corresponding test or adjust include/exclude policy.
 Set `duplicateStemGroup: first-dot-segment` when sibling files such as
 `index.test.mts` and `index.edge.test.mts` should count as duplicate stem tests
 that must move under the configured `testsDir`.
+
+## Why and when
+
+Use this rule when source files should have a predictable nearby Vitest test and
+new modules must not silently enter the suite without regression coverage.
+
+## What it catches/requires
+
+Each source selected by the configured Vitest application must have a matching
+test stem under the test policy; duplicate stem handling follows
+`duplicateStemGroup`.
+
+## Options and defaults
+
+`duplicateStemGroup` defaults to exact stems; set `first-dot-segment` when
+variants such as `index.edge.test.mts` should share a stem and move under the
+configured test directory.
+
+## Valid example
+
+```text
+src/users.ts
+src/users.test.ts
+```
+
+## Counterexample
+
+```text
+src/users.ts
+```
+
+## Fix
+
+Add the corresponding test, adjust include/exclude ownership, or choose the
+duplicate stem policy that matches the repository naming convention.
+
+## Suppression
+
+Use a narrow exclude for generated or adapter-only sources. Use the file
+directive only when another test framework provides the coverage.
+
+## Related rules
+
+[`vitest-project-mapping`](vitest-project-mapping.md) ensures each test has one
+owner; [`require-test-per-subdir`](require-test-per-subdir.md) enforces a
+coarser directory-level test presence policy.

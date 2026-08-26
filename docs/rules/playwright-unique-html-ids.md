@@ -26,3 +26,51 @@ When `tests.playwright: [<project>]` targets a Playwright project and more
 than one `type: nextjs` project is configured, that Playwright project needs
 a frontend-app binding — see
 [Multiple frontend apps](../configuration/tests.md#multiple-frontend-apps).
+
+## Why and when
+
+Use this rule when HTML IDs are used as DOM hooks, fragment targets, labels, or
+accessibility relationships and must remain unique within the analyzed app.
+
+## What it catches/requires
+
+Every selected literal HTML `id` value must have one owner in the rule's
+analyzed surface. The rule is independent of Playwright test-ID coverage.
+
+## Options and defaults
+
+There are no rule-local options. The rule uses the selected project or
+repository scope and scans the configured source universe; Playwright
+`selectors.htmlIds` only affects coverage, not this rule.
+
+## Valid example
+
+```tsx
+<label htmlFor="email">Email</label>
+<input id="email" />
+```
+
+## Counterexample
+
+```tsx
+<section id="results" />
+<aside id="results" />
+```
+
+## Fix
+
+Rename one ID and update every `htmlFor`, fragment URL, or selector that refers
+to it. Scope the rule to one frontend app when duplicate IDs belong to
+independent applications.
+
+## Suppression
+
+Use `no-mistakes-disable-line playwright-unique-html-ids`,
+`no-mistakes-disable-next-line`, or the file directive for a documented legacy
+exception. `htmlIds: false` is not suppression.
+
+## Related rules
+
+[`playwright-unique-test-ids`](playwright-unique-test-ids.md) checks configured
+test-ID values, while [`playwright-coverage`](playwright-coverage.md) checks
+whether routes and selectors have test evidence.

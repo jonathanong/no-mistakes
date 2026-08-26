@@ -50,3 +50,50 @@ ALTER TABLE comments VALIDATE CONSTRAINT comments_body_check;
 Use `no-mistakes-disable-next-line postgres-constraint-validate` or
 `no-mistakes-disable-file` when a pairing is intentionally split outside the
 configured SQL globs.
+
+## Why and when
+
+Use this rule for phased PostgreSQL migrations where a constraint is first
+installed without scanning old rows and must later become fully validated.
+
+## What it catches/requires
+
+Every named `NOT VALID` constraint add in the included SQL must have a matching
+`VALIDATE CONSTRAINT`; a validate for a missing add is also suspicious.
+
+## Options and defaults
+
+`sqlInclude` is the only rule option and defaults to `**/*.sql`. Pairing uses
+the canonical `table.name`; unnamed `NOT VALID` additions are ignored because
+they cannot be paired by name.
+
+## Valid example
+
+```sql
+ALTER TABLE comments ADD CONSTRAINT comments_body_check
+  CHECK (body <> '') NOT VALID;
+ALTER TABLE comments VALIDATE CONSTRAINT comments_body_check;
+```
+
+## Counterexample
+
+```sql
+ALTER TABLE comments ADD CONSTRAINT comments_body_check
+  CHECK (body <> '') NOT VALID;
+```
+
+## Fix
+
+Add the matching validation in a later included migration, or remove the
+orphaned validation if the constraint add was intentionally removed.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-constraint-validate` for a deliberate
+cross-directory rollout, or the file directive for a migration-only exception.
+
+## Related rules
+
+[`postgres-require-named-constraints`](postgres-require-named-constraints.md)
+ensures future phased constraints have names; [`postgres-require-fk-on-delete`](postgres-require-fk-on-delete.md)
+checks explicit foreign-key delete behavior.

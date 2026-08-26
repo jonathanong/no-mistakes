@@ -2,34 +2,42 @@
 
 [![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/jonathanong/no-mistakes?utm_source=badge)
 
-> Slop Warning: this codebase is written by agents for agents. The API surface is sloppy, but it _works_.
+`no-mistakes` is deterministic codebase intelligence for coding agents. It
+answers structural questions, selects affected tests, and enforces AST-friendly
+repository rules without running the application, calling an AI model, or
+maintaining a database.
 
-`no-mistakes` answers structural questions about TypeScript, JavaScript,
-React, Next.js, Playwright, queue, server-route, CI-workflow,
-Terraform/OpenTofu, and Swift code
-without running the application or calling an AI model. It is built for agents
-that need small, reliable answers they can feed into follow-up edits and tests.
+The canonical graph covers TypeScript/JavaScript, React, Next.js, Playwright,
+queues, server routes, GitHub Actions, Terraform/OpenTofu, Swift, .NET, and
+explicitly configured Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and
+Dart projects. Results are small, structured, and designed to feed directly
+into the next edit or validation step.
 
-The primary use-cases of `no-mistakes` are:
+The primary use cases are:
 
 1. Discovering impacted files and tests during planning
 2. Running selected tests in PR CI to minimize CI costs
-3. AST-based guardrails for your coding agents to minimize entropy and power the above use-cases
+3. AST-based guardrails that keep code analyzable as agents modify it
 
-Suppose you have the following dependency chain:
+The practical payoff is a fast, repeatable change map: agents can discover the
+right tests and callers locally, CI can spend work only where a change reaches,
+and teams can inspect the same typed graph from the CLI or async Node API.
+Configuration keeps project-specific conventions explicit instead of hiding
+them in a remote service or a persistent index.
+
+For example, consider this dependency chain:
 
 > Backend `getPost(id)` -> Backend GET `/posts/:id` -> Next.js Fetch GET `/posts/:id` -> Next.js Page `/post/[id]` -> Playwright Test on `/post/[id]`
 
-During planning, `no-mistakes` will provide the full dependency chain to the agent in a single, fast, CLI command.
-During CI, a `getPost()` change will select the relevant Playwright tests to run.
-No embeddings, all deterministically.
-To ensure that AST-parsing is reliable, many opinionated linting rules are included to avoid false positives.
+One graph query can expose the whole chain while planning. In CI, a change to
+`getPost()` can select the relevant Playwright tests instead of running every
+suite. The answer is derived locally from syntax and configuration—no
+embeddings or probabilistic inference.
 
-Additionally, since it already parses the entire AST tree, it includes opinionated linting rules based on anti-patterns written by agents.
-Unlike tools like eslint/oxlint that only allow lint rules on a per-file basis, `no-mistakes` parses your entire codebase in memory and applies rules globally.
-This is the origination of the name as it begun as a large number of custom cross-file linting rules.
-
-Two biggest examples are the duplication of function names.
+The same analysis powers repository-wide rules that ESLint and Oxlint cannot
+express one file at a time. One example is detecting duplicate exported
+function names that an agent may otherwise recreate after an incomplete text
+search:
 
 ```ts
 // backend/controllers/users.mts
@@ -43,25 +51,26 @@ export function getCurrentUser (ctx) {
 }
 ```
 
-`no-mistakes` will throw if there are multiple definitions of `getCurrentUser` in a workspace,
-a common mistakes agents commonly make when an existing function did not show up in search.
+`no-mistakes check` reports both definitions so the agent can reuse or rename
+the existing API.
 
 ## Why AST-based?
 
-Most codebase intelligence tools create a database of your code, slowly create vector embeddings, and/or has its own LLM layer.
-There are many downsides with this strategy including cost, complexity, and difficulty working on many branches using worktrees at the same time.
-
-`no-mistakes` instead understands your code through AST-parsing.
-No databases, no caching, just fast Rust code to understand the codebase.
-Yes, this is quite a huge undertaking to handle all cases, which is why this codebase is large.
+Many codebase-intelligence tools build persistent indexes, vector embeddings,
+or an LLM layer. Those approaches add cost, operational state, and awkwardness
+when several worktrees are active. `no-mistakes` parses the current checkout on
+demand in Rust, builds one in-memory graph, and discards it after the request.
 
 There are a few trade-offs with this approach:
 
-1. Some code is difficult to understand through AST-parsing, so `no-mistakes` includes rules that enforce AST-parsing-friendly coding. For example, Playwright test selectors should be simple strings - dynamically generated strings will not match well, especially if you enable the "all Playwright test hooks must be covered by a Playwright test" rule.
-1. `no-mistakes` is best effort a goal of high recall and low precision, meaning it may return wrong information/relationships, but should never miss a relationship (unless it cannot be inferred through AST-parsing such as `import('./${someRandomFile}')`). An agent should verify if a relationship returned is true.
-  1. As such, some of the code is based on heuristics and may need fine-tuning. For example, there is some hardcoding to distinguish between an HTTP client vs. HTTP server, e.g. (`axios.get()` vs. `app = express(); app.get()`), (though with a well written codebase, this should not be an issue because they should be written in completely separate files and you should specify which files your services/routes are defined to narrow the search).
-1. High CPU usage - parsing your repository on-demand may cause high-CPU usage, but may be significantly faster than other methods (e.g. `vitest related` takes 2 minutes, but takes 1 second with `no-mistakes` via `no-mistakes test plan`, supports Playwright, and only using 10/28 cores on an Apple Mac Studio M3 Ultra). This may become a bottleneck when working on multiple worktrees at once, but `no-mistakes` includes a locking mechanism to not run concurrently.
-1. Your code must be written in such a way to make it AST-friendly such as preferring many small files over large ones (since many relations are file-based) and having little abstractions and interdependencies as this blows up your dependency graph.
+1. Dynamic imports, selectors, routes, and queue names cannot always be resolved.
+   The bundled rules help keep important relationships static and analyzable.
+2. Some relationships are heuristic. The engine favors recall, so agents should
+   confirm exact call sites with `rg` after the graph narrows the file set.
+3. On-demand parsing is CPU-intensive. A machine-wide lock prevents competing
+   worktrees from running large analyses concurrently, and the async Node API
+   can batch related reports into one prepared request.
+4. Small modules and direct, static bindings produce the most useful graph.
 
 ## Agent Workflows
 
@@ -73,7 +82,7 @@ There are a few trade-offs with this approach:
 | What does a signature change affect? | `no-mistakes symbols <file> --mode signature-impact --symbol Symbol --format json` |
 | What does this module export/import? | `no-mistakes symbols <file> --include both --format json` |
 | Which packages do source files import directly? | `no-mistakes import-usages --root . --filter 'src/**' --format json` |
-| Which tests should run? | `no-mistakes tests plan <playwright\|vitest> --format json` |
+| Which tests should run? | `no-mistakes tests plan <playwright\|vitest> --changed-file <file> --format json` |
 | Why was a test selected? | `no-mistakes tests why <test> --plan plan.json` |
 | Which Playwright tests cover this page? | `no-mistakes playwright related <file> --json` |
 | Which queue/server files are connected? | `no-mistakes queues related <file> --json`; `no-mistakes server related <file> --json` |
@@ -118,6 +127,7 @@ cargo run -p no-mistakes -- dependents src/utils.mts --format paths
 - [no-mistakes rules](docs/rules/README.md)
 - [ESLint rules](docs/eslint-rules/README.md)
 - [Agent guide](docs/agent-guide.md)
+- [Packaged agent skill](skills/no-mistakes/SKILL.md)
 - [AST analysis behavior](docs/ast-analysis.md)
 
 ## Contributing
@@ -133,18 +143,13 @@ This repository is a huge token sink. Thus, contributions are welcomed.
 | Language/Framework/Tool | Status |
 | -- | -- |
 | TypeScript | Mature |
-| Next | Mature, other frameworks should work but are untested |
+| Next.js / React / Playwright | Mature |
 | `pnpm`, `npm`, `yarn`, `bun` | Supported, primarily tested using `pnpm` |
-| `bullmq`, `glide-mq` | Mature, primarily tested for `glide-mq` |
-| `vitest` | `vitest` is mature, `jest` has not been tested |
-| `playwright` | Mature |
-| .NET | Nascent |
-| Swift | Nascent |
-| Rust | Minimal |
-| GitHub Actions | Minimal, planned |
-| Terraform | Minimal |
-| Go | Unsupported |
-| Python | Unsupported |
+| `bullmq`, `glide-mq` | Supported, primarily tested for `glide-mq` |
+| Vitest / Jest | Supported |
+| Queue/server/CI/Terraform/OpenTofu | Supported with explicit configuration |
+| Swift / .NET | Shipped, narrower language frontends |
+| Python / Go / Rust / Ruby / PHP / Java / Kotlin / Elixir / Dart | Shipped v1 frontends and test plans; configure package or module roots explicitly |
 
 ## Design Constraints
 

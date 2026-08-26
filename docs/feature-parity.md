@@ -552,8 +552,10 @@ with the flag off and on.
 
 ## Configuration Shape
 
-New knobs are explicit and scoped. The names below are the intended contract;
-they do not exist until the corresponding implementation ships.
+These knobs are shipped, explicit, and scoped. Empty package/module lists
+disable the corresponding language frontend; no repository-wide fallback is
+inferred. See [queue configuration](configuration/queues.md) for the queue
+factory and project-glob details.
 
 ```yaml
 projects:
@@ -567,6 +569,8 @@ projects:
       workers: ["app/**/tasks.py", "workers/**/*.py"]
     trpc:
       routers: ["src/trpc/**/*.ts"]
+queues:
+  factories: [createQueue]
 tests:
   python:
     packages:

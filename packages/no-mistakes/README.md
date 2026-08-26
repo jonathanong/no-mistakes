@@ -1,7 +1,12 @@
 # no-mistakes
 
 Unified static codebase intelligence CLI for TS/JS module graphs, symbols,
-React traits, queue hops, server routes, and project checks.
+React traits, queue hops, server routes, configured language graphs, and project
+checks.
+
+Use it when an agent needs a deterministic impact map or focused test plan in
+the same process as a Node tool. The async N-API facade avoids subprocess
+parsing and reuses one prepared analysis for related reports.
 
 ```bash
 npm install --save-dev no-mistakes
@@ -13,6 +18,26 @@ npx no-mistakes check --json
 ```
 
 Programmatic Node usage loads the same Rust analysis through N-API:
+
+```js
+const { analyzeProject } = require("no-mistakes");
+
+const report = await analyzeProject({
+  root: process.cwd(),
+  reports: [
+    { type: "dependents", files: ["src/api.mts"] },
+    { type: "symbols", files: ["src/api.mts"], include: "both" },
+    {
+      type: "testsPlan",
+      framework: "vitest",
+      changedFiles: ["src/api.mts"],
+    },
+  ],
+});
+```
+
+Use `analyzeProject()` when reports share a root and configuration. Dedicated
+functions remain convenient for a single query:
 
 ````js
 const {
@@ -66,7 +91,7 @@ const {
   });
   const plan = await testsPlan({
     root: process.cwd(),
-    framework: "vitest", // also python, go, cargo, rails, php, playwright, dotnet, swift
+    framework: "vitest", // also jest, python, go, cargo, rails, php, java, kotlin, elixir, dart, playwright, dotnet, swift
     changedFiles: ["src/utils.mts"],
   });
   // Complete changed-file inventory, including paths that selected no tests.
@@ -155,4 +180,5 @@ npx no-mistakes rust-max-lines-per-file crates/*/src crates/*/tests
 
 See the full documentation in [docs/](../../docs/README.md), the
 [CLI command index](../../docs/cli/README.md), and the
-[Node/N-API guide](../../docs/node-api.md).
+[Node/N-API guide](../../docs/node-api.md). Agents can use the compact
+[packaged skill](../../skills/no-mistakes/SKILL.md).

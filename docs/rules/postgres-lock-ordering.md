@@ -52,3 +52,50 @@ query(`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE`);
 Use `no-mistakes-disable-next-line postgres-lock-ordering` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
 when a whole file is an intentional exception.
+
+## Why and when
+
+Use this rule for worker or request code that locks several rows by ID, where
+concurrent transactions can visit the same set in different orders.
+
+## What it catches/requires
+
+A multi-row `FOR UPDATE` query using `IN` or `= ANY` must order its rows or use
+`SKIP LOCKED`. The embedded SQL must be statically recoverable; unparseable
+statements receive a separate diagnostic.
+
+## Options and defaults
+
+`include` and `exclude` select source files. `importSpecifier` defaults to
+`@data-stores/psql`, `executorNames` defaults to `[query, read, write]`, and
+`safeDirective` defaults to `deadlock-safe`.
+
+## Valid example
+
+```ts
+query(`SELECT * FROM jobs WHERE id = ANY($1) ORDER BY id FOR UPDATE`);
+```
+
+## Counterexample
+
+```ts
+query(`SELECT * FROM jobs WHERE id = ANY($1) FOR UPDATE`);
+```
+
+## Fix
+
+Add deterministic `ORDER BY`, use `SKIP LOCKED` for a work queue, or document
+why a unique-key lookup is effectively single-row with the configured safe
+directive.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-lock-ordering` or
+`no-mistakes-disable-line`; reserve the file directive for a file whose locking
+contract is enforced elsewhere.
+
+## Related rules
+
+[`postgres-no-offset`](postgres-no-offset.md) covers inefficient pagination;
+[`postgres-require-query-annotation`](postgres-require-query-annotation.md)
+ensures lock statements remain identifiable in query logs.

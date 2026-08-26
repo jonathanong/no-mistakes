@@ -15,3 +15,47 @@ rules:
 Counterexample: `agents/email/index.mts` without `agents/email/README.md`.
 
 Fix: add the local doc or adjust roots/excludes.
+
+## Why and when
+
+Use this rule when each code directory needs a nearby README explaining its
+ownership, entrypoint, or agent workflow.
+
+## What it catches/requires
+
+Each selected code directory under `roots` must contain `requiredFile`.
+`codeExtensions` determines which files make a directory relevant.
+
+## Options and defaults
+
+`roots`, `requiredFile`, and `codeExtensions` are required; there are no
+implicit roots, filename, or language defaults. Common excludes still apply.
+
+## Valid example
+
+```text
+agents/email/index.mts
+agents/email/README.md
+```
+
+## Counterexample
+
+```text
+agents/email/index.mts
+```
+
+## Fix
+
+Add the required local README, or remove the directory from the configured roots
+if it is generated or owned by another documentation system.
+
+## Suppression
+
+Prefer adjusting `roots` or common excludes. Use
+`no-mistakes-disable-file required-local-docs` for a documented generated tree.
+
+## Related rules
+
+[`required-doc-section`](required-doc-section.md) enforces headings inside
+existing Markdown; [`require-files-in-subdirs`](require-files-in-subdirs.md)
+can require several files per directory.

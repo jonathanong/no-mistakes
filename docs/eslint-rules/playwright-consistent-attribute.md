@@ -1,11 +1,43 @@
 # `no-mistakes/playwright-consistent-attribute`
 
-Requires a canonical test ID attribute.
+## Why
 
-Why: a single selector attribute keeps test coverage and selector extraction
-predictable.
+One canonical test-id attribute keeps JSX hooks and Playwright selectors easy
+to search, configure, and connect in static coverage analysis.
 
-Counterexample: using both `data-testid` and `data-pw` when `data-pw` is canonical.
+## Disallowed
 
-Fix: replace alternate test ID attributes with the configured canonical
-attribute, such as `data-pw`.
+```tsx
+<button data-testid="save">Save</button>
+```
+
+## Allowed
+
+```tsx
+<button data-pw="save">Save</button>
+```
+
+## Options
+
+- `selectorAttributes` lists recognized test-id attributes; it defaults to
+  `["data-testid", "data-pw"]`.
+- `canonicalAttribute` is the only accepted attribute among that set; it
+  defaults to `"data-pw"`.
+
+## Fix
+
+Rename recognized non-canonical attributes to the configured canonical name.
+
+## Suppression
+
+```tsx
+// eslint-disable-next-line no-mistakes/playwright-consistent-attribute -- vendor component contract requires data-testid
+const vendorButton = <button data-testid="vendor-save">Save</button>;
+```
+
+## Related rules
+
+- [`playwright-literals`](playwright-literals.md) requires static test-id
+  values.
+- [`playwright-prefer-get-by-test-id`](playwright-prefer-get-by-test-id.md)
+  uses the same attribute list in tests.

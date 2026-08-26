@@ -1,5 +1,29 @@
 # `csharp-max-lines-per-file`
 
+## Why and when
+
+Use this rule when C# source and tests need a reviewable physical-size budget.
+
+## What it catches
+
+It counts comments and blank lines in selected `.cs` files and applies the
+appropriate source or test limit.
+
+## Options
+
+`maxLines`, `maxTestLines`, `roots`, `exclude`, and `testRoots` control limits
+and selection; omitted values use the documented defaults and built-in test
+root detection.
+
+## Valid example
+
+A selected source file at or below its configured physical-line limit passes.
+
+## Suppression and related rules
+
+Use file suppression for generated or intentionally exceptional files. See
+[`rust-max-lines-per-file`](rust-max-lines-per-file.md) for the Rust analogue.
+
 Caps C# source and test file length by physical line count. Blank lines and
 comments count; this rule does not ignore them.
 

@@ -11,6 +11,8 @@ projects:
 tests:
   playwright:
     configs: web/playwright.config.ts
+queues:
+  factories: [createQueue]
 effects:
   valkey:
     categories:
@@ -26,11 +28,17 @@ The `effects` map declares named effect families for the
 `<kind>` maps category labels to the function/constructor names that belong to
 them.
 
+The top-level `frontendRoot`, `assertNoFetch`, and `reactTraits` fields are
+legacy compatibility settings for the standalone `react` command. Prefer
+project-scoped roots and `tests.playwright` settings for new configurations;
+the legacy fields do not change shared frontend-app resolution.
+
 ## Topics
 
 - [Discovery](discovery.md)
 - [Projects](projects.md)
 - [Tests and selectors](tests.md)
+- [Queues](queues.md)
 - [Rules](rules.md)
 - [Test plan](test-plan.md)
 - [Filesystem](filesystem.md)

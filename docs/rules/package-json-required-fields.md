@@ -1,5 +1,31 @@
 # `package-json-required-fields`
 
+## Why and when
+
+Use this rule when publishable or workspace packages need a common manifest
+shape that package-manager defaults do not guarantee.
+
+## What it requires
+
+It reports selected `package.json` files missing a required field or whose
+configured field has the wrong value shape.
+
+## Options
+
+`include`, `exclude`, and `fields` select manifests and field requirements;
+each field policy uses the documented name, kind, and optional values/defaults.
+
+## Valid example
+
+A selected manifest containing each required field with the configured shape
+passes.
+
+## Suppression and related rules
+
+JSON cannot contain directives, so narrow the configuration for exceptional
+manifests. [`package-json-workspace-coverage`](package-json-workspace-coverage.md)
+checks directory membership rather than field shape.
+
 Flags `package.json` manifests that do not match configured field-shape
 policy: `private`, `type`, `license`, scoped `name`, and `main` when a
 companion entry file exists. Application-specific name pins stay local.

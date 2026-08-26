@@ -1,5 +1,37 @@
 # `package-json-nested-workspace-coverage`
 
+## Suppression
+
+Manifest findings are file-level. Narrow `roots`, dependency fields, or package
+selection for an intentional exception instead of suppressing generated JSON.
+
+## Why and when
+
+Use this rule when nested workspace configuration must exactly represent the
+packages a selected workspace depends on.
+
+## What it requires
+
+It reports missing, extra, or mis-scoped nested workspace entries relative to
+the configured dependency package inventory.
+
+## Options
+
+`roots`, `workspaceField`, `dependencyFields`, `include`, and `exclude` select
+packages and the compared manifest fields; omitted values use the documented
+workspace/dependency defaults.
+
+## Valid example
+
+A selected package whose nested workspace entries exactly cover its configured
+workspace dependencies passes.
+
+## Related rules
+
+[`package-json-workspace-coverage`](package-json-workspace-coverage.md) checks
+top-level workspace membership; [`workspace-package-cycles`](workspace-package-cycles.md)
+checks the resulting package graph.
+
 Requires each configured package root to list exactly the explicit workspace
 directories for matching dependencies declared by that root and its descendant
 package manifests.

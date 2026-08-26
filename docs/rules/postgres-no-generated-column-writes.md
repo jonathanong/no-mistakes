@@ -71,3 +71,50 @@ write(`UPDATE items SET note = $1`)
 Use `no-mistakes-disable-next-line postgres-no-generated-column-writes` for a
 one-off exception, or `no-mistakes-disable-file` when a whole file is an
 intentional migration of generated values.
+
+## Why and when
+
+Use this rule when PostgreSQL generated columns are maintained by the database
+and application writes must not try to supply their computed values.
+
+## What it catches/requires
+
+`UPDATE`, `INSERT`, or `MERGE` statements must omit generated columns discovered
+from migration SQL or listed in `extraGeneratedColumns`. TypeScript executor
+calls and included SQL files are both analyzed where configured.
+
+## Options and defaults
+
+`sqlInclude` defaults to `**/*.sql`; `include` selects DML source files and
+defaults to the supported source universe; `importSpecifier` defaults to
+`@data-stores/psql`; `executorNames` defaults to `[query, read, write]`; and
+`extraGeneratedColumns` defaults to an empty list.
+
+## Valid example
+
+```sql
+INSERT INTO items (id, note) VALUES ($1, $2);
+```
+
+## Counterexample
+
+```sql
+UPDATE items SET created_at = now() WHERE id = $1;
+```
+
+## Fix
+
+Remove the generated column from the write and provide only source columns
+from which PostgreSQL computes it.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-no-generated-column-writes` for a
+known external table exception, or the file directive for a migration utility
+whose writes are validated elsewhere.
+
+## Related rules
+
+[`postgres-no-add-column`](postgres-no-add-column.md) controls schema widening;
+[`postgres-sql-statement-policy`](postgres-sql-statement-policy.md) controls
+which SQL statement kinds are allowed in a file.

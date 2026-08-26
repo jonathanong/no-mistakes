@@ -1,14 +1,10 @@
 # ESLint And Oxlint Plugin
 
-The rule reference now lives in [docs/eslint-rules/](eslint-rules/README.md).
-
-Install:
+Install the plugin, then choose the preset that fits the repository policy:
 
 ```sh
 npm install --save-dev eslint-plugin-no-mistakes
 ```
-
-ESLint flat config:
 
 ```js
 const noMistakes = require("eslint-plugin-no-mistakes");
@@ -21,54 +17,153 @@ module.exports = [
 ];
 ```
 
-Oxlint:
+Oxlint loads the same ESLint plugin through `jsPlugins`:
 
 ```json
 {
   "jsPlugins": ["eslint-plugin-no-mistakes"],
-  "rules": {
-    "no-mistakes/playwright-literals": "error"
-  }
+  "rules": { "no-mistakes/playwright-literals": "error" }
 }
 ```
 
 ## Presets
 
-| Preset                           | Contents                                                                                                                                                                                |
-| -------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `noMistakes.configs.recommended` | Default static-safety rules: static fetches, no property deletion, literal Playwright selectors, unique test IDs, ReactNode nullish checks, direct TS exports, and function alias bans. |
-| `noMistakes.configs.strict`      | Recommended plus stricter Next.js, Playwright, React, test-state, and mock-file naming rules.                                                                                           |
+| Preset | Contents |
+| --- | --- |
+| `noMistakes.configs.recommended` | Static fetches, direct TypeScript APIs, basic selector safety, no property deletion, and ReactNode nullish safety. |
+| `noMistakes.configs.strict` | Recommended plus stricter Next.js, Playwright, React, test-state, mock-file, and array-await rules. |
 
-## Rule Options
+## Editor suggestions
 
-Rules not listed here have no options.
+Only two rules expose editor suggestions. `async-call-disposition` offers a
+`void` prefix for a bare configured promise; `async-try-catch-return-await`
+offers `await` for a direct configured return inside `try`. Neither suggestion
+decides whether detaching or catching the work is semantically correct, so
+review it before applying.
 
-| Rule                                              | Options                                                                                                                                                                                                                                                                                    |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `async-call-disposition`                          | `{ targets?: { sourceSpecifierPatterns?: string[], calleeNamePatterns?: string[] }[] }`.                                                                                                                                                                                                   |
-| `async-try-catch-return-await`                    | `{ handlers?: { sourceSpecifierPatterns?: string[], calleeNamePatterns?: string[] }[] }`.                                                                                                                                                                                                  |
-| `module-mock-boundary`                            | `{ internalSpecifiers?: string[], includePathPatterns?: string[], excludePathPatterns?: string[], requireLiteralSpecifiers?: boolean, baseline?: [string, string, number][], integrationExports?: object }`.                                                                               |
-| `module-mock-preserve-exports`                    | `{ internalSpecifiers?: string[], includePathPatterns?: string[], excludePathPatterns?: string[], baseline?: [string, string][] }`.                                                                                                                                                        |
-| `no-banned-import-outside-allowed-paths`          | `{ checkedPathPatterns?: string[], allowedPathPatterns?: string[], bannedImports?: { module: string, names: string[] }[] }`; the reserved name `"default"` bans a module's default export when called directly (including `.default()`).                                                   |
-| `no-global-fetch-outside-helper`                  | `{ checkedPathPatterns?: string[], allowedPathPatterns?: string[] }`.                                                                                                                                                                                                                      |
-| `playwright-assertion-timeout-cap`                | `{ max?: number }`, default `10000`.                                                                                                                                                                                                                                                       |
-| `playwright-consistent-attribute`                 | `{ selectorAttributes?: string[], canonicalAttribute?: string }`, defaults `["data-testid", "data-pw"]` and `"data-pw"`.                                                                                                                                                                   |
-| `playwright-defaults`                             | `{ selectorAttributes?: string[] }`.                                                                                                                                                                                                                                                       |
-| `playwright-literals`                             | `{ selectorAttributes?: string[], allowDefaultedProps?: boolean, allowStaticTemplates?: boolean }`; `allowDefaultedProps` defaults to `true`, `allowStaticTemplates` defaults to `false`.                                                                                                  |
-| `playwright-naming-convention`                    | `{ selectorAttributes?: string[], pattern?: string }`, default kebab-case pattern.                                                                                                                                                                                                         |
-| `playwright-no-empty`                             | `{ selectorAttributes?: string[] }`.                                                                                                                                                                                                                                                       |
-| `playwright-prefer-get-by-test-id`                | `{ selectorAttributes?: string[] }`.                                                                                                                                                                                                                                                       |
-| `playwright-require-exported-component-attribute` | `{ attributes?: string[], componentNamePattern?: string, components?: string[], ignoreComponents?: string[], wrappers?: string[], allowSpreadAttributes?: boolean, exportTypes?: ("named" \| "default")[], checkAnonymousDefault?: boolean }`.                                             |
-| `playwright-require-interactive-test-id`          | `{ selectorAttributes?: string[], interactiveComponents?: string[] }`; component entries may be exact names or `/regex/` patterns.                                                                                                                                                         |
-| `playwright-unique`                               | `{ selectorAttributes?: string[] }`.                                                                                                                                                                                                                                                       |
-| `postgres-cursor-call-contract`                   | `{ modules: string[], executors: string[], include?: string[], exclude?: string[], includeFiles?: string[], annotation?: string, sqlTagModules?: string[] }`. Empty `modules` or `executors` disables the rule. Default `include` is `**/*.{ts,mts,tsx,js,mjs}`. `includeFiles` stay in even when `exclude` matches. `sqlTagModules` defaults to `["sql-template-strings"]`. |
-| `postgres-no-manual-transaction`                  | `{ importSpecifier?: string, executorNames?: string[], owners?: string[] }`; defaults `@data-stores/psql` and `["query", "read", "write"]`. `owners` is an absolute-suffix or repo-relative allowlist for the transaction helper.                                                          |
-| `postgres-no-unbounded-query-fanout`              | `{ importSpecifier?: string, executorNames?: string[], chunkFunctionNames?: string[] }`; `chunkFunctionNames` defaults to `["chunkArray"]`.                                                                                                                                                |
-| `server-require-nullable-fetch-wrapper`           | `{ includePathPatterns?: string[], excludePathPatterns?: string[], getterCalleePatterns: string[], requiredWrapperCallee: string, nullableReturnTypeNames?: string[], inferNullableFromTopLevelEntityPath?: boolean, topLevelEntityPathPatterns?: string[] }`.                             |
-| `nextjs-no-manual-script-tags`                    | `{ allowInlineScriptIds?: string[], allowInlineScriptIdPatterns?: string[] }`.                                                                                                                                                                                                             |
-| `test-no-shared-state`                            | `{ allowBeforeAllAssignments?: boolean }`.                                                                                                                                                                                                                                                 |
-| `ts-no-export-renaming`                           | `{ allowDefaultReExports?: boolean, includePathPatterns?: string[] }`.                                                                                                                                                                                                                     |
-| `ts-preserve-null-option-defaults`                | `{ includePathPatterns?: string[], excludePathPatterns?: string[], optionObjectNames?: string[], optionObjectNamePatterns?: string[] }`.                                                                                                                                                   |
+## Rule options
+
+Rules omitted below have no options. Per-rule pages show valid and invalid code
+and point to related rules.
+
+### `async-call-disposition`
+
+`targets` is an array whose objects may set `sourceSpecifierPatterns?: string[]`
+and `calleeNamePatterns?: string[]`.
+
+### `async-try-catch-return-await`
+
+`handlers` is an array whose objects may set `sourceSpecifierPatterns?: string[]`
+and `calleeNamePatterns?: string[]`.
+
+### `module-mock-boundary`
+
+The schema accepts an object: `internalSpecifiers?: string[]`,
+`includePathPatterns?: string[]`, `excludePathPatterns?: string[]`,
+`requireLiteralSpecifiers?: boolean` (default `true`),
+`baseline?: [string, string, number][]`, and `integrationExports?: object`
+(including `sourcePathTemplates` and `reexportExtensions`).
+
+### `module-mock-preserve-exports`
+
+The schema accepts an object: `internalSpecifiers?: string[]`,
+`includePathPatterns?: string[]`, `excludePathPatterns?: string[]`, and
+`baseline?: [string, string][]`.
+
+### `nextjs-no-manual-script-tags`
+
+`allowInlineScriptIds?: string[]` and `allowInlineScriptIdPatterns?: string[]`;
+both default to no exemptions.
+
+### `no-banned-import-outside-allowed-paths`
+
+`checkedPathPatterns?: string[]`, `allowedPathPatterns?: string[]`, and
+`bannedImports` is an array of objects with `module: string` and
+`names: string[]`. `"default"` in `names` denotes direct default-export calls,
+including `.default()`.
+
+### `no-global-fetch-outside-helper`
+
+`checkedPathPatterns?: string[]` and `allowedPathPatterns?: string[]`.
+
+### `playwright-assertion-timeout-cap`
+
+`max?: number`; default `10000` milliseconds.
+
+### `playwright-consistent-attribute`
+
+`selectorAttributes?: string[]` (default `["data-testid", "data-pw"]`) and
+`canonicalAttribute?: string` (default `"data-pw"`).
+
+### `playwright-defaults`, `playwright-no-empty`, `playwright-prefer-get-by-test-id`, and `playwright-unique`
+
+`selectorAttributes?: string[]`; default `["data-testid", "data-pw"]`.
+
+### `playwright-literals`
+
+`selectorAttributes?: string[]` (default `["data-testid", "data-pw"]`),
+`allowDefaultedProps?: boolean` (default `true`), and
+`allowStaticTemplates?: boolean` (default `false`).
+
+### `playwright-naming-convention`
+
+`selectorAttributes?: string[]` (default `["data-testid", "data-pw"]`) and
+`pattern?: string` (the plugin's kebab-case pattern by default).
+
+### `playwright-require-exported-component-attribute`
+
+`attributes?: string[]` (default `["data-pw"]`), `componentNamePattern?: string`,
+`components?: string[]`, `ignoreComponents?: string[]`, `wrappers?: string[]`,
+`allowSpreadAttributes?: boolean` (default `false`),
+`exportTypes?: ("named" | "default")[]`, and `checkAnonymousDefault?: boolean`.
+
+### `playwright-require-interactive-test-id`
+
+`selectorAttributes?: string[]` (default `["data-testid", "data-pw"]`) and
+`interactiveComponents?: string[]`; component entries may be exact names or
+`/regex/` strings.
+
+### `postgres-cursor-call-contract`
+
+`modules: string[]`, `executors: string[]`, `include?: string[]`,
+`exclude?: string[]`, `includeFiles?: string[]`, `annotation?: string`, and
+`sqlTagModules?: string[]`. Empty `modules` or `executors` disables the rule;
+`include` defaults to `**/*.{ts,mts,tsx,js,mjs}` and `sqlTagModules` to
+`["sql-template-strings"]`.
+
+### `postgres-no-manual-transaction`
+
+`importSpecifier?: string` (default `"@data-stores/psql"`),
+`executorNames?: string[]` (default `["query", "read", "write"]`), and
+`owners?: string[]`.
+
+### `postgres-no-unbounded-query-fanout`
+
+`importSpecifier?: string`, `executorNames?: string[]`, and
+`chunkFunctionNames?: string[]` (default `["chunkArray"]`).
+
+### `server-require-nullable-fetch-wrapper`
+
+`includePathPatterns?: string[]`, `excludePathPatterns?: string[]`,
+`getterCalleePatterns: string[]`, `requiredWrapperCallee: string`,
+`nullableReturnTypeNames?: string[]`, `inferNullableFromTopLevelEntityPath?: boolean`
+(default `false`), and `topLevelEntityPathPatterns?: string[]`.
+
+### `test-no-shared-state`
+
+`allowBeforeAllAssignments?: boolean`; default `false`.
+
+### `ts-no-export-renaming`
+
+`allowDefaultReExports?: boolean` (default `false`) and
+`includePathPatterns?: string[]`.
+
+### `ts-preserve-null-option-defaults`
+
+`includePathPatterns?: string[]`, `excludePathPatterns?: string[]`,
+`optionObjectNames?: string[]`, and `optionObjectNamePatterns?: string[]`.
+
+## Example configuration
 
 ```js
 module.exports = [
@@ -79,35 +174,18 @@ module.exports = [
         "error",
         { selectorAttributes: ["data-testid", "data-pw"], canonicalAttribute: "data-pw" },
       ],
-      "no-mistakes/nextjs-no-manual-script-tags": [
-        "error",
-        { allowInlineScriptIds: ["json-ld"], allowInlineScriptIdPatterns: ["^ld-json-"] },
-      ],
-      "no-mistakes/ts-no-export-renaming": [
-        "error",
-        { includePathPatterns: ["^src/"], allowDefaultReExports: true },
-      ],
       "no-mistakes/async-call-disposition": [
         "error",
-        {
-          targets: [
-            {
-              sourceSpecifierPatterns: ["@app/jobs"],
-              calleeNamePatterns: ["/^enqueue[A-Z].*/"],
-            },
-          ],
-        },
+        { targets: [{ sourceSpecifierPatterns: ["@app/jobs"], calleeNamePatterns: ["/^enqueue/"] }] },
       ],
       "no-mistakes/no-global-fetch-outside-helper": [
         "error",
-        {
-          checkedPathPatterns: ["web/**"],
-          allowedPathPatterns: ["web/lib/api/**", "web/lib/client/**"],
-        },
+        { checkedPathPatterns: ["web/**"], allowedPathPatterns: ["web/lib/api/**"] },
       ],
     },
   },
 ];
 ```
 
-See [ESLint rule index](eslint-rules/README.md) for per-rule behavior.
+See the [ESLint rule index](eslint-rules/README.md) for behavior, fixes, and
+suppression guidance.

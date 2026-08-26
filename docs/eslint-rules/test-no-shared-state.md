@@ -1,57 +1,45 @@
 # `no-mistakes/test-no-shared-state`
 
-Disallows mutable module-scope test state.
+## Why
 
-Why: shared mutable state makes tests order-dependent and blocks reliable
-parallel execution.
+Mutable module-scope state leaks between tests and turns order or parallelism
+into hidden input.
 
-Counterexample: `let user; beforeEach(() => { user = ... })` at module scope.
-
-Fix: create state inside each test or reset it through explicit setup/cleanup.
-
-Playwright serial suites may initialize or reset module-scope state in
-`beforeAll` when the suite is marked with `test.describe.serial()` or
-`test.describe.configure({ mode: "serial" })`. The exception is limited to
-serial suites because those tests intentionally share ordered setup state.
-
-Counterexample:
+## Disallowed
 
 ```ts
-import { test } from "@playwright/test";
+let currentUser;
+test("first", () => { currentUser = makeUser(); });
+test("second", () => expect(currentUser).toBeDefined());
+```
 
-let shared: string[] = [];
+## Allowed
 
-test.describe("suite", () => {
-  test.beforeAll(() => {
-    shared = [];
-  });
-
-  test("case", () => {
-    shared.push("value");
-  });
+```ts
+test("user", () => {
+  const currentUser = makeUser();
+  expect(currentUser).toBeDefined();
 });
 ```
 
-Fix: make the suite serial when the shared setup is intentional, or move the
-state into each test.
+## Options
 
-`test.extend()` aliases are treated as test functions, including renamed imports
-from `vitest` or `@playwright/test`, chained `.extend()` calls, modifiers such
-as `.only`, table helpers such as `.each`, and aliased `.describe()` suites.
+- `allowBeforeAllAssignments` permits module-scope assignments in `beforeAll`.
+  It defaults to `false`.
 
-Counterexample:
+## Fix
+
+Create mutable values inside each test or reset them in the lifecycle hook that
+owns the test isolation boundary.
+
+## Suppression
 
 ```ts
-import { test as base } from "vitest";
-
-let shared = 0;
-const myTest = base.extend({});
-
-myTest.describe("suite", () => {
-  shared++;
-});
+// eslint-disable-next-line no-mistakes/test-no-shared-state -- suite intentionally tests module singleton initialization
+sharedConnection = createConnection();
 ```
 
-Shadowing caveat: local variables that shadow imported or extended test aliases
-are ignored, so helper parameters named `test` or `myTest` do not accidentally
-become test callbacks.
+## Related rules
+
+- [`no-vitest-sequential`](no-vitest-sequential.md) prevents serial ordering
+  from masking shared state.

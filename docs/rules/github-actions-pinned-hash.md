@@ -1,5 +1,31 @@
 # `github-actions-pinned-hash`
 
+## Why and when
+
+Use this rule when CI action code must be reproducible and a reviewer must be
+able to identify the version represented by each immutable SHA.
+
+## What it catches
+
+It rejects mutable tag or branch refs, non-40-character refs, and SHA refs
+without a version-shaped trailing comment. Local and Docker actions are exempt.
+
+## Options
+
+`excludePaths` is the only rule-specific option and defaults to an empty list.
+The built-in workflow and composite-action locations remain the default scope.
+
+## Valid example
+
+The two `uses:` lines in the pass example are valid because each has a full SHA
+and a version comment.
+
+## Related rules
+
+[`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)
+and [`github-actions-job-timeouts`](github-actions-job-timeouts.md) enforce
+the other per-step and per-job workflow contracts.
+
 Requires every `uses:` step in GitHub Actions workflow files to reference a
 40-char commit SHA with a version comment. Tag- or branch-pinned actions are
 mutable — an upstream owner can move the ref at any time, silently swapping
@@ -56,6 +82,8 @@ rules:
       excludePaths:
         - .github/workflows/release.yml
 ```
+
+## Suppression
 
 Use `no-mistakes-disable-next-line github-actions-pinned-hash` to suppress a
 single line.

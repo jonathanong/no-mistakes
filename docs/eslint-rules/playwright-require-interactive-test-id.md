@@ -1,24 +1,42 @@
 # `no-mistakes/playwright-require-interactive-test-id`
 
-Requires test IDs on interactive JSX elements.
+## Why
 
-Why: buttons, links, form controls, and similar elements need stable selectors
-for reliable browser tests.
+Interactive controls are high-value test targets. A stable test ID makes their
+coverage and automation intent explicit.
 
-Counterexample: `<button onClick={save}>Save</button>`.
+## Disallowed
 
-Fix: add the configured test ID attribute to the interactive element.
-
-Use `interactiveComponents` to opt wrapper components into the same check:
-
-```js
-{
-  "no-mistakes/playwright-require-interactive-test-id": [
-    "error",
-    { interactiveComponents: ["Button", "Link", "SelectItem", "/\\.Item$/"] },
-  ],
-}
+```tsx
+<button onClick={save}>Save</button>
 ```
 
-Capitalized components that are not configured are ignored because
-component-name matching is project-specific.
+## Allowed
+
+```tsx
+<button data-pw="save-button" onClick={save}>Save</button>
+```
+
+## Options
+
+- `selectorAttributes` lists acceptable test-id attributes; it defaults to
+  `["data-testid", "data-pw"]`.
+- `interactiveComponents` adds component names considered interactive. Entries
+  may be exact names or `/regex/` patterns.
+
+## Fix
+
+Add a configured literal test ID to the interactive element, or configure a
+project-specific interactive component name.
+
+## Suppression
+
+```tsx
+// eslint-disable-next-line no-mistakes/playwright-require-interactive-test-id -- decorative control is deliberately not automation-facing
+const decorative = <button onClick={animate}>Play</button>;
+```
+
+## Related rules
+
+- [`playwright-require-exported-component-attribute`](playwright-require-exported-component-attribute.md)
+  covers exported component roots and branches.

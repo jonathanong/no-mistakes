@@ -1,61 +1,45 @@
 # `no-mistakes/postgres-no-unbounded-query-fanout`
 
-Disallows `Promise.all(<source>.map(<cb>))` when the callback contains a
-database executor call and `source` is not statically bounded.
+## Why
 
-Why: mapping an unbounded collection into parallel executor calls can open
-one Postgres query per element. That exhausts the pool, multiplies lock
-contention, and turns a linear list into an accidental thundering herd.
-Chunked or statically listed work stays within a known concurrency bound.
+`Promise.all(items.map(query))` can create unbounded concurrent database work
+from an input-sized list.
 
-Example: a static list or chunk helper bounds the fan-out.
+## Disallowed
 
 ```ts
-import { query } from "@data-stores/psql";
-import { chunkArray } from "../lib/chunk";
-
-const KNOWN_IDS = ["a", "b"];
-
-await Promise.all(KNOWN_IDS.map((id) => query("SELECT 1 FROM t WHERE id = $1", [id])));
-await Promise.all(
-  chunkArray(ids, 25).map((batch) => query("SELECT 1 FROM t WHERE id = ANY($1::text[])", [batch])),
-);
+await Promise.all(userIds.map((id) => query("SELECT * FROM users WHERE id = $1", [id])));
 ```
 
-Counterexample: `Promise.all` fans out an executor over an unbounded map.
+## Allowed
 
 ```ts
-import { query } from "@data-stores/psql";
-
-export function loadAll(ids: string[]) {
-  return Promise.all(ids.map((id) => query("SELECT 1 FROM t WHERE id = $1", [id])));
+for (const ids of chunkArray(userIds, 50)) {
+  await Promise.all(ids.map((id) => query("SELECT * FROM users WHERE id = $1", [id])));
 }
 ```
 
-Fix: bound the collection before mapping. Use an array literal, a
-`SCREAMING_CASE` constant, or a configured chunk helper (`chunkArray` by
-default), or run the queries sequentially.
+## Options
 
-A source is statically bounded when it is:
+- `importSpecifier` identifies the database module; its default is the plugin's
+  standard PostgreSQL import.
+- `executorNames` lists checked executor names.
+- `chunkFunctionNames` lists approved chunk helpers and defaults to
+  `["chunkArray"]`.
 
-- an `ArrayExpression` (`[a, b].map(...)`)
-- a `SCREAMING_CASE` identifier (`KNOWN_IDS.map(...)`)
-- a `CallExpression` whose name is in `chunkFunctionNames`
-- an identifier whose declared initializer is one of the forms above
-  (`const bounded = ["x"]; bounded.map(...)`)
+## Fix
 
-Executor detection uses the same import bindings as
-[`postgres-no-manual-transaction`](postgres-no-manual-transaction.md):
-`importSpecifier` default `@data-stores/psql`, `executorNames` default
-`query` / `read` / `write`, and importing `withTransaction` /
-`withTransactionOptions` also binds `query`. Member `.query` calls count as
-executors.
+Use a static array, a SCREAMING_CASE bounded collection, sequential work, or a
+configured chunk helper before the mapped executor calls.
 
-Options:
+## Suppression
 
-- `importSpecifier` (default `@data-stores/psql`)
-- `executorNames` (default `["query", "read", "write"]`)
-- `chunkFunctionNames` (default `["chunkArray"]`)
+```ts
+// eslint-disable-next-line no-mistakes/postgres-no-unbounded-query-fanout -- bounded upstream list is enforced by the API contract
+await Promise.all(ids.map((id) => query(sql, [id])));
+```
 
-Not in `configs.recommended` or `configs.strict`. Enable it with executor
-config for the project.
+## Related rules
+
+- [`postgres-no-manual-transaction`](postgres-no-manual-transaction.md) covers
+  another database lifecycle boundary.

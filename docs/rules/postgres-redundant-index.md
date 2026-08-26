@@ -60,3 +60,49 @@ versus `Events`), implicit constraint indexes at line 1,
 `CREATE INDEX IF NOT EXISTS` no-ops, `ALTER INDEX ... RENAME TO`,
 `DROP INDEX` / `DROP TABLE` inside `DO $$` blocks, or `ALTER TABLE ... DROP
 COLUMN` invalidating indexes.
+
+## Why and when
+
+Use this rule during schema review to remove duplicate write and maintenance
+cost from indexes that add no lookup power.
+
+## What it catches/requires
+
+A live btree index is redundant when its keys are a strict prefix of another
+btree index on the same table with the same predicate and compatible includes.
+Unique shorter indexes remain meaningful and are not flagged.
+
+## Options and defaults
+
+`sqlInclude` defaults to `**/*.sql`; `allowDirective` defaults to
+`redundant-index-allow`; `allowedIndexes` defaults to an empty list. Entries use
+`table.index`, including schema qualifiers; stale entries are findings.
+
+## Valid example
+
+```sql
+CREATE INDEX events_topic_created_idx ON events (topic_id, created_at);
+```
+
+## Counterexample
+
+```sql
+CREATE INDEX events_topic_idx ON events (topic_id);
+CREATE INDEX events_topic_created_idx ON events (topic_id, created_at);
+```
+
+## Fix
+
+Drop the strict-prefix index, or document why it is intentionally retained
+with the configured directive or allowlist.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-redundant-index` for a one-off;
+prefer `allowDirective` or `allowedIndexes` when the exception is durable schema
+policy.
+
+## Related rules
+
+[`postgres-fk-index`](postgres-fk-index.md) protects foreign-key probes, while
+[`postgres-no-add-column`](postgres-no-add-column.md) governs migration shape.

@@ -1,5 +1,32 @@
 # `integration-test-no-mocks`
 
+## Why and when
+
+Use this rule when an integration-test directory is expected to exercise real
+boundaries instead of a unit-test substitute.
+
+## What it catches
+
+It catches configured mock-library imports, mock helpers, and mock-like calls
+in selected integration tests while retaining explicit allowlists.
+
+## Options
+
+`include`, `exclude`, `mockModules`, `mockCalls`, `allowModules`, and
+`allowCalls` select the tests and recognized mock shapes. Omitted lists use the
+documented built-in mock-library and helper defaults.
+
+## Valid example
+
+An integration test that calls its real database/API boundary without a mocked
+module or helper passes.
+
+## Related rules
+
+[`module-mock-boundary`](../eslint-rules/module-mock-boundary.md) governs
+file-local ESLint mock policy; [`vitest-mock-test-file-naming`](../eslint-rules/vitest-mock-test-file-naming.md)
+labels module-mocking tests.
+
 Bans configured mocking libraries and mock helpers in integration tests.
 
 ```yaml

@@ -1,39 +1,46 @@
 # `no-mistakes/playwright-literals`
 
-Requires literal Playwright selector values.
+## Why
 
-Why: literal selectors allow coverage, related-test, and uniqueness analysis to
-map tests to UI targets.
+Literal selector values make source-to-test coverage edges deterministic.
+Computed IDs cannot be reliably matched to Playwright assertions.
 
-Counterexample: `page.getByTestId(buttonId)` or `<button data-pw={id} />`.
-
-Fix: use string literals or supported static templates for test IDs and related
-selector arguments.
-
-Example:
+## Disallowed
 
 ```tsx
-page.getByTestId("save-button");
-<button data-pw="save-button" />;
+<button data-pw={`save-${user.id}`}>Save</button>
 ```
 
-Counterexample:
+## Allowed
 
 ```tsx
-page.getByTestId(buttonId);
-<button data-pw={props.testId} />;
+<button data-pw="save-button">Save</button>
+<button data-pw={testId}>Save</button>; // when testId has a literal default
 ```
 
-Options:
+## Options
 
-```js
-{
-  selectorAttributes: ["data-testid", "data-pw"],
-  allowDefaultedProps: true,
-  allowStaticTemplates: false,
-}
+- `selectorAttributes` lists attributes treated as test IDs; it defaults to
+  `["data-testid", "data-pw"]`.
+- `allowDefaultedProps` permits a prop with a literal default; it defaults to
+  `true`.
+- `allowStaticTemplates` permits expression-free template literals; it defaults
+  to `false`.
+
+## Fix
+
+Use a literal selector, or expose a prop with a literal default when a component
+needs a controlled override.
+
+## Suppression
+
+```tsx
+// eslint-disable-next-line no-mistakes/playwright-literals -- generated rows require runtime ids
+return <button data-pw={`row-${row.id}`}>Open</button>;
 ```
 
-Caveat: literal default prop values are accepted by default so component APIs can
-carry stable test IDs. Set `allowDefaultedProps: false` when the project wants
-only directly written literals.
+## Related rules
+
+- [`playwright-defaults`](playwright-defaults.md) validates the allowed prop
+  default form.
+- [`playwright-unique`](playwright-unique.md) catches duplicate literal IDs.

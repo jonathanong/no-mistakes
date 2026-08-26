@@ -98,3 +98,57 @@ Suppression caveat: findings point at the importing source file and line, so
 `no-mistakes-disable-line`/`-next-line`/`-file` directives work as usual.
 Prefer fixing the declaration over suppressing — a suppressed finding still
 fails at runtime after a production install.
+
+## Why and when
+
+Use this rule in deployable workspaces before a production-only install or
+container build. It catches the dependency declarations that development
+tooling often masks.
+
+## What it catches/requires
+
+Every runtime-reachable external package import must be declared in an allowed
+runtime field of its owning `package.json`. Type-only imports, test-only roots,
+and non-npm loader schemes are excluded as described above.
+
+## Options and defaults
+
+`workspaceRoots` is required and has no default. `allowedFields` defaults to
+`[dependencies, optionalDependencies, peerDependencies]`; `testFilePatterns`
+defaults to `**/__tests__/**`, `**/*.test.*`, and `**/*.d.*ts`. The shared
+include/exclude filters further bound the scan.
+
+## Valid example
+
+```json
+{
+  "dependencies": { "@acme/tool": "workspace:^" }
+}
+```
+
+## Counterexample
+
+```json
+{
+  "devDependencies": { "@acme/tool": "workspace:^" }
+}
+```
+
+When production code imports `@acme/tool`, a production install can prune it.
+
+## Fix
+
+Move the package to `dependencies`, `optionalDependencies`, or
+`peerDependencies`, or prove that the importer is not runtime-reachable.
+
+## Suppression
+
+Use a line or file `no-mistakes-disable-* production-dependency-declarations`
+directive only for a documented host-provided or generated dependency. A
+suppression does not make a pruned production install safe.
+
+## Related rules
+
+[`strict-package-layout`](strict-package-layout.md) checks workspace structure;
+[`required-entrypoint-reachability`](required-entrypoint-reachability.md)
+checks that selected runtime files are registered.

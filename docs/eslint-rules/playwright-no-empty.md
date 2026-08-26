@@ -1,9 +1,39 @@
 # `no-mistakes/playwright-no-empty`
 
-Disallows empty test IDs.
+## Why
 
-Why: empty selector values cannot identify stable UI targets.
+An empty test ID is neither a stable selector nor meaningful coverage evidence.
 
-Counterexample: `<button data-testid="" />`.
+## Disallowed
 
-Fix: provide a meaningful literal test ID or remove the unused attribute.
+```tsx
+<button data-pw="">Save</button>
+```
+
+## Allowed
+
+```tsx
+<button data-pw="save-button">Save</button>
+```
+
+## Options
+
+- `selectorAttributes` lists test-id attributes; it defaults to
+  `["data-testid", "data-pw"]`.
+
+## Fix
+
+Use a descriptive non-empty literal or remove the test-id attribute when the
+element should not be a selector target.
+
+## Suppression
+
+```tsx
+// eslint-disable-next-line no-mistakes/playwright-no-empty -- fixture verifies legacy empty-attribute rendering
+return <button data-pw="">Save</button>;
+```
+
+## Related rules
+
+- [`playwright-naming-convention`](playwright-naming-convention.md) validates
+  the non-empty value's naming style.

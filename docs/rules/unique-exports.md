@@ -21,3 +21,50 @@ only for files under a configured `type: remix` project's `app/routes/` (or
 
 Fix: rename one export, narrow the rule scope, or use a documented suppression
 for intentional public aliases.
+
+## Why and when
+
+Use this rule when agents and importers need one unambiguous name for each
+public export in a shared workspace.
+
+## What it catches/requires
+
+Two analyzed files must not define the same public export name in the checked
+scope, except for documented framework convention exports described above.
+
+## Options and defaults
+
+`uniqueAcrossTypesAndValues` defaults to `false`; set it to `true` when type and
+value namespaces must also be unique. Scope comes from the rule application's
+projects/tests filters.
+
+## Valid example
+
+```ts
+// users.ts
+export function getUser() {}
+// teams.ts
+export function getTeam() {}
+```
+
+## Counterexample
+
+```ts
+// users.ts and teams.ts both export function getCurrentUser() {}
+```
+
+## Fix
+
+Rename one export, narrow the project scope, or deliberately publish one alias
+through an approved barrel rather than defining duplicate names.
+
+## Suppression
+
+Use `no-mistakes-disable-file unique-exports` for a framework-generated or
+intentional alias file, with the public ownership reason in the comment.
+
+## Related rules
+
+[`required-entrypoint-reachability`](required-entrypoint-reachability.md)
+checks runtime registration; [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)
+checks import alias targets.

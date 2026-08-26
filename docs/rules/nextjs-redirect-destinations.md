@@ -1,5 +1,35 @@
 # `nextjs-redirect-destinations`
 
+## Suppression
+
+Use a line directive for a deliberate external or dynamic destination. Prefer
+an `allow` or `ignorePrefixes` entry when that route class is intentional.
+
+## Why and when
+
+Use this rule when rewrites and redirects must remain aligned with real App
+Router pages as routes evolve.
+
+## What it catches
+
+It reports static redirect/rewrite destinations that cannot be matched to the
+configured route inventory; dynamic destinations remain outside the heuristic.
+
+## Options
+
+`configFiles`, `routeRoots`, `allow`, and `ignorePrefixes` select configuration,
+pages, and exceptions. Omitted values use the documented Next.js defaults.
+
+## Valid example
+
+A redirect from `/old` to an existing `app/new/page.tsx` route passes.
+
+## Related rules
+
+[`nextjs-no-api-routes`](nextjs-no-api-routes.md) keeps route conventions
+consistent; [`config-path-references`](config-path-references.md) checks static
+paths in structured configuration.
+
 Checks that Next.js `redirects()` destinations (and, by default, `rewrites()`)
 resolve to real App Router pages. Stale destinations send users to 404s.
 
