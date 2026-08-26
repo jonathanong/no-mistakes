@@ -51,3 +51,50 @@ INSERT INTO foo (id) VALUES ('00000000-0000-0000-0000-000000000001')
 Use `no-mistakes-disable-next-line postgres-sql-statement-policy` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
 when a whole file is an intentional exception.
+
+## Why and when
+
+Use this rule on seed, config, or runtime SQL directories where schema DDL must
+remain in migrations and the file's allowed purpose should be machine-checked.
+
+## What it catches/requires
+
+Every configured banned statement kind is a finding in included SQL, including
+statically recoverable statements inside supported PL/pgSQL bodies.
+
+## Options and defaults
+
+`sqlInclude` defaults to `**/*.sql`. `bannedStatements` defaults to `CREATE
+TABLE`, `ALTER TABLE`, `CREATE INDEX`, `CREATE VIEW`, `TRUNCATE`, `DROP INDEX`,
+and `DROP VIEW`; `CREATE UNIQUE INDEX` and materialized views map to those
+categories.
+
+## Valid example
+
+```sql
+INSERT INTO foo (id) VALUES ('00000000-0000-0000-0000-000000000001')
+  ON CONFLICT (id) DO NOTHING;
+```
+
+## Counterexample
+
+```sql
+CREATE TABLE foo (id uuid PRIMARY KEY);
+```
+
+## Fix
+
+Move schema DDL to a migration directory, or narrow `sqlInclude` and the banned
+set to match the file's intentional role.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-sql-statement-policy` or
+`no-mistakes-disable-file` for an approved exception, rather than silently
+moving the file outside all policy coverage.
+
+## Related rules
+
+[`postgres-no-add-column`](postgres-no-add-column.md) governs migration column
+shape; [`postgres-constraint-validate`](postgres-constraint-validate.md)
+checks phased constraint rollout.

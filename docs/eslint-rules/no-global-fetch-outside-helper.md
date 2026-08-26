@@ -1,39 +1,45 @@
 # `no-mistakes/no-global-fetch-outside-helper`
 
-Disallows direct global `fetch` calls outside configured helper paths.
+## Why
 
-Why: projects that centralize request behavior in API/client helpers can keep
-auth, retry, error, and observability policy in one layer instead of spreading
-bare network calls through application code.
+Centralizing global `fetch` in a configured helper keeps transport policy,
+authentication, retries, and static route analysis in one reviewable place.
 
-Example: a configured helper path centralizes global `fetch`.
-
-```ts
-export function getUser(id: string) {
-  return fetch(`/api/users/${id}`);
-}
-```
-
-Counterexample: a checked application file calls global `fetch` directly.
+## Disallowed
 
 ```ts
-export function UserPage({ id }: { id: string }) {
-  return fetch(`/api/users/${id}`);
-}
+// web/app/users/page.tsx
+await fetch("/api/users");
 ```
 
-Fix: move the call into a configured helper path and call that helper from the
-application file.
+## Allowed
 
 ```ts
-import { getUser } from "../lib/api/users";
-
-export function UserPage({ id }: { id: string }) {
-  return getUser(id);
-}
+// web/lib/api/users.ts (an allowed helper path)
+export const listUsers = () => fetch("/api/users");
 ```
 
-Options: `checkedPathPatterns` and `allowedPathPatterns`.
-`checkedPathPatterns` opts files into the rule; when it is missing or empty,
-the rule reports nothing. `allowedPathPatterns` is optional and exempts helper
-or client paths where global fetch is permitted.
+## Options
+
+- `checkedPathPatterns` scopes files in which global `fetch` is banned.
+- `allowedPathPatterns` exempts the helper paths where global `fetch` may be
+  called.
+
+Both lists default to empty, so repositories opt into the boundary explicitly.
+
+## Fix
+
+Move the request into an allowed client/helper module and call that wrapper from
+application code.
+
+## Suppression
+
+```ts
+// eslint-disable-next-line no-mistakes/no-global-fetch-outside-helper -- service worker must call fetch directly
+await fetch(request);
+```
+
+## Related rules
+
+- [`no-banned-import-outside-allowed-paths`](no-banned-import-outside-allowed-paths.md)
+  applies the same policy to configured imports.

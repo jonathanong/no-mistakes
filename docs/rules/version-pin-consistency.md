@@ -53,3 +53,51 @@ EXAMPLE_TOOL_VERSION: 0.24.2
 
 Use `no-mistakes-disable-next-line version-pin-consistency` or
 `no-mistakes-disable-file version-pin-consistency` for a one-off exception.
+
+## Why and when
+
+Use this rule when one structured source owns a tool version and workflows,
+actions, or docs repeat it as operational anchors.
+
+## What it catches/requires
+
+The source key must resolve to a string pin and every included anchor's single
+capture group must equal it. Missing keys, stale captures, malformed patterns,
+and stale paths are findings.
+
+## Options and defaults
+
+`sourceFile`, `sourceKey`, and `anchors` are required. Each anchor supplies a
+file and exactly-one-capture `pattern`, with optional `label`. Common
+include/exclude filters apply; there are no implicit source or anchor files.
+
+## Valid example
+
+```yaml
+tools:
+  aqua:example-org/example-tool: 0.24.2
+```
+
+```yaml
+EXAMPLE_TOOL_VERSION: 0.24.2
+```
+
+## Counterexample
+
+The structured source says `0.24.2` while an anchor captures `0.24.1`.
+
+## Fix
+
+Update every anchor in the same change, or change the source ownership and
+patterns together so one canonical pin remains.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line version-pin-consistency` for one exceptional
+anchor or the file directive for a generated mirror that cannot be updated.
+
+## Related rules
+
+[`test-no-dependency-pins`](test-no-dependency-pins.md) prevents tests from
+hard-coding these versions; [`pnpm-release-age-policy`](pnpm-release-age-policy.md)
+governs release-age exceptions.

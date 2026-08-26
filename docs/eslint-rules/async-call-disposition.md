@@ -1,24 +1,49 @@
 # `no-mistakes/async-call-disposition`
 
-Requires configured async calls to be explicitly handled.
+## Why
 
-Why: queue enqueue and job scheduling APIs usually return promises. Floating
-those promises can hide failed job submissions and make worker control flow
-ambiguous.
+Configured async boundaries, such as enqueue or scheduling helpers, must make
+their promise disposition explicit. A bare call can silently lose a rejection.
 
-Counterexample: `enqueueEmail(user.id)`.
+## Disallowed
 
-Example:
-
-```js
-await enqueueEmail(user.id);
-void enqueueEmail(user.id);
-return enqueueEmail(user.id);
+```ts
+enqueueEmail(user.id);
 ```
 
-Fix: use `await enqueueEmail(...)`, `return enqueueEmail(...)`,
-`void enqueueEmail(...)`, or group multiple calls under an awaited or returned
-`Promise.all(...)`.
+## Allowed
 
-Configure `targets` with grouped `sourceSpecifierPatterns` and `calleeNamePatterns` glob or
-`/regex/` strings so only project-specific async APIs are checked.
+```ts
+await enqueueEmail(user.id);
+return enqueueEmail(user.id);
+void enqueueEmail(user.id); // intentionally fire and forget
+await Promise.all([enqueueEmail(first), enqueueEmail(second)]);
+```
+
+## Options
+
+- `targets` is an array of target groups. Each group may set
+  `sourceSpecifierPatterns` and `calleeNamePatterns`; values are glob or
+  `/regex/` strings. Only calls matching a configured group are checked.
+
+## Fix
+
+Await or return work whose failure belongs to the caller. Use `void` only when
+the call is deliberately detached.
+
+## Editor suggestion
+
+For a bare configured call, ESLint offers one suggestion: prefix it with
+`void`. It does not guess whether `await`, `return`, or detachment is correct.
+
+## Suppression
+
+```ts
+// eslint-disable-next-line no-mistakes/async-call-disposition -- queue is intentionally best effort
+enqueueEmail(user.id);
+```
+
+## Related rules
+
+- [`async-try-catch-return-await`](async-try-catch-return-await.md) for returned
+  promises inside protected error boundaries.

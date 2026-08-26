@@ -1,9 +1,42 @@
 # `no-mistakes/playwright-naming-convention`
 
-Requires a naming convention for literal test IDs.
+## Why
 
-Why: consistent IDs are easier for agents to search, compare, and maintain.
+A consistent test-id vocabulary makes selectors legible and reduces accidental
+near-duplicates.
 
-Counterexample: `data-pw="Save Button!"` when kebab-case IDs are required.
+## Disallowed
 
-Fix: rename literal test IDs to match the configured convention.
+```tsx
+<button data-pw="SaveButton">Save</button>
+```
+
+## Allowed
+
+```tsx
+<button data-pw="save-button">Save</button>
+```
+
+## Options
+
+- `selectorAttributes` lists test-id attributes; it defaults to
+  `["data-testid", "data-pw"]`.
+- `pattern` is the required regular-expression string. It defaults to the
+  plugin's kebab-case pattern.
+
+## Fix
+
+Rename the literal to a value matching the configured pattern, or change the
+pattern only when the repository naming policy changes.
+
+## Suppression
+
+```tsx
+// eslint-disable-next-line no-mistakes/playwright-naming-convention -- third-party compatibility selector
+return <button data-pw="Legacy_Save">Save</button>;
+```
+
+## Related rules
+
+- [`playwright-no-empty`](playwright-no-empty.md) rejects empty values.
+- [`playwright-unique`](playwright-unique.md) rejects duplicates in a file.

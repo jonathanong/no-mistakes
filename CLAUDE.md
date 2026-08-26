@@ -1,3 +1,5 @@
+<!-- cspell:ignore jonathanong -->
+
 ## Design principles
 
 Goal: AI-powered AST-based codebase intelligence for AI Agents.
@@ -134,12 +136,35 @@ in that PR.
 
 ## Agent Best Practices
 
-- Prefer `--format json` for parseable answers and `--format paths` for command
-  substitution. Avoid parsing human output.
-- Pass `--root` and package-local `--tsconfig` explicitly in monorepos.
-- Use the async Node/N-API API, especially `analyzeProject()`, for repeated
-  in-process queries instead of repeated shell commands.
-- Use `rg` for exact call lines after graph commands identify the relevant files.
+### Before editing
+
+- Use `no-mistakes` to scope structural impact before changing an existing
+  file: `dependents`, `symbols --mode signature-impact`, and the appropriate
+  `tests plan <framework> --changed-file <file>`. For a new file, repeat after
+  creating it.
+- Pass `--root` explicitly. Omit `--tsconfig` for ordinary monorepo ownership
+  resolution; pass a package tsconfig only to force one resolver.
+- Use `rg` after graph commands identify files when exact call lines, comments,
+  or dynamic syntax matter.
+
+### After editing
+
+- Re-run focused impact/planning for changed files, then ask
+  `impacted-checks <file...> --format json` for configured tests and generic
+  validation. Inspect warnings and fallback fields before treating an empty
+  result as complete.
+- Prefer `--format json` for parseable output and `--format paths` only for
+  trusted path lists. Do not parse human output or execute untrusted command
+  text.
+
+### Before handoff
+
+- Run `resolve-check` for changed TS/JS files and `check --format json` for
+  configured repository checks. Also run `playwright check --json` for
+  Next.js route, selector, or Playwright changes.
+- For repeated in-process queries, use the async Node/N-API API—especially
+  `analyzeProject()`—to share one request-scoped analysis rather than spawning
+  repeated CLI processes.
 
 ## Coverage
 

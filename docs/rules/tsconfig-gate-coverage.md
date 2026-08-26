@@ -360,3 +360,57 @@ Findings use line 1 of the tsconfig, workflow, or configuration file. Use a
 top-of-file `no-mistakes-disable-file tsconfig-gate-coverage` directive only
 when an intentional exception cannot be represented with a reasoned
 `allowProjects` entry.
+
+## Why and when
+
+Use this rule when every tracked TypeScript program must be exercised by both
+local whole-project typechecking and an enforcing GitHub Actions path.
+
+## What it catches/requires
+
+Each tracked tsconfig must be registered in a static `tsc --noEmit` command and
+in a workflow whose triggers and failure semantics cover the relevant source.
+The existing details above define the supported Actions, shell, reusable, and
+matrix forms.
+
+## Options and defaults
+
+`allowProjects` defaults to empty and maps tsconfig paths to human-readable
+reasons. The rule has no other rule-local options; `checks.commands`, workflow
+triggers, and project configuration provide the typecheck inputs.
+
+## Valid example
+
+```yaml
+checks:
+  commands:
+    - name: typecheck
+      command: [pnpm, exec, tsc, --noEmit, -p, tsconfig.json]
+      fileArgs: none
+      always: true
+```
+
+An applicable workflow job runs the same project with a propagating shell.
+
+## Counterexample
+
+A tracked `web/tsconfig.json` exists, but CI only type-checks the root config and
+the local `checks.commands` block has no web project command.
+
+## Fix
+
+Add a static project-specific `tsc --noEmit` command and an enforcing workflow
+path/filter for the source it covers, or add a reasoned `allowProjects` entry
+for a non-compiler config.
+
+## Suppression
+
+Prefer `allowProjects` for dependency-cruiser or generated configs. Use a
+top-of-file `no-mistakes-disable-file tsconfig-gate-coverage` directive only
+when the exception cannot be expressed as policy.
+
+## Related rules
+
+[`tsconfig-file-coverage`](tsconfig-file-coverage.md) checks membership in a
+compiler program; [`workflow-topology-policy`](workflow-topology-policy.md)
+asserts broader CI graph structure.

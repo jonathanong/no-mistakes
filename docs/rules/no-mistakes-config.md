@@ -1,5 +1,37 @@
 # `no-mistakes-config`
 
+## Why and when
+
+Enable this rule in every configured repository: stale paths and ineffective
+globs otherwise make a policy appear active while silently selecting nothing.
+
+## What it catches
+
+It validates configuration path references, scoped project globs, full-suite
+trigger paths, empty ignore/exclude patterns, and incompatible `limit` plus
+`direct` groups.
+
+## Options
+
+There are no rule-specific options or defaults. It validates the active
+`.no-mistakes.yml`; generic application fields only decide where config loads.
+
+## Valid example
+
+The fixed configuration below uses a tracked project root, removes the empty
+exclude, and puts the budget on a non-`direct` group.
+
+## Suppression
+
+Fix configuration rather than suppressing it. For an intentional generated
+config, use a narrowly scoped file directive in a comment-capable source.
+
+## Related rules
+
+[`config-path-references`](config-path-references.md) checks other structured
+config paths; [`structured-config-policy`](structured-config-policy.md) checks
+their shape.
+
 Lints the loaded `.no-mistakes.yml` against tracked files: schema path
 fields must exist, project `include`/`exclude` globs are resolved relative to
 their project root, positive full-suite trigger paths must match,

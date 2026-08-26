@@ -1,29 +1,49 @@
 # `no-mistakes/server-require-nullable-fetch-wrapper`
 
-Requires configured nullable entity fetch helpers to wrap getter calls in a
-project wrapper.
+## Why
 
-Why: entity getters often throw, return undefined, or use transport-specific
-missing-value behavior. A single wrapper keeps nullable helper contracts
-consistent.
+Nullable entity getters need one configured wrapper so a missing entity maps to
+the same `null` or response behavior in every server handler.
+
+## Disallowed
 
 ```ts
-export function getUser(): User | null {
-  return serverApi.get("/users/1");
+export async function getUserRoute() {
+  return getUserById(id);
 }
 ```
 
-Counterexample: an exported helper has a nullable return type and calls a
-configured getter directly.
-
-Fix: wrap the getter call in the configured nullable wrapper.
+## Allowed
 
 ```ts
-export function getUser(): User | null {
-  return nullableEntity(serverApi.get("/users/1"));
+export async function getUserRoute() {
+  return nullableEntity(getUserById(id));
 }
 ```
 
-Options: `includePathPatterns`, `excludePathPatterns`, `getterCalleePatterns`,
-`requiredWrapperCallee`, `nullableReturnTypeNames`,
-`inferNullableFromTopLevelEntityPath`, and `topLevelEntityPathPatterns`.
+## Options
+
+- `getterCalleePatterns` and `requiredWrapperCallee` are required.
+- `includePathPatterns` and `excludePathPatterns` scope matching files.
+- `nullableReturnTypeNames` adds nullable return-type hints.
+- `inferNullableFromTopLevelEntityPath` and `topLevelEntityPathPatterns`
+  enable path-based nullable inference.
+
+Optional lists default to empty and inference defaults to `false`.
+
+## Fix
+
+Wrap the configured getter within the same function boundary using the required
+wrapper, or narrow the configured getter/path policy.
+
+## Suppression
+
+```ts
+// eslint-disable-next-line no-mistakes/server-require-nullable-fetch-wrapper -- handler deliberately maps absence to 404 itself
+return getUserById(id);
+```
+
+## Related rules
+
+- [`no-global-fetch-outside-helper`](no-global-fetch-outside-helper.md)
+  centralizes another server I/O boundary.

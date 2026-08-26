@@ -1,31 +1,46 @@
 # `no-mistakes/module-mock-preserve-exports`
 
-Requires configured internal mocks to preserve real module exports.
+## Why
 
-Why: partial module mock objects silently hide newly added named exports. Spreading
-the real module keeps the mock shape connected to the source module.
+An internal module mock that replaces its full export object can hide consumers
+of the exports that the test did not intend to replace.
+
+## Disallowed
 
 ```ts
-import { vi } from "vitest";
+vi.mock("@app/payments", () => ({ charge: vi.fn() }));
+```
 
-vi.mock("./client", async () => ({
-  ...(await vi.importActual("./client")),
-  request: vi.fn(),
+## Allowed
+
+```ts
+vi.mock("@app/payments", async () => ({
+  ...(await vi.importActual("@app/payments")),
+  charge: vi.fn(),
 }));
 ```
 
-Counterexample: an internal mock factory returns only replacement exports.
+## Options
+
+The schema accepts an options object. `internalSpecifiers`,
+`includePathPatterns`, and `excludePathPatterns` select applicable mocks;
+`baseline` provides temporary `[file, specifier]` allowances. See the
+exhaustive table in [`eslint-plugin`](../eslint-plugin.md#rule-options).
+
+## Fix
+
+Spread the same module loaded through `vi.importActual`, Vitest's
+`importOriginal` parameter, or `jest.requireActual`, then override only the
+required export.
+
+## Suppression
 
 ```ts
-vi.mock("./client", () => ({
-  request: vi.fn(),
-}));
+// eslint-disable-next-line no-mistakes/module-mock-preserve-exports -- isolated module contract test
+vi.mock("@app/payments", () => ({ charge: vi.fn() }));
 ```
 
-Fix: spread `await vi.importActual(specifier)`, Vitest's `importOriginal()`
-factory parameter, or `jest.requireActual(specifier)` into every returned mock
-object. Object spy mocks such as `vi.mock("./client", { spy: true })` are
-allowed because they preserve the real exports.
+## Related rules
 
-Options: `internalSpecifiers`, `includePathPatterns`, `excludePathPatterns`,
-and `baseline`.
+- [`module-mock-boundary`](module-mock-boundary.md) decides whether an internal
+  module may be mocked at all.

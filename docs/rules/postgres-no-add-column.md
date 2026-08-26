@@ -69,3 +69,51 @@ CREATE TABLE posts (
 Use `no-mistakes-disable-next-line postgres-no-add-column` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
 when a whole file is an intentional exception.
+
+## Why and when
+
+Use this rule when schema shape must be established in the original table
+definition rather than widened by a later migration.
+
+## What it catches/requires
+
+Every included `ALTER TABLE ... ADD COLUMN` must either be absent or match one
+complete `allowedMigrations` entry. Stale allowlist entries also fail.
+
+## Options and defaults
+
+`sqlInclude` defaults to `**/*.sql`; `allowedMigrations` defaults to an empty
+list, meaning no add-column operation is allowed. Entries compare `path`,
+`table`, `column`, `type`, `nullable`, and optional `default` exactly.
+
+## Valid example
+
+```sql
+CREATE TABLE posts (
+  id uuid PRIMARY KEY,
+  status text NOT NULL DEFAULT 'draft'
+);
+```
+
+## Counterexample
+
+```sql
+ALTER TABLE posts ADD COLUMN status text;
+```
+
+## Fix
+
+Move the column into the original `CREATE TABLE`, or add a fully specified
+allowlist entry for a deliberate deployed-schema migration.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-no-add-column` for a one-off
+exception, or the file directive for a migration family with an external
+approval process.
+
+## Related rules
+
+[`postgres-sql-statement-policy`](postgres-sql-statement-policy.md) restricts
+statement kinds in non-migration SQL; [`postgres-constraint-validate`](postgres-constraint-validate.md)
+checks phased constraint validation.

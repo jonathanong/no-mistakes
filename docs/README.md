@@ -16,6 +16,7 @@ request structured output, understand config, and keep source code analyzable.
 | Keep file-local code analyzable | [ESLint rules](eslint-rules/README.md) |
 | Understand static-analysis limits | [AST analysis behavior](ast-analysis.md) |
 | Use the tool as an AI agent | [Agent guide](agent-guide.md) |
+| Install concise instructions for an agent | [Packaged agent skill](../skills/no-mistakes/SKILL.md) |
 | Compare language and framework coverage | [Feature parity](feature-parity.md) |
 
 ## Reference

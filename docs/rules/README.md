@@ -17,6 +17,31 @@ rules:
   - rule: unique-exports
 ```
 
+## Reading a rule page
+
+Each rule page explains why the policy exists, when to enable it, the behavior
+it catches or requires, and every rule-specific option and default. It also
+shows a valid configuration or code shape, an invalid counterexample, a manual
+fix, suppression guidance, and related rules where another check covers the
+same workflow. The common `scope`, `projects`, `include`, and `exclude` fields
+select the rule application; a page's `options:` block configures that rule's
+behavior.
+
+## Choose by problem
+
+| If you need to… | Start with |
+| --- | --- |
+| Keep agent context concise and code easy to analyze | [`agents-md-max-size`](agents-md-max-size.md), [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md), [`unique-exports`](unique-exports.md) |
+| Protect documentation structure and navigation | [`doc-consistency`](doc-consistency.md), [`markdown-reachability`](markdown-reachability.md), [`markdown-child-links`](markdown-child-links.md) |
+| Enforce package and workspace boundaries | [`forbidden-dependencies`](forbidden-dependencies.md), [`production-dependency-declarations`](production-dependency-declarations.md), [`workspace-package-cycles`](workspace-package-cycles.md) |
+| Make CI reproducible and bounded | [`github-actions-pinned-hash`](github-actions-pinned-hash.md), [`github-actions-job-timeouts`](github-actions-job-timeouts.md), [`workflow-topology-policy`](workflow-topology-policy.md) |
+| Keep browser tests statically traceable | [`playwright-coverage`](playwright-coverage.md), [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md), [`playwright-unique-test-ids`](playwright-unique-test-ids.md) |
+| Check PostgreSQL migrations and query safety | [`postgres-constraint-validate`](postgres-constraint-validate.md), [`postgres-fk-index`](postgres-fk-index.md), [`postgres-lock-ordering`](postgres-lock-ordering.md) |
+| Enforce language-specific source policy | [`csharp-no-async-void-delegate`](csharp-no-async-void-delegate.md), [`rust-no-inline-tests`](rust-no-inline-tests.md), [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md) |
+
+These are starting points, not presets. The related-rules section on each page
+explains which checks compose well and which one owns an overlapping concern.
+
 ## Rule Index
 
 | Rule                                                                          | Purpose                                                                         |
@@ -120,3 +145,7 @@ domain, rule ID, finding location/reason, and matching directive kind/line.
 Unknown rule IDs, malformed directives, and unused directives are ignored;
 they never hide a finding. File directives apply even when a finding has no
 line, while line and next-line directives require an exact finding location.
+
+Each rule page says when a file-level directive is the practical option. Prefer
+repairing the input or narrowing rule configuration: a suppression intentionally
+hides future regressions in the selected scope.

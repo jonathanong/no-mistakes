@@ -44,3 +44,48 @@ vi.mock(import('./dependency.mts'), () => import('./lazy.mts'))
 Caveat: only the bare `import(...)` form is recognized as a type carrier. A
 TS-wrapped specifier, e.g. `vi.mock(import('./dependency.mts') as unknown, factory)`,
 is not recognized and is still treated as an unmocked dynamic import.
+
+## Why and when
+
+Use this rule when tests should not accidentally load real optional, network,
+filesystem, or environment-dependent modules through a dynamic import.
+
+## What it catches/requires
+
+Every dynamic import reachable from a selected Vitest or Jest test must have a
+recognized mock. Static imports and the documented bare typed mock specifier
+forms are not findings.
+
+## Options and defaults
+
+There are no rule-local options. The selected `tests.vitest` or `tests.jest`
+project determines the test universe and mock semantics.
+
+## Valid example
+
+```ts
+vi.mock("external-lib", () => ({ run: vi.fn() }));
+const module = await import("external-lib");
+```
+
+## Counterexample
+
+```ts
+const module = await import("external-lib");
+```
+
+## Fix
+
+Add a manual mock, make the dependency a static import when appropriate, or
+narrow the rule target to tests whose dynamic boundary is intentional.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line test-no-unmocked-dynamic-imports` for one
+known integration test. Prefer a mock or explicit test-project scope.
+
+## Related rules
+
+[`test-no-dependency-pins`](test-no-dependency-pins.md) avoids brittle version
+assertions; [`vitest-project-mapping`](vitest-project-mapping.md) ensures each
+selected test has one Vitest owner.

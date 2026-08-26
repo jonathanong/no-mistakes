@@ -1,33 +1,48 @@
 # `no-mistakes/ts-preserve-null-option-defaults`
 
-Disallows defaults that collapse explicitly nullable option members.
+## Why
 
-Why: when an option type says `null` is meaningful, defaults must distinguish
-an omitted value from an explicit `null`.
+When an option type permits `null`, explicit null often has different meaning
+from omission. `??`, `||`, and their assignments collapse that distinction.
+
+## Disallowed
 
 ```ts
-interface Options {
-  label?: string | null;
-}
-
-function render(options: Options) {
+function render(options: { label?: string | null }) {
   return options.label ?? "Untitled";
 }
 ```
 
-Counterexample: a nullable optional member is defaulted with `??`, `||`, `??=`,
-or `||=`.
-
-Fix: check for `undefined` explicitly and preserve `null`.
+## Allowed
 
 ```ts
-function render(options: Options) {
+function render(options: { label?: string | null }) {
   return options.label === undefined ? "Untitled" : options.label;
 }
 ```
 
-Options: `includePathPatterns`, `excludePathPatterns`, `optionObjectNames`, and
-`optionObjectNamePatterns`.
+## Options
 
-Object destructuring defaults are allowed because they only apply when the
-property value is `undefined`, preserving explicit `null`.
+- `includePathPatterns` and `excludePathPatterns` scope files.
+- `optionObjectNames` lists option variable names.
+- `optionObjectNamePatterns` lists name patterns.
+
+All lists default to empty. Object-destructuring defaults remain allowed because
+they apply only to `undefined`.
+
+## Fix
+
+Test explicitly for `undefined` and preserve `null`; do not use `??`, `||`,
+`??=`, or `||=` for a nullable option member.
+
+## Suppression
+
+```ts
+// eslint-disable-next-line no-mistakes/ts-preserve-null-option-defaults -- API contract deliberately treats null as omission
+return options.label ?? "Untitled";
+```
+
+## Related rules
+
+- [`react-no-nullish-react-node`](react-no-nullish-react-node.md) applies the
+  same rule to ReactNode fallbacks.

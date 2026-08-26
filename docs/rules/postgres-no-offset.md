@@ -48,3 +48,48 @@ String literals that mention the word "offset" are not findings.
 Use `no-mistakes-disable-next-line postgres-no-offset` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
 when a whole file is an intentional exception.
+
+## Why and when
+
+Use this rule for APIs and workers where offset pagination becomes slower and
+less stable as rows are inserted or deleted between requests.
+
+## What it catches/requires
+
+Executed, statically recoverable PostgreSQL SQL must not contain `OFFSET`.
+Interpolated offsets are checked after placeholder normalization; prose and
+unparseable SQL are ignored.
+
+## Options and defaults
+
+`include` and `exclude` select source files. `importSpecifier` defaults to
+`@data-stores/psql`, and `executorNames` defaults to `[query, read, write]`.
+
+## Valid example
+
+```ts
+query(`SELECT id FROM posts ORDER BY id DESC LIMIT ${limit + 1}`);
+```
+
+## Counterexample
+
+```ts
+query(`SELECT id FROM posts ORDER BY id DESC OFFSET 10`);
+```
+
+## Fix
+
+Use a cursor predicate with a deterministic order, or use `LIMIT + 1`,
+`COUNT`, `EXISTS`, or `ROW_NUMBER()` when that is the actual query need.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-no-offset` or
+`no-mistakes-disable-line`; use the file directive only for an intentionally
+offset-based reporting query.
+
+## Related rules
+
+[`postgres-lock-ordering`](postgres-lock-ordering.md) covers multi-row locks;
+[`postgres-require-query-annotation`](postgres-require-query-annotation.md)
+keeps executed SQL identifiable in logs.

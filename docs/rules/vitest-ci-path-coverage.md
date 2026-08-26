@@ -86,3 +86,55 @@ Suppression caveat: findings report line 1 of the workflow file, so the
 practical opt-out is a top-of-file `no-mistakes-disable-file
 vitest-ci-path-coverage` directive. Prefer fixing the filter unless coverage is
 intentionally enforced elsewhere.
+
+## Why and when
+
+Use this rule when local Vitest selection is narrower than CI's path-filter
+triggers and a changed source file could skip the required test job.
+
+## What it catches/requires
+
+Each configured Vitest project input must be covered by the mapped workflow
+filter, including ordered negations and re-inclusions. Target-scoped full-suite
+triggers are checked against their named runner projects.
+
+## Options and defaults
+
+`projectFilters` defaults each Vitest project to its own filter name;
+`sourceGlobsByProject`, `workflows`, and `explicitProjectsOnly` are optional;
+`includeVitestProjectGlobs` and `includeFullSuiteTriggers` default to `true`.
+
+## Valid example
+
+```yaml
+paths:
+  - ts-shared/**
+```
+
+The filter covers `ts-shared/**/*.test.ts` and its source inputs.
+
+## Counterexample
+
+```yaml
+paths:
+  - ts-shared/*/package.json
+```
+
+This misses a nested `ts-shared/utils/index.mts` change selected locally.
+
+## Fix
+
+Broaden the workflow filter, correct `projectFilters`, or narrow the Vitest
+project input to the files CI really runs.
+
+## Suppression
+
+Findings point to workflow line 1, so use a top-of-file
+`no-mistakes-disable-file vitest-ci-path-coverage` directive only when another
+CI gate intentionally owns the coverage.
+
+## Related rules
+
+[`vitest-project-mapping`](vitest-project-mapping.md) assigns each test to one
+project; [`tsconfig-gate-coverage`](tsconfig-gate-coverage.md) performs the
+analogous CI/local gate check for TypeScript configs.

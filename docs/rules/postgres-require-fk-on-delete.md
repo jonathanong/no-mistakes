@@ -37,3 +37,50 @@ CREATE TABLE children (
 Use `no-mistakes-disable-next-line postgres-require-fk-on-delete` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
 when a whole file is an intentional exception.
+
+## Why and when
+
+Use this rule when every foreign-key delete behavior should be an explicit
+review decision rather than PostgreSQL's implicit `NO ACTION` default.
+
+## What it catches/requires
+
+Included foreign keys must specify one of `RESTRICT`, `CASCADE`, `SET NULL`, or
+`SET DEFAULT`; omitted actions and explicit `NO ACTION` are findings.
+
+## Options and defaults
+
+`sqlInclude` is the only option and defaults to `**/*.sql`. Statements inside
+supported `DO $$` blocks are included in the same schema-fact pass.
+
+## Valid example
+
+```sql
+ALTER TABLE children ADD CONSTRAINT fk_children_parent
+  FOREIGN KEY (parent_id) REFERENCES parents(id) ON DELETE CASCADE;
+```
+
+## Counterexample
+
+```sql
+CREATE TABLE children (
+  parent_id uuid REFERENCES parents(id)
+);
+```
+
+## Fix
+
+Choose and declare the delete action that matches the product's retention and
+ownership semantics.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-require-fk-on-delete` or
+`no-mistakes-disable-file` only when the implicit behavior is intentional and
+documented elsewhere.
+
+## Related rules
+
+[`postgres-fk-index`](postgres-fk-index.md) protects the same relationship's
+delete probes; [`postgres-require-named-constraints`](postgres-require-named-constraints.md)
+keeps phased foreign keys addressable.

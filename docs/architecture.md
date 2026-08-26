@@ -302,6 +302,23 @@ workloads must use checked-in fixtures,
 `BenchmarkId` for meaningful variants, `Throughput` where a stable unit exists,
 and must not generate repositories or launch the CLI as a subprocess.
 
+### Interpreting CodSpeed results
+
+GitHub-hosted `ubuntu-latest` runners do not guarantee one CPU architecture or
+model. A base run may use Intel while a PR run uses AMD (or the reverse), which
+can produce large apparent CPU and memory changes without any implementation
+change. CodSpeed also falls back to an older base when the PR's exact base has
+no successful benchmark run. Neither comparison is reliable enough to prove a
+regression.
+
+Treat a CodSpeed failure as actionable only when the report compares the same
+runtime environment and the expected base commit. If CodSpeed reports different
+runtime environments or an unexpected base, inspect the changed files first. A
+docs-only or otherwise unrelated change should record the mismatch in the PR's
+Shepherd Journal and acknowledge the result; code changes should be rerun on a
+matching runner before performance work begins. Local before/after measurements
+must use the same machine, toolchain, benchmark mode, thread count, and fixture.
+
 ## Anti-Patterns
 
 Avoid these patterns:

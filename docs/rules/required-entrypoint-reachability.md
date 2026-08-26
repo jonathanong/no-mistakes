@@ -52,3 +52,54 @@ Suppress a deliberate file exception with a documented file directive:
 
 Suppression caveat: reachability proves that a runtime module edge exists; it
 does not prove that a particular control-flow branch executes in production.
+
+## Why and when
+
+Use this rule for registries, workers, plugins, and handlers where every file
+matching a configured source glob must be loaded by a known runtime entrypoint.
+
+## What it catches/requires
+
+Each selected source requires a runtime-value path from one configured
+entrypoint within `maxDepth`, using supported imports, dynamic imports,
+`require`, workspace edges, assets, or re-exports. Type-only edges do not count.
+
+## Options and defaults
+
+`sourceGlobs` and `entrypoints` are required. `maxDepth` is optional and has no
+limit when omitted; when set, a direct import is depth 1. Rule-level `include`
+and `exclude` filters apply before matching.
+
+## Valid example
+
+```ts
+// runtime/register-workers.ts
+import "./email-worker";
+```
+
+With `sourceGlobs: ["workers/**/*.ts"]`, `workers/email-worker.ts` is reachable.
+
+## Counterexample
+
+```ts
+import type { EmailWorker } from "./email-worker";
+```
+
+The type-only import does not load the worker at runtime.
+
+## Fix
+
+Add a runtime import or re-export from the intended registry, increase
+`maxDepth` only for the intended chain, or narrow `sourceGlobs` for files not
+owned by that registry.
+
+## Suppression
+
+Use a top-of-file `no-mistakes-disable-file required-entrypoint-reachability`
+directive with a reason for host-loaded or generated files.
+
+## Related rules
+
+[`required-companion-imports`](required-companion-imports.md) checks local
+companion ownership; [`strict-package-layout`](strict-package-layout.md)
+checks package boundaries rather than runtime reachability.

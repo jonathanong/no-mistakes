@@ -1,10 +1,10 @@
-use no_mistakes::codebase::{rules, unique_exports};
-use no_mistakes::playwright::rules as playwright_rules;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
 #[path = "support/docs_coverage_cli_helpers.rs"]
 mod cli_docs_helpers;
+#[path = "support/docs_review_regressions.rs"]
+mod docs_review_regressions;
 use cli_docs_helpers::{
     enum_block, enum_variants, kebab_case, reachable_cli_pages, rust_sources, subcommand_enums,
 };
@@ -15,6 +15,34 @@ fn repo_root() -> PathBuf {
 
 fn read(path: &Path) -> String {
     std::fs::read_to_string(path).unwrap_or_else(|err| panic!("{}: {err}", path.display()))
+}
+
+fn rule_ids_from_source(root: &Path) -> BTreeSet<String> {
+    let rules_dir = root.join("crates/no-mistakes/src/codebase/rules");
+    let mut sources = rust_sources(&rules_dir);
+    sources.extend([
+        root.join("crates/no-mistakes/src/codebase/unique_exports.rs"),
+        root.join("crates/no-mistakes/src/playwright/rules.rs"),
+    ]);
+
+    sources
+        .into_iter()
+        .flat_map(|path| {
+            read(&path)
+                .lines()
+                .filter_map(|line| {
+                    let line = line.trim();
+                    let is_rule_constant = line.starts_with("pub const RULE_ID: &str = \"")
+                        || line.starts_with("pub const REQUIRED_DOC_SECTION_RULE_ID: &str = \"")
+                        || line.starts_with("pub const PLAYWRIGHT_");
+                    is_rule_constant
+                        .then(|| line.split_once("= \"")?.1.split_once('"').map(|(id, _)| id))
+                        .flatten()
+                        .map(str::to_string)
+                })
+                .collect::<Vec<_>>()
+        })
+        .collect()
 }
 
 #[test]
@@ -224,80 +252,8 @@ fn node_runtime_exports_have_api_docs() {
 fn no_mistakes_rules_have_docs() {
     let root = repo_root();
     let index = read(&root.join("docs/rules/README.md"));
-    let rule_ids = [
-        rules::AGENTS_MD_MAX_SIZE,
-        rules::BANNED_RENAMED_FILES,
-        rules::CSHARP_MAX_LINES_PER_FILE,
-        rules::CSHARP_NO_ASYNC_VOID_DELEGATE,
-        rules::DOC_CONSISTENCY,
-        rules::FILE_EXTENSION_POLICY,
-        rules::GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR,
-        rules::GITHUB_ACTIONS_COMPOSITE_STEP_SCHEMA,
-        rules::GITHUB_ACTIONS_JOB_TIMEOUTS,
-        rules::GITHUB_ACTIONS_TEST_TIMEOUT_LITERALS,
-        rules::VERSION_PIN_CONSISTENCY,
-        rules::FORBIDDEN_DEPENDENCIES,
-        rules::FORBIDDEN_WORKSPACE_CLOSURE,
-        rules::INTEGRATION_TEST_NO_MOCKS,
-        rules::LOCKFILE_ALLOWLIST,
-        rules::MARKDOWN_CHILD_LINKS,
-        rules::MARKDOWN_EVAL_TESTS,
-        rules::MARKDOWN_LINK_DISPLAY_TEXT,
-        rules::MARKDOWN_MERMAID_VALIDATION,
-        rules::MARKDOWN_REACHABILITY,
-        rules::MARKDOWN_STRUCTURE_BUDGET,
-        rules::NEXTJS_NO_API_ROUTES,
-        rules::NEXTJS_NO_CACHING,
-        rules::NEXTJS_REDIRECT_DESTINATIONS,
-        rules::NO_EMPTY_OR_COMMENTS_ONLY_FILES,
-        rules::NO_GIT_IDENTITY_MUTATION,
-        rules::NO_MISTAKES_CONFIG,
-        rules::NO_RAW_EPHEMERAL_PORT,
-        rules::PACKAGE_JSON_REGISTRY_ONLY,
-        rules::PACKAGE_JSON_NESTED_WORKSPACE_COVERAGE,
-        rules::PACKAGE_JSON_REQUIRED_FIELDS,
-        rules::PNPM_OVERRIDES_BAN,
-        rules::PNPM_RELEASE_AGE_POLICY,
-        rules::POSTGRES_CONSTRAINT_VALIDATE,
-        rules::POSTGRES_NO_ADD_COLUMN,
-        rules::POSTGRES_REQUIRE_NAMED_CONSTRAINTS,
-        rules::POSTGRES_REQUIRE_FK_ON_DELETE,
-        rules::POSTGRES_SQL_STATEMENT_POLICY,
-        rules::POSTGRES_FK_INDEX,
-        rules::POSTGRES_LOCK_ORDERING,
-        rules::POSTGRES_NO_OFFSET,
-        rules::POSTGRES_REQUIRE_QUERY_ANNOTATION,
-        rules::POSTGRES_NO_GENERATED_COLUMN_WRITES,
-        rules::POSTGRES_REDUNDANT_INDEX,
-        playwright_rules::PLAYWRIGHT_COVERAGE,
-        playwright_rules::PLAYWRIGHT_PREFER_TEST_ID_LOCATORS,
-        playwright_rules::PLAYWRIGHT_UNIQUE_HTML_IDS,
-        playwright_rules::PLAYWRIGHT_UNIQUE_TEST_IDS,
-        rules::PRODUCTION_DEPENDENCY_DECLARATIONS,
-        rules::REQUIRE_FILES_IN_SUBDIRS,
-        rules::REQUIRE_STORYBOOK_STORIES,
-        rules::REQUIRE_TEST_PER_SUBDIR,
-        rules::REQUIRED_ENTRYPOINT_REACHABILITY,
-        rules::REQUIRED_DOC_SECTION,
-        rules::REQUIRED_LOCAL_DOCS,
-        rules::RUST_MAX_LINES_PER_FILE,
-        rules::RUST_NO_INLINE_ALLOWS,
-        rules::RUST_NO_INLINE_TESTS,
-        rules::SERVER_ROUTE_CLIENT_BOUNDARY,
-        rules::SHELLCHECK_RUNNER,
-        rules::STRICT_PACKAGE_LAYOUT,
-        rules::SWIFT_NO_RAW_PRINT,
-        rules::SWIFT_VIEWMODEL_MAIN_ACTOR,
-        rules::TEST_EMAIL_DOMAIN_POLICY,
-        rules::TEST_NO_DEPENDENCY_PINS,
-        rules::TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
-        rules::TSCONFIG_ALIAS_FOLDER_MAPPING,
-        rules::TSCONFIG_FILE_COVERAGE,
-        rules::TSCONFIG_GATE_COVERAGE,
-        unique_exports::RULE_ID,
-        rules::VITEST_TEST_CORRESPONDENCE,
-        rules::WORKFLOW_TOPOLOGY_POLICY,
-    ];
+    let rule_ids = rule_ids_from_source(&root);
+    assert_eq!(rule_ids.len(), 82, "source rule inventory changed");
     for rule_id in rule_ids {
         let file = format!("{rule_id}.md");
         let path = root.join("docs/rules").join(&file);
@@ -308,10 +264,42 @@ fn no_mistakes_rules_have_docs() {
         );
         let body = read(&path);
         assert!(
-            body.contains("Counterexample:"),
-            "{file} needs a counterexample"
+            body.contains(&format!("# `{rule_id}`")),
+            "{file} needs a rule title"
         );
-        assert!(body.contains("Fix:"), "{file} needs fix guidance");
+        assert!(
+            body.contains("rules:"),
+            "{file} needs configuration guidance"
+        );
+        let lowercase_body = body.to_ascii_lowercase();
+        for (section, markers) in [
+            ("why and when", &["## why and when"][..]),
+            (
+                "behavior",
+                &["## what it catches", "## what it requires"][..],
+            ),
+            (
+                "valid example",
+                &["## valid example", "compliant example:"][..],
+            ),
+            ("counterexample", &["counterexample"][..]),
+            ("fix", &["fix"][..]),
+            ("suppression", &["suppression"][..]),
+            ("related rules", &["related rules"][..]),
+        ] {
+            assert!(
+                markers.iter().any(|marker| lowercase_body.contains(marker)),
+                "{file} needs {section} guidance"
+            );
+        }
+        assert!(
+            lowercase_body.contains("options"),
+            "{file} must explain its rule-local options or state that none exist"
+        );
+        assert!(
+            lowercase_body.contains("default"),
+            "{file} must state every option default or that no default exists"
+        );
     }
 }
 
@@ -447,7 +435,7 @@ fn review_found_doc_regressions_stay_fixed() {
     assert!(node_api.contains("react analyze\\|check"));
 
     let eslint_plugin = read_root("docs/eslint-plugin.md");
-    assert!(eslint_plugin.contains(r#""named" \| "default""#));
+    assert!(eslint_plugin.contains(r#"("named" | "default")[]"#));
 
     for rule_doc in [
         "docs/rules/forbidden-dependencies.md",

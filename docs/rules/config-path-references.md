@@ -5,6 +5,28 @@ Validates path strings stored inside structured YAML or JSON config files.
 required path fields for well-known configs (not optional `!` / `node_modules`
 / `.git` ignore globs).
 
+## Why and when
+
+Use this rule when configuration can name files, directories, or globs that must
+continue to resolve as a repository evolves.
+
+## What it catches
+
+It catches missing literal paths, unmatched required globs, invalid structured
+config, and stale paths extracted by the selected built-in presets.
+
+## Options
+
+`files` and `keys` select explicit config fields. `baseDir` defaults to
+`config-file`, `allowGlobs` defaults to `true`, and `presets` selects the
+documented config extractors. Empty selectors collect no explicit references.
+
+## Valid example
+
+`paths.requiredFiles: ["existing.json"]` passes when `existing.json` exists
+relative to the selected base directory; a preset passes when every required
+extracted path exists.
+
 ```yaml
 rules:
   - rule: config-path-references
@@ -77,3 +99,15 @@ rule-specific option fields:
 Rule option names are not treated as paths globally. For example,
 `workspace-package-cycles.allowlist` contains package-cycle identities and is
 not path-validated. Negative selectors and empty values are ignored.
+
+## Suppression
+
+JSON cannot carry directives, so narrow `files`, `keys`, or `presets` with
+rule configuration for exceptional JSON. YAML findings with a source line may
+use a normal `no-mistakes` directive.
+
+## Related rules
+
+[`no-mistakes-config`](no-mistakes-config.md) validates the active project
+configuration; [`structured-config-policy`](structured-config-policy.md)
+enforces required config shape and values.

@@ -1,10 +1,42 @@
 # `no-mistakes/no-vitest-sequential`
 
-Disallows Vitest sequential modifiers.
+## Why
 
-Why: sequential tests usually signal hidden shared state and reduce parallel,
-deterministic test execution.
+Vitest sequential modifiers make tests depend on execution order and can mask
+shared state that fails under normal parallel execution.
 
-Counterexample: `describe.sequential("users", () => {})`.
+## Disallowed
 
-Fix: isolate test state and remove `.sequential`.
+```ts
+describe.sequential("users", () => {
+  test("creates", () => {});
+});
+```
+
+## Allowed
+
+```ts
+describe("users", () => {
+  test("creates", () => {});
+});
+```
+
+## Options
+
+This rule has no options.
+
+## Fix
+
+Remove `.sequential` and isolate the fixture/state that requires ordering.
+
+## Suppression
+
+```ts
+// eslint-disable-next-line no-mistakes/no-vitest-sequential -- verifies a legacy serialized migration harness
+describe.sequential("migration", () => {});
+```
+
+## Related rules
+
+- [`test-no-shared-state`](test-no-shared-state.md) identifies the mutable state
+  that commonly motivates serial tests.

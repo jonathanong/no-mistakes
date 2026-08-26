@@ -1,5 +1,36 @@
 # `markdown-eval-tests`
 
+## Why and when
+
+Use this rule when tests must not execute shell snippets copied from Markdown,
+where prose changes could unexpectedly become executable behavior.
+
+## What it catches
+
+It catches evaluation of Markdown shell blocks outside the exact-path allowlist.
+
+## Options
+
+`include` selects test files and defaults to empty, which disables the rule
+until files are chosen. `allow` defaults to empty and lists exact test-file
+exceptions, not Markdown paths or globs.
+
+## Valid example
+
+A test that asserts rendered Markdown text without evaluating a shell fence
+passes.
+
+## Related rules
+
+[`markdown-mermaid-validation`](markdown-mermaid-validation.md) validates a
+safe, declarative fence language; [`shellcheck-runner`](shellcheck-runner.md)
+checks real shell files.
+
+## Suppression
+
+Use file suppression only for the guard's own controlled Markdown-evaluation
+fixture. Prefer an exact `allow` entry for a reviewed exception.
+
 Flags test files that look like they read a `.md` file and `eval` an extracted
 shell block inside a spawned `bash`/`sh`/`zsh` process. That pattern is a
 per-assertion cost outlier; prefer spawn-free `readFileSync` / `.toContain`

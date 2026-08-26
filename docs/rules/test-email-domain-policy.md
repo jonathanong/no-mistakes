@@ -24,3 +24,47 @@ fixture content entirely.
 Suppression caveat: suppress only a single line for a one-off fixture exception.
 Keep the suppression local so the banned domain still applies everywhere else in
 the file set.
+
+## Why and when
+
+Use this rule to keep tracked fixtures and docs from sending mail to real
+domains while preserving deterministic, obviously synthetic test addresses.
+
+## What it catches/requires
+
+Configured banned domains must not occur in selected files, including URL- or
+HTML-encoded forms, unless an allowed pattern matches.
+
+## Options and defaults
+
+`bannedDomains` is required. `allowedEmailPatterns` and `replacement` are
+optional; `extensions` defaults to the supported text/test extensions when not
+specified. Project and common include/exclude filters also apply.
+
+## Valid example
+
+```text
+tests+profile@example.test
+```
+
+## Counterexample
+
+```text
+owner@example.com
+```
+
+## Fix
+
+Replace the address with the configured synthetic replacement or add a narrowly
+scoped allow pattern for a documented, intentional fixture.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line test-email-domain-policy` on the one line;
+avoid file-wide suppression so the domain remains banned elsewhere.
+
+## Related rules
+
+[`test-no-dependency-pins`](test-no-dependency-pins.md) prevents brittle test
+assertions; [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)
+protects test isolation.

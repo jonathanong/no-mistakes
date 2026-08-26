@@ -1,10 +1,41 @@
 # `no-mistakes/playwright-no-set-timeout`
 
-Disallows fixed sleeps in Playwright tests.
+## Why
 
-Why: fixed sleeps make tests slower and less deterministic than waiting for a
-specific UI condition.
+Fixed sleeps make tests slow and flaky because elapsed time is not proof that
+the UI reached the expected state.
 
-Counterexample: `await page.waitForTimeout(1000)`.
+## Disallowed
 
-Fix: wait on locators, assertions, network state, or app-visible conditions.
+```ts
+await page.waitForTimeout(500);
+await new Promise((resolve) => setTimeout(resolve, 500));
+```
+
+## Allowed
+
+```ts
+await expect(page.getByRole("status")).toHaveText("Saved");
+await page.waitForURL("**/complete");
+```
+
+## Options
+
+This rule has no options.
+
+## Fix
+
+Wait for a route, locator state, response, or assertion that represents the
+actual completion condition.
+
+## Suppression
+
+```ts
+// eslint-disable-next-line no-mistakes/playwright-no-set-timeout -- intentionally measures a timer-based retry UI
+await page.waitForTimeout(100);
+```
+
+## Related rules
+
+- [`playwright-assertion-timeout-cap`](playwright-assertion-timeout-cap.md)
+  caps long assertion waits.

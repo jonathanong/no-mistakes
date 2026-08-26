@@ -42,6 +42,67 @@ jobs:
       - run: pnpm test
 ```
 
+## Why and when
+
+Use this rule when CI's job, artifact, reusable-workflow, and step ordering are
+part of the delivery contract and should be checked as a graph.
+
+## What it catches/requires
+
+Configured inventory and assertions must match workflow topology: required or
+forbidden edges, exact fan-in, artifacts, callers, step order, and documented
+unlocked workflows.
+
+## Options and defaults
+
+All collections default to empty, so omitted assertions impose no requirement:
+
+- `jobInventory`: workflow path to the exact expected job IDs.
+- `requiredJobs` / `forbiddenJobs`: job IDs that must exist or must not exist.
+- `requiredDirectEdges` / `forbiddenDirectEdges`: `[from, to]` pairs for direct
+  `needs` edges.
+- `requiredTransitiveEdges` / `forbiddenTransitiveEdges`: `[from, to]` pairs
+  checked across any dependency path.
+- `requiredArtifactEdges`: objects with `from`, `to`, `name`, and optional
+  `match` artifact-kind selector.
+- `exactFanIns`: job ID to the complete sorted list of direct upstream jobs.
+- `exactCallerJobs`, `stepOrders`, and `unlockedWorkflowReasons`: reusable
+  caller, ordered-step, and documented-unlocked-workflow policies.
+
+Empty maps do not assert that every possible workflow is listed; each supplied
+job or edge is checked and stale required targets are findings.
+
+## Valid example
+
+```yaml
+jobs:
+  test:
+    needs: lint
+```
+
+## Counterexample
+
+```yaml
+jobs:
+  test:
+    steps: [{run: pnpm test}]
+```
+
+## Fix
+
+Add the missing topology edge or ordered step, or update the policy with the
+intended graph and a reason for an intentionally unlocked workflow.
+
+## Suppression
+
+Prefer an `unlockedWorkflowReasons` entry for a deliberate exception. Use a
+file directive only when the workflow is owned by an external generator.
+
+## Related rules
+
+[`tsconfig-gate-coverage`](tsconfig-gate-coverage.md) checks typecheck gates;
+[`vitest-ci-path-coverage`](vitest-ci-path-coverage.md) checks test path filters.
+
 Fix: add the `needs` edge and ordered steps the policy names, or update
 the YAML options to match the intended graph.
 

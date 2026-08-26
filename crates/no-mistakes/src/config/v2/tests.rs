@@ -120,6 +120,12 @@ fn multi_project_config_parsed() {
 }
 
 #[test]
+fn rust_packages_config_parsed() {
+    let cfg = load_v2_config(&fixture("rust-packages"), None).unwrap();
+    assert_eq!(cfg.tests.rust.packages, vec!["crates/api"]);
+}
+
+#[test]
 fn selector_wrapper_config_rejects_missing_unknown_negative_and_conflicting_fields() {
     let cases = [
         ("missing", "testIdArgument"),

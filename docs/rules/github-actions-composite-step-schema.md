@@ -1,5 +1,38 @@
 # `github-actions-composite-step-schema`
 
+## Why and when
+
+Use this rule when composite actions are maintained locally. GitHub silently
+ignores workflow-only keys in a composite step, so a syntactically valid action
+can otherwise omit the intended runtime limit.
+
+## What it catches
+
+It rejects unsupported keys in `runs.steps` for `runs.using: composite`; Docker
+and Node actions are outside the rule.
+
+## Options
+
+`include` defaults to `.github/actions/**/action.{yml,yaml}`. An empty
+`allowedKeys` uses GitHub's built-in composite-step allowlist; `extraForbiddenKeys`
+adds explicit denials. No other rule-specific options exist.
+
+## Valid example
+
+The `Clean Action` example below is valid because each composite step uses only
+the documented step keys.
+
+## Suppression
+
+Use a file directive for an intentionally exceptional action, or a line
+directive on the unsupported key when the finding has that key's location.
+
+## Related rules
+
+[`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)
+places timeouts on the caller step; [`github-actions-job-timeouts`](github-actions-job-timeouts.md)
+sets the containing job limit.
+
 Validate composite-action `runs.steps` against the GitHub composite-step
 schema. GitHub documents a fixed set of step keys for `runs.using: composite`
 actions. Workflow-only keys such as `timeout-minutes` are silently ignored at

@@ -39,7 +39,7 @@ Changed files may also be passed as positional arguments.
 
 - Changed files, repository files, parsed facts, and the dependency graph are
   prepared once per invocation and reused across the
-  configured frameworks (`dotnet`, `vitest`, `playwright`, `swift`, `python`,
+  configured frameworks (`dotnet`, `vitest`, `jest`, `playwright`, `swift`, `python`,
   `go`, `cargo`, `rails`, `php`, `java`, `kotlin`, `elixir`, and `dart`). Each
   selected `TestExecutionTarget` becomes a `test` check; emitted commands match
   `tests plan` exactly. Runner ownership is preserved, so a Vitest-owned
@@ -86,11 +86,14 @@ symlink path may not match. Match against the resolved target path instead.
 
 ## Output
 
-`paths` format prints each command joined by spaces, one per line — ready to
-pipe into a shell loop:
+`paths` format prints each command joined by spaces, one per line. Treat the
+output as shell-quoted text for a trusted runner; do not pass untrusted output
+to `eval`. For a safe preview, print each command without executing it:
 
 ```sh
-no-mistakes impacted-checks src/foo.ts --format paths | while read -r cmd; do eval "$cmd"; done
+no-mistakes impacted-checks src/foo.ts --format paths | while IFS= read -r cmd; do
+  printf '%s\n' "$cmd"
+done
 ```
 
 ```json
@@ -102,6 +105,19 @@ no-mistakes impacted-checks src/foo.ts --format paths | while read -r cmd; do ev
   ],
   "warnings": [],
   "fallback_triggered": false
+}
+```
+
+Execute a trusted JSON report as argument vectors, without invoking a shell:
+
+```js
+import { spawnSync } from "node:child_process";
+
+for (const check of report.checks) {
+  const result = spawnSync(check.command[0], check.command.slice(1), {
+    stdio: "inherit",
+  });
+  if (result.status !== 0) process.exit(result.status ?? 1);
 }
 ```
 

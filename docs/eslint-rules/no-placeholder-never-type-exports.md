@@ -1,9 +1,41 @@
 # `no-mistakes/no-placeholder-never-type-exports`
 
-Disallows exported `never` placeholder type aliases.
+## Why
 
-Why: placeholder exports look like public API but carry no usable contract.
+Exported `never` aliases are often placeholders that advertise an API with no
+usable value and hide a missing type design.
 
-Counterexample: `export type User = never`.
+## Disallowed
 
-Fix: replace the placeholder with the real type or remove the export.
+```ts
+export type UserResponse = never;
+```
+
+## Allowed
+
+```ts
+export interface UserResponse {
+  id: string;
+}
+```
+
+## Options
+
+This rule has no options.
+
+## Fix
+
+Define the real exported contract or remove the temporary export until the
+surface exists.
+
+## Suppression
+
+```ts
+// eslint-disable-next-line no-mistakes/no-placeholder-never-type-exports -- intentional impossible state used by a generated compatibility declaration
+export type ImpossibleLegacyState = never;
+```
+
+## Related rules
+
+- [`ts-no-export-renaming`](ts-no-export-renaming.md) keeps exported value
+  identities direct.

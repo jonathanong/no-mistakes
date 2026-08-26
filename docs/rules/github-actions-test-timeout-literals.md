@@ -1,5 +1,31 @@
 # `github-actions-test-timeout-literals`
 
+## Why and when
+
+Use this rule when `github-actions-job-timeouts` owns timeout policy and tests
+should verify relationships rather than duplicate policy literals.
+
+## What it catches
+
+It catches embedded timeout YAML literals and direct timeout equality assertions
+in matching workflow tests.
+
+## Options
+
+`include` defaults to workflow `.test.mts` and `.test.ts` files. Each `allow`
+entry requires `file`, exact trimmed `text`, and a non-empty `reason`; no other
+rule-specific options exist.
+
+## Valid example
+
+The relational assertion in the fix below is valid because it compares values
+without restating the owned timeout literal.
+
+## Related rules
+
+[`github-actions-job-timeouts`](github-actions-job-timeouts.md) owns the
+workflow timeout policy this rule protects from duplication.
+
 Rejects workflow tests that restate `timeout-minutes` literals the job-timeouts
 rule already owns. YAML fragments such as `timeout-minutes: 15` and equality
 assertions against `['timeout-minutes']` or `.timeoutMinutes` are findings.
@@ -34,6 +60,8 @@ trimmed source line.
 ```ts
 expect(step?.['timeout-minutes']).toBeLessThanOrEqual(job?.['timeout-minutes'])
 ```
+
+## Suppression
 
 Use `no-mistakes-disable-next-line github-actions-test-timeout-literals` or
 `no-mistakes-disable-file` for a one-off test exception.

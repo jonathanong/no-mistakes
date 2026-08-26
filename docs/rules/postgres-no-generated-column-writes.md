@@ -71,3 +71,61 @@ write(`UPDATE items SET note = $1`)
 Use `no-mistakes-disable-next-line postgres-no-generated-column-writes` for a
 one-off exception, or `no-mistakes-disable-file` when a whole file is an
 intentional migration of generated values.
+
+## Why and when
+
+Use this rule when PostgreSQL generated columns are maintained by the database
+and application writes must not try to supply their computed values.
+
+## What it catches/requires
+
+`UPDATE`, `INSERT`, or `MERGE` statements must omit generated columns discovered
+from migration SQL or listed in `extraGeneratedColumns`. TypeScript executor
+calls and included SQL files are both analyzed where configured.
+
+## Options and defaults
+
+The rule compiles its options into two internal inputs, not nested YAML
+objects: the schema catalog and embedded-SQL matcher. There are no direct
+`schema` or `embedded` options.
+
+- `sqlInclude` supplies the schema catalog's SQL-file globs. An omitted or
+  empty list defaults to `**/*.sql`.
+- `include` selects files containing DML. When omitted or empty, it analyzes
+  `.ts`, `.mts`, `.tsx`, `.js`, and `.sql` files; otherwise its glob list is
+  used.
+- `importSpecifier` supplies the embedded-SQL matcher's import source. When
+  omitted or empty, it defaults to `@data-stores/psql`.
+- `executorNames` supplies the imported executor names that contain SQL. An
+  omitted or empty list defaults to `[query, read, write]`.
+- `extraGeneratedColumns` adds `{ table, column }` pairs to the generated
+  column catalog. It defaults to an empty list.
+
+## Valid example
+
+```sql
+INSERT INTO items (id, note) VALUES ($1, $2);
+```
+
+## Counterexample
+
+```sql
+UPDATE items SET created_at = now() WHERE id = $1;
+```
+
+## Fix
+
+Remove the generated column from the write and provide only source columns
+from which PostgreSQL computes it.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-no-generated-column-writes` for a
+known external table exception, or the file directive for a migration utility
+whose writes are validated elsewhere.
+
+## Related rules
+
+[`postgres-no-add-column`](postgres-no-add-column.md) controls schema widening;
+[`postgres-sql-statement-policy`](postgres-sql-statement-policy.md) controls
+which SQL statement kinds are allowed in a file.

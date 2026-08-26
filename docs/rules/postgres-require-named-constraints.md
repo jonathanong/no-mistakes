@@ -40,3 +40,48 @@ ALTER TABLE children ADD CONSTRAINT fk_children_parent
 Use `no-mistakes-disable-next-line postgres-require-named-constraints` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
 when a whole file is an intentional exception.
+
+## Why and when
+
+Use this rule for migrations that may need phased validation or future schema
+maintenance by name.
+
+## What it catches/requires
+
+`ALTER TABLE ... ADD FOREIGN KEY` and `ADD CHECK` statements must name their
+constraints. Inline `CREATE TABLE` constraints and unnamed unique/primary-key
+adds are intentionally outside the finding set.
+
+## Options and defaults
+
+`sqlInclude` is the only option and defaults to `**/*.sql`. Supported statements
+inside `DO $$` blocks are included in the same migration fact pass.
+
+## Valid example
+
+```sql
+ALTER TABLE children ADD CONSTRAINT fk_children_parent
+  FOREIGN KEY (parent_id) REFERENCES parents(id);
+```
+
+## Counterexample
+
+```sql
+ALTER TABLE children ADD CHECK (parent_id IS NOT NULL);
+```
+
+## Fix
+
+Give the check or foreign key a stable name that later migrations can use with
+`VALIDATE CONSTRAINT`, replacement, or removal operations.
+
+## Suppression
+
+Use `no-mistakes-disable-next-line postgres-require-named-constraints` or the
+file directive for generated or externally managed migrations.
+
+## Related rules
+
+[`postgres-constraint-validate`](postgres-constraint-validate.md) pairs named
+`NOT VALID` constraints with validation; [`postgres-require-fk-on-delete`](postgres-require-fk-on-delete.md)
+requires explicit foreign-key delete semantics.

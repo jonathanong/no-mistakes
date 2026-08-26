@@ -2,6 +2,11 @@
 
 Analyze queue producer/worker relationships for configured queue frameworks.
 
+Configure custom TypeScript factories and language/project queue globs in
+[Queue configuration](../configuration/queues.md) before running these
+queries. Queue analysis is opt-in and scoped; it does not infer repository-wide
+conventions.
+
 Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel, and Symfony Messenger
 sites emit the same canonical `queue-enqueue` / `queue-worker` graph edges.
 `queues edges|related|check` projects those language edges from the same

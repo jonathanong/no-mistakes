@@ -1,6 +1,9 @@
-# Test Plan
+# Test Planning
 
-The `test plan` command identifies which tests are affected by code changes using dependency graph analysis.
+`no-mistakes tests plan` identifies tests affected by changed files, diffs,
+entrypoints, dependency manifests, and lockfiles. This page explains the model;
+the [CLI reference](cli/tests-plan.md) is the source of truth for every flag and
+framework-specific detail.
 
 ## Input Modes
 
@@ -9,8 +12,8 @@ All inputs can be combined — the resulting test set is the union of all inputs
 ### Explicit changed files
 
 ```bash
-no-mistakes test plan --changed-file src/utils.mts --changed-file src/service.mts
-no-mistakes test plan --changed-files changed-files.txt
+no-mistakes tests plan vitest --changed-file src/utils.mts --changed-file src/service.mts
+no-mistakes tests plan vitest --changed-files changed-files.txt
 ```
 
 Manual paths that lexically escape the project root, or existing symlinks that
@@ -20,45 +23,45 @@ in the returned `changed_files` inventory while analysis follows the target.
 ### Git diff (explicit)
 
 ```bash
-no-mistakes test plan --base main
-no-mistakes test plan --base main --head feature-branch
+no-mistakes tests plan vitest --base main
+no-mistakes tests plan vitest --base main --head feature-branch
 ```
 
 ### Unified diff
 
 ```bash
-no-mistakes test plan --diff path/to/changes.diff
-no-mistakes test plan --diff-stdin < <(git diff main)
-no-mistakes test plan --diff-command "git diff main"
+no-mistakes tests plan vitest --diff path/to/changes.diff
+no-mistakes tests plan vitest --diff-stdin < <(git diff main)
+no-mistakes tests plan vitest --diff-command "git diff main"
 ```
 
 ### Entrypoints (file#export)
 
 ```bash
-no-mistakes test plan --entrypoint "src/utils.mts#formatDate"
-no-mistakes test plan --entrypoint "src/a.mts" --entrypoint "src/b.mts#handler"
+no-mistakes tests plan vitest --entrypoint "src/utils.mts#formatDate"
+no-mistakes tests plan vitest --entrypoint "src/a.mts" --entrypoint "src/b.mts#handler"
 ```
 
-## `test impact` Command
+## `tests impact` Command
 
 Convenience subcommand for entrypoint-based impact analysis:
 
 ```bash
-no-mistakes test impact "src/utils.mts#formatDate" "src/service.mts"
+no-mistakes tests impact "src/utils.mts#formatDate" "src/service.mts"
 ```
 
 Equivalent to:
 
 ```bash
-no-mistakes test plan --entrypoint "src/utils.mts#formatDate" --entrypoint "src/service.mts"
+no-mistakes tests plan vitest --entrypoint "src/utils.mts#formatDate" --entrypoint "src/service.mts"
 ```
 
 ## Output Formats
 
 ```bash
-no-mistakes test plan --diff-command "git diff main" --json          # JSON (default)
-no-mistakes test plan --diff-command "git diff main" --format paths  # one test file per line
-no-mistakes test plan --diff-command "git diff main" --format md     # markdown summary
+no-mistakes tests plan vitest --diff-command "git diff main" --json
+no-mistakes tests plan vitest --diff-command "git diff main" --format paths
+no-mistakes tests plan vitest --diff-command "git diff main" --format commands
 ```
 
 ## Deleted File Handling
@@ -88,7 +91,7 @@ const plan = await testsImpact({
 });
 ```
 
-`testsPlan()` returns `changed_files`, the complete deterministic, deduplicated
+`testsPlan()` returns `changedFiles`, the complete deterministic, deduplicated
 changed-file inventory prepared by the same invocation, relative to the request
 root. It remains available when no tests are selected and includes deleted paths
 plus both sides of detected renames and copies.
@@ -129,16 +132,16 @@ selection still requires explicit global fallback opt-in.
 
 ```bash
 # Targeted: only tests affected by lodash version bump run (plain plan)
-no-mistakes test plan --changed-file pnpm-lock.yaml --base main
+no-mistakes tests plan vitest --changed-file pnpm-lock.yaml --base main
 
 # Targeted: same behavior for Playwright framework plan
-no-mistakes test plan playwright --changed-file pnpm-lock.yaml --base main
+no-mistakes tests plan playwright --changed-file pnpm-lock.yaml --base main
 
 # Full suite fallback (no baseline supplied)
-no-mistakes test plan --changed-file pnpm-lock.yaml --global-config-fallback=true
+no-mistakes tests plan vitest --changed-file pnpm-lock.yaml --global-config-fallback=true
 
 # Tooling dep bump → fallback only when flag is set
-no-mistakes test plan playwright --changed-file pnpm-lock.yaml --base main --global-config-fallback=true
+no-mistakes tests plan playwright --changed-file pnpm-lock.yaml --base main --global-config-fallback=true
 ```
 
 ### Semantic dependency manifests
@@ -171,16 +174,16 @@ global fallback opt-in for full-suite selection.
 
 ## Breaking Change: Implicit Git Removed
 
-Previously, running `no-mistakes test plan` with no input arguments would implicitly run
+Previously, running the planner with no input arguments implicitly ran
 `git diff`, `git diff --cached`, and `git ls-files --others` to auto-detect changes.
 
 This implicit behavior has been removed. Clients must now explicitly specify their input:
 
 ```bash
 # Before (implicit, no longer works)
-no-mistakes test plan --json
+no-mistakes tests plan vitest --json
 
 # After (explicit)
-no-mistakes test plan --diff-command "git diff" --json
-no-mistakes test plan --base HEAD~1 --json
+no-mistakes tests plan vitest --diff-command "git diff" --json
+no-mistakes tests plan vitest --base HEAD~1 --json
 ```
