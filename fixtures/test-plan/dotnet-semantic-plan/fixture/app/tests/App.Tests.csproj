@@ -1,1 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk"><PropertyGroup><TargetFramework>net9.0</TargetFramework><IsTestProject>true</IsTestProject><RootNamespace>Company.App.Tests</RootNamespace></PropertyGroup><ItemGroup><ProjectReference Include="../App.csproj" /></ItemGroup></Project>
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <IsTestProject>true</IsTestProject>
+    <RootNamespace>Company.App.Tests</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../App.csproj" />
+    <!-- Linked sources supplement SDK default items; AppServiceTests.cs remains compiled. -->
+    <Compile Include="../AppService.cs" Link="AppService.cs" />
+  </ItemGroup>
+</Project>

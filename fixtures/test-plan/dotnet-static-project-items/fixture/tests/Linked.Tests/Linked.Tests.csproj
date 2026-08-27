@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- Linked sources supplement SDK default items; they do not replace local tests. -->
+    <Compile Include="../../src/Shared.cs; obj/GeneratedTests.cs" Link="Shared.cs" />
+    <Compile Remove="RemovedTests.cs" />
+    <ProjectReference Include="../../src/A.csproj; ../../src/B.csproj" />
+  </ItemGroup>
+</Project>

@@ -1,7 +1,7 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
-use super::project_items::{default_compile_files, item_values};
+use super::project_items::item_values;
 use super::{
     msbuild_path, normalize_path, project_static::parse_project_static, DotnetConfigProject,
     DotnetProjectFacts,
@@ -34,7 +34,8 @@ pub(in crate::codebase::dotnet) fn parse_project(
     let evaluated = evaluate_project_with_msbuild(&project_path, &config.name)
         .map_err(|warning| warnings.push(warning))
         .ok();
-    let mut facts = evaluated.unwrap_or_else(|| parse_project_static(&project_path, &source));
+    let mut facts =
+        evaluated.unwrap_or_else(|| parse_project_static(&project_path, &source, all_files));
     finalize_project_facts(
         &mut facts,
         &root,
@@ -70,9 +71,6 @@ pub(in crate::codebase::dotnet) fn finalize_project_facts(
     if facts.root_namespace.is_empty() {
         facts.root_namespace = facts.assembly_name.clone();
     }
-    if facts.compile_files.is_empty() {
-        facts.compile_files = default_compile_files(all_files, project_dir);
-    }
     let visible_files: BTreeSet<PathBuf> =
         all_files.iter().map(|path| normalize_path(path)).collect();
     facts
@@ -92,12 +90,7 @@ pub(in crate::codebase::dotnet) fn evaluate_project_with_program(
     name: &str,
     program: &str,
 ) -> Result<DotnetProjectFacts, String> {
-    let mut command = std::process::Command::new(program);
-    command
-        .arg("msbuild")
-        .arg(project_path)
-        .arg("-getProperty:AssemblyName,RootNamespace,IsTestProject,TargetFramework,TargetFrameworks")
-        .arg("-getItem:Compile,ProjectReference,PackageReference");
+    let mut command = msbuild_command(project_path, program);
     let output = crate::invocation::command_output(&mut command)
         .map_err(|error| format!("dotnet msbuild failed to start for `{name}`: {error}"))?;
     parse_msbuild_output(
@@ -107,6 +100,20 @@ pub(in crate::codebase::dotnet) fn evaluate_project_with_program(
         &output.stdout,
         &output.stderr,
     )
+}
+
+pub(in crate::codebase::dotnet) fn msbuild_command(
+    project_path: &Path,
+    program: &str,
+) -> std::process::Command {
+    let mut command = std::process::Command::new(program);
+    command
+        .arg("msbuild")
+        .arg(project_path)
+        .arg("-getProperty:AssemblyName,RootNamespace,IsTestProject,TargetFramework,TargetFrameworks")
+        .arg("-getItem:Compile,ProjectReference,PackageReference")
+        .current_dir(project_path.parent().unwrap_or_else(|| Path::new(".")));
+    command
 }
 
 pub(in crate::codebase::dotnet) fn parse_msbuild_output(
