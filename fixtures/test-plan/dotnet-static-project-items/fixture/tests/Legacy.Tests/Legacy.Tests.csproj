@@ -1,0 +1,6 @@
+<Project>
+  <ItemGroup>
+    <!-- Legacy projects have no SDK default items; compile membership is explicit. -->
+    <Compile Include="../../src/Shared.cs" Link="Shared.cs" />
+  </ItemGroup>
+</Project>

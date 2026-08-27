@@ -1,0 +1,10 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <!-- Unknown conditions must not remove a possible compile item in static fallback. -->
+    <Compile Remove="RetainedConservatively.cs" Condition="'$(Configuration)' == 'Release'" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(Configuration)' == 'Release'">
+    <!-- An enclosing condition is equally unknown to static fallback. -->
+    <Compile Remove="RetainedFromConditionalGroup.cs" />
+  </ItemGroup>
+</Project>

@@ -1,10 +1,12 @@
 use super::project::{
-    evaluate_project_with_program, finalize_project_facts, parse_msbuild_json,
+    evaluate_project_with_program, finalize_project_facts, msbuild_command, parse_msbuild_json,
     parse_msbuild_output, parse_project,
 };
 use super::project_static::parse_project_static;
 use super::*;
 use std::collections::BTreeSet;
+
+mod project_static_tests;
 
 fn fixture() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -116,7 +118,7 @@ fn csharp_compiled_patterns_and_keyword_table_are_reused() {
 fn project_static_parser_extracts_test_project_references_and_single_quoted_packages() {
     let path = fixture().join("dotnet-clients/tests/App.Tests/App.Tests.csproj");
     let source = std::fs::read_to_string(&path).unwrap();
-    let facts = parse_project_static(&path, &source);
+    let facts = parse_project_static(&path, &source, &[]);
 
     assert!(facts.is_test);
     assert_eq!(facts.root_namespace, "Company.App.Tests");
@@ -131,7 +133,7 @@ fn project_static_parser_extracts_test_project_references_and_single_quoted_pack
 fn project_static_parser_uses_defaults_and_test_sdk_signal() {
     let path = fixture().join("dotnet-clients/src/Fallback/Fallback.csproj");
     let source = std::fs::read_to_string(&path).unwrap();
-    let facts = parse_project_static(&path, &source);
+    let facts = parse_project_static(&path, &source, &[]);
 
     assert!(facts.is_test);
     assert_eq!(facts.assembly_name, "Fallback");
@@ -140,7 +142,7 @@ fn project_static_parser_uses_defaults_and_test_sdk_signal() {
 
 #[test]
 fn project_static_parser_handles_missing_file_stem_and_empty_tags() {
-    let facts = parse_project_static(Path::new("/"), "<Project><PropertyGroup /></Project>");
+    let facts = parse_project_static(Path::new("/"), "<Project><PropertyGroup /></Project>", &[]);
 
     assert_eq!(facts.assembly_name, "Project");
     assert_eq!(facts.root_namespace, "Project");
@@ -269,12 +271,23 @@ fn msbuild_evaluation_reports_start_status_and_parse_failures() {
 }
 
 #[test]
-fn project_finalize_fills_defaults_and_filters_compile_files() {
+fn msbuild_command_uses_the_configured_project_directory() {
+    let project_path = fixture().join("dotnet-clients/src/App/App.csproj");
+    let command = msbuild_command(&project_path, "dotnet");
+
+    assert_eq!(command.get_current_dir(), project_path.parent());
+    assert_eq!(
+        msbuild_command(Path::new("/"), "dotnet").get_current_dir(),
+        Some(Path::new("."))
+    );
+}
+
+#[test]
+fn project_finalize_preserves_an_authoritative_empty_msbuild_compile_list() {
     let root = normalize_path(&fixture());
     let project_path = normalize_path(&root.join("dotnet-clients/src/Fallback/Fallback.csproj"));
     let project_dir = normalize_path(&root.join("dotnet-clients/src/Fallback"));
     let source_file = normalize_path(&project_dir.join("FallbackService.cs"));
-    let outside_file = PathBuf::from("/outside/FallbackService.cs");
     let config = DotnetConfigProject {
         name: "fallback".to_string(),
         project: "dotnet-clients/src/Fallback/Fallback.csproj".to_string(),
@@ -282,12 +295,19 @@ fn project_finalize_fills_defaults_and_filters_compile_files() {
         exclude: Vec::new(),
         test: true,
     };
-    let mut facts = DotnetProjectFacts::default();
+    let mut facts = parse_msbuild_json(
+        &project_path,
+        r#"{
+          "Properties": {},
+          "Items": { "Compile": [] }
+        }"#,
+    )
+    .expect("empty evaluated Compile items should parse");
 
     finalize_project_facts(
         &mut facts,
         &root,
-        &[source_file.clone(), outside_file],
+        &[source_file],
         &config,
         &project_path,
         &project_dir,
@@ -297,10 +317,7 @@ fn project_finalize_fills_defaults_and_filters_compile_files() {
     assert_eq!(facts.name, "fallback");
     assert_eq!(facts.assembly_name, "Fallback");
     assert_eq!(facts.root_namespace, "Fallback");
-    assert_eq!(
-        facts.compile_files.into_iter().collect::<Vec<_>>(),
-        vec![source_file]
-    );
+    assert!(facts.compile_files.is_empty());
 }
 
 #[test]
