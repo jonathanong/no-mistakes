@@ -119,6 +119,18 @@ fn retains_compile_items_with_conditional_removals() {
     let root = normalize_path(&fixture());
     let project = root.join("tests/ConditionalRemove.Tests/ConditionalRemove.Tests.csproj");
     let local = root.join("tests/ConditionalRemove.Tests/RetainedConservatively.cs");
+    let grouped = root.join("tests/ConditionalRemove.Tests/RetainedFromConditionalGroup.cs");
+    let source = std::fs::read_to_string(&project).unwrap();
+    let facts = parse_project_static(&project, &source, &[local.clone(), grouped.clone()]);
+
+    assert_eq!(facts.compile_files, BTreeSet::from([local, grouped]));
+}
+
+#[test]
+fn ignores_default_item_opt_outs_in_conditional_property_groups() {
+    let root = normalize_path(&fixture());
+    let project = root.join("tests/ConditionalProperties.Tests/ConditionalProperties.Tests.csproj");
+    let local = root.join("tests/ConditionalProperties.Tests/IncludedInDebug.cs");
     let source = std::fs::read_to_string(&project).unwrap();
     let facts = parse_project_static(&project, &source, std::slice::from_ref(&local));
 

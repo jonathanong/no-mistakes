@@ -3,6 +3,13 @@ use std::borrow::Cow;
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+mod regexes;
+
+use regexes::{
+    conditional_item_group_regex, conditional_property_group_regex, msbuild_condition_regex,
+    static_compile_operation_regex, xml_comment_regex,
+};
+
 use super::project_items::default_compile_files;
 use super::{msbuild_path, normalize_path, DotnetProjectFacts};
 
@@ -12,6 +19,7 @@ pub(in crate::codebase::dotnet) fn parse_project_static(
     all_files: &[PathBuf],
 ) -> DotnetProjectFacts {
     let source = strip_xml_comments(source);
+    let source = strip_conditional_property_groups(&source);
     let source = source.as_ref();
     let project_dir = project_path.parent().unwrap_or_else(|| Path::new("."));
     let assembly_name = xml_tag(source, "AssemblyName").unwrap_or_else(|| {
@@ -80,19 +88,27 @@ fn static_compile_operations(
     project_dir: &Path,
     source: &str,
 ) -> Vec<(StaticCompileOperation, PathBuf)> {
-    let re = Regex::new(r#"(?is)<Compile\b[^>]*?\b(Include|Remove)\s*=\s*["']([^"']+)["'][^>]*>"#)
-        .expect("valid static Compile operation regex");
-    let condition_re =
-        Regex::new(r#"(?is)\bCondition\s*="#).expect("valid MSBuild condition regex");
-    re.captures_iter(source)
+    let conditional_item_groups: Vec<_> = conditional_item_group_regex()
+        .find_iter(source)
+        .map(|group| group.range())
+        .collect();
+    static_compile_operation_regex()
+        .captures_iter(source)
         .flat_map(|captures| {
             let operation = if captures[1].eq_ignore_ascii_case("Include") {
                 StaticCompileOperation::Include
             } else {
                 StaticCompileOperation::Remove
             };
+            let operation_start = captures
+                .get(0)
+                .expect("Compile operation regex should capture the full item")
+                .start();
             if matches!(operation, StaticCompileOperation::Remove)
-                && condition_re.is_match(&captures[0])
+                && (msbuild_condition_regex().is_match(&captures[0])
+                    || conditional_item_groups
+                        .iter()
+                        .any(|group| group.contains(&operation_start)))
             {
                 return Vec::new();
             }
@@ -129,9 +145,11 @@ fn is_sdk_project(source: &str) -> bool {
 }
 
 fn strip_xml_comments(source: &str) -> Cow<'_, str> {
-    Regex::new(r"(?s)<!--.*?-->")
-        .expect("valid XML comment regex")
-        .replace_all(source, "")
+    xml_comment_regex().replace_all(source, "")
+}
+
+fn strip_conditional_property_groups(source: &str) -> Cow<'_, str> {
+    conditional_property_group_regex().replace_all(source, "")
 }
 
 fn xml_tag_last(source: &str, tag: &str) -> Option<String> {
