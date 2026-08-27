@@ -91,3 +91,36 @@ fn keeps_legacy_project_compile_items_explicit() {
     assert_eq!(facts.compile_files, BTreeSet::from([linked]));
     assert!(!facts.compile_files.contains(&local));
 }
+
+#[test]
+fn recognizes_explicit_sdk_imports() {
+    let root = normalize_path(&fixture());
+    let project = root.join("tests/ImportedSdk.Tests/ImportedSdk.Tests.csproj");
+    let local = root.join("tests/ImportedSdk.Tests/ImportedByDefault.cs");
+    let source = std::fs::read_to_string(&project).unwrap();
+    let facts = parse_project_static(&project, &source, std::slice::from_ref(&local));
+
+    assert_eq!(facts.compile_files, BTreeSet::from([local]));
+}
+
+#[test]
+fn ignores_commented_default_item_opt_outs() {
+    let root = normalize_path(&fixture());
+    let project = root.join("tests/CommentedDefaults.Tests/CommentedDefaults.Tests.csproj");
+    let local = root.join("tests/CommentedDefaults.Tests/IncludedByDefault.cs");
+    let source = std::fs::read_to_string(&project).unwrap();
+    let facts = parse_project_static(&project, &source, std::slice::from_ref(&local));
+
+    assert_eq!(facts.compile_files, BTreeSet::from([local]));
+}
+
+#[test]
+fn retains_compile_items_with_conditional_removals() {
+    let root = normalize_path(&fixture());
+    let project = root.join("tests/ConditionalRemove.Tests/ConditionalRemove.Tests.csproj");
+    let local = root.join("tests/ConditionalRemove.Tests/RetainedConservatively.cs");
+    let source = std::fs::read_to_string(&project).unwrap();
+    let facts = parse_project_static(&project, &source, std::slice::from_ref(&local));
+
+    assert_eq!(facts.compile_files, BTreeSet::from([local]));
+}
