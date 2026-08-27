@@ -54,11 +54,57 @@ fn static_compile_files(
     } else {
         BTreeSet::new()
     };
-    files.extend(static_path_items(project_dir, source, "Compile", "Include"));
-    for removed in static_path_items(project_dir, source, "Compile", "Remove") {
-        files.remove(&removed);
+    for (operation, path) in static_compile_operations(project_dir, source) {
+        match operation {
+            StaticCompileOperation::Include => {
+                files.insert(path);
+            }
+            StaticCompileOperation::Remove => {
+                files.remove(&path);
+            }
+        }
     }
     files
+}
+
+#[derive(Clone, Copy)]
+enum StaticCompileOperation {
+    Include,
+    Remove,
+}
+
+fn static_compile_operations(
+    project_dir: &Path,
+    source: &str,
+) -> Vec<(StaticCompileOperation, PathBuf)> {
+    let re = Regex::new(r#"(?is)<Compile\b[^>]*?\b(Include|Remove)\s*=\s*["']([^"']+)["'][^>]*>"#)
+        .expect("valid static Compile operation regex");
+    re.captures_iter(source)
+        .flat_map(|captures| {
+            let operation = captures.get(1).map(|value| value.as_str());
+            let values = captures.get(2).map(|value| value.as_str());
+            operation
+                .into_iter()
+                .zip(values)
+                .flat_map(|(operation, values)| {
+                    let operation = if operation.eq_ignore_ascii_case("Include") {
+                        StaticCompileOperation::Include
+                    } else {
+                        StaticCompileOperation::Remove
+                    };
+                    values
+                        .split(';')
+                        .map(str::trim)
+                        .filter(|value| !value.is_empty())
+                        .map(move |value| {
+                            (
+                                operation,
+                                normalize_path(&project_dir.join(msbuild_path(value))),
+                            )
+                        })
+                })
+        })
+        .collect()
 }
 
 fn default_compile_items_enabled(source: &str) -> bool {

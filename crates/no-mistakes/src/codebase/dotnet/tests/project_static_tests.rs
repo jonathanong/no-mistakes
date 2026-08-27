@@ -14,6 +14,7 @@ fn merges_default_linked_and_removed_compile_items() {
     let project = root.join("tests/Linked.Tests/Linked.Tests.csproj");
     let local = root.join("tests/Linked.Tests/LocalTests.cs");
     let removed = root.join("tests/Linked.Tests/RemovedTests.cs");
+    let readded = root.join("tests/Linked.Tests/ReaddedTests.cs");
     let built = root.join("tests/Linked.Tests/bin/BuiltTests.cs");
     let generated = root.join("tests/Linked.Tests/obj/GeneratedTests.cs");
     let linked = root.join("src/Shared.cs");
@@ -24,6 +25,7 @@ fn merges_default_linked_and_removed_compile_items() {
         &[
             local.clone(),
             removed.clone(),
+            readded.clone(),
             built.clone(),
             generated.clone(),
             linked.clone(),
@@ -32,7 +34,7 @@ fn merges_default_linked_and_removed_compile_items() {
 
     assert_eq!(
         facts.compile_files,
-        BTreeSet::from([local, generated, linked])
+        BTreeSet::from([local, readded, generated, linked])
     );
     assert!(!facts.compile_files.contains(&removed));
     assert!(!facts.compile_files.contains(&built));
