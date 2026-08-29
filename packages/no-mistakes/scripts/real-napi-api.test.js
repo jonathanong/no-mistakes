@@ -10,7 +10,7 @@ const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 
 test(
   "compiled async N-API dependencies API matches the CLI fixture contract",
-  { skip: !addonPath },
+  { skip: !addonPath, timeout: 20_000 },
   async () => {
     assert.equal(resolve(addonPath), addonPath);
     assert.match(addonPath, /\.node$/);

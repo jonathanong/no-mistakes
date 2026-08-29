@@ -259,6 +259,81 @@ jobs:
           flags: javascript
           fail_ci_if_error: true
 
+  native-tests:
+    name: Native tests (${{ matrix.name }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Windows x64
+            os: windows-2025
+            target: x86_64-pc-windows-msvc
+            binary: ./target/debug/no-mistakes.exe
+            addon: target/debug/no_mistakes.dll
+          - name: macOS ARM64
+            os: macos-15
+            target: aarch64-apple-darwin
+            binary: ./target/debug/no-mistakes
+            addon: target/debug/libno_mistakes.dylib
+
+    steps:
+      - name: Checkout
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install Rust
+        timeout-minutes: 5
+        uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+
+      - name: Cache Rust build artifacts
+        timeout-minutes: 5
+        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
+        with:
+          key: native-${{ matrix.target }}
+
+      - name: Install npm dependencies
+        timeout-minutes: 5
+        run: npm ci --ignore-scripts
+
+      - name: Build JavaScript packages
+        timeout-minutes: 2
+        run: npm run build:js
+
+      - name: Run Rust tests
+        timeout-minutes: 25
+        run: cargo test --locked --workspace --all-features
+
+      - name: Build native CLI and N-API addon
+        timeout-minutes: 15
+        shell: bash
+        run: |
+          set -euo pipefail
+          cargo build --locked -p no-mistakes
+          NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
+          cp "${{ matrix.addon }}" target/debug/no-mistakes.node
+
+      - name: Run native CLI smoke test
+        timeout-minutes: 2
+        shell: bash
+        run: '"${{ matrix.binary }}" --version'
+
+      - name: Run real N-API API test
+        timeout-minutes: 2
+        shell: bash
+        run: |
+          set -euo pipefail
+          addon_path="$(node -e 'process.stdout.write(require("node:path").resolve("target/debug/no-mistakes.node"))')"
+          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" npx vitest run packages/no-mistakes/scripts/real-napi-api.test.js --coverage=false
+
   tests:
     name: Rust tests and coverage
     runs-on: ubuntu-latest
@@ -356,6 +431,7 @@ jobs:
     needs:
       - quality
       - javascript-tests
+      - native-tests
       - tests
     if: ${{ always() }}
     runs-on: ubuntu-latest
@@ -367,10 +443,11 @@ jobs:
         env:
           QUALITY_RESULT: ${{ needs.quality.result }}
           JAVASCRIPT_RESULT: ${{ needs.javascript-tests.result }}
+          NATIVE_RESULT: ${{ needs.native-tests.result }}
           RUST_RESULT: ${{ needs.tests.result }}
         run: |
-          if [[ "$QUALITY_RESULT" != "success" || "$JAVASCRIPT_RESULT" != "success" || "$RUST_RESULT" != "success" ]]; then
-            echo "Quality checks, JavaScript tests, or Rust coverage failed." >&2
+          if [[ "$QUALITY_RESULT" != "success" || "$JAVASCRIPT_RESULT" != "success" || "$NATIVE_RESULT" != "success" || "$RUST_RESULT" != "success" ]]; then
+            echo "Quality checks, JavaScript tests, native tests, or Rust coverage failed." >&2
             exit 1
           fi
 
