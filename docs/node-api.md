@@ -125,7 +125,9 @@ to publish them never masks the original analysis or publication error. The
 helper is unavailable on Windows because
 Node does not expose a trustworthy private Windows ACL check. Structural paths
 are sent to traversal reports as `{ file }` entries, so `#` remains part of a
-literal filename rather than a symbol delimiter.
+literal filename rather than a symbol delimiter. Deleted or renamed-away
+structural paths remain in traversal and test-planning inputs, but are omitted
+from the symbols input because no source file remains to analyze.
 
 ```js
 await writePlanningImpactArtifacts({

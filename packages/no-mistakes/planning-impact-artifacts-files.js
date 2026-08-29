@@ -37,14 +37,7 @@ async function validateOutputDirectory(outputDirectory) {
 }
 
 async function validateManifest(output, manifestPath) {
-  await assertOutputDirectory(output);
-  if ((await realpath(dirname(manifestPath))) !== output.path) {
-    throw new Error("manifest must be inside the private output directory");
-  }
-  const manifest = await realpath(manifestPath);
-  if (dirname(manifest) !== output.path) {
-    throw new Error("manifest must be inside the private output directory");
-  }
+  const manifest = await resolveManifestPath(output, manifestPath);
   const handle = await open(manifest, MANIFEST_OPEN_FLAGS);
   try {
     const metadata = await handle.stat();
@@ -64,6 +57,15 @@ async function validateManifest(output, manifestPath) {
     await handle.close().catch(() => {});
     throw error;
   }
+}
+
+async function resolveManifestPath(output, manifestPath) {
+  await assertOutputDirectory(output);
+  const manifest = await realpath(manifestPath);
+  if (dirname(manifest) !== output.path) {
+    throw new Error("manifest must be inside the private output directory");
+  }
+  return manifest;
 }
 
 async function publishArtifact(output, name, contents) {

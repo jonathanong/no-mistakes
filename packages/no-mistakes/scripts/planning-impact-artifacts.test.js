@@ -66,7 +66,11 @@ async function withFsOverride(overrides, callback, renameNoReplace) {
       return true;
     });
   Object.assign(fs, overrides);
-  const helperModules = ["../planning-impact-artifacts", "../planning-impact-artifacts-files"];
+  const helperModules = [
+    "../planning-impact-artifacts",
+    "../planning-impact-artifacts-files",
+    "../planning-impact-artifacts-inputs",
+  ];
   for (const helperModule of helperModules) delete require.cache[require.resolve(helperModule)];
   try {
     const artifacts = require("../planning-impact-artifacts");
@@ -266,6 +270,95 @@ test("writes empty structural artifacts for documentation-only changes", async (
   }
 });
 
+test("keeps deleted structural files out of the symbols report", async () => {
+  const root = await privateDirectory("no-mistakes-impact-root-");
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  let request;
+  try {
+    await writeFile(join(root, "present.mts"), "export const present = true;\n");
+    await mkdir(join(root, "folder.mts"));
+    await writeFile(manifest, "present.mts\ndeleted.mts\nfolder.mts\nREADME.md\n");
+    await writePlanningImpactArtifacts(
+      { root, changedFilesManifest: manifest, outputDirectory: directory },
+      async (options) => {
+        request = options;
+        return aggregateResult;
+      },
+    );
+    assert.deepEqual(request.reports[0].files, [
+      { file: "present.mts" },
+      { file: "deleted.mts" },
+      { file: "folder.mts" },
+    ]);
+    assert.deepEqual(request.reports[2].files, ["present.mts"]);
+    assert.deepEqual(request.reports[3].changedFiles, [
+      "present.mts",
+      "deleted.mts",
+      "folder.mts",
+      "README.md",
+    ]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("preserves the analysis error when checking the root or changed-file identity fails", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const root = await privateDirectory("no-mistakes-impact-root-");
+  const fs = require("node:fs/promises");
+  const originalLstat = fs.lstat;
+  try {
+    await writeFile(join(root, "error.mts"), "export const error = true;\n");
+    await writeFile(manifest, "error.mts\n");
+    const injected = new Error("root identity unavailable");
+    injected.code = "EACCES";
+    await withFsOverride(
+      {
+        lstat: async (path, ...args) => {
+          if (path === root) throw injected;
+          return originalLstat(path, ...args);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root, changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          (error) => error === injected,
+        );
+      },
+    );
+
+    const changedFile = join(root, "error.mts");
+    const fileError = new Error("changed-file identity unavailable");
+    fileError.code = "EIO";
+    await withFsOverride(
+      {
+        lstat: async (path, ...args) => {
+          if (path === changedFile) throw fileError;
+          return originalLstat(path, ...args);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root, changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          (error) => error === fileError,
+        );
+      },
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test("rejects unsafe paths and records bounded failures without stale JSON", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");
@@ -427,6 +520,84 @@ test("rejects a manifest symlink whose canonical target escapes the output direc
   } finally {
     await rm(directory, { recursive: true, force: true });
     await rm(outside, { recursive: true, force: true });
+  }
+});
+
+test("does not enable failure writes through a reserved manifest symlink alias", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const reserved = join(directory, "plan.json");
+  let analyzed = false;
+  try {
+    await mkdir(reserved);
+    await symlink(reserved, manifest);
+    await assert.rejects(
+      writePlanningImpactArtifacts(
+        { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+        async () => {
+          analyzed = true;
+          return aggregateResult;
+        },
+      ),
+      /regular file/,
+    );
+    assert.equal(analyzed, false);
+    for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
+      await assert.rejects(lstat(join(directory, `${name}.status`)), /ENOENT/);
+    }
+    assert.equal((await lstat(reserved)).isDirectory(), true);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("closes the output descriptor when manifest normalization fails", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const fs = require("node:fs/promises");
+  const originalOpen = fs.open;
+  const canonicalDirectory = await fs.realpath(directory);
+  let opened = 0;
+  let closed = 0;
+  try {
+    const malformed = join(directory, "malformed.txt");
+    await writeFile(malformed, "\n");
+    await withFsOverride(
+      {
+        open: async (path, ...args) => {
+          const handle = await originalOpen(path, ...args);
+          if (path === canonicalDirectory) {
+            opened += 1;
+            const originalClose = handle.close.bind(handle);
+            handle.close = async (...closeArgs) => {
+              closed += 1;
+              return originalClose(...closeArgs);
+            };
+          }
+          return handle;
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        for (const changedFilesManifest of [undefined, null, 42, join(directory, "missing.txt")]) {
+          await assert.rejects(
+            writeArtifacts(
+              { root: "/repo", changedFilesManifest, outputDirectory: directory },
+              async () => aggregateResult,
+            ),
+          );
+        }
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: malformed, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          /empty/,
+        );
+      },
+    );
+    assert.ok(opened > 0);
+    assert.equal(closed, opened);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
   }
 });
 

@@ -8,6 +8,8 @@ const {
   validateOutputDirectory,
 } = require("./planning-impact-artifacts-files");
 const { isOutputRestorationFailure } = require("./planning-impact-artifacts-errors");
+const { realpath } = require("node:fs/promises");
+const { existingFiles } = require("./planning-impact-artifacts-inputs");
 const { basename, isAbsolute, posix, resolve, win32 } = require("node:path");
 
 const REPORTS = ["dependencies", "dependents", "symbols", "plan"];
@@ -20,9 +22,10 @@ const REPORT_TYPES = {
 const RESERVED_ARTIFACT_NAME =
   /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/u;
 
-function buildRequest(root, changedFiles, broad) {
+async function buildRequest(root, changedFiles, broad) {
   const structuralFiles = changedFiles.filter((file) => /\.[cm]?[jt]sx?(?:#.*)?$/u.test(file));
   const traversalFiles = structuralFiles.map((file) => ({ file }));
+  const symbolFiles = await existingFiles(root, structuralFiles);
   const relationships = broad ? {} : { relationships: ["import", "workspace"] };
   const reports = structuralFiles.length
     ? [
@@ -33,7 +36,7 @@ function buildRequest(root, changedFiles, broad) {
           depth: 1,
           ...relationships,
         })),
-        { id: "symbols", type: "symbols", files: structuralFiles, include: "both" },
+        { id: "symbols", type: "symbols", files: symbolFiles, include: "both" },
       ]
     : [];
   reports.push({
@@ -49,11 +52,12 @@ function buildRequest(root, changedFiles, broad) {
 async function writePlanningImpactArtifacts(options, analyzeProject, renameNoReplace) {
   const output = await validateOutputDirectory(options.outputDirectory);
   let manifestHandle;
-  let mayWriteFailureArtifacts = !RESERVED_ARTIFACT_NAME.test(
-    basename(resolve(options.changedFilesManifest)),
-  );
+  let mayWriteFailureArtifacts = false;
   try {
-    const manifest = await validateManifest(output, resolve(options.changedFilesManifest));
+    const requestedManifestPath = resolve(options.changedFilesManifest);
+    const manifestPath = await realpath(requestedManifestPath);
+    mayWriteFailureArtifacts = !RESERVED_ARTIFACT_NAME.test(basename(manifestPath));
+    const manifest = await validateManifest(output, manifestPath);
     manifestHandle = manifest.handle;
     if (RESERVED_ARTIFACT_NAME.test(basename(manifest.path))) {
       mayWriteFailureArtifacts = false;
@@ -64,7 +68,7 @@ async function writePlanningImpactArtifacts(options, analyzeProject, renameNoRep
     manifestHandle = undefined;
     await updateOutputDirectory(output, invalidateStatuses, renameNoReplace);
     const request = {
-      ...buildRequest(options.root, changedFiles, options.broad === true),
+      ...(await buildRequest(options.root, changedFiles, options.broad === true)),
       ...invocationOptions(options),
     };
     const result = await analyzeProject(request);

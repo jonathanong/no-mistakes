@@ -15,6 +15,7 @@ module.exports = defineConfig({
         "packages/*/scripts/install/**/*.js",
         "packages/no-mistakes/planning-impact-artifacts.js",
         "packages/no-mistakes/planning-impact-artifacts-files.js",
+        "packages/no-mistakes/planning-impact-artifacts-inputs.js",
         "packages/eslint-plugin-no-mistakes/src/**/*.js",
       ],
       reporter: ["text", "lcov"],
