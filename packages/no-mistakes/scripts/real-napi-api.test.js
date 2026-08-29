@@ -62,19 +62,15 @@ test(
     try {
       const [message] = await once(child, "message");
       assert.equal(message, "locked");
-      let parentAcquired = false;
-      const pendingToken = native.acquirePlanningArtifactLock(lockPath).then((token) => {
-        parentAcquired = true;
-        return token;
-      });
-      await delay(50);
-      assert.equal(parentAcquired, false);
+      await assert.rejects(
+        native.acquirePlanningArtifactLock(lockPath),
+        /planning artifact lock is busy/,
+      );
 
       const exited = once(child, "exit");
       child.send("release");
       assert.deepEqual(await exited, [0, null]);
-      parentToken = await pendingToken;
-      assert.equal(parentAcquired, true);
+      parentToken = await native.acquirePlanningArtifactLock(lockPath);
       await native.releasePlanningArtifactLock(parentToken);
       parentToken = undefined;
     } finally {

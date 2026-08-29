@@ -29,10 +29,19 @@ pub(crate) fn acquire_planning_artifact_lock_impl(path: &Path) -> io::Result<Fil
     }
     file.set_permissions(Permissions::from_mode(0o600))?;
     // SAFETY: flock only borrows this live descriptor; the File retains it until release.
-    flock_impl(file.as_raw_fd(), libc::LOCK_EX)?;
+    flock_impl(file.as_raw_fd(), libc::LOCK_EX | libc::LOCK_NB).map_err(map_advisory_lock_error)?;
     let path_metadata = symlink_metadata(path)?;
     validate_planning_artifact_lock_identity(&metadata, &path_metadata)?;
     Ok(file)
+}
+
+#[cfg(unix)]
+fn map_advisory_lock_error(error: io::Error) -> io::Error {
+    if error.kind() == io::ErrorKind::WouldBlock {
+        io::Error::new(io::ErrorKind::WouldBlock, "planning artifact lock is busy")
+    } else {
+        error
+    }
 }
 
 #[cfg(unix)]

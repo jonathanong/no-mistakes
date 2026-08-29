@@ -1,6 +1,7 @@
 use super::{
-    acquire_planning_artifact_lock_impl, flock_impl, rename_no_replace_impl,
-    unlock_planning_artifact_lock_impl, validate_planning_artifact_lock_identity,
+    acquire_planning_artifact_lock_impl, flock_impl, map_advisory_lock_error,
+    rename_no_replace_impl, unlock_planning_artifact_lock_impl,
+    validate_planning_artifact_lock_identity,
 };
 
 #[test]
@@ -35,31 +36,38 @@ fn reports_an_underlying_rename_error() {
 
 #[cfg(unix)]
 #[test]
-fn serializes_lock_holders_and_releases_on_drop() {
-    use std::sync::mpsc;
-    use std::time::Duration;
-
+fn reports_busy_when_another_holder_owns_the_lock() {
     let directory = tempfile::tempdir().unwrap();
     let lock_path = directory.path().join("artifact.lock");
     let first = acquire_planning_artifact_lock_impl(&lock_path).unwrap();
-    let (sender, receiver) = mpsc::channel();
-    let contender_path = lock_path.clone();
-    let contender = std::thread::spawn(move || {
-        let lock = acquire_planning_artifact_lock_impl(&contender_path).unwrap();
-        sender.send(lock).unwrap();
-    });
-
-    assert!(receiver.recv_timeout(Duration::from_millis(50)).is_err());
+    let busy = acquire_planning_artifact_lock_impl(&lock_path).unwrap_err();
+    assert_eq!(busy.kind(), std::io::ErrorKind::WouldBlock);
+    assert!(busy.to_string().contains("planning artifact lock is busy"));
     drop(first);
-    let second = receiver.recv_timeout(Duration::from_secs(2)).unwrap();
+    let second = acquire_planning_artifact_lock_impl(&lock_path).unwrap();
     unlock_planning_artifact_lock_impl(&second).unwrap();
     drop(second);
-    contender.join().unwrap();
 
     let metadata = std::fs::metadata(lock_path).unwrap();
     use std::os::unix::fs::PermissionsExt;
     assert!(metadata.is_file());
     assert_eq!(metadata.permissions().mode() & 0o777, 0o600);
+}
+
+#[cfg(unix)]
+#[test]
+fn maps_nonblocking_lock_errors() {
+    let busy = map_advisory_lock_error(std::io::Error::new(
+        std::io::ErrorKind::WouldBlock,
+        "Resource temporarily unavailable",
+    ));
+    assert_eq!(busy.kind(), std::io::ErrorKind::WouldBlock);
+    assert!(busy.to_string().contains("planning artifact lock is busy"));
+    let other = map_advisory_lock_error(std::io::Error::new(
+        std::io::ErrorKind::PermissionDenied,
+        "permission denied",
+    ));
+    assert_eq!(other.to_string(), "permission denied");
 }
 
 #[cfg(unix)]

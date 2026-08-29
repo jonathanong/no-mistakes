@@ -132,8 +132,8 @@ an OS advisory lock shared by Node processes and worker isolates. Its adjacent
 `.<output-name>.planning-impact.lock` file is private and empty; it stores no
 analysis state, and process or worker-isolate exit releases the lock. Real paths
 and symbolic-link aliases use the same canonical lock identity. Changed-files
-manifests must be valid UTF-8. Safe manifest resolution failures also replace
-stale success artifacts with failure output.
+manifests must be valid UTF-8; a leading UTF-8 BOM is ignored. Safe manifest
+resolution failures also replace stale success artifacts with failure output.
 The helper is unavailable on Windows because
 Node does not expose a trustworthy private Windows ACL check. Structural paths
 are sent to traversal reports as `{ file }` entries, so `#` remains part of a

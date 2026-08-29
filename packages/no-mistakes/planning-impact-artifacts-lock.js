@@ -2,6 +2,11 @@
 
 const { lstat, readlink, realpath } = require("node:fs/promises");
 const path = require("node:path");
+const { setTimeout: delay } = require("node:timers/promises");
+
+const BUSY_LOCK = /planning artifact lock is busy/u;
+const INITIAL_LOCK_RETRY_MS = 10;
+const MAX_LOCK_RETRY_MS = 100;
 
 const outputUpdates = new Map();
 
@@ -49,9 +54,20 @@ function createPlanningArtifactLock(native) {
       path.dirname(outputPath),
       `.${path.basename(outputPath)}.planning-impact.lock`,
     );
-    const token = await native.acquirePlanningArtifactLock(lockPath);
+    const token = await acquirePlanningArtifactLock(native, lockPath);
     return async () => native.releasePlanningArtifactLock(token);
   };
+}
+
+async function acquirePlanningArtifactLock(native, lockPath) {
+  for (let delayMs = INITIAL_LOCK_RETRY_MS; ; delayMs = Math.min(delayMs * 2, MAX_LOCK_RETRY_MS)) {
+    try {
+      return await native.acquirePlanningArtifactLock(lockPath);
+    } catch (error) {
+      if (!BUSY_LOCK.test(String(error && error.message))) throw error;
+      await delay(delayMs);
+    }
+  }
 }
 
 module.exports = { canonicalOutputKey, createPlanningArtifactLock, serializeOutputUpdate };

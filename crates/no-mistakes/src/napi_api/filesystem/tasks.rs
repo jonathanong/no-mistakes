@@ -8,7 +8,7 @@ use std::path::PathBuf;
 #[cfg(unix)]
 use std::collections::HashMap;
 #[cfg(unix)]
-use std::sync::atomic::{AtomicU32, Ordering};
+use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 #[cfg(unix)]
 use std::sync::{Mutex, OnceLock};
 
@@ -41,6 +41,8 @@ impl Task for RenameNoReplaceTask {
 static PLANNING_ARTIFACT_LOCKS: OnceLock<Mutex<HashMap<u32, File>>> = OnceLock::new();
 #[cfg(unix)]
 static NEXT_PLANNING_ARTIFACT_LOCK: AtomicU32 = AtomicU32::new(1);
+#[cfg(unix)]
+static PLANNING_ARTIFACT_LOCK_CLEANUP: AtomicBool = AtomicBool::new(false);
 
 #[cfg(unix)]
 fn planning_artifact_locks() -> &'static Mutex<HashMap<u32, File>> {
@@ -51,6 +53,13 @@ fn planning_artifact_locks() -> &'static Mutex<HashMap<u32, File>> {
 fn cleanup_planning_artifact_lock(token: u32) {
     if let Ok(mut locks) = planning_artifact_locks().lock() {
         locks.remove(&token);
+    }
+}
+
+#[cfg(unix)]
+fn drain_planning_artifact_locks(_: ()) {
+    if let Ok(mut locks) = planning_artifact_locks().lock() {
+        locks.clear();
     }
 }
 
@@ -82,11 +91,17 @@ impl Task for AcquirePlanningArtifactLockTask {
                 if token != 0 && !locks.contains_key(&token) {
                     locks.insert(token, output);
                     drop(locks);
-                    if let Err(error) =
-                        env.add_env_cleanup_hook(token, cleanup_planning_artifact_lock)
+                    if PLANNING_ARTIFACT_LOCK_CLEANUP
+                        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
+                        .is_ok()
                     {
-                        cleanup_planning_artifact_lock(token);
-                        return Err(error);
+                        if let Err(error) =
+                            env.add_env_cleanup_hook((), drain_planning_artifact_locks)
+                        {
+                            PLANNING_ARTIFACT_LOCK_CLEANUP.store(false, Ordering::Release);
+                            cleanup_planning_artifact_lock(token);
+                            return Err(error);
+                        }
                     }
                     return Ok(token);
                 }

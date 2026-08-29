@@ -655,6 +655,37 @@ test("serializes canonical and symlink aliases while the output is parked", asyn
   }
 });
 
+test("strips a UTF-8 BOM from the changed-files manifest", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-bom-");
+  const manifest = join(directory, "changed-files.txt");
+  const fixture = JSON.parse(
+    await readFile(
+      join(
+        repositoryRoot,
+        "fixtures",
+        "napi",
+        "planning-impact-artifacts",
+        "utf8-bom-manifest.json",
+      ),
+      "utf8",
+    ),
+  );
+  const calls = [];
+  try {
+    await writeFile(manifest, Buffer.from(fixture.hex, "hex"));
+    await writePlanningImpactArtifacts(
+      { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+      async (options) => {
+        calls.push(options);
+        return aggregateResult;
+      },
+    );
+    assert.deepEqual(calls[0].reports[3].changedFiles, ["a.mts"]);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("rejects an invalid UTF-8 changed-files manifest with failure artifacts", async () => {
   const directory = await privateDirectory("no-mistakes-impact-utf8-");
   const manifest = join(directory, "changed-files.txt");

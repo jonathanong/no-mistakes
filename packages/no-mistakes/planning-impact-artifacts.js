@@ -23,7 +23,8 @@ const REPORT_TYPES = {
 };
 const RESERVED_ARTIFACT_NAME =
   /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/iu;
-const UTF8_DECODER = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
+// Node keeps U+FEFF when ignoreBOM is true; the default strips a UTF-8 BOM.
+const UTF8_DECODER = new TextDecoder("utf-8", { fatal: true });
 
 async function writePlanningImpactArtifacts(
   options,
