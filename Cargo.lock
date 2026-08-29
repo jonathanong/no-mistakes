@@ -1348,6 +1348,7 @@ dependencies = [
  "ignore",
  "is-terminal",
  "jsonc-parser",
+ "libc",
  "merman-analysis",
  "napi",
  "napi-build",

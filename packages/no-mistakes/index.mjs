@@ -60,6 +60,7 @@ export const {
   testsWhy,
   validateMermaidMarkdown,
   version,
+  writePlanningImpactArtifacts,
 } = cjs;
 
 export default cjs;

@@ -12,6 +12,7 @@ const {
   symbols,
   testsPlan,
   validateMermaidMarkdown,
+  writePlanningImpactArtifacts,
 } = require("no-mistakes");
 
 (async () => {
@@ -102,6 +103,53 @@ const {
 | `ci topology-impact`                       | `ciTopologyImpact(options)`                                                                                                                                                                                                                                                |
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
 
+`writePlanningImpactArtifacts(options)` is an integration helper for callers
+that need private, CLI-compatible planning files without spawning several
+commands. It runs one prepared `analyzeProject()` request, then writes
+`dependencies`, `dependents`, `symbols`, and Vitest `plan` artifacts as JSON,
+stderr, and status files in `outputDirectory`. `changedFilesManifest` is the
+path to a private regular file directly in that same existing `0700` directory
+(exactly `0700`, with no additional permission or special bits); its contents
+are newline-delimited literal repository-relative paths (only empty records are
+ignored) and its filename cannot collide with an artifact destination. The
+directory must remain the same private directory for the duration of the
+operation. It must share its parent's filesystem (mount boundaries are
+rejected), and that parent must permit atomically renaming the directory:
+publication parks and restores it. Bind mounts or other directories the
+platform cannot rename are unsupported and fail during that atomic parking.
+Artifact files use mode `0600`;
+all four existing statuses are first made nonzero before analysis begins, and
+failures remove stale JSON and attempt to write bounded diagnostics and nonzero
+statuses for every report. Those failure artifacts are best effort: inability
+to publish them never masks the original analysis or publication error. If that
+reporting transition cannot restore the output directory, the original error's
+non-enumerable `failureReportingError` contains the parked recovery path; a
+non-extensible thrown value is instead preserved in an `AggregateError`. The
+helper serializes concurrent calls that resolve to the same output directory,
+covering invalidation, analysis, and publication so an older call cannot mark
+its artifacts successful while a newer analysis is pending. Serialization uses
+an OS advisory lock shared by Node processes and worker isolates. Its adjacent
+`.<output-name>.planning-impact.lock` file is private and empty; it stores no
+analysis state, and process or worker-isolate exit releases the lock. Real paths
+and symbolic-link aliases use the same canonical lock identity. Changed-files
+manifests must be valid UTF-8; a leading UTF-8 BOM is ignored. Safe manifest
+resolution failures also replace stale success artifacts with failure output.
+The helper is unavailable on Windows because
+Node does not expose a trustworthy private Windows ACL check. Structural paths
+are sent to traversal reports as `{ file }` entries, so `#` remains part of a
+literal filename rather than a symbol delimiter. Deleted or renamed-away
+structural paths remain in traversal and test-planning inputs, but are omitted
+from the symbols input because no source file remains to analyze.
+
+```js
+await writePlanningImpactArtifacts({
+  root: process.cwd(),
+  changedFilesManifest: "/private/run/changed-files.txt",
+  outputDirectory: "/private/run",
+  broad: false,
+});
+```
+
 The following inventory is the complete runtime export surface. Keeping this
 list exhaustive makes a newly added function visible to agents even when it
 does not have a one-to-one CLI command:
@@ -111,6 +159,7 @@ does not have a one-to-one CLI command:
 | `createWorkflowTopologyIndex` | `createWorkflowTopologyIndex(topology)` |
 | `version` | `version()` |
 | `analyzeProject` | `analyzeProject(options)` |
+| `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
 | `check` | `check(options)` |
 | `ciEnv` | `ciEnv(options)` |

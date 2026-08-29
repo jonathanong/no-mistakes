@@ -4,6 +4,8 @@
 // overwriting the package's checked-in install placeholder.
 const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
 const planning = require("./planning");
+const { writePlanningImpactArtifacts: writeArtifacts } = require("./planning-impact-artifacts");
+const { createPlanningArtifactLock } = require("./planning-impact-artifacts-lock");
 const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -64,6 +66,7 @@ const jsonApis = createJsonApis({
 
 const PLAN_INPUT_REPORTS = new Set(["testsComment", "testsGraph", "testsGraphMermaid"]);
 const CAMELIZE_REPORTS = new Set(["testsPlan", "testsImpact", "testsTargets", "testsGraph"]);
+const acquirePlanningArtifactLock = createPlanningArtifactLock(native);
 
 async function analyzeProject(options = {}) {
   const request = { ...options };
@@ -95,6 +98,20 @@ async function analyzeProject(options = {}) {
   } finally {
     await Promise.all(generatedDirs.map((dir) => planning.removeGeneratedDir(dir)));
   }
+}
+
+async function writePlanningImpactArtifacts(options) {
+  return writeArtifacts(
+    options,
+    analyzeProject,
+    async (from, to) => {
+      if (await native.renameNoReplace(from, to)) return true;
+      const error = new Error("output directory path changed during planning artifact generation");
+      error.code = "EEXIST";
+      throw error;
+    },
+    acquirePlanningArtifactLock,
+  );
 }
 
 const topologyMemo = new Map();
@@ -140,6 +157,7 @@ async function version() {
 module.exports.createWorkflowTopologyIndex = createWorkflowTopologyIndex;
 module.exports.version = version;
 module.exports.analyzeProject = analyzeProject;
+module.exports.writePlanningImpactArtifacts = writePlanningImpactArtifacts;
 module.exports.callSites = jsonApis.callSites;
 module.exports.check = jsonApis.check;
 module.exports.resolveConfig = jsonApis.resolveConfig;

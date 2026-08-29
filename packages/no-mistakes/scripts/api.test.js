@@ -26,6 +26,10 @@ const RAW_NATIVE_EXPORTS = {
   testsGraphMermaid: "testsGraphMermaid",
   version: "version",
 };
+const PURE_JAVASCRIPT_EXPORTS = new Set([
+  "createWorkflowTopologyIndex",
+  "writePlanningImpactArtifacts",
+]);
 
 function nativeExportNames() {
   const exports = new Set(["version"]);
@@ -456,10 +460,10 @@ test("native exports, JavaScript exports, and declarations stay in parity", asyn
     const declaredExports = declarationExportNames();
     assert.deepEqual(Object.keys(api).sort(), declaredExports);
 
-    // This export is intentionally pure JS; every other declared function
+    // These exports are intentionally pure JS; every other declared function
     // must cross the N-API boundary and keep returning a promise.
     for (const name of declaredExports) {
-      if (name === "createWorkflowTopologyIndex") continue;
+      if (PURE_JAVASCRIPT_EXPORTS.has(name)) continue;
       const expectedNativeExport = nativeExportNameForApi(name);
       const result = api[name]({});
       assert.equal(typeof result.then, "function", `${name} must remain async`);
