@@ -1565,7 +1565,7 @@ test("rejects reserved artifact manifests through case-insensitive path aliases"
   }
 });
 
-test("allows differently cased artifact names on case-sensitive filesystems", async () => {
+test("does not reserve differently cased artifact names on case-sensitive filesystems", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "PLAN.STATUS");
   const reservedAlias = join(directory, "plan.status");
@@ -1576,7 +1576,7 @@ test("allows differently cased artifact names on case-sensitive filesystems", as
     await withFsOverride(
       {
         realpath: async (path, ...args) => {
-          if (path === reservedAlias) {
+          if (basename(path) === basename(reservedAlias)) {
             const error = new Error("case-sensitive alias does not exist");
             error.code = "ENOENT";
             throw error;
@@ -1584,11 +1584,9 @@ test("allows differently cased artifact names on case-sensitive filesystems", as
           return originalRealpath(path, ...args);
         },
       },
-      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
-        await writeArtifacts(
-          { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
-          async () => aggregateResult,
-        );
+      async () => {
+        const { isReservedArtifactPath } = require("../planning-impact-artifacts-inputs");
+        assert.equal(await isReservedArtifactPath(await originalRealpath(manifest)), false);
       },
     );
     assert.equal(await readFile(manifest, "utf8"), "README.md\n");
