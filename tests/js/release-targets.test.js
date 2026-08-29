@@ -46,7 +46,7 @@ test("native CI jobs run only platform-specific Rust tests", () => {
 
   assert.doesNotMatch(
     body,
-    /cargo test --locked --workspace/,
+    /cargo test\b[^\r\n]*--workspace\b/,
     "native jobs must not compile or run the Linux full suite",
   );
   assert.match(
@@ -56,4 +56,9 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
   assert.match(body, /Run native CLI smoke test/);
   assert.match(body, /real-napi-api\.test\.js/);
+  assert.match(
+    workflow,
+    /cargo test --workspace --all-features/,
+    "Linux coverage keeps the full-suite spelling the native guard must reject",
+  );
 });
