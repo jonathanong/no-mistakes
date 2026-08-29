@@ -1,5 +1,7 @@
 const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
+const { mkdtemp, mkdir, rm, stat } = require("node:fs/promises");
+const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 
@@ -24,5 +26,25 @@ test(
 
     assert.equal(typeof pendingReport.then, "function");
     assert.deepEqual(await pendingReport, expectedReport);
+  },
+);
+
+test(
+  "compiled internal N-API rename preserves an existing destination",
+  { skip: !addonPath },
+  async () => {
+    const directory = await mkdtemp(join(tmpdir(), "no-mistakes-napi-rename-"));
+    const source = join(directory, "source");
+    const destination = join(directory, "destination");
+    try {
+      await mkdir(source);
+      await mkdir(destination);
+      const native = require(addonPath);
+      assert.equal(await native.renameNoReplace(source, destination), false);
+      assert.equal((await stat(source)).isDirectory(), true);
+      assert.equal((await stat(destination)).isDirectory(), true);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   },
 );

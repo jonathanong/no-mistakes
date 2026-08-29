@@ -8,6 +8,7 @@ const {
   mkdtemp,
   readFile,
   readdir,
+  rename,
   rm,
   stat,
   symlink,
@@ -22,7 +23,17 @@ const packageRoot = join(__dirname, "..");
 const addonPath = join(packageRoot, "bin", "no-mistakes.node");
 const indexPath = join(packageRoot, "index.js");
 const esmIndexPath = join(packageRoot, "index.mjs");
-const { writePlanningImpactArtifacts } = require("../planning-impact-artifacts");
+const {
+  writePlanningImpactArtifacts: writePlanningImpactArtifactsInternal,
+} = require("../planning-impact-artifacts");
+
+// The published API supplies the native no-replace rename primitive. These direct helper tests
+// use Node's rename except where a deterministic race supplies its own fail-closed primitive.
+const writePlanningImpactArtifacts = (options, analyzeProject) =>
+  writePlanningImpactArtifactsInternal(options, analyzeProject, async (from, to) => {
+    await rename(from, to);
+    return true;
+  });
 
 const aggregateResult = {
   reports: [
@@ -50,7 +61,15 @@ async function withFsOverride(overrides, callback) {
   const helperModules = ["../planning-impact-artifacts", "../planning-impact-artifacts-files"];
   for (const helperModule of helperModules) delete require.cache[require.resolve(helperModule)];
   try {
-    return await callback(require("../planning-impact-artifacts"));
+    const artifacts = require("../planning-impact-artifacts");
+    return await callback({
+      ...artifacts,
+      writePlanningImpactArtifacts: async (options, analyzeProject) =>
+        artifacts.writePlanningImpactArtifacts(options, analyzeProject, async (from, to) => {
+          await fs.rename(from, to);
+          return true;
+        }),
+    });
   } finally {
     Object.assign(fs, originals);
     for (const helperModule of helperModules) delete require.cache[require.resolve(helperModule)];
@@ -458,6 +477,47 @@ test("rejects an output directory replacement before publishing artifacts", asyn
       }
     }
     await rm(victim, { recursive: true, force: true });
+  }
+});
+
+test("preserves concurrent public-path directory, file, and symlink victims", async () => {
+  for (const kind of ["directory", "file", "symlink"]) {
+    const directory = await privateDirectory(`no-mistakes-impact-${kind}-`);
+    const outside = await privateDirectory(`no-mistakes-impact-${kind}-outside-`);
+    const manifest = join(directory, "changed-files.txt");
+    const victim = join(outside, "victim.txt");
+    let parked;
+    try {
+      await writeFile(manifest, "a.mts\n");
+      if (kind === "symlink") await writeFile(victim, "protected");
+      await assert.rejects(
+        writePlanningImpactArtifactsInternal(
+          { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+          async () => {
+            assert.fail("analysis must not run when public restoration is occupied");
+          },
+          async (from, to) => {
+            parked = from;
+            if (kind === "directory") await mkdir(to);
+            else if (kind === "file") await writeFile(to, "protected");
+            else await symlink(victim, to);
+            return false;
+          },
+        ),
+        (error) => error.code === "EEXIST",
+      );
+      const metadata = await lstat(directory);
+      if (kind === "directory") assert.equal(metadata.isDirectory(), true);
+      else if (kind === "file") assert.equal(await readFile(directory, "utf8"), "protected");
+      else {
+        assert.equal(metadata.isSymbolicLink(), true);
+        assert.equal(await readFile(victim, "utf8"), "protected");
+      }
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+      await rm(parked, { recursive: true, force: true }).catch(() => {});
+      await rm(outside, { recursive: true, force: true });
+    }
   }
 });
 
@@ -1007,6 +1067,10 @@ test("exports the artifact writer through the public async Node API", async () =
     assert.equal(filename, addonPath);
     module.exports = {
       analyzeProjectJson: async () => JSON.stringify(aggregateResult),
+      renameNoReplace: async (from, to) => {
+        await rename(from, to);
+        return true;
+      },
     };
   };
   try {
@@ -1024,6 +1088,48 @@ test("exports the artifact writer through the public async Node API", async () =
     if (previous) require.extensions[".node"] = previous;
     else delete require.extensions[".node"];
     await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("public artifact API preserves a concurrent public-path victim", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-public-race-");
+  const manifest = join(directory, "changed-files.txt");
+  const previous = require.extensions[".node"];
+  let parked;
+  delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(addonPath)];
+  require.extensions[".node"] = (module, filename) => {
+    assert.equal(filename, addonPath);
+    module.exports = {
+      analyzeProjectJson: async () => {
+        assert.fail("analysis must not run when public restoration is occupied");
+      },
+      renameNoReplace: async (from, to) => {
+        parked = from;
+        await writeFile(to, "protected");
+        return false;
+      },
+    };
+  };
+  try {
+    await writeFile(manifest, "a.mts\n");
+    const api = require(indexPath);
+    await assert.rejects(
+      api.writePlanningImpactArtifacts({
+        root: "/repo",
+        changedFilesManifest: manifest,
+        outputDirectory: directory,
+      }),
+      (error) => error.code === "EEXIST",
+    );
+    assert.equal(await readFile(directory, "utf8"), "protected");
+  } finally {
+    delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(addonPath)];
+    if (previous) require.extensions[".node"] = previous;
+    else delete require.extensions[".node"];
+    await rm(directory, { recursive: true, force: true });
+    await rm(parked, { recursive: true, force: true }).catch(() => {});
   }
 });
 
@@ -1070,7 +1176,13 @@ test("exports the artifact writer through the real ESM entrypoint", async () => 
   delete require.cache[require.resolve(addonPath)];
   require.extensions[".node"] = (module, filename) => {
     assert.equal(filename, addonPath);
-    module.exports = { analyzeProjectJson: async () => JSON.stringify(aggregateResult) };
+    module.exports = {
+      analyzeProjectJson: async () => JSON.stringify(aggregateResult),
+      renameNoReplace: async (from, to) => {
+        await rename(from, to);
+        return true;
+      },
+    };
   };
   try {
     await writeFile(manifest, "a.mts\n");

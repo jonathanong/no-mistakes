@@ -36,6 +36,7 @@ pub(crate) use analyze_project::analyze_project_json_impl;
 mod async_task;
 mod cli_parity;
 mod codebase;
+mod filesystem;
 pub(crate) mod infra_swift;
 mod lockfile_diff;
 #[cfg(feature = "mermaid-validation")]
@@ -87,6 +88,13 @@ pub fn version() -> AsyncTask<VersionTask> {
 
 pub(crate) fn version_impl() -> String {
     env!("CARGO_PKG_VERSION").to_string()
+}
+
+/// Internal async primitive used by the JavaScript artifact publisher.
+#[cfg(not(coverage))]
+#[cfg_attr(not(test), napi)]
+pub fn rename_no_replace(from: String, to: String) -> AsyncTask<filesystem::RenameNoReplaceTask> {
+    AsyncTask::new(filesystem::RenameNoReplaceTask::new(from.into(), to.into()))
 }
 
 json_binding!(

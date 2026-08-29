@@ -44,7 +44,7 @@ function buildRequest(root, changedFiles, broad) {
   return { root, reports };
 }
 
-async function writePlanningImpactArtifacts(options, analyzeProject) {
+async function writePlanningImpactArtifacts(options, analyzeProject, renameNoReplace) {
   const output = await validateOutputDirectory(options.outputDirectory);
   let manifestHandle;
   let mayWriteFailureArtifacts = !RESERVED_ARTIFACT_NAME.test(
@@ -60,7 +60,7 @@ async function writePlanningImpactArtifacts(options, analyzeProject) {
     const changedFiles = parseChangedFiles(await manifestHandle.readFile("utf8"));
     await manifestHandle.close();
     manifestHandle = undefined;
-    await updateOutputDirectory(output, invalidateStatuses);
+    await updateOutputDirectory(output, invalidateStatuses, renameNoReplace);
     const request = {
       ...buildRequest(options.root, changedFiles, options.broad === true),
       ...invocationOptions(options),
@@ -68,7 +68,11 @@ async function writePlanningImpactArtifacts(options, analyzeProject) {
     const result = await analyzeProject(request);
     const completed = completeResult(result, request.reports.length > 1);
     const artifacts = reportArtifacts(completed);
-    await updateOutputDirectory(output, (privateOutput) => writeSuccess(privateOutput, artifacts));
+    await updateOutputDirectory(
+      output,
+      (privateOutput) => writeSuccess(privateOutput, artifacts),
+      renameNoReplace,
+    );
     return { outputDirectory: output.path, ...artifacts };
   } catch (error) {
     if (manifestHandle) {
@@ -76,8 +80,10 @@ async function writePlanningImpactArtifacts(options, analyzeProject) {
       manifestHandle = undefined;
     }
     if (mayWriteFailureArtifacts) {
-      await updateOutputDirectory(output, (privateOutput) =>
-        writeFailure(privateOutput, error),
+      await updateOutputDirectory(
+        output,
+        (privateOutput) => writeFailure(privateOutput, error),
+        renameNoReplace,
       ).catch(() => {});
     }
     throw error;

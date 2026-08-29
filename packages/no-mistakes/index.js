@@ -99,7 +99,12 @@ async function analyzeProject(options = {}) {
 }
 
 async function writePlanningImpactArtifacts(options) {
-  return writeArtifacts(options, analyzeProject);
+  return writeArtifacts(options, analyzeProject, async (from, to) => {
+    if (await native.renameNoReplace(from, to)) return true;
+    const error = new Error("output directory path changed during planning artifact generation");
+    error.code = "EEXIST";
+    throw error;
+  });
 }
 
 const topologyMemo = new Map();

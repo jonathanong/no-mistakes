@@ -106,7 +106,7 @@ async function removeArtifact(output, name) {
   return removePath(output, join(output.path, name));
 }
 
-async function updateOutputDirectory(output, update) {
+async function updateOutputDirectory(output, update, renameNoReplace) {
   await assertOutputDirectory(output);
   const parked = join(
     dirname(output.path),
@@ -126,7 +126,11 @@ async function updateOutputDirectory(output, update) {
   try {
     await assertOutputDirectory(privateOutput);
     await assertPathVacant(output.path);
-    await rename(parked, output.path);
+    if (!(await renameNoReplace(parked, output.path))) {
+      const error = new Error("output directory path changed during planning artifact generation");
+      error.code = "EEXIST";
+      throw error;
+    }
     await assertOutputDirectory(output);
   } catch (error) {
     restoreError = error;
