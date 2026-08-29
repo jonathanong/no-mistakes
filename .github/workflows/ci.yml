@@ -272,11 +272,13 @@ jobs:
             target: x86_64-pc-windows-msvc
             binary: ./target/debug/no-mistakes.exe
             addon: target/debug/no_mistakes.dll
+            rust_test: "invocation::tests::command_output_resumes_child_after_job_assignment"
           - name: macOS ARM64
             os: macos-15
             target: aarch64-apple-darwin
             binary: ./target/debug/no-mistakes
             addon: target/debug/libno_mistakes.dylib
+            rust_test: "invocation::"
 
     steps:
       - name: Checkout
@@ -314,7 +316,15 @@ jobs:
       # OS-specific invocation tests (Job Objects, process groups, signals).
       - name: Run platform-specific Rust tests
         timeout-minutes: 10
-        run: cargo test --locked -p no-mistakes --lib --all-features "invocation::"
+        shell: bash
+        run: |
+          set -euo pipefail
+          filter='${{ matrix.rust_test }}'
+          if [[ "${{ runner.os }}" == "Windows" ]]; then
+            cargo test --locked -p no-mistakes --lib --all-features "$filter" -- --exact --test-threads=1
+          else
+            cargo test --locked -p no-mistakes --lib --all-features "$filter"
+          fi
 
       - name: Build native CLI and N-API addon
         timeout-minutes: 10

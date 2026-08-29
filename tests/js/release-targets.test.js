@@ -51,9 +51,15 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
   assert.match(
     body,
-    /cargo test --locked -p no-mistakes --lib --all-features "invocation::"/,
-    "native jobs must filter to OS-specific invocation tests",
+    /cargo test --locked -p no-mistakes --lib --all-features "\$filter"/,
+    "native jobs must compile only the no-mistakes lib tests",
   );
+  assert.match(
+    body,
+    /invocation::tests::command_output_resumes_child_after_job_assignment/,
+    "Windows must run the Job Object regression in isolation",
+  );
+  assert.match(body, /rust_test: ["']invocation::["']/);
   assert.match(body, /Run native CLI smoke test/);
   assert.match(body, /real-napi-api\.test\.js/);
   assert.match(
