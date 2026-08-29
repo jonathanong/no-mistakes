@@ -2,10 +2,13 @@
 
 const RESTORATION_FAILURE = Symbol("planning artifact output restoration failure");
 
-function outputRestorationFailure(restoreError, parked, updateError) {
+function outputRestorationFailure(restoreError, parked, outputPath, updateError, restored = false) {
+  const recoveryPath = restored ? outputPath : parked;
   const error = new AggregateError(
     updateError ? [restoreError, updateError] : [restoreError],
-    `planning artifact output restoration failed; recover the parked directory at ${parked}`,
+    restored
+      ? `planning artifact output directory failed validation after restoration at ${recoveryPath}`
+      : `planning artifact output restoration failed; recover the parked directory at ${recoveryPath}`,
     { cause: restoreError },
   );
   error.code = restoreError.code;

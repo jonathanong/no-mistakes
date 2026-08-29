@@ -543,6 +543,60 @@ test("serializes invalidation, analysis, and publication for one output director
   }
 });
 
+test("queues a concurrent call before resolving a temporarily parked output path", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-queue-");
+  const manifest = join(directory, "changed-files.txt");
+  const fs = require("node:fs/promises");
+  const originalRename = fs.rename;
+  const canonicalDirectory = await fs.realpath(directory);
+  let announceParking;
+  let resumeParking;
+  const parkingStarted = new Promise((resolveStarted) => {
+    announceParking = resolveStarted;
+  });
+  const parkingMayFinish = new Promise((resolveFinish) => {
+    resumeParking = resolveFinish;
+  });
+  let parkedOnce = false;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await withFsOverride(
+      {
+        rename: async (from, to) => {
+          const result = await originalRename(from, to);
+          if (!parkedOnce && from === canonicalDirectory) {
+            parkedOnce = true;
+            announceParking();
+            await parkingMayFinish;
+          }
+          return result;
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        const first = writeArtifacts(
+          { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+          async () => aggregateResult,
+        );
+        await parkingStarted;
+        let secondSettled = false;
+        const second = writeArtifacts(
+          { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+          async () => aggregateResult,
+        ).finally(() => {
+          secondSettled = true;
+        });
+        await new Promise((resolveTurn) => setImmediate(resolveTurn));
+        assert.equal(secondSettled, false);
+        resumeParking();
+        await Promise.all([first, second]);
+      },
+    );
+  } finally {
+    resumeParking();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("replaces symlink and hardlink artifact destinations without touching their victims", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");
@@ -1104,6 +1158,59 @@ test("surfaces paired update and restoration failures with the parked recovery p
     assert.equal(await readFile(directory, "utf8"), "concurrent public-path victim");
     assert.equal((await lstat(parked)).isDirectory(), true);
   } finally {
+    await rm(directory, { recursive: true, force: true });
+    await rm(parked, { recursive: true, force: true }).catch(() => {});
+  }
+});
+
+test("reports the public recovery path after restoration completed", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-restored-failure-");
+  const manifest = join(directory, "changed-files.txt");
+  const fs = require("node:fs/promises");
+  const originalRealpath = fs.realpath;
+  const canonicalDirectory = await fs.realpath(directory);
+  let restored = false;
+  let parked;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await withFsOverride(
+      {
+        realpath: async (path, ...args) => {
+          if (restored && path === canonicalDirectory) {
+            const error = new Error("injected post-restoration lookup failure");
+            error.code = "EIO";
+            throw error;
+          }
+          return originalRealpath(path, ...args);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          (error) => {
+            assert.equal(error instanceof AggregateError, true);
+            assert.equal(error.code, "EIO");
+            assert.match(error.message, /failed validation after restoration/u);
+            assert.ok(error.message.includes(canonicalDirectory));
+            assert.ok(!error.message.includes(parked));
+            return true;
+          },
+        );
+      },
+      async (from, to) => {
+        parked = from;
+        await rename(from, to);
+        restored = true;
+        return true;
+      },
+    );
+    assert.equal((await lstat(directory)).isDirectory(), true);
+    await assert.rejects(lstat(parked), /ENOENT/u);
+  } finally {
+    restored = false;
     await rm(directory, { recursive: true, force: true });
     await rm(parked, { recursive: true, force: true }).catch(() => {});
   }
@@ -1783,6 +1890,8 @@ test("exports the artifact writer through the public async Node API", async () =
     assert.equal(filename, addonPath);
     module.exports = {
       analyzeProjectJson: async () => JSON.stringify(aggregateResult),
+      acquirePlanningArtifactLock: async () => 1,
+      releasePlanningArtifactLock: async () => {},
       renameNoReplace: async (from, to) => {
         await rename(from, to);
         return true;
@@ -1820,6 +1929,8 @@ test("public artifact API preserves a concurrent public-path victim", async () =
       analyzeProjectJson: async () => {
         assert.fail("analysis must not run when public restoration is occupied");
       },
+      acquirePlanningArtifactLock: async () => 1,
+      releasePlanningArtifactLock: async () => {},
       renameNoReplace: async (from, to) => {
         parked = from;
         await writeFile(to, "protected");
@@ -1861,6 +1972,8 @@ test("public artifact API preserves a manifest that collides with a reserved des
       analyzeProjectJson: async () => {
         assert.fail("reserved manifest collision must fail before public analysis");
       },
+      acquirePlanningArtifactLock: async () => 1,
+      releasePlanningArtifactLock: async () => {},
     };
   };
   try {
@@ -1894,6 +2007,8 @@ test("exports the artifact writer through the real ESM entrypoint", async () => 
     assert.equal(filename, addonPath);
     module.exports = {
       analyzeProjectJson: async () => JSON.stringify(aggregateResult),
+      acquirePlanningArtifactLock: async () => 1,
+      releasePlanningArtifactLock: async () => {},
       renameNoReplace: async (from, to) => {
         await rename(from, to);
         return true;

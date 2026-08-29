@@ -1,14 +1,89 @@
 use std::io;
 use std::path::Path;
 
-#[cfg(not(coverage))]
-use std::path::PathBuf;
-
-#[cfg(not(coverage))]
-use napi::{Env, Task};
+use std::fs::File;
 
 pub(crate) fn rename_no_replace_impl(from: &Path, to: &Path) -> io::Result<bool> {
     platform_rename_no_replace(from, to)
+}
+
+#[cfg(unix)]
+pub(crate) fn acquire_planning_artifact_lock_impl(path: &Path) -> io::Result<File> {
+    use std::fs::{symlink_metadata, OpenOptions, Permissions};
+    use std::os::fd::AsRawFd;
+    use std::os::unix::fs::{MetadataExt, OpenOptionsExt, PermissionsExt};
+
+    let file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .mode(0o600)
+        .custom_flags(libc::O_CLOEXEC | libc::O_NOFOLLOW)
+        .open(path)?;
+    let metadata = file.metadata()?;
+    if !metadata.is_file() || metadata.nlink() != 1 {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "planning artifact lock must be a regular file with one link",
+        ));
+    }
+    file.set_permissions(Permissions::from_mode(0o600))?;
+    // SAFETY: flock only borrows this live descriptor; the File retains it until release.
+    flock_impl(file.as_raw_fd(), libc::LOCK_EX)?;
+    let path_metadata = symlink_metadata(path)?;
+    validate_planning_artifact_lock_identity(&metadata, &path_metadata)?;
+    Ok(file)
+}
+
+#[cfg(unix)]
+fn validate_planning_artifact_lock_identity(
+    opened: &std::fs::Metadata,
+    path: &std::fs::Metadata,
+) -> io::Result<()> {
+    use std::os::unix::fs::MetadataExt;
+
+    if !path.is_file()
+        || path.nlink() != 1
+        || path.dev() != opened.dev()
+        || path.ino() != opened.ino()
+    {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "planning artifact lock changed during acquisition",
+        ));
+    }
+    Ok(())
+}
+
+#[cfg(not(unix))]
+pub(crate) fn acquire_planning_artifact_lock_impl(_path: &Path) -> io::Result<File> {
+    Err(io::Error::new(
+        io::ErrorKind::Unsupported,
+        "planning artifact locks are unavailable on this platform",
+    ))
+}
+
+#[cfg(unix)]
+fn unlock_planning_artifact_lock_impl(file: &File) -> io::Result<()> {
+    use std::os::fd::AsRawFd;
+
+    // SAFETY: flock only borrows this live descriptor.
+    flock_impl(file.as_raw_fd(), libc::LOCK_UN)
+}
+
+#[cfg(unix)]
+fn flock_impl(file_descriptor: std::os::fd::RawFd, operation: libc::c_int) -> io::Result<()> {
+    // SAFETY: callers provide a descriptor and an operation accepted by flock.
+    if unsafe { libc::flock(file_descriptor, operation) } == 0 {
+        Ok(())
+    } else {
+        Err(io::Error::last_os_error())
+    }
+}
+
+#[cfg(not(unix))]
+fn unlock_planning_artifact_lock_impl(_file: &File) -> io::Result<()> {
+    Ok(())
 }
 
 #[cfg(target_os = "linux")]
@@ -99,32 +174,11 @@ fn platform_rename_no_replace(_from: &Path, _to: &Path) -> io::Result<bool> {
 }
 
 #[cfg(not(coverage))]
-pub struct RenameNoReplaceTask {
-    from: PathBuf,
-    to: PathBuf,
-}
-
+mod tasks;
 #[cfg(not(coverage))]
-impl RenameNoReplaceTask {
-    pub(crate) fn new(from: PathBuf, to: PathBuf) -> Self {
-        Self { from, to }
-    }
-}
-
-#[cfg(not(coverage))]
-impl Task for RenameNoReplaceTask {
-    type Output = bool;
-    type JsValue = bool;
-
-    fn compute(&mut self) -> napi::Result<Self::Output> {
-        rename_no_replace_impl(&self.from, &self.to)
-            .map_err(|error| napi::Error::from_reason(error.to_string()))
-    }
-
-    fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
-        Ok(output)
-    }
-}
+pub use tasks::{
+    AcquirePlanningArtifactLockTask, ReleasePlanningArtifactLockTask, RenameNoReplaceTask,
+};
 
 #[cfg(test)]
 mod tests;

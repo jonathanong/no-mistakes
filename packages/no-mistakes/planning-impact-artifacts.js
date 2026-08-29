@@ -8,6 +8,7 @@ const {
   validateOutputDirectory,
 } = require("./planning-impact-artifacts-files");
 const artifactErrors = require("./planning-impact-artifacts-errors");
+const { serializeOutputUpdate } = require("./planning-impact-artifacts-lock");
 const { realpath } = require("node:fs/promises");
 const { buildRequest, completeResult } = require("./planning-impact-artifacts-inputs");
 const { basename, isAbsolute, posix, resolve, win32 } = require("node:path");
@@ -21,33 +22,27 @@ const REPORT_TYPES = {
 };
 const RESERVED_ARTIFACT_NAME =
   /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/iu;
-const outputUpdates = new Map();
 
-async function writePlanningImpactArtifacts(options, analyzeProject, renameNoReplace) {
-  const outputPath = await realpath(resolve(options.outputDirectory));
-  return serializeOutputUpdate(outputPath, () =>
-    writePlanningImpactArtifactsUnlocked(
-      { ...options, outputDirectory: outputPath },
-      analyzeProject,
-      renameNoReplace,
-    ),
-  );
-}
-
-async function serializeOutputUpdate(outputPath, update) {
-  const previous = outputUpdates.get(outputPath) || Promise.resolve();
-  let release;
-  const current = new Promise((resolveCurrent) => {
-    release = resolveCurrent;
+async function writePlanningImpactArtifacts(
+  options,
+  analyzeProject,
+  renameNoReplace,
+  acquireOutputLock = async () => async () => {},
+) {
+  const outputKey = resolve(options.outputDirectory);
+  return serializeOutputUpdate(outputKey, async () => {
+    const releaseOutputLock = await acquireOutputLock(outputKey);
+    try {
+      const outputPath = await realpath(outputKey);
+      return await writePlanningImpactArtifactsUnlocked(
+        { ...options, outputDirectory: outputPath },
+        analyzeProject,
+        renameNoReplace,
+      );
+    } finally {
+      await releaseOutputLock();
+    }
   });
-  outputUpdates.set(outputPath, current);
-  await previous;
-  try {
-    return await update();
-  } finally {
-    release();
-    if (outputUpdates.get(outputPath) === current) outputUpdates.delete(outputPath);
-  }
 }
 
 async function writePlanningImpactArtifactsUnlocked(options, analyzeProject, renameNoReplace) {

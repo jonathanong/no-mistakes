@@ -134,6 +134,7 @@ async function updateOutputDirectory(output, update, renameNoReplace) {
     updateError = error;
   }
   let restoreError;
+  let restored = false;
   try {
     await assertOutputDirectory(privateOutput);
     await assertPathVacant(output.path);
@@ -142,11 +143,13 @@ async function updateOutputDirectory(output, update, renameNoReplace) {
       error.code = "EEXIST";
       throw error;
     }
+    restored = true;
     await assertOutputDirectory(output);
   } catch (error) {
     restoreError = error;
   }
-  if (restoreError) throw outputRestorationFailure(restoreError, parked, updateError);
+  if (restoreError)
+    throw outputRestorationFailure(restoreError, parked, output.path, updateError, restored);
   if (updateError) throw updateError;
   return result;
 }

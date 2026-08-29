@@ -20,6 +20,7 @@
     "planning-impact-artifacts-errors.js",
     "planning-impact-artifacts-files.js",
     "planning-impact-artifacts-inputs.js",
+    "planning-impact-artifacts-lock.js",
     "planning-impact-artifacts-privacy.js",
     "planning.js",
     "workflow-topology-index.js",
