@@ -1,6 +1,6 @@
 "use strict";
 
-const { realpath, stat } = require("node:fs/promises");
+const { stat } = require("node:fs/promises");
 const { basename, dirname, join } = require("node:path");
 
 const RESERVED_ARTIFACT_NAME =
@@ -11,9 +11,11 @@ const RESERVED_ARTIFACT_NAMES = ["dependencies", "dependents", "symbols", "plan"
 
 async function isReservedArtifactPath(path) {
   if (RESERVED_ARTIFACT_NAME.test(basename(path))) return true;
+  const identity = await stat(path);
   for (const name of RESERVED_ARTIFACT_NAMES) {
     try {
-      if ((await realpath(join(dirname(path), name))) === path) return true;
+      const candidate = await stat(join(dirname(path), name));
+      if (candidate.dev === identity.dev && candidate.ino === identity.ino) return true;
     } catch (error) {
       if (!["ENOENT", "ENOTDIR"].includes(error.code)) throw error;
     }
