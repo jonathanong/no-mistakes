@@ -10,7 +10,11 @@ const {
 const artifactErrors = require("./planning-impact-artifacts-errors");
 const { canonicalOutputKey, serializeOutputUpdate } = require("./planning-impact-artifacts-lock");
 const { realpath } = require("node:fs/promises");
-const { buildRequest, completeResult } = require("./planning-impact-artifacts-inputs");
+const {
+  buildRequest,
+  completeResult,
+  isReservedArtifactPath,
+} = require("./planning-impact-artifacts-inputs");
 const { basename, isAbsolute, posix, resolve, win32 } = require("node:path");
 const { TextDecoder } = require("node:util");
 
@@ -22,7 +26,9 @@ const REPORT_TYPES = {
   plan: "testsPlan",
 };
 const RESERVED_ARTIFACT_NAME =
-  /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/iu;
+  /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/u;
+const RESERVED_MANIFEST_ERROR =
+  "changed-files manifest must not use a reserved artifact destination";
 // Node keeps U+FEFF when ignoreBOM is true; the default strips a UTF-8 BOM.
 const UTF8_DECODER = new TextDecoder("utf-8", { fatal: true });
 
@@ -55,17 +61,16 @@ async function writePlanningImpactArtifactsUnlocked(options, analyzeProject, ren
   try {
     const requestedManifestPath = resolve(options.changedFilesManifest);
     mayWriteFailureArtifacts = !RESERVED_ARTIFACT_NAME.test(basename(requestedManifestPath));
-    if (!mayWriteFailureArtifacts) {
-      throw new Error("changed-files manifest must not use a reserved artifact destination");
-    }
+    if (!mayWriteFailureArtifacts) throw new Error(RESERVED_MANIFEST_ERROR);
     const manifestPath = await realpath(requestedManifestPath);
-    mayWriteFailureArtifacts = !RESERVED_ARTIFACT_NAME.test(basename(manifestPath));
+    mayWriteFailureArtifacts = false;
+    if (await isReservedArtifactPath(manifestPath)) throw new Error(RESERVED_MANIFEST_ERROR);
+    mayWriteFailureArtifacts = true;
     const manifest = await validateManifest(output, manifestPath);
     manifestHandle = manifest.handle;
-    if (RESERVED_ARTIFACT_NAME.test(basename(manifest.path))) {
-      mayWriteFailureArtifacts = false;
-      throw new Error("changed-files manifest must not use a reserved artifact destination");
-    }
+    mayWriteFailureArtifacts = false;
+    if (await isReservedArtifactPath(manifest.path)) throw new Error(RESERVED_MANIFEST_ERROR);
+    mayWriteFailureArtifacts = true;
     const changedFiles = parseChangedFiles(decodeManifest(await manifestHandle.readFile()));
     await manifestHandle.close();
     manifestHandle = undefined;

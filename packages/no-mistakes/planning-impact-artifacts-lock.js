@@ -49,7 +49,6 @@ async function canonicalOutputKey(outputPath, visited = new Set()) {
 
 function createPlanningArtifactLock(native) {
   return async (outputPath) => {
-    if (process.platform === "win32") return async () => {};
     const lockPath = path.join(
       path.dirname(outputPath),
       `.${path.basename(outputPath)}.planning-impact.lock`,

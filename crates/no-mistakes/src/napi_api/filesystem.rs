@@ -3,6 +3,9 @@ use std::path::Path;
 
 use std::fs::File;
 
+#[cfg(windows)]
+mod windows;
+
 pub(crate) fn rename_no_replace_impl(from: &Path, to: &Path) -> io::Result<bool> {
     platform_rename_no_replace(from, to)
 }
@@ -64,12 +67,22 @@ fn validate_planning_artifact_lock_identity(
     Ok(())
 }
 
-#[cfg(not(unix))]
+#[cfg(windows)]
+pub(crate) fn acquire_planning_artifact_lock_impl(path: &Path) -> io::Result<File> {
+    windows::acquire_planning_artifact_lock(path)
+}
+
+#[cfg(not(any(unix, windows)))]
 pub(crate) fn acquire_planning_artifact_lock_impl(_path: &Path) -> io::Result<File> {
     Err(io::Error::new(
         io::ErrorKind::Unsupported,
         "planning artifact locks are unavailable on this platform",
     ))
+}
+
+#[cfg(windows)]
+fn unlock_planning_artifact_lock_impl(file: &File) -> io::Result<()> {
+    windows::unlock_planning_artifact_lock(file)
 }
 
 #[cfg(unix)]
@@ -88,11 +101,6 @@ fn flock_impl(file_descriptor: std::os::fd::RawFd, operation: libc::c_int) -> io
     } else {
         Err(io::Error::last_os_error())
     }
-}
-
-#[cfg(not(unix))]
-fn unlock_planning_artifact_lock_impl(_file: &File) -> io::Result<()> {
-    Ok(())
 }
 
 #[cfg(target_os = "linux")]

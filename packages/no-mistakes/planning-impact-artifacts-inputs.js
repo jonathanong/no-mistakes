@@ -1,11 +1,31 @@
 "use strict";
 
 const { lstat, stat } = require("node:fs/promises");
-const { join } = require("node:path");
+const { basename, dirname, join } = require("node:path");
+
+const RESERVED_ARTIFACT_NAME =
+  /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/u;
+const RESERVED_ARTIFACT_NAMES = ["dependencies", "dependents", "symbols", "plan"].flatMap((name) =>
+  ["json", "stderr", "status"].map((extension) => `${name}.${extension}`),
+);
+
+async function isReservedArtifactPath(path) {
+  if (RESERVED_ARTIFACT_NAME.test(basename(path))) return true;
+  const identity = await stat(path);
+  for (const name of RESERVED_ARTIFACT_NAMES) {
+    try {
+      const candidate = await lstat(join(dirname(path), name));
+      if (candidate.dev === identity.dev && candidate.ino === identity.ino) return true;
+    } catch (error) {
+      if (!["ENOENT", "ENOTDIR"].includes(error.code)) throw error;
+    }
+  }
+  return false;
+}
 
 async function existingFiles(root, files) {
   try {
-    await lstat(root);
+    await stat(root);
   } catch (error) {
     if (error.code === "ENOENT") return files;
     throw error;
@@ -64,4 +84,4 @@ function completeResult(result, requestedReports) {
   return { reports: [...omitted, ...result.reports] };
 }
 
-module.exports = { buildRequest, completeResult };
+module.exports = { buildRequest, completeResult, isReservedArtifactPath };
