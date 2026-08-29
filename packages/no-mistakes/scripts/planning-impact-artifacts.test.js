@@ -1,4 +1,6 @@
 const assert = require("node:assert/strict");
+const { execFileSync } = require("node:child_process");
+const { constants } = require("node:fs");
 const test = globalThis.test || require("node:test").test;
 const {
   chmod,
@@ -458,6 +460,100 @@ test("rejects a manifest hardlink to an outside file before analysis", async () 
   }
 });
 
+test(
+  "rejects a FIFO changed-files manifest without waiting for a writer",
+  { skip: process.platform === "win32" },
+  async () => {
+    const directory = await privateDirectory("no-mistakes-impact-");
+    const manifest = join(directory, "changed-files.txt");
+    const {
+      validateManifest,
+      validateOutputDirectory,
+    } = require("../planning-impact-artifacts-files");
+    let output;
+    try {
+      execFileSync("mkfifo", [manifest]);
+      output = await validateOutputDirectory(directory);
+      await assert.rejects(
+        validateManifest(output, manifest),
+        /changed-files manifest must be a regular file/,
+      );
+    } finally {
+      await output?.handle?.close().catch(() => {});
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
+  "opens special changed-files manifests nonblocking before rejecting them",
+  { skip: constants.O_NONBLOCK === undefined },
+  async () => {
+    const directory = await privateDirectory("no-mistakes-impact-");
+    const manifest = join(directory, "changed-files.txt");
+    const fs = require("node:fs/promises");
+    const originalOpen = fs.open;
+    try {
+      await writeFile(manifest, "a.mts\n");
+      const canonicalManifest = await fs.realpath(manifest);
+      let openedNonblocking = false;
+      await withFsOverride(
+        {
+          open: async (path, flags, ...rest) => {
+            if (path === canonicalManifest) {
+              openedNonblocking = (flags & constants.O_NONBLOCK) !== 0;
+              return {
+                stat: async () => ({ isFile: () => false }),
+                close: async () => {},
+              };
+            }
+            return originalOpen(path, flags, ...rest);
+          },
+        },
+        async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+          await assert.rejects(
+            writeArtifacts(
+              { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+              async () => aggregateResult,
+            ),
+            /changed-files manifest must be a regular file/,
+          );
+        },
+      );
+      assert.equal(openedNonblocking, true);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);
+
+test("requires the private output directory to share its parent's filesystem", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const fs = require("node:fs/promises");
+  const originalStat = fs.stat;
+  try {
+    const canonicalParent = dirname(await fs.realpath(directory));
+    await withFsOverride(
+      {
+        stat: async (path, ...rest) => {
+          const metadata = await originalStat(path, ...rest);
+          if (path !== canonicalParent) return metadata;
+          return { dev: metadata.dev + 1, isDirectory: () => true };
+        },
+      },
+      async () => {
+        const { validateOutputDirectory } = require("../planning-impact-artifacts-files");
+        await assert.rejects(
+          validateOutputDirectory(directory),
+          /must share its parent's filesystem for atomic planning artifact publication/,
+        );
+      },
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("rejects a manifest path swapped after it is opened", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const outside = await privateDirectory("no-mistakes-impact-outside-");
@@ -874,6 +970,37 @@ test("best-effort failure reporting preserves the original directory error", asy
       assert.equal(await readFile(join(directory, `${name}.status`), "utf8"), "1\n");
       assert.ok((await readFile(join(directory, `${name}.stderr`), "utf8")).length > 0);
     }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("best-effort failure reporting does not mask the original validation error", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const fs = require("node:fs/promises");
+  const originalRename = fs.rename;
+  try {
+    await writeFile(manifest, "../outside.mts\n");
+    await withFsOverride(
+      {
+        rename: async (...args) => {
+          if (args[0] === (await fs.realpath(directory))) {
+            throw new Error("failure artifact publication is unavailable");
+          }
+          return originalRename(...args);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          /repository-relative/,
+        );
+      },
+    );
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

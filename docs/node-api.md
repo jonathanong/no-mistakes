@@ -113,10 +113,16 @@ path to a private regular file directly in that same existing `0700` directory
 are newline-delimited literal repository-relative paths (only empty records are
 ignored) and its filename cannot collide with an artifact destination. The
 directory must remain the same private directory for the duration of the
-operation. Artifact files use mode `0600`;
+operation. It must share its parent's filesystem (mount boundaries are
+rejected), and that parent must permit atomically renaming the directory:
+publication parks and restores it. Bind mounts or other directories the
+platform cannot rename are unsupported and fail during that atomic parking.
+Artifact files use mode `0600`;
 all four existing statuses are first made nonzero before analysis begins, and
-failures remove stale JSON and best-effort write bounded diagnostics and
-nonzero statuses for every report. The helper is unavailable on Windows because
+failures remove stale JSON and attempt to write bounded diagnostics and nonzero
+statuses for every report. Those failure artifacts are best effort: inability
+to publish them never masks the original analysis or publication error. The
+helper is unavailable on Windows because
 Node does not expose a trustworthy private Windows ACL check. Structural paths
 are sent to traversal reports as `{ file }` entries, so `#` remains part of a
 literal filename rather than a symbol delimiter.

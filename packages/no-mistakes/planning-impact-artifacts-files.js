@@ -5,13 +5,20 @@ const { basename, dirname, join } = require("node:path");
 const { randomUUID } = require("node:crypto");
 const { outputRestorationFailure } = require("./planning-impact-artifacts-errors");
 const privacy = require("./planning-impact-artifacts-privacy");
-const MANIFEST_OPEN_FLAGS = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0);
+const MANIFEST_OPEN_FLAGS =
+  constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0);
 
 async function validateOutputDirectory(outputDirectory) {
   const directory = await realpath(outputDirectory);
   const metadata = await stat(directory);
   if (!privacy.isPrivateDirectory(metadata)) {
     throw privacy.privatePermissionError("output directory", 0o700);
+  }
+  const parentMetadata = await stat(dirname(directory));
+  if (!parentMetadata.isDirectory() || parentMetadata.dev !== metadata.dev) {
+    throw new Error(
+      "output directory must share its parent's filesystem for atomic planning artifact publication",
+    );
   }
   let handle;
   try {

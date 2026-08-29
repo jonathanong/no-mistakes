@@ -30,7 +30,7 @@ test(
 );
 
 test(
-  "compiled internal N-API rename preserves an existing destination",
+  "compiled internal N-API rename preserves an existing destination and claims a vacant one",
   { skip: !addonPath },
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "no-mistakes-napi-rename-"));
@@ -42,6 +42,10 @@ test(
       const native = require(addonPath);
       assert.equal(await native.renameNoReplace(source, destination), false);
       assert.equal((await stat(source)).isDirectory(), true);
+      assert.equal((await stat(destination)).isDirectory(), true);
+      await rm(destination, { recursive: true });
+      assert.equal(await native.renameNoReplace(source, destination), true);
+      await assert.rejects(stat(source), { code: "ENOENT" });
       assert.equal((await stat(destination)).isDirectory(), true);
     } finally {
       await rm(directory, { recursive: true, force: true });
