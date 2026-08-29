@@ -345,6 +345,36 @@ test("rejects a manifest symlink whose canonical target escapes the output direc
   }
 });
 
+test("rejects a manifest hardlink to an outside file before analysis", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const outside = await privateDirectory("no-mistakes-impact-outside-");
+  const manifest = join(directory, "changed-files.txt");
+  const outsideManifest = join(outside, "changed-files.txt");
+  let analyzed = false;
+  try {
+    await writeFile(outsideManifest, "a.mts\n");
+    await link(outsideManifest, manifest);
+    await assert.rejects(
+      writePlanningImpactArtifacts(
+        { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+        async () => {
+          analyzed = true;
+          return aggregateResult;
+        },
+      ),
+      /manifest changed during validation/,
+    );
+    assert.equal(analyzed, false);
+    assert.equal(await readFile(outsideManifest, "utf8"), "a.mts\n");
+    for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
+      assert.equal(await readFile(join(directory, `${name}.status`), "utf8"), "1\n");
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  }
+});
+
 test("rejects a manifest path swapped after it is opened", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const outside = await privateDirectory("no-mistakes-impact-outside-");

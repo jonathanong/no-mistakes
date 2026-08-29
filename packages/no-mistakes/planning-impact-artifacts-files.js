@@ -43,7 +43,12 @@ async function validateManifest(output, manifestPath) {
     const metadata = await handle.stat();
     if (!metadata.isFile()) throw new Error("changed-files manifest must be a regular file");
     const pathMetadata = await lstat(manifest);
-    if (!pathMetadata.isFile() || !sameFileIdentity(metadata, pathMetadata)) {
+    if (
+      metadata.nlink !== 1 ||
+      pathMetadata.nlink !== 1 ||
+      !pathMetadata.isFile() ||
+      !sameFileIdentity(metadata, pathMetadata)
+    ) {
       throw new Error("changed-files manifest changed during validation");
     }
     await assertOutputDirectory(output);
