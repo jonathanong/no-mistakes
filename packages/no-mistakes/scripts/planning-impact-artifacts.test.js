@@ -1535,16 +1535,16 @@ test("rejects reserved artifact manifests through case-insensitive path aliases"
   const manifest = join(directory, "PLAN.STATUS");
   const reservedAlias = join(directory, "plan.status");
   const fs = require("node:fs/promises");
-  const originalStat = fs.stat;
+  const originalLstat = fs.lstat;
   let analyzed = false;
   try {
     await writeFile(manifest, "a.mts\n");
     await withFsOverride(
       {
-        stat: async (path, ...args) =>
+        lstat: async (path, ...args) =>
           basename(path) === basename(reservedAlias)
-            ? originalStat(manifest, ...args)
-            : originalStat(path, ...args),
+            ? originalLstat(manifest, ...args)
+            : originalLstat(path, ...args),
       },
       async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
         await assert.rejects(
