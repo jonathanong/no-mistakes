@@ -275,13 +275,13 @@ fn command_output_resumes_child_after_job_assignment() {
         Some(std::thread::current().id()),
     )
     .unwrap();
-    let mut command = Command::new("cmd.exe");
+    let mut command = Command::new("powershell.exe");
     command.args([
-        "/D",
-        "/C",
-        // Reading `set /P` from NUL prints the prompt but leaves a failing
-        // ERRORLEVEL, so make the fixture's intended success explicit.
-        "<NUL set /P =stdout & <NUL set /P =stderr 1>&2 & exit /B 0",
+        "-NoLogo",
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        "[Console]::Out.Write('stdout'); [Console]::Error.Write('stderr')",
     ]);
 
     // The Windows path creates the process suspended, attaches its job, and
