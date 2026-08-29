@@ -262,7 +262,7 @@ jobs:
   native-tests:
     name: Native tests (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 40
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -308,20 +308,14 @@ jobs:
         timeout-minutes: 2
         run: npm run build:js
 
-      - name: Run full Rust tests
-        if: runner.os != 'Windows'
-        timeout-minutes: 25
-        run: cargo test --locked --workspace --all-features
-
-      - name: Compile Rust tests and run Windows process-tree regression
-        if: runner.os == 'Windows'
-        timeout-minutes: 25
-        run: |
-          cargo test --locked --workspace --all-features --no-run
-          cargo test --locked -p no-mistakes --lib --all-features invocation::tests::command_output_resumes_child_after_job_assignment -- --exact
+      # Linux `tests` owns the full suite. Native jobs only compile/run the
+      # OS-specific invocation tests (Job Objects, process groups, signals).
+      - name: Run platform-specific Rust tests
+        timeout-minutes: 10
+        run: cargo test --locked -p no-mistakes --lib --all-features "invocation::"
 
       - name: Build native CLI and N-API addon
-        timeout-minutes: 15
+        timeout-minutes: 10
         shell: bash
         run: |
           set -euo pipefail

@@ -37,3 +37,23 @@ test("every installer platform target has a release build", () => {
     assert.ok(releaseTargets.includes(target), `release workflow does not build ${target}`);
   }
 });
+
+test("native CI jobs run only platform-specific Rust tests", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
+  const nativeJob = workflow.match(/^ {2}native-tests:[\s\S]*?(?=^ {2}[a-z])/m);
+  assert.ok(nativeJob, "ci.yml must define native-tests");
+  const body = nativeJob[0];
+
+  assert.doesNotMatch(
+    body,
+    /cargo test --locked --workspace/,
+    "native jobs must not compile or run the Linux full suite",
+  );
+  assert.match(
+    body,
+    /cargo test --locked -p no-mistakes --lib --all-features "invocation::"/,
+    "native jobs must filter to OS-specific invocation tests",
+  );
+  assert.match(body, /Run native CLI smoke test/);
+  assert.match(body, /real-napi-api\.test\.js/);
+});
