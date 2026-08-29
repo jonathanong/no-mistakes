@@ -308,9 +308,17 @@ jobs:
         timeout-minutes: 2
         run: npm run build:js
 
-      - name: Run Rust tests
+      - name: Run full Rust tests
+        if: runner.os != 'Windows'
         timeout-minutes: 25
         run: cargo test --locked --workspace --all-features
+
+      - name: Compile Rust tests and run Windows process-tree regression
+        if: runner.os == 'Windows'
+        timeout-minutes: 25
+        run: |
+          cargo test --locked --workspace --all-features --no-run
+          cargo test --locked -p no-mistakes --lib --all-features invocation::tests::command_output_resumes_child_after_job_assignment -- --exact
 
       - name: Build native CLI and N-API addon
         timeout-minutes: 15
