@@ -6,9 +6,12 @@ use std::fs::File;
 use std::path::PathBuf;
 
 #[cfg(unix)]
+use napi::CleanupEnvHook;
+
+#[cfg(unix)]
 use std::collections::HashMap;
 #[cfg(unix)]
-use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
+use std::sync::atomic::{AtomicU32, Ordering};
 #[cfg(unix)]
 use std::sync::{Mutex, OnceLock};
 
@@ -38,14 +41,26 @@ impl Task for RenameNoReplaceTask {
 }
 
 #[cfg(unix)]
-static PLANNING_ARTIFACT_LOCKS: OnceLock<Mutex<HashMap<u32, File>>> = OnceLock::new();
+struct SendCleanupHook(CleanupEnvHook<u32>);
+
+// SAFETY: the hook pointer is only registered and removed on the Env's JS thread.
 #[cfg(unix)]
-static NEXT_PLANNING_ARTIFACT_LOCK: AtomicU32 = AtomicU32::new(1);
-#[cfg(unix)]
-static PLANNING_ARTIFACT_LOCK_CLEANUP: AtomicBool = AtomicBool::new(false);
+unsafe impl Send for SendCleanupHook {}
 
 #[cfg(unix)]
-fn planning_artifact_locks() -> &'static Mutex<HashMap<u32, File>> {
+struct PlanningArtifactLock {
+    file: File,
+    hook: SendCleanupHook,
+}
+
+#[cfg(unix)]
+static PLANNING_ARTIFACT_LOCKS: OnceLock<Mutex<HashMap<u32, PlanningArtifactLock>>> =
+    OnceLock::new();
+#[cfg(unix)]
+static NEXT_PLANNING_ARTIFACT_LOCK: AtomicU32 = AtomicU32::new(1);
+
+#[cfg(unix)]
+fn planning_artifact_locks() -> &'static Mutex<HashMap<u32, PlanningArtifactLock>> {
     PLANNING_ARTIFACT_LOCKS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
@@ -53,13 +68,6 @@ fn planning_artifact_locks() -> &'static Mutex<HashMap<u32, File>> {
 fn cleanup_planning_artifact_lock(token: u32) {
     if let Ok(mut locks) = planning_artifact_locks().lock() {
         locks.remove(&token);
-    }
-}
-
-#[cfg(unix)]
-fn drain_planning_artifact_locks(_: ()) {
-    if let Ok(mut locks) = planning_artifact_locks().lock() {
-        locks.clear();
     }
 }
 
@@ -85,24 +93,26 @@ impl Task for AcquirePlanningArtifactLockTask {
     fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         #[cfg(unix)]
         {
-            let mut locks = planning_artifact_locks().lock().unwrap();
+            let locks = planning_artifact_locks().lock().unwrap();
             loop {
                 let token = NEXT_PLANNING_ARTIFACT_LOCK.fetch_add(1, Ordering::Relaxed);
                 if token != 0 && !locks.contains_key(&token) {
-                    locks.insert(token, output);
                     drop(locks);
-                    if PLANNING_ARTIFACT_LOCK_CLEANUP
-                        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-                        .is_ok()
+                    let hook = match env.add_env_cleanup_hook(token, cleanup_planning_artifact_lock)
                     {
-                        if let Err(error) =
-                            env.add_env_cleanup_hook((), drain_planning_artifact_locks)
-                        {
-                            PLANNING_ARTIFACT_LOCK_CLEANUP.store(false, Ordering::Release);
-                            cleanup_planning_artifact_lock(token);
+                        Ok(hook) => hook,
+                        Err(error) => {
+                            drop(output);
                             return Err(error);
                         }
-                    }
+                    };
+                    planning_artifact_locks().lock().unwrap().insert(
+                        token,
+                        PlanningArtifactLock {
+                            file: output,
+                            hook: SendCleanupHook(hook),
+                        },
+                    );
                     return Ok(token);
                 }
             }
@@ -119,11 +129,17 @@ impl Task for AcquirePlanningArtifactLockTask {
 
 pub struct ReleasePlanningArtifactLockTask {
     token: u32,
+    #[cfg(unix)]
+    hook: Option<SendCleanupHook>,
 }
 
 impl ReleasePlanningArtifactLockTask {
     pub(crate) fn new(token: u32) -> Self {
-        Self { token }
+        Self {
+            token,
+            #[cfg(unix)]
+            hook: None,
+        }
     }
 }
 
@@ -134,11 +150,12 @@ impl Task for ReleasePlanningArtifactLockTask {
     fn compute(&mut self) -> napi::Result<Self::Output> {
         #[cfg(unix)]
         {
-            let file = planning_artifact_locks()
+            let PlanningArtifactLock { file, hook } = planning_artifact_locks()
                 .lock()
                 .unwrap()
                 .remove(&self.token)
                 .ok_or_else(|| napi::Error::from_reason("unknown planning artifact lock"))?;
+            self.hook = Some(hook);
             unlock_planning_artifact_lock_impl(&file)
                 .map_err(|error| napi::Error::from_reason(error.to_string()))?;
             Ok(())
@@ -149,7 +166,13 @@ impl Task for ReleasePlanningArtifactLockTask {
         ))
     }
 
-    fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
+    fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
+        #[cfg(unix)]
+        if let Some(hook) = self.hook.take() {
+            let _ = env.remove_env_cleanup_hook(hook.0);
+        }
+        #[cfg(not(unix))]
+        let _ = env;
         Ok(output)
     }
 }
