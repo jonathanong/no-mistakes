@@ -50,11 +50,51 @@ fn path_helpers_handle_absolute_and_relative_paths() {
     let absolute = cwd.join("tmp");
     assert_eq!(absolutize(&absolute).unwrap(), absolute);
     assert_eq!(absolutize(Path::new(".")).unwrap(), cwd.join("."));
-    let outside = cwd.parent().unwrap().join("other/file.ts");
-    assert_eq!(
-        relative_string(&cwd, &outside),
-        outside.to_string_lossy().replace('\\', "/")
-    );
+    match cwd.parent() {
+        Some(parent) => {
+            let outside = parent.join("other/file.ts");
+            assert_eq!(
+                relative_string(&cwd, &outside),
+                outside.to_string_lossy().replace('\\', "/")
+            );
+        }
+        None => {
+            let rendered = relative_string(&cwd, unrelated_outside_path());
+            assert!(!rendered.is_empty());
+            assert!(!rendered.contains('\\'));
+        }
+    }
+}
+
+#[test]
+fn relative_string_handles_filesystem_root_without_a_parent() {
+    let root = filesystem_root();
+    assert!(root.parent().is_none());
+    let outside = unrelated_outside_path();
+    let rendered = relative_string(root, outside);
+    assert!(!rendered.contains('\\'));
+    if cfg!(windows) {
+        assert_eq!(rendered, outside.to_string_lossy().replace('\\', "/"));
+    } else {
+        // Every absolute Unix path is under `/`, so the root prefix is stripped.
+        assert_eq!(rendered, "other/file.ts");
+    }
+}
+
+fn filesystem_root() -> &'static Path {
+    if cfg!(windows) {
+        Path::new(r"C:\")
+    } else {
+        Path::new("/")
+    }
+}
+
+fn unrelated_outside_path() -> &'static Path {
+    if cfg!(windows) {
+        Path::new(r"Z:\other\file.ts")
+    } else {
+        Path::new("/other/file.ts")
+    }
 }
 
 #[test]
