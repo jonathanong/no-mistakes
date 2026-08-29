@@ -1,7 +1,8 @@
 "use strict";
 
-const { chmod, readFile, realpath, rm, stat, writeFile } = require("node:fs/promises");
+const { open, readFile, realpath, rename, rm, stat } = require("node:fs/promises");
 const { dirname, isAbsolute, join, resolve } = require("node:path");
+const { randomUUID } = require("node:crypto");
 
 const REPORTS = ["dependencies", "dependents", "symbols", "plan"];
 const REPORT_TYPES = {
@@ -40,8 +41,8 @@ async function writePlanningImpactArtifacts(options, analyzeProject) {
   const outputDirectory = await validateOutputDirectory(options.outputDirectory);
   const manifestPath = resolve(options.changedFilesManifest);
   try {
-    await validateManifest(outputDirectory, manifestPath);
-    const changedFiles = parseChangedFiles(await readFile(manifestPath, "utf8"));
+    const manifest = await validateManifest(outputDirectory, manifestPath);
+    const changedFiles = parseChangedFiles(await readFile(manifest, "utf8"));
     const request = {
       ...buildRequest(options.root, changedFiles, options.broad === true),
       ...invocationOptions(options),
@@ -82,6 +83,7 @@ async function validateManifest(outputDirectory, manifestPath) {
   if (dirname(manifest) !== outputDirectory) {
     throw new Error("manifest must be inside the private output directory");
   }
+  return manifest;
 }
 
 function parseChangedFiles(source) {
@@ -130,32 +132,40 @@ function reportArtifacts(result) {
 }
 
 async function writeSuccess(outputDirectory, artifacts) {
-  await Promise.all(
-    REPORTS.flatMap((name) => [
-      writeArtifact(
-        join(outputDirectory, `${name}.json`),
-        `${JSON.stringify(toCliValue(artifacts[name]))}\n`,
-      ),
-      writeArtifact(join(outputDirectory, `${name}.stderr`), ""),
-      writeArtifact(join(outputDirectory, `${name}.status`), "0\n"),
-    ]),
-  );
+  for (const name of REPORTS) {
+    await publishArtifact(
+      outputDirectory,
+      `${name}.json`,
+      `${JSON.stringify(toCliValue(artifacts[name]))}\n`,
+    );
+    await publishArtifact(outputDirectory, `${name}.stderr`, "");
+  }
+  for (const name of REPORTS) await publishArtifact(outputDirectory, `${name}.status`, "0\n");
 }
 
 async function writeFailure(outputDirectory, error) {
   const diagnostic = boundedDiagnostic(error);
-  await Promise.all(
-    REPORTS.flatMap((name) => [
-      rm(join(outputDirectory, `${name}.json`), { force: true }),
-      writeArtifact(join(outputDirectory, `${name}.stderr`), diagnostic),
-      writeArtifact(join(outputDirectory, `${name}.status`), "1\n"),
-    ]),
-  );
+  for (const name of REPORTS) {
+    await rm(join(outputDirectory, `${name}.json`), { force: true });
+    await publishArtifact(outputDirectory, `${name}.stderr`, diagnostic);
+  }
+  for (const name of REPORTS) await publishArtifact(outputDirectory, `${name}.status`, "1\n");
 }
 
-async function writeArtifact(path, contents) {
-  await writeFile(path, contents, { mode: 0o600 });
-  await chmod(path, 0o600);
+async function publishArtifact(directory, name, contents) {
+  const staged = join(directory, `.${name}.${randomUUID()}.tmp`);
+  try {
+    const file = await open(staged, "wx", 0o600);
+    try {
+      await file.writeFile(contents);
+    } finally {
+      await file.close();
+    }
+    await rename(staged, join(directory, name));
+  } catch (error) {
+    await rm(staged, { force: true });
+    throw error;
+  }
 }
 
 function toCliValue(value) {
