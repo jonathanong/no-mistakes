@@ -399,6 +399,7 @@ fn vitest_ci_path_coverage_supports_no_mistakes_suppression() {
     assert!(findings.is_empty(), "{findings:#?}");
 }
 
+#[cfg(unix)]
 fn finite_set_symlink_fixture(name: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
