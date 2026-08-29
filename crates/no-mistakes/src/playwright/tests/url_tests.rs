@@ -1,7 +1,7 @@
 use crate::playwright::fsutil::{absolutize, relative_string};
 use crate::playwright::matcher;
 use crate::playwright::url::{is_dynamic_pattern_segment, is_ignored, normalize_url};
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 #[test]
 fn normalize_url_handles_relative_absolute_base_and_external() {
@@ -47,14 +47,13 @@ fn normalize_url_handles_edge_cases() {
 #[test]
 fn path_helpers_handle_absolute_and_relative_paths() {
     let cwd = std::env::current_dir().unwrap();
-    assert_eq!(
-        absolutize(Path::new("/tmp")).unwrap(),
-        PathBuf::from("/tmp")
-    );
+    let absolute = cwd.join("tmp");
+    assert_eq!(absolutize(&absolute).unwrap(), absolute);
     assert_eq!(absolutize(Path::new(".")).unwrap(), cwd.join("."));
+    let outside = cwd.parent().unwrap().join("other/file.ts");
     assert_eq!(
-        relative_string(Path::new("/repo"), Path::new("/other/file.ts")),
-        "/other/file.ts"
+        relative_string(&cwd, &outside),
+        outside.to_string_lossy().replace('\\', "/")
     );
 }
 

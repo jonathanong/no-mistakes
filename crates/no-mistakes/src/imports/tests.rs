@@ -2,6 +2,7 @@ use super::{collect_imports, collect_imports_from_program, resolve_import};
 use crate::ast;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
+#[cfg(unix)]
 use tempfile::tempdir;
 
 fn fixture(category: &str, name: &str, file: &str) -> PathBuf {
