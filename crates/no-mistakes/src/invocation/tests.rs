@@ -275,22 +275,16 @@ fn command_output_resumes_child_after_job_assignment() {
         Some(std::thread::current().id()),
     )
     .unwrap();
-    let mut command = Command::new("powershell.exe");
-    command.args([
-        "-NoLogo",
-        "-NoProfile",
-        "-NonInteractive",
-        "-Command",
-        "[Console]::Out.Write('stdout'); [Console]::Error.Write('stderr')",
-    ]);
+    let mut command = Command::new("cmd.exe");
+    command.args(["/D", "/C", "echo stdout&echo stderr>&2"]);
 
     // The Windows path creates the process suspended, attaches its job, and
     // must resume it before waiting for output.
     let output = command_output(&mut command).unwrap();
 
     assert!(output.status.success());
-    assert_eq!(output.stdout, b"stdout");
-    assert_eq!(output.stderr, b"stderr");
+    assert_eq!(output.stdout, b"stdout\r\n");
+    assert_eq!(output.stderr, b"stderr\r\n");
 }
 
 #[cfg(unix)]
