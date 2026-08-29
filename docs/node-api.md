@@ -12,6 +12,7 @@ const {
   symbols,
   testsPlan,
   validateMermaidMarkdown,
+  writePlanningImpactArtifacts,
 } = require("no-mistakes");
 
 (async () => {
@@ -102,6 +103,24 @@ const {
 | `ci topology-impact`                       | `ciTopologyImpact(options)`                                                                                                                                                                                                                                                |
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
 
+`writePlanningImpactArtifacts(options)` is an integration helper for callers
+that need private, CLI-compatible planning files without spawning several
+commands. It runs one prepared `analyzeProject()` request, then writes
+`dependencies`, `dependents`, `symbols`, and Vitest `plan` artifacts as JSON,
+stderr, and status files in `outputDirectory`. The manifest must be
+newline-separated repository-relative paths in that same existing `0700`
+directory. Artifact files use mode `0600`; failures remove stale JSON and
+write bounded diagnostics and nonzero statuses for every report.
+
+```js
+await writePlanningImpactArtifacts({
+  root: process.cwd(),
+  changedFilesManifest: "/private/run/changed-files.txt",
+  outputDirectory: "/private/run",
+  broad: false,
+});
+```
+
 The following inventory is the complete runtime export surface. Keeping this
 list exhaustive makes a newly added function visible to agents even when it
 does not have a one-to-one CLI command:
@@ -111,6 +130,7 @@ does not have a one-to-one CLI command:
 | `createWorkflowTopologyIndex` | `createWorkflowTopologyIndex(topology)` |
 | `version` | `version()` |
 | `analyzeProject` | `analyzeProject(options)` |
+| `writePlanningImpactArtifacts` | `writePlanningImpactArtifacts(options)` |
 | `callSites` | `callSites(options)` |
 | `check` | `check(options)` |
 | `ciEnv` | `ciEnv(options)` |

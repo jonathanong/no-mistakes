@@ -53,6 +53,8 @@ import type {
   TraverseOptions,
   WhyStep,
   WithInvocationOptions,
+  WritePlanningImpactArtifactsOptions,
+  PlanningImpactArtifacts,
 } from "./types";
 
 export * from "./types";
@@ -68,6 +70,9 @@ export function related(options: WithInvocationOptions<TraverseOptions>): Promis
 export function analyzeProject(
   options: WithInvocationOptions<AnalyzeProjectOptions>,
 ): Promise<AnalyzeProjectResult>;
+export function writePlanningImpactArtifacts(
+  options: WithInvocationOptions<WritePlanningImpactArtifactsOptions>,
+): Promise<PlanningImpactArtifacts>;
 export function symbols(
   options: WithInvocationOptions<SymbolsSignatureImpactOptions>,
 ): Promise<SignatureImpactResult>;

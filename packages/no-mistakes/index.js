@@ -4,6 +4,7 @@
 // overwriting the package's checked-in install placeholder.
 const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
 const planning = require("./planning");
+const { writePlanningImpactArtifacts: writeArtifacts } = require("./planning-impact-artifacts");
 const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
 const fs = require("node:fs");
 const path = require("node:path");
@@ -97,6 +98,10 @@ async function analyzeProject(options = {}) {
   }
 }
 
+async function writePlanningImpactArtifacts(options) {
+  return writeArtifacts(options, analyzeProject);
+}
+
 const topologyMemo = new Map();
 
 async function ciTopology(options) {
@@ -140,6 +145,7 @@ async function version() {
 module.exports.createWorkflowTopologyIndex = createWorkflowTopologyIndex;
 module.exports.version = version;
 module.exports.analyzeProject = analyzeProject;
+module.exports.writePlanningImpactArtifacts = writePlanningImpactArtifacts;
 module.exports.callSites = jsonApis.callSites;
 module.exports.check = jsonApis.check;
 module.exports.resolveConfig = jsonApis.resolveConfig;
