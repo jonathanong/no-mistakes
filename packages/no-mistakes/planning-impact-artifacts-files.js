@@ -4,13 +4,14 @@ const { constants } = require("node:fs");
 const { basename, dirname, join } = require("node:path");
 const { randomUUID } = require("node:crypto");
 const { outputRestorationFailure } = require("./planning-impact-artifacts-errors");
+const privacy = require("./planning-impact-artifacts-privacy");
 const MANIFEST_OPEN_FLAGS = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0);
 
 async function validateOutputDirectory(outputDirectory) {
   const directory = await realpath(outputDirectory);
   const metadata = await stat(directory);
-  if (!isPrivateDirectory(metadata)) {
-    throw new Error("output directory must exist and have mode 0700");
+  if (!privacy.isPrivateDirectory(metadata)) {
+    throw privacy.privatePermissionError("output directory", 0o700);
   }
   let handle;
   try {
@@ -70,8 +71,11 @@ async function publishArtifact(output, name, contents) {
       await file.chmod(0o600);
       await file.writeFile(contents);
       identity = await file.stat();
-      if (!identity.isFile() || (identity.mode & 0o7777) !== 0o600 || identity.nlink !== 1) {
-        throw new Error(`staged artifact is not a private regular file: ${name}`);
+      if (!privacy.isPrivateRegularFile(identity) || identity.nlink !== 1) {
+        throw privacy.privatePermissionError(
+          `staged artifact is not a private regular file: ${name}`,
+          0o600,
+        );
       }
     } finally {
       await file.close();
@@ -87,8 +91,7 @@ async function publishArtifact(output, name, contents) {
     const published = await lstat(destination);
     if (
       !sameFileIdentity(identity, published) ||
-      !published.isFile() ||
-      (published.mode & 0o7777) !== 0o600 ||
+      !privacy.isPrivateRegularFile(published) ||
       published.nlink !== 1
     ) {
       await removePath(output, destination).catch(() => {});
@@ -153,22 +156,18 @@ async function removePath(output, target) {
   await assertOutputDirectory(output);
 }
 
-function isPrivateDirectory(metadata) {
-  return metadata.isDirectory() && (metadata.mode & 0o7777) === 0o700;
-}
-
 async function assertOutputDirectory(output) {
   if ((await realpath(output.path)) !== output.path) {
     throw new Error("output directory path changed during planning artifact generation");
   }
   const metadata = await stat(output.path);
-  if (!isPrivateDirectory(metadata) || !sameFileIdentity(output.identity, metadata)) {
+  if (!privacy.isPrivateDirectory(metadata) || !sameFileIdentity(output.identity, metadata)) {
     throw new Error("output directory changed during planning artifact generation");
   }
   if (output.handle) {
     const descriptorMetadata = await output.handle.stat();
     if (
-      !isPrivateDirectory(descriptorMetadata) ||
+      !privacy.isPrivateDirectory(descriptorMetadata) ||
       !sameFileIdentity(output.identity, descriptorMetadata)
     ) {
       throw new Error("output directory descriptor changed during planning artifact generation");

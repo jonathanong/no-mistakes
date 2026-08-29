@@ -5,11 +5,11 @@ export interface WritePlanningImpactArtifactsOptions {
   /** Repository root passed to the prepared `analyzeProject()` request. */
   root: string;
   /**
-   * Path to a private regular manifest directly inside `outputDirectory`. Its newline-separated
-   * contents are repository-relative changed-file paths and its filename cannot be an artifact name.
+   * Path to a private regular manifest directly inside `outputDirectory`. Its newline-delimited
+   * contents are literal repository-relative changed-file paths; only empty records are ignored.
    */
   changedFilesManifest: string;
-  /** Existing private directory with exactly mode `0700` that receives the artifacts. */
+  /** Existing private directory with exactly mode `0700` that receives artifacts; unavailable on Windows. */
   outputDirectory: string;
   /** Omit the import/workspace relationship filter for structural reports. */
   broad?: boolean;

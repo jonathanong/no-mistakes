@@ -21,14 +21,15 @@ const RESERVED_ARTIFACT_NAME =
   /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/u;
 
 function buildRequest(root, changedFiles, broad) {
-  const structuralFiles = changedFiles.filter((file) => /\.[cm]?[jt]sx?$/u.test(file));
+  const structuralFiles = changedFiles.filter((file) => /\.[cm]?[jt]sx?(?:#.*)?$/u.test(file));
+  const traversalFiles = structuralFiles.map((file) => ({ file }));
   const relationships = broad ? {} : { relationships: ["import", "workspace"] };
   const reports = structuralFiles.length
     ? [
         ...["dependencies", "dependents"].map((type) => ({
           id: type,
           type,
-          files: structuralFiles,
+          files: traversalFiles,
           depth: 1,
           ...relationships,
         })),
@@ -101,14 +102,7 @@ function invocationOptions(options) {
   );
 }
 function parseChangedFiles(source) {
-  const files = [
-    ...new Set(
-      source
-        .split(/\r?\n/u)
-        .map((line) => line.trim())
-        .filter(Boolean),
-    ),
-  ];
+  const files = [...new Set(source.split(/\r\n|[\r\n]/u).filter((line) => line.length > 0))];
   if (!files.length) throw new Error("changed-files manifest is empty");
   for (const file of files) {
     if (

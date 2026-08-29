@@ -114,14 +114,14 @@ test("writes the compatible four-report contract from one prepared analysis", as
           {
             id: "dependencies",
             type: "dependencies",
-            files: ["backend/a.mts"],
+            files: [{ file: "backend/a.mts" }],
             depth: 1,
             relationships: ["import", "workspace"],
           },
           {
             id: "dependents",
             type: "dependents",
-            files: ["backend/a.mts"],
+            files: [{ file: "backend/a.mts" }],
             depth: 1,
             relationships: ["import", "workspace"],
           },
@@ -151,6 +151,66 @@ test("writes the compatible four-report contract from one prepared analysis", as
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
+});
+
+test("preserves literal manifest paths and traverses hash filenames as files", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const calls = [];
+  try {
+    await writeFile(manifest, " src.mts \nfoo.ts#literal\n#bar.ts\n\n");
+    await writePlanningImpactArtifacts(
+      { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+      async (options) => {
+        calls.push(options);
+        return aggregateResult;
+      },
+    );
+    assert.deepEqual(calls[0].reports, [
+      {
+        id: "dependencies",
+        type: "dependencies",
+        files: [{ file: "foo.ts#literal" }, { file: "#bar.ts" }],
+        depth: 1,
+        relationships: ["import", "workspace"],
+      },
+      {
+        id: "dependents",
+        type: "dependents",
+        files: [{ file: "foo.ts#literal" }, { file: "#bar.ts" }],
+        depth: 1,
+        relationships: ["import", "workspace"],
+      },
+      { id: "symbols", type: "symbols", files: ["foo.ts#literal", "#bar.ts"], include: "both" },
+      {
+        id: "plan",
+        type: "testsPlan",
+        framework: "vitest",
+        environment: "prePush",
+        changedFiles: [" src.mts ", "foo.ts#literal", "#bar.ts"],
+      },
+    ]);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("uses POSIX modes only on platforms where Node reports them reliably", () => {
+  const {
+    isPrivateDirectory,
+    isPrivateRegularFile,
+    privatePermissionError,
+  } = require("../planning-impact-artifacts-privacy");
+  const directory = { isDirectory: () => true, mode: 0o40700 };
+  const file = { isFile: () => true, mode: 0o100600 };
+
+  assert.equal(isPrivateDirectory(directory, "linux"), true);
+  assert.equal(isPrivateRegularFile(file, "linux"), true);
+  assert.equal(isPrivateDirectory(directory, "win32"), false);
+  assert.equal(isPrivateRegularFile(file, "win32"), false);
+  assert.throws(() => {
+    throw privatePermissionError("output directory", 0o700, "win32");
+  }, /unavailable on Windows/);
 });
 
 test("publishes 0600 artifacts under a restrictive umask and restores it", async () => {
@@ -333,7 +393,7 @@ test("reads the canonical manifest after a symlink is retargeted", async () => {
         await writeArtifacts(
           { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
           async (options) => {
-            assert.deepEqual(options.reports[0].files, ["first.mts"]);
+            assert.deepEqual(options.reports[0].files, [{ file: "first.mts" }]);
             return aggregateResult;
           },
         );
