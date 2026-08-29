@@ -1,8 +1,13 @@
 "use strict";
 
-const { open, readFile, realpath, rename, rm, stat } = require("node:fs/promises");
-const { dirname, isAbsolute, join, resolve } = require("node:path");
-const { randomUUID } = require("node:crypto");
+const {
+  assertOutputDirectory,
+  publishArtifact,
+  removeArtifact,
+  validateManifest,
+  validateOutputDirectory,
+} = require("./planning-impact-artifacts-files");
+const { isAbsolute, posix, resolve, win32 } = require("node:path");
 
 const REPORTS = ["dependencies", "dependents", "symbols", "plan"];
 const REPORT_TYPES = {
@@ -11,7 +16,6 @@ const REPORT_TYPES = {
   symbols: "symbols",
   plan: "testsPlan",
 };
-
 function buildRequest(root, changedFiles, broad) {
   const structuralFiles = changedFiles.filter((file) => /\.[cm]?[jt]sx?$/u.test(file));
   const relationships = broad ? {} : { relationships: ["import", "workspace"] };
@@ -38,11 +42,16 @@ function buildRequest(root, changedFiles, broad) {
 }
 
 async function writePlanningImpactArtifacts(options, analyzeProject) {
-  const outputDirectory = await validateOutputDirectory(options.outputDirectory);
-  const manifestPath = resolve(options.changedFilesManifest);
+  const output = await validateOutputDirectory(options.outputDirectory);
+  let manifestHandle;
   try {
-    const manifest = await validateManifest(outputDirectory, manifestPath);
-    const changedFiles = parseChangedFiles(await readFile(manifest, "utf8"));
+    await invalidateStatuses(output);
+    const manifest = await validateManifest(output, resolve(options.changedFilesManifest));
+    manifestHandle = manifest.handle;
+    const changedFiles = parseChangedFiles(await manifestHandle.readFile("utf8"));
+    await manifestHandle.close();
+    manifestHandle = undefined;
+    await assertOutputDirectory(output);
     const request = {
       ...buildRequest(options.root, changedFiles, options.broad === true),
       ...invocationOptions(options),
@@ -50,11 +59,18 @@ async function writePlanningImpactArtifacts(options, analyzeProject) {
     const result = await analyzeProject(request);
     const completed = completeResult(result, request.reports.length > 1);
     const artifacts = reportArtifacts(completed);
-    await writeSuccess(outputDirectory, artifacts);
-    return { outputDirectory, ...artifacts };
+    await writeSuccess(output, artifacts);
+    return { outputDirectory: output.path, ...artifacts };
   } catch (error) {
-    await writeFailure(outputDirectory, error);
+    if (manifestHandle) {
+      await manifestHandle.close().catch(() => {});
+      manifestHandle = undefined;
+    }
+    await writeFailure(output, error).catch(() => {});
     throw error;
+  } finally {
+    if (manifestHandle) await manifestHandle.close().catch(() => {});
+    if (output.handle) await output.handle.close().catch(() => {});
   }
 }
 
@@ -64,26 +80,6 @@ function invocationOptions(options) {
       .filter((name) => Object.hasOwn(options, name))
       .map((name) => [name, options[name]]),
   );
-}
-
-async function validateOutputDirectory(outputDirectory) {
-  const directory = await realpath(outputDirectory);
-  const metadata = await stat(directory);
-  if (!metadata.isDirectory() || (metadata.mode & 0o077) !== 0) {
-    throw new Error("output directory must exist and have mode 0700");
-  }
-  return directory;
-}
-
-async function validateManifest(outputDirectory, manifestPath) {
-  if ((await realpath(dirname(manifestPath))) !== outputDirectory) {
-    throw new Error("manifest must be inside the private output directory");
-  }
-  const manifest = await realpath(manifestPath);
-  if (dirname(manifest) !== outputDirectory) {
-    throw new Error("manifest must be inside the private output directory");
-  }
-  return manifest;
 }
 
 function parseChangedFiles(source) {
@@ -97,7 +93,13 @@ function parseChangedFiles(source) {
   ];
   if (!files.length) throw new Error("changed-files manifest is empty");
   for (const file of files) {
-    if (isAbsolute(file) || file.split(/[\\/]/u).includes("..")) {
+    if (
+      isAbsolute(file) ||
+      posix.isAbsolute(file) ||
+      win32.isAbsolute(file) ||
+      /^[A-Za-z]:/u.test(file) ||
+      file.split(/[\\/]/u).includes("..")
+    ) {
       throw new Error(`changed file must be repository-relative: ${file}`);
     }
   }
@@ -131,41 +133,38 @@ function reportArtifacts(result) {
   );
 }
 
-async function writeSuccess(outputDirectory, artifacts) {
+async function writeSuccess(output, artifacts) {
   for (const name of REPORTS) {
     await publishArtifact(
-      outputDirectory,
+      output,
       `${name}.json`,
       `${JSON.stringify(toCliValue(artifacts[name]))}\n`,
     );
-    await publishArtifact(outputDirectory, `${name}.stderr`, "");
+    await publishArtifact(output, `${name}.stderr`, "");
   }
-  for (const name of REPORTS) await publishArtifact(outputDirectory, `${name}.status`, "0\n");
+  for (const name of REPORTS) await publishArtifact(output, `${name}.status`, "0\n");
 }
 
-async function writeFailure(outputDirectory, error) {
+async function writeFailure(output, error) {
   const diagnostic = boundedDiagnostic(error);
   for (const name of REPORTS) {
-    await rm(join(outputDirectory, `${name}.json`), { force: true });
-    await publishArtifact(outputDirectory, `${name}.stderr`, diagnostic);
+    await attempt(() => removeArtifact(output, `${name}.json`));
+    await attempt(() => publishArtifact(output, `${name}.stderr`, diagnostic));
+    await attempt(() => publishArtifact(output, `${name}.status`, "1\n"));
   }
-  for (const name of REPORTS) await publishArtifact(outputDirectory, `${name}.status`, "1\n");
 }
 
-async function publishArtifact(directory, name, contents) {
-  const staged = join(directory, `.${name}.${randomUUID()}.tmp`);
+async function invalidateStatuses(output) {
+  for (const name of REPORTS) {
+    await attempt(() => publishArtifact(output, `${name}.status`, "1\n"));
+  }
+}
+
+async function attempt(operation) {
   try {
-    const file = await open(staged, "wx", 0o600);
-    try {
-      await file.chmod(0o600);
-      await file.writeFile(contents);
-    } finally {
-      await file.close();
-    }
-    await rename(staged, join(directory, name));
-  } catch (error) {
-    await rm(staged, { force: true });
-    throw error;
+    await operation();
+  } catch {
+    // Failure reporting must preserve the original analysis/publication error.
   }
 }
 

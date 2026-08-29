@@ -109,8 +109,11 @@ commands. It runs one prepared `analyzeProject()` request, then writes
 `dependencies`, `dependents`, `symbols`, and Vitest `plan` artifacts as JSON,
 stderr, and status files in `outputDirectory`. The manifest must be
 newline-separated repository-relative paths in that same existing `0700`
-directory. Artifact files use mode `0600`; failures remove stale JSON and
-write bounded diagnostics and nonzero statuses for every report.
+directory (exactly `0700`, with no additional permission or special bits), and
+the directory must remain the same private directory for the duration of the
+operation. Artifact files use mode `0600`; existing statuses are first made
+nonzero while analysis is in progress, and failures remove stale JSON and
+best-effort write bounded diagnostics and nonzero statuses for every report.
 
 ```js
 await writePlanningImpactArtifacts({

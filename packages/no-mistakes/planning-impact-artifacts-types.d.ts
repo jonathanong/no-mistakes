@@ -6,7 +6,7 @@ export interface WritePlanningImpactArtifactsOptions {
   root: string;
   /** Newline-separated, repository-relative changed-file paths inside `outputDirectory`. */
   changedFilesManifest: string;
-  /** Existing private directory (mode `0700`) that receives the artifacts. */
+  /** Existing private directory with exactly mode `0700` that receives the artifacts. */
   outputDirectory: string;
   /** Omit the import/workspace relationship filter for structural reports. */
   broad?: boolean;
