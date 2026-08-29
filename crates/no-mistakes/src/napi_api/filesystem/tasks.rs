@@ -1,10 +1,10 @@
-use super::{
-    acquire_planning_artifact_lock_impl, rename_no_replace_impl, unlock_planning_artifact_lock_impl,
-};
+use super::{acquire_planning_artifact_lock_impl, rename_no_replace_impl};
 use napi::{Env, Task};
 use std::fs::File;
 use std::path::PathBuf;
 
+#[cfg(unix)]
+use super::unlock_planning_artifact_lock_impl;
 #[cfg(unix)]
 use napi::CleanupEnvHook;
 
@@ -90,7 +90,7 @@ impl Task for AcquirePlanningArtifactLockTask {
             .map_err(|error| napi::Error::from_reason(error.to_string()))
     }
 
-    fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
+    fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         #[cfg(unix)]
         {
             let locks = planning_artifact_locks().lock().unwrap();
@@ -98,14 +98,14 @@ impl Task for AcquirePlanningArtifactLockTask {
                 let token = NEXT_PLANNING_ARTIFACT_LOCK.fetch_add(1, Ordering::Relaxed);
                 if token != 0 && !locks.contains_key(&token) {
                     drop(locks);
-                    let hook = match env.add_env_cleanup_hook(token, cleanup_planning_artifact_lock)
-                    {
-                        Ok(hook) => hook,
-                        Err(error) => {
-                            drop(output);
-                            return Err(error);
-                        }
-                    };
+                    let hook =
+                        match _env.add_env_cleanup_hook(token, cleanup_planning_artifact_lock) {
+                            Ok(hook) => hook,
+                            Err(error) => {
+                                drop(output);
+                                return Err(error);
+                            }
+                        };
                     planning_artifact_locks().lock().unwrap().insert(
                         token,
                         PlanningArtifactLock {
@@ -128,15 +128,17 @@ impl Task for AcquirePlanningArtifactLockTask {
 }
 
 pub struct ReleasePlanningArtifactLockTask {
+    #[cfg(unix)]
     token: u32,
     #[cfg(unix)]
     hook: Option<SendCleanupHook>,
 }
 
 impl ReleasePlanningArtifactLockTask {
-    pub(crate) fn new(token: u32) -> Self {
+    pub(crate) fn new(_token: u32) -> Self {
         Self {
-            token,
+            #[cfg(unix)]
+            token: _token,
             #[cfg(unix)]
             hook: None,
         }
@@ -166,13 +168,11 @@ impl Task for ReleasePlanningArtifactLockTask {
         ))
     }
 
-    fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
+    fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         #[cfg(unix)]
         if let Some(hook) = self.hook.take() {
-            let _ = env.remove_env_cleanup_hook(hook.0);
+            let _ = _env.remove_env_cleanup_hook(hook.0);
         }
-        #[cfg(not(unix))]
-        let _ = env;
         Ok(output)
     }
 }

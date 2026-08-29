@@ -90,11 +90,6 @@ fn flock_impl(file_descriptor: std::os::fd::RawFd, operation: libc::c_int) -> io
     }
 }
 
-#[cfg(not(unix))]
-fn unlock_planning_artifact_lock_impl(_file: &File) -> io::Result<()> {
-    Ok(())
-}
-
 #[cfg(target_os = "linux")]
 fn platform_rename_no_replace(from: &Path, to: &Path) -> io::Result<bool> {
     use std::os::unix::ffi::OsStrExt;
