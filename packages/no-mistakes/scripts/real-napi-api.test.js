@@ -52,7 +52,8 @@ test(
     });
     let parentToken;
     try {
-      assert.deepEqual(await once(child, "message"), ["locked"]);
+      const [message] = await once(child, "message");
+      assert.equal(message, "locked");
       let parentAcquired = false;
       const pendingToken = native.acquirePlanningArtifactLock(lockPath).then((token) => {
         parentAcquired = true;
