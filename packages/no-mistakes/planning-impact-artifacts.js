@@ -9,7 +9,7 @@ const {
 } = require("./planning-impact-artifacts-files");
 const artifactErrors = require("./planning-impact-artifacts-errors");
 const { realpath } = require("node:fs/promises");
-const { existingFiles } = require("./planning-impact-artifacts-inputs");
+const { buildRequest, completeResult } = require("./planning-impact-artifacts-inputs");
 const { basename, isAbsolute, posix, resolve, win32 } = require("node:path");
 
 const REPORTS = ["dependencies", "dependents", "symbols", "plan"];
@@ -21,40 +21,42 @@ const REPORT_TYPES = {
 };
 const RESERVED_ARTIFACT_NAME =
   /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/iu;
-
-async function buildRequest(root, changedFiles, broad) {
-  const structuralFiles = changedFiles.filter((file) => /\.[cm]?[jt]sx?(?:#.*)?$/u.test(file));
-  const traversalFiles = structuralFiles.map((file) => ({ file }));
-  const symbolFiles = await existingFiles(root, structuralFiles);
-  const relationships = broad ? {} : { relationships: ["import", "workspace"] };
-  const reports = structuralFiles.length
-    ? [
-        ...["dependencies", "dependents"].map((type) => ({
-          id: type,
-          type,
-          files: traversalFiles,
-          depth: 1,
-          ...relationships,
-        })),
-        { id: "symbols", type: "symbols", files: symbolFiles, include: "both" },
-      ]
-    : [];
-  reports.push({
-    id: "plan",
-    type: "testsPlan",
-    framework: "vitest",
-    environment: "prePush",
-    changedFiles,
-  });
-  return { root, reports };
-}
+const outputUpdates = new Map();
 
 async function writePlanningImpactArtifacts(options, analyzeProject, renameNoReplace) {
+  const outputPath = await realpath(resolve(options.outputDirectory));
+  return serializeOutputUpdate(outputPath, () =>
+    writePlanningImpactArtifactsUnlocked(
+      { ...options, outputDirectory: outputPath },
+      analyzeProject,
+      renameNoReplace,
+    ),
+  );
+}
+
+async function serializeOutputUpdate(outputPath, update) {
+  const previous = outputUpdates.get(outputPath) || Promise.resolve();
+  let release;
+  const current = new Promise((resolveCurrent) => {
+    release = resolveCurrent;
+  });
+  outputUpdates.set(outputPath, current);
+  await previous;
+  try {
+    return await update();
+  } finally {
+    release();
+    if (outputUpdates.get(outputPath) === current) outputUpdates.delete(outputPath);
+  }
+}
+
+async function writePlanningImpactArtifactsUnlocked(options, analyzeProject, renameNoReplace) {
   const output = await validateOutputDirectory(options.outputDirectory);
   let manifestHandle;
   let mayWriteFailureArtifacts = false;
   try {
     const requestedManifestPath = resolve(options.changedFilesManifest);
+    mayWriteFailureArtifacts = !RESERVED_ARTIFACT_NAME.test(basename(requestedManifestPath));
     const manifestPath = await realpath(requestedManifestPath);
     mayWriteFailureArtifacts = !RESERVED_ARTIFACT_NAME.test(basename(manifestPath));
     const manifest = await validateManifest(output, manifestPath);
@@ -72,7 +74,7 @@ async function writePlanningImpactArtifacts(options, analyzeProject, renameNoRep
       ...invocationOptions(options),
     };
     const result = await analyzeProject(request);
-    const completed = completeResult(result, request.reports.length > 1);
+    const completed = completeResult(result, request.reports);
     const artifacts = reportArtifacts(completed);
     await updateOutputDirectory(
       output,
@@ -126,18 +128,6 @@ function parseChangedFiles(source) {
     }
   }
   return files;
-}
-function completeResult(result, hasStructuralReports) {
-  if (hasStructuralReports) return result;
-  const traversal = { roots: [], files: [], diagnostics: [], tsconfig_provenance: [] };
-  return {
-    reports: [
-      { id: "dependencies", type: "dependencies", result: traversal },
-      { id: "dependents", type: "dependents", result: traversal },
-      { id: "symbols", type: "symbols", result: { roots: [], files: [] } },
-      ...result.reports,
-    ],
-  };
 }
 function reportArtifacts(result) {
   const reports = new Map(result.reports.map((report) => [report.id, report]));

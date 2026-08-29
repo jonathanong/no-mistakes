@@ -305,6 +305,35 @@ test("keeps deleted structural files out of the symbols report", async () => {
   }
 });
 
+test("omits the symbols request when every structural file was deleted", async () => {
+  const root = await privateDirectory("no-mistakes-impact-root-");
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  try {
+    await writeFile(manifest, "deleted.mts\n");
+    const result = await writePlanningImpactArtifacts(
+      { root, changedFilesManifest: manifest, outputDirectory: directory },
+      async (options) => {
+        assert.deepEqual(
+          options.reports.map((report) => report.id),
+          ["dependencies", "dependents", "plan"],
+        );
+        return {
+          reports: [
+            aggregateResult.reports[0],
+            aggregateResult.reports[1],
+            aggregateResult.reports[3],
+          ],
+        };
+      },
+    );
+    assert.deepEqual(result.symbols, { roots: [], files: [] });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("keeps source symlinks in the symbols report", async () => {
   const root = join(
     packageRoot,
@@ -439,6 +468,77 @@ test("rejects unsafe paths and records bounded failures without stale JSON", asy
     assert.ok(Buffer.byteLength(diagnostic) <= 4096);
     assert.ok(!diagnostic.endsWith("�"));
   } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("replaces stale success artifacts when manifest canonicalization fails", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await writePlanningImpactArtifacts(
+      { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+      async () => aggregateResult,
+    );
+    await unlink(manifest);
+
+    await assert.rejects(
+      writePlanningImpactArtifacts(
+        { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+        async () => aggregateResult,
+      ),
+      /ENOENT/u,
+    );
+    for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
+      await assert.rejects(readFile(join(directory, `${name}.json`), "utf8"), /ENOENT/u);
+      assert.equal(await readFile(join(directory, `${name}.status`), "utf8"), "1\n");
+      assert.match(await readFile(join(directory, `${name}.stderr`), "utf8"), /ENOENT/u);
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("serializes invalidation, analysis, and publication for one output directory", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  let beginFirst;
+  let releaseFirst;
+  const firstStarted = new Promise((resolveStarted) => {
+    beginFirst = resolveStarted;
+  });
+  const firstMayFinish = new Promise((resolveFinish) => {
+    releaseFirst = resolveFinish;
+  });
+  let secondStarted = false;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    const first = writePlanningImpactArtifacts(
+      { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+      async () => {
+        beginFirst();
+        await firstMayFinish;
+        return aggregateResult;
+      },
+    );
+    await firstStarted;
+    const second = writePlanningImpactArtifacts(
+      { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+      async () => {
+        secondStarted = true;
+        return aggregateResult;
+      },
+    );
+    await new Promise((resolveTurn) => setImmediate(resolveTurn));
+    assert.equal(secondStarted, false);
+
+    releaseFirst();
+    await first;
+    await second;
+    assert.equal(secondStarted, true);
+  } finally {
+    releaseFirst();
     await rm(directory, { recursive: true, force: true });
   }
 });

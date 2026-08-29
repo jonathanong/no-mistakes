@@ -125,7 +125,11 @@ to publish them never masks the original analysis or publication error. If that
 reporting transition cannot restore the output directory, the original error's
 non-enumerable `failureReportingError` contains the parked recovery path; a
 non-extensible thrown value is instead preserved in an `AggregateError`. The
-helper is unavailable on Windows because
+helper serializes concurrent calls that resolve to the same output directory,
+covering invalidation, analysis, and publication so an older call cannot mark
+its artifacts successful while a newer analysis is pending. Safe manifest
+resolution failures also replace stale success artifacts with failure output.
+The helper is unavailable on Windows because
 Node does not expose a trustworthy private Windows ACL check. Structural paths
 are sent to traversal reports as `{ file }` entries, so `#` remains part of a
 literal filename rather than a symbol delimiter. Deleted or renamed-away

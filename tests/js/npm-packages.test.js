@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const { execFileSync } = require("node:child_process");
 const { mkdtempSync, readdirSync, readFileSync, rmSync } = require("node:fs");
 const { tmpdir } = require("node:os");
-const { join } = require("node:path");
+const { join, posix } = require("node:path");
 
 const root = join(__dirname, "..", "..");
 const nativeBinaryPackages = ["no-mistakes"];
@@ -61,8 +61,12 @@ test("npm pack includes every transitive local require() from a published entry 
   const npmCache = mkdtempSync(join(tmpdir(), "no-mistakes-npm-pack-"));
   let packed;
   try {
+    const npmArguments = ["pack", "--dry-run", "--ignore-scripts", "--json"];
+    const command = process.platform === "win32" ? process.env.ComSpec || "cmd.exe" : "npm";
+    const commandArguments =
+      process.platform === "win32" ? ["/d", "/s", "/c", "npm", ...npmArguments] : npmArguments;
     packed = JSON.parse(
-      execFileSync("npm", ["pack", "--dry-run", "--ignore-scripts", "--json"], {
+      execFileSync(command, commandArguments, {
         cwd: packageDir,
         encoding: "utf8",
         env: { ...process.env, NPM_CONFIG_CACHE: npmCache },
@@ -87,6 +91,11 @@ test("npm pack includes every transitive local require() from a published entry 
     });
 
   const checked = new Set();
+  const resolveLocalRequire = (entry, required) => {
+    const requestedPath = posix.join(posix.dirname(entry), required);
+    return requestedPath.startsWith("bin/") ? requestedPath : `${requestedPath}.js`;
+  };
+  assert.equal(resolveLocalRequire("sub/a.js", "b"), "sub/b.js");
   const checkEntry = (entry) => {
     if (checked.has(entry)) return;
     checked.add(entry);
@@ -96,7 +105,7 @@ test("npm pack includes every transitive local require() from a published entry 
       // `./bin/no-mistakes.node` is the native addon, covered by `bin/`
       // regardless of extension; every other local require resolves to a
       // sibling `.js` file the same way Node's CJS resolver would.
-      const relativePath = required.startsWith("bin/") ? required : `${required}.js`;
+      const relativePath = resolveLocalRequire(entry, required);
       assert.ok(
         isCovered(relativePath),
         `${entry} requires "./${required}" but ${relativePath} is not covered by package.json's files list`,
