@@ -1,6 +1,6 @@
 "use strict";
 
-const { stat } = require("node:fs/promises");
+const { lstat, stat } = require("node:fs/promises");
 const { basename, dirname, join } = require("node:path");
 
 const RESERVED_ARTIFACT_NAME =
@@ -14,7 +14,7 @@ async function isReservedArtifactPath(path) {
   const identity = await stat(path);
   for (const name of RESERVED_ARTIFACT_NAMES) {
     try {
-      const candidate = await stat(join(dirname(path), name));
+      const candidate = await lstat(join(dirname(path), name));
       if (candidate.dev === identity.dev && candidate.ino === identity.ino) return true;
     } catch (error) {
       if (!["ENOENT", "ENOTDIR"].includes(error.code)) throw error;

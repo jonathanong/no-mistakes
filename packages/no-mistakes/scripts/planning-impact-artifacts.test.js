@@ -854,7 +854,7 @@ test("does not enable failure writes through a reserved manifest symlink alias",
           return aggregateResult;
         },
       ),
-      /regular file/,
+      /must not use a reserved artifact destination/,
     );
     assert.equal(analyzed, false);
     for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
@@ -1566,24 +1566,87 @@ test("rejects reserved artifact manifests through case-insensitive path aliases"
   }
 });
 
+test("replaces a reserved artifact symlink without reserving its manifest target", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const reservedAlias = join(directory, "plan.status");
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await symlink(manifest, reservedAlias);
+
+    await writePlanningImpactArtifacts(
+      { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+      async () => aggregateResult,
+    );
+
+    assert.equal(await readFile(manifest, "utf8"), "a.mts\n");
+    assert.equal((await lstat(reservedAlias)).isSymbolicLink(), false);
+    assert.equal(await readFile(reservedAlias, "utf8"), "0\n");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("keeps failure artifacts disabled while reserved alias identity probing can fail", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "PLAN.STATUS");
+  const fs = require("node:fs/promises");
+  const originalLstat = fs.lstat;
+  const originalStat = fs.stat;
+  let publishAttempts = 0;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await withFsOverride(
+      {
+        lstat: async (path, ...args) => {
+          if (basename(path) === "dependencies.json") {
+            const error = new Error("injected alias probe failure");
+            error.code = "ELOOP";
+            throw error;
+          }
+          if (basename(path) === "plan.status") return originalStat(manifest, ...args);
+          return originalLstat(path, ...args);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          /injected alias probe failure/,
+        );
+      },
+      async () => {
+        publishAttempts += 1;
+        return true;
+      },
+    );
+    assert.equal(publishAttempts, 0);
+    assert.equal(await readFile(manifest, "utf8"), "a.mts\n");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("does not reserve differently cased artifact names on case-sensitive filesystems", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "PLAN.STATUS");
   const reservedAlias = join(directory, "plan.status");
   const fs = require("node:fs/promises");
   const originalRealpath = fs.realpath;
-  const originalStat = fs.stat;
+  const originalLstat = fs.lstat;
   try {
     await writeFile(manifest, "README.md\n");
     await withFsOverride(
       {
-        stat: async (path, ...args) => {
+        lstat: async (path, ...args) => {
           if (basename(path) === basename(reservedAlias)) {
             const error = new Error("case-sensitive alias does not exist");
             error.code = "ENOENT";
             throw error;
           }
-          return originalStat(path, ...args);
+          return originalLstat(path, ...args);
         },
       },
       async () => {
@@ -1951,12 +2014,13 @@ test("continues failure diagnostics when report cleanup cannot stat a destinatio
   const fs = require("node:fs/promises");
   const originalLstat = fs.lstat;
   const originalRename = fs.rename;
+  let publishFailed = false;
   try {
     await writeFile(manifest, "a.mts\n");
     await withFsOverride(
       {
         lstat: async (path, ...args) => {
-          if (path.endsWith("dependencies.json")) {
+          if (publishFailed && path.endsWith("dependencies.json")) {
             const error = new Error("injected artifact stat failure");
             error.code = "EIO";
             throw error;
@@ -1964,7 +2028,10 @@ test("continues failure diagnostics when report cleanup cannot stat a destinatio
           return originalLstat(path, ...args);
         },
         rename: async (from, to) => {
-          if (to.endsWith("dependencies.json")) throw new Error("injected publish failure");
+          if (to.endsWith("dependencies.json")) {
+            publishFailed = true;
+            throw new Error("injected publish failure");
+          }
           return originalRename(from, to);
         },
       },
