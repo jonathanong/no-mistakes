@@ -1,5 +1,8 @@
 use std::io;
-use std::path::{Path, PathBuf};
+use std::path::Path;
+
+#[cfg(not(coverage))]
+use std::path::PathBuf;
 
 #[cfg(not(coverage))]
 use napi::{Env, Task};
