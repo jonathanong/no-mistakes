@@ -1,7 +1,9 @@
+use super::rename_no_replace_impl;
+
+#[cfg(unix)]
 use super::{
     acquire_planning_artifact_lock_impl, flock_impl, map_advisory_lock_error,
-    rename_no_replace_impl, unlock_planning_artifact_lock_impl,
-    validate_planning_artifact_lock_identity,
+    unlock_planning_artifact_lock_impl, validate_planning_artifact_lock_identity,
 };
 
 #[test]
