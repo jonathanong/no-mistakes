@@ -1,6 +1,6 @@
 "use strict";
 
-const { lstat } = require("node:fs/promises");
+const { lstat, stat } = require("node:fs/promises");
 const { join } = require("node:path");
 
 async function existingFiles(root, files) {
@@ -13,7 +13,7 @@ async function existingFiles(root, files) {
   const existing = await Promise.all(
     files.map(async (file) => {
       try {
-        return (await lstat(join(root, file))).isFile() ? file : undefined;
+        return (await stat(join(root, file))).isFile() ? file : undefined;
       } catch (error) {
         if (["ENOENT", "ENOTDIR"].includes(error.code)) return undefined;
         throw error;

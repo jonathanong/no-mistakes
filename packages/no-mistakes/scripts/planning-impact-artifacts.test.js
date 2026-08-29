@@ -304,12 +304,42 @@ test("keeps deleted structural files out of the symbols report", async () => {
   }
 });
 
+test("keeps source symlinks in the symbols report", async () => {
+  const root = join(
+    packageRoot,
+    "..",
+    "..",
+    "fixtures",
+    "codebase",
+    "dependencies",
+    "graph-files-dual-alias",
+    "fixture",
+  );
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  let request;
+  try {
+    await writeFile(manifest, "a.ts\n");
+    await writePlanningImpactArtifacts(
+      { root, changedFilesManifest: manifest, outputDirectory: directory },
+      async (options) => {
+        request = options;
+        return aggregateResult;
+      },
+    );
+    assert.deepEqual(request.reports[2].files, ["a.ts"]);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("preserves the analysis error when checking the root or changed-file identity fails", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");
   const root = await privateDirectory("no-mistakes-impact-root-");
   const fs = require("node:fs/promises");
   const originalLstat = fs.lstat;
+  const originalStat = fs.stat;
   try {
     await writeFile(join(root, "error.mts"), "export const error = true;\n");
     await writeFile(manifest, "error.mts\n");
@@ -338,9 +368,9 @@ test("preserves the analysis error when checking the root or changed-file identi
     fileError.code = "EIO";
     await withFsOverride(
       {
-        lstat: async (path, ...args) => {
+        stat: async (path, ...args) => {
           if (path === changedFile) throw fileError;
-          return originalLstat(path, ...args);
+          return originalStat(path, ...args);
         },
       },
       async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
@@ -1102,20 +1132,26 @@ test("rejects every reserved artifact destination as a changed-files manifest be
   try {
     for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
       for (const extension of ["json", "stderr", "status"]) {
-        const manifest = join(directory, `${name}.${extension}`);
-        await writeFile(manifest, "a.mts\n");
-        await assert.rejects(
-          writePlanningImpactArtifacts(
-            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
-            async () => {
-              analyzed = true;
-              return aggregateResult;
-            },
-          ),
-          /must not use a reserved artifact destination/,
-        );
-        assert.equal(await readFile(manifest, "utf8"), "a.mts\n");
-        await unlink(manifest);
+        // Reject both spellings everywhere so behavior stays safe on case-insensitive volumes.
+        for (const artifactName of [
+          `${name}.${extension}`,
+          `${name.toUpperCase()}.${extension.toUpperCase()}`,
+        ]) {
+          const manifest = join(directory, artifactName);
+          await writeFile(manifest, "a.mts\n");
+          await assert.rejects(
+            writePlanningImpactArtifacts(
+              { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+              async () => {
+                analyzed = true;
+                return aggregateResult;
+              },
+            ),
+            /must not use a reserved artifact destination/,
+          );
+          assert.equal(await readFile(manifest, "utf8"), "a.mts\n");
+          await unlink(manifest);
+        }
       }
     }
     assert.equal(analyzed, false);

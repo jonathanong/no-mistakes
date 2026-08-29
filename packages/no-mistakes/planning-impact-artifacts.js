@@ -20,7 +20,7 @@ const REPORT_TYPES = {
   plan: "testsPlan",
 };
 const RESERVED_ARTIFACT_NAME =
-  /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/u;
+  /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/iu;
 
 async function buildRequest(root, changedFiles, broad) {
   const structuralFiles = changedFiles.filter((file) => /\.[cm]?[jt]sx?(?:#.*)?$/u.test(file));
