@@ -228,6 +228,7 @@ fn drain_lines(
     Ok(())
 }
 
-#[cfg(test)]
+// These tests intentionally exercise POSIX shell process and pipe behavior.
+#[cfg(all(test, unix))]
 #[path = "stream/tests.rs"]
 mod tests;

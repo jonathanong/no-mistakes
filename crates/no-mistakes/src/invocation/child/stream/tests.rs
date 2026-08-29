@@ -113,7 +113,9 @@ fn terminates_the_child_when_a_line_is_rejected() {
     // loaded, fully-parallel test run, so a generous bound still only
     // passes if the process was actually terminated rather than awaited.
     let mut command = Command::new("sh");
-    command.args(["-c", "printf '%0100d' 0; sleep 120"]);
+    // Replace the shell with sleep so line rejection cannot race with the
+    // shell spawning a descendant outside its configured process group.
+    command.args(["-c", "printf '%0100d' 0; exec sleep 120"]);
     let start = std::time::Instant::now();
     let result = collect_lines(&mut command, 8);
     assert!(result.is_err());

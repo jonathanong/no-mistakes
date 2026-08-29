@@ -5,6 +5,7 @@ use super::*;
 use serde_json::Value;
 use std::process::Command;
 use std::time::Instant;
+#[cfg(unix)]
 use wait_timeout::ChildExt;
 
 mod napi_options;
@@ -274,8 +275,14 @@ fn command_output_resumes_child_after_job_assignment() {
         Some(std::thread::current().id()),
     )
     .unwrap();
-    let mut command = Command::new("cmd.exe");
-    command.args(["/D", "/C", "<NUL set /P =stdout & <NUL set /P =stderr 1>&2"]);
+    let mut command = Command::new("powershell.exe");
+    command.args([
+        "-NoLogo",
+        "-NoProfile",
+        "-NonInteractive",
+        "-Command",
+        "[Console]::Out.Write('stdout'); [Console]::Error.Write('stderr')",
+    ]);
 
     // The Windows path creates the process suspended, attaches its job, and
     // must resume it before waiting for output.

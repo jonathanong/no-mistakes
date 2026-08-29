@@ -4,8 +4,10 @@ use crate::fetches::analyze::routes::{
 };
 use crate::fetches::pipeline::target::{resolve_target_file, route_matches_target};
 use std::collections::HashMap;
+#[cfg(unix)]
 use std::fs;
 use std::path::{Path, PathBuf};
+#[cfg(unix)]
 use tempfile::tempdir;
 
 fn fixture(category: &str, name: &str) -> PathBuf {

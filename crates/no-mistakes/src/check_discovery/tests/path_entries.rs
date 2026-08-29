@@ -1,3 +1,5 @@
+#![cfg(unix)]
+
 use super::*;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::path::PathBuf;
