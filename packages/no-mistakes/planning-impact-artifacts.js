@@ -1,13 +1,13 @@
 "use strict";
 
 const {
-  assertOutputDirectory,
   publishArtifact,
   removeArtifact,
+  updateOutputDirectory,
   validateManifest,
   validateOutputDirectory,
 } = require("./planning-impact-artifacts-files");
-const { isAbsolute, posix, resolve, win32 } = require("node:path");
+const { basename, isAbsolute, posix, resolve, win32 } = require("node:path");
 
 const REPORTS = ["dependencies", "dependents", "symbols", "plan"];
 const REPORT_TYPES = {
@@ -16,6 +16,9 @@ const REPORT_TYPES = {
   symbols: "symbols",
   plan: "testsPlan",
 };
+const RESERVED_ARTIFACT_NAME =
+  /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/u;
+
 function buildRequest(root, changedFiles, broad) {
   const structuralFiles = changedFiles.filter((file) => /\.[cm]?[jt]sx?$/u.test(file));
   const relationships = broad ? {} : { relationships: ["import", "workspace"] };
@@ -44,14 +47,20 @@ function buildRequest(root, changedFiles, broad) {
 async function writePlanningImpactArtifacts(options, analyzeProject) {
   const output = await validateOutputDirectory(options.outputDirectory);
   let manifestHandle;
+  let mayWriteFailureArtifacts = !RESERVED_ARTIFACT_NAME.test(
+    basename(resolve(options.changedFilesManifest)),
+  );
   try {
-    await invalidateStatuses(output);
     const manifest = await validateManifest(output, resolve(options.changedFilesManifest));
     manifestHandle = manifest.handle;
+    if (RESERVED_ARTIFACT_NAME.test(basename(manifest.path))) {
+      mayWriteFailureArtifacts = false;
+      throw new Error("changed-files manifest must not use a reserved artifact destination");
+    }
     const changedFiles = parseChangedFiles(await manifestHandle.readFile("utf8"));
     await manifestHandle.close();
     manifestHandle = undefined;
-    await assertOutputDirectory(output);
+    await updateOutputDirectory(output, invalidateStatuses);
     const request = {
       ...buildRequest(options.root, changedFiles, options.broad === true),
       ...invocationOptions(options),
@@ -59,21 +68,24 @@ async function writePlanningImpactArtifacts(options, analyzeProject) {
     const result = await analyzeProject(request);
     const completed = completeResult(result, request.reports.length > 1);
     const artifacts = reportArtifacts(completed);
-    await writeSuccess(output, artifacts);
+    await updateOutputDirectory(output, (privateOutput) => writeSuccess(privateOutput, artifacts));
     return { outputDirectory: output.path, ...artifacts };
   } catch (error) {
     if (manifestHandle) {
       await manifestHandle.close().catch(() => {});
       manifestHandle = undefined;
     }
-    await writeFailure(output, error).catch(() => {});
+    if (mayWriteFailureArtifacts) {
+      await updateOutputDirectory(output, (privateOutput) =>
+        writeFailure(privateOutput, error),
+      ).catch(() => {});
+    }
     throw error;
   } finally {
     if (manifestHandle) await manifestHandle.close().catch(() => {});
     if (output.handle) await output.handle.close().catch(() => {});
   }
 }
-
 function invocationOptions(options) {
   return Object.fromEntries(
     ["timeout", "lockTimeout", "failOnLock", "jobs", "profile"]
@@ -81,7 +93,6 @@ function invocationOptions(options) {
       .map((name) => [name, options[name]]),
   );
 }
-
 function parseChangedFiles(source) {
   const files = [
     ...new Set(
@@ -105,7 +116,6 @@ function parseChangedFiles(source) {
   }
   return files;
 }
-
 function completeResult(result, hasStructuralReports) {
   if (hasStructuralReports) return result;
   const traversal = { roots: [], files: [], diagnostics: [], tsconfig_provenance: [] };
@@ -118,7 +128,6 @@ function completeResult(result, hasStructuralReports) {
     ],
   };
 }
-
 function reportArtifacts(result) {
   const reports = new Map(result.reports.map((report) => [report.id, report]));
   return Object.fromEntries(
@@ -156,7 +165,7 @@ async function writeFailure(output, error) {
 
 async function invalidateStatuses(output) {
   for (const name of REPORTS) {
-    await attempt(() => publishArtifact(output, `${name}.status`, "1\n"));
+    await publishArtifact(output, `${name}.status`, "1\n");
   }
 }
 

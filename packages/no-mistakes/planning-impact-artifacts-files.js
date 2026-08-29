@@ -2,7 +2,7 @@
 
 const { lstat, open, realpath, rename, rm, stat } = require("node:fs/promises");
 const { constants } = require("node:fs");
-const { dirname, join } = require("node:path");
+const { basename, dirname, join } = require("node:path");
 const { randomUUID } = require("node:crypto");
 
 const MANIFEST_OPEN_FLAGS = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0);
@@ -106,6 +106,36 @@ async function removeArtifact(output, name) {
   return removePath(output, join(output.path, name));
 }
 
+async function updateOutputDirectory(output, update) {
+  await assertOutputDirectory(output);
+  const parked = join(
+    dirname(output.path),
+    `.${basename(output.path)}.planning-impact-${randomUUID()}`,
+  );
+  await rename(output.path, parked);
+  const privateOutput = { ...output, path: parked };
+  let result;
+  let updateError;
+  try {
+    await assertOutputDirectory(privateOutput);
+    result = await update(privateOutput);
+  } catch (error) {
+    updateError = error;
+  }
+  let restoreError;
+  try {
+    await assertOutputDirectory(privateOutput);
+    await assertPathVacant(output.path);
+    await rename(parked, output.path);
+    await assertOutputDirectory(output);
+  } catch (error) {
+    restoreError = error;
+  }
+  if (updateError) throw updateError;
+  if (restoreError) throw restoreError;
+  return result;
+}
+
 async function removePath(output, target) {
   await assertOutputDirectory(output);
   let metadata;
@@ -143,6 +173,16 @@ async function assertOutputDirectory(output) {
   }
 }
 
+async function assertPathVacant(path) {
+  try {
+    await lstat(path);
+  } catch (error) {
+    if (error.code === "ENOENT") return;
+    throw error;
+  }
+  throw new Error("output directory path changed during planning artifact generation");
+}
+
 function sameFileIdentity(left, right) {
   return left.dev === right.dev && left.ino === right.ino;
 }
@@ -151,6 +191,7 @@ module.exports = {
   assertOutputDirectory,
   publishArtifact,
   removeArtifact,
+  updateOutputDirectory,
   validateManifest,
   validateOutputDirectory,
 };

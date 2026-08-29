@@ -107,13 +107,15 @@ const {
 that need private, CLI-compatible planning files without spawning several
 commands. It runs one prepared `analyzeProject()` request, then writes
 `dependencies`, `dependents`, `symbols`, and Vitest `plan` artifacts as JSON,
-stderr, and status files in `outputDirectory`. The manifest must be
-newline-separated repository-relative paths in that same existing `0700`
-directory (exactly `0700`, with no additional permission or special bits), and
-the directory must remain the same private directory for the duration of the
-operation. Artifact files use mode `0600`; existing statuses are first made
-nonzero while analysis is in progress, and failures remove stale JSON and
-best-effort write bounded diagnostics and nonzero statuses for every report.
+stderr, and status files in `outputDirectory`. `changedFilesManifest` is the
+path to a private regular file directly in that same existing `0700` directory
+(exactly `0700`, with no additional permission or special bits); its contents
+are newline-separated repository-relative paths and its filename cannot collide
+with an artifact destination. The directory must remain the same private
+directory for the duration of the operation. Artifact files use mode `0600`;
+all four existing statuses are first made nonzero before analysis begins, and
+failures remove stale JSON and best-effort write bounded diagnostics and
+nonzero statuses for every report.
 
 ```js
 await writePlanningImpactArtifacts({

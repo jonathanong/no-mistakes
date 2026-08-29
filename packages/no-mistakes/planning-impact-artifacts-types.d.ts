@@ -4,7 +4,10 @@ import type { DependencyResult, SymbolsResult, TestPlan } from "./types";
 export interface WritePlanningImpactArtifactsOptions {
   /** Repository root passed to the prepared `analyzeProject()` request. */
   root: string;
-  /** Newline-separated, repository-relative changed-file paths inside `outputDirectory`. */
+  /**
+   * Path to a private regular manifest directly inside `outputDirectory`. Its newline-separated
+   * contents are repository-relative changed-file paths and its filename cannot be an artifact name.
+   */
   changedFilesManifest: string;
   /** Existing private directory with exactly mode `0700` that receives the artifacts. */
   outputDirectory: string;

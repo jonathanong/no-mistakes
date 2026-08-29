@@ -7,6 +7,7 @@ const {
   mkdir,
   mkdtemp,
   readFile,
+  readdir,
   rm,
   stat,
   symlink,
@@ -14,7 +15,7 @@ const {
   writeFile,
 } = require("node:fs/promises");
 const { tmpdir } = require("node:os");
-const { join } = require("node:path");
+const { basename, dirname, join } = require("node:path");
 const { pathToFileURL } = require("node:url");
 
 const packageRoot = join(__dirname, "..");
@@ -417,15 +418,15 @@ test("rejects a manifest path swapped after it is opened", async () => {
 
 test("rejects an output directory replacement before publishing artifacts", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
-  const movedDirectory = `${directory}-moved`;
   const victim = await privateDirectory("no-mistakes-impact-victim-");
   const manifest = join(directory, "changed-files.txt");
   const fs = require("node:fs/promises");
   const originalRealpath = fs.realpath;
   const originalRename = fs.rename;
+  const canonicalDirectory = await originalRealpath(directory);
   try {
     await writeFile(manifest, "a.mts\n");
-    const canonicalDirectory = await originalRealpath(directory);
+    await writeFile(join(victim, "dependencies.json"), "protected");
     let swapped = false;
     await withFsOverride(
       {
@@ -433,7 +434,6 @@ test("rejects an output directory replacement before publishing artifacts", asyn
           const result = await originalRename(from, to);
           if (!swapped && to.endsWith("dependencies.json")) {
             swapped = true;
-            await originalRename(canonicalDirectory, movedDirectory);
             await symlink(victim, canonicalDirectory);
           }
           return result;
@@ -449,10 +449,14 @@ test("rejects an output directory replacement before publishing artifacts", asyn
         );
       },
     );
-    assert.deepEqual(await fs.readdir(victim), []);
+    assert.equal(await readFile(join(victim, "dependencies.json"), "utf8"), "protected");
   } finally {
     await rm(directory, { recursive: true, force: true });
-    await rm(movedDirectory, { recursive: true, force: true });
+    for (const entry of await readdir(dirname(canonicalDirectory))) {
+      if (entry.startsWith(`.${basename(canonicalDirectory)}.planning-impact-`)) {
+        await rm(join(dirname(canonicalDirectory), entry), { recursive: true, force: true });
+      }
+    }
     await rm(victim, { recursive: true, force: true });
   }
 });
@@ -526,6 +530,78 @@ test("invalidates prior success statuses before analysis completes", async () =>
     for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
       assert.equal(await readFile(join(directory, `${name}.status`), "utf8"), "0\n");
     }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("does not begin analysis when any success status cannot be invalidated", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const fs = require("node:fs/promises");
+  const originalRename = fs.rename;
+  let failed = false;
+  let analyzed = false;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
+      await writeFile(join(directory, `${name}.status`), "0\n");
+    }
+    await withFsOverride(
+      {
+        rename: async (from, to) => {
+          if (!failed && to.endsWith("symbols.status")) {
+            failed = true;
+            throw new Error("injected status invalidation failure");
+          }
+          return originalRename(from, to);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => {
+              analyzed = true;
+              return aggregateResult;
+            },
+          ),
+          /injected status invalidation failure/,
+        );
+      },
+    );
+    assert.equal(analyzed, false);
+    for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
+      assert.equal(await readFile(join(directory, `${name}.status`), "utf8"), "1\n");
+    }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("rejects every reserved artifact destination as a changed-files manifest before invalidation", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  let analyzed = false;
+  try {
+    for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
+      for (const extension of ["json", "stderr", "status"]) {
+        const manifest = join(directory, `${name}.${extension}`);
+        await writeFile(manifest, "a.mts\n");
+        await assert.rejects(
+          writePlanningImpactArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => {
+              analyzed = true;
+              return aggregateResult;
+            },
+          ),
+          /must not use a reserved artifact destination/,
+        );
+        assert.equal(await readFile(manifest, "utf8"), "a.mts\n");
+        await unlink(manifest);
+      }
+    }
+    assert.equal(analyzed, false);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
@@ -801,13 +877,12 @@ test("continues failure diagnostics when report cleanup cannot stat a destinatio
   const fs = require("node:fs/promises");
   const originalLstat = fs.lstat;
   const originalRename = fs.rename;
-  const destination = join(await fs.realpath(directory), "dependencies.json");
   try {
     await writeFile(manifest, "a.mts\n");
     await withFsOverride(
       {
         lstat: async (path, ...args) => {
-          if (path === destination) {
+          if (path.endsWith("dependencies.json")) {
             const error = new Error("injected artifact stat failure");
             error.code = "EIO";
             throw error;
@@ -815,7 +890,7 @@ test("continues failure diagnostics when report cleanup cannot stat a destinatio
           return originalLstat(path, ...args);
         },
         rename: async (from, to) => {
-          if (to === destination) throw new Error("injected publish failure");
+          if (to.endsWith("dependencies.json")) throw new Error("injected publish failure");
           return originalRename(from, to);
         },
       },
@@ -833,7 +908,7 @@ test("continues failure diagnostics when report cleanup cannot stat a destinatio
       assert.equal(await readFile(join(directory, `${name}.status`), "utf8"), "1\n");
       assert.ok((await readFile(join(directory, `${name}.stderr`), "utf8")).length > 0);
     }
-    await assert.rejects(readFile(destination, "utf8"), /ENOENT/);
+    await assert.rejects(readFile(join(directory, "dependencies.json"), "utf8"), /ENOENT/);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
@@ -943,6 +1018,41 @@ test("exports the artifact writer through the public async Node API", async () =
       outputDirectory: directory,
     });
     assert.deepEqual(result.dependencies, { files: ["a.mts"] });
+  } finally {
+    delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(addonPath)];
+    if (previous) require.extensions[".node"] = previous;
+    else delete require.extensions[".node"];
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("public artifact API preserves a manifest that collides with a reserved destination", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "plan.status");
+  const previous = require.extensions[".node"];
+  delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(addonPath)];
+  require.extensions[".node"] = (module, filename) => {
+    assert.equal(filename, addonPath);
+    module.exports = {
+      analyzeProjectJson: async () => {
+        assert.fail("reserved manifest collision must fail before public analysis");
+      },
+    };
+  };
+  try {
+    await writeFile(manifest, "a.mts\n");
+    const api = require(indexPath);
+    await assert.rejects(
+      api.writePlanningImpactArtifacts({
+        root: "/repo",
+        changedFilesManifest: manifest,
+        outputDirectory: directory,
+      }),
+      /must not use a reserved artifact destination/,
+    );
+    assert.equal(await readFile(manifest, "utf8"), "a.mts\n");
   } finally {
     delete require.cache[require.resolve(indexPath)];
     delete require.cache[require.resolve(addonPath)];
