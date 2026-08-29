@@ -3,16 +3,16 @@ use napi::{Env, Task};
 use std::fs::File;
 use std::path::PathBuf;
 
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 use super::unlock_planning_artifact_lock_impl;
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 use napi::CleanupEnvHook;
 
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 use std::collections::HashMap;
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 use std::sync::atomic::{AtomicU32, Ordering};
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 use std::sync::{Mutex, OnceLock};
 
 pub struct RenameNoReplaceTask {
@@ -40,31 +40,31 @@ impl Task for RenameNoReplaceTask {
     }
 }
 
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 struct SendCleanupHook(CleanupEnvHook<u32>);
 
 // SAFETY: the hook pointer is only registered and removed on the Env's JS thread.
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 unsafe impl Send for SendCleanupHook {}
 
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 struct PlanningArtifactLock {
     file: File,
     hook: SendCleanupHook,
 }
 
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 static PLANNING_ARTIFACT_LOCKS: OnceLock<Mutex<HashMap<u32, PlanningArtifactLock>>> =
     OnceLock::new();
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 static NEXT_PLANNING_ARTIFACT_LOCK: AtomicU32 = AtomicU32::new(1);
 
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 fn planning_artifact_locks() -> &'static Mutex<HashMap<u32, PlanningArtifactLock>> {
     PLANNING_ARTIFACT_LOCKS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 fn cleanup_planning_artifact_lock(token: u32) {
     if let Ok(mut locks) = planning_artifact_locks().lock() {
         locks.remove(&token);
@@ -91,7 +91,7 @@ impl Task for AcquirePlanningArtifactLockTask {
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
-        #[cfg(unix)]
+        #[cfg(any(unix, windows))]
         {
             let locks = planning_artifact_locks().lock().unwrap();
             loop {
@@ -117,7 +117,7 @@ impl Task for AcquirePlanningArtifactLockTask {
                 }
             }
         }
-        #[cfg(not(unix))]
+        #[cfg(not(any(unix, windows)))]
         {
             drop(output);
             Err(napi::Error::from_reason(
@@ -128,18 +128,18 @@ impl Task for AcquirePlanningArtifactLockTask {
 }
 
 pub struct ReleasePlanningArtifactLockTask {
-    #[cfg(unix)]
+    #[cfg(any(unix, windows))]
     token: u32,
-    #[cfg(unix)]
+    #[cfg(any(unix, windows))]
     hook: Option<SendCleanupHook>,
 }
 
 impl ReleasePlanningArtifactLockTask {
     pub(crate) fn new(_token: u32) -> Self {
         Self {
-            #[cfg(unix)]
+            #[cfg(any(unix, windows))]
             token: _token,
-            #[cfg(unix)]
+            #[cfg(any(unix, windows))]
             hook: None,
         }
     }
@@ -150,7 +150,7 @@ impl Task for ReleasePlanningArtifactLockTask {
     type JsValue = ();
 
     fn compute(&mut self) -> napi::Result<Self::Output> {
-        #[cfg(unix)]
+        #[cfg(any(unix, windows))]
         {
             let PlanningArtifactLock { file, hook } = planning_artifact_locks()
                 .lock()
@@ -162,14 +162,14 @@ impl Task for ReleasePlanningArtifactLockTask {
                 .map_err(|error| napi::Error::from_reason(error.to_string()))?;
             Ok(())
         }
-        #[cfg(not(unix))]
+        #[cfg(not(any(unix, windows)))]
         Err(napi::Error::from_reason(
             "planning artifact locks are unavailable on this platform",
         ))
     }
 
     fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
-        #[cfg(unix)]
+        #[cfg(any(unix, windows))]
         if let Some(hook) = self.hook.take() {
             let _ = _env.remove_env_cleanup_hook(hook.0);
         }

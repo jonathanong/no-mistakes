@@ -1,10 +1,10 @@
 use super::rename_no_replace_impl;
 
+#[cfg(any(unix, windows))]
+use super::{acquire_planning_artifact_lock_impl, unlock_planning_artifact_lock_impl};
+
 #[cfg(unix)]
-use super::{
-    acquire_planning_artifact_lock_impl, flock_impl, map_advisory_lock_error,
-    unlock_planning_artifact_lock_impl, validate_planning_artifact_lock_identity,
-};
+use super::{flock_impl, map_advisory_lock_error, validate_planning_artifact_lock_identity};
 
 #[test]
 fn does_not_replace_an_existing_destination() {
@@ -36,7 +36,7 @@ fn reports_an_underlying_rename_error() {
     assert!(!destination.exists());
 }
 
-#[cfg(unix)]
+#[cfg(any(unix, windows))]
 #[test]
 fn reports_busy_when_another_holder_owns_the_lock() {
     let directory = tempfile::tempdir().unwrap();
@@ -51,9 +51,30 @@ fn reports_busy_when_another_holder_owns_the_lock() {
     drop(second);
 
     let metadata = std::fs::metadata(lock_path).unwrap();
-    use std::os::unix::fs::PermissionsExt;
     assert!(metadata.is_file());
-    assert_eq!(metadata.permissions().mode() & 0o777, 0o600);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        assert_eq!(metadata.permissions().mode() & 0o777, 0o600);
+    }
+}
+
+#[cfg(windows)]
+#[test]
+fn rejects_hardlinked_lock_paths() {
+    let directory = tempfile::tempdir().unwrap();
+    let victim = directory.path().join("victim");
+    let hardlink_path = directory.path().join("hardlink.lock");
+    std::fs::write(&victim, "protected").unwrap();
+    std::fs::hard_link(&victim, &hardlink_path).unwrap();
+
+    assert_eq!(
+        acquire_planning_artifact_lock_impl(&hardlink_path)
+            .unwrap_err()
+            .kind(),
+        std::io::ErrorKind::InvalidData
+    );
+    assert_eq!(std::fs::read_to_string(victim).unwrap(), "protected");
 }
 
 #[cfg(unix)]
