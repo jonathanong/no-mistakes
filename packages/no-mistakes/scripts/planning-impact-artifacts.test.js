@@ -272,15 +272,16 @@ test("writes empty structural artifacts for documentation-only changes", async (
   }
 });
 
-test("keeps deleted structural files out of the symbols report", async () => {
+test("keeps deleted structural files out of symbols while following file symlinks", async () => {
   const root = await privateDirectory("no-mistakes-impact-root-");
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");
   let request;
   try {
     await writeFile(join(root, "present.mts"), "export const present = true;\n");
+    await symlink("present.mts", join(root, "linked.mts"));
     await mkdir(join(root, "folder.mts"));
-    await writeFile(manifest, "present.mts\ndeleted.mts\nfolder.mts\nREADME.md\n");
+    await writeFile(manifest, "present.mts\nlinked.mts\ndeleted.mts\nfolder.mts\nREADME.md\n");
     await writePlanningImpactArtifacts(
       { root, changedFilesManifest: manifest, outputDirectory: directory },
       async (options) => {
@@ -290,12 +291,14 @@ test("keeps deleted structural files out of the symbols report", async () => {
     );
     assert.deepEqual(request.reports[0].files, [
       { file: "present.mts" },
+      { file: "linked.mts" },
       { file: "deleted.mts" },
       { file: "folder.mts" },
     ]);
-    assert.deepEqual(request.reports[2].files, ["present.mts"]);
+    assert.deepEqual(request.reports[2].files, ["present.mts", "linked.mts"]);
     assert.deepEqual(request.reports[3].changedFiles, [
       "present.mts",
+      "linked.mts",
       "deleted.mts",
       "folder.mts",
       "README.md",
@@ -369,7 +372,6 @@ test("preserves the analysis error when checking the root or changed-file identi
   const manifest = join(directory, "changed-files.txt");
   const root = await privateDirectory("no-mistakes-impact-root-");
   const fs = require("node:fs/promises");
-  const originalLstat = fs.lstat;
   const originalStat = fs.stat;
   try {
     await writeFile(join(root, "error.mts"), "export const error = true;\n");
@@ -378,9 +380,9 @@ test("preserves the analysis error when checking the root or changed-file identi
     injected.code = "EACCES";
     await withFsOverride(
       {
-        lstat: async (path, ...args) => {
+        stat: async (path, ...args) => {
           if (path === root) throw injected;
-          return originalLstat(path, ...args);
+          return originalStat(path, ...args);
         },
       },
       async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
@@ -1468,26 +1470,20 @@ test("rejects every reserved artifact destination as a changed-files manifest be
   try {
     for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
       for (const extension of ["json", "stderr", "status"]) {
-        // Reject both spellings everywhere so behavior stays safe on case-insensitive volumes.
-        for (const artifactName of [
-          `${name}.${extension}`,
-          `${name.toUpperCase()}.${extension.toUpperCase()}`,
-        ]) {
-          const manifest = join(directory, artifactName);
-          await writeFile(manifest, "a.mts\n");
-          await assert.rejects(
-            writePlanningImpactArtifacts(
-              { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
-              async () => {
-                analyzed = true;
-                return aggregateResult;
-              },
-            ),
-            /must not use a reserved artifact destination/,
-          );
-          assert.equal(await readFile(manifest, "utf8"), "a.mts\n");
-          await unlink(manifest);
-        }
+        const manifest = join(directory, `${name}.${extension}`);
+        await writeFile(manifest, "a.mts\n");
+        await assert.rejects(
+          writePlanningImpactArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => {
+              analyzed = true;
+              return aggregateResult;
+            },
+          ),
+          /must not use a reserved artifact destination/,
+        );
+        assert.equal(await readFile(manifest, "utf8"), "a.mts\n");
+        await unlink(manifest);
       }
     }
 
@@ -1529,6 +1525,73 @@ test("rejects every reserved artifact destination as a changed-files manifest be
     assert.equal((await lstat(safeAlias)).isSymbolicLink(), true);
     assert.equal(await readFile(reservedTarget, "utf8"), "a.mts\n");
     assert.equal(analyzed, false);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("rejects reserved artifact manifests through case-insensitive path aliases", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "PLAN.STATUS");
+  const reservedAlias = join(directory, "plan.status");
+  const fs = require("node:fs/promises");
+  const originalRealpath = fs.realpath;
+  let analyzed = false;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    const canonicalManifest = await originalRealpath(manifest);
+    await withFsOverride(
+      {
+        realpath: async (path, ...args) =>
+          path === reservedAlias ? canonicalManifest : originalRealpath(path, ...args),
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => {
+              analyzed = true;
+              return aggregateResult;
+            },
+          ),
+          /must not use a reserved artifact destination/,
+        );
+      },
+    );
+    assert.equal(analyzed, false);
+    assert.equal(await readFile(manifest, "utf8"), "a.mts\n");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("allows differently cased artifact names on case-sensitive filesystems", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "PLAN.STATUS");
+  const reservedAlias = join(directory, "plan.status");
+  const fs = require("node:fs/promises");
+  const originalRealpath = fs.realpath;
+  try {
+    await writeFile(manifest, "README.md\n");
+    await withFsOverride(
+      {
+        realpath: async (path, ...args) => {
+          if (path === reservedAlias) {
+            const error = new Error("case-sensitive alias does not exist");
+            error.code = "ENOENT";
+            throw error;
+          }
+          return originalRealpath(path, ...args);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await writeArtifacts(
+          { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+          async () => aggregateResult,
+        );
+      },
+    );
+    assert.equal(await readFile(manifest, "utf8"), "README.md\n");
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
