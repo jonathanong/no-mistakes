@@ -57,6 +57,9 @@ async function writePlanningImpactArtifactsUnlocked(options, analyzeProject, ren
   try {
     const requestedManifestPath = resolve(options.changedFilesManifest);
     mayWriteFailureArtifacts = !RESERVED_ARTIFACT_NAME.test(basename(requestedManifestPath));
+    if (!mayWriteFailureArtifacts) {
+      throw new Error("changed-files manifest must not use a reserved artifact destination");
+    }
     const manifestPath = await realpath(requestedManifestPath);
     mayWriteFailureArtifacts = !RESERVED_ARTIFACT_NAME.test(basename(manifestPath));
     const manifest = await validateManifest(output, manifestPath);

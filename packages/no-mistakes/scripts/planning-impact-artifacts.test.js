@@ -1255,6 +1255,44 @@ test("rejects every reserved artifact destination as a changed-files manifest be
         }
       }
     }
+
+    // The lexical name remains reserved even when a symlink's target is safe.
+    const target = join(directory, "changed-files.txt");
+    const reservedAlias = join(directory, "plan.status");
+    await writeFile(target, "a.mts\n");
+    await symlink(target, reservedAlias);
+    await assert.rejects(
+      writePlanningImpactArtifacts(
+        { root: "/repo", changedFilesManifest: reservedAlias, outputDirectory: directory },
+        async () => {
+          analyzed = true;
+          return aggregateResult;
+        },
+      ),
+      /must not use a reserved artifact destination/,
+    );
+    assert.equal((await lstat(reservedAlias)).isSymbolicLink(), true);
+    assert.equal(await readFile(target, "utf8"), "a.mts\n");
+    await unlink(reservedAlias);
+    await unlink(target);
+
+    // Retain the separate canonical check for a safe alias to a reserved target.
+    const reservedTarget = join(directory, "plan.status");
+    const safeAlias = join(directory, "changed-files.txt");
+    await writeFile(reservedTarget, "a.mts\n");
+    await symlink(reservedTarget, safeAlias);
+    await assert.rejects(
+      writePlanningImpactArtifacts(
+        { root: "/repo", changedFilesManifest: safeAlias, outputDirectory: directory },
+        async () => {
+          analyzed = true;
+          return aggregateResult;
+        },
+      ),
+      /must not use a reserved artifact destination/,
+    );
+    assert.equal((await lstat(safeAlias)).isSymbolicLink(), true);
+    assert.equal(await readFile(reservedTarget, "utf8"), "a.mts\n");
     assert.equal(analyzed, false);
   } finally {
     await rm(directory, { recursive: true, force: true });
