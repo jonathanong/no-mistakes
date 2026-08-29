@@ -7,7 +7,7 @@ const {
   validateManifest,
   validateOutputDirectory,
 } = require("./planning-impact-artifacts-files");
-const { isOutputRestorationFailure } = require("./planning-impact-artifacts-errors");
+const artifactErrors = require("./planning-impact-artifacts-errors");
 const { realpath } = require("node:fs/promises");
 const { existingFiles } = require("./planning-impact-artifacts-inputs");
 const { basename, isAbsolute, posix, resolve, win32 } = require("node:path");
@@ -85,12 +85,18 @@ async function writePlanningImpactArtifacts(options, analyzeProject, renameNoRep
       await manifestHandle.close().catch(() => {});
       manifestHandle = undefined;
     }
-    if (mayWriteFailureArtifacts && !isOutputRestorationFailure(error)) {
-      await updateOutputDirectory(
-        output,
-        (privateOutput) => writeFailure(privateOutput, error),
-        renameNoReplace,
-      ).catch(() => {});
+    if (mayWriteFailureArtifacts && !artifactErrors.isOutputRestorationFailure(error)) {
+      try {
+        await updateOutputDirectory(
+          output,
+          (privateOutput) => writeFailure(privateOutput, error),
+          renameNoReplace,
+        );
+      } catch (failureReportingError) {
+        if (artifactErrors.isOutputRestorationFailure(failureReportingError)) {
+          throw artifactErrors.preserveFailureReportingError(error, failureReportingError);
+        }
+      }
     }
     throw error;
   } finally {

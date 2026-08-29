@@ -28,6 +28,7 @@ const esmIndexPath = join(packageRoot, "index.mjs");
 const {
   writePlanningImpactArtifacts: writePlanningImpactArtifactsInternal,
 } = require("../planning-impact-artifacts");
+const { preserveFailureReportingError } = require("../planning-impact-artifacts-errors");
 
 // The published API supplies the native no-replace rename primitive. These direct helper tests
 // use Node's rename except where a deterministic race supplies its own fail-closed primitive.
@@ -1179,6 +1180,59 @@ test("best-effort failure reporting preserves the original directory error", asy
     }
   } finally {
     await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("attaches a failure-report restoration error and parked recovery path", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-report-restore-");
+  const manifest = join(directory, "changed-files.txt");
+  const analysisError = new Error("injected analysis failure");
+  let parked;
+  let renameCalls = 0;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await assert.rejects(
+      writePlanningImpactArtifactsInternal(
+        { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+        async () => {
+          throw analysisError;
+        },
+        async (from, to) => {
+          renameCalls += 1;
+          if (renameCalls === 1) {
+            await rename(from, to);
+            return true;
+          }
+          parked = from;
+          await writeFile(to, "concurrent public-path victim");
+          return false;
+        },
+      ),
+      (error) => {
+        assert.equal(error, analysisError);
+        assert.equal(error.failureReportingError instanceof AggregateError, true);
+        assert.equal(error.failureReportingError.code, "EEXIST");
+        assert.ok(error.failureReportingError.message.includes(parked));
+        return true;
+      },
+    );
+    assert.equal(renameCalls, 2);
+    assert.equal(await readFile(directory, "utf8"), "concurrent public-path victim");
+    assert.equal((await lstat(parked)).isDirectory(), true);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+    await rm(parked, { recursive: true, force: true }).catch(() => {});
+  }
+});
+
+test("aggregates restoration details when the original failure cannot be extended", () => {
+  const restorationError = new Error("failure reporting stranded the directory");
+  for (const originalError of [Object.freeze(new Error("frozen failure")), "primitive failure"]) {
+    const result = preserveFailureReportingError(originalError, restorationError);
+    assert.equal(result instanceof AggregateError, true);
+    assert.deepEqual(result.errors, [originalError, restorationError]);
+    assert.equal(result.cause, originalError);
+    assert.match(result.message, /could not restore the output directory/u);
   }
 });
 

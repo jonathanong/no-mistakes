@@ -17,4 +17,30 @@ function isOutputRestorationFailure(error) {
   return error?.[RESTORATION_FAILURE] === true;
 }
 
-module.exports = { isOutputRestorationFailure, outputRestorationFailure };
+function preserveFailureReportingError(originalError, failureReportingError) {
+  if (
+    (typeof originalError === "object" && originalError !== null) ||
+    typeof originalError === "function"
+  ) {
+    try {
+      Object.defineProperty(originalError, "failureReportingError", {
+        configurable: true,
+        value: failureReportingError,
+      });
+      return originalError;
+    } catch {
+      // Fall through when a caller throws a frozen or otherwise non-extensible value.
+    }
+  }
+  return new AggregateError(
+    [originalError, failureReportingError],
+    `planning artifact generation failed and failure reporting could not restore the output directory: ${failureReportingError.message}`,
+    { cause: originalError },
+  );
+}
+
+module.exports = {
+  isOutputRestorationFailure,
+  outputRestorationFailure,
+  preserveFailureReportingError,
+};

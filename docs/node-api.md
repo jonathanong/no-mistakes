@@ -121,7 +121,10 @@ Artifact files use mode `0600`;
 all four existing statuses are first made nonzero before analysis begins, and
 failures remove stale JSON and attempt to write bounded diagnostics and nonzero
 statuses for every report. Those failure artifacts are best effort: inability
-to publish them never masks the original analysis or publication error. The
+to publish them never masks the original analysis or publication error. If that
+reporting transition cannot restore the output directory, the original error's
+non-enumerable `failureReportingError` contains the parked recovery path; a
+non-extensible thrown value is instead preserved in an `AggregateError`. The
 helper is unavailable on Windows because
 Node does not expose a trustworthy private Windows ACL check. Structural paths
 are sent to traversal reports as `{ file }` entries, so `#` remains part of a
