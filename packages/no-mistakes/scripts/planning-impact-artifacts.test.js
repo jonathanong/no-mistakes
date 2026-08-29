@@ -750,7 +750,8 @@ test("rejects a staged pathname swap before publication", async () => {
             { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
             async () => aggregateResult,
           ),
-          /staged artifact changed before publication: dependencies\.json/,
+          // Coverage instrumentation can let either adjacent identity guard observe the swap.
+          /(?:staged|published) artifact changed (?:before|during) publication: dependencies\.json/,
         );
       },
     );
