@@ -281,7 +281,7 @@ fn command_output_resumes_child_after_job_assignment() {
         "/C",
         // Reading `set /P` from NUL prints the prompt but leaves a failing
         // ERRORLEVEL, so make the fixture's intended success explicit.
-        "<NUL set /P \"=stdout\" & <NUL set /P \"=stderr\" 1>&2 & exit /B 0",
+        "<NUL set /P =stdout & <NUL set /P =stderr 1>&2 & exit /B 0",
     ]);
 
     // The Windows path creates the process suspended, attaches its job, and
