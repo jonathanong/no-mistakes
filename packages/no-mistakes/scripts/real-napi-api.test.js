@@ -6,6 +6,7 @@ const { mkdtemp, mkdir, rm, stat } = require("node:fs/promises");
 const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { setTimeout: delay } = require("node:timers/promises");
+const { Worker } = require("node:worker_threads");
 const test = globalThis.test || require("node:test").test;
 
 const repositoryRoot = join(__dirname, "..", "..", "..");
@@ -16,6 +17,13 @@ const lockHolderFixture = join(
   "napi",
   "planning-artifact-lock",
   "hold.js",
+);
+const workerLockHolderFixture = join(
+  repositoryRoot,
+  "fixtures",
+  "napi",
+  "planning-artifact-lock",
+  "worker.js",
 );
 const expectedReport = JSON.parse(readFileSync(join(fixtureRoot, "expected.json"), "utf8"));
 const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
@@ -72,6 +80,44 @@ test(
     } finally {
       if (parentToken !== undefined) await native.releasePlanningArtifactLock(parentToken);
       child.kill();
+      await rm(directory, { recursive: true, force: true });
+    }
+  },
+);
+
+test(
+  "compiled internal N-API lock is released when a worker terminates",
+  { skip: !addonPath },
+  async () => {
+    const directory = await mkdtemp(join(tmpdir(), "no-mistakes-napi-worker-lock-"));
+    const lockPath = join(directory, "artifact.lock");
+    const worker = new Worker(workerLockHolderFixture, {
+      workerData: { addonPath, lockPath },
+    });
+    let child;
+    try {
+      const [message] = await once(worker, "message");
+      assert.equal(message, "locked");
+      assert.equal(await worker.terminate(), 1);
+
+      child = fork(lockHolderFixture, [lockPath], {
+        env: { ...process.env, NO_MISTAKES_TEST_NAPI_ADDON_PATH: addonPath },
+        stdio: ["ignore", "ignore", "inherit", "ipc"],
+      });
+      const [childMessage] = await Promise.race([
+        once(child, "message"),
+        delay(2_000, undefined, { ref: false }).then(() => {
+          throw new Error("terminated worker retained its planning artifact lock");
+        }),
+      ]);
+      assert.equal(childMessage, "locked");
+      const exited = once(child, "exit");
+      child.send("release");
+      assert.deepEqual(await exited, [0, null]);
+      child = undefined;
+    } finally {
+      await worker.terminate();
+      child?.kill();
       await rm(directory, { recursive: true, force: true });
     }
   },

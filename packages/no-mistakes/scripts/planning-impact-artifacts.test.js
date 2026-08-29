@@ -22,6 +22,7 @@ const { basename, dirname, join } = require("node:path");
 const { pathToFileURL } = require("node:url");
 
 const packageRoot = join(__dirname, "..");
+const repositoryRoot = join(packageRoot, "..", "..");
 const addonPath = join(packageRoot, "bin", "no-mistakes.node");
 const indexPath = join(packageRoot, "index.js");
 const esmIndexPath = join(packageRoot, "index.mjs");
@@ -593,6 +594,102 @@ test("queues a concurrent call before resolving a temporarily parked output path
     );
   } finally {
     resumeParking();
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("serializes canonical and symlink aliases while the output is parked", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-alias-queue-");
+  const alias = `${directory}-alias`;
+  const manifest = join(directory, "changed-files.txt");
+  const fs = require("node:fs/promises");
+  const originalRename = fs.rename;
+  const canonicalDirectory = await fs.realpath(directory);
+  let announceParking;
+  let resumeParking;
+  const parkingStarted = new Promise((resolveStarted) => {
+    announceParking = resolveStarted;
+  });
+  const parkingMayFinish = new Promise((resolveFinish) => {
+    resumeParking = resolveFinish;
+  });
+  let parkedOnce = false;
+  try {
+    await symlink(canonicalDirectory, alias);
+    await writeFile(manifest, "a.mts\n");
+    await withFsOverride(
+      {
+        rename: async (from, to) => {
+          const result = await originalRename(from, to);
+          if (!parkedOnce && from === canonicalDirectory) {
+            parkedOnce = true;
+            announceParking();
+            await parkingMayFinish;
+          }
+          return result;
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        const first = writeArtifacts(
+          { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+          async () => aggregateResult,
+        );
+        await parkingStarted;
+        let aliasSettled = false;
+        const second = writeArtifacts(
+          { root: "/repo", changedFilesManifest: manifest, outputDirectory: alias },
+          async () => aggregateResult,
+        ).finally(() => {
+          aliasSettled = true;
+        });
+        await new Promise((resolveTurn) => setImmediate(resolveTurn));
+        assert.equal(aliasSettled, false);
+        resumeParking();
+        await Promise.all([first, second]);
+      },
+    );
+  } finally {
+    resumeParking();
+    await rm(alias, { force: true });
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("rejects an invalid UTF-8 changed-files manifest with failure artifacts", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-utf8-");
+  const manifest = join(directory, "changed-files.txt");
+  const fixture = JSON.parse(
+    await readFile(
+      join(
+        repositoryRoot,
+        "fixtures",
+        "napi",
+        "planning-impact-artifacts",
+        "invalid-utf8-manifest.json",
+      ),
+      "utf8",
+    ),
+  );
+  let analyzed = false;
+  try {
+    await writeFile(manifest, Buffer.from(fixture.hex, "hex"));
+    await assert.rejects(
+      writePlanningImpactArtifacts(
+        { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+        async () => {
+          analyzed = true;
+          return aggregateResult;
+        },
+      ),
+      /manifest must be valid UTF-8/,
+    );
+    assert.equal(analyzed, false);
+    assert.equal(await readFile(join(directory, "dependencies.status"), "utf8"), "1\n");
+    assert.match(
+      await readFile(join(directory, "dependencies.stderr"), "utf8"),
+      /manifest must be valid UTF-8/,
+    );
+  } finally {
     await rm(directory, { recursive: true, force: true });
   }
 });

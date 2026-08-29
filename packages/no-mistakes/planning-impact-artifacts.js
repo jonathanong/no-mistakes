@@ -8,10 +8,11 @@ const {
   validateOutputDirectory,
 } = require("./planning-impact-artifacts-files");
 const artifactErrors = require("./planning-impact-artifacts-errors");
-const { serializeOutputUpdate } = require("./planning-impact-artifacts-lock");
+const { canonicalOutputKey, serializeOutputUpdate } = require("./planning-impact-artifacts-lock");
 const { realpath } = require("node:fs/promises");
 const { buildRequest, completeResult } = require("./planning-impact-artifacts-inputs");
 const { basename, isAbsolute, posix, resolve, win32 } = require("node:path");
+const { TextDecoder } = require("node:util");
 
 const REPORTS = ["dependencies", "dependents", "symbols", "plan"];
 const REPORT_TYPES = {
@@ -22,6 +23,7 @@ const REPORT_TYPES = {
 };
 const RESERVED_ARTIFACT_NAME =
   /^(?:dependencies|dependents|symbols|plan)\.(?:json|stderr|status)$/iu;
+const UTF8_DECODER = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true });
 
 async function writePlanningImpactArtifacts(
   options,
@@ -29,7 +31,7 @@ async function writePlanningImpactArtifacts(
   renameNoReplace,
   acquireOutputLock = async () => async () => {},
 ) {
-  const outputKey = resolve(options.outputDirectory);
+  const outputKey = await canonicalOutputKey(resolve(options.outputDirectory));
   return serializeOutputUpdate(outputKey, async () => {
     const releaseOutputLock = await acquireOutputLock(outputKey);
     try {
@@ -63,7 +65,7 @@ async function writePlanningImpactArtifactsUnlocked(options, analyzeProject, ren
       mayWriteFailureArtifacts = false;
       throw new Error("changed-files manifest must not use a reserved artifact destination");
     }
-    const changedFiles = parseChangedFiles(await manifestHandle.readFile("utf8"));
+    const changedFiles = parseChangedFiles(decodeManifest(await manifestHandle.readFile()));
     await manifestHandle.close();
     manifestHandle = undefined;
     await updateOutputDirectory(output, invalidateStatuses, renameNoReplace);
@@ -102,6 +104,13 @@ async function writePlanningImpactArtifactsUnlocked(options, analyzeProject, ren
   } finally {
     if (manifestHandle) await manifestHandle.close().catch(() => {});
     if (output.handle) await output.handle.close().catch(() => {});
+  }
+}
+function decodeManifest(contents) {
+  try {
+    return UTF8_DECODER.decode(contents);
+  } catch {
+    throw new Error("changed-files manifest must be valid UTF-8");
   }
 }
 function invocationOptions(options) {

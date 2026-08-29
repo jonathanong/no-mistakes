@@ -47,6 +47,13 @@ fn planning_artifact_locks() -> &'static Mutex<HashMap<u32, File>> {
     PLANNING_ARTIFACT_LOCKS.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
+#[cfg(unix)]
+fn cleanup_planning_artifact_lock(token: u32) {
+    if let Ok(mut locks) = planning_artifact_locks().lock() {
+        locks.remove(&token);
+    }
+}
+
 pub struct AcquirePlanningArtifactLockTask {
     path: PathBuf,
 }
@@ -66,7 +73,7 @@ impl Task for AcquirePlanningArtifactLockTask {
             .map_err(|error| napi::Error::from_reason(error.to_string()))
     }
 
-    fn resolve(&mut self, _env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
+    fn resolve(&mut self, env: Env, output: Self::Output) -> napi::Result<Self::JsValue> {
         #[cfg(unix)]
         {
             let mut locks = planning_artifact_locks().lock().unwrap();
@@ -74,6 +81,13 @@ impl Task for AcquirePlanningArtifactLockTask {
                 let token = NEXT_PLANNING_ARTIFACT_LOCK.fetch_add(1, Ordering::Relaxed);
                 if token != 0 && !locks.contains_key(&token) {
                     locks.insert(token, output);
+                    drop(locks);
+                    if let Err(error) =
+                        env.add_env_cleanup_hook(token, cleanup_planning_artifact_lock)
+                    {
+                        cleanup_planning_artifact_lock(token);
+                        return Err(error);
+                    }
                     return Ok(token);
                 }
             }
