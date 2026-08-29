@@ -586,6 +586,57 @@ test("uses identity checks when directory descriptors are unavailable", async ()
   }
 });
 
+test("closes an output descriptor when its initial path identity changes", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const fs = require("node:fs/promises");
+  const originalOpen = fs.open;
+  const originalStat = fs.stat;
+  const canonicalDirectory = await fs.realpath(directory);
+  let directoryStats = 0;
+  let directoryClosed = false;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await withFsOverride(
+      {
+        open: async (path, ...args) => {
+          const handle = await originalOpen(path, ...args);
+          if (path === canonicalDirectory) {
+            const originalClose = handle.close.bind(handle);
+            handle.close = async (...closeArgs) => {
+              directoryClosed = true;
+              return originalClose(...closeArgs);
+            };
+          }
+          return handle;
+        },
+        stat: async (path, ...args) => {
+          const metadata = await originalStat(path, ...args);
+          if (path === canonicalDirectory) {
+            directoryStats += 1;
+            if (directoryStats === 2) {
+              Object.defineProperty(metadata, "ino", { value: metadata.ino + 1 });
+            }
+          }
+          return metadata;
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          /output directory changed/,
+        );
+      },
+    );
+    assert.equal(directoryClosed, true);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("rejects a changed output directory descriptor", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");
@@ -630,6 +681,86 @@ test("rejects a changed output directory descriptor", async () => {
   }
 });
 
+test("rejects a hardlinked staged artifact before publication", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const outside = await privateDirectory("no-mistakes-impact-outside-");
+  const manifest = join(directory, "changed-files.txt");
+  const outsideLink = join(outside, "staged-hardlink");
+  const fs = require("node:fs/promises");
+  const originalOpen = fs.open;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await withFsOverride(
+      {
+        open: async (path, ...args) => {
+          const handle = await originalOpen(path, ...args);
+          if (path.includes(".dependencies.json.")) {
+            const originalWriteFile = handle.writeFile.bind(handle);
+            handle.writeFile = async (...writeArgs) => {
+              const result = await originalWriteFile(...writeArgs);
+              await link(path, outsideLink);
+              return result;
+            };
+          }
+          return handle;
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          /staged artifact is not a private regular file: dependencies\.json/,
+        );
+      },
+    );
+    assert.equal(await readFile(outsideLink, "utf8"), '{"files":["a.mts"]}\n');
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  }
+});
+
+test("rejects a staged pathname swap before publication", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const outside = await privateDirectory("no-mistakes-impact-outside-");
+  const manifest = join(directory, "changed-files.txt");
+  const victim = join(outside, "victim.txt");
+  const fs = require("node:fs/promises");
+  const originalLstat = fs.lstat;
+  let swapped = false;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await writeFile(victim, "protected");
+    await withFsOverride(
+      {
+        lstat: async (path, ...args) => {
+          if (!swapped && path.includes(".dependencies.json.")) {
+            swapped = true;
+            await unlink(path);
+            await symlink(victim, path);
+          }
+          return originalLstat(path, ...args);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          /staged artifact changed before publication: dependencies\.json/,
+        );
+      },
+    );
+    assert.equal(await readFile(victim, "utf8"), "protected");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+    await rm(outside, { recursive: true, force: true });
+  }
+});
+
 test("settles a failed content publish before recording failure statuses", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");
@@ -658,6 +789,50 @@ test("settles a failed content publish before recording failure statuses", async
       assert.equal(await readFile(join(directory, `${name}.status`), "utf8"), "1\n");
       await assert.rejects(readFile(join(directory, `${name}.json`), "utf8"), /ENOENT/);
     }
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("continues failure diagnostics when report cleanup cannot stat a destination", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const fs = require("node:fs/promises");
+  const originalLstat = fs.lstat;
+  const originalRename = fs.rename;
+  const destination = join(await fs.realpath(directory), "dependencies.json");
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await withFsOverride(
+      {
+        lstat: async (path, ...args) => {
+          if (path === destination) {
+            const error = new Error("injected artifact stat failure");
+            error.code = "EIO";
+            throw error;
+          }
+          return originalLstat(path, ...args);
+        },
+        rename: async (from, to) => {
+          if (to === destination) throw new Error("injected publish failure");
+          return originalRename(from, to);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          /injected publish failure/,
+        );
+      },
+    );
+    for (const name of ["dependencies", "dependents", "symbols", "plan"]) {
+      assert.equal(await readFile(join(directory, `${name}.status`), "utf8"), "1\n");
+      assert.ok((await readFile(join(directory, `${name}.stderr`), "utf8")).length > 0);
+    }
+    await assert.rejects(readFile(destination, "utf8"), /ENOENT/);
   } finally {
     await rm(directory, { recursive: true, force: true });
   }
