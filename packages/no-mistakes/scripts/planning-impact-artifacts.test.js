@@ -128,6 +128,25 @@ test("writes the compatible four-report contract from one prepared analysis", as
   }
 });
 
+test("publishes 0600 artifacts under a restrictive umask and restores it", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const originalUmask = process.umask();
+  try {
+    await writeFile(manifest, "a.mts\n");
+    process.umask(0o600);
+    await writePlanningImpactArtifacts(
+      { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+      async () => aggregateResult,
+    );
+    assert.equal((await stat(join(directory, "plan.json"))).mode & 0o777, 0o600);
+  } finally {
+    process.umask(originalUmask);
+    await rm(directory, { recursive: true, force: true });
+  }
+  assert.equal(process.umask(), originalUmask);
+});
+
 test("writes empty structural artifacts for documentation-only changes", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");

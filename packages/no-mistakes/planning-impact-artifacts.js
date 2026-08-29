@@ -157,6 +157,7 @@ async function publishArtifact(directory, name, contents) {
   try {
     const file = await open(staged, "wx", 0o600);
     try {
+      await file.chmod(0o600);
       await file.writeFile(contents);
     } finally {
       await file.close();
