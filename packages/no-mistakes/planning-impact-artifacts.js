@@ -7,6 +7,7 @@ const {
   validateManifest,
   validateOutputDirectory,
 } = require("./planning-impact-artifacts-files");
+const { isOutputRestorationFailure } = require("./planning-impact-artifacts-errors");
 const { basename, isAbsolute, posix, resolve, win32 } = require("node:path");
 
 const REPORTS = ["dependencies", "dependents", "symbols", "plan"];
@@ -79,7 +80,7 @@ async function writePlanningImpactArtifacts(options, analyzeProject, renameNoRep
       await manifestHandle.close().catch(() => {});
       manifestHandle = undefined;
     }
-    if (mayWriteFailureArtifacts) {
+    if (mayWriteFailureArtifacts && !isOutputRestorationFailure(error)) {
       await updateOutputDirectory(
         output,
         (privateOutput) => writeFailure(privateOutput, error),

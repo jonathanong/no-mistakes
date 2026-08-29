@@ -54,9 +54,15 @@ async function privateDirectory(prefix) {
   return directory;
 }
 
-async function withFsOverride(overrides, callback) {
+async function withFsOverride(overrides, callback, renameNoReplace) {
   const fs = require("node:fs/promises");
   const originals = Object.fromEntries(Object.keys(overrides).map((name) => [name, fs[name]]));
+  const restoreWithoutReplacement =
+    renameNoReplace ||
+    (async (from, to) => {
+      await fs.rename(from, to);
+      return true;
+    });
   Object.assign(fs, overrides);
   const helperModules = ["../planning-impact-artifacts", "../planning-impact-artifacts-files"];
   for (const helperModule of helperModules) delete require.cache[require.resolve(helperModule)];
@@ -65,10 +71,7 @@ async function withFsOverride(overrides, callback) {
     return await callback({
       ...artifacts,
       writePlanningImpactArtifacts: async (options, analyzeProject) =>
-        artifacts.writePlanningImpactArtifacts(options, analyzeProject, async (from, to) => {
-          await fs.rename(from, to);
-          return true;
-        }),
+        artifacts.writePlanningImpactArtifacts(options, analyzeProject, restoreWithoutReplacement),
     });
   } finally {
     Object.assign(fs, originals);
@@ -464,7 +467,10 @@ test("rejects an output directory replacement before publishing artifacts", asyn
             { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
             async () => aggregateResult,
           ),
-          /output directory (?:path|descriptor) changed/,
+          (error) =>
+            error instanceof AggregateError &&
+            /recover the parked directory/u.test(error.message) &&
+            /output directory (?:path|descriptor) changed/u.test(error.cause.message),
         );
       },
     );
@@ -477,6 +483,64 @@ test("rejects an output directory replacement before publishing artifacts", asyn
       }
     }
     await rm(victim, { recursive: true, force: true });
+  }
+});
+
+test("rejects an output path whose canonical directory changes", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const link = join(dirname(directory), `${basename(directory)}-replacement`);
+  const { assertOutputDirectory } = require("../planning-impact-artifacts-files");
+  try {
+    await symlink(directory, link);
+    await assert.rejects(
+      assertOutputDirectory({ path: link, identity: await stat(directory) }),
+      /output directory path changed during planning artifact generation/,
+    );
+  } finally {
+    await rm(link, { force: true });
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("surfaces an output-path lookup error while restoring artifacts", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const fs = require("node:fs/promises");
+  const originalLstat = fs.lstat;
+  const canonicalDirectory = await fs.realpath(directory);
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await withFsOverride(
+      {
+        lstat: async (path, ...args) => {
+          if (path === canonicalDirectory) {
+            const error = new Error("injected output-path lookup failure");
+            error.code = "EACCES";
+            throw error;
+          }
+          return originalLstat(path, ...args);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          (error) =>
+            error instanceof AggregateError &&
+            error.code === "EACCES" &&
+            error.cause.code === "EACCES",
+        );
+      },
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+    for (const entry of await readdir(dirname(canonicalDirectory))) {
+      if (entry.startsWith(`.${basename(canonicalDirectory)}.planning-impact-`)) {
+        await rm(join(dirname(canonicalDirectory), entry), { recursive: true, force: true });
+      }
+    }
   }
 });
 
@@ -518,6 +582,72 @@ test("preserves concurrent public-path directory, file, and symlink victims", as
       await rm(parked, { recursive: true, force: true }).catch(() => {});
       await rm(outside, { recursive: true, force: true });
     }
+  }
+});
+
+test("surfaces paired update and restoration failures with the parked recovery path", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-restore-failure-");
+  const manifest = join(directory, "changed-files.txt");
+  const fs = require("node:fs/promises");
+  const originalOpen = fs.open;
+  const originalRealpath = fs.realpath;
+  const canonicalDirectory = await fs.realpath(directory);
+  const updateError = new Error("injected status write failure");
+  let parked;
+  let renameCalls = 0;
+  let restorationFailed = false;
+  let outerFailureTransitions = 0;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await withFsOverride(
+      {
+        open: async (path, ...args) => {
+          if (String(path).includes(".dependencies.status.") && args[0] === "wx") {
+            throw updateError;
+          }
+          return originalOpen(path, ...args);
+        },
+        realpath: async (path, ...args) => {
+          if (restorationFailed && path === canonicalDirectory) {
+            outerFailureTransitions += 1;
+            throw new Error("outer failure transition attempted");
+          }
+          return originalRealpath(path, ...args);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => {
+              assert.fail("analysis must not run after the status update fails");
+            },
+          ),
+          (error) => {
+            assert.equal(error instanceof AggregateError, true);
+            assert.equal(error.code, "EEXIST");
+            assert.equal(error.cause.code, "EEXIST");
+            assert.ok(error.message.includes(parked));
+            assert.deepEqual(error.errors, [error.cause, updateError]);
+            return true;
+          },
+        );
+      },
+      async (from, to) => {
+        renameCalls += 1;
+        parked = from;
+        await writeFile(to, "concurrent public-path victim");
+        restorationFailed = true;
+        return false;
+      },
+    );
+    assert.equal(renameCalls, 1);
+    assert.equal(outerFailureTransitions, 0);
+    assert.equal(await readFile(directory, "utf8"), "concurrent public-path victim");
+    assert.equal((await lstat(parked)).isDirectory(), true);
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+    await rm(parked, { recursive: true, force: true }).catch(() => {});
   }
 });
 

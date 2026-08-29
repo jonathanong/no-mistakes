@@ -1,10 +1,9 @@
 "use strict";
-
 const { lstat, open, realpath, rename, rm, stat } = require("node:fs/promises");
 const { constants } = require("node:fs");
 const { basename, dirname, join } = require("node:path");
 const { randomUUID } = require("node:crypto");
-
+const { outputRestorationFailure } = require("./planning-impact-artifacts-errors");
 const MANIFEST_OPEN_FLAGS = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0);
 
 async function validateOutputDirectory(outputDirectory) {
@@ -135,8 +134,8 @@ async function updateOutputDirectory(output, update, renameNoReplace) {
   } catch (error) {
     restoreError = error;
   }
+  if (restoreError) throw outputRestorationFailure(restoreError, parked, updateError);
   if (updateError) throw updateError;
-  if (restoreError) throw restoreError;
   return result;
 }
 
