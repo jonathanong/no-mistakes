@@ -44,16 +44,19 @@ test("release builds leave enough time for Intel macOS binary and N-API compilat
   assert.ok(buildJob, "release workflow must define the build job");
   const jobTimeout = buildJob[0].match(/^ {4}timeout-minutes: (\d+)$/m);
   const buildTimeout = buildJob[0].match(/^ {6}- name: Build binary\n {8}timeout-minutes: (\d+)$/m);
+  const stepTimeouts = [...buildJob[0].matchAll(/^ {8}timeout-minutes: (\d+)$/gm)];
   assert.ok(jobTimeout, "release build job must define a timeout");
   assert.ok(buildTimeout, "release binary step must define a timeout");
-  assert.ok(Number(jobTimeout[1]) >= 70, "release build job timeout must be at least 70 minutes");
+  assert.ok(stepTimeouts.length > 0, "release build steps must define timeouts");
+  assert.ok(Number(jobTimeout[1]) >= 100, "release build job timeout must be at least 100 minutes");
   assert.ok(
     Number(buildTimeout[1]) >= 60,
     "release binary step timeout must be at least 60 minutes",
   );
+  const totalStepTimeout = stepTimeouts.reduce((total, timeout) => total + Number(timeout[1]), 0);
   assert.ok(
-    Number(jobTimeout[1]) - Number(buildTimeout[1]) >= 10,
-    "release build job must leave at least 10 minutes after binary compilation",
+    Number(jobTimeout[1]) - totalStepTimeout >= 10,
+    "release build job must leave at least 10 minutes beyond all step timeouts",
   );
 });
 
