@@ -51,6 +51,10 @@ test("release builds leave enough time for Intel macOS binary and N-API compilat
     Number(buildTimeout[1]) >= 60,
     "release binary step timeout must be at least 60 minutes",
   );
+  assert.ok(
+    Number(jobTimeout[1]) - Number(buildTimeout[1]) >= 10,
+    "release build job must leave at least 10 minutes after binary compilation",
+  );
 });
 
 test("native CI jobs run only platform-specific Rust tests", () => {
