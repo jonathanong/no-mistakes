@@ -38,6 +38,28 @@ test("every installer platform target has a release build", () => {
   }
 });
 
+test("release builds leave enough time for Intel macOS binary and N-API compilation", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
+  const buildJob = workflow.match(/^ {2}build:[\s\S]*?(?=^ {2}publish:)/m);
+  assert.ok(buildJob, "release workflow must define the build job");
+  const jobTimeout = buildJob[0].match(/^ {4}timeout-minutes: (\d+)$/m);
+  const buildTimeout = buildJob[0].match(/^ {6}- name: Build binary\n {8}timeout-minutes: (\d+)$/m);
+  const stepTimeouts = [...buildJob[0].matchAll(/^ {8}timeout-minutes: (\d+)$/gm)];
+  assert.ok(jobTimeout, "release build job must define a timeout");
+  assert.ok(buildTimeout, "release binary step must define a timeout");
+  assert.ok(stepTimeouts.length > 0, "release build steps must define timeouts");
+  assert.ok(Number(jobTimeout[1]) >= 100, "release build job timeout must be at least 100 minutes");
+  assert.ok(
+    Number(buildTimeout[1]) >= 60,
+    "release binary step timeout must be at least 60 minutes",
+  );
+  const totalStepTimeout = stepTimeouts.reduce((total, timeout) => total + Number(timeout[1]), 0);
+  assert.ok(
+    Number(jobTimeout[1]) - totalStepTimeout >= 10,
+    "release build job must leave at least 10 minutes beyond all step timeouts",
+  );
+});
+
 test("native CI jobs run only platform-specific Rust tests", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
   const nativeJob = workflow.match(/^ {2}native-tests:[\s\S]*?(?=^ {2}[a-z])/m);
