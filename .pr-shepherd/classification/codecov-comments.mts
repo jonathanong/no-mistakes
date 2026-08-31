@@ -1,7 +1,12 @@
 import type { ClassifyRule } from "pr-shepherd/classify";
 
 const rule: ClassifyRule = (item) => {
-  if (item.kind !== "pr-comment" || item.author.toLowerCase() !== "codecov") {
+  if (item.kind !== "pr-comment") {
+    return null;
+  }
+
+  const author = item.author.toLowerCase().replace(/\[bot\]$/, "");
+  if (author !== "codecov") {
     return null;
   }
 
