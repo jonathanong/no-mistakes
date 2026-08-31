@@ -8,6 +8,9 @@ pub(super) fn checkout_key_line(source: &str, key: &str, occurrence: usize) -> u
         .nth(occurrence)
         .map(|(index, _)| index)
         .unwrap_or(0);
+    if flow_step_has_key(code_lines[checkout_line], key) {
+        return checkout_line + 1;
+    }
     let step_start =
         checkout_step_start(&lines, &code_lines, checkout_line).unwrap_or(checkout_line);
     let step_indent = leading_indent(lines[step_start]);
@@ -78,7 +81,20 @@ fn checkout_reference_on_line(
     index: usize,
     line: &str,
 ) -> bool {
-    checkout_step_start(lines, code_lines, index).is_some()
+    let Some(step_start) = checkout_step_start(lines, code_lines, index) else {
+        return false;
+    };
+    if index == step_start
+        && flow_step_mapping(line).is_some_and(|mapping| {
+            mapping
+                .get("uses")
+                .and_then(serde_yaml::Value::as_str)
+                .is_some_and(is_checkout_reference)
+        })
+    {
+        return true;
+    }
+    mapping_key_indent(lines[index]) == leading_indent(lines[step_start]) + 2
         && yaml_key_value(line.trim(), "uses")
             .and_then(|value| yaml_string_value(lines, index, value))
             .is_some_and(|uses| is_checkout_reference(&uses))
@@ -94,10 +110,28 @@ fn checkout_step_start(lines: &[&str], code_lines: &[&str], checkout_line: usize
     (0..step_start)
         .rev()
         .find(|index| {
-            !code_lines[*index].trim().is_empty() && leading_indent(lines[*index]) < step_indent
+            let line = code_lines[*index].trim();
+            let indent = leading_indent(lines[*index]);
+            !line.is_empty()
+                && indent <= step_indent
+                && (indent < step_indent || !is_sequence_entry(line))
         })
         .filter(|steps_key| yaml_key_value(code_lines[*steps_key].trim(), "steps").is_some())
         .map(|_| step_start)
+}
+
+fn flow_step_has_key(line: &str, key: &str) -> bool {
+    flow_step_mapping(line)
+        .and_then(|mapping| mapping.get("with")?.as_mapping().cloned())
+        .is_some_and(|with| with.contains_key(serde_yaml::Value::String(key.to_string())))
+}
+
+fn flow_step_mapping(line: &str) -> Option<serde_yaml::Mapping> {
+    let value = line.trim_start().strip_prefix("- ")?.trim_start();
+    value
+        .starts_with('{')
+        .then(|| serde_yaml::from_str(value).ok())
+        .flatten()
 }
 
 fn yaml_string_value(lines: &[&str], index: usize, value: &str) -> Option<String> {
@@ -136,6 +170,10 @@ fn is_sequence_entry(line: &str) -> bool {
 
 fn leading_indent(line: &str) -> usize {
     line.len() - line.trim_start().len()
+}
+
+fn mapping_key_indent(line: &str) -> usize {
+    leading_indent(line) + usize::from(line.trim_start().starts_with("- ")) * 2
 }
 
 pub(super) fn yaml_key_line(line: &str, key: &str) -> bool {

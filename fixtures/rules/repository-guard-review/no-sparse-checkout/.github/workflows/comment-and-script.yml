@@ -26,3 +26,17 @@ jobs:
         with:
           # no-mistakes-disable-next-line no-sparse-checkout
           sparse-checkout: examples
+  indentless:
+    steps:
+    - uses: actions/setup-node@v4
+      with:
+        # A nested input must not count as the step's action reference.
+        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+      with:
+        # no-mistakes-disable-next-line no-sparse-checkout
+        sparse-checkout: indentless
+  flow:
+    steps:
+      # no-mistakes-disable-next-line no-sparse-checkout
+      - { uses: actions/checkout@v4, with: { sparse-checkout: flow } }
