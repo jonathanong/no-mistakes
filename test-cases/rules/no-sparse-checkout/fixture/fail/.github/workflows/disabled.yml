@@ -1,0 +1,7 @@
+# no-mistakes-disable-file no-sparse-checkout
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: scripts

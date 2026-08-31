@@ -130,13 +130,14 @@ fn checkout_key_line(source: &str, key: &str, occurrence: usize) -> usize {
             with_indent = Some(indent);
             continue;
         }
-        if let Some(with_indent) = with_indent {
-            if !trimmed.is_empty() && indent <= with_indent {
-                break;
-            }
-            if yaml_key_line(trimmed, key) {
-                return index + 1;
-            }
+        let Some(with_indent) = with_indent else {
+            continue;
+        };
+        if !trimmed.is_empty() && indent <= with_indent {
+            break;
+        }
+        if yaml_key_line(trimmed, key) {
+            return index + 1;
         }
     }
     checkout_line + 1
@@ -151,3 +152,6 @@ fn yaml_key_line(line: &str, key: &str) -> bool {
         || line.starts_with(&format!("'{key}':"))
         || line.starts_with(&format!("\"{key}\":"))
 }
+
+#[cfg(test)]
+mod tests;

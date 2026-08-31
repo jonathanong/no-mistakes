@@ -22,6 +22,30 @@ fn reports_selected_full_sha_and_honors_allowed_context() {
 }
 
 #[test]
+fn public_check_handles_a_nested_fixture_root() {
+    let root = fixture("fail");
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    // The fixture is inside this repository's Git worktree; public discovery
+    // must still be safe when the requested root is a nested directory.
+    assert!(check(&root, &config).unwrap().is_empty());
+}
+
+#[test]
+fn unavailable_source_is_ignored() {
+    let root = fixture("fail");
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let missing = root.join("tests/missing.test.ts");
+    let sources = super::super::source_store_for_files(std::slice::from_ref(&missing));
+    assert!(
+        check_with_files_and_sources(&root, &config, &[missing], &sources)
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
 fn standard_include_selects_only_configured_paths() {
     let root = fixture("pass");
     let config =
