@@ -28,6 +28,7 @@ fn build_report_from_prepared(
         graph,
         facts,
     } = context;
+    ensure_signature_impact_facts_complete(facts, root)?;
     let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
         graph_files.iter_visible().cloned(),
     );
@@ -151,6 +152,23 @@ fn build_report_from_prepared(
     })
 }
 
+fn ensure_signature_impact_facts_complete(facts: &TsFactMap, root: &Path) -> Result<()> {
+    let mut failures = facts
+        .iter()
+        .filter_map(|(path, facts)| {
+            facts
+                .operational_error
+                .as_ref()
+                .map(|error| (relative_slash_path(root, path), error))
+        })
+        .collect::<Vec<_>>();
+    failures.sort_by(|left, right| left.0.cmp(&right.0));
+    if let Some((path, error)) = failures.first() {
+        bail!("signature-impact could not analyze `{path}`: {error}");
+    }
+    Ok(())
+}
+
 /// Shared, `want_tests`-independent inputs for [`local_caller_entries`], computed once per
 /// `signature-impact` run and reused for both the production and test passes.
 struct LocalCallerContext<'a> {
@@ -188,5 +206,7 @@ include!("impact_collect_exports.rs");
 mod impact_collect_caller_context_tests;
 #[cfg(test)]
 mod impact_collect_caller_tests;
+#[cfg(test)]
+mod impact_collect_failure_tests;
 #[cfg(test)]
 mod impact_collect_tests;

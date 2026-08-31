@@ -117,12 +117,16 @@ jobs:
           done < "$matches"
           exit "$fail"
 
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
       - name: Set up Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
 
       - name: Install Rust
         timeout-minutes: 5
@@ -134,9 +138,9 @@ jobs:
         timeout-minutes: 5
         uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
 
-      - name: Install npm dependencies
+      - name: Install pnpm dependencies
         timeout-minutes: 5
-        run: npm ci --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Validate Codecov config
         timeout-minutes: 2
@@ -148,7 +152,7 @@ jobs:
 
       - name: Check JavaScript formatting
         timeout-minutes: 2
-        run: npm run fmt:js:check
+        run: pnpm run fmt:js:check
 
       - name: Run Clippy
         timeout-minutes: 10
@@ -170,11 +174,11 @@ jobs:
 
       - name: Run Oxlint
         timeout-minutes: 2
-        run: npm run lint:js
+        run: pnpm run lint:js
 
       - name: Run CSpell
         timeout-minutes: 5
-        run: npm run lint:spell
+        run: pnpm run lint:spell
 
       - name: Run Lychee
         timeout-minutes: 5
@@ -197,7 +201,7 @@ jobs:
 
       - name: Check npm packages
         timeout-minutes: 2
-        run: npm pack --dry-run --workspaces
+        run: pnpm run pack:check
 
   javascript-tests:
     name: JavaScript tests
@@ -209,12 +213,16 @@ jobs:
         timeout-minutes: 5
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
       - name: Set up Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
 
       - name: Install Rust
         timeout-minutes: 5
@@ -224,13 +232,13 @@ jobs:
         timeout-minutes: 5
         uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
 
-      - name: Install npm dependencies
+      - name: Install pnpm dependencies
         timeout-minutes: 5
-        run: npm ci --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build JavaScript packages
         timeout-minutes: 2
-        run: npm run build:js
+        run: pnpm run build:js
 
       - name: Build N-API addon
         timeout-minutes: 10
@@ -238,15 +246,15 @@ jobs:
           NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
           cp target/debug/libno_mistakes.so target/debug/no-mistakes.node
 
-      - name: Run npm tests
+      - name: Run JavaScript tests
         timeout-minutes: 5
-        run: npm run test:ci --ignore-scripts
+        run: pnpm run test:ci
 
       - name: Run real N-API API test
         timeout-minutes: 2
         run: >-
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
-          npx vitest run
+          pnpm exec vitest run
           packages/no-mistakes/scripts/real-napi-api.test.js
           packages/no-mistakes/scripts/planning-impact-cli.test.js
           --coverage=false
@@ -290,12 +298,16 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
       - name: Set up Node.js
         timeout-minutes: 5
         uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
         with:
           node-version: 24
-          cache: npm
+          cache: pnpm
 
       - name: Install Rust
         timeout-minutes: 5
@@ -307,13 +319,13 @@ jobs:
         with:
           key: native-${{ matrix.target }}
 
-      - name: Install npm dependencies
+      - name: Install pnpm dependencies
         timeout-minutes: 5
-        run: npm ci --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build JavaScript packages
         timeout-minutes: 2
-        run: npm run build:js
+        run: pnpm run build:js
 
       # Linux `tests` owns the full suite. Native jobs only compile/run the
       # OS-specific invocation tests (Job Objects, process groups, signals).
@@ -349,7 +361,7 @@ jobs:
         run: |
           set -euo pipefail
           addon_path="$(node -e 'process.stdout.write(require("node:path").resolve("target/debug/no-mistakes.node"))')"
-          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" npx vitest run packages/no-mistakes/scripts/real-napi-api.test.js --coverage=false
+          NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js --coverage=false
 
   tests:
     name: Rust tests and coverage

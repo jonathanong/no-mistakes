@@ -2,6 +2,7 @@
 .codex/worktrees/
 /coverage/
 /node_modules/
+/package-lock.json
 /packages/*/coverage/
 /packages/*/node_modules/
 /packages/*/vendor/

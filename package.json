@@ -12,18 +12,19 @@
     "type": "git",
     "url": "git+https://github.com/jonathanong/no-mistakes.git"
   },
+  "packageManager": "pnpm@11.24.0",
   "workspaces": [
     "packages/*"
   ],
   "scripts": {
-    "build:js": "npm --workspaces --if-present run build",
+    "build:js": "pnpm --recursive --if-present run build",
     "test": "vitest run --coverage",
     "test:ci": "vitest run --coverage --reporter=dot --reporter=github-actions",
     "fmt:js": "oxfmt --write packages/ vitest.config.js",
     "fmt:js:check": "oxfmt --check packages/ vitest.config.js",
     "lint:js": "oxlint packages/ vitest.config.js",
     "lint:spell": "cspell lint README.md \"docs/**/*.md\" \"packages/no-mistakes/README.md\" \"packages/eslint-plugin-no-mistakes/README.md\" cspell.config.yaml package.json --no-progress --no-gitignore --show-suggestions --no-must-find-files",
-    "pack:check": "npm --workspaces pack --dry-run",
+    "pack:check": "pnpm --filter './packages/*' pack --dry-run",
     "prepare": "husky"
   },
   "devDependencies": {
@@ -36,7 +37,7 @@
     "oxfmt": "^0.65.0",
     "oxlint": "^1.80.0",
     "pr-shepherd": "^0.37.2",
-    "vitest": "^4.1.6"
+    "vitest": "^4.1.11"
   },
   "engines": {
     "node": "^20.19.0 || ^22.13.0 || >=24"

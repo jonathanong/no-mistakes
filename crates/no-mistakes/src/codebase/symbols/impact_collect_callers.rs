@@ -17,10 +17,12 @@ fn local_caller_entries(
         if is_test != want_tests {
             continue;
         }
-        let symbols = facts
-            .symbols
-            .as_ref()
-            .expect("imports_and_symbols fact plan collects symbols");
+        // The report boundary rejects operational failures before caller
+        // projection. Keep this defensive for direct helper use and partial
+        // fact plans that intentionally omit symbols.
+        let Some(symbols) = facts.symbols.as_ref() else {
+            continue;
+        };
         let local_names = target_local_names(
             symbols,
             &file,
