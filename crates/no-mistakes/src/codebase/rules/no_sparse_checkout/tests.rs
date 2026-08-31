@@ -71,11 +71,11 @@ fn line_suppression_uses_the_matching_checkout_step_not_an_earlier_ignored_key()
     let config =
         crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
     let file = root.join(".github/workflows/mixed.yml");
-    let sources = crate::codebase::rules::source_store_for_files(&[file.clone()]);
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&file));
     let direct = check_with_files_sources_and_deferred_suppression(
         &root,
         &config,
-        &[file.clone()],
+        std::slice::from_ref(&file),
         &sources,
         false,
     )
@@ -94,11 +94,11 @@ fn each_checkout_step_maps_its_own_inputs_and_line_suppression() {
     let config =
         crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
     let file = root.join(".github/workflows/two-checkouts.yml");
-    let sources = crate::codebase::rules::source_store_for_files(&[file.clone()]);
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&file));
     let deferred = check_with_files_sources_and_deferred_suppression(
         &root,
         &config,
-        &[file.clone()],
+        std::slice::from_ref(&file),
         &sources,
         true,
     )
