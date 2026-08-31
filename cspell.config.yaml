@@ -3,7 +3,6 @@ language: en
 useGitignore: true
 ignorePaths:
   - "Cargo.lock"
-  - "package-lock.json"
   - "pnpm-lock.yaml"
   - "target/**"
   - "coverage/**"

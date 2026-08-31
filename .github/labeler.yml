@@ -11,14 +11,14 @@ dependencies:
           - "Cargo.toml"
           - "Cargo.lock"
           - "package.json"
-          - "package-lock.json"
+          - "pnpm-lock.yaml"
           - ".github/dependabot.yml"
 
 npm:
   - changed-files:
       - any-glob-to-any-file:
           - "package.json"
-          - "package-lock.json"
+          - "pnpm-lock.yaml"
           - "bin/**"
           - "scripts/**/*.js"
 

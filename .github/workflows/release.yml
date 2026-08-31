@@ -61,6 +61,10 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
       - name: Configure git
         timeout-minutes: 1
         run: |
@@ -75,13 +79,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          npm version "${{ inputs.bump }}" --no-git-tag-version
+          pnpm version "${{ inputs.bump }}" --recursive --no-git-tag-version
           version="$(node -p "require('./package.json').version")"
-
-          for pkg in no-mistakes eslint-plugin-no-mistakes; do
-            npm pkg set "version=$version" --workspace "$pkg"
-          done
-          npm install --package-lock-only --ignore-scripts
+          pnpm install --lockfile-only --ignore-scripts
 
           node - "$version" <<'NODE'
           const fs = require("node:fs");
@@ -176,6 +176,10 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
       - name: Cache Rust build artifacts
         timeout-minutes: 5
         uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
@@ -183,9 +187,9 @@ jobs:
           prefix-key: v1-rust-release
           cache-bin: "false"
 
-      - name: Install npm dependencies
+      - name: Install pnpm dependencies
         timeout-minutes: 5
-        run: npm ci --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Verify versions
         timeout-minutes: 2
@@ -221,7 +225,7 @@ jobs:
             .filter(([, version]) => version !== expected)
             .map(([file, version]) => `${file}@${version}`);
           if (mismatches.length > 0) {
-            console.error(`npm version mismatch: ${mismatches.join(", ")}`);
+            console.error(`package version mismatch: ${mismatches.join(", ")}`);
             process.exit(1);
           }
           NODE
@@ -232,7 +236,7 @@ jobs:
 
       - name: Check JavaScript formatting
         timeout-minutes: 2
-        run: npm run fmt:js:check
+        run: pnpm run fmt:js:check
 
       - name: Run Clippy
         timeout-minutes: 10
@@ -240,23 +244,23 @@ jobs:
 
       - name: Run Oxlint
         timeout-minutes: 2
-        run: npm run lint:js
+        run: pnpm run lint:js
 
       - name: Run CSpell
         timeout-minutes: 5
-        run: npm run lint:spell
+        run: pnpm run lint:spell
 
       - name: Build JavaScript packages
         timeout-minutes: 2
-        run: npm run build:js
+        run: pnpm run build:js
 
       - name: Run Rust tests
         timeout-minutes: 15
         run: cargo test --all-features
 
-      - name: Run npm tests
+      - name: Run JavaScript tests
         timeout-minutes: 5
-        run: npm test
+        run: pnpm test
 
       - name: Check Cargo packages
         timeout-minutes: 10
@@ -266,7 +270,7 @@ jobs:
         timeout-minutes: 2
         run: |
           for pkg in no-mistakes eslint-plugin-no-mistakes; do
-            npm pack --dry-run --workspace "$pkg"
+            pnpm --filter "$pkg" pack --dry-run
           done
 
   build:
@@ -434,17 +438,17 @@ jobs:
           node-version: 24
           registry-url: https://registry.npmjs.org
 
-      - name: Install latest npm
+      - name: Set up pnpm
         timeout-minutes: 2
-        run: npm install -g npm@latest
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
 
-      - name: Install npm dependencies
+      - name: Install pnpm dependencies
         timeout-minutes: 5
-        run: SKIP_BINARY_DOWNLOAD=1 npm ci --ignore-scripts
+        run: SKIP_BINARY_DOWNLOAD=1 pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build JavaScript packages
         timeout-minutes: 2
-        run: npm run build:js
+        run: pnpm run build:js
 
       - name: Publish Cargo crates
         timeout-minutes: 10
@@ -507,9 +511,9 @@ jobs:
           fi
           version="${{ needs.prepare.outputs.version }}"
           for pkg in no-mistakes eslint-plugin-no-mistakes; do
-            if npm view "$pkg@$version" version >/dev/null 2>&1; then
+            if pnpm view "$pkg@$version" version >/dev/null 2>&1; then
               echo "$pkg $version is already published on npm; skipping"
             else
-              npm publish --provenance --access public --workspace "$pkg"
+              pnpm --filter "$pkg" publish --provenance --access public --no-git-checks
             fi
           done

@@ -52,7 +52,7 @@ echo "Running cargo clippy..."
 cargo clippy --all-targets --all-features -- -D warnings || exit 1
 
 echo "Running oxfmt check..."
-npm run fmt:js:check || exit 1
+pnpm run fmt:js:check || exit 1
 
 echo "Running oxlint..."
-npm run lint:js || exit 1
+pnpm run lint:js || exit 1
