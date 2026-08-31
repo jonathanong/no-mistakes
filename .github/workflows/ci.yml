@@ -374,7 +374,7 @@ jobs:
 
       - name: Install cargo-llvm-cov
         timeout-minutes: 5
-        uses: taiki-e/install-action@b6b84cf49ebfe0176417bdce007c624f0db37f20 # v2.86.2
+        uses: taiki-e/install-action@b6ff580856c41316412a0b9b60540fbc6f8c82cc # v2.86.7
         with:
           tool: cargo-llvm-cov
 
@@ -424,7 +424,7 @@ jobs:
 
       - name: Install cargo-crap
         timeout-minutes: 5
-        uses: taiki-e/install-action@b6b84cf49ebfe0176417bdce007c624f0db37f20 # v2.86.2
+        uses: taiki-e/install-action@b6ff580856c41316412a0b9b60540fbc6f8c82cc # v2.86.7
         with:
           tool: cargo-crap
 
@@ -718,7 +718,7 @@ jobs:
       - name: Run benchmarks
         if: ${{ env.BENCHMARK_SELECTED == 'true' }}
         timeout-minutes: 2
-        uses: CodSpeedHQ/action@4296e51e7041e24dadb86d1d6e8b9320d223dbe8 # v5.0.3
+        uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
         with:
           mode: ${{ matrix.mode }}
           run: |
