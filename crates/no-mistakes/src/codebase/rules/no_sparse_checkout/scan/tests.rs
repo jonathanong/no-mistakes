@@ -1,4 +1,4 @@
-use super::{checkout_key_line, yaml_key_line};
+use super::location::{checkout_key_line, yaml_key_line};
 
 #[test]
 fn checkout_key_line_finds_quoted_inputs_in_the_matching_checkout_step() {

@@ -1,0 +1,14 @@
+jobs:
+  build:
+    steps:
+      # This looks like a checkout but is only a comment.
+      # uses: actions/checkout@v4
+      - run: |
+          uses: actions/checkout@v4
+          with:
+            sparse-checkout: ignored
+      - name: Mixed-case checkout
+        'uses': 'Actions/Checkout@v4'
+        'with':
+          # no-mistakes-disable-next-line no-sparse-checkout
+          "sparse-checkout": src

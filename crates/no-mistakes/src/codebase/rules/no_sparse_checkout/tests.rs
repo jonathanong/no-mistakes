@@ -6,6 +6,12 @@ fn fixture(name: &str) -> PathBuf {
         .join(name)
 }
 
+fn review_fixture(name: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/repository-guard-review")
+        .join(name)
+}
+
 #[test]
 fn default_paths_report_sparse_checkout() {
     let root = fixture("fail");
@@ -207,4 +213,29 @@ fn default_selection_includes_composite_action_yaml() {
         crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
     let file = root.join(".github/actions/check/action.yaml");
     assert_eq!(check_with_files(&root, &config, &[file]).unwrap().len(), 1);
+}
+
+#[test]
+fn source_locations_ignore_comment_and_script_decoys_for_mixed_case_checkout() {
+    let root = review_fixture("no-sparse-checkout");
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let file = root.join(".github/workflows/comment-and-script.yml");
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&file));
+
+    let direct = check_with_files_sources_and_deferred_suppression(
+        &root,
+        &config,
+        std::slice::from_ref(&file),
+        &sources,
+        false,
+    )
+    .unwrap();
+    assert!(direct.is_empty(), "{direct:?}");
+
+    let deferred =
+        check_with_files_sources_and_deferred_suppression(&root, &config, &[file], &sources, true)
+            .unwrap();
+    assert_eq!(deferred.len(), 1, "{deferred:?}");
+    assert_eq!(deferred[0].line, 14, "{deferred:?}");
 }
