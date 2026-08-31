@@ -244,3 +244,31 @@ fn source_locations_ignore_comment_and_script_decoys_for_mixed_case_checkout() {
     assert_eq!(deferred[3].line, 38, "{deferred:?}");
     assert_eq!(deferred[4].line, 42, "{deferred:?}");
 }
+
+#[test]
+fn source_locations_follow_semantic_yaml_across_physical_lines() {
+    let root = review_fixture("no-sparse-checkout");
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let file = root.join(".github/workflows/continuations.yml");
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&file));
+
+    let direct = check_with_files_sources_and_deferred_suppression(
+        &root,
+        &config,
+        std::slice::from_ref(&file),
+        &sources,
+        false,
+    )
+    .unwrap();
+    assert!(direct.is_empty(), "{direct:?}");
+
+    let deferred =
+        check_with_files_sources_and_deferred_suppression(&root, &config, &[file], &sources, true)
+            .unwrap();
+    assert_eq!(deferred.len(), 4, "{deferred:?}");
+    assert_eq!(deferred[0].line, 6, "{deferred:?}");
+    assert_eq!(deferred[1].line, 15, "{deferred:?}");
+    assert_eq!(deferred[2].line, 25, "{deferred:?}");
+    assert_eq!(deferred[3].line, 31, "{deferred:?}");
+}
