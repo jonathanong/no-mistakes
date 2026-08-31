@@ -24,6 +24,8 @@ project-keyed Vitest triggers use `source: "projects"`. The additive
 includes the same named/project triggers for every other test-plan framework.
 Empty frameworks are omitted. Boolean project-keyed triggers expand to the
 project's `include` patterns, or `<root>/**` when include is unset. Each
+structured trigger includes its effective `includeChangedTests` boolean;
+legacy triggers omit the field. Each
 `playwright.apps` entry includes the effective `rewrites` and `ignoreRoutes`
 after per-project overrides and inheritance from the bound frontend app or
 top-level Playwright settings. Per-app `frontendRoot` and `selectorRoots`

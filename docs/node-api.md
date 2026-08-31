@@ -324,6 +324,11 @@ projects, emits `configured-trigger` reasons and execution targets, and leaves
 `fallbackTriggered` false. Semantic `.no-mistakes.yml`/`.yaml` invalidation is
 also identical for revision and inline-diff inputs.
 
+Structured target triggers do not expand when the matching changed file is a
+discovered test unless that trigger sets `includeChangedTests: true`. The
+changed test and its graph dependents remain selected normally. Legacy
+full-suite trigger forms retain their existing behavior.
+
 `testsPlan`, `testsImpact`, `testsWhy`, and `testsGraph` expose resource-edge
 provenance without a separate API: plan reasons use optional edge-aligned
 `viaDetails`, why steps use optional `detail`, and graph JSON edges use

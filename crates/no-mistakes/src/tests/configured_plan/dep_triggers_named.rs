@@ -1,4 +1,7 @@
-use super::{compile_ordered_patterns, matches_ordered, DependencyTriggers};
+use super::{
+    compile_ordered_patterns, ignored_changed_test, matches_ordered,
+    structured_trigger_skips_changed_test, DependencyTriggers,
+};
 use crate::tests::plan::relative_path;
 use anyhow::Result;
 use no_mistakes::config::v2::schema::NamedFullSuiteTrigger;
@@ -9,6 +12,7 @@ pub(super) fn apply_named_triggers(
     root: &Path,
     triggers: &[NamedFullSuiteTrigger],
     changed_files: &[PathBuf],
+    discovered_test_files: &HashSet<PathBuf>,
     ignored_sets: &[HashSet<PathBuf>],
     result: &mut DependencyTriggers,
 ) -> Result<Option<(String, PathBuf)>> {
@@ -16,14 +20,14 @@ pub(super) fn apply_named_triggers(
     for trigger in triggers {
         let compiled_patterns = compile_ordered_patterns(&trigger.paths)?;
         for changed in changed_files {
-            if ignored_sets.iter().any(|set| set.contains(changed)) {
-                continue;
-            }
             let rel = relative_path(root, changed);
             if !matches_ordered(&compiled_patterns, &rel) {
                 continue;
             }
             if trigger.targets.is_empty() {
+                if ignored_changed_test(changed, ignored_sets) {
+                    continue;
+                }
                 legacy_match.get_or_insert_with(|| {
                     (
                         format!("{} trigger changed: {}", trigger.name, rel),
@@ -31,6 +35,14 @@ pub(super) fn apply_named_triggers(
                     )
                 });
             } else {
+                if structured_trigger_skips_changed_test(
+                    changed,
+                    discovered_test_files,
+                    ignored_sets,
+                    trigger.include_changed_tests,
+                ) {
+                    continue;
+                }
                 result
                     .targeted
                     .entry(changed.clone())

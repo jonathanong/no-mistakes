@@ -100,6 +100,12 @@ fallback. Environment filters and limits run afterward. Legacy `true` and path
 list entries remain broad fallbacks. Trigger paths are ordered: later `!`
 patterns exclude earlier matches and later positive patterns can re-include.
 
+If the matching changed file is a discovered test, a structured target trigger
+does not expand by default. The changed test and tests that depend on it still
+run through normal graph selection. Add `includeChangedTests: true` only to a
+structured trigger that intentionally expands from changed tests. Legacy
+full-suite trigger behavior is unchanged.
+
 Revision and inline-diff plans compare `.no-mistakes.yml`/`.yaml` semantically
 per framework, so formatting-only edits and unrelated framework changes do not
 invalidate the selected framework. Changed-file-only input and unreadable old

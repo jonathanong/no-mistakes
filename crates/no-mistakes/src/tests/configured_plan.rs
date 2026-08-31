@@ -80,8 +80,14 @@ pub(crate) fn generate_configured_plan_with_prepared(
     let has_global_limit = effective_limit.is_some();
     let global_limit =
         limit_count(effective_limit.as_ref(), all_tests.len()).unwrap_or(all_tests.len());
-    let dependency_triggers =
-        dependency_triggers(root, config, framework, changed_files, prepared)?;
+    let dependency_triggers = dependency_triggers(
+        root,
+        config,
+        framework,
+        changed_files,
+        &all_test_set,
+        prepared,
+    )?;
 
     if effective_global_config_fallback(&env, args) {
         if let Some((reason, trigger_file)) = forced_fallback.as_ref() {

@@ -120,6 +120,10 @@ pub enum TestPlanProjectDependency {
 pub struct TestPlanTargetedProjectDependency {
     pub paths: Vec<String>,
     pub targets: Vec<String>,
+    /// Allow a discovered changed test to expand this trigger's runner targets.
+    /// Omission keeps changed tests bounded to ordinary graph selection.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub include_changed_tests: Option<bool>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

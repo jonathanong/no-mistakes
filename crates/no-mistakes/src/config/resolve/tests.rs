@@ -120,6 +120,7 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
                 "packages/generated/src/**".to_string(),
             ],
             targets: vec!["unit".to_string()],
+            include_changed_tests: None,
         }),
     );
     config.test_plan.vitest.full_suite_triggers.projects.insert(
@@ -171,6 +172,7 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
             name: "resources".to_string(),
             paths: vec!["./db/**".to_string(), " !./db/tmp/**".to_string()],
             targets: vec!["backend".to_string()],
+            include_changed_tests: None,
         });
 
     let triggers = resolved_vitest_triggers(&config);
@@ -193,6 +195,7 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
         ]
     );
     assert_eq!(by_name["root-app"].targets, vec!["unit".to_string()]);
+    assert_eq!(by_name["root-app"].include_changed_tests, Some(false));
     assert_eq!(
         by_name["prefixed"].paths,
         vec!["packages/generated/src/**".to_string()]
@@ -202,6 +205,8 @@ fn resolve_config_covers_project_trigger_shapes_and_glob_normalization() {
         vec!["db/**".to_string(), "!db/tmp/**".to_string()]
     );
     assert_eq!(by_name["resources"].source, "triggers");
+    assert_eq!(by_name["resources"].include_changed_tests, Some(false));
+    assert_eq!(by_name["generated"].include_changed_tests, None);
 }
 
 #[test]
@@ -216,6 +221,7 @@ fn resolve_config_reports_non_vitest_named_triggers() {
             name: "schema".to_string(),
             paths: vec!["./db/**".to_string()],
             targets: Vec::new(),
+            include_changed_tests: None,
         });
     config
         .projects
@@ -250,6 +256,7 @@ fn resolve_config_reports_kotlin_named_triggers() {
             name: "schema".to_string(),
             paths: vec!["./db/**".to_string()],
             targets: Vec::new(),
+            include_changed_tests: None,
         });
     let frameworks = resolved_framework_triggers(&config);
     assert_eq!(
@@ -275,6 +282,7 @@ fn resolve_config_reports_elixir_named_triggers() {
             name: "schema".to_string(),
             paths: vec!["./db/**".to_string()],
             targets: Vec::new(),
+            include_changed_tests: None,
         });
     let frameworks = resolved_framework_triggers(&config);
     assert_eq!(
@@ -300,6 +308,7 @@ fn resolve_config_reports_dart_named_triggers() {
             name: "schema".to_string(),
             paths: vec!["./db/**".to_string()],
             targets: Vec::new(),
+            include_changed_tests: None,
         });
     let frameworks = resolved_framework_triggers(&config);
     assert_eq!(

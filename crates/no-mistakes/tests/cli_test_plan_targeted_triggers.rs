@@ -170,6 +170,84 @@ fn structured_trigger_selects_only_the_target_project_in_every_cli_format() {
 }
 
 #[test]
+fn changed_test_skips_structured_trigger_but_keeps_test_dependents() {
+    let fixture = fixture();
+    copy_config(fixture.path(), "changed-tests-default.yml");
+    let report = json(&plan(
+        fixture.path(),
+        "vitest",
+        &["--changed-file", "src/web/web.test.ts", "--json"],
+    ));
+
+    assert_eq!(
+        selected_files(&report),
+        vec!["src/web/policy.test.ts", "src/web/web.test.ts"]
+    );
+    assert!(report["selected_tests"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|test| test["test_file"] == "src/web/web.test.ts")
+        .unwrap()["reasons"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|reason| reason["via"] == serde_json::json!(["self"])));
+    assert_eq!(report["fallback_triggered"], false);
+
+    let reversed = json(&plan(
+        fixture.path(),
+        "vitest",
+        &[
+            "--changed-file",
+            "src/web/web.test.ts",
+            "--changed-file",
+            "migrations/001.sql",
+            "--json",
+        ],
+    ));
+    let forward = json(&plan(
+        fixture.path(),
+        "vitest",
+        &[
+            "--changed-file",
+            "migrations/001.sql",
+            "--changed-file",
+            "src/web/web.test.ts",
+            "--json",
+        ],
+    ));
+    assert_eq!(forward, reversed);
+}
+
+#[test]
+fn changed_test_can_opt_in_to_one_structured_trigger() {
+    let fixture = fixture();
+    for config in [
+        "include-changed-tests.yml",
+        "include-changed-tests-project.yml",
+    ] {
+        copy_config(fixture.path(), config);
+        let report = json(&plan(
+            fixture.path(),
+            "vitest",
+            &["--changed-file", "src/web/web.test.ts", "--json"],
+        ));
+
+        assert_eq!(
+            selected_files(&report),
+            vec![
+                "src/shared.test.ts",
+                "src/web/policy.test.ts",
+                "src/web/web.test.ts"
+            ],
+            "{config}"
+        );
+        assert_eq!(report["fallback_triggered"], false, "{config}");
+    }
+}
+
+#[test]
 fn structured_triggers_union_targets_and_filter_shared_test_commands() {
     let fixture = fixture();
     let root = fixture.path();
@@ -330,6 +408,32 @@ fn legacy_trigger_still_falls_back_to_the_framework_suite() {
         selected_files(&report),
         vec!["src/db/db.test.ts", "src/web/web.test.ts"]
     );
+
+    let changed_test = json(&plan(
+        root,
+        "vitest",
+        &["--changed-file", "src/web/web.test.ts", "--json"],
+    ));
+    assert_eq!(changed_test["fallback_triggered"], true);
+    assert_eq!(selected_files(&changed_test), selected_files(&report));
+
+    for config in [
+        "legacy-named-changed-tests.yml",
+        "legacy-boolean-changed-tests.yml",
+    ] {
+        copy_config(root, config);
+        let legacy = json(&plan(
+            root,
+            "vitest",
+            &["--changed-file", "src/web/web.test.ts", "--json"],
+        ));
+        assert_eq!(legacy["fallback_triggered"], true, "{config}");
+        assert_eq!(
+            selected_files(&legacy),
+            vec!["src/db/db.test.ts", "src/web/web.test.ts"],
+            "{config}"
+        );
+    }
 }
 
 #[test]

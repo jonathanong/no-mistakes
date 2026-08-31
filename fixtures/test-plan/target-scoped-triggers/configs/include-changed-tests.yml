@@ -1,0 +1,26 @@
+projects:
+  changed-tests:
+    root: .
+tests:
+  vitest:
+    configs: vitest.changed-tests.mts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      ignoreChangedTests:
+        - vitest
+      triggers:
+        - name: changed-test-policy-opt-in
+          paths:
+            - src/**/*.test.ts
+          targets:
+            - web
+          includeChangedTests: true
+        - name: changed-test-policy-default
+          paths:
+            - src/**/*.test.ts
+          targets:
+            - database
+    environments:
+      pre-push:
+        globalConfigFallback: true

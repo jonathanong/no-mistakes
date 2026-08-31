@@ -1,5 +1,5 @@
 projects:
-  database-resources:
+  repository:
     root: .
 tests:
   vitest:
@@ -8,9 +8,8 @@ testPlan:
   vitest:
     fullSuiteTriggers:
       projects:
-        database-resources:
-          - migrations/**/*.sql
-          - src/**/*.test.ts
+        repository: true
     environments:
       pre-push:
-        exclude: [src/shared.test.ts]
+        exclude:
+          - src/shared.test.ts

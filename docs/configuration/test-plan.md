@@ -68,6 +68,21 @@ dummy `root: .` buckets. Its path patterns are resolved relative to the
 referenced project's `root`; named `fullSuiteTriggers` list entries remain
 repository-relative.
 
+Named triggers with non-empty `targets` are structured triggers. When a
+matching changed file is itself a discovered test, the planner runs that test
+and its normal graph dependents without expanding the trigger targets. Opt in
+only the trigger that intentionally represents a changed-test policy suite:
+
+```yaml
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      - name: import-boundary-policy
+        paths: [src/**/*.test.ts]
+        targets: [policy]
+        includeChangedTests: true
+```
+
 ## Project-keyed triggers (deprecated)
 
 `fullSuiteTriggers.projects` accepts legacy broad triggers and target-scoped
@@ -95,6 +110,15 @@ names use exact matching and each `targets` list must not repeat an exact name.
 A matched target-scoped trigger reports reason `configured-trigger` and does not set
 `fallback_triggered`. Environment include/exclude filters and limits are
 applied after target expansion.
+
+Target-scoped triggers do not expand from a matching discovered changed test
+by default. The changed test and tests that depend on it remain eligible through
+the ordinary graph plan. Set `includeChangedTests: true` on an individual
+structured trigger to allow its configured runner targets to expand from such
+a change. That per-trigger opt-in overrides framework-level
+`ignoreChangedTests` for the structured trigger. Legacy boolean, path-list, and
+named triggers without targets keep their existing `ignoreChangedTests` and
+full-suite fallback behavior.
 
 Legacy boolean and path-list forms remain broad full-suite fallbacks:
 

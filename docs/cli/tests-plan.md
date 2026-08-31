@@ -114,6 +114,12 @@ by the selected environment before limits are applied. Legacy boolean and path
 list entries still request the framework-wide fallback. Trigger paths support
 ordered `!` exclusions and later re-inclusions.
 
+When a discovered test file changes, a matching structured `{ paths, targets }`
+or named target trigger does not expand by default. The plan still selects the
+changed test and tests that depend on it through the ordinary graph. Set
+`includeChangedTests: true` on the specific structured trigger that should
+expand from changed tests. Legacy full-suite trigger forms are unchanged.
+
 For revision and inline-diff inputs, `.no-mistakes.yml`/`.yaml` changes are
 compared semantically per framework. Formatting-only changes do not invalidate
 tests, while a change to Vitest configuration does not invalidate Playwright

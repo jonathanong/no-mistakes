@@ -41,6 +41,8 @@ export interface ResolvedTrigger {
   name: string;
   paths: string[];
   targets: string[];
+  /** Effective changed-test expansion policy; present only for structured triggers. */
+  includeChangedTests?: boolean;
   source: "triggers" | "projects";
 }
 
