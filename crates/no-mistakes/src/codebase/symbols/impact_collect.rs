@@ -189,4 +189,6 @@ mod impact_collect_caller_context_tests;
 #[cfg(test)]
 mod impact_collect_caller_tests;
 #[cfg(test)]
+mod impact_collect_failure_tests;
+#[cfg(test)]
 mod impact_collect_tests;

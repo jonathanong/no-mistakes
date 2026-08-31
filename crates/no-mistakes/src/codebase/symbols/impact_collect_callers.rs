@@ -17,10 +17,12 @@ fn local_caller_entries(
         if is_test != want_tests {
             continue;
         }
-        let symbols = facts
-            .symbols
-            .as_ref()
-            .expect("imports_and_symbols fact plan collects symbols");
+        // Failed source reads and parser setup still occupy fact-map slots so
+        // every request-wide failure keeps one identity. They have no symbols
+        // to project into callers and must not abort the rest of the report.
+        let Some(symbols) = facts.symbols.as_ref() else {
+            continue;
+        };
         let local_names = target_local_names(
             symbols,
             &file,
