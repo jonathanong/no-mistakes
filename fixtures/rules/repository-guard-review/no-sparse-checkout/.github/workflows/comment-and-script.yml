@@ -1,3 +1,6 @@
+metadata:
+  # A checkout-shaped key outside `steps` must not consume an occurrence.
+  uses: actions/checkout@v4
 jobs:
   build:
     steps:
@@ -12,3 +15,8 @@ jobs:
         'with':
           # no-mistakes-disable-next-line no-sparse-checkout
           "sparse-checkout": src
+      - name: Folded checkout
+        uses: >
+          actions/checkout@v4
+        with:
+          sparse-checkout: docs

@@ -4,18 +4,12 @@ pub(super) fn checkout_key_line(source: &str, key: &str, occurrence: usize) -> u
     let checkout_line = code_lines
         .iter()
         .enumerate()
-        .filter(|(_, line)| checkout_reference_on_line(line))
+        .filter(|(index, line)| checkout_reference_on_line(&lines, &code_lines, *index, line))
         .nth(occurrence)
         .map(|(index, _)| index)
         .unwrap_or(0);
-    let checkout_indent = leading_indent(lines[checkout_line]);
-    let step_start = (0..=checkout_line)
-        .rev()
-        .find(|index| {
-            let line = code_lines[*index].trim_start();
-            is_sequence_entry(line) && leading_indent(lines[*index]) <= checkout_indent
-        })
-        .unwrap_or(checkout_line);
+    let step_start =
+        checkout_step_start(&lines, &code_lines, checkout_line).unwrap_or(checkout_line);
     let step_indent = leading_indent(lines[step_start]);
     let mut with_indent = None;
     for (index, line) in code_lines.iter().enumerate().skip(step_start) {
@@ -72,10 +66,55 @@ fn is_block_scalar_header(line: &str) -> bool {
         .is_some_and(|(_, value)| matches!(value.trim_start().chars().next(), Some('|' | '>')))
 }
 
-fn checkout_reference_on_line(line: &str) -> bool {
-    yaml_key_value(line.trim(), "uses")
-        .and_then(|value| serde_yaml::from_str::<String>(value).ok())
-        .is_some_and(|uses| is_checkout_reference(&uses))
+fn checkout_reference_on_line(
+    lines: &[&str],
+    code_lines: &[&str],
+    index: usize,
+    line: &str,
+) -> bool {
+    checkout_step_start(lines, code_lines, index).is_some()
+        && yaml_key_value(line.trim(), "uses")
+            .and_then(|value| yaml_string_value(lines, index, value))
+            .is_some_and(|uses| is_checkout_reference(&uses))
+}
+
+fn checkout_step_start(lines: &[&str], code_lines: &[&str], checkout_line: usize) -> Option<usize> {
+    let checkout_indent = leading_indent(lines[checkout_line]);
+    let step_start = (0..=checkout_line).rev().find(|index| {
+        let line = code_lines[*index].trim_start();
+        is_sequence_entry(line) && leading_indent(lines[*index]) <= checkout_indent
+    })?;
+    let step_indent = leading_indent(lines[step_start]);
+    (0..step_start)
+        .rev()
+        .find(|index| {
+            !code_lines[*index].trim().is_empty() && leading_indent(lines[*index]) < step_indent
+        })
+        .filter(|steps_key| yaml_key_value(code_lines[*steps_key].trim(), "steps").is_some())
+        .map(|_| step_start)
+}
+
+fn yaml_string_value(lines: &[&str], index: usize, value: &str) -> Option<String> {
+    if matches!(value.trim_start().chars().next(), Some('|' | '>')) {
+        let header_indent = leading_indent(lines[index]);
+        let mut document = format!("uses: {value}\n");
+        for line in lines.iter().skip(index + 1) {
+            if !line.trim().is_empty() && leading_indent(line) <= header_indent {
+                break;
+            }
+            document.push_str(line);
+            document.push('\n');
+        }
+        return serde_yaml::from_str::<serde_yaml::Mapping>(&document)
+            .ok()
+            .and_then(|mapping| {
+                mapping
+                    .get("uses")
+                    .and_then(serde_yaml::Value::as_str)
+                    .map(str::to_string)
+            });
+    }
+    serde_yaml::from_str::<String>(value).ok()
 }
 
 pub(super) fn is_checkout_reference(uses: &str) -> bool {
