@@ -29,13 +29,13 @@
   "devDependencies": {
     "@emnapi/core": "^1.11.3",
     "@emnapi/runtime": "^1.11.3",
-    "@vitest/coverage-v8": "^4.1.10",
-    "cspell": "^10.0.1",
-    "eslint": "^10.8.1",
+    "@vitest/coverage-v8": "^4.1.11",
+    "cspell": "^10.1.0",
+    "eslint": "^10.9.0",
     "husky": "^9.1.7",
-    "oxfmt": "^0.63.0",
-    "oxlint": "^1.78.0",
-    "pr-shepherd": "^0.35.0",
+    "oxfmt": "^0.65.0",
+    "oxlint": "^1.80.0",
+    "pr-shepherd": "^0.37.2",
     "vitest": "^4.1.6"
   },
   "engines": {
