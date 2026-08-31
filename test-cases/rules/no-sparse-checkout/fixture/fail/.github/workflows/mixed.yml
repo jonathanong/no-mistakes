@@ -1,0 +1,12 @@
+jobs:
+  ignored:
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          sparse-checkout: ignored
+  checked:
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # no-mistakes-disable-next-line no-sparse-checkout
+          sparse-checkout: scripts

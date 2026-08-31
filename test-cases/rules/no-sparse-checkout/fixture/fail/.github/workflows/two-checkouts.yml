@@ -1,0 +1,11 @@
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: first
+          sparse-checkout-cone-mode: false
+      - uses: actions/checkout@v4
+        with:
+          # no-mistakes-disable-next-line no-sparse-checkout
+          sparse-checkout: second

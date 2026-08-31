@@ -1,0 +1,6 @@
+jobs:
+  build:
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: rules
