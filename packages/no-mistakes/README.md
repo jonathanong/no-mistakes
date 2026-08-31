@@ -15,7 +15,12 @@ npx no-mistakes dependents src/utils.mts --json
 npx no-mistakes symbols src/utils.mts --json
 npx no-mistakes import-usages --root . --filter 'src/**' --json
 npx no-mistakes check --json
+npx no-mistakes planning-impact --changed-files /private/run/changed-files.txt --output-dir /private/run
 ```
+
+`planning-impact` is supplied by the npm package, not the Cargo-installed
+binary. It writes the private four-report artifact contract from one prepared
+analysis. See the [CLI reference](../../docs/cli/planning-impact.md).
 
 Programmatic Node usage loads the same Rust analysis through N-API:
 

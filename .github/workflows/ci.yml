@@ -246,7 +246,10 @@ jobs:
         timeout-minutes: 2
         run: >-
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$GITHUB_WORKSPACE/target/debug/no-mistakes.node"
-          npx vitest run packages/no-mistakes/scripts/real-napi-api.test.js --coverage=false
+          npx vitest run
+          packages/no-mistakes/scripts/real-napi-api.test.js
+          packages/no-mistakes/scripts/planning-impact-cli.test.js
+          --coverage=false
 
       - name: Upload JavaScript coverage to Codecov
         if: ${{ env.CODECOV_TOKEN != '' }}

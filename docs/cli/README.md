@@ -73,6 +73,7 @@ command name. See [Performance diagnostics](diagnostics.md).
 | [`server`](server.md) | Express, Hono, Fastify, and Koa route graphs. |
 | [`ci`](ci.md) | GitHub Actions impact ([`ci-impact`](ci-impact.md)), env usage ([`ci-env`](ci-env.md)), workflow topology ([`ci-topology`](ci-topology.md)), and revision topology impact ([`ci-topology-impact`](ci-topology-impact.md)). |
 | [`impacted-checks`](impacted-checks.md) | Minimal local validation commands for changed files. |
+| [`planning-impact`](planning-impact.md) | npm-package CI artifacts from one prepared analysis. |
 | [`infra`](infra.md) | Terraform/OpenTofu resource, module, and output relationships. |
 | [`swift`](swift.md) | Swift package importers and covering test targets. |
 

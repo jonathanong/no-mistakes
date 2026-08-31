@@ -1,12 +1,10 @@
 const assert = require("node:assert/strict");
 const { execFileSync } = require("node:child_process");
-const { mkdtempSync, readdirSync, readFileSync, rmSync } = require("node:fs");
+const { mkdtempSync, readdirSync, readFileSync, rmSync, statSync } = require("node:fs");
 const { tmpdir } = require("node:os");
 const { join, posix } = require("node:path");
 
 const root = join(__dirname, "..", "..");
-const nativeBinaryPackages = ["no-mistakes"];
-
 test("only the expected public npm packages remain", () => {
   const packagesDir = join(root, "packages");
   const manifests = [];
@@ -37,14 +35,14 @@ test("only the expected public npm packages remain", () => {
   assert.deepEqual(manifests.sort(), ["eslint-plugin-no-mistakes", "no-mistakes"]);
 });
 
-test("native npm packages expose direct executable bin targets", () => {
-  for (const name of nativeBinaryPackages) {
-    const manifest = JSON.parse(readFileSync(join(root, "packages", name, "package.json"), "utf8"));
-    assert.deepEqual(manifest.bin, { [name]: `bin/${name}` });
+test("the npm package exposes its launcher while the installer owns the native target", () => {
+  const packageDir = join(root, "packages", "no-mistakes");
+  const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
+  assert.deepEqual(manifest.bin, { "no-mistakes": "bin/no-mistakes.js" });
+  assert.notEqual(statSync(join(packageDir, manifest.bin["no-mistakes"])).mode & 0o111, 0);
 
-    const placeholder = readFileSync(join(root, "packages", name, "bin", name), "utf8");
-    assert.match(placeholder, /Native binary placeholder/);
-  }
+  const placeholder = readFileSync(join(packageDir, "bin", "no-mistakes"), "utf8");
+  assert.match(placeholder, /Native binary placeholder/);
 });
 
 // A `require("./sibling")` in a published entry point that isn't covered by
@@ -56,8 +54,13 @@ test("native npm packages expose direct executable bin targets", () => {
 test("npm pack includes every transitive local require() from a published entry point", () => {
   const packageDir = join(root, "packages", "no-mistakes");
   const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
-  const entryPoints = ["index.js", "planning.js", "workflow-topology-index.js"];
-  const requirePattern = /require\("\.\/([\w./-]+)"\)/g;
+  const entryPoints = [
+    "index.js",
+    "planning.js",
+    "workflow-topology-index.js",
+    ...Object.values(manifest.bin || {}),
+  ];
+  const requirePattern = /require\("(\.{1,2}\/[\w./-]+)"\)/g;
   const npmCache = mkdtempSync(join(tmpdir(), "no-mistakes-npm-pack-"));
   let packed;
   try {
@@ -76,6 +79,9 @@ test("npm pack includes every transitive local require() from a published entry 
     rmSync(npmCache, { recursive: true, force: true });
   }
   const packedPaths = new Set(packed[0].files.map((file) => file.path));
+  const packedLauncher = packed[0].files.find((file) => file.path === manifest.bin["no-mistakes"]);
+  assert.ok(packedLauncher, "npm pack must include the public launcher");
+  assert.notEqual(packedLauncher.mode & 0o111, 0);
 
   const isCovered = (relativePath) =>
     manifest.files.some((pattern) => {
@@ -92,8 +98,8 @@ test("npm pack includes every transitive local require() from a published entry 
 
   const checked = new Set();
   const resolveLocalRequire = (entry, required) => {
-    const requestedPath = posix.join(posix.dirname(entry), required);
-    return requestedPath.startsWith("bin/") ? requestedPath : `${requestedPath}.js`;
+    const requestedPath = posix.normalize(posix.join(posix.dirname(entry), required));
+    return posix.extname(requestedPath) ? requestedPath : `${requestedPath}.js`;
   };
   assert.equal(resolveLocalRequire("sub/a.js", "b"), "sub/b.js");
   const checkEntry = (entry) => {

@@ -8,9 +8,9 @@ const {
   testInstallerFailures,
 } = require("../../../tests/js/test-helpers");
 
-test("package bin points directly to the native executable target", () => {
+test("package bin points to the JavaScript launcher while the installer retains the native target", () => {
   const pkg = require("../package.json");
-  assert.deepEqual(pkg.bin, { "no-mistakes": "bin/no-mistakes" });
+  assert.deepEqual(pkg.bin, { "no-mistakes": "bin/no-mistakes.js" });
 });
 
 test("installer main downloads into the direct bin target", async () => {

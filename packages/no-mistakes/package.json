@@ -9,7 +9,7 @@
     "directory": "packages/no-mistakes"
   },
   "bin": {
-    "no-mistakes": "bin/no-mistakes"
+    "no-mistakes": "bin/no-mistakes.js"
   },
   "files": [
     "bin/",
@@ -22,6 +22,7 @@
     "planning-impact-artifacts-inputs.js",
     "planning-impact-artifacts-lock.js",
     "planning-impact-artifacts-privacy.js",
+    "planning-impact-cli.js",
     "planning.js",
     "workflow-topology-index.js",
     "workflow-topology-index-helpers.js",
