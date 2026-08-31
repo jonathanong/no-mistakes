@@ -75,6 +75,8 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`nextjs-redirect-destinations`](nextjs-redirect-destinations.md)             | Require Next.js redirect/rewrite destinations to match App Router pages.        |
 | [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md)       | Ban empty/comment-only files.                                                   |
 | [`no-git-identity-mutation`](no-git-identity-mutation.md)                     | Ban scripts that mutate git identity.                                           |
+| [`no-sparse-checkout`](no-sparse-checkout.md)                                 | Ban sparse Git checkouts in selected CI YAML.                                   |
+| [`no-test-git-sha`](no-test-git-sha.md)                                       | Ban embedded full Git SHA literals in selected test sources.                    |
 | [`no-mistakes-config`](no-mistakes-config.md)                                 | Lint `.no-mistakes.yml` paths, empty globs, and env-level `limit` with `direct`. |
 | [`no-raw-ephemeral-port`](no-raw-ephemeral-port.md)                           | Ban raw ephemeral port 0 binds and Node `listen(0)` calls.                      |
 | [`package-json-registry-only`](package-json-registry-only.md)                 | Require package registries to match configured policy.                          |

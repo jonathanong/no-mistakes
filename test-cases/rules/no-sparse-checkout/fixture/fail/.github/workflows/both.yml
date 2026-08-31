@@ -1,0 +1,8 @@
+jobs:
+  cleanup:
+    steps:
+      - uses: "actions/checkout@v4"
+        with:
+          "sparse-checkout": |-
+            scripts
+          'sparse-checkout-cone-mode': false

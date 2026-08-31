@@ -253,7 +253,7 @@ fn no_mistakes_rules_have_docs() {
     let root = repo_root();
     let index = read(&root.join("docs/rules/README.md"));
     let rule_ids = rule_ids_from_source(&root);
-    assert_eq!(rule_ids.len(), 82, "source rule inventory changed");
+    assert_eq!(rule_ids.len(), 84, "source rule inventory changed");
     for rule_id in rule_ids {
         let file = format!("{rule_id}.md");
         let path = root.join("docs/rules").join(&file);

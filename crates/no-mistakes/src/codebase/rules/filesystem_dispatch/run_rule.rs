@@ -90,6 +90,18 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         NO_GIT_IDENTITY_MUTATION => {
             no_git_identity_mutation::check_with_files_and_sources(root, config, files, sources)
         }
+        NO_SPARSE_CHECKOUT => {
+            no_sparse_checkout::check_with_files_sources_and_deferred_suppression(
+                root,
+                config,
+                files,
+                sources,
+                defer_suppression,
+            )
+        }
+        NO_TEST_GIT_SHA => {
+            no_test_git_sha::check_with_files_and_sources(root, config, files, sources)
+        }
         TEST_EMAIL_DOMAIN_POLICY => {
             test_email_domain_policy::check_with_files_and_sources(root, config, files, sources)
         }

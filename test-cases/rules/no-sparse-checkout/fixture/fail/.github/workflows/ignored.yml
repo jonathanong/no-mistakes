@@ -1,0 +1,8 @@
+jobs:
+  build:
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          sparse-checkout: not-a-checkout-input
+      - run: |
+          echo 'sparse-checkout: documentation only'

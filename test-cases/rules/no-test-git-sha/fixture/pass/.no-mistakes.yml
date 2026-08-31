@@ -1,0 +1,4 @@
+rules:
+  - rule: no-test-git-sha
+    scope: repository
+    include: ["tests/**/*.test.ts"]

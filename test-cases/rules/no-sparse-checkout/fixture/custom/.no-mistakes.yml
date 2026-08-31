@@ -1,0 +1,5 @@
+rules:
+  - rule: no-sparse-checkout
+    scope: repository
+    options:
+      include: ["ci/no-mistakes-workflows/**"]
