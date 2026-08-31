@@ -4,3 +4,4 @@
 # entries silently never match.
 ignoreChecks:
   - 'CodeRabbit'
+  - 'CodSpeed*'
