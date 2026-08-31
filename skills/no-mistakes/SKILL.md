@@ -86,6 +86,7 @@ the repository docs.
 | Next.js page-to-API coupling | `no-mistakes fetches <route-or-file> --format json` |
 | Queue/server graph | `no-mistakes queues related <file> --format json`; `no-mistakes server related <file> --format json` |
 | CI or workflow impact | `no-mistakes ci impact <file> --format json`; `no-mistakes ci topology --format json` |
+| Private CI planning artifacts (npm package) | `no-mistakes planning-impact --changed-files <manifest> --output-dir <directory>` |
 | Terraform/OpenTofu or Swift | `no-mistakes infra resource-refs <type.name> --format json`; `no-mistakes swift importers <file> --format json` |
 | Configured language graph | `no-mistakes dependents <file> --relationship <lang> --format json` |
 

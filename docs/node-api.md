@@ -102,6 +102,7 @@ const {
 | `ci topology`                              | `ciTopology(options)`                                                                                                                                                                                                                                                      |
 | `ci topology-impact`                       | `ciTopologyImpact(options)`                                                                                                                                                                                                                                                |
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
+| `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |
 
 `writePlanningImpactArtifacts(options)` is an integration helper for callers
 that need private, CLI-compatible planning files without spawning several
@@ -149,6 +150,14 @@ await writePlanningImpactArtifacts({
   broad: false,
 });
 ```
+
+The npm package also exposes this integration as `no-mistakes planning-impact
+--changed-files <manifest> --output-dir <directory>`. Its current working
+directory is `root`; `--broad`, `--timeout`, `--lock-timeout`,
+`--fail-on-lock`, `--jobs`, and `--profile ci` map to the matching API options.
+The command is silent on success. Argument and analysis failures write a
+UTF-8-safe diagnostic of at most 4 KiB to stderr and exit `1`. It is
+intentionally unavailable from the Cargo-installed native binary.
 
 The following inventory is the complete runtime export surface. Keeping this
 list exhaustive makes a newly added function visible to agents even when it
