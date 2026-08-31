@@ -17,9 +17,9 @@ fn local_caller_entries(
         if is_test != want_tests {
             continue;
         }
-        // Failed source reads and parser setup still occupy fact-map slots so
-        // every request-wide failure keeps one identity. They have no symbols
-        // to project into callers and must not abort the rest of the report.
+        // The report boundary rejects operational failures before caller
+        // projection. Keep this defensive for direct helper use and partial
+        // fact plans that intentionally omit symbols.
         let Some(symbols) = facts.symbols.as_ref() else {
             continue;
         };

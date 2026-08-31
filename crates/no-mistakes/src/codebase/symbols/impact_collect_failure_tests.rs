@@ -1,12 +1,7 @@
 use super::*;
 use crate::config::v2::NoMistakesConfig;
 
-#[test]
-fn local_caller_entries_skip_failed_fact_entries_without_symbols() {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture"),
-    );
+fn failed_facts(root: &Path) -> (PathBuf, TsFactMap) {
     let failed_path = root.join("failed.mts");
     let facts = TsFactMap::from([(
         failed_path.clone(),
@@ -15,6 +10,29 @@ fn local_caller_entries_skip_failed_fact_entries_without_symbols() {
             ..Default::default()
         },
     )]);
+    (failed_path, facts)
+}
+
+#[test]
+fn signature_impact_surfaces_failed_fact_entries() {
+    let root = PathBuf::from("/repo");
+    let (_, facts) = failed_facts(&root);
+
+    let error = ensure_signature_impact_facts_complete(&facts, &root).unwrap_err();
+
+    assert_eq!(
+        error.to_string(),
+        "signature-impact could not analyze `failed.mts`: synthetic read failure"
+    );
+}
+
+#[test]
+fn local_caller_entries_skip_failed_fact_entries_without_symbols() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/tests-impact-symbol/fixture"),
+    );
+    let (failed_path, facts) = failed_facts(&root);
     let workspace = crate::codebase::workspaces::load_from_files(&root, &[]).unwrap();
     let visible_files = [failed_path].into_iter().collect::<crate::fx::PathSet>();
     let remapper = crate::codebase::ts_source::FrozenPathRemapper::from_paths(
