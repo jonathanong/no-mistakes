@@ -8,7 +8,7 @@ rules:
 
 ## Why and when
 
-Enable this rule when CI must analyse and validate the complete repository.
+Enable this rule when CI must analyze and validate the complete repository.
 Sparse Git checkouts can silently omit inputs required by a workflow.
 
 ## What it catches
