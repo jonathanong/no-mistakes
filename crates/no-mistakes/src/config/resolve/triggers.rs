@@ -69,6 +69,8 @@ fn named_trigger(trigger: &NamedFullSuiteTrigger) -> ResolvedTrigger {
             .map(|pattern| project_relative_pattern(".", pattern))
             .collect(),
         targets: trigger.targets.clone(),
+        include_changed_tests: (!trigger.targets.is_empty())
+            .then_some(trigger.include_changed_tests.unwrap_or(false)),
         source: "triggers",
     }
 }
@@ -85,18 +87,21 @@ fn project_trigger(
             name: name.to_string(),
             paths: expanded_all_project_paths(name, project),
             targets: Vec::new(),
+            include_changed_tests: None,
             source: "projects",
         },
         TestPlanProjectDependency::Patterns(paths) => ResolvedTrigger {
             name: name.to_string(),
             paths: expand_project_paths(config, name, paths),
             targets: Vec::new(),
+            include_changed_tests: None,
             source: "projects",
         },
         TestPlanProjectDependency::Targeted(targeted) => ResolvedTrigger {
             name: name.to_string(),
             paths: expand_project_paths(config, name, &targeted.paths),
             targets: targeted.targets.clone(),
+            include_changed_tests: Some(targeted.include_changed_tests.unwrap_or(false)),
             source: "projects",
         },
     })

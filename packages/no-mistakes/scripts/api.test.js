@@ -647,6 +647,7 @@ test("resolveConfig declarations expose additive per-framework triggers", () => 
 
   assert.match(declarations, /vitestFullSuiteTriggers: ResolvedTrigger\[\];/);
   assert.match(declarations, /fullSuiteTriggers: ResolvedFrameworkTriggers\[\];/);
+  assert.match(declarations, /includeChangedTests\?: boolean;/);
   assert.match(
     declarations,
     /export interface ResolvedFrameworkTriggers \{\n  framework: TestPlanFramework;\n  triggers: ResolvedTrigger\[\];\n\}/,

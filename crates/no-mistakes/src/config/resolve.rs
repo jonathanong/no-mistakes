@@ -57,6 +57,8 @@ pub struct ResolvedTrigger {
     pub name: String,
     pub paths: Vec<String>,
     pub targets: Vec<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub include_changed_tests: Option<bool>,
     pub source: &'static str,
 }
 

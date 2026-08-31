@@ -1,0 +1,21 @@
+projects:
+  changed-tests:
+    root: .
+tests:
+  vitest:
+    configs: vitest.changed-tests.mts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      ignoreChangedTests:
+        - vitest
+      projects:
+        changed-tests:
+          paths:
+            - src/**/*.test.ts
+          targets:
+            - web
+          includeChangedTests: true
+    environments:
+      pre-push:
+        globalConfigFallback: true

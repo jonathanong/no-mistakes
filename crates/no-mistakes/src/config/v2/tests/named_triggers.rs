@@ -10,6 +10,7 @@ testPlan:
       - name: postgres-resources
         paths: [db/**/*.sql]
         targets: [backend]
+        includeChangedTests: true
       - name: root-config
         paths: [package.json]
 "#,
@@ -23,6 +24,7 @@ testPlan:
             name: "postgres-resources".to_string(),
             paths: vec!["db/**/*.sql".to_string()],
             targets: vec!["backend".to_string()],
+            include_changed_tests: Some(true),
         }
     );
     assert!(triggers[1].targets.is_empty());
@@ -95,6 +97,24 @@ testPlan:
         .unwrap_err()
         .to_string()
         .contains("paths must not be empty"));
+}
+
+#[test]
+fn changed_test_policy_requires_structured_named_targets() {
+    let result = serde_yaml::from_str::<NoMistakesConfig>(
+        r#"
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      - name: root-config
+        paths: [package.json]
+        includeChangedTests: false
+"#,
+    );
+    assert!(result
+        .unwrap_err()
+        .to_string()
+        .contains("includeChangedTests requires non-empty targets"));
 }
 
 #[test]

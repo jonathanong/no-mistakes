@@ -55,6 +55,9 @@ fn validate_named_triggers(
             "{}.testPlan.{framework}.fullSuiteTriggers.triggers[{index}]",
             path.display()
         );
+        if trigger.targets.is_empty() && trigger.include_changed_tests.is_some() {
+            anyhow::bail!("{base}.includeChangedTests requires non-empty targets");
+        }
         validate_paths(&trigger.paths, &base)?;
         validate_targets(&trigger.targets, &base)?;
     }

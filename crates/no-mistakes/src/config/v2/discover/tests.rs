@@ -82,6 +82,7 @@ fn targeted_full_suite_trigger_validates_paths_and_targets() {
             TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
                 paths,
                 targets,
+                include_changed_tests: None,
             }),
         );
         let error = validate_v2_config(&config, Path::new("config.yml"))
@@ -97,6 +98,7 @@ fn targeted_full_suite_trigger_validates_paths_and_targets() {
         TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
             paths: vec!["src/**".to_string()],
             targets: vec!["unit".to_string()],
+            include_changed_tests: None,
         }),
     );
     let error = validate_v2_config(&config, Path::new("config.yml"))
@@ -183,6 +185,7 @@ fn named_triggers_are_validated_for_every_test_plan_framework() {
             name: "resources".to_string(),
             paths: vec!["[".to_string()],
             targets: Vec::new(),
+            include_changed_tests: None,
         });
     let error = validate_v2_config(&config, Path::new("config.yml"))
         .unwrap_err()
@@ -195,6 +198,28 @@ fn named_triggers_are_validated_for_every_test_plan_framework() {
 }
 
 #[test]
+fn changed_test_policy_is_rejected_for_programmatic_legacy_named_trigger() {
+    let mut config = NoMistakesConfig::default();
+    config
+        .test_plan
+        .vitest
+        .full_suite_triggers
+        .triggers
+        .push(NamedFullSuiteTrigger {
+            name: "legacy".to_string(),
+            paths: vec!["src/**".to_string()],
+            targets: Vec::new(),
+            include_changed_tests: Some(false),
+        });
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains(
+        "config.yml.testPlan.vitest.fullSuiteTriggers.triggers[0].includeChangedTests requires non-empty targets"
+    ));
+}
+
+#[test]
 fn kotlin_targeted_project_triggers_require_a_top_level_project() {
     let mut config = NoMistakesConfig::default();
     config.test_plan.kotlin.full_suite_triggers.projects.insert(
@@ -202,6 +227,7 @@ fn kotlin_targeted_project_triggers_require_a_top_level_project() {
         TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
             paths: vec!["src/**".to_string()],
             targets: vec!["unit".to_string()],
+            include_changed_tests: None,
         }),
     );
     let error = validate_v2_config(&config, Path::new("config.yml"))
@@ -220,6 +246,7 @@ fn elixir_targeted_project_triggers_require_a_top_level_project() {
         TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
             paths: vec!["src/**".to_string()],
             targets: vec!["unit".to_string()],
+            include_changed_tests: None,
         }),
     );
     let error = validate_v2_config(&config, Path::new("config.yml"))
@@ -238,6 +265,7 @@ fn dart_targeted_project_triggers_require_a_top_level_project() {
         TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency {
             paths: vec!["src/**".to_string()],
             targets: vec!["unit".to_string()],
+            include_changed_tests: None,
         }),
     );
     let error = validate_v2_config(&config, Path::new("config.yml"))

@@ -1,6 +1,6 @@
 use crate::config::v2::schema::{
     NoMistakesConfig, TestPlanFrameworkConfig, TestPlanIgnoredChangedTestsFramework,
-    TestPlanProjectDependency, TestPlanTargetedProjectDependency,
+    TestPlanProjectDependency,
 };
 
 #[test]
@@ -152,13 +152,16 @@ testPlan:
         app:
           paths: [src/**, '!src/generated/**']
           targets: [unit]
+          includeChangedTests: true
 "#,
     )
     .unwrap();
-    assert!(matches!(
-        cfg.test_plan.vitest.full_suite_triggers.projects["app"],
-        TestPlanProjectDependency::Targeted(TestPlanTargetedProjectDependency { .. })
-    ));
+    let TestPlanProjectDependency::Targeted(targeted) =
+        &cfg.test_plan.vitest.full_suite_triggers.projects["app"]
+    else {
+        panic!("expected a structured target-scoped trigger");
+    };
+    assert_eq!(targeted.include_changed_tests, Some(true));
     let encoded = serde_json::to_value(&cfg).unwrap();
     let decoded: NoMistakesConfig = serde_json::from_value(encoded).unwrap();
     assert_eq!(decoded, cfg);

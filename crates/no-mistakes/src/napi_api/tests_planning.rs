@@ -4,6 +4,7 @@ include!("tests_planning/vitest_config_extends.rs");
 include!("tests_planning/changed_files.rs");
 include!("tests_planning/direct_test_owner.rs");
 include!("tests_planning/direct_import_limit.rs");
+include!("tests_planning/target_scoped_triggers.rs");
 
 #[test]
 fn tests_plan_json_union_applies_vitest_setup_fallback() {
@@ -190,32 +191,4 @@ fn tests_plan_why_comment_and_graph_exports_return_reports() {
     let why = tests_why_json_impl(crate::napi_api::options::test_json_arg(why_options)).unwrap();
     let why: serde_json::Value = serde_json::from_str(&why).unwrap();
     assert!(!why["source.ts"].as_array().unwrap().is_empty());
-}
-
-#[test]
-fn tests_plan_json_exposes_target_scoped_configured_triggers() {
-    let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/test-plan/target-scoped-triggers");
-    let output = tests_plan_json_impl(
-        crate::napi_api::options::test_json_arg(serde_json::json!({
-            "framework": "vitest",
-            "root": root,
-            "changedFiles": ["migrations/001.sql"]
-        })
-        .to_string(),)
-    )
-    .unwrap();
-    let plan: serde_json::Value = serde_json::from_str(&output).unwrap();
-
-    assert_eq!(plan["fallback_triggered"], false);
-    assert_eq!(plan["selected_tests"].as_array().unwrap().len(), 1);
-    assert_eq!(plan["selected_tests"][0]["test_file"], "src/db/db.test.ts");
-    assert_eq!(
-        plan["selected_tests"][0]["reasons"][0]["via"],
-        serde_json::json!(["configured-trigger"])
-    );
-    assert_eq!(
-        plan["selected_tests"][0]["targets"][0]["project"],
-        "database"
-    );
 }

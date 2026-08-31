@@ -34,6 +34,7 @@ pub(super) fn dependency_triggers(
     config: &NoMistakesConfig,
     framework: TestFramework,
     changed_files: &[PathBuf],
+    discovered_test_files: &HashSet<PathBuf>,
     prepared: &crate::tests::prepared_plan::PreparedTestPlanRequest,
 ) -> Result<DependencyTriggers> {
     let plan = framework_plan(config, framework);
@@ -55,6 +56,7 @@ pub(super) fn dependency_triggers(
         root,
         &plan.full_suite_triggers.triggers,
         &dependency_only_changed_files,
+        discovered_test_files,
         &ignored_sets,
         &mut result,
     )? {
@@ -67,15 +69,20 @@ pub(super) fn dependency_triggers(
         let patterns = project_dependency_patterns(project_name, project, trigger);
         let compiled_patterns = compile_ordered_patterns(&patterns)?;
         for changed in &dependency_only_changed_files {
-            if ignored_sets.iter().any(|set| set.contains(changed)) {
-                continue;
-            }
             let rel = relative_path(root, changed);
             if !matches_ordered(&compiled_patterns, &rel) {
                 continue;
             }
             match trigger {
                 TestPlanProjectDependency::Targeted(targeted) => {
+                    if structured_trigger_skips_changed_test(
+                        changed,
+                        discovered_test_files,
+                        &ignored_sets,
+                        targeted.include_changed_tests,
+                    ) {
+                        continue;
+                    }
                     result
                         .targeted
                         .entry(changed.clone())
@@ -85,6 +92,9 @@ pub(super) fn dependency_triggers(
                 // A matching legacy trigger always wins over every targeted
                 // trigger, regardless of resource-project map order.
                 TestPlanProjectDependency::All(_) | TestPlanProjectDependency::Patterns(_) => {
+                    if ignored_changed_test(changed, &ignored_sets) {
+                        continue;
+                    }
                     legacy_match.get_or_insert_with(|| {
                         (
                             format!("{} project dependency changed: {}", project_name, rel),
@@ -100,6 +110,20 @@ pub(super) fn dependency_triggers(
     }
     result.fallback = legacy_match;
     Ok(result)
+}
+
+pub(super) fn structured_trigger_skips_changed_test(
+    changed: &Path,
+    discovered_test_files: &HashSet<PathBuf>,
+    ignored_sets: &[HashSet<PathBuf>],
+    include_changed_tests: Option<bool>,
+) -> bool {
+    !include_changed_tests.unwrap_or(false)
+        && (discovered_test_files.contains(changed) || ignored_changed_test(changed, ignored_sets))
+}
+
+pub(super) fn ignored_changed_test(changed: &Path, ignored_sets: &[HashSet<PathBuf>]) -> bool {
+    ignored_sets.iter().any(|set| set.contains(changed))
 }
 
 pub(super) fn framework_plan(

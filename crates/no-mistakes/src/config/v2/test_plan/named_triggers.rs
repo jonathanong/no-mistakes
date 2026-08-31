@@ -17,6 +17,9 @@ pub struct NamedFullSuiteTrigger {
     pub paths: Vec<String>,
     #[serde(default)]
     pub targets: Vec<String>,
+    /// Applies only when `targets` makes this a structured trigger.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub include_changed_tests: Option<bool>,
 }
 
 #[derive(Debug, Deserialize, Default)]
@@ -67,6 +70,11 @@ fn validate_named(triggers: &[NamedFullSuiteTrigger]) -> Result<(), String> {
         if trigger.paths.is_empty() {
             return Err(format!(
                 "fullSuiteTriggers[{index}] `{name}` paths must not be empty"
+            ));
+        }
+        if trigger.targets.is_empty() && trigger.include_changed_tests.is_some() {
+            return Err(format!(
+                "fullSuiteTriggers[{index}] `{name}` includeChangedTests requires non-empty targets"
             ));
         }
         if let Some(previous) = names.insert(name.to_string(), index) {

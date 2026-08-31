@@ -56,4 +56,8 @@ fn config_resolve_prints_vitest_and_per_framework_triggers() {
         report["fullSuiteTriggers"][0]["triggers"][0]["name"].as_str(),
         Some("postgres-resources")
     );
+    assert_eq!(
+        report["fullSuiteTriggers"][0]["triggers"][0]["includeChangedTests"],
+        false
+    );
 }

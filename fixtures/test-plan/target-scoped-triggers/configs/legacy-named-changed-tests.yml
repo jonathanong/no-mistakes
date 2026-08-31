@@ -1,0 +1,13 @@
+tests:
+  vitest:
+    configs: vitest.config.mts
+testPlan:
+  vitest:
+    fullSuiteTriggers:
+      - name: changed-tests
+        paths:
+          - src/**/*.test.ts
+    environments:
+      pre-push:
+        exclude:
+          - src/shared.test.ts

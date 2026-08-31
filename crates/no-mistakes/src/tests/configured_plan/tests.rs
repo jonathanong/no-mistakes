@@ -4,6 +4,8 @@ use no_mistakes::config::v2::schema::{
     TestPlanProjectDependency, TestPlanTargetedProjectDependency,
 };
 
+include!("tests/changed_test_policy.rs");
+
 fn vitest_setup_args(root: PathBuf, changed_file: Vec<PathBuf>) -> PlanArgs {
     PlanArgs {
         framework: Some(TestFramework::Vitest),
@@ -399,6 +401,7 @@ fn dependency_trigger_ignores_changed_test_discovery_errors_for_source_changes()
         &config,
         TestFramework::Vitest,
         &[root.join("src/component.mts")],
+        &HashSet::new(),
         &prepared,
     )
     .unwrap();
@@ -419,6 +422,7 @@ fn dependency_patterns_use_ordered_negation_and_reinclusion() {
             "generated/keep.ts".to_string(),
         ],
         targets: vec!["unit".to_string()],
+        include_changed_tests: None,
     });
     let patterns = super::dep_triggers::project_dependency_patterns("src", &project, &trigger);
     assert_eq!(
