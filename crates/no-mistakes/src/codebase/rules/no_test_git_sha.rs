@@ -78,7 +78,7 @@ fn compile_options(options: Options) -> Result<CompiledOptions> {
         .collect::<Result<_>>()?;
     Ok(CompiledOptions {
         contexts,
-        sha: Regex::new(r"(?i)\b[0-9a-f]{40}\b").expect("SHA regex"),
+        sha: Regex::new(r"(?i)[0-9a-f]{40}").expect("SHA regex"),
     })
 }
 
@@ -98,6 +98,12 @@ fn check_file(
         options
             .sha
             .find_iter(line_text)
+            .filter(|matched| {
+                let bytes = line_text.as_bytes();
+                (matched.start() == 0 || !bytes[matched.start() - 1].is_ascii_hexdigit())
+                    && (matched.end() == bytes.len()
+                        || !bytes[matched.end()].is_ascii_hexdigit())
+            })
             .filter(|_| !allowed)
             .map(|_| RuleFinding {
                 rule: RULE_ID.to_string(),

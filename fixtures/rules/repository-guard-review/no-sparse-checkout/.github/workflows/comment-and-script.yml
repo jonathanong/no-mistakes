@@ -1,0 +1,42 @@
+metadata:
+  # A checkout-shaped key outside `steps` must not consume an occurrence.
+  uses: actions/checkout@v4
+jobs:
+  build:
+    steps:
+      # This looks like a checkout but is only a comment.
+      # uses: actions/checkout@v4
+      - run: |
+          uses: actions/checkout@v4
+          with:
+            sparse-checkout: ignored
+      - name: Mixed-case checkout
+        'uses': 'Actions/Checkout@v4'
+        'with':
+          # no-mistakes-disable-next-line no-sparse-checkout
+          "sparse-checkout": src
+      - name: Folded checkout
+        uses: >
+          actions/checkout@v4
+        with:
+          sparse-checkout: docs
+      - name: |
+          Checkout source
+        uses: actions/checkout@v4
+        with:
+          # no-mistakes-disable-next-line no-sparse-checkout
+          sparse-checkout: examples
+  indentless:
+    steps:
+    - uses: actions/setup-node@v4
+      with:
+        # A nested input must not count as the step's action reference.
+        uses: actions/checkout@v4
+    - uses: actions/checkout@v4
+      with:
+        # no-mistakes-disable-next-line no-sparse-checkout
+        sparse-checkout: indentless
+  flow:
+    steps:
+      # no-mistakes-disable-next-line no-sparse-checkout
+      - { uses: actions/checkout@v4, with: { sparse-checkout: flow } }

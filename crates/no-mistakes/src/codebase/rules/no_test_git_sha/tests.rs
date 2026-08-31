@@ -10,6 +10,12 @@ fn fixture(name: &str) -> PathBuf {
         .join(name)
 }
 
+fn review_fixture(name: &str) -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/repository-guard-review")
+        .join(name)
+}
+
 #[test]
 fn reports_selected_full_sha_and_honors_allowed_context() {
     let root = fixture("fail");
@@ -101,4 +107,16 @@ fn standard_exclude_removes_a_selected_test_path() {
             .unwrap()
             .is_empty()
     );
+}
+
+#[test]
+fn hexadecimal_boundaries_allow_underscores_but_reject_longer_hex_values() {
+    let root = review_fixture("no-test-git-sha");
+    let config =
+        crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
+    let file = root.join("tests/boundaries.test.ts");
+
+    let findings = check_with_files(&root, &config, &[file]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].line, 1, "{findings:?}");
 }

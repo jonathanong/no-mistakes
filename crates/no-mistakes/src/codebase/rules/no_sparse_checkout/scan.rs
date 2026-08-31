@@ -3,6 +3,8 @@ use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::{Mapping, Value};
 use std::path::Path;
 
+mod location;
+
 pub(super) fn check_file(
     root: &Path,
     path: &Path,
@@ -86,7 +88,7 @@ fn check_steps(
         };
         for key in FORBIDDEN_KEYS {
             if with.contains_key(Value::String((*key).to_string())) {
-                let line = checkout_key_line(source, key, occurrence);
+                let line = location::checkout_key_line(source, key, occurrence);
                 findings.push(RuleFinding {
                     rule: RULE_ID.to_string(),
                     file: file.to_string(),
@@ -106,51 +108,7 @@ fn check_steps(
 fn is_checkout(step: &Mapping) -> bool {
     step.get("uses")
         .and_then(Value::as_str)
-        .is_some_and(|uses| uses.trim().starts_with("actions/checkout@"))
-}
-
-fn checkout_key_line(source: &str, key: &str, occurrence: usize) -> usize {
-    let lines: Vec<&str> = source.lines().collect();
-    let checkout_line = lines
-        .iter()
-        .enumerate()
-        .filter(|(_, line)| line.contains("uses:") && line.contains("actions/checkout@"))
-        .nth(occurrence)
-        .map(|(index, _)| index)
-        .unwrap_or(0);
-    let step_indent = leading_indent(lines[checkout_line]);
-    let mut with_indent = None;
-    for (index, line) in lines.iter().enumerate().skip(checkout_line + 1) {
-        let indent = leading_indent(line);
-        let trimmed = line.trim();
-        if trimmed.starts_with("- ") && indent <= step_indent {
-            break;
-        }
-        if with_indent.is_none() && trimmed.starts_with("with:") {
-            with_indent = Some(indent);
-            continue;
-        }
-        let Some(with_indent) = with_indent else {
-            continue;
-        };
-        if !trimmed.is_empty() && indent <= with_indent {
-            break;
-        }
-        if yaml_key_line(trimmed, key) {
-            return index + 1;
-        }
-    }
-    checkout_line + 1
-}
-
-fn leading_indent(line: &str) -> usize {
-    line.len() - line.trim_start().len()
-}
-
-fn yaml_key_line(line: &str, key: &str) -> bool {
-    line.starts_with(&format!("{key}:"))
-        || line.starts_with(&format!("'{key}':"))
-        || line.starts_with(&format!("\"{key}\":"))
+        .is_some_and(location::is_checkout_reference)
 }
 
 #[cfg(test)]

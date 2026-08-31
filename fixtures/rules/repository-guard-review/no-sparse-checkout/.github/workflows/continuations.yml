@@ -1,0 +1,31 @@
+jobs:
+  multiline-flow:
+    steps:
+      # A flow step may continue across physical lines.
+      # no-mistakes-disable-next-line no-sparse-checkout
+      - { uses: actions/checkout@v4,
+          with: { sparse-checkout: flow } }
+  arbitrary-indent:
+    steps:
+      -
+          uses: actions/checkout@v4
+          with:
+            # Bare sequence entries do not require a two-space mapping indent.
+            # no-mistakes-disable-next-line no-sparse-checkout
+            sparse-checkout: arbitrary
+  multiline-quoted:
+    steps:
+      - uses: "actions/checkout@v4\
+          "
+        with:
+          nested:
+            # This nested key must not become the diagnostic location.
+            sparse-checkout: decoy
+          # no-mistakes-disable-next-line no-sparse-checkout
+          sparse-checkout: quoted
+  separated-colons:
+    steps :
+      - 'uses' : Actions/Checkout@v4
+        "with" :
+          # no-mistakes-disable-next-line no-sparse-checkout
+          "sparse-checkout" : separated
