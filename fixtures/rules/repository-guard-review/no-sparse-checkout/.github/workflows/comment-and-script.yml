@@ -20,3 +20,9 @@ jobs:
           actions/checkout@v4
         with:
           sparse-checkout: docs
+      - name: |
+          Checkout source
+        uses: actions/checkout@v4
+        with:
+          # no-mistakes-disable-next-line no-sparse-checkout
+          sparse-checkout: examples

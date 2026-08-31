@@ -53,7 +53,13 @@ fn yaml_code_lines<'a>(lines: &[&'a str]) -> Vec<&'a str> {
             }
             block_scalar_indent = None;
             if is_block_scalar_header(trimmed) {
-                block_scalar_indent = Some(indent);
+                // A key on a sequence entry starts after `- `, so sibling mapping
+                // keys may be indented beyond the dash without belonging to the scalar.
+                block_scalar_indent = Some(if line.trim_start().starts_with("- ") {
+                    indent + 2
+                } else {
+                    indent
+                });
             }
             *line
         })

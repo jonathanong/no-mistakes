@@ -237,7 +237,8 @@ fn source_locations_ignore_comment_and_script_decoys_for_mixed_case_checkout() {
     let deferred =
         check_with_files_sources_and_deferred_suppression(&root, &config, &[file], &sources, true)
             .unwrap();
-    assert_eq!(deferred.len(), 2, "{deferred:?}");
+    assert_eq!(deferred.len(), 3, "{deferred:?}");
     assert_eq!(deferred[0].line, 17, "{deferred:?}");
     assert_eq!(deferred[1].line, 22, "{deferred:?}");
+    assert_eq!(deferred[2].line, 28, "{deferred:?}");
 }
