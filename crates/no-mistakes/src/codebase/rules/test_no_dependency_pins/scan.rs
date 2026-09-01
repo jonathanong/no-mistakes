@@ -130,14 +130,19 @@ fn expect_token_start(bytes: &[u8], open_paren: usize) -> Option<usize> {
     while end > 0 && bytes[end - 1].is_ascii_whitespace() {
         end -= 1;
     }
-    let start = end.checked_sub("expect".len())?;
-    if &bytes[start..end] != b"expect" {
-        return None;
+    for token in [b"expect.soft".as_slice(), b"expect.poll", b"expect"] {
+        let Some(start) = end.checked_sub(token.len()) else {
+            continue;
+        };
+        if &bytes[start..end] == token
+            && (start == 0
+                || !(bytes[start - 1].is_ascii_alphanumeric()
+                    || matches!(bytes[start - 1], b'_' | b'$' | b'.')))
+        {
+            return Some(start);
+        }
     }
-    if start > 0 && (bytes[start - 1].is_ascii_alphanumeric() || bytes[start - 1] == b'_') {
-        return None;
-    }
-    Some(start)
+    None
 }
 
 fn line_at(content: &str, offset: usize) -> usize {

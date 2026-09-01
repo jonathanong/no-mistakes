@@ -68,13 +68,14 @@ assertions containing a quoted entry with a caret or tilde range; fixture paths
 and exact plain package metadata versions are not matched. Because raw text
 assertions do not preserve the entry's manifest section, suppress an intentional
 caret or tilde metadata assertion locally. Raw reads may use `toString()` or
-`trim()` before the matcher. Parsed matching is limited to
+`trim()` before `toContain`, `toBe`, `toEqual`, or `toStrictEqual`. Parsed matching is limited to
 `dependencies`, `devDependencies`, `optionalDependencies`, and
 `peerDependencies` property or bracket access followed directly by `toBe`,
 `toEqual`, or `toStrictEqual`, including non-null assertions, multiline
-assertions, optional string-literal assertion messages, compound comparator,
-OR, or hyphen ranges, and versioned `npm:` or `workspace:` specs. Negated
-assertions and malformed version prefixes are not matched.
+assertions (including `expect.soft` and `expect.poll`), optional string-literal
+assertion messages, explicit equality, compound comparator, OR, or hyphen
+ranges, and versioned `npm:` or `workspace:` specs. Negated assertions and
+malformed version prefixes are not matched.
 
 ## Options and defaults
 
