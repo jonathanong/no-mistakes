@@ -252,3 +252,78 @@ fn multiline_javascript_strings_keep_later_assertions_visible() {
         );
     }
 }
+
+#[test]
+fn malformed_version_delimiters_do_not_report_a_finding() {
+    let mut options = super::super::compile_options(&super::super::Options::default()).unwrap();
+    options.patterns = vec![CompiledPattern {
+        reason: "parsed dependency version assertion".to_string(),
+        regex: Regex::new(r#"(?P<version>"1\.2\.3)"#).unwrap(),
+        reject_preceding_at: false,
+        multiline: true,
+    }];
+
+    let findings = check_source(
+        "malformed.test.ts",
+        r#"expect(packageJson.dependencies.foo).toBe("1.2.3)"#,
+        &options,
+    );
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn overlapping_non_code_ranges_are_merged() {
+    let mut ranges = vec![(0, 5), (3, 9)];
+    merge_ranges(&mut ranges);
+    assert_eq!(ranges, vec![(0, 9)]);
+}
+
+#[test]
+fn quote_and_incomplete_prefix_recovery_paths_are_covered() {
+    let quote_source = "const x = 1\n'1.2.3'";
+    let quote_start = quote_source.find('\'').unwrap();
+    assert!(!is_code(&source_ranges(quote_source).non_code, quote_start));
+
+    let newline_source = "const x = '1.2.3\nexpect(value)";
+    let newline_start = newline_source.find('\'').unwrap();
+    assert!(!is_code(
+        &source_ranges(newline_source).non_code,
+        newline_start
+    ));
+
+    assert!(source_ranges("(value)").assertions.is_empty());
+    assert!(source_ranges(">(").assertions.is_empty());
+}
+
+#[test]
+fn malformed_delimiters_are_rejected() {
+    assert!(!super::delimiters::has_matching_version_delimiters(
+        "", false
+    ));
+    assert!(!super::delimiters::has_matching_version_delimiters(
+        "", true
+    ));
+    assert!(!super::delimiters::has_matching_raw_entry_delimiters(
+        r#"\"pkg\": \"1.2.3"#
+    ));
+}
+
+#[test]
+fn raw_literal_argument_handles_trailing_comment_trivia() {
+    fn direct(content: &str) -> bool {
+        let literal = r#""pkg""#;
+        let start = content.find(literal).unwrap();
+        let matched = Regex::new("(?s).*").unwrap().find(content).unwrap();
+        let ranges = source_ranges(content).non_code;
+        super::raw_literal_arg::is_direct_argument(
+            content,
+            matched,
+            (start, start + literal.len()),
+            &ranges,
+        )
+    }
+
+    assert!(!direct("f(\"pkg\"/*\n*/)"));
+    assert!(!direct("f(\"pkg\",/*\n*/)"));
+    assert!(direct("f(\"pkg\", /* same-line */)"));
+}
