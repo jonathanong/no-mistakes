@@ -2,10 +2,16 @@ use super::{CompiledOptions, CompiledPattern, RuleFinding, RULE_ID};
 
 pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
+    let assertion_ranges = opts
+        .patterns
+        .iter()
+        .any(|pattern| pattern.multiline)
+        .then(|| assertion_ranges(content))
+        .unwrap_or_default();
     for pattern in &opts.patterns {
         if pattern.multiline {
             for matched in pattern.regex.find_iter(content) {
-                let start = assertion_start(content, matched.start());
+                let start = assertion_start(&assertion_ranges, matched.start());
                 let line = line_at(content, start);
                 let normalized = matched
                     .as_str()
@@ -40,9 +46,10 @@ fn scan_lines(
     }
 }
 
-fn assertion_start(content: &str, match_start: usize) -> usize {
-    let bytes = &content.as_bytes()[..match_start];
+fn assertion_ranges(content: &str) -> Vec<(usize, usize)> {
+    let bytes = content.as_bytes();
     let mut stack = Vec::new();
+    let mut ranges = Vec::new();
     let mut quote = None::<u8>;
     let mut escaped = false;
     let mut line_comment = false;
@@ -89,16 +96,33 @@ fn assertion_start(content: &str, match_start: usize) -> usize {
             }
             b'\'' | b'"' | b'`' => quote = Some(byte),
             b'(' => stack.push(expect_token_start(bytes, index)),
-            b')' => _ = stack.pop(),
+            b')' => {
+                if let Some(Some(start)) = stack.pop() {
+                    ranges.push((start, index));
+                }
+            }
             _ => {}
         }
         index += 1;
     }
-    stack
-        .into_iter()
-        .rev()
-        .flatten()
-        .next()
+    ranges.extend(
+        stack
+            .into_iter()
+            .flatten()
+            .map(|start| (start, bytes.len())),
+    );
+    ranges.sort_unstable_by_key(|(start, _)| *start);
+    ranges
+}
+
+fn assertion_start(ranges: &[(usize, usize)], match_start: usize) -> usize {
+    let upper = ranges.partition_point(|(start, _)| *start <= match_start);
+    upper
+        .checked_sub(1)
+        .and_then(|index| {
+            let (start, end) = ranges[index];
+            (match_start <= end).then_some(start)
+        })
         .unwrap_or(match_start)
 }
 

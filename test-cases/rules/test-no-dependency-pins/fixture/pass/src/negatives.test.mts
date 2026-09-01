@@ -18,3 +18,4 @@ expect(readFileSync('fixtures/historical/package.json', 'utf8')).toContain('"exa
 expect(rootPackage.devDependencies?.eslint).not.toBe('10.9.0')
 expect(readFileSync('package.json', 'utf8')).not.toContain('"eslint": "^10.9.0"')
 expect(packageJson.dependencies?.example).toBe('1.2.3malformed')
+expect(readFileSync('package.json', 'utf8')).toContain('"example": "^1.2.3malformed"')
