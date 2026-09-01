@@ -1,0 +1,6 @@
+expect(readFileSync('package.json', 'utf8')).toContain('"no-mistakes": "^0.53.2"')
+expect(readRepoFile('package.json')).toContain("\"eslint\": \"~10.9.0\"")
+expect(rootPackage.devDependencies?.['@playwright/test']).toBe('1.61.1')
+expect(browserCrawlPackage.dependencies?.playwright).toBe('1.61.1')
+expect(packageJson.optionalDependencies?.['fsevents']).toEqual('2.3.3')
+expect(packageJson.peerDependencies.react).toEqual('19.1.0')

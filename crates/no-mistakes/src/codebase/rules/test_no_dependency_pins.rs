@@ -37,6 +37,14 @@ const DEFAULT_PATTERNS: &[(&str, &str)] = &[
         "versioned tool log",
         r"\bRUN v\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?\b",
     ),
+    (
+        "package.json dependency assertion",
+        r#"\b(?:readFileSync|readRepoFile)\(\s*['"]package\.json['"][^;\n]*?\.(?:toContain|toBe|toEqual)\([^;\n]*?\\?["'][@A-Za-z0-9_./-]+\\?["']\s*:\s*\\?["'][~^]\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?"#,
+    ),
+    (
+        "parsed dependency version assertion",
+        r#"\b(?:dependencies|devDependencies|optionalDependencies|peerDependencies)(?:\?\.\s*(?:\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|[A-Za-z_$][A-Za-z0-9_$-]*)|\s*\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|\.\s*[A-Za-z_$][A-Za-z0-9_$-]*)[^;\n]*?\.(?:toBe|toEqual)\(\s*['"`][~^]?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?"#,
+    ),
 ];
 
 #[derive(Deserialize, Default)]

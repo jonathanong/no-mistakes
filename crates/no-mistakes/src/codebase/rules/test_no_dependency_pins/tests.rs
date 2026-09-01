@@ -35,6 +35,7 @@ fn fail_files(root: &Path) -> Vec<PathBuf> {
         root.join("src/release-url.test.mts"),
         root.join("src/release-asset.test.mts"),
         root.join("src/tool-log.test.mts"),
+        root.join("src/dependency-manifest.test.mts"),
         root.join("src/__tests__/nested.ts"),
         root.join("src/helper.mock.test.js"),
     ]
@@ -74,7 +75,7 @@ fn default_include_matches_filaments_test_file_re() {
 }
 
 #[test]
-fn fail_fixture_reports_all_five_pin_shapes() {
+fn fail_fixture_reports_all_pin_shapes() {
     let root = fixture("fail");
     let findings = check_with_files(&root, &config_with_options("{}"), &fail_files(&root)).unwrap();
     let reasons: Vec<&str> = findings
@@ -94,6 +95,8 @@ fn fail_fixture_reports_all_five_pin_shapes() {
         "versioned release URL",
         "versioned release asset",
         "versioned tool log",
+        "package.json dependency assertion",
+        "parsed dependency version assertion",
     ] {
         assert!(reasons.contains(&reason), "missing {reason}: {findings:#?}");
     }
@@ -105,6 +108,32 @@ fn fail_fixture_reports_all_five_pin_shapes() {
         finding.import.as_deref()
             == Some("actions/setup-node@de0fac2e4500dabe0009e67214ff5f5447ce83dd")
     }));
+    assert!(findings.iter().any(|finding| {
+        finding.file == "src/dependency-manifest.test.mts"
+            && finding.target.as_deref() == Some("package.json dependency assertion")
+    }));
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| {
+                finding.file == "src/dependency-manifest.test.mts"
+                    && finding.target.as_deref() == Some("package.json dependency assertion")
+            })
+            .count(),
+        2,
+        "{findings:#?}"
+    );
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| {
+                finding.file == "src/dependency-manifest.test.mts"
+                    && finding.target.as_deref() == Some("parsed dependency version assertion")
+            })
+            .count(),
+        4,
+        "{findings:#?}"
+    );
     assert!(findings
         .iter()
         .any(|finding| finding.file == "src/__tests__/nested.ts"));
