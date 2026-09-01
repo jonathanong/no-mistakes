@@ -1,93 +1,115 @@
-pub(super) fn assertion_ranges(content: &str) -> Vec<(usize, usize)> {
-    let bytes = content.as_bytes();
-    let mut stack = Vec::new();
-    let mut ranges = Vec::new();
-    let mut quote = None::<u8>;
-    let mut escaped = false;
-    let mut regex = false;
-    let mut regex_class = false;
-    let mut regex_allowed = true;
-    let mut line_comment = false;
-    let mut block_comment = false;
-    let mut index = 0;
-    while index < bytes.len() {
+struct LexState {
+    quote: Option<u8>,
+    escaped: bool,
+    regex: bool,
+    regex_class: bool,
+    regex_allowed: bool,
+    line_comment: bool,
+    block_comment: bool,
+}
+
+impl LexState {
+    fn new() -> Self {
+        Self {
+            quote: None,
+            escaped: false,
+            regex: false,
+            regex_class: false,
+            regex_allowed: true,
+            line_comment: false,
+            block_comment: false,
+        }
+    }
+
+    fn skip_non_code(&mut self, bytes: &[u8], index: usize) -> Option<usize> {
         let byte = bytes[index];
-        let next = bytes.get(index + 1).copied();
-        if line_comment {
-            line_comment = byte != b'\n';
-            index += 1;
-            continue;
+        if self.line_comment {
+            self.line_comment = byte != b'\n';
+            return Some(index + 1);
         }
-        if block_comment {
-            if byte == b'*' && next == Some(b'/') {
-                block_comment = false;
-                index += 2;
-            } else {
-                index += 1;
+        if self.block_comment {
+            if byte == b'*' && bytes.get(index + 1) == Some(&b'/') {
+                self.block_comment = false;
+                return Some(index + 2);
             }
-            continue;
+            return Some(index + 1);
         }
-        if let Some(delimiter) = quote {
-            if escaped {
-                escaped = false;
+        if let Some(delimiter) = self.quote {
+            if self.escaped {
+                self.escaped = false;
             } else if byte == b'\\' {
-                escaped = true;
+                self.escaped = true;
             } else if byte == delimiter {
-                quote = None;
-                regex_allowed = false;
+                self.quote = None;
+                self.regex_allowed = false;
             }
-            index += 1;
-            continue;
+            return Some(index + 1);
         }
-        if regex {
-            if escaped {
-                escaped = false;
+        if self.regex {
+            if self.escaped {
+                self.escaped = false;
             } else {
                 match byte {
-                    b'\\' => escaped = true,
-                    b'[' => regex_class = true,
-                    b']' => regex_class = false,
-                    b'/' if !regex_class => {
-                        regex = false;
-                        regex_allowed = false;
+                    b'\\' => self.escaped = true,
+                    b'[' => self.regex_class = true,
+                    b']' => self.regex_class = false,
+                    b'/' if !self.regex_class => {
+                        self.regex = false;
+                        self.regex_allowed = false;
                     }
                     b'\n' => {
-                        regex = false;
-                        regex_class = false;
+                        self.regex = false;
+                        self.regex_class = false;
                     }
                     _ => {}
                 }
             }
-            index += 1;
+            return Some(index + 1);
+        }
+        None
+    }
+}
+
+pub(super) fn assertion_ranges(content: &str) -> Vec<(usize, usize)> {
+    let bytes = content.as_bytes();
+    let mut stack = Vec::new();
+    let mut ranges = Vec::new();
+    let mut lex = LexState::new();
+    let mut index = 0;
+    while index < bytes.len() {
+        let byte = bytes[index];
+        let next = bytes.get(index + 1).copied();
+        if let Some(next_index) = lex.skip_non_code(bytes, index) {
+            index = next_index;
             continue;
         }
         match byte {
             b'/' if next == Some(b'/') => {
-                line_comment = true;
+                lex.line_comment = true;
                 index += 2;
                 continue;
             }
             b'/' if next == Some(b'*') => {
-                block_comment = true;
+                lex.block_comment = true;
                 index += 2;
                 continue;
             }
-            b'/' if regex_allowed => regex = true,
-            b'/' => regex_allowed = true,
-            b'\'' | b'"' | b'`' => quote = Some(byte),
+            b'/' if lex.regex_allowed => lex.regex = true,
+            b'/' => lex.regex_allowed = true,
+            b'\'' | b'"' | b'`' => lex.quote = Some(byte),
             b'(' => {
                 stack.push(expect_token_start(bytes, index));
-                regex_allowed = true;
+                lex.regex_allowed = true;
             }
             b')' => {
                 if let Some(Some(start)) = stack.pop() {
                     ranges.push((start, index));
                 }
-                regex_allowed = false;
+                lex.regex_allowed = false;
             }
             b'[' | b'{' | b',' | b';' | b':' | b'=' | b'!' | b'?' | b'&' | b'|' | b'+' | b'-'
-            | b'*' | b'%' | b'~' | b'^' | b'<' | b'>' => regex_allowed = true,
-            b']' | b'}' | b'.' => regex_allowed = false,
+            | b'*' | b'%' | b'~' | b'^' | b'<' | b'>' => lex.regex_allowed = true,
+            b']' | b'}' | b'.' => lex.regex_allowed = false,
             byte if byte.is_ascii_alphabetic() || matches!(byte, b'_' | b'$') => {
                 let start = index;
                 index += 1;
@@ -96,7 +118,7 @@ pub(super) fn assertion_ranges(content: &str) -> Vec<(usize, usize)> {
                 {
                     index += 1;
                 }
-                regex_allowed = matches!(
+                lex.regex_allowed = matches!(
                     &bytes[start..index],
                     b"return"
                         | b"throw"
@@ -109,7 +131,7 @@ pub(super) fn assertion_ranges(content: &str) -> Vec<(usize, usize)> {
                 );
                 continue;
             }
-            byte if !byte.is_ascii_whitespace() => regex_allowed = false,
+            byte if !byte.is_ascii_whitespace() => lex.regex_allowed = false,
             _ => {}
         }
         index += 1;
