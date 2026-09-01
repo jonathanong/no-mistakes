@@ -75,7 +75,7 @@ trivia, by `toBe`, `toEqual`, or `toStrictEqual`, including computed identifier 
 or dependency-valued `toHaveProperty` assertions. It supports non-null
 assertions, multiline assertions (including `expect.soft` and `expect.poll`),
 the transparent `resolves` modifier,
-single-return block callbacks passed to `expect.poll`,
+sync or async expression callbacks and single-return block callbacks passed to `expect.poll`,
 simple identifier or member-path `as` casts, extra parenthesized wrappers,
 optional string-literal assertion messages, explicit equality, compound
 comparator, OR, or hyphen ranges, and versioned `npm:` or `workspace:` specs.

@@ -17,8 +17,11 @@ pub(super) fn is_transparent(
     if prefix.ends_with("Promise.resolve") {
         prefix.truncate(prefix.len() - "Promise.resolve".len());
         trim_open_parens(&mut prefix);
-    } else if prefix.ends_with("()=>") {
-        prefix.truncate(prefix.len() - "()=>".len());
+    } else if let Some(callback) = ["async()=>", "()=>"]
+        .into_iter()
+        .find(|callback| prefix.ends_with(callback))
+    {
+        prefix.truncate(prefix.len() - callback.len());
         trim_open_parens(&mut prefix);
     }
     is_expect_base(&prefix)
