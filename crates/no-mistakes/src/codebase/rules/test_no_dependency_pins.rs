@@ -37,6 +37,7 @@ struct CompiledPattern {
     reason: String,
     regex: Regex,
     reject_preceding_at: bool,
+    multiline: bool,
 }
 
 struct CompiledOptions {
@@ -118,12 +119,12 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let patterns = if opts.patterns.is_empty() {
         DEFAULT_PATTERNS
             .iter()
-            .map(|(reason, regex)| compile_pattern(reason, regex))
+            .map(|(reason, regex, multiline)| compile_pattern(reason, regex, *multiline))
             .collect::<Result<Vec<_>>>()?
     } else {
         opts.patterns
             .iter()
-            .map(|pattern| compile_pattern(&pattern.reason, &pattern.regex))
+            .map(|pattern| compile_pattern(&pattern.reason, &pattern.regex, false))
             .collect::<Result<Vec<_>>>()?
     };
     Ok(CompiledOptions {
@@ -137,7 +138,7 @@ fn default_include_regex() -> Regex {
     Regex::new(DEFAULT_INCLUDE_RE).expect("default test-file include regex is valid")
 }
 
-fn compile_pattern(reason: &str, source: &str) -> Result<CompiledPattern> {
+fn compile_pattern(reason: &str, source: &str, multiline: bool) -> Result<CompiledPattern> {
     let (pattern, reject_preceding_at) = match source.strip_prefix(LOOKBEHIND_NOT_AT) {
         Some(rest) => (rest, true),
         None => (source, false),
@@ -148,6 +149,7 @@ fn compile_pattern(reason: &str, source: &str) -> Result<CompiledPattern> {
         reason: reason.to_string(),
         regex,
         reject_preceding_at,
+        multiline,
     })
 }
 
@@ -169,28 +171,42 @@ fn check_file_with_sources(
 
 fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
-    for (index, line) in content.lines().enumerate() {
-        for pattern in &opts.patterns {
-            for matched in pattern.regex.find_iter(line) {
-                if pattern.reject_preceding_at
-                    && matched.start() > 0
-                    && line.as_bytes()[matched.start() - 1] == b'@'
-                {
-                    continue;
+    for pattern in &opts.patterns {
+        if pattern.multiline {
+            for matched in pattern.regex.find_iter(content) {
+                let line = content[..matched.start()]
+                    .bytes()
+                    .filter(|byte| *byte == b'\n')
+                    .count()
+                    + 1;
+                findings.push(finding(file, line, pattern, matched.as_str()));
+            }
+        } else {
+            for (index, line) in content.lines().enumerate() {
+                for matched in pattern.regex.find_iter(line) {
+                    if pattern.reject_preceding_at
+                        && matched.start() > 0
+                        && line.as_bytes()[matched.start() - 1] == b'@'
+                    {
+                        continue;
+                    }
+                    findings.push(finding(file, index + 1, pattern, matched.as_str()));
                 }
-                let pin = matched.as_str();
-                findings.push(RuleFinding {
-                    rule: RULE_ID.to_string(),
-                    file: file.to_string(),
-                    line: index + 1,
-                    message: message(file, index + 1, &pattern.reason, pin),
-                    import: Some(pin.to_string()),
-                    target: Some(pattern.reason.clone()),
-                });
             }
         }
     }
     findings
+}
+
+fn finding(file: &str, line: usize, pattern: &CompiledPattern, matched: &str) -> RuleFinding {
+    RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: file.to_string(),
+        line,
+        message: message(file, line, &pattern.reason, matched),
+        import: Some(matched.to_string()),
+        target: Some(pattern.reason.clone()),
+    }
 }
 
 fn message(file: &str, line: usize, reason: &str, matched: &str) -> String {

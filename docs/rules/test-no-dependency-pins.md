@@ -69,7 +69,9 @@ and exact plain package metadata versions are not matched. Because raw text
 assertions do not preserve the entry's manifest section, suppress an intentional
 caret or tilde metadata assertion locally. Parsed matching is limited to
 `dependencies`, `devDependencies`, `optionalDependencies`, and
-`peerDependencies` property access followed by `toBe` or `toEqual`.
+`peerDependencies` property or bracket access followed directly by `toBe` or
+`toEqual`, including multiline assertions and versioned `npm:` aliases. Negated
+assertions are not matched.
 
 ## Options and defaults
 

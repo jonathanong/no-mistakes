@@ -1,30 +1,37 @@
-pub(super) const DEFAULT_PATTERNS: &[(&str, &str)] = &[
+pub(super) const DEFAULT_PATTERNS: &[(&str, &str, bool)] = &[
     (
         "exact action ref",
         r"(?<!@)\b[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?\b",
+        false,
     ),
     (
         "exact tool version",
         r#"\b[A-Z][A-Z0-9_]*_VERSION:\s*['"]?\d+\.\d+(?:\.\d+)?(?:[-+][A-Za-z0-9_.-]+)?\b"#,
+        false,
     ),
     (
         "versioned release URL",
         r"\breleases/download/v?\d+(?:\.\d+)+(?:[-+][A-Za-z0-9_.-]+)?\b",
+        false,
     ),
     (
         "versioned release asset",
         r"\b[A-Za-z0-9_.-]+-v\d+(?:\.\d+)+(?:[-+][A-Za-z0-9_.-]+)?-[A-Za-z0-9_.-]+\b",
+        false,
     ),
     (
         "versioned tool log",
         r"\bRUN v\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?\b",
+        false,
     ),
     (
         "package.json dependency assertion",
-        r#"\b(?:readFileSync|readRepoFile)\(\s*['"]package\.json['"][^;\n]*?\.(?:toContain|toBe|toEqual)\([^;\n]*?\\?["'][@A-Za-z0-9_./-]+\\?["']\s*:\s*\\?["'][~^]\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?"#,
+        r#"\b(?:readFileSync|readRepoFile)\(\s*['"]package\.json['"][^;\n)]*\)[^.;\n]*?\.(?:toContain|toBe|toEqual)\([^;\n]*?\\?["'][@A-Za-z0-9_./-]+\\?["']\s*:\s*\\?["'][~^]\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?"#,
+        false,
     ),
     (
         "parsed dependency version assertion",
-        r#"\b(?:dependencies|devDependencies|optionalDependencies|peerDependencies)(?:\?\.\s*(?:\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|[A-Za-z_$][A-Za-z0-9_$-]*)|\s*\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|\.\s*[A-Za-z_$][A-Za-z0-9_$-]*)[^;\n]*?\.(?:toBe|toEqual)\(\s*['"`][~^]?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?"#,
+        r#"\b(?:dependencies|devDependencies|optionalDependencies|peerDependencies)(?:["']\s*\])?(?:\?\.\s*(?:\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|[A-Za-z_$][A-Za-z0-9_$-]*)|\s*\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|\.\s*[A-Za-z_$][A-Za-z0-9_$-]*)\s*,?\s*\)\s*\.(?:toBe|toEqual)\(\s*['"`](?:[~^]?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?|npm:[@A-Za-z0-9_./-]+@[~^]?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?)"#,
+        true,
     ),
 ];

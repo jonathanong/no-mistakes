@@ -4,3 +4,10 @@ expect(rootPackage.devDependencies?.['@playwright/test']).toBe('1.61.1')
 expect(browserCrawlPackage.dependencies?.playwright).toBe('1.61.1')
 expect(packageJson.optionalDependencies?.['fsevents']).toEqual('2.3.3')
 expect(packageJson.peerDependencies.react).toEqual('19.1.0')
+expect(rootPackage['devDependencies']['eslint']).toBe('10.9.0')
+expect(packageJson.dependencies.react).toBe('npm:preact@10.27.1')
+expect(
+  packageJson.devDependencies?.['@typescript-eslint/parser'],
+).toEqual(
+  '8.42.0',
+)
