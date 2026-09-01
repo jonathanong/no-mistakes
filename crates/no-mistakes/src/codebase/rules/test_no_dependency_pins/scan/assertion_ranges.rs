@@ -120,6 +120,10 @@ pub(super) fn expect_token_start(bytes: &[u8], open_paren: usize) -> Option<usiz
     while end > 0 && bytes[end - 1].is_ascii_whitespace() {
         end -= 1;
     }
+    end = type_argument_start(bytes, end)?;
+    while end > 0 && bytes[end - 1].is_ascii_whitespace() {
+        end -= 1;
+    }
     for token in [b"expect.soft".as_slice(), b"expect.poll", b"expect"] {
         let Some(start) = end.checked_sub(token.len()) else {
             continue;
@@ -130,6 +134,26 @@ pub(super) fn expect_token_start(bytes: &[u8], open_paren: usize) -> Option<usiz
                     || matches!(bytes[start - 1], b'_' | b'$' | b'.')))
         {
             return Some(start);
+        }
+    }
+    None
+}
+
+fn type_argument_start(bytes: &[u8], end: usize) -> Option<usize> {
+    if end == 0 || bytes[end - 1] != b'>' {
+        return Some(end);
+    }
+    let mut depth = 0;
+    for index in (0..end).rev() {
+        match bytes[index] {
+            b'>' if index == 0 || bytes[index - 1] != b'=' => depth += 1,
+            b'<' => {
+                depth -= 1;
+                if depth == 0 {
+                    return Some(index);
+                }
+            }
+            _ => {}
         }
     }
     None

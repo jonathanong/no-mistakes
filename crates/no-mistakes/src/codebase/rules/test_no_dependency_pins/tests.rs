@@ -131,7 +131,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("parsed dependency version assertion")
             })
             .count(),
-        25,
+        29,
         "{findings:#?}"
     );
     let multiline = findings
@@ -143,12 +143,14 @@ fn fail_fixture_reports_all_pin_shapes() {
                 .is_some_and(|pin| pin.contains("@typescript-eslint/parser"))
         })
         .expect("multiline dependency assertion finding");
-    let expected_line = std::fs::read_to_string(root.join("src/dependency-manifest.test.mts"))
-        .unwrap()
+    let source = std::fs::read_to_string(root.join("src/dependency-manifest.test.mts")).unwrap();
+    let parser_offset = source.find("@typescript-eslint/parser").unwrap();
+    let expected_line = source[..parser_offset]
         .lines()
-        .position(|line| line == "expect(")
-        .unwrap()
-        + 1;
+        .enumerate()
+        .filter_map(|(index, line)| (line == "expect(").then_some(index + 1))
+        .last()
+        .unwrap();
     assert_eq!(multiline.line, expected_line, "{multiline:#?}");
     assert!(!multiline.message.contains('\n'), "{multiline:#?}");
     assert!(findings

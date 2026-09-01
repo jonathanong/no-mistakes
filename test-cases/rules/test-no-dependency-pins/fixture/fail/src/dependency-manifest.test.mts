@@ -27,6 +27,17 @@ expect(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0-rc.1+build.5')
 expect(packageJson.peerDependencies.eslint).toBe('>=9')
 expect(packageJson.peerDependencies.eslint).toBe('^9.1')
 expect(packageJson.peerDependencies.eslint).toBe('>=9 <10')
+expect<string>(packageJson.dependencies.foo).toBe('1.2.3')
+expect(
+  packageJson.dependencies.foo, // current dependency
+).toBe('1.2.3')
+expect(
+  packageJson.dependencies.foo, /* current dependency */
+).toBe('1.2.3')
+expect.poll(
+  () => packageJson.dependencies.foo,
+  { timeout: 25_000 },
+).toBe('1.2.3')
 expect(packageJson.devDependencies.eslint, 'eslint must stay pinned').toBe('10.9.0')
 expect(
   packageJson.devDependencies?.['@typescript-eslint/parser'],

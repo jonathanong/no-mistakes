@@ -27,6 +27,9 @@ expect(packageJson.peerDependencies.eslint).toBe('v9')
 expect(readFileSync('package.json', 'utf8')).toContain('"example": "^1.2.3malformed"')
 expect(readFileSync('package.json', 'utf8')).toContain(actual) // e.g. "eslint": "^10.9.0"
 expect(readFileSync('package.json', 'utf8')).toContain(actual /* e.g. "eslint": "^10.9.0" */)
+// expect(readFileSync('package.json', 'utf8')).toContain('"eslint": "^10.9.0"')
+/* expect(readFileSync('package.json')).toContain('"eslint": "^10.9.0"') */
+const rawAssertionExample = `expect(readFileSync('package.json')).toContain('"eslint": "^10.9.0"')`
 // expect(packageJson.dependencies.foo).toBe('1.2.3')
 /* expect(packageJson.dependencies.foo).toBe('1.2.3') */
 const dependencyAssertionExample = "expect(packageJson.dependencies.foo).toBe('1.2.3')"
