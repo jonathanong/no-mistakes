@@ -40,7 +40,14 @@ const rawAssertionExample = `expect(readFileSync('package.json')).toContain('"es
 // expect(packageJson.dependencies.foo).toBe('1.2.3')
 /* expect(packageJson.dependencies.foo).toBe('1.2.3') */
 const dependencyAssertionExample = "expect(packageJson.dependencies.foo).toBe('1.2.3')"
+const dependencyTemplateExample = `expect(packageJson.dependencies.foo).toBe('1.2.3')`
 expect(
   /* expect(packageJson.dependencies.foo).toBe('1.2.3') */ actual,
 ).toBe(true)
 expect("expect(packageJson.dependencies.foo).toBe('1.2.3')").toBe(actual)
+expect(
+  readFileSync('package.json', 'utf8') /* .toContain('"eslint": "^9.0.0"') */,
+).toMatch(/eslint/)
+expect(
+  packageJson.dependencies.foo, // e.g. ).toBe('1.2.3')
+).toMatch(/^1/)

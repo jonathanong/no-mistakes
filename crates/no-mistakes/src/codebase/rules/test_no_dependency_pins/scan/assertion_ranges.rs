@@ -59,8 +59,13 @@ pub(super) fn source_ranges(content: &str) -> SourceRanges {
                 }
                 lex.regex_allowed = false;
             }
-            b'[' | b'{' | b',' | b';' | b':' | b'=' | b'!' | b'?' | b'&' | b'|' | b'+' | b'-'
-            | b'*' | b'%' | b'~' | b'^' | b'<' | b'>' => lex.regex_allowed = true,
+            b'{' => {
+                lex.open_brace();
+                lex.regex_allowed = true;
+            }
+            b'}' if lex.close_brace(index) => {}
+            b'[' | b',' | b';' | b':' | b'=' | b'!' | b'?' | b'&' | b'|' | b'+' | b'-' | b'*'
+            | b'%' | b'~' | b'^' | b'<' | b'>' => lex.regex_allowed = true,
             b']' | b'}' | b'.' => lex.regex_allowed = false,
             byte if byte.is_ascii_alphabetic() || matches!(byte, b'_' | b'$') => {
                 let start = index;

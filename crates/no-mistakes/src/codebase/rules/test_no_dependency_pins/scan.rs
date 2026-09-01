@@ -16,6 +16,9 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
                 if !is_code(&ranges.non_code, matched.start()) {
                     continue;
                 }
+                if !has_code_matcher(matched.as_str(), matched.start(), &ranges.non_code) {
+                    continue;
+                }
                 let Some(start) = assertion_start(&ranges.assertions, matched.start()) else {
                     continue;
                 };
@@ -32,6 +35,21 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
         }
     }
     findings
+}
+
+fn has_code_matcher(matched: &str, start: usize, non_code_ranges: &[(usize, usize)]) -> bool {
+    let matcher_offset = [
+        ".toBe(",
+        ".toContain(",
+        ".toEqual(",
+        ".toStrictEqual(",
+        ".toHaveProperty(",
+    ]
+    .iter()
+    .flat_map(|token| matched.match_indices(token).map(|(offset, _)| offset))
+    .max();
+
+    matcher_offset.is_some_and(|offset| is_code(non_code_ranges, start + offset))
 }
 
 fn scan_lines(

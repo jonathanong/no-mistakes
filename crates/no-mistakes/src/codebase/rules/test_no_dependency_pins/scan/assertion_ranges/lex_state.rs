@@ -7,6 +7,7 @@ pub(super) struct LexState {
     pub(super) line_comment: bool,
     pub(super) block_comment: bool,
     non_code_start: Option<usize>,
+    template_braces: Vec<usize>,
 }
 
 impl LexState {
@@ -20,6 +21,7 @@ impl LexState {
             line_comment: false,
             block_comment: false,
             non_code_start: None,
+            template_braces: Vec::new(),
         }
     }
 
@@ -31,6 +33,27 @@ impl LexState {
         if let Some(start) = self.non_code_start.take() {
             ranges.push((start, end));
         }
+    }
+
+    pub(super) fn open_brace(&mut self) {
+        if let Some(depth) = self.template_braces.last_mut() {
+            *depth += 1;
+        }
+    }
+
+    pub(super) fn close_brace(&mut self, index: usize) -> bool {
+        let Some(depth) = self.template_braces.last_mut() else {
+            return false;
+        };
+        *depth -= 1;
+        if *depth > 0 {
+            return false;
+        }
+        self.template_braces.pop();
+        self.quote = Some(b'`');
+        self.regex_allowed = false;
+        self.enter_non_code(index + 1);
+        true
     }
 
     pub(super) fn skip_non_code(
@@ -62,6 +85,12 @@ impl LexState {
                 }
             } else if byte == b'\\' {
                 self.escaped = true;
+            } else if delimiter == b'`' && byte == b'$' && bytes.get(index + 1) == Some(&b'{') {
+                self.quote = None;
+                self.finish_non_code(index, ranges);
+                self.template_braces.push(1);
+                self.regex_allowed = true;
+                return Some(index + 2);
             } else if delimiter != b'`' && matches!(byte, b'\n' | b'\r') {
                 self.quote = None;
                 self.finish_non_code(index, ranges);
