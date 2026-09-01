@@ -26,12 +26,12 @@ pub(super) const DEFAULT_PATTERNS: &[(&str, &str, bool)] = &[
     ),
     (
         "package.json dependency assertion",
-        r#"\b(?:readFileSync|readRepoFile)\(\s*['"]package\.json['"][^;\n)]*\)[^.;\n]*?\.(?:toContain|toBe|toEqual)\([^;\n]*?\\?["'][@A-Za-z0-9_./-]+\\?["']\s*:\s*\\?["'][~^]\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?"#,
+        r#"\b(?:readFileSync|readRepoFile)\(\s*['"]package\.json['"][^;\n)]*\)(?:\s*\.(?:toString|trim)\(\))*[^.;\n]*?\.(?:toContain|toBe|toEqual)\([^;\n]*?\\?["'][@A-Za-z0-9_./-]+\\?["']\s*:\s*\\?["'][~^]\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?"#,
         false,
     ),
     (
         "parsed dependency version assertion",
-        r#"\b(?:dependencies|devDependencies|optionalDependencies|peerDependencies)(?:["']\s*\])?(?:\?\.\s*(?:\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|[A-Za-z_$][A-Za-z0-9_$-]*)|\s*\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|\.\s*[A-Za-z_$][A-Za-z0-9_$-]*)\s*,?\s*\)\s*\.(?:toBe|toEqual)\(\s*['"`](?:[~^]?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?|npm:[@A-Za-z0-9_./-]+@[~^]?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?)"#,
+        r#"\b(?:dependencies|devDependencies|optionalDependencies|peerDependencies)(?:["']\s*\])?\s*!?\s*(?:\?\.\s*(?:\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|[A-Za-z_$][A-Za-z0-9_$-]*)|\s*\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|\.\s*[A-Za-z_$][A-Za-z0-9_$-]*)\s*!?\s*,?\s*\)\s*\.(?:toBe|toEqual)\(\s*['"`](?:(?:[~^]|[<>]=?)?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?|npm:[@A-Za-z0-9_./-]+@(?:[~^]|[<>]=?)?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?)"#,
         true,
     ),
 ];

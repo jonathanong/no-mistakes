@@ -1,4 +1,5 @@
 mod patterns;
+mod scan;
 
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
@@ -8,6 +9,7 @@ use anyhow::{Context, Result};
 use patterns::DEFAULT_PATTERNS;
 use rayon::prelude::*;
 use regex::Regex;
+use scan::check_source;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -167,50 +169,6 @@ fn check_file_with_sources(
         return Vec::new();
     };
     check_source(&rel, &content, opts)
-}
-
-fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
-    let mut findings = Vec::new();
-    for pattern in &opts.patterns {
-        if pattern.multiline {
-            for matched in pattern.regex.find_iter(content) {
-                let line = content[..matched.start()]
-                    .bytes()
-                    .filter(|byte| *byte == b'\n')
-                    .count()
-                    + 1;
-                findings.push(finding(file, line, pattern, matched.as_str()));
-            }
-        } else {
-            for (index, line) in content.lines().enumerate() {
-                for matched in pattern.regex.find_iter(line) {
-                    if pattern.reject_preceding_at
-                        && matched.start() > 0
-                        && line.as_bytes()[matched.start() - 1] == b'@'
-                    {
-                        continue;
-                    }
-                    findings.push(finding(file, index + 1, pattern, matched.as_str()));
-                }
-            }
-        }
-    }
-    findings
-}
-
-fn finding(file: &str, line: usize, pattern: &CompiledPattern, matched: &str) -> RuleFinding {
-    RuleFinding {
-        rule: RULE_ID.to_string(),
-        file: file.to_string(),
-        line,
-        message: message(file, line, &pattern.reason, matched),
-        import: Some(matched.to_string()),
-        target: Some(pattern.reason.clone()),
-    }
-}
-
-fn message(file: &str, line: usize, reason: &str, matched: &str) -> String {
-    format!("{file}:{line}: tests must not pin exact dependency versions ({reason}): `{matched}`")
 }
 
 #[cfg(test)]

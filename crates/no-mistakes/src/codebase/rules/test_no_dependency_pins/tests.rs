@@ -120,7 +120,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("package.json dependency assertion")
             })
             .count(),
-        2,
+        3,
         "{findings:#?}"
     );
     assert_eq!(
@@ -131,9 +131,20 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("parsed dependency version assertion")
             })
             .count(),
-        7,
+        10,
         "{findings:#?}"
     );
+    let multiline = findings
+        .iter()
+        .find(|finding| {
+            finding
+                .import
+                .as_deref()
+                .is_some_and(|pin| pin.contains("@typescript-eslint/parser"))
+        })
+        .expect("multiline dependency assertion finding");
+    assert_eq!(multiline.line, 13, "{multiline:#?}");
+    assert!(!multiline.message.contains('\n'), "{multiline:#?}");
     assert!(findings
         .iter()
         .any(|finding| finding.file == "src/__tests__/nested.ts"));
@@ -283,7 +294,12 @@ fn check_entry_point_uses_discovery() {
 #[test]
 fn message_includes_file_line_reason_and_match() {
     assert_eq!(
-        message("src/app.test.ts", 4, "exact action ref", "actions/checkout@v4"),
+        super::scan::message(
+            "src/app.test.ts",
+            4,
+            "exact action ref",
+            "actions/checkout@v4",
+        ),
         "src/app.test.ts:4: tests must not pin exact dependency versions (exact action ref): `actions/checkout@v4`"
     );
 }

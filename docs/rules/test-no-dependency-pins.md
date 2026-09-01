@@ -67,11 +67,12 @@ same-line `readFileSync('package.json', ...)` or `readRepoFile('package.json')`
 assertions containing a quoted entry with a caret or tilde range; fixture paths
 and exact plain package metadata versions are not matched. Because raw text
 assertions do not preserve the entry's manifest section, suppress an intentional
-caret or tilde metadata assertion locally. Parsed matching is limited to
+caret or tilde metadata assertion locally. Raw reads may use `toString()` or
+`trim()` before the matcher. Parsed matching is limited to
 `dependencies`, `devDependencies`, `optionalDependencies`, and
 `peerDependencies` property or bracket access followed directly by `toBe` or
-`toEqual`, including multiline assertions and versioned `npm:` aliases. Negated
-assertions are not matched.
+`toEqual`, including non-null assertions, multiline assertions, comparator
+ranges, and versioned `npm:` aliases. Negated assertions are not matched.
 
 ## Options and defaults
 
