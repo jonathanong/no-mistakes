@@ -48,6 +48,7 @@ const rawAssertionExample = `expect(readFileSync('package.json')).toContain('"es
 /* expect(packageJson.dependencies.foo).toBe('1.2.3') */
 const dependencyAssertionExample = "expect(packageJson.dependencies.foo).toBe('1.2.3')"
 const dependencyTemplateExample = `expect(packageJson.dependencies.foo).toBe('1.2.3')`
+const taggedDependencyTemplateExample = dedent`expect(packageJson.dependencies.foo).toBe('1.2.3')`
 expect(
   /* expect(packageJson.dependencies.foo).toBe('1.2.3') */ actual,
 ).toBe(true)

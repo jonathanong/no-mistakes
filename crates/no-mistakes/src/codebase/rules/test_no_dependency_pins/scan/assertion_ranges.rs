@@ -41,7 +41,8 @@ pub(super) fn source_ranges(content: &str) -> SourceRanges {
             }
             b'/' => lex.regex_allowed = true,
             b'\'' | b'"' | b'`'
-                if lex.regex_allowed
+                if byte == b'`'
+                    || lex.regex_allowed
                     || index == 0
                     || !(bytes[index - 1].is_ascii_alphanumeric()
                         || matches!(bytes[index - 1], b'_' | b'$')) =>

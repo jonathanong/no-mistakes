@@ -18,6 +18,8 @@ expect(readRepoFile('package.json')).toContain('"eslint": "^9"')
 expect(packageJson.devDependencies!['eslint']).toBe('10.9.0')
 expect(packageJson.devDependencies.eslint!).toBe('10.9.0')
 expect(packageJson.peerDependencies.react).toBe('>=18.0.0')
+expect(packageJson.peerDependencies.react).toBe('>= 18.0.0')
+expect(packageJson.peerDependencies.react).toBe('>= 18.0.0 < 20.0.0')
 expect(packageJson.peerDependencies.react).toBe('=18.0.0')
 expect(packageJson.peerDependencies.react).toBe('>=18.0.0 =19.0.0')
 expect(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0')
@@ -51,11 +53,13 @@ expect(((packageJson.dependencies.foo as unknown as string))).toStrictEqual('1.2
 expect(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0')
 expect((packageJson.devDependencies as DependencyMap)).toHaveProperty('eslint', '10.9.0')
 expect(packageJson.devDependencies).toHaveProperty('eslint', "10.9.0")
+expect(packageJson.devDependencies).toHaveProperty('eslint', '>= 10.9.0')
 expect(packageJson.optionalDependencies).toHaveProperty(dependency.name, '2.3.3')
 expect(packageJson).toHaveProperty('devDependencies.eslint', '10.9.0')
 expect /* dependency check */ (packageJson.dependencies.foo).toBe('1.2.3')
 `${expect(packageJson.dependencies.foo).toBe('1.2.3')}`
 `${{ value: `${expect(packageJson.dependencies.foo).toBe('1.2.3')}` }.value}`
+dedent`${expect(packageJson.dependencies.foo).toBe('1.2.3')}`
 expect(packageJson.devDependencies.eslint, 'eslint must stay pinned').toBe('10.9.0')
 expect(
   packageJson.devDependencies?.['@typescript-eslint/parser'],
