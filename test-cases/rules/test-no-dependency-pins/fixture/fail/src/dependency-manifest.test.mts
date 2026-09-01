@@ -32,6 +32,7 @@ expect(packageJson.devDependencies.eslint) // dependency check
   .toEqual('10.9.0')
 expect(packageJson.dependencies.foo).toBe /* current pin */ ('1.2.3')
 expect(packageJson.dependencies.foo). /* current pin */ toBe('1.2.3')
+expect(packageJson.dependencies.foo).toBe('1.2.3' /* use "latest instead */)
 expect(packageJson.devDependencies.eslint).toEqual // current pin
   ('10.9.0')
 expect(packageJson.peerDependencies.react).toBe('>=18.0.0')
@@ -62,6 +63,7 @@ expect.poll(
   () => packageJson.dependencies.foo,
   { timeout: 25_000 },
 ).toBe('1.2.3')
+await expect(Promise.resolve(packageJson.dependencies.foo)).resolves.toBe('1.2.3')
 expect.poll(() => { return packageJson.dependencies.foo; }, { timeout: 1 }).toBe('1.2.3')
 expect(packageJson.devDependencies[dependencyName]).toBe('10.9.0')
 expect(packageJson.dependencies?.[dependency.name]).toBe('1.2.3')
@@ -73,6 +75,8 @@ expect((packageJson.devDependencies as DependencyMap)).toHaveProperty('eslint', 
 expect(packageJson.devDependencies).toHaveProperty('eslint', "10.9.0")
 expect(packageJson.devDependencies).toHaveProperty /* current pin */ ('eslint', '10.9.0')
 expect(packageJson.devDependencies). /* current pin */ toHaveProperty('eslint', '10.9.0')
+expect(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0' /* use "latest instead */)
+await expect(Promise.resolve(packageJson.devDependencies)).resolves.toHaveProperty('eslint', '10.9.0')
 expect.poll(() => { return packageJson.devDependencies; }, { timeout: 1 }).toHaveProperty('eslint', '10.9.0')
 expect(packageJson.devDependencies).toHaveProperty('eslint', '>= 10.9.0')
 expect(packageJson.devDependencies, 'dependency check').toHaveProperty('eslint', '10.9.0')

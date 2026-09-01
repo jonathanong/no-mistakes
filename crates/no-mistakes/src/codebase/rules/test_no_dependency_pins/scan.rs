@@ -1,12 +1,14 @@
 use super::{CompiledOptions, CompiledPattern, RuleFinding, RULE_ID};
 use assertion_ranges::{assertion_start, is_code, source_ranges, SourceRanges};
 use delimiters::{has_matching_raw_entry_delimiters, has_matching_version_delimiters};
+use raw_literal_arg::is_direct_argument as raw_literal_is_direct_argument;
 use regex::{Match, Regex};
 use std::sync::LazyLock;
 
 mod assertion_ranges;
 mod delimiters;
 mod jsx_text_ranges;
+mod raw_literal_arg;
 
 pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
@@ -21,22 +23,31 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
     };
     for pattern in &opts.patterns {
         if pattern.multiline {
-            for matched in pattern.regex.find_iter(content) {
-                let raw_entry = if pattern.reason == "package.json dependency assertion" {
+            for captures in pattern.regex.captures_iter(content) {
+                let matched = captures.get(0).expect("full regex match");
+                let raw_assertion = pattern.reason == "package.json dependency assertion";
+                let raw_entry = if raw_assertion {
                     raw_manifest_entry(content, matched, &ranges.non_code)
                 } else {
-                    Some(matched.as_str())
+                    Some((matched.as_str(), None))
                 };
-                let Some(displayed) = raw_entry else {
+                let Some((displayed, raw_literal_range)) = raw_entry else {
                     continue;
                 };
-                let raw_assertion = pattern.reason == "package.json dependency assertion";
+                if raw_literal_range.is_some_and(|range| {
+                    !raw_literal_is_direct_argument(content, matched, range, &ranges.non_code)
+                }) {
+                    continue;
+                }
                 let reversed_assertion = !raw_assertion
                     && displayed
                         .as_bytes()
                         .first()
                         .is_some_and(|byte| matches!(*byte, b'\'' | b'"' | b'`'));
-                if !has_matching_version_delimiters(displayed, raw_assertion) {
+                let version_literal = captures
+                    .name("version")
+                    .map_or(displayed, |version| version.as_str());
+                if !has_matching_version_delimiters(version_literal, raw_assertion) {
                     continue;
                 }
                 if pattern.reason == "package.json dependency assertion"
@@ -83,7 +94,7 @@ fn raw_manifest_entry<'a>(
     content: &'a str,
     matched: Match<'a>,
     non_code_ranges: &[(usize, usize)],
-) -> Option<&'a str> {
+) -> Option<(&'a str, Option<(usize, usize)>)> {
     static ENTRY: LazyLock<Regex> = LazyLock::new(|| {
         Regex::new(
             r#"\\?["'][@A-Za-z0-9_./-]+\\?["']\s*:\s*\\?["'][~^]?\d+(?:\.\d+){0,2}(?:-[A-Za-z0-9_.-]+)?(?:\+[A-Za-z0-9_.-]+)?\\?["']"#,
@@ -108,7 +119,7 @@ fn raw_manifest_entry<'a>(
                 && !is_version_field_assertion(displayed)
                 && !continues_value
         })
-        .map(|entry| entry.as_str())
+        .map(|entry| (entry.as_str(), Some((start, end))))
 }
 
 fn is_version_field_assertion(matched: &str) -> bool {

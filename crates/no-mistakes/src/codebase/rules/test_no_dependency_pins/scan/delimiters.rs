@@ -1,14 +1,27 @@
 pub(super) fn has_matching_version_delimiters(matched: &str, raw_assertion: bool) -> bool {
     let bytes = matched.as_bytes();
-    if !raw_assertion && bytes.first().is_some_and(|byte| is_quote(*byte)) {
-        return has_matching_leading_delimiters(bytes);
+    if raw_assertion {
+        return has_matching_trailing_delimiters(bytes, true);
     }
-    let Some((closing_index, &closing)) =
-        bytes.iter().enumerate().rfind(|(_, byte)| is_quote(**byte))
-    else {
+    let (Some(&opening), Some(&closing)) = (bytes.first(), bytes.last()) else {
         return false;
     };
-    let prefix = &bytes[..closing_index];
+    opening == closing && is_quote(opening) && !is_escaped(&bytes[..bytes.len() - 1])
+}
+
+fn has_matching_trailing_delimiters(bytes: &[u8], raw_assertion: bool) -> bool {
+    let Some(&closing) = bytes.last() else {
+        return false;
+    };
+    let prefix = &bytes[..bytes.len() - 1];
+    (raw_assertion || !is_escaped(prefix))
+        && prefix
+            .iter()
+            .rfind(|byte| is_quote(**byte))
+            .is_some_and(|opening| *opening == closing)
+}
+
+fn is_escaped(prefix: &[u8]) -> bool {
     let escaped = prefix
         .iter()
         .rev()
@@ -16,30 +29,7 @@ pub(super) fn has_matching_version_delimiters(matched: &str, raw_assertion: bool
         .count()
         % 2
         == 1;
-    (raw_assertion || !escaped)
-        && prefix
-            .iter()
-            .rfind(|byte| is_quote(**byte))
-            .is_some_and(|opening| *opening == closing)
-}
-
-fn has_matching_leading_delimiters(bytes: &[u8]) -> bool {
-    let opening = bytes[0];
-    bytes[1..]
-        .iter()
-        .enumerate()
-        .find(|(_, byte)| is_quote(**byte))
-        .is_some_and(|(offset, closing)| {
-            let index = offset + 1;
-            let escaped = bytes[..index]
-                .iter()
-                .rev()
-                .take_while(|byte| **byte == b'\\')
-                .count()
-                % 2
-                == 1;
-            !escaped && *closing == opening
-        })
+    escaped
 }
 
 pub(super) fn has_matching_raw_entry_delimiters(matched: &str) -> bool {
