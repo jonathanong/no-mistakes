@@ -179,6 +179,26 @@ fn division_does_not_hide_a_same_line_assertion() {
 }
 
 #[test]
+fn control_condition_allows_a_following_regex_literal() {
+    for prefix in [
+        "if (ok) /[']/u.test(value); ",
+        "while (ok) /[']/u.test(value); ",
+        "for (const item of items) /[']/u.test(item); ",
+        "with (context) /[']/u.test(value); ",
+    ] {
+        let source = format!("{prefix}expect(packageJson.dependencies.foo).toBe('1.2.3')");
+        let match_start = source.find("dependencies").unwrap();
+        let expect_start = source.find("expect").unwrap();
+
+        assert_eq!(
+            assertion_start(&source_ranges(&source).assertions, match_start),
+            Some(expect_start),
+            "{prefix}"
+        );
+    }
+}
+
+#[test]
 fn multiline_javascript_strings_keep_later_assertions_visible() {
     for prefix in [
         "const value = 'line\\\ncontinuation';\n",

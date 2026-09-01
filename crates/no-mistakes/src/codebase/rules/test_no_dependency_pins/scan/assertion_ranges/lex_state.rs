@@ -7,6 +7,7 @@ pub(super) struct LexState {
     pub(super) line_comment: bool,
     pub(super) block_comment: bool,
     non_code_start: Option<usize>,
+    control_parens: Vec<bool>,
     template_braces: Vec<usize>,
 }
 
@@ -21,6 +22,7 @@ impl LexState {
             line_comment: false,
             block_comment: false,
             non_code_start: None,
+            control_parens: Vec::new(),
             template_braces: Vec::new(),
         }
     }
@@ -39,6 +41,14 @@ impl LexState {
         if let Some(depth) = self.template_braces.last_mut() {
             *depth += 1;
         }
+    }
+
+    pub(super) fn open_paren(&mut self, control_condition: bool) {
+        self.control_parens.push(control_condition);
+    }
+
+    pub(super) fn close_paren(&mut self) -> bool {
+        self.control_parens.pop().unwrap_or(false)
     }
 
     pub(super) fn close_brace(&mut self, index: usize) -> bool {
@@ -126,4 +136,23 @@ impl LexState {
         }
         None
     }
+}
+
+pub(super) fn follows_control_condition(
+    bytes: &[u8],
+    open_paren: usize,
+    non_code_ranges: &[(usize, usize)],
+) -> bool {
+    let end = super::skip_trivia(bytes, open_paren, non_code_ranges);
+    [b"if".as_slice(), b"while", b"for", b"with"]
+        .iter()
+        .any(|token| {
+            let Some(start) = end.checked_sub(token.len()) else {
+                return false;
+            };
+            &bytes[start..end] == *token
+                && (start == 0
+                    || !(bytes[start - 1].is_ascii_alphanumeric()
+                        || matches!(bytes[start - 1], b'_' | b'$' | b'.' | b'#')))
+        })
 }

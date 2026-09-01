@@ -31,6 +31,11 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
                     continue;
                 };
                 let raw_assertion = pattern.reason == "package.json dependency assertion";
+                let reversed_assertion = !raw_assertion
+                    && displayed
+                        .as_bytes()
+                        .first()
+                        .is_some_and(|byte| matches!(*byte, b'\'' | b'"' | b'`'));
                 if !has_matching_version_delimiters(displayed, raw_assertion) {
                     continue;
                 }
@@ -39,7 +44,7 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
                 {
                     continue;
                 }
-                if !is_code(&ranges.non_code, matched.start()) {
+                if !reversed_assertion && !is_code(&ranges.non_code, matched.start()) {
                     continue;
                 }
                 if !has_code_matcher(matched.as_str(), matched.start(), &ranges.non_code) {

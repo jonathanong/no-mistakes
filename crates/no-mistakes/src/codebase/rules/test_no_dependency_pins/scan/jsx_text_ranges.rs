@@ -1,6 +1,6 @@
 use oxc_ast::ast::JSXText;
 use oxc_ast_visit::Visit;
-use std::path::Path;
+use std::{path::Path, sync::Arc};
 
 #[derive(Default)]
 struct Collector {
@@ -21,10 +21,15 @@ pub(super) fn collect(file: &str, content: &str) -> Vec<(usize, usize)> {
     ) {
         return Vec::new();
     }
-    crate::ast::with_program(Path::new(file), content, |program, _| {
-        let mut collector = Collector::default();
-        collector.visit_program(program);
-        collector.ranges
-    })
+    crate::ast::with_recovered_program_status_observed(
+        Path::new(file),
+        Arc::from(content),
+        || {},
+        |program, _, _, _| {
+            let mut collector = Collector::default();
+            collector.visit_program(program);
+            collector.ranges
+        },
+    )
     .unwrap_or_default()
 }

@@ -1,7 +1,6 @@
 mod lex_state;
 
-use lex_state::LexState;
-
+use lex_state::{follows_control_condition, LexState};
 #[derive(Default)]
 pub(super) struct SourceRanges {
     pub(super) assertions: Vec<(usize, usize)>,
@@ -52,13 +51,14 @@ pub(super) fn source_ranges(content: &str) -> SourceRanges {
             }
             b'(' => {
                 stack.push(expect_token_start(bytes, index, &non_code_ranges));
+                lex.open_paren(follows_control_condition(bytes, index, &non_code_ranges));
                 lex.regex_allowed = true;
             }
             b')' => {
                 if let Some(Some(start)) = stack.pop() {
                     ranges.push((start, index));
                 }
-                lex.regex_allowed = false;
+                lex.regex_allowed = lex.close_paren();
             }
             b'{' => {
                 lex.open_brace();
