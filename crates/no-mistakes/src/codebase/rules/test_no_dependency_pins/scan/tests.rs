@@ -48,18 +48,45 @@ fn assertion_start_skips_ended_inner_assertions() {
 #[test]
 fn expect_token_detection_requires_a_standalone_name() {
     let start = super::assertion_ranges::expect_token_start;
-    assert_eq!(start(b"(", 0), None);
-    assert_eq!(start(b"myexpect(", 8), None);
-    assert_eq!(start(b"myexpect.soft(", 13), None);
-    assert_eq!(start(b"$expect.poll(", 12), None);
-    assert_eq!(start(b"helpers.expect.soft(", 19), None);
-    assert_eq!(start(b"expect (", 7), Some(0));
-    assert_eq!(start(b"expect.soft(", 11), Some(0));
-    assert_eq!(start(b"expect.poll(", 11), Some(0));
-    assert_eq!(start(b"expect<string>(", 14), Some(0));
-    assert_eq!(start(b"expect<Array<string>>(", 21), Some(0));
-    assert_eq!(start(b"expect<(value: string) => boolean>(", 34), Some(0));
-    assert_eq!(start(b"helper.expect<string>(", 21), None);
+    assert_eq!(start(b"(", 0, &[]), None);
+    assert_eq!(start(b"myexpect(", 8, &[]), None);
+    assert_eq!(start(b"myexpect.soft(", 13, &[]), None);
+    assert_eq!(start(b"$expect.poll(", 12, &[]), None);
+    assert_eq!(start(b"helpers.expect.soft(", 19, &[]), None);
+    assert_eq!(start(b"expect (", 7, &[]), Some(0));
+    assert_eq!(start(b"expect.soft(", 11, &[]), Some(0));
+    assert_eq!(start(b"expect.poll(", 11, &[]), Some(0));
+    assert_eq!(start(b"expect<string>(", 14, &[]), Some(0));
+    assert_eq!(start(b"expect<Array<string>>(", 21, &[]), Some(0));
+    assert_eq!(
+        start(b"expect<(value: string) => boolean>(", 34, &[]),
+        Some(0)
+    );
+    assert_eq!(start(b"helper.expect<string>(", 21, &[]), None);
+}
+
+#[test]
+fn assertion_ranges_skip_comments_before_the_call_parenthesis() {
+    for source in [
+        "expect /* context */ (packageJson.dependencies.foo).toBe('1.2.3')",
+        "expect // context\n(packageJson.dependencies.foo).toBe('1.2.3')",
+        "expect<string> /* context */ (packageJson.dependencies.foo).toBe('1.2.3')",
+        "expect /* context */ <string>(packageJson.dependencies.foo).toBe('1.2.3')",
+        "expect.soft /* context */ (packageJson.dependencies.foo).toBe('1.2.3')",
+        "expect.soft /* context */ <Array<string /* > */>> /* call */ (packageJson.dependencies.foo).toBe('1.2.3')",
+    ] {
+        let match_start = source.find("dependencies").unwrap();
+        let ranges = source_ranges(source).assertions;
+
+        assert_eq!(assertion_start(&ranges, match_start), Some(0), "{source}");
+    }
+
+    let helper = "helper.expect /* context */ <string>(packageJson.dependencies.foo).toBe('1.2.3')";
+    let match_start = helper.find("dependencies").unwrap();
+    assert_eq!(
+        assertion_start(&source_ranges(helper).assertions, match_start),
+        None
+    );
 }
 
 #[test]

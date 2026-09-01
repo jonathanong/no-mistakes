@@ -50,7 +50,7 @@ pub(super) fn source_ranges(content: &str) -> SourceRanges {
                 lex.enter_non_code(index);
             }
             b'(' => {
-                stack.push(expect_token_start(bytes, index));
+                stack.push(expect_token_start(bytes, index, &non_code_ranges));
                 lex.regex_allowed = true;
             }
             b')' => {
@@ -120,15 +120,14 @@ pub(super) fn assertion_start(ranges: &[(usize, usize)], match_start: usize) -> 
         .find_map(|&(start, end)| (match_start <= end).then_some(start))
 }
 
-pub(super) fn expect_token_start(bytes: &[u8], open_paren: usize) -> Option<usize> {
-    let mut end = open_paren;
-    while end > 0 && bytes[end - 1].is_ascii_whitespace() {
-        end -= 1;
-    }
-    end = type_argument_start(bytes, end)?;
-    while end > 0 && bytes[end - 1].is_ascii_whitespace() {
-        end -= 1;
-    }
+pub(super) fn expect_token_start(
+    bytes: &[u8],
+    open_paren: usize,
+    non_code_ranges: &[(usize, usize)],
+) -> Option<usize> {
+    let mut end = skip_trivia(bytes, open_paren, non_code_ranges);
+    end = type_argument_start(bytes, end, non_code_ranges)?;
+    end = skip_trivia(bytes, end, non_code_ranges);
     for token in [b"expect.soft".as_slice(), b"expect.poll", b"expect"] {
         let Some(start) = end.checked_sub(token.len()) else {
             continue;
@@ -144,12 +143,43 @@ pub(super) fn expect_token_start(bytes: &[u8], open_paren: usize) -> Option<usiz
     None
 }
 
-fn type_argument_start(bytes: &[u8], end: usize) -> Option<usize> {
+fn skip_trivia(bytes: &[u8], mut end: usize, non_code_ranges: &[(usize, usize)]) -> usize {
+    loop {
+        while end > 0 && bytes[end - 1].is_ascii_whitespace() {
+            end -= 1;
+        }
+        let upper = non_code_ranges.partition_point(|(start, _)| *start < end);
+        let Some(&(start, range_end)) = non_code_ranges[..upper].last() else {
+            return end;
+        };
+        if range_end != end
+            || !(bytes[start..].starts_with(b"//") || bytes[start..].starts_with(b"/*"))
+        {
+            return end;
+        }
+        end = start;
+    }
+}
+
+fn type_argument_start(
+    bytes: &[u8],
+    end: usize,
+    non_code_ranges: &[(usize, usize)],
+) -> Option<usize> {
     if end == 0 || bytes[end - 1] != b'>' {
         return Some(end);
     }
     let mut depth = 0;
-    for index in (0..end).rev() {
+    let mut index = end;
+    while index > 0 {
+        index -= 1;
+        let upper = non_code_ranges.partition_point(|(start, _)| *start <= index);
+        if let Some(&(start, range_end)) = non_code_ranges[..upper].last() {
+            if index < range_end {
+                index = start;
+                continue;
+            }
+        }
         match bytes[index] {
             b'>' if index == 0 || bytes[index - 1] != b'=' => depth += 1,
             b'<' => {

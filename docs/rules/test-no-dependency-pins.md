@@ -35,7 +35,7 @@ concrete version, or asserts `uses: actions/checkout@v6.0.2`,
 `no-mistakes-v0.44.0-x86_64-apple-darwin.tar.gz`, or `RUN v1.2.3`.
 
 ```ts
-expect(readFileSync('package.json', 'utf8')).toContain('"no-mistakes": "^0.53.2"')
+expect(readFileSync('package.json', 'utf8')).toContain('"no-mistakes": "0.53.2"')
 expect(packageJson.devDependencies?.['no-mistakes']).toBe('^0.53.2')
 expect(workflow).toContain('uses: actions/checkout@v6.0.2')
 expect(env).toContain("NODE_VERSION: '20.11.0'")
@@ -64,11 +64,11 @@ Selected test files must not assert exact package-manifest dependency,
 dependency-map, action, tool, release URL, asset, or log version strings matched
 by the configured pin patterns. Manifest matching is deliberately limited to
 same-line `readFileSync('package.json', ...)` or `readRepoFile('package.json')`
-assertions containing a quoted entry with a caret or tilde range; fixture paths
-and exact plain package metadata versions are not matched. Because raw text
-assertions do not preserve the entry's manifest section, suppress an intentional
-caret or tilde metadata assertion locally. Raw reads may use `toString()` or
-`trim()` before `toContain`, `toBe`, `toEqual`, or `toStrictEqual`. Parsed matching is limited to
+assertions containing a quoted entry with a bare version, caret range, or tilde
+range; fixture paths and entries named `version` are not matched. Because
+raw text assertions do not preserve the entry's manifest section, suppress an
+intentional metadata version assertion locally. Raw reads may use `toString()`
+or `trim()` before `toContain`, `toBe`, `toEqual`, or `toStrictEqual`. Parsed matching is limited to
 `dependencies`, `devDependencies`, `optionalDependencies`, and
 `peerDependencies` property or bracket access followed directly by `toBe`,
 `toEqual`, or `toStrictEqual`, including computed identifier or member keys,

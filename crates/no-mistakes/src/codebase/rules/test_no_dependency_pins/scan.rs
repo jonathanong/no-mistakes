@@ -13,6 +13,11 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
     for pattern in &opts.patterns {
         if pattern.multiline {
             for matched in pattern.regex.find_iter(content) {
+                if pattern.reason == "package.json dependency assertion"
+                    && is_version_field_assertion(matched.as_str())
+                {
+                    continue;
+                }
                 if !is_code(&ranges.non_code, matched.start()) {
                     continue;
                 }
@@ -35,6 +40,13 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
         }
     }
     findings
+}
+
+fn is_version_field_assertion(matched: &str) -> bool {
+    matched.contains(r#""version""#)
+        || matched.contains(r#"\"version\""#)
+        || matched.contains("'version'")
+        || matched.contains(r#"\'version\'"#)
 }
 
 fn has_code_matcher(matched: &str, start: usize, non_code_ranges: &[(usize, usize)]) -> bool {

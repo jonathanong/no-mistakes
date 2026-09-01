@@ -26,7 +26,7 @@ pub(super) const DEFAULT_PATTERNS: &[(&str, &str, bool)] = &[
     ),
     (
         "package.json dependency assertion",
-        r#"\b(?:readFileSync|readRepoFile)\(\s*['"]package\.json['"][^;\n)]*\)(?:\s*\.(?:toString|trim)\(\))*[^.;\n]*?\.(?:toContain|toBe|toEqual|toStrictEqual)\([^;/\n)]*?\\?["'][@A-Za-z0-9_./-]+\\?["']\s*:\s*\\?["'][~^]\d+(?:\.\d+){0,2}(?:-[A-Za-z0-9_.-]+)?(?:\+[A-Za-z0-9_.-]+)?\\?["']"#,
+        r#"\b(?:readFileSync|readRepoFile)\(\s*['"]package\.json['"][^;\n)]*\)(?:\s*\.(?:toString|trim)\(\))*[^.;\n]*?\.(?:toContain|toBe|toEqual|toStrictEqual)\([^;/\n)]*?\\?["'][@A-Za-z0-9_./-]+\\?["']\s*:\s*\\?["'][~^]?\d+(?:\.\d+){0,2}(?:-[A-Za-z0-9_.-]+)?(?:\+[A-Za-z0-9_.-]+)?\\?["']"#,
         true,
     ),
     (
