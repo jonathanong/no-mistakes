@@ -38,6 +38,11 @@ expect.poll(
   () => packageJson.dependencies.foo,
   { timeout: 25_000 },
 ).toBe('1.2.3')
+expect(packageJson.devDependencies[dependencyName]).toBe('10.9.0')
+expect(packageJson.dependencies?.[dependency.name]).toBe('1.2.3')
+expect(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0')
+expect(packageJson.optionalDependencies).toHaveProperty(dependency.name, '2.3.3')
+expect(packageJson).toHaveProperty('devDependencies.eslint', '10.9.0')
 expect(packageJson.devDependencies.eslint, 'eslint must stay pinned').toBe('10.9.0')
 expect(
   packageJson.devDependencies?.['@typescript-eslint/parser'],

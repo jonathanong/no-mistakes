@@ -31,7 +31,12 @@ pub(super) const DEFAULT_PATTERNS: &[(&str, &str, bool)] = &[
     ),
     (
         "parsed dependency version assertion",
-        r#"(?:\.\s*(?:dependencies|devDependencies|optionalDependencies|peerDependencies)|\[\s*["'](?:dependencies|devDependencies|optionalDependencies|peerDependencies)["']\s*\])\s*!?\s*(?:\?\.\s*(?:\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|[A-Za-z_$][A-Za-z0-9_$-]*)|\s*\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|\.\s*[A-Za-z_$][A-Za-z0-9_$-]*)\s*!?(?:\s|//[^\n]*|/\*[^*]*\*+(?:[^/*][^*]*\*+)*/)*(?:,(?:\s|//[^\n]*|/\*[^*]*\*+(?:[^/*][^*]*\*+)*/)*(?:(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\{[^{}]*\}),?)?(?:\s|//[^\n]*|/\*[^*]*\*+(?:[^/*][^*]*\*+)*/)*)?\)\s*\.(?:toBe|toEqual|toStrictEqual)\(\s*['"`](?:npm:[@A-Za-z0-9_./-]+@|workspace:)?(?:[~^=]|[<>]=?)?\d+(?:\.\d+){0,2}(?:-[A-Za-z0-9_.-]+)?(?:\+[A-Za-z0-9_.-]+)?(?:(?:[ \t]*\|\|[ \t]*|[ \t]+-[ \t]+|[ \t]+)(?:[~^=]|[<>]=?)?\d+(?:\.\d+){0,2}(?:-[A-Za-z0-9_.-]+)?(?:\+[A-Za-z0-9_.-]+)?)*["'`]"#,
+        r#"(?:\.\s*(?:dependencies|devDependencies|optionalDependencies|peerDependencies)|\[\s*["'](?:dependencies|devDependencies|optionalDependencies|peerDependencies)["']\s*\])\s*!?\s*(?:\?\.\s*(?:\[\s*(?:["'][@A-Za-z0-9_./-]+["']|[A-Za-z_$][A-Za-z0-9_$]*(?:\s*\.\s*[A-Za-z_$][A-Za-z0-9_$]*)*)\s*\]|[A-Za-z_$][A-Za-z0-9_$-]*)|\s*\[\s*(?:["'][@A-Za-z0-9_./-]+["']|[A-Za-z_$][A-Za-z0-9_$]*(?:\s*\.\s*[A-Za-z_$][A-Za-z0-9_$]*)*)\s*\]|\.\s*[A-Za-z_$][A-Za-z0-9_$-]*)\s*!?(?:\s|//[^\n]*|/\*[^*]*\*+(?:[^/*][^*]*\*+)*/)*(?:,(?:\s|//[^\n]*|/\*[^*]*\*+(?:[^/*][^*]*\*+)*/)*(?:(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`|\{[^{}]*\}),?)?(?:\s|//[^\n]*|/\*[^*]*\*+(?:[^/*][^*]*\*+)*/)*)?\)\s*\.(?:toBe|toEqual|toStrictEqual)\(\s*['"`](?:npm:[@A-Za-z0-9_./-]+@|workspace:)?(?:[~^=]|[<>]=?)?\d+(?:\.\d+){0,2}(?:-[A-Za-z0-9_.-]+)?(?:\+[A-Za-z0-9_.-]+)?(?:(?:[ \t]*\|\|[ \t]*|[ \t]+-[ \t]+|[ \t]+)(?:[~^=]|[<>]=?)?\d+(?:\.\d+){0,2}(?:-[A-Za-z0-9_.-]+)?(?:\+[A-Za-z0-9_.-]+)?)*["'`]"#,
+        true,
+    ),
+    (
+        "parsed dependency version assertion",
+        r#"(?:(?:\.\s*(?:dependencies|devDependencies|optionalDependencies|peerDependencies)|\[\s*["'](?:dependencies|devDependencies|optionalDependencies|peerDependencies)["']\s*\])\s*!?\s*\)\s*\.toHaveProperty\(\s*(?:["'`][@A-Za-z0-9_./-]+["'`]|[A-Za-z_$][A-Za-z0-9_$]*(?:\s*\.\s*[A-Za-z_$][A-Za-z0-9_$]*)*)|\)\s*\.toHaveProperty\(\s*["'`](?:dependencies|devDependencies|optionalDependencies|peerDependencies)\.[@A-Za-z0-9_./-]+["'`])\s*,\s*["'`](?:npm:[@A-Za-z0-9_./-]+@|workspace:)?(?:[~^=]|[<>]=?)?\d+(?:\.\d+){0,2}(?:-[A-Za-z0-9_.-]+)?(?:\+[A-Za-z0-9_.-]+)?(?:(?:[ \t]*\|\|[ \t]*|[ \t]+-[ \t]+|[ \t]+)(?:[~^=]|[<>]=?)?\d+(?:\.\d+){0,2}(?:-[A-Za-z0-9_.-]+)?(?:\+[A-Za-z0-9_.-]+)?)*["'`]"#,
         true,
     ),
 ];
