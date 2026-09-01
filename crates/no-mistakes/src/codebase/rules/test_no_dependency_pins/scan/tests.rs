@@ -1,5 +1,9 @@
 use super::*;
 
+fn source_ranges(content: &str) -> SourceRanges {
+    super::assertion_ranges::source_ranges_for_file("scanner.test.ts", content)
+}
+
 #[test]
 fn assertion_start_tracks_comments_quotes_and_nested_calls() {
     let source = r#"expect(
@@ -29,6 +33,21 @@ fn comparison_before_parenthesized_arrow_does_not_underflow_type_depth() {
 }
 
 #[test]
+fn javascript_comparison_is_not_a_generic_expect_call() {
+    let source = "expect < helper > (packageJson.dependencies.foo).toBe('1.2.3')";
+    assert!(
+        super::assertion_ranges::source_ranges_for_file("comparison.test.js", source)
+            .assertions
+            .is_empty()
+    );
+    assert!(
+        !super::assertion_ranges::source_ranges_for_file("generic.test.ts", source)
+            .assertions
+            .is_empty()
+    );
+}
+
+#[test]
 fn assertion_ranges_keep_an_unclosed_expect_available() {
     let source = "expect(\n  packageJson.devDependencies.foo";
     let match_start = source.find("devDependencies").unwrap();
@@ -54,24 +73,24 @@ fn assertion_start_skips_ended_inner_assertions() {
 #[test]
 fn expect_token_detection_requires_a_standalone_name() {
     let start = super::assertion_ranges::expect_token_start;
-    assert_eq!(start(b"(", 0, &[]), None);
-    assert_eq!(start(b"myexpect(", 8, &[]), None);
-    assert_eq!(start(b"myexpect.soft(", 13, &[]), None);
-    assert_eq!(start(b"$expect.poll(", 12, &[]), None);
-    assert_eq!(start(b"helpers.expect.soft(", 19, &[]), None);
-    assert_eq!(start(b"expect (", 7, &[]), Some(0));
-    assert_eq!(start(b"expect.soft(", 11, &[]), Some(0));
-    assert_eq!(start(b"expect.poll(", 11, &[]), Some(0));
-    assert_eq!(start(b"expect!(", 7, &[]), Some(0));
-    assert_eq!(start(b"expect<string>(", 14, &[]), Some(0));
-    assert_eq!(start(b"expect<Array<string>>(", 21, &[]), Some(0));
+    assert_eq!(start(b"(", 0, &[], true), None);
+    assert_eq!(start(b"myexpect(", 8, &[], true), None);
+    assert_eq!(start(b"myexpect.soft(", 13, &[], true), None);
+    assert_eq!(start(b"$expect.poll(", 12, &[], true), None);
+    assert_eq!(start(b"helpers.expect.soft(", 19, &[], true), None);
+    assert_eq!(start(b"expect (", 7, &[], true), Some(0));
+    assert_eq!(start(b"expect.soft(", 11, &[], true), Some(0));
+    assert_eq!(start(b"expect.poll(", 11, &[], true), Some(0));
+    assert_eq!(start(b"expect!(", 7, &[], true), Some(0));
+    assert_eq!(start(b"expect<string>(", 14, &[], true), Some(0));
+    assert_eq!(start(b"expect<Array<string>>(", 21, &[], true), Some(0));
     assert_eq!(
-        start(b"expect<(value: string) => boolean>(", 34, &[]),
+        start(b"expect<(value: string) => boolean>(", 34, &[], true),
         Some(0)
     );
-    assert_eq!(start(b"helper.expect<string>(", 21, &[]), None);
-    assert_eq!(start(b"helper.expect!(", 14, &[]), None);
-    assert_eq!(start(b"this.#expect(", 12, &[]), None);
+    assert_eq!(start(b"helper.expect<string>(", 21, &[], true), None);
+    assert_eq!(start(b"helper.expect!(", 14, &[], true), None);
+    assert_eq!(start(b"this.#expect(", 12, &[], true), None);
 }
 
 #[test]
@@ -169,6 +188,8 @@ fn division_does_not_hide_a_same_line_assertion() {
         "const ratio = count++ / total; ",
         "const ratio = count-- / total; ",
         "const ratio = ++count / total; ",
+        "const ratio = packageJson.do / divisor; ",
+        "const ratio = packageJson. /* property */ do / divisor; ",
     ] {
         let source =
             format!("{prefix}expect(\n  packageJson.devDependencies.foo,\n).toBe('1.2.3')");
@@ -195,6 +216,7 @@ fn control_condition_allows_a_following_regex_literal() {
         "if (ok) value(); else /[']/u.test(value); ",
         "const ctor = value instanceof /[']/u; ",
         "const present = key in /[']/u; ",
+        "do /[']/u.test(value); while (false); ",
     ] {
         let source = format!("{prefix}expect(packageJson.dependencies.foo).toBe('1.2.3')");
         let match_start = source.find("dependencies").unwrap();

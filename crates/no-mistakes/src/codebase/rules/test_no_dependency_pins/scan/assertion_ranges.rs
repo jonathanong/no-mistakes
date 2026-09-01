@@ -1,4 +1,5 @@
 mod lex_state;
+mod type_arguments;
 
 use lex_state::{follows_control_condition, LexState};
 #[derive(Default)]
@@ -7,7 +8,15 @@ pub(super) struct SourceRanges {
     pub(super) non_code: Vec<(usize, usize)>,
 }
 
-pub(super) fn source_ranges(content: &str) -> SourceRanges {
+pub(super) fn source_ranges_for_file(file: &str, content: &str) -> SourceRanges {
+    let extension = file.rsplit_once('.').map(|(_, extension)| extension);
+    source_ranges_with_type_arguments(
+        content,
+        matches!(extension, Some("ts" | "tsx" | "mts" | "cts")),
+    )
+}
+
+fn source_ranges_with_type_arguments(content: &str, allow_type_arguments: bool) -> SourceRanges {
     let bytes = content.as_bytes();
     let mut stack = Vec::new();
     let mut ranges = Vec::new();
@@ -50,7 +59,12 @@ pub(super) fn source_ranges(content: &str) -> SourceRanges {
                 lex.enter_non_code(index);
             }
             b'(' => {
-                stack.push(expect_token_start(bytes, index, &non_code_ranges));
+                stack.push(expect_token_start(
+                    bytes,
+                    index,
+                    &non_code_ranges,
+                    allow_type_arguments,
+                ));
                 lex.open_paren(follows_control_condition(bytes, index, &non_code_ranges));
                 lex.regex_allowed = true;
             }
@@ -80,7 +94,7 @@ pub(super) fn source_ranges(content: &str) -> SourceRanges {
                 {
                     index += 1;
                 }
-                lex.regex_allowed = LexState::keyword_allows_regex(&bytes[start..index]);
+                lex.regex_allowed = identifier_allows_regex(bytes, start, index, &non_code_ranges);
                 continue;
             }
             byte if !byte.is_ascii_whitespace() => lex.regex_allowed = false,
@@ -102,6 +116,17 @@ pub(super) fn source_ranges(content: &str) -> SourceRanges {
     }
 }
 
+fn identifier_allows_regex(
+    bytes: &[u8],
+    start: usize,
+    end: usize,
+    non_code_ranges: &[(usize, usize)],
+) -> bool {
+    let token_start = skip_trivia(bytes, start, non_code_ranges);
+    (token_start == 0 || bytes[token_start - 1] != b'.')
+        && LexState::keyword_allows_regex(&bytes[start..end])
+}
+
 pub(super) fn is_code(ranges: &[(usize, usize)], offset: usize) -> bool {
     let upper = ranges.partition_point(|(start, _)| *start <= offset);
     upper == 0 || offset >= ranges[upper - 1].1
@@ -119,10 +144,13 @@ pub(super) fn expect_token_start(
     bytes: &[u8],
     open_paren: usize,
     non_code_ranges: &[(usize, usize)],
+    allow_type_arguments: bool,
 ) -> Option<usize> {
     let mut end = skip_trivia(bytes, open_paren, non_code_ranges);
     end -= usize::from(end > 0 && bytes[end - 1] == b'!');
-    end = type_argument_start(bytes, end, non_code_ranges)?;
+    if allow_type_arguments {
+        end = type_arguments::start(bytes, end, non_code_ranges)?;
+    }
     end = skip_trivia(bytes, end, non_code_ranges);
     for token in [b"expect.soft".as_slice(), b"expect.poll", b"expect"] {
         let Some(start) = end.checked_sub(token.len()) else {
@@ -154,38 +182,4 @@ fn skip_trivia(bytes: &[u8], mut end: usize, non_code_ranges: &[(usize, usize)])
         }
         end = start;
     }
-}
-
-fn type_argument_start(
-    bytes: &[u8],
-    end: usize,
-    non_code_ranges: &[(usize, usize)],
-) -> Option<usize> {
-    if end == 0 || bytes[end - 1] != b'>' {
-        return Some(end);
-    }
-    let mut depth = 0;
-    let mut index = end;
-    while index > 0 {
-        index -= 1;
-        let upper = non_code_ranges.partition_point(|(start, _)| *start <= index);
-        if let Some(&(start, range_end)) = non_code_ranges[..upper].last() {
-            if index < range_end {
-                index = start;
-                continue;
-            }
-        }
-        match bytes[index] {
-            b'>' if index == 0 || bytes[index - 1] != b'=' => depth += 1,
-            b'<' if depth == 0 => return None,
-            b'<' => {
-                depth -= 1;
-                if depth == 0 {
-                    return Some(index);
-                }
-            }
-            _ => {}
-        }
-    }
-    None
 }

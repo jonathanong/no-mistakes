@@ -41,6 +41,7 @@ impl LexState {
                 | b"else"
                 | b"instanceof"
                 | b"in"
+                | b"do"
         )
     }
 

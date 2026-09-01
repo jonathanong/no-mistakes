@@ -1,5 +1,5 @@
 use super::{CompiledOptions, CompiledPattern, RuleFinding, RULE_ID};
-use assertion_ranges::{assertion_start, is_code, source_ranges, SourceRanges};
+use assertion_ranges::{assertion_start, is_code, source_ranges_for_file, SourceRanges};
 use delimiters::{has_matching_raw_entry_delimiters, has_matching_version_delimiters};
 use raw_literal_arg::{
     is_direct_argument as raw_literal_is_direct_argument, is_version_field_assertion,
@@ -18,7 +18,7 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
     let ranges = if opts.patterns.iter().any(|pattern| pattern.multiline) {
         let jsx_text_ranges = jsx_text_ranges::collect(file, content);
         let lexical_source = jsx_text_ranges::mask(content, &jsx_text_ranges);
-        let mut ranges = source_ranges(&lexical_source);
+        let mut ranges = source_ranges_for_file(file, &lexical_source);
         ranges.non_code.extend(jsx_text_ranges.iter().copied());
         merge_ranges(&mut ranges.non_code);
         ranges

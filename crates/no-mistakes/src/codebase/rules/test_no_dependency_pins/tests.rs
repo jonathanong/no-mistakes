@@ -177,6 +177,7 @@ fn negatives_and_non_test_files_are_ignored() {
         root.join("src/negatives.test.mts"),
         root.join("src/not-a-test.ts"),
         root.join("src/installer.spec.ts"),
+        root.join("src/comparison.test.js"),
     ];
     let findings = check_with_files(&root, &config_with_options("{}"), &files).unwrap();
     assert!(findings.is_empty(), "{findings:#?}");
