@@ -21,6 +21,8 @@ expect(packageJson.dependencies.localPackage).toBe('workspace:1.0.0')
 expect(packageJson.dependencies.localPackage).toBe('workspace:>=1.0.0 <2.0.0')
 expect(packageJson.dependencies.react).toBe('npm:preact@^10.0.0 || ^11.0.0')
 expect(packageJson.devDependencies.eslint).toStrictEqual('10.9.0')
+expect(packageJson.devDependencies.eslint).toBe('10.9.0-beta.1+build.5')
+expect(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0-rc.1+build.5')
 expect(packageJson.devDependencies.eslint, 'eslint must stay pinned').toBe('10.9.0')
 expect(
   packageJson.devDependencies?.['@typescript-eslint/parser'],

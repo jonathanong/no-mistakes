@@ -1,102 +1,49 @@
-struct LexState {
-    quote: Option<u8>,
-    escaped: bool,
-    regex: bool,
-    regex_class: bool,
-    regex_allowed: bool,
-    line_comment: bool,
-    block_comment: bool,
+mod lex_state;
+
+use lex_state::LexState;
+
+#[derive(Default)]
+pub(super) struct SourceRanges {
+    pub(super) assertions: Vec<(usize, usize)>,
+    pub(super) non_code: Vec<(usize, usize)>,
 }
 
-impl LexState {
-    fn new() -> Self {
-        Self {
-            quote: None,
-            escaped: false,
-            regex: false,
-            regex_class: false,
-            regex_allowed: true,
-            line_comment: false,
-            block_comment: false,
-        }
-    }
-
-    fn skip_non_code(&mut self, bytes: &[u8], index: usize) -> Option<usize> {
-        let byte = bytes[index];
-        if self.line_comment {
-            self.line_comment = byte != b'\n';
-            return Some(index + 1);
-        }
-        if self.block_comment {
-            if byte == b'*' && bytes.get(index + 1) == Some(&b'/') {
-                self.block_comment = false;
-                return Some(index + 2);
-            }
-            return Some(index + 1);
-        }
-        if let Some(delimiter) = self.quote {
-            if self.escaped {
-                self.escaped = false;
-            } else if byte == b'\\' {
-                self.escaped = true;
-            } else if byte == delimiter {
-                self.quote = None;
-                self.regex_allowed = false;
-            }
-            return Some(index + 1);
-        }
-        if self.regex {
-            if self.escaped {
-                self.escaped = false;
-            } else {
-                match byte {
-                    b'\\' => self.escaped = true,
-                    b'[' => self.regex_class = true,
-                    b']' => self.regex_class = false,
-                    b'/' if !self.regex_class => {
-                        self.regex = false;
-                        self.regex_allowed = false;
-                    }
-                    b'\n' => {
-                        self.regex = false;
-                        self.regex_class = false;
-                    }
-                    _ => {}
-                }
-            }
-            return Some(index + 1);
-        }
-        None
-    }
-}
-
-pub(super) fn assertion_ranges(content: &str) -> Vec<(usize, usize)> {
+pub(super) fn source_ranges(content: &str) -> SourceRanges {
     let bytes = content.as_bytes();
     let mut stack = Vec::new();
     let mut ranges = Vec::new();
+    let mut non_code_ranges = Vec::new();
     let mut lex = LexState::new();
     let mut index = 0;
     while index < bytes.len() {
         let byte = bytes[index];
         let next = bytes.get(index + 1).copied();
-        if let Some(next_index) = lex.skip_non_code(bytes, index) {
+        if let Some(next_index) = lex.skip_non_code(bytes, index, &mut non_code_ranges) {
             index = next_index;
             continue;
         }
         match byte {
             b'/' if next == Some(b'/') => {
                 lex.line_comment = true;
+                lex.enter_non_code(index);
                 index += 2;
                 continue;
             }
             b'/' if next == Some(b'*') => {
                 lex.block_comment = true;
+                lex.enter_non_code(index);
                 index += 2;
                 continue;
             }
-            b'/' if lex.regex_allowed => lex.regex = true,
+            b'/' if lex.regex_allowed => {
+                lex.regex = true;
+                lex.enter_non_code(index);
+            }
             b'/' => lex.regex_allowed = true,
-            b'\'' | b'"' | b'`' => lex.quote = Some(byte),
+            b'\'' | b'"' | b'`' => {
+                lex.quote = Some(byte);
+                lex.enter_non_code(index);
+            }
             b'(' => {
                 stack.push(expect_token_start(bytes, index));
                 lex.regex_allowed = true;
@@ -142,17 +89,25 @@ pub(super) fn assertion_ranges(content: &str) -> Vec<(usize, usize)> {
             .flatten()
             .map(|start| (start, bytes.len())),
     );
+    lex.finish_non_code(bytes.len(), &mut non_code_ranges);
     ranges.sort_unstable_by_key(|(start, _)| *start);
-    ranges
+    SourceRanges {
+        assertions: ranges,
+        non_code: non_code_ranges,
+    }
 }
 
-pub(super) fn assertion_start(ranges: &[(usize, usize)], match_start: usize) -> usize {
+pub(super) fn is_code(ranges: &[(usize, usize)], offset: usize) -> bool {
+    let upper = ranges.partition_point(|(start, _)| *start <= offset);
+    upper == 0 || offset >= ranges[upper - 1].1
+}
+
+pub(super) fn assertion_start(ranges: &[(usize, usize)], match_start: usize) -> Option<usize> {
     let upper = ranges.partition_point(|(start, _)| *start <= match_start);
     ranges[..upper]
         .iter()
         .rev()
         .find_map(|&(start, end)| (match_start <= end).then_some(start))
-        .unwrap_or(match_start)
 }
 
 pub(super) fn expect_token_start(bytes: &[u8], open_paren: usize) -> Option<usize> {

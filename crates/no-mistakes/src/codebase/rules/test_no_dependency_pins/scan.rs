@@ -1,19 +1,24 @@
 use super::{CompiledOptions, CompiledPattern, RuleFinding, RULE_ID};
-use assertion_ranges::{assertion_ranges, assertion_start};
+use assertion_ranges::{assertion_start, is_code, source_ranges, SourceRanges};
 
 mod assertion_ranges;
 
 pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
-    let assertion_ranges = if opts.patterns.iter().any(|pattern| pattern.multiline) {
-        assertion_ranges(content)
+    let ranges = if opts.patterns.iter().any(|pattern| pattern.multiline) {
+        source_ranges(content)
     } else {
-        Vec::new()
+        SourceRanges::default()
     };
     for pattern in &opts.patterns {
         if pattern.multiline {
             for matched in pattern.regex.find_iter(content) {
-                let start = assertion_start(&assertion_ranges, matched.start());
+                if !is_code(&ranges.non_code, matched.start()) {
+                    continue;
+                }
+                let Some(start) = assertion_start(&ranges.assertions, matched.start()) else {
+                    continue;
+                };
                 let line = line_at(content, start);
                 let normalized = matched
                     .as_str()
