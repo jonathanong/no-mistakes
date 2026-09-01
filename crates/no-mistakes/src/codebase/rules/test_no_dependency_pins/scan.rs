@@ -120,11 +120,11 @@ fn is_version_field_assertion(matched: &str) -> bool {
 
 fn has_code_matcher(matched: &str, start: usize, non_code_ranges: &[(usize, usize)]) -> bool {
     [
-        ".toBe",
-        ".toContain",
-        ".toEqual",
-        ".toStrictEqual",
-        ".toHaveProperty",
+        "toBe",
+        "toContain",
+        "toEqual",
+        "toStrictEqual",
+        "toHaveProperty",
     ]
     .iter()
     .flat_map(|token| matched.match_indices(token).map(|(offset, _)| offset))
