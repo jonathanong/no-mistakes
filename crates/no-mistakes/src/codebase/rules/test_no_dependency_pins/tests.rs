@@ -36,6 +36,7 @@ fn fail_files(root: &Path) -> Vec<PathBuf> {
         root.join("src/release-asset.test.mts"),
         root.join("src/tool-log.test.mts"),
         root.join("src/dependency-manifest.test.mts"),
+        root.join("src/jsx.test.tsx"),
         root.join("src/__tests__/nested.ts"),
         root.join("src/helper.mock.test.js"),
     ]
@@ -120,7 +121,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("package.json dependency assertion")
             })
             .count(),
-        9,
+        11,
         "{findings:#?}"
     );
     assert_eq!(
@@ -131,7 +132,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("parsed dependency version assertion")
             })
             .count(),
-        38,
+        42,
         "{findings:#?}"
     );
     let multiline = findings
@@ -159,6 +160,14 @@ fn fail_fixture_reports_all_pin_shapes() {
     assert!(findings
         .iter()
         .any(|finding| finding.file == "src/helper.mock.test.js"));
+    assert_eq!(
+        findings
+            .iter()
+            .filter(|finding| finding.file == "src/jsx.test.tsx")
+            .count(),
+        2,
+        "{findings:#?}"
+    );
 }
 
 #[test]

@@ -1,0 +1,30 @@
+use oxc_ast::ast::JSXText;
+use oxc_ast_visit::Visit;
+use std::path::Path;
+
+#[derive(Default)]
+struct Collector {
+    ranges: Vec<(usize, usize)>,
+}
+
+impl<'a> Visit<'a> for Collector {
+    fn visit_jsx_text(&mut self, text: &JSXText<'a>) {
+        self.ranges
+            .push((text.span.start as usize, text.span.end as usize));
+    }
+}
+
+pub(super) fn collect(file: &str, content: &str) -> Vec<(usize, usize)> {
+    if !matches!(
+        Path::new(file).extension().and_then(|ext| ext.to_str()),
+        Some("tsx" | "jsx")
+    ) {
+        return Vec::new();
+    }
+    crate::ast::with_program(Path::new(file), content, |program, _| {
+        let mut collector = Collector::default();
+        collector.visit_program(program);
+        collector.ranges
+    })
+    .unwrap_or_default()
+}
