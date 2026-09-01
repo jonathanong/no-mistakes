@@ -119,18 +119,16 @@ fn is_version_field_assertion(matched: &str) -> bool {
 }
 
 fn has_code_matcher(matched: &str, start: usize, non_code_ranges: &[(usize, usize)]) -> bool {
-    let matcher_offset = [
-        ".toBe(",
-        ".toContain(",
-        ".toEqual(",
-        ".toStrictEqual(",
-        ".toHaveProperty(",
+    [
+        ".toBe",
+        ".toContain",
+        ".toEqual",
+        ".toStrictEqual",
+        ".toHaveProperty",
     ]
     .iter()
     .flat_map(|token| matched.match_indices(token).map(|(offset, _)| offset))
-    .max();
-
-    matcher_offset.is_some_and(|offset| is_code(non_code_ranges, start + offset))
+    .any(|offset| is_code(non_code_ranges, start + offset))
 }
 
 fn scan_lines(

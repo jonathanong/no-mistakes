@@ -70,16 +70,18 @@ raw text assertions do not preserve the entry's manifest section, suppress an
 intentional metadata version assertion locally. Raw reads may use `toString()`
 or `trim()` before `toContain`, `toBe`, `toEqual`, or `toStrictEqual`. Parsed matching is limited to
 `dependencies`, `devDependencies`, `optionalDependencies`, and
-`peerDependencies` property or bracket access followed directly by `toBe`,
-`toEqual`, or `toStrictEqual`, including computed identifier or member keys,
+`peerDependencies` property or bracket access followed, aside from JavaScript
+trivia, by `toBe`, `toEqual`, or `toStrictEqual`, including computed identifier or member keys,
 or dependency-valued `toHaveProperty` assertions. It supports non-null
 assertions, multiline assertions (including `expect.soft` and `expect.poll`),
+single-return block callbacks passed to `expect.poll`,
 simple identifier or member-path `as` casts, extra parenthesized wrappers,
 optional string-literal assertion messages, explicit equality, compound
 comparator, OR, or hyphen ranges, and versioned `npm:` or `workspace:` specs.
 Computed dependency keys are limited to identifiers and member paths; calls,
-concatenations, nested bracket expressions, and array-form property paths are
-not matched. Negated assertions and malformed version prefixes are not matched.
+concatenations, nested bracket expressions, array-form property paths, and
+computed expected-version strings are not matched. Negated assertions and
+malformed version prefixes are not matched.
 
 ## Options and defaults
 

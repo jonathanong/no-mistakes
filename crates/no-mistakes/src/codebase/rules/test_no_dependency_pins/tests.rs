@@ -121,7 +121,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("package.json dependency assertion")
             })
             .count(),
-        11,
+        12,
         "{findings:#?}"
     );
     assert_eq!(
@@ -132,7 +132,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("parsed dependency version assertion")
             })
             .count(),
-        53,
+        61,
         "{findings:#?}"
     );
     let multiline = findings

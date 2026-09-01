@@ -3,10 +3,12 @@ pub(super) fn has_matching_version_delimiters(matched: &str, raw_assertion: bool
     if !raw_assertion && bytes.first().is_some_and(|byte| is_quote(*byte)) {
         return has_matching_leading_delimiters(bytes);
     }
-    let Some(&closing) = bytes.last() else {
+    let Some((closing_index, &closing)) =
+        bytes.iter().enumerate().rfind(|(_, byte)| is_quote(**byte))
+    else {
         return false;
     };
-    let prefix = &bytes[..bytes.len() - 1];
+    let prefix = &bytes[..closing_index];
     let escaped = prefix
         .iter()
         .rev()

@@ -184,14 +184,17 @@ fn control_condition_allows_a_following_regex_literal() {
         "if (ok) /[']/u.test(value); ",
         "while (ok) /[']/u.test(value); ",
         "for (const item of items) /[']/u.test(item); ",
+        "for await (const item of items) /[']/u.test(item); ",
         "with (context) /[']/u.test(value); ",
     ] {
         let source = format!("{prefix}expect(packageJson.dependencies.foo).toBe('1.2.3')");
         let match_start = source.find("dependencies").unwrap();
         let expect_start = source.find("expect").unwrap();
 
+        let ranges = source_ranges(&source);
+        assert!(is_code(&ranges.non_code, match_start), "{prefix}");
         assert_eq!(
-            assertion_start(&source_ranges(&source).assertions, match_start),
+            assertion_start(&ranges.assertions, match_start),
             Some(expect_start),
             "{prefix}"
         );

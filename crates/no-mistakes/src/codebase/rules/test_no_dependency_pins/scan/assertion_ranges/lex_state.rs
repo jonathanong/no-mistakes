@@ -144,15 +144,29 @@ pub(super) fn follows_control_condition(
     non_code_ranges: &[(usize, usize)],
 ) -> bool {
     let end = super::skip_trivia(bytes, open_paren, non_code_ranges);
-    [b"if".as_slice(), b"while", b"for", b"with"]
+    if [b"if".as_slice(), b"while", b"for", b"with"]
         .iter()
-        .any(|token| {
-            let Some(start) = end.checked_sub(token.len()) else {
-                return false;
-            };
-            &bytes[start..end] == *token
-                && (start == 0
-                    || !(bytes[start - 1].is_ascii_alphanumeric()
-                        || matches!(bytes[start - 1], b'_' | b'$' | b'.' | b'#')))
-        })
+        .any(|token| standalone_token_ends_at(bytes, end, token))
+    {
+        return true;
+    }
+    let Some(await_start) = end.checked_sub(b"await".len()) else {
+        return false;
+    };
+    standalone_token_ends_at(bytes, end, b"await")
+        && standalone_token_ends_at(
+            bytes,
+            super::skip_trivia(bytes, await_start, non_code_ranges),
+            b"for",
+        )
+}
+
+fn standalone_token_ends_at(bytes: &[u8], end: usize, token: &[u8]) -> bool {
+    let Some(start) = end.checked_sub(token.len()) else {
+        return false;
+    };
+    &bytes[start..end] == token
+        && (start == 0
+            || !(bytes[start - 1].is_ascii_alphanumeric()
+                || matches!(bytes[start - 1], b'_' | b'$' | b'.' | b'#')))
 }
