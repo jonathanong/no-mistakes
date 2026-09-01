@@ -61,3 +61,54 @@ fn assertion_ranges_include_vitest_modifier_calls() {
         assert_eq!(assertion_start(&ranges, match_start), 0, "{modifier}");
     }
 }
+
+#[test]
+fn assertion_ranges_skip_javascript_regex_literals() {
+    for prefix in [
+        "const quote = /\"/;\n",
+        "const quote = /[\"/]/;\n",
+        "const quote = /\\\"/;\n",
+        "const quote = /\"\n",
+        "return /\"/;\n",
+    ] {
+        let source =
+            format!("{prefix}expect(\n  packageJson.devDependencies.foo,\n).toBe('1.2.3')");
+        let match_start = source.find("devDependencies").unwrap();
+        let expect_start = source.find("expect").unwrap();
+        let ranges = assertion_ranges(&source);
+
+        assert_eq!(
+            assertion_start(&ranges, match_start),
+            expect_start,
+            "{prefix:?}"
+        );
+    }
+}
+
+#[test]
+fn regex_literals_inside_expect_do_not_change_parenthesis_depth() {
+    for expression in [
+        r#"/[\")]/.test(value)"#,
+        r#"/[\/)]/.test(value)"#,
+        r#"left / right && /[)]/.test(value)"#,
+    ] {
+        let source =
+            format!("expect(\n  {expression} && packageJson.devDependencies.foo,\n).toBe('1.2.3')");
+        let match_start = source.find("devDependencies").unwrap();
+        let close = source.find(").toBe").unwrap();
+        let ranges = assertion_ranges(&source);
+
+        assert_eq!(assertion_start(&ranges, match_start), 0, "{expression}");
+        assert!(ranges.contains(&(0, close)), "{expression}: {ranges:?}");
+    }
+}
+
+#[test]
+fn division_does_not_hide_a_same_line_assertion() {
+    let source = "const ratio = total / divisor; expect(\n  packageJson.devDependencies.foo,\n).toBe('1.2.3')";
+    let match_start = source.find("devDependencies").unwrap();
+    let expect_start = source.find("expect").unwrap();
+    let ranges = assertion_ranges(source);
+
+    assert_eq!(assertion_start(&ranges, match_start), expect_start);
+}

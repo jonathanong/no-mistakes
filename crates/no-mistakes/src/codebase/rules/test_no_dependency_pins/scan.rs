@@ -51,6 +51,9 @@ fn assertion_ranges(content: &str) -> Vec<(usize, usize)> {
     let mut ranges = Vec::new();
     let mut quote = None::<u8>;
     let mut escaped = false;
+    let mut regex = false;
+    let mut regex_class = false;
+    let mut regex_allowed = true;
     let mut line_comment = false;
     let mut block_comment = false;
     let mut index = 0;
@@ -78,6 +81,29 @@ fn assertion_ranges(content: &str) -> Vec<(usize, usize)> {
                 escaped = true;
             } else if byte == delimiter {
                 quote = None;
+                regex_allowed = false;
+            }
+            index += 1;
+            continue;
+        }
+        if regex {
+            if escaped {
+                escaped = false;
+            } else {
+                match byte {
+                    b'\\' => escaped = true,
+                    b'[' => regex_class = true,
+                    b']' => regex_class = false,
+                    b'/' if !regex_class => {
+                        regex = false;
+                        regex_allowed = false;
+                    }
+                    b'\n' => {
+                        regex = false;
+                        regex_class = false;
+                    }
+                    _ => {}
+                }
             }
             index += 1;
             continue;
@@ -93,13 +119,44 @@ fn assertion_ranges(content: &str) -> Vec<(usize, usize)> {
                 index += 2;
                 continue;
             }
+            b'/' if regex_allowed => regex = true,
+            b'/' => regex_allowed = true,
             b'\'' | b'"' | b'`' => quote = Some(byte),
-            b'(' => stack.push(expect_token_start(bytes, index)),
+            b'(' => {
+                stack.push(expect_token_start(bytes, index));
+                regex_allowed = true;
+            }
             b')' => {
                 if let Some(Some(start)) = stack.pop() {
                     ranges.push((start, index));
                 }
+                regex_allowed = false;
             }
+            b'[' | b'{' | b',' | b';' | b':' | b'=' | b'!' | b'?' | b'&' | b'|' | b'+' | b'-'
+            | b'*' | b'%' | b'~' | b'^' | b'<' | b'>' => regex_allowed = true,
+            b']' | b'}' | b'.' => regex_allowed = false,
+            byte if byte.is_ascii_alphabetic() || matches!(byte, b'_' | b'$') => {
+                let start = index;
+                index += 1;
+                while index < bytes.len()
+                    && (bytes[index].is_ascii_alphanumeric() || matches!(bytes[index], b'_' | b'$'))
+                {
+                    index += 1;
+                }
+                regex_allowed = matches!(
+                    &bytes[start..index],
+                    b"return"
+                        | b"throw"
+                        | b"case"
+                        | b"delete"
+                        | b"void"
+                        | b"typeof"
+                        | b"yield"
+                        | b"await"
+                );
+                continue;
+            }
+            byte if !byte.is_ascii_whitespace() => regex_allowed = false,
             _ => {}
         }
         index += 1;
