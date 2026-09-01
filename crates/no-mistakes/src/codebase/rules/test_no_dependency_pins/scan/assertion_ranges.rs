@@ -141,7 +141,7 @@ pub(super) fn expect_token_start(
         if &bytes[start..end] == token
             && (start == 0
                 || !(bytes[start - 1].is_ascii_alphanumeric()
-                    || matches!(bytes[start - 1], b'_' | b'$' | b'.')))
+                    || matches!(bytes[start - 1], b'_' | b'$' | b'.' | b'#')))
         {
             return Some(start);
         }

@@ -21,6 +21,7 @@ expect(rootPackage.devDependencies?.eslint, 'message').not.toBe('10.9.0')
 expect(readFileSync('package.json', 'utf8')).not.toContain('"eslint": "^10.9.0"')
 expect(packageJson.dependencies?.example).toBe('1.2.3malformed')
 expect(packageJson.dependencies?.example).toBe('1.2.3"malformed')
+expect(packageJson.dependencies?.example).toBe('1.2.3\'malformed')
 expect(packageJson.dependencies?.example).toEqual("1.2.3'malformed")
 expect(packageJson.dependencies?.example).toStrictEqual(`1.2.3"malformed`)
 expect(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0"malformed')
@@ -30,6 +31,13 @@ expect(config[section][dependencyName]).toBe('10.9.0')
 expect(packageJson.dependencies[getName()]).toBe('10.9.0')
 expect((packageJson.dependencies.foo + suffix)).toBe('1.2.3')
 expect(packageJson.devDependencies).not.toHaveProperty('eslint', '10.9.0')
+expect(packageJson.devDependencies) /* dependency check */ .not.toHaveProperty('eslint', '10.9.0')
+class PrivateExpectExample {
+  #expect = expect
+  check() {
+    this.#expect(packageJson.dependencies.foo).toBe('1.2.3')
+  }
+}
 expect(packageJson).toHaveProperty('engines.node', '>=24')
 expect(packageJson).toHaveProperty('devDependencies.eslint', 'latest')
 expect(packageJson.devDependencies).toHaveProperty('eslint')

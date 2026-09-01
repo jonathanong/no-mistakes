@@ -65,6 +65,7 @@ fn expect_token_detection_requires_a_standalone_name() {
     );
     assert_eq!(start(b"helper.expect<string>(", 21, &[]), None);
     assert_eq!(start(b"helper.expect!(", 14, &[]), None);
+    assert_eq!(start(b"this.#expect(", 12, &[]), None);
 }
 
 #[test]

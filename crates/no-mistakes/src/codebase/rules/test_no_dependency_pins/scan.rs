@@ -1,9 +1,11 @@
 use super::{CompiledOptions, CompiledPattern, RuleFinding, RULE_ID};
 use assertion_ranges::{assertion_start, is_code, source_ranges, SourceRanges};
+use delimiters::{has_matching_raw_entry_delimiters, has_matching_version_delimiters};
 use regex::{Match, Regex};
 use std::sync::LazyLock;
 
 mod assertion_ranges;
+mod delimiters;
 mod jsx_text_ranges;
 
 pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
@@ -28,7 +30,8 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
                 let Some(displayed) = raw_entry else {
                     continue;
                 };
-                if !has_matching_version_delimiters(displayed) {
+                let raw_assertion = pattern.reason == "package.json dependency assertion";
+                if !has_matching_version_delimiters(displayed, raw_assertion) {
                     continue;
                 }
                 if pattern.reason == "package.json dependency assertion"
@@ -101,31 +104,6 @@ fn raw_manifest_entry<'a>(
                 && !continues_value
         })
         .map(|entry| entry.as_str())
-}
-
-fn has_matching_version_delimiters(matched: &str) -> bool {
-    let bytes = matched.as_bytes();
-    let Some(&closing) = bytes.last() else {
-        return false;
-    };
-    bytes[..bytes.len() - 1]
-        .iter()
-        .rfind(|byte| matches!(byte, b'\'' | b'"' | b'`'))
-        .is_some_and(|opening| *opening == closing)
-}
-
-fn has_matching_raw_entry_delimiters(matched: &str) -> bool {
-    let mut quotes = matched.bytes().rev().filter(|byte| is_quote(*byte));
-    let (Some(value_close), Some(value_open), Some(key_close), Some(key_open)) =
-        (quotes.next(), quotes.next(), quotes.next(), quotes.next())
-    else {
-        return false;
-    };
-    value_open == value_close && key_open == key_close
-}
-
-fn is_quote(byte: u8) -> bool {
-    matches!(byte, b'\'' | b'"' | b'`')
 }
 
 fn is_version_field_assertion(matched: &str) -> bool {

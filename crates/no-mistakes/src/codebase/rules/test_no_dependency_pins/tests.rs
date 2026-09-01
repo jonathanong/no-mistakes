@@ -132,7 +132,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("parsed dependency version assertion")
             })
             .count(),
-        48,
+        50,
         "{findings:#?}"
     );
     let multiline = findings
