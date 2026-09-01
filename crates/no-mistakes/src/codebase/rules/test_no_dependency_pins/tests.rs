@@ -120,7 +120,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("package.json dependency assertion")
             })
             .count(),
-        5,
+        6,
         "{findings:#?}"
     );
     assert_eq!(
@@ -131,7 +131,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("parsed dependency version assertion")
             })
             .count(),
-        22,
+        25,
         "{findings:#?}"
     );
     let multiline = findings
@@ -178,9 +178,10 @@ fn honors_disable_comments() {
         root.join("src/line-disabled.test.mts"),
         root.join("src/file-disabled.test.mts"),
         root.join("src/next-line-disabled.test.mts"),
+        root.join("src/next-line-disabled.test.tsx"),
     ];
     let mut findings = check_with_files(&root, &config_with_options("{}"), &files).unwrap();
-    assert_eq!(findings.len(), 3, "{findings:#?}");
+    assert_eq!(findings.len(), 4, "{findings:#?}");
     let sources = super::super::source_store_for_files(&files);
     super::super::suppress_rule_findings_with_sources(&root, &mut findings, &sources);
     assert!(findings.is_empty(), "{findings:#?}");

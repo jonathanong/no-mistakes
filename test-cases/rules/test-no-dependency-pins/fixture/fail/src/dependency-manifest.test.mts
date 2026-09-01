@@ -9,6 +9,7 @@ expect(rootPackage['devDependencies']['eslint']).toBe('10.9.0')
 expect(packageJson.dependencies.react).toBe('npm:preact@10.27.1')
 expect(readFileSync('package.json').toString().trim()).toContain('"eslint": "^10.9.0"')
 expect(readRepoFile('package.json')).toContain('"typescript": "^5.9.0"') // current manifest pin
+expect(readRepoFile('package.json')).toContain('"eslint": "^9"')
 expect(packageJson.devDependencies!['eslint']).toBe('10.9.0')
 expect(packageJson.devDependencies.eslint!).toBe('10.9.0')
 expect(packageJson.peerDependencies.react).toBe('>=18.0.0')
@@ -23,6 +24,9 @@ expect(packageJson.dependencies.react).toBe('npm:preact@^10.0.0 || ^11.0.0')
 expect(packageJson.devDependencies.eslint).toStrictEqual('10.9.0')
 expect(packageJson.devDependencies.eslint).toBe('10.9.0-beta.1+build.5')
 expect(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0-rc.1+build.5')
+expect(packageJson.peerDependencies.eslint).toBe('>=9')
+expect(packageJson.peerDependencies.eslint).toBe('^9.1')
+expect(packageJson.peerDependencies.eslint).toBe('>=9 <10')
 expect(packageJson.devDependencies.eslint, 'eslint must stay pinned').toBe('10.9.0')
 expect(
   packageJson.devDependencies?.['@typescript-eslint/parser'],

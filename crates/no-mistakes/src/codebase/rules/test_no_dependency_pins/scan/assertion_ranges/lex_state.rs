@@ -57,9 +57,14 @@ impl LexState {
         }
         if let Some(delimiter) = self.quote {
             if self.escaped {
-                self.escaped = false;
+                if byte != b'\r' || bytes.get(index + 1) != Some(&b'\n') {
+                    self.escaped = false;
+                }
             } else if byte == b'\\' {
                 self.escaped = true;
+            } else if delimiter != b'`' && matches!(byte, b'\n' | b'\r') {
+                self.quote = None;
+                self.finish_non_code(index, ranges);
             } else if byte == delimiter {
                 self.quote = None;
                 self.regex_allowed = false;

@@ -131,3 +131,24 @@ fn division_does_not_hide_a_same_line_assertion() {
 
     assert_eq!(assertion_start(&ranges, match_start), Some(expect_start));
 }
+
+#[test]
+fn multiline_javascript_strings_keep_later_assertions_visible() {
+    for prefix in [
+        "const value = 'line\\\ncontinuation';\n",
+        "const value = 'line\\\r\ncontinuation';\r\n",
+        "const value = `line\ncontinuation`;\n",
+    ] {
+        let source =
+            format!("{prefix}expect(\n  packageJson.devDependencies.foo,\n).toBe('1.2.3')");
+        let match_start = source.find("devDependencies").unwrap();
+        let expect_start = source.find("expect").unwrap();
+        let ranges = source_ranges(&source).assertions;
+
+        assert_eq!(
+            assertion_start(&ranges, match_start),
+            Some(expect_start),
+            "{prefix:?}"
+        );
+    }
+}

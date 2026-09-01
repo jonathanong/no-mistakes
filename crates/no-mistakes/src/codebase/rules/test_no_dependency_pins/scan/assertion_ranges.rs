@@ -35,12 +35,17 @@ pub(super) fn source_ranges(content: &str) -> SourceRanges {
                 index += 2;
                 continue;
             }
-            b'/' if lex.regex_allowed => {
+            b'/' if lex.regex_allowed && (index == 0 || bytes[index - 1] != b'<') => {
                 lex.regex = true;
                 lex.enter_non_code(index);
             }
             b'/' => lex.regex_allowed = true,
-            b'\'' | b'"' | b'`' => {
+            b'\'' | b'"' | b'`'
+                if lex.regex_allowed
+                    || index == 0
+                    || !(bytes[index - 1].is_ascii_alphanumeric()
+                        || matches!(bytes[index - 1], b'_' | b'$')) =>
+            {
                 lex.quote = Some(byte);
                 lex.enter_non_code(index);
             }
