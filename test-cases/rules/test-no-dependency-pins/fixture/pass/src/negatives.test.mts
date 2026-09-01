@@ -23,3 +23,5 @@ expect(packageJson.dependencies?.example).toBe('1.2.3malformed')
 expect(packageJson.dependencies?.example).toBe('==1.2.3')
 expect(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0malformed')
 expect(readFileSync('package.json', 'utf8')).toContain('"example": "^1.2.3malformed"')
+expect(readFileSync('package.json', 'utf8')).toContain(actual) // e.g. "eslint": "^10.9.0"
+expect(readFileSync('package.json', 'utf8')).toContain(actual /* e.g. "eslint": "^10.9.0" */)

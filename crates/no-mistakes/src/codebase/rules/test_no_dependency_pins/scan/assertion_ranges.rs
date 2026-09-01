@@ -148,12 +148,10 @@ pub(super) fn assertion_ranges(content: &str) -> Vec<(usize, usize)> {
 
 pub(super) fn assertion_start(ranges: &[(usize, usize)], match_start: usize) -> usize {
     let upper = ranges.partition_point(|(start, _)| *start <= match_start);
-    upper
-        .checked_sub(1)
-        .and_then(|index| {
-            let (start, end) = ranges[index];
-            (match_start <= end).then_some(start)
-        })
+    ranges[..upper]
+        .iter()
+        .rev()
+        .find_map(|&(start, end)| (match_start <= end).then_some(start))
         .unwrap_or(match_start)
 }
 

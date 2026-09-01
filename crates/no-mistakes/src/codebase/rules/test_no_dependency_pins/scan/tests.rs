@@ -32,6 +32,20 @@ fn assertion_ranges_keep_an_unclosed_expect_available() {
 }
 
 #[test]
+fn assertion_start_skips_ended_inner_assertions() {
+    let source = r#"expect(
+  (() => {
+    expect(condition).toBe(true)
+    return packageJson.devDependencies.foo
+  })(),
+).toBe('1.2.3')"#;
+    let match_start = source.find("devDependencies").unwrap();
+    let ranges = assertion_ranges(source);
+
+    assert_eq!(assertion_start(&ranges, match_start), 0);
+}
+
+#[test]
 fn expect_token_detection_requires_a_standalone_name() {
     let start = super::assertion_ranges::expect_token_start;
     assert_eq!(start(b"(", 0), None);

@@ -8,6 +8,7 @@ expect(packageJson.peerDependencies.react).toEqual('19.1.0')
 expect(rootPackage['devDependencies']['eslint']).toBe('10.9.0')
 expect(packageJson.dependencies.react).toBe('npm:preact@10.27.1')
 expect(readFileSync('package.json').toString().trim()).toContain('"eslint": "^10.9.0"')
+expect(readRepoFile('package.json')).toContain('"typescript": "^5.9.0"') // current manifest pin
 expect(packageJson.devDependencies!['eslint']).toBe('10.9.0')
 expect(packageJson.devDependencies.eslint!).toBe('10.9.0')
 expect(packageJson.peerDependencies.react).toBe('>=18.0.0')

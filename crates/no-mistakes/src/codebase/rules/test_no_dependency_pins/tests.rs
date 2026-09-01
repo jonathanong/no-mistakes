@@ -120,7 +120,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("package.json dependency assertion")
             })
             .count(),
-        4,
+        5,
         "{findings:#?}"
     );
     assert_eq!(
