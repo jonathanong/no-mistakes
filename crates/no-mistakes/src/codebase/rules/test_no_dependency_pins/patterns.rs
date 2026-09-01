@@ -31,7 +31,7 @@ pub(super) const DEFAULT_PATTERNS: &[(&str, &str, bool)] = &[
     ),
     (
         "parsed dependency version assertion",
-        r#"\b(?:dependencies|devDependencies|optionalDependencies|peerDependencies)(?:["']\s*\])?\s*!?\s*(?:\?\.\s*(?:\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|[A-Za-z_$][A-Za-z0-9_$-]*)|\s*\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|\.\s*[A-Za-z_$][A-Za-z0-9_$-]*)\s*!?\s*,?\s*\)\s*\.(?:toBe|toEqual|toStrictEqual)\(\s*['"`](?:(?:[~^]|[<>]=?)?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?|npm:[@A-Za-z0-9_./-]+@(?:[~^]|[<>]=?)?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?|workspace:(?:[~^]|[<>]=?)?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?)["'`]"#,
+        r#"\b(?:dependencies|devDependencies|optionalDependencies|peerDependencies)(?:["']\s*\])?\s*!?\s*(?:\?\.\s*(?:\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|[A-Za-z_$][A-Za-z0-9_$-]*)|\s*\[\s*["'][@A-Za-z0-9_./-]+["']\s*\]|\.\s*[A-Za-z_$][A-Za-z0-9_$-]*)\s*!?\s*(?:,\s*(?:"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'|`(?:\\.|[^`\\])*`)?\s*)?\)\s*\.(?:toBe|toEqual|toStrictEqual)\(\s*['"`](?:npm:[@A-Za-z0-9_./-]+@|workspace:)?(?:[~^]|[<>]=?)?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?(?:(?:[ \t]*\|\|[ \t]*|[ \t]+-[ \t]+|[ \t]+)(?:[~^]|[<>]=?)?\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?)*["'`]"#,
         true,
     ),
 ];

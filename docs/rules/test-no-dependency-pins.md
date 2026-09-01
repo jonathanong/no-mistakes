@@ -72,8 +72,9 @@ caret or tilde metadata assertion locally. Raw reads may use `toString()` or
 `dependencies`, `devDependencies`, `optionalDependencies`, and
 `peerDependencies` property or bracket access followed directly by `toBe`,
 `toEqual`, or `toStrictEqual`, including non-null assertions, multiline
-assertions, comparator ranges, and versioned `npm:` or `workspace:` specs.
-Negated assertions and malformed version prefixes are not matched.
+assertions, optional string-literal assertion messages, compound comparator,
+OR, or hyphen ranges, and versioned `npm:` or `workspace:` specs. Negated
+assertions and malformed version prefixes are not matched.
 
 ## Options and defaults
 
