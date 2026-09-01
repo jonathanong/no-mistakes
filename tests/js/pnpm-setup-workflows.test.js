@@ -12,7 +12,14 @@ const releaseWorkflow = readFileSync(
 test("workflows use the pnpm 11 setup action with immutable refs", () => {
   for (const workflow of [ciWorkflow, releaseWorkflow]) {
     assert.doesNotMatch(workflow, /pnpm\/action-setup@/u);
-    assert.match(workflow, /uses: pnpm\/setup@[0-9a-f]{40} # v\d+/u);
+
+    const setupRefs = [...workflow.matchAll(/uses: pnpm\/setup@(\S+)/gu)].map(
+      ([, setupRef]) => setupRef,
+    );
+    assert.ok(setupRefs.length > 0);
+    for (const setupRef of setupRefs) {
+      assert.match(setupRef, /^[0-9a-f]{40}$/u);
+    }
   }
 });
 
