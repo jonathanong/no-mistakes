@@ -2,12 +2,11 @@ use super::{CompiledOptions, CompiledPattern, RuleFinding, RULE_ID};
 
 pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
-    let assertion_ranges = opts
-        .patterns
-        .iter()
-        .any(|pattern| pattern.multiline)
-        .then(|| assertion_ranges(content))
-        .unwrap_or_default();
+    let assertion_ranges = if opts.patterns.iter().any(|pattern| pattern.multiline) {
+        assertion_ranges(content)
+    } else {
+        Vec::new()
+    };
     for pattern in &opts.patterns {
         if pattern.multiline {
             for matched in pattern.regex.find_iter(content) {
