@@ -8,14 +8,14 @@ mod jsx_text_ranges;
 
 pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
-    let (ranges, jsx_text_ranges) = if opts.patterns.iter().any(|pattern| pattern.multiline) {
+    let ranges = if opts.patterns.iter().any(|pattern| pattern.multiline) {
         let mut ranges = source_ranges(content);
         let jsx_text_ranges = jsx_text_ranges::collect(file, content);
         ranges.non_code.extend(jsx_text_ranges.iter().copied());
         merge_ranges(&mut ranges.non_code);
-        (ranges, jsx_text_ranges)
+        ranges
     } else {
-        (SourceRanges::default(), Vec::new())
+        SourceRanges::default()
     };
     for pattern in &opts.patterns {
         if pattern.multiline {
@@ -50,7 +50,7 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
                 findings.push(finding(file, line, pattern, &normalized));
             }
         } else {
-            scan_lines(file, content, pattern, &jsx_text_ranges, &mut findings);
+            scan_lines(file, content, pattern, &mut findings);
         }
     }
     findings
@@ -88,10 +88,19 @@ fn raw_manifest_entry<'a>(
         .find(|(start, end)| *start <= offset && offset < *end)?;
     ENTRY
         .find_iter(&content[start..end])
-        .map(|entry| entry.as_str())
         .find(|entry| {
-            has_matching_raw_entry_delimiters(entry) && !is_version_field_assertion(entry)
+            let displayed = entry.as_str();
+            let continues_value = content
+                .as_bytes()
+                .get(start + entry.end())
+                .is_some_and(|byte| {
+                    byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'+' | b'-')
+                });
+            has_matching_raw_entry_delimiters(displayed)
+                && !is_version_field_assertion(displayed)
+                && !continues_value
         })
+        .map(|entry| entry.as_str())
 }
 
 fn has_matching_version_delimiters(matched: &str) -> bool {
@@ -145,16 +154,11 @@ fn scan_lines(
     file: &str,
     content: &str,
     pattern: &CompiledPattern,
-    jsx_text_ranges: &[(usize, usize)],
     findings: &mut Vec<RuleFinding>,
 ) {
-    let mut line_start = 0;
     for (index, line_with_ending) in content.split_inclusive('\n').enumerate() {
         let line = line_with_ending.trim_end_matches(['\r', '\n']);
         for matched in pattern.regex.find_iter(line) {
-            if !is_code(jsx_text_ranges, line_start + matched.start()) {
-                continue;
-            }
             if pattern.reject_preceding_at
                 && matched.start() > 0
                 && line.as_bytes()[matched.start() - 1] == b'@'
@@ -163,7 +167,6 @@ fn scan_lines(
             }
             findings.push(finding(file, index + 1, pattern, matched.as_str()));
         }
-        line_start += line_with_ending.len();
     }
 }
 

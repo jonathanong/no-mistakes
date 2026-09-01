@@ -56,6 +56,7 @@ fn expect_token_detection_requires_a_standalone_name() {
     assert_eq!(start(b"expect (", 7, &[]), Some(0));
     assert_eq!(start(b"expect.soft(", 11, &[]), Some(0));
     assert_eq!(start(b"expect.poll(", 11, &[]), Some(0));
+    assert_eq!(start(b"expect!(", 7, &[]), Some(0));
     assert_eq!(start(b"expect<string>(", 14, &[]), Some(0));
     assert_eq!(start(b"expect<Array<string>>(", 21, &[]), Some(0));
     assert_eq!(
@@ -63,6 +64,7 @@ fn expect_token_detection_requires_a_standalone_name() {
         Some(0)
     );
     assert_eq!(start(b"helper.expect<string>(", 21, &[]), None);
+    assert_eq!(start(b"helper.expect!(", 14, &[]), None);
 }
 
 #[test]

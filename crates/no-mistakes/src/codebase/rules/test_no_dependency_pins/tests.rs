@@ -132,7 +132,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("parsed dependency version assertion")
             })
             .count(),
-        46,
+        48,
         "{findings:#?}"
     );
     let multiline = findings
@@ -165,7 +165,7 @@ fn fail_fixture_reports_all_pin_shapes() {
             .iter()
             .filter(|finding| finding.file == "src/jsx.test.tsx")
             .count(),
-        2,
+        3,
         "{findings:#?}"
     );
 }

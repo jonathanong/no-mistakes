@@ -131,6 +131,7 @@ pub(super) fn expect_token_start(
     non_code_ranges: &[(usize, usize)],
 ) -> Option<usize> {
     let mut end = skip_trivia(bytes, open_paren, non_code_ranges);
+    end -= usize::from(end > 0 && bytes[end - 1] == b'!');
     end = type_argument_start(bytes, end, non_code_ranges)?;
     end = skip_trivia(bytes, end, non_code_ranges);
     for token in [b"expect.soft".as_slice(), b"expect.poll", b"expect"] {
@@ -147,7 +148,6 @@ pub(super) fn expect_token_start(
     }
     None
 }
-
 fn skip_trivia(bytes: &[u8], mut end: usize, non_code_ranges: &[(usize, usize)]) -> usize {
     loop {
         while end > 0 && bytes[end - 1].is_ascii_whitespace() {
