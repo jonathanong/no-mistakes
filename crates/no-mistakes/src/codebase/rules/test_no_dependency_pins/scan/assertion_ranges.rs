@@ -80,17 +80,7 @@ pub(super) fn source_ranges(content: &str) -> SourceRanges {
                 {
                     index += 1;
                 }
-                lex.regex_allowed = matches!(
-                    &bytes[start..index],
-                    b"return"
-                        | b"throw"
-                        | b"case"
-                        | b"delete"
-                        | b"void"
-                        | b"typeof"
-                        | b"yield"
-                        | b"await"
-                );
+                lex.regex_allowed = LexState::keyword_allows_regex(&bytes[start..index]);
                 continue;
             }
             byte if !byte.is_ascii_whitespace() => lex.regex_allowed = false,
@@ -187,6 +177,7 @@ fn type_argument_start(
         }
         match bytes[index] {
             b'>' if index == 0 || bytes[index - 1] != b'=' => depth += 1,
+            b'<' if depth == 0 => return None,
             b'<' => {
                 depth -= 1;
                 if depth == 0 {

@@ -23,6 +23,12 @@ fn assertion_start_returns_none_without_an_open_expect() {
 }
 
 #[test]
+fn comparison_before_parenthesized_arrow_does_not_underflow_type_depth() {
+    let source = "const less = a < b; const map = x => (x)";
+    assert!(source_ranges(source).assertions.is_empty());
+}
+
+#[test]
 fn assertion_ranges_keep_an_unclosed_expect_available() {
     let source = "expect(\n  packageJson.devDependencies.foo";
     let match_start = source.find("devDependencies").unwrap();
@@ -186,6 +192,9 @@ fn control_condition_allows_a_following_regex_literal() {
         "for (const item of items) /[']/u.test(item); ",
         "for await (const item of items) /[']/u.test(item); ",
         "with (context) /[']/u.test(value); ",
+        "if (ok) value(); else /[']/u.test(value); ",
+        "const ctor = value instanceof /[']/u; ",
+        "const present = key in /[']/u; ",
     ] {
         let source = format!("{prefix}expect(packageJson.dependencies.foo).toBe('1.2.3')");
         let match_start = source.find("dependencies").unwrap();

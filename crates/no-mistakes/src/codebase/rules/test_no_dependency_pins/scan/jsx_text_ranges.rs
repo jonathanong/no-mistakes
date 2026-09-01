@@ -33,3 +33,15 @@ pub(super) fn collect(file: &str, content: &str) -> Vec<(usize, usize)> {
     )
     .unwrap_or_default()
 }
+
+pub(super) fn mask(content: &str, ranges: &[(usize, usize)]) -> String {
+    let mut bytes = content.as_bytes().to_vec();
+    for &(start, end) in ranges {
+        for byte in &mut bytes[start..end] {
+            if !matches!(*byte, b'\n' | b'\r') {
+                *byte = b' ';
+            }
+        }
+    }
+    String::from_utf8(bytes).expect("masking JSX text preserves UTF-8")
+}

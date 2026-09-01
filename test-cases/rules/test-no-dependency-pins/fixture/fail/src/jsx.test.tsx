@@ -10,3 +10,4 @@ const nested = (
     <pre>{expect(packageJson.devDependencies.eslint).toBe('10.9.0')}</pre>
   </section>
 )
+const unmatchedJsxQuote = <div>"quoted text</div>; expect(packageJson.dependencies.foo).toBe('1.2.3')

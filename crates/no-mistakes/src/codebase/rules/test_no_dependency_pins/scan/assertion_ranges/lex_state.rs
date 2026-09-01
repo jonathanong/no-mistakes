@@ -27,6 +27,23 @@ impl LexState {
         }
     }
 
+    pub(super) fn keyword_allows_regex(token: &[u8]) -> bool {
+        matches!(
+            token,
+            b"return"
+                | b"throw"
+                | b"case"
+                | b"delete"
+                | b"void"
+                | b"typeof"
+                | b"yield"
+                | b"await"
+                | b"else"
+                | b"instanceof"
+                | b"in"
+        )
+    }
+
     pub(super) fn enter_non_code(&mut self, start: usize) {
         self.non_code_start = Some(start);
     }

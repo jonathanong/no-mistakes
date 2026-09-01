@@ -165,7 +165,7 @@ fn fail_fixture_reports_all_pin_shapes() {
             .iter()
             .filter(|finding| finding.file == "src/jsx.test.tsx")
             .count(),
-        3,
+        4,
         "{findings:#?}"
     );
 }

@@ -37,6 +37,7 @@ expect(packageJson.dependencies[getName()]).toBe('10.9.0')
 expect(packageJson.dependencies[`foo${suffix}`]).toBe('1.2.3')
 expect(packageJson[`${section}`][`foo`]).toBe('1.2.3')
 expect((packageJson.dependencies.foo + suffix)).toBe('1.2.3')
+expect(packageJson.dependencies.foo-offset).toBe('1.2.3')
 expect(packageJson.devDependencies).not.toHaveProperty('eslint', '10.9.0')
 expect(packageJson.devDependencies) /* dependency check */ .not.toHaveProperty('eslint', '10.9.0')
 class PrivateExpectExample {
