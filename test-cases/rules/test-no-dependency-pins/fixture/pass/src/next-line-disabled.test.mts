@@ -1,2 +1,7 @@
 // no-mistakes-disable-next-line test-no-dependency-pins
-expect(workflow).toContain('uses: actions/checkout@v6.0.2')
+expect(
+  /* misleading expect( and ) delimiters */
+  packageJson.devDependencies?.['@typescript-eslint/parser'],
+).toEqual(
+  '8.42.0',
+)

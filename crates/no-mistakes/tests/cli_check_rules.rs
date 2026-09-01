@@ -491,6 +491,7 @@ fn test_no_dependency_pins_fails_for_exact_pins() {
     assert!(body.contains("release-url.test.mts"), "{body}");
     assert!(body.contains("release-asset.test.mts"), "{body}");
     assert!(body.contains("tool-log.test.mts"), "{body}");
+    assert!(body.contains("dependency-manifest.test.mts"), "{body}");
 }
 
 #[test]

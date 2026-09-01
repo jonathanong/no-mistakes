@@ -9,3 +9,74 @@ expect(script).toContain('releases/tag/v1.2.3')
 expect(name).toBe('no-mistakes-latest-x86_64-apple-darwin.tar.gz')
 expect(output).toContain('run v1.2.3')
 expect(output).toContain('RUN latest')
+expect(readFileSync('api-schema.json', 'utf8')).toContain('"openapi": "3.1.0"')
+expect(packageJson.engines?.node).toBe('>=24.16.0')
+expect(config['runtime-dependencies']['example']).toBe('1.2.3')
+expect(rootPackage.devDependencies?.playwright).toMatch(/^\d+\.\d+\.\d+$/)
+expect(rootPackage.devDependenciesVersion).toBe('1.2.3')
+expect(readFileSync('package.json', 'utf8')).toContain('"version": "1.2.3"')
+expect(readFileSync('fixtures/historical/package.json', 'utf8')).toContain('"example": "^1.2.3"')
+expect(rootPackage.devDependencies?.eslint).not.toBe('10.9.0')
+expect(rootPackage.devDependencies?.eslint, 'message').not.toBe('10.9.0')
+expect(rootPackage.devDependencies?.eslint).not.toBe /* comparison only */ ('10.9.0')
+await expect(Promise.resolve(rootPackage.devDependencies?.eslint)).resolves.not.toBe('10.9.0')
+expect(readFileSync('package.json', 'utf8')).not.toContain('"eslint": "^10.9.0"')
+expect(readRepoFile('package.json')).toContain('"eslint": "9.0.0"'.replace('9.0.0', currentVersion))
+expect(packageJson.dependencies?.example).toBe('1.2.3malformed')
+expect(packageJson.dependencies?.example).toBe('1.2.3"malformed')
+expect(packageJson.dependencies?.example).toBe('1.2.3\'malformed')
+expect(packageJson.dependencies?.example).toEqual("1.2.3'malformed")
+expect(packageJson.dependencies?.example).toStrictEqual(`1.2.3"malformed`)
+expect(packageJson.dependencies.foo).toBe('1.2.3'.replace('1.2.3', currentVersion))
+expect(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0' + suffix)
+expect(packageJson.devDependencies).toHaveProperty('eslint', '10.9.0"malformed')
+expect(packageJson.dependencies?.example).toBe('==1.2.3')
+expect(packageJson.devDependencies[dependencyName]).not.toBe('10.9.0')
+expect(config[section][dependencyName]).toBe('10.9.0')
+expect(packageJson.dependencies[getName()]).toBe('10.9.0')
+expect(packageJson.dependencies[`foo${suffix}`]).toBe('1.2.3')
+expect(packageJson[`${section}`][`foo`]).toBe('1.2.3')
+expect((packageJson.dependencies.foo + suffix)).toBe('1.2.3')
+expect(overriddenVersion ?? packageJson.dependencies.foo).toBe('1.2.3')
+expect(normalize(packageJson.dependencies.foo)).toBe('1.2.3')
+expect(packageJson.dependencies.foo-offset).toBe('1.2.3')
+expect(packageJson.devDependencies).not.toHaveProperty('eslint', '10.9.0')
+expect(packageJson.devDependencies) /* dependency check */ .not.toHaveProperty('eslint', '10.9.0')
+class PrivateExpectExample {
+  #expect = expect
+  check() {
+    this.#expect(packageJson.dependencies.foo).toBe('1.2.3')
+  }
+}
+expect(packageJson).toHaveProperty('engines.node', '>=24')
+expect(packageJson).toHaveProperty('devDependencies.eslint', 'latest')
+expect(packageJson.devDependencies).toHaveProperty('eslint')
+expect(packageJson.peerDependencies.react).toBe('>=18.0.0 <20.0.0malformed')
+expect(packageJson.peerDependencies.eslint).toBe('9.1.2.3')
+expect(packageJson.dependencies.foo).toBe('1.2.3-beta.')
+expect(packageJson.dependencies.foo).toBe('1.2.3+build..5')
+expect(packageJson.peerDependencies.eslint).toBe('v9')
+expect(readRepoFile('package.json')).toContain('"foo": "1.2.3\"malformed"')
+expect(readFileSync('package.json', 'utf8')).toContain('"example": "^1.2.3malformed"')
+expect(readRepoFile('package.json')).toContain(`"eslint": "10.9.0'`)
+expect(readRepoFile('package.json')).toContain(`"eslint': "10.9.0"`)
+expect(readFileSync('package.json', 'utf8')).toContain(actual) // e.g. "eslint": "^10.9.0"
+expect(readFileSync('package.json', 'utf8')).toContain(actual /* e.g. "eslint": "^10.9.0" */)
+// expect(readFileSync('package.json', 'utf8')).toContain('"eslint": "^10.9.0"')
+/* expect(readFileSync('package.json')).toContain('"eslint": "^10.9.0"') */
+const rawAssertionExample = `expect(readFileSync('package.json')).toContain('"eslint": "^10.9.0"')`
+// expect(packageJson.dependencies.foo).toBe('1.2.3')
+/* expect(packageJson.dependencies.foo).toBe('1.2.3') */
+const dependencyAssertionExample = "expect(packageJson.dependencies.foo).toBe('1.2.3')"
+const dependencyTemplateExample = `expect(packageJson.dependencies.foo).toBe('1.2.3')`
+const taggedDependencyTemplateExample = dedent`expect(packageJson.dependencies.foo).toBe('1.2.3')`
+expect(
+  /* expect(packageJson.dependencies.foo).toBe('1.2.3') */ actual,
+).toBe(true)
+expect("expect(packageJson.dependencies.foo).toBe('1.2.3')").toBe(actual)
+expect(
+  readFileSync('package.json', 'utf8') /* .toContain('"eslint": "^9.0.0"') */,
+).toMatch(/eslint/)
+expect(
+  packageJson.dependencies.foo, // e.g. ).toBe('1.2.3')
+).toMatch(/^1/)

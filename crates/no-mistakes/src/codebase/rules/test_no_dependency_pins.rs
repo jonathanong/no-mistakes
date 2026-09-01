@@ -1,10 +1,15 @@
+mod patterns;
+mod scan;
+
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::{Context, Result};
+use patterns::DEFAULT_PATTERNS;
 use rayon::prelude::*;
 use regex::Regex;
+use scan::check_source;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
@@ -15,29 +20,6 @@ const DEFAULT_INCLUDE_RE: &str =
     r"(?:^|/)(?:__tests__/.*|[^/]+(?:\.mock)?\.test\.(?:mts|ts|tsx|mjs|js|cts|cjs))$";
 
 const LOOKBEHIND_NOT_AT: &str = "(?<!@)";
-
-const DEFAULT_PATTERNS: &[(&str, &str)] = &[
-    (
-        "exact action ref",
-        r"(?<!@)\b[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?\b",
-    ),
-    (
-        "exact tool version",
-        r#"\b[A-Z][A-Z0-9_]*_VERSION:\s*['"]?\d+\.\d+(?:\.\d+)?(?:[-+][A-Za-z0-9_.-]+)?\b"#,
-    ),
-    (
-        "versioned release URL",
-        r"\breleases/download/v?\d+(?:\.\d+)+(?:[-+][A-Za-z0-9_.-]+)?\b",
-    ),
-    (
-        "versioned release asset",
-        r"\b[A-Za-z0-9_.-]+-v\d+(?:\.\d+)+(?:[-+][A-Za-z0-9_.-]+)?-[A-Za-z0-9_.-]+\b",
-    ),
-    (
-        "versioned tool log",
-        r"\bRUN v\d+\.\d+\.\d+(?:[-+][A-Za-z0-9_.-]+)?\b",
-    ),
-];
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -57,6 +39,7 @@ struct CompiledPattern {
     reason: String,
     regex: Regex,
     reject_preceding_at: bool,
+    multiline: bool,
 }
 
 struct CompiledOptions {
@@ -138,12 +121,12 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let patterns = if opts.patterns.is_empty() {
         DEFAULT_PATTERNS
             .iter()
-            .map(|(reason, regex)| compile_pattern(reason, regex))
+            .map(|(reason, regex, multiline)| compile_pattern(reason, regex, *multiline))
             .collect::<Result<Vec<_>>>()?
     } else {
         opts.patterns
             .iter()
-            .map(|pattern| compile_pattern(&pattern.reason, &pattern.regex))
+            .map(|pattern| compile_pattern(&pattern.reason, &pattern.regex, false))
             .collect::<Result<Vec<_>>>()?
     };
     Ok(CompiledOptions {
@@ -157,7 +140,7 @@ fn default_include_regex() -> Regex {
     Regex::new(DEFAULT_INCLUDE_RE).expect("default test-file include regex is valid")
 }
 
-fn compile_pattern(reason: &str, source: &str) -> Result<CompiledPattern> {
+fn compile_pattern(reason: &str, source: &str, multiline: bool) -> Result<CompiledPattern> {
     let (pattern, reject_preceding_at) = match source.strip_prefix(LOOKBEHIND_NOT_AT) {
         Some(rest) => (rest, true),
         None => (source, false),
@@ -168,6 +151,7 @@ fn compile_pattern(reason: &str, source: &str) -> Result<CompiledPattern> {
         reason: reason.to_string(),
         regex,
         reject_preceding_at,
+        multiline,
     })
 }
 
@@ -185,36 +169,6 @@ fn check_file_with_sources(
         return Vec::new();
     };
     check_source(&rel, &content, opts)
-}
-
-fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
-    let mut findings = Vec::new();
-    for (index, line) in content.lines().enumerate() {
-        for pattern in &opts.patterns {
-            for matched in pattern.regex.find_iter(line) {
-                if pattern.reject_preceding_at
-                    && matched.start() > 0
-                    && line.as_bytes()[matched.start() - 1] == b'@'
-                {
-                    continue;
-                }
-                let pin = matched.as_str();
-                findings.push(RuleFinding {
-                    rule: RULE_ID.to_string(),
-                    file: file.to_string(),
-                    line: index + 1,
-                    message: message(file, index + 1, &pattern.reason, pin),
-                    import: Some(pin.to_string()),
-                    target: Some(pattern.reason.clone()),
-                });
-            }
-        }
-    }
-    findings
-}
-
-fn message(file: &str, line: usize, reason: &str, matched: &str) -> String {
-    format!("{file}:{line}: tests must not pin exact dependency versions ({reason}): `{matched}`")
 }
 
 #[cfg(test)]
