@@ -33,14 +33,15 @@ fn assertion_ranges_keep_an_unclosed_expect_available() {
 
 #[test]
 fn expect_token_detection_requires_a_standalone_name() {
-    assert_eq!(expect_token_start(b"(", 0), None);
-    assert_eq!(expect_token_start(b"myexpect(", 8), None);
-    assert_eq!(expect_token_start(b"myexpect.soft(", 13), None);
-    assert_eq!(expect_token_start(b"$expect.poll(", 12), None);
-    assert_eq!(expect_token_start(b"helpers.expect.soft(", 19), None);
-    assert_eq!(expect_token_start(b"expect (", 7), Some(0));
-    assert_eq!(expect_token_start(b"expect.soft(", 11), Some(0));
-    assert_eq!(expect_token_start(b"expect.poll(", 11), Some(0));
+    let start = super::assertion_ranges::expect_token_start;
+    assert_eq!(start(b"(", 0), None);
+    assert_eq!(start(b"myexpect(", 8), None);
+    assert_eq!(start(b"myexpect.soft(", 13), None);
+    assert_eq!(start(b"$expect.poll(", 12), None);
+    assert_eq!(start(b"helpers.expect.soft(", 19), None);
+    assert_eq!(start(b"expect (", 7), Some(0));
+    assert_eq!(start(b"expect.soft(", 11), Some(0));
+    assert_eq!(start(b"expect.poll(", 11), Some(0));
 }
 
 #[test]
