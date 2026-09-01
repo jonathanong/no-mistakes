@@ -54,11 +54,6 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
                 if !has_matching_version_delimiters(version_literal, raw_assertion) {
                     continue;
                 }
-                if pattern.reason == "package.json dependency assertion"
-                    && !has_matching_raw_entry_delimiters(displayed)
-                {
-                    continue;
-                }
                 if !reversed_assertion && !is_code(&ranges.non_code, matched.start()) {
                     continue;
                 }
