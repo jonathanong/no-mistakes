@@ -20,6 +20,8 @@ expect(readRepoFile('package.json')).toContain('"typescript": "^5.9.0"') // curr
 expect(readRepoFile('package.json')).toContain('"eslint": "^9"')
 expect(packageJson.devDependencies!['eslint']).toBe('10.9.0')
 expect(packageJson!.dependencies.foo).toBe('1.2.3')
+expect(paqueté.dependencies.foo).toBe('1.2.3')
+expect(packageJson.dependencies.dépendance).toBe('1.2.3')
 expect(packageJson.devDependencies.eslint!).toBe('10.9.0')
 expect!(packageJson.dependencies.foo).toBe('1.2.3')
 expect('1.2.3').toBe(packageJson.dependencies.foo)

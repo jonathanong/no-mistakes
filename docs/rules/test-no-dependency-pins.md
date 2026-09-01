@@ -79,6 +79,7 @@ sync or async expression callbacks and single-return block callbacks passed to `
 simple identifier or member-path `as` casts, extra parenthesized wrappers,
 optional string-literal assertion messages, explicit equality, compound
 comparator, OR, or hyphen ranges, and versioned `npm:` or `workspace:` specs.
+Parsed object, property, and computed-key identifiers support ECMAScript Unicode identifiers.
 Computed dependency keys are limited to identifiers and member paths; calls,
 concatenations, nested bracket expressions, array-form property paths, and
 computed expected-version strings are not matched. Negated assertions and
