@@ -13,8 +13,12 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
     for pattern in &opts.patterns {
         if pattern.multiline {
             for matched in pattern.regex.find_iter(content) {
+                if !has_matching_version_delimiters(matched.as_str()) {
+                    continue;
+                }
                 if pattern.reason == "package.json dependency assertion"
-                    && is_version_field_assertion(matched.as_str())
+                    && (!has_matching_raw_entry_delimiters(matched.as_str())
+                        || is_version_field_assertion(matched.as_str()))
                 {
                     continue;
                 }
@@ -40,6 +44,31 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
         }
     }
     findings
+}
+
+fn has_matching_version_delimiters(matched: &str) -> bool {
+    let bytes = matched.as_bytes();
+    let Some(&closing) = bytes.last() else {
+        return false;
+    };
+    bytes[..bytes.len() - 1]
+        .iter()
+        .rfind(|byte| matches!(byte, b'\'' | b'"' | b'`'))
+        .is_some_and(|opening| *opening == closing)
+}
+
+fn has_matching_raw_entry_delimiters(matched: &str) -> bool {
+    let mut quotes = matched.bytes().rev().filter(|byte| is_quote(*byte));
+    let (Some(value_close), Some(value_open), Some(key_close), Some(key_open)) =
+        (quotes.next(), quotes.next(), quotes.next(), quotes.next())
+    else {
+        return false;
+    };
+    value_open == value_close && key_open == key_close
+}
+
+fn is_quote(byte: u8) -> bool {
+    matches!(byte, b'\'' | b'"' | b'`')
 }
 
 fn is_version_field_assertion(matched: &str) -> bool {

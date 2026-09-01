@@ -64,6 +64,10 @@ pub(super) fn source_ranges(content: &str) -> SourceRanges {
                 lex.regex_allowed = true;
             }
             b'}' if lex.close_brace(index) => {}
+            byte @ (b'+' | b'-') if next == Some(byte) => {
+                index += 2;
+                continue;
+            }
             b'[' | b',' | b';' | b':' | b'=' | b'!' | b'?' | b'&' | b'|' | b'+' | b'-' | b'*'
             | b'%' | b'~' | b'^' | b'<' | b'>' => lex.regex_allowed = true,
             b']' | b'}' | b'.' => lex.regex_allowed = false,

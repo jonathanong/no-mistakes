@@ -155,12 +155,24 @@ fn regex_literals_inside_expect_do_not_change_parenthesis_depth() {
 
 #[test]
 fn division_does_not_hide_a_same_line_assertion() {
-    let source = "const ratio = total / divisor; expect(\n  packageJson.devDependencies.foo,\n).toBe('1.2.3')";
-    let match_start = source.find("devDependencies").unwrap();
-    let expect_start = source.find("expect").unwrap();
-    let ranges = source_ranges(source).assertions;
+    for prefix in [
+        "const ratio = total / divisor; ",
+        "const ratio = count++ / total; ",
+        "const ratio = count-- / total; ",
+        "const ratio = ++count / total; ",
+    ] {
+        let source =
+            format!("{prefix}expect(\n  packageJson.devDependencies.foo,\n).toBe('1.2.3')");
+        let match_start = source.find("devDependencies").unwrap();
+        let expect_start = source.find("expect").unwrap();
+        let ranges = source_ranges(&source).assertions;
 
-    assert_eq!(assertion_start(&ranges, match_start), Some(expect_start));
+        assert_eq!(
+            assertion_start(&ranges, match_start),
+            Some(expect_start),
+            "{prefix}"
+        );
+    }
 }
 
 #[test]
