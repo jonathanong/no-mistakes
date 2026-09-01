@@ -1,6 +1,13 @@
 use super::assertion_ranges::is_code;
 use regex::Match;
 
+pub(super) fn is_version_field_assertion(matched: &str) -> bool {
+    matched.contains(r#""version""#)
+        || matched.contains(r#"\"version\""#)
+        || matched.contains("'version'")
+        || matched.contains(r#"\'version\'"#)
+}
+
 pub(super) fn is_direct_argument(
     content: &str,
     matched: Match<'_>,

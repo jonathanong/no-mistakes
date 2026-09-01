@@ -1,7 +1,9 @@
 use super::{CompiledOptions, CompiledPattern, RuleFinding, RULE_ID};
 use assertion_ranges::{assertion_start, is_code, source_ranges, SourceRanges};
 use delimiters::{has_matching_raw_entry_delimiters, has_matching_version_delimiters};
-use raw_literal_arg::is_direct_argument as raw_literal_is_direct_argument;
+use raw_literal_arg::{
+    is_direct_argument as raw_literal_is_direct_argument, is_version_field_assertion,
+};
 use regex::{Match, Regex};
 use std::sync::LazyLock;
 
@@ -9,6 +11,7 @@ mod assertion_ranges;
 mod delimiters;
 mod jsx_text_ranges;
 mod raw_literal_arg;
+mod received_prefix;
 
 pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
@@ -65,6 +68,18 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
                 let Some(start) = assertion_start(&ranges.assertions, matched.start()) else {
                     continue;
                 };
+                if !raw_assertion
+                    && !reversed_assertion
+                    && !matched.as_str().starts_with("expect.poll")
+                    && !received_prefix::is_transparent(
+                        content,
+                        start,
+                        matched.start(),
+                        &ranges.non_code,
+                    )
+                {
+                    continue;
+                }
                 let line = line_at(content, start);
                 let normalized = displayed.split_whitespace().collect::<Vec<_>>().join(" ");
                 findings.push(finding(file, line, pattern, &normalized));
@@ -98,7 +113,7 @@ fn raw_manifest_entry<'a>(
 ) -> Option<(&'a str, Option<(usize, usize)>)> {
     static ENTRY: LazyLock<Regex> = LazyLock::new(|| {
         Regex::new(
-            r#"\\?["'][@A-Za-z0-9_./-]+\\?["']\s*:\s*\\?["'][~^]?\d+(?:\.\d+){0,2}(?:-[A-Za-z0-9_.-]+)?(?:\+[A-Za-z0-9_.-]+)?\\?["']"#,
+            r#"\\?["'][@A-Za-z0-9_./-]+\\?["']\s*:\s*\\?["'][~^]?\d+(?:\.\d+){0,2}(?:-[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*)?(?:\+[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)*)?\\?["']"#,
         )
         .expect("raw package entry regex")
     });
@@ -121,13 +136,6 @@ fn raw_manifest_entry<'a>(
                 && !continues_value
         })
         .map(|entry| (entry.as_str(), Some((start, end))))
-}
-
-fn is_version_field_assertion(matched: &str) -> bool {
-    matched.contains(r#""version""#)
-        || matched.contains(r#"\"version\""#)
-        || matched.contains("'version'")
-        || matched.contains(r#"\'version\'"#)
 }
 
 fn has_code_matcher(matched: &str, start: usize, non_code_ranges: &[(usize, usize)]) -> bool {
