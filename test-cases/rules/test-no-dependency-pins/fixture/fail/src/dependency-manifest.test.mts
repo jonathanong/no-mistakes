@@ -10,6 +10,8 @@ expect(readFileSync('package.json').toString().trim()).toContain('"eslint": "^10
 expect(packageJson.devDependencies!['eslint']).toBe('10.9.0')
 expect(packageJson.devDependencies.eslint!).toBe('10.9.0')
 expect(packageJson.peerDependencies.react).toBe('>=18.0.0')
+expect(packageJson.dependencies.localPackage).toBe('workspace:1.0.0')
+expect(packageJson.devDependencies.eslint).toStrictEqual('10.9.0')
 expect(
   packageJson.devDependencies?.['@typescript-eslint/parser'],
 ).toEqual(

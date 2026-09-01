@@ -131,7 +131,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                     && finding.target.as_deref() == Some("parsed dependency version assertion")
             })
             .count(),
-        10,
+        12,
         "{findings:#?}"
     );
     let multiline = findings
@@ -143,7 +143,7 @@ fn fail_fixture_reports_all_pin_shapes() {
                 .is_some_and(|pin| pin.contains("@typescript-eslint/parser"))
         })
         .expect("multiline dependency assertion finding");
-    assert_eq!(multiline.line, 13, "{multiline:#?}");
+    assert_eq!(multiline.line, 15, "{multiline:#?}");
     assert!(!multiline.message.contains('\n'), "{multiline:#?}");
     assert!(findings
         .iter()

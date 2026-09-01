@@ -139,3 +139,6 @@ fn finding(file: &str, line: usize, pattern: &CompiledPattern, matched: &str) ->
 pub(super) fn message(file: &str, line: usize, reason: &str, matched: &str) -> String {
     format!("{file}:{line}: tests must not pin exact dependency versions ({reason}): `{matched}`")
 }
+
+#[cfg(test)]
+mod tests;

@@ -70,9 +70,10 @@ assertions do not preserve the entry's manifest section, suppress an intentional
 caret or tilde metadata assertion locally. Raw reads may use `toString()` or
 `trim()` before the matcher. Parsed matching is limited to
 `dependencies`, `devDependencies`, `optionalDependencies`, and
-`peerDependencies` property or bracket access followed directly by `toBe` or
-`toEqual`, including non-null assertions, multiline assertions, comparator
-ranges, and versioned `npm:` aliases. Negated assertions are not matched.
+`peerDependencies` property or bracket access followed directly by `toBe`,
+`toEqual`, or `toStrictEqual`, including non-null assertions, multiline
+assertions, comparator ranges, and versioned `npm:` or `workspace:` specs.
+Negated assertions and malformed version prefixes are not matched.
 
 ## Options and defaults
 
