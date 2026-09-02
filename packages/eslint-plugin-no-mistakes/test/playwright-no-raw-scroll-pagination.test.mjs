@@ -1,3 +1,4 @@
+import tsParser from "@typescript-eslint/parser";
 import { RuleTester } from "eslint";
 import { describe, it } from "vitest";
 import { plugin } from "./helpers.mjs";
@@ -109,6 +110,26 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
       code: 'page.waitForRequest((req) => req.url().includes("pageafter=2"));\nawait page.evaluate(() => window.scrollTo(0, 0));',
       filename: "playwright/reviews.spec.mts",
       options: [{ cursorParams: ["after"] }],
+    },
+    // A `window` parameter shadowing the global inside the evaluate callback (a common pattern
+    // for injecting a test double) is a different binding — `window.scrollTo` here calls the
+    // shadowing parameter's own method, not the real browser API, and must not be misflagged.
+    {
+      code: `${PAGINATED_WAIT}\nawait page.evaluate((window) => window.scrollTo(0, 0), safeScroller);`,
+      filename: "playwright/reviews.spec.mts",
+    },
+    // A string literal type (`type CursorPattern = "after="`) is a type-only position — it is
+    // never evaluated at runtime and must not be mistaken for an actual cursor-param check. The
+    // predicate's only runtime check is a dynamic (non-literal) argument, so condition A never
+    // holds and the raw scroll below must not be flagged.
+    {
+      code: `page.waitForRequest((req) => {
+        type CursorPattern = "after=";
+        return req.url().includes(dynamicCursorKey);
+      });
+      await page.evaluate(() => window.scrollTo(0, 0));`,
+      filename: "playwright/reviews.spec.mts",
+      languageOptions: { parser: tsParser },
     },
   ],
   invalid: [
@@ -241,6 +262,29 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
     {
       code: `page.waitForRequest((req) => /^after=/.test(req.url()));\nawait page.evaluate(() => window.scrollTo(0, 0));`,
       filename: "playwright/reviews.spec.mts",
+      errors: [{ messageId: "rawScroll" }],
+    },
+    // A statically computed cursor-wait access (`page["waitForRequest"]`) is just as unambiguous
+    // as dot access and must be matched the same way.
+    {
+      code: 'page["waitForRequest"]((req) => req.url().includes("after="));\nawait page.evaluate(() => window.scrollTo(0, 0));',
+      filename: "playwright/reviews.spec.mts",
+      errors: [{ messageId: "rawScroll" }],
+    },
+    // .searchParams.getAll(...) is the same static cursor-param check as .has()/.get(), just
+    // under its other name, and must be recognized too.
+    {
+      code: "page.waitForRequest((req) => new URL(req.url()).searchParams.getAll(`after`).length > 0);\nawait page.evaluate(() => window.scrollTo(0, 0));",
+      filename: "playwright/reviews.spec.mts",
+      errors: [{ messageId: "rawScroll" }],
+    },
+    // A literal wrapped in a runtime `as` cast is still a real, evaluated value — the
+    // value-wrapper recurses into its own `.expression`, so the literal underneath must still be
+    // found and still count toward the cursor-param match.
+    {
+      code: 'page.waitForRequest((req) => req.url().includes("after=" as string));\nawait page.evaluate(() => window.scrollTo(0, 0));',
+      filename: "playwright/reviews.spec.mts",
+      languageOptions: { parser: tsParser },
       errors: [{ messageId: "rawScroll" }],
     },
   ],

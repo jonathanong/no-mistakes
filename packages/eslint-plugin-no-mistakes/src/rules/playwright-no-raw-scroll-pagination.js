@@ -9,7 +9,19 @@ const PLAYWRIGHT_PATH_PATTERN =
 
 const CURSOR_WAIT_PROPERTIES = new Set(["waitForRequest", "waitForResponse"]);
 const RAW_SCROLL_NAMES = new Set(["scrollTo", "scrollBy", "scroll"]);
-const SEARCH_PARAMS_ACCESSORS = new Set(["has", "get"]);
+const SEARCH_PARAMS_ACCESSORS = new Set(["has", "get", "getAll"]);
+
+// The TypeScript node types that wrap a runtime value expression rather than being purely
+// type-positioned; every other "TS"-prefixed node type is skipped by `collectLiteralStrings` — a
+// string literal appearing only inside a type alias or annotation is never evaluated at runtime
+// and must not be mistaken for an actual cursor-param check.
+const TS_VALUE_WRAPPER_TYPES = new Set([
+  "TSAsExpression",
+  "TSSatisfiesExpression",
+  "TSNonNullExpression",
+  "TSInstantiationExpression",
+  "TSTypeAssertion",
+]);
 
 function isPlaywrightPath(filename) {
   return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));
@@ -22,11 +34,12 @@ function propertyName(node) {
 
 // `page.waitForRequest(...)` / `page.waitForResponse(...)`, matched by property name only — the
 // object (page, frame, a locator, ...) doesn't matter, mirroring how `playwright-no-set-timeout`
-// matches `.waitForTimeout` regardless of receiver.
+// matches `.waitForTimeout` regardless of receiver. A statically computed access
+// (`page["waitForRequest"]`) is just as unambiguous as dot access and is matched the same way.
 function isCursorWaitCall(node) {
   return (
     node.callee.type === "MemberExpression" &&
-    !node.callee.computed &&
+    (!node.callee.computed || node.callee.property.type === "Literal") &&
     CURSOR_WAIT_PROPERTIES.has(propertyName(node.callee.property))
   );
 }
@@ -35,28 +48,33 @@ function isCursorWaitCall(node) {
 // `scrollBy` equivalents — the only imperative, position-based browser scroll APIs. A same-named
 // method on any other receiver (`map.scrollTo()`, an editor or page-object helper) is not a
 // browser scroll and is never matched. `scrollIntoView` is element-relative, not a pagination
-// driver, and is intentionally not matched. A bare call only counts when it resolves to the
-// global — a project's own locally-declared or imported `scrollTo`/`scroll`/`scrollBy` helper is a
-// different function and must not be misflagged.
+// driver, and is intentionally not matched. Both the bare call and the `window`-qualified call
+// only count when the receiver resolves to the global — a project's own locally-declared or
+// imported `scrollTo`/`scroll`/`scrollBy` helper, or a shadowing `window` parameter (as in
+// `page.evaluate((window) => window.scrollTo(...), safeScroller)`), is a different function and
+// must not be misflagged.
 function isRawScrollCall(node, context) {
   const callee = node.callee;
   if (callee.type === "Identifier") {
     if (!RAW_SCROLL_NAMES.has(callee.name)) return false;
-    const variable = resolveVariable(callee, context);
-    return !(variable?.defs?.length > 0);
+    return !(resolveVariable(callee, context)?.defs?.length > 0);
   }
-  return (
-    callee.type === "MemberExpression" &&
-    (!callee.computed || callee.property.type === "Literal") &&
-    callee.object.type === "Identifier" &&
-    callee.object.name === "window" &&
-    RAW_SCROLL_NAMES.has(propertyName(callee.property))
-  );
+  if (
+    callee.type !== "MemberExpression" ||
+    (callee.computed && callee.property.type !== "Literal") ||
+    callee.object.type !== "Identifier" ||
+    callee.object.name !== "window" ||
+    !RAW_SCROLL_NAMES.has(propertyName(callee.property))
+  ) {
+    return false;
+  }
+  return !(resolveVariable(callee.object, context)?.defs?.length > 0);
 }
 
-// `<something>.searchParams.has("after")` / `.get("after")` — the cursor param name is passed as
-// a bare accessor argument, never appearing with a trailing `=` the way it does in a raw query
-// string, so it needs its own literal-collection path rather than the boundary-matched one below.
+// `<something>.searchParams.has("after")` / `.get("after")` / `.getAll("after")` — the cursor
+// param name is passed as a bare accessor argument, never appearing with a trailing `=` the way
+// it does in a raw query string, so it needs its own literal-collection path rather than the
+// boundary-matched one below.
 function isSearchParamsAccessorCall(node) {
   return Boolean(
     node.callee.type === "MemberExpression" &&
@@ -109,8 +127,16 @@ function hasQueryParamBoundary(literal, param, isRegex) {
   return false;
 }
 
+// TypeScript type-only positions (a type alias, an interface body, a `: typeof x` annotation, ...)
+// are skipped entirely — a string literal type or template literal type is never evaluated at
+// runtime and must not be mistaken for an actual cursor-param check. The value-wrapper expressions
+// above recurse into their runtime `.expression` only, never a type operand.
 function collectLiteralStrings(node, results) {
   if (!node) return;
+  if (node.type.startsWith("TS")) {
+    if (TS_VALUE_WRAPPER_TYPES.has(node.type)) collectLiteralStrings(node.expression, results);
+    return;
+  }
   if (node.type === "Literal") {
     if (typeof node.value === "string") results.push({ value: node.value, isRegex: false });
     else if (node.regex) results.push({ value: node.regex.pattern, isRegex: true });

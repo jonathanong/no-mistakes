@@ -414,6 +414,23 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       options: TOKEN_FACTORIES,
       errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
+    // A self-referential write (`suffix = suffix.trim()`) still reads the pre-write, potentially
+    // stale value on its own right-hand side before the assignment takes effect — the read
+    // embedded in that right-hand side must still be flagged, and the write must not be treated
+    // as a fresh refresh, so the later read stays flagged too.
+    {
+      code: `let suffix = randomSuffix();
+      test.beforeAll(async () => {
+        suffix = suffix.trim();
+        await createPost({ slug: \`post-\${suffix}\` });
+      });`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+      errors: [
+        { messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } },
+        { messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } },
+      ],
+    },
     // An aliased `import { test as pw } from "@playwright/test"` must be recognized the same as
     // the bare `test`/`it`/`describe` names — `pw.beforeAll(...)` is exactly as re-entry-hazardous
     // as `test.beforeAll(...)`, and the hoisted read inside it must still be flagged.

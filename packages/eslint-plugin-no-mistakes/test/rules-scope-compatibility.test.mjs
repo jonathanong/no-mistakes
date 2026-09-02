@@ -302,4 +302,50 @@ describe("scope compatibility", () => {
 
     assert.equal(reports.length, 0);
   });
+
+  it("does not report a window-qualified scroll call when window is shadowed and scope.set is unavailable", () => {
+    const reports = [];
+
+    // A `window` parameter shadowing the global (e.g. `page.evaluate((window) => ...)`) must
+    // resolve to that parameter, not the global, under the degraded scope shape too.
+    const shadowParam = { type: "Identifier", name: "window" };
+    const waitCall = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "Identifier", name: "page" },
+        property: { type: "Identifier", name: "waitForRequest" },
+      },
+      arguments: [{ type: "Literal", value: "**/api/v1/posts?after=abc" }],
+    };
+    const scrollCall = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "Identifier", name: "window" },
+        property: { type: "Identifier", name: "scrollTo" },
+      },
+      arguments: [],
+    };
+
+    const listener = plugin.rules["playwright-no-raw-scroll-pagination"].create({
+      filename: "e2e.spec.ts",
+      sourceCode: {
+        getScope: () => ({
+          set: undefined,
+          variables: [{ name: "window", defs: [{ node: shadowParam }] }],
+          upper: null,
+        }),
+      },
+      report: (item) => reports.push(item),
+    });
+
+    listener.CallExpression(waitCall);
+    listener.CallExpression(scrollCall);
+    listener["Program:exit"]();
+
+    assert.equal(reports.length, 0);
+  });
 });
