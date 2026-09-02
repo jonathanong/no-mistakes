@@ -55,8 +55,9 @@ await page.evaluate(() => window.scrollTo(0, 0));
 
 ## Options
 
-- `cursorParams` lists pagination query-param names to look for inside the
-  awaited request/response predicate. It defaults to `["after", "cursor"]`.
+- `cursorParams` lists pagination query-param names to look for in the first
+  argument of a `waitForRequest` or `waitForResponse` call. It defaults to
+  `["after", "cursor"]`.
 - `scrollHelper` names the project's repeated-scroll helper, interpolated
   into the report message. It defaults to `""`, which uses a generic hint
   instead.
