@@ -186,5 +186,34 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
         { messageId: "hoisted", data: { name: "otherSuffix", factory: "randomSuffix" } },
       ],
     },
+    // A non-computed member-expression property (`config.suffix`) sharing the hoisted token's
+    // name is a binding position, not a reference — it must not be double-reported alongside
+    // the real read of the hoisted `suffix`.
+    {
+      code: `const suffix = randomSuffix();
+      test.beforeAll(async () => {
+        const config = {};
+        config.suffix = "unrelated";
+        await createPost({ slug: \`post-\${suffix}\` });
+      });`,
+      filename: "playwright/tests/tags/tag-limit.spec.mts",
+      options: TOKEN_FACTORIES,
+      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
+    },
+    // describe.each(...)('...', fn) shape: fn's enclosing call has a CallExpression callee
+    // (`describe.each([...])`), neither a bare Identifier nor a non-computed MemberExpression.
+    // That callee shape is not a recognized shield, so the declaration stays describe-scoped
+    // and a beforeAll reading it must still be flagged.
+    {
+      code: `describe.each(["a", "b"])("%s", () => {
+        const suffix = randomSuffix();
+        test.beforeAll(async () => {
+          await createPost({ slug: \`post-\${suffix}\` });
+        });
+      });`,
+      filename: "playwright/tests/tags/tag-limit.spec.mts",
+      options: TOKEN_FACTORIES,
+      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
+    },
   ],
 });

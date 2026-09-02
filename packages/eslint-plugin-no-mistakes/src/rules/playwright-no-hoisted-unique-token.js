@@ -15,11 +15,8 @@ function isPlaywrightPath(filename) {
 }
 
 function nearestOwnFunction(node) {
-  let current = node.parent;
-  while (current) {
+  for (let current = node.parent; current && current.type !== "Program"; current = current.parent) {
     if (isFunctionNode(current)) return current;
-    if (current.type === "Program") return null;
-    current = current.parent;
   }
   return null;
 }
