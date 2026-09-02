@@ -389,5 +389,18 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       options: TOKEN_FACTORIES,
       errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
+    // A `var` redeclared in the same scope (`var suffix; var suffix = randomSuffix();`) is a
+    // single Variable with two defs — the factory-call declarator is defs[1], not defs[0] — and
+    // must still be recognized as a hoisted candidate.
+    {
+      code: `var suffix;
+      var suffix = randomSuffix();
+      test.beforeAll(async () => {
+        await createPost({ slug: \`post-\${suffix}\` });
+      });`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
+    },
   ],
 });

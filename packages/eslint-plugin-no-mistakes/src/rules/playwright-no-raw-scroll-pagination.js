@@ -72,16 +72,36 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+// Regex-derived literals are matched as pattern *source text*, not executed, so a regex author's
+// own boundary syntax (`[?&]after=`, `(?:^|[?&])after=`) leaves a `]` or `)` immediately before
+// the param name instead of a literal `?`/`&`. Only these exact, known boundary constructs count
+// as a separator for a regex-derived literal — accepting an arbitrary `)`/`]` before the param
+// would also match an unrelated alternation like `(?:next|prev)cursor=`, which closes a group
+// that has nothing to do with a query-string separator.
+const REGEX_BOUNDARY_SUFFIXES = [
+  "(?:^|[?&])",
+  "(?:^|[&?])",
+  "(?:^|\\?|&)",
+  "(?:^|&|\\?)",
+  "[?&]",
+  "[&?]",
+];
+
 // Requires the cursor param to appear as an actual query-key boundary (`?after=`, `&after=`, or
 // `after=` at the very start of the literal) rather than an unconstrained substring match, which
-// would false-positive on e.g. `category=after-hours` for a configured param of `after`. A regex
-// literal's `.pattern` is matched as source *text*, not executed — so a regex author's own
-// boundary syntax (`[?&]after=`, `(?:^|[?&])after=`) leaves a `]` or `)` immediately before the
-// param name instead of a literal `?`/`&`. Regex-derived literals accept those two additional
-// closing characters as a boundary; plain strings and template quasis do not.
+// would false-positive on e.g. `category=after-hours` for a configured param of `after`.
 function hasQueryParamBoundary(literal, param, isRegex) {
-  const boundary = isRegex ? String.raw`(?:^|[?&\]]|\))` : "(?:^|[?&])";
-  return new RegExp(`${boundary}${escapeRegExp(param)}=`).test(literal);
+  const target = new RegExp(`${escapeRegExp(param)}=`, "g");
+  for (const match of literal.matchAll(target)) {
+    const prefix = literal.slice(0, match.index);
+    if (prefix.length === 0) return true;
+    if (isRegex) {
+      if (REGEX_BOUNDARY_SUFFIXES.some((suffix) => prefix.endsWith(suffix))) return true;
+    } else if (/[?&]$/.test(prefix)) {
+      return true;
+    }
+  }
+  return false;
 }
 
 function collectLiteralStrings(node, results) {

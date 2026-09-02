@@ -195,9 +195,12 @@ module.exports = rule(
           collectEvents(callback.body, events);
           const refreshed = new Set();
           for (const event of events) {
+            // A `var` redeclared in the same scope (`var suffix; var suffix = randomSuffix();`)
+            // is one Variable with multiple defs — the factory-call declarator may be any of
+            // them, not necessarily defs[0], so every def must be checked against `candidates`.
             const variable = resolveVariable(event.node, context);
-            const declarator = variable?.defs?.[0]?.node;
-            if (!declarator || !candidates.has(declarator)) continue;
+            const declarator = variable?.defs?.find((def) => candidates.has(def.node))?.node;
+            if (!declarator) continue;
             if (event.isWrite) {
               if (isUnconditionalWrite(event.node, callback)) refreshed.add(declarator);
               continue;

@@ -81,6 +81,23 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
       code: `import { scroll } from "./helpers";\n${PAGINATED_WAIT}\nawait scroll();`,
       filename: "playwright/reviews.spec.mts",
     },
+    // A regex whose alternation happens to close right before an unrelated compound param name
+    // (`(?:next|prev)cursor=` matches `nextcursor=`/`prevcursor=`, not a `cursor` query key) must
+    // not be treated as mentioning the configured `cursor` param just because a `)` precedes it —
+    // that `)` closes an alternation with nothing to do with a query-string separator.
+    {
+      code: "page.waitForRequest((req) => /(?:next|prev)cursor=/.test(req.url()));\nawait page.evaluate(() => window.scrollTo(0, 0));",
+      filename: "playwright/reviews.spec.mts",
+      options: [{ cursorParams: ["cursor"] }],
+    },
+    // A plain (non-regex) literal where the param name appears mid-string with no `?`/`&`
+    // immediately before it (`pageafter=2`, not `?after=2`) must not satisfy the boundary check —
+    // the same non-boundary rule that applies to regex literals also applies to plain strings.
+    {
+      code: 'page.waitForRequest((req) => req.url().includes("pageafter=2"));\nawait page.evaluate(() => window.scrollTo(0, 0));',
+      filename: "playwright/reviews.spec.mts",
+      options: [{ cursorParams: ["after"] }],
+    },
   ],
   invalid: [
     // The exact pre-fix reviews.spec.mts shape: waitForRequest predicate mentions `after=`,
