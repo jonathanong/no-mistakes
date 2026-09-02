@@ -2,13 +2,22 @@
 
 const { rule } = require("../helpers");
 const { childNodes, isFunctionNode } = require("./test-no-shared-state-helpers");
-const { resolveVariable } = require("./test-no-shared-state-aliases");
-const { calleeName, propertyName, setupCallbackKind } = require("./test-no-shared-state-callees");
+const { hasProperty, resolveVariable } = require("./test-no-shared-state-aliases");
+const { calleeName, setupCallbackKind } = require("./test-no-shared-state-callees");
 
 const PLAYWRIGHT_PATH_PATTERN =
   /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|$)|(?:^|[/\\])e2e\.(?:spec|test)\.[cm]?[jt]sx?$|\.pw\.(?:spec|test)\.[cm]?[jt]sx?$/;
 
 const TEST_BODY_NAMES = new Set(["test", "it"]);
+
+// The four TypeScript node types that wrap a runtime value expression rather than being purely
+// type-positioned; every other "TS"-prefixed node type is skipped entirely by `collectEvents`.
+const TS_VALUE_WRAPPER_TYPES = new Set([
+  "TSAsExpression",
+  "TSSatisfiesExpression",
+  "TSNonNullExpression",
+  "TSInstantiationExpression",
+]);
 
 function isPlaywrightPath(filename) {
   return PLAYWRIGHT_PATH_PATTERN.test(filename.replace(/\\/g, "/"));
@@ -24,7 +33,8 @@ function nearestOwnFunction(node) {
 // A declaration is already safely scoped to its own re-entry unit when the function it lives in
 // is passed straight into a setup hook (`beforeAll`/`beforeEach`/`afterEach`/`afterAll`, bare or
 // `test.`-qualified) or a test body (`test`/`it`, including `.only`/`.skip`-style modifiers) — but
-// NOT `describe`, which registers once and is exactly as re-entry-hazardous as module scope.
+// NOT `describe` anywhere in the callee chain (e.g. `test.describe.only`), which registers once
+// and is exactly as re-entry-hazardous as module scope.
 function isSharedScopeShield(fn) {
   const parent = fn.parent;
   if (!parent || parent.type !== "CallExpression") return false;
@@ -32,13 +42,35 @@ function isSharedScopeShield(fn) {
   const callee = parent.callee;
   if (callee.type === "Identifier") return TEST_BODY_NAMES.has(callee.name);
   if (callee.type === "MemberExpression" && !callee.computed) {
-    return TEST_BODY_NAMES.has(calleeName(callee)) && propertyName(callee.property) !== "describe";
+    return TEST_BODY_NAMES.has(calleeName(callee)) && !hasProperty(callee, "describe");
   }
   return false;
 }
 
+// A declaration nested arbitrarily deep inside a `beforeAll` callback — even inside a local helper
+// function the hook itself defines and invokes — is minted fresh on every hook re-entry, so it is
+// never a hoisting hazard regardless of how many function boundaries separate it from the hook.
+function isWithinBeforeAllCallback(node) {
+  for (let fn = nearestOwnFunction(node); fn; fn = nearestOwnFunction(fn)) {
+    const parent = fn.parent;
+    if (parent?.type === "CallExpression" && setupCallbackKind(parent) === "before-once") {
+      return true;
+    }
+  }
+  return false;
+}
+
+// An Identifier assigned to (not read) by a plain `=` assignment is a write, not a hoisted-value
+// reference: a hook that reassigns the tracked variable before reading it is no longer reusing the
+// hoisted value.
+function isWriteTarget(node) {
+  const parent = node.parent;
+  return parent?.type === "AssignmentExpression" && parent.operator === "=" && parent.left === node;
+}
+
 // Skip Identifier positions that are names, not value references: the non-computed `.property`
-// of a member access, and a non-computed, non-shorthand object-literal `.key`.
+// of a member access, a non-computed, non-shorthand object-literal `.key`, and a plain-assignment
+// write target.
 function isReferenceIdentifier(node) {
   const parent = node.parent;
   if (!parent) return true;
@@ -48,13 +80,24 @@ function isReferenceIdentifier(node) {
   if (parent.type === "Property" && !parent.computed && !parent.shorthand && parent.key === node) {
     return false;
   }
-  return true;
+  return !isWriteTarget(node);
 }
 
-function collectReferenceIdentifiers(node, results) {
-  if (!node) return;
-  if (node.type === "Identifier" && isReferenceIdentifier(node)) results.push(node);
-  for (const child of childNodes(node)) collectReferenceIdentifiers(child, results);
+// Collects every read and write of an Identifier reachable from `node`, in source order.
+// TypeScript type-only positions (`type X = typeof suffix`, `: typeof suffix` annotations, a
+// `TSInterfaceDeclaration` body, ...) are skipped entirely — the value-wrapper expressions above
+// recurse into their runtime `.expression` only, never a type operand.
+function collectEvents(node, results) {
+  if (!node || typeof node.type !== "string") return;
+  if (node.type.startsWith("TS")) {
+    if (TS_VALUE_WRAPPER_TYPES.has(node.type)) collectEvents(node.expression, results);
+    return;
+  }
+  if (node.type === "Identifier") {
+    if (isWriteTarget(node)) results.push({ node, isWrite: true });
+    else if (isReferenceIdentifier(node)) results.push({ node, isWrite: false });
+  }
+  for (const child of childNodes(node)) collectEvents(child, results);
 }
 
 module.exports = rule(
@@ -77,7 +120,7 @@ module.exports = rule(
     },
   },
   (context) => {
-    if (!isPlaywrightPath(context.filename)) return {};
+    let isPlaywrightFile = isPlaywrightPath(context.filename);
     const tokenFactories = context.options?.[0]?.tokenFactories;
     if (!tokenFactories || tokenFactories.length === 0) return {};
     const factoryNames = new Set(tokenFactories);
@@ -87,6 +130,9 @@ module.exports = rule(
     const beforeAllCallbacks = [];
 
     return {
+      ImportDeclaration(node) {
+        if (node.source.value === "@playwright/test") isPlaywrightFile = true;
+      },
       VariableDeclarator(node) {
         if (
           node.id.type !== "Identifier" ||
@@ -97,7 +143,9 @@ module.exports = rule(
           return;
         }
         const fn = nearestOwnFunction(node);
-        if (!fn || !isSharedScopeShield(fn)) candidates.set(node, node.init.callee.name);
+        if ((!fn || !isSharedScopeShield(fn)) && !isWithinBeforeAllCallback(node)) {
+          candidates.set(node, node.init.callee.name);
+        }
       },
       CallExpression(node) {
         if (setupCallbackKind(node) !== "before-once") return;
@@ -105,21 +153,25 @@ module.exports = rule(
         if (callback) beforeAllCallbacks.push(callback);
       },
       "Program:exit"() {
-        if (candidates.size === 0) return;
+        if (!isPlaywrightFile || candidates.size === 0) return;
         for (const callback of beforeAllCallbacks) {
-          const references = [];
-          collectReferenceIdentifiers(callback.body, references);
-          for (const identifier of references) {
-            const variable = resolveVariable(identifier, context);
+          const events = [];
+          collectEvents(callback.body, events);
+          const refreshed = new Set();
+          for (const event of events) {
+            const variable = resolveVariable(event.node, context);
             const declarator = variable?.defs?.[0]?.node;
-            const factory = declarator && candidates.get(declarator);
-            if (factory) {
-              context.report({
-                node: identifier,
-                messageId: "hoisted",
-                data: { name: identifier.name, factory },
-              });
+            if (!declarator || !candidates.has(declarator)) continue;
+            if (event.isWrite) {
+              refreshed.add(declarator);
+              continue;
             }
+            if (refreshed.has(declarator)) continue;
+            context.report({
+              node: event.node,
+              messageId: "hoisted",
+              data: { name: event.node.name, factory: candidates.get(declarator) },
+            });
           }
         }
       },

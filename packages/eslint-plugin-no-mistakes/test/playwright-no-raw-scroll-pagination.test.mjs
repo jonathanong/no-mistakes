@@ -47,6 +47,29 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
       code: `${PAGINATED_WAIT}\nawait locator.scrollIntoView();`,
       filename: "playwright/reviews.spec.mts",
     },
+    // A cursor param name that appears only as a substring of an unrelated query value
+    // (`after-hours`, not `after=`) must not satisfy the boundary match.
+    {
+      code: 'page.waitForRequest((req) => req.url().includes("category=after-hours"));\nawait page.evaluate(() => window.scrollTo(0, 0));',
+      filename: "playwright/reviews.spec.mts",
+      options: [{ cursorParams: ["after"] }],
+    },
+    // A same-named method on a non-window receiver (a map widget, an editor) is not a browser
+    // scroll and is never matched, regardless of a qualifying cursor wait elsewhere in the file.
+    {
+      code: `${PAGINATED_WAIT}\nmap.scrollTo({ lat: 0, lng: 0 });\nawait editor.scrollTo(0, 0);`,
+      filename: "playwright/reviews.spec.mts",
+    },
+    // An unrelated import does not activate a non-Playwright path.
+    {
+      code: `import { scrollToLoadMore } from "./helpers";\n${PAGINATED_WAIT}\nawait page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));`,
+      filename: "src/util.ts",
+    },
+    // A non-literal .searchParams.has(...) argument is never treated as a cursor-param match.
+    {
+      code: `page.waitForRequest((req) => new URL(req.url()).searchParams.has(cursorParamName));\nawait page.evaluate(() => window.scrollTo(0, 0));`,
+      filename: "playwright/reviews.spec.mts",
+    },
   ],
   invalid: [
     // The exact pre-fix reviews.spec.mts shape: waitForRequest predicate mentions `after=`,
@@ -115,6 +138,13 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
     {
       code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));`,
       filename: "reviews.pw.spec.ts",
+      errors: [{ messageId: "rawScroll" }],
+    },
+    // A file path that doesn't match the naming convention is still recognized once it imports
+    // @playwright/test.
+    {
+      code: `import { test } from "@playwright/test";\n${PAGINATED_WAIT}\nawait page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));`,
+      filename: "src/util.ts",
       errors: [{ messageId: "rawScroll" }],
     },
   ],

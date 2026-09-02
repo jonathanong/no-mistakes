@@ -9,6 +9,19 @@ single raw `window.scrollTo`/`scrollBy` call can fire that scroll before the
 effect commits — the synthetic scroll is lost forever, and the wait for the
 next page burns its full timeout instead of failing fast or succeeding.
 
+The two conditions are correlated at the file level, deliberately: a raw
+scroll call anywhere in a spec is flagged as soon as the file also awaits a
+cursor-paginated request anywhere, rather than requiring the two to appear in
+the same block or test. A spec mixing a legitimate raw scroll (testing
+scroll-to-top, say) with an unrelated paginated wait elsewhere in the same
+file is a rare shape, and file-level correlation is what a single-pass
+traversal without cross-block control-flow analysis can express — the
+alternative is exactly the kind of scope no static rule can promise. The
+awaited predicate is also only scanned when it's written inline as the
+call's own argument; a predicate extracted to a named function
+(`page.waitForRequest(isNextPageRequest)`) is not resolved back to that
+function's body and is not scanned.
+
 ## Disallowed
 
 ```ts

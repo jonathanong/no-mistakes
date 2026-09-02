@@ -14,6 +14,18 @@ design, so a hoisted token there collides on the second test, every time —
 loud and deterministic, and caught on the first run. The `beforeAll` case is
 the silent, scheduler-dependent one this rule exists for.
 
+The rule only tracks a `beforeAll` callback passed directly as an argument to
+the hook call — a hook that instead calls a named function
+(`test.beforeAll(setup)`) is not resolved back to that function's body and is
+not scanned. It also only tracks a factory call assigned directly to a
+`VariableDeclarator`; a factory nested inside a template literal or another
+expression (for example `` `post-${randomSuffix()}` `` written directly at
+module scope, with no intervening `const`) is not a candidate. And it only
+scans a callback's body — a token read only in a default parameter value
+(`async (suffix = someHoistedDefault) => { ... }`) is not scanned. Each of
+these is a narrower surface than the rule claims to cover, not a case it
+claims to handle and gets wrong.
+
 ## Disallowed
 
 ```ts
@@ -60,8 +72,8 @@ callback so a re-entry mints a fresh value instead of reusing the hoisted one.
 ## Suppression
 
 ```ts
-// eslint-disable-next-line no-mistakes/playwright-no-hoisted-unique-token -- beforeAll only reads this token, a separate afterEach resets the fixture it names
 test.beforeAll(async () => {
+  // eslint-disable-next-line no-mistakes/playwright-no-hoisted-unique-token -- beforeAll only reads this token, a separate afterEach resets the fixture it names
   await createPost({ slug: `post-${suffix}` });
 });
 ```

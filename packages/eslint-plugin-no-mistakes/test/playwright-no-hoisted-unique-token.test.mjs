@@ -1,3 +1,4 @@
+import tsParser from "@typescript-eslint/parser";
 import { RuleTester } from "eslint";
 import { describe, it } from "vitest";
 import { plugin } from "./helpers.mjs";
@@ -122,6 +123,65 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       filename: "playwright/tests/posts/post-lock.spec.mts",
       options: TOKEN_FACTORIES,
     },
+    // The hook reassigns the hoisted variable before reading it — the declarator is a candidate
+    // (its own initializer is a factory call), but every read inside the hook happens after the
+    // in-hook reassignment refreshes it, so nothing is stale.
+    {
+      code: `let suffix = randomSuffix();
+      test.beforeAll(async () => {
+        suffix = await computeSuffix();
+        await createPost({ slug: \`post-\${suffix}\` });
+      });`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+    },
+    // A declaration nested inside a local helper function that is itself defined and invoked
+    // inside beforeAll is minted fresh on every call, however many function boundaries separate
+    // it from the hook.
+    {
+      code: `test.beforeAll(async () => {
+        async function setup() {
+          const suffix = randomSuffix();
+          await createPost({ slug: \`post-\${suffix}\` });
+        }
+        await setup();
+      });`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+    },
+    // Non-Playwright path activated only via the @playwright/test import, with no hoisted read.
+    {
+      code: `import { test } from "@playwright/test";
+      const suffix = randomSuffix();
+      test("uses suffix directly", async () => {
+        await createPost({ slug: \`post-\${suffix}\` });
+      });`,
+      filename: "src/util.ts",
+      options: TOKEN_FACTORIES,
+    },
+    // An unrelated import does not activate a non-Playwright path.
+    {
+      code: `import { randomSuffix } from "./factories";
+      const suffix = randomSuffix();
+      test.beforeAll(async () => {
+        await createPost({ slug: \`post-\${suffix}\` });
+      });`,
+      filename: "src/util.ts",
+      options: TOKEN_FACTORIES,
+    },
+    // A `typeof` type query referencing a hoisted candidate is a type-only position, not a
+    // runtime read — it never observes the stale hoisted value and must not be flagged.
+    {
+      code: `const suffix = randomSuffix();
+      test.beforeAll(async () => {
+        type Suffix = typeof suffix;
+        const value: Suffix = "x";
+        await createPost({ slug: \`post-\${value}\` });
+      });`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+      languageOptions: { parser: tsParser },
+    },
   ],
   invalid: [
     // Exact pre-fix tag-limit.spec.mts / post-lock.spec.mts shape: module-scope hoist.
@@ -213,6 +273,45 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       });`,
       filename: "playwright/tests/tags/tag-limit.spec.mts",
       options: TOKEN_FACTORIES,
+      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
+    },
+    // test.describe.only(...) / .skip(...) still has "describe" in its callee chain — it
+    // registers once, exactly like plain describe, and must not be misread as a safe test-body
+    // shield just because "only"/"skip" is the last property.
+    {
+      code: `test.describe.only("Content Language Rendering", () => {
+        const suffix = randomSuffix();
+        test.beforeAll(async () => {
+          await createPost({ slug: \`post-\${suffix}\` });
+        });
+      });`,
+      filename: "playwright/tests/posts/content-language.spec.mts",
+      options: TOKEN_FACTORIES,
+      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
+    },
+    // A file path that doesn't match the naming convention is still recognized once it imports
+    // @playwright/test.
+    {
+      code: `import { test } from "@playwright/test";
+      const suffix = randomSuffix();
+      test.beforeAll(async () => {
+        await createPost({ slug: \`post-\${suffix}\` });
+      });`,
+      filename: "src/util.ts",
+      options: TOKEN_FACTORIES,
+      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
+    },
+    // A `suffix as string` cast is a runtime value position (the value-wrapper recurses into its
+    // own `.expression`), so the read underneath it is still a real, stale read and must still
+    // be flagged.
+    {
+      code: `const suffix = randomSuffix();
+      test.beforeAll(async () => {
+        await createPost({ slug: \`post-\${suffix as string}\` });
+      });`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+      languageOptions: { parser: tsParser },
       errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
   ],
