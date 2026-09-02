@@ -182,6 +182,22 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       options: TOKEN_FACTORIES,
       languageOptions: { parser: tsParser },
     },
+    // A class declared inside the hook can legally name a method or field after the tracked
+    // variable without ever reading it — the key position must not resolve back to the outer
+    // candidate the way a real value reference would.
+    {
+      code: `const suffix = randomSuffix();
+      test.beforeAll(async () => {
+        class Builder {
+          suffix() {
+            return "generated-here";
+          }
+        }
+        await createPost({ slug: new Builder().suffix() });
+      });`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+    },
   ],
   invalid: [
     // Exact pre-fix tag-limit.spec.mts / post-lock.spec.mts shape: module-scope hoist.
@@ -314,6 +330,18 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       languageOptions: { parser: tsParser },
       errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
+    // An angle-bracket `<string>suffix` assertion is the same runtime value wrapper as `as string`,
+    // just under TypeScript's other assertion syntax, and must be recursed into the same way.
+    {
+      code: `const suffix = randomSuffix();
+      test.beforeAll(async () => {
+        await createPost({ slug: \`post-\${<string>suffix}\` });
+      });`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+      languageOptions: { parser: tsParser },
+      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
+    },
     // The reassignment is nested inside a conditional branch, so it is not guaranteed to run
     // before the later read — `collectEvents`'s source-order traversal must not treat a merely
     // visited-earlier write as an unconditional refresh.
@@ -340,6 +368,21 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
           suffix = randomSuffix();
         };
         refresh();
+        await createPost({ slug: \`post-\${suffix}\` });
+      });`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
+    },
+    // The helper is declared but never called at all — the read of `suffix` observes the
+    // untouched hoisted value. Declaring a same-named helper must not, by itself, suppress the
+    // diagnostic for a read that plainly never goes through it.
+    {
+      code: `let suffix = randomSuffix();
+      test.beforeAll(async () => {
+        const refresh = () => {
+          suffix = randomSuffix();
+        };
         await createPost({ slug: \`post-\${suffix}\` });
       });`,
       filename: "playwright/tests/posts/post-lock.spec.mts",

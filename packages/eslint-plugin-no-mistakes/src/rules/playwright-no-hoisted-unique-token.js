@@ -10,13 +10,14 @@ const PLAYWRIGHT_PATH_PATTERN =
 
 const TEST_BODY_NAMES = new Set(["test", "it"]);
 
-// The four TypeScript node types that wrap a runtime value expression rather than being purely
+// The TypeScript node types that wrap a runtime value expression rather than being purely
 // type-positioned; every other "TS"-prefixed node type is skipped entirely by `collectEvents`.
 const TS_VALUE_WRAPPER_TYPES = new Set([
   "TSAsExpression",
   "TSSatisfiesExpression",
   "TSNonNullExpression",
   "TSInstantiationExpression",
+  "TSTypeAssertion",
 ]);
 
 function isPlaywrightPath(filename) {
@@ -97,9 +98,12 @@ function isUnconditionalWrite(node, callback) {
   return true;
 }
 
+const KEYED_MEMBER_TYPES = new Set(["MethodDefinition", "PropertyDefinition"]);
+
 // Skip Identifier positions that are names, not value references: the non-computed `.property`
-// of a member access, a non-computed, non-shorthand object-literal `.key`, and a plain-assignment
-// write target.
+// of a member access, a non-computed, non-shorthand object-literal `.key`, a non-computed class
+// method/field `.key` (a class declared inside the hook can legally name a member after the
+// tracked variable without reading it), and a plain-assignment write target.
 function isReferenceIdentifier(node) {
   const parent = node.parent;
   if (!parent) return true;
@@ -107,6 +111,9 @@ function isReferenceIdentifier(node) {
     return false;
   }
   if (parent.type === "Property" && !parent.computed && !parent.shorthand && parent.key === node) {
+    return false;
+  }
+  if (KEYED_MEMBER_TYPES.has(parent.type) && !parent.computed && parent.key === node) {
     return false;
   }
   return !isWriteTarget(node);
