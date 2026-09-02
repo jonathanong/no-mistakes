@@ -224,5 +224,24 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
       filename: "playwright/reviews.spec.mts",
       errors: [{ messageId: "rawScroll" }],
     },
+    // A regex whose pattern source has a bare `&` written directly before the param name (not one
+    // of the compound alternation/class constructs above) is just as unambiguous a boundary.
+    {
+      code: `page.waitForRequest((req) => /&after=/.test(req.url()));\nawait page.evaluate(() => window.scrollTo(0, 0));`,
+      filename: "playwright/reviews.spec.mts",
+      errors: [{ messageId: "rawScroll" }],
+    },
+    // Same for a bare escaped `\?` written directly before the param name.
+    {
+      code: "page.waitForRequest((req) => /\\?after=/.test(req.url()));\nawait page.evaluate(() => window.scrollTo(0, 0));",
+      filename: "playwright/reviews.spec.mts",
+      errors: [{ messageId: "rawScroll" }],
+    },
+    // Same for a `^` start anchor written directly before the param name.
+    {
+      code: `page.waitForRequest((req) => /^after=/.test(req.url()));\nawait page.evaluate(() => window.scrollTo(0, 0));`,
+      filename: "playwright/reviews.spec.mts",
+      errors: [{ messageId: "rawScroll" }],
+    },
   ],
 });

@@ -77,7 +77,9 @@ function escapeRegExp(value) {
 // the param name instead of a literal `?`/`&`. Only these exact, known boundary constructs count
 // as a separator for a regex-derived literal — accepting an arbitrary `)`/`]` before the param
 // would also match an unrelated alternation like `(?:next|prev)cursor=`, which closes a group
-// that has nothing to do with a query-string separator.
+// that has nothing to do with a query-string separator. A bare `&`, an escaped `\?`, or a `^`
+// start anchor written directly (`/&after=/`, `/\?after=/`, `/^after=/`) is unambiguous — unlike
+// `)`/`]`, none of these three characters ever closes an unrelated construct — so they count too.
 const REGEX_BOUNDARY_SUFFIXES = [
   "(?:^|[?&])",
   "(?:^|[&?])",
@@ -85,6 +87,9 @@ const REGEX_BOUNDARY_SUFFIXES = [
   "(?:^|&|\\?)",
   "[?&]",
   "[&?]",
+  "&",
+  "\\?",
+  "^",
 ];
 
 // Requires the cursor param to appear as an actual query-key boundary (`?after=`, `&after=`, or
