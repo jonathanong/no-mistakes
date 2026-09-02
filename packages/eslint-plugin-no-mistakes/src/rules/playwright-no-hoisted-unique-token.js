@@ -90,6 +90,9 @@ const BRANCHING_ANCESTOR_TYPES = new Set([
 function isUnconditionalWrite(node, callback) {
   for (let current = node.parent; current && current !== callback; current = current.parent) {
     if (BRANCHING_ANCESTOR_TYPES.has(current.type)) return false;
+    // A write inside a function nested in the callback (a locally-defined helper) only runs if
+    // that function is itself called — never assume the enclosing callback executes it unconditionally.
+    if (isFunctionNode(current) && current !== callback) return false;
   }
   return true;
 }

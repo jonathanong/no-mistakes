@@ -329,5 +329,22 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       options: TOKEN_FACTORIES,
       errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
+    // The reassignment lives inside a helper function nested in the callback. Even though the
+    // helper is called unconditionally right after its declaration, `isUnconditionalWrite` cannot
+    // see that call graph — a write behind any function boundary other than the callback itself
+    // must not be treated as a guaranteed refresh.
+    {
+      code: `let suffix = randomSuffix();
+      test.beforeAll(async () => {
+        const refresh = () => {
+          suffix = randomSuffix();
+        };
+        refresh();
+        await createPost({ slug: \`post-\${suffix}\` });
+      });`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
+    },
   ],
 });
