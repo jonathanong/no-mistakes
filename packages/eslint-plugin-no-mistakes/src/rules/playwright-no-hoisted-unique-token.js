@@ -3,7 +3,11 @@
 const { rule } = require("../helpers");
 const { childNodes, isFunctionNode } = require("./test-no-shared-state-helpers");
 const { hasProperty, resolveVariable } = require("./test-no-shared-state-aliases");
-const { calleeName, setupCallbackKind } = require("./test-no-shared-state-callees");
+const {
+  calleeName,
+  importSpecifierName,
+  setupCallbackKind,
+} = require("./test-no-shared-state-callees");
 
 const PLAYWRIGHT_PATH_PATTERN =
   /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|$)|(?:^|[/\\])e2e\.(?:spec|test)\.[cm]?[jt]sx?$|\.pw\.(?:spec|test)\.[cm]?[jt]sx?$/;
@@ -35,11 +39,13 @@ function nearestOwnFunction(node) {
 // is passed straight into a setup hook (`beforeAll`/`beforeEach`/`afterEach`/`afterAll`, bare or
 // `test.`-qualified) or a test body (`test`/`it`, including `.only`/`.skip`-style modifiers) — but
 // NOT `describe` anywhere in the callee chain (e.g. `test.describe.only`), which registers once
-// and is exactly as re-entry-hazardous as module scope.
-function isSharedScopeShield(fn) {
+// and is exactly as re-entry-hazardous as module scope. `testCalleeNames` carries every local alias
+// of the imported `test`/`it`/`describe` bindings, so an aliased `import { test as pw } from
+// "@playwright/test"` is recognized the same as the bare names.
+function isSharedScopeShield(fn, testCalleeNames) {
   const parent = fn.parent;
   if (!parent || parent.type !== "CallExpression") return false;
-  if (setupCallbackKind(parent)) return true;
+  if (setupCallbackKind(parent, testCalleeNames)) return true;
   const callee = parent.callee;
   if (callee.type === "Identifier") return TEST_BODY_NAMES.has(callee.name);
   if (callee.type === "MemberExpression" && !callee.computed) {
@@ -51,10 +57,13 @@ function isSharedScopeShield(fn) {
 // A declaration nested arbitrarily deep inside a `beforeAll` callback — even inside a local helper
 // function the hook itself defines and invokes — is minted fresh on every hook re-entry, so it is
 // never a hoisting hazard regardless of how many function boundaries separate it from the hook.
-function isWithinBeforeAllCallback(node) {
+function isWithinBeforeAllCallback(node, testCalleeNames) {
   for (let fn = nearestOwnFunction(node); fn; fn = nearestOwnFunction(fn)) {
     const parent = fn.parent;
-    if (parent?.type === "CallExpression" && setupCallbackKind(parent) === "before-once") {
+    if (
+      parent?.type === "CallExpression" &&
+      setupCallbackKind(parent, testCalleeNames) === "before-once"
+    ) {
       return true;
     }
   }
@@ -164,10 +173,21 @@ module.exports = rule(
     // declarator node -> factory name, for declarations not already shielded inside their own hook/test.
     const candidates = new Map();
     const beforeAllCallbacks = [];
+    // Local aliases of the imported `test`/`it`/`describe` bindings (e.g. `import { test as pw }`),
+    // so `pw.beforeAll(...)` is recognized the same as `test.beforeAll(...)`.
+    const testCalleeNames = new Set(["test", "it", "describe"]);
 
     return {
       ImportDeclaration(node) {
-        if (node.source.value === "@playwright/test") isPlaywrightFile = true;
+        if (node.source.value !== "@playwright/test") return;
+        isPlaywrightFile = true;
+        for (const specifier of node.specifiers) {
+          if (specifier.type !== "ImportSpecifier") continue;
+          const imported = importSpecifierName(specifier);
+          if (["describe", "it", "test"].includes(imported) && specifier.local?.name) {
+            testCalleeNames.add(specifier.local.name);
+          }
+        }
       },
       VariableDeclarator(node) {
         if (
@@ -179,12 +199,15 @@ module.exports = rule(
           return;
         }
         const fn = nearestOwnFunction(node);
-        if ((!fn || !isSharedScopeShield(fn)) && !isWithinBeforeAllCallback(node)) {
+        if (
+          (!fn || !isSharedScopeShield(fn, testCalleeNames)) &&
+          !isWithinBeforeAllCallback(node, testCalleeNames)
+        ) {
           candidates.set(node, node.init.callee.name);
         }
       },
       CallExpression(node) {
-        if (setupCallbackKind(node) !== "before-once") return;
+        if (setupCallbackKind(node, testCalleeNames) !== "before-once") return;
         const callback = node.arguments.find((argument) => isFunctionNode(argument));
         if (callback) beforeAllCallbacks.push(callback);
       },

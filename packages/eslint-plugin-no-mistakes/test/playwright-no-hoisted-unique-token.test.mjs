@@ -198,6 +198,15 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       filename: "playwright/tests/posts/post-lock.spec.mts",
       options: TOKEN_FACTORIES,
     },
+    // A beforeAll invoked with a named function reference, not an inline callback, has no
+    // scannable function-argument at all — nothing is added to beforeAllCallbacks and no report
+    // is ever produced, regardless of what the referenced function does internally.
+    {
+      code: `const suffix = randomSuffix();
+      test.beforeAll(setupSuffix);`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+    },
   ],
   invalid: [
     // Exact pre-fix tag-limit.spec.mts / post-lock.spec.mts shape: module-scope hoist.
@@ -306,9 +315,12 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
     // A file path that doesn't match the naming convention is still recognized once it imports
-    // @playwright/test.
+    // @playwright/test. The same import statement also carries a default specifier (not an
+    // ImportSpecifier, so it's skipped) and a named specifier unrelated to describe/it/test (so
+    // it's recognized but not added to the alias set) — neither affects the bare `test` binding
+    // still being tracked by its default name.
     {
-      code: `import { test } from "@playwright/test";
+      code: `import test, { expect } from "@playwright/test";
       const suffix = randomSuffix();
       test.beforeAll(async () => {
         await createPost({ slug: \`post-\${suffix}\` });
@@ -399,6 +411,19 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
         await createPost({ slug: \`post-\${suffix}\` });
       });`,
       filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
+    },
+    // An aliased `import { test as pw } from "@playwright/test"` must be recognized the same as
+    // the bare `test`/`it`/`describe` names — `pw.beforeAll(...)` is exactly as re-entry-hazardous
+    // as `test.beforeAll(...)`, and the hoisted read inside it must still be flagged.
+    {
+      code: `import { test as pw } from "@playwright/test";
+      const suffix = randomSuffix();
+      pw.beforeAll(async () => {
+        await createPost({ slug: \`post-\${suffix}\` });
+      });`,
+      filename: "src/util.ts",
       options: TOKEN_FACTORIES,
       errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },

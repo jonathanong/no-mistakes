@@ -70,6 +70,18 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
       code: `page.waitForRequest((req) => new URL(req.url()).searchParams.has(cursorParamName));\nawait page.evaluate(() => window.scrollTo(0, 0));`,
       filename: "playwright/reviews.spec.mts",
     },
+    // A template literal with actual interpolation is genuinely dynamic, unlike an
+    // interpolation-free template — it must not be treated as a cursor-param match.
+    {
+      code: "page.waitForRequest((req) => new URL(req.url()).searchParams.has(`${cursorParamName}`));\nawait page.evaluate(() => window.scrollTo(0, 0));",
+      filename: "playwright/reviews.spec.mts",
+    },
+    // A computed window member access with a dynamic (non-literal) property name is never
+    // statically knowable and must not be misflagged as window.scrollTo/scroll/scrollBy.
+    {
+      code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window[scrollMethodName](0, 0));`,
+      filename: "playwright/reviews.spec.mts",
+    },
     // A locally-declared `scrollTo` helper resolves to its own declaration, not the global —
     // calling it bare must not be misflagged as the raw browser API.
     {
@@ -196,6 +208,20 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
     {
       code: `import { test } from "@playwright/test";\n${PAGINATED_WAIT}\nawait page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));`,
       filename: "src/util.ts",
+      errors: [{ messageId: "rawScroll" }],
+    },
+    // A computed member access with a static string property name (`window["scrollTo"]`) is just
+    // as statically knowable as the dot form and must be matched the same way.
+    {
+      code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window["scrollTo"](0, document.body.scrollHeight));`,
+      filename: "playwright/reviews.spec.mts",
+      errors: [{ messageId: "rawScroll" }],
+    },
+    // The cursor param is mentioned via a static (interpolation-free) template literal passed to
+    // .searchParams.has(...) — just as statically knowable as a plain string literal argument.
+    {
+      code: "page.waitForRequest((req) => new URL(req.url()).searchParams.has(`after`));\nawait page.evaluate(() => window.scrollTo(0, 0));",
+      filename: "playwright/reviews.spec.mts",
       errors: [{ messageId: "rawScroll" }],
     },
   ],

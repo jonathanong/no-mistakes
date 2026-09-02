@@ -47,7 +47,7 @@ function isRawScrollCall(node, context) {
   }
   return (
     callee.type === "MemberExpression" &&
-    !callee.computed &&
+    (!callee.computed || callee.property.type === "Literal") &&
     callee.object.type === "Identifier" &&
     callee.object.name === "window" &&
     RAW_SCROLL_NAMES.has(propertyName(callee.property))
@@ -115,11 +115,22 @@ function collectLiteralStrings(node, results) {
   for (const child of childNodes(node)) collectLiteralStrings(child, results);
 }
 
+// A `.searchParams.has()`/`.get()` argument is never boundary-matched (see above), so an
+// interpolation-free template literal (`` `cursor` ``) is just as statically knowable as a plain
+// string literal — only a template with actual `${...}` interpolation is genuinely dynamic.
+function staticStringValue(node) {
+  if (node?.type === "Literal" && typeof node.value === "string") return node.value;
+  if (node?.type === "TemplateLiteral" && node.expressions.length === 0) {
+    return node.quasis[0].value.raw;
+  }
+  return null;
+}
+
 function collectSearchParamsAccessorArgs(node, results) {
   if (!node) return;
   if (node.type === "CallExpression" && isSearchParamsAccessorCall(node)) {
-    const arg = node.arguments[0];
-    if (arg?.type === "Literal" && typeof arg.value === "string") results.push(arg.value);
+    const value = staticStringValue(node.arguments[0]);
+    if (value !== null) results.push(value);
   }
   for (const child of childNodes(node)) collectSearchParamsAccessorArgs(child, results);
 }
