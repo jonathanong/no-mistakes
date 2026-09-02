@@ -28,10 +28,10 @@ Oxlint loads the same ESLint plugin through `jsPlugins`:
 
 ## Presets
 
-| Preset | Contents |
-| --- | --- |
+| Preset                           | Contents                                                                                                           |
+| -------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `noMistakes.configs.recommended` | Static fetches, direct TypeScript APIs, basic selector safety, no property deletion, and ReactNode nullish safety. |
-| `noMistakes.configs.strict` | Recommended plus stricter Next.js, Playwright, React, test-state, mock-file, and array-await rules. |
+| `noMistakes.configs.strict`      | Recommended plus stricter Next.js, Playwright, React, test-state, mock-file, and array-await rules.                |
 
 ## Editor suggestions
 
@@ -110,6 +110,16 @@ including `.default()`.
 `selectorAttributes?: string[]` (default `["data-testid", "data-pw"]`) and
 `pattern?: string` (the plugin's kebab-case pattern by default).
 
+### `playwright-no-hoisted-unique-token`
+
+`tokenFactories: string[]`; no default — the rule is inert until configured.
+
+### `playwright-no-raw-scroll-pagination`
+
+`cursorParams?: string[]` (default `["after", "cursor"]`) and
+`scrollHelper?: string` (default `""`; interpolated into the report message
+when set).
+
 ### `playwright-require-exported-component-attribute`
 
 `attributes?: string[]` (default `["data-pw"]`), `componentNamePattern?: string`,
@@ -176,7 +186,9 @@ module.exports = [
       ],
       "no-mistakes/async-call-disposition": [
         "error",
-        { targets: [{ sourceSpecifierPatterns: ["@app/jobs"], calleeNamePatterns: ["/^enqueue/"] }] },
+        {
+          targets: [{ sourceSpecifierPatterns: ["@app/jobs"], calleeNamePatterns: ["/^enqueue/"] }],
+        },
       ],
       "no-mistakes/no-global-fetch-outside-helper": [
         "error",

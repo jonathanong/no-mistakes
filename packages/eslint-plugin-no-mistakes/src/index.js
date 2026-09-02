@@ -22,6 +22,8 @@ const rules = {
   "playwright-literals": require("./rules/playwright-literals"),
   "playwright-naming-convention": require("./rules/playwright-naming-convention"),
   "playwright-no-empty": require("./rules/playwright-no-empty"),
+  "playwright-no-hoisted-unique-token": require("./rules/playwright-no-hoisted-unique-token"),
+  "playwright-no-raw-scroll-pagination": require("./rules/playwright-no-raw-scroll-pagination"),
   "playwright-no-set-timeout": require("./rules/playwright-no-set-timeout"),
   "playwright-prefer-get-by-test-id": require("./rules/playwright-prefer-get-by-test-id"),
   "playwright-require-exported-component-attribute": require("./rules/playwright-require-exported-component-attribute"),

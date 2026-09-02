@@ -138,4 +138,123 @@ describe("scope compatibility", () => {
 
     assert.equal(reports.length, 0);
   });
+
+  it("does not report a beforeAll-local shadow of a describe-scope hoisted token", () => {
+    const reports = [];
+
+    // test.describe('D', () => {
+    //   const suffix = randomSuffix();          // outer candidate, describe scope
+    //   test.beforeAll(() => {
+    //     const suffix = randomSuffix();        // inner shadow, already scoped to its own hook
+    //     use(suffix);
+    //   });
+    // });
+    const outerDeclarator = {
+      type: "VariableDeclarator",
+      id: { type: "Identifier", name: "suffix" },
+      init: {
+        type: "CallExpression",
+        callee: { type: "Identifier", name: "randomSuffix" },
+        arguments: [],
+      },
+    };
+    const outerDeclaration = {
+      type: "VariableDeclaration",
+      kind: "const",
+      declarations: [outerDeclarator],
+    };
+    outerDeclarator.parent = outerDeclaration;
+
+    const innerDeclarator = {
+      type: "VariableDeclarator",
+      id: { type: "Identifier", name: "suffix" },
+      init: {
+        type: "CallExpression",
+        callee: { type: "Identifier", name: "randomSuffix" },
+        arguments: [],
+      },
+    };
+    const innerDeclaration = {
+      type: "VariableDeclaration",
+      kind: "const",
+      declarations: [innerDeclarator],
+    };
+    innerDeclarator.parent = innerDeclaration;
+
+    const useStatement = {
+      type: "ExpressionStatement",
+      expression: {
+        type: "CallExpression",
+        callee: { type: "Identifier", name: "use" },
+        arguments: [{ type: "Identifier", name: "suffix" }],
+      },
+    };
+
+    const beforeAllCallback = {
+      type: "ArrowFunctionExpression",
+      params: [],
+      body: { type: "BlockStatement", body: [innerDeclaration, useStatement] },
+    };
+    innerDeclaration.parent = beforeAllCallback.body;
+    beforeAllCallback.body.parent = beforeAllCallback;
+
+    const beforeAllCall = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "Identifier", name: "test" },
+        property: { type: "Identifier", name: "beforeAll" },
+      },
+      arguments: [beforeAllCallback],
+    };
+    beforeAllCallback.parent = beforeAllCall;
+
+    const describeCallback = {
+      type: "ArrowFunctionExpression",
+      params: [],
+      body: {
+        type: "BlockStatement",
+        body: [outerDeclaration, { type: "ExpressionStatement", expression: beforeAllCall }],
+      },
+    };
+    outerDeclaration.parent = describeCallback.body;
+    describeCallback.body.parent = describeCallback;
+
+    const describeCall = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "Identifier", name: "test" },
+        property: { type: "Identifier", name: "describe" },
+      },
+      arguments: [{ type: "Literal", value: "D" }, describeCallback],
+    };
+    describeCallback.parent = describeCall;
+
+    // Degraded scope shape: `scope.set` absent, resolution falls back to `scope.variables.find(...)`.
+    // A single flat scope models the beforeAll callback's own block scope, where the inner shadow
+    // resolves first — proving shadow-correctness comes from `resolveVariable`'s scope walk, not
+    // from matching the declarator's name against every candidate.
+    const listener = plugin.rules["playwright-no-hoisted-unique-token"].create({
+      filename: "e2e.spec.ts",
+      options: [{ tokenFactories: ["randomSuffix"] }],
+      sourceCode: {
+        getScope: () => ({
+          set: undefined,
+          variables: [{ name: "suffix", defs: [{ node: innerDeclarator }] }],
+          upper: null,
+        }),
+      },
+      report: (item) => reports.push(item),
+    });
+
+    listener.VariableDeclarator(outerDeclarator);
+    listener.VariableDeclarator(innerDeclarator);
+    listener.CallExpression(beforeAllCall);
+    listener["Program:exit"]();
+
+    assert.equal(reports.length, 0);
+  });
 });
