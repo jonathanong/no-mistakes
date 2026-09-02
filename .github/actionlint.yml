@@ -1,0 +1,6 @@
+# Custom labels and repository Actions variables used by CI workflows.
+self-hosted-runner:
+  labels:
+    - codspeed-macro
+config-variables:
+  - USE_CODSPEED_MACRO_RUNNERS

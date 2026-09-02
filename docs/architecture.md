@@ -302,14 +302,24 @@ workloads must use checked-in fixtures,
 `BenchmarkId` for meaningful variants, `Throughput` where a stable unit exists,
 and must not generate repositories or launch the CLI as a subprocess.
 
+The `bench` and `benchmark-shards` jobs share one runner family so the uploaded
+harness matches the machine that executes it. Set the repository Actions
+variable `USE_CODSPEED_MACRO_RUNNERS` to the literal `true` to run those jobs
+on CodSpeed Macro Runners (`codspeed-macro`, ARM64). Any other value, including
+unset or `false`, keeps free GitHub-hosted `ubuntu-latest` (x86_64). Regular
+test and lint jobs always stay on GitHub-hosted runners. Flipping the variable
+changes CPU architecture and must not be treated as an implementation
+regression until both the CodSpeed base and the PR head use the same family.
+
 ### Interpreting CodSpeed results
 
 GitHub-hosted `ubuntu-latest` runners do not guarantee one CPU architecture or
 model. A base run may use Intel while a PR run uses AMD (or the reverse), which
 can produce large apparent CPU and memory changes without any implementation
-change. CodSpeed also falls back to an older base when the PR's exact base has
-no successful benchmark run. Neither comparison is reliable enough to prove a
-regression.
+change. CodSpeed Macro Runners are a single ARM64 machine class, so they avoid
+that hosted-runner lottery when `USE_CODSPEED_MACRO_RUNNERS` is `true`. CodSpeed
+also falls back to an older base when the PR's exact base has no successful
+benchmark run. Neither comparison is reliable enough to prove a regression.
 
 Treat a CodSpeed failure as actionable only when the report compares the same
 runtime environment and the expected base commit. If CodSpeed reports different

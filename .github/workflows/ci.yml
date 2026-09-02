@@ -521,14 +521,19 @@ jobs:
     name: Build benchmarks
     needs: changes
     if: ${{ needs.changes.outputs.benchmarks == 'true' }}
-    runs-on: ubuntu-latest
+    # Must match benchmark-shards. CodSpeed macro runners are ARM64;
+    # ubuntu-latest is x86_64, so the uploaded harness cannot cross families.
+    # vars.USE_CODSPEED_MACRO_RUNNERS must be the literal "true"; other values,
+    # including "false", keep GitHub-hosted runners.
+    runs-on: ${{ vars.USE_CODSPEED_MACRO_RUNNERS == 'true' && 'codspeed-macro' || 'ubuntu-latest' }}
     timeout-minutes: 60
     env:
       RAYON_NUM_THREADS: "4"
       # CodSpeed simulation/memory do not need production fat LTO. The release
       # profile's lto=true + codegen-units=1 OOMs or forces CARGO_BUILD_JOBS=1
       # on ubuntu-latest (~16 min). Relative CodSpeed comparisons are meaningful
-      # only when base and head use the same hosted-runner CPU environment.
+      # only when base and head use the same runner family (GitHub-hosted x86_64
+      # or CodSpeed macro ARM64).
       CARGO_PROFILE_BENCH_LTO: "false"
       CARGO_PROFILE_BENCH_CODEGEN_UNITS: "16"
 
@@ -547,7 +552,7 @@ jobs:
         timeout-minutes: 5
         uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
         with:
-          key: bench
+          key: bench-${{ runner.arch }}
 
       - name: Install cargo-codspeed
         timeout-minutes: 5
@@ -594,7 +599,8 @@ jobs:
       - changes
       - bench
     if: ${{ needs.changes.outputs.benchmarks == 'true' }}
-    runs-on: ubuntu-latest
+    # Must match bench so the downloaded harness matches this machine's arch.
+    runs-on: ${{ vars.USE_CODSPEED_MACRO_RUNNERS == 'true' && 'codspeed-macro' || 'ubuntu-latest' }}
     timeout-minutes: 8
     permissions:
       contents: read
