@@ -5,9 +5,15 @@
 `InfiniteScroll` components commonly gate their `IntersectionObserver` behind
 a **one-shot** `scroll` listener mounted in a deferred effect. A spec that
 awaits a cursor-paginated request or response but drives scrolling with a
-single raw `window.scrollTo`/`scrollBy` call can fire that scroll before the
-effect commits — the synthetic scroll is lost forever, and the wait for the
-next page burns its full timeout instead of failing fast or succeeding.
+single raw `window.scrollTo`/`scroll`/`scrollBy` call (bare or `window.`-
+qualified) can fire that scroll before the effect commits — the synthetic
+scroll is lost forever, and the wait for the next page burns its full
+timeout instead of failing fast or succeeding.
+
+A bare (unqualified) call only counts when it resolves to the browser
+global: a project's own locally-declared or imported `scrollTo`/`scroll`/
+`scrollBy` helper is a different function and is never matched, regardless
+of its name.
 
 The two conditions are correlated at the file level, deliberately: a raw
 scroll call anywhere in a spec is flagged as soon as the file also awaits a

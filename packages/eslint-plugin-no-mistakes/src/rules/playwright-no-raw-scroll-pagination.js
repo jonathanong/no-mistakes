@@ -2,12 +2,13 @@
 
 const { rule } = require("../helpers");
 const { childNodes } = require("./test-no-shared-state-helpers");
+const { resolveVariable } = require("./test-no-shared-state-aliases");
 
 const PLAYWRIGHT_PATH_PATTERN =
   /(?:^|[/\\])(?:e2e|playwright)(?:[/\\]|$)|(?:^|[/\\])e2e\.(?:spec|test)\.[cm]?[jt]sx?$|\.pw\.(?:spec|test)\.[cm]?[jt]sx?$/;
 
 const CURSOR_WAIT_PROPERTIES = new Set(["waitForRequest", "waitForResponse"]);
-const RAW_SCROLL_NAMES = new Set(["scrollTo", "scrollBy"]);
+const RAW_SCROLL_NAMES = new Set(["scrollTo", "scrollBy", "scroll"]);
 const SEARCH_PARAMS_ACCESSORS = new Set(["has", "get"]);
 
 function isPlaywrightPath(filename) {
@@ -30,13 +31,20 @@ function isCursorWaitCall(node) {
   );
 }
 
-// `window.scrollTo(...)`, bare `scrollTo(...)`, and the `scrollBy` equivalents — the only two
-// imperative, position-based browser scroll APIs. A same-named method on any other receiver
-// (`map.scrollTo()`, an editor or page-object helper) is not a browser scroll and is never matched.
-// `scrollIntoView` is element-relative, not a pagination driver, and is intentionally not matched.
-function isRawScrollCall(node) {
+// `window.scrollTo(...)`/`window.scroll(...)`, bare `scrollTo(...)`/`scroll(...)`, and the
+// `scrollBy` equivalents — the only imperative, position-based browser scroll APIs. A same-named
+// method on any other receiver (`map.scrollTo()`, an editor or page-object helper) is not a
+// browser scroll and is never matched. `scrollIntoView` is element-relative, not a pagination
+// driver, and is intentionally not matched. A bare call only counts when it resolves to the
+// global — a project's own locally-declared or imported `scrollTo`/`scroll`/`scrollBy` helper is a
+// different function and must not be misflagged.
+function isRawScrollCall(node, context) {
   const callee = node.callee;
-  if (callee.type === "Identifier") return RAW_SCROLL_NAMES.has(callee.name);
+  if (callee.type === "Identifier") {
+    if (!RAW_SCROLL_NAMES.has(callee.name)) return false;
+    const variable = resolveVariable(callee, context);
+    return !(variable?.defs?.length > 0);
+  }
   return (
     callee.type === "MemberExpression" &&
     !callee.computed &&
@@ -66,18 +74,23 @@ function escapeRegExp(value) {
 
 // Requires the cursor param to appear as an actual query-key boundary (`?after=`, `&after=`, or
 // `after=` at the very start of the literal) rather than an unconstrained substring match, which
-// would false-positive on e.g. `category=after-hours` for a configured param of `after`.
-function hasQueryParamBoundary(literal, param) {
-  return new RegExp(`(?:^|[?&])${escapeRegExp(param)}=`).test(literal);
+// would false-positive on e.g. `category=after-hours` for a configured param of `after`. A regex
+// literal's `.pattern` is matched as source *text*, not executed — so a regex author's own
+// boundary syntax (`[?&]after=`, `(?:^|[?&])after=`) leaves a `]` or `)` immediately before the
+// param name instead of a literal `?`/`&`. Regex-derived literals accept those two additional
+// closing characters as a boundary; plain strings and template quasis do not.
+function hasQueryParamBoundary(literal, param, isRegex) {
+  const boundary = isRegex ? String.raw`(?:^|[?&\]]|\))` : "(?:^|[?&])";
+  return new RegExp(`${boundary}${escapeRegExp(param)}=`).test(literal);
 }
 
 function collectLiteralStrings(node, results) {
   if (!node) return;
   if (node.type === "Literal") {
-    if (typeof node.value === "string") results.push(node.value);
-    else if (node.regex) results.push(node.regex.pattern);
+    if (typeof node.value === "string") results.push({ value: node.value, isRegex: false });
+    else if (node.regex) results.push({ value: node.regex.pattern, isRegex: true });
   } else if (node.type === "TemplateElement") {
-    results.push(node.value?.raw ?? "");
+    results.push({ value: node.value?.raw ?? "", isRegex: false });
   }
   for (const child of childNodes(node)) collectLiteralStrings(child, results);
 }
@@ -96,7 +109,9 @@ function mentionsCursorParam(node, cursorParams) {
   const literals = [];
   collectLiteralStrings(node, literals);
   if (
-    literals.some((literal) => cursorParams.some((param) => hasQueryParamBoundary(literal, param)))
+    literals.some(({ value, isRegex }) =>
+      cursorParams.some((param) => hasQueryParamBoundary(value, param, isRegex)),
+    )
   ) {
     return true;
   }
@@ -110,7 +125,7 @@ module.exports = rule(
     type: "problem",
     docs: {
       description:
-        "disallow driving cursor-paginated infinite scroll with a raw window.scrollTo/scrollBy",
+        "disallow driving cursor-paginated infinite scroll with a raw window.scrollTo/scroll/scrollBy",
       recommended: false,
     },
     schema: [
@@ -124,7 +139,7 @@ module.exports = rule(
     ],
     messages: {
       rawScroll:
-        "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout.{{helperHint}}",
+        "This file awaits a cursor-paginated request/response but drives scrolling with a raw scrollTo/scroll/scrollBy call — a single synthetic scroll can land before a deferred IntersectionObserver mounts and be lost forever, stalling the wait for its full timeout.{{helperHint}}",
     },
   },
   (context) => {
@@ -146,7 +161,7 @@ module.exports = rule(
         if (isCursorWaitCall(node) && mentionsCursorParam(node.arguments[0], cursorParams)) {
           hasCursorWait = true;
         }
-        if (isRawScrollCall(node)) scrollCandidates.push(node);
+        if (isRawScrollCall(node, context)) scrollCandidates.push(node);
       },
       "Program:exit"() {
         if (!isPlaywrightFile || !hasCursorWait) return;

@@ -314,5 +314,20 @@ ruleTester.run("playwright-no-hoisted-unique-token", rule, {
       languageOptions: { parser: tsParser },
       errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
     },
+    // The reassignment is nested inside a conditional branch, so it is not guaranteed to run
+    // before the later read — `collectEvents`'s source-order traversal must not treat a merely
+    // visited-earlier write as an unconditional refresh.
+    {
+      code: `let suffix = randomSuffix();
+      test.beforeAll(async () => {
+        if (needsSuffix) {
+          suffix = await computeSuffix();
+        }
+        await createPost({ slug: \`post-\${suffix}\` });
+      });`,
+      filename: "playwright/tests/posts/post-lock.spec.mts",
+      options: TOKEN_FACTORIES,
+      errors: [{ messageId: "hoisted", data: { name: "suffix", factory: "randomSuffix" } }],
+    },
   ],
 });

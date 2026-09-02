@@ -257,4 +257,49 @@ describe("scope compatibility", () => {
 
     assert.equal(reports.length, 0);
   });
+
+  it("does not report a locally-declared scrollTo helper when scope.set is unavailable", () => {
+    const reports = [];
+
+    // A project's own `function scrollTo(...) {}` helper, called bare inside a Playwright file
+    // that also has a qualifying cursor wait — must resolve to its own declaration, not the
+    // global, under the degraded scope shape oxlint's partial scope implementation produces.
+    const helperDeclarator = {
+      type: "FunctionDeclaration",
+      id: { type: "Identifier", name: "scrollTo" },
+    };
+    const waitCall = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "Identifier", name: "page" },
+        property: { type: "Identifier", name: "waitForRequest" },
+      },
+      arguments: [{ type: "Literal", value: "**/api/v1/posts?after=abc" }],
+    };
+    const scrollCall = {
+      type: "CallExpression",
+      callee: { type: "Identifier", name: "scrollTo" },
+      arguments: [],
+    };
+
+    const listener = plugin.rules["playwright-no-raw-scroll-pagination"].create({
+      filename: "e2e.spec.ts",
+      sourceCode: {
+        getScope: () => ({
+          set: undefined,
+          variables: [{ name: "scrollTo", defs: [{ node: helperDeclarator }] }],
+          upper: null,
+        }),
+      },
+      report: (item) => reports.push(item),
+    });
+
+    listener.CallExpression(waitCall);
+    listener.CallExpression(scrollCall);
+    listener["Program:exit"]();
+
+    assert.equal(reports.length, 0);
+  });
 });

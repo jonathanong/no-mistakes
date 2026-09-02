@@ -68,6 +68,32 @@ function isWriteTarget(node) {
   return parent?.type === "AssignmentExpression" && parent.operator === "=" && parent.left === node;
 }
 
+const BRANCHING_ANCESTOR_TYPES = new Set([
+  "IfStatement",
+  "ConditionalExpression",
+  "SwitchStatement",
+  "SwitchCase",
+  "TryStatement",
+  "CatchClause",
+  "LogicalExpression",
+  "ForStatement",
+  "ForInStatement",
+  "ForOfStatement",
+  "WhileStatement",
+  "DoWhileStatement",
+]);
+
+// `collectEvents` walks the callback body in source order, not control-flow order, so a write
+// nested inside a branch, loop, or logical short-circuit may never execute on a given re-entry —
+// it cannot "refresh" the tracked value just because it was visited earlier in the traversal. Only
+// a write with no branching ancestor between it and the callback body is unconditional.
+function isUnconditionalWrite(node, callback) {
+  for (let current = node.parent; current && current !== callback; current = current.parent) {
+    if (BRANCHING_ANCESTOR_TYPES.has(current.type)) return false;
+  }
+  return true;
+}
+
 // Skip Identifier positions that are names, not value references: the non-computed `.property`
 // of a member access, a non-computed, non-shorthand object-literal `.key`, and a plain-assignment
 // write target.
@@ -163,7 +189,7 @@ module.exports = rule(
             const declarator = variable?.defs?.[0]?.node;
             if (!declarator || !candidates.has(declarator)) continue;
             if (event.isWrite) {
-              refreshed.add(declarator);
+              if (isUnconditionalWrite(event.node, callback)) refreshed.add(declarator);
               continue;
             }
             if (refreshed.has(declarator)) continue;

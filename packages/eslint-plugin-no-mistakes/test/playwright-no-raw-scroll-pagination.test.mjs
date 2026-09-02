@@ -70,6 +70,17 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
       code: `page.waitForRequest((req) => new URL(req.url()).searchParams.has(cursorParamName));\nawait page.evaluate(() => window.scrollTo(0, 0));`,
       filename: "playwright/reviews.spec.mts",
     },
+    // A locally-declared `scrollTo` helper resolves to its own declaration, not the global —
+    // calling it bare must not be misflagged as the raw browser API.
+    {
+      code: `function scrollTo() {}\n${PAGINATED_WAIT}\nawait scrollTo();`,
+      filename: "playwright/reviews.spec.mts",
+    },
+    // A locally-imported `scroll` helper is likewise a different function from the global.
+    {
+      code: `import { scroll } from "./helpers";\n${PAGINATED_WAIT}\nawait scroll();`,
+      filename: "playwright/reviews.spec.mts",
+    },
   ],
   invalid: [
     // The exact pre-fix reviews.spec.mts shape: waitForRequest predicate mentions `after=`,
@@ -138,6 +149,29 @@ ruleTester.run("playwright-no-raw-scroll-pagination", rule, {
     {
       code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window.scrollTo(0, document.body.scrollHeight));`,
       filename: "reviews.pw.spec.ts",
+      errors: [{ messageId: "rawScroll" }],
+    },
+    // window.scroll(...) is the same imperative position-based API as scrollTo, just under its
+    // other name, and must be matched too.
+    {
+      code: `${PAGINATED_WAIT}\nawait page.evaluate(() => window.scroll(0, document.body.scrollHeight));`,
+      filename: "playwright/reviews.spec.mts",
+      errors: [{ messageId: "rawScroll" }],
+    },
+    // A bare, unshadowed `scroll()` call resolves to the global and is matched the same as
+    // scrollTo/scrollBy.
+    {
+      code: `${PAGINATED_WAIT}\nawait page.evaluate(() => scroll(0, 0));`,
+      filename: "playwright/reviews.spec.mts",
+      errors: [{ messageId: "rawScroll" }],
+    },
+    // The cursor param is mentioned via a regex literal whose own boundary syntax
+    // (`[?&]after=`) leaves a `]` immediately before the param name in the pattern *source* —
+    // matched as text, not executed, so the boundary check must recognize `]` (and `)`, for
+    // constructs like `(?:^|[?&])after=`) as a boundary specifically for regex-derived literals.
+    {
+      code: `page.waitForRequest((req) => /[?&]after=/.test(req.url()));\nawait page.evaluate(() => window.scrollTo(0, 0));`,
+      filename: "playwright/reviews.spec.mts",
       errors: [{ messageId: "rawScroll" }],
     },
     // A file path that doesn't match the naming convention is still recognized once it imports
