@@ -37,10 +37,7 @@ function createImportedTestAliases(context) {
       return Boolean(imported && resolveVariable(base, context) !== imported);
     },
     hasProperty(callee, name) {
-      if (hasOwnProperty(callee, name)) return true;
-      if (callee?.type === "MemberExpression") return this.hasProperty(callee.object, name);
-      if (callee?.type === "CallExpression") return this.hasProperty(callee.callee, name);
-      return false;
+      return hasProperty(callee, name);
     },
   };
 }
@@ -49,8 +46,18 @@ function hasOwnProperty(callee, name) {
   return callee?.type === "MemberExpression" && !callee.computed && callee.property?.name === name;
 }
 
+// Recursively checks the whole callee chain (member accesses and call results) for a
+// non-computed property named `name`, e.g. `hasProperty(test.describe.only, "describe")`.
+function hasProperty(callee, name) {
+  if (hasOwnProperty(callee, name)) return true;
+  if (callee?.type === "MemberExpression") return hasProperty(callee.object, name);
+  if (callee?.type === "CallExpression") return hasProperty(callee.callee, name);
+  return false;
+}
+
 module.exports = {
   createImportedTestAliases,
   hasOwnProperty,
+  hasProperty,
   resolveVariable,
 };

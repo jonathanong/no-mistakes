@@ -138,4 +138,214 @@ describe("scope compatibility", () => {
 
     assert.equal(reports.length, 0);
   });
+
+  it("does not report a beforeAll-local shadow of a describe-scope hoisted token", () => {
+    const reports = [];
+
+    // test.describe('D', () => {
+    //   const suffix = randomSuffix();          // outer candidate, describe scope
+    //   test.beforeAll(() => {
+    //     const suffix = randomSuffix();        // inner shadow, already scoped to its own hook
+    //     use(suffix);
+    //   });
+    // });
+    const outerDeclarator = {
+      type: "VariableDeclarator",
+      id: { type: "Identifier", name: "suffix" },
+      init: {
+        type: "CallExpression",
+        callee: { type: "Identifier", name: "randomSuffix" },
+        arguments: [],
+      },
+    };
+    const outerDeclaration = {
+      type: "VariableDeclaration",
+      kind: "const",
+      declarations: [outerDeclarator],
+    };
+    outerDeclarator.parent = outerDeclaration;
+
+    const innerDeclarator = {
+      type: "VariableDeclarator",
+      id: { type: "Identifier", name: "suffix" },
+      init: {
+        type: "CallExpression",
+        callee: { type: "Identifier", name: "randomSuffix" },
+        arguments: [],
+      },
+    };
+    const innerDeclaration = {
+      type: "VariableDeclaration",
+      kind: "const",
+      declarations: [innerDeclarator],
+    };
+    innerDeclarator.parent = innerDeclaration;
+
+    const useStatement = {
+      type: "ExpressionStatement",
+      expression: {
+        type: "CallExpression",
+        callee: { type: "Identifier", name: "use" },
+        arguments: [{ type: "Identifier", name: "suffix" }],
+      },
+    };
+
+    const beforeAllCallback = {
+      type: "ArrowFunctionExpression",
+      params: [],
+      body: { type: "BlockStatement", body: [innerDeclaration, useStatement] },
+    };
+    innerDeclaration.parent = beforeAllCallback.body;
+    beforeAllCallback.body.parent = beforeAllCallback;
+
+    const beforeAllCall = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "Identifier", name: "test" },
+        property: { type: "Identifier", name: "beforeAll" },
+      },
+      arguments: [beforeAllCallback],
+    };
+    beforeAllCallback.parent = beforeAllCall;
+
+    const describeCallback = {
+      type: "ArrowFunctionExpression",
+      params: [],
+      body: {
+        type: "BlockStatement",
+        body: [outerDeclaration, { type: "ExpressionStatement", expression: beforeAllCall }],
+      },
+    };
+    outerDeclaration.parent = describeCallback.body;
+    describeCallback.body.parent = describeCallback;
+
+    const describeCall = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "Identifier", name: "test" },
+        property: { type: "Identifier", name: "describe" },
+      },
+      arguments: [{ type: "Literal", value: "D" }, describeCallback],
+    };
+    describeCallback.parent = describeCall;
+
+    // Degraded scope shape: `scope.set` absent, resolution falls back to `scope.variables.find(...)`.
+    // A single flat scope models the beforeAll callback's own block scope, where the inner shadow
+    // resolves first — proving shadow-correctness comes from `resolveVariable`'s scope walk, not
+    // from matching the declarator's name against every candidate.
+    const listener = plugin.rules["playwright-no-hoisted-unique-token"].create({
+      filename: "e2e.spec.ts",
+      options: [{ tokenFactories: ["randomSuffix"] }],
+      sourceCode: {
+        getScope: () => ({
+          set: undefined,
+          variables: [{ name: "suffix", defs: [{ node: innerDeclarator }] }],
+          upper: null,
+        }),
+      },
+      report: (item) => reports.push(item),
+    });
+
+    listener.VariableDeclarator(outerDeclarator);
+    listener.VariableDeclarator(innerDeclarator);
+    listener.CallExpression(beforeAllCall);
+    listener["Program:exit"]();
+
+    assert.equal(reports.length, 0);
+  });
+
+  it("does not report a locally-declared scrollTo helper when scope.set is unavailable", () => {
+    const reports = [];
+
+    // A project's own `function scrollTo(...) {}` helper, called bare inside a Playwright file
+    // that also has a qualifying cursor wait — must resolve to its own declaration, not the
+    // global, under the degraded scope shape oxlint's partial scope implementation produces.
+    const helperDeclarator = {
+      type: "FunctionDeclaration",
+      id: { type: "Identifier", name: "scrollTo" },
+    };
+    const waitCall = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "Identifier", name: "page" },
+        property: { type: "Identifier", name: "waitForRequest" },
+      },
+      arguments: [{ type: "Literal", value: "**/api/v1/posts?after=abc" }],
+    };
+    const scrollCall = {
+      type: "CallExpression",
+      callee: { type: "Identifier", name: "scrollTo" },
+      arguments: [],
+    };
+
+    const listener = plugin.rules["playwright-no-raw-scroll-pagination"].create({
+      filename: "e2e.spec.ts",
+      sourceCode: {
+        getScope: () => ({
+          set: undefined,
+          variables: [{ name: "scrollTo", defs: [{ node: helperDeclarator }] }],
+          upper: null,
+        }),
+      },
+      report: (item) => reports.push(item),
+    });
+
+    listener.CallExpression(waitCall);
+    listener.CallExpression(scrollCall);
+    listener["Program:exit"]();
+
+    assert.equal(reports.length, 0);
+  });
+
+  it("does not report a window-qualified scroll call when window is shadowed and scope.set is unavailable", () => {
+    const reports = [];
+
+    // A `window` parameter shadowing the global (e.g. `page.evaluate((window) => ...)`) must
+    // resolve to that parameter, not the global, under the degraded scope shape too.
+    const shadowParam = { type: "Identifier", name: "window" };
+    const waitCall = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "Identifier", name: "page" },
+        property: { type: "Identifier", name: "waitForRequest" },
+      },
+      arguments: [{ type: "Literal", value: "**/api/v1/posts?after=abc" }],
+    };
+    const scrollCall = {
+      type: "CallExpression",
+      callee: {
+        type: "MemberExpression",
+        computed: false,
+        object: { type: "Identifier", name: "window" },
+        property: { type: "Identifier", name: "scrollTo" },
+      },
+      arguments: [],
+    };
+
+    const listener = plugin.rules["playwright-no-raw-scroll-pagination"].create({
+      filename: "e2e.spec.ts",
+      sourceCode: {
+        getScope: () => ({
+          set: undefined,
+          variables: [{ name: "window", defs: [{ node: shadowParam }] }],
+          upper: null,
+        }),
+      },
+      report: (item) => reports.push(item),
+    });
+
+    listener.CallExpression(waitCall);
+    listener.CallExpression(scrollCall);
+    listener["Program:exit"]();
+
+    assert.equal(reports.length, 0);
+  });
 });
