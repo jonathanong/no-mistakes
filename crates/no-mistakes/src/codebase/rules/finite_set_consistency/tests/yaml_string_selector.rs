@@ -50,6 +50,23 @@ fn extracts_terminal_strings_and_ignores_invalid_paths() {
     }
 }
 
+// JSON is valid YAML 1.2, so yaml-string-selector already reads a plain
+// package.json without a dedicated json-string-selector kind. Do not
+// "simplify" this into a YAML-flow-sequence source; the point of this test
+// is that ordinary JSON, unmodified, works.
+#[test]
+fn extracts_terminal_strings_from_plain_json_source() {
+    let source = r#"{"workspaces": ["foo", "backend/bar", "../shared/baz"]}"#;
+    assert_eq!(
+        extract_yaml_string_selector(source, "workspaces.[]"),
+        BTreeSet::from([
+            "foo".to_string(),
+            "backend/bar".to_string(),
+            "../shared/baz".to_string()
+        ]),
+    );
+}
+
 #[test]
 fn ignores_malformed_sources_non_string_terminals_and_indexes_on_mappings() {
     assert!(extract_yaml_string_selector("rules: [", "rules.[]").is_empty());

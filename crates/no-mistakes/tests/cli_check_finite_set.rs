@@ -95,3 +95,46 @@ fn finite_set_yaml_string_selector_passes_and_reports_missing_values() {
                 .is_some_and(|message| message.contains("permanentPackages contains"))
     }));
 }
+
+#[test]
+fn finite_set_prefix_transform_filters_a_pnpm_workspace_yaml_and_a_json_package_json() {
+    let pass_root = finite_set_fixture("prefix-transform/pass");
+    let pass = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&pass_root)
+        .arg("--config")
+        .arg(pass_root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    assert!(pass.status.success(), "{}", stdout(&pass));
+
+    let fail_root = finite_set_fixture("prefix-transform/fail");
+    let fail = Command::new(bin())
+        .args(["check", "--root"])
+        .arg(&fail_root)
+        .arg("--config")
+        .arg(fail_root.join(".no-mistakes.yml"))
+        .args(["--format", "json"])
+        .output()
+        .unwrap();
+    let body = stdout(&fail);
+    let json: serde_json::Value = serde_json::from_str(&body).expect("stdout should be json");
+
+    assert!(!fail.status.success(), "{body}");
+    let rules = json["rules"].as_array().unwrap();
+    assert!(rules.iter().any(|finding| {
+        finding["rule"] == "finite-set-consistency"
+            && finding["target"] == "api"
+            && finding["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("workspaceYamlBackendPackages contains"))
+    }));
+    assert!(rules.iter().any(|finding| {
+        finding["rule"] == "finite-set-consistency"
+            && finding["target"] == "cli"
+            && finding["message"]
+                .as_str()
+                .is_some_and(|message| message.contains("packageJsonWorkspaces contains"))
+    }));
+}

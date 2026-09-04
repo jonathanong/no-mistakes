@@ -1,0 +1,9 @@
+{
+  "name": "backend",
+  "private": true,
+  "workspaces": [
+    "../ts-shared/logger",
+    "agents",
+    "api"
+  ]
+}

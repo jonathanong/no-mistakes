@@ -7,6 +7,8 @@ use crate::config::v2::{
 use std::collections::BTreeSet;
 use std::path::Path;
 
+#[path = "tests/prefix_transform.rs"]
+mod prefix_transform;
 #[path = "tests/yaml_string_selector.rs"]
 mod yaml_string_selector;
 

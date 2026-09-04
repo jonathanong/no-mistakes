@@ -16,8 +16,12 @@ use std::path::{Path, PathBuf};
 
 mod call;
 mod path;
+mod prefix_transform;
+mod sql_enum;
 use call::extract_call_first_string_argument;
 pub(super) use path::{extract_path_regex_set, path_regex_capture_files, PATH_REGEX_CAPTURE};
+use prefix_transform::apply_prefix_transform;
+pub(super) use sql_enum::extract_sql_enum;
 
 #[derive(Debug, Clone)]
 pub(super) struct ExtractedSet {
@@ -42,45 +46,55 @@ pub(super) fn extract_set_with_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: Option<&dyn TsFactLookup>,
 ) -> Result<ExtractedSet> {
-    if spec.kind == path::PATH_REGEX_CAPTURE {
-        return extract_path_regex_set(root, spec, files, target_roots);
-    }
-    let paths = resolve_spec_files(root, &spec.file, target_roots);
-    let mut values = BTreeSet::new();
-    let mut issues = Vec::new();
-    for path in &paths {
-        if spec.kind == TS_CALL_FIRST_STRING_ARGUMENT {
-            extract_call_first_string_argument(root, path, spec, facts, &mut values, &mut issues);
-            continue;
+    let mut extracted = if spec.kind == path::PATH_REGEX_CAPTURE {
+        extract_path_regex_set(root, spec, files, target_roots)?
+    } else {
+        let paths = resolve_spec_files(root, &spec.file, target_roots);
+        let mut values = BTreeSet::new();
+        let mut issues = Vec::new();
+        for path in &paths {
+            if spec.kind == TS_CALL_FIRST_STRING_ARGUMENT {
+                extract_call_first_string_argument(
+                    root,
+                    path,
+                    spec,
+                    facts,
+                    &mut values,
+                    &mut issues,
+                );
+                continue;
+            }
+            let source = sources
+                .read_path(path)
+                .map_err(|error| anyhow::anyhow!(error.to_string()))?;
+            values.extend(match spec.kind.as_str() {
+                "ts-string-union" => extract_ts_string_union(&source, &spec.target),
+                "ts-const-object-keys" => extract_ts_const_object_keys(&source, &spec.target),
+                "ts-const-object-property" => {
+                    extract_ts_const_object_property(&source, &spec.target, &spec.property)
+                }
+                "ts-array-literal" => extract_ts_array_literal(&source, &spec.target),
+                "ts-const-array-property" => {
+                    extract_ts_const_array_property(&source, &spec.target, &spec.property)
+                }
+                "yaml-sequence" => extract_yaml_sequence(&source, &spec.key),
+                "yaml-string-selector" => extract_yaml_string_selector(&source, &spec.key),
+                "markdown-table-code-cells" => extract_markdown_table_code_cells(&source),
+                "sql-enum" => extract_sql_enum(&source, &spec.target),
+                _ => BTreeSet::new(),
+            });
         }
-        let source = sources
-            .read_path(path)
-            .map_err(|error| anyhow::anyhow!(error.to_string()))?;
-        values.extend(match spec.kind.as_str() {
-            "ts-string-union" => extract_ts_string_union(&source, &spec.target),
-            "ts-const-object-keys" => extract_ts_const_object_keys(&source, &spec.target),
-            "ts-const-object-property" => {
-                extract_ts_const_object_property(&source, &spec.target, &spec.property)
-            }
-            "ts-array-literal" => extract_ts_array_literal(&source, &spec.target),
-            "ts-const-array-property" => {
-                extract_ts_const_array_property(&source, &spec.target, &spec.property)
-            }
-            "yaml-sequence" => extract_yaml_sequence(&source, &spec.key),
-            "yaml-string-selector" => extract_yaml_string_selector(&source, &spec.key),
-            "markdown-table-code-cells" => extract_markdown_table_code_cells(&source),
-            "sql-enum" => extract_sql_enum(&source, &spec.target),
-            _ => BTreeSet::new(),
-        });
-    }
-    let path = paths
-        .first()
-        .expect("resolve_spec_files always returns at least one path");
-    Ok(ExtractedSet {
-        file: relative_slash_path(root, path),
-        values,
-        issues,
-    })
+        let path = paths
+            .first()
+            .expect("resolve_spec_files always returns at least one path");
+        ExtractedSet {
+            file: relative_slash_path(root, path),
+            values,
+            issues,
+        }
+    };
+    apply_prefix_transform(spec, &mut extracted);
+    Ok(extracted)
 }
 
 pub(super) fn resolve_spec_files(
@@ -158,43 +172,4 @@ pub(super) fn extract_ts_const_object_property(
         return BTreeSet::new();
     };
     top_level_property_values(&body, property)
-}
-
-pub(super) fn extract_sql_enum(source: &str, target: &str) -> BTreeSet<String> {
-    let source = strip_sql_comments(source);
-    let pattern = format!(
-        r#"(?is)CREATE\s+TYPE\s+{}\s+AS\s+ENUM\s*\("#,
-        regex::escape(target)
-    );
-    Regex::new(&pattern)
-        .ok()
-        .and_then(|regex| regex.find(&source))
-        .and_then(|mat| sql_enum_body(&source[mat.end()..]))
-        .map(quoted_strings_sql)
-        .unwrap_or_default()
-}
-
-fn sql_enum_body(source: &str) -> Option<&str> {
-    let mut quote = false;
-    let mut chars = source.char_indices().peekable();
-    while let Some((idx, ch)) = chars.next() {
-        if quote {
-            if ch == '\'' {
-                if chars.peek().is_some_and(|(_, next)| *next == '\'') {
-                    chars.next();
-                } else {
-                    quote = false;
-                }
-            }
-            continue;
-        }
-        if ch == '\'' {
-            quote = true;
-            continue;
-        }
-        if ch == ')' {
-            return Some(&source[..idx]);
-        }
-    }
-    None
 }

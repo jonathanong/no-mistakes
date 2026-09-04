@@ -1,0 +1,6 @@
+packages:
+  - backend
+  - backend/agents
+  - backend/api
+  - web
+  - cloudflare-worker
