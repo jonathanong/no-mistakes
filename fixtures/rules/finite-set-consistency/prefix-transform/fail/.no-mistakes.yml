@@ -1,0 +1,24 @@
+version: 2
+rules:
+  - rule: finite-set-consistency
+    scope: repository
+    options:
+      sets:
+        - name: workspaceYamlBackendPackages
+          file: pnpm-workspace.yaml
+          kind: yaml-sequence
+          key: packages
+          stripPrefix: "backend/"
+          minSize: 1
+        # package.json is plain JSON, not YAML; yaml-string-selector still
+        # extracts it because JSON is valid YAML 1.2. Do not add a dedicated
+        # json-string-selector kind for this case.
+        - name: packageJsonWorkspaces
+          file: package.json
+          kind: yaml-string-selector
+          key: workspaces.[]
+          excludePrefix: "../"
+          minSize: 1
+      comparisons:
+        - left: workspaceYamlBackendPackages
+          right: packageJsonWorkspaces

@@ -40,6 +40,8 @@ pub(crate) struct SetSpec {
     pub(crate) pattern: String,
     pub(crate) key: String,
     pub(crate) min_size: usize,
+    pub(crate) strip_prefix: String,
+    pub(crate) exclude_prefix: String,
 }
 
 #[derive(Deserialize, Default)]

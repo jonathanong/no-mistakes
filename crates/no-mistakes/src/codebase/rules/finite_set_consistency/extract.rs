@@ -42,45 +42,81 @@ pub(super) fn extract_set_with_sources(
     sources: &crate::codebase::ts_source::SourceStore,
     facts: Option<&dyn TsFactLookup>,
 ) -> Result<ExtractedSet> {
-    if spec.kind == path::PATH_REGEX_CAPTURE {
-        return extract_path_regex_set(root, spec, files, target_roots);
-    }
-    let paths = resolve_spec_files(root, &spec.file, target_roots);
-    let mut values = BTreeSet::new();
-    let mut issues = Vec::new();
-    for path in &paths {
-        if spec.kind == TS_CALL_FIRST_STRING_ARGUMENT {
-            extract_call_first_string_argument(root, path, spec, facts, &mut values, &mut issues);
-            continue;
+    let mut extracted = if spec.kind == path::PATH_REGEX_CAPTURE {
+        extract_path_regex_set(root, spec, files, target_roots)?
+    } else {
+        let paths = resolve_spec_files(root, &spec.file, target_roots);
+        let mut values = BTreeSet::new();
+        let mut issues = Vec::new();
+        for path in &paths {
+            if spec.kind == TS_CALL_FIRST_STRING_ARGUMENT {
+                extract_call_first_string_argument(
+                    root,
+                    path,
+                    spec,
+                    facts,
+                    &mut values,
+                    &mut issues,
+                );
+                continue;
+            }
+            let source = sources
+                .read_path(path)
+                .map_err(|error| anyhow::anyhow!(error.to_string()))?;
+            values.extend(match spec.kind.as_str() {
+                "ts-string-union" => extract_ts_string_union(&source, &spec.target),
+                "ts-const-object-keys" => extract_ts_const_object_keys(&source, &spec.target),
+                "ts-const-object-property" => {
+                    extract_ts_const_object_property(&source, &spec.target, &spec.property)
+                }
+                "ts-array-literal" => extract_ts_array_literal(&source, &spec.target),
+                "ts-const-array-property" => {
+                    extract_ts_const_array_property(&source, &spec.target, &spec.property)
+                }
+                "yaml-sequence" => extract_yaml_sequence(&source, &spec.key),
+                "yaml-string-selector" => extract_yaml_string_selector(&source, &spec.key),
+                "markdown-table-code-cells" => extract_markdown_table_code_cells(&source),
+                "sql-enum" => extract_sql_enum(&source, &spec.target),
+                _ => BTreeSet::new(),
+            });
         }
-        let source = sources
-            .read_path(path)
-            .map_err(|error| anyhow::anyhow!(error.to_string()))?;
-        values.extend(match spec.kind.as_str() {
-            "ts-string-union" => extract_ts_string_union(&source, &spec.target),
-            "ts-const-object-keys" => extract_ts_const_object_keys(&source, &spec.target),
-            "ts-const-object-property" => {
-                extract_ts_const_object_property(&source, &spec.target, &spec.property)
-            }
-            "ts-array-literal" => extract_ts_array_literal(&source, &spec.target),
-            "ts-const-array-property" => {
-                extract_ts_const_array_property(&source, &spec.target, &spec.property)
-            }
-            "yaml-sequence" => extract_yaml_sequence(&source, &spec.key),
-            "yaml-string-selector" => extract_yaml_string_selector(&source, &spec.key),
-            "markdown-table-code-cells" => extract_markdown_table_code_cells(&source),
-            "sql-enum" => extract_sql_enum(&source, &spec.target),
-            _ => BTreeSet::new(),
-        });
+        let path = paths
+            .first()
+            .expect("resolve_spec_files always returns at least one path");
+        ExtractedSet {
+            file: relative_slash_path(root, path),
+            values,
+            issues,
+        }
+    };
+    apply_prefix_transform(spec, &mut extracted);
+    Ok(extracted)
+}
+
+/// Applies `spec`'s optional `stripPrefix`/`excludePrefix` transform to a raw
+/// extraction, kind-agnostically, same as `minSize`. `stripPrefix` drops any
+/// value that does not carry the prefix and strips it from the ones that do;
+/// `excludePrefix` then drops any (possibly already-stripped) value that
+/// still carries its prefix. Both are no-ops when left empty (the default).
+fn apply_prefix_transform(spec: &SetSpec, extracted: &mut ExtractedSet) {
+    if spec.strip_prefix.is_empty() && spec.exclude_prefix.is_empty() {
+        return;
     }
-    let path = paths
-        .first()
-        .expect("resolve_spec_files always returns at least one path");
-    Ok(ExtractedSet {
-        file: relative_slash_path(root, path),
-        values,
-        issues,
-    })
+    extracted.values = std::mem::take(&mut extracted.values)
+        .into_iter()
+        .filter_map(|value| {
+            if spec.strip_prefix.is_empty() {
+                Some(value)
+            } else {
+                value
+                    .strip_prefix(spec.strip_prefix.as_str())
+                    .map(str::to_string)
+            }
+        })
+        .filter(|value| {
+            spec.exclude_prefix.is_empty() || !value.starts_with(spec.exclude_prefix.as_str())
+        })
+        .collect();
 }
 
 pub(super) fn resolve_spec_files(

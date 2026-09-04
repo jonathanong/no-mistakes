@@ -13,9 +13,10 @@ non-static members according to the selected comparison mode.
 ## Options
 
 `sets` entries require `name` and `kind` plus that extractor's documented
-fields (`file`, `target`, `key`, `pattern`, `property`, or `minSize`).
-`comparisons` entries require `left` and `right` and default `mode` to
-`equal-set`; supported modes are documented below.
+fields (`file`, `target`, `key`, `pattern`, `property`, `minSize`,
+`stripPrefix`, or `excludePrefix`). `comparisons` entries require `left` and
+`right` and default `mode` to `equal-set`; supported modes are documented
+below.
 
 ## Valid example
 
@@ -57,6 +58,18 @@ rules:
           file: .no-mistakes.yml
           kind: yaml-string-selector
           key: rules.[].options.permanentPackages.[].name
+        - name: workspaceYamlBackendPackages
+          file: pnpm-workspace.yaml
+          kind: yaml-sequence
+          key: packages
+          stripPrefix: "backend/"
+          minSize: 1
+        - name: packageJsonWorkspaces
+          file: backend/package.json
+          kind: yaml-string-selector
+          key: workspaces.[]
+          excludePrefix: "../"
+          minSize: 1
         - name: schedulerIds
           file: backend/queues/ai-agents/enqueues/schedules.mts
           kind: ts-call-first-string-argument
@@ -72,6 +85,8 @@ rules:
         - left: workspaceExcludes
           right: dependabotGlobs
           mode: glob-coverage
+        - left: workspaceYamlBackendPackages
+          right: packageJsonWorkspaces
         - left: schedulerIds
           right: scheduledJobRegistryIds
 ```
@@ -113,6 +128,24 @@ would otherwise pass. When an extract has fewer members than `minSize`, the
 rule reports that set and skips comparisons that use it. `minSize` defaults
 to `0` and is kind-agnostic. Use `minSize: 1` for live inventories such as
 skill-directory captures.
+
+`stripPrefix` and `excludePrefix` post-process a raw extraction and are
+kind-agnostic, like `minSize`. `stripPrefix` drops any value that does not
+carry the configured prefix and strips the prefix from the ones that do;
+`excludePrefix` then drops any value (stripped or not) that still carries its
+prefix. Both default to empty, which is a no-op, and `minSize` is enforced
+after the transform. Use them to compare one inventory's subset against
+another inventory that does not share its path convention — for example,
+`pnpm-workspace.yaml`'s `packages` sequence lists every workspace in the
+repository, while `backend/package.json`'s `workspaces` array lists only
+`backend`'s direct members, some of them via a `../` escape into a sibling
+package owned by a different rule. `stripPrefix: "backend/"` narrows the
+first set to `backend`'s own subpackages with their shared prefix removed,
+and `excludePrefix: "../"` narrows the second to the members it declares
+directly, so an `equal-set` comparison checks only the overlap the two files
+are actually meant to agree on. `backend/package.json` is plain JSON rather
+than YAML, but `yaml-string-selector` reads it unmodified because JSON is
+valid YAML 1.2; no separate JSON selector kind is needed.
 
 `ts-call-first-string-argument` extracts the first argument from every matching
 call in the configured file. The argument must be a quoted string or an
