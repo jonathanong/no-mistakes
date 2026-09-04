@@ -16,8 +16,10 @@ use std::path::{Path, PathBuf};
 
 mod call;
 mod path;
+mod prefix_transform;
 use call::extract_call_first_string_argument;
 pub(super) use path::{extract_path_regex_set, path_regex_capture_files, PATH_REGEX_CAPTURE};
+use prefix_transform::apply_prefix_transform;
 
 #[derive(Debug, Clone)]
 pub(super) struct ExtractedSet {
@@ -91,32 +93,6 @@ pub(super) fn extract_set_with_sources(
     };
     apply_prefix_transform(spec, &mut extracted);
     Ok(extracted)
-}
-
-/// Applies `spec`'s optional `stripPrefix`/`excludePrefix` transform to a raw
-/// extraction, kind-agnostically, same as `minSize`. `stripPrefix` drops any
-/// value that does not carry the prefix and strips it from the ones that do;
-/// `excludePrefix` then drops any (possibly already-stripped) value that
-/// still carries its prefix. Both are no-ops when left empty (the default).
-fn apply_prefix_transform(spec: &SetSpec, extracted: &mut ExtractedSet) {
-    if spec.strip_prefix.is_empty() && spec.exclude_prefix.is_empty() {
-        return;
-    }
-    extracted.values = std::mem::take(&mut extracted.values)
-        .into_iter()
-        .filter_map(|value| {
-            if spec.strip_prefix.is_empty() {
-                Some(value)
-            } else {
-                value
-                    .strip_prefix(spec.strip_prefix.as_str())
-                    .map(str::to_string)
-            }
-        })
-        .filter(|value| {
-            spec.exclude_prefix.is_empty() || !value.starts_with(spec.exclude_prefix.as_str())
-        })
-        .collect();
 }
 
 pub(super) fn resolve_spec_files(
