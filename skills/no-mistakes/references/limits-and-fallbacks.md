@@ -76,7 +76,9 @@ own edge kinds inside the packages listed in `.no-mistakes.yml`. Query those
 with `dependents --relationship python` (or `go`, `rust`, `ruby`, `php`,
 `java`, `kotlin`, `elixir`, `dart`, `swift`, `dotnet`) and
 `tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart|swift|dotnet`.
-Do not fall back to `rg` for those module-graph questions.
+Use the graph first. Keep `rg` for unsupported dynamic forms those
+frontends skip, such as `importlib.import_module(module_name)` or a
+computed Flask/FastAPI route.
 
 Markdown files, CI YAML workflows, Terraform/OpenTofu, and process spawn
 configs participate via their own edge kinds (`md`, `ci`, `workflow`,

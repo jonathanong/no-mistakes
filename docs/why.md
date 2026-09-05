@@ -50,7 +50,7 @@ language HTTP routes, language frontends, and repository rules.
 | Dynamic `fetch(\`/api/${id}\`)` or test IDs | Edges the graph cannot emit | [`nextjs-static-fetch-url`](eslint-rules/nextjs-static-fetch-url.md), [`playwright-literals`](eslint-rules/playwright-literals.md) |
 | Miss callers behind aliases or workspaces | Edits that compile in one package and break another | [`dependents`](cli/dependents.md) (omit `--tsconfig` in monorepos) |
 | Move a file and leave broken imports | A green agent session with unresolved specifiers | [`resolve-check`](cli/resolve-check.md) |
-| Change a signature and miss typed call sites | Callers that still type-check until runtime | [`symbols --mode signature-impact`](cli/symbols.md), [`call-sites`](cli/call-sites.md) |
+| Change a signature and miss import-based callers | Callers the graph can see; confirm exact lines with `rg` | [`symbols --mode signature-impact`](cli/symbols.md), [`call-sites`](cli/call-sites.md) |
 | Rename a queue job and miss the worker | Producers with no processor | [`queues check`](cli/queues-check.md), [`queues related`](cli/queues-related.md) |
 | Hoist a uniqueness token above re-entrant `beforeAll` | Duplicate-key failures that depend on the worker | [`playwright-no-hoisted-unique-token`](eslint-rules/playwright-no-hoisted-unique-token.md) |
 | One raw `scrollTo` racing cursor pagination | A wait that burns its timeout | [`playwright-no-raw-scroll-pagination`](eslint-rules/playwright-no-raw-scroll-pagination.md) |
