@@ -7,13 +7,14 @@ reach a change, or write a dynamic `fetch` / test ID that drops the
 relationship from the graph.
 
 `no-mistakes` answers those questions from the current checkout. It parses
-source once, builds one in-memory graph, and returns a small structured
-result. It does not run the app, call a model, or keep a database.
+each requested source once per required semantic mode, builds one in-memory
+graph, and returns a small structured result. It does not run the app, call
+a model, or keep a database.
 
 The model is:
 
-```
-facts (one parse) → one in-memory graph → commands and checks project that graph
+```text
+facts (one parse per required semantic mode) → one graph → commands and checks
 ```
 
 Static literals produce edges. Dynamic values are skipped rather than

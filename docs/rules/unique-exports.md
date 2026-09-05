@@ -25,9 +25,9 @@ for intentional public aliases.
 ## Why and when
 
 Use this rule when agents search for an API by name, find one file, and
-recreate the same export in another path. Grep and a single-file linter do
-not see the other `getCurrentUser`. Enable it in a shared workspace so each
-public name has one definition the agent can reuse or rename.
+recreate the same export in another path. A narrow search or single-file
+linter may miss the other `getCurrentUser`. Enable it in a shared workspace
+so each public name has one definition the agent can reuse or rename.
 
 ## What it catches/requires
 

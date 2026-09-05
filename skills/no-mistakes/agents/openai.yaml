@@ -1,4 +1,4 @@
 interface:
   display_name: "No Mistakes"
-  short_description: "Local AST graph: impact, test plans, Playwright coverage, and checks — not embeddings."
+  short_description: "Local AST graph: impact, tests, and checks."
   default_prompt: "Use $no-mistakes before editing to find callers and tests, after editing to validate, and instead of rg when the question crosses packages, aliases, Playwright routes, or configured language graphs. Inspect warnings and fallback_triggered before treating an empty plan as complete. Use rg only for exact call lines, comments, or dynamic forms."
