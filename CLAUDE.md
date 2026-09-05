@@ -109,14 +109,18 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Rule suppression must work consistently for every `no-mistakes` rule. Use `no-mistakes` suppression directives, never `guardrails`, and support top-of-file opt-outs (`no-mistakes-disable-file`) plus line-specific opt-outs (`no-mistakes-disable-line` and `no-mistakes-disable-next-line`) where findings have line numbers.
 - All shared Rust code belongs in `no-mistakes`. Crates must not depend on one another directly. If two crates need the same helper, lift it into `no-mistakes` first.
 - After `cargo build`, `cargo test`, or `cargo bench` in a worktree, delete
-  that worktree's `target/` (`rm -rf target` or `cargo clean`). Do not keep
-  build artifacts in throwaway worktrees. Never delete the main workspace
-  `target/` unless this worktree is the main workspace.
+  that worktree's `target/` (`rm -rf target` or `cargo clean`). If a local
+  Criterion `--save-baseline` / `--baseline` comparison is in progress, wait
+  until that comparison finishes — the first run stores measurements under
+  `target/`. Do not keep build artifacts in throwaway worktrees afterward.
+  Never delete the main workspace `target/` unless this worktree is the main
+  workspace.
 - Local Criterion on one machine is the source of truth for performance
-  before/after. CodSpeed is not reliable: GitHub-hosted runners do not stick
-  to one CPU architecture (Intel vs AMD; Macro Runners are ARM64), and
-  CodSpeed may compare against an older base. Treat CodSpeed as CI smoke that
-  the harness still builds, not as proof of a win or a regression.
+  before/after. GitHub-hosted runners do not stick to one CPU architecture
+  (Intel vs AMD; Macro Runners are ARM64), and CodSpeed may compare against
+  an older base; those mismatched comparisons are not proof of a win or a
+  regression. Treat a CodSpeed failure as actionable only when the report
+  compares the same runtime environment and the expected base commit.
 
 ### Public surface checklist
 
