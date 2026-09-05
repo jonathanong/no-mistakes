@@ -85,6 +85,50 @@ fn files_config_complete_graph_build_does_not_repeat_work() {
 }
 
 #[test]
+fn files_config_session_builder_reuses_prepared_test_filter() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+    let files = session.visible_paths(&root).paths_for(&root).as_ref().clone();
+    let tsconfig =
+        crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let graph_files = GraphFiles::from_files(files);
+    let plan = GraphBuildPlan {
+        imports: true,
+        routes: true,
+        ..GraphBuildPlan::default()
+    };
+    crate::ast::with_request_parse_cache(|| {
+        DepGraph::build_with_plan_files_config_facts_and_session(
+            &root,
+            &tsconfig,
+            plan,
+            &graph_files,
+            None,
+            None,
+            session.clone(),
+        )
+        .expect("session graph builder builds a graph");
+        let work = observer.snapshot().work;
+        assert_eq!(work["graph.builds"], 1, "{work:#?}");
+        assert_eq!(work["test_filter.builds"], 1, "{work:#?}");
+
+        DepGraph::build_with_plan_files_config_facts_and_session(
+            &root,
+            &tsconfig,
+            plan,
+            &graph_files,
+            None,
+            None,
+            session,
+        )
+        .expect("second session graph builder reuses the filter");
+        let work = observer.snapshot().work;
+        assert_eq!(work["test_filter.builds"], 1, "{work:#?}");
+    });
+}
+
+#[test]
 fn files_config_session_helper_does_not_call_discover_when_snapshot_exists() {
     let source = include_str!("../files_config_session.rs");
     assert_eq!(
