@@ -32,9 +32,11 @@ can trust.
    stop agents from hiding relationships behind aliases, dynamic URLs, or
    duplicate public names.
 
-Graph queries such as `dependents` and `tests plan vitest` work without a
-custom `testPlan` block. Configuration unlocks Playwright coverage, queues,
-server routes, language frontends, and repository rules.
+Graph queries such as `dependents`, `tests plan vitest`, and
+`playwright check` work without a custom config block on a conventional
+Next.js app. Configuration adds custom Playwright roots, wrappers, and
+multi-app bindings, plus queues, Remix and language HTTP routes, language
+frontends, and repository rules.
 
 ## Mistakes this prevents
 

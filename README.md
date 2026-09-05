@@ -63,10 +63,12 @@ the existing API.
 npm install --save-dev no-mistakes eslint-plugin-no-mistakes
 ```
 
-`dependents` and `tests plan vitest` work without a custom `testPlan` block.
-Express, Hono, Fastify, Koa, and NestJS route extraction also runs without
-config. Configuration unlocks Playwright coverage, queues, Remix and
-configured language HTTP routes, language frontends, and repository rules.
+`dependents`, `tests plan vitest`, and `playwright check` work without a
+custom config block on a conventional Next.js app with root `app/` and
+`*.spec.ts` tests. Express, Hono, Fastify, Koa, and NestJS route extraction
+also runs without config. Configuration adds custom Playwright roots,
+wrappers, and multi-app bindings, plus queues, Remix and language HTTP
+routes, language frontends, and repository rules.
 
 ```sh
 npx no-mistakes dependents src/utils.mts --format json
