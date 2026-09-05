@@ -68,11 +68,13 @@ pub(crate) fn edge_index_from_maps(
     // source-ordered flatten so canonical edge ordinals retain the exact order
     // of the former global edge comparator without a repository-wide sort.
     sort_adjacency_lists(&mut forward, &mut reverse);
-    EdgeIndex::from_normalized_adjacency_maps_by_source(forward, reverse, |left, right| {
-        // Source count is much smaller than adjacency length. Compare borrowed
-        // parts here so the flatten does not re-format a key on every compare.
-        cmp_node_sort_keys(left, right).then_with(|| left.cmp(right))
-    })
+    // Cache concatenated source keys so flatten sorts with slice memcmp
+    // instead of rebuilding Cow parts on every compare.
+    EdgeIndex::from_normalized_adjacency_maps_by_cached_source_key(
+        forward,
+        reverse,
+        |node| (cached_node_sort_key(node), node.clone()),
+    )
 }
 
 fn sort_edge_index_adjacency(index: &mut EdgeIndex<NodeId, EdgeKind>) {

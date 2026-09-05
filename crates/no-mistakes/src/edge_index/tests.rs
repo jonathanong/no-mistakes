@@ -289,3 +289,33 @@ fn direct_adjacency_constructor_and_invariant_cover_both_map_states() {
         .unwrap_or_default();
     assert!(message.contains("forward and reverse adjacency maps must describe identical edges"));
 }
+
+#[test]
+fn cached_source_key_flatten_matches_source_comparator() {
+    let mut forward = FxHashMap::default();
+    forward.insert("c".to_owned(), vec![("z".to_owned(), 1_u8)]);
+    forward.insert(
+        "a".to_owned(),
+        vec![("y".to_owned(), 2_u8), ("x".to_owned(), 1_u8)],
+    );
+    forward.insert("b".to_owned(), Vec::new());
+    let mut reverse = FxHashMap::default();
+    reverse.insert("z".to_owned(), vec![("c".to_owned(), 1_u8)]);
+    reverse.insert("y".to_owned(), vec![("a".to_owned(), 2_u8)]);
+    reverse.insert("x".to_owned(), vec![("a".to_owned(), 1_u8)]);
+
+    let by_cmp = EdgeIndex::from_normalized_adjacency_maps_by_source(
+        forward.clone(),
+        reverse.clone(),
+        Ord::cmp,
+    );
+    let by_key =
+        EdgeIndex::from_normalized_adjacency_maps_by_cached_source_key(forward, reverse, |node| {
+            node.clone()
+        });
+    assert_eq!(by_cmp.edges(), by_key.edges());
+    assert_eq!(
+        by_key.edges(),
+        &[edge("a", "y", 2), edge("a", "x", 1), edge("c", "z", 1)]
+    );
+}

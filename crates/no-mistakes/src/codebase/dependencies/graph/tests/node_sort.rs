@@ -81,6 +81,81 @@ fn cached_node_sort_key_matches_formatted_string_order() {
     }
 }
 
+#[cfg(unix)]
+#[test]
+fn cached_node_sort_key_matches_lossy_order_for_non_utf8_paths() {
+    // Raw `as_encoded_bytes` would reverse these (0x80 < 0xC2), but the
+    // historical comparator used `to_string_lossy` (U+0080 < U+FFFD).
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
+    use std::path::PathBuf;
+
+    let invalid = NodeId::file(PathBuf::from(OsString::from_vec(vec![0x80])));
+    let latin1_control = NodeId::file(PathBuf::from("\u{0080}"));
+    assert_eq!(
+        cached_node_sort_key(&invalid).cmp(&cached_node_sort_key(&latin1_control)),
+        node_sort_key(&invalid).cmp(&node_sort_key(&latin1_control)),
+    );
+    assert_eq!(
+        cached_node_sort_key(&invalid).cmp(&cached_node_sort_key(&latin1_control)),
+        std::cmp::Ordering::Greater,
+        "lossy U+FFFD must sort after UTF-8 U+0080"
+    );
+}
+
+fn assert_concatenated_chunks_match_flat_memcmp(left: &[&[u8]], right: &[&[u8]]) {
+    let expected = left
+        .iter()
+        .copied()
+        .flatten()
+        .cmp(right.iter().copied().flatten());
+    assert_eq!(
+        cmp_concatenated_bytes(left, right),
+        expected,
+        "chunked memcmp mismatch for {left:?} vs {right:?}"
+    );
+    assert_eq!(
+        cmp_concatenated_bytes(right, left),
+        expected.reverse(),
+        "chunked memcmp reverse mismatch for {right:?} vs {left:?}"
+    );
+}
+
+#[test]
+fn concatenated_byte_chunks_match_flat_memcmp() {
+    assert_concatenated_chunks_match_flat_memcmp(&[b"ab", b"c"], &[b"a", b"bc"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"", b"abc"], &[b"abc", b""]);
+    assert_concatenated_chunks_match_flat_memcmp(&[], &[b""]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"a"], &[b"a", b"b"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"ab"], &[b"a"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"a", b"c"], &[b"ab"]);
+    assert_concatenated_chunks_match_flat_memcmp(
+        &[b"/repo/source", b"#", b"job"],
+        &[b"/repo/source#job"],
+    );
+    assert_concatenated_chunks_match_flat_memcmp(&[b"/step:10"], &[b"/step:2"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"xx", b""], &[]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"abc"], &[b"abd"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"ab", b"cd"], &[b"ab", b"ce"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"short", b"-tail"], &[b"sh", b"ort-tail"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"", b"", b"z"], &[b"z"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"prefix", b"rest"], &[b"pre", b"fixrest"]);
+}
+
+#[test]
+fn flatten_source_cached_key_matches_formatted_order() {
+    let nodes = node_sort_table();
+    let mut cached = nodes.to_vec();
+    cached.sort_by_cached_key(|node| (cached_node_sort_key(node), node.clone()));
+    let mut formatted = nodes.to_vec();
+    formatted.sort_by(|left, right| {
+        node_sort_key(left)
+            .cmp(&node_sort_key(right))
+            .then_with(|| left.cmp(right))
+    });
+    assert_eq!(cached, formatted);
+}
+
 #[test]
 fn cached_adjacency_sort_matches_formatted_node_id_key() {
     let kinds = [EdgeKind::Import, EdgeKind::Selector, EdgeKind::WorkflowStep];
@@ -95,4 +170,25 @@ fn cached_adjacency_sort_matches_formatted_node_id_key() {
     let mut formatted = pairs;
     formatted.sort_by_cached_key(|(n, k)| (node_sort_key(n), n.clone(), k.sort_key()));
     assert_eq!(cached, formatted);
+}
+
+#[cfg(unix)]
+#[test]
+fn adjacency_sort_tie_breaks_lossy_path_collisions_by_node_id() {
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
+    use std::path::PathBuf;
+
+    let left = NodeId::file(PathBuf::from(OsString::from_vec(vec![0x80])));
+    let right = NodeId::file(PathBuf::from(OsString::from_vec(vec![0x81])));
+    assert_eq!(node_sort_key(&left), node_sort_key(&right));
+    let mut cached = vec![
+        (right.clone(), EdgeKind::Import),
+        (left.clone(), EdgeKind::Import),
+    ];
+    cached.sort_by_cached_key(|(n, k)| adjacency_sort_key(n, *k));
+    assert_eq!(
+        cached,
+        vec![(left, EdgeKind::Import), (right, EdgeKind::Import)]
+    );
 }
