@@ -144,6 +144,24 @@ pub(crate) fn push_ordinal<Node, Kind>(
     }
 }
 
+pub(crate) fn remember_pair<Node, Kind>(
+    known: &mut FxHashMap<Node, FxHashSet<Kind>>,
+    to: &Node,
+    kind: &Kind,
+) -> bool
+where
+    Node: Clone + Eq + Hash,
+    Kind: Clone + Eq + Hash,
+{
+    if let Some(kinds) = known.get_mut(to) {
+        return kinds.insert(kind.clone());
+    }
+    let mut kinds = FxHashSet::default();
+    kinds.insert(kind.clone());
+    known.insert(to.clone(), kinds);
+    true
+}
+
 pub(crate) fn seed_known_targets<Node, Kind>(
     existing: Option<&Adjacency<Node, Kind>>,
 ) -> FxHashMap<Node, FxHashSet<Kind>>
@@ -151,17 +169,17 @@ where
     Node: Clone + Eq + Hash,
     Kind: Clone + Eq + Hash,
 {
-    match existing {
-        Some(adj) => {
-            let mut known: FxHashMap<Node, FxHashSet<Kind>> =
-                fx_map_with_capacity(adj.neighbors.len());
-            for (to, kind) in &adj.neighbors {
-                known.entry(to.clone()).or_default().insert(kind.clone());
-            }
-            known
-        }
-        None => FxHashMap::default(),
+    let Some(adj) = existing else {
+        return FxHashMap::default();
+    };
+    if adj.neighbors.is_empty() {
+        return FxHashMap::default();
     }
+    let mut known: FxHashMap<Node, FxHashSet<Kind>> = fx_map_with_capacity(adj.neighbors.len());
+    for (to, kind) in &adj.neighbors {
+        remember_pair(&mut known, to, kind);
+    }
+    known
 }
 
 #[cfg(test)]
