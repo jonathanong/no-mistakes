@@ -1,23 +1,22 @@
 # Documentation
 
-`no-mistakes` provides local, deterministic AST tools for codebase
-intelligence. The docs are organized around agent tasks: choose a command,
-request structured output, understand config, and keep source code analyzable.
+`no-mistakes` parses the current checkout into one in-memory graph, then
+projects that graph into impact queries, test plans, and checks. Start with
+the job you have; the rest of this index is reference.
 
 ## Start Here
 
-| Goal | Doc |
-| --- | --- |
-| Pick the right CLI command | [CLI commands](cli/README.md) |
-| Diagnose analysis cost without changing command output | [Performance diagnostics](cli/diagnostics.md) |
-| Call the async Node API | [Node/N-API guide](node-api.md) |
-| Configure projects, tests, selectors, and rules | [Configuration](configuration/README.md) |
-| Configure repository checks | [no-mistakes rules](rules/README.md) |
-| Keep file-local code analyzable | [ESLint rules](eslint-rules/README.md) |
-| Understand static-analysis limits | [AST analysis behavior](ast-analysis.md) |
-| Use the tool as an AI agent | [Agent guide](agent-guide.md) |
-| Install concise instructions for an agent | [Packaged agent skill](../skills/no-mistakes/SKILL.md) |
-| Compare language and framework coverage | [Feature parity](feature-parity.md) |
+| Audience | Goal | Doc |
+| --- | --- | --- |
+| Everyone | Why it exists, and which agent mistakes it prevents | [Why no-mistakes exists](why.md) |
+| Humans | Install, first queries, and what config unlocks | [README](../README.md#install-and-first-queries), [Configuration](configuration/README.md) |
+| Humans | Repository checks and file-local lint rules | [no-mistakes rules](rules/README.md), [ESLint rules](eslint-rules/README.md) |
+| Agents | Change lifecycle and command selection | [Agent guide](agent-guide.md) |
+| Agents | Compact skill to install in a harness | [Packaged agent skill](../skills/no-mistakes/SKILL.md) |
+| Either | Pick a CLI command or async Node API | [CLI commands](cli/README.md), [Node/N-API guide](node-api.md) |
+| Either | Diagnose analysis cost without changing output | [Performance diagnostics](cli/diagnostics.md) |
+| Either | Static-analysis limits | [AST analysis behavior](ast-analysis.md) |
+| Either | Language and framework coverage contract | [Feature parity](feature-parity.md) |
 
 ## Reference
 
@@ -28,9 +27,9 @@ request structured output, understand config, and keep source code analyzable.
   would bypass the one-pass gateways.
 - [Graph edges](graph-edges.md) lists dependency edge kinds with fixture-backed
   examples, counterexamples, relationship filters, and caveats.
-- [Feature parity](feature-parity.md) is the contract for Python, Django,
-  Celery, Go, Asynq, Kafka, Rust, Rails, and PHP support relative to the TS/JS
-  surface.
+- [Feature parity](feature-parity.md) is the language-frontend contract
+  relative to the TS/JS surface (Python, Django, Celery, Go, Asynq, Kafka,
+  Rust, Rails, PHP, Java, Kotlin, Elixir, Dart, Swift, and .NET).
 - [Test planning](test-plan.md) explains configured test selection in more
   depth.
 - [Legacy CLI reference](cli-reference.md) and [legacy ESLint reference](eslint-plugin.md)

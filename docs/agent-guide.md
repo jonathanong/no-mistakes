@@ -1,7 +1,11 @@
 # Agent Guide
 
-Use these tools throughout a change when static codebase intelligence can
-reduce missed tests, hidden dependencies, or fragile dynamic patterns.
+Use these tools throughout a change so you do not miss tests, recreate an
+existing API, ship an untested App Router page, or treat an empty plan as
+complete. The catalog of those mistakes is in [Why no-mistakes exists](why.md).
+
+Grep finds strings. This graph finds resolved callers, covering tests, and
+static route/queue edges. Use `rg` after a graph query for exact call lines.
 
 ## Change lifecycle
 
@@ -47,10 +51,10 @@ Add project-specific versions of these instructions to `AGENTS.md`, `CLAUDE.md`,
 or the repository's agent guide:
 
 ```md
-Use no-mistakes for structural TS/JS questions before falling back to grep.
+Use no-mistakes for structural questions before falling back to grep. Skipping it misses callers behind aliases, covering tests, and uncovered App Router pages.
 Run no-mistakes dependents <changed-file> --format json to inspect impact.
 Use no-mistakes tests plan <framework> --changed-file <file> --format json before editing and after the change.
-Use no-mistakes impacted-checks <changed-files> --format json before handoff and inspect warnings and fallback_triggered.
+Use no-mistakes impacted-checks <changed-files> --format json before handoff and inspect warnings and fallback_triggered. An empty plan is not "nothing to run" until those fields are clean.
 Run no-mistakes playwright check --json before finishing Next.js App Router or Playwright work.
 Use no-mistakes playwright related <file> to identify Playwright tests for changed pages or selector-bearing components.
 Keep test IDs and fetch URLs static unless the project explicitly accepts that the AST tools cannot reason about them.

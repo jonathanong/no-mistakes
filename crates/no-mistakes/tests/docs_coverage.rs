@@ -451,6 +451,10 @@ fn review_found_doc_regressions_stay_fixed() {
     assert!(limits.contains("spawn(scriptName, [])"));
     assert!(limits.contains(r#"page.locator('[data-testid="submit"]').click()"#));
     assert!(limits.contains(r#"page.locator(`[data-testid="${id}"]`).click()"#));
+    assert!(limits.contains("--relationship python"));
+    assert!(!limits.contains(
+        "Other file types (Go, Rust, Python, CSS, JSON, Markdown source files) are not walked."
+    ));
 
     let feature_parity = read_root("docs/feature-parity.md");
     for needle in [
@@ -477,10 +481,16 @@ fn review_found_doc_regressions_stay_fixed() {
         docs_index.contains("(feature-parity.md)"),
         "docs/README.md must link feature-parity.md"
     );
+    assert!(docs_index.contains("(why.md)"));
 
     let root_readme = read_root("README.md");
     assert!(
         root_readme.contains("(docs/feature-parity.md)"),
         "README.md must link docs/feature-parity.md"
     );
+    assert!(root_readme.contains("(docs/why.md)"));
+
+    let why = read_root("docs/why.md");
+    assert!(why.contains("Three jobs"));
+    assert!(why.contains("Mistakes this prevents"));
 }

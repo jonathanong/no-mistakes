@@ -1,6 +1,6 @@
 ---
 name: no-mistakes
-description: "Core: TS/JS module graph (imports, dependents, exports, test impact, Playwright, React, queue/server, fetches, lockfile, no-mistakes checks). Also: CI, Terraform/OpenTofu, Swift/.NET, and configured Python/Go/Rust/Rails/PHP/Java/Kotlin/Elixir graphs plus tests plan. Prefer over rg when a question spans >2 workspace dirs or >5 import hops."
+description: "Deterministic impact map and test plan. Use before editing to find callers/tests, after editing to validate, and instead of rg when the question crosses packages, aliases, Playwright routes, or configured Python/Go/Rust graphs. Skipping it misses tests, duplicate exports, uncovered App Router pages, and empty plans that are not actually empty."
 allowed-tools: Bash(no-mistakes:*) Bash(rg:*) Read Glob
 ---
 
@@ -9,15 +9,17 @@ allowed-tools: Bash(no-mistakes:*) Bash(rg:*) Read Glob
 Use `no-mistakes` for structural codebase questions: import and test impact,
 public symbols, static route/fetch/queue relationships, or configured project
 checks. Use `rg` after a graph query for exact call lines, comments, strings,
-or unsupported/dynamic forms.
+or unsupported/dynamic forms. The mistakes this prevents are catalogued in
+[why.md](references/why.md).
 
 ## When to activate
 
-Use `no-mistakes` when the answer crosses more than two workspace directories,
-more than five import hops, or needs transitive test impact. For one local
-TS/JS file's direct static importers, use `no-mistakes importers <file>`;
-otherwise use the graph command below. For non-code text and exact syntax use
-`rg` directly.
+Use `no-mistakes` when skipping the graph would miss callers, tests, or
+coverage: a change that crosses packages or aliases, transitive test impact,
+Playwright/route/queue questions, or configured checks. For one local TS/JS
+file's direct static importers, use `no-mistakes importers <file>`; otherwise
+use the graph command below. For non-code text and exact syntax use `rg`
+directly.
 
 ## Change lifecycle
 
@@ -98,6 +100,7 @@ groups, limits, diffs, and deleted-file behavior.
 
 ## Reference routing
 
+- [why.md](references/why.md): mistakes this graph exists to prevent.
 - [lifecycle.md](references/lifecycle.md): before-edit, after-edit, and
   handoff recipes.
 - [decision-tree.md](references/decision-tree.md): command, relationship, and

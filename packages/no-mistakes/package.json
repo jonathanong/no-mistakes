@@ -1,7 +1,7 @@
 {
   "name": "no-mistakes",
   "version": "0.54.1",
-  "description": "Static codebase analysis tools for TS/JS dependencies, dependents, and symbols",
+  "description": "Deterministic impact maps, test plans, Playwright coverage, and repository checks for coding agents",
   "license": "MIT",
   "repository": {
     "type": "git",
