@@ -59,4 +59,55 @@ impl AnalysisSession {
     ) -> anyhow::Result<Arc<crate::codebase::ts_resolver::TsConfig>> {
         self.dataset(root).tsconfig(tsconfig_path)
     }
+
+    /// Request-scoped filter for `root`. A seeded filter is reused for that root.
+    #[doc(hidden)]
+    pub fn test_file_filter(
+        &self,
+        root: &Path,
+        config: &crate::config::v2::NoMistakesConfig,
+    ) -> Arc<crate::codebase::test_filter::TestFileFilter> {
+        self.test_file_filter_with_visible(root, config, None)
+    }
+
+    pub(crate) fn test_file_filter_with_visible(
+        &self,
+        root: &Path,
+        config: &crate::config::v2::NoMistakesConfig,
+        visible_paths: Option<&[PathBuf]>,
+    ) -> Arc<crate::codebase::test_filter::TestFileFilter> {
+        let root = normalize_path(root);
+        let cell = self.test_filter_cell(&root);
+        Arc::clone(cell.get_or_init(|| {
+            self.increment("test_filter.builds", 1);
+            let paths = visible_paths
+                .map(<[PathBuf]>::to_vec)
+                .unwrap_or_else(|| self.visible_paths(&root).paths_for(&root).as_ref().clone());
+            Arc::new(crate::codebase::test_filter::TestFileFilter::from_visible(
+                &root, config, &paths,
+            ))
+        }))
+    }
+
+    /// Seed a filter built from prepared project globs. First writer wins.
+    #[doc(hidden)]
+    pub fn insert_test_file_filter(
+        &self,
+        root: &Path,
+        filter: crate::codebase::test_filter::TestFileFilter,
+    ) {
+        let cell = self.test_filter_cell(&normalize_path(root));
+        let _ = cell.get_or_init(|| Arc::new(filter));
+    }
+
+    fn test_filter_cell(&self, root: &Path) -> Arc<super::TestFilterCell> {
+        match self.test_filters.entry(root.to_path_buf()) {
+            Entry::Occupied(entry) => Arc::clone(entry.get()),
+            Entry::Vacant(entry) => {
+                let cell = Arc::new(OnceLock::new());
+                entry.insert(Arc::clone(&cell));
+                cell
+            }
+        }
+    }
 }

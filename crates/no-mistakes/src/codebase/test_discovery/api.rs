@@ -93,8 +93,17 @@ pub fn discovered_test_globs_from_visible(
 pub fn project_filters(root: &Path, config: &NoMistakesConfig) -> Vec<(TestRunner, ProjectTestFilter)> {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let visible_paths = snapshot.paths_for(root);
-    let tsconfig = resolve_tsconfig_lossy(root, &visible_paths);
-    project_filters_from_visible(root, config, &visible_paths, &tsconfig)
+    project_filters_from_visible_paths(root, config, &visible_paths)
+}
+
+#[doc(hidden)]
+pub fn project_filters_from_visible_paths(
+    root: &Path,
+    config: &NoMistakesConfig,
+    visible_paths: &[PathBuf],
+) -> Vec<(TestRunner, ProjectTestFilter)> {
+    let tsconfig = resolve_tsconfig_lossy(root, visible_paths);
+    project_filters_from_visible(root, config, visible_paths, &tsconfig)
 }
 
 #[doc(hidden)]
@@ -104,6 +113,7 @@ pub fn project_filters_from_visible(
     visible_paths: &[PathBuf],
     tsconfig: &crate::codebase::ts_resolver::TsConfig,
 ) -> Vec<(TestRunner, ProjectTestFilter)> {
+    record_project_filters_call();
     [
         TestRunner::Dotnet,
         TestRunner::Vitest,
@@ -128,6 +138,12 @@ pub fn project_filters_from_visible(
                 .map(move |filter| (runner, filter))
         })
         .collect()
+}
+
+fn record_project_filters_call() {
+    if let Some(observer) = crate::diagnostics::current() {
+        observer.increment("test_filter.project_filters", 1);
+    }
 }
 
 pub(crate) fn named_project_filters(

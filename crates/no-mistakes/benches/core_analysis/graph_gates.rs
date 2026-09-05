@@ -2,15 +2,19 @@
 //! Sized above the 14-file core-analysis fixture and below the 246-file
 //! large-graph-monorepo acceptance fixture so CI benches stay in-process.
 
+#[path = "graph_gates_session.rs"]
+mod session;
 #[path = "graph_gates_support.rs"]
 mod support;
 
 use super::shard;
 use criterion::{black_box, BenchmarkId, Criterion, Throughput};
+use no_mistakes::codebase::analysis_session::AnalysisSession;
 use no_mistakes::codebase::dependencies::graph::DepGraph;
 use no_mistakes::codebase::dependencies::NodeId;
 use no_mistakes::codebase::ts_resolver::load_tsconfig;
 use no_mistakes::codebase::ts_source::facts::{collect_ts_facts, TsFactPlan};
+use std::sync::Arc;
 use support::{
     build_graph, domain_totals, expect_count, expect_kind_counts, fact_totals, file_nodes,
     fixture_root, gate_plan, source_files, traversal_snapshot, EXPECTED_BACKEND_ROUTES,
@@ -172,6 +176,20 @@ pub(super) fn bench_graph_gates(c: &mut Criterion) {
         });
     }
     build_group.finish();
+
+    let session = AnalysisSession::new(None);
+    let v2 = session
+        .config(&root, Some(&config_path))
+        .expect("graph-gates session config");
+    let _ = session.test_file_filter(&root, v2.as_ref());
+    session::bench_graph_gates_session(
+        c,
+        &root,
+        &config,
+        &config_path,
+        Arc::clone(&session),
+        &preflight,
+    );
 
     let mut query_group = c.benchmark_group("graph_gates_query");
     query_group.throughput(Throughput::Elements(

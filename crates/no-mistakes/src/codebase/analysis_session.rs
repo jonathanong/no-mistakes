@@ -31,6 +31,7 @@ pub struct AnalysisSession {
     registry_extension_reports: DashMap<RegistryExtensionKey, RegistryExtensionCell>,
     parse_attempts: Option<DashMap<PathBuf, u64>>,
     interner: Arc<PathInterner>,
+    test_filters: DashMap<PathBuf, Arc<TestFilterCell>>,
 }
 
 type AnalysisDataset = crate::codebase::analysis_dataset::AnalysisDataset;
@@ -39,6 +40,7 @@ type SourceReadResult = Result<Arc<str>, SourceReadError>;
 type RegistryExtensionResult =
     Result<Arc<crate::registry_extension_query::RegistryExtensionReport>, Arc<str>>;
 type RegistryExtensionCell = Arc<OnceLock<RegistryExtensionResult>>;
+type TestFilterCell = OnceLock<Arc<crate::codebase::test_filter::TestFileFilter>>;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 struct RegistryExtensionKey {
@@ -81,6 +83,7 @@ impl AnalysisSession {
             registry_extension_reports: DashMap::new(),
             parse_attempts: collect_keyed_work.then(DashMap::new),
             interner: Arc::new(PathInterner::new()),
+            test_filters: DashMap::new(),
         })
     }
 

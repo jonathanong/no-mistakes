@@ -24,6 +24,27 @@ impl DepGraph {
         )
     }
 
+    /// Standalone graph build that reuses a request session's TestFileFilter.
+    #[doc(hidden)]
+    pub fn build_with_plan_and_config_and_session(
+        root: &Path,
+        tsconfig: &TsConfig,
+        plan: GraphBuildPlan,
+        config_path: Option<&Path>,
+        session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
+    ) -> Result<Self> {
+        let graph_files = GraphFiles::discover(root);
+        Self::build_with_plan_files_config_facts_and_session(
+            root,
+            tsconfig,
+            plan,
+            &graph_files,
+            config_path,
+            None,
+            session,
+        )
+    }
+
     pub(crate) fn build_with_plan_and_files(
         root: &Path,
         tsconfig: &TsConfig,

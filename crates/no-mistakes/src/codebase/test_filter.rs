@@ -46,6 +46,24 @@ impl TestFileFilter {
     }
 
     #[doc(hidden)]
+    pub fn from_visible(
+        root: &Path,
+        config: &NoMistakesConfig,
+        visible_paths: &[std::path::PathBuf],
+    ) -> Self {
+        Self::from_prepared_projects(
+            root,
+            config,
+            visible_paths,
+            crate::codebase::test_discovery::project_filters_from_visible_paths(
+                root,
+                config,
+                visible_paths,
+            ),
+        )
+    }
+
+    #[doc(hidden)]
     pub fn from_prepared_projects(
         root: &Path,
         config: &NoMistakesConfig,

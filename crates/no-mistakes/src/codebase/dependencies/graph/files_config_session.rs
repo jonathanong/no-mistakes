@@ -29,7 +29,7 @@ fn graph_config_options_with_config_and_session(
         None => crate::codebase::config::load_config(root),
     }
     .ok()?;
-    let v2_config = load_v2_config(root, config_path).ok();
+    let v2_config = load_v2_config(root, config_path).ok()?;
     let snapshot;
     let snapshot_paths;
     let discovered;
@@ -43,12 +43,19 @@ fn graph_config_options_with_config_and_session(
         discovered = crate::codebase::ts_source::discover_visible_paths(root);
         &discovered
     };
-    Some(graph_config_options_from_loaded(
-        root,
-        &config,
-        v2_config.as_ref()?,
-        visible_paths,
-    ))
+    Some(match session {
+        Some(session) => graph_config_options_from_loaded_with_test_filter(
+            root,
+            &config,
+            &v2_config,
+            visible_paths,
+            Some(
+                (*session.test_file_filter_with_visible(root, &v2_config, Some(visible_paths)))
+                    .clone(),
+            ),
+        ),
+        None => graph_config_options_from_loaded(root, &config, &v2_config, visible_paths),
+    })
 }
 
 fn graph_config_options_for_plan_with_config_and_session(
