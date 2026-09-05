@@ -167,6 +167,7 @@ impl DepGraph {
     ) -> Result<Self> {
         let session =
             crate::codebase::analysis_session::AnalysisSession::new(crate::diagnostics::current());
+        // Interner-only session: graph config still uses TestFileFilter::new.
         let config_options = graph_config_options_for_plan_with_config_and_session(
             root,
             plan,

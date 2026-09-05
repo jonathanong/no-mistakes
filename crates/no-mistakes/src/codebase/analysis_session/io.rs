@@ -60,7 +60,7 @@ impl AnalysisSession {
         self.dataset(root).tsconfig(tsconfig_path)
     }
 
-    /// Request-scoped filter. Seed with [`Self::insert_test_file_filter`] to skip glob compile.
+    /// Request-scoped filter for `root`. A seeded filter is reused for that root.
     #[doc(hidden)]
     pub fn test_file_filter(
         &self,
