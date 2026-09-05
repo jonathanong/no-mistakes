@@ -58,7 +58,7 @@ fn graph_files_visible_does_not_build_a_pathbuf_hashset() {
         "from_files must mark visibility with a parallel bitset, not a cloned path set"
     );
     assert!(
-        constructor.contains("as_os_str().cmp") && !constructor.contains("all.sort();"),
+        constructor.contains("sort_os_str_paths") && !constructor.contains("all.sort();"),
         "from_files must sort visible paths with OsStr order, not Path::cmp"
     );
     assert!(
@@ -86,7 +86,7 @@ fn graph_files_visible_does_not_build_a_pathbuf_hashset() {
         "fn visible_index(&self, path: &Path) -> Option<usize>",
     );
     assert!(
-        visible_index.contains("as_os_str().cmp")
+        visible_index.contains("cmp_os_str_paths")
             && !visible_index.contains("as_path().cmp")
             && !visible_index.contains("canonicalize"),
         "visible_index must probe OsStr bytes without Path::cmp or canonicalize"

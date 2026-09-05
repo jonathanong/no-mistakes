@@ -1,3 +1,4 @@
+use super::cmp_os_str_paths;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -51,7 +52,7 @@ impl FileInventory {
         mut entries: Vec<ClassifiedPath>,
         metadata_stats: usize,
     ) -> Self {
-        entries.sort_by(|left, right| left.path.as_os_str().cmp(right.path.as_os_str()));
+        entries.sort_by(|left, right| cmp_os_str_paths(&left.path, &right.path));
         entries.dedup_by(|left, right| left.path == right.path);
 
         assert!(
@@ -121,7 +122,7 @@ impl FileInventory {
     #[doc(hidden)]
     pub fn id_for_normalized_path(&self, path: &Path) -> Option<FileId> {
         self.paths
-            .binary_search_by(|candidate| candidate.as_os_str().cmp(path.as_os_str()))
+            .binary_search_by(|candidate| cmp_os_str_paths(candidate, path))
             .ok()
             .map(|index| FileId(index as u32))
     }

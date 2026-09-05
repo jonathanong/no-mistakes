@@ -350,3 +350,66 @@ fn visible_snapshot_treats_non_git_fallback_and_supplied_paths_as_authoritative(
         vec![ignored, visible]
     );
 }
+
+#[test]
+fn from_paths_tracked_membership_is_os_str_byte_identity() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/ts-source/normalized-path-membership"),
+    );
+    let nested = root.join("a/b.ts");
+    let dashed = root.join("a-b.ts");
+    let dotted = root.join("a/./b.ts");
+    let collapsed = crate::codebase::ts_source::normalize_discovery_path(&dotted);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(
+        &root,
+        &[nested.clone(), dashed.clone()],
+    );
+
+    // OsStr bytes put `a-b.ts` before `a/b.ts` (`-` < `/`). Path::cmp would
+    // reverse that because it compares the `a` component first.
+    assert_eq!(
+        snapshot.tracked_paths_for(&root).as_slice(),
+        [dashed.clone(), nested.clone()]
+    );
+    assert_eq!(nested.as_os_str(), collapsed.as_os_str());
+    assert_ne!(dotted.as_os_str(), nested.as_os_str());
+    assert_eq!(
+        snapshot.tracked_paths_from(&[dashed.clone(), nested.clone()]),
+        [dashed.clone(), nested.clone()]
+    );
+    // `tracked_paths_from` normalizes first; the unnormalized spelling hits
+    // only after `normalize_discovery_path`, not via Path component collapse.
+    assert_eq!(
+        snapshot.tracked_paths_from(std::slice::from_ref(&dotted)),
+        [nested]
+    );
+}
+
+#[test]
+fn visible_snapshot_contains_path_probes_os_str_bytes() {
+    let source = include_str!("../visible_snapshot.rs");
+    let start = source
+        .find("fn contains_path(")
+        .expect("contains_path must stay in visible_snapshot.rs");
+    let body = &source[start..];
+    let end = body.find("\nfn ").unwrap_or(body.len());
+    let contains_path = &body[..end];
+    assert!(
+        contains_path.contains("cmp_os_str_paths")
+            && !contains_path.contains("as_path().cmp")
+            && !contains_path.contains("canonicalize"),
+        "contains_path must probe OsStr bytes without Path::cmp or canonicalize"
+    );
+    let snapshot_view = source
+        .find("fn snapshot_path_view(")
+        .expect("snapshot_path_view must stay in visible_snapshot.rs");
+    let view_body = &source[snapshot_view..];
+    let view_end = view_body.find("\nfn ").unwrap_or(view_body.len());
+    let snapshot_path_view = &view_body[..view_end];
+    assert!(
+        snapshot_path_view.contains("sort_os_str_paths")
+            && !snapshot_path_view.contains("tracked_paths.sort();"),
+        "discovery tracked_paths must sort with the same OsStr comparator"
+    );
+}
