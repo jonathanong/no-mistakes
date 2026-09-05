@@ -81,6 +81,28 @@ fn cached_node_sort_key_matches_formatted_string_order() {
     }
 }
 
+#[cfg(unix)]
+#[test]
+fn cached_node_sort_key_matches_lossy_order_for_non_utf8_paths() {
+    // Raw `as_encoded_bytes` would reverse these (0x80 < 0xC2), but the
+    // historical comparator used `to_string_lossy` (U+0080 < U+FFFD).
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
+    use std::path::PathBuf;
+
+    let invalid = NodeId::file(PathBuf::from(OsString::from_vec(vec![0x80])));
+    let latin1_control = NodeId::file(PathBuf::from("\u{0080}"));
+    assert_eq!(
+        cached_node_sort_key(&invalid).cmp(&cached_node_sort_key(&latin1_control)),
+        node_sort_key(&invalid).cmp(&node_sort_key(&latin1_control)),
+    );
+    assert_eq!(
+        cached_node_sort_key(&invalid).cmp(&cached_node_sort_key(&latin1_control)),
+        std::cmp::Ordering::Greater,
+        "lossy U+FFFD must sort after UTF-8 U+0080"
+    );
+}
+
 fn assert_concatenated_chunks_match_flat_memcmp(left: &[&[u8]], right: &[&[u8]]) {
     let expected = left
         .iter()

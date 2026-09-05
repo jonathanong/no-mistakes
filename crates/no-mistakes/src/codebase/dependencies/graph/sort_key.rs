@@ -13,10 +13,20 @@ impl NodeSortKey {
         name: Option<Arc<str>>,
         step: Option<usize>,
     ) -> Self {
-        let path_bytes = path
-            .as_ref()
-            .map(|path| path.as_os_str().as_encoded_bytes())
-            .unwrap_or(b"");
+        // Match `node_sort_key` / `cmp_node_sort_keys`: valid UTF-8 is a
+        // borrowed slice; invalid sequences use the same U+FFFD replacement
+        // as `Path::to_string_lossy` so canonical ordinals stay stable.
+        let path_lossy;
+        let path_bytes: &[u8] = match path.as_ref() {
+            None => b"",
+            Some(path) => match path.to_str() {
+                Some(s) => s.as_bytes(),
+                None => {
+                    path_lossy = path.to_string_lossy().into_owned();
+                    path_lossy.as_bytes()
+                }
+            },
+        };
         let mid_bytes = mid.as_bytes();
         let name_bytes = name.as_deref().map(str::as_bytes).unwrap_or(b"");
         let mut suffix = [0u8; 32];
