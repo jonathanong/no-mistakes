@@ -6,18 +6,6 @@ pub(crate) fn intern_node_str(value: impl Into<Arc<str>>) -> Arc<str> {
     value.into()
 }
 
-fn interned_str_eq(left: &Arc<str>, right: &Arc<str>) -> bool {
-    Arc::ptr_eq(left, right) || left.as_ref() == right.as_ref()
-}
-
-fn hash_file<H: Hasher>(file: &FileNode, state: &mut H) {
-    file.hash(state);
-}
-
-fn hash_str<H: Hasher>(value: &Arc<str>, state: &mut H) {
-    value.as_ref().hash(state);
-}
-
 impl PartialEq for NodeId {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
@@ -31,8 +19,8 @@ impl PartialEq for NodeId {
                     file: fb,
                     symbol: sb,
                 },
-            ) => fa == fb && interned_str_eq(sa, sb),
-            (Self::Module(a), Self::Module(b)) => interned_str_eq(a, b),
+            ) => fa == fb && sa == sb,
+            (Self::Module(a), Self::Module(b)) => a == b,
             (
                 Self::QueueJob {
                     queue_file: fa,
@@ -42,7 +30,7 @@ impl PartialEq for NodeId {
                     queue_file: fb,
                     job: jb,
                 },
-            ) => fa == fb && interned_str_eq(ja, jb),
+            ) => fa == fb && ja == jb,
             (
                 Self::WorkflowJob {
                     workflow_file: fa,
@@ -52,7 +40,7 @@ impl PartialEq for NodeId {
                     workflow_file: fb,
                     job: jb,
                 },
-            ) => fa == fb && interned_str_eq(ja, jb),
+            ) => fa == fb && ja == jb,
             (
                 Self::WorkflowStep {
                     workflow_file: fa,
@@ -64,7 +52,7 @@ impl PartialEq for NodeId {
                     job: jb,
                     step: sb,
                 },
-            ) => fa == fb && interned_str_eq(ja, jb) && sa == sb,
+            ) => fa == fb && ja == jb && sa == sb,
             (
                 Self::TrpcProcedure {
                     router_file: fa,
@@ -74,7 +62,7 @@ impl PartialEq for NodeId {
                     router_file: fb,
                     procedure: pb,
                 },
-            ) => fa == fb && interned_str_eq(pa, pb),
+            ) => fa == fb && pa == pb,
             _ => false,
         }
     }
@@ -86,35 +74,35 @@ impl Hash for NodeId {
     fn hash<H: Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
         match self {
-            Self::File(path) => hash_file(path, state),
+            Self::File(path) => path.hash(state),
             Self::Symbol { file, symbol } => {
-                hash_file(file, state);
-                hash_str(symbol, state);
+                file.hash(state);
+                symbol.hash(state);
             }
-            Self::Module(specifier) => hash_str(specifier, state),
+            Self::Module(specifier) => specifier.hash(state),
             Self::QueueJob { queue_file, job } => {
-                hash_file(queue_file, state);
-                hash_str(job, state);
+                queue_file.hash(state);
+                job.hash(state);
             }
             Self::WorkflowJob { workflow_file, job } => {
-                hash_file(workflow_file, state);
-                hash_str(job, state);
+                workflow_file.hash(state);
+                job.hash(state);
             }
             Self::WorkflowStep {
                 workflow_file,
                 job,
                 step,
             } => {
-                hash_file(workflow_file, state);
-                hash_str(job, state);
+                workflow_file.hash(state);
+                job.hash(state);
                 step.hash(state);
             }
             Self::TrpcProcedure {
                 router_file,
                 procedure,
             } => {
-                hash_file(router_file, state);
-                hash_str(procedure, state);
+                router_file.hash(state);
+                procedure.hash(state);
             }
         }
     }
@@ -132,10 +120,10 @@ impl NodeId {
     }
 
     /// Construct a symbol node. Use in expressions only — match `NodeId::Symbol { .. }`.
-    pub fn symbol(path: impl AsRef<Path>, symbol: impl Into<Arc<str>>) -> Self {
+    pub fn symbol(path: impl AsRef<Path>, symbol: impl Into<InternedStr>) -> Self {
         Self::Symbol {
             file: FileNode::new(intern_node_path(path)),
-            symbol: intern_node_str(symbol),
+            symbol: symbol.into(),
         }
     }
 
@@ -147,25 +135,25 @@ impl NodeId {
     ) -> Self {
         Self::Symbol {
             file: FileNode::new(interner.intern_path(path)),
-            symbol: interner.intern_str(symbol),
+            symbol: InternedStr::new(interner.intern_str(symbol)),
         }
     }
 
     /// Construct a module node. Use in expressions only — match `NodeId::Module(...)`.
-    pub fn module(value: impl Into<Arc<str>>) -> Self {
-        Self::Module(intern_node_str(value))
+    pub fn module(value: impl Into<InternedStr>) -> Self {
+        Self::Module(value.into())
     }
 
     /// Session-interned module node. Match `NodeId::Module(...)`.
     pub fn module_in(interner: &PathInterner, value: impl AsRef<str>) -> Self {
-        Self::Module(interner.intern_str(value))
+        Self::Module(InternedStr::new(interner.intern_str(value)))
     }
 
     /// Construct a queue-job node. Use in expressions only — match `NodeId::QueueJob { .. }`.
-    pub fn queue_job(path: impl AsRef<Path>, job: impl Into<Arc<str>>) -> Self {
+    pub fn queue_job(path: impl AsRef<Path>, job: impl Into<InternedStr>) -> Self {
         Self::QueueJob {
             queue_file: FileNode::new(intern_node_path(path)),
-            job: intern_node_str(job),
+            job: job.into(),
         }
     }
 
@@ -177,15 +165,15 @@ impl NodeId {
     ) -> Self {
         Self::QueueJob {
             queue_file: FileNode::new(interner.intern_path(path)),
-            job: interner.intern_str(job),
+            job: InternedStr::new(interner.intern_str(job)),
         }
     }
 
     /// Construct a workflow-job node. Use in expressions only — match `NodeId::WorkflowJob { .. }`.
-    pub fn workflow_job(path: impl AsRef<Path>, job: impl Into<Arc<str>>) -> Self {
+    pub fn workflow_job(path: impl AsRef<Path>, job: impl Into<InternedStr>) -> Self {
         Self::WorkflowJob {
             workflow_file: FileNode::new(intern_node_path(path)),
-            job: intern_node_str(job),
+            job: job.into(),
         }
     }
 
@@ -197,15 +185,15 @@ impl NodeId {
     ) -> Self {
         Self::WorkflowJob {
             workflow_file: FileNode::new(interner.intern_path(path)),
-            job: interner.intern_str(job),
+            job: InternedStr::new(interner.intern_str(job)),
         }
     }
 
     /// Construct a workflow-step node. Use in expressions only — match `NodeId::WorkflowStep { .. }`.
-    pub fn workflow_step(path: impl AsRef<Path>, job: impl Into<Arc<str>>, step: usize) -> Self {
+    pub fn workflow_step(path: impl AsRef<Path>, job: impl Into<InternedStr>, step: usize) -> Self {
         Self::WorkflowStep {
             workflow_file: FileNode::new(intern_node_path(path)),
-            job: intern_node_str(job),
+            job: job.into(),
             step,
         }
     }
@@ -219,7 +207,7 @@ impl NodeId {
     ) -> Self {
         Self::WorkflowStep {
             workflow_file: FileNode::new(interner.intern_path(path)),
-            job: interner.intern_str(job),
+            job: InternedStr::new(interner.intern_str(job)),
             step,
         }
     }

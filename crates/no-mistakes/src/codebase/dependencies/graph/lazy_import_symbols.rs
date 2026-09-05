@@ -27,7 +27,7 @@ where
         .iter()
         .filter_map(|node| {
             if let NodeId::Symbol { file, symbol } = node {
-                Some((file.clone_arc(), Arc::clone(symbol)))
+                Some((file.clone_arc(), symbol.clone_arc()))
             } else {
                 None
             }
@@ -62,7 +62,7 @@ where
                 ) = (&node, neighbor)
                 {
                     if neighbor_file == owner
-                        && root_symbols.contains(&(owner.clone_arc(), Arc::clone(symbol)))
+                        && root_symbols.contains(&(owner.clone_arc(), symbol.clone_arc()))
                     {
                         continue;
                     }

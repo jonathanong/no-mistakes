@@ -46,21 +46,21 @@ fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {
     match n {
         NodeId::File(path) => NodeSortKey::new(Some(path.clone_arc()), "", None, None),
         NodeId::Symbol { file, symbol } => {
-            NodeSortKey::new(Some(file.clone_arc()), "#", Some(Arc::clone(symbol)), None)
+            NodeSortKey::new(Some(file.clone_arc()), "#", Some(symbol.clone_arc()), None)
         }
         NodeId::Module(specifier) => {
-            NodeSortKey::new(None, "module:", Some(Arc::clone(specifier)), None)
+            NodeSortKey::new(None, "module:", Some(specifier.clone_arc()), None)
         }
         NodeId::QueueJob { queue_file, job } => NodeSortKey::new(
             Some(queue_file.clone_arc()),
             "#",
-            Some(Arc::clone(job)),
+            Some(job.clone_arc()),
             None,
         ),
         NodeId::WorkflowJob { workflow_file, job } => NodeSortKey::new(
             Some(workflow_file.clone_arc()),
             "#job:",
-            Some(Arc::clone(job)),
+            Some(job.clone_arc()),
             None,
         ),
         NodeId::WorkflowStep {
@@ -70,7 +70,7 @@ fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {
         } => NodeSortKey::new(
             Some(workflow_file.clone_arc()),
             "#job:",
-            Some(Arc::clone(job)),
+            Some(job.clone_arc()),
             Some(*step),
         ),
         NodeId::TrpcProcedure {
@@ -79,7 +79,7 @@ fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {
         } => NodeSortKey::new(
             Some(router_file.clone_arc()),
             "#procedure:",
-            Some(Arc::clone(procedure)),
+            Some(procedure.clone_arc()),
             None,
         ),
     }
