@@ -1,9 +1,13 @@
 #[cfg(test)]
 mod tests_types {
-    use crate::codebase::dependencies::graph::{EdgeKind, NodeId, VitestSetupField};
+    use crate::codebase::analysis_session::PathInterner;
+    use crate::codebase::dependencies::graph::{
+        EdgeKind, FileNode, InternedStr, NodeId, VitestSetupField,
+    };
     use std::collections::HashSet;
     use std::hash::{Hash, Hasher};
     use std::path::{Path, PathBuf};
+    use std::sync::Arc;
 
     fn hash_of(node: &NodeId) -> u64 {
         let mut hasher = std::collections::hash_map::DefaultHasher::new();
@@ -92,8 +96,6 @@ mod tests_types {
 
     #[test]
     fn interned_symbol_and_job_strings_share_arc_on_clone_and_keep_sort_hash() {
-        use std::sync::Arc;
-
         let path = PathBuf::from("src/jobs.ts");
         let symbol = NodeId::symbol(&path, "send");
         let queue = NodeId::queue_job(&path, "send");
@@ -103,28 +105,28 @@ mod tests_types {
         let symbol_clone = symbol.clone();
         match (&symbol, &symbol_clone) {
             (NodeId::Symbol { symbol: left, .. }, NodeId::Symbol { symbol: right, .. }) => {
-                assert!(Arc::ptr_eq(left, right))
+                assert!(Arc::ptr_eq(left.as_arc(), right.as_arc()))
             }
             _ => panic!("expected Symbol"),
         }
         let queue_clone = queue.clone();
         match (&queue, &queue_clone) {
             (NodeId::QueueJob { job: left, .. }, NodeId::QueueJob { job: right, .. }) => {
-                assert!(Arc::ptr_eq(left, right));
+                assert!(Arc::ptr_eq(left.as_arc(), right.as_arc()));
             }
             _ => panic!("expected QueueJob"),
         }
         let workflow_clone = workflow.clone();
         match (&workflow, &workflow_clone) {
             (NodeId::WorkflowJob { job: left, .. }, NodeId::WorkflowJob { job: right, .. }) => {
-                assert!(Arc::ptr_eq(left, right))
+                assert!(Arc::ptr_eq(left.as_arc(), right.as_arc()))
             }
             _ => panic!("expected WorkflowJob"),
         }
         let step_clone = step.clone();
         match (&step, &step_clone) {
             (NodeId::WorkflowStep { job: left, .. }, NodeId::WorkflowStep { job: right, .. }) => {
-                assert!(Arc::ptr_eq(left, right))
+                assert!(Arc::ptr_eq(left.as_arc(), right.as_arc()))
             }
             _ => panic!("expected WorkflowStep"),
         }
@@ -145,7 +147,7 @@ mod tests_types {
         let owned: Arc<str> = Arc::from("reuse");
         let reused = NodeId::symbol(&path, owned.clone());
         match reused {
-            NodeId::Symbol { symbol, .. } => assert!(Arc::ptr_eq(&owned, &symbol)),
+            NodeId::Symbol { symbol, .. } => assert!(Arc::ptr_eq(&owned, symbol.as_arc())),
             other => panic!("expected Symbol, got {other:?}"),
         }
     }
@@ -219,8 +221,6 @@ mod tests_types {
 
     #[test]
     fn file_nodes_hash_by_path_bytes_and_clone_shares_the_arc() {
-        use std::sync::Arc;
-
         let left = NodeId::file("src/widget.ts");
         let right = NodeId::file(PathBuf::from("src/widget.ts"));
         assert_eq!(left, right);
@@ -235,5 +235,84 @@ mod tests_types {
             other => panic!("expected File nodes, got {other:?}"),
         }
         assert!(left < NodeId::file("src/z.ts"));
+    }
+
+    #[test]
+    fn file_node_rejects_equality_on_id_mismatch_without_requiring_equal_paths() {
+        let path = Arc::<Path>::from(Path::new("src/widget.ts"));
+        let left = FileNode::from_parts(1, Arc::clone(&path));
+        let right = FileNode::from_parts(2, path);
+        assert_eq!(left.as_ref(), right.as_ref());
+        assert_ne!(left, right);
+        assert_ne!(hash_of_value(&left), hash_of_value(&right));
+    }
+
+    #[test]
+    fn file_node_matching_ids_still_compare_path_bytes() {
+        let left = FileNode::from_parts(1, Arc::from(Path::new("src/a.ts")));
+        let right = FileNode::from_parts(1, Arc::from(Path::new("src/b.ts")));
+        assert_ne!(left, right);
+        assert!(left < right);
+    }
+
+    #[test]
+    fn interned_str_equal_content_distinct_arcs_hash_equal() {
+        let left = InternedStr::new(Arc::<str>::from("Widget"));
+        let right = InternedStr::new(Arc::<str>::from("Widget"));
+        assert!(!Arc::ptr_eq(left.as_arc(), right.as_arc()));
+        assert_eq!(left, right);
+        assert_eq!(left, left.clone());
+        assert_eq!(hash_of_value(&left), hash_of_value(&right));
+        assert_eq!(left.as_ref(), "Widget");
+        assert_eq!(&*left, "Widget");
+        assert_eq!(left.to_string(), "Widget");
+        let cloned = left.clone_arc();
+        assert!(Arc::ptr_eq(left.as_arc(), &cloned));
+        assert_eq!(left.cmp(&right), std::cmp::Ordering::Equal);
+        assert!(left.partial_cmp(&right).is_some());
+        assert_eq!(
+            InternedStr::from("Alpha").cmp(&InternedStr::from("Beta")),
+            std::cmp::Ordering::Less
+        );
+        assert_eq!(
+            InternedStr::from(String::from("Z")),
+            InternedStr::from(Arc::<str>::from("Z"))
+        );
+    }
+
+    #[test]
+    fn interned_str_rejects_equality_on_id_mismatch_and_compares_bytes_on_collision() {
+        let shared = Arc::<str>::from("Widget");
+        let left = InternedStr::from_parts(1, Arc::clone(&shared));
+        let right = InternedStr::from_parts(2, shared);
+        assert_eq!(left.as_ref(), right.as_ref());
+        assert_ne!(left, right);
+
+        let collision_left = InternedStr::from_parts(7, Arc::<str>::from("alpha"));
+        let collision_right = InternedStr::from_parts(7, Arc::<str>::from("beta"));
+        assert_ne!(collision_left, collision_right);
+        assert!(collision_left < collision_right);
+    }
+
+    #[test]
+    fn node_id_symbol_and_symbol_in_remain_hash_eq_compatible() {
+        let interner = PathInterner::new();
+        let standalone = NodeId::symbol("src/widget.ts", "Widget");
+        let interned = NodeId::symbol_in(&interner, "src/widget.ts", "Widget");
+        assert_eq!(standalone, interned);
+        assert_eq!(hash_of(&standalone), hash_of(&interned));
+        match (&standalone, &interned) {
+            (NodeId::Symbol { symbol: left, .. }, NodeId::Symbol { symbol: right, .. }) => {
+                assert!(!Arc::ptr_eq(left.as_arc(), right.as_arc()));
+                assert_eq!(left.as_ref(), right.as_ref());
+            }
+            other => panic!("expected Symbol, got {other:?}"),
+        }
+    }
+
+    fn hash_of_value<T: Hash>(value: &T) -> u64 {
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        value.hash(&mut hasher);
+        hasher.finish()
     }
 }

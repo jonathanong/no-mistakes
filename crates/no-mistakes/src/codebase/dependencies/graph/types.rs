@@ -5,33 +5,33 @@ include!("types_file_node.rs");
 /// A node in the dependency graph: a source file, external module, or virtual node.
 ///
 /// File paths are interned as [`FileNode`] (integer hash + `Arc<Path>`) and
-/// symbol/job/module names as `Arc<str>` so cloning a `NodeId` does not copy
-/// those bytes. Construct with `NodeId::file` / `symbol` / `module` / …; keep
-/// matching `NodeId::File(path)` and `NodeId::Symbol { file, .. }`.
+/// symbol/job/module names as [`InternedStr`] so cloning a `NodeId` does not
+/// copy those bytes. Construct with `NodeId::file` / `symbol` / `module` / …;
+/// keep matching `NodeId::File(path)` and `NodeId::Symbol { file, .. }`.
 #[derive(Debug, Clone, PartialOrd, Ord)]
 pub enum NodeId {
     File(FileNode),
     Symbol {
         file: FileNode,
-        symbol: Arc<str>,
+        symbol: InternedStr,
     },
-    Module(Arc<str>),
+    Module(InternedStr),
     QueueJob {
         queue_file: FileNode,
-        job: Arc<str>,
+        job: InternedStr,
     },
     WorkflowJob {
         workflow_file: FileNode,
-        job: Arc<str>,
+        job: InternedStr,
     },
     WorkflowStep {
         workflow_file: FileNode,
-        job: Arc<str>,
+        job: InternedStr,
         step: usize,
     },
     TrpcProcedure {
         router_file: FileNode,
-        procedure: Arc<str>,
+        procedure: InternedStr,
     },
 }
 
@@ -147,3 +147,6 @@ type ParsedImports<'a> = Vec<(
     &'a crate::codebase::ts_source::facts::TsFileFacts,
     HashSet<String>,
 )>;
+
+#[cfg(test)]
+mod interned_identity_tests;
