@@ -30,4 +30,5 @@ keep a database. Static literals produce edges; dynamic values are skipped.
 | Parse human CLI output | `--format json` |
 
 Configured Python, Go, Rust, and other language graphs use
-`dependents --relationship <lang>`, not `rg`.
+`dependents --relationship <lang>` first. Use `rg` for dynamic forms those
+frontends skip.
