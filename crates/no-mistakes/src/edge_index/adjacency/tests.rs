@@ -1,4 +1,6 @@
-use super::{into_adjacency_map, push_neighbor, push_ordinal, seed_known_targets, Adjacency};
+use super::{
+    into_adjacency_map, push_neighbor, push_ordinal, remember_pair, seed_known_targets, Adjacency,
+};
 use crate::fx::{fx_map, FxHashMap};
 
 fn one_adj(key: &str, adj: Adjacency<String, u8>) -> FxHashMap<String, Adjacency<String, u8>> {
@@ -90,12 +92,20 @@ fn seed_known_targets_covers_existing_and_missing_sources() {
         (None, 0),
         (
             Some(Adjacency {
+                neighbors: Vec::new(),
+                ordinals: Vec::new(),
+            }),
+            0,
+        ),
+        (
+            Some(Adjacency {
                 neighbors: vec![
                     ("b".to_owned(), 1_u8),
+                    ("b".to_owned(), 1),
                     ("b".to_owned(), 2),
                     ("c".to_owned(), 1),
                 ],
-                ordinals: vec![0, 1, 2],
+                ordinals: vec![0, 1, 2, 3],
             }),
             2,
         ),
@@ -109,6 +119,19 @@ fn seed_known_targets_covers_existing_and_missing_sources() {
             assert!(known.get("c").is_some_and(|kinds| kinds.contains(&1)));
         }
     }
+}
+
+#[test]
+fn remember_pair_inserts_once_per_target_kind() {
+    let mut known = fx_map();
+    assert!(remember_pair(&mut known, &"b".to_owned(), &1_u8));
+    assert!(remember_pair(&mut known, &"b".to_owned(), &2));
+    assert!(!remember_pair(&mut known, &"b".to_owned(), &1));
+    assert!(remember_pair(&mut known, &"c".to_owned(), &1));
+    assert_eq!(known.len(), 2);
+    assert!(known
+        .get("b")
+        .is_some_and(|kinds| kinds.contains(&1) && kinds.contains(&2)));
 }
 
 #[test]

@@ -1,4 +1,4 @@
-use super::super::adjacency::{push_neighbor, seed_known_targets};
+use super::super::adjacency::{push_neighbor, remember_pair, seed_known_targets, Adjacency};
 use super::super::{CanonicalEdge, EdgeIndex};
 use crate::fx::{fx_map_with_capacity, FxHashMap, FxHashSet};
 use std::hash::Hash;
@@ -21,48 +21,49 @@ where
         let (lower, upper) = edges.size_hint();
         let mut known_by_source = fx_map_with_capacity(upper.unwrap_or(lower));
         for edge in edges {
-            if !known_by_source.contains_key(&edge.from) {
-                known_by_source.insert(
-                    edge.from.clone(),
-                    seed_known_targets(self.forward.get(&edge.from)),
-                );
-            }
-            if pair_is_known(&known_by_source[&edge.from], &edge.to, &edge.kind) {
+            if !record_unknown_pair(
+                &mut known_by_source,
+                &self.forward,
+                &edge.from,
+                &edge.to,
+                &edge.kind,
+            ) {
                 continue;
             }
-            let known = known_by_source
-                .get_mut(&edge.from)
-                .expect("source known-set is inserted before accept");
-            known
-                .entry(edge.to.clone())
-                .or_default()
-                .insert(edge.kind.clone());
             let ordinal = self.edges.len();
+            let CanonicalEdge { from, to, kind } = edge;
             push_neighbor(
                 &mut self.forward,
-                &edge.from,
-                (edge.to.clone(), edge.kind.clone()),
+                &from,
+                (to.clone(), kind.clone()),
                 ordinal,
             );
             push_neighbor(
                 &mut self.reverse,
-                &edge.to,
-                (edge.from.clone(), edge.kind.clone()),
+                &to,
+                (from.clone(), kind.clone()),
                 ordinal,
             );
-            self.edges.push(edge);
+            self.edges.push(CanonicalEdge { from, to, kind });
         }
     }
 }
 
-fn pair_is_known<Node, Kind>(
-    known: &FxHashMap<Node, FxHashSet<Kind>>,
+fn record_unknown_pair<Node, Kind>(
+    known_by_source: &mut FxHashMap<Node, FxHashMap<Node, FxHashSet<Kind>>>,
+    forward: &FxHashMap<Node, Adjacency<Node, Kind>>,
+    from: &Node,
     to: &Node,
     kind: &Kind,
 ) -> bool
 where
-    Node: Eq + Hash,
-    Kind: Eq + Hash,
+    Node: Clone + Eq + Hash,
+    Kind: Clone + Eq + Hash,
 {
-    known.get(to).is_some_and(|kinds| kinds.contains(kind))
+    if let Some(known) = known_by_source.get_mut(from) {
+        return remember_pair(known, to, kind);
+    }
+    let seeded = seed_known_targets(forward.get(from));
+    let known = known_by_source.entry(from.clone()).or_insert(seeded);
+    remember_pair(known, to, kind)
 }

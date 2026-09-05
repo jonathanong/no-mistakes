@@ -85,16 +85,35 @@ fn extend_edges_preserving_ordinals_matches_rebuild_cases() {
 fn extend_edges_from_seeded_empty_source_hits_existing_adjacency() {
     let mut index =
         EdgeIndex::from_edges_and_nodes(std::iter::empty(), ["a".to_owned(), "orphan".to_owned()]);
-    index.extend_edges_preserving_ordinals([edge("a", "b", 1), edge("a", "b", 1)]);
-    assert_eq!(index.edges(), &[edge("a", "b", 1)]);
+    index.extend_edges_preserving_ordinals([
+        edge("a", "b", 1),
+        edge("a", "b", 1),
+        edge("a", "b", 2),
+        edge("a", "c", 3),
+        edge("z", "b", 4),
+        edge("z", "b", 4),
+    ]);
+    assert_eq!(
+        index.edges(),
+        &[
+            edge("a", "b", 1),
+            edge("a", "b", 2),
+            edge("a", "c", 3),
+            edge("z", "b", 4)
+        ]
+    );
     assert_eq!(
         index.forward().get("a").map(|adj| adj.ordinals.as_slice()),
-        Some(&[0][..])
+        Some(&[0, 1, 2][..])
     );
     assert!(index
         .forward()
         .get("orphan")
         .is_some_and(|adj| adj.neighbors.is_empty()));
+    assert_eq!(
+        index.reverse().get("b").map(|adj| adj.ordinals.as_slice()),
+        Some(&[0, 1, 3][..])
+    );
 }
 
 #[test]
