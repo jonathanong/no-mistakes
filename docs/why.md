@@ -34,9 +34,10 @@ can trust.
 
 Graph queries such as `dependents`, `tests plan vitest`, and
 `playwright check` work without a custom config block on a conventional
-Next.js app. Configuration adds custom Playwright roots, wrappers, and
-multi-app bindings, plus queues, Remix and language HTTP routes, language
-frontends, and repository rules.
+Next.js app. Express, Hono, Fastify, Koa, NestJS, and BullMQ / glide-mq
+graphs also run without config. Configuration adds custom Playwright roots,
+wrappers, and multi-app bindings, plus custom queue factories, Remix and
+language HTTP routes, language frontends, and repository rules.
 
 ## Mistakes this prevents
 

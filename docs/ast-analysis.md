@@ -144,9 +144,10 @@ Supported frameworks include Express, Hono, Fastify, Koa router patterns,
 NestJS controllers, Remix `app/routes` under `type: remix`, and known project
 helper shapes. Configured Django / Flask / FastAPI, Go HTTP, Rails, Laravel /
 Symfony, Rust Axum / Actix / Rocket, ASP.NET, Spring, and Phoenix literals
-are listed in [feature parity](feature-parity.md). The analyzer records
-method, normalized route pattern, source file, and route edges. Dynamic route
-paths are skipped because guessing would create noisy graph edges.
+are listed in [feature parity](feature-parity.md). Native Node extractors
+record method, normalized route pattern, source file, and route edges.
+Projected language routes currently use method `*`. Dynamic route paths are
+skipped because guessing would create noisy graph edges.
 
 ## React Traits
 
