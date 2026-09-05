@@ -81,6 +81,59 @@ fn cached_node_sort_key_matches_formatted_string_order() {
     }
 }
 
+fn assert_concatenated_chunks_match_flat_memcmp(left: &[&[u8]], right: &[&[u8]]) {
+    let expected = left
+        .iter()
+        .copied()
+        .flatten()
+        .cmp(right.iter().copied().flatten());
+    assert_eq!(
+        cmp_concatenated_bytes(left, right),
+        expected,
+        "chunked memcmp mismatch for {left:?} vs {right:?}"
+    );
+    assert_eq!(
+        cmp_concatenated_bytes(right, left),
+        expected.reverse(),
+        "chunked memcmp reverse mismatch for {right:?} vs {left:?}"
+    );
+}
+
+#[test]
+fn concatenated_byte_chunks_match_flat_memcmp() {
+    assert_concatenated_chunks_match_flat_memcmp(&[b"ab", b"c"], &[b"a", b"bc"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"", b"abc"], &[b"abc", b""]);
+    assert_concatenated_chunks_match_flat_memcmp(&[], &[b""]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"a"], &[b"a", b"b"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"ab"], &[b"a"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"a", b"c"], &[b"ab"]);
+    assert_concatenated_chunks_match_flat_memcmp(
+        &[b"/repo/source", b"#", b"job"],
+        &[b"/repo/source#job"],
+    );
+    assert_concatenated_chunks_match_flat_memcmp(&[b"/step:10"], &[b"/step:2"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"xx", b""], &[]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"abc"], &[b"abd"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"ab", b"cd"], &[b"ab", b"ce"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"short", b"-tail"], &[b"sh", b"ort-tail"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"", b"", b"z"], &[b"z"]);
+    assert_concatenated_chunks_match_flat_memcmp(&[b"prefix", b"rest"], &[b"pre", b"fixrest"]);
+}
+
+#[test]
+fn flatten_source_cached_key_matches_formatted_order() {
+    let nodes = node_sort_table();
+    let mut cached = nodes.to_vec();
+    cached.sort_by_cached_key(|node| (cached_node_sort_key(node), node.clone()));
+    let mut formatted = nodes.to_vec();
+    formatted.sort_by(|left, right| {
+        node_sort_key(left)
+            .cmp(&node_sort_key(right))
+            .then_with(|| left.cmp(right))
+    });
+    assert_eq!(cached, formatted);
+}
+
 #[test]
 fn cached_adjacency_sort_matches_formatted_node_id_key() {
     let kinds = [EdgeKind::Import, EdgeKind::Selector, EdgeKind::WorkflowStep];

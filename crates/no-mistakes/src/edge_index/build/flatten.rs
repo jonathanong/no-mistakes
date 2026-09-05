@@ -16,10 +16,33 @@ where
     /// kind)`, but avoids materializing and sorting one repository-wide edge
     /// vector. Empty forward nodes and reverse-only targets remain in their
     /// respective maps unchanged.
+    #[cfg_attr(not(any(test, feature = "test-instrumentation")), allow(dead_code))]
     pub(crate) fn from_normalized_adjacency_maps_by_source(
         forward: FxHashMap<Node, Vec<(Node, Kind)>>,
         reverse: FxHashMap<Node, Vec<(Node, Kind)>>,
         mut compare_sources: impl FnMut(&Node, &Node) -> Ordering,
+    ) -> Self {
+        Self::from_normalized_adjacency_maps_with_sorted_sources(forward, reverse, |sources| {
+            sources.sort_by(|left, right| compare_sources(left, right))
+        })
+    }
+
+    /// Same flatten as [`Self::from_normalized_adjacency_maps_by_source`], with
+    /// sources ordered by a cached key instead of a comparator.
+    pub(crate) fn from_normalized_adjacency_maps_by_cached_source_key<K: Ord>(
+        forward: FxHashMap<Node, Vec<(Node, Kind)>>,
+        reverse: FxHashMap<Node, Vec<(Node, Kind)>>,
+        mut source_key: impl FnMut(&Node) -> K,
+    ) -> Self {
+        Self::from_normalized_adjacency_maps_with_sorted_sources(forward, reverse, |sources| {
+            sources.sort_by_cached_key(|node| source_key(*node))
+        })
+    }
+
+    fn from_normalized_adjacency_maps_with_sorted_sources(
+        forward: FxHashMap<Node, Vec<(Node, Kind)>>,
+        reverse: FxHashMap<Node, Vec<(Node, Kind)>>,
+        sort_sources: impl FnOnce(&mut Vec<&Node>),
     ) -> Self {
         #[cfg(debug_assertions)]
         super::assert_adjacency_maps_are_consistent(&forward, &reverse);
@@ -30,7 +53,7 @@ where
         let edges =
             crate::perf_trace::trace("graph.canonical_flatten", || {
                 let mut sources = forward.keys().collect::<Vec<_>>();
-                sources.sort_by(|left, right| compare_sources(left, right));
+                sort_sources(&mut sources);
                 let edge_capacity = forward.values().map(|adj| adj.neighbors.len()).sum();
                 let mut edges = Vec::with_capacity(edge_capacity);
                 for from in sources {

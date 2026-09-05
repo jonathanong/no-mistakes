@@ -1,11 +1,9 @@
-/// Interned sort parts. Compares as the concatenation of `node_sort_key`.
-#[derive(Clone, Debug)]
+/// Concatenated `node_sort_key` bytes.
+///
+/// Paths may contain `#`, so parts must not be compared sequentially.
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 struct NodeSortKey {
-    path: Option<Arc<Path>>,
-    mid: &'static str,
-    name: Option<Arc<str>>,
-    step: [u8; 32],
-    step_len: u8,
+    bytes: Box<[u8]>,
 }
 
 impl NodeSortKey {
@@ -15,61 +13,60 @@ impl NodeSortKey {
         name: Option<Arc<str>>,
         step: Option<usize>,
     ) -> Self {
+        let path_bytes = path
+            .as_ref()
+            .map(|path| path.as_os_str().as_encoded_bytes())
+            .unwrap_or(b"");
+        let mid_bytes = mid.as_bytes();
+        let name_bytes = name.as_deref().map(str::as_bytes).unwrap_or(b"");
         let mut suffix = [0u8; 32];
-        let step_len = match step {
-            Some(step) => {
-                let written = write_step_suffix(step, &mut suffix).len();
-                debug_assert!(written <= suffix.len());
-                debug_assert!(written <= usize::from(u8::MAX));
-                written as u8
-            }
-            None => 0,
+        let step_bytes = match step {
+            Some(step) => write_step_suffix(step, &mut suffix).as_bytes(),
+            None => b"",
         };
+        let mut bytes = Vec::with_capacity(
+            path_bytes.len() + mid_bytes.len() + name_bytes.len() + step_bytes.len(),
+        );
+        bytes.extend_from_slice(path_bytes);
+        bytes.extend_from_slice(mid_bytes);
+        bytes.extend_from_slice(name_bytes);
+        bytes.extend_from_slice(step_bytes);
         Self {
-            path,
-            mid,
-            name,
-            step: suffix,
-            step_len,
+            bytes: bytes.into_boxed_slice(),
         }
     }
-
-    fn parts(&self) -> [&[u8]; 4] {
-        [
-            self.path
-                .as_ref()
-                .map(|path| path.as_os_str().as_encoded_bytes())
-                .unwrap_or(b""),
-            self.mid.as_bytes(),
-            self.name.as_deref().map(str::as_bytes).unwrap_or(b""),
-            &self.step[..usize::from(self.step_len)],
-        ]
-    }
 }
 
-impl PartialEq for NodeSortKey {
-    fn eq(&self, other: &Self) -> bool {
-        self.cmp(other) == std::cmp::Ordering::Equal
-    }
-}
-
-impl Eq for NodeSortKey {}
-
-impl PartialOrd for NodeSortKey {
-    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
-        Some(self.cmp(other))
-    }
-}
-
-impl Ord for NodeSortKey {
-    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        cmp_concatenated_bytes(&self.parts(), &other.parts())
-    }
-}
-
+/// Byte-identical to concatenating the slices, then `memcmp`.
 fn cmp_concatenated_bytes(left: &[&[u8]], right: &[&[u8]]) -> std::cmp::Ordering {
-    left.iter()
-        .copied()
-        .flatten()
-        .cmp(right.iter().copied().flatten())
+    let mut left_i = 0;
+    let mut right_i = 0;
+    let mut left_off = 0;
+    let mut right_off = 0;
+    loop {
+        while left_i < left.len() && left_off >= left[left_i].len() {
+            left_i += 1;
+            left_off = 0;
+        }
+        while right_i < right.len() && right_off >= right[right_i].len() {
+            right_i += 1;
+            right_off = 0;
+        }
+        match (left_i < left.len(), right_i < right.len()) {
+            (false, false) => return std::cmp::Ordering::Equal,
+            (false, true) => return std::cmp::Ordering::Less,
+            (true, false) => return std::cmp::Ordering::Greater,
+            (true, true) => {
+                let left_rest = &left[left_i][left_off..];
+                let right_rest = &right[right_i][right_off..];
+                let n = left_rest.len().min(right_rest.len());
+                let order = left_rest[..n].cmp(&right_rest[..n]);
+                if order != std::cmp::Ordering::Equal {
+                    return order;
+                }
+                left_off += n;
+                right_off += n;
+            }
+        }
+    }
 }

@@ -186,10 +186,21 @@ fn write_decimal(mut value: usize, buf: &mut [u8]) -> usize {
 }
 
 fn cmp_concatenated(
-    left: &[std::borrow::Cow<'_, str>],
-    right: &[std::borrow::Cow<'_, str>],
+    left: &[std::borrow::Cow<'_, str>; 4],
+    right: &[std::borrow::Cow<'_, str>; 4],
 ) -> std::cmp::Ordering {
-    left.iter()
-        .flat_map(|part| part.as_bytes())
-        .cmp(right.iter().flat_map(|part| part.as_bytes()))
+    cmp_concatenated_bytes(
+        &[
+            left[0].as_bytes(),
+            left[1].as_bytes(),
+            left[2].as_bytes(),
+            left[3].as_bytes(),
+        ],
+        &[
+            right[0].as_bytes(),
+            right[1].as_bytes(),
+            right[2].as_bytes(),
+            right[3].as_bytes(),
+        ],
+    )
 }
