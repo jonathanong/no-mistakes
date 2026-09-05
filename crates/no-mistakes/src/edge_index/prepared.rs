@@ -1,5 +1,6 @@
 use super::{CanonicalEdge, EdgeDirection, EdgeIndex, NodeAliases};
-use std::collections::{BTreeSet, HashMap, HashSet};
+use crate::fx::{fx_map_with_capacity, FxHashMap};
+use std::collections::HashSet;
 use std::hash::Hash;
 
 /// Typed relationships prepared once for public-name root lookup and projection.
@@ -10,8 +11,8 @@ use std::hash::Hash;
 #[derive(Debug, Clone)]
 pub(crate) struct PreparedRelationshipIndex<Node, Kind> {
     index: EdgeIndex<Node, Kind>,
-    public_names: HashMap<Node, String>,
-    nodes_by_name: HashMap<String, Vec<Node>>,
+    public_names: FxHashMap<Node, String>,
+    nodes_by_name: FxHashMap<String, Vec<Node>>,
     aliases: NodeAliases<Node>,
 }
 
@@ -30,7 +31,7 @@ where
         // A typed node often appears in many relationships. Public rendering
         // can require path normalization/allocation, so derive it once per
         // distinct typed node before sorting or grouping its edges.
-        let mut public_names = HashMap::<Node, String>::new();
+        let mut public_names = fx_map_with_capacity(edges.len());
         for edge in &edges {
             public_names
                 .entry(edge.from.clone())
@@ -39,6 +40,10 @@ where
                 .entry(edge.to.clone())
                 .or_insert_with(|| public_node(&edge.to));
         }
+        // First-pass capacity is raw edge count; unique nodes are fewer when
+        // the same job is enqueued from many sites. Drop the spare buckets so
+        // the retained index does not keep that construction over-allocation.
+        public_names.shrink_to_fit();
         let public_name = |node: &Node| {
             public_names
                 .get(node)
@@ -54,28 +59,27 @@ where
         });
         edges.dedup();
 
-        // A BTreeSet preserves the pre-existing sorted typed-root vectors
-        // without repeatedly scanning a high-collision public-name bucket.
-        let mut grouped_nodes = HashMap::<&str, BTreeSet<Node>>::new();
+        // Sort/dedup each bucket once so typed-root vectors stay ordered.
+        let mut grouped_nodes: FxHashMap<&str, Vec<Node>> = fx_map_with_capacity(edges.len());
         for edge in &edges {
             grouped_nodes
                 .entry(public_name(&edge.from).as_str())
                 .or_default()
-                .insert(edge.from.clone());
+                .push(edge.from.clone());
             grouped_nodes
                 .entry(public_name(&edge.to).as_str())
                 .or_default()
-                .insert(edge.to.clone());
+                .push(edge.to.clone());
         }
-        let aliases = NodeAliases::from_groups(
-            grouped_nodes
-                .values()
-                .map(|nodes| nodes.iter().cloned().collect::<Vec<_>>()),
-        );
-        let nodes_by_name = grouped_nodes
-            .into_iter()
-            .map(|(name, nodes)| (name.to_owned(), nodes.into_iter().collect()))
-            .collect();
+        for nodes in grouped_nodes.values_mut() {
+            nodes.sort();
+            nodes.dedup();
+        }
+        let aliases = NodeAliases::from_groups(grouped_nodes.values().cloned());
+        let mut nodes_by_name = fx_map_with_capacity(grouped_nodes.len());
+        for (name, nodes) in grouped_nodes {
+            nodes_by_name.insert(name.to_owned(), nodes);
+        }
 
         Self {
             index: EdgeIndex::from_unique_edges_in_order(edges),
@@ -170,6 +174,8 @@ fn project_first_seen<Input, Output>(
 where
     Output: Clone + Eq + Hash,
 {
+    // Projected `Output` is a public report edge (paths/jobs from repo
+    // source), not an interned analysis key. Keep SipHash here.
     let mut seen = HashSet::new();
     values
         .into_iter()
