@@ -166,7 +166,7 @@ fn snapshot_path_view(
         .into_iter()
         .map(|path| normalize_discovery_path(&path))
         .collect::<Vec<_>>();
-    tracked_paths.sort();
+    sort_os_str_paths(&mut tracked_paths);
     tracked_paths.dedup();
     Arc::new(SnapshotPathView {
         sources: Arc::new(SourceStore::new_observed(
@@ -193,8 +193,9 @@ fn snapshot_path_view_from_paths(
 }
 
 fn contains_path(paths: &[PathBuf], path: &Path) -> bool {
+    // Exact OsStr membership. Canonical remapping does not belong here.
     paths
-        .binary_search_by(|candidate| candidate.as_path().cmp(path))
+        .binary_search_by(|candidate| cmp_os_str_paths(candidate, path))
         .is_ok()
 }
 
