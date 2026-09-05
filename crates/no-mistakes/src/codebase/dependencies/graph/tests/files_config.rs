@@ -94,7 +94,117 @@ fn files_config_session_helper_does_not_call_discover_when_snapshot_exists() {
     );
     assert!(source.contains("graph_config_options_with_config_and_session"));
     assert!(source.contains("session.visible_paths(root)"));
+    assert!(source.contains("graph_config_options_from_loaded_with_test_filter"));
+    assert!(source.contains("session.test_file_filter_with_visible("));
+    assert!(!source.contains("TestFileFilter::new("));
     assert!(!include_str!("../files_config.rs").contains("discover_visible_paths"));
+}
+
+/// Regression: a session that already holds a TestFileFilter must not compile
+/// suite globs again during graph config (`crates/CLAUDE.md`: assert on a call
+/// count, not value equality). Seeding with `from_prepared_projects` is the
+/// prepared-analysis path; a rebuild would still increment
+/// `test_filter.project_filters`.
+#[test]
+fn files_config_session_does_not_rebuild_prepared_test_filter() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    crate::diagnostics::with_observer(Some(observer.clone()), || {
+        let session =
+            crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+        let snapshot = session.visible_paths(&root);
+        let v2 = crate::config::v2::load_v2_config(&root, None).unwrap();
+        session.insert_test_file_filter(
+            &root,
+            crate::codebase::test_filter::TestFileFilter::from_prepared_projects(
+                &root,
+                &v2,
+                snapshot.paths_for(&root).as_ref(),
+                Vec::new(),
+            ),
+        );
+        session.insert_test_file_filter(
+            &root,
+            crate::codebase::test_filter::TestFileFilter::fallback_only(),
+        );
+
+        let project_filters_before = observer
+            .snapshot()
+            .work
+            .get("test_filter.project_filters")
+            .copied()
+            .unwrap_or_default();
+        let builds_before = observer
+            .snapshot()
+            .work
+            .get("test_filter.builds")
+            .copied()
+            .unwrap_or_default();
+
+        let from_session =
+            graph_config_options_with_config_and_session(&root, None, Some(&session), None);
+        assert!(from_session.is_some());
+        let from_snapshot = graph_config_options_with_config_and_session(
+            &root,
+            None,
+            Some(&session),
+            Some(snapshot.paths_for(&root).as_ref()),
+        );
+        assert!(from_snapshot.is_some());
+
+        let work = observer.snapshot().work;
+        assert_eq!(
+            work.get("test_filter.project_filters")
+                .copied()
+                .unwrap_or_default(),
+            project_filters_before,
+            "prepared session must not invoke project_filters during graph config, {work:#?}"
+        );
+        assert_eq!(
+            work.get("test_filter.builds").copied().unwrap_or_default(),
+            builds_before,
+            "prepared session must not compile a second TestFileFilter, {work:#?}"
+        );
+        assert_eq!(project_filters_before, 0, "{work:#?}");
+        assert_eq!(builds_before, 0, "{work:#?}");
+    });
+}
+
+#[test]
+fn files_config_session_builds_test_filter_once() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    crate::diagnostics::with_observer(Some(observer.clone()), || {
+        let session =
+            crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+
+        let first =
+            graph_config_options_with_config_and_session(&root, None, Some(&session), None);
+        assert!(first.is_some());
+        let work = observer.snapshot().work;
+        let project_filters = work
+            .get("test_filter.project_filters")
+            .copied()
+            .unwrap_or_default();
+        assert_eq!(work["test_filter.builds"], 1, "{work:#?}");
+        assert!(
+            project_filters >= 1,
+            "first session graph config compiles project filters, {work:#?}"
+        );
+
+        let second =
+            graph_config_options_with_config_and_session(&root, None, Some(&session), None);
+        assert!(second.is_some());
+        let work = observer.snapshot().work;
+        assert_eq!(work["test_filter.builds"], 1, "{work:#?}");
+        assert_eq!(
+            work.get("test_filter.project_filters")
+                .copied()
+                .unwrap_or_default(),
+            project_filters,
+            "second graph config must not compile project filters again, {work:#?}"
+        );
+    });
 }
 
 #[test]

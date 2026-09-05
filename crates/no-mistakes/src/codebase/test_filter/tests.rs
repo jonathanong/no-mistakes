@@ -170,6 +170,17 @@ fn non_impact_filter_ignores_always_include_globs() {
 }
 
 #[test]
+fn from_visible_uses_prepared_project_filters() {
+    let root = fixture_root();
+    let config = load_config_fixture(&root, "suite-exclude");
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let filter = TestFileFilter::from_visible(&root, &config, snapshot.paths_for(&root).as_ref());
+
+    assert!(filter.is_match_rel("backend/api/users.test.mts"));
+    assert!(!filter.is_match_rel("backend/api/users.mock.test.mts"));
+}
+
+#[test]
 fn prepared_impact_filter_keeps_always_include_globs() {
     let root = fixture_root();
     let mut config = NoMistakesConfig::default();
