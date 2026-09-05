@@ -8,18 +8,24 @@ impl GraphFiles {
         visible: impl IntoIterator<Item = PathBuf>,
         mut resource_candidates: Vec<PathBuf>,
     ) -> Self {
-        all.sort();
+        all.sort_by(|left, right| left.as_os_str().cmp(right.as_os_str()));
         all.dedup();
-        indexable.sort();
+        indexable.sort_by(|left, right| left.as_os_str().cmp(right.as_os_str()));
         indexable.dedup();
-        resource_candidates.sort();
+        resource_candidates.sort_by(|left, right| left.as_os_str().cmp(right.as_os_str()));
         resource_candidates.dedup();
         let mut visible_paths: Vec<_> = visible.into_iter().collect();
-        visible_paths.sort();
+        visible_paths.sort_by(|left, right| left.as_os_str().cmp(right.as_os_str()));
         visible_paths.dedup();
         let flags = all
             .iter()
-            .map(|path| u8::from(visible_paths.binary_search(path).is_ok()))
+            .map(|path| {
+                u8::from(
+                    visible_paths
+                        .binary_search_by(|candidate| candidate.as_os_str().cmp(path.as_os_str()))
+                        .is_ok(),
+                )
+            })
             .collect();
         Self {
             all: std::sync::Arc::new(all),

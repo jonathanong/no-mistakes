@@ -10,6 +10,12 @@ fn fixture(path: &str) -> PathBuf {
     )
 }
 
+fn os_str_membership_fixture(path: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/ts-source/normalized-path-membership")
+        .join(path)
+}
+
 #[test]
 fn identities_are_sorted_deduplicated_and_lexically_normalized() {
     let alpha = fixture("alpha.ts");
@@ -31,6 +37,31 @@ fn identities_are_sorted_deduplicated_and_lexically_normalized() {
     );
     assert_eq!(inventory.id_for_path(&fixture("missing.ts")), None);
     assert_eq!(inventory.path(FileId(u32::MAX)), None);
+}
+
+#[test]
+fn normalized_inventory_probe_is_os_str_byte_identity() {
+    let nested = crate::codebase::ts_resolver::normalize_path(&os_str_membership_fixture("a/b.ts"));
+    let dashed = crate::codebase::ts_resolver::normalize_path(&os_str_membership_fixture("a-b.ts"));
+    let dotted = os_str_membership_fixture("a/./b.ts");
+    let collapsed = crate::codebase::ts_resolver::normalize_path(&dotted);
+
+    let inventory = FileInventory::from_paths(&[nested.clone(), dashed.clone()]);
+
+    // OsStr bytes put `a-b.ts` before `a/b.ts` (`-` < `/`). Path::cmp would
+    // reverse that because it compares the `a` component first.
+    assert_eq!(
+        inventory.paths().as_slice(),
+        [dashed.clone(), nested.clone()]
+    );
+    assert_eq!(nested.as_os_str(), collapsed.as_os_str());
+    assert_ne!(dotted.as_os_str(), nested.as_os_str());
+
+    let id = inventory.id_for_normalized_path(&nested).unwrap();
+    assert_eq!(inventory.path(id).unwrap().as_os_str(), nested.as_os_str());
+    assert_eq!(inventory.id_for_normalized_path(&dotted), None);
+    assert_eq!(inventory.id_for_path(&dotted), Some(id));
+    assert_eq!(inventory.id_for_normalized_path(&collapsed), Some(id));
 }
 
 #[test]

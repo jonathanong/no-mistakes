@@ -58,6 +58,10 @@ fn graph_files_visible_does_not_build_a_pathbuf_hashset() {
         "from_files must mark visibility with a parallel bitset, not a cloned path set"
     );
     assert!(
+        constructor.contains("as_os_str().cmp") && !constructor.contains("all.sort();"),
+        "from_files must sort visible paths with OsStr order, not Path::cmp"
+    );
+    assert!(
         !constructor.contains("visible:")
             || constructor.contains("let visible = vec![1u8; all.len()]"),
         "from_files must not assign a HashSet to visible"
@@ -76,6 +80,16 @@ fn graph_files_visible_does_not_build_a_pathbuf_hashset() {
         trait_contains.contains("GraphFiles::contains_visible(self, path)")
             && !trait_contains.contains("self.visible_path"),
         "VisiblePathLookup::contains_visible must stay exact HashSet-style membership"
+    );
+    let visible_index = graph_files_source_function_body(
+        visible_source,
+        "fn visible_index(&self, path: &Path) -> Option<usize>",
+    );
+    assert!(
+        visible_index.contains("as_os_str().cmp")
+            && !visible_index.contains("as_path().cmp")
+            && !visible_index.contains("canonicalize"),
+        "visible_index must probe OsStr bytes without Path::cmp or canonicalize"
     );
 }
 
@@ -288,6 +302,29 @@ fn graph_files_explicit_root_marks_existing_hidden_path_visible() {
     assert!(files.add_explicit_root(&page));
     assert!(files.contains_visible(&page));
     assert!(!files.add_explicit_root(&page));
+}
+
+#[test]
+fn graph_files_visible_probe_is_os_str_byte_identity() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/ts-source/normalized-path-membership"),
+    );
+    let nested = root.join("a/b.ts");
+    let dashed = root.join("a-b.ts");
+    let dotted = root.join("a/./b.ts");
+    let collapsed = crate::codebase::ts_resolver::normalize_path(&dotted);
+
+    let files = GraphFiles::from_files(vec![nested.clone(), dashed.clone()]);
+    // OsStr bytes put `a-b.ts` before `a/b.ts` (`-` < `/`). Path::cmp would
+    // reverse that because it compares the `a` component first.
+    assert_eq!(files.all(), [dashed.clone(), nested.clone()]);
+    assert_eq!(nested.as_os_str(), collapsed.as_os_str());
+    assert_ne!(dotted.as_os_str(), nested.as_os_str());
+    assert!(files.contains_visible(&nested));
+    assert!(files.contains_visible(&dashed));
+    assert!(!files.contains_visible(&dotted));
+    assert!(files.contains_visible(&collapsed));
 }
 
 #[cfg(unix)]

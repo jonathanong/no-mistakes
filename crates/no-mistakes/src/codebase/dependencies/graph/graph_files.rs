@@ -63,10 +63,10 @@ impl GraphFiles {
         mut resource_candidates: Vec<PathBuf>,
         excluded_indexable: &HashSet<PathBuf>,
     ) -> Self {
-        all.sort();
+        all.sort_by(|left, right| left.as_os_str().cmp(right.as_os_str()));
         all.dedup();
         let visible = vec![1u8; all.len()];
-        resource_candidates.sort();
+        resource_candidates.sort_by(|left, right| left.as_os_str().cmp(right.as_os_str()));
         resource_candidates.dedup();
         let indexable: Vec<PathBuf> = all
             .iter()

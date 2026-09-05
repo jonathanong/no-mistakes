@@ -11,7 +11,7 @@ impl GraphFiles {
         let mut changed = false;
         match self
             .all
-            .binary_search_by(|candidate| candidate.as_path().cmp(path.as_path()))
+            .binary_search_by(|candidate| candidate.as_os_str().cmp(path.as_os_str()))
         {
             Ok(index) => {
                 if self.visible.get(index).copied() != Some(1) {
@@ -37,7 +37,7 @@ impl GraphFiles {
         if is_indexable(&path) && !self.indexable.contains(&path) {
             let indexable = std::sync::Arc::make_mut(&mut self.indexable);
             indexable.push(path);
-            indexable.sort();
+            indexable.sort_by(|left, right| left.as_os_str().cmp(right.as_os_str()));
             changed = true;
         }
         if changed {
@@ -53,7 +53,7 @@ impl GraphFiles {
 
     fn visible_index(&self, path: &Path) -> Option<usize> {
         self.all
-            .binary_search_by(|candidate| candidate.as_path().cmp(path))
+            .binary_search_by(|candidate| candidate.as_os_str().cmp(path.as_os_str()))
             .ok()
             .filter(|&index| self.visible.get(index).copied() == Some(1))
     }
