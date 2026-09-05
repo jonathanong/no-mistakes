@@ -147,3 +147,6 @@ type ParsedImports<'a> = Vec<(
     &'a crate::codebase::ts_source::facts::TsFileFacts,
     HashSet<String>,
 )>;
+
+#[cfg(test)]
+mod interned_identity_tests;

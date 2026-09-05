@@ -36,11 +36,6 @@ impl FileNode {
         }
     }
 
-    #[cfg(test)]
-    pub(crate) fn from_parts(id: u64, path: Arc<Path>) -> Self {
-        Self { id, path }
-    }
-
     #[cfg_attr(not(test), allow(dead_code))]
     pub(crate) fn as_arc(&self) -> &Arc<Path> {
         &self.path
@@ -110,11 +105,6 @@ impl InternedStr {
             id: fx_content_id(value.as_ref()),
             value,
         }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn from_parts(id: u64, value: Arc<str>) -> Self {
-        Self { id, value }
     }
 
     #[cfg_attr(not(test), allow(dead_code))]
