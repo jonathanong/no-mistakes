@@ -18,7 +18,12 @@ from runtime behavior.
 ## Module Graphs
 
 `no-mistakes dependencies`, `dependents`, `related`, and `symbols` parse TS/JS
-imports, exports, and package metadata.
+imports, exports, and package metadata. Configured Python, Go, Rust, Ruby,
+PHP, Java, Kotlin, Elixir, Dart, Swift, and .NET packages emit language
+edges into the same graph; query those with
+`dependents --relationship <lang>` as described in
+[feature parity](feature-parity.md). `importers` remains the fast TS/JS-only
+reverse static-import scan.
 
 Supported import edges:
 
@@ -35,12 +40,16 @@ Resolution support:
   replacements are resolved relative to `baseUrl` when it is present, matching
   TypeScript behavior; otherwise they are resolved relative to the tsconfig that
   defines `paths`.
+- `compilerOptions.baseUrl` without `paths` also resolves bare specifiers
+  relative to that directory, including extension and index-file candidates.
+  Prefer `paths` for aliases shared across workspace packages. A missing
+  `baseUrl`-relative specifier is classified `external` by `resolve-check`,
+  the same as a bare npm package.
 - Workspace package entrypoints and exact or single-`*` export subpaths.
 
 Intentional limits:
 
 - Bare external packages such as `react`, `express`, and `node:path` are ignored.
-- `baseUrl`-only aliases are not resolved unless represented in `paths`.
 - Non-literal `import()`, `require()`, and computed specifiers are not resolved.
 - Symbol queries answer import/export relationships, not line-level call sites.
   Use `rg` on returned files for exact call locations.
@@ -112,8 +121,10 @@ instead of guessed.
 
 ## Queue Graphs
 
-`no-mistakes queues` and `no-mistakes queues` detect static BullMQ and glide-mq
-producer/worker relationships.
+`no-mistakes queues` detects static BullMQ and glide-mq producer/worker
+relationships. Configured Celery, Asynq, Kafka, Active Job, Sidekiq, Laravel,
+and Symfony Messenger sites emit the same `queue-enqueue` / `queue-worker`
+edges; query those with `dependents --relationship queue`.
 
 The graph uses virtual queue-job nodes such as `queues.ts#sendWelcome` so a
 producer can connect to the worker that processes the same static job name.
@@ -125,19 +136,23 @@ unmatched rather than guessed.
 
 ## Server Route Graphs
 
-`no-mistakes server` and `no-mistakes server` extract route definitions and edges
-from Node.js server frameworks.
+`no-mistakes server` extracts route definitions and edges from Node.js server
+frameworks and projects configured language `RouteRef` facts into the same
+report.
 
-Supported frameworks include Express, Hono, Fastify, Koa router patterns, NestJS
-controllers, and known project helper shapes. The analyzer records method, normalized route pattern,
-source file, and route edges. Dynamic route paths are skipped because guessing
-would create noisy graph edges.
+Supported frameworks include Express, Hono, Fastify, Koa router patterns,
+NestJS controllers, Remix `app/routes` under `type: remix`, and known project
+helper shapes. Configured Django / Flask / FastAPI, Go HTTP, Rails, Laravel /
+Symfony, Rust Axum / Actix / Rocket, ASP.NET, Spring, and Phoenix literals
+are listed in [feature parity](feature-parity.md). The analyzer records
+method, normalized route pattern, source file, and route edges. Dynamic route
+paths are skipped because guessing would create noisy graph edges.
 
 ## React Traits
 
-`no-mistakes react` and `no-mistakes react` scan React component files and report
-traits such as state, props, memoization, environment directives, fetch usage,
-and rendered child components.
+`no-mistakes react` scans React component files and reports traits such as
+state, props, memoization, environment directives, fetch usage, and rendered
+child components.
 
 Component detection is heuristic. It favors static exports, local declarations,
 and JSX component usage. Broken files produce parse errors; unknown dynamic

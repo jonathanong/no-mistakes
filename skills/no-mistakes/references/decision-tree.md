@@ -36,7 +36,10 @@ What are you trying to find?
 │   └─ no-mistakes dependents <file> --relationship trpc
 │
 ├─ Server route extraction / related files
-│   └─ no-mistakes server routes  (Express/Hono/Koa, language HTTP, Remix file routes)
+│   └─ no-mistakes server routes  (Express/Hono/Fastify/Koa/NestJS, language HTTP, Remix file routes)
+│
+├─ Configured Python/Go/Rust/Rails/PHP/Java/Kotlin/Elixir/Dart graphs
+│   └─ no-mistakes dependents <file> --relationship python|go|rust|ruby|php|java|kotlin|elixir|dart
 │   └─ no-mistakes server related <file> [--direction deps|dependents|both]
 │   └─ no-mistakes server edges [file] [--depth N]
 │
@@ -110,6 +113,15 @@ What are you trying to find?
 | `react` | React component render relationship |
 | `dotnet` | C# `using`/type reference/project reference edges |
 | `swift` | Swift import/type reference/SwiftPM target dependency edges |
+| `python` | Python import and reference edges in configured packages |
+| `go` | Go import and reference edges in configured modules |
+| `rust` | Rust `use`/`mod` and path-dep edges in configured packages |
+| `ruby` | Ruby require and configured constant edges |
+| `php` | PHP `use` / Composer edges |
+| `java` | Java import and reference edges |
+| `kotlin` | Kotlin import and reference edges |
+| `elixir` | Elixir import and reference edges |
+| `dart` | Dart import and reference edges |
 | `terraform` | Terraform/OpenTofu resource, module, and output reference edges |
 | `all` | All standard relationships, including `workflow`, except the opt-in `route-import` and `trpc` relationships (default) |
 
@@ -150,11 +162,11 @@ no-mistakes dependents src/auth.mts --filter 'backend/**' --filter 'integration-
   involves >5 import hops, or requires transitive test-impact across a large
   graph.
 - ⚡ Use `rg` when: you need the exact call line, the pattern may appear in
-  non-import contexts (comments, strings, dynamic lookups), or the file type
-  has no `no-mistakes` graph domain (Go source, prose). For non-TS/JS
-  structural questions: `.yml` → `ci` · `.tf` → `infra` · `.swift` →
-  `swift` · Rust binary CI impact → `--relationship ci` · CSS/JSON asset
-  imports → `--relationship asset`.
+  non-import contexts (comments, strings, dynamic lookups), or the file is
+  prose with no graph domain. For non-TS/JS structural questions: configured
+  Python/Go/Rust/… → `--relationship <lang>` · `.yml` → `ci`/`workflow` ·
+  `.tf` → `infra` · `.swift` → `swift` · Rust binary CI impact →
+  `--relationship ci` · CSS/JSON asset imports → `--relationship asset`.
 - For "what directly imports this one file?" in a single directory,
   `no-mistakes importers <file>` is faster and prints static-import callers.
   For complete impact including dynamic and CommonJS imports, use

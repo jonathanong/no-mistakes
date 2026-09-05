@@ -96,8 +96,9 @@ hint at that call. Either configure the wrapper or add a literal
 
 ## Why and when
 
-Use this rule on a Next.js or Playwright surface when a passing test suite is
-not enough evidence that every route and stable selector is exercised. It is
+Use this rule on a Next.js or Playwright surface so an agent cannot ship a
+new App Router page or stable selector that no test navigates to or asserts.
+A passing suite is not evidence that every route is exercised. It is
 especially useful before shipping a new page, selector, or second frontend
 app.
 

@@ -1,12 +1,12 @@
 # no-mistakes
 
-Unified static codebase intelligence CLI for TS/JS module graphs, symbols,
-React traits, queue hops, server routes, configured language graphs, and project
-checks.
+Local AST graph for coding agents: impact, focused test plans, Playwright
+coverage, and repository checks. Use it when grep would miss callers behind
+aliases, when a change should not run every suite, or when a new page needs a
+coverage gate. See [why it exists](../../docs/why.md).
 
-Use it when an agent needs a deterministic impact map or focused test plan in
-the same process as a Node tool. The async N-API facade avoids subprocess
-parsing and reuses one prepared analysis for related reports.
+The async N-API facade avoids subprocess parsing and reuses one prepared
+analysis for related reports.
 
 ```bash
 npm install --save-dev no-mistakes

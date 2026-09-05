@@ -2,28 +2,31 @@
 
 [![CodSpeed](https://img.shields.io/endpoint?url=https://codspeed.io/badge.json)](https://app.codspeed.io/jonathanong/no-mistakes?utm_source=badge)
 
-`no-mistakes` is deterministic codebase intelligence for coding agents. It
-answers structural questions, selects affected tests, and enforces AST-friendly
-repository rules without running the application, calling an AI model, or
-maintaining a database.
+`no-mistakes` tells coding agents and CI which files, tests, and routes a
+change can affect, then enforces the static shapes that keep those answers
+true. It parses the current checkout locally. It does not run the app, call a
+model, or keep a database.
+
+The jobs are:
+
+1. **Scope the change** — callers, routes, queues, and workflows through the
+   resolved graph, not a text search
+2. **Select the tests** — Vitest, Playwright, and configured native plans
+   instead of every suite
+3. **Keep the graph honest** — repository checks and ESLint/Oxlint rules that
+   stop agents from hiding relationships
+
+Grep has no resolver. Embeddings are probabilistic and cost a model call.
+Persistent indexes go stale across worktrees. ESLint cannot see cross-file
+uniqueness. `no-mistakes` builds one in-memory graph from this checkout and
+discards it after the request. [Why it exists](docs/why.md) names the agent
+mistakes that graph is for.
 
 The canonical graph covers TypeScript/JavaScript, React, Next.js, Playwright,
 queues, server routes, GitHub Actions, Terraform/OpenTofu, Swift, .NET, and
 explicitly configured Python, Go, Rust, Ruby, PHP, Java, Kotlin, Elixir, and
-Dart projects. Results are small, structured, and designed to feed directly
-into the next edit or validation step.
-
-The primary use cases are:
-
-1. Discovering impacted files and tests during planning
-2. Running selected tests in PR CI to minimize CI costs
-3. AST-based guardrails that keep code analyzable as agents modify it
-
-The practical payoff is a fast, repeatable change map: agents can discover the
-right tests and callers locally, CI can spend work only where a change reaches,
-and teams can inspect the same typed graph from the CLI or async Node API.
-Configuration keeps project-specific conventions explicit instead of hiding
-them in a remote service or a persistent index.
+Dart projects. Results are small, structured, and designed to feed the next
+edit or validation step.
 
 For example, consider this dependency chain:
 
@@ -53,6 +56,32 @@ export function getCurrentUser (ctx) {
 
 `no-mistakes check` reports both definitions so the agent can reuse or rename
 the existing API.
+
+## Install and first queries
+
+```sh
+npm install --save-dev no-mistakes eslint-plugin-no-mistakes
+```
+
+`dependents` and `tests plan vitest` work without a custom `testPlan` block.
+Configuration unlocks Playwright coverage, queues, server routes, language
+frontends, and repository rules.
+
+```sh
+npx no-mistakes dependents src/utils.mts --format json
+npx no-mistakes tests plan vitest --changed-file src/utils.mts --format json
+npx no-mistakes tests plan vitest --from-git-diff origin/main...HEAD --format json
+```
+
+Use the git-range form in PR CI so the job runs the tests that reach the
+diff instead of every suite. For several related reports in one process, call
+`analyzeProject()` from the [Node API](docs/node-api.md).
+
+Local development from this repository:
+
+```sh
+cargo run -p no-mistakes -- dependents src/utils.mts --format paths
+```
 
 ## Why AST-based?
 
@@ -104,20 +133,9 @@ workflow can avoid subprocess overhead.
 | Find direct importers before renaming a module | `no-mistakes dependents <file> --depth 1 --relationship import --relationship workspace --format paths` |
 | Count static-import callers of a file | `no-mistakes importers <file>` |
 
-## Install
-
-```sh
-npm install --save-dev no-mistakes eslint-plugin-no-mistakes
-```
-
-Local development from this repository:
-
-```sh
-cargo run -p no-mistakes -- dependents src/utils.mts --format paths
-```
-
 ## Documentation
 
+- [Why no-mistakes exists](docs/why.md)
 - [Documentation index](docs/README.md)
 - [CLI commands](docs/cli/README.md)
 - [Node/N-API guide](docs/node-api.md)

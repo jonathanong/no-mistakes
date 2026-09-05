@@ -70,7 +70,7 @@ command name. See [Performance diagnostics](diagnostics.md).
 | [`playwright`](playwright.md) | Playwright route, selector, and assertion coverage. |
 | [`react`](react.md) | React component trait analysis and fetch checks. |
 | [`queues`](queues.md) | Queue producer/worker graph checks. |
-| [`server`](server.md) | Express, Hono, Fastify, and Koa route graphs. |
+| [`server`](server.md) | Express, Hono, Fastify, Koa, NestJS, Remix, and configured language HTTP route graphs. |
 | [`ci`](ci.md) | GitHub Actions impact ([`ci-impact`](ci-impact.md)), env usage ([`ci-env`](ci-env.md)), workflow topology ([`ci-topology`](ci-topology.md)), and revision topology impact ([`ci-topology-impact`](ci-topology-impact.md)). |
 | [`impacted-checks`](impacted-checks.md) | Minimal local validation commands for changed files. |
 | [`planning-impact`](planning-impact.md) | npm-package CI artifacts from one prepared analysis. |

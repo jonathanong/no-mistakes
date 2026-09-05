@@ -185,7 +185,7 @@ are configured domain extractors on top of it.
 | Tests | `tests plan vitest` | `tests plan python` over pytest / unittest files |
 | HTTP routes | Express / Hono / Koa | Django URLconf → view, plus configured Flask / FastAPI decorator literals |
 | Queues | BullMQ / glide-mq | Celery `@shared_task` / `@app.task`, `.delay(` / `.apply_async(` |
-| Lockfile | pnpm / npm / yarn / bun | `poetry.lock`, `uv.lock`, `Pipfile.lock` |
+| Lockfile | pnpm / npm / yarn / bun | later (`lockfile diff` is npm-family; `poetry.lock` / `uv.lock` / `Pipfile.lock` are not parsed) |
 
 Configure package roots the way Swift configures `tests.swift.packages`. Route
 and queue paths stay under `projects.*.routes` and `projects.*.queues`. Do not
@@ -236,7 +236,7 @@ Go support is the language frontend. Asynq is the queue extractor. Configured
 | Tests | `tests plan vitest` | `tests plan go` → `go test` in owning packages |
 | HTTP routes | `server routes` | configured `net/http`, Chi, Gin, Echo, or Fiber registrations |
 | Queues | BullMQ job name | Asynq `NewTask("mail:welcome", …)` / `HandleFunc("mail:welcome", …)` |
-| Lockfile | npm-family | `go.mod` (selected module graph, not `go.sum`) |
+| Lockfile | npm-family | later (`lockfile diff` is npm-family; test planning reads the selected module graph from `go.mod`, not `go.sum`) |
 
 Asynq task type strings are the virtual job identity, same as a BullMQ job
 name. A producer file gets `queue-enqueue`; the handler file gets
@@ -279,8 +279,11 @@ out of scope. Configure producer and consumer file globs through
 
 ## Rust
 
-Rust should become a language frontend at Swift/.NET depth, then pick up
-routes and queues from the shared domains.
+Rust v1 is a language frontend at the Swift/.NET bar: configured
+`tests.rust.packages` emit `rust-use` / `rust-mod` / `rust-package` edges,
+`tests plan cargo` selects crate tests, and static Axum / Actix / Rocket
+registrations emit `route` edges. Dedicated `no-mistakes rust` CLI, language
+`symbols` / `call-sites`, and `Cargo.lock` diffs are later work.
 
 | Feature | TS/JS reference | Rust equivalent |
 | --- | --- | --- |
@@ -290,7 +293,7 @@ routes and queues from the shared domains.
 | Tests | `tests plan vitest` | `tests plan cargo` → `cargo test -p <pkg>` for sibling `tests.rs`; `cargo test -p <pkg> --test <name>` only for `tests/` integration targets |
 | HTTP routes | `server routes` | configured Axum, Actix, or Rocket registrations |
 | Queues | BullMQ | configured enqueue/worker globs; Kafka when present |
-| Lockfile | npm-family | `Cargo.lock` |
+| Lockfile | npm-family | later (`lockfile diff` is npm-family; `Cargo.lock` diffs are not started) |
 | Checks | `unique-exports` | keep the existing `rust-*` filesystem rules |
 
 `ci` remains the narrow workflow-file → Rust-binary Cargo edge. Do not overload
@@ -324,7 +327,7 @@ Sidekiq extractors.
 | Tests | `tests plan vitest` | `tests plan rails` over Minitest / RSpec files |
 | HTTP routes | `server routes` | configured `config/routes.rb` (and engine routes) → controller#action, including bare `resources :name` |
 | Queues | BullMQ | Active Job `SomeJob.perform_later` or Sidekiq `SomeWorker.perform_async` → job class |
-| Lockfile | npm-family | `Gemfile.lock` |
+| Lockfile | npm-family | later (`lockfile diff` is npm-family; `Gemfile.lock` diffs are not started) |
 
 Zeitwerk inference is heuristic and must stay inside configured roots. Do not
 scan the whole repository for `app/models`. Dynamic `constantize`,
@@ -353,7 +356,7 @@ framework from files, and do not enable both extractors from a missing value.
 | Tests | `tests plan vitest` | `tests plan php` over PHPUnit / Pest files |
 | HTTP routes | `server routes` | configured Laravel `Route::` / bare `Route::resource` or Symfony attribute/YAML routes |
 | Queues | BullMQ | Laravel `SomeJob::dispatch()` / `ShouldQueue`, or Symfony Messenger handlers |
-| Lockfile | npm-family | `composer.lock` |
+| Lockfile | npm-family | later (`lockfile diff` is npm-family; `composer.lock` diffs are not started) |
 
 ```php
 Route::get('/api/users', [UserController::class, 'index']);

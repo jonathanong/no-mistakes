@@ -69,11 +69,21 @@ This is usually fine — external packages are not project files. If you need to
 
 ## Non-TS/JS files in the graph
 
-The graph only traverses `.mts`, `.ts`, `.tsx`, `.mjs`, `.js`, `.jsx` files for import edges. Other file types (Go, Rust, Python, CSS, JSON, Markdown source files) are not walked.
+TS/JS `import` edges only traverse `.mts`, `.ts`, `.tsx`, `.mjs`, `.js`,
+`.jsx` files. Configured language frontends are a different walk: Python, Go,
+Rust, Ruby, PHP, Java, Kotlin, Elixir, Dart, Swift, and .NET files emit their
+own edge kinds inside the packages listed in `.no-mistakes.yml`. Query those
+with `dependents --relationship python` (or `go`, `rust`, `ruby`, `php`,
+`java`, `kotlin`, `elixir`, `dart`, `swift`, `dotnet`) and
+`tests plan python|go|cargo|rails|php|java|kotlin|elixir|dart|swift|dotnet`.
+Do not fall back to `rg` for those module-graph questions.
 
-Exception: Markdown files, CI YAML workflows, and process spawn configs participate via their own edge kinds (`md`, `ci`, `process`) but are not walked for import-style edges.
+Markdown files, CI YAML workflows, Terraform/OpenTofu, and process spawn
+configs participate via their own edge kinds (`md`, `ci`, `workflow`,
+`terraform`, `process`) and are not walked for TS/JS import-style edges.
 
-**Workaround:** file-search (`rg`, `sg`) for non-TS/JS analysis.
+**Workaround:** `rg` for prose, comments, and file types with no graph domain.
+`importers` stays the fast TS/JS-only reverse static-import scan.
 
 ## Inline type qualifiers
 
