@@ -36,26 +36,10 @@ fn node_sort_key(n: &NodeId) -> String {
 
 include!("sort_key.rs");
 
-/// File < Symbol < Module < QueueJob < … so display-key collisions keep
-/// historical NodeId order without cloning the node into the cached key.
-fn node_variant_rank(n: &NodeId) -> u8 {
-    match n {
-        NodeId::File(_) => 0,
-        NodeId::Symbol { .. } => 1,
-        NodeId::Module(_) => 2,
-        NodeId::QueueJob { .. } => 3,
-        NodeId::WorkflowJob { .. } => 4,
-        NodeId::WorkflowStep { .. } => 5,
-        NodeId::TrpcProcedure { .. } => 6,
-    }
-}
-
-fn adjacency_sort_key(n: &NodeId, kind: EdgeKind) -> (NodeSortKey, u8, (u8, u8)) {
-    (
-        cached_node_sort_key(n),
-        node_variant_rank(n),
-        kind.sort_key(),
-    )
+/// Display-key collisions, including distinct non-UTF-8 paths that collapse
+/// to the same `to_string_lossy` string, keep historical `NodeId` order.
+fn adjacency_sort_key(n: &NodeId, kind: EdgeKind) -> (NodeSortKey, NodeId, (u8, u8)) {
+    (cached_node_sort_key(n), n.clone(), kind.sort_key())
 }
 
 fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {

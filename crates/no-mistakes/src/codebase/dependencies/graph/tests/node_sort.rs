@@ -171,3 +171,24 @@ fn cached_adjacency_sort_matches_formatted_node_id_key() {
     formatted.sort_by_cached_key(|(n, k)| (node_sort_key(n), n.clone(), k.sort_key()));
     assert_eq!(cached, formatted);
 }
+
+#[cfg(unix)]
+#[test]
+fn adjacency_sort_tie_breaks_lossy_path_collisions_by_node_id() {
+    use std::ffi::OsString;
+    use std::os::unix::ffi::OsStringExt;
+    use std::path::PathBuf;
+
+    let left = NodeId::file(PathBuf::from(OsString::from_vec(vec![0x80])));
+    let right = NodeId::file(PathBuf::from(OsString::from_vec(vec![0x81])));
+    assert_eq!(node_sort_key(&left), node_sort_key(&right));
+    let mut cached = vec![
+        (right.clone(), EdgeKind::Import),
+        (left.clone(), EdgeKind::Import),
+    ];
+    cached.sort_by_cached_key(|(n, k)| adjacency_sort_key(n, *k));
+    assert_eq!(
+        cached,
+        vec![(left, EdgeKind::Import), (right, EdgeKind::Import)]
+    );
+}
