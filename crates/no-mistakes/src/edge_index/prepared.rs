@@ -39,6 +39,10 @@ where
                 .entry(edge.to.clone())
                 .or_insert_with(|| public_node(&edge.to));
         }
+        // First-pass capacity is raw edge count; unique nodes are fewer when
+        // the same job is enqueued from many sites. Drop the spare buckets so
+        // the retained index does not keep that construction over-allocation.
+        public_names.shrink_to_fit();
         let public_name = |node: &Node| {
             public_names
                 .get(node)
