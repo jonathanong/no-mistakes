@@ -1,5 +1,6 @@
 use super::{CanonicalEdge, EdgeDirection, EdgeIndex, NodeAliases};
-use crate::fx::{fx_map_with_capacity, fx_set, FxHashMap};
+use crate::fx::{fx_map_with_capacity, FxHashMap};
+use std::collections::HashSet;
 use std::hash::Hash;
 
 /// Typed relationships prepared once for public-name root lookup and projection.
@@ -173,7 +174,9 @@ fn project_first_seen<Input, Output>(
 where
     Output: Clone + Eq + Hash,
 {
-    let mut seen = fx_set();
+    // Projected `Output` is a public report edge (paths/jobs from repo
+    // source), not an interned analysis key. Keep SipHash here.
+    let mut seen = HashSet::new();
     values
         .into_iter()
         .filter_map(|value| {
