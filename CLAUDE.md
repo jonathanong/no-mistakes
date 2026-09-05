@@ -108,6 +108,15 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   Shepherd Journal before resolving the thread.
 - Rule suppression must work consistently for every `no-mistakes` rule. Use `no-mistakes` suppression directives, never `guardrails`, and support top-of-file opt-outs (`no-mistakes-disable-file`) plus line-specific opt-outs (`no-mistakes-disable-line` and `no-mistakes-disable-next-line`) where findings have line numbers.
 - All shared Rust code belongs in `no-mistakes`. Crates must not depend on one another directly. If two crates need the same helper, lift it into `no-mistakes` first.
+- After `cargo build`, `cargo test`, or `cargo bench` in a worktree, delete
+  that worktree's `target/` (`rm -rf target` or `cargo clean`). Do not keep
+  build artifacts in throwaway worktrees. Never delete the main workspace
+  `target/` unless this worktree is the main workspace.
+- Local Criterion on one machine is the source of truth for performance
+  before/after. CodSpeed is not reliable: GitHub-hosted runners do not stick
+  to one CPU architecture (Intel vs AMD; Macro Runners are ARM64), and
+  CodSpeed may compare against an older base. Treat CodSpeed as CI smoke that
+  the harness still builds, not as proof of a win or a regression.
 
 ### Public surface checklist
 
