@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes",
-  "version": "0.54.1",
+  "version": "0.54.2",
   "description": "Deterministic impact maps, test plans, Playwright coverage, and repository checks for coding agents",
   "license": "MIT",
   "repository": {

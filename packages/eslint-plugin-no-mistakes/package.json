@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-no-mistakes",
-  "version": "0.54.1",
+  "version": "0.54.2",
   "description": "ESLint and Oxlint rules that keep code static enough for no-mistakes analyzers and coding agents",
   "license": "MIT",
   "repository": {
