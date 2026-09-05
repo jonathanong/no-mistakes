@@ -10,7 +10,7 @@ Use `no-mistakes` for structural codebase questions: import and test impact,
 public symbols, static route/fetch/queue relationships, or configured project
 checks. Use `rg` after a graph query for exact call lines, comments, strings,
 or unsupported/dynamic forms. The mistakes this prevents are catalogued in
-[docs/why.md](../../docs/why.md).
+[docs/why.md](https://github.com/jonathanong/no-mistakes/blob/main/docs/why.md).
 
 ## When to activate
 
@@ -100,7 +100,8 @@ groups, limits, diffs, and deleted-file behavior.
 
 ## Reference routing
 
-- [docs/why.md](../../docs/why.md): mistakes this graph exists to prevent.
+- [docs/why.md](https://github.com/jonathanong/no-mistakes/blob/main/docs/why.md):
+  mistakes this graph exists to prevent.
 - [lifecycle.md](references/lifecycle.md): before-edit, after-edit, and
   handoff recipes.
 - [decision-tree.md](references/decision-tree.md): command, relationship, and

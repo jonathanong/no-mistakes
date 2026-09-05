@@ -37,11 +37,11 @@ What are you trying to find?
 │
 ├─ Server route extraction / related files
 │   └─ no-mistakes server routes  (Express/Hono/Fastify/Koa/NestJS, language HTTP, Remix file routes)
+│   └─ no-mistakes server related <file> [--direction deps|dependents|both]
+│   └─ no-mistakes server edges [file] [--depth N]
 │
 ├─ Configured Python/Go/Rust/Rails/PHP/Java/Kotlin/Elixir/Dart graphs
 │   └─ no-mistakes dependents <file> --relationship python|go|rust|ruby|php|java|kotlin|elixir|dart
-│   └─ no-mistakes server related <file> [--direction deps|dependents|both]
-│   └─ no-mistakes server edges [file] [--depth N]
 │
 ├─ Tests to run after changing a file (preferred)
 │   └─ no-mistakes tests plan vitest --changed-file <file> --format paths
