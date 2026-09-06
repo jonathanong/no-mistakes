@@ -38,4 +38,35 @@ describe("oxlint support", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("reports const aliases through the plugin", () => {
+    const root = mkdtempSync(join(tmpdir(), "pac-oxlint-"));
+    try {
+      writeFileSync(join(root, "fixture.ts"), "const alias = original;\n");
+      writeFileSync(
+        join(root, ".oxlintrc.json"),
+        JSON.stringify({
+          jsPlugins: [{ name: "no-mistakes", specifier: resolve(__dirname, "../src/index.js") }],
+          rules: { "no-mistakes/ts-no-const-aliases": "error" },
+        }),
+      );
+      const result = spawnSync(
+        process.execPath,
+        [
+          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+          "--config",
+          ".oxlintrc.json",
+          "fixture.ts",
+        ],
+        {
+          cwd: root,
+          encoding: "utf8",
+        },
+      );
+      assert.notEqual(result.status, 0);
+      assert.match(`${result.stderr || ""}${result.stdout || ""}`, /const alias|indirection/i);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });

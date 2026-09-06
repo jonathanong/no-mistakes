@@ -30,7 +30,7 @@ Oxlint loads the same ESLint plugin through `jsPlugins`:
 
 | Preset                           | Contents                                                                                                           |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `noMistakes.configs.recommended` | Static fetches, direct TypeScript APIs, basic selector safety, no property deletion, and ReactNode nullish safety. |
+| `noMistakes.configs.recommended` | Static fetches, direct TypeScript APIs and const identities, basic selector safety, no property deletion, and ReactNode nullish safety. |
 | `noMistakes.configs.strict`      | Recommended plus stricter Next.js, Playwright, React, test-state, mock-file, and array-await rules.                |
 
 ## Editor suggestions
