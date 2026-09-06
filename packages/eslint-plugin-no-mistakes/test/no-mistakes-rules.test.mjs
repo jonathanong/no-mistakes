@@ -346,6 +346,44 @@ describe("ts-no-function-aliases", () => {
   });
 });
 
+describe("ts-no-const-aliases", () => {
+  it("allows same-name declarations and values that are not direct aliases", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("ts-no-const-aliases", "valid.ts"),
+        "ts-no-const-aliases",
+        undefined,
+        "valid.ts",
+      ),
+      [],
+    );
+  });
+
+  it("reports local and exported differently named const aliases", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("ts-no-const-aliases", "invalid.ts"),
+        "ts-no-const-aliases",
+        undefined,
+        "invalid.ts",
+      ),
+      ["alias", "alias", "alias", "alias"],
+    );
+  });
+
+  it("unwraps transparent TypeScript expressions without unwrapping await", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("ts-no-const-aliases", "coverage.ts"),
+        "ts-no-const-aliases",
+        undefined,
+        "coverage.ts",
+      ),
+      ["alias", "alias", "alias", "alias", "alias", "alias"],
+    );
+  });
+});
+
 describe("react-no-nullish-react-node", () => {
   it("allows explicit undefined checks and non-ReactNode nullish expressions", () => {
     assert.deepEqual(
