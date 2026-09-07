@@ -113,8 +113,8 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
   assert.doesNotMatch(
     body,
-    /cargo test --locked -p no-mistakes --lib --all-features/,
-    "native jobs must not compile test-instrumentation via --all-features",
+    /cargo test\b[^\r\n]*--all-features\b/,
+    "native jobs must not pass --all-features to cargo test in any flag order",
   );
   assert.match(
     body,
