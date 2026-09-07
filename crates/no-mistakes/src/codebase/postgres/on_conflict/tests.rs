@@ -409,3 +409,66 @@ fn allowlisted_trigger_writing_arbiter_is_unsafe() {
         "{found:?}"
     );
 }
+
+fn assert_message(sql: &str, needle: &str) {
+    let found = messages(sql);
+    assert!(
+        found.iter().any(|message| message.contains(needle)),
+        "{found:?}"
+    );
+}
+
+#[test]
+fn unproven_assignment_forms_are_judged() {
+    assert_message(
+        "INSERT INTO items (id, note) VALUES (1, 'a')
+         ON CONFLICT (id) DO UPDATE SET note = (SELECT 'x');",
+        "subquery",
+    );
+    assert_message(
+        "INSERT INTO items (id, n) VALUES (1, 0)
+         ON CONFLICT (id) DO UPDATE SET n = n + 1;",
+        "non-convergent",
+    );
+    assert!(messages(
+        "INSERT INTO items (id, score) VALUES (1, 0)
+         ON CONFLICT (id) DO UPDATE SET score = GREATEST(score, EXCLUDED.score, NULL);"
+    )
+    .is_empty());
+    assert_message(
+        "INSERT INTO items (id, seen) VALUES (1, now())
+         ON CONFLICT (id) DO UPDATE SET seen = LEAST(now(), seen);",
+        "GREATEST/LEAST",
+    );
+    assert_message(
+        "INSERT INTO items (id, score) VALUES (1, 0)
+         ON CONFLICT (id) DO UPDATE SET score = GREATEST(other, 1);",
+        "not convergent",
+    );
+    assert_message(
+        "INSERT INTO items (id, seen) VALUES (1, now())
+         ON CONFLICT (id) DO UPDATE SET seen = COALESCE(now(), items.seen);",
+        "may only follow",
+    );
+    assert_message(
+        "INSERT INTO items (id, seen) VALUES (1, now())
+         ON CONFLICT (id) DO UPDATE SET seen = COALESCE(note, items.seen);",
+        "different column",
+    );
+}
+
+#[test]
+fn disabled_convergence_and_volatility_ignore_unproven_forms() {
+    let file = extract_sql_statement_facts(
+        "INSERT INTO items (id, note, seen) VALUES (1, 'a', now())
+         ON CONFLICT (id) DO UPDATE SET note = (SELECT 'x'), seen = GREATEST(now(), other),
+           n = n + 1, updated_at = created_at;",
+    );
+    let mut options = catalog(&[], &[], &[], &[]);
+    options.check_convergence = false;
+    options.check_volatility = false;
+    options.check_arbiter = false;
+    options.check_triggers = false;
+    options.check_generated = false;
+    assert!(judge_file(&file, &options).is_empty());
+}

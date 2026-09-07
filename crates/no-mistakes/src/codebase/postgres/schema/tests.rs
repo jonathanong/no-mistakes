@@ -408,3 +408,33 @@ fn generated_is_null_collects_the_source_column() {
     );
     assert_eq!(tables[0].columns[1].generated_source_columns, ["id"]);
 }
+
+#[test]
+fn generated_expr_walk_covers_remaining_ident_shapes() {
+    let tables = extract_create_table_metadata(
+        "CREATE TABLE t (
+           id int,
+           note text,
+           flag boolean,
+           a int GENERATED ALWAYS AS (id + 1) STORED,
+           b int GENERATED ALWAYS AS (-id) STORED,
+           c text GENERATED ALWAYS AS (CAST(id AS text)) STORED,
+           d text GENERATED ALWAYS AS (lower(note)) STORED,
+           e int GENERATED ALWAYS AS (CASE flag WHEN true THEN id ELSE 0 END) STORED,
+           f int GENERATED ALWAYS AS (CASE WHEN flag THEN id ELSE note::int END) STORED,
+           g boolean GENERATED ALWAYS AS (flag IS TRUE) STORED,
+           h boolean GENERATED ALWAYS AS (flag IS FALSE) STORED,
+           i boolean GENERATED ALWAYS AS (id IS NOT DISTINCT FROM id) STORED,
+           j boolean GENERATED ALWAYS AS (note LIKE 'x%') STORED
+         );",
+    );
+    let sources: Vec<_> = tables[0]
+        .columns
+        .iter()
+        .filter(|column| column.is_generated)
+        .flat_map(|column| column.generated_source_columns.clone())
+        .collect();
+    assert!(sources.contains(&"id".to_string()), "{sources:?}");
+    assert!(sources.contains(&"note".to_string()), "{sources:?}");
+    assert!(sources.contains(&"flag".to_string()), "{sources:?}");
+}
