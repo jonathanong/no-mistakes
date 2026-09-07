@@ -14,6 +14,8 @@ pub(super) fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
+    let mut ancestor_resolver =
+        super::ancestor_override_subset::AncestorResolver::new(root, sources);
     for policy in &opts.policies {
         let matching = super::super::matching_files(root, &policy.files, files, target_roots)?;
         for path in matching {
@@ -67,7 +69,12 @@ pub(super) fn scan(
                 if assertion.kind == Some(AssertionKind::AncestorOverrideSubset) {
                     findings.extend(
                         super::ancestor_override_subset::check_ancestor_override_subset(
-                            root, &rel, &path, sources, &value, assertion,
+                            &rel,
+                            &path,
+                            files,
+                            &value,
+                            assertion,
+                            &mut ancestor_resolver,
                         ),
                     );
                     continue;

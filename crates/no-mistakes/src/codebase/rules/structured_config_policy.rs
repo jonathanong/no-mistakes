@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 
 mod ancestor_override_subset;
 mod equals_file;
+mod path_containment;
 mod scan;
 mod value_assertions;
 mod when;
@@ -61,6 +62,8 @@ pub(crate) struct ValueAssertion {
     pub(crate) overrides_key: String,
     #[serde(default = "default_override_files_key")]
     pub(crate) override_files_key: String,
+    #[serde(default = "default_override_exclude_files_key")]
+    pub(crate) override_exclude_files_key: String,
     #[serde(default = "default_override_rules_key")]
     pub(crate) override_rules_key: String,
 }
@@ -75,6 +78,10 @@ fn default_overrides_key() -> String {
 
 fn default_override_files_key() -> String {
     "files".to_string()
+}
+
+fn default_override_exclude_files_key() -> String {
+    "excludeFiles".to_string()
 }
 
 fn default_override_rules_key() -> String {

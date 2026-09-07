@@ -1,0 +1,3 @@
+{
+  "overrides": [{ "files": ["nested/**/*.ts", "**/*.ts", "**/*.tsx", "nested/specific-file.ts"], "rules": { "union-rule": "error" } }]
+}

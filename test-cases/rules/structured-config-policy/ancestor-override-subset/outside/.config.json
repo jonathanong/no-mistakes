@@ -1,1 +1,1 @@
-{ "extends": "../../../../outside.json" }
+{ "extends": "../../nested-plugins/invalid.json" }

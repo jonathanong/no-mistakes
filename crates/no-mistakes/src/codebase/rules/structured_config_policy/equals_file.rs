@@ -92,14 +92,7 @@ fn values_match(left: &Value, right: &Value, assertion: &ValueAssertion, from_ke
 }
 
 fn contained_in_root(root: &Path, path: &Path) -> bool {
-    if path.strip_prefix(root).is_err() {
-        return false;
-    }
-    match (path.canonicalize(), root.canonicalize()) {
-        (Ok(resolved), Ok(resolved_root)) => resolved.strip_prefix(resolved_root).is_ok(),
-        (Err(_), _) => true,
-        (Ok(resolved), Err(_)) => resolved.strip_prefix(root).is_ok(),
-    }
+    super::path_containment::verify(root, path).unwrap_or(false)
 }
 
 fn finding(file: &str, assertion: &ValueAssertion, message: String) -> RuleFinding {

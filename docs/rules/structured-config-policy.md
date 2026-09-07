@@ -113,6 +113,16 @@ support `boolean`, `positive-number`, `string-array`, `record-of-boolean`,
 `object-shape`, and `ancestor-override-subset`. Array `match` defaults to `all`;
 `when` is optional.
 
+`ancestor-override-subset` follows local `extends` chains and compares each
+ancestor override's effective rules before and after a nested config rebases
+its patterns. It evaluates only tracked candidate files, treats `files` and
+`excludeFiles` as pattern unions, and respects later override precedence.
+Package extends are ignored; malformed local chains, invalid override shapes,
+invalid globs, cycles, missing files, and paths that cannot be proved inside
+the repository are findings. The assertion accepts `extendsKey`,
+`overridesKey`, `overrideFilesKey`, `overrideExcludeFilesKey`, and
+`overrideRulesKey` when a config format uses different field names.
+
 ## Valid example
 
 ```yaml

@@ -1,0 +1,6 @@
+{
+  "overrides": [
+    { "files": ["nested/**/*.ts"], "excludeFiles": ["nested/generated/**"], "rules": { "rule": "first" } },
+    { "files": ["**/*.ts"], "rules": { "rule": "second" } }
+  ]
+}
