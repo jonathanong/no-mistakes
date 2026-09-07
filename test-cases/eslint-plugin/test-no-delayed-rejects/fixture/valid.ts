@@ -16,6 +16,66 @@ export async function immediateCatchCapture() {
   await expect(rejection).resolves.toMatchObject({ status: 403 });
 }
 
+export async function immediateCatchObserver() {
+  const update = startOperation();
+  void update.catch(() => undefined);
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function immediateBlockCatchObserver() {
+  const update = startOperation();
+  void update.catch((error: unknown) => {
+    return error;
+  });
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function immediateThenObserver() {
+  const update = startOperation();
+  void update.then(undefined, () => undefined);
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerDominatesNestedAwait(flag: boolean) {
+  const update = startOperation();
+  void update.catch((error: unknown) => error);
+  if (flag) await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function terminatingBranchDoesNotReachAssertion(skip: boolean) {
+  const update = startOperation();
+  if (skip) {
+    await release();
+    return;
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function mutuallyExclusiveBranches(skip: boolean) {
+  const update = startOperation();
+  if (skip) {
+    await release();
+  } else {
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function mutuallyExclusiveSwitchCases(kind: "wait" | "assert") {
+  const update = startOperation();
+  switch (kind) {
+    case "wait":
+      await release();
+      break;
+    case "assert":
+      await expect(update).rejects.toThrow();
+      break;
+  }
+}
+
 export async function nestedCallbackAwait() {
   const update = startOperation();
   void (async () => {

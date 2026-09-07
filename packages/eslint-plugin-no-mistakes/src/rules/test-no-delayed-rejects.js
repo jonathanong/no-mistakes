@@ -2,6 +2,8 @@
 
 const { rule } = require("../helpers");
 const { findContainingFunction, traverse, unwrapExpression } = require("./async-ast");
+const { canReachMatcher, contains, executesBefore } = require("./test-no-delayed-rejects-flow");
+const { isNonRejectingHandler } = require("./test-no-delayed-rejects-handlers");
 
 const EXPECT_MODULES = new Set(["vitest", "@jest/globals"]);
 
@@ -53,7 +55,18 @@ function expectedIdentifier(rejects, context) {
   if (expectation.arguments.length !== 1 || !isExpectCallee(expectation.callee, context))
     return null;
   const [argument] = expectation.arguments;
-  return argument.type === "Identifier" ? argument : null;
+  const unwrapped = unwrapExpression(argument);
+  return unwrapped.type === "Identifier" ? unwrapped : null;
+}
+
+function matcherCall(rejects) {
+  let current = rejects;
+  while (current.parent?.type === "MemberExpression" && current.parent.object === current) {
+    current = current.parent;
+  }
+  return current.parent?.type === "CallExpression" && current.parent.callee === current
+    ? current.parent
+    : null;
 }
 
 function constDeclarator(identifier, context) {
@@ -75,16 +88,46 @@ function constDeclarator(identifier, context) {
   return declarator;
 }
 
-function hasInterveningAwait(context, declarator, rejects) {
+function isSameConst(identifier, declarator, context) {
+  return identifier.type === "Identifier" && constDeclarator(identifier, context) === declarator;
+}
+
+function isRejectionHandlerCall(node, declarator, context) {
+  if (node.type !== "CallExpression" || node.callee.type !== "MemberExpression") return false;
+  const callee = node.callee;
+  const object = unwrapExpression(callee.object);
+  if (!isSameConst(object, declarator, context)) return false;
+  const property = literalPropertyName(callee);
+  if (property === "catch")
+    return node.arguments.length >= 1 && isNonRejectingHandler(node.arguments[0]);
+  return (
+    property === "then" && node.arguments.length >= 2 && isNonRejectingHandler(node.arguments[1])
+  );
+}
+
+function hasObserverBeforeSuspension(context, functionNode, declarator, suspension) {
+  let found = false;
+  traverse(context, functionNode, (node) => {
+    if (isRejectionHandlerCall(node, declarator, context) && executesBefore(node, suspension)) {
+      found = true;
+    }
+  });
+  return found;
+}
+
+function hasInterveningAwait(context, declarator, matcher) {
   const functionNode = findContainingFunction(declarator);
-  if (!functionNode || functionNode !== findContainingFunction(rejects)) return false;
+  if (!functionNode || functionNode !== findContainingFunction(matcher)) return false;
 
   let found = false;
   traverse(context, functionNode, (node) => {
     if (
       (node.type === "AwaitExpression" || (node.type === "ForOfStatement" && node.await)) &&
       node.range[0] >= declarator.init.range[1] &&
-      node.range[1] <= rejects.range[0]
+      node.range[0] < matcher.range[1] &&
+      !contains(node, matcher) &&
+      canReachMatcher(node, matcher, functionNode) &&
+      !hasObserverBeforeSuspension(context, functionNode, declarator, node)
     ) {
       found = true;
     }
@@ -110,7 +153,8 @@ module.exports = rule(
       const identifier = expectedIdentifier(node, context);
       if (!identifier) return;
       const declarator = constDeclarator(identifier, context);
-      if (!declarator || !hasInterveningAwait(context, declarator, node)) return;
+      const call = matcherCall(node);
+      if (!declarator || !call || !hasInterveningAwait(context, declarator, call)) return;
       context.report({ node, messageId: "delayedReject" });
     },
   }),
