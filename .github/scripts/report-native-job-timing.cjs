@@ -51,25 +51,28 @@ function interestingStep(name) {
   );
 }
 
-function workloadStep(name) {
-  return (
-    interestingStep(name) ||
-    name === "Run native CLI smoke test" ||
-    name === "Run real N-API API test"
-  );
-}
+const REQUIRED_WORKLOAD_STEP_NAMES = [
+  "Run platform-specific Rust tests",
+  "Build native CLI and N-API addon",
+  "Run native CLI smoke test",
+  "Run real N-API API test",
+];
 
 function compileWorkloadFailed(job) {
-  return (job.steps ?? []).some(
-    (step) =>
-      workloadStep(step.name) && (step.conclusion === "failure" || step.conclusion === "cancelled"),
+  const steps = job.steps ?? [];
+  // `always()` still runs this reporter after a setup failure, which leaves
+  // every required compile/test/smoke/N-API step `skipped`. Treat missing,
+  // skipped, cancelled, or failed required steps as non-comparable. Platform
+  // Defender steps stay optional so a macOS skip does not look like a failure.
+  return !REQUIRED_WORKLOAD_STEP_NAMES.every((name) =>
+    steps.some((step) => step.name === name && step.conclusion === "success"),
   );
 }
 
 function stepDurationMap(job, nowMs) {
   const map = new Map();
   for (const step of job.steps ?? []) {
-    if (!interestingStep(step.name)) {
+    if (!interestingStep(step.name) || step.conclusion === "skipped") {
       continue;
     }
     map.set(step.name, durationSeconds(step.started_at, step.completed_at, nowMs));
@@ -80,7 +83,7 @@ function stepDurationMap(job, nowMs) {
 function comparableEndMs(job, nowMs = Date.now()) {
   let end = null;
   for (const step of job.steps ?? []) {
-    if (!interestingStep(step.name)) {
+    if (!interestingStep(step.name) || step.conclusion === "skipped") {
       continue;
     }
     const completed = parseTimestamp(step.completed_at) ?? nowMs;

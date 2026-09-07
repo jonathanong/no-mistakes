@@ -94,6 +94,39 @@ test("job totals stop at the last compile step, not post-job cleanup", () => {
   assert.equal(comparableDurationSeconds(job, nowMs), 554);
 });
 
+function successfulNativeJob(extraSteps = []) {
+  return {
+    started_at: "2026-09-07T12:33:27Z",
+    steps: [
+      {
+        name: "Run platform-specific Rust tests",
+        started_at: "2026-09-07T12:34:42Z",
+        completed_at: "2026-09-07T12:38:11Z",
+        conclusion: "success",
+      },
+      {
+        name: "Build native CLI and N-API addon",
+        started_at: "2026-09-07T12:38:11Z",
+        completed_at: "2026-09-07T12:42:41Z",
+        conclusion: "success",
+      },
+      {
+        name: "Run native CLI smoke test",
+        started_at: "2026-09-07T12:42:41Z",
+        completed_at: "2026-09-07T12:42:50Z",
+        conclusion: "success",
+      },
+      {
+        name: "Run real N-API API test",
+        started_at: "2026-09-07T12:42:50Z",
+        completed_at: "2026-09-07T12:43:00Z",
+        conclusion: "success",
+      },
+      ...extraSteps,
+    ],
+  };
+}
+
 test("failed compile or test steps suppress the performance delta", () => {
   const failed = {
     started_at: "2026-09-07T12:33:27Z",
@@ -114,4 +147,58 @@ test("failed compile or test steps suppress the performance delta", () => {
     nowMs: Date.parse("2026-09-07T12:50:00Z"),
   });
   assert.match(markdown, /n\/a \(current run failed\)/);
+});
+
+test("skipped required workload steps suppress the performance delta", () => {
+  const skipped = {
+    started_at: "2026-09-07T12:33:27Z",
+    steps: [
+      {
+        name: "Install pnpm dependencies",
+        conclusion: "failure",
+      },
+      {
+        name: "Run platform-specific Rust tests",
+        conclusion: "skipped",
+      },
+      {
+        name: "Build native CLI and N-API addon",
+        conclusion: "skipped",
+      },
+      {
+        name: "Run native CLI smoke test",
+        conclusion: "skipped",
+      },
+      {
+        name: "Run real N-API API test",
+        conclusion: "skipped",
+      },
+    ],
+  };
+  assert.equal(compileWorkloadFailed(skipped), true);
+  const markdown = buildMarkdown({
+    jobName: "Windows x64",
+    afterJob: skipped,
+    beforeJob: successfulNativeJob(),
+    nowMs: Date.parse("2026-09-07T12:50:00Z"),
+  });
+  assert.match(markdown, /n\/a \(current run failed\)/);
+});
+
+test("a skipped Defender step on an otherwise successful job stays comparable", () => {
+  const macos = successfulNativeJob([
+    {
+      name: "Exclude workspace from Microsoft Defender",
+      conclusion: "skipped",
+    },
+  ]);
+  assert.equal(compileWorkloadFailed(macos), false);
+  const markdown = buildMarkdown({
+    jobName: "macOS ARM64",
+    afterJob: macos,
+    beforeJob: successfulNativeJob(),
+    nowMs: Date.parse("2026-09-07T12:50:00Z"),
+  });
+  assert.doesNotMatch(markdown, /n\/a \(current run failed\)/);
+  assert.match(markdown, /\*\*0s\*\*/);
 });
