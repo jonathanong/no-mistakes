@@ -5,6 +5,9 @@ declare function loadExpected(): Promise<unknown>;
 declare function loadHandler(): Promise<(value: void) => void>;
 declare function startOperation(): Promise<void>;
 declare function dangerous(): void;
+declare function acquireLock(): AsyncDisposable;
+declare function consume(...values: unknown[]): void;
+declare const locks: Iterable<AsyncDisposable>;
 declare const maybeRelease: undefined | ((value: Promise<void>) => Promise<void>);
 declare const maybeCoordinator: undefined | { release(value: Promise<void>): Promise<void> };
 
@@ -96,6 +99,169 @@ export async function authorizationRace() {
   await release();
   await release();
   await expect(update).rejects.toMatchObject({ status: 403 });
+}
+
+export async function awaitUsingScopeExitSuspends() {
+  const update = startOperation();
+  {
+    await using _lock = acquireLock();
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function awaitUsingForInitializerExitSuspends() {
+  const update = startOperation();
+  for (await using _lock = acquireLock(); Math.random() > 0.5;) {
+    Math.random();
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function awaitUsingForOfIterationExitSuspends() {
+  const update = startOperation();
+  for (await using _lock of locks) {
+    Math.random();
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function awaitUsingForOfSkippedIterationSuspends(skip: boolean) {
+  const update = startOperation();
+  for (await using _lock of locks) {
+    if (skip) continue;
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function awaitUsingBreakThenEnclosingBackedgeSuspends() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    for (await using _lock of locks) {
+      if (index === 0) break;
+      await expect(update).rejects.toThrow();
+    }
+  }
+}
+
+export async function awaitUsingLabeledBreakThenEnclosingBackedgeSuspends() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    resource: for (await using _lock of locks) {
+      if (index === 0) break resource;
+      await expect(update).rejects.toThrow();
+    }
+  }
+}
+
+export async function awaitUsingBlockLabelBreakThenEnclosingBackedgeSuspends() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    resource: {
+      while (true) {
+        for (await using _lock of locks) {
+          if (index === 0) break resource;
+          await expect(update).rejects.toThrow();
+        }
+      }
+    }
+  }
+}
+
+export async function awaitUsingCaughtThrowThenEnclosingBackedgeSuspends() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    try {
+      for (await using _lock of locks) {
+        if (index === 0) throw new Error("expected");
+        await expect(update).rejects.toThrow();
+      }
+    } catch {
+      Math.random();
+    }
+  }
+}
+
+export async function awaitUsingRethrowThenEnclosingBackedgeSuspends() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    try {
+      try {
+        for (await using _lock of locks) {
+          if (index === 0) throw new Error("inner");
+          await expect(update).rejects.toThrow();
+        }
+      } catch {
+        throw new Error("outer");
+      }
+    } catch {
+      Math.random();
+    }
+  }
+}
+
+export async function awaitUsingCaughtThrowThenBlockAndBackedgeSuspends() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    try {
+      for (await using _lock of locks) {
+        if (index === 0) throw new Error("expected");
+        await expect(update).rejects.toThrow();
+      }
+    } catch {
+      Math.random();
+    }
+    {
+      Math.random();
+    }
+  }
+}
+
+export async function awaitUsingCaughtThrowThenConditionalBackedgeSuspends(flag: boolean) {
+  const update = startOperation();
+  outer: for (let index = 0; index < 2; index += 1) {
+    try {
+      for (await using _lock of locks) {
+        if (index === 0) throw new Error("expected");
+        await expect(update).rejects.toThrow();
+      }
+    } catch {
+      Math.random();
+    }
+    if (flag) continue outer;
+    else return;
+  }
+}
+
+export async function awaitUsingThrowingFinalizerThenEnclosingBackedgeSuspends() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    try {
+      try {
+        for (await using _lock of locks) {
+          if (index === 0) throw new Error("initial");
+          await expect(update).rejects.toThrow();
+        }
+      } finally {
+        throw new Error("outer");
+      }
+    } catch {
+      Math.random();
+    }
+  }
+}
+
+export async function awaitUsingForBodyObserverDoesNotDominateDisposal() {
+  const update = startOperation();
+  for (await using _lock = acquireLock(); false;) {
+    void update.catch(() => void 0);
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function conditionalObserverInEarlierCallArgumentDoesNotDominate(flag: boolean) {
+  const update = startOperation();
+  consume(flag && update.catch(() => void 0), await release());
+  await expect(update).rejects.toThrow();
 }
 
 export async function computedRejects() {

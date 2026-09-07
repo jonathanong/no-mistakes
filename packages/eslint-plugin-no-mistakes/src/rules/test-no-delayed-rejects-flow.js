@@ -4,14 +4,17 @@ const {
   abruptCompletionReachesMatcher,
   alwaysExits,
   breakSkipsMatcher,
+  continueSkipsMatcher,
   caughtThrowCanContinue,
   contains,
 } = require("./test-no-delayed-rejects-abrupt");
+const { finalizerPreventsReach } = require("./test-no-delayed-rejects-finalizers");
 const {
   mayThrow,
   possibleCaughtThrowCanContinue,
   thrownCompletionCanReachMatcher,
 } = require("./test-no-delayed-rejects-transfers");
+const { childExecutesBefore } = require("./test-no-delayed-rejects-order");
 
 function isLoop(node) {
   return (
@@ -60,7 +63,12 @@ function branchesAreExclusive(current, parent, matcher, suspension, functionNode
     const suspensionIndex = current.consequent.findIndex((item) => contains(item, suspension));
     return current.consequent
       .slice(suspensionIndex + 1)
-      .some((item) => item.type === "BreakStatement" || alwaysExits(item));
+      .some(
+        (item) =>
+          item.type === "BreakStatement" ||
+          alwaysExits(item) ||
+          continueSkipsMatcher(item, matcher),
+      );
   }
   return false;
 }
@@ -78,7 +86,9 @@ function canReachMatcher(suspension, matcher, functionNode) {
       return false;
     }
     if (!contains(current, matcher) && breakSkipsMatcher(current, matcher)) return false;
+    if (!contains(current, matcher) && continueSkipsMatcher(current, matcher)) return false;
     const parent = current.parent;
+    if (finalizerPreventsReach(parent, current, matcher)) return false;
     if (branchesAreExclusive(current, parent, matcher, suspension, functionNode)) return false;
     const statements =
       parent?.type === "BlockStatement"
@@ -93,7 +103,10 @@ function canReachMatcher(suspension, matcher, functionNode) {
         const end = matcherIndex === -1 ? statements.length : matcherIndex;
         const following = statements.slice(currentIndex + 1, end);
         const exitIndex = following.findIndex(
-          (statement) => alwaysExits(statement) || breakSkipsMatcher(statement, matcher),
+          (statement) =>
+            alwaysExits(statement) ||
+            breakSkipsMatcher(statement, matcher) ||
+            continueSkipsMatcher(statement, matcher),
         );
         const exit = following[exitIndex];
         const caughtThrow =
@@ -158,7 +171,7 @@ function executesBefore(observer, suspension) {
     let current = observer;
     while (current !== suspension) {
       const parent = current.parent;
-      if (parent !== suspension && isConditionalBoundary(parent, current, observer, suspension)) {
+      if (isConditionalBoundary(parent, current, observer, suspension)) {
         return false;
       }
       current = parent;
@@ -169,6 +182,7 @@ function executesBefore(observer, suspension) {
   let conditional = false;
   while (current.parent) {
     const parent = current.parent;
+    if (!conditional && childExecutesBefore(parent, current, suspension)) return true;
     if ((parent.type === "BlockStatement" || parent.type === "SwitchCase") && !conditional) {
       const suspensionStatement = directChildIn(suspension, parent);
       if (suspensionStatement) {

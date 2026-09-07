@@ -119,49 +119,67 @@ function caughtThrowCanContinue(node, matcher) {
   return false;
 }
 
-function directBreakSkipsMatcher(node, matcher) {
+function isLoop(node) {
+  return (
+    node.type === "WhileStatement" ||
+    node.type === "DoWhileStatement" ||
+    node.type === "ForStatement" ||
+    node.type === "ForInStatement" ||
+    node.type === "ForOfStatement"
+  );
+}
+
+function directJumpSkipsMatcher(node, matcher) {
   let current = node.parent;
   while (true) {
     const isTarget = node.label
       ? current.type === "LabeledStatement" && current.label.name === node.label.name
-      : current.type === "SwitchStatement" ||
-        current.type === "WhileStatement" ||
-        current.type === "DoWhileStatement" ||
-        current.type === "ForStatement" ||
-        current.type === "ForInStatement" ||
-        current.type === "ForOfStatement";
+      : isLoop(current) || (node.type === "BreakStatement" && current.type === "SwitchStatement");
     if (isTarget) return contains(current, matcher);
     current = current.parent;
   }
 }
 
-function breakSkipsMatcher(node, matcher) {
-  if (node.type === "BreakStatement") return directBreakSkipsMatcher(node, matcher);
-  if (node.type === "BlockStatement") {
-    return node.body.some((statement) => breakSkipsMatcher(statement, matcher));
+function jumpSkipsMatcher(node, matcher, type) {
+  if (node.type === type) return directJumpSkipsMatcher(node, matcher);
+  if (node.type === "BlockStatement" || node.type === "SwitchCase") {
+    const statements = node.type === "BlockStatement" ? node.body : node.consequent;
+    return statements.some((statement) => jumpSkipsMatcher(statement, matcher, type));
   }
   if (node.type === "TryStatement") {
-    if (node.finalizer && breakSkipsMatcher(node.finalizer, matcher)) return true;
+    if (node.finalizer && jumpSkipsMatcher(node.finalizer, matcher, type)) return true;
     if (node.finalizer && alwaysExits(node.finalizer)) {
-      return breakSkipsMatcher(node.finalizer, matcher);
+      return jumpSkipsMatcher(node.finalizer, matcher, type);
     }
-    if (breakSkipsMatcher(node.block, matcher)) return true;
+    if (jumpSkipsMatcher(node.block, matcher, type)) return true;
     return Boolean(
-      node.handler && alwaysThrows(node.block) && breakSkipsMatcher(node.handler.body, matcher),
+      node.handler &&
+      alwaysThrows(node.block) &&
+      jumpSkipsMatcher(node.handler.body, matcher, type),
     );
   }
   return Boolean(
     node.type === "IfStatement" &&
     node.alternate &&
-    breakSkipsMatcher(node.consequent, matcher) &&
-    breakSkipsMatcher(node.alternate, matcher),
+    jumpSkipsMatcher(node.consequent, matcher, type) &&
+    jumpSkipsMatcher(node.alternate, matcher, type),
   );
+}
+
+function breakSkipsMatcher(node, matcher) {
+  return jumpSkipsMatcher(node, matcher, "BreakStatement");
+}
+
+function continueSkipsMatcher(node, matcher) {
+  return jumpSkipsMatcher(node, matcher, "ContinueStatement");
 }
 
 module.exports = {
   abruptCompletionReachesMatcher,
   alwaysExits,
+  alwaysThrows,
   breakSkipsMatcher,
+  continueSkipsMatcher,
   caughtThrowCanContinue,
   contains,
 };

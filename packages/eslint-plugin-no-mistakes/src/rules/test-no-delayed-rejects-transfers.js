@@ -1,6 +1,11 @@
 "use strict";
 
-const { alwaysExits, breakSkipsMatcher, contains } = require("./test-no-delayed-rejects-abrupt");
+const {
+  alwaysExits,
+  breakSkipsMatcher,
+  contains,
+  continueSkipsMatcher,
+} = require("./test-no-delayed-rejects-abrupt");
 
 function mayThrow(statement) {
   if (statement.type === "ThrowStatement") return true;
@@ -44,8 +49,11 @@ function possibleCaughtThrowCanContinue(node, matcher) {
     !contains(node, matcher) &&
     !alwaysExits(node.handler.body) &&
     !breakSkipsMatcher(node.handler.body, matcher) &&
+    !continueSkipsMatcher(node.handler.body, matcher) &&
     (!node.finalizer ||
-      (!alwaysExits(node.finalizer) && !breakSkipsMatcher(node.finalizer, matcher))),
+      (!alwaysExits(node.finalizer) &&
+        !breakSkipsMatcher(node.finalizer, matcher) &&
+        !continueSkipsMatcher(node.finalizer, matcher))),
   );
 }
 
@@ -63,7 +71,8 @@ function thrownCompletionCanReachMatcher(origin, matcher) {
       if (
         current !== parent.finalizer &&
         parent.finalizer &&
-        breakSkipsMatcher(parent.finalizer, matcher)
+        (breakSkipsMatcher(parent.finalizer, matcher) ||
+          continueSkipsMatcher(parent.finalizer, matcher))
       ) {
         return false;
       }
@@ -82,6 +91,7 @@ function thrownCompletionCanReachMatcher(origin, matcher) {
       if (parent.handler) {
         if (contains(parent, matcher)) return false;
         if (breakSkipsMatcher(parent.handler.body, matcher)) return false;
+        if (continueSkipsMatcher(parent.handler.body, matcher)) return false;
         if (!alwaysExits(parent.handler.body)) return true;
         if (!mayThrow(parent.handler.body)) return false;
         current = parent;

@@ -10,6 +10,7 @@ const {
 const { canReachMatcher, contains, executesBefore } = require("./test-no-delayed-rejects-flow");
 const { isImmediateObserver } = require("./test-no-delayed-rejects-observers");
 const {
+  awaitUsingScope,
   promiseExistsBeforeInitializerSuspension,
   suspensionOccursBeforeMatcher,
 } = require("./test-no-delayed-rejects-suspensions");
@@ -142,12 +143,13 @@ function hasInterveningAwait(context, declarator, matcher, observerCache) {
 
   let found = false;
   traverse(context, functionNode, (node) => {
+    const suspension = awaitUsingScope(node, matcher) ?? node;
     if (
-      suspensionOccursBeforeMatcher(node, matcher, functionNode) &&
+      (suspension !== node || suspensionOccursBeforeMatcher(node, matcher, functionNode)) &&
       (node.range[0] >= declarator.init.range[1] ||
         promiseExistsBeforeInitializerSuspension(declarator.init, node)) &&
-      canReachMatcher(node, matcher, functionNode) &&
-      !hasObserverBeforeSuspension(observers, node)
+      canReachMatcher(suspension, matcher, functionNode) &&
+      !hasObserverBeforeSuspension(observers, suspension)
     ) {
       found = true;
     }

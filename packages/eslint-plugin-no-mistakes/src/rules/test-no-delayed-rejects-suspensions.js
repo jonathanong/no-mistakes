@@ -2,6 +2,7 @@
 
 const { contains } = require("./test-no-delayed-rejects-flow");
 const { isPromiseChainMember } = require("./test-no-delayed-rejects-chains");
+const { possibleResourceExitBeforeMatcher } = require("./test-no-delayed-rejects-loop-jumps");
 
 function isLoop(node) {
   return (
@@ -53,6 +54,18 @@ function loopBranchesCanReorder(suspension, matcher, functionNode) {
 }
 
 function suspensionOccursBeforeMatcher(node, matcher, functionNode) {
+  if (
+    node.type === "VariableDeclaration" &&
+    node.kind === "await using" &&
+    node.parent.type === "ForOfStatement" &&
+    node.parent.left === node &&
+    contains(node.parent.body, matcher)
+  ) {
+    return (
+      loopBranchesCanReorder(node, matcher, functionNode) ||
+      possibleResourceExitBeforeMatcher(node.parent.body, matcher, node.parent)
+    );
+  }
   let isSuspension = node.type === "AwaitExpression" || node.type === "YieldExpression";
   if (node.type === "ForOfStatement") {
     isSuspension =
@@ -82,4 +95,24 @@ function promiseExistsBeforeInitializerSuspension(initializer, suspension) {
   return false;
 }
 
-module.exports = { promiseExistsBeforeInitializerSuspension, suspensionOccursBeforeMatcher };
+function awaitUsingScope(node, matcher) {
+  if (node.type !== "VariableDeclaration" || node.kind !== "await using") return null;
+  const parent = node.parent;
+  let scope = null;
+  if (parent.type === "ForOfStatement" && parent.left === node) scope = parent.body;
+  else if (parent.type === "ForStatement" && parent.init === node) scope = parent;
+  else {
+    let current = parent;
+    while (current && current.type !== "BlockStatement") {
+      current = current.parent;
+    }
+    scope = current;
+  }
+  return scope && scope.range[1] <= matcher.range[0] ? scope : null;
+}
+
+module.exports = {
+  awaitUsingScope,
+  promiseExistsBeforeInitializerSuspension,
+  suspensionOccursBeforeMatcher,
+};

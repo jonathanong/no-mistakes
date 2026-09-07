@@ -5,6 +5,9 @@ declare function startOperation(): Promise<void>;
 declare const dynamicProperty: string;
 declare const service: { start(handler: unknown): Promise<void> };
 declare function getService(): { start(handler: unknown): Promise<void> };
+declare function consume(...values: unknown[]): void;
+declare function acquireLock(): AsyncDisposable;
+declare const locks: Iterable<AsyncDisposable>;
 declare const maybeCoordinator: undefined | { release(value: Promise<void>): Promise<void> };
 
 export async function noInterveningAwait() {
@@ -147,6 +150,204 @@ export async function observerInLogicalLeftDominatesAwait() {
   await expect(update).rejects.toThrow();
 }
 
+export async function observerInEarlierCallArgumentDominatesAwait() {
+  const update = startOperation();
+  consume(
+    update.catch(() => void 0),
+    await release(),
+  );
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerInEarlierArrayElementDominatesAwait() {
+  const update = startOperation();
+  consume([update.catch(() => void 0), await release()]);
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerInEarlierSequenceEntryDominatesAwait() {
+  const update = startOperation();
+  consume((update.catch(() => void 0), await release()));
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerBeforeAwaitUsingScopeExit() {
+  const update = startOperation();
+  {
+    await using _lock = acquireLock();
+    void update.catch(() => void 0);
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerBeforeAwaitUsingForOfDisposal() {
+  const update = startOperation();
+  for (await using _lock of locks) {
+    void update.catch(() => void 0);
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function matcherBeforeAwaitUsingForOfDisposal() {
+  const update = startOperation();
+  for (await using _lock of locks) {
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function nestedContinueDoesNotExitAwaitUsingIteration(keepSpinning: boolean) {
+  const update = startOperation();
+  for (await using _lock of locks) {
+    while (keepSpinning) continue;
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function breakWithoutEnclosingBackedgeCannotReachMatcher() {
+  const update = startOperation();
+  for (await using _lock of locks) {
+    break;
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function breakExitingEnclosingLoopCannotReachMatcher(flag: boolean) {
+  const update = startOperation();
+  outer: while (flag) {
+    for (await using _lock of locks) {
+      break outer;
+      await expect(update).rejects.toThrow();
+    }
+  }
+}
+
+export async function caughtThrowReturningCannotReachLaterMatcher(flag: boolean) {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    try {
+      for (await using _lock of locks) {
+        if (flag) throw new Error("expected");
+        await expect(update).rejects.toThrow();
+      }
+    } catch {
+      return;
+    }
+  }
+}
+
+export async function caughtThrowInsideResourceScopeDoesNotDispose(flag: boolean) {
+  const update = startOperation();
+  for (await using _lock of locks) {
+    try {
+      if (flag) throw new Error("expected");
+    } catch {
+      Math.random();
+    }
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function caughtThrowBeforeTerminalOuterStatementCannotBackedge() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    try {
+      for (await using _lock of locks) {
+        if (index === 0) throw new Error("expected");
+        await expect(update).rejects.toThrow();
+      }
+    } catch {
+      Math.random();
+    }
+    return;
+  }
+}
+
+export async function caughtThrowBeforeMixedTerminalBranchesCannotBackedge(flag: boolean) {
+  const update = startOperation();
+  outer: for (let index = 0; index < 2; index += 1) {
+    try {
+      for (await using _lock of locks) {
+        if (index === 0) throw new Error("expected");
+        await expect(update).rejects.toThrow();
+      }
+    } catch {
+      Math.random();
+    }
+    if (flag) return;
+    else break outer;
+  }
+}
+
+export async function caughtThrowWithoutEnclosingLoopCannotBackedge(flag: boolean) {
+  const update = startOperation();
+  try {
+    for (await using _lock of locks) {
+      if (flag) throw new Error("expected");
+      await expect(update).rejects.toThrow();
+    }
+  } catch {
+    Math.random();
+  }
+}
+
+export async function caughtThrowBreakingEnclosingLoopCannotReachMatcher() {
+  const update = startOperation();
+  outer: for (;;) {
+    try {
+      for (await using _lock of locks) {
+        throw new Error("expected");
+        await expect(update).rejects.toThrow();
+      }
+    } catch {
+      break outer;
+    }
+  }
+}
+
+export async function throwOverriddenByReturningFinallyCannotReachMatcher(flag: boolean) {
+  const update = startOperation();
+  for (await using _lock of locks) {
+    try {
+      if (flag) throw new Error("expected");
+    } finally {
+      return;
+    }
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function innerThrowingFinallyCannotReachMatcher(flag: boolean) {
+  const update = startOperation();
+  try {
+    for (await using _lock of locks) {
+      try {
+        if (flag) throw new Error("initial");
+      } finally {
+        throw new Error("terminal");
+      }
+      await expect(update).rejects.toThrow();
+    }
+  } catch {
+    Math.random();
+  }
+}
+
+export async function uncaughtThrowCannotReachLaterMatcher(flag: boolean) {
+  const update = startOperation();
+  for (await using _lock of locks) {
+    if (flag) throw new Error("expected");
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function awaitUsingScopeExitAfterConditionalMatcher(flag: boolean) {
+  const update = startOperation();
+  if (flag) await expect(update).rejects.toThrow();
+  {
+    await using _lock = acquireLock();
+  }
+}
+
 export async function observerInSwitchDiscriminantDominatesAwait() {
   const update = startOperation();
   switch (update.catch(() => void 0)) {
@@ -271,6 +472,44 @@ export async function returningInnerFinallyDoesNotReachMatcher() {
     Math.random();
   }
   await expect(update).rejects.toThrow();
+}
+
+export async function enclosingReturningFinallyDoesNotReachMatcher(skip: boolean) {
+  const update = startOperation();
+  if (skip) {
+    try {
+      await release();
+    } finally {
+      return;
+    }
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function enclosingContinuingFinallyDoesNotReachMatcher(flag: boolean) {
+  const update = startOperation();
+  while (flag) {
+    try {
+      await release();
+    } finally {
+      continue;
+    }
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function enclosingLabeledContinueDoesNotReachMatcher(flag: boolean) {
+  const update = startOperation();
+  outer: while (flag) {
+    while (flag) {
+      try {
+        await release();
+      } finally {
+        continue outer;
+      }
+      await expect(update).rejects.toThrow();
+    }
+  }
 }
 
 export async function abruptReturningInnerFinallyDoesNotReachMatcher() {
