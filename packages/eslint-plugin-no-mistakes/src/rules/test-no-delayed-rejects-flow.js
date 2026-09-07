@@ -91,13 +91,13 @@ function canReachMatcher(suspension, matcher, functionNode) {
   return true;
 }
 
-function isConditionalBoundary(node) {
+function isConditionalBoundary(node, child) {
   return (
     node.type === "IfStatement" ||
     node.type === "ConditionalExpression" ||
     node.type === "LogicalExpression" ||
     node.type === "SwitchStatement" ||
-    node.type === "TryStatement" ||
+    (node.type === "TryStatement" && child !== node.finalizer) ||
     isLoop(node)
   );
 }
@@ -139,7 +139,7 @@ function executesBefore(observer, suspension) {
         if (statements.indexOf(current) < statements.indexOf(suspensionStatement)) return true;
       }
     }
-    if (isConditionalBoundary(parent)) conditional = true;
+    if (isConditionalBoundary(parent, current)) conditional = true;
     current = parent;
   }
   return false;

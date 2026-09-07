@@ -27,8 +27,8 @@ export async function immediateCatchObserver() {
 
 export async function immediateBlockCatchObserver() {
   const update = startOperation();
-  void update.catch((error: unknown) => {
-    return error;
+  void update.catch(() => {
+    return undefined;
   });
   await release();
   await expect(update).rejects.toThrow();
@@ -50,7 +50,7 @@ export async function terminalCatchObservesPromiseChain() {
 
 export async function safeContinuationAfterSafeCatch() {
   const update = startOperation();
-  void update.catch((error: unknown) => error).then((value) => value);
+  void update.catch(() => undefined).then(() => undefined);
   await release();
   await expect(update).rejects.toThrow();
 }
@@ -58,36 +58,36 @@ export async function safeContinuationAfterSafeCatch() {
 export async function safeMultiStageContinuation() {
   const update = startOperation();
   void update
-    .catch((error: unknown) => error)
+    .catch(() => undefined)
     .finally(() => undefined)
     .then(() => {
       throw new Error("recovered below");
     })
     .then(
-      (value) => value,
-      (error: unknown) => error,
+      () => undefined,
+      () => undefined,
     )
-    .catch((error: unknown) => error);
+    .catch(() => undefined);
   await release();
   await expect(update).rejects.toThrow();
 }
 
 export async function inertVoidFulfillmentHandler() {
   const update = startOperation();
-  void update.then(void 0, (error: unknown) => error);
+  void update.then(void 0, () => undefined);
   await release();
   await expect(update).rejects.toThrow();
 }
 
 export async function observerAttachedInsideAwait() {
   const update = startOperation();
-  await update.catch((error: unknown) => error);
+  await update.catch(() => undefined);
   await expect(update).rejects.toThrow();
 }
 
 export async function observerDominatesNestedAwait(flag: boolean) {
   const update = startOperation();
-  void update.catch((error: unknown) => error);
+  void update.catch(() => undefined);
   if (flag) await release();
   await expect(update).rejects.toThrow();
 }
@@ -95,9 +95,57 @@ export async function observerDominatesNestedAwait(flag: boolean) {
 export async function observerInUnconditionalNestedBlock() {
   const update = startOperation();
   {
-    void update.catch((error: unknown) => error);
+    void update.catch(() => undefined);
   }
   await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerInFinallyDominatesLaterAwait() {
+  const update = startOperation();
+  try {
+    Math.random();
+  } finally {
+    void update.catch(() => undefined);
+  }
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function exitingTryDoesNotReachMatcher() {
+  const update = startOperation();
+  await release();
+  try {
+    return;
+  } finally {
+    Math.random();
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function returningTryWithCatchDoesNotReachMatcher() {
+  const update = startOperation();
+  await release();
+  try {
+    return;
+  } catch {
+    Math.random();
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function nestedReturningTryDoesNotReachMatcher() {
+  const update = startOperation();
+  await release();
+  try {
+    try {
+      return;
+    } finally {
+      Math.random();
+    }
+  } catch {
+    Math.random();
+  }
   await expect(update).rejects.toThrow();
 }
 

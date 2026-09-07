@@ -2,12 +2,11 @@
 
 const { unwrapExpression } = require("./async-ast");
 
-function isSafeValue(node, parameter) {
+function isSafeValue(node) {
   const unwrapped = unwrapExpression(node);
   if (
     unwrapped.type === "Literal" ||
-    (unwrapped.type === "Identifier" &&
-      (unwrapped.name === "undefined" || unwrapped.name === parameter))
+    (unwrapped.type === "Identifier" && unwrapped.name === "undefined")
   ) {
     return true;
   }
@@ -27,14 +26,13 @@ function isNonRejectingHandler(argument) {
   if (handler.params.length > 1 || handler.params.some((item) => item.type !== "Identifier")) {
     return false;
   }
-  const parameter = handler.params[0]?.name ?? null;
-  if (handler.body.type !== "BlockStatement") return isSafeValue(handler.body, parameter);
+  if (handler.body.type !== "BlockStatement") return isSafeValue(handler.body);
   if (handler.body.body.length === 0) return true;
   if (handler.body.body.length !== 1 || handler.body.body[0].type !== "ReturnStatement") {
     return false;
   }
   const returned = handler.body.body[0].argument;
-  return !returned || isSafeValue(returned, parameter);
+  return !returned || isSafeValue(returned);
 }
 
 function isAbsentHandler(argument) {

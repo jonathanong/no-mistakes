@@ -210,6 +210,13 @@ export async function absentCatchHandler() {
   await expect(update).rejects.toThrow();
 }
 
+export async function rejectionReasonThenableCanRejectChild() {
+  const update = startOperation();
+  void update.catch((reason: unknown) => reason);
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
 export async function rethrowingCatchCreatesUnhandledChild() {
   const update = startOperation();
   void update.catch((error: unknown) => {
@@ -316,6 +323,21 @@ export async function innerRethrowReachesOuterCatchAndMatcher() {
       await release();
       throw new Error("inner");
     } catch {
+      throw new Error("outer");
+    }
+  } catch {
+    // Execution continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function throwingInnerFinallyReachesOuterCatchAndMatcher() {
+  const update = startOperation();
+  try {
+    await release();
+    try {
+      Math.random();
+    } finally {
       throw new Error("outer");
     }
   } catch {

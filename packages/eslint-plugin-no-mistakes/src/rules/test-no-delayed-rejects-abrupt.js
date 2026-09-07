@@ -7,6 +7,13 @@ function contains(ancestor, node) {
 function alwaysExits(statement) {
   if (statement.type === "ReturnStatement" || statement.type === "ThrowStatement") return true;
   if (statement.type === "BlockStatement") return statement.body.some(alwaysExits);
+  if (statement.type === "TryStatement") {
+    if (statement.finalizer && alwaysExits(statement.finalizer)) return true;
+    if (!alwaysExits(statement.block)) return false;
+    return (
+      !statement.handler || alwaysReturns(statement.block) || alwaysExits(statement.handler.body)
+    );
+  }
   return (
     statement.type === "IfStatement" &&
     statement.alternate &&
@@ -15,11 +22,42 @@ function alwaysExits(statement) {
   );
 }
 
+function alwaysReturns(statement) {
+  if (statement.type === "ReturnStatement") return true;
+  if (statement.type === "BlockStatement") {
+    const exit = statement.body.find(alwaysExits);
+    return Boolean(exit && alwaysReturns(exit));
+  }
+  if (statement.type === "TryStatement") {
+    if (statement.finalizer && alwaysExits(statement.finalizer)) {
+      return alwaysReturns(statement.finalizer);
+    }
+    if (alwaysReturns(statement.block)) return true;
+    return Boolean(
+      statement.handler && alwaysExits(statement.block) && alwaysReturns(statement.handler.body),
+    );
+  }
+  return (
+    statement.type === "IfStatement" &&
+    statement.alternate &&
+    alwaysReturns(statement.consequent) &&
+    alwaysReturns(statement.alternate)
+  );
+}
+
 function alwaysThrows(statement) {
   if (statement.type === "ThrowStatement") return true;
   if (statement.type === "BlockStatement") {
     const exit = statement.body.find(alwaysExits);
     return Boolean(exit && alwaysThrows(exit));
+  }
+  if (statement.type === "TryStatement") {
+    if (statement.finalizer && alwaysExits(statement.finalizer)) {
+      return alwaysThrows(statement.finalizer);
+    }
+    return (
+      alwaysThrows(statement.block) && (!statement.handler || alwaysThrows(statement.handler.body))
+    );
   }
   return (
     statement.type === "IfStatement" &&
