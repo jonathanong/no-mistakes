@@ -101,15 +101,23 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   assert.ok(nativeJob, "ci.yml must define native-tests");
   const body = nativeJob[0];
 
+  // Bash `\` continuations are one argv to cargo; a newline-limited regex
+  // would miss `--all-features` on the next physical line.
+  const unfoldedNativeJob = body.replace(/\\\r?\n[ \t]*/g, " ");
   assert.doesNotMatch(
-    body,
+    unfoldedNativeJob,
     /cargo test\b[^\r\n]*--workspace\b/,
     "native jobs must not compile or run the Linux full suite",
   );
   assert.match(
     body,
-    /cargo test --locked -p no-mistakes --lib --all-features/,
+    /cargo test --locked -p no-mistakes --lib/,
     "macOS native jobs must compile only the no-mistakes lib tests",
+  );
+  assert.doesNotMatch(
+    unfoldedNativeJob,
+    /cargo test\b[^\r\n]*--all-features\b/,
+    "native jobs must not pass --all-features to cargo test, including across bash line continuations",
   );
   assert.match(
     body,
