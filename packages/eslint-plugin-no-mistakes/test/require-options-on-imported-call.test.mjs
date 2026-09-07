@@ -181,6 +181,38 @@ validateUrl!(url);
       "missingOptions",
     ]);
   });
+
+  it("treats imported require bindings as shadowed", () => {
+    const code = `import require from "loader";
+const { validateUrl } = require("ssrf-guard/node");
+validateUrl(url);
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "import-require.ts"), []);
+  });
+
+  it("pre-registers nested CommonJS declarations used by earlier closures", () => {
+    const code = `const run = () => validateUrl(url);
+const { validateUrl } = require("ssrf-guard/node");
+run();
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "nested-cjs.ts"), ["missingOptions"]);
+  });
+
+  it("matches named default import spellings by local name", () => {
+    const code = `import { default as validateUrl } from "ssrf-guard/node";
+validateUrl(url);
+validateUrl(url, { timeoutMs: 1 });
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "default-named.ts"), ["missingOptions"]);
+  });
+
+  it("ignores reassigned CommonJS bindings", () => {
+    const code = `let checkUrl = require("ssrf-guard/node").validateUrl;
+checkUrl = localCheckUrl;
+checkUrl(url);
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "reassigned.ts"), []);
+  });
 });
 
 describe("require-options-on-imported-call helpers", () => {

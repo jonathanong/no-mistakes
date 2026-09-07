@@ -4,8 +4,6 @@ const { unwrapExpression } = require("./async-ast");
 const { compileTargets, matchesAny, targetMatches } = require("./async-patterns");
 const { propertyName } = require("./module-mock-helpers");
 
-const LOCAL_REQUIRE_DEFS = new Set(["Parameter", "Variable", "CatchClause", "FunctionName"]);
-
 function findVariable(scope, name) {
   while (scope) {
     const variable = scope.variables.find((candidate) => candidate.name === name);
@@ -24,18 +22,22 @@ function importSpecifierName(specifier) {
   return imported.type === "Literal" ? String(imported.value) : imported.name;
 }
 
+function isLocalRequire(id, context) {
+  const variable = resolveVariable(id, context);
+  return Boolean(variable?.defs.some((def) => def.type && def.type !== "ImplicitGlobalVariable"));
+}
+
 function requireSource(node, context) {
   const expression = unwrapExpression(node);
   if (
     expression?.type !== "CallExpression" ||
     expression.callee.type !== "Identifier" ||
     expression.callee.name !== "require" ||
-    typeof expression.arguments[0]?.value !== "string"
+    typeof expression.arguments[0]?.value !== "string" ||
+    isLocalRequire(expression.callee, context)
   ) {
     return null;
   }
-  const variable = resolveVariable(expression.callee, context);
-  if (variable?.defs.some((def) => LOCAL_REQUIRE_DEFS.has(def.type))) return null;
   return expression.arguments[0].value;
 }
 
@@ -70,6 +72,7 @@ function createTargetMatcher(context, optionKey = "targets") {
   }
 
   function recordRequireDeclarator(node) {
+    if (node.parent?.type !== "VariableDeclaration" || node.parent.kind !== "const") return;
     const source = requireSource(node.init, context);
     if (source) {
       if (node.id.type === "Identifier") {
@@ -100,23 +103,34 @@ function createTargetMatcher(context, optionKey = "targets") {
       } else if (specifier.type === "ImportDefaultSpecifier") {
         recordDirect(specifier.local, source, specifier.local.name);
       } else if (specifier.type === "ImportSpecifier") {
-        recordDirect(specifier.local, source, importSpecifierName(specifier));
+        const imported = importSpecifierName(specifier);
+        recordDirect(
+          specifier.local,
+          source,
+          imported === "default" ? specifier.local.name : imported,
+        );
+      }
+    }
+  }
+
+  function walk(node, visit) {
+    if (!node?.type) return;
+    visit(node);
+    for (const key of context.sourceCode.visitorKeys[node.type] || []) {
+      const value = node[key];
+      if (Array.isArray(value)) {
+        for (const child of value) walk(child, visit);
+      } else {
+        walk(value, visit);
       }
     }
   }
 
   function recordProgram(node) {
-    for (const statement of node.body) {
-      if (statement.type === "ImportDeclaration") recordImportDeclaration(statement);
-      const declarations =
-        statement.type === "VariableDeclaration"
-          ? statement.declarations
-          : statement.type === "ExportNamedDeclaration" &&
-              statement.declaration?.type === "VariableDeclaration"
-            ? statement.declaration.declarations
-            : [];
-      for (const declaration of declarations) recordRequireDeclarator(declaration);
-    }
+    walk(node, (child) => {
+      if (child.type === "ImportDeclaration") recordImportDeclaration(child);
+      else if (child.type === "VariableDeclarator") recordRequireDeclarator(child);
+    });
   }
 
   function resolveDirectTarget(node) {

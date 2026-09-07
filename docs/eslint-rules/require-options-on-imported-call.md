@@ -38,8 +38,10 @@ await checkUrl(url, { timeoutMs: DNS_TIMEOUT_MS, ...rest });
   - `requiredProperties`: property names that must be statically visible.
   - optional `propertyMatch`: `"any"` (default) or `"all"`.
 
-Default imports match the local binding name. The rule does not follow
-`const alias = imported` or injected members such as `deps.validateUrl()`.
+Default imports match the local binding name, including
+`import { default as local }`. CommonJS provenance is limited to `const`
+bindings. The rule does not follow `const alias = imported` or injected
+members such as `deps.validateUrl()`.
 
 ## Fix
 
