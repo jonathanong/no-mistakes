@@ -1,6 +1,4 @@
 const assert = require("node:assert/strict");
-const fs = require("node:fs");
-const path = require("node:path");
 const {
   buildMarkdown,
   commentMarker,
@@ -238,13 +236,4 @@ test("a skipped Defender step on an otherwise successful job stays comparable", 
   });
   assert.doesNotMatch(markdown, /n\/a \(current run failed\)/);
   assert.match(markdown, /\*\*0s\*\*/);
-});
-
-test("exact-SHA baseline lookup is restricted to push runs", () => {
-  const source = fs.readFileSync(
-    path.join(__dirname, "../../.github/scripts/report-native-job-timing.cjs"),
-    "utf8",
-  );
-  const shaLookup = source.slice(source.indexOf("const shaRuns"), source.indexOf("const branchRuns"));
-  assert.match(shaLookup, /"--event",\s*"push"/);
 });

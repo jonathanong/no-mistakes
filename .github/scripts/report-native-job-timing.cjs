@@ -189,8 +189,6 @@ async function findBeforeJob({ repository, workflow, jobName, baseSha, baseRef }
     workflow,
     "--commit",
     baseSha,
-    "--event",
-    "push",
     "--status",
     "success",
     "--json",
