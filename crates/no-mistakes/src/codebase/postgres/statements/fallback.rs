@@ -54,16 +54,23 @@ fn skip_block_comment(chars: &[char], mut index: usize, out: &mut String) -> usi
     out.push(' ');
     out.push(' ');
     index += 2;
-    while index + 1 < chars.len() && !(chars[index] == '*' && chars[index + 1] == '/') {
+    let mut depth = 1i32;
+    while index < chars.len() && depth > 0 {
+        if chars[index] == '/' && chars.get(index + 1) == Some(&'*') {
+            out.push(' ');
+            out.push(' ');
+            index += 2;
+            depth += 1;
+            continue;
+        }
+        if chars[index] == '*' && chars.get(index + 1) == Some(&'/') {
+            out.push(' ');
+            out.push(' ');
+            index += 2;
+            depth -= 1;
+            continue;
+        }
         out.push(if chars[index] == '\n' { '\n' } else { ' ' });
-        index += 1;
-    }
-    if index < chars.len() {
-        out.push(' ');
-        index += 1;
-    }
-    if index < chars.len() {
-        out.push(' ');
         index += 1;
     }
     index

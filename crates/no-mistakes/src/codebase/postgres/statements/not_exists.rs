@@ -66,9 +66,26 @@ fn match_guard(text: &str, index: usize) -> bool {
         return false;
     }
     let rest = &text[index..];
-    ["where not exists", "and not exists"]
-        .into_iter()
-        .any(|prefix| rest.starts_with(prefix) && ident_boundary(rest, prefix.len()))
+    ["where", "and"].into_iter().any(|first| {
+        if !rest.starts_with(first) || !ident_boundary(rest, first.len()) {
+            return false;
+        }
+        let Some(after_first) = skip_sql_space(&rest[first.len()..]) else {
+            return false;
+        };
+        if !after_first.starts_with("not") || !ident_boundary(after_first, 3) {
+            return false;
+        }
+        let Some(after_not) = skip_sql_space(&after_first[3..]) else {
+            return false;
+        };
+        after_not.starts_with("exists") && ident_boundary(after_not, 6)
+    })
+}
+
+fn skip_sql_space(text: &str) -> Option<&str> {
+    let trimmed = text.trim_start_matches(|c: char| c.is_ascii_whitespace());
+    (trimmed.len() < text.len()).then_some(trimmed)
 }
 
 fn token_start(text: &str, index: usize) -> bool {

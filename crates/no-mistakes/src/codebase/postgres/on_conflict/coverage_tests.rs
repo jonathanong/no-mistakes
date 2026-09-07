@@ -119,3 +119,26 @@ fn generated_self_assignment_of_source_is_safe() {
     }];
     assert!(judge_file(&file, &catalog(&schema)).is_empty());
 }
+
+#[test]
+fn guarded_select_still_rejects_statement_insert_triggers() {
+    let file = extract_sql_statement_facts(
+        "INSERT INTO items (id) SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM items WHERE id = 1);",
+    );
+    let triggers = extract_sql_statement_facts(
+        "CREATE TRIGGER t AFTER INSERT ON items EXECUTE FUNCTION audit();",
+    )
+    .triggers;
+    let mut options = catalog(&[]);
+    options.triggers = &triggers;
+    let found = judge_file(&file, &options);
+    assert!(
+        found
+            .iter()
+            .any(|(_, message)| message.contains("statement-level")),
+        "{found:?}"
+    );
+    let replay_safe = ["audit".to_string()];
+    options.replay_safe = &replay_safe;
+    assert!(judge_file(&file, &options).is_empty());
+}

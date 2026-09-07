@@ -60,7 +60,11 @@ pub fn judge_file(file: &SqlStatementFileFacts, catalog: &Catalog<'_>) -> Vec<(u
 
 fn judge_insert(insert: &SqlInsertFact, catalog: &Catalog<'_>) -> Option<String> {
     if insert.guarded_select {
-        return None;
+        return if catalog.check_triggers {
+            trigger::judge_guarded_select(insert, catalog)
+        } else {
+            None
+        };
     }
     let Some(conflict) = &insert.on_conflict else {
         return Some("INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS".into());

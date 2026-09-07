@@ -107,5 +107,16 @@ fn top_level_not_exists_respects_paren_depth_and_token_edges() {
     assert!(super::has_top_level_not_exists_in(
         "AND NOT EXISTS (SELECT 1)"
     ));
+    assert!(super::has_top_level_not_exists_in(
+        "INSERT INTO items (id) SELECT 1 WHERE\nNOT\tEXISTS (SELECT 1)"
+    ));
     assert!(!super::has_top_level_not_exists_in("WHERE NOT EXISTSfoo"));
+}
+
+#[test]
+fn nested_block_comments_do_not_hide_following_insert() {
+    let facts =
+        extract_sql_statement_facts("/* outer /* inner */ ' */ INSERT INTO items (id) VALUES (1);");
+    assert!(facts.insert_keyword_count >= 1, "{facts:?}");
+    assert_eq!(facts.inserts.len(), 1);
 }

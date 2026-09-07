@@ -84,13 +84,24 @@ fn words(sql: &str) -> Vec<Word> {
 
 fn skip_block_comment(bytes: &[u8], mut index: usize, line: &mut usize) -> usize {
     index += 2;
-    while index + 1 < bytes.len() && !(bytes[index] == b'*' && bytes[index + 1] == b'/') {
+    let mut depth = 1i32;
+    while index < bytes.len() && depth > 0 {
+        if bytes[index] == b'/' && bytes.get(index + 1) == Some(&b'*') {
+            index += 2;
+            depth += 1;
+            continue;
+        }
+        if bytes[index] == b'*' && bytes.get(index + 1) == Some(&b'/') {
+            index += 2;
+            depth -= 1;
+            continue;
+        }
         if bytes[index] == b'\n' {
             *line += 1;
         }
         index += 1;
     }
-    index.saturating_add(2).min(bytes.len())
+    index.min(bytes.len())
 }
 
 fn skip_quoted(bytes: &[u8], mut index: usize, quote: u8, line: &mut usize) -> usize {

@@ -4,6 +4,30 @@ use crate::codebase::postgres::statement_facts::{
     SqlTriggerFact, SqlTriggerPeriod,
 };
 
+pub(super) fn judge_guarded_select(
+    insert: &SqlInsertFact,
+    catalog: &Catalog<'_>,
+) -> Option<String> {
+    catalog.triggers.iter().find_map(|trigger| {
+        if !trigger.table.eq_ignore_ascii_case(&insert.table)
+            || trigger.for_each_row
+            || !fires_insert(trigger)
+        {
+            return None;
+        }
+        let allowlisted = catalog
+            .replay_safe
+            .iter()
+            .any(|name| name.eq_ignore_ascii_case(&trigger.function));
+        (!allowlisted).then(|| {
+            format!(
+                "statement-level trigger {} fires on every replay",
+                trigger.function
+            )
+        })
+    })
+}
+
 pub(super) fn judge(
     insert: &SqlInsertFact,
     conflict: &SqlOnConflictFact,
