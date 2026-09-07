@@ -146,7 +146,7 @@ sqlparser AST:
   (`IS DISTINCT FROM EXCLUDED`, `IS NULL AND EXCLUDED IS NOT NULL`), and
   INSERT column value forms from `VALUES` / `SELECT` (or MySQL-style `SET`).
   Wildcards, omitted columns, `DEFAULT VALUES`, and set operations yield no
-  stable form; `DEFAULT` and `CURRENT_TIMESTAMP` identifiers are unstable
+  stable form; `DEFAULT`, `CURRENT_TIMESTAMP`, and `'now'` are unstable
 - `INSERT…SELECT` guarded by a conjunctive `WHERE NOT EXISTS`
 - SELECT FROM/JOIN relation names, predicate SQL, and `EXISTS` set-operation
   facts (`restricted` when every arm has a placeholder or literal bound;

@@ -46,8 +46,7 @@ fn rewritten_by_applicable(
     column: &str,
 ) -> bool {
     catalog.triggers.iter().any(|trigger| {
-        trigger.for_each_row
-            && trigger.table.eq_ignore_ascii_case(table)
+        trigger.table.eq_ignore_ascii_case(table)
             && mutates_proposed_row(trigger, assigned)
             && catalog.trigger_writes.iter().any(|(name, columns)| {
                 name.eq_ignore_ascii_case(&trigger.function)
@@ -60,8 +59,10 @@ fn rewritten_by_applicable(
 
 fn mutates_proposed_row(trigger: &SqlTriggerFact, assigned: &[String]) -> bool {
     fires_update(trigger, assigned)
-        || (matches!(
-            trigger.period,
-            SqlTriggerPeriod::Before | SqlTriggerPeriod::InsteadOf
-        ) && fires_insert(trigger))
+        || (trigger.for_each_row
+            && matches!(
+                trigger.period,
+                SqlTriggerPeriod::Before | SqlTriggerPeriod::InsteadOf
+            )
+            && fires_insert(trigger))
 }

@@ -56,8 +56,30 @@ fn from_value(value: &ValueWithSpan) -> SqlValueForm {
     match &value.value {
         Value::Null => SqlValueForm::Null,
         Value::Placeholder(_) => SqlValueForm::Placeholder,
+        Value::SingleQuotedString(text) | Value::EscapedStringLiteral(text)
+            if is_relative_datetime(text) =>
+        {
+            SqlValueForm::Other
+        }
+        Value::DollarQuotedString(quoted) if is_relative_datetime(&quoted.value) => {
+            SqlValueForm::Other
+        }
         _ => SqlValueForm::Literal,
     }
+}
+
+fn is_relative_datetime(text: &str) -> bool {
+    matches!(
+        text.trim().to_ascii_lowercase().as_str(),
+        "now"
+            | "today"
+            | "tomorrow"
+            | "yesterday"
+            | "epoch"
+            | "infinity"
+            | "-infinity"
+            | "allballs"
+    )
 }
 
 fn compound_form(parts: &[sqlparser::ast::Ident]) -> SqlValueForm {

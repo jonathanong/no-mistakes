@@ -295,6 +295,36 @@ fn insert_default_and_timestamp_idents_are_unstable() {
         "{:#?}",
         timestamp.inserts[0].assignments
     );
+    let relative = extract_sql_statement_facts("INSERT INTO items (id, seen) VALUES (1, 'now');");
+    assert!(
+        relative.inserts[0]
+            .assignments
+            .iter()
+            .any(|assignment| assignment.column == "seen"
+                && assignment.form == SqlValueForm::Other),
+        "{:#?}",
+        relative.inserts[0].assignments
+    );
+    let escaped = extract_sql_statement_facts("INSERT INTO items (id, seen) VALUES (1, E'now');");
+    assert!(
+        escaped.inserts[0]
+            .assignments
+            .iter()
+            .any(|assignment| assignment.column == "seen"
+                && assignment.form == SqlValueForm::Other),
+        "{:#?}",
+        escaped.inserts[0].assignments
+    );
+    let dollar = extract_sql_statement_facts("INSERT INTO items (id, seen) VALUES (1, $$now$$);");
+    assert!(
+        dollar.inserts[0]
+            .assignments
+            .iter()
+            .any(|assignment| assignment.column == "seen"
+                && assignment.form == SqlValueForm::Other),
+        "{:#?}",
+        dollar.inserts[0].assignments
+    );
 }
 
 #[test]

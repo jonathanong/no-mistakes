@@ -81,6 +81,11 @@ fn current_timestamp_ident_is_not_a_noop() {
 }
 
 #[test]
+fn relative_datetime_literal_is_not_a_noop() {
+    assert_refires("INSERT INTO items (id, a, b) VALUES (1, 'x', 'now')");
+}
+
+#[test]
 fn coalesce_volatile_insert_value_is_not_a_noop() {
     assert_refires("INSERT INTO items (id, a, b) VALUES (1, 'x', COALESCE(now(), 'y'))");
 }
