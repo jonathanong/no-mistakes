@@ -305,6 +305,13 @@ and the Mermaid graph renders the Vitest field in the edge label. The optional
 fields preserve compatibility with previously saved plan JSON and are absent
 for ordinary edges.
 
+When `testsWhy()` or an `analyzeProject()` report of type `testsWhy` receives
+`planJson`, the Node facade materializes that document in a private temporary
+directory before calling native code. The directory is removed after success,
+native rejection, or preparation failure. Batched reports wait for every plan
+to finish preparation before returning an error, so a slower sibling cannot
+leave a generated plan directory behind.
+
 `testsImpact()` skips only a failed or unavailable optional Vitest config so a
 native test impact remains available. If Vitest configuration prepared
 successfully, its discovery errors (such as invalid include patterns) reject

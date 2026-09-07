@@ -64,7 +64,6 @@ const jsonApis = createJsonApis({
   symbols: "symbolsJson",
 });
 
-const PLAN_INPUT_REPORTS = new Set(["testsComment", "testsGraph", "testsGraphMermaid"]);
 const CAMELIZE_REPORTS = new Set(["testsPlan", "testsImpact", "testsTargets", "testsGraph"]);
 const acquirePlanningArtifactLock = createPlanningArtifactLock(native);
 
@@ -73,18 +72,7 @@ async function analyzeProject(options = {}) {
   const generatedDirs = [];
   try {
     if (Array.isArray(request.reports)) {
-      request.reports = await Promise.all(
-        request.reports.map(async (report) => {
-          if (report.type === "testsWhy") {
-            const prepared = await planning.prepareWhyPlan(report);
-            if (prepared.generatedDir) generatedDirs.push(prepared.generatedDir);
-            return prepared.request;
-          }
-          return PLAN_INPUT_REPORTS.has(report.type)
-            ? await planning.decamelizePlanOptions(report)
-            : report;
-        }),
-      );
+      request.reports = await planning.prepareAnalyzeProjectReports(request.reports, generatedDirs);
     }
     const result = await jsonApis.analyzeProject(request);
     for (const report of result.reports || []) {
