@@ -177,8 +177,10 @@ fn oversized_deadline_is_rejected() {
     let _serial = deadline_test_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let result =
-        DeadlineGuard::install_for_invocation(Some(Duration::MAX), Some(std::thread::current().id()));
+    let result = DeadlineGuard::install_for_invocation(
+        Some(Duration::MAX),
+        Some(std::thread::current().id()),
+    );
     let Err(error) = result else {
         panic!("an oversized timeout should fail");
     };
@@ -251,7 +253,8 @@ fn command_output_captures_output_with_and_without_deadline() {
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     for timeout in [None, Some(Duration::from_secs(5))] {
         let _guard =
-            DeadlineGuard::install_for_invocation(timeout, Some(std::thread::current().id())).unwrap();
+            DeadlineGuard::install_for_invocation(timeout, Some(std::thread::current().id()))
+                .unwrap();
         let mut command = Command::new("sh");
         command.args([
             "-c",
