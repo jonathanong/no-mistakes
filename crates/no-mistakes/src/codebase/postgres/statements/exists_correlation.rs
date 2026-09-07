@@ -3,11 +3,11 @@
 //! and nested-subquery scopes are intentionally not modeled.
 
 use crate::codebase::postgres::idents::{
-    ident_key, object_name_ident, unwrap_expr, visit_function_args,
+    ident_key, insert_ident, object_name_ident, unwrap_expr, visit_function_args,
 };
 use sqlparser::ast::{
-    Expr, GroupByExpr, Ident, JoinConstraint, JoinOperator, Query, Select, SelectItem, SetExpr,
-    TableFactor, TableFunctionArgs, TableWithJoins,
+    Expr, GroupByExpr, JoinConstraint, JoinOperator, Query, Select, SelectItem,
+    SelectItemQualifiedWildcardKind, SetExpr, TableFactor, TableFunctionArgs, TableWithJoins,
 };
 use std::collections::HashSet;
 
@@ -68,13 +68,6 @@ fn collect_factor_locals(factor: &TableFactor, local: &mut HashSet<String>) {
     }
 }
 
-fn insert_ident(local: &mut HashSet<String>, ident: &Ident) {
-    let key = ident_key(ident);
-    if !key.is_empty() {
-        local.insert(key);
-    }
-}
-
 fn query_refs_outside(query: &Query, local: &HashSet<String>) -> bool {
     query.with.as_ref().is_some_and(|with| {
         with.cte_tables
@@ -102,6 +95,12 @@ fn set_refs_outside(expr: &SetExpr, local: &HashSet<String>) -> bool {
 fn select_refs_outside(select: &Select, local: &HashSet<String>) -> bool {
     select.projection.iter().any(|item| match item {
         SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } => {
+            expr_refs_outside(expr, local)
+        }
+        SelectItem::QualifiedWildcard(SelectItemQualifiedWildcardKind::ObjectName(name), _) => {
+            object_name_ident(name).is_some_and(|ident| !local.contains(&ident_key(ident)))
+        }
+        SelectItem::QualifiedWildcard(SelectItemQualifiedWildcardKind::Expr(expr), _) => {
             expr_refs_outside(expr, local)
         }
         _ => false,

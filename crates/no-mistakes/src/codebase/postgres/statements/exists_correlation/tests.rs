@@ -336,4 +336,12 @@ fn like_in_subquery_table_args_group_by_and_quoted_idents() {
          )",
     );
     assert_eq!(grouped_exists, vec![(false, true)], "{grouped_exists:?}");
+    let wildcard = exists_ops(
+        "SELECT 1 FROM posts WHERE EXISTS (
+            SELECT posts.* FROM topics
+            UNION ALL
+            SELECT posts.* FROM tags
+         )",
+    );
+    assert_eq!(wildcard, vec![(false, true)], "{wildcard:?}");
 }

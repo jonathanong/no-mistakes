@@ -1,4 +1,5 @@
 use sqlparser::ast::Expr;
+use std::collections::HashSet;
 
 /// Lowercased identifiers referenced anywhere under `expr`.
 pub fn collect_ident_names(expr: &Expr) -> Vec<String> {
@@ -88,6 +89,13 @@ pub(crate) fn object_name_ident(
         sqlparser::ast::ObjectNamePart::Identifier(ident) => Some(ident),
         _ => None,
     })
+}
+
+pub(crate) fn insert_ident(local: &mut HashSet<String>, ident: &sqlparser::ast::Ident) {
+    let key = ident_key(ident);
+    if !key.is_empty() {
+        local.insert(key);
+    }
 }
 
 fn collect_idents(expr: &Expr, names: &mut Vec<String>) {
