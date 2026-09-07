@@ -69,6 +69,44 @@ fn skip_dollar(chars: &[char], start: usize, out: &mut String) -> Option<usize> 
     Some(chars.len())
 }
 
+/// Replace `--` and `/* */` comments with spaces while keeping newlines so
+/// later keyword scans still line up with the original source.
+pub fn mask_comments(sql: &str) -> String {
+    let chars: Vec<char> = sql.chars().collect();
+    let mut out = String::with_capacity(sql.len());
+    let mut index = 0usize;
+    while index < chars.len() {
+        if chars[index] == '-' && chars.get(index + 1) == Some(&'-') {
+            while index < chars.len() && chars[index] != '\n' {
+                out.push(' ');
+                index += 1;
+            }
+            continue;
+        }
+        if chars[index] == '/' && chars.get(index + 1) == Some(&'*') {
+            out.push(' ');
+            out.push(' ');
+            index += 2;
+            while index + 1 < chars.len() && !(chars[index] == '*' && chars[index + 1] == '/') {
+                out.push(if chars[index] == '\n' { '\n' } else { ' ' });
+                index += 1;
+            }
+            if index < chars.len() {
+                out.push(' ');
+                index += 1;
+            }
+            if index < chars.len() {
+                out.push(' ');
+                index += 1;
+            }
+            continue;
+        }
+        out.push(chars[index]);
+        index += 1;
+    }
+    out
+}
+
 pub fn insert_keyword_count(masked: &str) -> usize {
     let lower = masked.to_ascii_lowercase();
     let mut count = 0usize;

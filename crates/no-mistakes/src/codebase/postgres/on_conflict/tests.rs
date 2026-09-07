@@ -85,6 +85,18 @@ fn matching_self_assignment_is_convergent() {
 }
 
 #[test]
+fn null_arbiter_assignment_is_unsafe() {
+    let found =
+        messages("INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO UPDATE SET id = NULL;");
+    assert!(
+        found
+            .iter()
+            .any(|message| message.contains("arbiter column")),
+        "{found:?}"
+    );
+}
+
+#[test]
 fn volatile_assignment_is_unsafe() {
     let found = messages(
         "INSERT INTO items (id, seen) VALUES (1, now())

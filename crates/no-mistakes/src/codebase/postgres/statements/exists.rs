@@ -1,5 +1,6 @@
 use super::SqlExistsSetOpFact;
-use sqlparser::ast::{Expr, Query, SetExpr, Value, ValueWithSpan};
+use crate::codebase::postgres::idents::unwrap_expr;
+use sqlparser::ast::{BinaryOperator, Expr, Query, SetExpr, Value, ValueWithSpan};
 
 pub(super) fn collect_exists(expr: Option<&Expr>, out: &mut Vec<SqlExistsSetOpFact>) {
     let Some(expr) = expr else {
@@ -57,15 +58,32 @@ fn set_expr_restricted(expr: &SetExpr) -> bool {
 }
 
 fn expr_is_restricted(expr: &Expr) -> bool {
-    match expr {
-        Expr::BinaryOp { left, right, .. } => {
-            is_const_or_placeholder(left)
-                || is_const_or_placeholder(right)
-                || expr_is_restricted(left)
-                || expr_is_restricted(right)
-        }
-        Expr::Nested(inner) => expr_is_restricted(inner),
-        _ => is_const_or_placeholder(expr),
+    match unwrap_expr(expr) {
+        Expr::BinaryOp {
+            left,
+            op: BinaryOperator::And,
+            right,
+        } => expr_is_restricted(left) || expr_is_restricted(right),
+        Expr::BinaryOp {
+            left,
+            op: BinaryOperator::Or,
+            right,
+        } => expr_is_restricted(left) && expr_is_restricted(right),
+        Expr::BinaryOp { left, right, .. } => column_bound_to_const(left, right),
+        _ => false,
+    }
+}
+
+fn column_bound_to_const(left: &Expr, right: &Expr) -> bool {
+    (is_relation_column(left) && is_const_or_placeholder(right))
+        || (is_relation_column(right) && is_const_or_placeholder(left))
+}
+
+fn is_relation_column(expr: &Expr) -> bool {
+    match unwrap_expr(expr) {
+        Expr::Identifier(ident) => !super::value::is_placeholder_ident(&ident.value),
+        Expr::CompoundIdentifier(_) => true,
+        _ => false,
     }
 }
 

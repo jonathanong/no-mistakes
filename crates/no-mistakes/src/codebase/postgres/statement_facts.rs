@@ -10,6 +10,7 @@ pub struct SqlStatementFileFacts {
     pub parse_failed: bool,
     pub insert_keyword_count: usize,
     pub has_top_level_not_exists: bool,
+    pub origin_line: usize,
 }
 
 /// One executed `INSERT` recovered from PostgreSQL SQL.

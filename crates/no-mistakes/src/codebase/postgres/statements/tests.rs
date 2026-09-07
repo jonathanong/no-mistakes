@@ -90,6 +90,50 @@ fn trigger_line_skips_comment_keywords() {
 }
 
 #[test]
+fn omitted_for_each_is_statement_level() {
+    let facts =
+        extract_sql_statement_facts("CREATE TRIGGER t AFTER INSERT ON items EXECUTE FUNCTION f();");
+    assert_eq!(facts.triggers.len(), 1);
+    assert!(!facts.triggers[0].for_each_row);
+}
+
+#[test]
+fn comment_not_exists_is_not_a_top_level_guard() {
+    let facts = extract_sql_statement_facts(
+        "-- WHERE NOT EXISTS (SELECT 1)\nINSERT INTO items (id) VALUES (1);",
+    );
+    assert!(!facts.has_top_level_not_exists);
+}
+
+#[test]
+fn identifier_prefix_is_not_a_not_exists_guard() {
+    assert!(!super::has_top_level_not_exists_in(
+        "SELECT 1 FROM foowhere not exists (SELECT 1)"
+    ));
+}
+
+#[test]
+fn exists_tautology_is_not_restricted() {
+    let facts = extract_sql_statement_facts(
+        "SELECT 1 WHERE EXISTS (SELECT 1 FROM t WHERE 1 = 1 UNION ALL SELECT 1 FROM t WHERE id = 1);",
+    );
+    assert!(facts.selects.iter().any(|select| select
+        .exists_set_operations
+        .iter()
+        .any(|exists| !exists.restricted)));
+}
+
+#[test]
+fn derived_table_selects_are_collected() {
+    let facts =
+        extract_sql_statement_facts("SELECT * FROM (SELECT id FROM items WHERE id = 1) AS t");
+    assert!(facts
+        .selects
+        .iter()
+        .any(|select| select.tables.iter().any(|table| table == "items")));
+}
+
+#[test]
 fn exists_union_is_unrestricted() {
     let sql = std::fs::read_to_string(
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))

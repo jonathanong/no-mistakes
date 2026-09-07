@@ -26,7 +26,7 @@ pub fn judge_file(file: &SqlStatementFileFacts, catalog: &Catalog<'_>) -> Vec<(u
     let mut findings = Vec::new();
     if file.parse_failed && file.insert_keyword_count > 1 && file.inserts.is_empty() {
         findings.push((
-            1,
+            file.origin_line.max(1),
             "unparseable fragment carries more than one INSERT; hoist each statement".to_string(),
         ));
         return findings;
@@ -35,7 +35,10 @@ pub fn judge_file(file: &SqlStatementFileFacts, catalog: &Catalog<'_>) -> Vec<(u
         if file.has_top_level_not_exists {
             return findings;
         }
-        findings.push((1, "INSERT could not be proven replay-safe".to_string()));
+        findings.push((
+            file.origin_line.max(1),
+            "INSERT could not be proven replay-safe".to_string(),
+        ));
         return findings;
     }
     for insert in &file.inserts {

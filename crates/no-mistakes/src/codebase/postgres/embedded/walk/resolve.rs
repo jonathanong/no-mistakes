@@ -119,6 +119,10 @@ pub(super) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
         visitor.mark_dynamic(ident.name.as_str());
         return;
     };
+    if visitor.control_depth > 0 {
+        visitor.mark_dynamic(ident.name.as_str());
+        return;
+    }
     for scope in visitor.scopes.iter_mut().rev() {
         if let Some(binding) = scope.get_mut(ident.name.as_str()) {
             match (&binding.sql, binding.kind) {

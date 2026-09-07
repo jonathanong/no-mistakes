@@ -55,6 +55,29 @@ fn walk_child_exprs(expr: &Expr, names: &mut Vec<String>) {
                 collect_idents(else_result, names);
             }
         }
+        Expr::IsNull(inner)
+        | Expr::IsNotNull(inner)
+        | Expr::IsTrue(inner)
+        | Expr::IsFalse(inner) => {
+            collect_idents(inner, names);
+        }
+        Expr::IsDistinctFrom(left, right) | Expr::IsNotDistinctFrom(left, right) => {
+            collect_idents(left, names);
+            collect_idents(right, names);
+        }
+        Expr::Between {
+            expr, low, high, ..
+        } => {
+            collect_idents(expr, names);
+            collect_idents(low, names);
+            collect_idents(high, names);
+        }
+        Expr::InList { expr, list, .. } => {
+            collect_idents(expr, names);
+            for item in list {
+                collect_idents(item, names);
+            }
+        }
         _ => {}
     }
 }

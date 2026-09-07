@@ -19,7 +19,7 @@ use sqlparser::ast::Statement;
 
 /// Extract INSERT/SELECT/trigger facts from one SQL source.
 pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
-    let masked = fallback::mask_quoted_sql(sql);
+    let masked = fallback::mask_comments(&fallback::mask_quoted_sql(sql));
     let insert_keyword_count = fallback::insert_keyword_count(&masked);
     let parse_failed = parse_postgres_sql(sql).is_err();
     let statements = parse_postgres_sql_lenient(sql);
@@ -51,6 +51,7 @@ pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
         parse_failed,
         insert_keyword_count,
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),
+        origin_line: 0,
     }
 }
 
@@ -79,7 +80,9 @@ fn collect_one(
 }
 
 pub fn has_top_level_not_exists_in(sql: &str) -> bool {
-    not_exists::has_top_level_conjunctive_not_exists(&fallback::mask_quoted_sql(sql))
+    not_exists::has_top_level_conjunctive_not_exists(&fallback::mask_comments(
+        &fallback::mask_quoted_sql(sql),
+    ))
 }
 
 #[cfg(test)]

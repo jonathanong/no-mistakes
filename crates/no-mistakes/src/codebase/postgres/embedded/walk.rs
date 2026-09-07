@@ -26,6 +26,7 @@ pub(super) fn collect_calls(
         bindings,
         scopes: Vec::new(),
         calls: Vec::new(),
+        control_depth: 0,
     };
     visitor.visit_program(program);
     visitor.calls
@@ -36,6 +37,7 @@ struct ScopeVisitor<'a> {
     bindings: &'a HashSet<String>,
     scopes: Vec<HashMap<String, BindingState>>,
     calls: Vec<EmbeddedSqlCall>,
+    control_depth: usize,
 }
 
 impl ScopeVisitor<'_> {
@@ -81,6 +83,12 @@ impl ScopeVisitor<'_> {
                 return;
             }
         }
+    }
+
+    fn with_control_flow(&mut self, walk: impl FnOnce(&mut Self)) {
+        self.control_depth += 1;
+        walk(self);
+        self.control_depth = self.control_depth.saturating_sub(1);
     }
 }
 
@@ -134,6 +142,30 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
             self.calls.push(resolve::executor_call(self, call, callee));
         }
         walk::walk_call_expression(self, call);
+    }
+
+    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) {
+        self.with_control_flow(|visitor| walk::walk_if_statement(visitor, statement));
+    }
+
+    fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
+        self.with_control_flow(|visitor| walk::walk_for_statement(visitor, statement));
+    }
+
+    fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {
+        self.with_control_flow(|visitor| walk::walk_for_in_statement(visitor, statement));
+    }
+
+    fn visit_for_of_statement(&mut self, statement: &oxc_ast::ast::ForOfStatement<'a>) {
+        self.with_control_flow(|visitor| walk::walk_for_of_statement(visitor, statement));
+    }
+
+    fn visit_while_statement(&mut self, statement: &oxc_ast::ast::WhileStatement<'a>) {
+        self.with_control_flow(|visitor| walk::walk_while_statement(visitor, statement));
+    }
+
+    fn visit_do_while_statement(&mut self, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
+        self.with_control_flow(|visitor| walk::walk_do_while_statement(visitor, statement));
     }
 }
 

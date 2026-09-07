@@ -29,7 +29,6 @@ fn from_trigger(sql: &str, trigger: &CreateTrigger, n: usize) -> SqlTriggerFact 
             trigger.trigger_object,
             Some(TriggerObjectKind::ForEach(TriggerObject::Row))
                 | Some(TriggerObjectKind::For(TriggerObject::Row))
-                | None
         ),
         events: trigger.events.iter().map(from_event).collect(),
         line: super::lines::nth_keyword_pair_line(sql, "create", "trigger", n),

@@ -374,3 +374,11 @@ fn identity_generated_columns_are_recorded() {
                 |constraint| constraint.contains("IDENTITY") || constraint.contains("PRIMARY")
             ))));
 }
+
+#[test]
+fn generated_is_null_collects_the_source_column() {
+    let tables = extract_create_table_metadata(
+        "CREATE TABLE t (id int, flag boolean GENERATED ALWAYS AS (id IS NULL) STORED);",
+    );
+    assert_eq!(tables[0].columns[1].generated_source_columns, ["id"]);
+}

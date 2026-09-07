@@ -50,6 +50,7 @@ fn push_select(sql: &str, select: &Select, out: &mut Vec<SqlSelectFact>) {
             }
         }
     }
+    collect_derived_queries(sql, &select.from, out);
     if tables.is_empty() && exists_set_operations.is_empty() {
         return;
     }
@@ -73,6 +74,21 @@ fn table_names(from: &[TableWithJoins]) -> Vec<String> {
         }
     }
     names
+}
+
+fn collect_derived_queries(sql: &str, from: &[TableWithJoins], out: &mut Vec<SqlSelectFact>) {
+    for table in from {
+        collect_derived_factor(sql, &table.relation, out);
+        for join in &table.joins {
+            collect_derived_factor(sql, &join.relation, out);
+        }
+    }
+}
+
+fn collect_derived_factor(sql: &str, table: &TableFactor, out: &mut Vec<SqlSelectFact>) {
+    if let TableFactor::Derived { subquery, .. } = table {
+        collect_query(sql, subquery, out);
+    }
 }
 
 fn push_table(table: &TableFactor, names: &mut Vec<String>) {

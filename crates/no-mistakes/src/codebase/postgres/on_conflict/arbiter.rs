@@ -1,6 +1,6 @@
 use super::{form_is_excluded, form_is_self};
 use crate::codebase::postgres::statement_facts::{
-    SqlConflictArbiter, SqlInsertFact, SqlOnConflictFact, SqlValueForm,
+    SqlConflictArbiter, SqlInsertFact, SqlOnConflictFact,
 };
 
 pub(super) fn judge(_insert: &SqlInsertFact, conflict: &SqlOnConflictFact) -> Option<String> {
@@ -12,7 +12,6 @@ pub(super) fn judge(_insert: &SqlInsertFact, conflict: &SqlOnConflictFact) -> Op
                 }
                 if form_is_excluded(&assignment.form, column)
                     || form_is_self(&assignment.form, column)
-                    || matches!(assignment.form, SqlValueForm::Null)
                 {
                     return None;
                 }

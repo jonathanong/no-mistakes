@@ -57,6 +57,17 @@ pub fn has_top_level_conjunctive_not_exists(masked: &str) -> bool {
 }
 
 fn match_guard(text: &str, index: usize) -> bool {
+    if !token_start(text, index) {
+        return false;
+    }
     let rest = &text[index..];
     rest.starts_with("where not exists") || rest.starts_with("and not exists")
+}
+
+fn token_start(text: &str, index: usize) -> bool {
+    if index == 0 {
+        return true;
+    }
+    let prev = text.as_bytes()[index - 1];
+    !prev.is_ascii_alphanumeric() && prev != b'_'
 }
