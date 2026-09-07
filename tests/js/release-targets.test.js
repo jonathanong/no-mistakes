@@ -35,8 +35,9 @@ test("every native optional package has a release target", () => {
   }
 });
 
-test("release native build jobs stay within the 30-minute execution bound", () => {
+test("release native build jobs enforce separate CLI and N-API execution bounds", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
+  const timeouts = new Map();
   for (const name of ["build-cli", "build-napi"]) {
     const job = workflow.match(
       new RegExp(`^ {2}${name}:[\\s\\S]*?(?=^ {2}(?:build-|publish:))`, "m"),
@@ -44,10 +45,29 @@ test("release native build jobs stay within the 30-minute execution bound", () =
     assert.ok(job, `release workflow must define ${name}`);
     const jobTimeout = job[0].match(/^ {4}timeout-minutes: (\d+)$/m);
     const stepTimeouts = [...job[0].matchAll(/^ {8}timeout-minutes: (\d+)$/gm)];
+    const buildCliTimeout = job[0].match(/^ {6}- name: Build CLI\n {8}timeout-minutes: (\d+)$/m);
     assert.ok(jobTimeout, `${name} must define a timeout`);
-    assert.ok(Number(jobTimeout[1]) <= 30, `${name} must be at most 30 minutes`);
-    assert.ok(stepTimeouts.every((timeout) => Number(timeout[1]) <= 25));
+    timeouts.set(name, {
+      buildCli: buildCliTimeout ? Number(buildCliTimeout[1]) : undefined,
+      job: Number(jobTimeout[1]),
+      steps: stepTimeouts.map((timeout) => Number(timeout[1])),
+    });
   }
+
+  const cli = timeouts.get("build-cli");
+  assert.equal(cli.job, 80, "CLI builds need an 80-minute job envelope");
+  assert.equal(cli.buildCli, 45, "Build CLI needs a 45-minute cold-build budget");
+  assert.ok(
+    cli.steps.every((timeout) => timeout <= 45),
+    "CLI steps must be at most 45 minutes",
+  );
+
+  const napi = timeouts.get("build-napi");
+  assert.ok(napi.job <= 30, "N-API builds must be at most 30 minutes");
+  assert.ok(
+    napi.steps.every((timeout) => timeout <= 25),
+    "N-API steps must be at most 25 minutes",
+  );
 });
 
 test("release syncs optional native package versions and publishes only through npm OIDC", () => {
@@ -64,7 +84,10 @@ test("release syncs optional native package versions and publishes only through 
   ]) {
     const platformIndex = workflow.indexOf(`            ${name}`);
     const mainIndex = workflow.indexOf("            no-mistakes \\\n", platformIndex);
-    assert.ok(platformIndex >= 0 && mainIndex > platformIndex, `${name} must publish before no-mistakes`);
+    assert.ok(
+      platformIndex >= 0 && mainIndex > platformIndex,
+      `${name} must publish before no-mistakes`,
+    );
   }
   assert.match(workflow, /Expected exactly one N-API addon candidate/);
   assert.match(workflow, /expected_magic='Mach-O\.\*arm64'/);
