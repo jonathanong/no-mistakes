@@ -344,4 +344,20 @@ fn like_in_subquery_table_args_group_by_and_quoted_idents() {
          )",
     );
     assert_eq!(wildcard, vec![(false, true)], "{wildcard:?}");
+    let similar = exists_ops(
+        "SELECT 1 FROM posts WHERE EXISTS (
+            SELECT 1 FROM topics WHERE topics.name SIMILAR TO posts.pattern
+            UNION ALL
+            SELECT 1 FROM tags WHERE tags.name SIMILAR TO posts.pattern
+         )",
+    );
+    assert_eq!(similar, vec![(false, true)], "{similar:?}");
+    let right_join = exists_ops(
+        "SELECT 1 FROM posts WHERE EXISTS (
+            SELECT 1 FROM topics RIGHT JOIN tags ON tags.post_id = posts.id
+            UNION ALL
+            SELECT 1 FROM topics
+         )",
+    );
+    assert_eq!(right_join, vec![(false, true)], "{right_join:?}");
 }

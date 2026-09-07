@@ -1,6 +1,7 @@
-use super::collect_ident_names;
+use super::{collect_ident_names, ident_key, insert_ident, object_name_ident};
 use crate::codebase::postgres::parse_postgres_sql;
-use sqlparser::ast::{SelectItem, SetExpr, Statement};
+use sqlparser::ast::{Ident, ObjectName, SelectItem, SetExpr, Statement};
+use std::collections::HashSet;
 
 fn projection_names(sql: &str) -> Vec<String> {
     let Statement::Query(query) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
@@ -43,4 +44,16 @@ fn collect_ident_names_walks_named_and_wildcard_function_args() {
     let named = projection_names("SELECT date_trunc('day', timestamp => created_at)");
     assert!(named.contains(&"created_at".into()), "{named:?}");
     assert!(projection_names("SELECT count(*)").is_empty());
+}
+
+#[test]
+fn ident_key_insert_and_object_name_helpers() {
+    assert_eq!(ident_key(&Ident::new("Posts")), "posts");
+    assert_eq!(ident_key(&Ident::with_quote('"', "Posts")), "Posts");
+    let mut local = HashSet::new();
+    insert_ident(&mut local, &Ident::new(""));
+    assert!(local.is_empty());
+    insert_ident(&mut local, &Ident::new("topics"));
+    assert!(local.contains("topics"));
+    assert!(object_name_ident(&ObjectName(Vec::new())).is_none());
 }
