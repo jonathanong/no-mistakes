@@ -63,6 +63,11 @@ the existing API.
 npm install --save-dev no-mistakes eslint-plugin-no-mistakes
 ```
 
+The npm package installs a matching platform-specific optional package that
+contains both the executable and N-API addon. Installation has no downloader
+or lifecycle binary build; if optional dependencies are disabled, reinstall
+with optional dependencies enabled.
+
 `dependents`, `tests plan vitest`, and `playwright check` work without a
 custom config block on a conventional Next.js app with root `app/` and
 `*.spec.ts` tests. Express, Hono, Fastify, Koa, and NestJS routes, and

@@ -27,10 +27,11 @@ const workerLockHolderFixture = join(
 );
 const expectedReport = JSON.parse(readFileSync(join(fixtureRoot, "expected.json"), "utf8"));
 const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
+const compiledAddonPath = addonPath && addonPath.endsWith(".node") ? addonPath : undefined;
 
 test(
   "compiled async N-API dependencies API matches the CLI fixture contract",
-  { skip: !addonPath, timeout: 20_000 },
+  { skip: !compiledAddonPath, timeout: 20_000 },
   async () => {
     assert.equal(resolve(addonPath), addonPath);
     assert.match(addonPath, /\.node$/);
@@ -49,7 +50,7 @@ test(
 
 test(
   "compiled internal N-API lock serializes separate Node processes",
-  { skip: !addonPath },
+  { skip: !compiledAddonPath },
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "no-mistakes-napi-lock-"));
     const lockPath = join(directory, "artifact.lock");
@@ -83,7 +84,7 @@ test(
 
 test(
   "compiled internal N-API lock is released when a worker terminates",
-  { skip: !addonPath },
+  { skip: !compiledAddonPath },
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "no-mistakes-napi-worker-lock-"));
     const lockPath = join(directory, "artifact.lock");
@@ -121,7 +122,7 @@ test(
 
 test(
   "compiled internal N-API rename preserves an existing destination and claims a vacant one",
-  { skip: !addonPath },
+  { skip: !compiledAddonPath },
   async () => {
     const directory = await mkdtemp(join(tmpdir(), "no-mistakes-napi-rename-"));
     const source = join(directory, "source");

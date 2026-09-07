@@ -2,8 +2,8 @@
 "use strict";
 
 const { spawn } = require("node:child_process");
-const { join } = require("node:path");
 const { boundedDiagnostic } = require("../planning-impact-cli");
+const { resolveNativePackage } = require("../scripts/native-package");
 
 const VALUE_OPTIONS = new Set(["--timeout", "--lock-timeout", "--jobs", "--profile", "-j"]);
 const FLAG_OPTIONS = new Set(["--fail-on-lock"]);
@@ -35,8 +35,22 @@ function planningImpactArgs(argv) {
   return [...argv.slice(0, index), ...argv.slice(index + 1)];
 }
 
-function launchNative(argv, spawnFn = spawn, io = process, kill = process.kill) {
-  const child = spawnFn(join(__dirname, "no-mistakes"), argv, { stdio: "inherit" });
+function launchNative(
+  argv,
+  spawnFn = spawn,
+  io = process,
+  kill = process.kill,
+  resolve = resolveNativePackage,
+) {
+  let cliPath;
+  try {
+    cliPath = resolve().cliPath;
+  } catch (error) {
+    io.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    io.exitCode = 1;
+    return undefined;
+  }
+  const child = spawnFn(cliPath, argv, { stdio: "inherit" });
   child.on("error", (error) => {
     io.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
     io.exitCode = 1;

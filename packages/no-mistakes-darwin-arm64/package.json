@@ -1,0 +1,29 @@
+{
+  "name": "no-mistakes-darwin-arm64",
+  "version": "0.55.0",
+  "description": "Native no-mistakes CLI and N-API addon for macOS ARM64",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonathanong/no-mistakes.git",
+    "directory": "packages/no-mistakes-darwin-arm64"
+  },
+  "bin": {
+    "no-mistakes-darwin-arm64": "bin/no-mistakes"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "main": "bin/no-mistakes.node",
+  "publishConfig": {
+    "access": "public"
+  }
+}

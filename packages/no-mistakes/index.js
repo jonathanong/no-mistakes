@@ -1,8 +1,8 @@
 "use strict";
 
-// CI real-addon tests point this at the freshly compiled cdylib without
-// overwriting the package's checked-in install placeholder.
-const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
+const { resolveNativePackage } = require("./scripts/native-package");
+const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || resolveNativePackage().addonPath;
+const native = require(addonPath);
 const planning = require("./planning");
 const { writePlanningImpactArtifacts: writeArtifacts } = require("./planning-impact-artifacts");
 const { createPlanningArtifactLock } = require("./planning-impact-artifacts-lock");
@@ -154,60 +154,47 @@ async function version() {
   return native.version();
 }
 
-module.exports.createWorkflowTopologyIndex = createWorkflowTopologyIndex;
-module.exports.version = version;
-module.exports.analyzeProject = analyzeProject;
-module.exports.writePlanningImpactArtifacts = writePlanningImpactArtifacts;
-module.exports.callSites = jsonApis.callSites;
-module.exports.check = jsonApis.check;
-module.exports.resolveConfig = jsonApis.resolveConfig;
-module.exports.ciEnv = jsonApis.ciEnv;
-module.exports.ciImpact = jsonApis.ciImpact;
-module.exports.ciTopology = ciTopology;
-module.exports.ciTopologyImpact = jsonApis.ciTopologyImpact;
-module.exports.dataPw = jsonApis.dataPw;
-module.exports.deadExports = jsonApis.deadExports;
-module.exports.dependencies = jsonApis.dependencies;
-module.exports.dependents = jsonApis.dependents;
-module.exports.effects = jsonApis.effects;
-module.exports.exportsOf = jsonApis.exportsOf;
-module.exports.fetches = jsonApis.fetches;
-module.exports.impactedChecks = jsonApis.impactedChecks;
-module.exports.importUsages = jsonApis.importUsages;
-module.exports.importers = jsonApis.importers;
-module.exports.infraOutputs = jsonApis.infraOutputs;
-module.exports.infraResourceRefs = jsonApis.infraResourceRefs;
-module.exports.infraTestFor = jsonApis.infraTestFor;
-module.exports.lockfileDiff = jsonApis.lockfileDiff;
-module.exports.validateMermaidMarkdown = jsonApis.validateMermaidMarkdown;
-module.exports.playwrightCheck = jsonApis.playwrightCheck;
-module.exports.playwrightEdges = jsonApis.playwrightEdges;
-module.exports.playwrightRelated = jsonApis.playwrightRelated;
-module.exports.playwrightTests = jsonApis.playwrightTests;
-module.exports.reactAnalyze = jsonApis.reactAnalyze;
-module.exports.reactCheck = jsonApis.reactCheck;
-module.exports.reactUsages = jsonApis.reactUsages;
-module.exports.registryExtension = jsonApis.registryExtension;
-module.exports.related = jsonApis.related;
-module.exports.resolveCheck = jsonApis.resolveCheck;
-module.exports.rscCallers = jsonApis.rscCallers;
-module.exports.swiftImporters = jsonApis.swiftImporters;
-module.exports.swiftTestTargets = jsonApis.swiftTestTargets;
-module.exports.symbols = jsonApis.symbols;
-module.exports.testsComment = planning.testsComment;
-module.exports.testsGraphMermaid = planning.testsGraphMermaid;
-module.exports.flow = planning.flow;
-module.exports.queueCheck = planning.queueCheck;
-module.exports.queueEdges = planning.queueEdges;
-module.exports.queueRelated = planning.queueRelated;
-module.exports.queues = planning.queues;
-module.exports.serverContracts = planning.serverContracts;
-module.exports.serverRouteEdges = planning.serverRouteEdges;
-module.exports.serverRouteList = planning.serverRouteList;
-module.exports.serverRouteRelated = planning.serverRouteRelated;
-module.exports.serverRoutes = planning.serverRoutes;
-module.exports.testsGraph = planning.testsGraph;
-module.exports.testsImpact = planning.testsImpact;
-module.exports.testsPlan = planning.testsPlan;
-module.exports.testsTargets = planning.testsTargets;
-module.exports.testsWhy = planning.testsWhy;
+const {
+  flow,
+  queueCheck,
+  queueEdges,
+  queueRelated,
+  queues,
+  serverContracts,
+  serverRouteEdges,
+  serverRouteList,
+  serverRouteRelated,
+  serverRoutes,
+  testsComment,
+  testsGraph,
+  testsGraphMermaid,
+  testsImpact,
+  testsPlan,
+  testsTargets,
+  testsWhy,
+} = planning;
+
+Object.assign(module.exports, jsonApis, {
+  analyzeProject,
+  ciTopology,
+  createWorkflowTopologyIndex,
+  version,
+  writePlanningImpactArtifacts,
+  flow,
+  queueCheck,
+  queueEdges,
+  queueRelated,
+  queues,
+  serverContracts,
+  serverRouteEdges,
+  serverRouteList,
+  serverRouteRelated,
+  serverRoutes,
+  testsComment,
+  testsGraph,
+  testsGraphMermaid,
+  testsImpact,
+  testsPlan,
+  testsTargets,
+  testsWhy,
+});

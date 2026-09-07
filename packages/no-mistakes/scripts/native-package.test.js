@@ -1,0 +1,184 @@
+const assert = require("node:assert/strict");
+const { chmodSync, mkdtempSync, mkdirSync, rmSync, writeFileSync } = require("node:fs");
+const { tmpdir } = require("node:os");
+const { join } = require("node:path");
+const test = globalThis.test || require("node:test").test;
+
+const {
+  localPackagePath,
+  nativePackageName,
+  resolveNativePackage,
+  unsupportedPlatformMessage,
+  usableCli,
+} = require("./native-package");
+
+test("accepts only regular executable Unix files and regular Windows files", () => {
+  const directory = mkdtempSync(join(tmpdir(), "no-mistakes-cli-mode-"));
+  try {
+    const cli = join(directory, "no-mistakes");
+    const childDirectory = join(directory, "directory");
+    writeFileSync(cli, "binary");
+    mkdirSync(childDirectory);
+    chmodSync(cli, 0o644);
+    assert.equal(usableCli(cli, "darwin"), false);
+    assert.equal(usableCli(cli, "win32"), true);
+    assert.equal(usableCli(childDirectory, "win32"), false);
+    chmodSync(cli, 0o755);
+    assert.equal(usableCli(cli, "darwin"), true);
+  } finally {
+    rmSync(directory, { recursive: true, force: true });
+  }
+});
+
+test("finds the sibling platform workspace only for repository staging", () => {
+  assert.match(localPackagePath("no-mistakes-darwin-arm64"), /no-mistakes-darwin-arm64$/);
+  assert.equal(localPackagePath("not-a-no-mistakes-package"), undefined);
+});
+
+test("maps supported Node platforms to their native optional package", () => {
+  assert.equal(nativePackageName("darwin", "arm64"), "no-mistakes-darwin-arm64");
+  assert.equal(nativePackageName("darwin", "x64"), "no-mistakes-darwin-x64");
+  assert.equal(nativePackageName("linux", "arm64"), "no-mistakes-linux-arm64-gnu");
+  assert.equal(nativePackageName("linux", "x64"), "no-mistakes-linux-x64-gnu");
+  assert.equal(nativePackageName("win32", "x64"), "no-mistakes-win32-x64-msvc");
+  assert.equal(nativePackageName("win32", "arm64"), undefined);
+});
+
+test("resolves the CLI and addon from one selected optional package", () => {
+  const resolved = resolveNativePackage({
+    platform: "darwin",
+    arch: "arm64",
+    resolve: (request) => `/virtual/${request}`,
+    isUsableCli: () => true,
+  });
+  assert.deepEqual(resolved, {
+    name: "no-mistakes-darwin-arm64",
+    cliPath: "/virtual/no-mistakes-darwin-arm64/bin/no-mistakes",
+    addonPath: "/virtual/no-mistakes-darwin-arm64",
+  });
+});
+
+test("resolves the Windows executable from the same optional package", () => {
+  const resolved = resolveNativePackage({
+    platform: "win32",
+    arch: "x64",
+    resolve: (request) => `/virtual/${request}`,
+    isUsableCli: () => true,
+  });
+  assert.equal(resolved.cliPath, "/virtual/no-mistakes-win32-x64-msvc/bin/no-mistakes.exe");
+});
+
+test("reports missing optional packages and unsupported platforms clearly", () => {
+  assert.throws(
+    () =>
+      resolveNativePackage({
+        platform: "darwin",
+        arch: "arm64",
+        resolve: () => {
+          throw new Error("absent");
+        },
+        resolveLocalPackage: () => undefined,
+        isUsableCli: () => true,
+      }),
+    /no-mistakes-darwin-arm64.*npm install/i,
+  );
+  assert.match(unsupportedPlatformMessage("win32", "arm64"), /Unsupported platform win32\/arm64/);
+});
+
+test("directs an installed package missing its CLI to repair optional dependencies", () => {
+  assert.throws(
+    () =>
+      resolveNativePackage({
+        platform: "darwin",
+        arch: "arm64",
+        resolve: (request) =>
+          request.endsWith("package.json")
+            ? "/virtual/package.json"
+            : (() => {
+                throw new Error("absent");
+              })(),
+        resolveLocalPackage: () => undefined,
+        isUsableCli: () => true,
+      }),
+    /unavailable.*npm install/i,
+  );
+});
+
+test("uses the local staged native package for repository development", () => {
+  const resolved = resolveNativePackage({
+    platform: "darwin",
+    arch: "arm64",
+    resolve: () => {
+      throw new Error("not installed");
+    },
+    resolveLocalPackage: () => "/repo/packages/no-mistakes-darwin-arm64",
+    localArtifactExists: () => true,
+    isUsableCli: () => true,
+  });
+  assert.deepEqual(resolved, {
+    name: "no-mistakes-darwin-arm64",
+    cliPath: "/repo/packages/no-mistakes-darwin-arm64/bin/no-mistakes",
+    addonPath: "/repo/packages/no-mistakes-darwin-arm64/bin/no-mistakes.node",
+  });
+});
+
+test("rejects an installed Unix CLI without execute permission before spawn", () => {
+  assert.throws(
+    () =>
+      resolveNativePackage({
+        platform: "darwin",
+        arch: "arm64",
+        resolve: (request) => `/virtual/${request}`,
+        resolveLocalPackage: () => undefined,
+        isUsableCli: () => false,
+      }),
+    /not executable.*npm install/i,
+  );
+});
+
+test("rejects a local staged Unix CLI without execute permission before spawn", () => {
+  assert.throws(
+    () =>
+      resolveNativePackage({
+        platform: "darwin",
+        arch: "arm64",
+        resolve: () => {
+          throw new Error("not installed");
+        },
+        resolveLocalPackage: () => "/repo/packages/no-mistakes-darwin-arm64",
+        localArtifactExists: () => true,
+        isUsableCli: () => false,
+      }),
+    /unusable CLI artifact.*pnpm run build:native/i,
+  );
+});
+
+test("directs a local package with missing artifacts to explicit staging", () => {
+  assert.throws(
+    () =>
+      resolveNativePackage({
+        platform: "darwin",
+        arch: "arm64",
+        resolve: () => {
+          throw new Error("not installed");
+        },
+        resolveLocalPackage: () => "/repo/packages/no-mistakes-darwin-arm64",
+        localArtifactExists: () => false,
+      }),
+    /no staged artifacts.*pnpm run build:native/i,
+  );
+});
+
+test("Windows verifies CLI presence without Unix execute-bit semantics", () => {
+  const resolved = resolveNativePackage({
+    platform: "win32",
+    arch: "x64",
+    resolve: (request) => `/virtual/${request}`,
+    isUsableCli: (path, platform) => {
+      assert.equal(platform, "win32");
+      assert.match(path, /\.exe$/);
+      return true;
+    },
+  });
+  assert.match(resolved.cliPath, /\.exe$/);
+});

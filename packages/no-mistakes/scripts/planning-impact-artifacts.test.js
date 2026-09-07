@@ -23,7 +23,7 @@ const { pathToFileURL } = require("node:url");
 
 const packageRoot = join(__dirname, "..");
 const repositoryRoot = join(packageRoot, "..", "..");
-const addonPath = join(packageRoot, "bin", "no-mistakes.node");
+const addonPath = join(repositoryRoot, "fixtures", "napi", "test-addon.js");
 const indexPath = join(packageRoot, "index.js");
 const esmIndexPath = join(packageRoot, "index.mjs");
 const {
@@ -2141,20 +2141,17 @@ test("records a failed report schema as aggregate failure", async () => {
 test("exports the artifact writer through the public async Node API", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");
-  const previous = require.extensions[".node"];
+  const previous = globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
   delete require.cache[require.resolve(indexPath)];
   delete require.cache[require.resolve(addonPath)];
-  require.extensions[".node"] = (module, filename) => {
-    assert.equal(filename, addonPath);
-    module.exports = {
-      analyzeProjectJson: async () => JSON.stringify(aggregateResult),
-      acquirePlanningArtifactLock: async () => 1,
-      releasePlanningArtifactLock: async () => {},
-      renameNoReplace: async (from, to) => {
-        await rename(from, to);
-        return true;
-      },
-    };
+  globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = {
+    analyzeProjectJson: async () => JSON.stringify(aggregateResult),
+    acquirePlanningArtifactLock: async () => 1,
+    releasePlanningArtifactLock: async () => {},
+    renameNoReplace: async (from, to) => {
+      await rename(from, to);
+      return true;
+    },
   };
   try {
     await writeFile(manifest, "a.mts\n");
@@ -2168,8 +2165,8 @@ test("exports the artifact writer through the public async Node API", async () =
   } finally {
     delete require.cache[require.resolve(indexPath)];
     delete require.cache[require.resolve(addonPath)];
-    if (previous) require.extensions[".node"] = previous;
-    else delete require.extensions[".node"];
+    if (previous) globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = previous;
+    else delete globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
     await rm(directory, { recursive: true, force: true });
   }
 });
@@ -2177,24 +2174,21 @@ test("exports the artifact writer through the public async Node API", async () =
 test("public artifact API preserves a concurrent public-path victim", async () => {
   const directory = await privateDirectory("no-mistakes-impact-public-race-");
   const manifest = join(directory, "changed-files.txt");
-  const previous = require.extensions[".node"];
+  const previous = globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
   let parked;
   delete require.cache[require.resolve(indexPath)];
   delete require.cache[require.resolve(addonPath)];
-  require.extensions[".node"] = (module, filename) => {
-    assert.equal(filename, addonPath);
-    module.exports = {
-      analyzeProjectJson: async () => {
-        assert.fail("analysis must not run when public restoration is occupied");
-      },
-      acquirePlanningArtifactLock: async () => 1,
-      releasePlanningArtifactLock: async () => {},
-      renameNoReplace: async (from, to) => {
-        parked = from;
-        await writeFile(to, "protected");
-        return false;
-      },
-    };
+  globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = {
+    analyzeProjectJson: async () => {
+      assert.fail("analysis must not run when public restoration is occupied");
+    },
+    acquirePlanningArtifactLock: async () => 1,
+    releasePlanningArtifactLock: async () => {},
+    renameNoReplace: async (from, to) => {
+      parked = from;
+      await writeFile(to, "protected");
+      return false;
+    },
   };
   try {
     await writeFile(manifest, "a.mts\n");
@@ -2211,8 +2205,8 @@ test("public artifact API preserves a concurrent public-path victim", async () =
   } finally {
     delete require.cache[require.resolve(indexPath)];
     delete require.cache[require.resolve(addonPath)];
-    if (previous) require.extensions[".node"] = previous;
-    else delete require.extensions[".node"];
+    if (previous) globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = previous;
+    else delete globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
     await rm(directory, { recursive: true, force: true });
     await rm(parked, { recursive: true, force: true }).catch(() => {});
   }
@@ -2221,18 +2215,15 @@ test("public artifact API preserves a concurrent public-path victim", async () =
 test("public artifact API preserves a manifest that collides with a reserved destination", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "plan.status");
-  const previous = require.extensions[".node"];
+  const previous = globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
   delete require.cache[require.resolve(indexPath)];
   delete require.cache[require.resolve(addonPath)];
-  require.extensions[".node"] = (module, filename) => {
-    assert.equal(filename, addonPath);
-    module.exports = {
-      analyzeProjectJson: async () => {
-        assert.fail("reserved manifest collision must fail before public analysis");
-      },
-      acquirePlanningArtifactLock: async () => 1,
-      releasePlanningArtifactLock: async () => {},
-    };
+  globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = {
+    analyzeProjectJson: async () => {
+      assert.fail("reserved manifest collision must fail before public analysis");
+    },
+    acquirePlanningArtifactLock: async () => 1,
+    releasePlanningArtifactLock: async () => {},
   };
   try {
     await writeFile(manifest, "a.mts\n");
@@ -2249,8 +2240,8 @@ test("public artifact API preserves a manifest that collides with a reserved des
   } finally {
     delete require.cache[require.resolve(indexPath)];
     delete require.cache[require.resolve(addonPath)];
-    if (previous) require.extensions[".node"] = previous;
-    else delete require.extensions[".node"];
+    if (previous) globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = previous;
+    else delete globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
     await rm(directory, { recursive: true, force: true });
   }
 });
@@ -2258,20 +2249,17 @@ test("public artifact API preserves a manifest that collides with a reserved des
 test("exports the artifact writer through the real ESM entrypoint", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");
-  const previous = require.extensions[".node"];
+  const previous = globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
   delete require.cache[require.resolve(indexPath)];
   delete require.cache[require.resolve(addonPath)];
-  require.extensions[".node"] = (module, filename) => {
-    assert.equal(filename, addonPath);
-    module.exports = {
-      analyzeProjectJson: async () => JSON.stringify(aggregateResult),
-      acquirePlanningArtifactLock: async () => 1,
-      releasePlanningArtifactLock: async () => {},
-      renameNoReplace: async (from, to) => {
-        await rename(from, to);
-        return true;
-      },
-    };
+  globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = {
+    analyzeProjectJson: async () => JSON.stringify(aggregateResult),
+    acquirePlanningArtifactLock: async () => 1,
+    releasePlanningArtifactLock: async () => {},
+    renameNoReplace: async (from, to) => {
+      await rename(from, to);
+      return true;
+    },
   };
   try {
     await writeFile(manifest, "a.mts\n");
@@ -2285,8 +2273,8 @@ test("exports the artifact writer through the real ESM entrypoint", async () => 
   } finally {
     delete require.cache[require.resolve(indexPath)];
     delete require.cache[require.resolve(addonPath)];
-    if (previous) require.extensions[".node"] = previous;
-    else delete require.extensions[".node"];
+    if (previous) globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = previous;
+    else delete globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
     await rm(directory, { recursive: true, force: true });
   }
 });

@@ -5,7 +5,7 @@ const { join } = require("node:path");
 
 const packageRoot = join(__dirname, "..");
 const repositoryRoot = join(packageRoot, "..", "..");
-const addonPath = join(packageRoot, "bin", "no-mistakes.node");
+const addonPath = join(repositoryRoot, "fixtures", "napi", "test-addon.js");
 const indexPath = join(packageRoot, "index.js");
 const planningPath = join(packageRoot, "planning.js");
 const fixture = JSON.parse(
@@ -17,24 +17,22 @@ function loadApiWithFixtureNative() {
   delete require.cache[require.resolve(planningPath)];
   delete require.cache[addonPath];
 
-  const previous = require.extensions[".node"];
-  require.extensions[".node"] = (module, filename) => {
-    assert.equal(filename, addonPath);
-    module.exports = {
-      fetchesJson: async () => JSON.stringify(fixture.fetches),
-      checkJson: async (json) =>
-        JSON.stringify(
-          JSON.parse(json).includeSuppressed ? fixture.checkWithSuppressed : fixture.check,
-        ),
-      queuesJson: async () => JSON.stringify(fixture.queues),
-      reactAnalyzeJson: async () => JSON.stringify(fixture.reactAnalyze),
-    };
+  const previous = globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
+  globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = {
+    fetchesJson: async () => JSON.stringify(fixture.fetches),
+    checkJson: async (json) =>
+      JSON.stringify(
+        JSON.parse(json).includeSuppressed ? fixture.checkWithSuppressed : fixture.check,
+      ),
+    queuesJson: async () => JSON.stringify(fixture.queues),
+    reactAnalyzeJson: async () => JSON.stringify(fixture.reactAnalyze),
   };
 
   return {
     api: require(indexPath),
     restore() {
-      require.extensions[".node"] = previous;
+      if (previous) globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = previous;
+      else delete globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
       delete require.cache[require.resolve(indexPath)];
       delete require.cache[require.resolve(planningPath)];
       delete require.cache[addonPath];

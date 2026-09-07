@@ -5,6 +5,7 @@ const { tmpdir } = require("node:os");
 const { join, posix } = require("node:path");
 
 const root = join(__dirname, "..", "..");
+const releaseVersion = JSON.parse(readFileSync(join(root, "package.json"), "utf8")).version;
 test("only the expected public npm packages remain", () => {
   const packagesDir = join(root, "packages");
   const manifests = [];
@@ -32,17 +33,69 @@ test("only the expected public npm packages remain", () => {
     }
   }
 
-  assert.deepEqual(manifests.sort(), ["eslint-plugin-no-mistakes", "no-mistakes"]);
+  assert.deepEqual(manifests.sort(), [
+    "eslint-plugin-no-mistakes",
+    "no-mistakes",
+    "no-mistakes-darwin-arm64",
+    "no-mistakes-darwin-x64",
+    "no-mistakes-linux-arm64-gnu",
+    "no-mistakes-linux-x64-gnu",
+    "no-mistakes-win32-x64-msvc",
+  ]);
 });
 
-test("the npm package exposes its launcher while the installer owns the native target", () => {
+test("native platform package manifests are runtime-bearing and platform-constrained", () => {
+  const expected = {
+    "no-mistakes-darwin-arm64": { os: ["darwin"], cpu: ["arm64"] },
+    "no-mistakes-darwin-x64": { os: ["darwin"], cpu: ["x64"] },
+    "no-mistakes-linux-arm64-gnu": { os: ["linux"], cpu: ["arm64"], libc: ["glibc"] },
+    "no-mistakes-linux-x64-gnu": { os: ["linux"], cpu: ["x64"], libc: ["glibc"] },
+    "no-mistakes-win32-x64-msvc": { os: ["win32"], cpu: ["x64"] },
+  };
+
+  for (const [name, platform] of Object.entries(expected)) {
+    const packageDir = join(root, "packages", name);
+    const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
+    assert.equal(manifest.name, name);
+    assert.equal(manifest.version, releaseVersion);
+    assert.deepEqual(manifest.os, platform.os);
+    assert.deepEqual(manifest.cpu, platform.cpu);
+    assert.deepEqual(manifest.libc, platform.libc);
+    assert.equal(manifest.main, "bin/no-mistakes.node");
+    assert.deepEqual(manifest.bin, {
+      [name]: `bin/no-mistakes${name.includes("win32") ? ".exe" : ""}`,
+    });
+    assert.deepEqual(manifest.files, ["bin/", "README.md", "LICENSE"]);
+    assert.deepEqual(manifest.publishConfig, { access: "public" });
+    assert.equal(manifest.repository.directory, `packages/${name}`);
+    assert.equal(manifest.exports, undefined);
+    assert.equal(manifest.scripts, undefined);
+  }
+});
+
+test("the npm package exposes one JavaScript launcher and optional native packages", () => {
   const packageDir = join(root, "packages", "no-mistakes");
   const manifest = JSON.parse(readFileSync(join(packageDir, "package.json"), "utf8"));
   assert.deepEqual(manifest.bin, { "no-mistakes": "bin/no-mistakes.js" });
   assert.notEqual(statSync(join(packageDir, manifest.bin["no-mistakes"])).mode & 0o111, 0);
 
-  const placeholder = readFileSync(join(packageDir, "bin", "no-mistakes"), "utf8");
-  assert.match(placeholder, /Native binary placeholder/);
+  assert.deepEqual(Object.values(manifest.optionalDependencies), Array(5).fill(releaseVersion));
+  assert.equal(statSync(join(packageDir, "bin", "no-mistakes.js")).isFile(), true);
+});
+
+test("packed no-mistakes pins every platform optional dependency to its release version", () => {
+  const packageDir = join(root, "packages", "no-mistakes");
+  let tarball;
+  try {
+    execFileSync("pnpm", ["--filter", "no-mistakes", "pack"], { cwd: root, stdio: "pipe" });
+    tarball = join(root, `no-mistakes-${releaseVersion}.tgz`);
+    const packed = JSON.parse(
+      execFileSync("tar", ["-xOf", tarball, "package/package.json"], { encoding: "utf8" }),
+    );
+    assert.deepEqual(Object.values(packed.optionalDependencies), Array(5).fill(packed.version));
+  } finally {
+    if (tarball) rmSync(tarball, { force: true });
+  }
 });
 
 // A `require("./sibling")` in a published entry point that isn't covered by
