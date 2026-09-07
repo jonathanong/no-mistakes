@@ -69,7 +69,23 @@ fn insert_assignments(sql: &str, insert: &Insert) -> Vec<super::SqlAssignmentFac
 }
 
 fn has_overriding_user_value(sql: &str) -> bool {
-    super::fallback::mask_quoted_sql(sql)
-        .to_ascii_lowercase()
-        .contains("overriding user value")
+    let masked = super::fallback::mask_quoted_sql(sql);
+    let mut rest = masked.as_str();
+    let mut without_blocks = String::new();
+    while let Some(start) = rest.find("/*") {
+        without_blocks.push_str(&rest[..start]);
+        without_blocks.push(' ');
+        rest = match rest[start + 2..].find("*/") {
+            Some(end) => &rest[start + 2 + end + 2..],
+            None => "",
+        };
+    }
+    without_blocks.push_str(rest);
+    let tokens = without_blocks
+        .lines()
+        .flat_map(|line| line.split("--").next().unwrap_or(line).split_whitespace())
+        .map(str::to_ascii_lowercase)
+        .collect::<Vec<_>>()
+        .join(" ");
+    tokens.contains("overriding user value")
 }

@@ -3,7 +3,7 @@ use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::schema::relation_name;
 use sqlparser::ast::{
     Assignment, AssignmentTarget, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments,
-    ObjectNamePart, Value, ValueWithSpan,
+    ObjectNamePart, UnaryOperator, Value, ValueWithSpan,
 };
 
 const VOLATILE: &[&str] = &[
@@ -47,6 +47,10 @@ pub(super) fn from_expr(expr: &Expr) -> SqlValueForm {
         },
         Expr::CompoundIdentifier(parts) => compound_form(parts),
         Expr::Function(function) => from_function(function),
+        Expr::UnaryOp {
+            op: UnaryOperator::Plus | UnaryOperator::Minus,
+            expr,
+        } => signed_literal(expr),
         Expr::Subquery(_) | Expr::Exists { .. } | Expr::InSubquery { .. } => SqlValueForm::Subquery,
         _ => SqlValueForm::Other,
     }
@@ -70,18 +74,21 @@ fn from_value(value: &ValueWithSpan) -> SqlValueForm {
     }
 }
 
+fn signed_literal(expr: &Expr) -> SqlValueForm {
+    match from_expr(expr) {
+        SqlValueForm::Literal | SqlValueForm::Null | SqlValueForm::Placeholder => {
+            SqlValueForm::Literal
+        }
+        form => form,
+    }
+}
+
+#[rustfmt::skip]
+const RELATIVE_DATETIME: &[&str] =
+    &["now", "today", "tomorrow", "yesterday", "epoch", "infinity", "-infinity", "allballs"];
+
 fn is_relative_datetime(text: &str) -> bool {
-    matches!(
-        text.trim().to_ascii_lowercase().as_str(),
-        "now"
-            | "today"
-            | "tomorrow"
-            | "yesterday"
-            | "epoch"
-            | "infinity"
-            | "-infinity"
-            | "allballs"
-    )
+    RELATIVE_DATETIME.contains(&text.trim().to_ascii_lowercase().as_str())
 }
 
 fn compound_form(parts: &[sqlparser::ast::Ident]) -> SqlValueForm {
@@ -183,13 +190,9 @@ fn is_volatile_name(name: &str) -> bool {
 pub(crate) fn form_is_stable(form: &SqlValueForm) -> bool {
     match form {
         SqlValueForm::Literal | SqlValueForm::Null | SqlValueForm::Placeholder => true,
-        SqlValueForm::Excluded { .. }
-        | SqlValueForm::SelfRef { .. }
-        | SqlValueForm::Volatile { .. }
-        | SqlValueForm::Subquery
-        | SqlValueForm::Other => false,
         SqlValueForm::Coalesce { args }
         | SqlValueForm::Greatest { args }
         | SqlValueForm::Least { args } => args.iter().all(form_is_stable),
+        _ => false,
     }
 }

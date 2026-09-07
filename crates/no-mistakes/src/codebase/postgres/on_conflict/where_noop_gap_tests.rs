@@ -90,9 +90,8 @@ fn relative_datetime_literal_is_not_a_noop() {
 #[test]
 fn overriding_user_value_is_not_a_noop() {
     let found = judge_file(
-        &extract_sql_statement_facts(&sql(
-            "INSERT INTO items (id, a, b) OVERRIDING USER VALUE VALUES (1, 'x', 'y')",
-        )),
+        &extract_sql_statement_facts(&sql("INSERT INTO items (id, a, b) OVERRIDING /* skip */
+             USER VALUE VALUES (1, 'x', 'y')")),
         &catalog(&extract_sql_statement_facts(AFTER_A).triggers, &[], &[]),
     );
     assert!(
@@ -124,6 +123,11 @@ fn after_insert_rewrite_is_not_a_noop() {
 #[test]
 fn coalesce_volatile_insert_value_is_not_a_noop() {
     assert_refires("INSERT INTO items (id, a, b) VALUES (1, 'x', COALESCE(now(), 'y'))");
+}
+
+#[test]
+fn signed_volatile_insert_value_is_not_a_noop() {
+    assert_refires("INSERT INTO items (id, a, b) VALUES (1, 'x', -now())");
 }
 
 #[test]
@@ -178,11 +182,15 @@ fn instead_of_insert_rewrite_is_not_a_noop() {
 
 #[test]
 fn placeholder_insert_value_still_noops() {
-    let found = judge_file(
-        &extract_sql_statement_facts(&sql(
-            "INSERT INTO items (id, a, b) VALUES (1, 'x', sql_placeholder_1)",
-        )),
-        &catalog(&extract_sql_statement_facts(AFTER_A).triggers, &[], &[]),
-    );
-    assert!(found.is_empty(), "{found:?}");
+    for insert in [
+        "INSERT INTO items (id, a, b) VALUES (1, 'x', sql_placeholder_1)",
+        "INSERT INTO items (id, a, b) VALUES (1, 'x', -1)",
+        "INSERT INTO items (id, a, b) VALUES (1, 'x', +1)",
+    ] {
+        let found = judge_file(
+            &extract_sql_statement_facts(&sql(insert)),
+            &catalog(&extract_sql_statement_facts(AFTER_A).triggers, &[], &[]),
+        );
+        assert!(found.is_empty(), "{insert} {found:?}");
+    }
 }
