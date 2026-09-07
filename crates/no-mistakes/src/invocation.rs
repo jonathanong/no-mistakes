@@ -20,32 +20,34 @@ use std::time::Duration;
 
 const DEFAULT_TIMEOUT_SECONDS: u64 = 30;
 
-#[cfg(any(test, feature = "test-instrumentation"))]
+// Windows native CI compiles this helper into the ordinary rlib so the Job
+// Object integration test can install a deadline without `--cfg test`.
+#[cfg(any(test, feature = "test-instrumentation", windows))]
 #[doc(hidden)]
 pub fn install_test_deadline(timeout: Duration) -> Result<impl Drop> {
     let serial = deadline_test_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     let deadline =
-        DeadlineGuard::install_with_owner(Some(timeout), Some(std::thread::current().id()))?;
+        DeadlineGuard::install_for_invocation(Some(timeout), Some(std::thread::current().id()))?;
     Ok(TestDeadlineGuard {
         _deadline: deadline,
         _serial: serial,
     })
 }
 
-#[cfg(any(test, feature = "test-instrumentation"))]
+#[cfg(any(test, feature = "test-instrumentation", windows))]
 struct TestDeadlineGuard {
     _deadline: DeadlineGuard,
     _serial: std::sync::MutexGuard<'static, ()>,
 }
 
-#[cfg(any(test, feature = "test-instrumentation"))]
+#[cfg(any(test, feature = "test-instrumentation", windows))]
 impl Drop for TestDeadlineGuard {
     fn drop(&mut self) {}
 }
 
-#[cfg(any(test, feature = "test-instrumentation"))]
+#[cfg(any(test, feature = "test-instrumentation", windows))]
 fn deadline_test_lock() -> &'static std::sync::Mutex<()> {
     static LOCK: std::sync::OnceLock<std::sync::Mutex<()>> = std::sync::OnceLock::new();
     LOCK.get_or_init(|| std::sync::Mutex::new(()))

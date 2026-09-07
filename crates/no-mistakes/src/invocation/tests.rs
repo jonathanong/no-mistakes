@@ -85,7 +85,7 @@ fn disabled_deadline_allows_timeout_check() {
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     let _guard =
-        DeadlineGuard::install_with_owner(None, Some(std::thread::current().id())).unwrap();
+        DeadlineGuard::install_for_invocation(None, Some(std::thread::current().id())).unwrap();
     check_timeout().unwrap();
 }
 
@@ -177,8 +177,10 @@ fn oversized_deadline_is_rejected() {
     let _serial = deadline_test_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let result =
-        DeadlineGuard::install_with_owner(Some(Duration::MAX), Some(std::thread::current().id()));
+    let result = DeadlineGuard::install_for_invocation(
+        Some(Duration::MAX),
+        Some(std::thread::current().id()),
+    );
     let Err(error) = result else {
         panic!("an oversized timeout should fail");
     };
@@ -251,7 +253,8 @@ fn command_output_captures_output_with_and_without_deadline() {
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     for timeout in [None, Some(Duration::from_secs(5))] {
         let _guard =
-            DeadlineGuard::install_with_owner(timeout, Some(std::thread::current().id())).unwrap();
+            DeadlineGuard::install_for_invocation(timeout, Some(std::thread::current().id()))
+                .unwrap();
         let mut command = Command::new("sh");
         command.args([
             "-c",
@@ -264,36 +267,13 @@ fn command_output_captures_output_with_and_without_deadline() {
     }
 }
 
-#[cfg(windows)]
-#[test]
-fn command_output_resumes_child_after_job_assignment() {
-    let _serial = deadline_test_lock()
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let _guard = DeadlineGuard::install_with_owner(
-        Some(Duration::from_secs(5)),
-        Some(std::thread::current().id()),
-    )
-    .unwrap();
-    let mut command = Command::new("cmd.exe");
-    command.args(["/D", "/C", "echo stdout&echo stderr>&2"]);
-
-    // The Windows path creates the process suspended, attaches its job, and
-    // must resume it before waiting for output.
-    let output = command_output(&mut command).unwrap();
-
-    assert!(output.status.success());
-    assert_eq!(output.stdout, b"stdout\r\n");
-    assert_eq!(output.stderr, b"stderr\r\n");
-}
-
 #[cfg(unix)]
 #[test]
 fn command_output_terminates_child_at_deadline() {
     let _serial = deadline_test_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let _guard = DeadlineGuard::install_with_owner(
+    let _guard = DeadlineGuard::install_for_invocation(
         Some(Duration::from_millis(1)),
         Some(std::thread::current().id()),
     )
@@ -368,7 +348,7 @@ fn child_output_reader_returns_bytes_without_deadline() {
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
     let _guard =
-        DeadlineGuard::install_with_owner(None, Some(std::thread::current().id())).unwrap();
+        DeadlineGuard::install_for_invocation(None, Some(std::thread::current().id())).unwrap();
     let (sender, receiver) = std::sync::mpsc::channel();
     sender.send(Ok(vec![1, 2, 3])).unwrap();
     assert_eq!(super::child::receive_reader(&receiver).unwrap(), [1, 2, 3]);
@@ -380,7 +360,7 @@ fn command_output_deadline_kills_descendants_holding_output_pipes() {
     let _serial = deadline_test_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let _guard = DeadlineGuard::install_with_owner(
+    let _guard = DeadlineGuard::install_for_invocation(
         Some(Duration::from_millis(50)),
         Some(std::thread::current().id()),
     )

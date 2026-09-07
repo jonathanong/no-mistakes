@@ -5,7 +5,7 @@ fn committed_output_disables_later_deadline_checks() {
     let _serial = super::super::deadline_test_lock()
         .lock()
         .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let guard = DeadlineGuard::install_with_owner(
+    let guard = DeadlineGuard::install_for_invocation(
         Some(Duration::from_secs(30)),
         Some(std::thread::current().id()),
     )

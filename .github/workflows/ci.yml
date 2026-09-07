@@ -267,6 +267,10 @@ jobs:
     name: Native tests (${{ matrix.name }})
     runs-on: ${{ matrix.os }}
     timeout-minutes: 20
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -276,7 +280,6 @@ jobs:
             target: x86_64-pc-windows-msvc
             binary: ./target/debug/no-mistakes.exe
             addon: target/debug/no_mistakes.dll
-            rust_test: "invocation::tests::command_output_resumes_child_after_job_assignment"
           - name: macOS ARM64
             os: macos-15
             target: aarch64-apple-darwin
@@ -319,16 +322,17 @@ jobs:
 
       # Linux `tests` owns the full suite. Native jobs only compile/run the
       # OS-specific invocation tests (Job Objects, process groups, signals).
+      # Windows uses an integration test so cargo does not typecheck ~7,500
+      # lib unit tests just to run the Job Object resume regression.
       - name: Run platform-specific Rust tests
         timeout-minutes: 10
         shell: bash
         run: |
           set -euo pipefail
-          filter='${{ matrix.rust_test }}'
           if [[ "${{ runner.os }}" == "Windows" ]]; then
-            cargo test --locked -p no-mistakes --lib --all-features "$filter" -- --exact --test-threads=1
+            cargo test --locked -p no-mistakes --test windows_job_object -- --exact --test-threads=1
           else
-            cargo test --locked -p no-mistakes --lib --all-features "$filter"
+            cargo test --locked -p no-mistakes --lib --all-features '${{ matrix.rust_test }}'
           fi
 
       - name: Build native CLI and N-API addon
@@ -352,6 +356,21 @@ jobs:
           set -euo pipefail
           addon_path="$(node -e 'process.stdout.write(require("node:path").resolve("target/debug/no-mistakes.node"))')"
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js --coverage=false
+
+      - name: Report native job timing
+        if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        continue-on-error: true
+        timeout-minutes: 2
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          JOB_NAME: Native tests (${{ matrix.name }})
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          HEAD_SHA: ${{ github.sha }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+        run: node .github/scripts/report-native-job-timing.cjs
 
   tests:
     name: Rust tests and coverage

@@ -21,14 +21,6 @@ pub(super) struct DeadlineGuard {
 }
 
 impl DeadlineGuard {
-    #[cfg(any(test, feature = "test-instrumentation"))]
-    pub(super) fn install_with_owner(
-        timeout: Option<Duration>,
-        owner: Option<std::thread::ThreadId>,
-    ) -> Result<Self> {
-        Self::install_for_invocation(timeout, owner)
-    }
-
     pub(super) fn install_for_invocation(
         timeout: Option<Duration>,
         owner: Option<std::thread::ThreadId>,
