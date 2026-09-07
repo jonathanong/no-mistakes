@@ -59,11 +59,18 @@ pub(super) fn scan(
         }
     }
     for file in &facts.statements {
-        if !opts.scan_embedded && !is_sql_path(&file.path) {
+        if !opts.scan_embedded && is_embedded_source(&file.path) {
             continue;
         }
         let rel = relative_slash_path(root, &file.path);
-        for (line, message) in judge_file(file, &catalog) {
+        let judged = if file.parse_failed && !opts.fail_unanalyzable {
+            let mut recoverable = file.clone();
+            recoverable.parse_failed = false;
+            judge_file(&recoverable, &catalog)
+        } else {
+            judge_file(file, &catalog)
+        };
+        for (line, message) in judged {
             findings.push(finding(&rel, line, &message));
         }
     }
@@ -71,10 +78,11 @@ pub(super) fn scan(
     Ok(findings)
 }
 
-fn is_sql_path(path: &Path) -> bool {
-    path.extension()
-        .and_then(|extension| extension.to_str())
-        .is_some_and(|extension| extension.eq_ignore_ascii_case("sql"))
+fn is_embedded_source(path: &Path) -> bool {
+    matches!(
+        path.extension().and_then(|extension| extension.to_str()),
+        Some("js" | "ts" | "mjs" | "mts" | "cjs" | "cts" | "tsx" | "jsx")
+    )
 }
 
 fn finding(file: &str, line: usize, message: &str) -> RuleFinding {

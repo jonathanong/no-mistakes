@@ -23,7 +23,8 @@ rules:
 ```
 
 `sqlInclude` defaults to `**/*.sql`. `relations` defaults to empty (no
-findings). `unanalyzableSql` defaults to `fail`. `importSpecifier` defaults to
+findings). `unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other
+values are a configuration error). `importSpecifier` defaults to
 `@data-stores/psql`; `executorNames` defaults to `[query, read, write]`.
 
 Counterexample: `SELECT id FROM topics WHERE id = $1` when `topics` requires
@@ -60,7 +61,8 @@ compared case-insensitively after whitespace normalization.
 
 `include` / `exclude` select source files (empty include means all files).
 `sqlInclude` defaults to `**/*.sql`. `relations` defaults to `[]`.
-`unanalyzableSql` defaults to `fail` (`ignore` skips malformed SQL).
+`unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other values are a
+configuration error).
 `importSpecifier` defaults to `@data-stores/psql`. `executorNames` defaults to
 `[query, read, write]`.
 

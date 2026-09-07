@@ -1,3 +1,4 @@
+use super::super::tags::{interpolating_untrusted_tag, kind_for_const};
 use super::super::{first_call_argument, sql_text, EmbeddedSqlCall, EmbeddedSqlKind};
 use super::{BindingState, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
@@ -62,6 +63,9 @@ pub(super) fn classify_init(
             (Some(text), EmbeddedSqlKind::Dynamic)
         };
     }
+    if interpolating_untrusted_tag(expr) {
+        return (sql_text(expr), EmbeddedSqlKind::Dynamic);
+    }
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => kind_for_const(literal.value.to_string(), is_const),
         Expression::TaggedTemplateExpression(_) => {
@@ -72,14 +76,6 @@ pub(super) fn classify_init(
         }
         Expression::TemplateLiteral(_) => (sql_text(expr), EmbeddedSqlKind::Dynamic),
         _ => (None, EmbeddedSqlKind::Dynamic),
-    }
-}
-
-fn kind_for_const(sql: String, is_const: bool) -> (Option<String>, EmbeddedSqlKind) {
-    if is_const {
-        (Some(sql), EmbeddedSqlKind::ImmutableLocal)
-    } else {
-        (Some(sql), EmbeddedSqlKind::Dynamic)
     }
 }
 
@@ -99,6 +95,7 @@ fn static_fragment(expr: &Expression<'_>) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => sql_text(expr),
+        Expression::TaggedTemplateExpression(_) if interpolating_untrusted_tag(expr) => None,
         Expression::TaggedTemplateExpression(_) => sql_text(expr),
         Expression::BinaryExpression(_) => composed_sql(expr).map(|(text, _)| text),
         _ => None,

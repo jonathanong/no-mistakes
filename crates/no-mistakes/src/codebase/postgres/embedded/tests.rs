@@ -464,4 +464,22 @@ fn inline_tagged_and_interpolated_calls_are_not_identifier_bindings() {
         &EmbeddedSqlOptions::default(),
     );
     assert_eq!(interpolated.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+    let raw = extract_embedded_sql_from_source(
+        Path::new("inline-raw.ts"),
+        "import { query } from '@data-stores/psql'\nquery(String.raw`SELECT ${table}`)\n",
+        &EmbeddedSqlOptions::default(),
+    );
+    assert_eq!(raw.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+    let raw_static = extract_embedded_sql_from_source(
+        Path::new("inline-raw-static.ts"),
+        "import { query } from '@data-stores/psql'\nquery(String.raw`SELECT 1`)\n",
+        &EmbeddedSqlOptions::default(),
+    );
+    assert_eq!(raw_static.calls[0].kind, super::EmbeddedSqlKind::Inline);
+    let sql_param = extract_embedded_sql_from_source(
+        Path::new("inline-sql-param.ts"),
+        "import { query } from '@data-stores/psql'\nquery(sql`SELECT ${id}`)\n",
+        &EmbeddedSqlOptions::default(),
+    );
+    assert_eq!(sql_param.calls[0].kind, super::EmbeddedSqlKind::Inline);
 }

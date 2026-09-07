@@ -72,3 +72,30 @@ fn missing_source_file_errors() {
         "{error}"
     );
 }
+
+#[test]
+fn rejects_unknown_options() {
+    let error = compile_options(&Options {
+        unanalyzable_sql: "fial".into(),
+        ..Default::default()
+    })
+    .err()
+    .expect("mode");
+    assert!(error.to_string().contains("unanalyzableSql"), "{error}");
+    let error = compile_options(&Options {
+        banned_shapes: vec!["other-shape".into()],
+        ..Default::default()
+    })
+    .err()
+    .expect("shape");
+    assert!(error.to_string().contains("bannedShapes"), "{error}");
+    assert!(
+        !compile_options(&Options {
+            banned_shapes: vec!["correlated-exists-set-operation".into()],
+            unanalyzable_sql: "ignore".into(),
+            ..Default::default()
+        })
+        .unwrap()
+        .fail_unanalyzable
+    );
+}

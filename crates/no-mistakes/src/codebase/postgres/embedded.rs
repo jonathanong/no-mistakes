@@ -8,6 +8,7 @@ use oxc_span::SourceType;
 use std::collections::{HashMap, HashSet};
 use std::path::{Path, PathBuf};
 
+mod tags;
 mod walk;
 
 const DEFAULT_IMPORT_SPECIFIER: &str = "@data-stores/psql";
