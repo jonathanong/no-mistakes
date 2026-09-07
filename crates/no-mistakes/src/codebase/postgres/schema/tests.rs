@@ -376,6 +376,32 @@ fn identity_generated_columns_are_recorded() {
 }
 
 #[test]
+fn generated_between_in_list_and_distinct_collect_source_columns() {
+    let tables = extract_create_table_metadata(
+        "CREATE TABLE t (
+           id int,
+           note text,
+           a boolean GENERATED ALWAYS AS (id BETWEEN 1 AND 2) STORED,
+           b boolean GENERATED ALWAYS AS (id IN (1, 2)) STORED,
+           c boolean GENERATED ALWAYS AS (id IS NOT NULL) STORED,
+           d boolean GENERATED ALWAYS AS (id IS DISTINCT FROM note) STORED
+         );",
+    );
+    let names: Vec<_> = tables[0]
+        .columns
+        .iter()
+        .filter(|column| column.is_generated)
+        .map(|column| column.generated_source_columns.clone())
+        .collect();
+    assert!(names
+        .iter()
+        .any(|sources| sources.contains(&"id".to_string())));
+    assert!(names.iter().any(
+        |sources| sources.contains(&"id".to_string()) && sources.contains(&"note".to_string())
+    ));
+}
+
+#[test]
 fn generated_is_null_collects_the_source_column() {
     let tables = extract_create_table_metadata(
         "CREATE TABLE t (id int, flag boolean GENERATED ALWAYS AS (id IS NULL) STORED);",
