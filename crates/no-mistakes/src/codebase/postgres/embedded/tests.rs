@@ -424,6 +424,14 @@ fn append_non_static_and_non_append_members_are_dynamic_or_unchanged() {
         extract("composed-append-other-method.ts").calls[0].kind,
         super::EmbeddedSqlKind::ImmutableLocal
     );
+    assert_eq!(
+        extract("composed-append-non-ident.ts").calls[0].kind,
+        super::EmbeddedSqlKind::ImmutableLocal
+    );
+    assert_eq!(
+        extract("composed-append-on-dynamic.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Dynamic
+    );
 }
 
 #[test]

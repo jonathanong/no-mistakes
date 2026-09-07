@@ -142,3 +142,47 @@ fn guarded_select_still_rejects_statement_insert_triggers() {
     options.replay_safe = &replay_safe;
     assert!(judge_file(&file, &options).is_empty());
 }
+
+#[test]
+fn guarded_select_ignores_row_triggers_and_disabled_checks() {
+    let file = extract_sql_statement_facts(
+        "INSERT INTO items (id) SELECT 1 WHERE NOT EXISTS (SELECT 1 FROM items WHERE id = 1);",
+    );
+    let row = extract_sql_statement_facts(
+        "CREATE TRIGGER t BEFORE INSERT ON items FOR EACH ROW EXECUTE FUNCTION audit();",
+    )
+    .triggers;
+    let other = extract_sql_statement_facts(
+        "CREATE TRIGGER t AFTER INSERT ON other EXECUTE FUNCTION audit();",
+    )
+    .triggers;
+    let mut options = catalog(&[]);
+    options.triggers = &row;
+    assert!(judge_file(&file, &options).is_empty());
+    options.triggers = &other;
+    assert!(judge_file(&file, &options).is_empty());
+    options.check_triggers = false;
+    let stmt = extract_sql_statement_facts(
+        "CREATE TRIGGER t AFTER INSERT ON items EXECUTE FUNCTION audit();",
+    )
+    .triggers;
+    options.triggers = &stmt;
+    assert!(judge_file(&file, &options).is_empty());
+}
+
+#[test]
+fn current_timestamp_without_args_is_volatile() {
+    let found = judge_file(
+        &extract_sql_statement_facts(
+            "INSERT INTO items (id, seen) VALUES (1, now())
+             ON CONFLICT (id) DO UPDATE SET seen = CURRENT_TIMESTAMP;",
+        ),
+        &catalog(&[]),
+    );
+    assert!(
+        found
+            .iter()
+            .any(|(_, message)| message.contains("volatile")),
+        "{found:?}"
+    );
+}

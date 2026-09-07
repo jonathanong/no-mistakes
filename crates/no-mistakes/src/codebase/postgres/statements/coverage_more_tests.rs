@@ -148,4 +148,32 @@ fn conflict_where_swapped_and_mismatched_null_proofs() {
         .unwrap()
         .where_proof;
     assert!(proof.null_and_excluded_not_null.is_empty(), "{proof:?}");
+    let not_leaf = extract_sql_statement_facts(
+        "INSERT INTO items (id, note) VALUES (1, 'a')
+         ON CONFLICT (id) DO UPDATE SET note = EXCLUDED.note
+         WHERE items.note IS NULL AND NOT (EXCLUDED.note = 1);",
+    );
+    assert!(not_leaf.inserts[0]
+        .on_conflict
+        .as_ref()
+        .unwrap()
+        .where_proof
+        .null_and_excluded_not_null
+        .is_empty());
+}
+
+#[test]
+fn conflict_where_or_does_not_classify_nested_leaves() {
+    let facts = extract_sql_statement_facts(
+        "INSERT INTO items (id, note) VALUES (1, 'a')
+         ON CONFLICT (id) DO UPDATE SET note = EXCLUDED.note
+         WHERE flag OR (items.note IS NULL AND EXCLUDED.note IS NOT NULL)
+            OR items.note IS DISTINCT FROM EXCLUDED.note;",
+    );
+    let proof = &facts.inserts[0].on_conflict.as_ref().unwrap().where_proof;
+    assert!(proof.disjunctive, "{proof:?}");
+    assert!(
+        proof.distinct_from_excluded.is_empty() || proof.disjunctive,
+        "{proof:?}"
+    );
 }

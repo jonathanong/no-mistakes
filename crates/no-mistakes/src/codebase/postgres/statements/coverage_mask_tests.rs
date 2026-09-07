@@ -120,3 +120,18 @@ fn nested_block_comments_do_not_hide_following_insert() {
     assert!(facts.insert_keyword_count >= 1, "{facts:?}");
     assert_eq!(facts.inserts.len(), 1);
 }
+
+#[test]
+fn doubled_quotes_and_unclosed_dollar_do_not_steal_insert_lines() {
+    let doubled = extract_sql_statement_facts(
+        "SELECT 'it''s INSERT INTO decoy';\nINSERT INTO items (id) VALUES (1);",
+    );
+    assert_eq!(doubled.inserts.len(), 1);
+    assert_eq!(doubled.inserts[0].line, 2);
+    let unclosed = extract_sql_statement_facts(
+        "SELECT $tag$INSERT INTO decoy\nINSERT INTO items (id) VALUES (1);",
+    );
+    assert!(unclosed.inserts.is_empty() || unclosed.insert_keyword_count == 0);
+    assert!(!super::has_top_level_not_exists_in("WHERE NOT"));
+    assert!(!super::has_top_level_not_exists_in("AND"));
+}
