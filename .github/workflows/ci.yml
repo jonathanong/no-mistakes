@@ -324,9 +324,36 @@ jobs:
       # OS-specific invocation tests (Job Objects, process groups, signals).
       # Windows uses an integration test so cargo does not typecheck ~7,500
       # lib unit tests just to run the Job Object resume regression.
+      #
+      # Rewrite crate-type in this job only so one rustc emits the rlib (CLI
+      # + Windows integration test) and the Node cdylib. Do not commit that
+      # crate-type: Linux coverage should not also link a cdylib.
+      - name: Build native CLI and N-API addon
+        timeout-minutes: 10
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("crates/no-mistakes/Cargo.toml")
+          text = path.read_text()
+          old = 'crate-type = ["rlib"]'
+          new = 'crate-type = ["rlib", "cdylib"]'
+          if old not in text:
+              raise SystemExit(f"expected {old!r} in {path}")
+          path.write_text(text.replace(old, new, 1))
+          PY
+          echo "NO_MISTAKES_BUILD_NAPI=1" >> "$GITHUB_ENV"
+          NO_MISTAKES_BUILD_NAPI=1 cargo build --locked -p no-mistakes
+          cp "${{ matrix.addon }}" target/debug/no-mistakes.node
+
       - name: Run platform-specific Rust tests
         timeout-minutes: 10
         shell: bash
+        env:
+          # Must match the preceding build so Windows `cargo test --test`
+          # reuses the rlib instead of rustc-ing no-mistakes again.
+          NO_MISTAKES_BUILD_NAPI: "1"
         run: |
           set -euo pipefail
           if [[ "${{ runner.os }}" == "Windows" ]]; then
@@ -334,15 +361,6 @@ jobs:
           else
             cargo test --locked -p no-mistakes --lib --all-features '${{ matrix.rust_test }}'
           fi
-
-      - name: Build native CLI and N-API addon
-        timeout-minutes: 10
-        shell: bash
-        run: |
-          set -euo pipefail
-          cargo build --locked -p no-mistakes
-          NO_MISTAKES_BUILD_NAPI=1 cargo rustc --locked -p no-mistakes --lib --crate-type cdylib
-          cp "${{ matrix.addon }}" target/debug/no-mistakes.node
 
       - name: Run native CLI smoke test
         timeout-minutes: 2
