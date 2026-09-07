@@ -103,15 +103,10 @@ function caughtThrowCanContinue(node, matcher) {
     if (parent.type === "TryStatement" && current === parent.block) {
       if (parent.finalizer && alwaysExits(parent.finalizer)) {
         if (!alwaysThrows(parent.finalizer)) return false;
-        current = parent;
-        continue;
-      }
-      if (parent.handler) {
+      } else if (parent.handler) {
         if (contains(parent, matcher)) return false;
         if (!alwaysExits(parent.handler.body)) return true;
         if (!alwaysThrows(parent.handler.body)) return false;
-        current = parent;
-        continue;
       }
     }
     current = parent;

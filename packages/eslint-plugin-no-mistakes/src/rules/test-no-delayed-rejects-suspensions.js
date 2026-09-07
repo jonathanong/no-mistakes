@@ -101,13 +101,7 @@ function awaitUsingScope(node, matcher) {
   let scope = null;
   if (parent.type === "ForOfStatement" && parent.left === node) scope = parent.body;
   else if (parent.type === "ForStatement" && parent.init === node) scope = parent;
-  else {
-    let current = parent;
-    while (current && current.type !== "BlockStatement") {
-      current = current.parent;
-    }
-    scope = current;
-  }
+  else if (parent.type === "BlockStatement") scope = parent;
   return scope && scope.range[1] <= matcher.range[0] ? scope : null;
 }
 
