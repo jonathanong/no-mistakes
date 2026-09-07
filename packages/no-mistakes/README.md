@@ -48,6 +48,10 @@ const report = await analyzeProject({
 Use `analyzeProject()` when reports share a root and configuration. Dedicated
 functions remain convenient for a single query:
 
+`testsWhy` reports that receive `planJson` are materialized in a private
+temporary directory and cleaned up after success, native rejection, or
+preparation failure, including when they are batched through `analyzeProject()`.
+
 ````js
 const {
   dependencies,

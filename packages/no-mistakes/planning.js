@@ -7,6 +7,7 @@ const { resolveNativePackage } = require("./scripts/native-package");
 const native = require(
   process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || resolveNativePackage().addonPath,
 );
+const PLAN_INPUT_REPORTS = new Set(["testsComment", "testsGraph", "testsGraphMermaid"]);
 
 async function callJson(fn, options) {
   const input = Buffer.from(JSON.stringify(options || {}));
@@ -94,7 +95,15 @@ async function prepareWhyPlan(options = {}) {
   }
   if (document == null) return { request: next };
   const generatedDir = await fs.mkdtemp(path.join(os.tmpdir(), "no-mistakes-why-"));
-  await fs.writeFile(path.join(generatedDir, "plan.json"), JSON.stringify(loadPlanJson(document)));
+  try {
+    await fs.writeFile(
+      path.join(generatedDir, "plan.json"),
+      JSON.stringify(loadPlanJson(document)),
+    );
+  } catch (error) {
+    await removeGeneratedDir(generatedDir);
+    throw error;
+  }
   next.plan = path.join(generatedDir, "plan.json");
   delete next.planJson;
   return { request: next, generatedDir };
@@ -107,6 +116,21 @@ async function materializeWhyPlan(options = {}) {
 async function removeGeneratedDir(generatedDir) {
   if (!generatedDir) return;
   await fs.rm(generatedDir, { recursive: true, force: true }).catch(() => {});
+}
+
+async function prepareAnalyzeProjectReports(reports, generatedDirs) {
+  const preparations = reports.map(async (report) => {
+    if (report.type === "testsWhy") {
+      const prepared = await prepareWhyPlan(report);
+      if (prepared.generatedDir) generatedDirs.push(prepared.generatedDir);
+      return prepared.request;
+    }
+    return PLAN_INPUT_REPORTS.has(report.type) ? await decamelizePlanOptions(report) : report;
+  });
+  const settled = await Promise.allSettled(preparations);
+  const rejected = settled.find((result) => result.status === "rejected");
+  if (rejected) throw rejected.reason;
+  return settled.map((result) => result.value);
 }
 
 function camelizeWhy(value) {
@@ -176,6 +200,7 @@ module.exports = {
   camelizeWhy,
   decamelizePlanOptions,
   materializeWhyPlan,
+  prepareAnalyzeProjectReports,
   prepareWhyPlan,
   removeGeneratedDir,
   testsComment,

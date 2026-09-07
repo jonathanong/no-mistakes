@@ -10,6 +10,13 @@ const indexPath = join(packageRoot, "index.js");
 const planningPath = join(packageRoot, "planning.js");
 const repositoryRoot = join(packageRoot, "..", "..");
 const addonPath = join(repositoryRoot, "fixtures", "napi", "test-addon.js");
+const planningFixturePath = join(
+  repositoryRoot,
+  "fixtures",
+  "node-api",
+  "planning-temp-cleanup",
+  "plan.json",
+);
 
 const RUST_NAPI_BINDING_FILES = [
   "crates/no-mistakes/src/napi_api.rs",
@@ -413,6 +420,124 @@ test("testsWhy and analyzeProject clean generated why-plan directories", async (
     }
     assert.equal(existsSync(planPath), true);
   } finally {
+    delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(planningPath)];
+    delete require.cache[addonPath];
+    if (previous) {
+      globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = previous;
+    } else {
+      delete globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
+    }
+  }
+});
+
+test("preparation write failures clean their temporary directory and preserve the error", async () => {
+  const previous = globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
+  const fs = require("node:fs/promises");
+  const originalMkdtemp = fs.mkdtemp;
+  const originalWriteFile = fs.writeFile;
+  const generatedDirs = [];
+  const injected = new Error("plan write failed");
+  delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(planningPath)];
+  delete require.cache[addonPath];
+  globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = {
+    testsWhyJson: async () => JSON.stringify({ command: "testsWhy" }),
+  };
+  fs.mkdtemp = async (...args) => {
+    const generatedDir = await originalMkdtemp(...args);
+    generatedDirs.push(generatedDir);
+    return generatedDir;
+  };
+  fs.writeFile = async (file, ...args) => {
+    if (String(file).includes("no-mistakes-why-")) throw injected;
+    return originalWriteFile(file, ...args);
+  };
+  try {
+    const api = require(indexPath);
+    await assert.rejects(
+      api.testsWhy({ planJson: JSON.parse(readFileSync(planningFixturePath, "utf8")) }),
+      (error) => error === injected,
+    );
+    assert.equal(generatedDirs.length, 1);
+    assert.equal(existsSync(generatedDirs[0]), false);
+  } finally {
+    fs.mkdtemp = originalMkdtemp;
+    fs.writeFile = originalWriteFile;
+    delete require.cache[require.resolve(indexPath)];
+    delete require.cache[require.resolve(planningPath)];
+    delete require.cache[addonPath];
+    if (previous) {
+      globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = previous;
+    } else {
+      delete globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
+    }
+  }
+});
+
+test("analyzeProject waits for every preparation before cleaning generated plans", async () => {
+  const previous = globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__;
+  const fs = require("node:fs/promises");
+  const originalMkdtemp = fs.mkdtemp;
+  const originalWriteFile = fs.writeFile;
+  const generatedDirs = [];
+  const failed = new Error("first plan write failed");
+  let writeCount = 0;
+  let releaseSibling;
+  let siblingStarted;
+  const siblingStartedPromise = new Promise((resolve) => {
+    siblingStarted = resolve;
+  });
+  const siblingReleased = new Promise((resolve) => {
+    releaseSibling = resolve;
+  });
+  delete require.cache[require.resolve(indexPath)];
+  delete require.cache[require.resolve(planningPath)];
+  delete require.cache[addonPath];
+  globalThis.__NO_MISTAKES_TEST_NAPI_ADDON__ = {
+    analyzeProjectJson: async () => JSON.stringify({ command: "analyzeProject", reports: [] }),
+  };
+  fs.mkdtemp = async (...args) => {
+    const generatedDir = await originalMkdtemp(...args);
+    generatedDirs.push(generatedDir);
+    return generatedDir;
+  };
+  fs.writeFile = async (file, ...args) => {
+    if (!String(file).includes("no-mistakes-why-")) return originalWriteFile(file, ...args);
+    writeCount += 1;
+    if (writeCount === 1) throw failed;
+    siblingStarted();
+    await siblingReleased;
+    return originalWriteFile(file, ...args);
+  };
+  try {
+    const api = require(indexPath);
+    const request = api.analyzeProject({
+      reports: [
+        { type: "testsWhy", planJson: JSON.parse(readFileSync(planningFixturePath, "utf8")) },
+        { type: "testsWhy", planJson: JSON.parse(readFileSync(planningFixturePath, "utf8")) },
+      ],
+    });
+    await siblingStartedPromise;
+    let settled = false;
+    void request.then(
+      () => {
+        settled = true;
+      },
+      () => {
+        settled = true;
+      },
+    );
+    await new Promise((resolve) => setImmediate(resolve));
+    assert.equal(settled, false);
+    releaseSibling();
+    await assert.rejects(request, (error) => error === failed);
+    assert.equal(generatedDirs.length, 2);
+    for (const generatedDir of generatedDirs) assert.equal(existsSync(generatedDir), false);
+  } finally {
+    releaseSibling();
+    fs.mkdtemp = originalMkdtemp;
+    fs.writeFile = originalWriteFile;
     delete require.cache[require.resolve(indexPath)];
     delete require.cache[require.resolve(planningPath)];
     delete require.cache[addonPath];
