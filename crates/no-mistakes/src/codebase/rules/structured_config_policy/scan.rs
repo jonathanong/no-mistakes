@@ -11,6 +11,7 @@ pub(super) fn scan(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
+    inventory: &[PathBuf],
     target_roots: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
@@ -71,7 +72,7 @@ pub(super) fn scan(
                     }
                     Some(AssertionKind::AncestorOverrideSubset) => {
                         findings.extend(check_ancestor_override_subset(
-                            root, &path, &rel, sources, files, &value, assertion,
+                            root, &path, &rel, sources, inventory, &value, assertion,
                         ));
                     }
                     _ => findings.extend(assert_value(&rel, &value, assertion)?),

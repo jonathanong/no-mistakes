@@ -135,13 +135,13 @@ pub(crate) fn check_with_files_and_sources(
             let opts: Options = rule.try_rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
+            let in_scope: Vec<PathBuf> = all_files
                 .iter()
                 .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
                 .cloned()
                 .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files, &target_roots, sources)
+            let files = super::path_filter::filter_rule_files(root, config, rule, &in_scope)?;
+            scan(root, &opts, &files, &in_scope, &target_roots, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();

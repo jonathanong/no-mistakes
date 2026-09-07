@@ -99,3 +99,24 @@ policies:
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].target.as_deref(), Some("rules"));
 }
+
+#[test]
+fn ancestor_override_subset_uses_in_scope_children_when_include_is_configs_only() {
+    let root = fixture_root();
+    let files = inventory(
+        &root,
+        &[".oxlintrc.json", "lost/.oxlintrc.json", "lost/file.ts"],
+    );
+    let mut config = config(
+        r#"
+policies:
+  - files: ["lost/.oxlintrc.json"]
+    valueAssertions:
+      - kind: ancestor-override-subset
+"#,
+    );
+    config.rules[0].include = vec!["**/.oxlintrc.json".to_string()];
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert_eq!(findings[0].file, "lost/.oxlintrc.json");
+}

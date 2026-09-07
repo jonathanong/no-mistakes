@@ -53,10 +53,11 @@ string.
 array) relative to the declaring file. Package specifiers are skipped; cycles
 and paths that leave the repository root are findings. Parse errors are reported
 on the ancestor file. After a nested config becomes the resolution root, ancestor
-override `files` globs are matched against inventory children under that nested
-directory. An override that matched those children relative to the ancestor
-directory but no longer matches relative to the nested directory is lost: its
-`rules` must be a value-equal subset of the nested config's top-level `rules`.
+override `files` globs are matched against in-scope inventory children under that
+nested directory, including files excluded by a config-only rule `include`. An
+override that matched those children relative to the ancestor directory but no
+longer matches relative to the nested directory is lost: its `rules` must be a
+value-equal subset of the nested config's top-level `rules`.
 Overrides whose globs still match after rebasing, and nested directories with no
 inventory children, are ignored. Extra nested rules are allowed. Key names default
 to `extends`, `overrides`, `files`, and `rules`, and can be overridden with
