@@ -4,6 +4,8 @@ const { unwrapExpression } = require("./async-ast");
 const { compileTargets, matchesAny, targetMatches } = require("./async-patterns");
 const { propertyName } = require("./module-mock-helpers");
 
+const LOCAL_REQUIRE_DEFS = new Set(["Parameter", "Variable", "CatchClause", "FunctionName"]);
+
 function findVariable(scope, name) {
   while (scope) {
     const variable = scope.variables.find((candidate) => candidate.name === name);
@@ -22,14 +24,19 @@ function importSpecifierName(specifier) {
   return imported.type === "Literal" ? String(imported.value) : imported.name;
 }
 
-function requireSource(node) {
+function requireSource(node, context) {
   const expression = unwrapExpression(node);
-  return expression?.type === "CallExpression" &&
-    expression.callee.type === "Identifier" &&
-    expression.callee.name === "require" &&
-    typeof expression.arguments[0]?.value === "string"
-    ? expression.arguments[0].value
-    : null;
+  if (
+    expression?.type !== "CallExpression" ||
+    expression.callee.type !== "Identifier" ||
+    expression.callee.name !== "require" ||
+    typeof expression.arguments[0]?.value !== "string"
+  ) {
+    return null;
+  }
+  const variable = resolveVariable(expression.callee, context);
+  if (variable?.defs.some((def) => LOCAL_REQUIRE_DEFS.has(def.type))) return null;
+  return expression.arguments[0].value;
 }
 
 function bindingIdentifier(node) {
@@ -63,23 +70,44 @@ function createTargetMatcher(context, optionKey = "targets") {
   }
 
   function recordRequireDeclarator(node) {
-    const source = requireSource(node.init);
-    if (!source) return;
-    if (node.id.type === "Identifier") {
-      recordNamespace(node.id, source);
-      recordDirect(node.id, source, node.id.name);
+    const source = requireSource(node.init, context);
+    if (source) {
+      if (node.id.type === "Identifier") {
+        recordNamespace(node.id, source);
+        recordDirect(node.id, source, node.id.name);
+        return;
+      }
+      if (node.id.type === "ObjectPattern") {
+        for (const property of node.id.properties) {
+          if (property.type !== "Property") continue;
+          recordDirect(bindingIdentifier(property.value), source, propertyName(property.key));
+        }
+      }
       return;
     }
-    if (node.id.type === "ObjectPattern") {
-      for (const property of node.id.properties) {
-        if (property.type !== "Property") continue;
-        recordDirect(bindingIdentifier(property.value), source, propertyName(property.key));
+    const member = unwrapExpression(node.init);
+    if (member?.type !== "MemberExpression" || node.id.type !== "Identifier") return;
+    const memberSource = requireSource(member.object, context);
+    const name = memberPropertyName(member);
+    if (memberSource && name) recordDirect(node.id, memberSource, name);
+  }
+
+  function recordImportDeclaration(node) {
+    const source = node.source.value;
+    for (const specifier of node.specifiers) {
+      if (specifier.type === "ImportNamespaceSpecifier") {
+        recordNamespace(specifier.local, source);
+      } else if (specifier.type === "ImportDefaultSpecifier") {
+        recordDirect(specifier.local, source, specifier.local.name);
+      } else if (specifier.type === "ImportSpecifier") {
+        recordDirect(specifier.local, source, importSpecifierName(specifier));
       }
     }
   }
 
-  function recordProgramRequires(node) {
+  function recordProgram(node) {
     for (const statement of node.body) {
+      if (statement.type === "ImportDeclaration") recordImportDeclaration(statement);
       const declarations =
         statement.type === "VariableDeclaration"
           ? statement.declarations
@@ -101,16 +129,18 @@ function createTargetMatcher(context, optionKey = "targets") {
     if (node.type !== "MemberExpression") return null;
     const name = memberPropertyName(node);
     if (!name) return null;
+    const object = unwrapExpression(node.object);
     const source =
-      requireSource(node.object) ||
-      (node.object.type === "Identifier"
-        ? namespaceBindings.get(resolveVariable(node.object, context))
+      requireSource(object, context) ||
+      (object.type === "Identifier"
+        ? namespaceBindings.get(resolveVariable(object, context))
         : null);
     return source && targetMatches(targets, source, name) ? { source, calleeName: name } : null;
   }
 
   function resolveCallTarget(node) {
-    return resolveDirectTarget(node.callee) || resolveNamespaceTarget(node.callee);
+    const callee = unwrapExpression(node.callee);
+    return resolveDirectTarget(callee) || resolveNamespaceTarget(callee);
   }
 
   return {
@@ -120,22 +150,9 @@ function createTargetMatcher(context, optionKey = "targets") {
       return Boolean(resolveCallTarget(node));
     },
     visitors: {
-      Program: recordProgramRequires,
-      ImportDeclaration(node) {
-        const source = node.source.value;
-        for (const specifier of node.specifiers) {
-          if (specifier.type === "ImportNamespaceSpecifier") {
-            recordNamespace(specifier.local, source);
-          } else if (specifier.type === "ImportDefaultSpecifier") {
-            recordDirect(specifier.local, source, specifier.local.name);
-          } else if (specifier.type === "ImportSpecifier") {
-            recordDirect(specifier.local, source, importSpecifierName(specifier));
-          }
-        }
-      },
-      VariableDeclarator(node) {
-        recordRequireDeclarator(node);
-      },
+      Program: recordProgram,
+      ImportDeclaration: recordImportDeclaration,
+      VariableDeclarator: recordRequireDeclarator,
     },
   };
 }

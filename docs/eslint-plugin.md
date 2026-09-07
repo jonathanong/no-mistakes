@@ -58,10 +58,10 @@ and `calleeNamePatterns?: string[]`.
 
 ### `require-options-on-imported-call`
 
-`targets` is an array whose objects may set `sourceSpecifierPatterns?: string[]`,
-`calleeNamePatterns?: string[]`, `optionsPosition` (one-based),
-`requiredProperties: string[]`, and `propertyMatch?: "any" | "all"` (default
-`"any"`). Empty `targets` disables the rule.
+`targets` is an array whose objects set `sourceSpecifierPatterns: string[]`,
+`calleeNamePatterns: string[]`, `optionsPosition` (one-based),
+`requiredProperties: string[]`, and optional `propertyMatch?: "any" | "all"`
+(default `"any"`). Empty `targets` disables the rule.
 
 ### `module-mock-boundary`
 

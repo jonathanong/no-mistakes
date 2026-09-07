@@ -143,6 +143,44 @@ validateUrl(url, {});
       "missingOptions",
     ]);
   });
+
+  it("tracks member-selected CommonJS bindings", () => {
+    const code = `const checkUrl = require("ssrf-guard/node").validateUrl;
+checkUrl(url);
+checkUrl(url, { timeoutMs: 1 });
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "cjs-member.ts"), ["missingOptions"]);
+  });
+
+  it("records ESM imports before calls even when the import appears after", () => {
+    const code = `checkUrl(url);
+import { validateUrl as checkUrl } from "ssrf-guard/node";
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "import-after.ts"), ["missingOptions"]);
+  });
+
+  it("ignores shadowed require bindings", () => {
+    const code = `function load(require) {
+  const { validateUrl } = require("ssrf-guard/node");
+  validateUrl(url);
+}
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "shadow-require.ts"), []);
+  });
+
+  it("unwraps typed imported callees", () => {
+    const code = `import { validateUrl } from "ssrf-guard/node";
+import * as ssrf from "ssrf-guard/node";
+(validateUrl as Validator)(url);
+validateUrl!(url);
+(ssrf as Guard).validateUrl(url);
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "typed.ts"), [
+      "missingOptions",
+      "missingOptions",
+      "missingOptions",
+    ]);
+  });
 });
 
 describe("require-options-on-imported-call helpers", () => {
