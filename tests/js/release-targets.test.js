@@ -125,6 +125,16 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   assert.match(body, /Run native CLI smoke test/);
   assert.match(body, /real-napi-api\.test\.js/);
   assert.match(
+    body,
+    /crate-type = \["rlib", "cdylib"\]/,
+    "native jobs must emit rlib and cdylib from one rustc",
+  );
+  assert.doesNotMatch(
+    body,
+    /cargo rustc --locked -p no-mistakes --lib --crate-type cdylib/,
+    "native jobs must not compile the crate a second time as cdylib-only",
+  );
+  assert.match(
     workflow,
     /cargo test --workspace --all-features/,
     "Linux coverage keeps the full-suite spelling the native guard must reject",
