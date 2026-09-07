@@ -1,67 +1,8 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { compileTargets, matchesAny, targetMatches } = require("./async-patterns");
 const { propertyName } = require("./module-mock-helpers");
-
-function safeRegExp(source) {
-  try {
-    return new RegExp(source);
-  } catch {
-    return null;
-  }
-}
-
-function patternToRegExp(pattern) {
-  if (pattern.startsWith("/") && pattern.endsWith("/") && pattern.length > 2) {
-    return safeRegExp(pattern.slice(1, -1));
-  }
-  let source = "^";
-  for (let index = 0; index < pattern.length; index += 1) {
-    const ch = pattern[index];
-    const next = pattern[index + 1];
-    if (ch === "*" && next === "*") {
-      if (pattern[index + 2] === "/") {
-        source += "(?:.*/)?";
-        index += 2;
-      } else {
-        source += ".*";
-        index += 1;
-      }
-    } else if (ch === "*") {
-      source += "[^/]*";
-    } else if (ch === "?") {
-      source += "[^/]";
-    } else {
-      source += ch.replace(/[\\^$+?.()|[\]{}]/g, "\\$&");
-    }
-  }
-  return safeRegExp(`${source}$`);
-}
-
-function compileTargets(options, optionKey) {
-  return (options[optionKey] || [])
-    .map((target) => ({
-      sourceSpecifierPatterns: (target.sourceSpecifierPatterns || [])
-        .map(patternToRegExp)
-        .filter(Boolean),
-      calleeNamePatterns: (target.calleeNamePatterns || []).map(patternToRegExp).filter(Boolean),
-    }))
-    .filter(
-      (target) => target.sourceSpecifierPatterns.length > 0 && target.calleeNamePatterns.length > 0,
-    );
-}
-
-function matchesAny(value, patterns) {
-  return typeof value === "string" && patterns.some((pattern) => pattern.test(value));
-}
-
-function targetMatches(targets, source, calleeName) {
-  return targets.some(
-    (target) =>
-      matchesAny(source, target.sourceSpecifierPatterns) &&
-      matchesAny(calleeName, target.calleeNamePatterns),
-  );
-}
 
 function findVariable(scope, name) {
   while (scope) {
@@ -81,14 +22,23 @@ function importSpecifierName(specifier) {
   return imported.type === "Literal" ? String(imported.value) : imported.name;
 }
 
-function requireSource(node) {
+function isLocalRequire(id, context) {
+  const variable = resolveVariable(id, context);
+  return Boolean(variable?.defs.some((def) => def.type && def.type !== "ImplicitGlobalVariable"));
+}
+
+function requireSource(node, context) {
   const expression = unwrapExpression(node);
-  return expression?.type === "CallExpression" &&
-    expression.callee.type === "Identifier" &&
-    expression.callee.name === "require" &&
-    typeof expression.arguments[0]?.value === "string"
-    ? expression.arguments[0].value
-    : null;
+  if (
+    expression?.type !== "CallExpression" ||
+    expression.callee.type !== "Identifier" ||
+    expression.callee.name !== "require" ||
+    typeof expression.arguments[0]?.value !== "string" ||
+    isLocalRequire(expression.callee, context)
+  ) {
+    return null;
+  }
+  return expression.arguments[0].value;
 }
 
 function bindingIdentifier(node) {
@@ -122,74 +72,118 @@ function createTargetMatcher(context, optionKey = "targets") {
   }
 
   function recordRequireDeclarator(node) {
-    const source = requireSource(node.init);
-    if (!source) return;
-    if (node.id.type === "Identifier") {
-      recordNamespace(node.id, source);
-      recordDirect(node.id, source, node.id.name);
+    if (node.parent?.type !== "VariableDeclaration" || node.parent.kind !== "const") return;
+    const source = requireSource(node.init, context);
+    if (source) {
+      if (node.id.type === "Identifier") {
+        recordNamespace(node.id, source);
+        recordDirect(node.id, source, node.id.name);
+        return;
+      }
+      if (node.id.type === "ObjectPattern") {
+        for (const property of node.id.properties) {
+          if (property.type !== "Property") continue;
+          const name = property.computed
+            ? property.key?.type === "Literal"
+              ? String(property.key.value)
+              : null
+            : propertyName(property.key);
+          if (name) recordDirect(bindingIdentifier(property.value), source, name);
+        }
+      }
       return;
     }
-    if (node.id.type === "ObjectPattern") {
-      for (const property of node.id.properties) {
-        if (property.type !== "Property") continue;
-        recordDirect(bindingIdentifier(property.value), source, propertyName(property.key));
+    const member = unwrapExpression(node.init);
+    if (member?.type !== "MemberExpression" || node.id.type !== "Identifier") return;
+    const memberSource = requireSource(member.object, context);
+    const name = memberPropertyName(member);
+    if (memberSource && name) recordDirect(node.id, memberSource, name);
+  }
+
+  function recordImportEquals(node) {
+    if (node.importKind === "type" || node.id?.type !== "Identifier") return;
+    const ref = node.moduleReference;
+    if (ref?.type !== "TSExternalModuleReference") return;
+    const source = ref.expression?.type === "Literal" ? String(ref.expression.value) : null;
+    if (!source) return;
+    recordNamespace(node.id, source);
+    recordDirect(node.id, source, node.id.name);
+  }
+
+  function recordImportDeclaration(node) {
+    const source = node.source.value;
+    for (const specifier of node.specifiers) {
+      if (specifier.type === "ImportNamespaceSpecifier") {
+        recordNamespace(specifier.local, source);
+      } else if (specifier.type === "ImportDefaultSpecifier") {
+        recordDirect(specifier.local, source, specifier.local.name);
+      } else if (specifier.type === "ImportSpecifier") {
+        const imported = importSpecifierName(specifier);
+        recordDirect(
+          specifier.local,
+          source,
+          imported === "default" ? specifier.local.name : imported,
+        );
       }
     }
   }
 
-  function recordProgramRequires(node) {
-    for (const statement of node.body) {
-      const declarations =
-        statement.type === "VariableDeclaration"
-          ? statement.declarations
-          : statement.type === "ExportNamedDeclaration" &&
-              statement.declaration?.type === "VariableDeclaration"
-            ? statement.declaration.declarations
-            : [];
-      for (const declaration of declarations) recordRequireDeclarator(declaration);
+  function walk(node, visit) {
+    if (!node?.type) return;
+    visit(node);
+    for (const key of context.sourceCode.visitorKeys[node.type] || []) {
+      const value = node[key];
+      if (Array.isArray(value)) {
+        for (const child of value) walk(child, visit);
+      } else {
+        walk(value, visit);
+      }
     }
   }
 
-  function isDirectTarget(node) {
-    if (node.type !== "Identifier") return false;
-    const variable = resolveVariable(node, context);
-    return Boolean(variable && directBindings.has(variable));
+  function recordProgram(node) {
+    walk(node, (child) => {
+      if (child.type === "ImportDeclaration") recordImportDeclaration(child);
+      else if (child.type === "TSImportEqualsDeclaration") recordImportEquals(child);
+      else if (child.type === "VariableDeclarator") recordRequireDeclarator(child);
+    });
   }
 
-  function isNamespaceTarget(node) {
-    if (node.type !== "MemberExpression") return false;
+  function resolveDirectTarget(node) {
+    if (node.type !== "Identifier") return null;
+    const variable = resolveVariable(node, context);
+    return (variable && directBindings.get(variable)) || null;
+  }
+
+  function resolveNamespaceTarget(node) {
+    if (node.type !== "MemberExpression") return null;
     const name = memberPropertyName(node);
-    if (!name) return false;
+    if (!name) return null;
+    const object = unwrapExpression(node.object);
     const source =
-      requireSource(node.object) ||
-      (node.object.type === "Identifier"
-        ? namespaceBindings.get(resolveVariable(node.object, context))
+      requireSource(object, context) ||
+      (object.type === "Identifier"
+        ? namespaceBindings.get(resolveVariable(object, context))
         : null);
-    return Boolean(source && targetMatches(targets, source, name));
+    return source && targetMatches(targets, source, name) ? { source, calleeName: name } : null;
+  }
+
+  function resolveCallTarget(node) {
+    const callee = unwrapExpression(node.callee);
+    return resolveDirectTarget(callee) || resolveNamespaceTarget(callee);
   }
 
   return {
     hasTargets: targets.length > 0,
+    resolveCallTarget,
     isTargetCall(node) {
-      return isDirectTarget(node.callee) || isNamespaceTarget(node.callee);
+      return Boolean(resolveCallTarget(node));
     },
     visitors: {
-      Program: recordProgramRequires,
-      ImportDeclaration(node) {
-        const source = node.source.value;
-        for (const specifier of node.specifiers) {
-          if (specifier.type === "ImportNamespaceSpecifier") {
-            recordNamespace(specifier.local, source);
-          } else if (specifier.type === "ImportDefaultSpecifier") {
-            recordDirect(specifier.local, source, specifier.local.name);
-          } else if (specifier.type === "ImportSpecifier") {
-            recordDirect(specifier.local, source, importSpecifierName(specifier));
-          }
-        }
-      },
-      VariableDeclarator(node) {
-        recordRequireDeclarator(node);
-      },
+      Program: recordProgram,
+      ImportDeclaration: recordImportDeclaration,
+      TSImportEqualsDeclaration: recordImportEquals,
+      VariableDeclarator: recordRequireDeclarator,
     },
   };
 }

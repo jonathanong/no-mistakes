@@ -37,6 +37,7 @@ const rules = {
   "postgres-no-unbounded-query-fanout": require("./rules/postgres-no-unbounded-query-fanout"),
   "react-no-nullish-react-node": require("./rules/react-no-nullish-react-node"),
   "react-no-use-promise-resolve": require("./rules/react-no-use-promise-resolve"),
+  "require-options-on-imported-call": require("./rules/require-options-on-imported-call"),
   "server-require-nullable-fetch-wrapper": require("./rules/server-require-nullable-fetch-wrapper"),
   "test-no-error-message-matching": require("./rules/test-no-error-message-matching"),
   "test-no-delayed-rejects": require("./rules/test-no-delayed-rejects"),

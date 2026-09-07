@@ -144,4 +144,55 @@ async function test() {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("reports aliased imported calls missing required options", () => {
+    const root = mkdtempSync(join(tmpdir(), "pac-oxlint-"));
+    try {
+      writeFileSync(
+        join(root, "fixture.ts"),
+        'import { validateUrl as checkUrl } from "ssrf-guard/node";\ncheckUrl(url);\n',
+      );
+      writeFileSync(
+        join(root, ".oxlintrc.json"),
+        JSON.stringify({
+          jsPlugins: [{ name: "no-mistakes", specifier: resolve(__dirname, "../src/index.js") }],
+          rules: {
+            "no-mistakes/require-options-on-imported-call": [
+              "error",
+              {
+                targets: [
+                  {
+                    sourceSpecifierPatterns: ["ssrf-guard/node"],
+                    calleeNamePatterns: ["validateUrl"],
+                    optionsPosition: 2,
+                    requiredProperties: ["timeoutMs", "signal"],
+                  },
+                ],
+              },
+            ],
+          },
+        }),
+      );
+      const result = spawnSync(
+        process.execPath,
+        [
+          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+          "--config",
+          ".oxlintrc.json",
+          "fixture.ts",
+        ],
+        {
+          cwd: root,
+          encoding: "utf8",
+        },
+      );
+      assert.notEqual(result.status, 0);
+      assert.match(
+        `${result.stderr || ""}${result.stdout || ""}`,
+        /statically visible options object|require-options-on-imported-call/i,
+      );
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
