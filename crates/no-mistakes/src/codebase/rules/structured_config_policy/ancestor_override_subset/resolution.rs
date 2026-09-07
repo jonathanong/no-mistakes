@@ -25,7 +25,7 @@ struct ResolutionKey {
 
 enum Work {
     Enter(PathBuf, Value),
-    Exit(PathBuf),
+    Exit(PathBuf, PathBuf),
 }
 
 impl<'a> AncestorResolver<'a> {
@@ -52,15 +52,31 @@ impl<'a> AncestorResolver<'a> {
         self.values.insert(start.clone(), value.clone());
         let mut direct = BTreeMap::new();
         let mut visiting = BTreeSet::new();
+        let mut depth = 0usize;
         let mut work = vec![Work::Enter(start.clone(), value.clone())];
         while let Some(item) = work.pop() {
             match item {
                 Work::Enter(path, value) => {
+                    depth += 1;
+                    if depth > 1024 {
+                        return Err(format!(
+                            "{}: `{}` exceeds the extends depth limit",
+                            relative_slash_path(self.root, &path),
+                            assertion.extends_key
+                        ));
+                    }
                     let key = resolution_key(&path, assertion);
                     if self.chains.contains_key(&key) {
                         continue;
                     }
-                    if !visiting.insert(path.clone()) {
+                    let canonical = path.canonicalize().map_err(|error| {
+                        format!(
+                            "{}: cannot verify `{}` identity: {error}",
+                            relative_slash_path(self.root, &path),
+                            assertion.extends_key
+                        )
+                    })?;
+                    if !visiting.insert(canonical.clone()) {
                         return Err(format!(
                             "{}: `{}` contains an extends cycle",
                             relative_slash_path(self.root, &path),
@@ -69,7 +85,7 @@ impl<'a> AncestorResolver<'a> {
                     }
                     let parents = self.parents(&path, &value, assertion)?;
                     direct.insert(path.clone(), parents.clone());
-                    work.push(Work::Exit(path));
+                    work.push(Work::Exit(path, canonical));
                     for parent in parents.into_iter().rev() {
                         if !self
                             .chains
@@ -82,8 +98,8 @@ impl<'a> AncestorResolver<'a> {
                         }
                     }
                 }
-                Work::Exit(path) => {
-                    visiting.remove(&path);
+                Work::Exit(path, canonical) => {
+                    visiting.remove(&canonical);
                     let mut chain = Vec::new();
                     for parent in direct.get(&path).into_iter().flatten() {
                         chain.extend(
@@ -118,10 +134,17 @@ impl<'a> AncestorResolver<'a> {
     ) -> Result<Vec<PathBuf>, String> {
         let mut parents = Vec::new();
         for specifier in extends(value, &assertion.extends_key)? {
-            let Some(specifier) = local_specifier(&specifier)? else {
+            let Some(specifier) = local_specifier(&specifier, &assertion.extends_key)? else {
                 continue;
             };
             let parent = normalize_path(&path.parent().unwrap_or(self.root).join(specifier));
+            if !parent.exists() {
+                return Err(format!(
+                    "{}: `{}` reference is missing",
+                    relative_slash_path(self.root, path),
+                    assertion.extends_key
+                ));
+            }
             self.ensure_contained(path, &parent, &assertion.extends_key)?;
             self.load(&parent)?;
             parents.push(parent);

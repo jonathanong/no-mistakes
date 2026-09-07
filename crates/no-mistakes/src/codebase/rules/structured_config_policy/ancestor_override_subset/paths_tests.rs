@@ -3,14 +3,14 @@ use super::resolution::paths::local_specifier;
 #[test]
 fn classifies_posix_windows_and_package_extends() {
     assert_eq!(
-        local_specifier("./base.json").unwrap(),
+        local_specifier("./base.json", "parents").unwrap(),
         Some("./base.json".to_string())
     );
     assert_eq!(
-        local_specifier("..\\base.json").unwrap(),
+        local_specifier("..\\base.json", "parents").unwrap(),
         Some("../base.json".to_string())
     );
-    assert_eq!(local_specifier("@scope/config").unwrap(), None);
+    assert_eq!(local_specifier("@scope/config", "parents").unwrap(), None);
     for path in [
         "",
         "  ",
@@ -19,6 +19,6 @@ fn classifies_posix_windows_and_package_extends() {
         "C:base.json",
         "\\\\server\\share\\base.json",
     ] {
-        assert!(local_specifier(path).is_err(), "{path:?}");
+        assert!(local_specifier(path, "parents").is_err(), "{path:?}");
     }
 }

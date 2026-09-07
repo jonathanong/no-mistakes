@@ -17,9 +17,9 @@ pub(crate) fn extends(value: &Value, key: &str) -> Result<Vec<String>, String> {
     }
 }
 
-pub(crate) fn local_specifier(specifier: &str) -> Result<Option<String>, String> {
+pub(crate) fn local_specifier(specifier: &str, key: &str) -> Result<Option<String>, String> {
     if specifier.trim().is_empty() {
-        return Err("`extends` reference must not be blank".to_string());
+        return Err(format!("`{key}` reference must not be blank"));
     }
     if specifier.starts_with("./")
         || specifier.starts_with("../")
@@ -30,7 +30,7 @@ pub(crate) fn local_specifier(specifier: &str) -> Result<Option<String>, String>
     }
     if is_absolute_or_drive_path(specifier) || is_drive_relative_path(specifier) {
         return Err(format!(
-            "`extends` reference is outside the repository root: {specifier}"
+            "`{key}` reference is outside the repository root: {specifier}"
         ));
     }
     Ok(None)
