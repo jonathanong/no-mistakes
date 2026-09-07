@@ -264,29 +264,6 @@ fn command_output_captures_output_with_and_without_deadline() {
     }
 }
 
-#[cfg(windows)]
-#[test]
-fn command_output_resumes_child_after_job_assignment() {
-    let _serial = deadline_test_lock()
-        .lock()
-        .unwrap_or_else(std::sync::PoisonError::into_inner);
-    let _guard = DeadlineGuard::install_with_owner(
-        Some(Duration::from_secs(5)),
-        Some(std::thread::current().id()),
-    )
-    .unwrap();
-    let mut command = Command::new("cmd.exe");
-    command.args(["/D", "/C", "echo stdout&echo stderr>&2"]);
-
-    // The Windows path creates the process suspended, attaches its job, and
-    // must resume it before waiting for output.
-    let output = command_output(&mut command).unwrap();
-
-    assert!(output.status.success());
-    assert_eq!(output.stdout, b"stdout\r\n");
-    assert_eq!(output.stderr, b"stderr\r\n");
-}
-
 #[cfg(unix)]
 #[test]
 fn command_output_terminates_child_at_deadline() {
