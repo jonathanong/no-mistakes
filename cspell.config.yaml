@@ -91,6 +91,7 @@ words:
   - serde
   - sqlparser
   - quasis
+  - unanalyzable
   - unparseable
   - sgconfig
   - shellcheck

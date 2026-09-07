@@ -125,6 +125,9 @@ fn postgres_embedded_sql_configured(config: &no_mistakes::config::v2::NoMistakes
         no_mistakes::codebase::rules::POSTGRES_LOCK_ORDERING,
         no_mistakes::codebase::rules::POSTGRES_NO_OFFSET,
         no_mistakes::codebase::rules::POSTGRES_REQUIRE_QUERY_ANNOTATION,
+        no_mistakes::codebase::rules::POSTGRES_REQUIRED_PREDICATES,
+        no_mistakes::codebase::rules::POSTGRES_SQL_SHAPE_POLICY,
+        no_mistakes::codebase::rules::POSTGRES_IDEMPOTENT_INSERT,
     ]
     .iter()
     .any(|rule_id| rule_configured(config, rule_id))

@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      sqlInclude: ["sql/**/*.sql"]
+      relations:
+        - table: topics
+          require:
+            - parent_id IS NOT NULL
