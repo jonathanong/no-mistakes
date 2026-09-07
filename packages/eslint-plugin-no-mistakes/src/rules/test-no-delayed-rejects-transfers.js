@@ -49,8 +49,8 @@ function possibleCaughtThrowCanContinue(node, matcher) {
   );
 }
 
-function suspensionFailureCanReachMatcher(suspension, matcher) {
-  let current = suspension;
+function thrownCompletionCanReachMatcher(origin, matcher) {
+  let current = origin;
   while (current.parent) {
     const parent = current.parent;
     if (parent.type === "TryStatement") {
@@ -93,4 +93,4 @@ function suspensionFailureCanReachMatcher(suspension, matcher) {
   return false;
 }
 
-module.exports = { possibleCaughtThrowCanContinue, suspensionFailureCanReachMatcher };
+module.exports = { mayThrow, possibleCaughtThrowCanContinue, thrownCompletionCanReachMatcher };

@@ -216,6 +216,68 @@ export async function conditionalCatchDoesNotDominate() {
   await expect(update).rejects.toThrow();
 }
 
+export async function caughtThrowBeforeObserverDoesNotDominate(flag: boolean) {
+  const update = startOperation();
+  try {
+    if (flag) throw new Error("caught");
+    void update.catch(() => void 0);
+  } catch {
+    Math.random();
+  }
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function rethrowBeforeObserverReachesOuterCatch(flag: boolean) {
+  const update = startOperation();
+  try {
+    try {
+      if (flag) throw new Error("inner");
+      void update.catch(() => void 0);
+    } catch {
+      throw new Error("outer");
+    }
+  } catch {
+    Math.random();
+  }
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function throwingFinallyBeforeObserverReachesOuterCatch(flag: boolean) {
+  const update = startOperation();
+  try {
+    try {
+      if (flag) throw new Error("inner");
+      void update.catch(() => void 0);
+    } catch {
+      return;
+    } finally {
+      throw new Error("outer");
+    }
+  } catch {
+    Math.random();
+  }
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function handlerlessTryThrowBeforeObserverReachesOuterCatch(flag: boolean) {
+  const update = startOperation();
+  try {
+    try {
+      if (flag) throw new Error("inner");
+      void update.catch(() => void 0);
+    } finally {
+      Math.random();
+    }
+  } catch {
+    Math.random();
+  }
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
 export async function conditionalCatchInsideAwaitDoesNotDominate(flag: boolean) {
   const update = startOperation();
   await (flag && update.catch(() => undefined));

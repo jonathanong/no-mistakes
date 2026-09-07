@@ -4,13 +4,15 @@ const { rule } = require("../helpers");
 const { findContainingFunction, traverse, unwrapExpression } = require("./async-ast");
 const {
   chainIsSafelyObserved,
-  isPromiseChainMember,
   literalPropertyName,
   promiseChainBase,
 } = require("./test-no-delayed-rejects-chains");
 const { canReachMatcher, contains, executesBefore } = require("./test-no-delayed-rejects-flow");
 const { isImmediateObserver } = require("./test-no-delayed-rejects-observers");
-const { suspensionOccursBeforeMatcher } = require("./test-no-delayed-rejects-suspensions");
+const {
+  promiseExistsBeforeInitializerSuspension,
+  suspensionOccursBeforeMatcher,
+} = require("./test-no-delayed-rejects-suspensions");
 
 const EXPECT_MODULES = new Set(["vitest", "@jest/globals"]);
 
@@ -107,46 +109,36 @@ function rejectionMatcherCall(node, declarator, context) {
   return matcherCall(node);
 }
 
-function hasObserverBeforeSuspension(context, functionNode, declarator, suspension) {
-  let found = false;
+function collectObserverSites(context, functionNode, declarator) {
+  const observers = [];
   traverse(context, functionNode, (node) => {
     const matcher = rejectionMatcherCall(node, declarator, context);
     const handler =
       isRejectionHandlerCall(node, declarator, context) ||
       isImmediateObserver(node, declarator, context, isSameConst);
+    if (handler) observers.push(node);
+    else if (matcher) observers.push(matcher);
+  });
+  return observers;
+}
+
+function hasObserverBeforeSuspension(observers, suspension) {
+  return observers.some((observer) => {
     const observesAfterForAwaitSuspends =
       suspension.type === "ForOfStatement" &&
-      (contains(suspension.left, node) || contains(suspension.body, node));
-    if (
-      (handler && !observesAfterForAwaitSuspends && executesBefore(node, suspension)) ||
-      (matcher && !observesAfterForAwaitSuspends && executesBefore(matcher, suspension))
-    ) {
-      found = true;
-    }
+      (contains(suspension.left, observer) || contains(suspension.body, observer));
+    return !observesAfterForAwaitSuspends && executesBefore(observer, suspension);
   });
-  return found;
 }
 
-function promiseExistsBeforeInitializerSuspension(initializer, suspension) {
-  let current = suspension;
-  while (current && current !== initializer) {
-    const parent = current.parent;
-    if (
-      parent?.type === "CallExpression" &&
-      parent.arguments.includes(current) &&
-      isPromiseChainMember(parent.callee) &&
-      parent.callee.object.range[1] <= suspension.range[0]
-    ) {
-      return true;
-    }
-    current = parent;
-  }
-  return false;
-}
-
-function hasInterveningAwait(context, declarator, matcher) {
+function hasInterveningAwait(context, declarator, matcher, observerCache) {
   const functionNode = findContainingFunction(declarator);
   if (!functionNode || functionNode !== findContainingFunction(matcher)) return false;
+  let observers = observerCache.get(declarator);
+  if (!observers) {
+    observers = collectObserverSites(context, functionNode, declarator);
+    observerCache.set(declarator, observers);
+  }
 
   let found = false;
   traverse(context, functionNode, (node) => {
@@ -155,7 +147,7 @@ function hasInterveningAwait(context, declarator, matcher) {
       (node.range[0] >= declarator.init.range[1] ||
         promiseExistsBeforeInitializerSuspension(declarator.init, node)) &&
       canReachMatcher(node, matcher, functionNode) &&
-      !hasObserverBeforeSuspension(context, functionNode, declarator, node)
+      !hasObserverBeforeSuspension(observers, node)
     ) {
       found = true;
     }
@@ -176,14 +168,23 @@ module.exports = rule(
         "Attach a rejection observer to this const promise before awaiting coordination; the promise can reject before expect(...).rejects observes it.",
     },
   },
-  (context) => ({
-    MemberExpression(node) {
-      const identifier = expectedIdentifier(node, context);
-      if (!identifier) return;
-      const declarator = constDeclarator(identifier, context);
-      const call = matcherCall(node);
-      if (!declarator || !call || !hasInterveningAwait(context, declarator, call)) return;
-      context.report({ node, messageId: "delayedReject" });
-    },
-  }),
+  (context) => {
+    const observerCache = new WeakMap();
+    return {
+      MemberExpression(node) {
+        const identifier = expectedIdentifier(node, context);
+        if (!identifier) return;
+        const declarator = constDeclarator(identifier, context);
+        const call = matcherCall(node);
+        if (
+          !declarator ||
+          !call ||
+          !hasInterveningAwait(context, declarator, call, observerCache)
+        ) {
+          return;
+        }
+        context.report({ node, messageId: "delayedReject" });
+      },
+    };
+  },
 );

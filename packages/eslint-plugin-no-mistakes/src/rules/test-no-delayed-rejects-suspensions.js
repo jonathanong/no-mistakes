@@ -1,6 +1,7 @@
 "use strict";
 
 const { contains } = require("./test-no-delayed-rejects-flow");
+const { isPromiseChainMember } = require("./test-no-delayed-rejects-chains");
 
 function isLoop(node) {
   return (
@@ -64,4 +65,21 @@ function suspensionOccursBeforeMatcher(node, matcher, functionNode) {
   return node.range[0] < matcher.range[1] || loopBranchesCanReorder(node, matcher, functionNode);
 }
 
-module.exports = { suspensionOccursBeforeMatcher };
+function promiseExistsBeforeInitializerSuspension(initializer, suspension) {
+  let current = suspension;
+  while (current && current !== initializer) {
+    const parent = current.parent;
+    if (
+      parent?.type === "CallExpression" &&
+      parent.arguments.includes(current) &&
+      isPromiseChainMember(parent.callee) &&
+      parent.callee.object.range[1] <= suspension.range[0]
+    ) {
+      return true;
+    }
+    current = parent;
+  }
+  return false;
+}
+
+module.exports = { promiseExistsBeforeInitializerSuspension, suspensionOccursBeforeMatcher };

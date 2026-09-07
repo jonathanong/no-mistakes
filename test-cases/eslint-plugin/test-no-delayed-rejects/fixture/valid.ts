@@ -23,6 +23,17 @@ export async function directAwaitObservesRejection() {
   await expect(update).rejects.toThrow();
 }
 
+export async function directlyAwaitedChainObservesRejection() {
+  const update = startOperation();
+  try {
+    await update.then();
+  } catch {
+    Math.random();
+  }
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
 export async function immediateCatchCapture() {
   const update = startOperation();
   const rejection = update.catch((error: unknown) => error);
@@ -119,6 +130,51 @@ export async function observerDominatesNestedAwait(flag: boolean) {
   const update = startOperation();
   void update.catch(() => void 0);
   if (flag) await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerInIfTestDominatesAwait() {
+  const update = startOperation();
+  if (update.catch(() => void 0)) Math.random();
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerInLogicalLeftDominatesAwait() {
+  const update = startOperation();
+  update.catch(() => void 0) && Math.random();
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerInSwitchDiscriminantDominatesAwait() {
+  const update = startOperation();
+  switch (update.catch(() => void 0)) {
+    default:
+      Math.random();
+  }
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerInForInitializerDominatesAwait() {
+  const update = startOperation();
+  for (void update.catch(() => void 0); Math.random() > 0.5;) break;
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerInWhileTestDominatesAwait() {
+  const update = startOperation();
+  while (update.catch(() => void 0)) break;
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function forAwaitRightObserverDominatesLaterAwait() {
+  const update = startOperation();
+  for await (const _item of [update.catch(() => void 0)]) Math.random();
+  await release();
   await expect(update).rejects.toThrow();
 }
 

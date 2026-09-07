@@ -8,8 +8,9 @@ const {
   contains,
 } = require("./test-no-delayed-rejects-abrupt");
 const {
+  mayThrow,
   possibleCaughtThrowCanContinue,
-  suspensionFailureCanReachMatcher,
+  thrownCompletionCanReachMatcher,
 } = require("./test-no-delayed-rejects-transfers");
 
 function isLoop(node) {
@@ -65,7 +66,7 @@ function branchesAreExclusive(current, parent, matcher, suspension, functionNode
 }
 
 function canReachMatcher(suspension, matcher, functionNode) {
-  if (suspensionFailureCanReachMatcher(suspension, matcher)) return true;
+  if (thrownCompletionCanReachMatcher(suspension, matcher)) return true;
   let current = suspension;
   while (current && current !== functionNode) {
     if (
@@ -115,16 +116,31 @@ function canReachMatcher(suspension, matcher, functionNode) {
   return true;
 }
 
-function isConditionalBoundary(node, child) {
-  return (
-    node.type === "IfStatement" ||
-    node.type === "ConditionalExpression" ||
-    node.type === "LogicalExpression" ||
-    node.type === "SwitchStatement" ||
-    isOptionalCall(node) ||
-    (node.type === "TryStatement" && child !== node.finalizer) ||
-    isLoop(node)
-  );
+function throwCanSkipObserver(block, observer, suspension) {
+  const observerIndex = block.body.findIndex((statement) => contains(statement, observer));
+  return block.body
+    .slice(0, observerIndex)
+    .some(
+      (statement) => mayThrow(statement) && thrownCompletionCanReachMatcher(statement, suspension),
+    );
+}
+
+function isConditionalBoundary(node, child, observer, suspension) {
+  if (node.type === "IfStatement" || node.type === "ConditionalExpression") {
+    return child !== node.test;
+  }
+  if (node.type === "LogicalExpression") return child === node.right;
+  if (node.type === "SwitchStatement") return child !== node.discriminant;
+  if (node.type === "TryStatement") {
+    if (child === node.handler) return true;
+    return Boolean(child === node.block && throwCanSkipObserver(node.block, observer, suspension));
+  }
+  if (node.type === "ForStatement") return child !== node.init && child !== node.test;
+  if (node.type === "WhileStatement") return child !== node.test;
+  if (node.type === "ForInStatement" || node.type === "ForOfStatement") {
+    return child !== node.right;
+  }
+  return isOptionalCall(node) || node.type === "DoWhileStatement";
 }
 
 function statementsFor(container) {
@@ -142,12 +158,7 @@ function executesBefore(observer, suspension) {
     let current = observer;
     while (current !== suspension) {
       const parent = current.parent;
-      if (
-        parent.type === "ConditionalExpression" ||
-        parent.type === "LogicalExpression" ||
-        parent.type === "IfStatement" ||
-        isOptionalCall(parent)
-      ) {
+      if (parent !== suspension && isConditionalBoundary(parent, current, observer, suspension)) {
         return false;
       }
       current = parent;
@@ -165,7 +176,7 @@ function executesBefore(observer, suspension) {
         if (statements.indexOf(current) < statements.indexOf(suspensionStatement)) return true;
       }
     }
-    if (isConditionalBoundary(parent, current)) conditional = true;
+    if (isConditionalBoundary(parent, current, observer, suspension)) conditional = true;
     current = parent;
   }
   return false;

@@ -1,7 +1,11 @@
 "use strict";
 
 const { unwrapExpression, unwrapTransparentParent } = require("./async-ast");
-const { literalPropertyName } = require("./test-no-delayed-rejects-chains");
+const {
+  isPromiseChainMember,
+  literalPropertyName,
+  promiseChainBase,
+} = require("./test-no-delayed-rejects-chains");
 
 const PROMISE_AGGREGATES = new Set(["all", "allSettled", "any", "race"]);
 
@@ -18,7 +22,13 @@ function findVariable(scope, name) {
 
 function isImmediateObserver(node, declarator, context, isSameConst) {
   if (node.type === "AwaitExpression") {
-    return isSameConst(unwrapExpression(node.argument), declarator, context);
+    const argument = unwrapExpression(node.argument);
+    return (
+      isSameConst(argument, declarator, context) ||
+      (argument.type === "CallExpression" &&
+        isPromiseChainMember(argument.callee) &&
+        isSameConst(promiseChainBase(argument), declarator, context))
+    );
   }
   if (
     node.type !== "CallExpression" ||
