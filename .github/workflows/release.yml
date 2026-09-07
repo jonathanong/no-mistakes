@@ -12,6 +12,10 @@ on:
           - patch
           - minor
           - major
+      resume_version:
+        description: Existing tagged SemVer version to rebuild and publish without another bump
+        type: string
+        required: false
 
 permissions: {}
 
@@ -73,12 +77,42 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-      - name: Bump versions, commit, tag, and push
+      - name: Prepare release commit
         id: bump
         timeout-minutes: 2
         shell: bash
+        env:
+          RESUME_VERSION: ${{ inputs.resume_version }}
         run: |
           set -euo pipefail
+          resume_version="$RESUME_VERSION"
+          if [ -n "$resume_version" ]; then
+            node - "$resume_version" <<'NODE'
+            const version = process.argv[2];
+            const semver = /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)(?:-(?:(?:0|[1-9]\d*)|(?:\d*[A-Za-z-][0-9A-Za-z-]*))(?:\.(?:(?:0|[1-9]\d*)|(?:\d*[A-Za-z-][0-9A-Za-z-]*)))*)?(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?$/;
+            if (!semver.test(version)) {
+              console.error(`::error::resume_version must be a strict SemVer version, received ${JSON.stringify(version)}`);
+              process.exit(1);
+            }
+          NODE
+
+            tag="v$resume_version"
+            if ! git rev-parse --verify --quiet "refs/tags/$tag^{commit}" >/dev/null; then
+              echo "::error::Release tag $tag does not exist." >&2
+              exit 1
+            fi
+            release_sha="$(git rev-list -n 1 "$tag")"
+            tag_version="$(git show "$release_sha:package.json" | node -e 'let source = ""; process.stdin.on("data", (chunk) => { source += chunk; }); process.stdin.on("end", () => { process.stdout.write(JSON.parse(source).version); });')"
+            if [ "$tag_version" != "$resume_version" ]; then
+              echo "::error::Release tag $tag contains package.json version $tag_version, expected $resume_version." >&2
+              exit 1
+            fi
+            echo "Resuming release for $tag at $release_sha"
+            echo "release-sha=$release_sha" >> "$GITHUB_OUTPUT"
+            echo "version=$resume_version" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
           pnpm version "${{ inputs.bump }}" --recursive --no-git-tag-version
           version="$(node -p "require('./package.json').version")"
           node packages/no-mistakes/scripts/sync-native-package-versions.js "$version"
@@ -302,7 +336,7 @@ jobs:
           - target: x86_64-pc-windows-msvc
             os: windows-2025
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
+    timeout-minutes: 70
     permissions:
       contents: read
     steps:
@@ -331,7 +365,7 @@ jobs:
           cache-bin: "false"
 
       - name: Build CLI
-        timeout-minutes: 25
+        timeout-minutes: 45
         shell: bash
         run: |
           cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
