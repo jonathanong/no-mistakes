@@ -116,6 +116,74 @@ describe("async-call-disposition", () => {
   });
 });
 
+describe("test-no-delayed-rejects", () => {
+  it("reports rejection observers attached after coordination awaits", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "invalid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "invalid.ts",
+      ),
+      [
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+      ],
+    );
+  });
+
+  it("allows immediate observation and unsupported indirection", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "valid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "valid.ts",
+      ),
+      [],
+    );
+  });
+
+  it("recognizes expect imported from @jest/globals but not other modules", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "jest-invalid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "jest-invalid.ts",
+      ),
+      ["delayedReject"],
+    );
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "non-framework-expect-valid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "non-framework-expect-valid.ts",
+      ),
+      [],
+    );
+  });
+
+  it("recognizes the ordinary global expect binding", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "global-invalid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "global-invalid.ts",
+      ),
+      ["delayedReject"],
+    );
+  });
+});
+
 describe("async-try-catch-return-await", () => {
   it("allows awaited returns in configured try/catch handlers", () => {
     assert.deepEqual(

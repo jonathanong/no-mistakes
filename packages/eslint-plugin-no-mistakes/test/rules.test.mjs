@@ -11,6 +11,11 @@ describe("plugin exports", () => {
       "error",
       { canonicalAttribute: "data-pw" },
     ]);
+    assert.equal(plugin.configs.strict.rules["no-mistakes/test-no-delayed-rejects"], "error");
+    assert.equal(
+      plugin.configs.recommended.rules["no-mistakes/test-no-delayed-rejects"],
+      undefined,
+    );
   });
 });
 
