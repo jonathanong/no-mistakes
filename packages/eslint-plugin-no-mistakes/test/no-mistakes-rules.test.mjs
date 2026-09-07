@@ -116,6 +116,183 @@ describe("async-call-disposition", () => {
   });
 });
 
+describe("test-no-delayed-rejects", () => {
+  it("reports rejection observers attached after coordination awaits", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "invalid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "invalid.ts",
+      ),
+      [
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+        "delayedReject",
+      ],
+    );
+  });
+
+  it("allows immediate observation and unsupported indirection", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "valid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "valid.ts",
+      ),
+      [],
+    );
+  });
+
+  it("recognizes expect imported from @jest/globals but not other modules", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "jest-invalid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "jest-invalid.ts",
+      ),
+      ["delayedReject"],
+    );
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "non-framework-expect-valid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "non-framework-expect-valid.ts",
+      ),
+      [],
+    );
+  });
+
+  it("recognizes the ordinary global expect binding", () => {
+    assert.deepEqual(
+      messages(
+        ruleFixture("test-no-delayed-rejects", "global-invalid.ts"),
+        "test-no-delayed-rejects",
+        undefined,
+        "global-invalid.ts",
+      ),
+      ["delayedReject"],
+    );
+  });
+
+  it("does not count deferred or conditional observers as attached", () => {
+    const deferredField = `async function run() {
+      const update = startOperation();
+      class Deferred { observed = update.catch(() => void 0); }
+      await release();
+      await expect(update).rejects.toThrow();
+    }`;
+    const destructuringDefault = `async function run() {
+      const update = startOperation();
+      const { value = update.catch(() => void 0) } = { value: true };
+      await release();
+      await expect(update).rejects.toThrow();
+    }`;
+    assert.deepEqual(messages(deferredField, "test-no-delayed-rejects"), ["delayedReject"]);
+    assert.deepEqual(messages(destructuringDefault, "test-no-delayed-rejects"), ["delayedReject"]);
+  });
+
+  it("recognizes guaranteed catch and primitive absent handlers", () => {
+    const guaranteedCatch = `async function run() {
+      const update = startOperation();
+      try { throw new Error("expected"); }
+      catch { void update.catch(() => void 0); }
+      await release();
+      await expect(update).rejects.toThrow();
+    }`;
+    const absentFulfillmentHandler = `async function run() {
+      const update = startOperation();
+      void update.then(false, () => void 0);
+      await release();
+      await expect(update).rejects.toThrow();
+    }`;
+    assert.deepEqual(messages(guaranteedCatch, "test-no-delayed-rejects"), []);
+    assert.deepEqual(messages(absentFulfillmentHandler, "test-no-delayed-rejects"), []);
+  });
+});
+
 describe("async-try-catch-return-await", () => {
   it("allows awaited returns in configured try/catch handlers", () => {
     assert.deepEqual(

@@ -103,4 +103,45 @@ describe("oxlint support", () => {
       rmSync(root, { recursive: true, force: true });
     }
   });
+
+  it("reports delayed rejection observers through the plugin", () => {
+    const root = mkdtempSync(join(tmpdir(), "pac-oxlint-"));
+    try {
+      writeFileSync(
+        join(root, "fixture.ts"),
+        `import { expect } from "vitest";
+
+async function test() {
+  const operation = startOperation();
+  await release();
+  await expect(operation).rejects.toThrow();
+}
+`,
+      );
+      writeFileSync(
+        join(root, ".oxlintrc.json"),
+        JSON.stringify({
+          jsPlugins: [{ name: "no-mistakes", specifier: resolve(__dirname, "../src/index.js") }],
+          rules: { "no-mistakes/test-no-delayed-rejects": "error" },
+        }),
+      );
+      const result = spawnSync(
+        process.execPath,
+        [
+          resolve(__dirname, "../../../node_modules/oxlint/bin/oxlint"),
+          "--config",
+          ".oxlintrc.json",
+          "fixture.ts",
+        ],
+        {
+          cwd: root,
+          encoding: "utf8",
+        },
+      );
+      assert.notEqual(result.status, 0);
+      assert.match(`${result.stderr || ""}${result.stdout || ""}`, /rejection|observer|await/i);
+    } finally {
+      rmSync(root, { recursive: true, force: true });
+    }
+  });
 });
