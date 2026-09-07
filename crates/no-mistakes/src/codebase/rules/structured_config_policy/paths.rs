@@ -6,7 +6,6 @@ pub(super) fn contained_in_root(root: &Path, path: &Path) -> bool {
     }
     match (path.canonicalize(), root.canonicalize()) {
         (Ok(resolved), Ok(resolved_root)) => resolved.strip_prefix(resolved_root).is_ok(),
-        (Err(_), _) => true,
-        (Ok(resolved), Err(_)) => resolved.strip_prefix(root).is_ok(),
+        _ => true,
     }
 }

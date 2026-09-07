@@ -40,6 +40,10 @@
       }
     },
     {
+      "files": ["**/nested/**"],
+      "rules": {}
+    },
+    {
       "files": ["**/nested/**"]
     },
     {

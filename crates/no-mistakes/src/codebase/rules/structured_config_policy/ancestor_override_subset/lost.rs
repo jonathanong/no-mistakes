@@ -68,7 +68,10 @@ fn compile_globs(patterns: &[&str]) -> Option<GlobSet> {
             any = true;
         }
     }
-    any.then(|| builder.build().ok()).flatten()
+    if !any {
+        return None;
+    }
+    builder.build().ok()
 }
 
 fn any_child_matches(globs: &GlobSet, children: &[&Path], base_dir: &Path) -> bool {
