@@ -206,6 +206,7 @@ fn missing_sql_text_is_ignored() {
         line: 1,
         callee: "query".to_string(),
         sql_text: None,
+        ..Default::default()
     };
     assert!(findings_for_call("src/lock.ts", "", &call, &compiled).is_empty());
 }

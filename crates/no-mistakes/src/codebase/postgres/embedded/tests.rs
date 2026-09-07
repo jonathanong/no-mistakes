@@ -300,3 +300,40 @@ fn extract_from_program_matches_source_entry() {
     assert_eq!(facts.executor_bindings, ["write"]);
     assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 8"));
 }
+
+#[test]
+fn immutable_const_sql_is_analyzable() {
+    let facts = extract("immutable-local.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::ImmutableLocal);
+    assert!(facts.calls[0]
+        .sql_text
+        .as_deref()
+        .unwrap()
+        .contains("topics"));
+}
+
+#[test]
+fn static_concat_is_composed() {
+    let facts = extract("composed-concat.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics")
+    );
+}
+
+#[test]
+fn append_static_fragment_is_composed() {
+    let facts = extract("composed-append.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics WHERE id = 1")
+    );
+}
+
+#[test]
+fn reassigned_let_is_dynamic() {
+    let facts = extract("dynamic-let.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}

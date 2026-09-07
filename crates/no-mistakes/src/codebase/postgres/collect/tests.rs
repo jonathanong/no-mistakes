@@ -167,6 +167,20 @@ fn collect_postgres_facts_respects_plan_flags() {
     .unwrap();
     assert_eq!(both.schema.len(), 1);
     assert_eq!(both.embedded.len(), 1);
+
+    let statements = collect_postgres_facts(
+        &fixture_root(),
+        &sources,
+        &files,
+        &CheckFactPlan {
+            postgres_dml: true,
+            ..CheckFactPlan::default()
+        },
+        &PostgresSchemaOptions::default(),
+        &EmbeddedSqlOptions::default(),
+    )
+    .unwrap();
+    assert!(!statements.statements.is_empty());
 }
 
 #[test]

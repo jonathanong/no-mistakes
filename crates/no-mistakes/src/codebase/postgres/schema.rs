@@ -53,6 +53,7 @@ fn column_metadata(column: &sqlparser::ast::ColumnDef) -> SqlColumnMetadata {
         generated_expression: None,
         generated_function: None,
         generated_function_arg_columns: Vec::new(),
+        generated_source_columns: Vec::new(),
     };
     for option in &column.options {
         apply_column_option(&mut facts, &option.option);
@@ -83,6 +84,7 @@ fn apply_column_option(facts: &mut SqlColumnMetadata, option: &ColumnOption) {
                 facts.generated_expression = Some(expr.to_string());
                 facts.generated_function = generated_function(expr);
                 facts.generated_function_arg_columns = generated_function_arg_columns(expr);
+                facts.generated_source_columns = super::idents::collect_ident_names(expr);
                 push_constraint(&mut facts.constraints, "CONSTR_GENERATED");
             } else if sequence_options.is_some() {
                 push_constraint(&mut facts.constraints, "CONSTR_IDENTITY");

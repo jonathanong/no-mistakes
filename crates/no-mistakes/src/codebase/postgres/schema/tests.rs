@@ -343,6 +343,7 @@ fn generated_without_expression_or_sequence_is_still_marked() {
         generated_expression: None,
         generated_function: None,
         generated_function_arg_columns: Vec::new(),
+        generated_source_columns: Vec::new(),
     };
     super::apply_column_option(
         &mut facts,

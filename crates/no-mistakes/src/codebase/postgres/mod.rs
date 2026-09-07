@@ -6,11 +6,15 @@ mod annotation;
 mod collect;
 pub mod dml;
 mod embedded;
+mod idents;
 mod locking;
 mod migration;
 mod offset;
+mod on_conflict;
 mod parse;
 mod schema;
+mod statement_facts;
+pub mod statements;
 mod types;
 
 pub use annotation::sql_requires_query_annotation;
@@ -24,13 +28,20 @@ pub use dml::{
 pub use embedded::{
     executed_query_text, executor_bindings, extract_embedded_sql_from_program,
     extract_embedded_sql_from_source, is_database_call, sql_text, EmbeddedSqlCall,
-    EmbeddedSqlFileFacts, EmbeddedSqlOptions,
+    EmbeddedSqlFileFacts, EmbeddedSqlKind, EmbeddedSqlOptions,
 };
 pub use locking::{extract_locking_select_metadata, LockingSelectMetadata};
 pub use migration::extract_migration_facts;
 pub use offset::sql_has_offset_clause;
+pub use on_conflict::{judge_file, Catalog as IdempotentCatalog};
 pub use parse::{parse_postgres_sql, PostgresParseError};
 pub use schema::extract_create_table_metadata;
+pub use statements::{
+    extract_sql_statement_facts, has_top_level_not_exists_in, insert_keyword_count,
+    mask_quoted_sql, SqlAssignmentFact, SqlConflictArbiter, SqlConflictWhereProof,
+    SqlExistsSetOpFact, SqlInsertFact, SqlOnConflictAction, SqlOnConflictFact, SqlSelectFact,
+    SqlStatementFileFacts, SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod, SqlValueForm,
+};
 pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,
     SqlColumnMetadata, SqlCreateIndexMetadata, SqlCreateTableMetadata, SqlDropIndexMetadata,

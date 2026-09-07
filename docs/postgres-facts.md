@@ -9,7 +9,9 @@ These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`,
-`postgres-constraint-validate`, and `postgres-no-add-column` consume
+`postgres-constraint-validate`, `postgres-no-add-column`,
+`postgres-required-predicates`, `postgres-sql-shape-policy`, and
+`postgres-idempotent-insert` consume
 the facts through `no-mistakes check`.
 
 ## Schema facts
@@ -116,14 +118,43 @@ A call is a database call when:
 - the callee is an identifier in the binding set, or
 - the callee is a member expression whose property is `query`
 
-`collect_postgres_facts` runs these extractors only when
-`CheckFactPlan.postgres_schema` or `CheckFactPlan.embedded_sql` is set.
+`collect_postgres_facts` runs these extractors when
+`CheckFactPlan.postgres_schema`, `CheckFactPlan.embedded_sql`, or
+`CheckFactPlan.postgres_dml` is set. `postgres_dml` also extracts statement
+facts from matching `.sql` files and from non-`Dynamic` embedded calls.
 
-`postgres-no-generated-column-writes` consumes these facts. It demands both
-`postgres_schema` and `embedded_sql`, then matches parsed DML writes against
-generated columns. Tables that are not declared in SQL go through that
-rule's `extraGeneratedColumns` option; this layer does not scrape
-`voteTable:` literals.
+Each `EmbeddedSqlCall` records `kind`:
+
+- `Inline` — SQL literal or template at the call site
+- `ImmutableLocal` — `const` binding with static SQL
+- `Composed` — static `+` concatenation or `.append(...)` of static fragments
+- `Dynamic` — `let`, reassignment, interpolating templates, or incomplete
+  composition (fail closed)
+
+## Statement facts
+
+`extract_sql_statement_facts(sql)` parses PostgreSQL SQL (leniently) and
+returns typed INSERT / SELECT / CREATE TRIGGER facts without keeping the
+sqlparser AST:
+
+- executed `INSERT` (EXPLAIN without ANALYZE is skipped; PREPARE inner
+  statements are treated as executed; CREATE FUNCTION/PROCEDURE bodies are not)
+- `ON CONFLICT` action, arbiter (columns / named constraint / unknown), SET
+  assignment forms (literal, EXCLUDED, self-ref, COALESCE/GREATEST/LEAST,
+  placeholder, volatile, subquery, other), and conjunctive WHERE proofs
+  (`IS DISTINCT FROM EXCLUDED`, `IS NULL AND EXCLUDED IS NOT NULL`)
+- `INSERT…SELECT` guarded by a conjunctive `WHERE NOT EXISTS`
+- SELECT FROM/JOIN relation names, predicate SQL, and `EXISTS` set-operation
+  facts (`restricted` when every arm has a placeholder or literal bound)
+- `CREATE TRIGGER` table, function, period, row/statement, and events
+
+Unparseable files set `parse_failed` and count quote-masked `INSERT INTO`
+keywords so multi-INSERT fragments fail closed. A top-level conjunctive
+`WHERE NOT EXISTS` / `AND NOT EXISTS` (paren-depth zero) is recorded even
+when the AST is missing.
+
+`postgres-required-predicates`, `postgres-sql-shape-policy`, and
+`postgres-idempotent-insert` consume these facts.
 
 ## Locking-select facts
 

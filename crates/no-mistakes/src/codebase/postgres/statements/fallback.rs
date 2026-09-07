@@ -1,0 +1,85 @@
+/// Replace quoted and dollar-quoted SQL text with spaces so keyword scans
+/// cannot match identifiers or literals.
+pub fn mask_quoted_sql(sql: &str) -> String {
+    let chars: Vec<char> = sql.chars().collect();
+    let mut out = String::with_capacity(sql.len());
+    let mut index = 0usize;
+    while index < chars.len() {
+        if chars[index] == '\'' {
+            index = skip_quote(&chars, index, '\'', &mut out);
+            continue;
+        }
+        if chars[index] == '"' {
+            index = skip_quote(&chars, index, '"', &mut out);
+            continue;
+        }
+        if chars[index] == '$' {
+            if let Some(end) = skip_dollar(&chars, index, &mut out) {
+                index = end;
+                continue;
+            }
+        }
+        out.push(chars[index]);
+        index += 1;
+    }
+    out
+}
+
+fn skip_quote(chars: &[char], start: usize, quote: char, out: &mut String) -> usize {
+    out.push(' ');
+    let mut index = start + 1;
+    while index < chars.len() {
+        out.push(' ');
+        if chars[index] == quote {
+            if index + 1 < chars.len() && chars[index + 1] == quote {
+                out.push(' ');
+                index += 2;
+                continue;
+            }
+            return index + 1;
+        }
+        index += 1;
+    }
+    index
+}
+
+fn skip_dollar(chars: &[char], start: usize, out: &mut String) -> Option<usize> {
+    let mut tag = String::from("$");
+    let mut index = start + 1;
+    while index < chars.len() && (chars[index].is_ascii_alphanumeric() || chars[index] == '_') {
+        tag.push(chars[index]);
+        index += 1;
+    }
+    if index >= chars.len() || chars[index] != '$' {
+        return None;
+    }
+    tag.push('$');
+    index += 1;
+    let tag_chars: Vec<char> = tag.chars().collect();
+    while index + tag_chars.len() <= chars.len() {
+        if chars[index..index + tag_chars.len()] == tag_chars[..] {
+            for _ in 0..tag_chars.len() {
+                out.push(' ');
+            }
+            return Some(index + tag_chars.len());
+        }
+        out.push(' ');
+        index += 1;
+    }
+    Some(chars.len())
+}
+
+pub fn insert_keyword_count(masked: &str) -> usize {
+    let lower = masked.to_ascii_lowercase();
+    let mut count = 0usize;
+    let mut search = lower.as_str();
+    while let Some(at) = search.find("insert") {
+        let after = &search[at + 6..];
+        let trimmed = after.trim_start();
+        if trimmed.starts_with("into") {
+            count += 1;
+        }
+        search = &search[at + 6..];
+    }
+    count
+}

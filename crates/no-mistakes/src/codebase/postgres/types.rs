@@ -34,6 +34,7 @@ pub struct SqlColumnMetadata {
     pub generated_expression: Option<String>,
     pub generated_function: Option<String>,
     pub generated_function_arg_columns: Vec<String>,
+    pub generated_source_columns: Vec<String>,
 }
 
 /// Schema facts for one SQL file read through [`crate::codebase::ts_source::SourceStore`].
@@ -151,6 +152,7 @@ pub struct SqlStatementKind {
 pub struct PostgresFacts {
     pub schema: Vec<SqlSchemaFileFacts>,
     pub embedded: Vec<EmbeddedSqlFileFacts>,
+    pub statements: Vec<crate::codebase::postgres::statement_facts::SqlStatementFileFacts>,
 }
 
 /// Path-aware extractor failure. Extractors return this instead of panicking.

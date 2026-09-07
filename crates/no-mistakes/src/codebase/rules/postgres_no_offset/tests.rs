@@ -160,6 +160,7 @@ fn missing_sql_text_is_ignored() {
         line: 1,
         callee: "query".to_string(),
         sql_text: None,
+        ..Default::default()
     };
     assert!(super::scan::findings_for_call("src/query.ts", &call).is_empty());
 }
@@ -170,6 +171,7 @@ fn unparseable_sql_is_ignored() {
         line: 1,
         callee: "query".to_string(),
         sql_text: Some("SELECT id FROM posts OFFSET".to_string()),
+        ..Default::default()
     };
     assert!(super::scan::findings_for_call("src/query.ts", &call).is_empty());
 }

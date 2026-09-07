@@ -1,11 +1,20 @@
-use super::{callee_name, first_call_argument, resolve_call_sql, sql_text, EmbeddedSqlCall};
+use super::{callee_name, EmbeddedSqlCall, EmbeddedSqlKind};
 use oxc_ast::ast::{
-    BindingPattern, BlockStatement, CallExpression, Declaration, FormalParameters, Function,
-    FunctionBody, Program, Statement, VariableDeclaration, VariableDeclarator,
+    AssignmentTarget, BindingPattern, BlockStatement, CallExpression, FormalParameters, Function,
+    FunctionBody, Program,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 use std::collections::{HashMap, HashSet};
+
+mod resolve;
+
+#[derive(Clone)]
+struct BindingState {
+    sql: Option<String>,
+    kind: EmbeddedSqlKind,
+    line: u32,
+}
 
 pub(super) fn collect_calls(
     program: &Program<'_>,
@@ -25,7 +34,7 @@ pub(super) fn collect_calls(
 struct ScopeVisitor<'a> {
     source: &'a str,
     bindings: &'a HashSet<String>,
-    scopes: Vec<HashMap<String, Option<String>>>,
+    scopes: Vec<HashMap<String, BindingState>>,
     calls: Vec<EmbeddedSqlCall>,
 }
 
@@ -38,22 +47,38 @@ impl ScopeVisitor<'_> {
         self.scopes.pop();
     }
 
-    fn current_scope(&mut self) -> Option<&mut HashMap<String, Option<String>>> {
+    fn current_scope(&mut self) -> Option<&mut HashMap<String, BindingState>> {
         self.scopes.last_mut()
     }
 
-    fn lookup(&self, name: &str) -> Option<String> {
+    fn lookup(&self, name: &str) -> Option<BindingState> {
         self.scopes
             .iter()
             .rev()
             .find_map(|scope| scope.get(name).cloned())
-            .flatten()
     }
 
     fn bind_param(&mut self, pattern: &BindingPattern<'_>) {
         if let BindingPattern::BindingIdentifier(ident) = pattern {
             if let Some(scope) = self.current_scope() {
-                scope.insert(ident.name.to_string(), None);
+                scope.insert(
+                    ident.name.to_string(),
+                    BindingState {
+                        sql: None,
+                        kind: EmbeddedSqlKind::Dynamic,
+                        line: 0,
+                    },
+                );
+            }
+        }
+    }
+
+    fn mark_dynamic(&mut self, name: &str) {
+        for scope in self.scopes.iter_mut().rev() {
+            if let Some(binding) = scope.get_mut(name) {
+                binding.kind = EmbeddedSqlKind::Dynamic;
+                binding.sql = None;
+                return;
             }
         }
     }
@@ -62,14 +87,14 @@ impl ScopeVisitor<'_> {
 impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_program(&mut self, program: &Program<'a>) {
         self.push_scope();
-        record_statements(&program.body, self.current_scope());
+        resolve::record_statements(&program.body, self);
         walk::walk_program(self, program);
         self.pop_scope();
     }
 
     fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
         self.push_scope();
-        record_statements(&block.body, self.current_scope());
+        resolve::record_statements(&block.body, self);
         walk::walk_block_statement(self, block);
         self.pop_scope();
     }
@@ -82,7 +107,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
-        record_statements(&body.statements, self.current_scope());
+        resolve::record_statements(&body.statements, self);
         walk::walk_function_body(self, body);
     }
 
@@ -96,95 +121,24 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.pop_scope();
     }
 
+    fn visit_assignment_expression(&mut self, assign: &oxc_ast::ast::AssignmentExpression<'a>) {
+        if let AssignmentTarget::AssignmentTargetIdentifier(ident) = &assign.left {
+            self.mark_dynamic(ident.name.as_str());
+        }
+        walk::walk_assignment_expression(self, assign);
+    }
+
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        resolve::apply_append(self, call);
         if let Some(callee) = callee_name(call, self.bindings) {
-            let sql = first_call_argument(call).and_then(|argument| {
-                let identifier_bindings = flatten_scopes(&self.scopes);
-                resolve_call_sql(argument, &identifier_bindings)
-                    .or_else(|| self.lookup_ident(argument))
-            });
-            self.calls.push(EmbeddedSqlCall {
-                line: crate::codebase::ts_source::byte_offset_to_line(
-                    self.source,
-                    call.span.start as usize,
-                ),
-                callee,
-                sql_text: sql,
-            });
+            self.calls.push(resolve::executor_call(self, call, callee));
         }
         walk::walk_call_expression(self, call);
     }
-}
-
-impl ScopeVisitor<'_> {
-    fn lookup_ident(&self, argument: &oxc_ast::ast::Expression<'_>) -> Option<String> {
-        match crate::codebase::ts_source::unwrap_ts_wrappers(argument) {
-            oxc_ast::ast::Expression::Identifier(ident) => self.lookup(ident.name.as_str()),
-            _ => None,
-        }
-    }
-}
-
-fn flatten_scopes(scopes: &[HashMap<String, Option<String>>]) -> HashMap<String, String> {
-    let mut out = HashMap::new();
-    for scope in scopes {
-        for (name, value) in scope {
-            if let Some(text) = value {
-                out.insert(name.clone(), text.clone());
-            } else {
-                out.remove(name);
-            }
-        }
-    }
-    out
 }
 
 fn record_params(params: &FormalParameters<'_>, visitor: &mut ScopeVisitor<'_>) {
     for param in &params.items {
         visitor.bind_param(&param.pattern);
     }
-}
-
-fn record_statements(
-    statements: &[Statement<'_>],
-    scope: Option<&mut HashMap<String, Option<String>>>,
-) {
-    let Some(scope) = scope else {
-        return;
-    };
-    for statement in statements {
-        match statement {
-            Statement::VariableDeclaration(declaration) => {
-                record_variable_declaration(declaration, scope);
-            }
-            Statement::ExportDeclaration(export) => {
-                if let Declaration::VariableDeclaration(declaration) = &export.declaration {
-                    record_variable_declaration(declaration, scope);
-                }
-            }
-            _ => {}
-        }
-    }
-}
-
-fn record_variable_declaration(
-    declaration: &VariableDeclaration<'_>,
-    scope: &mut HashMap<String, Option<String>>,
-) {
-    for declarator in &declaration.declarations {
-        record_declarator(declarator, scope);
-    }
-}
-
-fn record_declarator(
-    declarator: &VariableDeclarator<'_>,
-    scope: &mut HashMap<String, Option<String>>,
-) {
-    let BindingPattern::BindingIdentifier(ident) = &declarator.id else {
-        return;
-    };
-    scope.insert(
-        ident.name.to_string(),
-        declarator.init.as_ref().and_then(sql_text),
-    );
 }
