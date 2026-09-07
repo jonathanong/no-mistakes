@@ -208,3 +208,29 @@ fn existsfoo_identifier_is_not_a_not_exists_guard() {
         "INSERT INTO items (id) SELECT 1 WHERE NOT EXISTS (SELECT 1)"
     ));
 }
+
+#[test]
+fn comment_apostrophe_does_not_hide_insert_keywords() {
+    let facts =
+        extract_sql_statement_facts("-- '\nINSERT INTO items (id) VALUES (1);\nINSERT INTO");
+    assert!(facts.insert_keyword_count >= 2, "{facts:?}");
+}
+
+#[test]
+fn exists_boolean_predicate_is_restricted() {
+    let facts = extract_sql_statement_facts(
+        "SELECT 1 WHERE EXISTS (
+            SELECT 1 FROM accounts WHERE active = TRUE
+            UNION ALL
+            SELECT 1 FROM accounts WHERE active = FALSE
+         );",
+    );
+    assert!(
+        facts.selects.iter().any(|select| select
+            .exists_set_operations
+            .iter()
+            .any(|exists| exists.restricted)),
+        "{:#?}",
+        facts.selects
+    );
+}

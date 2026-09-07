@@ -19,7 +19,7 @@ use sqlparser::ast::{Query, SetExpr, Statement};
 
 /// Extract INSERT/SELECT/trigger facts from one SQL source.
 pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
-    let masked = fallback::mask_comments(&fallback::mask_quoted_sql(sql));
+    let masked = mask_sql(sql);
     let insert_keyword_count = fallback::insert_keyword_count(&masked);
     let parse_failed = parse_postgres_sql(sql).is_err();
     let statements = parse_postgres_sql_lenient(sql);
@@ -124,9 +124,11 @@ fn collect_set_inserts(
 }
 
 pub fn has_top_level_not_exists_in(sql: &str) -> bool {
-    not_exists::has_top_level_conjunctive_not_exists(&fallback::mask_comments(
-        &fallback::mask_quoted_sql(sql),
-    ))
+    not_exists::has_top_level_conjunctive_not_exists(&mask_sql(sql))
+}
+
+fn mask_sql(sql: &str) -> String {
+    fallback::mask_quoted_sql(&fallback::mask_comments(sql))
 }
 
 #[cfg(test)]

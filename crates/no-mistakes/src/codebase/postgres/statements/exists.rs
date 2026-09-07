@@ -88,19 +88,14 @@ fn is_relation_column(expr: &Expr) -> bool {
 }
 
 fn is_const_or_placeholder(expr: &Expr) -> bool {
-    match expr {
-        Expr::Value(ValueWithSpan {
-            value: Value::Placeholder(_),
-            ..
-        })
-        | Expr::Value(ValueWithSpan {
-            value: Value::Number(_, _),
-            ..
-        })
-        | Expr::Value(ValueWithSpan {
-            value: Value::SingleQuotedString(_),
-            ..
-        }) => true,
+    match unwrap_expr(expr) {
+        Expr::Value(ValueWithSpan { value, .. }) => matches!(
+            value,
+            Value::Placeholder(_)
+                | Value::Number(_, _)
+                | Value::SingleQuotedString(_)
+                | Value::Boolean(_)
+        ),
         Expr::Identifier(ident) => super::value::is_placeholder_ident(&ident.value),
         _ => false,
     }
