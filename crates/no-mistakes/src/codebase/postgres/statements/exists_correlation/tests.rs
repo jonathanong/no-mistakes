@@ -320,4 +320,20 @@ fn like_in_subquery_table_args_group_by_and_quoted_idents() {
          )"#,
     );
     assert_eq!(quoted, vec![(false, true)], "{quoted:?}");
+    let values = exists_ops(
+        "SELECT 1 FROM posts WHERE EXISTS (
+            VALUES (posts.id)
+            UNION ALL
+            VALUES (1)
+         )",
+    );
+    assert_eq!(values, vec![(false, true)], "{values:?}");
+    let grouped_exists = exists_ops(
+        "SELECT 1 FROM posts GROUP BY EXISTS (
+            SELECT 1 FROM topics WHERE topics.post_id = posts.id
+            UNION ALL
+            SELECT 1 FROM tags WHERE tags.post_id = posts.id
+         )",
+    );
+    assert_eq!(grouped_exists, vec![(false, true)], "{grouped_exists:?}");
 }

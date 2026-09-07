@@ -58,9 +58,9 @@ An uncorrelated `EXISTS` around a set operation, including a FROM-less
 `SELECT EXISTS (… UNION …) AS alias` scalar probe, is allowed. An inner
 placeholder on every arm does not make a correlated wrapping `EXISTS` safe.
 
-Use `no-mistakes-disable-next-line postgres-sql-shape-policy` or
-`no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
-when a whole file is an intentional exception.
+Use `no-mistakes-disable-next-line postgres-sql-shape-policy` immediately
+before the `EXISTS`, or `no-mistakes-disable-line` on that line, or
+`no-mistakes-disable-file` when a whole file is an intentional exception.
 
 ## Why and when
 
@@ -118,9 +118,9 @@ Rewrite so the set operation is not inside a correlated `EXISTS`: test
 
 ## Suppression
 
-Use `no-mistakes-disable-next-line postgres-sql-shape-policy` or
-`no-mistakes-disable-line`; use the file directive only for an intentional
-correlated existence check.
+Use `no-mistakes-disable-next-line postgres-sql-shape-policy` immediately
+before the `EXISTS`, or `no-mistakes-disable-line` on that line; use the file
+directive only for an intentional correlated existence check.
 
 ## Related rules
 

@@ -81,6 +81,15 @@ pub(crate) fn ident_key(ident: &sqlparser::ast::Ident) -> String {
     }
 }
 
+pub(crate) fn object_name_ident(
+    name: &sqlparser::ast::ObjectName,
+) -> Option<&sqlparser::ast::Ident> {
+    name.0.iter().rev().find_map(|part| match part {
+        sqlparser::ast::ObjectNamePart::Identifier(ident) => Some(ident),
+        _ => None,
+    })
+}
+
 fn collect_idents(expr: &Expr, names: &mut Vec<String>) {
     match unwrap_expr(expr) {
         Expr::Identifier(ident) => names.push(ident.value.to_ascii_lowercase()),

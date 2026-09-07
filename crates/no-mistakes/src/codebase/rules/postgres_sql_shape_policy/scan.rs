@@ -51,16 +51,14 @@ pub(super) fn scan(
             continue;
         }
         for select in &file.selects {
-            if select
-                .exists_set_operations
-                .iter()
-                .any(|exists| exists.correlated)
-            {
-                findings.push(finding(
-                    &rel,
-                    select.line.max(1),
-                    "do not wrap a set operation in a correlated EXISTS",
-                ));
+            for exists in &select.exists_set_operations {
+                if exists.correlated {
+                    findings.push(finding(
+                        &rel,
+                        exists.line.max(1),
+                        "do not wrap a set operation in a correlated EXISTS",
+                    ));
+                }
             }
         }
     }

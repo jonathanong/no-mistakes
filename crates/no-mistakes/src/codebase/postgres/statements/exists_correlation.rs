@@ -2,10 +2,12 @@
 //! among the EXISTS subquery's own FROM/WITH names. Shared UNION-arm locals
 //! and nested-subquery scopes are intentionally not modeled.
 
-use crate::codebase::postgres::idents::{ident_key, unwrap_expr, visit_function_args};
+use crate::codebase::postgres::idents::{
+    ident_key, object_name_ident, unwrap_expr, visit_function_args,
+};
 use sqlparser::ast::{
-    Expr, GroupByExpr, Ident, JoinConstraint, JoinOperator, ObjectName, ObjectNamePart, Query,
-    Select, SelectItem, SetExpr, TableFactor, TableFunctionArgs, TableWithJoins,
+    Expr, GroupByExpr, Ident, JoinConstraint, JoinOperator, Query, Select, SelectItem, SetExpr,
+    TableFactor, TableFunctionArgs, TableWithJoins,
 };
 use std::collections::HashSet;
 
@@ -52,7 +54,7 @@ fn collect_factor_locals(factor: &TableFactor, local: &mut HashSet<String>) {
         TableFactor::Table { name, alias, .. } => {
             if let Some(alias) = alias {
                 insert_ident(local, &alias.name);
-            } else if let Some(ident) = object_ident(name) {
+            } else if let Some(ident) = object_name_ident(name) {
                 insert_ident(local, ident);
             }
         }
@@ -64,13 +66,6 @@ fn collect_factor_locals(factor: &TableFactor, local: &mut HashSet<String>) {
         } => collect_table_locals(table_with_joins, local),
         _ => {}
     }
-}
-
-fn object_ident(name: &ObjectName) -> Option<&Ident> {
-    name.0.iter().rev().find_map(|part| match part {
-        ObjectNamePart::Identifier(ident) => Some(ident),
-        _ => None,
-    })
 }
 
 fn insert_ident(local: &mut HashSet<String>, ident: &Ident) {
@@ -95,6 +90,11 @@ fn set_refs_outside(expr: &SetExpr, local: &HashSet<String>) -> bool {
         SetExpr::SetOperation { left, right, .. } => {
             set_refs_outside(left, local) || set_refs_outside(right, local)
         }
+        SetExpr::Values(values) => values.rows.iter().any(|row| {
+            row.content
+                .iter()
+                .any(|expr| expr_refs_outside(expr, local))
+        }),
         _ => false,
     }
 }

@@ -51,7 +51,7 @@ fn collect_set(sql: &str, expr: &SetExpr, out: &mut Vec<SqlSelectFact>) {
 fn push_select(sql: &str, select: &Select, out: &mut Vec<SqlSelectFact>) {
     let tables = table_names(&select.from);
     let mut exists_set_operations = Vec::new();
-    super::exists::collect_from_select(select, &mut exists_set_operations);
+    super::exists::collect_from_select(sql, select, &mut exists_set_operations);
     collect_derived_queries(sql, &select.from, out);
     if tables.is_empty() && exists_set_operations.is_empty() {
         return;
