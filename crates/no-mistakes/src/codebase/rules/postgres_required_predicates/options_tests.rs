@@ -35,7 +35,7 @@ fn include_exclude_and_option_overrides() {
         &config_yaml(&format!(
             "sqlInclude: [\"sql/**/*.sql\"]\nexclude: ['sql/001.sql']{relations}"
         )),
-        &[sql.clone()],
+        std::slice::from_ref(&sql),
     )
     .unwrap()
     .is_empty());
@@ -45,7 +45,7 @@ fn include_exclude_and_option_overrides() {
             &config_yaml(&format!(
                 "sqlInclude: [\"sql/**/*.sql\"]\ninclude: ['sql/001.sql']{relations}"
             )),
-            &[sql.clone()],
+            std::slice::from_ref(&sql),
         )
         .unwrap()
         .len(),
@@ -84,7 +84,12 @@ fn dynamic_unparseable_and_unrelated_tables() {
     let embedded = fixture("fail-embedded");
     let ts = embedded.join("src/query.ts");
     let relations = "sqlInclude: [\"sql/**/*.sql\"]\nrelations:\n  - table: topics\n    require: [\"parent_id IS NOT NULL\"]";
-    let flagged = check_with_files(&embedded, &config_yaml(relations), &[ts.clone()]).unwrap();
+    let flagged = check_with_files(
+        &embedded,
+        &config_yaml(relations),
+        std::slice::from_ref(&ts),
+    )
+    .unwrap();
     assert!(!flagged.is_empty(), "{flagged:?}");
     let ignored = check_with_files(
         &embedded,

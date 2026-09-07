@@ -32,7 +32,7 @@ fn include_exclude_and_option_overrides() {
     assert!(check_with_files(
         &root,
         &config_yaml("sqlInclude: [\"sql/**/*.sql\"]\nexclude: ['sql/001.sql']"),
-        &[sql.clone()],
+        std::slice::from_ref(&sql),
     )
     .unwrap()
     .is_empty());
@@ -40,7 +40,7 @@ fn include_exclude_and_option_overrides() {
         check_with_files(
             &root,
             &config_yaml("sqlInclude: [\"sql/**/*.sql\"]\ninclude: ['sql/001.sql']"),
-            &[sql.clone()],
+            std::slice::from_ref(&sql),
         )
         .unwrap()
         .len(),
@@ -49,7 +49,7 @@ fn include_exclude_and_option_overrides() {
     assert!(check_with_files(
         &root,
         &config_yaml("sqlInclude: [\"sql/**/*.sql\"]\ninclude: ['sql/missing.sql']"),
-        &[sql.clone()],
+        std::slice::from_ref(&sql),
     )
     .unwrap()
     .is_empty());
@@ -96,7 +96,8 @@ fn include_exclude_and_option_overrides() {
 fn dynamic_unparseable_and_non_sql_scan_paths() {
     let dynamic = fixture("fail-dynamic");
     let ts = dynamic.join("src/query.ts");
-    let flagged = check_with_files(&dynamic, &config_yaml("{}"), &[ts.clone()]).unwrap();
+    let flagged =
+        check_with_files(&dynamic, &config_yaml("{}"), std::slice::from_ref(&ts)).unwrap();
     assert!(
         flagged
             .iter()

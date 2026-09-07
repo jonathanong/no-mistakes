@@ -133,7 +133,19 @@ fn include_exclude_and_option_overrides() {
         .len(),
         1
     );
-    let error = check_with_files(&root, &config_yaml("include: ['[']"), &[sql]).expect_err("glob");
+    let error = check_with_files(
+        &root,
+        &config_yaml("include: ['[']"),
+        std::slice::from_ref(&sql),
+    )
+    .expect_err("glob");
+    assert!(error.to_string().contains("invalid glob"), "{error}");
+    let error = check_with_files(
+        &root,
+        &config_yaml("exclude: ['[']"),
+        std::slice::from_ref(&sql),
+    )
+    .expect_err("glob");
     assert!(error.to_string().contains("invalid glob"), "{error}");
     let compiled = compile_options(&Options {
         sql_include: vec!["migrations/**/*.sql".into()],
