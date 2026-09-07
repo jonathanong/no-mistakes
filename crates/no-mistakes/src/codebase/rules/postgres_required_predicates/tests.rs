@@ -46,6 +46,21 @@ fn required_predicate_passes() {
 }
 
 #[test]
+fn required_predicate_on_left_join_passes() {
+    let root = fixture("pass");
+    let findings = check_with_files(&root, &config(), &[root.join("sql/left-join.sql")]).unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn flags_left_join_missing_predicate() {
+    let root = fixture("fail");
+    let findings = check_with_files(&root, &config(), &[root.join("sql/left-join.sql")]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("parent_id"), "{findings:?}");
+}
+
+#[test]
 fn flags_embedded_query() {
     let root = fixture("fail-embedded");
     let findings = check_with_files(&root, &config(), &[root.join("src/query.ts")]).unwrap();
