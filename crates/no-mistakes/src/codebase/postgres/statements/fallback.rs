@@ -90,7 +90,7 @@ fn skip_quote(chars: &[char], start: usize, quote: char, out: &mut String, escap
             return chars.len();
         }
         if chars[index] == quote {
-            if !escaped && index + 1 < chars.len() && chars[index + 1] == quote {
+            if index + 1 < chars.len() && chars[index + 1] == quote {
                 out.push(' ');
                 index += 2;
                 continue;

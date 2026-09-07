@@ -444,8 +444,8 @@ fn generated_expr_walk_covers_remaining_ident_shapes() {
     assert_eq!(sources("b"), ["id"]);
     assert_eq!(sources("c"), ["id"]);
     assert_eq!(sources("d"), ["note"]);
-    assert!(sources("e").contains(&"flag".to_string()) && sources("e").contains(&"id".to_string()));
-    assert!(sources("f").contains(&"flag".to_string()));
+    assert_eq!(sources("e"), ["flag", "id"]);
+    assert_eq!(sources("f"), ["flag", "id", "note"]);
     assert_eq!(sources("g"), ["flag"]);
     assert_eq!(sources("h"), ["flag"]);
     assert_eq!(sources("i"), ["id"]);

@@ -102,6 +102,7 @@ fn join_forms_without_on_do_not_record_join_predicates() {
         "SELECT * FROM items CROSS JOIN accounts",
         "SELECT * FROM items NATURAL JOIN accounts",
         "SELECT * FROM items JOIN accounts USING (id)",
+        "SELECT * FROM items LEFT JOIN accounts USING (id)",
     ] {
         let facts = extract_sql_statement_facts(sql);
         assert!(

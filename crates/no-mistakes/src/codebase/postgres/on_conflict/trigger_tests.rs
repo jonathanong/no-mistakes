@@ -104,6 +104,42 @@ fn do_nothing_skips_triggers_when_disabled() {
 }
 
 #[test]
+fn judge_form_arms_respect_disabled_flags() {
+    use crate::codebase::postgres::statement_facts::SqlValueForm;
+    let mut file = extract_sql_statement_facts(
+        "INSERT INTO items (id, note) VALUES (1, 'a')
+         ON CONFLICT (id) DO UPDATE SET note = EXCLUDED.note;",
+    );
+    let forms = [
+        SqlValueForm::Placeholder,
+        SqlValueForm::Subquery,
+        SqlValueForm::Other,
+        SqlValueForm::SelfRef {
+            column: "id".to_string(),
+        },
+        SqlValueForm::Volatile {
+            name: "now".to_string(),
+        },
+        SqlValueForm::Greatest {
+            args: vec![SqlValueForm::Other],
+        },
+        SqlValueForm::Least {
+            args: vec![SqlValueForm::Placeholder],
+        },
+        SqlValueForm::Coalesce {
+            args: vec![SqlValueForm::Null, SqlValueForm::Other],
+        },
+    ];
+    let mut options = catalog(&[], &[], &[]);
+    options.check_convergence = false;
+    options.check_volatility = false;
+    for form in forms {
+        file.inserts[0].on_conflict.as_mut().unwrap().assignments[0].form = form;
+        assert!(judge_file(&file, &options).is_empty());
+    }
+}
+
+#[test]
 fn update_of_note_does_not_fire_on_other_assignment() {
     let file = extract_sql_statement_facts(
         "INSERT INTO items (id, other) VALUES (1, 'a')

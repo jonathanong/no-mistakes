@@ -67,6 +67,10 @@ fn quote_comment_and_dollar_masks_skip_insert_keywords() {
         0
     );
     assert_eq!(
+        extract_sql_statement_facts("SELECT E'it''s INSERT INTO x';").insert_keyword_count,
+        0
+    );
+    assert_eq!(
         extract_sql_statement_facts("SELECT E'foo\\").insert_keyword_count,
         0
     );
