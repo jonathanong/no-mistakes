@@ -208,6 +208,31 @@ fn embedded_insert_lines_are_rebased_to_the_call_site() {
 }
 
 #[test]
+fn composed_insert_lines_are_rebased_to_the_declaration() {
+    let ts = embedded_path("composed-insert.ts");
+    let sources = store(std::slice::from_ref(&ts));
+    let facts = collect_postgres_facts(
+        &fixture_root(),
+        &sources,
+        std::slice::from_ref(&ts),
+        &CheckFactPlan {
+            postgres_dml: true,
+            ..CheckFactPlan::default()
+        },
+        &PostgresSchemaOptions::default(),
+        &EmbeddedSqlOptions::default(),
+    )
+    .unwrap();
+    let file = facts
+        .statements
+        .iter()
+        .find(|file| !file.inserts.is_empty())
+        .expect("composed insert facts");
+    assert_eq!(file.origin_line, 3);
+    assert!(file.inserts[0].line >= 3, "{}", file.inserts[0].line);
+}
+
+#[test]
 fn fact_error_display_without_path() {
     let error = PostgresFactError::message("nope");
     assert_eq!(error.to_string(), "nope");

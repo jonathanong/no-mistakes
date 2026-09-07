@@ -1,3 +1,4 @@
+use crate::codebase::postgres::idents::unwrap_expr;
 use sqlparser::ast::{BinaryOperator, Expr, Query, SetExpr, UnaryOperator};
 
 pub(super) fn query_is_guarded(query: &Query) -> bool {
@@ -24,7 +25,10 @@ pub(super) fn has_conjunctive_not_exists(expr: &Expr) -> bool {
         Expr::UnaryOp {
             op: UnaryOperator::Not,
             expr,
-        } => matches!(expr.as_ref(), Expr::Exists { negated: false, .. }),
+        } => matches!(
+            unwrap_expr(expr.as_ref()),
+            Expr::Exists { negated: false, .. }
+        ),
         Expr::Exists { negated: true, .. } => true,
         Expr::BinaryOp {
             left,

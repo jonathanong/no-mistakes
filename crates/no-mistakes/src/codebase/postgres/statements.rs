@@ -128,6 +128,8 @@ pub fn has_top_level_not_exists_in(sql: &str) -> bool {
 }
 
 #[cfg(test)]
+mod coverage_more_tests;
+#[cfg(test)]
 mod coverage_tests;
 #[cfg(test)]
 mod tests;

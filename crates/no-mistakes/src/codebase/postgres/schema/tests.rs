@@ -451,3 +451,25 @@ fn generated_expr_walk_covers_remaining_ident_shapes() {
     assert_eq!(sources("i"), ["id"]);
     assert!(sources("j").is_empty(), "{:?}", sources("j"));
 }
+
+#[test]
+fn generated_named_and_wildcard_function_args_are_walked() {
+    let tables = extract_create_table_metadata(
+        "CREATE TABLE t (
+           id int,
+           a text GENERATED ALWAYS AS (concat(x => id)) STORED,
+           b int GENERATED ALWAYS AS (count(*)) STORED
+         );",
+    );
+    let sources = |name: &str| {
+        tables[0]
+            .columns
+            .iter()
+            .find(|column| column.name == name)
+            .unwrap()
+            .generated_source_columns
+            .clone()
+    };
+    assert_eq!(sources("a"), ["id"]);
+    assert!(sources("b").is_empty(), "{:?}", sources("b"));
+}
