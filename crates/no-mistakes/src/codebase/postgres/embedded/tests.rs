@@ -394,6 +394,14 @@ fn concat_fragments_and_non_const_inits_are_classified() {
         super::EmbeddedSqlKind::Dynamic
     );
     assert_eq!(
+        extract("composed-concat-minus.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Dynamic
+    );
+    assert_eq!(
+        extract("let-uninitialized.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Dynamic
+    );
+    assert_eq!(
         extract("export-const-sql.ts").calls[0].kind,
         super::EmbeddedSqlKind::ImmutableLocal
     );
@@ -435,6 +443,10 @@ fn append_non_static_and_non_append_members_are_dynamic_or_unchanged() {
     assert_eq!(
         extract("composed-append-function.ts").calls[0].kind,
         super::EmbeddedSqlKind::Dynamic
+    );
+    assert_eq!(
+        extract("composed-append-unknown.ts").calls[0].kind,
+        super::EmbeddedSqlKind::ImmutableLocal
     );
 }
 

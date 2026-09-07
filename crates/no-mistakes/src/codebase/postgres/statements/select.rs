@@ -138,3 +138,6 @@ fn join_expr(operator: &sqlparser::ast::JoinOperator) -> Option<&Expr> {
         _ => None,
     }
 }
+
+#[cfg(test)]
+mod tests;

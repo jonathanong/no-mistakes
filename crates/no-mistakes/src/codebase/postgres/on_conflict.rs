@@ -6,6 +6,8 @@ mod generated;
 mod trigger;
 
 #[cfg(test)]
+mod coverage_more_tests;
+#[cfg(test)]
 mod coverage_tests;
 #[cfg(test)]
 mod trigger_tests;
