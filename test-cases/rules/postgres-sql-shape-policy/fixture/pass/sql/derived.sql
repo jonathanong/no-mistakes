@@ -1,0 +1,6 @@
+SELECT 1 FROM posts
+WHERE EXISTS (
+  SELECT 1 FROM (
+    SELECT 1 FROM topics UNION ALL SELECT 1 FROM tags
+  ) candidate
+);

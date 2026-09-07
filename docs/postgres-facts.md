@@ -146,7 +146,8 @@ sqlparser AST:
   (`IS DISTINCT FROM EXCLUDED`, `IS NULL AND EXCLUDED IS NOT NULL`)
 - `INSERT…SELECT` guarded by a conjunctive `WHERE NOT EXISTS`
 - SELECT FROM/JOIN relation names, predicate SQL, and `EXISTS` set-operation
-  facts (`restricted` when every arm has a placeholder or literal bound)
+  facts (`restricted` when every arm has a placeholder or literal bound;
+  `correlated` when a qualified identifier is outside the subquery FROM/WITH)
 - `CREATE TRIGGER` table, function, period, row/statement, and events
 
 Unparseable files set `parse_failed` and count quote-masked `INSERT INTO`

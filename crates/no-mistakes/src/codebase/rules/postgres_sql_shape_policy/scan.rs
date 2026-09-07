@@ -54,12 +54,12 @@ pub(super) fn scan(
             if select
                 .exists_set_operations
                 .iter()
-                .any(|exists| !exists.restricted)
+                .any(|exists| exists.correlated)
             {
                 findings.push(finding(
                     &rel,
                     select.line.max(1),
-                    "do not use EXISTS around a set operation without an inner restriction",
+                    "do not wrap a set operation in a correlated EXISTS",
                 ));
             }
         }

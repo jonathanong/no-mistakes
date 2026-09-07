@@ -89,6 +89,8 @@ pub struct SqlSelectFact {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SqlExistsSetOpFact {
     pub restricted: bool,
+    /// Qualified `table.column` whose qualifier is not a local FROM/WITH name.
+    pub correlated: bool,
 }
 
 /// One `CREATE TRIGGER`.

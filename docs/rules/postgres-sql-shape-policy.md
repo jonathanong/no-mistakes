@@ -1,9 +1,11 @@
 # `postgres-sql-shape-policy`
 
 Ban configured PostgreSQL SQL shapes that the parser can prove. The default
-shape is `correlated-exists-set-operation`: `EXISTS (SELECT … UNION [ALL] …)`
-without an inner placeholder or literal restriction on every arm. That form
-often correlates over an unbound relation and cannot be proven safe.
+shape is `correlated-exists-set-operation`: a correlated
+`EXISTS (SELECT … UNION [ALL] / INTERSECT / EXCEPT …)`. Postgres cannot pull a
+set-operation body into a semijoin, so that form rematerializes the whole set
+once per outer row. An uncorrelated `EXISTS (… UNION …)` is planned once as an
+InitPlan and is not this shape.
 
 The rule consumes dual-source statement facts (`CheckFactPlan.postgres_dml`).
 Unparseable or dynamic SQL fails closed unless `unanalyzableSql` is `ignore`.
@@ -26,26 +28,35 @@ other values are a configuration error).
 `importSpecifier` defaults to `@data-stores/psql`; `executorNames` defaults to
 `[query, read, write]`.
 
-Counterexample: `EXISTS` wrapping `UNION ALL` with no inner restriction.
+Counterexample: correlated `EXISTS` wrapping `UNION ALL`.
 
 ```sql
-SELECT 1 WHERE EXISTS (
-  SELECT 1 FROM topics
+SELECT 1 FROM posts
+WHERE EXISTS (
+  SELECT 1 FROM topics WHERE topics.post_id = posts.id
   UNION ALL
-  SELECT 1 FROM topics
+  SELECT 1 FROM tags WHERE tags.post_id = posts.id
 );
 ```
 
-Fix: restrict each set-operation arm (placeholder or literal) or rewrite
-without `EXISTS` around a set operation.
+Fix: keep the set operation uncorrelated, then test membership — for example
+`post_id IN (SELECT candidate.post_id FROM ( … UNION ALL … ) candidate)` — or
+use a single-arm `EXISTS` without a set operation.
 
 ```sql
-SELECT 1 WHERE EXISTS (
-  SELECT 1 FROM topics WHERE id = $1
-  UNION ALL
-  SELECT 1 FROM topics WHERE id = $1
+SELECT 1 FROM posts
+WHERE posts.id IN (
+  SELECT candidate.post_id FROM (
+    SELECT topics.post_id FROM topics
+    UNION ALL
+    SELECT tags.post_id FROM tags
+  ) candidate
 );
 ```
+
+An uncorrelated `EXISTS` around a set operation, including a FROM-less
+`SELECT EXISTS (… UNION …) AS alias` scalar probe, is allowed. An inner
+placeholder on every arm does not make a correlated wrapping `EXISTS` safe.
 
 Use `no-mistakes-disable-next-line postgres-sql-shape-policy` or
 `no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
@@ -53,15 +64,20 @@ when a whole file is an intentional exception.
 
 ## Why and when
 
-Use this rule when correlated `EXISTS (… UNION …)` over an unbound relation
-has caused full scans or correctness holes, and you want a fail-closed shape
-ban instead of a table-specific allowlist.
+Use this rule when correlated `EXISTS (… UNION …)` has caused per-outer-row
+set-operation scans, and you want a fail-closed shape ban instead of a
+table-specific allowlist.
 
 ## What it catches/requires
 
 When `correlated-exists-set-operation` is banned, an `EXISTS` whose subquery
-is a set operation is a finding unless every arm has an inner restriction
-(placeholder, numeric/string literal, or `sql_placeholder_*`).
+is a set operation is a finding when a qualified `table.column` in that
+subquery names a relation that is not local to the subquery's FROM/WITH
+(including SELECT-list and HAVING `EXISTS`). Set operations nested inside a
+derived-table `FROM` of the `EXISTS` subquery are not this shape.
+
+Correlation is a syntax heuristic: only qualified references count, UNION
+branches share one local-name set, and nested subquery scopes are not tracked.
 
 ## Options and defaults
 
@@ -85,23 +101,24 @@ SELECT 1 WHERE EXISTS (
 ## Counterexample
 
 ```sql
-SELECT 1 WHERE EXISTS (
-  SELECT 1 FROM topics
+SELECT 1 FROM posts
+WHERE EXISTS (
+  SELECT 1 FROM topics WHERE topics.post_id = posts.id
   UNION ALL
-  SELECT 1 FROM topics
+  SELECT 1 FROM tags WHERE tags.post_id = posts.id
 );
 ```
 
 ## Fix
 
-Put a placeholder or literal restriction on every UNION/EXCEPT/INTERSECT arm,
-or replace the set operation with a single restricted subquery.
+Rewrite so the set operation is not inside a correlated `EXISTS`: test
+`IN (SELECT … FROM (<set-operation>) alias)` or use one restricted subquery.
 
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-sql-shape-policy` or
 `no-mistakes-disable-line`; use the file directive only for an intentional
-unrestricted existence check.
+correlated existence check.
 
 ## Related rules
 

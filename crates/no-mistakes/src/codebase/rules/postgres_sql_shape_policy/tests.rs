@@ -42,7 +42,7 @@ fn config_yaml(yaml: &str) -> NoMistakesConfig {
 }
 
 #[test]
-fn flags_unrestricted_exists_union() {
+fn flags_correlated_exists_union() {
     let findings = run(&fixture("fail"));
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(
@@ -54,6 +54,24 @@ fn flags_unrestricted_exists_union() {
 #[test]
 fn restricted_union_is_clean() {
     assert!(run(&fixture("pass")).is_empty());
+}
+
+#[test]
+fn uncorrelated_and_derived_unions_are_clean() {
+    let root = fixture("pass");
+    for name in ["uncorrelated.sql", "probe.sql", "derived.sql"] {
+        let file = root.join("sql").join(name);
+        let findings = check_with_files(&root, &config(), std::slice::from_ref(&file)).unwrap();
+        assert!(findings.is_empty(), "{name} {findings:?}");
+    }
+}
+
+#[test]
+fn restricted_correlated_union_is_still_flagged() {
+    let root = fixture("fail");
+    let file = root.join("sql/restricted-correlated.sql");
+    let findings = check_with_files(&root, &config(), std::slice::from_ref(&file)).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
 }
 
 #[test]

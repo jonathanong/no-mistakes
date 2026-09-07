@@ -90,6 +90,6 @@ unfiltered reporting query.
 
 ## Related rules
 
-[`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) bans unsafe SQL
-shapes; [`postgres-idempotent-insert`](postgres-idempotent-insert.md) covers
+[`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) bans correlated
+`EXISTS` set operations; [`postgres-idempotent-insert`](postgres-idempotent-insert.md) covers
 replay-safe INSERT.

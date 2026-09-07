@@ -120,7 +120,7 @@ fn exists_tautology_is_not_restricted() {
     assert!(facts.selects.iter().any(|select| select
         .exists_set_operations
         .iter()
-        .any(|exists| !exists.restricted)));
+        .any(|exists| !exists.restricted && !exists.correlated)));
 }
 
 #[test]
@@ -160,7 +160,7 @@ fn exists_union_is_unrestricted() {
     assert!(facts.selects.iter().any(|select| select
         .exists_set_operations
         .iter()
-        .any(|exists| !exists.restricted)));
+        .any(|exists| !exists.restricted && !exists.correlated)));
 }
 
 #[test]
