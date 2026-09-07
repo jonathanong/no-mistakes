@@ -28,6 +28,7 @@ pub(super) fn collect_calls(
         scopes: Vec::new(),
         calls: Vec::new(),
         control_depth: 0,
+        functions: resolve::LocalFunctions::collect(program),
     };
     visitor.visit_program(program);
     visitor.calls
@@ -39,6 +40,7 @@ struct ScopeVisitor<'a> {
     scopes: Vec<HashMap<String, BindingState>>,
     calls: Vec<EmbeddedSqlCall>,
     control_depth: usize,
+    functions: resolve::LocalFunctions,
 }
 
 impl ScopeVisitor<'_> {

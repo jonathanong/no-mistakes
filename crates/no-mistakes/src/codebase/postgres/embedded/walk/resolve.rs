@@ -1,9 +1,16 @@
+mod append;
+mod chain;
+mod functions;
+
+pub(super) use append::apply_append;
+pub(super) use functions::LocalFunctions;
+
 use super::super::tags::{interpolating_untrusted_tag, kind_for_const};
 use super::super::{first_call_argument, sql_text, EmbeddedSqlCall, EmbeddedSqlKind};
 use super::{BindingState, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    Argument, BinaryOperator, BindingPattern, CallExpression, Declaration, Expression, Statement,
+    BinaryOperator, BindingPattern, CallExpression, Declaration, Expression, Statement,
     VariableDeclaration, VariableDeclarator,
 };
 
@@ -46,7 +53,7 @@ fn record_declarator(
     };
     let line =
         crate::codebase::ts_source::byte_offset_to_line(visitor.source, ident.span.start as usize);
-    let (sql, kind) = classify_init(init, is_const);
+    let (sql, kind) = classify_init(init, is_const, &visitor.functions);
     if let Some(scope) = visitor.current_scope() {
         scope.insert(ident.name.to_string(), BindingState { sql, kind, line });
     }
@@ -55,8 +62,9 @@ fn record_declarator(
 pub(super) fn classify_init(
     expr: &Expression<'_>,
     is_const: bool,
+    functions: &LocalFunctions,
 ) -> (Option<String>, EmbeddedSqlKind) {
-    if let Some((text, kind)) = composed_sql(expr) {
+    if let Some((text, kind)) = composed_sql(expr, functions) {
         return if is_const {
             (Some(text), kind)
         } else {
@@ -75,74 +83,47 @@ pub(super) fn classify_init(
             kind_for_const(sql_text(expr).unwrap_or_default(), is_const)
         }
         Expression::TemplateLiteral(_) => (sql_text(expr), EmbeddedSqlKind::Dynamic),
+        Expression::CallExpression(_) => match resolve_chain(expr, functions) {
+            Some(text) if is_const => (Some(text), EmbeddedSqlKind::Composed),
+            Some(text) => (Some(text), EmbeddedSqlKind::Dynamic),
+            None => (None, EmbeddedSqlKind::Dynamic),
+        },
         _ => (None, EmbeddedSqlKind::Dynamic),
     }
 }
 
-fn composed_sql(expr: &Expression<'_>) -> Option<(String, EmbeddedSqlKind)> {
+fn composed_sql(
+    expr: &Expression<'_>,
+    functions: &LocalFunctions,
+) -> Option<(String, EmbeddedSqlKind)> {
     let Expression::BinaryExpression(binary) = unwrap_ts_wrappers(expr) else {
         return None;
     };
     if binary.operator != BinaryOperator::Addition {
         return None;
     }
-    let left = static_fragment(&binary.left)?;
-    let right = static_fragment(&binary.right)?;
+    let left = static_fragment(&binary.left, functions)?;
+    let right = static_fragment(&binary.right, functions)?;
     Some((format!("{left}{right}"), EmbeddedSqlKind::Composed))
 }
 
-fn static_fragment(expr: &Expression<'_>) -> Option<String> {
+fn static_fragment(expr: &Expression<'_>, functions: &LocalFunctions) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => sql_text(expr),
         Expression::TaggedTemplateExpression(_) if interpolating_untrusted_tag(expr) => None,
         Expression::TaggedTemplateExpression(_) => sql_text(expr),
-        Expression::BinaryExpression(_) => composed_sql(expr).map(|(text, _)| text),
+        Expression::BinaryExpression(_) => composed_sql(expr, functions).map(|(text, _)| text),
+        Expression::CallExpression(_) => resolve_chain(expr, functions),
         _ => None,
     }
 }
 
-pub(super) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression<'_>) {
-    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
-        return;
-    };
-    if member.property.name != "append" {
-        return;
-    }
-    let Expression::Identifier(ident) = unwrap_ts_wrappers(&member.object) else {
-        return;
-    };
-    let Some(arg) = first_static_arg(call) else {
-        visitor.mark_dynamic(ident.name.as_str());
-        return;
-    };
-    if visitor.control_depth > 0 {
-        visitor.mark_dynamic(ident.name.as_str());
-        return;
-    }
-    for scope in visitor.scopes.iter_mut().rev() {
-        if let Some(binding) = scope.get_mut(ident.name.as_str()) {
-            match (&binding.sql, binding.kind) {
-                (Some(sql), EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed) => {
-                    binding.sql = Some(format!("{sql}{arg}"));
-                    binding.kind = EmbeddedSqlKind::Composed;
-                }
-                _ => {
-                    binding.kind = EmbeddedSqlKind::Dynamic;
-                    binding.sql = None;
-                }
-            }
-            return;
-        }
-    }
-}
-
-fn first_static_arg(call: &CallExpression<'_>) -> Option<String> {
-    let Argument::SpreadElement(_) = call.arguments.first()? else {
-        let expr = call.arguments.first()?.as_expression()?;
-        return static_fragment(expr);
-    };
-    None
+/// Resolves a fluent `.append()` chain or a call into a same-file
+/// statically-composed function, per [`chain::resolve_expr`].
+fn resolve_chain(expr: &Expression<'_>, functions: &LocalFunctions) -> Option<String> {
+    let mut lookup = |name: &str, _depth: u8| functions.get(name);
+    chain::resolve_expr(expr, functions::MAX_RESOLVE_DEPTH, &mut lookup)
 }
 
 pub(super) fn executor_call(
@@ -176,7 +157,7 @@ pub(super) fn executor_call(
             }
         }
         _ => {
-            let (sql, kind) = classify_init(argument, true);
+            let (sql, kind) = classify_init(argument, true, &visitor.functions);
             EmbeddedSqlCall {
                 line,
                 callee,
