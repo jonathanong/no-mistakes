@@ -8,9 +8,6 @@
     "url": "git+https://github.com/jonathanong/no-mistakes.git",
     "directory": "packages/no-mistakes-linux-x64-gnu"
   },
-  "bin": {
-    "no-mistakes-linux-x64-gnu": "bin/no-mistakes"
-  },
   "files": [
     "bin/",
     "README.md",

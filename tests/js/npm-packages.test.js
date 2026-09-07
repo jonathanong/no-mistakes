@@ -62,9 +62,7 @@ test("native platform package manifests are runtime-bearing and platform-constra
     assert.deepEqual(manifest.cpu, platform.cpu);
     assert.deepEqual(manifest.libc, platform.libc);
     assert.equal(manifest.main, "bin/no-mistakes.node");
-    assert.deepEqual(manifest.bin, {
-      [name]: `bin/no-mistakes${name.includes("win32") ? ".exe" : ""}`,
-    });
+    assert.equal(manifest.bin, undefined);
     assert.deepEqual(manifest.files, ["bin/", "README.md", "LICENSE"]);
     assert.deepEqual(manifest.publishConfig, { access: "public" });
     assert.equal(manifest.repository.directory, `packages/${name}`);
@@ -81,6 +79,10 @@ test("the npm package exposes one JavaScript launcher and optional native packag
 
   assert.deepEqual(Object.values(manifest.optionalDependencies), Array(5).fill(releaseVersion));
   assert.equal(statSync(join(packageDir, "bin", "no-mistakes.js")).isFile(), true);
+  assert.match(
+    readFileSync(join(root, "pnpm-workspace.yaml"), "utf8"),
+    /^linkWorkspacePackages: true$/mu,
+  );
 });
 
 test("packed no-mistakes pins every platform optional dependency to its release version", () => {

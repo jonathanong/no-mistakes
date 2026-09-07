@@ -8,9 +8,6 @@
     "url": "git+https://github.com/jonathanong/no-mistakes.git",
     "directory": "packages/no-mistakes-win32-x64-msvc"
   },
-  "bin": {
-    "no-mistakes-win32-x64-msvc": "bin/no-mistakes.exe"
-  },
   "files": [
     "bin/",
     "README.md",

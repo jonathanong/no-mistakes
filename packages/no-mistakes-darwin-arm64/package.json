@@ -8,9 +8,6 @@
     "url": "git+https://github.com/jonathanong/no-mistakes.git",
     "directory": "packages/no-mistakes-darwin-arm64"
   },
-  "bin": {
-    "no-mistakes-darwin-arm64": "bin/no-mistakes"
-  },
   "files": [
     "bin/",
     "README.md",
