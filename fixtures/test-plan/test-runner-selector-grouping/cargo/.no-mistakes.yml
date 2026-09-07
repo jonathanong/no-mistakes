@@ -1,0 +1,9 @@
+tests:
+  rust:
+    packages:
+      - app
+testPlan:
+  cargo:
+    environments:
+      all:
+        all: true

@@ -11,6 +11,12 @@ const test = globalThis.test || require("node:test").test;
 
 const repositoryRoot = join(__dirname, "..", "..", "..");
 const fixtureRoot = join(repositoryRoot, "fixtures", "napi", "real-addon-dependencies");
+const selectorGroupingFixtureRoot = join(
+  repositoryRoot,
+  "fixtures",
+  "test-plan",
+  "test-runner-selector-grouping",
+);
 const lockHolderFixture = join(
   repositoryRoot,
   "fixtures",
@@ -45,6 +51,76 @@ test(
 
     assert.equal(typeof pendingReport.then, "function");
     assert.deepEqual(await pendingReport, expectedReport);
+  },
+);
+
+test(
+  "compiled async N-API test plans preserve runner selectors and match analyzeProject",
+  { skip: !compiledAddonPath, timeout: 20_000 },
+  async () => {
+    const root = join(selectorGroupingFixtureRoot, "cargo");
+    const options = {
+      root,
+      framework: "cargo",
+      environment: "all",
+      changedFiles: ["app/src/lib.rs"],
+    };
+    const direct = await require("../index.js").testsPlan(options);
+    const batched = await require("../index.js").analyzeProject({
+      root,
+      reports: [
+        {
+          type: "testsPlan",
+          framework: options.framework,
+          environment: options.environment,
+          changedFiles: options.changedFiles,
+        },
+      ],
+    });
+
+    assert.deepEqual(batched.reports[0].result, direct);
+    assert.deepEqual(
+      direct.executionTargets.map(({ runnerArgs, testFiles }) => ({ runnerArgs, testFiles })),
+      [
+        { runnerArgs: ["-p", "app", "--test", "a"], testFiles: ["app/tests/a.rs"] },
+        { runnerArgs: ["-p", "app", "--test", "b"], testFiles: ["app/tests/b.rs"] },
+      ],
+    );
+
+    const swiftOptions = {
+      root: selectorGroupingFixtureRoot,
+      config: join(selectorGroupingFixtureRoot, "swift", ".no-mistakes.yml"),
+      framework: "swift",
+      environment: "all",
+      changedFiles: ["swift/Sources/App/Value.swift"],
+    };
+    const swiftDirect = await require("../index.js").testsPlan(swiftOptions);
+    const swiftBatched = await require("../index.js").analyzeProject({
+      root: swiftOptions.root,
+      config: swiftOptions.config,
+      reports: [
+        {
+          type: "testsPlan",
+          framework: swiftOptions.framework,
+          environment: swiftOptions.environment,
+          changedFiles: swiftOptions.changedFiles,
+        },
+      ],
+    });
+    assert.deepEqual(swiftBatched.reports[0].result, swiftDirect);
+    assert.deepEqual(
+      swiftDirect.executionTargets.map(({ runnerArgs, testFiles }) => ({ runnerArgs, testFiles })),
+      [
+        {
+          runnerArgs: ["--package-path", "swift", "--filter", "AlphaTests"],
+          testFiles: ["swift/Tests/AlphaTests/Alpha.swift"],
+        },
+        {
+          runnerArgs: ["--package-path", "swift", "--filter", "BetaTests"],
+          testFiles: ["swift/Tests/BetaTests/Beta.swift"],
+        },
+      ],
+    );
   },
 );
 

@@ -501,6 +501,9 @@ addon avoids UTF-16 string copies at the N-API boundary.
   Batch `testsPlan` and `ciTopology` in one `analyzeProject({ reports })` call
   so they share the machine-wide lock. `testsPlan()` / `testsImpact()` return
   camelCase `executionTargets` (optional `name` for Swift path-prefix groups).
+  Execution targets retain normalized runner selectors in `runnerArgs`, so
+  distinct Cargo `--test` targets and Swift `--filter` values remain separate
+  while identical selectors can be combined.
   `includeGlob` is a `testsPlan()` option that scopes configured framework
   discovery before planning, so group accounting and execution targets contain
   only matching tests.

@@ -1,0 +1,9 @@
+tests:
+  swift:
+    packages:
+      - swift
+testPlan:
+  swift:
+    environments:
+      all:
+        all: true
