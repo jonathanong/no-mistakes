@@ -59,7 +59,8 @@ override that matched those children relative to the ancestor directory but no
 longer matches relative to the nested directory is lost: its `rules` must be a
 value-equal subset of the nested config's top-level `rules`.
 Overrides whose globs still match after rebasing, and nested directories with no
-inventory children, are ignored. Extra nested rules are allowed. Key names default
+inventory children, are ignored. Single-star globs do not cross `/`. Extra nested
+rules are allowed. Key names default
 to `extends`, `overrides`, `files`, and `rules`, and can be overridden with
 `extendsKey`, `overridesKey`, `filesKey`, and `rulesKey`.
 

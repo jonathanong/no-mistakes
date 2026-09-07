@@ -3,7 +3,7 @@ use super::{finding, mapping_at, string_entries};
 use crate::codebase::rules::structured_config_policy::value_at_key;
 use crate::codebase::rules::structured_config_policy::ValueAssertion;
 use crate::codebase::rules::RuleFinding;
-use globset::{Glob, GlobSet, GlobSetBuilder};
+use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
 use serde_yaml::Mapping;
 use std::path::Path;
 
@@ -63,7 +63,7 @@ fn compile_globs(patterns: &[&str]) -> Option<GlobSet> {
     let mut any = false;
     for pattern in patterns {
         let trimmed = pattern.trim_start_matches("./");
-        if let Ok(glob) = Glob::new(trimmed) {
+        if let Ok(glob) = GlobBuilder::new(trimmed).literal_separator(true).build() {
             builder.add(glob);
             any = true;
         }

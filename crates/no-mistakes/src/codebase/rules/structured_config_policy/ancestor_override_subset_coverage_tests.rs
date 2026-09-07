@@ -43,6 +43,11 @@ fn ancestor_override_subset_skips_diamond_extends_and_malformed_overrides() {
             "odd/file.ts",
             "bool-extends/.oxlintrc.json",
             "abs/.oxlintrc.json",
+            // Oxlint `*` does not match `/`. `star-seg/*.ts` must not treat
+            // `star-seg/inner/file.ts` as a lost ancestor override.
+            "star-seg-parent.json",
+            "star-seg/.oxlintrc.json",
+            "star-seg/inner/file.ts",
         ],
     );
     let findings = check_with_files(
@@ -67,6 +72,7 @@ policies:
     assert!(!found.contains(&"diamond/nested/.oxlintrc.json"), "{body}");
     assert!(!found.contains(&"odd/.oxlintrc.json"), "{body}");
     assert!(!found.contains(&"bool-extends/.oxlintrc.json"), "{body}");
+    assert!(!found.contains(&"star-seg/.oxlintrc.json"), "{body}");
     assert!(found.contains(&"abs/.oxlintrc.json"), "{body}");
     assert_eq!(findings.len(), 1, "{body}");
     assert!(
