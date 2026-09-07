@@ -103,12 +103,14 @@ fn detects_lost_rules_for_actual_tsx_specific_and_nested_source_candidates() {
         root.join("actual/nested/component.tsx"),
         root.join("actual/nested/specific-file.ts"),
         root.join("actual/nested/src/app.ts"),
+        root.join("actual/sibling.ts"),
     ];
     let findings = check_with_files(&root, &config(), &files).unwrap();
     let body = format!("{findings:?}");
     assert!(body.contains("tsx-rule"), "{body}");
     assert!(body.contains("specific-rule"), "{body}");
     assert!(body.contains("source-rule"), "{body}");
+    assert!(!body.contains("sibling-rule"), "{body}");
 }
 
 #[test]

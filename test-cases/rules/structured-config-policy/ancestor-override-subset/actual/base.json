@@ -2,6 +2,7 @@
   "overrides": [
     { "files": ["nested/**/*.tsx"], "rules": { "tsx-rule": "error" } },
     { "files": ["nested/specific-file.ts"], "rules": { "specific-rule": "error" } },
-    { "files": ["nested/src/app.ts"], "rules": { "source-rule": "error" } }
+    { "files": ["nested/src/app.ts"], "rules": { "source-rule": "error" } },
+    { "files": ["sibling.ts"], "rules": { "sibling-rule": "error" } }
   ]
 }

@@ -16,20 +16,24 @@ pub(super) fn required_rules(
         records.extend(overrides(&ancestor.path, &ancestor.value, assertion)?);
     }
     let mut required = BTreeMap::new();
-    for candidate in candidates {
+    let nested_dir = nested_path.parent().unwrap_or(nested_path);
+    for candidate in candidates
+        .iter()
+        .filter(|candidate| candidate.strip_prefix(nested_dir).is_ok())
+    {
         let mut before = BTreeMap::new();
         let mut after = BTreeMap::new();
         for record in &records {
             if record.matches(candidate, record.path.parent().unwrap_or(&record.path)) {
-                before.extend(record.rules.clone());
+                before.extend(&record.rules);
             }
             if record.matches(candidate, nested_path.parent().unwrap_or(nested_path)) {
-                after.extend(record.rules.clone());
+                after.extend(&record.rules);
             }
         }
         for (key, value) in before {
             if after.get(&key) != Some(&value) {
-                required.insert(key, value);
+                required.insert(key.clone(), value.clone());
             }
         }
     }
@@ -106,7 +110,7 @@ fn overrides(
         .collect()
 }
 
-fn compile_patterns(
+pub(super) fn compile_patterns(
     record: &Mapping,
     key: &str,
     required: bool,
@@ -142,24 +146,4 @@ fn compile_patterns(
                 .map_err(|error| format!("`{key}` has invalid glob `{pattern}`: {error}"))
         })
         .collect()
-}
-
-#[cfg(test)]
-mod tests {
-    use super::compile_patterns;
-    use serde_yaml::{Mapping, Value};
-    #[test]
-    fn rejects_invalid_and_non_string_patterns() {
-        let mut record = Mapping::new();
-        record.insert(
-            Value::String("files".to_string()),
-            Value::Sequence(vec![Value::Number(1.into())]),
-        );
-        assert!(compile_patterns(&record, "files", true).is_err());
-        record.insert(
-            Value::String("files".to_string()),
-            Value::String("[".to_string()),
-        );
-        assert!(compile_patterns(&record, "files", true).is_err());
-    }
 }

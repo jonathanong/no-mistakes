@@ -4,6 +4,10 @@ use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
 mod matching;
+#[cfg(test)]
+mod matching_tests;
+#[cfg(test)]
+mod paths_tests;
 mod resolution;
 
 pub(crate) use resolution::AncestorResolver;
@@ -20,7 +24,7 @@ pub(super) fn check_ancestor_override_subset(
         Ok(ancestors) => ancestors,
         Err(message) => return vec![finding(rel, assertion, message)],
     };
-    let required = match matching::required_rules(&ancestors, path, candidates, assertion) {
+    let required = match matching::required_rules(ancestors.as_ref(), path, candidates, assertion) {
         Ok(required) => required,
         Err(message) => return vec![finding(rel, assertion, format!("{rel}: {message}"))],
     };

@@ -5,15 +5,16 @@ use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
-mod paths;
+pub(super) mod paths;
 use paths::{extends, local_specifier};
 
 pub(crate) struct AncestorResolver<'a> {
     root: &'a Path,
     sources: &'a SourceStore,
     values: BTreeMap<PathBuf, Value>,
-    chains: BTreeMap<ResolutionKey, Vec<Ancestor>>,
+    chains: BTreeMap<ResolutionKey, Arc<Vec<Ancestor>>>,
 }
 
 #[derive(Clone, Ord, PartialOrd, Eq, PartialEq)]
@@ -42,11 +43,11 @@ impl<'a> AncestorResolver<'a> {
         path: &Path,
         value: &Value,
         assertion: &super::super::ValueAssertion,
-    ) -> Result<Vec<Ancestor>, String> {
+    ) -> Result<Arc<Vec<Ancestor>>, String> {
         let start = normalize_path(path);
         let key = resolution_key(&start, assertion);
         if let Some(chain) = self.chains.get(&key) {
-            return Ok(chain.clone());
+            return Ok(Arc::clone(chain));
         }
         self.values.insert(start.clone(), value.clone());
         let mut direct = BTreeMap::new();
@@ -88,22 +89,24 @@ impl<'a> AncestorResolver<'a> {
                         chain.extend(
                             self.chains
                                 .get(&resolution_key(parent, assertion))
-                                .cloned()
-                                .expect("parents resolve before children"),
+                                .expect("parents resolve before children")
+                                .iter()
+                                .cloned(),
                         );
                         chain.push(Ancestor {
                             path: parent.clone(),
                             value: self.values.get(parent).cloned().expect("loaded parent"),
                         });
                     }
-                    self.chains.insert(resolution_key(&path, assertion), chain);
+                    self.chains
+                        .insert(resolution_key(&path, assertion), Arc::new(chain));
                 }
             }
         }
         Ok(self
             .chains
             .get(&key)
-            .cloned()
+            .map(Arc::clone)
             .expect("start chain resolved"))
     }
 
