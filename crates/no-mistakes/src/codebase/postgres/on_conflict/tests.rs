@@ -378,3 +378,34 @@ fn after_update_without_where_re_fires_trigger() {
         "{found:?}"
     );
 }
+
+#[test]
+fn statement_level_delete_trigger_is_ignored() {
+    let sql = "INSERT INTO items (id, note) VALUES (1, 'a')
+         ON CONFLICT (id) DO UPDATE SET note = EXCLUDED.note;";
+    let file = extract_sql_statement_facts(sql);
+    let triggers = extract_sql_statement_facts(
+        "CREATE TRIGGER t AFTER DELETE ON items EXECUTE FUNCTION audit();",
+    )
+    .triggers;
+    assert!(judge_file(&file, &catalog(&[], &triggers, &[], &[])).is_empty());
+}
+
+#[test]
+fn allowlisted_trigger_writing_arbiter_is_unsafe() {
+    let sql = "INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING;";
+    let file = extract_sql_statement_facts(sql);
+    let triggers = extract_sql_statement_facts(
+        "CREATE TRIGGER t BEFORE INSERT ON items FOR EACH ROW EXECUTE FUNCTION audit();",
+    )
+    .triggers;
+    let replay_safe = ["audit".to_string()];
+    let writes = [("audit".to_string(), vec!["id".to_string()])];
+    let found = judge_file(&file, &catalog(&[], &triggers, &replay_safe, &writes));
+    assert!(
+        found
+            .iter()
+            .any(|(_, message)| message.contains("conflict-arbiter")),
+        "{found:?}"
+    );
+}

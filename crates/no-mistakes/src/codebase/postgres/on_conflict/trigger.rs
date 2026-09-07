@@ -15,12 +15,23 @@ pub(super) fn judge(
         .map(|assignment| assignment.column.clone())
         .collect();
     let generated_sources = generated_arbiter_sources(insert, conflict, catalog);
+    let arbiter_columns = match &conflict.arbiter {
+        SqlConflictArbiter::Columns(columns) => columns.clone(),
+        _ => Vec::new(),
+    };
     catalog
         .triggers
         .iter()
         .filter(|trigger| trigger.table.eq_ignore_ascii_case(&insert.table))
         .find_map(|trigger| {
-            unsafe_reason(trigger, conflict, &assigned, catalog, &generated_sources)
+            unsafe_reason(
+                trigger,
+                conflict,
+                &assigned,
+                catalog,
+                &generated_sources,
+                &arbiter_columns,
+            )
         })
 }
 
@@ -30,6 +41,7 @@ fn unsafe_reason(
     assigned: &[String],
     catalog: &Catalog<'_>,
     generated_sources: &[String],
+    arbiter_columns: &[String],
 ) -> Option<String> {
     let allowlisted = catalog
         .replay_safe
@@ -41,14 +53,20 @@ fn unsafe_reason(
             generated_sources
                 .iter()
                 .any(|source| source.eq_ignore_ascii_case(column))
+                || arbiter_columns
+                    .iter()
+                    .any(|arbiter| arbiter.eq_ignore_ascii_case(column))
         })
     {
         return Some(format!(
-            "allowlisted trigger {} writes a generated-arbiter source",
+            "allowlisted trigger {} writes a conflict-arbiter column",
             trigger.function
         ));
     }
     if !trigger.for_each_row {
+        if !fires_insert(trigger) && !has_update_event(trigger) {
+            return None;
+        }
         return if allowlisted {
             None
         } else {
@@ -137,6 +155,13 @@ fn fires_insert(trigger: &SqlTriggerFact) -> bool {
         .events
         .iter()
         .any(|event| matches!(event, SqlTriggerEvent::Insert))
+}
+
+fn has_update_event(trigger: &SqlTriggerFact) -> bool {
+    trigger
+        .events
+        .iter()
+        .any(|event| matches!(event, SqlTriggerEvent::Update { .. }))
 }
 
 fn fires_update(trigger: &SqlTriggerFact, assigned: &[String]) -> bool {
