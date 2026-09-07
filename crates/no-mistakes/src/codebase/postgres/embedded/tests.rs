@@ -300,3 +300,168 @@ fn extract_from_program_matches_source_entry() {
     assert_eq!(facts.executor_bindings, ["write"]);
     assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 8"));
 }
+
+#[test]
+fn immutable_const_sql_is_analyzable() {
+    let facts = extract("immutable-local.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::ImmutableLocal);
+    assert!(facts.calls[0]
+        .sql_text
+        .as_deref()
+        .unwrap()
+        .contains("topics"));
+}
+
+#[test]
+fn static_concat_is_composed() {
+    let facts = extract("composed-concat.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics")
+    );
+}
+
+#[test]
+fn append_static_fragment_is_composed() {
+    let facts = extract("composed-append.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics WHERE id = 1")
+    );
+}
+
+#[test]
+fn append_inside_unbraced_if_is_dynamic() {
+    let facts = extract("composed-append-if.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn append_inside_unbraced_loop_is_dynamic() {
+    let facts = extract("composed-append-loop.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn append_inside_switch_ternary_or_logical_is_dynamic() {
+    for name in [
+        "composed-append-switch.ts",
+        "composed-append-ternary.ts",
+        "composed-append-and.ts",
+        "composed-append-for.ts",
+        "composed-append-for-in.ts",
+        "composed-append-while.ts",
+        "composed-append-do-while.ts",
+    ] {
+        assert_eq!(
+            extract(name).calls[0].kind,
+            super::EmbeddedSqlKind::Dynamic,
+            "{name}"
+        );
+    }
+}
+
+#[test]
+fn reassigned_let_is_dynamic() {
+    let facts = extract("dynamic-let.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn concat_fragments_and_non_const_inits_are_classified() {
+    let nested = extract("composed-concat-nested.ts");
+    assert_eq!(nested.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        nested.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics")
+    );
+    assert_eq!(
+        extract("composed-concat-templates.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Composed
+    );
+    assert_eq!(
+        extract("composed-concat-tagged.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Composed
+    );
+    assert_eq!(
+        extract("composed-concat-let.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Dynamic
+    );
+    assert_eq!(
+        extract("composed-concat-dynamic.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Dynamic
+    );
+    assert_eq!(
+        extract("composed-concat-minus.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Dynamic
+    );
+    assert_eq!(
+        extract("let-uninitialized.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Dynamic
+    );
+    assert_eq!(
+        extract("export-const-sql.ts").calls[0].kind,
+        super::EmbeddedSqlKind::ImmutableLocal
+    );
+    assert_eq!(
+        extract("destructure-sql.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Dynamic
+    );
+    assert_eq!(
+        extract("template-dynamic-init.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Dynamic
+    );
+}
+
+#[test]
+fn append_non_static_and_non_append_members_are_dynamic_or_unchanged() {
+    for name in [
+        "composed-append-spread.ts",
+        "composed-append-dynamic-arg.ts",
+        "composed-append-empty.ts",
+    ] {
+        assert_eq!(
+            extract(name).calls[0].kind,
+            super::EmbeddedSqlKind::Dynamic,
+            "{name}"
+        );
+    }
+    assert_eq!(
+        extract("composed-append-other-method.ts").calls[0].kind,
+        super::EmbeddedSqlKind::ImmutableLocal
+    );
+    assert_eq!(
+        extract("composed-append-non-ident.ts").calls[0].kind,
+        super::EmbeddedSqlKind::ImmutableLocal
+    );
+    assert_eq!(
+        extract("composed-append-on-dynamic.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Dynamic
+    );
+    assert_eq!(
+        extract("composed-append-function.ts").calls[0].kind,
+        super::EmbeddedSqlKind::Dynamic
+    );
+    assert_eq!(
+        extract("composed-append-unknown.ts").calls[0].kind,
+        super::EmbeddedSqlKind::ImmutableLocal
+    );
+}
+
+#[test]
+fn inline_tagged_and_interpolated_calls_are_not_identifier_bindings() {
+    let tagged = extract_embedded_sql_from_source(
+        Path::new("inline-tagged.ts"),
+        "import { query } from '@data-stores/psql'\nquery(sql`SELECT 1`)\n",
+        &EmbeddedSqlOptions::default(),
+    );
+    assert_eq!(tagged.calls[0].kind, super::EmbeddedSqlKind::Inline);
+    let interpolated = extract_embedded_sql_from_source(
+        Path::new("inline-template.ts"),
+        "import { query } from '@data-stores/psql'\nquery(`SELECT ${id}`)\n",
+        &EmbeddedSqlOptions::default(),
+    );
+    assert_eq!(interpolated.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}

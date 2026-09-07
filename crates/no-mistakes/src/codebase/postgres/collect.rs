@@ -9,6 +9,8 @@ use globset::{Glob, GlobSet, GlobSetBuilder};
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
+mod dml;
+
 /// Read `sql_paths` through `sources` and extract migration schema facts.
 pub fn extract_schema_facts(
     _root: &Path,
@@ -68,7 +70,7 @@ pub fn collect_postgres_facts(
     } else {
         Vec::new()
     };
-    let embedded = if plan.embedded_sql {
+    let embedded = if plan.embedded_sql || plan.postgres_dml {
         let ts_paths: Vec<PathBuf> = files
             .iter()
             .filter(|path| is_indexable(path))
@@ -78,7 +80,16 @@ pub fn collect_postgres_facts(
     } else {
         Vec::new()
     };
-    Ok(PostgresFacts { schema, embedded })
+    let statements = if plan.postgres_dml {
+        dml::collect(root, sources, files, schema_options, &embedded)?
+    } else {
+        Vec::new()
+    };
+    Ok(PostgresFacts {
+        schema,
+        embedded,
+        statements,
+    })
 }
 
 fn schema_file_facts(
@@ -100,7 +111,7 @@ fn embedded_file_facts(
     Ok(extract_embedded_sql_from_source(path, &source, options))
 }
 
-fn read_source(
+pub(super) fn read_source(
     path: &Path,
     sources: &SourceStore,
 ) -> Result<std::sync::Arc<str>, PostgresFactError> {
@@ -109,7 +120,7 @@ fn read_source(
         .map_err(|error| PostgresFactError::for_path(path, format!("failed to read: {error}")))
 }
 
-fn compile_sql_include(patterns: &[String]) -> Result<GlobSet, PostgresFactError> {
+pub(super) fn compile_sql_include(patterns: &[String]) -> Result<GlobSet, PostgresFactError> {
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
         let glob = Glob::new(&glob_normalize::normalize(pattern)).map_err(|error| {
@@ -122,7 +133,7 @@ fn compile_sql_include(patterns: &[String]) -> Result<GlobSet, PostgresFactError
         .map_err(|error| PostgresFactError::message(format!("invalid sqlInclude globs: {error}")))
 }
 
-fn matches_sql_include(root: &Path, path: &Path, globs: &GlobSet) -> bool {
+pub(super) fn matches_sql_include(root: &Path, path: &Path, globs: &GlobSet) -> bool {
     let relative = relative_slash_path(root, path);
     globs.is_match(&relative)
         || path

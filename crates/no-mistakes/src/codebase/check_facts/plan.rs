@@ -22,6 +22,7 @@ pub struct CheckFactPlan {
     pub raw_source: bool,
     pub postgres_schema: bool,
     pub embedded_sql: bool,
+    pub postgres_dml: bool,
     pub graph: crate::codebase::ts_source::facts::TsFactPlan,
     pub graph_context: crate::codebase::ts_source::facts::TsFactContext,
 }
@@ -49,6 +50,7 @@ impl CheckFactPlan {
         self.raw_source |= other.raw_source;
         self.postgres_schema |= other.postgres_schema;
         self.embedded_sql |= other.embedded_sql;
+        self.postgres_dml |= other.postgres_dml;
         self.graph.include(other.graph);
         self.graph_context.include(other.graph_context);
     }

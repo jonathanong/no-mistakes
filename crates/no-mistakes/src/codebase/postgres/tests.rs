@@ -21,9 +21,15 @@ fn check_fact_plan_include_merges_postgres_flags() {
     });
     assert!(plan.postgres_schema);
     assert!(plan.embedded_sql);
+    assert!(!plan.postgres_dml);
+    plan.include(CheckFactPlan {
+        postgres_dml: true,
+        ..CheckFactPlan::default()
+    });
     plan.include(CheckFactPlan::default());
     assert!(plan.postgres_schema);
     assert!(plan.embedded_sql);
+    assert!(plan.postgres_dml);
 }
 
 #[test]

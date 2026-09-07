@@ -343,6 +343,7 @@ fn generated_without_expression_or_sequence_is_still_marked() {
         generated_expression: None,
         generated_function: None,
         generated_function_arg_columns: Vec::new(),
+        generated_source_columns: Vec::new(),
     };
     super::apply_column_option(
         &mut facts,
@@ -372,4 +373,103 @@ fn identity_generated_columns_are_recorded() {
             || column.constraints.iter().any(
                 |constraint| constraint.contains("IDENTITY") || constraint.contains("PRIMARY")
             ))));
+}
+
+#[test]
+fn generated_between_in_list_and_distinct_collect_source_columns() {
+    let tables = extract_create_table_metadata(
+        "CREATE TABLE t (
+           id int,
+           note text,
+           a boolean GENERATED ALWAYS AS (id BETWEEN 1 AND 2) STORED,
+           b boolean GENERATED ALWAYS AS (id IN (1, 2)) STORED,
+           c boolean GENERATED ALWAYS AS (id IS NOT NULL) STORED,
+           d boolean GENERATED ALWAYS AS (id IS DISTINCT FROM note) STORED
+         );",
+    );
+    let table = &tables[0];
+    let sources = |name: &str| {
+        table
+            .columns
+            .iter()
+            .find(|column| column.name == name)
+            .unwrap()
+            .generated_source_columns
+            .clone()
+    };
+    assert_eq!(sources("a"), ["id"]);
+    assert_eq!(sources("b"), ["id"]);
+    assert_eq!(sources("c"), ["id"]);
+    assert_eq!(sources("d"), ["id", "note"]);
+}
+
+#[test]
+fn generated_is_null_collects_the_source_column() {
+    let tables = extract_create_table_metadata(
+        "CREATE TABLE t (id int, flag boolean GENERATED ALWAYS AS (id IS NULL) STORED);",
+    );
+    assert_eq!(tables[0].columns[1].generated_source_columns, ["id"]);
+}
+
+#[test]
+fn generated_expr_walk_covers_remaining_ident_shapes() {
+    let tables = extract_create_table_metadata(
+        "CREATE TABLE t (
+           id int,
+           note text,
+           flag boolean,
+           a int GENERATED ALWAYS AS (id + 1) STORED,
+           b int GENERATED ALWAYS AS (-id) STORED,
+           c text GENERATED ALWAYS AS (CAST(id AS text)) STORED,
+           d text GENERATED ALWAYS AS (lower(note)) STORED,
+           e int GENERATED ALWAYS AS (CASE flag WHEN true THEN id ELSE 0 END) STORED,
+           f int GENERATED ALWAYS AS (CASE WHEN flag THEN id ELSE note::int END) STORED,
+           g boolean GENERATED ALWAYS AS (flag IS TRUE) STORED,
+           h boolean GENERATED ALWAYS AS (flag IS FALSE) STORED,
+           i boolean GENERATED ALWAYS AS (id IS NOT DISTINCT FROM id) STORED,
+           j boolean GENERATED ALWAYS AS (note LIKE 'x%') STORED
+         );",
+    );
+    let table = &tables[0];
+    let sources = |name: &str| {
+        table
+            .columns
+            .iter()
+            .find(|column| column.name == name)
+            .unwrap()
+            .generated_source_columns
+            .clone()
+    };
+    assert_eq!(sources("a"), ["id"]);
+    assert_eq!(sources("b"), ["id"]);
+    assert_eq!(sources("c"), ["id"]);
+    assert_eq!(sources("d"), ["note"]);
+    assert_eq!(sources("e"), ["flag", "id"]);
+    assert_eq!(sources("f"), ["flag", "id", "note"]);
+    assert_eq!(sources("g"), ["flag"]);
+    assert_eq!(sources("h"), ["flag"]);
+    assert_eq!(sources("i"), ["id"]);
+    assert!(sources("j").is_empty(), "{:?}", sources("j"));
+}
+
+#[test]
+fn generated_named_and_wildcard_function_args_are_walked() {
+    let tables = extract_create_table_metadata(
+        "CREATE TABLE t (
+           id int,
+           a text GENERATED ALWAYS AS (concat(x => id)) STORED,
+           b int GENERATED ALWAYS AS (count(*)) STORED
+         );",
+    );
+    let sources = |name: &str| {
+        tables[0]
+            .columns
+            .iter()
+            .find(|column| column.name == name)
+            .unwrap()
+            .generated_source_columns
+            .clone()
+    };
+    assert_eq!(sources("a"), ["id"]);
+    assert!(sources("b").is_empty(), "{:?}", sources("b"));
 }

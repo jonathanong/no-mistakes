@@ -12,6 +12,7 @@ fn generated_col(name: &str) -> SqlColumnMetadata {
         generated_expression: None,
         generated_function: None,
         generated_function_arg_columns: Vec::new(),
+        generated_source_columns: Vec::new(),
     }
 }
 
@@ -25,6 +26,7 @@ fn plain_col(name: &str) -> SqlColumnMetadata {
         generated_expression: None,
         generated_function: None,
         generated_function_arg_columns: Vec::new(),
+        generated_source_columns: Vec::new(),
     }
 }
 

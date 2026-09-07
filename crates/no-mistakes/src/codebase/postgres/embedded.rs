@@ -35,11 +35,23 @@ impl Default for EmbeddedSqlOptions {
 }
 
 /// One executor call site and the SQL text it would execute.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct EmbeddedSqlCall {
     pub line: u32,
     pub callee: String,
     pub sql_text: Option<String>,
+    pub kind: EmbeddedSqlKind,
+    pub declaration_line: Option<u32>,
+}
+
+/// How executed SQL was recovered from TypeScript.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum EmbeddedSqlKind {
+    #[default]
+    Inline,
+    ImmutableLocal,
+    Composed,
+    Dynamic,
 }
 
 /// Embedded-SQL facts for one TypeScript/JavaScript file.
@@ -159,18 +171,11 @@ fn static_query_key(expr: &Expression<'_>) -> bool {
     }
 }
 
-fn first_call_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'a Expression<'a>> {
+pub(super) fn first_call_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'a Expression<'a>> {
     match call.arguments.first()? {
         Argument::SpreadElement(_) => None,
         other => other.as_expression(),
     }
-}
-
-fn resolve_call_sql(
-    argument: &Expression<'_>,
-    bindings: &HashMap<String, String>,
-) -> Option<String> {
-    executed_query_text(argument, bindings)
 }
 
 /// SQL text of a literal, tagged template, or template expression.

@@ -33,16 +33,7 @@ impl ConfiguredChecks {
                 config,
                 no_mistakes::codebase::rules::REQUIRE_STORYBOOK_STORIES,
             ),
-            embedded_sql: rule_configured(
-                config,
-                no_mistakes::codebase::rules::POSTGRES_LOCK_ORDERING,
-            ) || rule_configured(
-                config,
-                no_mistakes::codebase::rules::POSTGRES_NO_OFFSET,
-            ) || rule_configured(
-                config,
-                no_mistakes::codebase::rules::POSTGRES_REQUIRE_QUERY_ANNOTATION,
-            ),
+            embedded_sql: postgres_embedded_sql_configured(config),
         }
     }
 }
@@ -88,6 +79,7 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
             || enabled.storybook_stories,
         postgres_schema: false,
         embedded_sql: enabled.embedded_sql,
+        postgres_dml: false,
         graph: if enabled.dynamic_import_rules {
             no_mistakes::codebase::ts_source::facts::TsFactPlan::imports()
         } else {
@@ -126,6 +118,16 @@ pub(crate) fn integration_configured(config: &no_mistakes::config::v2::NoMistake
         .values()
         .any(|project| !project.integration_suites.is_empty());
     vitest_configured || playwright_configured
+}
+
+fn postgres_embedded_sql_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
+    [
+        no_mistakes::codebase::rules::POSTGRES_LOCK_ORDERING,
+        no_mistakes::codebase::rules::POSTGRES_NO_OFFSET,
+        no_mistakes::codebase::rules::POSTGRES_REQUIRE_QUERY_ANNOTATION,
+    ]
+    .iter()
+    .any(|rule_id| rule_configured(config, rule_id))
 }
 
 fn rule_configured(config: &no_mistakes::config::v2::NoMistakesConfig, rule_id: &str) -> bool {
