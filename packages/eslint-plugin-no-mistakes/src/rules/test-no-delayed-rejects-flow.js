@@ -1,73 +1,13 @@
 "use strict";
 
-function contains(ancestor, node) {
-  return ancestor.range[0] <= node.range[0] && ancestor.range[1] >= node.range[1];
-}
+const {
+  abruptCompletionReachesMatcher,
+  alwaysExits,
+  breakSkipsMatcher,
+  caughtThrowCanContinue,
+  contains,
+} = require("./test-no-delayed-rejects-abrupt");
 
-function alwaysExits(statement) {
-  if (statement.type === "ReturnStatement" || statement.type === "ThrowStatement") return true;
-  if (statement.type === "BlockStatement") return statement.body.some(alwaysExits);
-  return (
-    statement.type === "IfStatement" &&
-    statement.alternate &&
-    alwaysExits(statement.consequent) &&
-    alwaysExits(statement.alternate)
-  );
-}
-
-function alwaysThrows(statement) {
-  if (statement.type === "ThrowStatement") return true;
-  if (statement.type === "BlockStatement") {
-    const exit = statement.body.find(alwaysExits);
-    return Boolean(exit && alwaysThrows(exit));
-  }
-  return (
-    statement.type === "IfStatement" &&
-    statement.alternate &&
-    alwaysThrows(statement.consequent) &&
-    alwaysThrows(statement.alternate)
-  );
-}
-
-function matcherRunsInFinally(node, matcher) {
-  let current = node;
-  while (current.parent) {
-    const parent = current.parent;
-    if (
-      parent.type === "TryStatement" &&
-      parent.finalizer &&
-      (current === parent.block || current === parent.handler) &&
-      contains(parent.finalizer, matcher)
-    ) {
-      return true;
-    }
-    current = parent;
-  }
-  return false;
-}
-
-function matcherRunsInCatch(node, matcher) {
-  let current = node;
-  while (current.parent) {
-    const parent = current.parent;
-    if (
-      parent.type === "TryStatement" &&
-      current === parent.block &&
-      parent.handler &&
-      contains(parent.handler, matcher)
-    ) {
-      return true;
-    }
-    current = parent;
-  }
-  return false;
-}
-
-function abruptCompletionReachesMatcher(node, matcher) {
-  return (
-    matcherRunsInFinally(node, matcher) || (alwaysThrows(node) && matcherRunsInCatch(node, matcher))
-  );
-}
 function isLoop(node) {
   return (
     node?.type === "WhileStatement" ||
@@ -115,10 +55,12 @@ function canReachMatcher(suspension, matcher, functionNode) {
     if (
       (current.type === "ReturnStatement" || current.type === "ThrowStatement") &&
       !contains(current, matcher) &&
-      !abruptCompletionReachesMatcher(current, matcher)
+      !abruptCompletionReachesMatcher(current, matcher) &&
+      !caughtThrowCanContinue(current, matcher)
     ) {
       return false;
     }
+    if (!contains(current, matcher) && breakSkipsMatcher(current, matcher)) return false;
     const parent = current.parent;
     if (branchesAreExclusive(current, parent, matcher, suspension, functionNode)) return false;
     const statements =
@@ -132,8 +74,14 @@ function canReachMatcher(suspension, matcher, functionNode) {
       if (currentIndex !== -1) {
         const matcherIndex = statements.findIndex((statement) => contains(statement, matcher));
         const end = matcherIndex === -1 ? statements.length : matcherIndex;
-        const exit = statements.slice(currentIndex + 1, end).find(alwaysExits);
-        if (exit && !abruptCompletionReachesMatcher(exit, matcher)) {
+        const exit = statements
+          .slice(currentIndex + 1, end)
+          .find((statement) => alwaysExits(statement) || breakSkipsMatcher(statement, matcher));
+        if (
+          exit &&
+          !abruptCompletionReachesMatcher(exit, matcher) &&
+          !caughtThrowCanContinue(exit, matcher)
+        ) {
           return false;
         }
       }

@@ -4,10 +4,11 @@ const { rule } = require("../helpers");
 const { findContainingFunction, traverse, unwrapExpression } = require("./async-ast");
 const {
   chainIsSafelyObserved,
+  isPromiseChainMember,
   literalPropertyName,
   promiseChainBase,
 } = require("./test-no-delayed-rejects-chains");
-const { canReachMatcher, executesBefore } = require("./test-no-delayed-rejects-flow");
+const { canReachMatcher, contains, executesBefore } = require("./test-no-delayed-rejects-flow");
 const { suspensionOccursBeforeMatcher } = require("./test-no-delayed-rejects-suspensions");
 
 const EXPECT_MODULES = new Set(["vitest", "@jest/globals"]);
@@ -98,14 +99,44 @@ function isRejectionHandlerCall(node, declarator, context) {
   return chainIsSafelyObserved(node);
 }
 
+function rejectionMatcherCall(node, declarator, context) {
+  if (node.type !== "MemberExpression") return null;
+  const identifier = expectedIdentifier(node, context);
+  if (!identifier || !isSameConst(identifier, declarator, context)) return null;
+  return matcherCall(node);
+}
+
 function hasObserverBeforeSuspension(context, functionNode, declarator, suspension) {
   let found = false;
   traverse(context, functionNode, (node) => {
-    if (isRejectionHandlerCall(node, declarator, context) && executesBefore(node, suspension)) {
+    const matcher = rejectionMatcherCall(node, declarator, context);
+    if (
+      (isRejectionHandlerCall(node, declarator, context) && executesBefore(node, suspension)) ||
+      (matcher &&
+        !(suspension.type === "ForOfStatement" && contains(suspension, matcher)) &&
+        executesBefore(matcher, suspension))
+    ) {
       found = true;
     }
   });
   return found;
+}
+
+function promiseExistsBeforeInitializerSuspension(initializer, suspension) {
+  let current = suspension;
+  while (current && current !== initializer) {
+    const parent = current.parent;
+    if (
+      parent?.type === "CallExpression" &&
+      parent.arguments.includes(current) &&
+      isPromiseChainMember(parent.callee) &&
+      parent.callee.object.range[1] <= suspension.range[0]
+    ) {
+      return true;
+    }
+    current = parent;
+  }
+  return false;
 }
 
 function hasInterveningAwait(context, declarator, matcher) {
@@ -116,7 +147,8 @@ function hasInterveningAwait(context, declarator, matcher) {
   traverse(context, functionNode, (node) => {
     if (
       suspensionOccursBeforeMatcher(node, matcher, functionNode) &&
-      node.range[0] >= declarator.init.range[1] &&
+      (node.range[0] >= declarator.init.range[1] ||
+        promiseExistsBeforeInitializerSuspension(declarator.init, node)) &&
       canReachMatcher(node, matcher, functionNode) &&
       !hasObserverBeforeSuspension(context, functionNode, declarator, node)
     ) {

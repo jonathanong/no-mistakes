@@ -2,6 +2,7 @@ import { expect } from "vitest";
 
 declare function release(): Promise<void>;
 declare function loadExpected(): Promise<unknown>;
+declare function loadHandler(): Promise<(value: void) => void>;
 declare function startOperation(): Promise<void>;
 declare function dangerous(): void;
 
@@ -18,10 +19,52 @@ export async function multipleAwaits() {
   await expect(update).rejects.toThrow();
 }
 
+export async function suspensionAfterPromiseCreationInsideInitializer() {
+  const update = startOperation().then(await loadHandler());
+  await expect(update).rejects.toThrow();
+}
+
 export async function branch() {
   const update = startOperation();
   if (Math.random() > 0.5) await release();
   await expect(update).rejects.toThrow();
+}
+
+export async function conditionalEarlierMatcherDoesNotDominate(flag: boolean) {
+  const update = startOperation();
+  if (flag) await expect(update).rejects.toThrow();
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function switchBreakStillReachesLaterMatcher(flag: boolean) {
+  const update = startOperation();
+  switch (flag) {
+    case true:
+      await release();
+      break;
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function breakAfterMatcherDoesNotSuppressDiagnostic() {
+  const update = startOperation();
+  while (true) {
+    await release();
+    await expect(update).rejects.toThrow();
+    break;
+  }
+}
+
+export async function nestedBreakAfterMatcherDoesNotSuppressDiagnostic() {
+  const update = startOperation();
+  while (true) {
+    await release();
+    await expect(update).rejects.toThrow();
+    {
+      break;
+    }
+  }
 }
 
 export async function tryFinally() {
@@ -229,6 +272,59 @@ export async function compoundThrowReachesCatchMatcher(flag: boolean) {
   } catch {
     await expect(update).rejects.toThrow();
   }
+}
+
+export async function caughtThrowContinuesToLaterMatcher() {
+  const update = startOperation();
+  try {
+    await release();
+    throw new Error("caught");
+  } catch {
+    // Execution continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function compoundCaughtThrowContinuesToLaterMatcher(flag: boolean) {
+  const update = startOperation();
+  try {
+    await release();
+    if (flag) throw new Error("first");
+    else throw new Error("second");
+  } catch {
+    // Execution continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function innerRethrowReachesOuterCatchAndMatcher() {
+  const update = startOperation();
+  try {
+    try {
+      await release();
+      throw new Error("inner");
+    } catch {
+      throw new Error("outer");
+    }
+  } catch {
+    // Execution continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function nestedCaughtThrowContinuesToLaterMatcher() {
+  const update = startOperation();
+  try {
+    try {
+      await release();
+      throw new Error("caught outside");
+    } finally {
+      // The throw continues through this non-abrupt finalizer.
+    }
+  } catch {
+    // Execution continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
 }
 
 export async function* yieldSuspendsBeforeMatcher() {

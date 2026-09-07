@@ -3,6 +3,8 @@ import { expect } from "vitest";
 declare function release(): Promise<void>;
 declare function startOperation(): Promise<void>;
 declare const dynamicProperty: string;
+declare const service: { start(handler: unknown): Promise<void> };
+declare function getService(): { start(handler: unknown): Promise<void> };
 
 export async function noInterveningAwait() {
   const update = startOperation();
@@ -120,6 +122,65 @@ export async function throwingBranchDoesNotReachAssertion(skip: boolean) {
     await release();
     throw new Error("expected");
   }
+  await expect(update).rejects.toThrow();
+}
+
+export async function breakingBranchDoesNotReachAssertion(skip: boolean) {
+  const update = startOperation();
+  while (true) {
+    if (skip) {
+      await release();
+      break;
+    }
+    await expect(update).rejects.toThrow();
+    break;
+  }
+}
+
+export async function nestedBlockBreakDoesNotReachAssertion(skip: boolean) {
+  const update = startOperation();
+  while (true) {
+    if (skip) {
+      await release();
+      {
+        break;
+      }
+    }
+    await expect(update).rejects.toThrow();
+    break;
+  }
+}
+
+export async function earlierMatcherObservesBeforeLaterSuspension() {
+  const update = startOperation();
+  await expect(update).rejects.toThrow();
+  await release();
+  await expect(update).rejects.toMatchObject({ status: 403 });
+}
+
+export async function initializerSuspendsBeforePromiseCreation() {
+  const update = startOperation(await release());
+  await expect(update).rejects.toThrow();
+}
+
+export async function caughtThrowReturningFromFunctionDoesNotReachMatcher() {
+  const update = startOperation();
+  try {
+    await release();
+    throw new Error("caught");
+  } catch {
+    return;
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function methodInitializerSuspendsBeforePromiseCreation() {
+  const update = service.start(await release());
+  await expect(update).rejects.toThrow();
+}
+
+export async function factoryMethodInitializerSuspendsBeforePromiseCreation() {
+  const update = getService().start(await release());
   await expect(update).rejects.toThrow();
 }
 

@@ -14,13 +14,13 @@ function literalPropertyName(member) {
   return null;
 }
 
+function isPromiseChainMember(node) {
+  return node.type === "MemberExpression" && PROMISE_CHAIN_METHODS.has(literalPropertyName(node));
+}
+
 function promiseChainBase(node) {
   let current = unwrapExpression(node);
-  while (
-    current.type === "CallExpression" &&
-    current.callee.type === "MemberExpression" &&
-    PROMISE_CHAIN_METHODS.has(literalPropertyName(current.callee))
-  ) {
+  while (current.type === "CallExpression" && isPromiseChainMember(current.callee)) {
     current = unwrapExpression(current.callee.object);
   }
   return current;
@@ -75,4 +75,9 @@ function chainIsSafelyObserved(node) {
   }
 }
 
-module.exports = { chainIsSafelyObserved, literalPropertyName, promiseChainBase };
+module.exports = {
+  chainIsSafelyObserved,
+  isPromiseChainMember,
+  literalPropertyName,
+  promiseChainBase,
+};
