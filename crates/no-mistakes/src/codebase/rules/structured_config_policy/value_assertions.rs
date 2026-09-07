@@ -18,7 +18,12 @@ pub(super) fn assert_value(
     let Some(kind) = assertion.kind else {
         return Ok(Vec::new());
     };
-    if assertion.key.is_empty() || kind == AssertionKind::EqualsFile {
+    if assertion.key.is_empty()
+        || matches!(
+            kind,
+            AssertionKind::EqualsFile | AssertionKind::AncestorOverrideSubset
+        )
+    {
         return Ok(Vec::new());
     }
     if assertion.match_mode == MatchMode::Any {

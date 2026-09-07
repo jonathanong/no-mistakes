@@ -1,3 +1,4 @@
+use super::paths::contained_in_root;
 use super::value_assertions::selector::{any_groups, values_at_selector};
 use super::{MatchMode, ValueAssertion, RULE_ID};
 use crate::codebase::rules::RuleFinding;
@@ -89,17 +90,6 @@ fn values_match(left: &Value, right: &Value, assertion: &ValueAssertion, from_ke
     }
     let actual = values_at_selector(left, &assertion.key);
     !actual.has_missing && actual.values == expected.values
-}
-
-fn contained_in_root(root: &Path, path: &Path) -> bool {
-    if path.strip_prefix(root).is_err() {
-        return false;
-    }
-    match (path.canonicalize(), root.canonicalize()) {
-        (Ok(resolved), Ok(resolved_root)) => resolved.strip_prefix(resolved_root).is_ok(),
-        (Err(_), _) => true,
-        (Ok(resolved), Err(_)) => resolved.strip_prefix(root).is_ok(),
-    }
 }
 
 fn finding(file: &str, assertion: &ValueAssertion, message: String) -> RuleFinding {

@@ -6,7 +6,9 @@ use serde::{Deserialize, Deserializer};
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
+mod ancestor_override_subset;
 mod equals_file;
+mod paths;
 mod scan;
 mod value_assertions;
 mod when;
@@ -52,6 +54,10 @@ pub(crate) struct ValueAssertion {
     pub(crate) message: Option<String>,
     pub(crate) file: String,
     pub(crate) from_key: String,
+    pub(crate) extends_key: String,
+    pub(crate) overrides_key: String,
+    pub(crate) files_key: String,
+    pub(crate) rules_key: String,
     #[serde(rename = "match", default)]
     pub(crate) match_mode: MatchMode,
 }
@@ -77,6 +83,7 @@ pub(crate) enum AssertionKind {
     Equals,
     EqualsFile,
     ObjectShape,
+    AncestorOverrideSubset,
 }
 
 impl AssertionKind {
@@ -92,6 +99,7 @@ impl AssertionKind {
             "equals" => Some(Self::Equals),
             "equals-file" => Some(Self::EqualsFile),
             "object-shape" => Some(Self::ObjectShape),
+            "ancestor-override-subset" => Some(Self::AncestorOverrideSubset),
             _ => None,
         }
     }
@@ -127,13 +135,13 @@ pub(crate) fn check_with_files_and_sources(
             let opts: Options = rule.try_rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
+            let in_scope: Vec<PathBuf> = all_files
                 .iter()
                 .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
                 .cloned()
                 .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            scan(root, &opts, &files, &target_roots, sources)
+            let files = super::path_filter::filter_rule_files(root, config, rule, &in_scope)?;
+            scan(root, &opts, &files, &in_scope, &target_roots, sources)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -146,6 +154,12 @@ fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
         .try_fold(value, |current, part| current.get(part))
 }
 
+#[cfg(test)]
+mod ancestor_override_subset_coverage_tests;
+#[cfg(test)]
+mod ancestor_override_subset_error_tests;
+#[cfg(test)]
+mod ancestor_override_subset_tests;
 #[cfg(test)]
 mod bind_tests;
 #[cfg(test)]

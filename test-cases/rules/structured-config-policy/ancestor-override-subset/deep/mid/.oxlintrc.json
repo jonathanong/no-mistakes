@@ -1,0 +1,4 @@
+{
+  // JSONC mid config in a deep extends chain.
+  "extends": ["../../.oxlintrc.json"]
+}

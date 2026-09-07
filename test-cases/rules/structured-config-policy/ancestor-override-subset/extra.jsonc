@@ -1,0 +1,11 @@
+{
+  // Second extend source used by multi/ and multi-ok/.
+  "overrides": [
+    {
+      "files": ["**/multi/**", "**/multi-ok/**"],
+      "rules": {
+        "extra-rule": "off"
+      }
+    }
+  ]
+}

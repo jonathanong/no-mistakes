@@ -1,0 +1,10 @@
+{
+  "overrides": [
+    {
+      "files": ["star-seg/*.ts"],
+      "rules": {
+        "star-seg-rule": "off"
+      }
+    }
+  ]
+}

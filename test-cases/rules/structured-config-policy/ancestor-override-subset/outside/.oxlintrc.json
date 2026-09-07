@@ -1,0 +1,3 @@
+{
+  "extends": ["../../nested-plugins/.oxlintrc.json"]
+}

@@ -1,0 +1,6 @@
+{
+  "extends": ["../left.json", "../right.json"],
+  "rules": {
+    "no-void": "off"
+  }
+}

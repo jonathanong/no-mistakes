@@ -1,3 +1,4 @@
+use super::ancestor_override_subset::check_ancestor_override_subset;
 use super::equals_file::check_equals_file;
 use super::when::policy_applies;
 use super::{assert_value, value_at_key, AssertionKind, Options, RULE_ID};
@@ -10,6 +11,7 @@ pub(super) fn scan(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
+    inventory: &[PathBuf],
     target_roots: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
@@ -64,11 +66,17 @@ pub(super) fn scan(
                 }
             }
             for assertion in &policy.value_assertions {
-                if assertion.kind == Some(AssertionKind::EqualsFile) {
-                    findings.extend(check_equals_file(root, &rel, sources, &value, assertion));
-                    continue;
+                match assertion.kind {
+                    Some(AssertionKind::EqualsFile) => {
+                        findings.extend(check_equals_file(root, &rel, sources, &value, assertion));
+                    }
+                    Some(AssertionKind::AncestorOverrideSubset) => {
+                        findings.extend(check_ancestor_override_subset(
+                            root, &path, &rel, sources, inventory, &value, assertion,
+                        ));
+                    }
+                    _ => findings.extend(assert_value(&rel, &value, assertion)?),
                 }
-                findings.extend(assert_value(&rel, &value, assertion)?);
             }
         }
     }

@@ -1,0 +1,4 @@
+layers:
+  - globs: ["**/child/**", "**/child-lost/**"]
+    policy:
+      foo: bar

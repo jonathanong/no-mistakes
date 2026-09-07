@@ -1,0 +1,10 @@
+{
+  "overrides": [
+    {
+      "files": ["**/nested/**"],
+      "rules": {
+        "no-void": "off"
+      }
+    }
+  ]
+}
