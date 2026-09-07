@@ -71,15 +71,14 @@ write generated-arbiter source columns still fail. A conjunctive `DO UPDATE`
 EXCLUDED` or `IS NULL AND EXCLUDED IS NOT NULL`) is a no-op for `AFTER UPDATE`
 row triggers, because Postgres skips the whole update when `WHERE` is false.
 A proof column listed in `triggerWrittenColumns` for any applicable trigger
-still fails: another function on the same update, or a row-level `BEFORE
-INSERT` / `INSTEAD OF INSERT` function, can rewrite the column so the next
-replay sees a true `WHERE`. The proven INSERT value must also be stable
-(literal, null, placeholder, or a `COALESCE`/`GREATEST`/`LEAST` of those).
-Volatile INSERT values (`now()`, `CURRENT_TIMESTAMP`), relative datetime
-literals (`'now'`), `DEFAULT`, omitted columns, `SELECT *`, SELECT column
-references, and sources without a column list still fail. A statement-level
-UPDATE function in `triggerWrittenColumns` that writes the proof column
-still fails. Disjunctive `WHERE` and constant `SET` plus a matching
+still fails: another function on the same update, a `BEFORE` / `INSTEAD OF` /
+`AFTER INSERT` function, or a statement-level UPDATE function can rewrite the
+column so the next replay sees a true `WHERE`. The proven INSERT value must
+also be stable (literal, null, placeholder, or a `COALESCE`/`GREATEST`/`LEAST`
+of those). Volatile INSERT values (`now()`, `CURRENT_TIMESTAMP`), relative
+datetime literals (`'now'`, `U&'now'`), `DEFAULT`, `OVERRIDING USER VALUE`,
+omitted columns, `SELECT *`, SELECT column references, and sources without a
+column list still fail. Disjunctive `WHERE` and constant `SET` plus a matching
 `WHERE` still fail.
 
 ## Options and defaults

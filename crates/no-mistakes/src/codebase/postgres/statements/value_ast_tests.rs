@@ -187,4 +187,10 @@ fn datetime_idents_and_quoted_now_are_unstable_forms() {
         )),
         SqlValueForm::Other
     );
+    assert_eq!(
+        super::value::from_expr(&Expr::Value(
+            Value::UnicodeStringLiteral("now".into()).with_empty_span()
+        )),
+        SqlValueForm::Other
+    );
 }

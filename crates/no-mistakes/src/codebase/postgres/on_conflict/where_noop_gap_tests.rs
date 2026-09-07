@@ -88,6 +88,40 @@ fn relative_datetime_literal_is_not_a_noop() {
 }
 
 #[test]
+fn overriding_user_value_is_not_a_noop() {
+    let found = judge_file(
+        &extract_sql_statement_facts(&sql(
+            "INSERT INTO items (id, a, b) OVERRIDING USER VALUE VALUES (1, 'x', 'y')",
+        )),
+        &catalog(&extract_sql_statement_facts(AFTER_A).triggers, &[], &[]),
+    );
+    assert!(
+        found
+            .iter()
+            .any(|(_, message)| message.contains("re-fire") || message.contains("replay-safe")),
+        "{found:?}"
+    );
+}
+
+#[test]
+fn after_insert_rewrite_is_not_a_noop() {
+    let file =
+        extract_sql_statement_facts(&sql("INSERT INTO items (id, a, b) VALUES (1, 'x', 'y')"));
+    let triggers = extract_sql_statement_facts(
+        "CREATE TRIGGER n AFTER INSERT ON items FOR EACH STATEMENT EXECUTE FUNCTION normalize();
+         CREATE TRIGGER t AFTER UPDATE OF a ON items FOR EACH ROW EXECUTE FUNCTION audit();",
+    )
+    .triggers;
+    let writes = [("normalize".to_string(), vec!["b".to_string()])];
+    let replay_safe = ["normalize".to_string()];
+    let found = judge_file(&file, &catalog(&triggers, &writes, &replay_safe));
+    assert!(
+        found.iter().any(|(_, message)| message.contains("audit")),
+        "{found:?}"
+    );
+}
+
+#[test]
 fn coalesce_volatile_insert_value_is_not_a_noop() {
     assert_refires("INSERT INTO items (id, a, b) VALUES (1, 'x', COALESCE(now(), 'y'))");
 }

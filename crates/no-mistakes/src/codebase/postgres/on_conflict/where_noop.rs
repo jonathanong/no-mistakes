@@ -2,7 +2,7 @@ use super::form_is_excluded;
 use super::trigger::{fires_insert, fires_update};
 use super::Catalog;
 use crate::codebase::postgres::statement_facts::{
-    SqlAssignmentFact, SqlOnConflictFact, SqlTriggerFact, SqlTriggerPeriod,
+    SqlAssignmentFact, SqlOnConflictFact, SqlTriggerFact,
 };
 use crate::codebase::postgres::statements::form_is_stable;
 
@@ -58,11 +58,5 @@ fn rewritten_by_applicable(
 }
 
 fn mutates_proposed_row(trigger: &SqlTriggerFact, assigned: &[String]) -> bool {
-    fires_update(trigger, assigned)
-        || (trigger.for_each_row
-            && matches!(
-                trigger.period,
-                SqlTriggerPeriod::Before | SqlTriggerPeriod::InsteadOf
-            )
-            && fires_insert(trigger))
+    fires_update(trigger, assigned) || fires_insert(trigger)
 }

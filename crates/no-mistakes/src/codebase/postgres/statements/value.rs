@@ -56,7 +56,9 @@ fn from_value(value: &ValueWithSpan) -> SqlValueForm {
     match &value.value {
         Value::Null => SqlValueForm::Null,
         Value::Placeholder(_) => SqlValueForm::Placeholder,
-        Value::SingleQuotedString(text) | Value::EscapedStringLiteral(text)
+        Value::SingleQuotedString(text)
+        | Value::EscapedStringLiteral(text)
+        | Value::UnicodeStringLiteral(text)
             if is_relative_datetime(text) =>
         {
             SqlValueForm::Other

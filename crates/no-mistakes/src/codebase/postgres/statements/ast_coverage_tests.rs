@@ -170,3 +170,19 @@ fn insert_set_assignments_are_kept() {
         super::insert::from_insert(sql, &insert, 1, true).assignments
     );
 }
+
+#[test]
+fn overriding_user_value_drops_source_forms() {
+    let sql = "INSERT INTO items (id, seen) VALUES (1, 'a')";
+    let Statement::Insert(insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
+        panic!("insert");
+    };
+    assert!(super::insert::from_insert(
+        "INSERT INTO items (id, seen) OVERRIDING USER VALUE VALUES (1, 'a')",
+        &insert,
+        1,
+        true,
+    )
+    .assignments
+    .is_empty());
+}
