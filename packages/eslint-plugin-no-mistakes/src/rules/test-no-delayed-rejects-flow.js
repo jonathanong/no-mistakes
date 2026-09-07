@@ -3,6 +3,7 @@
 const {
   abruptCompletionReachesMatcher,
   alwaysExits,
+  alwaysThrows,
   breakSkipsMatcher,
   continueSkipsMatcher,
   caughtThrowCanContinue,
@@ -143,9 +144,10 @@ function isConditionalBoundary(node, child, observer, suspension) {
     return child !== node.test;
   }
   if (node.type === "LogicalExpression") return child === node.right;
+  if (node.type === "AssignmentPattern") return child === node.right;
   if (node.type === "SwitchStatement") return child !== node.discriminant;
   if (node.type === "TryStatement") {
-    if (child === node.handler) return true;
+    if (child === node.handler) return !alwaysThrows(node.block);
     return Boolean(child === node.block && throwCanSkipObserver(node.block, observer, suspension));
   }
   if (node.type === "ForStatement") return child !== node.init && child !== node.test;

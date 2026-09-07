@@ -256,6 +256,41 @@ describe("test-no-delayed-rejects", () => {
       ["delayedReject"],
     );
   });
+
+  it("does not count deferred or conditional observers as attached", () => {
+    const deferredField = `async function run() {
+      const update = startOperation();
+      class Deferred { observed = update.catch(() => void 0); }
+      await release();
+      await expect(update).rejects.toThrow();
+    }`;
+    const destructuringDefault = `async function run() {
+      const update = startOperation();
+      const { value = update.catch(() => void 0) } = { value: true };
+      await release();
+      await expect(update).rejects.toThrow();
+    }`;
+    assert.deepEqual(messages(deferredField, "test-no-delayed-rejects"), ["delayedReject"]);
+    assert.deepEqual(messages(destructuringDefault, "test-no-delayed-rejects"), ["delayedReject"]);
+  });
+
+  it("recognizes guaranteed catch and primitive absent handlers", () => {
+    const guaranteedCatch = `async function run() {
+      const update = startOperation();
+      try { throw new Error("expected"); }
+      catch { void update.catch(() => void 0); }
+      await release();
+      await expect(update).rejects.toThrow();
+    }`;
+    const absentFulfillmentHandler = `async function run() {
+      const update = startOperation();
+      void update.then(false, () => void 0);
+      await release();
+      await expect(update).rejects.toThrow();
+    }`;
+    assert.deepEqual(messages(guaranteedCatch, "test-no-delayed-rejects"), []);
+    assert.deepEqual(messages(absentFulfillmentHandler, "test-no-delayed-rejects"), []);
+  });
 });
 
 describe("async-try-catch-return-await", () => {

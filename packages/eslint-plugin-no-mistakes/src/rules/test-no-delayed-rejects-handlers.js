@@ -31,7 +31,7 @@ function isNonRejectingHandler(argument) {
 function isAbsentHandler(argument) {
   if (!argument) return true;
   const unwrapped = unwrapExpression(argument);
-  if (unwrapped.type === "Literal" && unwrapped.value === null) return true;
+  if (unwrapped.type === "Literal") return true;
   if (unwrapped.type !== "UnaryExpression" || unwrapped.operator !== "void") return false;
   const operand = unwrapExpression(unwrapped.argument);
   return operand.type === "Literal";

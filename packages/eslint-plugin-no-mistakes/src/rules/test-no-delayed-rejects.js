@@ -110,6 +110,23 @@ function rejectionMatcherCall(node, declarator, context) {
   return matcherCall(node);
 }
 
+function executesWhenDeclared(node, functionNode) {
+  let current = node;
+  while (current.parent && current.parent !== functionNode) {
+    const parent = current.parent;
+    if (
+      parent.type === "PropertyDefinition" &&
+      !parent.static &&
+      parent.value &&
+      contains(parent.value, node)
+    ) {
+      return false;
+    }
+    current = parent;
+  }
+  return true;
+}
+
 function collectObserverSites(context, functionNode, declarator) {
   const observers = [];
   traverse(context, functionNode, (node) => {
@@ -117,8 +134,8 @@ function collectObserverSites(context, functionNode, declarator) {
     const handler =
       isRejectionHandlerCall(node, declarator, context) ||
       isImmediateObserver(node, declarator, context, isSameConst);
-    if (handler) observers.push(node);
-    else if (matcher) observers.push(matcher);
+    if (handler && executesWhenDeclared(node, functionNode)) observers.push(node);
+    else if (matcher && executesWhenDeclared(matcher, functionNode)) observers.push(matcher);
   });
   return observers;
 }
