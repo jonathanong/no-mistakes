@@ -11,10 +11,11 @@ pub(super) fn judge(conflict: &SqlOnConflictFact, check_volatility: bool) -> Opt
 
 fn judge_form(column: &str, form: &SqlValueForm, check_volatility: bool) -> Option<String> {
     match form {
-        SqlValueForm::Literal
-        | SqlValueForm::Null
-        | SqlValueForm::Excluded { .. }
-        | SqlValueForm::SelfRef { .. } => None,
+        SqlValueForm::Literal | SqlValueForm::Null | SqlValueForm::Excluded { .. } => None,
+        SqlValueForm::SelfRef { column: name } if name.eq_ignore_ascii_case(column) => None,
+        SqlValueForm::SelfRef { column: name } => Some(format!(
+            "{column} = a reference to {name} is not a self-assignment"
+        )),
         SqlValueForm::Placeholder => Some(format!(
             "{column} = an unresolved bind parameter cannot be proven convergent"
         )),

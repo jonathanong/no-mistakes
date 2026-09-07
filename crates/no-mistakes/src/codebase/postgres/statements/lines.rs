@@ -36,18 +36,101 @@ struct Word {
 }
 
 fn words(sql: &str) -> Vec<Word> {
-    let mut words = Vec::new();
-    for (index, line) in sql.lines().enumerate() {
-        for token in line.split(|ch: char| !ch.is_ascii_alphanumeric() && ch != '_') {
-            if !token.is_empty() {
-                words.push(Word {
-                    line: index + 1,
-                    text: token.to_string(),
+    let bytes = sql.as_bytes();
+    let mut index = 0usize;
+    let mut line = 1usize;
+    let mut out = Vec::new();
+    while index < bytes.len() {
+        match bytes[index] {
+            b'\n' => {
+                line += 1;
+                index += 1;
+            }
+            b'-' if bytes.get(index + 1) == Some(&b'-') => {
+                while index < bytes.len() && bytes[index] != b'\n' {
+                    index += 1;
+                }
+            }
+            b'/' if bytes.get(index + 1) == Some(&b'*') => {
+                index = skip_block_comment(bytes, index, &mut line);
+            }
+            quote @ (b'\'' | b'"') => index = skip_quoted(bytes, index, quote, &mut line),
+            b'$' => {
+                if let Some(end) = skip_dollar(bytes, index, &mut line) {
+                    index = end;
+                } else {
+                    index += 1;
+                }
+            }
+            c if c.is_ascii_alphabetic() || c == b'_' => {
+                let start = index;
+                let start_line = line;
+                index += 1;
+                while index < bytes.len()
+                    && (bytes[index].is_ascii_alphanumeric() || bytes[index] == b'_')
+                {
+                    index += 1;
+                }
+                out.push(Word {
+                    line: start_line,
+                    text: sql[start..index].to_string(),
                 });
             }
+            _ => index += 1,
         }
     }
-    words
+    out
+}
+
+fn skip_block_comment(bytes: &[u8], mut index: usize, line: &mut usize) -> usize {
+    index += 2;
+    while index + 1 < bytes.len() && !(bytes[index] == b'*' && bytes[index + 1] == b'/') {
+        if bytes[index] == b'\n' {
+            *line += 1;
+        }
+        index += 1;
+    }
+    index.saturating_add(2).min(bytes.len())
+}
+
+fn skip_quoted(bytes: &[u8], mut index: usize, quote: u8, line: &mut usize) -> usize {
+    index += 1;
+    while index < bytes.len() {
+        if bytes[index] == b'\n' {
+            *line += 1;
+        }
+        if bytes[index] == quote {
+            if quote == b'\'' && bytes.get(index + 1) == Some(&b'\'') {
+                index += 2;
+                continue;
+            }
+            return index + 1;
+        }
+        index += 1;
+    }
+    index
+}
+
+fn skip_dollar(bytes: &[u8], start: usize, line: &mut usize) -> Option<usize> {
+    let mut index = start + 1;
+    while index < bytes.len() && (bytes[index].is_ascii_alphanumeric() || bytes[index] == b'_') {
+        index += 1;
+    }
+    if index >= bytes.len() || bytes[index] != b'$' {
+        return None;
+    }
+    let tag_len = index + 1 - start;
+    index += 1;
+    while index + tag_len <= bytes.len() {
+        if bytes[index] == b'\n' {
+            *line += 1;
+        }
+        if bytes[index..index + tag_len] == bytes[start..start + tag_len] {
+            return Some(index + tag_len);
+        }
+        index += 1;
+    }
+    Some(bytes.len())
 }
 
 fn eq(word: &Word, expected: &str) -> bool {

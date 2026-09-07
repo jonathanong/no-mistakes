@@ -65,6 +65,31 @@ fn quoted_insert_is_not_counted() {
 }
 
 #[test]
+fn insert_line_skips_comment_and_string_keywords() {
+    let sql =
+        "-- INSERT INTO decoy\nSELECT 'INSERT INTO decoy';\nINSERT INTO items (id) VALUES (1);";
+    let facts = extract_sql_statement_facts(sql);
+    assert_eq!(facts.inserts.len(), 1);
+    assert_eq!(facts.inserts[0].line, 3);
+}
+
+#[test]
+fn insert_line_skips_block_comment_and_dollar_quote() {
+    let sql = "/* INSERT INTO decoy */\nSELECT $q$INSERT INTO decoy$q$;\nINSERT INTO items (id) VALUES (1);";
+    let facts = extract_sql_statement_facts(sql);
+    assert_eq!(facts.inserts.len(), 1);
+    assert_eq!(facts.inserts[0].line, 3);
+}
+
+#[test]
+fn trigger_line_skips_comment_keywords() {
+    let sql = "-- CREATE TRIGGER decoy BEFORE INSERT ON items FOR EACH ROW EXECUTE FUNCTION f();\nCREATE TRIGGER real AFTER INSERT ON items FOR EACH ROW EXECUTE FUNCTION f();";
+    let facts = extract_sql_statement_facts(sql);
+    assert_eq!(facts.triggers.len(), 1);
+    assert_eq!(facts.triggers[0].line, 2);
+}
+
+#[test]
 fn exists_union_is_unrestricted() {
     let sql = std::fs::read_to_string(
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))

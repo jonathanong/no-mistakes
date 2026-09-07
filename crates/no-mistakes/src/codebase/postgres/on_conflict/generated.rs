@@ -1,5 +1,6 @@
+use super::form_is_self;
 use crate::codebase::postgres::statement_facts::{
-    SqlConflictArbiter, SqlInsertFact, SqlOnConflictFact, SqlValueForm,
+    SqlConflictArbiter, SqlInsertFact, SqlOnConflictFact,
 };
 use crate::codebase::postgres::types::SqlSchemaFileFacts;
 
@@ -41,7 +42,7 @@ pub(super) fn judge(
             if sources
                 .iter()
                 .any(|source| source.eq_ignore_ascii_case(&assignment.column))
-                && !matches!(assignment.form, SqlValueForm::SelfRef { .. })
+                && !form_is_self(&assignment.form, &assignment.column)
             {
                 return Some(format!(
                     "ON CONFLICT DO UPDATE assigns a source column of generated arbiter {}",

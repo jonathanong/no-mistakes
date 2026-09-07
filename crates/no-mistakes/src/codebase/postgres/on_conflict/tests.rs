@@ -62,6 +62,29 @@ fn do_update_excluded_is_safe() {
 }
 
 #[test]
+fn cross_column_assignment_is_not_convergent() {
+    let found = messages(
+        "INSERT INTO items (id, updated_at) VALUES (1, '2020-01-01')
+         ON CONFLICT (id) DO UPDATE SET updated_at = created_at;",
+    );
+    assert!(
+        found
+            .iter()
+            .any(|message| message.contains("not a self-assignment")),
+        "{found:?}"
+    );
+}
+
+#[test]
+fn matching_self_assignment_is_convergent() {
+    assert!(messages(
+        "INSERT INTO items (id, note) VALUES (1, 'a')
+         ON CONFLICT (id) DO UPDATE SET note = note;"
+    )
+    .is_empty());
+}
+
+#[test]
 fn volatile_assignment_is_unsafe() {
     let found = messages(
         "INSERT INTO items (id, seen) VALUES (1, now())
