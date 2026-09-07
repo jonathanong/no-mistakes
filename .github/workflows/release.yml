@@ -336,7 +336,7 @@ jobs:
           - target: x86_64-pc-windows-msvc
             os: windows-2025
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 70
+    timeout-minutes: 80
     permissions:
       contents: read
     steps:

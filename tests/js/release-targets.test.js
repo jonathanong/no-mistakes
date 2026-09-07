@@ -45,15 +45,18 @@ test("release native build jobs enforce separate CLI and N-API execution bounds"
     assert.ok(job, `release workflow must define ${name}`);
     const jobTimeout = job[0].match(/^ {4}timeout-minutes: (\d+)$/m);
     const stepTimeouts = [...job[0].matchAll(/^ {8}timeout-minutes: (\d+)$/gm)];
+    const buildCliTimeout = job[0].match(/^ {6}- name: Build CLI\n {8}timeout-minutes: (\d+)$/m);
     assert.ok(jobTimeout, `${name} must define a timeout`);
     timeouts.set(name, {
+      buildCli: buildCliTimeout ? Number(buildCliTimeout[1]) : undefined,
       job: Number(jobTimeout[1]),
       steps: stepTimeouts.map((timeout) => Number(timeout[1])),
     });
   }
 
   const cli = timeouts.get("build-cli");
-  assert.equal(cli.job, 70, "CLI builds need a 70-minute cold-build budget");
+  assert.equal(cli.job, 80, "CLI builds need an 80-minute job envelope");
+  assert.equal(cli.buildCli, 45, "Build CLI needs a 45-minute cold-build budget");
   assert.ok(
     cli.steps.every((timeout) => timeout <= 45),
     "CLI steps must be at most 45 minutes",
