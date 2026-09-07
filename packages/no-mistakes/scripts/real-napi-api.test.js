@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const { fork } = require("node:child_process");
 const { once } = require("node:events");
 const { readFileSync } = require("node:fs");
-const { mkdtemp, mkdir, rm, stat } = require("node:fs/promises");
+const { copyFile, cp, mkdtemp, mkdir, rm, stat, utimes } = require("node:fs/promises");
 const { tmpdir } = require("node:os");
 const { join, resolve } = require("node:path");
 const { setTimeout: delay } = require("node:timers/promises");
@@ -26,6 +26,7 @@ const workerLockHolderFixture = join(
   "worker.js",
 );
 const expectedReport = JSON.parse(readFileSync(join(fixtureRoot, "expected.json"), "utf8"));
+const freshTopologyFixture = join(repositoryRoot, "fixtures", "napi", "fresh-topology");
 const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH;
 const compiledAddonPath = addonPath && addonPath.endsWith(".node") ? addonPath : undefined;
 
@@ -45,6 +46,81 @@ test(
 
     assert.equal(typeof pendingReport.then, "function");
     assert.deepEqual(await pendingReport, expectedReport);
+  },
+);
+
+function workflowPaths(topology) {
+  return topology.workflows.map((workflow) => workflow.path).sort();
+}
+
+function jobIds(topology) {
+  return topology.jobs.map((job) => job.id).sort();
+}
+
+async function batchedTopology(api, options) {
+  const result = await api.analyzeProject({
+    ...options,
+    reports: [{ type: "ciTopology" }],
+  });
+  return result.reports[0].result;
+}
+
+test(
+  "compiled topology calls read workflow and inherited config changes from the current filesystem",
+  { skip: !compiledAddonPath, timeout: 20_000 },
+  async () => {
+    const directory = await mkdtemp(join(tmpdir(), "no-mistakes-fresh-topology-"));
+    const root = join(directory, "project");
+    const workflows = join(root, ".github", "workflows");
+    const inheritedConfig = join(root, "configs", "inherited.yml");
+    try {
+      await cp(join(freshTopologyFixture, "project"), root, { recursive: true });
+      const api = require("../index.js");
+
+      assert.deepEqual(workflowPaths(await api.ciTopology({ root })), [
+        ".github/workflows/initial.yml",
+      ]);
+
+      await copyFile(
+        join(freshTopologyFixture, "changes", "workflow-edited.yml"),
+        join(workflows, "initial.yml"),
+      );
+      assert.deepEqual(jobIds(await api.ciTopology({ root })), [
+        ".github/workflows/initial.yml#edited",
+      ]);
+
+      await copyFile(
+        join(freshTopologyFixture, "changes", "workflow-added.yml"),
+        join(workflows, "added.yml"),
+      );
+      assert.deepEqual(workflowPaths(await api.ciTopology({ root })), [
+        ".github/workflows/added.yml",
+        ".github/workflows/initial.yml",
+      ]);
+
+      await rm(join(workflows, "initial.yml"));
+      assert.deepEqual(workflowPaths(await api.ciTopology({ root })), [
+        ".github/workflows/added.yml",
+      ]);
+
+      const originalConfigStat = await stat(inheritedConfig);
+      const inheritedOptions = { root, config: "configs/inherited.yml" };
+      const firstInherited = await api.ciTopology(inheritedOptions);
+      assert.deepEqual(workflowPaths(firstInherited), ["inherited/first/first.yml"]);
+      assert.deepEqual(await batchedTopology(api, inheritedOptions), firstInherited);
+
+      // Keep the timestamp stable: freshness must not depend on config metadata.
+      await copyFile(
+        join(freshTopologyFixture, "changes", "inherited-config-updated.yml"),
+        inheritedConfig,
+      );
+      await utimes(inheritedConfig, originalConfigStat.atime, originalConfigStat.mtime);
+      const updatedInherited = await api.ciTopology(inheritedOptions);
+      assert.deepEqual(workflowPaths(updatedInherited), ["inherited/second/second.yml"]);
+      assert.deepEqual(await batchedTopology(api, inheritedOptions), updatedInherited);
+    } finally {
+      await rm(directory, { recursive: true, force: true });
+    }
   },
 );
 

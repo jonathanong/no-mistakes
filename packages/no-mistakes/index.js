@@ -7,7 +7,6 @@ const planning = require("./planning");
 const { writePlanningImpactArtifacts: writeArtifacts } = require("./planning-impact-artifacts");
 const { createPlanningArtifactLock } = require("./planning-impact-artifacts-lock");
 const { createWorkflowTopologyIndex } = require("./workflow-topology-index");
-const fs = require("node:fs");
 const path = require("node:path");
 
 async function callJson(fn, options) {
@@ -102,40 +101,8 @@ async function writePlanningImpactArtifacts(options) {
   );
 }
 
-const topologyMemo = new Map();
-
-async function ciTopology(options) {
-  const root = path.resolve((options && options.root) || process.cwd());
-  const configPath = path.resolve(root, (options && options.config) || ".no-mistakes.yml");
-  let mtime = 0;
-  try {
-    mtime = fs.statSync(configPath).mtimeMs;
-  } catch {
-    mtime = 0;
-  }
-  const workflows = JSON.stringify(
-    []
-      .concat((options && options.workflows) || [])
-      .map(String)
-      .sort(),
-  );
-  const identity = `${root}\0${configPath}\0`;
-  const key = `${identity}${mtime}\0${workflows}`;
-  const stale = [];
-  for (const memoKey of topologyMemo.keys()) {
-    if (!memoKey.startsWith(identity)) continue;
-    const memoMtime = memoKey.slice(identity.length).split("\0")[0];
-    if (memoMtime !== String(mtime)) stale.push(memoKey);
-  }
-  for (const memoKey of stale) topologyMemo.delete(memoKey);
-  const cached = topologyMemo.get(key);
-  if (cached) return cached.then((value) => structuredClone(value));
-  const pending = jsonApis.ciTopology({ ...options, root }).catch((error) => {
-    topologyMemo.delete(key);
-    throw error;
-  });
-  topologyMemo.set(key, pending);
-  return pending.then((value) => structuredClone(value));
+async function ciTopology(options = {}) {
+  return jsonApis.ciTopology({ ...options, root: path.resolve(options.root || process.cwd()) });
 }
 
 const version = () => native.version();

@@ -1,0 +1,7 @@
+name: Second inherited config
+on: push
+jobs:
+  second:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo second
