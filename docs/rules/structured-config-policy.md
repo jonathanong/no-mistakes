@@ -28,9 +28,9 @@ rules:
 
 Supported assertion kinds are `boolean`, `positive-number`, `string-array`,
 `record-of-boolean`, `string-prefix`, `string-glob`, `not-single-file`, `equals`,
-`equals-file`, and `object-shape`. JSON and JSONC files (`.json`, `.jsonc`) are
-parsed with comment support; YAML is used for other extensions. A file that cannot
-be parsed is a finding, not a silent skip.
+`equals-file`, `object-shape`, and `ancestor-override-subset`. JSON and JSONC
+files (`.json`, `.jsonc`) are parsed with comment support; YAML is used for other
+extensions. A file that cannot be parsed is a finding, not a silent skip.
 
 Selectors are dotted paths; use numeric parts for array indexes and `[]` to apply
 an assertion to every array entry. On `[]` selectors, `match: all` (default)
@@ -48,6 +48,15 @@ The comparison file must stay inside the repository root after normalization;
 parse errors are reported on that referenced file. `when` skips the rest of a
 policy for a file unless each listed key is a non-empty array or non-empty
 string.
+
+`ancestor-override-subset` recursively follows local `./` and `../` `extends`
+entries (a string or array). If an ancestor override matches a nested config's
+directory before rebasing but not after, its rules must be a value-equal subset
+of that nested config's top-level `rules`. Cycles, paths outside the repository,
+missing local configs, malformed `extends`, and invalid inherited configs are
+findings; package specifiers are skipped. `extendsKey`, `overridesKey`,
+`overrideFilesKey`, and `overrideRulesKey` customize these names; their defaults
+are `extends`, `overrides`, `files`, and `rules`.
 
 ```yaml
 policies:
@@ -101,7 +110,8 @@ failed cross-file equality checks are findings.
 set `files`, `requiredKeys`, `bannedKeys`, and `valueAssertions`; assertions
 support `boolean`, `positive-number`, `string-array`, `record-of-boolean`,
 `string-prefix`, `string-glob`, `not-single-file`, `equals`, `equals-file`, and
-`object-shape`. Array `match` defaults to `all`; `when` is optional.
+`object-shape`, and `ancestor-override-subset`. Array `match` defaults to `all`;
+`when` is optional.
 
 ## Valid example
 

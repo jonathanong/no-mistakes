@@ -1,0 +1,3 @@
+{
+  "overrides": [{ "files": ["**/*.ts"], "rules": { "first-rule": "error" } }]
+}

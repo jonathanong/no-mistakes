@@ -1,0 +1,4 @@
+{
+  "extends": "../first/.config.json",
+  "overrides": [{ "files": ["**/*.ts"], "rules": { "second-rule": "warn" } }]
+}

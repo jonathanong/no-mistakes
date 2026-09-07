@@ -1,0 +1,4 @@
+{
+  "extends": "../.config.json",
+  "rules": { "root-rule": "warn" }
+}

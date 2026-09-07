@@ -6,6 +6,7 @@ use serde::{Deserialize, Deserializer};
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
+mod ancestor_override_subset;
 mod equals_file;
 mod scan;
 mod value_assertions;
@@ -54,6 +55,30 @@ pub(crate) struct ValueAssertion {
     pub(crate) from_key: String,
     #[serde(rename = "match", default)]
     pub(crate) match_mode: MatchMode,
+    #[serde(default = "default_extends_key")]
+    pub(crate) extends_key: String,
+    #[serde(default = "default_overrides_key")]
+    pub(crate) overrides_key: String,
+    #[serde(default = "default_override_files_key")]
+    pub(crate) override_files_key: String,
+    #[serde(default = "default_override_rules_key")]
+    pub(crate) override_rules_key: String,
+}
+
+fn default_extends_key() -> String {
+    "extends".to_string()
+}
+
+fn default_overrides_key() -> String {
+    "overrides".to_string()
+}
+
+fn default_override_files_key() -> String {
+    "files".to_string()
+}
+
+fn default_override_rules_key() -> String {
+    "rules".to_string()
 }
 
 #[derive(Deserialize, Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -77,6 +102,7 @@ pub(crate) enum AssertionKind {
     Equals,
     EqualsFile,
     ObjectShape,
+    AncestorOverrideSubset,
 }
 
 impl AssertionKind {
@@ -92,6 +118,7 @@ impl AssertionKind {
             "equals" => Some(Self::Equals),
             "equals-file" => Some(Self::EqualsFile),
             "object-shape" => Some(Self::ObjectShape),
+            "ancestor-override-subset" => Some(Self::AncestorOverrideSubset),
             _ => None,
         }
     }
@@ -146,6 +173,8 @@ fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
         .try_fold(value, |current, part| current.get(part))
 }
 
+#[cfg(test)]
+mod ancestor_override_subset_tests;
 #[cfg(test)]
 mod bind_tests;
 #[cfg(test)]

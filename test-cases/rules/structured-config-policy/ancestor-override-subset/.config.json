@@ -1,0 +1,16 @@
+{
+  "overrides": [
+    {
+      "files": ["direct/**/*.ts"],
+      "rules": { "direct-rule": "error" }
+    },
+    {
+      "files": ["deep/**/*.ts"],
+      "rules": { "deep-rule": "error" }
+    },
+    {
+      "files": ["missing/**/*.ts", "different/**/*.ts"],
+      "rules": { "root-rule": "error" }
+    }
+  ]
+}

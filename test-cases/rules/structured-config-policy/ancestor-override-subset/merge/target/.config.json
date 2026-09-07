@@ -1,0 +1,4 @@
+{
+  "extends": "../second/.config.json",
+  "rules": { "first-rule": "error", "second-rule": "warn" }
+}

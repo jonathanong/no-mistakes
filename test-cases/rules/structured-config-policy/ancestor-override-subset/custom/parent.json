@@ -1,0 +1,3 @@
+{
+  "scoped": [{ "paths": ["target/*"], "policies": { "custom-rule": "error" } }]
+}

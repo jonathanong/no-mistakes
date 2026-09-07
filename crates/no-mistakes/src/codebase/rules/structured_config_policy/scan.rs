@@ -64,6 +64,14 @@ pub(super) fn scan(
                 }
             }
             for assertion in &policy.value_assertions {
+                if assertion.kind == Some(AssertionKind::AncestorOverrideSubset) {
+                    findings.extend(
+                        super::ancestor_override_subset::check_ancestor_override_subset(
+                            root, &rel, &path, sources, &value, assertion,
+                        ),
+                    );
+                    continue;
+                }
                 if assertion.kind == Some(AssertionKind::EqualsFile) {
                     findings.extend(check_equals_file(root, &rel, sources, &value, assertion));
                     continue;
