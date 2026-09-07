@@ -1,0 +1,29 @@
+{
+  "name": "no-mistakes-linux-x64-gnu",
+  "version": "0.55.0",
+  "description": "Native no-mistakes CLI and N-API addon for Linux x64 with glibc",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonathanong/no-mistakes.git",
+    "directory": "packages/no-mistakes-linux-x64-gnu"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "libc": [
+    "glibc"
+  ],
+  "main": "bin/no-mistakes.node",
+  "publishConfig": {
+    "access": "public"
+  }
+}

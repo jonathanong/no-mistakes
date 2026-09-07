@@ -3,7 +3,10 @@
 const fs = require("node:fs/promises");
 const os = require("node:os");
 const path = require("node:path");
-const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
+const { resolveNativePackage } = require("./scripts/native-package");
+const native = require(
+  process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || resolveNativePackage().addonPath,
+);
 
 async function callJson(fn, options) {
   const input = Buffer.from(JSON.stringify(options || {}));

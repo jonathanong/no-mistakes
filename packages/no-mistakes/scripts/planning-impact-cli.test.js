@@ -239,6 +239,8 @@ test("delegates native arguments unchanged and propagates its exit code", async 
       return child;
     },
     io,
+    process.kill,
+    () => ({ cliPath: "/native/no-mistakes" }),
   );
   handlers.exit(23, null);
   assert.deepEqual(calls[0].argv, ["--timeout", "5", "dependencies", "src/a.ts"]);
@@ -248,7 +250,13 @@ test("delegates native arguments unchanged and propagates its exit code", async 
 test("reports native spawn errors and preserves signal or null-code exits", () => {
   const handlers = {};
   const io = { exitCode: undefined, stderr: { write: (value) => (io.error = value) } };
-  launchNative([], () => ({ on: (event, handler) => (handlers[event] = handler) }), io);
+  launchNative(
+    [],
+    () => ({ on: (event, handler) => (handlers[event] = handler) }),
+    io,
+    process.kill,
+    () => ({ cliPath: "/native/no-mistakes" }),
+  );
   handlers.error(new Error("spawn failed"));
   assert.equal(io.exitCode, 1);
   assert.equal(io.error, "spawn failed\n");
@@ -262,14 +270,31 @@ test("reports native spawn errors and preserves signal or null-code exits", () =
     () => ({ on: (event, handler) => (signalHandlers[event] = handler) }),
     { stderr: { write() {} } },
     (pid, signal) => signals.push({ pid, signal }),
+    () => ({ cliPath: "/native/no-mistakes" }),
   );
   signalHandlers.exit(null, "SIGTERM");
   assert.deepEqual(signals, [{ pid: process.pid, signal: "SIGTERM" }]);
 });
 
+test("reports a selected-platform resolver failure before attempting to spawn", () => {
+  const io = { exitCode: undefined, stderr: { write: (value) => (io.error = value) } };
+  const result = launchNative(
+    ["dependencies", "src/a.ts"],
+    () => assert.fail("the CLI must not spawn without its matching platform package"),
+    io,
+    process.kill,
+    () => {
+      throw new Error("The optional native package no-mistakes-darwin-arm64 is unavailable.");
+    },
+  );
+  assert.equal(result, undefined);
+  assert.equal(io.exitCode, 1);
+  assert.match(io.error, /no-mistakes-darwin-arm64/);
+});
+
 test(
   "the real addon writes dependency, dependent, symbol, and plan artifacts",
-  { skip: !process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH },
+  { skip: !process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH?.endsWith(".node") },
   async () => {
     const root = join(__dirname, "..", "..", "..", "fixtures", "napi", "real-addon-dependencies");
     const output = await mkdtemp(join(tmpdir(), "no-mistakes-planning-cli-"));

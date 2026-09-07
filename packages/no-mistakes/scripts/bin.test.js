@@ -1,22 +1,6 @@
 const assert = require("node:assert/strict");
-const { join } = require("node:path");
 
-const PACKAGE_ROOT = join(__dirname, "..");
-const { main } = require("./install");
-const {
-  testInstallerMainDownloads,
-  testInstallerFailures,
-} = require("../../../tests/js/test-helpers");
-
-test("package bin points to the JavaScript launcher while the installer retains the native target", () => {
+test("package bin points to the JavaScript launcher", () => {
   const pkg = require("../package.json");
   assert.deepEqual(pkg.bin, { "no-mistakes": "bin/no-mistakes.js" });
-});
-
-test("installer main downloads into the direct bin target", async () => {
-  await testInstallerMainDownloads(main, "no-mistakes", PACKAGE_ROOT, assert);
-});
-
-test("installer reports failures", async () => {
-  await testInstallerFailures(main, assert);
 });

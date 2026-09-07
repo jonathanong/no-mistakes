@@ -2,7 +2,7 @@ const assert = require("node:assert/strict");
 const { readFileSync } = require("node:fs");
 const { join } = require("node:path");
 
-const { platformTarget } = require("../../packages/no-mistakes/scripts/install/platform");
+const { nativePackageName } = require("../../packages/no-mistakes/scripts/native-package");
 
 const repoRoot = join(__dirname, "..", "..");
 
@@ -15,49 +15,61 @@ function releaseMatrixTargets(source) {
     .map((line) => line.trim().replace(/^- /, ""));
 }
 
-test("every installer platform target has a release build", () => {
+test("every native optional package has a release target", () => {
   const releaseWorkflow = readFileSync(
     join(repoRoot, ".github", "workflows", "release.yml"),
     "utf8",
   );
   const releaseTargets = releaseMatrixTargets(releaseWorkflow);
-  const installerTargets = [
-    platformTarget("darwin", "x64"),
-    platformTarget("darwin", "arm64"),
-    platformTarget("win32", "x64"),
-    platformTarget("linux", "x64", {
-      getReport: () => ({ header: { glibcVersionRuntime: "2.35" } }),
-    }),
-    platformTarget("linux", "arm64", {
-      getReport: () => ({ header: { glibcVersionRuntime: "2.35" } }),
-    }),
+  const targets = [
+    ["darwin", "x64", "x86_64-apple-darwin"],
+    ["darwin", "arm64", "aarch64-apple-darwin"],
+    ["win32", "x64", "x86_64-pc-windows-msvc"],
+    ["linux", "x64", "x86_64-unknown-linux-gnu"],
+    ["linux", "arm64", "aarch64-unknown-linux-gnu"],
   ];
 
-  for (const target of installerTargets) {
+  for (const [platform, arch, target] of targets) {
+    assert.match(nativePackageName(platform, arch), /^no-mistakes-/);
     assert.ok(releaseTargets.includes(target), `release workflow does not build ${target}`);
   }
 });
 
-test("release builds leave enough time for Intel macOS binary and N-API compilation", () => {
+test("release native build jobs stay within the 30-minute execution bound", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
-  const buildJob = workflow.match(/^ {2}build:[\s\S]*?(?=^ {2}publish:)/m);
-  assert.ok(buildJob, "release workflow must define the build job");
-  const jobTimeout = buildJob[0].match(/^ {4}timeout-minutes: (\d+)$/m);
-  const buildTimeout = buildJob[0].match(/^ {6}- name: Build binary\n {8}timeout-minutes: (\d+)$/m);
-  const stepTimeouts = [...buildJob[0].matchAll(/^ {8}timeout-minutes: (\d+)$/gm)];
-  assert.ok(jobTimeout, "release build job must define a timeout");
-  assert.ok(buildTimeout, "release binary step must define a timeout");
-  assert.ok(stepTimeouts.length > 0, "release build steps must define timeouts");
-  assert.ok(Number(jobTimeout[1]) >= 100, "release build job timeout must be at least 100 minutes");
-  assert.ok(
-    Number(buildTimeout[1]) >= 60,
-    "release binary step timeout must be at least 60 minutes",
-  );
-  const totalStepTimeout = stepTimeouts.reduce((total, timeout) => total + Number(timeout[1]), 0);
-  assert.ok(
-    Number(jobTimeout[1]) - totalStepTimeout >= 10,
-    "release build job must leave at least 10 minutes beyond all step timeouts",
-  );
+  for (const name of ["build-cli", "build-napi"]) {
+    const job = workflow.match(
+      new RegExp(`^ {2}${name}:[\\s\\S]*?(?=^ {2}(?:build-|publish:))`, "m"),
+    );
+    assert.ok(job, `release workflow must define ${name}`);
+    const jobTimeout = job[0].match(/^ {4}timeout-minutes: (\d+)$/m);
+    const stepTimeouts = [...job[0].matchAll(/^ {8}timeout-minutes: (\d+)$/gm)];
+    assert.ok(jobTimeout, `${name} must define a timeout`);
+    assert.ok(Number(jobTimeout[1]) <= 30, `${name} must be at most 30 minutes`);
+    assert.ok(stepTimeouts.every((timeout) => Number(timeout[1]) <= 25));
+  }
+});
+
+test("release syncs optional native package versions and publishes only through npm OIDC", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
+  assert.match(workflow, /sync-native-package-versions\.js "\$version"/);
+  assert.match(workflow, /npm publish "\.\/packages\/\$pkg" --provenance --access public/);
+  assert.doesNotMatch(workflow, /NPM_TOKEN|pnpm[^\n]* publish/);
+  for (const name of [
+    "no-mistakes-darwin-arm64",
+    "no-mistakes-darwin-x64",
+    "no-mistakes-linux-arm64-gnu",
+    "no-mistakes-linux-x64-gnu",
+    "no-mistakes-win32-x64-msvc",
+  ]) {
+    const platformIndex = workflow.indexOf(`            ${name}`);
+    const mainIndex = workflow.indexOf("            no-mistakes \\\n", platformIndex);
+    assert.ok(platformIndex >= 0 && mainIndex > platformIndex, `${name} must publish before no-mistakes`);
+  }
+  assert.match(workflow, /Expected exactly one N-API addon candidate/);
+  assert.match(workflow, /expected_magic='Mach-O\.\*arm64'/);
+  assert.match(workflow, /expected_magic='ELF 64-bit\.\*x86-64'/);
+  assert.match(workflow, /expected_magic='PE32\\\+\.\*x86-64'/);
 });
 
 test("native CI jobs run only platform-specific Rust tests", () => {

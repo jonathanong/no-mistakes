@@ -13,9 +13,7 @@ on:
           - minor
           - major
 
-permissions:
-  contents: write
-  id-token: write
+permissions: {}
 
 concurrency:
   group: release
@@ -30,6 +28,8 @@ jobs:
     name: Prepare release
     runs-on: ubuntu-latest
     timeout-minutes: 5
+    permissions:
+      contents: write
     outputs:
       release-sha: ${{ steps.bump.outputs.release-sha }}
       version: ${{ steps.bump.outputs.version }}
@@ -76,13 +76,12 @@ jobs:
       - name: Bump versions, commit, tag, and push
         id: bump
         timeout-minutes: 2
-        env:
-          SKIP_BINARY_DOWNLOAD: "1"
         shell: bash
         run: |
           set -euo pipefail
           pnpm version "${{ inputs.bump }}" --recursive --no-git-tag-version
           version="$(node -p "require('./package.json').version")"
+          node packages/no-mistakes/scripts/sync-native-package-versions.js "$version"
           pnpm install --lockfile-only --ignore-scripts
 
           node - "$version" <<'NODE'
@@ -277,8 +276,8 @@ jobs:
             pnpm --filter "$pkg" pack --dry-run
           done
 
-  build:
-    name: Build for ${{ matrix.target }}
+  build-cli:
+    name: Build CLI for ${{ matrix.target }}
     needs:
       - prepare
       - validate
@@ -303,7 +302,9 @@ jobs:
           - target: x86_64-pc-windows-msvc
             os: windows-2025
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 100
+    timeout-minutes: 30
+    permissions:
+      contents: read
     steps:
       - name: Download prepared source
         timeout-minutes: 5
@@ -329,18 +330,11 @@ jobs:
           prefix-key: v1-rust-release
           cache-bin: "false"
 
-      - name: Build binary
-        timeout-minutes: 60
+      - name: Build CLI
+        timeout-minutes: 25
         shell: bash
         run: |
           cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
-          rm -f target/${{ matrix.target }}/release/libno_mistakes*.so
-          rm -f target/${{ matrix.target }}/release/libno_mistakes*.dylib
-          rm -f target/${{ matrix.target }}/release/no_mistakes*.dll
-          rm -f target/${{ matrix.target }}/release/deps/libno_mistakes*.so
-          rm -f target/${{ matrix.target }}/release/deps/libno_mistakes*.dylib
-          rm -f target/${{ matrix.target }}/release/deps/no_mistakes*.dll
-          NO_MISTAKES_BUILD_NAPI=1 cargo rustc --release --locked --target ${{ matrix.target }} -p no-mistakes --lib --crate-type cdylib
 
       - name: Stage assets
         timeout-minutes: 2
@@ -349,40 +343,29 @@ jobs:
           case "${{ matrix.target }}" in
             *windows*)
               bin_ext=".exe"
-              lib_name="no_mistakes.dll"
-              lib_pattern="no_mistakes*.dll"
               ;;
             *apple-darwin*)
               bin_ext=""
-              lib_name="libno_mistakes.dylib"
-              lib_pattern="libno_mistakes*.dylib"
               ;;
             *)
               bin_ext=""
-              lib_name="libno_mistakes.so"
-              lib_pattern="libno_mistakes*.so"
               ;;
           esac
           mkdir -p release-assets
           binary_source="target/${{ matrix.target }}/release/no-mistakes$bin_ext"
           binary_artifact="release-assets/no-mistakes-v${{ needs.prepare.outputs.version }}-${{ matrix.target }}$bin_ext"
-          addon_source="target/${{ matrix.target }}/release/$lib_name"
-          if [[ ! -f "$addon_source" ]]; then
-            addon_candidates=()
-            while IFS= read -r addon_candidate; do
-              addon_candidates+=("$addon_candidate")
-            done < <(find "target/${{ matrix.target }}/release/deps" -maxdepth 1 -type f -name "$lib_pattern" -print | sort)
-            if [[ "${#addon_candidates[@]}" -ne 1 ]]; then
-              echo "Expected exactly one N-API addon artifact matching $lib_pattern, found ${#addon_candidates[@]}" >&2
-              printf '%s\n' "${addon_candidates[@]}" >&2
-              exit 1
-            fi
-            addon_source="${addon_candidates[0]}"
-          fi
-          addon_artifact="release-assets/no-mistakes-napi-v${{ needs.prepare.outputs.version }}-${{ matrix.target }}.node"
           "$binary_source" --version
+          case "${{ matrix.target }}" in
+            aarch64-apple-darwin) expected_magic='Mach-O.*arm64' ;;
+            x86_64-apple-darwin) expected_magic='Mach-O.*x86_64' ;;
+            aarch64-unknown-linux-gnu) expected_magic='ELF 64-bit.*ARM aarch64' ;;
+            x86_64-unknown-linux-gnu) expected_magic='ELF 64-bit.*x86-64' ;;
+            x86_64-pc-windows-msvc) expected_magic='PE32\+.*x86-64' ;;
+            *) echo "::error::Unknown target ${{ matrix.target }}" >&2; exit 1 ;;
+          esac
+          file "$binary_source" | grep -E "$expected_magic"
           cp "$binary_source" "$binary_artifact"
-          cp "$addon_source" "$addon_artifact"
+          test -x "$binary_artifact" || [[ "$binary_artifact" == *.exe ]]
 
       - name: Generate checksum (Unix)
         if: runner.os != 'Windows'
@@ -410,8 +393,80 @@ jobs:
         timeout-minutes: 5
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
-          name: release-assets-${{ matrix.target }}
+          name: release-cli-${{ matrix.target }}
           path: release-assets/*
+          if-no-files-found: error
+
+  build-napi:
+    name: Build N-API for ${{ matrix.target }}
+    needs:
+      - prepare
+      - validate
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [aarch64-apple-darwin, x86_64-apple-darwin, x86_64-unknown-linux-gnu, aarch64-unknown-linux-gnu, x86_64-pc-windows-msvc]
+        include:
+          - { target: aarch64-apple-darwin, os: macos-15 }
+          - { target: x86_64-apple-darwin, os: macos-15-intel }
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-22.04 }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-22.04-arm }
+          - { target: x86_64-pc-windows-msvc, os: windows-2025 }
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        timeout-minutes: 5
+        with: { name: release-source, path: prepared-release }
+      - run: tar -xzf prepared-release/release-source.tgz
+        timeout-minutes: 2
+      - uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
+        timeout-minutes: 5
+        with:
+          targets: ${{ matrix.target }}
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        timeout-minutes: 5
+        with: { node-version: 24 }
+      - name: Build N-API addon
+        timeout-minutes: 25
+        shell: bash
+        run: |
+          NO_MISTAKES_BUILD_NAPI=1 cargo rustc --release --locked --target ${{ matrix.target }} -p no-mistakes --lib --crate-type cdylib
+          case "${{ matrix.target }}" in
+            *windows*) pattern='no_mistakes*.dll' ;;
+            *apple*) pattern='libno_mistakes*.dylib' ;;
+            *) pattern='libno_mistakes*.so' ;;
+          esac
+          addons=()
+          while IFS= read -r addon; do
+            addons+=("$addon")
+          done < <(find "target/${{ matrix.target }}/release" -maxdepth 1 -type f -name "$pattern")
+          if [ "${#addons[@]}" -eq 0 ]; then
+            while IFS= read -r addon; do
+              addons+=("$addon")
+            done < <(find "target/${{ matrix.target }}/release/deps" -maxdepth 1 -type f -name "$pattern")
+          fi
+          test "${#addons[@]}" -eq 1 || { echo "::error::Expected exactly one N-API addon candidate for ${{ matrix.target }}, found ${#addons[@]}" >&2; printf '%s\n' "${addons[@]}" >&2; exit 1; }
+          addon="${addons[0]}"
+          case "${{ matrix.target }}" in
+            aarch64-apple-darwin) expected_magic='Mach-O.*arm64' ;;
+            x86_64-apple-darwin) expected_magic='Mach-O.*x86_64' ;;
+            aarch64-unknown-linux-gnu) expected_magic='ELF 64-bit.*ARM aarch64' ;;
+            x86_64-unknown-linux-gnu) expected_magic='ELF 64-bit.*x86-64' ;;
+            x86_64-pc-windows-msvc) expected_magic='PE32\+.*x86-64' ;;
+            *) echo "::error::Unknown target ${{ matrix.target }}" >&2; exit 1 ;;
+          esac
+          file "$addon" | grep -E "$expected_magic"
+          addon_artifact="no-mistakes-napi-v${{ needs.prepare.outputs.version }}-${{ matrix.target }}.node"
+          cp "$addon" "$addon_artifact"
+          node -e '(async () => { const addon=require(process.argv[1]); if (typeof addon.version !== "function" || await addon.version() !== process.argv[2]) process.exit(1) })().catch((error) => { console.error(error); process.exit(1) })' "$PWD/$addon_artifact" "${{ needs.prepare.outputs.version }}"
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        timeout-minutes: 5
+        with:
+          name: release-napi-${{ matrix.target }}
+          path: no-mistakes-napi-*.node
           if-no-files-found: error
 
   publish:
@@ -419,9 +474,13 @@ jobs:
     needs:
       - prepare
       - validate
-      - build
+      - build-cli
+      - build-napi
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    permissions:
+      contents: write
+      id-token: write
     steps:
       - name: Checkout release commit
         timeout-minutes: 5
@@ -450,7 +509,7 @@ jobs:
 
       - name: Install pnpm dependencies
         timeout-minutes: 5
-        run: SKIP_BINARY_DOWNLOAD=1 pnpm install --frozen-lockfile --ignore-scripts
+        run: pnpm install --frozen-lockfile --ignore-scripts
 
       - name: Build JavaScript packages
         timeout-minutes: 2
@@ -480,13 +539,47 @@ jobs:
             fi
           done
 
-      - name: Download release assets
+      - name: Download CLI release assets
         timeout-minutes: 5
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          pattern: release-assets-*
+          pattern: release-cli-*
           path: dist
           merge-multiple: true
+
+      - name: Download N-API release assets
+        timeout-minutes: 5
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          pattern: release-napi-*
+          path: dist
+          merge-multiple: true
+
+      - name: Stage platform packages
+        timeout-minutes: 5
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.prepare.outputs.version }}"
+          for entry in \
+            'no-mistakes-darwin-arm64 aarch64-apple-darwin' \
+            'no-mistakes-darwin-x64 x86_64-apple-darwin' \
+            'no-mistakes-linux-arm64-gnu aarch64-unknown-linux-gnu' \
+            'no-mistakes-linux-x64-gnu x86_64-unknown-linux-gnu' \
+            'no-mistakes-win32-x64-msvc x86_64-pc-windows-msvc'
+          do
+            read -r package target <<<"$entry"
+            extension=""
+            runtime="linux"
+            if [[ "$target" == *windows* ]]; then extension=".exe"; runtime="win32"; fi
+            [[ "$target" == *apple-darwin* ]] && runtime="darwin"
+            node packages/no-mistakes/scripts/stage-native.js \
+              --package "$package" \
+              --binary "dist/no-mistakes-v$version-$target$extension" \
+              --addon "dist/no-mistakes-napi-v$version-$target.node" \
+              --platform "$runtime"
+            pnpm --filter "$package" pack --dry-run
+          done
 
       - name: Create GitHub release
         timeout-minutes: 5
@@ -502,24 +595,24 @@ jobs:
             gh release create "$tag" dist/* --title "$tag" --generate-notes
           fi
 
-      - name: Publish npm packages
+      - name: Publish npm packages with OIDC
         timeout-minutes: 10
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         shell: bash
         run: |
           set -euo pipefail
-          if [ -n "${NPM_TOKEN:-}" ]; then
-            export NODE_AUTH_TOKEN="$NPM_TOKEN"
-            echo "Publishing npm packages with NPM_TOKEN"
-          else
-            echo "Publishing npm packages with OIDC trusted publishing"
-          fi
           version="${{ needs.prepare.outputs.version }}"
-          for pkg in no-mistakes eslint-plugin-no-mistakes; do
+          for pkg in \
+            no-mistakes-darwin-arm64 \
+            no-mistakes-darwin-x64 \
+            no-mistakes-linux-arm64-gnu \
+            no-mistakes-linux-x64-gnu \
+            no-mistakes-win32-x64-msvc \
+            no-mistakes \
+            eslint-plugin-no-mistakes
+          do
             if pnpm view "$pkg@$version" version >/dev/null 2>&1; then
               echo "$pkg $version is already published on npm; skipping"
             else
-              pnpm --filter "$pkg" publish --provenance --access public --no-git-checks
+              npm publish "./packages/$pkg" --provenance --access public
             fi
           done

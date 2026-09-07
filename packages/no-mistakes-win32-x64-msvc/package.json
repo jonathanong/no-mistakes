@@ -1,0 +1,26 @@
+{
+  "name": "no-mistakes-win32-x64-msvc",
+  "version": "0.55.0",
+  "description": "Native no-mistakes CLI and N-API addon for Windows x64",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jonathanong/no-mistakes.git",
+    "directory": "packages/no-mistakes-win32-x64-msvc"
+  },
+  "files": [
+    "bin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "os": [
+    "win32"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "main": "bin/no-mistakes.node",
+  "publishConfig": {
+    "access": "public"
+  }
+}

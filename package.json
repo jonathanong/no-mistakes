@@ -18,12 +18,13 @@
   ],
   "scripts": {
     "build:js": "pnpm --recursive --if-present run build",
+    "build:native": "node packages/no-mistakes/scripts/local-stage-native.js",
     "test": "vitest run --coverage",
     "test:ci": "vitest run --coverage --reporter=dot --reporter=github-actions",
     "fmt:js": "oxfmt --write packages/ vitest.config.js",
     "fmt:js:check": "oxfmt --check packages/ vitest.config.js",
     "lint:js": "oxlint packages/ vitest.config.js",
-    "lint:spell": "cspell lint README.md \"docs/**/*.md\" \"packages/no-mistakes/README.md\" \"packages/eslint-plugin-no-mistakes/README.md\" cspell.config.yaml package.json --no-progress --no-gitignore --show-suggestions --no-must-find-files",
+    "lint:spell": "cspell lint README.md \"docs/**/*.md\" \"packages/*/README.md\" cspell.config.yaml package.json --no-progress --no-gitignore --show-suggestions --no-must-find-files",
     "pack:check": "pnpm --filter './packages/*' pack --dry-run",
     "prepare": "husky"
   },

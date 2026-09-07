@@ -1,8 +1,8 @@
 "use strict";
 
-// CI real-addon tests point this at the freshly compiled cdylib without
-// overwriting the package's checked-in install placeholder.
-const native = require(process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || "./bin/no-mistakes.node");
+const { resolveNativePackage } = require("./scripts/native-package");
+const addonPath = process.env.NO_MISTAKES_TEST_NAPI_ADDON_PATH || resolveNativePackage().addonPath;
+const native = require(addonPath);
 const planning = require("./planning");
 const { writePlanningImpactArtifacts: writeArtifacts } = require("./planning-impact-artifacts");
 const { createPlanningArtifactLock } = require("./planning-impact-artifacts-lock");
@@ -150,9 +150,7 @@ async function ciTopology(options) {
   return pending.then((value) => structuredClone(value));
 }
 
-async function version() {
-  return native.version();
-}
+const version = () => native.version();
 
 module.exports.createWorkflowTopologyIndex = createWorkflowTopologyIndex;
 module.exports.version = version;
