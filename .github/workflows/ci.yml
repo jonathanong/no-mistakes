@@ -350,6 +350,10 @@ jobs:
       - name: Run platform-specific Rust tests
         timeout-minutes: 10
         shell: bash
+        env:
+          # Must match the preceding build so Windows `cargo test --test`
+          # reuses the rlib instead of rustc-ing no-mistakes again.
+          NO_MISTAKES_BUILD_NAPI: "1"
         run: |
           set -euo pipefail
           if [[ "${{ runner.os }}" == "Windows" ]]; then
