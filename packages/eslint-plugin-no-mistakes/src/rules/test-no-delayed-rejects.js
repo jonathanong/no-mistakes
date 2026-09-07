@@ -6,6 +6,7 @@ const { canReachMatcher, contains, executesBefore } = require("./test-no-delayed
 const { isNonRejectingHandler } = require("./test-no-delayed-rejects-handlers");
 
 const EXPECT_MODULES = new Set(["vitest", "@jest/globals"]);
+const PROMISE_CHAIN_METHODS = new Set(["catch", "finally", "then"]);
 
 function findVariable(scope, name) {
   let current = scope;
@@ -92,10 +93,22 @@ function isSameConst(identifier, declarator, context) {
   return identifier.type === "Identifier" && constDeclarator(identifier, context) === declarator;
 }
 
+function promiseChainBase(node) {
+  let current = unwrapExpression(node);
+  while (
+    current.type === "CallExpression" &&
+    current.callee.type === "MemberExpression" &&
+    PROMISE_CHAIN_METHODS.has(literalPropertyName(current.callee))
+  ) {
+    current = unwrapExpression(current.callee.object);
+  }
+  return current;
+}
+
 function isRejectionHandlerCall(node, declarator, context) {
   if (node.type !== "CallExpression" || node.callee.type !== "MemberExpression") return false;
   const callee = node.callee;
-  const object = unwrapExpression(callee.object);
+  const object = promiseChainBase(callee.object);
   if (!isSameConst(object, declarator, context)) return false;
   const property = literalPropertyName(callee);
   if (property === "catch")

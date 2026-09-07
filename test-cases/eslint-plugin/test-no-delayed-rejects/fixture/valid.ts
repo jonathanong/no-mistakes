@@ -39,6 +39,13 @@ export async function immediateThenObserver() {
   await expect(update).rejects.toThrow();
 }
 
+export async function terminalCatchObservesPromiseChain() {
+  const update = startOperation();
+  void update.then(() => undefined).catch(() => undefined);
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
 export async function observerAttachedInsideAwait() {
   const update = startOperation();
   await update.catch((error: unknown) => error);
