@@ -168,4 +168,6 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
 }
 
 #[cfg(test)]
+mod options_tests;
+#[cfg(test)]
 mod tests;

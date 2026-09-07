@@ -449,7 +449,7 @@ fn generated_expr_walk_covers_remaining_ident_shapes() {
     assert_eq!(sources("g"), ["flag"]);
     assert_eq!(sources("h"), ["flag"]);
     assert_eq!(sources("i"), ["id"]);
-    assert!(sources("j").is_empty(), "{:?}", sources("j"));
+    assert_eq!(sources("j"), ["note"]);
 }
 
 #[test]

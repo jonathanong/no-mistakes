@@ -43,7 +43,7 @@ fn join_on_exists_set_operation_is_collected() {
                 && select
                     .exists_set_operations
                     .iter()
-                    .any(|exists| !exists.restricted)
+                    .any(|exists| !exists.restricted && exists.correlated)
         }),
         "{:#?}",
         facts.selects

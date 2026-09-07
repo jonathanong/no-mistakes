@@ -2,6 +2,7 @@
 
 mod conflict;
 mod exists;
+mod exists_correlation;
 mod fallback;
 mod insert;
 mod lines;

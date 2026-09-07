@@ -1,8 +1,36 @@
 use super::SqlExistsSetOpFact;
 use crate::codebase::postgres::idents::unwrap_expr;
-use sqlparser::ast::{BinaryOperator, Expr, Query, SetExpr, Value, ValueWithSpan};
+use sqlparser::ast::{
+    BinaryOperator, Expr, GroupByExpr, JoinConstraint, JoinOperator, Query, Select, SelectItem,
+    SetExpr, Value, ValueWithSpan,
+};
 
-pub(super) fn collect_exists(expr: Option<&Expr>, out: &mut Vec<SqlExistsSetOpFact>) {
+pub(super) fn collect_from_select(sql: &str, select: &Select, out: &mut Vec<SqlExistsSetOpFact>) {
+    collect_exists(sql, select.selection.as_ref(), out);
+    collect_exists(sql, select.having.as_ref(), out);
+    for item in &select.projection {
+        match item {
+            SelectItem::UnnamedExpr(expr) | SelectItem::ExprWithAlias { expr, .. } => {
+                collect_exists(sql, Some(expr), out);
+            }
+            _ => {}
+        }
+    }
+    if let GroupByExpr::Expressions(exprs, _) = &select.group_by {
+        for expr in exprs {
+            collect_exists(sql, Some(expr), out);
+        }
+    }
+    for table in &select.from {
+        for join in &table.joins {
+            if let Some(expr) = join_on_expr(&join.join_operator) {
+                collect_exists(sql, Some(expr), out);
+            }
+        }
+    }
+}
+
+pub(super) fn collect_exists(sql: &str, expr: Option<&Expr>, out: &mut Vec<SqlExistsSetOpFact>) {
     let Some(expr) = expr else {
         return;
     };
@@ -11,33 +39,49 @@ pub(super) fn collect_exists(expr: Option<&Expr>, out: &mut Vec<SqlExistsSetOpFa
             if set_expr_has_set_op(&subquery.body) {
                 out.push(SqlExistsSetOpFact {
                     restricted: set_expr_restricted(&subquery.body),
+                    correlated: super::exists_correlation::query_is_correlated(subquery),
+                    line: exists_line(sql),
                 });
             }
-            collect_query_exists(subquery, out);
+            collect_query_exists(sql, subquery, out);
         }
-        Expr::BinaryOp { left, right, .. } => {
-            collect_exists(Some(left), out);
-            collect_exists(Some(right), out);
+        Expr::Subquery(query) => collect_query_exists(sql, query, out),
+        other => crate::codebase::postgres::idents::visit_child_exprs(other, &mut |child| {
+            collect_exists(sql, Some(child), out);
+        }),
+    }
+}
+
+fn exists_line(sql: &str) -> usize {
+    super::lines::line_containing(sql, &["exists"])
+}
+
+fn collect_query_exists(sql: &str, query: &Query, out: &mut Vec<SqlExistsSetOpFact>) {
+    collect_exists_from_set(sql, &query.body, out);
+}
+
+fn collect_exists_from_set(sql: &str, expr: &SetExpr, out: &mut Vec<SqlExistsSetOpFact>) {
+    match expr {
+        SetExpr::Select(select) => collect_from_select(sql, select, out),
+        SetExpr::Query(query) => collect_query_exists(sql, query, out),
+        SetExpr::SetOperation { left, right, .. } => {
+            collect_exists_from_set(sql, left, out);
+            collect_exists_from_set(sql, right, out);
         }
-        Expr::UnaryOp { expr, .. } | Expr::Nested(expr) => collect_exists(Some(expr), out),
-        Expr::Subquery(query) => collect_query_exists(query, out),
         _ => {}
     }
 }
 
-fn collect_query_exists(query: &Query, out: &mut Vec<SqlExistsSetOpFact>) {
-    collect_exists_from_set(&query.body, out);
-}
-
-fn collect_exists_from_set(expr: &SetExpr, out: &mut Vec<SqlExistsSetOpFact>) {
-    match expr {
-        SetExpr::Select(select) => collect_exists(select.selection.as_ref(), out),
-        SetExpr::Query(query) => collect_query_exists(query, out),
-        SetExpr::SetOperation { left, right, .. } => {
-            collect_exists_from_set(left, out);
-            collect_exists_from_set(right, out);
-        }
-        _ => {}
+fn join_on_expr(operator: &JoinOperator) -> Option<&Expr> {
+    match operator {
+        JoinOperator::Join(JoinConstraint::On(expr))
+        | JoinOperator::Inner(JoinConstraint::On(expr))
+        | JoinOperator::Left(JoinConstraint::On(expr))
+        | JoinOperator::LeftOuter(JoinConstraint::On(expr))
+        | JoinOperator::Right(JoinConstraint::On(expr))
+        | JoinOperator::RightOuter(JoinConstraint::On(expr))
+        | JoinOperator::FullOuter(JoinConstraint::On(expr)) => Some(expr),
+        _ => None,
     }
 }
 

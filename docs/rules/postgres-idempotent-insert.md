@@ -108,6 +108,6 @@ non-idempotent load.
 
 [`postgres-required-predicates`](postgres-required-predicates.md) requires
 relation filters; [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md)
-bans unsafe `EXISTS` set operations;
+bans correlated `EXISTS` set operations;
 [`postgres-no-generated-column-writes`](postgres-no-generated-column-writes.md)
 bans writing generated columns in DML.
