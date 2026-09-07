@@ -148,8 +148,10 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
                 opts.executor_names.clone()
             },
         },
-        fail_unanalyzable: opts.unanalyzable_sql.is_empty()
-            || opts.unanalyzable_sql.eq_ignore_ascii_case("fail"),
+        fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
+            RULE_ID,
+            &opts.unanalyzable_sql,
+        )?,
         scan_embedded: opts.scan_embedded,
         check_convergence: opts.check_convergence,
         check_volatility: opts.check_volatility,

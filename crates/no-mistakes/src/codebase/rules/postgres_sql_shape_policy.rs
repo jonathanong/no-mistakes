@@ -94,6 +94,11 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     } else {
         opts.banned_shapes.clone()
     };
+    for shape in &shapes {
+        if !shape.eq_ignore_ascii_case(CORRELATED_EXISTS_SET_OP) {
+            anyhow::bail!("{RULE_ID}: unknown bannedShapes value `{shape}`");
+        }
+    }
     Ok(CompiledOptions {
         include,
         exclude,
@@ -119,8 +124,10 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         ban_exists_set_op: shapes
             .iter()
             .any(|shape| shape.eq_ignore_ascii_case(CORRELATED_EXISTS_SET_OP)),
-        fail_unanalyzable: opts.unanalyzable_sql.is_empty()
-            || opts.unanalyzable_sql.eq_ignore_ascii_case("fail"),
+        fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
+            RULE_ID,
+            &opts.unanalyzable_sql,
+        )?,
     })
 }
 

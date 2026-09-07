@@ -20,7 +20,9 @@ rules:
 ```
 
 `sqlInclude` defaults to `**/*.sql`. `bannedShapes` defaults to
-`[correlated-exists-set-operation]`. `unanalyzableSql` defaults to `fail`.
+`[correlated-exists-set-operation]`. Unknown `bannedShapes` values are a
+configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
+other values are a configuration error).
 `importSpecifier` defaults to `@data-stores/psql`; `executorNames` defaults to
 `[query, read, write]`.
 
@@ -65,9 +67,10 @@ is a set operation is a finding unless every arm has an inner restriction
 
 `include` / `exclude` select source files (empty include means all files).
 `sqlInclude` defaults to `**/*.sql`. `bannedShapes` defaults to
-`[correlated-exists-set-operation]`. `unanalyzableSql` defaults to `fail`.
-`importSpecifier` defaults to `@data-stores/psql`. `executorNames` defaults to
-`[query, read, write]`.
+`[correlated-exists-set-operation]`. Unknown `bannedShapes` values are a
+configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
+other values are a configuration error). `importSpecifier` defaults to
+`@data-stores/psql`. `executorNames` defaults to `[query, read, write]`.
 
 ## Valid example
 

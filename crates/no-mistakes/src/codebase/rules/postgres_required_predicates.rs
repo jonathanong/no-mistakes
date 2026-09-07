@@ -117,12 +117,11 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             },
         },
         relations: opts.relations.clone(),
-        fail_unanalyzable: fail_closed(&opts.unanalyzable_sql),
+        fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
+            RULE_ID,
+            &opts.unanalyzable_sql,
+        )?,
     })
-}
-
-fn fail_closed(value: &str) -> bool {
-    value.is_empty() || value.eq_ignore_ascii_case("fail")
 }
 
 #[cfg(test)]

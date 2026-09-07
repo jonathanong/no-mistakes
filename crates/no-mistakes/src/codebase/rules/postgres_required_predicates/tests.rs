@@ -104,3 +104,14 @@ fn invalid_include_glob_errors() {
     let error = check_with_files(&root, &invalid, &[root.join("sql/001.sql")]).expect_err("glob");
     assert!(error.to_string().contains("invalid glob"), "{error}");
 }
+
+#[test]
+fn rejects_unknown_unanalyzable_sql() {
+    let error = compile_options(&Options {
+        unanalyzable_sql: "fial".into(),
+        ..Default::default()
+    })
+    .err()
+    .expect("mode");
+    assert!(error.to_string().contains("unanalyzableSql"), "{error}");
+}

@@ -29,7 +29,8 @@ rules:
 
 `sqlInclude` defaults to `**/*.sql`. `scanEmbedded` and every `check*` flag
 default to `true`. `replaySafeTriggerFunctions` defaults to `[]`.
-`triggerWrittenColumns` defaults to `{}`. `unanalyzableSql` defaults to `fail`.
+`triggerWrittenColumns` defaults to `{}`. `unanalyzableSql` defaults to `fail`
+(`fail` or `ignore`; other values are a configuration error).
 `importSpecifier` defaults to `@data-stores/psql`; `executorNames` defaults to
 `[query, read, write]`.
 
@@ -59,11 +60,13 @@ non-convergent `now()` / `gen_random_uuid()` rewrites.
 ## What it catches/requires
 
 Executed inserts must include `ON CONFLICT` or a top-level conjunctive
-`WHERE NOT EXISTS`. `DO UPDATE` SET lists must be convergent; volatile
-functions may only follow a self-reference in `COALESCE`; arbiter columns must
-stay `EXCLUDED` or unchanged; triggers that re-fire on replay are findings
-unless allowlisted; allowlisted triggers that write generated-arbiter source
-columns still fail.
+`WHERE NOT EXISTS`. `NOT EXISTS` is a sequential-replay heuristic: under
+`READ COMMITTED`, concurrent statements can both pass the guard, so prefer
+`ON CONFLICT` with a unique arbiter when writers can overlap. `DO UPDATE` SET
+lists must be convergent; volatile functions may only follow a self-reference
+in `COALESCE`; arbiter columns must stay `EXCLUDED` or unchanged; triggers that
+re-fire on replay are findings unless allowlisted; allowlisted triggers that
+write generated-arbiter source columns still fail.
 
 ## Options and defaults
 
@@ -72,7 +75,8 @@ columns still fail.
 `checkConvergence`, `checkVolatility`, `checkArbiter`, `checkTriggers`, and
 `checkGenerated` default to `true`. `replaySafeTriggerFunctions` defaults to
 `[]`. `triggerWrittenColumns` maps function names to columns those functions
-write (default `{}`). `unanalyzableSql` defaults to `fail`.
+write (default `{}`). `unanalyzableSql` defaults to `fail` (`fail` or
+`ignore`; other values are a configuration error).
 `importSpecifier` defaults to `@data-stores/psql`. `executorNames` defaults to
 `[query, read, write]`.
 

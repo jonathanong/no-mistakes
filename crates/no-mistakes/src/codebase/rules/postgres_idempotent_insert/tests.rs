@@ -103,3 +103,52 @@ fn invalid_include_glob_errors() {
     .expect_err("glob");
     assert!(error.to_string().contains("invalid glob"), "{error}");
 }
+
+#[test]
+fn rejects_unknown_unanalyzable_sql() {
+    let error = compile_options(&Options {
+        unanalyzable_sql: "fial".into(),
+        ..Default::default()
+    })
+    .err()
+    .expect("mode");
+    assert!(error.to_string().contains("unanalyzableSql"), "{error}");
+}
+
+#[test]
+fn psql_standalone_and_ignored_unparseable_inserts() {
+    let root = fixture("fail");
+    let psql = root.join("sql/001.psql");
+    let findings = check_with_files(
+        &root,
+        &config_yaml("sqlInclude: [\"sql/**/*.psql\"]\nscanEmbedded: false"),
+        std::slice::from_ref(&psql),
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    let embedded = root.join("src/query.ts");
+    let skipped = check_with_files(
+        &root,
+        &config_yaml("scanEmbedded: false"),
+        std::slice::from_ref(&embedded),
+    )
+    .unwrap();
+    assert!(skipped.is_empty(), "{skipped:?}");
+    let unparseable = root.join("sql/unparseable.sql");
+    let ignored = check_with_files(
+        &root,
+        &config_yaml("sqlInclude: [\"sql/**/*.sql\"]\nunanalyzableSql: ignore"),
+        std::slice::from_ref(&unparseable),
+    )
+    .unwrap();
+    assert!(ignored.is_empty(), "{ignored:?}");
+    let flagged =
+        check_with_files(&root, &default_config(), std::slice::from_ref(&unparseable)).unwrap();
+    assert!(
+        flagged
+            .iter()
+            .any(|finding| finding.message.contains("replay-safe")
+                || finding.message.contains("could not be proven")),
+        "{flagged:?}"
+    );
+}
