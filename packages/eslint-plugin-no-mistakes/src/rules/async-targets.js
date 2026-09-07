@@ -83,7 +83,12 @@ function createTargetMatcher(context, optionKey = "targets") {
       if (node.id.type === "ObjectPattern") {
         for (const property of node.id.properties) {
           if (property.type !== "Property") continue;
-          recordDirect(bindingIdentifier(property.value), source, propertyName(property.key));
+          const name = property.computed
+            ? property.key?.type === "Literal"
+              ? String(property.key.value)
+              : null
+            : propertyName(property.key);
+          if (name) recordDirect(bindingIdentifier(property.value), source, name);
         }
       }
       return;
@@ -93,6 +98,16 @@ function createTargetMatcher(context, optionKey = "targets") {
     const memberSource = requireSource(member.object, context);
     const name = memberPropertyName(member);
     if (memberSource && name) recordDirect(node.id, memberSource, name);
+  }
+
+  function recordImportEquals(node) {
+    if (node.importKind === "type" || node.id?.type !== "Identifier") return;
+    const ref = node.moduleReference;
+    if (ref?.type !== "TSExternalModuleReference") return;
+    const source = ref.expression?.type === "Literal" ? String(ref.expression.value) : null;
+    if (!source) return;
+    recordNamespace(node.id, source);
+    recordDirect(node.id, source, node.id.name);
   }
 
   function recordImportDeclaration(node) {
@@ -129,6 +144,7 @@ function createTargetMatcher(context, optionKey = "targets") {
   function recordProgram(node) {
     walk(node, (child) => {
       if (child.type === "ImportDeclaration") recordImportDeclaration(child);
+      else if (child.type === "TSImportEqualsDeclaration") recordImportEquals(child);
       else if (child.type === "VariableDeclarator") recordRequireDeclarator(child);
     });
   }
@@ -166,6 +182,7 @@ function createTargetMatcher(context, optionKey = "targets") {
     visitors: {
       Program: recordProgram,
       ImportDeclaration: recordImportDeclaration,
+      TSImportEqualsDeclaration: recordImportEquals,
       VariableDeclarator: recordRequireDeclarator,
     },
   };

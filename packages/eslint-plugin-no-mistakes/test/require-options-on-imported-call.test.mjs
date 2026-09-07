@@ -213,6 +213,39 @@ checkUrl(url);
 `;
     assert.deepEqual(messages(code, RULE, ssrfOptions, "reassigned.ts"), []);
   });
+
+  it("ignores computed CommonJS destructuring keys that are not literals", () => {
+    const options = {
+      targets: [
+        {
+          sourceSpecifierPatterns: ["ssrf-guard/node"],
+          calleeNamePatterns: ["exportName"],
+          optionsPosition: 2,
+          requiredProperties: ["timeoutMs"],
+        },
+      ],
+    };
+    const code = `const exportName = "other";
+const { [exportName]: checkUrl } = require("ssrf-guard/node");
+checkUrl(url);
+`;
+    assert.deepEqual(messages(code, RULE, options, "computed-destructure.ts"), []);
+  });
+
+  it("records TypeScript import-equals CommonJS bindings", () => {
+    const code = `import ssrf = require("ssrf-guard/node");
+ssrf.validateUrl(url);
+ssrf.validateUrl(url, { timeoutMs: 1 });
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "import-equals.ts"), ["missingOptions"]);
+  });
+
+  it("accepts expression-free template option keys", () => {
+    const code = `import { validateUrl } from "ssrf-guard/node";
+validateUrl(url, { [\`timeoutMs\`]: 1000 });
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "template-key.ts"), []);
+  });
 });
 
 describe("require-options-on-imported-call helpers", () => {
@@ -302,6 +335,18 @@ describe("require-options-on-imported-call helpers", () => {
         type: "Property",
         computed: true,
         key: { type: "Literal", value: "timeoutMs" },
+      }),
+      "timeoutMs",
+    );
+    assert.equal(
+      __test.staticPropertyName({
+        type: "Property",
+        computed: true,
+        key: {
+          type: "TemplateLiteral",
+          expressions: [],
+          quasis: [{ type: "TemplateElement", value: { cooked: "timeoutMs" } }],
+        },
       }),
       "timeoutMs",
     );

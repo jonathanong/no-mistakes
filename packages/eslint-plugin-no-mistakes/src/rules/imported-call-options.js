@@ -2,7 +2,7 @@
 
 const { unwrapExpression } = require("./async-ast");
 const { compileTargets, matchingTargets } = require("./async-patterns");
-const { propertyName } = require("./module-mock-helpers");
+const { propertyName, literalString } = require("./module-mock-helpers");
 
 const importedCallOptionsSchema = [
   {
@@ -61,9 +61,7 @@ function compileImportedCallTargets(options) {
 
 function staticPropertyName(property) {
   if (property.type !== "Property") return null;
-  if (property.computed) {
-    return property.key.type === "Literal" ? String(property.key.value) : null;
-  }
+  if (property.computed) return literalString(property.key);
   return propertyName(property.key);
 }
 
