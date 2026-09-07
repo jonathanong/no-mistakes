@@ -110,13 +110,13 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
         self.push_scope();
         record_params(&function.params, self);
-        walk::walk_function(self, function, flags);
+        self.with_control_flow(|visitor| walk::walk_function(visitor, function, flags));
         self.pop_scope();
     }
 
     fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
         resolve::record_statements(&body.statements, self);
-        walk::walk_function_body(self, body);
+        self.with_control_flow(|visitor| walk::walk_function_body(visitor, body));
     }
 
     fn visit_arrow_function_expression(
@@ -125,7 +125,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     ) {
         self.push_scope();
         record_params(&arrow.params, self);
-        walk::walk_arrow_function_expression(self, arrow);
+        self.with_control_flow(|visitor| walk::walk_arrow_function_expression(visitor, arrow));
         self.pop_scope();
     }
 

@@ -13,6 +13,15 @@ pub(super) fn collect(sql: &str, statement: &Statement, out: &mut Vec<SqlSelectF
             }
         }
         Statement::CreateView(view) => collect_query(sql, &view.query, out),
+        Statement::CreateTable(table) => {
+            if let Some(query) = table.query.as_deref() {
+                collect_query(sql, query, out);
+            }
+        }
+        Statement::Copy {
+            source: sqlparser::ast::CopySource::Query(query),
+            ..
+        } => collect_query(sql, query, out),
         Statement::Explain { statement, .. } => collect(sql, statement, out),
         _ => {}
     }

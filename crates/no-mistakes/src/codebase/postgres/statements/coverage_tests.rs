@@ -13,6 +13,18 @@ fn create_view_and_explain_collect_selects() {
         .selects
         .iter()
         .any(|select| select.tables.contains(&"accounts".to_string())));
+    let ctas = extract_sql_statement_facts(
+        "CREATE TABLE snapshot AS SELECT id FROM accounts WHERE id = 1",
+    );
+    assert!(ctas
+        .selects
+        .iter()
+        .any(|select| select.tables.contains(&"accounts".to_string())));
+    let copy = extract_sql_statement_facts("COPY (SELECT id FROM accounts WHERE id = 1) TO STDOUT");
+    assert!(copy
+        .selects
+        .iter()
+        .any(|select| select.tables.contains(&"accounts".to_string())));
 }
 
 #[test]
