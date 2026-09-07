@@ -108,8 +108,13 @@ test("native CI jobs run only platform-specific Rust tests", () => {
   );
   assert.match(
     body,
-    /cargo test --locked -p no-mistakes --lib --all-features/,
+    /cargo test --locked -p no-mistakes --lib/,
     "macOS native jobs must compile only the no-mistakes lib tests",
+  );
+  assert.doesNotMatch(
+    body,
+    /cargo test --locked -p no-mistakes --lib --all-features/,
+    "native jobs must not compile test-instrumentation via --all-features",
   );
   assert.match(
     body,

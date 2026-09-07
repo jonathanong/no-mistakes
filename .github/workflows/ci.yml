@@ -374,7 +374,7 @@ jobs:
           if [[ "${{ runner.os }}" == "Windows" ]]; then
             cargo test --locked -p no-mistakes --test windows_job_object -- --exact --test-threads=1
           else
-            cargo test --locked -p no-mistakes --lib --all-features '${{ matrix.rust_test }}'
+            cargo test --locked -p no-mistakes --lib '${{ matrix.rust_test }}'
           fi
 
       - name: Run native CLI smoke test
