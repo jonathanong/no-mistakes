@@ -2,11 +2,10 @@
 //! among the EXISTS subquery's own FROM/WITH names. Shared UNION-arm locals
 //! and nested-subquery scopes are intentionally not modeled.
 
-use crate::codebase::postgres::idents::unwrap_expr;
-use crate::codebase::postgres::schema::relation_name;
+use crate::codebase::postgres::idents::{ident_key, unwrap_expr, visit_function_args};
 use sqlparser::ast::{
-    Expr, JoinConstraint, JoinOperator, Query, Select, SelectItem, SetExpr, TableFactor,
-    TableWithJoins,
+    Expr, GroupByExpr, Ident, JoinConstraint, JoinOperator, ObjectName, ObjectNamePart, Query,
+    Select, SelectItem, SetExpr, TableFactor, TableFunctionArgs, TableWithJoins,
 };
 use std::collections::HashSet;
 
@@ -19,7 +18,7 @@ pub(super) fn query_is_correlated(query: &Query) -> bool {
 fn collect_query_locals(query: &Query, local: &mut HashSet<String>) {
     if let Some(with) = &query.with {
         for cte in &with.cte_tables {
-            insert_name(local, &cte.alias.name.value);
+            insert_ident(local, &cte.alias.name);
         }
     }
     collect_set_locals(&query.body, local);
@@ -52,14 +51,14 @@ fn collect_factor_locals(factor: &TableFactor, local: &mut HashSet<String>) {
     match factor {
         TableFactor::Table { name, alias, .. } => {
             if let Some(alias) = alias {
-                insert_name(local, &alias.name.value);
-            } else {
-                insert_name(local, &relation_name(name));
+                insert_ident(local, &alias.name);
+            } else if let Some(ident) = object_ident(name) {
+                insert_ident(local, ident);
             }
         }
         TableFactor::Derived {
             alias: Some(alias), ..
-        } => insert_name(local, &alias.name.value),
+        } => insert_ident(local, &alias.name),
         TableFactor::NestedJoin {
             table_with_joins, ..
         } => collect_table_locals(table_with_joins, local),
@@ -67,9 +66,17 @@ fn collect_factor_locals(factor: &TableFactor, local: &mut HashSet<String>) {
     }
 }
 
-fn insert_name(local: &mut HashSet<String>, name: &str) {
-    if !name.is_empty() {
-        local.insert(name.to_ascii_lowercase());
+fn object_ident(name: &ObjectName) -> Option<&Ident> {
+    name.0.iter().rev().find_map(|part| match part {
+        ObjectNamePart::Identifier(ident) => Some(ident),
+        _ => None,
+    })
+}
+
+fn insert_ident(local: &mut HashSet<String>, ident: &Ident) {
+    let key = ident_key(ident);
+    if !key.is_empty() {
+        local.insert(key);
     }
 }
 
@@ -110,6 +117,12 @@ fn select_refs_outside(select: &Select, local: &HashSet<String>) -> bool {
             .from
             .iter()
             .any(|table| table_refs_outside(table, local))
+        || match &select.group_by {
+            GroupByExpr::Expressions(exprs, _) => {
+                exprs.iter().any(|expr| expr_refs_outside(expr, local))
+            }
+            GroupByExpr::All(_) => false,
+        }
 }
 
 fn table_refs_outside(table: &TableWithJoins, local: &HashSet<String>) -> bool {
@@ -126,6 +139,18 @@ fn factor_refs_outside(factor: &TableFactor, local: &HashSet<String>) -> bool {
         TableFactor::NestedJoin {
             table_with_joins, ..
         } => table_refs_outside(table_with_joins, local),
+        TableFactor::Table {
+            args: Some(TableFunctionArgs { args, .. }),
+            ..
+        } => {
+            let mut found = false;
+            visit_function_args(args, &mut |expr| {
+                if !found {
+                    found = expr_refs_outside(expr, local);
+                }
+            });
+            found
+        }
         _ => false,
     }
 }
@@ -146,13 +171,13 @@ fn join_on(operator: &JoinOperator) -> Option<&Expr> {
 fn expr_refs_outside(expr: &Expr, local: &HashSet<String>) -> bool {
     match unwrap_expr(expr) {
         Expr::CompoundIdentifier(parts) if parts.len() >= 2 => {
-            !local.contains(&parts[parts.len() - 2].value.to_ascii_lowercase())
+            !local.contains(&ident_key(&parts[parts.len() - 2]))
+        }
+        Expr::InSubquery { expr, subquery, .. } => {
+            expr_refs_outside(expr, local) || query_refs_outside(subquery, local)
         }
         Expr::Subquery(query)
         | Expr::Exists {
-            subquery: query, ..
-        }
-        | Expr::InSubquery {
             subquery: query, ..
         } => query_refs_outside(query, local),
         other => {

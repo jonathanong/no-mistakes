@@ -62,7 +62,22 @@ pub(crate) fn visit_child_exprs(expr: &Expr, visit: &mut impl FnMut(&Expr)) {
                 visit(item);
             }
         }
+        Expr::Like { expr, pattern, .. }
+        | Expr::ILike { expr, pattern, .. }
+        | Expr::SimilarTo { expr, pattern, .. }
+        | Expr::RLike { expr, pattern, .. } => {
+            visit(expr);
+            visit(pattern);
+        }
         _ => {}
+    }
+}
+
+pub(crate) fn ident_key(ident: &sqlparser::ast::Ident) -> String {
+    if ident.quote_style.is_some() {
+        ident.value.clone()
+    } else {
+        ident.value.to_ascii_lowercase()
     }
 }
 
@@ -82,7 +97,14 @@ fn visit_function_arg_exprs(function: &sqlparser::ast::Function, visit: &mut imp
     let sqlparser::ast::FunctionArguments::List(list) = &function.args else {
         return;
     };
-    for arg in &list.args {
+    visit_function_args(&list.args, visit);
+}
+
+pub(crate) fn visit_function_args(
+    args: &[sqlparser::ast::FunctionArg],
+    visit: &mut impl FnMut(&Expr),
+) {
+    for arg in args {
         if let Some(expr) = function_arg_expr(arg) {
             visit(expr);
         }

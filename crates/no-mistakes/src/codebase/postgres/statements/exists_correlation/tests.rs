@@ -277,3 +277,47 @@ fn function_inlist_star_and_natural_join_shapes() {
     );
     assert_eq!(natural, vec![(false, false)], "{natural:?}");
 }
+
+#[test]
+fn like_in_subquery_table_args_group_by_and_quoted_idents() {
+    let liked = exists_ops(
+        "SELECT 1 FROM posts WHERE EXISTS (
+            SELECT 1 FROM topics WHERE topics.name LIKE posts.pattern
+            UNION ALL
+            SELECT 1 FROM tags WHERE tags.name LIKE posts.pattern
+         )",
+    );
+    assert_eq!(liked, vec![(false, true)], "{liked:?}");
+    let in_left = exists_ops(
+        "SELECT 1 FROM posts WHERE EXISTS (
+            SELECT 1 FROM topics WHERE posts.id IN (SELECT post_id FROM allowed)
+            UNION ALL
+            SELECT 1 FROM tags WHERE posts.id IN (SELECT post_id FROM allowed)
+         )",
+    );
+    assert_eq!(in_left, vec![(false, true)], "{in_left:?}");
+    let table_args = exists_ops(
+        "SELECT 1 FROM posts WHERE EXISTS (
+            SELECT 1 FROM jsonb_array_elements(posts.tags) AS tag
+            UNION ALL
+            SELECT 1 FROM jsonb_array_elements(posts.tags) AS tag
+         )",
+    );
+    assert_eq!(table_args, vec![(false, true)], "{table_args:?}");
+    let grouped = exists_ops(
+        "SELECT 1 FROM posts WHERE EXISTS (
+            SELECT count(*) FROM topics GROUP BY posts.id
+            UNION ALL
+            SELECT count(*) FROM tags GROUP BY posts.id
+         )",
+    );
+    assert_eq!(grouped, vec![(false, true)], "{grouped:?}");
+    let quoted = exists_ops(
+        r#"SELECT 1 FROM "Posts" WHERE EXISTS (
+            SELECT 1 FROM topics AS posts WHERE topics.post_id = "Posts".id
+            UNION ALL
+            SELECT 1 FROM tags WHERE tags.post_id = "Posts".id
+         )"#,
+    );
+    assert_eq!(quoted, vec![(false, true)], "{quoted:?}");
+}

@@ -28,6 +28,14 @@ fn collect_ident_names_walks_case_between_in_and_truth_tests() {
     assert_eq!(projection_names("SELECT flag IS FALSE"), ["flag"]);
     assert_eq!(projection_names("SELECT id IN (note, 0)"), ["id", "note"]);
     assert_eq!(projection_names("SELECT ((id))"), ["id"]);
+    assert_eq!(
+        projection_names("SELECT name LIKE pattern"),
+        ["name", "pattern"]
+    );
+    assert_eq!(
+        projection_names("SELECT name ILIKE pattern"),
+        ["name", "pattern"]
+    );
 }
 
 #[test]
