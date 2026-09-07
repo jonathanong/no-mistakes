@@ -145,3 +145,28 @@ fn insert_source_without_query_or_rows_is_unstable() {
         super::insert::from_insert(sql, &insert, 1, true).assignments
     );
 }
+
+#[test]
+fn insert_set_assignments_are_kept() {
+    let sql = "INSERT INTO items (id, seen) VALUES (1, 'a')";
+    let Statement::Insert(mut insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
+        panic!("insert");
+    };
+    let Statement::Update(update) = parse_postgres_sql("UPDATE items SET seen = now()")
+        .unwrap()
+        .pop()
+        .unwrap()
+    else {
+        panic!("update");
+    };
+    insert.assignments = update.assignments;
+    assert!(
+        super::insert::from_insert(sql, &insert, 1, true)
+            .assignments
+            .iter()
+            .any(|assignment| assignment.column == "seen"
+                && matches!(assignment.form, super::SqlValueForm::Volatile { .. })),
+        "{:#?}",
+        super::insert::from_insert(sql, &insert, 1, true).assignments
+    );
+}

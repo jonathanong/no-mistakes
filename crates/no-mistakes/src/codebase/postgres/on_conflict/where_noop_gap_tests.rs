@@ -1,5 +1,7 @@
 use super::{judge_file, Catalog};
-use crate::codebase::postgres::statement_facts::SqlTriggerFact;
+use crate::codebase::postgres::statement_facts::{
+    SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod,
+};
 use crate::codebase::postgres::statements::extract_sql_statement_facts;
 
 fn catalog<'a>(
@@ -117,11 +119,20 @@ fn before_insert_rewrite_is_not_a_noop() {
 fn instead_of_insert_rewrite_is_not_a_noop() {
     let file =
         extract_sql_statement_facts(&sql("INSERT INTO items (id, a, b) VALUES (1, 'x', 'y')"));
-    let triggers = extract_sql_statement_facts(
+    let mut triggers = extract_sql_statement_facts(
         "CREATE TRIGGER n INSTEAD OF INSERT ON items FOR EACH ROW EXECUTE FUNCTION normalize();
          CREATE TRIGGER t AFTER UPDATE OF a ON items FOR EACH ROW EXECUTE FUNCTION audit();",
     )
     .triggers;
+    // sqlparser may map INSTEAD OF to BEFORE; pin the fact so the INSERT rewrite
+    // arm is covered even when the SQL period token is normalized.
+    for trigger in &mut triggers {
+        if trigger.function.eq_ignore_ascii_case("normalize") {
+            trigger.period = SqlTriggerPeriod::InsteadOf;
+            trigger.for_each_row = true;
+            trigger.events = vec![SqlTriggerEvent::Insert];
+        }
+    }
     let writes = [("normalize".to_string(), vec!["b".to_string()])];
     let replay_safe = ["normalize".to_string()];
     let found = judge_file(&file, &catalog(&triggers, &writes, &replay_safe));
