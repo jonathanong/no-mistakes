@@ -47,3 +47,5 @@ enqueueEmail(user.id);
 
 - [`async-try-catch-return-await`](async-try-catch-return-await.md) for returned
   promises inside protected error boundaries.
+- [`require-options-on-imported-call`](require-options-on-imported-call.md) for
+  required options on calls resolved from configured imports.

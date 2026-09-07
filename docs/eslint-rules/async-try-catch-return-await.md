@@ -53,3 +53,5 @@ return enqueueEmail(user.id);
 
 - [`async-call-disposition`](async-call-disposition.md) for all configured
   async calls, including non-returned calls.
+- [`require-options-on-imported-call`](require-options-on-imported-call.md) for
+  required options on calls resolved from configured imports.

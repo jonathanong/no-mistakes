@@ -1,67 +1,8 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const { compileTargets, matchesAny, targetMatches } = require("./async-patterns");
 const { propertyName } = require("./module-mock-helpers");
-
-function safeRegExp(source) {
-  try {
-    return new RegExp(source);
-  } catch {
-    return null;
-  }
-}
-
-function patternToRegExp(pattern) {
-  if (pattern.startsWith("/") && pattern.endsWith("/") && pattern.length > 2) {
-    return safeRegExp(pattern.slice(1, -1));
-  }
-  let source = "^";
-  for (let index = 0; index < pattern.length; index += 1) {
-    const ch = pattern[index];
-    const next = pattern[index + 1];
-    if (ch === "*" && next === "*") {
-      if (pattern[index + 2] === "/") {
-        source += "(?:.*/)?";
-        index += 2;
-      } else {
-        source += ".*";
-        index += 1;
-      }
-    } else if (ch === "*") {
-      source += "[^/]*";
-    } else if (ch === "?") {
-      source += "[^/]";
-    } else {
-      source += ch.replace(/[\\^$+?.()|[\]{}]/g, "\\$&");
-    }
-  }
-  return safeRegExp(`${source}$`);
-}
-
-function compileTargets(options, optionKey) {
-  return (options[optionKey] || [])
-    .map((target) => ({
-      sourceSpecifierPatterns: (target.sourceSpecifierPatterns || [])
-        .map(patternToRegExp)
-        .filter(Boolean),
-      calleeNamePatterns: (target.calleeNamePatterns || []).map(patternToRegExp).filter(Boolean),
-    }))
-    .filter(
-      (target) => target.sourceSpecifierPatterns.length > 0 && target.calleeNamePatterns.length > 0,
-    );
-}
-
-function matchesAny(value, patterns) {
-  return typeof value === "string" && patterns.some((pattern) => pattern.test(value));
-}
-
-function targetMatches(targets, source, calleeName) {
-  return targets.some(
-    (target) =>
-      matchesAny(source, target.sourceSpecifierPatterns) &&
-      matchesAny(calleeName, target.calleeNamePatterns),
-  );
-}
 
 function findVariable(scope, name) {
   while (scope) {
@@ -150,28 +91,33 @@ function createTargetMatcher(context, optionKey = "targets") {
     }
   }
 
-  function isDirectTarget(node) {
-    if (node.type !== "Identifier") return false;
+  function resolveDirectTarget(node) {
+    if (node.type !== "Identifier") return null;
     const variable = resolveVariable(node, context);
-    return Boolean(variable && directBindings.has(variable));
+    return (variable && directBindings.get(variable)) || null;
   }
 
-  function isNamespaceTarget(node) {
-    if (node.type !== "MemberExpression") return false;
+  function resolveNamespaceTarget(node) {
+    if (node.type !== "MemberExpression") return null;
     const name = memberPropertyName(node);
-    if (!name) return false;
+    if (!name) return null;
     const source =
       requireSource(node.object) ||
       (node.object.type === "Identifier"
         ? namespaceBindings.get(resolveVariable(node.object, context))
         : null);
-    return Boolean(source && targetMatches(targets, source, name));
+    return source && targetMatches(targets, source, name) ? { source, calleeName: name } : null;
+  }
+
+  function resolveCallTarget(node) {
+    return resolveDirectTarget(node.callee) || resolveNamespaceTarget(node.callee);
   }
 
   return {
     hasTargets: targets.length > 0,
+    resolveCallTarget,
     isTargetCall(node) {
-      return isDirectTarget(node.callee) || isNamespaceTarget(node.callee);
+      return Boolean(resolveCallTarget(node));
     },
     visitors: {
       Program: recordProgramRequires,
