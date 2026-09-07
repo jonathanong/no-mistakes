@@ -25,12 +25,17 @@ fn mask_regions(sql: &str) -> String {
             index = skip_block_comment(&chars, index, &mut out);
             continue;
         }
+        if matches!(chars[index], 'e' | 'E') && chars.get(index + 1) == Some(&'\'') {
+            out.push(' ');
+            index = skip_quote(&chars, index + 1, '\'', &mut out, true);
+            continue;
+        }
         if chars[index] == '\'' {
-            index = skip_quote(&chars, index, '\'', &mut out);
+            index = skip_quote(&chars, index, '\'', &mut out, false);
             continue;
         }
         if chars[index] == '"' {
-            index = skip_quote(&chars, index, '"', &mut out);
+            index = skip_quote(&chars, index, '"', &mut out, false);
             continue;
         }
         if chars[index] == '$' {
@@ -64,13 +69,21 @@ fn skip_block_comment(chars: &[char], mut index: usize, out: &mut String) -> usi
     index
 }
 
-fn skip_quote(chars: &[char], start: usize, quote: char, out: &mut String) -> usize {
+fn skip_quote(chars: &[char], start: usize, quote: char, out: &mut String, escaped: bool) -> usize {
     out.push(' ');
     let mut index = start + 1;
     while index < chars.len() {
         out.push(' ');
+        if escaped && chars[index] == '\\' {
+            if index + 1 < chars.len() {
+                out.push(' ');
+                index += 2;
+                continue;
+            }
+            return chars.len();
+        }
         if chars[index] == quote {
-            if index + 1 < chars.len() && chars[index + 1] == quote {
+            if !escaped && index + 1 < chars.len() && chars[index + 1] == quote {
                 out.push(' ');
                 index += 2;
                 continue;

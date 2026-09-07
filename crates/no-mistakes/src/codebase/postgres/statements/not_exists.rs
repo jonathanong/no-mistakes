@@ -75,5 +75,5 @@ fn ident_boundary(text: &str, end: usize) -> bool {
     let Some(&next) = text.as_bytes().get(end) else {
         return true;
     };
-    !next.is_ascii_alphanumeric() && next != b'_' && next != b'$'
+    !next.is_ascii_alphanumeric() && next != b'_' && next != b'$' && next < 0x80
 }

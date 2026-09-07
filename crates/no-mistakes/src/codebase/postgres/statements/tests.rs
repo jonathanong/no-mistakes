@@ -207,13 +207,16 @@ fn existsfoo_identifier_is_not_a_not_exists_guard() {
     assert!(super::has_top_level_not_exists_in(
         "INSERT INTO items (id) SELECT 1 WHERE NOT EXISTS (SELECT 1)"
     ));
+    assert!(!super::has_top_level_not_exists_in(
+        "INSERT INTO items (id) SELECT 1 WHERE NOT EXISTSé (SELECT 1)"
+    ));
 }
 
 #[test]
 fn comment_apostrophe_does_not_hide_insert_keywords() {
     let facts =
         extract_sql_statement_facts("-- '\nINSERT INTO items (id) VALUES (1);\nINSERT INTO");
-    assert!(facts.insert_keyword_count >= 2, "{facts:?}");
+    assert_eq!(facts.insert_keyword_count, 2, "{facts:?}");
 }
 
 #[test]

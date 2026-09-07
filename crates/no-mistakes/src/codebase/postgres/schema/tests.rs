@@ -430,13 +430,24 @@ fn generated_expr_walk_covers_remaining_ident_shapes() {
            j boolean GENERATED ALWAYS AS (note LIKE 'x%') STORED
          );",
     );
-    let sources: Vec<_> = tables[0]
-        .columns
-        .iter()
-        .filter(|column| column.is_generated)
-        .flat_map(|column| column.generated_source_columns.clone())
-        .collect();
-    assert!(sources.contains(&"id".to_string()), "{sources:?}");
-    assert!(sources.contains(&"note".to_string()), "{sources:?}");
-    assert!(sources.contains(&"flag".to_string()), "{sources:?}");
+    let table = &tables[0];
+    let sources = |name: &str| {
+        table
+            .columns
+            .iter()
+            .find(|column| column.name == name)
+            .unwrap()
+            .generated_source_columns
+            .clone()
+    };
+    assert_eq!(sources("a"), ["id"]);
+    assert_eq!(sources("b"), ["id"]);
+    assert_eq!(sources("c"), ["id"]);
+    assert_eq!(sources("d"), ["note"]);
+    assert!(sources("e").contains(&"flag".to_string()) && sources("e").contains(&"id".to_string()));
+    assert!(sources("f").contains(&"flag".to_string()));
+    assert_eq!(sources("g"), ["flag"]);
+    assert_eq!(sources("h"), ["flag"]);
+    assert_eq!(sources("i"), ["id"]);
+    assert!(sources("j").is_empty(), "{:?}", sources("j"));
 }

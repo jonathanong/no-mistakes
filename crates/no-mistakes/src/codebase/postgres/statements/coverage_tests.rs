@@ -149,7 +149,7 @@ fn dollar_and_escaped_quotes_do_not_count_inserts() {
     let facts = extract_sql_statement_facts(
         "SELECT $tag$INSERT INTO decoy$tag$; SELECT E'it\\'s INSERT INTO x'",
     );
-    assert!(facts.insert_keyword_count <= 1, "{facts:?}");
+    assert_eq!(facts.insert_keyword_count, 0, "{facts:?}");
 }
 
 #[test]
