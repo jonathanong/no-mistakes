@@ -1,7 +1,7 @@
 /// Mask comments, quoted strings, and dollar-quoted bodies in one scan so
 /// comment markers inside literals and quotes inside comments cannot nest.
 pub fn mask_quoted_sql(sql: &str) -> String {
-    mask_regions(sql)
+    mask_comments(sql)
 }
 
 /// Same one-pass mask as [`mask_quoted_sql`].
