@@ -64,10 +64,13 @@ fn collect_one(
     selects: &mut Vec<SqlSelectFact>,
     triggers: &mut Vec<SqlTriggerFact>,
 ) {
-    if matches!(statement, Statement::Insert(_)) {
+    if let Statement::Insert(insert) = statement {
         *insert_n += 1;
         if let Some(fact) = insert::from_statement(sql, statement, *insert_n) {
             inserts.push(fact);
+        }
+        if let Some(source) = insert.source.as_deref() {
+            collect_query_inserts(sql, source, insert_n, inserts);
         }
     }
     if matches!(statement, Statement::CreateTrigger(_)) {

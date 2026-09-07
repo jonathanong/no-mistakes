@@ -86,8 +86,12 @@ fn collect_derived_queries(sql: &str, from: &[TableWithJoins], out: &mut Vec<Sql
 }
 
 fn collect_derived_factor(sql: &str, table: &TableFactor, out: &mut Vec<SqlSelectFact>) {
-    if let TableFactor::Derived { subquery, .. } = table {
-        collect_query(sql, subquery, out);
+    match table {
+        TableFactor::Derived { subquery, .. } => collect_query(sql, subquery, out),
+        TableFactor::NestedJoin {
+            table_with_joins, ..
+        } => collect_derived_queries(sql, std::slice::from_ref(table_with_joins), out),
+        _ => {}
     }
 }
 

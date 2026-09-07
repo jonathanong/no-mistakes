@@ -345,6 +345,21 @@ fn append_inside_unbraced_loop_is_dynamic() {
 }
 
 #[test]
+fn append_inside_switch_ternary_or_logical_is_dynamic() {
+    for name in [
+        "composed-append-switch.ts",
+        "composed-append-ternary.ts",
+        "composed-append-and.ts",
+    ] {
+        assert_eq!(
+            extract(name).calls[0].kind,
+            super::EmbeddedSqlKind::Dynamic,
+            "{name}"
+        );
+    }
+}
+
+#[test]
 fn reassigned_let_is_dynamic() {
     let facts = extract("dynamic-let.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);

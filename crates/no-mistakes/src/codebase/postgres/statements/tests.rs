@@ -171,3 +171,40 @@ fn prepare_inner_insert_is_executed() {
     assert_eq!(facts.inserts.len(), 1);
     assert!(facts.inserts[0].executed);
 }
+
+#[test]
+fn insert_source_cte_insert_is_collected() {
+    let facts = extract_sql_statement_facts(
+        "INSERT INTO parent (id)
+         WITH added AS (INSERT INTO items (id) VALUES (1) RETURNING id)
+         SELECT id FROM added",
+    );
+    assert_eq!(facts.inserts.len(), 2, "{:#?}", facts.inserts);
+    assert!(facts.inserts.iter().any(|insert| insert.table == "parent"));
+    assert!(facts.inserts.iter().any(|insert| insert.table == "items"));
+}
+
+#[test]
+fn nested_join_derived_table_is_collected() {
+    let facts = extract_sql_statement_facts(
+        "SELECT * FROM (items JOIN (SELECT id FROM accounts WHERE id = 1) AS a ON items.id = a.id)",
+    );
+    assert!(
+        facts
+            .selects
+            .iter()
+            .any(|select| select.tables.iter().any(|table| table == "accounts")),
+        "{:#?}",
+        facts.selects
+    );
+}
+
+#[test]
+fn existsfoo_identifier_is_not_a_not_exists_guard() {
+    assert!(!super::has_top_level_not_exists_in(
+        "INSERT INTO items (id) SELECT 1 WHERE NOT EXISTSfoo (SELECT 1)"
+    ));
+    assert!(super::has_top_level_not_exists_in(
+        "INSERT INTO items (id) SELECT 1 WHERE NOT EXISTS (SELECT 1)"
+    ));
+}

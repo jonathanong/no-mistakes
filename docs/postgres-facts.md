@@ -9,10 +9,11 @@ These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`,
-`postgres-constraint-validate`, `postgres-no-add-column`,
-`postgres-required-predicates`, `postgres-sql-shape-policy`, and
-`postgres-idempotent-insert` consume
-the facts through `no-mistakes check`.
+`postgres-constraint-validate`, and `postgres-no-add-column`
+consume the facts through `no-mistakes check`. Forthcoming DML rules
+(`postgres-required-predicates`, `postgres-sql-shape-policy`,
+`postgres-idempotent-insert`) will consume the same INSERT/SELECT facts
+once registered.
 
 ## Schema facts
 

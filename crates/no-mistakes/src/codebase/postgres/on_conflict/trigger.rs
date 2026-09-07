@@ -14,7 +14,8 @@ pub(super) fn judge(
         .iter()
         .map(|assignment| assignment.column.clone())
         .collect();
-    let generated_sources = generated_arbiter_sources(insert, conflict, catalog);
+    let generated_sources =
+        super::generated::arbiter_source_columns(insert, conflict, catalog.schema);
     let arbiter_columns = match &conflict.arbiter {
         SqlConflictArbiter::Columns(columns) => columns.clone(),
         _ => Vec::new(),
@@ -48,6 +49,12 @@ fn unsafe_reason(
         .iter()
         .any(|name| name.eq_ignore_ascii_case(&trigger.function));
     let writes = written_columns(trigger, catalog);
+    let applies = (trigger.for_each_row
+        && (fires_insert(trigger) || fires_update(trigger, assigned)))
+        || (!trigger.for_each_row && (fires_insert(trigger) || has_update_event(trigger)));
+    if !applies {
+        return None;
+    }
     if allowlisted
         && writes.iter().any(|column| {
             generated_sources
@@ -64,9 +71,6 @@ fn unsafe_reason(
         ));
     }
     if !trigger.for_each_row {
-        if !fires_insert(trigger) && !has_update_event(trigger) {
-            return None;
-        }
         return if allowlisted {
             None
         } else {
@@ -120,36 +124,6 @@ fn written_columns(trigger: &SqlTriggerFact, catalog: &Catalog<'_>) -> Vec<Strin
         .collect()
 }
 
-fn generated_arbiter_sources(
-    insert: &SqlInsertFact,
-    conflict: &SqlOnConflictFact,
-    catalog: &Catalog<'_>,
-) -> Vec<String> {
-    let SqlConflictArbiter::Columns(arbiter) = &conflict.arbiter else {
-        return Vec::new();
-    };
-    catalog
-        .schema
-        .iter()
-        .flat_map(|file| file.tables.iter())
-        .filter(|table| table.table_name.eq_ignore_ascii_case(&insert.table))
-        .flat_map(|table| table.columns.iter())
-        .filter(|column| {
-            column.is_generated
-                && arbiter
-                    .iter()
-                    .any(|name| name.eq_ignore_ascii_case(&column.name))
-        })
-        .flat_map(|column| {
-            if column.generated_source_columns.is_empty() {
-                column.generated_function_arg_columns.clone()
-            } else {
-                column.generated_source_columns.clone()
-            }
-        })
-        .collect()
-}
-
 fn fires_insert(trigger: &SqlTriggerFact) -> bool {
     trigger
         .events
@@ -181,15 +155,19 @@ fn where_proves_noop(conflict: &SqlOnConflictFact, assigned: &[String]) -> bool 
         return false;
     }
     assigned.iter().all(|column| {
-        conflict
-            .where_proof
-            .distinct_from_excluded
-            .iter()
-            .any(|name| name.eq_ignore_ascii_case(column))
-            || conflict
-                .where_proof
-                .null_and_excluded_not_null
-                .iter()
-                .any(|name| name.eq_ignore_ascii_case(column))
+        conflict.assignments.iter().any(|assignment| {
+            assignment.column.eq_ignore_ascii_case(column)
+                && super::form_is_excluded(&assignment.form, column)
+                && (conflict
+                    .where_proof
+                    .distinct_from_excluded
+                    .iter()
+                    .any(|name| name.eq_ignore_ascii_case(column))
+                    || conflict
+                        .where_proof
+                        .null_and_excluded_not_null
+                        .iter()
+                        .any(|name| name.eq_ignore_ascii_case(column)))
+        })
     })
 }

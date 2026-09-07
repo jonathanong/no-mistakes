@@ -5,6 +5,9 @@ mod convergence;
 mod generated;
 mod trigger;
 
+#[cfg(test)]
+mod trigger_tests;
+
 use crate::codebase::postgres::statement_facts::{
     SqlInsertFact, SqlOnConflictAction, SqlStatementFileFacts, SqlTriggerFact, SqlValueForm,
 };

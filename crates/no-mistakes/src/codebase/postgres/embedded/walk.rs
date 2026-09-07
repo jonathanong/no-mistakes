@@ -167,6 +167,24 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_do_while_statement(&mut self, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
         self.with_control_flow(|visitor| walk::walk_do_while_statement(visitor, statement));
     }
+
+    fn visit_switch_statement(&mut self, statement: &oxc_ast::ast::SwitchStatement<'a>) {
+        self.visit_expression(&statement.discriminant);
+        self.with_control_flow(|visitor| visitor.visit_switch_cases(&statement.cases));
+    }
+
+    fn visit_conditional_expression(&mut self, expr: &oxc_ast::ast::ConditionalExpression<'a>) {
+        self.visit_expression(&expr.test);
+        self.with_control_flow(|visitor| {
+            visitor.visit_expression(&expr.consequent);
+            visitor.visit_expression(&expr.alternate);
+        });
+    }
+
+    fn visit_logical_expression(&mut self, expr: &oxc_ast::ast::LogicalExpression<'a>) {
+        self.visit_expression(&expr.left);
+        self.with_control_flow(|visitor| visitor.visit_expression(&expr.right));
+    }
 }
 
 fn record_params(params: &FormalParameters<'_>, visitor: &mut ScopeVisitor<'_>) {

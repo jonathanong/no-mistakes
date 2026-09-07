@@ -62,13 +62,18 @@ fn match_guard(text: &str, index: usize) -> bool {
         return false;
     }
     let rest = &text[index..];
-    rest.starts_with("where not exists") || rest.starts_with("and not exists")
+    ["where not exists", "and not exists"]
+        .into_iter()
+        .any(|prefix| rest.starts_with(prefix) && ident_boundary(rest, prefix.len()))
 }
 
 fn token_start(text: &str, index: usize) -> bool {
-    if index == 0 {
+    index == 0 || ident_boundary(text, index - 1)
+}
+
+fn ident_boundary(text: &str, end: usize) -> bool {
+    let Some(&next) = text.as_bytes().get(end) else {
         return true;
-    }
-    let prev = text.as_bytes()[index - 1];
-    !prev.is_ascii_alphanumeric() && prev != b'_'
+    };
+    !next.is_ascii_alphanumeric() && next != b'_' && next != b'$'
 }

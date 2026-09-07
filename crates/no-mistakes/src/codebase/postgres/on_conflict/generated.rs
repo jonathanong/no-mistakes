@@ -53,3 +53,32 @@ pub(super) fn judge(
     }
     None
 }
+
+pub(super) fn arbiter_source_columns(
+    insert: &SqlInsertFact,
+    conflict: &SqlOnConflictFact,
+    schema: &[SqlSchemaFileFacts],
+) -> Vec<String> {
+    let SqlConflictArbiter::Columns(arbiter) = &conflict.arbiter else {
+        return Vec::new();
+    };
+    schema
+        .iter()
+        .flat_map(|file| file.tables.iter())
+        .filter(|table| table.table_name.eq_ignore_ascii_case(&insert.table))
+        .flat_map(|table| table.columns.iter())
+        .filter(|column| {
+            column.is_generated
+                && arbiter
+                    .iter()
+                    .any(|name| name.eq_ignore_ascii_case(&column.name))
+        })
+        .flat_map(|column| {
+            if column.generated_source_columns.is_empty() {
+                column.generated_function_arg_columns.clone()
+            } else {
+                column.generated_source_columns.clone()
+            }
+        })
+        .collect()
+}
