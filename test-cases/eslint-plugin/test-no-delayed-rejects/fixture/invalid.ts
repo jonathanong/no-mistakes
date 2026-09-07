@@ -91,6 +91,12 @@ export async function conditionalCatchDoesNotDominate() {
   await expect(update).rejects.toThrow();
 }
 
+export async function conditionalCatchInsideAwaitDoesNotDominate(flag: boolean) {
+  const update = startOperation();
+  await (flag && update.catch((error: unknown) => error));
+  await expect(update).rejects.toThrow();
+}
+
 export async function absentCatchHandler() {
   const update = startOperation();
   void update.catch(undefined);
@@ -103,6 +109,13 @@ export async function rethrowingCatchCreatesUnhandledChild() {
   void update.catch((error: unknown) => {
     throw error;
   });
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function destructuredCatchHandlerIsNotProvablySafe() {
+  const update = startOperation();
+  void update.catch(({ message }: Error) => message);
   await release();
   await expect(update).rejects.toThrow();
 }

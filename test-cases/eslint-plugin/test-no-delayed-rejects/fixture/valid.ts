@@ -39,6 +39,12 @@ export async function immediateThenObserver() {
   await expect(update).rejects.toThrow();
 }
 
+export async function observerAttachedInsideAwait() {
+  const update = startOperation();
+  await update.catch((error: unknown) => error);
+  await expect(update).rejects.toThrow();
+}
+
 export async function observerDominatesNestedAwait(flag: boolean) {
   const update = startOperation();
   void update.catch((error: unknown) => error);
@@ -51,6 +57,21 @@ export async function terminatingBranchDoesNotReachAssertion(skip: boolean) {
   if (skip) {
     await release();
     return;
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function returnAwaitDoesNotReachAssertion(skip: boolean) {
+  const update = startOperation();
+  if (skip) return await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function throwingBranchDoesNotReachAssertion(skip: boolean) {
+  const update = startOperation();
+  if (skip) {
+    await release();
+    throw new Error("expected");
   }
   await expect(update).rejects.toThrow();
 }
