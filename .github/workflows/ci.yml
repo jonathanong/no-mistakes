@@ -358,7 +358,8 @@ jobs:
           NO_MISTAKES_TEST_NAPI_ADDON_PATH="$addon_path" pnpm exec vitest run packages/no-mistakes/scripts/real-napi-api.test.js --coverage=false
 
       - name: Report native job timing
-        if: ${{ always() && github.event_name == 'pull_request' }}
+        if: ${{ always() && github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository }}
+        continue-on-error: true
         timeout-minutes: 2
         shell: bash
         env:

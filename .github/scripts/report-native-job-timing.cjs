@@ -114,8 +114,12 @@ async function ghJson(args) {
   return JSON.parse(output);
 }
 
+function isSuccessfulRun(run) {
+  return run?.status === "completed" && run?.conclusion === "success";
+}
+
 function findJob(jobs, jobName) {
-  return (jobs ?? []).find((job) => job.name === jobName) ?? null;
+  return (jobs ?? []).find((job) => job.name === jobName && job.conclusion === "success") ?? null;
 }
 
 async function loadJobs(repository, runId) {
@@ -136,13 +140,15 @@ async function findBeforeJob({ repository, workflow, jobName, baseSha, baseRef }
     workflow,
     "--commit",
     baseSha,
+    "--status",
+    "success",
     "--json",
     "databaseId,conclusion,status,headSha",
     "--limit",
     "20",
   ]);
   for (const run of shaRuns) {
-    if (run.status !== "completed") {
+    if (!isSuccessfulRun(run)) {
       continue;
     }
     const jobs = await loadJobs(repository, run.databaseId);
@@ -191,11 +197,18 @@ function ghWrite(args, payload) {
 }
 
 async function upsertComment({ repository, prNumber, marker, body }) {
-  const comments = await ghJson([
-    "api",
-    `repos/${repository}/issues/${prNumber}/comments?per_page=100`,
-  ]);
-  const existing = (comments ?? []).find((comment) => (comment.body ?? "").includes(marker));
+  const { execFileSync } = require("node:child_process");
+  const output = execFileSync(
+    "gh",
+    ["api", "--paginate", `repos/${repository}/issues/${prNumber}/comments`, "--jq", ".[]"],
+    { encoding: "utf8", env: process.env, stdio: ["ignore", "pipe", "pipe"] },
+  );
+  const comments = output
+    .split("\n")
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => JSON.parse(line));
+  const existing = comments.find((comment) => (comment.body ?? "").includes(marker));
   const payload = JSON.stringify({ body });
   if (existing) {
     ghWrite(
@@ -284,9 +297,11 @@ module.exports = {
   buildMarkdown,
   commentMarker,
   durationSeconds,
+  findJob,
   formatDelta,
   formatDuration,
   interestingStep,
+  isSuccessfulRun,
 };
 
 if (require.main === module) {

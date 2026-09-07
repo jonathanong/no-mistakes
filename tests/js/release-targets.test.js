@@ -117,6 +117,11 @@ test("native CI jobs run only platform-specific Rust tests", () => {
     "Windows must run the Job Object regression as an integration test",
   );
   assert.match(body, /rust_test: ["']invocation::["']/);
+  assert.match(
+    body,
+    /head\.repo\.full_name == github\.repository/,
+    "native timing comments must not run on fork PRs where GITHUB_TOKEN cannot write",
+  );
   assert.match(body, /Run native CLI smoke test/);
   assert.match(body, /real-napi-api\.test\.js/);
   assert.match(

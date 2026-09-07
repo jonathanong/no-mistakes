@@ -2,8 +2,10 @@ const assert = require("node:assert/strict");
 const {
   buildMarkdown,
   commentMarker,
+  findJob,
   formatDelta,
   formatDuration,
+  isSuccessfulRun,
 } = require("../../.github/scripts/report-native-job-timing.cjs");
 
 test("formats durations and deltas", () => {
@@ -59,4 +61,20 @@ test("builds a before/after comment for the native job", () => {
   assert.match(markdown, /9m 25s/);
   assert.match(markdown, /Run platform-specific Rust tests/);
   assert.match(markdown, /Build native CLI and N-API addon/);
+});
+
+test("baselines ignore unsuccessful runs and jobs", () => {
+  assert.equal(isSuccessfulRun({ status: "completed", conclusion: "success" }), true);
+  assert.equal(isSuccessfulRun({ status: "completed", conclusion: "failure" }), false);
+  assert.equal(isSuccessfulRun({ status: "completed", conclusion: "cancelled" }), false);
+  assert.equal(
+    findJob(
+      [
+        { name: "Native tests (Windows x64)", conclusion: "cancelled" },
+        { name: "Native tests (Windows x64)", conclusion: "success" },
+      ],
+      "Native tests (Windows x64)",
+    )?.conclusion,
+    "success",
+  );
 });
