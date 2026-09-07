@@ -12,16 +12,16 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 
 ## Async and module boundaries
 
-| Rule                                                              | Purpose                                                                 |
-| ----------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| [`async-call-disposition`](async-call-disposition.md)             | Make configured async calls awaited, returned, or explicitly detached.  |
-| [`async-try-catch-return-await`](async-try-catch-return-await.md) | Keep configured promise rejections inside the intended `try`/`catch`.   |
-| [`await-array-methods`](await-array-methods.md)                   | Reject awaiting synchronous array helpers.                              |
-| [`no-inline-noop-promise-catch`](no-inline-noop-promise-catch.md) | Reject inline Promise catch callbacks that do not handle the rejection. |
-| [`require-options-on-imported-call`](require-options-on-imported-call.md) | Require configured properties in an imported call's options argument. |
-| [`test-no-delayed-rejects`](test-no-delayed-rejects.md)           | Observe expected promise rejections before coordination awaits.         |
-| [`module-mock-boundary`](module-mock-boundary.md)                 | Restrict configured internal module mocks.                              |
-| [`module-mock-preserve-exports`](module-mock-preserve-exports.md) | Preserve untouched exports in allowed internal module mocks.            |
+| Rule                                                                      | Purpose                                                                 |
+| ------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| [`async-call-disposition`](async-call-disposition.md)                     | Make configured async calls awaited, returned, or explicitly detached.  |
+| [`async-try-catch-return-await`](async-try-catch-return-await.md)         | Keep configured promise rejections inside the intended `try`/`catch`.   |
+| [`await-array-methods`](await-array-methods.md)                           | Reject awaiting synchronous array helpers.                              |
+| [`no-inline-noop-promise-catch`](no-inline-noop-promise-catch.md)         | Reject inline Promise catch callbacks that do not handle the rejection. |
+| [`require-options-on-imported-call`](require-options-on-imported-call.md) | Require configured properties in an imported call's options argument.   |
+| [`test-no-delayed-rejects`](test-no-delayed-rejects.md)                   | Observe expected promise rejections before coordination awaits.         |
+| [`module-mock-boundary`](module-mock-boundary.md)                         | Restrict configured internal module mocks.                              |
+| [`module-mock-preserve-exports`](module-mock-preserve-exports.md)         | Preserve untouched exports in allowed internal module mocks.            |
 
 ## Next.js and server boundaries
 
