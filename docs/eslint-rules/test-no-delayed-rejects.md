@@ -41,6 +41,11 @@ const update = updateCommunityAgentPrompt(input);
 await expect(update).rejects.toThrow();
 ```
 
+Directly awaiting the promise or passing it directly in an array to built-in
+`Promise.allSettled` also observes its rejection. The built-in `Promise.all`,
+`any`, and `race` are recognized when their aggregate promise is immediately
+awaited; otherwise that promise can become the new unhandled rejection.
+
 The same direct binding may be asserted later when it first receives an
 unconditional, structurally non-rejecting `catch` or rejection-side `then`
 handler. The recognized handler may return a literal, `void 0`, or nothing.

@@ -5,6 +5,8 @@ declare function loadExpected(): Promise<unknown>;
 declare function loadHandler(): Promise<(value: void) => void>;
 declare function startOperation(): Promise<void>;
 declare function dangerous(): void;
+declare const maybeRelease: undefined | ((value: Promise<void>) => Promise<void>);
+declare const maybeCoordinator: undefined | { release(value: Promise<void>): Promise<void> };
 
 export async function oneAwait() {
   const update = startOperation();
@@ -217,6 +219,40 @@ export async function conditionalCatchDoesNotDominate() {
 export async function conditionalCatchInsideAwaitDoesNotDominate(flag: boolean) {
   const update = startOperation();
   await (flag && update.catch(() => undefined));
+  await expect(update).rejects.toThrow();
+}
+
+export async function optionalCallCatchDoesNotDominate() {
+  const update = startOperation();
+  await maybeRelease?.(update.catch(() => void 0));
+  await expect(update).rejects.toThrow();
+}
+
+export async function optionalMemberCallCatchDoesNotDominate() {
+  const update = startOperation();
+  await maybeCoordinator?.release(update.catch(() => void 0));
+  await expect(update).rejects.toThrow();
+}
+
+export async function discardedAllTransfersUnhandledRejection() {
+  const update = startOperation();
+  void Promise.all([update]);
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function delayedRaceTransfersUnhandledRejection() {
+  const update = startOperation();
+  const aggregate = Promise.race([update]);
+  await release();
+  await aggregate;
+  await expect(update).rejects.toThrow();
+}
+
+export async function shadowedPromiseAggregateDoesNotObserve() {
+  const Promise = { allSettled: (_values: unknown[]) => release() };
+  const update = startOperation();
+  await Promise.allSettled([update]);
   await expect(update).rejects.toThrow();
 }
 

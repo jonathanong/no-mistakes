@@ -9,6 +9,7 @@ const {
   promiseChainBase,
 } = require("./test-no-delayed-rejects-chains");
 const { canReachMatcher, contains, executesBefore } = require("./test-no-delayed-rejects-flow");
+const { isImmediateObserver } = require("./test-no-delayed-rejects-observers");
 const { suspensionOccursBeforeMatcher } = require("./test-no-delayed-rejects-suspensions");
 
 const EXPECT_MODULES = new Set(["vitest", "@jest/globals"]);
@@ -106,20 +107,13 @@ function rejectionMatcherCall(node, declarator, context) {
   return matcherCall(node);
 }
 
-function isDirectAwaitObserver(node, declarator, context) {
-  return (
-    node.type === "AwaitExpression" &&
-    isSameConst(unwrapExpression(node.argument), declarator, context)
-  );
-}
-
 function hasObserverBeforeSuspension(context, functionNode, declarator, suspension) {
   let found = false;
   traverse(context, functionNode, (node) => {
     const matcher = rejectionMatcherCall(node, declarator, context);
     const handler =
       isRejectionHandlerCall(node, declarator, context) ||
-      isDirectAwaitObserver(node, declarator, context);
+      isImmediateObserver(node, declarator, context, isSameConst);
     const observesAfterForAwaitSuspends =
       suspension.type === "ForOfStatement" &&
       (contains(suspension.left, node) || contains(suspension.body, node));

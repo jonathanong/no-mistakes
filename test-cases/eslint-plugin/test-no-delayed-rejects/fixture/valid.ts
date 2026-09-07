@@ -5,6 +5,7 @@ declare function startOperation(): Promise<void>;
 declare const dynamicProperty: string;
 declare const service: { start(handler: unknown): Promise<void> };
 declare function getService(): { start(handler: unknown): Promise<void> };
+declare const maybeCoordinator: undefined | { release(value: Promise<void>): Promise<void> };
 
 export async function noInterveningAwait() {
   const update = startOperation();
@@ -55,6 +56,16 @@ export async function immediateThenObserver() {
 export async function forAwaitIterableObserver(items: AsyncIterable<unknown>) {
   const update = startOperation();
   for await (const _item of [update.catch(() => void 0), items]) {
+    Math.random();
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function parenthesizedOptionalMemberStillEvaluatesArguments() {
+  const update = startOperation();
+  try {
+    await (maybeCoordinator?.release)(update.catch(() => void 0));
+  } catch {
     Math.random();
   }
   await expect(update).rejects.toThrow();
@@ -512,6 +523,22 @@ export async function expectWithMultipleArgumentsIsUnsupported() {
 export async function aggregateObservesBeforeAwait() {
   const update = startOperation();
   await Promise.all([expect(update).rejects.toThrow()]);
+}
+
+export async function allSettledObservesBeforeAwait() {
+  const update = startOperation();
+  await Promise.allSettled([update, release()]);
+  await expect(update).rejects.toThrow();
+}
+
+export async function awaitedAllObservesBeforeAwait() {
+  const update = startOperation();
+  try {
+    await Promise.all([update, release()]);
+  } catch {
+    Math.random();
+  }
+  await expect(update).rejects.toThrow();
 }
 
 export async function storedMatcherPromiseIsOutsideThisRule() {

@@ -22,6 +22,17 @@ function isLoop(node) {
   );
 }
 
+function isOptionalCall(node) {
+  if (node.type !== "CallExpression") return false;
+  if (node.optional) return true;
+  let current = node.callee;
+  while (current.type === "MemberExpression") {
+    if (current.optional) return true;
+    current = current.object;
+  }
+  return false;
+}
+
 function hasLoopBackedge(node, functionNode) {
   let current = node.parent;
   while (current && current !== functionNode) {
@@ -110,6 +121,7 @@ function isConditionalBoundary(node, child) {
     node.type === "ConditionalExpression" ||
     node.type === "LogicalExpression" ||
     node.type === "SwitchStatement" ||
+    isOptionalCall(node) ||
     (node.type === "TryStatement" && child !== node.finalizer) ||
     isLoop(node)
   );
@@ -133,7 +145,8 @@ function executesBefore(observer, suspension) {
       if (
         parent.type === "ConditionalExpression" ||
         parent.type === "LogicalExpression" ||
-        parent.type === "IfStatement"
+        parent.type === "IfStatement" ||
+        isOptionalCall(parent)
       ) {
         return false;
       }
