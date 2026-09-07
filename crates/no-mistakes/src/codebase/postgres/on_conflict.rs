@@ -4,6 +4,7 @@ mod arbiter;
 mod convergence;
 mod generated;
 mod trigger;
+mod where_noop;
 
 #[cfg(test)]
 mod coverage_more_tests;

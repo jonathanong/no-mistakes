@@ -70,6 +70,8 @@ write generated-arbiter source columns still fail. A conjunctive `DO UPDATE`
 `WHERE` that proves any one assigned `EXCLUDED` column (`IS DISTINCT FROM
 EXCLUDED` or `IS NULL AND EXCLUDED IS NOT NULL`) is a no-op for `AFTER UPDATE`
 row triggers, because Postgres skips the whole update when `WHERE` is false.
+A proof column listed in `triggerWrittenColumns` for that trigger still fails:
+the function can rewrite the column so the next replay sees a true `WHERE`.
 Disjunctive `WHERE` and constant `SET` plus a matching `WHERE` still fail.
 
 ## Options and defaults
