@@ -1,0 +1,3 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
