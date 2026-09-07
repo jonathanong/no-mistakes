@@ -62,11 +62,31 @@ function stepDurationMap(job, nowMs) {
   return map;
 }
 
+function comparableEndMs(job, nowMs = Date.now()) {
+  let end = null;
+  for (const step of job.steps ?? []) {
+    if (!interestingStep(step.name)) {
+      continue;
+    }
+    const completed = parseTimestamp(step.completed_at) ?? nowMs;
+    if (end == null || completed > end) {
+      end = completed;
+    }
+  }
+  return end ?? parseTimestamp(job.completed_at) ?? nowMs;
+}
+
+function comparableDurationSeconds(job, nowMs = Date.now()) {
+  const start = parseTimestamp(job.started_at);
+  if (start == null) {
+    return null;
+  }
+  return Math.max(0, Math.round((comparableEndMs(job, nowMs) - start) / 1000));
+}
+
 function buildMarkdown({ jobName, afterJob, beforeJob, afterSha, beforeSha, nowMs = Date.now() }) {
-  const afterSeconds = durationSeconds(afterJob.started_at, afterJob.completed_at, nowMs);
-  const beforeSeconds = beforeJob
-    ? durationSeconds(beforeJob.started_at, beforeJob.completed_at, nowMs)
-    : null;
+  const afterSeconds = comparableDurationSeconds(afterJob, nowMs);
+  const beforeSeconds = beforeJob ? comparableDurationSeconds(beforeJob, nowMs) : null;
   const afterSteps = stepDurationMap(afterJob, nowMs);
   const beforeSteps = beforeJob ? stepDurationMap(beforeJob, nowMs) : new Map();
   const stepNames = [...new Set([...beforeSteps.keys(), ...afterSteps.keys()])];
@@ -118,7 +138,11 @@ function isSuccessfulRun(run) {
   return run?.status === "completed" && run?.conclusion === "success";
 }
 
-function findJob(jobs, jobName) {
+function findJobByName(jobs, jobName) {
+  return (jobs ?? []).find((job) => job.name === jobName) ?? null;
+}
+
+function findSuccessfulJob(jobs, jobName) {
   return (jobs ?? []).find((job) => job.name === jobName && job.conclusion === "success") ?? null;
 }
 
@@ -152,7 +176,7 @@ async function findBeforeJob({ repository, workflow, jobName, baseSha, baseRef }
       continue;
     }
     const jobs = await loadJobs(repository, run.databaseId);
-    const job = findJob(jobs, jobName);
+    const job = findSuccessfulJob(jobs, jobName);
     if (job) {
       return { job, sha: run.headSha ?? baseSha };
     }
@@ -176,7 +200,7 @@ async function findBeforeJob({ repository, workflow, jobName, baseSha, baseRef }
   ]);
   for (const run of branchRuns) {
     const jobs = await loadJobs(repository, run.databaseId);
-    const job = findJob(jobs, jobName);
+    const job = findSuccessfulJob(jobs, jobName);
     if (job) {
       return { job, sha: run.headSha };
     }
@@ -259,7 +283,7 @@ async function main() {
   }
 
   const afterJobs = await loadJobs(repository, runId);
-  const afterJob = findJob(afterJobs, jobName);
+  const afterJob = findJobByName(afterJobs, jobName);
   if (!afterJob) {
     throw new Error(`current run has no job named ${jobName}`);
   }
@@ -296,8 +320,10 @@ async function main() {
 module.exports = {
   buildMarkdown,
   commentMarker,
+  comparableDurationSeconds,
   durationSeconds,
-  findJob,
+  findJobByName,
+  findSuccessfulJob,
   formatDelta,
   formatDuration,
   interestingStep,

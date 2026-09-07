@@ -2,7 +2,9 @@ const assert = require("node:assert/strict");
 const {
   buildMarkdown,
   commentMarker,
-  findJob,
+  comparableDurationSeconds,
+  findJobByName,
+  findSuccessfulJob,
   formatDelta,
   formatDuration,
   isSuccessfulRun,
@@ -58,7 +60,7 @@ test("builds a before/after comment for the native job", () => {
   });
 
   assert.ok(markdown.includes(commentMarker("Windows x64")));
-  assert.match(markdown, /9m 25s/);
+  assert.match(markdown, /9m 14s/);
   assert.match(markdown, /Run platform-specific Rust tests/);
   assert.match(markdown, /Build native CLI and N-API addon/);
 });
@@ -67,14 +69,26 @@ test("baselines ignore unsuccessful runs and jobs", () => {
   assert.equal(isSuccessfulRun({ status: "completed", conclusion: "success" }), true);
   assert.equal(isSuccessfulRun({ status: "completed", conclusion: "failure" }), false);
   assert.equal(isSuccessfulRun({ status: "completed", conclusion: "cancelled" }), false);
-  assert.equal(
-    findJob(
-      [
-        { name: "Native tests (Windows x64)", conclusion: "cancelled" },
-        { name: "Native tests (Windows x64)", conclusion: "success" },
-      ],
-      "Native tests (Windows x64)",
-    )?.conclusion,
-    "success",
-  );
+  const jobs = [
+    { name: "Native tests (Windows x64)", conclusion: null },
+    { name: "Native tests (Windows x64)", conclusion: "success" },
+  ];
+  assert.equal(findJobByName(jobs, "Native tests (Windows x64)")?.conclusion, null);
+  assert.equal(findSuccessfulJob(jobs, "Native tests (Windows x64)")?.conclusion, "success");
+});
+
+test("job totals stop at the last compile step, not post-job cleanup", () => {
+  const nowMs = Date.parse("2026-09-07T12:50:00Z");
+  const job = {
+    started_at: "2026-09-07T12:33:27Z",
+    completed_at: "2026-09-07T12:49:00Z",
+    steps: [
+      {
+        name: "Build native CLI and N-API addon",
+        started_at: "2026-09-07T12:38:11Z",
+        completed_at: "2026-09-07T12:42:41Z",
+      },
+    ],
+  };
+  assert.equal(comparableDurationSeconds(job, nowMs), 554);
 });
