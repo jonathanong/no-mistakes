@@ -122,6 +122,21 @@ test("native CI jobs run only platform-specific Rust tests", () => {
     /head\.repo\.full_name == github\.repository/,
     "native timing comments must not run on fork PRs where GITHUB_TOKEN cannot write",
   );
+  const defenderStep = body.match(
+    /- name: Exclude workspace from Microsoft Defender[\s\S]*?(?=\n      - name: Checkout)/,
+  );
+  assert.ok(defenderStep, "Defender exclusion must run before Checkout");
+  const defender = defenderStep[0];
+  assert.match(defender, /runner\.os == 'Windows'/);
+  assert.match(
+    defender,
+    /github\.event_name != 'pull_request' \|\| github\.event\.pull_request\.head\.repo\.full_name == github\.repository/,
+    "Defender exclusions must not run on untrusted fork pull requests",
+  );
+  assert.match(defender, /Add-MpPreference -ExclusionPath/);
+  assert.match(defender, /GITHUB_WORKSPACE/);
+  assert.match(defender, /'\.cargo'/);
+  assert.match(defender, /'\.rustup'/);
   assert.match(body, /Run native CLI smoke test/);
   assert.match(body, /real-napi-api\.test\.js/);
   assert.match(
