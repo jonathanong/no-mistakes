@@ -140,6 +140,16 @@ function breakSkipsMatcher(node, matcher) {
   if (node.type === "BlockStatement") {
     return node.body.some((statement) => breakSkipsMatcher(statement, matcher));
   }
+  if (node.type === "TryStatement") {
+    if (node.finalizer && breakSkipsMatcher(node.finalizer, matcher)) return true;
+    if (node.finalizer && alwaysExits(node.finalizer)) {
+      return breakSkipsMatcher(node.finalizer, matcher);
+    }
+    if (breakSkipsMatcher(node.block, matcher)) return true;
+    return Boolean(
+      node.handler && alwaysThrows(node.block) && breakSkipsMatcher(node.handler.body, matcher),
+    );
+  }
   return Boolean(
     node.type === "IfStatement" &&
     node.alternate &&

@@ -11,6 +11,17 @@ export async function noInterveningAwait() {
   await expect(update).rejects.toThrow();
 }
 
+export async function directAwaitObservesRejection() {
+  const update = startOperation();
+  try {
+    await update;
+    return;
+  } catch {
+    Math.random();
+  }
+  await expect(update).rejects.toThrow();
+}
+
 export async function immediateCatchCapture() {
   const update = startOperation();
   const rejection = update.catch((error: unknown) => error);
@@ -20,7 +31,7 @@ export async function immediateCatchCapture() {
 
 export async function immediateCatchObserver() {
   const update = startOperation();
-  void update.catch(() => undefined);
+  void update.catch(() => void 0);
   await release();
   await expect(update).rejects.toThrow();
 }
@@ -28,7 +39,7 @@ export async function immediateCatchObserver() {
 export async function immediateBlockCatchObserver() {
   const update = startOperation();
   void update.catch(() => {
-    return undefined;
+    return void 0;
   });
   await release();
   await expect(update).rejects.toThrow();
@@ -36,21 +47,29 @@ export async function immediateBlockCatchObserver() {
 
 export async function immediateThenObserver() {
   const update = startOperation();
-  void update.then(undefined, () => undefined);
+  void update.then(void 0, () => void 0);
   await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function forAwaitIterableObserver(items: AsyncIterable<unknown>) {
+  const update = startOperation();
+  for await (const _item of [update.catch(() => void 0), items]) {
+    Math.random();
+  }
   await expect(update).rejects.toThrow();
 }
 
 export async function terminalCatchObservesPromiseChain() {
   const update = startOperation();
-  void update.then(() => undefined).catch(() => undefined);
+  void update.then(() => void 0).catch(() => void 0);
   await release();
   await expect(update).rejects.toThrow();
 }
 
 export async function safeContinuationAfterSafeCatch() {
   const update = startOperation();
-  void update.catch(() => undefined).then(() => undefined);
+  void update.catch(() => void 0).then(() => void 0);
   await release();
   await expect(update).rejects.toThrow();
 }
@@ -58,36 +77,36 @@ export async function safeContinuationAfterSafeCatch() {
 export async function safeMultiStageContinuation() {
   const update = startOperation();
   void update
-    .catch(() => undefined)
-    .finally(() => undefined)
+    .catch(() => void 0)
+    .finally(() => void 0)
     .then(() => {
       throw new Error("recovered below");
     })
     .then(
-      () => undefined,
-      () => undefined,
+      () => void 0,
+      () => void 0,
     )
-    .catch(() => undefined);
+    .catch(() => void 0);
   await release();
   await expect(update).rejects.toThrow();
 }
 
 export async function inertVoidFulfillmentHandler() {
   const update = startOperation();
-  void update.then(void 0, () => undefined);
+  void update.then(void 0, () => void 0);
   await release();
   await expect(update).rejects.toThrow();
 }
 
 export async function observerAttachedInsideAwait() {
   const update = startOperation();
-  await update.catch(() => undefined);
+  await update.catch(() => void 0);
   await expect(update).rejects.toThrow();
 }
 
 export async function observerDominatesNestedAwait(flag: boolean) {
   const update = startOperation();
-  void update.catch(() => undefined);
+  void update.catch(() => void 0);
   if (flag) await release();
   await expect(update).rejects.toThrow();
 }
@@ -95,7 +114,7 @@ export async function observerDominatesNestedAwait(flag: boolean) {
 export async function observerInUnconditionalNestedBlock() {
   const update = startOperation();
   {
-    void update.catch(() => undefined);
+    void update.catch(() => void 0);
   }
   await release();
   await expect(update).rejects.toThrow();
@@ -106,7 +125,7 @@ export async function observerInFinallyDominatesLaterAwait() {
   try {
     Math.random();
   } finally {
-    void update.catch(() => undefined);
+    void update.catch(() => void 0);
   }
   await release();
   await expect(update).rejects.toThrow();
@@ -232,6 +251,28 @@ export async function returnAwaitDoesNotReachAssertion(skip: boolean) {
   await expect(update).rejects.toThrow();
 }
 
+export async function caughtReturnAwaitStillReturnsFromFunction() {
+  const update = startOperation();
+  try {
+    return await release();
+  } catch {
+    return;
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function returnAwaitOverriddenByFinallyDoesNotReachAssertion() {
+  const update = startOperation();
+  try {
+    return await release();
+  } catch {
+    Math.random();
+  } finally {
+    return;
+  }
+  await expect(update).rejects.toThrow();
+}
+
 export async function throwingBranchDoesNotReachAssertion(skip: boolean) {
   const update = startOperation();
   if (skip) {
@@ -264,6 +305,75 @@ export async function nestedBlockBreakDoesNotReachAssertion(skip: boolean) {
     }
     await expect(update).rejects.toThrow();
     break;
+  }
+}
+
+export async function breakThroughFinallyDoesNotReachAssertion() {
+  const update = startOperation();
+  while (true) {
+    await release();
+    try {
+      break;
+    } finally {
+      Math.random();
+    }
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function breakFromCatchDoesNotReachAssertion() {
+  const update = startOperation();
+  while (true) {
+    await release();
+    try {
+      throw new Error("caught");
+    } catch {
+      break;
+    } finally {
+      Math.random();
+    }
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function suspensionCatchBreakDoesNotReachAssertion() {
+  const update = startOperation();
+  while (true) {
+    try {
+      await release();
+      return;
+    } catch {
+      break;
+    }
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function suspensionFinallyBreakDoesNotReachAssertion() {
+  const update = startOperation();
+  while (true) {
+    try {
+      await release();
+      return;
+    } catch {
+      Math.random();
+    } finally {
+      break;
+    }
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function breakFromFinallyDoesNotReachAssertion() {
+  const update = startOperation();
+  while (true) {
+    await release();
+    try {
+      Math.random();
+    } finally {
+      break;
+    }
+    await expect(update).rejects.toThrow();
   }
 }
 

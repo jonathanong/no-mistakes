@@ -106,15 +106,26 @@ function rejectionMatcherCall(node, declarator, context) {
   return matcherCall(node);
 }
 
+function isDirectAwaitObserver(node, declarator, context) {
+  return (
+    node.type === "AwaitExpression" &&
+    isSameConst(unwrapExpression(node.argument), declarator, context)
+  );
+}
+
 function hasObserverBeforeSuspension(context, functionNode, declarator, suspension) {
   let found = false;
   traverse(context, functionNode, (node) => {
     const matcher = rejectionMatcherCall(node, declarator, context);
+    const handler =
+      isRejectionHandlerCall(node, declarator, context) ||
+      isDirectAwaitObserver(node, declarator, context);
+    const observesAfterForAwaitSuspends =
+      suspension.type === "ForOfStatement" &&
+      (contains(suspension.left, node) || contains(suspension.body, node));
     if (
-      (isRejectionHandlerCall(node, declarator, context) && executesBefore(node, suspension)) ||
-      (matcher &&
-        !(suspension.type === "ForOfStatement" && contains(suspension, matcher)) &&
-        executesBefore(matcher, suspension))
+      (handler && !observesAfterForAwaitSuspends && executesBefore(node, suspension)) ||
+      (matcher && !observesAfterForAwaitSuspends && executesBefore(matcher, suspension))
     ) {
       found = true;
     }

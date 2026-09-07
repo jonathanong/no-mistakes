@@ -4,17 +4,10 @@ const { unwrapExpression } = require("./async-ast");
 
 function isSafeValue(node) {
   const unwrapped = unwrapExpression(node);
-  if (
-    unwrapped.type === "Literal" ||
-    (unwrapped.type === "Identifier" && unwrapped.name === "undefined")
-  ) {
-    return true;
-  }
+  if (unwrapped.type === "Literal") return true;
   if (unwrapped.type !== "UnaryExpression" || unwrapped.operator !== "void") return false;
   const operand = unwrapExpression(unwrapped.argument);
-  return (
-    operand.type === "Literal" || (operand.type === "Identifier" && operand.name === "undefined")
-  );
+  return operand.type === "Literal";
 }
 
 function isNonRejectingHandler(argument) {
@@ -39,12 +32,9 @@ function isAbsentHandler(argument) {
   if (!argument) return true;
   const unwrapped = unwrapExpression(argument);
   if (unwrapped.type === "Literal" && unwrapped.value === null) return true;
-  if (unwrapped.type === "Identifier" && unwrapped.name === "undefined") return true;
   if (unwrapped.type !== "UnaryExpression" || unwrapped.operator !== "void") return false;
   const operand = unwrapExpression(unwrapped.argument);
-  return (
-    operand.type === "Literal" || (operand.type === "Identifier" && operand.name === "undefined")
-  );
+  return operand.type === "Literal";
 }
 
 function isNonRejectingHandlerOrAbsent(argument) {

@@ -43,10 +43,10 @@ await expect(update).rejects.toThrow();
 
 The same direct binding may be asserted later when it first receives an
 unconditional, structurally non-rejecting `catch` or rejection-side `then`
-handler. The recognized handler may return its error parameter, `undefined`,
-or a literal. Throwing handlers and handlers that call other code are not
-assumed safe because their discarded child promise can itself reject
-unhandled.
+handler. The recognized handler may return a literal, `void 0`, or nothing.
+Returning the rejection reason, an identifier named `undefined`, or the result
+of calling other code is not assumed safe because the discarded child promise
+can itself reject unhandled.
 
 ## Scope
 

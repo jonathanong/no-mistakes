@@ -7,6 +7,10 @@ const {
   caughtThrowCanContinue,
   contains,
 } = require("./test-no-delayed-rejects-abrupt");
+const {
+  possibleCaughtThrowCanContinue,
+  suspensionFailureCanReachMatcher,
+} = require("./test-no-delayed-rejects-transfers");
 
 function isLoop(node) {
   return (
@@ -50,6 +54,7 @@ function branchesAreExclusive(current, parent, matcher, suspension, functionNode
 }
 
 function canReachMatcher(suspension, matcher, functionNode) {
+  if (suspensionFailureCanReachMatcher(suspension, matcher)) return true;
   let current = suspension;
   while (current && current !== functionNode) {
     if (
@@ -74,11 +79,19 @@ function canReachMatcher(suspension, matcher, functionNode) {
       if (currentIndex !== -1) {
         const matcherIndex = statements.findIndex((statement) => contains(statement, matcher));
         const end = matcherIndex === -1 ? statements.length : matcherIndex;
-        const exit = statements
-          .slice(currentIndex + 1, end)
-          .find((statement) => alwaysExits(statement) || breakSkipsMatcher(statement, matcher));
+        const following = statements.slice(currentIndex + 1, end);
+        const exitIndex = following.findIndex(
+          (statement) => alwaysExits(statement) || breakSkipsMatcher(statement, matcher),
+        );
+        const exit = following[exitIndex];
+        const caughtThrow =
+          exit &&
+          following
+            .slice(0, exitIndex + 1)
+            .some((statement) => possibleCaughtThrowCanContinue(statement, matcher));
         if (
           exit &&
+          !caughtThrow &&
           !abruptCompletionReachesMatcher(exit, matcher) &&
           !caughtThrowCanContinue(exit, matcher)
         ) {

@@ -123,6 +123,23 @@ export async function forAwaitSuspendsBeforeBodyMatcher(items: AsyncIterable<unk
   }
 }
 
+export async function forAwaitHandlerDoesNotObserveBeforeIteration(items: AsyncIterable<unknown>) {
+  const update = startOperation();
+  for await (const _item of items) {
+    void update.catch(() => void 0);
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function forAwaitBindingHandlerDoesNotObserveBeforeIteration(
+  items: AsyncIterable<unknown>,
+) {
+  const update = startOperation();
+  for await (const [_item = update.catch(() => void 0)] of items) {
+    await expect(update).rejects.toThrow();
+  }
+}
+
 export async function loopBackedgeReachesOtherBranch() {
   const update = startOperation();
   for (let index = 0; index < 2; index += 1) {
@@ -206,6 +223,14 @@ export async function conditionalCatchInsideAwaitDoesNotDominate(flag: boolean) 
 export async function absentCatchHandler() {
   const update = startOperation();
   void update.catch(undefined);
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function shadowedUndefinedHandlerCanRejectChild() {
+  const undefined = Promise.reject(new Error("child"));
+  const update = startOperation();
+  void update.catch(() => undefined);
   await release();
   await expect(update).rejects.toThrow();
 }
@@ -372,6 +397,178 @@ export async function nestedCaughtThrowContinuesToLaterMatcher() {
     }
   } catch {
     // Execution continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function returnAwaitRejectionReachesCatchAndMatcher() {
+  const update = startOperation();
+  try {
+    return await release();
+  } catch {
+    // A rejection continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function ordinaryAwaitRejectionReachesCatchPastReturn() {
+  const update = startOperation();
+  try {
+    await release();
+    return;
+  } catch {
+    // A rejection continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function returnAwaitRejectionReachesMatcherInCatch() {
+  const update = startOperation();
+  try {
+    return await release();
+  } catch {
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function returnAwaitRethrowReachesOuterCatchAndMatcher() {
+  const update = startOperation();
+  try {
+    try {
+      return await release();
+    } catch {
+      throw new Error("outer");
+    }
+  } catch {
+    // The rethrow continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function conditionalCaughtThrowBypassesLaterReturn(flag: boolean) {
+  const update = startOperation();
+  await release();
+  try {
+    if (flag) throw new Error("caught");
+    return;
+  } catch {
+    // The conditional throw continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function caughtConditionalThrowOrReturnReachesMatcher(flag: boolean) {
+  const update = startOperation();
+  try {
+    await release();
+    if (flag) throw new Error("caught");
+    else return;
+  } catch {
+    // The throwing branch continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function conditionalThrowReachesMatcherInCatch(flag: boolean) {
+  const update = startOperation();
+  try {
+    await release();
+    if (flag) throw new Error("caught");
+    return;
+  } catch {
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function switchThrowBypassesLaterReturn(kind: "throw" | "return") {
+  const update = startOperation();
+  await release();
+  try {
+    switch (kind) {
+      case "throw":
+        throw new Error("caught");
+      default:
+        break;
+    }
+    return;
+  } catch {
+    // The throwing switch case continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function nestedConditionalRethrowBypassesLaterReturn(flag: boolean) {
+  const update = startOperation();
+  await release();
+  try {
+    try {
+      if (flag) throw new Error("inner");
+    } catch {
+      throw new Error("outer");
+    }
+    return;
+  } catch {
+    // The nested throw continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function conditionalThrowThroughThrowingFinally(flag: boolean) {
+  const update = startOperation();
+  await release();
+  try {
+    try {
+      if (flag) throw new Error("inner");
+      return;
+    } finally {
+      throw new Error("outer");
+    }
+  } catch {
+    // The finalizer throw continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function conditionalFinalizerThrowBypassesLaterReturn(flag: boolean) {
+  const update = startOperation();
+  await release();
+  try {
+    try {
+      return;
+    } finally {
+      if (flag) throw new Error("caught");
+    }
+    return;
+  } catch {
+    // The finalizer's throwing branch continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function conditionalThrowThroughRethrowingCatch(flag: boolean) {
+  const update = startOperation();
+  await release();
+  try {
+    try {
+      if (flag) throw new Error("inner");
+      return;
+    } catch {
+      throw new Error("outer");
+    }
+  } catch {
+    // The rethrow continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function loopThrowBypassesLaterReturn(flag: boolean) {
+  const update = startOperation();
+  await release();
+  try {
+    while (flag) throw new Error("caught");
+    return;
+  } catch {
+    // The throwing loop body continues to the matcher below.
   }
   await expect(update).rejects.toThrow();
 }
