@@ -41,7 +41,7 @@ describe("require-options-on-imported-call", () => {
   it("reports imported calls without statically visible required options", () => {
     assert.deepEqual(
       messages(ruleFixture("invalid.ts"), RULE, ssrfOptions, "invalid.ts"),
-      Array.from({ length: 13 }, () => "missingOptions"),
+      Array.from({ length: 17 }, () => "missingOptions"),
     );
   });
 
@@ -210,6 +210,9 @@ validateUrl(url, { timeoutMs: 1 });
     const code = `let checkUrl = require("ssrf-guard/node").validateUrl;
 checkUrl = localCheckUrl;
 checkUrl(url);
+let ssrf = require("ssrf-guard/node");
+ssrf = localSsrf;
+ssrf.validateUrl(url);
 `;
     assert.deepEqual(messages(code, RULE, ssrfOptions, "reassigned.ts"), []);
   });
