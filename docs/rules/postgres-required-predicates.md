@@ -72,6 +72,8 @@ configuration error).
 SELECT id FROM topics WHERE parent_id IS NOT NULL AND id = $1;
 ```
 
+`LEFT JOIN` / `RIGHT JOIN` `ON` predicates count the same as `WHERE`.
+
 ## Counterexample
 
 ```sql

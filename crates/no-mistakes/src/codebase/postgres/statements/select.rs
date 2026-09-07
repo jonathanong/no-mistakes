@@ -124,8 +124,11 @@ fn predicate_text(select: &Select) -> String {
 
 fn join_expr(operator: &sqlparser::ast::JoinOperator) -> Option<&Expr> {
     match operator {
-        sqlparser::ast::JoinOperator::Inner(JoinConstraint::On(expr))
+        sqlparser::ast::JoinOperator::Join(JoinConstraint::On(expr))
+        | sqlparser::ast::JoinOperator::Inner(JoinConstraint::On(expr))
+        | sqlparser::ast::JoinOperator::Left(JoinConstraint::On(expr))
         | sqlparser::ast::JoinOperator::LeftOuter(JoinConstraint::On(expr))
+        | sqlparser::ast::JoinOperator::Right(JoinConstraint::On(expr))
         | sqlparser::ast::JoinOperator::RightOuter(JoinConstraint::On(expr))
         | sqlparser::ast::JoinOperator::FullOuter(JoinConstraint::On(expr)) => Some(expr),
         _ => None,
