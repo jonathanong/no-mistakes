@@ -19,6 +19,7 @@ function isSafeValue(node, parameter) {
 }
 
 function isNonRejectingHandler(argument) {
+  if (!argument) return false;
   const handler = unwrapExpression(argument);
   if (handler.type !== "ArrowFunctionExpression" && handler.type !== "FunctionExpression") {
     return false;
@@ -36,4 +37,20 @@ function isNonRejectingHandler(argument) {
   return !returned || isSafeValue(returned, parameter);
 }
 
-module.exports = { isNonRejectingHandler };
+function isAbsentHandler(argument) {
+  if (!argument) return true;
+  const unwrapped = unwrapExpression(argument);
+  if (unwrapped.type === "Literal" && unwrapped.value === null) return true;
+  if (unwrapped.type === "Identifier" && unwrapped.name === "undefined") return true;
+  if (unwrapped.type !== "UnaryExpression" || unwrapped.operator !== "void") return false;
+  const operand = unwrapExpression(unwrapped.argument);
+  return (
+    operand.type === "Literal" || (operand.type === "Identifier" && operand.name === "undefined")
+  );
+}
+
+function isNonRejectingHandlerOrAbsent(argument) {
+  return isAbsentHandler(argument) || isNonRejectingHandler(argument);
+}
+
+module.exports = { isNonRejectingHandler, isNonRejectingHandlerOrAbsent };

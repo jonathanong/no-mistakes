@@ -75,10 +75,10 @@ This rule has no options.
 ## Fix
 
 There is no autofix. Attach a rejection handler before the first coordination
-await, then assert its captured value after coordination. A `for await` loop is
-also an intervening suspension. Do not store an un-awaited
-`expect(...).rejects` matcher promise; the test runner's `valid-expect` rule
-owns that separate error.
+await, then assert its captured value after coordination. A `for await` loop and
+an async-generator `yield` are also intervening suspensions. Do not store an
+un-awaited `expect(...).rejects` matcher promise; the test runner's
+`valid-expect` rule owns that separate error.
 
 ## Suppression
 

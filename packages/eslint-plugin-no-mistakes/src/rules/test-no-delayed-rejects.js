@@ -2,11 +2,15 @@
 
 const { rule } = require("../helpers");
 const { findContainingFunction, traverse, unwrapExpression } = require("./async-ast");
-const { canReachMatcher, contains, executesBefore } = require("./test-no-delayed-rejects-flow");
-const { isNonRejectingHandler } = require("./test-no-delayed-rejects-handlers");
+const {
+  chainIsSafelyObserved,
+  literalPropertyName,
+  promiseChainBase,
+} = require("./test-no-delayed-rejects-chains");
+const { canReachMatcher, executesBefore } = require("./test-no-delayed-rejects-flow");
+const { suspensionOccursBeforeMatcher } = require("./test-no-delayed-rejects-suspensions");
 
 const EXPECT_MODULES = new Set(["vitest", "@jest/globals"]);
-const PROMISE_CHAIN_METHODS = new Set(["catch", "finally", "then"]);
 
 function findVariable(scope, name) {
   let current = scope;
@@ -16,12 +20,6 @@ function findVariable(scope, name) {
     if (variable) return variable;
     current = current.upper;
   }
-  return null;
-}
-
-function literalPropertyName(member) {
-  if (!member.computed && member.property.type === "Identifier") return member.property.name;
-  if (member.computed && member.property.type === "Literal") return member.property.value;
   return null;
 }
 
@@ -93,29 +91,11 @@ function isSameConst(identifier, declarator, context) {
   return identifier.type === "Identifier" && constDeclarator(identifier, context) === declarator;
 }
 
-function promiseChainBase(node) {
-  let current = unwrapExpression(node);
-  while (
-    current.type === "CallExpression" &&
-    current.callee.type === "MemberExpression" &&
-    PROMISE_CHAIN_METHODS.has(literalPropertyName(current.callee))
-  ) {
-    current = unwrapExpression(current.callee.object);
-  }
-  return current;
-}
-
 function isRejectionHandlerCall(node, declarator, context) {
   if (node.type !== "CallExpression" || node.callee.type !== "MemberExpression") return false;
-  const callee = node.callee;
-  const object = promiseChainBase(callee.object);
+  const object = promiseChainBase(node.callee.object);
   if (!isSameConst(object, declarator, context)) return false;
-  const property = literalPropertyName(callee);
-  if (property === "catch")
-    return node.arguments.length >= 1 && isNonRejectingHandler(node.arguments[0]);
-  return (
-    property === "then" && node.arguments.length >= 2 && isNonRejectingHandler(node.arguments[1])
-  );
+  return chainIsSafelyObserved(node);
 }
 
 function hasObserverBeforeSuspension(context, functionNode, declarator, suspension) {
@@ -135,10 +115,8 @@ function hasInterveningAwait(context, declarator, matcher) {
   let found = false;
   traverse(context, functionNode, (node) => {
     if (
-      (node.type === "AwaitExpression" || (node.type === "ForOfStatement" && node.await)) &&
+      suspensionOccursBeforeMatcher(node, matcher, functionNode) &&
       node.range[0] >= declarator.init.range[1] &&
-      node.range[0] < matcher.range[1] &&
-      !contains(node, matcher) &&
       canReachMatcher(node, matcher, functionNode) &&
       !hasObserverBeforeSuspension(context, functionNode, declarator, node)
     ) {

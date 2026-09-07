@@ -15,6 +15,20 @@ function alwaysExits(statement) {
   );
 }
 
+function alwaysThrows(statement) {
+  if (statement.type === "ThrowStatement") return true;
+  if (statement.type === "BlockStatement") {
+    const exit = statement.body.find(alwaysExits);
+    return Boolean(exit && alwaysThrows(exit));
+  }
+  return (
+    statement.type === "IfStatement" &&
+    statement.alternate &&
+    alwaysThrows(statement.consequent) &&
+    alwaysThrows(statement.alternate)
+  );
+}
+
 function matcherRunsInFinally(node, matcher) {
   let current = node;
   while (current.parent) {
@@ -51,19 +65,38 @@ function matcherRunsInCatch(node, matcher) {
 
 function abruptCompletionReachesMatcher(node, matcher) {
   return (
-    matcherRunsInFinally(node, matcher) ||
-    (node.type === "ThrowStatement" && matcherRunsInCatch(node, matcher))
+    matcherRunsInFinally(node, matcher) || (alwaysThrows(node) && matcherRunsInCatch(node, matcher))
+  );
+}
+function isLoop(node) {
+  return (
+    node?.type === "WhileStatement" ||
+    node?.type === "DoWhileStatement" ||
+    node?.type === "ForStatement" ||
+    node?.type === "ForInStatement" ||
+    node?.type === "ForOfStatement"
   );
 }
 
-function branchesAreExclusive(current, parent, matcher, suspension) {
+function hasLoopBackedge(node, functionNode) {
+  let current = node.parent;
+  while (current && current !== functionNode) {
+    if (isLoop(current)) return true;
+    current = current.parent;
+  }
+  return false;
+}
+
+function branchesAreExclusive(current, parent, matcher, suspension, functionNode) {
   if (parent?.type === "IfStatement" || parent?.type === "ConditionalExpression") {
+    if (hasLoopBackedge(parent, functionNode)) return false;
     return (
       (current === parent.consequent && parent.alternate && contains(parent.alternate, matcher)) ||
       (current === parent.alternate && contains(parent.consequent, matcher))
     );
   }
   if (current.type === "SwitchCase" && parent?.type === "SwitchStatement") {
+    if (hasLoopBackedge(parent, functionNode)) return false;
     const currentIndex = parent.cases.indexOf(current);
     const matcherIndex = parent.cases.findIndex((item) => contains(item, matcher));
     if (matcherIndex === -1 || matcherIndex === currentIndex) return false;
@@ -87,7 +120,7 @@ function canReachMatcher(suspension, matcher, functionNode) {
       return false;
     }
     const parent = current.parent;
-    if (branchesAreExclusive(current, parent, matcher, suspension)) return false;
+    if (branchesAreExclusive(current, parent, matcher, suspension, functionNode)) return false;
     const statements =
       parent?.type === "BlockStatement"
         ? parent.body
@@ -110,31 +143,25 @@ function canReachMatcher(suspension, matcher, functionNode) {
   return true;
 }
 
-function executionSite(node) {
+function isConditionalBoundary(node) {
+  return (
+    node.type === "IfStatement" ||
+    node.type === "ConditionalExpression" ||
+    node.type === "LogicalExpression" ||
+    node.type === "SwitchStatement" ||
+    node.type === "TryStatement" ||
+    isLoop(node)
+  );
+}
+
+function statementsFor(container) {
+  return container.type === "BlockStatement" ? container.body : container.consequent;
+}
+
+function directChildIn(node, container) {
   let current = node;
-  let conditional = false;
-  while (current.parent) {
-    const parent = current.parent;
-    if (parent.type === "BlockStatement" || parent.type === "SwitchCase") {
-      return { conditional, container: parent, statement: current };
-    }
-    if (
-      parent.type === "IfStatement" ||
-      parent.type === "ConditionalExpression" ||
-      parent.type === "LogicalExpression" ||
-      parent.type === "SwitchStatement" ||
-      parent.type === "TryStatement" ||
-      parent.type === "WhileStatement" ||
-      parent.type === "DoWhileStatement" ||
-      parent.type === "ForStatement" ||
-      parent.type === "ForInStatement" ||
-      parent.type === "ForOfStatement"
-    ) {
-      conditional = true;
-    }
-    current = parent;
-  }
-  return null;
+  while (current.parent && current.parent !== container) current = current.parent;
+  return current.parent === container ? current : null;
 }
 
 function executesBefore(observer, suspension) {
@@ -153,18 +180,21 @@ function executesBefore(observer, suspension) {
     }
     return true;
   }
-  const observerSite = executionSite(observer);
-  if (!observerSite || observerSite.conditional) return false;
-  let suspensionStatement = suspension;
-  while (suspensionStatement.parent && suspensionStatement.parent !== observerSite.container) {
-    suspensionStatement = suspensionStatement.parent;
+  let current = observer;
+  let conditional = false;
+  while (current.parent) {
+    const parent = current.parent;
+    if ((parent.type === "BlockStatement" || parent.type === "SwitchCase") && !conditional) {
+      const suspensionStatement = directChildIn(suspension, parent);
+      if (suspensionStatement) {
+        const statements = statementsFor(parent);
+        if (statements.indexOf(current) < statements.indexOf(suspensionStatement)) return true;
+      }
+    }
+    if (isConditionalBoundary(parent)) conditional = true;
+    current = parent;
   }
-  if (suspensionStatement.parent !== observerSite.container) return false;
-  const statements =
-    observerSite.container.type === "BlockStatement"
-      ? observerSite.container.body
-      : observerSite.container.consequent;
-  return statements.indexOf(observerSite.statement) < statements.indexOf(suspensionStatement);
+  return false;
 }
 
 module.exports = { canReachMatcher, contains, executesBefore };

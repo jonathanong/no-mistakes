@@ -46,6 +46,37 @@ export async function terminalCatchObservesPromiseChain() {
   await expect(update).rejects.toThrow();
 }
 
+export async function safeContinuationAfterSafeCatch() {
+  const update = startOperation();
+  void update.catch((error: unknown) => error).then((value) => value);
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function safeMultiStageContinuation() {
+  const update = startOperation();
+  void update
+    .catch((error: unknown) => error)
+    .finally(() => undefined)
+    .then(() => {
+      throw new Error("recovered below");
+    })
+    .then(
+      (value) => value,
+      (error: unknown) => error,
+    )
+    .catch((error: unknown) => error);
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function inertVoidFulfillmentHandler() {
+  const update = startOperation();
+  void update.then(void 0, (error: unknown) => error);
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
 export async function observerAttachedInsideAwait() {
   const update = startOperation();
   await update.catch((error: unknown) => error);
@@ -56,6 +87,15 @@ export async function observerDominatesNestedAwait(flag: boolean) {
   const update = startOperation();
   void update.catch((error: unknown) => error);
   if (flag) await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function observerInUnconditionalNestedBlock() {
+  const update = startOperation();
+  {
+    void update.catch((error: unknown) => error);
+  }
+  await release();
   await expect(update).rejects.toThrow();
 }
 
@@ -101,6 +141,39 @@ export async function mutuallyExclusiveSwitchCases(kind: "wait" | "assert") {
     case "assert":
       await expect(update).rejects.toThrow();
       break;
+  }
+}
+
+export async function matcherBeforeLaterLoopAwait() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    await expect(update).rejects.toThrow();
+    await release();
+  }
+}
+
+export async function matcherInLoopIfTestDominatesLaterAwait() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    if (await expect(update).rejects.toThrow()) continue;
+    await release();
+  }
+}
+
+export async function matcherInLoopConditionalTestDominatesLaterAwait() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    const result = (await expect(update).rejects.toThrow()) ? 1 : 2;
+    if (result === 1) continue;
+    await release();
+  }
+}
+
+export async function matcherInLoopLogicalLeftDominatesLaterAwait() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    (await expect(update).rejects.toThrow()) && index.toString();
+    await release();
   }
 }
 

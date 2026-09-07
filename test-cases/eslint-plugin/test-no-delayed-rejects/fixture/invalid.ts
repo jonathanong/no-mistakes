@@ -61,6 +61,57 @@ export async function forAwaitSuspends(items: AsyncIterable<unknown>) {
   await expect(update).rejects.toThrow();
 }
 
+export async function forAwaitSuspendsBeforeBodyMatcher(items: AsyncIterable<unknown>) {
+  const update = startOperation();
+  for await (const _item of items) {
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function loopBackedgeReachesOtherBranch() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    if (index === 0) await release();
+    else await expect(update).rejects.toThrow();
+  }
+}
+
+export async function reversedLoopBackedgeReachesEarlierBranch() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    if (index === 1) await expect(update).rejects.toThrow();
+    else await release();
+  }
+}
+
+export async function switchBackedgeReachesEarlierCase() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    switch (index) {
+      case 1:
+        await expect(update).rejects.toThrow();
+        break;
+      default:
+        await release();
+    }
+  }
+}
+
+export async function skippedMatcherLetsLaterAwaitSuspendFirst() {
+  const update = startOperation();
+  for (let index = 0; index < 2; index += 1) {
+    if (index === 1) await expect(update).rejects.toThrow();
+    await release();
+  }
+}
+
+export async function forAwaitSuspendsBeforeBindingMatcher(items: AsyncIterable<unknown>) {
+  const update = startOperation();
+  for await (const [_item = await expect(update).rejects.toThrow()] of items) {
+    // The iterator suspends before evaluating the binding default.
+  }
+}
+
 export async function assertedArgument() {
   const update = startOperation();
   await release();
@@ -113,6 +164,26 @@ export async function rethrowingCatchCreatesUnhandledChild() {
   await expect(update).rejects.toThrow();
 }
 
+export async function unsafeContinuationAfterSafeCatch() {
+  const update = startOperation();
+  void update
+    .catch((error: unknown) => error)
+    .then((error) => {
+      throw error;
+    });
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
+export async function wrappedUnsafeContinuationAfterSafeCatch() {
+  const update = startOperation();
+  void (update.catch((error: unknown) => error) as Promise<unknown>).then(() => {
+    throw new Error("expected");
+  });
+  await release();
+  await expect(update).rejects.toThrow();
+}
+
 export async function destructuredCatchHandlerIsNotProvablySafe() {
   const update = startOperation();
   void update.catch(({ message }: Error) => message);
@@ -145,4 +216,23 @@ export async function throwReachesCatchMatcher() {
   } catch {
     await expect(update).rejects.toThrow();
   }
+}
+
+export async function compoundThrowReachesCatchMatcher(flag: boolean) {
+  const update = startOperation();
+  try {
+    await release();
+    {
+      if (flag) throw new Error("first");
+      else throw new Error("second");
+    }
+  } catch {
+    await expect(update).rejects.toThrow();
+  }
+}
+
+export async function* yieldSuspendsBeforeMatcher() {
+  const update = startOperation();
+  yield "ready";
+  await expect(update).rejects.toThrow();
 }
