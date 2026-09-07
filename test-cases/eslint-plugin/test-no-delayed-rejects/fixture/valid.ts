@@ -149,6 +149,74 @@ export async function nestedReturningTryDoesNotReachMatcher() {
   await expect(update).rejects.toThrow();
 }
 
+export async function returningCatchDoesNotReachMatcher() {
+  const update = startOperation();
+  await release();
+  try {
+    throw new Error("caught");
+  } catch {
+    return;
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function bothTryBranchesReturnBeforeMatcher(flag: boolean) {
+  const update = startOperation();
+  await release();
+  try {
+    if (flag) return;
+    else return;
+  } catch {
+    Math.random();
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function returningInnerFinallyDoesNotReachMatcher() {
+  const update = startOperation();
+  try {
+    try {
+      await release();
+      throw new Error("replaced by return");
+    } finally {
+      return;
+    }
+  } catch {
+    Math.random();
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function abruptReturningInnerFinallyDoesNotReachMatcher() {
+  const update = startOperation();
+  await release();
+  try {
+    try {
+      throw new Error("replaced by return");
+    } finally {
+      return;
+    }
+  } catch {
+    Math.random();
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function nestedReturningCatchDoesNotReachMatcher() {
+  const update = startOperation();
+  await release();
+  try {
+    try {
+      throw new Error("caught");
+    } catch {
+      return;
+    }
+  } catch {
+    Math.random();
+  }
+  await expect(update).rejects.toThrow();
+}
+
 export async function terminatingBranchDoesNotReachAssertion(skip: boolean) {
   const update = startOperation();
   if (skip) {

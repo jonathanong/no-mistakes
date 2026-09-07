@@ -199,7 +199,7 @@ export async function conditionalCatchDoesNotDominate() {
 
 export async function conditionalCatchInsideAwaitDoesNotDominate(flag: boolean) {
   const update = startOperation();
-  await (flag && update.catch((error: unknown) => error));
+  await (flag && update.catch(() => undefined));
   await expect(update).rejects.toThrow();
 }
 
@@ -339,6 +339,21 @@ export async function throwingInnerFinallyReachesOuterCatchAndMatcher() {
       Math.random();
     } finally {
       throw new Error("outer");
+    }
+  } catch {
+    // Execution continues to the matcher below.
+  }
+  await expect(update).rejects.toThrow();
+}
+
+export async function suspensionInsideThrowingFinallyFlowReachesMatcher() {
+  const update = startOperation();
+  try {
+    try {
+      await release();
+      throw new Error("replaced");
+    } finally {
+      throw new Error("caught outside");
     }
   } catch {
     // Execution continues to the matcher below.

@@ -168,6 +168,7 @@ describe("test-no-delayed-rejects", () => {
         "delayedReject",
         "delayedReject",
         "delayedReject",
+        "delayedReject",
       ],
     );
   });
