@@ -134,6 +134,22 @@ fn derived_table_selects_are_collected() {
 }
 
 #[test]
+fn data_modifying_cte_insert_is_collected() {
+    let facts = extract_sql_statement_facts(
+        "WITH added AS (INSERT INTO items (id) VALUES (1) RETURNING id) SELECT * FROM added",
+    );
+    assert_eq!(facts.inserts.len(), 1);
+    assert_eq!(facts.inserts[0].table, "items");
+}
+
+#[test]
+fn utf8_identifier_does_not_panic_not_exists_scan() {
+    assert!(super::has_top_level_not_exists_in(
+        "SELECT 1 FROM café WHERE NOT EXISTS (SELECT 1)"
+    ));
+}
+
+#[test]
 fn exists_union_is_unrestricted() {
     let sql = std::fs::read_to_string(
         PathBuf::from(env!("CARGO_MANIFEST_DIR"))

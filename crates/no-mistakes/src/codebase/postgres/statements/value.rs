@@ -35,6 +35,7 @@ pub(super) fn from_assignment(assignment: &Assignment) -> SqlAssignmentFact {
 pub(super) fn from_expr(expr: &Expr) -> SqlValueForm {
     match unwrap_expr(expr) {
         Expr::Value(value) => from_value(value),
+        Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => SqlValueForm::Placeholder,
         Expr::Identifier(ident) => SqlValueForm::SelfRef {
             column: ident.value.clone(),
         },

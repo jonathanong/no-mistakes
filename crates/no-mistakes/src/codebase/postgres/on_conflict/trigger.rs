@@ -1,4 +1,4 @@
-use super::{form_is_self, Catalog};
+use super::Catalog;
 use crate::codebase::postgres::statement_facts::{
     SqlConflictArbiter, SqlInsertFact, SqlOnConflictFact, SqlTriggerEvent, SqlTriggerFact,
     SqlTriggerPeriod,
@@ -166,9 +166,5 @@ fn where_proves_noop(conflict: &SqlOnConflictFact, assigned: &[String]) -> bool 
                 .null_and_excluded_not_null
                 .iter()
                 .any(|name| name.eq_ignore_ascii_case(column))
-            || conflict.assignments.iter().any(|assignment| {
-                assignment.column.eq_ignore_ascii_case(column)
-                    && form_is_self(&assignment.form, column)
-            })
     })
 }

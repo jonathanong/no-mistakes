@@ -15,7 +15,7 @@ pub use crate::codebase::postgres::statement_facts::*;
 pub use fallback::{insert_keyword_count, mask_quoted_sql};
 
 use crate::codebase::postgres::parse::{parse_postgres_sql, parse_postgres_sql_lenient};
-use sqlparser::ast::Statement;
+use sqlparser::ast::{Query, SetExpr, Statement};
 
 /// Extract INSERT/SELECT/trigger facts from one SQL source.
 pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
@@ -76,7 +76,48 @@ fn collect_one(
             triggers.push(fact);
         }
     }
+    if let Statement::Query(query) = statement {
+        collect_query_inserts(sql, query, insert_n, inserts);
+    }
     select::collect(sql, statement, selects);
+}
+
+fn collect_query_inserts(
+    sql: &str,
+    query: &Query,
+    insert_n: &mut usize,
+    inserts: &mut Vec<SqlInsertFact>,
+) {
+    if let Some(with) = &query.with {
+        for cte in &with.cte_tables {
+            collect_query_inserts(sql, &cte.query, insert_n, inserts);
+        }
+    }
+    collect_set_inserts(sql, &query.body, insert_n, inserts);
+}
+
+fn collect_set_inserts(
+    sql: &str,
+    expr: &SetExpr,
+    insert_n: &mut usize,
+    inserts: &mut Vec<SqlInsertFact>,
+) {
+    match expr {
+        SetExpr::Insert(statement) => {
+            if matches!(statement, Statement::Insert(_)) {
+                *insert_n += 1;
+                if let Some(fact) = insert::from_statement(sql, statement, *insert_n) {
+                    inserts.push(fact);
+                }
+            }
+        }
+        SetExpr::Query(query) => collect_query_inserts(sql, query, insert_n, inserts),
+        SetExpr::SetOperation { left, right, .. } => {
+            collect_set_inserts(sql, left, insert_n, inserts);
+            collect_set_inserts(sql, right, insert_n, inserts);
+        }
+        _ => {}
+    }
 }
 
 pub fn has_top_level_not_exists_in(sql: &str) -> bool {

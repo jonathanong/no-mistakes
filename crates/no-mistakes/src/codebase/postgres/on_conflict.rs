@@ -24,14 +24,15 @@ pub struct Catalog<'a> {
 
 pub fn judge_file(file: &SqlStatementFileFacts, catalog: &Catalog<'_>) -> Vec<(usize, String)> {
     let mut findings = Vec::new();
-    if file.parse_failed && file.insert_keyword_count > 1 && file.inserts.is_empty() {
-        findings.push((
-            file.origin_line.max(1),
-            "unparseable fragment carries more than one INSERT; hoist each statement".to_string(),
-        ));
-        return findings;
-    }
-    if file.parse_failed && file.inserts.is_empty() && file.insert_keyword_count > 0 {
+    if file.parse_failed && file.insert_keyword_count > file.inserts.len() {
+        if file.insert_keyword_count > 1 {
+            findings.push((
+                file.origin_line.max(1),
+                "unparseable fragment carries more than one INSERT; hoist each statement"
+                    .to_string(),
+            ));
+            return findings;
+        }
         if file.has_top_level_not_exists {
             return findings;
         }
@@ -60,7 +61,11 @@ fn judge_insert(insert: &SqlInsertFact, catalog: &Catalog<'_>) -> Option<String>
         return Some("INSERT must include ON CONFLICT or a conjunctive WHERE NOT EXISTS".into());
     };
     if conflict.action == SqlOnConflictAction::DoNothing {
-        return None;
+        return if catalog.check_triggers {
+            trigger::judge(insert, conflict, catalog)
+        } else {
+            None
+        };
     }
     if catalog.check_arbiter {
         if let Some(message) = arbiter::judge(insert, conflict) {
@@ -68,7 +73,11 @@ fn judge_insert(insert: &SqlInsertFact, catalog: &Catalog<'_>) -> Option<String>
         }
     }
     if catalog.check_convergence || catalog.check_volatility {
-        if let Some(message) = convergence::judge(conflict, catalog.check_volatility) {
+        if let Some(message) = convergence::judge(
+            conflict,
+            catalog.check_convergence,
+            catalog.check_volatility,
+        ) {
             return Some(message);
         }
     }

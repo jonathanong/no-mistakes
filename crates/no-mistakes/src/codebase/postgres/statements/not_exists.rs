@@ -38,6 +38,7 @@ pub(super) fn has_conjunctive_not_exists(expr: &Expr) -> bool {
 /// Quote-masked `WHERE|AND NOT EXISTS` at paren-depth zero.
 pub fn has_top_level_conjunctive_not_exists(masked: &str) -> bool {
     let lower = masked.to_ascii_lowercase();
+    let text = lower.as_str();
     let bytes = lower.as_bytes();
     let mut depth = 0i32;
     let mut index = 0usize;
@@ -46,7 +47,7 @@ pub fn has_top_level_conjunctive_not_exists(masked: &str) -> bool {
             b'(' => depth += 1,
             b')' => depth -= 1,
             _ => {
-                if depth == 0 && match_guard(&lower, index) {
+                if depth == 0 && text.is_char_boundary(index) && match_guard(text, index) {
                     return true;
                 }
             }

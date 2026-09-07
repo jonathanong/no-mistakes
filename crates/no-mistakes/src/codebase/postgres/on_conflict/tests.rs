@@ -97,6 +97,49 @@ fn null_arbiter_assignment_is_unsafe() {
 }
 
 #[test]
+fn placeholder_assignment_is_not_convergent() {
+    let found = messages(
+        "INSERT INTO items (id, note) VALUES (1, 'a')
+         ON CONFLICT (id) DO UPDATE SET note = sql_placeholder_1;",
+    );
+    assert!(
+        found
+            .iter()
+            .any(|message| message.contains("bind parameter")),
+        "{found:?}"
+    );
+}
+
+#[test]
+fn recovered_insert_plus_unparseable_insert_fails_closed() {
+    let found =
+        messages("INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING; INSERT INTO");
+    assert!(
+        found
+            .iter()
+            .any(|message| message.contains("more than one INSERT")),
+        "{found:?}"
+    );
+}
+
+#[test]
+fn do_nothing_still_checks_before_insert_triggers() {
+    let sql = "INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING;";
+    let file = extract_sql_statement_facts(sql);
+    let triggers = extract_sql_statement_facts(
+        "CREATE TRIGGER t BEFORE INSERT ON items FOR EACH ROW EXECUTE FUNCTION audit();",
+    )
+    .triggers;
+    let found = judge_file(&file, &catalog(&[], &triggers, &[], &[]));
+    assert!(
+        found
+            .iter()
+            .any(|(_, message)| message.contains("BEFORE INSERT")),
+        "{found:?}"
+    );
+}
+
+#[test]
 fn volatile_assignment_is_unsafe() {
     let found = messages(
         "INSERT INTO items (id, seen) VALUES (1, now())
