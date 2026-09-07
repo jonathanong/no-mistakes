@@ -132,4 +132,6 @@ fn mask_sql(sql: &str) -> String {
 }
 
 #[cfg(test)]
+mod coverage_tests;
+#[cfg(test)]
 mod tests;

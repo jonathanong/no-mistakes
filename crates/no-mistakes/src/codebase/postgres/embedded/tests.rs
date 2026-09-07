@@ -350,6 +350,10 @@ fn append_inside_switch_ternary_or_logical_is_dynamic() {
         "composed-append-switch.ts",
         "composed-append-ternary.ts",
         "composed-append-and.ts",
+        "composed-append-for.ts",
+        "composed-append-for-in.ts",
+        "composed-append-while.ts",
+        "composed-append-do-while.ts",
     ] {
         assert_eq!(
             extract(name).calls[0].kind,
