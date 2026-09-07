@@ -8,6 +8,8 @@ const {
   localPackagePath,
   nativePackageName,
   resolveNativePackage,
+  supportedGlibc,
+  unsupportedGlibcMessage,
   unsupportedPlatformMessage,
   usableCli,
 } = require("./native-package");
@@ -42,6 +44,42 @@ test("maps supported Node platforms to their native optional package", () => {
   assert.equal(nativePackageName("linux", "x64"), "no-mistakes-linux-x64-gnu");
   assert.equal(nativePackageName("win32", "x64"), "no-mistakes-win32-x64-msvc");
   assert.equal(nativePackageName("win32", "arm64"), undefined);
+});
+
+test("accepts Linux native packages only on glibc 2.35 or newer", () => {
+  const report = (version) => ({ getReport: () => ({ header: { glibcVersionRuntime: version } }) });
+  assert.equal(supportedGlibc(report("2.35")), true);
+  assert.equal(supportedGlibc(report("2.36")), true);
+  assert.equal(supportedGlibc(report("3.0")), true);
+  assert.equal(supportedGlibc(report("2.34")), false);
+  assert.equal(supportedGlibc(report("invalid")), false);
+  assert.equal(
+    supportedGlibc({ getReport: () => ({ header: { glibcVersionCompiler: "2.35" } }) }),
+    true,
+  );
+  assert.equal(supportedGlibc({}), false);
+  assert.equal(
+    supportedGlibc({
+      getReport: () => {
+        throw new Error("unavailable");
+      },
+    }),
+    false,
+  );
+});
+
+test("rejects unsupported Linux glibc before resolving native packages", () => {
+  assert.throws(
+    () =>
+      resolveNativePackage({
+        platform: "linux",
+        arch: "x64",
+        report: { getReport: () => ({ header: { glibcVersionRuntime: "2.34" } }) },
+        resolve: () => assert.fail("unsupported glibc must not resolve a package"),
+      }),
+    /glibc 2\.35 or newer\. Detected glibc 2\.34\. Install with `cargo install no-mistakes`/,
+  );
+  assert.match(unsupportedGlibcMessage({}), /Could not detect a supported glibc runtime/);
 });
 
 test("resolves the CLI and addon from one selected optional package", () => {
@@ -83,6 +121,17 @@ test("reports missing optional packages and unsupported platforms clearly", () =
     /no-mistakes-darwin-arm64.*npm install/i,
   );
   assert.match(unsupportedPlatformMessage("win32", "arm64"), /Unsupported platform win32\/arm64/);
+  assert.throws(
+    () =>
+      resolveNativePackage({
+        platform: "linux",
+        arch: "riscv64",
+        report: {
+          getReport: () => assert.fail("unsupported architectures must not inspect glibc"),
+        },
+      }),
+    /Unsupported platform linux\/riscv64/,
+  );
 });
 
 test("directs an installed package missing its CLI to repair optional dependencies", () => {

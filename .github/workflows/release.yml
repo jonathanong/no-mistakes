@@ -439,7 +439,15 @@ jobs:
             *apple*) pattern='libno_mistakes*.dylib' ;;
             *) pattern='libno_mistakes*.so' ;;
           esac
-          mapfile -t addons < <(find target/${{ matrix.target }}/release target/${{ matrix.target }}/release/deps -maxdepth 1 -type f -name "$pattern")
+          addons=()
+          while IFS= read -r addon; do
+            addons+=("$addon")
+          done < <(find "target/${{ matrix.target }}/release" -maxdepth 1 -type f -name "$pattern")
+          if [ "${#addons[@]}" -eq 0 ]; then
+            while IFS= read -r addon; do
+              addons+=("$addon")
+            done < <(find "target/${{ matrix.target }}/release/deps" -maxdepth 1 -type f -name "$pattern")
+          fi
           test "${#addons[@]}" -eq 1 || { echo "::error::Expected exactly one N-API addon candidate for ${{ matrix.target }}, found ${#addons[@]}" >&2; printf '%s\n' "${addons[@]}" >&2; exit 1; }
           addon="${addons[0]}"
           case "${{ matrix.target }}" in
@@ -453,7 +461,7 @@ jobs:
           file "$addon" | grep -E "$expected_magic"
           addon_artifact="no-mistakes-napi-v${{ needs.prepare.outputs.version }}-${{ matrix.target }}.node"
           cp "$addon" "$addon_artifact"
-          node -e '(async () => { const addon=require(process.argv[1]); if (typeof addon.version !== "function" || await addon.version() !== process.argv[2]) process.exit(1) })().catch((error) => { console.error(error); process.exit(1) })' "$addon_artifact" "${{ needs.prepare.outputs.version }}"
+          node -e '(async () => { const addon=require(process.argv[1]); if (typeof addon.version !== "function" || await addon.version() !== process.argv[2]) process.exit(1) })().catch((error) => { console.error(error); process.exit(1) })' "$PWD/$addon_artifact" "${{ needs.prepare.outputs.version }}"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         timeout-minutes: 5
         with:
