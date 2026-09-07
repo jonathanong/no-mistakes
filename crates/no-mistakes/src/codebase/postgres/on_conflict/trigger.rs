@@ -124,12 +124,7 @@ fn unsafe_reason(
         return None;
     }
     if trigger.period == SqlTriggerPeriod::After
-        && super::where_noop::where_proves_noop(
-            conflict,
-            assigned,
-            &trigger.function,
-            catalog.trigger_writes,
-        )
+        && super::where_noop::where_proves_noop(conflict, assigned, &trigger.table, catalog)
     {
         return None;
     }
@@ -172,7 +167,7 @@ fn has_update_event(trigger: &SqlTriggerFact) -> bool {
         .any(|event| matches!(event, SqlTriggerEvent::Update { .. }))
 }
 
-fn fires_update(trigger: &SqlTriggerFact, assigned: &[String]) -> bool {
+pub(super) fn fires_update(trigger: &SqlTriggerFact, assigned: &[String]) -> bool {
     trigger.events.iter().any(|event| match event {
         SqlTriggerEvent::Update { columns } if columns.is_empty() => true,
         SqlTriggerEvent::Update { columns } => columns.iter().any(|column| {
