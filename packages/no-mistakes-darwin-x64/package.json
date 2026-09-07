@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes-darwin-x64",
-  "version": "0.56.0",
+  "version": "0.57.0",
   "description": "Native no-mistakes CLI and N-API addon for macOS x64",
   "license": "MIT",
   "repository": {
