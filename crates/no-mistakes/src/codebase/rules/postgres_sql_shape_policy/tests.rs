@@ -90,13 +90,12 @@ fn rejects_unknown_options() {
     .expect("shape");
     assert!(error.to_string().contains("bannedShapes"), "{error}");
     assert!(
-        compile_options(&Options {
+        !compile_options(&Options {
             banned_shapes: vec!["correlated-exists-set-operation".into()],
             unanalyzable_sql: "ignore".into(),
             ..Default::default()
         })
         .unwrap()
         .fail_unanalyzable
-            == false
     );
 }
