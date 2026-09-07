@@ -21,9 +21,9 @@
     "test": "vitest run --coverage"
   },
   "devDependencies": {
-    "@typescript-eslint/parser": "^8.67.0",
+    "@typescript-eslint/parser": "^8.68.0",
     "@vitest/coverage-v8": "^4.1.11",
-    "eslint": "^10.9.0",
+    "eslint": "^10.9.1",
     "oxlint": "^1.80.0",
     "vitest": "^4.1.11"
   },
