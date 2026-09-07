@@ -3,11 +3,7 @@ use crate::codebase::postgres::parse_postgres_sql;
 use sqlparser::ast::{SelectItem, SetExpr, Statement};
 
 fn projection_names(sql: &str) -> Vec<String> {
-    let Statement::Query(query) = parse_postgres_sql(sql)
-        .unwrap()
-        .pop()
-        .unwrap()
-    else {
+    let Statement::Query(query) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
         panic!("query");
     };
     let SetExpr::Select(select) = query.body.as_ref() else {
