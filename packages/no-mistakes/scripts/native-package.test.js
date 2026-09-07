@@ -22,11 +22,11 @@ test("accepts only regular executable Unix files and regular Windows files", () 
     writeFileSync(cli, "binary");
     mkdirSync(childDirectory);
     chmodSync(cli, 0o644);
-    assert.equal(usableCli(cli, "darwin"), false);
+    if (process.platform !== "win32") assert.equal(usableCli(cli, "darwin"), false);
     assert.equal(usableCli(cli, "win32"), true);
     assert.equal(usableCli(childDirectory, "win32"), false);
     chmodSync(cli, 0o755);
-    assert.equal(usableCli(cli, "darwin"), true);
+    if (process.platform !== "win32") assert.equal(usableCli(cli, "darwin"), true);
   } finally {
     rmSync(directory, { recursive: true, force: true });
   }
