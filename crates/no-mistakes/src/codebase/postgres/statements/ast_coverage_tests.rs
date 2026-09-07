@@ -186,4 +186,13 @@ USER VALUE VALUES (1, 'a')",
     )
     .assignments
     .is_empty());
+
+    assert!(super::insert::from_insert(
+        "INSERT INTO items (id, seen) OVERRIDING /* outer /* inner */ note */\nUSER VALUE VALUES (1, 'a')",
+        &insert,
+        1,
+        true,
+    )
+    .assignments
+    .is_empty());
 }
