@@ -47,6 +47,18 @@ export async function switchBreakStillReachesLaterMatcher(flag: boolean) {
   await expect(update).rejects.toThrow();
 }
 
+export async function switchFallthroughReachesMatcher(kind: "wait" | "assert") {
+  const update = startOperation();
+  switch (kind) {
+    case "wait":
+      await release();
+      Math.random();
+    case "assert":
+      await expect(update).rejects.toThrow();
+      break;
+  }
+}
+
 export async function breakAfterMatcherDoesNotSuppressDiagnostic() {
   const update = startOperation();
   while (true) {
