@@ -86,6 +86,12 @@ including `.default()`.
 
 `checkedPathPatterns?: string[]` and `allowedPathPatterns?: string[]`.
 
+### `no-inline-noop-promise-catch`
+
+`checkedPathPatterns?: string[]` and `allowedPathPatterns?: string[]` scope
+files (empty `checkedPathPatterns` checks every file).
+`allowedCalleeNamePatterns?: string[]` skips matching originating call names.
+
 ### `playwright-assertion-timeout-cap`
 
 `max?: number`; default `10000` milliseconds.

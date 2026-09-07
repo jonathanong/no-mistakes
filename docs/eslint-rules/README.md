@@ -17,6 +17,7 @@ cross-rule option reference is in [`eslint-plugin`](../eslint-plugin.md#rule-opt
 | [`async-call-disposition`](async-call-disposition.md)             | Make configured async calls awaited, returned, or explicitly detached. |
 | [`async-try-catch-return-await`](async-try-catch-return-await.md) | Keep configured promise rejections inside the intended `try`/`catch`.  |
 | [`await-array-methods`](await-array-methods.md)                   | Reject awaiting synchronous array helpers.                             |
+| [`no-inline-noop-promise-catch`](no-inline-noop-promise-catch.md) | Reject inline Promise catch callbacks that do not handle the rejection. |
 | [`module-mock-boundary`](module-mock-boundary.md)                 | Restrict configured internal module mocks.                             |
 | [`module-mock-preserve-exports`](module-mock-preserve-exports.md) | Preserve untouched exports in allowed internal module mocks.           |
 
