@@ -289,7 +289,7 @@ jobs:
 
     steps:
       - name: Exclude workspace from Microsoft Defender
-        if: ${{ runner.os == 'Windows' }}
+        if: ${{ runner.os == 'Windows' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
         timeout-minutes: 2
         continue-on-error: true
         shell: powershell
