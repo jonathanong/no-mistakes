@@ -249,3 +249,31 @@ fn select_list_case_wrapped_exists_is_collected() {
     );
     assert_eq!(flags, vec![(false, true)], "{flags:?}");
 }
+
+#[test]
+fn function_inlist_star_and_natural_join_shapes() {
+    let coalesced = exists_ops(
+        "SELECT COALESCE(EXISTS (
+            SELECT 1 FROM topics WHERE topics.post_id = posts.id
+            UNION ALL
+            SELECT 1 FROM tags WHERE tags.post_id = posts.id
+         ), false) FROM posts",
+    );
+    assert_eq!(coalesced, vec![(false, true)], "{coalesced:?}");
+    let listed = exists_ops(
+        "SELECT * FROM posts WHERE EXISTS (
+            SELECT 1 FROM topics WHERE topics.post_id IN (posts.id, 0)
+            UNION ALL
+            SELECT 1 FROM tags WHERE tags.post_id IS TRUE
+         )",
+    );
+    assert_eq!(listed, vec![(false, true)], "{listed:?}");
+    let natural = exists_ops(
+        "SELECT 1 WHERE EXISTS (
+            SELECT 1 FROM topics NATURAL JOIN tags
+            UNION ALL
+            SELECT 1 FROM topics
+         )",
+    );
+    assert_eq!(natural, vec![(false, false)], "{natural:?}");
+}

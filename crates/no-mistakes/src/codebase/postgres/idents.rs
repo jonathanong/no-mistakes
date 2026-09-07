@@ -103,3 +103,6 @@ fn function_arg_expr(arg: &sqlparser::ast::FunctionArg) -> Option<&Expr> {
         _ => None,
     }
 }
+
+#[cfg(test)]
+mod tests;
