@@ -60,19 +60,19 @@ importers:
   packages/no-mistakes:
     optionalDependencies:
       no-mistakes-darwin-arm64:
-        specifier: 0.57.1
+        specifier: 0.58.0
         version: link:../no-mistakes-darwin-arm64
       no-mistakes-darwin-x64:
-        specifier: 0.57.1
+        specifier: 0.58.0
         version: link:../no-mistakes-darwin-x64
       no-mistakes-linux-arm64-gnu:
-        specifier: 0.57.1
+        specifier: 0.58.0
         version: link:../no-mistakes-linux-arm64-gnu
       no-mistakes-linux-x64-gnu:
-        specifier: 0.57.1
+        specifier: 0.58.0
         version: link:../no-mistakes-linux-x64-gnu
       no-mistakes-win32-x64-msvc:
-        specifier: 0.57.1
+        specifier: 0.58.0
         version: link:../no-mistakes-win32-x64-msvc
 
   packages/no-mistakes-darwin-arm64: {}
