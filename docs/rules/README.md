@@ -90,6 +90,9 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-require-named-constraints`](postgres-require-named-constraints.md)     | Require names on ALTER TABLE ADD FOREIGN KEY and CHECK.                     |
 | [`postgres-require-fk-on-delete`](postgres-require-fk-on-delete.md)               | Require an explicit ON DELETE action on every foreign key.                  |
 | [`postgres-sql-statement-policy`](postgres-sql-statement-policy.md)               | Ban configured SQL statement kinds in matching schema files.                |
+| [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md)                       | Ban unsafe SQL shapes such as unrestricted EXISTS set operations.           |
+| [`postgres-required-predicates`](postgres-required-predicates.md)                 | Require configured predicates on named PostgreSQL relations.                |
+| [`postgres-idempotent-insert`](postgres-idempotent-insert.md)                     | Require replay-safe INSERT (ON CONFLICT / NOT EXISTS).                      |
 | [`postgres-fk-index`](postgres-fk-index.md)                                       | Require a leading btree/hash index on each foreign key column.              |
 | [`postgres-redundant-index`](postgres-redundant-index.md)                         | Flag btree indexes whose keys are a strict prefix of another live index.    |
 | [`postgres-no-generated-column-writes`](postgres-no-generated-column-writes.md) | Ban DML writes to PostgreSQL generated columns.                               |

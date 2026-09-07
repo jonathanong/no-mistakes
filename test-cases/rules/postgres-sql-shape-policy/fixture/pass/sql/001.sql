@@ -1,0 +1,6 @@
+SELECT 1
+WHERE EXISTS (
+  SELECT 1 FROM topics WHERE id = $1
+  UNION ALL
+  SELECT 1 FROM topics WHERE id = $1
+);

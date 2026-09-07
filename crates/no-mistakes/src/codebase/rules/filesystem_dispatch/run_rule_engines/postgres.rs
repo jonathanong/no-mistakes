@@ -49,10 +49,19 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
+        POSTGRES_REQUIRED_PREDICATES => {
+            postgres_required_predicates::check_with_files_and_sources(root, config, files, sources)
+        }
+        POSTGRES_SQL_SHAPE_POLICY => {
+            postgres_sql_shape_policy::check_with_files_and_sources(root, config, files, sources)
+        }
         POSTGRES_SQL_STATEMENT_POLICY => {
             postgres_sql_statement_policy::check_with_files_and_sources(
                 root, config, files, sources,
             )
+        }
+        POSTGRES_IDEMPOTENT_INSERT => {
+            postgres_idempotent_insert::check_with_files_and_sources(root, config, files, sources)
         }
         _ => return None,
     })

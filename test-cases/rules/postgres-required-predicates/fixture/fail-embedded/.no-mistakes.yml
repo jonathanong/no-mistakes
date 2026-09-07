@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      relations:
+        - table: topics
+          require:
+            - parent_id IS NOT NULL
