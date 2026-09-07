@@ -51,6 +51,21 @@ function interestingStep(name) {
   );
 }
 
+function workloadStep(name) {
+  return (
+    interestingStep(name) ||
+    name === "Run native CLI smoke test" ||
+    name === "Run real N-API API test"
+  );
+}
+
+function compileWorkloadFailed(job) {
+  return (job.steps ?? []).some(
+    (step) =>
+      workloadStep(step.name) && (step.conclusion === "failure" || step.conclusion === "cancelled"),
+  );
+}
+
 function stepDurationMap(job, nowMs) {
   const map = new Map();
   for (const step of job.steps ?? []) {
@@ -85,11 +100,15 @@ function comparableDurationSeconds(job, nowMs = Date.now()) {
 }
 
 function buildMarkdown({ jobName, afterJob, beforeJob, afterSha, beforeSha, nowMs = Date.now() }) {
+  const afterFailed = compileWorkloadFailed(afterJob);
   const afterSeconds = comparableDurationSeconds(afterJob, nowMs);
   const beforeSeconds = beforeJob ? comparableDurationSeconds(beforeJob, nowMs) : null;
   const afterSteps = stepDurationMap(afterJob, nowMs);
   const beforeSteps = beforeJob ? stepDurationMap(beforeJob, nowMs) : new Map();
   const stepNames = [...new Set([...beforeSteps.keys(), ...afterSteps.keys()])];
+  const delta = afterFailed
+    ? "n/a (current run failed)"
+    : `**${formatDelta(afterSeconds, beforeSeconds)}**`;
 
   const lines = [
     commentMarker(jobName),
@@ -99,7 +118,7 @@ function buildMarkdown({ jobName, afterJob, beforeJob, afterSha, beforeSha, nowM
     "| --- | --- | --- |",
     `| Before (base) | ${formatDuration(beforeSeconds)} | ${beforeSha ? `\`${beforeSha.slice(0, 7)}\`` : "n/a"} |`,
     `| After (this run) | ${formatDuration(afterSeconds)} | ${afterSha ? `\`${afterSha.slice(0, 7)}\`` : "n/a"} |`,
-    `| Delta | **${formatDelta(afterSeconds, beforeSeconds)}** | |`,
+    `| Delta | ${delta} | |`,
     "",
   ];
 
@@ -191,6 +210,8 @@ async function findBeforeJob({ repository, workflow, jobName, baseSha, baseRef }
     workflow,
     "--branch",
     baseRef,
+    "--event",
+    "push",
     "--status",
     "success",
     "--json",
@@ -326,6 +347,7 @@ module.exports = {
   findSuccessfulJob,
   formatDelta,
   formatDuration,
+  compileWorkloadFailed,
   interestingStep,
   isSuccessfulRun,
 };

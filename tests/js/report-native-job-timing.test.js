@@ -3,6 +3,7 @@ const {
   buildMarkdown,
   commentMarker,
   comparableDurationSeconds,
+  compileWorkloadFailed,
   findJobByName,
   findSuccessfulJob,
   formatDelta,
@@ -91,4 +92,26 @@ test("job totals stop at the last compile step, not post-job cleanup", () => {
     ],
   };
   assert.equal(comparableDurationSeconds(job, nowMs), 554);
+});
+
+test("failed compile or test steps suppress the performance delta", () => {
+  const failed = {
+    started_at: "2026-09-07T12:33:27Z",
+    steps: [
+      {
+        name: "Build native CLI and N-API addon",
+        started_at: "2026-09-07T12:38:11Z",
+        completed_at: "2026-09-07T12:40:00Z",
+        conclusion: "failure",
+      },
+    ],
+  };
+  assert.equal(compileWorkloadFailed(failed), true);
+  const markdown = buildMarkdown({
+    jobName: "Windows x64",
+    afterJob: failed,
+    beforeJob: failed,
+    nowMs: Date.parse("2026-09-07T12:50:00Z"),
+  });
+  assert.match(markdown, /n\/a \(current run failed\)/);
 });
