@@ -4,6 +4,7 @@ mod arbiter;
 mod convergence;
 mod generated;
 mod trigger;
+mod where_noop;
 
 #[cfg(test)]
 mod coverage_more_tests;
@@ -11,6 +12,8 @@ mod coverage_more_tests;
 mod coverage_tests;
 #[cfg(test)]
 mod trigger_tests;
+#[cfg(test)]
+mod where_noop_tests;
 
 use crate::codebase::postgres::statement_facts::{
     SqlInsertFact, SqlOnConflictAction, SqlStatementFileFacts, SqlTriggerFact, SqlValueForm,

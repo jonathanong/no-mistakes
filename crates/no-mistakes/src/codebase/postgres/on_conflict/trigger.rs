@@ -123,7 +123,9 @@ fn unsafe_reason(
     if allowlisted {
         return None;
     }
-    if trigger.period == SqlTriggerPeriod::After && where_proves_noop(conflict, assigned) {
+    if trigger.period == SqlTriggerPeriod::After
+        && super::where_noop::where_proves_noop(conflict, assigned, &trigger.table, catalog)
+    {
         return None;
     }
     Some(format!(
@@ -165,7 +167,7 @@ fn has_update_event(trigger: &SqlTriggerFact) -> bool {
         .any(|event| matches!(event, SqlTriggerEvent::Update { .. }))
 }
 
-fn fires_update(trigger: &SqlTriggerFact, assigned: &[String]) -> bool {
+pub(super) fn fires_update(trigger: &SqlTriggerFact, assigned: &[String]) -> bool {
     trigger.events.iter().any(|event| match event {
         SqlTriggerEvent::Update { columns } if columns.is_empty() => true,
         SqlTriggerEvent::Update { columns } => columns.iter().any(|column| {
@@ -174,27 +176,5 @@ fn fires_update(trigger: &SqlTriggerFact, assigned: &[String]) -> bool {
                 .any(|assigned| assigned.eq_ignore_ascii_case(column))
         }),
         _ => false,
-    })
-}
-
-fn where_proves_noop(conflict: &SqlOnConflictFact, assigned: &[String]) -> bool {
-    if conflict.where_proof.disjunctive || assigned.is_empty() {
-        return false;
-    }
-    assigned.iter().all(|column| {
-        conflict.assignments.iter().any(|assignment| {
-            assignment.column.eq_ignore_ascii_case(column)
-                && super::form_is_excluded(&assignment.form, column)
-                && (conflict
-                    .where_proof
-                    .distinct_from_excluded
-                    .iter()
-                    .any(|name| name.eq_ignore_ascii_case(column))
-                    || conflict
-                        .where_proof
-                        .null_and_excluded_not_null
-                        .iter()
-                        .any(|name| name.eq_ignore_ascii_case(column)))
-        })
     })
 }

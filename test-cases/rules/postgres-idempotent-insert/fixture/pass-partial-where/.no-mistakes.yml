@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-idempotent-insert
+    scope: repository
+    options:
+      sqlInclude: ["sql/**/*.sql"]

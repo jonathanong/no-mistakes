@@ -66,7 +66,14 @@ Executed inserts must include `ON CONFLICT` or a top-level conjunctive
 lists must be convergent; volatile functions may only follow a self-reference
 in `COALESCE`; arbiter columns must stay `EXCLUDED` or unchanged; triggers that
 re-fire on replay are findings unless allowlisted; allowlisted triggers that
-write generated-arbiter source columns still fail.
+write generated-arbiter source columns still fail. A conjunctive `DO UPDATE`
+`WHERE` that proves any one assigned `EXCLUDED` column (`IS DISTINCT FROM
+EXCLUDED` or `IS NULL AND EXCLUDED IS NOT NULL`) is a no-op for `AFTER UPDATE`
+row triggers, because Postgres skips the whole update when `WHERE` is false.
+A proof column listed in `triggerWrittenColumns` for any applicable trigger
+still fails: another function on the same update can rewrite the column so
+the next replay sees a true `WHERE`.
+Disjunctive `WHERE` and constant `SET` plus a matching `WHERE` still fail.
 
 ## Options and defaults
 
@@ -84,6 +91,16 @@ write (default `{}`). `unanalyzableSql` defaults to `fail` (`fail` or
 
 ```sql
 INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+```
+
+A conjunctive `WHERE` on any one assigned `EXCLUDED` column is also enough
+for `AFTER UPDATE` row triggers, even when the trigger watches a different
+assigned column:
+
+```sql
+INSERT INTO items (id, a, b) VALUES (1, 'x', 'y')
+ON CONFLICT (id) DO UPDATE SET a = EXCLUDED.a, b = EXCLUDED.b
+WHERE items.b IS DISTINCT FROM EXCLUDED.b;
 ```
 
 ## Counterexample

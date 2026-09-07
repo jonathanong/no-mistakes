@@ -63,3 +63,10 @@ fn postgres_idempotent_insert_passes_do_nothing() {
     let out = check_json(&root);
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
+
+#[test]
+fn postgres_idempotent_insert_passes_partial_where_noop() {
+    let root = fixture("postgres-idempotent-insert", "pass-partial-where");
+    let out = check_json(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}

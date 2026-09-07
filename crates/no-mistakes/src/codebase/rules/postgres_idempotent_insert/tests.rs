@@ -46,6 +46,13 @@ fn do_nothing_passes() {
 }
 
 #[test]
+fn partial_where_noop_passes() {
+    // One proven assigned EXCLUDED column is enough: Postgres skips the whole
+    // DO UPDATE when WHERE is false, so AFTER UPDATE OF a does not re-fire.
+    assert!(run(&fixture("pass-partial-where")).is_empty());
+}
+
+#[test]
 fn not_exists_passes() {
     assert!(run(&fixture("pass-not-exists")).is_empty());
 }
