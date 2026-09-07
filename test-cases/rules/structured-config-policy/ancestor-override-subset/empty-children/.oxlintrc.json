@@ -1,0 +1,4 @@
+{
+  // No inventory children, so lost-override restatement is not required.
+  "extends": ["../.oxlintrc.json"]
+}

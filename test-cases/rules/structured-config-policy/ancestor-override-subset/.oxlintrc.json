@@ -1,0 +1,55 @@
+{
+  // Nested configs rebase these override globs against their own directory.
+  "overrides": [
+    "skip-non-object",
+    {
+      "files": [
+        "**/nested/**",
+        "**/lost/**",
+        "**/drift/**",
+        "**/superset/**",
+        "**/deep/**",
+        "**/string-extends/**",
+        "**/empty-children/**",
+        "**/multi/**",
+        "**/multi-ok/**",
+        "**/symlink/**",
+        "**/outside/**"
+      ],
+      "rules": {
+        "no-void": "off",
+        "no-await-in-loop": "off"
+      }
+    },
+    {
+      "files": ["**/*.ts"],
+      "rules": {
+        "no-debugger": "off"
+      }
+    },
+    {
+      "files": ["**/other-helpers/**"],
+      "rules": {
+        "no-console": "off"
+      }
+    },
+    {
+      "files": ["["],
+      "rules": {
+        "bogus-rule": "off"
+      }
+    },
+    {
+      "files": ["**/nested/**"]
+    },
+    {
+      "rules": {
+        "also-bogus": "off"
+      }
+    },
+    {
+      "files": [1, true, "**/nested/**"],
+      "rules": "not-a-map"
+    }
+  ]
+}

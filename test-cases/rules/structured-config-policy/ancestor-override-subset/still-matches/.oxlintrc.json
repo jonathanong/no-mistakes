@@ -1,0 +1,4 @@
+{
+  // Ancestor `**/*.ts` still matches after rebase, so no restatement is required.
+  "extends": ["../.oxlintrc.json"]
+}

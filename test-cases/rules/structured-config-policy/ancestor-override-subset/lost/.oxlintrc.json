@@ -1,0 +1,4 @@
+{
+  // Intentionally omits restated ancestor override rules.
+  "extends": ["../.oxlintrc.json"]
+}

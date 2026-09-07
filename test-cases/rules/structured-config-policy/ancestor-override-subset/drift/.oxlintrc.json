@@ -1,0 +1,7 @@
+{
+  "extends": ["../.oxlintrc.json"],
+  "rules": {
+    "no-void": "error",
+    "no-await-in-loop": "off"
+  }
+}

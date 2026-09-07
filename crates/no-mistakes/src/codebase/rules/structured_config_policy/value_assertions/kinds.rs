@@ -33,7 +33,7 @@ pub(super) fn kind_violation(
             .as_ref()
             .is_some_and(|expected| expected != value)
             .then(|| "must equal the configured value".to_string()),
-        AssertionKind::EqualsFile => None,
+        AssertionKind::EqualsFile | AssertionKind::AncestorOverrideSubset => None,
         AssertionKind::ObjectShape => object_shape_violation(value, assertion),
     }
 }

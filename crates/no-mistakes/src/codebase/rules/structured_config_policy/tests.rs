@@ -405,12 +405,17 @@ fn assertion_enums_clone_eq_and_debug() {
     assert_ne!(MatchMode::All, MatchMode::Any);
     assert_eq!(AssertionKind::Boolean, AssertionKind::Boolean);
     assert_eq!(AssertionKind::EqualsFile, AssertionKind::EqualsFile);
+    assert_eq!(
+        AssertionKind::AncestorOverrideSubset,
+        AssertionKind::AncestorOverrideSubset
+    );
     let _ = PolicyWhen::default();
     let _ = format!(
-        "{:?}{:?}{:?}{:?}",
+        "{:?}{:?}{:?}{:?}{:?}",
         MatchMode::All,
         MatchMode::Any,
         AssertionKind::ObjectShape,
-        AssertionKind::EqualsFile
+        AssertionKind::EqualsFile,
+        AssertionKind::AncestorOverrideSubset
     );
 }
