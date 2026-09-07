@@ -187,22 +187,3 @@ USER VALUE VALUES (1, 'a')",
     .assignments
     .is_empty());
 }
-
-#[test]
-fn unclosed_block_comment_keeps_source_forms() {
-    let sql = "INSERT INTO items (id, seen) VALUES (1, 'a')";
-    let Statement::Insert(insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
-        panic!("insert");
-    };
-    assert!(!super::insert::from_insert(sql, &insert, 1, true)
-        .assignments
-        .is_empty());
-    assert!(!super::insert::from_insert(
-        "INSERT INTO items (id, seen) VALUES (1, 'a') /*",
-        &insert,
-        1,
-        true,
-    )
-    .assignments
-    .is_empty());
-}

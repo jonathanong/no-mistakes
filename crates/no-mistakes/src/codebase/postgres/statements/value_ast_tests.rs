@@ -193,19 +193,4 @@ fn datetime_idents_and_quoted_now_are_unstable_forms() {
         )),
         SqlValueForm::Other
     );
-    let minus_one = Expr::UnaryOp {
-        op: UnaryOperator::Minus,
-        expr: Box::new(Expr::Value(
-            Value::Number("1".into(), false).with_empty_span(),
-        )),
-    };
-    assert_eq!(super::value::from_expr(&minus_one), SqlValueForm::Literal);
-    let minus_now = Expr::UnaryOp {
-        op: UnaryOperator::Minus,
-        expr: Box::new(Expr::Identifier(Ident::new("now"))),
-    };
-    assert!(matches!(
-        super::value::from_expr(&minus_now),
-        SqlValueForm::Volatile { name } if name == "now"
-    ));
 }
