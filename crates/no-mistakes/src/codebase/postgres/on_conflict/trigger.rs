@@ -1,7 +1,7 @@
 use super::Catalog;
 use crate::codebase::postgres::statement_facts::{
-    SqlConflictArbiter, SqlInsertFact, SqlOnConflictFact, SqlTriggerEvent, SqlTriggerFact,
-    SqlTriggerPeriod,
+    SqlConflictArbiter, SqlInsertFact, SqlOnConflictAction, SqlOnConflictFact, SqlTriggerEvent,
+    SqlTriggerFact, SqlTriggerPeriod,
 };
 
 pub(super) fn judge(
@@ -51,7 +51,10 @@ fn unsafe_reason(
     let writes = written_columns(trigger, catalog);
     let applies = (trigger.for_each_row
         && (fires_insert(trigger) || fires_update(trigger, assigned)))
-        || (!trigger.for_each_row && (fires_insert(trigger) || has_update_event(trigger)));
+        || (!trigger.for_each_row
+            && (fires_insert(trigger)
+                || (has_update_event(trigger)
+                    && conflict.action == SqlOnConflictAction::DoUpdate)));
     if !applies {
         return None;
     }

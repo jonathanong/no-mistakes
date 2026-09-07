@@ -117,6 +117,18 @@ fn update_of_note_does_not_fire_on_other_assignment() {
 }
 
 #[test]
+fn statement_update_trigger_ignored_on_do_nothing() {
+    let file = extract_sql_statement_facts(
+        "INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING;",
+    );
+    let triggers = extract_sql_statement_facts(
+        "CREATE TRIGGER t AFTER UPDATE ON items EXECUTE FUNCTION audit();",
+    )
+    .triggers;
+    assert!(judge_file(&file, &catalog(&triggers, &[], &[])).is_empty());
+}
+
+#[test]
 fn generated_arbiter_falls_back_to_function_args() {
     use crate::codebase::postgres::types::{
         SqlColumnMetadata, SqlCreateTableMetadata, SqlSchemaFileFacts,

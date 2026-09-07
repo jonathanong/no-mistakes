@@ -1,10 +1,30 @@
-/// Replace quoted and dollar-quoted SQL text with spaces so keyword scans
-/// cannot match identifiers or literals.
+/// Mask comments, quoted strings, and dollar-quoted bodies in one scan so
+/// comment markers inside literals and quotes inside comments cannot nest.
 pub fn mask_quoted_sql(sql: &str) -> String {
+    mask_regions(sql)
+}
+
+/// Same one-pass mask as [`mask_quoted_sql`].
+pub fn mask_comments(sql: &str) -> String {
+    mask_regions(sql)
+}
+
+fn mask_regions(sql: &str) -> String {
     let chars: Vec<char> = sql.chars().collect();
     let mut out = String::with_capacity(sql.len());
     let mut index = 0usize;
     while index < chars.len() {
+        if chars[index] == '-' && chars.get(index + 1) == Some(&'-') {
+            while index < chars.len() && chars[index] != '\n' {
+                out.push(' ');
+                index += 1;
+            }
+            continue;
+        }
+        if chars[index] == '/' && chars.get(index + 1) == Some(&'*') {
+            index = skip_block_comment(&chars, index, &mut out);
+            continue;
+        }
         if chars[index] == '\'' {
             index = skip_quote(&chars, index, '\'', &mut out);
             continue;
@@ -23,6 +43,25 @@ pub fn mask_quoted_sql(sql: &str) -> String {
         index += 1;
     }
     out
+}
+
+fn skip_block_comment(chars: &[char], mut index: usize, out: &mut String) -> usize {
+    out.push(' ');
+    out.push(' ');
+    index += 2;
+    while index + 1 < chars.len() && !(chars[index] == '*' && chars[index + 1] == '/') {
+        out.push(if chars[index] == '\n' { '\n' } else { ' ' });
+        index += 1;
+    }
+    if index < chars.len() {
+        out.push(' ');
+        index += 1;
+    }
+    if index < chars.len() {
+        out.push(' ');
+        index += 1;
+    }
+    index
 }
 
 fn skip_quote(chars: &[char], start: usize, quote: char, out: &mut String) -> usize {
@@ -67,44 +106,6 @@ fn skip_dollar(chars: &[char], start: usize, out: &mut String) -> Option<usize> 
         index += 1;
     }
     Some(chars.len())
-}
-
-/// Replace `--` and `/* */` comments with spaces while keeping newlines so
-/// later keyword scans still line up with the original source.
-pub fn mask_comments(sql: &str) -> String {
-    let chars: Vec<char> = sql.chars().collect();
-    let mut out = String::with_capacity(sql.len());
-    let mut index = 0usize;
-    while index < chars.len() {
-        if chars[index] == '-' && chars.get(index + 1) == Some(&'-') {
-            while index < chars.len() && chars[index] != '\n' {
-                out.push(' ');
-                index += 1;
-            }
-            continue;
-        }
-        if chars[index] == '/' && chars.get(index + 1) == Some(&'*') {
-            out.push(' ');
-            out.push(' ');
-            index += 2;
-            while index + 1 < chars.len() && !(chars[index] == '*' && chars[index + 1] == '/') {
-                out.push(if chars[index] == '\n' { '\n' } else { ' ' });
-                index += 1;
-            }
-            if index < chars.len() {
-                out.push(' ');
-                index += 1;
-            }
-            if index < chars.len() {
-                out.push(' ');
-                index += 1;
-            }
-            continue;
-        }
-        out.push(chars[index]);
-        index += 1;
-    }
-    out
 }
 
 pub fn insert_keyword_count(masked: &str) -> usize {

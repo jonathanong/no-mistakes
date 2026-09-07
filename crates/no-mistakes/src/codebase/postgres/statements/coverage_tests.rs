@@ -151,3 +151,15 @@ fn dollar_and_escaped_quotes_do_not_count_inserts() {
     );
     assert!(facts.insert_keyword_count <= 1, "{facts:?}");
 }
+
+#[test]
+fn comment_marker_inside_string_does_not_hide_insert() {
+    let facts = extract_sql_statement_facts("SELECT '/*'; INSERT INTO items (id) VALUES (1);");
+    assert!(facts.insert_keyword_count >= 1, "{facts:?}");
+    assert_eq!(facts.inserts.len(), 1);
+    let sql = "SELECT '/*'; INSERT INTO items (id) VALUES (1);";
+    assert_eq!(
+        super::fallback::mask_comments(sql),
+        super::fallback::mask_quoted_sql(sql)
+    );
+}
