@@ -13,6 +13,8 @@ mod coverage_tests;
 #[cfg(test)]
 mod trigger_tests;
 #[cfg(test)]
+mod where_noop_gap_tests;
+#[cfg(test)]
 mod where_noop_tests;
 
 use crate::codebase::postgres::statement_facts::{

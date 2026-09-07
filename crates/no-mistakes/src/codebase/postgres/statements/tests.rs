@@ -1,4 +1,4 @@
-use super::{extract_sql_statement_facts, SqlOnConflictAction};
+use super::{extract_sql_statement_facts, SqlOnConflictAction, SqlValueForm};
 use std::path::PathBuf;
 
 #[test]
@@ -235,5 +235,131 @@ fn exists_boolean_predicate_is_restricted() {
             .any(|exists| exists.restricted)),
         "{:#?}",
         facts.selects
+    );
+}
+
+#[test]
+fn insert_values_forms_are_collected() {
+    let facts =
+        extract_sql_statement_facts("INSERT INTO items (id, note, seen) VALUES (1, 'a', now());");
+    let insert = &facts.inserts[0];
+    assert!(
+        insert
+            .assignments
+            .iter()
+            .any(|assignment| assignment.column == "note"
+                && assignment.form == SqlValueForm::Literal),
+        "{:#?}",
+        insert.assignments
+    );
+    assert!(
+        insert.assignments.iter().any(|assignment| {
+            assignment.column == "seen" && matches!(assignment.form, SqlValueForm::Volatile { .. })
+        }),
+        "{:#?}",
+        insert.assignments
+    );
+}
+
+#[test]
+fn insert_select_forms_are_collected() {
+    let facts = extract_sql_statement_facts("INSERT INTO items (id, seen) SELECT 1, now();");
+    assert!(
+        facts.inserts[0].assignments.iter().any(|assignment| {
+            assignment.column == "seen" && matches!(assignment.form, SqlValueForm::Volatile { .. })
+        }),
+        "{:#?}",
+        facts.inserts[0].assignments
+    );
+}
+
+#[test]
+fn insert_default_and_timestamp_idents_are_unstable() {
+    let defaulted =
+        extract_sql_statement_facts("INSERT INTO items (id, seen) VALUES (1, DEFAULT);");
+    assert!(
+        defaulted.inserts[0]
+            .assignments
+            .iter()
+            .any(|assignment| assignment.column == "seen"
+                && assignment.form == SqlValueForm::Other),
+        "{:#?}",
+        defaulted.inserts[0].assignments
+    );
+    let timestamp =
+        extract_sql_statement_facts("INSERT INTO items (id, seen) VALUES (1, CURRENT_TIMESTAMP);");
+    assert!(
+        timestamp.inserts[0].assignments.iter().any(|assignment| {
+            assignment.column == "seen" && matches!(assignment.form, SqlValueForm::Volatile { .. })
+        }),
+        "{:#?}",
+        timestamp.inserts[0].assignments
+    );
+}
+
+#[test]
+fn insert_select_star_and_implicit_columns_have_no_forms() {
+    let star = extract_sql_statement_facts("INSERT INTO items (id, seen) SELECT * FROM src;");
+    assert!(
+        star.inserts[0].assignments.is_empty(),
+        "{:#?}",
+        star.inserts[0].assignments
+    );
+    let implicit = extract_sql_statement_facts("INSERT INTO items VALUES (1, now());");
+    assert!(
+        implicit.inserts[0].assignments.is_empty(),
+        "{:#?}",
+        implicit.inserts[0].assignments
+    );
+}
+
+#[test]
+fn insert_source_covers_parens_union_alias_and_defaults() {
+    let parenthesized =
+        extract_sql_statement_facts("INSERT INTO items (id, seen) (SELECT 1, now());");
+    assert!(
+        parenthesized.inserts[0]
+            .assignments
+            .iter()
+            .any(|assignment| assignment.column == "seen"
+                && matches!(assignment.form, SqlValueForm::Volatile { .. })),
+        "{:#?}",
+        parenthesized.inserts[0].assignments
+    );
+    let union = extract_sql_statement_facts(
+        "INSERT INTO items (id, seen) SELECT 1, 'x' UNION SELECT 2, now();",
+    );
+    assert!(
+        union.inserts[0].assignments.is_empty(),
+        "{:#?}",
+        union.inserts[0].assignments
+    );
+    let aliased =
+        extract_sql_statement_facts("INSERT INTO items (id, seen) SELECT 1 AS id, now() AS seen;");
+    assert!(
+        aliased.inserts[0].assignments.iter().any(|assignment| {
+            assignment.column == "seen" && matches!(assignment.form, SqlValueForm::Volatile { .. })
+        }),
+        "{:#?}",
+        aliased.inserts[0].assignments
+    );
+    let short = extract_sql_statement_facts("INSERT INTO items (id, a, b) SELECT 1, 'x';");
+    assert!(
+        short.inserts[0]
+            .assignments
+            .iter()
+            .any(|assignment| assignment.column == "b" && assignment.form == SqlValueForm::Other),
+        "{:#?}",
+        short.inserts[0].assignments
+    );
+    let ragged =
+        extract_sql_statement_facts("INSERT INTO items (id, a, b) VALUES (1, 'x', 'y'), (2, 'x');");
+    assert!(
+        ragged.inserts[0]
+            .assignments
+            .iter()
+            .any(|assignment| assignment.column == "b" && assignment.form == SqlValueForm::Other),
+        "{:#?}",
+        ragged.inserts[0].assignments
     );
 }

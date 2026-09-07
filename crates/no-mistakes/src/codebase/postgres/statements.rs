@@ -5,6 +5,7 @@ mod exists;
 mod exists_correlation;
 mod fallback;
 mod insert;
+mod insert_source;
 mod lines;
 mod not_exists;
 mod select;
@@ -14,6 +15,7 @@ mod wrappers;
 
 pub use crate::codebase::postgres::statement_facts::*;
 pub use fallback::{insert_keyword_count, mask_quoted_sql};
+pub(crate) use value::form_is_stable;
 
 use crate::codebase::postgres::parse::{parse_postgres_sql, parse_postgres_sql_lenient};
 use sqlparser::ast::{Query, SetExpr, Statement};

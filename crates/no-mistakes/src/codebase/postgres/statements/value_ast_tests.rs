@@ -142,3 +142,20 @@ fn unary_not_exists_and_unrestricted_exists_leaves() {
         .null_and_excluded_not_null
         .is_empty());
 }
+
+#[test]
+fn insert_value_stability_is_literals_nulls_and_placeholders() {
+    use super::form_is_stable;
+    assert!(form_is_stable(&SqlValueForm::Literal));
+    assert!(form_is_stable(&SqlValueForm::Null));
+    assert!(form_is_stable(&SqlValueForm::Placeholder));
+    assert!(form_is_stable(&SqlValueForm::Greatest {
+        args: vec![SqlValueForm::Literal, SqlValueForm::Null]
+    }));
+    assert!(!form_is_stable(&SqlValueForm::SelfRef {
+        column: "b".into()
+    }));
+    assert!(!form_is_stable(&SqlValueForm::Least {
+        args: vec![SqlValueForm::Placeholder, SqlValueForm::Other]
+    }));
+}

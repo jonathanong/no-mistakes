@@ -124,3 +124,24 @@ fn trigger_period_for_and_for_row_object() {
     assert!(fact.for_each_row);
     assert!(fact.function.is_empty());
 }
+
+#[test]
+fn insert_source_without_query_or_rows_is_unstable() {
+    let sql = "INSERT INTO items (id, seen) VALUES (1, 'a')";
+    let Statement::Insert(mut insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
+        panic!("insert");
+    };
+    insert.source = None;
+    assert!(super::insert::from_insert(sql, &insert, 1, true)
+        .assignments
+        .is_empty());
+    insert.source = Some(Box::new(empty_query()));
+    assert!(
+        super::insert::from_insert(sql, &insert, 1, true)
+            .assignments
+            .iter()
+            .all(|assignment| assignment.form == super::SqlValueForm::Other),
+        "{:#?}",
+        super::insert::from_insert(sql, &insert, 1, true).assignments
+    );
+}

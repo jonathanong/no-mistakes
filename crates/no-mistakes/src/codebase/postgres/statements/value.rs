@@ -36,6 +36,12 @@ pub(super) fn from_expr(expr: &Expr) -> SqlValueForm {
     match unwrap_expr(expr) {
         Expr::Value(value) => from_value(value),
         Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => SqlValueForm::Placeholder,
+        Expr::Identifier(ident) if is_volatile_name(&ident.value) => SqlValueForm::Volatile {
+            name: ident.value.to_ascii_lowercase(),
+        },
+        Expr::Identifier(ident) if ident.value.eq_ignore_ascii_case("default") => {
+            SqlValueForm::Other
+        }
         Expr::Identifier(ident) => SqlValueForm::SelfRef {
             column: ident.value.clone(),
         },
@@ -67,7 +73,7 @@ fn compound_form(parts: &[sqlparser::ast::Ident]) -> SqlValueForm {
 
 fn from_function(function: &Function) -> SqlValueForm {
     let name = last_function_name(function).to_ascii_lowercase();
-    if VOLATILE.iter().any(|item| *item == name) {
+    if is_volatile_name(&name) {
         return SqlValueForm::Volatile { name };
     }
     let args = function_arg_exprs(function)
@@ -144,4 +150,22 @@ pub(super) fn excluded_column(expr: &Expr) -> Option<String> {
 pub(super) fn is_placeholder_ident(name: &str) -> bool {
     let lower = name.to_ascii_lowercase();
     lower.starts_with('$') || lower.starts_with("sql_placeholder_")
+}
+
+fn is_volatile_name(name: &str) -> bool {
+    VOLATILE.iter().any(|item| name.eq_ignore_ascii_case(item))
+}
+
+pub(crate) fn form_is_stable(form: &SqlValueForm) -> bool {
+    match form {
+        SqlValueForm::Literal | SqlValueForm::Null | SqlValueForm::Placeholder => true,
+        SqlValueForm::Excluded { .. }
+        | SqlValueForm::SelfRef { .. }
+        | SqlValueForm::Volatile { .. }
+        | SqlValueForm::Subquery
+        | SqlValueForm::Other => false,
+        SqlValueForm::Coalesce { args }
+        | SqlValueForm::Greatest { args }
+        | SqlValueForm::Least { args } => args.iter().all(form_is_stable),
+    }
 }

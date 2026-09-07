@@ -101,6 +101,7 @@ fn empty_assigned_list_does_not_prove_a_noop() {
         &[],
         "items",
         &catalog(&[], &[], &[]),
+        &[],
     ));
 }
 

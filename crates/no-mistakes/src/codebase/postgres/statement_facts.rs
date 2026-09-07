@@ -21,6 +21,7 @@ pub struct SqlInsertFact {
     pub executed: bool,
     pub on_conflict: Option<SqlOnConflictFact>,
     pub guarded_select: bool,
+    /// INSERT `SET` assignments, or column/value forms from `VALUES` / `SELECT`.
     pub assignments: Vec<SqlAssignmentFact>,
 }
 

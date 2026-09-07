@@ -26,11 +26,18 @@ pub(super) fn from_insert(sql: &str, insert: &Insert, n: usize, executed: bool) 
             Some(OnInsert::OnConflict(conflict)) => Some(from_conflict(conflict)),
             _ => None,
         },
-        assignments: insert
-            .assignments
-            .iter()
-            .map(super::value::from_assignment)
-            .collect(),
+        assignments: {
+            let set: Vec<_> = insert
+                .assignments
+                .iter()
+                .map(super::value::from_assignment)
+                .collect();
+            if set.is_empty() {
+                super::insert_source::from_insert(insert)
+            } else {
+                set
+            }
+        },
     }
 }
 

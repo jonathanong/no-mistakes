@@ -51,6 +51,7 @@ pub(super) fn judge(
         .find_map(|trigger| {
             unsafe_reason(
                 trigger,
+                insert,
                 conflict,
                 &assigned,
                 catalog,
@@ -62,6 +63,7 @@ pub(super) fn judge(
 
 fn unsafe_reason(
     trigger: &SqlTriggerFact,
+    insert: &SqlInsertFact,
     conflict: &SqlOnConflictFact,
     assigned: &[String],
     catalog: &Catalog<'_>,
@@ -124,7 +126,13 @@ fn unsafe_reason(
         return None;
     }
     if trigger.period == SqlTriggerPeriod::After
-        && super::where_noop::where_proves_noop(conflict, assigned, &trigger.table, catalog)
+        && super::where_noop::where_proves_noop(
+            conflict,
+            assigned,
+            &trigger.table,
+            catalog,
+            &insert.assignments,
+        )
     {
         return None;
     }
@@ -153,7 +161,7 @@ fn written_columns(trigger: &SqlTriggerFact, catalog: &Catalog<'_>) -> Vec<Strin
         .collect()
 }
 
-fn fires_insert(trigger: &SqlTriggerFact) -> bool {
+pub(super) fn fires_insert(trigger: &SqlTriggerFact) -> bool {
     trigger
         .events
         .iter()

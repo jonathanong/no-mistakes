@@ -53,6 +53,13 @@ fn partial_where_noop_passes() {
 }
 
 #[test]
+fn volatile_where_proof_fails() {
+    let findings = run(&fixture("fail-volatile-proof"));
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("re-fire"), "{findings:?}");
+}
+
+#[test]
 fn not_exists_passes() {
     assert!(run(&fixture("pass-not-exists")).is_empty());
 }
