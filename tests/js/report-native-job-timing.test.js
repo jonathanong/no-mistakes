@@ -185,6 +185,41 @@ test("skipped required workload steps suppress the performance delta", () => {
   assert.match(markdown, /n\/a \(current run failed\)/);
 });
 
+test("a skipped required step on the baseline suppresses the performance delta", () => {
+  const incompleteBaseline = {
+    started_at: "2026-09-07T12:33:27Z",
+    conclusion: "success",
+    steps: [
+      {
+        name: "Run platform-specific Rust tests",
+        started_at: "2026-09-07T12:34:42Z",
+        completed_at: "2026-09-07T12:38:11Z",
+        conclusion: "success",
+      },
+      {
+        name: "Build native CLI and N-API addon",
+        conclusion: "skipped",
+      },
+      {
+        name: "Run native CLI smoke test",
+        conclusion: "skipped",
+      },
+      {
+        name: "Run real N-API API test",
+        conclusion: "skipped",
+      },
+    ],
+  };
+  assert.equal(compileWorkloadFailed(incompleteBaseline), true);
+  const markdown = buildMarkdown({
+    jobName: "Windows x64",
+    afterJob: successfulNativeJob(),
+    beforeJob: incompleteBaseline,
+    nowMs: Date.parse("2026-09-07T12:50:00Z"),
+  });
+  assert.match(markdown, /n\/a \(base run incomplete\)/);
+});
+
 test("a skipped Defender step on an otherwise successful job stays comparable", () => {
   const macos = successfulNativeJob([
     {

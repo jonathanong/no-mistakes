@@ -104,6 +104,7 @@ function comparableDurationSeconds(job, nowMs = Date.now()) {
 
 function buildMarkdown({ jobName, afterJob, beforeJob, afterSha, beforeSha, nowMs = Date.now() }) {
   const afterFailed = compileWorkloadFailed(afterJob);
+  const beforeFailed = beforeJob ? compileWorkloadFailed(beforeJob) : false;
   const afterSeconds = comparableDurationSeconds(afterJob, nowMs);
   const beforeSeconds = beforeJob ? comparableDurationSeconds(beforeJob, nowMs) : null;
   const afterSteps = stepDurationMap(afterJob, nowMs);
@@ -111,7 +112,9 @@ function buildMarkdown({ jobName, afterJob, beforeJob, afterSha, beforeSha, nowM
   const stepNames = [...new Set([...beforeSteps.keys(), ...afterSteps.keys()])];
   const delta = afterFailed
     ? "n/a (current run failed)"
-    : `**${formatDelta(afterSeconds, beforeSeconds)}**`;
+    : beforeFailed
+      ? "n/a (base run incomplete)"
+      : `**${formatDelta(afterSeconds, beforeSeconds)}**`;
 
   const lines = [
     commentMarker(jobName),
