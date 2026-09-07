@@ -16,6 +16,56 @@ pub fn unwrap_expr(expr: &Expr) -> &Expr {
     }
 }
 
+pub(crate) fn visit_child_exprs(expr: &Expr, visit: &mut impl FnMut(&Expr)) {
+    match expr {
+        Expr::BinaryOp { left, right, .. }
+        | Expr::IsDistinctFrom(left, right)
+        | Expr::IsNotDistinctFrom(left, right) => {
+            visit(left);
+            visit(right);
+        }
+        Expr::UnaryOp { expr, .. }
+        | Expr::Cast { expr, .. }
+        | Expr::Nested(expr)
+        | Expr::IsNull(expr)
+        | Expr::IsNotNull(expr)
+        | Expr::IsTrue(expr)
+        | Expr::IsFalse(expr) => visit(expr),
+        Expr::Function(function) => visit_function_arg_exprs(function, visit),
+        Expr::Case {
+            operand,
+            conditions,
+            else_result,
+            ..
+        } => {
+            if let Some(operand) = operand {
+                visit(operand);
+            }
+            for case in conditions {
+                visit(&case.condition);
+                visit(&case.result);
+            }
+            if let Some(else_result) = else_result {
+                visit(else_result);
+            }
+        }
+        Expr::Between {
+            expr, low, high, ..
+        } => {
+            visit(expr);
+            visit(low);
+            visit(high);
+        }
+        Expr::InList { expr, list, .. } => {
+            visit(expr);
+            for item in list {
+                visit(item);
+            }
+        }
+        _ => {}
+    }
+}
+
 fn collect_idents(expr: &Expr, names: &mut Vec<String>) {
     match unwrap_expr(expr) {
         Expr::Identifier(ident) => names.push(ident.value.to_ascii_lowercase()),
@@ -24,71 +74,17 @@ fn collect_idents(expr: &Expr, names: &mut Vec<String>) {
                 names.push(ident.value.to_ascii_lowercase());
             }
         }
-        other => walk_child_exprs(other, names),
+        other => visit_child_exprs(other, &mut |child| collect_idents(child, names)),
     }
 }
 
-fn walk_child_exprs(expr: &Expr, names: &mut Vec<String>) {
-    match expr {
-        Expr::BinaryOp { left, right, .. } => {
-            collect_idents(left, names);
-            collect_idents(right, names);
-        }
-        Expr::UnaryOp { expr, .. } | Expr::Cast { expr, .. } | Expr::Nested(expr) => {
-            collect_idents(expr, names);
-        }
-        Expr::Function(function) => collect_function_idents(function, names),
-        Expr::Case {
-            operand,
-            conditions,
-            else_result,
-            ..
-        } => {
-            if let Some(operand) = operand {
-                collect_idents(operand, names);
-            }
-            for case in conditions {
-                collect_idents(&case.condition, names);
-                collect_idents(&case.result, names);
-            }
-            if let Some(else_result) = else_result {
-                collect_idents(else_result, names);
-            }
-        }
-        Expr::IsNull(inner)
-        | Expr::IsNotNull(inner)
-        | Expr::IsTrue(inner)
-        | Expr::IsFalse(inner) => {
-            collect_idents(inner, names);
-        }
-        Expr::IsDistinctFrom(left, right) | Expr::IsNotDistinctFrom(left, right) => {
-            collect_idents(left, names);
-            collect_idents(right, names);
-        }
-        Expr::Between {
-            expr, low, high, ..
-        } => {
-            collect_idents(expr, names);
-            collect_idents(low, names);
-            collect_idents(high, names);
-        }
-        Expr::InList { expr, list, .. } => {
-            collect_idents(expr, names);
-            for item in list {
-                collect_idents(item, names);
-            }
-        }
-        _ => {}
-    }
-}
-
-fn collect_function_idents(function: &sqlparser::ast::Function, names: &mut Vec<String>) {
+fn visit_function_arg_exprs(function: &sqlparser::ast::Function, visit: &mut impl FnMut(&Expr)) {
     let sqlparser::ast::FunctionArguments::List(list) = &function.args else {
         return;
     };
     for arg in &list.args {
         if let Some(expr) = function_arg_expr(arg) {
-            collect_idents(expr, names);
+            visit(expr);
         }
     }
 }

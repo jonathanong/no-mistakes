@@ -2,8 +2,8 @@
 
 Ban configured PostgreSQL SQL shapes that the parser can prove. The default
 shape is `correlated-exists-set-operation`: a correlated
-`EXISTS (SELECT … UNION [ALL] / INTERSECT / EXCEPT …)`. Postgres cannot pull a
-set-operation body into a semijoin, so that form rematerializes the whole set
+`EXISTS (SELECT … UNION [ALL] / INTERSECT / EXCEPT …)`. Postgres cannot turn
+that set-operation body into a nested loop join, so it rebuilds the whole set
 once per outer row. An uncorrelated `EXISTS (… UNION …)` is planned once as an
 InitPlan and is not this shape.
 
@@ -76,8 +76,10 @@ subquery names a relation that is not local to the subquery's FROM/WITH
 (including SELECT-list and HAVING `EXISTS`). Set operations nested inside a
 derived-table `FROM` of the `EXISTS` subquery are not this shape.
 
-Correlation is a syntax heuristic: only qualified references count, UNION
-branches share one local-name set, and nested subquery scopes are not tracked.
+Correlation is a syntax heuristic: only qualified references count, an
+aliased inner relation hides its base name, `schema.table.col` uses the table
+component, UNION branches share one local-name set, and nested subquery
+scopes are not tracked.
 
 ## Options and defaults
 

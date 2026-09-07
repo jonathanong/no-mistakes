@@ -66,6 +66,7 @@ fn include_exclude_and_option_overrides() {
     })
     .unwrap();
     assert!(!compiled.fail_unanalyzable);
+    assert_eq!(compiled.relations[0].table, "topics");
     assert_eq!(compiled.schema.sql_include, ["migrations/**/*.sql"]);
     assert_eq!(compiled.embedded.import_specifier, "@other/db");
     assert_eq!(compiled.embedded.executor_names, ["run"]);
@@ -81,30 +82,24 @@ fn include_exclude_and_option_overrides() {
 
 #[test]
 fn dynamic_unparseable_and_unrelated_tables() {
-    let embedded = fixture("fail-embedded");
-    let ts = embedded.join("src/query.ts");
+    let dynamic = fixture("fail-dynamic");
+    let ts = dynamic.join("src/query.ts");
     let relations = "sqlInclude: [\"sql/**/*.sql\"]\nrelations:\n  - table: topics\n    require: [\"parent_id IS NOT NULL\"]";
-    let flagged = check_with_files(
-        &embedded,
-        &config_yaml(relations),
-        std::slice::from_ref(&ts),
-    )
-    .unwrap();
-    assert!(!flagged.is_empty(), "{flagged:?}");
+    let flagged =
+        check_with_files(&dynamic, &config_yaml(relations), std::slice::from_ref(&ts)).unwrap();
+    assert!(
+        flagged
+            .iter()
+            .any(|finding| finding.message.contains("not statically recoverable")),
+        "{flagged:?}"
+    );
     let ignored = check_with_files(
-        &embedded,
+        &dynamic,
         &config_yaml(&format!("unanalyzableSql: ignore\n{relations}")),
         &[ts],
     )
     .unwrap();
-    assert!(
-        ignored.is_empty()
-            || ignored.iter().all(|finding| {
-                !finding.message.contains("unanalyzable")
-                    && !finding.message.contains("not statically recoverable")
-            }),
-        "{ignored:?}"
-    );
+    assert!(ignored.is_empty(), "{ignored:?}");
     let root = fixture("fail");
     let unparseable = check_with_files(
         &root,

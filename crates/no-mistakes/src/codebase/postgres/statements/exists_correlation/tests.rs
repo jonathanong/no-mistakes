@@ -196,3 +196,56 @@ fn query_is_correlated_reads_direct_select() {
     };
     assert!(query_is_correlated(&query));
 }
+
+#[test]
+fn coalesce_case_between_and_schema_qualified_refs() {
+    let wrapped = exists_ops(
+        "SELECT 1 FROM posts WHERE EXISTS (
+            SELECT 1 FROM topics WHERE topics.post_id = COALESCE(posts.id, 0)
+            UNION ALL
+            SELECT 1 FROM tags WHERE tags.post_id BETWEEN posts.id AND posts.id
+         )",
+    );
+    assert_eq!(wrapped, vec![(false, true)], "{wrapped:?}");
+    let distinct = exists_ops(
+        "SELECT 1 FROM posts WHERE EXISTS (
+            SELECT 1 FROM topics WHERE topics.post_id IS DISTINCT FROM posts.id
+            UNION ALL
+            SELECT 1 FROM tags WHERE tags.post_id IS NOT NULL
+         )",
+    );
+    assert_eq!(distinct, vec![(false, true)], "{distinct:?}");
+    let schema_local = exists_ops(
+        "SELECT 1 WHERE EXISTS (
+            SELECT 1 FROM public.topics WHERE public.topics.id = 1
+            UNION ALL
+            SELECT 1 FROM public.tags WHERE public.tags.id = 2
+         )",
+    );
+    assert_eq!(schema_local, vec![(true, false)], "{schema_local:?}");
+}
+
+#[test]
+fn aliased_inner_table_hides_base_name() {
+    let flags = exists_ops(
+        "SELECT 1 FROM topics WHERE EXISTS (
+            SELECT 1 FROM topics AS inner_topics
+            WHERE inner_topics.parent_id = topics.id
+            UNION ALL
+            SELECT 1 FROM tags WHERE tags.topic_id = topics.id
+         )",
+    );
+    assert_eq!(flags, vec![(false, true)], "{flags:?}");
+}
+
+#[test]
+fn select_list_case_wrapped_exists_is_collected() {
+    let flags = exists_ops(
+        "SELECT CASE WHEN EXISTS (
+            SELECT 1 FROM topics WHERE topics.post_id = posts.id
+            UNION ALL
+            SELECT 1 FROM tags WHERE tags.post_id = posts.id
+         ) THEN 1 END FROM posts",
+    );
+    assert_eq!(flags, vec![(false, true)], "{flags:?}");
+}

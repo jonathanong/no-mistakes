@@ -74,6 +74,20 @@ fn include_exclude_and_option_overrides() {
     assert!(!compiled.fail_unanalyzable);
     assert!(!compiled.scan_embedded);
     assert!(!compiled.check_convergence);
+    assert!(!compiled.check_volatility);
+    assert!(!compiled.check_arbiter);
+    assert!(!compiled.check_triggers);
+    assert!(!compiled.check_generated);
+    let only_volatility = compile_options(&Options {
+        check_volatility: false,
+        ..Default::default()
+    })
+    .unwrap();
+    assert!(only_volatility.check_convergence);
+    assert!(!only_volatility.check_volatility);
+    assert!(only_volatility.check_arbiter);
+    assert!(only_volatility.check_triggers);
+    assert!(only_volatility.check_generated);
     assert_eq!(compiled.schema.sql_include, ["migrations/**/*.sql"]);
     assert_eq!(compiled.embedded.import_specifier, "@other/db");
     assert_eq!(compiled.embedded.executor_names, ["run"]);
@@ -104,13 +118,23 @@ fn dynamic_unparseable_and_non_sql_scan_paths() {
             .any(|finding| finding.message.contains("not statically recoverable")),
         "{flagged:?}"
     );
-    let ignored = check_with_files(
-        &dynamic,
-        &config_yaml("unanalyzableSql: ignore\nscanEmbedded: false"),
-        &[ts],
-    )
-    .unwrap();
+    let ignored =
+        check_with_files(&dynamic, &config_yaml("unanalyzableSql: ignore"), &[ts]).unwrap();
     assert!(ignored.is_empty(), "{ignored:?}");
+    let embedded = fixture("fail-embedded");
+    let insert = embedded.join("src/query.ts");
+    let recovered =
+        check_with_files(&embedded, &config_yaml("{}"), std::slice::from_ref(&insert)).unwrap();
+    assert!(
+        recovered
+            .iter()
+            .any(|finding| finding.message.contains("ON CONFLICT")
+                || finding.message.contains("NOT EXISTS")),
+        "{recovered:?}"
+    );
+    let skipped =
+        check_with_files(&embedded, &config_yaml("scanEmbedded: false"), &[insert]).unwrap();
+    assert!(skipped.is_empty(), "{skipped:?}");
     let root = fixture("fail");
     let unparseable = check_with_files(
         &root,

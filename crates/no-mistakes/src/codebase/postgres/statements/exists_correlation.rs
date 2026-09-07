@@ -51,9 +51,10 @@ fn collect_table_locals(table: &TableWithJoins, local: &mut HashSet<String>) {
 fn collect_factor_locals(factor: &TableFactor, local: &mut HashSet<String>) {
     match factor {
         TableFactor::Table { name, alias, .. } => {
-            insert_name(local, &relation_name(name));
             if let Some(alias) = alias {
                 insert_name(local, &alias.name.value);
+            } else {
+                insert_name(local, &relation_name(name));
             }
         }
         TableFactor::Derived {
@@ -145,13 +146,7 @@ fn join_on(operator: &JoinOperator) -> Option<&Expr> {
 fn expr_refs_outside(expr: &Expr, local: &HashSet<String>) -> bool {
     match unwrap_expr(expr) {
         Expr::CompoundIdentifier(parts) if parts.len() >= 2 => {
-            !local.contains(&parts[0].value.to_ascii_lowercase())
-        }
-        Expr::BinaryOp { left, right, .. } => {
-            expr_refs_outside(left, local) || expr_refs_outside(right, local)
-        }
-        Expr::UnaryOp { expr, .. } | Expr::Nested(expr) | Expr::Cast { expr, .. } => {
-            expr_refs_outside(expr, local)
+            !local.contains(&parts[parts.len() - 2].value.to_ascii_lowercase())
         }
         Expr::Subquery(query)
         | Expr::Exists {
@@ -160,7 +155,15 @@ fn expr_refs_outside(expr: &Expr, local: &HashSet<String>) -> bool {
         | Expr::InSubquery {
             subquery: query, ..
         } => query_refs_outside(query, local),
-        _ => false,
+        other => {
+            let mut found = false;
+            crate::codebase::postgres::idents::visit_child_exprs(other, &mut |child| {
+                if !found {
+                    found = expr_refs_outside(child, local);
+                }
+            });
+            found
+        }
     }
 }
 

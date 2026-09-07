@@ -39,13 +39,10 @@ pub(super) fn collect_exists(expr: Option<&Expr>, out: &mut Vec<SqlExistsSetOpFa
             }
             collect_query_exists(subquery, out);
         }
-        Expr::BinaryOp { left, right, .. } => {
-            collect_exists(Some(left), out);
-            collect_exists(Some(right), out);
-        }
-        Expr::UnaryOp { expr, .. } | Expr::Nested(expr) => collect_exists(Some(expr), out),
         Expr::Subquery(query) => collect_query_exists(query, out),
-        _ => {}
+        other => crate::codebase::postgres::idents::visit_child_exprs(other, &mut |child| {
+            collect_exists(Some(child), out);
+        }),
     }
 }
 
