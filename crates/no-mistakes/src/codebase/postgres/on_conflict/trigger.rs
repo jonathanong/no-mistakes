@@ -181,7 +181,7 @@ fn where_proves_noop(conflict: &SqlOnConflictFact, assigned: &[String]) -> bool 
     if conflict.where_proof.disjunctive || assigned.is_empty() {
         return false;
     }
-    assigned.iter().all(|column| {
+    assigned.iter().any(|column| {
         conflict.assignments.iter().any(|assignment| {
             assignment.column.eq_ignore_ascii_case(column)
                 && super::form_is_excluded(&assignment.form, column)
