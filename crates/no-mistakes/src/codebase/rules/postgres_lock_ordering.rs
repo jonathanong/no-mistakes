@@ -8,7 +8,7 @@ use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
-mod directive;
+pub(crate) mod directive;
 mod scan;
 
 pub const RULE_ID: &str = "postgres-lock-ordering";
@@ -24,6 +24,7 @@ pub(crate) struct Options {
     pub(crate) import_specifier: String,
     pub(crate) executor_names: Vec<String>,
     pub(crate) safe_directive: String,
+    pub(crate) schema_catalog_path: String,
 }
 
 struct CompiledOptions {
@@ -31,6 +32,7 @@ struct CompiledOptions {
     exclude: GlobMatcher,
     embedded: EmbeddedSqlOptions,
     safe_directive: String,
+    schema_catalog_path: Option<String>,
 }
 
 impl CompiledOptions {
@@ -107,6 +109,8 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         } else {
             opts.safe_directive.clone()
         },
+        schema_catalog_path: (!opts.schema_catalog_path.is_empty())
+            .then(|| opts.schema_catalog_path.clone()),
     })
 }
 

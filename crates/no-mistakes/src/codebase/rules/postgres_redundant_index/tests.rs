@@ -52,6 +52,7 @@ fn run(root: &Path, extra: &str) -> Vec<RuleFinding> {
 fn param(name: &str, ordering: Option<&str>, nulls: Option<&str>) -> SqlIndexParam {
     SqlIndexParam {
         name: Some(name.to_string()),
+        expression: name.to_string(),
         ordering: ordering.map(str::to_string),
         nulls_ordering: nulls.map(str::to_string),
         ..Default::default()

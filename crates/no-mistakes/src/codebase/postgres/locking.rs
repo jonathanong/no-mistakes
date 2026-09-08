@@ -1,8 +1,9 @@
 use super::parse::{parse_postgres_sql, PostgresParseError};
 use super::schema::relation_name;
+use super::CanonicalOrderKey;
 use sqlparser::ast::{
-    BinaryOperator, Expr, Function, LockClause, LockType, NonBlock, Query, SetExpr, Statement,
-    TableFactor, TableWithJoins,
+    BinaryOperator, Expr, Function, LockClause, LockType, NonBlock, OrderByKind, Query, SetExpr,
+    Statement, TableFactor, TableWithJoins,
 };
 
 /// Locking `SELECT` facts later lock-ordering rules can query.
@@ -11,6 +12,8 @@ pub struct LockingSelectMetadata {
     pub has_multi_row_predicate: bool,
     pub has_order_by: bool,
     pub skips_locked_rows: bool,
+    pub table: Option<String>,
+    pub order: Option<Vec<CanonicalOrderKey>>,
 }
 
 /// Parse `sql` and return one record per `SELECT` that uses `FOR UPDATE`.
@@ -43,8 +46,42 @@ fn collect_from_query(query: &Query, out: &mut Vec<LockingSelectMetadata>) {
             has_multi_row_predicate: set_expr_has_multi_row(&query.body),
             has_order_by: query.order_by.is_some(),
             skips_locked_rows: locks_skip_locked(&query.locks),
+            table: lock_table(&query.body),
+            order: query.order_by.as_ref().and_then(order_keys),
         });
     }
+}
+
+fn lock_table(expr: &SetExpr) -> Option<String> {
+    match expr {
+        SetExpr::Select(select) => {
+            let TableFactor::Table { name, .. } = &select.from.first()?.relation else {
+                return None;
+            };
+            Some(relation_name(name))
+        }
+        SetExpr::Query(query) => lock_table(&query.body),
+        _ => None,
+    }
+}
+
+fn order_keys(order: &sqlparser::ast::OrderBy) -> Option<Vec<CanonicalOrderKey>> {
+    let OrderByKind::Expressions(expressions) = &order.kind else {
+        return None;
+    };
+    Some(
+        expressions
+            .iter()
+            .map(|expression| {
+                let ascending = expression.options.asc.unwrap_or(true);
+                CanonicalOrderKey {
+                    expression: expression.expr.to_string(),
+                    ascending,
+                    nulls_first: expression.options.nulls_first.unwrap_or(!ascending),
+                }
+            })
+            .collect(),
+    )
 }
 
 fn collect_from_set_expr(expr: &SetExpr, out: &mut Vec<LockingSelectMetadata>) {

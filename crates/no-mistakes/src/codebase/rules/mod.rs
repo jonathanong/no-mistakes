@@ -41,6 +41,7 @@ pub mod package_json_required_fields;
 pub mod package_json_workspace_coverage;
 pub mod pnpm_overrides_ban;
 pub mod pnpm_release_age_policy;
+pub mod postgres_conflict_ordering;
 pub mod postgres_constraint_validate;
 pub mod postgres_fk_index;
 pub mod postgres_idempotent_insert;

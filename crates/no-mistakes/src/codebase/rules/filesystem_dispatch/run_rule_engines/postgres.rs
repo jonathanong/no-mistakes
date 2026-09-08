@@ -11,6 +11,9 @@ pub(super) fn run(
     sources: &SourceStore,
 ) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
+        POSTGRES_CONFLICT_ORDERING => {
+            postgres_conflict_ordering::check_with_files_and_sources(root, config, files, sources)
+        }
         POSTGRES_CONSTRAINT_VALIDATE => {
             postgres_constraint_validate::check_with_files_and_sources(root, config, files, sources)
         }

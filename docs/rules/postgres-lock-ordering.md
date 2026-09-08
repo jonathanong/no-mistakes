@@ -19,10 +19,13 @@ rules:
       importSpecifier: "@data-stores/psql"
       executorNames: [query, read, write]
       safeDirective: deadlock-safe
+      schemaCatalogPath: backend/data-stores/psql/schema-snapshot/schema.json
 ```
 
 `importSpecifier` defaults to `@data-stores/psql`. `executorNames` defaults to
 `query`, `read`, and `write`. `safeDirective` defaults to `deadlock-safe`.
+`schemaCatalogPath` is optional; when present it must be a repository-relative
+Vouchington PostgreSQL snapshot with `formatVersion: 2`.
 
 Counterexample: `query(\`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE\`)`
 without `ORDER BY` or `SKIP LOCKED`. Unparseable `FOR UPDATE` SQL is a
@@ -64,11 +67,19 @@ A multi-row `FOR UPDATE` query using `IN` or `= ANY` must order its rows or use
 `SKIP LOCKED`. The embedded SQL must be statically recoverable; unparseable
 statements receive a separate diagnostic.
 
+With `schemaCatalogPath`, an ordinary multi-row lock must also begin its
+`ORDER BY` with the ordered expression keys of one valid, ready, non-partial
+btree unique index for the locked table. This makes reader lock order match
+the catalog-backed writer order instead of accepting an unrelated deterministic
+sort. `SKIP LOCKED` remains an alternative because it avoids waiting for an
+already-held row lock.
+
 ## Options and defaults
 
 `include` and `exclude` select source files. `importSpecifier` defaults to
 `@data-stores/psql`, `executorNames` defaults to `[query, read, write]`, and
-`safeDirective` defaults to `deadlock-safe`.
+`safeDirective` defaults to `deadlock-safe`. `schemaCatalogPath` defaults to
+unset; set it to enable the catalog exact-prefix requirement.
 
 ## Valid example
 
@@ -98,4 +109,6 @@ contract is enforced elsewhere.
 
 [`postgres-no-offset`](postgres-no-offset.md) covers inefficient pagination;
 [`postgres-require-query-annotation`](postgres-require-query-annotation.md)
-ensures lock statements remain identifiable in query logs.
+ensures lock statements remain identifiable in query logs; and
+[`postgres-conflict-ordering`](postgres-conflict-ordering.md) requires shared
+multi-row conflict writers to use the same catalog order.

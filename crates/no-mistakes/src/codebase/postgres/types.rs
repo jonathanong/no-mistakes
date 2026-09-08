@@ -57,6 +57,7 @@ pub struct SqlSchemaFileFacts {
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct SqlIndexParam {
     pub name: Option<String>,
+    pub expression: String,
     pub opclass: Option<String>,
     pub ordering: Option<String>,
     pub nulls_ordering: Option<String>,

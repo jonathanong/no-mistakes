@@ -32,13 +32,24 @@ pub fn collect_schema_facts(
     candidate_paths: &[PathBuf],
     options: &PostgresSchemaOptions,
 ) -> Result<Vec<SqlSchemaFileFacts>, PostgresFactError> {
+    let sql_paths = postgres_sql_paths(root, candidate_paths, options)?;
+    extract_schema_facts(root, sources, &sql_paths)
+}
+
+/// Select static PostgreSQL files using the same `sqlInclude` semantics as
+/// schema fact collection. Query rules use this when an opt-in needs to scan
+/// checked-in `.sql` query files rather than only typed executor calls.
+pub fn postgres_sql_paths(
+    root: &Path,
+    candidate_paths: &[PathBuf],
+    options: &PostgresSchemaOptions,
+) -> Result<Vec<PathBuf>, PostgresFactError> {
     let globs = compile_sql_include(&options.sql_include)?;
-    let sql_paths: Vec<PathBuf> = candidate_paths
+    Ok(candidate_paths
         .iter()
         .filter(|path| matches_sql_include(root, path, &globs))
         .cloned()
-        .collect();
-    extract_schema_facts(root, sources, &sql_paths)
+        .collect())
 }
 
 /// Read TS/JS paths through `sources` and extract executor call SQL.

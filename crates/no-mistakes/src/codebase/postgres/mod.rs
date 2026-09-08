@@ -3,6 +3,7 @@
 //! Check rules consume these facts instead of re-parsing SQL or TypeScript.
 
 mod annotation;
+mod catalog;
 mod collect;
 pub mod dml;
 mod embedded;
@@ -19,8 +20,13 @@ pub mod statements;
 mod types;
 
 pub use annotation::sql_requires_query_annotation;
+pub use catalog::{
+    expression_matches, order_prefix_matches, parse_postgres_expression, CanonicalIndex,
+    CanonicalOrderKey, ResolvedArbiter, SchemaCatalog,
+};
 pub use collect::{
     collect_postgres_facts, collect_schema_facts, extract_embedded_sql_facts, extract_schema_facts,
+    postgres_sql_paths,
 };
 pub use dml::{
     extract_dml_write_targets, find_generated_column_writes, GeneratedColumnWrite, GeneratedTable,

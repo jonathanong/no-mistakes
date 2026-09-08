@@ -1,0 +1,182 @@
+use super::*;
+use crate::config::v2::{
+    schema::{RuleDef, RuleScope},
+    NoMistakesConfig,
+};
+use std::path::{Path, PathBuf};
+
+fn fixture_root() -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/postgres-conflict-ordering")
+}
+
+fn fixture(scenario: &str) -> PathBuf {
+    fixture_root().join("fixture").join(scenario)
+}
+
+fn config() -> NoMistakesConfig {
+    config_with_options("schemaCatalogPath: schema.json")
+}
+
+fn config_with_options(options: &str) -> NoMistakesConfig {
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str(options).unwrap(),
+        ..Default::default()
+    });
+    config
+}
+
+fn files(root: &Path) -> Vec<PathBuf> {
+    vec![root.join("src/insert.ts"), root.join("schema.json")]
+}
+
+fn findings(scenario: &str) -> Vec<RuleFinding> {
+    let root = fixture(scenario);
+    check_with_files(&root, &config(), &files(&root)).unwrap()
+}
+
+#[test]
+fn rejects_a_multi_row_source_without_canonical_order() {
+    let findings = findings("fail-missing-order");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("missing-canonical-order")
+    );
+    assert!(findings[0].message.contains("catalog arbiter"));
+}
+
+#[test]
+fn accepts_the_catalog_key_prefix() {
+    assert!(findings("pass-canonical-order").is_empty());
+}
+
+#[test]
+fn follows_the_shared_typed_transaction_executor_facts() {
+    let root = fixture("pass-canonical-order");
+    let findings = check_with_files(
+        &root,
+        &config(),
+        &[root.join("src/transaction.ts"), root.join("schema.json")],
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn rejects_targetless_multi_row_do_nothing() {
+    let findings = findings("fail-targetless");
+    assert_eq!(findings[0].target.as_deref(), Some("targetless-arbiter"));
+}
+
+#[test]
+fn accepts_expression_index_order_with_a_terminal_tie_breaker() {
+    let findings = findings("pass-expression");
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn rejects_differently_ordered_inferred_indexes() {
+    let findings = findings("fail-ambiguous");
+    assert_eq!(findings[0].target.as_deref(), Some("ambiguous-arbiter"));
+}
+
+#[test]
+fn rejects_a_conflict_target_whose_written_order_differs_from_the_catalog() {
+    let findings = findings("fail-reversed-target");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].target.as_deref(), Some("noncanonical-target"));
+}
+
+#[test]
+fn resolves_a_partial_unique_index_by_its_inference_predicate() {
+    assert!(findings("pass-partial").is_empty());
+    let findings = findings("fail-partial-predicate");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].target.as_deref(), Some("unresolved-arbiter"));
+}
+
+#[test]
+fn resolves_a_named_unique_constraint_to_its_catalog_key_order() {
+    let findings = findings("pass-constraint");
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn scans_opted_in_static_sql_sources() {
+    let root = fixture("pass-sql-include");
+    let findings = check_with_files(
+        &root,
+        &config_with_options("schemaCatalogPath: schema.json\nsqlInclude: ['queries/**/*.sql']"),
+        &[root.join("queries/insert.sql"), root.join("schema.json")],
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:#?}");
+}
+
+#[test]
+fn requires_a_catalog_path() {
+    let error = match compile_options(&Options::default()) {
+        Ok(_) => panic!("missing schemaCatalogPath should fail"),
+        Err(error) => error,
+    };
+    assert!(error.to_string().contains("schemaCatalogPath"));
+}
+
+#[test]
+fn rejects_recovered_dynamic_conflict_sql_by_default() {
+    let root = fixture("pass-canonical-order");
+    let result = check_with_files(
+        &root,
+        &config(),
+        &[root.join("src/dynamic.ts"), root.join("schema.json")],
+    )
+    .unwrap();
+    assert_eq!(result.len(), 1, "{result:#?}");
+    assert_eq!(result[0].target.as_deref(), Some("unanalyzable-sql"));
+}
+
+#[test]
+fn allows_an_explicit_unanalyzable_sql_exception() {
+    let root = fixture("pass-canonical-order");
+    let result = check_with_files(
+        &root,
+        &config_with_options("schemaCatalogPath: schema.json\nunanalyzableSql: ignore"),
+        &[root.join("src/dynamic.ts"), root.join("schema.json")],
+    )
+    .unwrap();
+    assert!(result.is_empty(), "{result:#?}");
+}
+
+#[test]
+fn honors_the_safe_directive_for_recovered_dynamic_sql() {
+    let root = fixture("pass-canonical-order");
+    let result = check_with_files(
+        &root,
+        &config(),
+        &[root.join("src/dynamic-safe.ts"), root.join("schema.json")],
+    )
+    .unwrap();
+    assert!(result.is_empty(), "{result:#?}");
+}
+
+#[test]
+fn napi_check_reports_the_same_registered_rule() {
+    let root = fixture("fail-missing-order");
+    let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(
+        serde_json::json!({ "root": root, "config": root.join(".no-mistakes.yml") }).to_string(),
+    ))
+    .unwrap();
+    let report: serde_json::Value = serde_json::from_str(&report).unwrap();
+    assert!(
+        report["rules"].as_array().is_some_and(|findings| {
+            findings.iter().any(|finding| {
+                finding["rule"] == RULE_ID && finding["target"] == "missing-canonical-order"
+            })
+        }),
+        "{report:#?}"
+    );
+}

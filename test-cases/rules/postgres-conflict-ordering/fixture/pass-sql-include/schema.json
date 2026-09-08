@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "items": {
+      "indexes": {
+        "items_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true, "constraintBacked": true, "valid": true, "ready": true,
+          "keys": [{ "expression": "id", "descending": false, "nullsFirst": false }],
+          "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": { "definition": "PRIMARY KEY (id)", "columns": ["id"] }
+    }
+  }, "views": {}, "enums": {}, "extensions": {}, "functions": {}, "policies": {}
+}

@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-conflict-ordering
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json

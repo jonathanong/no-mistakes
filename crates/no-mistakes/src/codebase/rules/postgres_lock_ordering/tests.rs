@@ -43,6 +43,17 @@ fn findings_for(scenario: &str) -> Vec<RuleFinding> {
     check_with_files(&root, &default_config(), &[file]).unwrap()
 }
 
+fn findings_with_catalog(scenario: &str) -> Vec<RuleFinding> {
+    let root = fixture(scenario);
+    let files = vec![ts_file(&root), root.join("schema.json")];
+    check_with_files(
+        &root,
+        &config_with_options("schemaCatalogPath: schema.json"),
+        &files,
+    )
+    .unwrap()
+}
+
 #[test]
 fn fail_fixture_reports_abba_deadlock() {
     let findings = findings_for("fail");
@@ -61,6 +72,14 @@ fn fail_fixture_reports_abba_deadlock() {
 #[test]
 fn order_by_is_safe() {
     assert!(findings_for("pass-order").is_empty());
+}
+
+#[test]
+fn catalog_mode_requires_a_real_unique_key_prefix() {
+    assert!(findings_with_catalog("pass-catalog").is_empty());
+    let findings = findings_with_catalog("fail-catalog-order");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(findings[0].message.contains("schema-catalog"));
 }
 
 #[test]
@@ -217,12 +236,14 @@ fn compile_options_honor_overrides() {
         import_specifier: "@other/db".to_string(),
         executor_names: vec!["run".to_string()],
         safe_directive: "ordered-locks".to_string(),
+        schema_catalog_path: "schema.json".to_string(),
         ..Default::default()
     })
     .unwrap();
     assert_eq!(compiled.embedded.import_specifier, "@other/db");
     assert_eq!(compiled.embedded.executor_names, ["run"]);
     assert_eq!(compiled.safe_directive, "ordered-locks");
+    assert_eq!(compiled.schema_catalog_path.as_deref(), Some("schema.json"));
 }
 
 #[test]
