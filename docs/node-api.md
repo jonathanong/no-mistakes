@@ -400,6 +400,12 @@ test planning use this behavior across referenced workspace projects. Set
 `tsconfig` only to force that one config for the entire request; this preserves
 the previous single-config behavior for debugging and compatibility.
 
+`compilerOptions.paths` uses TypeScript's selection rules in standalone graph
+APIs and `analyzeProject()`: exact keys win, then the longest prefix before a
+wildcard, with declaration order breaking ties. Replacement fallbacks are tried
+only within the winning key, so a missing specific target cannot resolve through
+a less-specific mapping.
+
 `ciTopology(options)` returns the same schema-v1 `WorkflowTopology` JSON as
 `ci topology --format json` — it never throws on diagnostics (unlike the CLI,
 which exits non-zero and prints nothing when any diagnostic is an error);

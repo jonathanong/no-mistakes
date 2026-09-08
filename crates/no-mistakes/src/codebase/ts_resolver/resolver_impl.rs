@@ -45,9 +45,17 @@ impl<'a> ImportResolver<'a> {
         let config = tsconfig.get();
         let mut alias_order: Vec<usize> = (0..config.paths.len()).collect();
         alias_order.sort_by(|&a, &b| {
-            let la = config.paths[a].0.len();
-            let lb = config.paths[b].0.len();
-            lb.cmp(&la).then(a.cmp(&b))
+            let left_star = config.paths[a].0.find('*');
+            let right_star = config.paths[b].0.find('*');
+            left_star
+                .is_some()
+                .cmp(&right_star.is_some())
+                .then_with(|| {
+                    right_star
+                        .unwrap_or(config.paths[b].0.len())
+                        .cmp(&left_star.unwrap_or(config.paths[a].0.len()))
+                })
+                .then(a.cmp(&b))
         });
 
         Self {
@@ -154,5 +162,23 @@ impl<'a> ImportResolver<'a> {
 
     fn tsconfig(&self) -> &TsConfig {
         self.tsconfig.get()
+    }
+
+    fn matching_aliases<'resolver>(
+        &'resolver self,
+        specifier: &'resolver str,
+    ) -> impl Iterator<Item = (String, &'resolver [String])> + 'resolver {
+        let match_limit = match self.policy {
+            ImportResolutionPolicy::Standard => 1,
+            ImportResolutionPolicy::QueueCompatibility { .. } => usize::MAX,
+        };
+        self.alias_order
+            .iter()
+            .filter_map(move |idx| {
+                let (pattern, replacements) = &self.tsconfig().paths[*idx];
+                match_alias(pattern, specifier)
+                    .map(|capture| (capture, replacements.as_slice()))
+            })
+            .take(match_limit)
     }
 }

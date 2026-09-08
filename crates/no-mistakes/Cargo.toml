@@ -24,7 +24,7 @@ git2 = "0.21"
 hcl-rs = "0.19"
 ignore = "0.4"
 is-terminal = "0.4"
-jsonc-parser = { version = "0.33", features = ["serde"] }
+jsonc-parser = { version = "0.33", features = ["serde", "serde_json"] }
 merman-analysis = { version = "=0.8.0-alpha.5", optional = true }
 napi = { version = "3.9.0", features = ["napi8"] }
 napi-derive = "3.5.6"

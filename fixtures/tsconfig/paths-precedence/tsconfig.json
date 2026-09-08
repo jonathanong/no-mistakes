@@ -1,0 +1,15 @@
+{
+  "compilerOptions": {
+    "paths": {
+      "*": ["src/catch-all/*"],
+      "feature/*/detail": ["src/total-length/*"],
+      "feature/s*": ["src/longest-prefix/*"],
+      "exact/*": ["src/wildcard/*"],
+      "exact/value": ["src/exact.ts"],
+      "tie/*": ["src/first-tie/*"],
+      "tie/*/detail": ["src/second-tie/*"],
+      "replacement/*": ["src/missing/*", "src/replacement/*"],
+      "shadowed/*": ["src/missing/*"]
+    }
+  }
+}

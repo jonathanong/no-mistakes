@@ -225,6 +225,12 @@ fn auxiliary_ownership_tsconfig_fixture() -> PathBuf {
     )
 }
 
+fn paths_precedence_tsconfig_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/tsconfig/paths-precedence"),
+    )
+}
+
 #[test]
 fn scoped_catalog_selects_and_resolves_workspace_aliases() {
     let root = workspace_tsconfig_fixture();
@@ -1378,6 +1384,67 @@ fn resolution_candidates_cover_absolute_and_queue_compatibility_fallbacks() {
 }
 
 // ── resolve_import — aliases ──────────────────────────────────────────
+
+#[test]
+fn aliases_follow_typescript_pattern_precedence_and_mapping_fallbacks() {
+    let root = paths_precedence_tsconfig_fixture();
+    let config = load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let importer = root.join("src/entry.ts");
+    let resolver = ImportResolver::new(&config);
+
+    assert_eq!(
+        resolver.resolve("feature/specific/detail", &importer),
+        Some(root.join("src/longest-prefix/pecific/detail.ts"))
+    );
+    assert_eq!(
+        resolver.resolve("exact/value", &importer),
+        Some(root.join("src/exact.ts"))
+    );
+    assert_eq!(
+        resolver.resolve("tie/value/detail", &importer),
+        Some(root.join("src/first-tie/value/detail.ts"))
+    );
+    assert_eq!(
+        resolver.resolve("replacement/value", &importer),
+        Some(root.join("src/replacement/value.ts"))
+    );
+    assert_eq!(resolver.resolve("shadowed/value", &importer), None);
+}
+
+#[test]
+fn aliases_preserve_declaration_ties_and_deleted_candidate_precedence() {
+    let root = paths_precedence_tsconfig_fixture();
+    let config = load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let importer = root.join("src/entry.ts");
+    let resolver = ImportResolver::new(&config);
+
+    let patterns: Vec<_> = config
+        .paths
+        .iter()
+        .map(|(pattern, _)| pattern.as_str())
+        .collect();
+    assert_eq!(&patterns[..3], ["*", "feature/*/detail", "feature/s*"]);
+
+    let candidates = resolver.resolution_candidates("shadowed/value", &importer);
+    assert!(candidates.contains(&root.join("src/missing/value.ts")));
+    assert!(!candidates.contains(&root.join("src/catch-all/shadowed/value.ts")));
+}
+
+#[test]
+fn queue_compatibility_keeps_declaration_order_fallthrough() {
+    let root = paths_precedence_tsconfig_fixture();
+    let config = load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    let importer = root.join("src/entry.ts");
+    let resolver = ImportResolver::new(&config).with_queue_compatibility(&root);
+
+    assert_eq!(
+        resolver.resolve("shadowed/value", &importer),
+        Some(root.join("src/catch-all/shadowed/value.ts"))
+    );
+    let candidates = resolver.resolution_candidates("shadowed/value", &importer);
+    assert!(candidates.contains(&root.join("src/catch-all/shadowed/value.ts")));
+    assert!(candidates.contains(&root.join("src/missing/value.ts")));
+}
 
 #[test]
 fn resolves_alias_exact() {

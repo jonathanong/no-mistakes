@@ -17,6 +17,7 @@ const selectorGroupingFixtureRoot = join(
   "test-plan",
   "test-runner-selector-grouping",
 );
+const pathsPrecedenceFixtureRoot = join(repositoryRoot, "fixtures", "tsconfig", "paths-precedence");
 const lockHolderFixture = join(
   repositoryRoot,
   "fixtures",
@@ -195,6 +196,38 @@ test(
           runnerArgs: ["--package-path", "swift", "--filter", "BetaTests"],
           testFiles: ["swift/Tests/BetaTests/Beta.swift"],
         },
+      ],
+    );
+  },
+);
+
+test(
+  "compiled dependencies APIs match TypeScript paths precedence",
+  { skip: !compiledAddonPath, timeout: 20_000 },
+  async () => {
+    const api = require("../index.js");
+    const options = {
+      root: pathsPrecedenceFixtureRoot,
+      files: ["src/entry.ts"],
+      relationships: ["import"],
+    };
+    const direct = await api.dependencies(options);
+    const aggregate = await api.analyzeProject({
+      root: pathsPrecedenceFixtureRoot,
+      reports: [
+        { type: "dependencies", files: options.files, relationships: options.relationships },
+      ],
+    });
+
+    assert.deepEqual(aggregate.reports[0].result, direct);
+    assert.deepEqual(
+      direct.files.map((file) => file.path || file.module),
+      [
+        "src/exact.ts",
+        "src/first-tie/value/detail.ts",
+        "src/longest-prefix/pecific/detail.ts",
+        "src/replacement/value.ts",
+        "shadowed/value",
       ],
     );
   },

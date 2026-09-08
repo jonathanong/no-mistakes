@@ -27,11 +27,7 @@ impl<'a> ImportResolver<'a> {
         }
 
         let mut candidates = std::collections::BTreeSet::new();
-        for idx in &self.alias_order {
-            let (pattern, replacements) = &self.tsconfig().paths[*idx];
-            let Some(capture) = match_alias(pattern, specifier) else {
-                continue;
-            };
+        for (capture, replacements) in self.matching_aliases(specifier) {
             for replacement in replacements {
                 let resolved = replacement.replace('*', &capture);
                 let base = self

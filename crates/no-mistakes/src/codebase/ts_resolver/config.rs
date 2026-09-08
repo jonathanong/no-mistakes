@@ -73,30 +73,46 @@ fn load_tsconfig_inner(
         ),
     };
 
-    let parsed: Option<serde_json::Value> =
-        jsonc_parser::parse_to_serde_value(&content, &jsonc_parser::ParseOptions::default())
-            .map_err(|e| anyhow::anyhow!("parsing {}: {e}", path.display()))?;
-    let v = parsed.unwrap_or(serde_json::Value::Null);
-
-    let own_paths: Option<Vec<(String, Vec<String>)>> = v
-        .get("compilerOptions")
-        .and_then(|co| co.get("paths"))
-        .and_then(|p| p.as_object())
-        .map(|obj| {
-            obj.iter()
-                .map(|(pattern, replacements)| {
-                    let repls = replacements
+    let parsed = jsonc_parser::parse_to_ast(
+        &content,
+        &jsonc_parser::CollectOptions::default(),
+        &jsonc_parser::ParseOptions::default(),
+    )
+    .map_err(|e| anyhow::anyhow!("parsing {}: {e}", path.display()))?;
+    let own_paths = parsed
+        .value
+        .as_ref()
+        .and_then(jsonc_parser::ast::Value::as_object)
+        .and_then(|root| root.get_object("compilerOptions"))
+        .and_then(|compiler_options| compiler_options.get_object("paths"))
+        .map(|paths| {
+            paths
+                .properties
+                .iter()
+                .map(|property| {
+                    let replacements = property
+                        .value
                         .as_array()
-                        .map(|arr| {
-                            arr.iter()
-                                .filter_map(|v| v.as_str().map(str::to_string))
+                        .map(|array| {
+                            array
+                                .elements
+                                .iter()
+                                .filter_map(|value| {
+                                    value
+                                        .as_string_lit()
+                                        .map(|literal| literal.value.to_string())
+                                })
                                 .collect()
                         })
                         .unwrap_or_default();
-                    (pattern.clone(), repls)
+                    (property.name.as_str().to_string(), replacements)
                 })
-                .collect()
+                .collect::<Vec<_>>()
         });
+    let v = parsed
+        .value
+        .map(serde_json::Value::from)
+        .unwrap_or(serde_json::Value::Null);
     let own_base_url = v
         .get("compilerOptions")
         .and_then(|co| co.get("baseUrl"))

@@ -39,7 +39,9 @@ Resolution support:
 - `compilerOptions.paths`, including `tsconfig.extends` chains. Path
   replacements are resolved relative to `baseUrl` when it is present, matching
   TypeScript behavior; otherwise they are resolved relative to the tsconfig that
-  defines `paths`.
+  defines `paths`. Exact keys win over wildcard keys. Among matching wildcard
+  keys, the longest prefix before `*` wins, with declaration order breaking
+  ties. Only that key's replacement list is tried, in order.
 - `compilerOptions.baseUrl` without `paths` also resolves bare specifiers
   relative to that directory, including extension and index-file candidates.
   Prefer `paths` for aliases shared across workspace packages. A missing
