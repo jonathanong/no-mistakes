@@ -77,6 +77,19 @@ fn validation_rejects_empty_and_invalid_selectors() {
 }
 
 #[test]
+fn validation_rejects_empty_vitest_project_lists_and_call_target_names() {
+    for yaml in [
+        "roots: [{ vitest: [] }]\ntargets: [{ global: setTimeout }]",
+        "roots: [{ file: src/entry.mts }]\ntargets: [{ global: '' }]",
+        "roots: [{ file: src/entry.mts }]\ntargets: [{ exact: '' }]",
+        "roots: [{ file: src/entry.mts }]\ntargets: [{ terminal: '' }]",
+    ] {
+        let error = config::validate(&options(yaml)).expect_err("empty selector must be rejected");
+        assert!(error.to_string().contains("must not be empty"), "{error:#}");
+    }
+}
+
+#[test]
 fn graph_plan_requests_calls_for_repeated_applications() {
     let config = NoMistakesConfig {
         rules: vec![
@@ -142,6 +155,82 @@ fn selector_variants_deserialize_without_textual_fallbacks() {
 }
 
 #[test]
+fn function_and_terminal_selectors_use_canonical_repository_targets() {
+    use crate::codebase::dependencies::extract::InvocationKind;
+    use crate::codebase::dependencies::graph::{ResolvedCallSite, ResolvedCallTarget};
+
+    let root = coverage_root();
+    let app = application(
+        "canonical",
+        "roots: [{ file: src/selectors.mts }]\ntargets: [{ function: { file: src/targets.mts, symbol: repositoryTarget } }]",
+    );
+    let opts = options(
+        "roots: [{ file: src/selectors.mts }]\ntargets: [{ function: { file: src/targets.mts, symbol: repositoryTarget } }]",
+    );
+    let repository_site = ResolvedCallSite {
+        file: root.join("src/selectors.mts"),
+        caller: Some("selectorCalls".to_string()),
+        line: 8,
+        offset: 0,
+        invocation: InvocationKind::Call,
+        source_callee: "repositoryTarget".to_string(),
+        target: ResolvedCallTarget::RepositoryFunction {
+            file: root.join("src/targets.mts"),
+            scope: "repositoryTarget".to_string(),
+        },
+    };
+    assert_eq!(
+        findings::finding_for_site(
+            &root,
+            &app,
+            "canonical, application #1",
+            &opts,
+            &repository_site
+        )
+        .expect("canonical repository target matches")
+        .target
+        .as_deref(),
+        Some("repository function `src/targets.mts#repositoryTarget`")
+    );
+
+    let terminal =
+        options("roots: [{ file: src/selectors.mts }]\ntargets: [{ terminal: repositoryTarget }]");
+    assert_eq!(
+        findings::finding_for_site(
+            &root,
+            &app,
+            "canonical, application #1",
+            &terminal,
+            &repository_site
+        )
+        .expect("terminal selector matches repository scope")
+        .target
+        .as_deref(),
+        Some("terminal `repositoryTarget`")
+    );
+}
+
+#[test]
+fn vitest_roots_require_a_catalog_and_absolute_function_roots_resolve() {
+    let (root, graph) = call_graph();
+    let files = vec![root.join("src/entry.mts")];
+    let vitest = options("roots: [{ vitest: true }]\ntargets: [{ global: setTimeout }]");
+    let error = roots::expand(&root, &vitest, &graph, None, &files).unwrap_err();
+    assert!(error
+        .to_string()
+        .contains("require a prepared Vitest project catalog"));
+
+    let entry = root.join("src/entry.mts");
+    let function = options(&format!(
+        "roots: [{{ function: {{ file: {}, symbol: entry }} }}]\ntargets: [{{ global: setTimeout }}]",
+        entry.display()
+    ));
+    let nodes = roots::expand(&root, &function, &graph, None, &files)
+        .expect("absolute function roots resolve from the configured file");
+    assert!(!nodes.is_empty());
+}
+
+#[test]
 fn aggregate_runner_keeps_distinct_same_line_occurrences() {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/forbidden-calls/same-line-occurrences/fixture");
@@ -192,6 +281,17 @@ fn file_and_module_roots_select_their_callable_sources() {
     assert!(findings
         .iter()
         .all(|finding| finding.file != "src/selectors.mts"));
+
+    let error = coverage_findings(
+        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ module: src/targets.mts }]\n      targets: [{ global: setTimeout }]\n",
+    )
+    .expect_err("a module without callable sources must be rejected");
+    assert!(
+        error
+            .to_string()
+            .contains("configured root resolves to no callable source"),
+        "{error:#}"
+    );
 }
 
 #[test]
@@ -219,6 +319,10 @@ fn binding_aware_targets_distinguish_global_module_and_repository_calls() {
 
 #[test]
 fn construct_and_unknown_call_policies_are_explicit() {
+    let call = coverage_findings(
+        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      traversal: file\n      invocations: [call]\n      targets: [{ global: Date }]\n",
+    )
+    .unwrap();
     let construct = coverage_findings(
         "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ file: src/selectors.mts }]\n      traversal: file\n      invocations: [construct]\n      targets: [{ global: Date }]\n",
     )
@@ -232,6 +336,7 @@ fn construct_and_unknown_call_policies_are_explicit() {
     )
     .unwrap();
 
+    assert_eq!(call.len(), 1, "{call:#?}");
     assert_eq!(construct.len(), 1, "{construct:#?}");
     assert!(ignored.is_empty(), "{ignored:#?}");
     assert_eq!(reported.len(), 1, "{reported:#?}");
@@ -261,6 +366,44 @@ fn all_vitest_roots_and_default_call_invocations_are_inclusive() {
 
     assert_eq!(vitest.len(), 2, "{vitest:#?}");
     assert_eq!(default_calls.len(), 1, "{default_calls:#?}");
+}
+
+#[test]
+fn prepared_vitest_catalog_handles_unconfigured_and_unknown_projects() {
+    let root = coverage_root();
+    let visible = crate::codebase::ts_source::discover_files(&root, &[]);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &visible);
+    let tsconfig = crate::codebase::ts_resolver::TsConfig {
+        dir: root.clone(),
+        paths_dir: root.clone(),
+        ..Default::default()
+    };
+    let tsconfig_catalog =
+        crate::codebase::ts_resolver::TsConfigCatalog::forced(&root, tsconfig, None);
+
+    let unconfigured: NoMistakesConfig = serde_yaml::from_str(
+        "tests:\n  vitest:\n    configs: missing.config.ts\n    projects:\n      unit:\n        include: [src/**/*.test.mts]",
+    )
+    .unwrap();
+    let empty = crate::codebase::rules::prepare_vitest_project_catalog(
+        &root,
+        &unconfigured,
+        &snapshot,
+        &tsconfig_catalog,
+    );
+    assert!(empty.config_projects().unwrap().is_empty());
+
+    let config = crate::config::v2::load_v2_config(&root, None).unwrap();
+    let catalog = crate::codebase::rules::prepare_vitest_project_catalog(
+        &root,
+        &config,
+        &snapshot,
+        &tsconfig_catalog,
+    );
+    let error = catalog
+        .matching_files(&root, &["missing".to_string()], &visible)
+        .unwrap_err();
+    assert!(error.to_string().contains("names an unknown project"));
 }
 
 #[test]
