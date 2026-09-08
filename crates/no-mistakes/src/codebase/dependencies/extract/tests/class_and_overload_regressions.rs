@@ -214,3 +214,73 @@ fn bound_named_class_expression_keeps_its_internal_identity() {
         }));
     }
 }
+
+#[test]
+fn nested_aggregate_callables_keep_their_owner_and_member_identity() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/codebase/dependencies/nested-callable-aggregates/fixture/src/aggregate-callables.mts");
+    let source = std::fs::read_to_string(&fixture).expect("aggregate callable fixture must exist");
+    let facts = facts(&source);
+
+    for scope in [
+        "boot/registry/load",
+        "boot/Service/run",
+        "boot/Service/reload",
+    ] {
+        assert!(
+            facts
+                .callable_scope_ids
+                .iter()
+                .any(|(_, candidate)| candidate == scope),
+            "{scope} must retain a callable identity: {:?}",
+            facts.callable_scope_ids
+        );
+    }
+
+    let registry_id = facts
+        .callable_bindings
+        .iter()
+        .find_map(|(_, binding, id)| (binding == "registry").then_some(*id))
+        .expect("nested registry binding");
+    assert!(facts.function_calls.iter().any(|call| {
+        call.invocation == InvocationKind::Membership
+            && call.caller.as_deref() == Some("boot/registry")
+            && call.caller_id == Some(registry_id)
+            && call.callee == "load"
+    }));
+    assert!(facts.imports.iter().any(|import| {
+        import.specifier == "./object-called.mts"
+            && import.function_scope.as_deref() == Some("boot/registry/load")
+    }));
+
+    let class_id = facts
+        .callable_scope_ids
+        .iter()
+        .find_map(|(id, scope)| (scope == "boot/Service").then_some(*id))
+        .expect("nested class identity");
+    for (member, specifier) in [
+        ("run", "./field-called.mts"),
+        ("reload", "./field-reloaded.mts"),
+    ] {
+        let member_id = facts
+            .imports
+            .iter()
+            .find_map(|import| {
+                (import.specifier == specifier
+                    && import.function_scope.as_deref() == Some(&format!("boot/Service/{member}")))
+                    .then_some(import.function_scope_id)
+            })
+            .flatten()
+            .expect("static field callable owner");
+        assert!(
+            facts.class_member_callable_ids.iter().any(
+                |(candidate_class, candidate_member, candidate_id)| {
+                    *candidate_class == class_id
+                        && candidate_member == member
+                        && *candidate_id == member_id
+                }
+            ),
+            "{member} must preserve its field callable identity"
+        );
+    }
+}

@@ -45,37 +45,28 @@ fn visit_variable_declarator_with_scope<'a>(
             collector.pop_function_scope(true);
             collector.pop_syntactic_caller(pushed_syntactic_caller);
         }
-        Some(Expression::ObjectExpression(object))
-            if name.is_some() && collector.function_stack.is_empty() =>
-        {
-            if let Some(name) = name.as_deref() {
-                record_object_member_calls(
-                    collector,
-                    name,
-                    CallableId(declarator.span.start),
-                    object,
-                );
-            }
+        Some(Expression::ObjectExpression(object)) if name.is_some() => {
+            let name = name.expect("object branch requires a binding name");
+            let scope = collector.callable_scope_name(&name);
+            record_object_member_calls(
+                collector,
+                &name,
+                &scope,
+                CallableId(declarator.span.start),
+                object,
+            );
             // Treat both inline `export const` and later `export { … }` named
             // object bindings as exported, so a registry written either way keeps
             // its dynamic-import edges reachable.
-            let exported = collector.export_depth > 0
-                || name
-                    .as_deref()
-                    .is_some_and(|name| collector.is_exported_top_level_name(name));
+            let exported = collector.function_stack.is_empty()
+                && (collector.export_depth > 0 || collector.is_exported_top_level_name(&name));
             if exported {
-                if let Some(name) = name.as_deref() {
-                    collector.record_exported_resource_root(name);
-                    record_object_resource_scopes(collector, name, object);
-                }
-                visit_exported_variable_declarator_reference(collector, declarator, name);
+                collector.record_exported_resource_root(&name);
+                record_object_resource_scopes(collector, &name, object);
+                visit_exported_variable_declarator_reference(collector, declarator, Some(name));
             } else {
-                if let Some(name) = name.as_deref() {
-                    record_object_value_references(collector, name, object);
-                    walk_object_values_with_parent_scope(collector, name, object);
-                } else {
-                    walk::walk_variable_declarator(collector, declarator);
-                }
+                record_object_value_references(collector, &scope, object);
+                walk_object_values_with_parent_scope(collector, &scope, object);
             }
         }
         Some(Expression::ClassExpression(class)) if name.is_some() => {

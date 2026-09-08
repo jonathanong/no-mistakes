@@ -16,7 +16,13 @@ fn walk_default_expression<'a>(
     }
     collector.record_exported_resource_root("default");
     if let Some(object) = default_object_expression(&export.declaration) {
-        record_object_member_calls(collector, "default", CallableId(export.span.start), object);
+        record_object_member_calls(
+            collector,
+            "default",
+            "default",
+            CallableId(export.span.start),
+            object,
+        );
         record_object_resource_scopes(collector, "default", object);
     }
     collector.push_function_scope(Some("default".to_string()), CallableId(export.span.start));

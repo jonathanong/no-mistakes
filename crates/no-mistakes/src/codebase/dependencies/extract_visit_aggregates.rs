@@ -106,27 +106,43 @@ fn record_class_member_calls(
     class: &Class<'_>,
 ) {
     for element in &class.body.body {
-        if let ClassElement::MethodDefinition(method) = element {
-            let name = crate::codebase::ts_source::static_property_key_name(&method.key);
-            if method.r#static || name == Some("constructor") {
+        match element {
+            ClassElement::MethodDefinition(method) => {
+                let name = crate::codebase::ts_source::static_property_key_name(&method.key);
+                if method.r#static || name == Some("constructor") {
+                    record_member_call(collector, class_name, class_id, name);
+                }
+            }
+            ClassElement::PropertyDefinition(property)
+                if property.r#static
+                    && matches!(
+                        property.value,
+                        Some(
+                            Expression::FunctionExpression(_)
+                                | Expression::ArrowFunctionExpression(_)
+                        )
+                    ) =>
+            {
                 record_member_call(
                     collector,
                     class_name,
                     class_id,
-                    name,
+                    crate::codebase::ts_source::static_property_key_name(&property.key),
                 );
             }
+            _ => {}
         }
     }
 }
 
 fn record_object_member_calls(
     collector: &mut ImportCollector,
-    object_name: &str,
+    object_binding: &str,
+    object_scope: &str,
     object_id: CallableId,
     object: &ObjectExpression<'_>,
 ) {
-    collector.record_callable_binding_id(object_name, object_id);
+    collector.record_callable_binding_id(object_binding, object_id);
     for property in &object.properties {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             continue;
@@ -137,7 +153,7 @@ fn record_object_member_calls(
         ) {
             record_member_call(
                 collector,
-                object_name,
+                object_scope,
                 object_id,
                 crate::codebase::ts_source::static_property_key_name(&property.key),
             );

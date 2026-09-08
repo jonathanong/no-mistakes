@@ -29,11 +29,29 @@ fn record_class_resource_scopes(
     class: &Class<'_>,
 ) {
     for element in &class.body.body {
-        let ClassElement::MethodDefinition(method) = element else {
-            continue;
-        };
-        if let Some(name) = crate::codebase::ts_source::static_property_key_name(&method.key) {
-            collector.record_exported_resource_scope(format!("{parent}/{name}"));
+        match element {
+            ClassElement::MethodDefinition(method) => {
+                if let Some(name) =
+                    crate::codebase::ts_source::static_property_key_name(&method.key)
+                {
+                    collector.record_exported_resource_scope(format!("{parent}/{name}"));
+                }
+            }
+            ClassElement::PropertyDefinition(property)
+                if matches!(
+                    property.value,
+                    Some(
+                        Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_)
+                    )
+                ) =>
+            {
+                if let Some(name) =
+                    crate::codebase::ts_source::static_property_key_name(&property.key)
+                {
+                    collector.record_exported_resource_scope(format!("{parent}/{name}"));
+                }
+            }
+            _ => {}
         }
     }
 }

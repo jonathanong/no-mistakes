@@ -29,11 +29,91 @@ fn walk_class_with_scoped_methods<'a>(
                 }
             }
             walk_class_method_with_scope(collector, class_name, class_id, method_id, method);
+        } else if let ClassElement::PropertyDefinition(property) = element {
+            if let Some((name, callable_id)) = static_callable_field(property) {
+                collector.record_class_member_callable_id(class_id, &name, callable_id);
+                walk_static_callable_field_with_scope(
+                    collector,
+                    class_name,
+                    class_id,
+                    &name,
+                    callable_id,
+                    property,
+                );
+            } else if !property.r#static {
+                walk_instance_property_with_class_scope(collector, class_name, class_id, property);
+            } else {
+                walk::walk_class_element(collector, element);
+            }
         } else {
             walk::walk_class_element(collector, element);
         }
     }
     collector.pop_lexical_scope(pushed_class_scope);
+}
+
+fn walk_instance_property_with_class_scope<'a>(
+    collector: &mut ImportCollector,
+    class_name: &str,
+    class_id: CallableId,
+    property: &PropertyDefinition<'a>,
+) {
+    collector.push_function_scope(Some(class_name.to_string()), class_id);
+    walk::walk_property_definition(collector, property);
+    collector.pop_function_scope(true);
+}
+
+fn static_callable_field(property: &PropertyDefinition<'_>) -> Option<(String, CallableId)> {
+    if !property.r#static {
+        return None;
+    }
+    let name = crate::codebase::ts_source::static_property_key_name(&property.key)?.to_string();
+    let value = property.value.as_ref()?;
+    let id = match value {
+        Expression::FunctionExpression(function) => CallableId(function.span.start),
+        Expression::ArrowFunctionExpression(arrow) => CallableId(arrow.span.start),
+        _ => return None,
+    };
+    Some((name, id))
+}
+
+fn walk_static_callable_field_with_scope<'a>(
+    collector: &mut ImportCollector,
+    class_name: &str,
+    class_id: CallableId,
+    name: &str,
+    callable_id: CallableId,
+    property: &PropertyDefinition<'a>,
+) {
+    walk_decorators_as_invocations(collector, &property.decorators);
+    collector.visit_property_key(&property.key);
+    if let Some(type_annotation) = &property.type_annotation {
+        collector.visit_ts_type_annotation(type_annotation);
+    }
+    collector.push_function_scope(Some(class_name.to_string()), class_id);
+    collector.push_function_scope(Some(name.to_string()), callable_id);
+    if let Some(scope) = collector.current_function() {
+        collector.callable_scopes.insert(scope);
+    }
+    match property
+        .value
+        .as_ref()
+        .expect("static callable field has a value")
+    {
+        Expression::FunctionExpression(function) => {
+            collector.add_type_parameter_names(function.type_parameters.as_deref());
+            collector.add_formal_parameters(&function.params);
+            walk_function_with_body_bindings(collector, function);
+        }
+        Expression::ArrowFunctionExpression(arrow) => {
+            collector.add_type_parameter_names(arrow.type_parameters.as_deref());
+            collector.add_formal_parameters(&arrow.params);
+            walk_arrow_function_with_body_bindings(collector, arrow);
+        }
+        _ => unreachable!("static callable field was validated before walking"),
+    }
+    collector.pop_function_scope(true);
+    collector.pop_function_scope(true);
 }
 
 fn visit_class_static_block_with_scope<'a>(
