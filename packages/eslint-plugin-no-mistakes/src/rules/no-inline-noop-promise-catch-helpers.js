@@ -57,7 +57,8 @@ function isNoopExpression(node, sourceCode) {
 
 function isNoopLiteralExpression(node) {
   const current = unwrapExpression(node);
-  return current?.type === "Literal" && current.regex == null;
+  if (current?.type === "Literal") return true;
+  return current?.type === "TemplateLiteral" && current.expressions.length === 0;
 }
 
 function isNoopStatement(statement, sourceCode) {

@@ -58,9 +58,11 @@ Replace the inline no-op with a named handler, `onError`, logging, a returned
 fallback, or a rethrow. Do not suppress a production swallow to keep a
 catch-presence rule quiet.
 
-A bare literal expression inside a block is also a no-op: it is not the same
-as returning that literal as an intentional fallback. A locally shadowed
-`undefined` is treated as a fallback value, and generator callbacks are
+A bare primitive literal, regular expression literal, or no-substitution
+template literal inside a block is also a no-op: it is not the same as returning
+that value from the callback. Interpolated and tagged templates remain allowed
+because their expressions or tag can have observable behavior. A locally
+shadowed `undefined` is treated as a fallback value. Generator callbacks are
 allowed because calling them produces an iterator rather than an ignored
 `undefined` result.
 

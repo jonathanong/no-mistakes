@@ -24,7 +24,9 @@ export async function invalidCatches(work: Promise<void>, ok: () => void) {
     /* swallow */
   });
   work?.catch(() => {});
-  work.catch(() => {});
+  // Preserve this explicit EmptyStatement regression; formatters otherwise erase the node.
+  // prettier-ignore
+  work.catch(() => { ; });
   saveUser()
     .then((value) => value)
     .catch(() => {});
@@ -49,6 +51,12 @@ export async function invalidCatches(work: Promise<void>, ok: () => void) {
   });
   work.catch(() => {
     0n;
+  });
+  work.catch(() => {
+    /ignored/;
+  });
+  work.catch(() => {
+    `ignored`;
   });
 }
 
