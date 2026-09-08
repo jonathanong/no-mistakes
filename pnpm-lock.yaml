@@ -62,9 +62,6 @@ importers:
       no-mistakes-darwin-arm64:
         specifier: 0.59.0
         version: link:../no-mistakes-darwin-arm64
-      no-mistakes-darwin-x64:
-        specifier: 0.59.0
-        version: link:../no-mistakes-darwin-x64
       no-mistakes-linux-arm64-gnu:
         specifier: 0.59.0
         version: link:../no-mistakes-linux-arm64-gnu
@@ -76,8 +73,6 @@ importers:
         version: link:../no-mistakes-win32-x64-msvc
 
   packages/no-mistakes-darwin-arm64: {}
-
-  packages/no-mistakes-darwin-x64: {}
 
   packages/no-mistakes-linux-arm64-gnu: {}
 

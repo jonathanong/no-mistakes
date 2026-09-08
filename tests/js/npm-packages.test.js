@@ -37,7 +37,6 @@ test("only the expected public npm packages remain", () => {
     "eslint-plugin-no-mistakes",
     "no-mistakes",
     "no-mistakes-darwin-arm64",
-    "no-mistakes-darwin-x64",
     "no-mistakes-linux-arm64-gnu",
     "no-mistakes-linux-x64-gnu",
     "no-mistakes-win32-x64-msvc",
@@ -47,7 +46,6 @@ test("only the expected public npm packages remain", () => {
 test("native platform package manifests are runtime-bearing and platform-constrained", () => {
   const expected = {
     "no-mistakes-darwin-arm64": { os: ["darwin"], cpu: ["arm64"] },
-    "no-mistakes-darwin-x64": { os: ["darwin"], cpu: ["x64"] },
     "no-mistakes-linux-arm64-gnu": { os: ["linux"], cpu: ["arm64"], libc: ["glibc"] },
     "no-mistakes-linux-x64-gnu": { os: ["linux"], cpu: ["x64"], libc: ["glibc"] },
     "no-mistakes-win32-x64-msvc": { os: ["win32"], cpu: ["x64"] },
@@ -77,7 +75,7 @@ test("the npm package exposes one JavaScript launcher and optional native packag
   assert.deepEqual(manifest.bin, { "no-mistakes": "bin/no-mistakes.js" });
   assert.notEqual(statSync(join(packageDir, manifest.bin["no-mistakes"])).mode & 0o111, 0);
 
-  assert.deepEqual(Object.values(manifest.optionalDependencies), Array(5).fill(releaseVersion));
+  assert.deepEqual(Object.values(manifest.optionalDependencies), Array(4).fill(releaseVersion));
   assert.equal(statSync(join(packageDir, "bin", "no-mistakes.js")).isFile(), true);
   assert.match(
     readFileSync(join(root, "pnpm-workspace.yaml"), "utf8"),
@@ -94,7 +92,7 @@ test("packed no-mistakes pins every platform optional dependency to its release 
     const packed = JSON.parse(
       execFileSync("tar", ["-xOf", tarball, "package/package.json"], { encoding: "utf8" }),
     );
-    assert.deepEqual(Object.values(packed.optionalDependencies), Array(5).fill(packed.version));
+    assert.deepEqual(Object.values(packed.optionalDependencies), Array(4).fill(packed.version));
   } finally {
     if (tarball) rmSync(tarball, { force: true });
   }

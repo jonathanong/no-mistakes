@@ -39,7 +39,7 @@ test("finds the sibling platform workspace only for repository staging", () => {
 
 test("maps supported Node platforms to their native optional package", () => {
   assert.equal(nativePackageName("darwin", "arm64"), "no-mistakes-darwin-arm64");
-  assert.equal(nativePackageName("darwin", "x64"), "no-mistakes-darwin-x64");
+  assert.equal(nativePackageName("darwin", "x64"), undefined);
   assert.equal(nativePackageName("linux", "arm64"), "no-mistakes-linux-arm64-gnu");
   assert.equal(nativePackageName("linux", "x64"), "no-mistakes-linux-x64-gnu");
   assert.equal(nativePackageName("win32", "x64"), "no-mistakes-win32-x64-msvc");
@@ -121,6 +121,10 @@ test("reports missing optional packages and unsupported platforms clearly", () =
     /no-mistakes-darwin-arm64.*npm install/i,
   );
   assert.match(unsupportedPlatformMessage("win32", "arm64"), /Unsupported platform win32\/arm64/);
+  assert.throws(
+    () => resolveNativePackage({ platform: "darwin", arch: "x64" }),
+    /Unsupported platform darwin\/x64\. Install with `cargo install no-mistakes` instead\./,
+  );
   assert.throws(
     () =>
       resolveNativePackage({

@@ -9,8 +9,10 @@ The async N-API facade avoids subprocess parsing and reuses one prepared
 analysis for related reports.
 
 Published installs select a platform-specific optional package containing both
-the CLI and N-API addon. Repository contributors build and stage the local
-native package explicitly with `pnpm run build:native` before running the CLI.
+the CLI and N-API addon. Prebuilt packages support macOS ARM64, Linux ARM64 and
+x64 with glibc, and Windows x64; Intel Macs are not supported. Repository
+contributors build and stage the local native package explicitly with
+`pnpm run build:native` before running the CLI.
 
 ```bash
 npm install --save-dev no-mistakes
