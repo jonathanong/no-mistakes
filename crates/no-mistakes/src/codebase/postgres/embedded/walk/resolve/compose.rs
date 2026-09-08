@@ -17,7 +17,7 @@ pub(super) fn classify_init(
             (Some(text), EmbeddedSqlKind::Dynamic)
         };
     }
-    if interpolating_untrusted_tag(expr, &mut |name| visitor.shadowed_locally(name)) {
+    if interpolating_untrusted_tag(expr, &mut |name| tag_shadowed(name, visitor)) {
         return (sql_text(expr), EmbeddedSqlKind::Dynamic);
     }
     match unwrap_ts_wrappers(expr) {
@@ -59,7 +59,7 @@ pub(super) fn static_fragment(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>)
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => sql_text(expr),
         Expression::TaggedTemplateExpression(_)
-            if interpolating_untrusted_tag(expr, &mut |name| visitor.shadowed_locally(name)) =>
+            if interpolating_untrusted_tag(expr, &mut |name| tag_shadowed(name, visitor)) =>
         {
             None
         }
@@ -83,11 +83,23 @@ fn resolve_chain(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> Option<St
         }
         visitor.functions.get(name)
     };
-    let mut is_shadowed = |name: &str| visitor.shadowed_locally(name);
+    let mut is_shadowed = |name: &str| tag_shadowed(name, visitor);
     chain::resolve_expr(
         expr,
         functions::MAX_RESOLVE_DEPTH,
         &mut lookup,
         &mut is_shadowed,
     )
+}
+
+/// Whether `name` is untrustworthy as a tagged template's own trusted-tag
+/// reference — either a lexical shadow at a nested scope
+/// ([`ScopeVisitor::shadowed_locally`]), or a top-level rebinding away from a
+/// same-file helper's trusted meaning ([`functions::LocalFunctions::is_tag_shadowed`]).
+/// Resolution routed through an intermediate same-file helper body already
+/// combines both checks (`functions::resolve_named`'s own `is_shadowed`);
+/// this mirrors that for calls and tags resolved directly here, without an
+/// intermediate helper.
+fn tag_shadowed(name: &str, visitor: &ScopeVisitor<'_>) -> bool {
+    visitor.shadowed_locally(name) || visitor.functions.is_tag_shadowed(name)
 }

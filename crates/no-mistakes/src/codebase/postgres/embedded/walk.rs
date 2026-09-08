@@ -144,7 +144,19 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
     fn visit_switch_statement(&mut self, statement: &oxc_ast::ast::SwitchStatement<'a>) {
         self.visit_expression(&statement.discriminant);
+        // All of a switch's cases share one lexical scope (unlike a
+        // `BlockStatement` per case), so a case-local function declaration
+        // is recorded here, once, across every case's statements — not
+        // per-case — before any case is walked. Without this, a `function
+        // build() {}` declared directly in a case body is invisible to
+        // `shadowed_locally`, and a same-named top-level helper is wrongly
+        // resolved through instead.
+        self.push_scope();
+        for case in &statement.cases {
+            resolve::record_statements(&case.consequent, self);
+        }
         self.with_control_flow(|visitor| visitor.visit_switch_cases(&statement.cases));
+        self.pop_scope();
     }
 
     fn visit_conditional_expression(&mut self, expr: &oxc_ast::ast::ConditionalExpression<'a>) {

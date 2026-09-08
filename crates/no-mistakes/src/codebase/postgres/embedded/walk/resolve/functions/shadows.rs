@@ -1,3 +1,4 @@
+use super::super::for_each_bound_name;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
     BindingPattern, Declaration, Expression, ImportDeclaration, ImportDeclarationSpecifier,
@@ -29,8 +30,9 @@ pub(super) struct TagShadows {
 impl TagShadows {
     pub(super) fn collect(program: &Program<'_>) -> Self {
         let mut shadows = Self::default();
+        let top_level_functions = top_level_function_names(program);
         for statement in &program.body {
-            record_statement(statement, &mut shadows);
+            record_statement(statement, &top_level_functions, &mut shadows);
         }
         shadows
     }
@@ -40,12 +42,46 @@ impl TagShadows {
     }
 }
 
-fn record_statement(statement: &Statement<'_>, shadows: &mut TagShadows) {
+/// Names of every top-level `function` declaration (including
+/// `export function …`), gathered up front so a same-named top-level
+/// `const`/`let`/`var` never counts as shadowing it — matching the
+/// established rule in [`super::super::record_function_declaration`]'s own
+/// doc comment: "existing fixtures rely on a same-named top-level helper
+/// never shadowing itself." The parser doesn't reject the real-world
+/// collision (JS would), and fixtures such as
+/// `composed-chain-append-tagged-trusted.ts` and `composed-concat-tagged.ts`
+/// deliberately reuse the trusted tag's own name for a const holding its
+/// composed result.
+fn top_level_function_names<'a>(program: &Program<'a>) -> HashSet<&'a str> {
+    let mut names = HashSet::new();
+    for statement in &program.body {
+        let function = match statement {
+            Statement::FunctionDeclaration(function) => Some(function.as_ref()),
+            Statement::ExportDeclaration(export) => match &export.declaration {
+                Declaration::FunctionDeclaration(function) => Some(function.as_ref()),
+                _ => None,
+            },
+            _ => None,
+        };
+        if let Some(id) = function.and_then(|function| function.id.as_ref()) {
+            names.insert(id.name.as_str());
+        }
+    }
+    names
+}
+
+fn record_statement(
+    statement: &Statement<'_>,
+    top_level_functions: &HashSet<&str>,
+    shadows: &mut TagShadows,
+) {
     match statement {
-        Statement::VariableDeclaration(declaration) => record_declaration(declaration, shadows),
+        Statement::VariableDeclaration(declaration) => {
+            record_declaration(declaration, top_level_functions, shadows);
+        }
         Statement::ExportDeclaration(export) => {
             if let Declaration::VariableDeclaration(declaration) = &export.declaration {
-                record_declaration(declaration, shadows);
+                record_declaration(declaration, top_level_functions, shadows);
             }
         }
         Statement::ImportDeclaration(import) => record_import(import, shadows),
@@ -82,23 +118,40 @@ fn record_import(import: &ImportDeclaration<'_>, shadows: &mut TagShadows) {
     }
 }
 
-fn record_declaration(declaration: &VariableDeclaration<'_>, shadows: &mut TagShadows) {
+fn record_declaration(
+    declaration: &VariableDeclaration<'_>,
+    top_level_functions: &HashSet<&str>,
+    shadows: &mut TagShadows,
+) {
     for declarator in &declaration.declarations {
-        record_declarator(declarator, shadows);
+        record_declarator(declarator, top_level_functions, shadows);
     }
 }
 
-fn record_declarator(declarator: &VariableDeclarator<'_>, shadows: &mut TagShadows) {
-    let BindingPattern::BindingIdentifier(ident) = &declarator.id else {
-        return;
-    };
-    let is_helper_shape = declarator
-        .init
-        .as_ref()
-        .is_some_and(|init| is_function_shaped(init));
-    if !is_helper_shape || ident.name.eq_ignore_ascii_case("sql") {
-        shadows.names.insert(ident.name.to_string());
-    }
+/// A destructured declarator (`const { tag: sql } = providers;`) has no
+/// single callable-helper shape to exempt — the callable-helper exemption
+/// below applies only to a simple `BindingIdentifier` — so every name it
+/// binds is recorded as a shadow, matching how a non-function-shaped
+/// identifier declarator is already handled. A name that also names a
+/// top-level `function` declaration is exempted unconditionally, even from
+/// the `sql`-specific override just below: see
+/// [`top_level_function_names`].
+fn record_declarator(
+    declarator: &VariableDeclarator<'_>,
+    top_level_functions: &HashSet<&str>,
+    shadows: &mut TagShadows,
+) {
+    let is_helper_shape = declarator.init.as_ref().is_some_and(|init| {
+        matches!(&declarator.id, BindingPattern::BindingIdentifier(_)) && is_function_shaped(init)
+    });
+    for_each_bound_name(&declarator.id, &mut |name| {
+        if top_level_functions.contains(name) {
+            return;
+        }
+        if !is_helper_shape || name.eq_ignore_ascii_case("sql") {
+            shadows.names.insert(name.to_string());
+        }
+    });
 }
 
 pub(super) fn is_function_shaped(expr: &Expression<'_>) -> bool {

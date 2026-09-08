@@ -151,3 +151,27 @@ fn call_inside_a_named_function_expressions_own_self_binding_fails_closed() {
     let facts = extract("composed-chain-shadowed-named-function-expression-self-call.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
+
+#[test]
+fn direct_chain_tagged_by_a_captured_top_level_const_rebinding_sql_fails_closed() {
+    let facts = extract("composed-chain-shadowed-top-level-const-direct.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn function_declaration_in_a_switch_case_shadowing_a_top_level_helper_fails_closed() {
+    let facts = extract("composed-chain-shadowed-switch-case-function-declaration.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn helper_tagged_by_a_destructured_top_level_const_rebinding_sql_fails_closed() {
+    let facts = extract("composed-chain-shadowed-destructured-top-level-const.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn reassigned_via_update_expression_is_rejected() {
+    let facts = extract("composed-chain-function-reassigned-via-update-expression.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}

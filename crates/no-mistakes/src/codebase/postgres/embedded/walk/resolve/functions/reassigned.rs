@@ -2,7 +2,7 @@ use super::super::for_each_bound_name;
 use super::shadows::is_function_shaped;
 use oxc_ast::ast::{
     AssignmentTarget, AssignmentTargetMaybeDefault, AssignmentTargetProperty, ForStatementLeft,
-    Program, VariableDeclarator,
+    Program, SimpleAssignmentTarget, UpdateExpression, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashSet;
@@ -99,6 +99,20 @@ impl<'a> Visit<'a> for ReassignedNames<'a> {
             }
         }
         walk::walk_for_statement_left(self, it);
+    }
+
+    /// `build++`/`build--` writes through `UpdateExpression.argument`, a
+    /// `SimpleAssignmentTarget` — a separate node type from the
+    /// `AssignmentTarget` `visit_assignment_target` above already catches,
+    /// reached through its own visitor method rather than as a case of it.
+    /// Only the identifier form is a same-file-helper-name rebinding; a
+    /// member-expression operand (`obj.build++`) writes through a property,
+    /// not a name `LocalFunctions` tracks, so it's left alone.
+    fn visit_update_expression(&mut self, it: &UpdateExpression<'a>) {
+        if let SimpleAssignmentTarget::AssignmentTargetIdentifier(ident) = &it.argument {
+            self.names.insert(ident.name.as_str());
+        }
+        walk::walk_update_expression(self, it);
     }
 }
 

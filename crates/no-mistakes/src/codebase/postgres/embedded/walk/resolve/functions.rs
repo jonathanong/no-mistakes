@@ -22,6 +22,7 @@ pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
 /// never narrows it.
 pub(crate) struct LocalFunctions {
     resolved: HashMap<String, String>,
+    tag_shadows: TagShadows,
 }
 
 /// A same-file helper's params and body, however it was declared
@@ -54,11 +55,23 @@ impl LocalFunctions {
                 resolved.insert(name.to_string(), text);
             }
         }
-        Self { resolved }
+        Self {
+            resolved,
+            tag_shadows,
+        }
     }
 
     pub(crate) fn get(&self, name: &str) -> Option<String> {
         self.resolved.get(name).cloned()
+    }
+
+    /// Whether `name` is a top-level binding that rebinds a same-file
+    /// helper's tag away from trusted meaning (see [`shadows::TagShadows`]).
+    /// Exposed so callers resolving a call or tag directly — not through an
+    /// intermediate same-file helper body, which already consults this via
+    /// [`resolve_named`] — apply the same check.
+    pub(crate) fn is_tag_shadowed(&self, name: &str) -> bool {
+        self.tag_shadows.contains(name)
     }
 }
 
