@@ -5,14 +5,14 @@ use oxc_ast::ast::{
     AssignmentTargetMaybeDefault, AssignmentTargetProperty, BindingPattern, BlockStatement,
     CallExpression, CatchClause, Class, ClassElement, Declaration, ExportAllDeclaration,
     ExportDeclaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
-    ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier, Expression, FormalParameters,
-    IdentifierReference, ImportDeclaration, ImportDeclarationSpecifier, ImportExpression,
-    JSXOpeningElement, MethodDefinition, MethodDefinitionKind, ModuleExportName, NewExpression,
-    ObjectExpression, ObjectProperty, ObjectPropertyKind, Program, PropertyDefinition, Statement,
-    StaticBlock, StaticMemberExpression, TSEnumDeclaration, TSImportType, TSInterfaceDeclaration,
-    TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
-    TSTypeParameterDeclaration, TSTypeReference, TaggedTemplateExpression, VariableDeclaration,
-    VariableDeclarationKind, VariableDeclarator,
+    ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier, Expression, ForStatementLeft,
+    FormalParameters, IdentifierReference, ImportDeclaration, ImportDeclarationSpecifier,
+    ImportExpression, JSXOpeningElement, MethodDefinition, MethodDefinitionKind, ModuleExportName,
+    NewExpression, ObjectExpression, ObjectProperty, ObjectPropertyKind, Program,
+    PropertyDefinition, Statement, StaticBlock, StaticMemberExpression, TSEnumDeclaration,
+    TSImportType, TSInterfaceDeclaration, TSQualifiedName, TSTypeAliasDeclaration, TSTypeName,
+    TSTypeParameter, TSTypeParameterDeclaration, TSTypeReference, TaggedTemplateExpression,
+    VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::SourceType;
@@ -238,6 +238,7 @@ include!("extract_visit_object_references.rs");
 include!("extract_collector_aliases.rs");
 include!("extract_visit_helpers.rs");
 include!("extract_visit_variables.rs");
+include!("extract_control_flow_scopes.rs");
 include!("extract_default_helpers.rs");
 include!("extract_object_scope_helpers.rs");
 include!("extract_resource_scopes.rs");
