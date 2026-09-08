@@ -40,7 +40,7 @@ fn collect_overrides_rejects_invalid_globs_before_skipping_empty_rules() {
     let ancestors = [Ancestor {
         path: PathBuf::from("/repo/base.json"),
         rel: "base.json".to_string(),
-        value,
+        value: value.into(),
     }];
 
     let (_, findings) = collect_overrides(&ancestors, "nested/.oxlintrc.json", &assertion, &keys);

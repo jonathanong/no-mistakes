@@ -10,7 +10,9 @@ use crate::codebase::structured_value::parse_structured_value;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::Value;
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub(super) struct Nested<'a> {
     pub(super) path: &'a Path,
@@ -21,7 +23,36 @@ pub(super) struct Nested<'a> {
 pub(super) struct Ancestor {
     pub(super) path: PathBuf,
     pub(super) rel: String,
-    pub(super) value: Value,
+    pub(super) value: Arc<Value>,
+}
+
+#[derive(Default)]
+struct ParsedAncestorCache {
+    values: BTreeMap<PathBuf, Result<Arc<Value>, String>>,
+    #[cfg(test)]
+    parse_counts: BTreeMap<PathBuf, usize>,
+}
+
+impl ParsedAncestorCache {
+    fn parse(&mut self, path: &Path, source: &str) -> Result<Arc<Value>, String> {
+        if let Some(value) = self.values.get(path) {
+            return value.clone();
+        }
+        #[cfg(test)]
+        {
+            *self.parse_counts.entry(path.to_path_buf()).or_default() += 1;
+        }
+        let value = parse_structured_value(path, source)
+            .map(Arc::new)
+            .map_err(|error| error.to_string());
+        self.values.insert(path.to_path_buf(), value.clone());
+        value
+    }
+
+    #[cfg(test)]
+    fn parse_count(&self, path: &Path) -> usize {
+        self.parse_counts.get(path).copied().unwrap_or_default()
+    }
 }
 
 struct Walk<'a> {
@@ -33,6 +64,7 @@ struct Walk<'a> {
     stack: Vec<PathBuf>,
     occurrences: usize,
     max_occurrences: usize,
+    parsed_ancestors: ParsedAncestorCache,
     ancestors: Vec<Ancestor>,
     findings: &'a mut Vec<RuleFinding>,
 }
@@ -54,6 +86,7 @@ pub(super) fn collect_ancestors(
         stack: vec![nested.path.to_path_buf()],
         occurrences: 0,
         max_occurrences: MAX_EXTENDS_OCCURRENCES,
+        parsed_ancestors: ParsedAncestorCache::default(),
         ancestors: Vec::new(),
         findings,
     };
@@ -164,7 +197,7 @@ impl Walk<'_> {
         });
     }
 
-    fn load(&mut self, spec: &str, resolved: &Path) -> Option<Value> {
+    fn load(&mut self, spec: &str, resolved: &Path) -> Option<Arc<Value>> {
         let Some(source) = crate::codebase::rules::read_source(self.sources, resolved) else {
             self.findings.push(finding(
                 self.nested_rel,
@@ -176,7 +209,7 @@ impl Walk<'_> {
             ));
             return None;
         };
-        match parse_structured_value(resolved, &source) {
+        match self.parsed_ancestors.parse(resolved, &source) {
             Ok(value) => Some(value),
             Err(error) => {
                 let ancestor_rel = relative_slash_path(self.root, resolved);

@@ -21,6 +21,7 @@ fn follow_rejects_an_extends_chain_at_the_depth_limit() {
         stack: vec![root.to_path_buf(); MAX_EXTENDS_DEPTH],
         occurrences: 0,
         max_occurrences: MAX_EXTENDS_OCCURRENCES,
+        parsed_ancestors: ParsedAncestorCache::default(),
         ancestors: Vec::new(),
         findings: &mut findings,
     };
@@ -61,6 +62,7 @@ fn bounds_repeated_occurrences_in_a_fanout_graph() {
         stack: vec![nested.clone()],
         occurrences: 0,
         max_occurrences: 3,
+        parsed_ancestors: ParsedAncestorCache::default(),
         ancestors: Vec::new(),
         findings: &mut findings,
     };
@@ -94,21 +96,23 @@ fn preserves_each_non_cycle_occurrence_in_a_diamond_extends_graph() {
     let assertion = ValueAssertion::default();
     let keys = Keys::from_assertion(&assertion);
     let mut findings = Vec::new();
-    let ancestors = collect_ancestors(
-        &root,
-        Nested {
-            path: &nested,
-            rel: "diamond/nested/.oxlintrc.json",
-            value: &value,
-        },
-        &sources,
-        &assertion,
-        &keys,
-        &mut findings,
-    );
-    assert!(findings.is_empty(), "{findings:?}");
+    let mut walk = Walk {
+        root: &root,
+        nested_rel: "diamond/nested/.oxlintrc.json",
+        sources: &sources,
+        assertion: &assertion,
+        keys: &keys,
+        stack: vec![nested.clone()],
+        occurrences: 0,
+        max_occurrences: MAX_EXTENDS_OCCURRENCES,
+        parsed_ancestors: ParsedAncestorCache::default(),
+        ancestors: Vec::new(),
+        findings: &mut findings,
+    };
+    walk.visit(&nested, &value);
+    assert!(walk.findings.is_empty(), "{:?}", walk.findings);
     assert_eq!(
-        ancestors
+        walk.ancestors
             .iter()
             .map(|ancestor| ancestor.rel.as_str())
             .collect::<Vec<_>>(),
@@ -118,5 +122,10 @@ fn preserves_each_non_cycle_occurrence_in_a_diamond_extends_graph() {
             "diamond/shared.json",
             "diamond/right.json",
         ],
+    );
+    assert_eq!(
+        walk.parsed_ancestors
+            .parse_count(&root.join("diamond/shared.json")),
+        1
     );
 }
