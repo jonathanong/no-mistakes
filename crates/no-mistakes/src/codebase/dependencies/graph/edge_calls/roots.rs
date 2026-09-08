@@ -87,7 +87,9 @@ impl DepGraph {
     }
 
     fn has_call_site_in_file(&self, file: &std::path::Path) -> bool {
-        self.resolved_call_sites.iter().any(|site| site.file == file)
+        self.resolved_call_sites
+            .iter()
+            .any(|site| site.file == file)
     }
 
     /// Follow canonical call edges with deterministic shortest traces. `File`
@@ -165,13 +167,17 @@ impl DepGraph {
         else {
             return vec![node.clone()];
         };
+        let symbol: &str = symbol;
+        if let Some(matches) = self.resolve_exported_callable_root(file.as_ref(), symbol) {
+            return matches;
+        }
         let matches = self
             .callable_nodes_by_file
             .get(file.as_ref())
             .into_iter()
             .flatten()
             .filter(|candidate| {
-                matches!(candidate, NodeId::Symbol { symbol: candidate_symbol, .. } if candidate_symbol == symbol)
+                matches!(candidate, NodeId::Symbol { symbol: candidate_symbol, .. } if candidate_symbol.to_string() == symbol)
             })
             .cloned()
             .collect::<Vec<_>>();
@@ -181,4 +187,104 @@ impl DepGraph {
             Vec::new()
         }
     }
+
+    /// Resolve an exported root through the canonical target retained on an
+    /// imported call site. Call edges already perform the full resolver and
+    /// re-export walk while building the graph, so root expansion must reuse
+    /// that result rather than compare a barrel's public spelling with the
+    /// target declaration's private spelling.
+    fn resolve_exported_callable_root(
+        &self,
+        file: &std::path::Path,
+        symbol: &str,
+    ) -> Option<Vec<NodeId>> {
+        let file = crate::codebase::ts_resolver::normalize_path(file);
+        let mut found_export = false;
+        let mut matches = Vec::new();
+        for site in &self.resolved_call_sites {
+            let ResolvedCallTarget::ModuleExport {
+                specifier,
+                export_path,
+                repository_target,
+            } = &site.target
+            else {
+                continue;
+            };
+            if export_path != symbol || !module_specifier_targets_file(&site.file, specifier, &file)
+            {
+                continue;
+            }
+            found_export = true;
+            let Some((target_file, target_scope)) = repository_target else {
+                continue;
+            };
+            let Some(target) = self.unique_callable_node(target_file, target_scope) else {
+                continue;
+            };
+            matches.push(target);
+        }
+        if !found_export {
+            return None;
+        }
+        matches.sort();
+        matches.dedup();
+        Some(matches)
+    }
+
+    fn unique_callable_node(&self, file: &std::path::Path, symbol: &str) -> Option<NodeId> {
+        let mut matches = self
+            .callable_nodes_by_file
+            .get(file)
+            .into_iter()
+            .flatten()
+            .filter(|candidate| {
+                matches!(candidate, NodeId::Symbol { symbol: candidate_symbol, .. } if candidate_symbol.to_string() == symbol)
+            })
+            .cloned();
+        let node = matches.next()?;
+        matches.next().is_none().then_some(node)
+    }
+}
+
+fn module_specifier_targets_file(
+    importing_file: &std::path::Path,
+    specifier: &str,
+    requested_file: &std::path::Path,
+) -> bool {
+    if !specifier.starts_with('.') && !specifier.starts_with('/') {
+        return false;
+    }
+    let Some(parent) = importing_file.parent() else {
+        return false;
+    };
+    let base = parent.join(specifier);
+    let requested_file = crate::codebase::ts_resolver::normalize_path(requested_file);
+    module_specifier_candidates(&base)
+        .into_iter()
+        .any(|candidate| crate::codebase::ts_resolver::normalize_path(&candidate) == requested_file)
+}
+
+fn module_specifier_candidates(base: &std::path::Path) -> Vec<std::path::PathBuf> {
+    const EXTENSIONS: &[&str] = &["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"];
+    let mut candidates = vec![base.to_path_buf()];
+    let extension = base.extension().and_then(|extension| extension.to_str());
+    if extension.is_none() {
+        candidates.extend(
+            EXTENSIONS
+                .iter()
+                .map(|extension| base.with_extension(extension)),
+        );
+        candidates.extend(
+            EXTENSIONS
+                .iter()
+                .map(|extension| base.join("index").with_extension(extension)),
+        );
+    } else if matches!(extension, Some("js" | "jsx" | "mjs" | "cjs")) {
+        candidates.extend(
+            EXTENSIONS[..4]
+                .iter()
+                .map(|extension| base.with_extension(extension)),
+        );
+    }
+    candidates
 }

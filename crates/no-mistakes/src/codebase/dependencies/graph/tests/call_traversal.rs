@@ -244,6 +244,86 @@ fn call_roots_are_pure_and_retain_leaf_and_global_only_callables() {
 }
 
 #[test]
+fn exported_function_roots_resolve_renamed_defaults_and_barrels() {
+    let (root, graph) = call_fixture_graph();
+
+    for (file, symbol, target_file, target) in [
+        (
+            root.join("src/exported-local-aliases.mts"),
+            "exportedAlias",
+            root.join("src/alias-target.mts"),
+            "importedTarget",
+        ),
+        (
+            root.join("src/exported-local-aliases.mts"),
+            "default",
+            root.join("src/alias-target.mts"),
+            "defaultTarget",
+        ),
+        (
+            root.join("src/reexport-default.mts"),
+            "default",
+            root.join("src/alias-target.mts"),
+            "defaultTarget",
+        ),
+        (
+            root.join("src/star-cycle-a.mts"),
+            "cycle",
+            root.join("src/star-cycle-provider.mts"),
+            "cycle",
+        ),
+        (
+            root.join("src/star-cycle-b.mts"),
+            "cycle",
+            root.join("src/star-cycle-provider.mts"),
+            "cycle",
+        ),
+    ] {
+        let roots = graph.expand_call_roots(&[CallRoot::Function {
+            file,
+            symbol: symbol.to_string(),
+        }]);
+        assert_eq!(roots.len(), 1, "{symbol} should resolve to one root");
+        assert!(has_symbol(&roots[0], &target_file, target), "{roots:#?}");
+    }
+}
+
+#[test]
+fn exported_function_roots_follow_named_reexport_barrels() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/forbidden-calls/coverage/fixture"),
+    );
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            imports: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+    let roots = graph.expand_call_roots(&[CallRoot::Function {
+        file: root.join("src/barrel.mts"),
+        symbol: "reexportedTarget".to_string(),
+    }]);
+
+    assert_eq!(roots.len(), 1, "named re-export should resolve to one root");
+    assert!(has_symbol(
+        &roots[0],
+        &root.join("src/targets.mts"),
+        "repositoryTarget"
+    ));
+}
+
+#[test]
 fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
     let (root, graph) = call_fixture_graph();
     let aliases = root.join("src/aliases.mts");
