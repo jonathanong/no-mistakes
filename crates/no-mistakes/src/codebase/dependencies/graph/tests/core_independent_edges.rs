@@ -1,3 +1,5 @@
+use super::{require_core_edge_facts, GraphBuildPlan};
+
 #[test]
 fn collect_independent_core_edges_parallelizes_import_symbol_and_test_kinds() {
     let builder = include_str!("../builder_edges.rs");
@@ -36,4 +38,41 @@ fn collect_independent_core_edges_parallelizes_import_symbol_and_test_kinds() {
         !builder.contains("merge_edges(forward, reverse, import_edges)"),
         "core kinds must not merge on the rayon worker that collected them"
     );
+}
+
+#[test]
+fn core_edges_reject_missing_facts_for_every_fact_backed_core_kind() {
+    for (plan, expected) in [
+        (
+            GraphBuildPlan {
+                route_imports: true,
+                ..GraphBuildPlan::default()
+            },
+            "TS import facts are required for route-import edges",
+        ),
+        (
+            GraphBuildPlan {
+                symbols: true,
+                ..GraphBuildPlan::default()
+            },
+            "TS symbol facts are required when symbol edges are requested",
+        ),
+        (
+            GraphBuildPlan {
+                calls: true,
+                ..GraphBuildPlan::default()
+            },
+            "TS call facts are required when call edges are requested",
+        ),
+    ] {
+        assert_eq!(
+            require_core_edge_facts(plan, None)
+                .expect_err("fact-backed core edge must not build without prepared facts")
+                .to_string(),
+            expected
+        );
+    }
+
+    require_core_edge_facts(GraphBuildPlan::default(), None)
+        .expect("fact-free core edge plan accepts no facts");
 }

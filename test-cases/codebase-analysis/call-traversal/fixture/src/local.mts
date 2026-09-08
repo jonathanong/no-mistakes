@@ -8,4 +8,15 @@ function second() {
 
 function third() {}
 
+function outer() {
+  function outerOnly() {}
+
+  function inner() {
+    outerOnly();
+  }
+
+  inner();
+}
+
 first();
+outer();

@@ -215,6 +215,44 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
                 } if file == &root.join("src/alias-target.mts") && scope == "importedTarget"
             )
     }));
+    for (callee, expected_export, expected_scope) in [
+        ("targets.importedTarget", "importedTarget", "importedTarget"),
+        ("targets.default", "default", "defaultTarget"),
+    ] {
+        let matching_sites = graph
+            .resolved_call_sites()
+            .iter()
+            .filter(|site| site.file == aliases && site.source_callee == callee)
+            .collect::<Vec<_>>();
+        assert!(
+            matching_sites.iter().any(|site| {
+                matches!(
+                        &site.target,
+                        ResolvedCallTarget::ModuleExport {
+                            specifier,
+                            export_path,
+                            repository_target: Some((file, scope)),
+                        } if specifier == "./alias-target.mts"
+                            && export_path == expected_export
+                            && file == &root.join("src/alias-target.mts")
+                            && scope == expected_scope
+                    )
+            }),
+            "a namespace member must retain its concrete export target: {callee}: {matching_sites:#?}"
+        );
+    }
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.file == aliases
+            && site.source_callee == "remote"
+            && matches!(
+                &site.target,
+                ResolvedCallTarget::ModuleExport {
+                    specifier,
+                    export_path,
+                    repository_target: None,
+                } if specifier == "unresolved-runtime-library" && export_path == "remote"
+            )
+    }));
     assert!(graph.resolved_call_sites().iter().any(|site| {
         site.file == aliases
             && site.source_callee == "second"
@@ -316,6 +354,9 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
         "collision",
         "externalCollision",
         "window.setTimeout",
+        "targets.deep.member",
+        "propertyImport.call",
+        "hidden",
     ] {
         assert!(
             graph.resolved_call_sites().iter().any(|site| {
@@ -326,4 +367,27 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
             "{callee} must remain unknown rather than guessed"
         );
     }
+}
+
+#[test]
+fn call_resolution_walks_lexical_parent_scopes_without_guessing_properties() {
+    let (root, graph) = call_fixture_graph();
+    let local = root.join("src/local.mts");
+    let outer = symbol(&local, "outer");
+    let inner = symbol(&local, "outer/inner");
+    let outer_only = symbol(&local, "outer/outerOnly");
+
+    let direct = graph.call_traces(std::slice::from_ref(&inner), CallTraversal::Direct, None);
+    assert_eq!(
+        direct.iter().map(|trace| &trace.target).collect::<Vec<_>>(),
+        vec![&outer_only],
+        "a nested function can call a callable declared by its lexical parent"
+    );
+    assert!(
+        graph
+            .call_traces(&[outer], CallTraversal::Transitive, None)
+            .iter()
+            .any(|trace| trace.target == outer_only),
+        "the parent-local edge participates in ordinary traversal"
+    );
 }

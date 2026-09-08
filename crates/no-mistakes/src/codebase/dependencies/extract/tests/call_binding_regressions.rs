@@ -289,6 +289,40 @@ fn callable_alias_invalidation_tracks_destructuring_targets_and_lexical_bindings
 }
 
 #[test]
+fn callable_alias_invalidation_handles_object_property_defaults_and_ignores_member_writes() {
+    let source = r#"
+        function target() {}
+        const shorthand = target;
+        const renamed = target;
+        const fallback = target;
+        const rest = target;
+        const retained = target;
+
+        ({ shorthand, original: renamed, fallback = replacement, ...rest } = source);
+        holder.retained = replacement;
+    "#;
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, source);
+
+    for invalidated in ["shorthand", "renamed", "fallback", "rest"] {
+        assert!(
+            !facts
+                .callable_aliases
+                .iter()
+                .any(|alias| alias.scope.is_none() && alias.local == invalidated),
+            "object assignment must invalidate {invalidated}"
+        );
+    }
+    assert!(facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.scope.is_none()
+            && alias.local == "retained"
+            && alias.target == "target"));
+}
+
+#[test]
 fn call_facts_record_unknown_calls_with_location_and_kind() {
     let source = "(condition ? left : right)();\nnew (condition ? Left : Right)();";
     let allocator = Allocator::default();

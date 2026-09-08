@@ -19,6 +19,11 @@ fn relationship_flag_parsed() {
 }
 
 #[test]
+fn call_relationship_has_a_core_cli_spelling() {
+    assert_eq!(RelationshipArg::Call.as_str(), "call");
+}
+
+#[test]
 fn relationship_flag_repeatable() {
     let a = parse(&[
         "deps",

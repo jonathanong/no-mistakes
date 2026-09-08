@@ -20,14 +20,12 @@ fn simple_callee_name(expr: &Expression<'_>) -> Option<String> {
 }
 
 fn simple_static_member_name(member: &StaticMemberExpression<'_>) -> Option<String> {
-    match &member.object {
-        Expression::Identifier(object) => Some(format!(
-            "{}.{}",
-            object.name.as_str(),
-            member.property.name.as_str()
-        )),
-        _ => None,
-    }
+    let object = match &member.object {
+        Expression::Identifier(object) => object.name.to_string(),
+        Expression::StaticMemberExpression(object) => simple_static_member_name(object)?,
+        _ => return None,
+    };
+    Some(format!("{object}.{}", member.property.name.as_str()))
 }
 
 fn simple_computed_member_name(

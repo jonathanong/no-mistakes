@@ -1,4 +1,8 @@
 import { importedTarget as imported } from "./alias-target.mts";
+import * as targets from "./alias-target.mts";
+import { importedTarget as propertyImport } from "./alias-target.mts";
+import { hidden } from "./private-target.mts";
+import { remote } from "unresolved-runtime-library";
 import defaultThroughIdentifier from "./reexport-default.mts";
 import defaultThroughStar from "./star-default.mts";
 import { shared as ambiguous } from "./ambiguous-barrel.mts";
@@ -36,6 +40,12 @@ localExportAlias();
 collision();
 externalCollision();
 externalMock();
+targets.importedTarget();
+targets.default();
+targets.deep.member();
+propertyImport.call();
+hidden();
+remote();
 
 globalThis.setTimeout(() => {}, 1);
 window.setTimeout(() => {}, 1);
