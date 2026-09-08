@@ -3,6 +3,11 @@ use super::*;
 fn facts(source: &str) -> ImportFacts {
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+    assert!(
+        parsed.diagnostics.is_empty(),
+        "parse errors: {:#?}",
+        parsed.diagnostics
+    );
     extract_import_facts_from_program_with_source(&parsed.program, source)
 }
 
@@ -21,6 +26,81 @@ fn nested_class_eager_expressions_keep_the_enclosing_callable_owner() {
     assert!(facts.function_calls.iter().any(|call| {
         call.callee == "loadMethod" && call.caller.as_deref() == Some("outer/Service/method")
     }));
+}
+
+#[test]
+fn named_class_and_member_decorators_are_calls_in_the_enclosing_evaluation_scope() {
+    let facts = facts(
+        r#"
+            import { classDecorator } from "./class-decorator.mts";
+            import * as memberDecorators from "./member-decorator.mts";
+
+            function localDecorator() {}
+            function outer() {
+              @classDecorator
+              class Service {
+                @memberDecorators.decorate
+                method() {}
+
+                @localDecorator
+                field = 1;
+              }
+            }
+        "#,
+    );
+
+    for (callee, identity) in [
+        ("classDecorator", CallTargetIdentity::ModuleExport),
+        (
+            "memberDecorators.decorate",
+            CallTargetIdentity::ModuleExport,
+        ),
+        ("localDecorator", CallTargetIdentity::RepositoryFunction),
+    ] {
+        assert!(
+            facts.function_calls.iter().any(|call| {
+                call.callee == callee
+                    && call.caller.as_deref() == Some("outer")
+                    && call.invocation == InvocationKind::Call
+                    && call.target_identity == identity
+            }),
+            "{callee} must be an enclosing-scope decorator invocation: {:#?}",
+            facts.function_calls
+        );
+    }
+}
+
+#[test]
+fn dynamic_decorators_remain_unknown_calls_without_named_edges() {
+    let facts = facts(
+        r#"
+            function outer() {
+              @factory()
+              class FactoryDecorated {}
+
+              @(decorators[method])
+              class ComputedDecorated {}
+            }
+        "#,
+    );
+
+    assert!(
+        facts
+            .function_calls
+            .iter()
+            .any(|call| { call.callee == "factory" && call.caller.as_deref() == Some("outer") }),
+        "decorator factory call must retain its enclosing owner: {:#?}",
+        facts.function_calls
+    );
+    assert_eq!(
+        facts
+            .unknown_calls
+            .iter()
+            .filter(|call| call.caller.as_deref() == Some("outer"))
+            .count(),
+        2,
+        "factory-result and computed decorators must stay unresolved"
+    );
 }
 
 #[test]
@@ -88,26 +168,49 @@ fn bound_anonymous_class_overloads_share_implementation_callable_ids() {
 #[test]
 fn bound_named_class_expression_keeps_its_internal_identity() {
     let facts = facts(
-        "const Public = class Internal { static load() {} parse(value: string): string; parse(value: number): string; parse(value: string | number) { Internal.load(); return ''; } }; new Public().parse('input');",
+        "const Public = class Internal { constructor() {} static load() {} parse(value: string): string; parse(value: number): string; parse(value: string | number) { Internal.load(); return ''; } }; new Public().parse('input'); Public.load(); function outer() { const NestedPublic = class NestedInternal { constructor() {} static load() {} parse(value: string): string; parse(value: number): string; parse(value: string | number) { NestedInternal.load(); return ''; } }; new NestedPublic().parse('input'); NestedPublic.load(); }",
     );
 
-    assert_eq!(
-        facts
+    for (outward, internal, scope) in [
+        ("Public", "Internal", "Internal"),
+        ("NestedPublic", "NestedInternal", "outer/NestedInternal"),
+    ] {
+        let outward_id = facts
+            .callable_bindings
+            .iter()
+            .find_map(|(_, name, id)| (name == outward).then_some(*id))
+            .expect("outward class binding");
+        let internal_id = facts
+            .callable_bindings
+            .iter()
+            .find_map(|(_, name, id)| (name == internal).then_some(*id))
+            .expect("internal class binding");
+        assert_eq!(outward_id, internal_id, "{outward} and {internal}");
+
+        let method_scope = format!("{scope}/parse");
+        assert_eq!(
+            facts
+                .callable_scope_ids
+                .iter()
+                .filter(|(_, candidate)| candidate == &method_scope)
+                .count(),
+            1,
+            "{method_scope} must collapse overloads to its implementation ID"
+        );
+        assert!(!facts
             .callable_scope_ids
             .iter()
-            .filter(|(_, scope)| scope == "Internal/parse")
-            .count(),
-        1
-    );
-    assert!(!facts
-        .callable_scope_ids
-        .iter()
-        .any(|(_, scope)| scope == "Public/parse"));
-    assert!(
-        facts.function_calls.iter().any(|call| {
-            call.caller.as_deref() == Some("Internal/parse") && call.callee == "Internal.load"
-        }),
-        "named class self-reference must remain in the internal method scope: {:#?}",
-        facts.function_calls
-    );
+            .any(|(_, candidate)| candidate == &format!("{outward}/parse")));
+        for callee in [outward.to_string(), format!("{outward}.load")] {
+            assert!(facts.function_calls.iter().any(|call| {
+                call.callee == callee
+                    && call.target_identity == CallTargetIdentity::RepositoryFunction
+            }));
+        }
+        assert!(facts.function_calls.iter().any(|call| {
+            call.caller.as_deref() == Some(method_scope.as_str())
+                && call.callee == format!("{internal}.load")
+                && call.target_identity == CallTargetIdentity::RepositoryFunction
+        }));
+    }
 }

@@ -106,6 +106,11 @@ pub struct TsFileFacts {
         String,
         crate::codebase::dependencies::extract::CallableId,
     )>,
+    pub class_member_callable_ids: Vec<(
+        crate::codebase::dependencies::extract::CallableId,
+        String,
+        crate::codebase::dependencies::extract::CallableId,
+    )>,
     pub lexical_scope_parents: Vec<(usize, Option<usize>)>,
     pub callable_scopes: Vec<String>,
     pub class_scopes: Vec<String>,

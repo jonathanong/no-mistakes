@@ -79,7 +79,7 @@ impl ImportCollector {
             }
             self.function_stack.push(scope);
             self.function_id_stack.push(id);
-            self.function_scope_stack.push(self.local_stack.len());
+            self.var_scope_stack.push(self.local_stack.len());
             self.local_stack.push(HashSet::new());
             let lexical_scope_id = self.next_lexical_scope_id;
             self.lexical_scope_parents
@@ -135,7 +135,7 @@ impl ImportCollector {
         });
         self.function_stack.push(scope);
         self.function_id_stack.push(id);
-        self.function_scope_stack.push(self.local_stack.len());
+        self.var_scope_stack.push(self.local_stack.len());
         self.local_stack.push(HashSet::new());
         let lexical_scope_id = self.next_lexical_scope_id;
         self.lexical_scope_parents
@@ -150,7 +150,7 @@ impl ImportCollector {
         if pushed {
             self.function_stack.pop();
             self.function_id_stack.pop();
-            self.function_scope_stack.pop();
+            self.var_scope_stack.pop();
             self.local_stack.pop();
             self.lexical_scope_ids.pop();
             self.type_local_stack.pop();

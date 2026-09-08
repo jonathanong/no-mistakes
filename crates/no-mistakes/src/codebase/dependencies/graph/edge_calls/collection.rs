@@ -37,14 +37,28 @@ fn collect_call_edges_for_core(
                             call.callee_binding_scope,
                             &call.callee,
                         )
-                        .unwrap_or_else(|| call.callee.clone());
-                    let target_identity = call_target_identity(&index, call, &resolved_callee);
+                        .or_else(|| {
+                            (call.target_identity
+                                == crate::codebase::dependencies::extract::CallTargetIdentity::RepositoryFunction)
+                                .then(|| {
+                                    index.resolve_class_binding(
+                                        call.callee_binding_scope,
+                                        &call.callee,
+                                    )
+                                })
+                                .flatten()
+                        })
+                        .unwrap_or_else(|| ResolvedLocalCallee {
+                            callee: call.callee.clone(),
+                            callable_id: None,
+                        });
+                    let target_identity = call_target_identity(&index, call, &resolved_callee.callee);
                     let target = match target_identity {
                         crate::codebase::dependencies::extract::CallTargetIdentity::RepositoryFunction => {
                             resolve_local_call_scope(
                                 call.caller.as_deref(),
                                 call.callee_binding_scope,
-                                &resolved_callee,
+                                &resolved_callee.callee,
                                 &index.known_scopes,
                                 &index.class_scopes,
                             )
@@ -72,7 +86,7 @@ fn collect_call_edges_for_core(
                                 resolver,
                                 path,
                                 &index,
-                                &resolved_callee,
+                                &resolved_callee.callee,
                                 &indexes,
                             )
                             .unwrap_or(ResolvedCallTarget::Unknown)
@@ -91,6 +105,7 @@ fn collect_call_edges_for_core(
                                 facts,
                                 file,
                                 scope,
+                                resolved_callee.callable_id,
                             ),
                             EdgeKind::Call,
                         )),
@@ -147,8 +162,9 @@ fn callable_node_for_call(
     facts: &dyn TsFactLookup,
     file: &std::path::Path,
     scope: &str,
+    exact_id: Option<crate::codebase::dependencies::extract::CallableId>,
 ) -> NodeId {
-    let id = facts.get_ts_facts(file).and_then(|file_facts| {
+    let id = exact_id.or_else(|| facts.get_ts_facts(file).and_then(|file_facts| {
         // The resolved file and canonical target scope own this callable
         // identity. Importer lexical scopes and local aliases are unrelated
         // source files, and using either can select a same-spelled target
@@ -159,7 +175,7 @@ fn callable_node_for_call(
             .filter_map(|(id, display)| (display == scope).then_some(*id));
         let first = ids.next()?;
         ids.next().is_none().then_some(first)
-    });
+    }));
     id.map_or_else(
         || NodeId::symbol_in(interner, file, scope),
         |id| NodeId::callable_in(interner, file, scope, id),

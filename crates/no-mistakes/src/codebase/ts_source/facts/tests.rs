@@ -215,7 +215,7 @@ fn effect_projection_does_not_start_a_domain_ast_walk() {
     assert!(helper_calls.iter().any(|call| call.caller.is_some()));
     assert!(helper_calls.iter().any(|call| call.caller.is_none()));
     assert_eq!(facts.effect_calls.len(), 1, "{facts:#?}");
-    assert_eq!(facts.effect_calls[0].caller.as_deref(), Some("value"));
+    assert_eq!(facts.effect_calls[0].caller, None);
     assert!(
         !observer.snapshot().work.contains_key("ast.walks"),
         "effects must project canonical calls without a second AST visitor: {:#?}",

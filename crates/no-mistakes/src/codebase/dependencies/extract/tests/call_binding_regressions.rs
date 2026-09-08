@@ -463,23 +463,6 @@ fn call_facts_hoist_var_bindings_out_of_module_and_function_blocks() {
 }
 
 #[test]
-fn call_facts_do_not_hoist_class_static_block_vars_into_the_module() {
-    let source = r#"
-        setTimeout();
-        class Timers {
-          static { var setTimeout = () => {}; }
-        }
-    "#;
-    let allocator = Allocator::default();
-    let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
-    let facts = extract_import_facts_from_program_with_source(&parsed.program, source);
-
-    assert!(facts.function_calls.iter().any(|call| {
-        call.callee == "setTimeout" && call.target_identity == CallTargetIdentity::Global
-    }));
-}
-
-#[test]
 fn call_facts_scope_loop_and_switch_lexical_bindings() {
     let source = r#"
         for (const setTimeout of callbacks) {

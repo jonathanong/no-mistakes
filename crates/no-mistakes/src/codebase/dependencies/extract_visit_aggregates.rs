@@ -17,6 +17,7 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
         walk_class_with_scoped_methods(collector, name, CallableId(class.span.start), class);
         return;
     }
+    record_decorator_invocations(collector, &class.decorators);
     walk::walk_class(collector, class);
 }
 

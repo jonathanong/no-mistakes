@@ -49,7 +49,12 @@ fn visit_variable_declarator_with_scope<'a>(
             if name.is_some() && collector.function_stack.is_empty() =>
         {
             if let Some(name) = name.as_deref() {
-                record_object_member_calls(collector, name, CallableId(declarator.span.start), object);
+                record_object_member_calls(
+                    collector,
+                    name,
+                    CallableId(declarator.span.start),
+                    object,
+                );
             }
             // Treat both inline `export const` and later `export { … }` named
             // object bindings as exported, so a registry written either way keeps
@@ -73,23 +78,32 @@ fn visit_variable_declarator_with_scope<'a>(
                 }
             }
         }
-        Some(Expression::ClassExpression(class)) if name.is_some() && class.id.is_none() => {
+        Some(Expression::ClassExpression(class)) if name.is_some() => {
             if let Some(name) = name.as_deref() {
                 let class_id = CallableId(class.span.start);
-                let scope = collector.callable_scope_name(name);
+                // A named class expression has two bindings to one class:
+                // `Public` is observable around the expression, while
+                // `Internal` is the class body's self-reference. Keep method
+                // scopes under the latter, but retain the outward binding so
+                // calls through either spelling share the class identity.
+                let class_name = class.id.as_ref().map_or(name, |id| id.name.as_str());
+                let scope = collector.callable_scope_name(class_name);
                 collector.record_callable_binding_id(name, class_id);
                 record_class_member_calls(collector, &scope, class_id, class);
+                collector.known_function_scopes.insert(scope.clone());
+                collector
+                    .callable_scope_ids
+                    .insert((class_id, scope.clone()));
                 collector.callable_scopes.insert(scope.clone());
                 collector.class_scopes.insert(scope);
-                if collector.function_stack.is_empty()
-                    && collector.is_exported_top_level_name(name)
+                if collector.function_stack.is_empty() && collector.is_exported_top_level_name(name)
                 {
                     collector.record_exported_resource_root(name);
                     record_class_resource_scopes(collector, name, class);
                 }
                 collector.visit_binding_pattern(&declarator.id);
                 walk_variable_type_annotation(collector, declarator);
-                walk_class_with_scoped_methods(collector, name, class_id, class);
+                walk_class_with_scoped_methods(collector, class_name, class_id, class);
             }
         }
         _ if name.is_some() && collector.function_stack.is_empty() && declarator.init.is_some() => {

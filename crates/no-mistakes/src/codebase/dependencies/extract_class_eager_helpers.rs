@@ -4,7 +4,12 @@ fn walk_class_with_scoped_methods<'a>(
     class_id: CallableId,
     class: &Class<'a>,
 ) {
-    walk::walk_decorators(collector, &class.decorators);
+    walk_decorators_as_invocations(collector, &class.decorators);
+    let pushed_class_scope = collector.push_lexical_scope();
+    if let Some(name) = class.id.as_ref().map(|id| id.name.as_str()) {
+        collector.add_binding_name(name);
+        collector.record_callable_binding_id(name, class_id);
+    }
     if let Some(type_parameters) = &class.type_parameters {
         collector.visit_ts_type_parameter_declaration(type_parameters);
     }
@@ -18,11 +23,33 @@ fn walk_class_with_scoped_methods<'a>(
     for element in &class.body.body {
         if let ClassElement::MethodDefinition(method) = element {
             let method_id = class_method_callable_id(class, method);
+            if method.r#static {
+                if let Some(name) = crate::codebase::ts_source::static_property_key_name(&method.key) {
+                    collector.record_class_member_callable_id(class_id, name, method_id);
+                }
+            }
             walk_class_method_with_scope(collector, class_name, class_id, method_id, method);
         } else {
             walk::walk_class_element(collector, element);
         }
     }
+    collector.pop_lexical_scope(pushed_class_scope);
+}
+
+fn visit_class_static_block_with_scope<'a>(
+    collector: &mut ImportCollector,
+    block: &StaticBlock<'a>,
+) {
+    let pushed = collector.push_lexical_scope();
+    if pushed {
+        collector.var_scope_stack.push(collector.local_stack.len() - 1);
+    }
+    predeclare_function_declarations(collector, &block.body);
+    walk::walk_static_block(collector, block);
+    if pushed {
+        collector.var_scope_stack.pop();
+    }
+    collector.pop_lexical_scope(pushed);
 }
 
 fn class_method_callable_id(class: &Class<'_>, method: &MethodDefinition<'_>) -> CallableId {
@@ -62,7 +89,7 @@ fn walk_class_method_with_scope<'a>(
     method_id: CallableId,
     method: &MethodDefinition<'a>,
 ) {
-    walk::walk_decorators(collector, &method.decorators);
+    walk_decorators_as_invocations(collector, &method.decorators);
     walk::walk_property_key(collector, &method.key);
     collector.push_function_scope(Some(class_name.to_string()), class_id);
     let name = crate::codebase::ts_source::static_property_key_name(&method.key);
@@ -76,4 +103,50 @@ fn walk_class_method_with_scope<'a>(
     walk_function_with_body_bindings(collector, &method.value);
     collector.pop_function_scope(pushed);
     collector.pop_function_scope(true);
+}
+
+/// Decorators evaluate in the class's enclosing lexical scope, not inside the
+/// class or decorated member. A bare static decorator is still an invocation
+/// at runtime even though the AST represents it as an expression rather than
+/// a `CallExpression`.
+fn walk_decorators_as_invocations<'a>(
+    collector: &mut ImportCollector,
+    decorators: &oxc_allocator::Vec<'a, oxc_ast::ast::Decorator<'a>>,
+) {
+    record_decorator_invocations(collector, decorators);
+    walk::walk_decorators(collector, decorators);
+}
+
+fn record_decorator_invocations<'a>(
+    collector: &mut ImportCollector,
+    decorators: &oxc_allocator::Vec<'a, oxc_ast::ast::Decorator<'a>>,
+) {
+    for decorator in decorators {
+        let line = import_line_at(&collector.line_starts, decorator.span.start as usize);
+        if let Some(callee) = simple_callee_name(&decorator.expression) {
+            let target_identity = collector.call_target_identity(&callee);
+            let callee_binding_scope = collector.callee_binding_scope(&callee);
+            collector.function_calls.push(FunctionCall {
+                caller: collector.current_function(),
+                caller_id: collector.current_function_id(),
+                syntactic_caller: collector.current_syntactic_caller(),
+                callee,
+                line,
+                offset: decorator.span.start,
+                is_callback: false,
+                invocation: InvocationKind::Call,
+                target_identity,
+                callee_binding_scope,
+                static_arg: None,
+                static_cwd: None,
+            });
+            if has_dynamic_static_member_receiver(&decorator.expression) {
+                collector.record_unknown_call(line, decorator.span.start, InvocationKind::Call);
+            }
+        } else {
+            // A decorator factory or computed member can execute, but its
+            // resulting decorator cannot be named without guessing.
+            collector.record_unknown_call(line, decorator.span.start, InvocationKind::Call);
+        }
+    }
 }

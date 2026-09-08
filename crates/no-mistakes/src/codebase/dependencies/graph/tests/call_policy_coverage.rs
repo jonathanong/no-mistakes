@@ -46,12 +46,15 @@ fn callable_alias_resolution_uses_the_callee_binding_scope() {
         imported: HashMap::new(),
         exported: HashMap::new(),
         aliases: HashMap::from([((0, "alias".to_string()), "target".to_string())]),
+        class_bindings: HashMap::new(),
         lexical_scope_parents: HashMap::from([(0, None), (1, Some(0))]),
         stars: Vec::new(),
     };
 
     assert_eq!(
-        index.resolve_alias(Some("outer/inner"), Some(0), "alias"),
+        index
+            .resolve_alias(Some("outer/inner"), Some(0), "alias")
+            .map(|resolved| resolved.callee),
         Some("target".to_string()),
     );
     assert_eq!(

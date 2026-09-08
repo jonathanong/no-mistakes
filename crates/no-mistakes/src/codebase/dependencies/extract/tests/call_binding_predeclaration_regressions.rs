@@ -73,7 +73,7 @@ fn class_method_bodies_predeclare_later_function_and_shadow_bindings() {
         .iter()
         .find(|call| call.callee == "helper")
         .expect("class method helper call");
-    assert_eq!(helper_call.caller.as_deref(), Some("run"));
+    assert_eq!(helper_call.caller.as_deref(), Some("default/run"));
     assert_eq!(
         helper_call.target_identity,
         CallTargetIdentity::RepositoryFunction
@@ -84,6 +84,6 @@ fn class_method_bodies_predeclare_later_function_and_shadow_bindings() {
         .iter()
         .find(|call| call.callee == "setTimeout")
         .expect("class method shadowed call");
-    assert_eq!(timeout_call.caller.as_deref(), Some("run"));
+    assert_eq!(timeout_call.caller.as_deref(), Some("default/run"));
     assert_eq!(timeout_call.target_identity, CallTargetIdentity::Unknown);
 }

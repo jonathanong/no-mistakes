@@ -68,6 +68,9 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         .map(|((scope, name), id)| (scope, name, id))
         .collect();
     callable_bindings.sort();
+    let mut class_member_callable_ids: Vec<_> =
+        collector.class_member_callable_ids.into_iter().collect();
+    class_member_callable_ids.sort();
     let mut lexical_scope_parents: Vec<_> = collector.lexical_scope_parents.into_iter().collect();
     lexical_scope_parents.sort_by_key(|(scope, _)| *scope);
     let callable_aliases = collector
@@ -98,6 +101,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         known_function_scopes,
         callable_scope_ids,
         callable_bindings,
+        class_member_callable_ids,
         lexical_scope_parents,
         callable_scopes,
         class_scopes,

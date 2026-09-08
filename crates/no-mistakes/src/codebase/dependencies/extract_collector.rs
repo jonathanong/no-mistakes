@@ -10,6 +10,10 @@ struct ImportCollector {
     function_stack: Vec<String>,
     function_id_stack: Vec<CallableId>,
     callable_scope_ids: HashSet<(CallableId, String)>,
+    /// Static class members have a display scope derived from the class name,
+    /// which is not unique across sibling lexical scopes. Preserve their
+    /// parser-owned identity next to their owning class binding.
+    class_member_callable_ids: HashSet<(CallableId, String, CallableId)>,
     syntactic_caller_stack: Vec<String>,
     local_stack: Vec<HashSet<String>>,
     /// Stable identities parallel to `local_stack`. Scope depth alone is not
@@ -22,7 +26,9 @@ struct ImportCollector {
     next_lexical_scope_id: usize,
     type_local_stack: Vec<HashSet<String>>,
     type_parameter_stack: Vec<HashSet<String>>,
-    function_scope_stack: Vec<usize>,
+    /// Local-stack indices that own `var` declarations. Function bodies and
+    /// class static blocks each establish an independent var environment.
+    var_scope_stack: Vec<usize>,
     exported_functions: HashSet<String>,
     exported_resource_roots: HashSet<String>,
     exported_resource_scopes: HashSet<String>,

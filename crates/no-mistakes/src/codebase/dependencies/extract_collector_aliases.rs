@@ -13,6 +13,12 @@ impl ImportCollector {
             let Some(target) = simple_callee_name(init) else {
                 continue;
             };
+            if !matches!(
+                self.call_target_identity(&target),
+                CallTargetIdentity::RepositoryFunction | CallTargetIdentity::ModuleExport
+            ) {
+                continue;
+            }
             self.callable_aliases.push(CallableAliasBinding {
                 alias: CallableAlias {
                     scope: self.current_function(),

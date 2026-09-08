@@ -3,16 +3,10 @@ fn visit_method_definition_with_scope<'a>(
     method: &MethodDefinition<'a>,
 ) {
     let name = crate::codebase::ts_source::static_property_key_name(&method.key);
-    let keep_class_scope = collector.current_function().is_some_and(|scope| {
-        collector.class_scopes.contains(&scope) && collector.exported_functions.contains(&scope)
-    });
-    let saved_function_stack =
-        (!keep_class_scope).then(|| std::mem::take(&mut collector.function_stack));
-    walk::walk_decorators(collector, &method.decorators);
+    // Decorators and computed keys are evaluated where the class expression
+    // appears, before entering the method's callable scope.
+    walk_decorators_as_invocations(collector, &method.decorators);
     walk::walk_property_key(collector, &method.key);
-    if let Some(saved_function_stack) = saved_function_stack {
-        collector.function_stack = saved_function_stack;
-    }
     let pushed = name.is_some();
     collector.push_function_scope(name.map(str::to_string), CallableId(method.value.span.start));
     if let Some(scope) = collector.current_function() {

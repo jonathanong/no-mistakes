@@ -65,7 +65,7 @@ impl ImportCollector {
     // Kept as the narrower historical helper for its direct coverage test.
     fn add_var_binding_name(&mut self, name: &str) {
         let Some(index) = self
-            .function_scope_stack
+            .var_scope_stack
             .last()
             .copied()
             .or_else(|| (!self.local_stack.is_empty()).then_some(0))
@@ -134,6 +134,16 @@ impl ImportCollector {
         let scope = self.current_lexical_scope_id();
         self.record_callable_binding(name);
         self.callable_bindings.insert((scope, name.to_string()), id);
+    }
+
+    fn record_class_member_callable_id(
+        &mut self,
+        class_id: CallableId,
+        member: &str,
+        member_id: CallableId,
+    ) {
+        self.class_member_callable_ids
+            .insert((class_id, member.to_string(), member_id));
     }
 
     fn callee_shadows_import(&self, callee: &str) -> bool {

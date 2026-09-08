@@ -20,8 +20,8 @@ impl ImportCollector {
                     ) {
                         self.record_local_export_binding(local, exported);
                     }
-                    if let Some(name) = module_export_name_name(&specifier.local) {
-                        self.exported_functions.insert(name.to_string());
+                    if let ModuleExportName::IdentifierName(identifier) = &specifier.local {
+                        self.exported_functions.insert(identifier.name.to_string());
                     }
                 }
             }

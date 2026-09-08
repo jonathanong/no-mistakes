@@ -129,7 +129,7 @@ fn predeclare_function_declarations<'a>(
 impl ImportCollector {
     fn record_callable_declaration_bindings(&mut self, declaration: &VariableDeclaration<'_>) {
         let binding_scope = if declaration.kind == VariableDeclarationKind::Var {
-            self.function_scope_stack
+            self.var_scope_stack
                 .last()
                 .copied()
                 .unwrap_or(0)

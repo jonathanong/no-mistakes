@@ -57,6 +57,32 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_method_definition_with_scope(self, method);
     }
 
+    fn visit_property_definition(&mut self, property: &PropertyDefinition<'a>) {
+        walk_decorators_as_invocations(self, &property.decorators);
+        self.visit_property_key(&property.key);
+        if let Some(type_annotation) = &property.type_annotation {
+            self.visit_ts_type_annotation(type_annotation);
+        }
+        if let Some(value) = &property.value {
+            self.visit_expression(value);
+        }
+    }
+
+    fn visit_accessor_property(&mut self, property: &AccessorProperty<'a>) {
+        walk_decorators_as_invocations(self, &property.decorators);
+        self.visit_property_key(&property.key);
+        if let Some(type_annotation) = &property.type_annotation {
+            self.visit_ts_type_annotation(type_annotation);
+        }
+        if let Some(value) = &property.value {
+            self.visit_expression(value);
+        }
+    }
+
+    fn visit_static_block(&mut self, block: &StaticBlock<'a>) {
+        visit_class_static_block_with_scope(self, block);
+    }
+
     fn visit_object_property(&mut self, property: &ObjectProperty<'a>) {
         visit_object_property_with_scope(self, property);
     }

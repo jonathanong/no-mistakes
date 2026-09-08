@@ -80,10 +80,10 @@ fn visit_exported_variable_declarator_reference<'a>(
     declarator: &VariableDeclarator<'a>,
     name: Option<String>,
 ) {
-    let source_owner = (!matches!(
+    let source_owner = matches!(
         declarator.init,
-        Some(Expression::ObjectExpression(_) | Expression::ClassExpression(_))
-    ))
+        Some(Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_))
+    )
     .then_some(name.clone())
     .flatten();
     let pushed_syntactic_caller = collector.push_syntactic_caller(source_owner);
