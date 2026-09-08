@@ -37,6 +37,12 @@ fn reassigned_function_declaration_is_rejected() {
 }
 
 #[test]
+fn reassigned_via_var_initializer_is_rejected() {
+    let facts = extract("composed-chain-function-reassigned-via-var-initializer.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
 fn top_level_binary_composition_of_two_trusted_placeholders_renumbers_sequentially() {
     let facts = extract("composed-append-binary-placeholders.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);

@@ -1,17 +1,20 @@
+use super::super::for_each_bound_name;
 use oxc_ast::ast::{
     AssignmentExpression, AssignmentTarget, AssignmentTargetMaybeDefault, AssignmentTargetProperty,
-    Program,
+    Program, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashSet;
 
-/// Names assigned anywhere in the program, e.g. `build = externalBuilder;`
-/// or `({ build } = providers);` reassigning a hoisted `function build() {}`
-/// directly or through destructuring. A function declaration's binding is
-/// mutable, so a call to it can no longer be trusted to run the
-/// originally-collected body once any assignment to that name exists
-/// anywhere — `LocalFunctions::collect` drops such names outright rather
-/// than resolving through a body that may not be the one that runs.
+/// Names assigned anywhere in the program, e.g. `build = externalBuilder;`,
+/// `({ build } = providers);`, or `var build = externalBuilder;` reassigning
+/// a hoisted `function build() {}` directly, through destructuring, or
+/// through a same-named re-declaration with an initializer. A function
+/// declaration's binding is mutable, so a call to it can no longer be
+/// trusted to run the originally-collected body once any assignment or
+/// initialized re-declaration of that name exists anywhere —
+/// `LocalFunctions::collect` drops such names outright rather than
+/// resolving through a body that may not be the one that runs.
 #[derive(Default)]
 pub(super) struct ReassignedNames<'a> {
     names: HashSet<&'a str>,
@@ -36,6 +39,16 @@ impl<'a> Visit<'a> for ReassignedNames<'a> {
             names.insert(name);
         });
         walk::walk_assignment_expression(self, assign);
+    }
+
+    fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {
+        if declarator.init.is_some() {
+            let names = &mut self.names;
+            for_each_bound_name(&declarator.id, &mut |name| {
+                names.insert(name);
+            });
+        }
+        walk::walk_variable_declarator(self, declarator);
     }
 }
 

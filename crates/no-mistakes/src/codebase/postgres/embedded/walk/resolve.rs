@@ -22,7 +22,10 @@ use oxc_ast::ast::{
 /// parameter shadowing a same-named top-level helper (`function f({ safe })`
 /// shadows a top-level `safe`), letting `resolve_chain`/`resolve_named`
 /// wrongly resolve calls through it.
-pub(super) fn for_each_bound_name(pattern: &BindingPattern<'_>, on_name: &mut impl FnMut(&str)) {
+pub(super) fn for_each_bound_name<'a>(
+    pattern: &BindingPattern<'a>,
+    on_name: &mut impl FnMut(&'a str),
+) {
     match pattern {
         BindingPattern::BindingIdentifier(ident) => on_name(ident.name.as_str()),
         BindingPattern::ObjectPattern(object) => {
