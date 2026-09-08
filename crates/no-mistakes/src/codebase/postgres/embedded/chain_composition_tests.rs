@@ -1,0 +1,57 @@
+use super::{extract_embedded_sql_from_source, EmbeddedSqlOptions};
+use std::path::PathBuf;
+
+fn fixture(name: &str) -> PathBuf {
+    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres-facts/embedded")
+        .join(name)
+}
+
+fn extract(name: &str) -> super::EmbeddedSqlFileFacts {
+    let source = std::fs::read_to_string(fixture(name)).expect("fixture");
+    extract_embedded_sql_from_source(&fixture(name), &source, &EmbeddedSqlOptions::default())
+}
+
+#[test]
+fn call_shadowed_by_a_destructured_outer_parameter_fails_closed() {
+    let facts = extract("composed-chain-shadowed-outer-destructured-param.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn helper_call_shadowed_by_its_own_destructured_parameter_fails_closed() {
+    let facts = extract("composed-chain-shadowed-helper-destructured-param.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn helper_call_shadowed_by_a_default_valued_array_element_past_a_rest_param_fails_closed() {
+    let facts = extract("composed-chain-shadowed-array-rest-default-param.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn reassigned_function_declaration_is_rejected() {
+    let facts = extract("composed-chain-function-reassigned.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn top_level_binary_composition_of_two_trusted_placeholders_renumbers_sequentially() {
+    let facts = extract("composed-append-binary-placeholders.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT * FROM topics WHERE id = sql_placeholder_1 AND status = sql_placeholder_2")
+    );
+}
+
+#[test]
+fn same_file_function_binary_composition_of_two_trusted_placeholders_renumbers_sequentially() {
+    let facts = extract("composed-chain-function-binary-placeholders.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT * FROM topics WHERE id = sql_placeholder_1 AND status = sql_placeholder_2")
+    );
+}
