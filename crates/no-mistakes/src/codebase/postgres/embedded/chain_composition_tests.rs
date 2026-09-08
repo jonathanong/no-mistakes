@@ -67,3 +67,15 @@ fn local_tagged_by_a_parameter_named_sql_fails_closed() {
     let facts = extract("composed-chain-shadowed-sql-tag-local.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
+
+#[test]
+fn nested_function_declaration_shadowing_a_top_level_helper_fails_closed() {
+    let facts = extract("composed-chain-shadowed-nested-function-declaration.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn reassigned_through_destructuring_is_rejected() {
+    let facts = extract("composed-chain-function-reassigned-destructured.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}

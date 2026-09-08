@@ -11,8 +11,8 @@ use super::{BindingState, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use compose::classify_init;
 use oxc_ast::ast::{
-    BindingPattern, CallExpression, Declaration, Expression, Statement, VariableDeclaration,
-    VariableDeclarator,
+    BindingPattern, CallExpression, Declaration, Expression, Function, Statement,
+    VariableDeclaration, VariableDeclarator,
 };
 
 /// Every name a parameter or declarator's binding pattern introduces,
@@ -53,13 +53,50 @@ pub(super) fn record_statements(statements: &[Statement<'_>], visitor: &mut Scop
             Statement::VariableDeclaration(declaration) => {
                 record_variable_declaration(declaration, visitor);
             }
-            Statement::ExportDeclaration(export) => {
-                if let Declaration::VariableDeclaration(declaration) = &export.declaration {
+            Statement::FunctionDeclaration(function) => {
+                record_function_declaration(function, visitor);
+            }
+            Statement::ExportDeclaration(export) => match &export.declaration {
+                Declaration::VariableDeclaration(declaration) => {
                     record_variable_declaration(declaration, visitor);
                 }
-            }
+                Declaration::FunctionDeclaration(function) => {
+                    record_function_declaration(function, visitor);
+                }
+                _ => {}
+            },
             _ => {}
         }
+    }
+}
+
+/// Binds a nested function declaration's own name into its enclosing scope,
+/// as a shadow marker only — `LocalFunctions` never collects a nested
+/// declaration's body (see its own doc comment), so this exists solely to
+/// make `shadowed_locally` recognize that the name no longer refers to a
+/// same-named top-level helper within this scope. A top-level declaration
+/// is skipped: it lands in the program's own outermost scope, which
+/// `shadowed_locally` always excludes, so recording it there would only
+/// risk clobbering a same-named top-level `const` binding's own already
+/// classified `BindingState` (JS forbids the collision within one real
+/// scope, but the parser doesn't enforce that, and existing fixtures rely
+/// on a same-named top-level helper never shadowing itself).
+fn record_function_declaration(function: &Function<'_>, visitor: &mut ScopeVisitor<'_>) {
+    if visitor.scopes.len() <= 1 {
+        return;
+    }
+    let Some(id) = &function.id else { return };
+    let line =
+        crate::codebase::ts_source::byte_offset_to_line(visitor.source, id.span.start as usize);
+    if let Some(scope) = visitor.current_scope() {
+        scope.insert(
+            id.name.to_string(),
+            BindingState {
+                sql: None,
+                kind: EmbeddedSqlKind::Dynamic,
+                line,
+            },
+        );
     }
 }
 

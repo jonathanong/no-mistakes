@@ -1,12 +1,14 @@
+mod reassigned;
+
 use super::chain;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    ArrowFunctionBody, AssignmentExpression, AssignmentTarget, BindingPattern, Declaration,
-    Expression, FormalParameters, Function, FunctionBody, Program, Statement, VariableDeclaration,
-    VariableDeclarationKind, VariableDeclarator,
+    ArrowFunctionBody, BindingPattern, Declaration, Expression, FormalParameters, Function,
+    FunctionBody, Program, Statement, VariableDeclaration, VariableDeclarationKind,
+    VariableDeclarator,
 };
-use oxc_ast_visit::{walk, Visit};
-use std::collections::{HashMap, HashSet};
+use reassigned::ReassignedNames;
+use std::collections::HashMap;
 
 pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
 
@@ -41,9 +43,8 @@ impl LocalFunctions {
         for statement in &program.body {
             collect_named_functions(statement, &mut raw);
         }
-        let mut reassigned = ReassignedNames::default();
-        reassigned.visit_program(program);
-        raw.retain(|name, _| !reassigned.names.contains(name));
+        let reassigned = ReassignedNames::collect(program);
+        raw.retain(|name, _| !reassigned.contains(name));
         let mut resolved = HashMap::new();
         for name in raw.keys().copied() {
             let mut resolving = Vec::new();
@@ -56,26 +57,6 @@ impl LocalFunctions {
 
     pub(crate) fn get(&self, name: &str) -> Option<String> {
         self.resolved.get(name).cloned()
-    }
-}
-
-/// Names assigned anywhere in the program, e.g. `build = externalBuilder;`
-/// reassigning a hoisted `function build() {}`. A function declaration's
-/// binding is mutable, so a call to it can no longer be trusted to run the
-/// originally-collected body once any assignment to that name exists
-/// anywhere — `LocalFunctions::collect` drops such names outright rather
-/// than resolving through a body that may not be the one that runs.
-#[derive(Default)]
-struct ReassignedNames<'a> {
-    names: HashSet<&'a str>,
-}
-
-impl<'a> Visit<'a> for ReassignedNames<'a> {
-    fn visit_assignment_expression(&mut self, assign: &AssignmentExpression<'a>) {
-        if let AssignmentTarget::AssignmentTargetIdentifier(ident) = &assign.left {
-            self.names.insert(ident.name.as_str());
-        }
-        walk::walk_assignment_expression(self, assign);
     }
 }
 
