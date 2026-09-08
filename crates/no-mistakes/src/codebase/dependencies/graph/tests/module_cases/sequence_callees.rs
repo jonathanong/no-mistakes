@@ -27,23 +27,22 @@ fn sequence_callee_final_operands_produce_local_and_imported_call_edges() {
     );
 
     assert!(calls.iter().any(|entry| match &entry.node {
-            NodeId::Symbol { file, symbol, .. }
-                if file.as_ref() == source.as_path() && symbol.as_ref() == "localTarget" =>
-            {
-                entry.via.contains(&EdgeKind::Call)
-            }
-            _ => false,
-        }));
+        NodeId::Symbol { file, symbol, .. }
+            if file.as_ref() == source.as_path() && symbol.as_ref() == "localTarget" =>
+        {
+            entry.via.contains(&EdgeKind::Call)
+        }
+        _ => false,
+    }));
     assert!(calls.iter().any(|entry| match &entry.node {
-            NodeId::Symbol { file, symbol, .. }
-                if file.as_ref() == imported.as_path() && symbol.as_ref() == "importedTarget" =>
-            {
-                entry.via.contains(&EdgeKind::Call)
-            }
-            _ => false,
-        }));
+        NodeId::Symbol { file, symbol, .. }
+            if file.as_ref() == imported.as_path() && symbol.as_ref() == "importedTarget" =>
+        {
+            entry.via.contains(&EdgeKind::Call)
+        }
+        _ => false,
+    }));
     assert!(!calls.iter().any(|entry| {
         matches!(&entry.node, NodeId::Symbol { symbol, .. } if symbol.as_ref() == "dynamicFactory")
     }));
-
 }

@@ -177,7 +177,7 @@ impl DepGraph {
             .into_iter()
             .flatten()
             .filter(|candidate| {
-                matches!(candidate, NodeId::Symbol { symbol: candidate_symbol, .. } if candidate_symbol.to_string() == symbol)
+                matches!(candidate, NodeId::Symbol { symbol: candidate_symbol, .. } if candidate_symbol.as_ref() == symbol)
             })
             .cloned()
             .collect::<Vec<_>>();
@@ -188,47 +188,27 @@ impl DepGraph {
         }
     }
 
-    /// Resolve an exported root through the canonical target retained on an
-    /// imported call site. Call edges already perform the full resolver and
-    /// re-export walk while building the graph, so root expansion must reuse
-    /// that result rather than compare a barrel's public spelling with the
-    /// target declaration's private spelling.
+    /// Resolve an exported root through the canonical export resolution built
+    /// alongside call edges. This is populated for every exported spelling,
+    /// including exports with no inbound call site.
     fn resolve_exported_callable_root(
         &self,
         file: &std::path::Path,
         symbol: &str,
     ) -> Option<Vec<NodeId>> {
-        let file = crate::codebase::ts_resolver::normalize_path(file);
-        let mut found_export = false;
-        let mut matches = Vec::new();
-        for site in &self.resolved_call_sites {
-            let ResolvedCallTarget::ModuleExport {
-                specifier,
-                export_path,
-                repository_target,
-            } = &site.target
-            else {
-                continue;
-            };
-            if export_path != symbol || !module_specifier_targets_file(&site.file, specifier, &file)
-            {
-                continue;
-            }
-            found_export = true;
-            let Some((target_file, target_scope)) = repository_target else {
-                continue;
-            };
-            let Some(target) = self.unique_callable_node(target_file, target_scope) else {
-                continue;
-            };
-            matches.push(target);
+        let key = (
+            crate::codebase::ts_resolver::normalize_path(file),
+            symbol.to_owned(),
+        );
+        let resolution = self.callable_export_resolutions.get(&key)?;
+        match resolution {
+            ExportedCallableResolution::Callable(target_file, target_scope) => self
+                .unique_callable_node(target_file, target_scope)
+                .map(|target| vec![target]),
+            ExportedCallableResolution::Absent => None,
+            ExportedCallableResolution::ExternalModuleExport(_, _)
+            | ExportedCallableResolution::Unknown => Some(Vec::new()),
         }
-        if !found_export {
-            return None;
-        }
-        matches.sort();
-        matches.dedup();
-        Some(matches)
     }
 
     fn unique_callable_node(&self, file: &std::path::Path, symbol: &str) -> Option<NodeId> {
@@ -238,53 +218,10 @@ impl DepGraph {
             .into_iter()
             .flatten()
             .filter(|candidate| {
-                matches!(candidate, NodeId::Symbol { symbol: candidate_symbol, .. } if candidate_symbol.to_string() == symbol)
+                matches!(candidate, NodeId::Symbol { symbol: candidate_symbol, .. } if candidate_symbol.as_ref() == symbol)
             })
             .cloned();
         let node = matches.next()?;
         matches.next().is_none().then_some(node)
     }
-}
-
-fn module_specifier_targets_file(
-    importing_file: &std::path::Path,
-    specifier: &str,
-    requested_file: &std::path::Path,
-) -> bool {
-    if !specifier.starts_with('.') && !specifier.starts_with('/') {
-        return false;
-    }
-    let Some(parent) = importing_file.parent() else {
-        return false;
-    };
-    let base = parent.join(specifier);
-    let requested_file = crate::codebase::ts_resolver::normalize_path(requested_file);
-    module_specifier_candidates(&base)
-        .into_iter()
-        .any(|candidate| crate::codebase::ts_resolver::normalize_path(&candidate) == requested_file)
-}
-
-fn module_specifier_candidates(base: &std::path::Path) -> Vec<std::path::PathBuf> {
-    const EXTENSIONS: &[&str] = &["ts", "tsx", "mts", "cts", "js", "jsx", "mjs", "cjs"];
-    let mut candidates = vec![base.to_path_buf()];
-    let extension = base.extension().and_then(|extension| extension.to_str());
-    if extension.is_none() {
-        candidates.extend(
-            EXTENSIONS
-                .iter()
-                .map(|extension| base.with_extension(extension)),
-        );
-        candidates.extend(
-            EXTENSIONS
-                .iter()
-                .map(|extension| base.join("index").with_extension(extension)),
-        );
-    } else if matches!(extension, Some("js" | "jsx" | "mjs" | "cjs")) {
-        candidates.extend(
-            EXTENSIONS[..4]
-                .iter()
-                .map(|extension| base.with_extension(extension)),
-        );
-    }
-    candidates
 }

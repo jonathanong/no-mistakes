@@ -58,8 +58,15 @@ fn walk_instance_property_with_class_scope<'a>(
     class_id: CallableId,
     property: &PropertyDefinition<'a>,
 ) {
+    walk_decorators_as_invocations(collector, &property.decorators);
+    collector.visit_property_key(&property.key);
+    if let Some(type_annotation) = &property.type_annotation {
+        collector.visit_ts_type_annotation(type_annotation);
+    }
     collector.push_function_scope(Some(class_name.to_string()), class_id);
-    walk::walk_property_definition(collector, property);
+    if let Some(value) = &property.value {
+        collector.visit_expression(value);
+    }
     collector.pop_function_scope(true);
 }
 

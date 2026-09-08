@@ -40,12 +40,15 @@ fn block_local_immutable_alias_keeps_target_dynamic_import_reachable() {
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
-    assert!(deps.iter().any(|entry| {
-        entry.node.as_file() == Some(root.join("src/called.mts").as_path())
-    }));
-    assert!(!deps.iter().any(|entry| {
-        entry.node.as_file() == Some(root.join("src/uncalled.mts").as_path())
-    }));
+    assert!(
+        deps.iter()
+            .any(|entry| { entry.node.as_file() == Some(root.join("src/called.mts").as_path()) })
+    );
+    assert!(
+        !deps
+            .iter()
+            .any(|entry| { entry.node.as_file() == Some(root.join("src/uncalled.mts").as_path()) })
+    );
 }
 
 #[test]
@@ -80,9 +83,11 @@ fn imported_callable_identity_comes_from_the_resolved_export() {
         )
     };
     let direct = graph.call_traces(&roots, CallTraversal::Direct, None);
-    assert!(direct
-        .iter()
-        .any(|trace| is_target_symbol(&trace.target, "actual")));
+    assert!(
+        direct
+            .iter()
+            .any(|trace| is_target_symbol(&trace.target, "actual"))
+    );
     assert!(
         !direct
             .iter()

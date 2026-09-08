@@ -28,7 +28,8 @@ fn import_is_reachable(
         || has_reachable_unknown_call(facts, reachable)
         || reachable.contains(&scope)
         || exported_function_scope(facts, import.function_scope.as_deref())
-        || (import.kind == ImportKind::Type && exported_symbol_scope(facts, import.function_scope.as_deref()))
+        || (import.kind == ImportKind::Type
+            && exported_symbol_scope(facts, import.function_scope.as_deref()))
 }
 
 fn resource_is_reachable(
@@ -68,8 +69,7 @@ fn has_reachable_unknown_call(
     facts.unknown_calls.iter().any(|call| match call.caller_id {
         None if call.caller.is_none() => true,
         Some(id) => {
-            reachable.contains(&id)
-                || exported_function_scope(facts, call.caller.as_deref())
+            reachable.contains(&id) || exported_function_scope(facts, call.caller.as_deref())
         }
         None => exported_function_scope(facts, call.caller.as_deref()),
     })
@@ -83,6 +83,10 @@ fn exported_function_scope(
         .exported_functions
         .iter()
         .any(|exported| Some(exported.as_str()) == scope)
+        || facts
+            .exported_bindings
+            .iter()
+            .any(|binding| binding.specifier.is_none() && Some(binding.local.as_str()) == scope)
 }
 
 fn exported_symbol_scope(
@@ -101,7 +105,9 @@ fn exported_resource_symbol_scope(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     scope: Option<&str>,
 ) -> bool {
-    let Some(scope) = scope else { return false; };
+    let Some(scope) = scope else {
+        return false;
+    };
     if facts
         .exported_resource_scopes
         .iter()

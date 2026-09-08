@@ -181,6 +181,10 @@ fn resolve_callee_scope(
         return dotted;
     }
     if let Some(caller) = caller {
+        let nested_member = format!("{caller}/{dotted}");
+        if known_scopes.contains(&nested_member) {
+            return nested_member;
+        }
         let nested = format!("{caller}/{callee}");
         if known_scopes.contains(&nested) {
             return nested;

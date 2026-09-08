@@ -248,6 +248,16 @@ fn nested_aggregate_callables_keep_their_owner_and_member_identity() {
             && call.caller_id == Some(registry_id)
             && call.callee == "load"
     }));
+    for callee in ["registry.load", "Service.run", "Service.reload"] {
+        assert!(
+            facts.function_calls.iter().any(|call| {
+                call.callee == callee
+                    && call.target_identity == CallTargetIdentity::RepositoryFunction
+            }),
+            "{callee} must resolve to its aggregate callable: {:#?}",
+            facts.function_calls
+        );
+    }
     assert!(facts.imports.iter().any(|import| {
         import.specifier == "./object-called.mts"
             && import.function_scope.as_deref() == Some("boot/registry/load")
@@ -268,7 +278,7 @@ fn nested_aggregate_callables_keep_their_owner_and_member_identity() {
             .find_map(|import| {
                 (import.specifier == specifier
                     && import.function_scope.as_deref() == Some(&format!("boot/Service/{member}")))
-                    .then_some(import.function_scope_id)
+                .then_some(import.function_scope_id)
             })
             .flatten()
             .expect("static field callable owner");

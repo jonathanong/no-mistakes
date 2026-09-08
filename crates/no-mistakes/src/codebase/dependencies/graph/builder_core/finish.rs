@@ -65,6 +65,7 @@
             root: root.to_path_buf(),
             edges: edge_index_from_maps(forward, reverse),
             callable_nodes_by_file,
+            callable_export_resolutions,
             resolved_call_sites,
             vitest_setup_projects: Vec::new(),
             effective_edges: OnceLock::new(),

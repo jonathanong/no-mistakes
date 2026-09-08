@@ -13,6 +13,28 @@ fn nested_aggregate_callable_members_reach_only_invoked_bodies_and_imports() {
         base_url: None,
     };
     let source = root.join("src/aggregate-callables.mts");
+    let facts = collect_ts_facts(
+        std::slice::from_ref(&source),
+        TsFactPlan {
+            function_calls: true,
+            imports: true,
+            ..TsFactPlan::default()
+        },
+    );
+    let file_facts = facts
+        .get(&source)
+        .expect("fixture source must produce TS facts");
+    let reachable = reachable_function_scopes(file_facts);
+    for scope in ["boot/registry/load", "boot/Service/run", "boot/Service/reload"] {
+        assert!(
+            file_facts
+                .callable_scope_ids
+                .iter()
+                .any(|(id, candidate)| candidate == scope && reachable.contains(id)),
+            "{scope} must be reached from its invoked aggregate member: {:#?}",
+            file_facts.function_calls
+        );
+    }
     let graph =
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .expect("aggregate callable graph must build");

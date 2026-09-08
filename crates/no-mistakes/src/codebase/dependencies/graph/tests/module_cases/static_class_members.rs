@@ -79,8 +79,7 @@ fn static_class_members_resolve_without_guessing_function_object_members() {
     }
     assert!(graph.resolved_call_sites().iter().any(|site| {
         site.source_callee == "ReassignedExpression.run"
-            && site.target
-                == crate::codebase::dependencies::graph::ResolvedCallTarget::Unknown
+            && site.target == crate::codebase::dependencies::graph::ResolvedCallTarget::Unknown
     }));
     for (source_callee, scope) in [
         ("NestedPublic", "namedExpressionNest/NestedInternal"),

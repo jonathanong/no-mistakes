@@ -2,10 +2,14 @@ fn collect_call_edges_for_core(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
+    callable_export_resolutions: &mut FxHashMap<
+        (std::path::PathBuf, String),
+        ExportedCallableResolution,
+    >,
 ) -> (Vec<Edge>, Vec<ResolvedCallSite>) {
     use rayon::prelude::*;
     let indexes = CallableResolutionIndexes::default();
-    edge_inputs
+    let output = edge_inputs
         .graph_files
         .indexable()
         .par_iter()
@@ -157,7 +161,15 @@ fn collect_call_edges_for_core(
             left.0.append(&mut right.0);
             left.1.append(&mut right.1);
             left
-        })
+        });
+    populate_callable_export_resolutions(
+        edge_inputs,
+        facts,
+        resolver,
+        &indexes,
+        callable_export_resolutions,
+    );
+    output
 }
 
 fn callable_node_for_call(
@@ -167,18 +179,20 @@ fn callable_node_for_call(
     scope: &str,
     exact_id: Option<crate::codebase::dependencies::extract::CallableId>,
 ) -> NodeId {
-    let id = exact_id.or_else(|| facts.get_ts_facts(file).and_then(|file_facts| {
-        // The resolved file and canonical target scope own this callable
-        // identity. Importer lexical scopes and local aliases are unrelated
-        // source files, and using either can select a same-spelled target
-        // declaration instead of the export resolution's actual callable.
-        let mut ids = file_facts
-            .callable_scope_ids
-            .iter()
-            .filter_map(|(id, display)| (display == scope).then_some(*id));
-        let first = ids.next()?;
-        ids.next().is_none().then_some(first)
-    }));
+    let id = exact_id.or_else(|| {
+        facts.get_ts_facts(file).and_then(|file_facts| {
+            // The resolved file and canonical target scope own this callable
+            // identity. Importer lexical scopes and local aliases are unrelated
+            // source files, and using either can select a same-spelled target
+            // declaration instead of the export resolution's actual callable.
+            let mut ids = file_facts
+                .callable_scope_ids
+                .iter()
+                .filter_map(|(id, display)| (display == scope).then_some(*id));
+            let first = ids.next()?;
+            ids.next().is_none().then_some(first)
+        })
+    });
     id.map_or_else(
         || NodeId::symbol_in(interner, file, scope),
         |id| NodeId::callable_in(interner, file, scope, id),

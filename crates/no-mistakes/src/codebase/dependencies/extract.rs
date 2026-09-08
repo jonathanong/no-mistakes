@@ -14,7 +14,7 @@ use oxc_ast::ast::{
     TSTypeParameterDeclaration, TSTypeReference, TaggedTemplateExpression, VariableDeclaration,
     VariableDeclarationKind, VariableDeclarator,
 };
-use oxc_ast_visit::{Visit, walk};
+use oxc_ast_visit::{walk, Visit};
 use oxc_span::SourceType;
 use std::collections::{HashMap, HashSet};
 use std::path::Path;

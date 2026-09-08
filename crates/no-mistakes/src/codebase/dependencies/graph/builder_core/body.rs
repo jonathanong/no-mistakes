@@ -97,6 +97,10 @@
         let mut reverse: EdgeMap = EdgeMap::default();
         let mut resource_edge_details: ResourceEdgeDetails = fx_map();
         let mut resource_diagnostics = Vec::new();
+        let mut callable_export_resolutions: FxHashMap<
+            (PathBuf, String),
+            ExportedCallableResolution,
+        > = fx_map();
         let mut resolved_call_sites = Vec::new();
         let files = graph_files.indexable();
 
@@ -148,6 +152,7 @@
                 reverse: &mut reverse,
                 resource_edge_details: &mut resource_edge_details,
                 resource_diagnostics: &mut resource_diagnostics,
+                callable_export_resolutions: &mut callable_export_resolutions,
                 resolved_call_sites: &mut resolved_call_sites,
             },
         )?;

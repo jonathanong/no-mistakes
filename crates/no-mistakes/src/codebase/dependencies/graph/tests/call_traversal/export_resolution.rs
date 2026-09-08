@@ -29,7 +29,10 @@ fn call_export_resolution_keeps_missing_facts_and_nonvisible_stars_unknown() {
         ExportedCallableResolution::Unknown
     ));
     assert!(matches!(
-        indexes.exports.get(&(source.clone(), "missing".to_string())).as_deref(),
+        indexes
+            .exports
+            .get(&(source.clone(), "missing".to_string()))
+            .as_deref(),
         Some(ExportedCallableResolution::Unknown)
     ));
 

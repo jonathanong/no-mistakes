@@ -19,9 +19,11 @@ fn graph_includes_external_module_and_package_dependency_nodes() {
         entry.node == NodeId::file(root.join("packages/local/src/index.mts"))
             && entry.via.contains(&EdgeKind::WorkspaceImport)
     }));
-    assert!(!deps
-        .iter()
-        .any(|entry| entry.node == NodeId::module("@local/pkg")));
+    assert!(
+        !deps
+            .iter()
+            .any(|entry| entry.node == NodeId::module("@local/pkg"))
+    );
 
     let manifest_deps = graph.deps_of(&[NodeId::file(root.join("package.json"))], None, None);
     assert!(manifest_deps.iter().any(|entry| {

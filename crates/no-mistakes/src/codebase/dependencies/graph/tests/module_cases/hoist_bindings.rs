@@ -18,9 +18,10 @@ fn hoisted_helper_inside_arrow_body_keeps_dynamic_import_reachable() {
         Some(&[EdgeKind::DynamicImport].into()),
     );
 
-    assert!(deps.iter().any(|entry| {
-        entry.node.as_file() == Some(root.join("src/called.mts").as_path())
-    }));
+    assert!(
+        deps.iter()
+            .any(|entry| { entry.node.as_file() == Some(root.join("src/called.mts").as_path()) })
+    );
 }
 
 #[test]
@@ -41,12 +42,15 @@ fn nested_class_eager_imports_are_owned_by_the_reachable_enclosing_function() {
         Some(&[EdgeKind::DynamicImport].into()),
     );
 
-    assert!(deps
-        .iter()
-        .any(|entry| entry.node.as_file() == Some(root.join("src/called.mts").as_path())));
-    assert!(!deps
-        .iter()
-        .any(|entry| entry.node.as_file() == Some(root.join("src/uncalled.mts").as_path())));
+    assert!(
+        deps.iter()
+            .any(|entry| entry.node.as_file() == Some(root.join("src/called.mts").as_path()))
+    );
+    assert!(
+        !deps
+            .iter()
+            .any(|entry| entry.node.as_file() == Some(root.join("src/uncalled.mts").as_path()))
+    );
 }
 
 #[test]

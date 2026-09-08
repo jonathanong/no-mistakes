@@ -67,24 +67,36 @@ fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
     let entry = root.join("src/entry.mts");
     let entry_root = symbol(&entry, "entry");
 
-    let direct = graph.call_traces(std::slice::from_ref(&entry_root), CallTraversal::Direct, None);
+    let direct = graph.call_traces(
+        std::slice::from_ref(&entry_root),
+        CallTraversal::Direct,
+        None,
+    );
     let direct_targets = direct.iter().map(|trace| &trace.target).collect::<Vec<_>>();
     assert_eq!(direct.len(), 3, "entry has three direct calls");
-    assert!(direct_targets
-        .iter()
-        .any(|node| has_symbol(node, &root.join("src/diamond-left.mts"), "diamondLeft")));
-    assert!(direct_targets
-        .iter()
-        .any(|node| has_symbol(node, &root.join("src/diamond-right.mts"), "diamondRight")));
-    assert!(direct_targets
-        .iter()
-        .any(|node| has_symbol(node, &root.join("src/cycle-a.mts"), "cycleA")));
+    assert!(direct_targets.iter().any(|node| has_symbol(
+        node,
+        &root.join("src/diamond-left.mts"),
+        "diamondLeft"
+    )));
+    assert!(direct_targets.iter().any(|node| has_symbol(
+        node,
+        &root.join("src/diamond-right.mts"),
+        "diamondRight"
+    )));
+    assert!(direct_targets.iter().any(|node| has_symbol(
+        node,
+        &root.join("src/cycle-a.mts"),
+        "cycleA"
+    )));
 
-    assert!(
-        graph
-            .call_traces(std::slice::from_ref(&entry_root), CallTraversal::Transitive, Some(0))
-            .is_empty()
-    );
+    assert!(graph
+        .call_traces(
+            std::slice::from_ref(&entry_root),
+            CallTraversal::Transitive,
+            Some(0)
+        )
+        .is_empty());
     let depth_one = graph.call_traces(
         std::slice::from_ref(&entry_root),
         CallTraversal::Transitive,
@@ -92,34 +104,32 @@ fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
     );
     assert_eq!(depth_one, direct, "maxDepth=1 is the direct boundary");
     let depth_two = graph.call_traces(&[entry_root], CallTraversal::Transitive, Some(2));
-    assert!(
-        depth_two.iter().any(|trace| {
-            has_symbol(&trace.target, &root.join("src/diamond-shared.mts"), "shared")
-        })
-    );
-    assert!(
-        depth_two
-            .iter()
-            .any(|trace| has_symbol(&trace.target, &root.join("src/cycle-b.mts"), "cycleB"))
-    );
+    assert!(depth_two.iter().any(|trace| {
+        has_symbol(
+            &trace.target,
+            &root.join("src/diamond-shared.mts"),
+            "shared",
+        )
+    }));
+    assert!(depth_two.iter().any(|trace| has_symbol(
+        &trace.target,
+        &root.join("src/cycle-b.mts"),
+        "cycleB"
+    )));
 
     // A file traversal is deliberately a same-source-file layer, even when
     // the root function calls imported functions.
-    assert!(
-        graph
-            .call_traces(
-                &[symbol(&root.join("src/local.mts"), "first")],
-                CallTraversal::File,
-                None,
-            )
-            .iter()
-            .all(|trace| trace.target.as_file() == Some(root.join("src/local.mts").as_path()))
-    );
-    assert!(
-        graph
-            .call_traces(&[symbol(&entry, "entry")], CallTraversal::File, None)
-            .is_empty()
-    );
+    assert!(graph
+        .call_traces(
+            &[symbol(&root.join("src/local.mts"), "first")],
+            CallTraversal::File,
+            None,
+        )
+        .iter()
+        .all(|trace| trace.target.as_file() == Some(root.join("src/local.mts").as_path())));
+    assert!(graph
+        .call_traces(&[symbol(&entry, "entry")], CallTraversal::File, None)
+        .is_empty());
 }
 
 #[test]
@@ -147,7 +157,10 @@ fn class_member_membership_does_not_create_call_edges() {
         Some(&[EdgeKind::Call].into()),
     );
 
-    assert!(calls.is_empty(), "class membership is not invocation evidence");
+    assert!(
+        calls.is_empty(),
+        "class membership is not invocation evidence"
+    );
 }
 
 #[test]
@@ -157,7 +170,13 @@ fn call_traversal_uses_deterministic_shortest_diamond_paths_and_terminates_cycle
     let traces = graph.call_traces(&[symbol(&entry, "entry")], CallTraversal::Transitive, None);
     let shared_trace = traces
         .iter()
-        .find(|trace| has_symbol(&trace.target, &root.join("src/diamond-shared.mts"), "shared"))
+        .find(|trace| {
+            has_symbol(
+                &trace.target,
+                &root.join("src/diamond-shared.mts"),
+                "shared",
+            )
+        })
         .expect("diamond target is reachable");
     assert_eq!(shared_trace.nodes.len(), 3);
     assert!(has_symbol(
@@ -168,7 +187,11 @@ fn call_traversal_uses_deterministic_shortest_diamond_paths_and_terminates_cycle
     assert_eq!(
         traces
             .iter()
-            .filter(|trace| has_symbol(&trace.target, &root.join("src/diamond-shared.mts"), "shared"))
+            .filter(|trace| has_symbol(
+                &trace.target,
+                &root.join("src/diamond-shared.mts"),
+                "shared"
+            ))
             .count(),
         1,
         "diamond target has one shortest trace"
@@ -179,11 +202,9 @@ fn call_traversal_uses_deterministic_shortest_diamond_paths_and_terminates_cycle
             "cycle-{}.mts",
             name.trim_start_matches("cycle").to_ascii_lowercase()
         ));
-        assert!(
-            traces
-                .iter()
-                .any(|trace| has_symbol(&trace.target, &path, name))
-        );
+        assert!(traces
+            .iter()
+            .any(|trace| has_symbol(&trace.target, &path, name)));
     }
     assert!(
         traces.len() < 20,
@@ -204,33 +225,25 @@ fn call_roots_are_pure_and_retain_leaf_and_global_only_callables() {
     assert!(!roots.contains(&symbol(&root.join("src/cycle-a.mts"), "cycleA")));
 
     let global_file = root.join("src/global-only.mts");
-    assert!(
-        graph
-            .expand_call_roots(&[CallRoot::File(global_file.clone())])
-            .iter()
-            .any(|node| has_symbol(node, &global_file, "globalOnly"))
-    );
-    assert!(
-        graph
-            .expand_call_roots(&[CallRoot::Module(global_file.clone())])
-            .contains(&NodeId::file(&global_file))
-    );
-    assert!(
-        graph
-            .expand_call_roots(&[CallRoot::Function {
-                file: global_file.clone(),
-                symbol: "notDefined".to_string(),
-            }])
-            .is_empty()
-    );
+    assert!(graph
+        .expand_call_roots(&[CallRoot::File(global_file.clone())])
+        .iter()
+        .any(|node| has_symbol(node, &global_file, "globalOnly")));
+    assert!(graph
+        .expand_call_roots(&[CallRoot::Module(global_file.clone())])
+        .contains(&NodeId::file(&global_file)));
+    assert!(graph
+        .expand_call_roots(&[CallRoot::Function {
+            file: global_file.clone(),
+            symbol: "notDefined".to_string(),
+        }])
+        .is_empty());
 
     let unknown_file = root.join("src/unknown.mts");
     let unknown_root = symbol(&unknown_file, "unknown");
-    assert!(
-        graph
-            .call_traces(&[unknown_root], CallTraversal::Transitive, None)
-            .is_empty()
-    );
+    assert!(graph
+        .call_traces(&[unknown_root], CallTraversal::Transitive, None)
+        .is_empty());
     assert!(graph.resolved_call_sites().iter().any(|site| {
         site.file == unknown_file
             && site.source_callee == "globalThis.setTimeout"
@@ -277,6 +290,12 @@ fn exported_function_roots_resolve_renamed_defaults_and_barrels() {
             "cycle",
             root.join("src/star-cycle-provider.mts"),
             "cycle",
+        ),
+        (
+            root.join("src/unreferenced-export.mts"),
+            "public",
+            root.join("src/unreferenced-export.mts"),
+            "uncalledTarget",
         ),
     ] {
         let roots = graph.expand_call_roots(&[CallRoot::Function {
@@ -337,7 +356,11 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
     assert_eq!(
         traces
             .iter()
-            .filter(|trace| has_symbol(&trace.target, &root.join("src/alias-target.mts"), "importedTarget"))
+            .filter(|trace| has_symbol(
+                &trace.target,
+                &root.join("src/alias-target.mts"),
+                "importedTarget"
+            ))
             .count(),
         3,
         "module, anonymous callback, and nested function aliases retain canonical call edges"
@@ -370,17 +393,20 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
             )
     }));
     for callee in ["cycle", "cycleFromB"] {
-        assert!(graph.resolved_call_sites().iter().any(|site| {
-            site.file == aliases
-                && site.source_callee == callee
-                && matches!(
-                    &site.target,
-                    ResolvedCallTarget::ModuleExport {
-                        repository_target: Some((file, scope)),
-                        ..
-                    } if file == &root.join("src/star-cycle-provider.mts") && scope == "cycle"
-                )
-        }), "{callee} must resolve through the cyclic barrel to its concrete provider");
+        assert!(
+            graph.resolved_call_sites().iter().any(|site| {
+                site.file == aliases
+                    && site.source_callee == callee
+                    && matches!(
+                        &site.target,
+                        ResolvedCallTarget::ModuleExport {
+                            repository_target: Some((file, scope)),
+                            ..
+                        } if file == &root.join("src/star-cycle-provider.mts") && scope == "cycle"
+                    )
+            }),
+            "{callee} must resolve through the cyclic barrel to its concrete provider"
+        );
     }
     for (callee, expected_export, expected_scope) in [
         ("targets.importedTarget", "importedTarget", "importedTarget"),
@@ -394,16 +420,16 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
         assert!(
             matching_sites.iter().any(|site| {
                 matches!(
-                        &site.target,
-                        ResolvedCallTarget::ModuleExport {
-                            specifier,
-                            export_path,
-                            repository_target: Some((file, scope)),
-                        } if specifier == "./alias-target.mts"
-                            && export_path == expected_export
-                            && file == &root.join("src/alias-target.mts")
-                            && scope == expected_scope
-                    )
+                    &site.target,
+                    ResolvedCallTarget::ModuleExport {
+                        specifier,
+                        export_path,
+                        repository_target: Some((file, scope)),
+                    } if specifier == "./alias-target.mts"
+                        && export_path == expected_export
+                        && file == &root.join("src/alias-target.mts")
+                        && scope == expected_scope
+                )
             }),
             "a namespace member must retain its concrete export target: {callee}: {matching_sites:#?}"
         );
@@ -443,12 +469,18 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
                 } if file == &root.join("src/alias-target.mts") && scope == "importedTarget"
             )
     }));
-    assert!(traces
-        .iter()
-        .any(|trace| has_symbol(&trace.target, &root.join("src/alias-target.mts"), "defaultTarget")));
+    assert!(traces.iter().any(|trace| has_symbol(
+        &trace.target,
+        &root.join("src/alias-target.mts"),
+        "defaultTarget"
+    )));
     assert!(
         !traces.iter().any(|trace| {
-            has_symbol(&trace.target, &root.join("src/mixed-star-callable.mts"), "collision")
+            has_symbol(
+                &trace.target,
+                &root.join("src/mixed-star-callable.mts"),
+                "collision",
+            )
         }),
         "a non-callable export-star collision must not select the callable branch"
     );
@@ -558,11 +590,12 @@ fn call_resolution_walks_lexical_parent_scopes_without_guessing_properties() {
     let outer = symbol(&local, "outer");
     let inner = symbol(&local, "outer/inner");
     let direct = graph.call_traces(std::slice::from_ref(&inner), CallTraversal::Direct, None);
-    assert!(direct.iter().map(|trace| &trace.target).all(|target| has_symbol(
-        target,
-        &local,
-        "outer/outerOnly"
-    )) && direct.len() == 1,
+    assert!(
+        direct
+            .iter()
+            .map(|trace| &trace.target)
+            .all(|target| has_symbol(target, &local, "outer/outerOnly"))
+            && direct.len() == 1,
         "a nested function can call a callable declared by its lexical parent"
     );
     assert!(

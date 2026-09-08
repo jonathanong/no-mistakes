@@ -26,7 +26,9 @@ fn resolve_exported_callable(
     visited.push(key.clone());
     let Some(file) = indexes.file(facts, path) else {
         if cacheable {
-            indexes.exports.insert(key, ExportedCallableResolution::Unknown);
+            indexes
+                .exports
+                .insert(key, ExportedCallableResolution::Unknown);
         }
         return ExportedCallableResolution::Unknown;
     };
@@ -169,6 +171,66 @@ fn resolve_exported_callable(
         indexes.exports.insert(key, result.clone());
     }
     result
+}
+
+/// Resolve every export spelling once while the graph build still owns the
+/// resolver and facts. Root expansion runs after those inputs are dropped, so
+/// retaining this result is what lets an uncalled exported function still
+/// resolve to its canonical repository callable.
+fn populate_callable_export_resolutions(
+    edge_inputs: &GraphEdgeBuildInputs<'_>,
+    facts: &dyn TsFactLookup,
+    resolver: &dyn ImportResolution,
+    indexes: &CallableResolutionIndexes,
+    output: &mut FxHashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
+) {
+    let mut files = Vec::new();
+    let mut public_names = std::collections::HashSet::new();
+    for path in edge_inputs.graph_files.indexable() {
+        let Some(file) = indexes.file(facts, path) else {
+            continue;
+        };
+        public_names.extend(file.exported.keys().cloned());
+        files.push((path.clone(), file));
+    }
+    let mut public_names = public_names.into_iter().collect::<Vec<_>>();
+    public_names.sort();
+    for (path, file) in files {
+        let mut candidates = file.exported.keys().cloned().collect::<Vec<_>>();
+        if !file.stars.is_empty() {
+            candidates.extend(
+                public_names
+                    .iter()
+                    .filter(|name| name.as_str() != "default")
+                    .cloned(),
+            );
+        }
+        for namespace in file.exported.iter().filter_map(|(name, binding)| {
+            (binding.local == "*" && binding.specifier.is_some()).then_some(name)
+        }) {
+            candidates.extend(
+                public_names
+                    .iter()
+                    .map(|member| format!("{namespace}.{member}")),
+            );
+        }
+        candidates.sort();
+        candidates.dedup();
+        for export in candidates {
+            let resolution = resolve_exported_callable(
+                edge_inputs,
+                facts,
+                resolver,
+                &path,
+                &export,
+                indexes,
+                &mut Vec::new(),
+            );
+            if !matches!(resolution, ExportedCallableResolution::Absent) {
+                output.insert((path.clone(), export), resolution);
+            }
+        }
+    }
 }
 
 include!("export_resolution_namespace.rs");
