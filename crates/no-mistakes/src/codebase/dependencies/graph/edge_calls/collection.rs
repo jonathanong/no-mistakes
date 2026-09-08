@@ -20,8 +20,9 @@ fn collect_call_edges_for_core(
                 .filter(|call| {
                     call.invocation
                         != crate::codebase::dependencies::extract::InvocationKind::Membership
+                        && !call.is_callback
                 })
-                .map(|call| call.offset)
+                .map(|call| (call.caller_id, call.offset, call.invocation))
                 .collect::<std::collections::HashSet<_>>();
             let mut sites = file
                 .function_calls
@@ -126,7 +127,9 @@ fn collect_call_edges_for_core(
                     )
                 })
                 .collect::<Vec<_>>();
-            sites.extend(file.unknown_calls.iter().filter(|call| !call_offsets.contains(&call.offset)).map(|call| {
+            sites.extend(file.unknown_calls.iter().filter(|call| {
+                !call_offsets.contains(&(call.caller_id, call.offset, call.invocation))
+            }).map(|call| {
                 (
                     None,
                     ResolvedCallSite {

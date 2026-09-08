@@ -44,6 +44,28 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         .extend(later_named_type_exports(program, &local_type_names));
     collector.visit_program(program);
 
+    let reassigned_callable_ids = collector
+        .reassigned_callable_binding_ids
+        .iter()
+        .filter_map(|(binding_scope, callee)| {
+            let (binding, member) = callee
+                .split_once('.')
+                .map_or((callee.as_str(), None), |(binding, member)| {
+                    (binding, Some(member))
+                });
+            let callable_id = *collector
+                .callable_bindings
+                .get(&(*binding_scope, binding.to_string()))?;
+            member.map_or(Some(callable_id), |member| {
+                collector.class_member_callable_ids.iter().find_map(
+                    |(class_id, candidate, member_id)| {
+                        (*class_id == callable_id && candidate == member).then_some(*member_id)
+                    },
+                )
+            })
+        })
+        .collect::<HashSet<_>>();
+
     let mut exported_resource_roots: Vec<_> =
         collector.exported_resource_roots.into_iter().collect();
     exported_resource_roots.sort();
@@ -52,16 +74,24 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     exported_resource_scopes.sort();
     let mut known_function_scopes: Vec<_> = collector.known_function_scopes.into_iter().collect();
     known_function_scopes.sort();
+    let mut callable_scope_ids: Vec<_> = collector
+        .callable_scope_ids
+        .into_iter()
+        .filter(|(id, _)| !reassigned_callable_ids.contains(id))
+        .collect();
+    callable_scope_ids.sort();
+    let callable_scope_names = callable_scope_ids
+        .iter()
+        .map(|(_, scope)| scope)
+        .collect::<HashSet<_>>();
     let mut callable_scopes: Vec<_> = collector
         .callable_scopes
         .into_iter()
-        .filter(|scope| !collector.reassigned_callable_scopes.contains(scope))
+        .filter(|scope| callable_scope_names.contains(scope))
         .collect();
     callable_scopes.sort();
     let mut class_scopes: Vec<_> = collector.class_scopes.into_iter().collect();
     class_scopes.sort();
-    let mut callable_scope_ids: Vec<_> = collector.callable_scope_ids.into_iter().collect();
-    callable_scope_ids.sort();
     let mut callable_bindings: Vec<_> = collector
         .callable_bindings
         .into_iter()

@@ -42,12 +42,8 @@ impl ImportCollector {
         else {
             return;
         };
-        if binding_name == name {
-            self.reassigned_callable_binding_ids
-                .insert((binding_scope, name.to_string()));
-        }
-        self.reassigned_callable_scopes
-            .insert(name.replace('.', "/"));
+        self.reassigned_callable_binding_ids
+            .insert((binding_scope, name.to_string()));
         let scope = self.current_function();
         self.reassigned_alias_bindings.extend(
             self.callable_aliases

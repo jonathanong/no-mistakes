@@ -1,17 +1,20 @@
 impl ImportCollector {
     fn has_local_function_scope(&self, callee: &str) -> bool {
-        if self
-            .reassigned_callable_scopes
-            .contains(&callee.replace('.', "/"))
-        {
-            return false;
-        }
         let binding = callee
             .split_once('.')
             .map_or(callee, |(binding, _)| binding);
         let Some(binding_scope) = self.callee_binding_scope(callee) else {
             return false;
         };
+        if self
+            .reassigned_callable_binding_ids
+            .contains(&(binding_scope, binding.to_string()))
+            || self
+                .reassigned_callable_binding_ids
+                .contains(&(binding_scope, callee.to_string()))
+        {
+            return false;
+        }
         let callable_alias = self.callable_aliases.iter().any(|alias| {
             alias.alias.binding_scope == binding_scope && alias.alias.local == binding
         });
@@ -58,29 +61,21 @@ impl ImportCollector {
         }
         let Some(caller) = self.current_function() else {
             let member = binding.replace('.', "/");
-            return (self.callable_scopes.contains(binding)
-                && !self.reassigned_callable_scopes.contains(binding))
-                || (self.known_function_scopes.contains(&member)
-                    && !self.reassigned_callable_scopes.contains(&member));
+            return self.callable_scopes.contains(binding)
+                || self.known_function_scopes.contains(&member);
         };
         let mut scope = caller.as_str();
         loop {
             let candidate = format!("{scope}/{binding}");
             let member_candidate = format!("{scope}/{}", binding.replace('.', "/"));
-            if (self.callable_scopes.contains(&candidate)
-                && !self.reassigned_callable_scopes.contains(&candidate))
-                || (self.callable_scopes.contains(&member_candidate)
-                    && !self.reassigned_callable_scopes.contains(&member_candidate))
+            if self.callable_scopes.contains(&candidate)
+                || self.callable_scopes.contains(&member_candidate)
             {
                 return true;
             }
             let Some((parent, _)) = scope.rsplit_once('/') else {
-                return (self.callable_scopes.contains(binding)
-                    && !self.reassigned_callable_scopes.contains(binding))
-                    || (self.callable_scopes.contains(&binding.replace('.', "/"))
-                        && !self
-                            .reassigned_callable_scopes
-                            .contains(&binding.replace('.', "/")));
+                return self.callable_scopes.contains(binding)
+                    || self.callable_scopes.contains(&binding.replace('.', "/"));
             };
             scope = parent;
         }

@@ -49,7 +49,6 @@ struct ImportCollector {
     callable_binding_ids: HashSet<(usize, String)>,
     callable_bindings: HashMap<(usize, String), CallableId>,
     reassigned_callable_binding_ids: HashSet<(usize, String)>,
-    reassigned_callable_scopes: HashSet<String>,
     star_reexport_specifiers: Vec<String>,
     suppress_imports: bool,
     collect_suppressed_runtime_imports: bool,
