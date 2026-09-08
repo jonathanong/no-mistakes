@@ -32,6 +32,14 @@ export async function validCatches(
   work.catch(async (error) => {
     await report(error);
   });
+  work.catch(function* () {});
+  work.catch(async function* () {});
+  work.catch(() => {
+    `${fallback}`;
+  });
+  work.catch(() => {
+    tag`ignored`;
+  });
   try {
     await work;
   } catch {
@@ -46,4 +54,12 @@ function report(error: unknown) {
 function onFulfilled() {}
 
 const fallback = null;
+const tag = String.raw;
 const handlers: Array<(error: unknown) => void> = [];
+
+export function shadowedUndefined(work: Promise<void>, undefined: unknown) {
+  work.catch(() => undefined);
+  work.catch(() => {
+    undefined;
+  });
+}

@@ -37,7 +37,7 @@ module.exports = Object.assign(
       return {
         CallExpression(node) {
           const handler = rejectionHandler(node);
-          if (!handler || !isInlineNoopFunction(handler)) return;
+          if (!handler || !isInlineNoopFunction(handler, context.sourceCode)) return;
           if (isAllowedCallee(node, options)) return;
           context.report({ node: handler, messageId: "noopCatch" });
         },
