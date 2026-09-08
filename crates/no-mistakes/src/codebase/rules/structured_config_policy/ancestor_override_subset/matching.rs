@@ -64,3 +64,6 @@ fn compile_globs(value: &Value) -> Option<GlobSet> {
     }
     builder.build().ok()
 }
+
+#[cfg(test)]
+mod tests;

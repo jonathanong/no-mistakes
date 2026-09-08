@@ -40,3 +40,6 @@ fn is_portable_absolute(spec: &str) -> bool {
         || spec.starts_with(['/', '\\'])
         || spec.as_bytes().get(1) == Some(&b':')
 }
+
+#[cfg(test)]
+mod tests;
