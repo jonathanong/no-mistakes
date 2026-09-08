@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "items": {
+      "indexes": {
+        "items_live_id": {
+          "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": false, "valid": true, "ready": true,
+          "keys": [{ "expression": "id", "descending": false, "nullsFirst": false }],
+          "includedColumns": [], "predicate": "is_live"
+        }
+      }, "uniqueConstraints": {}, "primaryKey": null
+    }
+  }, "views": {}, "enums": {}, "extensions": {}, "functions": {}, "policies": {}
+}

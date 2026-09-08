@@ -122,6 +122,7 @@ pub(crate) fn integration_configured(config: &no_mistakes::config::v2::NoMistake
 
 fn postgres_embedded_sql_configured(config: &no_mistakes::config::v2::NoMistakesConfig) -> bool {
     [
+        no_mistakes::codebase::rules::POSTGRES_CONFLICT_ORDERING,
         no_mistakes::codebase::rules::POSTGRES_LOCK_ORDERING,
         no_mistakes::codebase::rules::POSTGRES_NO_OFFSET,
         no_mistakes::codebase::rules::POSTGRES_REQUIRE_QUERY_ANNOTATION,

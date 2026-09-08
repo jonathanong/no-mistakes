@@ -1,0 +1,16 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "edges": {
+      "indexes": {
+        "edges_unique": {
+          "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": false, "valid": true, "ready": true,
+          "keys": [
+            { "expression": "left_id", "descending": false, "nullsFirst": false },
+            { "expression": "right_id", "descending": false, "nullsFirst": false }
+          ], "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": null
+    }
+  }, "views": {}, "enums": {}, "extensions": {}, "functions": {}, "policies": {}
+}

@@ -1,11 +1,11 @@
-pub(super) const DEFAULT_SAFE_DIRECTIVE: &str = "deadlock-safe";
+pub(crate) const DEFAULT_SAFE_DIRECTIVE: &str = "deadlock-safe";
 const DIRECTIVE_LOOKBACK: usize = 200;
 
 pub(super) fn contains_for_update(sql: &str) -> bool {
     sql.to_ascii_lowercase().contains("for update")
 }
 
-pub(super) fn has_safe_directive(source: &str, line: u32, sql: &str, directive: &str) -> bool {
+pub(crate) fn has_safe_directive(source: &str, line: u32, sql: &str, directive: &str) -> bool {
     if directive.is_empty() {
         return false;
     }

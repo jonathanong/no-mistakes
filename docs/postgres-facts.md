@@ -5,7 +5,7 @@ work. Check rules consume these facts instead of re-parsing SQL or
 TypeScript.
 
 These extractors are library APIs. There is no CLI command or N-API dump.
-`postgres-lock-ordering`, `postgres-no-offset`,
+`postgres-conflict-ordering`, `postgres-lock-ordering`, `postgres-no-offset`,
 `postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`,
@@ -79,7 +79,7 @@ There is no hardcoded `backend/migrations/` root.
 
 `postgres-fk-index`, `postgres-redundant-index`, and
 `postgres-constraint-validate` consume these
-migration facts. `postgres-lock-ordering` and
+migration facts. `postgres-conflict-ordering`, `postgres-lock-ordering`, and
 `postgres-no-generated-column-writes` consume
 the facts through `no-mistakes check`.
 
@@ -170,9 +170,13 @@ when the AST is missing.
 - `has_multi_row_predicate` — the locked select's `WHERE` uses `IN` or `= ANY`
 - `has_order_by` — the locked query has `ORDER BY`
 - `skips_locked_rows` — the lock uses `SKIP LOCKED`
+- `table` and parsed `ORDER BY` expression keys — used with a configured
+  schema catalog to require an exact valid unique-key prefix
 
 Unparseable SQL returns an error. The lock-ordering rule consumes this helper
-instead of re-parsing SQL with a private parser.
+instead of re-parsing SQL with a private parser. `postgres-conflict-ordering`
+also consumes the shared embedded-SQL facts, then resolves its conflict arbiter
+against the committed Vouchington schema snapshot.
 
 ## Offset facts
 
