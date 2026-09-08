@@ -14,7 +14,8 @@ fn collect_call_edges_for_core(
                 return Vec::new();
             };
             let Some(index) = indexes.file(facts, path) else { return Vec::new() };
-            file.function_calls
+            let mut sites = file
+                .function_calls
                 .iter()
                 .map(|call| {
                     let resolved_callee = index
@@ -83,7 +84,22 @@ fn collect_call_edges_for_core(
                         },
                     )
                 })
-                .collect::<Vec<_>>()
+                .collect::<Vec<_>>();
+            sites.extend(file.unknown_calls.iter().map(|call| {
+                (
+                    None,
+                    ResolvedCallSite {
+                        file: path.to_path_buf(),
+                        caller: call.caller.clone(),
+                        source_callee: "<unknown>".to_string(),
+                        line: call.line,
+                        offset: call.offset,
+                        invocation: call.invocation,
+                        target: ResolvedCallTarget::Unknown,
+                    },
+                )
+            }));
+            sites
         })
         .fold(|| (Vec::new(), Vec::new()), |mut output, (edge, site)| {
             if let Some(edge) = edge {

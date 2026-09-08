@@ -139,6 +139,11 @@ fn call_roots_are_pure_and_retain_leaf_and_global_only_callables() {
     );
     assert!(
         graph
+            .expand_call_roots(&[CallRoot::Module(global_file.clone())])
+            .contains(&NodeId::file(&global_file))
+    );
+    assert!(
+        graph
             .expand_call_roots(&[CallRoot::Function {
                 file: global_file.clone(),
                 symbol: "notDefined".to_string(),
@@ -156,6 +161,11 @@ fn call_roots_are_pure_and_retain_leaf_and_global_only_callables() {
     assert!(graph.resolved_call_sites().iter().any(|site| {
         site.file == unknown_file
             && site.source_callee == "globalThis.setTimeout"
+            && matches!(site.target, ResolvedCallTarget::Unknown)
+    }));
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.file == unknown_file
+            && site.source_callee == "<unknown>"
             && matches!(site.target, ResolvedCallTarget::Unknown)
     }));
 }

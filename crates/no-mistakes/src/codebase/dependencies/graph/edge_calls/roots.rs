@@ -46,9 +46,7 @@ impl DepGraph {
             .flat_map(|root| match root {
                 CallRoot::Module(file) => {
                     let node = NodeId::file(crate::codebase::ts_resolver::normalize_path(file));
-                    self.traversal_edges()
-                        .forward()
-                        .contains_key(&node)
+                    self.has_call_site_in_file(node.as_file().expect("file node"))
                         .then_some(node)
                         .into_iter()
                         .collect::<Vec<_>>()
@@ -84,12 +82,16 @@ impl DepGraph {
             .cloned()
             .unwrap_or_default();
         let module = NodeId::file(&file);
-        if self.traversal_edges().forward().contains_key(&module) {
+        if self.has_call_site_in_file(&file) {
             nodes.push(module);
         }
         nodes.sort();
         nodes.dedup();
         nodes
+    }
+
+    fn has_call_site_in_file(&self, file: &std::path::Path) -> bool {
+        self.resolved_call_sites.iter().any(|site| site.file == file)
     }
 
     /// Follow canonical call edges with deterministic shortest traces. `File`
