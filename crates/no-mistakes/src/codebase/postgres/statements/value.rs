@@ -63,6 +63,7 @@ fn from_value(value: &ValueWithSpan) -> SqlValueForm {
         Value::SingleQuotedString(text)
         | Value::EscapedStringLiteral(text)
         | Value::UnicodeStringLiteral(text)
+        | Value::NationalStringLiteral(text)
             if is_relative_datetime(text) =>
         {
             SqlValueForm::Other
@@ -76,16 +77,13 @@ fn from_value(value: &ValueWithSpan) -> SqlValueForm {
 
 fn signed_literal(expr: &Expr) -> SqlValueForm {
     match from_expr(expr) {
-        SqlValueForm::Literal | SqlValueForm::Null | SqlValueForm::Placeholder => {
-            SqlValueForm::Literal
-        }
+        SqlValueForm::Literal | SqlValueForm::Null => SqlValueForm::Literal,
         form => form,
     }
 }
 
 #[rustfmt::skip]
-const RELATIVE_DATETIME: &[&str] =
-    &["now", "today", "tomorrow", "yesterday", "epoch", "infinity", "-infinity", "allballs"];
+const RELATIVE_DATETIME: &[&str] = &["now", "today", "tomorrow", "yesterday"];
 
 fn is_relative_datetime(text: &str) -> bool {
     RELATIVE_DATETIME.contains(&text.trim().to_ascii_lowercase().as_str())

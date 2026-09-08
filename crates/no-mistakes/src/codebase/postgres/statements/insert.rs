@@ -26,7 +26,7 @@ pub(super) fn from_insert(sql: &str, insert: &Insert, n: usize, executed: bool) 
             Some(OnInsert::OnConflict(conflict)) => Some(from_conflict(conflict)),
             _ => None,
         },
-        assignments: insert_assignments(sql, insert),
+        assignments: insert_assignments(sql, insert, n),
     }
 }
 
@@ -52,8 +52,8 @@ fn from_conflict(conflict: &sqlparser::ast::OnConflict) -> super::SqlOnConflictF
     }
 }
 
-fn insert_assignments(sql: &str, insert: &Insert) -> Vec<super::SqlAssignmentFact> {
-    if has_overriding_user_value(sql) {
+fn insert_assignments(sql: &str, insert: &Insert, n: usize) -> Vec<super::SqlAssignmentFact> {
+    if has_overriding_user_value(sql, n) {
         return Vec::new();
     }
     let set: Vec<_> = insert
@@ -68,8 +68,8 @@ fn insert_assignments(sql: &str, insert: &Insert) -> Vec<super::SqlAssignmentFac
     }
 }
 
-fn has_overriding_user_value(sql: &str) -> bool {
-    let masked = super::fallback::mask_quoted_sql(sql);
+fn has_overriding_user_value(sql: &str, n: usize) -> bool {
+    let masked = super::fallback::mask_quoted_sql(&super::lines::nth_insert_source(sql, n));
     let tokens = masked
         .split_whitespace()
         .map(str::to_ascii_lowercase)

@@ -2,18 +2,38 @@ pub(super) fn nth_insert_line(sql: &str, n: usize) -> usize {
     nth_keyword_pair_line(sql, "insert", "into", n)
 }
 
+pub(super) fn nth_insert_source(sql: &str, n: usize) -> String {
+    let lines = keyword_pair_lines(sql, "insert", "into");
+    let start = lines.get(n.saturating_sub(1)).copied().unwrap_or(1);
+    slice_lines(sql, start, lines.get(n).copied())
+}
+
 pub(super) fn nth_keyword_pair_line(sql: &str, first: &str, second: &str, n: usize) -> usize {
+    keyword_pair_lines(sql, first, second)
+        .get(n.saturating_sub(1))
+        .copied()
+        .unwrap_or(1)
+}
+
+fn keyword_pair_lines(sql: &str, first: &str, second: &str) -> Vec<usize> {
     let words = words(sql);
-    let mut found = 0usize;
-    for index in 0..words.len().saturating_sub(1) {
-        if eq(&words[index], first) && eq(&words[index + 1], second) {
-            found += 1;
-            if found == n {
-                return words[index].line;
-            }
-        }
-    }
-    1
+    (0..words.len().saturating_sub(1))
+        .filter(|&index| eq(&words[index], first) && eq(&words[index + 1], second))
+        .map(|index| words[index].line)
+        .collect()
+}
+
+fn slice_lines(sql: &str, start: usize, end: Option<usize>) -> String {
+    let end = end.filter(|end| *end > start).unwrap_or(usize::MAX);
+    sql.lines()
+        .enumerate()
+        .filter(|(index, _)| {
+            let line = index + 1;
+            line >= start && line < end
+        })
+        .map(|(_, line)| line)
+        .collect::<Vec<_>>()
+        .join("\n")
 }
 
 pub(super) fn line_containing(source: &str, parts: &[&str]) -> usize {

@@ -76,7 +76,7 @@ still fails: another function on the same update, a `BEFORE` / `INSTEAD OF` /
 column so the next replay sees a true `WHERE`. The proven INSERT value must
 also be stable (literal, null, placeholder, or a `COALESCE`/`GREATEST`/`LEAST`
 of those). Volatile INSERT values (`now()`, `CURRENT_TIMESTAMP`), relative
-datetime literals (`'now'`, `U&'now'`), `DEFAULT`, `OVERRIDING USER VALUE`,
+datetime literals (`'now'`, `N'now'`, `U&'now'`), `DEFAULT`, `OVERRIDING USER VALUE`,
 omitted columns, `SELECT *`, SELECT column references, and sources without a
 column list still fail. Disjunctive `WHERE` and constant `SET` plus a matching
 `WHERE` still fail.

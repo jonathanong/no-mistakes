@@ -85,6 +85,7 @@ fn current_timestamp_ident_is_not_a_noop() {
 #[test]
 fn relative_datetime_literal_is_not_a_noop() {
     assert_refires("INSERT INTO items (id, a, b) VALUES (1, 'x', 'now')");
+    assert_refires("INSERT INTO items (id, a, b) VALUES (1, 'x', N'now')");
 }
 
 #[test]
@@ -186,6 +187,7 @@ fn placeholder_insert_value_still_noops() {
         "INSERT INTO items (id, a, b) VALUES (1, 'x', sql_placeholder_1)",
         "INSERT INTO items (id, a, b) VALUES (1, 'x', -1)",
         "INSERT INTO items (id, a, b) VALUES (1, 'x', +1)",
+        "INSERT INTO items (id, a, b) VALUES (1, 'x', 'epoch')",
     ] {
         let found = judge_file(
             &extract_sql_statement_facts(&sql(insert)),
