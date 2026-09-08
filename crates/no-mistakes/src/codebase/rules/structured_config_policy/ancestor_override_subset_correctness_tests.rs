@@ -142,6 +142,7 @@ policies:
                 "malformed/child/.oxlintrc.json",
                 "malformed/child/file.ts",
                 "malformed/invalid-extends/.oxlintrc.json",
+                "malformed/padded-extends/.oxlintrc.json",
             ],
         ),
     )
@@ -160,6 +161,13 @@ policies:
         messages
             .iter()
             .any(|message| message.contains("extends must be a string")),
+        "{findings:?}"
+    );
+    assert!(
+        messages.iter().any(|message| {
+            message.contains("malformed/padded-extends/.oxlintrc.json")
+                && message.contains("non-empty portable")
+        }),
         "{findings:?}"
     );
 }

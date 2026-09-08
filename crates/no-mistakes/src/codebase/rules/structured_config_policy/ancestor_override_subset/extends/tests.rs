@@ -19,6 +19,8 @@ fn follow_rejects_an_extends_chain_at_the_depth_limit() {
         assertion: &assertion,
         keys: &keys,
         stack: vec![root.to_path_buf(); MAX_EXTENDS_DEPTH],
+        occurrences: 0,
+        max_occurrences: MAX_EXTENDS_OCCURRENCES,
         ancestors: Vec::new(),
         findings: &mut findings,
     };
@@ -28,6 +30,48 @@ fn follow_rejects_an_extends_chain_at_the_depth_limit() {
     assert_eq!(walk.findings.len(), 1);
     assert!(walk.findings[0].message.contains("maximum depth"));
     assert!(walk.ancestors.is_empty());
+}
+
+#[test]
+fn bounds_repeated_occurrences_in_a_fanout_graph() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/structured-config-policy/ancestor-override-subset"),
+    );
+    let nested = root.join("diamond/nested/.oxlintrc.json");
+    let files = [
+        root.join("diamond/shared.json"),
+        root.join("diamond/left.json"),
+        root.join("diamond/right.json"),
+        nested.clone(),
+    ];
+    let sources = crate::codebase::rules::source_store_for_files(&files);
+    let source = crate::codebase::rules::read_source(&sources, &nested).unwrap();
+    let value =
+        crate::codebase::structured_value::parse_structured_value(&nested, &source).unwrap();
+    let assertion = ValueAssertion::default();
+    let keys = Keys::from_assertion(&assertion);
+    let mut findings = Vec::new();
+    let mut walk = Walk {
+        root: &root,
+        nested_rel: "diamond/nested/.oxlintrc.json",
+        sources: &sources,
+        assertion: &assertion,
+        keys: &keys,
+        stack: vec![nested.clone()],
+        occurrences: 0,
+        max_occurrences: 3,
+        ancestors: Vec::new(),
+        findings: &mut findings,
+    };
+
+    walk.visit(&nested, &value);
+
+    assert_eq!(walk.ancestors.len(), 3);
+    assert_eq!(walk.findings.len(), 1, "{:?}", walk.findings);
+    assert!(walk.findings[0]
+        .message
+        .contains("maximum of 3 occurrences"));
 }
 
 #[test]

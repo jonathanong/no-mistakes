@@ -3,13 +3,14 @@ use serde_yaml::Value;
 use std::path::Path;
 
 pub(super) const MAX_EXTENDS_DEPTH: usize = 64;
+pub(super) const MAX_EXTENDS_OCCURRENCES: usize = 256;
 
 pub(super) fn is_package_specifier(spec: &str) -> bool {
     !spec.starts_with('.') && !is_portable_absolute(spec)
 }
 
 pub(super) fn is_valid_extends_spec(spec: &str) -> bool {
-    if spec.trim().is_empty() || is_portable_absolute(spec) {
+    if spec != spec.trim() || spec.is_empty() || is_portable_absolute(spec) {
         return false;
     }
     is_package_specifier(spec) || spec.starts_with('.')

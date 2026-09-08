@@ -1,6 +1,8 @@
 use super::finding;
 use super::keys::Keys;
-use super::spec::{extends_specs, is_package_specifier, MAX_EXTENDS_DEPTH};
+use super::spec::{
+    extends_specs, is_package_specifier, MAX_EXTENDS_DEPTH, MAX_EXTENDS_OCCURRENCES,
+};
 use crate::codebase::rules::structured_config_policy::paths::canonical_path_in_canonical_root;
 use crate::codebase::rules::structured_config_policy::ValueAssertion;
 use crate::codebase::rules::RuleFinding;
@@ -29,6 +31,8 @@ struct Walk<'a> {
     assertion: &'a ValueAssertion,
     keys: &'a Keys<'a>,
     stack: Vec<PathBuf>,
+    occurrences: usize,
+    max_occurrences: usize,
     ancestors: Vec<Ancestor>,
     findings: &'a mut Vec<RuleFinding>,
 }
@@ -48,6 +52,8 @@ pub(super) fn collect_ancestors(
         assertion,
         keys,
         stack: vec![nested.path.to_path_buf()],
+        occurrences: 0,
+        max_occurrences: MAX_EXTENDS_OCCURRENCES,
         ancestors: Vec::new(),
         findings,
     };
@@ -133,6 +139,18 @@ impl Walk<'_> {
             ));
             return;
         }
+        if self.occurrences >= self.max_occurrences {
+            self.findings.push(finding(
+                self.nested_rel,
+                self.assertion,
+                format!(
+                    "{}: ancestor-override-subset extends traversal exceeds the maximum of {} occurrences",
+                    self.nested_rel, self.max_occurrences
+                ),
+            ));
+            return;
+        }
+        self.occurrences += 1;
         let Some(value) = self.load(spec, &resolved) else {
             return;
         };
