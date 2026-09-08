@@ -1,20 +1,27 @@
 use super::super::for_each_bound_name;
 use oxc_ast::ast::{
-    AssignmentExpression, AssignmentTarget, AssignmentTargetMaybeDefault, AssignmentTargetProperty,
-    Program, VariableDeclarator,
+    AssignmentTarget, AssignmentTargetMaybeDefault, AssignmentTargetProperty, Program,
+    VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashSet;
 
 /// Names assigned anywhere in the program, e.g. `build = externalBuilder;`,
-/// `({ build } = providers);`, or `var build = externalBuilder;` reassigning
-/// a hoisted `function build() {}` directly, through destructuring, or
+/// `({ build } = providers);`, `for (build of providers)`, or
+/// `var build = externalBuilder;` reassigning a hoisted `function build() {}`
+/// directly, through destructuring, through a for-in/for-of loop target, or
 /// through a same-named re-declaration with an initializer. A function
 /// declaration's binding is mutable, so a call to it can no longer be
 /// trusted to run the originally-collected body once any assignment or
 /// initialized re-declaration of that name exists anywhere —
 /// `LocalFunctions::collect` drops such names outright rather than
 /// resolving through a body that may not be the one that runs.
+///
+/// Hooking the generic `visit_assignment_target` — rather than
+/// `visit_assignment_expression` specifically — is what catches the loop
+/// case too: a `for (build of providers)` target reaches the same
+/// `AssignmentTarget` node through `ForStatementLeft`, with no separate
+/// `AssignmentExpression` in between.
 #[derive(Default)]
 pub(super) struct ReassignedNames<'a> {
     names: HashSet<&'a str>,
@@ -33,12 +40,12 @@ impl<'a> ReassignedNames<'a> {
 }
 
 impl<'a> Visit<'a> for ReassignedNames<'a> {
-    fn visit_assignment_expression(&mut self, assign: &AssignmentExpression<'a>) {
+    fn visit_assignment_target(&mut self, target: &AssignmentTarget<'a>) {
         let names = &mut self.names;
-        for_each_assigned_name(&assign.left, &mut |name| {
+        for_each_assigned_name(target, &mut |name| {
             names.insert(name);
         });
-        walk::walk_assignment_expression(self, assign);
+        walk::walk_assignment_target(self, target);
     }
 
     fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {

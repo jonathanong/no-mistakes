@@ -2,7 +2,7 @@ use super::bindings::callee_name;
 use super::{EmbeddedSqlCall, EmbeddedSqlKind};
 use oxc_ast::ast::{
     AssignmentTarget, BlockStatement, CallExpression, FormalParameters, Function, FunctionBody,
-    Program,
+    FunctionType, Program,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
@@ -71,6 +71,19 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
         self.push_scope();
         record_params(&function.params, self);
+        // A named function expression's own name is visible only inside its
+        // own body (unlike a declaration's, hoisted into the enclosing
+        // scope by `record_function_declaration`), so it belongs in the
+        // scope this call just pushed rather than in any outer one. Without
+        // it, `shadowed_locally` can never see that the name is rebound here
+        // at all, and a same-spelled reference inside the body — e.g. using
+        // the expression's own name as a template tag — reads back as the
+        // untouched top-level/global binding instead of this local rebind.
+        if function.r#type == FunctionType::FunctionExpression {
+            if let Some(id) = &function.id {
+                self.bind_self_name(id.name.as_str());
+            }
+        }
         self.with_control_flow(|visitor| walk::walk_function(visitor, function, flags));
         self.pop_scope();
     }

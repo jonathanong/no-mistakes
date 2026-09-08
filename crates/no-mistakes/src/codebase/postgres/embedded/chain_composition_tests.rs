@@ -103,3 +103,27 @@ fn named_function_expression_self_binding_is_not_collected_under_its_const_name(
     let facts = extract("composed-chain-shadowed-named-function-expression-self-binding.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
+
+#[test]
+fn helper_tagged_by_a_top_level_arrow_rebinding_sql_fails_closed() {
+    let facts = extract("composed-chain-shadowed-top-level-arrow-rebinding-sql.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn helper_return_tagged_by_a_parameter_named_sql_with_no_interpolation_fails_closed() {
+    let facts = extract("composed-chain-shadowed-sql-tag-param-no-interpolation.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn reassigned_via_for_of_loop_target_is_rejected() {
+    let facts = extract("composed-chain-function-reassigned-via-for-of.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn tag_use_of_a_named_function_expressions_own_self_binding_fails_closed() {
+    let facts = extract("composed-chain-shadowed-named-function-expression-self-tag.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}

@@ -50,6 +50,25 @@ impl ScopeVisitor<'_> {
         }
     }
 
+    /// Binds a named function expression's own self-reference into its
+    /// just-pushed body scope, as a shadow marker only — this is never a
+    /// same-file helper `LocalFunctions` resolves calls through by this
+    /// name (it already requires the const/expression names to match, and
+    /// otherwise drops the binding), so recording it here exists solely to
+    /// make `shadowed_locally` see the rebind.
+    pub(super) fn bind_self_name(&mut self, name: &str) {
+        if let Some(scope) = self.current_scope() {
+            scope.insert(
+                name.to_string(),
+                BindingState {
+                    sql: None,
+                    kind: EmbeddedSqlKind::Dynamic,
+                    line: 0,
+                },
+            );
+        }
+    }
+
     pub(super) fn mark_dynamic(&mut self, name: &str) {
         for scope in self.scopes.iter_mut().rev() {
             if let Some(binding) = scope.get_mut(name) {

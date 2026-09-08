@@ -13,6 +13,14 @@ use std::collections::HashSet;
 /// covers). A top-level `function` declaration is out of scope here: that
 /// shape is a legitimate same-file helper collected elsewhere, including one
 /// referencing its own top-level declaration by name.
+///
+/// The callable-helper-shape exemption never applies to a binding spelled
+/// `sql` (case-insensitively, matching the tag-name check this feeds): the
+/// only thing that consults a shadowed name is whether it is safe to trust a
+/// tagged template's own tag as the trusted SQL-concatenation tag, and a
+/// callable rebinding of `sql` is exactly the shape that can ignore its
+/// template arguments and return arbitrary text — a helper shape doesn't
+/// make that any safer.
 #[derive(Default)]
 pub(super) struct TagShadows {
     names: HashSet<String>,
@@ -58,7 +66,7 @@ fn record_declarator(declarator: &VariableDeclarator<'_>, shadows: &mut TagShado
         .init
         .as_ref()
         .is_some_and(|init| is_function_shaped(init));
-    if !is_helper_shape {
+    if !is_helper_shape || ident.name.eq_ignore_ascii_case("sql") {
         shadows.names.insert(ident.name.to_string());
     }
 }
