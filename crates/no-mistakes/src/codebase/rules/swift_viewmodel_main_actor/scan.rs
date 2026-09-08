@@ -52,14 +52,15 @@ fn check_file(
     if !defer_suppression && has_disable_file_comment(&source, RULE_ID) {
         return Vec::new();
     }
+    let code = super::super::lexical_mask::swift_code_mask(&source);
     let mut findings = Vec::new();
-    for cap in CLASS_DECL.captures_iter(&source) {
+    for cap in CLASS_DECL.captures_iter(&code) {
         let Some(name) = cap.get(1) else { continue };
         if !name.as_str().ends_with(&opts.suffix) {
             continue;
         }
         let start = cap.get(0).map_or(name.start(), |m| m.start());
-        if commented(&source, start) || has_attribute(&source, start, &opts.attribute) {
+        if has_attribute(&code, start, &opts.attribute) {
             continue;
         }
         let line = source[..start].bytes().filter(|&b| b == b'\n').count() + 1;
@@ -76,12 +77,6 @@ fn check_file(
         super::super::suppress_rule_findings_with_source(&mut findings, &source);
     }
     findings
-}
-
-fn commented(source: &str, start: usize) -> bool {
-    let line_start = source[..start].rfind('\n').map_or(0, |i| i + 1);
-    let prefix = source[line_start..start].trim_start();
-    prefix.starts_with("//") || prefix.contains("//")
 }
 
 fn has_attribute(source: &str, mut i: usize, attr: &str) -> bool {

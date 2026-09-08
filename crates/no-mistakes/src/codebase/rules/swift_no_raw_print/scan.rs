@@ -33,13 +33,16 @@ fn check_file(
     if !defer_suppression && has_disable_file_comment(&source, RULE_ID) {
         return Vec::new();
     }
+    let code = super::super::lexical_mask::swift_code_mask(&source);
     let mut seen = BTreeSet::new();
     let mut findings = Vec::new();
-    for mat in opts.print.find_iter(&source) {
-        if commented(&source, mat.start()) {
-            continue;
-        }
-        let line = source[..mat.start()]
+    for mat in opts.print.find_iter(&code) {
+        let print_start = mat.start()
+            + mat
+                .as_str()
+                .find("print")
+                .expect("print regex match contains print");
+        let line = source[..print_start]
             .bytes()
             .filter(|&b| b == b'\n')
             .count()
@@ -60,10 +63,4 @@ fn check_file(
         super::super::suppress_rule_findings_with_source(&mut findings, &source);
     }
     findings
-}
-
-fn commented(source: &str, start: usize) -> bool {
-    let line_start = source[..start].rfind('\n').map_or(0, |i| i + 1);
-    let prefix = source[line_start..start].trim_start();
-    prefix.starts_with("//") || prefix.contains("//")
 }

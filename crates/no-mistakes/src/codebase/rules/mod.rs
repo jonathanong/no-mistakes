@@ -17,6 +17,7 @@ pub mod github_actions_pinned_hash;
 pub mod github_actions_test_timeout_literals;
 mod ids;
 pub mod integration_test_no_mocks;
+mod lexical_mask;
 pub mod lockfile_allowlist;
 pub mod markdown_child_links;
 pub mod markdown_eval_tests;

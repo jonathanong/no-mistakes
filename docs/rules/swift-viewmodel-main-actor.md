@@ -5,6 +5,9 @@ Requires Swift `class` types whose names end with `ViewModel` to be annotated
 `extension` declarations are ignored. Scope files with rule `include` /
 `exclude`.
 
+The rule ignores class-shaped text in comments and ordinary, raw, and multiline
+string literals. Suppression directives are read from the original source.
+
 Why: a ViewModel class without `@MainActor` can mutate UI state off the main
 actor.
 

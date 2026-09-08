@@ -352,6 +352,10 @@ It rejects with the same rule application and `options` path diagnostic as the
 CLI when a configured option has the wrong type; invalid option objects are
 never replaced with rule defaults.
 
+For Swift and C# source rules, `check()` and an `analyzeProject()` `check`
+report both ignore comments and string literals while continuing to inspect
+executable string interpolations. Finding lines refer to the original source.
+
 `resolveConfig(options)` returns the same JSON as `config resolve`: frontend
 apps, Playwright coverage gates, effective per-app `rewrites`/`ignoreRoutes`,
 Vitest `vitestFullSuiteTriggers`, and the additive `fullSuiteTriggers` array

@@ -34,11 +34,12 @@ fn check_file(
     if !defer_suppression && has_disable_file_comment(&source, RULE_ID) {
         return Vec::new();
     }
+    let code = super::super::lexical_mask::csharp_code_mask(&source);
     let mut seen = BTreeSet::new();
     let mut findings = Vec::new();
     for pattern in opts.constructors.iter().chain(opts.methods.iter()) {
         collect_matches(
-            &source,
+            &code,
             pattern,
             &rel,
             &opts.message,
@@ -61,9 +62,6 @@ fn collect_matches(
     findings: &mut Vec<RuleFinding>,
 ) {
     for mat in pattern.find_iter(source) {
-        if commented(source, mat.start()) {
-            continue;
-        }
         let line = source[..mat.start()]
             .bytes()
             .filter(|&b| b == b'\n')
@@ -81,10 +79,4 @@ fn collect_matches(
             target: None,
         });
     }
-}
-
-fn commented(source: &str, start: usize) -> bool {
-    let line_start = source[..start].rfind('\n').map_or(0, |i| i + 1);
-    let prefix = source[line_start..start].trim_start();
-    prefix.starts_with("//") || prefix.contains("//")
 }

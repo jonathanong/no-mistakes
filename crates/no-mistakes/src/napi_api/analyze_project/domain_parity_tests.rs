@@ -58,3 +58,4 @@ include!("domain_parity_tests/playwright_react_server.rs");
 include!("domain_parity_tests/symbols.rs");
 include!("domain_parity_tests/symbol_parse_modes.rs");
 include!("domain_parity_tests/heterogeneous.rs");
+include!("domain_parity_tests/language_rules.rs");

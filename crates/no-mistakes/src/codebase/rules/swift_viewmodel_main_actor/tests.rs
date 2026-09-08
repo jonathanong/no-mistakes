@@ -13,6 +13,13 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
+fn lexical_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/swift-csharp-lexical-masking"),
+    )
+}
+
 fn config(yaml: &str) -> NoMistakesConfig {
     NoMistakesConfig {
         rules: vec![RuleDef {
@@ -128,4 +135,12 @@ fn skips_missing_source() {
     let missing = root.join("missing.swift");
     let findings = check_with_files(&root, &config("{}"), &[missing]).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn masks_comments_and_strings_and_uses_the_original_source_for_suppression() {
+    let findings = run(&lexical_fixture(), "{}");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].file, "SwiftViewModel.swift");
+    assert_eq!(findings[0].line, 13);
 }

@@ -13,6 +13,13 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
+fn lexical_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/swift-csharp-lexical-masking"),
+    )
+}
+
 fn config(yaml: &str) -> NoMistakesConfig {
     NoMistakesConfig {
         rules: vec![RuleDef {
@@ -114,4 +121,18 @@ fn skips_missing_source() {
     let missing = root.join("missing.swift");
     let findings = check_with_files(&root, &config("{}"), &[missing]).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn masks_comments_and_strings_but_scans_interpolation_at_original_lines() {
+    let findings = run(&lexical_fixture(), "{}");
+    // Literal examples are invisible, but the interpolation on line 12 executes.
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        vec![("SwiftPrint.swift", 11), ("SwiftPrint.swift", 12)],
+        "{findings:#?}"
+    );
 }

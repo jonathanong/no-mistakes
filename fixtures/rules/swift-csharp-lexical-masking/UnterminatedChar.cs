@@ -1,0 +1,4 @@
+class UnterminatedChar
+{
+    char value = '
+}

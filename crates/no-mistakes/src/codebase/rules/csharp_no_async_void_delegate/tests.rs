@@ -13,6 +13,13 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
+fn lexical_fixture() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/swift-csharp-lexical-masking"),
+    )
+}
+
 fn config(yaml: &str) -> NoMistakesConfig {
     NoMistakesConfig {
         rules: vec![RuleDef {
@@ -129,4 +136,33 @@ fn skips_missing_source() {
     let missing = root.join("missing.cs");
     let findings = check_with_files(&root, &config("{}"), &[missing]).unwrap();
     assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn masks_comments_and_strings_but_scans_interpolation_at_original_lines() {
+    let findings = run(&lexical_fixture(), "{}");
+    // Literal examples are invisible, but the interpolations on lines 11 and 18 execute.
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        vec![
+            ("AsyncDelegate.cs", 11),
+            ("AsyncDelegate.cs", 14),
+            ("AsyncDelegate.cs", 18)
+        ],
+        "{findings:#?}"
+    );
+}
+
+#[test]
+fn consumes_escaped_opening_and_closing_brace_groups() {
+    let findings = run(&lexical_fixture(), "{}");
+    assert!(
+        !findings
+            .iter()
+            .any(|finding| { finding.file == "AsyncDelegate.cs" && finding.line == 19 }),
+        "{findings:?}"
+    );
 }
