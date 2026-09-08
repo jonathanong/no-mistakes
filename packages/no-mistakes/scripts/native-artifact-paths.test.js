@@ -1,4 +1,5 @@
 const assert = require("node:assert/strict");
+const { join } = require("node:path");
 const test = globalThis.test || require("node:test").test;
 
 const {
@@ -45,7 +46,7 @@ test("uses Cargo metadata's default worktree-local target directory", () => {
       env: {},
       runCargoMetadata: () => metadata("/repo/no-mistakes/target"),
     }),
-    "/repo/no-mistakes/target/release",
+    join("/repo/no-mistakes/target", "release"),
   );
 });
 
@@ -72,7 +73,7 @@ test("passes CARGO_TARGET_DIR to Cargo metadata instead of resolving it independ
         return metadata("/external/rust-target");
       },
     }),
-    "/external/rust-target/release",
+    join("/external/rust-target", "release"),
   );
 });
 
