@@ -59,3 +59,6 @@ fn substitute_function_arguments(
     }
     Some(())
 }
+
+#[cfg(test)]
+mod tests;
