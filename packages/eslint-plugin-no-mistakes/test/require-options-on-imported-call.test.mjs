@@ -222,6 +222,13 @@ for (var iterated of callbacks) iterated(url);
     assert.deepEqual(messages(code, RULE, ssrfOptions, "reassigned.ts"), []);
   });
 
+  it("tracks defaulted var destructuring from CommonJS", () => {
+    const code = `var { validateUrl = fallback } = require("ssrf-guard/node");
+validateUrl(url);
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "defaulted-var.ts"), ["missingOptions"]);
+  });
+
   it("ignores numeric CommonJS member and destructuring keys", () => {
     const options = {
       targets: [

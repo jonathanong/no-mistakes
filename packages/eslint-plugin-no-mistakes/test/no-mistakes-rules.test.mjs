@@ -95,12 +95,14 @@ describe("async-call-disposition", () => {
   it("tracks non-reassigned mutable CommonJS bindings", () => {
     const code = `let jobs = require("@app/jobs");
 var sendSms = require("@app/jobs").sendSms;
+var { enqueueEmail: defaultedEnqueue = fallback } = require("@app/jobs");
 jobs.enqueueEmail("1");
 sendSms("1");
+defaultedEnqueue("1");
 `;
     assert.deepEqual(
       messages(code, "async-call-disposition", asyncTargetOptions, "mutable-cjs.ts"),
-      ["disposition", "disposition"],
+      ["disposition", "disposition", "disposition"],
     );
   });
 

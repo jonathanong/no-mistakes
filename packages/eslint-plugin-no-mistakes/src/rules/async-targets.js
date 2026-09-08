@@ -65,13 +65,13 @@ function createTargetMatcher(context, optionKey = "targets") {
   function isReassigned(id) {
     const variable = resolveVariable(id, context);
     const writes = variable?.references.filter((reference) => reference.isWrite()) || [];
+    const initializationSites = new Set(
+      writes.filter((reference) => reference.init).map((reference) => reference.identifier),
+    );
     const isVar = variable?.defs.some(
       (definition) => definition.type === "Variable" && definition.parent?.kind === "var",
     );
-    return (
-      writes.some((reference) => !reference.init) ||
-      (isVar && writes.filter((reference) => reference.init).length > 1)
-    );
+    return writes.some((reference) => !reference.init) || (isVar && initializationSites.size > 1);
   }
 
   function recordDirect(id, source, calleeName) {
