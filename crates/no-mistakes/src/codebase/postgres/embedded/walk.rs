@@ -63,6 +63,17 @@ impl ScopeVisitor<'_> {
             .find_map(|scope| scope.get(name).cloned())
     }
 
+    /// Whether `name` is bound at a scope more deeply nested than the
+    /// top-level program scope — a real lexical shadow of a same-named
+    /// top-level helper. A match found only in the outermost scope is the
+    /// helper's own top-level declaration (JS/TS forbids redeclaring a name
+    /// twice in one scope), not a shadow, and must not block resolving it.
+    pub(super) fn shadowed_locally(&self, name: &str) -> bool {
+        self.scopes
+            .get(1..)
+            .is_some_and(|nested| nested.iter().any(|scope| scope.contains_key(name)))
+    }
+
     fn bind_param(&mut self, pattern: &BindingPattern<'_>) {
         if let BindingPattern::BindingIdentifier(ident) = pattern {
             if let Some(scope) = self.current_scope() {

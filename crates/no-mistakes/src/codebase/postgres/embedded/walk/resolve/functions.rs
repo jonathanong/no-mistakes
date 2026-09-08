@@ -1,5 +1,10 @@
 use super::chain;
-use oxc_ast::ast::{Declaration, Function, Program, Statement};
+use crate::codebase::ts_source::unwrap_ts_wrappers;
+use oxc_ast::ast::{
+    ArrowFunctionBody, BindingPattern, Declaration, Expression, FormalParameters, Function,
+    FunctionBody, Program, Statement, VariableDeclaration, VariableDeclarationKind,
+    VariableDeclarator,
+};
 use std::collections::HashMap;
 
 pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
@@ -10,18 +15,28 @@ pub(crate) struct LocalFunctions {
     resolved: HashMap<String, String>,
 }
 
+/// A same-file helper's params and body, however it was declared
+/// (`function`, `const x = function() {}`, or `const x = () => {}`).
+///
+/// A single lifetime, not two: [`unwrap_ts_wrappers`] requires its argument's
+/// reference and arena lifetimes to be the same, so any type built from its
+/// result must use one lifetime throughout rather than distinguishing a
+/// "place" lifetime from an "arena" lifetime.
+struct Resolvable<'a> {
+    params: &'a FormalParameters<'a>,
+    body: &'a FunctionBody<'a>,
+}
+
 impl LocalFunctions {
     pub(crate) fn collect(program: &Program<'_>) -> Self {
-        let mut raw: HashMap<&str, &Function<'_>> = HashMap::new();
+        let mut raw: HashMap<&str, Resolvable<'_>> = HashMap::new();
         for statement in &program.body {
-            if let Some((name, function)) = named_function(statement) {
-                raw.insert(name, function);
-            }
+            collect_named_functions(statement, &mut raw);
         }
         let mut resolved = HashMap::new();
         for name in raw.keys().copied() {
             let mut resolving = Vec::new();
-            if let Some(text) = resolve_named(name, &raw, &mut resolving) {
+            if let Some(text) = resolve_named(name, MAX_RESOLVE_DEPTH, &raw, &mut resolving) {
                 resolved.insert(name.to_string(), text);
             }
         }
@@ -33,41 +48,132 @@ impl LocalFunctions {
     }
 }
 
-fn named_function<'p, 'a>(statement: &'p Statement<'a>) -> Option<(&'p str, &'p Function<'a>)> {
-    let function = match statement {
-        Statement::FunctionDeclaration(function) => function.as_ref(),
+fn collect_named_functions<'a>(
+    statement: &'a Statement<'a>,
+    raw: &mut HashMap<&'a str, Resolvable<'a>>,
+) {
+    match statement {
+        Statement::FunctionDeclaration(function) => insert_function(function, raw),
+        Statement::VariableDeclaration(declaration) => insert_const_functions(declaration, raw),
         Statement::ExportDeclaration(export) => match &export.declaration {
-            Declaration::FunctionDeclaration(function) => function.as_ref(),
-            _ => return None,
+            Declaration::FunctionDeclaration(function) => insert_function(function, raw),
+            Declaration::VariableDeclaration(declaration) => {
+                insert_const_functions(declaration, raw);
+            }
+            _ => {}
         },
-        _ => return None,
-    };
+        _ => {}
+    }
+}
+
+fn insert_function<'a>(function: &'a Function<'a>, raw: &mut HashMap<&'a str, Resolvable<'a>>) {
+    if let Some((name, resolvable)) = function_resolvable(function) {
+        raw.insert(name, resolvable);
+    }
+}
+
+fn insert_const_functions<'a>(
+    declaration: &'a VariableDeclaration<'a>,
+    raw: &mut HashMap<&'a str, Resolvable<'a>>,
+) {
+    if declaration.kind != VariableDeclarationKind::Const {
+        return;
+    }
+    for declarator in &declaration.declarations {
+        if let Some((name, resolvable)) = const_resolvable(declarator) {
+            raw.insert(name, resolvable);
+        }
+    }
+}
+
+fn function_resolvable<'a>(function: &'a Function<'a>) -> Option<(&'a str, Resolvable<'a>)> {
     let id = function.id.as_ref()?;
-    Some((id.name.as_str(), function))
+    let resolvable = resolvable_body(function)?;
+    Some((id.name.as_str(), resolvable))
+}
+
+/// A function's params and body, provided it's synchronously inlinable —
+/// irrespective of whether it has a name of its own. A `const`-bound
+/// function expression (`const x = function () {...}`) is anonymous at the
+/// AST level; its name comes from the binding, not [`function_resolvable`]'s
+/// `function.id`.
+fn resolvable_body<'a>(function: &'a Function<'a>) -> Option<Resolvable<'a>> {
+    if function.r#async || function.generator {
+        return None;
+    }
+    let body = function.body.as_ref()?;
+    Some(Resolvable {
+        params: &function.params,
+        body,
+    })
+}
+
+fn const_resolvable<'a>(
+    declarator: &'a VariableDeclarator<'a>,
+) -> Option<(&'a str, Resolvable<'a>)> {
+    let BindingPattern::BindingIdentifier(ident) = &declarator.id else {
+        return None;
+    };
+    let init = declarator.init.as_ref()?;
+    match unwrap_ts_wrappers(init) {
+        Expression::FunctionExpression(function) => {
+            let resolvable = resolvable_body(function)?;
+            Some((ident.name.as_str(), resolvable))
+        }
+        Expression::ArrowFunctionExpression(arrow) => {
+            if arrow.r#async {
+                return None;
+            }
+            let ArrowFunctionBody::FunctionBody(body) = &arrow.body else {
+                return None;
+            };
+            Some((
+                ident.name.as_str(),
+                Resolvable {
+                    params: &arrow.params,
+                    body,
+                },
+            ))
+        }
+        _ => None,
+    }
+}
+
+fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
+    resolvable.params.items.iter().any(|param| {
+        matches!(&param.pattern, BindingPattern::BindingIdentifier(ident) if ident.name.as_str() == name)
+    })
 }
 
 /// A function only inlines when its body is exactly one `return <expr>;` —
 /// no local declarations, no control flow, no side effects to reason about.
 /// Parameters used outside a template placeholder never resolve, because
 /// `chain::resolve_expr` has no `Identifier` case: that keeps this sound
-/// without a separate parameter-position check.
+/// without a separate parameter-position check. A callee that shadows one of
+/// this function's own parameters is rejected rather than resolved through
+/// the global declaration of the same name.
 fn resolve_named(
     name: &str,
-    raw: &HashMap<&str, &Function<'_>>,
+    depth: u8,
+    raw: &HashMap<&str, Resolvable<'_>>,
     resolving: &mut Vec<String>,
 ) -> Option<String> {
     if resolving.iter().any(|seen| seen == name) {
         return None;
     }
-    let function = *raw.get(name)?;
-    let body = function.body.as_ref()?;
-    let [Statement::ReturnStatement(ret)] = body.statements.as_slice() else {
+    let resolvable = raw.get(name)?;
+    let [Statement::ReturnStatement(ret)] = resolvable.body.statements.as_slice() else {
         return None;
     };
     let argument = ret.argument.as_ref()?;
     resolving.push(name.to_string());
-    let mut lookup = |callee: &str, _depth: u8| resolve_named(callee, raw, resolving);
-    let text = chain::resolve_expr(argument, MAX_RESOLVE_DEPTH, &mut lookup);
+    let mut lookup = |callee: &str, depth: u8| {
+        if shadows_param(resolvable, callee) {
+            return None;
+        }
+        resolve_named(callee, depth, raw, resolving)
+    };
+    let text = chain::resolve_expr(argument, depth, &mut lookup);
     resolving.pop();
     text
 }

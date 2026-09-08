@@ -53,7 +53,7 @@ fn record_declarator(
     };
     let line =
         crate::codebase::ts_source::byte_offset_to_line(visitor.source, ident.span.start as usize);
-    let (sql, kind) = classify_init(init, is_const, &visitor.functions);
+    let (sql, kind) = classify_init(init, is_const, visitor);
     if let Some(scope) = visitor.current_scope() {
         scope.insert(ident.name.to_string(), BindingState { sql, kind, line });
     }
@@ -62,9 +62,9 @@ fn record_declarator(
 pub(super) fn classify_init(
     expr: &Expression<'_>,
     is_const: bool,
-    functions: &LocalFunctions,
+    visitor: &ScopeVisitor<'_>,
 ) -> (Option<String>, EmbeddedSqlKind) {
-    if let Some((text, kind)) = composed_sql(expr, functions) {
+    if let Some((text, kind)) = composed_sql(expr, visitor) {
         return if is_const {
             (Some(text), kind)
         } else {
@@ -83,7 +83,7 @@ pub(super) fn classify_init(
             kind_for_const(sql_text(expr).unwrap_or_default(), is_const)
         }
         Expression::TemplateLiteral(_) => (sql_text(expr), EmbeddedSqlKind::Dynamic),
-        Expression::CallExpression(_) => match resolve_chain(expr, functions) {
+        Expression::CallExpression(_) => match resolve_chain(expr, visitor) {
             Some(text) if is_const => (Some(text), EmbeddedSqlKind::Composed),
             Some(text) => (Some(text), EmbeddedSqlKind::Dynamic),
             None => (None, EmbeddedSqlKind::Dynamic),
@@ -94,7 +94,7 @@ pub(super) fn classify_init(
 
 fn composed_sql(
     expr: &Expression<'_>,
-    functions: &LocalFunctions,
+    visitor: &ScopeVisitor<'_>,
 ) -> Option<(String, EmbeddedSqlKind)> {
     let Expression::BinaryExpression(binary) = unwrap_ts_wrappers(expr) else {
         return None;
@@ -102,27 +102,36 @@ fn composed_sql(
     if binary.operator != BinaryOperator::Addition {
         return None;
     }
-    let left = static_fragment(&binary.left, functions)?;
-    let right = static_fragment(&binary.right, functions)?;
+    let left = static_fragment(&binary.left, visitor)?;
+    let right = static_fragment(&binary.right, visitor)?;
     Some((format!("{left}{right}"), EmbeddedSqlKind::Composed))
 }
 
-fn static_fragment(expr: &Expression<'_>, functions: &LocalFunctions) -> Option<String> {
+fn static_fragment(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => sql_text(expr),
         Expression::TaggedTemplateExpression(_) if interpolating_untrusted_tag(expr) => None,
         Expression::TaggedTemplateExpression(_) => sql_text(expr),
-        Expression::BinaryExpression(_) => composed_sql(expr, functions).map(|(text, _)| text),
-        Expression::CallExpression(_) => resolve_chain(expr, functions),
+        Expression::BinaryExpression(_) => composed_sql(expr, visitor).map(|(text, _)| text),
+        Expression::CallExpression(_) => resolve_chain(expr, visitor),
         _ => None,
     }
 }
 
 /// Resolves a fluent `.append()` chain or a call into a same-file
-/// statically-composed function, per [`chain::resolve_expr`].
-fn resolve_chain(expr: &Expression<'_>, functions: &LocalFunctions) -> Option<String> {
-    let mut lookup = |name: &str, _depth: u8| functions.get(name);
+/// statically-composed function, per [`chain::resolve_expr`]. A callee name
+/// shadowed by an in-scope parameter or nested local at this call site is
+/// rejected rather than resolved against the same-named top-level
+/// declaration; the top-level declaration's own binding (e.g. a const-bound
+/// helper referencing itself) is not a shadow of itself.
+fn resolve_chain(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> Option<String> {
+    let mut lookup = |name: &str, _depth: u8| {
+        if visitor.shadowed_locally(name) {
+            return None;
+        }
+        visitor.functions.get(name)
+    };
     chain::resolve_expr(expr, functions::MAX_RESOLVE_DEPTH, &mut lookup)
 }
 
@@ -157,7 +166,7 @@ pub(super) fn executor_call(
             }
         }
         _ => {
-            let (sql, kind) = classify_init(argument, true, &visitor.functions);
+            let (sql, kind) = classify_init(argument, true, visitor);
             EmbeddedSqlCall {
                 line,
                 callee,

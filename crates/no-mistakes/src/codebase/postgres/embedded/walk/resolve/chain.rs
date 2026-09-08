@@ -40,6 +40,7 @@ fn resolve_call(
         Expression::StaticMemberExpression(member) if member.property.name == "append" => {
             let base = resolve_expr(&member.object, depth, lookup)?;
             let appended = resolve_expr(append_argument(call)?, depth, lookup)?;
+            let appended = renumber_placeholders(&appended, count_placeholders(&base));
             Some(format!("{base}{appended}"))
         }
         Expression::Identifier(ident) => lookup(ident.name.as_str(), depth),
@@ -52,4 +53,35 @@ fn append_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'a Expression<'a
         Argument::SpreadElement(_) => None,
         other => other.as_expression(),
     }
+}
+
+const PLACEHOLDER_MARKER: &str = "sql_placeholder_";
+
+pub(super) fn count_placeholders(text: &str) -> u32 {
+    text.matches(PLACEHOLDER_MARKER).count() as u32
+}
+
+/// Each independently-resolved fragment numbers its own placeholders from 1,
+/// so joining two fragments via `.append()` would otherwise duplicate
+/// `sql_placeholder_1`. Shift every placeholder in `text` by `offset` (the
+/// placeholder count already used by the fragment it's being joined after)
+/// so the joined result stays sequential in source order.
+pub(super) fn renumber_placeholders(text: &str, offset: u32) -> String {
+    if offset == 0 {
+        return text.to_string();
+    }
+    let mut out = String::with_capacity(text.len());
+    let mut rest = text;
+    let mut seen = 0u32;
+    while let Some(position) = rest.find(PLACEHOLDER_MARKER) {
+        out.push_str(&rest[..position]);
+        let after_marker = &rest[position + PLACEHOLDER_MARKER.len()..];
+        let digits = after_marker.bytes().take_while(u8::is_ascii_digit).count();
+        seen += 1;
+        out.push_str(PLACEHOLDER_MARKER);
+        out.push_str(&(offset + seen).to_string());
+        rest = &after_marker[digits..];
+    }
+    out.push_str(rest);
+    out
 }

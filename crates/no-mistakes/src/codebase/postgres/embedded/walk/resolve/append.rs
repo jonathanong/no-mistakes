@@ -1,5 +1,6 @@
 use super::super::super::EmbeddedSqlKind;
-use super::{static_fragment, LocalFunctions, ScopeVisitor};
+use super::chain::{count_placeholders, renumber_placeholders};
+use super::{static_fragment, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 
@@ -13,7 +14,7 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
     let Expression::Identifier(ident) = unwrap_ts_wrappers(&member.object) else {
         return;
     };
-    let Some(arg) = first_static_arg(call, &visitor.functions) else {
+    let Some(arg) = first_static_arg(call, visitor) else {
         visitor.mark_dynamic(ident.name.as_str());
         return;
     };
@@ -25,6 +26,7 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
         if let Some(binding) = scope.get_mut(ident.name.as_str()) {
             match (&binding.sql, binding.kind) {
                 (Some(sql), EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed) => {
+                    let arg = renumber_placeholders(&arg, count_placeholders(sql));
                     binding.sql = Some(format!("{sql}{arg}"));
                     binding.kind = EmbeddedSqlKind::Composed;
                 }
@@ -38,10 +40,10 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
     }
 }
 
-fn first_static_arg(call: &CallExpression<'_>, functions: &LocalFunctions) -> Option<String> {
+fn first_static_arg(call: &CallExpression<'_>, visitor: &ScopeVisitor<'_>) -> Option<String> {
     let Argument::SpreadElement(_) = call.arguments.first()? else {
         let expr = call.arguments.first()?.as_expression()?;
-        return static_fragment(expr, functions);
+        return static_fragment(expr, visitor);
     };
     None
 }

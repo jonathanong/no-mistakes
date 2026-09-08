@@ -101,3 +101,89 @@ fn call_to_a_self_recursive_same_file_function_fails_closed() {
     let facts = extract("composed-chain-function-recursive.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
+
+#[test]
+fn helper_call_shadowed_by_its_own_parameter_fails_closed() {
+    let facts = extract("composed-chain-shadowed-helper-param.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn call_shadowed_by_an_enclosing_parameter_fails_closed() {
+    let facts = extract("composed-chain-shadowed-outer-param.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn helper_chain_beyond_the_depth_budget_fails_closed() {
+    let facts = extract("composed-chain-function-deep.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn fluent_append_of_two_trusted_placeholders_renumbers_sequentially() {
+    let facts = extract("composed-chain-append-tagged-placeholders.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT * FROM topics WHERE id = sql_placeholder_1 AND status = sql_placeholder_2")
+    );
+}
+
+#[test]
+fn statement_level_append_of_two_trusted_placeholders_renumbers_sequentially() {
+    let facts = extract("composed-append-tagged-placeholders.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT * FROM topics WHERE id = sql_placeholder_1 AND status = sql_placeholder_2")
+    );
+}
+
+#[test]
+fn async_helper_is_rejected() {
+    let facts = extract("composed-chain-function-async.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn generator_helper_is_rejected() {
+    let facts = extract("composed-chain-function-generator.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn const_bound_function_expression_helper_is_composed() {
+    let facts = extract("composed-chain-const-function-expression.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics WHERE id = 1")
+    );
+}
+
+#[test]
+fn const_bound_block_bodied_arrow_helper_is_composed() {
+    let facts = extract("composed-chain-const-arrow.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics WHERE id = 1")
+    );
+}
+
+#[test]
+fn exported_const_bound_arrow_helper_is_composed() {
+    let facts = extract("composed-chain-const-arrow-exported.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics WHERE id = 1")
+    );
+}
+
+#[test]
+fn expression_bodied_arrow_helper_is_not_collected() {
+    let facts = extract("composed-chain-const-arrow-expression-body.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
