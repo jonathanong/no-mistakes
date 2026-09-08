@@ -11,7 +11,9 @@ fn mapping(source: &str) -> Mapping {
 
 #[test]
 fn globs_accept_string_and_sequence_and_reject_invalid_values() {
-    let values = mapping("files: '**/*.ts'\nexcludeFiles: [skip.ts]\ninvalid: [1]\nbad: '['\n");
+    let values = mapping(
+        "files: '**/*.ts'\nexcludeFiles: [skip.ts]\ninvalid: [1]\nbad: '['\nscalar: true\n",
+    );
     assert!(compile_value_globs(&values, "files")
         .unwrap()
         .is_match("src/file.ts"));
@@ -22,6 +24,7 @@ fn globs_accept_string_and_sequence_and_reject_invalid_values() {
         .is_match("skip.ts"));
     assert!(compile_value_globs(&values, "invalid").is_none());
     assert!(compile_value_globs(&values, "bad").is_none());
+    assert!(compile_value_globs(&values, "scalar").is_none());
     assert!(optional_value_globs(&values, "invalid").is_err());
 }
 
@@ -38,5 +41,9 @@ fn relative_paths_support_siblings_and_reject_different_roots() {
     assert_eq!(
         relative_path(Path::new("/repo"), Path::new("relative")),
         None
+    );
+    assert_eq!(
+        relative_path(Path::new("/repo"), Path::new("/repo/../outside")),
+        Some("outside".to_string())
     );
 }

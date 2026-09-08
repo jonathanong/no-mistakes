@@ -200,3 +200,6 @@ impl Walk<'_> {
         }
     }
 }
+
+#[cfg(test)]
+mod tests;
