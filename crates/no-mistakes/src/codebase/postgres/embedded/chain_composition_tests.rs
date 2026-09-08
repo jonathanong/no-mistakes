@@ -147,8 +147,18 @@ fn helper_tagged_by_an_imported_sql_binding_fails_closed() {
 }
 
 #[test]
-fn reassigned_via_for_of_declared_loop_target_is_rejected() {
+fn declared_for_of_loop_target_does_not_shadow_a_call_after_the_loop() {
     let facts = extract("composed-chain-function-reassigned-via-for-of-declared.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics")
+    );
+}
+
+#[test]
+fn declared_for_of_loop_target_still_shadows_a_call_inside_the_loop() {
+    let facts = extract("composed-chain-function-reassigned-via-for-of-declared-loop-body-call.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
 

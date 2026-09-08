@@ -10,10 +10,13 @@ use std::collections::HashSet;
 
 /// Names assigned anywhere in the program, e.g. `build = externalBuilder;`,
 /// `({ build } = providers);`, `for (build of providers)`,
-/// `for (const build of providers) {}`, or `var build = externalBuilder;`
+/// `for (var build of providers) {}`, or `var build = externalBuilder;`
 /// reassigning a hoisted `function build() {}` directly, through
-/// destructuring, through a for-in/for-of loop target (declared or plain),
-/// or through a same-named re-declaration with an initializer. A function
+/// destructuring, through a for-in/for-of loop target (plain, or declared
+/// with `var`), or through a same-named re-declaration with an initializer.
+/// A `let`/`const` loop target is lexically scoped to the loop and is
+/// deliberately excluded — see the `visit_for_statement_left` doc comment
+/// below. A function
 /// declaration's binding is mutable, so a call to it can no longer be
 /// trusted to run the originally-collected body once any assignment or
 /// initialized re-declaration of that name exists anywhere —
@@ -74,18 +77,31 @@ impl<'a> Visit<'a> for ReassignedNames<'a> {
     /// like the non-declaration form `for (build of providers)` already
     /// caught via `visit_assignment_target` — but its `VariableDeclarator`
     /// has no initializer, so `visit_variable_declaration`'s per-declarator
-    /// pass above never sees it. Mark every name it binds as reassigned
-    /// unconditionally: unlike a
-    /// top-level helper declaration, there is no legitimate "this declarator
-    /// literally is the helper" reading here — the iterable, not this
-    /// declarator, decides what the name is bound to each time.
+    /// pass above never sees it.
+    ///
+    /// Only a `var` target counts as a global reassignment here: `var` is
+    /// function-scoped, so it really does leak the loop's last-iterated
+    /// value to a same-named top-level helper everywhere else in the
+    /// function, including after the loop. A `let`/`const` target is
+    /// lexically scoped to the loop itself — `for (const build of …) {}`
+    /// does not rebind an outer top-level `function build() {}` for a call
+    /// made after the loop, so marking it globally reassigned here would be
+    /// a false positive. `ScopeVisitor::visit_for_of_statement`/
+    /// `visit_for_in_statement` separately push a scope and bind the
+    /// declared target there for every kind (`var` included), so a call
+    /// made *inside* the loop body still resolves against the loop-scoped
+    /// value via `shadowed_locally` rather than the stale top-level body —
+    /// this method only governs whether the name counts as reassigned
+    /// outside the loop.
     fn visit_for_statement_left(&mut self, it: &ForStatementLeft<'a>) {
         if let ForStatementLeft::VariableDeclaration(declaration) = it {
-            let names = &mut self.names;
-            for declarator in &declaration.declarations {
-                for_each_bound_name(&declarator.id, &mut |name| {
-                    names.insert(name);
-                });
+            if declaration.kind == VariableDeclarationKind::Var {
+                let names = &mut self.names;
+                for declarator in &declaration.declarations {
+                    for_each_bound_name(&declarator.id, &mut |name| {
+                        names.insert(name);
+                    });
+                }
             }
         }
         walk::walk_for_statement_left(self, it);

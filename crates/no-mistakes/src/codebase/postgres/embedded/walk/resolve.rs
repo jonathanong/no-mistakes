@@ -11,7 +11,7 @@ use super::{BindingState, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use compose::classify_init;
 use oxc_ast::ast::{
-    BindingPattern, CallExpression, Declaration, Expression, Function, Statement,
+    BindingPattern, CallExpression, Declaration, Expression, ForStatementLeft, Function, Statement,
     VariableDeclaration, VariableDeclarator,
 };
 
@@ -46,6 +46,27 @@ pub(super) fn for_each_bound_name<'a>(
         }
         BindingPattern::AssignmentPattern(assignment) => {
             for_each_bound_name(&assignment.left, on_name);
+        }
+    }
+}
+
+/// Binds a for-in/for-of declaration-form loop target (`for (const build of
+/// providers) {}`) into the scope `visit_for_in_statement`/
+/// `visit_for_of_statement` just pushed, as a local shadow — matching how
+/// `bind_param` shadows a function parameter. The non-declaration form
+/// (`for (build of providers)`, reassigning an existing outer binding) needs
+/// no such binding: `ReassignedNames` already drops that name from
+/// `LocalFunctions` everywhere, inside the loop and out.
+///
+/// This runs regardless of `var`/`let`/`const`: whatever the loop body sees
+/// while it runs, the per-iteration value shadows a same-named top-level
+/// helper. Whether the name counts as reassigned *after* the loop — where
+/// only `var` leaks — is a separate question `ReassignedNames::
+/// visit_for_statement_left` answers on its own.
+pub(super) fn bind_for_statement_left(left: &ForStatementLeft<'_>, visitor: &mut ScopeVisitor<'_>) {
+    if let ForStatementLeft::VariableDeclaration(declaration) = left {
+        for declarator in &declaration.declarations {
+            visitor.bind_param(&declarator.id);
         }
     }
 }

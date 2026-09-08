@@ -127,11 +127,17 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {
+        self.push_scope();
+        resolve::bind_for_statement_left(&statement.left, self);
         self.with_control_flow(|visitor| walk::walk_for_in_statement(visitor, statement));
+        self.pop_scope();
     }
 
     fn visit_for_of_statement(&mut self, statement: &oxc_ast::ast::ForOfStatement<'a>) {
+        self.push_scope();
+        resolve::bind_for_statement_left(&statement.left, self);
         self.with_control_flow(|visitor| walk::walk_for_of_statement(visitor, statement));
+        self.pop_scope();
     }
 
     fn visit_while_statement(&mut self, statement: &oxc_ast::ast::WhileStatement<'a>) {
