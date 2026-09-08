@@ -190,7 +190,7 @@ fn graph_gates_full_domain_and_check_preflight_counts() {
     assert_eq!(http_calls, 13);
     assert_eq!(process_spawns, 4);
     assert_eq!(react, 19);
-    assert_eq!(symbol_references, 302);
+    assert_eq!(symbol_references, 310);
     assert_eq!(check_value.as_object().map(|value| value.len()), Some(7));
 }
 

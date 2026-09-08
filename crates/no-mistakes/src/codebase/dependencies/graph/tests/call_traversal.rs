@@ -320,12 +320,12 @@ fn exported_function_roots_follow_named_reexport_barrels() {
         },
     );
     let bindings = &facts.get(&barrel).unwrap().exported_bindings;
-    assert!(
-        bindings
-            .iter()
-            .any(|binding| binding.exported == "reexportedTarget"),
-        "named re-export must be extracted: {bindings:#?}"
-    );
+    let binding = bindings
+        .iter()
+        .find(|binding| binding.exported == "reexportedTarget")
+        .unwrap_or_else(|| panic!("named re-export must be extracted: {bindings:#?}"));
+    assert_eq!(binding.local, "public");
+    assert_eq!(binding.specifier.as_deref(), Some("./unreferenced-export.mts"));
     let roots = graph.expand_call_roots(&[CallRoot::Function {
         file: barrel,
         symbol: "reexportedTarget".to_string(),
