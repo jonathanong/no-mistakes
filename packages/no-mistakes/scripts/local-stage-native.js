@@ -5,10 +5,12 @@ const { spawnSync } = require("node:child_process");
 const { existsSync } = require("node:fs");
 const { join, resolve } = require("node:path");
 
+const { cargoReleaseDirectory } = require("./native-artifact-paths");
 const { nativePackageName } = require("./native-package");
 const { stageNative } = require("./stage-native");
 
 const root = resolve(__dirname, "..", "..", "..");
+const releaseDirectory = cargoReleaseDirectory({ root });
 
 function runCargo(args, env = {}) {
   const result = spawnSync("cargo", args, {
@@ -26,7 +28,7 @@ function addonPath() {
       : process.platform === "win32"
         ? ["no_mistakes.dll"]
         : ["libno_mistakes.so"];
-  const paths = names.map((name) => join(root, "target", "release", name));
+  const paths = names.map((name) => join(releaseDirectory, name));
   return paths.find(existsSync) || paths[0];
 }
 
@@ -43,9 +45,7 @@ async function main() {
   await stageNative({
     packageName,
     binary: join(
-      root,
-      "target",
-      "release",
+      releaseDirectory,
       process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes",
     ),
     addon: addonPath(),
