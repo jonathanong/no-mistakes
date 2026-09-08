@@ -320,15 +320,12 @@ jobs:
       matrix:
         target:
           - aarch64-apple-darwin
-          - x86_64-apple-darwin
           - x86_64-unknown-linux-gnu
           - aarch64-unknown-linux-gnu
           - x86_64-pc-windows-msvc
         include:
           - target: aarch64-apple-darwin
             os: macos-15
-          - target: x86_64-apple-darwin
-            os: macos-15-intel
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-22.04
           - target: aarch64-unknown-linux-gnu
@@ -392,7 +389,6 @@ jobs:
           "$binary_source" --version
           case "${{ matrix.target }}" in
             aarch64-apple-darwin) expected_magic='Mach-O.*arm64' ;;
-            x86_64-apple-darwin) expected_magic='Mach-O.*x86_64' ;;
             aarch64-unknown-linux-gnu) expected_magic='ELF 64-bit.*ARM aarch64' ;;
             x86_64-unknown-linux-gnu) expected_magic='ELF 64-bit.*x86-64' ;;
             x86_64-pc-windows-msvc) expected_magic='PE32\+.*x86-64' ;;
@@ -444,14 +440,12 @@ jobs:
         target:
           [
             aarch64-apple-darwin,
-            x86_64-apple-darwin,
             x86_64-unknown-linux-gnu,
             aarch64-unknown-linux-gnu,
             x86_64-pc-windows-msvc,
           ]
         include:
           - { target: aarch64-apple-darwin, os: macos-15 }
-          - { target: x86_64-apple-darwin, os: macos-15-intel }
           - { target: x86_64-unknown-linux-gnu, os: ubuntu-22.04 }
           - { target: aarch64-unknown-linux-gnu, os: ubuntu-22.04-arm }
           - { target: x86_64-pc-windows-msvc, os: windows-2025 }
@@ -502,7 +496,6 @@ jobs:
           addon="${addons[0]}"
           case "${{ matrix.target }}" in
             aarch64-apple-darwin) expected_magic='Mach-O.*arm64' ;;
-            x86_64-apple-darwin) expected_magic='Mach-O.*x86_64' ;;
             aarch64-unknown-linux-gnu) expected_magic='ELF 64-bit.*ARM aarch64' ;;
             x86_64-unknown-linux-gnu) expected_magic='ELF 64-bit.*x86-64' ;;
             x86_64-pc-windows-msvc) expected_magic='PE32\+.*x86-64' ;;
@@ -613,7 +606,6 @@ jobs:
           version="${{ needs.prepare.outputs.version }}"
           for entry in \
             'no-mistakes-darwin-arm64 aarch64-apple-darwin' \
-            'no-mistakes-darwin-x64 x86_64-apple-darwin' \
             'no-mistakes-linux-arm64-gnu aarch64-unknown-linux-gnu' \
             'no-mistakes-linux-x64-gnu x86_64-unknown-linux-gnu' \
             'no-mistakes-win32-x64-msvc x86_64-pc-windows-msvc'
@@ -653,7 +645,6 @@ jobs:
           version="${{ needs.prepare.outputs.version }}"
           for pkg in \
             no-mistakes-darwin-arm64 \
-            no-mistakes-darwin-x64 \
             no-mistakes-linux-arm64-gnu \
             no-mistakes-linux-x64-gnu \
             no-mistakes-win32-x64-msvc \

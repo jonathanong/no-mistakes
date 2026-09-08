@@ -22,7 +22,6 @@ test("every native optional package has a release target", () => {
   );
   const releaseTargets = releaseMatrixTargets(releaseWorkflow);
   const targets = [
-    ["darwin", "x64", "x86_64-apple-darwin"],
     ["darwin", "arm64", "aarch64-apple-darwin"],
     ["win32", "x64", "x86_64-pc-windows-msvc"],
     ["linux", "x64", "x86_64-unknown-linux-gnu"],
@@ -103,7 +102,6 @@ test("release syncs optional native package versions and publishes only through 
   assert.doesNotMatch(workflow, /NPM_TOKEN|pnpm[^\n]* publish/);
   for (const name of [
     "no-mistakes-darwin-arm64",
-    "no-mistakes-darwin-x64",
     "no-mistakes-linux-arm64-gnu",
     "no-mistakes-linux-x64-gnu",
     "no-mistakes-win32-x64-msvc",

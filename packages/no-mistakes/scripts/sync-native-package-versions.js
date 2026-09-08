@@ -6,7 +6,6 @@ const { join, resolve } = require("node:path");
 
 const PACKAGE_NAMES = [
   "no-mistakes-darwin-arm64",
-  "no-mistakes-darwin-x64",
   "no-mistakes-linux-arm64-gnu",
   "no-mistakes-linux-x64-gnu",
   "no-mistakes-win32-x64-msvc",

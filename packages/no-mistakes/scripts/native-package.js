@@ -7,7 +7,6 @@ const MIN_GLIBC = [2, 35];
 
 const PACKAGE_NAMES = new Map([
   ["darwin/arm64", "no-mistakes-darwin-arm64"],
-  ["darwin/x64", "no-mistakes-darwin-x64"],
   ["linux/arm64", "no-mistakes-linux-arm64-gnu"],
   ["linux/x64", "no-mistakes-linux-x64-gnu"],
   ["win32/x64", "no-mistakes-win32-x64-msvc"],
