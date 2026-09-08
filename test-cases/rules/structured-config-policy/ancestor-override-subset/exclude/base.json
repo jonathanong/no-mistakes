@@ -1,0 +1,9 @@
+{
+  "overrides": [
+    {
+      "files": ["ignored/skip.ts", "lost/file.ts"],
+      "excludeFiles": ["ignored/skip.ts"],
+      "rules": { "x": "error" }
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "overrides": [
+    { "files": ["["], "rules": { "x": "error" } }
+  ]
+}

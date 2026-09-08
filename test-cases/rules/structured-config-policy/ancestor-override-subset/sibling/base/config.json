@@ -1,0 +1,8 @@
+{
+  "overrides": [
+    {
+      "files": ["../app/nested/**/*.ts"],
+      "rules": { "x": "error" }
+    }
+  ]
+}

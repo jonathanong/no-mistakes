@@ -28,7 +28,7 @@ fn inventory(root: &Path, rels: &[&str]) -> Vec<PathBuf> {
 }
 
 #[test]
-fn ancestor_override_subset_skips_diamond_extends_and_malformed_overrides() {
+fn ancestor_override_subset_rejects_malformed_overrides_and_keeps_valid_configs() {
     let root = fixture_root();
     let files = inventory(
         &root,
@@ -70,13 +70,16 @@ policies:
         .map(|finding| finding.file.as_str())
         .collect();
     assert!(!found.contains(&"diamond/nested/.oxlintrc.json"), "{body}");
-    assert!(!found.contains(&"odd/.oxlintrc.json"), "{body}");
-    assert!(!found.contains(&"bool-extends/.oxlintrc.json"), "{body}");
+    assert!(found.contains(&"odd/.oxlintrc.json"), "{body}");
+    assert!(found.contains(&"bool-extends/.oxlintrc.json"), "{body}");
     assert!(!found.contains(&"star-seg/.oxlintrc.json"), "{body}");
     assert!(found.contains(&"abs/.oxlintrc.json"), "{body}");
-    assert_eq!(findings.len(), 1, "{body}");
+    assert_eq!(findings.len(), 3, "{body}");
     assert!(
-        findings[0].message.contains("outside the repository root"),
+        findings
+            .iter()
+            .any(|finding| finding.file == "abs/.oxlintrc.json"
+                && finding.message.contains("portable relative path")),
         "{body}"
     );
 }
@@ -125,4 +128,83 @@ policies:
     let findings = check_with_files(&root, &config, &files).unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].file, "lost/.oxlintrc.json");
+}
+
+#[test]
+fn ancestor_override_subset_fails_closed_for_unresolvable_roots_and_nested_paths() {
+    let fixture = fixture_root();
+    let value = serde_yaml::from_str::<Value>(r#"{"extends":"../.oxlintrc.json"}"#).unwrap();
+    let assertion = ValueAssertion::default();
+    let missing_root = fixture.join("missing-root");
+    let sources = super::super::source_store_for_files(&[]);
+
+    let missing_root_inventory = paths::CanonicalInventory::new(&missing_root, &[]);
+    let missing_root_findings = ancestor_override_subset::check_ancestor_override_subset(
+        &missing_root.join("nested/.oxlintrc.json"),
+        "nested/.oxlintrc.json",
+        &sources,
+        &value,
+        &assertion,
+        &missing_root_inventory,
+    );
+    assert_eq!(missing_root_findings.len(), 1);
+    assert!(missing_root_findings[0]
+        .message
+        .contains("cannot resolve the repository root safely"));
+
+    let outside_nested = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
+    let outside_inventory = paths::CanonicalInventory::new(&fixture, &[]);
+    let outside_findings = ancestor_override_subset::check_ancestor_override_subset(
+        &outside_nested,
+        "outside/.oxlintrc.json",
+        &sources,
+        &value,
+        &assertion,
+        &outside_inventory,
+    );
+    assert_eq!(outside_findings.len(), 1);
+    assert!(outside_findings[0]
+        .message
+        .contains("nested config is outside the repository root"));
+}
+
+#[test]
+fn ancestor_override_subset_reports_each_malformed_override_shape() {
+    let root = fixture_root();
+    let files = inventory(
+        &root,
+        &[
+            "malformed-shapes/base.json",
+            "malformed-shapes/nested/.oxlintrc.json",
+            "malformed-shapes/nested/file.ts",
+        ],
+    );
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+policies:
+  - files: ["malformed-shapes/nested/.oxlintrc.json"]
+    valueAssertions:
+      - kind: ancestor-override-subset
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+    let messages = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect::<Vec<_>>();
+    for detail in [
+        "must be an object",
+        "rules must be an object",
+        "excludeFiles must contain valid string globs",
+    ] {
+        assert!(
+            messages.iter().any(|message| message.contains(detail)),
+            "{findings:?}"
+        );
+    }
+    assert_eq!(findings.len(), 3, "{findings:?}");
 }
