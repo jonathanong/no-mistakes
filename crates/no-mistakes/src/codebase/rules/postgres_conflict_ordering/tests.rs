@@ -110,7 +110,9 @@ fn scans_opted_in_static_sql_sources() {
     let root = fixture("pass-sql-include");
     let findings = check_with_files(
         &root,
-        &config_with_options("schemaCatalogPath: schema.json\nsqlInclude: ['queries/**/*.sql']"),
+        &config_with_options(
+            "schemaCatalogPath: schema.json\ninclude: ['src/**/*.ts']\nsqlInclude: ['queries/**/*.sql']",
+        ),
         &[root.join("queries/insert.sql"), root.join("schema.json")],
     )
     .unwrap();
@@ -137,6 +139,46 @@ fn rejects_recovered_dynamic_conflict_sql_by_default() {
     .unwrap();
     assert_eq!(result.len(), 1, "{result:#?}");
     assert_eq!(result[0].target.as_deref(), Some("unanalyzable-sql"));
+}
+
+#[test]
+fn rejects_a_dynamic_insert_before_its_conflict_clause_is_recovered() {
+    let root = fixture("pass-canonical-order");
+    let result = check_with_files(
+        &root,
+        &config(),
+        &[
+            root.join("src/dynamic-insert-fragment.ts"),
+            root.join("schema.json"),
+        ],
+    )
+    .unwrap();
+    assert_eq!(result.len(), 1, "{result:#?}");
+    assert_eq!(result[0].target.as_deref(), Some("unanalyzable-sql"));
+}
+
+#[test]
+fn ignores_recovered_dynamic_non_insert_sql() {
+    let root = fixture("pass-canonical-order");
+    let result = check_with_files(
+        &root,
+        &config(),
+        &[root.join("src/dynamic-select.ts"), root.join("schema.json")],
+    )
+    .unwrap();
+    assert!(result.is_empty(), "{result:#?}");
+}
+
+#[test]
+fn resolves_top_level_select_aliases_in_the_source_order() {
+    let root = fixture("pass-canonical-order");
+    let result = check_with_files(
+        &root,
+        &config(),
+        &[root.join("src/alias.ts"), root.join("schema.json")],
+    )
+    .unwrap();
+    assert!(result.is_empty(), "{result:#?}");
 }
 
 #[test]

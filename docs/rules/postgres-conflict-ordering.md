@@ -31,8 +31,9 @@ rules:
 `schemaCatalogPath` is required and must name a repository-relative Vouchington
 PostgreSQL `schema.json` snapshot with `formatVersion: 2`. The snapshot, not a
 lexical sort, supplies an index's expression and key order. `sqlInclude` is
-opt-in (default `[]`) and adds static `.sql` query files; typed executor calls
-are always considered. `importSpecifier` defaults to `@data-stores/psql` and
+opt-in (default `[]`) and adds static `.sql` query files independently of the
+TypeScript `include` selection; both selections still honor the rule scope and
+`exclude`. Typed executor calls are always considered. `importSpecifier` defaults to `@data-stores/psql` and
 `executorNames` to `[query, read, write]`. Transaction helpers and `.query(...)`
 calls use the shared typed-executor facts.
 
@@ -51,7 +52,8 @@ For a potentially multi-row `INSERT … SELECT … ON CONFLICT`, the rule:
 4. requires the written conflict target itself to match the selected catalog key
    sequence; and
 5. requires the source `ORDER BY` to begin with that same key sequence after
-   mapping inserted columns to their `SELECT` expressions.
+   mapping inserted columns to their `SELECT` expressions and resolving
+   top-level `SELECT` output aliases.
 
 The comparison parses SQL expressions: for example, an index key
 `lower(category_text)` maps to `lower(input.category_text)` without treating
@@ -92,10 +94,11 @@ ON CONFLICT (left_id, right_id) DO NOTHING
 
 ## Dynamic SQL and suppression
 
-Recovered dynamic SQL that visibly contains `INSERT` and `ON CONFLICT` fails
-closed by default because appended branches can alter the row order. A wholly
-opaque dynamic call has no recoverable conflict shape, so the rule does not
-claim it is safe or unsafe. Make the statement static, use `unanalyzableSql:
+Recovered dynamic SQL that visibly contains any `INSERT` token fails closed by
+default: an incomplete or interpolated suffix can add or change an `ON
+CONFLICT` order. A wholly opaque dynamic call, or recovered dynamic SQL with no
+`INSERT` token, has no recoverable writer shape, so the rule does not claim it
+is safe or unsafe. Make the statement static, use `unanalyzableSql:
 ignore` for a temporary scoped rollout exception, or add a nearby SQL/comment
 directive such as `/* deadlock-safe: single ordered source */` only when the
 ordering is enforced outside the analyzable statement.

@@ -44,6 +44,21 @@ fn order_by_is_recorded() {
 }
 
 #[test]
+fn records_every_unqualified_lock_relation_and_resolves_of_aliases() {
+    let meta = first(
+        "SELECT * FROM jobs AS j JOIN users AS u ON u.id = j.user_id WHERE u.id = ANY($1) ORDER BY j.id FOR UPDATE",
+    );
+    assert_eq!(
+        meta.tables,
+        Some(vec!["jobs".to_string(), "users".to_string()])
+    );
+    let meta = first(
+        "SELECT * FROM jobs AS j JOIN users AS u ON u.id = j.user_id WHERE u.id = ANY($1) ORDER BY j.id FOR UPDATE OF j",
+    );
+    assert_eq!(meta.tables, Some(vec!["jobs".to_string()]));
+}
+
+#[test]
 fn skip_locked_is_recorded() {
     let meta = first("SELECT * FROM t WHERE id = ANY($1) FOR UPDATE SKIP LOCKED");
     assert!(meta.has_multi_row_predicate);

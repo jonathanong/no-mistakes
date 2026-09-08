@@ -1,0 +1,21 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "jobs": {
+      "indexes": {
+        "jobs_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true, "constraintBacked": true, "valid": true, "ready": true,
+          "keys": [{ "column": "id", "expression": "id", "opclass": "uuid_ops", "descending": false, "nullsFirst": false }], "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": { "definition": "PRIMARY KEY (id)", "columns": ["id"] }
+    },
+    "users": {
+      "indexes": {
+        "users_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true, "constraintBacked": true, "valid": true, "ready": true,
+          "keys": [{ "column": "user_id", "expression": "user_id", "opclass": "uuid_ops", "descending": false, "nullsFirst": false }], "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": { "definition": "PRIMARY KEY (id)", "columns": ["id"] }
+    }
+  }, "views": {}, "enums": {}, "extensions": {}, "functions": {}, "policies": {}
+}

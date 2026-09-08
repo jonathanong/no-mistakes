@@ -77,7 +77,11 @@ fn order_by_is_safe() {
 #[test]
 fn catalog_mode_requires_a_real_unique_key_prefix() {
     assert!(findings_with_catalog("pass-catalog").is_empty());
+    assert!(findings_with_catalog("pass-catalog-of-alias").is_empty());
     let findings = findings_with_catalog("fail-catalog-order");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(findings[0].message.contains("schema-catalog"));
+    let findings = findings_with_catalog("fail-catalog-join");
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert!(findings[0].message.contains("schema-catalog"));
 }

@@ -69,10 +69,13 @@ statements receive a separate diagnostic.
 
 With `schemaCatalogPath`, an ordinary multi-row lock must also begin its
 `ORDER BY` with the ordered expression keys of one valid, ready, non-partial
-btree unique index for the locked table. This makes reader lock order match
-the catalog-backed writer order instead of accepting an unrelated deterministic
-sort. `SKIP LOCKED` remains an alternative because it avoids waiting for an
-already-held row lock.
+btree unique index for every directly locked base relation. An unqualified
+`FOR UPDATE` validates every direct base relation; `FOR UPDATE OF alias` resolves
+that alias (or base relation) to exactly one direct base relation. Derived,
+unmatched, or ambiguous lock targets fail closed. This makes reader lock order
+match the catalog-backed writer order instead of accepting an unrelated
+deterministic sort. `SKIP LOCKED` remains an alternative because it avoids
+waiting for an already-held row lock.
 
 ## Options and defaults
 

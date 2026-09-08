@@ -29,6 +29,7 @@ pub(super) enum ConflictTargetKind {
 pub(super) struct SourceShape {
     pub multi_row: bool,
     pub order: Option<Vec<CanonicalOrderKey>>,
+    pub order_aliases: BTreeMap<String, String>,
     pub projections: Option<BTreeMap<String, String>>,
 }
 
@@ -68,11 +69,13 @@ fn analyze_insert(insert: &Insert, target: ConflictTargetKind) -> Result<Analyze
         SourceShape {
             multi_row: false,
             order: None,
+            order_aliases: BTreeMap::new(),
             projections: None,
         },
         |query| SourceShape {
             multi_row: query_is_potentially_multi_row(query.body.as_ref()),
             order: query.order_by.as_ref().and_then(order_keys),
+            order_aliases: order_aliases(query.body.as_ref()),
             projections: projection_map(insert, query.body.as_ref()),
         },
     );
@@ -109,6 +112,22 @@ fn order_keys(order: &sqlparser::ast::OrderBy) -> Option<Vec<CanonicalOrderKey>>
             })
             .collect(),
     )
+}
+
+fn order_aliases(body: &SetExpr) -> BTreeMap<String, String> {
+    let SetExpr::Select(select) = body else {
+        return BTreeMap::new();
+    };
+    select
+        .projection
+        .iter()
+        .filter_map(|projection| {
+            let SelectItem::ExprWithAlias { expr, alias } = projection else {
+                return None;
+            };
+            Some((alias.value.to_ascii_lowercase(), expr.to_string()))
+        })
+        .collect()
 }
 
 fn projection_map(insert: &Insert, body: &SetExpr) -> Option<BTreeMap<String, String>> {

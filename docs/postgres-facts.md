@@ -170,8 +170,10 @@ when the AST is missing.
 - `has_multi_row_predicate` — the locked select's `WHERE` uses `IN` or `= ANY`
 - `has_order_by` — the locked query has `ORDER BY`
 - `skips_locked_rows` — the lock uses `SKIP LOCKED`
-- `table` and parsed `ORDER BY` expression keys — used with a configured
-  schema catalog to require an exact valid unique-key prefix
+- resolved direct locked base relations and parsed `ORDER BY` expression keys —
+  used with a configured schema catalog to require an exact valid unique-key
+  prefix for every locked relation; unqualified `FOR UPDATE` includes every
+  direct base relation and `FOR UPDATE OF` must resolve unambiguously
 
 Unparseable SQL returns an error. The lock-ordering rule consumes this helper
 instead of re-parsing SQL with a private parser. `postgres-conflict-ordering`

@@ -97,11 +97,14 @@ fn findings_for_call_with_catalog(
                     lock.has_multi_row_predicate
                         && !lock.skips_locked_rows
                         && !lock
-                            .table
+                            .tables
                             .as_deref()
                             .zip(lock.order.as_deref())
-                            .is_some_and(|(table, order)| {
-                                catalog.has_canonical_prefix(table, order)
+                            .is_some_and(|(tables, order)| {
+                                !tables.is_empty()
+                                    && tables
+                                        .iter()
+                                        .all(|table| catalog.has_canonical_prefix(table, order))
                             })
                 }) {
                     vec![finding(

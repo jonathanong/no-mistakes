@@ -95,7 +95,7 @@ fn finding_for_insert(
             "multi-row INSERT source must be a direct SELECT with explicit target columns so arbiter expressions can be mapped to ORDER BY",
         ));
     };
-    let Some(actual) = insert.source.order else {
+    let Some(actual) = insert.source.order.as_ref() else {
         return Some(finding(
             file,
             line,
@@ -106,6 +106,7 @@ fn finding_for_insert(
             ),
         ));
     };
+    let actual = resolve_order_aliases(actual, &insert.source.order_aliases);
     if !order_prefix_matches(&actual, &expected, false) {
         return Some(finding(
             file,
@@ -157,6 +158,28 @@ fn display_keys(keys: &[CanonicalOrderKey]) -> String {
         })
         .collect::<Vec<_>>()
         .join(", ")
+}
+
+fn resolve_order_aliases(
+    order: &[CanonicalOrderKey],
+    aliases: &std::collections::BTreeMap<String, String>,
+) -> Vec<CanonicalOrderKey> {
+    order
+        .iter()
+        .map(|key| CanonicalOrderKey {
+            expression: aliases
+                .get(&key.expression.to_ascii_lowercase())
+                .cloned()
+                .unwrap_or_else(|| key.expression.clone()),
+            ascending: key.ascending,
+            nulls_first: key.nulls_first,
+        })
+        .collect()
+}
+
+pub(super) fn contains_insert(sql: &str) -> bool {
+    sql.split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
+        .any(|token| token.eq_ignore_ascii_case("insert"))
 }
 
 pub(super) fn contains_insert_conflict(sql: &str) -> bool {

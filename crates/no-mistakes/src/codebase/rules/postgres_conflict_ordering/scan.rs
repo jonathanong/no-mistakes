@@ -50,13 +50,13 @@ pub(super) fn scan_with_sources(
                     && call
                         .sql_text
                         .as_deref()
-                        .is_some_and(analysis::contains_insert_conflict)
+                        .is_some_and(analysis::contains_insert)
                 {
                     findings.push(analysis::finding(
                         &rel,
                         call.line as usize,
                         "unanalyzable-sql",
-                        "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+                        "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked",
                     ));
                 }
                 continue;

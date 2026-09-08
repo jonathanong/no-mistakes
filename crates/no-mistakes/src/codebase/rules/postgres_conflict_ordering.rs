@@ -1,6 +1,8 @@
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
-use crate::codebase::postgres::{fail_unanalyzable_sql, EmbeddedSqlOptions, PostgresSchemaOptions};
+use crate::codebase::postgres::{
+    fail_unanalyzable_sql, postgres_sql_paths, EmbeddedSqlOptions, PostgresSchemaOptions,
+};
 use crate::codebase::rules::postgres_lock_ordering::directive::DEFAULT_SAFE_DIRECTIVE;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
@@ -39,8 +41,11 @@ pub(crate) struct CompiledOptions {
 
 impl CompiledOptions {
     fn includes(&self, rel: &str) -> bool {
-        (self.include.is_empty() || self.include.is_match(rel))
-            && (self.exclude.is_empty() || !self.exclude.is_match(rel))
+        (self.include.is_empty() || self.include.is_match(rel)) && !self.excludes(rel)
+    }
+
+    fn excludes(&self, rel: &str) -> bool {
+        !self.exclude.is_empty() && self.exclude.is_match(rel)
     }
 }
 
@@ -74,11 +79,21 @@ pub(crate) fn check_with_files_and_sources(
                 })
                 .cloned()
                 .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            let files: Vec<PathBuf> = files
-                .into_iter()
+            let scoped_files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+            let mut files: Vec<PathBuf> = scoped_files
+                .iter()
                 .filter(|path| compiled.includes(&relative_slash_path(root, path)))
+                .cloned()
                 .collect();
+            if let Some(sql_sources) = &compiled.sql_sources {
+                files.extend(
+                    postgres_sql_paths(root, &scoped_files, sql_sources)?
+                        .into_iter()
+                        .filter(|path| !compiled.excludes(&relative_slash_path(root, path))),
+                );
+            }
+            files.sort();
+            files.dedup();
             scan::scan_with_sources(root, &compiled, &files, sources)
         })
         .collect();
