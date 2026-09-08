@@ -1,28 +1,27 @@
 {
         crate::invocation::check_timeout()?;
         let call_interner = edge_inputs.interner.clone();
-        let mut callable_nodes = plan
-            .calls
-            .then(|| {
-                files
-                    .iter()
-                    .flat_map(|path| {
-                        facts
-                            .and_then(|facts| facts.get_ts_facts(path))
-                            .into_iter()
-                            .flat_map({
-                                let interner = call_interner.clone();
-                                move |file| {
-                                    let interner = interner.clone();
-                                    file.callable_scopes.iter().map(move |scope| {
-                                        NodeId::symbol_in(&interner, path, scope)
-                                    })
-                                }
-                            })
-                    })
-                    .collect::<Vec<_>>()
-            })
-            .unwrap_or_default();
+        let mut callable_nodes = if plan.calls {
+            files
+                .iter()
+                .flat_map(|path| {
+                    facts
+                        .and_then(|facts| facts.get_ts_facts(path))
+                        .into_iter()
+                        .flat_map({
+                            let interner = call_interner.clone();
+                            move |file| {
+                                let interner = interner.clone();
+                                file.callable_scopes.iter().map(move |scope| {
+                                    NodeId::symbol_in(&interner, path, scope)
+                                })
+                            }
+                        })
+                })
+                .collect::<Vec<_>>()
+        } else {
+            Vec::new()
+        };
         callable_nodes.sort();
         callable_nodes.dedup();
         let mut callable_nodes_by_file: FxHashMap<PathBuf, Vec<NodeId>> = fx_map();

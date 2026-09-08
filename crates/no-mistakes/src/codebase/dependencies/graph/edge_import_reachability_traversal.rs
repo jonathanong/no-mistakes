@@ -87,12 +87,10 @@ fn resolve_callable_alias(
             .cloned();
         let Some(alias) = alias else {
             if !resolved_alias {
-                let Some(parent) = owner
+                let parent = owner
                     .as_deref()
                     .and_then(|scope| scope.rsplit_once('/').map(|(parent, _)| parent.to_string()))
-                else {
-                    return None;
-                };
+                    ?;
                 owner = Some(parent);
                 continue;
             }

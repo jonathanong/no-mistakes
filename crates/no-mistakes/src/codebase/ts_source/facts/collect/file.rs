@@ -126,12 +126,11 @@ pub(crate) fn collect_file_facts_from_program(
     } else {
         domain::DomainFacts::default()
     };
-    let effect_calls = plan
-        .effect_calls
-        .then(|| {
-            domain::collect_effect_calls(&import_facts.function_calls, &context.effect_functions)
-        })
-        .unwrap_or_default();
+    let effect_calls = if plan.effect_calls {
+        domain::collect_effect_calls(&import_facts.function_calls, &context.effect_functions)
+    } else {
+        Vec::new()
+    };
     let call_sites = domain.call_sites;
     let react_components = if plan.react {
         match context.visible_files.as_deref() {

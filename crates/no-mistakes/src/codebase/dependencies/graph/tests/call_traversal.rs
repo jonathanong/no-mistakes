@@ -29,7 +29,7 @@ fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
     let entry = root.join("src/entry.mts");
     let entry_root = symbol(&entry, "entry");
 
-    let direct = graph.call_traces(&[entry_root.clone()], CallTraversal::Direct, None);
+    let direct = graph.call_traces(std::slice::from_ref(&entry_root), CallTraversal::Direct, None);
     let direct_targets = direct.iter().map(|trace| &trace.target).collect::<Vec<_>>();
     assert_eq!(direct.len(), 3, "entry has three direct calls");
     assert!(direct_targets.contains(&&symbol(&root.join("src/diamond-left.mts"), "diamondLeft")));
@@ -41,10 +41,14 @@ fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
 
     assert!(
         graph
-            .call_traces(&[entry_root.clone()], CallTraversal::Transitive, Some(0))
+            .call_traces(std::slice::from_ref(&entry_root), CallTraversal::Transitive, Some(0))
             .is_empty()
     );
-    let depth_one = graph.call_traces(&[entry_root.clone()], CallTraversal::Transitive, Some(1));
+    let depth_one = graph.call_traces(
+        std::slice::from_ref(&entry_root),
+        CallTraversal::Transitive,
+        Some(1),
+    );
     assert_eq!(depth_one, direct, "maxDepth=1 is the direct boundary");
     let depth_two = graph.call_traces(&[entry_root], CallTraversal::Transitive, Some(2));
     assert!(

@@ -4,10 +4,11 @@ impl ImportCollector {
             .split_once('.')
             .map_or(callee, |(binding, _)| binding);
         if self.local_binding_shadows(binding) {
-            return self
-                .has_local_function_scope(callee)
-                .then_some(CallTargetIdentity::RepositoryFunction)
-                .unwrap_or(CallTargetIdentity::Unknown);
+            return if self.has_local_function_scope(callee) {
+                CallTargetIdentity::RepositoryFunction
+            } else {
+                CallTargetIdentity::Unknown
+            };
         }
         if self.imported_bindings.contains(binding)
             || self.predeclared_imported_bindings.contains(binding)
