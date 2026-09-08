@@ -15,6 +15,7 @@ import {
   exportedAlias,
   default as defaultAlias,
   localExportAlias,
+  reexportedTarget,
 } from "./exported-local-aliases.mts";
 import { collision } from "./mixed-star-barrel.mts";
 import { externalCollision } from "./external-star-barrel.mts";
@@ -42,6 +43,7 @@ cycleA();
 exportedAlias();
 defaultAlias();
 localExportAlias();
+reexportedTarget();
 collision();
 externalCollision();
 externalMock();

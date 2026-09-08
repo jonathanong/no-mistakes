@@ -310,8 +310,24 @@ fn exported_function_roots_resolve_renamed_defaults_and_barrels() {
 #[test]
 fn exported_function_roots_follow_named_reexport_barrels() {
     let (root, graph) = call_fixture_graph();
+    let barrel = root.join("src/exported-local-aliases.mts");
+    let facts = collect_ts_facts(
+        std::slice::from_ref(&barrel),
+        TsFactPlan {
+            imports: true,
+            function_calls: true,
+            ..TsFactPlan::default()
+        },
+    );
+    let bindings = &facts.get(&barrel).unwrap().exported_bindings;
+    assert!(
+        bindings
+            .iter()
+            .any(|binding| binding.exported == "reexportedTarget"),
+        "named re-export must be extracted: {bindings:#?}"
+    );
     let roots = graph.expand_call_roots(&[CallRoot::Function {
-        file: root.join("src/exported-local-aliases.mts"),
+        file: barrel,
         symbol: "reexportedTarget".to_string(),
     }]);
 
