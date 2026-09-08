@@ -45,6 +45,7 @@ use crate::codebase::dependencies::extract::{CallTargetIdentity, InvocationKind}
 fn playwright_graph_build_has_one_snapshot_construction_site() {
     let builder = [
         include_str!("../builder_core.rs"),
+        include_str!("../builder_core/body.rs"),
         include_str!("../builder_edges.rs"),
     ]
     .concat();
