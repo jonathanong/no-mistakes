@@ -61,7 +61,7 @@ function compileImportedCallTargets(options) {
 
 function staticPropertyName(property) {
   if (property.type !== "Property") return null;
-  if (property.computed) return literalString(property.key);
+  if (property.computed) return literalString(unwrapExpression(property.key));
   return propertyName(property.key);
 }
 

@@ -41,7 +41,7 @@ describe("require-options-on-imported-call", () => {
   it("reports imported calls without statically visible required options", () => {
     assert.deepEqual(
       messages(ruleFixture("invalid.ts"), RULE, ssrfOptions, "invalid.ts"),
-      Array.from({ length: 13 }, () => "missingOptions"),
+      Array.from({ length: 17 }, () => "missingOptions"),
     );
   });
 
@@ -210,8 +210,37 @@ validateUrl(url, { timeoutMs: 1 });
     const code = `let checkUrl = require("ssrf-guard/node").validateUrl;
 checkUrl = localCheckUrl;
 checkUrl(url);
+let ssrf = require("ssrf-guard/node");
+ssrf = localSsrf;
+ssrf.validateUrl(url);
+var reinitialized = require("ssrf-guard/node").validateUrl;
+var reinitialized = localCheckUrl;
+reinitialized(url);
+var iterated = require("ssrf-guard/node").validateUrl;
+for (var iterated of callbacks) iterated(url);
 `;
     assert.deepEqual(messages(code, RULE, ssrfOptions, "reassigned.ts"), []);
+  });
+
+  it("tracks defaulted var destructuring from CommonJS", () => {
+    const code = `var { validateUrl = fallback } = require("ssrf-guard/node");
+validateUrl(url);
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "defaulted-var.ts"), ["missingOptions"]);
+  });
+
+  it("ignores numeric CommonJS member and destructuring keys", () => {
+    const options = {
+      targets: [
+        {
+          sourceSpecifierPatterns: ["ssrf-guard/node"],
+          calleeNamePatterns: ["0"],
+          optionsPosition: 2,
+          requiredProperties: ["timeoutMs"],
+        },
+      ],
+    };
+    assert.deepEqual(messages(ruleFixture("numeric.ts"), RULE, options, "numeric.ts"), []);
   });
 
   it("ignores computed CommonJS destructuring keys that are not literals", () => {

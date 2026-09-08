@@ -7,6 +7,11 @@ const guard = require("ssrf-guard/node");
 const { validateUrl: requireUrl } = require("ssrf-guard/node");
 const typedGuard = require("ssrf-guard/node") as Guard;
 const { ...rest } = require("ssrf-guard/node");
+const { [(`validateUrl` as string)]: typedDestructuredUrl } = require(
+  (`ssrf-guard/node` as string),
+);
+let mutableGuard = require(`ssrf-guard/node`);
+var mutableUrl = require("ssrf-guard/node").validateUrl;
 
 export const { validateUrl: exportedUrl } = require("ssrf-guard/node");
 
@@ -29,6 +34,9 @@ export async function accepted(
   await exportedUrl(url, { "signal": signal });
   await require("ssrf-guard/node").validateUrl(url, { timeoutMs: 1 });
   await (require("ssrf-guard/node") as Guard).validateUrl(url, { timeoutMs });
+  await typedDestructuredUrl(url, { [("timeoutMs" as string)]: 1 });
+  await mutableGuard[("validateUrl" as string)](url, { timeoutMs });
+  await mutableUrl(url, { signal });
 }
 
 export async function ignored(

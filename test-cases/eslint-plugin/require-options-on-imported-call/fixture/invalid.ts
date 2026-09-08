@@ -6,6 +6,12 @@ const guard = require("ssrf-guard/node");
 const { validateUrl: requireUrl } = require("ssrf-guard/node");
 const typedGuard = require("ssrf-guard/node") as Guard;
 const { validateUrl: fallback = noop } = require("ssrf-guard/node") as Guard;
+const staticMember = require((`ssrf-guard/node` as string))[("validateUrl" as string)];
+const { [(`validateUrl` as string)]: typedDestructuredUrl } = require(
+  (`ssrf-guard/node` as string),
+);
+let mutableGuard = require(`ssrf-guard/node`);
+var mutableUrl = require("ssrf-guard/node").validateUrl;
 
 export const { validateUrl: exportedUrl } = require("ssrf-guard/node");
 
@@ -22,6 +28,10 @@ export async function rejected(url: string, opts: object, key: string) {
   await exportedUrl(url);
   await require("ssrf-guard/node").validateUrl(url);
   await (require("ssrf-guard/node") as Guard).validateUrl(url, { ...opts });
+  await staticMember(url);
+  await typedDestructuredUrl(url);
+  await mutableGuard[("validateUrl" as string)](url);
+  await mutableUrl(url);
 }
 
 export function laterRequire(url: string) {

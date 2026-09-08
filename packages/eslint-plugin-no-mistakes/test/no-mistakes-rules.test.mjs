@@ -92,6 +92,20 @@ describe("async-call-disposition", () => {
     assert.deepEqual(message.suggestions[0].fix, { range: [42, 42], text: "void " });
   });
 
+  it("tracks non-reassigned mutable CommonJS bindings", () => {
+    const code = `let jobs = require("@app/jobs");
+var sendSms = require("@app/jobs").sendSms;
+var { enqueueEmail: defaultedEnqueue = fallback } = require("@app/jobs");
+jobs.enqueueEmail("1");
+sendSms("1");
+defaultedEnqueue("1");
+`;
+    assert.deepEqual(
+      messages(code, "async-call-disposition", asyncTargetOptions, "mutable-cjs.ts"),
+      ["disposition", "disposition", "disposition"],
+    );
+  });
+
   it("is a no-op without targets and ignores invalid regexes", () => {
     const code = ruleFixture("async-call-disposition", "invalid.ts");
     assert.deepEqual(messages(code, "async-call-disposition", undefined, "invalid.ts"), []);

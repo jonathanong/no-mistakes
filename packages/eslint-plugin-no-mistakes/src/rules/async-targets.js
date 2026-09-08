@@ -2,7 +2,7 @@
 
 const { unwrapExpression } = require("./async-ast");
 const { compileTargets, matchesAny, targetMatches } = require("./async-patterns");
-const { propertyName } = require("./module-mock-helpers");
+const { propertyName, literalString } = require("./module-mock-helpers");
 
 function findVariable(scope, name) {
   while (scope) {
@@ -29,16 +29,17 @@ function isLocalRequire(id, context) {
 
 function requireSource(node, context) {
   const expression = unwrapExpression(node);
+  const source = literalString(unwrapExpression(expression?.arguments?.[0]));
   if (
     expression?.type !== "CallExpression" ||
     expression.callee.type !== "Identifier" ||
     expression.callee.name !== "require" ||
-    typeof expression.arguments[0]?.value !== "string" ||
+    source === null ||
     isLocalRequire(expression.callee, context)
   ) {
     return null;
   }
-  return expression.arguments[0].value;
+  return source;
 }
 
 function bindingIdentifier(node) {
@@ -48,7 +49,11 @@ function bindingIdentifier(node) {
 
 function memberPropertyName(node) {
   if (!node.computed) return propertyName(node.property);
-  return node.property?.type === "Literal" ? String(node.property.value) : null;
+  return staticComputedPropertyName(node.property);
+}
+
+function staticComputedPropertyName(node) {
+  return literalString(unwrapExpression(node));
 }
 
 function createTargetMatcher(context, optionKey = "targets") {
@@ -57,14 +62,36 @@ function createTargetMatcher(context, optionKey = "targets") {
   const directBindings = new Map();
   const namespaceBindings = new Map();
 
+  function isReassigned(id) {
+    const variable = resolveVariable(id, context);
+    const writes = variable?.references.filter((reference) => reference.isWrite()) || [];
+    const initializationSites = new Set(
+      writes.filter((reference) => reference.init).map((reference) => reference.identifier),
+    );
+    const isVar = variable?.defs.some(
+      (definition) => definition.type === "Variable" && definition.parent?.kind === "var",
+    );
+    return writes.some((reference) => !reference.init) || (isVar && initializationSites.size > 1);
+  }
+
   function recordDirect(id, source, calleeName) {
-    if (id?.type !== "Identifier" || !targetMatches(targets, source, calleeName)) return;
+    if (
+      id?.type !== "Identifier" ||
+      isReassigned(id) ||
+      !targetMatches(targets, source, calleeName)
+    ) {
+      return;
+    }
     const variable = resolveVariable(id, context);
     if (variable) directBindings.set(variable, { source, calleeName });
   }
 
   function recordNamespace(id, source) {
-    if (id.type !== "Identifier" || !matchesAny(source, sourceSpecifierPatterns)) {
+    if (
+      id.type !== "Identifier" ||
+      isReassigned(id) ||
+      !matchesAny(source, sourceSpecifierPatterns)
+    ) {
       return;
     }
     const variable = resolveVariable(id, context);
@@ -72,7 +99,7 @@ function createTargetMatcher(context, optionKey = "targets") {
   }
 
   function recordRequireDeclarator(node) {
-    if (node.parent?.type !== "VariableDeclaration" || node.parent.kind !== "const") return;
+    if (node.parent?.type !== "VariableDeclaration") return;
     const source = requireSource(node.init, context);
     if (source) {
       if (node.id.type === "Identifier") {
@@ -84,9 +111,7 @@ function createTargetMatcher(context, optionKey = "targets") {
         for (const property of node.id.properties) {
           if (property.type !== "Property") continue;
           const name = property.computed
-            ? property.key?.type === "Literal"
-              ? String(property.key.value)
-              : null
+            ? staticComputedPropertyName(property.key)
             : propertyName(property.key);
           if (name) recordDirect(bindingIdentifier(property.value), source, name);
         }

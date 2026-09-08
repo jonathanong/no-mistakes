@@ -39,9 +39,12 @@ await checkUrl(url, { timeoutMs: DNS_TIMEOUT_MS, ...rest });
   - optional `propertyMatch`: `"any"` (default) or `"all"`.
 
 Default imports match the local binding name, including
-`import { default as local }`. CommonJS provenance is limited to `const`
-bindings. The rule does not follow `const alias = imported` or injected
-members such as `deps.validateUrl()`.
+`import { default as local }`. CommonJS provenance supports `const`, `let`,
+and `var` bindings only when their binding has one initialization and no later
+writes. The rule does not follow `const alias = imported` or injected members
+such as `deps.validateUrl()`. Computed CommonJS members and destructuring keys
+must be string literals or expression-free template literals; numeric keys are
+not coerced into export names.
 
 ## Fix
 
