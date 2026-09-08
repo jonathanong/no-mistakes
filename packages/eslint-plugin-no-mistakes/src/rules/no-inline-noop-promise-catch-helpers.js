@@ -37,18 +37,39 @@ function isVoidZero(node) {
   return argument?.type === "Literal" && argument.value === 0;
 }
 
-function isNoopExpression(node) {
+function isShadowedUndefined(node, sourceCode) {
+  let scope = sourceCode?.getScope?.(node) ?? null;
+  while (scope) {
+    const variable = scope.set?.get("undefined");
+    if (variable?.defs?.length > 0) return true;
+    scope = scope.upper;
+  }
+  return false;
+}
+
+function isNoopExpression(node, sourceCode) {
   const current = unwrapExpression(node);
-  if (current.type === "Identifier" && current.name === "undefined") return true;
+  if (current.type === "Identifier" && current.name === "undefined") {
+    return Boolean(sourceCode) && !isShadowedUndefined(current, sourceCode);
+  }
   return isVoidZero(current);
 }
 
-function isNoopStatement(statement) {
+function isNoopLiteralExpression(node) {
+  const current = unwrapExpression(node);
+  return current?.type === "Literal" && current.regex == null;
+}
+
+function isNoopStatement(statement, sourceCode) {
   if (statement.type === "EmptyStatement") return true;
   if (statement.type === "ReturnStatement") {
-    return statement.argument == null || isNoopExpression(statement.argument);
+    return statement.argument == null || isNoopExpression(statement.argument, sourceCode);
   }
-  return statement.type === "ExpressionStatement" && isNoopExpression(statement.expression);
+  return (
+    statement.type === "ExpressionStatement" &&
+    (isNoopExpression(statement.expression, sourceCode) ||
+      isNoopLiteralExpression(statement.expression))
+  );
 }
 
 function isInlineFunction(node) {
@@ -56,11 +77,11 @@ function isInlineFunction(node) {
   return node?.type === "FunctionExpression" && node.id == null;
 }
 
-function isInlineNoopFunction(node) {
+function isInlineNoopFunction(node, sourceCode) {
   const current = unwrapExpression(node);
-  if (!isInlineFunction(current)) return false;
-  if (current.body.type !== "BlockStatement") return isNoopExpression(current.body);
-  return current.body.body.every(isNoopStatement);
+  if (!isInlineFunction(current) || current.generator) return false;
+  if (current.body.type !== "BlockStatement") return isNoopExpression(current.body, sourceCode);
+  return current.body.body.every((statement) => isNoopStatement(statement, sourceCode));
 }
 
 function originatingCalleeName(call) {

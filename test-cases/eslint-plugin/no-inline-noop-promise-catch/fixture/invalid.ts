@@ -24,9 +24,7 @@ export async function invalidCatches(work: Promise<void>, ok: () => void) {
     /* swallow */
   });
   work?.catch(() => {});
-  work.catch(() => {
-    ;
-  });
+  work.catch(() => {});
   saveUser()
     .then((value) => value)
     .catch(() => {});
@@ -36,6 +34,22 @@ export async function invalidCatches(work: Promise<void>, ok: () => void) {
     return work;
   })().catch(() => {});
   work.catch(() => undefined as never);
+  // Bare literals do not create a fallback or any other observable handling.
+  work.catch(() => {
+    0;
+  });
+  work.catch(() => {
+    "ignored";
+  });
+  work.catch(() => {
+    true;
+  });
+  work.catch(() => {
+    null;
+  });
+  work.catch(() => {
+    0n;
+  });
 }
 
 function saveUser() {

@@ -7,6 +7,10 @@ rejection. Failed work then looks complete. This rule requires observable
 handling — a named handler, logging, reporting, a transform, or a rethrow —
 so swallowed business failures stay reviewable.
 
+The rule intentionally recognizes `.catch` and two-argument `.then` by syntax;
+it does not prove that the receiver is a native `Promise`. Use the path and
+callee allowlists for known custom APIs.
+
 ## Disallowed
 
 ```ts
@@ -16,6 +20,9 @@ saveUser(input).catch(() => {
   return;
 });
 saveUser(input).then(onSaved, () => void 0);
+saveUser(input).catch(() => {
+  "ignored";
+});
 ```
 
 ## Allowed
@@ -30,6 +37,8 @@ saveUser(input).catch((error) => {
   throw error;
 });
 saveUser(input).catch(() => null);
+saveUser(input).catch(function* () {});
+saveUser(input).catch(async function* () {});
 ```
 
 ## Options
@@ -48,6 +57,12 @@ Values are glob or `/regex/` strings. Invalid regex patterns are ignored.
 Replace the inline no-op with a named handler, `onError`, logging, a returned
 fallback, or a rethrow. Do not suppress a production swallow to keep a
 catch-presence rule quiet.
+
+A bare literal expression inside a block is also a no-op: it is not the same
+as returning that literal as an intentional fallback. A locally shadowed
+`undefined` is treated as a fallback value, and generator callbacks are
+allowed because calling them produces an iterator rather than an ignored
+`undefined` result.
 
 ## Suppression
 

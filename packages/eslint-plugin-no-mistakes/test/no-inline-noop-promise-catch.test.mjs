@@ -14,7 +14,7 @@ function ruleFixture(name) {
 }
 
 const NOOP = "noopCatch";
-const INVALID_COUNT = 19;
+const INVALID_COUNT = 24;
 const OPTIONS_COUNT = 4;
 
 describe(RULE, () => {
@@ -90,5 +90,17 @@ describe(RULE, () => {
       messages(code, RULE, { checkedPathPatterns: ["backend/**", "/[/"] }, "backend/job.ts"),
       Array(OPTIONS_COUNT).fill(NOOP),
     );
+  });
+
+  it("allows generator callbacks and a shadowed undefined fallback", () => {
+    const code = `
+      function useFallback(work, undefined) {
+        work.catch(() => undefined);
+        work.catch(() => { undefined; });
+        work.catch(function* () {});
+        work.catch(async function* () {});
+      }
+    `;
+    assert.deepEqual(messages(code, RULE, undefined, "shadowed-undefined.ts"), []);
   });
 });
