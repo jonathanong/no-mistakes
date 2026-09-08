@@ -91,6 +91,20 @@ fn extracts_named_reexport() {
     assert_eq!(kinds(&imports), vec![ImportKind::Static]);
 }
 
+#[test]
+fn call_facts_preserve_string_literal_export_names() {
+    let source = "export { handler as \"call-handler\" } from './target.mts';";
+    let allocator = oxc_allocator::Allocator::default();
+    let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, source);
+
+    assert!(facts.exported_bindings.iter().any(|binding| {
+        binding.specifier.as_deref() == Some("./target.mts")
+            && binding.local == "handler"
+            && binding.exported == "call-handler"
+    }));
+}
+
 // ── Type-only forms ─────────────────────────────────────────────────
 
 #[test]

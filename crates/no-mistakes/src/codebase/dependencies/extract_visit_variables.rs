@@ -20,6 +20,19 @@ fn visit_variable_declarator_with_scope<'a>(
             let pushed_syntactic_caller = collector.push_syntactic_caller(source_name);
             let scope_name = name.or_else(|| function_name(function));
             push_variable_function_scope(collector, declarator, scope_name);
+            if let Some(self_name) = function_name(function) {
+                collector.add_binding_name(&self_name);
+                collector.record_callable_binding(&self_name);
+                collector.callable_aliases.push(CallableAliasBinding {
+                    alias: CallableAlias {
+                        scope: collector.current_function(),
+                        local: self_name,
+                        target: collector.current_function().expect("named function scope"),
+                        binding_scope: collector.current_lexical_scope_id(),
+                    },
+                    lexical_scope_depth: collector.local_stack.len() - 1,
+                });
+            }
             collector.add_type_parameter_names(function.type_parameters.as_deref());
             collector.add_formal_parameters(&function.params);
             walk::walk_function(collector, function, oxc_syntax::scope::ScopeFlags::empty());

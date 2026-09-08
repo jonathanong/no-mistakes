@@ -15,7 +15,10 @@ fn resolve_exported_callable(
         return result.clone();
     }
     if visited.contains(&key) {
-        return ExportedCallableResolution::Unknown;
+        // This branch cannot provide the requested export without leaving the
+        // cycle. Treat it as absent so another concrete star branch can still
+        // prove a unique callable provider.
+        return ExportedCallableResolution::Absent;
     }
     visited.push(key.clone());
     let Some(file) = indexes.file(facts, path) else {

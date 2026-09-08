@@ -9,7 +9,7 @@ import { absentThroughStar } from "./empty-star-barrel.mts";
 import defaultThroughIdentifier from "./reexport-default.mts";
 import defaultThroughStar from "./star-default.mts";
 import { shared as ambiguous } from "./ambiguous-barrel.mts";
-import { missing as cycle } from "./star-cycle-a.mts";
+import { cycle } from "./star-cycle-a.mts";
 import {
   exportedAlias,
   default as defaultAlias,

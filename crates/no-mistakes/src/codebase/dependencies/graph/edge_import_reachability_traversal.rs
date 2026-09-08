@@ -90,14 +90,19 @@ fn resolve_callable_alias(
             .cloned();
         let Some(alias) = alias else {
             if !resolved_alias {
-                let parent = owner
+                if let Some(parent) = owner
                     .as_deref()
                     .and_then(|scope| scope.rsplit_once('/').map(|(parent, _)| parent.to_string()))
-                    ?;
-                owner = Some(parent);
-                continue;
+                {
+                    owner = Some(parent);
+                    continue;
+                }
+                if owner.is_some() {
+                    owner = None;
+                    continue;
+                }
             }
-            return Some(target);
+            return resolved_alias.then_some(target);
         };
         if !visited.insert(key) {
             return None;

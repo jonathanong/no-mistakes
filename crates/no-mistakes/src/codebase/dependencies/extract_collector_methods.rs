@@ -2,7 +2,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
     let require_callee = is_require_resolve_callee(&call.callee)
         .then_some("require.resolve")
         .or_else(|| is_require_callee(&call.callee).then_some("require"));
-    if let Some(callee) = require_callee {
+    if let Some(callee) = require_callee.filter(|_| !collector.local_binding_shadows("require")) {
         if collector.should_record_call(callee) {
             collector.function_calls.push(FunctionCall {
                 caller: collector.current_function(),

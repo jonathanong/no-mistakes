@@ -267,6 +267,17 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
                 } if file == &root.join("src/alias-target.mts") && scope == "importedTarget"
             )
     }));
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.file == aliases
+            && site.source_callee == "cycle"
+            && matches!(
+                &site.target,
+                ResolvedCallTarget::ModuleExport {
+                    repository_target: Some((file, scope)),
+                    ..
+                } if file == &root.join("src/star-cycle-provider.mts") && scope == "cycle"
+            )
+    }));
     for (callee, expected_export, expected_scope) in [
         ("targets.importedTarget", "importedTarget", "importedTarget"),
         ("targets.default", "default", "defaultTarget"),
@@ -411,7 +422,6 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
     for callee in [
         "defaultThroughStar",
         "ambiguous",
-        "cycle",
         "mutable",
         "mutableDeclaration",
         "cycleA",

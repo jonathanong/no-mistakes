@@ -73,3 +73,52 @@ fn aggregate_membership_is_not_an_invocation_callback() {
         .iter()
         .any(|call| call.invocation == InvocationKind::Membership));
 }
+
+#[test]
+fn shadowed_require_is_recorded_once() {
+    let facts = facts("function run(require) { require('x'); }");
+    let calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.callee == "require")
+        .collect();
+
+    assert_eq!(calls.len(), 1);
+    assert_eq!(calls[0].target_identity, CallTargetIdentity::Unknown);
+}
+
+#[test]
+fn named_function_expression_self_reference_aliases_its_variable_scope() {
+    let facts = facts("const factorial = function recur(n) { return recur(n - 1); };");
+    let call = facts
+        .function_calls
+        .iter()
+        .find(|call| call.callee == "recur")
+        .expect("recursive self call");
+
+    assert_eq!(call.caller.as_deref(), Some("factorial"));
+    assert_eq!(call.target_identity, CallTargetIdentity::RepositoryFunction);
+    assert!(facts.callable_aliases.iter().any(|alias| {
+        alias.scope.as_deref() == Some("factorial")
+            && alias.local == "recur"
+            && alias.target == "factorial"
+            && alias.binding_scope == call.callee_binding_scope.expect("self binding scope")
+    }));
+}
+
+#[test]
+fn eager_object_initializers_are_module_owned_but_function_properties_are_scoped() {
+    let facts =
+        facts("function target() {} const config = { value: target(), load() { target(); } };");
+    let calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.callee == "target")
+        .collect();
+
+    assert_eq!(calls.len(), 2);
+    assert!(calls.iter().any(|call| call.caller.is_none()));
+    assert!(calls
+        .iter()
+        .any(|call| call.caller.as_deref() == Some("config/load")));
+}

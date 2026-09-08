@@ -124,7 +124,7 @@ fn module_export_name_name<'a>(name: &'a ModuleExportName<'a>) -> Option<&'a str
     match name {
         ModuleExportName::IdentifierReference(identifier) => Some(identifier.name.as_str()),
         ModuleExportName::IdentifierName(identifier) => Some(identifier.name.as_str()),
-        ModuleExportName::StringLiteral(_) => None,
+        ModuleExportName::StringLiteral(literal) => Some(literal.value.as_str()),
     }
 }
 

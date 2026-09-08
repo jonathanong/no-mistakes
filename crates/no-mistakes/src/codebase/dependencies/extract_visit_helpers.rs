@@ -145,14 +145,21 @@ impl ImportCollector {
         let Some(binding_scope) = self.callee_binding_scope(callee) else {
             return false;
         };
-        if !self
+        let callable_alias = self.callable_aliases.iter().any(|alias| {
+            alias.alias.binding_scope == binding_scope && alias.alias.local == binding
+        });
+        if (!self
             .callable_binding_ids
             .contains(&(binding_scope, binding.to_string()))
+            && !callable_alias)
             || self
                 .reassigned_callable_binding_ids
                 .contains(&(binding_scope, binding.to_string()))
         {
             return false;
+        }
+        if callable_alias {
+            return true;
         }
         // `api/run` can mean either an aggregate member or a lexical nested
         // function. A declared `function api` owns the latter spelling, so a
