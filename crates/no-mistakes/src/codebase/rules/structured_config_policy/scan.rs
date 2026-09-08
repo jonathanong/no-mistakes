@@ -17,6 +17,21 @@ pub(super) fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let mut parsed_ancestors = ParsedAncestorCache::default();
+    #[cfg(test)]
+    {
+        let mut canonical_inventory_initializations = 0;
+        return scan_with_parsed_ancestors(
+            root,
+            opts,
+            files,
+            inventory,
+            target_roots,
+            sources,
+            &mut parsed_ancestors,
+            &mut canonical_inventory_initializations,
+        );
+    }
+    #[cfg(not(test))]
     scan_with_parsed_ancestors(
         root,
         opts,
@@ -25,7 +40,6 @@ pub(super) fn scan(
         target_roots,
         sources,
         &mut parsed_ancestors,
-        None,
     )
 }
 
