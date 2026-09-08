@@ -24,6 +24,7 @@ pub(super) fn resolve_expr(
         Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
             let left = resolve_expr(&binary.left, depth, lookup)?;
             let right = resolve_expr(&binary.right, depth, lookup)?;
+            let right = renumber_placeholders(&right, count_placeholders(&left));
             Some(format!("{left}{right}"))
         }
         Expression::CallExpression(call) => resolve_call(call, depth, lookup),

@@ -14,6 +14,38 @@ use oxc_ast::ast::{
     VariableDeclaration, VariableDeclarator,
 };
 
+/// Every name a parameter or declarator's binding pattern introduces,
+/// however deeply destructured — `x`, `{ a: x }`, `[x]`, `{ x = 1 }`, and any
+/// nesting or combination of those, plus rest elements. A shadow check that
+/// only handled a bare `BindingIdentifier` would miss a destructured
+/// parameter shadowing a same-named top-level helper (`function f({ safe })`
+/// shadows a top-level `safe`), letting `resolve_chain`/`resolve_named`
+/// wrongly resolve calls through it.
+pub(super) fn for_each_bound_name(pattern: &BindingPattern<'_>, on_name: &mut impl FnMut(&str)) {
+    match pattern {
+        BindingPattern::BindingIdentifier(ident) => on_name(ident.name.as_str()),
+        BindingPattern::ObjectPattern(object) => {
+            for property in &object.properties {
+                for_each_bound_name(&property.value, on_name);
+            }
+            if let Some(rest) = &object.rest {
+                for_each_bound_name(&rest.argument, on_name);
+            }
+        }
+        BindingPattern::ArrayPattern(array) => {
+            for element in array.elements.iter().flatten() {
+                for_each_bound_name(element, on_name);
+            }
+            if let Some(rest) = &array.rest {
+                for_each_bound_name(&rest.argument, on_name);
+            }
+        }
+        BindingPattern::AssignmentPattern(assignment) => {
+            for_each_bound_name(&assignment.left, on_name);
+        }
+    }
+}
+
 pub(super) fn record_statements(statements: &[Statement<'_>], visitor: &mut ScopeVisitor<'_>) {
     for statement in statements {
         match statement {
@@ -104,6 +136,7 @@ fn composed_sql(
     }
     let left = static_fragment(&binary.left, visitor)?;
     let right = static_fragment(&binary.right, visitor)?;
+    let right = chain::renumber_placeholders(&right, chain::count_placeholders(&left));
     Some((format!("{left}{right}"), EmbeddedSqlKind::Composed))
 }
 

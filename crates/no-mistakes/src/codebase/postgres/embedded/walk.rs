@@ -75,10 +75,12 @@ impl ScopeVisitor<'_> {
     }
 
     fn bind_param(&mut self, pattern: &BindingPattern<'_>) {
-        if let BindingPattern::BindingIdentifier(ident) = pattern {
+        let mut names = Vec::new();
+        resolve::for_each_bound_name(pattern, &mut |name| names.push(name.to_string()));
+        for name in names {
             if let Some(scope) = self.current_scope() {
                 scope.insert(
-                    ident.name.to_string(),
+                    name,
                     BindingState {
                         sql: None,
                         kind: EmbeddedSqlKind::Dynamic,

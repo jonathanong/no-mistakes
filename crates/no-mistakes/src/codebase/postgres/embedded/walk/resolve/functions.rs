@@ -1,16 +1,24 @@
 use super::chain;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    ArrowFunctionBody, BindingPattern, Declaration, Expression, FormalParameters, Function,
-    FunctionBody, Program, Statement, VariableDeclaration, VariableDeclarationKind,
-    VariableDeclarator,
+    ArrowFunctionBody, AssignmentExpression, AssignmentTarget, BindingPattern, Declaration,
+    Expression, FormalParameters, Function, FunctionBody, Program, Statement, VariableDeclaration,
+    VariableDeclarationKind, VariableDeclarator,
 };
-use std::collections::HashMap;
+use oxc_ast_visit::{walk, Visit};
+use std::collections::{HashMap, HashSet};
 
 pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
 
 /// Same-file functions whose body is a single `return` of a statically
 /// resolvable SQL fragment, pre-resolved once per file.
+///
+/// Collection only walks `program.body` — a helper declared lexically nested
+/// inside another function or block is never collected, so a call to it
+/// fails closed (`Dynamic`) rather than risking resolving through the wrong
+/// binding. This is an accepted limitation, not a soundness gap: extending
+/// collection to nested scopes only widens what resolves as `Composed`, it
+/// never narrows it.
 pub(crate) struct LocalFunctions {
     resolved: HashMap<String, String>,
 }
@@ -33,6 +41,9 @@ impl LocalFunctions {
         for statement in &program.body {
             collect_named_functions(statement, &mut raw);
         }
+        let mut reassigned = ReassignedNames::default();
+        reassigned.visit_program(program);
+        raw.retain(|name, _| !reassigned.names.contains(name));
         let mut resolved = HashMap::new();
         for name in raw.keys().copied() {
             let mut resolving = Vec::new();
@@ -45,6 +56,26 @@ impl LocalFunctions {
 
     pub(crate) fn get(&self, name: &str) -> Option<String> {
         self.resolved.get(name).cloned()
+    }
+}
+
+/// Names assigned anywhere in the program, e.g. `build = externalBuilder;`
+/// reassigning a hoisted `function build() {}`. A function declaration's
+/// binding is mutable, so a call to it can no longer be trusted to run the
+/// originally-collected body once any assignment to that name exists
+/// anywhere — `LocalFunctions::collect` drops such names outright rather
+/// than resolving through a body that may not be the one that runs.
+#[derive(Default)]
+struct ReassignedNames<'a> {
+    names: HashSet<&'a str>,
+}
+
+impl<'a> Visit<'a> for ReassignedNames<'a> {
+    fn visit_assignment_expression(&mut self, assign: &AssignmentExpression<'a>) {
+        if let AssignmentTarget::AssignmentTargetIdentifier(ident) = &assign.left {
+            self.names.insert(ident.name.as_str());
+        }
+        walk::walk_assignment_expression(self, assign);
     }
 }
 
@@ -141,7 +172,9 @@ fn const_resolvable<'a>(
 
 fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
     resolvable.params.items.iter().any(|param| {
-        matches!(&param.pattern, BindingPattern::BindingIdentifier(ident) if ident.name.as_str() == name)
+        let mut shadows = false;
+        super::for_each_bound_name(&param.pattern, &mut |bound| shadows |= bound == name);
+        shadows
     })
 }
 
