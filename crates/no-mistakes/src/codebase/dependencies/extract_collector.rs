@@ -14,6 +14,10 @@ struct ImportCollector {
     /// which is not unique across sibling lexical scopes. Preserve their
     /// parser-owned identity next to their owning class binding.
     class_member_callable_ids: HashSet<(CallableId, String, CallableId)>,
+    /// Every class method's identity, used only to invalidate the exact
+    /// reassigned lexical binding without promoting instance methods to static
+    /// graph edges.
+    class_callable_member_ids: HashSet<(CallableId, String, CallableId)>,
     syntactic_caller_stack: Vec<String>,
     local_stack: Vec<HashSet<String>>,
     /// Stable identities parallel to `local_stack`. Scope depth alone is not

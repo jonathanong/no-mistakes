@@ -23,6 +23,11 @@ fn walk_class_with_scoped_methods<'a>(
     for element in &class.body.body {
         if let ClassElement::MethodDefinition(method) = element {
             let method_id = class_method_callable_id(class, method);
+            if let Some(name) =
+                crate::codebase::ts_source::static_property_key_name(&method.key)
+            {
+                collector.record_class_callable_member_id(class_id, name, method_id);
+            }
             if method.r#static {
                 if let Some(name) = crate::codebase::ts_source::static_property_key_name(&method.key) {
                     collector.record_class_member_callable_id(class_id, name, method_id);

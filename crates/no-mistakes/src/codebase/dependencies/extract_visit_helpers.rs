@@ -4,6 +4,9 @@ impl ImportCollector {
             .split_once('.')
             .map_or(callee, |(binding, _)| binding);
         if self.local_binding_shadows(binding) {
+            if matches!(binding, "globalThis" | "window" | "self" | "global") {
+                return CallTargetIdentity::Unknown;
+            }
             return if self.has_local_function_scope(callee) {
                 CallTargetIdentity::RepositoryFunction
             } else {
@@ -143,6 +146,16 @@ impl ImportCollector {
         member_id: CallableId,
     ) {
         self.class_member_callable_ids
+            .insert((class_id, member.to_string(), member_id));
+    }
+
+    fn record_class_callable_member_id(
+        &mut self,
+        class_id: CallableId,
+        member: &str,
+        member_id: CallableId,
+    ) {
+        self.class_callable_member_ids
             .insert((class_id, member.to_string(), member_id));
     }
 
