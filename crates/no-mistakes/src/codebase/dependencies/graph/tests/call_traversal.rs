@@ -23,6 +23,30 @@ fn symbol(path: &Path, name: &str) -> NodeId {
     NodeId::symbol(path, name)
 }
 
+fn call_resolution_inputs<'a>(
+    root: &'a Path,
+    tsconfig: &'a TsConfig,
+    graph_files: &'a GraphFiles,
+) -> GraphEdgeBuildInputs<'a> {
+    GraphEdgeBuildInputs {
+        root,
+        tsconfig,
+        tsconfig_catalog: None,
+        plan: GraphBuildPlan::default(),
+        workspace: None,
+        graph_files,
+        config_options: None,
+        playwright_settings: &[],
+        config_path: None,
+        dotnet_facts: None,
+        swift_facts: None,
+        import_resolution_cache: None,
+        visible_paths: None,
+        workflow_documents: None,
+        interner: Arc::new(PathInterner::new()),
+    }
+}
+
 #[test]
 fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
     let (root, graph) = call_fixture_graph();
@@ -255,6 +279,18 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
     }));
     assert!(graph.resolved_call_sites().iter().any(|site| {
         site.file == aliases
+            && site.source_callee == "importedExternal"
+            && matches!(
+                &site.target,
+                ResolvedCallTarget::ModuleExport {
+                    specifier,
+                    export_path,
+                    repository_target: None,
+                } if specifier == "vitest" && export_path == "mock"
+            )
+    }));
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.file == aliases
             && site.source_callee == "second"
             && matches!(
                 &site.target,
@@ -357,6 +393,8 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
         "targets.deep.member",
         "propertyImport.call",
         "hidden",
+        "missingReexport",
+        "absentThroughStar",
     ] {
         assert!(
             graph.resolved_call_sites().iter().any(|site| {
@@ -367,6 +405,60 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
             "{callee} must remain unknown rather than guessed"
         );
     }
+}
+
+#[test]
+fn call_export_resolution_keeps_missing_facts_and_nonvisible_stars_unknown() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("call-traversal"));
+    let source = root.join("src/empty-star-barrel.mts");
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph_files = GraphFiles::from_files(vec![source.clone()]);
+    let inputs = call_resolution_inputs(&root, &tsconfig, &graph_files);
+    let resolver = ImportResolver::new(&tsconfig);
+
+    let missing_facts = TsFactMap::new();
+    let indexes = CallableResolutionIndexes::default();
+    assert!(matches!(
+        resolve_exported_callable(
+            &inputs,
+            &missing_facts,
+            &resolver,
+            &source,
+            "missing",
+            &indexes,
+            &mut Vec::new(),
+        ),
+        ExportedCallableResolution::Unknown
+    ));
+    assert!(matches!(
+        indexes.exports.get(&(source.clone(), "missing".to_string())).as_deref(),
+        Some(ExportedCallableResolution::Unknown)
+    ));
+
+    let star_facts = TsFactMap::from([(
+        source.clone(),
+        TsFileFacts {
+            star_reexport_specifiers: vec!["./empty-star-source.mts".to_string()],
+            ..TsFileFacts::default()
+        },
+    )]);
+    assert!(matches!(
+        resolve_exported_callable(
+            &inputs,
+            &star_facts,
+            &resolver,
+            &source,
+            "missing",
+            &CallableResolutionIndexes::default(),
+            &mut Vec::new(),
+        ),
+        ExportedCallableResolution::Unknown
+    ));
 }
 
 #[test]
