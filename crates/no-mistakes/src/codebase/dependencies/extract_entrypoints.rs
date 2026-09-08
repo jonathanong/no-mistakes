@@ -57,7 +57,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
                 .callable_bindings
                 .get(&(*binding_scope, binding.to_string()))?;
             member.map_or(Some(callable_id), |member| {
-                collector.class_callable_member_ids.iter().find_map(
+                collector.aggregate_callable_member_ids.iter().find_map(
                     |(class_id, candidate, member_id)| {
                         (*class_id == callable_id && candidate == member).then_some(*member_id)
                     },

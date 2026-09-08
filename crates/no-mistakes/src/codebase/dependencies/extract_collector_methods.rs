@@ -69,6 +69,35 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
             InvocationKind::Call,
         );
     }
+    record_callable_argument_transitions(collector, call);
+}
+
+fn record_callable_argument_transitions(collector: &mut ImportCollector, call: &CallExpression<'_>) {
+    for argument in &call.arguments {
+        let Some(expression) = argument.as_expression() else {
+            continue;
+        };
+        let Some(callee) = simple_callee_name(expression) else {
+            continue;
+        };
+        if collector.call_target_identity(&callee) != CallTargetIdentity::RepositoryFunction {
+            continue;
+        }
+        collector.function_calls.push(FunctionCall {
+            caller: collector.current_function(),
+            caller_id: collector.current_function_id(),
+            syntactic_caller: collector.current_syntactic_caller(),
+            callee_binding_scope: collector.callee_binding_scope(&callee),
+            callee,
+            line: 0,
+            offset: 0,
+            is_callback: true,
+            invocation: InvocationKind::Callback,
+            target_identity: CallTargetIdentity::RepositoryFunction,
+            static_arg: None,
+            static_cwd: None,
+        });
+    }
 }
 
 fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewExpression<'_>) {
@@ -90,6 +119,13 @@ fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewE
                 callee_binding_scope,
                 static_arg: new.arguments.first().and_then(static_path_argument),
             });
+            if has_dynamic_static_member_receiver(&new.callee) {
+                collector.record_unknown_call(
+                    import_line_at(&collector.line_starts, new.span.start as usize),
+                    new.span.start,
+                    InvocationKind::Construct,
+                );
+            }
         }
     } else {
         collector.record_unknown_call(

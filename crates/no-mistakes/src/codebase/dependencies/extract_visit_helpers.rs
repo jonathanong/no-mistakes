@@ -149,13 +149,13 @@ impl ImportCollector {
             .insert((class_id, member.to_string(), member_id));
     }
 
-    fn record_class_callable_member_id(
+    fn record_aggregate_callable_member_id(
         &mut self,
         class_id: CallableId,
         member: &str,
         member_id: CallableId,
     ) {
-        self.class_callable_member_ids
+        self.aggregate_callable_member_ids
             .insert((class_id, member.to_string(), member_id));
     }
 

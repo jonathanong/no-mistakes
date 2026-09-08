@@ -41,20 +41,14 @@ fn walk_default_expression<'a>(
 fn parenthesized_default_function<'a>(
     declaration: &'a ExportDefaultDeclarationKind<'a>,
 ) -> Option<&'a oxc_ast::ast::Function<'a>> {
-    let ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) = declaration else {
-        return None;
-    };
-    parenthesized_function_expression(&parenthesized.expression)
+    default_expression(declaration).and_then(parenthesized_function_expression)
 }
 
 fn parenthesized_function_expression<'a>(
     expression: &'a Expression<'a>,
 ) -> Option<&'a oxc_ast::ast::Function<'a>> {
-    match expression {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
         Expression::FunctionExpression(function) => Some(function),
-        Expression::ParenthesizedExpression(parenthesized) => {
-            parenthesized_function_expression(&parenthesized.expression)
-        }
         _ => None,
     }
 }
@@ -62,31 +56,24 @@ fn parenthesized_function_expression<'a>(
 fn parenthesized_default_arrow<'a>(
     declaration: &'a ExportDefaultDeclarationKind<'a>,
 ) -> Option<&'a oxc_ast::ast::ArrowFunctionExpression<'a>> {
-    let ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) = declaration else {
-        return None;
-    };
-    parenthesized_arrow_expression(&parenthesized.expression)
+    default_expression(declaration).and_then(parenthesized_arrow_expression)
 }
 
 fn parenthesized_arrow_expression<'a>(
     expression: &'a Expression<'a>,
 ) -> Option<&'a oxc_ast::ast::ArrowFunctionExpression<'a>> {
-    match expression {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
         Expression::ArrowFunctionExpression(arrow) => Some(arrow),
-        Expression::ParenthesizedExpression(parenthesized) => {
-            parenthesized_arrow_expression(&parenthesized.expression)
-        }
         _ => None,
     }
 }
 
 fn default_expression_creates_own_scope(declaration: &ExportDefaultDeclarationKind<'_>) -> bool {
-    match declaration {
+    match default_expression(declaration).map(crate::codebase::ts_source::unwrap_ts_wrappers) {
         // Bare `export default () => …` is an expression; parenthesized functions
         // are unwrapped before this helper runs, and `export default function`
         // is a FunctionDeclaration rather than FunctionExpression.
-        ExportDefaultDeclarationKind::ArrowFunctionExpression(_) => true,
-        ExportDefaultDeclarationKind::ParenthesizedExpression(_) => false,
+        Some(Expression::ArrowFunctionExpression(_)) => true,
         _ => false,
     }
 }
@@ -96,18 +83,33 @@ fn default_object_expression<'a>(
 ) -> Option<&'a ObjectExpression<'a>> {
     match declaration {
         ExportDefaultDeclarationKind::ObjectExpression(object) => Some(object),
-        ExportDefaultDeclarationKind::ParenthesizedExpression(parenthesized) => {
-            object_expression(&parenthesized.expression)
-        }
-        _ => None,
+        _ => default_expression(declaration).and_then(object_expression),
     }
 }
 
 fn object_expression<'a>(expression: &'a Expression<'a>) -> Option<&'a ObjectExpression<'a>> {
-    match expression {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
         Expression::ObjectExpression(object) => Some(object),
-        Expression::ParenthesizedExpression(parenthesized) => {
-            object_expression(&parenthesized.expression)
+        _ => None,
+    }
+}
+
+fn default_expression<'a>(
+    declaration: &'a ExportDefaultDeclarationKind<'a>,
+) -> Option<&'a Expression<'a>> {
+    match declaration {
+        ExportDefaultDeclarationKind::ParenthesizedExpression(expression) => {
+            Some(&expression.expression)
+        }
+        ExportDefaultDeclarationKind::TSAsExpression(expression) => Some(&expression.expression),
+        ExportDefaultDeclarationKind::TSNonNullExpression(expression) => {
+            Some(&expression.expression)
+        }
+        ExportDefaultDeclarationKind::TSSatisfiesExpression(expression) => {
+            Some(&expression.expression)
+        }
+        ExportDefaultDeclarationKind::TSTypeAssertion(expression) => {
+            Some(&expression.expression)
         }
         _ => None,
     }

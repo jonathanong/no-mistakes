@@ -14,6 +14,7 @@ fn walk_class_with_scoped_methods<'a>(
         collector.visit_ts_type_parameter_declaration(type_parameters);
     }
     if let Some(heritage) = &class.heritage {
+        record_class_base_symbol_reference(collector, class_name, class_id, class);
         collector.visit_expression(&heritage.expression);
         if let Some(type_arguments) = &heritage.type_arguments {
             collector.visit_ts_type_parameter_instantiation(type_arguments);
@@ -26,11 +27,16 @@ fn walk_class_with_scoped_methods<'a>(
             if let Some(name) =
                 crate::codebase::ts_source::static_property_key_name(&method.key)
             {
-                collector.record_class_callable_member_id(class_id, name, method_id);
+                collector.record_aggregate_callable_member_id(class_id, name, method_id);
             }
             if method.r#static {
                 if let Some(name) = crate::codebase::ts_source::static_property_key_name(&method.key) {
                     collector.record_class_member_callable_id(class_id, name, method_id);
+                    if method.kind == MethodDefinitionKind::Get {
+                        collector
+                            .static_getter_member_ids
+                            .insert((class_id, name.to_string()));
+                    }
                 }
             }
             walk_class_method_with_scope(collector, class_name, class_id, method_id, method);

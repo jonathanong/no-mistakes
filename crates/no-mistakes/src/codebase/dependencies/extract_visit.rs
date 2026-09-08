@@ -210,6 +210,7 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_static_member_expression(&mut self, member: &StaticMemberExpression<'a>) {
         if let Some(name) = simple_static_member_name(member) {
+            record_static_getter_read(self, member, &name);
             self.push_value_symbol_reference(name);
         }
         walk::walk_static_member_expression(self, member);

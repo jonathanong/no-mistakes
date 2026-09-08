@@ -25,7 +25,9 @@ fn reachable_function_scopes(
                 && call.callee == "constructor")
             || call.invocation
                 == crate::codebase::dependencies::extract::InvocationKind::Construct
-            || (call.caller.is_some() && call.callee.starts_with("<anonymous:"))
+            || (call.invocation
+                == crate::codebase::dependencies::extract::InvocationKind::Callback
+                && (call.caller.is_some() || !call.callee.starts_with("<anonymous:")))
     }) {
         let Some(callee) = reachable_callee_scope(facts, call, &known_scopes) else {
             continue;

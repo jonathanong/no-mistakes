@@ -4,6 +4,7 @@ fn walk_function_with_body_bindings<'a>(
 ) {
     // Default parameters run in the parameter environment, before the body
     // lexical environment exists. Visit them before introducing body bindings.
+    visit_type_parameter_constraints(collector, function.type_parameters.as_deref());
     walk::walk_formal_parameters(collector, &function.params);
     if let Some(return_type) = &function.return_type {
         walk::walk_ts_type_annotation(collector, return_type);
@@ -19,6 +20,7 @@ fn walk_arrow_function_with_body_bindings<'a>(
     arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
 ) {
     // Default parameters run before the body lexical environment exists.
+    visit_type_parameter_constraints(collector, arrow.type_parameters.as_deref());
     walk::walk_formal_parameters(collector, &arrow.params);
     if let Some(return_type) = &arrow.return_type {
         walk::walk_ts_type_annotation(collector, return_type);

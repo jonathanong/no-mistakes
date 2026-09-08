@@ -41,6 +41,17 @@ impl ImportCollector {
             else {
                 return false;
             };
+            let is_class = self
+                .callable_scope_ids
+                .iter()
+                .any(|(id, scope)| id == class_id && self.class_scopes.contains(scope));
+            if is_class {
+                return self.class_member_callable_ids.iter().any(
+                    |(candidate_class_id, candidate_member, _)| {
+                        candidate_class_id == class_id && candidate_member == member
+                    },
+                );
+            }
             return self.function_calls.iter().any(|call| {
                 call.invocation == InvocationKind::Membership
                     && call.caller_id == Some(*class_id)

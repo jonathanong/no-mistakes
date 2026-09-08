@@ -17,7 +17,8 @@ struct ImportCollector {
     /// Every class method's identity, used only to invalidate the exact
     /// reassigned lexical binding without promoting instance methods to static
     /// graph edges.
-    class_callable_member_ids: HashSet<(CallableId, String, CallableId)>,
+    aggregate_callable_member_ids: HashSet<(CallableId, String, CallableId)>,
+    static_getter_member_ids: HashSet<(CallableId, String)>,
     syntactic_caller_stack: Vec<String>,
     local_stack: Vec<HashSet<String>>,
     /// Stable identities parallel to `local_stack`. Scope depth alone is not

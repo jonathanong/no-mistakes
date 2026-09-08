@@ -2,6 +2,7 @@ use super::*;
 
 mod constructor_reachability;
 mod callable_identity;
+mod callback_and_getter_reachability;
 mod hoist_bindings;
 mod import_policy;
 mod namespace_alias;

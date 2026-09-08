@@ -99,17 +99,18 @@ fn member_callee_unwraps_typescript_receiver_wrappers() {
 
 #[test]
 fn dynamic_member_receiver_records_unknown_call_evidence() {
-    let source = "function run() { factory().invoke(); }";
+    let source = "function run() { factory().invoke(); new (factory().Handler)(); }";
     let facts = facts(source);
 
     assert!(facts
         .function_calls
         .iter()
         .any(|call| call.callee == "factory" && call.caller.as_deref() == Some("run")));
-    assert_eq!(facts.unknown_calls.len(), 1);
+    assert_eq!(facts.unknown_calls.len(), 2);
     assert_eq!(facts.unknown_calls[0].caller.as_deref(), Some("run"));
     assert_eq!(facts.unknown_calls[0].line, 1);
     assert_eq!(facts.unknown_calls[0].invocation, InvocationKind::Call);
+    assert_eq!(facts.unknown_calls[1].invocation, InvocationKind::Construct);
     assert!(facts
         .function_calls
         .iter()
@@ -206,6 +207,19 @@ fn local_class_members_are_callable_through_the_class_binding() {
     assert_eq!(facts.class_scopes, ["Service"]);
     assert!(facts.function_calls.iter().any(|call| {
         call.callee == "Service.run"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
+fn static_getter_reads_are_callable_invocations() {
+    let facts = facts(
+        "class Service { static get value() { return 1; } } function run() { return Service.value; }",
+    );
+    assert!(facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "Service.value"
+            && call.invocation == InvocationKind::Call
             && call.target_identity == CallTargetIdentity::RepositoryFunction
     }));
 }

@@ -62,6 +62,8 @@ fn call_resolution_inputs<'a>(
 mod export_resolution;
 #[path = "call_traversal/resolution.rs"]
 mod resolution;
+#[path = "call_traversal/callable_aliases.rs"]
+mod callable_aliases;
 
 #[test]
 fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
