@@ -15,6 +15,10 @@ pub(super) fn find_keyword(sql: &str, keyword: &str, start: usize) -> Option<usi
         }
         match bytes[index] {
             b'\'' | b'"' => quote = Some(bytes[index]),
+            b'$' if let Some(end) = dollar_quote_end(sql, index) => {
+                index = end;
+                continue;
+            }
             b'-' if bytes.get(index + 1) == Some(&b'-') => {
                 index = sql[index..]
                     .find('\n')
@@ -39,6 +43,45 @@ pub(super) fn find_keyword(sql: &str, keyword: &str, start: usize) -> Option<usi
         index += 1;
     }
     None
+}
+
+/// Return the first byte after a PostgreSQL dollar-quoted string. An
+/// unterminated dollar quote consumes the rest of the input, which keeps
+/// keywords in a partially written function body from becoming false hits.
+fn dollar_quote_end(sql: &str, start: usize) -> Option<usize> {
+    let bytes = sql.as_bytes();
+    let mut delimiter_end = start + 1;
+    if bytes.get(delimiter_end) == Some(&b'$') {
+        delimiter_end += 1;
+    } else {
+        if !is_dollar_tag_start(bytes.get(delimiter_end).copied()) {
+            return None;
+        }
+        delimiter_end += 1;
+        while is_dollar_tag_byte(bytes.get(delimiter_end).copied()) {
+            delimiter_end += 1;
+        }
+        if bytes.get(delimiter_end) != Some(&b'$') {
+            return None;
+        }
+        delimiter_end += 1;
+    }
+    let delimiter = &sql[start..delimiter_end];
+    Some(
+        sql[delimiter_end..]
+            .find(delimiter)
+            .map_or(bytes.len(), |offset| {
+                delimiter_end + offset + delimiter.len()
+            }),
+    )
+}
+
+fn is_dollar_tag_start(byte: Option<u8>) -> bool {
+    byte.is_some_and(|byte| byte.is_ascii_alphabetic() || byte == b'_')
+}
+
+fn is_dollar_tag_byte(byte: Option<u8>) -> bool {
+    byte.is_some_and(|byte| byte.is_ascii_alphanumeric() || byte == b'_')
 }
 
 pub(super) fn starts_keyword(sql: &str, start: usize, keyword: &str) -> bool {

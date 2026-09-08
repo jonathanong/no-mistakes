@@ -148,6 +148,25 @@ fn scans_opted_in_static_sql_sources() {
 }
 
 #[test]
+fn scopes_sql_file_safe_directives_to_their_own_statement() {
+    let root = fixture("fail-sql-statement-directive");
+    let findings = check_with_files(
+        &root,
+        &config_with_options(
+            "schemaCatalogPath: schema.json\ninclude: ['src/**/*.ts']\nsqlInclude: ['queries/**/*.sql']",
+        ),
+        &[root.join("queries/inserts.sql"), root.join("schema.json")],
+    )
+    .unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("missing-canonical-order")
+    );
+    assert_eq!(findings[0].line, 5);
+}
+
+#[test]
 fn requires_a_catalog_path() {
     let error = match compile_options(&Options::default()) {
         Ok(_) => panic!("missing schemaCatalogPath should fail"),
@@ -242,6 +261,21 @@ fn ignores_recovered_dynamic_non_insert_sql() {
         &root,
         &config(),
         &[root.join("src/dynamic-select.ts"), root.join("schema.json")],
+    )
+    .unwrap();
+    assert!(result.is_empty(), "{result:#?}");
+}
+
+#[test]
+fn ignores_dynamic_non_insert_sql_that_only_mentions_insert_in_comments_or_strings() {
+    let root = fixture("pass-canonical-order");
+    let result = check_with_files(
+        &root,
+        &config(),
+        &[
+            root.join("src/dynamic-comment-and-string.ts"),
+            root.join("schema.json"),
+        ],
     )
     .unwrap();
     assert!(result.is_empty(), "{result:#?}");

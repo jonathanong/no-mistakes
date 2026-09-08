@@ -1,7 +1,8 @@
 use super::CanonicalOrderKey;
 use crate::codebase::postgres::parse_postgres_sql;
 use regex::Regex;
-use sqlparser::ast::{Expr, SelectItem, SetExpr, Statement};
+use sqlparser::ast::{visit_expressions, Expr, SelectItem, SetExpr, Statement};
+use std::ops::ControlFlow;
 use std::sync::OnceLock;
 
 pub fn order_prefix_matches(
@@ -12,6 +13,19 @@ pub fn order_prefix_matches(
     actual.len() >= expected.len()
         && actual.iter().zip(expected).all(|(actual, expected)| {
             expression_matches(&actual.expression, &expected.expression, ignore_qualifiers)
+                && actual.ascending == expected.ascending
+                && actual.nulls_first == expected.nulls_first
+        })
+}
+pub(super) fn order_prefix_matches_for_qualifiers(
+    actual: &[CanonicalOrderKey],
+    expected: &[CanonicalOrderKey],
+    qualifiers: &[String],
+) -> bool {
+    actual.len() >= expected.len()
+        && actual.iter().zip(expected).all(|(actual, expected)| {
+            qualifiers_are_allowed(&actual.expression, qualifiers)
+                && expression_matches(&actual.expression, &expected.expression, true)
                 && actual.ascending == expected.ascending
                 && actual.nulls_first == expected.nulls_first
         })
@@ -86,4 +100,28 @@ fn strip_qualifiers(expression: &str) -> String {
         })
         .replace_all(expression, "$1")
         .into_owned()
+}
+fn qualifiers_are_allowed(expression: &str, qualifiers: &[String]) -> bool {
+    let Some(expression) = parse_postgres_expression(expression) else {
+        return false;
+    };
+    visit_expressions(&expression, |expression| {
+        let Expr::CompoundIdentifier(parts) = expression else {
+            return ControlFlow::Continue(());
+        };
+        let qualifier = parts[..parts.len().saturating_sub(1)]
+            .iter()
+            .map(|part| part.value.as_str())
+            .collect::<Vec<_>>()
+            .join(".");
+        if qualifiers
+            .iter()
+            .any(|candidate| candidate.eq_ignore_ascii_case(&qualifier))
+        {
+            ControlFlow::Continue(())
+        } else {
+            ControlFlow::Break(())
+        }
+    })
+    .is_continue()
 }

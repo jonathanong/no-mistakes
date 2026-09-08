@@ -170,8 +170,12 @@ when the AST is missing.
 - `has_multi_row_predicate` — the locked select's `WHERE` uses `IN` or `= ANY`
 - `has_order_by` — the locked query has `ORDER BY`
 - `skips_locked_rows` — the lock uses `SKIP LOCKED`
-- `table` and parsed `ORDER BY` expression keys — used with a configured
-  schema catalog to require an exact valid unique-key prefix
+- `tables` — the schema-preserving base relations selected by the lock clause
+- `table_qualifiers` — the schema, base-name, and alias qualifiers valid for
+  each locked relation
+- `order` — parsed `ORDER BY` expression keys, used with a configured schema
+  catalog to require an exact valid unique-key prefix without accepting a key
+  qualified by another joined relation
 
 Unparseable SQL returns an error. The lock-ordering rule consumes this helper
 instead of re-parsing SQL with a private parser. `postgres-conflict-ordering`

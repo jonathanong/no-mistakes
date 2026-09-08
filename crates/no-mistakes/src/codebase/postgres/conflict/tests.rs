@@ -246,3 +246,67 @@ fn skips_non_insert_and_non_conflict_statements() {
     assert_eq!(inserts.len(), 1);
     assert_eq!(inserts[0].target, SqlConflictTarget::Targetless);
 }
+
+#[test]
+fn skips_tagged_and_untagged_dollar_quoted_bodies() {
+    let sql = r#"
+        SELECT $$ INSERT INTO decoy VALUES (1) ON CONFLICT (decoy_id) DO NOTHING $$;
+        SELECT $body$ ON CONFLICT (also_decoy) DO NOTHING $body$;
+        INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING
+    "#;
+    let raw = raw::raw_conflicts(sql).unwrap();
+    assert_eq!(raw.len(), 1);
+    assert_eq!(
+        raw[0].target,
+        SqlConflictTarget::Columns {
+            expressions: vec!["id".into()],
+            predicate: None,
+        }
+    );
+    let inserts = analyze_conflict_inserts(sql).unwrap();
+    assert_eq!(inserts.len(), 1);
+    assert_eq!(inserts[0].table, "items");
+}
+
+#[test]
+fn skips_unterminated_dollar_quoted_body() {
+    let sql = "SELECT $function$ INSERT INTO decoy ON CONFLICT (id) DO NOTHING";
+    assert!(raw::raw_conflicts(sql).unwrap().is_empty());
+    assert!(analyze_conflict_inserts(sql).unwrap().is_empty());
+    assert_eq!(
+        raw::raw_conflicts("SELECT $tag INSERT ON CONFLICT")
+            .unwrap()
+            .len(),
+        1
+    );
+}
+
+#[test]
+fn traverses_data_modifying_ctes_before_the_outer_statement() {
+    let sql = "WITH inserted AS (
+        INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING RETURNING id
+    )
+    SELECT id FROM inserted";
+    let inserts = analyze_conflict_inserts(sql).unwrap();
+    assert_eq!(inserts.len(), 1);
+    assert_eq!(inserts[0].table, "items");
+    assert_eq!(
+        inserts[0].target,
+        SqlConflictTarget::Columns {
+            expressions: vec!["id".into()],
+            predicate: None,
+        }
+    );
+}
+
+#[test]
+fn preserves_raw_target_alignment_across_ctes_and_outer_insert() {
+    let sql = "WITH inserted AS (
+        INSERT INTO items (id) VALUES (1) ON CONFLICT (id) DO NOTHING RETURNING id
+    )
+    INSERT INTO summaries (id) SELECT id FROM inserted ON CONFLICT (id) DO NOTHING";
+    let inserts = analyze_conflict_inserts(sql).unwrap();
+    assert_eq!(inserts.len(), 2);
+    assert_eq!(inserts[0].table, "items");
+    assert_eq!(inserts[1].table, "summaries");
+}

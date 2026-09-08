@@ -1,6 +1,8 @@
+use super::expressions::order_prefix_matches_for_qualifiers;
 use super::{
-    normalize_expression, normalize_identifier, order_prefix_matches, CanonicalIndex,
-    CanonicalOrderKey, CatalogTable, ResolvedArbiter, SchemaCatalog,
+    names::{normalize_identifier, normalize_table_name},
+    normalize_expression, order_prefix_matches, CanonicalIndex, CanonicalOrderKey, CatalogTable,
+    ResolvedArbiter, SchemaCatalog,
 };
 impl SchemaCatalog {
     pub fn resolve_columns(
@@ -80,8 +82,22 @@ impl SchemaCatalog {
                 .any(|index| order_prefix_matches(order, &index.keys, true))
         })
     }
+    pub(crate) fn has_canonical_prefix_for_qualifiers(
+        &self,
+        table: &str,
+        qualifiers: &[String],
+        order: &[CanonicalOrderKey],
+    ) -> bool {
+        self.table(table).is_some_and(|table| {
+            table
+                .indexes
+                .iter()
+                .filter(|index| index.predicate.is_none())
+                .any(|index| order_prefix_matches_for_qualifiers(order, &index.keys, qualifiers))
+        })
+    }
     fn table(&self, table: &str) -> Option<&CatalogTable> {
-        self.tables.get(&normalize_identifier(table))
+        self.tables.get(&normalize_table_name(table))
     }
 }
 fn resolve_candidates(candidates: Vec<CanonicalIndex>) -> ResolvedArbiter {

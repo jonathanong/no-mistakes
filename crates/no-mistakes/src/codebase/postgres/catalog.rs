@@ -5,6 +5,7 @@ use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 
 mod expressions;
+mod names;
 mod resolve;
 #[cfg(test)]
 mod tests;
@@ -150,7 +151,7 @@ impl SchemaCatalog {
                     .into_iter()
                     .map(|(name, constraint)| {
                         (
-                            normalize_identifier(&name),
+                            names::normalize_identifier(&name),
                             constraint
                                 .columns
                                 .into_iter()
@@ -160,7 +161,7 @@ impl SchemaCatalog {
                     })
                     .collect();
                 (
-                    normalize_identifier(&name),
+                    names::normalize_table_name(&name),
                     CatalogTable {
                         indexes,
                         unique_constraints,
@@ -172,14 +173,6 @@ impl SchemaCatalog {
     }
 }
 
-fn normalize_identifier(identifier: &str) -> String {
-    identifier
-        .rsplit('.')
-        .next()
-        .unwrap_or(identifier)
-        .trim_matches('"')
-        .to_ascii_lowercase()
-}
 pub(crate) fn normalize_catalog_path(raw_path: &str) -> Result<PathBuf> {
     let path = Path::new(raw_path);
     let mut normalized = PathBuf::new();

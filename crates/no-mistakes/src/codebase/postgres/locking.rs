@@ -16,6 +16,7 @@ pub struct LockingSelectMetadata {
     pub has_order_by: bool,
     pub skips_locked_rows: bool,
     pub tables: Option<Vec<String>>,
+    pub table_qualifiers: Option<std::collections::BTreeMap<String, Vec<String>>>,
     pub order: Option<Vec<CanonicalOrderKey>>,
 }
 
@@ -45,11 +46,13 @@ fn collect_from_query(query: &Query, out: &mut Vec<LockingSelectMetadata>) {
     }
     collect_from_set_expr(&query.body, out);
     if has_for_update(&query.locks) {
+        let locked_tables = locked_tables(&query.body, &query.locks);
         out.push(LockingSelectMetadata {
             has_multi_row_predicate: set_expr_has_multi_row(&query.body),
             has_order_by: query.order_by.is_some(),
             skips_locked_rows: locks_skip_locked(&query.locks),
-            tables: locked_tables(&query.body, &query.locks),
+            tables: locked_tables.as_ref().map(|tables| tables.names.clone()),
+            table_qualifiers: locked_tables.map(|tables| tables.qualifiers),
             order: query.order_by.as_ref().and_then(order_keys),
         });
     }

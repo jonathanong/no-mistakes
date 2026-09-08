@@ -71,16 +71,18 @@ pub(super) fn scan_with_sources(
         for path in postgres_sql_paths(root, files, sql_sources)? {
             let rel = relative_slash_path(root, &path);
             let source = crate::codebase::rules::read_source(sources, &path).unwrap_or_default();
-            if has_safe_directive(&source, 1, &source, &opts.safe_directive) {
-                continue;
+            for (line, statement) in analysis::sql_statements(&source) {
+                if has_safe_directive(statement, 1, statement, &opts.safe_directive) {
+                    continue;
+                }
+                findings.extend(analysis::findings_for_sql(
+                    &rel,
+                    line as usize,
+                    statement,
+                    catalog,
+                    opts.fail_unanalyzable,
+                ));
             }
-            findings.extend(analysis::findings_for_sql(
-                &rel,
-                1,
-                &source,
-                catalog,
-                opts.fail_unanalyzable,
-            ));
         }
     }
     crate::codebase::rules::sort_findings(&mut findings);

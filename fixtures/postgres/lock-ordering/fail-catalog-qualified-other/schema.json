@@ -5,7 +5,7 @@
       "indexes": {
         "jobs_pkey": {
           "accessMethod": "btree", "unique": true, "primary": true, "constraintBacked": true, "valid": true, "ready": true,
-          "keys": [{ "expression": "lower(id)", "descending": false, "nullsFirst": false }], "predicate": null
+          "keys": [{ "expression": "id", "descending": false, "nullsFirst": false }], "predicate": null
         }
       }
     },
@@ -13,7 +13,7 @@
       "indexes": {
         "users_pkey": {
           "accessMethod": "btree", "unique": true, "primary": true, "constraintBacked": true, "valid": true, "ready": true,
-          "keys": [{ "expression": "user_id", "descending": false, "nullsFirst": false }], "predicate": null
+          "keys": [{ "expression": "id", "descending": false, "nullsFirst": false }], "predicate": null
         }
       }
     }

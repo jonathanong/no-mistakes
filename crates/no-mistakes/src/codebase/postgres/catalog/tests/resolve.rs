@@ -1,5 +1,6 @@
 use super::super::{
-    CanonicalIndex, CanonicalOrderKey, CatalogTable, ResolvedArbiter, SchemaCatalog,
+    CanonicalIndex, CanonicalOrderKey, CatalogTable, ResolvedArbiter, SchemaCatalog, Snapshot,
+    SnapshotIndex, SnapshotIndexKey, SnapshotTable,
 };
 use std::collections::BTreeMap;
 
@@ -97,4 +98,38 @@ fn catalog_prefixes_ignore_qualifiers_but_exclude_partial_indexes() {
     assert!(catalog.has_canonical_prefix("users", &[key("input.id")]));
     assert!(!catalog.has_canonical_prefix("partial_users", &[key("email")]));
     assert!(!catalog.has_canonical_prefix("missing_table", &[key("id")]));
+}
+
+#[test]
+fn schema_qualified_tables_keep_distinct_catalog_identities() {
+    let index = |expression: &str| SnapshotIndex {
+        access_method: "btree".to_owned(),
+        unique: true,
+        valid: true,
+        ready: true,
+        keys: vec![SnapshotIndexKey {
+            expression: expression.to_owned(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let table = |index_name: &str, expression: &str| SnapshotTable {
+        indexes: BTreeMap::from([(index_name.to_owned(), index(expression))]),
+        ..Default::default()
+    };
+    let catalog = SchemaCatalog::from_snapshot(Snapshot {
+        format_version: 2,
+        tables: BTreeMap::from([
+            ("public.items".to_owned(), table("public_items_key", "id")),
+            (
+                "archive.items".to_owned(),
+                table("archive_items_key", "archive_id"),
+            ),
+        ]),
+    });
+
+    assert!(catalog.has_canonical_prefix("public.items", &[key("id")]));
+    assert!(!catalog.has_canonical_prefix("archive.items", &[key("id")]));
+    assert!(catalog.has_canonical_prefix("archive.items", &[key("archive_id")]));
+    assert!(!catalog.has_canonical_prefix("items", &[key("id")]));
 }

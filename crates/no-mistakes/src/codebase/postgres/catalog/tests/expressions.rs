@@ -1,3 +1,4 @@
+use super::super::expressions::order_prefix_matches_for_qualifiers;
 use super::super::{
     normalize_expression, order_prefix_matches, parse_postgres_expression, CanonicalOrderKey,
 };
@@ -43,6 +44,11 @@ fn postgres_expression_parser_handles_aliases_and_rejects_non_expressions() {
     assert!(parse_postgres_expression("*").is_none());
     assert!(parse_postgres_expression("id, name").is_none());
     assert!(parse_postgres_expression("lower(").is_none());
+    assert!(!order_prefix_matches_for_qualifiers(
+        &[key("lower(")],
+        &[key("lower(id)")],
+        &["items".to_owned()],
+    ));
 }
 
 #[test]

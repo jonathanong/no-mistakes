@@ -97,9 +97,16 @@ fn findings_for_call_with_catalog(
                             .zip(lock.order.as_deref())
                             .is_some_and(|(tables, order)| {
                                 !tables.is_empty()
-                                    && tables
-                                        .iter()
-                                        .all(|table| catalog.has_canonical_prefix(table, order))
+                                    && tables.iter().all(|table| {
+                                        lock.table_qualifiers
+                                            .as_ref()
+                                            .and_then(|qualifiers| qualifiers.get(table))
+                                            .is_some_and(|qualifiers| {
+                                                catalog.has_canonical_prefix_for_qualifiers(
+                                                    table, qualifiers, order,
+                                                )
+                                            })
+                                    })
                             })
                 }) {
                     vec![finding(

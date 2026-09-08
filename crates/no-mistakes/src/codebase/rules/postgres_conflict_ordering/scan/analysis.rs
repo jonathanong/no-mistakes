@@ -6,6 +6,9 @@ use crate::codebase::postgres::{
 };
 use crate::codebase::rules::RuleFinding;
 
+mod sql;
+pub(super) use sql::{contains_insert, contains_insert_conflict, sql_statements};
+
 pub(super) fn findings_for_sql(
     file: &str,
     line: usize,
@@ -158,16 +161,6 @@ fn display_keys(keys: &[CanonicalOrderKey]) -> String {
         })
         .collect::<Vec<_>>()
         .join(", ")
-}
-
-pub(super) fn contains_insert_conflict(sql: &str) -> bool {
-    let normalized = sql.to_ascii_lowercase();
-    normalized.contains("insert") && normalized.contains("on conflict")
-}
-
-pub(super) fn contains_insert(sql: &str) -> bool {
-    sql.split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
-        .any(|token| token.eq_ignore_ascii_case("insert"))
 }
 
 fn resolve_order_aliases(

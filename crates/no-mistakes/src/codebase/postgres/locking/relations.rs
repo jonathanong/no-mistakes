@@ -1,22 +1,32 @@
 use super::relation_name;
-use sqlparser::ast::{LockClause, LockType, SetExpr, TableFactor, TableWithJoins};
-use std::collections::BTreeSet;
+use sqlparser::ast::{
+    LockClause, LockType, ObjectName, ObjectNamePart, SetExpr, TableFactor, TableWithJoins,
+};
+use std::collections::{BTreeMap, BTreeSet};
 
-pub(super) fn locked_tables(body: &SetExpr, locks: &[LockClause]) -> Option<Vec<String>> {
+pub(super) struct LockedTables {
+    pub(super) names: Vec<String>,
+    pub(super) qualifiers: BTreeMap<String, Vec<String>>,
+}
+
+pub(super) fn locked_tables(body: &SetExpr, locks: &[LockClause]) -> Option<LockedTables> {
     let relations = relations(body)?;
     let update_locks: Vec<_> = locks
         .iter()
         .filter(|lock| lock.lock_type == LockType::Update)
         .collect();
     if update_locks.is_empty() {
-        return Some(Vec::new());
+        return Some(LockedTables {
+            names: Vec::new(),
+            qualifiers: BTreeMap::new(),
+        });
     }
     if update_locks.iter().any(|lock| lock.of.is_none()) {
-        return Some(distinct_tables(&relations));
+        return Some(selected_tables(&relations.iter().collect::<Vec<_>>()));
     }
-    let mut tables = BTreeSet::new();
+    let mut tables = Vec::new();
     for lock in update_locks {
-        let target = normalize(&relation_name(lock.of.as_ref()?));
+        let target = normalize(&qualified_relation_name(lock.of.as_ref()?));
         let matches = relations
             .iter()
             .filter(|relation| relation.names.contains(&target))
@@ -24,9 +34,9 @@ pub(super) fn locked_tables(body: &SetExpr, locks: &[LockClause]) -> Option<Vec<
         if matches.len() != 1 {
             return None;
         }
-        tables.insert(matches[0].table.clone());
+        tables.push(matches[0]);
     }
-    Some(tables.into_iter().collect())
+    Some(selected_tables(&tables))
 }
 
 #[derive(Debug)]
@@ -57,8 +67,8 @@ fn collect_table_with_joins(table: &TableWithJoins, relations: &mut Vec<Relation
 fn collect_table_factor(factor: &TableFactor, relations: &mut Vec<Relation>) -> Option<()> {
     match factor {
         TableFactor::Table { name, alias, .. } => {
-            let table = relation_name(name);
-            let mut names = BTreeSet::from([normalize(&table)]);
+            let table = qualified_relation_name(name);
+            let mut names = BTreeSet::from([normalize(&table), normalize(&relation_name(name))]);
             if let Some(alias) = alias {
                 names.insert(normalize(&alias.name.value));
             }
@@ -72,13 +82,31 @@ fn collect_table_factor(factor: &TableFactor, relations: &mut Vec<Relation>) -> 
     }
 }
 
-fn distinct_tables(relations: &[Relation]) -> Vec<String> {
-    relations
-        .iter()
-        .map(|relation| relation.table.clone())
-        .collect::<BTreeSet<_>>()
+fn selected_tables(relations: &[&Relation]) -> LockedTables {
+    let mut qualifiers = BTreeMap::new();
+    for relation in relations {
+        qualifiers
+            .entry(relation.table.clone())
+            .or_insert_with(BTreeSet::new)
+            .extend(relation.names.iter().cloned());
+    }
+    let names = qualifiers.keys().cloned().collect();
+    let qualifiers = qualifiers
         .into_iter()
-        .collect()
+        .map(|(table, names)| (table, names.into_iter().collect()))
+        .collect();
+    LockedTables { names, qualifiers }
+}
+
+fn qualified_relation_name(name: &ObjectName) -> String {
+    name.0
+        .iter()
+        .filter_map(|part| match part {
+            ObjectNamePart::Identifier(ident) => Some(ident.value.as_str()),
+            _ => None,
+        })
+        .collect::<Vec<_>>()
+        .join(".")
 }
 
 fn normalize(name: &str) -> String {

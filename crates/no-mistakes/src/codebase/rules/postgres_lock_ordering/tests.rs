@@ -19,7 +19,13 @@ fn fixture(scenario: &str) -> PathBuf {
     // retain legacy locations for pre-existing lock-ordering scenarios.
     if matches!(
         scenario,
-        "fail-catalog-join" | "fail-catalog-order" | "pass-catalog" | "pass-catalog-of-alias"
+        "fail-catalog-join"
+            | "fail-catalog-order"
+            | "fail-catalog-qualified-other"
+            | "fail-catalog-schema-qualified"
+            | "pass-catalog"
+            | "pass-catalog-of-alias"
+            | "pass-catalog-unqualified"
     ) {
         return PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../fixtures/postgres/lock-ordering")
@@ -88,12 +94,25 @@ fn order_by_is_safe() {
 fn catalog_mode_requires_a_real_unique_key_prefix() {
     assert!(findings_with_catalog("pass-catalog").is_empty());
     assert!(findings_with_catalog("pass-catalog-of-alias").is_empty());
+    assert!(findings_with_catalog("pass-catalog-unqualified").is_empty());
     let findings = findings_with_catalog("fail-catalog-order");
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert!(findings[0].message.contains("schema-catalog"));
     let findings = findings_with_catalog("fail-catalog-join");
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert!(findings[0].message.contains("schema-catalog"));
+}
+
+#[test]
+fn catalog_mode_scopes_qualifiers_and_schema_names_to_locked_relations() {
+    for scenario in [
+        "fail-catalog-qualified-other",
+        "fail-catalog-schema-qualified",
+    ] {
+        let findings = findings_with_catalog(scenario);
+        assert_eq!(findings.len(), 1, "{scenario}: {findings:#?}");
+        assert!(findings[0].message.contains("schema-catalog"));
+    }
 }
 
 #[test]

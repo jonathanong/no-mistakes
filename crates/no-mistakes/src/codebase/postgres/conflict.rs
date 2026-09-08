@@ -1,7 +1,9 @@
 use crate::codebase::postgres::{parse_postgres_sql, CanonicalOrderKey};
 use anyhow::{bail, Result};
 use raw::{raw_conflicts, sanitize};
-use sqlparser::ast::{Insert, OnInsert, OrderByKind, SelectItem, SetExpr, Statement, TableObject};
+use sqlparser::ast::{
+    Insert, OnInsert, OrderByKind, Query, SelectItem, SetExpr, Statement, TableObject,
+};
 use std::collections::BTreeMap;
 
 mod raw;
@@ -42,22 +44,72 @@ pub fn analyze_conflict_inserts(sql: &str) -> Result<Vec<SqlConflictInsertFact>>
     let statements = parse_postgres_sql(&sanitized)?;
     let mut raw = raw.into_iter();
     let mut inserts = Vec::new();
-    for statement in statements {
-        let Statement::Insert(insert) = statement else {
-            continue;
-        };
-        let Some(OnInsert::OnConflict(_)) = insert.on else {
-            continue;
-        };
-        let raw = raw
-            .next()
-            .ok_or_else(|| anyhow::anyhow!("missing ON CONFLICT target"))?;
-        inserts.push(analyze_insert(&insert, raw.target)?);
+    for statement in &statements {
+        collect_statement(statement, &mut raw, &mut inserts)?;
     }
     if raw.next().is_some() {
         bail!("could not align ON CONFLICT clauses with INSERT statements");
     }
     Ok(inserts)
+}
+
+fn collect_statement(
+    statement: &Statement,
+    raw: &mut std::vec::IntoIter<raw::RawConflict>,
+    inserts: &mut Vec<SqlConflictInsertFact>,
+) -> Result<()> {
+    match statement {
+        Statement::Insert(insert) => collect_insert(insert, raw, inserts),
+        Statement::Query(query) => collect_query(query, raw, inserts),
+        _ => Ok(()),
+    }
+}
+
+fn collect_query(
+    query: &Query,
+    raw: &mut std::vec::IntoIter<raw::RawConflict>,
+    inserts: &mut Vec<SqlConflictInsertFact>,
+) -> Result<()> {
+    if let Some(with) = &query.with {
+        for cte in &with.cte_tables {
+            collect_query(&cte.query, raw, inserts)?;
+        }
+    }
+    collect_set_expr(query.body.as_ref(), raw, inserts)
+}
+
+fn collect_set_expr(
+    body: &SetExpr,
+    raw: &mut std::vec::IntoIter<raw::RawConflict>,
+    inserts: &mut Vec<SqlConflictInsertFact>,
+) -> Result<()> {
+    match body {
+        SetExpr::Insert(statement) => collect_statement(statement, raw, inserts),
+        SetExpr::Query(query) => collect_query(query, raw, inserts),
+        SetExpr::SetOperation { left, right, .. } => {
+            collect_set_expr(left, raw, inserts)?;
+            collect_set_expr(right, raw, inserts)
+        }
+        _ => Ok(()),
+    }
+}
+
+fn collect_insert(
+    insert: &Insert,
+    raw: &mut std::vec::IntoIter<raw::RawConflict>,
+    inserts: &mut Vec<SqlConflictInsertFact>,
+) -> Result<()> {
+    if let Some(source) = insert.source.as_deref() {
+        collect_query(source, raw, inserts)?;
+    }
+    let Some(OnInsert::OnConflict(_)) = insert.on else {
+        return Ok(());
+    };
+    let raw = raw
+        .next()
+        .ok_or_else(|| anyhow::anyhow!("missing ON CONFLICT target"))?;
+    inserts.push(analyze_insert(insert, raw.target)?);
+    Ok(())
 }
 
 fn analyze_insert(insert: &Insert, target: SqlConflictTarget) -> Result<SqlConflictInsertFact> {

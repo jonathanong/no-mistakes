@@ -99,3 +99,47 @@ fn helper_branches_preserve_order_metadata_and_alias_fallbacks() {
     assert!(contains_insert("insert into items"));
     assert!(!contains_insert("reinsertion"));
 }
+
+#[test]
+fn token_detection_and_statement_splitting_ignore_quoted_text_and_comments() {
+    let sql = "-- INSERT should not start a statement\n\
+/* ON CONFLICT; */\n\
+SELECT 'INSERT; ON CONFLICT', $$INSERT; ON CONFLICT$$;\n\
+INSERT INTO items (id) SELECT id FROM input ON CONFLICT (id) DO NOTHING;\n\
+-- deadlock-safe\n\
+INSERT INTO items (id) SELECT id FROM input;";
+
+    assert!(contains_insert(sql));
+    assert!(contains_insert_conflict(sql));
+    assert!(!contains_insert("SELECT 'INSERT' /* INSERT */"));
+    assert!(!contains_insert_conflict(
+        "SELECT 'INSERT ON CONFLICT' /* ON CONFLICT */"
+    ));
+
+    let statements = sql_statements(sql);
+    assert_eq!(statements.len(), 3, "{statements:#?}");
+    assert_eq!(statements[0].0, 3);
+    assert!(statements[0].1.contains("$$INSERT; ON CONFLICT$$"));
+    assert_eq!(statements[1].0, 4);
+    assert_eq!(statements[2].0, 6);
+}
+
+#[test]
+fn statement_lexer_covers_postgres_quoted_and_unterminated_shapes() {
+    let sql = "SELECT \"semi;\"\"colon\", $body$tagged;$body$;\n\
+/* outer; /* nested; */ still outer; */ SELECT 'escaped\\'; value';";
+    let statements = sql_statements(sql);
+    assert_eq!(statements.len(), 2, "{statements:#?}");
+    assert_eq!(statements[1].0, 2);
+
+    for unterminated in [
+        "SELECT 'INSERT; ON CONFLICT",
+        "SELECT \"INSERT; ON CONFLICT",
+        "SELECT $body$INSERT; ON CONFLICT",
+        "SELECT /* INSERT; ON CONFLICT",
+    ] {
+        assert!(!contains_insert_conflict(unterminated), "{unterminated}");
+        assert_eq!(sql_statements(unterminated).len(), 1);
+    }
+    assert_eq!(sql_statements("SELECT $body INSERT; ON CONFLICT").len(), 2);
+}

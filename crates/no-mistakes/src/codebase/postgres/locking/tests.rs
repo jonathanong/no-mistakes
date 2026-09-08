@@ -107,7 +107,7 @@ fn relation_resolver_handles_an_empty_update_lock_set_and_deduplicates_self_join
         panic!("expected query");
     };
     assert_eq!(
-        super::relations::locked_tables(&query.body, &[]),
+        super::relations::locked_tables(&query.body, &[]).map(|tables| tables.names),
         Some(Vec::new())
     );
 
@@ -115,6 +115,33 @@ fn relation_resolver_handles_an_empty_update_lock_set_and_deduplicates_self_join
         "SELECT * FROM jobs AS first_job JOIN jobs AS second_job ON true WHERE first_job.id = ANY($1) ORDER BY first_job.id FOR UPDATE",
     );
     assert_eq!(meta.tables, Some(vec!["jobs".to_string()]));
+}
+
+#[test]
+fn locked_relations_preserve_schema_and_alias_qualifiers() {
+    let meta = first(
+        "SELECT * FROM archive.items AS archived WHERE archived.id = ANY($1) ORDER BY archived.id FOR UPDATE",
+    );
+    assert_eq!(meta.tables, Some(vec!["archive.items".to_string()]));
+    assert_eq!(
+        meta.table_qualifiers,
+        Some(std::collections::BTreeMap::from([(
+            "archive.items".to_string(),
+            vec![
+                "archive.items".to_string(),
+                "archived".to_string(),
+                "items".to_string(),
+            ],
+        )]))
+    );
+}
+
+#[test]
+fn explicit_schema_lock_targets_resolve_without_matching_another_schema() {
+    let meta = first(
+        "SELECT * FROM public.items JOIN archive.items ON true WHERE archive.items.archive_id = ANY($1) ORDER BY archive.items.archive_id FOR UPDATE OF archive.items",
+    );
+    assert_eq!(meta.tables, Some(vec!["archive.items".to_string()]));
 }
 
 #[test]
