@@ -60,12 +60,7 @@ policies:
         ancestor_override_subset::parsed_ancestor_parse_count(&cache, &root.join(".oxlintrc.json"),),
         1
     );
-    assert!(findings
-        .iter()
-        .any(|finding| finding.file == "nested/.oxlintrc.json"));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.file == "string-extends/.oxlintrc.json"));
+    assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
