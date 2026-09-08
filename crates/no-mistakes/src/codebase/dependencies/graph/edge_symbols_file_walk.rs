@@ -133,7 +133,15 @@ fn collect_exported_value_edges(input: ExportedValueEdgeInputs<'_>, edges: &mut 
                         ));
                     }
                 } else if let Some(scope) = resolve_local_scope(&caller, symbol_ref, local_scopes) {
-                    let scope_is_callable = calls_by_caller.contains_key(&scope);
+                    // A referenced function is not invoked merely because its
+                    // value is returned. Use the prepared callable catalog for
+                    // this distinction; `calls_by_caller` intentionally keeps
+                    // only resolved local execution edges and may omit an
+                    // imported call inside the referenced helper.
+                    let scope_is_callable = file_facts
+                        .callable_scopes
+                        .iter()
+                        .any(|candidate| candidate == &scope);
                     if !root_is_callable || !scope_is_callable {
                         queue.push_back(scope);
                     }
