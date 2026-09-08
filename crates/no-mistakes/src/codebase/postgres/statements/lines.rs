@@ -3,9 +3,13 @@ pub(super) fn nth_insert_line(sql: &str, n: usize) -> usize {
 }
 
 pub(super) fn nth_insert_source(sql: &str, n: usize) -> String {
-    let lines = keyword_pair_lines(sql, "insert", "into");
-    let start = lines.get(n.saturating_sub(1)).copied().unwrap_or(1);
-    slice_lines(sql, start, lines.get(n).copied())
+    let pairs = keyword_pair_words(sql, "insert", "into");
+    let start = pairs
+        .get(n.saturating_sub(1))
+        .map(|word| word.start)
+        .unwrap_or(0);
+    let end = pairs.get(n).map(|word| word.start).unwrap_or(sql.len());
+    sql.get(start..end).unwrap_or_default().to_string()
 }
 
 pub(super) fn nth_keyword_pair_line(sql: &str, first: &str, second: &str, n: usize) -> usize {
@@ -16,24 +20,18 @@ pub(super) fn nth_keyword_pair_line(sql: &str, first: &str, second: &str, n: usi
 }
 
 fn keyword_pair_lines(sql: &str, first: &str, second: &str) -> Vec<usize> {
-    let words = words(sql);
-    (0..words.len().saturating_sub(1))
-        .filter(|&index| eq(&words[index], first) && eq(&words[index + 1], second))
-        .map(|index| words[index].line)
+    keyword_pair_words(sql, first, second)
+        .into_iter()
+        .map(|word| word.line)
         .collect()
 }
 
-fn slice_lines(sql: &str, start: usize, end: Option<usize>) -> String {
-    let end = end.filter(|end| *end > start).unwrap_or(usize::MAX);
-    sql.lines()
-        .enumerate()
-        .filter(|(index, _)| {
-            let line = index + 1;
-            line >= start && line < end
-        })
-        .map(|(_, line)| line)
-        .collect::<Vec<_>>()
-        .join("\n")
+fn keyword_pair_words(sql: &str, first: &str, second: &str) -> Vec<Word> {
+    let words = words(sql);
+    (0..words.len().saturating_sub(1))
+        .filter(|&index| eq(&words[index], first) && eq(&words[index + 1], second))
+        .map(|index| words[index].clone())
+        .collect()
 }
 
 pub(super) fn line_containing(source: &str, parts: &[&str]) -> usize {
@@ -50,7 +48,9 @@ pub(super) fn line_containing(source: &str, parts: &[&str]) -> usize {
         .unwrap_or(1)
 }
 
+#[derive(Clone)]
 struct Word {
+    start: usize,
     line: usize,
     text: String,
 }
@@ -92,6 +92,7 @@ fn words(sql: &str) -> Vec<Word> {
                     index += 1;
                 }
                 out.push(Word {
+                    start,
                     line: start_line,
                     text: sql[start..index].to_string(),
                 });
