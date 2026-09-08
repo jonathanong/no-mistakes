@@ -47,11 +47,11 @@ fn visit_variable_declarator_with_scope<'a>(
         }
         Some(Expression::ObjectExpression(object)) if name.is_some() => {
             let name = name.expect("object branch requires a binding name");
-            let scope = collector.callable_scope_name(&name);
+            let member_scope = collector.callable_scope_name(&name);
             record_object_member_calls(
                 collector,
                 &name,
-                &scope,
+                &member_scope,
                 CallableId(declarator.span.start),
                 object,
             );
@@ -65,8 +65,8 @@ fn visit_variable_declarator_with_scope<'a>(
                 record_object_resource_scopes(collector, &name, object);
                 visit_exported_variable_declarator_reference(collector, declarator, Some(name));
             } else {
-                record_object_value_references(collector, &scope, object);
-                walk_object_values_with_parent_scope(collector, &scope, object);
+                record_object_value_references(collector, &member_scope, object);
+                walk_object_values_with_parent_scope(collector, &name, object);
             }
         }
         Some(Expression::ClassExpression(class)) if name.is_some() => {
