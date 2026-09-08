@@ -12,8 +12,20 @@
                             let interner = call_interner.clone();
                             move |file| {
                                 let interner = interner.clone();
-                                file.callable_scopes.iter().map(move |scope| {
-                                    NodeId::symbol_in(&interner, path, scope)
+                                file.callable_scopes.iter().flat_map(move |scope| {
+                                    let matches = file
+                                        .callable_scope_ids
+                                        .iter()
+                                        .filter(|(_, candidate)| candidate == scope)
+                                        .map(|(id, _)| {
+                                            NodeId::callable_in(&interner, path, scope, *id)
+                                        })
+                                        .collect::<Vec<_>>();
+                                    if matches.is_empty() {
+                                        vec![NodeId::symbol_in(&interner, path, scope)]
+                                    } else {
+                                        matches
+                                    }
                                 })
                             }
                         })
@@ -52,7 +64,6 @@
         let mut graph = Self {
             root: root.to_path_buf(),
             edges: edge_index_from_maps(forward, reverse),
-            callable_nodes,
             callable_nodes_by_file,
             resolved_call_sites,
             vitest_setup_projects: Vec::new(),

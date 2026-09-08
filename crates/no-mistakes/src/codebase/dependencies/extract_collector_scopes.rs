@@ -57,6 +57,7 @@ impl ImportCollector {
                 kind,
                 line: import_line_at(&self.line_starts, byte_offset),
                 function_scope: self.function_stack.last().cloned(),
+                function_scope_id: self.current_function_id(),
                 side_effect_only,
                 re_export,
                 runtime_reachable,
@@ -64,18 +65,20 @@ impl ImportCollector {
         }
     }
 
-    fn push_function_scope(&mut self, name: Option<String>) {
+    fn push_function_scope(&mut self, name: Option<String>, id: CallableId) {
+        self.push_function_scope_for_binding(name, None, id);
+    }
+
+    fn push_function_scope_for_binding(&mut self, name: Option<String>, binding_scope: Option<usize>, id: CallableId) {
         if let Some(name) = name {
-            let scope = self
-                .function_stack
-                .last()
-                .map(|parent| format!("{parent}/{name}"))
-                .unwrap_or(name);
+            let scope = self.callable_scope_name_for_binding(&name, binding_scope);
             self.known_function_scopes.insert(scope.clone());
+            self.callable_scope_ids.insert((id, scope.clone()));
             if self.export_depth > 0 && self.function_stack.is_empty() {
                 self.exported_functions.insert(scope.clone());
             }
             self.function_stack.push(scope);
+            self.function_id_stack.push(id);
             self.function_scope_stack.push(self.local_stack.len());
             self.local_stack.push(HashSet::new());
             self.lexical_scope_ids.push(self.next_lexical_scope_id);
@@ -85,7 +88,20 @@ impl ImportCollector {
         }
     }
 
-    fn push_anonymous_function_scope(&mut self) {
+    fn callable_scope_name(&self, name: &str) -> String {
+        self.callable_scope_name_for_binding(name, None)
+    }
+
+    fn callable_scope_name_for_binding(&self, name: &str, _binding_scope: Option<usize>) -> String {
+        let parent = self.function_stack.last();
+        // Lexical identity is carried by `CallableId`; public callable names
+        // stay source-level and must never expose collector implementation
+        // counters such as `<scope:N>`.
+        let name = name.to_string();
+        parent.map(|parent| format!("{parent}/{name}")).unwrap_or(name)
+    }
+
+    fn push_anonymous_function_scope(&mut self, id: CallableId) {
         self.anonymous_scope_count += 1;
         let name = format!("<anonymous:{}>", self.anonymous_scope_count);
         let scope = self
@@ -95,12 +111,14 @@ impl ImportCollector {
             .unwrap_or(name);
         self.known_function_scopes.insert(scope.clone());
         self.callable_scopes.insert(scope.clone());
+        self.callable_scope_ids.insert((id, scope.clone()));
         // Module callbacks need the same synthetic edge as nested callbacks:
         // a top-level IIFE/callback is available to file-root call analysis,
         // while execution-sensitive projections still distinguish the
         // synthetic invocation through `is_callback`.
         self.function_calls.push(FunctionCall {
             caller: self.function_stack.last().cloned(),
+            caller_id: self.current_function_id(),
             syntactic_caller: self.current_syntactic_caller(),
             callee: scope.clone(),
             line: 0,
@@ -113,6 +131,7 @@ impl ImportCollector {
             static_cwd: None,
         });
         self.function_stack.push(scope);
+        self.function_id_stack.push(id);
         self.function_scope_stack.push(self.local_stack.len());
         self.local_stack.push(HashSet::new());
         self.lexical_scope_ids.push(self.next_lexical_scope_id);
@@ -124,6 +143,7 @@ impl ImportCollector {
     fn pop_function_scope(&mut self, pushed: bool) {
         if pushed {
             self.function_stack.pop();
+            self.function_id_stack.pop();
             self.function_scope_stack.pop();
             self.local_stack.pop();
             self.lexical_scope_ids.pop();
@@ -134,6 +154,10 @@ impl ImportCollector {
 
     fn current_syntactic_caller(&self) -> Option<String> {
         self.syntactic_caller_stack.last().cloned()
+    }
+
+    fn current_function_id(&self) -> Option<CallableId> {
+        self.function_id_stack.last().copied()
     }
 
     fn push_syntactic_caller(&mut self, name: Option<String>) -> bool {

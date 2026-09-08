@@ -17,6 +17,7 @@ impl ImportCollector {
             self.callable_aliases.push(CallableAliasBinding {
                 alias: CallableAlias {
                     scope: self.current_function(),
+                    scope_id: self.current_function_id(),
                     local: local.to_string(),
                     target,
                     binding_scope: self.current_lexical_scope_id(),

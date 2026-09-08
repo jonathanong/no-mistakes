@@ -1,7 +1,7 @@
 pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
     match node {
         NodeId::File(p) => no_mistakes::codebase::ts_source::relative_slash_path(root, p),
-        NodeId::Symbol { file, symbol } => {
+        NodeId::Symbol { file, symbol, .. } => {
             let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, file);
             format!("{}#{}", rel, symbol)
         }

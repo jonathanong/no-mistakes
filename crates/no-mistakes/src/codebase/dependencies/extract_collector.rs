@@ -7,8 +7,9 @@ struct ImportCollector {
     function_calls: Vec<FunctionCall>,
     unknown_calls: Vec<UnknownCall>,
     symbol_references: Vec<FunctionCall>,
-    unknown_callers: Vec<Option<String>>,
     function_stack: Vec<String>,
+    function_id_stack: Vec<CallableId>,
+    callable_scope_ids: HashSet<(CallableId, String)>,
     syntactic_caller_stack: Vec<String>,
     local_stack: Vec<HashSet<String>>,
     /// Stable identities parallel to `local_stack`. Scope depth alone is not
@@ -36,6 +37,7 @@ struct ImportCollector {
     callable_aliases: Vec<CallableAliasBinding>,
     reassigned_alias_bindings: HashSet<CallableAliasBinding>,
     callable_binding_ids: HashSet<(usize, String)>,
+    callable_bindings: HashMap<(usize, String), CallableId>,
     reassigned_callable_binding_ids: HashSet<(usize, String)>,
     reassigned_callable_scopes: HashSet<String>,
     star_reexport_specifiers: Vec<String>,

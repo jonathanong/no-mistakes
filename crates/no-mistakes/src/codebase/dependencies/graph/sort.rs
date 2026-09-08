@@ -14,7 +14,7 @@ fn add_via_kind(entry: &mut NodeEntry, kind: EdgeKind) {
 fn node_sort_key(n: &NodeId) -> String {
     match n {
         NodeId::File(p) => p.to_string_lossy().into_owned(),
-        NodeId::Symbol { file, symbol } => format!("{}#{symbol}", file.to_string_lossy()),
+        NodeId::Symbol { file, symbol, .. } => format!("{}#{symbol}", file.to_string_lossy()),
         NodeId::Module(specifier) => format!("module:{specifier}"),
         NodeId::QueueJob { queue_file, job } => {
             format!("{}#{}", queue_file.to_string_lossy(), job)
@@ -45,7 +45,7 @@ fn adjacency_sort_key(n: &NodeId, kind: EdgeKind) -> (NodeSortKey, NodeId, (u8, 
 fn cached_node_sort_key(n: &NodeId) -> NodeSortKey {
     match n {
         NodeId::File(path) => NodeSortKey::new(Some(path.clone_arc()), "", None, None),
-        NodeId::Symbol { file, symbol } => {
+        NodeId::Symbol { file, symbol, .. } => {
             NodeSortKey::new(Some(file.clone_arc()), "#", Some(symbol.clone_arc()), None)
         }
         NodeId::Module(specifier) => {
@@ -100,7 +100,7 @@ fn node_sort_parts<'a>(
 ) -> [std::borrow::Cow<'a, str>; 4] {
     match n {
         NodeId::File(path) => [path.to_string_lossy(), "".into(), "".into(), "".into()],
-        NodeId::Symbol { file, symbol } => [
+        NodeId::Symbol { file, symbol, .. } => [
             file.to_string_lossy(),
             "#".into(),
             std::borrow::Cow::Borrowed(symbol.as_ref()),

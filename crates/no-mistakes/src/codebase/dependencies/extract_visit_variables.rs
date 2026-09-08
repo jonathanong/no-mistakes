@@ -6,7 +6,7 @@ fn visit_variable_declarator_with_scope<'a>(
     match declarator.init.as_ref() {
         Some(Expression::ArrowFunctionExpression(arrow)) => {
             let pushed_syntactic_caller = collector.push_syntactic_caller(name.clone());
-            push_variable_function_scope(collector, declarator, name);
+            push_variable_function_scope(collector, declarator, name, CallableId(arrow.span.start));
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
             collector.add_formal_parameters(&arrow.params);
             walk::walk_arrow_function_expression(collector, arrow);
@@ -19,13 +19,19 @@ fn visit_variable_declarator_with_scope<'a>(
             let source_name = name.clone().or_else(|| function_name(function));
             let pushed_syntactic_caller = collector.push_syntactic_caller(source_name);
             let scope_name = name.or_else(|| function_name(function));
-            push_variable_function_scope(collector, declarator, scope_name);
+            push_variable_function_scope(
+                collector,
+                declarator,
+                scope_name,
+                CallableId(function.span.start),
+            );
             if let Some(self_name) = function_name(function) {
                 collector.add_binding_name(&self_name);
                 collector.record_callable_binding(&self_name);
                 collector.callable_aliases.push(CallableAliasBinding {
                     alias: CallableAlias {
                         scope: collector.current_function(),
+                        scope_id: collector.current_function_id(),
                         local: self_name,
                         target: collector.current_function().expect("named function scope"),
                         binding_scope: collector.current_lexical_scope_id(),
@@ -43,7 +49,7 @@ fn visit_variable_declarator_with_scope<'a>(
             if name.is_some() && collector.function_stack.is_empty() =>
         {
             if let Some(name) = name.as_deref() {
-                record_object_member_calls(collector, name, object);
+                record_object_member_calls(collector, name, CallableId(declarator.span.start), object);
             }
             // Treat both inline `export const` and later `export { … }` named
             // object bindings as exported, so a registry written either way keeps
@@ -71,7 +77,8 @@ fn visit_variable_declarator_with_scope<'a>(
             if name.is_some() && collector.function_stack.is_empty() =>
         {
             if let Some(name) = name.as_deref() {
-                record_class_member_calls(collector, name, class);
+                collector.record_callable_binding_id(name, CallableId(class.span.start));
+                record_class_member_calls(collector, name, CallableId(class.span.start), class);
                 if collector.is_exported_top_level_name(name) {
                     collector.record_exported_resource_root(name);
                     record_class_resource_scopes(collector, name, class);

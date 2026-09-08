@@ -69,10 +69,7 @@ fn predeclare_function_declarations<'a>(
                 if let Some(name) = function_name(function) {
                     collector.add_binding_name(&name);
                     collector.record_callable_binding(&name);
-                    let scope = collector
-                        .current_function()
-                        .map(|parent| format!("{parent}/{name}"))
-                        .unwrap_or(name);
+                    let scope = collector.callable_scope_name(&name);
                     collector.known_function_scopes.insert(scope.clone());
                     collector.callable_scopes.insert(scope);
                 }

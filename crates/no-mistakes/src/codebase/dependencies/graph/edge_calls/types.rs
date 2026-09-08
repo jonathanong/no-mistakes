@@ -4,6 +4,8 @@
 pub struct ResolvedCallSite {
     pub file: std::path::PathBuf,
     pub caller: Option<String>,
+    /// Opaque identity paired with `caller` for graph traversal only.
+    pub caller_id: Option<crate::codebase::dependencies::extract::CallableId>,
     pub line: u32,
     /// Zero-based source byte where the invocation starts. This distinguishes
     /// multiple forbidden calls on the same source line.

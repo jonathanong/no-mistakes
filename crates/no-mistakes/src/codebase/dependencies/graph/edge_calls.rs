@@ -7,6 +7,7 @@
 #[derive(Clone)]
 struct CallableFileIndex {
     known_scopes: std::collections::HashSet<String>,
+    class_scopes: std::collections::HashSet<String>,
     imported:
         std::collections::HashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
     exported:
@@ -19,6 +20,7 @@ impl CallableFileIndex {
     fn from_facts(file: &crate::codebase::ts_source::facts::TsFileFacts) -> Self {
         Self {
             known_scopes: file.callable_scopes.iter().cloned().collect(),
+            class_scopes: file.class_scopes.iter().cloned().collect(),
             imported: file
                 .imported_bindings
                 .iter()
@@ -63,7 +65,14 @@ impl CallableFileIndex {
                 }
                 if target.contains('.')
                     || self.imported.contains_key(&target)
-                    || resolve_local_call_scope(caller, &target, &self.known_scopes).is_some()
+                    || resolve_local_call_scope(
+                        caller,
+                        None,
+                        &target,
+                        &self.known_scopes,
+                        &self.class_scopes,
+                    )
+                    .is_some()
                 {
                     return Some(target);
                 }

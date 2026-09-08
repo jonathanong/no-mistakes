@@ -333,12 +333,14 @@ fn call_facts_record_unknown_calls_with_location_and_kind() {
         vec![
             UnknownCall {
                 caller: None,
+                caller_id: None,
                 line: 1,
                 offset: 0,
                 invocation: InvocationKind::Call,
             },
             UnknownCall {
                 caller: None,
+                caller_id: None,
                 line: 2,
                 offset: source.find("new ").unwrap() as u32,
                 invocation: InvocationKind::Construct,

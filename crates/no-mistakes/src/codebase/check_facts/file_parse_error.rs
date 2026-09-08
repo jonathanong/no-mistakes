@@ -29,8 +29,8 @@ pub(crate) fn ts_facts(
         unknown_calls: import_facts.unknown_calls,
         known_function_scopes: import_facts.known_function_scopes,
         callable_scopes: import_facts.callable_scopes,
+        class_scopes: import_facts.class_scopes,
         exported_functions: import_facts.exported_functions,
-        unknown_callers: import_facts.unknown_callers,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
         ..Default::default()
     }

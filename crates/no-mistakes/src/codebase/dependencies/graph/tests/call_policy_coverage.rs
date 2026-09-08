@@ -8,6 +8,7 @@ fn resource_diagnostics_follow_exported_resource_members_only() {
         kind: crate::codebase::ts_resources::ResourceDiagnosticKind::DynamicPath,
         line: 1,
         function_scope: Some(scope.to_string()),
+        function_scope_id: Some(crate::codebase::dependencies::extract::CallableId(1)),
     };
 
     assert!(resource_diagnostic_is_reachable(
@@ -41,6 +42,7 @@ fn call_scope_resolution_walks_multiple_lexical_parents() {
 fn callable_alias_resolution_uses_the_callee_binding_scope() {
     let index = CallableFileIndex {
         known_scopes: HashSet::from(["target".to_string()]),
+        class_scopes: HashSet::new(),
         imported: HashMap::new(),
         exported: HashMap::new(),
         aliases: HashMap::from([((0, "alias".to_string()), "target".to_string())]),
@@ -65,6 +67,7 @@ fn callable_alias_resolution_reaches_module_scope_from_outermost_function() {
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
         callable_aliases: vec![CallableAlias {
             scope: None,
+            scope_id: None,
             local: "moduleAlias".to_string(),
             target: "target".to_string(),
             binding_scope: 0,
@@ -72,6 +75,7 @@ fn callable_alias_resolution_reaches_module_scope_from_outermost_function() {
         function_calls: vec![
             FunctionCall {
                 caller: None,
+                caller_id: None,
                 syntactic_caller: None,
                 callee: "run".to_string(),
                 line: 1,
@@ -85,6 +89,7 @@ fn callable_alias_resolution_reaches_module_scope_from_outermost_function() {
             },
             FunctionCall {
                 caller: Some("run".to_string()),
+                caller_id: Some(crate::codebase::dependencies::extract::CallableId(1)),
                 syntactic_caller: Some("run".to_string()),
                 callee: "moduleAlias".to_string(),
                 line: 2,
@@ -98,14 +103,32 @@ fn callable_alias_resolution_reaches_module_scope_from_outermost_function() {
             },
         ],
         callable_scopes: vec!["run".to_string(), "target".to_string()],
+        callable_scope_ids: vec![
+            (
+                crate::codebase::dependencies::extract::CallableId(1),
+                "run".to_string(),
+            ),
+            (
+                crate::codebase::dependencies::extract::CallableId(2),
+                "target".to_string(),
+            ),
+        ],
+        callable_bindings: vec![],
         ..Default::default()
     };
 
     assert_eq!(
-        resolve_callable_alias(&facts, Some("run"), "moduleAlias"),
+        resolve_callable_alias(
+            &facts,
+            Some(crate::codebase::dependencies::extract::CallableId(1)),
+            Some(0),
+            Some("run"),
+            "moduleAlias",
+        ),
         Some("target".to_string()),
     );
-    assert!(reachable_function_scopes(&facts).contains("target"));
+    assert!(reachable_function_scopes(&facts)
+        .contains(&crate::codebase::dependencies::extract::CallableId(2)));
 }
 
 #[test]
@@ -116,6 +139,7 @@ fn callable_alias_lookup_does_not_cross_a_shadowed_parameter() {
         function_calls: vec![
             FunctionCall {
                 caller: None,
+                caller_id: None,
                 syntactic_caller: None,
                 callee: "run".to_string(),
                 line: 1,
@@ -129,6 +153,7 @@ fn callable_alias_lookup_does_not_cross_a_shadowed_parameter() {
             },
             FunctionCall {
                 caller: Some("run".to_string()),
+                caller_id: Some(crate::codebase::dependencies::extract::CallableId(1)),
                 syntactic_caller: Some("run".to_string()),
                 callee: "target".to_string(),
                 line: 2,
@@ -142,12 +167,23 @@ fn callable_alias_lookup_does_not_cross_a_shadowed_parameter() {
             },
         ],
         callable_scopes: vec!["run".to_string(), "target".to_string()],
+        callable_scope_ids: vec![
+            (
+                crate::codebase::dependencies::extract::CallableId(1),
+                "run".to_string(),
+            ),
+            (
+                crate::codebase::dependencies::extract::CallableId(2),
+                "target".to_string(),
+            ),
+        ],
+        callable_bindings: vec![],
         ..Default::default()
     };
 
     let reachable = reachable_function_scopes(&facts);
-    assert!(reachable.contains("run"));
-    assert!(!reachable.contains("target"));
+    assert!(reachable.contains(&crate::codebase::dependencies::extract::CallableId(1)));
+    assert!(!reachable.contains(&crate::codebase::dependencies::extract::CallableId(2)));
 }
 
 #[test]
@@ -156,6 +192,7 @@ fn constructor_membership_is_reachable_but_other_member_membership_is_not() {
 
     let membership = |callee: &str| FunctionCall {
         caller: Some("Service".to_string()),
+        caller_id: Some(crate::codebase::dependencies::extract::CallableId(1)),
         syntactic_caller: None,
         callee: callee.to_string(),
         line: 0,
@@ -171,6 +208,7 @@ fn constructor_membership_is_reachable_but_other_member_membership_is_not() {
         function_calls: vec![
             FunctionCall {
                 caller: None,
+                caller_id: None,
                 syntactic_caller: None,
                 callee: "Service".to_string(),
                 line: 1,
@@ -190,10 +228,25 @@ fn constructor_membership_is_reachable_but_other_member_membership_is_not() {
             "Service/constructor".to_string(),
             "Service/unused".to_string(),
         ],
+        callable_scope_ids: vec![
+            (
+                crate::codebase::dependencies::extract::CallableId(1),
+                "Service".to_string(),
+            ),
+            (
+                crate::codebase::dependencies::extract::CallableId(2),
+                "Service/constructor".to_string(),
+            ),
+            (
+                crate::codebase::dependencies::extract::CallableId(3),
+                "Service/unused".to_string(),
+            ),
+        ],
+        callable_bindings: vec![],
         ..Default::default()
     };
 
     let reachable = reachable_function_scopes(&facts);
-    assert!(reachable.contains("Service/constructor"));
-    assert!(!reachable.contains("Service/unused"));
+    assert!(reachable.contains(&crate::codebase::dependencies::extract::CallableId(2)));
+    assert!(!reachable.contains(&crate::codebase::dependencies::extract::CallableId(3)));
 }

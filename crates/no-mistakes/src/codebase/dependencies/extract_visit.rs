@@ -17,7 +17,10 @@ impl<'a> Visit<'a> for ImportCollector {
             }
         }
         if name.is_some() {
-            self.push_function_scope(name);
+            if let Some(name) = &name {
+                self.record_callable_binding_id(name, CallableId(function.span.start));
+            }
+            self.push_function_scope(name, CallableId(function.span.start));
             if let Some(scope) = self.current_function() {
                 self.callable_scopes.insert(scope.clone());
                 if self.export_depth > 0 && self.function_stack.len() == 1 {
@@ -26,7 +29,7 @@ impl<'a> Visit<'a> for ImportCollector {
                 }
             }
         } else {
-            self.push_anonymous_function_scope();
+            self.push_anonymous_function_scope(CallableId(function.span.start));
         }
         self.add_type_parameter_names(function.type_parameters.as_deref());
         self.add_formal_parameters(&function.params);
@@ -39,7 +42,7 @@ impl<'a> Visit<'a> for ImportCollector {
         &mut self,
         arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
-        self.push_anonymous_function_scope();
+        self.push_anonymous_function_scope(CallableId(arrow.span.start));
         self.add_type_parameter_names(arrow.type_parameters.as_deref());
         self.add_formal_parameters(&arrow.params);
         walk::walk_arrow_function_expression(self, arrow);

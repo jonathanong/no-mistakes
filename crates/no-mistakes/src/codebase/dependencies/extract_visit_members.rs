@@ -14,7 +14,7 @@ fn visit_method_definition_with_scope<'a>(
         collector.function_stack = saved_function_stack;
     }
     let pushed = name.is_some();
-    collector.push_function_scope(name.map(str::to_string));
+    collector.push_function_scope(name.map(str::to_string), CallableId(method.value.span.start));
     if let Some(scope) = collector.current_function() {
         collector.callable_scopes.insert(scope);
     }
@@ -39,7 +39,7 @@ fn visit_object_property_with_scope<'a>(
             let pushed_syntactic_caller =
                 collector.push_syntactic_caller(function_name(function));
             let pushed = name.is_some();
-            collector.push_function_scope(name.map(str::to_string));
+            collector.push_function_scope(name.map(str::to_string), CallableId(function.span.start));
             if let Some(scope) = collector.current_function() {
                 collector.callable_scopes.insert(scope);
             }
@@ -52,7 +52,7 @@ fn visit_object_property_with_scope<'a>(
         Expression::ArrowFunctionExpression(arrow) => {
             walk::walk_property_key(collector, &property.key);
             let pushed = name.is_some();
-            collector.push_function_scope(name.map(str::to_string));
+            collector.push_function_scope(name.map(str::to_string), CallableId(arrow.span.start));
             if let Some(scope) = collector.current_function() {
                 collector.callable_scopes.insert(scope);
             }

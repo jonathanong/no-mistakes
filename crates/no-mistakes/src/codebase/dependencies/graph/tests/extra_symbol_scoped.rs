@@ -38,6 +38,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
             kind: ImportKind::Dynamic,
             line: 1,
             function_scope: Some("run".to_string()),
+            function_scope_id: None,
             side_effect_only: false,
             re_export: false,
             runtime_reachable: false,
@@ -74,6 +75,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
     let calls = vec![
         FunctionCall {
             caller: None,
+            caller_id: None,
             syntactic_caller: None,
             callee: "alpha".to_string(),
             line: 0,
@@ -87,6 +89,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         },
         FunctionCall {
             caller: None,
+            caller_id: None,
             syntactic_caller: None,
             callee: "beta".to_string(),
             line: 0,
@@ -100,6 +103,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         },
         FunctionCall {
             caller: None,
+            caller_id: None,
             syntactic_caller: None,
             callee: "alpha".to_string(),
             line: 0,
@@ -114,6 +118,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         },
         FunctionCall {
             caller: None,
+            caller_id: None,
             syntactic_caller: None,
             callee: "missing".to_string(),
             line: 0,
@@ -127,6 +132,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         },
         FunctionCall {
             caller: Some("run".to_string()),
+            caller_id: None,
             syntactic_caller: None,
             callee: "beta".to_string(),
             line: 0,
@@ -157,6 +163,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         false,
         &[FunctionCall {
             caller: None,
+            caller_id: None,
             syntactic_caller: None,
             callee: "alpha".to_string(),
             line: 0,

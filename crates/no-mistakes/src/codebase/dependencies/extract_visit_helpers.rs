@@ -33,6 +33,7 @@ impl ImportCollector {
         let callee_binding_scope = self.callee_binding_scope(&name);
         self.symbol_references.push(FunctionCall {
             caller,
+            caller_id: self.current_function_id(),
             syntactic_caller: self.current_syntactic_caller(),
             callee: name,
             line: 0,
@@ -129,6 +130,12 @@ impl ImportCollector {
             .insert((self.current_lexical_scope_id(), name.to_string()));
     }
 
+    fn record_callable_binding_id(&mut self, name: &str, id: CallableId) {
+        let scope = self.current_lexical_scope_id();
+        self.record_callable_binding(name);
+        self.callable_bindings.insert((scope, name.to_string()), id);
+    }
+
     fn callee_shadows_import(&self, callee: &str) -> bool {
         let binding = callee
             .split_once('.')
@@ -138,61 +145,6 @@ impl ImportCollector {
                 || self.predeclared_imported_bindings.contains(binding))
     }
 
-    fn has_local_function_scope(&self, callee: &str) -> bool {
-        let binding = callee
-            .split_once('.')
-            .map_or(callee, |(binding, _)| binding);
-        let Some(binding_scope) = self.callee_binding_scope(callee) else {
-            return false;
-        };
-        let callable_alias = self.callable_aliases.iter().any(|alias| {
-            alias.alias.binding_scope == binding_scope && alias.alias.local == binding
-        });
-        if (!self
-            .callable_binding_ids
-            .contains(&(binding_scope, binding.to_string()))
-            && !callable_alias)
-            || self
-                .reassigned_callable_binding_ids
-                .contains(&(binding_scope, binding.to_string()))
-        {
-            return false;
-        }
-        if callable_alias {
-            return true;
-        }
-        // `api/run` can mean either an aggregate member or a lexical nested
-        // function. A declared `function api` owns the latter spelling, so a
-        // static `api.run()` must not be guessed as an aggregate dispatch.
-        if callee.contains('.') && self.callable_scopes.contains(binding) {
-            return false;
-        }
-        let Some(caller) = self.current_function() else {
-            return self.callable_scopes.contains(binding)
-                || self
-                    .known_function_scopes
-                    .contains(&binding.replace('.', "/"));
-        };
-        let mut scope = caller.as_str();
-        loop {
-            let candidate = format!("{scope}/{binding}");
-            let member_candidate = format!("{scope}/{}", binding.replace('.', "/"));
-            if (self.callable_scopes.contains(&candidate)
-                && !self.reassigned_callable_scopes.contains(&candidate))
-                || (self.callable_scopes.contains(&member_candidate)
-                    && !self.reassigned_callable_scopes.contains(&member_candidate))
-            {
-                return true;
-            }
-            let Some((parent, _)) = scope.rsplit_once('/') else {
-                return (self.callable_scopes.contains(binding)
-                    && !self.reassigned_callable_scopes.contains(binding))
-                    || (self.callable_scopes.contains(&binding.replace('.', "/"))
-                        && !self
-                            .reassigned_callable_scopes
-                            .contains(&binding.replace('.', "/")));
-            };
-            scope = parent;
-        }
-    }
 }
+
+include!("extract_callable_scope_helper.rs");

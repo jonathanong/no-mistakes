@@ -15,8 +15,16 @@ use oxc_ast::ast::{
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::SourceType;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use std::path::Path;
+
+/// Opaque source-local identity for a callable owner.
+///
+/// The byte offset is deliberately never rendered.  It is stable for the two
+/// parser-owned collectors that need to agree on ownership, while display
+/// names remain the source-level scope strings carried beside it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub struct CallableId(pub u32);
 
 /// The syntactic import form that produced an extracted module specifier.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -40,6 +48,7 @@ pub struct ExtractedImport {
     pub kind: ImportKind,
     pub line: u32,
     pub function_scope: Option<String>,
+    pub function_scope_id: Option<CallableId>,
     pub side_effect_only: bool,
     pub re_export: bool,
     /// `true` for a runtime (`import()`/`require()`) import collected from inside
@@ -55,6 +64,7 @@ pub struct ExtractedImport {
 pub struct FunctionCall {
     /// The lexical callable scope containing the invocation, when known.
     pub caller: Option<String>,
+    pub caller_id: Option<CallableId>,
     /// The nearest source-level function owner used for source-occurrence
     /// reports. Unlike [`Self::caller`], this preserves the unqualified
     /// syntactic name and does not invent owners for anonymous callbacks or
@@ -106,6 +116,7 @@ pub enum CallTargetIdentity {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnknownCall {
     pub caller: Option<String>,
+    pub caller_id: Option<CallableId>,
     pub line: u32,
     /// Zero-based source byte where the unresolved invocation starts.
     pub offset: u32,
@@ -150,6 +161,7 @@ pub struct ExportedBinding {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CallableAlias {
     pub scope: Option<String>,
+    pub scope_id: Option<CallableId>,
     pub local: String,
     pub target: String,
     /// The lexical binding identity of `local`.
@@ -165,36 +177,7 @@ struct CallableAliasBinding {
     lexical_scope_depth: usize,
 }
 
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
-pub struct ImportFacts {
-    pub imports: Vec<ExtractedImport>,
-    pub imported_bindings: Vec<ImportedBinding>,
-    pub exported_bindings: Vec<ExportedBinding>,
-    pub callable_aliases: Vec<CallableAlias>,
-    /// Sources of `export * from` declarations. These are kept distinct from
-    /// named re-exports because resolving a name through a star requires an
-    /// unambiguous candidate check.
-    pub star_reexport_specifiers: Vec<String>,
-    pub function_calls: Vec<FunctionCall>,
-    pub unknown_calls: Vec<UnknownCall>,
-    pub symbol_references: Vec<FunctionCall>,
-    pub exported_functions: Vec<String>,
-    /// Exported object/class roots whose member scopes may be reached by an
-    /// importer. This is collected by the import pass without full symbols.
-    pub exported_resource_roots: Vec<String>,
-    /// Exact callable scopes belonging to exported object/class aggregates.
-    /// Unlike lexical helpers nested inside a member, these scopes are reachable
-    /// when the aggregate is imported even without a local static call.
-    pub exported_resource_scopes: Vec<String>,
-    /// Every lexical callable scope seen in this file. Relationship producers
-    /// reuse this canonical fact to resolve local calls without reparsing.
-    pub known_function_scopes: Vec<String>,
-    /// Only scopes that denote an invokable function/method, excluding
-    /// aggregate owner scopes introduced while walking object/class values.
-    pub callable_scopes: Vec<String>,
-    pub unknown_callers: Vec<Option<String>>,
-    pub has_unknown_top_level_call: bool,
-}
+include!("extract_import_facts.rs");
 
 /// Holds parser configuration for TypeScript or TSX extraction.
 pub struct ImportExtractor {

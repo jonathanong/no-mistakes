@@ -58,6 +58,17 @@ fn resolve_exported_callable(
                 .contains(&local)
                 .then(|| ExportedCallableResolution::Callable(path.to_path_buf(), local.clone()))
                 .or_else(|| {
+                    resolve_exported_namespace_member_alias(
+                        edge_inputs,
+                        facts,
+                        resolver,
+                        path,
+                        (file.as_ref(), &local),
+                        indexes,
+                        visited,
+                    )
+                })
+                .or_else(|| {
                     let imported = file.imported.get(&local).filter(|imported| {
                         imported.kind != crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
                     })?;
@@ -144,6 +155,47 @@ fn resolve_exported_callable(
         .exports
         .insert((path.to_path_buf(), export.to_string()), result.clone());
     result
+}
+
+fn resolve_exported_namespace_member_alias(
+    edge_inputs: &GraphEdgeBuildInputs<'_>,
+    facts: &dyn TsFactLookup,
+    resolver: &dyn ImportResolution,
+    path: &std::path::Path,
+    alias: (&CallableFileIndex, &str),
+    indexes: &CallableResolutionIndexes,
+    visited: &mut Vec<(std::path::PathBuf, String)>,
+) -> Option<ExportedCallableResolution> {
+    let (file, local) = alias;
+    let (namespace, export) = local.split_once('.')?;
+    if export.contains('.') {
+        return None;
+    }
+    let imported = file.imported.get(namespace).filter(|imported| {
+        imported.kind == crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
+    })?;
+    let visible_target = resolver
+        .resolve(&imported.specifier, path)
+        .and_then(|target_path| edge_inputs.graph_files.visible_path(&target_path));
+    if let Some(target_path) = visible_target {
+        return Some(resolve_exported_callable(
+            edge_inputs,
+            facts,
+            resolver,
+            target_path,
+            export,
+            indexes,
+            visited,
+        ));
+    }
+    Some(if external_module_specifier(&imported.specifier) {
+        ExportedCallableResolution::ExternalModuleExport(
+            imported.specifier.clone(),
+            export.to_string(),
+        )
+    } else {
+        ExportedCallableResolution::Unknown
+    })
 }
 
 fn external_module_specifier(specifier: &str) -> bool {

@@ -25,9 +25,25 @@ fn simple_static_member_name(member: &StaticMemberExpression<'_>) -> Option<Stri
         Expression::ThisExpression(_) => "this".to_string(),
         Expression::StaticMemberExpression(object) => simple_static_member_name(object)?,
         Expression::ComputedMemberExpression(object) => simple_computed_member_name(object)?,
-        _ => return None,
+        _ => "<unknown>".to_string(),
     };
     Some(format!("{object}.{}", member.property.name.as_str()))
+}
+
+fn has_dynamic_static_member_receiver(expr: &Expression<'_>) -> bool {
+    let Expression::StaticMemberExpression(member) =
+        crate::codebase::ts_source::unwrap_ts_wrappers(expr)
+    else {
+        return false;
+    };
+    match crate::codebase::ts_source::unwrap_ts_wrappers(&member.object) {
+        Expression::Identifier(_) | Expression::ThisExpression(_) => false,
+        Expression::StaticMemberExpression(_) => has_dynamic_static_member_receiver(&member.object),
+        Expression::ComputedMemberExpression(member) => {
+            simple_computed_member_name(member).is_none()
+        }
+        _ => true,
+    }
 }
 
 fn simple_computed_member_name(

@@ -47,7 +47,6 @@ pub(crate) fn from_raw_maps(
     DepGraph {
         root,
         edges: edge_index_from_test_maps(typed_fwd, typed_rev),
-        callable_nodes: Vec::new(),
         callable_nodes_by_file: fx_map(),
         resolved_call_sites: Vec::new(),
         vitest_setup_projects: Vec::new(),
@@ -63,7 +62,6 @@ pub(crate) fn from_typed_maps(root: PathBuf, forward: EdgeMap, reverse: EdgeMap)
     DepGraph {
         root,
         edges: edge_index_from_test_maps(forward, reverse),
-        callable_nodes: Vec::new(),
         callable_nodes_by_file: fx_map(),
         resolved_call_sites: Vec::new(),
         vitest_setup_projects: Vec::new(),

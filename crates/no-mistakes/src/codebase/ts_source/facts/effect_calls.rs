@@ -14,33 +14,30 @@ pub(crate) fn collect_effect_calls(
     calls: &[FunctionCall],
     names: &EffectNames,
 ) -> Vec<EffectCallFact> {
-    let scoped_calls: HashSet<_> = calls
+    let canonical_by_offset = calls
         .iter()
-        .filter(|call| {
-            call.caller.is_some()
-                && matches!(
-                    call.invocation,
-                    InvocationKind::Call | InvocationKind::Construct
-                )
-        })
-        .map(|call| call.offset)
-        .collect();
+        .enumerate()
+        .filter(|(_, call)| is_effect_invocation(call, names))
+        .fold(HashMap::new(), |mut canonical, (index, call)| {
+            canonical
+                .entry(effect_occurrence_key(call))
+                .and_modify(|current| {
+                    if prefers_ownership_record(call, &calls[*current]) {
+                        *current = index;
+                    }
+                })
+                .or_insert(index);
+            canonical
+        });
+    let canonical_indices = canonical_by_offset
+        .values()
+        .copied()
+        .collect::<HashSet<_>>();
     calls
         .iter()
-        .filter(|call| {
-            // Exported variable initializers are also visited once while
-            // resolving their value references. Keep that scoped occurrence;
-            // the ordinary outer traversal records the same call with no
-            // caller and is not a distinct effect.
-            call.caller.is_some() || !scoped_calls.contains(&call.offset)
-        })
-        .filter(|call| {
-            matches!(
-                call.invocation,
-                InvocationKind::Call | InvocationKind::Construct
-            )
-        })
-        .filter_map(|call| {
+        .enumerate()
+        .filter(|call| canonical_indices.contains(&call.0) && is_effect_invocation(call.1, names))
+        .filter_map(|(_, call)| {
             let (callee, category) = effect_match(&call.callee, names)?;
             Some(EffectCallFact {
                 line: call.line as usize,
@@ -50,6 +47,41 @@ pub(crate) fn collect_effect_calls(
             })
         })
         .collect()
+}
+
+fn effect_occurrence_key(call: &FunctionCall) -> (u32, &str, bool) {
+    (
+        call.offset,
+        &call.callee,
+        matches!(call.invocation, InvocationKind::Construct),
+    )
+}
+
+fn is_effect_invocation(call: &FunctionCall, names: &EffectNames) -> bool {
+    matches!(
+        call.invocation,
+        InvocationKind::Call | InvocationKind::Construct
+    ) && effect_match(&call.callee, names).is_some()
+}
+
+fn prefers_ownership_record(candidate: &FunctionCall, current: &FunctionCall) -> bool {
+    match (candidate.caller.as_deref(), current.caller.as_deref()) {
+        // An exported initializer can be collected both at module scope and
+        // within its owning callable. Keep the callable-owned record.
+        (Some(_), None) => true,
+        (None, Some(_)) => false,
+        (Some(candidate), Some(current)) => {
+            // Nested traversal projections may emit the same AST occurrence
+            // under more than one callable scope. The shallowest scope is the
+            // canonical owner; retain input order when scopes are peers.
+            callable_scope_depth(candidate) < callable_scope_depth(current)
+        }
+        (None, None) => false,
+    }
+}
+
+fn callable_scope_depth(scope: &str) -> usize {
+    scope.matches('/').count()
 }
 
 fn effect_match<'a>(

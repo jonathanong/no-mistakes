@@ -1,15 +1,15 @@
 #[derive(Clone)]
 struct ReachabilityTransition {
-    callee: String,
+    callee: crate::codebase::dependencies::extract::CallableId,
     requires_constructed_caller: bool,
     constructs_callee: bool,
 }
 
 fn reachable_function_scopes(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
-) -> HashSet<String> {
+) -> HashSet<crate::codebase::dependencies::extract::CallableId> {
     let known_scopes = known_function_scopes(facts);
-    let mut by_caller: HashMap<Option<String>, Vec<ReachabilityTransition>> = HashMap::new();
+    let mut by_caller: HashMap<Option<crate::codebase::dependencies::extract::CallableId>, Vec<ReachabilityTransition>> = HashMap::new();
     for call in facts.function_calls.iter().filter(|call| {
         // Synthetic callbacks are ownership facts, not module execution
         // evidence. Preserve the historical conservative edge from an
@@ -27,7 +27,7 @@ fn reachable_function_scopes(
             continue;
         };
         by_caller
-            .entry(call.caller.clone())
+            .entry(call.caller_id)
             .or_default()
             .push(ReachabilityTransition {
                 callee,
@@ -40,7 +40,7 @@ fn reachable_function_scopes(
 
     let mut reachable = HashSet::new();
     let mut visited = HashSet::new();
-    let mut queue: VecDeque<(String, bool)> = by_caller
+    let mut queue: VecDeque<(crate::codebase::dependencies::extract::CallableId, bool)> = by_caller
         .get(&None)
         .cloned()
         .unwrap_or_default()
@@ -49,14 +49,14 @@ fn reachable_function_scopes(
         .map(|transition| (transition.callee, transition.constructs_callee))
         .collect();
     while let Some((function, constructed)) = queue.pop_front() {
-        if !visited.insert((function.clone(), constructed)) {
+        if !visited.insert((function, constructed)) {
             continue;
         }
-        reachable.insert(function.clone());
+        reachable.insert(function);
         if let Some(callees) = by_caller.get(&Some(function)) {
             for transition in callees {
                 if !transition.requires_constructed_caller || constructed {
-                    queue.push_back((transition.callee.clone(), transition.constructs_callee));
+                    queue.push_back((transition.callee, transition.constructs_callee));
                 }
             }
         }
@@ -68,32 +68,65 @@ fn reachable_callee_scope(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     call: &FunctionCall,
     known_scopes: &HashSet<String>,
-) -> Option<String> {
+) -> Option<crate::codebase::dependencies::extract::CallableId> {
     use crate::codebase::dependencies::extract::CallTargetIdentity;
 
     // Canonical immutable aliases win over the raw syntactic classification:
     // a declaration prepass can prove the alias is locally bound before its
     // target has been visited, but only resolution proves which function runs.
-    if let Some(resolved) = resolve_callable_alias(facts, call.caller.as_deref(), &call.callee) {
+    if let Some(resolved) = resolve_callable_alias(
+        facts,
+        call.caller_id,
+        call.callee_binding_scope,
+        call.caller.as_deref(),
+        &call.callee,
+    ) {
         let scope = resolve_callee_scope(call.caller.as_deref(), &resolved, known_scopes);
         if known_scopes.contains(&scope) {
-            return Some(scope);
+            return callable_id_for_scope(facts, &scope, call.callee_binding_scope);
         }
     }
 
     if call.target_identity == CallTargetIdentity::RepositoryFunction {
-        return Some(resolve_callee_scope(
+        let scope = resolve_callee_scope(
             call.caller.as_deref(),
             &call.callee,
             known_scopes,
-        ));
+        );
+        return callable_id_for_scope(facts, &scope, call.callee_binding_scope);
     }
 
     None
 }
 
+fn callable_id_for_scope(
+    facts: &crate::codebase::ts_source::facts::TsFileFacts,
+    scope: &str,
+    binding_scope: Option<usize>,
+) -> Option<crate::codebase::dependencies::extract::CallableId> {
+    if let Some(id) = binding_scope.and_then(|scope_id| {
+        let name = scope.rsplit('/').next().unwrap_or(scope);
+        facts.callable_bindings.iter().find_map(|(candidate, binding, id)| {
+            (*candidate == scope_id && binding == name).then_some(*id)
+        })
+    }) {
+        return Some(id);
+    }
+    // Display scopes are intentionally non-unique. The caller identity drives
+    // traversal; an unqualified target must be unambiguous before it can add a
+    // reachability edge, rather than accidentally joining sibling declarations.
+    let mut ids = facts
+        .callable_scope_ids
+        .iter()
+        .filter_map(|(id, display)| (display == scope).then_some(*id));
+    let first = ids.next()?;
+    ids.next().is_none().then_some(first)
+}
+
 fn resolve_callable_alias(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
+    caller_id: Option<crate::codebase::dependencies::extract::CallableId>,
+    callee_binding_scope: Option<usize>,
     caller: Option<&str>,
     callee: &str,
 ) -> Option<String> {
@@ -109,7 +142,14 @@ fn resolve_callable_alias(
         let alias = facts
             .callable_aliases
             .iter()
-            .find(|alias| alias.scope == key.0 && alias.local == key.1)
+            .find(|alias| {
+                alias.local == key.1
+                    && (callee_binding_scope
+                        .is_some_and(|scope| alias.binding_scope == scope)
+                        || caller_id.is_some_and(|id| alias.scope_id == Some(id))
+                        || (caller_id.is_some() && alias.scope_id.is_none() && key.0.is_none())
+                        || (caller_id.is_none() && alias.scope == key.0))
+            })
             .cloned();
         let Some(alias) = alias else {
             if !resolved_alias {

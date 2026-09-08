@@ -22,13 +22,13 @@ fn walk_object_property_value_with_parent_scope<'a>(
 ) {
     match &property.value {
         Expression::FunctionExpression(function) => {
-            collector.push_function_scope(Some(parent.to_string()));
+            collector.push_function_scope(Some(parent.to_string()), CallableId(function.span.start));
             walk::walk_property_key(collector, &property.key);
             walk_function_property_value(collector, &property.key, function);
             collector.pop_function_scope(true);
         }
         Expression::ArrowFunctionExpression(arrow) => {
-            collector.push_function_scope(Some(parent.to_string()));
+            collector.push_function_scope(Some(parent.to_string()), CallableId(arrow.span.start));
             walk::walk_property_key(collector, &property.key);
             walk_arrow_property_value(collector, &property.key, arrow);
             collector.pop_function_scope(true);
@@ -47,7 +47,7 @@ fn walk_function_property_value<'a>(
 ) {
     let name = crate::codebase::ts_source::static_property_key_name(key);
     let pushed = name.is_some();
-    collector.push_function_scope(name.map(str::to_string));
+    collector.push_function_scope(name.map(str::to_string), CallableId(function.span.start));
     if let Some(scope) = collector.current_function() {
         collector.callable_scopes.insert(scope);
     }
@@ -68,7 +68,7 @@ fn walk_arrow_property_value<'a>(
 ) {
     let name = crate::codebase::ts_source::static_property_key_name(key);
     let pushed = name.is_some();
-    collector.push_function_scope(name.map(str::to_string));
+    collector.push_function_scope(name.map(str::to_string), CallableId(arrow.span.start));
     if let Some(scope) = collector.current_function() {
         collector.callable_scopes.insert(scope);
     }

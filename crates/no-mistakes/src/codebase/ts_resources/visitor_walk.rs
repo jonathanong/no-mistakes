@@ -13,7 +13,10 @@ impl<'a> ResourceVisitor<'a> {
         function: &Function<'a>,
         flags: oxc_syntax::scope::ScopeFlags,
     ) {
-        self.push_function(name);
+        self.push_function(
+            name,
+            crate::codebase::dependencies::extract::CallableId(function.span.start),
+        );
         if let Some(id) = &function.id {
             self.declare_binding(id.name.as_str(), None);
         }
@@ -28,7 +31,10 @@ impl<'a> ResourceVisitor<'a> {
         name: Option<String>,
         arrow: &ArrowFunctionExpression<'a>,
     ) {
-        self.push_function(name);
+        self.push_function(
+            name,
+            crate::codebase::dependencies::extract::CallableId(arrow.span.start),
+        );
         self.shadow_parameters(&arrow.params);
         if let Some(statements) = crate::ast::arrow_function_body_statements(&arrow.body) {
             self.predeclare_var_bindings_in_statements(statements);
@@ -61,11 +67,22 @@ impl<'a> ResourceVisitor<'a> {
                     function,
                     oxc_syntax::scope::ScopeFlags::empty(),
                 ),
-            (
-                Some(Expression::ObjectExpression(_) | Expression::ClassExpression(_)),
-                Some(name),
-            ) if self.function_stack.is_empty() => {
-                self.push_aggregate(name);
+            (Some(Expression::ObjectExpression(_)), Some(name))
+                if self.function_stack.is_empty() =>
+            {
+                self.push_aggregate(name, None);
+                walk::walk_variable_declarator(self, declarator);
+                self.pop_aggregate();
+            }
+            (Some(Expression::ClassExpression(class)), Some(name))
+                if self.function_stack.is_empty() =>
+            {
+                self.push_aggregate(
+                    name,
+                    Some(crate::codebase::dependencies::extract::CallableId(
+                        class.span.start,
+                    )),
+                );
                 walk::walk_variable_declarator(self, declarator);
                 self.pop_aggregate();
             }
@@ -128,7 +145,10 @@ impl<'a> ResourceVisitor<'a> {
     }
 
     fn walk_default_export(&mut self, export: &ExportDefaultDeclaration<'a>) {
-        self.push_function(Some("default".to_string()));
+        self.push_function(
+            Some("default".to_string()),
+            crate::codebase::dependencies::extract::CallableId(export.span.start),
+        );
         walk::walk_export_default_declaration(self, export);
         self.pop_function();
     }

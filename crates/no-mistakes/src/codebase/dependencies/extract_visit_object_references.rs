@@ -14,6 +14,7 @@ fn record_object_value_references(
             let callee_binding_scope = collector.callee_binding_scope(&callee);
             collector.symbol_references.push(FunctionCall {
                 caller: Some(object_name.to_string()),
+                caller_id: collector.current_function_id(),
                 syntactic_caller: collector.current_syntactic_caller(),
                 callee,
                 line: 0,

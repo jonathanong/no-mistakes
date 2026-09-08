@@ -81,7 +81,7 @@ fn dynamic_member_receiver_records_unknown_call_evidence() {
     assert!(facts
         .function_calls
         .iter()
-        .all(|call| call.callee != "<unknown>.invoke"));
+        .any(|call| call.callee == "<unknown>.invoke"));
 }
 
 #[test]
@@ -166,4 +166,93 @@ fn function_body_bindings_do_not_shadow_parameter_default_calls() {
         .expect("parameter default call");
 
     assert_eq!(call.target_identity, CallTargetIdentity::ModuleExport);
+}
+
+#[test]
+fn local_class_members_are_callable_through_the_class_binding() {
+    let facts = facts("class Service { static run() {} } Service.run();");
+    assert_eq!(facts.class_scopes, ["Service"]);
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "Service.run"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
+fn only_static_class_members_are_callable_through_the_class_binding() {
+    let facts =
+        facts("class Service { run() {} static reload() {} } Service.run(); Service.reload();");
+
+    assert!(!facts.function_calls.iter().any(|call| {
+        call.callee == "Service.run"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "Service.reload"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
+fn only_static_class_expression_members_are_callable_through_the_binding() {
+    let facts = facts(
+        "const Service = class { run() {} static reload() {} }; Service.run(); Service.reload();",
+    );
+
+    assert!(!facts.function_calls.iter().any(|call| {
+        call.callee == "Service.run"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "Service.reload"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
+fn nested_local_class_members_are_callable_through_the_class_binding() {
+    let facts = facts("function boot() { class Service { static run() {} } Service.run(); }");
+    assert!(facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("boot")
+            && call.callee == "Service.run"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts
+        .class_scopes
+        .iter()
+        .any(|scope| scope == "boot/Service"));
+}
+
+#[test]
+fn sibling_block_callables_share_display_names_but_have_distinct_ids() {
+    let facts = facts(
+        "function outer() { { function f() { first(); } f(); } { function f() { second(); } f(); } }",
+    );
+    let scopes: Vec<_> = facts
+        .callable_scopes
+        .iter()
+        .filter(|scope| scope.ends_with("/f"))
+        .collect();
+
+    assert_eq!(scopes, ["outer/f"]);
+    let ids: Vec<_> = facts
+        .callable_scope_ids
+        .iter()
+        .filter_map(|(id, scope)| (scope == "outer/f").then_some(*id))
+        .collect();
+    assert_eq!(ids.len(), 2);
+    assert_ne!(ids[0], ids[1]);
+    let first_caller = facts
+        .function_calls
+        .iter()
+        .find(|call| call.caller.as_deref() == Some("outer/f") && call.callee == "first")
+        .expect("call in first sibling");
+    let second_caller = facts
+        .function_calls
+        .iter()
+        .find(|call| call.caller.as_deref() == Some("outer/f") && call.callee == "second")
+        .expect("call in second sibling");
+    assert_ne!(first_caller.caller_id, second_caller.caller_id);
+    assert!(ids.contains(&first_caller.caller_id.expect("first sibling id")));
+    assert!(ids.contains(&second_caller.caller_id.expect("second sibling id")));
 }

@@ -1,22 +1,23 @@
 fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>) {
-    if collector.current_function().is_none() {
-        if let Some(name) = class.id.as_ref().map(|id| id.name.as_str()) {
-            record_class_member_calls(collector, name, class);
-            if collector.is_exported_top_level_name(name) {
-                collector.record_exported_resource_root(name);
-                record_class_resource_scopes(collector, name, class);
-            }
-            collector.push_function_scope(Some(name.to_string()));
-            if collector.export_depth > 0 {
-                collector.exported_functions.insert(name.to_string());
-                collector.record_local_export_binding(name, name);
-            }
-            collector.callable_scopes.insert(name.to_string());
-            collector.class_scopes.insert(name.to_string());
-            walk::walk_class(collector, class);
-            collector.pop_function_scope(true);
-            return;
+    if let Some(name) = class.id.as_ref().map(|id| id.name.as_str()) {
+        let scope = collector.callable_scope_name(name);
+        let class_id = CallableId(class.span.start);
+        collector.record_callable_binding_id(name, class_id);
+        record_class_member_calls(collector, &scope, class_id, class);
+        if collector.current_function().is_none() && collector.is_exported_top_level_name(name) {
+            collector.record_exported_resource_root(name);
+            record_class_resource_scopes(collector, name, class);
         }
+        collector.push_function_scope(Some(name.to_string()), CallableId(class.span.start));
+        if collector.export_depth > 0 && collector.current_function().as_deref() == Some(scope.as_str()) {
+            collector.exported_functions.insert(scope.clone());
+            collector.record_local_export_binding(name, &scope);
+        }
+        collector.callable_scopes.insert(scope.clone());
+        collector.class_scopes.insert(scope);
+        walk::walk_class(collector, class);
+        collector.pop_function_scope(true);
+        return;
     }
     walk::walk_class(collector, class);
 }
@@ -53,7 +54,7 @@ fn visit_export_default_declaration_with_scope<'a>(
             collector.export_depth -= 1;
         }
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-            collector.push_function_scope(Some("default".to_string()));
+            collector.push_function_scope(Some("default".to_string()), CallableId(arrow.span.start));
             collector.exported_functions.insert("default".to_string());
             collector.callable_scopes.insert("default".to_string());
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
@@ -71,10 +72,10 @@ fn visit_export_default_declaration_with_scope<'a>(
                 .id
                 .as_ref()
                 .map_or_else(|| "default".to_string(), |id| id.name.to_string());
-            record_class_member_calls(collector, &scope, class);
+            record_class_member_calls(collector, &scope, CallableId(class.span.start), class);
             collector.record_exported_resource_root(&scope);
             record_class_resource_scopes(collector, &scope, class);
-            collector.push_function_scope(Some(scope.clone()));
+            collector.push_function_scope(Some(scope.clone()), CallableId(class.span.start));
             collector.exported_functions.insert(scope.clone());
             collector.callable_scopes.insert(scope);
             if let Some(scope) = collector.current_function() {
@@ -96,22 +97,30 @@ fn visit_exported_enum_declaration<'a>(
     declaration: &TSEnumDeclaration<'a>,
 ) {
     let scope = declaration.id.name.to_string();
-    collector.push_function_scope(Some(scope.clone()));
+    collector.push_function_scope(Some(scope.clone()), CallableId(declaration.span.start));
     collector.exported_functions.insert(scope.clone());
     collector.exported_type_scopes.insert(scope);
     walk::walk_ts_enum_declaration(collector, declaration);
     collector.pop_function_scope(true);
 }
 
-fn record_class_member_calls(collector: &mut ImportCollector, class_name: &str, class: &Class<'_>) {
-    collector.record_callable_binding(class_name);
+fn record_class_member_calls(
+    collector: &mut ImportCollector,
+    class_name: &str,
+    class_id: CallableId,
+    class: &Class<'_>,
+) {
     for element in &class.body.body {
         if let ClassElement::MethodDefinition(method) = element {
-            record_member_call(
-                collector,
-                class_name,
-                crate::codebase::ts_source::static_property_key_name(&method.key),
-            );
+            let name = crate::codebase::ts_source::static_property_key_name(&method.key);
+            if method.r#static || name == Some("constructor") {
+                record_member_call(
+                    collector,
+                    class_name,
+                    class_id,
+                    name,
+                );
+            }
         }
     }
 }
@@ -119,9 +128,10 @@ fn record_class_member_calls(collector: &mut ImportCollector, class_name: &str, 
 fn record_object_member_calls(
     collector: &mut ImportCollector,
     object_name: &str,
+    object_id: CallableId,
     object: &ObjectExpression<'_>,
 ) {
-    collector.record_callable_binding(object_name);
+    collector.record_callable_binding_id(object_name, object_id);
     for property in &object.properties {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             continue;
@@ -133,16 +143,23 @@ fn record_object_member_calls(
             record_member_call(
                 collector,
                 object_name,
+                object_id,
                 crate::codebase::ts_source::static_property_key_name(&property.key),
             );
         }
     }
 }
 
-fn record_member_call(collector: &mut ImportCollector, parent: &str, name: Option<&str>) {
+fn record_member_call(
+    collector: &mut ImportCollector,
+    parent: &str,
+    parent_id: CallableId,
+    name: Option<&str>,
+) {
     if let Some(name) = name {
         collector.function_calls.push(FunctionCall {
             caller: Some(parent.to_string()),
+            caller_id: Some(parent_id),
             syntactic_caller: collector.current_syntactic_caller(),
             callee: name.to_string(),
             line: 0,

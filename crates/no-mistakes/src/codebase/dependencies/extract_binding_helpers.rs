@@ -50,9 +50,13 @@ fn push_variable_function_scope<'a>(
     collector: &mut ImportCollector,
     declarator: &VariableDeclarator<'a>,
     name: Option<String>,
+    callable_id: CallableId,
 ) {
+    let binding_scope = name
+        .as_deref()
+        .and_then(|name| collector.callee_binding_scope(name));
     if exported_top_level_binding(collector, name.as_ref()) {
-        collector.push_function_scope(name);
+        collector.push_function_scope_for_binding(name, binding_scope, callable_id);
         if let Some(scope) = collector.current_function() {
             collector.exported_functions.insert(scope.clone());
             collector.callable_scopes.insert(scope);
@@ -61,13 +65,13 @@ fn push_variable_function_scope<'a>(
         walk_variable_type_annotation(collector, declarator);
     } else if name.is_some() {
         walk::walk_binding_pattern(collector, &declarator.id);
-        collector.push_function_scope(name);
+        collector.push_function_scope_for_binding(name, binding_scope, callable_id);
         if let Some(scope) = collector.current_function() {
             collector.callable_scopes.insert(scope);
         }
     } else {
         walk::walk_binding_pattern(collector, &declarator.id);
-        collector.push_anonymous_function_scope();
+        collector.push_anonymous_function_scope(callable_id);
     }
 }
 
@@ -84,7 +88,7 @@ fn visit_exported_variable_declarator_reference<'a>(
     .flatten();
     let pushed_syntactic_caller = collector.push_syntactic_caller(source_owner);
     let pushed = name.is_some();
-    collector.push_function_scope(name);
+    collector.push_function_scope(name, CallableId(declarator.span.start));
     let saved_suppress_imports = collector.suppress_imports;
     let saved_collect_runtime = collector.collect_suppressed_runtime_imports;
     let saved_base_depth = collector.runtime_reachable_base_depth;
@@ -110,7 +114,7 @@ fn visit_variable_declarator_references_for_bindings<'a>(
         return false;
     }
     for name in names {
-        collector.push_function_scope(Some(name.clone()));
+        collector.push_function_scope(Some(name.clone()), CallableId(declarator.span.start));
         let saved_suppress_imports = collector.suppress_imports;
         collector.suppress_imports = true;
         if let Some(init) = &declarator.init {

@@ -272,6 +272,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
         &current,
         &[FunctionCall {
             caller: Some("api".to_string()),
+            caller_id: None,
             syntactic_caller: None,
             callee: "fetch".to_string(),
             line: 0,

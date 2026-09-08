@@ -17,6 +17,7 @@ impl ImportCollector {
         let callee_binding_scope = self.callee_binding_scope(&name);
         self.symbol_references.push(FunctionCall {
             caller: self.current_function(),
+            caller_id: self.current_function_id(),
             syntactic_caller: self.current_syntactic_caller(),
             callee: name,
             line: 0,

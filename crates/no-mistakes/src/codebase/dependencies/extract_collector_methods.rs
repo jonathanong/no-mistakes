@@ -6,6 +6,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
         if collector.should_record_call(callee) {
             collector.function_calls.push(FunctionCall {
                 caller: collector.current_function(),
+                caller_id: collector.current_function_id(),
                 syntactic_caller: collector.current_syntactic_caller(),
                 callee: callee.to_string(),
                 line: import_line_at(&collector.line_starts, call.span.start as usize),
@@ -41,6 +42,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
             let callee_binding_scope = collector.callee_binding_scope(&callee);
             collector.function_calls.push(FunctionCall {
                 caller: collector.current_function(),
+                caller_id: collector.current_function_id(),
                 syntactic_caller: collector.current_syntactic_caller(),
                 static_cwd: static_process_cwd_arg(&callee, &call.arguments),
                 callee,
@@ -52,6 +54,13 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
                 callee_binding_scope,
                 static_arg: call.arguments.first().and_then(static_path_argument),
             });
+            if has_dynamic_static_member_receiver(&call.callee) {
+                collector.record_unknown_call(
+                    import_line_at(&collector.line_starts, call.span.start as usize),
+                    call.span.start,
+                    InvocationKind::Call,
+                );
+            }
         }
     } else {
         collector.record_unknown_call(
@@ -69,6 +78,7 @@ fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewE
             let callee_binding_scope = collector.callee_binding_scope(&callee);
             collector.function_calls.push(FunctionCall {
                 caller: collector.current_function(),
+                caller_id: collector.current_function_id(),
                 syntactic_caller: collector.current_syntactic_caller(),
                 static_cwd: None,
                 callee,
@@ -96,9 +106,9 @@ impl ImportCollector {
         if caller.is_none() {
             self.has_unknown_top_level_call = true;
         }
-        self.unknown_callers.push(caller.clone());
         self.unknown_calls.push(UnknownCall {
             caller,
+            caller_id: self.current_function_id(),
             line,
             offset,
             invocation,

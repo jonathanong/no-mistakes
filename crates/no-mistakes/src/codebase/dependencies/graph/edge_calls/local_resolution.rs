@@ -11,7 +11,14 @@ fn call_target_identity(
         .map_or(callee, |(binding, _)| binding);
     if file.imported.contains_key(binding) {
         crate::codebase::dependencies::extract::CallTargetIdentity::ModuleExport
-    } else if resolve_local_call_scope(call.caller.as_deref(), callee, &file.known_scopes).is_some()
+    } else if resolve_local_call_scope(
+        call.caller.as_deref(),
+        call.callee_binding_scope,
+        callee,
+        &file.known_scopes,
+        &file.class_scopes,
+    )
+    .is_some()
     {
         crate::codebase::dependencies::extract::CallTargetIdentity::RepositoryFunction
     } else {
@@ -23,13 +30,15 @@ fn call_target_identity(
 /// existing import-reachability scope behavior without another AST pass.
 fn resolve_local_call_scope<'a>(
     caller: Option<&str>,
+    _binding_scope: Option<usize>,
     callee: &str,
     known: &'a std::collections::HashSet<String>,
+    class_scopes: &std::collections::HashSet<String>,
 ) -> Option<&'a str> {
     let binding = callee
         .split_once('.')
         .map_or(callee, |(binding, _)| binding);
-    if callee.contains('.') && known.contains(binding) {
+    if callee.contains('.') && known.contains(binding) && !class_scopes.contains(binding) {
         return None;
     }
     let mut scope = caller;
@@ -45,9 +54,10 @@ fn resolve_local_call_scope<'a>(
         }
         scope = current.rsplit_once('/').map(|(parent, _)| parent);
     }
-    known.get(callee).map(String::as_str).or_else(|| {
+    known.get(callee).map(String::as_str)
+        .or_else(|| {
         known
             .get(callee.replace('.', "/").as_str())
             .map(String::as_str)
-    })
+        })
 }

@@ -57,11 +57,7 @@ impl DepGraph {
                         crate::codebase::ts_resolver::normalize_path(file),
                         symbol.as_str(),
                     );
-                    self.callable_nodes
-                        .contains(&node)
-                        .then_some(node)
-                        .into_iter()
-                        .collect::<Vec<_>>()
+                    self.resolve_display_callable(&node).into_iter().collect()
                 }
                 CallRoot::Vitest { files } => files
                     .iter()
@@ -103,7 +99,12 @@ impl DepGraph {
         traversal: CallTraversal,
         max_depth: Option<usize>,
     ) -> Vec<CallTrace> {
-        let roots = normalize_nodes(roots);
+        let roots = normalize_nodes(
+            &roots
+                .iter()
+                .flat_map(|root| self.resolve_display_callable(root))
+                .collect::<Vec<_>>(),
+        );
         let edges = self.traversal_edges().forward();
         let mut out = Vec::new();
         for root in roots {
@@ -150,5 +151,34 @@ impl DepGraph {
             (&left.root, &left.target, &left.nodes).cmp(&(&right.root, &right.target, &right.nodes))
         });
         out
+    }
+
+    /// A public/query symbol has no opaque identity. Resolve it only when its
+    /// stable display name selects exactly one internal callable; ambiguous
+    /// sibling declarations stay distinct and require a file root instead.
+    fn resolve_display_callable(&self, node: &NodeId) -> Vec<NodeId> {
+        let NodeId::Symbol {
+            file,
+            symbol,
+            callable_id: None,
+        } = node
+        else {
+            return vec![node.clone()];
+        };
+        let matches = self
+            .callable_nodes_by_file
+            .get(file.as_ref())
+            .into_iter()
+            .flatten()
+            .filter(|candidate| {
+                matches!(candidate, NodeId::Symbol { symbol: candidate_symbol, .. } if candidate_symbol == symbol)
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        if matches.len() == 1 {
+            matches
+        } else {
+            Vec::new()
+        }
     }
 }

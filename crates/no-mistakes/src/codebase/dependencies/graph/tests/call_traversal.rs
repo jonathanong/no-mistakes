@@ -23,6 +23,17 @@ fn symbol(path: &Path, name: &str) -> NodeId {
     NodeId::symbol(path, name)
 }
 
+/// Traversal nodes carry an opaque callable identity so same-named sibling
+/// declarations cannot collapse. These catalog assertions intentionally
+/// check the stable public file/symbol projection instead.
+fn has_symbol(node: &NodeId, path: &Path, name: &str) -> bool {
+    matches!(
+        node,
+        NodeId::Symbol { file, symbol, .. }
+            if file.as_ref() == path && symbol.as_ref() == name
+    )
+}
+
 fn call_resolution_inputs<'a>(
     root: &'a Path,
     tsconfig: &'a TsConfig,
@@ -47,6 +58,9 @@ fn call_resolution_inputs<'a>(
     }
 }
 
+#[path = "call_traversal/export_resolution.rs"]
+mod export_resolution;
+
 #[test]
 fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
     let (root, graph) = call_fixture_graph();
@@ -56,12 +70,15 @@ fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
     let direct = graph.call_traces(std::slice::from_ref(&entry_root), CallTraversal::Direct, None);
     let direct_targets = direct.iter().map(|trace| &trace.target).collect::<Vec<_>>();
     assert_eq!(direct.len(), 3, "entry has three direct calls");
-    assert!(direct_targets.contains(&&symbol(&root.join("src/diamond-left.mts"), "diamondLeft")));
-    assert!(direct_targets.contains(&&symbol(
-        &root.join("src/diamond-right.mts"),
-        "diamondRight"
-    )));
-    assert!(direct_targets.contains(&&symbol(&root.join("src/cycle-a.mts"), "cycleA")));
+    assert!(direct_targets
+        .iter()
+        .any(|node| has_symbol(node, &root.join("src/diamond-left.mts"), "diamondLeft")));
+    assert!(direct_targets
+        .iter()
+        .any(|node| has_symbol(node, &root.join("src/diamond-right.mts"), "diamondRight")));
+    assert!(direct_targets
+        .iter()
+        .any(|node| has_symbol(node, &root.join("src/cycle-a.mts"), "cycleA")));
 
     assert!(
         graph
@@ -77,13 +94,13 @@ fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
     let depth_two = graph.call_traces(&[entry_root], CallTraversal::Transitive, Some(2));
     assert!(
         depth_two.iter().any(|trace| {
-            trace.target == symbol(&root.join("src/diamond-shared.mts"), "shared")
+            has_symbol(&trace.target, &root.join("src/diamond-shared.mts"), "shared")
         })
     );
     assert!(
         depth_two
             .iter()
-            .any(|trace| { trace.target == symbol(&root.join("src/cycle-b.mts"), "cycleB") })
+            .any(|trace| has_symbol(&trace.target, &root.join("src/cycle-b.mts"), "cycleB"))
     );
 
     // A file traversal is deliberately a same-source-file layer, even when
@@ -137,19 +154,22 @@ fn class_member_membership_does_not_create_call_edges() {
 fn call_traversal_uses_deterministic_shortest_diamond_paths_and_terminates_cycles() {
     let (root, graph) = call_fixture_graph();
     let entry = root.join("src/entry.mts");
-    let shared = symbol(&root.join("src/diamond-shared.mts"), "shared");
     let traces = graph.call_traces(&[symbol(&entry, "entry")], CallTraversal::Transitive, None);
     let shared_trace = traces
         .iter()
-        .find(|trace| trace.target == shared)
+        .find(|trace| has_symbol(&trace.target, &root.join("src/diamond-shared.mts"), "shared"))
         .expect("diamond target is reachable");
     assert_eq!(shared_trace.nodes.len(), 3);
+    assert!(has_symbol(
+        &shared_trace.nodes[1],
+        &root.join("src/diamond-left.mts"),
+        "diamondLeft"
+    ));
     assert_eq!(
-        shared_trace.nodes[1],
-        symbol(&root.join("src/diamond-left.mts"), "diamondLeft")
-    );
-    assert_eq!(
-        traces.iter().filter(|trace| trace.target == shared).count(),
+        traces
+            .iter()
+            .filter(|trace| has_symbol(&trace.target, &root.join("src/diamond-shared.mts"), "shared"))
+            .count(),
         1,
         "diamond target has one shortest trace"
     );
@@ -162,7 +182,7 @@ fn call_traversal_uses_deterministic_shortest_diamond_paths_and_terminates_cycle
         assert!(
             traces
                 .iter()
-                .any(|trace| trace.target == symbol(&path, name))
+                .any(|trace| has_symbol(&trace.target, &path, name))
         );
     }
     assert!(
@@ -187,7 +207,8 @@ fn call_roots_are_pure_and_retain_leaf_and_global_only_callables() {
     assert!(
         graph
             .expand_call_roots(&[CallRoot::File(global_file.clone())])
-            .contains(&symbol(&global_file, "globalOnly"))
+            .iter()
+            .any(|node| has_symbol(node, &global_file, "globalOnly"))
     );
     assert!(
         graph
@@ -226,8 +247,6 @@ fn call_roots_are_pure_and_retain_leaf_and_global_only_callables() {
 fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
     let (root, graph) = call_fixture_graph();
     let aliases = root.join("src/aliases.mts");
-    let target = symbol(&root.join("src/alias-target.mts"), "importedTarget");
-    let default = symbol(&root.join("src/alias-target.mts"), "defaultTarget");
     let roots = graph.expand_call_roots(&[CallRoot::File(aliases.clone())]);
     let traces = graph.call_traces(&roots, CallTraversal::Direct, None);
 
@@ -236,7 +255,10 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
     ));
 
     assert_eq!(
-        traces.iter().filter(|trace| trace.target == target).count(),
+        traces
+            .iter()
+            .filter(|trace| has_symbol(&trace.target, &root.join("src/alias-target.mts"), "importedTarget"))
+            .count(),
         3,
         "module, anonymous callback, and nested function aliases retain canonical call edges"
     );
@@ -339,20 +361,22 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
                 } if file == &root.join("src/alias-target.mts") && scope == "importedTarget"
             )
     }));
-    assert!(traces.iter().any(|trace| trace.target == default));
+    assert!(traces
+        .iter()
+        .any(|trace| has_symbol(&trace.target, &root.join("src/alias-target.mts"), "defaultTarget")));
     assert!(
         !traces.iter().any(|trace| {
-            trace.target == symbol(&root.join("src/mixed-star-callable.mts"), "collision")
+            has_symbol(&trace.target, &root.join("src/mixed-star-callable.mts"), "collision")
         }),
         "a non-callable export-star collision must not select the callable branch"
     );
     assert!(
         !traces.iter().any(|trace| {
-            trace.target
-                == symbol(
-                    &root.join("src/mixed-star-callable.mts"),
-                    "externalCollision",
-                )
+            has_symbol(
+                &trace.target,
+                &root.join("src/mixed-star-callable.mts"),
+                "externalCollision",
+            )
         }),
         "an unresolved export-star candidate must not select the visible callable branch"
     );
@@ -446,78 +470,24 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
 }
 
 #[test]
-fn call_export_resolution_keeps_missing_facts_and_nonvisible_stars_unknown() {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture("call-traversal"));
-    let source = root.join("src/empty-star-barrel.mts");
-    let tsconfig = TsConfig {
-        dir: root.clone(),
-        paths: vec![],
-        paths_dir: root.clone(),
-        base_url: None,
-    };
-    let graph_files = GraphFiles::from_files(vec![source.clone()]);
-    let inputs = call_resolution_inputs(&root, &tsconfig, &graph_files);
-    let resolver = ImportResolver::new(&tsconfig);
-
-    let missing_facts = TsFactMap::new();
-    let indexes = CallableResolutionIndexes::default();
-    assert!(matches!(
-        resolve_exported_callable(
-            &inputs,
-            &missing_facts,
-            &resolver,
-            &source,
-            "missing",
-            &indexes,
-            &mut Vec::new(),
-        ),
-        ExportedCallableResolution::Unknown
-    ));
-    assert!(matches!(
-        indexes.exports.get(&(source.clone(), "missing".to_string())).as_deref(),
-        Some(ExportedCallableResolution::Unknown)
-    ));
-
-    let star_facts = TsFactMap::from([(
-        source.clone(),
-        TsFileFacts {
-            star_reexport_specifiers: vec!["./empty-star-source.mts".to_string()],
-            ..TsFileFacts::default()
-        },
-    )]);
-    assert!(matches!(
-        resolve_exported_callable(
-            &inputs,
-            &star_facts,
-            &resolver,
-            &source,
-            "missing",
-            &CallableResolutionIndexes::default(),
-            &mut Vec::new(),
-        ),
-        ExportedCallableResolution::Unknown
-    ));
-}
-
-#[test]
 fn call_resolution_walks_lexical_parent_scopes_without_guessing_properties() {
     let (root, graph) = call_fixture_graph();
     let local = root.join("src/local.mts");
     let outer = symbol(&local, "outer");
     let inner = symbol(&local, "outer/inner");
-    let outer_only = symbol(&local, "outer/outerOnly");
-
     let direct = graph.call_traces(std::slice::from_ref(&inner), CallTraversal::Direct, None);
-    assert_eq!(
-        direct.iter().map(|trace| &trace.target).collect::<Vec<_>>(),
-        vec![&outer_only],
+    assert!(direct.iter().map(|trace| &trace.target).all(|target| has_symbol(
+        target,
+        &local,
+        "outer/outerOnly"
+    )) && direct.len() == 1,
         "a nested function can call a callable declared by its lexical parent"
     );
     assert!(
         graph
             .call_traces(&[outer], CallTraversal::Transitive, None)
             .iter()
-            .any(|trace| trace.target == outer_only),
+            .any(|trace| has_symbol(&trace.target, &local, "outer/outerOnly")),
         "the parent-local edge participates in ordinary traversal"
     );
 }

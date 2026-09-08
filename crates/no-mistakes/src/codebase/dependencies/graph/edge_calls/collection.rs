@@ -14,6 +14,15 @@ fn collect_call_edges_for_core(
                 return Vec::new();
             };
             let Some(index) = indexes.file(facts, path) else { return Vec::new() };
+            let call_offsets = file
+                .function_calls
+                .iter()
+                .filter(|call| {
+                    call.invocation
+                        != crate::codebase::dependencies::extract::InvocationKind::Membership
+                })
+                .map(|call| call.offset)
+                .collect::<std::collections::HashSet<_>>();
             let mut sites = file
                 .function_calls
                 .iter()
@@ -32,7 +41,13 @@ fn collect_call_edges_for_core(
                     let target_identity = call_target_identity(&index, call, &resolved_callee);
                     let target = match target_identity {
                         crate::codebase::dependencies::extract::CallTargetIdentity::RepositoryFunction => {
-                            resolve_local_call_scope(call.caller.as_deref(), &resolved_callee, &index.known_scopes)
+                            resolve_local_call_scope(
+                                call.caller.as_deref(),
+                                call.callee_binding_scope,
+                                &resolved_callee,
+                                &index.known_scopes,
+                                &index.class_scopes,
+                            )
                                 .map(|scope| (path.to_path_buf(), scope.to_string()))
                         }
                         crate::codebase::dependencies::extract::CallTargetIdentity::ModuleExport => None,
@@ -41,7 +56,10 @@ fn collect_call_edges_for_core(
                     };
                     let source = call.caller.as_deref().map_or_else(
                         || NodeId::file_in(&edge_inputs.interner, path),
-                        |caller| NodeId::symbol_in(&edge_inputs.interner, path, caller),
+                        |caller| call.caller_id.map_or_else(
+                            || NodeId::symbol_in(&edge_inputs.interner, path, caller),
+                            |id| NodeId::callable_in(&edge_inputs.interner, path, caller, id),
+                        ),
                     );
                     let resolved_target = match (target_identity, target) {
                         (crate::codebase::dependencies::extract::CallTargetIdentity::RepositoryFunction, Some((file, scope))) => {
@@ -68,7 +86,14 @@ fn collect_call_edges_for_core(
                         ResolvedCallTarget::RepositoryFunction { file, scope }
                         | ResolvedCallTarget::ModuleExport { repository_target: Some((file, scope)), .. } => Some((
                             source,
-                            NodeId::symbol_in(&edge_inputs.interner, file, scope),
+                            callable_node_for_call(
+                                &edge_inputs.interner,
+                                facts,
+                                file,
+                                scope,
+                                call.callee_binding_scope,
+                                &call.callee,
+                            ),
                             EdgeKind::Call,
                         )),
                         _ => None,
@@ -78,6 +103,7 @@ fn collect_call_edges_for_core(
                         ResolvedCallSite {
                             file: path.to_path_buf(),
                             caller: call.caller.clone(),
+                            caller_id: call.caller_id,
                             source_callee: call.callee.clone(),
                             line: call.line,
                             offset: call.offset,
@@ -87,12 +113,13 @@ fn collect_call_edges_for_core(
                     )
                 })
                 .collect::<Vec<_>>();
-            sites.extend(file.unknown_calls.iter().map(|call| {
+            sites.extend(file.unknown_calls.iter().filter(|call| !call_offsets.contains(&call.offset)).map(|call| {
                 (
                     None,
                     ResolvedCallSite {
                         file: path.to_path_buf(),
                         caller: call.caller.clone(),
+                        caller_id: call.caller_id,
                         source_callee: "<unknown>".to_string(),
                         line: call.line,
                         offset: call.offset,
@@ -115,4 +142,37 @@ fn collect_call_edges_for_core(
             left.1.append(&mut right.1);
             left
         })
+}
+
+fn callable_node_for_call(
+    interner: &crate::codebase::analysis_session::PathInterner,
+    facts: &dyn TsFactLookup,
+    file: &std::path::Path,
+    scope: &str,
+    binding_scope: Option<usize>,
+    callee: &str,
+) -> NodeId {
+    let id = facts.get_ts_facts(file).and_then(|file_facts| {
+        let binding = callee.split_once('.').map_or(callee, |(name, _)| name);
+        if let Some(id) = binding_scope.and_then(|scope_id| {
+            file_facts
+                .callable_bindings
+                .iter()
+                .find_map(|(candidate_scope, name, id)| {
+                    (*candidate_scope == scope_id && name == binding).then_some(*id)
+                })
+        }) {
+            return Some(id);
+        }
+        let mut ids = file_facts
+            .callable_scope_ids
+            .iter()
+            .filter_map(|(id, display)| (display == scope).then_some(*id));
+        let first = ids.next()?;
+        ids.next().is_none().then_some(first)
+    });
+    id.map_or_else(
+        || NodeId::symbol_in(interner, file, scope),
+        |id| NodeId::callable_in(interner, file, scope, id),
+    )
 }

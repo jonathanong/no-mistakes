@@ -57,6 +57,16 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         .filter(|scope| !collector.reassigned_callable_scopes.contains(scope))
         .collect();
     callable_scopes.sort();
+    let mut class_scopes: Vec<_> = collector.class_scopes.into_iter().collect();
+    class_scopes.sort();
+    let mut callable_scope_ids: Vec<_> = collector.callable_scope_ids.into_iter().collect();
+    callable_scope_ids.sort();
+    let mut callable_bindings: Vec<_> = collector
+        .callable_bindings
+        .into_iter()
+        .map(|((scope, name), id)| (scope, name, id))
+        .collect();
+    callable_bindings.sort();
     let callable_aliases = collector
         .callable_aliases
         .into_iter()
@@ -83,8 +93,10 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         exported_resource_roots,
         exported_resource_scopes,
         known_function_scopes,
+        callable_scope_ids,
+        callable_bindings,
         callable_scopes,
-        unknown_callers: collector.unknown_callers,
+        class_scopes,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
     }
 }

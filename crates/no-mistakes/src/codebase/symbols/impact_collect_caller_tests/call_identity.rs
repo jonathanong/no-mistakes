@@ -7,6 +7,7 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 fn local_call(identity: CallTargetIdentity, callee: &str) -> FunctionCall {
     FunctionCall {
         caller: Some("consumer".to_string()),
+        caller_id: None,
         syntactic_caller: Some("consumer".to_string()),
         callee: callee.to_string(),
         line: 1,

@@ -16,10 +16,10 @@ fn walk_default_expression<'a>(
     }
     collector.record_exported_resource_root("default");
     if let Some(object) = default_object_expression(&export.declaration) {
-        record_object_member_calls(collector, "default", object);
+        record_object_member_calls(collector, "default", CallableId(export.span.start), object);
         record_object_resource_scopes(collector, "default", object);
     }
-    collector.push_function_scope(Some("default".to_string()));
+    collector.push_function_scope(Some("default".to_string()), CallableId(export.span.start));
     // Flag the runtime import in the callback directly forming the default value —
     // e.g. `export default dynamic(() => import('./Foo'))` — as reachable through
     // the `default` binding instead of dropping it with its anonymous callback
@@ -111,7 +111,7 @@ fn walk_default_arrow_with_scope<'a>(
     collector: &mut ImportCollector,
     arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
 ) {
-    collector.push_function_scope(Some("default".to_string()));
+    collector.push_function_scope(Some("default".to_string()), CallableId(arrow.span.start));
     collector.exported_functions.insert("default".to_string());
     collector.callable_scopes.insert("default".to_string());
     collector.add_type_parameter_names(arrow.type_parameters.as_deref());
@@ -126,7 +126,7 @@ fn walk_default_function_with_scope<'a>(
     scope: &str,
 ) {
     let pushed_syntactic_caller = collector.push_syntactic_caller(function_name(function));
-    collector.push_function_scope(Some(scope.to_string()));
+    collector.push_function_scope(Some(scope.to_string()), CallableId(function.span.start));
     collector.exported_functions.insert(scope.to_string());
     collector.callable_scopes.insert(scope.to_string());
     collector.add_type_parameter_names(function.type_parameters.as_deref());
