@@ -28,6 +28,47 @@ fn inventory(root: &Path, rels: &[&str]) -> Vec<PathBuf> {
 }
 
 #[test]
+fn scan_caches_a_common_ancestor_across_nested_configs() {
+    let root = fixture_root();
+    let files = inventory(
+        &root,
+        &[
+            ".oxlintrc.json",
+            "nested/.oxlintrc.json",
+            "nested/file.ts",
+            "string-extends/.oxlintrc.json",
+            "string-extends/file.ts",
+        ],
+    );
+    let opts: Options = serde_yaml::from_str(
+        r#"
+policies:
+  - files: ["**/.oxlintrc.json"]
+    valueAssertions:
+      - kind: ancestor-override-subset
+"#,
+    )
+    .unwrap();
+    let sources = super::super::source_store_for_files(&files);
+    let mut cache = ancestor_override_subset::ParsedAncestorCache::default();
+
+    let findings =
+        scan::scan_with_parsed_ancestors(&root, &opts, &files, &files, &[], &sources, &mut cache)
+            .unwrap();
+
+    assert_eq!(
+        ancestor_override_subset::parsed_ancestor_parse_count(&cache, &root.join(".oxlintrc.json"),),
+        1
+    );
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file == "nested/.oxlintrc.json"));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file == "string-extends/.oxlintrc.json"));
+}
+
+#[test]
 fn ancestor_override_subset_rejects_malformed_overrides_and_keeps_valid_configs() {
     let root = fixture_root();
     let files = inventory(
@@ -139,6 +180,7 @@ fn ancestor_override_subset_fails_closed_for_unresolvable_roots_and_nested_paths
     let sources = super::super::source_store_for_files(&[]);
 
     let missing_root_inventory = paths::CanonicalInventory::new(&missing_root, &[]);
+    let mut missing_root_cache = ancestor_override_subset::ParsedAncestorCache::default();
     let missing_root_findings = ancestor_override_subset::check_ancestor_override_subset(
         &missing_root.join("nested/.oxlintrc.json"),
         "nested/.oxlintrc.json",
@@ -146,6 +188,7 @@ fn ancestor_override_subset_fails_closed_for_unresolvable_roots_and_nested_paths
         &value,
         &assertion,
         &missing_root_inventory,
+        &mut missing_root_cache,
     );
     assert_eq!(missing_root_findings.len(), 1);
     assert!(missing_root_findings[0]
@@ -154,6 +197,7 @@ fn ancestor_override_subset_fails_closed_for_unresolvable_roots_and_nested_paths
 
     let outside_nested = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
     let outside_inventory = paths::CanonicalInventory::new(&fixture, &[]);
+    let mut outside_cache = ancestor_override_subset::ParsedAncestorCache::default();
     let outside_findings = ancestor_override_subset::check_ancestor_override_subset(
         &outside_nested,
         "outside/.oxlintrc.json",
@@ -161,6 +205,7 @@ fn ancestor_override_subset_fails_closed_for_unresolvable_roots_and_nested_paths
         &value,
         &assertion,
         &outside_inventory,
+        &mut outside_cache,
     );
     assert_eq!(outside_findings.len(), 1);
     assert!(outside_findings[0]

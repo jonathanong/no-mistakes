@@ -1,4 +1,4 @@
-use super::ancestor_override_subset::check_ancestor_override_subset;
+use super::ancestor_override_subset::{check_ancestor_override_subset, ParsedAncestorCache};
 use super::equals_file::check_equals_file;
 use super::paths::CanonicalInventory;
 use super::when::policy_applies;
@@ -15,6 +15,69 @@ pub(super) fn scan(
     inventory: &[PathBuf],
     target_roots: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
+    let mut parsed_ancestors = ParsedAncestorCache::default();
+    scan_with_parsed_ancestors(
+        root,
+        opts,
+        files,
+        inventory,
+        target_roots,
+        sources,
+        &mut parsed_ancestors,
+    )
+}
+
+#[cfg(test)]
+pub(super) fn scan_with_parsed_ancestors(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    inventory: &[PathBuf],
+    target_roots: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    parsed_ancestors: &mut ParsedAncestorCache,
+) -> Result<Vec<RuleFinding>> {
+    scan_impl(
+        root,
+        opts,
+        files,
+        inventory,
+        target_roots,
+        sources,
+        parsed_ancestors,
+    )
+}
+
+#[cfg(not(test))]
+fn scan_with_parsed_ancestors(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    inventory: &[PathBuf],
+    target_roots: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    parsed_ancestors: &mut ParsedAncestorCache,
+) -> Result<Vec<RuleFinding>> {
+    scan_impl(
+        root,
+        opts,
+        files,
+        inventory,
+        target_roots,
+        sources,
+        parsed_ancestors,
+    )
+}
+
+fn scan_impl(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    inventory: &[PathBuf],
+    target_roots: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    parsed_ancestors: &mut ParsedAncestorCache,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     let canonical_inventory = CanonicalInventory::new(root, inventory);
@@ -80,6 +143,7 @@ pub(super) fn scan(
                             &value,
                             assertion,
                             &canonical_inventory,
+                            parsed_ancestors,
                         ));
                     }
                     _ => findings.extend(assert_value(&rel, &value, assertion)?),

@@ -27,7 +27,7 @@ pub(super) struct Ancestor {
 }
 
 #[derive(Default)]
-struct ParsedAncestorCache {
+pub(in crate::codebase::rules::structured_config_policy) struct ParsedAncestorCache {
     values: BTreeMap<PathBuf, Result<Arc<Value>, String>>,
     #[cfg(test)]
     parse_counts: BTreeMap<PathBuf, usize>,
@@ -50,7 +50,10 @@ impl ParsedAncestorCache {
     }
 
     #[cfg(test)]
-    fn parse_count(&self, path: &Path) -> usize {
+    pub(in crate::codebase::rules::structured_config_policy) fn parse_count(
+        &self,
+        path: &Path,
+    ) -> usize {
         self.parse_counts.get(path).copied().unwrap_or_default()
     }
 }
@@ -64,7 +67,7 @@ struct Walk<'a> {
     stack: Vec<PathBuf>,
     occurrences: usize,
     max_occurrences: usize,
-    parsed_ancestors: ParsedAncestorCache,
+    parsed_ancestors: &'a mut ParsedAncestorCache,
     ancestors: Vec<Ancestor>,
     findings: &'a mut Vec<RuleFinding>,
 }
@@ -76,6 +79,7 @@ pub(super) fn collect_ancestors(
     assertion: &ValueAssertion,
     keys: &Keys<'_>,
     findings: &mut Vec<RuleFinding>,
+    parsed_ancestors: &mut ParsedAncestorCache,
 ) -> Vec<Ancestor> {
     let mut walk = Walk {
         root,
@@ -86,7 +90,7 @@ pub(super) fn collect_ancestors(
         stack: vec![nested.path.to_path_buf()],
         occurrences: 0,
         max_occurrences: MAX_EXTENDS_OCCURRENCES,
-        parsed_ancestors: ParsedAncestorCache::default(),
+        parsed_ancestors,
         ancestors: Vec::new(),
         findings,
     };
