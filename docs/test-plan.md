@@ -64,6 +64,16 @@ no-mistakes tests plan vitest --diff-command "git diff main" --format paths
 no-mistakes tests plan vitest --diff-command "git diff main" --format commands
 ```
 
+## Execution Targets
+
+CLI JSON plans include `execution_targets` for assembling commands in CI.
+Targets are grouped only when their runner, configuration, project, path-prefix
+name, and normalized `runner_args` match. Runner selectors therefore remain
+attached to their target: Cargo integration tests keep distinct `--test` values,
+and Swift packages keep distinct `--filter` values. Identical selectors
+continue to share one grouped target. The Node API exposes these fields as
+`executionTargets` and `runnerArgs`.
+
 ## Deleted File Handling
 
 When a diff indicates a file was deleted, the tool:

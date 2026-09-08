@@ -117,3 +117,69 @@ fn path_prefixes_name_only_swift_execution_targets() {
     assert_eq!(groups.len(), 1);
     assert_eq!(groups[0].name, None);
 }
+
+#[test]
+fn distinct_selector_arguments_keep_execution_targets_separate() {
+    let mut cargo_a = target("cargo", Some("app"), &["cargo", "test"]);
+    cargo_a.runner_args = vec!["-p".into(), "app".into(), "--test".into(), "a".into()];
+    let mut cargo_b = cargo_a.clone();
+    cargo_b.runner_args[3] = "b".into();
+    let mut swift_a = target("swift", Some("swift"), &["swift", "test"]);
+    swift_a.runner_args = vec!["--filter".into(), "AlphaTests".into()];
+    let mut swift_b = swift_a.clone();
+    swift_b.runner_args[1] = "BetaTests".into();
+
+    let groups = grouped_execution_targets(
+        &[
+            selected("tests/a.rs", vec![cargo_a]),
+            selected("tests/b.rs", vec![cargo_b]),
+            selected("Tests/Alpha.swift", vec![swift_a]),
+            selected("Tests/Beta.swift", vec![swift_b]),
+        ],
+        &[],
+    );
+
+    assert_eq!(groups.len(), 4);
+    assert!(groups.iter().any(|group| {
+        group.runner == "cargo"
+            && group.runner_args == ["-p", "app", "--test", "a"]
+            && group.test_files == ["tests/a.rs"]
+    }));
+    assert!(groups.iter().any(|group| {
+        group.runner == "cargo"
+            && group.runner_args == ["-p", "app", "--test", "b"]
+            && group.test_files == ["tests/b.rs"]
+    }));
+    assert!(groups.iter().any(|group| {
+        group.runner == "swift"
+            && group.runner_args == ["--filter", "AlphaTests"]
+            && group.test_files == ["Tests/Alpha.swift"]
+    }));
+    assert!(groups.iter().any(|group| {
+        group.runner == "swift"
+            && group.runner_args == ["--filter", "BetaTests"]
+            && group.test_files == ["Tests/Beta.swift"]
+    }));
+}
+
+#[test]
+fn identical_selector_arguments_still_combine_execution_targets() {
+    let mut swift_a = target("swift", Some("swift"), &["swift", "test"]);
+    swift_a.runner_args = vec!["--filter".into(), "SharedTests".into()];
+    let swift_b = swift_a.clone();
+
+    let groups = grouped_execution_targets(
+        &[
+            selected("Tests/SharedA.swift", vec![swift_a]),
+            selected("Tests/SharedB.swift", vec![swift_b]),
+        ],
+        &[],
+    );
+
+    assert_eq!(groups.len(), 1);
+    assert_eq!(groups[0].runner_args, ["--filter", "SharedTests"]);
+    assert_eq!(
+        groups[0].test_files,
+        ["Tests/SharedA.swift", "Tests/SharedB.swift"]
+    );
+}

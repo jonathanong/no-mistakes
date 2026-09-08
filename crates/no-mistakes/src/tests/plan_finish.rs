@@ -17,6 +17,7 @@ type ExecutionGroupKey = (
     Option<String>,
     Vec<String>,
     Option<String>,
+    Vec<String>,
 );
 
 fn grouped_execution_targets(
@@ -31,12 +32,14 @@ fn grouped_execution_targets(
             } else {
                 None
             };
+            let runner_args = runner_args_without_file(target, &test.test_file);
             let key = (
                 target.runner.clone(),
                 target.config.clone(),
                 target.project.clone(),
                 target.base_command.clone(),
                 name.clone(),
+                runner_args.clone(),
             );
             let group = groups.entry(key).or_insert_with(|| GroupedExecutionTarget {
                 runner: target.runner.clone(),
@@ -44,7 +47,7 @@ fn grouped_execution_targets(
                 project: target.project.clone(),
                 name,
                 base_command: target.base_command.clone(),
-                runner_args: runner_args_without_file(target, &test.test_file),
+                runner_args,
                 test_files: Vec::new(),
             });
             if !group.test_files.iter().any(|file| file == &test.test_file) {
