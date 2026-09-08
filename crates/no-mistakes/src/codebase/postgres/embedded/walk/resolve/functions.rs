@@ -184,7 +184,9 @@ fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
 /// `chain::resolve_expr` has no `Identifier` case: that keeps this sound
 /// without a separate parameter-position check. A callee that shadows one of
 /// this function's own parameters is rejected rather than resolved through
-/// the global declaration of the same name.
+/// the global declaration of the same name — and so is a tagged template
+/// whose tag name (e.g. `sql`) is one of this function's own parameters,
+/// via `is_shadowed`.
 fn resolve_named(
     name: &str,
     depth: u8,
@@ -206,7 +208,8 @@ fn resolve_named(
         }
         resolve_named(callee, depth, raw, resolving)
     };
-    let text = chain::resolve_expr(argument, depth, &mut lookup);
+    let mut is_shadowed = |tag: &str| shadows_param(resolvable, tag);
+    let text = chain::resolve_expr(argument, depth, &mut lookup, &mut is_shadowed);
     resolving.pop();
     text
 }

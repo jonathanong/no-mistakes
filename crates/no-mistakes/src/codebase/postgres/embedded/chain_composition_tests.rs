@@ -55,3 +55,15 @@ fn same_file_function_binary_composition_of_two_trusted_placeholders_renumbers_s
         Some("SELECT * FROM topics WHERE id = sql_placeholder_1 AND status = sql_placeholder_2")
     );
 }
+
+#[test]
+fn helper_return_tagged_by_a_parameter_named_sql_fails_closed() {
+    let facts = extract("composed-chain-shadowed-sql-tag-param.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn local_tagged_by_a_parameter_named_sql_fails_closed() {
+    let facts = extract("composed-chain-shadowed-sql-tag-local.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}

@@ -8,26 +8,34 @@ use oxc_ast::ast::{Argument, BinaryOperator, CallExpression, Expression};
 ///
 /// `lookup` resolves a bare-identifier call target (a same-file function
 /// name) to its own resolved body text, or `None` when it isn't one.
+/// `is_shadowed` reports whether a name is currently bound to something
+/// other than its global meaning (e.g. the trusted `sql` tag shadowed by a
+/// same-file helper's own parameter) — see [`interpolating_untrusted_tag`].
 /// `depth` bounds recursion so a cyclic or pathological chain fails closed
 /// instead of overflowing the stack.
 pub(super) fn resolve_expr(
     expr: &Expression<'_>,
     depth: u8,
     lookup: &mut impl FnMut(&str, u8) -> Option<String>,
+    is_shadowed: &mut impl FnMut(&str) -> bool,
 ) -> Option<String> {
     let depth = depth.checked_sub(1)?;
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => sql_text(expr),
-        Expression::TaggedTemplateExpression(_) if interpolating_untrusted_tag(expr) => None,
+        Expression::TaggedTemplateExpression(_)
+            if interpolating_untrusted_tag(expr, is_shadowed) =>
+        {
+            None
+        }
         Expression::TaggedTemplateExpression(_) => sql_text(expr),
         Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
-            let left = resolve_expr(&binary.left, depth, lookup)?;
-            let right = resolve_expr(&binary.right, depth, lookup)?;
+            let left = resolve_expr(&binary.left, depth, lookup, is_shadowed)?;
+            let right = resolve_expr(&binary.right, depth, lookup, is_shadowed)?;
             let right = renumber_placeholders(&right, count_placeholders(&left));
             Some(format!("{left}{right}"))
         }
-        Expression::CallExpression(call) => resolve_call(call, depth, lookup),
+        Expression::CallExpression(call) => resolve_call(call, depth, lookup, is_shadowed),
         _ => None,
     }
 }
@@ -36,11 +44,12 @@ fn resolve_call(
     call: &CallExpression<'_>,
     depth: u8,
     lookup: &mut impl FnMut(&str, u8) -> Option<String>,
+    is_shadowed: &mut impl FnMut(&str) -> bool,
 ) -> Option<String> {
     match unwrap_ts_wrappers(&call.callee) {
         Expression::StaticMemberExpression(member) if member.property.name == "append" => {
-            let base = resolve_expr(&member.object, depth, lookup)?;
-            let appended = resolve_expr(append_argument(call)?, depth, lookup)?;
+            let base = resolve_expr(&member.object, depth, lookup, is_shadowed)?;
+            let appended = resolve_expr(append_argument(call)?, depth, lookup, is_shadowed)?;
             let appended = renumber_placeholders(&appended, count_placeholders(&base));
             Some(format!("{base}{appended}"))
         }
