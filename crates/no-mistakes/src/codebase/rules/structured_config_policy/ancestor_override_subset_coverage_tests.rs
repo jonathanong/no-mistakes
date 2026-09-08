@@ -51,16 +51,64 @@ policies:
     .unwrap();
     let sources = super::super::source_store_for_files(&files);
     let mut cache = ancestor_override_subset::ParsedAncestorCache::default();
+    let mut canonical_inventory_initializations = 0;
 
-    let findings =
-        scan::scan_with_parsed_ancestors(&root, &opts, &files, &files, &[], &sources, &mut cache)
-            .unwrap();
+    let findings = scan::scan_with_parsed_ancestors(
+        &root,
+        &opts,
+        &files,
+        &files,
+        &[],
+        &sources,
+        &mut cache,
+        &mut canonical_inventory_initializations,
+    )
+    .unwrap();
 
     assert_eq!(
         ancestor_override_subset::parsed_ancestor_parse_count(&cache, &root.join(".oxlintrc.json"),),
         1
     );
+    assert_eq!(canonical_inventory_initializations, 1);
     assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn scan_does_not_initialize_ancestor_state_without_an_active_assertion() {
+    let root = fixture_root();
+    let files = inventory(&root, &["nested/.oxlintrc.json"]);
+    let opts: Options = serde_yaml::from_str(
+        r#"
+policies:
+  - files: ["**/.oxlintrc.json"]
+    valueAssertions:
+      - kind: boolean
+        key: enabled
+  - files: ["**/.oxlintrc.json"]
+    when:
+      - key: absent
+    valueAssertions:
+      - kind: ancestor-override-subset
+"#,
+    )
+    .unwrap();
+    let sources = super::super::source_store_for_files(&files);
+    let mut cache = ancestor_override_subset::ParsedAncestorCache::default();
+    let mut canonical_inventory_initializations = 0;
+
+    let _ = scan::scan_with_parsed_ancestors(
+        &root,
+        &opts,
+        &files,
+        &files,
+        &[],
+        &sources,
+        &mut cache,
+        &mut canonical_inventory_initializations,
+    )
+    .unwrap();
+
+    assert_eq!(canonical_inventory_initializations, 0);
 }
 
 #[test]

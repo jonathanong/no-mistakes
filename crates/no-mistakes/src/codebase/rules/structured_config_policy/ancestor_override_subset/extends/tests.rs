@@ -81,6 +81,50 @@ fn bounds_repeated_occurrences_in_a_fanout_graph() {
 }
 
 #[test]
+fn bounds_repeated_invalid_local_extends_attempts() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/structured-config-policy/ancestor-override-subset"),
+    );
+    let nested = root.join("diamond/nested/.oxlintrc.json");
+    let sources = crate::codebase::rules::source_store_for_files(&[nested.clone()]);
+    let assertion = ValueAssertion::default();
+    let keys = Keys::from_assertion(&assertion);
+
+    for spec in [
+        "./missing.json",
+        "./.oxlintrc.json",
+        "../../../../../../Cargo.toml",
+    ] {
+        let value: Value = serde_yaml::from_str(&format!(
+            "extends: ['{spec}', '{spec}', '{spec}', '{spec}']"
+        ))
+        .unwrap();
+        let mut findings = Vec::new();
+        let mut parsed_ancestors = ParsedAncestorCache::default();
+        let mut walk = Walk {
+            root: &root,
+            nested_rel: "diamond/nested/.oxlintrc.json",
+            sources: &sources,
+            assertion: &assertion,
+            keys: &keys,
+            stack: vec![nested.clone()],
+            occurrences: 0,
+            max_occurrences: 2,
+            traversal_exhausted: false,
+            parsed_ancestors: &mut parsed_ancestors,
+            ancestors: Vec::new(),
+            findings: &mut findings,
+        };
+        walk.visit(&nested, &value);
+        assert_eq!(walk.findings.len(), 3, "{spec}: {:?}", walk.findings);
+        assert!(walk.findings[2]
+            .message
+            .contains("maximum of 2 occurrences"));
+    }
+}
+
+#[test]
 fn preserves_each_non_cycle_occurrence_in_a_diamond_extends_graph() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &Path::new(env!("CARGO_MANIFEST_DIR"))

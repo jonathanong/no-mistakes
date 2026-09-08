@@ -25,6 +25,7 @@ pub(super) fn scan(
         target_roots,
         sources,
         &mut parsed_ancestors,
+        None,
     )
 }
 
@@ -37,6 +38,7 @@ pub(super) fn scan_with_parsed_ancestors(
     target_roots: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     parsed_ancestors: &mut ParsedAncestorCache,
+    canonical_inventory_initializations: &mut usize,
 ) -> Result<Vec<RuleFinding>> {
     scan_impl(
         root,
@@ -46,6 +48,7 @@ pub(super) fn scan_with_parsed_ancestors(
         target_roots,
         sources,
         parsed_ancestors,
+        Some(canonical_inventory_initializations),
     )
 }
 
@@ -67,6 +70,7 @@ fn scan_with_parsed_ancestors(
         target_roots,
         sources,
         parsed_ancestors,
+        None,
     )
 }
 
@@ -78,6 +82,7 @@ fn scan_impl(
     target_roots: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
     parsed_ancestors: &mut ParsedAncestorCache,
+    mut canonical_inventory_initializations: Option<&mut usize>,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     let mut canonical_inventory = None;
@@ -138,6 +143,10 @@ fn scan_impl(
                     Some(AssertionKind::AncestorOverrideSubset) => {
                         if canonical_inventory.is_none() {
                             canonical_inventory = Some(CanonicalInventory::new(root, inventory));
+                            if let Some(initializations) = &mut canonical_inventory_initializations
+                            {
+                                **initializations += 1;
+                            }
                         }
                         findings.extend(check_ancestor_override_subset(
                             &path,
