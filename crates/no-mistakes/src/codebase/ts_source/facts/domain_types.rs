@@ -1,5 +1,4 @@
 use globset::GlobSet;
-use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
@@ -12,7 +11,6 @@ pub struct TsFactContext {
     pub queue_factory_glob: Option<GlobSet>,
     pub queue_project_factory_names: Vec<String>,
     pub http_prefixes: Vec<String>,
-    pub effect_functions: HashMap<String, Option<String>>,
     pub visible_files: Option<Arc<crate::fx::PathSet>>,
     pub(crate) server_route_filter: Option<ServerRouteFactFilter>,
     pub(crate) trpc_router_glob: Option<GlobSet>,
@@ -62,14 +60,6 @@ pub struct BackendRouteFact {
     pub register_object: String,
     pub route: String,
     pub line: u32,
-}
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct EffectCallFact {
-    pub line: usize,
-    pub callee: String,
-    pub category: Option<String>,
-    pub caller: Option<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -137,7 +127,6 @@ impl TsFactContext {
         self.http_prefixes.extend(other.http_prefixes);
         self.http_prefixes.sort();
         self.http_prefixes.dedup();
-        self.effect_functions.extend(other.effect_functions);
         self.server_route_filter = self
             .server_route_filter
             .take()
@@ -192,7 +181,6 @@ impl Default for TsFactContext {
             queue_factory_glob: None,
             queue_project_factory_names: Vec::new(),
             http_prefixes: Vec::new(),
-            effect_functions: HashMap::new(),
             visible_files: None,
             server_route_filter: None,
             trpc_router_glob: None,

@@ -84,20 +84,32 @@ impl ReexportNamespaceResolver<'_> {
                 }
                 continue;
             };
-            let (target, source_kind) = if let Some(target) = self.resolver.resolve(source, barrel)
-            {
+            let (target, source_kind) = if let Some(target) = self.resolver.resolve(source, barrel) {
                 (self.graph_files.visible_path(&target)?.to_path_buf(), kind)
-            } else {
+            } else if let Some(target) = self.workspace.resolve_specifier_from_file_visible(
+                source,
+                barrel,
+                self.visible_files,
+            ) {
                 (
-                    self.graph_files
-                        .visible_path(&self.workspace.resolve_specifier_from_file_visible(
-                            source,
-                            barrel,
-                            self.visible_files,
-                        )?)?
-                        .to_path_buf(),
+                    self.graph_files.visible_path(&target)?.to_path_buf(),
                     workspace_symbol_edge_kind(export.is_type_only),
                 )
+            } else if !self.workspace.recognizes_specifier_from(source, barrel)
+                && !export.is_type_only
+                && bare_module_node_in(self.interner, source).is_some()
+            {
+                let export = if reexported == "*" {
+                    self.member.to_string()
+                } else {
+                    format!("{reexported}.{}", self.member)
+                };
+                return Some((
+                    NodeId::module_in(self.interner, format!("{source}#{export}")),
+                    kind,
+                ));
+            } else {
+                return None;
             };
             let edge_kind = with_type_only_edge_kind(
                 source_kind,

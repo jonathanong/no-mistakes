@@ -31,6 +31,13 @@ Use `--relationship trpc` for static tRPC procedure calls. It follows
 virtual nodes. Empty `projects.*.trpc.routers` lists disable extraction;
 `--relationship all` and unfiltered `dependencies` omit these edges.
 
+Use `--relationship call` for binding-aware TypeScript and JavaScript call
+reachability from file or symbol roots. It follows local calls and proven
+named, star, and namespace re-exports, but not ordinary imported value reads,
+shadowed bindings, or unresolved dynamic callees. Depth-limited traversal uses
+deterministic shortest paths. Pass `--symbols` with `FILE#SYMBOL` to start at a
+named callable rather than the whole file. `all` omits `call`.
+
 Key options: `--tsconfig`, `--depth`/`--max-depth`, repeatable `--filter`,
 repeatable `--target-module`, repeatable `--relationship`, repeatable `--test`,
 `--format`, `--json`, and `--timings`.
@@ -44,7 +51,8 @@ JSON and YAML reports include stable `diagnostics` plus `tsconfig_provenance`
 for requested entry files. Invalid automatic configs warn and fall back
 conservatively; an invalid explicit `--tsconfig` remains an error.
 
-`FILE#SYMBOL` is not meaningful for dependencies; symbol filtering is for
-[`dependents`](dependents.md) and [`related`](related.md).
+`FILE#SYMBOL` requires `--symbols` and is meaningful for `--relationship call`;
+otherwise symbol filtering is for [`dependents`](dependents.md) and
+[`related`](related.md).
 
 Node API: `dependencies(options)`.

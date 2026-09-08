@@ -83,6 +83,7 @@ fn non_workflow_relationship_edges(relationship: &RelationshipArg) -> &'static [
                 EdgeKind::TerraformOutputRef,
             ],
         RelationshipArg::Resource => &[EdgeKind::Resource],
+        RelationshipArg::Call => &[EdgeKind::Call, EdgeKind::CallReexport],
         RelationshipArg::Trpc => &[EdgeKind::TrpcCall, EdgeKind::TrpcProcedure],
         _ => unreachable!("handled before non-workflow relationship mapping"),
     }

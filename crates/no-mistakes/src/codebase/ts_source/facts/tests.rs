@@ -150,10 +150,6 @@ fn plan_domain_fact_detection_tracks_domain_flags() {
             ..TsFactPlan::default()
         },
         TsFactPlan {
-            effect_calls: true,
-            ..TsFactPlan::default()
-        },
-        TsFactPlan {
             rsc_environment: true,
             ..TsFactPlan::default()
         },
@@ -299,10 +295,6 @@ fn plan_empty_detection_tracks_all_flags() {
             ..TsFactPlan::default()
         },
         TsFactPlan {
-            effect_calls: true,
-            ..TsFactPlan::default()
-        },
-        TsFactPlan {
             rsc_environment: true,
             ..TsFactPlan::default()
         },
@@ -320,23 +312,14 @@ fn plan_empty_detection_tracks_all_flags() {
 }
 
 #[test]
-fn plan_coverage_tracks_effect_and_rsc_facts() {
+fn plan_coverage_tracks_rsc_facts() {
     let available = TsFactPlan {
-        effect_calls: true,
         rsc_environment: true,
         ..TsFactPlan::default()
     };
 
     assert!(available.covers(TsFactPlan {
-        effect_calls: true,
-        ..TsFactPlan::default()
-    }));
-    assert!(available.covers(TsFactPlan {
         rsc_environment: true,
-        ..TsFactPlan::default()
-    }));
-    assert!(!TsFactPlan::default().covers(TsFactPlan {
-        effect_calls: true,
         ..TsFactPlan::default()
     }));
     assert!(!TsFactPlan::default().covers(TsFactPlan {

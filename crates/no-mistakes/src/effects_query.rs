@@ -144,7 +144,6 @@ pub fn run(
     // (routes, queues, React, Swift, …), which an `effects` query discards.
     let plan = GraphBuildPlan::from_allowed(Some(&allowed));
     let mut fact_context = crate::codebase::ts_source::facts::TsFactContext::new(&root);
-    fact_context.effect_functions = selection.names.clone();
     fact_context.set_visible_file_set(graph_files.visible_path_set());
     let facts =
         crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session(
@@ -153,7 +152,7 @@ pub fn run(
             crate::codebase::ts_source::facts::TsFactPlan {
                 imports: true,
                 function_calls: true,
-                effect_calls: true,
+                call_reachability: true,
                 ..Default::default()
             },
             &fact_context,

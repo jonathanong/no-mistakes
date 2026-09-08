@@ -1,6 +1,6 @@
 use super::super::{domain, TsFactContext, TsFactPlan, TsFileFacts};
 use crate::codebase::dependencies::extract::{
-    extract_import_facts_from_program_with_source_and_resource_roots, is_indexable,
+    extract_import_facts_from_program_with_source_options, is_indexable,
 };
 use crate::codebase::ts_symbols::extract_symbols_from_program;
 use std::path::Path;
@@ -102,11 +102,12 @@ pub(crate) fn collect_file_facts_from_program(
     parse_error: Option<String>,
     stored_source: Option<Arc<str>>,
 ) -> TsFileFacts {
-    let import_facts = if plan.imports || plan.function_calls {
-        extract_import_facts_from_program_with_source_and_resource_roots(
+    let import_facts = if plan.imports || plan.function_calls || plan.call_reachability {
+        extract_import_facts_from_program_with_source_options(
             program,
             source,
             plan.resources,
+            plan.call_reachability,
         )
     } else {
         Default::default()
@@ -154,6 +155,7 @@ pub(crate) fn collect_file_facts_from_program(
         source: stored_source.or_else(|| plan.source.then(|| Arc::<str>::from(source))),
         imports: import_facts.imports,
         function_calls: import_facts.function_calls,
+        call_reachability: import_facts.call_reachability,
         call_sites,
         resource_calls: resources.calls,
         resource_diagnostics: resources.diagnostics,
@@ -177,7 +179,6 @@ pub(crate) fn collect_file_facts_from_program(
         process_spawns: domain.process_spawns,
         server_routes: domain.server_routes,
         react_components,
-        effect_calls: domain.effect_calls,
         rsc_environment: domain.rsc_environment,
         trpc_procedures: domain.trpc_procedures,
         trpc_calls: domain.trpc_calls,

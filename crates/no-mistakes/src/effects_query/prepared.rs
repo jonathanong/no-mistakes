@@ -37,12 +37,6 @@ pub(crate) fn selection_from_config(
     })
 }
 
-pub(crate) fn selection_fact_functions(
-    selection: &EffectsSelection,
-) -> impl Iterator<Item = String> + '_ {
-    selection.names.keys().cloned()
-}
-
 pub(crate) fn run_with_prepared(
     root: &Path,
     selection: &EffectsSelection,
@@ -77,18 +71,23 @@ pub(crate) fn run_with_prepared(
         .filter_map(|(path, depth)| facts.get(path).map(|file| (path, file, *depth)))
         .flat_map(|(path, file, depth)| {
             let relative_path = relative_slash_path(root, path);
-            file.effect_calls.iter().filter_map(move |call| {
-                selection
-                    .names
-                    .get(&call.callee)
-                    .map(|category| EffectCallSite {
-                        file: relative_path.clone(),
-                        line: call.line,
-                        callee: call.callee.clone(),
-                        category: category.clone(),
-                        caller: call.caller.clone(),
-                        depth,
-                    })
+            file.call_reachability.iter().filter_map(move |call| {
+                let candidates = effect_callee(call);
+                let category = candidates
+                    .iter()
+                    .find_map(|candidate| selection.names.get(candidate));
+                category.map(|category| EffectCallSite {
+                    file: relative_path.clone(),
+                    line: call.line as usize,
+                    callee: candidates
+                        .iter()
+                        .find(|candidate| selection.names.contains_key(*candidate))
+                        .cloned()
+                        .unwrap_or_default(),
+                    category: category.clone(),
+                    caller: call.caller.clone(),
+                    depth,
+                })
             })
         })
         .collect();
@@ -107,4 +106,31 @@ pub(crate) fn run_with_prepared(
         call_sites,
         by_category,
     })
+}
+
+/// Preserve the effects query's full-name and terminal-name matching while
+/// projecting from the shared binding-aware call facts.
+fn effect_callee(
+    call: &crate::codebase::dependencies::extract::CallReachabilityFact,
+) -> Vec<String> {
+    let mut candidates = vec![call.callee.clone()];
+    let name = match &call.binding {
+        crate::codebase::dependencies::extract::CallBinding::Local { scope }
+        | crate::codebase::dependencies::extract::CallBinding::Import { export: scope, .. } => {
+            scope
+        }
+        crate::codebase::dependencies::extract::CallBinding::Global { name }
+        | crate::codebase::dependencies::extract::CallBinding::Shadowed { name } => name,
+        crate::codebase::dependencies::extract::CallBinding::Unresolved { .. } => {
+            return Vec::new();
+        }
+    };
+    candidates.push(name.clone());
+    if let Some((_, terminal)) = name.rsplit_once('.') {
+        candidates.push(terminal.to_string());
+    } else if let Some((_, terminal)) = name.rsplit_once('/') {
+        candidates.push(terminal.to_string());
+    }
+    candidates.dedup();
+    candidates
 }

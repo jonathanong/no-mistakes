@@ -4,13 +4,13 @@ use oxc_ast::ast::{
     Argument, BindingPattern, BlockStatement, CallExpression, CatchClause, Class, ClassElement,
     ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration,
     ExportDefaultDeclarationKind, ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier,
-    Expression, FormalParameters, IdentifierReference, ImportDeclaration,
-    ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement, MethodDefinition,
-    ModuleExportName, ObjectExpression, ObjectProperty, ObjectPropertyKind, Program, Statement,
-    StaticMemberExpression, TSEnumDeclaration, TSImportType, TSInterfaceDeclaration,
-    TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
-    TSTypeParameterDeclaration, TSTypeReference, VariableDeclaration, VariableDeclarationKind,
-    VariableDeclarator,
+    Expression, ForInStatement, ForOfStatement, ForStatement, FormalParameters,
+    IdentifierReference, ImportDeclaration, ImportDeclarationSpecifier, ImportExpression,
+    JSXOpeningElement, MethodDefinition, ModuleExportName, NewExpression, ObjectExpression,
+    ObjectProperty, ObjectPropertyKind, Program, Statement, StaticMemberExpression,
+    SwitchStatement, TSEnumDeclaration, TSImportType, TSInterfaceDeclaration, TSQualifiedName,
+    TSTypeAliasDeclaration, TSTypeName, TSTypeParameter, TSTypeParameterDeclaration,
+    TSTypeReference, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::SourceType;
@@ -58,10 +58,47 @@ pub struct FunctionCall {
     pub static_cwd: Option<String>,
 }
 
+/// The lexical identity of a statically recognizable callee.
+///
+/// This deliberately differs from [`FunctionCall`], whose string-only shape is
+/// retained for the legacy import-reachability algorithm.  Consumers that need
+/// call correctness (rather than a conservative import owner) must use
+/// [`CallReachabilityFact`].
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub enum CallBinding {
+    /// A callable declared in this source file.
+    Local { scope: String },
+    /// An ESM/CommonJS value import, including aliases, namespace members,
+    /// and member calls through a named import (`export.member`).
+    Import { module: String, export: String },
+    /// A name with no local or imported lexical binding.
+    Global { name: String },
+    /// A local binding hides an otherwise importable/global name, but this
+    /// pass cannot prove that its value is callable.
+    Shadowed { name: String },
+    /// Dynamic/computed syntax for which a stable callable identity is absent.
+    Unresolved { display: String },
+}
+
+/// A binding-aware call occurrence collected during the shared TS fact pass.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+pub struct CallReachabilityFact {
+    /// `None` represents file top-level code.
+    pub caller: Option<String>,
+    pub binding: CallBinding,
+    /// Original statically rendered callee spelling, retained for exact-name
+    /// policies and backwards-compatible spelling-based consumers.
+    pub callee: String,
+    pub line: u32,
+    /// `direct` for `fn()`, `member` for `ns.fn()`, and `unknown` for dynamic syntax.
+    pub invocation_kind: &'static str,
+}
+
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ImportFacts {
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
+    pub call_reachability: Vec<CallReachabilityFact>,
     pub symbol_references: Vec<FunctionCall>,
     pub exported_functions: Vec<String>,
     /// Exported object/class roots whose member scopes may be reached by an
@@ -121,7 +158,10 @@ include!("extract_export_names.rs");
 include!("extract_visit.rs");
 include!("extract_visit_exports.rs");
 include!("extract_collector_methods.rs");
+include!("extract_collector_scopes.rs");
+include!("extract_call_fact_methods.rs");
 include!("extract_visit_aggregates.rs");
+include!("extract_visit_aggregate_members.rs");
 include!("extract_visit_object_references.rs");
 include!("extract_visit_helpers.rs");
 include!("extract_default_helpers.rs");
@@ -131,7 +171,12 @@ include!("extract_type_scope_helpers.rs");
 include!("extract_visit_hoist.rs");
 include!("extract_visit_types.rs");
 include!("extract_binding_helpers.rs");
+include!("extract_call_binding_helpers.rs");
+include!("extract_require_binding_helpers.rs");
 include!("extract_syntax_helpers.rs");
+include!("extract_visit_scope_helpers.rs");
+include!("extract_visit_loop_scopes.rs");
+include!("extract_visit_function_scopes.rs");
 
 /// Returns `true` for `.tsx` / `.jsx` files (which need the TSX grammar).
 pub fn is_tsx_file(path: &Path) -> bool {
@@ -149,6 +194,10 @@ pub fn is_indexable(path: &Path) -> bool {
     )
 }
 
+#[cfg(test)]
+mod call_reachability_regression_tests;
+#[cfg(test)]
+mod call_reachability_tests;
 #[cfg(test)]
 mod coverage_tests;
 #[cfg(test)]

@@ -4,6 +4,7 @@ impl TsFactPlan {
     pub fn include(&mut self, other: Self) {
         self.imports |= other.imports;
         self.function_calls |= other.function_calls;
+        self.call_reachability |= other.call_reachability;
         self.call_sites |= other.call_sites;
         self.resources |= other.resources;
         self.symbols |= other.symbols;
@@ -17,7 +18,6 @@ impl TsFactPlan {
         self.process_spawns |= other.process_spawns;
         self.server_routes |= other.server_routes;
         self.react |= other.react;
-        self.effect_calls |= other.effect_calls;
         self.rsc_environment |= other.rsc_environment;
         self.trpc_router |= other.trpc_router;
         self.trpc_calls |= other.trpc_calls;
@@ -44,6 +44,7 @@ impl TsFactPlan {
     pub fn is_empty(self) -> bool {
         !self.imports
             && !self.function_calls
+            && !self.call_reachability
             && !self.call_sites
             && !self.resources
             && !self.symbols
@@ -57,7 +58,6 @@ impl TsFactPlan {
             && !self.process_spawns
             && !self.server_routes
             && !self.react
-            && !self.effect_calls
             && !self.rsc_environment
             && !self.trpc_router
             && !self.trpc_calls
@@ -72,7 +72,6 @@ impl TsFactPlan {
             || self.http_calls
             || self.process_spawns
             || self.server_routes
-            || self.effect_calls
             || self.rsc_environment
             || self.trpc_router
             || self.trpc_calls
@@ -87,6 +86,7 @@ impl TsFactPlan {
     fn covers_syntax_facts(self, required: Self) -> bool {
         (!required.imports || self.imports)
             && (!required.function_calls || self.function_calls)
+            && (!required.call_reachability || self.call_reachability)
             && (!required.call_sites || self.call_sites)
             && (!required.resources || self.resources)
             && (!required.symbols || self.symbols)
@@ -106,7 +106,6 @@ impl TsFactPlan {
         (!required.http_calls || self.http_calls)
             && (!required.process_spawns || self.process_spawns)
             && (!required.react || self.react)
-            && (!required.effect_calls || self.effect_calls)
             && (!required.rsc_environment || self.rsc_environment)
             && (!required.trpc_router || self.trpc_router)
             && (!required.trpc_calls || self.trpc_calls)

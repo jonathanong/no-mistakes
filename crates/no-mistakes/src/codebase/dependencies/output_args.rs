@@ -45,7 +45,7 @@ pub struct TraverseArgs {
     pub json: bool,
 
     /// Only follow edges of this relationship kind. Can be repeated (OR logic).
-    /// Values: import, import-static, import-dynamic, import-type, import-require, route-import, workspace, package, test, route, queue, md, ci, workflow, http, process, asset, react, resource, dotnet, swift, terraform, python, go, rust, ruby, php, all.
+    /// Values: import, import-static, import-dynamic, import-type, import-require, route-import, workspace, package, test, route, queue, md, ci, workflow, http, process, asset, react, resource, call, dotnet, swift, terraform, python, go, rust, ruby, php, all.
     /// Default: all.
     #[arg(long = "relationship", value_enum, value_name = "KIND")]
     pub relationships: Vec<RelationshipArg>,
@@ -58,8 +58,9 @@ pub struct TraverseArgs {
     #[arg(skip)]
     pub timings: bool,
 
-    /// Files to start from. Supports `FILE#SYMBOL` for symbol-level dependents queries
-    /// and `QUEUE_FILE#JOB_NAME` for queue-job dependents queries.
+    /// Files to start from. Supports `FILE#SYMBOL` for symbol-level dependents
+    /// queries and symbol-enabled call dependencies, and `QUEUE_FILE#JOB_NAME`
+    /// for queue-job dependents queries.
     /// Can be relative to --root or absolute.
     #[arg(required = true, value_name = "FILE")]
     pub files: Vec<PathBuf>,

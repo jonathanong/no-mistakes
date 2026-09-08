@@ -51,7 +51,7 @@ fn effective_ts_fact_plan(
     fact_plan.route_refs &= route_refs_configured;
     fact_plan.backend_routes &= route_backend_configured || http_configured;
     fact_plan.http_calls &= http_configured;
-    fact_plan.symbols = plan.symbols || (fact_plan.symbols && queue_configured);
+    fact_plan.symbols = plan.symbols || plan.calls || (fact_plan.symbols && queue_configured);
     fact_plan.queue_usage &= queue_configured;
     fact_plan.queue_factory &= queue_configured;
     fact_plan.queue_project &= queue_configured;

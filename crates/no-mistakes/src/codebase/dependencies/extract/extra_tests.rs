@@ -172,3 +172,37 @@ fn default_expression_helpers_cover_parenthesized_forms_and_static_args() {
         .iter()
         .any(|call| call.caller.as_deref() == Some("default") && call.callee == "alpha"));
 }
+
+#[test]
+fn fixture_call_facts_are_opt_in_for_prepared_collection() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/call-reachability/bindings/index.ts");
+    let source = std::fs::read_to_string(&fixture).expect("binding fixture should exist");
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program_with_source_options(
+        &parsed.program,
+        &source,
+        false,
+        false,
+    );
+    assert!(facts.call_reachability.is_empty());
+    assert!(!facts.function_calls.is_empty());
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.caller.is_none() && call.callee == "blockValue"));
+
+    let mut with_calls = extract_import_facts_from_program_with_source_options(
+        &parsed.program,
+        &source,
+        false,
+        true,
+    );
+    with_calls.call_reachability.clear();
+    assert_eq!(
+        with_calls, facts,
+        "additive call facts changed legacy fields"
+    );
+}

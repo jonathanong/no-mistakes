@@ -57,6 +57,7 @@ fn walk_function_property_value<'a>(
     }
     collector.add_type_parameter_names(function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
+    predeclare_function_body(collector, function);
     walk::walk_function(
         collector,
         function,
@@ -78,6 +79,7 @@ fn walk_arrow_property_value<'a>(
     }
     collector.add_type_parameter_names(arrow.type_parameters.as_deref());
     collector.add_formal_parameters(&arrow.params);
+    predeclare_arrow_body(collector, arrow);
     walk::walk_arrow_function_expression(collector, arrow);
     collector.pop_function_scope(pushed);
 }

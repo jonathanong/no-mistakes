@@ -24,8 +24,9 @@ fn collect_independent_core_edges_parallelizes_import_symbol_and_test_kinds() {
             && independent.contains("edges.package")
             && independent.contains("edges.assets")
             && independent.contains("edges.symbols")
+            && independent.contains("edges.calls")
             && independent.contains("edges.tests"),
-        "core merge order must stay imports, route_imports, workspace, package, assets, symbols, tests"
+        "core merge order must keep call edges after symbols and before tests"
     );
     assert!(
         independent.contains("traced_parallel_edges")

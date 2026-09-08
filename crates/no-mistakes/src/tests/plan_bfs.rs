@@ -173,6 +173,8 @@ pub(crate) fn path_confidence(edges: &[EdgeKind]) -> Confidence {
 
 pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
     match edge {
+        EdgeKind::Call => "call",
+        EdgeKind::CallReexport => "call re-export",
         EdgeKind::Import
         | EdgeKind::TypeImport
         | EdgeKind::DynamicImport

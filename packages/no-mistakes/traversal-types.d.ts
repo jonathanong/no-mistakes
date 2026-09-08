@@ -36,6 +36,7 @@ export type Relationship =
   | "elixir"
   | "dart"
   | "resource"
+  | "call"
   | "trpc"
   | "all";
 

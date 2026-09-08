@@ -18,9 +18,24 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     source: &str,
     collect_resource_roots: bool,
 ) -> ImportFacts {
+    extract_import_facts_from_program_with_source_options(
+        program,
+        source,
+        collect_resource_roots,
+        true,
+    )
+}
+
+pub(crate) fn extract_import_facts_from_program_with_source_options<'a>(
+    program: &Program<'a>,
+    source: &str,
+    collect_resource_roots: bool,
+    collect_call_reachability: bool,
+) -> ImportFacts {
     let mut collector = ImportCollector {
         line_starts: import_line_starts(source),
         collect_resource_roots,
+        collect_call_reachability,
         ..ImportCollector::default()
     };
     let local_type_names = local_type_declaration_names(program);
@@ -33,7 +48,23 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     collector
         .later_exported_type_names
         .extend(later_named_type_exports(program, &local_type_names));
-    collector.visit_program(program);
+    if collect_call_reachability {
+        // Keep program bindings in the same lexical stack as function/block
+        // bindings. Otherwise a top-level value or hoisted declaration can be
+        // mistaken for a global call target.
+        collector.push_program_scope();
+        for statement in &program.body {
+            if let Statement::ImportDeclaration(import) = statement {
+                collector.record_imported_bindings(import);
+            }
+        }
+        predeclare_function_declarations(&mut collector, &program.body);
+        predeclare_lexical_declarations(&mut collector, &program.body);
+        collector.visit_program(program);
+        collector.pop_program_scope();
+    } else {
+        collector.visit_program(program);
+    }
 
     let mut exported_resource_roots: Vec<_> =
         collector.exported_resource_roots.into_iter().collect();
@@ -52,6 +83,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     ImportFacts {
         imports: collector.imports,
         function_calls: collector.function_calls,
+        call_reachability: collector.call_reachability,
         symbol_references: collector.symbol_references,
         exported_functions,
         exported_resource_roots,

@@ -6,12 +6,10 @@ impl DepGraph {
         session: std::sync::Arc<crate::codebase::analysis_session::AnalysisSession>,
     ) -> Result<Self> {
         session.record_work("graph.builds", 1);
-        let root = edge_inputs.root;
-        let tsconfig = edge_inputs.tsconfig;
+        let (root, tsconfig) = (edge_inputs.root, edge_inputs.tsconfig);
         let plan = edge_inputs.plan;
         let graph_files = edge_inputs.graph_files;
-        let config_options = edge_inputs.config_options;
-        let config_path = edge_inputs.config_path;
+        let (config_options, config_path) = (edge_inputs.config_options, edge_inputs.config_path);
         let supplied_workspace = edge_inputs.workspace;
         let resolver = graph_import_resolver(&edge_inputs, &session);
         let fact_plan = effective_ts_fact_plan(plan, config_options);
@@ -113,7 +111,8 @@ impl DepGraph {
 
         let parsed_imports = parsed_imports_for_plan(plan, files, facts)?;
         crate::invocation::check_timeout()?;
-        let needs_workspace = plan.imports || plan.workspace || plan.package || plan.symbols;
+        let needs_workspace =
+            plan.imports || plan.workspace || plan.package || plan.symbols || plan.calls;
         let owned_workspace = (needs_workspace && supplied_workspace.is_none()).then(|| {
             crate::codebase::workspaces::load_indexed_from_files(root, graph_files.all())
                 .unwrap_or_default()
@@ -155,6 +154,19 @@ impl DepGraph {
                 resource_diagnostics: &mut resource_diagnostics,
             },
         )?;
+        merge_call_reexports_if_requested(
+            CallReexportMergeInputs {
+                plan,
+                files,
+                facts,
+                resolver: &resolver,
+                workspace,
+                graph_files,
+                interner: &edge_inputs.interner,
+            },
+            &mut forward,
+            &mut reverse,
+        );
         crate::invocation::check_timeout()?;
         let mut graph = Self {
             root: root.to_path_buf(),

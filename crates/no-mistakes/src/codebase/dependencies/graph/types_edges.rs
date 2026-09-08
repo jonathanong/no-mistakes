@@ -7,6 +7,11 @@ mod domain;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum EdgeKind {
+    /// A binding-aware TS/JS invocation. This is opt-in because it models
+    /// callable identity rather than module ownership.
+    Call,
+    /// A symbol re-export bridge included only in binding-aware call plans.
+    CallReexport,
     /// Regular TS/JS static import.
     Import,
     /// Type-only import (`import type ...`).
@@ -136,6 +141,8 @@ impl EdgeKind {
 
     fn as_core_str(&self) -> Option<&'static str> {
         match self {
+            Self::Call => Some("call"),
+            Self::CallReexport => Some("call-reexport"),
             Self::Import => Some("import"),
             Self::TypeImport => Some("type-import"),
             Self::DynamicImport => Some("dynamic-import"),

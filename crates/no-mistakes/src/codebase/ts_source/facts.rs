@@ -1,5 +1,5 @@
 use crate::codebase::check_facts::PlaywrightSettingsKey;
-use crate::codebase::dependencies::extract::{ExtractedImport, FunctionCall};
+use crate::codebase::dependencies::extract::{CallReachabilityFact, ExtractedImport, FunctionCall};
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
 use crate::codebase::ts_queues::usage::QueueUsage;
@@ -44,12 +44,14 @@ pub use collect::{
     collect_ts_facts, collect_ts_facts_with_context, collect_ts_facts_with_context_and_sources,
     collect_ts_facts_with_session_and_context,
 };
-pub use domain::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactContext};
+pub use domain::{BackendRouteFact, RscEnvironmentFact, TsFactContext};
 
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct TsFactPlan {
     pub imports: bool,
     pub function_calls: bool,
+    /// Binding-aware call identities for canonical call-reachability edges.
+    pub call_reachability: bool,
     pub call_sites: bool,
     pub resources: bool,
     pub symbols: bool,
@@ -63,7 +65,6 @@ pub struct TsFactPlan {
     pub process_spawns: bool,
     pub server_routes: bool,
     pub react: bool,
-    pub effect_calls: bool,
     pub rsc_environment: bool,
     pub trpc_router: bool,
     pub trpc_calls: bool,
@@ -85,6 +86,7 @@ pub struct TsFileFacts {
     pub source: Option<std::sync::Arc<str>>,
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
+    pub call_reachability: Vec<CallReachabilityFact>,
     pub call_sites: Vec<CallSiteFact>,
     pub resource_calls: Vec<ResourceCall>,
     pub resource_diagnostics: Vec<ResourceDiagnostic>,
@@ -108,7 +110,6 @@ pub struct TsFileFacts {
     pub process_spawns: Vec<SpawnEdge>,
     pub(crate) server_routes: Option<ServerRouteFileFacts>,
     pub react_components: Arc<Vec<ComponentFacts>>,
-    pub effect_calls: Vec<EffectCallFact>,
     pub rsc_environment: Option<RscEnvironmentFact>,
     pub trpc_procedures: Vec<String>,
     pub trpc_calls: Vec<crate::codebase::ts_trpc::TrpcCallFact>,
