@@ -1,15 +1,29 @@
 use super::*;
 
-pub(super) fn graph_rule_findings(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    config_path: Option<&Path>,
-    shared: &crate::codebase::check_facts::CheckFactMap,
-    prepared_graph: Option<&crate::codebase::dependencies::graph::PreparedGraphConfig>,
-    dependency_graph: Option<&DepGraph>,
-    inferred_roots: Option<&crate::codebase::config::InferredRoots>,
-    prepared_vitest_projects: Option<&crate::codebase::rules::PreparedVitestProjectCatalog>,
-) -> Result<Vec<RuleFinding>> {
+pub(super) struct GraphRuleRequest<'a> {
+    pub(super) root: &'a Path,
+    pub(super) config: &'a crate::config::v2::NoMistakesConfig,
+    pub(super) config_path: Option<&'a Path>,
+    pub(super) shared: &'a crate::codebase::check_facts::CheckFactMap,
+    pub(super) prepared_graph:
+        Option<&'a crate::codebase::dependencies::graph::PreparedGraphConfig>,
+    pub(super) dependency_graph: Option<&'a DepGraph>,
+    pub(super) inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
+    pub(super) prepared_vitest_projects:
+        Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
+}
+
+pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
+    let GraphRuleRequest {
+        root,
+        config,
+        config_path,
+        shared,
+        prepared_graph,
+        dependency_graph,
+        inferred_roots,
+        prepared_vitest_projects,
+    } = request;
     let mut findings = Vec::new();
     if rule_enabled(config, FORBIDDEN_CALLS) {
         findings.extend(crate::perf_trace::trace("rules.forbidden_calls", || {

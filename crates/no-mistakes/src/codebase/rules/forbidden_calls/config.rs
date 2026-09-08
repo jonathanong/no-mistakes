@@ -46,17 +46,13 @@ pub(super) enum VitestSelector {
     All(bool),
     Projects(Vec<String>),
 }
-#[derive(Debug, Clone, Copy, Deserialize)]
+#[derive(Debug, Clone, Copy, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
 pub(super) enum Traversal {
+    #[default]
     Direct,
     File,
     Transitive,
-}
-impl Default for Traversal {
-    fn default() -> Self {
-        Self::Direct
-    }
 }
 #[derive(Debug, Deserialize, Default, PartialEq, Eq)]
 #[serde(rename_all = "kebab-case")]

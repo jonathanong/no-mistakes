@@ -32,29 +32,40 @@ pub(crate) fn check_with_graph(
     let mut findings = Vec::new();
     for (index, application) in config.rule_applications(RULE_ID).into_iter().enumerate() {
         let options: Options = application.try_rule_options()?;
-        findings.extend(check_application(
-            &root,
+        findings.extend(check_application(ApplicationCheck {
+            root: &root,
             config,
             application,
-            index + 1,
-            &options,
+            index: index + 1,
+            options: &options,
             graph,
             catalog,
             graph_files,
-        )?);
+        })?);
     }
     Ok(findings)
 }
-fn check_application(
-    root: &Path,
-    config: &NoMistakesConfig,
-    application: &RuleDef,
+struct ApplicationCheck<'a> {
+    root: &'a Path,
+    config: &'a NoMistakesConfig,
+    application: &'a RuleDef,
     index: usize,
-    options: &Options,
-    graph: &DepGraph,
-    catalog: Option<&super::super::PreparedVitestProjectCatalog>,
-    graph_files: &[PathBuf],
-) -> Result<Vec<RuleFinding>> {
+    options: &'a Options,
+    graph: &'a DepGraph,
+    catalog: Option<&'a super::super::PreparedVitestProjectCatalog>,
+    graph_files: &'a [PathBuf],
+}
+fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
+    let ApplicationCheck {
+        root,
+        config,
+        application,
+        index,
+        options,
+        graph,
+        catalog,
+        graph_files,
+    } = input;
     config::validate(options)?;
     let roots = roots::expand(root, options, graph, catalog, graph_files)?;
     let path_filter = super::super::path_filter::RulePathFilter::new(root, config, application)?;
@@ -132,9 +143,11 @@ fn allowed_invocations(configured: &[Invocation]) -> Vec<InvocationKind> {
             Invocation::Construct => InvocationKind::Construct,
         })
         .collect::<Vec<_>>();
-    (!values.is_empty())
-        .then_some(values)
-        .unwrap_or_else(|| vec![InvocationKind::Call])
+    if values.is_empty() {
+        vec![InvocationKind::Call]
+    } else {
+        values
+    }
 }
 fn site_source_node(site: &ResolvedCallSite) -> NodeId {
     site.caller.as_deref().map_or_else(
