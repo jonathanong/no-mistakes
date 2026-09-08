@@ -6,13 +6,14 @@ use super::spec::{
 use crate::codebase::rules::structured_config_policy::paths::canonical_path_in_canonical_root;
 use crate::codebase::rules::structured_config_policy::ValueAssertion;
 use crate::codebase::rules::RuleFinding;
-use crate::codebase::structured_value::parse_structured_value;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::Value;
-use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
+
+mod cache;
+pub(in crate::codebase::rules::structured_config_policy) use cache::ParsedAncestorCache;
 
 pub(super) struct Nested<'a> {
     pub(super) path: &'a Path,
@@ -24,38 +25,6 @@ pub(super) struct Ancestor {
     pub(super) path: PathBuf,
     pub(super) rel: String,
     pub(super) value: Arc<Value>,
-}
-
-#[derive(Default)]
-pub(in crate::codebase::rules::structured_config_policy) struct ParsedAncestorCache {
-    values: BTreeMap<PathBuf, Result<Arc<Value>, String>>,
-    #[cfg(test)]
-    parse_counts: BTreeMap<PathBuf, usize>,
-}
-
-impl ParsedAncestorCache {
-    fn parse(&mut self, path: &Path, source: &str) -> Result<Arc<Value>, String> {
-        if let Some(value) = self.values.get(path) {
-            return value.clone();
-        }
-        #[cfg(test)]
-        {
-            *self.parse_counts.entry(path.to_path_buf()).or_default() += 1;
-        }
-        let value = parse_structured_value(path, source)
-            .map(Arc::new)
-            .map_err(|error| error.to_string());
-        self.values.insert(path.to_path_buf(), value.clone());
-        value
-    }
-
-    #[cfg(test)]
-    pub(in crate::codebase::rules::structured_config_policy) fn parse_count(
-        &self,
-        path: &Path,
-    ) -> usize {
-        self.parse_counts.get(path).copied().unwrap_or_default()
-    }
 }
 
 struct Walk<'a> {

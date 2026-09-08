@@ -11,7 +11,7 @@ mod keys;
 mod lost;
 mod matching;
 mod spec;
-pub(super) use extends::ParsedAncestorCache;
+pub(in crate::codebase::rules::structured_config_policy) use extends::ParsedAncestorCache;
 use extends::{collect_ancestors, Nested};
 use keys::Keys;
 use lost::lost_override_findings;
@@ -76,11 +76,6 @@ pub(super) fn check_ancestor_override_subset(
         &keys,
     ));
     findings
-}
-
-#[cfg(test)]
-pub(super) fn parsed_ancestor_parse_count(cache: &ParsedAncestorCache, path: &Path) -> usize {
-    cache.parse_count(path)
 }
 
 pub(super) fn mapping_at<'a>(value: &'a Value, key: &str) -> Option<&'a serde_yaml::Mapping> {

@@ -162,6 +162,8 @@ mod ancestor_override_subset_coverage_tests;
 #[cfg(test)]
 mod ancestor_override_subset_error_tests;
 #[cfg(test)]
+mod ancestor_override_subset_resource_tests;
+#[cfg(test)]
 mod ancestor_override_subset_tests;
 #[cfg(test)]
 mod bind_tests;

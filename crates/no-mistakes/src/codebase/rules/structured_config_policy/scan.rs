@@ -8,6 +8,12 @@ use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
 
+#[derive(Default)]
+pub(super) struct ScanState {
+    pub(super) parsed_ancestors: ParsedAncestorCache,
+    pub(super) canonical_inventory: Option<CanonicalInventory>,
+}
+
 pub(super) fn scan(
     root: &Path,
     opts: &Options,
@@ -16,90 +22,27 @@ pub(super) fn scan(
     target_roots: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
-    let mut parsed_ancestors = ParsedAncestorCache::default();
-    #[cfg(test)]
-    {
-        let mut canonical_inventory_initializations = 0;
-        return scan_with_parsed_ancestors(
-            root,
-            opts,
-            files,
-            inventory,
-            target_roots,
-            sources,
-            &mut parsed_ancestors,
-            &mut canonical_inventory_initializations,
-        );
-    }
-    #[cfg(not(test))]
-    scan_with_parsed_ancestors(
+    scan_with_state(
         root,
         opts,
         files,
         inventory,
         target_roots,
         sources,
-        &mut parsed_ancestors,
+        &mut ScanState::default(),
     )
 }
 
-#[cfg(test)]
-pub(super) fn scan_with_parsed_ancestors(
+pub(super) fn scan_with_state(
     root: &Path,
     opts: &Options,
     files: &[PathBuf],
     inventory: &[PathBuf],
     target_roots: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
-    parsed_ancestors: &mut ParsedAncestorCache,
-    canonical_inventory_initializations: &mut usize,
-) -> Result<Vec<RuleFinding>> {
-    scan_impl(
-        root,
-        opts,
-        files,
-        inventory,
-        target_roots,
-        sources,
-        parsed_ancestors,
-        Some(canonical_inventory_initializations),
-    )
-}
-
-#[cfg(not(test))]
-fn scan_with_parsed_ancestors(
-    root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
-    inventory: &[PathBuf],
-    target_roots: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    parsed_ancestors: &mut ParsedAncestorCache,
-) -> Result<Vec<RuleFinding>> {
-    scan_impl(
-        root,
-        opts,
-        files,
-        inventory,
-        target_roots,
-        sources,
-        parsed_ancestors,
-        None,
-    )
-}
-
-fn scan_impl(
-    root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
-    inventory: &[PathBuf],
-    target_roots: &[PathBuf],
-    sources: &crate::codebase::ts_source::SourceStore,
-    parsed_ancestors: &mut ParsedAncestorCache,
-    mut canonical_inventory_initializations: Option<&mut usize>,
+    state: &mut ScanState,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
-    let mut canonical_inventory = None;
     for policy in &opts.policies {
         let matching = super::super::matching_files(root, &policy.files, files, target_roots)?;
         for path in matching {
@@ -155,21 +98,17 @@ fn scan_impl(
                         findings.extend(check_equals_file(root, &rel, sources, &value, assertion));
                     }
                     Some(AssertionKind::AncestorOverrideSubset) => {
-                        if canonical_inventory.is_none() {
-                            canonical_inventory = Some(CanonicalInventory::new(root, inventory));
-                            if let Some(initializations) = &mut canonical_inventory_initializations
-                            {
-                                **initializations += 1;
-                            }
-                        }
+                        let canonical_inventory = state
+                            .canonical_inventory
+                            .get_or_insert_with(|| CanonicalInventory::new(root, inventory));
                         findings.extend(check_ancestor_override_subset(
                             &path,
                             &rel,
                             sources,
                             &value,
                             assertion,
-                            canonical_inventory.as_ref().unwrap(),
-                            parsed_ancestors,
+                            canonical_inventory,
+                            &mut state.parsed_ancestors,
                         ));
                     }
                     _ => findings.extend(assert_value(&rel, &value, assertion)?),

@@ -87,7 +87,7 @@ fn bounds_repeated_invalid_local_extends_attempts() {
             .join("../../test-cases/rules/structured-config-policy/ancestor-override-subset"),
     );
     let nested = root.join("diamond/nested/.oxlintrc.json");
-    let sources = crate::codebase::rules::source_store_for_files(&[nested.clone()]);
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&nested));
     let assertion = ValueAssertion::default();
     let keys = Keys::from_assertion(&assertion);
 
@@ -173,9 +173,8 @@ fn preserves_each_non_cycle_occurrence_in_a_diamond_extends_graph() {
             "diamond/right.json",
         ],
     );
-    assert_eq!(
-        walk.parsed_ancestors
-            .parse_count(&root.join("diamond/shared.json")),
-        1
-    );
+    assert!(walk
+        .parsed_ancestors
+        .values
+        .contains_key(&root.join("diamond/shared.json")));
 }
