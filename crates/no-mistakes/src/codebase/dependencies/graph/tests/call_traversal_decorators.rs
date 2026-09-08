@@ -32,4 +32,18 @@ fn call_traversal_reaches_static_decorators_without_guessing_computed_decorators
             "dynamicDecorator",
         )
     }));
+    let sites = graph
+        .resolved_call_sites()
+        .iter()
+        .filter(|site| site.file == decorators)
+        .collect::<Vec<_>>();
+    let factory = sites
+        .iter()
+        .find(|site| site.source_callee == "classDecorator")
+        .expect("decorator factory call must remain named");
+    assert!(sites.iter().any(|site| {
+        site.source_callee == "<unknown>"
+            && site.line == factory.line
+            && site.caller_id == factory.caller_id
+    }), "the returned decorator application is a distinct unknown call: {sites:#?}");
 }

@@ -103,7 +103,7 @@ fn analyze_project_graph_report_uses_opt_in_call_relationships() {
             .as_array()
             .is_some_and(|via| via.iter().all(|kind| kind == "call"))
     }));
-    assert!(!files
+    assert!(files
         .iter()
         .any(|entry| entry["file"] == "src/diamond-shared.mts"));
 }

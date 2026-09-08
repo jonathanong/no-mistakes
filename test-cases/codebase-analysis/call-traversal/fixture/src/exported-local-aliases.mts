@@ -10,3 +10,4 @@ export {
   defaultLocalAlias as default,
   localExportAlias,
 };
+export { uncalledTarget as reexportedTarget } from "./unreferenced-export.mts";

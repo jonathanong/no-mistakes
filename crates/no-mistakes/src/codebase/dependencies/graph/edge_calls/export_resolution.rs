@@ -177,6 +177,43 @@ fn resolve_exported_callable(
 /// resolver and facts. Root expansion runs after those inputs are dropped, so
 /// retaining this result is what lets an uncalled exported function still
 /// resolve to its canonical repository callable.
+struct ExportNameEdges {
+    direct: std::collections::HashSet<String>,
+    stars: Vec<std::path::PathBuf>,
+    namespaces: Vec<(String, std::path::PathBuf)>,
+}
+
+fn exported_names_for_file(
+    path: &std::path::Path,
+    edges: &FxHashMap<std::path::PathBuf, ExportNameEdges>,
+    visiting: &mut std::collections::HashSet<std::path::PathBuf>,
+) -> std::collections::HashSet<String> {
+    if !visiting.insert(path.to_path_buf()) {
+        return std::collections::HashSet::new();
+    }
+    let Some(file) = edges.get(path) else {
+        visiting.remove(path);
+        return std::collections::HashSet::new();
+    };
+    let mut names = file.direct.clone();
+    for target in &file.stars {
+        names.extend(
+            exported_names_for_file(target, edges, visiting)
+                .into_iter()
+                .filter(|name| name != "default"),
+        );
+    }
+    for (namespace, target) in &file.namespaces {
+        names.extend(
+            exported_names_for_file(target, edges, visiting)
+                .into_iter()
+                .map(|member| format!("{namespace}.{member}")),
+        );
+    }
+    visiting.remove(path);
+    names
+}
+
 fn populate_callable_export_resolutions(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
@@ -184,38 +221,53 @@ fn populate_callable_export_resolutions(
     indexes: &CallableResolutionIndexes,
     output: &mut FxHashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
 ) {
-    let mut files = Vec::new();
-    let mut public_names = std::collections::HashSet::new();
+    let mut export_edges = FxHashMap::default();
     for path in edge_inputs.graph_files.indexable() {
         let Some(file) = indexes.file(facts, path) else {
             continue;
         };
-        public_names.extend(file.exported.keys().cloned());
-        files.push((path.clone(), file));
+        let mut names = std::collections::HashSet::new();
+        let mut namespaces = Vec::new();
+        for (name, binding) in &file.exported {
+            if binding.local == "*" {
+                if let Some(target) = binding.specifier.as_deref().and_then(|specifier| {
+                    resolver
+                        .resolve(specifier, path)
+                        .and_then(|target| edge_inputs.graph_files.visible_path(&target))
+                        .map(std::path::Path::to_path_buf)
+                }) {
+                    namespaces.push((name.clone(), target));
+                }
+            } else {
+                names.insert(name.clone());
+            }
+        }
+        let stars = file
+            .stars
+            .iter()
+            .filter_map(|specifier| {
+                resolver
+                    .resolve(specifier, path)
+                    .and_then(|target| edge_inputs.graph_files.visible_path(&target))
+                    .map(std::path::Path::to_path_buf)
+            })
+            .collect::<Vec<_>>();
+        export_edges.insert(
+            path.clone(),
+            ExportNameEdges {
+                direct: names,
+                stars,
+                namespaces,
+            },
+        );
     }
-    let mut public_names = public_names.into_iter().collect::<Vec<_>>();
-    public_names.sort();
-    for (path, file) in files {
-        let mut candidates = file.exported.keys().cloned().collect::<Vec<_>>();
-        if !file.stars.is_empty() {
-            candidates.extend(
-                public_names
-                    .iter()
-                    .filter(|name| name.as_str() != "default")
-                    .cloned(),
-            );
-        }
-        for namespace in file.exported.iter().filter_map(|(name, binding)| {
-            (binding.local == "*" && binding.specifier.is_some()).then_some(name)
-        }) {
-            candidates.extend(
-                public_names
-                    .iter()
-                    .map(|member| format!("{namespace}.{member}")),
-            );
-        }
-        candidates.sort();
-        candidates.dedup();
+    let paths = export_edges.keys().cloned().collect::<Vec<_>>();
+    for path in paths {
+        let candidates = exported_names_for_file(
+            &path,
+            &export_edges,
+            &mut std::collections::HashSet::new(),
+        );
         for export in candidates {
             let resolution = resolve_exported_callable(
                 edge_inputs,

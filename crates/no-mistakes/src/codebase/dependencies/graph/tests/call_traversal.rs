@@ -309,36 +309,26 @@ fn exported_function_roots_resolve_renamed_defaults_and_barrels() {
 
 #[test]
 fn exported_function_roots_follow_named_reexport_barrels() {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules/forbidden-calls/coverage/fixture"),
-    );
-    let tsconfig = TsConfig {
-        dir: root.clone(),
-        paths: vec![],
-        paths_dir: root.clone(),
-        base_url: None,
-    };
-    let graph = DepGraph::build_with_plan(
-        &root,
-        &tsconfig,
-        GraphBuildPlan {
-            calls: true,
-            imports: true,
-            ..GraphBuildPlan::default()
-        },
-    )
-    .unwrap();
+    let (root, graph) = call_fixture_graph();
     let roots = graph.expand_call_roots(&[CallRoot::Function {
-        file: root.join("src/barrel.mts"),
+        file: root.join("src/exported-local-aliases.mts"),
         symbol: "reexportedTarget".to_string(),
     }]);
 
-    assert_eq!(roots.len(), 1, "named re-export should resolve to one root");
+    assert_eq!(
+        roots.len(),
+        1,
+        "named re-export should resolve to one root; exports={:?}",
+        graph
+            .callable_export_resolutions
+            .keys()
+            .filter(|(file, _)| file == &root.join("src/exported-local-aliases.mts"))
+            .collect::<Vec<_>>()
+    );
     assert!(has_symbol(
         &roots[0],
-        &root.join("src/targets.mts"),
-        "repositoryTarget"
+        &root.join("src/unreferenced-export.mts"),
+        "uncalledTarget"
     ));
 }
 
