@@ -39,6 +39,8 @@ fn parsed_workflow_set(
     )
 }
 
+use crate::codebase::dependencies::extract::{CallTargetIdentity, InvocationKind};
+
 #[test]
 fn playwright_graph_build_has_one_snapshot_construction_site() {
     let builder = [

@@ -1,6 +1,4 @@
 use super::extract::{is_indexable, ExtractedImport, FunctionCall, ImportKind};
-#[cfg(test)]
-use super::extract::{CallTargetIdentity, InvocationKind};
 use crate::codebase::ts_resolver::{ImportResolution, ImportResolver, TsConfig};
 use crate::codebase::ts_source::facts::{
     collect_ts_facts, collect_ts_facts_with_session_and_context, TsFactContext, TsFactMap,
