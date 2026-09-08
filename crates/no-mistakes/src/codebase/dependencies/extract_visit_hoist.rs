@@ -14,6 +14,23 @@ fn walk_function_with_body_bindings<'a>(
     }
 }
 
+fn walk_arrow_function_with_body_bindings<'a>(
+    collector: &mut ImportCollector,
+    arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
+) {
+    // Default parameters run before the body lexical environment exists.
+    walk::walk_formal_parameters(collector, &arrow.params);
+    if let Some(return_type) = &arrow.return_type {
+        walk::walk_ts_type_annotation(collector, return_type);
+    }
+    if let Some(body) = crate::ast::arrow_function_body(&arrow.body) {
+        predeclare_function_declarations(collector, &body.statements);
+        walk::walk_function_body(collector, body);
+    } else if let Some(expression) = arrow.body.as_expression() {
+        collector.visit_expression(expression);
+    }
+}
+
 fn predeclare_hoisted_var_bindings<'a>(collector: &mut ImportCollector, statements: &[Statement<'a>]) {
     let mut names = HashSet::new();
     let mut visitor = HoistedVarBindingCollector { names: &mut names };
@@ -68,7 +85,7 @@ fn predeclare_function_declarations<'a>(
             Statement::FunctionDeclaration(function) => {
                 if let Some(name) = function_name(function) {
                     collector.add_binding_name(&name);
-                    collector.record_callable_binding(&name);
+                    collector.record_callable_binding_id(&name, CallableId(function.span.start));
                     let scope = collector.callable_scope_name(&name);
                     collector.known_function_scopes.insert(scope.clone());
                     collector.callable_scopes.insert(scope);

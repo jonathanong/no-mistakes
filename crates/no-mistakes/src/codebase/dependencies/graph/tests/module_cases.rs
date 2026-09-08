@@ -1,6 +1,7 @@
 use super::*;
 
 mod constructor_reachability;
+mod hoist_bindings;
 mod import_policy;
 mod namespace_alias;
 mod static_class_members;
@@ -377,6 +378,25 @@ fn nested_callers_resolve_aliases_declared_by_lexical_parents() {
 
     assert!(deps.iter().any(|entry| {
         entry.node.as_file() == Some(root.join("src/nested-parent-alias-target.mts").as_path())
+    }));
+
+    let call_graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+    assert!(call_graph.resolved_call_sites().iter().any(|site| {
+        site.file == root.join("src/nested-parent-alias.mts")
+            && site.source_callee == "load"
+            && matches!(
+                &site.target,
+                ResolvedCallTarget::RepositoryFunction { file, scope }
+                    if file == &root.join("src/nested-parent-alias.mts") && scope == "target"
+            )
     }));
 }
 

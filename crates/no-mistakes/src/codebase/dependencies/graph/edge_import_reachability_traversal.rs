@@ -125,53 +125,40 @@ fn callable_id_for_scope(
 
 fn resolve_callable_alias(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
-    caller_id: Option<crate::codebase::dependencies::extract::CallableId>,
+    _caller_id: Option<crate::codebase::dependencies::extract::CallableId>,
     callee_binding_scope: Option<usize>,
-    caller: Option<&str>,
+    _caller: Option<&str>,
     callee: &str,
 ) -> Option<String> {
     if callee.contains('.') {
         return None;
     }
-    let mut owner = caller.map(str::to_string);
+    let mut binding_scope = callee_binding_scope?;
+    let parents: HashMap<_, _> = facts.lexical_scope_parents.iter().copied().collect();
     let mut target = callee.to_string();
     let mut resolved_alias = false;
     let mut visited = HashSet::new();
     loop {
-        let key = (owner.clone(), target.clone());
-        let alias = facts
-            .callable_aliases
-            .iter()
-            .find(|alias| {
-                alias.local == key.1
-                    && (callee_binding_scope
-                        .is_some_and(|scope| alias.binding_scope == scope)
-                        || caller_id.is_some_and(|id| alias.scope_id == Some(id))
-                        || (caller_id.is_some() && alias.scope_id.is_none() && key.0.is_none())
-                        || (caller_id.is_none() && alias.scope == key.0))
-            })
-            .cloned();
-        let Some(alias) = alias else {
-            if !resolved_alias {
-                if let Some(parent) = owner
-                    .as_deref()
-                    .and_then(|scope| scope.rsplit_once('/').map(|(parent, _)| parent.to_string()))
-                {
-                    owner = Some(parent);
-                    continue;
-                }
-                if owner.is_some() {
-                    owner = None;
-                    continue;
-                }
+        let mut scope = Some(binding_scope);
+        let alias = loop {
+            let Some(candidate_scope) = scope else { break None };
+            if let Some(alias) = facts.callable_aliases.iter().find(|alias| {
+                alias.binding_scope == candidate_scope && alias.local == target
+            }) {
+                break Some(alias);
             }
+            scope = parents.get(&candidate_scope).copied().flatten();
+        };
+        let Some(alias) = alias else {
             return resolved_alias.then_some(target);
         };
+        let key = (alias.binding_scope, alias.local.clone());
         if !visited.insert(key) {
             return None;
         }
         resolved_alias = true;
-        target = alias.target;
+        binding_scope = alias.binding_scope;
+        target = alias.target.clone();
     }
 }
 

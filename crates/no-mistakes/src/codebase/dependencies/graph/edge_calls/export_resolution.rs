@@ -11,8 +11,11 @@ fn resolve_exported_callable(
     visited: &mut Vec<(std::path::PathBuf, String)>,
 ) -> ExportedCallableResolution {
     let key = (path.to_path_buf(), export.to_string());
-    if let Some(result) = indexes.exports.get(&key) {
-        return result.clone();
+    let cacheable = visited.is_empty();
+    if cacheable {
+        if let Some(result) = indexes.exports.get(&key) {
+            return result.clone();
+        }
     }
     if visited.contains(&key) {
         // This branch cannot provide the requested export without leaving the
@@ -22,12 +25,22 @@ fn resolve_exported_callable(
     }
     visited.push(key.clone());
     let Some(file) = indexes.file(facts, path) else {
-        indexes
-            .exports
-            .insert(key, ExportedCallableResolution::Unknown);
+        if cacheable {
+            indexes.exports.insert(key, ExportedCallableResolution::Unknown);
+        }
         return ExportedCallableResolution::Unknown;
     };
-    let result = if let Some(binding) = file.exported.get(export) {
+    let result = if let Some((namespace, member)) = export.split_once('.') {
+        resolve_exported_namespace_reexport_member(
+            edge_inputs,
+            facts,
+            resolver,
+            path,
+            (file.as_ref(), namespace, member),
+            indexes,
+            visited,
+        )
+    } else if let Some(binding) = file.exported.get(export) {
         if let Some(specifier) = &binding.specifier {
             let visible_target = resolver
                 .resolve(specifier, path)
@@ -151,52 +164,13 @@ fn resolve_exported_callable(
             }
         }
     };
-    indexes
-        .exports
-        .insert((path.to_path_buf(), export.to_string()), result.clone());
+    if cacheable {
+        indexes.exports.insert(key, result.clone());
+    }
     result
 }
 
-fn resolve_exported_namespace_member_alias(
-    edge_inputs: &GraphEdgeBuildInputs<'_>,
-    facts: &dyn TsFactLookup,
-    resolver: &dyn ImportResolution,
-    path: &std::path::Path,
-    alias: (&CallableFileIndex, &str),
-    indexes: &CallableResolutionIndexes,
-    visited: &mut Vec<(std::path::PathBuf, String)>,
-) -> Option<ExportedCallableResolution> {
-    let (file, local) = alias;
-    let (namespace, export) = local.split_once('.')?;
-    if export.contains('.') {
-        return None;
-    }
-    let imported = file.imported.get(namespace).filter(|imported| {
-        imported.kind == crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
-    })?;
-    let visible_target = resolver
-        .resolve(&imported.specifier, path)
-        .and_then(|target_path| edge_inputs.graph_files.visible_path(&target_path));
-    if let Some(target_path) = visible_target {
-        return Some(resolve_exported_callable(
-            edge_inputs,
-            facts,
-            resolver,
-            target_path,
-            export,
-            indexes,
-            visited,
-        ));
-    }
-    Some(if external_module_specifier(&imported.specifier) {
-        ExportedCallableResolution::ExternalModuleExport(
-            imported.specifier.clone(),
-            export.to_string(),
-        )
-    } else {
-        ExportedCallableResolution::Unknown
-    })
-}
+include!("export_resolution_namespace.rs");
 
 fn external_module_specifier(specifier: &str) -> bool {
     !specifier.starts_with('.') && !specifier.starts_with('/') && !specifier.starts_with('#')

@@ -41,6 +41,34 @@ fn nested_block_shadow_has_a_distinct_callee_binding_identity() {
 }
 
 #[test]
+fn lexical_scope_parents_preserve_nested_alias_resolution_order() {
+    let facts = facts(
+        "function target() {} function outer() { const outerAlias = target; function inner() { const innerAlias = outerAlias; innerAlias(); } inner(); }",
+    );
+    let inner_alias = facts
+        .callable_aliases
+        .iter()
+        .find(|alias| alias.local == "innerAlias")
+        .expect("inner alias");
+    let outer_alias = facts
+        .callable_aliases
+        .iter()
+        .find(|alias| alias.local == "outerAlias")
+        .expect("outer alias");
+    let parents = facts
+        .lexical_scope_parents
+        .iter()
+        .copied()
+        .collect::<HashMap<_, _>>();
+
+    assert_eq!(
+        parents.get(&inner_alias.binding_scope),
+        Some(&Some(outer_alias.binding_scope)),
+        "the inner binding must search its enclosing lexical frame before module scope"
+    );
+}
+
+#[test]
 fn reassignment_invalidates_callable_declarations_and_members() {
     let facts = facts(
         "function target() {} target = injected; target(); class Registry { reload() {} } Registry.reload = injected; Registry.reload();",

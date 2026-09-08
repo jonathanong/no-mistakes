@@ -289,17 +289,19 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
                 } if file == &root.join("src/alias-target.mts") && scope == "importedTarget"
             )
     }));
-    assert!(graph.resolved_call_sites().iter().any(|site| {
-        site.file == aliases
-            && site.source_callee == "cycle"
-            && matches!(
-                &site.target,
-                ResolvedCallTarget::ModuleExport {
-                    repository_target: Some((file, scope)),
-                    ..
-                } if file == &root.join("src/star-cycle-provider.mts") && scope == "cycle"
-            )
-    }));
+    for callee in ["cycle", "cycleFromB"] {
+        assert!(graph.resolved_call_sites().iter().any(|site| {
+            site.file == aliases
+                && site.source_callee == callee
+                && matches!(
+                    &site.target,
+                    ResolvedCallTarget::ModuleExport {
+                        repository_target: Some((file, scope)),
+                        ..
+                    } if file == &root.join("src/star-cycle-provider.mts") && scope == "cycle"
+                )
+        }), "{callee} must resolve through the cyclic barrel to its concrete provider");
+    }
     for (callee, expected_export, expected_scope) in [
         ("targets.importedTarget", "importedTarget", "importedTarget"),
         ("targets.default", "default", "defaultTarget"),

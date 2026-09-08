@@ -360,6 +360,11 @@ fn call_facts_keep_namespace_reexports_out_of_transparent_star_sources() {
     let facts = extract_import_facts_from_program_with_source(&parsed.program, source);
 
     assert_eq!(facts.star_reexport_specifiers, vec!["./transparent.mts"]);
+    assert!(facts.exported_bindings.iter().any(|binding| {
+        binding.specifier.as_deref() == Some("./namespace.mts")
+            && binding.local == "*"
+            && binding.exported == "namespace"
+    }));
 }
 
 #[test]

@@ -19,15 +19,30 @@ fn resolve_imported_call_target(
         .get(local)
         .filter(|binding| match requested_export {
             Some(_) => {
-                binding.kind
-                    == crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
+                matches!(
+                    binding.kind,
+                    crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
+                        | crate::codebase::dependencies::extract::ImportedBindingKind::Named
+                )
             }
             None => {
                 binding.kind
                     != crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
             }
         })?;
-    let export = requested_export.unwrap_or(&binding.imported);
+    let export = match (binding.kind, requested_export) {
+        (crate::codebase::dependencies::extract::ImportedBindingKind::Namespace, Some(member)) => {
+            member.to_string()
+        }
+        // A named import normally is a value, not a namespace object. Preserve
+        // its requested member here so export resolution can accept it only
+        // when the barrel concretely exported `* as thatName`.
+        (crate::codebase::dependencies::extract::ImportedBindingKind::Named, Some(member)) => {
+            format!("{}.{member}", binding.imported)
+        }
+        (_, None) => binding.imported.clone(),
+        _ => return Some(ResolvedCallTarget::Unknown),
+    };
     let direct_target = || {
         module_export_target(file, callee, None).expect("callee came from an imported binding")
     };
@@ -42,7 +57,7 @@ fn resolve_imported_call_target(
         facts,
         resolver,
         target_path,
-        export,
+        &export,
         indexes,
         &mut Vec::new(),
     ) {

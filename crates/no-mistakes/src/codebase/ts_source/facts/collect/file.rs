@@ -174,6 +174,7 @@ pub(crate) fn collect_file_facts_from_program(
         known_function_scopes: import_facts.known_function_scopes,
         callable_scope_ids: import_facts.callable_scope_ids,
         callable_bindings: import_facts.callable_bindings,
+        lexical_scope_parents: import_facts.lexical_scope_parents,
         callable_scopes: import_facts.callable_scopes,
         class_scopes: import_facts.class_scopes,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,

@@ -13,6 +13,7 @@ struct CallableFileIndex {
     exported:
         std::collections::HashMap<String, crate::codebase::dependencies::extract::ExportedBinding>,
     aliases: std::collections::HashMap<(usize, String), String>,
+    lexical_scope_parents: std::collections::HashMap<usize, Option<usize>>,
     stars: Vec<String>,
 }
 
@@ -37,6 +38,7 @@ impl CallableFileIndex {
                 .iter()
                 .map(|alias| ((alias.binding_scope, alias.local.clone()), alias.target.clone()))
                 .collect(),
+            lexical_scope_parents: file.lexical_scope_parents.iter().copied().collect(),
             stars: file.star_reexport_specifiers.clone(),
         }
     }
@@ -50,19 +52,28 @@ impl CallableFileIndex {
         if callee.contains('.') {
             return None;
         }
-        let binding_scope = binding_scope?;
+        let mut binding_scope = binding_scope?;
         let mut visited = std::collections::HashSet::new();
         let mut target = callee.to_string();
         loop {
-            let key = (binding_scope, target.clone());
-            if let Some(alias) = self.aliases.get(&key) {
+            let mut scope = Some(binding_scope);
+            let alias = loop {
+                let Some(candidate_scope) = scope else { break None };
+                if let Some(alias) = self.aliases.get(&(candidate_scope, target.clone())) {
+                    break Some((candidate_scope, alias));
+                }
+                scope = self
+                    .lexical_scope_parents
+                    .get(&candidate_scope)
+                    .copied()
+                    .flatten();
+            };
+            if let Some((alias_scope, alias)) = alias {
+                let key = (alias_scope, target.clone());
                 if !visited.insert(key) {
                     return None;
                 }
                 target = alias.clone();
-                if self.aliases.contains_key(&(binding_scope, target.clone())) {
-                    continue;
-                }
                 if target.contains('.')
                     || self.imported.contains_key(&target)
                     || resolve_local_call_scope(
@@ -76,6 +87,8 @@ impl CallableFileIndex {
                 {
                     return Some(target);
                 }
+                binding_scope = alias_scope;
+                continue;
             }
             return None;
         }

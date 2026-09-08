@@ -10,6 +10,7 @@ import defaultThroughIdentifier from "./reexport-default.mts";
 import defaultThroughStar from "./star-default.mts";
 import { shared as ambiguous } from "./ambiguous-barrel.mts";
 import { cycle } from "./star-cycle-a.mts";
+import { cycle as cycleFromB } from "./star-cycle-b.mts";
 import {
   exportedAlias,
   default as defaultAlias,
@@ -33,6 +34,7 @@ defaultThroughIdentifier();
 defaultThroughStar();
 ambiguous();
 cycle();
+cycleFromB();
 mutable = () => {};
 mutable();
 mutableDeclaration();

@@ -3,8 +3,10 @@ function target() {
 }
 
 function outer() {
-  const load = target;
+  const outerLoad = target;
   function inner() {
+    // The inner alias must continue through its lexical parent binding.
+    const load = outerLoad;
     load();
   }
   inner();

@@ -31,12 +31,27 @@ fn visit_export_all_declaration_with_scope(
         kind,
         export.span.start as usize,
     );
-    // `export * as namespace from` has one concrete exported name. It is
-    // not a transparent `export *` forwarding edge.
-    if !export.export_kind.is_type() && export.exported.is_none() {
-        collector
-            .star_reexport_specifiers
-            .push(export.source.value.to_string());
+    // `export * as namespace from` has one concrete exported name. Retain a
+    // namespace marker rather than treating it as a transparent star source:
+    // a later named import of that name may call one member of its source.
+    if !export.export_kind.is_type() {
+        if let Some(exported) = export
+            .exported
+            .as_ref()
+            .and_then(module_export_name_name)
+        {
+            collector.call_export_bindings.push(ExportedBinding {
+                specifier: Some(export.source.value.to_string()),
+                // `*` cannot be an ECMAScript export name. It distinguishes
+                // the namespace object from a normal named re-export.
+                local: "*".to_string(),
+                exported: exported.to_string(),
+            });
+        } else {
+            collector
+                .star_reexport_specifiers
+                .push(export.source.value.to_string());
+        }
     }
 }
 

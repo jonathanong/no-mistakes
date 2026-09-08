@@ -29,6 +29,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     // second source pass.
     collector.local_stack.push(HashSet::new());
     collector.lexical_scope_ids.push(0);
+    collector.lexical_scope_parents.insert(0, None);
     collector.next_lexical_scope_id = 1;
     predeclare_program_value_bindings(&mut collector, program);
     let local_type_names = local_type_declaration_names(program);
@@ -67,6 +68,8 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         .map(|((scope, name), id)| (scope, name, id))
         .collect();
     callable_bindings.sort();
+    let mut lexical_scope_parents: Vec<_> = collector.lexical_scope_parents.into_iter().collect();
+    lexical_scope_parents.sort_by_key(|(scope, _)| *scope);
     let callable_aliases = collector
         .callable_aliases
         .into_iter()
@@ -95,6 +98,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         known_function_scopes,
         callable_scope_ids,
         callable_bindings,
+        lexical_scope_parents,
         callable_scopes,
         class_scopes,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,

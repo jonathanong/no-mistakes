@@ -53,11 +53,7 @@ fn walk_function_property_value<'a>(
     }
     collector.add_type_parameter_names(function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
-    walk::walk_function(
-        collector,
-        function,
-        oxc_syntax::scope::ScopeFlags::empty(),
-    );
+    walk_function_with_body_bindings(collector, function);
     collector.pop_function_scope(pushed);
 }
 
@@ -74,6 +70,6 @@ fn walk_arrow_property_value<'a>(
     }
     collector.add_type_parameter_names(arrow.type_parameters.as_deref());
     collector.add_formal_parameters(&arrow.params);
-    walk::walk_arrow_function_expression(collector, arrow);
+    walk_arrow_function_with_body_bindings(collector, arrow);
     collector.pop_function_scope(pushed);
 }

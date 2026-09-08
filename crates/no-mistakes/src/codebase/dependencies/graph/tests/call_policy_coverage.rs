@@ -46,6 +46,7 @@ fn callable_alias_resolution_uses_the_callee_binding_scope() {
         imported: HashMap::new(),
         exported: HashMap::new(),
         aliases: HashMap::from([((0, "alias".to_string()), "target".to_string())]),
+        lexical_scope_parents: HashMap::from([(0, None)]),
         stars: Vec::new(),
     };
 

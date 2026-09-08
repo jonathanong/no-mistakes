@@ -9,7 +9,7 @@ fn visit_variable_declarator_with_scope<'a>(
             push_variable_function_scope(collector, declarator, name, CallableId(arrow.span.start));
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
             collector.add_formal_parameters(&arrow.params);
-            walk::walk_arrow_function_expression(collector, arrow);
+            walk_arrow_function_with_body_bindings(collector, arrow);
             collector.pop_function_scope(true);
             collector.pop_syntactic_caller(pushed_syntactic_caller);
         }
@@ -41,7 +41,7 @@ fn visit_variable_declarator_with_scope<'a>(
             }
             collector.add_type_parameter_names(function.type_parameters.as_deref());
             collector.add_formal_parameters(&function.params);
-            walk::walk_function(collector, function, oxc_syntax::scope::ScopeFlags::empty());
+            walk_function_with_body_bindings(collector, function);
             collector.pop_function_scope(true);
             collector.pop_syntactic_caller(pushed_syntactic_caller);
         }

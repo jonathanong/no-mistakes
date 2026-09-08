@@ -15,6 +15,10 @@ struct ImportCollector {
     /// Stable identities parallel to `local_stack`. Scope depth alone is not
     /// an identity: sibling/nested blocks can reuse a depth while shadowing.
     lexical_scope_ids: Vec<usize>,
+    /// Lexical parent for each stable scope identity. Alias resolution needs
+    /// this rather than display scope strings: sibling functions can share a
+    /// display name while still binding different outer aliases.
+    lexical_scope_parents: HashMap<usize, Option<usize>>,
     next_lexical_scope_id: usize,
     type_local_stack: Vec<HashSet<String>>,
     type_parameter_stack: Vec<HashSet<String>>,

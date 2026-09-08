@@ -81,7 +81,10 @@ impl ImportCollector {
             self.function_id_stack.push(id);
             self.function_scope_stack.push(self.local_stack.len());
             self.local_stack.push(HashSet::new());
-            self.lexical_scope_ids.push(self.next_lexical_scope_id);
+            let lexical_scope_id = self.next_lexical_scope_id;
+            self.lexical_scope_parents
+                .insert(lexical_scope_id, self.lexical_scope_ids.last().copied());
+            self.lexical_scope_ids.push(lexical_scope_id);
             self.next_lexical_scope_id += 1;
             self.type_local_stack.push(HashSet::new());
             self.type_parameter_stack.push(HashSet::new());
@@ -134,7 +137,10 @@ impl ImportCollector {
         self.function_id_stack.push(id);
         self.function_scope_stack.push(self.local_stack.len());
         self.local_stack.push(HashSet::new());
-        self.lexical_scope_ids.push(self.next_lexical_scope_id);
+        let lexical_scope_id = self.next_lexical_scope_id;
+        self.lexical_scope_parents
+            .insert(lexical_scope_id, self.lexical_scope_ids.last().copied());
+        self.lexical_scope_ids.push(lexical_scope_id);
         self.next_lexical_scope_id += 1;
         self.type_local_stack.push(HashSet::new());
         self.type_parameter_stack.push(HashSet::new());
@@ -178,7 +184,10 @@ impl ImportCollector {
     fn push_lexical_scope(&mut self) -> bool {
         if !self.local_stack.is_empty() {
             self.local_stack.push(HashSet::new());
-            self.lexical_scope_ids.push(self.next_lexical_scope_id);
+            let lexical_scope_id = self.next_lexical_scope_id;
+            self.lexical_scope_parents
+                .insert(lexical_scope_id, self.lexical_scope_ids.last().copied());
+            self.lexical_scope_ids.push(lexical_scope_id);
             self.next_lexical_scope_id += 1;
             self.type_local_stack.push(HashSet::new());
             self.type_parameter_stack.push(HashSet::new());
