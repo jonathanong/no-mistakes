@@ -88,7 +88,7 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
         .cloned()
         .collect::<Vec<_>>();
     let calls_by_caller = local_call_graph(&resolved_calls);
-    let call_records_by_caller = local_call_records(&resolved_calls);
+    let call_records_by_caller = local_call_records(&file_facts.function_calls);
     let refs_by_caller = local_call_graph(&file_facts.symbol_references);
     let ordered_refs_by_caller = local_ordered_call_graph(&file_facts.symbol_references);
     let scoped_imports = scoped_import_map_with_graph_files(
