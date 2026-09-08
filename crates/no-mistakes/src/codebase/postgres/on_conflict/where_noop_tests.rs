@@ -101,6 +101,7 @@ fn empty_assigned_list_does_not_prove_a_noop() {
         &[],
         "items",
         &catalog(&[], &[], &[]),
+        &[],
     ));
 }
 
@@ -115,6 +116,27 @@ fn other_applicable_trigger_rewrite_is_not_a_noop() {
     );
     let triggers = extract_sql_statement_facts(
         "CREATE TRIGGER n BEFORE UPDATE OF a ON items FOR EACH ROW EXECUTE FUNCTION normalize();
+         CREATE TRIGGER t AFTER UPDATE OF a ON items FOR EACH ROW EXECUTE FUNCTION audit();",
+    )
+    .triggers;
+    let writes = [("normalize".to_string(), vec!["b".to_string()])];
+    let replay_safe = ["normalize".to_string()];
+    let found = judge_file(&file, &catalog(&triggers, &writes, &replay_safe));
+    assert!(
+        found.iter().any(|(_, message)| message.contains("audit")),
+        "{found:?}"
+    );
+}
+
+#[test]
+fn statement_level_update_rewrite_is_not_a_noop() {
+    let file = extract_sql_statement_facts(
+        "INSERT INTO items (id, a, b) VALUES (1, 'x', 'y')
+         ON CONFLICT (id) DO UPDATE SET a = EXCLUDED.a, b = EXCLUDED.b
+         WHERE items.b IS DISTINCT FROM EXCLUDED.b;",
+    );
+    let triggers = extract_sql_statement_facts(
+        "CREATE TRIGGER n AFTER UPDATE OF a ON items FOR EACH STATEMENT EXECUTE FUNCTION normalize();
          CREATE TRIGGER t AFTER UPDATE OF a ON items FOR EACH ROW EXECUTE FUNCTION audit();",
     )
     .triggers;

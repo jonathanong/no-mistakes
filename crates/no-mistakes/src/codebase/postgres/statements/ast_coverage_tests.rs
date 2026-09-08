@@ -124,3 +124,75 @@ fn trigger_period_for_and_for_row_object() {
     assert!(fact.for_each_row);
     assert!(fact.function.is_empty());
 }
+
+#[test]
+fn insert_source_without_query_or_rows_is_unstable() {
+    let sql = "INSERT INTO items (id, seen) VALUES (1, 'a')";
+    let Statement::Insert(mut insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
+        panic!("insert");
+    };
+    insert.source = None;
+    assert!(super::insert::from_insert(sql, &insert, 1, true)
+        .assignments
+        .is_empty());
+    insert.source = Some(Box::new(empty_query()));
+    assert!(
+        super::insert::from_insert(sql, &insert, 1, true)
+            .assignments
+            .iter()
+            .all(|assignment| assignment.form == super::SqlValueForm::Other),
+        "{:#?}",
+        super::insert::from_insert(sql, &insert, 1, true).assignments
+    );
+}
+
+#[test]
+fn insert_set_assignments_are_kept() {
+    let sql = "INSERT INTO items (id, seen) VALUES (1, 'a')";
+    let Statement::Insert(mut insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
+        panic!("insert");
+    };
+    let Statement::Update(update) = parse_postgres_sql("UPDATE items SET seen = now()")
+        .unwrap()
+        .pop()
+        .unwrap()
+    else {
+        panic!("update");
+    };
+    insert.assignments = update.assignments;
+    assert!(
+        super::insert::from_insert(sql, &insert, 1, true)
+            .assignments
+            .iter()
+            .any(|assignment| assignment.column == "seen"
+                && matches!(assignment.form, super::SqlValueForm::Volatile { .. })),
+        "{:#?}",
+        super::insert::from_insert(sql, &insert, 1, true).assignments
+    );
+}
+
+#[test]
+fn overriding_user_value_drops_source_forms() {
+    let sql = "INSERT INTO items (id, seen) VALUES (1, 'a')";
+    let Statement::Insert(insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
+        panic!("insert");
+    };
+    assert!(super::insert::from_insert(
+        "INSERT INTO items (id, seen) OVERRIDING /* skip */
+USER VALUE VALUES (1, 'a')",
+        &insert,
+        1,
+        true,
+    )
+    .assignments
+    .is_empty());
+
+    assert!(super::insert::from_insert(
+        "INSERT INTO items (id, seen) OVERRIDING /* outer /* inner */ note */\nUSER VALUE VALUES (1, 'a')",
+        &insert,
+        1,
+        true,
+    )
+    .assignments
+    .is_empty());
+}

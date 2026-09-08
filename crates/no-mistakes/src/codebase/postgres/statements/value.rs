@@ -3,26 +3,15 @@ use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::schema::relation_name;
 use sqlparser::ast::{
     Assignment, AssignmentTarget, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments,
-    ObjectNamePart, Value, ValueWithSpan,
+    Ident, ObjectNamePart, UnaryOperator, Value, ValueWithSpan,
 };
 
+#[rustfmt::skip]
 const VOLATILE: &[&str] = &[
-    "gen_random_uuid",
-    "random",
-    "nextval",
-    "uuidv7",
-    "uuid_generate_v1",
-    "uuid_generate_v1mc",
-    "uuid_generate_v4",
-    "now",
-    "clock_timestamp",
-    "statement_timestamp",
-    "transaction_timestamp",
-    "current_timestamp",
-    "current_date",
-    "current_time",
-    "localtime",
-    "localtimestamp",
+    "gen_random_uuid", "random", "nextval", "uuidv7", "uuid_generate_v1",
+    "uuid_generate_v1mc", "uuid_generate_v4", "now", "clock_timestamp",
+    "statement_timestamp", "transaction_timestamp", "current_timestamp",
+    "current_date", "current_time", "localtime", "localtimestamp",
 ];
 
 pub(super) fn from_assignment(assignment: &Assignment) -> SqlAssignmentFact {
@@ -35,12 +24,13 @@ pub(super) fn from_assignment(assignment: &Assignment) -> SqlAssignmentFact {
 pub(super) fn from_expr(expr: &Expr) -> SqlValueForm {
     match unwrap_expr(expr) {
         Expr::Value(value) => from_value(value),
-        Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => SqlValueForm::Placeholder,
-        Expr::Identifier(ident) => SqlValueForm::SelfRef {
-            column: ident.value.clone(),
-        },
+        Expr::Identifier(ident) => ident_form(ident),
         Expr::CompoundIdentifier(parts) => compound_form(parts),
         Expr::Function(function) => from_function(function),
+        Expr::UnaryOp {
+            op: UnaryOperator::Plus | UnaryOperator::Minus,
+            expr,
+        } => signed_literal(expr),
         Expr::Subquery(_) | Expr::Exists { .. } | Expr::InSubquery { .. } => SqlValueForm::Subquery,
         _ => SqlValueForm::Other,
     }
@@ -50,8 +40,55 @@ fn from_value(value: &ValueWithSpan) -> SqlValueForm {
     match &value.value {
         Value::Null => SqlValueForm::Null,
         Value::Placeholder(_) => SqlValueForm::Placeholder,
+        Value::SingleQuotedString(text)
+        | Value::EscapedStringLiteral(text)
+        | Value::UnicodeStringLiteral(text)
+        | Value::NationalStringLiteral(text)
+            if is_relative_datetime(text) =>
+        {
+            SqlValueForm::Other
+        }
+        Value::DollarQuotedString(quoted) if is_relative_datetime(&quoted.value) => {
+            SqlValueForm::Other
+        }
         _ => SqlValueForm::Literal,
     }
+}
+
+fn ident_form(ident: &Ident) -> SqlValueForm {
+    if ident.quote_style.is_some() {
+        return SqlValueForm::SelfRef {
+            column: ident.value.clone(),
+        };
+    }
+    if is_placeholder_ident(&ident.value) {
+        return SqlValueForm::Placeholder;
+    }
+    if is_volatile_name(&ident.value) {
+        return SqlValueForm::Volatile {
+            name: ident.value.to_ascii_lowercase(),
+        };
+    }
+    if ident.value.eq_ignore_ascii_case("default") {
+        return SqlValueForm::Other;
+    }
+    SqlValueForm::SelfRef {
+        column: ident.value.clone(),
+    }
+}
+
+fn signed_literal(expr: &Expr) -> SqlValueForm {
+    match from_expr(expr) {
+        SqlValueForm::Literal | SqlValueForm::Null => SqlValueForm::Literal,
+        form => form,
+    }
+}
+
+#[rustfmt::skip]
+const RELATIVE_DATETIME: &[&str] = &["now", "today", "tomorrow", "yesterday"];
+
+fn is_relative_datetime(text: &str) -> bool {
+    RELATIVE_DATETIME.contains(&text.trim().to_ascii_lowercase().as_str())
 }
 
 fn compound_form(parts: &[sqlparser::ast::Ident]) -> SqlValueForm {
@@ -66,8 +103,11 @@ fn compound_form(parts: &[sqlparser::ast::Ident]) -> SqlValueForm {
 }
 
 fn from_function(function: &Function) -> SqlValueForm {
-    let name = last_function_name(function).to_ascii_lowercase();
-    if VOLATILE.iter().any(|item| *item == name) {
+    let Some(ident) = builtin_function_ident(function) else {
+        return SqlValueForm::Other;
+    };
+    let name = ident.value.to_ascii_lowercase();
+    if is_volatile_name(&name) {
         return SqlValueForm::Volatile { name };
     }
     let args = function_arg_exprs(function)
@@ -82,17 +122,11 @@ fn from_function(function: &Function) -> SqlValueForm {
     }
 }
 
-fn last_function_name(function: &Function) -> String {
-    function
-        .name
-        .0
-        .iter()
-        .rev()
-        .find_map(|part| match part {
-            ObjectNamePart::Identifier(ident) => Some(ident.value.clone()),
-            _ => None,
-        })
-        .unwrap_or_default()
+fn builtin_function_ident(function: &Function) -> Option<&Ident> {
+    match function.name.0.as_slice() {
+        [ObjectNamePart::Identifier(ident)] if ident.quote_style.is_none() => Some(ident),
+        _ => None,
+    }
 }
 
 fn function_arg_exprs(function: &Function) -> Vec<&Expr> {
@@ -144,4 +178,18 @@ pub(super) fn excluded_column(expr: &Expr) -> Option<String> {
 pub(super) fn is_placeholder_ident(name: &str) -> bool {
     let lower = name.to_ascii_lowercase();
     lower.starts_with('$') || lower.starts_with("sql_placeholder_")
+}
+
+fn is_volatile_name(name: &str) -> bool {
+    VOLATILE.iter().any(|item| name.eq_ignore_ascii_case(item))
+}
+
+pub(crate) fn form_is_stable(form: &SqlValueForm) -> bool {
+    match form {
+        SqlValueForm::Literal | SqlValueForm::Null | SqlValueForm::Placeholder => true,
+        SqlValueForm::Coalesce { args }
+        | SqlValueForm::Greatest { args }
+        | SqlValueForm::Least { args } => args.iter().all(form_is_stable),
+        _ => false,
+    }
 }

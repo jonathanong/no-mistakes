@@ -2,18 +2,36 @@ pub(super) fn nth_insert_line(sql: &str, n: usize) -> usize {
     nth_keyword_pair_line(sql, "insert", "into", n)
 }
 
+pub(super) fn nth_insert_source(sql: &str, n: usize) -> String {
+    let pairs = keyword_pair_words(sql, "insert", "into");
+    let start = pairs
+        .get(n.saturating_sub(1))
+        .map(|word| word.start)
+        .unwrap_or(0);
+    let end = pairs.get(n).map(|word| word.start).unwrap_or(sql.len());
+    sql.get(start..end).unwrap_or_default().to_string()
+}
+
 pub(super) fn nth_keyword_pair_line(sql: &str, first: &str, second: &str, n: usize) -> usize {
+    keyword_pair_lines(sql, first, second)
+        .get(n.saturating_sub(1))
+        .copied()
+        .unwrap_or(1)
+}
+
+fn keyword_pair_lines(sql: &str, first: &str, second: &str) -> Vec<usize> {
+    keyword_pair_words(sql, first, second)
+        .into_iter()
+        .map(|word| word.line)
+        .collect()
+}
+
+fn keyword_pair_words(sql: &str, first: &str, second: &str) -> Vec<Word> {
     let words = words(sql);
-    let mut found = 0usize;
-    for index in 0..words.len().saturating_sub(1) {
-        if eq(&words[index], first) && eq(&words[index + 1], second) {
-            found += 1;
-            if found == n {
-                return words[index].line;
-            }
-        }
-    }
-    1
+    (0..words.len().saturating_sub(1))
+        .filter(|&index| eq(&words[index], first) && eq(&words[index + 1], second))
+        .map(|index| words[index].clone())
+        .collect()
 }
 
 pub(super) fn line_containing(source: &str, parts: &[&str]) -> usize {
@@ -30,7 +48,9 @@ pub(super) fn line_containing(source: &str, parts: &[&str]) -> usize {
         .unwrap_or(1)
 }
 
+#[derive(Clone)]
 struct Word {
+    start: usize,
     line: usize,
     text: String,
 }
@@ -72,6 +92,7 @@ fn words(sql: &str) -> Vec<Word> {
                     index += 1;
                 }
                 out.push(Word {
+                    start,
                     line: start_line,
                     text: sql[start..index].to_string(),
                 });

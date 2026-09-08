@@ -70,3 +70,12 @@ fn postgres_idempotent_insert_passes_partial_where_noop() {
     let out = check_json(&root);
     assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
 }
+
+#[test]
+fn postgres_idempotent_insert_flags_volatile_where_proof() {
+    let root = fixture("postgres-idempotent-insert", "fail-volatile-proof");
+    let out = check_json(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "{body}");
+    assert!(body.contains("re-fire"), "{body}");
+}

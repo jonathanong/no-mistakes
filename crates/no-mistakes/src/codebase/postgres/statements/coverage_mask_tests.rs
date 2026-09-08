@@ -1,4 +1,6 @@
 use super::{extract_sql_statement_facts, SqlValueForm};
+use crate::codebase::postgres::parse::parse_postgres_sql;
+use sqlparser::ast::Statement;
 
 #[test]
 fn assignment_forms_cover_named_wildcard_exists_and_in_subquery() {
@@ -138,4 +140,20 @@ fn doubled_quotes_and_unclosed_dollar_do_not_steal_insert_lines() {
     assert!(unclosed.inserts.is_empty() || unclosed.insert_keyword_count == 0);
     assert!(!super::has_top_level_not_exists_in("WHERE NOT"));
     assert!(!super::has_top_level_not_exists_in("AND"));
+}
+
+#[test]
+fn unclosed_block_comment_does_not_drop_insert_assignments() {
+    let sql = "INSERT INTO items (id, seen) VALUES (1, 'a')";
+    let Statement::Insert(insert) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
+        panic!("insert");
+    };
+    assert!(!super::insert::from_insert(
+        "INSERT INTO items (id, seen) VALUES (1, 'a') /*",
+        &insert,
+        1,
+        true,
+    )
+    .assignments
+    .is_empty());
 }

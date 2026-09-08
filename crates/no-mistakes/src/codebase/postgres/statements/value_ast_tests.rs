@@ -1,7 +1,8 @@
 use super::{extract_sql_statement_facts, SqlValueForm};
 use sqlparser::ast::{
-    Expr, Function, FunctionArg, FunctionArgExpr, FunctionArgumentList, FunctionArguments, Ident,
-    ObjectName, ObjectNamePart, Query, SetExpr, UnaryOperator, Values,
+    DollarQuotedString, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArgumentList,
+    FunctionArguments, Ident, ObjectName, ObjectNamePart, Query, SetExpr, UnaryOperator, Value,
+    Values,
 };
 
 fn empty_query() -> Query {
@@ -141,4 +142,55 @@ fn unary_not_exists_and_unrestricted_exists_leaves() {
         .where_proof
         .null_and_excluded_not_null
         .is_empty());
+}
+
+#[test]
+fn insert_value_stability_is_literals_nulls_and_placeholders() {
+    use super::form_is_stable;
+    assert!(form_is_stable(&SqlValueForm::Literal));
+    assert!(form_is_stable(&SqlValueForm::Null));
+    assert!(form_is_stable(&SqlValueForm::Placeholder));
+    assert!(form_is_stable(&SqlValueForm::Greatest {
+        args: vec![SqlValueForm::Literal, SqlValueForm::Null]
+    }));
+    assert!(!form_is_stable(&SqlValueForm::SelfRef {
+        column: "b".into()
+    }));
+    assert!(!form_is_stable(&SqlValueForm::Least {
+        args: vec![SqlValueForm::Placeholder, SqlValueForm::Other]
+    }));
+}
+
+#[test]
+fn datetime_idents_and_quoted_now_are_unstable_forms() {
+    assert!(matches!(
+        super::value::from_expr(&Expr::Identifier(Ident::new("CURRENT_TIMESTAMP"))),
+        SqlValueForm::Volatile { name } if name == "current_timestamp"
+    ));
+    assert_eq!(
+        super::value::from_expr(&Expr::Identifier(Ident::new("DEFAULT"))),
+        SqlValueForm::Other
+    );
+    assert_eq!(
+        super::value::from_expr(&Expr::Value(
+            Value::EscapedStringLiteral("now".into()).with_empty_span()
+        )),
+        SqlValueForm::Other
+    );
+    assert_eq!(
+        super::value::from_expr(&Expr::Value(
+            Value::DollarQuotedString(DollarQuotedString {
+                value: "today".into(),
+                tag: None,
+            })
+            .with_empty_span()
+        )),
+        SqlValueForm::Other
+    );
+    assert_eq!(
+        super::value::from_expr(&Expr::Value(
+            Value::UnicodeStringLiteral("now".into()).with_empty_span()
+        )),
+        SqlValueForm::Other
+    );
 }

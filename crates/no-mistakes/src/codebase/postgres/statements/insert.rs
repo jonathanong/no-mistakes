@@ -26,11 +26,7 @@ pub(super) fn from_insert(sql: &str, insert: &Insert, n: usize, executed: bool) 
             Some(OnInsert::OnConflict(conflict)) => Some(from_conflict(conflict)),
             _ => None,
         },
-        assignments: insert
-            .assignments
-            .iter()
-            .map(super::value::from_assignment)
-            .collect(),
+        assignments: insert_assignments(sql, insert, n),
     }
 }
 
@@ -54,4 +50,30 @@ fn from_conflict(conflict: &sqlparser::ast::OnConflict) -> super::SqlOnConflictF
             where_proof: super::conflict::where_proof(update.selection.as_ref()),
         },
     }
+}
+
+fn insert_assignments(sql: &str, insert: &Insert, n: usize) -> Vec<super::SqlAssignmentFact> {
+    if has_overriding_user_value(sql, n) {
+        return Vec::new();
+    }
+    let set: Vec<_> = insert
+        .assignments
+        .iter()
+        .map(super::value::from_assignment)
+        .collect();
+    if set.is_empty() {
+        super::insert_source::from_insert(insert)
+    } else {
+        set
+    }
+}
+
+fn has_overriding_user_value(sql: &str, n: usize) -> bool {
+    let masked = super::fallback::mask_quoted_sql(&super::lines::nth_insert_source(sql, n));
+    let tokens = masked
+        .split_whitespace()
+        .map(str::to_ascii_lowercase)
+        .collect::<Vec<_>>()
+        .join(" ");
+    tokens.contains("overriding user value")
 }
