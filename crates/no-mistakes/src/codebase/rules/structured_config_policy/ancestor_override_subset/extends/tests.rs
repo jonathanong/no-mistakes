@@ -6,7 +6,9 @@ use std::sync::Arc;
 fn follow_rejects_an_extends_chain_at_the_depth_limit() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
     let resolved = root.join("Cargo.toml");
-    let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&[resolved.clone()])));
+    let sources = SourceStore::new(Arc::new(FileInventory::from_paths(std::slice::from_ref(
+        &resolved,
+    ))));
     let assertion = ValueAssertion::default();
     let keys = Keys::from_assertion(&assertion);
     let mut findings = Vec::new();
