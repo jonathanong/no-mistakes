@@ -178,7 +178,8 @@ fn resolve_order_aliases(
 }
 
 pub(super) fn contains_insert(sql: &str) -> bool {
-    sql.split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
+    crate::codebase::postgres::mask_quoted_sql(sql)
+        .split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
         .any(|token| token.eq_ignore_ascii_case("insert"))
 }
 

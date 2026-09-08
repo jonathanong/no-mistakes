@@ -170,6 +170,20 @@ fn ignores_recovered_dynamic_non_insert_sql() {
 }
 
 #[test]
+fn ignores_recovered_dynamic_sql_with_insert_only_in_a_literal_or_comment() {
+    let root = fixture("pass-canonical-order");
+    for file in ["dynamic-insert-literal.ts", "dynamic-insert-comment.ts"] {
+        let result = check_with_files(
+            &root,
+            &config(),
+            &[root.join("src").join(file), root.join("schema.json")],
+        )
+        .unwrap();
+        assert!(result.is_empty(), "{file}: {result:#?}");
+    }
+}
+
+#[test]
 fn resolves_top_level_select_aliases_in_the_source_order() {
     let root = fixture("pass-canonical-order");
     let result = check_with_files(
