@@ -9,7 +9,10 @@
       "tie/*": ["src/first-tie/*"],
       "tie/*/detail": ["src/second-tie/*"],
       "replacement/*": ["src/missing/*", "src/replacement/*"],
-      "shadowed/*": ["src/missing/*"]
+      // A repeated JSON key keeps its final value in its original order slot.
+      "duplicate/*": ["src/missing/*"],
+      "shadowed/*": ["src/missing/*"],
+      "duplicate/*": ["src/replacement/*"]
     }
   }
 }

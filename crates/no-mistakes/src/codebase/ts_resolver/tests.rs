@@ -1408,6 +1408,10 @@ fn aliases_follow_typescript_pattern_precedence_and_mapping_fallbacks() {
         resolver.resolve("replacement/value", &importer),
         Some(root.join("src/replacement/value.ts"))
     );
+    assert_eq!(
+        resolver.resolve("duplicate/value", &importer),
+        Some(root.join("src/replacement/value.ts"))
+    );
     assert_eq!(resolver.resolve("shadowed/value", &importer), None);
 }
 
@@ -1424,6 +1428,13 @@ fn aliases_preserve_declaration_ties_and_deleted_candidate_precedence() {
         .map(|(pattern, _)| pattern.as_str())
         .collect();
     assert_eq!(&patterns[..3], ["*", "feature/*/detail", "feature/s*"]);
+    assert_eq!(
+        patterns
+            .iter()
+            .filter(|pattern| **pattern == "duplicate/*")
+            .count(),
+        1
+    );
 
     let candidates = resolver.resolution_candidates("shadowed/value", &importer);
     assert!(candidates.contains(&root.join("src/missing/value.ts")));

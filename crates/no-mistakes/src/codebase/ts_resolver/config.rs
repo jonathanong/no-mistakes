@@ -86,28 +86,34 @@ fn load_tsconfig_inner(
         .and_then(|root| root.get_object("compilerOptions"))
         .and_then(|compiler_options| compiler_options.get_object("paths"))
         .map(|paths| {
-            paths
-                .properties
-                .iter()
-                .map(|property| {
-                    let replacements = property
-                        .value
-                        .as_array()
-                        .map(|array| {
-                            array
-                                .elements
-                                .iter()
-                                .filter_map(|value| {
-                                    value
-                                        .as_string_lit()
-                                        .map(|literal| literal.value.to_string())
-                                })
-                                .collect()
-                        })
-                        .unwrap_or_default();
-                    (property.name.as_str().to_string(), replacements)
-                })
-                .collect::<Vec<_>>()
+            let mut mappings: Vec<(String, Vec<String>)> = Vec::new();
+            let mut positions: std::collections::HashMap<String, usize> =
+                std::collections::HashMap::new();
+            for property in &paths.properties {
+                let replacements = property
+                    .value
+                    .as_array()
+                    .map(|array| {
+                        array
+                            .elements
+                            .iter()
+                            .filter_map(|value| {
+                                value
+                                    .as_string_lit()
+                                    .map(|literal| literal.value.to_string())
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                let pattern = property.name.as_str().to_string();
+                if let Some(index) = positions.get(&pattern).copied() {
+                    mappings[index].1 = replacements;
+                } else {
+                    positions.insert(pattern.clone(), mappings.len());
+                    mappings.push((pattern, replacements));
+                }
+            }
+            mappings
         });
     let v = parsed
         .value
