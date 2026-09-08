@@ -260,6 +260,13 @@ tRPC router procedures and client calls through virtual nodes identified as
 and `procedure`; `FlowNode` uses `kind: "trpc-procedure"`. `all` does not
 include `trpc`. Empty `projects.*.trpc.routers` lists disable extraction.
 
+The graph APIs also accept the opt-in `call` relationship. It follows
+binding-aware TypeScript and JavaScript calls between file or symbol roots,
+including proven named, star, and namespace re-exports. It excludes ordinary
+imported value reads, shadowed bindings, and unresolved dynamic callees.
+`DependencyFile.depth` and `via` expose deterministic shortest traversal;
+`all` intentionally does not include `call`.
+
 `testsPlan(options)` returns `changedFiles`, the sorted, deduplicated
 changed-file inventory prepared by that same call, relative to the request root.
 The field is present even when no tests are selected and retains deleted paths

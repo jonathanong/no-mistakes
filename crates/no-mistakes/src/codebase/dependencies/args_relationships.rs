@@ -46,6 +46,7 @@ pub enum RelationshipArg {
     Elixir,
     Dart,
     Resource,
+    Call,
     Trpc,
     All,
 }
@@ -109,6 +110,7 @@ impl RelationshipArg {
             Self::Asset => "asset",
             Self::React => "react",
             Self::Resource => "resource",
+            Self::Call => "call",
             Self::All => "all",
             _ => unreachable!("workflow and language relationships are handled first"),
         }

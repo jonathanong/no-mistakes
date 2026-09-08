@@ -29,6 +29,11 @@ calls and the router files that declared them. Virtual IDs are
 `src/router.ts#procedure:user.get`. Empty `projects.*.trpc.routers` lists
 disable extraction; `--relationship all` omits these edges.
 
+Use `--relationship call` for reverse binding-aware TypeScript and JavaScript
+call reachability. The projection includes local calls and proven named, star,
+and namespace re-exports without treating ordinary imported value reads as
+calls. `all` omits `call`.
+
 Use `--relationship resource` to find runtime consumers of a tracked resource.
 Only literal supported filesystem and static glob calls become resource edges;
 dynamic paths are reported by test-impact diagnostics rather than guessed here.

@@ -116,6 +116,7 @@ fn walk_default_arrow_with_scope<'a>(
     collector.callable_scopes.insert("default".to_string());
     collector.add_type_parameter_names(arrow.type_parameters.as_deref());
     collector.add_formal_parameters(&arrow.params);
+    predeclare_arrow_body(collector, arrow);
     walk::walk_arrow_function_expression(collector, arrow);
     collector.pop_function_scope(true);
 }
@@ -130,6 +131,7 @@ fn walk_default_function_with_scope<'a>(
     collector.callable_scopes.insert(scope.to_string());
     collector.add_type_parameter_names(function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
+    predeclare_function_body(collector, function);
     walk::walk_function(collector, function, oxc_syntax::scope::ScopeFlags::empty());
     collector.pop_function_scope(true);
 }

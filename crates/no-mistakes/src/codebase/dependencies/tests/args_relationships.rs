@@ -24,6 +24,7 @@ fn empty_relationships_returns_standard_edges() {
     let set = relationship_filter(&[]).expect("unfiltered traversal has an explicit standard set");
     assert!(set.contains(&EdgeKind::Import));
     assert!(!set.contains(&EdgeKind::RouteImport));
+    assert!(!set.contains(&EdgeKind::Call));
     assert!(!set.contains(&EdgeKind::TrpcCall));
 }
 
@@ -33,6 +34,7 @@ fn all_keyword_returns_standard_edges() {
         .expect("all excludes opt-in alternate edges");
     assert!(set.contains(&EdgeKind::Selector));
     assert!(!set.contains(&EdgeKind::RouteImport));
+    assert!(!set.contains(&EdgeKind::Call));
     assert!(!set.contains(&EdgeKind::TrpcCall));
 }
 
@@ -47,7 +49,10 @@ fn standard_edges_include_every_non_opt_in_relationship_mapping() {
         .filter(|relationship| {
             !matches!(
                 relationship,
-                RelationshipArg::RouteImport | RelationshipArg::Trpc | RelationshipArg::All
+                RelationshipArg::RouteImport
+                    | RelationshipArg::Call
+                    | RelationshipArg::Trpc
+                    | RelationshipArg::All
             )
         })
     {
@@ -184,6 +189,18 @@ fn trpc_maps_to_trpc_call_and_trpc_procedure() {
     let standard = relationship_filter(&[]).unwrap();
     assert!(!standard.contains(&EdgeKind::TrpcCall));
     assert!(!standard.contains(&EdgeKind::TrpcProcedure));
+}
+
+#[test]
+fn call_maps_to_calls_and_proven_reexports_only() {
+    let set = relationship_filter(&[RelationshipArg::Call]).unwrap();
+    assert_eq!(
+        set,
+        std::collections::HashSet::from([EdgeKind::Call, EdgeKind::CallReexport])
+    );
+    let standard = relationship_filter(&[]).unwrap();
+    assert!(!standard.contains(&EdgeKind::Call));
+    assert!(!standard.contains(&EdgeKind::CallReexport));
 }
 
 #[test]

@@ -208,7 +208,13 @@ fn covers_arrow_caller_member_and_flat_functions() {
     )));
     // Flat `functions` entry is uncategorized.
     assert!(triples.contains(&("standalone".to_string(), None, Some("run".to_string()))));
-    assert_eq!(report.by_category.get("uncategorized"), Some(&1));
+    assert!(triples.contains(&("mark".to_string(), None, Some("run".to_string()))));
+    assert!(triples.contains(&(
+        "invalidate".to_string(),
+        Some("invalidation".to_string()),
+        Some("shadowedEffect".to_string())
+    )));
+    assert_eq!(report.by_category.get("uncategorized"), Some(&2));
 }
 
 #[test]

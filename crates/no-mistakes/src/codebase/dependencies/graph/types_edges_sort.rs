@@ -60,12 +60,16 @@ pub(super) const fn key(kind: EdgeKind) -> (u8, u8) {
         | EdgeKind::WorkflowRun
         | EdgeKind::WorkflowArtifact
         | EdgeKind::VitestSetup(_) => workflow(kind),
-        EdgeKind::TrpcCall | EdgeKind::TrpcProcedure => core(kind),
+        EdgeKind::Call | EdgeKind::CallReexport | EdgeKind::TrpcCall | EdgeKind::TrpcProcedure => {
+            core(kind)
+        }
     }
 }
 
 const fn core(kind: EdgeKind) -> (u8, u8) {
     match kind {
+        EdgeKind::Call => (39, 0),
+        EdgeKind::CallReexport => (40, 0),
         EdgeKind::Import => (0, 0),
         EdgeKind::TypeImport => (1, 0),
         EdgeKind::DynamicImport => (2, 0),

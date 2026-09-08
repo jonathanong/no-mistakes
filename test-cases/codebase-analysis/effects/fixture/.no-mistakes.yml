@@ -11,3 +11,4 @@ effects:
         - invalidate
     functions:
       - standalone
+      - mark

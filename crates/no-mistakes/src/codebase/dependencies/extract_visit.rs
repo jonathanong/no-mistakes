@@ -5,10 +5,15 @@ struct ImportCollector {
     line_starts: Vec<u32>,
     imports: Vec<ExtractedImport>,
     function_calls: Vec<FunctionCall>,
+    call_reachability: Vec<CallReachabilityFact>,
     symbol_references: Vec<FunctionCall>,
     unknown_callers: Vec<Option<String>>,
     function_stack: Vec<String>,
     local_stack: Vec<HashSet<String>>,
+    /// Call-only lexical declarations known for the whole scope before their
+    /// source-order visit. Kept separate so legacy `function_calls` preserve
+    /// their historical source-order shadow behavior.
+    call_predeclared_stack: Vec<HashSet<String>>,
     type_local_stack: Vec<HashSet<String>>,
     type_parameter_stack: Vec<HashSet<String>>,
     function_scope_stack: Vec<usize>,
@@ -16,6 +21,8 @@ struct ImportCollector {
     exported_resource_roots: HashSet<String>,
     exported_resource_scopes: HashSet<String>,
     collect_resource_roots: bool,
+    collect_call_reachability: bool,
+    program_scope_active: bool,
     exported_type_scopes: HashSet<String>,
     callable_scopes: HashSet<String>,
     class_scopes: HashSet<String>,
@@ -24,6 +31,17 @@ struct ImportCollector {
     anonymous_scope_count: usize,
     known_function_scopes: HashSet<String>,
     imported_bindings: HashSet<String>,
+    top_level_value_bindings: HashSet<String>,
+    call_import_bindings: std::collections::HashMap<String, (String, String)>,
+    /// Value aliases declared inside functions/blocks. This mirrors
+    /// `local_stack` so an alias never leaks through a lexical boundary.
+    call_alias_stack: Vec<std::collections::HashMap<String, (String, String)>>,
+    /// Local `require` bindings created by `createRequire(import.meta.url)`.
+    require_factory_bindings: Vec<HashSet<String>>,
+    top_level_require_factory_bindings: HashSet<String>,
+    /// Synthetic initializer walks used by legacy import reachability must not
+    /// manufacture a second call occurrence with the variable name as caller.
+    suppress_call_reachability: bool,
     suppress_imports: bool,
     collect_suppressed_runtime_imports: bool,
     /// `function_stack` depth captured at the start of an exported binding
@@ -47,39 +65,14 @@ impl<'a> Visit<'a> for ImportCollector {
         function: &oxc_ast::ast::Function<'a>,
         flags: oxc_syntax::scope::ScopeFlags,
     ) {
-        let name = function_name(function);
-        if self.current_function().is_some() {
-            if let Some(name) = &name {
-                self.add_binding_name(name);
-            }
-        }
-        if name.is_some() {
-            self.push_function_scope(name);
-            if let Some(scope) = self.current_function() {
-                self.callable_scopes.insert(scope.clone());
-                if self.export_depth > 0 && self.function_stack.len() == 1 {
-                    self.exported_functions.insert(scope.clone());
-                }
-            }
-        } else {
-            self.push_anonymous_function_scope();
-        }
-        self.add_type_parameter_names(function.type_parameters.as_deref());
-        self.add_formal_parameters(&function.params);
-        predeclare_function_body(self, function);
-        walk::walk_function(self, function, flags);
-        self.pop_function_scope(true);
+        visit_function_with_scope(self, function, flags);
     }
 
     fn visit_arrow_function_expression(
         &mut self,
         arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
-        self.push_anonymous_function_scope();
-        self.add_type_parameter_names(arrow.type_parameters.as_deref());
-        self.add_formal_parameters(&arrow.params);
-        walk::walk_arrow_function_expression(self, arrow);
-        self.pop_function_scope(true);
+        visit_arrow_function_with_scope(self, arrow);
     }
 
     fn visit_method_definition(&mut self, method: &MethodDefinition<'a>) {
@@ -100,6 +93,8 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
         visit_variable_declaration_with_bindings(self, declaration);
+        self.record_top_level_value_bindings(declaration);
+        self.record_call_binding_aliases(declaration);
         walk::walk_variable_declaration(self, declaration);
     }
 
@@ -109,6 +104,22 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
         visit_catch_clause_with_scope(self, clause);
+    }
+
+    fn visit_for_statement(&mut self, statement: &ForStatement<'a>) {
+        visit_for_statement_with_scope(self, statement);
+    }
+
+    fn visit_for_in_statement(&mut self, statement: &ForInStatement<'a>) {
+        visit_for_in_statement_with_scope(self, statement);
+    }
+
+    fn visit_for_of_statement(&mut self, statement: &ForOfStatement<'a>) {
+        visit_for_of_statement_with_scope(self, statement);
+    }
+
+    fn visit_switch_statement(&mut self, statement: &SwitchStatement<'a>) {
+        visit_switch_statement_with_scope(self, statement);
     }
 
     fn visit_ts_type_alias_declaration(&mut self, declaration: &TSTypeAliasDeclaration<'a>) {
@@ -182,6 +193,11 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         visit_call_expression_with_imports(self, call);
         walk::walk_call_expression(self, call);
+    }
+
+    fn visit_new_expression(&mut self, new: &NewExpression<'a>) {
+        visit_new_expression_with_imports(self, new);
+        walk::walk_new_expression(self, new);
     }
 
     fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {

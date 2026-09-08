@@ -196,6 +196,24 @@ impl DepGraph {
         self.traversal_edges().reverse().contains_key(node)
     }
 
+    pub(crate) fn call_target_symbols_in_file(&self, file: &Path) -> Vec<NodeId> {
+        let normalized = crate::codebase::ts_resolver::normalize_path(file);
+        let mut targets: Vec<_> = self
+            .traversal_edges()
+            .reverse()
+            .iter()
+            .filter(|(node, adjacency)| {
+                matches!(node, NodeId::Symbol { file, .. } if file.as_ref() == normalized)
+                    && adjacency.neighbors.iter().any(|(_, kind)| {
+                        matches!(kind, EdgeKind::Call | EdgeKind::CallReexport)
+                    })
+            })
+            .map(|(node, _)| node.clone())
+            .collect();
+        targets.sort();
+        targets
+    }
+
     pub fn all_files(&self) -> impl Iterator<Item = &NodeId> {
         self.traversal_edges().forward().keys()
     }

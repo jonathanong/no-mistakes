@@ -65,6 +65,8 @@ include!("sort.rs");
 include!("edge_import_reachability_scopes.rs");
 include!("edge_import_reachability.rs");
 include!("edge_imports.rs");
+include!("edge_calls.rs");
+include!("edge_call_reexports.rs");
 include!("edge_route_imports.rs");
 include!("edge_symbols_types.rs");
 include!("edge_symbols.rs");

@@ -15,7 +15,6 @@ fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
         BindingPattern::AssignmentPattern(assignment) => binding_names(&assignment.left),
     }
 }
-
 fn visit_binding_defaults_for_name<'a>(
     collector: &mut ImportCollector,
     pattern: &BindingPattern<'a>,
@@ -94,15 +93,18 @@ fn visit_exported_variable_declarator_reference<'a>(
     let pushed = name.is_some();
     collector.push_function_scope(name);
     let saved_suppress_imports = collector.suppress_imports;
+    let saved_suppress_calls = collector.suppress_call_reachability;
     let saved_collect_runtime = collector.collect_suppressed_runtime_imports;
     let saved_base_depth = collector.runtime_reachable_base_depth;
     collector.suppress_imports = true;
+    collector.suppress_call_reachability = true;
     collector.collect_suppressed_runtime_imports = collector
         .current_function()
         .is_some_and(|scope| collector.is_exported_top_level_name(&scope));
     collector.runtime_reachable_base_depth = Some(collector.function_stack.len());
     walk::walk_variable_declarator(collector, declarator);
     collector.suppress_imports = saved_suppress_imports;
+    collector.suppress_call_reachability = saved_suppress_calls;
     collector.collect_suppressed_runtime_imports = saved_collect_runtime;
     collector.runtime_reachable_base_depth = saved_base_depth;
     collector.pop_function_scope(pushed);
@@ -119,47 +121,17 @@ fn visit_variable_declarator_references_for_bindings<'a>(
     for name in names {
         collector.push_function_scope(Some(name.clone()));
         let saved_suppress_imports = collector.suppress_imports;
+        let saved_suppress_calls = collector.suppress_call_reachability;
         collector.suppress_imports = true;
+        collector.suppress_call_reachability = true;
         if let Some(init) = &declarator.init {
             collector.visit_expression(init);
         }
         visit_binding_defaults_for_name(collector, &declarator.id, &name);
         walk_variable_type_annotation(collector, declarator);
         collector.suppress_imports = saved_suppress_imports;
+        collector.suppress_call_reachability = saved_suppress_calls;
         collector.pop_function_scope(true);
     }
     true
-}
-
-impl ImportCollector {
-    fn should_record_call(&self, callee: &str) -> bool {
-        let binding = callee.split_once('.').map_or(callee, |(binding, _)| binding);
-        if self.local_binding_shadows(binding) {
-            self.has_local_function_scope(binding)
-        } else {
-            true
-        }
-    }
-
-    fn record_imported_bindings(&mut self, import: &ImportDeclaration<'_>) {
-        let Some(specifiers) = &import.specifiers else {
-            return;
-        };
-        for specifier in specifiers {
-            match specifier {
-                ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
-                    self.imported_bindings
-                        .insert(specifier.local.name.to_string());
-                }
-                ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) => {
-                    self.imported_bindings
-                        .insert(specifier.local.name.to_string());
-                }
-                ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {
-                    self.imported_bindings
-                        .insert(specifier.local.name.to_string());
-                }
-            }
-        }
-    }
 }

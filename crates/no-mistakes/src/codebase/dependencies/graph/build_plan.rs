@@ -22,6 +22,9 @@ pub struct GraphBuildPlan {
     pub resources: bool,
     pub react: bool,
     pub symbols: bool,
+    /// Binding-aware invocation relationships. Kept opt-in so legacy graph
+    /// consumers retain their historical edge set.
+    pub calls: bool,
     pub dotnet: bool,
     pub swift: bool,
     pub terraform: bool,
@@ -54,6 +57,7 @@ impl GraphBuildPlan {
             resources: true,
             react: true,
             symbols: false,
+            calls: false,
             dotnet: true,
             swift: true,
             terraform: true,
@@ -121,6 +125,7 @@ impl GraphBuildPlan {
             resources: allowed.contains(&EdgeKind::Resource),
             react: allowed.contains(&EdgeKind::ReactRender),
             symbols: false,
+            calls: allowed.contains(&EdgeKind::Call) || allowed.contains(&EdgeKind::CallReexport),
             dotnet: allowed.contains(&EdgeKind::DotnetUsing)
                 || allowed.contains(&EdgeKind::DotnetReference)
                 || allowed.contains(&EdgeKind::DotnetProjectDependency)
@@ -156,6 +161,7 @@ impl GraphBuildPlan {
         self.resources |= other.resources;
         self.react |= other.react;
         self.symbols |= other.symbols;
+        self.calls |= other.calls;
         self.dotnet |= other.dotnet;
         self.swift |= other.swift;
         self.terraform |= other.terraform;
@@ -171,9 +177,17 @@ impl GraphBuildPlan {
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.route_imports || self.workspace || self.assets,
-            function_calls: self.imports || self.workspace || self.assets || self.symbols || self.resources,
+            function_calls: self.imports
+                || self.workspace
+                || self.assets
+                || self.symbols
+                || self.calls
+                || self.resources,
+            call_reachability: self.calls,
             resources: self.resources,
-            symbols: self.symbols || self.queues,
+            // Symbol export/re-export edges form the bridge from a resolved
+            // imported call target to its ultimate callable declaration.
+            symbols: self.symbols || self.queues || self.calls,
             react: self.react,
             route_refs: self.routes,
             backend_routes: self.routes || self.http,

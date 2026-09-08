@@ -30,4 +30,8 @@ workflow-file-to-Rust-binary relationship.
 (`src/router.ts#procedure:user.get`, Flow `kind: "trpc-procedure"`). Empty
 `projects.*.trpc.routers` lists disable extraction; `all` omits `trpc`.
 
+`--relationship call` includes binding-aware TypeScript and JavaScript call
+edges plus proven re-export bridges. It excludes ordinary imported value reads,
+shadowed bindings, and unresolved dynamic callees; `all` omits `call`.
+
 Node API: `flow(options)`.

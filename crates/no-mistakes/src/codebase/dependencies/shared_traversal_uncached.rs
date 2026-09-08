@@ -63,10 +63,24 @@ fn collect_uncached_entries(
             );
             entries
         }
+        Direction::Deps if allowed.is_some_and(|edges| edges.contains(&EdgeKind::Call)) => {
+            let graph = shared.graph_shared()?;
+            let roots = roots_with_call_caller_symbols(
+                roots,
+                shared.prepared_facts(),
+                shared.session.interner(),
+            );
+            graph.deps_of(&roots, args.depth, allowed)
+        }
         Direction::Deps if shared.build_plan.symbols && !args.include_symbols => shared
             .request_graph_without_symbols_shared(allowed)?
             .deps_of(roots, args.depth, allowed),
         Direction::Deps => shared.graph_shared()?.deps_of(roots, args.depth, allowed),
+        Direction::Dependents if allowed.is_some_and(|edges| edges.contains(&EdgeKind::Call)) => {
+            let graph = shared.graph_shared()?;
+            let roots = roots_with_exported_callable_symbols(roots, graph.as_ref());
+            graph.dependents_of(&roots, args.depth, allowed)
+        }
         Direction::Dependents if args.include_symbols => {
             let graph = shared.graph_shared()?;
             let roots = roots_with_existing_queue_jobs(

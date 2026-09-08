@@ -4,6 +4,7 @@ impl TsFactPlan {
     pub fn include(&mut self, other: Self) {
         self.imports |= other.imports;
         self.function_calls |= other.function_calls;
+        self.call_reachability |= other.call_reachability;
         self.call_sites |= other.call_sites;
         self.resources |= other.resources;
         self.symbols |= other.symbols;
@@ -44,6 +45,7 @@ impl TsFactPlan {
     pub fn is_empty(self) -> bool {
         !self.imports
             && !self.function_calls
+            && !self.call_reachability
             && !self.call_sites
             && !self.resources
             && !self.symbols
@@ -87,6 +89,7 @@ impl TsFactPlan {
     fn covers_syntax_facts(self, required: Self) -> bool {
         (!required.imports || self.imports)
             && (!required.function_calls || self.function_calls)
+            && (!required.call_reachability || self.call_reachability)
             && (!required.call_sites || self.call_sites)
             && (!required.resources || self.resources)
             && (!required.symbols || self.symbols)

@@ -1,5 +1,5 @@
 use crate::codebase::check_facts::PlaywrightSettingsKey;
-use crate::codebase::dependencies::extract::{ExtractedImport, FunctionCall};
+use crate::codebase::dependencies::extract::{CallReachabilityFact, ExtractedImport, FunctionCall};
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
 use crate::codebase::ts_queues::usage::QueueUsage;
@@ -50,6 +50,8 @@ pub use domain::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactCon
 pub struct TsFactPlan {
     pub imports: bool,
     pub function_calls: bool,
+    /// Binding-aware call identities for canonical call-reachability edges.
+    pub call_reachability: bool,
     pub call_sites: bool,
     pub resources: bool,
     pub symbols: bool,
@@ -85,6 +87,7 @@ pub struct TsFileFacts {
     pub source: Option<std::sync::Arc<str>>,
     pub imports: Vec<ExtractedImport>,
     pub function_calls: Vec<FunctionCall>,
+    pub call_reachability: Vec<CallReachabilityFact>,
     pub call_sites: Vec<CallSiteFact>,
     pub resource_calls: Vec<ResourceCall>,
     pub resource_diagnostics: Vec<ResourceDiagnostic>,

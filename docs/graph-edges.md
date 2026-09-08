@@ -27,6 +27,8 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 | `workspace-type-import` | `WorkspaceTypeImport` | `workspace` | TS/JS file -> type-only workspace package entry/export/import target | [`subpath.tsx`](../test-cases/codebase-analysis/cross-boundary-monorepo/fixture/apps/web/pages/subpath.tsx) |
 | `package` | `PackageDependency` | `package` | `package.json` -> declared workspace package entry or external module node | [`graph-modules`](../test-cases/codebase-analysis/graph-modules) |
 | `asset` | `AssetImport` | `asset` | TS/JS file -> explicit relative non-code asset import | [`graph-missing-edges/packages/app/src/entry.mts`](../test-cases/codebase-analysis/graph-missing-edges/fixture/packages/app/src/entry.mts) |
+| `call` | `Call` | `call` | binding-aware TS/JS caller -> local callable, resolved imported export, or stable global/module callable identity | [`call-reachability/bindings/index.ts`](../fixtures/call-reachability/bindings/index.ts) |
+| `call-reexport` | `CallReexport` | `call` | callable export symbol -> the symbol it re-exports, without admitting ordinary imported value references | [`call-reachability/graph-barrel/barrel.ts`](../fixtures/call-reachability/graph-barrel/barrel.ts) |
 | `resource` | `Resource` | `resource` | TS/JS consumer -> tracked runtime filesystem resource | fixture-backed resource-impact tests |
 | `test` | `TestOf` | `test` | test file -> corresponding source file | [`codebase-intel/packages/api/src/index.test.mts`](../test-cases/codebase-analysis/codebase-intel/fixture/packages/api/src/index.test.mts) |
 | `vitest-setup` | `VitestSetup` | `test` | Vitest test file -> its effective `setupFiles` or `globalSetup` module; edge detail identifies the field | `fixtures/test-plan/vitest-setup-dependencies` |
@@ -133,7 +135,7 @@ their configured roots, mounts, test exclusions, and any explicit filter.
 | `kotlin` | `kotlin-import`, `kotlin-ref` |
 | `elixir` | `elixir-import`, `elixir-ref` |
 | `dart` | `dart-import`, `dart-ref` |
-| `all` | all standard edge kinds, including `workflow`; excludes the opt-in `route-import` and `trpc` views |
+| `all` | all standard edge kinds, including `workflow`; excludes the opt-in `route-import`, `trpc`, and prepared `call` views |
 
 Workflow virtual-node IDs are stable and project-relative:
 `path/to/workflow.yml#job:<job>` for a job and
@@ -147,6 +149,24 @@ for example `src/router.ts#procedure:user.get`. JSON/YAML records expose
 `routerFile` and `procedure`; Flow nodes use `kind: "trpc-procedure"`.
 `--relationship trpc` is opt-in: unfiltered traversal and `--relationship all`
 omit these edges, the same way they omit `route-import`.
+
+`call` is opt-in at graph construction and public traversal, so it cannot alter
+existing dependency or effects reports. The extractor records aliases,
+namespace members, local bindings, shadowed bindings, and unresolved dynamic
+calls separately; only resolved identities become edges.
+The call plan also requests existing symbol export edges, so a call through a
+local barrel follows its re-export chain without a second resolver or parse.
+The call-specific relationship follows `call` and `call-reexport` only. It
+retains deterministic shortest depths and never widens through an ordinary file
+import. Unfiltered traversal and `--relationship all` omit it.
+
+Call reachability is deliberately static and conservative. Direct calls,
+constructors, immediately invoked function expressions, lexical aliases, and
+statically named import members are modeled. Computed properties, values
+returned from higher-order functions, callbacks invoked by unknown library
+code, and other dynamic dispatch remain unresolved facts rather than guessed
+edges. Policy consumers must choose explicitly whether unresolved calls fail,
+warn, or are ignored.
 
 The precise workflow filters include the structural edges listed above so a
 forward or reverse traversal can enter and leave the relevant virtual node.

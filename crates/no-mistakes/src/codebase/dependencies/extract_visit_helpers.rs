@@ -26,9 +26,10 @@ impl ImportCollector {
     }
 
     fn add_function_binding_names(&mut self, pattern: &BindingPattern<'_>) {
-        let Some(index) = self.function_scope_stack.last().copied() else {
-            return;
-        };
+        // `var` is function-scoped. At program level the root lexical scope
+        // is its function-equivalent owner, so block-local `var` declarations
+        // still shadow globals after the block.
+        let index = self.function_scope_stack.last().copied().unwrap_or(0);
         let Some(scope) = self.local_stack.get_mut(index) else {
             return;
         };
@@ -53,6 +54,27 @@ impl ImportCollector {
         scope.insert(name.to_string());
     }
 
+    fn add_predeclared_call_binding_names(&mut self, pattern: &BindingPattern<'_>) {
+        let Some(scope) = self.call_predeclared_stack.last_mut() else {
+            return;
+        };
+        scope.extend(binding_names(pattern));
+    }
+
+    fn add_predeclared_call_binding_name(&mut self, name: &str) {
+        let Some(scope) = self.call_predeclared_stack.last_mut() else {
+            return;
+        };
+        scope.insert(name.to_string());
+    }
+
+    fn add_predeclared_function_call_binding_name(&mut self, name: &str) {
+        let index = self.function_scope_stack.last().copied().unwrap_or(0);
+        if let Some(scope) = self.call_predeclared_stack.get_mut(index) {
+            scope.insert(name.to_string());
+        }
+    }
+
     fn add_type_binding_name(&mut self, name: &str) {
         if self.type_local_stack.is_empty() {
             self.type_local_stack.push(HashSet::new());
@@ -63,18 +85,85 @@ impl ImportCollector {
     }
 
     fn local_binding_shadows(&self, name: &str) -> bool {
-        self.local_stack
+        self.local_stack.iter().enumerate().rev().any(|(index, scope)| {
+            scope.contains(name)
+                || self
+                    .call_predeclared_stack
+                    .get(index)
+                    .is_some_and(|predeclared| predeclared.contains(name))
+        })
+    }
+
+    fn legacy_local_binding_shadows(&self, name: &str) -> bool {
+        let Some(function_scope) = self.function_scope_stack.last().copied() else {
+            // Legacy import reachability never modeled lexical bindings in
+            // top-level blocks. Keep that conservative behavior even though
+            // call reachability needs those scopes for binding correctness.
+            return false;
+        };
+        self.local_stack[function_scope..]
             .iter()
             .rev()
             .any(|scope| scope.contains(name))
     }
 
-    fn callee_shadows_import(&self, callee: &str) -> bool {
-        let binding = callee.split_once('.').map_or(callee, |(binding, _)| binding);
-        self.local_binding_shadows(binding)
+    /// Resolve a locally declared callable without walking through a nearer
+    /// lexical binding. `Some(None)` means a parameter/value binding hides an
+    /// outer function with the same name.
+    fn visible_local_function_scope(&self, callee: &str) -> Option<Option<String>> {
+        let binding = callee
+            .split_once('.')
+            .map_or(callee, |(binding, _)| binding);
+        let callable = callee.replace('.', "/");
+        for (index, locals) in self.local_stack.iter().enumerate().rev() {
+            let declared = locals.contains(binding)
+                || self
+                    .call_predeclared_stack
+                    .get(index)
+                    .is_some_and(|predeclared| predeclared.contains(binding));
+            if !declared {
+                continue;
+            }
+            if index == 0 {
+                return Some(
+                    self.callable_scopes
+                        .contains(&callable)
+                        .then(|| callable.clone()),
+                );
+            }
+            if let Some(function_index) = self
+                .function_scope_stack
+                .iter()
+                .rposition(|scope_index| *scope_index <= index)
+            {
+                let scope = &self.function_stack[function_index];
+                let candidate = format!("{scope}/{callable}");
+                return Some(
+                    self.callable_scopes
+                        .contains(&candidate)
+                        .then_some(candidate),
+                );
+            }
+            if self.program_scope_active {
+                return Some(
+                    self.callable_scopes
+                        .contains(&callable)
+                        .then(|| callable.clone()),
+                );
+            }
+            return Some(None);
+        }
+        self.callable_scopes
+            .contains(&callable)
+            .then_some(Some(callable))
     }
 
-    fn has_local_function_scope(&self, callee: &str) -> bool {
+    fn callee_shadows_import(&self, callee: &str) -> bool {
+        let binding = callee.split_once('.').map_or(callee, |(binding, _)| binding);
+        self.legacy_local_binding_shadows(binding)
+    }
+
+    fn legacy_has_local_function_scope(&self, callee: &str) -> bool {
         let binding = callee.split_once('.').map_or(callee, |(binding, _)| binding);
         let Some(caller) = self.current_function() else {
             return self.known_function_scopes.contains(binding);
@@ -91,119 +180,4 @@ impl ImportCollector {
             scope = parent;
         }
     }
-}
-
-fn visit_variable_declarator_with_scope<'a>(
-    collector: &mut ImportCollector,
-    declarator: &VariableDeclarator<'a>,
-) {
-    let name = binding_identifier_name(&declarator.id).map(str::to_string);
-    match declarator.init.as_ref() {
-        Some(Expression::ArrowFunctionExpression(arrow)) => {
-            push_variable_function_scope(collector, declarator, name);
-            collector.add_type_parameter_names(arrow.type_parameters.as_deref());
-            collector.add_formal_parameters(&arrow.params);
-            walk::walk_arrow_function_expression(collector, arrow);
-            collector.pop_function_scope(true);
-        }
-        Some(Expression::FunctionExpression(function)) => {
-            let scope_name = name.or_else(|| function_name(function));
-            push_variable_function_scope(collector, declarator, scope_name);
-            collector.add_type_parameter_names(function.type_parameters.as_deref());
-            collector.add_formal_parameters(&function.params);
-            walk::walk_function(
-                collector,
-                function,
-                oxc_syntax::scope::ScopeFlags::empty(),
-            );
-            collector.pop_function_scope(true);
-        }
-        Some(Expression::ObjectExpression(object))
-            if name.is_some() && collector.function_stack.is_empty() =>
-        {
-            if let Some(name) = name.as_deref() {
-                record_object_member_calls(collector, name, object);
-            }
-            // Treat both inline `export const` and later `export { … }` named
-            // object bindings as exported, so a registry written either way keeps
-            // its dynamic-import edges reachable.
-            let exported = collector.export_depth > 0
-                || name
-                    .as_deref()
-                    .is_some_and(|name| collector.is_exported_top_level_name(name));
-            if exported {
-                if let Some(name) = name.as_deref() {
-                    collector.record_exported_resource_root(name);
-                    record_object_resource_scopes(collector, name, object);
-                }
-                visit_exported_variable_declarator_reference(collector, declarator, name);
-            } else {
-                if let Some(name) = name.as_deref() {
-                    record_object_value_references(collector, name, object);
-                    walk_object_values_with_parent_scope(collector, name, object);
-                } else {
-                    walk::walk_variable_declarator(collector, declarator);
-                }
-            }
-        }
-        Some(Expression::ClassExpression(class)) if name.is_some() && collector.function_stack.is_empty() => {
-            if let Some(name) = name.as_deref() {
-                record_class_member_calls(collector, name, class);
-                if collector.is_exported_top_level_name(name) {
-                    collector.record_exported_resource_root(name);
-                    record_class_resource_scopes(collector, name, class);
-                }
-            }
-            visit_exported_variable_declarator_reference(collector, declarator, name);
-            walk::walk_variable_declarator(collector, declarator);
-        }
-        _ if name.is_some()
-            && collector.function_stack.is_empty()
-            && declarator.init.is_some() =>
-        {
-            visit_exported_variable_declarator_reference(collector, declarator, name);
-            walk::walk_variable_declarator(collector, declarator);
-        }
-        _ if collector.function_stack.is_empty() && declarator.init.is_some() =>
-        {
-            visit_variable_declarator_references_for_bindings(collector, declarator);
-            walk::walk_variable_declarator(collector, declarator);
-        }
-        _ => walk::walk_variable_declarator(collector, declarator),
-    }
-}
-
-fn visit_variable_declaration_with_bindings<'a>(
-    collector: &mut ImportCollector,
-    declaration: &VariableDeclaration<'a>,
-) {
-    if collector.current_function().is_none() {
-        return;
-    }
-    for declarator in &declaration.declarations {
-        if declaration.kind == VariableDeclarationKind::Var {
-            collector.add_function_binding_names(&declarator.id);
-        } else {
-            collector.add_binding_names(&declarator.id);
-        }
-    }
-}
-
-fn visit_block_statement_with_scope<'a>(
-    collector: &mut ImportCollector,
-    block: &BlockStatement<'a>,
-) {
-    let pushed = collector.push_lexical_scope();
-    predeclare_function_declarations(collector, &block.body);
-    walk::walk_block_statement(collector, block);
-    collector.pop_lexical_scope(pushed);
-}
-
-fn visit_catch_clause_with_scope<'a>(collector: &mut ImportCollector, clause: &CatchClause<'a>) {
-    let pushed = collector.push_lexical_scope();
-    if let Some(param) = &clause.param {
-        collector.add_binding_names(&param.pattern);
-    }
-    walk::walk_catch_clause(collector, clause);
-    collector.pop_lexical_scope(pushed);
 }

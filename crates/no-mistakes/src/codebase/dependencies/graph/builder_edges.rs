@@ -60,6 +60,9 @@ fn require_core_edge_facts(plan: GraphBuildPlan, facts: Option<&dyn TsFactLookup
     if plan.route_imports && facts.is_none() {
         anyhow::bail!("TS import facts are required for route-import edges");
     }
+    if plan.calls && facts.is_none() {
+        anyhow::bail!("TS call-reachability facts are required when call edges are requested");
+    }
     if plan.symbols && facts.is_none() {
         anyhow::bail!("TS symbol facts are required when symbol edges are requested");
     }
@@ -157,7 +160,7 @@ fn collect_symbol_edges_for_core(
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
 ) -> Vec<Edge> {
-    if !edge_inputs.plan.symbols {
+    if !edge_inputs.plan.symbols && !edge_inputs.plan.calls {
         return Vec::new();
     }
     collect_symbol_edges(
@@ -172,6 +175,25 @@ fn collect_symbol_edges_for_core(
         resolver,
         workspace,
         edge_inputs.config_options,
+        &edge_inputs.interner,
+    )
+}
+
+fn collect_call_edges_for_core(
+    edge_inputs: &GraphEdgeBuildInputs<'_>,
+    facts: Option<&dyn TsFactLookup>,
+    resolver: &dyn ImportResolution,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+) -> Vec<Edge> {
+    if !edge_inputs.plan.calls {
+        return Vec::new();
+    }
+    collect_call_reachability_edges(
+        edge_inputs.graph_files.indexable(),
+        facts.expect("call plan requires TS facts"),
+        resolver,
+        workspace,
+        edge_inputs.graph_files,
         &edge_inputs.interner,
     )
 }

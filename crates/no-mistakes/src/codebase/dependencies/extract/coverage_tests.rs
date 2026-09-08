@@ -155,7 +155,11 @@ fn collector_defensive_scope_helpers_are_noops_without_active_scope() {
     collector.add_binding_names(binding);
     collector.add_binding_name("value");
     collector.known_function_scopes.insert("known".to_string());
+    collector.callable_scopes.insert("known".to_string());
 
-    assert!(collector.has_local_function_scope("known"));
+    assert_eq!(
+        collector.visible_local_function_scope("known"),
+        Some(Some("known".to_string()))
+    );
     assert_eq!(binding_names(binding), vec!["value"]);
 }

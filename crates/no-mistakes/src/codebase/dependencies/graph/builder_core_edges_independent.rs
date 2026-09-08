@@ -5,6 +5,7 @@ struct CoreIndependentEdges {
     package: Vec<Edge>,
     assets: Vec<Edge>,
     symbols: Vec<Edge>,
+    calls: Vec<Edge>,
     tests: Vec<Edge>,
 }
 
@@ -20,108 +21,44 @@ fn collect_independent_core_edges(
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
 ) -> CoreIndependentEdges {
     let observer = session.observer().cloned();
-    let ((imports, route_imports), ((workspace_edges, package), (assets, (symbols, tests)))) =
+    let ((imports, route_imports), ((workspace_edges, package), ((assets, symbols), (calls, tests)))) =
         rayon::join(
-            || {
-                crate::diagnostics::with_observer(observer.clone(), || {
-                    rayon::join(
-                        || {
-                            traced_parallel_edges(observer.clone(), "graph.imports", || {
-                                collect_import_edges_for_core(
-                                    edge_inputs,
-                                    parsed_imports,
-                                    resolver,
-                                    workspace,
-                                )
-                            })
-                        },
-                        || {
-                            traced_parallel_edges(observer.clone(), "graph.route_imports", || {
-                                collect_route_import_edges_for_core(edge_inputs, facts, session)
-                            })
-                        },
-                    )
-                })
-            },
-            || {
-                crate::diagnostics::with_observer(observer.clone(), || {
-                    rayon::join(
-                        || {
-                            crate::diagnostics::with_observer(observer.clone(), || {
-                                rayon::join(
-                                    || {
-                                        traced_parallel_edges(
-                                            observer.clone(),
-                                            "graph.workspace",
-                                            || {
-                                                collect_workspace_edges_for_core(
-                                                    edge_inputs,
-                                                    parsed_imports,
-                                                    resolver,
-                                                    workspace,
-                                                )
-                                            },
-                                        )
-                                    },
-                                    || {
-                                        traced_parallel_edges(
-                                            observer.clone(),
-                                            "graph.package",
-                                            || collect_package_edges_for_core(edge_inputs, workspace),
-                                        )
-                                    },
-                                )
-                            })
-                        },
-                        || {
-                            crate::diagnostics::with_observer(observer.clone(), || {
-                                rayon::join(
-                                    || {
-                                        traced_parallel_edges(
-                                            observer.clone(),
-                                            "graph.assets",
-                                            || {
-                                                collect_asset_edges_for_core(
-                                                    edge_inputs,
-                                                    parsed_imports,
-                                                    resolver,
-                                                )
-                                            },
-                                        )
-                                    },
-                                    || {
-                                        crate::diagnostics::with_observer(observer.clone(), || {
-                                            rayon::join(
-                                                || {
-                                                    traced_parallel_edges(
-                                                        observer.clone(),
-                                                        "graph.symbols",
-                                                        || {
-                                                            collect_symbol_edges_for_core(
-                                                                edge_inputs,
-                                                                facts,
-                                                                resolver,
-                                                                workspace,
-                                                            )
-                                                        },
-                                                    )
-                                                },
-                                                || {
-                                                    traced_parallel_edges(
-                                                        observer.clone(),
-                                                        "graph.tests",
-                                                        || collect_test_edges_for_core(edge_inputs),
-                                                    )
-                                                },
-                                            )
-                                        })
-                                    },
-                                )
-                            })
-                        },
-                    )
-                })
-            },
+            || rayon::join(
+                || traced_parallel_edges(observer.clone(), "graph.imports", || {
+                    collect_import_edges_for_core(edge_inputs, parsed_imports, resolver, workspace)
+                }),
+                || traced_parallel_edges(observer.clone(), "graph.route_imports", || {
+                    collect_route_import_edges_for_core(edge_inputs, facts, session)
+                }),
+            ),
+            || rayon::join(
+                || rayon::join(
+                    || traced_parallel_edges(observer.clone(), "graph.workspace", || {
+                        collect_workspace_edges_for_core(edge_inputs, parsed_imports, resolver, workspace)
+                    }),
+                    || traced_parallel_edges(observer.clone(), "graph.package", || {
+                        collect_package_edges_for_core(edge_inputs, workspace)
+                    }),
+                ),
+                || rayon::join(
+                    || rayon::join(
+                        || traced_parallel_edges(observer.clone(), "graph.assets", || {
+                            collect_asset_edges_for_core(edge_inputs, parsed_imports, resolver)
+                        }),
+                        || traced_parallel_edges(observer.clone(), "graph.symbols", || {
+                            collect_symbol_edges_for_core(edge_inputs, facts, resolver, workspace)
+                        }),
+                    ),
+                    || rayon::join(
+                        || traced_parallel_edges(observer.clone(), "graph.calls", || {
+                            collect_call_edges_for_core(edge_inputs, facts, resolver, workspace)
+                        }),
+                        || traced_parallel_edges(observer.clone(), "graph.tests", || {
+                            collect_test_edges_for_core(edge_inputs)
+                        }),
+                    ),
+                ),
+            ),
         );
     CoreIndependentEdges {
         imports,
@@ -130,6 +67,7 @@ fn collect_independent_core_edges(
         package,
         assets,
         symbols,
+        calls,
         tests,
     }
 }
@@ -151,5 +89,6 @@ fn merge_independent_core_edges(forward: &mut EdgeMap, reverse: &mut EdgeMap, ed
     merge_edges(forward, reverse, edges.package);
     merge_edges(forward, reverse, edges.assets);
     merge_edges(forward, reverse, edges.symbols);
+    merge_edges(forward, reverse, edges.calls);
     merge_edges(forward, reverse, edges.tests);
 }
