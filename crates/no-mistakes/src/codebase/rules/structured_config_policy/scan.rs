@@ -80,7 +80,7 @@ fn scan_impl(
     parsed_ancestors: &mut ParsedAncestorCache,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
-    let canonical_inventory = CanonicalInventory::new(root, inventory);
+    let mut canonical_inventory = None;
     for policy in &opts.policies {
         let matching = super::super::matching_files(root, &policy.files, files, target_roots)?;
         for path in matching {
@@ -136,13 +136,16 @@ fn scan_impl(
                         findings.extend(check_equals_file(root, &rel, sources, &value, assertion));
                     }
                     Some(AssertionKind::AncestorOverrideSubset) => {
+                        if canonical_inventory.is_none() {
+                            canonical_inventory = Some(CanonicalInventory::new(root, inventory));
+                        }
                         findings.extend(check_ancestor_override_subset(
                             &path,
                             &rel,
                             sources,
                             &value,
                             assertion,
-                            &canonical_inventory,
+                            canonical_inventory.as_ref().unwrap(),
                             parsed_ancestors,
                         ));
                     }

@@ -67,6 +67,7 @@ struct Walk<'a> {
     stack: Vec<PathBuf>,
     occurrences: usize,
     max_occurrences: usize,
+    traversal_exhausted: bool,
     parsed_ancestors: &'a mut ParsedAncestorCache,
     ancestors: Vec<Ancestor>,
     findings: &'a mut Vec<RuleFinding>,
@@ -90,6 +91,7 @@ pub(super) fn collect_ancestors(
         stack: vec![nested.path.to_path_buf()],
         occurrences: 0,
         max_occurrences: MAX_EXTENDS_OCCURRENCES,
+        traversal_exhausted: false,
         parsed_ancestors,
         ancestors: Vec::new(),
         findings,
@@ -131,6 +133,22 @@ impl Walk<'_> {
         if is_package_specifier(spec) {
             return;
         }
+        if self.traversal_exhausted {
+            return;
+        }
+        if self.occurrences >= self.max_occurrences {
+            self.traversal_exhausted = true;
+            self.findings.push(finding(
+                self.nested_rel,
+                self.assertion,
+                format!(
+                    "{}: ancestor-override-subset extends traversal exceeds the maximum of {} occurrences",
+                    self.nested_rel, self.max_occurrences
+                ),
+            ));
+            return;
+        }
+        self.occurrences += 1;
         let resolved = normalize_path(&from_dir.join(spec));
         if !resolved.exists() {
             self.findings.push(finding(
@@ -176,18 +194,6 @@ impl Walk<'_> {
             ));
             return;
         }
-        if self.occurrences >= self.max_occurrences {
-            self.findings.push(finding(
-                self.nested_rel,
-                self.assertion,
-                format!(
-                    "{}: ancestor-override-subset extends traversal exceeds the maximum of {} occurrences",
-                    self.nested_rel, self.max_occurrences
-                ),
-            ));
-            return;
-        }
-        self.occurrences += 1;
         let Some(value) = self.load(spec, &resolved) else {
             return;
         };
