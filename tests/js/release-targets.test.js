@@ -70,6 +70,32 @@ test("release native build jobs enforce separate CLI and N-API execution bounds"
   );
 });
 
+test("release N-API builds restore the target-shared Rust cache after CLI builds", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
+  const cliJob = workflow.match(/^ {2}build-cli:[\s\S]*?(?=^ {2}build-napi:)/m);
+  const napiJob = workflow.match(/^ {2}build-napi:[\s\S]*?(?=^ {2}publish:)/m);
+  assert.ok(cliJob, "release workflow must define build-cli");
+  assert.ok(napiJob, "release workflow must define build-napi");
+  assert.match(
+    napiJob[0],
+    /^ {4}needs:\n {6}- prepare\n {6}- validate\n {6}- build-cli$/m,
+    "N-API builds must wait for CLI builds to save the shared cache",
+  );
+
+  const cachePattern =
+    /- name: Cache Rust build artifacts\n {8}timeout-minutes: 5\n {8}uses: Swatinem\/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2\n {8}with:\n {10}prefix-key: v1-rust-release\n {10}shared-key: release-\$\{\{ matrix\.target \}\}\n {10}cache-bin: "false"/;
+  const cliCacheStep = cliJob[0].match(cachePattern);
+  const napiCacheStep = napiJob[0].match(cachePattern);
+  assert.ok(cliCacheStep, "CLI builds must save the target-shared Rust cache");
+  assert.ok(napiCacheStep, "N-API builds must restore the target-shared Rust cache");
+
+  const buildStepOffset = napiJob[0].indexOf("- name: Build N-API addon");
+  assert.ok(
+    buildStepOffset > napiCacheStep.index,
+    "N-API builds must restore cache before compiling",
+  );
+});
+
 test("release syncs optional native package versions and publishes only through npm OIDC", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
   assert.match(workflow, /sync-native-package-versions\.js "\$version"/);
