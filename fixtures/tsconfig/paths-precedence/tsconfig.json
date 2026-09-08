@@ -1,9 +1,11 @@
 {
   // Config objects also use their final declaration, matching JSON parsing.
+  // biome-ignore lint/suspicious/noDuplicateObjectKeys: fixture verifies final compilerOptions selection
   "compilerOptions": {
     "paths": { "stale-root/*": ["src/missing/*"] }
   },
   "compilerOptions": {
+    // biome-ignore lint/suspicious/noDuplicateObjectKeys: fixture verifies final paths selection
     "paths": { "stale-nested/*": ["src/missing/*"] },
     "paths": {
       "*": ["src/catch-all/*"],
@@ -15,6 +17,7 @@
       "tie/*/detail": ["src/second-tie/*"],
       "replacement/*": ["src/missing/*", "src/replacement/*"],
       // A repeated JSON key keeps its final value in its original order slot.
+      // biome-ignore lint/suspicious/noDuplicateObjectKeys: fixture verifies final alias replacement selection
       "duplicate/*": ["src/missing/*"],
       "shadowed/*": ["src/missing/*"],
       "duplicate/*": ["src/replacement/*"]
