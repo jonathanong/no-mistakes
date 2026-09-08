@@ -233,6 +233,7 @@ include!("extract_collector_methods.rs");
 include!("extract_visit_members.rs");
 include!("extract_visit_aggregates.rs");
 include!("extract_class_eager_helpers.rs");
+include!("extract_class_callable_helpers.rs");
 include!("extract_visit_object_references.rs");
 include!("extract_collector_aliases.rs");
 include!("extract_visit_helpers.rs");
