@@ -5,6 +5,7 @@ struct ImportCollector {
     line_starts: Vec<u32>,
     imports: Vec<ExtractedImport>,
     function_calls: Vec<FunctionCall>,
+    unknown_calls: Vec<UnknownCall>,
     symbol_references: Vec<FunctionCall>,
     unknown_callers: Vec<Option<String>>,
     function_stack: Vec<String>,
@@ -24,6 +25,12 @@ struct ImportCollector {
     anonymous_scope_count: usize,
     known_function_scopes: HashSet<String>,
     imported_bindings: HashSet<String>,
+    predeclared_imported_bindings: HashSet<String>,
+    call_import_bindings: Vec<ImportedBinding>,
+    call_export_bindings: Vec<ExportedBinding>,
+    callable_aliases: Vec<CallableAliasBinding>,
+    reassigned_alias_bindings: HashSet<CallableAliasBinding>,
+    star_reexport_specifiers: Vec<String>,
     suppress_imports: bool,
     collect_suppressed_runtime_imports: bool,
     /// `function_stack` depth captured at the start of an exported binding
@@ -59,6 +66,7 @@ impl<'a> Visit<'a> for ImportCollector {
                 self.callable_scopes.insert(scope.clone());
                 if self.export_depth > 0 && self.function_stack.len() == 1 {
                     self.exported_functions.insert(scope.clone());
+                    self.record_local_export_binding(scope.clone(), scope);
                 }
             }
         } else {
@@ -91,6 +99,11 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {
+        if self.export_depth > 0 && self.function_stack.is_empty() {
+            for name in binding_names(&declarator.id) {
+                self.record_local_export_binding(name.clone(), name);
+            }
+        }
         visit_variable_declarator_with_scope(self, declarator);
     }
 
@@ -100,11 +113,35 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
         visit_variable_declaration_with_bindings(self, declaration);
+        self.record_const_callable_aliases(declaration);
         walk::walk_variable_declaration(self, declaration);
+    }
+
+    fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
+        for name in assignment_target_names(&assignment.left) {
+            self.record_reassigned_callable_alias(&name);
+        }
+        walk::walk_assignment_expression(self, assignment);
     }
 
     fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
         visit_block_statement_with_scope(self, block);
+    }
+
+    fn visit_switch_statement(&mut self, switch: &oxc_ast::ast::SwitchStatement<'a>) {
+        visit_switch_statement_with_scope(self, switch);
+    }
+
+    fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
+        visit_for_statement_with_scope(self, statement);
+    }
+
+    fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {
+        visit_for_in_statement_with_scope(self, statement);
+    }
+
+    fn visit_for_of_statement(&mut self, statement: &oxc_ast::ast::ForOfStatement<'a>) {
+        visit_for_of_statement_with_scope(self, statement);
     }
 
     fn visit_catch_clause(&mut self, clause: &CatchClause<'a>) {
@@ -131,7 +168,10 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_import_declaration(&mut self, import: &ImportDeclaration<'a>) {
         let kind = import_declaration_kind(import);
-        let side_effect_only = import.specifiers.as_ref().is_none_or(|specifiers| specifiers.is_empty());
+        let side_effect_only = import
+            .specifiers
+            .as_ref()
+            .is_none_or(|specifiers| specifiers.is_empty());
         self.push_with_side_effect(
             import.source.value.as_str(),
             kind,
@@ -160,7 +200,17 @@ impl<'a> Visit<'a> for ImportCollector {
         } else {
             ImportKind::Static
         };
-        self.push_reexport(export.source.value.as_str(), kind, export.span.start as usize);
+        self.push_reexport(
+            export.source.value.as_str(),
+            kind,
+            export.span.start as usize,
+        );
+        // `export * as namespace from` has one concrete exported name. It is
+        // not a transparent `export *` forwarding edge.
+        if !export.export_kind.is_type() && export.exported.is_none() {
+            self.star_reexport_specifiers
+                .push(export.source.value.to_string());
+        }
     }
 
     fn visit_export_default_declaration(&mut self, export: &ExportDefaultDeclaration<'a>) {
@@ -175,13 +225,22 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_ts_import_type(&mut self, import: &TSImportType<'a>) {
-        self.push(import.source.value.as_str(), ImportKind::Type, import.span.start as usize);
+        self.push(
+            import.source.value.as_str(),
+            ImportKind::Type,
+            import.span.start as usize,
+        );
         walk::walk_ts_import_type(self, import);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
         visit_call_expression_with_imports(self, call);
         walk::walk_call_expression(self, call);
+    }
+
+    fn visit_new_expression(&mut self, new: &NewExpression<'a>) {
+        visit_new_expression_with_imports(self, new);
+        walk::walk_new_expression(self, new);
     }
 
     fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {

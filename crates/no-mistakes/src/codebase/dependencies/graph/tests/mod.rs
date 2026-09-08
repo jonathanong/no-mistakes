@@ -103,3 +103,4 @@ mod selector_optimization;
 mod source_store_reuse;
 mod workflow_topology_edges;
 mod workflow_topology_run;
+include!("call_traversal.rs");

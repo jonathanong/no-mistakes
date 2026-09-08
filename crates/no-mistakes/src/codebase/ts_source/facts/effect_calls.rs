@@ -1,66 +1,68 @@
 use super::EffectCallFact;
-use crate::codebase::ts_source::byte_offset_to_line;
-use oxc_ast::ast::{Expression, VariableDeclarator};
-use std::collections::HashMap;
+use crate::codebase::dependencies::extract::{FunctionCall, InvocationKind};
+use std::collections::{HashMap, HashSet};
 
-pub(super) type EffectNames = HashMap<String, Option<String>>;
+pub(crate) type EffectNames = HashMap<String, Option<String>>;
 
-pub(super) struct EffectSink<'a> {
-    pub source: &'a str,
-    pub names: &'a EffectNames,
-    pub caller: Option<&'a str>,
-    pub hits: &'a mut Vec<EffectCallFact>,
+/// Projects configured effect occurrences from the canonical call collection.
+///
+/// Effects intentionally remain spelling-based: a configured terminal member
+/// name still matches `client.createSubscriber()`, and a shadowed binding is
+/// still reportable as an effect occurrence. Resolution-sensitive graph users
+/// must inspect `FunctionCall::target_identity` instead.
+pub(crate) fn collect_effect_calls(
+    calls: &[FunctionCall],
+    names: &EffectNames,
+) -> Vec<EffectCallFact> {
+    let scoped_calls: HashSet<_> = calls
+        .iter()
+        .filter(|call| {
+            call.caller.is_some()
+                && matches!(
+                    call.invocation,
+                    InvocationKind::Call | InvocationKind::Construct
+                )
+        })
+        .map(|call| call.offset)
+        .collect();
+    calls
+        .iter()
+        .filter(|call| {
+            // Exported variable initializers are also visited once while
+            // resolving their value references. Keep that scoped occurrence;
+            // the ordinary outer traversal records the same call with no
+            // caller and is not a distinct effect.
+            call.caller.is_some() || !scoped_calls.contains(&call.offset)
+        })
+        .filter(|call| {
+            matches!(
+                call.invocation,
+                InvocationKind::Call | InvocationKind::Construct
+            )
+        })
+        .filter_map(|call| {
+            let (callee, category) = effect_match(&call.callee, names)?;
+            Some(EffectCallFact {
+                line: call.line as usize,
+                callee: callee.to_string(),
+                category: category.clone(),
+                caller: call.caller.clone(),
+            })
+        })
+        .collect()
 }
 
-pub(super) fn record_effect(sink: EffectSink<'_>, callee: &Expression<'_>, byte_offset: u32) {
-    if let Some((name, category)) = match_callee(callee, sink.names) {
-        sink.hits.push(EffectCallFact {
-            line: byte_offset_to_line(sink.source, byte_offset as usize) as usize,
-            callee: name,
-            category,
-            caller: sink.caller.map(str::to_string),
-        });
-    }
-}
-
-pub(super) fn declarator_function_name<'a>(declarator: &VariableDeclarator<'a>) -> Option<&'a str> {
-    let is_function = matches!(
-        declarator.init,
-        Some(Expression::ArrowFunctionExpression(_)) | Some(Expression::FunctionExpression(_))
-    );
-    if !is_function {
-        return None;
-    }
-    match &declarator.id {
-        oxc_ast::ast::BindingPattern::BindingIdentifier(id) => Some(id.name.as_str()),
-        _ => None,
-    }
-}
-
-fn match_callee(callee: &Expression<'_>, names: &EffectNames) -> Option<(String, Option<String>)> {
-    for candidate in callee_candidates(callee) {
-        if let Some(category) = names.get(&candidate) {
-            return Some((candidate, category.clone()));
-        }
-    }
-    None
-}
-
-fn callee_candidates(expr: &Expression<'_>) -> Vec<String> {
-    match expr {
-        Expression::Identifier(ident) => vec![ident.name.to_string()],
-        Expression::ParenthesizedExpression(parenthesized) => {
-            callee_candidates(&parenthesized.expression)
-        }
-        Expression::StaticMemberExpression(member) => {
-            let property = member.property.name.to_string();
-            let mut candidates = Vec::new();
-            if let Expression::Identifier(object) = &member.object {
-                candidates.push(format!("{}.{}", object.name, property));
-            }
-            candidates.push(property);
-            candidates
-        }
-        _ => Vec::new(),
-    }
+fn effect_match<'a>(
+    callee: &'a str,
+    names: &'a EffectNames,
+) -> Option<(&'a str, &'a Option<String>)> {
+    names
+        .get_key_value(callee)
+        .map(|(name, category)| (name.as_str(), category))
+        .or_else(|| {
+            callee
+                .rsplit_once('.')
+                .and_then(|(_, terminal)| names.get_key_value(terminal))
+                .map(|(name, category)| (name.as_str(), category))
+        })
 }

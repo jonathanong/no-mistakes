@@ -6,4 +6,4 @@ export function loop() {
   start();
 }
 
-function invalidate() {}
+export function invalidate() {}

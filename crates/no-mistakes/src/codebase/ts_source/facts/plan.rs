@@ -72,7 +72,6 @@ impl TsFactPlan {
             || self.http_calls
             || self.process_spawns
             || self.server_routes
-            || self.effect_calls
             || self.rsc_environment
             || self.trpc_router
             || self.trpc_calls

@@ -1,0 +1,48 @@
+import { importedTarget as imported } from "./alias-target.mts";
+import defaultThroughIdentifier from "./reexport-default.mts";
+import defaultThroughStar from "./star-default.mts";
+import { shared as ambiguous } from "./ambiguous-barrel.mts";
+import { missing as cycle } from "./star-cycle-a.mts";
+import {
+  exportedAlias,
+  default as defaultAlias,
+  localExportAlias,
+} from "./exported-local-aliases.mts";
+import { collision } from "./mixed-star-barrel.mts";
+import { externalCollision } from "./external-star-barrel.mts";
+
+const first = imported;
+const second = (first as typeof first);
+const mutable = imported;
+let mutableDeclaration = imported;
+const cycleA = cycleB;
+const cycleB = cycleA;
+
+first();
+second?.();
+defaultThroughIdentifier();
+defaultThroughStar();
+ambiguous();
+cycle();
+mutable = () => {};
+mutable();
+mutableDeclaration();
+cycleA();
+exportedAlias();
+defaultAlias();
+localExportAlias();
+collision();
+externalCollision();
+
+globalThis.setTimeout(() => {}, 1);
+window.setTimeout(() => {}, 1);
+self.setTimeout(() => {}, 1);
+global.setTimeout(() => {}, 1);
+
+function shadowed(window: { setTimeout(): void }) {
+  window.setTimeout();
+}
+
+function sameLineCalls() { setTimeout(() => {}, 1); clearTimeout(0); }
+
+(() => imported())();

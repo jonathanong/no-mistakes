@@ -831,6 +831,11 @@ test("graph declarations expose tRPC relationships and virtual nodes", () => {
   assert.match(flowDeclarations, /procedure\?: string;/);
 });
 
+test("graph declarations expose opt-in call relationships", () => {
+  const declarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  assert.match(declarations, /\| "call"/);
+});
+
 test("declarations expose invocation controls on every analysis", () => {
   const indexDeclarations = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
   const invocationDeclarations = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");

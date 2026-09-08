@@ -276,6 +276,35 @@ fn collect_file_facts_keeps_raw_source_for_parse_and_source_type_errors() {
 }
 
 #[test]
+fn recovered_parse_error_facts_retain_callable_aliases() {
+    let source = r#"
+        import { importedTarget } from './target';
+        const localTarget = importedTarget;
+        localTarget();
+    "#;
+    let allocator = oxc_allocator::Allocator::default();
+    let parsed = oxc_parser::Parser::new(&allocator, source, oxc_span::SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty());
+    let facts = super::file_parse_error::ts_facts(
+        &CheckFactPlan {
+            graph: crate::codebase::ts_source::facts::TsFactPlan {
+                function_calls: true,
+                ..Default::default()
+            },
+            ..CheckFactPlan::default()
+        },
+        None,
+        source,
+        &parsed.program,
+        "synthetic recoverable parse error".to_string(),
+    );
+    assert!(facts.parse_error.is_some());
+    assert!(facts.callable_aliases.iter().any(|alias| {
+        alias.scope.is_none() && alias.local == "localTarget" && alias.target == "importedTarget"
+    }));
+}
+
+#[test]
 fn collect_file_facts_records_unsupported_source_type() {
     let root = ast_fixture_path("");
     let file = ast_fixture_path("unknown-extension.source");

@@ -75,8 +75,20 @@ fn collect_symbol_edges_for_file(input: SymbolFileEdgeInputs<'_>) -> Vec<Edge> {
     }
     collect_export_reference_edges(exports, &imported_symbols, &namespace_imports, &mut edges);
 
-    let calls_by_caller = local_call_graph(&file_facts.function_calls);
-    let call_records_by_caller = local_call_records(&file_facts.function_calls);
+    // Function-call facts now retain unresolved/shadowed occurrences for call
+    // policy reporting. Legacy symbol reachability remains a resolved-local
+    // projection, so those occurrences cannot attribute imports by spelling.
+    let resolved_calls = file_facts
+        .function_calls
+        .iter()
+        .filter(|call| {
+            call.target_identity
+                == crate::codebase::dependencies::extract::CallTargetIdentity::RepositoryFunction
+        })
+        .cloned()
+        .collect::<Vec<_>>();
+    let calls_by_caller = local_call_graph(&resolved_calls);
+    let call_records_by_caller = local_call_records(&resolved_calls);
     let refs_by_caller = local_call_graph(&file_facts.symbol_references);
     let ordered_refs_by_caller = local_ordered_call_graph(&file_facts.symbol_references);
     let scoped_imports = scoped_import_map_with_graph_files(

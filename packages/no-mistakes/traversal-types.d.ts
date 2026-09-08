@@ -1,4 +1,5 @@
 export type Relationship =
+  | "call"
   | "import"
   | "import-static"
   | "import-dynamic"

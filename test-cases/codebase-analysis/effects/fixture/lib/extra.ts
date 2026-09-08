@@ -1,5 +1,6 @@
 import { ValkeyCache } from "valkey";
 import { client } from "./client";
+import { invalidate } from "./b";
 
 // Arrow function bound to a const: the caller of the nested effect is `handler`.
 export const handler = () => {
@@ -15,6 +16,13 @@ export function run() {
   const [first] = () => 0;
   // Computed-member callee (neither identifier nor static member).
   (client as never)[first]();
+}
+
+// Effects remain spelling-based even when this local callable shadows an
+// import. Graph/symbol consumers must instead respect target identity.
+export function shadowedEffect() {
+  const invalidate = () => undefined;
+  invalidate();
 }
 
 function standalone() {}

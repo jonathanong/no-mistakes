@@ -43,11 +43,7 @@ fn visit_object_property_with_scope<'a>(
             }
             collector.add_type_parameter_names(function.type_parameters.as_deref());
             collector.add_formal_parameters(&function.params);
-            walk::walk_function(
-                collector,
-                function,
-                oxc_syntax::scope::ScopeFlags::empty(),
-            );
+            walk::walk_function(collector, function, oxc_syntax::scope::ScopeFlags::empty());
             collector.pop_function_scope(pushed);
         }
         Expression::ArrowFunctionExpression(arrow) => {
@@ -77,6 +73,7 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
             collector.push_function_scope(Some(name.to_string()));
             if collector.export_depth > 0 {
                 collector.exported_functions.insert(name.to_string());
+                collector.record_local_export_binding(name, name);
             }
             collector.callable_scopes.insert(name.to_string());
             collector.class_scopes.insert(name.to_string());
@@ -92,8 +89,22 @@ fn visit_export_default_declaration_with_scope<'a>(
     collector: &mut ImportCollector,
     export: &ExportDefaultDeclaration<'a>,
 ) {
-    if let ExportDefaultDeclarationKind::Identifier(identifier) = &export.declaration {
-        collector.exported_functions.insert(identifier.name.to_string());
+    let default_local = match &export.declaration {
+        ExportDefaultDeclarationKind::Identifier(identifier) => Some(identifier.name.to_string()),
+        ExportDefaultDeclarationKind::FunctionDeclaration(function) => function_name(function),
+        ExportDefaultDeclarationKind::ClassDeclaration(class) => class
+            .id
+            .as_ref()
+            .map(|identifier| identifier.name.to_string()),
+        _ => None,
+    }
+    .unwrap_or_else(|| "default".to_string());
+    collector.record_local_export_binding(&default_local, "default");
+    if matches!(
+        &export.declaration,
+        ExportDefaultDeclarationKind::Identifier(_)
+    ) {
+        collector.exported_functions.insert(default_local);
     }
     collector.export_depth += 1;
     match &export.declaration {
@@ -195,6 +206,11 @@ fn record_member_call(collector: &mut ImportCollector, parent: &str, name: Optio
         collector.function_calls.push(FunctionCall {
             caller: Some(parent.to_string()),
             callee: name.to_string(),
+            line: 0,
+            offset: 0,
+            is_callback: true,
+            invocation: InvocationKind::Callback,
+            target_identity: CallTargetIdentity::RepositoryFunction,
             static_arg: None,
             static_cwd: None,
         });

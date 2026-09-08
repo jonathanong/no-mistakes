@@ -75,30 +75,56 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         FunctionCall {
             caller: None,
             callee: "alpha".to_string(),
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: InvocationKind::Call,
+            target_identity: CallTargetIdentity::ModuleExport,
             static_arg: None,
             static_cwd: None,
         },
         FunctionCall {
             caller: None,
             callee: "beta".to_string(),
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: InvocationKind::Call,
+            target_identity: CallTargetIdentity::ModuleExport,
             static_arg: None,
             static_cwd: None,
         },
         FunctionCall {
             caller: None,
             callee: "alpha".to_string(),
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: InvocationKind::Call,
+            // A retained shadowed spelling must not manufacture an import edge.
+            target_identity: CallTargetIdentity::Unknown,
             static_arg: None,
             static_cwd: None,
         },
         FunctionCall {
             caller: None,
             callee: "missing".to_string(),
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: InvocationKind::Call,
+            target_identity: CallTargetIdentity::Unknown,
             static_arg: None,
             static_cwd: None,
         },
         FunctionCall {
             caller: Some("run".to_string()),
             callee: "beta".to_string(),
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: InvocationKind::Call,
+            target_identity: CallTargetIdentity::Unknown,
             static_arg: None,
             static_cwd: None,
         },
@@ -116,6 +142,25 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         let interner = crate::codebase::analysis_session::PathInterner::new();
         target_node(target, &interner) == target_node(&alpha, &interner)
     }));
+
+    let shadowed_only = fallback_imported_symbols(
+        false,
+        &[FunctionCall {
+            caller: None,
+            callee: "alpha".to_string(),
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: InvocationKind::Call,
+            target_identity: CallTargetIdentity::Unknown,
+            static_arg: None,
+            static_cwd: None,
+        }],
+        &[],
+        &imports,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+    assert!(shadowed_only.is_empty());
 
     imports.insert("alpha_alias".to_string(), alpha.clone());
     let all = fallback_imported_symbols(

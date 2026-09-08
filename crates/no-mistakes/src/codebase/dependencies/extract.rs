@@ -1,13 +1,14 @@
 use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    Argument, BindingPattern, BlockStatement, CallExpression, CatchClause, Class, ClassElement,
-    ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration,
+    Argument, AssignmentExpression, AssignmentTarget, AssignmentTargetMaybeDefault,
+    AssignmentTargetProperty, BindingPattern, BlockStatement, CallExpression, CatchClause, Class,
+    ClassElement, Declaration, ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration,
     ExportDefaultDeclarationKind, ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier,
     Expression, FormalParameters, IdentifierReference, ImportDeclaration,
     ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement, MethodDefinition,
-    ModuleExportName, ObjectExpression, ObjectProperty, ObjectPropertyKind, Program, Statement,
-    StaticMemberExpression, TSEnumDeclaration, TSImportType, TSInterfaceDeclaration,
+    ModuleExportName, NewExpression, ObjectExpression, ObjectProperty, ObjectPropertyKind, Program,
+    Statement, StaticMemberExpression, TSEnumDeclaration, TSImportType, TSInterfaceDeclaration,
     TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
     TSTypeParameterDeclaration, TSTypeReference, VariableDeclaration, VariableDeclarationKind,
     VariableDeclarator,
@@ -52,16 +53,116 @@ pub struct ExtractedImport {
 /// A statically visible function call in a file.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct FunctionCall {
+    /// The lexical callable scope containing the invocation, when known.
     pub caller: Option<String>,
+    /// The source spelling of the callee. This deliberately preserves aliases;
+    /// resolution belongs to the prepared graph layer.
     pub callee: String,
+    /// One-based source line of the invocation.
+    pub line: u32,
+    /// Zero-based source byte where the invocation starts. Synthetic and
+    /// reference-only facts use zero because they do not represent an AST call.
+    pub offset: u32,
+    /// Whether this is the synthetic callback edge used to preserve anonymous
+    /// callback reachability, rather than a JavaScript call expression.
+    pub is_callback: bool,
+    /// The JavaScript invocation form. Synthetic callback edges retain their
+    /// own kind so callers can exclude them from source-level policy checks.
+    pub invocation: InvocationKind,
+    /// Binding classification captured during the same AST pass. The callee
+    /// spelling remains available for exact and terminal-name policies.
+    pub target_identity: CallTargetIdentity,
     pub static_arg: Option<String>,
     pub static_cwd: Option<String>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum InvocationKind {
+    Call,
+    Construct,
+    Callback,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum CallTargetIdentity {
+    Global,
+    ModuleExport,
+    RepositoryFunction,
+    Unknown,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct UnknownCall {
+    pub caller: Option<String>,
+    pub line: u32,
+    /// Zero-based source byte where the unresolved invocation starts.
+    pub offset: u32,
+    pub invocation: InvocationKind,
+}
+
+/// A runtime import binding.  This is deliberately separate from
+/// [`ExtractedImport`]: dependency edges only need the module specifier, while
+/// call resolution must retain the local binding and exported name.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ImportedBinding {
+    pub specifier: String,
+    pub local: String,
+    pub imported: String,
+    pub kind: ImportedBindingKind,
+    pub is_type_only: bool,
+}
+
+/// The syntactic shape of an import binding. Only a namespace binding can
+/// statically resolve `binding.member()`; named/default imports are values, not
+/// module objects.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ImportedBindingKind {
+    Named,
+    Default,
+    Namespace,
+}
+
+/// A runtime export binding. `specifier` is present for a named re-export and
+/// absent when the export names a local binding in the same module.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ExportedBinding {
+    pub specifier: Option<String>,
+    pub local: String,
+    pub exported: String,
+}
+
+/// An immutable local value alias whose initializer is a statically named
+/// callable. The scope is the lexical function owner, or `None` for module
+/// bindings. Mutable declarations and bindings observed on an assignment LHS
+/// are deliberately omitted so call resolution never guesses their value.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct CallableAlias {
+    pub scope: Option<String>,
+    pub local: String,
+    pub target: String,
+}
+
+/// Private binding identity used while extracting callable aliases. Public
+/// alias facts are function/module scoped, but invalidation must also retain
+/// the lexical frame so an inner shadow cannot invalidate an outer alias.
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct CallableAliasBinding {
+    alias: CallableAlias,
+    lexical_scope_depth: usize,
 }
 
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub struct ImportFacts {
     pub imports: Vec<ExtractedImport>,
+    pub imported_bindings: Vec<ImportedBinding>,
+    pub exported_bindings: Vec<ExportedBinding>,
+    pub callable_aliases: Vec<CallableAlias>,
+    /// Sources of `export * from` declarations. These are kept distinct from
+    /// named re-exports because resolving a name through a star requires an
+    /// unambiguous candidate check.
+    pub star_reexport_specifiers: Vec<String>,
     pub function_calls: Vec<FunctionCall>,
+    pub unknown_calls: Vec<UnknownCall>,
     pub symbol_references: Vec<FunctionCall>,
     pub exported_functions: Vec<String>,
     /// Exported object/class roots whose member scopes may be reached by an
@@ -71,6 +172,12 @@ pub struct ImportFacts {
     /// Unlike lexical helpers nested inside a member, these scopes are reachable
     /// when the aggregate is imported even without a local static call.
     pub exported_resource_scopes: Vec<String>,
+    /// Every lexical callable scope seen in this file. Relationship producers
+    /// reuse this canonical fact to resolve local calls without reparsing.
+    pub known_function_scopes: Vec<String>,
+    /// Only scopes that denote an invokable function/method, excluding
+    /// aggregate owner scopes introduced while walking object/class values.
+    pub callable_scopes: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
 }

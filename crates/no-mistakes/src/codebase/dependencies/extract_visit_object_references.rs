@@ -5,13 +5,20 @@ fn record_object_value_references(
 ) {
     for property in &object.properties {
         let reference = match property {
-            ObjectPropertyKind::ObjectProperty(property) => simple_object_reference(&property.value),
+            ObjectPropertyKind::ObjectProperty(property) => {
+                simple_object_reference(&property.value)
+            }
             ObjectPropertyKind::SpreadProperty(spread) => simple_object_reference(&spread.argument),
         };
         if let Some(callee) = reference {
             collector.symbol_references.push(FunctionCall {
                 caller: Some(object_name.to_string()),
                 callee,
+                line: 0,
+                offset: 0,
+                is_callback: false,
+                invocation: InvocationKind::Call,
+                target_identity: CallTargetIdentity::Unknown,
                 static_arg: None,
                 static_cwd: None,
             });

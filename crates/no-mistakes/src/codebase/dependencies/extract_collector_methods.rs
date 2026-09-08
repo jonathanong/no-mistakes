@@ -91,14 +91,22 @@ impl ImportCollector {
             .last()
             .map(|parent| format!("{parent}/{name}"))
             .unwrap_or(name);
-        if let Some(parent) = self.function_stack.last() {
-            self.function_calls.push(FunctionCall {
-                caller: Some(parent.clone()),
-                callee: scope.clone(),
-                static_arg: None,
-                static_cwd: None,
-            });
-        }
+        self.known_function_scopes.insert(scope.clone());
+        self.callable_scopes.insert(scope.clone());
+        // Module callbacks need the same synthetic edge as nested callbacks:
+        // a top-level IIFE/callback is reachable from the module root, while a
+        // later graph consumer still distinguishes the synthetic invocation.
+        self.function_calls.push(FunctionCall {
+            caller: self.function_stack.last().cloned(),
+            callee: scope.clone(),
+            line: 0,
+            offset: 0,
+            is_callback: true,
+            invocation: InvocationKind::Callback,
+            target_identity: CallTargetIdentity::RepositoryFunction,
+            static_arg: None,
+            static_cwd: None,
+        });
         self.function_stack.push(scope);
         self.function_scope_stack.push(self.local_stack.len());
         self.local_stack.push(HashSet::new());
@@ -117,7 +125,7 @@ impl ImportCollector {
     }
 
     fn push_lexical_scope(&mut self) -> bool {
-        if self.current_function().is_some() {
+        if !self.local_stack.is_empty() {
             self.local_stack.push(HashSet::new());
             self.type_local_stack.push(HashSet::new());
             self.type_parameter_stack.push(HashSet::new());
@@ -137,13 +145,35 @@ impl ImportCollector {
 }
 
 fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &CallExpression<'_>) {
-    if is_require_resolve_callee(&call.callee) {
+    let require_callee = is_require_resolve_callee(&call.callee)
+        .then_some("require.resolve")
+        .or_else(|| is_require_callee(&call.callee).then_some("require"));
+    if let Some(callee) = require_callee {
+        if collector.should_record_call(callee) {
+            collector.function_calls.push(FunctionCall {
+                caller: collector.current_function(),
+                callee: callee.to_string(),
+                line: import_line_at(&collector.line_starts, call.span.start as usize),
+                offset: call.span.start,
+                is_callback: false,
+                invocation: InvocationKind::Call,
+                target_identity: collector.call_target_identity(callee),
+                static_arg: call.arguments.first().and_then(static_path_argument),
+                static_cwd: None,
+            });
+        }
+    }
+    if is_require_resolve_callee(&call.callee) && !collector.local_binding_shadows("require") {
         if let Some(first) = call.arguments.first() {
             if let Some(specifier) = string_literal_argument(first) {
-                collector.push(specifier, ImportKind::RequireResolve, call.span.start as usize);
+                collector.push(
+                    specifier,
+                    ImportKind::RequireResolve,
+                    call.span.start as usize,
+                );
             }
         }
-    } else if is_require_callee(&call.callee) {
+    } else if is_require_callee(&call.callee) && !collector.local_binding_shadows("require") {
         if let Some(first) = call.arguments.first() {
             if let Some(specifier) = string_literal_argument(first) {
                 collector.push(specifier, ImportKind::Require, call.span.start as usize);
@@ -151,18 +181,65 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
         }
     } else if let Some(callee) = simple_callee_name(&call.callee) {
         if collector.should_record_call(&callee) {
+            let target_identity = collector.call_target_identity(&callee);
             collector.function_calls.push(FunctionCall {
                 caller: collector.current_function(),
                 static_cwd: static_process_cwd_arg(&callee, &call.arguments),
                 callee,
+                line: import_line_at(&collector.line_starts, call.span.start as usize),
+                offset: call.span.start,
+                is_callback: false,
+                invocation: InvocationKind::Call,
+                target_identity,
                 static_arg: call.arguments.first().and_then(static_path_argument),
             });
         }
     } else {
-        let caller = collector.current_function();
-        if caller.is_none() {
-            collector.has_unknown_top_level_call = true;
+        collector.record_unknown_call(
+            import_line_at(&collector.line_starts, call.span.start as usize),
+            call.span.start,
+            InvocationKind::Call,
+        );
+    }
+}
+
+fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewExpression<'_>) {
+    if let Some(callee) = simple_callee_name(&new.callee) {
+        if collector.should_record_call(&callee) {
+            let target_identity = collector.call_target_identity(&callee);
+            collector.function_calls.push(FunctionCall {
+                caller: collector.current_function(),
+                static_cwd: None,
+                callee,
+                line: import_line_at(&collector.line_starts, new.span.start as usize),
+                offset: new.span.start,
+                is_callback: false,
+                invocation: InvocationKind::Construct,
+                target_identity,
+                static_arg: new.arguments.first().and_then(static_path_argument),
+            });
         }
-        collector.unknown_callers.push(caller);
+    } else {
+        collector.record_unknown_call(
+            import_line_at(&collector.line_starts, new.span.start as usize),
+            new.span.start,
+            InvocationKind::Construct,
+        );
+    }
+}
+
+impl ImportCollector {
+    fn record_unknown_call(&mut self, line: u32, offset: u32, invocation: InvocationKind) {
+        let caller = self.current_function();
+        if caller.is_none() {
+            self.has_unknown_top_level_call = true;
+        }
+        self.unknown_callers.push(caller.clone());
+        self.unknown_calls.push(UnknownCall {
+            caller,
+            line,
+            offset,
+            invocation,
+        });
     }
 }

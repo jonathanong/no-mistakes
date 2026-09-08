@@ -1,8 +1,25 @@
 impl ImportCollector {
+    fn record_local_export_binding(&mut self, local: impl Into<String>, exported: impl Into<String>) {
+        let binding = ExportedBinding {
+            specifier: None,
+            local: local.into(),
+            exported: exported.into(),
+        };
+        if !self.call_export_bindings.contains(&binding) {
+            self.call_export_bindings.push(binding);
+        }
+    }
+
     fn collect_local_export_specifiers(&mut self, export: &ExportNamedDeclaration<'_>) {
         if !export.export_kind.is_type() {
             for specifier in &export.specifiers {
                 if !specifier.export_kind.is_type() {
+                    if let (Some(local), Some(exported)) = (
+                        module_export_name_name(&specifier.local),
+                        module_export_name_name(&specifier.exported),
+                    ) {
+                        self.record_local_export_binding(local, exported);
+                    }
                     if let Some(name) = module_export_name_name(&specifier.local) {
                         self.exported_functions.insert(name.to_string());
                     }
@@ -26,6 +43,22 @@ impl ImportCollector {
             export_named_declaration_kind(export),
             export.span.start as usize,
         );
+        if !export.export_kind.is_type() {
+            for specifier in &export.specifiers {
+                if !specifier.export_kind.is_type() {
+                    if let (Some(local), Some(exported)) = (
+                        module_export_name_name(&specifier.local),
+                        module_export_name_name(&specifier.exported),
+                    ) {
+                        self.call_export_bindings.push(ExportedBinding {
+                            specifier: Some(export.source.value.to_string()),
+                            local: local.to_string(),
+                            exported: exported.to_string(),
+                        });
+                    }
+                }
+            }
+        }
         self.export_depth += 1;
         walk::walk_export_from_declaration(self, export);
         self.export_depth -= 1;

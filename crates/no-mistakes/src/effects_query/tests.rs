@@ -373,3 +373,23 @@ fn effects_reuses_one_parse_for_imports_and_effect_calls() {
     );
     assert!(!run_source.contains("scan_file("));
 }
+
+#[test]
+fn effects_keep_spelling_based_matches_for_shadowed_configured_calls() {
+    let report = run(
+        &fixture(),
+        None,
+        None,
+        "valkey",
+        Path::new("app/extra-entry.ts"),
+        &[],
+        None,
+    )
+    .unwrap();
+
+    assert!(report.call_sites.iter().any(|site| {
+        site.file == "lib/extra.ts"
+            && site.callee == "invalidate"
+            && site.caller.as_deref() == Some("shadowedEffect")
+    }));
+}

@@ -1,6 +1,18 @@
 // Included into `dependencies::tests::args`; shares its parsing helpers.
 
 #[test]
+fn relationship_help_lists_call() {
+    use clap::CommandFactory as _;
+
+    let mut command = TraverseArgs::command();
+    let mut help = Vec::new();
+    command.write_long_help(&mut help).unwrap();
+    let help = String::from_utf8(help).unwrap();
+
+    assert!(help.contains("Values: call, import"), "{help}");
+}
+
+#[test]
 fn relationship_flag_parsed() {
     let a = parse(&["deps", "a.mts", "--relationship", "import"]);
     assert_eq!(a.relationships, vec![RelationshipArg::Import]);
@@ -23,15 +35,17 @@ fn relationship_flag_repeatable() {
 fn empty_relationships_returns_standard_edges() {
     let set = relationship_filter(&[]).expect("unfiltered traversal has an explicit standard set");
     assert!(set.contains(&EdgeKind::Import));
+    assert!(!set.contains(&EdgeKind::Call));
     assert!(!set.contains(&EdgeKind::RouteImport));
     assert!(!set.contains(&EdgeKind::TrpcCall));
 }
 
 #[test]
 fn all_keyword_returns_standard_edges() {
-    let set = relationship_filter(&[RelationshipArg::All])
-        .expect("all excludes opt-in alternate edges");
+    let set =
+        relationship_filter(&[RelationshipArg::All]).expect("all excludes opt-in alternate edges");
     assert!(set.contains(&EdgeKind::Selector));
+    assert!(!set.contains(&EdgeKind::Call));
     assert!(!set.contains(&EdgeKind::RouteImport));
     assert!(!set.contains(&EdgeKind::TrpcCall));
 }
@@ -47,7 +61,10 @@ fn standard_edges_include_every_non_opt_in_relationship_mapping() {
         .filter(|relationship| {
             !matches!(
                 relationship,
-                RelationshipArg::RouteImport | RelationshipArg::Trpc | RelationshipArg::All
+                RelationshipArg::Call
+                    | RelationshipArg::RouteImport
+                    | RelationshipArg::Trpc
+                    | RelationshipArg::All
             )
         })
     {
@@ -224,7 +241,10 @@ fn workflow_relationships_include_their_structural_bridges() {
     );
 
     let needs = relationship_filter(&[RelationshipArg::WorkflowNeeds]).unwrap();
-    assert_eq!(needs, [EdgeKind::WorkflowJob, EdgeKind::WorkflowNeeds].into());
+    assert_eq!(
+        needs,
+        [EdgeKind::WorkflowJob, EdgeKind::WorkflowNeeds].into()
+    );
 
     let ci = relationship_filter(&[RelationshipArg::Ci]).unwrap();
     assert_eq!(ci, [EdgeKind::CiInvocation].into());

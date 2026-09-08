@@ -150,10 +150,6 @@ fn plan_domain_fact_detection_tracks_domain_flags() {
             ..TsFactPlan::default()
         },
         TsFactPlan {
-            effect_calls: true,
-            ..TsFactPlan::default()
-        },
-        TsFactPlan {
             rsc_environment: true,
             ..TsFactPlan::default()
         },
@@ -168,6 +164,103 @@ fn plan_domain_fact_detection_tracks_domain_flags() {
     ] {
         assert!(plan.has_domain_facts());
     }
+    assert!(!TsFactPlan {
+        effect_calls: true,
+        ..TsFactPlan::default()
+    }
+    .has_domain_facts());
+}
+
+#[test]
+fn effects_can_use_the_plain_canonical_fact_collection() {
+    let file = fixture("imports.ts");
+    let facts = collect_ts_facts(
+        std::slice::from_ref(&file),
+        TsFactPlan {
+            effect_calls: true,
+            ..TsFactPlan::default()
+        },
+    );
+
+    assert!(!facts[&file].function_calls.is_empty());
+    assert!(facts[&file].effect_calls.is_empty());
+}
+
+#[test]
+fn effect_projection_does_not_start_a_domain_ast_walk() {
+    let file = fixture("imports.ts");
+    let mut context = TsFactContext::new(file.parent().unwrap());
+    context.effect_functions.insert("helper".to_string(), None);
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let facts = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        collect_file_facts(
+            &file,
+            TsFactPlan {
+                effect_calls: true,
+                ..TsFactPlan::default()
+            },
+            &context,
+        )
+        .unwrap()
+    };
+
+    let helper_calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.callee == "helper")
+        .collect();
+    assert_eq!(helper_calls.len(), 2, "{helper_calls:#?}");
+    assert_eq!(helper_calls[0].offset, helper_calls[1].offset);
+    assert!(helper_calls.iter().any(|call| call.caller.is_some()));
+    assert!(helper_calls.iter().any(|call| call.caller.is_none()));
+    assert_eq!(facts.effect_calls.len(), 1, "{facts:#?}");
+    assert_eq!(facts.effect_calls[0].caller.as_deref(), Some("value"));
+    assert!(
+        observer.snapshot().work.get("ast.walks").is_none(),
+        "effects must project canonical calls without a second AST visitor: {:#?}",
+        observer.snapshot()
+    );
+}
+
+#[test]
+fn effect_projection_keeps_distinct_same_line_calls() {
+    let file = fixture("same-line-effects.ts");
+    let mut context = TsFactContext::new(file.parent().unwrap());
+    context.effect_functions.insert("helper".to_string(), None);
+
+    let facts = collect_file_facts(
+        &file,
+        TsFactPlan {
+            effect_calls: true,
+            ..TsFactPlan::default()
+        },
+        &context,
+    )
+    .unwrap();
+
+    assert_eq!(
+        facts.effect_calls.len(),
+        2,
+        "one same-line call is inside the exported function and one is a distinct top-level call: {:#?}",
+        facts.effect_calls
+    );
+    assert_eq!(
+        facts
+            .effect_calls
+            .iter()
+            .filter(|call| call.caller.as_deref() == Some("value"))
+            .count(),
+        1
+    );
+    assert_eq!(
+        facts
+            .effect_calls
+            .iter()
+            .filter(|call| call.caller.is_none())
+            .count(),
+        1
+    );
 }
 
 #[test]

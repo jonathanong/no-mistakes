@@ -1,6 +1,8 @@
 impl ImportCollector {
     fn push_type_symbol_reference(&mut self, name: String) {
-        let binding = name.split_once('.').map_or(name.as_str(), |(binding, _)| binding);
+        let binding = name
+            .split_once('.')
+            .map_or(name.as_str(), |(binding, _)| binding);
         if self.type_parameter_shadows(binding) {
             return;
         }
@@ -15,6 +17,11 @@ impl ImportCollector {
         self.symbol_references.push(FunctionCall {
             caller: self.current_function(),
             callee: name,
+            line: 0,
+            offset: 0,
+            is_callback: false,
+            invocation: InvocationKind::Call,
+            target_identity: CallTargetIdentity::Unknown,
             static_arg: None,
             static_cwd: None,
         });

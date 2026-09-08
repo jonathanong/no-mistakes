@@ -20,6 +20,7 @@ mod domain_walk;
 #[path = "effect_calls.rs"]
 mod effect_calls;
 pub use domain_types::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactContext};
+pub(crate) use effect_calls::collect_effect_calls;
 
 #[derive(Default)]
 pub(crate) struct DomainFacts {
@@ -35,7 +36,6 @@ pub(crate) struct DomainFacts {
     pub http_calls: Vec<HttpCall>,
     pub process_spawns: Vec<SpawnEdge>,
     pub server_routes: Option<crate::server_routes::model::FileFacts>,
-    pub effect_calls: Vec<EffectCallFact>,
     pub rsc_environment: Option<RscEnvironmentFact>,
     pub trpc_procedures: Vec<String>,
     pub trpc_calls: Vec<crate::codebase::ts_trpc::TrpcCallFact>,
@@ -85,13 +85,7 @@ pub(crate) fn collect_domain_facts<'a>(
         )
     });
     let http_prefixes: Vec<&str> = context.http_prefixes.iter().map(String::as_str).collect();
-    let fused = domain_walk::collect_fused_domain_calls(
-        program,
-        source,
-        plan,
-        &http_prefixes,
-        &context.effect_functions,
-    );
+    let fused = domain_walk::collect_fused_domain_calls(program, source, plan, &http_prefixes);
     let process_spawns = if plan.process_spawns {
         match context.visible_files.as_deref() {
             Some(visible) => extract_spawn_edges_from_program_from_visible(
@@ -129,7 +123,6 @@ pub(crate) fn collect_domain_facts<'a>(
         http_calls: fused.http_calls,
         process_spawns,
         server_routes,
-        effect_calls: fused.effect_calls,
         rsc_environment,
         trpc_procedures,
         trpc_calls: fused.trpc_calls,

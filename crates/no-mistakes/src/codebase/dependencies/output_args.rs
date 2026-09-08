@@ -45,7 +45,7 @@ pub struct TraverseArgs {
     pub json: bool,
 
     /// Only follow edges of this relationship kind. Can be repeated (OR logic).
-    /// Values: import, import-static, import-dynamic, import-type, import-require, route-import, workspace, package, test, route, queue, md, ci, workflow, http, process, asset, react, resource, dotnet, swift, terraform, python, go, rust, ruby, php, all.
+    /// Values: call, import, import-static, import-dynamic, import-type, import-require, route-import, workspace, package, test, route, queue, md, ci, workflow, http, process, asset, react, resource, dotnet, swift, terraform, python, go, rust, ruby, php, all.
     /// Default: all.
     #[arg(long = "relationship", value_enum, value_name = "KIND")]
     pub relationships: Vec<RelationshipArg>,

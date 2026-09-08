@@ -8,7 +8,7 @@ fn binding_identifier_name<'a>(pattern: &'a oxc_ast::ast::BindingPattern<'a>) ->
 }
 
 fn simple_callee_name(expr: &Expression<'_>) -> Option<String> {
-    match expr {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
         Expression::Identifier(ident) => Some(ident.name.to_string()),
         Expression::ParenthesizedExpression(parenthesized) => {
             simple_callee_name(&parenthesized.expression)
@@ -104,10 +104,10 @@ fn all_export_specifiers_are_type(specifiers: &[ExportSpecifier<'_>]) -> bool {
 }
 
 fn module_export_name_name<'a>(name: &'a ModuleExportName<'a>) -> Option<&'a str> {
-    if let ModuleExportName::IdentifierReference(identifier) = name {
-        Some(identifier.name.as_str())
-    } else {
-        None
+    match name {
+        ModuleExportName::IdentifierReference(identifier) => Some(identifier.name.as_str()),
+        ModuleExportName::IdentifierName(identifier) => Some(identifier.name.as_str()),
+        ModuleExportName::StringLiteral(_) => None,
     }
 }
 

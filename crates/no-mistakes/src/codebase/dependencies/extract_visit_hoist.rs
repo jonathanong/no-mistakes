@@ -7,20 +7,87 @@ fn predeclare_function_body<'a>(
     }
 }
 
+fn predeclare_hoisted_var_bindings<'a>(collector: &mut ImportCollector, statements: &[Statement<'a>]) {
+    let mut names = HashSet::new();
+    let mut visitor = HoistedVarBindingCollector { names: &mut names };
+    for statement in statements {
+        visitor.visit_statement(statement);
+    }
+    for name in names {
+        collector.add_var_binding_name(&name);
+    }
+}
+
+struct HoistedVarBindingCollector<'a> {
+    names: &'a mut HashSet<String>,
+}
+
+impl<'ast> Visit<'ast> for HoistedVarBindingCollector<'_> {
+    fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'ast>) {
+        if declaration.kind == VariableDeclarationKind::Var {
+            for declarator in &declaration.declarations {
+                self.names.extend(binding_names(&declarator.id));
+            }
+        }
+        walk::walk_variable_declaration(self, declaration);
+    }
+
+    // Nested callables own their own `var` environments.
+    fn visit_function(
+        &mut self,
+        _function: &oxc_ast::ast::Function<'ast>,
+        _flags: oxc_syntax::scope::ScopeFlags,
+    ) {
+    }
+
+    fn visit_arrow_function_expression(
+        &mut self,
+        _arrow: &oxc_ast::ast::ArrowFunctionExpression<'ast>,
+    ) {
+    }
+
+    // Class static blocks own their own `var` environment, just like class
+    // methods own their function environments. Neither can hoist into the
+    // surrounding module or function.
+    fn visit_class(&mut self, _class: &Class<'ast>) {}
+}
+
 fn predeclare_function_declarations<'a>(
     collector: &mut ImportCollector,
     statements: &[Statement<'a>],
 ) {
     for statement in statements {
-        if let Statement::FunctionDeclaration(function) = statement {
-            if let Some(name) = function_name(function) {
-                collector.add_binding_name(&name);
-                let scope = collector
-                    .current_function()
-                    .map(|parent| format!("{parent}/{name}"))
-                    .unwrap_or(name);
-                collector.known_function_scopes.insert(scope);
+        match statement {
+            Statement::FunctionDeclaration(function) => {
+                if let Some(name) = function_name(function) {
+                    collector.add_binding_name(&name);
+                    let scope = collector
+                        .current_function()
+                        .map(|parent| format!("{parent}/{name}"))
+                        .unwrap_or(name);
+                    collector.known_function_scopes.insert(scope.clone());
+                    collector.callable_scopes.insert(scope);
+                }
             }
+            // We only use this catalog to prove that a spelling is locally
+            // bound. A call before a `let`/`const` declaration is a TDZ error
+            // at runtime, but it must never be misclassified as a global API.
+            Statement::VariableDeclaration(declaration) => {
+                for declarator in &declaration.declarations {
+                    if declaration.kind == VariableDeclarationKind::Var {
+                        collector.add_var_binding_names(&declarator.id);
+                    } else {
+                        collector.add_binding_names(&declarator.id);
+                    }
+                }
+            }
+            Statement::ClassDeclaration(class) => {
+                if let Some(name) = class.id.as_ref() {
+                    collector.add_binding_name(name.name.as_str());
+                }
+            }
+            _ => {}
         }
     }
+    predeclare_hoisted_var_bindings(collector, statements);
 }

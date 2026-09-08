@@ -31,6 +31,55 @@ fn get_entries_supports_import_only_dependencies() {
 }
 
 #[test]
+fn cli_call_relationship_uses_real_fixture_graph_edges() {
+    let root = fixture_root("call-traversal");
+    let output = run_json(
+        TraverseArgs {
+            files: vec![PathBuf::from("src/entry.mts")],
+            file_symbols: Vec::new(),
+            file_entrypoints_are_structured: Vec::new(),
+            root: Some(root.clone()),
+            tsconfig: None,
+            depth: Some(2),
+            filters: Vec::new(),
+            target_modules: Vec::new(),
+            tests: Vec::new(),
+            format: Some(Format::Json),
+            json: true,
+            relationships: vec![RelationshipArg::Call],
+            include_symbols: false,
+            timings: false,
+        },
+        Direction::Deps,
+    )
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let files = value["files"].as_array().unwrap();
+    let paths = files
+        .iter()
+        .filter_map(|entry| entry.get("file").and_then(serde_json::Value::as_str))
+        .collect::<Vec<_>>();
+    assert!(
+        paths.iter().any(|path| path.ends_with("diamond-left.mts")),
+        "{value}"
+    );
+    assert!(
+        paths.iter().any(|path| path.ends_with("diamond-right.mts")),
+        "{value}"
+    );
+    assert!(
+        paths.iter().any(|path| path.ends_with("cycle-a.mts")),
+        "{value}"
+    );
+    assert!(
+        !paths
+            .iter()
+            .any(|path| path.ends_with("diamond-shared.mts")),
+        "{value}"
+    );
+}
+
+#[test]
 fn get_entries_supports_symbol_dependents() {
     let root = fixture_root("symbol-export");
     let entrypoints = vec![

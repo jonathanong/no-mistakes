@@ -16,6 +16,87 @@ fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
     }
 }
 
+fn assignment_target_names(target: &AssignmentTarget<'_>) -> Vec<String> {
+    match target {
+        AssignmentTarget::AssignmentTargetIdentifier(identifier) => {
+            vec![identifier.name.to_string()]
+        }
+        AssignmentTarget::ArrayAssignmentTarget(array) => array
+            .elements
+            .iter()
+            .flatten()
+            .flat_map(assignment_target_maybe_default_names)
+            .chain(
+                array
+                    .rest
+                    .iter()
+                    .flat_map(|rest| assignment_target_names(&rest.target)),
+            )
+            .collect(),
+        AssignmentTarget::ObjectAssignmentTarget(object) => object
+            .properties
+            .iter()
+            .flat_map(|property| match property {
+                AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(property) => {
+                    vec![property.binding.name.to_string()]
+                }
+                AssignmentTargetProperty::AssignmentTargetPropertyProperty(property) => {
+                    assignment_target_maybe_default_names(&property.binding)
+                }
+            })
+            .chain(
+                object
+                    .rest
+                    .iter()
+                    .flat_map(|rest| assignment_target_names(&rest.target)),
+            )
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+fn assignment_target_maybe_default_names(target: &AssignmentTargetMaybeDefault<'_>) -> Vec<String> {
+    match target {
+        AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(target) => {
+            assignment_target_names(&target.binding)
+        }
+        AssignmentTargetMaybeDefault::AssignmentTargetIdentifier(identifier) => {
+            vec![identifier.name.to_string()]
+        }
+        AssignmentTargetMaybeDefault::ArrayAssignmentTarget(array) => array
+            .elements
+            .iter()
+            .flatten()
+            .flat_map(assignment_target_maybe_default_names)
+            .chain(
+                array
+                    .rest
+                    .iter()
+                    .flat_map(|rest| assignment_target_names(&rest.target)),
+            )
+            .collect(),
+        AssignmentTargetMaybeDefault::ObjectAssignmentTarget(object) => object
+            .properties
+            .iter()
+            .flat_map(|property| match property {
+                AssignmentTargetProperty::AssignmentTargetPropertyIdentifier(property) => {
+                    vec![property.binding.name.to_string()]
+                }
+                AssignmentTargetProperty::AssignmentTargetPropertyProperty(property) => {
+                    assignment_target_maybe_default_names(&property.binding)
+                }
+            })
+            .chain(
+                object
+                    .rest
+                    .iter()
+                    .flat_map(|rest| assignment_target_names(&rest.target)),
+            )
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
 fn visit_binding_defaults_for_name<'a>(
     collector: &mut ImportCollector,
     pattern: &BindingPattern<'a>,
@@ -23,7 +104,10 @@ fn visit_binding_defaults_for_name<'a>(
 ) {
     match pattern {
         BindingPattern::AssignmentPattern(assignment) => {
-            if binding_names(&assignment.left).iter().any(|binding| binding == name) {
+            if binding_names(&assignment.left)
+                .iter()
+                .any(|binding| binding == name)
+            {
                 collector.visit_expression(&assignment.right);
             }
             visit_binding_defaults_for_name(collector, &assignment.left, name);
@@ -132,13 +216,11 @@ fn visit_variable_declarator_references_for_bindings<'a>(
 }
 
 impl ImportCollector {
-    fn should_record_call(&self, callee: &str) -> bool {
-        let binding = callee.split_once('.').map_or(callee, |(binding, _)| binding);
-        if self.local_binding_shadows(binding) {
-            self.has_local_function_scope(binding)
-        } else {
-            true
-        }
+    fn should_record_call(&self, _callee: &str) -> bool {
+        // A shadowed value still represents a real callsite. Its target is
+        // Unknown unless we can resolve a local callable scope; dropping it
+        // would make policy checks silently miss dynamic/local dispatch.
+        true
     }
 
     fn record_imported_bindings(&mut self, import: &ImportDeclaration<'_>) {
@@ -150,14 +232,36 @@ impl ImportCollector {
                 ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
                     self.imported_bindings
                         .insert(specifier.local.name.to_string());
+                    self.call_import_bindings.push(ImportedBinding {
+                        specifier: import.source.value.to_string(),
+                        local: specifier.local.name.to_string(),
+                        imported: specifier.imported.name().to_string(),
+                        kind: ImportedBindingKind::Named,
+                        is_type_only: import.import_kind.is_type()
+                            || specifier.import_kind.is_type(),
+                    });
                 }
                 ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) => {
                     self.imported_bindings
                         .insert(specifier.local.name.to_string());
+                    self.call_import_bindings.push(ImportedBinding {
+                        specifier: import.source.value.to_string(),
+                        local: specifier.local.name.to_string(),
+                        imported: "default".to_string(),
+                        kind: ImportedBindingKind::Default,
+                        is_type_only: import.import_kind.is_type(),
+                    });
                 }
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {
                     self.imported_bindings
                         .insert(specifier.local.name.to_string());
+                    self.call_import_bindings.push(ImportedBinding {
+                        specifier: import.source.value.to_string(),
+                        local: specifier.local.name.to_string(),
+                        imported: "*".to_string(),
+                        kind: ImportedBindingKind::Namespace,
+                        is_type_only: import.import_kind.is_type(),
+                    });
                 }
             }
         }

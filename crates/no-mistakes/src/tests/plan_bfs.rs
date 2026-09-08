@@ -212,6 +212,7 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::ElixirImport | EdgeKind::ElixirReference => "elixir",
         EdgeKind::DartImport | EdgeKind::DartReference => "dart",
         EdgeKind::TrpcCall | EdgeKind::TrpcProcedure => "trpc",
+        EdgeKind::Call => "call",
         EdgeKind::WorkflowJob => "workflow-job",
         EdgeKind::WorkflowStep => "workflow-step",
         EdgeKind::WorkflowNeeds => "workflow-needs",

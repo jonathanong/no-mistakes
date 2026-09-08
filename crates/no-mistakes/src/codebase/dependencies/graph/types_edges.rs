@@ -7,6 +7,9 @@ mod domain;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum EdgeKind {
+    /// Statically resolved lexical function invocation. This opt-in edge is
+    /// intentionally excluded from the default graph until callers request it.
+    Call,
     /// Regular TS/JS static import.
     Import,
     /// Type-only import (`import type ...`).
@@ -136,6 +139,7 @@ impl EdgeKind {
 
     fn as_core_str(&self) -> Option<&'static str> {
         match self {
+            Self::Call => Some("call"),
             Self::Import => Some("import"),
             Self::TypeImport => Some("type-import"),
             Self::DynamicImport => Some("dynamic-import"),

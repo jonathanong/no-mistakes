@@ -23,6 +23,12 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         collect_resource_roots,
         ..ImportCollector::default()
     };
+    // Establish the file lexical environment before visiting expressions so a
+    // later declaration cannot make an earlier global-looking call resolve to
+    // a built-in. This is collection from the already parsed Program, not a
+    // second source pass.
+    collector.local_stack.push(HashSet::new());
+    predeclare_program_value_bindings(&mut collector, program);
     let local_type_names = local_type_declaration_names(program);
     collector
         .exported_functions
@@ -41,7 +47,16 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     let mut exported_resource_scopes: Vec<_> =
         collector.exported_resource_scopes.into_iter().collect();
     exported_resource_scopes.sort();
-    let callable_scopes = collector.callable_scopes;
+    let mut known_function_scopes: Vec<_> = collector.known_function_scopes.into_iter().collect();
+    known_function_scopes.sort();
+    let mut callable_scopes: Vec<_> = collector.callable_scopes.into_iter().collect();
+    callable_scopes.sort();
+    let callable_aliases = collector
+        .callable_aliases
+        .into_iter()
+        .filter(|binding| !collector.reassigned_alias_bindings.contains(binding))
+        .map(|binding| binding.alias)
+        .collect();
     let exported_type_scopes = collector.exported_type_scopes;
     let mut exported_functions: Vec<_> = collector
         .exported_functions
@@ -51,13 +66,117 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     exported_functions.sort();
     ImportFacts {
         imports: collector.imports,
+        imported_bindings: collector.call_import_bindings,
+        exported_bindings: collector.call_export_bindings,
+        callable_aliases,
+        star_reexport_specifiers: collector.star_reexport_specifiers,
         function_calls: collector.function_calls,
+        unknown_calls: collector.unknown_calls,
         symbol_references: collector.symbol_references,
         exported_functions,
         exported_resource_roots,
         exported_resource_scopes,
+        known_function_scopes,
+        callable_scopes,
         unknown_callers: collector.unknown_callers,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
+    }
+}
+
+fn predeclare_program_value_bindings<'a>(collector: &mut ImportCollector, program: &Program<'a>) {
+    for statement in &program.body {
+        match statement {
+            Statement::FunctionDeclaration(function) => {
+                if let Some(name) = function_name(function) {
+                    collector.add_binding_name(&name);
+                    collector.known_function_scopes.insert(name.clone());
+                    collector.callable_scopes.insert(name);
+                }
+            }
+            Statement::VariableDeclaration(declaration) => {
+                for declarator in &declaration.declarations {
+                    collector.add_binding_names(&declarator.id);
+                }
+            }
+            Statement::ClassDeclaration(class) => {
+                if let Some(name) = class.id.as_ref() {
+                    collector.add_binding_name(name.name.as_str());
+                }
+            }
+            Statement::ImportDeclaration(import) => {
+                if import.import_kind.is_type() {
+                    continue;
+                }
+                if let Some(specifiers) = &import.specifiers {
+                    for specifier in specifiers {
+                        match specifier {
+                            ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
+                                if specifier.import_kind.is_type() {
+                                    continue;
+                                }
+                                collector
+                                    .predeclared_imported_bindings
+                                    .insert(specifier.local.name.to_string());
+                            }
+                            ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) => {
+                                collector
+                                    .predeclared_imported_bindings
+                                    .insert(specifier.local.name.to_string());
+                            }
+                            ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {
+                                collector
+                                    .predeclared_imported_bindings
+                                    .insert(specifier.local.name.to_string());
+                            }
+                        }
+                    }
+                }
+            }
+            Statement::ExportDeclaration(export) => {
+                predeclare_export_declaration_binding(collector, &export.declaration);
+            }
+            Statement::ExportDefaultDeclaration(export) => match &export.declaration {
+                ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
+                    if let Some(name) = function_name(function) {
+                        collector.add_binding_name(&name);
+                    }
+                }
+                ExportDefaultDeclarationKind::ClassDeclaration(class) => {
+                    if let Some(name) = class.id.as_ref() {
+                        collector.add_binding_name(name.name.as_str());
+                    }
+                }
+                _ => {}
+            },
+            _ => {}
+        }
+    }
+    predeclare_hoisted_var_bindings(collector, &program.body);
+}
+
+fn predeclare_export_declaration_binding<'a>(
+    collector: &mut ImportCollector,
+    declaration: &Declaration<'a>,
+) {
+    match declaration {
+        Declaration::FunctionDeclaration(function) => {
+            if let Some(name) = function_name(function) {
+                collector.add_binding_name(&name);
+                collector.known_function_scopes.insert(name.clone());
+                collector.callable_scopes.insert(name);
+            }
+        }
+        Declaration::VariableDeclaration(declaration) => {
+            for declarator in &declaration.declarations {
+                collector.add_binding_names(&declarator.id);
+            }
+        }
+        Declaration::ClassDeclaration(class) => {
+            if let Some(name) = class.id.as_ref() {
+                collector.add_binding_name(name.name.as_str());
+            }
+        }
+        _ => {}
     }
 }
 

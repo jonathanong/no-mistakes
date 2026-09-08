@@ -1,5 +1,7 @@
 use crate::codebase::check_facts::PlaywrightSettingsKey;
-use crate::codebase::dependencies::extract::{ExtractedImport, FunctionCall};
+use crate::codebase::dependencies::extract::{
+    ExportedBinding, ExtractedImport, FunctionCall, ImportedBinding, UnknownCall,
+};
 use crate::codebase::ts_http_calls::HttpCall;
 use crate::codebase::ts_process_spawn::SpawnEdge;
 use crate::codebase::ts_queues::usage::QueueUsage;
@@ -84,7 +86,12 @@ pub struct TsFileFacts {
     pub fatal_parse_error: bool,
     pub source: Option<std::sync::Arc<str>>,
     pub imports: Vec<ExtractedImport>,
+    pub imported_bindings: Vec<ImportedBinding>,
+    pub exported_bindings: Vec<ExportedBinding>,
+    pub callable_aliases: Vec<crate::codebase::dependencies::extract::CallableAlias>,
+    pub star_reexport_specifiers: Vec<String>,
     pub function_calls: Vec<FunctionCall>,
+    pub unknown_calls: Vec<UnknownCall>,
     pub call_sites: Vec<CallSiteFact>,
     pub resource_calls: Vec<ResourceCall>,
     pub resource_diagnostics: Vec<ResourceDiagnostic>,
@@ -92,6 +99,8 @@ pub struct TsFileFacts {
     pub exported_functions: Vec<String>,
     pub exported_resource_roots: Vec<String>,
     pub exported_resource_scopes: Vec<String>,
+    pub known_function_scopes: Vec<String>,
+    pub callable_scopes: Vec<String>,
     pub unknown_callers: Vec<Option<String>>,
     pub has_unknown_top_level_call: bool,
     pub symbols: Option<Arc<FileSymbols>>,
