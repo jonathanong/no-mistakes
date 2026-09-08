@@ -11,7 +11,7 @@ struct CallableFileIndex {
         std::collections::HashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
     exported:
         std::collections::HashMap<String, crate::codebase::dependencies::extract::ExportedBinding>,
-    aliases: std::collections::HashMap<(Option<String>, String), String>,
+    aliases: std::collections::HashMap<(usize, String), String>,
     stars: Vec<String>,
 }
 
@@ -33,52 +33,42 @@ impl CallableFileIndex {
             aliases: file
                 .callable_aliases
                 .iter()
-                .map(|alias| {
-                    (
-                        (alias.scope.clone(), alias.local.clone()),
-                        alias.target.clone(),
-                    )
-                })
+                .map(|alias| ((alias.binding_scope, alias.local.clone()), alias.target.clone()))
                 .collect(),
             stars: file.star_reexport_specifiers.clone(),
         }
     }
 
-    fn resolve_alias(&self, caller: Option<&str>, callee: &str) -> Option<String> {
+    fn resolve_alias(
+        &self,
+        caller: Option<&str>,
+        binding_scope: Option<usize>,
+        callee: &str,
+    ) -> Option<String> {
         if callee.contains('.') {
             return None;
         }
-        let mut scope = caller.map(str::to_string);
+        let binding_scope = binding_scope?;
         let mut visited = std::collections::HashSet::new();
         let mut target = callee.to_string();
         loop {
-            let key = (scope.clone(), target.clone());
+            let key = (binding_scope, target.clone());
             if let Some(alias) = self.aliases.get(&key) {
                 if !visited.insert(key) {
                     return None;
                 }
                 target = alias.clone();
-                if self.aliases.contains_key(&(scope.clone(), target.clone())) {
+                if self.aliases.contains_key(&(binding_scope, target.clone())) {
                     continue;
                 }
                 if target.contains('.')
                     || self.imported.contains_key(&target)
-                    || resolve_local_call_scope(scope.as_deref(), &target, &self.known_scopes)
-                        .is_some()
+                    || resolve_local_call_scope(caller, &target, &self.known_scopes).is_some()
                 {
                     return Some(target);
                 }
             }
-            if let Some(parent) = scope
-                .as_deref()
-                .and_then(|current| current.rsplit_once('/').map(|(parent, _)| parent))
-            {
-                scope = Some(parent.to_string());
-            } else if scope.is_some() {
-                scope = None;
-            } else {
-                return None;
-            }
+            return None;
         }
     }
 }

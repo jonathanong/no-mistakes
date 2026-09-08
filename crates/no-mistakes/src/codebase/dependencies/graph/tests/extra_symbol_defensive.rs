@@ -279,6 +279,7 @@ fn symbol_edge_helpers_cover_defensive_symbol_branches() {
             is_callback: false,
             invocation: InvocationKind::Call,
             target_identity: CallTargetIdentity::Unknown,
+            callee_binding_scope: None,
             static_arg: None,
             static_cwd: None,
         }],

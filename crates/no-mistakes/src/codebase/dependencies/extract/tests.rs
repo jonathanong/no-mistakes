@@ -489,3 +489,5 @@ fn function_expression_declarator_binding_pattern_is_visited() {
 
 #[path = "tests/call_binding_regressions.rs"]
 mod call_binding_regressions;
+#[path = "tests/call_binding_shadow_regressions.rs"]
+mod call_binding_shadow_regressions;

@@ -77,6 +77,10 @@ pub struct FunctionCall {
     /// Binding classification captured during the same AST pass. The callee
     /// spelling remains available for exact and terminal-name policies.
     pub target_identity: CallTargetIdentity,
+    /// Identity of the lexical frame which owns the callee's first segment.
+    /// This distinguishes a block-local shadow from an alias owned by the
+    /// surrounding callable scope.
+    pub callee_binding_scope: Option<usize>,
     pub static_arg: Option<String>,
     pub static_cwd: Option<String>,
 }
@@ -86,6 +90,9 @@ pub enum InvocationKind {
     Call,
     Construct,
     Callback,
+    /// Synthetic aggregate membership used by import reachability. This is
+    /// not a JavaScript invocation and must never become a call edge.
+    Membership,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -145,6 +152,8 @@ pub struct CallableAlias {
     pub scope: Option<String>,
     pub local: String,
     pub target: String,
+    /// The lexical binding identity of `local`.
+    pub binding_scope: usize,
 }
 
 /// Private binding identity used while extracting callable aliases. Public

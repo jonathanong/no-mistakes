@@ -14,6 +14,7 @@ fn local_call(identity: CallTargetIdentity, callee: &str) -> FunctionCall {
         is_callback: false,
         invocation: InvocationKind::Call,
         target_identity: identity,
+        callee_binding_scope: None,
         static_arg: None,
         static_cwd: None,
     }

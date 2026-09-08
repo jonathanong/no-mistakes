@@ -93,7 +93,11 @@ impl GraphBuildPlan {
         };
         Self {
             calls: allowed.contains(&EdgeKind::Call),
-            imports: allowed.contains(&EdgeKind::Import)
+            // Resolved call edges use the prepared import projection to find
+            // direct and re-exported callable targets. Traversal still emits
+            // only `Call` edges when that is the selected relationship.
+            imports: allowed.contains(&EdgeKind::Call)
+                || allowed.contains(&EdgeKind::Import)
                 || allowed.contains(&EdgeKind::TypeImport)
                 || allowed.contains(&EdgeKind::DynamicImport)
                 || allowed.contains(&EdgeKind::Require)

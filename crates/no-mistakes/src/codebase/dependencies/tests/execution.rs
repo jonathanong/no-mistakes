@@ -72,11 +72,84 @@ fn cli_call_relationship_uses_real_fixture_graph_edges() {
         "{value}"
     );
     assert!(
-        !paths
+        paths
             .iter()
             .any(|path| path.ends_with("diamond-shared.mts")),
         "{value}"
     );
+}
+
+#[test]
+fn call_dependents_expand_callable_roots_without_importer_edges() {
+    let root = fixture_root("call-traversal");
+    let output = run_json(
+        TraverseArgs {
+            files: vec![PathBuf::from("src/diamond-shared.mts")],
+            file_symbols: Vec::new(),
+            file_entrypoints_are_structured: Vec::new(),
+            root: Some(root.clone()),
+            tsconfig: None,
+            depth: None,
+            filters: Vec::new(),
+            target_modules: Vec::new(),
+            tests: Vec::new(),
+            format: Some(Format::Json),
+            json: true,
+            relationships: vec![RelationshipArg::Call],
+            include_symbols: false,
+            timings: false,
+        },
+        Direction::Dependents,
+    )
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let files = value["files"].as_array().unwrap();
+    let paths = files
+        .iter()
+        .filter_map(|entry| entry.get("file").and_then(serde_json::Value::as_str))
+        .collect::<Vec<_>>();
+    for caller in ["src/diamond-left.mts", "src/diamond-right.mts"] {
+        assert!(paths.iter().any(|path| path.ends_with(caller)), "{value}");
+    }
+    assert!(
+        !paths
+            .iter()
+            .any(|path| path.ends_with("src/non-calling-importer.mts")),
+        "{value}"
+    );
+
+    let output = run_json(
+        TraverseArgs {
+            files: vec![PathBuf::from("src/local.mts#second")],
+            file_symbols: Vec::new(),
+            file_entrypoints_are_structured: Vec::new(),
+            root: Some(root),
+            tsconfig: None,
+            depth: None,
+            filters: Vec::new(),
+            target_modules: Vec::new(),
+            tests: Vec::new(),
+            format: Some(Format::Json),
+            json: true,
+            relationships: vec![RelationshipArg::Call],
+            include_symbols: false,
+            timings: false,
+        },
+        Direction::Dependents,
+    )
+    .unwrap();
+    let value: serde_json::Value = serde_json::from_str(&output).unwrap();
+    let files = value["files"].as_array().unwrap();
+    assert!(files.iter().any(|entry| {
+        entry
+            .get("file")
+            .and_then(serde_json::Value::as_str)
+            .is_some_and(|path| path.ends_with("src/local.mts"))
+            && entry
+                .get("symbol")
+                .and_then(serde_json::Value::as_str)
+                .is_some_and(|symbol| symbol == "first")
+    }), "{value}");
 }
 
 #[test]

@@ -20,10 +20,15 @@ fn simple_callee_name(expr: &Expression<'_>) -> Option<String> {
 }
 
 fn simple_static_member_name(member: &StaticMemberExpression<'_>) -> Option<String> {
-    let object = match &member.object {
+    let object = match crate::codebase::ts_source::unwrap_ts_wrappers(&member.object) {
         Expression::Identifier(object) => object.name.to_string(),
+        Expression::ThisExpression(_) => "this".to_string(),
         Expression::StaticMemberExpression(object) => simple_static_member_name(object)?,
-        _ => return None,
+        Expression::ComputedMemberExpression(object) => simple_computed_member_name(object)?,
+        // Effects match configured member terminals independently of a
+        // receiver. Preserve that occurrence without claiming an unknown
+        // expression is a global or repository binding.
+        _ => "<unknown>".to_string(),
     };
     Some(format!("{object}.{}", member.property.name.as_str()))
 }

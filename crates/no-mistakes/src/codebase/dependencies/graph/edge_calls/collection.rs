@@ -17,9 +17,17 @@ fn collect_call_edges_for_core(
             let mut sites = file
                 .function_calls
                 .iter()
+                .filter(|call| {
+                    call.invocation
+                        != crate::codebase::dependencies::extract::InvocationKind::Membership
+                })
                 .map(|call| {
                     let resolved_callee = index
-                        .resolve_alias(call.caller.as_deref(), &call.callee)
+                        .resolve_alias(
+                            call.caller.as_deref(),
+                            call.callee_binding_scope,
+                            &call.callee,
+                        )
                         .unwrap_or_else(|| call.callee.clone());
                     let target_identity = call_target_identity(&index, call, &resolved_callee);
                     let target = match target_identity {

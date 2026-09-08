@@ -14,6 +14,7 @@ impl ImportCollector {
         } else {
             name
         };
+        let callee_binding_scope = self.callee_binding_scope(&name);
         self.symbol_references.push(FunctionCall {
             caller: self.current_function(),
             syntactic_caller: self.current_syntactic_caller(),
@@ -23,6 +24,7 @@ impl ImportCollector {
             is_callback: false,
             invocation: InvocationKind::Call,
             target_identity: CallTargetIdentity::Unknown,
+            callee_binding_scope,
             static_arg: None,
             static_cwd: None,
         });

@@ -19,6 +19,7 @@ impl ImportCollector {
                     scope: self.current_function(),
                     local: local.to_string(),
                     target,
+                    binding_scope: self.current_lexical_scope_id(),
                 },
                 lexical_scope_depth: self.local_stack.len() - 1,
             });
@@ -35,13 +36,21 @@ impl ImportCollector {
     }
 
     fn record_reassigned_callable_alias(&mut self, name: &str) {
-        let Some(lexical_scope_depth) = self
+        let binding_name = name.split_once('.').map_or(name, |(binding, _)| binding);
+        let Some((lexical_scope_depth, binding_scope)) = self
             .local_stack
             .iter()
-            .rposition(|scope| scope.contains(name))
+            .rposition(|scope| scope.contains(binding_name))
+            .map(|depth| (depth, self.lexical_scope_ids[depth]))
         else {
             return;
         };
+        if binding_name == name {
+            self.reassigned_callable_binding_ids
+                .insert((binding_scope, name.to_string()));
+        }
+        self.reassigned_callable_scopes
+            .insert(name.replace('.', "/"));
         let scope = self.current_function();
         self.reassigned_alias_bindings.extend(
             self.callable_aliases

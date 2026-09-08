@@ -61,6 +61,7 @@ fn predeclare_function_declarations<'a>(
             Statement::FunctionDeclaration(function) => {
                 if let Some(name) = function_name(function) {
                     collector.add_binding_name(&name);
+                    collector.record_callable_binding(&name);
                     let scope = collector
                         .current_function()
                         .map(|parent| format!("{parent}/{name}"))

@@ -30,6 +30,7 @@ impl ImportCollector {
         if self.callee_shadows_import(&name) {
             return;
         }
+        let callee_binding_scope = self.callee_binding_scope(&name);
         self.symbol_references.push(FunctionCall {
             caller,
             syntactic_caller: self.current_syntactic_caller(),
@@ -39,6 +40,7 @@ impl ImportCollector {
             is_callback: false,
             invocation: InvocationKind::Call,
             target_identity: CallTargetIdentity::Unknown,
+            callee_binding_scope,
             static_arg: None,
             static_cwd: None,
         });
@@ -107,6 +109,26 @@ impl ImportCollector {
             .any(|scope| scope.contains(name))
     }
 
+    fn current_lexical_scope_id(&self) -> usize {
+        *self
+            .lexical_scope_ids
+            .last()
+            .expect("collector always establishes the program lexical scope")
+    }
+
+    fn callee_binding_scope(&self, callee: &str) -> Option<usize> {
+        let binding = callee.split_once('.').map_or(callee, |(binding, _)| binding);
+        self.local_stack
+            .iter()
+            .rposition(|scope| scope.contains(binding))
+            .map(|depth| self.lexical_scope_ids[depth])
+    }
+
+    fn record_callable_binding(&mut self, name: &str) {
+        self.callable_binding_ids
+            .insert((self.current_lexical_scope_id(), name.to_string()));
+    }
+
     fn callee_shadows_import(&self, callee: &str) -> bool {
         let binding = callee
             .split_once('.')
@@ -120,6 +142,18 @@ impl ImportCollector {
         let binding = callee
             .split_once('.')
             .map_or(callee, |(binding, _)| binding);
+        let Some(binding_scope) = self.callee_binding_scope(callee) else {
+            return false;
+        };
+        if !self
+            .callable_binding_ids
+            .contains(&(binding_scope, binding.to_string()))
+            || self
+                .reassigned_callable_binding_ids
+                .contains(&(binding_scope, binding.to_string()))
+        {
+            return false;
+        }
         // `api/run` can mean either an aggregate member or a lexical nested
         // function. A declared `function api` owns the latter spelling, so a
         // static `api.run()` must not be guessed as an aggregate dispatch.
@@ -136,14 +170,20 @@ impl ImportCollector {
         loop {
             let candidate = format!("{scope}/{binding}");
             let member_candidate = format!("{scope}/{}", binding.replace('.', "/"));
-            if self.callable_scopes.contains(&candidate)
-                || self.callable_scopes.contains(&member_candidate)
+            if (self.callable_scopes.contains(&candidate)
+                && !self.reassigned_callable_scopes.contains(&candidate))
+                || (self.callable_scopes.contains(&member_candidate)
+                    && !self.reassigned_callable_scopes.contains(&member_candidate))
             {
                 return true;
             }
             let Some((parent, _)) = scope.rsplit_once('/') else {
-                return self.callable_scopes.contains(binding)
-                    || self.callable_scopes.contains(&binding.replace('.', "/"));
+                return (self.callable_scopes.contains(binding)
+                    && !self.reassigned_callable_scopes.contains(binding))
+                    || (self.callable_scopes.contains(&binding.replace('.', "/"))
+                        && !self
+                            .reassigned_callable_scopes
+                            .contains(&binding.replace('.', "/")));
             };
             scope = parent;
         }

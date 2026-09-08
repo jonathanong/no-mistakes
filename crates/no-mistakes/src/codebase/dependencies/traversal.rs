@@ -13,8 +13,25 @@ pub(super) fn deps_entries(
     depth: Option<usize>,
     import_only: bool,
     roots: &[NodeId],
+    entrypoints: &[Entrypoint],
     ctx: &TraversalCtx<'_>,
 ) -> Result<Vec<graph::NodeEntry>> {
+    if has_call_relationship(ctx.allowed) {
+        let graph = graph::DepGraph::build_with_plan_and_files(
+            ctx.root,
+            ctx.tsconfig,
+            ctx.build_plan,
+            ctx.graph_files,
+        )?;
+        let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
+        let call_allowed = std::collections::HashSet::from([EdgeKind::Call]);
+        let call_entries = graph.deps_of(&call_roots, depth, Some(&call_allowed));
+        let remaining_entries = remaining_relationships(ctx.allowed)
+            .map_or_else(Vec::new, |allowed| {
+                graph.deps_of(roots, depth, Some(&allowed))
+            });
+        return Ok(merge_entries(call_entries, remaining_entries));
+    }
     if import_only {
         Ok(graph::lazy_import_deps_of_with_files(
             roots,
@@ -44,7 +61,7 @@ pub(super) fn get_entries(
     ctx: &TraversalCtx<'_>,
 ) -> Result<Vec<graph::NodeEntry>> {
     match direction {
-        Direction::Deps => deps_entries(depth, import_only, roots, ctx),
+        Direction::Deps => deps_entries(depth, import_only, roots, entrypoints, ctx),
         Direction::Dependents => dependents_entries(entrypoints, roots, depth, ctx),
     }
 }
@@ -55,6 +72,22 @@ pub(super) fn dependents_entries(
     depth: Option<usize>,
     ctx: &TraversalCtx<'_>,
 ) -> Result<Vec<graph::NodeEntry>> {
+    if has_call_relationship(ctx.allowed) {
+        let graph = graph::DepGraph::build_with_plan_and_files(
+            ctx.root,
+            ctx.tsconfig,
+            ctx.build_plan,
+            ctx.graph_files,
+        )?;
+        let callable_roots = graph.expand_call_roots(&call_roots(entrypoints));
+        let call_allowed = std::collections::HashSet::from([EdgeKind::Call]);
+        let call_entries = graph.dependents_of(&callable_roots, depth, Some(&call_allowed));
+        let remaining_entries = remaining_relationships(ctx.allowed)
+            .map_or_else(Vec::new, |allowed| {
+                graph.dependents_of(roots, depth, Some(&allowed))
+            });
+        return Ok(merge_entries(call_entries, remaining_entries));
+    }
     let any_symbol = entrypoints.iter().any(|e| e.symbol.is_some());
     if ctx.symbols {
         let graph = graph::DepGraph::build_with_plan_and_files(
@@ -101,6 +134,56 @@ pub(super) fn dependents_entries(
     } else {
         Ok(graph.dependents_of(roots, depth, ctx.allowed))
     }
+}
+
+pub(super) fn has_call_relationship(allowed: Option<&std::collections::HashSet<EdgeKind>>) -> bool {
+    allowed.is_some_and(|allowed| allowed.contains(&EdgeKind::Call))
+}
+
+fn remaining_relationships(
+    allowed: Option<&std::collections::HashSet<EdgeKind>>,
+) -> Option<std::collections::HashSet<EdgeKind>> {
+    let remaining = allowed?
+        .iter()
+        .copied()
+        .filter(|kind| *kind != EdgeKind::Call)
+        .collect::<std::collections::HashSet<_>>();
+    (!remaining.is_empty()).then_some(remaining)
+}
+
+fn merge_entries(
+    left: Vec<graph::NodeEntry>,
+    right: Vec<graph::NodeEntry>,
+) -> Vec<graph::NodeEntry> {
+    let mut entries = std::collections::BTreeMap::new();
+    for entry in left.into_iter().chain(right) {
+        entries
+            .entry(entry.node.clone())
+            .and_modify(|current: &mut graph::NodeEntry| {
+                current.depth = current.depth.min(entry.depth);
+                current.via.extend(entry.via.iter().copied());
+                current.via.sort();
+                current.via.dedup();
+            })
+            .or_insert(entry);
+    }
+    entries.into_values().collect()
+}
+
+pub(super) fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
+    entrypoints
+        .iter()
+        .filter_map(|entrypoint| {
+            let file = entrypoint.node.as_file()?.to_path_buf();
+            Some(match &entrypoint.symbol {
+                Some(symbol) => graph::CallRoot::Function {
+                    file,
+                    symbol: symbol.clone(),
+                },
+                None => graph::CallRoot::File(file),
+            })
+        })
+        .collect()
 }
 
 fn build_dependents_graph(

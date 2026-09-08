@@ -104,6 +104,7 @@ fn visit_exported_enum_declaration<'a>(
 }
 
 fn record_class_member_calls(collector: &mut ImportCollector, class_name: &str, class: &Class<'_>) {
+    collector.record_callable_binding(class_name);
     for element in &class.body.body {
         if let ClassElement::MethodDefinition(method) = element {
             record_member_call(
@@ -120,6 +121,7 @@ fn record_object_member_calls(
     object_name: &str,
     object: &ObjectExpression<'_>,
 ) {
+    collector.record_callable_binding(object_name);
     for property in &object.properties {
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             continue;
@@ -146,8 +148,9 @@ fn record_member_call(collector: &mut ImportCollector, parent: &str, name: Optio
             line: 0,
             offset: 0,
             is_callback: true,
-            invocation: InvocationKind::Callback,
+            invocation: InvocationKind::Membership,
             target_identity: CallTargetIdentity::RepositoryFunction,
+            callee_binding_scope: None,
             static_arg: None,
             static_cwd: None,
         });

@@ -11,6 +11,7 @@ fn record_object_value_references(
             ObjectPropertyKind::SpreadProperty(spread) => simple_object_reference(&spread.argument),
         };
         if let Some(callee) = reference {
+            let callee_binding_scope = collector.callee_binding_scope(&callee);
             collector.symbol_references.push(FunctionCall {
                 caller: Some(object_name.to_string()),
                 syntactic_caller: collector.current_syntactic_caller(),
@@ -20,6 +21,7 @@ fn record_object_value_references(
                 is_callback: false,
                 invocation: InvocationKind::Call,
                 target_identity: CallTargetIdentity::Unknown,
+                callee_binding_scope,
                 static_arg: None,
                 static_cwd: None,
             });

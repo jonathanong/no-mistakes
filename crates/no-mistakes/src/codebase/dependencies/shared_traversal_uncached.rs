@@ -63,10 +63,48 @@ fn collect_uncached_entries(
             );
             entries
         }
+        Direction::Deps if has_call_relationship(allowed) => {
+            let graph = shared.graph_shared()?;
+            let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
+            let call_allowed = std::collections::HashSet::from([EdgeKind::Call]);
+            let call_entries = graph.deps_of(&call_roots, args.depth, Some(&call_allowed));
+            let remaining_allowed = allowed.map(|allowed| {
+                allowed
+                    .iter()
+                    .copied()
+                    .filter(|kind| *kind != EdgeKind::Call)
+                    .collect::<std::collections::HashSet<_>>()
+            });
+            let remaining_entries = remaining_allowed
+                .as_ref()
+                .filter(|allowed| !allowed.is_empty())
+                .map_or_else(Vec::new, |allowed| graph.deps_of(roots, args.depth, Some(allowed)));
+            merge_entries(call_entries, remaining_entries)
+        }
         Direction::Deps if shared.build_plan.symbols && !args.include_symbols => shared
             .request_graph_without_symbols_shared(allowed)?
             .deps_of(roots, args.depth, allowed),
         Direction::Deps => shared.graph_shared()?.deps_of(roots, args.depth, allowed),
+        Direction::Dependents if has_call_relationship(allowed) => {
+            let graph = shared.graph_shared()?;
+            let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
+            let call_allowed = std::collections::HashSet::from([EdgeKind::Call]);
+            let call_entries = graph.dependents_of(&call_roots, args.depth, Some(&call_allowed));
+            let remaining_allowed = allowed.map(|allowed| {
+                allowed
+                    .iter()
+                    .copied()
+                    .filter(|kind| *kind != EdgeKind::Call)
+                    .collect::<std::collections::HashSet<_>>()
+            });
+            let remaining_entries = remaining_allowed
+                .as_ref()
+                .filter(|allowed| !allowed.is_empty())
+                .map_or_else(Vec::new, |allowed| {
+                    graph.dependents_of(roots, args.depth, Some(allowed))
+                });
+            merge_entries(call_entries, remaining_entries)
+        }
         Direction::Dependents if args.include_symbols => {
             let graph = shared.graph_shared()?;
             let roots = roots_with_existing_queue_jobs(
@@ -108,4 +146,43 @@ fn collect_uncached_entries(
             .dependents_of(roots, args.depth, allowed),
     };
     Ok(entries)
+}
+
+fn has_call_relationship(allowed: Option<&std::collections::HashSet<EdgeKind>>) -> bool {
+    allowed.is_some_and(|allowed| allowed.contains(&EdgeKind::Call))
+}
+
+fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
+    entrypoints
+        .iter()
+        .filter_map(|entrypoint| {
+            let file = entrypoint.node.as_file()?.to_path_buf();
+            Some(match &entrypoint.symbol {
+                Some(symbol) => graph::CallRoot::Function {
+                    file,
+                    symbol: symbol.clone(),
+                },
+                None => graph::CallRoot::File(file),
+            })
+        })
+        .collect()
+}
+
+fn merge_entries(
+    left: Vec<graph::NodeEntry>,
+    right: Vec<graph::NodeEntry>,
+) -> Vec<graph::NodeEntry> {
+    let mut entries = std::collections::BTreeMap::new();
+    for entry in left.into_iter().chain(right) {
+        entries
+            .entry(entry.node.clone())
+            .and_modify(|current: &mut graph::NodeEntry| {
+                current.depth = current.depth.min(entry.depth);
+                current.via.extend(entry.via.iter().copied());
+                current.via.sort();
+                current.via.dedup();
+            })
+            .or_insert(entry);
+    }
+    entries.into_values().collect()
 }

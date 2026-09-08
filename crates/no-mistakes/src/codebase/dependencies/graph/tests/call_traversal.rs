@@ -106,6 +106,34 @@ fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
 }
 
 #[test]
+fn class_member_membership_does_not_create_call_edges() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+    let method = root.join("src/method.mts");
+    let calls = graph.deps_of(
+        &[symbol(&method, "Loader")],
+        None,
+        Some(&[EdgeKind::Call].into()),
+    );
+
+    assert!(calls.is_empty(), "class membership is not invocation evidence");
+}
+
+#[test]
 fn call_traversal_uses_deterministic_shortest_diamond_paths_and_terminates_cycles() {
     let (root, graph) = call_fixture_graph();
     let entry = root.join("src/entry.mts");

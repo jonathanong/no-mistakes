@@ -49,7 +49,7 @@ fn resolve_exported_callable(
             }
         } else {
             let local = file
-                .resolve_alias(None, &binding.local)
+                .resolve_alias(None, Some(0), &binding.local)
                 .unwrap_or_else(|| binding.local.clone());
             file.known_scopes
                 .contains(&local)

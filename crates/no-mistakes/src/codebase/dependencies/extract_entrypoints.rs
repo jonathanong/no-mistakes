@@ -28,6 +28,8 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     // a built-in. This is collection from the already parsed Program, not a
     // second source pass.
     collector.local_stack.push(HashSet::new());
+    collector.lexical_scope_ids.push(0);
+    collector.next_lexical_scope_id = 1;
     predeclare_program_value_bindings(&mut collector, program);
     let local_type_names = local_type_declaration_names(program);
     collector
@@ -49,7 +51,11 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     exported_resource_scopes.sort();
     let mut known_function_scopes: Vec<_> = collector.known_function_scopes.into_iter().collect();
     known_function_scopes.sort();
-    let mut callable_scopes: Vec<_> = collector.callable_scopes.into_iter().collect();
+    let mut callable_scopes: Vec<_> = collector
+        .callable_scopes
+        .into_iter()
+        .filter(|scope| !collector.reassigned_callable_scopes.contains(scope))
+        .collect();
     callable_scopes.sort();
     let callable_aliases = collector
         .callable_aliases
@@ -89,6 +95,7 @@ fn predeclare_program_value_bindings<'a>(collector: &mut ImportCollector, progra
             Statement::FunctionDeclaration(function) => {
                 if let Some(name) = function_name(function) {
                     collector.add_binding_name(&name);
+                    collector.record_callable_binding(&name);
                     collector.known_function_scopes.insert(name.clone());
                     collector.callable_scopes.insert(name);
                 }

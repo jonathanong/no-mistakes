@@ -11,6 +11,10 @@ struct ImportCollector {
     function_stack: Vec<String>,
     syntactic_caller_stack: Vec<String>,
     local_stack: Vec<HashSet<String>>,
+    /// Stable identities parallel to `local_stack`. Scope depth alone is not
+    /// an identity: sibling/nested blocks can reuse a depth while shadowing.
+    lexical_scope_ids: Vec<usize>,
+    next_lexical_scope_id: usize,
     type_local_stack: Vec<HashSet<String>>,
     type_parameter_stack: Vec<HashSet<String>>,
     function_scope_stack: Vec<usize>,
@@ -31,6 +35,9 @@ struct ImportCollector {
     call_export_bindings: Vec<ExportedBinding>,
     callable_aliases: Vec<CallableAliasBinding>,
     reassigned_alias_bindings: HashSet<CallableAliasBinding>,
+    callable_binding_ids: HashSet<(usize, String)>,
+    reassigned_callable_binding_ids: HashSet<(usize, String)>,
+    reassigned_callable_scopes: HashSet<String>,
     star_reexport_specifiers: Vec<String>,
     suppress_imports: bool,
     collect_suppressed_runtime_imports: bool,

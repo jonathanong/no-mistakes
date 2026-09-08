@@ -38,17 +38,22 @@ fn call_scope_resolution_walks_multiple_lexical_parents() {
 }
 
 #[test]
-fn callable_alias_resolution_reaches_module_scope_from_nested_callers() {
+fn callable_alias_resolution_uses_the_callee_binding_scope() {
     let index = CallableFileIndex {
         known_scopes: HashSet::from(["target".to_string()]),
         imported: HashMap::new(),
         exported: HashMap::new(),
-        aliases: HashMap::from([((None, "alias".to_string()), "target".to_string())]),
+        aliases: HashMap::from([((0, "alias".to_string()), "target".to_string())]),
         stars: Vec::new(),
     };
 
     assert_eq!(
-        index.resolve_alias(Some("outer/inner"), "alias"),
+        index.resolve_alias(Some("outer/inner"), Some(0), "alias"),
         Some("target".to_string()),
+    );
+    assert_eq!(
+        index.resolve_alias(Some("outer/inner"), Some(1), "alias"),
+        None,
+        "a block-local shadow must not resolve an outer alias",
     );
 }

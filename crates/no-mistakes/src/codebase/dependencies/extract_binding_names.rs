@@ -51,6 +51,12 @@ fn assignment_target_names(target: &AssignmentTarget<'_>) -> Vec<String> {
                     .flat_map(|rest| assignment_target_names(&rest.target)),
             )
             .collect(),
+        AssignmentTarget::StaticMemberExpression(member) => simple_static_member_name(member)
+            .into_iter()
+            .collect(),
+        AssignmentTarget::ComputedMemberExpression(member) => simple_computed_member_name(member)
+            .into_iter()
+            .collect(),
         _ => Vec::new(),
     }
 }

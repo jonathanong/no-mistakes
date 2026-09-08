@@ -13,6 +13,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
                 is_callback: false,
                 invocation: InvocationKind::Call,
                 target_identity: collector.call_target_identity(callee),
+                callee_binding_scope: collector.callee_binding_scope(callee),
                 static_arg: call.arguments.first().and_then(static_path_argument),
                 static_cwd: None,
             });
@@ -37,6 +38,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
     } else if let Some(callee) = simple_callee_name(&call.callee) {
         if collector.should_record_call(&callee) {
             let target_identity = collector.call_target_identity(&callee);
+            let callee_binding_scope = collector.callee_binding_scope(&callee);
             collector.function_calls.push(FunctionCall {
                 caller: collector.current_function(),
                 syntactic_caller: collector.current_syntactic_caller(),
@@ -47,6 +49,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
                 is_callback: false,
                 invocation: InvocationKind::Call,
                 target_identity,
+                callee_binding_scope,
                 static_arg: call.arguments.first().and_then(static_path_argument),
             });
         }
@@ -63,6 +66,7 @@ fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewE
     if let Some(callee) = simple_callee_name(&new.callee) {
         if collector.should_record_call(&callee) {
             let target_identity = collector.call_target_identity(&callee);
+            let callee_binding_scope = collector.callee_binding_scope(&callee);
             collector.function_calls.push(FunctionCall {
                 caller: collector.current_function(),
                 syntactic_caller: collector.current_syntactic_caller(),
@@ -73,6 +77,7 @@ fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewE
                 is_callback: false,
                 invocation: InvocationKind::Construct,
                 target_identity,
+                callee_binding_scope,
                 static_arg: new.arguments.first().and_then(static_path_argument),
             });
         }

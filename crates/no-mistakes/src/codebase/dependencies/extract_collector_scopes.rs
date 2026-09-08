@@ -78,6 +78,8 @@ impl ImportCollector {
             self.function_stack.push(scope);
             self.function_scope_stack.push(self.local_stack.len());
             self.local_stack.push(HashSet::new());
+            self.lexical_scope_ids.push(self.next_lexical_scope_id);
+            self.next_lexical_scope_id += 1;
             self.type_local_stack.push(HashSet::new());
             self.type_parameter_stack.push(HashSet::new());
         }
@@ -106,12 +108,15 @@ impl ImportCollector {
             is_callback: true,
             invocation: InvocationKind::Callback,
             target_identity: CallTargetIdentity::RepositoryFunction,
+            callee_binding_scope: None,
             static_arg: None,
             static_cwd: None,
         });
         self.function_stack.push(scope);
         self.function_scope_stack.push(self.local_stack.len());
         self.local_stack.push(HashSet::new());
+        self.lexical_scope_ids.push(self.next_lexical_scope_id);
+        self.next_lexical_scope_id += 1;
         self.type_local_stack.push(HashSet::new());
         self.type_parameter_stack.push(HashSet::new());
     }
@@ -121,6 +126,7 @@ impl ImportCollector {
             self.function_stack.pop();
             self.function_scope_stack.pop();
             self.local_stack.pop();
+            self.lexical_scope_ids.pop();
             self.type_local_stack.pop();
             self.type_parameter_stack.pop();
         }
@@ -148,6 +154,8 @@ impl ImportCollector {
     fn push_lexical_scope(&mut self) -> bool {
         if !self.local_stack.is_empty() {
             self.local_stack.push(HashSet::new());
+            self.lexical_scope_ids.push(self.next_lexical_scope_id);
+            self.next_lexical_scope_id += 1;
             self.type_local_stack.push(HashSet::new());
             self.type_parameter_stack.push(HashSet::new());
             true
@@ -159,6 +167,7 @@ impl ImportCollector {
     fn pop_lexical_scope(&mut self, pushed: bool) {
         if pushed {
             self.local_stack.pop();
+            self.lexical_scope_ids.pop();
             self.type_local_stack.pop();
             self.type_parameter_stack.pop();
         }

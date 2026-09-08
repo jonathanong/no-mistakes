@@ -51,6 +51,9 @@ fn push_variable_function_scope<'a>(
     declarator: &VariableDeclarator<'a>,
     name: Option<String>,
 ) {
+    if let Some(name) = name.as_deref() {
+        collector.record_callable_binding(name);
+    }
     if exported_top_level_binding(collector, name.as_ref()) {
         collector.push_function_scope(name);
         if let Some(scope) = collector.current_function() {
