@@ -74,7 +74,7 @@ pub(super) fn sanitize(sql: &str, conflicts: &[RawConflict]) -> String {
         .iter()
         .flat_map(|conflict| conflict.replacements.iter().cloned())
         .collect::<Vec<_>>();
-    replacements.sort_by(|left, right| right.0.cmp(&left.0));
+    replacements.sort_by_key(|replacement| std::cmp::Reverse(replacement.0));
     let mut sanitized = sql.to_string();
     for (start, end, replacement) in replacements {
         sanitized.replace_range(start..end, &replacement);
