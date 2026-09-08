@@ -222,7 +222,7 @@ for (var iterated of callbacks) iterated(url);
     assert.deepEqual(messages(code, RULE, ssrfOptions, "reassigned.ts"), []);
   });
 
-  it("matches static numeric CommonJS member and destructuring keys", () => {
+  it("ignores numeric CommonJS member and destructuring keys", () => {
     const options = {
       targets: [
         {
@@ -233,10 +233,7 @@ for (var iterated of callbacks) iterated(url);
         },
       ],
     };
-    assert.deepEqual(messages(ruleFixture("numeric.ts"), RULE, options, "numeric.ts"), [
-      "missingOptions",
-      "missingOptions",
-    ]);
+    assert.deepEqual(messages(ruleFixture("numeric.ts"), RULE, options, "numeric.ts"), []);
   });
 
   it("ignores computed CommonJS destructuring keys that are not literals", () => {

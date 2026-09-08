@@ -53,9 +53,7 @@ function memberPropertyName(node) {
 }
 
 function staticComputedPropertyName(node) {
-  const key = unwrapExpression(node);
-  const string = literalString(key);
-  return string ?? (typeof key?.value === "number" ? String(key.value) : null);
+  return literalString(unwrapExpression(node));
 }
 
 function createTargetMatcher(context, optionKey = "targets") {
