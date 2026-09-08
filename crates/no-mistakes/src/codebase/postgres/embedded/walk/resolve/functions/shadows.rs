@@ -1,7 +1,7 @@
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    BindingPattern, Declaration, Expression, Program, Statement, VariableDeclaration,
-    VariableDeclarator,
+    BindingPattern, Declaration, Expression, ImportDeclaration, ImportDeclarationSpecifier,
+    ImportOrExportKind, Program, Statement, VariableDeclaration, VariableDeclarator,
 };
 use std::collections::HashSet;
 
@@ -48,7 +48,37 @@ fn record_statement(statement: &Statement<'_>, shadows: &mut TagShadows) {
                 record_declaration(declaration, shadows);
             }
         }
+        Statement::ImportDeclaration(import) => record_import(import, shadows),
         _ => {}
+    }
+}
+
+/// An imported local binding spelled `sql` is exactly as untrusted as a
+/// non-helper-shaped top-level rebinding: nothing here verifies the
+/// import's source module actually is the trusted SQL-concatenation tag, so
+/// a same-spelled import from anywhere else can ignore its template
+/// argument and return arbitrary text.
+fn record_import(import: &ImportDeclaration<'_>, shadows: &mut TagShadows) {
+    if import.import_kind == ImportOrExportKind::Type {
+        return;
+    }
+    let Some(specifiers) = &import.specifiers else {
+        return;
+    };
+    for specifier in specifiers {
+        let local = match specifier {
+            ImportDeclarationSpecifier::ImportSpecifier(named) => {
+                if named.import_kind == ImportOrExportKind::Type {
+                    continue;
+                }
+                &named.local
+            }
+            ImportDeclarationSpecifier::ImportDefaultSpecifier(default) => &default.local,
+            ImportDeclarationSpecifier::ImportNamespaceSpecifier(namespace) => &namespace.local,
+        };
+        if local.name.eq_ignore_ascii_case("sql") {
+            shadows.names.insert(local.name.to_string());
+        }
     }
 }
 

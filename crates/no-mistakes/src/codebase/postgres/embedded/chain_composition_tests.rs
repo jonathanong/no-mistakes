@@ -127,3 +127,9 @@ fn tag_use_of_a_named_function_expressions_own_self_binding_fails_closed() {
     let facts = extract("composed-chain-shadowed-named-function-expression-self-tag.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
+
+#[test]
+fn helper_tagged_by_an_imported_sql_binding_fails_closed() {
+    let facts = extract("composed-chain-shadowed-imported-sql-tag.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
