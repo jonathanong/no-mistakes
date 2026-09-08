@@ -352,8 +352,8 @@ test("programmatic API proxies object options through async native addon calls",
         .entryWorkflow,
       "ci.yml",
     );
-    const cached = await api.ciTopology({ workflows: ["ci.yml"] });
-    cached.options.workflows[0] = "mutated.yml";
+    const topology = await api.ciTopology({ workflows: ["ci.yml"] });
+    topology.options.workflows[0] = "mutated.yml";
     assert.equal((await api.ciTopology({ workflows: ["ci.yml"] })).options.workflows[0], "ci.yml");
     assert.equal(await api.version(), "1.2.3");
   } finally {

@@ -511,7 +511,6 @@ addon avoids UTF-16 string copies at the N-API boundary.
   `includeGlob` is a `testsPlan()` option that scopes configured framework
   discovery before planning, so group accounting and execution targets contain
   only matching tests.
-  `ciTopology()` is memoized
-  in-process by root, config mtime, and workflows filter; pass `profile: "ci"`
+  `ciTopology()` reads the current filesystem for each call; pass `profile: "ci"`
   (or CLI `--profile ci`) to clear command and lock timeouts.
 - Prefer structured API results over parsing human CLI output.
