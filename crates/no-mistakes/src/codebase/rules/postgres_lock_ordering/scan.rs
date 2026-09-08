@@ -1,9 +1,6 @@
 use super::directive::{contains_for_update, has_safe_directive};
 use super::{CompiledOptions, RULE_ID};
-use crate::codebase::check_facts::CheckFactPlan;
-use crate::codebase::postgres::{
-    collect_postgres_facts, extract_locking_select_metadata, PostgresSchemaOptions, SchemaCatalog,
-};
+use crate::codebase::postgres::{extract_locking_select_metadata, SchemaCatalog};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
@@ -17,26 +14,24 @@ pub(super) fn scan_with_sources(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let catalog = opts
         .schema_catalog_path
         .as_deref()
-        .map(|path| SchemaCatalog::load(root, path, sources))
+        .map(|path| facts.postgres_schema_catalog(path))
         .transpose()?;
-    let facts = collect_postgres_facts(
-        root,
-        sources,
-        files,
-        &CheckFactPlan {
-            embedded_sql: true,
-            ..CheckFactPlan::default()
-        },
-        &PostgresSchemaOptions::default(),
-        &opts.embedded,
-    )
-    .with_context(|| format!("{RULE_ID} failed to collect embedded SQL facts"))?;
     let mut findings = Vec::new();
-    for file in facts.embedded {
+    for path in files
+        .iter()
+        .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
+    {
+        let file = facts.embedded_sql(path, &opts.embedded).with_context(|| {
+            format!(
+                "{RULE_ID} failed to collect embedded SQL facts from prepared analysis for {}",
+                path.display()
+            )
+        })?;
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
         for call in &file.calls {
@@ -97,11 +92,14 @@ fn findings_for_call_with_catalog(
                     lock.has_multi_row_predicate
                         && !lock.skips_locked_rows
                         && !lock
-                            .table
+                            .tables
                             .as_deref()
                             .zip(lock.order.as_deref())
-                            .is_some_and(|(table, order)| {
-                                catalog.has_canonical_prefix(table, order)
+                            .is_some_and(|(tables, order)| {
+                                !tables.is_empty()
+                                    && tables
+                                        .iter()
+                                        .all(|table| catalog.has_canonical_prefix(table, order))
                             })
                 }) {
                     vec![finding(

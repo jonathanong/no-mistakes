@@ -9,14 +9,14 @@ mod raw;
 mod tests;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(super) struct AnalyzedInsert {
+pub struct SqlConflictInsertFact {
     pub table: String,
-    pub target: ConflictTargetKind,
-    pub source: SourceShape,
+    pub target: SqlConflictTarget,
+    pub source: SqlInsertSourceShape,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(super) enum ConflictTargetKind {
+pub enum SqlConflictTarget {
     Columns {
         expressions: Vec<String>,
         predicate: Option<String>,
@@ -26,13 +26,14 @@ pub(super) enum ConflictTargetKind {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub(super) struct SourceShape {
+pub struct SqlInsertSourceShape {
     pub multi_row: bool,
     pub order: Option<Vec<CanonicalOrderKey>>,
     pub projections: Option<BTreeMap<String, String>>,
+    pub order_aliases: BTreeMap<String, String>,
 }
 
-pub(super) fn analyze_inserts(sql: &str) -> Result<Vec<AnalyzedInsert>> {
+pub fn analyze_conflict_inserts(sql: &str) -> Result<Vec<SqlConflictInsertFact>> {
     let raw = raw_conflicts(sql)?;
     if raw.is_empty() {
         return Ok(Vec::new());
@@ -59,24 +60,26 @@ pub(super) fn analyze_inserts(sql: &str) -> Result<Vec<AnalyzedInsert>> {
     Ok(inserts)
 }
 
-fn analyze_insert(insert: &Insert, target: ConflictTargetKind) -> Result<AnalyzedInsert> {
+fn analyze_insert(insert: &Insert, target: SqlConflictTarget) -> Result<SqlConflictInsertFact> {
     let table = match &insert.table {
         TableObject::TableName(name) => name.to_string(),
         _ => bail!("INSERT target is not a table name"),
     };
     let source = insert.source.as_deref().map_or(
-        SourceShape {
+        SqlInsertSourceShape {
             multi_row: false,
             order: None,
             projections: None,
+            order_aliases: BTreeMap::new(),
         },
-        |query| SourceShape {
+        |query| SqlInsertSourceShape {
             multi_row: query_is_potentially_multi_row(query.body.as_ref()),
             order: query.order_by.as_ref().and_then(order_keys),
             projections: projection_map(insert, query.body.as_ref()),
+            order_aliases: order_aliases(query.body.as_ref()),
         },
     );
-    Ok(AnalyzedInsert {
+    Ok(SqlConflictInsertFact {
         table,
         target,
         source,
@@ -134,6 +137,22 @@ fn projection_map(insert: &Insert, body: &SetExpr) -> Option<BTreeMap<String, St
                 _ => return None,
             };
             Some((column.to_string().to_ascii_lowercase(), expression))
+        })
+        .collect()
+}
+
+fn order_aliases(body: &SetExpr) -> BTreeMap<String, String> {
+    let SetExpr::Select(select) = body else {
+        return BTreeMap::new();
+    };
+    select
+        .projection
+        .iter()
+        .filter_map(|projection| {
+            let SelectItem::ExprWithAlias { expr, alias } = projection else {
+                return None;
+            };
+            Some((alias.value.to_ascii_lowercase(), expr.to_string()))
         })
         .collect()
 }

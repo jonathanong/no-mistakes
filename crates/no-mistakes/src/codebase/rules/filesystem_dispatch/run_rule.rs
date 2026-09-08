@@ -7,7 +7,7 @@ pub(super) struct RunRuleRequest<'a> {
     pub(super) root: &'a Path,
     pub(super) config: &'a crate::config::v2::NoMistakesConfig,
     pub(super) files: &'a [PathBuf],
-    pub(super) sources: &'a crate::codebase::ts_source::SourceStore,
+    pub(super) sources: &'a std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     pub(super) facts: Option<&'a crate::codebase::check_facts::CheckFactMap>,
     pub(super) defer_suppression: bool,
 }

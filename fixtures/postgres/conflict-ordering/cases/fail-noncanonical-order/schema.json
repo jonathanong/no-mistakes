@@ -1,0 +1,16 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "items": {
+      "indexes": {
+        "items_tenant_id_key": {
+          "accessMethod": "btree",
+          "unique": true,
+          "valid": true,
+          "ready": true,
+          "keys": [{ "expression": "tenant_id" }, { "expression": "id" }]
+        }
+      }
+    }
+  }
+}

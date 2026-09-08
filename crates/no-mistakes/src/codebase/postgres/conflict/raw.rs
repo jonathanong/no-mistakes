@@ -1,4 +1,4 @@
-use super::ConflictTargetKind;
+use super::SqlConflictTarget;
 use anyhow::Result;
 use lex::{
     find_keyword, matching_parenthesis, skip_whitespace, split_top_level, starts_keyword,
@@ -9,7 +9,7 @@ mod lex;
 
 #[derive(Debug, Clone)]
 pub(super) struct RawConflict {
-    pub(super) target: ConflictTargetKind,
+    pub(super) target: SqlConflictTarget,
     replacements: Vec<(usize, usize, String)>,
 }
 
@@ -32,7 +32,7 @@ pub(super) fn raw_conflicts(sql: &str) -> Result<Vec<RawConflict>> {
             let constraint_start = skip_whitespace(sql, after + "on".len());
             let name_start = skip_whitespace(sql, constraint_start + "constraint".len());
             let (name, end) = take_identifier(sql, name_start)?;
-            (ConflictTargetKind::Constraint(name), Vec::new(), end)
+            (SqlConflictTarget::Constraint(name), Vec::new(), end)
         } else if sql.as_bytes().get(after) == Some(&b'(') {
             let close = matching_parenthesis(sql, after)?;
             let expressions = split_top_level(&sql[after + 1..close]);
@@ -50,7 +50,7 @@ pub(super) fn raw_conflicts(sql: &str) -> Result<Vec<RawConflict>> {
                 replacements.push((where_start, do_start, " ".to_string()));
             }
             (
-                ConflictTargetKind::Columns {
+                SqlConflictTarget::Columns {
                     expressions,
                     predicate,
                 },
@@ -58,7 +58,7 @@ pub(super) fn raw_conflicts(sql: &str) -> Result<Vec<RawConflict>> {
                 close + 1,
             )
         } else {
-            (ConflictTargetKind::Targetless, Vec::new(), after)
+            (SqlConflictTarget::Targetless, Vec::new(), after)
         };
         conflicts.push(RawConflict {
             target,
@@ -74,7 +74,7 @@ pub(super) fn sanitize(sql: &str, conflicts: &[RawConflict]) -> String {
         .iter()
         .flat_map(|conflict| conflict.replacements.iter().cloned())
         .collect::<Vec<_>>();
-    replacements.sort_by(|left, right| right.0.cmp(&left.0));
+    replacements.sort_by_key(|replacement| std::cmp::Reverse(replacement.0));
     let mut sanitized = sql.to_string();
     for (start, end, replacement) in replacements {
         sanitized.replace_range(start..end, &replacement);

@@ -8,7 +8,7 @@ fn bin() -> PathBuf {
 fn fixture(scenario: &str) -> PathBuf {
     no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../test-cases/rules/postgres-conflict-ordering/fixture")
+            .join("../../fixtures/postgres/conflict-ordering/cases")
             .join(scenario),
     )
 }

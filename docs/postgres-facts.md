@@ -175,8 +175,17 @@ when the AST is missing.
 
 Unparseable SQL returns an error. The lock-ordering rule consumes this helper
 instead of re-parsing SQL with a private parser. `postgres-conflict-ordering`
-also consumes the shared embedded-SQL facts, then resolves its conflict arbiter
-against the committed Vouchington schema snapshot.
+also consumes request-prepared embedded-SQL facts, then resolves its conflict
+arbiter against the configured PostgreSQL schema snapshot. Distinct executor
+configurations and catalog paths are prepared once per request and reused by
+every rule application that selects them.
+
+`analyze_conflict_inserts(sql)` exposes the same structured SQL projection to
+Rust callers as `SqlConflictInsertFact`, `SqlConflictTarget`, and
+`SqlInsertSourceShape`. It preserves ordered conflict expressions, partial
+predicates, source cardinality, projected target columns, aliases, and parsed
+`ORDER BY` keys; rule engines resolve those facts against `SchemaCatalog`
+instead of owning another SQL shape.
 
 ## Offset facts
 

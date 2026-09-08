@@ -1,8 +1,8 @@
-use super::super::syntax::{analyze_inserts, ConflictTargetKind, SourceShape};
 use super::super::RULE_ID;
 use super::substitute::substitute_target_columns;
 use crate::codebase::postgres::{
-    order_prefix_matches, CanonicalIndex, CanonicalOrderKey, ResolvedArbiter, SchemaCatalog,
+    analyze_conflict_inserts, order_prefix_matches, CanonicalIndex, CanonicalOrderKey,
+    ResolvedArbiter, SchemaCatalog, SqlConflictInsertFact, SqlConflictTarget, SqlInsertSourceShape,
 };
 use crate::codebase::rules::RuleFinding;
 
@@ -13,7 +13,7 @@ pub(super) fn findings_for_sql(
     catalog: &SchemaCatalog,
     fail_unanalyzable: bool,
 ) -> Vec<RuleFinding> {
-    let inserts = match analyze_inserts(sql) {
+    let inserts = match analyze_conflict_inserts(sql) {
         Ok(inserts) => inserts,
         Err(_) if fail_unanalyzable && contains_insert_conflict(sql) => {
             return vec![finding(
@@ -35,11 +35,11 @@ pub(super) fn findings_for_sql(
 fn finding_for_insert(
     file: &str,
     line: usize,
-    insert: super::super::syntax::AnalyzedInsert,
+    insert: SqlConflictInsertFact,
     catalog: &SchemaCatalog,
 ) -> Option<RuleFinding> {
     let (arbiter, target_is_ordered) = match &insert.target {
-        ConflictTargetKind::Targetless => {
+        SqlConflictTarget::Targetless => {
             return Some(finding(
                 file,
                 line,
@@ -47,14 +47,14 @@ fn finding_for_insert(
                 "multi-row ON CONFLICT DO NOTHING needs an explicit conflict target; targetless DO NOTHING can arbitrate different unique or exclusion constraints",
             ));
         }
-        ConflictTargetKind::Columns {
+        SqlConflictTarget::Columns {
             expressions,
             predicate,
         } => (
             catalog.resolve_columns(&insert.table, expressions, predicate.as_deref()),
             Some(expressions),
         ),
-        ConflictTargetKind::Constraint(name) => {
+        SqlConflictTarget::Constraint(name) => {
             (catalog.resolve_constraint(&insert.table, name), None)
         }
     };
@@ -95,7 +95,7 @@ fn finding_for_insert(
             "multi-row INSERT source must be a direct SELECT with explicit target columns so arbiter expressions can be mapped to ORDER BY",
         ));
     };
-    let Some(actual) = insert.source.order else {
+    let Some(actual) = insert.source.order.as_ref() else {
         return Some(finding(
             file,
             line,
@@ -106,6 +106,7 @@ fn finding_for_insert(
             ),
         ));
     };
+    let actual = resolve_order_aliases(actual, &insert.source.order_aliases);
     if !order_prefix_matches(&actual, &expected, false) {
         return Some(finding(
             file,
@@ -129,7 +130,7 @@ fn target_matches_catalog(target: &[String], index: &CanonicalIndex) -> bool {
 
 fn expected_source_order(
     index: &CanonicalIndex,
-    source: &SourceShape,
+    source: &SqlInsertSourceShape,
 ) -> Option<Vec<CanonicalOrderKey>> {
     let projections = source.projections.as_ref()?;
     index
@@ -162,6 +163,28 @@ fn display_keys(keys: &[CanonicalOrderKey]) -> String {
 pub(super) fn contains_insert_conflict(sql: &str) -> bool {
     let normalized = sql.to_ascii_lowercase();
     normalized.contains("insert") && normalized.contains("on conflict")
+}
+
+pub(super) fn contains_insert(sql: &str) -> bool {
+    sql.split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
+        .any(|token| token.eq_ignore_ascii_case("insert"))
+}
+
+fn resolve_order_aliases(
+    order: &[CanonicalOrderKey],
+    aliases: &std::collections::BTreeMap<String, String>,
+) -> Vec<CanonicalOrderKey> {
+    order
+        .iter()
+        .map(|key| CanonicalOrderKey {
+            expression: aliases
+                .get(&key.expression.to_ascii_lowercase())
+                .cloned()
+                .unwrap_or_else(|| key.expression.clone()),
+            ascending: key.ascending,
+            nulls_first: key.nulls_first,
+        })
+        .collect()
 }
 
 pub(super) fn finding(file: &str, line: usize, target: &str, message: &str) -> RuleFinding {

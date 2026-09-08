@@ -6,13 +6,16 @@ use sqlparser::ast::{
     Statement, TableFactor, TableWithJoins,
 };
 
+mod relations;
+use relations::locked_tables;
+
 /// Locking `SELECT` facts later lock-ordering rules can query.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct LockingSelectMetadata {
     pub has_multi_row_predicate: bool,
     pub has_order_by: bool,
     pub skips_locked_rows: bool,
-    pub table: Option<String>,
+    pub tables: Option<Vec<String>>,
     pub order: Option<Vec<CanonicalOrderKey>>,
 }
 
@@ -46,22 +49,9 @@ fn collect_from_query(query: &Query, out: &mut Vec<LockingSelectMetadata>) {
             has_multi_row_predicate: set_expr_has_multi_row(&query.body),
             has_order_by: query.order_by.is_some(),
             skips_locked_rows: locks_skip_locked(&query.locks),
-            table: lock_table(&query.body),
+            tables: locked_tables(&query.body, &query.locks),
             order: query.order_by.as_ref().and_then(order_keys),
         });
-    }
-}
-
-fn lock_table(expr: &SetExpr) -> Option<String> {
-    match expr {
-        SetExpr::Select(select) => {
-            let TableFactor::Table { name, .. } = &select.from.first()?.relation else {
-                return None;
-            };
-            Some(relation_name(name))
-        }
-        SetExpr::Query(query) => lock_table(&query.body),
-        _ => None,
     }
 }
 

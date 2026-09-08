@@ -6,12 +6,11 @@ use crate::config::v2::{
 use std::path::{Path, PathBuf};
 
 fn fixture_root() -> PathBuf {
-    PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/rules/postgres-conflict-ordering")
+    PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/postgres/conflict-ordering")
 }
 
 fn fixture(scenario: &str) -> PathBuf {
-    fixture_root().join("fixture").join(scenario)
+    fixture_root().join("cases").join(scenario)
 }
 
 fn config() -> NoMistakesConfig {
@@ -50,8 +49,37 @@ fn rejects_a_multi_row_source_without_canonical_order() {
 }
 
 #[test]
+fn rejects_a_noncanonical_source_order() {
+    let findings = findings("fail-noncanonical-order");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].target.as_deref(), Some("noncanonical-order"));
+}
+
+#[test]
+fn rejects_a_source_that_cannot_be_mapped_to_target_columns() {
+    let findings = findings("fail-unresolved-source-order");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("unresolved-source-order")
+    );
+}
+
+#[test]
 fn accepts_the_catalog_key_prefix() {
     assert!(findings("pass-canonical-order").is_empty());
+}
+
+#[test]
+fn resolves_top_level_select_aliases_in_the_source_order() {
+    let root = fixture("pass-canonical-order");
+    let findings = check_with_files(
+        &root,
+        &config(),
+        &[root.join("src/alias.ts"), root.join("schema.json")],
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:#?}");
 }
 
 #[test]
@@ -110,7 +138,9 @@ fn scans_opted_in_static_sql_sources() {
     let root = fixture("pass-sql-include");
     let findings = check_with_files(
         &root,
-        &config_with_options("schemaCatalogPath: schema.json\nsqlInclude: ['queries/**/*.sql']"),
+        &config_with_options(
+            "schemaCatalogPath: schema.json\ninclude: ['src/**/*.ts']\nsqlInclude: ['queries/**/*.sql']",
+        ),
         &[root.join("queries/insert.sql"), root.join("schema.json")],
     )
     .unwrap();
@@ -127,6 +157,21 @@ fn requires_a_catalog_path() {
 }
 
 #[test]
+fn compile_options_canonicalize_executor_names_for_prepared_fact_lookup() {
+    let compiled = compile_options(&Options {
+        schema_catalog_path: "schema.json".to_string(),
+        executor_names: vec![
+            "write".to_string(),
+            "query".to_string(),
+            "write".to_string(),
+        ],
+        ..Default::default()
+    })
+    .unwrap();
+    assert_eq!(compiled.embedded.executor_names, ["query", "write"]);
+}
+
+#[test]
 fn rejects_recovered_dynamic_conflict_sql_by_default() {
     let root = fixture("pass-canonical-order");
     let result = check_with_files(
@@ -137,6 +182,34 @@ fn rejects_recovered_dynamic_conflict_sql_by_default() {
     .unwrap();
     assert_eq!(result.len(), 1, "{result:#?}");
     assert_eq!(result[0].target.as_deref(), Some("unanalyzable-sql"));
+}
+
+#[test]
+fn rejects_a_dynamic_insert_before_its_conflict_clause_is_recovered() {
+    let root = fixture("pass-canonical-order");
+    let result = check_with_files(
+        &root,
+        &config(),
+        &[
+            root.join("src/dynamic-insert-fragment.ts"),
+            root.join("schema.json"),
+        ],
+    )
+    .unwrap();
+    assert_eq!(result.len(), 1, "{result:#?}");
+    assert_eq!(result[0].target.as_deref(), Some("unanalyzable-sql"));
+}
+
+#[test]
+fn ignores_recovered_dynamic_non_insert_sql() {
+    let root = fixture("pass-canonical-order");
+    let result = check_with_files(
+        &root,
+        &config(),
+        &[root.join("src/dynamic-select.ts"), root.join("schema.json")],
+    )
+    .unwrap();
+    assert!(result.is_empty(), "{result:#?}");
 }
 
 #[test]

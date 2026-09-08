@@ -15,6 +15,16 @@ fn fixture_root() -> PathBuf {
 }
 
 fn fixture(scenario: &str) -> PathBuf {
+    // New catalog fixtures live under the canonical repository fixture root;
+    // retain legacy locations for pre-existing lock-ordering scenarios.
+    if matches!(
+        scenario,
+        "fail-catalog-join" | "fail-catalog-order" | "pass-catalog" | "pass-catalog-of-alias"
+    ) {
+        return PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/postgres/lock-ordering")
+            .join(scenario);
+    }
     fixture_root().join("fixture").join(scenario)
 }
 
@@ -77,7 +87,11 @@ fn order_by_is_safe() {
 #[test]
 fn catalog_mode_requires_a_real_unique_key_prefix() {
     assert!(findings_with_catalog("pass-catalog").is_empty());
+    assert!(findings_with_catalog("pass-catalog-of-alias").is_empty());
     let findings = findings_with_catalog("fail-catalog-order");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(findings[0].message.contains("schema-catalog"));
+    let findings = findings_with_catalog("fail-catalog-join");
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert!(findings[0].message.contains("schema-catalog"));
 }
@@ -234,14 +248,14 @@ fn missing_sql_text_is_ignored() {
 fn compile_options_honor_overrides() {
     let compiled = compile_options(&Options {
         import_specifier: "@other/db".to_string(),
-        executor_names: vec!["run".to_string()],
+        executor_names: vec!["write".to_string(), "run".to_string(), "write".to_string()],
         safe_directive: "ordered-locks".to_string(),
         schema_catalog_path: "schema.json".to_string(),
         ..Default::default()
     })
     .unwrap();
     assert_eq!(compiled.embedded.import_specifier, "@other/db");
-    assert_eq!(compiled.embedded.executor_names, ["run"]);
+    assert_eq!(compiled.embedded.executor_names, ["run", "write"]);
     assert_eq!(compiled.safe_directive, "ordered-locks");
     assert_eq!(compiled.schema_catalog_path.as_deref(), Some("schema.json"));
 }

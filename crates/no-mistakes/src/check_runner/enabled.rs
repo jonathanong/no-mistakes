@@ -79,6 +79,8 @@ pub(crate) fn fact_plan(enabled: EnabledChecks) -> CheckFactPlan {
             || enabled.storybook_stories,
         postgres_schema: false,
         embedded_sql: enabled.embedded_sql,
+        embedded_sql_options: Vec::new(),
+        postgres_schema_catalog_paths: Vec::new(),
         postgres_dml: false,
         graph: if enabled.dynamic_import_rules {
             no_mistakes::codebase::ts_source::facts::TsFactPlan::imports()
@@ -101,6 +103,9 @@ pub(crate) fn plan_requests_facts(plan: &CheckFactPlan) -> bool {
         || plan.server_route_client_boundary
         || plan.raw_source
         || plan.source
+        || plan.embedded_sql
+        || !plan.embedded_sql_options.is_empty()
+        || !plan.postgres_schema_catalog_paths.is_empty()
         || !plan.graph.is_empty()
 }
 
@@ -124,11 +129,6 @@ fn postgres_embedded_sql_configured(config: &no_mistakes::config::v2::NoMistakes
     [
         no_mistakes::codebase::rules::POSTGRES_CONFLICT_ORDERING,
         no_mistakes::codebase::rules::POSTGRES_LOCK_ORDERING,
-        no_mistakes::codebase::rules::POSTGRES_NO_OFFSET,
-        no_mistakes::codebase::rules::POSTGRES_REQUIRE_QUERY_ANNOTATION,
-        no_mistakes::codebase::rules::POSTGRES_REQUIRED_PREDICATES,
-        no_mistakes::codebase::rules::POSTGRES_SQL_SHAPE_POLICY,
-        no_mistakes::codebase::rules::POSTGRES_IDEMPOTENT_INSERT,
     ]
     .iter()
     .any(|rule_id| rule_configured(config, rule_id))

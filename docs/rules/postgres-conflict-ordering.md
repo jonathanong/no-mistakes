@@ -28,8 +28,8 @@ rules:
       safeDirective: deadlock-safe
 ```
 
-`schemaCatalogPath` is required and must name a repository-relative Vouchington
-PostgreSQL `schema.json` snapshot with `formatVersion: 2`. The snapshot, not a
+`schemaCatalogPath` is required and must name a repository-relative PostgreSQL
+schema snapshot with `formatVersion: 2`. The snapshot, not a
 lexical sort, supplies an index's expression and key order. `sqlInclude` is
 opt-in (default `[]`) and adds static `.sql` query files; typed executor calls
 are always considered. `importSpecifier` defaults to `@data-stores/psql` and
@@ -43,8 +43,8 @@ exception is being removed. `safeDirective` defaults to `deadlock-safe`.
 
 For a potentially multi-row `INSERT … SELECT … ON CONFLICT`, the rule:
 
-1. rejects targetless `ON CONFLICT DO NOTHING`, because no one arbiter can be
-   selected;
+1. rejects `ON CONFLICT DO NOTHING` when its target is omitted, because no one
+   arbiter can be selected;
 2. resolves the column/expression target plus an optional partial-index
    predicate against valid, ready btree unique indexes in the catalog;
 3. rejects an unresolved or differently ordered set of inferred indexes;
@@ -55,8 +55,10 @@ For a potentially multi-row `INSERT … SELECT … ON CONFLICT`, the rule:
 
 The comparison parses SQL expressions: for example, an index key
 `lower(category_text)` maps to `lower(input.category_text)` without treating
-`lower` as a column. Only an exact normalized partial-index predicate is
-accepted; logical implication is deliberately not guessed.
+`lower` as a column. It also resolves a top-level `SELECT` alias, so
+`SELECT input.id AS conflict_id ... ORDER BY conflict_id` is accepted. Only an
+exact normalized partial-index predicate is accepted; logical implication is
+deliberately not guessed.
 
 ## Valid example
 
@@ -92,8 +94,9 @@ ON CONFLICT (left_id, right_id) DO NOTHING
 
 ## Dynamic SQL and suppression
 
-Recovered dynamic SQL that visibly contains `INSERT` and `ON CONFLICT` fails
-closed by default because appended branches can alter the row order. A wholly
+Recovered dynamic SQL whose static fragments identify an `INSERT` fails closed
+by default because an interpolation can add or alter its conflict clause and
+row order. A wholly
 opaque dynamic call has no recoverable conflict shape, so the rule does not
 claim it is safe or unsafe. Make the statement static, use `unanalyzableSql:
 ignore` for a temporary scoped rollout exception, or add a nearby SQL/comment

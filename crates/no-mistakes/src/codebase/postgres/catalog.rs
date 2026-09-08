@@ -105,7 +105,10 @@ impl SchemaCatalog {
         let snapshot: Snapshot = serde_json::from_str(&source)
             .with_context(|| format!("schemaCatalogPath {} is not valid JSON", path.display()))?;
         if snapshot.format_version != 2 {
-            bail!("schemaCatalogPath {} must be a Vouchington PostgreSQL schema snapshot formatVersion 2", path.display());
+            bail!(
+                "schemaCatalogPath {} must be a PostgreSQL schema snapshot with formatVersion 2",
+                path.display()
+            );
         }
         Ok(Self::from_snapshot(snapshot))
     }
@@ -177,15 +180,24 @@ fn normalize_identifier(identifier: &str) -> String {
         .trim_matches('"')
         .to_ascii_lowercase()
 }
-fn catalog_path(root: &Path, raw_path: &str) -> Result<PathBuf> {
+pub(crate) fn normalize_catalog_path(raw_path: &str) -> Result<PathBuf> {
     let path = Path::new(raw_path);
-    if raw_path.is_empty()
-        || path.is_absolute()
-        || path
-            .components()
-            .any(|part| matches!(part, Component::ParentDir))
-    {
+    let mut normalized = PathBuf::new();
+    for component in path.components() {
+        match component {
+            Component::Normal(value) => normalized.push(value),
+            Component::CurDir => {}
+            Component::ParentDir | Component::RootDir | Component::Prefix(_) => {
+                bail!("schemaCatalogPath must be a non-empty repository-relative path");
+            }
+        }
+    }
+    if normalized.as_os_str().is_empty() {
         bail!("schemaCatalogPath must be a non-empty repository-relative path");
     }
-    Ok(root.join(path))
+    Ok(normalized)
+}
+
+fn catalog_path(root: &Path, raw_path: &str) -> Result<PathBuf> {
+    Ok(root.join(normalize_catalog_path(raw_path)?))
 }

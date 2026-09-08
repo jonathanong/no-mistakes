@@ -2,11 +2,7 @@ mod analysis;
 mod substitute;
 
 use super::{CompiledOptions, RULE_ID};
-use crate::codebase::check_facts::CheckFactPlan;
-use crate::codebase::postgres::{
-    collect_postgres_facts, postgres_sql_paths, EmbeddedSqlKind, PostgresSchemaOptions,
-    SchemaCatalog,
-};
+use crate::codebase::postgres::{postgres_sql_paths, EmbeddedSqlKind};
 use crate::codebase::rules::postgres_lock_ordering::directive::has_safe_directive;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
@@ -18,25 +14,23 @@ pub(super) fn scan_with_sources(
     opts: &CompiledOptions,
     files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    let catalog = SchemaCatalog::load(root, &opts.schema_catalog_path, sources)?;
-    let facts = collect_postgres_facts(
-        root,
-        sources,
-        files,
-        &CheckFactPlan {
-            embedded_sql: true,
-            ..CheckFactPlan::default()
-        },
-        &PostgresSchemaOptions::default(),
-        &opts.embedded,
-    )
-    .with_context(|| format!("{RULE_ID} failed to collect embedded SQL facts"))?;
+    let catalog = facts.postgres_schema_catalog(&opts.schema_catalog_path)?;
     let mut findings = Vec::new();
-    for file in facts.embedded {
+    for path in files
+        .iter()
+        .filter(|path| crate::codebase::dependencies::extract::is_indexable(path))
+    {
+        let file = facts.embedded_sql(path, &opts.embedded).with_context(|| {
+            format!(
+                "{RULE_ID} failed to collect embedded SQL facts from prepared analysis for {}",
+                path.display()
+            )
+        })?;
         let rel = relative_slash_path(root, &file.path);
         let source = crate::codebase::rules::read_source(sources, &file.path).unwrap_or_default();
-        for call in file.calls {
+        for call in &file.calls {
             if has_safe_directive(
                 &source,
                 call.line,
@@ -50,13 +44,13 @@ pub(super) fn scan_with_sources(
                     && call
                         .sql_text
                         .as_deref()
-                        .is_some_and(analysis::contains_insert_conflict)
+                        .is_some_and(analysis::contains_insert)
                 {
                     findings.push(analysis::finding(
                         &rel,
                         call.line as usize,
                         "unanalyzable-sql",
-                        "keep INSERT ... ON CONFLICT SQL statically parseable so canonical ordering can be checked",
+                        "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked",
                     ));
                 }
                 continue;
@@ -68,7 +62,7 @@ pub(super) fn scan_with_sources(
                 &rel,
                 call.line as usize,
                 sql,
-                &catalog,
+                catalog,
                 opts.fail_unanalyzable,
             ));
         }
@@ -84,7 +78,7 @@ pub(super) fn scan_with_sources(
                 &rel,
                 1,
                 &source,
-                &catalog,
+                catalog,
                 opts.fail_unanalyzable,
             ));
         }

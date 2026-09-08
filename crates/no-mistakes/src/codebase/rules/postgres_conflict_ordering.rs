@@ -1,6 +1,8 @@
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
-use crate::codebase::postgres::{fail_unanalyzable_sql, EmbeddedSqlOptions, PostgresSchemaOptions};
+use crate::codebase::postgres::{
+    fail_unanalyzable_sql, postgres_sql_paths, EmbeddedSqlOptions, PostgresSchemaOptions,
+};
 use crate::codebase::rules::postgres_lock_ordering::directive::DEFAULT_SAFE_DIRECTIVE;
 use crate::codebase::ts_source::relative_slash_path;
 use crate::config::v2::NoMistakesConfig;
@@ -10,7 +12,6 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 
 mod scan;
-mod syntax;
 
 pub const RULE_ID: &str = "postgres-conflict-ordering";
 
@@ -42,6 +43,10 @@ impl CompiledOptions {
         (self.include.is_empty() || self.include.is_match(rel))
             && (self.exclude.is_empty() || !self.exclude.is_match(rel))
     }
+
+    fn excludes(&self, rel: &str) -> bool {
+        !self.exclude.is_empty() && self.exclude.is_match(rel)
+    }
 }
 
 pub(crate) fn check_with_files(
@@ -57,7 +62,27 @@ pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
+    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> Result<Vec<RuleFinding>> {
+    let profiles = crate::codebase::postgres::configured_embedded_sql_options(config, &[RULE_ID])?;
+    let catalog_paths =
+        crate::codebase::postgres::configured_schema_catalog_paths(config, &[RULE_ID])?;
+    let facts = crate::codebase::postgres::prepare_embedded_sql_facts(
+        root,
+        all_files,
+        std::sync::Arc::clone(sources),
+        profiles,
+        catalog_paths,
+    );
+    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
+}
+
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -74,12 +99,22 @@ pub(crate) fn check_with_files_and_sources(
                 })
                 .cloned()
                 .collect();
-            let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
-            let files: Vec<PathBuf> = files
-                .into_iter()
+            let scoped_files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+            let mut files: Vec<PathBuf> = scoped_files
+                .iter()
                 .filter(|path| compiled.includes(&relative_slash_path(root, path)))
+                .cloned()
                 .collect();
-            scan::scan_with_sources(root, &compiled, &files, sources)
+            if let Some(sql_sources) = &compiled.sql_sources {
+                files.extend(
+                    postgres_sql_paths(root, &scoped_files, sql_sources)?
+                        .into_iter()
+                        .filter(|path| !compiled.excludes(&relative_slash_path(root, path))),
+                );
+            }
+            files.sort();
+            files.dedup();
+            scan::scan_with_sources(root, &compiled, &files, sources, facts)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -93,22 +128,10 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     }
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
-    let defaults = EmbeddedSqlOptions::default();
     Ok(CompiledOptions {
         include,
         exclude,
-        embedded: EmbeddedSqlOptions {
-            import_specifier: if opts.import_specifier.is_empty() {
-                defaults.import_specifier
-            } else {
-                opts.import_specifier.clone()
-            },
-            executor_names: if opts.executor_names.is_empty() {
-                defaults.executor_names
-            } else {
-                opts.executor_names.clone()
-            },
-        },
+        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
         schema_catalog_path: opts.schema_catalog_path.clone(),
         sql_sources: (!opts.sql_include.is_empty()).then(|| PostgresSchemaOptions {
             sql_include: opts.sql_include.clone(),

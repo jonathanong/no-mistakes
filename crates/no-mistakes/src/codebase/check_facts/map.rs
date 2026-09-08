@@ -50,6 +50,10 @@ pub struct CheckFactMap {
     pub(crate) playwright_routes_cache: PlaywrightRoutesCache,
     pub(crate) app_text_targets_cache: AppTextTargetsCache,
     pub(crate) route_reachable_files_cache: RouteReachableFilesCache,
+    pub(crate) postgres_schema_catalogs: std::collections::BTreeMap<
+        String,
+        Result<Arc<crate::codebase::postgres::SchemaCatalog>, Arc<str>>,
+    >,
 }
 
 #[derive(Default)]
@@ -66,6 +70,10 @@ pub(crate) struct CheckFileFacts {
     pub dynamic_imports: Option<TestFacts>,
     pub nextjs_caching: Option<Vec<NextjsCachingFinding>>,
     pub storybook: Option<StorybookFileFacts>,
+    pub(crate) embedded_sql: Vec<(
+        crate::codebase::postgres::EmbeddedSqlOptions,
+        crate::codebase::postgres::EmbeddedSqlFileFacts,
+    )>,
     pub(crate) server_route_client_boundary:
         Option<crate::codebase::rules::server_route_client_boundary::FileFacts>,
     pub(crate) playwright: Option<PlaywrightTestFacts>,
@@ -81,6 +89,42 @@ pub(crate) struct CheckFileFacts {
 impl CheckFactMap {
     pub fn files(&self) -> &[PathBuf] {
         &self.files
+    }
+
+    pub(crate) fn embedded_sql(
+        &self,
+        path: &std::path::Path,
+        options: &crate::codebase::postgres::EmbeddedSqlOptions,
+    ) -> anyhow::Result<&crate::codebase::postgres::EmbeddedSqlFileFacts> {
+        let file = self
+            .ts
+            .get(path)
+            .ok_or_else(|| anyhow::anyhow!("prepared facts are missing for {}", path.display()))?;
+        file.embedded_sql
+            .iter()
+            .find_map(|(key, facts)| (key == options).then_some(facts))
+            .ok_or_else(|| {
+                file.parse_error.as_ref().map_or_else(
+                    || anyhow::anyhow!("prepared embedded SQL projection is missing"),
+                    |error| anyhow::anyhow!(error.clone()),
+                )
+            })
+    }
+
+    pub(crate) fn postgres_schema_catalog(
+        &self,
+        path: &str,
+    ) -> anyhow::Result<&crate::codebase::postgres::SchemaCatalog> {
+        let normalized = crate::codebase::postgres::normalize_schema_catalog_path(path)?
+            .to_string_lossy()
+            .into_owned();
+        match self.postgres_schema_catalogs.get(&normalized) {
+            Some(Ok(catalog)) => Ok(catalog),
+            Some(Err(error)) => Err(anyhow::anyhow!(error.to_string())),
+            None => Err(anyhow::anyhow!(
+                "prepared schema catalog is missing for schemaCatalogPath {path}"
+            )),
+        }
     }
 
     pub(crate) fn graph_file_universe(&self) -> &[PathBuf] {
@@ -138,6 +182,7 @@ impl CheckFactMap {
             playwright_routes_cache: Arc::clone(&self.playwright_routes_cache),
             app_text_targets_cache: Arc::clone(&self.app_text_targets_cache),
             route_reachable_files_cache: Arc::clone(&self.route_reachable_files_cache),
+            postgres_schema_catalogs: self.postgres_schema_catalogs.clone(),
             stats: self.stats,
         }
     }

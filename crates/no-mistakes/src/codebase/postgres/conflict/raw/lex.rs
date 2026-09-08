@@ -85,6 +85,7 @@ pub(super) fn matching_parenthesis(sql: &str, open: usize) -> Result<usize> {
     bail!("unclosed ON CONFLICT target")
 }
 
+/// Split a conflict target without crossing nested SQL delimiters.
 pub(super) fn split_top_level(sql: &str) -> Vec<String> {
     let mut expressions = Vec::new();
     let mut start = 0usize;

@@ -4,10 +4,9 @@ Flags executed PostgreSQL SQL that takes a `FOR UPDATE` lock with a multi-row
 predicate (`IN` or `= ANY`) but no `ORDER BY` and no `SKIP LOCKED`. Two
 transactions that lock the same rows in opposite order can deadlock (ABBA).
 
-The rule uses the shared PostgreSQL embedded-SQL facts
-(`extract_embedded_sql_from_source`, `collect_postgres_facts`) and
-`extract_locking_select_metadata`. It does not re-parse TypeScript or SQL
-with a private parser.
+The rule consumes request-prepared PostgreSQL embedded-SQL facts and
+`extract_locking_select_metadata`. It does not re-parse TypeScript in the rule
+engine.
 
 ```yaml
 rules:
@@ -25,7 +24,7 @@ rules:
 `importSpecifier` defaults to `@data-stores/psql`. `executorNames` defaults to
 `query`, `read`, and `write`. `safeDirective` defaults to `deadlock-safe`.
 `schemaCatalogPath` is optional; when present it must be a repository-relative
-Vouchington PostgreSQL snapshot with `formatVersion: 2`.
+PostgreSQL schema snapshot with `formatVersion: 2`.
 
 Counterexample: `query(\`SELECT * FROM t WHERE id = ANY($1) FOR UPDATE\`)`
 without `ORDER BY` or `SKIP LOCKED`. Unparseable `FOR UPDATE` SQL is a
@@ -69,10 +68,12 @@ statements receive a separate diagnostic.
 
 With `schemaCatalogPath`, an ordinary multi-row lock must also begin its
 `ORDER BY` with the ordered expression keys of one valid, ready, non-partial
-btree unique index for the locked table. This makes reader lock order match
-the catalog-backed writer order instead of accepting an unrelated deterministic
-sort. `SKIP LOCKED` remains an alternative because it avoids waiting for an
-already-held row lock.
+btree unique index for every locked base table. `FOR UPDATE OF alias` limits
+the requirement to that resolved relation; joins, derived relations, or an
+unresolved `OF` target fail closed rather than silently checking only the first
+`FROM` table. This makes reader lock order match the catalog-backed writer
+order instead of accepting an unrelated deterministic sort. `SKIP LOCKED`
+remains an alternative because it avoids waiting for an already-held row lock.
 
 ## Options and defaults
 

@@ -55,7 +55,27 @@ pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
+    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
+) -> Result<Vec<RuleFinding>> {
+    let profiles = crate::codebase::postgres::configured_embedded_sql_options(config, &[RULE_ID])?;
+    let catalog_paths =
+        crate::codebase::postgres::configured_schema_catalog_paths(config, &[RULE_ID])?;
+    let facts = crate::codebase::postgres::prepare_embedded_sql_facts(
+        root,
+        all_files,
+        std::sync::Arc::clone(sources),
+        profiles,
+        catalog_paths,
+    );
+    check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
+}
+
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -77,7 +97,7 @@ pub(crate) fn check_with_files_and_sources(
                 .into_iter()
                 .filter(|path| compiled.includes(&relative_slash_path(root, path)))
                 .collect();
-            scan_with_sources(root, &compiled, &files, sources)
+            scan_with_sources(root, &compiled, &files, sources, facts)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -88,22 +108,10 @@ pub(crate) fn check_with_files_and_sources(
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
-    let defaults = EmbeddedSqlOptions::default();
     Ok(CompiledOptions {
         include,
         exclude,
-        embedded: EmbeddedSqlOptions {
-            import_specifier: if opts.import_specifier.is_empty() {
-                defaults.import_specifier
-            } else {
-                opts.import_specifier.clone()
-            },
-            executor_names: if opts.executor_names.is_empty() {
-                defaults.executor_names
-            } else {
-                opts.executor_names.clone()
-            },
-        },
+        embedded: EmbeddedSqlOptions::configured(&opts.import_specifier, &opts.executor_names),
         safe_directive: if opts.safe_directive.is_empty() {
             DEFAULT_SAFE_DIRECTIVE.to_string()
         } else {

@@ -69,6 +69,7 @@ pub(crate) fn collect_file_facts_from_program(
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
     let playwright =
         super::super::file_playwright::collect_playwright_facts(path, program, source, playwright);
+    let embedded_sql = prepared_embedded_sql(path, source, program, plan);
     let symbols = ts.symbols.clone();
     CheckFileFacts {
         ts: ts.into(),
@@ -82,6 +83,7 @@ pub(crate) fn collect_file_facts_from_program(
         dynamic_imports: fused.dynamic_imports,
         nextjs_caching: fused.nextjs_caching,
         storybook: fused.storybook,
+        embedded_sql,
         server_route_client_boundary,
         playwright,
         playwright_fetch,
@@ -92,4 +94,30 @@ pub(crate) fn collect_file_facts_from_program(
         legacy_symbol_parse_error: None,
         parsed: true,
     }
+}
+
+pub(super) fn prepared_embedded_sql(
+    path: &Path,
+    source: &str,
+    program: &oxc_ast::ast::Program<'_>,
+    plan: &CheckFactPlan,
+) -> Vec<(
+    crate::codebase::postgres::EmbeddedSqlOptions,
+    crate::codebase::postgres::EmbeddedSqlFileFacts,
+)> {
+    let mut profiles = plan.embedded_sql_options.clone();
+    if plan.embedded_sql && profiles.is_empty() {
+        profiles.push(crate::codebase::postgres::EmbeddedSqlOptions::default());
+    }
+    profiles.sort();
+    profiles.dedup();
+    profiles
+        .into_iter()
+        .map(|options| {
+            let facts = crate::codebase::postgres::extract_embedded_sql_from_program(
+                path, program, source, &options,
+            );
+            (options, facts)
+        })
+        .collect()
 }

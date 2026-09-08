@@ -22,6 +22,11 @@ pub struct CheckFactPlan {
     pub raw_source: bool,
     pub postgres_schema: bool,
     pub embedded_sql: bool,
+    /// Distinct configured embedded-SQL projections collected from each
+    /// already-parsed TS/JS program during the request's shared fact pass.
+    pub embedded_sql_options: Vec<crate::codebase::postgres::EmbeddedSqlOptions>,
+    /// Repository-relative schema snapshots loaded once at the request boundary.
+    pub postgres_schema_catalog_paths: Vec<String>,
     pub postgres_dml: bool,
     pub graph: crate::codebase::ts_source::facts::TsFactPlan,
     pub graph_context: crate::codebase::ts_source::facts::TsFactContext,
@@ -50,6 +55,13 @@ impl CheckFactPlan {
         self.raw_source |= other.raw_source;
         self.postgres_schema |= other.postgres_schema;
         self.embedded_sql |= other.embedded_sql;
+        self.embedded_sql_options.extend(other.embedded_sql_options);
+        self.embedded_sql_options.sort();
+        self.embedded_sql_options.dedup();
+        self.postgres_schema_catalog_paths
+            .extend(other.postgres_schema_catalog_paths);
+        self.postgres_schema_catalog_paths.sort();
+        self.postgres_schema_catalog_paths.dedup();
         self.postgres_dml |= other.postgres_dml;
         self.graph.include(other.graph);
         self.graph_context.include(other.graph_context);

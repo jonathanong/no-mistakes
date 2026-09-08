@@ -5,6 +5,7 @@
 mod annotation;
 mod catalog;
 mod collect;
+mod conflict;
 pub mod dml;
 mod embedded;
 mod idents;
@@ -13,6 +14,7 @@ mod migration;
 mod offset;
 mod on_conflict;
 mod parse;
+mod profiles;
 mod rule_options;
 mod schema;
 mod statement_facts;
@@ -20,6 +22,7 @@ pub mod statements;
 mod types;
 
 pub use annotation::sql_requires_query_annotation;
+pub(crate) use catalog::normalize_catalog_path as normalize_schema_catalog_path;
 pub use catalog::{
     expression_matches, order_prefix_matches, parse_postgres_expression, CanonicalIndex,
     CanonicalOrderKey, ResolvedArbiter, SchemaCatalog,
@@ -27,6 +30,9 @@ pub use catalog::{
 pub use collect::{
     collect_postgres_facts, collect_schema_facts, extract_embedded_sql_facts, extract_schema_facts,
     postgres_sql_paths,
+};
+pub use conflict::{
+    analyze_conflict_inserts, SqlConflictInsertFact, SqlConflictTarget, SqlInsertSourceShape,
 };
 pub use dml::{
     extract_dml_write_targets, find_generated_column_writes, GeneratedColumnWrite, GeneratedTable,
@@ -42,6 +48,13 @@ pub use migration::extract_migration_facts;
 pub use offset::sql_has_offset_clause;
 pub use on_conflict::{judge_file, Catalog as IdempotentCatalog};
 pub use parse::{parse_postgres_sql, PostgresParseError};
+pub(crate) use profiles::{
+    configured_embedded_sql_options, load_schema_catalogs, prepare_embedded_sql_facts,
+};
+pub use profiles::{
+    configured_embedded_sql_options_for_checks, configured_schema_catalog_paths,
+    PREPARED_EMBEDDED_SQL_RULE_IDS, SCHEMA_CATALOG_RULE_IDS,
+};
 pub use rule_options::fail_unanalyzable_sql;
 pub use schema::extract_create_table_metadata;
 pub use statements::{

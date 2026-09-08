@@ -83,55 +83,58 @@ fn collect_file_facts_from_source(
     let legacy_symbols = plan
         .legacy_symbol_paths
         .contains(&crate::codebase::ts_resolver::normalize_path(path));
-    let collect =
-        |program: &oxc_ast::ast::Program<'_>, parsed_source: &str, parse_error: Option<String>| {
-            if let Some(parse_error) = parse_error {
-                let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
-                let mut ts = super::file_parse_error::ts_facts(
-                    plan,
-                    stored_source.clone(),
-                    program,
-                    parse_error.clone(),
-                );
-                let symbols = (legacy_symbols && (plan.symbols || plan.graph.symbols)).then(|| {
-                    Arc::new(crate::codebase::ts_symbols::extract_symbols_from_program(
-                        program,
-                        parsed_source,
-                    ))
-                });
-                if let Some(symbols) = &symbols {
-                    ts.symbols = Some(Arc::clone(symbols));
-                }
-                let integration_runner_config =
-                    plan.integration_runner_configs.as_ref().and_then(|plan| {
-                        plan.parse_error(
-                            path,
-                            format!("failed to parse {}: {parse_error}", path.display()),
-                        )
-                    });
-                return CheckFileFacts {
-                    ts: Arc::new(ts),
-                    source: stored_source,
-                    symbols,
-                    integration_runner_config,
-                    parse_error: Some(parse_error),
-                    parsed: true,
-                    server_route_client_boundary: plan
-                        .server_route_client_boundary
-                        .then(Default::default),
-                    ..CheckFileFacts::default()
-                };
-            }
-            collect_file_facts_from_program(
-                root,
-                path,
+    let collect = |program: &oxc_ast::ast::Program<'_>,
+                   parsed_source: &str,
+                   parse_error: Option<String>| {
+        if let Some(parse_error) = parse_error {
+            let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
+            let mut ts = super::file_parse_error::ts_facts(
                 plan,
-                playwright,
-                parsed_source,
+                stored_source.clone(),
                 program,
-                should_store_source(plan).then(|| Arc::clone(&source)),
-            )
-        };
+                parse_error.clone(),
+            );
+            let symbols = (legacy_symbols && (plan.symbols || plan.graph.symbols)).then(|| {
+                Arc::new(crate::codebase::ts_symbols::extract_symbols_from_program(
+                    program,
+                    parsed_source,
+                ))
+            });
+            if let Some(symbols) = &symbols {
+                ts.symbols = Some(Arc::clone(symbols));
+            }
+            let integration_runner_config =
+                plan.integration_runner_configs.as_ref().and_then(|plan| {
+                    plan.parse_error(
+                        path,
+                        format!("failed to parse {}: {parse_error}", path.display()),
+                    )
+                });
+            let embedded_sql = program::prepared_embedded_sql(path, parsed_source, program, plan);
+            return CheckFileFacts {
+                ts: Arc::new(ts),
+                source: stored_source,
+                symbols,
+                integration_runner_config,
+                embedded_sql,
+                parse_error: Some(parse_error),
+                parsed: true,
+                server_route_client_boundary: plan
+                    .server_route_client_boundary
+                    .then(Default::default),
+                ..CheckFileFacts::default()
+            };
+        }
+        collect_file_facts_from_program(
+            root,
+            path,
+            plan,
+            playwright,
+            parsed_source,
+            program,
+            should_store_source(plan).then(|| Arc::clone(&source)),
+        )
+    };
     let collected = if legacy_symbols {
         session.with_legacy_symbols_program(path, &source, collect)
     } else {
