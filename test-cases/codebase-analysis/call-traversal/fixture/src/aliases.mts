@@ -17,6 +17,7 @@ const mutable = imported;
 let mutableDeclaration = imported;
 const cycleA = cycleB;
 const cycleB = cycleA;
+const moduleAlias = imported;
 
 first();
 second?.();
@@ -46,3 +47,7 @@ function shadowed(window: { setTimeout(): void }) {
 function sameLineCalls() { setTimeout(() => {}, 1); clearTimeout(0); }
 
 (() => imported())();
+
+export function callsModuleAlias() {
+  moduleAlias();
+}

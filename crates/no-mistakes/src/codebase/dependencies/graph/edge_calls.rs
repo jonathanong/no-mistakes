@@ -53,19 +53,21 @@ impl CallableFileIndex {
         let mut target = callee.to_string();
         loop {
             let key = (scope.clone(), target.clone());
-            let alias = self.aliases.get(&key)?;
-            if !visited.insert(key) {
-                return None;
-            }
-            target = alias.clone();
-            if self.aliases.contains_key(&(scope.clone(), target.clone())) {
-                continue;
-            }
-            if target.contains('.')
-                || self.imported.contains_key(&target)
-                || resolve_local_call_scope(scope.as_deref(), &target, &self.known_scopes).is_some()
-            {
-                return Some(target);
+            if let Some(alias) = self.aliases.get(&key) {
+                if !visited.insert(key) {
+                    return None;
+                }
+                target = alias.clone();
+                if self.aliases.contains_key(&(scope.clone(), target.clone())) {
+                    continue;
+                }
+                if target.contains('.')
+                    || self.imported.contains_key(&target)
+                    || resolve_local_call_scope(scope.as_deref(), &target, &self.known_scopes)
+                        .is_some()
+                {
+                    return Some(target);
+                }
             }
             if let Some(parent) = scope
                 .as_deref()

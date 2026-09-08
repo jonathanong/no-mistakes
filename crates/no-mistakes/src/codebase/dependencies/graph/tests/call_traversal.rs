@@ -175,8 +175,8 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
 
     assert_eq!(
         traces.iter().filter(|trace| trace.target == target).count(),
-        2,
-        "the module and invoked anonymous callback each retain one canonical call edge"
+        3,
+        "module, anonymous callback, and nested function aliases retain canonical call edges"
     );
     for callee in ["first", "second"] {
         assert!(
@@ -194,6 +194,17 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
             "{callee} must retain its imported target before graph edge deduplication"
         );
     }
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.file == aliases
+            && site.source_callee == "moduleAlias"
+            && matches!(
+                &site.target,
+                ResolvedCallTarget::ModuleExport {
+                    repository_target: Some((file, scope)),
+                    ..
+                } if file == &root.join("src/alias-target.mts") && scope == "importedTarget"
+            )
+    }));
     assert!(graph.resolved_call_sites().iter().any(|site| {
         site.file == aliases
             && site.source_callee == "second"
