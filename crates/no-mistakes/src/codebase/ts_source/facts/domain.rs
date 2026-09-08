@@ -19,6 +19,9 @@ mod domain_types;
 mod domain_walk;
 #[path = "effect_calls.rs"]
 mod effect_calls;
+#[cfg(test)]
+#[path = "effect_calls_tests.rs"]
+mod effect_calls_tests;
 pub use domain_types::{BackendRouteFact, EffectCallFact, RscEnvironmentFact, TsFactContext};
 pub(crate) use effect_calls::collect_effect_calls;
 
