@@ -82,8 +82,7 @@ fn later_named_value_exports<'a>(
             if specifier.export_kind.is_type() {
                 continue;
             }
-            if let ModuleExportName::IdentifierName(identifier) = &specifier.local {
-                let name = identifier.name.as_str();
+            if let Some(name) = module_export_name_name(&specifier.local) {
                 if local_type_names.contains(name) {
                     continue;
                 }
