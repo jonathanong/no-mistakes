@@ -24,13 +24,8 @@ pub(super) fn deps_entries(
             ctx.graph_files,
         )?;
         let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
-        let call_allowed = std::collections::HashSet::from([EdgeKind::Call]);
-        let call_entries = graph.deps_of(&call_roots, depth, Some(&call_allowed));
-        let remaining_entries = remaining_relationships(ctx.allowed)
-            .map_or_else(Vec::new, |allowed| {
-                graph.deps_of(roots, depth, Some(&allowed))
-            });
-        return Ok(merge_entries(call_entries, remaining_entries));
+        let roots = roots_with_call_roots(roots, call_roots);
+        return Ok(graph.deps_of(&roots, depth, ctx.allowed));
     }
     if import_only {
         Ok(graph::lazy_import_deps_of_with_files(
@@ -80,13 +75,8 @@ pub(super) fn dependents_entries(
             ctx.graph_files,
         )?;
         let callable_roots = graph.expand_call_roots(&call_roots(entrypoints));
-        let call_allowed = std::collections::HashSet::from([EdgeKind::Call]);
-        let call_entries = graph.dependents_of(&callable_roots, depth, Some(&call_allowed));
-        let remaining_entries = remaining_relationships(ctx.allowed)
-            .map_or_else(Vec::new, |allowed| {
-                graph.dependents_of(roots, depth, Some(&allowed))
-            });
-        return Ok(merge_entries(call_entries, remaining_entries));
+        let roots = roots_with_call_roots(roots, callable_roots);
+        return Ok(graph.dependents_of(&roots, depth, ctx.allowed));
     }
     let any_symbol = entrypoints.iter().any(|e| e.symbol.is_some());
     if ctx.symbols {
@@ -140,36 +130,6 @@ pub(super) fn has_call_relationship(allowed: Option<&std::collections::HashSet<E
     allowed.is_some_and(|allowed| allowed.contains(&EdgeKind::Call))
 }
 
-fn remaining_relationships(
-    allowed: Option<&std::collections::HashSet<EdgeKind>>,
-) -> Option<std::collections::HashSet<EdgeKind>> {
-    let remaining = allowed?
-        .iter()
-        .copied()
-        .filter(|kind| *kind != EdgeKind::Call)
-        .collect::<std::collections::HashSet<_>>();
-    (!remaining.is_empty()).then_some(remaining)
-}
-
-fn merge_entries(
-    left: Vec<graph::NodeEntry>,
-    right: Vec<graph::NodeEntry>,
-) -> Vec<graph::NodeEntry> {
-    let mut entries = std::collections::BTreeMap::new();
-    for entry in left.into_iter().chain(right) {
-        entries
-            .entry(entry.node.clone())
-            .and_modify(|current: &mut graph::NodeEntry| {
-                current.depth = current.depth.min(entry.depth);
-                current.via.extend(entry.via.iter().copied());
-                current.via.sort();
-                current.via.dedup();
-            })
-            .or_insert(entry);
-    }
-    entries.into_values().collect()
-}
-
 pub(super) fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
     entrypoints
         .iter()
@@ -185,6 +145,8 @@ pub(super) fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
         })
         .collect()
 }
+
+include!("traversal_mixed_relationships_tests.rs");
 
 fn build_dependents_graph(
     ctx: &TraversalCtx<'_>,

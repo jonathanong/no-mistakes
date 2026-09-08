@@ -100,6 +100,45 @@ fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewE
     }
 }
 
+fn visit_tagged_template_expression_with_imports(
+    collector: &mut ImportCollector,
+    tagged: &TaggedTemplateExpression<'_>,
+) {
+    if let Some(callee) = simple_callee_name(&tagged.tag) {
+        if collector.should_record_call(&callee) {
+            let target_identity = collector.call_target_identity(&callee);
+            let callee_binding_scope = collector.callee_binding_scope(&callee);
+            collector.function_calls.push(FunctionCall {
+                caller: collector.current_function(),
+                caller_id: collector.current_function_id(),
+                syntactic_caller: collector.current_syntactic_caller(),
+                static_cwd: None,
+                callee,
+                line: import_line_at(&collector.line_starts, tagged.span.start as usize),
+                offset: tagged.span.start,
+                is_callback: false,
+                invocation: InvocationKind::Call,
+                target_identity,
+                callee_binding_scope,
+                static_arg: None,
+            });
+            if has_dynamic_static_member_receiver(&tagged.tag) {
+                collector.record_unknown_call(
+                    import_line_at(&collector.line_starts, tagged.quasi.span.start as usize),
+                    tagged.quasi.span.start,
+                    InvocationKind::Call,
+                );
+            }
+        }
+    } else {
+        collector.record_unknown_call(
+            import_line_at(&collector.line_starts, tagged.quasi.span.start as usize),
+            tagged.quasi.span.start,
+            InvocationKind::Call,
+        );
+    }
+}
+
 impl ImportCollector {
     fn record_unknown_call(&mut self, line: u32, offset: u32, invocation: InvocationKind) {
         let caller = self.current_function();

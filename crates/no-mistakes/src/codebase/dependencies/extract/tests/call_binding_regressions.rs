@@ -163,6 +163,38 @@ fn function_call_facts_distinguish_calls_from_construction() {
 }
 
 #[test]
+fn tagged_template_facts_use_named_call_binding_classification() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/tagged-template-calls.mts");
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, &source);
+
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "localTag"
+            && call.caller.as_deref() == Some("taggedTemplates")
+            && call.invocation == InvocationKind::Call
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "importedTag"
+            && call.caller.as_deref() == Some("taggedTemplates")
+            && call.invocation == InvocationKind::Call
+            && call.target_identity == CallTargetIdentity::ModuleExport
+    }));
+    assert_eq!(
+        facts
+            .function_calls
+            .iter()
+            .filter(|call| matches!(call.callee.as_str(), "localTag" | "importedTag"))
+            .count(),
+        2,
+        "computed and dynamically produced tags must not be guessed as named calls"
+    );
+}
+
+#[test]
 fn call_facts_classify_only_unshadowed_global_bindings_as_global() {
     let source = r#"
         setTimeout(() => {}, 1);

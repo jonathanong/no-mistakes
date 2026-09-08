@@ -172,6 +172,11 @@ impl<'a> Visit<'a> for ImportCollector {
         walk::walk_new_expression(self, new);
     }
 
+    fn visit_tagged_template_expression(&mut self, tagged: &TaggedTemplateExpression<'a>) {
+        visit_tagged_template_expression_with_imports(self, tagged);
+        walk::walk_tagged_template_expression(self, tagged);
+    }
+
     fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {
         self.push_value_symbol_reference(identifier.name.to_string());
         walk::walk_identifier_reference(self, identifier);

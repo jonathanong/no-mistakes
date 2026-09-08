@@ -20,11 +20,7 @@ fn visit_method_definition_with_scope<'a>(
     }
     collector.add_type_parameter_names(method.value.type_parameters.as_deref());
     collector.add_formal_parameters(&method.value.params);
-    walk::walk_function(
-        collector,
-        &method.value,
-        oxc_syntax::scope::ScopeFlags::empty(),
-    );
+    walk_function_with_body_bindings(collector, &method.value);
     collector.pop_function_scope(pushed);
 }
 

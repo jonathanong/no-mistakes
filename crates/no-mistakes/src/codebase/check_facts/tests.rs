@@ -279,8 +279,12 @@ fn collect_file_facts_keeps_raw_source_for_parse_and_source_type_errors() {
 fn recovered_parse_error_facts_retain_callable_aliases() {
     let source = r#"
         import { importedTarget } from './target';
-        const localTarget = importedTarget;
-        localTarget();
+        function outer() {
+            const localTarget = importedTarget;
+            function inner() { localTarget(); }
+            inner();
+        }
+        outer();
     "#;
     let allocator = oxc_allocator::Allocator::default();
     let parsed = oxc_parser::Parser::new(&allocator, source, oxc_span::SourceType::ts()).parse();
@@ -300,8 +304,22 @@ fn recovered_parse_error_facts_retain_callable_aliases() {
     );
     assert!(facts.parse_error.is_some());
     assert!(facts.callable_aliases.iter().any(|alias| {
-        alias.scope.is_none() && alias.local == "localTarget" && alias.target == "importedTarget"
+        alias.scope.as_deref() == Some("outer")
+            && alias.local == "localTarget"
+            && alias.target == "importedTarget"
     }));
+    assert!(facts
+        .callable_scope_ids
+        .iter()
+        .any(|(_, scope)| scope == "outer/inner"));
+    assert!(facts
+        .callable_bindings
+        .iter()
+        .any(|(_, name, _)| name == "inner"));
+    assert!(facts
+        .lexical_scope_parents
+        .iter()
+        .any(|(_, parent)| parent.is_some()));
 }
 
 #[test]

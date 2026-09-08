@@ -10,8 +10,8 @@ use oxc_ast::ast::{
     MethodDefinitionKind, ModuleExportName, NewExpression, ObjectExpression, ObjectProperty,
     ObjectPropertyKind, Program, Statement, StaticMemberExpression, TSEnumDeclaration,
     TSImportType, TSInterfaceDeclaration, TSQualifiedName, TSTypeAliasDeclaration, TSTypeName,
-    TSTypeParameter, TSTypeParameterDeclaration, TSTypeReference, VariableDeclaration,
-    VariableDeclarationKind, VariableDeclarator,
+    TSTypeParameter, TSTypeParameterDeclaration, TSTypeReference, TaggedTemplateExpression,
+    VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::SourceType;

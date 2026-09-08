@@ -54,3 +54,36 @@ fn manually_walked_callable_bodies_predeclare_later_function_and_shadow_bindings
         .filter(|call| call.callee == "setTimeout")
         .all(|call| call.target_identity == CallTargetIdentity::Unknown));
 }
+
+#[test]
+fn class_method_bodies_predeclare_later_function_and_shadow_bindings() {
+    let facts = facts(
+        "export default (class {\
+           static run() {\
+             helper();\
+             function helper() {}\
+             setTimeout();\
+             const setTimeout = local;\
+           }\
+         });",
+    );
+
+    let helper_call = facts
+        .function_calls
+        .iter()
+        .find(|call| call.callee == "helper")
+        .expect("class method helper call");
+    assert_eq!(helper_call.caller.as_deref(), Some("run"));
+    assert_eq!(
+        helper_call.target_identity,
+        CallTargetIdentity::RepositoryFunction
+    );
+
+    let timeout_call = facts
+        .function_calls
+        .iter()
+        .find(|call| call.callee == "setTimeout")
+        .expect("class method shadowed call");
+    assert_eq!(timeout_call.caller.as_deref(), Some("run"));
+    assert_eq!(timeout_call.target_identity, CallTargetIdentity::Unknown);
+}
