@@ -6,6 +6,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
         if collector.should_record_call(callee) {
             collector.function_calls.push(FunctionCall {
                 caller: collector.current_function(),
+                syntactic_caller: collector.current_syntactic_caller(),
                 callee: callee.to_string(),
                 line: import_line_at(&collector.line_starts, call.span.start as usize),
                 offset: call.span.start,
@@ -38,6 +39,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
             let target_identity = collector.call_target_identity(&callee);
             collector.function_calls.push(FunctionCall {
                 caller: collector.current_function(),
+                syntactic_caller: collector.current_syntactic_caller(),
                 static_cwd: static_process_cwd_arg(&callee, &call.arguments),
                 callee,
                 line: import_line_at(&collector.line_starts, call.span.start as usize),
@@ -63,6 +65,7 @@ fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewE
             let target_identity = collector.call_target_identity(&callee);
             collector.function_calls.push(FunctionCall {
                 caller: collector.current_function(),
+                syntactic_caller: collector.current_syntactic_caller(),
                 static_cwd: None,
                 callee,
                 line: import_line_at(&collector.line_starts, new.span.start as usize),

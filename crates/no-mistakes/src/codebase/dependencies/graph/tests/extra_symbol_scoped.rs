@@ -74,6 +74,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
     let calls = vec![
         FunctionCall {
             caller: None,
+            syntactic_caller: None,
             callee: "alpha".to_string(),
             line: 0,
             offset: 0,
@@ -85,6 +86,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         },
         FunctionCall {
             caller: None,
+            syntactic_caller: None,
             callee: "beta".to_string(),
             line: 0,
             offset: 0,
@@ -96,6 +98,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         },
         FunctionCall {
             caller: None,
+            syntactic_caller: None,
             callee: "alpha".to_string(),
             line: 0,
             offset: 0,
@@ -108,6 +111,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         },
         FunctionCall {
             caller: None,
+            syntactic_caller: None,
             callee: "missing".to_string(),
             line: 0,
             offset: 0,
@@ -119,6 +123,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         },
         FunctionCall {
             caller: Some("run".to_string()),
+            syntactic_caller: None,
             callee: "beta".to_string(),
             line: 0,
             offset: 0,
@@ -147,6 +152,7 @@ fn symbol_fallback_imports_keep_only_top_level_uses_when_exports_exist() {
         false,
         &[FunctionCall {
             caller: None,
+            syntactic_caller: None,
             callee: "alpha".to_string(),
             line: 0,
             offset: 0,

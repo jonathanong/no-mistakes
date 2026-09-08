@@ -46,7 +46,7 @@ pub(crate) fn collect_effect_calls(
                 line: call.line as usize,
                 callee: callee.to_string(),
                 category: category.clone(),
-                caller: call.caller.clone(),
+                caller: call.syntactic_caller.clone(),
             })
         })
         .collect()

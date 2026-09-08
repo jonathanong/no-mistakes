@@ -141,6 +141,7 @@ fn record_member_call(collector: &mut ImportCollector, parent: &str, name: Optio
     if let Some(name) = name {
         collector.function_calls.push(FunctionCall {
             caller: Some(parent.to_string()),
+            syntactic_caller: collector.current_syntactic_caller(),
             callee: name.to_string(),
             line: 0,
             offset: 0,

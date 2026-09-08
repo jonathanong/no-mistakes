@@ -25,4 +25,35 @@ export function shadowedEffect() {
   invalidate();
 }
 
+export function nestedOwner() {
+  function nestedEffect() {
+    invalidate();
+  }
+  nestedEffect();
+}
+
+export function anonymousOwner() {
+  [undefined].forEach(() => invalidate());
+}
+
+export class ClassEffects {
+  run() {
+    invalidate();
+  }
+}
+
+export const objectEffects = {
+  run() {
+    invalidate();
+  },
+};
+
+export function wrappedOwner() {
+  (invalidate as () => void)();
+}
+
+export const boundOwner = function internalOwner() {
+  invalidate();
+};
+
 function standalone() {}

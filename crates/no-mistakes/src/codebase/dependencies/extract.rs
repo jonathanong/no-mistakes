@@ -55,6 +55,11 @@ pub struct ExtractedImport {
 pub struct FunctionCall {
     /// The lexical callable scope containing the invocation, when known.
     pub caller: Option<String>,
+    /// The nearest source-level function owner used for source-occurrence
+    /// reports. Unlike [`Self::caller`], this preserves the unqualified
+    /// syntactic name and does not invent owners for anonymous callbacks or
+    /// property/class methods.
+    pub syntactic_caller: Option<String>,
     /// The source spelling of the callee. This deliberately preserves aliases;
     /// resolution belongs to the prepared graph layer.
     pub callee: String,

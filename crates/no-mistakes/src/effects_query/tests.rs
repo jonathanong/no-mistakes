@@ -393,3 +393,36 @@ fn effects_keep_spelling_based_matches_for_shadowed_configured_calls() {
             && site.caller.as_deref() == Some("shadowedEffect")
     }));
 }
+
+#[test]
+fn effects_project_legacy_source_callers_from_canonical_calls() {
+    let report = run(
+        &fixture(),
+        None,
+        None,
+        "valkey",
+        Path::new("app/extra-entry.ts"),
+        &[],
+        None,
+    )
+    .unwrap();
+    let caller_at = |line| {
+        report
+            .call_sites
+            .iter()
+            .find(|site| {
+                site.file == "lib/extra.ts" && site.callee == "invalidate" && site.line == line
+            })
+            .map(|site| site.caller.clone())
+    };
+
+    // These are public effects-report caller semantics, not graph scopes.
+    // Canonical scopes are qualified and name anonymous/member bodies, while
+    // the historical report used the nearest syntactic function identity.
+    assert_eq!(caller_at(30), Some(Some("nestedEffect".to_string())));
+    assert_eq!(caller_at(36), Some(Some("anonymousOwner".to_string())));
+    assert_eq!(caller_at(41), Some(None));
+    assert_eq!(caller_at(47), Some(None));
+    assert_eq!(caller_at(52), Some(Some("wrappedOwner".to_string())));
+    assert_eq!(caller_at(56), Some(Some("boundOwner".to_string())));
+}

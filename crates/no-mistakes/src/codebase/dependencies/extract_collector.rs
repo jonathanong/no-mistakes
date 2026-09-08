@@ -9,6 +9,7 @@ struct ImportCollector {
     symbol_references: Vec<FunctionCall>,
     unknown_callers: Vec<Option<String>>,
     function_stack: Vec<String>,
+    syntactic_caller_stack: Vec<String>,
     local_stack: Vec<HashSet<String>>,
     type_local_stack: Vec<HashSet<String>>,
     type_parameter_stack: Vec<HashSet<String>>,

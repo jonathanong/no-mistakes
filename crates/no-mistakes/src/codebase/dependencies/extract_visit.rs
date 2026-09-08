@@ -10,6 +10,7 @@ impl<'a> Visit<'a> for ImportCollector {
         flags: oxc_syntax::scope::ScopeFlags,
     ) {
         let name = function_name(function);
+        let pushed_syntactic_caller = self.push_syntactic_caller(name.clone());
         if self.current_function().is_some() {
             if let Some(name) = &name {
                 self.add_binding_name(name);
@@ -32,6 +33,7 @@ impl<'a> Visit<'a> for ImportCollector {
         predeclare_function_body(self, function);
         walk::walk_function(self, function, flags);
         self.pop_function_scope(true);
+        self.pop_syntactic_caller(pushed_syntactic_caller);
     }
 
     fn visit_arrow_function_expression(

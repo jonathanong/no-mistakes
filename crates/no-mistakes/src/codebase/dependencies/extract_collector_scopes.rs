@@ -98,6 +98,7 @@ impl ImportCollector {
         // later graph consumer still distinguishes the synthetic invocation.
         self.function_calls.push(FunctionCall {
             caller: self.function_stack.last().cloned(),
+            syntactic_caller: self.current_syntactic_caller(),
             callee: scope.clone(),
             line: 0,
             offset: 0,
@@ -121,6 +122,25 @@ impl ImportCollector {
             self.local_stack.pop();
             self.type_local_stack.pop();
             self.type_parameter_stack.pop();
+        }
+    }
+
+    fn current_syntactic_caller(&self) -> Option<String> {
+        self.syntactic_caller_stack.last().cloned()
+    }
+
+    fn push_syntactic_caller(&mut self, name: Option<String>) -> bool {
+        if let Some(name) = name {
+            self.syntactic_caller_stack.push(name);
+            true
+        } else {
+            false
+        }
+    }
+
+    fn pop_syntactic_caller(&mut self, pushed: bool) {
+        if pushed {
+            self.syntactic_caller_stack.pop();
         }
     }
 

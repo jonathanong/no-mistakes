@@ -36,6 +36,8 @@ fn visit_object_property_with_scope<'a>(
     match &property.value {
         Expression::FunctionExpression(function) => {
             walk::walk_property_key(collector, &property.key);
+            let pushed_syntactic_caller =
+                collector.push_syntactic_caller(function_name(function));
             let pushed = name.is_some();
             collector.push_function_scope(name.map(str::to_string));
             if let Some(scope) = collector.current_function() {
@@ -45,6 +47,7 @@ fn visit_object_property_with_scope<'a>(
             collector.add_formal_parameters(&function.params);
             walk::walk_function(collector, function, oxc_syntax::scope::ScopeFlags::empty());
             collector.pop_function_scope(pushed);
+            collector.pop_syntactic_caller(pushed_syntactic_caller);
         }
         Expression::ArrowFunctionExpression(arrow) => {
             walk::walk_property_key(collector, &property.key);

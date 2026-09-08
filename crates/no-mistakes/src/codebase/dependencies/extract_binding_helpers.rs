@@ -76,6 +76,13 @@ fn visit_exported_variable_declarator_reference<'a>(
     declarator: &VariableDeclarator<'a>,
     name: Option<String>,
 ) {
+    let source_owner = (!matches!(
+        declarator.init,
+        Some(Expression::ObjectExpression(_) | Expression::ClassExpression(_))
+    ))
+    .then_some(name.clone())
+    .flatten();
+    let pushed_syntactic_caller = collector.push_syntactic_caller(source_owner);
     let pushed = name.is_some();
     collector.push_function_scope(name);
     let saved_suppress_imports = collector.suppress_imports;
@@ -91,6 +98,7 @@ fn visit_exported_variable_declarator_reference<'a>(
     collector.collect_suppressed_runtime_imports = saved_collect_runtime;
     collector.runtime_reachable_base_depth = saved_base_depth;
     collector.pop_function_scope(pushed);
+    collector.pop_syntactic_caller(pushed_syntactic_caller);
 }
 
 fn visit_variable_declarator_references_for_bindings<'a>(

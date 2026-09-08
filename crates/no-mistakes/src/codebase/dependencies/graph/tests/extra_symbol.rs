@@ -155,6 +155,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
             function_calls: vec![
                 FunctionCall {
                     caller: None,
+                    syntactic_caller: None,
                     callee: "used".to_string(),
                     line: 0,
                     offset: 0,
@@ -166,6 +167,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
                 },
                 FunctionCall {
                     caller: Some("helper".to_string()),
+                    syntactic_caller: None,
                     callee: "used".to_string(),
                     line: 0,
                     offset: 0,
@@ -177,6 +179,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
                 },
                 FunctionCall {
                     caller: Some("run".to_string()),
+                    syntactic_caller: None,
                     callee: "missing".to_string(),
                     line: 0,
                     offset: 0,
@@ -188,6 +191,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
                 },
                 FunctionCall {
                     caller: Some("run".to_string()),
+                    syntactic_caller: None,
                     callee: "used".to_string(),
                     line: 0,
                     offset: 0,
@@ -200,6 +204,7 @@ fn symbol_edge_collection_covers_filtered_and_type_branches() {
             ],
             symbol_references: vec![FunctionCall {
                 caller: Some("run".to_string()),
+                syntactic_caller: None,
                 callee: "used".to_string(),
                 line: 0,
                 offset: 0,

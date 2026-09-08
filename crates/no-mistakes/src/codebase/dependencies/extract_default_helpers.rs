@@ -125,6 +125,7 @@ fn walk_default_function_with_scope<'a>(
     function: &oxc_ast::ast::Function<'a>,
     scope: &str,
 ) {
+    let pushed_syntactic_caller = collector.push_syntactic_caller(function_name(function));
     collector.push_function_scope(Some(scope.to_string()));
     collector.exported_functions.insert(scope.to_string());
     collector.callable_scopes.insert(scope.to_string());
@@ -132,4 +133,5 @@ fn walk_default_function_with_scope<'a>(
     collector.add_formal_parameters(&function.params);
     walk::walk_function(collector, function, oxc_syntax::scope::ScopeFlags::empty());
     collector.pop_function_scope(true);
+    collector.pop_syntactic_caller(pushed_syntactic_caller);
 }

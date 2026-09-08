@@ -13,6 +13,7 @@ fn record_object_value_references(
         if let Some(callee) = reference {
             collector.symbol_references.push(FunctionCall {
                 caller: Some(object_name.to_string()),
+                syntactic_caller: collector.current_syntactic_caller(),
                 callee,
                 line: 0,
                 offset: 0,

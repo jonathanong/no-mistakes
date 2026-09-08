@@ -16,6 +16,7 @@ impl ImportCollector {
         };
         self.symbol_references.push(FunctionCall {
             caller: self.current_function(),
+            syntactic_caller: self.current_syntactic_caller(),
             callee: name,
             line: 0,
             offset: 0,

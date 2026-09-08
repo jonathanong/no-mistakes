@@ -5,19 +5,26 @@ fn visit_variable_declarator_with_scope<'a>(
     let name = binding_identifier_name(&declarator.id).map(str::to_string);
     match declarator.init.as_ref() {
         Some(Expression::ArrowFunctionExpression(arrow)) => {
+            let pushed_syntactic_caller = collector.push_syntactic_caller(name.clone());
             push_variable_function_scope(collector, declarator, name);
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
             collector.add_formal_parameters(&arrow.params);
             walk::walk_arrow_function_expression(collector, arrow);
             collector.pop_function_scope(true);
+            collector.pop_syntactic_caller(pushed_syntactic_caller);
         }
         Some(Expression::FunctionExpression(function)) => {
+            // The legacy source-occurrence owner is the variable binding even
+            // when a function expression also has an internal name.
+            let source_name = name.clone().or_else(|| function_name(function));
+            let pushed_syntactic_caller = collector.push_syntactic_caller(source_name);
             let scope_name = name.or_else(|| function_name(function));
             push_variable_function_scope(collector, declarator, scope_name);
             collector.add_type_parameter_names(function.type_parameters.as_deref());
             collector.add_formal_parameters(&function.params);
             walk::walk_function(collector, function, oxc_syntax::scope::ScopeFlags::empty());
             collector.pop_function_scope(true);
+            collector.pop_syntactic_caller(pushed_syntactic_caller);
         }
         Some(Expression::ObjectExpression(object))
             if name.is_some() && collector.function_stack.is_empty() =>
