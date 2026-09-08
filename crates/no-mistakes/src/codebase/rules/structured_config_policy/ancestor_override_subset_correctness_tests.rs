@@ -13,12 +13,8 @@ fn fixture_root() -> PathBuf {
 }
 
 fn config() -> NoMistakesConfig {
-    let mut config = NoMistakesConfig::default();
-    config.rules.push(RuleDef {
-        rule: RULE_ID.to_string(),
-        scope: Some(RuleScope::Repository),
-        options: serde_yaml::from_str(
-            r#"
+    config_from(
+        r#"
 policies:
   - files: ["**/.oxlintrc.json"]
     when:
@@ -26,8 +22,15 @@ policies:
     valueAssertions:
       - kind: ancestor-override-subset
 "#,
-        )
-        .unwrap(),
+    )
+}
+
+fn config_from(options: &str) -> NoMistakesConfig {
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str(options).unwrap(),
         ..Default::default()
     });
     config
@@ -124,7 +127,14 @@ fn ancestor_override_subset_rejects_malformed_extends_and_overrides() {
     let root = fixture_root();
     let findings = check_with_files(
         &root,
-        &config(),
+        &config_from(
+            r#"
+policies:
+  - files: ["**/.oxlintrc.json"]
+    valueAssertions:
+      - kind: ancestor-override-subset
+"#,
+        ),
         &files(
             &root,
             &[
@@ -152,4 +162,33 @@ fn ancestor_override_subset_rejects_malformed_extends_and_overrides() {
             .any(|message| message.contains("extends must be a string")),
         "{findings:?}"
     );
+}
+
+#[test]
+fn policy_when_skips_ancestor_override_subset_with_the_rest_of_the_policy() {
+    let root = fixture_root();
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str(
+            r#"
+policies:
+  - files: ["malformed/invalid-extends/.oxlintrc.json"]
+    when:
+      - key: absent
+    valueAssertions:
+      - kind: ancestor-override-subset
+"#,
+        )
+        .unwrap(),
+        ..Default::default()
+    });
+    let findings = check_with_files(
+        &root,
+        &config,
+        &files(&root, &["malformed/invalid-extends/.oxlintrc.json"]),
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
 }

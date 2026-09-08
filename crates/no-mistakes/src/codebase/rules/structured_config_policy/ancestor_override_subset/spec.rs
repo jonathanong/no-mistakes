@@ -12,7 +12,7 @@ pub(super) fn is_valid_extends_spec(spec: &str) -> bool {
     if spec.trim().is_empty() || is_portable_absolute(spec) {
         return false;
     }
-    is_package_specifier(spec) || spec.starts_with("./") || spec.starts_with("../")
+    is_package_specifier(spec) || spec.starts_with('.')
 }
 
 pub(super) fn extends_specs<'a>(value: &'a Value, key: &str) -> Result<Vec<&'a str>, &'static str> {

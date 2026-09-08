@@ -11,6 +11,15 @@ fn extends_specs_accept_local_and_package_specs() {
 }
 
 #[test]
+fn extends_specs_accept_dot_prefixed_same_directory_configs() {
+    let value: Value = serde_yaml::from_str("extends: .oxlintrc.base.json").unwrap();
+    assert_eq!(
+        extends_specs(&value, "extends").unwrap(),
+        vec![".oxlintrc.base.json"]
+    );
+}
+
+#[test]
 fn extends_specs_reject_invalid_shapes_and_portable_absolute_forms() {
     for source in [
         "extends: true",

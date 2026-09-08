@@ -50,8 +50,9 @@ policy for a file unless each listed key is a non-empty array or non-empty
 string.
 
 `ancestor-override-subset` follows local `extends` chains (a string or an array
-of strings) relative to the declaring file. Package specifiers are skipped;
-blank, non-string, drive-qualified, UNC, and absolute local paths are findings.
+of strings) relative to the declaring file, including dot-prefixed same-directory
+configs such as `.oxlintrc.base.json`. Package specifiers are skipped; blank,
+non-string, drive-qualified, UNC, and absolute local paths are findings.
 Cycles, unresolvable paths, and paths that leave the canonical repository root
 are findings. Parse errors are reported on the ancestor file. After a nested
 config becomes the resolution root, ancestor override `files` globs are matched

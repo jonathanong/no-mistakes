@@ -1,5 +1,6 @@
-use super::ancestor_override_subset::check_ancestor_override_subset;
+use super::ancestor_override_subset::check_ancestor_override_subset_with_canonical_inventory;
 use super::equals_file::check_equals_file;
+use super::paths::CanonicalInventory;
 use super::when::policy_applies;
 use super::{assert_value, value_at_key, AssertionKind, Options, RULE_ID};
 use crate::codebase::rules::RuleFinding;
@@ -16,6 +17,7 @@ pub(super) fn scan(
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
+    let canonical_inventory = CanonicalInventory::new(root, inventory);
     for policy in &opts.policies {
         let matching = super::super::matching_files(root, &policy.files, files, target_roots)?;
         for path in matching {
@@ -39,13 +41,6 @@ pub(super) fn scan(
                     }
                 };
             if !policy_applies(&value, &policy.when) {
-                for assertion in &policy.value_assertions {
-                    if matches!(assertion.kind, Some(AssertionKind::AncestorOverrideSubset)) {
-                        findings.extend(check_ancestor_override_subset(
-                            root, &path, &rel, sources, inventory, &value, assertion,
-                        ));
-                    }
-                }
                 continue;
             }
             for key in &policy.required_keys {
@@ -78,8 +73,13 @@ pub(super) fn scan(
                         findings.extend(check_equals_file(root, &rel, sources, &value, assertion));
                     }
                     Some(AssertionKind::AncestorOverrideSubset) => {
-                        findings.extend(check_ancestor_override_subset(
-                            root, &path, &rel, sources, inventory, &value, assertion,
+                        findings.extend(check_ancestor_override_subset_with_canonical_inventory(
+                            &path,
+                            &rel,
+                            sources,
+                            &value,
+                            assertion,
+                            &canonical_inventory,
                         ));
                     }
                     _ => findings.extend(assert_value(&rel, &value, assertion)?),
