@@ -259,6 +259,20 @@ fn call_roots_are_pure_and_retain_leaf_and_global_only_callables() {
 }
 
 #[test]
+fn object_properties_storing_existing_callables_resolve_member_calls() {
+    let (root, graph) = call_fixture_graph();
+    let file = root.join("src/object-callable-alias.mts");
+    let targets = graph.call_traces(
+        &[symbol(&file, "callThroughObject")],
+        CallTraversal::Direct,
+        None,
+    );
+
+    assert_eq!(targets.len(), 1);
+    assert!(has_symbol(&targets[0].target, &file, "objectTarget"));
+}
+
+#[test]
 fn exported_function_roots_resolve_renamed_defaults_and_barrels() {
     let (root, graph) = call_fixture_graph();
 

@@ -240,3 +240,15 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
         );
     }
 }
+
+#[test]
+fn reassigned_exports_do_not_resolve_as_callable_imports() {
+    let (root, graph) = call_fixture_graph();
+    let consumer = root.join("src/reassigned-export-consumer.mts");
+
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.file == consumer
+            && site.source_callee == "target"
+            && site.target == ResolvedCallTarget::Unknown
+    }));
+}

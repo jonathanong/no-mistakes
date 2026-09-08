@@ -7,6 +7,7 @@
 #[derive(Clone)]
 struct CallableFileIndex {
     known_scopes: std::collections::HashSet<String>,
+    exported_scopes: std::collections::HashSet<String>,
     class_scopes: std::collections::HashSet<String>,
     imported:
         std::collections::HashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
@@ -43,6 +44,7 @@ impl CallableFileIndex {
             .collect::<std::collections::HashMap<_, _>>();
         Self {
             known_scopes: file.callable_scopes.iter().cloned().collect(),
+            exported_scopes: file.exported_functions.iter().cloned().collect(),
             class_scopes: file.class_scopes.iter().cloned().collect(),
             imported: file
                 .imported_bindings

@@ -16,11 +16,15 @@ fn reachable_function_scopes(
         // executing parent into its nested anonymous callback, but do not make
         // a merely declared module callback execution-reachable. Aggregate
         // member callbacks remain excluded, except a constructor after its
-        // parent was constructed.
+        // parent was constructed. A derived class's synthetic
+        // base-construction transition is likewise reachable only after its
+        // derived class was constructed.
         !call.is_callback
             || (call.invocation
                 == crate::codebase::dependencies::extract::InvocationKind::Membership
                 && call.callee == "constructor")
+            || call.invocation
+                == crate::codebase::dependencies::extract::InvocationKind::Construct
             || (call.caller.is_some() && call.callee.starts_with("<anonymous:"))
     }) {
         let Some(callee) = reachable_callee_scope(facts, call, &known_scopes) else {
@@ -32,7 +36,10 @@ fn reachable_function_scopes(
             .push(ReachabilityTransition {
                 callee,
                 requires_constructed_caller: call.invocation
-                    == crate::codebase::dependencies::extract::InvocationKind::Membership,
+                    == crate::codebase::dependencies::extract::InvocationKind::Membership
+                    || (call.is_callback
+                        && call.invocation
+                            == crate::codebase::dependencies::extract::InvocationKind::Construct),
                 constructs_callee: call.invocation
                     == crate::codebase::dependencies::extract::InvocationKind::Construct,
             });

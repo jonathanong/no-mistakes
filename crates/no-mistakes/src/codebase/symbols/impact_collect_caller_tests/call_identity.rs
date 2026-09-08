@@ -46,6 +46,11 @@ fn legacy_local_caller_matching_uses_binding_identity_not_only_the_callee_spelli
         &local_names,
         &imported,
     ));
+    assert!(!legacy_call_matches_local_target(
+        &local_call(CallTargetIdentity::Unknown, "alias"),
+        &local_names,
+        &unimported,
+    ));
     assert!(legacy_call_matches_local_target(
         &local_call(CallTargetIdentity::RepositoryFunction, "alias"),
         &local_names,

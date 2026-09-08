@@ -65,6 +65,11 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
             })
         })
         .collect::<HashSet<_>>();
+    let reassigned_callable_scopes = collector
+        .callable_scope_ids
+        .iter()
+        .filter_map(|(id, scope)| reassigned_callable_ids.contains(id).then_some(scope.clone()))
+        .collect::<HashSet<_>>();
 
     let mut exported_resource_roots: Vec<_> =
         collector.exported_resource_roots.into_iter().collect();
@@ -77,17 +82,11 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     let mut callable_scope_ids: Vec<_> = collector
         .callable_scope_ids
         .into_iter()
-        .filter(|(id, _)| !reassigned_callable_ids.contains(id))
         .collect();
     callable_scope_ids.sort();
-    let callable_scope_names = callable_scope_ids
-        .iter()
-        .map(|(_, scope)| scope)
-        .collect::<HashSet<_>>();
     let mut callable_scopes: Vec<_> = collector
         .callable_scopes
         .into_iter()
-        .filter(|scope| callable_scope_names.contains(scope))
         .collect();
     callable_scopes.sort();
     let mut class_scopes: Vec<_> = collector.class_scopes.into_iter().collect();
@@ -113,7 +112,10 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     let mut exported_functions: Vec<_> = collector
         .exported_functions
         .into_iter()
-        .filter(|scope| callable_scopes.contains(scope) || exported_type_scopes.contains(scope))
+        .filter(|scope| {
+            !reassigned_callable_scopes.contains(scope)
+                && (callable_scopes.contains(scope) || exported_type_scopes.contains(scope))
+        })
         .collect();
     exported_functions.sort();
     ImportFacts {

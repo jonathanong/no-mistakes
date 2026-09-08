@@ -69,13 +69,13 @@ fn lexical_scope_parents_preserve_nested_alias_resolution_order() {
 }
 
 #[test]
-fn reassignment_invalidates_callable_declarations_and_members() {
+fn reassignment_invalidates_calls_without_erasing_callable_identities() {
     let facts = facts(
-        "function target() {} target = injected; target(); class Registry { reload() {} } Registry.reload = injected; Registry.reload();",
+        "function target() {} const saved = target; target = injected; target(); saved(); class Registry { reload() {} } Registry.reload = injected; Registry.reload();",
     );
 
-    assert!(!facts.callable_scopes.iter().any(|scope| scope == "target"));
-    assert!(!facts
+    assert!(facts.callable_scopes.iter().any(|scope| scope == "target"));
+    assert!(facts
         .callable_scopes
         .iter()
         .any(|scope| scope == "Registry/reload"));
@@ -83,6 +83,10 @@ fn reassignment_invalidates_callable_declarations_and_members() {
         !matches!(call.callee.as_str(), "target" | "Registry.reload")
             || call.target_identity != CallTargetIdentity::RepositoryFunction
     }));
+    assert!(facts
+        .callable_aliases
+        .iter()
+        .any(|alias| { alias.local == "saved" && alias.target == "target" }));
 }
 
 #[test]

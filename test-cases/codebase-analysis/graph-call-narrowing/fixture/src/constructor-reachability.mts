@@ -27,3 +27,27 @@ class Unused {
 class Eager {
   static field = import("./static-field-eager.mts");
 }
+
+class InheritedBase {
+  field = import("./inherited-instance-field-called.mts");
+
+  constructor() {
+    import("./inherited-constructor-called.mts");
+  }
+
+  unused() {
+    import("./inherited-unused-method.mts");
+  }
+}
+
+class Derived extends InheritedBase {}
+
+new Derived();
+
+class PlainBase {
+  field = import("./inherited-plain-call.mts");
+}
+
+class PlainDerived extends PlainBase {}
+
+PlainDerived();

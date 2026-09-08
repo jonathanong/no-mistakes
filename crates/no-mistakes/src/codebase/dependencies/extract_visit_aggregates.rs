@@ -4,6 +4,7 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
         let class_id = CallableId(class.span.start);
         collector.record_callable_binding_id(name, class_id);
         record_class_member_calls(collector, &scope, class_id, class);
+        record_class_base_construction(collector, &scope, class_id, class);
         if collector.current_function().is_none() && collector.is_exported_top_level_name(name) {
             collector.record_exported_resource_root(name);
             record_class_resource_scopes(collector, name, class);
@@ -72,6 +73,7 @@ fn visit_export_default_declaration_with_scope<'a>(
                 .as_ref()
                 .map_or_else(|| "default".to_string(), |id| id.name.to_string());
             record_class_member_calls(collector, &scope, CallableId(class.span.start), class);
+            record_class_base_construction(collector, &scope, CallableId(class.span.start), class);
             collector.record_exported_resource_root(&scope);
             record_class_resource_scopes(collector, &scope, class);
             collector.exported_functions.insert(scope.clone());

@@ -44,13 +44,14 @@ fn legacy_call_matches_local_target(
     use crate::codebase::dependencies::extract::CallTargetIdentity;
     match call.target_identity {
         CallTargetIdentity::ModuleExport => true,
-        CallTargetIdentity::RepositoryFunction | CallTargetIdentity::Unknown => !facts.imported_bindings.iter().any(|binding| {
+        CallTargetIdentity::RepositoryFunction => !facts.imported_bindings.iter().any(|binding| {
             call.callee == binding.local
                 || call
                     .callee
                     .strip_prefix(&binding.local)
                     .is_some_and(|suffix| suffix.starts_with('.'))
         }),
+        CallTargetIdentity::Unknown => false,
         CallTargetIdentity::Global => false,
     }
 }

@@ -66,12 +66,13 @@ fn resolve_exported_callable(
                 ExportedCallableResolution::Unknown
             }
         } else {
-            let local = file
-                .resolve_alias(None, Some(0), &binding.local)
-                .map(|resolved| resolved.callee)
+            let resolved_alias = file.resolve_alias(None, Some(0), &binding.local);
+            let local = resolved_alias
+                .as_ref()
+                .map(|resolved| resolved.callee.clone())
                 .unwrap_or_else(|| binding.local.clone());
-            file.known_scopes
-                .contains(&local)
+            (resolved_alias.is_some() && file.known_scopes.contains(&local)
+                || file.exported_scopes.contains(&local))
                 .then(|| ExportedCallableResolution::Callable(path.to_path_buf(), local.clone()))
                 .or_else(|| {
                     resolve_exported_namespace_member_alias(

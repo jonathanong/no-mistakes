@@ -42,6 +42,7 @@ fn call_scope_resolution_walks_multiple_lexical_parents() {
 fn callable_alias_resolution_uses_the_callee_binding_scope() {
     let index = CallableFileIndex {
         known_scopes: HashSet::from(["target".to_string()]),
+        exported_scopes: HashSet::new(),
         class_scopes: HashSet::new(),
         imported: HashMap::new(),
         exported: HashMap::new(),

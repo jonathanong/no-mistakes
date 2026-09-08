@@ -25,7 +25,11 @@ fn constructor_imports_require_construction_and_prune_other_members() {
     assert!(paths.contains(root.join("src/constructor-called.mts").as_path()));
     assert!(paths.contains(root.join("src/instance-field-called.mts").as_path()));
     assert!(paths.contains(root.join("src/static-field-eager.mts").as_path()));
+    assert!(paths.contains(root.join("src/inherited-instance-field-called.mts").as_path()));
+    assert!(paths.contains(root.join("src/inherited-constructor-called.mts").as_path()));
     assert!(!paths.contains(root.join("src/constructor-unused-method.mts").as_path()));
     assert!(!paths.contains(root.join("src/constructor-plain-call.mts").as_path()));
     assert!(!paths.contains(root.join("src/instance-field-unused.mts").as_path()));
+    assert!(!paths.contains(root.join("src/inherited-unused-method.mts").as_path()));
+    assert!(!paths.contains(root.join("src/inherited-plain-call.mts").as_path()));
 }

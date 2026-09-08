@@ -10,25 +10,53 @@ impl ImportCollector {
             ) else {
                 continue;
             };
-            let Some(target) = simple_callee_name(init) else {
+            if let Some(target) = simple_callee_name(init).filter(|target| {
+                matches!(
+                    self.call_target_identity(target),
+                    CallTargetIdentity::RepositoryFunction | CallTargetIdentity::ModuleExport
+                )
+            }) {
+                self.callable_aliases.push(CallableAliasBinding {
+                    alias: CallableAlias {
+                        scope: self.current_function(),
+                        scope_id: self.current_function_id(),
+                        local: local.to_string(),
+                        target,
+                        binding_scope: self.current_lexical_scope_id(),
+                    },
+                    lexical_scope_depth: self.local_stack.len() - 1,
+                });
+            }
+            let Expression::ObjectExpression(object) = init else {
                 continue;
             };
-            if !matches!(
-                self.call_target_identity(&target),
-                CallTargetIdentity::RepositoryFunction | CallTargetIdentity::ModuleExport
-            ) {
-                continue;
+            for property in &object.properties {
+                let ObjectPropertyKind::ObjectProperty(property) = property else {
+                    continue;
+                };
+                let Some(member) = crate::codebase::ts_source::static_property_key_name(&property.key)
+                else {
+                    continue;
+                };
+                let Some(target) = simple_callee_name(&property.value).filter(|target| {
+                    matches!(
+                        self.call_target_identity(target),
+                        CallTargetIdentity::RepositoryFunction | CallTargetIdentity::ModuleExport
+                    )
+                }) else {
+                    continue;
+                };
+                self.callable_aliases.push(CallableAliasBinding {
+                    alias: CallableAlias {
+                        scope: self.current_function(),
+                        scope_id: self.current_function_id(),
+                        local: format!("{local}.{member}"),
+                        target,
+                        binding_scope: self.current_lexical_scope_id(),
+                    },
+                    lexical_scope_depth: self.local_stack.len() - 1,
+                });
             }
-            self.callable_aliases.push(CallableAliasBinding {
-                alias: CallableAlias {
-                    scope: self.current_function(),
-                    scope_id: self.current_function_id(),
-                    local: local.to_string(),
-                    target,
-                    binding_scope: self.current_lexical_scope_id(),
-                },
-                lexical_scope_depth: self.local_stack.len() - 1,
-            });
         }
     }
 

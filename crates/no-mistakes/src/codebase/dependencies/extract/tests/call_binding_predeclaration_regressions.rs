@@ -28,6 +28,29 @@ fn inline_export_function_predeclaration_records_its_callable_binding_id() {
 }
 
 #[test]
+fn named_default_function_predeclaration_records_its_callable_binding_id() {
+    let facts = facts("namedDefault(); export default function namedDefault() {}");
+    let call = facts
+        .function_calls
+        .iter()
+        .find(|call| call.caller.is_none() && call.callee == "namedDefault")
+        .expect("same-file named default call");
+    let binding_scope = call
+        .callee_binding_scope
+        .expect("named default binding scope");
+    let default_id = facts
+        .callable_scope_ids
+        .iter()
+        .find_map(|(id, scope)| (scope == "namedDefault").then_some(*id))
+        .expect("named default callable identity");
+
+    assert_eq!(call.target_identity, CallTargetIdentity::RepositoryFunction);
+    assert!(facts.callable_bindings.iter().any(|(scope, name, id)| {
+        *scope == binding_scope && name == "namedDefault" && *id == default_id
+    }));
+}
+
+#[test]
 fn manually_walked_callable_bodies_predeclare_later_function_and_shadow_bindings() {
     let facts = facts(
         "const arrow = () => { helper(); function helper() {} setTimeout(); const setTimeout = local; };\

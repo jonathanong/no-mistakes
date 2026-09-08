@@ -24,7 +24,9 @@ fn collect_call_edges_for_core(
                 .filter(|call| {
                     call.invocation
                         != crate::codebase::dependencies::extract::InvocationKind::Membership
-                        && !call.is_callback
+                        && !(call.is_callback
+                            && call.invocation
+                                == crate::codebase::dependencies::extract::InvocationKind::Construct)
                 })
                 .map(|call| (call.caller_id, call.offset, call.invocation))
                 .collect::<std::collections::HashSet<_>>();
@@ -34,6 +36,9 @@ fn collect_call_edges_for_core(
                 .filter(|call| {
                     call.invocation
                         != crate::codebase::dependencies::extract::InvocationKind::Membership
+                        && !(call.is_callback
+                            && call.invocation
+                                == crate::codebase::dependencies::extract::InvocationKind::Construct)
                 })
                 .map(|call| {
                     let resolved_callee = index

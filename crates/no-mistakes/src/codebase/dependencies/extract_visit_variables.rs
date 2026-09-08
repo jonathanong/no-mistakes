@@ -81,6 +81,7 @@ fn visit_variable_declarator_with_scope<'a>(
                 let scope = collector.callable_scope_name(class_name);
                 collector.record_callable_binding_id(name, class_id);
                 record_class_member_calls(collector, &scope, class_id, class);
+                record_class_base_construction(collector, &scope, class_id, class);
                 collector.known_function_scopes.insert(scope.clone());
                 collector
                     .callable_scope_ids

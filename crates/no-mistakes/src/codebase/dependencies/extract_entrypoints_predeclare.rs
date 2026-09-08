@@ -72,6 +72,12 @@ fn predeclare_program_value_bindings<'a>(collector: &mut ImportCollector, progra
                 ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
                     if let Some(name) = function_name(function) {
                         collector.add_binding_name(&name);
+                        if collector.callable_binding_id(&name).is_none() {
+                            collector
+                                .record_callable_binding_id(&name, CallableId(function.span.start));
+                        }
+                        collector.known_function_scopes.insert(name.clone());
+                        collector.callable_scopes.insert(name);
                     }
                 }
                 ExportDefaultDeclarationKind::ClassDeclaration(class) => {
