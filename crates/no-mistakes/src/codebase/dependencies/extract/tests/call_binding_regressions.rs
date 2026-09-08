@@ -104,6 +104,27 @@ fn function_call_facts_preserve_source_line_and_callback_provenance() {
 }
 
 #[test]
+fn top_level_callback_does_not_create_a_synthetic_root_call() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+        "../../test-cases/codebase-analysis/import-facts/fixture/top-level-callback-argument.mts",
+    );
+    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, &source);
+
+    assert!(facts
+        .function_calls
+        .iter()
+        .all(|call| !(call.is_callback && call.caller.is_none())));
+    assert!(facts.imports.iter().any(|import| {
+        import.specifier == "./loaded.mts"
+            && import.function_scope.as_deref() == Some("<anonymous:1>")
+    }));
+}
+
+#[test]
 fn call_facts_preserve_runtime_import_aliases_and_named_reexports() {
     let source = r#"
         import { source as alias } from "./source.mts";
