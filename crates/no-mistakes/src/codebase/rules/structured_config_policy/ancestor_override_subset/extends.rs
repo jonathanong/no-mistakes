@@ -1,14 +1,19 @@
 use super::finding;
 use super::keys::Keys;
-use super::spec::{extends_specs, is_package_specifier, MAX_EXTENDS_DEPTH};
+use super::spec::{
+    extends_specs, is_package_specifier, MAX_EXTENDS_DEPTH, MAX_EXTENDS_OCCURRENCES,
+};
 use crate::codebase::rules::structured_config_policy::paths::canonical_path_in_canonical_root;
 use crate::codebase::rules::structured_config_policy::ValueAssertion;
 use crate::codebase::rules::RuleFinding;
-use crate::codebase::structured_value::parse_structured_value;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
+
+mod cache;
+pub(in crate::codebase::rules::structured_config_policy) use cache::ParsedAncestorCache;
 
 pub(super) struct Nested<'a> {
     pub(super) path: &'a Path,
@@ -19,7 +24,7 @@ pub(super) struct Nested<'a> {
 pub(super) struct Ancestor {
     pub(super) path: PathBuf,
     pub(super) rel: String,
-    pub(super) value: Value,
+    pub(super) value: Arc<Value>,
 }
 
 struct Walk<'a> {
@@ -29,6 +34,10 @@ struct Walk<'a> {
     assertion: &'a ValueAssertion,
     keys: &'a Keys<'a>,
     stack: Vec<PathBuf>,
+    occurrences: usize,
+    max_occurrences: usize,
+    traversal_exhausted: bool,
+    parsed_ancestors: &'a mut ParsedAncestorCache,
     ancestors: Vec<Ancestor>,
     findings: &'a mut Vec<RuleFinding>,
 }
@@ -40,6 +49,7 @@ pub(super) fn collect_ancestors(
     assertion: &ValueAssertion,
     keys: &Keys<'_>,
     findings: &mut Vec<RuleFinding>,
+    parsed_ancestors: &mut ParsedAncestorCache,
 ) -> Vec<Ancestor> {
     let mut walk = Walk {
         root,
@@ -48,6 +58,10 @@ pub(super) fn collect_ancestors(
         assertion,
         keys,
         stack: vec![nested.path.to_path_buf()],
+        occurrences: 0,
+        max_occurrences: MAX_EXTENDS_OCCURRENCES,
+        traversal_exhausted: false,
+        parsed_ancestors,
         ancestors: Vec::new(),
         findings,
     };
@@ -88,6 +102,22 @@ impl Walk<'_> {
         if is_package_specifier(spec) {
             return;
         }
+        if self.traversal_exhausted {
+            return;
+        }
+        if self.occurrences >= self.max_occurrences {
+            self.traversal_exhausted = true;
+            self.findings.push(finding(
+                self.nested_rel,
+                self.assertion,
+                format!(
+                    "{}: ancestor-override-subset extends traversal exceeds the maximum of {} occurrences",
+                    self.nested_rel, self.max_occurrences
+                ),
+            ));
+            return;
+        }
+        self.occurrences += 1;
         let resolved = normalize_path(&from_dir.join(spec));
         if !resolved.exists() {
             self.findings.push(finding(
@@ -146,7 +176,7 @@ impl Walk<'_> {
         });
     }
 
-    fn load(&mut self, spec: &str, resolved: &Path) -> Option<Value> {
+    fn load(&mut self, spec: &str, resolved: &Path) -> Option<Arc<Value>> {
         let Some(source) = crate::codebase::rules::read_source(self.sources, resolved) else {
             self.findings.push(finding(
                 self.nested_rel,
@@ -158,7 +188,7 @@ impl Walk<'_> {
             ));
             return None;
         };
-        match parse_structured_value(resolved, &source) {
+        match self.parsed_ancestors.parse(resolved, &source) {
             Ok(value) => Some(value),
             Err(error) => {
                 let ancestor_rel = relative_slash_path(self.root, resolved);

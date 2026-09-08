@@ -12,7 +12,7 @@ fn mapping(source: &str) -> Mapping {
 #[test]
 fn globs_accept_string_and_sequence_and_reject_invalid_values() {
     let values = mapping(
-        "files: '**/*.ts'\nexcludeFiles: [skip.ts]\ninvalid: [1]\nbad: '['\nscalar: true\nempty: []\nblank: ''\ndot: './'\n",
+        "files: '**/*.ts'\nexcludeFiles: [skip.ts]\ninvalid: [1]\nbad: '['\nscalar: true\nempty: []\nblank: ''\nwhitespace: '   '\ndot: './'\ndotWhitespace: ' ./ '\npaddedFiles: ' **/*.ts'\npaddedExcludeFiles: ['skip.ts ']\n",
     );
     assert!(compile_value_globs(&values, "files")
         .unwrap()
@@ -27,7 +27,11 @@ fn globs_accept_string_and_sequence_and_reject_invalid_values() {
     assert!(compile_value_globs(&values, "scalar").is_none());
     assert!(compile_value_globs(&values, "empty").is_none());
     assert!(compile_value_globs(&values, "blank").is_none());
+    assert!(compile_value_globs(&values, "whitespace").is_none());
     assert!(compile_value_globs(&values, "dot").is_none());
+    assert!(compile_value_globs(&values, "dotWhitespace").is_none());
+    assert!(compile_value_globs(&values, "paddedFiles").is_none());
+    assert!(optional_value_globs(&values, "paddedExcludeFiles").is_err());
     assert!(optional_value_globs(&values, "invalid").is_err());
 }
 

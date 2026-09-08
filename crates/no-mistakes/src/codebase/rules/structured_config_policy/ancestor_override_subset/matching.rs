@@ -57,6 +57,9 @@ fn compile_globs(value: &Value) -> Option<GlobSet> {
     }
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
+        if pattern != pattern.trim() {
+            return None;
+        }
         let trimmed = pattern.trim_start_matches("./");
         if trimmed.is_empty() {
             return None;

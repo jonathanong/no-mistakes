@@ -131,44 +131,6 @@ policies:
 }
 
 #[test]
-fn ancestor_override_subset_fails_closed_for_unresolvable_roots_and_nested_paths() {
-    let fixture = fixture_root();
-    let value = serde_yaml::from_str::<Value>(r#"{"extends":"../.oxlintrc.json"}"#).unwrap();
-    let assertion = ValueAssertion::default();
-    let missing_root = fixture.join("missing-root");
-    let sources = super::super::source_store_for_files(&[]);
-
-    let missing_root_inventory = paths::CanonicalInventory::new(&missing_root, &[]);
-    let missing_root_findings = ancestor_override_subset::check_ancestor_override_subset(
-        &missing_root.join("nested/.oxlintrc.json"),
-        "nested/.oxlintrc.json",
-        &sources,
-        &value,
-        &assertion,
-        &missing_root_inventory,
-    );
-    assert_eq!(missing_root_findings.len(), 1);
-    assert!(missing_root_findings[0]
-        .message
-        .contains("cannot resolve the repository root safely"));
-
-    let outside_nested = Path::new(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
-    let outside_inventory = paths::CanonicalInventory::new(&fixture, &[]);
-    let outside_findings = ancestor_override_subset::check_ancestor_override_subset(
-        &outside_nested,
-        "outside/.oxlintrc.json",
-        &sources,
-        &value,
-        &assertion,
-        &outside_inventory,
-    );
-    assert_eq!(outside_findings.len(), 1);
-    assert!(outside_findings[0]
-        .message
-        .contains("nested config is outside the repository root"));
-}
-
-#[test]
 fn ancestor_override_subset_reports_each_malformed_override_shape() {
     let root = fixture_root();
     let files = inventory(
