@@ -1,13 +1,12 @@
+mod collect;
 mod reassigned;
+mod shadows;
 
 use super::chain;
-use crate::codebase::ts_source::unwrap_ts_wrappers;
-use oxc_ast::ast::{
-    ArrowFunctionBody, BindingPattern, Declaration, Expression, FormalParameters, Function,
-    FunctionBody, Program, Statement, VariableDeclaration, VariableDeclarationKind,
-    VariableDeclarator,
-};
+use collect::collect_named_functions;
+use oxc_ast::ast::{FormalParameters, FunctionBody, Program, Statement};
 use reassigned::ReassignedNames;
+use shadows::TagShadows;
 use std::collections::HashMap;
 
 pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
@@ -45,10 +44,13 @@ impl LocalFunctions {
         }
         let reassigned = ReassignedNames::collect(program);
         raw.retain(|name, _| !reassigned.contains(name));
+        let tag_shadows = TagShadows::collect(program);
         let mut resolved = HashMap::new();
         for name in raw.keys().copied() {
             let mut resolving = Vec::new();
-            if let Some(text) = resolve_named(name, MAX_RESOLVE_DEPTH, &raw, &mut resolving) {
+            if let Some(text) =
+                resolve_named(name, MAX_RESOLVE_DEPTH, &raw, &mut resolving, &tag_shadows)
+            {
                 resolved.insert(name.to_string(), text);
             }
         }
@@ -57,97 +59,6 @@ impl LocalFunctions {
 
     pub(crate) fn get(&self, name: &str) -> Option<String> {
         self.resolved.get(name).cloned()
-    }
-}
-
-fn collect_named_functions<'a>(
-    statement: &'a Statement<'a>,
-    raw: &mut HashMap<&'a str, Resolvable<'a>>,
-) {
-    match statement {
-        Statement::FunctionDeclaration(function) => insert_function(function, raw),
-        Statement::VariableDeclaration(declaration) => insert_const_functions(declaration, raw),
-        Statement::ExportDeclaration(export) => match &export.declaration {
-            Declaration::FunctionDeclaration(function) => insert_function(function, raw),
-            Declaration::VariableDeclaration(declaration) => {
-                insert_const_functions(declaration, raw);
-            }
-            _ => {}
-        },
-        _ => {}
-    }
-}
-
-fn insert_function<'a>(function: &'a Function<'a>, raw: &mut HashMap<&'a str, Resolvable<'a>>) {
-    if let Some((name, resolvable)) = function_resolvable(function) {
-        raw.insert(name, resolvable);
-    }
-}
-
-fn insert_const_functions<'a>(
-    declaration: &'a VariableDeclaration<'a>,
-    raw: &mut HashMap<&'a str, Resolvable<'a>>,
-) {
-    if declaration.kind != VariableDeclarationKind::Const {
-        return;
-    }
-    for declarator in &declaration.declarations {
-        if let Some((name, resolvable)) = const_resolvable(declarator) {
-            raw.insert(name, resolvable);
-        }
-    }
-}
-
-fn function_resolvable<'a>(function: &'a Function<'a>) -> Option<(&'a str, Resolvable<'a>)> {
-    let id = function.id.as_ref()?;
-    let resolvable = resolvable_body(function)?;
-    Some((id.name.as_str(), resolvable))
-}
-
-/// A function's params and body, provided it's synchronously inlinable —
-/// irrespective of whether it has a name of its own. A `const`-bound
-/// function expression (`const x = function () {...}`) is anonymous at the
-/// AST level; its name comes from the binding, not [`function_resolvable`]'s
-/// `function.id`.
-fn resolvable_body<'a>(function: &'a Function<'a>) -> Option<Resolvable<'a>> {
-    if function.r#async || function.generator {
-        return None;
-    }
-    let body = function.body.as_ref()?;
-    Some(Resolvable {
-        params: &function.params,
-        body,
-    })
-}
-
-fn const_resolvable<'a>(
-    declarator: &'a VariableDeclarator<'a>,
-) -> Option<(&'a str, Resolvable<'a>)> {
-    let BindingPattern::BindingIdentifier(ident) = &declarator.id else {
-        return None;
-    };
-    let init = declarator.init.as_ref()?;
-    match unwrap_ts_wrappers(init) {
-        Expression::FunctionExpression(function) => {
-            let resolvable = resolvable_body(function)?;
-            Some((ident.name.as_str(), resolvable))
-        }
-        Expression::ArrowFunctionExpression(arrow) => {
-            if arrow.r#async {
-                return None;
-            }
-            let ArrowFunctionBody::FunctionBody(body) = &arrow.body else {
-                return None;
-            };
-            Some((
-                ident.name.as_str(),
-                Resolvable {
-                    params: &arrow.params,
-                    body,
-                },
-            ))
-        }
-        _ => None,
     }
 }
 
@@ -166,13 +77,15 @@ fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
 /// without a separate parameter-position check. A callee that shadows one of
 /// this function's own parameters is rejected rather than resolved through
 /// the global declaration of the same name — and so is a tagged template
-/// whose tag name (e.g. `sql`) is one of this function's own parameters,
-/// via `is_shadowed`.
+/// whose tag name (e.g. `sql`) is one of this function's own parameters, or
+/// is rebound anywhere else at the top level by something other than a
+/// same-file helper (see [`shadows::TagShadows`]), via `is_shadowed`.
 fn resolve_named(
     name: &str,
     depth: u8,
     raw: &HashMap<&str, Resolvable<'_>>,
     resolving: &mut Vec<String>,
+    tag_shadows: &TagShadows,
 ) -> Option<String> {
     if resolving.iter().any(|seen| seen == name) {
         return None;
@@ -187,9 +100,9 @@ fn resolve_named(
         if shadows_param(resolvable, callee) {
             return None;
         }
-        resolve_named(callee, depth, raw, resolving)
+        resolve_named(callee, depth, raw, resolving, tag_shadows)
     };
-    let mut is_shadowed = |tag: &str| shadows_param(resolvable, tag);
+    let mut is_shadowed = |tag: &str| shadows_param(resolvable, tag) || tag_shadows.contains(tag);
     let text = chain::resolve_expr(argument, depth, &mut lookup, &mut is_shadowed);
     resolving.pop();
     text

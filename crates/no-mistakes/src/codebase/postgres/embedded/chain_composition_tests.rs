@@ -79,3 +79,21 @@ fn reassigned_through_destructuring_is_rejected() {
     let facts = extract("composed-chain-function-reassigned-destructured.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
+
+#[test]
+fn helper_tagged_by_a_captured_top_level_const_rebinding_sql_fails_closed() {
+    let facts = extract("composed-chain-shadowed-captured-top-level-const.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn call_shadowed_by_a_catch_parameter_fails_closed() {
+    let facts = extract("composed-chain-shadowed-catch-parameter.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn named_function_expression_self_binding_is_not_collected_under_its_const_name() {
+    let facts = extract("composed-chain-shadowed-named-function-expression-self-binding.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}

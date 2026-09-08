@@ -1,14 +1,15 @@
 use super::bindings::callee_name;
 use super::{EmbeddedSqlCall, EmbeddedSqlKind};
 use oxc_ast::ast::{
-    AssignmentTarget, BindingPattern, BlockStatement, CallExpression, FormalParameters, Function,
-    FunctionBody, Program,
+    AssignmentTarget, BlockStatement, CallExpression, FormalParameters, Function, FunctionBody,
+    Program,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 use std::collections::{HashMap, HashSet};
 
 mod resolve;
+mod scope;
 
 #[derive(Clone)]
 struct BindingState {
@@ -43,71 +44,6 @@ struct ScopeVisitor<'a> {
     functions: resolve::LocalFunctions,
 }
 
-impl ScopeVisitor<'_> {
-    fn push_scope(&mut self) {
-        self.scopes.push(HashMap::new());
-    }
-
-    fn pop_scope(&mut self) {
-        self.scopes.pop();
-    }
-
-    fn current_scope(&mut self) -> Option<&mut HashMap<String, BindingState>> {
-        self.scopes.last_mut()
-    }
-
-    fn lookup(&self, name: &str) -> Option<BindingState> {
-        self.scopes
-            .iter()
-            .rev()
-            .find_map(|scope| scope.get(name).cloned())
-    }
-
-    /// Whether `name` is bound at a scope more deeply nested than the
-    /// top-level program scope — a real lexical shadow of a same-named
-    /// top-level helper. A match found only in the outermost scope is the
-    /// helper's own top-level declaration (JS/TS forbids redeclaring a name
-    /// twice in one scope), not a shadow, and must not block resolving it.
-    pub(super) fn shadowed_locally(&self, name: &str) -> bool {
-        self.scopes
-            .get(1..)
-            .is_some_and(|nested| nested.iter().any(|scope| scope.contains_key(name)))
-    }
-
-    fn bind_param(&mut self, pattern: &BindingPattern<'_>) {
-        let mut names = Vec::new();
-        resolve::for_each_bound_name(pattern, &mut |name| names.push(name.to_string()));
-        for name in names {
-            if let Some(scope) = self.current_scope() {
-                scope.insert(
-                    name,
-                    BindingState {
-                        sql: None,
-                        kind: EmbeddedSqlKind::Dynamic,
-                        line: 0,
-                    },
-                );
-            }
-        }
-    }
-
-    fn mark_dynamic(&mut self, name: &str) {
-        for scope in self.scopes.iter_mut().rev() {
-            if let Some(binding) = scope.get_mut(name) {
-                binding.kind = EmbeddedSqlKind::Dynamic;
-                binding.sql = None;
-                return;
-            }
-        }
-    }
-
-    fn with_control_flow(&mut self, walk: impl FnOnce(&mut Self)) {
-        self.control_depth += 1;
-        walk(self);
-        self.control_depth = self.control_depth.saturating_sub(1);
-    }
-}
-
 impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_program(&mut self, program: &Program<'a>) {
         self.push_scope();
@@ -120,6 +56,15 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.push_scope();
         resolve::record_statements(&block.body, self);
         walk::walk_block_statement(self, block);
+        self.pop_scope();
+    }
+
+    fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
+        self.push_scope();
+        if let Some(param) = &clause.param {
+            self.bind_param(&param.pattern);
+        }
+        walk::walk_catch_clause(self, clause);
         self.pop_scope();
     }
 
