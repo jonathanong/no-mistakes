@@ -213,8 +213,30 @@ checkUrl(url);
 let ssrf = require("ssrf-guard/node");
 ssrf = localSsrf;
 ssrf.validateUrl(url);
+var reinitialized = require("ssrf-guard/node").validateUrl;
+var reinitialized = localCheckUrl;
+reinitialized(url);
+var iterated = require("ssrf-guard/node").validateUrl;
+for (var iterated of callbacks) iterated(url);
 `;
     assert.deepEqual(messages(code, RULE, ssrfOptions, "reassigned.ts"), []);
+  });
+
+  it("matches static numeric CommonJS member and destructuring keys", () => {
+    const options = {
+      targets: [
+        {
+          sourceSpecifierPatterns: ["ssrf-guard/node"],
+          calleeNamePatterns: ["0"],
+          optionsPosition: 2,
+          requiredProperties: ["timeoutMs"],
+        },
+      ],
+    };
+    assert.deepEqual(messages(ruleFixture("numeric.ts"), RULE, options, "numeric.ts"), [
+      "missingOptions",
+      "missingOptions",
+    ]);
   });
 
   it("ignores computed CommonJS destructuring keys that are not literals", () => {

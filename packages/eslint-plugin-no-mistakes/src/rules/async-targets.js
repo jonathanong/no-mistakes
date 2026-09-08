@@ -49,7 +49,13 @@ function bindingIdentifier(node) {
 
 function memberPropertyName(node) {
   if (!node.computed) return propertyName(node.property);
-  return literalString(unwrapExpression(node.property));
+  return staticComputedPropertyName(node.property);
+}
+
+function staticComputedPropertyName(node) {
+  const key = unwrapExpression(node);
+  const string = literalString(key);
+  return string ?? (typeof key?.value === "number" ? String(key.value) : null);
 }
 
 function createTargetMatcher(context, optionKey = "targets") {
@@ -60,8 +66,13 @@ function createTargetMatcher(context, optionKey = "targets") {
 
   function isReassigned(id) {
     const variable = resolveVariable(id, context);
-    return Boolean(
-      variable?.references.some((reference) => reference.isWrite() && !reference.init),
+    const writes = variable?.references.filter((reference) => reference.isWrite()) || [];
+    const isVar = variable?.defs.some(
+      (definition) => definition.type === "Variable" && definition.parent?.kind === "var",
+    );
+    return (
+      writes.some((reference) => !reference.init) ||
+      (isVar && writes.filter((reference) => reference.init).length > 1)
     );
   }
 
@@ -102,7 +113,7 @@ function createTargetMatcher(context, optionKey = "targets") {
         for (const property of node.id.properties) {
           if (property.type !== "Property") continue;
           const name = property.computed
-            ? literalString(unwrapExpression(property.key))
+            ? staticComputedPropertyName(property.key)
             : propertyName(property.key);
           if (name) recordDirect(bindingIdentifier(property.value), source, name);
         }
