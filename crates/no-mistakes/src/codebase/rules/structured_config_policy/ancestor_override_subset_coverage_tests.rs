@@ -28,7 +28,7 @@ fn inventory(root: &Path, rels: &[&str]) -> Vec<PathBuf> {
 }
 
 #[test]
-fn ancestor_override_subset_skips_diamond_extends_and_malformed_overrides() {
+fn ancestor_override_subset_rejects_malformed_overrides_and_keeps_valid_configs() {
     let root = fixture_root();
     let files = inventory(
         &root,
@@ -70,13 +70,16 @@ policies:
         .map(|finding| finding.file.as_str())
         .collect();
     assert!(!found.contains(&"diamond/nested/.oxlintrc.json"), "{body}");
-    assert!(!found.contains(&"odd/.oxlintrc.json"), "{body}");
-    assert!(!found.contains(&"bool-extends/.oxlintrc.json"), "{body}");
+    assert!(found.contains(&"odd/.oxlintrc.json"), "{body}");
+    assert!(found.contains(&"bool-extends/.oxlintrc.json"), "{body}");
     assert!(!found.contains(&"star-seg/.oxlintrc.json"), "{body}");
     assert!(found.contains(&"abs/.oxlintrc.json"), "{body}");
-    assert_eq!(findings.len(), 1, "{body}");
+    assert_eq!(findings.len(), 3, "{body}");
     assert!(
-        findings[0].message.contains("outside the repository root"),
+        findings
+            .iter()
+            .any(|finding| finding.file == "abs/.oxlintrc.json"
+                && finding.message.contains("portable relative path")),
         "{body}"
     );
 }

@@ -1,13 +1,18 @@
 use super::value_at_key;
 use super::ValueAssertion;
+use crate::codebase::rules::structured_config_policy::paths::canonical_path_in_root;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
 mod extends;
+mod keys;
 mod lost;
-use extends::{collect_ancestors, Keys, Nested};
+mod matching;
+mod spec;
+use extends::{collect_ancestors, Nested};
+use keys::Keys;
 use lost::lost_override_findings;
 
 pub(super) fn check_ancestor_override_subset(
@@ -33,24 +38,29 @@ pub(super) fn check_ancestor_override_subset(
         &keys,
         &mut findings,
     );
-    let nested_dir = nested_path.parent().unwrap_or(nested_path);
-    let children: Vec<&Path> = files
+    let Some(nested_path) = canonical_path_in_root(root, nested_path) else {
+        return findings;
+    };
+    let nested_dir = nested_path.parent().unwrap_or(&nested_path);
+    let canonical_children: Vec<PathBuf> = files
+        .iter()
+        .filter_map(|path| canonical_path_in_root(root, path))
+        .filter(|path| path != &nested_path && path.starts_with(nested_dir))
+        .collect();
+    let children = canonical_children
         .iter()
         .map(PathBuf::as_path)
-        .filter(|path| *path != nested_path && path.starts_with(nested_dir))
-        .collect();
+        .collect::<Vec<_>>();
     let nested_rules = mapping_at(value, keys.rules);
-    for ancestor in ancestors {
-        findings.extend(lost_override_findings(
-            nested_rel,
-            nested_dir,
-            nested_rules,
-            &children,
-            &ancestor,
-            assertion,
-            &keys,
-        ));
-    }
+    findings.extend(lost_override_findings(
+        nested_rel,
+        nested_dir,
+        nested_rules,
+        &children,
+        &ancestors,
+        assertion,
+        &keys,
+    ));
     findings
 }
 
@@ -75,13 +85,5 @@ pub(super) fn finding(file: &str, assertion: &ValueAssertion, message: String) -
         message,
         import: None,
         target: Some(target),
-    }
-}
-
-pub(super) fn string_entries(value: Option<&Value>) -> Vec<&str> {
-    match value {
-        Some(Value::String(text)) => vec![text.as_str()],
-        Some(Value::Sequence(items)) => items.iter().filter_map(Value::as_str).collect(),
-        _ => Vec::new(),
     }
 }

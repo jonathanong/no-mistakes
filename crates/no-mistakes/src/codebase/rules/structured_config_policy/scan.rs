@@ -39,6 +39,13 @@ pub(super) fn scan(
                     }
                 };
             if !policy_applies(&value, &policy.when) {
+                for assertion in &policy.value_assertions {
+                    if matches!(assertion.kind, Some(AssertionKind::AncestorOverrideSubset)) {
+                        findings.extend(check_ancestor_override_subset(
+                            root, &path, &rel, sources, inventory, &value, assertion,
+                        ));
+                    }
+                }
                 continue;
             }
             for key in &policy.required_keys {

@@ -1,6 +1,7 @@
-use super::{finding, string_entries};
-use crate::codebase::rules::structured_config_policy::paths::contained_in_root;
-use crate::codebase::rules::structured_config_policy::value_at_key;
+use super::finding;
+use super::keys::Keys;
+use super::spec::{extends_specs, is_package_specifier, MAX_EXTENDS_DEPTH};
+use crate::codebase::rules::structured_config_policy::paths::canonical_path_in_root;
 use crate::codebase::rules::structured_config_policy::ValueAssertion;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::structured_value::parse_structured_value;
@@ -9,32 +10,6 @@ use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::Value;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
-
-pub(super) struct Keys<'a> {
-    pub(super) extends: &'a str,
-    pub(super) overrides: &'a str,
-    pub(super) files: &'a str,
-    pub(super) rules: &'a str,
-}
-
-impl<'a> Keys<'a> {
-    pub(super) fn from_assertion(assertion: &'a ValueAssertion) -> Self {
-        Self {
-            extends: named(&assertion.extends_key, "extends"),
-            overrides: named(&assertion.overrides_key, "overrides"),
-            files: named(&assertion.files_key, "files"),
-            rules: named(&assertion.rules_key, "rules"),
-        }
-    }
-}
-
-fn named<'a>(value: &'a str, default: &'a str) -> &'a str {
-    if value.is_empty() {
-        default
-    } else {
-        value
-    }
-}
 
 pub(super) struct Nested<'a> {
     pub(super) path: &'a Path,
@@ -68,27 +43,70 @@ pub(super) fn collect_ancestors(
     keys: &Keys<'_>,
     findings: &mut Vec<RuleFinding>,
 ) -> Vec<Ancestor> {
+    let Some(root) = root.canonicalize().ok() else {
+        findings.push(finding(
+            nested.rel,
+            assertion,
+            format!(
+                "{}: ancestor-override-subset cannot resolve the repository root safely",
+                nested.rel
+            ),
+        ));
+        return Vec::new();
+    };
+    let Some(nested_path) = canonical_path_in_root(&root, nested.path) else {
+        findings.push(finding(
+            nested.rel,
+            assertion,
+            format!(
+                "{}: ancestor-override-subset nested config is outside the repository root",
+                nested.rel
+            ),
+        ));
+        return Vec::new();
+    };
     let mut walk = Walk {
-        root,
+        root: &root,
         nested_rel: nested.rel,
         sources,
         assertion,
         keys,
-        stack: vec![normalize_path(nested.path)],
+        stack: vec![nested_path.clone()],
         seen: HashSet::new(),
         ancestors: Vec::new(),
         findings,
     };
-    walk.visit(nested.path, nested.value);
+    walk.visit(&nested_path, nested.value);
     walk.ancestors
 }
 
 impl Walk<'_> {
     fn visit(&mut self, from_path: &Path, from_value: &Value) {
         let from_dir = from_path.parent().unwrap_or(from_path);
-        for spec in string_entries(value_at_key(from_value, self.keys.extends)) {
+        for spec in self.extends(from_value) {
             self.follow(from_dir, spec);
         }
+    }
+
+    fn extends<'b>(&mut self, value: &'b Value) -> Vec<&'b str> {
+        match extends_specs(value, self.keys.extends) {
+            Ok(specs) => specs,
+            Err(detail) => {
+                self.invalid_extends(detail);
+                Vec::new()
+            }
+        }
+    }
+
+    fn invalid_extends(&mut self, detail: &str) {
+        self.findings.push(finding(
+            self.nested_rel,
+            self.assertion,
+            format!(
+                "{}: ancestor-override-subset extends {detail}",
+                self.nested_rel
+            ),
+        ));
     }
 
     fn follow(&mut self, from_dir: &Path, spec: &str) {
@@ -96,12 +114,34 @@ impl Walk<'_> {
             return;
         }
         let resolved = normalize_path(&from_dir.join(spec));
-        if !contained_in_root(self.root, &resolved) {
+        if !resolved.exists() {
+            self.findings.push(finding(
+                self.nested_rel,
+                self.assertion,
+                format!(
+                    "{}: ancestor-override-subset `{spec}` is missing",
+                    self.nested_rel
+                ),
+            ));
+            return;
+        }
+        let Some(resolved) = canonical_path_in_root(self.root, &resolved) else {
             self.findings.push(finding(
                 self.nested_rel,
                 self.assertion,
                 format!(
                     "{}: ancestor-override-subset `{spec}` is outside the repository root",
+                    self.nested_rel
+                ),
+            ));
+            return;
+        };
+        if self.stack.len() >= MAX_EXTENDS_DEPTH {
+            self.findings.push(finding(
+                self.nested_rel,
+                self.assertion,
+                format!(
+                    "{}: ancestor-override-subset extends chain exceeds the maximum depth of {MAX_EXTENDS_DEPTH}",
                     self.nested_rel
                 ),
             ));
@@ -159,8 +199,4 @@ impl Walk<'_> {
             }
         }
     }
-}
-
-fn is_package_specifier(spec: &str) -> bool {
-    !spec.starts_with('.') && !Path::new(spec).is_absolute()
 }
