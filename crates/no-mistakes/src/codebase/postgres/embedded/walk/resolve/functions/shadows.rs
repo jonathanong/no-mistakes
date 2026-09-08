@@ -101,7 +101,7 @@ fn record_declarator(declarator: &VariableDeclarator<'_>, shadows: &mut TagShado
     }
 }
 
-fn is_function_shaped(expr: &Expression<'_>) -> bool {
+pub(super) fn is_function_shaped(expr: &Expression<'_>) -> bool {
     matches!(
         unwrap_ts_wrappers(expr),
         Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_)

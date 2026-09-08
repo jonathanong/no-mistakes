@@ -133,3 +133,15 @@ fn helper_tagged_by_an_imported_sql_binding_fails_closed() {
     let facts = extract("composed-chain-shadowed-imported-sql-tag.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
+
+#[test]
+fn reassigned_via_for_of_declared_loop_target_is_rejected() {
+    let facts = extract("composed-chain-function-reassigned-via-for-of-declared.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn helper_return_tagged_by_a_non_sql_tag_with_no_interpolation_fails_closed() {
+    let facts = extract("composed-chain-shadowed-non-sql-tag-no-interpolation.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
