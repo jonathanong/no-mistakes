@@ -145,3 +145,9 @@ fn helper_return_tagged_by_a_non_sql_tag_with_no_interpolation_fails_closed() {
     let facts = extract("composed-chain-shadowed-non-sql-tag-no-interpolation.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
+
+#[test]
+fn call_inside_a_named_function_expressions_own_self_binding_fails_closed() {
+    let facts = extract("composed-chain-shadowed-named-function-expression-self-call.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
