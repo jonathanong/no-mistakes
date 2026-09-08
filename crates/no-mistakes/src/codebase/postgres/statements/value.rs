@@ -3,26 +3,15 @@ use crate::codebase::postgres::idents::unwrap_expr;
 use crate::codebase::postgres::schema::relation_name;
 use sqlparser::ast::{
     Assignment, AssignmentTarget, Expr, Function, FunctionArg, FunctionArgExpr, FunctionArguments,
-    ObjectNamePart, UnaryOperator, Value, ValueWithSpan,
+    Ident, ObjectNamePart, UnaryOperator, Value, ValueWithSpan,
 };
 
+#[rustfmt::skip]
 const VOLATILE: &[&str] = &[
-    "gen_random_uuid",
-    "random",
-    "nextval",
-    "uuidv7",
-    "uuid_generate_v1",
-    "uuid_generate_v1mc",
-    "uuid_generate_v4",
-    "now",
-    "clock_timestamp",
-    "statement_timestamp",
-    "transaction_timestamp",
-    "current_timestamp",
-    "current_date",
-    "current_time",
-    "localtime",
-    "localtimestamp",
+    "gen_random_uuid", "random", "nextval", "uuidv7", "uuid_generate_v1",
+    "uuid_generate_v1mc", "uuid_generate_v4", "now", "clock_timestamp",
+    "statement_timestamp", "transaction_timestamp", "current_timestamp",
+    "current_date", "current_time", "localtime", "localtimestamp",
 ];
 
 pub(super) fn from_assignment(assignment: &Assignment) -> SqlAssignmentFact {
@@ -35,16 +24,7 @@ pub(super) fn from_assignment(assignment: &Assignment) -> SqlAssignmentFact {
 pub(super) fn from_expr(expr: &Expr) -> SqlValueForm {
     match unwrap_expr(expr) {
         Expr::Value(value) => from_value(value),
-        Expr::Identifier(ident) if is_placeholder_ident(&ident.value) => SqlValueForm::Placeholder,
-        Expr::Identifier(ident) if is_volatile_name(&ident.value) => SqlValueForm::Volatile {
-            name: ident.value.to_ascii_lowercase(),
-        },
-        Expr::Identifier(ident) if ident.value.eq_ignore_ascii_case("default") => {
-            SqlValueForm::Other
-        }
-        Expr::Identifier(ident) => SqlValueForm::SelfRef {
-            column: ident.value.clone(),
-        },
+        Expr::Identifier(ident) => ident_form(ident),
         Expr::CompoundIdentifier(parts) => compound_form(parts),
         Expr::Function(function) => from_function(function),
         Expr::UnaryOp {
@@ -75,6 +55,28 @@ fn from_value(value: &ValueWithSpan) -> SqlValueForm {
     }
 }
 
+fn ident_form(ident: &Ident) -> SqlValueForm {
+    if ident.quote_style.is_some() {
+        return SqlValueForm::SelfRef {
+            column: ident.value.clone(),
+        };
+    }
+    if is_placeholder_ident(&ident.value) {
+        return SqlValueForm::Placeholder;
+    }
+    if is_volatile_name(&ident.value) {
+        return SqlValueForm::Volatile {
+            name: ident.value.to_ascii_lowercase(),
+        };
+    }
+    if ident.value.eq_ignore_ascii_case("default") {
+        return SqlValueForm::Other;
+    }
+    SqlValueForm::SelfRef {
+        column: ident.value.clone(),
+    }
+}
+
 fn signed_literal(expr: &Expr) -> SqlValueForm {
     match from_expr(expr) {
         SqlValueForm::Literal | SqlValueForm::Null => SqlValueForm::Literal,
@@ -101,7 +103,10 @@ fn compound_form(parts: &[sqlparser::ast::Ident]) -> SqlValueForm {
 }
 
 fn from_function(function: &Function) -> SqlValueForm {
-    let name = last_function_name(function).to_ascii_lowercase();
+    let Some(ident) = builtin_function_ident(function) else {
+        return SqlValueForm::Other;
+    };
+    let name = ident.value.to_ascii_lowercase();
     if is_volatile_name(&name) {
         return SqlValueForm::Volatile { name };
     }
@@ -117,17 +122,11 @@ fn from_function(function: &Function) -> SqlValueForm {
     }
 }
 
-fn last_function_name(function: &Function) -> String {
-    function
-        .name
-        .0
-        .iter()
-        .rev()
-        .find_map(|part| match part {
-            ObjectNamePart::Identifier(ident) => Some(ident.value.clone()),
-            _ => None,
-        })
-        .unwrap_or_default()
+fn builtin_function_ident(function: &Function) -> Option<&Ident> {
+    match function.name.0.as_slice() {
+        [ObjectNamePart::Identifier(ident)] if ident.quote_style.is_none() => Some(ident),
+        _ => None,
+    }
 }
 
 fn function_arg_exprs(function: &Function) -> Vec<&Expr> {
