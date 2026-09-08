@@ -5,6 +5,7 @@ const { spawnSync } = require("node:child_process");
 const { existsSync } = require("node:fs");
 const { join, resolve } = require("node:path");
 
+const { cargoReleaseDirectory } = require("./native-artifact-paths");
 const { nativePackageName } = require("./native-package");
 const { stageNative } = require("./stage-native");
 
@@ -19,15 +20,25 @@ function runCargo(args, env = {}) {
   if (result.status !== 0) process.exit(result.status || 1);
 }
 
-function addonPath() {
+function localNativeArtifacts({
+  root,
+  env = process.env,
+  platform = process.platform,
+  addonExists = existsSync,
+  resolveReleaseDirectory = cargoReleaseDirectory,
+}) {
+  const releaseDirectory = resolveReleaseDirectory({ root, env });
   const names =
-    process.platform === "darwin"
+    platform === "darwin"
       ? ["libno_mistakes.dylib"]
-      : process.platform === "win32"
+      : platform === "win32"
         ? ["no_mistakes.dll"]
         : ["libno_mistakes.so"];
-  const paths = names.map((name) => join(root, "target", "release", name));
-  return paths.find(existsSync) || paths[0];
+  const paths = names.map((name) => join(releaseDirectory, name));
+  return {
+    addon: paths.find(addonExists) || paths[0],
+    binary: join(releaseDirectory, platform === "win32" ? "no-mistakes.exe" : "no-mistakes"),
+  };
 }
 
 async function main() {
@@ -40,17 +51,14 @@ async function main() {
       NO_MISTAKES_BUILD_NAPI: "1",
     },
   );
+  const artifacts = localNativeArtifacts({ root });
   await stageNative({
     packageName,
-    binary: join(
-      root,
-      "target",
-      "release",
-      process.platform === "win32" ? "no-mistakes.exe" : "no-mistakes",
-    ),
-    addon: addonPath(),
+    ...artifacts,
   });
 }
+
+module.exports = { localNativeArtifacts };
 
 if (require.main === module) {
   main().catch((error) => {
