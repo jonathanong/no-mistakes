@@ -1,9 +1,16 @@
-fn predeclare_function_body<'a>(
+fn walk_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     function: &oxc_ast::ast::Function<'a>,
 ) {
+    // Default parameters run in the parameter environment, before the body
+    // lexical environment exists. Visit them before introducing body bindings.
+    walk::walk_formal_parameters(collector, &function.params);
+    if let Some(return_type) = &function.return_type {
+        walk::walk_ts_type_annotation(collector, return_type);
+    }
     if let Some(body) = &function.body {
         predeclare_function_declarations(collector, &body.statements);
+        walk::walk_function_body(collector, body);
     }
 }
 
@@ -91,4 +98,29 @@ fn predeclare_function_declarations<'a>(
         }
     }
     predeclare_hoisted_var_bindings(collector, statements);
+}
+
+impl ImportCollector {
+    fn record_callable_declaration_bindings(&mut self, declaration: &VariableDeclaration<'_>) {
+        let binding_scope = if declaration.kind == VariableDeclarationKind::Var {
+            self.function_scope_stack
+                .last()
+                .copied()
+                .unwrap_or(0)
+        } else {
+            self.local_stack.len() - 1
+        };
+        let binding_scope = self.lexical_scope_ids[binding_scope];
+        for declarator in &declaration.declarations {
+            if matches!(
+                declarator.init,
+                Some(Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_))
+            ) {
+                if let Some(name) = binding_identifier_name(&declarator.id) {
+                    self.callable_binding_ids
+                        .insert((binding_scope, name.to_string()));
+                }
+            }
+        }
+    }
 }

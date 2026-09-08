@@ -1,15 +1,26 @@
+#[derive(Clone)]
+struct ReachabilityTransition {
+    callee: String,
+    requires_constructed_caller: bool,
+    constructs_callee: bool,
+}
+
 fn reachable_function_scopes(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
 ) -> HashSet<String> {
     let known_scopes = known_function_scopes(facts);
-    let mut by_caller: HashMap<Option<String>, Vec<String>> = HashMap::new();
+    let mut by_caller: HashMap<Option<String>, Vec<ReachabilityTransition>> = HashMap::new();
     for call in facts.function_calls.iter().filter(|call| {
         // Synthetic callbacks are ownership facts, not module execution
         // evidence. Preserve the historical conservative edge from an
         // executing parent into its nested anonymous callback, but do not make
         // a merely declared module callback execution-reachable. Aggregate
-        // member callbacks remain excluded as before.
+        // member callbacks remain excluded, except a constructor after its
+        // parent was constructed.
         !call.is_callback
+            || (call.invocation
+                == crate::codebase::dependencies::extract::InvocationKind::Membership
+                && call.callee == "constructor")
             || (call.caller.is_some() && call.callee.starts_with("<anonymous:"))
     }) {
         let Some(callee) = reachable_callee_scope(facts, call, &known_scopes) else {
@@ -18,23 +29,35 @@ fn reachable_function_scopes(
         by_caller
             .entry(call.caller.clone())
             .or_default()
-            .push(callee);
+            .push(ReachabilityTransition {
+                callee,
+                requires_constructed_caller: call.invocation
+                    == crate::codebase::dependencies::extract::InvocationKind::Membership,
+                constructs_callee: call.invocation
+                    == crate::codebase::dependencies::extract::InvocationKind::Construct,
+            });
     }
 
     let mut reachable = HashSet::new();
-    let mut queue: VecDeque<String> = by_caller
+    let mut visited = HashSet::new();
+    let mut queue: VecDeque<(String, bool)> = by_caller
         .get(&None)
         .cloned()
         .unwrap_or_default()
         .into_iter()
+        .filter(|transition| !transition.requires_constructed_caller)
+        .map(|transition| (transition.callee, transition.constructs_callee))
         .collect();
-    while let Some(function) = queue.pop_front() {
-        if !reachable.insert(function.clone()) {
+    while let Some((function, constructed)) = queue.pop_front() {
+        if !visited.insert((function.clone(), constructed)) {
             continue;
         }
+        reachable.insert(function.clone());
         if let Some(callees) = by_caller.get(&Some(function)) {
-            for callee in callees {
-                queue.push_back(callee.clone());
+            for transition in callees {
+                if !transition.requires_constructed_caller || constructed {
+                    queue.push_back((transition.callee.clone(), transition.constructs_callee));
+                }
             }
         }
     }

@@ -66,6 +66,25 @@ fn member_callee_unwraps_typescript_receiver_wrappers() {
 }
 
 #[test]
+fn dynamic_member_receiver_records_unknown_call_evidence() {
+    let source = "function run() { factory().invoke(); }";
+    let facts = facts(source);
+
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "factory" && call.caller.as_deref() == Some("run")));
+    assert_eq!(facts.unknown_calls.len(), 1);
+    assert_eq!(facts.unknown_calls[0].caller.as_deref(), Some("run"));
+    assert_eq!(facts.unknown_calls[0].line, 1);
+    assert_eq!(facts.unknown_calls[0].invocation, InvocationKind::Call);
+    assert!(facts
+        .function_calls
+        .iter()
+        .all(|call| call.callee != "<unknown>.invoke"));
+}
+
+#[test]
 fn aggregate_membership_is_not_an_invocation_callback() {
     let facts = facts("const registry = { load() {} };");
     assert!(facts
@@ -121,4 +140,30 @@ fn eager_object_initializers_are_module_owned_but_function_properties_are_scoped
     assert!(calls
         .iter()
         .any(|call| call.caller.as_deref() == Some("config/load")));
+}
+
+#[test]
+fn callable_var_uses_its_hoisted_function_binding_identity() {
+    let facts = facts("function run() { { var load = () => {}; } load(); }");
+    let call = facts
+        .function_calls
+        .iter()
+        .find(|call| call.caller.as_deref() == Some("run") && call.callee == "load")
+        .expect("hoisted var call");
+
+    assert_eq!(call.target_identity, CallTargetIdentity::RepositoryFunction);
+}
+
+#[test]
+fn function_body_bindings_do_not_shadow_parameter_default_calls() {
+    let facts = facts(
+        "import { target } from './dep.mts'; function run(value = target()) { const target = local; }",
+    );
+    let call = facts
+        .function_calls
+        .iter()
+        .find(|call| call.caller.as_deref() == Some("run") && call.callee == "target")
+        .expect("parameter default call");
+
+    assert_eq!(call.target_identity, CallTargetIdentity::ModuleExport);
 }

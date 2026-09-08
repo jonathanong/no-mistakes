@@ -25,10 +25,7 @@ fn simple_static_member_name(member: &StaticMemberExpression<'_>) -> Option<Stri
         Expression::ThisExpression(_) => "this".to_string(),
         Expression::StaticMemberExpression(object) => simple_static_member_name(object)?,
         Expression::ComputedMemberExpression(object) => simple_computed_member_name(object)?,
-        // Effects match configured member terminals independently of a
-        // receiver. Preserve that occurrence without claiming an unknown
-        // expression is a global or repository binding.
-        _ => "<unknown>".to_string(),
+        _ => return None,
     };
     Some(format!("{object}.{}", member.property.name.as_str()))
 }

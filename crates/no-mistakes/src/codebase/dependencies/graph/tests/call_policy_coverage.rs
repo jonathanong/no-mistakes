@@ -149,3 +149,51 @@ fn callable_alias_lookup_does_not_cross_a_shadowed_parameter() {
     assert!(reachable.contains("run"));
     assert!(!reachable.contains("target"));
 }
+
+#[test]
+fn constructor_membership_is_reachable_but_other_member_membership_is_not() {
+    use crate::codebase::dependencies::extract::FunctionCall;
+
+    let membership = |callee: &str| FunctionCall {
+        caller: Some("Service".to_string()),
+        syntactic_caller: None,
+        callee: callee.to_string(),
+        line: 0,
+        offset: 0,
+        is_callback: true,
+        invocation: InvocationKind::Membership,
+        target_identity: CallTargetIdentity::RepositoryFunction,
+        callee_binding_scope: None,
+        static_arg: None,
+        static_cwd: None,
+    };
+    let facts = crate::codebase::ts_source::facts::TsFileFacts {
+        function_calls: vec![
+            FunctionCall {
+                caller: None,
+                syntactic_caller: None,
+                callee: "Service".to_string(),
+                line: 1,
+                offset: 0,
+                is_callback: false,
+                invocation: InvocationKind::Construct,
+                target_identity: CallTargetIdentity::RepositoryFunction,
+                callee_binding_scope: Some(0),
+                static_arg: None,
+                static_cwd: None,
+            },
+            membership("constructor"),
+            membership("unused"),
+        ],
+        callable_scopes: vec![
+            "Service".to_string(),
+            "Service/constructor".to_string(),
+            "Service/unused".to_string(),
+        ],
+        ..Default::default()
+    };
+
+    let reachable = reachable_function_scopes(&facts);
+    assert!(reachable.contains("Service/constructor"));
+    assert!(!reachable.contains("Service/unused"));
+}

@@ -7,7 +7,7 @@ impl<'a> Visit<'a> for ImportCollector {
     fn visit_function(
         &mut self,
         function: &oxc_ast::ast::Function<'a>,
-        flags: oxc_syntax::scope::ScopeFlags,
+        _flags: oxc_syntax::scope::ScopeFlags,
     ) {
         let name = function_name(function);
         let pushed_syntactic_caller = self.push_syntactic_caller(name.clone());
@@ -30,8 +30,7 @@ impl<'a> Visit<'a> for ImportCollector {
         }
         self.add_type_parameter_names(function.type_parameters.as_deref());
         self.add_formal_parameters(&function.params);
-        predeclare_function_body(self, function);
-        walk::walk_function(self, function, flags);
+        walk_function_with_body_bindings(self, function);
         self.pop_function_scope(true);
         self.pop_syntactic_caller(pushed_syntactic_caller);
     }
@@ -70,6 +69,7 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
         visit_variable_declaration_with_bindings(self, declaration);
+        self.record_callable_declaration_bindings(declaration);
         self.record_const_callable_aliases(declaration);
         walk::walk_variable_declaration(self, declaration);
     }
