@@ -152,6 +152,11 @@ fn allowed_invocations(configured: &[Invocation]) -> Vec<InvocationKind> {
 fn site_source_node(site: &ResolvedCallSite) -> NodeId {
     site.caller.as_deref().map_or_else(
         || NodeId::file(&site.file),
-        |symbol| NodeId::symbol(&site.file, symbol),
+        |symbol| {
+            site.caller_id.map_or_else(
+                || NodeId::symbol(&site.file, symbol),
+                |id| NodeId::callable(&site.file, symbol.to_string(), id),
+            )
+        },
     )
 }

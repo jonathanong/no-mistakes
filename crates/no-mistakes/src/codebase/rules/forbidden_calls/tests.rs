@@ -170,6 +170,7 @@ fn function_and_terminal_selectors_use_canonical_repository_targets() {
     let repository_site = ResolvedCallSite {
         file: root.join("src/selectors.mts"),
         caller: Some("selectorCalls".to_string()),
+        caller_id: None,
         line: 8,
         offset: 0,
         invocation: InvocationKind::Call,
