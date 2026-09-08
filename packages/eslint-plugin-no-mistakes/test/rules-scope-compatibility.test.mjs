@@ -3,29 +3,6 @@ import { describe, it } from "vitest";
 import { plugin } from "./helpers.mjs";
 
 describe("scope compatibility", () => {
-  it("reports setTimeout when scope.set is unavailable", () => {
-    const reports = [];
-    const listener = plugin.rules["playwright-no-set-timeout"].create({
-      filename: "e2e.spec.ts",
-      sourceCode: {
-        getScope: () => ({
-          set: undefined,
-          variables: [{ name: "setTimeout", defs: [] }],
-          upper: null,
-        }),
-      },
-      report: (item) => reports.push(item),
-    });
-
-    listener.CallExpression({
-      type: "CallExpression",
-      callee: { type: "Identifier", name: "setTimeout" },
-    });
-
-    assert.equal(reports.length, 1);
-    assert.equal(reports[0].messageId, "timeout");
-  });
-
   it("ignores named test callbacks when fallback lookup cannot resolve a function", () => {
     const reports = [];
     const listener = plugin.rules["test-no-shared-state"].create({

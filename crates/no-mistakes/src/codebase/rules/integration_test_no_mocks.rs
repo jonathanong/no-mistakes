@@ -11,36 +11,20 @@ use std::path::{Path, PathBuf};
 
 pub const RULE_ID: &str = "integration-test-no-mocks";
 
-mod calls;
 mod patterns;
 mod strings;
 mod strip;
 mod test_targets;
-
-const DEFAULT_FORBIDDEN_CALLS: &[&str] = &[
-    "vi.mock",
-    "vi.doMock",
-    "vi.importMock",
-    "vi.fn",
-    "vi.spyOn",
-    "vi.stubGlobal",
-    "jest.mock",
-    "jest.doMock",
-    "jest.fn",
-    "jest.spyOn",
-];
 
 const DEFAULT_FORBIDDEN_MODULES: &[&str] = &["msw", "nock", "sinon"];
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
 pub(crate) struct Options {
-    pub(crate) forbidden_calls: Vec<String>,
     pub(crate) forbidden_modules: Vec<String>,
 }
 
 struct CompiledOptions {
-    calls: Vec<(String, Regex)>,
     modules: Vec<(String, Regex)>,
 }
 
@@ -122,11 +106,6 @@ fn scan_with_sources(
 }
 
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
-    let calls: Vec<&str> = if opts.forbidden_calls.is_empty() {
-        DEFAULT_FORBIDDEN_CALLS.to_vec()
-    } else {
-        opts.forbidden_calls.iter().map(String::as_str).collect()
-    };
     let modules: Vec<&str> = if opts.forbidden_modules.is_empty() {
         DEFAULT_FORBIDDEN_MODULES.to_vec()
     } else {
@@ -134,14 +113,6 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     };
 
     Ok(CompiledOptions {
-        calls: calls
-            .into_iter()
-            .map(|call| {
-                let pattern = patterns::call(call);
-                let regex = Regex::new(&pattern).expect("escaped call pattern is valid regex");
-                Ok((call.to_string(), regex))
-            })
-            .collect::<Result<Vec<_>>>()?,
         modules: modules
             .into_iter()
             .map(|module| {
@@ -164,9 +135,7 @@ fn check_file_with_sources(
     };
     let rel = relative_slash_path(root, path);
     let comments_removed = strip::comments_and_regex_literals(&content);
-    let mut findings = calls::findings(&rel, &comments_removed, &compiled.calls);
-    findings.extend(module_findings(&rel, &comments_removed, &compiled.modules));
-    findings
+    module_findings(&rel, &comments_removed, &compiled.modules)
 }
 
 fn module_findings(

@@ -39,6 +39,7 @@ fn legacy_prepared_request_without_sources_uses_the_request_session() {
         prepared_graph: None,
         prepared_tsconfig: &tsconfig,
         prepared_tsconfig_catalog: &catalog,
+        prepared_vitest_projects: None,
         inferred_roots: None,
         sources: None,
     })
@@ -99,6 +100,7 @@ fn playwright_coverage_check(
         prepared_graph: None,
         prepared_tsconfig: &tsconfig,
         prepared_tsconfig_catalog: &catalog,
+        prepared_vitest_projects: None,
         inferred_roots: None,
         sources: None,
     })

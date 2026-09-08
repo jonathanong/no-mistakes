@@ -8,8 +8,20 @@ pub(super) fn graph_rule_findings(
     prepared_graph: Option<&crate::codebase::dependencies::graph::PreparedGraphConfig>,
     dependency_graph: Option<&DepGraph>,
     inferred_roots: Option<&crate::codebase::config::InferredRoots>,
+    prepared_vitest_projects: Option<&crate::codebase::rules::PreparedVitestProjectCatalog>,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
+    if rule_enabled(config, FORBIDDEN_CALLS) {
+        findings.extend(crate::perf_trace::trace("rules.forbidden_calls", || {
+            forbidden_calls::check_with_graph(
+                root,
+                config,
+                dependency_graph.expect("forbidden-calls requires canonical graph"),
+                prepared_vitest_projects,
+                shared.graph_file_universe(),
+            )
+        })?);
+    }
     if rule_enabled(config, FORBIDDEN_DEPENDENCIES) {
         findings.extend(crate::perf_trace::trace(
             "rules.forbidden_dependencies",

@@ -1,0 +1,9 @@
+rules:
+  - name: no-real-timers
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - file: src/timers.mts
+      targets:
+        - global: setTimeout

@@ -1,0 +1,11 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - name: default-global
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/entry.mts }]
+      traversal: transitive
+      targets: [{ global: setTimeout }]
