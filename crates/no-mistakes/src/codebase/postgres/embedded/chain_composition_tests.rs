@@ -43,6 +43,12 @@ fn reassigned_via_var_initializer_is_rejected() {
 }
 
 #[test]
+fn reassigned_via_var_initializer_shaped_like_a_helper_is_still_rejected() {
+    let facts = extract("composed-chain-function-reassigned-via-var-callable-initializer.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
 fn top_level_binary_composition_of_two_trusted_placeholders_renumbers_sequentially() {
     let facts = extract("composed-append-binary-placeholders.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Composed);
@@ -113,6 +119,12 @@ fn helper_tagged_by_a_top_level_arrow_rebinding_sql_fails_closed() {
 #[test]
 fn helper_return_tagged_by_a_parameter_named_sql_with_no_interpolation_fails_closed() {
     let facts = extract("composed-chain-shadowed-sql-tag-param-no-interpolation.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}
+
+#[test]
+fn helper_return_tagged_by_a_parameter_named_string_dot_raw_fails_closed() {
+    let facts = extract("composed-chain-shadowed-string-raw-tag-param-no-interpolation.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
 

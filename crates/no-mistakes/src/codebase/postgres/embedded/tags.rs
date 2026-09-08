@@ -30,24 +30,47 @@ pub(super) fn interpolating_untrusted_tag(
         return false;
     };
     if tagged.quasi.expressions.is_empty() {
-        return !is_sql_tag(&tagged.tag, is_shadowed) && !is_string_raw_tag(&tagged.tag);
+        return !is_sql_tag(&tagged.tag, is_shadowed)
+            && !is_string_raw_tag(&tagged.tag, is_shadowed);
     }
     !is_sql_tag(&tagged.tag, is_shadowed)
 }
 
 /// The built-in `String.raw` tag: a fixed, well-known JS semantic (return
 /// the raw template text unchanged) rather than an arbitrary function, so
-/// its zero-interpolation output can be trusted to be its quasi text.
-fn is_string_raw_tag(tag: &Expression<'_>) -> bool {
-    matches!(
-        unwrap_ts_wrappers(tag),
-        Expression::StaticMemberExpression(member)
-            if member.property.name == "raw"
-                && matches!(
-                    unwrap_ts_wrappers(&member.object),
-                    Expression::Identifier(ident) if ident.name == "String"
-                )
-    )
+/// its zero-interpolation output can be trusted to be its quasi text —
+/// unless `String` itself is shadowed (e.g. a same-file helper's own
+/// parameter named `String`), in which case `.raw` is a property access on
+/// whatever arbitrary value that binding holds, not the real built-in,
+/// matching how [`is_sql_tag`] already treats a shadowed `sql`.
+fn is_string_raw_tag(tag: &Expression<'_>, is_shadowed: &mut impl FnMut(&str) -> bool) -> bool {
+    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(tag) else {
+        return false;
+    };
+    if member.property.name != "raw" {
+        return false;
+    }
+    let Expression::Identifier(ident) = unwrap_ts_wrappers(&member.object) else {
+        return false;
+    };
+    ident.name == "String" && !is_shadowed(ident.name.as_str())
+}
+
+/// Syntactic-only counterpart of [`is_string_raw_tag`]: whether `tag` is
+/// spelled `String.raw`, regardless of whether `String` is shadowed. Used
+/// once a tagged template's trust has already been settled — by
+/// [`interpolating_untrusted_tag`], which does consult shadowing — to pick
+/// which quasi form (raw or cooked) reflects what `String.raw`'s own
+/// well-known semantics would actually produce.
+pub(super) fn is_string_raw_tag_spelling(tag: &Expression<'_>) -> bool {
+    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(tag) else {
+        return false;
+    };
+    member.property.name == "raw"
+        && matches!(
+            unwrap_ts_wrappers(&member.object),
+            Expression::Identifier(ident) if ident.name == "String"
+        )
 }
 
 pub(super) fn kind_for_const(sql: String, is_const: bool) -> (Option<String>, EmbeddedSqlKind) {

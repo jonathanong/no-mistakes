@@ -2,7 +2,8 @@ use super::super::for_each_bound_name;
 use super::shadows::is_function_shaped;
 use oxc_ast::ast::{
     AssignmentTarget, AssignmentTargetMaybeDefault, AssignmentTargetProperty, ForStatementLeft,
-    Program, SimpleAssignmentTarget, UpdateExpression, VariableDeclarator,
+    Program, SimpleAssignmentTarget, UpdateExpression, VariableDeclaration,
+    VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use std::collections::HashSet;
@@ -32,14 +33,9 @@ use std::collections::HashSet;
 ///
 /// A declarator's own initializer is exempted from counting as a
 /// reassignment when it is itself a same-file callable-helper shape
-/// (`function`/arrow expression, matching [`shadows::is_function_shaped`]):
-/// that shape is exactly what defines a const-bound helper in the first
-/// place (see `collect::const_resolvable`), not a rebinding of one — a
-/// literal function/arrow value can't itself be "the wrong body" the way an
-/// identifier reference like `externalBuilder` can. A re-declaration whose
-/// initializer resolves to something else (an identifier, a call, ...)
-/// still counts, which is what keeps `var build = externalBuilder;`
-/// rejected after an earlier `function build() {}`.
+/// (`function`/arrow expression, matching [`shadows::is_function_shaped`])
+/// declared `const` — see [`record_declarator_reassignment`] for why the
+/// exemption is narrowed to that one declaration kind.
 #[derive(Default)]
 pub(super) struct ReassignedNames<'a> {
     names: HashSet<&'a str>,
@@ -66,26 +62,20 @@ impl<'a> Visit<'a> for ReassignedNames<'a> {
         walk::walk_assignment_target(self, target);
     }
 
-    fn visit_variable_declarator(&mut self, declarator: &VariableDeclarator<'a>) {
-        let is_reassignment = declarator
-            .init
-            .as_ref()
-            .is_some_and(|init| !is_function_shaped(init));
-        if is_reassignment {
-            let names = &mut self.names;
-            for_each_bound_name(&declarator.id, &mut |name| {
-                names.insert(name);
-            });
+    fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
+        for declarator in &declaration.declarations {
+            record_declarator_reassignment(declaration.kind, declarator, &mut self.names);
         }
-        walk::walk_variable_declarator(self, declarator);
+        walk::walk_variable_declaration(self, declaration);
     }
 
     /// A declaration-form loop target (`for (const build of providers) {}`)
     /// binds a fresh value from the iterable on every iteration, exactly
     /// like the non-declaration form `for (build of providers)` already
     /// caught via `visit_assignment_target` — but its `VariableDeclarator`
-    /// has no initializer, so `visit_variable_declarator` above never sees
-    /// it. Mark every name it binds as reassigned unconditionally: unlike a
+    /// has no initializer, so `visit_variable_declaration`'s per-declarator
+    /// pass above never sees it. Mark every name it binds as reassigned
+    /// unconditionally: unlike a
     /// top-level helper declaration, there is no legitimate "this declarator
     /// literally is the helper" reading here — the iterable, not this
     /// declarator, decides what the name is bound to each time.
@@ -113,6 +103,40 @@ impl<'a> Visit<'a> for ReassignedNames<'a> {
             self.names.insert(ident.name.as_str());
         }
         walk::walk_update_expression(self, it);
+    }
+}
+
+/// A declarator's own initializer is exempted from counting as a
+/// reassignment when it is itself a same-file callable-helper shape
+/// (`function`/arrow expression, matching [`is_function_shaped`]) **and**
+/// its declaration is `const`: that combination is exactly what
+/// `collect::const_resolvable` collects as a legitimate same-file helper,
+/// not a rebinding of one — a literal function/arrow value can't itself be
+/// "the wrong body" the way an identifier reference like `externalBuilder`
+/// can.
+///
+/// `var`/`let` never reach `const_resolvable` — only `const` function
+/// expressions are collected as helpers — so a same-shaped
+/// `var build = () => …;` following an earlier `function build() {}` is a
+/// real runtime rebinding to a body `LocalFunctions` never re-collects: it
+/// must still count as a reassignment, or calls to `build` keep resolving
+/// through the stale `function` declaration's body. A re-declaration whose
+/// initializer resolves to something else (an identifier, a call, ...)
+/// still counts regardless of kind, which is what keeps
+/// `var build = externalBuilder;` rejected after an earlier
+/// `function build() {}`.
+fn record_declarator_reassignment<'a>(
+    kind: VariableDeclarationKind,
+    declarator: &VariableDeclarator<'a>,
+    names: &mut HashSet<&'a str>,
+) {
+    let is_collectible_helper = kind == VariableDeclarationKind::Const
+        && declarator.init.as_ref().is_some_and(is_function_shaped);
+    let is_reassignment = declarator.init.is_some() && !is_collectible_helper;
+    if is_reassignment {
+        for_each_bound_name(&declarator.id, &mut |name| {
+            names.insert(name);
+        });
     }
 }
 
