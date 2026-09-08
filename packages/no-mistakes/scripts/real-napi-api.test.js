@@ -221,7 +221,7 @@ test(
 
     assert.deepEqual(aggregate.reports[0].result, direct);
     assert.deepEqual(
-      direct.files.map((file) => file.path || file.module),
+      direct.files.map((file) => (file.path || file.module).replaceAll("\\", "/")),
       [
         "src/exact.ts",
         "src/first-tie/value/detail.ts",
