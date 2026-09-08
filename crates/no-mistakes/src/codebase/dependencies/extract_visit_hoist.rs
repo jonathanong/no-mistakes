@@ -81,11 +81,23 @@ fn predeclare_function_declarations<'a>(
     statements: &[Statement<'a>],
 ) {
     for statement in statements {
+        let Statement::FunctionDeclaration(function) = statement else {
+            continue;
+        };
+        if function.body.is_some() {
+            if let Some(name) = function_name(function) {
+                collector.record_callable_binding_id(&name, CallableId(function.span.start));
+            }
+        }
+    }
+    for statement in statements {
         match statement {
             Statement::FunctionDeclaration(function) => {
                 if let Some(name) = function_name(function) {
                     collector.add_binding_name(&name);
-                    collector.record_callable_binding_id(&name, CallableId(function.span.start));
+                    if collector.callable_binding_id(&name).is_none() {
+                        collector.record_callable_binding_id(&name, CallableId(function.span.start));
+                    }
                     let scope = collector.callable_scope_name(&name);
                     collector.known_function_scopes.insert(scope.clone());
                     collector.callable_scopes.insert(scope);

@@ -368,6 +368,19 @@ fn call_facts_keep_namespace_reexports_out_of_transparent_star_sources() {
 }
 
 #[test]
+fn sequence_callees_use_only_a_simple_final_operand() {
+    let source = "function helper() {} (0, helper)(); (0, factory())();";
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, source);
+
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "helper" && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts.unknown_calls.iter().any(|call| call.offset > 0));
+}
+
+#[test]
 fn call_facts_predeclare_later_function_declarations_as_callable() {
     let source = r#"
         run();

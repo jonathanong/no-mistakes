@@ -1,9 +1,12 @@
 use super::*;
 
 mod constructor_reachability;
+mod callable_identity;
 mod hoist_bindings;
 mod import_policy;
 mod namespace_alias;
+mod overloads;
+mod sequence_callees;
 mod static_class_members;
 
 #[test]

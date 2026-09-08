@@ -1,7 +1,6 @@
 impl ImportCollector {
     fn record_const_callable_aliases(&mut self, declaration: &VariableDeclaration<'_>) {
-        if declaration.kind != VariableDeclarationKind::Const || !self.is_function_or_module_scope()
-        {
+        if declaration.kind != VariableDeclarationKind::Const {
             return;
         }
         for declarator in &declaration.declarations {
@@ -24,15 +23,6 @@ impl ImportCollector {
                 },
                 lexical_scope_depth: self.local_stack.len() - 1,
             });
-        }
-    }
-
-    fn is_function_or_module_scope(&self) -> bool {
-        match self.function_scope_stack.last().copied() {
-            Some(function_scope) => self.local_stack.len() == function_scope + 1,
-            // The program frame is lexical as well: a top-level block must not
-            // expose a block-local alias as a module alias.
-            None => self.local_stack.len() == 1,
         }
     }
 

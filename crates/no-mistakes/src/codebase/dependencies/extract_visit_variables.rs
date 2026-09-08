@@ -73,19 +73,24 @@ fn visit_variable_declarator_with_scope<'a>(
                 }
             }
         }
-        Some(Expression::ClassExpression(class))
-            if name.is_some() && collector.function_stack.is_empty() =>
-        {
+        Some(Expression::ClassExpression(class)) if name.is_some() && class.id.is_none() => {
             if let Some(name) = name.as_deref() {
-                collector.record_callable_binding_id(name, CallableId(class.span.start));
-                record_class_member_calls(collector, name, CallableId(class.span.start), class);
-                if collector.is_exported_top_level_name(name) {
+                let class_id = CallableId(class.span.start);
+                let scope = collector.callable_scope_name(name);
+                collector.record_callable_binding_id(name, class_id);
+                record_class_member_calls(collector, &scope, class_id, class);
+                collector.callable_scopes.insert(scope.clone());
+                collector.class_scopes.insert(scope);
+                if collector.function_stack.is_empty()
+                    && collector.is_exported_top_level_name(name)
+                {
                     collector.record_exported_resource_root(name);
                     record_class_resource_scopes(collector, name, class);
                 }
+                collector.visit_binding_pattern(&declarator.id);
+                walk_variable_type_annotation(collector, declarator);
+                walk_class_with_scoped_methods(collector, name, class_id, class);
             }
-            visit_exported_variable_declarator_reference(collector, declarator, name);
-            walk::walk_variable_declarator(collector, declarator);
         }
         _ if name.is_some() && collector.function_stack.is_empty() && declarator.init.is_some() => {
             visit_exported_variable_declarator_reference(collector, declarator, name);

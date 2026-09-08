@@ -147,6 +147,9 @@ fn resolve_callable_alias(
             }) {
                 break Some(alias);
             }
+            if !resolved_alias {
+                break None;
+            }
             scope = parents.get(&candidate_scope).copied().flatten();
         };
         let Some(alias) = alias else {

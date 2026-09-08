@@ -7,11 +7,11 @@ use oxc_ast::ast::{
     ExportDefaultDeclarationKind, ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier,
     Expression, FormalParameters, IdentifierReference, ImportDeclaration,
     ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement, MethodDefinition,
-    ModuleExportName, NewExpression, ObjectExpression, ObjectProperty, ObjectPropertyKind, Program,
-    Statement, StaticMemberExpression, TSEnumDeclaration, TSImportType, TSInterfaceDeclaration,
-    TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
-    TSTypeParameterDeclaration, TSTypeReference, VariableDeclaration, VariableDeclarationKind,
-    VariableDeclarator,
+    MethodDefinitionKind, ModuleExportName, NewExpression, ObjectExpression, ObjectProperty,
+    ObjectPropertyKind, Program, Statement, StaticMemberExpression, TSEnumDeclaration,
+    TSImportType, TSInterfaceDeclaration, TSQualifiedName, TSTypeAliasDeclaration, TSTypeName,
+    TSTypeParameter, TSTypeParameterDeclaration, TSTypeReference, VariableDeclaration,
+    VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::SourceType;
@@ -231,6 +231,7 @@ include!("extract_collector_scopes.rs");
 include!("extract_collector_methods.rs");
 include!("extract_visit_members.rs");
 include!("extract_visit_aggregates.rs");
+include!("extract_class_eager_helpers.rs");
 include!("extract_visit_object_references.rs");
 include!("extract_collector_aliases.rs");
 include!("extract_visit_helpers.rs");

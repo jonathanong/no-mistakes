@@ -1,10 +1,27 @@
 fn predeclare_program_value_bindings<'a>(collector: &mut ImportCollector, program: &Program<'a>) {
     for statement in &program.body {
+        let function = match statement {
+            Statement::FunctionDeclaration(function) => Some(function.as_ref()),
+            Statement::ExportDeclaration(export) => match &export.declaration {
+                Declaration::FunctionDeclaration(function) => Some(function.as_ref()),
+                _ => None,
+            },
+            _ => None,
+        };
+        if let Some(function) = function.filter(|function| function.body.is_some()) {
+            if let Some(name) = function_name(function) {
+                collector.record_callable_binding_id(&name, CallableId(function.span.start));
+            }
+        }
+    }
+    for statement in &program.body {
         match statement {
             Statement::FunctionDeclaration(function) => {
                 if let Some(name) = function_name(function) {
                     collector.add_binding_name(&name);
-                    collector.record_callable_binding_id(&name, CallableId(function.span.start));
+                    if collector.callable_binding_id(&name).is_none() {
+                        collector.record_callable_binding_id(&name, CallableId(function.span.start));
+                    }
                     collector.known_function_scopes.insert(name.clone());
                     collector.callable_scopes.insert(name);
                 }
@@ -78,7 +95,9 @@ fn predeclare_export_declaration_binding<'a>(
         Declaration::FunctionDeclaration(function) => {
             if let Some(name) = function_name(function) {
                 collector.add_binding_name(&name);
-                collector.record_callable_binding_id(&name, CallableId(function.span.start));
+                if collector.callable_binding_id(&name).is_none() {
+                    collector.record_callable_binding_id(&name, CallableId(function.span.start));
+                }
                 collector.known_function_scopes.insert(name.clone());
                 collector.callable_scopes.insert(name);
             }

@@ -55,12 +55,16 @@ impl CallableFileIndex {
         let mut binding_scope = binding_scope?;
         let mut visited = std::collections::HashSet::new();
         let mut target = callee.to_string();
+        let mut resolved_alias = false;
         loop {
             let mut scope = Some(binding_scope);
             let alias = loop {
                 let Some(candidate_scope) = scope else { break None };
                 if let Some(alias) = self.aliases.get(&(candidate_scope, target.clone())) {
                     break Some((candidate_scope, alias));
+                }
+                if !resolved_alias {
+                    break None;
                 }
                 scope = self
                     .lexical_scope_parents
@@ -73,6 +77,7 @@ impl CallableFileIndex {
                 if !visited.insert(key) {
                     return None;
                 }
+                resolved_alias = true;
                 target = alias.clone();
                 if target.contains('.')
                     || self.imported.contains_key(&target)

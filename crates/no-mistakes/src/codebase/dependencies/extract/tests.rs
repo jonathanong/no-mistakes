@@ -507,3 +507,5 @@ mod call_binding_predeclaration_regressions;
 mod call_binding_regressions;
 #[path = "tests/call_binding_shadow_regressions.rs"]
 mod call_binding_shadow_regressions;
+#[path = "tests/class_and_overload_regressions.rs"]
+mod class_and_overload_regressions;

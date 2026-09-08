@@ -166,6 +166,12 @@ impl ImportCollector {
         self.function_id_stack.last().copied()
     }
 
+    fn callable_binding_id(&self, name: &str) -> Option<CallableId> {
+        self.callable_bindings
+            .get(&(self.current_lexical_scope_id(), name.to_string()))
+            .copied()
+    }
+
     fn push_syntactic_caller(&mut self, name: Option<String>) -> bool {
         if let Some(name) = name {
             self.syntactic_caller_stack.push(name);

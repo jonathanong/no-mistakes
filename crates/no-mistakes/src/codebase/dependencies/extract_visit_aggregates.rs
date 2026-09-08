@@ -8,15 +8,13 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
             collector.record_exported_resource_root(name);
             record_class_resource_scopes(collector, name, class);
         }
-        collector.push_function_scope(Some(name.to_string()), CallableId(class.span.start));
-        if collector.export_depth > 0 && collector.current_function().as_deref() == Some(scope.as_str()) {
+        if collector.export_depth > 0 && collector.current_function().is_none() {
             collector.exported_functions.insert(scope.clone());
             collector.record_local_export_binding(name, &scope);
         }
         collector.callable_scopes.insert(scope.clone());
-        collector.class_scopes.insert(scope);
-        walk::walk_class(collector, class);
-        collector.pop_function_scope(true);
+        collector.class_scopes.insert(scope.clone());
+        walk_class_with_scoped_methods(collector, name, CallableId(class.span.start), class);
         return;
     }
     walk::walk_class(collector, class);
@@ -75,14 +73,10 @@ fn visit_export_default_declaration_with_scope<'a>(
             record_class_member_calls(collector, &scope, CallableId(class.span.start), class);
             collector.record_exported_resource_root(&scope);
             record_class_resource_scopes(collector, &scope, class);
-            collector.push_function_scope(Some(scope.clone()), CallableId(class.span.start));
             collector.exported_functions.insert(scope.clone());
-            collector.callable_scopes.insert(scope);
-            if let Some(scope) = collector.current_function() {
-                collector.class_scopes.insert(scope);
-            }
-            walk::walk_class(collector, class);
-            collector.pop_function_scope(true);
+            collector.callable_scopes.insert(scope.clone());
+            collector.class_scopes.insert(scope.clone());
+            walk_class_with_scoped_methods(collector, &scope, CallableId(class.span.start), class);
             collector.export_depth -= 1;
         }
         _ => {

@@ -10,6 +10,10 @@ impl<'a> Visit<'a> for ImportCollector {
         _flags: oxc_syntax::scope::ScopeFlags,
     ) {
         let name = function_name(function);
+        let callable_id = name
+            .as_deref()
+            .and_then(|name| self.callable_binding_id(name))
+            .unwrap_or(CallableId(function.span.start));
         let pushed_syntactic_caller = self.push_syntactic_caller(name.clone());
         if self.current_function().is_some() {
             if let Some(name) = &name {
@@ -18,9 +22,9 @@ impl<'a> Visit<'a> for ImportCollector {
         }
         if name.is_some() {
             if let Some(name) = &name {
-                self.record_callable_binding_id(name, CallableId(function.span.start));
+                self.record_callable_binding_id(name, callable_id);
             }
-            self.push_function_scope(name, CallableId(function.span.start));
+            self.push_function_scope(name, callable_id);
             if let Some(scope) = self.current_function() {
                 self.callable_scopes.insert(scope.clone());
                 if self.export_depth > 0 && self.function_stack.len() == 1 {
@@ -29,7 +33,7 @@ impl<'a> Visit<'a> for ImportCollector {
                 }
             }
         } else {
-            self.push_anonymous_function_scope(CallableId(function.span.start));
+            self.push_anonymous_function_scope(callable_id);
         }
         self.add_type_parameter_names(function.type_parameters.as_deref());
         self.add_formal_parameters(&function.params);

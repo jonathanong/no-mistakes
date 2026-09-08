@@ -91,8 +91,6 @@ fn collect_call_edges_for_core(
                                 facts,
                                 file,
                                 scope,
-                                call.callee_binding_scope,
-                                &call.callee,
                             ),
                             EdgeKind::Call,
                         )),
@@ -149,21 +147,12 @@ fn callable_node_for_call(
     facts: &dyn TsFactLookup,
     file: &std::path::Path,
     scope: &str,
-    binding_scope: Option<usize>,
-    callee: &str,
 ) -> NodeId {
     let id = facts.get_ts_facts(file).and_then(|file_facts| {
-        let binding = callee.split_once('.').map_or(callee, |(name, _)| name);
-        if let Some(id) = binding_scope.and_then(|scope_id| {
-            file_facts
-                .callable_bindings
-                .iter()
-                .find_map(|(candidate_scope, name, id)| {
-                    (*candidate_scope == scope_id && name == binding).then_some(*id)
-                })
-        }) {
-            return Some(id);
-        }
+        // The resolved file and canonical target scope own this callable
+        // identity. Importer lexical scopes and local aliases are unrelated
+        // source files, and using either can select a same-spelled target
+        // declaration instead of the export resolution's actual callable.
         let mut ids = file_facts
             .callable_scope_ids
             .iter()

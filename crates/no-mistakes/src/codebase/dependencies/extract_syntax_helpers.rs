@@ -13,6 +13,10 @@ fn simple_callee_name(expr: &Expression<'_>) -> Option<String> {
         Expression::ParenthesizedExpression(parenthesized) => {
             simple_callee_name(&parenthesized.expression)
         }
+        Expression::SequenceExpression(sequence) => sequence
+            .expressions
+            .last()
+            .and_then(|expression| simple_callee_name(expression)),
         Expression::StaticMemberExpression(member) => simple_static_member_name(member),
         Expression::ComputedMemberExpression(member) => simple_computed_member_name(member),
         _ => None,
