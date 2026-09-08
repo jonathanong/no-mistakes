@@ -4,10 +4,13 @@ fn reachable_function_scopes(
     let known_scopes = known_function_scopes(facts);
     let mut by_caller: HashMap<Option<String>, Vec<String>> = HashMap::new();
     for call in facts.function_calls.iter().filter(|call| {
-        // Aggregate-member callbacks are synthetic ownership facts, not
-        // execution facts. A constructed class is not evidence that every
-        // method runs. Anonymous callbacks remain execution-reachable.
-        !call.is_callback || call.callee.starts_with("<anonymous:")
+        // Synthetic callbacks are ownership facts, not module execution
+        // evidence. Preserve the historical conservative edge from an
+        // executing parent into its nested anonymous callback, but do not make
+        // a merely declared module callback execution-reachable. Aggregate
+        // member callbacks remain excluded as before.
+        !call.is_callback
+            || (call.caller.is_some() && call.callee.starts_with("<anonymous:"))
     }) {
         let Some(callee) = reachable_callee_scope(facts, call, &known_scopes) else {
             continue;

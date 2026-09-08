@@ -26,21 +26,27 @@ fn resolve_exported_callable(
     };
     let result = if let Some(binding) = file.exported.get(export) {
         if let Some(specifier) = &binding.specifier {
-            resolver
+            let visible_target = resolver
                 .resolve(specifier, path)
-                .and_then(|target_path| edge_inputs.graph_files.visible_path(&target_path))
-                .map(|target_path| {
-                    resolve_exported_callable(
-                        edge_inputs,
-                        facts,
-                        resolver,
-                        target_path,
-                        &binding.local,
-                        indexes,
-                        visited,
-                    )
-                })
-                .unwrap_or(ExportedCallableResolution::Unknown)
+                .and_then(|target_path| edge_inputs.graph_files.visible_path(&target_path));
+            if let Some(target_path) = visible_target {
+                resolve_exported_callable(
+                    edge_inputs,
+                    facts,
+                    resolver,
+                    target_path,
+                    &binding.local,
+                    indexes,
+                    visited,
+                )
+            } else if external_module_specifier(specifier) {
+                ExportedCallableResolution::ExternalModuleExport(
+                    specifier.clone(),
+                    binding.local.clone(),
+                )
+            } else {
+                ExportedCallableResolution::Unknown
+            }
         } else {
             let local = file
                 .resolve_alias(None, &binding.local)
@@ -52,11 +58,20 @@ fn resolve_exported_callable(
                     let imported = file.imported.get(&local).filter(|imported| {
                         imported.kind != crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
                     })?;
-                    resolver
+                    let visible_target = resolver
                         .resolve(&imported.specifier, path)
-                        .and_then(|target_path| edge_inputs.graph_files.visible_path(&target_path))
-                        .map(|target_path| {
-                            resolve_exported_callable(
+                        .and_then(|target_path| edge_inputs.graph_files.visible_path(&target_path));
+                    visible_target.map_or_else(
+                        || {
+                            external_module_specifier(&imported.specifier).then(|| {
+                                ExportedCallableResolution::ExternalModuleExport(
+                                    imported.specifier.clone(),
+                                    imported.imported.clone(),
+                                )
+                            })
+                        },
+                        |target_path| {
+                            Some(resolve_exported_callable(
                                 edge_inputs,
                                 facts,
                                 resolver,
@@ -64,8 +79,9 @@ fn resolve_exported_callable(
                                 &imported.imported,
                                 indexes,
                                 visited,
-                            )
-                        })
+                            ))
+                        },
+                    )
                 })
                 .unwrap_or(ExportedCallableResolution::Unknown)
         }
@@ -106,7 +122,8 @@ fn resolve_exported_callable(
                     ExportedCallableResolution::Callable(path, scope) => {
                         candidates.push((path, scope))
                     }
-                    ExportedCallableResolution::Unknown => has_unknown_candidate = true,
+                    ExportedCallableResolution::ExternalModuleExport(_, _)
+                    | ExportedCallableResolution::Unknown => has_unknown_candidate = true,
                 }
             }
             candidates.sort();
@@ -124,4 +141,8 @@ fn resolve_exported_callable(
         .exports
         .insert((path.to_path_buf(), export.to_string()), result.clone());
     result
+}
+
+fn external_module_specifier(specifier: &str) -> bool {
+    !specifier.starts_with('.') && !specifier.starts_with('/') && !specifier.starts_with('#')
 }

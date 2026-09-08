@@ -1,6 +1,6 @@
 /// Resolves a direct runtime import binding (including one static namespace
 /// member) to a callable in a visible local module.
-fn resolve_imported_call_scope(
+fn resolve_imported_call_target(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
     resolver: &dyn ImportResolution,
@@ -8,7 +8,7 @@ fn resolve_imported_call_scope(
     file: &CallableFileIndex,
     callee: &str,
     indexes: &CallableResolutionIndexes,
-) -> Option<(std::path::PathBuf, String)> {
+) -> Option<ResolvedCallTarget> {
     let (local, requested_export) = match callee.split_once('.') {
         Some((local, member)) if !member.contains('.') => (local, Some(member)),
         Some(_) => return None,
@@ -27,10 +27,17 @@ fn resolve_imported_call_scope(
                     != crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
             }
         })?;
-    let target_path = resolver.resolve(&binding.specifier, path)?;
-    let target_path = edge_inputs.graph_files.visible_path(&target_path)?;
     let export = requested_export.unwrap_or(&binding.imported);
-    resolve_exported_callable(
+    let direct_target = || {
+        module_export_target(file, callee, None).expect("callee came from an imported binding")
+    };
+    let Some(target_path) = resolver.resolve(&binding.specifier, path) else {
+        return Some(direct_target());
+    };
+    let Some(target_path) = edge_inputs.graph_files.visible_path(&target_path) else {
+        return Some(direct_target());
+    };
+    Some(match resolve_exported_callable(
         edge_inputs,
         facts,
         resolver,
@@ -38,6 +45,20 @@ fn resolve_imported_call_scope(
         export,
         indexes,
         &mut Vec::new(),
-    )
-    .callable()
+    ) {
+        ExportedCallableResolution::Callable(target_file, scope) => {
+            module_export_target(file, callee, Some((target_file, scope)))
+                .expect("callee came from an imported binding")
+        }
+        ExportedCallableResolution::ExternalModuleExport(specifier, export_path) => {
+            ResolvedCallTarget::ModuleExport {
+                specifier,
+                export_path,
+                repository_target: None,
+            }
+        }
+        ExportedCallableResolution::Absent | ExportedCallableResolution::Unknown => {
+            ResolvedCallTarget::Unknown
+        }
+    })
 }

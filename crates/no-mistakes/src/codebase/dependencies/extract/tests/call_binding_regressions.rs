@@ -104,24 +104,21 @@ fn function_call_facts_preserve_source_line_and_callback_provenance() {
 }
 
 #[test]
-fn top_level_callback_does_not_create_a_synthetic_root_call() {
-    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../test-cases/codebase-analysis/import-facts/fixture/top-level-callback-argument.mts",
-    );
+fn static_computed_member_calls_keep_a_resolvable_callee() {
+    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/import-facts/fixture/computed-member-calls.mts");
     let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
     let allocator = Allocator::default();
     let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
 
     let facts = extract_import_facts_from_program_with_source(&parsed.program, &source);
-
-    assert!(facts
-        .function_calls
-        .iter()
-        .all(|call| !(call.is_callback && call.caller.is_none())));
-    assert!(facts.imports.iter().any(|import| {
-        import.specifier == "./loaded.mts"
-            && import.function_scope.as_deref() == Some("<anonymous:1>")
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "page.waitForTimeout" && call.target_identity == CallTargetIdentity::Unknown
     }));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "playwright.test" && call.target_identity == CallTargetIdentity::ModuleExport
+    }));
+    assert!(facts.unknown_calls.is_empty());
 }
 
 #[test]

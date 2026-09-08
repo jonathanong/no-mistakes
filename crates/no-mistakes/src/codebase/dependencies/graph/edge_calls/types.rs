@@ -57,22 +57,3 @@ fn module_export_target(
         repository_target,
     })
 }
-
-/// A visible repository module with no callable export is a proven-invalid
-/// target, not an unresolved external module export. This distinction keeps
-/// malformed and ambiguous barrel imports in the unknown-call policy bucket
-/// while retaining module/export provenance for dependencies outside the graph.
-fn imported_call_targets_visible_module(
-    edge_inputs: &GraphEdgeBuildInputs<'_>,
-    resolver: &dyn ImportResolution,
-    path: &std::path::Path,
-    file: &CallableFileIndex,
-    callee: &str,
-) -> bool {
-    let local = callee.split_once('.').map_or(callee, |(local, _)| local);
-    file.imported
-        .get(local)
-        .and_then(|binding| resolver.resolve(&binding.specifier, path))
-        .and_then(|target| edge_inputs.graph_files.visible_path(&target))
-        .is_some()
-}

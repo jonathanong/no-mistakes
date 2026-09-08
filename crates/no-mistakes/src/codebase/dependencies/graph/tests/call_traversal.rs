@@ -281,6 +281,18 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
             && site.source_callee == "window.setTimeout"
             && matches!(site.target, ResolvedCallTarget::Global { .. })
     }));
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.file == aliases
+            && site.source_callee == "externalMock"
+            && matches!(
+                &site.target,
+                ResolvedCallTarget::ModuleExport {
+                    specifier,
+                    export_path,
+                    repository_target: None,
+                } if specifier == "vitest" && export_path == "mock"
+            )
+    }));
     let same_line_calls = graph
         .resolved_call_sites()
         .iter()

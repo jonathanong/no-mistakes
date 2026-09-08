@@ -14,6 +14,7 @@ fn simple_callee_name(expr: &Expression<'_>) -> Option<String> {
             simple_callee_name(&parenthesized.expression)
         }
         Expression::StaticMemberExpression(member) => simple_static_member_name(member),
+        Expression::ComputedMemberExpression(member) => simple_computed_member_name(member),
         _ => None,
     }
 }
@@ -27,6 +28,19 @@ fn simple_static_member_name(member: &StaticMemberExpression<'_>) -> Option<Stri
         )),
         _ => None,
     }
+}
+
+fn simple_computed_member_name(
+    member: &oxc_ast::ast::ComputedMemberExpression<'_>,
+) -> Option<String> {
+    let Expression::Identifier(object) = &member.object else {
+        return None;
+    };
+    let property = match crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression) {
+        Expression::StringLiteral(property) => property.value.as_str(),
+        _ => return None,
+    };
+    Some(format!("{}.{property}", object.name.as_str()))
 }
 
 fn jsx_element_reference_name(name: &oxc_ast::ast::JSXElementName<'_>) -> Option<String> {

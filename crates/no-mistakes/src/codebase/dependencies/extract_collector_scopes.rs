@@ -93,24 +93,22 @@ impl ImportCollector {
             .unwrap_or(name);
         self.known_function_scopes.insert(scope.clone());
         self.callable_scopes.insert(scope.clone());
-        // Preserve the historical reachability contract: a nested callback is
-        // conservatively reachable with its parent, but merely declaring a
-        // module-level callback does not execute it. Top-level IIFEs still have
-        // their real call expression as execution evidence.
-        if let Some(parent) = self.function_stack.last() {
-            self.function_calls.push(FunctionCall {
-                caller: Some(parent.clone()),
-                syntactic_caller: self.current_syntactic_caller(),
-                callee: scope.clone(),
-                line: 0,
-                offset: 0,
-                is_callback: true,
-                invocation: InvocationKind::Callback,
-                target_identity: CallTargetIdentity::RepositoryFunction,
-                static_arg: None,
-                static_cwd: None,
-            });
-        }
+        // Module callbacks need the same synthetic edge as nested callbacks:
+        // a top-level IIFE/callback is available to file-root call analysis,
+        // while execution-sensitive projections still distinguish the
+        // synthetic invocation through `is_callback`.
+        self.function_calls.push(FunctionCall {
+            caller: self.function_stack.last().cloned(),
+            syntactic_caller: self.current_syntactic_caller(),
+            callee: scope.clone(),
+            line: 0,
+            offset: 0,
+            is_callback: true,
+            invocation: InvocationKind::Callback,
+            target_identity: CallTargetIdentity::RepositoryFunction,
+            static_arg: None,
+            static_cwd: None,
+        });
         self.function_stack.push(scope);
         self.function_scope_stack.push(self.local_stack.len());
         self.local_stack.push(HashSet::new());

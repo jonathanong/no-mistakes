@@ -27,9 +27,7 @@ fn collect_call_edges_for_core(
                             resolve_local_call_scope(call.caller.as_deref(), &resolved_callee, &index.known_scopes)
                                 .map(|scope| (path.to_path_buf(), scope.to_string()))
                         }
-                        crate::codebase::dependencies::extract::CallTargetIdentity::ModuleExport => {
-                            resolve_imported_call_scope(edge_inputs, facts, resolver, path, &index, &resolved_callee, &indexes)
-                        }
+                        crate::codebase::dependencies::extract::CallTargetIdentity::ModuleExport => None,
                         crate::codebase::dependencies::extract::CallTargetIdentity::Global
                         | crate::codebase::dependencies::extract::CallTargetIdentity::Unknown => None,
                     };
@@ -41,21 +39,17 @@ fn collect_call_edges_for_core(
                         (crate::codebase::dependencies::extract::CallTargetIdentity::RepositoryFunction, Some((file, scope))) => {
                             ResolvedCallTarget::RepositoryFunction { file, scope }
                         }
-                        (crate::codebase::dependencies::extract::CallTargetIdentity::ModuleExport, repository_target) => {
-                            if repository_target.is_none()
-                                && imported_call_targets_visible_module(
-                                    edge_inputs,
-                                    resolver,
-                                    path,
-                                    &index,
-                                    &resolved_callee,
-                                )
-                            {
-                                ResolvedCallTarget::Unknown
-                            } else {
-                                module_export_target(&index, &resolved_callee, repository_target)
-                                    .unwrap_or(ResolvedCallTarget::Unknown)
-                            }
+                        (crate::codebase::dependencies::extract::CallTargetIdentity::ModuleExport, _) => {
+                            resolve_imported_call_target(
+                                edge_inputs,
+                                facts,
+                                resolver,
+                                path,
+                                &index,
+                                &resolved_callee,
+                                &indexes,
+                            )
+                            .unwrap_or(ResolvedCallTarget::Unknown)
                         }
                         (crate::codebase::dependencies::extract::CallTargetIdentity::Global, _) => {
                             ResolvedCallTarget::Global { name: call.callee.clone() }

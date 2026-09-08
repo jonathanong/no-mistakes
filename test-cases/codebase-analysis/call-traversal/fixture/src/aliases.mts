@@ -10,6 +10,7 @@ import {
 } from "./exported-local-aliases.mts";
 import { collision } from "./mixed-star-barrel.mts";
 import { externalCollision } from "./external-star-barrel.mts";
+import { mock as externalMock } from "./external-named-barrel.mts";
 
 const first = imported;
 const second = (first as typeof first);
@@ -34,6 +35,7 @@ defaultAlias();
 localExportAlias();
 collision();
 externalCollision();
+externalMock();
 
 globalThis.setTimeout(() => {}, 1);
 window.setTimeout(() => {}, 1);

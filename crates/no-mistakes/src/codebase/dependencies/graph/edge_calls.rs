@@ -96,16 +96,8 @@ struct CallableResolutionIndexes {
 enum ExportedCallableResolution {
     Absent,
     Callable(std::path::PathBuf, String),
+    ExternalModuleExport(String, String),
     Unknown,
-}
-
-impl ExportedCallableResolution {
-    fn callable(self) -> Option<(std::path::PathBuf, String)> {
-        match self {
-            Self::Callable(path, scope) => Some((path, scope)),
-            Self::Absent | Self::Unknown => None,
-        }
-    }
 }
 
 impl CallableResolutionIndexes {
