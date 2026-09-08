@@ -1,0 +1,127 @@
+/// Follows explicit local exports and named re-exports.  The visited key keeps
+/// malformed barrel cycles finite. `export *` resolves only if exactly one
+/// canonical target supplies the requested export; ambiguity is unknown.
+fn resolve_exported_callable(
+    edge_inputs: &GraphEdgeBuildInputs<'_>,
+    facts: &dyn TsFactLookup,
+    resolver: &dyn ImportResolution,
+    path: &std::path::Path,
+    export: &str,
+    indexes: &CallableResolutionIndexes,
+    visited: &mut Vec<(std::path::PathBuf, String)>,
+) -> ExportedCallableResolution {
+    let key = (path.to_path_buf(), export.to_string());
+    if let Some(result) = indexes.exports.get(&key) {
+        return result.clone();
+    }
+    if visited.contains(&key) {
+        return ExportedCallableResolution::Unknown;
+    }
+    visited.push(key.clone());
+    let Some(file) = indexes.file(facts, path) else {
+        indexes
+            .exports
+            .insert(key, ExportedCallableResolution::Unknown);
+        return ExportedCallableResolution::Unknown;
+    };
+    let result = if let Some(binding) = file.exported.get(export) {
+        if let Some(specifier) = &binding.specifier {
+            resolver
+                .resolve(specifier, path)
+                .and_then(|target_path| edge_inputs.graph_files.visible_path(&target_path))
+                .map(|target_path| {
+                    resolve_exported_callable(
+                        edge_inputs,
+                        facts,
+                        resolver,
+                        target_path,
+                        &binding.local,
+                        indexes,
+                        visited,
+                    )
+                })
+                .unwrap_or(ExportedCallableResolution::Unknown)
+        } else {
+            let local = file
+                .resolve_alias(None, &binding.local)
+                .unwrap_or_else(|| binding.local.clone());
+            file.known_scopes
+                .contains(&local)
+                .then(|| ExportedCallableResolution::Callable(path.to_path_buf(), local.clone()))
+                .or_else(|| {
+                    let imported = file.imported.get(&local).filter(|imported| {
+                        imported.kind != crate::codebase::dependencies::extract::ImportedBindingKind::Namespace
+                    })?;
+                    resolver
+                        .resolve(&imported.specifier, path)
+                        .and_then(|target_path| edge_inputs.graph_files.visible_path(&target_path))
+                        .map(|target_path| {
+                            resolve_exported_callable(
+                                edge_inputs,
+                                facts,
+                                resolver,
+                                target_path,
+                                &imported.imported,
+                                indexes,
+                                visited,
+                            )
+                        })
+                })
+                .unwrap_or(ExportedCallableResolution::Unknown)
+        }
+    } else {
+        // A callable's spelling alone is not an export. Keeping this after the
+        // explicit binding lookup prevents a private `fn sameName()` in a barrel
+        // from satisfying an imported selector. ECMAScript `export *` deliberately
+        // excludes `default`; guessing one from a barrel is incorrect.
+        if export == "default" {
+            ExportedCallableResolution::Absent
+        } else {
+            let mut candidates = Vec::new();
+            let mut has_unknown_candidate = false;
+            for specifier in &file.stars {
+                // An unresolved or excluded star source can still export this
+                // name. It therefore collides with any callable branch just as
+                // a visible non-callable source does; treating it as absent
+                // would manufacture an unsound call edge.
+                let Some(target_path) = resolver.resolve(specifier, path) else {
+                    has_unknown_candidate = true;
+                    continue;
+                };
+                let Some(target_path) = edge_inputs.graph_files.visible_path(&target_path) else {
+                    has_unknown_candidate = true;
+                    continue;
+                };
+                let mut branch_visited = visited.clone();
+                match resolve_exported_callable(
+                    edge_inputs,
+                    facts,
+                    resolver,
+                    target_path,
+                    export,
+                    indexes,
+                    &mut branch_visited,
+                ) {
+                    ExportedCallableResolution::Absent => {}
+                    ExportedCallableResolution::Callable(path, scope) => {
+                        candidates.push((path, scope))
+                    }
+                    ExportedCallableResolution::Unknown => has_unknown_candidate = true,
+                }
+            }
+            candidates.sort();
+            candidates.dedup();
+            if has_unknown_candidate || candidates.len() > 1 {
+                ExportedCallableResolution::Unknown
+            } else if let Some((path, scope)) = candidates.pop() {
+                ExportedCallableResolution::Callable(path, scope)
+            } else {
+                ExportedCallableResolution::Absent
+            }
+        }
+    };
+    indexes
+        .exports
+        .insert((path.to_path_buf(), export.to_string()), result.clone());
+    result
+}

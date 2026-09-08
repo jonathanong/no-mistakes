@@ -1,48 +1,3 @@
-#[derive(Default)]
-struct ImportCollector {
-    /// 0-based byte offsets of each line start. Empty when line numbers are
-    /// unused so the collector does not retain a full source copy.
-    line_starts: Vec<u32>,
-    imports: Vec<ExtractedImport>,
-    function_calls: Vec<FunctionCall>,
-    unknown_calls: Vec<UnknownCall>,
-    symbol_references: Vec<FunctionCall>,
-    unknown_callers: Vec<Option<String>>,
-    function_stack: Vec<String>,
-    local_stack: Vec<HashSet<String>>,
-    type_local_stack: Vec<HashSet<String>>,
-    type_parameter_stack: Vec<HashSet<String>>,
-    function_scope_stack: Vec<usize>,
-    exported_functions: HashSet<String>,
-    exported_resource_roots: HashSet<String>,
-    exported_resource_scopes: HashSet<String>,
-    collect_resource_roots: bool,
-    exported_type_scopes: HashSet<String>,
-    callable_scopes: HashSet<String>,
-    class_scopes: HashSet<String>,
-    export_depth: usize,
-    has_unknown_top_level_call: bool,
-    anonymous_scope_count: usize,
-    known_function_scopes: HashSet<String>,
-    imported_bindings: HashSet<String>,
-    predeclared_imported_bindings: HashSet<String>,
-    call_import_bindings: Vec<ImportedBinding>,
-    call_export_bindings: Vec<ExportedBinding>,
-    callable_aliases: Vec<CallableAliasBinding>,
-    reassigned_alias_bindings: HashSet<CallableAliasBinding>,
-    star_reexport_specifiers: Vec<String>,
-    suppress_imports: bool,
-    collect_suppressed_runtime_imports: bool,
-    /// `function_stack` depth captured at the start of an exported binding
-    /// initializer / default-export expression. A runtime (`import()`/`require()`)
-    /// import exactly one function level below this depth — the callback directly
-    /// forming the exported value, e.g. `dynamic(() => import('./Foo'))` — is
-    /// flagged reachable. Deeper, uninvoked nested imports fall back to normal
-    /// call-scope reachability so they are not falsely kept.
-    runtime_reachable_base_depth: Option<usize>,
-    later_exported_type_names: HashSet<String>,
-}
-
 impl<'a> Visit<'a> for ImportCollector {
     fn visit_statement(&mut self, statement: &Statement<'a>) {
         record_statement_type_binding(self, statement);
@@ -167,19 +122,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_import_declaration(&mut self, import: &ImportDeclaration<'a>) {
-        let kind = import_declaration_kind(import);
-        let side_effect_only = import
-            .specifiers
-            .as_ref()
-            .is_none_or(|specifiers| specifiers.is_empty());
-        self.push_with_side_effect(
-            import.source.value.as_str(),
-            kind,
-            import.span.start as usize,
-            side_effect_only,
-            false,
-        );
-        self.record_imported_bindings(import);
+        visit_import_declaration_with_scope(self, import);
     }
 
     fn visit_export_named_declaration(&mut self, export: &ExportNamedDeclaration<'a>) {
@@ -195,22 +138,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_export_all_declaration(&mut self, export: &ExportAllDeclaration<'a>) {
-        let kind = if export.export_kind.is_type() {
-            ImportKind::Type
-        } else {
-            ImportKind::Static
-        };
-        self.push_reexport(
-            export.source.value.as_str(),
-            kind,
-            export.span.start as usize,
-        );
-        // `export * as namespace from` has one concrete exported name. It is
-        // not a transparent `export *` forwarding edge.
-        if !export.export_kind.is_type() && export.exported.is_none() {
-            self.star_reexport_specifiers
-                .push(export.source.value.to_string());
-        }
+        visit_export_all_declaration_with_scope(self, export);
     }
 
     fn visit_export_default_declaration(&mut self, export: &ExportDefaultDeclaration<'a>) {
@@ -218,19 +146,11 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_import_expression(&mut self, import: &ImportExpression<'a>) {
-        if let Some(specifier) = static_import_specifier(&import.source) {
-            self.push(&specifier, ImportKind::Dynamic, import.span.start as usize);
-        }
-        walk::walk_import_expression(self, import);
+        visit_import_expression_with_scope(self, import);
     }
 
     fn visit_ts_import_type(&mut self, import: &TSImportType<'a>) {
-        self.push(
-            import.source.value.as_str(),
-            ImportKind::Type,
-            import.span.start as usize,
-        );
-        walk::walk_ts_import_type(self, import);
+        visit_ts_import_type_with_scope(self, import);
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {

@@ -71,6 +71,7 @@ include!("edge_calls.rs");
 include!("edge_route_imports.rs");
 include!("edge_symbols_types.rs");
 include!("edge_symbols.rs");
+include!("edge_symbols_file_walk.rs");
 include!("edge_symbols_file.rs");
 include!("edge_symbols_call_graph.rs");
 include!("edge_symbols_http.rs");
@@ -105,8 +106,6 @@ include!("edge_playwright_http_process.rs");
 include!("edge_react.rs");
 include!("edge_resources.rs");
 include!("edge_resource_resolution.rs");
-#[cfg(test)]
-mod edge_resources_tests;
 include!("edge_dotnet_scope.rs");
 include!("edge_dotnet.rs");
 include!("edge_dotnet_central.rs");

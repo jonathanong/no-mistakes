@@ -225,18 +225,25 @@ impl ImportExtractor {
 
 include!("extract_entrypoints.rs");
 include!("extract_export_names.rs");
+include!("extract_collector.rs");
 include!("extract_visit.rs");
+include!("extract_visit_modules.rs");
 include!("extract_visit_exports.rs");
+include!("extract_collector_scopes.rs");
 include!("extract_collector_methods.rs");
+include!("extract_visit_members.rs");
 include!("extract_visit_aggregates.rs");
 include!("extract_visit_object_references.rs");
+include!("extract_collector_aliases.rs");
 include!("extract_visit_helpers.rs");
+include!("extract_visit_variables.rs");
 include!("extract_default_helpers.rs");
 include!("extract_object_scope_helpers.rs");
 include!("extract_resource_scopes.rs");
 include!("extract_type_scope_helpers.rs");
 include!("extract_visit_hoist.rs");
 include!("extract_visit_types.rs");
+include!("extract_binding_names.rs");
 include!("extract_binding_helpers.rs");
 include!("extract_syntax_helpers.rs");
 

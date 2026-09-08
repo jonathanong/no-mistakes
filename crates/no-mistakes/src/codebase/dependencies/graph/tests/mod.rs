@@ -96,6 +96,7 @@ include!("vitest_setup.rs");
 
 mod core_independent_edges;
 mod edge_kind_semantics;
+mod edge_resources;
 mod finalization;
 mod remaining_edges;
 mod selector_fact_plan;

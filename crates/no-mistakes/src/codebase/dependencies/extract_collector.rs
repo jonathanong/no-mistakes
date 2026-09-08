@@ -1,0 +1,44 @@
+#[derive(Default)]
+struct ImportCollector {
+    /// 0-based byte offsets of each line start. Empty when line numbers are
+    /// unused so the collector does not retain a full source copy.
+    line_starts: Vec<u32>,
+    imports: Vec<ExtractedImport>,
+    function_calls: Vec<FunctionCall>,
+    unknown_calls: Vec<UnknownCall>,
+    symbol_references: Vec<FunctionCall>,
+    unknown_callers: Vec<Option<String>>,
+    function_stack: Vec<String>,
+    local_stack: Vec<HashSet<String>>,
+    type_local_stack: Vec<HashSet<String>>,
+    type_parameter_stack: Vec<HashSet<String>>,
+    function_scope_stack: Vec<usize>,
+    exported_functions: HashSet<String>,
+    exported_resource_roots: HashSet<String>,
+    exported_resource_scopes: HashSet<String>,
+    collect_resource_roots: bool,
+    exported_type_scopes: HashSet<String>,
+    callable_scopes: HashSet<String>,
+    class_scopes: HashSet<String>,
+    export_depth: usize,
+    has_unknown_top_level_call: bool,
+    anonymous_scope_count: usize,
+    known_function_scopes: HashSet<String>,
+    imported_bindings: HashSet<String>,
+    predeclared_imported_bindings: HashSet<String>,
+    call_import_bindings: Vec<ImportedBinding>,
+    call_export_bindings: Vec<ExportedBinding>,
+    callable_aliases: Vec<CallableAliasBinding>,
+    reassigned_alias_bindings: HashSet<CallableAliasBinding>,
+    star_reexport_specifiers: Vec<String>,
+    suppress_imports: bool,
+    collect_suppressed_runtime_imports: bool,
+    /// `function_stack` depth captured at the start of an exported binding
+    /// initializer / default-export expression. A runtime (`import()`/`require()`)
+    /// import exactly one function level below this depth — the callback directly
+    /// forming the exported value, e.g. `dynamic(() => import('./Foo'))` — is
+    /// flagged reachable. Deeper, uninvoked nested imports fall back to normal
+    /// call-scope reachability so they are not falsely kept.
+    runtime_reachable_base_depth: Option<usize>,
+    later_exported_type_names: HashSet<String>,
+}
