@@ -1,0 +1,16 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "rss_feed_item_categories": {
+      "indexes": {
+        "idx_rss_feed_item_categories__item_category_lower": {
+          "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": false, "valid": true, "ready": true,
+          "keys": [
+            { "column": "rss_feed_item_id", "expression": "rss_feed_item_id", "opclass": "uuid_ops", "descending": false, "nullsFirst": false },
+            { "column": null, "expression": "lower(category_text)", "opclass": "text_ops", "descending": false, "nullsFirst": false }
+          ], "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": null
+    }
+  }, "views": {}, "enums": {}, "extensions": {}, "functions": {}, "policies": {}
+}

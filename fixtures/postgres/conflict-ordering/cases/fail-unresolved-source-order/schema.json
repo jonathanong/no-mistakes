@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "items": {
+      "indexes": {
+        "items_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "valid": true,
+          "ready": true,
+          "keys": [{ "expression": "id" }]
+        }
+      }
+    }
+  }
+}

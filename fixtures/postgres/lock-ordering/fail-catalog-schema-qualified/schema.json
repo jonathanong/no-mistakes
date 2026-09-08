@@ -1,0 +1,21 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "public.items": {
+      "indexes": {
+        "public_items_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true, "constraintBacked": true, "valid": true, "ready": true,
+          "keys": [{ "expression": "id", "descending": false, "nullsFirst": false }], "predicate": null
+        }
+      }
+    },
+    "archive.items": {
+      "indexes": {
+        "archive_items_pkey": {
+          "accessMethod": "btree", "unique": true, "primary": true, "constraintBacked": true, "valid": true, "ready": true,
+          "keys": [{ "expression": "archive_id", "descending": false, "nullsFirst": false }], "predicate": null
+        }
+      }
+    }
+  }
+}

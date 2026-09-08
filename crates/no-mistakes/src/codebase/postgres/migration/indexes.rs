@@ -119,6 +119,7 @@ pub(super) fn covering_unique(
 fn named_param(name: &str) -> SqlIndexParam {
     SqlIndexParam {
         name: Some(name.to_string()),
+        expression: name.to_string(),
         ..Default::default()
     }
 }
@@ -130,6 +131,7 @@ fn index_params(columns: &[IndexColumn]) -> Vec<SqlIndexParam> {
 fn index_param(column: &IndexColumn) -> SqlIndexParam {
     SqlIndexParam {
         name: leading_index_column(column),
+        expression: column.column.expr.to_string(),
         opclass: column.operator_class.as_ref().map(qualified_relation),
         ordering: match column.column.options.asc {
             Some(true) => Some("asc".to_string()),

@@ -148,6 +148,7 @@ fn recovered_error_facts(
         symbols: symbols.clone(),
         legacy_symbols: symbols,
         integration_runner_config,
+        embedded_sql: super::program::prepared_embedded_sql(path, parsed_source, program, plan),
         parse_error: Some(parse_error),
         parsed: true,
         server_route_client_boundary: plan.server_route_client_boundary.then(Default::default),

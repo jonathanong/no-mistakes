@@ -1,4 +1,5 @@
-use super::{callee_name, EmbeddedSqlCall, EmbeddedSqlKind};
+use super::bindings::callee_name;
+use super::{EmbeddedSqlCall, EmbeddedSqlKind};
 use oxc_ast::ast::{
     AssignmentTarget, BindingPattern, BlockStatement, CallExpression, FormalParameters, Function,
     FunctionBody, Program,

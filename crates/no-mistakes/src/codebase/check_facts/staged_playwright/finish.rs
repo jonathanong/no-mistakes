@@ -7,6 +7,8 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 pub(super) struct FinishMapInput {
+    pub(super) root: PathBuf,
+    pub(super) sources: Arc<crate::codebase::ts_source::SourceStore>,
     pub(super) files: Vec<PathBuf>,
     pub(super) graph_files: Vec<PathBuf>,
     pub(super) graph_files_complete: bool,
@@ -21,6 +23,8 @@ pub(super) struct FinishMapInput {
 
 pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
     let FinishMapInput {
+        root,
+        sources,
         files,
         mut graph_files,
         graph_files_complete,
@@ -44,6 +48,11 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
     integration_runner_configs.extend(super::super::runner_config_facts(&ts));
     let (app_selector_occurrences_cache, app_text_targets_cache) =
         super::super::playwright_aggregate_facts(&ts);
+    let postgres_schema_catalogs = crate::codebase::postgres::load_schema_catalogs(
+        &root,
+        &sources,
+        &plan.postgres_schema_catalog_paths,
+    );
     CheckFactMap {
         files,
         graph_files,
@@ -66,5 +75,6 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         playwright_routes_cache: Arc::new(DashMap::new()),
         app_text_targets_cache: Arc::new(app_text_targets_cache),
         route_reachable_files_cache: Arc::new(DashMap::new()),
+        postgres_schema_catalogs,
     }
 }

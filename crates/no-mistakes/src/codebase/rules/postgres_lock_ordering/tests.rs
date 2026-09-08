@@ -15,6 +15,22 @@ fn fixture_root() -> PathBuf {
 }
 
 fn fixture(scenario: &str) -> PathBuf {
+    // New catalog fixtures live under the canonical repository fixture root;
+    // retain legacy locations for pre-existing lock-ordering scenarios.
+    if matches!(
+        scenario,
+        "fail-catalog-join"
+            | "fail-catalog-order"
+            | "fail-catalog-qualified-other"
+            | "fail-catalog-schema-qualified"
+            | "pass-catalog"
+            | "pass-catalog-of-alias"
+            | "pass-catalog-unqualified"
+    ) {
+        return PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/postgres/lock-ordering")
+            .join(scenario);
+    }
     fixture_root().join("fixture").join(scenario)
 }
 
@@ -43,6 +59,17 @@ fn findings_for(scenario: &str) -> Vec<RuleFinding> {
     check_with_files(&root, &default_config(), &[file]).unwrap()
 }
 
+fn findings_with_catalog(scenario: &str) -> Vec<RuleFinding> {
+    let root = fixture(scenario);
+    let files = vec![ts_file(&root), root.join("schema.json")];
+    check_with_files(
+        &root,
+        &config_with_options("schemaCatalogPath: schema.json"),
+        &files,
+    )
+    .unwrap()
+}
+
 #[test]
 fn fail_fixture_reports_abba_deadlock() {
     let findings = findings_for("fail");
@@ -61,6 +88,31 @@ fn fail_fixture_reports_abba_deadlock() {
 #[test]
 fn order_by_is_safe() {
     assert!(findings_for("pass-order").is_empty());
+}
+
+#[test]
+fn catalog_mode_requires_a_real_unique_key_prefix() {
+    assert!(findings_with_catalog("pass-catalog").is_empty());
+    assert!(findings_with_catalog("pass-catalog-of-alias").is_empty());
+    assert!(findings_with_catalog("pass-catalog-unqualified").is_empty());
+    let findings = findings_with_catalog("fail-catalog-order");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(findings[0].message.contains("schema-catalog"));
+    let findings = findings_with_catalog("fail-catalog-join");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(findings[0].message.contains("schema-catalog"));
+}
+
+#[test]
+fn catalog_mode_scopes_qualifiers_and_schema_names_to_locked_relations() {
+    for scenario in [
+        "fail-catalog-qualified-other",
+        "fail-catalog-schema-qualified",
+    ] {
+        let findings = findings_with_catalog(scenario);
+        assert_eq!(findings.len(), 1, "{scenario}: {findings:#?}");
+        assert!(findings[0].message.contains("schema-catalog"));
+    }
 }
 
 #[test]
@@ -215,14 +267,16 @@ fn missing_sql_text_is_ignored() {
 fn compile_options_honor_overrides() {
     let compiled = compile_options(&Options {
         import_specifier: "@other/db".to_string(),
-        executor_names: vec!["run".to_string()],
+        executor_names: vec!["write".to_string(), "run".to_string(), "write".to_string()],
         safe_directive: "ordered-locks".to_string(),
+        schema_catalog_path: "schema.json".to_string(),
         ..Default::default()
     })
     .unwrap();
     assert_eq!(compiled.embedded.import_specifier, "@other/db");
-    assert_eq!(compiled.embedded.executor_names, ["run"]);
+    assert_eq!(compiled.embedded.executor_names, ["run", "write"]);
     assert_eq!(compiled.safe_directive, "ordered-locks");
+    assert_eq!(compiled.schema_catalog_path.as_deref(), Some("schema.json"));
 }
 
 #[test]

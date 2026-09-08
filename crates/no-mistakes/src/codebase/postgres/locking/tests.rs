@@ -1,11 +1,12 @@
 use super::{
     collect_from_query, collect_from_set_expr, collect_queries_from_expr, expr_has_multi_row,
-    extract_locking_select_metadata, function_is_any, function_name_is_any, set_expr_has_multi_row,
-    LockingSelectMetadata,
+    extract_locking_select_metadata, function_is_any, function_name_is_any, order_keys,
+    set_expr_has_multi_row, LockingSelectMetadata,
 };
+use crate::codebase::postgres::parse_postgres_sql;
 use sqlparser::ast::{
-    BinaryOperator, Expr, Function, FunctionArguments, Ident, ObjectName, ObjectNamePart, Query,
-    SetExpr, UnaryOperator, Values,
+    BinaryOperator, Expr, Function, FunctionArguments, Ident, ObjectName, ObjectNamePart, OrderBy,
+    OrderByKind, OrderByOptions, Query, SetExpr, Statement, UnaryOperator, Values,
 };
 
 fn first(sql: &str) -> LockingSelectMetadata {
@@ -41,6 +42,106 @@ fn order_by_is_recorded() {
     assert!(meta.has_multi_row_predicate);
     assert!(meta.has_order_by);
     assert!(!meta.skips_locked_rows);
+}
+
+#[test]
+fn non_expression_order_by_has_no_canonical_key_projection() {
+    assert!(order_keys(&OrderBy {
+        kind: OrderByKind::All(OrderByOptions::default()),
+        interpolate: None,
+    })
+    .is_none());
+}
+
+#[test]
+fn records_every_unqualified_lock_relation_and_resolves_of_aliases() {
+    let meta = first(
+        "SELECT * FROM jobs AS j JOIN users AS u ON u.id = j.user_id WHERE u.id = ANY($1) ORDER BY j.id FOR UPDATE",
+    );
+    assert_eq!(
+        meta.tables,
+        Some(vec!["jobs".to_string(), "users".to_string()])
+    );
+    let meta = first(
+        "SELECT * FROM jobs AS j JOIN users AS u ON u.id = j.user_id WHERE u.id = ANY($1) ORDER BY j.id FOR UPDATE OF j",
+    );
+    assert_eq!(meta.tables, Some(vec!["jobs".to_string()]));
+}
+
+#[test]
+fn explicit_lock_targets_must_resolve_to_exactly_one_base_relation() {
+    let unresolved =
+        first("SELECT * FROM jobs AS j WHERE j.id = ANY($1) ORDER BY j.id FOR UPDATE OF missing");
+    assert_eq!(unresolved.tables, None);
+
+    // The unaliased base name would refer to either side of this self-join.
+    let ambiguous = first(
+        "SELECT * FROM jobs AS left_job JOIN jobs AS right_job ON true WHERE left_job.id = ANY($1) ORDER BY left_job.id FOR UPDATE OF jobs",
+    );
+    assert_eq!(ambiguous.tables, None);
+}
+
+#[test]
+fn locking_a_derived_relation_does_not_claim_a_base_table_order() {
+    let meta = first(
+        "SELECT * FROM (SELECT * FROM jobs WHERE id = ANY($1)) AS queued ORDER BY queued.id FOR UPDATE",
+    );
+    assert_eq!(meta.tables, None);
+}
+
+#[test]
+fn nested_join_relations_are_collected_for_unqualified_locks() {
+    let meta = first(
+        "SELECT * FROM (jobs AS j JOIN users AS u ON true) WHERE j.id = ANY($1) ORDER BY j.id FOR UPDATE",
+    );
+    assert_eq!(
+        meta.tables,
+        Some(vec!["jobs".to_string(), "users".to_string()])
+    );
+}
+
+#[test]
+fn relation_resolver_handles_an_empty_update_lock_set_and_deduplicates_self_joins() {
+    let statements = parse_postgres_sql("SELECT * FROM jobs").expect("parse");
+    let Statement::Query(query) = &statements[0] else {
+        panic!("expected query");
+    };
+    assert_eq!(
+        super::relations::locked_tables(&query.body, &[]).map(|tables| tables.names),
+        Some(Vec::new())
+    );
+
+    let meta = first(
+        "SELECT * FROM jobs AS first_job JOIN jobs AS second_job ON true WHERE first_job.id = ANY($1) ORDER BY first_job.id FOR UPDATE",
+    );
+    assert_eq!(meta.tables, Some(vec!["jobs".to_string()]));
+}
+
+#[test]
+fn locked_relations_preserve_schema_and_alias_qualifiers() {
+    let meta = first(
+        "SELECT * FROM archive.items AS archived WHERE archived.id = ANY($1) ORDER BY archived.id FOR UPDATE",
+    );
+    assert_eq!(meta.tables, Some(vec!["archive.items".to_string()]));
+    assert_eq!(
+        meta.table_qualifiers,
+        Some(std::collections::BTreeMap::from([(
+            "archive.items".to_string(),
+            vec![
+                "archive.items".to_string(),
+                "archived".to_string(),
+                "items".to_string(),
+            ],
+        )]))
+    );
+}
+
+#[test]
+fn explicit_schema_lock_targets_resolve_without_matching_another_schema() {
+    let meta = first(
+        "SELECT * FROM public.items JOIN archive.items ON true WHERE archive.items.archive_id = ANY($1) ORDER BY archive.items.archive_id FOR UPDATE OF archive.items",
+    );
+    assert_eq!(meta.tables, Some(vec!["archive.items".to_string()]));
 }
 
 #[test]

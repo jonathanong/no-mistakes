@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "edges": {
+      "indexes": {
+        "edges_forward": {
+          "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": false, "valid": true, "ready": true,
+          "keys": [{ "column": "left_id", "expression": "left_id", "opclass": "uuid_ops", "descending": false, "nullsFirst": false }, { "column": "right_id", "expression": "right_id", "opclass": "uuid_ops", "descending": false, "nullsFirst": false }], "includedColumns": [], "predicate": null
+        },
+        "edges_reverse": {
+          "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": false, "valid": true, "ready": true,
+          "keys": [{ "column": "right_id", "expression": "right_id", "opclass": "uuid_ops", "descending": false, "nullsFirst": false }, { "column": "left_id", "expression": "left_id", "opclass": "uuid_ops", "descending": false, "nullsFirst": false }], "includedColumns": [], "predicate": null
+        }
+      }, "uniqueConstraints": {}, "primaryKey": null
+    }
+  }, "views": {}, "enums": {}, "extensions": {}, "functions": {}, "policies": {}
+}

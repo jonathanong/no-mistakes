@@ -5,7 +5,7 @@ work. Check rules consume these facts instead of re-parsing SQL or
 TypeScript.
 
 These extractors are library APIs. There is no CLI command or N-API dump.
-`postgres-lock-ordering`, `postgres-no-offset`,
+`postgres-conflict-ordering`, `postgres-lock-ordering`, `postgres-no-offset`,
 `postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`,
@@ -79,7 +79,7 @@ There is no hardcoded `backend/migrations/` root.
 
 `postgres-fk-index`, `postgres-redundant-index`, and
 `postgres-constraint-validate` consume these
-migration facts. `postgres-lock-ordering` and
+migration facts. `postgres-conflict-ordering`, `postgres-lock-ordering`, and
 `postgres-no-generated-column-writes` consume
 the facts through `no-mistakes check`.
 
@@ -170,9 +170,26 @@ when the AST is missing.
 - `has_multi_row_predicate` — the locked select's `WHERE` uses `IN` or `= ANY`
 - `has_order_by` — the locked query has `ORDER BY`
 - `skips_locked_rows` — the lock uses `SKIP LOCKED`
+- `tables` — the schema-preserving base relations selected by the lock clause
+- `table_qualifiers` — the schema, base-name, and alias qualifiers valid for
+  each locked relation
+- `order` — parsed `ORDER BY` expression keys, used with a configured schema
+  catalog to require an exact valid unique-key prefix without accepting a key
+  qualified by another joined relation
 
 Unparseable SQL returns an error. The lock-ordering rule consumes this helper
-instead of re-parsing SQL with a private parser.
+instead of re-parsing SQL with a private parser. `postgres-conflict-ordering`
+also consumes request-prepared embedded-SQL facts, then resolves its conflict
+arbiter against the configured PostgreSQL schema snapshot. Distinct executor
+configurations and catalog paths are prepared once per request and reused by
+every rule application that selects them.
+
+`analyze_conflict_inserts(sql)` exposes the same structured SQL projection to
+Rust callers as `SqlConflictInsertFact`, `SqlConflictTarget`, and
+`SqlInsertSourceShape`. It preserves ordered conflict expressions, partial
+predicates, source cardinality, projected target columns, aliases, and parsed
+`ORDER BY` keys; rule engines resolve those facts against `SchemaCatalog`
+instead of owning another SQL shape.
 
 ## Offset facts
 

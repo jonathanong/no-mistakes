@@ -8,9 +8,18 @@ pub(super) fn run(
     root: &Path,
     config: &NoMistakesConfig,
     files: &[PathBuf],
-    sources: &SourceStore,
+    sources: &std::sync::Arc<SourceStore>,
+    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
+        POSTGRES_CONFLICT_ORDERING => match facts {
+            Some(facts) => postgres_conflict_ordering::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            ),
+            None => postgres_conflict_ordering::check_with_files_and_sources(
+                root, config, files, sources,
+            ),
+        },
         POSTGRES_CONSTRAINT_VALIDATE => {
             postgres_constraint_validate::check_with_files_and_sources(root, config, files, sources)
         }
@@ -28,9 +37,14 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
-        POSTGRES_LOCK_ORDERING => {
-            postgres_lock_ordering::check_with_files_and_sources(root, config, files, sources)
-        }
+        POSTGRES_LOCK_ORDERING => match facts {
+            Some(facts) => postgres_lock_ordering::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            ),
+            None => {
+                postgres_lock_ordering::check_with_files_and_sources(root, config, files, sources)
+            }
+        },
         POSTGRES_NO_OFFSET => {
             postgres_no_offset::check_with_files_and_sources(root, config, files, sources)
         }

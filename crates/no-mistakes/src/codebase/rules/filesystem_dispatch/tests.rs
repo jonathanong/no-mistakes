@@ -13,6 +13,10 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
                     "  - rule: {id}\n    scope: repository\n    options:\n      \
                      workspaceRoots: [\".\"]\n"
                 )
+            } else if *id == POSTGRES_CONFLICT_ORDERING {
+                format!(
+                    "  - rule: {id}\n    scope: repository\n    options:\n      schemaCatalogPath: schema.json\n"
+                )
             } else {
                 format!("  - rule: {id}\n    scope: repository\n")
             }
@@ -24,14 +28,21 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
     config_path
 }
 
+fn all_rules_fixture() -> tempfile::TempDir {
+    let source = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/filesystem-dispatch/all-rules");
+    crate::test_support::materialize_saved_fixture(&source)
+}
+
 /// Cover all dispatch branches via `run_filesystem_rules_with_files`.
 /// Passing an empty file list means no rule actually does I/O on files —
 /// they just enter their dispatch branch and return Ok(empty).
 #[test]
 fn dispatch_with_files_covers_all_rule_branches() {
-    let tmp = tempfile::tempdir().unwrap();
-    let config_path = write_config(tmp.path(), FILESYSTEM_RULE_IDS);
-    let findings = run_filesystem_rules_with_files(tmp.path(), Some(&config_path), &[]).unwrap();
+    let fixture = all_rules_fixture();
+    let config_path = write_config(fixture.path(), FILESYSTEM_RULE_IDS);
+    let findings =
+        run_filesystem_rules_with_files(fixture.path(), Some(&config_path), &[]).unwrap();
     // Empty file list → no findings; but all dispatch branches have been entered.
     assert!(
         findings.is_empty(),
@@ -59,9 +70,9 @@ fn dispatch_with_files_returns_configuration_errors() {
 /// discover_files returns nothing, so no findings are emitted.
 #[test]
 fn dispatch_standalone_covers_all_rule_branches() {
-    let tmp = tempfile::tempdir().unwrap();
-    let config_path = write_config(tmp.path(), FILESYSTEM_RULE_IDS);
-    let findings = run_filesystem_rules(tmp.path(), Some(&config_path)).unwrap();
+    let fixture = all_rules_fixture();
+    let config_path = write_config(fixture.path(), FILESYSTEM_RULE_IDS);
+    let findings = run_filesystem_rules(fixture.path(), Some(&config_path)).unwrap();
     assert!(
         findings.is_empty(),
         "empty directory should produce no findings: {findings:?}"
@@ -473,15 +484,16 @@ comparisons:
 /// config that omits those two rules, exercising the skip paths.
 #[test]
 fn dispatch_with_files_skips_disabled_rules() {
-    let tmp = tempfile::tempdir().unwrap();
+    let fixture = all_rules_fixture();
     // Omit RUST_MAX_LINES_PER_FILE and RUST_NO_INLINE_TESTS from the config.
     let rules_without_rust: Vec<&str> = FILESYSTEM_RULE_IDS
         .iter()
         .copied()
         .filter(|&r| r != RUST_MAX_LINES_PER_FILE && r != RUST_NO_INLINE_TESTS)
         .collect();
-    let config_path = write_config(tmp.path(), &rules_without_rust);
-    let findings = run_filesystem_rules_with_files(tmp.path(), Some(&config_path), &[]).unwrap();
+    let config_path = write_config(fixture.path(), &rules_without_rust);
+    let findings =
+        run_filesystem_rules_with_files(fixture.path(), Some(&config_path), &[]).unwrap();
     assert!(findings.is_empty());
 }
 

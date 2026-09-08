@@ -13,10 +13,11 @@ pub(super) fn run(request: RunRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
         config,
         files,
         sources,
+        facts,
         defer_suppression,
         ..
     } = request;
-    if let Some(out) = postgres::run(rule_id, root, config, files, sources) {
+    if let Some(out) = postgres::run(rule_id, root, config, files, sources, facts) {
         return out;
     }
     if let Some(out) = deferred::run(rule_id, root, config, files, sources, defer_suppression) {

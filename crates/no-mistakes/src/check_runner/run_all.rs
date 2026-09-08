@@ -4,9 +4,11 @@ use super::{
 };
 use crate::check_parallel::{run_domain_checks, DomainCheckInputs};
 use crate::check_tasks;
-use anyhow::{Context, Result};
+use anyhow::Result;
 use enabled::{fact_plan, integration_configured};
 use std::path::PathBuf;
+
+mod playwright;
 
 pub(crate) fn run_all_with_suppressed(
     root: PathBuf,
@@ -34,24 +36,13 @@ pub(crate) fn run_all_with_suppressed(
     let canonical_graph_plan = no_mistakes::codebase::rules::try_canonical_graph_plan(config)?;
     let graph_requires_full_file_universe =
         no_mistakes::codebase::rules::canonical_graph_requires_full_file_universe(config);
-    let playwright_consumers = canonical_graph_plan
-        .map(
-            |plan| no_mistakes::playwright::rules::PlaywrightFactConsumers {
-                graph_selectors: plan.playwright_selectors,
-                graph_routes: plan.playwright_routes,
-            },
-        )
-        .unwrap_or_default();
-    let mut playwright_fact_plan = match prepared.playwright.as_ref() {
-        Some(prepared) => Some(prepared.fact_plan()),
-        None => no_mistakes::playwright::rules::fact_plan_for_consumers(
-            &root,
-            config_path.as_deref(),
-            config,
-            playwright_consumers,
-        )
-        .context("failed to prepare Playwright shared facts")?,
-    };
+    let mut playwright_fact_plan = playwright::fact_plan(
+        &root,
+        config_path.as_deref(),
+        config,
+        canonical_graph_plan,
+        prepared.playwright.as_ref(),
+    )?;
     let integration_enabled = integration_configured(config);
     let react_enabled = prepared.react.enabled();
     let mut plan = fact_plan(enabled::EnabledChecks {
@@ -67,6 +58,13 @@ pub(crate) fn run_all_with_suppressed(
         unique_exports: unique_exports_enabled,
         embedded_sql: enabled.embedded_sql,
     });
+    plan.embedded_sql_options =
+        no_mistakes::codebase::postgres::configured_embedded_sql_options_for_checks(config)?;
+    plan.postgres_schema_catalog_paths =
+        no_mistakes::codebase::postgres::configured_schema_catalog_paths(
+            config,
+            no_mistakes::codebase::postgres::SCHEMA_CATALOG_RULE_IDS,
+        )?;
     if integration_enabled {
         plan.integration_runner_configs = Some(std::sync::Arc::new(
             no_mistakes::integration_tests::prepare_runner_configs_with_catalog(

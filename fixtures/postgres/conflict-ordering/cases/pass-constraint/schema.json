@@ -1,0 +1,18 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "items": {
+      "indexes": {
+        "items_external_id_key": {
+          "accessMethod": "btree", "unique": true, "primary": false, "constraintBacked": true, "valid": true, "ready": true,
+          "keys": [{ "expression": "external_id", "descending": false, "nullsFirst": false }],
+          "includedColumns": [], "predicate": null
+        }
+      },
+      "uniqueConstraints": {
+        "items_external_id_key": { "columns": ["external_id"], "definition": "UNIQUE (external_id)" }
+      },
+      "primaryKey": null
+    }
+  }, "views": {}, "enums": {}, "extensions": {}, "functions": {}, "policies": {}
+}

@@ -93,6 +93,11 @@ fn collect_check_facts_inner(
         .values()
         .filter(|facts| facts.parse_error.is_some())
         .count();
+    let postgres_schema_catalogs = crate::codebase::postgres::load_schema_catalogs(
+        root,
+        &sources,
+        &plan.postgres_schema_catalog_paths,
+    );
     CheckFactMap {
         files,
         graph_files,
@@ -111,5 +116,6 @@ fn collect_check_facts_inner(
         playwright_routes_cache: Arc::new(DashMap::new()),
         app_text_targets_cache: Arc::new(DashMap::new()),
         route_reachable_files_cache: Arc::new(DashMap::new()),
+        postgres_schema_catalogs,
     }
 }

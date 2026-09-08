@@ -135,6 +135,8 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         &mut ts,
     );
     finish_map(FinishMapInput {
+        root: root.to_path_buf(),
+        sources,
         files,
         graph_files,
         graph_files_complete,
