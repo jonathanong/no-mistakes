@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes",
-  "version": "0.58.0",
+  "version": "0.59.0",
   "description": "Deterministic impact maps, test plans, Playwright coverage, and repository checks for coding agents",
   "license": "MIT",
   "repository": {
@@ -45,10 +45,10 @@
     "access": "public"
   },
   "optionalDependencies": {
-    "no-mistakes-darwin-arm64": "0.58.0",
-    "no-mistakes-darwin-x64": "0.58.0",
-    "no-mistakes-linux-arm64-gnu": "0.58.0",
-    "no-mistakes-linux-x64-gnu": "0.58.0",
-    "no-mistakes-win32-x64-msvc": "0.58.0"
+    "no-mistakes-darwin-arm64": "0.59.0",
+    "no-mistakes-darwin-x64": "0.59.0",
+    "no-mistakes-linux-arm64-gnu": "0.59.0",
+    "no-mistakes-linux-x64-gnu": "0.59.0",
+    "no-mistakes-win32-x64-msvc": "0.59.0"
   }
 }
