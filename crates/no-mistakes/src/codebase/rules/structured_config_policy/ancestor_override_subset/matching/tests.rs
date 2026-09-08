@@ -12,7 +12,7 @@ fn mapping(source: &str) -> Mapping {
 #[test]
 fn globs_accept_string_and_sequence_and_reject_invalid_values() {
     let values = mapping(
-        "files: '**/*.ts'\nexcludeFiles: [skip.ts]\ninvalid: [1]\nbad: '['\nscalar: true\n",
+        "files: '**/*.ts'\nexcludeFiles: [skip.ts]\ninvalid: [1]\nbad: '['\nscalar: true\nempty: []\nblank: ''\ndot: './'\n",
     );
     assert!(compile_value_globs(&values, "files")
         .unwrap()
@@ -25,6 +25,9 @@ fn globs_accept_string_and_sequence_and_reject_invalid_values() {
     assert!(compile_value_globs(&values, "invalid").is_none());
     assert!(compile_value_globs(&values, "bad").is_none());
     assert!(compile_value_globs(&values, "scalar").is_none());
+    assert!(compile_value_globs(&values, "empty").is_none());
+    assert!(compile_value_globs(&values, "blank").is_none());
+    assert!(compile_value_globs(&values, "dot").is_none());
     assert!(optional_value_globs(&values, "invalid").is_err());
 }
 

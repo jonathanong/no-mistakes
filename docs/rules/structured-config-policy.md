@@ -130,7 +130,7 @@ support `boolean`, `positive-number`, `string-array`, `record-of-boolean`,
 `string-prefix`, `string-glob`, `not-single-file`, `equals`, `equals-file`,
 `object-shape`, and `ancestor-override-subset`. Array `match` defaults to `all`;
 `when` is optional. `ancestor-override-subset` key names default to `extends`,
-`overrides`, `files`, and `rules`.
+`overrides`, `files`, `excludeFiles`, and `rules`.
 
 ## Valid example
 

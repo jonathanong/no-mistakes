@@ -93,9 +93,6 @@ fn collect_overrides<'a>(
                 }
                 continue;
             };
-            if rules.is_empty() {
-                continue;
-            }
             let Some(files) = compile_value_globs(override_value, keys.files) else {
                 findings.push(invalid_override(
                     nested_rel,
@@ -117,6 +114,9 @@ fn collect_overrides<'a>(
                     continue;
                 }
             };
+            if rules.is_empty() {
+                continue;
+            }
             collected.push(Override {
                 rules,
                 files,

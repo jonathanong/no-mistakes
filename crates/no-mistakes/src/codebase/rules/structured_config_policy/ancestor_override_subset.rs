@@ -4,7 +4,7 @@ use crate::codebase::rules::structured_config_policy::paths::CanonicalInventory;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use serde_yaml::Value;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 mod extends;
 mod keys;
@@ -16,26 +16,6 @@ use keys::Keys;
 use lost::lost_override_findings;
 
 pub(super) fn check_ancestor_override_subset(
-    root: &Path,
-    nested_path: &Path,
-    nested_rel: &str,
-    sources: &SourceStore,
-    files: &[PathBuf],
-    value: &Value,
-    assertion: &ValueAssertion,
-) -> Vec<RuleFinding> {
-    let canonical_paths = CanonicalInventory::new(root, files);
-    check_ancestor_override_subset_with_canonical_inventory(
-        nested_path,
-        nested_rel,
-        sources,
-        value,
-        assertion,
-        &canonical_paths,
-    )
-}
-
-pub(super) fn check_ancestor_override_subset_with_canonical_inventory(
     nested_path: &Path,
     nested_rel: &str,
     sources: &SourceStore,
@@ -77,7 +57,7 @@ pub(super) fn check_ancestor_override_subset_with_canonical_inventory(
         &keys,
         &mut findings,
     );
-    let nested_dir = nested_path.parent().unwrap_or(&nested_path);
+    let nested_dir = nested_path.parent().unwrap_or(nested_path);
     let canonical_children: Vec<&Path> = canonical_paths
         .paths()
         .filter(|path| path != &nested_path && path.starts_with(nested_dir))

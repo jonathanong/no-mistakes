@@ -1,4 +1,4 @@
-use super::ancestor_override_subset::check_ancestor_override_subset_with_canonical_inventory;
+use super::ancestor_override_subset::check_ancestor_override_subset;
 use super::equals_file::check_equals_file;
 use super::paths::CanonicalInventory;
 use super::when::policy_applies;
@@ -73,7 +73,7 @@ pub(super) fn scan(
                         findings.extend(check_equals_file(root, &rel, sources, &value, assertion));
                     }
                     Some(AssertionKind::AncestorOverrideSubset) => {
-                        findings.extend(check_ancestor_override_subset_with_canonical_inventory(
+                        findings.extend(check_ancestor_override_subset(
                             &path,
                             &rel,
                             sources,

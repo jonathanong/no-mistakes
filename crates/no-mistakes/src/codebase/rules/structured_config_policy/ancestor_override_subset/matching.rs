@@ -52,9 +52,15 @@ fn compile_globs(value: &Value) -> Option<GlobSet> {
             .collect::<Option<Vec<_>>>()?,
         _ => return None,
     };
+    if patterns.is_empty() {
+        return None;
+    }
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
         let trimmed = pattern.trim_start_matches("./");
+        if trimmed.is_empty() {
+            return None;
+        }
         builder.add(
             GlobBuilder::new(trimmed)
                 .literal_separator(true)

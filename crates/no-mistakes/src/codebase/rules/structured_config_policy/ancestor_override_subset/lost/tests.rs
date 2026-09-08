@@ -1,4 +1,5 @@
 use super::*;
+use std::path::PathBuf;
 
 #[test]
 fn effective_rules_ignores_children_on_a_different_path_root() {
@@ -28,4 +29,24 @@ fn effective_rules_ignores_children_on_a_different_path_root() {
     });
 
     assert!(effective.is_empty());
+}
+
+#[test]
+fn collect_overrides_rejects_invalid_globs_before_skipping_empty_rules() {
+    let value: Value =
+        serde_yaml::from_str("overrides:\n  - files: ['[']\n    rules: {}\n").unwrap();
+    let assertion = ValueAssertion::default();
+    let keys = Keys::from_assertion(&assertion);
+    let ancestors = [Ancestor {
+        path: PathBuf::from("/repo/base.json"),
+        rel: "base.json".to_string(),
+        value,
+    }];
+
+    let (_, findings) = collect_overrides(&ancestors, "nested/.oxlintrc.json", &assertion, &keys);
+
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0]
+        .message
+        .contains("files must contain valid string globs"));
 }
