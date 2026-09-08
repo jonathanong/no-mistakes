@@ -1,7 +1,7 @@
 use super::super::file::{collect_file_fact_variants_with_session, CheckFactVariant};
 use super::{collect_file_facts, CheckFactPlan};
 use crate::codebase::check_facts::{
-    playwright_aggregate_facts, CheckFileFacts, PlaywrightSettingsKey,
+    playwright_aggregate_facts, CheckFactMap, CheckFileFacts, PlaywrightSettingsKey,
 };
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
@@ -266,4 +266,100 @@ fn batch_collection_covers_graph_only_files() {
     assert!(
         maps[0].ts.contains_key(&extra) || maps[0].graph_files.iter().any(|path| path == &extra)
     );
+}
+
+#[test]
+fn legacy_embedded_sql_demand_uses_the_default_profile() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/conflict-ordering/shared-prepared");
+    let file = root.join("src/queries.ts");
+    let facts = collect_file_facts(
+        &root,
+        &file,
+        &CheckFactPlan {
+            embedded_sql: true,
+            ..CheckFactPlan::default()
+        },
+        None,
+    )
+    .expect("embedded SQL fixture is parsed");
+
+    assert_eq!(facts.embedded_sql.len(), 1);
+    assert_eq!(
+        facts.embedded_sql[0].0,
+        crate::codebase::postgres::EmbeddedSqlOptions::default()
+    );
+}
+
+#[test]
+fn prepared_postgres_fact_accessors_preserve_missing_and_load_errors() {
+    let missing_file = PathBuf::from("missing.ts");
+    let empty_file = PathBuf::from("empty.ts");
+    let invalid_file = PathBuf::from("invalid.ts");
+    let mut ts = crate::codebase::ts_source::FileIdMap::default();
+    ts.insert(
+        empty_file.clone(),
+        std::sync::Arc::new(CheckFileFacts::default()),
+    );
+    ts.insert(
+        invalid_file.clone(),
+        std::sync::Arc::new(CheckFileFacts {
+            parse_error: Some("source parse failed".to_string()),
+            ..CheckFileFacts::default()
+        }),
+    );
+    let facts = CheckFactMap {
+        ts,
+        postgres_schema_catalogs: std::collections::BTreeMap::from([
+            (
+                "broken.json".to_string(),
+                Err(std::sync::Arc::<str>::from("catalog load failed")),
+            ),
+            (
+                "valid.json".to_string(),
+                Ok(std::sync::Arc::new(
+                    crate::codebase::postgres::SchemaCatalog::default(),
+                )),
+            ),
+        ]),
+        ..CheckFactMap::default()
+    };
+    let options = crate::codebase::postgres::EmbeddedSqlOptions::default();
+
+    assert!(facts
+        .embedded_sql(&missing_file, &options)
+        .unwrap_err()
+        .to_string()
+        .contains("prepared facts are missing"));
+    assert_eq!(
+        facts
+            .embedded_sql(&empty_file, &options)
+            .unwrap_err()
+            .to_string(),
+        "prepared embedded SQL projection is missing"
+    );
+    assert_eq!(
+        facts
+            .embedded_sql(&invalid_file, &options)
+            .unwrap_err()
+            .to_string(),
+        "source parse failed"
+    );
+    assert_eq!(
+        facts
+            .postgres_schema_catalog("broken.json")
+            .unwrap_err()
+            .to_string(),
+        "catalog load failed"
+    );
+    assert_eq!(
+        facts
+            .postgres_schema_catalog("missing.json")
+            .unwrap_err()
+            .to_string(),
+        "prepared schema catalog is missing for schemaCatalogPath missing.json"
+    );
+    facts
+        .postgres_schema_catalog("./valid.json")
+        .expect("normalized prepared catalog is returned");
 }

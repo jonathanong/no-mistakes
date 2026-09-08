@@ -40,4 +40,209 @@ fn preserves_partial_index_predicates() {
             predicate: Some("is_live".to_string()),
         }
     );
+
+    let after_action = analyze_conflict_inserts(
+        "INSERT INTO items (id) SELECT id FROM input ON CONFLICT (id) DO UPDATE SET id = EXCLUDED.id WHERE id > 0",
+    )
+    .unwrap();
+    assert_eq!(
+        after_action[0].target,
+        SqlConflictTarget::Columns {
+            expressions: vec!["id".to_string()],
+            predicate: None,
+        }
+    );
+}
+
+#[test]
+fn ignores_keywords_in_strings_comments_and_identifiers() {
+    let sql = r#"-- ON CONFLICT in a line comment
+        SELECT 'ON CONFLICT'; /* ON CONFLICT in a block comment */
+        SELECT on_conflict FROM records"#;
+    assert!(analyze_conflict_inserts(sql).unwrap().is_empty());
+    assert!(raw::raw_conflicts(sql).unwrap().is_empty());
+    assert!(raw::raw_conflicts("/* ON CONFLICT").unwrap().is_empty());
+    assert!(raw::raw_conflicts("SELECT 'ON CONFLICT")
+        .unwrap()
+        .is_empty());
+    assert!(raw::raw_conflicts("SELECT 1 ON foo").unwrap().is_empty());
+    assert!(
+        raw::raw_conflicts("SELECT 1 ON something CONFLICT DO NOTHING")
+            .unwrap()
+            .is_empty()
+    );
+}
+
+#[test]
+fn recognizes_constraint_targets_and_sanitizes_column_targets() {
+    let constraint = raw::raw_conflicts(
+        "INSERT INTO items VALUES (1) ON CONFLICT ON CONSTRAINT \"items_pkey\" DO NOTHING",
+    )
+    .unwrap();
+    assert_eq!(constraint.len(), 1);
+    assert_eq!(
+        constraint[0].target,
+        SqlConflictTarget::Constraint("\"items_pkey\"".into())
+    );
+    assert_eq!(raw::sanitize("SELECT 1", &constraint), "SELECT 1");
+
+    let unquoted = raw::raw_conflicts(
+        "INSERT INTO items VALUES (1) ON CONFLICT ON CONSTRAINT public.items_pkey DO NOTHING",
+    )
+    .unwrap();
+    assert_eq!(
+        unquoted[0].target,
+        SqlConflictTarget::Constraint("public.items_pkey".into())
+    );
+
+    let at_start = raw::raw_conflicts("ON CONFLICT DO NOTHING").unwrap();
+    assert_eq!(at_start[0].target, SqlConflictTarget::Targetless);
+
+    let columns = raw::raw_conflicts(
+        "INSERT INTO items VALUES (1) ON CONFLICT (id, (COALESCE(name, 'x)')),) WHERE active DO NOTHING",
+    )
+    .unwrap();
+    assert_eq!(
+        raw::sanitize(
+            "INSERT INTO items VALUES (1) ON CONFLICT (id, (COALESCE(name, 'x)')),) WHERE active DO NOTHING",
+            &columns,
+        ),
+        "INSERT INTO items VALUES (1) ON CONFLICT (nm_conflict_key)  DO NOTHING"
+    );
+}
+
+#[test]
+fn reports_malformed_constraint_and_column_targets() {
+    for (sql, expected) in [
+        (
+            "INSERT INTO items VALUES (1) ON CONFLICT ON CONSTRAINT",
+            "no constraint name",
+        ),
+        (
+            "INSERT INTO items VALUES (1) ON CONFLICT ON CONSTRAINT \"items_pkey DO NOTHING",
+            "unclosed constraint identifier",
+        ),
+        (
+            "INSERT INTO items VALUES (1) ON CONFLICT (id",
+            "unclosed ON CONFLICT target",
+        ),
+        (
+            "INSERT INTO items VALUES (1) ON CONFLICT (id)",
+            "has no DO action",
+        ),
+    ] {
+        let error = analyze_conflict_inserts(sql).unwrap_err();
+        assert!(error.to_string().contains(expected), "{sql}: {error:#}");
+    }
+}
+
+#[test]
+fn captures_values_cardinality_and_default_values() {
+    let inserts = analyze_conflict_inserts(
+        "INSERT INTO items (id) VALUES (1) ON CONFLICT DO NOTHING;
+         INSERT INTO items (id) VALUES (1), (2) ON CONFLICT DO NOTHING;
+         INSERT INTO items DEFAULT VALUES ON CONFLICT DO NOTHING;
+         INSERT INTO items (id) (SELECT id FROM input) ON CONFLICT DO NOTHING;
+         INSERT INTO items (id) SELECT id FROM first_input UNION ALL SELECT id FROM second_input ON CONFLICT DO NOTHING",
+    )
+    .unwrap();
+    assert_eq!(inserts.len(), 5);
+    assert!(!inserts[0].source.multi_row);
+    assert!(inserts[1].source.multi_row);
+    assert_eq!(inserts[0].source.projections, None);
+    assert_eq!(
+        inserts[2].source,
+        SqlInsertSourceShape {
+            multi_row: false,
+            order: None,
+            projections: None,
+            order_aliases: Default::default(),
+        }
+    );
+    assert!(inserts[3].source.multi_row);
+    assert!(inserts[4].source.multi_row);
+}
+
+#[test]
+fn captures_projection_aliases_and_ordering_defaults() {
+    let inserts = analyze_conflict_inserts(
+        "INSERT INTO items (ID, note)
+         SELECT id AS source_id, note FROM input
+         ORDER BY source_id DESC NULLS FIRST, note ASC NULLS LAST
+         ON CONFLICT (id) DO NOTHING",
+    )
+    .unwrap();
+    let source = &inserts[0].source;
+    assert_eq!(
+        source.projections.as_ref().unwrap().get("id"),
+        Some(&"id".into())
+    );
+    assert_eq!(source.order_aliases.get("source_id"), Some(&"id".into()));
+    assert_eq!(
+        source.order,
+        Some(vec![
+            CanonicalOrderKey {
+                expression: "source_id".into(),
+                ascending: false,
+                nulls_first: true,
+            },
+            CanonicalOrderKey {
+                expression: "note".into(),
+                ascending: true,
+                nulls_first: false,
+            },
+        ])
+    );
+}
+
+#[test]
+fn declines_non_expression_order_and_projection_shapes() {
+    let all_order = analyze_conflict_inserts(
+        "INSERT INTO items SELECT * FROM input ORDER BY ALL ON CONFLICT DO NOTHING",
+    )
+    .unwrap();
+    assert_eq!(
+        all_order[0].source.order,
+        Some(vec![CanonicalOrderKey {
+            expression: "ALL".into(),
+            ascending: true,
+            nulls_first: false,
+        }])
+    );
+    assert_eq!(all_order[0].source.projections, None);
+    assert!(all_order[0].source.order_aliases.is_empty());
+
+    let mismatch = analyze_conflict_inserts(
+        "INSERT INTO items (id, note) SELECT id FROM input ON CONFLICT DO NOTHING",
+    )
+    .unwrap();
+    assert_eq!(mismatch[0].source.projections, None);
+
+    let wildcard = analyze_conflict_inserts(
+        "INSERT INTO items (id) SELECT * FROM input ON CONFLICT DO NOTHING",
+    )
+    .unwrap();
+    assert_eq!(wildcard[0].source.projections, None);
+}
+
+#[test]
+fn order_by_all_is_ignored_directly() {
+    let order = sqlparser::ast::OrderBy {
+        kind: sqlparser::ast::OrderByKind::All(Default::default()),
+        interpolate: None,
+    };
+    assert_eq!(order_keys(&order), None);
+}
+
+#[test]
+fn skips_non_insert_and_non_conflict_statements() {
+    let inserts = analyze_conflict_inserts(
+        "SELECT 1;
+         INSERT INTO items VALUES (1);
+         UPDATE items SET id = 2;
+         INSERT INTO items VALUES (1) ON CONFLICT DO NOTHING",
+    )
+    .unwrap();
+    assert_eq!(inserts.len(), 1);
+    assert_eq!(inserts[0].target, SqlConflictTarget::Targetless);
 }

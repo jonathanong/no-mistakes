@@ -1,4 +1,8 @@
 use super::*;
+
+mod expressions;
+mod resolve;
+
 #[test]
 fn expressions_ignore_formatting_but_not_source_bindings() {
     assert!(expression_matches(

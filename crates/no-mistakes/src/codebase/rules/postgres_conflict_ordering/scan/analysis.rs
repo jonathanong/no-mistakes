@@ -197,3 +197,6 @@ pub(super) fn finding(file: &str, line: usize, target: &str, message: &str) -> R
         target: Some(target.to_string()),
     }
 }
+
+#[cfg(test)]
+mod tests;
