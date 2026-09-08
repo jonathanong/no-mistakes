@@ -10,6 +10,10 @@ fn classifies_posix_windows_and_package_extends() {
         local_specifier("..\\base.json", "parents").unwrap(),
         Some("../base.json".to_string())
     );
+    assert_eq!(
+        local_specifier(".oxlintrc.base.json", "parents").unwrap(),
+        Some(".oxlintrc.base.json".to_string())
+    );
     assert_eq!(local_specifier("@scope/config", "parents").unwrap(), None);
     for path in [
         "",

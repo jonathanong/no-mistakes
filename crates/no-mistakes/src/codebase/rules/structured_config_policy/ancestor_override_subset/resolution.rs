@@ -5,36 +5,37 @@ use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::Value;
 use std::collections::{BTreeMap, BTreeSet};
 use std::path::{Path, PathBuf};
-use std::sync::Arc;
 
 pub(super) mod paths;
 use paths::{extends, local_specifier};
 
 pub(crate) struct AncestorResolver<'a> {
     root: &'a Path,
+    root_identity: Result<PathBuf, String>,
     sources: &'a SourceStore,
     values: BTreeMap<PathBuf, Value>,
-    chains: BTreeMap<ResolutionKey, Arc<Vec<Ancestor>>>,
-}
-
-#[derive(Clone, Ord, PartialOrd, Eq, PartialEq)]
-struct ResolutionKey {
-    path: PathBuf,
-    extends_key: String,
-}
-
-enum Work {
-    Enter(PathBuf, Value),
-    Exit(PathBuf, PathBuf),
+    values_by_identity: BTreeMap<PathBuf, Value>,
+    identities: BTreeMap<PathBuf, Result<PathBuf, String>>,
 }
 
 impl<'a> AncestorResolver<'a> {
-    pub(crate) fn new(root: &'a Path, sources: &'a SourceStore) -> Self {
+    pub(crate) fn new(root: &'a Path, sources: &'a SourceStore, candidates: &[PathBuf]) -> Self {
+        let root_identity = root.canonicalize().map_err(|error| error.to_string());
+        let identities = candidates
+            .iter()
+            .map(|path| {
+                let path = normalize_path(path);
+                let identity = path.canonicalize().map_err(|error| error.to_string());
+                (path, identity)
+            })
+            .collect();
         Self {
             root,
+            root_identity,
             sources,
             values: BTreeMap::new(),
-            chains: BTreeMap::new(),
+            values_by_identity: BTreeMap::new(),
+            identities,
         }
     }
 
@@ -43,87 +44,56 @@ impl<'a> AncestorResolver<'a> {
         path: &Path,
         value: &Value,
         assertion: &super::super::ValueAssertion,
-    ) -> Result<Arc<Vec<Ancestor>>, String> {
+    ) -> Result<Vec<Ancestor>, String> {
         let start = normalize_path(path);
-        let key = resolution_key(&start, assertion);
-        if let Some(chain) = self.chains.get(&key) {
-            return Ok(Arc::clone(chain));
-        }
         self.values.insert(start.clone(), value.clone());
-        let mut direct = BTreeMap::new();
-        let mut visiting = BTreeSet::new();
-        let mut depth = 0usize;
-        let mut work = vec![Work::Enter(start.clone(), value.clone())];
-        while let Some(item) = work.pop() {
-            match item {
-                Work::Enter(path, value) => {
-                    depth += 1;
-                    if depth > 1024 {
-                        return Err(format!(
-                            "{}: `{}` exceeds the extends depth limit",
-                            relative_slash_path(self.root, &path),
-                            assertion.extends_key
-                        ));
-                    }
-                    let key = resolution_key(&path, assertion);
-                    if self.chains.contains_key(&key) {
-                        continue;
-                    }
-                    let canonical = path.canonicalize().map_err(|error| {
-                        format!(
-                            "{}: cannot verify `{}` identity: {error}",
-                            relative_slash_path(self.root, &path),
-                            assertion.extends_key
-                        )
-                    })?;
-                    if !visiting.insert(canonical.clone()) {
-                        return Err(format!(
-                            "{}: `{}` contains an extends cycle",
-                            relative_slash_path(self.root, &path),
-                            assertion.extends_key
-                        ));
-                    }
-                    let parents = self.parents(&path, &value, assertion)?;
-                    direct.insert(path.clone(), parents.clone());
-                    work.push(Work::Exit(path, canonical));
-                    for parent in parents.into_iter().rev() {
-                        if !self
-                            .chains
-                            .contains_key(&resolution_key(&parent, assertion))
-                        {
-                            work.push(Work::Enter(
-                                parent.clone(),
-                                self.values.get(&parent).cloned().expect("loaded parent"),
-                            ));
-                        }
-                    }
-                }
-                Work::Exit(path, canonical) => {
-                    visiting.remove(&canonical);
-                    let mut chain = Vec::new();
-                    for parent in direct.get(&path).into_iter().flatten() {
-                        chain.extend(
-                            self.chains
-                                .get(&resolution_key(parent, assertion))
-                                .expect("parents resolve before children")
-                                .iter()
-                                .cloned(),
-                        );
-                        chain.push(Ancestor {
-                            path: parent.clone(),
-                            value: self.values.get(parent).cloned().expect("loaded parent"),
-                        });
-                    }
-                    self.chains
-                        .insert(resolution_key(&path, assertion), Arc::new(chain));
-                }
-            }
+        let mut active = BTreeSet::new();
+        self.resolve_from(&start, value, assertion, &mut active, 0)
+    }
+
+    fn resolve_from(
+        &mut self,
+        path: &Path,
+        value: &Value,
+        assertion: &super::super::ValueAssertion,
+        active: &mut BTreeSet<PathBuf>,
+        depth: usize,
+    ) -> Result<Vec<Ancestor>, String> {
+        if depth >= 1024 {
+            return Err(format!(
+                "{}: `{}` exceeds the extends depth limit",
+                relative_slash_path(self.root, path),
+                assertion.extends_key
+            ));
         }
-        Ok(self
-            .chains
-            .get(&key)
-            .map(Arc::clone)
-            .expect("start chain resolved"))
+        let identity = self.identity(path, &assertion.extends_key)?;
+        if !active.insert(identity.clone()) {
+            return Err(format!(
+                "{}: `{}` contains an extends cycle",
+                relative_slash_path(self.root, path),
+                assertion.extends_key
+            ));
+        }
+        let result = (|| {
+            let mut chain = Vec::new();
+            for parent in self.parents(path, value, assertion)? {
+                let parent_value = self.values.get(&parent).cloned().expect("loaded parent");
+                chain.extend(self.resolve_from(
+                    &parent,
+                    &parent_value,
+                    assertion,
+                    active,
+                    depth + 1,
+                )?);
+                chain.push(Ancestor {
+                    path: parent,
+                    value: parent_value,
+                });
+            }
+            Ok(chain)
+        })();
+        active.remove(&identity);
+        result
     }
 
     fn parents(
@@ -152,15 +122,20 @@ impl<'a> AncestorResolver<'a> {
         Ok(parents)
     }
 
-    fn ensure_contained(&self, from: &Path, candidate: &Path, key: &str) -> Result<(), String> {
-        let contained =
-            super::super::path_containment::verify(self.root, candidate).map_err(|error| {
-                format!(
-                    "{}: cannot verify `{key}` repository containment: {error}",
-                    relative_slash_path(self.root, from)
-                )
-            })?;
-        if contained {
+    fn ensure_contained(&mut self, from: &Path, candidate: &Path, key: &str) -> Result<(), String> {
+        let root = self.root_identity.clone().map_err(|error| {
+            format!(
+                "{}: cannot verify `{key}` repository containment: {error}",
+                relative_slash_path(self.root, from)
+            )
+        })?;
+        let candidate = self.identity(candidate, key).map_err(|error| {
+            format!(
+                "{}: cannot verify `{key}` repository containment: {error}",
+                relative_slash_path(self.root, from)
+            )
+        })?;
+        if candidate.strip_prefix(&root).is_ok() {
             return Ok(());
         }
         Err(format!(
@@ -173,19 +148,47 @@ impl<'a> AncestorResolver<'a> {
         if self.values.contains_key(path) {
             return Ok(());
         }
+        let identity = self.identity(path, "extends")?;
+        if let Some(value) = self.values_by_identity.get(&identity) {
+            self.values.insert(path.to_path_buf(), value.clone());
+            return Ok(());
+        }
         let rel = relative_slash_path(self.root, path);
         let source = super::super::super::read_source(self.sources, path)
             .ok_or_else(|| format!("{rel}: extends reference is missing"))?;
         let value =
             parse_structured_value(path, &source).map_err(|error| format!("{rel}: {error}"))?;
-        self.values.insert(path.to_path_buf(), value);
+        self.values.insert(path.to_path_buf(), value.clone());
+        self.values_by_identity.insert(identity, value);
         Ok(())
     }
-}
 
-fn resolution_key(path: &Path, assertion: &super::super::ValueAssertion) -> ResolutionKey {
-    ResolutionKey {
-        path: path.to_path_buf(),
-        extends_key: assertion.extends_key.clone(),
+    fn identity(&mut self, path: &Path, key: &str) -> Result<PathBuf, String> {
+        let path = normalize_path(path);
+        let identity = self
+            .identities
+            .entry(path.clone())
+            .or_insert_with(|| path.canonicalize().map_err(|error| error.to_string()));
+        identity.clone().map_err(|error| {
+            format!(
+                "{}: cannot verify `{key}` identity: {error}",
+                relative_slash_path(self.root, &path)
+            )
+        })
+    }
+
+    #[cfg(test)]
+    pub(crate) fn resolve_for_test(
+        &mut self,
+        path: &Path,
+        value: &Value,
+        assertion: &super::super::ValueAssertion,
+    ) -> Result<Vec<Ancestor>, String> {
+        self.resolve(path, value, assertion)
+    }
+
+    #[cfg(test)]
+    pub(crate) fn cached_identity_count(&self) -> usize {
+        self.identities.len()
     }
 }

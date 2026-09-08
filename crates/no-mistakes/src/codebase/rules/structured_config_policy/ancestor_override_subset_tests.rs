@@ -170,7 +170,11 @@ fn supports_custom_structured_config_keys() {
         override_rules_key: "policies".to_string(),
         ..Default::default()
     };
-    let mut resolver = super::ancestor_override_subset::AncestorResolver::new(&root, &sources);
+    let mut resolver = super::ancestor_override_subset::AncestorResolver::new(
+        &root,
+        &sources,
+        &[parent.clone(), target.clone()],
+    );
     let findings = super::ancestor_override_subset::check_ancestor_override_subset(
         "custom/target/config.json",
         &target,
@@ -196,4 +200,90 @@ fn reports_invalid_extends_and_override_shapes_without_silently_skipping_them() 
     let body = format!("{findings:?}");
     assert!(body.contains("malformed/.config.json"), "{body}");
     assert!(body.contains("invalid-override/.config.json"), "{body}");
+}
+
+#[test]
+fn follows_dot_prefixed_same_directory_extends_paths() {
+    let findings = findings_for(&["dot/.oxlintrc.base.json", "dot/.config.json"]);
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(findings[0].message.contains("overrides"), "{findings:?}");
+}
+
+#[test]
+fn when_skips_ancestor_override_assertions_with_the_rest_of_its_policy() {
+    let root = fixture_root();
+    let files = [
+        root.join("direct/.config.json"),
+        root.join("direct/only.ts"),
+        root.join(".config.json"),
+    ];
+    let findings = check_with_files(
+        &root,
+        &config_from(
+            r#"
+policies:
+  - files: ["**/.config.json"]
+    when:
+      - key: extends
+    requiredKeys: [must-not-run]
+    valueAssertions:
+      - kind: ancestor-override-subset
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+    assert!(findings.iter().any(|finding| {
+        finding.file == "direct/.config.json" && finding.target.as_deref() == Some("must-not-run")
+    }));
+    assert!(!findings.iter().any(|finding| {
+        finding.file == ".config.json" && finding.target.as_deref() == Some("must-not-run")
+    }));
+}
+
+#[test]
+fn preserves_each_ordered_non_cycle_ancestor_occurrence_from_diamond_extends() {
+    let root = fixture_root();
+    let paths = [
+        root.join("diamond/shared.json"),
+        root.join("diamond/left.json"),
+        root.join("diamond/right.json"),
+        root.join("diamond/.config.json"),
+    ];
+    let sources = super::super::source_store_for_files(&paths);
+    let target = &paths[3];
+    let source = super::super::read_source(&sources, target).unwrap();
+    let value = crate::codebase::structured_value::parse_structured_value(target, &source).unwrap();
+    let assertion = ValueAssertion {
+        kind: Some(AssertionKind::AncestorOverrideSubset),
+        extends_key: "extends".to_string(),
+        ..Default::default()
+    };
+    let mut resolver =
+        super::ancestor_override_subset::AncestorResolver::new(&root, &sources, &paths);
+    assert_eq!(resolver.cached_identity_count(), paths.len());
+    let first = resolver
+        .resolve_for_test(target, &value, &assertion)
+        .unwrap();
+    let second = resolver
+        .resolve_for_test(target, &value, &assertion)
+        .unwrap();
+    assert_eq!(resolver.cached_identity_count(), paths.len());
+    for chain in [&first, &second] {
+        assert_eq!(
+            chain
+                .iter()
+                .map(|ancestor| crate::codebase::ts_source::relative_slash_path(
+                    &root,
+                    &ancestor.path
+                ))
+                .collect::<Vec<_>>(),
+            vec![
+                "diamond/shared.json",
+                "diamond/left.json",
+                "diamond/shared.json",
+                "diamond/right.json",
+            ],
+        );
+    }
 }

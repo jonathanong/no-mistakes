@@ -15,7 +15,7 @@ pub(super) fn scan(
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     let mut ancestor_resolver =
-        super::ancestor_override_subset::AncestorResolver::new(root, sources);
+        super::ancestor_override_subset::AncestorResolver::new(root, sources, files);
     for policy in &opts.policies {
         let matching = super::super::matching_files(root, &policy.files, files, target_roots)?;
         for path in matching {

@@ -49,8 +49,9 @@ parse errors are reported on that referenced file. `when` skips the rest of a
 policy for a file unless each listed key is a non-empty array or non-empty
 string.
 
-`ancestor-override-subset` recursively follows local `./` and `../` `extends`
-entries (a string or array). If an ancestor override matches a nested config's
+`ancestor-override-subset` recursively follows local dot-prefixed (`./`, `../`,
+or same-directory names such as `.oxlintrc.base.json`) `extends` entries (a
+string or array). If an ancestor override matches a nested config's
 directory before rebasing but not after, its rules must be a value-equal subset
 of that nested config's top-level `rules`. Cycles, paths outside the repository,
 missing local configs, malformed `extends`, and invalid inherited configs are

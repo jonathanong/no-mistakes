@@ -21,9 +21,8 @@ pub(crate) fn local_specifier(specifier: &str, key: &str) -> Result<Option<Strin
     if specifier.trim().is_empty() {
         return Err(format!("`{key}` reference must not be blank"));
     }
-    if specifier.starts_with("./")
+    if (specifier.starts_with('.') && !specifier.starts_with(".."))
         || specifier.starts_with("../")
-        || specifier.starts_with(".\\")
         || specifier.starts_with("..\\")
     {
         return Ok(Some(specifier.replace('\\', "/")));

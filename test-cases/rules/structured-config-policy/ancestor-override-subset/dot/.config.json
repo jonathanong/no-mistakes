@@ -1,0 +1,4 @@
+{
+  "extends": ".oxlintrc.base.json",
+  "rules": {}
+}
