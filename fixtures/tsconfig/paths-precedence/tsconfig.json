@@ -1,5 +1,10 @@
 {
+  // Config objects also use their final declaration, matching JSON parsing.
   "compilerOptions": {
+    "paths": { "stale-root/*": ["src/missing/*"] }
+  },
+  "compilerOptions": {
+    "paths": { "stale-nested/*": ["src/missing/*"] },
     "paths": {
       "*": ["src/catch-all/*"],
       "feature/*/detail": ["src/total-length/*"],

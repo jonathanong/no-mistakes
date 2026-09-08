@@ -1428,6 +1428,8 @@ fn aliases_preserve_declaration_ties_and_deleted_candidate_precedence() {
         .map(|(pattern, _)| pattern.as_str())
         .collect();
     assert_eq!(&patterns[..3], ["*", "feature/*/detail", "feature/s*"]);
+    assert!(!patterns.contains(&"stale-root/*"));
+    assert!(!patterns.contains(&"stale-nested/*"));
     assert_eq!(
         patterns
             .iter()

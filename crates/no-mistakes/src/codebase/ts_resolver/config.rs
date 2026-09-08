@@ -83,8 +83,8 @@ fn load_tsconfig_inner(
         .value
         .as_ref()
         .and_then(jsonc_parser::ast::Value::as_object)
-        .and_then(|root| root.get_object("compilerOptions"))
-        .and_then(|compiler_options| compiler_options.get_object("paths"))
+        .and_then(|root| last_object_property(root, "compilerOptions"))
+        .and_then(|compiler_options| last_object_property(compiler_options, "paths"))
         .map(|paths| {
             let mut mappings: Vec<(String, Vec<String>)> = Vec::new();
             let mut positions: std::collections::HashMap<String, usize> =
