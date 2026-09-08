@@ -40,6 +40,12 @@ importing file, including referenced workspace projects. `--tsconfig <FILE>`
 instead forces one config across the request; use it to reproduce a legacy
 single-config result or to debug an alias.
 
+TypeScript `paths` keys follow compiler precedence: an exact match wins;
+otherwise the matching wildcard with the longest prefix before `*` wins.
+Declaration order breaks equal-prefix ties, and fallback proceeds only through
+the winning key's replacement array. A missing target does not fall through to
+a less-specific key.
+
 JSON and YAML reports include stable `diagnostics` plus `tsconfig_provenance`
 for requested entry files. Invalid automatic configs warn and fall back
 conservatively; an invalid explicit `--tsconfig` remains an error.

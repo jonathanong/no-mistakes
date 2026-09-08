@@ -73,30 +73,52 @@ fn load_tsconfig_inner(
         ),
     };
 
-    let parsed: Option<serde_json::Value> =
-        jsonc_parser::parse_to_serde_value(&content, &jsonc_parser::ParseOptions::default())
-            .map_err(|e| anyhow::anyhow!("parsing {}: {e}", path.display()))?;
-    let v = parsed.unwrap_or(serde_json::Value::Null);
-
-    let own_paths: Option<Vec<(String, Vec<String>)>> = v
-        .get("compilerOptions")
-        .and_then(|co| co.get("paths"))
-        .and_then(|p| p.as_object())
-        .map(|obj| {
-            obj.iter()
-                .map(|(pattern, replacements)| {
-                    let repls = replacements
-                        .as_array()
-                        .map(|arr| {
-                            arr.iter()
-                                .filter_map(|v| v.as_str().map(str::to_string))
-                                .collect()
-                        })
-                        .unwrap_or_default();
-                    (pattern.clone(), repls)
-                })
-                .collect()
+    let parsed = jsonc_parser::parse_to_ast(
+        &content,
+        &jsonc_parser::CollectOptions::default(),
+        &jsonc_parser::ParseOptions::default(),
+    )
+    .map_err(|e| anyhow::anyhow!("parsing {}: {e}", path.display()))?;
+    let own_paths = parsed
+        .value
+        .as_ref()
+        .and_then(jsonc_parser::ast::Value::as_object)
+        .and_then(|root| last_object_property(root, "compilerOptions"))
+        .and_then(|compiler_options| last_object_property(compiler_options, "paths"))
+        .map(|paths| {
+            let mut mappings: Vec<(String, Vec<String>)> = Vec::new();
+            let mut positions: std::collections::HashMap<String, usize> =
+                std::collections::HashMap::new();
+            for property in &paths.properties {
+                let replacements = property
+                    .value
+                    .as_array()
+                    .map(|array| {
+                        array
+                            .elements
+                            .iter()
+                            .filter_map(|value| {
+                                value
+                                    .as_string_lit()
+                                    .map(|literal| literal.value.to_string())
+                            })
+                            .collect()
+                    })
+                    .unwrap_or_default();
+                let pattern = property.name.as_str().to_string();
+                if let Some(index) = positions.get(&pattern).copied() {
+                    mappings[index].1 = replacements;
+                } else {
+                    positions.insert(pattern.clone(), mappings.len());
+                    mappings.push((pattern, replacements));
+                }
+            }
+            mappings
         });
+    let v = parsed
+        .value
+        .map(serde_json::Value::from)
+        .unwrap_or(serde_json::Value::Null);
     let own_base_url = v
         .get("compilerOptions")
         .and_then(|co| co.get("baseUrl"))

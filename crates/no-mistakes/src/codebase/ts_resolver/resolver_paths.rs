@@ -15,20 +15,17 @@ impl<'a> ImportResolver<'a> {
             return self.try_path(&dir.join(specifier));
         }
 
-        for idx in &self.alias_order {
-            let (pattern, replacements) = &self.tsconfig().paths[*idx];
-            if let Some(capture) = match_alias(pattern, specifier) {
-                for replacement in replacements {
-                    let resolved = replacement.replace('*', &capture);
-                    let base = self
-                        .tsconfig()
-                        .base_url
-                        .as_ref()
-                        .unwrap_or(&self.tsconfig().paths_dir)
-                        .join(&resolved);
-                    if let Some(path) = self.try_path(&base) {
-                        return Some(path);
-                    }
+        for (capture, replacements) in self.matching_aliases(specifier) {
+            for replacement in replacements {
+                let resolved = replacement.replace('*', &capture);
+                let base = self
+                    .tsconfig()
+                    .base_url
+                    .as_ref()
+                    .unwrap_or(&self.tsconfig().paths_dir)
+                    .join(&resolved);
+                if let Some(path) = self.try_path(&base) {
+                    return Some(path);
                 }
             }
         }
