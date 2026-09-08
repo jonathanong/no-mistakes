@@ -64,8 +64,8 @@ rules must be a value-equal subset of the nested config's top-level `rules`.
 Sibling-relative globs such as `../app/**/*.ts` are supported. Overrides whose
 globs still match after rebasing, and nested directories with no inventory
 children, are ignored. Invalid override shapes and globs are findings.
-Traversal allows at most 256 resolved ancestor occurrences; exceeding the limit
-is a finding.
+Traversal allows at most 256 local ancestor traversal attempts; exceeding the
+limit is a finding.
 Single-star globs do not cross `/`. Extra nested rules are allowed. Key names
 default to `extends`, `overrides`, `files`, `excludeFiles`, and `rules`, and can
 be overridden with `extendsKey`, `overridesKey`, `filesKey`, `excludeFilesKey`,
