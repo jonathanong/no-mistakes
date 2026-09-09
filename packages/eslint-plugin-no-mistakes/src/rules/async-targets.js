@@ -1,30 +1,20 @@
 "use strict";
 
 const { unwrapExpression } = require("./async-ast");
+const {
+  isLocalRequire,
+  isReassigned,
+  memberPropertyName,
+  namespaceSourceFromInit,
+  recordObjectPatternBindings,
+  resolveVariable,
+} = require("./async-target-bindings");
 const { compileTargets, matchesAny, targetMatches } = require("./async-patterns");
-const { propertyName, literalString } = require("./module-mock-helpers");
-
-function findVariable(scope, name) {
-  while (scope) {
-    const variable = scope.variables.find((candidate) => candidate.name === name);
-    if (variable) return variable;
-    scope = scope.upper;
-  }
-  return null;
-}
-
-function resolveVariable(node, context) {
-  return findVariable(context.sourceCode.getScope(node), node.name);
-}
+const { literalString } = require("./module-mock-helpers");
 
 function importSpecifierName(specifier) {
   const imported = specifier.imported;
   return imported.type === "Literal" ? String(imported.value) : imported.name;
-}
-
-function isLocalRequire(id, context) {
-  const variable = resolveVariable(id, context);
-  return Boolean(variable?.defs.some((def) => def.type && def.type !== "ImplicitGlobalVariable"));
 }
 
 function requireSource(node, context) {
@@ -42,42 +32,16 @@ function requireSource(node, context) {
   return source;
 }
 
-function bindingIdentifier(node) {
-  if (node?.type === "Identifier") return node;
-  return node?.type === "AssignmentPattern" && node.left.type === "Identifier" ? node.left : null;
-}
-
-function memberPropertyName(node) {
-  if (!node.computed) return propertyName(node.property);
-  return staticComputedPropertyName(node.property);
-}
-
-function staticComputedPropertyName(node) {
-  return literalString(unwrapExpression(node));
-}
-
 function createTargetMatcher(context, optionKey = "targets") {
   const targets = compileTargets(context.options?.[0] || {}, optionKey);
   const sourceSpecifierPatterns = targets.flatMap((target) => target.sourceSpecifierPatterns);
   const directBindings = new Map();
   const namespaceBindings = new Map();
 
-  function isReassigned(id) {
-    const variable = resolveVariable(id, context);
-    const writes = variable?.references.filter((reference) => reference.isWrite()) || [];
-    const initializationSites = new Set(
-      writes.filter((reference) => reference.init).map((reference) => reference.identifier),
-    );
-    const isVar = variable?.defs.some(
-      (definition) => definition.type === "Variable" && definition.parent?.kind === "var",
-    );
-    return writes.some((reference) => !reference.init) || (isVar && initializationSites.size > 1);
-  }
-
   function recordDirect(id, source, calleeName) {
     if (
       id?.type !== "Identifier" ||
-      isReassigned(id) ||
+      isReassigned(id, context) ||
       !targetMatches(targets, source, calleeName)
     ) {
       return;
@@ -89,7 +53,7 @@ function createTargetMatcher(context, optionKey = "targets") {
   function recordNamespace(id, source) {
     if (
       id.type !== "Identifier" ||
-      isReassigned(id) ||
+      isReassigned(id, context) ||
       !matchesAny(source, sourceSpecifierPatterns)
     ) {
       return;
@@ -108,21 +72,20 @@ function createTargetMatcher(context, optionKey = "targets") {
         return;
       }
       if (node.id.type === "ObjectPattern") {
-        for (const property of node.id.properties) {
-          if (property.type !== "Property") continue;
-          const name = property.computed
-            ? staticComputedPropertyName(property.key)
-            : propertyName(property.key);
-          if (name) recordDirect(bindingIdentifier(property.value), source, name);
-        }
+        recordObjectPatternBindings(node.id, source, recordDirect);
       }
       return;
     }
     const member = unwrapExpression(node.init);
-    if (member?.type !== "MemberExpression" || node.id.type !== "Identifier") return;
-    const memberSource = requireSource(member.object, context);
-    const name = memberPropertyName(member);
-    if (memberSource && name) recordDirect(node.id, memberSource, name);
+    if (member?.type === "MemberExpression" && node.id.type === "Identifier") {
+      const memberSource = requireSource(member.object, context);
+      const name = memberPropertyName(member);
+      if (memberSource && name) recordDirect(node.id, memberSource, name);
+      return;
+    }
+    if (node.id.type !== "ObjectPattern") return;
+    const nsSource = namespaceSourceFromInit(node.init, context, namespaceBindings);
+    if (nsSource) recordObjectPatternBindings(node.id, nsSource, recordDirect);
   }
 
   function recordImportEquals(node) {
@@ -170,7 +133,9 @@ function createTargetMatcher(context, optionKey = "targets") {
     walk(node, (child) => {
       if (child.type === "ImportDeclaration") recordImportDeclaration(child);
       else if (child.type === "TSImportEqualsDeclaration") recordImportEquals(child);
-      else if (child.type === "VariableDeclarator") recordRequireDeclarator(child);
+    });
+    walk(node, (child) => {
+      if (child.type === "VariableDeclarator") recordRequireDeclarator(child);
     });
   }
 
