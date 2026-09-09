@@ -61,3 +61,29 @@ fn inner_alias_increment_does_not_invalidate_the_outer_callable() {
         alias.local == "alias" && alias.target == "target" && alias.invalidated_at.is_none()
     }));
 }
+
+#[test]
+fn var_bound_object_aggregate_binds_in_the_hoisted_function_scope() {
+    let facts = facts(
+        "function run() { { var api = { load() { import('./dep.mts'); }, unused() { import('./unused.mts'); } }; } api.load(); }",
+    );
+    let load = facts
+        .function_calls
+        .iter()
+        .find(|call| {
+            call.caller.as_deref() == Some("run")
+                && call.callee == "api.load"
+                && call.invocation == InvocationKind::Call
+        })
+        .expect("post-block aggregate call");
+    let binding_scope = load.callee_binding_scope.expect("hoisted api binding");
+
+    assert_eq!(load.target_identity, CallTargetIdentity::RepositoryFunction);
+    assert!(facts
+        .callable_bindings
+        .iter()
+        .any(|(scope, name, _)| *scope == binding_scope && name == "api"));
+    assert!(facts.imports.iter().any(|import| {
+        import.specifier == "./dep.mts" && import.function_scope.as_deref() == Some("run/api/load")
+    }));
+}
