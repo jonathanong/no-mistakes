@@ -41,7 +41,7 @@ describe("require-options-on-imported-call", () => {
   it("reports imported calls without statically visible required options", () => {
     assert.deepEqual(
       messages(ruleFixture("invalid.ts"), RULE, ssrfOptions, "invalid.ts"),
-      Array.from({ length: 17 }, () => "missingOptions"),
+      Array.from({ length: 21 }, () => "missingOptions"),
     );
   });
 
@@ -206,6 +206,74 @@ validateUrl(url, { timeoutMs: 1 });
     assert.deepEqual(messages(code, RULE, ssrfOptions, "default-named.ts"), ["missingOptions"]);
   });
 
+  it("tracks object destructure from namespace bindings", () => {
+    const code = `import * as ssrf from "ssrf-guard/node";
+const { validateUrl } = ssrf;
+const { validateUrl: typedUrl } = ssrf as Guard;
+validateUrl(url);
+typedUrl(url, { timeoutMs: 1 });
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "ns-destructure.ts"), ["missingOptions"]);
+  });
+
+  it("records namespace destructure even when the import appears after", () => {
+    const code = `const { validateUrl } = ssrf;
+validateUrl(url);
+import * as ssrf from "ssrf-guard/node";
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "ns-destructure-after.ts"), [
+      "missingOptions",
+    ]);
+  });
+
+  it("tracks object destructure from CommonJS namespace bindings", () => {
+    const code = `const ssrf = require("ssrf-guard/node");
+const { validateUrl } = ssrf;
+validateUrl(url);
+validateUrl(url, { timeoutMs: 1 });
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "cjs-ns-destructure.ts"), [
+      "missingOptions",
+    ]);
+  });
+
+  it("does not follow namespace identifier aliases", () => {
+    const code = `import * as ssrf from "ssrf-guard/node";
+const guard = ssrf;
+guard.validateUrl(url);
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "ns-alias.ts"), []);
+  });
+
+  it("ignores nested namespace destructure bindings", () => {
+    const code = `import * as ssrf from "ssrf-guard/node";
+const { validateUrl: { nested } = fallback } = ssrf;
+nested(url);
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "nested-ns-destructure.ts"), []);
+  });
+
+  it("ignores var bindings that also define parameters", () => {
+    const code = `function load(validateUrl) {
+  validateUrl(url);
+  var validateUrl = require("ssrf-guard/node").validateUrl;
+  validateUrl(url);
+}
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "param-var.ts"), []);
+  });
+
+  it("ignores var bindings that also define catch parameters", () => {
+    const code = `try {
+} catch (validateUrl) {
+  validateUrl(url);
+  var validateUrl = require("ssrf-guard/node").validateUrl;
+  validateUrl(url);
+}
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "catch-var.ts"), []);
+  });
+
   it("ignores reassigned CommonJS bindings", () => {
     const code = `let checkUrl = require("ssrf-guard/node").validateUrl;
 checkUrl = localCheckUrl;
@@ -267,6 +335,16 @@ ssrf.validateUrl(url);
 ssrf.validateUrl(url, { timeoutMs: 1 });
 `;
     assert.deepEqual(messages(code, RULE, ssrfOptions, "import-equals.ts"), ["missingOptions"]);
+  });
+
+  it("tracks object destructure from import-equals namespaces", () => {
+    const code = `import ssrf = require("ssrf-guard/node");
+const { validateUrl } = ssrf;
+validateUrl(url);
+`;
+    assert.deepEqual(messages(code, RULE, ssrfOptions, "import-equals-destructure.ts"), [
+      "missingOptions",
+    ]);
   });
 
   it("accepts expression-free template option keys", () => {
@@ -421,6 +499,34 @@ describe("require-options-on-imported-call helpers", () => {
         { propertyMatch: "all", requiredProperties: ["timeoutMs", "signal"] },
       ),
       true,
+    );
+  });
+
+  it("treats parameter, catch, and function-name defs as unstable", () => {
+    const { isReassigned, namespaceSourceFromInit } = require("../src/rules/async-target-bindings");
+    const id = { type: "Identifier", name: "validateUrl" };
+    function mockContext(variable) {
+      return {
+        sourceCode: {
+          getScope: () => ({ variables: variable ? [variable] : [], upper: null }),
+        },
+      };
+    }
+    assert.equal(isReassigned(id, mockContext(null)), false);
+    assert.equal(
+      isReassigned(
+        id,
+        mockContext({ name: "validateUrl", references: [], defs: [{ type: "FunctionName" }] }),
+      ),
+      true,
+    );
+    assert.equal(
+      namespaceSourceFromInit({ type: "Literal", value: "ssrf" }, mockContext(null), new Map()),
+      null,
+    );
+    assert.equal(
+      namespaceSourceFromInit({ type: "Identifier", name: "ssrf" }, mockContext(null), new Map()),
+      null,
     );
   });
 });

@@ -106,6 +106,19 @@ defaultedEnqueue("1");
     );
   });
 
+  it("ignores var bindings that also define parameters", () => {
+    const code = `function load(enqueueEmail) {
+  enqueueEmail("1");
+  var enqueueEmail = require("@app/jobs").enqueueEmail;
+  enqueueEmail("1");
+}
+`;
+    assert.deepEqual(
+      messages(code, "async-call-disposition", asyncTargetOptions, "param-var.ts"),
+      [],
+    );
+  });
+
   it("is a no-op without targets and ignores invalid regexes", () => {
     const code = ruleFixture("async-call-disposition", "invalid.ts");
     assert.deepEqual(messages(code, "async-call-disposition", undefined, "invalid.ts"), []);
