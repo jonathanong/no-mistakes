@@ -5,6 +5,12 @@ export function sleep() {
   wait(() => {}, 1);
 }
 
-export function timeoutCall(page: { waitForTimeout: (ms: number) => void }) {
+// Typed Playwright-style callback parameter: `terminal: waitForTimeout`
+// must report this direct call without a locally initialized receiver.
+test("timeout", async ({
+  page,
+}: {
+  page: { waitForTimeout: (ms: number) => void };
+}) => {
   page.waitForTimeout(1);
-}
+});

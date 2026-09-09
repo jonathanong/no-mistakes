@@ -496,3 +496,4 @@ mod file_bounded;
 mod glob;
 mod parse_errors;
 mod playwright;
+mod terminal;

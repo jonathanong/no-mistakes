@@ -76,7 +76,11 @@ fn terminal_name(site: &ResolvedCallSite) -> Option<&str> {
         ResolvedCallTarget::Global { name } => name.rsplit('.').next(),
         ResolvedCallTarget::ModuleExport { export_path, .. } => export_path.rsplit('.').next(),
         ResolvedCallTarget::RepositoryFunction { scope, .. } => scope.rsplit('/').next(),
-        ResolvedCallTarget::Unknown => None,
+        // Typed parameters and other unresolved member calls keep source spelling.
+        ResolvedCallTarget::Unknown => site
+            .source_callee
+            .rsplit_once('.')
+            .map(|(_, terminal)| terminal),
     }
 }
 fn describe_target(selector: &Target) -> String {
