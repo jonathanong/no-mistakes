@@ -32,6 +32,7 @@ test("timeout", async ({
 }) => {
   page.waitForTimeout(1);
   browser.waitForTimeout(1);
+  // Static computed access is a distinct call site from page.waitForTimeout().
   page["waitForTimeout"](1);
   factory().waitForTimeout(1);
   actor.run();
