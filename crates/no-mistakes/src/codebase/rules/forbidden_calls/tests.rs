@@ -344,6 +344,20 @@ fn construct_and_unknown_call_policies_are_explicit() {
 }
 
 #[test]
+fn exact_selectors_match_unknown_member_calls_before_ignore() {
+    let findings = coverage_findings(
+        "rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ function: { file: src/selectors.mts, symbol: timeoutCall } }]\n      unknownCalls: ignore\n      targets: [{ exact: page.waitForTimeout }]\n",
+    )
+    .unwrap();
+
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert!(
+        findings[0].message.contains("exact `page.waitForTimeout`"),
+        "{findings:#?}"
+    );
+}
+
+#[test]
 fn named_vitest_roots_use_the_prepared_catalog() {
     let findings = coverage_findings(
         "tests:\n  vitest:\n    configs: vitest.config.ts\nrules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ vitest: [unit] }]\n      targets: [{ global: setTimeout }]\n",

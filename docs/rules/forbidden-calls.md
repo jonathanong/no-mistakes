@@ -15,8 +15,10 @@ global is not mistaken for the global API.
 ## What it catches
 
 It reports selected call or constructor occurrences reachable from configured
-roots. A shadowed name, computed member, or unresolved dynamic call is not
-reported unless the application sets `unknownCalls: finding`.
+roots. `exact` selectors match the source callee spelling even when the call
+cannot be resolved canonically, so `exact: page.waitForTimeout` still reports
+`page.waitForTimeout()`. Other unresolved, shadowed, computed, or dynamic calls
+are not reported unless the application sets `unknownCalls: finding`.
 
 ## Options and roots
 
@@ -59,7 +61,9 @@ name, an imported module export, or a canonical repository function. Static
 named imports, aliases, re-exports, and static namespace members such as
 `import * as timers from "node:timers/promises"; timers.setTimeout()` are
 resolved. Use `function` when a repository target must remain stable through a
-barrel or import alias. Computed or dynamic calls are not guessed.
+barrel or import alias. Use `exact` for a source spelling that the graph records
+as unknown, such as an unresolved member call. Other computed or dynamic calls
+are not guessed.
 
 ## Valid example
 
@@ -85,9 +89,10 @@ rules:
 
 ## Unknown calls and suppression
 
-`unknownCalls: ignore` omits unresolved dynamic calls. `unknownCalls: finding`
-reports them as explicit policy findings. Configuration errors, such as an
-invalid root or selector, are never suppressible. Source findings honor ordinary
+`unknownCalls: ignore` omits unresolved dynamic calls that do not match an
+`exact` selector. `unknownCalls: finding` reports remaining unknown calls as
+explicit policy findings. Configuration errors, such as an invalid root or
+selector, are never suppressible. Source findings honor ordinary
 `no-mistakes-disable-file`, `no-mistakes-disable-line`, and
 `no-mistakes-disable-next-line` directives.
 

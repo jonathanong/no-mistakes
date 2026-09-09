@@ -79,6 +79,7 @@ fn reviewed_commands_and_rule_options_stay_accurate() {
             "integration-test-no-mocks.md",
             &[
                 "`forbiddenModules`",
+                "`forbiddenCalls`",
                 "[`forbidden-calls`](forbidden-calls.md)",
             ][..],
         ),

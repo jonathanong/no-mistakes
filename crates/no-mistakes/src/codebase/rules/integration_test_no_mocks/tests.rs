@@ -414,6 +414,7 @@ fn module_matches_ignore_closed_string_literals_before_real_imports() {
 fn custom_module_options_replace_defaults() {
     let opts = Options {
         forbidden_modules: vec!["wiremock".to_string()],
+        ..Default::default()
     };
     let compiled = compile_options(&opts).unwrap();
     let root = fixture("custom");
@@ -425,4 +426,26 @@ fn custom_module_options_replace_defaults() {
     assert!(findings
         .iter()
         .any(|finding| finding.import.as_deref() == Some("wiremock")));
+}
+
+#[test]
+fn rejects_legacy_forbidden_calls_option() {
+    let root = fixture("defaults");
+    let file = root.join("example.test.mts");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(crate::config::v2::schema::RuleScope::Repository),
+            options: serde_yaml::from_str("forbiddenCalls: [vi.mock]").unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+
+    let error = check_with_files(&root, &config, &[file]).unwrap_err();
+    let message = error.to_string();
+    assert!(
+        message.contains("forbiddenCalls") && message.contains("forbidden-calls"),
+        "{message}"
+    );
 }

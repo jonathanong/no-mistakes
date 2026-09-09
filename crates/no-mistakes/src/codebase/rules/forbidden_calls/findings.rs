@@ -30,13 +30,15 @@ fn target_label(
     targets: &[Target],
     unknown_calls: &UnknownCalls,
 ) -> Option<String> {
-    if matches!(site.target, ResolvedCallTarget::Unknown) {
-        return (unknown_calls == &UnknownCalls::Finding).then(|| "unknown call".to_string());
-    }
-    targets
+    if let Some(label) = targets
         .iter()
         .find(|target| target_matches(root, target, site))
         .map(describe_target)
+    {
+        return Some(label);
+    }
+    (matches!(site.target, ResolvedCallTarget::Unknown) && unknown_calls == &UnknownCalls::Finding)
+        .then(|| "unknown call".to_string())
 }
 fn target_matches(root: &Path, selector: &Target, site: &ResolvedCallSite) -> bool {
     match selector {

@@ -19,9 +19,11 @@ mod test_targets;
 const DEFAULT_FORBIDDEN_MODULES: &[&str] = &["msw", "nock", "sinon"];
 
 #[derive(Deserialize, Default)]
-#[serde(default, rename_all = "camelCase")]
+#[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(crate) struct Options {
     pub(crate) forbidden_modules: Vec<String>,
+    #[serde(default)]
+    forbidden_calls: Option<serde_yaml::Value>,
 }
 
 struct CompiledOptions {
@@ -48,6 +50,7 @@ pub(crate) fn check_with_files_and_sources(
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
+            reject_removed_call_options(&opts)?;
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
             let files = candidate_files(root, config, all_files, &skip, &target_roots, rule);
@@ -103,6 +106,15 @@ fn scan_with_sources(
         .collect();
     super::sort_findings(&mut findings);
     Ok(findings)
+}
+
+fn reject_removed_call_options(opts: &Options) -> Result<()> {
+    if opts.forbidden_calls.is_some() {
+        anyhow::bail!(
+            "integration-test-no-mocks no longer accepts `options.forbiddenCalls`; configure a `forbidden-calls` application for mock invocations such as `vi.mock` and `vi.spyOn`"
+        );
+    }
+    Ok(())
 }
 
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
