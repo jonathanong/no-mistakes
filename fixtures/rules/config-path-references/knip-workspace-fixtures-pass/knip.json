@@ -1,0 +1,10 @@
+{
+  "workspaces": {
+    "backend/dependency-cruiser-rules": {
+      "entry": [
+        "__tests__/fixtures/**/*.mts",
+        "__tests__/fixtures/build-insert-query/direct-import.mts"
+      ]
+    }
+  }
+}

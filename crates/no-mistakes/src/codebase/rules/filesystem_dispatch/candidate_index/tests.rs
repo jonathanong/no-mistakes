@@ -525,3 +525,5 @@ fn project_scoped_tsconfig_file_coverage_keeps_repository_inventory_tsconfig() {
         std::slice::from_ref(&source)
     );
 }
+
+mod config_path_inventory;

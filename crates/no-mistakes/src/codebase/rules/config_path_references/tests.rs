@@ -476,4 +476,5 @@ fn presets_pass_when_required_paths_exist() {
     assert!(findings.is_empty(), "unexpected findings: {findings:?}");
 }
 
+mod knip_fixtures;
 mod preset_paths;

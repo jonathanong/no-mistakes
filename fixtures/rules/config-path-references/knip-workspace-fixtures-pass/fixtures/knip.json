@@ -1,0 +1,7 @@
+{
+  "workspaces": {
+    ".": {
+      "entry": "missing-from-skipped-knip.ts"
+    }
+  }
+}

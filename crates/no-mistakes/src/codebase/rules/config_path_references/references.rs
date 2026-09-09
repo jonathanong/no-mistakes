@@ -28,6 +28,21 @@ pub(super) fn reference_exists(
     Ok(false)
 }
 
+pub(super) fn existence_candidates(
+    all_files: &[PathBuf],
+    target_roots: &[PathBuf],
+) -> Vec<PathBuf> {
+    all_files
+        .iter()
+        .filter(|path| {
+            target_roots
+                .iter()
+                .any(|rule_root| path.starts_with(rule_root))
+        })
+        .cloned()
+        .collect()
+}
+
 fn tracked_reference_exists(root: &Path, target: &Path, rel_files: &[String]) -> bool {
     let rel = relative_slash_path(root, target);
     let rel = rel.trim_start_matches("./").trim_end_matches('/');

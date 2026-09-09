@@ -13,6 +13,7 @@ filesystem:
 Filesystem rules build one discovery snapshot and reuse its file inventories
 across enabled rules. Most rules use the general Git-visible inventory, which
 contains tracked files and visible untracked files. Repository-state rules such
-as `banned-paths` use the snapshot's tracked-only inventory inside a Git
-worktree. Outside Git, they use the ignore-aware visible inventory as a
-fallback.
+as `banned-paths`, and path-existence checks such as `config-path-references`,
+use the snapshot's tracked-only inventory inside a Git worktree, including
+tracked files under source skip directories. Outside Git, they use the
+ignore-aware visible inventory as a fallback.

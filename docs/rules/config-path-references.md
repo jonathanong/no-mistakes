@@ -13,7 +13,12 @@ continue to resolve as a repository evolves.
 ## What it catches
 
 It catches missing literal paths, unmatched required globs, invalid structured
-config, and stale paths extracted by the selected built-in presets.
+config, and stale paths extracted by the selected built-in presets. In a Git
+worktree, existence is checked against the request's tracked inventory,
+including files under built-in source skip directories such as `fixtures/`;
+untracked files do not satisfy a reference. Outside Git, the rule uses the
+ignore-aware visible inventory. Preset configs under those skip directories are
+not scanned.
 
 ## Options
 

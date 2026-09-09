@@ -45,6 +45,7 @@ fn reports_busy_when_another_holder_owns_the_lock() {
     let busy = acquire_planning_artifact_lock_impl(&lock_path).unwrap_err();
     assert_eq!(busy.kind(), std::io::ErrorKind::WouldBlock);
     assert!(busy.to_string().contains("planning artifact lock is busy"));
+    unlock_planning_artifact_lock_impl(&first).unwrap();
     drop(first);
     let second = acquire_planning_artifact_lock_impl(&lock_path).unwrap();
     unlock_planning_artifact_lock_impl(&second).unwrap();
