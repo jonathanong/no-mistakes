@@ -35,6 +35,7 @@ fn visit_variable_declarator_with_scope<'a>(
                         local: self_name,
                         target: collector.current_function().expect("named function scope"),
                         binding_scope: collector.current_lexical_scope_id(),
+                        invalidated_at: None,
                     },
                     lexical_scope_depth: collector.local_stack.len() - 1,
                 });

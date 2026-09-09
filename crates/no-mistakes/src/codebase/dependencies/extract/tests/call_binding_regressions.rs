@@ -307,17 +307,14 @@ fn callable_alias_invalidation_tracks_destructuring_targets_and_lexical_bindings
             && alias.local == "alias"
             && alias.target == "target"
     }));
-    assert!(!facts
-        .callable_aliases
-        .iter()
-        .any(|alias| { alias.scope.as_deref() == Some("outer/inner") && alias.local == "alias" }));
-    assert!(
-        !facts
-            .callable_aliases
-            .iter()
-            .any(|alias| alias.scope.is_none() && alias.local == "moduleAlias"),
-        "object destructuring assignment must invalidate a module alias"
-    );
+    assert!(facts.callable_aliases.iter().any(|alias| {
+        alias.scope.as_deref() == Some("outer/inner")
+            && alias.local == "alias"
+            && alias.invalidated_at.is_some()
+    }));
+    assert!(facts.callable_aliases.iter().any(|alias| {
+        alias.scope.is_none() && alias.local == "moduleAlias" && alias.invalidated_at.is_some()
+    }));
 }
 
 #[test]
@@ -339,10 +336,11 @@ fn callable_alias_invalidation_handles_object_property_defaults_and_ignores_memb
 
     for invalidated in ["shorthand", "renamed", "fallback", "rest"] {
         assert!(
-            !facts
-                .callable_aliases
-                .iter()
-                .any(|alias| alias.scope.is_none() && alias.local == invalidated),
+            facts.callable_aliases.iter().any(|alias| {
+                alias.scope.is_none()
+                    && alias.local == invalidated
+                    && alias.invalidated_at.is_some()
+            }),
             "object assignment must invalidate {invalidated}"
         );
     }

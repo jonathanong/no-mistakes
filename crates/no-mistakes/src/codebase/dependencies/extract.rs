@@ -15,7 +15,7 @@ use oxc_ast::ast::{
     VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
-use oxc_span::SourceType;
+use oxc_span::{GetSpan, SourceType};
 use std::collections::{HashMap, HashSet};
 use std::path::Path;
 
@@ -157,8 +157,8 @@ pub struct ExportedBinding {
 
 /// An immutable local value alias whose initializer is a statically named
 /// callable. The scope is the lexical function owner, or `None` for module
-/// bindings. Mutable declarations and bindings observed on an assignment LHS
-/// are deliberately omitted so call resolution never guesses their value.
+/// bindings. A later assignment retains the alias only for source positions
+/// before its invalidation cutoff.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct CallableAlias {
     pub scope: Option<String>,
@@ -167,6 +167,10 @@ pub struct CallableAlias {
     pub target: String,
     /// The lexical binding identity of `local`.
     pub binding_scope: usize,
+    /// Byte offset where an assignment invalidates this otherwise immutable
+    /// alias. Calls before that source position still have the original
+    /// target; later calls must not resolve through it.
+    pub invalidated_at: Option<u32>,
 }
 
 /// Private binding identity used while extracting callable aliases. Public

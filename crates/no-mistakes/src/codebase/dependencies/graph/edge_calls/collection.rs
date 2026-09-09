@@ -21,31 +21,20 @@ fn collect_call_edges_for_core(
             let call_offsets = file
                 .function_calls
                 .iter()
-                .filter(|call| {
-                    call.invocation
-                        != crate::codebase::dependencies::extract::InvocationKind::Membership
-                        && !(call.is_callback
-                            && call.invocation
-                                == crate::codebase::dependencies::extract::InvocationKind::Construct)
-                })
+                .filter(|call| is_traversable_call(&index, call))
                 .map(|call| (call.caller_id, call.offset, call.invocation))
                 .collect::<std::collections::HashSet<_>>();
             let mut sites = file
                 .function_calls
                 .iter()
-                .filter(|call| {
-                    call.invocation
-                        != crate::codebase::dependencies::extract::InvocationKind::Membership
-                        && !(call.is_callback
-                            && call.invocation
-                                == crate::codebase::dependencies::extract::InvocationKind::Construct)
-                })
+                .filter(|call| is_traversable_call(&index, call))
                 .map(|call| {
                     let resolved_callee = index
                         .resolve_alias(
                             call.caller.as_deref(),
                             call.callee_binding_scope,
                             &call.callee,
+                            call.offset,
                         )
                         .or_else(|| {
                             (call.target_identity
@@ -62,6 +51,12 @@ fn collect_call_edges_for_core(
                             callee: call.callee.clone(),
                             callable_id: None,
                         });
+                    let callable_id = resolved_callee.callable_id.or_else(|| {
+                        index.resolve_local_callable_id(
+                            call.callee_binding_scope,
+                            &resolved_callee.callee,
+                        )
+                    });
                     let target_identity = call_target_identity(&index, call, &resolved_callee.callee);
                     let target = match target_identity {
                         crate::codebase::dependencies::extract::CallTargetIdentity::RepositoryFunction => {
@@ -115,7 +110,7 @@ fn collect_call_edges_for_core(
                                 facts,
                                 file,
                                 scope,
-                                resolved_callee.callable_id,
+                                callable_id,
                             ),
                             EdgeKind::Call,
                         )),

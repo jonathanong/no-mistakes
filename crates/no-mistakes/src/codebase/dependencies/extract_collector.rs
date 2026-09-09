@@ -19,6 +19,7 @@ struct ImportCollector {
     /// graph edges.
     aggregate_callable_member_ids: HashSet<(CallableId, String, CallableId)>,
     static_getter_member_ids: HashSet<(CallableId, String)>,
+    static_setter_member_ids: HashSet<(CallableId, String)>,
     syntactic_caller_stack: Vec<String>,
     local_stack: Vec<HashSet<String>>,
     /// Stable identities parallel to `local_stack`. Scope depth alone is not
@@ -50,7 +51,6 @@ struct ImportCollector {
     call_import_bindings: Vec<ImportedBinding>,
     call_export_bindings: Vec<ExportedBinding>,
     callable_aliases: Vec<CallableAliasBinding>,
-    reassigned_alias_bindings: HashSet<CallableAliasBinding>,
     callable_binding_ids: HashSet<(usize, String)>,
     callable_bindings: HashMap<(usize, String), CallableId>,
     reassigned_callable_binding_ids: HashSet<(usize, String)>,

@@ -58,12 +58,14 @@ fn call_resolution_inputs<'a>(
     }
 }
 
-#[path = "call_traversal/export_resolution.rs"]
-mod export_resolution;
-#[path = "call_traversal/resolution.rs"]
-mod resolution;
 #[path = "call_traversal/callable_aliases.rs"]
 mod callable_aliases;
+#[path = "call_traversal/export_resolution.rs"]
+mod export_resolution;
+#[path = "call_traversal/lexical_callable_ids.rs"]
+mod lexical_callable_ids;
+#[path = "call_traversal/resolution.rs"]
+mod resolution;
 
 #[test]
 fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
@@ -94,13 +96,15 @@ fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
         "cycleA"
     )));
 
-    assert!(graph
-        .call_traces(
-            std::slice::from_ref(&entry_root),
-            CallTraversal::Transitive,
-            Some(0)
-        )
-        .is_empty());
+    assert!(
+        graph
+            .call_traces(
+                std::slice::from_ref(&entry_root),
+                CallTraversal::Transitive,
+                Some(0)
+            )
+            .is_empty()
+    );
     let depth_one = graph.call_traces(
         std::slice::from_ref(&entry_root),
         CallTraversal::Transitive,
@@ -123,17 +127,21 @@ fn call_traversal_has_direct_file_and_transitive_depth_boundaries() {
 
     // A file traversal is deliberately a same-source-file layer, even when
     // the root function calls imported functions.
-    assert!(graph
-        .call_traces(
-            &[symbol(&root.join("src/local.mts"), "first")],
-            CallTraversal::File,
-            None,
-        )
-        .iter()
-        .all(|trace| trace.target.as_file() == Some(root.join("src/local.mts").as_path())));
-    assert!(graph
-        .call_traces(&[symbol(&entry, "entry")], CallTraversal::File, None)
-        .is_empty());
+    assert!(
+        graph
+            .call_traces(
+                &[symbol(&root.join("src/local.mts"), "first")],
+                CallTraversal::File,
+                None,
+            )
+            .iter()
+            .all(|trace| trace.target.as_file() == Some(root.join("src/local.mts").as_path()))
+    );
+    assert!(
+        graph
+            .call_traces(&[symbol(&entry, "entry")], CallTraversal::File, None)
+            .is_empty()
+    );
 }
 
 #[test]
@@ -206,9 +214,11 @@ fn call_traversal_uses_deterministic_shortest_diamond_paths_and_terminates_cycle
             "cycle-{}.mts",
             name.trim_start_matches("cycle").to_ascii_lowercase()
         ));
-        assert!(traces
-            .iter()
-            .any(|trace| has_symbol(&trace.target, &path, name)));
+        assert!(
+            traces
+                .iter()
+                .any(|trace| has_symbol(&trace.target, &path, name))
+        );
     }
     assert!(
         traces.len() < 20,
@@ -229,25 +239,33 @@ fn call_roots_are_pure_and_retain_leaf_and_global_only_callables() {
     assert!(!roots.contains(&symbol(&root.join("src/cycle-a.mts"), "cycleA")));
 
     let global_file = root.join("src/global-only.mts");
-    assert!(graph
-        .expand_call_roots(&[CallRoot::File(global_file.clone())])
-        .iter()
-        .any(|node| has_symbol(node, &global_file, "globalOnly")));
-    assert!(graph
-        .expand_call_roots(&[CallRoot::Module(global_file.clone())])
-        .contains(&NodeId::file(&global_file)));
-    assert!(graph
-        .expand_call_roots(&[CallRoot::Function {
-            file: global_file.clone(),
-            symbol: "notDefined".to_string(),
-        }])
-        .is_empty());
+    assert!(
+        graph
+            .expand_call_roots(&[CallRoot::File(global_file.clone())])
+            .iter()
+            .any(|node| has_symbol(node, &global_file, "globalOnly"))
+    );
+    assert!(
+        graph
+            .expand_call_roots(&[CallRoot::Module(global_file.clone())])
+            .contains(&NodeId::file(&global_file))
+    );
+    assert!(
+        graph
+            .expand_call_roots(&[CallRoot::Function {
+                file: global_file.clone(),
+                symbol: "notDefined".to_string(),
+            }])
+            .is_empty()
+    );
 
     let unknown_file = root.join("src/unknown.mts");
     let unknown_root = symbol(&unknown_file, "unknown");
-    assert!(graph
-        .call_traces(&[unknown_root], CallTraversal::Transitive, None)
-        .is_empty());
+    assert!(
+        graph
+            .call_traces(&[unknown_root], CallTraversal::Transitive, None)
+            .is_empty()
+    );
     assert!(graph.resolved_call_sites().iter().any(|site| {
         site.file == unknown_file
             && site.source_callee == "globalThis.setTimeout"
@@ -343,7 +361,10 @@ fn exported_function_roots_follow_named_reexport_barrels() {
         .find(|binding| binding.exported == "reexportedTarget")
         .unwrap_or_else(|| panic!("named re-export must be extracted: {bindings:#?}"));
     assert_eq!(binding.local, "public");
-    assert_eq!(binding.specifier.as_deref(), Some("./unreferenced-export.mts"));
+    assert_eq!(
+        binding.specifier.as_deref(),
+        Some("./unreferenced-export.mts")
+    );
     let roots = graph.expand_call_roots(&[CallRoot::Function {
         file: barrel,
         symbol: "reexportedTarget".to_string(),

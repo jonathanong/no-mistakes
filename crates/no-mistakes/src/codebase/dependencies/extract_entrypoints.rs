@@ -105,7 +105,6 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     let callable_aliases = collector
         .callable_aliases
         .into_iter()
-        .filter(|binding| !collector.reassigned_alias_bindings.contains(binding))
         .map(|binding| binding.alias)
         .collect();
     let exported_type_scopes = collector.exported_type_scopes;

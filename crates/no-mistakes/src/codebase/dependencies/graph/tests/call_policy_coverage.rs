@@ -44,9 +44,10 @@ fn callable_alias_resolution_uses_the_callee_binding_scope() {
         known_scopes: HashSet::from(["target".to_string()]),
         exported_scopes: HashSet::new(),
         class_scopes: HashSet::new(),
+        callable_bindings: HashMap::new(),
         imported: HashMap::new(),
         exported: HashMap::new(),
-        aliases: HashMap::from([((0, "alias".to_string()), "target".to_string())]),
+        aliases: HashMap::from([((0, "alias".to_string()), ("target".to_string(), None))]),
         class_bindings: HashMap::new(),
         lexical_scope_parents: HashMap::from([(0, None), (1, Some(0))]),
         stars: Vec::new(),
@@ -54,12 +55,12 @@ fn callable_alias_resolution_uses_the_callee_binding_scope() {
 
     assert_eq!(
         index
-            .resolve_alias(Some("outer/inner"), Some(0), "alias")
+            .resolve_alias(Some("outer/inner"), Some(0), "alias", 0)
             .map(|resolved| resolved.callee),
         Some("target".to_string()),
     );
     assert_eq!(
-        index.resolve_alias(Some("outer/inner"), Some(1), "alias"),
+        index.resolve_alias(Some("outer/inner"), Some(1), "alias", 0),
         None,
         "a block-local shadow must not resolve an outer alias",
     );
@@ -76,6 +77,7 @@ fn callable_alias_resolution_reaches_module_scope_from_outermost_function() {
             local: "moduleAlias".to_string(),
             target: "target".to_string(),
             binding_scope: 0,
+            invalidated_at: None,
         }],
         function_calls: vec![
             FunctionCall {
@@ -123,17 +125,13 @@ fn callable_alias_resolution_reaches_module_scope_from_outermost_function() {
     };
 
     assert_eq!(
-        resolve_callable_alias(
-            &facts,
-            Some(crate::codebase::dependencies::extract::CallableId(1)),
-            Some(0),
-            Some("run"),
-            "moduleAlias",
-        ),
+        resolve_callable_alias(&facts, &facts.function_calls[1]),
         Some("target".to_string()),
     );
-    assert!(reachable_function_scopes(&facts)
-        .contains(&crate::codebase::dependencies::extract::CallableId(2)));
+    assert!(
+        reachable_function_scopes(&facts)
+            .contains(&crate::codebase::dependencies::extract::CallableId(2))
+    );
 }
 
 #[test]

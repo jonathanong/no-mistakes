@@ -38,6 +38,15 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
         }
     } else if let Some(callee) = simple_callee_name(&call.callee) {
         if collector.should_record_call(&callee) {
+            if is_static_getter(collector, &callee) {
+                collector.record_unknown_call(
+                    import_line_at(&collector.line_starts, call.span.start as usize),
+                    call.span.start,
+                    InvocationKind::Call,
+                );
+                record_callable_argument_transitions(collector, call);
+                return;
+            }
             let target_identity = collector.call_target_identity(&callee);
             let callee_binding_scope = collector.callee_binding_scope(&callee);
             collector.function_calls.push(FunctionCall {

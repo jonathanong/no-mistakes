@@ -73,7 +73,7 @@ fn invalidate_for_statement_assignment_target(
         return;
     };
     for name in assignment_target_names(target) {
-        collector.record_reassigned_callable_alias(&name);
+        collector.record_reassigned_callable_alias(&name, target.span().start);
     }
 }
 

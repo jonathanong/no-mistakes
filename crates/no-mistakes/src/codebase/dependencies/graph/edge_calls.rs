@@ -9,11 +9,15 @@ struct CallableFileIndex {
     known_scopes: std::collections::HashSet<String>,
     exported_scopes: std::collections::HashSet<String>,
     class_scopes: std::collections::HashSet<String>,
+    callable_bindings: std::collections::HashMap<
+        (usize, String),
+        crate::codebase::dependencies::extract::CallableId,
+    >,
     imported:
         std::collections::HashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
     exported:
         std::collections::HashMap<String, crate::codebase::dependencies::extract::ExportedBinding>,
-    aliases: std::collections::HashMap<(usize, String), String>,
+    aliases: std::collections::HashMap<(usize, String), (String, Option<u32>)>,
     /// Class bindings resolve to their internal class scope and exact parser
     /// identity. A display scope can repeat in sibling blocks.
     class_bindings: std::collections::HashMap<(usize, String), ClassBindingTarget>,
@@ -25,7 +29,8 @@ struct CallableFileIndex {
 struct ClassBindingTarget {
     scope: String,
     class_id: crate::codebase::dependencies::extract::CallableId,
-    static_member_ids: std::collections::HashMap<String, crate::codebase::dependencies::extract::CallableId>,
+    static_member_ids:
+        std::collections::HashMap<String, crate::codebase::dependencies::extract::CallableId>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -46,6 +51,11 @@ impl CallableFileIndex {
             known_scopes: file.callable_scopes.iter().cloned().collect(),
             exported_scopes: file.exported_functions.iter().cloned().collect(),
             class_scopes: file.class_scopes.iter().cloned().collect(),
+            callable_bindings: file
+                .callable_bindings
+                .iter()
+                .map(|(scope, binding, id)| ((*scope, binding.clone()), *id))
+                .collect(),
             imported: file
                 .imported_bindings
                 .iter()
@@ -63,7 +73,7 @@ impl CallableFileIndex {
                 .map(|alias| {
                     (
                         (alias.binding_scope, alias.local.clone()),
-                        alias.target.clone(),
+                        (alias.target.clone(), alias.invalidated_at),
                     )
                 })
                 .collect(),
@@ -71,21 +81,22 @@ impl CallableFileIndex {
                 .callable_bindings
                 .iter()
                 .filter_map(|(scope, binding, id)| {
-                    class_scope_by_id
-                        .get(id)
-                        .map(|class_scope| {
-                            let static_member_ids = file
-                                .class_member_callable_ids
-                                .iter()
-                                .filter(|(candidate_class_id, _, _)| *candidate_class_id == *id)
-                                .map(|(_, member, member_id)| (member.clone(), *member_id))
-                                .collect();
-                            ((*scope, binding.clone()), ClassBindingTarget {
+                    class_scope_by_id.get(id).map(|class_scope| {
+                        let static_member_ids = file
+                            .class_member_callable_ids
+                            .iter()
+                            .filter(|(candidate_class_id, _, _)| *candidate_class_id == *id)
+                            .map(|(_, member, member_id)| (member.clone(), *member_id))
+                            .collect();
+                        (
+                            (*scope, binding.clone()),
+                            ClassBindingTarget {
                                 scope: class_scope.clone(),
                                 class_id: *id,
                                 static_member_ids,
-                            })
-                        })
+                            },
+                        )
+                    })
                 })
                 .collect(),
             lexical_scope_parents: file.lexical_scope_parents.iter().copied().collect(),
@@ -93,7 +104,11 @@ impl CallableFileIndex {
         }
     }
 
-    fn resolve_class_binding(&self, binding_scope: Option<usize>, callee: &str) -> Option<ResolvedLocalCallee> {
+    fn resolve_class_binding(
+        &self,
+        binding_scope: Option<usize>,
+        callee: &str,
+    ) -> Option<ResolvedLocalCallee> {
         let binding_scope = binding_scope?;
         let (binding, member) = callee
             .split_once('.')
@@ -113,10 +128,10 @@ impl CallableFileIndex {
             callable_id: Some(callable_id),
         })
     }
-
 }
 
 include!("edge_calls/alias_resolution.rs");
+include!("edge_calls/traversal_filter.rs");
 
 #[derive(Clone, Default)]
 struct CallableResolutionIndexes {

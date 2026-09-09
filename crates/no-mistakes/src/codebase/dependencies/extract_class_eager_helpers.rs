@@ -42,6 +42,10 @@ fn walk_class_with_scoped_methods<'a>(
                         collector
                             .static_getter_member_ids
                             .insert((class_id, name.to_string()));
+                    } else if method.kind == MethodDefinitionKind::Set {
+                        collector
+                            .static_setter_member_ids
+                            .insert((class_id, name.to_string()));
                     }
                 }
             }

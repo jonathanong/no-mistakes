@@ -108,10 +108,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
-        for name in assignment_target_names(&assignment.left) {
-            self.record_reassigned_callable_alias(&name);
-        }
-        walk::walk_assignment_expression(self, assignment);
+        visit_assignment_expression_with_calls(self, assignment);
     }
 
     fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {

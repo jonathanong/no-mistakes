@@ -11,12 +11,16 @@ fn destructured_callable_aliases_resolve_to_their_source_functions() {
     );
 
     assert_eq!(targets.len(), 2);
-    assert!(targets
-        .iter()
-        .any(|target| has_symbol(&target.target, &file, "objectTarget")));
-    assert!(targets
-        .iter()
-        .any(|target| has_symbol(&target.target, &file, "arrayTarget")));
+    assert!(
+        targets
+            .iter()
+            .any(|target| has_symbol(&target.target, &file, "objectTarget"))
+    );
+    assert!(
+        targets
+            .iter()
+            .any(|target| has_symbol(&target.target, &file, "arrayTarget"))
+    );
 }
 
 #[test]

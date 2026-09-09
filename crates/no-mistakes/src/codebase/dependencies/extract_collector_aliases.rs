@@ -94,12 +94,13 @@ impl ImportCollector {
                 local,
                 target,
                 binding_scope: self.current_lexical_scope_id(),
+                invalidated_at: None,
             },
             lexical_scope_depth: self.local_stack.len() - 1,
         });
     }
 
-    fn record_reassigned_callable_alias(&mut self, name: &str) {
+    fn record_reassigned_callable_alias(&mut self, name: &str, offset: u32) {
         let binding_name = name.split_once('.').map_or(name, |(binding, _)| binding);
         let Some((lexical_scope_depth, binding_scope)) = self
             .local_stack
@@ -111,15 +112,13 @@ impl ImportCollector {
         };
         self.reassigned_callable_binding_ids
             .insert((binding_scope, name.to_string()));
-        self.reassigned_alias_bindings.extend(
-            self.callable_aliases
-                .iter()
-                .filter(|binding| {
-                    binding.alias.local == name
-                        && binding.alias.binding_scope == binding_scope
-                        && binding.lexical_scope_depth == lexical_scope_depth
-                })
-                .cloned(),
-        );
+        for alias in &mut self.callable_aliases {
+            if alias.alias.local == name
+                && alias.alias.binding_scope == binding_scope
+                && alias.lexical_scope_depth == lexical_scope_depth
+            {
+                alias.alias.invalidated_at.get_or_insert(offset);
+            }
+        }
     }
 }

@@ -1,4 +1,22 @@
 impl CallableFileIndex {
+    fn resolve_local_callable_id(
+        &self,
+        mut binding_scope: Option<usize>,
+        callee: &str,
+    ) -> Option<crate::codebase::dependencies::extract::CallableId> {
+        let binding = callee.rsplit('/').next()?;
+        if binding.contains('.') {
+            return None;
+        }
+        while let Some(scope) = binding_scope {
+            if let Some(id) = self.callable_bindings.get(&(scope, binding.to_string())) {
+                return Some(*id);
+            }
+            binding_scope = self.lexical_scope_parents.get(&scope).copied().flatten();
+        }
+        None
+    }
+
     fn resolve_class_binding_in_scope_chain(
         &self,
         mut binding_scope: usize,
@@ -21,11 +39,16 @@ impl CallableFileIndex {
         caller: Option<&str>,
         binding_scope: Option<usize>,
         callee: &str,
+        offset: u32,
     ) -> Option<ResolvedLocalCallee> {
         let mut binding_scope = binding_scope?;
         let mut visited = std::collections::HashSet::new();
         if callee.contains('.') {
-            if let Some(target) = self.aliases.get(&(binding_scope, callee.to_string())) {
+            if let Some((target, _)) = self
+                .aliases
+                .get(&(binding_scope, callee.to_string()))
+                .filter(|(_, invalidated_at)| invalidated_at.is_none_or(|cutoff| offset < cutoff))
+            {
                 return Some(ResolvedLocalCallee {
                     callee: target.clone(),
                     callable_id: None,
@@ -43,7 +66,13 @@ impl CallableFileIndex {
                 let Some(candidate_scope) = scope else {
                     break None;
                 };
-                if let Some(alias) = self.aliases.get(&(candidate_scope, target.clone())) {
+                if let Some((alias, _)) = self
+                    .aliases
+                    .get(&(candidate_scope, target.clone()))
+                    .filter(|(_, invalidated_at)| {
+                        invalidated_at.is_none_or(|cutoff| offset < cutoff)
+                    })
+                {
                     break Some((candidate_scope, alias));
                 }
                 if !resolved_alias {
@@ -62,8 +91,8 @@ impl CallableFileIndex {
                 }
                 resolved_alias = true;
                 target = alias.clone();
-                let class_target = member
-                    .map_or_else(|| target.clone(), |member| format!("{target}.{member}"));
+                let class_target =
+                    member.map_or_else(|| target.clone(), |member| format!("{target}.{member}"));
                 if let Some(class_scope) =
                     self.resolve_class_binding_in_scope_chain(alias_scope, &class_target)
                 {

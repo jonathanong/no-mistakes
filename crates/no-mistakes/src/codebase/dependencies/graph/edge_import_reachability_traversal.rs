@@ -85,10 +85,7 @@ fn reachable_callee_scope(
     // target has been visited, but only resolution proves which function runs.
     if let Some(resolved) = resolve_callable_alias(
         facts,
-        call.caller_id,
-        call.callee_binding_scope,
-        call.caller.as_deref(),
-        &call.callee,
+        call,
     ) {
         let scope = resolve_callee_scope(call.caller.as_deref(), &resolved, known_scopes);
         if known_scopes.contains(&scope) {
@@ -134,15 +131,13 @@ fn callable_id_for_scope(
 
 fn resolve_callable_alias(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
-    _caller_id: Option<crate::codebase::dependencies::extract::CallableId>,
-    callee_binding_scope: Option<usize>,
-    _caller: Option<&str>,
-    callee: &str,
+    call: &FunctionCall,
 ) -> Option<String> {
+    let callee = &call.callee;
     if callee.contains('.') {
         return None;
     }
-    let mut binding_scope = callee_binding_scope?;
+    let mut binding_scope = call.callee_binding_scope?;
     let parents: HashMap<_, _> = facts.lexical_scope_parents.iter().copied().collect();
     let mut target = callee.to_string();
     let mut resolved_alias = false;
@@ -152,7 +147,9 @@ fn resolve_callable_alias(
         let alias = loop {
             let Some(candidate_scope) = scope else { break None };
             if let Some(alias) = facts.callable_aliases.iter().find(|alias| {
-                alias.binding_scope == candidate_scope && alias.local == target
+                alias.binding_scope == candidate_scope
+                    && alias.local == target
+                    && alias.invalidated_at.is_none_or(|offset| call.offset < offset)
             }) {
                 break Some(alias);
             }

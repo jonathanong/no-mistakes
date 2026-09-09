@@ -212,14 +212,45 @@ fn local_class_members_are_callable_through_the_class_binding() {
 }
 
 #[test]
-fn static_getter_reads_are_callable_invocations() {
+fn static_getter_reads_are_recorded_separately_from_return_value_calls() {
     let facts = facts(
-        "class Service { static get value() { return 1; } } function run() { return Service.value; }",
+        "class Service { static get value() { return () => {}; } } function run() { Service.value(); }",
     );
     assert!(facts.function_calls.iter().any(|call| {
         call.caller.as_deref() == Some("run")
             && call.callee == "Service.value"
             && call.invocation == InvocationKind::Call
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts.unknown_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run") && call.invocation == InvocationKind::Call
+    }));
+    assert_eq!(
+        facts
+            .function_calls
+            .iter()
+            .filter(|call| {
+                call.caller.as_deref() == Some("run") && call.callee == "Service.value"
+            })
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn static_setter_assignment_invokes_the_setter_without_invalidating_it() {
+    let facts = facts(
+        "class Service { static set value(next) {} } function run() { Service.value = 1; Service.value = 2; }",
+    );
+    let setter_calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.caller.as_deref() == Some("run") && call.callee == "Service.value")
+        .collect();
+
+    assert_eq!(setter_calls.len(), 2);
+    assert!(setter_calls.iter().all(|call| {
+        call.invocation == InvocationKind::Call
             && call.target_identity == CallTargetIdentity::RepositoryFunction
     }));
 }
