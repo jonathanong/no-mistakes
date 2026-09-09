@@ -333,6 +333,9 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   `FILE#SYMBOL` call queries start from the selected callable rather than the
   file root, so unrelated top-level calls in that file stay out of the
   projection; file-level call queries still include those sites.
+  Constructor calls propagate statically named callable arguments with the same
+  callback-transition model as ordinary calls, so `new Service(target)` keeps
+  `target` reachable; reassigned and dynamic arguments stay unresolved.
   Call edges and that reachability pass share one per-file `CallableFileIndex`:
   aliases and callable bindings are indexed by lexical `(binding scope, local
   name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
