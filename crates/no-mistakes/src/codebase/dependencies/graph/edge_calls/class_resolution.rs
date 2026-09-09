@@ -45,6 +45,9 @@ impl CallableFileIndex {
             if let Some(member_id) = static_member_id(scope, member, invocation) {
                 return Some((scope, member_id));
             }
+            if accessor_kind(invocation) && has_own_static_descriptor(scope, member) {
+                return None;
+            }
             let base = scope.local_base.as_ref()?;
             let mut lexical_scope = Some(binding_scope);
             let base_scope = loop {
@@ -76,4 +79,14 @@ fn static_member_id(
         InvocationKind::Set => scope.static_setter_ids.get(member).copied(),
         _ => scope.static_member_ids.get(member).copied(),
     }
+}
+
+fn accessor_kind(invocation: InvocationKind) -> bool {
+    matches!(invocation, InvocationKind::Get | InvocationKind::Set)
+}
+
+fn has_own_static_descriptor(scope: &ClassBindingTarget, member: &str) -> bool {
+    scope.static_member_ids.contains_key(member)
+        || scope.static_getter_ids.contains_key(member)
+        || scope.static_setter_ids.contains_key(member)
 }

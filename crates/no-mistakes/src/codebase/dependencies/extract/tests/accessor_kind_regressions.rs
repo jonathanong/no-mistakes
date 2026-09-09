@@ -62,3 +62,20 @@ fn static_accessors_keep_kind_specific_collector_maps() {
         "static setters must nest by owner so paired accessors keep distinct identities"
     );
 }
+
+#[test]
+fn computed_assignment_keys_still_read_static_getters() {
+    let facts = facts(
+        "class Registry { static get value() {} static set value(next) {} } const target = {}; function run() { target[Registry.value] = 1; }",
+    );
+    assert!(facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "Registry.value"
+            && call.invocation == InvocationKind::Get
+    }));
+    assert!(!facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "Registry.value"
+            && call.invocation == InvocationKind::Set
+    }));
+}

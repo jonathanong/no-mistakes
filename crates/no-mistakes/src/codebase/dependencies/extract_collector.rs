@@ -87,7 +87,6 @@ struct ImportCollector {
     /// call-scope reachability so they are not falsely kept.
     runtime_reachable_base_depth: Option<usize>,
     later_exported_type_names: FxHashSet<String>,
-    suppress_static_getter_reads: bool,
 }
 
 include!("extract_collector_maps.rs");
