@@ -92,7 +92,10 @@ call site.
 Supported argument shapes:
 
 - string literals
-- tagged templates (`sql\`SELECT ...\``)
+- tagged templates, such as a `sql` tag applied to a template literal. The trusted tag is an identifier
+  spelled `sql` (case-insensitive) that is not lexically shadowed, or a
+  default import from `sql-template-strings` under any local name. Other
+  `sql`-named imports, including `import * as sql`, remain untrusted shadows.
 - template literals
 - identifiers bound in scope (`const q = \`SELECT ...\`; query(q)`)
 
