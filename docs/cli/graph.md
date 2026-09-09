@@ -30,7 +30,10 @@ such as `import * as api from "./api"; api.run()`, and explicit named re-exports
 `--depth 1` is the direct-call boundary and `--depth 0` returns no related
 nodes. Computed members, dynamic callees, globals, and ambiguous re-exports
 remain unconnected because terminal-name matching would create unsound edges.
-The call relationship is opt-in and is never added by `all`.
+`FILE#SYMBOL` call queries start at the selected callable rather than the file
+root, so unrelated top-level calls in that file are omitted. File-level call
+queries still include those top-level sites. The call relationship is opt-in
+and is never added by `all`.
 
 `workflow` adds canonical GitHub Actions edges: workflow file -> virtual job ->
 virtual step, `needs`, local `uses`, literal `run:` targets, and same-run

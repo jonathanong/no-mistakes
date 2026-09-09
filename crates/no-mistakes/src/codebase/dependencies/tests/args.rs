@@ -561,7 +561,7 @@ fn validate_direction_allows_symbol_with_dependents() {
     let args = parse(&["deps", "a.mts#alpha", "b.mts"]);
     let root = fixture_root("simple");
     let entrypoints = resolve_entrypoints(&args.files, &root, &root);
-    validate_direction(&Direction::Dependents, &entrypoints).unwrap();
+    validate_direction(&Direction::Dependents, &entrypoints, false).unwrap();
 }
 
 #[test]
@@ -569,6 +569,6 @@ fn validate_direction_rejects_symbol_with_deps() {
     let args = parse(&["deps", "a.mts#alpha"]);
     let root = fixture_root("simple");
     let entrypoints = resolve_entrypoints(&args.files, &root, &root);
-    let err = validate_direction(&Direction::Deps, &entrypoints).unwrap_err();
+    let err = validate_direction(&Direction::Deps, &entrypoints, false).unwrap_err();
     assert!(format!("{err}").contains("#symbol"));
 }

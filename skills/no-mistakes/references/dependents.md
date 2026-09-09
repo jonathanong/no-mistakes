@@ -74,7 +74,7 @@ no-mistakes dependents src/queues.mts#sendEmail --root /path/to/project
 
 - Follows re-exports transitively — a file that re-exports `sendEmail` is included, as are its importers
 - Namespace imports (`import * as`) are treated as matching all symbols
-- `#SYMBOL` syntax is only supported in `no-mistakes dependents`, not `no-mistakes dependencies`
+- `#SYMBOL` syntax is for `no-mistakes dependents` named-export impact, and for `no-mistakes dependencies --relationship call` callable roots
 
 ## Output
 

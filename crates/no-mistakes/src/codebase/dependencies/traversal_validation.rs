@@ -11,12 +11,14 @@ fn resolve_root(args: &TraverseArgs, cwd: &Path) -> PathBuf {
     }
 }
 
-fn validate_direction(direction: &Direction, entrypoints: &[Entrypoint]) -> Result<()> {
-    if matches!(direction, Direction::Deps) {
+fn validate_direction(
+    direction: &Direction,
+    entrypoints: &[Entrypoint],
+    allow_deps_symbols: bool,
+) -> Result<()> {
+    if matches!(direction, Direction::Deps) && !allow_deps_symbols {
         for entrypoint in entrypoints {
-            if entrypoint.symbol.is_some()
-                && !matches!(entrypoint.node, NodeId::Symbol { .. })
-            {
+            if entrypoint.symbol.is_some() && !matches!(entrypoint.node, NodeId::Symbol { .. }) {
                 bail!(
                     "#symbol targeting (e.g. `file.mts#exportName`) is only supported \
                      in the `dependents` direction unless --symbols is enabled."

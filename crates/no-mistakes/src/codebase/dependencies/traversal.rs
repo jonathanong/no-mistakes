@@ -24,7 +24,7 @@ pub(super) fn deps_entries(
             ctx.graph_files,
         )?;
         let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
-        let roots = roots_with_call_roots(roots, call_roots);
+        let roots = roots_with_call_roots(roots, call_roots, entrypoints, ctx.allowed);
         return Ok(graph.deps_of(&roots, depth, ctx.allowed));
     }
     if import_only {
@@ -75,7 +75,7 @@ pub(super) fn dependents_entries(
             ctx.graph_files,
         )?;
         let callable_roots = graph.expand_call_roots(&call_roots(entrypoints));
-        let roots = roots_with_call_roots(roots, callable_roots);
+        let roots = roots_with_call_roots(roots, callable_roots, entrypoints, ctx.allowed);
         return Ok(graph.dependents_of(&roots, depth, ctx.allowed));
     }
     let any_symbol = entrypoints.iter().any(|e| e.symbol.is_some());
