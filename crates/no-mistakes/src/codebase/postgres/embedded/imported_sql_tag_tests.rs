@@ -79,3 +79,9 @@ fn nested_destructure_of_an_imported_sql_tag_alias_fails_closed() {
     let facts = extract("imported-sql-template-strings-nested-destructure.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
+
+#[test]
+fn named_non_sql_export_aliased_to_sql_fails_closed() {
+    let facts = extract("imported-sql-template-strings-named-alias.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}

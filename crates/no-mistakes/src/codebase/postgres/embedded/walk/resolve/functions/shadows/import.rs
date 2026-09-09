@@ -40,7 +40,10 @@ fn record_specifier(
                 shadows.imported.insert(local.to_string());
                 return;
             }
-            if trusted && local.eq_ignore_ascii_case("sql") {
+            if trusted
+                && named.imported.name().as_str() == "sql"
+                && local.eq_ignore_ascii_case("sql")
+            {
                 return;
             }
             shadow_sql_local(local, shadows);
