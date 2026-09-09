@@ -50,6 +50,28 @@ fn playwright_true_selects_only_playwright_tests() {
 }
 
 #[test]
+fn playwright_terminal_matches_typed_page_parameter() {
+    let findings = fixture_findings(&format!(
+        "{PLAYWRIGHT_CONFIG}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ playwright: true }}]\n      traversal: file\n      unknownCalls: ignore\n      targets:\n        - global: setTimeout\n        - terminal: waitForTimeout\n        - moduleExport: {{ module: node:timers, export: setTimeout }}\n",
+    ))
+    .unwrap();
+
+    assert!(findings
+        .iter()
+        .any(|finding| finding.target.as_deref() == Some("global `setTimeout`")));
+    assert!(findings.iter().any(|finding| {
+        finding.target.as_deref() == Some("module export `node:timers#setTimeout`")
+    }));
+    assert!(
+        findings.iter().any(|finding| {
+            finding.target.as_deref() == Some("terminal `waitForTimeout`")
+                && finding.import.as_deref() == Some("page.waitForTimeout")
+        }),
+        "{findings:#?}"
+    );
+}
+
+#[test]
 fn named_playwright_roots_use_the_prepared_catalog() {
     let findings = fixture_findings(&format!(
         "{PLAYWRIGHT_CONFIG}rules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{{ playwright: [chromium] }}]\n      targets: [{{ global: setTimeout }}]\n",

@@ -17,8 +17,12 @@ global is not mistaken for the global API.
 It reports selected call or constructor occurrences reachable from configured
 roots. `exact` selectors match the source callee spelling even when the call
 cannot be resolved canonically, so `exact: page.waitForTimeout` still reports
-`page.waitForTimeout()`. Other unresolved, shadowed, computed, or dynamic calls
-are not reported unless the application sets `unknownCalls: finding`.
+`page.waitForTimeout()`. `terminal` selectors match the last member of a
+resolved target and, for unresolved member calls, the last segment of that
+source spelling, so `terminal: waitForTimeout` reports a typed Playwright
+callback parameter's `page.waitForTimeout()`. Other unresolved, shadowed,
+computed, or dynamic calls are not reported unless the application sets
+`unknownCalls: finding`.
 
 ## Options and roots
 
@@ -71,9 +75,10 @@ name, an imported module export, or a canonical repository function. Static
 named imports, aliases, re-exports, and static namespace members such as
 `import * as timers from "node:timers/promises"; timers.setTimeout()` are
 resolved. Use `function` when a repository target must remain stable through a
-barrel or import alias. Use `exact` for a source spelling that the graph records
-as unknown, such as an unresolved member call. Other computed or dynamic calls
-are not guessed.
+barrel or import alias. Use `exact` for a full source spelling that the graph
+records as unknown. Use `terminal` for the last member name, including
+unresolved receivers such as typed callback parameters. Other computed or
+dynamic calls are not guessed.
 
 ## Valid example
 
@@ -106,6 +111,7 @@ rules:
       targets:
         - global: setTimeout
         - exact: page.waitForTimeout
+        - terminal: waitForTimeout
         - moduleExport:
             module: node:timers/promises
             export: setTimeout
@@ -119,9 +125,10 @@ catalog, for example `glob: e2e/**/*.spec.ts` or a list of patterns. Use
 ## Unknown calls and suppression
 
 `unknownCalls: ignore` omits unresolved dynamic calls that do not match an
-`exact` selector. `unknownCalls: finding` reports remaining unknown calls as
-explicit policy findings. Configuration errors, such as an invalid root,
-selector, or a requested root that fails to parse, are never suppressible.
+`exact` or `terminal` selector. `unknownCalls: finding` reports remaining
+unknown calls as explicit policy findings. Configuration errors, such as an
+invalid root, selector, or a requested root that fails to parse, are never
+suppressible.
 Unrelated files that fail to parse are ignored unless they are selected as a
 root. Source findings honor ordinary `no-mistakes-disable-file`,
 `no-mistakes-disable-line`, and `no-mistakes-disable-next-line` directives.
