@@ -339,9 +339,12 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   the source binding's `CallableId` through local aliases, named re-exports, and
   unambiguous `export *`, so duplicate display names cannot select the wrong
   callable. Increment and decrement
-  writes invalidate the same binding as assignment. Object-literal member aliases
+  writes invalidate the same binding as assignment.   Object-literal member aliases
   keep last-write for duplicate
-  keys and drop earlier members after a later spread. Static setter updates
+  keys and drop earlier members after a later spread. A `var` object
+  aggregate declared in a nested block still binds in the hoisted function
+  or module `var` scope, so `api.load()` after that block keeps `load`
+  reachable. Static setter updates
   such as `C.value++` record a setter invocation instead of invalidating the
   accessor. Class aliases expose only static members, including static getter
   reads such as `const Alias = C; Alias.value`. Named `export default class

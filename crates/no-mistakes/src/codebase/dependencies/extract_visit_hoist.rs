@@ -144,6 +144,7 @@ impl ImportCollector {
             let callable_id = match declarator.init.as_ref() {
                 Some(Expression::ArrowFunctionExpression(arrow)) => CallableId(arrow.span.start),
                 Some(Expression::FunctionExpression(function)) => CallableId(function.span.start),
+                Some(Expression::ObjectExpression(_)) => CallableId(declarator.span.start),
                 _ => continue,
             };
             if let Some(name) = binding_identifier_name(&declarator.id) {

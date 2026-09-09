@@ -65,3 +65,29 @@ fn nested_aggregate_callable_members_reach_only_invoked_bodies_and_imports() {
         );
     }
 }
+
+#[test]
+fn var_bound_aggregate_after_nested_block_keeps_member_imports() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
+    let deps = graph.deps_of(
+        &[NodeId::file(root.join("src/var-bound-aggregate.mts"))],
+        None,
+        Some(&[EdgeKind::DynamicImport].into()),
+    );
+    let paths: HashSet<_> = deps
+        .iter()
+        .filter_map(|entry| entry.node.as_file())
+        .collect();
+
+    assert!(paths.contains(root.join("src/var-bound-aggregate-dep.mts").as_path()));
+    assert!(!paths.contains(root.join("src/var-bound-aggregate-unused.mts").as_path()));
+}
