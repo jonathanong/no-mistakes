@@ -152,3 +152,62 @@ fn materialized_aliases_keep_their_declaring_callable_owner() {
             && alias.scope_id == Some(outer_id)
     }));
 }
+
+#[test]
+fn increment_invalidates_a_local_callable_alias() {
+    let source = "function target() {} const alias = target; alias++; alias();";
+    let facts = facts(source);
+
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "alias" && call.target_identity == CallTargetIdentity::Unknown
+    }));
+    assert!(facts.callable_aliases.iter().any(|alias| {
+        alias.local == "alias"
+            && alias.target == "target"
+            && alias.invalidated_at == Some(source.find("alias++").unwrap() as u32)
+    }));
+}
+
+#[test]
+fn duplicate_object_keys_keep_the_last_callable_write() {
+    let facts = facts(
+        "function target() {} function later() {} const calls = { run: target, run: 0, run: later }; calls.run();",
+    );
+
+    assert!(facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "calls.run" && alias.target == "later"));
+    assert!(!facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "calls.run" && alias.target == "target"));
+}
+
+#[test]
+fn non_callable_duplicate_key_drops_the_member_alias() {
+    let facts = facts("function target() {} const calls = { run: target, run: 0 }; calls.run();");
+
+    assert!(!facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "calls.run"));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "calls.run" && call.target_identity == CallTargetIdentity::Unknown
+    }));
+}
+
+#[test]
+fn later_object_spread_drops_earlier_member_aliases() {
+    let facts = facts(
+        "function target() {} const replacement = {}; const calls = { run: target, ...replacement }; calls.run();",
+    );
+
+    assert!(!facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "calls.run"));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "calls.run" && call.target_identity == CallTargetIdentity::Unknown
+    }));
+}

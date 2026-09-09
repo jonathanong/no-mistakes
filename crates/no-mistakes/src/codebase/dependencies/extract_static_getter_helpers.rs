@@ -105,10 +105,30 @@ fn visit_assignment_expression_with_calls<'a>(
     collector: &mut ImportCollector,
     assignment: &AssignmentExpression<'a>,
 ) {
-    for name in assignment_target_names(&assignment.left) {
-        if !record_static_setter_assignment(collector, &name, assignment.span.start) {
-            collector.record_reassigned_callable_alias(&name, assignment.span.start);
+    record_assignment_target_writes(collector, &assignment.left, assignment.span.start);
+    walk::walk_assignment_expression(collector, assignment);
+}
+
+fn visit_update_expression_with_calls<'a>(
+    collector: &mut ImportCollector,
+    update: &oxc_ast::ast::UpdateExpression<'a>,
+) {
+    record_assignment_target_writes(
+        collector,
+        update.argument.as_assignment_target(),
+        update.span.start,
+    );
+    walk::walk_update_expression(collector, update);
+}
+
+fn record_assignment_target_writes(
+    collector: &mut ImportCollector,
+    target: &AssignmentTarget<'_>,
+    offset: u32,
+) {
+    for name in assignment_target_names(target) {
+        if !record_static_setter_assignment(collector, &name, offset) {
+            collector.record_reassigned_callable_alias(&name, offset);
         }
     }
-    walk::walk_assignment_expression(collector, assignment);
 }

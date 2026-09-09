@@ -295,6 +295,27 @@ fn static_setter_assignment_invokes_the_setter_without_invalidating_it() {
 }
 
 #[test]
+fn static_setter_update_invokes_the_setter_without_invalidating_it() {
+    let facts = facts(
+        "class Service { static set value(next) { import('./dep.mts'); } } function run() { Service.value++; --Service.value; }",
+    );
+    let setter_calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.caller.as_deref() == Some("run") && call.callee == "Service.value")
+        .collect();
+
+    assert_eq!(setter_calls.len(), 2);
+    assert!(setter_calls.iter().all(|call| {
+        call.invocation == InvocationKind::Call
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts.imports.iter().any(|import| {
+        import.specifier == "./dep.mts" && import.function_scope.as_deref() == Some("Service/value")
+    }));
+}
+
+#[test]
 fn computed_class_keys_retain_class_symbol_ownership() {
     let facts =
         facts("import { alpha as key } from './source.mts'; export class Client { [key]() {} }");

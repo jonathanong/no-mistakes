@@ -44,3 +44,20 @@ fn for_iteration_assignment_targets_invalidate_callable_bindings() {
         .iter()
         .all(|call| call.target_identity == CallTargetIdentity::Unknown));
 }
+
+#[test]
+fn inner_alias_increment_does_not_invalidate_the_outer_callable() {
+    let facts = facts(
+        "function target() {} function run() { const alias = target; { const alias = value; alias++; } alias(); }",
+    );
+    let call = facts
+        .function_calls
+        .iter()
+        .find(|call| call.caller.as_deref() == Some("run") && call.callee == "alias")
+        .expect("outer alias call");
+
+    assert_eq!(call.target_identity, CallTargetIdentity::RepositoryFunction);
+    assert!(facts.callable_aliases.iter().any(|alias| {
+        alias.local == "alias" && alias.target == "target" && alias.invalidated_at.is_none()
+    }));
+}

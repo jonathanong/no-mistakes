@@ -129,3 +129,49 @@ fn wrapped_default_class_default_export_resolves_to_its_canonical_scope() {
         )
     }));
 }
+
+#[test]
+fn static_setter_updates_keep_setter_imports_reachable() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
+    let deps = graph.deps_of(
+        &[NodeId::file(root.join("src/static-setter-update.mts"))],
+        None,
+        Some(&[EdgeKind::DynamicImport].into()),
+    );
+
+    assert!(deps.iter().any(|entry| {
+        entry.node.as_file() == Some(root.join("src/static-setter-loaded.mts").as_path())
+    }));
+}
+
+#[test]
+fn incremented_alias_drops_the_previous_target_imports() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph =
+        DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
+            .unwrap();
+    let deps = graph.deps_of(
+        &[NodeId::file(root.join("src/incremented-alias.mts"))],
+        None,
+        Some(&[EdgeKind::DynamicImport].into()),
+    );
+
+    assert!(!deps
+        .iter()
+        .any(|entry| entry.node.as_file() == Some(root.join("src/called.mts").as_path())));
+}
