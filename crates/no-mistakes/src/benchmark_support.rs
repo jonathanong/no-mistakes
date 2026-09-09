@@ -22,8 +22,8 @@ pub use bench_shard::{
     OBSERVER, QUERY, TESTS_PLAN,
 };
 pub use call_index::{
-    callable_file_index_fixture, construct_callable_file_index, CallableFileIndexFixture,
-    CallableFileIndexSummary,
+    callable_file_index_fixture, construct_callable_file_index, probe_call_site_files,
+    CallableFileIndexFixture, CallableFileIndexSummary,
 };
 pub use language_frontends::{
     collect_language_frontend_edges, collect_language_frontend_facts, language_frontend_fixture,

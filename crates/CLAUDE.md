@@ -130,13 +130,19 @@ use `crate::fx::{FxHashMap, FxHashSet, fx_map, fx_set}`. SipHash
 indexes must start on FxHash; rustc-hash 2 aliases have no `new()`. The
 `no-std-hashmap-call-indexes` ast-grep rule covers `graph/edge_calls/**`.
 
+### Index related tables before per-entity queries
+
+After collecting a per-file `Vec`, build a membership or group index before
+any per-file/per-name helper. Nested `table_a.iter()` × `table_b.filter`
+joins must be one grouping pass. Do not linear-scan a repo-wide `Vec`
+(`resolved_call_sites`) inside a per-file helper. Lock construction work,
+not output equality.
+
 ### Shared state in parallel loops
 
-Avoid `Mutex<HashMap<K, V>>` for caches accessed from rayon `par_iter()`. The
-lock serialises every lookup and insert across all threads, eliminating most
-parallel speedup. Use `DashMap<K, V>` instead; its sharded
-`entry(...).or_insert_with(...)` keeps per-key computation single-shot without
-serializing unrelated keys.
+Avoid `Mutex<HashMap<K, V>>` for caches accessed from rayon `par_iter()`.
+Use `DashMap` so `entry(...).or_insert_with(...)` does not serialize
+unrelated keys.
 
 ### Verify a builder method doesn't silently disable an existing cache
 
@@ -185,16 +191,10 @@ Root/prefix expansion (include globs, preserved roots, project roots) must reuse
 the single discovered file list, not walk per pattern or per project — compute
 once, memoize per `(base, pattern)`, and early-return when nothing to expand.
 
-**Regression guard:** prove the fast path is taken, not just that output is
-unchanged — a `.gitignore`-blind walk and a git-aware one often produce the same
-final file list while differing enormously in work done. Construct a case where
-the two approaches would disagree (e.g. a gitignored directory containing a
-nested match) and assert on the disagreement.
+**Regression guard:** prove the fast path is taken. Construct a case where a
+`.gitignore`-blind walk and a git-aware one disagree (gitignored nested match).
 
 ### Pre-compute BFS traversals in parallel before the per-entity loop
 
-When every parallel work item needs a BFS traversal of the same graph, run all
-BFS traversals up front in a single `par_iter()` pass so the results are cached
-before the work loop begins. This avoids redundant traversals and lets the
-expensive computation scale linearly. Regression tests must show the traversal
-cache is populated before the dependent per-entity loop.
+When every parallel work item needs a BFS of the same graph, run those
+traversals up front in one `par_iter()` so results are cached first.

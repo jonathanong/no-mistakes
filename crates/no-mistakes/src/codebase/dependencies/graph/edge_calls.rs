@@ -26,6 +26,7 @@ struct CallableFileIndex {
     /// identity. A display scope can repeat in sibling blocks.
     class_bindings: FxHashMap<(usize, String), ClassBindingTarget>,
     lexical_scope_parents: FxHashMap<usize, Option<usize>>,
+    scope_ids_by_display: FxHashMap<String, Vec<crate::codebase::dependencies::extract::CallableId>>,
     stars: Vec<String>,
 }
 
@@ -112,6 +113,7 @@ impl CallableFileIndex {
                 })
                 .collect(),
             lexical_scope_parents: file.lexical_scope_parents.iter().copied().collect(),
+            scope_ids_by_display: index_scope_ids_by_display(&file.callable_scope_ids),
             stars: file.star_reexport_specifiers.clone(),
         }
     }
@@ -160,4 +162,6 @@ include!("edge_calls/roots.rs");
 include!("edge_calls/import_resolution.rs");
 include!("edge_calls/export_resolution.rs");
 include!("edge_calls/local_resolution.rs");
+include!("edge_calls/site_index.rs");
+#[cfg(feature = "test-instrumentation")]
 include!("edge_calls/bench.rs");

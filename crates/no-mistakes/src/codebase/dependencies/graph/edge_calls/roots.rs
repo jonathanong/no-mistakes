@@ -87,9 +87,7 @@ impl DepGraph {
     }
 
     fn has_call_site_in_file(&self, file: &std::path::Path) -> bool {
-        self.resolved_call_sites
-            .iter()
-            .any(|site| site.file == file)
+        self.call_sites_by_file.contains_key(file)
     }
 
     /// Follow canonical call edges with deterministic shortest traces. `File`

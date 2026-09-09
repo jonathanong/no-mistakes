@@ -64,3 +64,14 @@ fn index_binding_declared_at(
         .map(|(scope, name, offset)| ((*scope, name.clone()), *offset))
         .collect()
 }
+
+fn index_scope_ids_by_display(
+    ids: &[(crate::codebase::dependencies::extract::CallableId, String)],
+) -> FxHashMap<String, Vec<crate::codebase::dependencies::extract::CallableId>> {
+    let mut by_display: FxHashMap<String, Vec<crate::codebase::dependencies::extract::CallableId>> =
+        fx_map();
+    for (id, scope) in ids {
+        by_display.entry(scope.clone()).or_default().push(*id);
+    }
+    by_display
+}
