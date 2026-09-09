@@ -124,7 +124,8 @@ tests:
 ```
 
 These policies are also used by `vitest-project-mapping` when that rule sets
-`explicitProjectsOnly: true`.
+`explicitProjectsOnly: true`, and by [`forbidden-calls`](../rules/forbidden-calls.md)
+Vitest roots (`vitest: true` and named project lists).
 
 ## Jest
 

@@ -149,10 +149,14 @@ fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
     assert!(!mapping.contains("VisiblePathSnapshot::new"));
     assert!(!coverage.contains("VisiblePathSnapshot::new"));
     let aggregate_mapping = mapping
-        .split("Some(catalog) => catalog.config_projects()?")
+        .split("if let Some(catalog) = catalog {")
         .nth(1)
-        .and_then(|source| source.split("None =>").next())
+        .and_then(|source| source.split("let projects = if").next())
         .expect("mapping prepared-catalog branch");
+    assert!(
+        aggregate_mapping.contains("catalog.merged_projects()"),
+        "mapping must reuse the prepared catalog merge"
+    );
     assert!(!aggregate_mapping.contains("load_projects("));
     let aggregate_coverage = coverage
         .split("Some(catalog) => catalog.config_projects()?")

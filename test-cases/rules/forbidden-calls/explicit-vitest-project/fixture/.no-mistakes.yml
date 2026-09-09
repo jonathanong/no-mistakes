@@ -1,0 +1,14 @@
+tests:
+  vitest:
+    projects:
+      custom:
+        include: [src/custom.spec.mts]
+rules:
+  - name: explicit-vitest-no-real-timers
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - vitest: [custom]
+      targets:
+        - global: setTimeout
