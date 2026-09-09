@@ -1,8 +1,10 @@
+mod import;
+
 use super::super::for_each_bound_name;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    BindingPattern, Declaration, Expression, ImportDeclaration, ImportDeclarationSpecifier,
-    ImportOrExportKind, Program, Statement, VariableDeclaration, VariableDeclarator,
+    BindingPattern, Declaration, Expression, Program, Statement, VariableDeclaration,
+    VariableDeclarator,
 };
 use std::collections::HashSet;
 
@@ -22,9 +24,14 @@ use std::collections::HashSet;
 /// callable rebinding of `sql` is exactly the shape that can ignore its
 /// template arguments and return arbitrary text — a helper shape doesn't
 /// make that any safer.
+///
+/// Default imports from `sql-template-strings` are the opposite: they *are*
+/// the trusted tag, recorded in [`TagShadows::imported`] under whatever
+/// local name the file used.
 #[derive(Default)]
 pub(super) struct TagShadows {
     names: HashSet<String>,
+    imported: HashSet<String>,
 }
 
 impl TagShadows {
@@ -39,6 +46,10 @@ impl TagShadows {
 
     pub(super) fn contains(&self, name: &str) -> bool {
         self.names.contains(name)
+    }
+
+    pub(super) fn imported_tags(&self) -> &HashSet<String> {
+        &self.imported
     }
 }
 
@@ -84,37 +95,8 @@ fn record_statement(
                 record_declaration(declaration, top_level_functions, shadows);
             }
         }
-        Statement::ImportDeclaration(import) => record_import(import, shadows),
+        Statement::ImportDeclaration(import) => import::record_import(import, shadows),
         _ => {}
-    }
-}
-
-/// An imported local binding spelled `sql` is exactly as untrusted as a
-/// non-helper-shaped top-level rebinding: nothing here verifies the
-/// import's source module actually is the trusted SQL-concatenation tag, so
-/// a same-spelled import from anywhere else can ignore its template
-/// argument and return arbitrary text.
-fn record_import(import: &ImportDeclaration<'_>, shadows: &mut TagShadows) {
-    if import.import_kind == ImportOrExportKind::Type {
-        return;
-    }
-    let Some(specifiers) = &import.specifiers else {
-        return;
-    };
-    for specifier in specifiers {
-        let local = match specifier {
-            ImportDeclarationSpecifier::ImportSpecifier(named) => {
-                if named.import_kind == ImportOrExportKind::Type {
-                    continue;
-                }
-                &named.local
-            }
-            ImportDeclarationSpecifier::ImportDefaultSpecifier(default) => &default.local,
-            ImportDeclarationSpecifier::ImportNamespaceSpecifier(namespace) => &namespace.local,
-        };
-        if local.name.eq_ignore_ascii_case("sql") {
-            shadows.names.insert(local.name.to_string());
-        }
     }
 }
 

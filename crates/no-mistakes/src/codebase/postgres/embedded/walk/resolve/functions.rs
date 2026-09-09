@@ -7,7 +7,7 @@ use collect::collect_named_functions;
 use oxc_ast::ast::{FormalParameters, FunctionBody, Program, Statement};
 use reassigned::ReassignedNames;
 use shadows::TagShadows;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
 
@@ -73,6 +73,11 @@ impl LocalFunctions {
     pub(crate) fn is_tag_shadowed(&self, name: &str) -> bool {
         self.tag_shadows.contains(name)
     }
+
+    /// Local names of a default import from `sql-template-strings`.
+    pub(crate) fn imported_sql_tags(&self) -> &HashSet<String> {
+        self.tag_shadows.imported_tags()
+    }
 }
 
 fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
@@ -116,7 +121,13 @@ fn resolve_named(
         resolve_named(callee, depth, raw, resolving, tag_shadows)
     };
     let mut is_shadowed = |tag: &str| shadows_param(resolvable, tag) || tag_shadows.contains(tag);
-    let text = chain::resolve_expr(argument, depth, &mut lookup, &mut is_shadowed);
+    let text = chain::resolve_expr(
+        argument,
+        depth,
+        &mut lookup,
+        &mut is_shadowed,
+        tag_shadows.imported_tags(),
+    );
     resolving.pop();
     text
 }

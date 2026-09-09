@@ -1,6 +1,7 @@
 use super::EmbeddedSqlKind;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::Expression;
+use std::collections::HashSet;
 
 /// `is_shadowed` reports whether a name is currently bound to something
 /// other than the global trusted SQL tag (e.g. a same-file helper's own
@@ -9,11 +10,13 @@ use oxc_ast::ast::Expression;
 /// passed in under that name.
 ///
 /// A tagged template with interpolated values is untrusted unless the tag
-/// is really the built-in `sql` concatenation tag: it parameterizes
-/// interpolated values instead of splicing them into the text, which is
-/// what makes trusting its quasi text safe even though the call has
-/// arguments. Nothing else — `String.raw` included — offers that guarantee,
-/// so any other tag with interpolations is untrusted.
+/// is really the trusted SQL concatenation tag: the unshadowed identifier
+/// `sql`, or a default import from `sql-template-strings` under any local
+/// name. That tag parameterizes interpolated values instead of splicing
+/// them into the text, which is what makes trusting its quasi text safe
+/// even though the call has arguments. Nothing else — `String.raw`
+/// included — offers that guarantee, so any other tag with interpolations
+/// is untrusted.
 ///
 /// A tagged template with zero interpolated values carries no runtime data
 /// at all, so the only question left is whether the tag returns its quasi
@@ -25,15 +28,16 @@ use oxc_ast::ast::Expression;
 pub(super) fn interpolating_untrusted_tag(
     expr: &Expression<'_>,
     is_shadowed: &mut impl FnMut(&str) -> bool,
+    imported_sql_tags: &HashSet<String>,
 ) -> bool {
     let Expression::TaggedTemplateExpression(tagged) = unwrap_ts_wrappers(expr) else {
         return false;
     };
     if tagged.quasi.expressions.is_empty() {
-        return !is_sql_tag(&tagged.tag, is_shadowed)
+        return !is_sql_tag(&tagged.tag, is_shadowed, imported_sql_tags)
             && !is_string_raw_tag(&tagged.tag, is_shadowed);
     }
-    !is_sql_tag(&tagged.tag, is_shadowed)
+    !is_sql_tag(&tagged.tag, is_shadowed, imported_sql_tags)
 }
 
 /// The built-in `String.raw` tag: a fixed, well-known JS semantic (return
@@ -81,11 +85,15 @@ pub(super) fn kind_for_const(sql: String, is_const: bool) -> (Option<String>, Em
     }
 }
 
-fn is_sql_tag(tag: &Expression<'_>, is_shadowed: &mut impl FnMut(&str) -> bool) -> bool {
-    match unwrap_ts_wrappers(tag) {
-        Expression::Identifier(ident) if ident.name.eq_ignore_ascii_case("sql") => {
-            !is_shadowed(ident.name.as_str())
-        }
-        _ => false,
-    }
+fn is_sql_tag(
+    tag: &Expression<'_>,
+    is_shadowed: &mut impl FnMut(&str) -> bool,
+    imported_sql_tags: &HashSet<String>,
+) -> bool {
+    let Expression::Identifier(ident) = unwrap_ts_wrappers(tag) else {
+        return false;
+    };
+    let name = ident.name.as_str();
+    !is_shadowed(name)
+        && (ident.name.eq_ignore_ascii_case("sql") || imported_sql_tags.contains(name))
 }

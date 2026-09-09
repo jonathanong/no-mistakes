@@ -17,7 +17,7 @@ pub(super) fn classify_init(
             (Some(text), EmbeddedSqlKind::Dynamic)
         };
     }
-    if interpolating_untrusted_tag(expr, &mut |name| tag_shadowed(name, visitor)) {
+    if untrusted_tag(expr, visitor) {
         return (sql_text(expr), EmbeddedSqlKind::Dynamic);
     }
     match unwrap_ts_wrappers(expr) {
@@ -58,11 +58,7 @@ pub(super) fn static_fragment(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>)
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => sql_text(expr),
-        Expression::TaggedTemplateExpression(_)
-            if interpolating_untrusted_tag(expr, &mut |name| tag_shadowed(name, visitor)) =>
-        {
-            None
-        }
+        Expression::TaggedTemplateExpression(_) if untrusted_tag(expr, visitor) => None,
         Expression::TaggedTemplateExpression(_) => sql_text(expr),
         Expression::BinaryExpression(_) => composed_sql(expr, visitor).map(|(text, _)| text),
         Expression::CallExpression(_) => resolve_chain(expr, visitor),
@@ -89,6 +85,15 @@ fn resolve_chain(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> Option<St
         functions::MAX_RESOLVE_DEPTH,
         &mut lookup,
         &mut is_shadowed,
+        visitor.functions.imported_sql_tags(),
+    )
+}
+
+fn untrusted_tag(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> bool {
+    interpolating_untrusted_tag(
+        expr,
+        &mut |name| tag_shadowed(name, visitor),
+        visitor.functions.imported_sql_tags(),
     )
 }
 
