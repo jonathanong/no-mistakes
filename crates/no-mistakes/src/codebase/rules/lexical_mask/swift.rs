@@ -146,7 +146,7 @@ fn swift_escape_end(source: &[u8], i: usize, hashes: usize) -> Option<usize> {
     if char_at >= source.len() {
         return Some(char_at);
     }
-    Some((char_at + utf8_width(source[char_at])).min(source.len()))
+    Some(char_at + utf8_width(source[char_at]))
 }
 
 fn mask_swift_block_comment(source: &[u8], masked: &mut [u8], mut i: usize) -> usize {

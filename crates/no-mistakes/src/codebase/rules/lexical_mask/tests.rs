@@ -46,3 +46,47 @@ fn swift_interpolation_closer_keeps_a_token_boundary() {
     assert!(mask.contains("print)"), "{mask:?}");
     assert!(!mask.contains("print("), "{mask:?}");
 }
+
+#[test]
+fn swift_hash_that_is_not_a_literal_stays_code() {
+    let source = "#if os(iOS)\nprint(\"real\")\n#endif\n";
+    let mask = swift_code_mask(source);
+    assert!(mask.contains("print("), "{mask:?}");
+}
+
+#[test]
+fn swift_escape_at_eof_does_not_panic() {
+    let mask = swift_code_mask("let s = \"\\");
+    assert!(mask.starts_with("let s = "), "{mask:?}");
+}
+
+#[test]
+fn swift_hashed_multiline_string_masks_content() {
+    let source = "let s = #\"\"\"\nprint(fake)\n\"\"\"#\nprint(\"real\")\n";
+    let mask = swift_code_mask(source);
+    assert!(mask.contains("print("), "{mask:?}");
+    assert!(!executable(&mask).contains("print(fake)"), "{mask:?}");
+}
+
+#[test]
+fn swift_raw_backslash_without_hash_stays_inside_the_string() {
+    let source = "let s = #\"abc \\ def\"#\nprint(\"real\")\n";
+    let mask = swift_code_mask(source);
+    assert!(mask.contains("print("), "{mask:?}");
+}
+
+#[test]
+fn csharp_indexer_and_extra_brackets_in_interpolation() {
+    let source = "var text = $\"{arr[0]]}\";\nvar extra = $\"{x)}\";\nvar after = new Command(async () => { });\n";
+    let mask = csharp_code_mask(source);
+    assert!(
+        executable(&mask).contains("newCommand(async()=>{})"),
+        "{mask:?}"
+    );
+}
+
+#[test]
+fn csharp_unterminated_format_clause_stops_at_eof() {
+    let mask = csharp_code_mask("var formatted = $\"{value:/*");
+    assert!(mask.contains("var formatted = "), "{mask:?}");
+}
