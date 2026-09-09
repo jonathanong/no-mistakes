@@ -32,22 +32,10 @@ fn findings(name: &str) -> Vec<RuleFinding> {
 }
 
 #[test]
-fn rejects_default_mock_calls_and_modules() {
+fn rejects_default_mock_modules() {
     let findings = findings("defaults");
 
-    assert_eq!(findings.len(), 8, "{findings:#?}");
-    assert!(findings
-        .iter()
-        .any(|finding| finding.import.as_deref() == Some("vi.mock")));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.import.as_deref() == Some("vi.fn")));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.import.as_deref() == Some("jest.fn")));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.import.as_deref() == Some("jest.spyOn")));
+    assert_eq!(findings.len(), 4, "{findings:#?}");
     assert!(findings
         .iter()
         .any(|finding| finding.import.as_deref() == Some("msw")));
@@ -57,24 +45,6 @@ fn rejects_default_mock_calls_and_modules() {
     assert!(findings
         .iter()
         .any(|finding| finding.import.as_deref() == Some("sinon")));
-}
-
-#[test]
-fn detects_wrapped_forbidden_calls_across_lines() {
-    let findings = findings("wrapped-calls");
-
-    assert_eq!(findings.len(), 2, "{findings:#?}");
-    assert!(findings
-        .iter()
-        .any(|finding| finding.line == 1 && finding.import.as_deref() == Some("vi.mock")));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.line == 4 && finding.import.as_deref() == Some("vi.mock")));
-}
-
-#[test]
-fn ignores_comments_and_global_fetch_router() {
-    assert!(findings("comments").is_empty());
 }
 
 #[test]
@@ -306,37 +276,12 @@ fn selected_test_target_match_does_not_fallback_for_missing_target_name() {
 }
 
 #[test]
-fn strips_comments_and_strings_without_hiding_real_code() {
+fn strips_comments_and_strings_without_hiding_real_modules() {
     let findings = findings("strings");
 
-    assert_eq!(findings.len(), 2, "{findings:#?}");
-    assert_eq!(findings[0].line, 6);
-    assert_eq!(findings[0].import.as_deref(), Some("vi.mock"));
-    assert_eq!(findings[1].line, 7);
-    assert_eq!(findings[1].import.as_deref(), Some("msw"));
-}
-
-#[test]
-fn detects_bracket_and_typed_forbidden_calls() {
-    let findings = findings("bracket-typed-calls");
-
-    assert_eq!(findings.len(), 8, "{findings:#?}");
-    assert_eq!(
-        findings
-            .iter()
-            .map(|finding| (finding.line, finding.import.as_deref()))
-            .collect::<Vec<_>>(),
-        vec![
-            (1, Some("vi.mock")),
-            (6, Some("vi.mock")),
-            (8, Some("vi.mock")),
-            (2, Some("vi.fn")),
-            (4, Some("vi.fn")),
-            (5, Some("jest.fn")),
-            (7, Some("jest.fn")),
-            (3, Some("jest.spyOn"))
-        ]
-    );
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].line, 3);
+    assert_eq!(findings[0].import.as_deref(), Some("msw"));
 }
 
 #[test]
@@ -369,39 +314,36 @@ fn ignores_module_specifiers_inside_regex_literals() {
 }
 
 #[test]
-fn detects_calls_and_modules_inside_template_expressions() {
+fn detects_modules_inside_template_expressions() {
     let findings = findings("template-expression");
 
-    assert_eq!(findings.len(), 7, "{findings:#?}");
+    assert_eq!(findings.len(), 6, "{findings:#?}");
     assert!(findings
         .iter()
-        .any(|finding| finding.line == 1 && finding.import.as_deref() == Some("vi.mock")));
-    assert!(findings
-        .iter()
-        .any(|finding| finding.line == 2 && finding.import.as_deref() == Some("msw")));
+        .any(|finding| finding.line == 1 && finding.import.as_deref() == Some("msw")));
     assert_eq!(
         findings
             .iter()
-            .filter(|finding| finding.line == 3 && finding.import.as_deref() == Some("msw"))
+            .filter(|finding| finding.line == 2 && finding.import.as_deref() == Some("msw"))
             .count(),
         1
     );
     assert!(findings
         .iter()
-        .any(|finding| finding.line == 3 && finding.import.as_deref() == Some("nock")));
+        .any(|finding| finding.line == 2 && finding.import.as_deref() == Some("nock")));
     assert!(findings
         .iter()
-        .any(|finding| finding.line == 4 && finding.import.as_deref() == Some("msw")));
+        .any(|finding| finding.line == 3 && finding.import.as_deref() == Some("msw")));
     assert!(findings
         .iter()
-        .any(|finding| finding.line == 5 && finding.import.as_deref() == Some("nock")));
+        .any(|finding| finding.line == 4 && finding.import.as_deref() == Some("nock")));
     assert!(findings
         .iter()
-        .any(|finding| finding.line == 10 && finding.import.as_deref() == Some("nock")));
-    assert!(findings.iter().all(|finding| finding.line != 6
+        .any(|finding| finding.line == 9 && finding.import.as_deref() == Some("nock")));
+    assert!(findings.iter().all(|finding| finding.line != 5
+        && finding.line != 6
         && finding.line != 7
-        && finding.line != 8
-        && finding.line != 9));
+        && finding.line != 8));
 }
 
 #[test]
@@ -469,9 +411,8 @@ fn module_matches_ignore_closed_string_literals_before_real_imports() {
 }
 
 #[test]
-fn custom_call_and_module_options_replace_defaults() {
+fn custom_module_options_replace_defaults() {
     let opts = Options {
-        forbidden_calls: vec!["mockLib.fake".to_string()],
         forbidden_modules: vec!["wiremock".to_string()],
     };
     let compiled = compile_options(&opts).unwrap();
@@ -480,29 +421,8 @@ fn custom_call_and_module_options_replace_defaults() {
 
     let findings = check_file(&root, &file, &compiled);
 
-    assert_eq!(findings.len(), 2, "{findings:#?}");
-    assert!(findings
-        .iter()
-        .any(|finding| finding.import.as_deref() == Some("mockLib.fake")));
+    assert_eq!(findings.len(), 1, "{findings:#?}");
     assert!(findings
         .iter()
         .any(|finding| finding.import.as_deref() == Some("wiremock")));
-}
-
-#[test]
-fn extensionless_custom_call_and_missing_file_paths_are_handled() {
-    let opts = Options {
-        forbidden_calls: vec!["mock".to_string()],
-        forbidden_modules: Vec::new(),
-    };
-    let compiled = compile_options(&opts).unwrap();
-    let root = fixture("extensionless");
-    let file = root.join("case.mts");
-
-    let findings = check_file(&root, &file, &compiled);
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].import.as_deref(), Some("mock"));
-
-    let missing = root.join("missing.mts");
-    assert!(check_file(&root, &missing, &compiled).is_empty());
 }

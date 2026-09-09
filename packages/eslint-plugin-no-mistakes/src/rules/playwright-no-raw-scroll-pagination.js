@@ -33,8 +33,8 @@ function propertyName(node) {
 }
 
 // `page.waitForRequest(...)` / `page.waitForResponse(...)`, matched by property name only — the
-// object (page, frame, a locator, ...) doesn't matter, mirroring how `playwright-no-set-timeout`
-// matches `.waitForTimeout` regardless of receiver. A statically computed access
+// object (page, frame, a locator, ...) does not affect the cursor relationship.
+// A statically computed access
 // (`page["waitForRequest"]`) is just as unambiguous as dot access and is matched the same way.
 function isCursorWaitCall(node) {
   return (

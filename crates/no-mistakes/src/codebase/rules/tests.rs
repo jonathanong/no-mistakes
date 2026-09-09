@@ -422,6 +422,38 @@ fn run_check_with_facts_executes_forbidden_dependencies_rule() {
 }
 
 #[test]
+fn run_check_with_facts_executes_forbidden_calls_with_prepared_vitest_catalog() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/forbidden-calls/coverage/fixture"),
+    );
+    let config_path = root.join(".no-mistakes.yml");
+    let config = crate::config::v2::load_v2_config(&root, Some(&config_path)).unwrap();
+    let graph_plan = try_canonical_graph_plan(&config)
+        .unwrap()
+        .expect("forbidden-calls requires a graph");
+    assert!(graph_plan.calls);
+    let (graph, graph_context) =
+        crate::codebase::dependencies::graph::ts_fact_plan_and_context_for_plan(&root, graph_plan);
+    let shared = crate::codebase::check_facts::collect_check_facts(
+        &root,
+        crate::codebase::ts_source::discover_files(&root, &[]),
+        crate::codebase::check_facts::CheckFactPlan {
+            graph,
+            graph_context,
+            ..Default::default()
+        },
+    );
+
+    let findings = run_check_with_facts(&root, Some(&config_path), None, &shared).unwrap();
+    assert!(findings.iter().any(|finding| {
+        finding.rule == FORBIDDEN_CALLS
+            && finding.file == "src/entry.mts"
+            && finding.target.as_deref() == Some("global `setTimeout`")
+    }));
+}
+
+#[test]
 fn run_check_with_facts_reports_missing_forbidden_dependency_graph_facts() {
     let root = fixture("codebase-analysis/forbidden-dependencies-basic");
     let shared = crate::codebase::check_facts::CheckFactMap::default();

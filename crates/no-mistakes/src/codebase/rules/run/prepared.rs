@@ -1,10 +1,11 @@
 use super::{
-    any_codebase_rule_enabled, forbidden_dependencies, nextjs_no_api_routes, nextjs_no_caching,
-    require_storybook_stories, required_entrypoint_reachability, rule_enabled,
+    any_codebase_rule_enabled, forbidden_calls, forbidden_dependencies, nextjs_no_api_routes,
+    nextjs_no_caching, require_storybook_stories, required_entrypoint_reachability, rule_enabled,
     server_route_client_boundary, suppress_rule_findings_with_sources,
-    test_no_unmocked_dynamic_imports, PreparedRuleFindings, RuleFinding, FORBIDDEN_DEPENDENCIES,
-    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRED_ENTRYPOINT_REACHABILITY,
-    REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    test_no_unmocked_dynamic_imports, PreparedRuleFindings, RuleFinding, FORBIDDEN_CALLS,
+    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
+    REQUIRED_ENTRYPOINT_REACHABILITY, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
+    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use anyhow::Result;
@@ -30,6 +31,7 @@ pub struct PreparedRulesCheck<'a> {
     pub prepared_graph: Option<&'a crate::codebase::dependencies::graph::PreparedGraphConfig>,
     pub prepared_tsconfig: &'a crate::codebase::ts_resolver::TsConfig,
     pub prepared_tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
+    pub prepared_vitest_projects: Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
     pub inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
     pub sources: Option<&'a crate::codebase::ts_source::SourceStore>,
 }
@@ -50,6 +52,10 @@ pub fn canonical_graph_plan(
         needed = true;
     }
     if let Some(forbidden_plan) = forbidden_dependencies::graph_plan(config) {
+        plan.include(forbidden_plan);
+        needed = true;
+    }
+    if let Some(forbidden_plan) = forbidden_calls::graph_plan(config) {
         plan.include(forbidden_plan);
         needed = true;
     }
@@ -75,6 +81,10 @@ pub fn try_canonical_graph_plan(
         plan.include(forbidden_plan);
         needed = true;
     }
+    if let Some(forbidden_plan) = forbidden_calls::graph_plan(config) {
+        plan.include(forbidden_plan);
+        needed = true;
+    }
     Ok(needed.then_some(plan))
 }
 
@@ -85,6 +95,7 @@ pub fn canonical_graph_requires_full_file_universe(
 ) -> bool {
     required_entrypoint_reachability::graph_plan(config).is_some()
         || config.rule_configured(FORBIDDEN_DEPENDENCIES)
+        || config.rule_configured(FORBIDDEN_CALLS)
 }
 
 pub fn run_check_with_config_and_facts_and_playwright(

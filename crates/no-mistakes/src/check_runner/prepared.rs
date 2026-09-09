@@ -121,7 +121,8 @@ pub(crate) fn prepare_from_shared(
     let react = no_mistakes::react_traits::prepare_check_from_loaded_config(&config, false);
     let vitest_projects = (config
         .rule_configured(no_mistakes::codebase::rules::VITEST_PROJECT_MAPPING)
-        || config.rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE))
+        || config.rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE)
+        || config.rule_configured(no_mistakes::codebase::rules::FORBIDDEN_CALLS))
     .then(|| {
         no_mistakes::codebase::rules::prepare_vitest_project_catalog(
             root,
