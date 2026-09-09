@@ -102,6 +102,18 @@ fn reachable_callee_scope(
         }
     }
 
+    if let Some(id) = index
+        .resolve_this_member(
+            call.caller.as_deref(),
+            call.caller_id,
+            &call.callee,
+            call.invocation,
+        )
+        .and_then(|resolved| resolved.callable_id)
+    {
+        return Some(id);
+    }
+
     if call.target_identity == CallTargetIdentity::RepositoryFunction {
         if let Some(id) = index
             .resolve_class_binding(

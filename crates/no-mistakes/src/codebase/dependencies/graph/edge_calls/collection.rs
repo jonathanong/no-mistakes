@@ -50,6 +50,14 @@ fn collect_call_edges_for_core(
                                 })
                                 .flatten()
                         })
+                        .or_else(|| {
+                            index.resolve_this_member(
+                                call.caller.as_deref(),
+                                call.caller_id,
+                                &call.callee,
+                                call.invocation,
+                            )
+                        })
                         .unwrap_or_else(|| ResolvedLocalCallee {
                             callee: call.callee.clone(),
                             callable_id: None,
