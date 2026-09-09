@@ -38,6 +38,13 @@ fn named_imported_class_static_members_resolve() {
                 if file.as_ref() == target.as_path() && symbol.as_ref() == "Service/run"
         ) && entry.via.contains(&EdgeKind::Call)
     }));
+    assert!(!calls.iter().any(|entry| {
+        matches!(
+            &entry.node,
+            NodeId::Symbol { file, symbol, .. }
+                if file.as_ref() == target.as_path() && symbol.as_ref() == "Service"
+        ) && entry.via.contains(&EdgeKind::Call)
+    }));
 }
 
 #[test]
@@ -56,6 +63,13 @@ fn default_imported_class_static_members_resolve() {
             &entry.node,
             NodeId::Symbol { file, symbol, .. }
                 if file.as_ref() == target.as_path() && symbol.as_ref() == "Service/run"
+        ) && entry.via.contains(&EdgeKind::Call)
+    }));
+    assert!(!calls.iter().any(|entry| {
+        matches!(
+            &entry.node,
+            NodeId::Symbol { file, symbol, .. }
+                if file.as_ref() == target.as_path() && symbol.as_ref() == "Service"
         ) && entry.via.contains(&EdgeKind::Call)
     }));
 }
