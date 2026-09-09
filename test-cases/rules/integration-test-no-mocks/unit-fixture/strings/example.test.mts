@@ -1,7 +1,3 @@
-const message = 'vi.mock should only be text'
 const other = "import('msw') is documentation"
-/*
-vi.fn()
-*/
-/* setup */ vi.mock('../module')
+/* setup */ const mockPolicy = 'documentation only'
 const server = await import('msw/node')

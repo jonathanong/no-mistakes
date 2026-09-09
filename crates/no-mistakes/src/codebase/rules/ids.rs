@@ -7,6 +7,7 @@ pub use super::csharp_no_async_void_delegate::RULE_ID as CSHARP_NO_ASYNC_VOID_DE
 pub use super::doc_consistency::RULE_ID as DOC_CONSISTENCY;
 pub use super::file_extension_policy::RULE_ID as FILE_EXTENSION_POLICY;
 pub use super::finite_set_consistency::RULE_ID as FINITE_SET_CONSISTENCY;
+pub use super::forbidden_calls::RULE_ID as FORBIDDEN_CALLS;
 pub use super::forbidden_dependencies::RULE_ID as FORBIDDEN_DEPENDENCIES;
 pub use super::forbidden_workspace_closure::RULE_ID as FORBIDDEN_WORKSPACE_CLOSURE;
 pub use super::github_actions_action_timeout_pair::RULE_ID as GITHUB_ACTIONS_ACTION_TIMEOUT_PAIR;

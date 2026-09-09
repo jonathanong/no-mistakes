@@ -201,36 +201,11 @@ describe("upstreamed generic rules", () => {
       "heading",
       "text",
     ]);
-    assert.deepEqual(messages(code, "playwright-no-set-timeout", undefined, "e2e.spec.ts"), [
-      "timeout",
-      "timeout",
-      "timeout",
-    ]);
-
     const valid = fixture("playwright.valid.ts");
     assert.deepEqual(
       messages(valid, "playwright-assertion-timeout-cap", undefined, "e2e.spec.ts"),
       [],
     );
     assert.deepEqual(messages(valid, "playwright-selector-priority", undefined, "e2e.spec.ts"), []);
-    assert.deepEqual(messages(valid, "playwright-no-set-timeout", undefined, "e2e.spec.ts"), []);
-    assert.deepEqual(
-      messages(
-        fixture("playwright.non-test.ts"),
-        "playwright-no-set-timeout",
-        undefined,
-        "playwright.non-test.ts",
-      ),
-      [],
-    );
-    assert.deepEqual(
-      messages(
-        fixture("playwright.non-test.ts"),
-        "playwright-no-set-timeout",
-        undefined,
-        "app/timer.ts",
-      ),
-      [],
-    );
   });
 });

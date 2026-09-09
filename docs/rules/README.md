@@ -55,6 +55,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`doc-consistency`](doc-consistency.md)                                       | Require files, headings, substrings, and banned-substring checks.               |
 | [`file-extension-policy`](file-extension-policy.md)                           | Enforce allowed or banned extensions in configured scopes.                      |
 | [`finite-set-consistency`](finite-set-consistency.md)                         | Compare finite string sets from source, paths, and YAML selectors.              |
+| [`forbidden-calls`](forbidden-calls.md)                                       | Prevent configured roots from invoking selected functions.                      |
 | [`github-actions-action-timeout-pair`](github-actions-action-timeout-pair.md)     | Require paired step and nested action timeouts for configured `uses`.       |
 | [`github-actions-composite-step-schema`](github-actions-composite-step-schema.md) | Validate composite-action steps against GitHub's documented step keys.     |
 | [`github-actions-job-timeouts`](github-actions-job-timeouts.md)                   | Require literal job `timeout-minutes` and optional caps.                    |
@@ -62,7 +63,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`github-actions-test-timeout-literals`](github-actions-test-timeout-literals.md) | Reject timeout-minutes literals restated in workflow tests.                 |
 | [`forbidden-dependencies`](forbidden-dependencies.md)                         | Prevent configured files/modules from depending on forbidden targets.           |
 | [`forbidden-workspace-closure`](forbidden-workspace-closure.md)               | Prevent workspace package closures from reaching forbidden packages.            |
-| [`integration-test-no-mocks`](integration-test-no-mocks.md)                   | Ban mocking libraries and mock helpers in integration tests.                    |
+| [`integration-test-no-mocks`](integration-test-no-mocks.md)                   | Ban mocking libraries in integration tests.                                     |
 | [`lockfile-allowlist`](lockfile-allowlist.md)                                 | Allow only configured package lock files.                                       |
 | [`markdown-child-links`](markdown-child-links.md)                                 | Require parent Markdown files to link every matching child, including optional canonical HTML list items. |
 | [`markdown-eval-tests`](markdown-eval-tests.md)                                   | Ban tests that eval markdown shell blocks unless exact-path allowlisted.    |

@@ -35,6 +35,46 @@ impl PreparedVitestProjectCatalog {
     pub(crate) fn config_projects(&self) -> anyhow::Result<Vec<ConfigProject>> {
         self.config_projects.clone().map_err(anyhow::Error::msg)
     }
+
+    /// Reuse parsed Vitest ownership for graph-backed call policy roots.
+    pub(crate) fn matching_files(
+        &self,
+        root: &Path,
+        names: &[String],
+        files: &[std::path::PathBuf],
+    ) -> anyhow::Result<Vec<std::path::PathBuf>> {
+        let projects = self.config_projects()?;
+        let selected = projects
+            .iter()
+            .filter(|project| {
+                names.is_empty()
+                    || project
+                        .policy_name
+                        .as_deref()
+                        .is_some_and(|name| names.iter().any(|selected| selected == name))
+            })
+            .collect::<Vec<_>>();
+        if !names.is_empty() && selected.len() != names.len() {
+            anyhow::bail!("forbidden-calls Vitest root names an unknown project");
+        }
+        let filters = selected
+            .iter()
+            .map(|project| {
+                crate::codebase::test_discovery::ProjectTestFilter::from_project_ref(project)
+            })
+            .collect::<anyhow::Result<Vec<_>>>()?;
+        let mut matched = files
+            .iter()
+            .filter(|file| {
+                let relative = crate::codebase::ts_source::relative_slash_path(root, file);
+                filters.iter().any(|filter| filter.is_match(&relative))
+            })
+            .cloned()
+            .collect::<Vec<_>>();
+        matched.sort();
+        matched.dedup();
+        Ok(matched)
+    }
 }
 
 pub(crate) fn config_projects_required(

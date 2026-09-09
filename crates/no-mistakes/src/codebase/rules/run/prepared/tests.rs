@@ -15,6 +15,25 @@ fn canonical_graph_plan_preserves_legacy_fallback_while_try_is_strict() {
 }
 
 #[test]
+fn canonical_graph_plans_include_forbidden_call_edges() {
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(crate::config::v2::schema::RuleDef {
+        rule: crate::codebase::rules::FORBIDDEN_CALLS.to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        options: serde_yaml::from_str(
+            "roots: [{ file: src/entry.mts }]\ntargets: [{ global: setTimeout }]",
+        )
+        .unwrap(),
+        ..Default::default()
+    });
+
+    assert!(canonical_graph_plan(&config).is_some_and(|plan| plan.calls));
+    assert!(try_canonical_graph_plan(&config)
+        .unwrap()
+        .is_some_and(|plan| plan.calls));
+}
+
+#[test]
 fn legacy_prepared_request_without_sources_uses_the_request_session() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check-runner/empty");
@@ -39,6 +58,7 @@ fn legacy_prepared_request_without_sources_uses_the_request_session() {
         prepared_graph: None,
         prepared_tsconfig: &tsconfig,
         prepared_tsconfig_catalog: &catalog,
+        prepared_vitest_projects: None,
         inferred_roots: None,
         sources: None,
     })
@@ -99,6 +119,7 @@ fn playwright_coverage_check(
         prepared_graph: None,
         prepared_tsconfig: &tsconfig,
         prepared_tsconfig_catalog: &catalog,
+        prepared_vitest_projects: None,
         inferred_roots: None,
         sources: None,
     })

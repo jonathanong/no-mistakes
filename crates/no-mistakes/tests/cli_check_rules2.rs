@@ -311,7 +311,7 @@ fn migrated_generic_content_rules_run_through_filesystem_dispatch() {
         integration.iter().any(|finding| finding.rule
             == no_mistakes::codebase::rules::INTEGRATION_TEST_NO_MOCKS
             && finding.file == "integration-tests/web-api/mocked.test.mts"
-            && finding.import.as_deref() == Some("vi.mock")),
+            && finding.import.as_deref() == Some("msw")),
         "{integration_body}"
     );
     assert!(

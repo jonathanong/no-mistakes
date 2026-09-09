@@ -117,12 +117,15 @@ pub(super) fn playwright(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> 
 
 pub(super) fn graph_rules(req: &IndependentRuleRequest<'_>) -> Result<RuleChunk> {
     Ok(RuleChunk::from_findings(graph_rule_findings(
-        req.root,
-        req.config,
-        req.config_path,
-        req.shared,
-        req.prepared_graph,
-        req.dependency_graph,
-        req.inferred_roots,
+        graph_rules::GraphRuleRequest {
+            root: req.root,
+            config: req.config,
+            config_path: req.config_path,
+            shared: req.shared,
+            prepared_graph: req.prepared_graph,
+            dependency_graph: req.dependency_graph,
+            inferred_roots: req.inferred_roots,
+            prepared_vitest_projects: req.prepared_vitest_projects,
+        },
     )?))
 }

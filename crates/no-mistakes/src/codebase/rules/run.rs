@@ -1,10 +1,10 @@
 use super::{
-    forbidden_dependencies, nextjs_no_api_routes, nextjs_no_caching, require_storybook_stories,
-    required_entrypoint_reachability, rule_enabled, server_route_client_boundary,
-    suppress_rule_findings_with_sources, test_no_unmocked_dynamic_imports, RuleFinding,
-    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
-    REQUIRED_ENTRYPOINT_REACHABILITY, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
-    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    forbidden_calls, forbidden_dependencies, nextjs_no_api_routes, nextjs_no_caching,
+    prepare_vitest_project_catalog, require_storybook_stories, required_entrypoint_reachability,
+    rule_enabled, server_route_client_boundary, suppress_rule_findings_with_sources,
+    test_no_unmocked_dynamic_imports, RuleFinding, FORBIDDEN_CALLS, FORBIDDEN_DEPENDENCIES,
+    NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING, REQUIRED_ENTRYPOINT_REACHABILITY,
+    REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use anyhow::Result;
 use std::path::Path;
@@ -74,6 +74,12 @@ pub fn run_check_with_facts_and_playwright(
         &sources,
         Some(&config),
     );
+    let visible_snapshot = config
+        .rule_configured(FORBIDDEN_CALLS)
+        .then(|| crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, visible));
+    let prepared_vitest_projects = visible_snapshot.as_ref().map(|snapshot| {
+        prepare_vitest_project_catalog(root, &config, snapshot, &prepared_tsconfig_catalog)
+    });
     run_check_with_config_and_facts_and_playwright(PreparedRulesCheck {
         session,
         root,
@@ -85,6 +91,7 @@ pub fn run_check_with_facts_and_playwright(
         prepared_graph: None,
         prepared_tsconfig: &prepared_tsconfig,
         prepared_tsconfig_catalog: &prepared_tsconfig_catalog,
+        prepared_vitest_projects: prepared_vitest_projects.as_ref(),
         inferred_roots: None,
         sources: Some(&sources),
     })
@@ -133,5 +140,6 @@ fn any_codebase_rule_enabled(config: &crate::config::v2::NoMistakesConfig) -> bo
         || rule_enabled(config, REQUIRE_STORYBOOK_STORIES)
         || crate::playwright::rules::configured(config)
         || rule_enabled(config, FORBIDDEN_DEPENDENCIES)
+        || rule_enabled(config, FORBIDDEN_CALLS)
         || rule_enabled(config, REQUIRED_ENTRYPOINT_REACHABILITY)
 }

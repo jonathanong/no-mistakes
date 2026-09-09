@@ -78,6 +78,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                 prepared_graph,
                                 prepared_tsconfig,
                                 prepared_tsconfig_catalog,
+                                prepared_vitest_projects: vitest_projects,
                                 inferred_roots: Some(inferred_roots),
                                 sources: Some(sources.as_ref()),
                             },

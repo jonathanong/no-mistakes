@@ -36,5 +36,4 @@ await expect(report).toBeVisible({ timeout: 20_000 });
 
 ## Related rules
 
-- [`playwright-no-set-timeout`](playwright-no-set-timeout.md) rejects fixed
-  sleeps in favor of observable conditions.
+This rule owns assertion-specific timeout caps.

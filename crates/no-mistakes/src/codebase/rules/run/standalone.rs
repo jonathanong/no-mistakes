@@ -1,7 +1,8 @@
 use super::{
     any_codebase_rule_enabled, canonical_graph_requires_full_file_universe, rule_enabled,
-    try_canonical_graph_plan, PreparedRulesCheck, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
-    REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY, TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    try_canonical_graph_plan, PreparedRulesCheck, FORBIDDEN_CALLS, NEXTJS_NO_API_ROUTES,
+    NEXTJS_NO_CACHING, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
+    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
 };
 use crate::codebase::check_facts::{
     collect_check_facts_with_graph_files_playwright_and_sources, CheckFactPlan,
@@ -90,6 +91,14 @@ pub(super) fn run_check(
         &sources,
         Some(&config),
     );
+    let prepared_vitest_projects = config.rule_configured(FORBIDDEN_CALLS).then(|| {
+        crate::codebase::rules::prepare_vitest_project_catalog(
+            root,
+            &config,
+            snapshot.as_ref(),
+            &prepared_tsconfig_catalog,
+        )
+    });
     let shared = collect_check_facts_with_graph_files_playwright_and_sources(
         root,
         files,
@@ -112,6 +121,7 @@ pub(super) fn run_check(
         prepared_graph: prepared_graph.as_ref(),
         prepared_tsconfig: &prepared_tsconfig,
         prepared_tsconfig_catalog: &prepared_tsconfig_catalog,
+        prepared_vitest_projects: prepared_vitest_projects.as_ref(),
         inferred_roots: Some(&inferred_roots),
         sources: Some(&sources),
     })
