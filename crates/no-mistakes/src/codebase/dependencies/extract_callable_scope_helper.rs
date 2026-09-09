@@ -32,22 +32,18 @@ impl ImportCollector {
             if member == "constructor" {
                 return false;
             }
-            let Some(class_id) = self
+            if let Some(class_id) = self.class_id_for_binding(binding_scope, binding) {
+                return self.has_class_static_member(class_id, binding_scope, member);
+            }
+            let Some(aggregate_id) = self
                 .callable_bindings
                 .get(&(binding_scope, binding.to_string()))
             else {
                 return false;
             };
-            let is_class = self
-                .callable_scope_ids
-                .iter()
-                .any(|(id, scope)| id == class_id && self.class_scopes.contains(scope));
-            if is_class {
-                return self.has_class_static_member(*class_id, binding_scope, member);
-            }
             return self.function_calls.iter().any(|call| {
                 call.invocation == InvocationKind::Membership
-                    && call.caller_id == Some(*class_id)
+                    && call.caller_id == Some(*aggregate_id)
                     && call.callee == member
             });
         }
@@ -131,5 +127,42 @@ impl ImportCollector {
             }
             class_id = base_id;
         }
+    }
+
+    fn class_id_for_binding(&self, binding_scope: usize, binding: &str) -> Option<CallableId> {
+        let mut scope = Some(binding_scope);
+        let mut name = binding.to_string();
+        let mut seen = HashSet::new();
+        while let Some(scope_id) = scope {
+            if !seen.insert((scope_id, name.clone())) {
+                return None;
+            }
+            if let Some(id) = self.callable_bindings.get(&(scope_id, name.clone())) {
+                if self
+                    .callable_scope_ids
+                    .iter()
+                    .any(|(candidate, class_scope)| {
+                        candidate == id && self.class_scopes.contains(class_scope)
+                    })
+                {
+                    return Some(*id);
+                }
+            }
+            if let Some(alias) = self.indexed_callable_alias(scope_id, &name) {
+                if alias.target.contains('.') {
+                    return None;
+                }
+                name = alias.target.clone();
+                continue;
+            }
+            if self
+                .lexical_binding_names
+                .contains(&(scope_id, name.clone()))
+            {
+                return None;
+            }
+            scope = self.lexical_scope_parents.get(&scope_id).copied().flatten();
+        }
+        None
     }
 }
