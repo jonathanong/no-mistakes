@@ -51,9 +51,7 @@ impl RuleCandidateIndex {
                     rule_id == BANNED_PATHS
                         || rule_id == TSCONFIG_FILE_COVERAGE
                         || rule_id == super::VERSION_PIN_CONSISTENCY
-                        // These rules validate configuration references against
-                        // the repository's tracked inventory. Generated or
-                        // otherwise visible files must not satisfy them.
+                        // Tracked-only: generated/visible files must not satisfy these.
                         || matches!(
                             rule_id,
                             CONFIG_PATH_REFERENCES
@@ -67,7 +65,8 @@ impl RuleCandidateIndex {
                             .any(|rule| rule.applies_to_repository()))
                         || matches!(
                             rule_id,
-                            TSCONFIG_FILE_COVERAGE
+                            CONFIG_PATH_REFERENCES
+                                | TSCONFIG_FILE_COVERAGE
                                 | MARKDOWN_MERMAID_VALIDATION
                                 | MARKDOWN_REACHABILITY
                                 | MARKDOWN_STRUCTURE_BUDGET

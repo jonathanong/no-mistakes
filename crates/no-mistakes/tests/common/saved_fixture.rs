@@ -14,6 +14,10 @@ pub fn materialize(category: &str, name: &str) -> tempfile::TempDir {
 fn copy_tree(source: &Path, destination: &Path) {
     for entry in ignore::WalkBuilder::new(source)
         .hidden(false)
+        .ignore(false)
+        .git_ignore(false)
+        .git_global(false)
+        .git_exclude(false)
         .require_git(false)
         .build()
         .map(Result::unwrap)

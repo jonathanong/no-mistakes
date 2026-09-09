@@ -11,7 +11,7 @@ pub const RULE_ID: &str = "config-path-references";
 
 mod presets;
 mod references;
-use references::reference_exists;
+use references::{existence_candidates, reference_exists};
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -54,18 +54,20 @@ pub(crate) fn check_with_files_and_sources(
             opts.validate()?;
             let target_roots = super::target_roots(root, config, rule);
             let skip = super::skip_dir_set(config);
-            let files: Vec<PathBuf> = all_files
+            let config_universe: Vec<PathBuf> = all_files
                 .iter()
                 .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
                 .cloned()
                 .collect();
-            let config_files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
+            let config_files =
+                super::path_filter::filter_rule_files(root, config, rule, &config_universe)?;
+            let reference_candidates = existence_candidates(all_files, &target_roots);
             scan(
                 root,
                 config,
                 &opts,
                 &config_files,
-                &files,
+                &reference_candidates,
                 &target_roots,
                 sources,
             )

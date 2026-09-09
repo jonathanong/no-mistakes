@@ -1,0 +1,6 @@
+rules:
+  - rule: config-path-references
+    scope: repository
+    options:
+      presets:
+        - knip

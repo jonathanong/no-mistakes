@@ -13,7 +13,10 @@ continue to resolve as a repository evolves.
 ## What it catches
 
 It catches missing literal paths, unmatched required globs, invalid structured
-config, and stale paths extracted by the selected built-in presets.
+config, and stale paths extracted by the selected built-in presets. Existence
+is checked against the request's tracked inventory, including files under
+built-in source skip directories such as `fixtures/`. Untracked files never
+satisfy a reference.
 
 ## Options
 
