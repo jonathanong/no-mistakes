@@ -132,7 +132,12 @@ fn masks_comments_and_strings_but_scans_interpolation_at_original_lines() {
             .iter()
             .map(|finding| (finding.file.as_str(), finding.line))
             .collect::<Vec<_>>(),
-        vec![("SwiftPrint.swift", 11), ("SwiftPrint.swift", 12)],
+        vec![
+            ("SwiftPrint.swift", 11),
+            ("SwiftPrint.swift", 12),
+            ("SwiftPrint.swift", 17),
+            ("SwiftPrint.swift", 20)
+        ],
         "{findings:#?}"
     );
 }

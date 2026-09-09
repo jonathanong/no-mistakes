@@ -9,3 +9,6 @@ mod swift;
 
 pub(crate) use csharp::csharp_code_mask;
 pub(crate) use swift::swift_code_mask;
+
+#[cfg(test)]
+mod tests;

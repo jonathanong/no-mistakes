@@ -19,3 +19,6 @@ var rawEscapedInterpolation = $$"""{{{{new Command(async () => {{ }})}}}}""";
 // Both brace halves are literal text; the rule must consume each complete escape group.
 var escapedClosing = $"literal }} new Command(async () => {{ }})";
 var rawLiteralBraces = $$"""literal } new Command(async () => { })""";
+// Format clauses are string content, not comments. The later call must stay visible.
+var formatted = $"{value:/*}";
+var afterFormat = new Command(async () => { });

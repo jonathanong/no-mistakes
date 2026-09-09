@@ -12,7 +12,7 @@ fn mask_swift_code(source: &[u8], masked: &mut [u8], mut i: usize, close_paren: 
     while i < source.len() {
         if close_paren && source[i] == b')' {
             if paren_depth == 0 {
-                blank(masked, i);
+                // Keep the closer so `print` inside interpolation cannot join a later `(`.
                 return i + 1;
             }
             paren_depth -= 1;
@@ -32,8 +32,8 @@ fn mask_swift_code(source: &[u8], masked: &mut [u8], mut i: usize, close_paren: 
             i = mask_swift_block_comment(source, masked, i);
             continue;
         }
-        if let Some((start, hashes, quote)) = swift_string_start(source, i) {
-            i = mask_swift_string(source, masked, start, hashes, quote);
+        if let Some(literal) = swift_literal_start(source, i) {
+            i = mask_swift_literal(source, masked, literal);
             continue;
         }
         i += 1;
@@ -41,50 +41,77 @@ fn mask_swift_code(source: &[u8], masked: &mut [u8], mut i: usize, close_paren: 
     i
 }
 
-fn swift_string_start(source: &[u8], i: usize) -> Option<(usize, usize, usize)> {
+struct SwiftLiteral {
+    start: usize,
+    hashes: usize,
+    open: usize,
+    delimiter: u8,
+    delimiter_len: usize,
+}
+
+fn swift_literal_start(source: &[u8], i: usize) -> Option<SwiftLiteral> {
     if source.get(i) == Some(&b'"') {
-        return Some((i, 0, i));
+        return Some(swift_string_literal(i, 0, i, source));
     }
     if source.get(i) != Some(&b'#') {
         return None;
     }
     let hashes = source[i..].iter().take_while(|&&byte| byte == b'#').count();
-    let quote = i + hashes;
-    (source.get(quote) == Some(&b'"')).then_some((i, hashes, quote))
+    let open = i + hashes;
+    match source.get(open) {
+        Some(&b'"') => Some(swift_string_literal(i, hashes, open, source)),
+        Some(&b'/') => Some(SwiftLiteral {
+            start: i,
+            hashes,
+            open,
+            delimiter: b'/',
+            delimiter_len: 1,
+        }),
+        _ => None,
+    }
 }
 
-fn mask_swift_string(
-    source: &[u8],
-    masked: &mut [u8],
-    start: usize,
-    hashes: usize,
-    quote: usize,
-) -> usize {
-    let triple = starts_with(source, quote, b"\"\"\"");
-    let delimiter_len = if triple { 3 } else { 1 };
-    let mut i = quote + delimiter_len;
-    blank_range(masked, start, i);
+fn swift_string_literal(start: usize, hashes: usize, open: usize, source: &[u8]) -> SwiftLiteral {
+    SwiftLiteral {
+        start,
+        hashes,
+        open,
+        delimiter: b'"',
+        delimiter_len: if starts_with(source, open, b"\"\"\"") {
+            3
+        } else {
+            1
+        },
+    }
+}
+
+fn mask_swift_literal(source: &[u8], masked: &mut [u8], literal: SwiftLiteral) -> usize {
+    let mut i = literal.open + literal.delimiter_len;
+    blank_range(masked, literal.start, i);
     while i < source.len() {
-        if swift_string_ends(source, i, hashes, delimiter_len) {
-            let end = i + delimiter_len + hashes;
+        if source[i] == b'\\' {
+            if interpolation_starts(source, i, literal.hashes) {
+                let open_end = i + 2 + literal.hashes;
+                blank_range(masked, i, open_end);
+                i = mask_swift_code(source, masked, open_end, true);
+                continue;
+            }
+            if let Some(end) = swift_escape_end(source, i, literal.hashes) {
+                blank_range(masked, i, end);
+                i = end;
+                continue;
+            }
+        }
+        if swift_delimited_ends(
+            source,
+            i,
+            literal.hashes,
+            literal.delimiter,
+            literal.delimiter_len,
+        ) {
+            let end = i + literal.delimiter_len + literal.hashes;
             blank_range(masked, i, end);
             return end;
-        }
-        if source[i] == b'\\' && interpolation_starts(source, i, hashes) {
-            let open_end = i + 2 + hashes;
-            blank_range(masked, i, open_end);
-            i = mask_swift_code(source, masked, open_end, true);
-            continue;
-        }
-        if hashes == 0 && source[i] == b'\\' {
-            blank(masked, i);
-            i += 1;
-            if i < source.len() {
-                let width = utf8_width(source[i]);
-                blank_range(masked, i, (i + width).min(source.len()));
-                i += width;
-            }
-            continue;
         }
         blank(masked, i);
         i += 1;
@@ -92,8 +119,14 @@ fn mask_swift_string(
     i
 }
 
-fn swift_string_ends(source: &[u8], i: usize, hashes: usize, delimiter_len: usize) -> bool {
-    repeated(source, i, b'"', delimiter_len)
+fn swift_delimited_ends(
+    source: &[u8],
+    i: usize,
+    hashes: usize,
+    delimiter: u8,
+    delimiter_len: usize,
+) -> bool {
+    repeated(source, i, delimiter, delimiter_len)
         && source
             .get(i + delimiter_len..i + delimiter_len + hashes)
             .is_some_and(|suffix| suffix.iter().all(|&byte| byte == b'#'))
@@ -103,6 +136,17 @@ fn interpolation_starts(source: &[u8], i: usize, hashes: usize) -> bool {
     source.get(i + 1..i + 1 + hashes).is_some_and(|suffix| {
         suffix.iter().all(|&byte| byte == b'#') && source.get(i + 1 + hashes) == Some(&b'(')
     })
+}
+
+fn swift_escape_end(source: &[u8], i: usize, hashes: usize) -> Option<usize> {
+    if !repeated(source, i + 1, b'#', hashes) {
+        return None;
+    }
+    let char_at = i + 1 + hashes;
+    if char_at >= source.len() {
+        return Some(char_at);
+    }
+    Some((char_at + utf8_width(source[char_at])).min(source.len()))
 }
 
 fn mask_swift_block_comment(source: &[u8], masked: &mut [u8], mut i: usize) -> usize {

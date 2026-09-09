@@ -23,7 +23,7 @@ fn cli_reports_only_executable_swift_and_csharp_matches() {
     assert!(!output.status.success());
     let report: Value = serde_json::from_slice(&output.stdout).unwrap();
     let findings = report["rules"].as_array().unwrap();
-    assert_eq!(findings.len(), 6, "{report:#?}");
+    assert_eq!(findings.len(), 10, "{report:#?}");
     assert!(findings.iter().any(|finding| {
         finding["rule"] == "swift-viewmodel-main-actor"
             && finding["file"] == "SwiftViewModel.swift"
@@ -39,5 +39,20 @@ fn cli_reports_only_executable_swift_and_csharp_matches() {
         finding["rule"] == "csharp-no-async-void-delegate"
             && finding["file"] == "AsyncDelegate.cs"
             && finding["line"] == 18
+    }));
+    assert!(findings.iter().any(|finding| {
+        finding["rule"] == "csharp-no-async-void-delegate"
+            && finding["file"] == "AsyncDelegate.cs"
+            && finding["line"] == 24
+    }));
+    assert!(findings.iter().any(|finding| {
+        finding["rule"] == "swift-no-raw-print"
+            && finding["file"] == "SwiftPrint.swift"
+            && finding["line"] == 17
+    }));
+    assert!(!findings.iter().any(|finding| {
+        finding["rule"] == "swift-no-raw-print"
+            && finding["file"] == "SwiftPrint.swift"
+            && finding["line"] == 22
     }));
 }

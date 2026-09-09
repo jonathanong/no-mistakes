@@ -140,7 +140,12 @@ fn skips_missing_source() {
 #[test]
 fn masks_comments_and_strings_and_uses_the_original_source_for_suppression() {
     let findings = run(&lexical_fixture(), "{}");
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].file, "SwiftViewModel.swift");
-    assert_eq!(findings[0].line, 13);
+    assert_eq!(
+        findings
+            .iter()
+            .map(|finding| (finding.file.as_str(), finding.line))
+            .collect::<Vec<_>>(),
+        vec![("SwiftViewModel.swift", 13), ("SwiftViewModel.swift", 16)],
+        "{findings:#?}"
+    );
 }

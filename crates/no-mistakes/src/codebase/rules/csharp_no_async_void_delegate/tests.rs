@@ -150,7 +150,8 @@ fn masks_comments_and_strings_but_scans_interpolation_at_original_lines() {
         vec![
             ("AsyncDelegate.cs", 11),
             ("AsyncDelegate.cs", 14),
-            ("AsyncDelegate.cs", 18)
+            ("AsyncDelegate.cs", 18),
+            ("AsyncDelegate.cs", 24)
         ],
         "{findings:#?}"
     );

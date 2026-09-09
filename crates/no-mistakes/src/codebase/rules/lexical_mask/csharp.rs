@@ -1,4 +1,7 @@
-use super::common::{blank, blank_range, repeated, starts_with, utf8_width};
+use super::common::{blank, blank_range, repeated, starts_with};
+
+mod string;
+use string::{csharp_string_start, mask_csharp_char, mask_csharp_string};
 
 pub(crate) fn csharp_code_mask(source: &str) -> String {
     let bytes = source.as_bytes();
@@ -7,13 +10,15 @@ pub(crate) fn csharp_code_mask(source: &str) -> String {
     String::from_utf8(masked).expect("masking replaces UTF-8 bytes with ASCII spaces")
 }
 
-fn mask_csharp_code(
+pub(super) fn mask_csharp_code(
     source: &[u8],
     masked: &mut [u8],
     mut i: usize,
     closing_braces: Option<usize>,
 ) -> usize {
-    let mut brace_depth = 0;
+    let mut brace_depth: usize = 0;
+    let mut paren_depth: usize = 0;
+    let mut bracket_depth: usize = 0;
     while i < source.len() {
         if let Some(width) = closing_braces {
             if source[i] == b'}' {
@@ -21,9 +26,7 @@ fn mask_csharp_code(
                     blank_range(masked, i, i + width);
                     return i + width;
                 }
-                if brace_depth > 0 {
-                    brace_depth -= 1;
-                }
+                brace_depth = brace_depth.saturating_sub(1);
                 i += 1;
                 continue;
             }
@@ -49,124 +52,35 @@ fn mask_csharp_code(
             i = mask_csharp_string(source, masked, string);
             continue;
         }
+        if let Some(width) = closing_braces {
+            if source[i] == b':' && brace_depth == 0 && paren_depth == 0 && bracket_depth == 0 {
+                return mask_interpolation_format(source, masked, i, width);
+            }
+            match source[i] {
+                b'(' => paren_depth += 1,
+                b')' => paren_depth = paren_depth.saturating_sub(1),
+                b'[' => bracket_depth += 1,
+                b']' => bracket_depth = bracket_depth.saturating_sub(1),
+                _ => {}
+            }
+        }
         i += 1;
     }
     i
 }
 
-#[derive(Clone, Copy)]
-struct CsharpString {
-    start: usize,
-    quote: usize,
-    dollars: usize,
-    verbatim: bool,
-    quote_count: usize,
-}
-
-fn csharp_string_start(source: &[u8], i: usize) -> Option<CsharpString> {
-    let mut j = i;
-    let mut dollars = 0;
-    while source.get(j) == Some(&b'$') {
-        dollars += 1;
-        j += 1;
-    }
-    let mut verbatim = false;
-    if source.get(j) == Some(&b'@') {
-        verbatim = true;
-        j += 1;
-        while source.get(j) == Some(&b'$') {
-            dollars += 1;
-            j += 1;
-        }
-    }
-    if source.get(j) != Some(&b'"') {
-        return None;
-    }
-    let quote_count = source[j..].iter().take_while(|&&byte| byte == b'"').count();
-    Some(CsharpString {
-        start: i,
-        quote: j,
-        dollars,
-        verbatim,
-        quote_count,
-    })
-}
-
-fn mask_csharp_string(source: &[u8], masked: &mut [u8], string: CsharpString) -> usize {
-    let raw = string.quote_count >= 3;
-    let delimiter_len = if raw { string.quote_count } else { 1 };
-    let mut i = string.quote + delimiter_len;
-    blank_range(masked, string.start, i);
+fn mask_interpolation_format(
+    source: &[u8],
+    masked: &mut [u8],
+    mut i: usize,
+    width: usize,
+) -> usize {
     while i < source.len() {
-        if raw && repeated(source, i, b'"', delimiter_len) {
-            blank_range(masked, i, i + delimiter_len);
-            return i + delimiter_len;
-        }
-        if !raw && source[i] == b'"' {
-            if string.verbatim && source.get(i + 1) == Some(&b'"') {
-                blank_range(masked, i, i + 2);
-                i += 2;
-                continue;
-            }
-            blank(masked, i);
-            return i + 1;
-        }
-        if !raw
-            && string.dollars > 0
-            && csharp_escaped_interpolation_braces(source, i, string.dollars, source[i])
-        {
-            let escaped_width = string.dollars * 2;
-            blank_range(masked, i, i + escaped_width);
-            i += escaped_width;
-            continue;
-        }
-        if string.dollars > 0 && csharp_interpolation_starts(source, i, string.dollars) {
-            blank_range(masked, i, i + string.dollars);
-            i = mask_csharp_code(source, masked, i + string.dollars, Some(string.dollars));
-            continue;
-        }
-        if !raw && !string.verbatim && source[i] == b'\\' {
-            blank(masked, i);
-            i += 1;
-            if i < source.len() {
-                let width = utf8_width(source[i]);
-                blank_range(masked, i, (i + width).min(source.len()));
-                i += width;
-            }
-            continue;
+        if source[i] == b'}' && repeated(source, i, b'}', width) {
+            blank_range(masked, i, i + width);
+            return i + width;
         }
         blank(masked, i);
-        i += 1;
-    }
-    i
-}
-
-fn csharp_interpolation_starts(source: &[u8], i: usize, width: usize) -> bool {
-    repeated(source, i, b'{', width) && source.get(i + width) != Some(&b'{')
-}
-
-fn csharp_escaped_interpolation_braces(source: &[u8], i: usize, width: usize, brace: u8) -> bool {
-    matches!(brace, b'{' | b'}') && repeated(source, i, brace, width * 2)
-}
-
-fn mask_csharp_char(source: &[u8], masked: &mut [u8], mut i: usize) -> usize {
-    blank(masked, i);
-    i += 1;
-    while i < source.len() {
-        if source[i] == b'\\' {
-            blank(masked, i);
-            i += 1;
-            if i < source.len() {
-                let width = utf8_width(source[i]);
-                blank_range(masked, i, (i + width).min(source.len()));
-                i += width;
-            }
-            continue;
-        }
-        blank(masked, i);
-        if source[i] == b'\'' {
-            return i + 1;
-        }
         i += 1;
     }
     i

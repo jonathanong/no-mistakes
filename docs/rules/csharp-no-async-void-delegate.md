@@ -46,9 +46,10 @@ Use `no-mistakes-disable-next-line csharp-no-async-void-delegate` on the lambda
 or `no-mistakes-disable-file` for generated code. Prefer a synchronous wrapper
 because suppression leaves unobserved exceptions possible.
 
-Comments and escaped, verbatim, raw, and multiline strings are ignored. An
-interpolated string's expression is executable C# and remains checked at its
-original source line.
+Comments and escaped, verbatim, raw, and multiline strings are ignored.
+Interpolation format clauses are string content, not comments. An interpolated
+string's expression is executable C# and remains checked at its original source
+line.
 
 ## Related rules
 

@@ -65,9 +65,11 @@ Send the event through the process logger, or add the specific logging file to
 Prefer `allow` for a stable logger fallback. Use
 `no-mistakes-disable-next-line swift-no-raw-print` for one intentional call.
 
-Comments and ordinary, raw, and multiline string literals are ignored. Calls
-inside Swift string interpolations remain executable and are reported at their
-original source line.
+Comments and ordinary, raw, multiline, and extended string literals are ignored,
+as are extended regex literals such as `#/"/#`. Matching-hash escapes inside
+extended strings stay inside the literal. Calls inside Swift string interpolations
+remain executable and are reported at their original source line. The interpolation
+closer is left in the mask so a trailing identifier cannot join a later `(`.
 
 ## Related rules
 
