@@ -42,6 +42,8 @@ struct ResolvedLocalCallee {
     callable_id: Option<crate::codebase::dependencies::extract::CallableId>,
 }
 
+include!("edge_calls/index_build.rs");
+
 impl CallableFileIndex {
     fn from_facts(file: &crate::codebase::ts_source::facts::TsFileFacts) -> Self {
         let class_scope_by_id = file
@@ -50,6 +52,8 @@ impl CallableFileIndex {
             .filter(|(_, scope)| file.class_scopes.contains(scope))
             .map(|(id, scope)| (*id, scope.clone()))
             .collect::<std::collections::HashMap<_, _>>();
+        let members_by_class = index_class_members_by_id(&file.class_member_callable_ids);
+        let local_bases = index_local_construct_bases(&file.function_calls);
         Self {
             known_scopes: file.callable_scopes.iter().cloned().collect(),
             exported_scopes: file.exported_functions.iter().cloned().collect(),
@@ -85,28 +89,16 @@ impl CallableFileIndex {
                 .iter()
                 .filter_map(|(scope, binding, id)| {
                     class_scope_by_id.get(id).map(|class_scope| {
-                        let static_member_ids = file
-                            .class_member_callable_ids
-                            .iter()
-                            .filter(|(candidate_class_id, _, _)| *candidate_class_id == *id)
-                            .map(|(_, member, member_id)| (member.clone(), *member_id))
-                            .collect();
-                        let local_base = file.function_calls.iter().find_map(|call| {
-                            (call.caller_id == Some(*id)
-                                && call.is_callback
-                                && call.invocation
-                                    == crate::codebase::dependencies::extract::InvocationKind::Construct
-                                && call.target_identity
-                                    == crate::codebase::dependencies::extract::CallTargetIdentity::RepositoryFunction)
-                                .then(|| call.callee.clone())
-                        });
                         (
                             (*scope, binding.clone()),
                             ClassBindingTarget {
                                 scope: class_scope.clone(),
                                 class_id: *id,
-                                static_member_ids,
-                                local_base,
+                                static_member_ids: members_by_class
+                                    .get(id)
+                                    .cloned()
+                                    .unwrap_or_default(),
+                                local_base: local_bases.get(id).cloned(),
                             },
                         )
                     })
@@ -116,7 +108,6 @@ impl CallableFileIndex {
             stars: file.star_reexport_specifiers.clone(),
         }
     }
-
 }
 
 include!("edge_calls/class_resolution.rs");
