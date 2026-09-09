@@ -9,10 +9,11 @@ use oxc_ast::ast::{
     FormalParameters, Function, IdentifierReference, ImportDeclaration, ImportDeclarationSpecifier,
     ImportExpression, JSXOpeningElement, MethodDefinition, MethodDefinitionKind, ModuleExportName,
     NewExpression, ObjectExpression, ObjectProperty, ObjectPropertyKind, Program,
-    PropertyDefinition, Statement, StaticBlock, StaticMemberExpression, TSEnumDeclaration,
-    TSImportType, TSInterfaceDeclaration, TSQualifiedName, TSTypeAliasDeclaration, TSTypeName,
-    TSTypeParameter, TSTypeParameterDeclaration, TSTypeReference, TaggedTemplateExpression,
-    VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
+    PropertyDefinition, PropertyKind, Statement, StaticBlock, StaticMemberExpression,
+    TSEnumDeclaration, TSImportType, TSInterfaceDeclaration, TSQualifiedName,
+    TSTypeAliasDeclaration, TSTypeName, TSTypeParameter, TSTypeParameterDeclaration,
+    TSTypeReference, TaggedTemplateExpression, VariableDeclaration, VariableDeclarationKind,
+    VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::{GetSpan, SourceType};
@@ -238,10 +239,12 @@ include!("extract_visit_members.rs");
 include!("extract_visit_aggregates.rs");
 include!("extract_class_heritage_helpers.rs");
 include!("extract_static_getter_helpers.rs");
+include!("extract_object_getter_helpers.rs");
 include!("extract_class_eager_helpers.rs");
 include!("extract_class_callable_helpers.rs");
 include!("extract_visit_object_references.rs");
 include!("extract_collector_aliases.rs");
+include!("extract_collector_aggregate_aliases.rs");
 include!("extract_visit_helpers.rs");
 include!("extract_visit_variables.rs");
 include!("extract_control_flow_scopes.rs");

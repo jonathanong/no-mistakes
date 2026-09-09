@@ -38,7 +38,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
         }
     } else if let Some(callee) = simple_callee_name(&call.callee) {
         if collector.should_record_call(&callee) {
-            if is_static_getter(collector, &callee) {
+            if is_static_getter(collector, &callee) || is_object_getter(collector, &callee) {
                 collector.record_unknown_call(
                     import_line_at(&collector.line_starts, call.span.start as usize),
                     call.span.start,
@@ -81,7 +81,10 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
     record_callable_argument_transitions(collector, call);
 }
 
-fn record_callable_argument_transitions(collector: &mut ImportCollector, call: &CallExpression<'_>) {
+fn record_callable_argument_transitions(
+    collector: &mut ImportCollector,
+    call: &CallExpression<'_>,
+) {
     for argument in &call.arguments {
         let Some(expression) = argument.as_expression() else {
             continue;

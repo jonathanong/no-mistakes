@@ -3,6 +3,7 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
         let scope = collector.callable_scope_name(name);
         let class_id = CallableId(class.span.start);
         collector.record_callable_binding_id(name, class_id);
+        collector.callable_scope_ids.insert((class_id, scope.clone()));
         record_class_member_calls(collector, &scope, class_id, class);
         record_class_base_construction(collector, &scope, class_id, class);
         if collector.current_function().is_none() && collector.is_exported_top_level_name(name) {
@@ -54,7 +55,8 @@ fn visit_export_default_declaration_with_scope<'a>(
             collector.export_depth -= 1;
         }
         ExportDefaultDeclarationKind::ArrowFunctionExpression(arrow) => {
-            collector.push_function_scope(Some("default".to_string()), CallableId(arrow.span.start));
+            collector
+                .push_function_scope(Some("default".to_string()), CallableId(arrow.span.start));
             collector.exported_functions.insert("default".to_string());
             collector.callable_scopes.insert("default".to_string());
             collector.add_type_parameter_names(arrow.type_parameters.as_deref());
@@ -72,6 +74,9 @@ fn visit_export_default_declaration_with_scope<'a>(
                 .id
                 .as_ref()
                 .map_or_else(|| "default".to_string(), |id| id.name.to_string());
+            collector
+                .callable_scope_ids
+                .insert((CallableId(class.span.start), scope.clone()));
             record_class_member_calls(collector, &scope, CallableId(class.span.start), class);
             record_class_base_construction(collector, &scope, CallableId(class.span.start), class);
             collector.record_exported_resource_root(&scope);
@@ -147,6 +152,14 @@ fn record_object_member_calls(
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             continue;
         };
+        if property.kind == PropertyKind::Get {
+            if let Some(name) = crate::codebase::ts_source::static_property_key_name(&property.key)
+            {
+                collector
+                    .object_getter_member_ids
+                    .insert((object_id, name.to_string()));
+            }
+        }
         if matches!(
             property.value,
             Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_)
@@ -161,12 +174,7 @@ fn record_object_member_calls(
                 _ => unreachable!("callable property checked above"),
             };
             collector.record_aggregate_callable_member_id(object_id, name, callable_id);
-            record_member_call(
-                collector,
-                object_scope,
-                object_id,
-                Some(name),
-            );
+            record_member_call(collector, object_scope, object_id, Some(name));
         }
     }
 }

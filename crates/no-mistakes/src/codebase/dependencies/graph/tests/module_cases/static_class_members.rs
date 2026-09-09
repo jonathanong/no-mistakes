@@ -36,6 +36,13 @@ fn static_class_members_resolve_without_guessing_function_object_members() {
         matches!(
             &entry.node,
             NodeId::Symbol { file, symbol, .. }
+                if file.as_ref() == source.as_path() && symbol.as_ref() == "InheritedBase/run"
+        ) && entry.via.contains(&EdgeKind::Call)
+    }));
+    assert!(calls.iter().any(|entry| {
+        matches!(
+            &entry.node,
+            NodeId::Symbol { file, symbol, .. }
                 if file.as_ref() == source.as_path() && symbol.as_ref() == "ExpressionService/run"
         ) && entry.via.contains(&EdgeKind::Call)
     }));

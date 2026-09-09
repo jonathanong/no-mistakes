@@ -10,6 +10,10 @@ fn walk_default_expression<'a>(
         walk_default_arrow_with_scope(collector, arrow);
         return;
     }
+    if let Some(class) = parenthesized_default_class(&export.declaration) {
+        walk_default_class_with_scope(collector, class);
+        return;
+    }
     if default_expression_creates_own_scope(&export.declaration) {
         walk::walk_export_default_declaration(collector, export);
         return;
@@ -57,6 +61,17 @@ fn parenthesized_default_arrow<'a>(
     declaration: &'a ExportDefaultDeclarationKind<'a>,
 ) -> Option<&'a oxc_ast::ast::ArrowFunctionExpression<'a>> {
     default_expression(declaration).and_then(parenthesized_arrow_expression)
+}
+
+fn parenthesized_default_class<'a>(
+    declaration: &'a ExportDefaultDeclarationKind<'a>,
+) -> Option<&'a Class<'a>> {
+    default_expression(declaration).and_then(|expression| {
+        match crate::codebase::ts_source::unwrap_ts_wrappers(expression) {
+            Expression::ClassExpression(class) => Some(class.as_ref()),
+            _ => None,
+        }
+    })
 }
 
 fn parenthesized_arrow_expression<'a>(
@@ -108,9 +123,7 @@ fn default_expression<'a>(
         ExportDefaultDeclarationKind::TSSatisfiesExpression(expression) => {
             Some(&expression.expression)
         }
-        ExportDefaultDeclarationKind::TSTypeAssertion(expression) => {
-            Some(&expression.expression)
-        }
+        ExportDefaultDeclarationKind::TSTypeAssertion(expression) => Some(&expression.expression),
         _ => None,
     }
 }
@@ -142,4 +155,26 @@ fn walk_default_function_with_scope<'a>(
     walk_function_with_body_bindings(collector, function);
     collector.pop_function_scope(true);
     collector.pop_syntactic_caller(pushed_syntactic_caller);
+}
+
+fn walk_default_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>) {
+    let class_id = CallableId(class.span.start);
+    let scope = class
+        .id
+        .as_ref()
+        .map_or_else(|| "default".to_string(), |id| id.name.to_string());
+    // Export resolution uses a synthetic default spelling for this class.
+    collector.record_callable_binding_id("default", class_id);
+    if scope != "default" {
+        collector.push_callable_alias("default".to_string(), scope.clone());
+    }
+    collector.callable_scope_ids.insert((class_id, scope.clone()));
+    record_class_member_calls(collector, &scope, class_id, class);
+    record_class_base_construction(collector, &scope, class_id, class);
+    collector.record_exported_resource_root(&scope);
+    record_class_resource_scopes(collector, &scope, class);
+    collector.exported_functions.insert(scope.clone());
+    collector.callable_scopes.insert(scope.clone());
+    collector.class_scopes.insert(scope.clone());
+    walk_class_with_scoped_methods(collector, &scope, class_id, class);
 }

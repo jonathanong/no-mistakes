@@ -7,8 +7,30 @@ impl ImportCollector {
             let Some(init) = declarator.init.as_ref() else {
                 continue;
             };
+            self.record_const_aggregate_alias_candidate(&declarator.id, init);
             self.record_callable_alias_from_pattern(&declarator.id, init);
         }
+    }
+
+    fn record_const_aggregate_alias_candidate(
+        &mut self,
+        pattern: &BindingPattern<'_>,
+        init: &Expression<'_>,
+    ) {
+        let (Some(local), Some(target)) =
+            (binding_identifier_name(pattern), simple_callee_name(init))
+        else {
+            return;
+        };
+        self.aggregate_alias_candidates
+            .push(AggregateAliasCandidate {
+                binding_scope: self.current_lexical_scope_id(),
+                lexical_scope_depth: self.local_stack.len() - 1,
+                local: local.to_string(),
+                target,
+                owner: self.current_function(),
+                owner_id: self.current_function_id(),
+            });
     }
 
     fn record_callable_alias_from_pattern(
@@ -45,7 +67,8 @@ impl ImportCollector {
                     if property.computed {
                         continue;
                     }
-                    let Some(key) = crate::codebase::ts_source::static_property_key_name(&property.key)
+                    let Some(key) =
+                        crate::codebase::ts_source::static_property_key_name(&property.key)
                     else {
                         continue;
                     };

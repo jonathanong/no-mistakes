@@ -29,6 +29,17 @@ fn nested_class_eager_expressions_keep_the_enclosing_callable_owner() {
 }
 
 #[test]
+fn inherited_static_callable_members_resolve_through_local_base_classes() {
+    let facts = facts("class Base { static run() {} } class Child extends Base {} Child.run();");
+
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "Child.run"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction));
+}
+
+#[test]
 fn named_class_and_member_decorators_are_calls_in_the_enclosing_evaluation_scope() {
     let facts = facts(
         r#"

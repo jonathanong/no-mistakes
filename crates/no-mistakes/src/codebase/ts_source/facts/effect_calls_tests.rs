@@ -90,3 +90,28 @@ fn keeps_nested_effects_that_share_an_ast_start_offset() {
     callees.sort_unstable();
     assert_eq!(callees, ["start", "stop"]);
 }
+
+#[test]
+fn excludes_synthetic_callback_construction_transitions() {
+    let call = |is_callback| FunctionCall {
+        caller: Some("Derived".to_string()),
+        caller_id: None,
+        syntactic_caller: Some("Derived".to_string()),
+        callee: "Base".to_string(),
+        line: 1,
+        offset: u32::from(is_callback),
+        is_callback,
+        invocation: InvocationKind::Construct,
+        target_identity: CallTargetIdentity::RepositoryFunction,
+        callee_binding_scope: None,
+        static_arg: None,
+        static_cwd: None,
+    };
+    let effects = collect_effect_calls(
+        &[call(true), call(false)],
+        &EffectNames::from([("Base".to_string(), None)]),
+    );
+
+    assert_eq!(effects.len(), 1, "{effects:#?}");
+    assert_eq!(effects[0].callee, "Base");
+}

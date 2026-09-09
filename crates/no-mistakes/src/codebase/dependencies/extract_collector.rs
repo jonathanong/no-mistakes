@@ -1,3 +1,12 @@
+struct AggregateAliasCandidate {
+    binding_scope: usize,
+    lexical_scope_depth: usize,
+    local: String,
+    target: String,
+    owner: Option<String>,
+    owner_id: Option<CallableId>,
+}
+
 #[derive(Default)]
 struct ImportCollector {
     /// 0-based byte offsets of each line start. Empty when line numbers are
@@ -18,8 +27,13 @@ struct ImportCollector {
     /// reassigned lexical binding without promoting instance methods to static
     /// graph edges.
     aggregate_callable_member_ids: HashSet<(CallableId, String, CallableId)>,
+    /// `const facade = api` candidates are expanded after traversal, once the
+    /// source aggregate's members have been collected.
+    aggregate_alias_candidates: Vec<AggregateAliasCandidate>,
     static_getter_member_ids: HashSet<(CallableId, String)>,
+    object_getter_member_ids: HashSet<(CallableId, String)>,
     static_setter_member_ids: HashSet<(CallableId, String)>,
+    class_local_bases: HashMap<CallableId, String>,
     syntactic_caller_stack: Vec<String>,
     local_stack: Vec<HashSet<String>>,
     /// Stable identities parallel to `local_stack`. Scope depth alone is not

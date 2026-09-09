@@ -2,6 +2,11 @@ class Service {
   static run() {}
 }
 
+class InheritedBase {
+  static run() {}
+}
+class InheritedChild extends InheritedBase {}
+
 const ExpressionService = class {
   static run() {}
   instance() {}
@@ -36,6 +41,7 @@ function api() {
 }
 
 Service.run();
+InheritedChild.run();
 ExpressionService.run();
 ExpressionService.instance();
 new NamedExpressionService();

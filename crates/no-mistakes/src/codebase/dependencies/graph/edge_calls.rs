@@ -31,6 +31,9 @@ struct ClassBindingTarget {
     class_id: crate::codebase::dependencies::extract::CallableId,
     static_member_ids:
         std::collections::HashMap<String, crate::codebase::dependencies::extract::CallableId>,
+    /// A simple local `extends Base` relationship. Imported, computed, and
+    /// expression bases intentionally stay unresolved here.
+    local_base: Option<String>,
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -88,12 +91,22 @@ impl CallableFileIndex {
                             .filter(|(candidate_class_id, _, _)| *candidate_class_id == *id)
                             .map(|(_, member, member_id)| (member.clone(), *member_id))
                             .collect();
+                        let local_base = file.function_calls.iter().find_map(|call| {
+                            (call.caller_id == Some(*id)
+                                && call.is_callback
+                                && call.invocation
+                                    == crate::codebase::dependencies::extract::InvocationKind::Construct
+                                && call.target_identity
+                                    == crate::codebase::dependencies::extract::CallTargetIdentity::RepositoryFunction)
+                                .then(|| call.callee.clone())
+                        });
                         (
                             (*scope, binding.clone()),
                             ClassBindingTarget {
                                 scope: class_scope.clone(),
                                 class_id: *id,
                                 static_member_ids,
+                                local_base,
                             },
                         )
                     })
@@ -104,32 +117,9 @@ impl CallableFileIndex {
         }
     }
 
-    fn resolve_class_binding(
-        &self,
-        binding_scope: Option<usize>,
-        callee: &str,
-    ) -> Option<ResolvedLocalCallee> {
-        let binding_scope = binding_scope?;
-        let (binding, member) = callee
-            .split_once('.')
-            .map_or((callee, None), |(binding, member)| (binding, Some(member)));
-        let scope = self
-            .class_bindings
-            .get(&(binding_scope, binding.to_string()))?;
-        let callable_id = match member {
-            Some(member) => scope.static_member_ids.get(member).copied()?,
-            None => scope.class_id,
-        };
-        Some(ResolvedLocalCallee {
-            callee: member.map_or_else(
-                || scope.scope.clone(),
-                |member| format!("{}.{}", scope.scope, member),
-            ),
-            callable_id: Some(callable_id),
-        })
-    }
 }
 
+include!("edge_calls/class_resolution.rs");
 include!("edge_calls/alias_resolution.rs");
 include!("edge_calls/traversal_filter.rs");
 

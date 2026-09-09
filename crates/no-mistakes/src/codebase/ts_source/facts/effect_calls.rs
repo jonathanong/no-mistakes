@@ -58,10 +58,12 @@ fn effect_occurrence_key(call: &FunctionCall) -> (u32, &str, bool) {
 }
 
 fn is_effect_invocation(call: &FunctionCall, names: &EffectNames) -> bool {
-    matches!(
+    let is_source_invocation = matches!(
         call.invocation,
         InvocationKind::Call | InvocationKind::Construct
-    ) && effect_match(&call.callee, names).is_some()
+    ) && !(call.is_callback
+        && matches!(call.invocation, InvocationKind::Construct));
+    is_source_invocation && effect_match(&call.callee, names).is_some()
 }
 
 fn prefers_ownership_record(candidate: &FunctionCall, current: &FunctionCall) -> bool {

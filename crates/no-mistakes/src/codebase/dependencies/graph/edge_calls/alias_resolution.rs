@@ -44,15 +44,48 @@ impl CallableFileIndex {
         let mut binding_scope = binding_scope?;
         let mut visited = std::collections::HashSet::new();
         if callee.contains('.') {
-            if let Some((target, _)) = self
-                .aliases
-                .get(&(binding_scope, callee.to_string()))
-                .filter(|(_, invalidated_at)| invalidated_at.is_none_or(|cutoff| offset < cutoff))
-            {
-                return Some(ResolvedLocalCallee {
-                    callee: target.clone(),
-                    callable_id: None,
-                });
+            let mut target = callee.to_string();
+            let mut resolved_alias = false;
+            loop {
+                let mut scope = Some(binding_scope);
+                let alias = loop {
+                    let Some(candidate_scope) = scope else {
+                        break None;
+                    };
+                    if let Some((alias, _)) = self
+                        .aliases
+                        .get(&(candidate_scope, target.clone()))
+                        .filter(|(_, invalidated_at)| {
+                            invalidated_at.is_none_or(|cutoff| offset < cutoff)
+                        })
+                    {
+                        break Some((candidate_scope, alias));
+                    }
+                    scope = self
+                        .lexical_scope_parents
+                        .get(&candidate_scope)
+                        .copied()
+                        .flatten();
+                };
+                let Some((alias_scope, alias)) = alias else {
+                    if resolved_alias {
+                        if let Some(class_scope) =
+                            self.resolve_class_binding_in_scope_chain(binding_scope, &target)
+                        {
+                            return Some(class_scope);
+                        }
+                    }
+                    return resolved_alias.then_some(ResolvedLocalCallee {
+                        callee: target,
+                        callable_id: None,
+                    });
+                };
+                if !visited.insert((alias_scope, target)) {
+                    return None;
+                }
+                resolved_alias = true;
+                target = alias.clone();
+                binding_scope = alias_scope;
             }
         }
         let (binding, member) = callee

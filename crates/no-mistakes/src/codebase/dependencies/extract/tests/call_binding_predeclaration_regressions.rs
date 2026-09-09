@@ -110,3 +110,30 @@ fn class_method_bodies_predeclare_later_function_and_shadow_bindings() {
     assert_eq!(timeout_call.caller.as_deref(), Some("default/run"));
     assert_eq!(timeout_call.target_identity, CallTargetIdentity::Unknown);
 }
+
+#[test]
+fn wrapped_default_class_uses_its_class_scope_and_default_binding_identity() {
+    let facts = facts(
+        "export default ((class Wrapped { static run() { helper(); function helper() {} } }) satisfies unknown);",
+    );
+    let class_id = facts
+        .callable_scope_ids
+        .iter()
+        .find_map(|(id, scope)| (scope == "Wrapped").then_some(*id))
+        .expect("wrapped class callable identity");
+    let helper_call = facts
+        .function_calls
+        .iter()
+        .find(|call| call.callee == "helper")
+        .expect("wrapped class method call");
+
+    assert_eq!(helper_call.caller.as_deref(), Some("Wrapped/run"));
+    assert!(facts
+        .callable_bindings
+        .iter()
+        .any(|(_, name, id)| { name == "default" && *id == class_id }));
+    assert!(facts
+        .exported_bindings
+        .iter()
+        .any(|binding| { binding.local == "default" && binding.exported == "default" }));
+}

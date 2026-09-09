@@ -238,6 +238,45 @@ fn static_getter_reads_are_recorded_separately_from_return_value_calls() {
 }
 
 #[test]
+fn object_getter_reads_are_recorded_separately_from_return_value_calls() {
+    let facts = facts(
+        "const registry = { get value() { return () => {}; } }; function run() { registry.value(); }",
+    );
+    assert!(facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "registry.value"
+            && call.invocation == InvocationKind::Call
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts.unknown_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run") && call.invocation == InvocationKind::Call
+    }));
+    assert_eq!(
+        facts
+            .function_calls
+            .iter()
+            .filter(|call| {
+                call.caller.as_deref() == Some("run") && call.callee == "registry.value"
+            })
+            .count(),
+        1
+    );
+}
+
+#[test]
+fn reassigned_object_binding_does_not_invoke_its_previous_getter() {
+    let facts = facts(
+        "let registry = { get value() { return () => {}; } }; registry = {}; function run() { return registry.value; }",
+    );
+
+    assert!(!facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "registry.value"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
 fn static_setter_assignment_invokes_the_setter_without_invalidating_it() {
     let facts = facts(
         "class Service { static set value(next) {} } function run() { Service.value = 1; Service.value = 2; }",

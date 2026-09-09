@@ -28,9 +28,6 @@ impl ImportCollector {
         {
             return false;
         }
-        if callable_alias {
-            return true;
-        }
         if let Some((_, member)) = callee.split_once('.') {
             if member == "constructor" {
                 return false;
@@ -46,17 +43,16 @@ impl ImportCollector {
                 .iter()
                 .any(|(id, scope)| id == class_id && self.class_scopes.contains(scope));
             if is_class {
-                return self.class_member_callable_ids.iter().any(
-                    |(candidate_class_id, candidate_member, _)| {
-                        candidate_class_id == class_id && candidate_member == member
-                    },
-                );
+                return self.has_class_static_member(*class_id, binding_scope, member);
             }
             return self.function_calls.iter().any(|call| {
                 call.invocation == InvocationKind::Membership
                     && call.caller_id == Some(*class_id)
                     && call.callee == member
             });
+        }
+        if callable_alias {
+            return true;
         }
         if let Some(class_id) = self
             .callable_bindings
@@ -89,6 +85,51 @@ impl ImportCollector {
                     || self.callable_scopes.contains(&binding.replace('.', "/"));
             };
             scope = parent;
+        }
+    }
+}
+
+impl ImportCollector {
+    fn has_class_static_member(
+        &self,
+        mut class_id: CallableId,
+        binding_scope: usize,
+        member: &str,
+    ) -> bool {
+        let mut seen = HashSet::new();
+        loop {
+            if !seen.insert(class_id) {
+                return false;
+            }
+            if self.class_member_callable_ids.iter().any(
+                |(candidate_class_id, candidate_member, _)| {
+                    *candidate_class_id == class_id && candidate_member == member
+                },
+            ) {
+                return true;
+            }
+            let Some(base) = self.class_local_bases.get(&class_id) else {
+                return false;
+            };
+            let mut scope = Some(binding_scope);
+            let base_id = loop {
+                let Some(scope_id) = scope else { break None };
+                if let Some(id) = self.callable_bindings.get(&(scope_id, base.clone())) {
+                    break Some(*id);
+                }
+                scope = self.lexical_scope_parents.get(&scope_id).copied().flatten();
+            };
+            let Some(base_id) = base_id else {
+                return false;
+            };
+            let base_is_class = self
+                .callable_scope_ids
+                .iter()
+                .any(|(id, scope)| *id == base_id && self.class_scopes.contains(scope));
+            if !base_is_class {
+                return false;
+            }
+            class_id = base_id;
         }
     }
 }

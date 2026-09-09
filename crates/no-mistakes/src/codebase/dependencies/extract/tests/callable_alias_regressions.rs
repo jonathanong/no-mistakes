@@ -81,3 +81,74 @@ fn callable_alias_invalidation_preserves_calls_before_the_assignment() {
             && alias.invalidated_at == Some(source.find("alias = injected").unwrap() as u32)
     }));
 }
+
+#[test]
+fn immutable_object_aliases_preserve_callable_member_identity() {
+    let facts = facts(
+        "function target() {} const api = { run: target }; const facade = api; facade.run();",
+    );
+
+    assert!(facts.callable_aliases.iter().any(|alias| {
+        alias.local == "facade.run" && alias.target == "api.run" && alias.invalidated_at.is_none()
+    }));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "facade.run"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
+fn chained_immutable_object_aliases_preserve_callable_members() {
+    let facts = facts(
+        "function target() {} const api = { run: target }; const facade = api; const secondFacade = facade; secondFacade.run();",
+    );
+
+    assert!(facts
+        .callable_aliases
+        .iter()
+        .any(|alias| { alias.local == "secondFacade.run" && alias.target == "facade.run" }));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "secondFacade.run"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
+fn class_aliases_only_materialize_static_callable_members() {
+    let facts = facts(
+        "class Service { static run() {} instance() {} } const Alias = Service; Alias.run(); Alias.instance();",
+    );
+
+    assert!(facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "Alias.run"));
+    assert!(!facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "Alias.instance"));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "Alias.run" && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "Alias.instance" && call.target_identity == CallTargetIdentity::Unknown
+    }));
+}
+
+#[test]
+fn materialized_aliases_keep_their_declaring_callable_owner() {
+    let facts = facts(
+        "function target() {} function outer() { const api = { run: target }; const facade = api; facade.run(); }",
+    );
+    let outer_id = facts
+        .callable_scope_ids
+        .iter()
+        .find_map(|(id, scope)| (scope == "outer").then_some(*id))
+        .expect("outer callable identity");
+
+    assert!(facts.callable_aliases.iter().any(|alias| {
+        alias.local == "facade.run"
+            && alias.scope.as_deref() == Some("outer")
+            && alias.scope_id == Some(outer_id)
+    }));
+}

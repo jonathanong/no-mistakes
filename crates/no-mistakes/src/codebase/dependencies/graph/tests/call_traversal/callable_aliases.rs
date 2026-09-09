@@ -35,3 +35,17 @@ fn nested_object_member_reassignment_removes_the_callable_edge() {
 
     assert!(targets.is_empty());
 }
+
+#[test]
+fn immutable_object_aliases_resolve_callable_members() {
+    let (root, graph) = call_fixture_graph();
+    let file = root.join("src/immutable-object-callable-alias.mts");
+    let targets = graph.call_traces(
+        &[symbol(&file, "callThroughFacade")],
+        CallTraversal::Direct,
+        None,
+    );
+
+    assert_eq!(targets.len(), 1);
+    assert!(has_symbol(&targets[0].target, &file, "target"));
+}

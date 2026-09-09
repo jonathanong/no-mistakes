@@ -10,6 +10,7 @@ fn record_class_base_construction(
     let Some(base) = class.heritage_expression().and_then(simple_callee_name) else {
         return;
     };
+    collector.record_class_local_base(class_id, base.clone());
     collector.function_calls.push(FunctionCall {
         caller: Some(class_name.to_string()),
         caller_id: Some(class_id),

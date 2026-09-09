@@ -43,6 +43,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         .later_exported_type_names
         .extend(later_named_type_exports(program, &local_type_names));
     collector.visit_program(program);
+    collector.materialize_aggregate_aliases();
 
     let reassigned_callable_ids = collector
         .reassigned_callable_binding_ids

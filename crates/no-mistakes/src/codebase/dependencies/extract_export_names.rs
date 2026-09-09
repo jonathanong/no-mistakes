@@ -58,6 +58,7 @@ fn later_default_export_value_names<'a>(program: &Program<'a>) -> Vec<String> {
             | ExportDefaultDeclarationKind::FunctionExpression(_)
     ) || parenthesized_default_function(&export.declaration).is_some()
         || parenthesized_default_arrow(&export.declaration).is_some()
+        || parenthesized_default_class(&export.declaration).is_some()
     {
         return Vec::new();
     }
