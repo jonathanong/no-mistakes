@@ -459,3 +459,20 @@ fn callable_alias_resolution_is_indexed_once_per_file() {
         "deferred alias finalization must look up the binding index",
     );
 }
+
+#[test]
+fn dotted_alias_resolution_follows_the_full_alias_chain() {
+    let source = include_str!("../edge_calls/alias_resolution.rs");
+    let dotted = source
+        .split("if callee.contains('.') {")
+        .nth(1)
+        .and_then(|rest| rest.split("let (binding, member) = callee").next())
+        .expect("dotted resolve_alias branch");
+
+    assert!(
+        dotted.contains("loop {")
+            && dotted.contains("resolved_alias = true")
+            && dotted.contains("target = alias.target.clone()"),
+        "dotted aliases must follow the chain, not return after one hop",
+    );
+}

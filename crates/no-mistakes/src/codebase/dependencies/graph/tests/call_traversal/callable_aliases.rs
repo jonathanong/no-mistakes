@@ -102,3 +102,70 @@ fn later_object_spread_removes_the_callable_member_edge() {
 
     assert!(targets.is_empty());
 }
+
+#[test]
+fn multi_hop_dotted_aliases_resolve_to_the_canonical_callable() {
+    let (root, graph) = call_fixture_graph();
+    let file = root.join("src/multi-hop-dotted-callable-alias.mts");
+    let targets = graph.call_traces(
+        &[symbol(&file, "callThroughObjectAlias")],
+        CallTraversal::Direct,
+        None,
+    );
+
+    assert_eq!(targets.len(), 1);
+    assert!(has_symbol(&targets[0].target, &file, "target"));
+}
+
+#[test]
+fn cyclic_dotted_aliases_stay_conservative() {
+    let (root, graph) = call_fixture_graph();
+    let file = root.join("src/cyclic-dotted-callable-alias.mts");
+    let targets = graph.call_traces(
+        &[symbol(&file, "callCyclicAlias")],
+        CallTraversal::Direct,
+        None,
+    );
+
+    assert!(targets.is_empty());
+}
+
+#[test]
+fn unresolved_dotted_aliases_stay_conservative() {
+    let (root, graph) = call_fixture_graph();
+    let file = root.join("src/unresolved-dotted-callable-alias.mts");
+    let targets = graph.call_traces(
+        &[symbol(&file, "callUnresolvedAlias")],
+        CallTraversal::Direct,
+        None,
+    );
+
+    assert!(targets.is_empty());
+}
+
+#[test]
+fn reassigned_intermediate_dotted_alias_stays_conservative() {
+    let (root, graph) = call_fixture_graph();
+    let file = root.join("src/reassigned-intermediate-dotted-alias.mts");
+    let targets = graph.call_traces(
+        &[symbol(&file, "callAfterInvokeReassign")],
+        CallTraversal::Direct,
+        None,
+    );
+
+    assert!(targets.is_empty());
+}
+
+#[test]
+fn shadowed_intermediate_name_does_not_steal_the_captured_alias() {
+    let (root, graph) = call_fixture_graph();
+    let file = root.join("src/shadowed-dotted-callable-alias.mts");
+    let targets = graph.call_traces(
+        &[symbol(&file, "callThroughShadow")],
+        CallTraversal::Direct,
+        None,
+    );
+
+    assert_eq!(targets.len(), 1);
+    assert!(has_symbol(&targets[0].target, &file, "target"));
+}

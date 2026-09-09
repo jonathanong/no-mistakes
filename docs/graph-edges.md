@@ -331,8 +331,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   aliases and callable bindings are indexed by lexical `(binding scope, local
   name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
   class, import, and deferred aliases, including `declared_at` (TDZ) and
-  `invalidated_at`. Increment and decrement writes invalidate the same binding
-  as assignment. Object-literal member aliases keep last-write for duplicate
+  `invalidated_at`. Dotted aliases follow that same cycle-safe chain, so
+  `calls.run` through `invoke` still reaches `target`. Increment and decrement
+  writes invalidate the same binding as assignment. Object-literal member aliases
+  keep last-write for duplicate
   keys and drop earlier members after a later spread. Static setter updates
   such as `C.value++` record a setter invocation instead of invalidating the
   accessor. Class aliases expose only static members, including static getter
