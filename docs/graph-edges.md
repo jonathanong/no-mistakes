@@ -347,7 +347,9 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   callable. Increment and decrement
   writes invalidate the same binding as assignment.   Object-literal member aliases
   keep last-write for duplicate
-  keys and drop earlier members after a later spread. A `var` object
+  keys. A later statically known object spread copies eligible members; unknown
+  or mutable spreads still drop earlier members. `{ ...source }.run()` resolves
+  through that same last-write member set. A `var` object
   aggregate declared in a nested block still binds in the hoisted function
   or module `var` scope, so `api.load()` after that block keeps `load`
   reachable. Static getter reads and setter writes keep distinct callable

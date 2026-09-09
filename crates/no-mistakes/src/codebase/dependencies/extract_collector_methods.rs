@@ -36,7 +36,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
                 collector.push(specifier, ImportKind::Require, call.span.start as usize);
             }
         }
-    } else if let Some(callee) = simple_callee_name(&call.callee) {
+    } else if let Some(callee) = recorded_call_callee(collector, call) {
         if collector.should_record_call(&callee) {
             if is_static_getter(collector, &callee) || is_object_getter(collector, &callee) {
                 collector.record_unknown_call(
