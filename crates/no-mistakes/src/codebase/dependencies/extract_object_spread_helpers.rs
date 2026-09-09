@@ -2,8 +2,9 @@ fn recorded_call_callee(
     collector: &ImportCollector,
     call: &CallExpression<'_>,
 ) -> Option<String> {
-    object_literal_spread_call_callee(collector, call)
-        .or_else(|| simple_callee_name(&call.callee))
+    let callee = object_literal_spread_call_callee(collector, call)
+        .or_else(|| simple_callee_name(&call.callee))?;
+    Some(normalize_function_prototype_call_apply(collector, callee))
 }
 
 fn object_literal_spread_call_callee(

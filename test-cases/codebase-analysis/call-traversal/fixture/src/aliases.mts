@@ -50,6 +50,7 @@ externalMock();
 targets.importedTarget();
 targets.default();
 targets.deep.member();
+// Function.prototype.call on an imported callable resolves to that callable.
 propertyImport.call();
 hidden();
 remote();

@@ -503,6 +503,8 @@ fn function_expression_declarator_binding_pattern_is_visited() {
 
 #[path = "tests/accessor_kind_regressions.rs"]
 mod accessor_kind_regressions;
+#[path = "tests/call_apply_regressions.rs"]
+mod call_apply_regressions;
 mod call_binding_metadata;
 #[path = "tests/call_binding_predeclaration_regressions.rs"]
 mod call_binding_predeclaration_regressions;

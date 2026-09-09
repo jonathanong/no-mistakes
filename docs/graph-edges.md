@@ -349,7 +349,11 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   keep last-write for duplicate
   keys. A later statically known object spread copies eligible members; unknown
   or mutable spreads still drop earlier members. `{ ...source }.run()` resolves
-  through that same last-write member set. A `var` object
+  through that same last-write member set.
+  Statically recognizable `fn.call(...)` and `fn.apply(...)` invocations
+  normalize to `fn` when `fn` is a known local, imported, or aliased callable
+  that does not own a `call`/`apply` member. Dynamic receivers such as
+  `factory().call()` and `this.call()` stay unresolved. A `var` object
   aggregate declared in a nested block still binds in the hoisted function
   or module `var` scope, so `api.load()` after that block keeps `load`
   reachable. Static getter reads and setter writes keep distinct callable
