@@ -6,7 +6,7 @@ use oxc_ast::ast::{
     CallExpression, CatchClause, Class, ClassElement, Declaration, ExportAllDeclaration,
     ExportDeclaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
     ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier, Expression, ForStatementLeft,
-    FormalParameters, IdentifierReference, ImportDeclaration, ImportDeclarationSpecifier,
+    FormalParameters, Function, IdentifierReference, ImportDeclaration, ImportDeclarationSpecifier,
     ImportExpression, JSXOpeningElement, MethodDefinition, MethodDefinitionKind, ModuleExportName,
     NewExpression, ObjectExpression, ObjectProperty, ObjectPropertyKind, Program,
     PropertyDefinition, Statement, StaticBlock, StaticMemberExpression, TSEnumDeclaration,
