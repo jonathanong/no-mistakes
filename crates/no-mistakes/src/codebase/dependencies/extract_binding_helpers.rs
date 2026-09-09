@@ -1,21 +1,3 @@
-fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
-    match pattern {
-        BindingPattern::BindingIdentifier(identifier) => vec![identifier.name.to_string()],
-        BindingPattern::ObjectPattern(object) => object
-            .properties
-            .iter()
-            .flat_map(|property| binding_names(&property.value))
-            .collect(),
-        BindingPattern::ArrayPattern(array) => array
-            .elements
-            .iter()
-            .flatten()
-            .flat_map(binding_names)
-            .collect(),
-        BindingPattern::AssignmentPattern(assignment) => binding_names(&assignment.left),
-    }
-}
-
 fn visit_binding_defaults_for_name<'a>(
     collector: &mut ImportCollector,
     pattern: &BindingPattern<'a>,
@@ -23,7 +5,10 @@ fn visit_binding_defaults_for_name<'a>(
 ) {
     match pattern {
         BindingPattern::AssignmentPattern(assignment) => {
-            if binding_names(&assignment.left).iter().any(|binding| binding == name) {
+            if binding_names(&assignment.left)
+                .iter()
+                .any(|binding| binding == name)
+            {
                 collector.visit_expression(&assignment.right);
             }
             visit_binding_defaults_for_name(collector, &assignment.left, name);
@@ -65,9 +50,13 @@ fn push_variable_function_scope<'a>(
     collector: &mut ImportCollector,
     declarator: &VariableDeclarator<'a>,
     name: Option<String>,
+    callable_id: CallableId,
 ) {
+    let binding_scope = name
+        .as_deref()
+        .and_then(|name| collector.callee_binding_scope(name));
     if exported_top_level_binding(collector, name.as_ref()) {
-        collector.push_function_scope(name);
+        collector.push_function_scope_for_binding(name, binding_scope, callable_id);
         if let Some(scope) = collector.current_function() {
             collector.exported_functions.insert(scope.clone());
             collector.callable_scopes.insert(scope);
@@ -76,13 +65,13 @@ fn push_variable_function_scope<'a>(
         walk_variable_type_annotation(collector, declarator);
     } else if name.is_some() {
         walk::walk_binding_pattern(collector, &declarator.id);
-        collector.push_function_scope(name);
+        collector.push_function_scope_for_binding(name, binding_scope, callable_id);
         if let Some(scope) = collector.current_function() {
             collector.callable_scopes.insert(scope);
         }
     } else {
         walk::walk_binding_pattern(collector, &declarator.id);
-        collector.push_anonymous_function_scope();
+        collector.push_anonymous_function_scope(callable_id);
     }
 }
 
@@ -91,8 +80,15 @@ fn visit_exported_variable_declarator_reference<'a>(
     declarator: &VariableDeclarator<'a>,
     name: Option<String>,
 ) {
+    let source_owner = matches!(
+        declarator.init,
+        Some(Expression::ArrowFunctionExpression(_) | Expression::FunctionExpression(_))
+    )
+    .then_some(name.clone())
+    .flatten();
+    let pushed_syntactic_caller = collector.push_syntactic_caller(source_owner);
     let pushed = name.is_some();
-    collector.push_function_scope(name);
+    collector.push_function_scope(name, CallableId(declarator.span.start));
     let saved_suppress_imports = collector.suppress_imports;
     let saved_collect_runtime = collector.collect_suppressed_runtime_imports;
     let saved_base_depth = collector.runtime_reachable_base_depth;
@@ -106,6 +102,7 @@ fn visit_exported_variable_declarator_reference<'a>(
     collector.collect_suppressed_runtime_imports = saved_collect_runtime;
     collector.runtime_reachable_base_depth = saved_base_depth;
     collector.pop_function_scope(pushed);
+    collector.pop_syntactic_caller(pushed_syntactic_caller);
 }
 
 fn visit_variable_declarator_references_for_bindings<'a>(
@@ -117,7 +114,7 @@ fn visit_variable_declarator_references_for_bindings<'a>(
         return false;
     }
     for name in names {
-        collector.push_function_scope(Some(name.clone()));
+        collector.push_function_scope(Some(name.clone()), CallableId(declarator.span.start));
         let saved_suppress_imports = collector.suppress_imports;
         collector.suppress_imports = true;
         if let Some(init) = &declarator.init {
@@ -132,13 +129,11 @@ fn visit_variable_declarator_references_for_bindings<'a>(
 }
 
 impl ImportCollector {
-    fn should_record_call(&self, callee: &str) -> bool {
-        let binding = callee.split_once('.').map_or(callee, |(binding, _)| binding);
-        if self.local_binding_shadows(binding) {
-            self.has_local_function_scope(binding)
-        } else {
-            true
-        }
+    fn should_record_call(&self, _callee: &str) -> bool {
+        // A shadowed value still represents a real callsite. Its target is
+        // Unknown unless we can resolve a local callable scope; dropping it
+        // would make policy checks silently miss dynamic/local dispatch.
+        true
     }
 
     fn record_imported_bindings(&mut self, import: &ImportDeclaration<'_>) {
@@ -150,14 +145,36 @@ impl ImportCollector {
                 ImportDeclarationSpecifier::ImportSpecifier(specifier) => {
                     self.imported_bindings
                         .insert(specifier.local.name.to_string());
+                    self.call_import_bindings.push(ImportedBinding {
+                        specifier: import.source.value.to_string(),
+                        local: specifier.local.name.to_string(),
+                        imported: specifier.imported.name().to_string(),
+                        kind: ImportedBindingKind::Named,
+                        is_type_only: import.import_kind.is_type()
+                            || specifier.import_kind.is_type(),
+                    });
                 }
                 ImportDeclarationSpecifier::ImportDefaultSpecifier(specifier) => {
                     self.imported_bindings
                         .insert(specifier.local.name.to_string());
+                    self.call_import_bindings.push(ImportedBinding {
+                        specifier: import.source.value.to_string(),
+                        local: specifier.local.name.to_string(),
+                        imported: "default".to_string(),
+                        kind: ImportedBindingKind::Default,
+                        is_type_only: import.import_kind.is_type(),
+                    });
                 }
                 ImportDeclarationSpecifier::ImportNamespaceSpecifier(specifier) => {
                     self.imported_bindings
                         .insert(specifier.local.name.to_string());
+                    self.call_import_bindings.push(ImportedBinding {
+                        specifier: import.source.value.to_string(),
+                        local: specifier.local.name.to_string(),
+                        imported: "*".to_string(),
+                        kind: ImportedBindingKind::Namespace,
+                        is_type_only: import.import_kind.is_type(),
+                    });
                 }
             }
         }

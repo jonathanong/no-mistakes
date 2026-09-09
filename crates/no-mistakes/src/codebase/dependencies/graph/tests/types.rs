@@ -86,7 +86,7 @@ mod tests_types {
             other => panic!("expected File, got {other:?}"),
         }
         match &symbol_a {
-            NodeId::Symbol { file, symbol } => {
+            NodeId::Symbol { file, symbol, .. } => {
                 assert_eq!(file.as_ref(), Path::new("src/widget.ts"));
                 assert_eq!(symbol.as_ref(), "Widget");
             }

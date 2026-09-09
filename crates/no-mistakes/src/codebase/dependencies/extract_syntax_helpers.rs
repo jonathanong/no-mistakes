@@ -8,25 +8,59 @@ fn binding_identifier_name<'a>(pattern: &'a oxc_ast::ast::BindingPattern<'a>) ->
 }
 
 fn simple_callee_name(expr: &Expression<'_>) -> Option<String> {
-    match expr {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
         Expression::Identifier(ident) => Some(ident.name.to_string()),
         Expression::ParenthesizedExpression(parenthesized) => {
             simple_callee_name(&parenthesized.expression)
         }
+        Expression::SequenceExpression(sequence) => sequence
+            .expressions
+            .last()
+            .and_then(|expression| simple_callee_name(expression)),
         Expression::StaticMemberExpression(member) => simple_static_member_name(member),
+        Expression::ComputedMemberExpression(member) => simple_computed_member_name(member),
         _ => None,
     }
 }
 
 fn simple_static_member_name(member: &StaticMemberExpression<'_>) -> Option<String> {
-    match &member.object {
-        Expression::Identifier(object) => Some(format!(
-            "{}.{}",
-            object.name.as_str(),
-            member.property.name.as_str()
-        )),
-        _ => None,
+    let object = match crate::codebase::ts_source::unwrap_ts_wrappers(&member.object) {
+        Expression::Identifier(object) => object.name.to_string(),
+        Expression::ThisExpression(_) => "this".to_string(),
+        Expression::StaticMemberExpression(object) => simple_static_member_name(object)?,
+        Expression::ComputedMemberExpression(object) => simple_computed_member_name(object)?,
+        _ => "<unknown>".to_string(),
+    };
+    Some(format!("{object}.{}", member.property.name.as_str()))
+}
+
+fn has_dynamic_static_member_receiver(expr: &Expression<'_>) -> bool {
+    let Expression::StaticMemberExpression(member) =
+        crate::codebase::ts_source::unwrap_ts_wrappers(expr)
+    else {
+        return false;
+    };
+    match crate::codebase::ts_source::unwrap_ts_wrappers(&member.object) {
+        Expression::Identifier(_) | Expression::ThisExpression(_) => false,
+        Expression::StaticMemberExpression(_) => has_dynamic_static_member_receiver(&member.object),
+        Expression::ComputedMemberExpression(member) => {
+            simple_computed_member_name(member).is_none()
+        }
+        _ => true,
     }
+}
+
+fn simple_computed_member_name(
+    member: &oxc_ast::ast::ComputedMemberExpression<'_>,
+) -> Option<String> {
+    let Expression::Identifier(object) = &member.object else {
+        return None;
+    };
+    let property = match crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression) {
+        Expression::StringLiteral(property) => property.value.as_str(),
+        _ => return None,
+    };
+    Some(format!("{}.{property}", object.name.as_str()))
 }
 
 fn jsx_element_reference_name(name: &oxc_ast::ast::JSXElementName<'_>) -> Option<String> {
@@ -104,10 +138,10 @@ fn all_export_specifiers_are_type(specifiers: &[ExportSpecifier<'_>]) -> bool {
 }
 
 fn module_export_name_name<'a>(name: &'a ModuleExportName<'a>) -> Option<&'a str> {
-    if let ModuleExportName::IdentifierReference(identifier) = name {
-        Some(identifier.name.as_str())
-    } else {
-        None
+    match name {
+        ModuleExportName::IdentifierReference(identifier) => Some(identifier.name.as_str()),
+        ModuleExportName::IdentifierName(identifier) => Some(identifier.name.as_str()),
+        ModuleExportName::StringLiteral(literal) => Some(literal.value.as_str()),
     }
 }
 

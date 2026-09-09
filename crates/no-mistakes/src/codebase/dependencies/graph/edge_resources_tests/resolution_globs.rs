@@ -21,6 +21,7 @@ fn resource_edges_cover_source_module_globs_invalid_patterns_and_missing_exact_p
                     cwd: None,
                     line: 1,
                     function_scope: None,
+                    function_scope_id: None,
                 },
                 ResourceCall {
                     kind: ResourceCallKind::GlobSync,
@@ -31,6 +32,7 @@ fn resource_edges_cover_source_module_globs_invalid_patterns_and_missing_exact_p
                     cwd: None,
                     line: 2,
                     function_scope: None,
+                    function_scope_id: None,
                 },
                 ResourceCall {
                     kind: ResourceCallKind::Glob,
@@ -41,6 +43,7 @@ fn resource_edges_cover_source_module_globs_invalid_patterns_and_missing_exact_p
                     cwd: None,
                     line: 3,
                     function_scope: None,
+                    function_scope_id: None,
                 },
                 ResourceCall {
                     kind: ResourceCallKind::ReadFileSync,
@@ -51,6 +54,7 @@ fn resource_edges_cover_source_module_globs_invalid_patterns_and_missing_exact_p
                     cwd: None,
                     line: 4,
                     function_scope: None,
+                    function_scope_id: None,
                 },
             ],
             ..TsFileFacts::default()

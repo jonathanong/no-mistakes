@@ -142,6 +142,7 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
             kind,
             line,
             function_scope: None,
+            function_scope_id: None,
             side_effect_only: false,
             re_export: false,
             runtime_reachable: false,

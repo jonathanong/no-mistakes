@@ -9,9 +9,7 @@ fn walk_object_values_with_parent_scope<'a>(
                 walk_object_property_value_with_parent_scope(collector, parent, property);
             }
             ObjectPropertyKind::SpreadProperty(spread) => {
-                collector.push_function_scope(Some(parent.to_string()));
                 collector.visit_expression(&spread.argument);
-                collector.pop_function_scope(true);
             }
         }
     }
@@ -24,22 +22,20 @@ fn walk_object_property_value_with_parent_scope<'a>(
 ) {
     match &property.value {
         Expression::FunctionExpression(function) => {
-            collector.push_function_scope(Some(parent.to_string()));
+            collector.push_function_scope(Some(parent.to_string()), CallableId(function.span.start));
             walk::walk_property_key(collector, &property.key);
             walk_function_property_value(collector, &property.key, function);
             collector.pop_function_scope(true);
         }
         Expression::ArrowFunctionExpression(arrow) => {
-            collector.push_function_scope(Some(parent.to_string()));
+            collector.push_function_scope(Some(parent.to_string()), CallableId(arrow.span.start));
             walk::walk_property_key(collector, &property.key);
             walk_arrow_property_value(collector, &property.key, arrow);
             collector.pop_function_scope(true);
         }
         _ => {
-            collector.push_function_scope(Some(parent.to_string()));
             walk::walk_property_key(collector, &property.key);
             collector.visit_expression(&property.value);
-            collector.pop_function_scope(true);
         }
     }
 }
@@ -51,17 +47,14 @@ fn walk_function_property_value<'a>(
 ) {
     let name = crate::codebase::ts_source::static_property_key_name(key);
     let pushed = name.is_some();
-    collector.push_function_scope(name.map(str::to_string));
+    collector.push_function_scope(name.map(str::to_string), CallableId(function.span.start));
     if let Some(scope) = collector.current_function() {
         collector.callable_scopes.insert(scope);
     }
     collector.add_type_parameter_names(function.type_parameters.as_deref());
+    visit_type_parameter_constraints(collector, function.type_parameters.as_deref());
     collector.add_formal_parameters(&function.params);
-    walk::walk_function(
-        collector,
-        function,
-        oxc_syntax::scope::ScopeFlags::empty(),
-    );
+    walk_function_with_body_bindings(collector, function);
     collector.pop_function_scope(pushed);
 }
 
@@ -72,12 +65,13 @@ fn walk_arrow_property_value<'a>(
 ) {
     let name = crate::codebase::ts_source::static_property_key_name(key);
     let pushed = name.is_some();
-    collector.push_function_scope(name.map(str::to_string));
+    collector.push_function_scope(name.map(str::to_string), CallableId(arrow.span.start));
     if let Some(scope) = collector.current_function() {
         collector.callable_scopes.insert(scope);
     }
     collector.add_type_parameter_names(arrow.type_parameters.as_deref());
+    visit_type_parameter_constraints(collector, arrow.type_parameters.as_deref());
     collector.add_formal_parameters(&arrow.params);
-    walk::walk_arrow_function_expression(collector, arrow);
+    walk_arrow_function_with_body_bindings(collector, arrow);
     collector.pop_function_scope(pushed);
 }

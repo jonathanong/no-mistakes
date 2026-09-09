@@ -276,6 +276,53 @@ fn collect_file_facts_keeps_raw_source_for_parse_and_source_type_errors() {
 }
 
 #[test]
+fn recovered_parse_error_facts_retain_callable_aliases() {
+    let source = r#"
+        import { importedTarget } from './target';
+        function outer() {
+            const localTarget = importedTarget;
+            function inner() { localTarget(); }
+            inner();
+        }
+        outer();
+    "#;
+    let allocator = oxc_allocator::Allocator::default();
+    let parsed = oxc_parser::Parser::new(&allocator, source, oxc_span::SourceType::ts()).parse();
+    assert!(parsed.diagnostics.is_empty());
+    let facts = super::file_parse_error::ts_facts(
+        &CheckFactPlan {
+            graph: crate::codebase::ts_source::facts::TsFactPlan {
+                function_calls: true,
+                ..Default::default()
+            },
+            ..CheckFactPlan::default()
+        },
+        None,
+        source,
+        &parsed.program,
+        "synthetic recoverable parse error".to_string(),
+    );
+    assert!(facts.parse_error.is_some());
+    assert!(facts.callable_aliases.iter().any(|alias| {
+        alias.scope.as_deref() == Some("outer")
+            && alias.local == "localTarget"
+            && alias.target == "importedTarget"
+    }));
+    assert!(facts
+        .callable_scope_ids
+        .iter()
+        .any(|(_, scope)| scope == "outer/inner"));
+    assert!(facts
+        .callable_bindings
+        .iter()
+        .any(|(_, name, _)| name == "inner"));
+    assert!(facts
+        .lexical_scope_parents
+        .iter()
+        .any(|(_, parent)| parent.is_some()));
+}
+
+#[test]
 fn collect_file_facts_records_unsupported_source_type() {
     let root = ast_fixture_path("");
     let file = ast_fixture_path("unknown-extension.source");
@@ -447,68 +494,5 @@ fn collect_check_facts_keeps_graph_files_out_of_shared_file_scope() {
     assert_eq!(facts.stats.files_discovered, 2);
 }
 
-#[test]
-fn explicitly_empty_graph_file_universe_is_complete() {
-    let root = fixture_path("");
-    let scoped = fixture_path("src/everything.tsx");
-    let facts = collect_check_facts_with_graph_files_and_playwright(
-        &root,
-        vec![scoped],
-        Vec::new(),
-        CheckFactPlan::default(),
-        None,
-    );
-
-    assert_eq!(
-        crate::codebase::dependencies::graph::TsFactLookup::graph_files(&facts),
-        Some([].as_slice())
-    );
-    assert!(facts.graph_file_universe_is_complete());
-    assert!(facts.graph_file_universe().is_empty());
-}
-
-#[test]
-fn collect_check_facts_only_parses_playwright_test_files_for_playwright_facts() {
-    let root = fixture_path("");
-    let test_file = fixture_path("src/everything.tsx");
-    let invalid_file = fixture_path("src/invalid.ts");
-    let facts = collect_check_facts_with_playwright(
-        &root,
-        vec![test_file.clone(), invalid_file.clone()],
-        CheckFactPlan::default(),
-        Some(playwright_plan(test_file.clone())),
-    );
-
-    assert_eq!(facts.stats.files_discovered, 2);
-    assert_eq!(facts.stats.files_parsed, 1);
-    assert_eq!(facts.stats.parse_errors, 0);
-    assert!(facts
-        .ts
-        .get(&test_file)
-        .expect("test file facts")
-        .playwright
-        .is_some());
-    assert!(!facts.ts.contains_key(&invalid_file));
-}
-
-#[test]
-fn playwright_fact_plan_union_preserves_staged_variants_and_source_metadata() {
-    let first = fixture_path("src/everything.tsx");
-    let second = fixture_path("src/widget.tsx");
-    let mut plan = playwright_plan(first.clone());
-    plan.set_source_files(vec![first.clone()]);
-    let mut other = playwright_plan(second.clone());
-    other.set_source_files(vec![second.clone()]);
-
-    plan.include(other);
-
-    assert!(plan.file(&first).is_some());
-    assert!(plan.file(&second).is_some());
-    assert_eq!(
-        plan.source_files().as_ref(),
-        &[
-            crate::codebase::ts_resolver::normalize_path(&first),
-            crate::codebase::ts_resolver::normalize_path(&second),
-        ]
-    );
-}
+#[path = "tests/playwright_regressions.rs"]
+mod playwright_regressions;

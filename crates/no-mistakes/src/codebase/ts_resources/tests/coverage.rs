@@ -1,6 +1,42 @@
 use super::*;
 
 #[test]
+fn resource_callable_ids_match_import_extraction_for_variable_values_and_class_fields() {
+    let source = r#"
+        import * as fs from 'node:fs';
+        export const load = () => fs.readFile('variable.json');
+        export class Service { field = fs.readFile('class-field.json'); }
+    "#;
+    let allocator = oxc_allocator::Allocator::default();
+    let parsed = crate::ast::parse(
+        std::path::Path::new("resource.ts"),
+        &allocator,
+        source,
+        oxc_span::SourceType::ts(),
+    );
+    assert!(parsed.diagnostics.is_empty(), "{:?}", parsed.diagnostics);
+    let imports =
+        crate::codebase::dependencies::extract::extract_import_facts_from_program_with_source(
+            &parsed.program,
+            source,
+        );
+    let resources = extract(&parsed.program, source);
+
+    for (path, scope) in [("variable.json", "load"), ("class-field.json", "Service")] {
+        let resource_id = resources
+            .calls
+            .iter()
+            .find(|call| call.path.value == path)
+            .and_then(|call| call.function_scope_id)
+            .expect("resource call must carry a callable identity");
+        assert!(imports
+            .callable_scope_ids
+            .iter()
+            .any(|(id, candidate)| *id == resource_id && candidate == scope));
+    }
+}
+
+#[test]
 fn records_static_url_forms_and_scoped_dynamic_diagnostics() {
     let facts = facts(include_str!(
         "../../../../../../fixtures/test-plan/resource-impact/extractor-coverage.ts"

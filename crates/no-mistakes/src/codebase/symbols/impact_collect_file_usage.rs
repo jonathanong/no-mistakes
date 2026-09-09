@@ -29,6 +29,13 @@ fn file_entry_uses_symbol(
     let callees: BTreeSet<String> = file_facts
         .function_calls
         .iter()
+        // Dynamic-import heuristics below retain their source-level fallback.
+        // Do not let a newly retained unknown/shadowed call turn that fallback
+        // into a positive file-level usage by spelling alone.
+        .filter(|call| {
+            call.target_identity
+                != crate::codebase::dependencies::extract::CallTargetIdentity::Unknown
+        })
         .chain(file_facts.symbol_references.iter())
         .map(|call| call.callee.clone())
         .collect();

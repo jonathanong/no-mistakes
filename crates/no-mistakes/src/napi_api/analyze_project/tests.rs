@@ -76,6 +76,39 @@ fn analyze_project_value_impl_accepts_parsed_options() {
 }
 
 #[test]
+fn analyze_project_graph_report_uses_opt_in_call_relationships() {
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": fixture_root("call-traversal"),
+            "reports": [{
+                "type": "dependencies",
+                "files": ["src/entry.mts"],
+                "relationships": ["call"],
+                "depth": 2
+            }]
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let files = value["reports"][0]["result"]["files"].as_array().unwrap();
+    assert!(files.iter().any(|entry| {
+        entry["file"] == "src/diamond-left.mts" && entry["symbol"] == "diamondLeft"
+    }));
+    assert!(files
+        .iter()
+        .any(|entry| { entry["file"] == "src/cycle-a.mts" && entry["symbol"] == "cycleA" }));
+    assert!(files.iter().all(|entry| {
+        entry["via"]
+            .as_array()
+            .is_some_and(|via| via.iter().all(|kind| kind == "call"))
+    }));
+    assert!(files
+        .iter()
+        .any(|entry| entry["file"] == "src/diamond-shared.mts"));
+}
+
+#[test]
 fn analyze_project_dynamic_import_check_respects_filesystem_skips_with_standalone_parity() {
     let root = check_runner_fixture("dynamic-import-respects-filesystem-skip");
     let result = analyze_project_check_result(&root);

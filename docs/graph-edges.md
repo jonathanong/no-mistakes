@@ -17,6 +17,7 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 
 | Serialized `via` | Internal edge kind | Relationship | Direction | Fixture proof |
 | --- | --- | --- | --- | --- |
+| `call` | `Call` | `call` | lexical caller function (or file top level) -> statically resolved local function, direct named import, static namespace-member import, or explicit named re-export | [`call-traversal`](../test-cases/codebase-analysis/call-traversal), [`graph-call-narrowing`](../test-cases/codebase-analysis/graph-call-narrowing), extractor and graph tests |
 | `import` | `Import` | `import`, `import-static` | TS/JS file -> statically imported TS/JS file | [`import-forms/static.mts`](../test-cases/codebase-analysis/import-forms/fixture/static.mts), asserted by `graph_edge_kind_acceptance` |
 | `type-import` | `TypeImport` | `import`, `import-type` | TS/JS file -> type-only dependency | [`import-forms/type-only.mts`](../test-cases/codebase-analysis/import-forms/fixture/type-only.mts), [`inline-type.mts`](../test-cases/codebase-analysis/import-forms/fixture/inline-type.mts), [`import-type.mts`](../test-cases/codebase-analysis/import-forms/fixture/import-type.mts) |
 | `dynamic-import` | `DynamicImport` | `import`, `import-dynamic` | TS/JS file -> string-literal `import("...")` target | [`import-forms/dynamic.mts`](../test-cases/codebase-analysis/import-forms/fixture/dynamic.mts) |
@@ -95,6 +96,7 @@ their configured roots, mounts, test exclusions, and any explicit filter.
 
 | Filter | Included edge kinds |
 | --- | --- |
+| `call` | `call` |
 | `import` | `import`, `type-import`, `dynamic-import`, `require`, `require-resolve` |
 | `import-static` | `import` |
 | `import-type` | `type-import` |
@@ -133,7 +135,7 @@ their configured roots, mounts, test exclusions, and any explicit filter.
 | `kotlin` | `kotlin-import`, `kotlin-ref` |
 | `elixir` | `elixir-import`, `elixir-ref` |
 | `dart` | `dart-import`, `dart-ref` |
-| `all` | all standard edge kinds, including `workflow`; excludes the opt-in `route-import` and `trpc` views |
+| `all` | all standard edge kinds, including `workflow`; excludes the opt-in `call`, `route-import`, and `trpc` views |
 
 Workflow virtual-node IDs are stable and project-relative:
 `path/to/workflow.yml#job:<job>` for a job and
@@ -300,6 +302,13 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   `router.push`), queue names, and process commands are not guessed. Only static
   literals and supported expression-free shapes produce edges. (Playwright
   `route-test` navigation is the documented exception above.)
+- `call` edges are opt-in and are deliberately soundness-bounded. Only local
+  functions, direct named imports, static namespace-member imports, and explicit named re-exports with one
+  resolved target become edges. Computed members, dynamic callees, globals,
+  ambiguous `export *` targets, and unresolved modules remain call-site facts
+  or diagnostics, never guessed graph edges. Call traversal is cycle-safe and
+  reports each target once at its deterministic shortest path; `depth: 0`
+  emits no targets and `depth: 1` is the direct-call boundary.
 - Selector text edges are approximate. Exact selector edges from configured test
   ID attributes are stronger than role/text/label/placeholder matching.
   Configured selector wrappers produce the same exact edge when their declared

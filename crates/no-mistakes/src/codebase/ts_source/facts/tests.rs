@@ -150,10 +150,6 @@ fn plan_domain_fact_detection_tracks_domain_flags() {
             ..TsFactPlan::default()
         },
         TsFactPlan {
-            effect_calls: true,
-            ..TsFactPlan::default()
-        },
-        TsFactPlan {
             rsc_environment: true,
             ..TsFactPlan::default()
         },
@@ -168,6 +164,103 @@ fn plan_domain_fact_detection_tracks_domain_flags() {
     ] {
         assert!(plan.has_domain_facts());
     }
+    assert!(!TsFactPlan {
+        effect_calls: true,
+        ..TsFactPlan::default()
+    }
+    .has_domain_facts());
+}
+
+#[test]
+fn effects_can_use_the_plain_canonical_fact_collection() {
+    let file = fixture("imports.ts");
+    let facts = collect_ts_facts(
+        std::slice::from_ref(&file),
+        TsFactPlan {
+            effect_calls: true,
+            ..TsFactPlan::default()
+        },
+    );
+
+    assert!(!facts[&file].function_calls.is_empty());
+    assert!(facts[&file].effect_calls.is_empty());
+}
+
+#[test]
+fn effect_projection_does_not_start_a_domain_ast_walk() {
+    let file = fixture("imports.ts");
+    let mut context = TsFactContext::new(file.parent().unwrap());
+    context.effect_functions.insert("helper".to_string(), None);
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let facts = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        collect_file_facts(
+            &file,
+            TsFactPlan {
+                effect_calls: true,
+                ..TsFactPlan::default()
+            },
+            &context,
+        )
+        .unwrap()
+    };
+
+    let helper_calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.callee == "helper")
+        .collect();
+    assert_eq!(helper_calls.len(), 2, "{helper_calls:#?}");
+    assert_eq!(helper_calls[0].offset, helper_calls[1].offset);
+    assert!(helper_calls.iter().any(|call| call.caller.is_some()));
+    assert!(helper_calls.iter().any(|call| call.caller.is_none()));
+    assert_eq!(facts.effect_calls.len(), 1, "{facts:#?}");
+    assert_eq!(facts.effect_calls[0].caller, None);
+    assert!(
+        !observer.snapshot().work.contains_key("ast.walks"),
+        "effects must project canonical calls without a second AST visitor: {:#?}",
+        observer.snapshot()
+    );
+}
+
+#[test]
+fn effect_projection_keeps_distinct_same_line_calls() {
+    let file = fixture("same-line-effects.ts");
+    let mut context = TsFactContext::new(file.parent().unwrap());
+    context.effect_functions.insert("helper".to_string(), None);
+
+    let facts = collect_file_facts(
+        &file,
+        TsFactPlan {
+            effect_calls: true,
+            ..TsFactPlan::default()
+        },
+        &context,
+    )
+    .unwrap();
+
+    assert_eq!(
+        facts.effect_calls.len(),
+        2,
+        "one same-line call is inside the exported function and one is a distinct top-level call: {:#?}",
+        facts.effect_calls
+    );
+    assert_eq!(
+        facts
+            .effect_calls
+            .iter()
+            .filter(|call| call.caller.as_deref() == Some("value"))
+            .count(),
+        1
+    );
+    assert_eq!(
+        facts
+            .effect_calls
+            .iter()
+            .filter(|call| call.caller.is_none())
+            .count(),
+        1
+    );
 }
 
 #[test]
@@ -401,104 +494,5 @@ fn queue_factory_context_requires_specifier_and_function_even_when_glob_matches(
     assert!(facts[&ts].queue_name.is_none());
 }
 
-#[test]
-fn queue_factory_context_without_glob_matches_all_paths() {
-    let ts = fixture("imports.ts");
-    let context = TsFactContext::new(ts.parent().unwrap());
-
-    assert!(context.matches_queue_factory(&ts));
-}
-
-#[test]
-fn collect_ts_facts_skips_non_indexable_files_and_preserves_read_errors() {
-    let ts = fixture("imports.ts");
-    let txt = fixture("plain.txt");
-    let missing = fixture("missing.ts");
-    let facts = collect_ts_facts(&[ts.clone(), txt, missing.clone()], TsFactPlan::imports());
-
-    assert_eq!(facts.len(), 2);
-    assert_eq!(facts[&ts].imports.len(), 1);
-    assert!(facts[&ts].symbols.is_none());
-    assert!(facts[&missing]
-        .operational_error
-        .as_deref()
-        .is_some_and(|error| error.contains("failed to read")));
-    assert!(facts[&missing]
-        .parse_error
-        .as_deref()
-        .is_some_and(|error| error.contains("failed to read")));
-}
-
-#[test]
-fn collect_ts_facts_uses_tsx_parser_and_symbols_when_requested() {
-    let tsx = fixture("component.tsx");
-    let facts = collect_ts_facts(
-        std::slice::from_ref(&tsx),
-        TsFactPlan::imports_and_symbols(),
-    );
-
-    assert_eq!(facts[&tsx].imports.len(), 1);
-    assert!(facts[&tsx].symbols.is_some());
-}
-
-#[test]
-fn exported_resource_roots_are_collected_only_for_resource_plans() {
-    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/test-plan/resource-impact/exported-member-consumer.ts");
-    let imports_and_symbols = collect_ts_facts(
-        std::slice::from_ref(&source),
-        TsFactPlan::imports_and_symbols(),
-    );
-    assert!(imports_and_symbols[&source]
-        .exported_resource_roots
-        .is_empty());
-    assert!(imports_and_symbols[&source]
-        .exported_resource_scopes
-        .is_empty());
-
-    let resources = collect_ts_facts(
-        std::slice::from_ref(&source),
-        TsFactPlan {
-            imports: true,
-            function_calls: true,
-            resources: true,
-            ..TsFactPlan::default()
-        },
-    );
-    assert_eq!(
-        resources[&source].exported_resource_roots,
-        ["NamedService", "Service", "api", "default", "eagerApi"]
-    );
-    assert!(resources[&source]
-        .exported_resource_scopes
-        .iter()
-        .any(|scope| scope == "api/nested/load"));
-}
-
-#[test]
-fn collect_ts_facts_can_skip_import_collection() {
-    let ts = fixture("imports.ts");
-    let facts = collect_ts_facts(
-        std::slice::from_ref(&ts),
-        TsFactPlan {
-            imports: false,
-            symbols: false,
-            ..TsFactPlan::default()
-        },
-    );
-
-    assert!(facts[&ts].imports.is_empty());
-    assert!(facts[&ts].symbols.is_none());
-}
-
-#[test]
-fn collect_file_facts_falls_back_to_ts_source_type_for_unknown_extension() {
-    let unknown = fixture("unknown-extension.source");
-    let facts = collect_file_facts(&unknown, TsFactPlan::imports(), &TsFactContext::default())
-        .expect("unknown extension fixture should still parse as TypeScript");
-
-    assert_eq!(facts.imports.len(), 1);
-}
-
-#[path = "tests_observer.rs"]
-mod observer_tests;
+#[path = "tests/collection_regressions.rs"]
+mod collection_regressions;

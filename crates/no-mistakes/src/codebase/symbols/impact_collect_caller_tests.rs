@@ -172,4 +172,5 @@ fn symbol_aliases_collect_destructured_and_member_assignment_locals() {
     assert!(!aliases.contains("assigned"));
 }
 
+mod call_identity;
 mod usage_helpers;

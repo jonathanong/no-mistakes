@@ -5,10 +5,17 @@ fn normalize_nodes(nodes: &[NodeId]) -> Vec<NodeId> {
             NodeId::File(path) => {
                 NodeId::file(crate::codebase::ts_resolver::normalize_path(path.as_ref()))
             }
-            NodeId::Symbol { file, symbol } => NodeId::symbol(
-                crate::codebase::ts_resolver::normalize_path(file),
-                symbol.clone(),
-            ),
+            NodeId::Symbol {
+                file,
+                symbol,
+                callable_id,
+            } => NodeId::Symbol {
+                file: FileNode::new(intern_node_path(
+                    crate::codebase::ts_resolver::normalize_path(file),
+                )),
+                symbol: symbol.clone(),
+                callable_id: *callable_id,
+            },
             NodeId::Module(specifier) => NodeId::Module(specifier.clone()),
             NodeId::QueueJob { queue_file, job } => NodeId::queue_job(
                 crate::codebase::ts_resolver::normalize_path(queue_file),

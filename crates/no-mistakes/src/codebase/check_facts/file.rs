@@ -91,6 +91,7 @@ fn collect_file_facts_from_source(
             let mut ts = super::file_parse_error::ts_facts(
                 plan,
                 stored_source.clone(),
+                parsed_source,
                 program,
                 parse_error.clone(),
             );

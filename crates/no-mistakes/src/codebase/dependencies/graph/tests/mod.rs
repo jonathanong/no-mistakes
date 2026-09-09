@@ -39,10 +39,13 @@ fn parsed_workflow_set(
     )
 }
 
+use crate::codebase::dependencies::extract::{CallTargetIdentity, InvocationKind};
+
 #[test]
 fn playwright_graph_build_has_one_snapshot_construction_site() {
     let builder = [
         include_str!("../builder_core.rs"),
+        include_str!("../builder_core/body.rs"),
         include_str!("../builder_edges.rs"),
     ]
     .concat();
@@ -96,6 +99,7 @@ include!("vitest_setup.rs");
 
 mod core_independent_edges;
 mod edge_kind_semantics;
+mod edge_resources;
 mod finalization;
 mod remaining_edges;
 mod selector_fact_plan;
@@ -103,3 +107,8 @@ mod selector_optimization;
 mod source_store_reuse;
 mod workflow_topology_edges;
 mod workflow_topology_run;
+include!("call_traversal.rs");
+mod call_traversal_unknown_dedup;
+include!("call_traversal_decorators.rs");
+include!("call_traversal_tagged_templates.rs");
+include!("call_policy_coverage.rs");

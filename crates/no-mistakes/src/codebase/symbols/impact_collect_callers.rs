@@ -37,12 +37,13 @@ fn local_caller_entries(
         let target_function_call_callers: BTreeSet<_> = facts
             .function_calls
             .iter()
-            .filter(|call| matches_local_callee(&call.callee, &local_names))
+            .filter(|call| legacy_call_matches_local_target(call, &local_names, facts))
             .filter_map(|call| call.caller.as_deref())
             .collect();
         for call in facts
             .function_calls
             .iter()
+            .filter(|call| legacy_call_matches_local_target(call, &local_names, facts))
             .chain(facts.symbol_references.iter().filter(|call| {
                 let Some(caller) = call.caller.as_deref() else {
                     return false;

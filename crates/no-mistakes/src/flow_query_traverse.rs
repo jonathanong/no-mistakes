@@ -107,7 +107,7 @@ fn flow_node(node: &NodeId, root: &Path, depth: usize) -> FlowNode {
             router_file: None,
             procedure: None,
         },
-        NodeId::Symbol { file, symbol } => FlowNode {
+        NodeId::Symbol { file, symbol, .. } => FlowNode {
             id,
             kind: "symbol",
             depth,

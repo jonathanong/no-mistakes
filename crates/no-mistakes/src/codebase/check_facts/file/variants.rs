@@ -124,6 +124,7 @@ fn recovered_error_facts(
     let mut ts = super::super::file_parse_error::ts_facts(
         plan,
         stored_source.clone(),
+        parsed_source,
         program,
         parse_error.clone(),
     );

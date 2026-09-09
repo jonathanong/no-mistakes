@@ -83,6 +83,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
                 kind: ImportKind::Dynamic,
                 line: 6,
                 function_scope: Some("hiddenNamed".to_string()),
+                function_scope_id: None,
                 side_effect_only: false,
                 re_export: false,
                 runtime_reachable: true,

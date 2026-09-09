@@ -169,23 +169,27 @@ fn empty_serial_paths_collect_symbols_with_the_parallel_fact_path() {
 }
 
 #[test]
-fn collect_domain_facts_fuses_http_and_effect_call_walks() {
+fn effects_project_canonical_calls_while_domain_walk_fuses_http_and_trpc() {
     let source = include_str!("../domain.rs");
     let walk = include_str!("../domain_walk.rs");
     let collect = include_str!("../collect/file.rs");
     assert!(
         source.contains("collect_fused_domain_calls"),
-        "domain facts must walk HTTP and effect calls together"
+        "domain facts must retain the shared HTTP/tRPC visitor"
     );
     assert!(
         !source.contains("extract_http_calls_from_program")
             && !source.contains("effect_calls::extract")
             && !source.contains("extract_trpc_calls_from_program"),
-        "HTTP, effect, and tRPC call extractors must not walk the program again"
+        "domain extractors must not walk the program again"
     );
     assert!(
         walk.contains("record_call_site") && walk.contains("procedure_path_from_call"),
         "the fused domain walk must record call sites and tRPC calls"
+    );
+    assert!(
+        !walk.contains("record_effect") && collect.contains("collect_effect_calls"),
+        "effects must project the canonical function-call facts, not join the domain visitor"
     );
     assert!(
         !collect.contains("collect_call_site_facts"),

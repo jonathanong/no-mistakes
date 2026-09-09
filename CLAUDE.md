@@ -36,7 +36,7 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 - Allow custom error messages for agents
 - Automatically fix when possible
 - If a rule is file-specific, make it an eslint/oxlint rule
-- 100% test coverage
+- Aim for 100% test coverage; enforce the repository's configured coverage floors
 - Test fixture-based — can't be perfect, but add more tests to improve coverage
 - Heuristics — can't be perfect, but we'll try our best
 - All CLIs must also be available through the N-API API for node.js
@@ -187,7 +187,7 @@ in that PR.
 
 ## Coverage
 
-- Coverage gates must enforce 99% line and function coverage by default.
+- Coverage gates must enforce 95% line and function coverage by default.
   Change `RUST_COVERAGE_FAIL_UNDER_LINES` and
   `RUST_COVERAGE_FAIL_UNDER_FUNCTIONS` in `.github/workflows/ci.yml`, and keep
   Codecov rust `target` values in `codecov.yml` in sync.

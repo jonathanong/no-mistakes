@@ -16,7 +16,13 @@ pub(super) fn rust_sources(dir: &Path) -> Vec<PathBuf> {
         })
         .filter_map(|entry| {
             let path = entry.into_path();
+            // Graph builder fragments expand inside a function and cannot
+            // contain standalone clap declarations.
             (path.extension().and_then(|ext| ext.to_str()) == Some("rs")
+                && path
+                    .parent()
+                    .and_then(Path::file_name)
+                    .is_none_or(|name| name != "builder_core")
                 && std::fs::symlink_metadata(&path)
                     .map(|metadata| metadata.file_type().is_file())
                     .unwrap_or(false))

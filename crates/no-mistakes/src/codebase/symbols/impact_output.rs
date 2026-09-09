@@ -155,7 +155,7 @@ fn export_name<'a>(kind: &ExportKind, name: &'a str) -> &'a str {
 fn caller_parts(node: &NodeId, root: &Path) -> Option<(String, Option<String>)> {
     match node {
         NodeId::File(path) => Some((relative_slash_path(root, path), None)),
-        NodeId::Symbol { file, symbol } => {
+        NodeId::Symbol { file, symbol, .. } => {
             Some((relative_slash_path(root, file), Some(symbol.to_string())))
         }
         NodeId::Module(_)

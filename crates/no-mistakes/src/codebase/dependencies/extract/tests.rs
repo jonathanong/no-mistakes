@@ -91,6 +91,20 @@ fn extracts_named_reexport() {
     assert_eq!(kinds(&imports), vec![ImportKind::Static]);
 }
 
+#[test]
+fn call_facts_preserve_string_literal_export_names() {
+    let source = "export { handler as \"call-handler\" } from './target.mts';";
+    let allocator = oxc_allocator::Allocator::default();
+    let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, source);
+
+    assert!(facts.exported_bindings.iter().any(|binding| {
+        binding.specifier.as_deref() == Some("./target.mts")
+            && binding.local == "handler"
+            && binding.exported == "call-handler"
+    }));
+}
+
 // ── Type-only forms ─────────────────────────────────────────────────
 
 #[test]
@@ -356,7 +370,12 @@ fn fixture_assignment_pattern_shadows_imported_calls() {
         .filter(|call| call.caller.as_deref() == Some("run") && call.callee == "loaded")
         .collect();
 
-    assert!(calls.is_empty());
+    assert_eq!(
+        calls.len(),
+        1,
+        "the shadowed runtime call remains observable"
+    );
+    assert_eq!(calls[0].target_identity, CallTargetIdentity::Unknown);
     assert!(!facts
         .symbol_references
         .iter()
@@ -482,111 +501,18 @@ fn function_expression_declarator_binding_pattern_is_visited() {
     assert_eq!(facts.imports[0].function_scope, None);
 }
 
-#[test]
-fn fixture_object_function_properties_track_static_scopes() {
-    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../test-cases/codebase-analysis/import-facts/fixture/object-function-property.mts",
-    );
-    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
-    let allocator = Allocator::default();
-    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
-
-    let facts = extract_import_facts_from_program(&ret.program);
-    let scopes: Vec<_> = facts
-        .imports
-        .iter()
-        .map(|import| import.function_scope.as_deref())
-        .collect();
-
-    assert_eq!(scopes, vec![Some("loaders/load"), Some("loaders/fallback")]);
-}
-
-#[test]
-fn fixture_object_arrow_properties_track_static_scopes() {
-    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/codebase-analysis/import-facts/fixture/object-function-arrow-property.mts");
-    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
-    let allocator = Allocator::default();
-    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
-
-    let facts = extract_import_facts_from_program(&ret.program);
-
-    assert_eq!(facts.imports.len(), 1);
-    assert_eq!(
-        facts.imports[0].function_scope.as_deref(),
-        Some("loaders/lazy")
-    );
-}
-
-#[test]
-fn fixture_computed_function_keys_are_visited_under_parent_scope() {
-    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../test-cases/codebase-analysis/import-facts/fixture/computed-function-keys.mts");
-    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
-    let allocator = Allocator::default();
-    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
-
-    let facts = extract_import_facts_from_program(&ret.program);
-    let imports: Vec<_> = facts
-        .imports
-        .iter()
-        .map(|import| (import.specifier.as_str(), import.function_scope.as_deref()))
-        .collect();
-
-    assert_eq!(
-        imports,
-        vec![
-            ("./key.mts", Some("loaders")),
-            ("./loaded.mts", Some("loaders")),
-            ("./method-key.mts", None),
-            ("./loaded.mts", Some("Loader"))
-        ]
-    );
-}
-
-#[test]
-fn fixture_anonymous_function_expression_records_anonymous_scope() {
-    let fixture = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
-        "../../test-cases/codebase-analysis/import-facts/fixture/anonymous-function-expression.mts",
-    );
-    let source = std::fs::read_to_string(&fixture).expect("fixture file should exist");
-    let allocator = Allocator::default();
-    let ret = Parser::new(&allocator, &source, SourceType::ts()).parse();
-
-    let facts = extract_import_facts_from_program(&ret.program);
-
-    assert_eq!(facts.imports.len(), 1);
-    assert_eq!(
-        facts.imports[0].function_scope.as_deref(),
-        Some("<anonymous:1>")
-    );
-}
-
-// ── is_indexable / is_tsx_file ──────────────────────────────────────
-
-#[test]
-fn is_indexable_ts() {
-    assert!(is_indexable(Path::new("a.ts")));
-    assert!(is_indexable(Path::new("a.mts")));
-    assert!(is_indexable(Path::new("a.tsx")));
-    assert!(is_indexable(Path::new("a.cts")));
-    assert!(is_indexable(Path::new("a.js")));
-    assert!(is_indexable(Path::new("a.mjs")));
-    assert!(is_indexable(Path::new("a.jsx")));
-    assert!(is_indexable(Path::new("a.cjs")));
-}
-
-#[test]
-fn is_indexable_rejects_non_ts() {
-    assert!(!is_indexable(Path::new("a.rs")));
-    assert!(!is_indexable(Path::new("a.json")));
-    assert!(!is_indexable(Path::new("Makefile")));
-}
-
-#[test]
-fn is_tsx_file_detects_tsx() {
-    assert!(is_tsx_file(Path::new("a.tsx")));
-    assert!(is_tsx_file(Path::new("a.jsx")));
-    assert!(!is_tsx_file(Path::new("a.ts")));
-    assert!(!is_tsx_file(Path::new("a.mts")));
-}
+mod call_binding_metadata;
+#[path = "tests/call_binding_predeclaration_regressions.rs"]
+mod call_binding_predeclaration_regressions;
+#[path = "tests/call_binding_reassignment_scope.rs"]
+mod call_binding_reassignment_scope;
+#[path = "tests/call_binding_regressions.rs"]
+mod call_binding_regressions;
+#[path = "tests/call_binding_shadow_regressions.rs"]
+mod call_binding_shadow_regressions;
+#[path = "tests/callable_alias_regressions.rs"]
+mod callable_alias_regressions;
+#[path = "tests/class_and_overload_regressions.rs"]
+mod class_and_overload_regressions;
+#[path = "tests/static_block_regressions.rs"]
+mod static_block_regressions;

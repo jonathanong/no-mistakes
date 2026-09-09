@@ -26,7 +26,7 @@ where
     let root_symbols: FxHashSet<(Arc<Path>, Arc<str>)> = starts
         .iter()
         .filter_map(|node| {
-            if let NodeId::Symbol { file, symbol } = node {
+            if let NodeId::Symbol { file, symbol, .. } = node {
                 Some((file.clone_arc(), symbol.clone_arc()))
             } else {
                 None
@@ -57,6 +57,7 @@ where
                     NodeId::Symbol {
                         file: owner,
                         symbol,
+                        ..
                     },
                     NodeId::File(neighbor_file),
                 ) = (&node, neighbor)
