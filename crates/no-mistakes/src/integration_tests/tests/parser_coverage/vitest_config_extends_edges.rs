@@ -94,7 +94,7 @@ fn absolute_static_vitest_config_extends_keeps_config_provenance() {
     let source = crate::test_support::replace_quoted_placeholder(
         &std::fs::read_to_string(&path).unwrap(),
         "__ABSOLUTE_EXTENDS__",
-        &base.to_string_lossy(),
+        base.to_string_lossy(),
     );
     let project = parse_vitest_fixture(&source, &path, &root)
         .unwrap()

@@ -313,7 +313,7 @@ fn absolute_cwd_resolves_spawn_entry() {
     let cwd = root.path().join("apps/site");
     let src = format!(
         "spawn('scripts/from-abs.mts', [], {{ cwd: {} }})",
-        crate::test_support::js_string_literal(&cwd.to_string_lossy())
+        crate::test_support::js_string_literal(cwd.to_string_lossy())
     );
 
     let edges = extract_spawn_edges(&src, &caller, root.path());

@@ -148,10 +148,10 @@ fn vitest_absolute_setup_paths_resolve_runtime_closures_but_not_declarations() {
         &crate::test_support::replace_quoted_placeholder(
             &std::fs::read_to_string(&path).unwrap(),
             "__ABSOLUTE_RUNTIME_SETUP__",
-            &root.join("absolute-setup.ts").to_string_lossy(),
+            root.join("absolute-setup.ts").to_string_lossy(),
         ),
         "__ABSOLUTE_DECLARATION_SETUP__",
-        &root.join("absolute-declaration.d.ts").to_string_lossy(),
+        root.join("absolute-declaration.d.ts").to_string_lossy(),
     );
     let project = &parse_vitest_fixture(&source, &path, &root).unwrap()[0];
     let runtime = project
