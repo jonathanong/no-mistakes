@@ -45,3 +45,20 @@ fn paired_static_accessors_keep_distinct_callable_ids() {
             && call.target_identity == CallTargetIdentity::RepositoryFunction
     }));
 }
+
+#[test]
+fn static_accessors_keep_kind_specific_collector_maps() {
+    let collector = include_str!("../../extract_collector.rs");
+    assert!(
+        collector.contains(
+            "static_getter_member_ids: FxHashMap<CallableId, FxHashMap<String, CallableId>>"
+        ),
+        "static getters must nest by owner so paired accessors keep distinct identities"
+    );
+    assert!(
+        collector.contains(
+            "static_setter_member_ids: FxHashMap<CallableId, FxHashMap<String, CallableId>>"
+        ),
+        "static setters must nest by owner so paired accessors keep distinct identities"
+    );
+}
