@@ -108,4 +108,4 @@ src/main.mts
   name because its deliberately conservative closure is an alternate view.
 - Route/queue edges are only active when `.no-mistakes.yml` defines the relevant config
 - Patterns ending in `/` in `--filter` collapse results to that folder level
-- `#SYMBOL` syntax is NOT supported for `no-mistakes dependencies` (only for `no-mistakes dependents`)
+- `#SYMBOL` syntax selects a callable for `--relationship call`; other relationships ignore it (use `dependents` for named-export impact)

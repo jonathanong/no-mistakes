@@ -43,9 +43,13 @@ pub(crate) fn collect_and_filter_entries_prepared(
         workspace: &workspace,
         interner: shared.session.interner(),
     });
-    validate_direction(&direction, &entrypoints)?;
-
     let allowed = relationship_filter(&args.relationships);
+    validate_direction(
+        &direction,
+        &entrypoints,
+        has_call_relationship(allowed.as_ref()),
+    )?;
+
     let roots: Vec<NodeId> = entrypoints
         .iter()
         .map(|entrypoint| entrypoint.node.clone())

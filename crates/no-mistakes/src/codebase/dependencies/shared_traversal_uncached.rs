@@ -66,7 +66,7 @@ fn collect_uncached_entries(
         Direction::Deps if has_call_relationship(allowed) => {
             let graph = shared.graph_shared()?;
             let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
-            let roots = roots_with_call_roots(roots, call_roots);
+            let roots = roots_with_call_roots(roots, call_roots, entrypoints, allowed);
             graph.deps_of(&roots, args.depth, allowed)
         }
         Direction::Deps if shared.build_plan.symbols && !args.include_symbols => shared
@@ -76,7 +76,7 @@ fn collect_uncached_entries(
         Direction::Dependents if has_call_relationship(allowed) => {
             let graph = shared.graph_shared()?;
             let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
-            let roots = roots_with_call_roots(roots, call_roots);
+            let roots = roots_with_call_roots(roots, call_roots, entrypoints, allowed);
             graph.dependents_of(&roots, args.depth, allowed)
         }
         Direction::Dependents if args.include_symbols => {
@@ -142,13 +142,43 @@ fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
         .collect()
 }
 
-/// Mixed relationship traversals retain the original file roots for file-level
-/// edges and the expanded callable roots for call edges.
-fn roots_with_call_roots(roots: &[NodeId], call_roots: Vec<NodeId>) -> Vec<NodeId> {
+/// Mixed relationship traversals retain file roots for file-level edges and
+/// expanded callable roots for call edges. Call-only symbol queries omit the
+/// file node so projection does not also walk unrelated top-level calls.
+fn roots_with_call_roots(
+    roots: &[NodeId],
+    call_roots: Vec<NodeId>,
+    entrypoints: &[Entrypoint],
+    allowed: Option<&std::collections::HashSet<EdgeKind>>,
+) -> Vec<NodeId> {
+    let call_only = allowed.is_some_and(|kinds| {
+        kinds.len() == 1 && kinds.contains(&EdgeKind::Call)
+    });
     let mut combined = Vec::with_capacity(roots.len() + call_roots.len());
-    combined.extend_from_slice(roots);
+    combined.extend(
+        roots
+            .iter()
+            .filter(|root| keep_call_projection_file_root(root, entrypoints, call_only))
+            .cloned(),
+    );
     combined.extend(call_roots);
     combined.sort();
     combined.dedup();
     combined
+}
+
+fn keep_call_projection_file_root(
+    root: &NodeId,
+    entrypoints: &[Entrypoint],
+    call_only: bool,
+) -> bool {
+    if !call_only {
+        return true;
+    }
+    let NodeId::File(file) = root else {
+        return true;
+    };
+    !entrypoints.iter().any(|entrypoint| {
+        entrypoint.symbol.is_some() && entrypoint.node.as_file() == Some(file.as_ref())
+    })
 }

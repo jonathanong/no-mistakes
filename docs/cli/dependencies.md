@@ -13,7 +13,9 @@ process, asset, resource, and React edges can all be included. Use
 reads, directory reads, and supported static glob matches.
 
 Use `--relationship call` to follow statically resolved lexical calls from the
-input file. The result includes local function calls, direct named imports,
+input file. `FILE#SYMBOL` starts that traversal at the selected callable even
+when symbols are excluded from output, so unrelated top-level calls in the same
+file are omitted. The result includes local function calls, direct named imports,
 static namespace-member imports, or explicit named re-exports. `--depth 1`
 returns only direct calls,
 `--depth 0` returns no calls, and larger depths follow the resolved call graph.
@@ -61,7 +63,8 @@ JSON and YAML reports include stable `diagnostics` plus `tsconfig_provenance`
 for requested entry files. Invalid automatic configs warn and fall back
 conservatively; an invalid explicit `--tsconfig` remains an error.
 
-`FILE#SYMBOL` is not meaningful for dependencies; symbol filtering is for
-[`dependents`](dependents.md) and [`related`](related.md).
+`FILE#SYMBOL` is meaningful for `--relationship call`, where it selects the
+callable instead of the whole file. For other relationships, symbol filtering
+is for [`dependents`](dependents.md) and [`related`](related.md).
 
 Node API: `dependencies(options)`.

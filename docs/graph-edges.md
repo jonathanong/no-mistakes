@@ -330,6 +330,9 @@ not assumed to equal a concrete literal route such as `/user/settings`.
 - Function-scoped dynamic `import()` and `require()` edges are pruned unless the
   containing function is statically called, exported, reached through an unknown
   top-level call shape, or contains an unknown call shape in reachable code.
+  `FILE#SYMBOL` call queries start from the selected callable rather than the
+  file root, so unrelated top-level calls in that file stay out of the
+  projection; file-level call queries still include those sites.
   Call edges and that reachability pass share one per-file `CallableFileIndex`:
   aliases and callable bindings are indexed by lexical `(binding scope, local
   name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
