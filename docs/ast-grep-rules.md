@@ -155,7 +155,7 @@ generic Rust/JS patterns can observe:
 - `no-std-hashmap-call-indexes` covers `graph/edge_calls.rs` and
   `graph/edge_calls/**`. Interned callable-index keys (lexical
   `(scope, name)`, `CallableId`, import/export locals) must use
-  `crate::fx` maps, not `std::collections::HashMap`/`HashSet`. rustc-hash 2
+  `crate::fx` maps, not `std::collections::HashMap`/`HashSet`. FxHash
   aliases have no `new()`; `HashMap::new()` in this directory is always
   SipHash. Public or untrusted keys elsewhere still use SipHash (`fx.rs`).
 - `no-global-edge-vector-dedup` protects canonical graph finalization in
