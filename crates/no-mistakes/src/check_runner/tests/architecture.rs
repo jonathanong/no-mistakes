@@ -18,6 +18,7 @@ fn aggregate_check_injects_prepared_config_into_every_domain() {
         "inferred_roots",
         "codebase_config",
         "vitest_projects",
+        "playwright_projects",
     ] {
         assert!(
             parallel.contains(prepared_input),
@@ -128,6 +129,12 @@ fn aggregate_vitest_ci_coverage_reuses_the_request_snapshot() {
 
     assert_eq!(
         prepared.matches("prepare_vitest_project_catalog(").count(),
+        1
+    );
+    assert_eq!(
+        prepared
+            .matches("prepare_playwright_project_catalog(")
+            .count(),
         1
     );
     assert!(tasks.contains("run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts"));

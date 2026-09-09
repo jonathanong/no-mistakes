@@ -2,6 +2,9 @@ use super::RULE_ID;
 use anyhow::{bail, Result};
 use serde::Deserialize;
 
+mod root;
+pub(super) use root::{catalog_names, PlaywrightRoot, Root};
+
 #[derive(Debug, Deserialize, Default)]
 #[serde(default, rename_all = "camelCase", deny_unknown_fields)]
 pub(super) struct Options {
@@ -11,40 +14,6 @@ pub(super) struct Options {
     pub(super) unknown_calls: UnknownCalls,
     pub(super) targets: Vec<Target>,
     pub(super) invocations: Vec<Invocation>,
-}
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-pub(super) enum Root {
-    File(FileRoot),
-    Module(ModuleRoot),
-    Function(FunctionRoot),
-    Vitest(VitestRoot),
-}
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(super) struct FileRoot {
-    pub(super) file: String,
-}
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(super) struct ModuleRoot {
-    pub(super) module: String,
-}
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(super) struct FunctionRoot {
-    pub(super) function: FunctionSelector,
-}
-#[derive(Debug, Deserialize)]
-#[serde(deny_unknown_fields)]
-pub(super) struct VitestRoot {
-    pub(super) vitest: VitestSelector,
-}
-#[derive(Debug, Deserialize)]
-#[serde(untagged)]
-pub(super) enum VitestSelector {
-    All(bool),
-    Projects(Vec<String>),
 }
 #[derive(Debug, Clone, Copy, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -124,19 +93,7 @@ pub(super) fn validate(options: &Options) -> Result<()> {
     if options.max_depth == Some(0) {
         bail!("{RULE_ID}: maxDepth must be greater than zero");
     }
-    for root in &options.roots {
-        match root {
-            Root::Vitest(VitestRoot {
-                vitest: VitestSelector::All(false),
-            }) => bail!("{RULE_ID}: vitest root must be true or a non-empty project list"),
-            Root::Vitest(VitestRoot {
-                vitest: VitestSelector::Projects(names),
-            }) if names.is_empty() => {
-                bail!("{RULE_ID}: vitest root project list must not be empty")
-            }
-            _ => {}
-        }
-    }
+    root::validate_roots(&options.roots)?;
     for target in &options.targets {
         match target {
             Target::Global(GlobalTarget { global })

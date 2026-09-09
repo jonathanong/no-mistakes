@@ -15,6 +15,8 @@ pub(crate) struct PreparedCheckInputs {
     pub(crate) tsconfig: no_mistakes::codebase::ts_resolver::TsConfig,
     pub(crate) tsconfig_catalog: Arc<no_mistakes::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) vitest_projects: Option<no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
+    pub(crate) playwright_projects:
+        Option<no_mistakes::codebase::rules::PreparedPlaywrightProjectCatalog>,
     pub(crate) workflow_documents:
         Option<Arc<no_mistakes::codebase::ci_workflows::ParsedWorkflowSet>>,
     pub(crate) tsconfig_gate_project_inputs:
@@ -131,6 +133,16 @@ pub(crate) fn prepare_from_shared(
             &tsconfig_catalog,
         )
     });
+    let playwright_projects = config
+        .rule_configured(no_mistakes::codebase::rules::FORBIDDEN_CALLS)
+        .then(|| {
+            no_mistakes::codebase::rules::prepare_playwright_project_catalog(
+                root,
+                &config,
+                visible_paths.as_ref(),
+                &tsconfig_catalog,
+            )
+        });
     let workflow_documents = (config
         .rule_configured(no_mistakes::codebase::rules::VITEST_CI_PATH_COVERAGE)
         || config.rule_configured(no_mistakes::codebase::rules::TSCONFIG_GATE_COVERAGE)
@@ -168,6 +180,7 @@ pub(crate) fn prepare_from_shared(
         tsconfig,
         tsconfig_catalog,
         vitest_projects,
+        playwright_projects,
         workflow_documents,
         tsconfig_gate_project_inputs,
     })

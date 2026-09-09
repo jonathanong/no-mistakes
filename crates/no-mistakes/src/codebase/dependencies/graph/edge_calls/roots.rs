@@ -15,9 +15,9 @@ pub enum CallRoot {
         file: std::path::PathBuf,
         symbol: String,
     },
-    /// Files selected by the prepared Vitest project catalog for the requested
-    /// project set. Catalog parsing remains owned by the request preparation.
-    Vitest {
+    /// Files selected by a prepared catalog or glob. Catalog parsing remains
+    /// owned by the request preparation.
+    Files {
         files: Vec<std::path::PathBuf>,
     },
 }
@@ -59,7 +59,7 @@ impl DepGraph {
                     );
                     self.resolve_display_callable(&node).into_iter().collect()
                 }
-                CallRoot::Vitest { files } => files
+                CallRoot::Files { files } => files
                     .iter()
                     .flat_map(|file| self.callable_file_roots(file))
                     .collect::<Vec<_>>(),

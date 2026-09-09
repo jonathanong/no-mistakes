@@ -100,6 +100,7 @@ impl SharedCheckContext {
                 config,
                 codebase_config: &self.prepared.codebase_config,
                 vitest_projects: self.prepared.vitest_projects.as_ref(),
+                playwright_projects: self.prepared.playwright_projects.as_ref(),
                 workflow_documents: self.prepared.workflow_documents.as_deref(),
                 tsconfig_gate_project_inputs: self
                     .prepared

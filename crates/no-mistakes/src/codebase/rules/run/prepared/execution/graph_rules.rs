@@ -11,6 +11,8 @@ pub(super) struct GraphRuleRequest<'a> {
     pub(super) inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
     pub(super) prepared_vitest_projects:
         Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
+    pub(super) prepared_playwright_projects:
+        Option<&'a crate::codebase::rules::PreparedPlaywrightProjectCatalog>,
 }
 
 pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<RuleFinding>> {
@@ -23,6 +25,7 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
         dependency_graph,
         inferred_roots,
         prepared_vitest_projects,
+        prepared_playwright_projects,
     } = request;
     let mut findings = Vec::new();
     if rule_enabled(config, FORBIDDEN_CALLS) {
@@ -32,6 +35,7 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
                 config,
                 dependency_graph.expect("forbidden-calls requires canonical graph"),
                 prepared_vitest_projects,
+                prepared_playwright_projects,
                 shared.graph_file_universe(),
             )
         })?);

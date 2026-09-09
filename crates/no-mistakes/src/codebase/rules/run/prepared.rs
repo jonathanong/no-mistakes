@@ -32,6 +32,8 @@ pub struct PreparedRulesCheck<'a> {
     pub prepared_tsconfig: &'a crate::codebase::ts_resolver::TsConfig,
     pub prepared_tsconfig_catalog: &'a crate::codebase::ts_resolver::TsConfigCatalog,
     pub prepared_vitest_projects: Option<&'a crate::codebase::rules::PreparedVitestProjectCatalog>,
+    pub prepared_playwright_projects:
+        Option<&'a crate::codebase::rules::PreparedPlaywrightProjectCatalog>,
     pub inferred_roots: Option<&'a crate::codebase::config::InferredRoots>,
     pub sources: Option<&'a crate::codebase::ts_source::SourceStore>,
 }

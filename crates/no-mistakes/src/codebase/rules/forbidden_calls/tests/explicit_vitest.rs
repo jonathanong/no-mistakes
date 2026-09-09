@@ -87,3 +87,18 @@ fn prepared_catalog_merges_explicit_projects_without_runner_configs() {
         "{matched:?}"
     );
 }
+
+#[test]
+fn vitest_root_errors_when_no_files_match() {
+    // Skip runner discovery with a missing config, then use an include that
+    // matches nothing so the empty-collection diagnostic stays distinct from I/O.
+    let error = fixture_findings(
+        "tests:\n  vitest:\n    configs: missing.config.ts\n    projects:\n      empty:\n        include: [does-not-exist/**/*.ts]\nrules:\n  - rule: forbidden-calls\n    scope: repository\n    options:\n      roots: [{ vitest: true }]\n      targets: [{ global: setTimeout }]\n",
+    )
+    .unwrap_err();
+
+    assert!(
+        error.to_string().contains("Vitest root matched no files"),
+        "{error:#}"
+    );
+}

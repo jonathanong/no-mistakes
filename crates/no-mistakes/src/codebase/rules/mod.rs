@@ -41,6 +41,7 @@ pub mod package_json_nested_workspace_coverage;
 pub mod package_json_registry_only;
 pub mod package_json_required_fields;
 pub mod package_json_workspace_coverage;
+mod playwright_project_catalog;
 pub mod pnpm_overrides_ban;
 pub mod pnpm_release_age_policy;
 pub mod postgres_conflict_ordering;
@@ -65,6 +66,7 @@ pub mod require_test_per_subdir;
 pub mod required_companion_imports;
 pub mod required_entrypoint_reachability;
 pub mod required_local_docs;
+mod runner_project_catalog;
 pub mod rust_max_lines_per_file;
 pub mod rust_no_inline_allows;
 pub mod rust_no_inline_tests;
@@ -107,6 +109,10 @@ pub use filesystem_dispatch::{
     run_filesystem_rules_with_files, run_filesystem_rules_with_visible_and_snapshot,
 };
 pub use ids::*;
+#[doc(hidden)]
+pub use playwright_project_catalog::{
+    prepare_playwright_project_catalog, PreparedPlaywrightProjectCatalog,
+};
 #[doc(hidden)]
 pub use run::{
     canonical_graph_plan, canonical_graph_requires_full_file_universe,

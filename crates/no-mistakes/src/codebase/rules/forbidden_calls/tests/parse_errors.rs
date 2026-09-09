@@ -40,11 +40,10 @@ fn findings(yaml: &str) -> anyhow::Result<Vec<crate::codebase::rules::RuleFindin
 #[test]
 fn expand_fails_closed_for_a_malformed_file_root() {
     let (root, graph) = malformed_graph();
-    let error = roots::expand(
+    let error = super::expand_roots(
         &root,
         &options("roots: [{ file: src/broken.mts }]\ntargets: [{ global: setTimeout }]"),
         &graph,
-        None,
         &[],
     )
     .unwrap_err();
@@ -57,11 +56,10 @@ fn expand_fails_closed_for_a_malformed_file_root() {
 #[test]
 fn expand_accepts_a_valid_root_when_unrelated_files_are_malformed() {
     let (root, graph) = malformed_graph();
-    let nodes = roots::expand(
+    let nodes = super::expand_roots(
         &root,
         &options("roots: [{ file: src/entry.mts }]\ntargets: [{ global: setTimeout }]"),
         &graph,
-        None,
         &[],
     )
     .expect("unrelated parse errors must stay optional");

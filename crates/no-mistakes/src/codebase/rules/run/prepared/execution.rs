@@ -32,6 +32,7 @@ pub(super) fn run(
         prepared_tsconfig,
         prepared_tsconfig_catalog,
         prepared_vitest_projects,
+        prepared_playwright_projects,
         inferred_roots,
         sources: _,
     } = inputs;
@@ -100,6 +101,7 @@ pub(super) fn run(
             prepared_graph,
             prepared_tsconfig_catalog,
             prepared_vitest_projects,
+            prepared_playwright_projects,
             inferred_roots,
             sources,
             dependency_graph,

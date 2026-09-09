@@ -99,6 +99,14 @@ pub(super) fn run_check(
             &prepared_tsconfig_catalog,
         )
     });
+    let prepared_playwright_projects = config.rule_configured(FORBIDDEN_CALLS).then(|| {
+        crate::codebase::rules::prepare_playwright_project_catalog(
+            root,
+            &config,
+            snapshot.as_ref(),
+            &prepared_tsconfig_catalog,
+        )
+    });
     let shared = collect_check_facts_with_graph_files_playwright_and_sources(
         root,
         files,
@@ -122,6 +130,7 @@ pub(super) fn run_check(
         prepared_tsconfig: &prepared_tsconfig,
         prepared_tsconfig_catalog: &prepared_tsconfig_catalog,
         prepared_vitest_projects: prepared_vitest_projects.as_ref(),
+        prepared_playwright_projects: prepared_playwright_projects.as_ref(),
         inferred_roots: Some(&inferred_roots),
         sources: Some(&sources),
     })
