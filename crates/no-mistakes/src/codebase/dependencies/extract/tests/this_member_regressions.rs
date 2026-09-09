@@ -24,6 +24,20 @@ fn constructor_this_member_calls_keep_this_receiver_spelling() {
 }
 
 #[test]
+fn mixed_instance_and_static_run_keep_distinct_this_member_caller_ids() {
+    let facts = facts(
+        "class Service { run() { this.load(); } static run() { this.load(); } load() {} static load() {} }",
+    );
+    let loads: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.callee == "this.load")
+        .collect();
+    assert_eq!(loads.len(), 2);
+    assert_ne!(loads[0].caller_id, loads[1].caller_id);
+}
+
+#[test]
 fn derived_override_dynamic_imports_stay_on_the_overriding_method() {
     let facts = facts(
         "class Base { async load() { await import('./this-member-base-loaded.mts'); } } class Derived extends Base { constructor() { super(); this.load(); } async load() { await import('./this-member-loaded.mts'); } }",

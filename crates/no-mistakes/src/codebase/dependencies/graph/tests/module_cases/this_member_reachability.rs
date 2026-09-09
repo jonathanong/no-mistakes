@@ -181,3 +181,74 @@ fn computed_this_member_stays_unresolved() {
             if file.as_ref() == source.as_path() && symbol.as_ref() == "Service/load"
     )));
 }
+
+#[test]
+fn mixed_instance_and_static_run_keep_this_member_kind() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let source = root.join("src/this-member-mixed-run.mts");
+    let facts = collect_ts_facts(
+        std::slice::from_ref(&source),
+        TsFactPlan {
+            function_calls: true,
+            ..TsFactPlan::default()
+        },
+    );
+    let file_facts = facts.get(&source).expect("mixed-run fixture facts");
+    let static_run = file_facts
+        .class_member_callable_ids
+        .iter()
+        .find(|(_, name, _)| name == "run")
+        .map(|(_, _, id)| *id)
+        .expect("static run");
+    let static_load = file_facts
+        .class_member_callable_ids
+        .iter()
+        .find(|(_, name, _)| name == "load")
+        .map(|(_, _, id)| *id)
+        .expect("static load");
+    let instance_run = file_facts
+        .function_calls
+        .iter()
+        .find(|call| call.callee == "this.load" && call.caller_id != Some(static_run))
+        .and_then(|call| call.caller_id)
+        .expect("instance run");
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+    for (caller, expect_static) in [(instance_run, false), (static_run, true)] {
+        let traces = graph.call_traces(
+            &[NodeId::callable(&source, "Service/run", caller)],
+            CallTraversal::Direct,
+            None,
+        );
+        let load = traces.iter().find_map(|trace| match &trace.target {
+            NodeId::Symbol {
+                file,
+                symbol,
+                callable_id,
+                ..
+            } if file.as_ref() == source.as_path() && symbol.as_ref() == "Service/load" => {
+                *callable_id
+            }
+            _ => None,
+        });
+        if expect_static {
+            assert_eq!(load, Some(static_load));
+        } else {
+            assert_ne!(load, Some(static_load));
+            assert!(load.is_some());
+        }
+    }
+}
