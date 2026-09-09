@@ -51,6 +51,13 @@ fn saved_fixture(name: &str) -> tempfile::TempDir {
     crate::test_support::materialize_saved_fixture(&source)
 }
 
+fn quoted_saved_fixture(name: &str) -> tempfile::TempDir {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-config")
+        .join(name);
+    crate::test_support::materialize_quote_containing_fixture(&source)
+}
+
 #[test]
 fn default_json_workspace_discovery_parses_objects_and_string_projects() {
     let fixture = saved_fixture("vitest-workspace-json");
@@ -134,19 +141,18 @@ fn vitest_setup_does_not_resolve_a_declaration_file_as_runtime() {
 
 #[test]
 fn vitest_absolute_setup_paths_resolve_runtime_closures_but_not_declarations() {
-    let fixture = saved_fixture("vitest-absolute-setup");
+    let fixture = quoted_saved_fixture("vitest-absolute-setup");
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
     let path = root.join("vitest.config.ts");
-    let source = std::fs::read_to_string(&path)
-        .unwrap()
-        .replace(
+    let source = crate::test_support::replace_quoted_placeholder(
+        &crate::test_support::replace_quoted_placeholder(
+            &std::fs::read_to_string(&path).unwrap(),
             "__ABSOLUTE_RUNTIME_SETUP__",
-            &root.join("absolute-setup.ts").to_string_lossy(),
-        )
-        .replace(
-            "__ABSOLUTE_DECLARATION_SETUP__",
-            &root.join("absolute-declaration.d.ts").to_string_lossy(),
-        );
+            root.join("absolute-setup.ts").to_string_lossy(),
+        ),
+        "__ABSOLUTE_DECLARATION_SETUP__",
+        root.join("absolute-declaration.d.ts").to_string_lossy(),
+    );
     let project = &parse_vitest_fixture(&source, &path, &root).unwrap()[0];
     let runtime = project
         .vitest_setup

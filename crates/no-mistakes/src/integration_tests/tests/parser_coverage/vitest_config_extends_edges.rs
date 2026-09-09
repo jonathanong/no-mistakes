@@ -38,6 +38,13 @@ fn saved_fixture(name: &str) -> tempfile::TempDir {
     crate::test_support::materialize_saved_fixture(&source)
 }
 
+fn quoted_saved_fixture(name: &str) -> tempfile::TempDir {
+    let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/test-config")
+        .join(name);
+    crate::test_support::materialize_quote_containing_fixture(&source)
+}
+
 #[test]
 fn unreadable_static_vitest_config_extends_keeps_owner_fallback() {
     let fixture = saved_fixture("vitest-extends-read-error");
@@ -80,13 +87,15 @@ fn unreadable_static_vitest_config_extends_keeps_owner_fallback() {
 
 #[test]
 fn absolute_static_vitest_config_extends_keeps_config_provenance() {
-    let fixture = saved_fixture("vitest-extends-absolute");
+    let fixture = quoted_saved_fixture("vitest-extends-absolute");
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
     let path = root.join("vitest.config.ts");
     let base = root.join("base.js");
-    let source = std::fs::read_to_string(&path)
-        .unwrap()
-        .replace("__ABSOLUTE_EXTENDS__", &base.to_string_lossy());
+    let source = crate::test_support::replace_quoted_placeholder(
+        &std::fs::read_to_string(&path).unwrap(),
+        "__ABSOLUTE_EXTENDS__",
+        base.to_string_lossy(),
+    );
     let project = parse_vitest_fixture(&source, &path, &root)
         .unwrap()
         .remove(0);
@@ -97,14 +106,16 @@ fn absolute_static_vitest_config_extends_keeps_config_provenance() {
 
 #[test]
 fn unresolved_absolute_static_vitest_config_extends_keeps_candidate_trigger() {
-    let fixture = saved_fixture("vitest-extends-absolute-unresolved");
+    let fixture = quoted_saved_fixture("vitest-extends-absolute-unresolved");
     let root = crate::codebase::ts_resolver::normalize_path(fixture.path());
     let path = root.join("vitest.config.ts");
     let missing = root.join("missing.js");
     let missing_source = missing.to_string_lossy().into_owned();
-    let source = std::fs::read_to_string(&path)
-        .unwrap()
-        .replace("__ABSOLUTE_UNRESOLVED_EXTENDS__", &missing_source);
+    let source = crate::test_support::replace_quoted_placeholder(
+        &std::fs::read_to_string(&path).unwrap(),
+        "__ABSOLUTE_UNRESOLVED_EXTENDS__",
+        &missing_source,
+    );
     let project = parse_vitest_fixture(&source, &path, &root)
         .unwrap()
         .remove(0);

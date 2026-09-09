@@ -8,7 +8,10 @@ use std::path::PathBuf;
 use tempfile::TempDir;
 
 fn make_root(files: &[&str]) -> TempDir {
-    let dir = TempDir::new().unwrap();
+    make_root_in(TempDir::new().unwrap(), files)
+}
+
+fn make_root_in(dir: TempDir, files: &[&str]) -> TempDir {
     for f in files {
         let path = dir.path().join(f);
         fs::create_dir_all(path.parent().unwrap()).unwrap();
@@ -301,13 +304,16 @@ exec("node http://example.com/script.mts");
 
 #[test]
 fn absolute_cwd_resolves_spawn_entry() {
-    let root = make_root(&["apps/site/scripts/from-abs.mts"]);
+    let root = make_root_in(
+        crate::test_support::quote_containing_tempdir(),
+        &["apps/site/scripts/from-abs.mts"],
+    );
     let caller = root.path().join("setup.mts");
     fs::write(&caller, "").unwrap();
     let cwd = root.path().join("apps/site");
     let src = format!(
-        "spawn('scripts/from-abs.mts', [], {{ cwd: '{}' }})",
-        cwd.to_string_lossy()
+        "spawn('scripts/from-abs.mts', [], {{ cwd: {} }})",
+        crate::test_support::js_string_literal(cwd.to_string_lossy())
     );
 
     let edges = extract_spawn_edges(&src, &caller, root.path());

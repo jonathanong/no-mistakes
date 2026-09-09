@@ -16,7 +16,10 @@ pub(crate) fn materialize_gitignore_fixture(name: &str) -> TempDir {
 /// Copies a saved fixture to a per-test root so parser instrumentation from
 /// parallel tests cannot observe the same absolute source paths.
 pub(crate) fn materialize_saved_fixture(source: &Path) -> TempDir {
-    let destination = TempDir::new().expect("create fixture destination");
+    materialize_saved_fixture_into(source, TempDir::new().expect("create fixture destination"))
+}
+
+pub(crate) fn materialize_saved_fixture_into(source: &Path, destination: TempDir) -> TempDir {
     for entry in ignore::WalkBuilder::new(source)
         .hidden(false)
         .ignore(false)
