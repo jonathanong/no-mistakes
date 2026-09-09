@@ -1,0 +1,7 @@
+rules:
+  - rule: swift-no-raw-print
+    scope: repository
+  - rule: swift-viewmodel-main-actor
+    scope: repository
+  - rule: csharp-no-async-void-delegate
+    scope: repository

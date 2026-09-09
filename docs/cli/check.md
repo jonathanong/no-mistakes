@@ -33,3 +33,7 @@ continue to use that rule's documented defaults.
 
 Node API: `check({ includeSuppressed: true })` exposes the same optional
 `suppressed` accounting.
+
+Swift and C# source rules scan executable code only. Comments and string
+literals, including raw and multiline forms, do not create findings; code in a
+string interpolation remains executable and is checked at its source line.

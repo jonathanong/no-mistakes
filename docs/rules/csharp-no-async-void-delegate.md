@@ -1,6 +1,6 @@
 # `csharp-no-async-void-delegate`
 
-Flags C# `async` lambdas passed to void `Action` APIs. The default constructors
+Flags C# `async` lambdas passed to void `Action` APIs in executable code. The default constructors
 are `Command` (including `Microsoft.Maui.Controls.Command` and generic
 `Command<T>`). The default method is `BeginInvokeOnMainThread`.
 
@@ -45,6 +45,11 @@ Fix: wrap the work as `() => _ = FooAsync()` so the delegate stays synchronous.
 Use `no-mistakes-disable-next-line csharp-no-async-void-delegate` on the lambda
 or `no-mistakes-disable-file` for generated code. Prefer a synchronous wrapper
 because suppression leaves unobserved exceptions possible.
+
+Comments and escaped, verbatim, raw, and multiline strings are ignored.
+Interpolation format clauses are string content, not comments. An interpolated
+string's expression is executable C# and remains checked at its original source
+line.
 
 ## Related rules
 
