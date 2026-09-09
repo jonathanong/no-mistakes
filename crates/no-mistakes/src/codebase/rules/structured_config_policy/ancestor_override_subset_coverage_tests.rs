@@ -28,7 +28,7 @@ fn inventory(root: &Path, rels: &[&str]) -> Vec<PathBuf> {
 }
 
 #[test]
-fn ancestor_override_subset_skips_diamond_extends_and_malformed_overrides() {
+fn ancestor_override_subset_rejects_malformed_overrides_and_keeps_valid_configs() {
     let root = fixture_root();
     let files = inventory(
         &root,
@@ -70,13 +70,16 @@ policies:
         .map(|finding| finding.file.as_str())
         .collect();
     assert!(!found.contains(&"diamond/nested/.oxlintrc.json"), "{body}");
-    assert!(!found.contains(&"odd/.oxlintrc.json"), "{body}");
-    assert!(!found.contains(&"bool-extends/.oxlintrc.json"), "{body}");
+    assert!(found.contains(&"odd/.oxlintrc.json"), "{body}");
+    assert!(found.contains(&"bool-extends/.oxlintrc.json"), "{body}");
     assert!(!found.contains(&"star-seg/.oxlintrc.json"), "{body}");
     assert!(found.contains(&"abs/.oxlintrc.json"), "{body}");
-    assert_eq!(findings.len(), 1, "{body}");
+    assert_eq!(findings.len(), 3, "{body}");
     assert!(
-        findings[0].message.contains("outside the repository root"),
+        findings
+            .iter()
+            .any(|finding| finding.file == "abs/.oxlintrc.json"
+                && finding.message.contains("portable relative path")),
         "{body}"
     );
 }
@@ -125,4 +128,45 @@ policies:
     let findings = check_with_files(&root, &config, &files).unwrap();
     assert_eq!(findings.len(), 1, "{findings:?}");
     assert_eq!(findings[0].file, "lost/.oxlintrc.json");
+}
+
+#[test]
+fn ancestor_override_subset_reports_each_malformed_override_shape() {
+    let root = fixture_root();
+    let files = inventory(
+        &root,
+        &[
+            "malformed-shapes/base.json",
+            "malformed-shapes/nested/.oxlintrc.json",
+            "malformed-shapes/nested/file.ts",
+        ],
+    );
+    let findings = check_with_files(
+        &root,
+        &config(
+            r#"
+policies:
+  - files: ["malformed-shapes/nested/.oxlintrc.json"]
+    valueAssertions:
+      - kind: ancestor-override-subset
+"#,
+        ),
+        &files,
+    )
+    .unwrap();
+    let messages = findings
+        .iter()
+        .map(|finding| finding.message.as_str())
+        .collect::<Vec<_>>();
+    for detail in [
+        "must be an object",
+        "rules must be an object",
+        "excludeFiles must contain valid string globs",
+    ] {
+        assert!(
+            messages.iter().any(|message| message.contains(detail)),
+            "{findings:?}"
+        );
+    }
+    assert_eq!(findings.len(), 3, "{findings:?}");
 }

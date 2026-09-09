@@ -1,14 +1,15 @@
 use super::bindings::callee_name;
 use super::{EmbeddedSqlCall, EmbeddedSqlKind};
 use oxc_ast::ast::{
-    AssignmentTarget, BindingPattern, BlockStatement, CallExpression, FormalParameters, Function,
-    FunctionBody, Program,
+    AssignmentTarget, BlockStatement, CallExpression, FormalParameters, Function, FunctionBody,
+    FunctionType, Program,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
 use std::collections::{HashMap, HashSet};
 
 mod resolve;
+mod scope;
 
 #[derive(Clone)]
 struct BindingState {
@@ -28,6 +29,7 @@ pub(super) fn collect_calls(
         scopes: Vec::new(),
         calls: Vec::new(),
         control_depth: 0,
+        functions: resolve::LocalFunctions::collect(program),
     };
     visitor.visit_program(program);
     visitor.calls
@@ -39,58 +41,7 @@ struct ScopeVisitor<'a> {
     scopes: Vec<HashMap<String, BindingState>>,
     calls: Vec<EmbeddedSqlCall>,
     control_depth: usize,
-}
-
-impl ScopeVisitor<'_> {
-    fn push_scope(&mut self) {
-        self.scopes.push(HashMap::new());
-    }
-
-    fn pop_scope(&mut self) {
-        self.scopes.pop();
-    }
-
-    fn current_scope(&mut self) -> Option<&mut HashMap<String, BindingState>> {
-        self.scopes.last_mut()
-    }
-
-    fn lookup(&self, name: &str) -> Option<BindingState> {
-        self.scopes
-            .iter()
-            .rev()
-            .find_map(|scope| scope.get(name).cloned())
-    }
-
-    fn bind_param(&mut self, pattern: &BindingPattern<'_>) {
-        if let BindingPattern::BindingIdentifier(ident) = pattern {
-            if let Some(scope) = self.current_scope() {
-                scope.insert(
-                    ident.name.to_string(),
-                    BindingState {
-                        sql: None,
-                        kind: EmbeddedSqlKind::Dynamic,
-                        line: 0,
-                    },
-                );
-            }
-        }
-    }
-
-    fn mark_dynamic(&mut self, name: &str) {
-        for scope in self.scopes.iter_mut().rev() {
-            if let Some(binding) = scope.get_mut(name) {
-                binding.kind = EmbeddedSqlKind::Dynamic;
-                binding.sql = None;
-                return;
-            }
-        }
-    }
-
-    fn with_control_flow(&mut self, walk: impl FnOnce(&mut Self)) {
-        self.control_depth += 1;
-        walk(self);
-        self.control_depth = self.control_depth.saturating_sub(1);
-    }
+    functions: resolve::LocalFunctions,
 }
 
 impl<'a> Visit<'a> for ScopeVisitor<'a> {
@@ -108,9 +59,31 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.pop_scope();
     }
 
+    fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
+        self.push_scope();
+        if let Some(param) = &clause.param {
+            self.bind_param(&param.pattern);
+        }
+        walk::walk_catch_clause(self, clause);
+        self.pop_scope();
+    }
+
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
         self.push_scope();
         record_params(&function.params, self);
+        // A named function expression's own name is visible only inside its
+        // own body (unlike a declaration's, hoisted into the enclosing
+        // scope by `record_function_declaration`), so it belongs in the
+        // scope this call just pushed rather than in any outer one. Without
+        // it, `shadowed_locally` can never see that the name is rebound here
+        // at all, and a same-spelled reference inside the body — e.g. using
+        // the expression's own name as a template tag — reads back as the
+        // untouched top-level/global binding instead of this local rebind.
+        if function.r#type == FunctionType::FunctionExpression {
+            if let Some(id) = &function.id {
+                self.bind_self_name(id.name.as_str());
+            }
+        }
         self.with_control_flow(|visitor| walk::walk_function(visitor, function, flags));
         self.pop_scope();
     }
@@ -154,11 +127,17 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {
+        self.push_scope();
+        resolve::bind_for_statement_left(&statement.left, self);
         self.with_control_flow(|visitor| walk::walk_for_in_statement(visitor, statement));
+        self.pop_scope();
     }
 
     fn visit_for_of_statement(&mut self, statement: &oxc_ast::ast::ForOfStatement<'a>) {
+        self.push_scope();
+        resolve::bind_for_statement_left(&statement.left, self);
         self.with_control_flow(|visitor| walk::walk_for_of_statement(visitor, statement));
+        self.pop_scope();
     }
 
     fn visit_while_statement(&mut self, statement: &oxc_ast::ast::WhileStatement<'a>) {
@@ -171,7 +150,19 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
     fn visit_switch_statement(&mut self, statement: &oxc_ast::ast::SwitchStatement<'a>) {
         self.visit_expression(&statement.discriminant);
+        // All of a switch's cases share one lexical scope (unlike a
+        // `BlockStatement` per case), so a case-local function declaration
+        // is recorded here, once, across every case's statements — not
+        // per-case — before any case is walked. Without this, a `function
+        // build() {}` declared directly in a case body is invisible to
+        // `shadowed_locally`, and a same-named top-level helper is wrongly
+        // resolved through instead.
+        self.push_scope();
+        for case in &statement.cases {
+            resolve::record_statements(&case.consequent, self);
+        }
         self.with_control_flow(|visitor| visitor.visit_switch_cases(&statement.cases));
+        self.pop_scope();
     }
 
     fn visit_conditional_expression(&mut self, expr: &oxc_ast::ast::ConditionalExpression<'a>) {

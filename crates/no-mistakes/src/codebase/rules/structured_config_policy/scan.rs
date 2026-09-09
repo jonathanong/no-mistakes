@@ -1,11 +1,18 @@
-use super::ancestor_override_subset::check_ancestor_override_subset;
+use super::ancestor_override_subset::{check_ancestor_override_subset, ParsedAncestorCache};
 use super::equals_file::check_equals_file;
+use super::paths::CanonicalInventory;
 use super::when::policy_applies;
 use super::{assert_value, value_at_key, AssertionKind, Options, RULE_ID};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::Result;
 use std::path::{Path, PathBuf};
+
+#[derive(Default)]
+pub(super) struct ScanState {
+    pub(super) parsed_ancestors: ParsedAncestorCache,
+    pub(super) canonical_inventory: Option<CanonicalInventory>,
+}
 
 pub(super) fn scan(
     root: &Path,
@@ -14,6 +21,26 @@ pub(super) fn scan(
     inventory: &[PathBuf],
     target_roots: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
+    scan_with_state(
+        root,
+        opts,
+        files,
+        inventory,
+        target_roots,
+        sources,
+        &mut ScanState::default(),
+    )
+}
+
+pub(super) fn scan_with_state(
+    root: &Path,
+    opts: &Options,
+    files: &[PathBuf],
+    inventory: &[PathBuf],
+    target_roots: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    state: &mut ScanState,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
     for policy in &opts.policies {
@@ -71,8 +98,17 @@ pub(super) fn scan(
                         findings.extend(check_equals_file(root, &rel, sources, &value, assertion));
                     }
                     Some(AssertionKind::AncestorOverrideSubset) => {
+                        let canonical_inventory = state
+                            .canonical_inventory
+                            .get_or_insert_with(|| CanonicalInventory::new(root, inventory));
                         findings.extend(check_ancestor_override_subset(
-                            root, &path, &rel, sources, inventory, &value, assertion,
+                            &path,
+                            &rel,
+                            sources,
+                            &value,
+                            assertion,
+                            canonical_inventory,
+                            &mut state.parsed_ancestors,
                         ));
                     }
                     _ => findings.extend(assert_value(&rel, &value, assertion)?),

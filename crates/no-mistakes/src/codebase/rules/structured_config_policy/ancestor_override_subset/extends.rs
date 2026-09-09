@@ -1,40 +1,19 @@
-use super::{finding, string_entries};
-use crate::codebase::rules::structured_config_policy::paths::contained_in_root;
-use crate::codebase::rules::structured_config_policy::value_at_key;
+use super::finding;
+use super::keys::Keys;
+use super::spec::{
+    extends_specs, is_package_specifier, MAX_EXTENDS_DEPTH, MAX_EXTENDS_OCCURRENCES,
+};
+use crate::codebase::rules::structured_config_policy::paths::canonical_path_in_canonical_root;
 use crate::codebase::rules::structured_config_policy::ValueAssertion;
 use crate::codebase::rules::RuleFinding;
-use crate::codebase::structured_value::parse_structured_value;
 use crate::codebase::ts_resolver::normalize_path;
 use crate::codebase::ts_source::{relative_slash_path, SourceStore};
 use serde_yaml::Value;
-use std::collections::HashSet;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
-pub(super) struct Keys<'a> {
-    pub(super) extends: &'a str,
-    pub(super) overrides: &'a str,
-    pub(super) files: &'a str,
-    pub(super) rules: &'a str,
-}
-
-impl<'a> Keys<'a> {
-    pub(super) fn from_assertion(assertion: &'a ValueAssertion) -> Self {
-        Self {
-            extends: named(&assertion.extends_key, "extends"),
-            overrides: named(&assertion.overrides_key, "overrides"),
-            files: named(&assertion.files_key, "files"),
-            rules: named(&assertion.rules_key, "rules"),
-        }
-    }
-}
-
-fn named<'a>(value: &'a str, default: &'a str) -> &'a str {
-    if value.is_empty() {
-        default
-    } else {
-        value
-    }
-}
+mod cache;
+pub(in crate::codebase::rules::structured_config_policy) use cache::ParsedAncestorCache;
 
 pub(super) struct Nested<'a> {
     pub(super) path: &'a Path,
@@ -45,7 +24,7 @@ pub(super) struct Nested<'a> {
 pub(super) struct Ancestor {
     pub(super) path: PathBuf,
     pub(super) rel: String,
-    pub(super) value: Value,
+    pub(super) value: Arc<Value>,
 }
 
 struct Walk<'a> {
@@ -55,7 +34,10 @@ struct Walk<'a> {
     assertion: &'a ValueAssertion,
     keys: &'a Keys<'a>,
     stack: Vec<PathBuf>,
-    seen: HashSet<PathBuf>,
+    occurrences: usize,
+    max_occurrences: usize,
+    traversal_exhausted: bool,
+    parsed_ancestors: &'a mut ParsedAncestorCache,
     ancestors: Vec<Ancestor>,
     findings: &'a mut Vec<RuleFinding>,
 }
@@ -67,6 +49,7 @@ pub(super) fn collect_ancestors(
     assertion: &ValueAssertion,
     keys: &Keys<'_>,
     findings: &mut Vec<RuleFinding>,
+    parsed_ancestors: &mut ParsedAncestorCache,
 ) -> Vec<Ancestor> {
     let mut walk = Walk {
         root,
@@ -74,8 +57,11 @@ pub(super) fn collect_ancestors(
         sources,
         assertion,
         keys,
-        stack: vec![normalize_path(nested.path)],
-        seen: HashSet::new(),
+        stack: vec![nested.path.to_path_buf()],
+        occurrences: 0,
+        max_occurrences: MAX_EXTENDS_OCCURRENCES,
+        traversal_exhausted: false,
+        parsed_ancestors,
         ancestors: Vec::new(),
         findings,
     };
@@ -86,22 +72,81 @@ pub(super) fn collect_ancestors(
 impl Walk<'_> {
     fn visit(&mut self, from_path: &Path, from_value: &Value) {
         let from_dir = from_path.parent().unwrap_or(from_path);
-        for spec in string_entries(value_at_key(from_value, self.keys.extends)) {
+        for spec in self.extends(from_value) {
             self.follow(from_dir, spec);
         }
+    }
+
+    fn extends<'b>(&mut self, value: &'b Value) -> Vec<&'b str> {
+        match extends_specs(value, self.keys.extends) {
+            Ok(specs) => specs,
+            Err(detail) => {
+                self.invalid_extends(detail);
+                Vec::new()
+            }
+        }
+    }
+
+    fn invalid_extends(&mut self, detail: &str) {
+        self.findings.push(finding(
+            self.nested_rel,
+            self.assertion,
+            format!(
+                "{}: ancestor-override-subset extends {detail}",
+                self.nested_rel
+            ),
+        ));
     }
 
     fn follow(&mut self, from_dir: &Path, spec: &str) {
         if is_package_specifier(spec) {
             return;
         }
+        if self.traversal_exhausted {
+            return;
+        }
+        if self.occurrences >= self.max_occurrences {
+            self.traversal_exhausted = true;
+            self.findings.push(finding(
+                self.nested_rel,
+                self.assertion,
+                format!(
+                    "{}: ancestor-override-subset extends traversal exceeds the maximum of {} occurrences",
+                    self.nested_rel, self.max_occurrences
+                ),
+            ));
+            return;
+        }
+        self.occurrences += 1;
         let resolved = normalize_path(&from_dir.join(spec));
-        if !contained_in_root(self.root, &resolved) {
+        if !resolved.exists() {
+            self.findings.push(finding(
+                self.nested_rel,
+                self.assertion,
+                format!(
+                    "{}: ancestor-override-subset `{spec}` is missing",
+                    self.nested_rel
+                ),
+            ));
+            return;
+        }
+        let Some(resolved) = canonical_path_in_canonical_root(self.root, &resolved) else {
             self.findings.push(finding(
                 self.nested_rel,
                 self.assertion,
                 format!(
                     "{}: ancestor-override-subset `{spec}` is outside the repository root",
+                    self.nested_rel
+                ),
+            ));
+            return;
+        };
+        if self.stack.len() >= MAX_EXTENDS_DEPTH {
+            self.findings.push(finding(
+                self.nested_rel,
+                self.assertion,
+                format!(
+                    "{}: ancestor-override-subset extends chain exceeds the maximum depth of {MAX_EXTENDS_DEPTH}",
                     self.nested_rel
                 ),
             ));
@@ -118,9 +163,6 @@ impl Walk<'_> {
             ));
             return;
         }
-        if !self.seen.insert(resolved.clone()) {
-            return;
-        }
         let Some(value) = self.load(spec, &resolved) else {
             return;
         };
@@ -134,7 +176,7 @@ impl Walk<'_> {
         });
     }
 
-    fn load(&mut self, spec: &str, resolved: &Path) -> Option<Value> {
+    fn load(&mut self, spec: &str, resolved: &Path) -> Option<Arc<Value>> {
         let Some(source) = crate::codebase::rules::read_source(self.sources, resolved) else {
             self.findings.push(finding(
                 self.nested_rel,
@@ -146,7 +188,7 @@ impl Walk<'_> {
             ));
             return None;
         };
-        match parse_structured_value(resolved, &source) {
+        match self.parsed_ancestors.parse(resolved, &source) {
             Ok(value) => Some(value),
             Err(error) => {
                 let ancestor_rel = relative_slash_path(self.root, resolved);
@@ -161,6 +203,5 @@ impl Walk<'_> {
     }
 }
 
-fn is_package_specifier(spec: &str) -> bool {
-    !spec.starts_with('.') && !Path::new(spec).is_absolute()
-}
+#[cfg(test)]
+mod tests;

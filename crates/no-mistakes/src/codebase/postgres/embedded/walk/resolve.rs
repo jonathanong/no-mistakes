@@ -1,11 +1,75 @@
-use super::super::tags::{interpolating_untrusted_tag, kind_for_const};
-use super::super::{first_call_argument, sql_text, EmbeddedSqlCall, EmbeddedSqlKind};
+mod append;
+mod chain;
+mod compose;
+mod functions;
+
+pub(super) use append::apply_append;
+pub(super) use functions::LocalFunctions;
+
+use super::super::{first_call_argument, EmbeddedSqlCall, EmbeddedSqlKind};
 use super::{BindingState, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
+use compose::classify_init;
 use oxc_ast::ast::{
-    Argument, BinaryOperator, BindingPattern, CallExpression, Declaration, Expression, Statement,
+    BindingPattern, CallExpression, Declaration, Expression, ForStatementLeft, Function, Statement,
     VariableDeclaration, VariableDeclarator,
 };
+
+/// Every name a parameter or declarator's binding pattern introduces,
+/// however deeply destructured — `x`, `{ a: x }`, `[x]`, `{ x = 1 }`, and any
+/// nesting or combination of those, plus rest elements. A shadow check that
+/// only handled a bare `BindingIdentifier` would miss a destructured
+/// parameter shadowing a same-named top-level helper (`function f({ safe })`
+/// shadows a top-level `safe`), letting `resolve_chain`/`resolve_named`
+/// wrongly resolve calls through it.
+pub(super) fn for_each_bound_name<'a>(
+    pattern: &BindingPattern<'a>,
+    on_name: &mut impl FnMut(&'a str),
+) {
+    match pattern {
+        BindingPattern::BindingIdentifier(ident) => on_name(ident.name.as_str()),
+        BindingPattern::ObjectPattern(object) => {
+            for property in &object.properties {
+                for_each_bound_name(&property.value, on_name);
+            }
+            if let Some(rest) = &object.rest {
+                for_each_bound_name(&rest.argument, on_name);
+            }
+        }
+        BindingPattern::ArrayPattern(array) => {
+            for element in array.elements.iter().flatten() {
+                for_each_bound_name(element, on_name);
+            }
+            if let Some(rest) = &array.rest {
+                for_each_bound_name(&rest.argument, on_name);
+            }
+        }
+        BindingPattern::AssignmentPattern(assignment) => {
+            for_each_bound_name(&assignment.left, on_name);
+        }
+    }
+}
+
+/// Binds a for-in/for-of declaration-form loop target (`for (const build of
+/// providers) {}`) into the scope `visit_for_in_statement`/
+/// `visit_for_of_statement` just pushed, as a local shadow — matching how
+/// `bind_param` shadows a function parameter. The non-declaration form
+/// (`for (build of providers)`, reassigning an existing outer binding) needs
+/// no such binding: `ReassignedNames` already drops that name from
+/// `LocalFunctions` everywhere, inside the loop and out.
+///
+/// This runs regardless of `var`/`let`/`const`: whatever the loop body sees
+/// while it runs, the per-iteration value shadows a same-named top-level
+/// helper. Whether the name counts as reassigned *after* the loop — where
+/// only `var` leaks — is a separate question `ReassignedNames::
+/// visit_for_statement_left` answers on its own.
+pub(super) fn bind_for_statement_left(left: &ForStatementLeft<'_>, visitor: &mut ScopeVisitor<'_>) {
+    if let ForStatementLeft::VariableDeclaration(declaration) = left {
+        for declarator in &declaration.declarations {
+            visitor.bind_param(&declarator.id);
+        }
+    }
+}
 
 pub(super) fn record_statements(statements: &[Statement<'_>], visitor: &mut ScopeVisitor<'_>) {
     for statement in statements {
@@ -13,13 +77,50 @@ pub(super) fn record_statements(statements: &[Statement<'_>], visitor: &mut Scop
             Statement::VariableDeclaration(declaration) => {
                 record_variable_declaration(declaration, visitor);
             }
-            Statement::ExportDeclaration(export) => {
-                if let Declaration::VariableDeclaration(declaration) = &export.declaration {
+            Statement::FunctionDeclaration(function) => {
+                record_function_declaration(function, visitor);
+            }
+            Statement::ExportDeclaration(export) => match &export.declaration {
+                Declaration::VariableDeclaration(declaration) => {
                     record_variable_declaration(declaration, visitor);
                 }
-            }
+                Declaration::FunctionDeclaration(function) => {
+                    record_function_declaration(function, visitor);
+                }
+                _ => {}
+            },
             _ => {}
         }
+    }
+}
+
+/// Binds a nested function declaration's own name into its enclosing scope,
+/// as a shadow marker only — `LocalFunctions` never collects a nested
+/// declaration's body (see its own doc comment), so this exists solely to
+/// make `shadowed_locally` recognize that the name no longer refers to a
+/// same-named top-level helper within this scope. A top-level declaration
+/// is skipped: it lands in the program's own outermost scope, which
+/// `shadowed_locally` always excludes, so recording it there would only
+/// risk clobbering a same-named top-level `const` binding's own already
+/// classified `BindingState` (JS forbids the collision within one real
+/// scope, but the parser doesn't enforce that, and existing fixtures rely
+/// on a same-named top-level helper never shadowing itself).
+fn record_function_declaration(function: &Function<'_>, visitor: &mut ScopeVisitor<'_>) {
+    if visitor.scopes.len() <= 1 {
+        return;
+    }
+    let Some(id) = &function.id else { return };
+    let line =
+        crate::codebase::ts_source::byte_offset_to_line(visitor.source, id.span.start as usize);
+    if let Some(scope) = visitor.current_scope() {
+        scope.insert(
+            id.name.to_string(),
+            BindingState {
+                sql: None,
+                kind: EmbeddedSqlKind::Dynamic,
+                line,
+            },
+        );
     }
 }
 
@@ -46,103 +147,10 @@ fn record_declarator(
     };
     let line =
         crate::codebase::ts_source::byte_offset_to_line(visitor.source, ident.span.start as usize);
-    let (sql, kind) = classify_init(init, is_const);
+    let (sql, kind) = classify_init(init, is_const, visitor);
     if let Some(scope) = visitor.current_scope() {
         scope.insert(ident.name.to_string(), BindingState { sql, kind, line });
     }
-}
-
-pub(super) fn classify_init(
-    expr: &Expression<'_>,
-    is_const: bool,
-) -> (Option<String>, EmbeddedSqlKind) {
-    if let Some((text, kind)) = composed_sql(expr) {
-        return if is_const {
-            (Some(text), kind)
-        } else {
-            (Some(text), EmbeddedSqlKind::Dynamic)
-        };
-    }
-    if interpolating_untrusted_tag(expr) {
-        return (sql_text(expr), EmbeddedSqlKind::Dynamic);
-    }
-    match unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(literal) => kind_for_const(literal.value.to_string(), is_const),
-        Expression::TaggedTemplateExpression(_) => {
-            kind_for_const(sql_text(expr).unwrap_or_default(), is_const)
-        }
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-            kind_for_const(sql_text(expr).unwrap_or_default(), is_const)
-        }
-        Expression::TemplateLiteral(_) => (sql_text(expr), EmbeddedSqlKind::Dynamic),
-        _ => (None, EmbeddedSqlKind::Dynamic),
-    }
-}
-
-fn composed_sql(expr: &Expression<'_>) -> Option<(String, EmbeddedSqlKind)> {
-    let Expression::BinaryExpression(binary) = unwrap_ts_wrappers(expr) else {
-        return None;
-    };
-    if binary.operator != BinaryOperator::Addition {
-        return None;
-    }
-    let left = static_fragment(&binary.left)?;
-    let right = static_fragment(&binary.right)?;
-    Some((format!("{left}{right}"), EmbeddedSqlKind::Composed))
-}
-
-fn static_fragment(expr: &Expression<'_>) -> Option<String> {
-    match unwrap_ts_wrappers(expr) {
-        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => sql_text(expr),
-        Expression::TaggedTemplateExpression(_) if interpolating_untrusted_tag(expr) => None,
-        Expression::TaggedTemplateExpression(_) => sql_text(expr),
-        Expression::BinaryExpression(_) => composed_sql(expr).map(|(text, _)| text),
-        _ => None,
-    }
-}
-
-pub(super) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression<'_>) {
-    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
-        return;
-    };
-    if member.property.name != "append" {
-        return;
-    }
-    let Expression::Identifier(ident) = unwrap_ts_wrappers(&member.object) else {
-        return;
-    };
-    let Some(arg) = first_static_arg(call) else {
-        visitor.mark_dynamic(ident.name.as_str());
-        return;
-    };
-    if visitor.control_depth > 0 {
-        visitor.mark_dynamic(ident.name.as_str());
-        return;
-    }
-    for scope in visitor.scopes.iter_mut().rev() {
-        if let Some(binding) = scope.get_mut(ident.name.as_str()) {
-            match (&binding.sql, binding.kind) {
-                (Some(sql), EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed) => {
-                    binding.sql = Some(format!("{sql}{arg}"));
-                    binding.kind = EmbeddedSqlKind::Composed;
-                }
-                _ => {
-                    binding.kind = EmbeddedSqlKind::Dynamic;
-                    binding.sql = None;
-                }
-            }
-            return;
-        }
-    }
-}
-
-fn first_static_arg(call: &CallExpression<'_>) -> Option<String> {
-    let Argument::SpreadElement(_) = call.arguments.first()? else {
-        let expr = call.arguments.first()?.as_expression()?;
-        return static_fragment(expr);
-    };
-    None
 }
 
 pub(super) fn executor_call(
@@ -176,7 +184,7 @@ pub(super) fn executor_call(
             }
         }
         _ => {
-            let (sql, kind) = classify_init(argument, true);
+            let (sql, kind) = classify_init(argument, true, visitor);
             EmbeddedSqlCall {
                 line,
                 callee,

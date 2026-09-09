@@ -1,56 +1,48 @@
-use super::extends::{Ancestor, Keys};
-use super::{finding, mapping_at, string_entries};
+use super::extends::Ancestor;
+use super::finding;
+use super::keys::Keys;
+use super::matching::{compile_value_globs, mapping_value, optional_value_globs, relative_path};
 use crate::codebase::rules::structured_config_policy::value_at_key;
 use crate::codebase::rules::structured_config_policy::ValueAssertion;
 use crate::codebase::rules::RuleFinding;
-use globset::{GlobBuilder, GlobSet, GlobSetBuilder};
-use serde_yaml::Mapping;
+use globset::GlobSet;
+use serde_yaml::{Mapping, Value};
 use std::path::Path;
+
+struct Override<'a> {
+    rules: &'a Mapping,
+    files: GlobSet,
+    exclude_files: Option<GlobSet>,
+    dir: &'a Path,
+}
 
 pub(super) fn lost_override_findings(
     nested_rel: &str,
     nested_dir: &Path,
     nested_rules: Option<&Mapping>,
     children: &[&Path],
-    ancestor: &Ancestor,
+    ancestors: &[Ancestor],
     assertion: &ValueAssertion,
     keys: &Keys<'_>,
 ) -> Vec<RuleFinding> {
-    let Some(overrides) = value_at_key(&ancestor.value, keys.overrides) else {
-        return Vec::new();
-    };
-    let Some(overrides) = overrides.as_sequence() else {
-        return Vec::new();
-    };
-    let ancestor_dir = ancestor.path.parent().unwrap_or(&ancestor.path);
-    let mut findings = Vec::new();
-    for override_value in overrides {
-        let Some(override_rules) = mapping_at(override_value, keys.rules) else {
-            continue;
-        };
-        if override_rules.is_empty() {
-            continue;
-        }
-        let Some(globs) = compile_globs(&string_entries(value_at_key(override_value, keys.files)))
-        else {
-            continue;
-        };
-        if !any_child_matches(&globs, children, ancestor_dir) {
-            continue;
-        }
-        if any_child_matches(&globs, children, nested_dir) {
-            continue;
-        }
-        if rules_are_subset(override_rules, nested_rules) {
-            continue;
-        }
+    let (overrides, mut findings) = collect_overrides(ancestors, nested_rel, assertion, keys);
+    let has_lost_rules = children.iter().copied().any(|child| {
+        let before = effective_rules(&overrides, child, |override_| override_.dir);
+        let after = effective_rules(&overrides, child, |_| nested_dir);
+        let lost = before
+            .into_iter()
+            .filter(|(key, value)| lookup(&after, key) != Some(value))
+            .collect::<Vec<_>>();
+        !lost.is_empty() && !rules_are_subset(&lost, nested_rules)
+    });
+    if has_lost_rules {
         findings.push(finding(
             nested_rel,
             assertion,
             assertion.message.clone().unwrap_or_else(|| {
                 format!(
-                    "{nested_rel}: lost ancestor override from `{}` must be a value-equal subset of `{}`",
-                    ancestor.rel, keys.rules
+                    "{nested_rel}: lost ancestor override must be a value-equal subset of `{}`",
+                    keys.rules
                 )
             }),
         ));
@@ -58,42 +50,144 @@ pub(super) fn lost_override_findings(
     findings
 }
 
-fn compile_globs(patterns: &[&str]) -> Option<GlobSet> {
-    let mut builder = GlobSetBuilder::new();
-    let mut any = false;
-    for pattern in patterns {
-        let trimmed = pattern.trim_start_matches("./");
-        if let Ok(glob) = GlobBuilder::new(trimmed).literal_separator(true).build() {
-            builder.add(glob);
-            any = true;
+fn collect_overrides<'a>(
+    ancestors: &'a [Ancestor],
+    nested_rel: &str,
+    assertion: &ValueAssertion,
+    keys: &Keys<'_>,
+) -> (Vec<Override<'a>>, Vec<RuleFinding>) {
+    let mut collected = Vec::new();
+    let mut findings = Vec::new();
+    for ancestor in ancestors {
+        let Some(overrides) = value_at_key(&ancestor.value, keys.overrides) else {
+            continue;
+        };
+        let Some(overrides) = overrides.as_sequence() else {
+            findings.push(invalid_override(
+                nested_rel,
+                assertion,
+                &ancestor.rel,
+                "must be an array",
+            ));
+            continue;
+        };
+        for override_value in overrides {
+            let Some(override_value) = override_value.as_mapping() else {
+                findings.push(invalid_override(
+                    nested_rel,
+                    assertion,
+                    &ancestor.rel,
+                    "must be an object",
+                ));
+                continue;
+            };
+            let Some(rules) = mapping_value(override_value, keys.rules).and_then(Value::as_mapping)
+            else {
+                if mapping_value(override_value, keys.rules).is_some() {
+                    findings.push(invalid_override(
+                        nested_rel,
+                        assertion,
+                        &ancestor.rel,
+                        "rules must be an object",
+                    ));
+                }
+                continue;
+            };
+            let Some(files) = compile_value_globs(override_value, keys.files) else {
+                findings.push(invalid_override(
+                    nested_rel,
+                    assertion,
+                    &ancestor.rel,
+                    "files must contain valid string globs",
+                ));
+                continue;
+            };
+            let exclude_files = match optional_value_globs(override_value, keys.exclude_files) {
+                Ok(exclude_files) => exclude_files,
+                Err(()) => {
+                    findings.push(invalid_override(
+                        nested_rel,
+                        assertion,
+                        &ancestor.rel,
+                        "excludeFiles must contain valid string globs",
+                    ));
+                    continue;
+                }
+            };
+            if rules.is_empty() {
+                continue;
+            }
+            collected.push(Override {
+                rules,
+                files,
+                exclude_files,
+                dir: ancestor.path.parent().unwrap_or(&ancestor.path),
+            });
         }
     }
-    if !any {
-        return None;
+    (collected, findings)
+}
+
+fn invalid_override(
+    nested_rel: &str,
+    assertion: &ValueAssertion,
+    ancestor_rel: &str,
+    detail: &str,
+) -> RuleFinding {
+    finding(
+        nested_rel,
+        assertion,
+        format!("{nested_rel}: ancestor override in `{ancestor_rel}` {detail}"),
+    )
+}
+
+fn effective_rules<'a>(
+    overrides: &'a [Override<'a>],
+    child: &Path,
+    base_dir: impl Fn(&Override<'a>) -> &'a Path,
+) -> Vec<(&'a Value, &'a Value)> {
+    let mut rules = Vec::new();
+    for override_ in overrides {
+        let Some(rel) = relative_path(base_dir(override_), child) else {
+            continue;
+        };
+        if !override_.files.is_match(&rel)
+            || override_
+                .exclude_files
+                .as_ref()
+                .is_some_and(|exclude| exclude.is_match(&rel))
+        {
+            continue;
+        }
+        for (key, value) in override_.rules {
+            set_rule(&mut rules, key, value);
+        }
     }
-    builder.build().ok()
+    rules
 }
 
-fn any_child_matches(globs: &GlobSet, children: &[&Path], base_dir: &Path) -> bool {
-    children
+fn set_rule<'a>(rules: &mut Vec<(&'a Value, &'a Value)>, key: &'a Value, value: &'a Value) {
+    if let Some((_, existing)) = rules.iter_mut().find(|(current, _)| *current == key) {
+        *existing = value;
+    } else {
+        rules.push((key, value));
+    }
+}
+
+fn lookup<'a>(rules: &'a [(&Value, &'a Value)], key: &Value) -> Option<&'a Value> {
+    rules
         .iter()
-        .copied()
-        .any(|child| relative_under(base_dir, child).is_some_and(|rel| globs.is_match(&rel)))
+        .find_map(|(current, value)| (*current == key).then_some(*value))
 }
 
-fn relative_under(base_dir: &Path, path: &Path) -> Option<String> {
-    path.strip_prefix(base_dir)
-        .ok()
-        .map(|rel| rel.to_string_lossy().replace('\\', "/"))
-}
-
-fn rules_are_subset(override_rules: &Mapping, nested_rules: Option<&Mapping>) -> bool {
+fn rules_are_subset(expected: &[(&Value, &Value)], nested_rules: Option<&Mapping>) -> bool {
     let Some(nested_rules) = nested_rules else {
         return false;
     };
-    override_rules.iter().all(|(key, expected)| {
-        nested_rules
-            .get(key)
-            .is_some_and(|actual| actual == expected)
-    })
+    expected
+        .iter()
+        .all(|(key, value)| nested_rules.get(*key) == Some(*value))
 }
+
+#[cfg(test)]
+mod tests;

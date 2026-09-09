@@ -1,26 +1,52 @@
 use super::value_at_key;
 use super::ValueAssertion;
+use crate::codebase::rules::structured_config_policy::paths::CanonicalInventory;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::SourceStore;
 use serde_yaml::Value;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 
 mod extends;
+mod keys;
 mod lost;
-use extends::{collect_ancestors, Keys, Nested};
+mod matching;
+mod spec;
+pub(in crate::codebase::rules::structured_config_policy) use extends::ParsedAncestorCache;
+use extends::{collect_ancestors, Nested};
+use keys::Keys;
 use lost::lost_override_findings;
 
 pub(super) fn check_ancestor_override_subset(
-    root: &Path,
     nested_path: &Path,
     nested_rel: &str,
     sources: &SourceStore,
-    files: &[PathBuf],
     value: &Value,
     assertion: &ValueAssertion,
+    canonical_paths: &CanonicalInventory,
+    parsed_ancestors: &mut ParsedAncestorCache,
 ) -> Vec<RuleFinding> {
     let keys = Keys::from_assertion(assertion);
     let mut findings = Vec::new();
+    let Some(root) = canonical_paths.root() else {
+        findings.push(finding(
+            nested_rel,
+            assertion,
+            format!(
+                "{nested_rel}: ancestor-override-subset cannot resolve the repository root safely"
+            ),
+        ));
+        return findings;
+    };
+    let Some(nested_path) = canonical_paths.path(nested_path) else {
+        findings.push(finding(
+            nested_rel,
+            assertion,
+            format!(
+                "{nested_rel}: ancestor-override-subset nested config is outside the repository root"
+            ),
+        ));
+        return findings;
+    };
     let ancestors = collect_ancestors(
         root,
         Nested {
@@ -32,25 +58,23 @@ pub(super) fn check_ancestor_override_subset(
         assertion,
         &keys,
         &mut findings,
+        parsed_ancestors,
     );
     let nested_dir = nested_path.parent().unwrap_or(nested_path);
-    let children: Vec<&Path> = files
-        .iter()
-        .map(PathBuf::as_path)
-        .filter(|path| *path != nested_path && path.starts_with(nested_dir))
+    let canonical_children: Vec<&Path> = canonical_paths
+        .paths()
+        .filter(|path| path != &nested_path && path.starts_with(nested_dir))
         .collect();
     let nested_rules = mapping_at(value, keys.rules);
-    for ancestor in ancestors {
-        findings.extend(lost_override_findings(
-            nested_rel,
-            nested_dir,
-            nested_rules,
-            &children,
-            &ancestor,
-            assertion,
-            &keys,
-        ));
-    }
+    findings.extend(lost_override_findings(
+        nested_rel,
+        nested_dir,
+        nested_rules,
+        &canonical_children,
+        &ancestors,
+        assertion,
+        &keys,
+    ));
     findings
 }
 
@@ -75,13 +99,5 @@ pub(super) fn finding(file: &str, assertion: &ValueAssertion, message: String) -
         message,
         import: None,
         target: Some(target),
-    }
-}
-
-pub(super) fn string_entries(value: Option<&Value>) -> Vec<&str> {
-    match value {
-        Some(Value::String(text)) => vec![text.as_str()],
-        Some(Value::Sequence(items)) => items.iter().filter_map(Value::as_str).collect(),
-        _ => Vec::new(),
     }
 }

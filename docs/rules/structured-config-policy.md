@@ -49,20 +49,27 @@ parse errors are reported on that referenced file. `when` skips the rest of a
 policy for a file unless each listed key is a non-empty array or non-empty
 string.
 
-`ancestor-override-subset` follows local `extends` chains (string or string
-array) relative to the declaring file. Package specifiers are skipped; cycles
-and paths that leave the repository root are findings. Parse errors are reported
-on the ancestor file. After a nested config becomes the resolution root, ancestor
-override `files` globs are matched against in-scope inventory children under that
-nested directory, including files excluded by a config-only rule `include`. An
-override that matched those children relative to the ancestor directory but no
-longer matches relative to the nested directory is lost: its `rules` must be a
-value-equal subset of the nested config's top-level `rules`.
-Overrides whose globs still match after rebasing, and nested directories with no
-inventory children, are ignored. Single-star globs do not cross `/`. Extra nested
-rules are allowed. Key names default
-to `extends`, `overrides`, `files`, and `rules`, and can be overridden with
-`extendsKey`, `overridesKey`, `filesKey`, and `rulesKey`.
+`ancestor-override-subset` follows local `extends` chains (a string or an array
+of strings) relative to the declaring file, including dot-prefixed same-directory
+configs such as `.oxlintrc.base.json`. Package specifiers are skipped; blank,
+non-string, drive-qualified, UNC, and absolute local paths are findings.
+Cycles, unresolvable paths, and paths that leave the canonical repository root
+are findings. Parse errors are reported on the ancestor file. After a nested
+config becomes the resolution root, ancestor override `files` globs are matched
+per in-scope inventory child under that nested directory, including files
+excluded by a config-only rule `include`. `excludeFiles` is honored. An override
+that matched a child relative to the ancestor directory but no longer matches
+that child relative to the nested directory is lost: its effective, ordered
+rules must be a value-equal subset of the nested config's top-level `rules`.
+Sibling-relative globs such as `../app/**/*.ts` are supported. Overrides whose
+globs still match after rebasing, and nested directories with no inventory
+children, are ignored. Invalid override shapes and globs are findings.
+Traversal allows at most 256 local ancestor traversal attempts; exceeding the
+limit is a finding.
+Single-star globs do not cross `/`. Extra nested rules are allowed. Key names
+default to `extends`, `overrides`, `files`, `excludeFiles`, and `rules`, and can
+be overridden with `extendsKey`, `overridesKey`, `filesKey`, `excludeFilesKey`,
+and `rulesKey`.
 
 ```yaml
 policies:
@@ -125,7 +132,7 @@ support `boolean`, `positive-number`, `string-array`, `record-of-boolean`,
 `string-prefix`, `string-glob`, `not-single-file`, `equals`, `equals-file`,
 `object-shape`, and `ancestor-override-subset`. Array `match` defaults to `all`;
 `when` is optional. `ancestor-override-subset` key names default to `extends`,
-`overrides`, `files`, and `rules`.
+`overrides`, `files`, `excludeFiles`, and `rules`.
 
 ## Valid example
 

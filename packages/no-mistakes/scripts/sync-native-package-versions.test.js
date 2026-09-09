@@ -26,7 +26,7 @@ test("release version sync pins every optional native package to the main packag
     const main = JSON.parse(
       readFileSync(join(root, "packages", "no-mistakes", "package.json"), "utf8"),
     );
-    assert.deepEqual(Object.values(main.optionalDependencies), Array(5).fill("1.2.3"));
+    assert.deepEqual(Object.values(main.optionalDependencies), Array(4).fill("1.2.3"));
   } finally {
     rmSync(root, { recursive: true, force: true });
   }

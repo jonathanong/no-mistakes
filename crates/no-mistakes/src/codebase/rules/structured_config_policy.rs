@@ -57,6 +57,7 @@ pub(crate) struct ValueAssertion {
     pub(crate) extends_key: String,
     pub(crate) overrides_key: String,
     pub(crate) files_key: String,
+    pub(crate) exclude_files_key: String,
     pub(crate) rules_key: String,
     #[serde(rename = "match", default)]
     pub(crate) match_mode: MatchMode,
@@ -155,9 +156,13 @@ fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
 }
 
 #[cfg(test)]
+mod ancestor_override_subset_correctness_tests;
+#[cfg(test)]
 mod ancestor_override_subset_coverage_tests;
 #[cfg(test)]
 mod ancestor_override_subset_error_tests;
+#[cfg(test)]
+mod ancestor_override_subset_resource_tests;
 #[cfg(test)]
 mod ancestor_override_subset_tests;
 #[cfg(test)]

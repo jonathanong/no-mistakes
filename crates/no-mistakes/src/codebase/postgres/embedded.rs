@@ -82,8 +82,11 @@ pub(super) fn first_call_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'
 pub fn sql_text(expr: &Expression<'_>) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
-        Expression::TemplateLiteral(template) => Some(template_sql_text(template)),
-        Expression::TaggedTemplateExpression(tagged) => Some(template_sql_text(&tagged.quasi)),
+        Expression::TemplateLiteral(template) => Some(template_sql_text(template, false)),
+        Expression::TaggedTemplateExpression(tagged) => {
+            let use_raw = tags::is_string_raw_tag_spelling(&tagged.tag);
+            Some(template_sql_text(&tagged.quasi, use_raw))
+        }
         _ => None,
     }
 }
@@ -102,18 +105,25 @@ pub fn executed_query_text(
     }
 }
 
-fn template_sql_text(template: &TemplateLiteral<'_>) -> String {
+/// `use_raw` selects `String.raw`'s own runtime semantics (the literal
+/// source characters, escape sequences un-processed) over the cooked form
+/// every other tag — the trusted `sql` tag included — returns; see
+/// [`tags::is_string_raw_tag_spelling`].
+fn template_sql_text(template: &TemplateLiteral<'_>, use_raw: bool) -> String {
     let mut out = String::new();
     for (index, quasi) in template.quasis.iter().enumerate() {
         if index > 0 {
             out.push_str(&format!("sql_placeholder_{index}"));
         }
-        out.push_str(quasi_text(quasi));
+        out.push_str(quasi_text(quasi, use_raw));
     }
     out
 }
 
-fn quasi_text<'a>(quasi: &'a oxc_ast::ast::TemplateElement<'a>) -> &'a str {
+fn quasi_text<'a>(quasi: &'a oxc_ast::ast::TemplateElement<'a>, use_raw: bool) -> &'a str {
+    if use_raw {
+        return quasi.value.raw.as_str();
+    }
     quasi
         .value
         .cooked
@@ -122,5 +132,13 @@ fn quasi_text<'a>(quasi: &'a oxc_ast::ast::TemplateElement<'a>) -> &'a str {
         .unwrap_or(quasi.value.raw.as_str())
 }
 
+#[cfg(test)]
+mod chain_composition_tests;
+#[cfg(test)]
+mod chain_reassignment_destructuring_tests;
+#[cfg(test)]
+mod chain_tests;
+#[cfg(test)]
+mod compose_classification_tests;
 #[cfg(test)]
 mod tests;

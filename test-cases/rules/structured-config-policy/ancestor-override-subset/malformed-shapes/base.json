@@ -1,0 +1,11 @@
+{
+  "overrides": [
+    "not-an-object",
+    { "files": ["nested/file.ts"], "rules": "not-an-object" },
+    {
+      "files": ["nested/file.ts"],
+      "excludeFiles": [1],
+      "rules": { "x": "error" }
+    }
+  ]
+}

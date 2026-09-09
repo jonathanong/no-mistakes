@@ -1,7 +1,6 @@
 {
   // Nested configs rebase these override globs against their own directory.
   "overrides": [
-    "skip-non-object",
     {
       "files": [
         "**/nested/**",
@@ -34,26 +33,11 @@
       }
     },
     {
-      "files": ["["],
-      "rules": {
-        "bogus-rule": "off"
-      }
-    },
-    {
       "files": ["**/nested/**"],
       "rules": {}
     },
     {
       "files": ["**/nested/**"]
-    },
-    {
-      "rules": {
-        "also-bogus": "off"
-      }
-    },
-    {
-      "files": [1, true, "**/nested/**"],
-      "rules": "not-a-map"
     }
   ]
 }

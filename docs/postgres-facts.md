@@ -100,16 +100,16 @@ Template interpolations become `sql_placeholder_N` (1-based, in source
 order). The first quasi is copied as-is; each later quasi is prefixed with
 the next placeholder. This is the lock-ordering `sqlText` contract. It is
 intentionally different from Filaments' runtime-query helper, which joins
-quasis with ` ? `.
+quasis with `?`.
 
 ### Executor bindings
 
 Imports decide which local identifiers execute SQL:
 
-| knob | default |
-| --- | --- |
-| `importSpecifier` | `@data-stores/psql` |
-| `executorNames` | `query`, `read`, `write` |
+| knob              | default                  |
+| ----------------- | ------------------------ |
+| `importSpecifier` | `@data-stores/psql`      |
+| `executorNames`   | `query`, `read`, `write` |
 
 Importing `withTransaction` or `withTransactionOptions` also binds `query`.
 A missing specifier produces no executor bindings.
@@ -128,7 +128,11 @@ Each `EmbeddedSqlCall` records `kind`:
 
 - `Inline` — SQL literal or template at the call site
 - `ImmutableLocal` — `const` binding with static SQL
-- `Composed` — static `+` concatenation or `.append(...)` of static fragments
+- `Composed` — static `+` concatenation, a fluent `.append(...)` chain, or a
+  call into a same-file function whose body is exactly one `return` of such a
+  chain (recursive, up to 8 calls deep). A parameter referenced outside a
+  chain's template-placeholder position, or a callee that isn't a same-file
+  function, fails closed instead of resolving.
 - `Dynamic` — `let`, reassignment, interpolating templates, or incomplete
   composition (fail closed)
 
@@ -210,7 +214,7 @@ comments (`-- name`) and empty `/* */` comments are not annotations.
 
 ## Out of scope
 
-Lock-ordering and runtime-query *rules* are not part of this fact layer.
+Lock-ordering and runtime-query _rules_ are not part of this fact layer.
 Election-schema vote tables and UUIDv7 predicates are also out of scope.
 
 `postgres-redundant-index` v1 also leaves these migration index transitions
