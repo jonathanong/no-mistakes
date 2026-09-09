@@ -30,3 +30,23 @@ pub(super) fn bench_callable_file_index_construction(c: &mut Criterion) {
     }
     group.finish();
 }
+
+pub(super) fn bench_call_site_membership(c: &mut Criterion) {
+    if !shard::should_run(shard::GRAPH_CORE) {
+        return;
+    }
+    let mut group = c.benchmark_group("call_site_membership");
+    for files in [4_096usize, 16_384] {
+        let hits = no_mistakes::benchmark_support::probe_call_site_files(files);
+        assert_eq!(hits, files, "every synthetic file must have a call site");
+        group.throughput(Throughput::Elements(files as u64));
+        group.bench_with_input(BenchmarkId::from_parameter(files), &files, |b, files| {
+            b.iter(|| {
+                black_box(no_mistakes::benchmark_support::probe_call_site_files(
+                    black_box(*files),
+                ))
+            });
+        });
+    }
+    group.finish();
+}

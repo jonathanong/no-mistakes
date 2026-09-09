@@ -102,3 +102,7 @@ pub fn construct_callable_file_index(
         entries: constructed.max(fixture.entries),
     }
 }
+
+pub fn probe_call_site_files(file_count: usize) -> usize {
+    crate::codebase::dependencies::graph::benchmark_probe_call_site_files(file_count)
+}

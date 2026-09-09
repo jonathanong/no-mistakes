@@ -26,7 +26,7 @@ mod shard;
 use aggregate::{
     bench_aggregate_and_multi_report, bench_finite_set_membership, bench_impacted_checks,
 };
-use call_index::bench_callable_file_index_construction;
+use call_index::{bench_call_site_membership, bench_callable_file_index_construction};
 use criterion::{criterion_group, criterion_main};
 use graph::{bench_facts_graph_and_query, bench_high_fanout_finalization, bench_lazy_traversal};
 use graph_gates::bench_graph_gates;
@@ -44,6 +44,7 @@ criterion_group!(
     benches,
     bench_lazy_traversal,
     bench_callable_file_index_construction,
+    bench_call_site_membership,
     bench_facts_graph_and_query,
     bench_graph_gates,
     bench_language_frontends,

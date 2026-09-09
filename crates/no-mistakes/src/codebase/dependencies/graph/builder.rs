@@ -8,6 +8,10 @@ pub struct DepGraph {
     callable_nodes_by_file: FxHashMap<PathBuf, Vec<NodeId>>,
     callable_export_resolutions: FxHashMap<(PathBuf, String), ExportedCallableResolution>,
     resolved_call_sites: Vec<ResolvedCallSite>,
+    /// Ranges into the sorted `resolved_call_sites` vector, keyed by file.
+    /// Per-file membership and scans must use this instead of walking the
+    /// whole-repo site list.
+    call_sites_by_file: FxHashMap<PathBuf, std::ops::Range<usize>>,
     vitest_setup_projects: Vec<VitestSetupProject>,
     effective_edges: OnceLock<EdgeIndex<NodeId, EdgeKind>>,
     parse_errors: HashMap<PathBuf, String>,
