@@ -254,6 +254,30 @@ fn class_alias_static_getter_reads_follow_the_class_binding() {
 }
 
 #[test]
+fn nested_class_alias_static_getter_reads_follow_the_outer_class() {
+    let facts = facts(
+        "class Service { static get value() { import('./dep.mts'); } } function run() { const Alias = Service; Alias.value; }",
+    );
+    assert!(facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "Alias.value"
+            && call.invocation == InvocationKind::Call
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
+fn dotted_callable_alias_is_not_a_class_binding() {
+    let facts = facts(
+        "class Service { static run() {} static get value() { import('./dep.mts'); } } const Alias = Service.run; Alias.value;",
+    );
+    assert!(!facts.function_calls.iter().any(|call| {
+        call.callee == "Alias.value"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
 fn shadowed_class_alias_does_not_read_the_outer_static_getter() {
     let facts = facts(
         "class Service { static get value() { import('./dep.mts'); } } function run() { const Alias = Service; { const Alias = other; Alias.value; } }",

@@ -149,10 +149,10 @@ impl ImportCollector {
                 }
             }
             if let Some(alias) = self.indexed_callable_alias(scope_id, &name) {
-                name = alias
-                    .target
-                    .split_once('.')
-                    .map_or(alias.target.clone(), |(binding, _)| binding.to_string());
+                if alias.target.contains('.') {
+                    return None;
+                }
+                name = alias.target.clone();
                 continue;
             }
             if self
