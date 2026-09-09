@@ -12,6 +12,7 @@ mod imported_class_statics;
 mod namespace_alias;
 mod nested_aggregate_callables;
 mod object_setter_reachability;
+mod object_spread_reachability;
 mod overloads;
 mod sequence_callees;
 mod static_class_members;

@@ -222,7 +222,7 @@ fn non_callable_duplicate_key_drops_the_member_alias() {
 #[test]
 fn later_object_spread_drops_earlier_member_aliases() {
     let facts = facts(
-        "function target() {} const replacement = {}; const calls = { run: target, ...replacement }; calls.run();",
+        "function target() {} function replacement() { return {}; } const calls = { run: target, ...replacement() }; calls.run();",
     );
 
     assert!(!facts
@@ -248,4 +248,39 @@ fn object_member_aliases_record_the_first_hop_only() {
         .callable_aliases
         .iter()
         .any(|alias| alias.local == "calls.run" && alias.target == "invoke"));
+}
+
+#[test]
+fn known_object_spread_copies_source_member_aliases() {
+    let facts = facts(
+        "function target() {} const source = { run: target }; const api = { ...source }; api.run();",
+    );
+
+    assert!(facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "api.run" && alias.target == "source.run"));
+}
+
+#[test]
+fn empty_known_object_spread_keeps_earlier_member_aliases() {
+    let facts = facts(
+        "function target() {} const replacement = {}; const calls = { run: target, ...replacement }; calls.run();",
+    );
+
+    assert!(facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "calls.run" && alias.target == "target"));
+}
+
+#[test]
+fn object_literal_spread_call_resolves_to_the_source_member() {
+    let facts =
+        facts("function target() {} const source = { run: target }; ({ ...source }).run();");
+
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "source.run"));
 }

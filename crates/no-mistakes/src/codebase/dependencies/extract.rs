@@ -221,6 +221,7 @@ include!("extract_visit.rs");
 include!("extract_visit_modules.rs");
 include!("extract_visit_exports.rs");
 include!("extract_collector_scopes.rs");
+include!("extract_object_spread_helpers.rs");
 include!("extract_collector_methods.rs");
 include!("extract_visit_members.rs");
 include!("extract_visit_aggregates.rs");

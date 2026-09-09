@@ -131,7 +131,18 @@ impl ImportCollector {
         let mut members = Vec::new();
         for property in &object.properties {
             match property {
-                ObjectPropertyKind::SpreadProperty(_) => members.clear(),
+                ObjectPropertyKind::SpreadProperty(spread) => match spread_member_aliases(
+                    self,
+                    &spread.argument,
+                ) {
+                    Some(spread_members) => {
+                        for (member, _) in &spread_members {
+                            members.retain(|(existing, _)| existing != member);
+                        }
+                        members.extend(spread_members);
+                    }
+                    None => members.clear(),
+                },
                 ObjectPropertyKind::ObjectProperty(property) => {
                     let Some(member) =
                         crate::codebase::ts_source::static_property_key_name(&property.key)

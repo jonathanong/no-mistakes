@@ -137,6 +137,15 @@ fn record_object_member_calls(
 ) {
     collector.record_callable_binding_id(object_binding, object_id);
     for property in &object.properties {
+        if record_object_spread_property(
+            collector,
+            object_binding,
+            object_scope,
+            object_id,
+            property,
+        ) {
+            continue;
+        }
         let ObjectPropertyKind::ObjectProperty(property) = property else {
             continue;
         };

@@ -518,5 +518,7 @@ mod callable_alias_regressions;
 mod callable_alias_tdz;
 #[path = "tests/class_and_overload_regressions.rs"]
 mod class_and_overload_regressions;
+#[path = "tests/object_spread_regressions.rs"]
+mod object_spread_regressions;
 #[path = "tests/static_block_regressions.rs"]
 mod static_block_regressions;
