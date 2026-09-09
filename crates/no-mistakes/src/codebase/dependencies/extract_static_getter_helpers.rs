@@ -3,6 +3,9 @@ fn record_static_getter_read(
     member: &StaticMemberExpression<'_>,
     callee: &str,
 ) {
+    if collector.suppress_static_getter_reads {
+        return;
+    }
     let Some((binding, property)) = callee.split_once('.') else {
         return;
     };
@@ -28,7 +31,7 @@ fn record_static_getter_read(
         line: import_line_at(&collector.line_starts, member.span.start as usize),
         offset: member.span.start,
         is_callback: false,
-        invocation: InvocationKind::Call,
+        invocation: InvocationKind::Get,
         target_identity: CallTargetIdentity::RepositoryFunction,
         callee_binding_scope: Some(binding_scope),
         static_arg: None,
@@ -74,7 +77,7 @@ fn record_static_setter_assignment(
         line: import_line_at(&collector.line_starts, offset as usize),
         offset,
         is_callback: false,
-        invocation: InvocationKind::Call,
+        invocation: InvocationKind::Set,
         target_identity: CallTargetIdentity::RepositoryFunction,
         callee_binding_scope: Some(binding_scope),
         static_arg: None,
@@ -88,7 +91,10 @@ fn visit_assignment_expression_with_calls<'a>(
     assignment: &AssignmentExpression<'a>,
 ) {
     record_assignment_target_writes(collector, &assignment.left, assignment.span.start);
-    walk::walk_assignment_expression(collector, assignment);
+    collector.suppress_static_getter_reads = true;
+    walk::walk_assignment_target(collector, &assignment.left);
+    collector.suppress_static_getter_reads = false;
+    collector.visit_expression(&assignment.right);
 }
 
 fn visit_update_expression_with_calls<'a>(

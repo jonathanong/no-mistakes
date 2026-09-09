@@ -207,6 +207,18 @@ fn import_collector_nests_interned_keys_on_fxhash() {
         "class members must nest by owner so (class, member) probes skip a linear scan"
     );
     assert!(
+        collector.contains(
+            "static_getter_member_ids: FxHashMap<CallableId, FxHashMap<String, CallableId>>"
+        ),
+        "static getters must nest by owner so paired accessors keep distinct identities"
+    );
+    assert!(
+        collector.contains(
+            "static_setter_member_ids: FxHashMap<CallableId, FxHashMap<String, CallableId>>"
+        ),
+        "static setters must nest by owner so paired accessors keep distinct identities"
+    );
+    assert!(
         !collector.contains("HashMap<(usize, String)"),
         "do not key collector maps on allocated (scope, String) tuples"
     );

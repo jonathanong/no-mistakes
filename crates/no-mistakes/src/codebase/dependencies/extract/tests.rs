@@ -501,6 +501,8 @@ fn function_expression_declarator_binding_pattern_is_visited() {
     assert_eq!(facts.imports[0].function_scope, None);
 }
 
+#[path = "tests/accessor_kind_regressions.rs"]
+mod accessor_kind_regressions;
 mod call_binding_metadata;
 #[path = "tests/call_binding_predeclaration_regressions.rs"]
 mod call_binding_predeclaration_regressions;

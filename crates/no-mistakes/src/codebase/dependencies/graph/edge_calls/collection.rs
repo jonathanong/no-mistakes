@@ -36,6 +36,7 @@ fn collect_call_edges_for_core(
                             &call.callee,
                             call.offset,
                             call.caller_id,
+                            call.invocation,
                         )
                         .or_else(|| {
                             (call.target_identity
@@ -44,6 +45,7 @@ fn collect_call_edges_for_core(
                                     index.resolve_class_binding(
                                         call.callee_binding_scope,
                                         &call.callee,
+                                        call.invocation,
                                     )
                                 })
                                 .flatten()

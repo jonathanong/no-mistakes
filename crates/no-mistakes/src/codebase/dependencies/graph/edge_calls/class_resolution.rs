@@ -3,6 +3,7 @@ impl CallableFileIndex {
         &self,
         binding_scope: Option<usize>,
         callee: &str,
+        invocation: InvocationKind,
     ) -> Option<ResolvedLocalCallee> {
         let binding_scope = binding_scope?;
         let (binding, member) = callee
@@ -14,7 +15,7 @@ impl CallableFileIndex {
         let (target_scope, callable_id) = match member {
             Some(member) => {
                 let (owner, member_id) =
-                    self.resolve_static_member(binding_scope, scope, member)?;
+                    self.resolve_static_member(binding_scope, scope, member, invocation)?;
                 (owner.scope.as_str(), member_id)
             }
             None => (scope.scope.as_str(), scope.class_id),
@@ -33,6 +34,7 @@ impl CallableFileIndex {
         binding_scope: usize,
         scope: &'a ClassBindingTarget,
         member: &str,
+        invocation: InvocationKind,
     ) -> Option<(
         &'a ClassBindingTarget,
         crate::codebase::dependencies::extract::CallableId,
@@ -40,8 +42,8 @@ impl CallableFileIndex {
         let mut scope = scope;
         let mut visited = fx_set();
         loop {
-            if let Some(member_id) = scope.static_member_ids.get(member) {
-                return Some((scope, *member_id));
+            if let Some(member_id) = static_member_id(scope, member, invocation) {
+                return Some((scope, member_id));
             }
             let base = scope.local_base.as_ref()?;
             let mut lexical_scope = Some(binding_scope);
@@ -61,5 +63,17 @@ impl CallableFileIndex {
             }
             scope = base_scope;
         }
+    }
+}
+
+fn static_member_id(
+    scope: &ClassBindingTarget,
+    member: &str,
+    invocation: InvocationKind,
+) -> Option<crate::codebase::dependencies::extract::CallableId> {
+    match invocation {
+        InvocationKind::Get => scope.static_getter_ids.get(member).copied(),
+        InvocationKind::Set => scope.static_setter_ids.get(member).copied(),
+        _ => scope.static_member_ids.get(member).copied(),
     }
 }

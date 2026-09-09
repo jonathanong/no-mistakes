@@ -33,7 +33,10 @@ impl ImportCollector {
                 .into_iter()
                 .flatten()
                 .filter(|(member, member_id)| {
-                    !source_is_class || self.has_class_member_id(source_id, member, **member_id)
+                    !source_is_class
+                        || self.has_class_member_id(source_id, member, **member_id)
+                        || self.has_static_getter_member(source_id, member)
+                        || self.has_static_setter_member(source_id, member)
                 })
                 .map(|(member, _)| member.clone())
                 .chain(self.callable_aliases.iter().filter_map(|alias| {

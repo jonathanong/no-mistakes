@@ -1,3 +1,5 @@
+use crate::codebase::dependencies::extract::InvocationKind;
+
 /// Projects statically resolved lexical calls into the canonical graph.
 ///
 /// This resolves same-file bindings, direct named and namespace imports, and
@@ -43,6 +45,10 @@ struct ClassBindingTarget {
     class_id: crate::codebase::dependencies::extract::CallableId,
     static_member_ids:
         FxHashMap<String, crate::codebase::dependencies::extract::CallableId>,
+    static_getter_ids:
+        FxHashMap<String, crate::codebase::dependencies::extract::CallableId>,
+    static_setter_ids:
+        FxHashMap<String, crate::codebase::dependencies::extract::CallableId>,
     /// A simple local `extends Base` relationship. Imported, computed, and
     /// expression bases intentionally stay unresolved here.
     local_base: Option<String>,
@@ -65,6 +71,8 @@ impl CallableFileIndex {
             .map(|(id, scope)| (*id, scope.clone()))
             .collect::<FxHashMap<_, _>>();
         let members_by_class = index_class_members_by_id(&file.class_member_callable_ids);
+        let getters_by_class = index_class_members_by_id(&file.static_getter_callable_ids);
+        let setters_by_class = index_class_members_by_id(&file.static_setter_callable_ids);
         let local_bases = index_local_construct_bases(&file.function_calls);
         let callable_bindings = file
             .callable_bindings
@@ -103,6 +111,14 @@ impl CallableFileIndex {
                                 scope: class_scope.clone(),
                                 class_id: *id,
                                 static_member_ids: members_by_class
+                                    .get(id)
+                                    .cloned()
+                                    .unwrap_or_default(),
+                                static_getter_ids: getters_by_class
+                                    .get(id)
+                                    .cloned()
+                                    .unwrap_or_default(),
+                                static_setter_ids: setters_by_class
                                     .get(id)
                                     .cloned()
                                     .unwrap_or_default(),

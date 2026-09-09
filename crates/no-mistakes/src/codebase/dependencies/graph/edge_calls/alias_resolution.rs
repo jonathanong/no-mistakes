@@ -21,9 +21,10 @@ impl CallableFileIndex {
         &self,
         mut binding_scope: usize,
         callee: &str,
+        invocation: InvocationKind,
     ) -> Option<ResolvedLocalCallee> {
         loop {
-            if let Some(target) = self.resolve_class_binding(Some(binding_scope), callee) {
+            if let Some(target) = self.resolve_class_binding(Some(binding_scope), callee, invocation) {
                 return Some(target);
             }
             binding_scope = self
@@ -41,6 +42,7 @@ impl CallableFileIndex {
         callee: &str,
         offset: u32,
         caller_id: Option<crate::codebase::dependencies::extract::CallableId>,
+        invocation: InvocationKind,
     ) -> Option<ResolvedLocalCallee> {
         let call_binding_scope = binding_scope;
         let mut binding_scope = binding_scope?;
@@ -80,9 +82,11 @@ impl CallableFileIndex {
                 };
                 let Some((alias_scope, alias)) = alias else {
                     if resolved_alias {
-                        if let Some(class_scope) =
-                            self.resolve_class_binding_in_scope_chain(binding_scope, &target)
-                        {
+                        if let Some(class_scope) = self.resolve_class_binding_in_scope_chain(
+                            binding_scope,
+                            &target,
+                            invocation,
+                        ) {
                             return Some(class_scope);
                         }
                     }
@@ -155,7 +159,7 @@ impl CallableFileIndex {
                 let class_target =
                     member.map_or_else(|| target.clone(), |member| format!("{target}.{member}"));
                 if let Some(class_scope) =
-                    self.resolve_class_binding_in_scope_chain(alias_scope, &class_target)
+                    self.resolve_class_binding_in_scope_chain(alias_scope, &class_target, invocation)
                 {
                     return Some(class_scope);
                 }

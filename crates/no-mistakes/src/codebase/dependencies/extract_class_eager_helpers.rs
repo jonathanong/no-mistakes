@@ -37,19 +37,22 @@ fn walk_class_with_scoped_methods<'a>(
                 if let Some(name) =
                     crate::codebase::ts_source::static_property_key_name(&method.key)
                 {
-                    collector.record_class_member_callable_id(class_id, name, method_id);
                     if method.kind == MethodDefinitionKind::Get {
-                        owner_name_insert(
+                        owner_member_insert(
                             &mut collector.static_getter_member_ids,
                             class_id,
                             name.to_string(),
+                            method_id,
                         );
                     } else if method.kind == MethodDefinitionKind::Set {
-                        owner_name_insert(
+                        owner_member_insert(
                             &mut collector.static_setter_member_ids,
                             class_id,
                             name.to_string(),
+                            method_id,
                         );
+                    } else {
+                        collector.record_class_member_callable_id(class_id, name, method_id);
                     }
                 }
             }

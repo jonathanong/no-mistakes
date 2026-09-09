@@ -243,7 +243,7 @@ fn static_getter_reads_are_recorded_separately_from_return_value_calls() {
     assert!(facts.function_calls.iter().any(|call| {
         call.caller.as_deref() == Some("run")
             && call.callee == "Service.value"
-            && call.invocation == InvocationKind::Call
+            && call.invocation == InvocationKind::Get
             && call.target_identity == CallTargetIdentity::RepositoryFunction
     }));
     assert!(facts.unknown_calls.iter().any(|call| {
@@ -269,7 +269,7 @@ fn class_alias_static_getter_reads_follow_the_class_binding() {
     assert!(facts.function_calls.iter().any(|call| {
         call.caller.as_deref() == Some("run")
             && call.callee == "Alias.value"
-            && call.invocation == InvocationKind::Call
+            && call.invocation == InvocationKind::Get
             && call.target_identity == CallTargetIdentity::RepositoryFunction
     }));
     assert!(facts.imports.iter().any(|import| {
@@ -285,7 +285,7 @@ fn nested_class_alias_static_getter_reads_follow_the_outer_class() {
     assert!(facts.function_calls.iter().any(|call| {
         call.caller.as_deref() == Some("run")
             && call.callee == "Alias.value"
-            && call.invocation == InvocationKind::Call
+            && call.invocation == InvocationKind::Get
             && call.target_identity == CallTargetIdentity::RepositoryFunction
     }));
 }
@@ -377,7 +377,7 @@ fn static_setter_assignment_invokes_the_setter_without_invalidating_it() {
 
     assert_eq!(setter_calls.len(), 2);
     assert!(setter_calls.iter().all(|call| {
-        call.invocation == InvocationKind::Call
+        call.invocation == InvocationKind::Set
             && call.target_identity == CallTargetIdentity::RepositoryFunction
     }));
 }
@@ -395,7 +395,7 @@ fn static_setter_update_invokes_the_setter_without_invalidating_it() {
 
     assert_eq!(setter_calls.len(), 2);
     assert!(setter_calls.iter().all(|call| {
-        call.invocation == InvocationKind::Call
+        call.invocation == InvocationKind::Set
             && call.target_identity == CallTargetIdentity::RepositoryFunction
     }));
     assert!(facts.imports.iter().any(|import| {

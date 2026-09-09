@@ -37,9 +37,9 @@ struct ImportCollector {
     deferred_simple_aliases: Vec<AggregateAliasCandidate>,
     callable_binding_declared_at: Vec<FxHashMap<String, u32>>,
     lexical_binding_names: Vec<FxHashSet<String>>,
-    static_getter_member_ids: FxHashMap<CallableId, FxHashSet<String>>,
+    static_getter_member_ids: FxHashMap<CallableId, FxHashMap<String, CallableId>>,
     object_getter_member_ids: FxHashMap<CallableId, FxHashSet<String>>,
-    static_setter_member_ids: FxHashMap<CallableId, FxHashSet<String>>,
+    static_setter_member_ids: FxHashMap<CallableId, FxHashMap<String, CallableId>>,
     class_local_bases: FxHashMap<CallableId, String>,
     syntactic_caller_stack: Vec<String>,
     local_stack: Vec<FxHashSet<String>>,
@@ -87,6 +87,7 @@ struct ImportCollector {
     /// call-scope reachability so they are not falsely kept.
     runtime_reachable_base_depth: Option<usize>,
     later_exported_type_names: FxHashSet<String>,
+    suppress_static_getter_reads: bool,
 }
 
 include!("extract_collector_maps.rs");

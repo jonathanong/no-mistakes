@@ -97,23 +97,7 @@ pub struct FunctionCall {
     pub static_cwd: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum InvocationKind {
-    Call,
-    Construct,
-    Callback,
-    /// Synthetic aggregate membership used by import reachability. This is
-    /// not a JavaScript invocation and must never become a call edge.
-    Membership,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum CallTargetIdentity {
-    Global,
-    ModuleExport,
-    RepositoryFunction,
-    Unknown,
-}
+include!("extract_kinds.rs");
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct UnknownCall {

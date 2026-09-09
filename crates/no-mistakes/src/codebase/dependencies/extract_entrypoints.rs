@@ -100,6 +100,10 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     callable_binding_declared_at.sort();
     let mut class_member_callable_ids = flatten_owner_members(collector.class_member_callable_ids);
     class_member_callable_ids.sort();
+    let mut static_getter_callable_ids = flatten_owner_members(collector.static_getter_member_ids);
+    static_getter_callable_ids.sort();
+    let mut static_setter_callable_ids = flatten_owner_members(collector.static_setter_member_ids);
+    static_setter_callable_ids.sort();
     let mut lexical_scope_parents: Vec<_> = collector.lexical_scope_parents.into_iter().collect();
     lexical_scope_parents.sort_by_key(|(scope, _)| *scope);
     let callable_aliases = collector
@@ -134,6 +138,8 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         callable_bindings,
         callable_binding_declared_at,
         class_member_callable_ids,
+        static_getter_callable_ids,
+        static_setter_callable_ids,
         lexical_scope_parents,
         callable_scopes,
         class_scopes,
