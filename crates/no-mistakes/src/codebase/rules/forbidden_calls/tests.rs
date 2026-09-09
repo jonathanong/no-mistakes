@@ -7,6 +7,9 @@ use crate::config::v2::{
 };
 use std::path::PathBuf;
 
+mod support;
+pub(super) use support::expand_roots;
+
 fn options(yaml: &str) -> Options {
     serde_yaml::from_str(yaml).unwrap()
 }
@@ -118,7 +121,7 @@ fn applications_are_ordered_and_overlap_independently() {
         ..Default::default()
     };
     let files = vec![root.join("src/entry.mts")];
-    let findings = check_with_graph(&root, &config, &graph, None, &files).unwrap();
+    let findings = check_with_graph(&root, &config, &graph, None, None, &files).unwrap();
     assert_eq!(findings.len(), 2, "{findings:#?}");
     assert!(findings[0].message.contains("(exact, application #1)"));
     assert!(findings[1].message.contains("(terminal, application #2)"));
@@ -216,7 +219,7 @@ fn vitest_roots_require_a_catalog_and_absolute_function_roots_resolve() {
     let (root, graph) = call_graph();
     let files = vec![root.join("src/entry.mts")];
     let vitest = options("roots: [{ vitest: true }]\ntargets: [{ global: setTimeout }]");
-    let error = roots::expand(&root, &vitest, &graph, None, &files).unwrap_err();
+    let error = expand_roots(&root, &vitest, &graph, &files).unwrap_err();
     assert!(error
         .to_string()
         .contains("require a prepared Vitest project catalog"));
@@ -226,7 +229,7 @@ fn vitest_roots_require_a_catalog_and_absolute_function_roots_resolve() {
         "roots: [{{ function: {{ file: {}, symbol: entry }} }}]\ntargets: [{{ global: setTimeout }}]",
         entry.display()
     ));
-    let nodes = roots::expand(&root, &function, &graph, None, &files)
+    let nodes = expand_roots(&root, &function, &graph, &files)
         .expect("absolute function roots resolve from the configured file");
     assert!(!nodes.is_empty());
 }
@@ -487,6 +490,9 @@ fn source_suppression_filters_call_findings_without_hiding_configuration_errors(
     );
 }
 
+mod explicit_playwright;
 mod explicit_vitest;
 mod file_bounded;
+mod glob;
 mod parse_errors;
+mod playwright;

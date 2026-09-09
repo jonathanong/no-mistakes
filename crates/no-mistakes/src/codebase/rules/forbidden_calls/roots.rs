@@ -1,56 +1,30 @@
-use super::config::{Options, Root, VitestSelector};
+use super::config::{catalog_names, Options, PlaywrightRoot, Root};
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::{CallRoot, DepGraph, NodeId};
 use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{bail, Context, Result};
 use std::path::{Path, PathBuf};
 
-pub(super) fn expand(
-    root: &Path,
-    options: &Options,
-    graph: &DepGraph,
-    catalog: Option<&super::super::PreparedVitestProjectCatalog>,
-    graph_files: &[PathBuf],
-) -> Result<Vec<NodeId>> {
+pub(super) struct ExpandRequest<'a> {
+    pub root: &'a Path,
+    pub options: &'a Options,
+    pub graph: &'a DepGraph,
+    pub vitest: Option<&'a super::super::PreparedVitestProjectCatalog>,
+    pub playwright: Option<&'a super::super::PreparedPlaywrightProjectCatalog>,
+    pub graph_files: &'a [PathBuf],
+    pub target_roots: &'a [PathBuf],
+}
+
+pub(super) fn expand(input: ExpandRequest<'_>) -> Result<Vec<NodeId>> {
     let mut call_roots = Vec::new();
-    for selector in &options.roots {
-        match selector {
-            Root::File(selector) => call_roots.push(CallRoot::File(require_parsed_file(
-                root,
-                graph,
-                &selector.file,
-                "file root",
-            )?)),
-            Root::Module(selector) => call_roots.push(CallRoot::Module(require_parsed_file(
-                root,
-                graph,
-                &selector.module,
-                "module root",
-            )?)),
-            Root::Function(selector) => call_roots.push(CallRoot::Function {
-                file: require_parsed_file(root, graph, &selector.function.file, "function root")?,
-                symbol: selector.function.symbol.clone(),
-            }),
-            Root::Vitest(selector) => {
-                let catalog = catalog.context(
-                    "forbidden-calls Vitest roots require a prepared Vitest project catalog",
-                )?;
-                let names = match &selector.vitest {
-                    VitestSelector::All(true) => Vec::new(),
-                    VitestSelector::All(false) => unreachable!("validated options"),
-                    VitestSelector::Projects(names) => names.clone(),
-                };
-                let files = catalog.matching_files(root, &names, graph_files)?;
-                for file in &files {
-                    reject_parse_error(graph, root, file)?;
-                }
-                call_roots.push(CallRoot::Vitest { files });
-            }
-        }
+    for selector in &input.options.roots {
+        call_roots.push(expand_selector(&input, selector)?);
     }
     let mut nodes = Vec::new();
     for call_root in call_roots {
-        let mut expanded = graph.expand_call_roots(std::slice::from_ref(&call_root));
+        let mut expanded = input
+            .graph
+            .expand_call_roots(std::slice::from_ref(&call_root));
         if expanded.is_empty() {
             bail!("{RULE_ID}: a configured root resolves to no callable source");
         }
@@ -59,6 +33,80 @@ pub(super) fn expand(
     nodes.sort();
     nodes.dedup();
     Ok(nodes)
+}
+
+fn expand_selector(input: &ExpandRequest<'_>, selector: &Root) -> Result<CallRoot> {
+    match selector {
+        Root::File(selector) => Ok(CallRoot::File(require_parsed_file(
+            input.root,
+            input.graph,
+            &selector.file,
+            "file root",
+        )?)),
+        Root::Module(selector) => Ok(CallRoot::Module(require_parsed_file(
+            input.root,
+            input.graph,
+            &selector.module,
+            "module root",
+        )?)),
+        Root::Function(selector) => Ok(CallRoot::Function {
+            file: require_parsed_file(
+                input.root,
+                input.graph,
+                &selector.function.file,
+                "function root",
+            )?,
+            symbol: selector.function.symbol.clone(),
+        }),
+        Root::Vitest(selector) => {
+            let catalog = input.vitest.context(
+                "forbidden-calls Vitest roots require a prepared Vitest project catalog",
+            )?;
+            let files = catalog.matching_files(
+                input.root,
+                &catalog_names(&selector.vitest),
+                input.graph_files,
+            )?;
+            collection_root(input, files, "Vitest root matched no files")
+        }
+        Root::Playwright(PlaywrightRoot { playwright }) => {
+            let catalog = input.playwright.context(
+                "forbidden-calls Playwright roots require a prepared Playwright project catalog",
+            )?;
+            let files = catalog.matching_files(
+                input.root,
+                &catalog_names(playwright),
+                input.graph_files,
+            )?;
+            collection_root(input, files, "Playwright root matched no files")
+        }
+        Root::Glob(selector) => {
+            let patterns = selector.glob.values();
+            let mut files = super::super::matching_files(
+                input.root,
+                &patterns,
+                input.graph_files,
+                input.target_roots,
+            )?;
+            files.sort();
+            files.dedup();
+            collection_root(input, files, "glob root matched no files")
+        }
+    }
+}
+
+fn collection_root(
+    input: &ExpandRequest<'_>,
+    files: Vec<PathBuf>,
+    empty_message: &str,
+) -> Result<CallRoot> {
+    if files.is_empty() {
+        bail!("{RULE_ID}: {empty_message}");
+    }
+    for file in &files {
+        reject_parse_error(input.graph, input.root, file)?;
+    }
+    Ok(CallRoot::Files { files })
 }
 
 fn require_parsed_file(

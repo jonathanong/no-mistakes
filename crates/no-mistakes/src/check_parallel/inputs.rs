@@ -45,6 +45,8 @@ pub(crate) struct DomainCheckInputs<'a> {
     pub(crate) codebase_config: &'a no_mistakes::codebase::config::Config,
     pub(crate) vitest_projects:
         Option<&'a no_mistakes::codebase::rules::PreparedVitestProjectCatalog>,
+    pub(crate) playwright_projects:
+        Option<&'a no_mistakes::codebase::rules::PreparedPlaywrightProjectCatalog>,
     pub(crate) workflow_documents:
         Option<&'a no_mistakes::codebase::ci_workflows::ParsedWorkflowSet>,
     pub(crate) tsconfig_gate_project_inputs:

@@ -113,14 +113,14 @@ fn call_traces_have_stable_shortest_paths_and_respect_layers() {
     }]);
     let module_roots = graph.expand_call_roots(&[CallRoot::Module(file.clone())]);
     assert_eq!(module_roots, vec![NodeId::file(&file)]);
-    let vitest_roots = graph.expand_call_roots(&[CallRoot::Vitest {
+    let collection_roots = graph.expand_call_roots(&[CallRoot::Files {
         files: vec![file.clone()],
     }]);
-    assert!(vitest_roots.contains(&NodeId::file(&file)));
-    assert!(vitest_roots
+    assert!(collection_roots.contains(&NodeId::file(&file)));
+    assert!(collection_roots
         .iter()
         .any(|node| node.display_name(&root).ends_with("#run")));
-    assert!(vitest_roots
+    assert!(collection_roots
         .iter()
         .any(|node| node.display_name(&root).ends_with("#target")));
     let direct = graph.call_traces(&roots, CallTraversal::Direct, None);
@@ -140,7 +140,7 @@ fn call_traces_have_stable_shortest_paths_and_respect_layers() {
 }
 
 #[test]
-fn file_and_vitest_call_roots_include_global_only_callables() {
+fn file_and_collection_call_roots_include_global_only_callables() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
     let tsconfig = TsConfig {
         dir: root.clone(),
@@ -163,7 +163,7 @@ fn file_and_vitest_call_roots_include_global_only_callables() {
         .iter()
         .any(|node| matches!(node, NodeId::Symbol { file: owner, symbol, .. } if owner.as_ref() == file.as_path() && symbol.as_ref() == "globalOnly")));
     assert!(graph
-        .expand_call_roots(&[CallRoot::Vitest { files: vec![file] }])
+        .expand_call_roots(&[CallRoot::Files { files: vec![file] }])
         .iter()
         .any(|node| matches!(node, NodeId::Symbol { symbol, .. } if symbol.as_ref() == "globalOnly")));
 }

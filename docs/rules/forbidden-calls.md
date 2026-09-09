@@ -27,10 +27,16 @@ selection, roots, targets, traversal, and message; applications run in YAML
 order and may intentionally overlap.
 
 `options.roots` accepts a `file` or `module` root, a repository `function`
-root, or a Vitest project root. Vitest roots select runner-config projects and
-explicit `tests.vitest.projects` entries with include globs; `vitest: true`
-includes that merged set, and a named list still errors for names present in
-neither source. `traversal` is `direct`, `file`, or `transitive`; `maxDepth`
+root, a `glob` of prepared graph files, or a Vitest or Playwright catalog
+root. Catalog roots select runner-config projects and explicit
+`tests.vitest.projects` / `tests.playwright.projects` entries through those
+projects' include paths (`testDir` and `testMatch` for Playwright).
+`vitest: true` or `playwright: true` includes that merged set, and a named
+list still errors for names present in neither source. Rule-level `include`
+and `exclude` still filter findings after expansion; they cannot select the
+root collection.
+
+`traversal` is `direct`, `file`, or `transitive`; `maxDepth`
 caps the selected traversal. `direct` always stops after one call hop. Call
 cycles are finite and each distinct reachable call occurrence is reported once.
 
@@ -46,7 +52,9 @@ roots:
   - file: src/entry.mts
   - module: src/startup.mts
   - function: { file: src/jobs.mts, symbol: runJob }
+  - glob: e2e/**/*.spec.ts
   - vitest: [unit, integration]
+  - playwright: true
 targets:
   - global: setTimeout
   - exact: page.waitForTimeout
@@ -87,7 +95,26 @@ rules:
         - moduleExport:
             module: node:timers/promises
             export: setTimeout
+  - name: playwright-no-set-timeout
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - playwright: true
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - global: setTimeout
+        - exact: page.waitForTimeout
+        - moduleExport:
+            module: node:timers/promises
+            export: setTimeout
 ```
+
+A `glob` root selects the same prepared file universe without a runner
+catalog, for example `glob: e2e/**/*.spec.ts` or a list of patterns. Use
+`playwright: true` when the repository already has Playwright `testDir` /
+`testMatch` selection paths.
 
 ## Unknown calls and suppression
 

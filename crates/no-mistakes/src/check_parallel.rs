@@ -29,7 +29,11 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
     let sources = inputs.sources;
     let inferred_roots = inputs.inferred_roots;
     let config = inputs.config;
-    let (codebase_config, vitest_projects) = (inputs.codebase_config, inputs.vitest_projects);
+    let (codebase_config, vitest_projects, playwright_projects) = (
+        inputs.codebase_config,
+        inputs.vitest_projects,
+        inputs.playwright_projects,
+    );
     let workflow_documents = inputs.workflow_documents;
     let tsconfig_gate_project_inputs = inputs.tsconfig_gate_project_inputs;
     let defer_suppression = inputs.defer_suppression;
@@ -79,6 +83,7 @@ pub(crate) fn run_domain_checks(inputs: DomainCheckInputs<'_>) -> DomainResults 
                                 prepared_tsconfig,
                                 prepared_tsconfig_catalog,
                                 prepared_vitest_projects: vitest_projects,
+                                prepared_playwright_projects: playwright_projects,
                                 inferred_roots: Some(inferred_roots),
                                 sources: Some(sources.as_ref()),
                             },

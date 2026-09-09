@@ -31,6 +31,7 @@ fn error_from(config: &crate::config::v2::NoMistakesConfig) -> anyhow::Error {
         dependency_graph: Some(&graph),
         inferred_roots: None,
         prepared_vitest_projects: None,
+        prepared_playwright_projects: None,
     })
     .unwrap_err()
 }

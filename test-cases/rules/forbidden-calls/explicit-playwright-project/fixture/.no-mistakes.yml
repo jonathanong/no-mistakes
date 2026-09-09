@@ -1,0 +1,14 @@
+tests:
+  playwright:
+    projects:
+      custom:
+        include: [src/custom.spec.ts]
+rules:
+  - name: explicit-playwright-no-real-timers
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - playwright: [custom]
+      targets:
+        - global: setTimeout

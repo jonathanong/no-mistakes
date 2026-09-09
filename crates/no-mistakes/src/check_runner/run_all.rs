@@ -168,6 +168,7 @@ pub(crate) fn run_all_with_suppressed(
             config,
             codebase_config: &prepared.codebase_config,
             vitest_projects: prepared.vitest_projects.as_ref(),
+            playwright_projects: prepared.playwright_projects.as_ref(),
             workflow_documents: prepared.workflow_documents.as_deref(),
             tsconfig_gate_project_inputs: prepared.tsconfig_gate_project_inputs.as_ref(),
             // Ordinary checks preserve each domain's early suppression path;
