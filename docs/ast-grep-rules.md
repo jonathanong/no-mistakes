@@ -198,7 +198,6 @@ outside a loop remains valid.
    confirm with `ast-grep test --skip-snapshot-tests`.
 4. Only allowlist a file/call site via `ignores` when it's genuinely bounded
    or is the documented fallback itself — leave everything else caught.
-5. `ast-grep scan` is already wired into `.husky/pre-push` (alongside
-   `no-mistakes check`) and into the `ast-analysis` job in
-   `.github/workflows/ci.yml` — a new rule under `.ast-grep/rules/` is picked
-   up automatically, no additional wiring needed.
+5. `ast-grep scan` is already wired into `.husky/pre-push` and into the
+   `ast-analysis` job in `.github/workflows/ci.yml` — a new rule under
+   `.ast-grep/rules/` is picked up automatically, no additional wiring needed.
