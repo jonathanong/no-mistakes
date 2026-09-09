@@ -1,5 +1,14 @@
 use super::*;
 
+#[test]
+fn import_reachability_resolves_this_member_through_the_class_index() {
+    let reachability = include_str!("../../edge_import_reachability_traversal.rs");
+    assert!(
+        reachability.contains(".resolve_this_member("),
+        "import reachability must resolve this.member through the class index",
+    );
+}
+
 fn dynamic_import_deps(file: &str) -> HashSet<std::path::PathBuf> {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
     let tsconfig = TsConfig {

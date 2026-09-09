@@ -478,10 +478,6 @@ fn callable_alias_resolution_is_indexed_once_per_file() {
         "import reachability must share resolve_alias with call edges",
     );
     assert!(
-        reachability.contains(".resolve_this_member("),
-        "import reachability must resolve this.member through the class index",
-    );
-    assert!(
         !reachability.contains("callable_aliases.iter()"),
         "import reachability must not linear-scan callable_aliases",
     );
