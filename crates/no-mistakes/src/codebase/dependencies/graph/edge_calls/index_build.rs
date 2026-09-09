@@ -4,15 +4,15 @@ fn index_class_members_by_id(
         String,
         crate::codebase::dependencies::extract::CallableId,
     )],
-) -> std::collections::HashMap<
+) -> FxHashMap<
     crate::codebase::dependencies::extract::CallableId,
-    std::collections::HashMap<String, crate::codebase::dependencies::extract::CallableId>,
+    FxHashMap<String, crate::codebase::dependencies::extract::CallableId>,
 > {
-    let mut by_class = std::collections::HashMap::new();
+    let mut by_class = fx_map();
     for (class_id, member, member_id) in members {
         by_class
             .entry(*class_id)
-            .or_insert_with(std::collections::HashMap::new)
+            .or_insert_with(fx_map)
             .insert(member.clone(), *member_id);
     }
     by_class
@@ -20,8 +20,8 @@ fn index_class_members_by_id(
 
 fn index_local_construct_bases(
     calls: &[crate::codebase::dependencies::extract::FunctionCall],
-) -> std::collections::HashMap<crate::codebase::dependencies::extract::CallableId, String> {
-    let mut bases = std::collections::HashMap::new();
+) -> FxHashMap<crate::codebase::dependencies::extract::CallableId, String> {
+    let mut bases = fx_map();
     for call in calls {
         if !(call.is_callback
             && call.invocation
@@ -40,7 +40,7 @@ fn index_local_construct_bases(
 
 fn index_callable_aliases(
     aliases: &[crate::codebase::dependencies::extract::CallableAlias],
-) -> std::collections::HashMap<(usize, String), IndexedAlias> {
+) -> FxHashMap<(usize, String), IndexedAlias> {
     aliases
         .iter()
         .map(|alias| {
@@ -58,7 +58,7 @@ fn index_callable_aliases(
 
 fn index_binding_declared_at(
     offsets: &[(usize, String, u32)],
-) -> std::collections::HashMap<(usize, String), u32> {
+) -> FxHashMap<(usize, String), u32> {
     offsets
         .iter()
         .map(|(scope, name, offset)| ((*scope, name.clone()), *offset))

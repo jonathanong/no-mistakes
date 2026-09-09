@@ -169,3 +169,20 @@ fn shadowed_intermediate_name_does_not_steal_the_captured_alias() {
     assert_eq!(targets.len(), 1);
     assert!(has_symbol(&targets[0].target, &file, "target"));
 }
+
+#[test]
+fn dotted_alias_resolution_follows_the_full_alias_chain() {
+    let source = include_str!("../../edge_calls/alias_resolution.rs");
+    let dotted = source
+        .split("if callee.contains('.') {")
+        .nth(1)
+        .and_then(|rest| rest.split("let (binding, member) = callee").next())
+        .expect("dotted resolve_alias branch");
+
+    assert!(
+        dotted.contains("loop {")
+            && dotted.contains("resolved_alias = true")
+            && dotted.contains("target = alias.target.clone()"),
+        "dotted aliases must follow the chain, not return after one hop",
+    );
+}

@@ -41,24 +41,26 @@ fn call_scope_resolution_walks_multiple_lexical_parents() {
 #[test]
 fn callable_alias_resolution_uses_the_callee_binding_scope() {
     let index = CallableFileIndex {
-        known_scopes: HashSet::from(["target".to_string()]),
-        exported_scopes: HashSet::new(),
-        class_scopes: HashSet::new(),
-        callable_bindings: HashMap::new(),
-        imported: HashMap::new(),
-        exported: HashMap::new(),
-        aliases: HashMap::from([(
+        known_scopes: ["target".to_string()].into_iter().collect(),
+        exported_scopes: fx_set(),
+        class_scopes: fx_set(),
+        callable_bindings: fx_map(),
+        imported: fx_map(),
+        exported: fx_map(),
+        aliases: [(
             (0, "alias".to_string()),
             IndexedAlias {
                 target: "target".to_string(),
                 declared_at: 0,
                 invalidated_at: None,
             },
-        )]),
-        binding_declared_at: HashMap::new(),
-        invocation_offsets: HashMap::new(),
-        class_bindings: HashMap::new(),
-        lexical_scope_parents: HashMap::from([(0, None), (1, Some(0))]),
+        )]
+        .into_iter()
+        .collect(),
+        binding_declared_at: fx_map(),
+        invocation_offsets: fx_map(),
+        class_bindings: fx_map(),
+        lexical_scope_parents: [(0, None), (1, Some(0))].into_iter().collect(),
         stars: Vec::new(),
     };
 
@@ -287,7 +289,7 @@ fn class_members_are_indexed_once_by_class_identity() {
 
     assert_eq!(indexed.len(), 2);
     assert_eq!(
-        indexed.values().map(HashMap::len).sum::<usize>(),
+        indexed.values().map(|members| members.len()).sum::<usize>(),
         members.len(),
         "one-pass grouping keeps one entry per member, not a cartesian product",
     );
@@ -461,18 +463,54 @@ fn callable_alias_resolution_is_indexed_once_per_file() {
 }
 
 #[test]
-fn dotted_alias_resolution_follows_the_full_alias_chain() {
-    let source = include_str!("../edge_calls/alias_resolution.rs");
-    let dotted = source
-        .split("if callee.contains('.') {")
-        .nth(1)
-        .and_then(|rest| rest.split("let (binding, member) = callee").next())
-        .expect("dotted resolve_alias branch");
-
+fn callable_file_index_uses_fx_hash_for_interned_keys() {
+    let sources = [
+        include_str!("../edge_calls.rs"),
+        include_str!("../edge_calls/index_build.rs"),
+        include_str!("../edge_calls/liveness.rs"),
+        include_str!("../edge_calls/collection.rs"),
+        include_str!("../edge_calls/local_resolution.rs"),
+        include_str!("../edge_calls/class_resolution.rs"),
+        include_str!("../edge_calls/alias_resolution.rs"),
+        include_str!("../edge_calls/export_resolution_population.rs"),
+        include_str!("../edge_calls/roots.rs"),
+    ];
+    for source in sources {
+        assert!(
+            !source.contains("std::collections::HashMap"),
+            "callable indexes must use crate::fx maps, not SipHash HashMap"
+        );
+        assert!(
+            !source.contains("std::collections::HashSet"),
+            "callable indexes must use crate::fx sets, not SipHash HashSet"
+        );
+        assert!(
+            !source.contains("HashMap::new()"),
+            "rustc-hash 2 FxHashMap has no new(); use fx_map()"
+        );
+        assert!(
+            !source.contains("HashSet::new()"),
+            "rustc-hash 2 FxHashSet has no new(); use fx_set()"
+        );
+    }
+    let facts = crate::codebase::ts_source::facts::TsFileFacts {
+        callable_bindings: vec![(
+            0,
+            "run".to_string(),
+            crate::codebase::dependencies::extract::CallableId(1),
+        )],
+        callable_aliases: vec![crate::codebase::dependencies::extract::CallableAlias {
+            scope: None,
+            scope_id: None,
+            local: "alias".to_string(),
+            target: "run".to_string(),
+            binding_scope: 0,
+            declared_at: 0,
+            invalidated_at: None,
+        }],
+        ..Default::default()
+    };
     assert!(
-        dotted.contains("loop {")
-            && dotted.contains("resolved_alias = true")
-            && dotted.contains("target = alias.target.clone()"),
-        "dotted aliases must follow the chain, not return after one hop",
+        crate::codebase::dependencies::graph::benchmark_construct_callable_file_index(&facts) >= 2
     );
 }

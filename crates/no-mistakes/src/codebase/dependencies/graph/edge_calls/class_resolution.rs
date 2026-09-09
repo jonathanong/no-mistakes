@@ -38,7 +38,7 @@ impl CallableFileIndex {
         crate::codebase::dependencies::extract::CallableId,
     )> {
         let mut scope = scope;
-        let mut visited = std::collections::HashSet::new();
+        let mut visited = fx_set();
         loop {
             if let Some(member_id) = scope.static_member_ids.get(member) {
                 return Some((scope, *member_id));

@@ -44,7 +44,7 @@ impl CallableFileIndex {
     ) -> Option<ResolvedLocalCallee> {
         let call_binding_scope = binding_scope;
         let mut binding_scope = binding_scope?;
-        let mut visited = std::collections::HashSet::new();
+        let mut visited = fx_set();
         if callee.contains('.') {
             // Dotted members hop until the chain ends: `calls.run` -> `invoke`
             // -> `target`. Returning after the first alias would disagree with

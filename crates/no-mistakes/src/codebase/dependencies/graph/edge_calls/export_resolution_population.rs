@@ -3,7 +3,7 @@
 /// retaining this result is what lets an uncalled exported function still
 /// resolve to its canonical repository callable.
 struct ExportNameEdges {
-    direct: std::collections::HashSet<String>,
+    direct: FxHashSet<String>,
     stars: Vec<std::path::PathBuf>,
     namespaces: Vec<(String, std::path::PathBuf)>,
 }
@@ -11,14 +11,14 @@ struct ExportNameEdges {
 fn exported_names_for_file(
     path: &std::path::Path,
     edges: &FxHashMap<std::path::PathBuf, ExportNameEdges>,
-    visiting: &mut std::collections::HashSet<std::path::PathBuf>,
-) -> std::collections::HashSet<String> {
+    visiting: &mut FxHashSet<std::path::PathBuf>,
+) -> FxHashSet<String> {
     if !visiting.insert(path.to_path_buf()) {
-        return std::collections::HashSet::new();
+        return fx_set();
     }
     let Some(file) = edges.get(path) else {
         visiting.remove(path);
-        return std::collections::HashSet::new();
+        return fx_set();
     };
     let mut names = file.direct.clone();
     for target in &file.stars {
@@ -51,7 +51,7 @@ fn populate_callable_export_resolutions(
         let Some(file) = indexes.file(facts, path) else {
             continue;
         };
-        let mut names = std::collections::HashSet::new();
+        let mut names = fx_set();
         let mut namespaces = Vec::new();
         for (name, binding) in &file.exported {
             if binding.local == "*" {
@@ -91,7 +91,7 @@ fn populate_callable_export_resolutions(
         let candidates = exported_names_for_file(
             &path,
             &export_edges,
-            &mut std::collections::HashSet::new(),
+            &mut fx_set(),
         );
         for export in candidates {
             let resolution = resolve_exported_callable(

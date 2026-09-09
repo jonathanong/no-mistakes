@@ -23,7 +23,7 @@ fn collect_call_edges_for_core(
                 .iter()
                 .filter(|call| is_traversable_call(&index, call))
                 .map(|call| (call.caller_id, call.offset, call.invocation))
-                .collect::<std::collections::HashSet<_>>();
+                .collect::<FxHashSet<_>>();
             let mut sites = file
                 .function_calls
                 .iter()

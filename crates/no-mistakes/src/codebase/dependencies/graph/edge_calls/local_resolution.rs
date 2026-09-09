@@ -32,8 +32,8 @@ fn resolve_local_call_scope<'a>(
     caller: Option<&str>,
     _binding_scope: Option<usize>,
     callee: &str,
-    known: &'a std::collections::HashSet<String>,
-    class_scopes: &std::collections::HashSet<String>,
+    known: &'a FxHashSet<String>,
+    class_scopes: &FxHashSet<String>,
 ) -> Option<&'a str> {
     let binding = callee
         .split_once('.')
