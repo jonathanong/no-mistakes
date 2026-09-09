@@ -252,3 +252,193 @@ fn mixed_instance_and_static_run_keep_this_member_kind() {
         }
     }
 }
+
+fn this_member_facts(file: &str) -> (std::path::PathBuf, crate::codebase::ts_source::facts::TsFileFacts) {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let source = root.join(file);
+    let facts = collect_ts_facts(
+        std::slice::from_ref(&source),
+        TsFactPlan {
+            function_calls: true,
+            ..TsFactPlan::default()
+        },
+    );
+    let file_facts = facts.get(&source).cloned().expect("this-member fixture facts");
+    (source, file_facts)
+}
+
+#[test]
+fn this_member_index_covers_caller_id_fallbacks_and_invalid_callees() {
+    let (_, method) = this_member_facts("src/this-member-method.mts");
+    let method = CallableFileIndex::from_facts(&method);
+    assert!(method
+        .resolve_this_member(
+            Some("Service/run"),
+            None,
+            "this.load",
+            InvocationKind::Construct,
+        )
+        .is_none());
+    assert!(method
+        .resolve_this_member(Some("Service/run"), None, "this.foo.bar", InvocationKind::Call)
+        .is_none());
+    assert!(method
+        .resolve_this_member(Some("Service/run"), None, "this.", InvocationKind::Call)
+        .is_none());
+    assert_eq!(
+        method
+            .resolve_this_member(Some("Service/run"), None, "this.load", InvocationKind::Call)
+            .map(|resolved| resolved.callee),
+        Some("Service/load".to_string()),
+    );
+
+    let (_, mixed) = this_member_facts("src/this-member-mixed-run.mts");
+    let mixed = CallableFileIndex::from_facts(&mixed);
+    assert!(mixed
+        .resolve_this_member(Some("Service/run"), None, "this.load", InvocationKind::Call)
+        .is_none());
+}
+
+#[test]
+fn nested_this_member_resolves_from_unique_instance_and_static_methods() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+    let source = root.join("src/this-member-nested.mts");
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.file == source
+            && site.source_callee == "this.load"
+            && matches!(
+                &site.target,
+                ResolvedCallTarget::RepositoryFunction { scope, .. } if scope == "Service/load"
+            )
+    }));
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.file == source
+            && site.source_callee == "this.load"
+            && matches!(
+                &site.target,
+                ResolvedCallTarget::RepositoryFunction { scope, .. } if scope == "StaticService/load"
+            )
+    }));
+}
+
+#[test]
+fn static_getter_this_member_resolves_as_static() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+    let source = root.join("src/this-member-static-getter.mts");
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.file == source
+            && site.source_callee == "this.load"
+            && matches!(
+                &site.target,
+                ResolvedCallTarget::RepositoryFunction { scope, .. } if scope == "Service/load"
+            )
+    }));
+}
+
+#[test]
+fn sibling_same_named_classes_leave_this_member_unresolved() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+    let source = root.join("src/this-member-sibling.mts");
+    assert!(!graph.resolved_call_sites().iter().any(|site| {
+        site.file == source
+            && site.source_callee == "this.load"
+            && matches!(&site.target, ResolvedCallTarget::RepositoryFunction { .. })
+    }));
+}
+
+#[test]
+fn cyclic_heritage_leaves_missing_this_member_unresolved() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+    let source = root.join("src/this-member-cycle.mts");
+    assert!(!graph.resolved_call_sites().iter().any(|site| {
+        site.file == source
+            && site.source_callee == "this.missing"
+            && matches!(&site.target, ResolvedCallTarget::RepositoryFunction { .. })
+    }));
+}
+
+#[test]
+fn mixed_kind_this_member_stays_unresolved_on_the_other_kind() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+    let source = root.join("src/this-member-wrong-kind.mts");
+    assert!(!graph.resolved_call_sites().iter().any(|site| {
+        site.file == source
+            && matches!(site.source_callee.as_str(), "this.load" | "this.run")
+            && matches!(&site.target, ResolvedCallTarget::RepositoryFunction { .. })
+    }));
+}
