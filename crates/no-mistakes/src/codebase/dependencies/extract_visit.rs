@@ -210,12 +210,11 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_static_member_expression(&mut self, member: &StaticMemberExpression<'a>) {
-        if let Some(name) = simple_static_member_name(member) {
-            record_static_getter_read(self, member, &name);
-            record_object_getter_read(self, member, &name);
-            self.push_value_symbol_reference(name);
-        }
-        walk::walk_static_member_expression(self, member);
+        visit_static_member_expression_with_getters(self, member);
+    }
+
+    fn visit_computed_member_expression(&mut self, member: &ComputedMemberExpression<'a>) {
+        visit_computed_member_expression_with_getters(self, member);
     }
 
     fn visit_ts_type_reference(&mut self, reference: &TSTypeReference<'a>) {

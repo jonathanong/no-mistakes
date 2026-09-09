@@ -1,8 +1,27 @@
-fn record_static_getter_read(
+fn visit_static_member_expression_with_getters<'a>(
     collector: &mut ImportCollector,
-    member: &StaticMemberExpression<'_>,
-    callee: &str,
+    member: &StaticMemberExpression<'a>,
 ) {
+    if let Some(name) = simple_static_member_name(member) {
+        record_static_getter_read(collector, member.span.start, &name);
+        record_object_getter_read(collector, member, &name);
+        collector.push_value_symbol_reference(name);
+    }
+    walk::walk_static_member_expression(collector, member);
+}
+
+fn visit_computed_member_expression_with_getters<'a>(
+    collector: &mut ImportCollector,
+    member: &ComputedMemberExpression<'a>,
+) {
+    if let Some(name) = simple_computed_member_name(member) {
+        record_static_getter_read(collector, member.span.start, &name);
+        collector.push_value_symbol_reference(name);
+    }
+    walk::walk_computed_member_expression(collector, member);
+}
+
+fn record_static_getter_read(collector: &mut ImportCollector, offset: u32, callee: &str) {
     let Some((binding, property)) = callee.split_once('.') else {
         return;
     };
@@ -25,8 +44,8 @@ fn record_static_getter_read(
         caller_id: collector.current_function_id(),
         syntactic_caller: collector.current_syntactic_caller(),
         callee: callee.to_string(),
-        line: import_line_at(&collector.line_starts, member.span.start as usize),
-        offset: member.span.start,
+        line: import_line_at(&collector.line_starts, offset as usize),
+        offset,
         is_callback: false,
         invocation: InvocationKind::Get,
         target_identity: CallTargetIdentity::RepositoryFunction,
@@ -98,6 +117,11 @@ fn walk_assignment_lhs_without_written_getter<'a>(
 ) {
     if let AssignmentTarget::StaticMemberExpression(member) = target {
         collector.visit_expression(&member.object);
+        return;
+    }
+    if let AssignmentTarget::ComputedMemberExpression(member) = target {
+        collector.visit_expression(&member.object);
+        collector.visit_expression(&member.expression);
         return;
     }
     walk::walk_assignment_target(collector, target);

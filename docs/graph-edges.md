@@ -346,8 +346,9 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   or module `var` scope, so `api.load()` after that block keeps `load`
   reachable. Static getter reads and setter writes keep distinct callable
   identities when a class declares both `static get value()` and
-  `static set value()`. Reads such as `C.value` invoke only the getter;
-  assignments such as `C.value = next` invoke only the setter. Increment and
+  `static set value()`. Reads such as `C.value` or `C["value"]` invoke only
+  the getter; dynamic `C[name]` stays unresolved. Assignments such as
+  `C.value = next` invoke only the setter. Increment and
   decrement writes such as `C.value++` record a setter invocation instead of
   invalidating the accessor. Class aliases expose only static members, including static getter
   reads such as `const Alias = C; Alias.value`. Named `export default class
