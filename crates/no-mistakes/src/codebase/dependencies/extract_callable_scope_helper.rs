@@ -15,9 +15,9 @@ impl ImportCollector {
         {
             return false;
         }
-        let callable_alias = self.callable_aliases.iter().any(|alias| {
-            alias.alias.binding_scope == binding_scope && alias.alias.local == binding
-        });
+        let callable_alias = self
+            .callable_alias_index
+            .contains_key(&(binding_scope, binding.to_string()));
         if (!self
             .callable_binding_ids
             .contains(&(binding_scope, binding.to_string()))

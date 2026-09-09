@@ -4,6 +4,12 @@
 /// explicit or unambiguous-star re-export chains. Dynamic calls and computed
 /// members deliberately remain absent: connecting those by terminal name would
 /// make call traversal unsound.
+///
+/// Aliases and callable bindings are indexed once per file by lexical
+/// `(binding scope, local name)`. `resolve_alias` is the cycle-safe resolver
+/// shared with import reachability for plain, dotted, class, import, and
+/// deferred aliases. It honors `declared_at` (TDZ) and `invalidated_at`.
+/// Class-member maps are built separately by `index_class_members_by_id`.
 #[derive(Clone)]
 struct CallableFileIndex {
     known_scopes: std::collections::HashSet<String>,

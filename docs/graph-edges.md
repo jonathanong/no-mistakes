@@ -327,6 +327,11 @@ not assumed to equal a concrete literal route such as `/user/settings`.
 - Function-scoped dynamic `import()` and `require()` edges are pruned unless the
   containing function is statically called, exported, reached through an unknown
   top-level call shape, or contains an unknown call shape in reachable code.
+  Call edges and that reachability pass share one per-file `CallableFileIndex`:
+  aliases and callable bindings are indexed by lexical `(binding scope, local
+  name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
+  class, import, and deferred aliases, including `declared_at` (TDZ) and
+  `invalidated_at`. Class members stay on a separate per-class identity index.
 - `route-import` deliberately does not apply that function-reachability pruning.
   It remains literal-only, so computed dynamic imports still require an `rg`
   fallback.

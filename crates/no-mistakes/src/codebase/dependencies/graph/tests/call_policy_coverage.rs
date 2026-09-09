@@ -134,8 +134,17 @@ fn callable_alias_resolution_reaches_module_scope_from_outermost_function() {
         ..Default::default()
     };
 
+    let index = CallableFileIndex::from_facts(&facts);
     assert_eq!(
-        resolve_callable_alias(&facts, &facts.function_calls[1], &HashMap::new(), &HashMap::new()),
+        index
+            .resolve_alias(
+                facts.function_calls[1].caller.as_deref(),
+                facts.function_calls[1].callee_binding_scope,
+                &facts.function_calls[1].callee,
+                facts.function_calls[1].offset,
+                facts.function_calls[1].caller_id,
+            )
+            .map(|resolved| resolved.callee),
         Some("target".to_string()),
     );
     assert!(
@@ -415,5 +424,38 @@ fn callable_file_index_construction_preindexes_class_members() {
     assert!(
         !source.contains("candidate_class_id"),
         "from_facts must not rescan class_member_callable_ids per class binding",
+    );
+}
+
+#[test]
+fn callable_alias_resolution_is_indexed_once_per_file() {
+    let source = include_str!("../edge_calls.rs");
+    let helpers = include_str!("../edge_calls/index_build.rs");
+    let reachability = include_str!("../edge_import_reachability_traversal.rs");
+    let deferred = include_str!("../../extract_collector_deferred_aliases.rs");
+
+    assert!(
+        helpers.contains("fn index_callable_aliases("),
+        "aliases must be grouped once by lexical binding identity",
+    );
+    assert!(
+        source.contains("aliases: index_callable_aliases(&file.callable_aliases)"),
+        "from_facts must assemble the alias map in one pass",
+    );
+    assert!(
+        reachability.contains("CallableFileIndex::from_facts(facts)"),
+        "import reachability must reuse the per-file alias index",
+    );
+    assert!(
+        reachability.contains("index.resolve_alias("),
+        "import reachability must share resolve_alias with call edges",
+    );
+    assert!(
+        !reachability.contains("callable_aliases.iter()"),
+        "import reachability must not linear-scan callable_aliases",
+    );
+    assert!(
+        !deferred.contains("callable_aliases.iter()"),
+        "deferred alias finalization must look up the binding index",
     );
 }

@@ -28,7 +28,7 @@ fn visit_variable_declarator_with_scope<'a>(
             if let Some(self_name) = function_name(function) {
                 collector.add_binding_name(&self_name);
                 collector.record_callable_binding(&self_name);
-                collector.callable_aliases.push(CallableAliasBinding {
+                collector.insert_callable_alias(CallableAliasBinding {
                     alias: CallableAlias {
                         scope: collector.current_function(),
                         scope_id: collector.current_function_id(),

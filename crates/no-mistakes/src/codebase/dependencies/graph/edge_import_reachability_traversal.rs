@@ -9,17 +9,7 @@ fn reachable_function_scopes(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
 ) -> HashSet<crate::codebase::dependencies::extract::CallableId> {
     let known_scopes = known_function_scopes(facts);
-    let bindings = facts
-        .callable_bindings
-        .iter()
-        .map(|(scope, name, id)| ((*scope, name.clone()), *id))
-        .collect();
-    let invocation_offsets = invocation_offsets_from_bindings(&bindings, &facts.function_calls);
-    let declared_at: HashMap<_, _> = facts
-        .callable_binding_declared_at
-        .iter()
-        .map(|(scope, name, offset)| ((*scope, name.clone()), *offset))
-        .collect();
+    let index = CallableFileIndex::from_facts(facts);
     let mut by_caller: HashMap<Option<crate::codebase::dependencies::extract::CallableId>, Vec<ReachabilityTransition>> = HashMap::new();
     for call in facts.function_calls.iter().filter(|call| {
         // Synthetic callbacks are ownership facts, not module execution
@@ -40,13 +30,7 @@ fn reachable_function_scopes(
                 == crate::codebase::dependencies::extract::InvocationKind::Callback
                 && (call.caller.is_some() || !call.callee.starts_with("<anonymous:")))
     }) {
-        let Some(callee) = reachable_callee_scope(
-            facts,
-            call,
-            &known_scopes,
-            &invocation_offsets,
-            &declared_at,
-        ) else {
+        let Some(callee) = reachable_callee_scope(facts, call, &known_scopes, &index) else {
             continue;
         };
         by_caller
@@ -94,18 +78,26 @@ fn reachable_callee_scope(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     call: &FunctionCall,
     known_scopes: &HashSet<String>,
-    invocation_offsets: &HashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>>,
-    declared_at: &HashMap<(usize, String), u32>,
+    index: &CallableFileIndex,
 ) -> Option<crate::codebase::dependencies::extract::CallableId> {
     use crate::codebase::dependencies::extract::CallTargetIdentity;
 
     // Canonical immutable aliases win over the raw syntactic classification:
     // a declaration prepass can prove the alias is locally bound before its
     // target has been visited, but only resolution proves which function runs.
-    if let Some(resolved) = resolve_callable_alias(facts, call, invocation_offsets, declared_at) {
-        let scope = resolve_callee_scope(call.caller.as_deref(), &resolved, known_scopes);
+    if let Some(resolved) = index.resolve_alias(
+        call.caller.as_deref(),
+        call.callee_binding_scope,
+        &call.callee,
+        call.offset,
+        call.caller_id,
+    ) {
+        if let Some(id) = resolved.callable_id {
+            return Some(id);
+        }
+        let scope = resolve_callee_scope(call.caller.as_deref(), &resolved.callee, known_scopes);
         if known_scopes.contains(&scope) {
-            return callable_id_for_scope(facts, &scope, call.callee_binding_scope);
+            return callable_id_for_scope(facts, index, &scope, call.callee_binding_scope);
         }
     }
 
@@ -115,7 +107,7 @@ fn reachable_callee_scope(
             &call.callee,
             known_scopes,
         );
-        return callable_id_for_scope(facts, &scope, call.callee_binding_scope);
+        return callable_id_for_scope(facts, index, &scope, call.callee_binding_scope);
     }
 
     None
@@ -123,14 +115,16 @@ fn reachable_callee_scope(
 
 fn callable_id_for_scope(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
+    index: &CallableFileIndex,
     scope: &str,
     binding_scope: Option<usize>,
 ) -> Option<crate::codebase::dependencies::extract::CallableId> {
     if let Some(id) = binding_scope.and_then(|scope_id| {
         let name = scope.rsplit('/').next().unwrap_or(scope);
-        facts.callable_bindings.iter().find_map(|(candidate, binding, id)| {
-            (*candidate == scope_id && binding == name).then_some(*id)
-        })
+        index
+            .callable_bindings
+            .get(&(scope_id, name.to_string()))
+            .copied()
     }) {
         return Some(id);
     }
