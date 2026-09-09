@@ -141,4 +141,6 @@ mod chain_tests;
 #[cfg(test)]
 mod compose_classification_tests;
 #[cfg(test)]
+mod imported_sql_tag_tests;
+#[cfg(test)]
 mod tests;
