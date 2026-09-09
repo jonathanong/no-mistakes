@@ -233,3 +233,19 @@ fn later_object_spread_drops_earlier_member_aliases() {
         call.callee == "calls.run" && call.target_identity == CallTargetIdentity::Unknown
     }));
 }
+
+#[test]
+fn object_member_aliases_record_the_first_hop_only() {
+    let facts = facts(
+        "function target() {} const invoke = target; const calls = { run: invoke }; calls.run();",
+    );
+
+    assert!(facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "invoke" && alias.target == "target"));
+    assert!(facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "calls.run" && alias.target == "invoke"));
+}

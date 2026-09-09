@@ -46,6 +46,9 @@ impl CallableFileIndex {
         let mut binding_scope = binding_scope?;
         let mut visited = fx_set();
         if callee.contains('.') {
+            // Dotted members hop until the chain ends: `calls.run` -> `invoke`
+            // -> `target`. Returning after the first alias would disagree with
+            // import reachability on the same facts.
             let mut target = callee.to_string();
             let mut resolved_alias = false;
             loop {
