@@ -69,6 +69,18 @@ fn static_class_members_resolve_without_guessing_function_object_members() {
         .find(|site| site.source_callee == "InternalExpressionService.run")
         .expect("internal static call");
     assert_eq!(named_static.target, internal_static.target);
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.source_callee == "ExpressionAlias.run"
+            && matches!(
+                &site.target,
+                crate::codebase::dependencies::graph::ResolvedCallTarget::RepositoryFunction { scope, .. }
+                    if scope == "ExpressionService/run"
+            )
+    }));
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.source_callee == "ExpressionAlias.instance"
+            && site.target == crate::codebase::dependencies::graph::ResolvedCallTarget::Unknown
+    }));
     for source_callee in [
         "NamedExpressionAlias",
         "NamedExpressionAlias.run",

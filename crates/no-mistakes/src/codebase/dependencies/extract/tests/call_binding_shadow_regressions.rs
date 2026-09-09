@@ -238,6 +238,46 @@ fn static_getter_reads_are_recorded_separately_from_return_value_calls() {
 }
 
 #[test]
+fn class_alias_static_getter_reads_follow_the_class_binding() {
+    let facts = facts(
+        "class Service { static get value() { import('./dep.mts'); } } const Alias = Service; function run() { Alias.value; }",
+    );
+    assert!(facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "Alias.value"
+            && call.invocation == InvocationKind::Call
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts.imports.iter().any(|import| {
+        import.specifier == "./dep.mts" && import.function_scope.as_deref() == Some("Service/value")
+    }));
+}
+
+#[test]
+fn shadowed_class_alias_does_not_read_the_outer_static_getter() {
+    let facts = facts(
+        "class Service { static get value() { import('./dep.mts'); } } function run() { const Alias = Service; { const Alias = other; Alias.value; } }",
+    );
+    assert!(!facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "Alias.value"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
+fn reassigned_class_alias_does_not_read_the_previous_static_getter() {
+    let facts = facts(
+        "class Service { static get value() { import('./dep.mts'); } } function run() { let Alias = Service; Alias = other; Alias.value; }",
+    );
+    assert!(!facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "Alias.value"
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
 fn object_getter_reads_are_recorded_separately_from_return_value_calls() {
     let facts = facts(
         "const registry = { get value() { return () => {}; } }; function run() { registry.value(); }",

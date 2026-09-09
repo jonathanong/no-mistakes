@@ -335,7 +335,9 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   as assignment. Object-literal member aliases keep last-write for duplicate
   keys and drop earlier members after a later spread. Static setter updates
   such as `C.value++` record a setter invocation instead of invalidating the
-  accessor. Class members stay on a separate per-class identity index.
+  accessor. Class aliases expose only static members, including static getter
+  reads such as `const Alias = C; Alias.value`. Class members stay on a
+  separate per-class identity index.
 - `route-import` deliberately does not apply that function-reachability pruning.
   It remains literal-only, so computed dynamic imports still require an `rg`
   fallback.

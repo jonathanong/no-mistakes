@@ -11,19 +11,19 @@ fn record_static_getter_read(
     };
     if collector
         .reassigned_callable_binding_ids
-        .contains(&(binding_scope, callee.to_string()))
+        .contains(&(binding_scope, binding.to_string()))
+        || collector
+            .reassigned_callable_binding_ids
+            .contains(&(binding_scope, callee.to_string()))
     {
         return;
     }
-    let Some(class_id) = collector
-        .callable_bindings
-        .get(&(binding_scope, binding.to_string()))
-    else {
+    let Some(class_id) = collector.class_id_for_binding(binding_scope, binding) else {
         return;
     };
     if !collector
         .static_getter_member_ids
-        .contains(&(*class_id, property.to_string()))
+        .contains(&(class_id, property.to_string()))
     {
         return;
     }
@@ -50,15 +50,12 @@ fn is_static_getter(collector: &ImportCollector, callee: &str) -> bool {
     let Some(binding_scope) = collector.callee_binding_scope(callee) else {
         return false;
     };
-    let Some(class_id) = collector
-        .callable_bindings
-        .get(&(binding_scope, binding.to_string()))
-    else {
+    let Some(class_id) = collector.class_id_for_binding(binding_scope, binding) else {
         return false;
     };
     collector
         .static_getter_member_ids
-        .contains(&(*class_id, property.to_string()))
+        .contains(&(class_id, property.to_string()))
 }
 
 fn record_static_setter_assignment(
@@ -72,15 +69,12 @@ fn record_static_setter_assignment(
     let Some(binding_scope) = collector.callee_binding_scope(callee) else {
         return false;
     };
-    let Some(class_id) = collector
-        .callable_bindings
-        .get(&(binding_scope, binding.to_string()))
-    else {
+    let Some(class_id) = collector.class_id_for_binding(binding_scope, binding) else {
         return false;
     };
     if !collector
         .static_setter_member_ids
-        .contains(&(*class_id, property.to_string()))
+        .contains(&(class_id, property.to_string()))
     {
         return false;
     }

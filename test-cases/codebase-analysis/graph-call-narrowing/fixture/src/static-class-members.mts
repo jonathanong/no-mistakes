@@ -11,6 +11,7 @@ const ExpressionService = class {
   static run() {}
   instance() {}
 };
+const ExpressionAlias = ExpressionService;
 
 const NamedExpressionService = class InternalExpressionService {
   constructor() {}
@@ -44,6 +45,9 @@ Service.run();
 InheritedChild.run();
 ExpressionService.run();
 ExpressionService.instance();
+ExpressionAlias.run();
+// Instance members must stay unresolved on a class alias.
+ExpressionAlias.instance();
 new NamedExpressionService();
 NamedExpressionService.run();
 new NamedExpressionAlias();

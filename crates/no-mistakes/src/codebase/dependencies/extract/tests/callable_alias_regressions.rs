@@ -136,6 +136,28 @@ fn class_aliases_only_materialize_static_callable_members() {
 }
 
 #[test]
+fn class_expression_aliases_only_materialize_static_callable_members() {
+    let facts = facts(
+        "const Service = class { static run() {} instance() {} }; const Alias = Service; Alias.run(); Alias.instance();",
+    );
+
+    assert!(facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "Alias.run"));
+    assert!(!facts
+        .callable_aliases
+        .iter()
+        .any(|alias| alias.local == "Alias.instance"));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "Alias.run" && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "Alias.instance" && call.target_identity == CallTargetIdentity::Unknown
+    }));
+}
+
+#[test]
 fn materialized_aliases_keep_their_declaring_callable_owner() {
     let facts = facts(
         "function target() {} function outer() { const api = { run: target }; const facade = api; facade.run(); }",
