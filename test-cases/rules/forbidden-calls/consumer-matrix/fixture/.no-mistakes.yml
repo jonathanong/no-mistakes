@@ -1,0 +1,68 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+  playwright:
+    configs: playwright.config.ts
+rules:
+  - name: vitest-no-real-timers
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - vitest: true
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - global: setTimeout
+        - moduleExport:
+            module: node:timers
+            export: setTimeout
+        - moduleExport:
+            module: node:timers/promises
+            export: setTimeout
+  - name: playwright-no-set-timeout
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - playwright: true
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - global: setTimeout
+        - moduleExport:
+            module: node:timers
+            export: setTimeout
+        - moduleExport:
+            module: node:timers/promises
+            export: setTimeout
+        - terminal: waitForTimeout
+  - name: integration-no-mocks
+    rule: forbidden-calls
+    scope: repository
+    include:
+      - src/integration/**
+    options:
+      roots:
+        - vitest: true
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - exact: vi.mock
+        - exact: vi.doMock
+        - exact: vi.importMock
+        - exact: vi.fn
+        - exact: vi.spyOn
+        - exact: vi.stubGlobal
+        - exact: jest.mock
+        - exact: jest.doMock
+  - name: scripts-no-sleep
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - glob: scripts/**/*.mts
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - global: setTimeout

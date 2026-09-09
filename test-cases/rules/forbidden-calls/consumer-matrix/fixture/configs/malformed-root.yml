@@ -1,0 +1,9 @@
+rules:
+  - name: malformed-selected-root
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - file: src/broken.mts
+      targets:
+        - global: setTimeout

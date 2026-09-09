@@ -1,0 +1,17 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+    projects:
+      unit:
+        include: [src/unit/timers.test.mts]
+rules:
+  - name: overlap-unit
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - vitest: [unit]
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - global: setTimeout

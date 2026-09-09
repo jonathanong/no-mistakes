@@ -1,0 +1,12 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - name: unknown-vitest-project
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - vitest: [missing]
+      targets:
+        - global: setTimeout
