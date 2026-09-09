@@ -120,13 +120,10 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   worktree is the main workspace.
 - Local Criterion is the source of truth for performance before/after only
   when both runs use the same machine, toolchain, benchmark mode, thread
-  count, and fixture. GitHub-hosted runners do not stick to one CPU
-  architecture (Intel vs AMD; Macro Runners are ARM64), and CodSpeed may
-  compare against an older base; those mismatched comparison reports are not
-  proof of a win or a regression. Treat a CodSpeed *comparison* as actionable
-  only when it uses the same runtime environment and the expected base commit.
-  A CodSpeed harness crash, timeout, or failed shard execution is still
-  actionable even when there is no comparison report.
+  count, and fixture. Ignore CodSpeed: GitHub Actions runners are not a
+  consistent CPU architecture (Intel vs AMD; Macro Runners are ARM64), so
+  the numbers are not stable and must not be treated as a win, a regression,
+  or a reason to change code.
 
 ### Public surface checklist
 
