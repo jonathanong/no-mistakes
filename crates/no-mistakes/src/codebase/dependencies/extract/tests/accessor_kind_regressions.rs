@@ -104,3 +104,58 @@ fn dynamic_computed_static_getter_reads_stay_unresolved() {
             && call.invocation == InvocationKind::Get
     }));
 }
+
+#[test]
+fn object_setter_assignment_invokes_the_setter_without_invalidating_it() {
+    let facts = facts(
+        "const api = { set value(next) { import('./dep.mts'); } }; function run() { api.value = 1; api['value'] = 2; }",
+    );
+    let setter_calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.caller.as_deref() == Some("run") && call.callee == "api.value")
+        .collect();
+
+    assert_eq!(setter_calls.len(), 2);
+    assert!(setter_calls.iter().all(|call| {
+        call.invocation == InvocationKind::Set
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+    assert!(facts.imports.iter().any(|import| {
+        import.specifier == "./dep.mts" && import.function_scope.as_deref() == Some("api/value")
+    }));
+}
+
+#[test]
+fn object_setter_update_invokes_the_setter_without_invalidating_it() {
+    let facts = facts(
+        "const api = { set value(next) { import('./dep.mts'); } }; function run() { api.value++; --api.value; }",
+    );
+    let setter_calls: Vec<_> = facts
+        .function_calls
+        .iter()
+        .filter(|call| call.caller.as_deref() == Some("run") && call.callee == "api.value")
+        .collect();
+
+    assert_eq!(setter_calls.len(), 2);
+    assert!(setter_calls.iter().all(|call| {
+        call.invocation == InvocationKind::Set
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
+fn object_data_property_writes_invalidate_the_replaced_member() {
+    let facts =
+        facts("const api = { load() {} }; function run() { api.load = () => {}; api.load(); }");
+    assert!(!facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "api.load"
+            && call.invocation == InvocationKind::Set
+    }));
+    assert!(facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "api.load"
+            && call.target_identity == CallTargetIdentity::Unknown
+    }));
+}

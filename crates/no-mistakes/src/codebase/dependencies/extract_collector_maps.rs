@@ -172,4 +172,16 @@ impl ImportCollector {
             member.to_string(),
         );
     }
+
+    fn has_object_setter_member(&self, object_id: CallableId, member: &str) -> bool {
+        owner_name_contains(&self.object_setter_member_ids, object_id, member)
+    }
+
+    fn insert_object_setter_member(&mut self, object_id: CallableId, member: &str) {
+        owner_name_insert(
+            &mut self.object_setter_member_ids,
+            object_id,
+            member.to_string(),
+        );
+    }
 }

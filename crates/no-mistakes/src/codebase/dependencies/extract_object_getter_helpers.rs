@@ -53,3 +53,42 @@ fn is_object_getter(collector: &ImportCollector, callee: &str) -> bool {
     };
     collector.has_object_getter_member(object_id, property)
 }
+
+fn record_object_setter_assignment(
+    collector: &mut ImportCollector,
+    callee: &str,
+    offset: u32,
+) -> bool {
+    let Some((binding, property)) = callee.split_once('.') else {
+        return false;
+    };
+    let Some(binding_scope) = collector.callee_binding_scope(callee) else {
+        return false;
+    };
+    if collector.has_reassigned_callable_at(binding_scope, binding)
+        || collector.has_reassigned_callable_at(binding_scope, callee)
+    {
+        return false;
+    }
+    let Some(object_id) = collector.callable_binding_at(binding_scope, binding) else {
+        return false;
+    };
+    if !collector.has_object_setter_member(object_id, property) {
+        return false;
+    }
+    collector.function_calls.push(FunctionCall {
+        caller: collector.current_function(),
+        caller_id: collector.current_function_id(),
+        syntactic_caller: collector.current_syntactic_caller(),
+        callee: callee.to_string(),
+        line: import_line_at(&collector.line_starts, offset as usize),
+        offset,
+        is_callback: false,
+        invocation: InvocationKind::Set,
+        target_identity: CallTargetIdentity::RepositoryFunction,
+        callee_binding_scope: Some(binding_scope),
+        static_arg: None,
+        static_cwd: None,
+    });
+    true
+}

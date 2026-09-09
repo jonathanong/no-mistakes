@@ -356,7 +356,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   the getter; dynamic `C[name]` stays unresolved. Assignments such as
   `C.value = next` invoke only the setter. Increment and
   decrement writes such as `C.value++` record a setter invocation instead of
-  invalidating the accessor. Class aliases expose only static members, including static getter
+  invalidating the accessor. Object-literal setter writes such as `api.value =
+  next` and `api.value++` invoke the setter instead of replacing the member;
+  ordinary data-property writes such as `api.load = other` still invalidate.
+  Class aliases expose only static members, including static getter
   reads such as `const Alias = C; Alias.value`. Named `export default class
   Service` registers `Service` in the enclosing module binding scope before
   the class body, so `new Service()` keeps the constructor reachable. Named and

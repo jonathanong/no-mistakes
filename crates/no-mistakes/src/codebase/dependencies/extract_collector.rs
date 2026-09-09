@@ -39,6 +39,7 @@ struct ImportCollector {
     lexical_binding_names: Vec<FxHashSet<String>>,
     static_getter_member_ids: FxHashMap<CallableId, FxHashMap<String, CallableId>>,
     object_getter_member_ids: FxHashMap<CallableId, FxHashSet<String>>,
+    object_setter_member_ids: FxHashMap<CallableId, FxHashSet<String>>,
     static_setter_member_ids: FxHashMap<CallableId, FxHashMap<String, CallableId>>,
     class_local_bases: FxHashMap<CallableId, String>,
     syntactic_caller_stack: Vec<String>,

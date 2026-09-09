@@ -145,7 +145,9 @@ fn record_assignment_target_writes(
     offset: u32,
 ) {
     for name in assignment_target_names(target) {
-        if !record_static_setter_assignment(collector, &name, offset) {
+        if !record_static_setter_assignment(collector, &name, offset)
+            && !record_object_setter_assignment(collector, &name, offset)
+        {
             collector.record_reassigned_callable_alias(&name, offset);
         }
     }
