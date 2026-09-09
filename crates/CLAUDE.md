@@ -138,6 +138,11 @@ joins must be one grouping pass. Do not linear-scan a repo-wide `Vec`
 (`resolved_call_sites`) inside a per-file helper. Lock construction work,
 not output equality.
 
+### Catalog-rooted graph policy stays in the selected files
+
+Graph rules rooted on a Vitest catalog or file set must not BFS or scan
+repo-wide call records for `traversal: file`; filter selected files first.
+
 ### Shared state in parallel loops
 
 Avoid `Mutex<HashMap<K, V>>` for caches accessed from rayon `par_iter()`.
@@ -146,13 +151,9 @@ unrelated keys.
 
 ### Verify a builder method doesn't silently disable an existing cache
 
-A builder method that configures one thing (e.g. a visible-file set) can also
-flip an unrelated flag (e.g. disabling a cache) if the two were bundled together
-for a reason that no longer applies. Easy to miss: results stay correct, only
-performance regresses. A "cache reuses result" test doesn't catch this either —
-it only asserts the same value comes back twice, which holds regardless of
-whether caching happened; assert on the cache's own state (length, hit counter)
-instead.
+A builder that configures one thing can also flip an unrelated cache flag.
+Results stay correct and only performance regresses. Assert on cache state
+(length, hit counter), not value equality.
 
 ### Hoist per-iteration I/O and parsing out of hot loops
 
@@ -195,6 +196,5 @@ once, memoize per `(base, pattern)`, and early-return when nothing to expand.
 `.gitignore`-blind walk and a git-aware one disagree (gitignored nested match).
 
 ### Pre-compute BFS traversals in parallel before the per-entity loop
-
 When every parallel work item needs a BFS of the same graph, run those
 traversals up front in one `par_iter()` so results are cached first.
