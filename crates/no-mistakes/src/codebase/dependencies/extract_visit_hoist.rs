@@ -37,7 +37,7 @@ fn predeclare_hoisted_var_bindings<'a>(
     collector: &mut ImportCollector,
     statements: &[Statement<'a>],
 ) {
-    let mut names = HashSet::new();
+    let mut names = fx_set();
     let mut visitor = HoistedVarBindingCollector { names: &mut names };
     for statement in statements {
         visitor.visit_statement(statement);
@@ -48,7 +48,7 @@ fn predeclare_hoisted_var_bindings<'a>(
 }
 
 struct HoistedVarBindingCollector<'a> {
-    names: &'a mut HashSet<String>,
+    names: &'a mut FxHashSet<String>,
 }
 
 impl<'ast> Visit<'ast> for HoistedVarBindingCollector<'_> {
@@ -147,12 +147,13 @@ impl ImportCollector {
                 _ => continue,
             };
             if let Some(name) = binding_identifier_name(&declarator.id) {
-                self.callable_binding_ids
-                    .insert((binding_scope, name.to_string()));
-                self.callable_bindings
-                    .insert((binding_scope, name.to_string()), callable_id);
-                self.callable_binding_declared_at
-                    .insert((binding_scope, name.to_string()), declarator.span.start);
+                self.insert_callable_binding_name_at(binding_scope, name.to_string());
+                self.insert_callable_binding_at(binding_scope, name.to_string(), callable_id);
+                self.insert_binding_declared_at(
+                    binding_scope,
+                    name.to_string(),
+                    declarator.span.start,
+                );
             }
         }
     }

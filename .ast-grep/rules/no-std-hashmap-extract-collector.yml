@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# ImportCollector walk tables use interned local keys (CallableId, lexical
+# (scope, name), binding names). Those must hash with crate::fx, not SipHash.
+# See crates/CLAUDE.md "Interned analysis keys use FxHash" and fx.rs.
+id: no-std-hashmap-extract-collector
+language: rust
+severity: error
+message: >-
+  SipHash map/set in the import collector. Interned analysis keys must use
+  crate::fx::{FxHashMap, FxHashSet, fx_map, fx_set}. rustc-hash 2 aliases have
+  no new()/with_capacity(); do not land std::collections::HashMap and switch later.
+rule:
+  any:
+    - pattern: std::collections::HashMap
+    - pattern: std::collections::HashSet
+    - pattern: std::collections::HashMap::new()
+    - pattern: std::collections::HashSet::new()
+    - pattern: HashMap::new()
+    - pattern: HashSet::new()
+files:
+  - "crates/no-mistakes/src/codebase/dependencies/extract.rs"
+  - "crates/no-mistakes/src/codebase/dependencies/extract_*.rs"
+ignores:
+  - "crates/no-mistakes/src/**/tests/**"
+  - "crates/no-mistakes/src/**/*_tests.rs"
+  - "crates/no-mistakes/src/**/tests.rs"

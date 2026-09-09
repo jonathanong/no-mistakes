@@ -9,25 +9,15 @@ fn record_object_getter_read(
     let Some(binding_scope) = collector.callee_binding_scope(callee) else {
         return;
     };
-    if collector
-        .reassigned_callable_binding_ids
-        .contains(&(binding_scope, callee.to_string()))
-        || collector
-            .reassigned_callable_binding_ids
-            .contains(&(binding_scope, binding.to_string()))
+    if collector.has_reassigned_callable_at(binding_scope, callee)
+        || collector.has_reassigned_callable_at(binding_scope, binding)
     {
         return;
     }
-    let Some(object_id) = collector
-        .callable_bindings
-        .get(&(binding_scope, binding.to_string()))
-    else {
+    let Some(object_id) = collector.callable_binding_at(binding_scope, binding) else {
         return;
     };
-    if !collector
-        .object_getter_member_ids
-        .contains(&(*object_id, property.to_string()))
-    {
+    if !collector.has_object_getter_member(object_id, property) {
         return;
     }
     collector.function_calls.push(FunctionCall {
@@ -53,22 +43,13 @@ fn is_object_getter(collector: &ImportCollector, callee: &str) -> bool {
     let Some(binding_scope) = collector.callee_binding_scope(callee) else {
         return false;
     };
-    if collector
-        .reassigned_callable_binding_ids
-        .contains(&(binding_scope, binding.to_string()))
-        || collector
-            .reassigned_callable_binding_ids
-            .contains(&(binding_scope, callee.to_string()))
+    if collector.has_reassigned_callable_at(binding_scope, binding)
+        || collector.has_reassigned_callable_at(binding_scope, callee)
     {
         return false;
     }
-    let Some(object_id) = collector
-        .callable_bindings
-        .get(&(binding_scope, binding.to_string()))
-    else {
+    let Some(object_id) = collector.callable_binding_at(binding_scope, binding) else {
         return false;
     };
-    collector
-        .object_getter_member_ids
-        .contains(&(*object_id, property.to_string()))
+    collector.has_object_getter_member(object_id, property)
 }

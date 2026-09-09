@@ -1,0 +1,28 @@
+id: no-std-hashmap-extract-collector
+valid:
+  - |
+    fn index() -> FxHashMap<usize, FxHashMap<String, CallableId>> {
+        let mut by_scope = Vec::new();
+        by_scope.resize_with(1, fx_map);
+        by_scope[0].insert("run".to_string(), CallableId(1));
+        fx_map()
+    }
+  - |
+    fn seen() -> FxHashSet<String> {
+        let mut names = fx_set();
+        names.insert("run".to_string());
+        names
+    }
+invalid:
+  - |
+    fn index() -> std::collections::HashMap<(usize, String), CallableId> {
+        std::collections::HashMap::new()
+    }
+  - |
+    fn seen() -> std::collections::HashSet<String> {
+        std::collections::HashSet::new()
+    }
+  - |
+    fn index() -> FxHashMap<String, u32> {
+        HashMap::new()
+    }

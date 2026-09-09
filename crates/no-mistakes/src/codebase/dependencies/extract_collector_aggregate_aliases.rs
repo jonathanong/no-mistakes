@@ -13,42 +13,36 @@ impl ImportCollector {
             let mut scope = Some(alias_scope);
             let source_id = loop {
                 let Some(scope_id) = scope else { break None };
-                if let Some(id) = self.callable_bindings.get(&(scope_id, target.clone())) {
-                    break Some(*id);
+                if let Some(id) = self.callable_binding_at(scope_id, &target) {
+                    break Some(id);
                 }
                 scope = self.lexical_scope_parents.get(&scope_id).copied().flatten();
             };
             let Some(source_id) = source_id else {
                 continue;
             };
-            self.callable_binding_ids
-                .insert((alias_scope, local.clone()));
-            self.callable_bindings
-                .insert((alias_scope, local.clone()), source_id);
+            self.insert_callable_binding_name_at(alias_scope, local.clone());
+            self.insert_callable_binding_at(alias_scope, local.clone(), source_id);
             let source_is_class = self
                 .callable_scope_ids
                 .iter()
                 .any(|(id, scope)| *id == source_id && self.class_scopes.contains(scope));
             let members = self
                 .aggregate_callable_member_ids
-                .iter()
-                .filter(|(aggregate_id, member, member_id)| {
-                    *aggregate_id == source_id
-                        && (!source_is_class
-                            || self.class_member_callable_ids.contains(&(
-                                *aggregate_id,
-                                member.clone(),
-                                *member_id,
-                            )))
+                .get(&source_id)
+                .into_iter()
+                .flatten()
+                .filter(|(member, member_id)| {
+                    !source_is_class || self.has_class_member_id(source_id, member, **member_id)
                 })
-                .map(|(_, member, _)| member.clone())
+                .map(|(member, _)| member.clone())
                 .chain(self.callable_aliases.iter().filter_map(|alias| {
                     (alias.alias.binding_scope == alias_scope)
                         .then(|| alias.alias.local.strip_prefix(&format!("{target}.")))
                         .flatten()
                         .map(str::to_string)
                 }))
-                .collect::<HashSet<_>>();
+                .collect::<FxHashSet<_>>();
             for member in members {
                 let local_member = format!("{local}.{member}");
                 let target_member = format!("{target}.{member}");
@@ -82,7 +76,7 @@ impl ImportCollector {
         initial_target: &str,
     ) -> CallTargetIdentity {
         let mut target = initial_target.to_string();
-        let mut visited = HashSet::new();
+        let mut visited = fx_set();
         loop {
             if !visited.insert(target.clone()) {
                 return CallTargetIdentity::Unknown;

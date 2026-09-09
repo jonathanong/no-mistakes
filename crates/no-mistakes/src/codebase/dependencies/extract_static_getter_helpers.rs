@@ -9,22 +9,15 @@ fn record_static_getter_read(
     let Some(binding_scope) = collector.callee_binding_scope(callee) else {
         return;
     };
-    if collector
-        .reassigned_callable_binding_ids
-        .contains(&(binding_scope, binding.to_string()))
-        || collector
-            .reassigned_callable_binding_ids
-            .contains(&(binding_scope, callee.to_string()))
+    if collector.has_reassigned_callable_at(binding_scope, binding)
+        || collector.has_reassigned_callable_at(binding_scope, callee)
     {
         return;
     }
     let Some(class_id) = collector.class_id_for_binding(binding_scope, binding) else {
         return;
     };
-    if !collector
-        .static_getter_member_ids
-        .contains(&(class_id, property.to_string()))
-    {
+    if !collector.has_static_getter_member(class_id, property) {
         return;
     }
     collector.function_calls.push(FunctionCall {
@@ -53,9 +46,7 @@ fn is_static_getter(collector: &ImportCollector, callee: &str) -> bool {
     let Some(class_id) = collector.class_id_for_binding(binding_scope, binding) else {
         return false;
     };
-    collector
-        .static_getter_member_ids
-        .contains(&(class_id, property.to_string()))
+    collector.has_static_getter_member(class_id, property)
 }
 
 fn record_static_setter_assignment(
@@ -72,10 +63,7 @@ fn record_static_setter_assignment(
     let Some(class_id) = collector.class_id_for_binding(binding_scope, binding) else {
         return false;
     };
-    if !collector
-        .static_setter_member_ids
-        .contains(&(class_id, property.to_string()))
-    {
+    if !collector.has_static_setter_member(class_id, property) {
         return false;
     }
     collector.function_calls.push(FunctionCall {

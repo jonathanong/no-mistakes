@@ -142,8 +142,8 @@ fn visit_type_parameter_constraints<'a>(
 }
 
 fn push_top_level_type_scope(collector: &mut ImportCollector) {
-    collector.type_local_stack.push(HashSet::new());
-    collector.type_parameter_stack.push(HashSet::new());
+    collector.type_local_stack.push(fx_set());
+    collector.type_parameter_stack.push(fx_set());
 }
 
 fn pop_top_level_type_scope(collector: &mut ImportCollector) {

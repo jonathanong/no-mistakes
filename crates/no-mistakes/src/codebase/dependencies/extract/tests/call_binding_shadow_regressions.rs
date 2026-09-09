@@ -1,4 +1,5 @@
 use super::*;
+use std::collections::HashMap;
 
 fn facts(source: &str) -> ImportFacts {
     let allocator = Allocator::default();

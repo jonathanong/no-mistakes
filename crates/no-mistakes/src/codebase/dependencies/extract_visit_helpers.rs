@@ -80,8 +80,7 @@ impl ImportCollector {
             return;
         };
         scope.insert(name.to_string());
-        self.lexical_binding_names
-            .insert((scope_id, name.to_string()));
+        self.insert_lexical_binding_at(scope_id, name.to_string());
     }
 
     fn add_binding_names(&mut self, pattern: &BindingPattern<'_>) {
@@ -89,12 +88,17 @@ impl ImportCollector {
             return;
         };
         let scope_id = self.current_lexical_scope_id();
-        let Some(scope) = self.local_stack.last_mut() else {
-            return;
-        };
-        for name in binding_names(pattern) {
-            scope.insert(name.clone());
-            self.lexical_binding_names.insert((scope_id, name));
+        let names = binding_names(pattern);
+        {
+            let Some(scope) = self.local_stack.last_mut() else {
+                return;
+            };
+            for name in &names {
+                scope.insert(name.clone());
+            }
+        }
+        for name in names {
+            self.insert_lexical_binding_at(scope_id, name);
         }
     }
 
@@ -107,13 +111,12 @@ impl ImportCollector {
             return;
         };
         scope.insert(name.to_string());
-        self.lexical_binding_names
-            .insert((scope_id, name.to_string()));
+        self.insert_lexical_binding_at(scope_id, name.to_string());
     }
 
     fn add_type_binding_name(&mut self, name: &str) {
         if self.type_local_stack.is_empty() {
-            self.type_local_stack.push(HashSet::new());
+            self.type_local_stack.push(fx_set());
         }
         if let Some(scope) = self.type_local_stack.last_mut() {
             scope.insert(name.to_string());
@@ -135,7 +138,9 @@ impl ImportCollector {
     }
 
     fn callee_binding_scope(&self, callee: &str) -> Option<usize> {
-        let binding = callee.split_once('.').map_or(callee, |(binding, _)| binding);
+        let binding = callee
+            .split_once('.')
+            .map_or(callee, |(binding, _)| binding);
         self.local_stack
             .iter()
             .rposition(|scope| scope.contains(binding))
@@ -143,14 +148,13 @@ impl ImportCollector {
     }
 
     fn record_callable_binding(&mut self, name: &str) {
-        self.callable_binding_ids
-            .insert((self.current_lexical_scope_id(), name.to_string()));
+        self.insert_callable_binding_name_at(self.current_lexical_scope_id(), name.to_string());
     }
 
     fn record_callable_binding_id(&mut self, name: &str, id: CallableId) {
         let scope = self.current_lexical_scope_id();
         self.record_callable_binding(name);
-        self.callable_bindings.insert((scope, name.to_string()), id);
+        self.insert_callable_binding_at(scope, name.to_string(), id);
     }
 
     fn record_class_member_callable_id(
@@ -159,8 +163,12 @@ impl ImportCollector {
         member: &str,
         member_id: CallableId,
     ) {
-        self.class_member_callable_ids
-            .insert((class_id, member.to_string(), member_id));
+        owner_member_insert(
+            &mut self.class_member_callable_ids,
+            class_id,
+            member.to_string(),
+            member_id,
+        );
     }
 
     fn record_aggregate_callable_member_id(
@@ -169,8 +177,12 @@ impl ImportCollector {
         member: &str,
         member_id: CallableId,
     ) {
-        self.aggregate_callable_member_ids
-            .insert((class_id, member.to_string(), member_id));
+        owner_member_insert(
+            &mut self.aggregate_callable_member_ids,
+            class_id,
+            member.to_string(),
+            member_id,
+        );
     }
 
     fn record_class_local_base(&mut self, class_id: CallableId, base: String) {
@@ -185,7 +197,6 @@ impl ImportCollector {
             && (self.imported_bindings.contains(binding)
                 || self.predeclared_imported_bindings.contains(binding))
     }
-
 }
 
 include!("extract_callable_scope_helper.rs");

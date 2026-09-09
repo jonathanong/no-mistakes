@@ -3,7 +3,9 @@ fn visit_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>
         let scope = collector.callable_scope_name(name);
         let class_id = CallableId(class.span.start);
         collector.record_callable_binding_id(name, class_id);
-        collector.callable_scope_ids.insert((class_id, scope.clone()));
+        collector
+            .callable_scope_ids
+            .insert((class_id, scope.clone()));
         record_class_member_calls(collector, &scope, class_id, class);
         record_class_base_construction(collector, &scope, class_id, class);
         if collector.current_function().is_none() && collector.is_exported_top_level_name(name) {
@@ -155,9 +157,11 @@ fn record_object_member_calls(
         if property.kind == PropertyKind::Get {
             if let Some(name) = crate::codebase::ts_source::static_property_key_name(&property.key)
             {
-                collector
-                    .object_getter_member_ids
-                    .insert((object_id, name.to_string()));
+                owner_name_insert(
+                    &mut collector.object_getter_member_ids,
+                    object_id,
+                    name.to_string(),
+                );
             }
         }
         if matches!(

@@ -69,7 +69,12 @@ impl ImportCollector {
         self.push_function_scope_for_binding(name, None, id);
     }
 
-    fn push_function_scope_for_binding(&mut self, name: Option<String>, binding_scope: Option<usize>, id: CallableId) {
+    fn push_function_scope_for_binding(
+        &mut self,
+        name: Option<String>,
+        binding_scope: Option<usize>,
+        id: CallableId,
+    ) {
         if let Some(name) = name {
             let scope = self.callable_scope_name_for_binding(&name, binding_scope);
             self.known_function_scopes.insert(scope.clone());
@@ -80,14 +85,14 @@ impl ImportCollector {
             self.function_stack.push(scope);
             self.function_id_stack.push(id);
             self.var_scope_stack.push(self.local_stack.len());
-            self.local_stack.push(HashSet::new());
+            self.local_stack.push(fx_set());
             let lexical_scope_id = self.next_lexical_scope_id;
             self.lexical_scope_parents
                 .insert(lexical_scope_id, self.lexical_scope_ids.last().copied());
             self.lexical_scope_ids.push(lexical_scope_id);
             self.next_lexical_scope_id += 1;
-            self.type_local_stack.push(HashSet::new());
-            self.type_parameter_stack.push(HashSet::new());
+            self.type_local_stack.push(fx_set());
+            self.type_parameter_stack.push(fx_set());
         }
     }
 
@@ -101,7 +106,9 @@ impl ImportCollector {
         // stay source-level and must never expose collector implementation
         // counters such as `<scope:N>`.
         let name = name.to_string();
-        parent.map(|parent| format!("{parent}/{name}")).unwrap_or(name)
+        parent
+            .map(|parent| format!("{parent}/{name}"))
+            .unwrap_or(name)
     }
 
     fn push_anonymous_function_scope(&mut self, id: CallableId) {
@@ -136,14 +143,14 @@ impl ImportCollector {
         self.function_stack.push(scope);
         self.function_id_stack.push(id);
         self.var_scope_stack.push(self.local_stack.len());
-        self.local_stack.push(HashSet::new());
+        self.local_stack.push(fx_set());
         let lexical_scope_id = self.next_lexical_scope_id;
         self.lexical_scope_parents
             .insert(lexical_scope_id, self.lexical_scope_ids.last().copied());
         self.lexical_scope_ids.push(lexical_scope_id);
         self.next_lexical_scope_id += 1;
-        self.type_local_stack.push(HashSet::new());
-        self.type_parameter_stack.push(HashSet::new());
+        self.type_local_stack.push(fx_set());
+        self.type_parameter_stack.push(fx_set());
     }
 
     fn pop_function_scope(&mut self, pushed: bool) {
@@ -167,9 +174,7 @@ impl ImportCollector {
     }
 
     fn callable_binding_id(&self, name: &str) -> Option<CallableId> {
-        self.callable_bindings
-            .get(&(self.current_lexical_scope_id(), name.to_string()))
-            .copied()
+        self.callable_binding_at(self.current_lexical_scope_id(), name)
     }
 
     fn push_syntactic_caller(&mut self, name: Option<String>) -> bool {
@@ -189,14 +194,14 @@ impl ImportCollector {
 
     fn push_lexical_scope(&mut self) -> bool {
         if !self.local_stack.is_empty() {
-            self.local_stack.push(HashSet::new());
+            self.local_stack.push(fx_set());
             let lexical_scope_id = self.next_lexical_scope_id;
             self.lexical_scope_parents
                 .insert(lexical_scope_id, self.lexical_scope_ids.last().copied());
             self.lexical_scope_ids.push(lexical_scope_id);
             self.next_lexical_scope_id += 1;
-            self.type_local_stack.push(HashSet::new());
-            self.type_parameter_stack.push(HashSet::new());
+            self.type_local_stack.push(fx_set());
+            self.type_parameter_stack.push(fx_set());
             true
         } else {
             false

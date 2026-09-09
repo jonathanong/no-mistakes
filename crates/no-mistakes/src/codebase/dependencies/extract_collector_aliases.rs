@@ -46,16 +46,15 @@ impl ImportCollector {
             if let Some(target) = self.callable_alias_target(init) {
                 self.push_callable_alias(local.to_string(), target, declared_at);
             } else if let Some(target) = simple_callee_name(init) {
-                self.deferred_simple_aliases
-                    .push(AggregateAliasCandidate {
-                        binding_scope: self.current_lexical_scope_id(),
-                        lexical_scope_depth: self.local_stack.len() - 1,
-                        local: local.to_string(),
-                        target,
-                        declared_at,
-                        owner: self.current_function(),
-                        owner_id: self.current_function_id(),
-                    });
+                self.deferred_simple_aliases.push(AggregateAliasCandidate {
+                    binding_scope: self.current_lexical_scope_id(),
+                    lexical_scope_depth: self.local_stack.len() - 1,
+                    local: local.to_string(),
+                    target,
+                    declared_at,
+                    owner: self.current_function(),
+                    owner_id: self.current_function_id(),
+                });
             }
             if let Expression::ObjectExpression(object) = init {
                 self.record_object_member_callable_aliases(local, object, declared_at);
@@ -127,15 +126,18 @@ impl ImportCollector {
     }
 
     fn insert_callable_alias(&mut self, binding: CallableAliasBinding) {
-        let key = (binding.alias.binding_scope, binding.alias.local.clone());
+        let scope = binding.alias.binding_scope;
+        let local = binding.alias.local.clone();
         let index = self.callable_aliases.len();
         self.callable_aliases.push(binding);
-        self.callable_alias_index.insert(key, index);
+        self.insert_callable_alias_index_at(scope, local, index);
     }
 
     fn indexed_callable_alias(&self, scope: usize, local: &str) -> Option<&CallableAlias> {
-        let index = *self.callable_alias_index.get(&(scope, local.to_string()))?;
-        self.callable_aliases.get(index).map(|binding| &binding.alias)
+        let index = self.callable_alias_index_at(scope, local)?;
+        self.callable_aliases
+            .get(index)
+            .map(|binding| &binding.alias)
     }
 
     fn record_reassigned_callable_alias(&mut self, name: &str, offset: u32) {
@@ -148,13 +150,8 @@ impl ImportCollector {
         else {
             return;
         };
-        self.reassigned_callable_binding_ids
-            .insert((binding_scope, name.to_string()));
-        if let Some(index) = self
-            .callable_alias_index
-            .get(&(binding_scope, name.to_string()))
-            .copied()
-        {
+        self.insert_reassigned_callable_at(binding_scope, name.to_string());
+        if let Some(index) = self.callable_alias_index_at(binding_scope, name) {
             if let Some(alias) = self.callable_aliases.get_mut(index) {
                 if alias.lexical_scope_depth == lexical_scope_depth {
                     alias.alias.invalidated_at.get_or_insert(offset);

@@ -27,7 +27,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     // later declaration cannot make an earlier global-looking call resolve to
     // a built-in. This is collection from the already parsed Program, not a
     // second source pass.
-    collector.local_stack.push(HashSet::new());
+    collector.local_stack.push(fx_set());
     collector.lexical_scope_ids.push(0);
     collector.lexical_scope_parents.insert(0, None);
     collector.next_lexical_scope_id = 1;
@@ -49,29 +49,35 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     let reassigned_callable_ids = collector
         .reassigned_callable_binding_ids
         .iter()
+        .enumerate()
+        .flat_map(|(binding_scope, names)| {
+            names
+                .iter()
+                .map(move |callee| (binding_scope, callee.as_str()))
+        })
         .filter_map(|(binding_scope, callee)| {
             let (binding, member) = callee
                 .split_once('.')
-                .map_or((callee.as_str(), None), |(binding, member)| {
-                    (binding, Some(member))
-                });
-            let callable_id = *collector
-                .callable_bindings
-                .get(&(*binding_scope, binding.to_string()))?;
+                .map_or((callee, None), |(binding, member)| (binding, Some(member)));
+            let callable_id = collector.callable_binding_at(binding_scope, binding)?;
             member.map_or(Some(callable_id), |member| {
-                collector.aggregate_callable_member_ids.iter().find_map(
-                    |(class_id, candidate, member_id)| {
-                        (*class_id == callable_id && candidate == member).then_some(*member_id)
-                    },
+                owner_member_id(
+                    &collector.aggregate_callable_member_ids,
+                    callable_id,
+                    member,
                 )
             })
         })
-        .collect::<HashSet<_>>();
+        .collect::<FxHashSet<_>>();
     let reassigned_callable_scopes = collector
         .callable_scope_ids
         .iter()
-        .filter_map(|(id, scope)| reassigned_callable_ids.contains(id).then_some(scope.clone()))
-        .collect::<HashSet<_>>();
+        .filter_map(|(id, scope)| {
+            reassigned_callable_ids
+                .contains(id)
+                .then_some(scope.clone())
+        })
+        .collect::<FxHashSet<_>>();
 
     let mut exported_resource_roots: Vec<_> =
         collector.exported_resource_roots.into_iter().collect();
@@ -81,32 +87,18 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     exported_resource_scopes.sort();
     let mut known_function_scopes: Vec<_> = collector.known_function_scopes.into_iter().collect();
     known_function_scopes.sort();
-    let mut callable_scope_ids: Vec<_> = collector
-        .callable_scope_ids
-        .into_iter()
-        .collect();
+    let mut callable_scope_ids: Vec<_> = collector.callable_scope_ids.into_iter().collect();
     callable_scope_ids.sort();
-    let mut callable_scopes: Vec<_> = collector
-        .callable_scopes
-        .into_iter()
-        .collect();
+    let mut callable_scopes: Vec<_> = collector.callable_scopes.into_iter().collect();
     callable_scopes.sort();
     let mut class_scopes: Vec<_> = collector.class_scopes.into_iter().collect();
     class_scopes.sort();
-    let mut callable_bindings: Vec<_> = collector
-        .callable_bindings
-        .into_iter()
-        .map(|((scope, name), id)| (scope, name, id))
-        .collect();
+    let mut callable_bindings = flatten_scope_map(collector.callable_bindings);
     callable_bindings.sort();
-    let mut callable_binding_declared_at: Vec<_> = collector
-        .callable_binding_declared_at
-        .into_iter()
-        .map(|((scope, name), offset)| (scope, name, offset))
-        .collect();
+    let mut callable_binding_declared_at =
+        flatten_scope_map(collector.callable_binding_declared_at);
     callable_binding_declared_at.sort();
-    let mut class_member_callable_ids: Vec<_> =
-        collector.class_member_callable_ids.into_iter().collect();
+    let mut class_member_callable_ids = flatten_owner_members(collector.class_member_callable_ids);
     class_member_callable_ids.sort();
     let mut lexical_scope_parents: Vec<_> = collector.lexical_scope_parents.into_iter().collect();
     lexical_scope_parents.sort_by_key(|(scope, _)| *scope);

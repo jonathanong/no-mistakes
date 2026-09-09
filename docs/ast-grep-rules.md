@@ -158,6 +158,10 @@ generic Rust/JS patterns can observe:
   `crate::fx` maps, not `std::collections::HashMap`/`HashSet`. FxHash
   aliases have no `new()`; `HashMap::new()` in this directory is always
   SipHash. Public or untrusted keys elsewhere still use SipHash (`fx.rs`).
+- `no-std-hashmap-extract-collector` covers `dependencies/extract.rs` and
+  `dependencies/extract_*.rs`. The per-file import walk uses the same
+  interned keys; look up names with `&str` on nested FxHash tables, not
+  `get(&(scope, name.to_string()))` on a SipHash `(scope, String)` map.
 - `no-global-edge-vector-dedup` protects canonical graph finalization in
   `edge_index/build.rs`. A full `edges` vector there must be produced by the
   normalized-adjacency flatten, not globally sorted and deduplicated after the

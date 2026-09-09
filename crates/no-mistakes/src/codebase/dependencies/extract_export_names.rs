@@ -69,7 +69,7 @@ fn later_default_export_value_names<'a>(program: &Program<'a>) -> Vec<String> {
 
 fn later_named_value_exports<'a>(
     program: &Program<'a>,
-    local_type_names: &HashSet<String>,
+    local_type_names: &FxHashSet<String>,
 ) -> Vec<String> {
     let mut exports = Vec::new();
     for statement in &program.body {
@@ -100,7 +100,7 @@ fn later_named_value_exports<'a>(
 
 fn later_named_type_exports<'a>(
     program: &Program<'a>,
-    local_type_names: &HashSet<String>,
+    local_type_names: &FxHashSet<String>,
 ) -> Vec<String> {
     let mut exports = Vec::new();
     for statement in &program.body {
@@ -122,7 +122,7 @@ fn later_named_type_exports<'a>(
     exports
 }
 
-fn local_type_declaration_names<'a>(program: &Program<'a>) -> HashSet<String> {
+fn local_type_declaration_names<'a>(program: &Program<'a>) -> FxHashSet<String> {
     program
         .body
         .iter()

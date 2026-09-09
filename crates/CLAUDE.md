@@ -125,10 +125,10 @@ that snapshot through any path that would rediscover files, e.g. the
 ### Interned analysis keys use FxHash
 
 Interned local keys (paths, `NodeId`, `CallableId`, lexical `(scope, name)`)
-use `crate::fx::{FxHashMap, FxHashSet, fx_map, fx_set}`. SipHash
-`std::collections` maps are for public or untrusted keys. New per-file
-indexes must start on FxHash; rustc-hash 2 aliases have no `new()`. The
-`no-std-hashmap-call-indexes` ast-grep rule covers `graph/edge_calls/**`.
+use `crate::fx` maps. Nest `(scope, name)` tables so lookups take `&str`;
+do not `get(&(scope, name.to_string()))`. SipHash is for public/untrusted
+keys. rustc-hash 2 aliases have no `new()`. ast-grep covers
+`no-std-hashmap-call-indexes` and `no-std-hashmap-extract-collector`.
 
 ### Index related tables before per-entity queries
 
