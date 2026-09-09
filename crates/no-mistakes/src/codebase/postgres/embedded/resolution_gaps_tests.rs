@@ -63,6 +63,18 @@ fn parameter_assignment_does_not_reassign_an_unrelated_top_level_helper() {
 }
 
 #[test]
+fn parameter_var_declaration_does_not_reassign_an_unrelated_top_level_helper() {
+    let facts = extract("composed-chain-param-var-does-not-reassign-helper.js");
+    assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Composed);
+    assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 1"));
+}
+
+#[test]
+fn function_declaration_named_sql_returning_env_is_not_the_trusted_tag() {
+    assert_dynamic("composed-chain-shadowed-function-declaration-env-sql.ts");
+}
+
+#[test]
 fn append_does_not_renumber_user_authored_placeholder_substrings() {
     let facts = extract("composed-chain-append-literal-placeholder-name.ts");
     assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Composed);

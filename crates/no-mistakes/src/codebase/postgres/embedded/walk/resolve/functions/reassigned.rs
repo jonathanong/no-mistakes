@@ -107,8 +107,16 @@ impl<'a> Visit<'a> for ReassignedNames<'a> {
     }
 
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
+        let mut rebound = Vec::new();
         for declarator in &declaration.declarations {
-            record_declarator_reassignment(declaration.kind, declarator, &mut self.names);
+            record_declarator_reassignment(declaration.kind, declarator, &mut |name| {
+                rebound.push(name);
+            });
+        }
+        for name in rebound {
+            if self.records_name(name) {
+                self.names.insert(name);
+            }
         }
         walk::walk_variable_declaration(self, declaration);
     }
@@ -137,11 +145,14 @@ impl<'a> Visit<'a> for ReassignedNames<'a> {
     fn visit_for_statement_left(&mut self, it: &ForStatementLeft<'a>) {
         if let ForStatementLeft::VariableDeclaration(declaration) = it {
             if declaration.kind == VariableDeclarationKind::Var {
-                let names = &mut self.names;
+                let mut rebound = Vec::new();
                 for declarator in &declaration.declarations {
-                    for_each_bound_name(&declarator.id, &mut |name| {
-                        names.insert(name);
-                    });
+                    for_each_bound_name(&declarator.id, &mut |name| rebound.push(name));
+                }
+                for name in rebound {
+                    if self.records_name(name) {
+                        self.names.insert(name);
+                    }
                 }
             }
         }
@@ -187,15 +198,13 @@ impl<'a> Visit<'a> for ReassignedNames<'a> {
 fn record_declarator_reassignment<'a>(
     kind: VariableDeclarationKind,
     declarator: &VariableDeclarator<'a>,
-    names: &mut HashSet<&'a str>,
+    on_name: &mut impl FnMut(&'a str),
 ) {
     let is_collectible_helper = kind == VariableDeclarationKind::Const
         && declarator.init.as_ref().is_some_and(is_function_shaped);
     let is_reassignment = declarator.init.is_some() && !is_collectible_helper;
     if is_reassignment {
-        for_each_bound_name(&declarator.id, &mut |name| {
-            names.insert(name);
-        });
+        for_each_bound_name(&declarator.id, on_name);
     }
 }
 

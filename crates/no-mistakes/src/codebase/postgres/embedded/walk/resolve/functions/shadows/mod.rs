@@ -158,11 +158,10 @@ pub(super) fn is_trusted_tag_name(name: &str) -> bool {
     name.eq_ignore_ascii_case("sql") || name == "String"
 }
 
-/// A `function sql()` / `function String()` whose body is a static SQL
-/// fragment is a helper, not a tagged-template implementation — so the name
-/// must not be trusted as the intrinsic tag. A tag implementation such as
-/// `function sql(strings, ...values) { return strings.join(""); }` is left
-/// alone so in-file tag fixtures keep working.
+/// A `function sql()` / `function String()` is a tag shadow unless it looks
+/// like an in-file tagged-template implementation (it takes parameters and
+/// does not return a static SQL fragment). Zero-arg helpers, including
+/// `return process.env.SQL`, must not keep the intrinsic tag trusted.
 fn record_function_tag_shadow(function: &Function<'_>, shadows: &mut TagShadows) {
     let Some(id) = function.id.as_ref() else {
         return;
@@ -170,9 +169,14 @@ fn record_function_tag_shadow(function: &Function<'_>, shadows: &mut TagShadows)
     if !is_trusted_tag_name(id.name.as_str()) {
         return;
     }
-    if returns_static_sql(function) {
+    if !looks_like_tag_implementation(function) {
         shadows.names.insert(id.name.to_string());
     }
+}
+
+fn looks_like_tag_implementation(function: &Function<'_>) -> bool {
+    let has_params = !function.params.items.is_empty() || function.params.rest.is_some();
+    has_params && !returns_static_sql(function)
 }
 
 fn record_class_tag_shadow(class: &Class<'_>, shadows: &mut TagShadows) {
