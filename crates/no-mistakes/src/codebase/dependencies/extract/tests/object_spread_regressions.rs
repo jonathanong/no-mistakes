@@ -73,3 +73,30 @@ fn later_unknown_spread_clears_copied_object_members() {
         .iter()
         .any(|alias| alias.local == "api.run"));
 }
+
+#[test]
+fn later_explicit_property_wins_after_unknown_object_literal_spread() {
+    let facts = facts(
+        "function target() {} function factory() { return {}; } ({ ...factory(), run: target }).run();",
+    );
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "target"));
+}
+
+#[test]
+fn nested_source_shadow_copies_inner_spread_aliases_only() {
+    let facts = facts(
+        "function outerTarget() {} function innerTarget() {} const source = { run: outerTarget }; function wrap() { const source = { run: innerTarget }; const api = { ...source }; api.run(); }",
+    );
+    assert!(facts.callable_aliases.iter().any(|alias| {
+        alias.local == "api.run"
+            && alias.target == "source.run"
+            && alias.scope.as_deref() == Some("wrap")
+    }));
+    assert!(!facts
+        .callable_aliases
+        .iter()
+        .any(|alias| { alias.local == "api.run" && alias.target == "outerTarget" }));
+}

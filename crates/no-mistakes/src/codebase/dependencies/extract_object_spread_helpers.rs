@@ -32,10 +32,14 @@ fn object_literal_member_target(
     for property in &object.properties {
         match property {
             ObjectPropertyKind::SpreadProperty(spread) => {
-                let (source, source_id) =
-                    known_object_spread_source(collector, &spread.argument)?;
-                if object_source_has_member(collector, source_id, &source, member) {
-                    target = Some(format!("{source}.{member}"));
+                if let Some((source, source_id)) =
+                    known_object_spread_source(collector, &spread.argument)
+                {
+                    if object_source_has_member(collector, source_id, &source, member) {
+                        target = Some(format!("{source}.{member}"));
+                    }
+                } else {
+                    target = None;
                 }
             }
             ObjectPropertyKind::ObjectProperty(property) => {
@@ -148,11 +152,11 @@ fn spread_member_aliases(
         .map(|(member, _)| member.clone())
         .collect::<FxHashSet<_>>();
     let prefix = format!("{source}.");
+    let source_scope = collector.callee_binding_scope(&source)?;
     members.extend(collector.callable_aliases.iter().filter_map(|alias| {
-        alias
-            .alias
-            .local
-            .strip_prefix(&prefix)
+        (alias.alias.binding_scope == source_scope)
+            .then(|| alias.alias.local.strip_prefix(&prefix))
+            .flatten()
             .map(str::to_string)
     }));
     Some(
