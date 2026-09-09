@@ -154,11 +154,11 @@ impl ImportCollector {
     }
 
     fn has_static_getter_member(&self, class_id: CallableId, member: &str) -> bool {
-        owner_name_contains(&self.static_getter_member_ids, class_id, member)
+        owner_member_id(&self.static_getter_member_ids, class_id, member).is_some()
     }
 
     fn has_static_setter_member(&self, class_id: CallableId, member: &str) -> bool {
-        owner_name_contains(&self.static_setter_member_ids, class_id, member)
+        owner_member_id(&self.static_setter_member_ids, class_id, member).is_some()
     }
 
     fn has_object_getter_member(&self, object_id: CallableId, member: &str) -> bool {

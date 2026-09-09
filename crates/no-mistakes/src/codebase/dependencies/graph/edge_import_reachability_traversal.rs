@@ -91,6 +91,7 @@ fn reachable_callee_scope(
         &call.callee,
         call.offset,
         call.caller_id,
+        call.invocation,
     ) {
         if let Some(id) = resolved.callable_id {
             return Some(id);
@@ -102,6 +103,16 @@ fn reachable_callee_scope(
     }
 
     if call.target_identity == CallTargetIdentity::RepositoryFunction {
+        if let Some(id) = index
+            .resolve_class_binding(
+                call.callee_binding_scope,
+                &call.callee,
+                call.invocation,
+            )
+            .and_then(|resolved| resolved.callable_id)
+        {
+            return Some(id);
+        }
         let scope = resolve_callee_scope(
             call.caller.as_deref(),
             &call.callee,

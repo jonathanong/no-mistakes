@@ -1,6 +1,7 @@
 use super::*;
 
 mod alias_tdz;
+mod accessor_kind;
 mod constructor_reachability;
 mod callable_identity;
 mod duplicate_export_identity;

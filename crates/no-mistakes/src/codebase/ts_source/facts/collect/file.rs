@@ -176,6 +176,8 @@ pub(crate) fn collect_file_facts_from_program(
         callable_bindings: import_facts.callable_bindings,
         callable_binding_declared_at: import_facts.callable_binding_declared_at,
         class_member_callable_ids: import_facts.class_member_callable_ids,
+        static_getter_callable_ids: import_facts.static_getter_callable_ids,
+        static_setter_callable_ids: import_facts.static_setter_callable_ids,
         lexical_scope_parents: import_facts.lexical_scope_parents,
         callable_scopes: import_facts.callable_scopes,
         class_scopes: import_facts.class_scopes,

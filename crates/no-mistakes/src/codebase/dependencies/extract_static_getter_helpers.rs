@@ -28,7 +28,7 @@ fn record_static_getter_read(
         line: import_line_at(&collector.line_starts, member.span.start as usize),
         offset: member.span.start,
         is_callback: false,
-        invocation: InvocationKind::Call,
+        invocation: InvocationKind::Get,
         target_identity: CallTargetIdentity::RepositoryFunction,
         callee_binding_scope: Some(binding_scope),
         static_arg: None,
@@ -74,7 +74,7 @@ fn record_static_setter_assignment(
         line: import_line_at(&collector.line_starts, offset as usize),
         offset,
         is_callback: false,
-        invocation: InvocationKind::Call,
+        invocation: InvocationKind::Set,
         target_identity: CallTargetIdentity::RepositoryFunction,
         callee_binding_scope: Some(binding_scope),
         static_arg: None,
@@ -88,7 +88,19 @@ fn visit_assignment_expression_with_calls<'a>(
     assignment: &AssignmentExpression<'a>,
 ) {
     record_assignment_target_writes(collector, &assignment.left, assignment.span.start);
-    walk::walk_assignment_expression(collector, assignment);
+    walk_assignment_lhs_without_written_getter(collector, &assignment.left);
+    collector.visit_expression(&assignment.right);
+}
+
+fn walk_assignment_lhs_without_written_getter<'a>(
+    collector: &mut ImportCollector,
+    target: &AssignmentTarget<'a>,
+) {
+    if let AssignmentTarget::StaticMemberExpression(member) = target {
+        collector.visit_expression(&member.object);
+        return;
+    }
+    walk::walk_assignment_target(collector, target);
 }
 
 fn visit_update_expression_with_calls<'a>(

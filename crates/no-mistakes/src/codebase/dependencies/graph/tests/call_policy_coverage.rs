@@ -67,12 +67,26 @@ fn callable_alias_resolution_uses_the_callee_binding_scope() {
 
     assert_eq!(
         index
-            .resolve_alias(Some("outer/inner"), Some(0), "alias", 0, None)
+            .resolve_alias(
+                Some("outer/inner"),
+                Some(0),
+                "alias",
+                0,
+                None,
+                InvocationKind::Call,
+            )
             .map(|resolved| resolved.callee),
         Some("target".to_string()),
     );
     assert_eq!(
-        index.resolve_alias(Some("outer/inner"), Some(1), "alias", 0, None),
+        index.resolve_alias(
+            Some("outer/inner"),
+            Some(1),
+            "alias",
+            0,
+            None,
+            InvocationKind::Call,
+        ),
         None,
         "a block-local shadow must not resolve an outer alias",
     );
@@ -146,6 +160,7 @@ fn callable_alias_resolution_reaches_module_scope_from_outermost_function() {
                 &facts.function_calls[1].callee,
                 facts.function_calls[1].offset,
                 facts.function_calls[1].caller_id,
+                facts.function_calls[1].invocation,
             )
             .map(|resolved| resolved.callee),
         Some("target".to_string()),
@@ -341,6 +356,8 @@ fn callable_file_index_looks_up_preindexed_class_members() {
             (CallableId(2), "run".to_string(), CallableId(21)),
             (CallableId(1), "init".to_string(), CallableId(12)),
         ],
+        static_getter_callable_ids: vec![(CallableId(1), "value".to_string(), CallableId(13))],
+        static_setter_callable_ids: vec![(CallableId(1), "value".to_string(), CallableId(14))],
         function_calls: vec![
             construct(
                 Some(CallableId(1)),
@@ -399,6 +416,8 @@ fn callable_file_index_looks_up_preindexed_class_members() {
 
     assert_eq!(alpha.static_member_ids.get("run"), Some(&CallableId(11)));
     assert_eq!(alpha.static_member_ids.get("init"), Some(&CallableId(12)));
+    assert_eq!(alpha.static_getter_ids.get("value"), Some(&CallableId(13)));
+    assert_eq!(alpha.static_setter_ids.get("value"), Some(&CallableId(14)));
     assert_eq!(beta.static_member_ids.get("run"), Some(&CallableId(21)));
     assert!(!alpha.static_member_ids.contains_key("stop"));
     assert_eq!(alpha.local_base.as_deref(), Some("Base"));
@@ -423,6 +442,11 @@ fn callable_file_index_construction_preindexes_class_members() {
     assert!(
         source.contains("index_class_members_by_id(&file.class_member_callable_ids)"),
         "from_facts must assemble class bindings from the pre-indexed member map",
+    );
+    assert!(
+        source.contains("index_class_members_by_id(&file.static_getter_callable_ids)")
+            && source.contains("index_class_members_by_id(&file.static_setter_callable_ids)"),
+        "from_facts must keep accessor identities off the method map",
     );
     assert!(
         !source.contains("candidate_class_id"),

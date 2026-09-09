@@ -344,9 +344,12 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   keys and drop earlier members after a later spread. A `var` object
   aggregate declared in a nested block still binds in the hoisted function
   or module `var` scope, so `api.load()` after that block keeps `load`
-  reachable. Static setter updates
-  such as `C.value++` record a setter invocation instead of invalidating the
-  accessor. Class aliases expose only static members, including static getter
+  reachable. Static getter reads and setter writes keep distinct callable
+  identities when a class declares both `static get value()` and
+  `static set value()`. Reads such as `C.value` invoke only the getter;
+  assignments such as `C.value = next` invoke only the setter. Increment and
+  decrement writes such as `C.value++` record a setter invocation instead of
+  invalidating the accessor. Class aliases expose only static members, including static getter
   reads such as `const Alias = C; Alias.value`. Named `export default class
   Service` registers `Service` in the enclosing module binding scope before
   the class body, so `new Service()` keeps the constructor reachable. Class

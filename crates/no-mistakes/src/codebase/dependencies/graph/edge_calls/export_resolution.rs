@@ -66,7 +66,14 @@ fn resolve_exported_callable(
                 ExportedCallableResolution::Unknown
             }
         } else {
-            let resolved_alias = file.resolve_alias(None, Some(0), &binding.local, u32::MAX, None);
+            let resolved_alias = file.resolve_alias(
+                None,
+                Some(0),
+                &binding.local,
+                u32::MAX,
+                None,
+                crate::codebase::dependencies::extract::InvocationKind::Call,
+            );
             let local = resolved_alias
                 .as_ref()
                 .map(|resolved| resolved.callee.clone())
