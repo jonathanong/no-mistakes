@@ -73,3 +73,9 @@ fn default_import_from_an_untrusted_module_fails_closed() {
     let facts = extract("imported-sql-untrusted-default.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
+
+#[test]
+fn nested_destructure_of_an_imported_sql_tag_alias_fails_closed() {
+    let facts = extract("imported-sql-template-strings-nested-destructure.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+}

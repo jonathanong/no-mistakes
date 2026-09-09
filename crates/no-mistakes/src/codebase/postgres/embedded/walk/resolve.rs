@@ -140,6 +140,10 @@ fn record_declarator(
     visitor: &mut ScopeVisitor<'_>,
 ) {
     let BindingPattern::BindingIdentifier(ident) = &declarator.id else {
+        // Destructuring has no single SQL init to classify; bind every name
+        // as a shadow so a nested `const { tag } = …` cannot keep a trusted
+        // imported tag alias.
+        visitor.bind_param(&declarator.id);
         return;
     };
     let Some(init) = &declarator.init else {
