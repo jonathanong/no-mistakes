@@ -83,6 +83,7 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
                         specifier,
                         export_path,
                         repository_target: Some((file, scope)),
+                        ..
                     } if specifier == "./alias-target.mts"
                         && export_path == expected_export
                         && file == &root.join("src/alias-target.mts")
@@ -101,6 +102,7 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
                     specifier,
                     export_path,
                     repository_target: None,
+                    ..
                 } if specifier == "unresolved-runtime-library" && export_path == "remote"
             )
     }));
@@ -113,6 +115,7 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
                     specifier,
                     export_path,
                     repository_target: None,
+                    ..
                 } if specifier == "vitest" && export_path == "mock"
             )
     }));
@@ -199,6 +202,7 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
                     specifier,
                     export_path,
                     repository_target: None,
+                    ..
                 } if specifier == "vitest" && export_path == "mock"
             )
     }));

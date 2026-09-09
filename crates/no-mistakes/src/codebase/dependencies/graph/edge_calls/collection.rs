@@ -102,22 +102,14 @@ fn collect_call_edges_for_core(
                         }
                         _ => ResolvedCallTarget::Unknown,
                     };
-                    let edge = match &resolved_target {
-                        ResolvedCallTarget::RepositoryFunction { file, scope }
-                        | ResolvedCallTarget::ModuleExport { repository_target: Some((file, scope)), .. } => Some((
-                            source,
-                            callable_node_for_call(
-                                &edge_inputs.interner,
-                                facts,
-                                &indexes,
-                                file,
-                                scope,
-                                callable_id,
-                            ),
-                            EdgeKind::Call,
-                        )),
-                        _ => None,
-                    };
+                    let edge = graph_call_target_node(
+                        &edge_inputs.interner,
+                        facts,
+                        &indexes,
+                        &resolved_target,
+                        callable_id,
+                    )
+                    .map(|target| (source, target, EdgeKind::Call));
                     (
                         edge,
                         ResolvedCallSite {
@@ -172,27 +164,4 @@ fn collect_call_edges_for_core(
         callable_export_resolutions,
     );
     output
-}
-
-fn callable_node_for_call(
-    interner: &crate::codebase::analysis_session::PathInterner,
-    facts: &dyn TsFactLookup,
-    indexes: &CallableResolutionIndexes,
-    file: &std::path::Path,
-    scope: &str,
-    exact_id: Option<crate::codebase::dependencies::extract::CallableId>,
-) -> NodeId {
-    let id = exact_id.or_else(|| {
-        // The resolved file and canonical target scope own this callable
-        // identity. Importer lexical scopes and local aliases are unrelated
-        // source files, and using either can select a same-spelled target
-        // declaration instead of the export resolution's actual callable.
-        indexes
-            .file(facts, file)
-            .and_then(|index| index.unique_scope_id(scope))
-    });
-    id.map_or_else(
-        || NodeId::symbol_in(interner, file, scope),
-        |id| NodeId::callable_in(interner, file, scope, id),
-    )
 }

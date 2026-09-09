@@ -27,7 +27,7 @@ fn import_is_reachable(
     facts.has_unknown_top_level_call
         || has_reachable_unknown_call(facts, reachable)
         || reachable.contains(&scope)
-        || exported_function_scope(facts, import.function_scope.as_deref())
+        || exported_function_scope(facts, import.function_scope.as_deref(), Some(scope))
         || (import.kind == ImportKind::Type
             && exported_symbol_scope(facts, import.function_scope.as_deref()))
 }
@@ -43,7 +43,7 @@ fn resource_is_reachable(
     facts.has_unknown_top_level_call
         || has_reachable_unknown_call(facts, reachable)
         || reachable.contains(&scope)
-        || exported_function_scope(facts, call.function_scope.as_deref())
+        || exported_function_scope(facts, call.function_scope.as_deref(), Some(scope))
         || exported_resource_symbol_scope(facts, call.function_scope.as_deref())
 }
 
@@ -58,7 +58,7 @@ fn resource_diagnostic_is_reachable(
     facts.has_unknown_top_level_call
         || has_reachable_unknown_call(facts, reachable)
         || reachable.contains(&scope)
-        || exported_function_scope(facts, diagnostic.function_scope.as_deref())
+        || exported_function_scope(facts, diagnostic.function_scope.as_deref(), Some(scope))
         || exported_resource_symbol_scope(facts, diagnostic.function_scope.as_deref())
 }
 
@@ -69,24 +69,44 @@ fn has_reachable_unknown_call(
     facts.unknown_calls.iter().any(|call| match call.caller_id {
         None if call.caller.is_none() => true,
         Some(id) => {
-            reachable.contains(&id) || exported_function_scope(facts, call.caller.as_deref())
+            reachable.contains(&id) || exported_function_scope(facts, call.caller.as_deref(), Some(id))
         }
-        None => exported_function_scope(facts, call.caller.as_deref()),
+        None => exported_function_scope(facts, call.caller.as_deref(), None),
     })
 }
 
 fn exported_function_scope(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     scope: Option<&str>,
+    scope_id: Option<crate::codebase::dependencies::extract::CallableId>,
 ) -> bool {
-    facts
+    let name_exported = facts
         .exported_functions
         .iter()
         .any(|exported| Some(exported.as_str()) == scope)
-        || facts
-            .exported_bindings
-            .iter()
-            .any(|binding| binding.specifier.is_none() && Some(binding.local.as_str()) == scope)
+        || facts.exported_bindings.iter().any(|binding| {
+            binding.specifier.is_none() && Some(binding.local.as_str()) == scope
+        });
+    if !name_exported {
+        return false;
+    }
+    let Some(id) = scope_id else {
+        return true;
+    };
+    let duplicates = facts
+        .callable_scope_ids
+        .iter()
+        .filter(|(_, display)| Some(display.as_str()) == scope)
+        .count();
+    if duplicates <= 1 {
+        return true;
+    }
+    facts
+        .callable_bindings
+        .iter()
+        .any(|(binding_scope, name, binding_id)| {
+            *binding_id == id && *binding_scope == 0 && Some(name.as_str()) == scope
+        })
 }
 
 fn exported_symbol_scope(

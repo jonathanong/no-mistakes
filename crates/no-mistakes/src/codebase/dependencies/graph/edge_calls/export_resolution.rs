@@ -73,7 +73,9 @@ fn resolve_exported_callable(
                 .unwrap_or_else(|| binding.local.clone());
             (resolved_alias.is_some() && file.known_scopes.contains(&local)
                 || file.exported_scopes.contains(&local))
-                .then(|| ExportedCallableResolution::Callable(path.to_path_buf(), local.clone()))
+                .then(|| {
+                    exported_local_callable(file.as_ref(), path, local.clone(), resolved_alias.as_ref())
+                })
                 .or_else(|| {
                     resolve_exported_namespace_member_alias(
                         edge_inputs,
@@ -150,8 +152,8 @@ fn resolve_exported_callable(
                     &mut branch_visited,
                 ) {
                     ExportedCallableResolution::Absent => {}
-                    ExportedCallableResolution::Callable(path, scope) => {
-                        candidates.push((path, scope))
+                    ExportedCallableResolution::Callable(path, scope, callable_id) => {
+                        candidates.push((path, scope, callable_id))
                     }
                     ExportedCallableResolution::ExternalModuleExport(_, _)
                     | ExportedCallableResolution::Unknown => has_unknown_candidate = true,
@@ -161,8 +163,8 @@ fn resolve_exported_callable(
             candidates.dedup();
             if has_unknown_candidate || candidates.len() > 1 {
                 ExportedCallableResolution::Unknown
-            } else if let Some((path, scope)) = candidates.pop() {
-                ExportedCallableResolution::Callable(path, scope)
+            } else if let Some((path, scope, callable_id)) = candidates.pop() {
+                ExportedCallableResolution::Callable(path, scope, callable_id)
             } else {
                 ExportedCallableResolution::Absent
             }

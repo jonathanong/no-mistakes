@@ -78,3 +78,15 @@ fn resolve_exported_namespace_member_alias(
         ExportedCallableResolution::Unknown
     })
 }
+
+fn exported_local_callable(
+    file: &CallableFileIndex,
+    path: &std::path::Path,
+    local: String,
+    resolved: Option<&ResolvedLocalCallee>,
+) -> ExportedCallableResolution {
+    let callable_id = resolved
+        .and_then(|resolved| resolved.callable_id)
+        .or_else(|| file.resolve_local_callable_id(Some(0), &local));
+    ExportedCallableResolution::Callable(path.to_path_buf(), local, callable_id)
+}

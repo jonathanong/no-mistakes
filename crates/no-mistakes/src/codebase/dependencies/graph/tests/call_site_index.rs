@@ -37,17 +37,18 @@ fn callable_nodes_group_scope_ids_once_per_file() {
 #[test]
 fn callable_node_lookup_uses_the_per_file_scope_index() {
     let collection = include_str!("../edge_calls/collection.rs");
+    let types = include_str!("../edge_calls/types.rs");
     let helpers = include_str!("../edge_calls/index_build.rs");
     assert!(
         helpers.contains("fn index_scope_ids_by_display("),
         "callable_scope_ids must be grouped once by display scope"
     );
     assert!(
-        collection.contains("index.unique_scope_id(scope)"),
+        collection.contains("graph_call_target_node(") && types.contains("index.unique_scope_id(scope)"),
         "call edges must look up the pre-indexed unique scope id"
     );
     assert!(
-        !collection.contains("callable_scope_ids"),
+        !collection.contains("callable_scope_ids") && !types.contains("callable_scope_ids"),
         "callable_node_for_call must not scan callable_scope_ids per call"
     );
 }
