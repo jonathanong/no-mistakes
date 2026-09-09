@@ -12,19 +12,21 @@
                             let interner = call_interner.clone();
                             move |file| {
                                 let interner = interner.clone();
+                                let mut ids_by_scope: FxHashMap<&str, Vec<_>> = fx_map();
+                                for (id, scope) in &file.callable_scope_ids {
+                                    ids_by_scope.entry(scope.as_str()).or_default().push(*id);
+                                }
                                 file.callable_scopes.iter().flat_map(move |scope| {
-                                    let matches = file
-                                        .callable_scope_ids
-                                        .iter()
-                                        .filter(|(_, candidate)| candidate == scope)
-                                        .map(|(id, _)| {
-                                            NodeId::callable_in(&interner, path, scope, *id)
-                                        })
-                                        .collect::<Vec<_>>();
-                                    if matches.is_empty() {
-                                        vec![NodeId::symbol_in(&interner, path, scope)]
-                                    } else {
-                                        matches
+                                    match ids_by_scope.get(scope.as_str()).map(Vec::as_slice) {
+                                        None | Some([]) => {
+                                            vec![NodeId::symbol_in(&interner, path, scope)]
+                                        }
+                                        Some(ids) => ids
+                                            .iter()
+                                            .map(|id| {
+                                                NodeId::callable_in(&interner, path, scope, *id)
+                                            })
+                                            .collect(),
                                     }
                                 })
                             }
@@ -61,12 +63,14 @@
                 &right.source_callee,
             ))
         });
+        let call_sites_by_file = index_sorted_call_sites_by_file(&resolved_call_sites);
         let mut graph = Self {
             root: root.to_path_buf(),
             edges: edge_index_from_maps(forward, reverse),
             callable_nodes_by_file,
             callable_export_resolutions,
             resolved_call_sites,
+            call_sites_by_file,
             vitest_setup_projects: Vec::new(),
             effective_edges: OnceLock::new(),
             parse_errors,

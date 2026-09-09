@@ -66,6 +66,7 @@ fn module_export_target(
 fn graph_call_target_node(
     interner: &crate::codebase::analysis_session::PathInterner,
     facts: &dyn TsFactLookup,
+    indexes: &CallableResolutionIndexes,
     target: &ResolvedCallTarget,
     local_callable_id: Option<crate::codebase::dependencies::extract::CallableId>,
 ) -> Option<NodeId> {
@@ -73,6 +74,7 @@ fn graph_call_target_node(
         ResolvedCallTarget::RepositoryFunction { file, scope } => Some(callable_node_for_call(
             interner,
             facts,
+            indexes,
             file,
             scope,
             local_callable_id,
@@ -84,6 +86,7 @@ fn graph_call_target_node(
         } => Some(callable_node_for_call(
             interner,
             facts,
+            indexes,
             file,
             scope,
             *callable_id,
@@ -95,21 +98,15 @@ fn graph_call_target_node(
 fn callable_node_for_call(
     interner: &crate::codebase::analysis_session::PathInterner,
     facts: &dyn TsFactLookup,
+    indexes: &CallableResolutionIndexes,
     file: &std::path::Path,
     scope: &str,
     exact_id: Option<crate::codebase::dependencies::extract::CallableId>,
 ) -> NodeId {
     let id = exact_id.or_else(|| {
-        facts.get_ts_facts(file).and_then(|file_facts| {
-            // The resolved file and canonical target scope own this identity.
-            // Importer lexical scopes must not select a same-spelled declaration.
-            let mut ids = file_facts
-                .callable_scope_ids
-                .iter()
-                .filter_map(|(id, display)| (display == scope).then_some(*id));
-            let first = ids.next()?;
-            ids.next().is_none().then_some(first)
-        })
+        indexes
+            .file(facts, file)
+            .and_then(|index| index.unique_scope_id(scope))
     });
     id.map_or_else(
         || NodeId::symbol_in(interner, file, scope),

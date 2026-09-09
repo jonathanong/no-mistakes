@@ -80,24 +80,33 @@ fn exported_function_scope(
     scope: Option<&str>,
     scope_id: Option<crate::codebase::dependencies::extract::CallableId>,
 ) -> bool {
-    if let Some(id) = scope_id {
-        return facts.callable_bindings.iter().any(|(binding_scope, name, binding_id)| {
-            *binding_id == id
-                && *binding_scope == 0
-                && (facts.exported_functions.iter().any(|exported| exported == name)
-                    || facts.exported_bindings.iter().any(|binding| {
-                        binding.specifier.is_none() && binding.local == *name
-                    }))
-        });
-    }
-    facts
+    let name_exported = facts
         .exported_functions
         .iter()
         .any(|exported| Some(exported.as_str()) == scope)
-        || facts
-            .exported_bindings
-            .iter()
-            .any(|binding| binding.specifier.is_none() && Some(binding.local.as_str()) == scope)
+        || facts.exported_bindings.iter().any(|binding| {
+            binding.specifier.is_none() && Some(binding.local.as_str()) == scope
+        });
+    if !name_exported {
+        return false;
+    }
+    let Some(id) = scope_id else {
+        return true;
+    };
+    let duplicates = facts
+        .callable_scope_ids
+        .iter()
+        .filter(|(_, display)| Some(display.as_str()) == scope)
+        .count();
+    if duplicates <= 1 {
+        return true;
+    }
+    facts
+        .callable_bindings
+        .iter()
+        .any(|(binding_scope, name, binding_id)| {
+            *binding_id == id && *binding_scope == 0 && Some(name.as_str()) == scope
+        })
 }
 
 fn exported_symbol_scope(

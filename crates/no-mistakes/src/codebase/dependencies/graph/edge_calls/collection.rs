@@ -105,6 +105,7 @@ fn collect_call_edges_for_core(
                     let edge = graph_call_target_node(
                         &edge_inputs.interner,
                         facts,
+                        &indexes,
                         &resolved_target,
                         callable_id,
                     )
