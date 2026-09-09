@@ -135,7 +135,7 @@ fn callable_alias_resolution_reaches_module_scope_from_outermost_function() {
     };
 
     assert_eq!(
-        resolve_callable_alias(&facts, &facts.function_calls[1], &HashMap::new()),
+        resolve_callable_alias(&facts, &facts.function_calls[1], &HashMap::new(), &HashMap::new()),
         Some("target".to_string()),
     );
     assert!(

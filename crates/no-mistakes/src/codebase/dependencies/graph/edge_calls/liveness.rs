@@ -10,7 +10,10 @@ fn invocation_offsets_from_bindings(
         Vec<u32>,
     > = std::collections::HashMap::new();
     for call in calls {
-        if call.is_callback {
+        if call.is_callback
+            && call.invocation
+                != crate::codebase::dependencies::extract::InvocationKind::Callback
+        {
             continue;
         }
         let Some(scope) = call.callee_binding_scope else {

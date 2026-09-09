@@ -54,3 +54,30 @@ fn nested_closure_aliases_a_later_direct_arrow_binding() {
         .iter()
         .any(|(_, name, _)| name == "later"));
 }
+
+#[test]
+fn deferred_alias_stops_at_a_non_callable_shadow() {
+    let facts = facts(
+        "function outer() { const target = () => {}; function nested() { const target = 0; const alias = target; alias(); } nested(); }",
+    );
+    assert!(facts
+        .callable_aliases
+        .iter()
+        .all(|alias| alias.local != "alias"));
+}
+
+#[test]
+fn deferred_alias_does_not_target_a_class_or_reassigned_binding() {
+    let class_facts = facts("function nested() { const C = Later; C(); } nested(); class Later {}");
+    assert!(class_facts
+        .callable_aliases
+        .iter()
+        .all(|alias| alias.local != "C"));
+    let reassigned = facts(
+        "function nested() { const a = later; a(); } let later = () => {}; later = injected; nested();",
+    );
+    assert!(reassigned
+        .callable_aliases
+        .iter()
+        .all(|alias| alias.local != "a"));
+}

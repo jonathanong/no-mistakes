@@ -15,6 +15,11 @@ fn reachable_function_scopes(
         .map(|(scope, name, id)| ((*scope, name.clone()), *id))
         .collect();
     let invocation_offsets = invocation_offsets_from_bindings(&bindings, &facts.function_calls);
+    let declared_at: HashMap<_, _> = facts
+        .callable_binding_declared_at
+        .iter()
+        .map(|(scope, name, offset)| ((*scope, name.clone()), *offset))
+        .collect();
     let mut by_caller: HashMap<Option<crate::codebase::dependencies::extract::CallableId>, Vec<ReachabilityTransition>> = HashMap::new();
     for call in facts.function_calls.iter().filter(|call| {
         // Synthetic callbacks are ownership facts, not module execution
@@ -35,7 +40,13 @@ fn reachable_function_scopes(
                 == crate::codebase::dependencies::extract::InvocationKind::Callback
                 && (call.caller.is_some() || !call.callee.starts_with("<anonymous:")))
     }) {
-        let Some(callee) = reachable_callee_scope(facts, call, &known_scopes, &invocation_offsets) else {
+        let Some(callee) = reachable_callee_scope(
+            facts,
+            call,
+            &known_scopes,
+            &invocation_offsets,
+            &declared_at,
+        ) else {
             continue;
         };
         by_caller
@@ -84,13 +95,14 @@ fn reachable_callee_scope(
     call: &FunctionCall,
     known_scopes: &HashSet<String>,
     invocation_offsets: &HashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>>,
+    declared_at: &HashMap<(usize, String), u32>,
 ) -> Option<crate::codebase::dependencies::extract::CallableId> {
     use crate::codebase::dependencies::extract::CallTargetIdentity;
 
     // Canonical immutable aliases win over the raw syntactic classification:
     // a declaration prepass can prove the alias is locally bound before its
     // target has been visited, but only resolution proves which function runs.
-    if let Some(resolved) = resolve_callable_alias(facts, call, invocation_offsets) {
+    if let Some(resolved) = resolve_callable_alias(facts, call, invocation_offsets, declared_at) {
         let scope = resolve_callee_scope(call.caller.as_deref(), &resolved, known_scopes);
         if known_scopes.contains(&scope) {
             return callable_id_for_scope(facts, &scope, call.callee_binding_scope);

@@ -43,13 +43,27 @@ impl ImportCollector {
         let mut scope = Some(binding_scope);
         while let Some(scope_id) = scope {
             if self
-                .callable_bindings
-                .contains_key(&(scope_id, target.to_string()))
-                || self.callable_aliases.iter().any(|alias| {
-                    alias.alias.binding_scope == scope_id && alias.alias.local == target
-                })
+                .lexical_binding_names
+                .contains(&(scope_id, target.to_string()))
             {
-                return true;
+                if self
+                    .reassigned_callable_binding_ids
+                    .contains(&(scope_id, target.to_string()))
+                {
+                    return false;
+                }
+                if self.callable_aliases.iter().any(|alias| {
+                    alias.alias.binding_scope == scope_id && alias.alias.local == target
+                }) {
+                    return true;
+                }
+                let Some(id) = self.callable_bindings.get(&(scope_id, target.to_string())) else {
+                    return false;
+                };
+                return !self
+                    .callable_scope_ids
+                    .iter()
+                    .any(|(candidate, scope)| candidate == id && self.class_scopes.contains(scope));
             }
             scope = self.lexical_scope_parents.get(&scope_id).copied().flatten();
         }

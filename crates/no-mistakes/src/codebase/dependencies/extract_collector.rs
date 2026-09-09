@@ -36,6 +36,7 @@ struct ImportCollector {
     /// can alias a later direct function/arrow in the enclosing scope.
     deferred_simple_aliases: Vec<AggregateAliasCandidate>,
     callable_binding_declared_at: HashMap<(usize, String), u32>,
+    lexical_binding_names: HashSet<(usize, String)>,
     static_getter_member_ids: HashSet<(CallableId, String)>,
     object_getter_member_ids: HashSet<(CallableId, String)>,
     static_setter_member_ids: HashSet<(CallableId, String)>,

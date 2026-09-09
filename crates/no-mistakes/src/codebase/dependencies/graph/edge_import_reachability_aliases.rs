@@ -2,6 +2,7 @@ fn resolve_callable_alias(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     call: &FunctionCall,
     invocation_offsets: &HashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>>,
+    declared_at: &HashMap<(usize, String), u32>,
 ) -> Option<String> {
     let callee = &call.callee;
     if callee.contains('.') {
@@ -9,11 +10,6 @@ fn resolve_callable_alias(
     }
     let mut binding_scope = call.callee_binding_scope?;
     let parents: HashMap<_, _> = facts.lexical_scope_parents.iter().copied().collect();
-    let declared_at: HashMap<_, _> = facts
-        .callable_binding_declared_at
-        .iter()
-        .map(|(scope, name, offset)| ((*scope, name.clone()), *offset))
-        .collect();
     let mut target = callee.to_string();
     let mut resolved_alias = false;
     let mut visited = HashSet::new();
@@ -47,7 +43,7 @@ fn resolve_callable_alias(
                 .then(|| {
                     fact_target_binding_live(
                         facts,
-                        &declared_at,
+                        declared_at,
                         &parents,
                         invocation_offsets,
                         binding_scope,
