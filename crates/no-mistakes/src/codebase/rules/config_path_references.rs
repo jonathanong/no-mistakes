@@ -110,7 +110,7 @@ fn scan(
 ) -> Result<Vec<RuleFinding>> {
     let config_files = super::matching_files(root, &opts.files, config_candidates, target_roots)?;
     let preset_candidates = if opts.files.is_empty() {
-        reference_candidates
+        config_candidates
     } else {
         &config_files
     };

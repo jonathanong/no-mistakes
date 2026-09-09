@@ -32,6 +32,24 @@ fn knip_workspace_entries_under_fixtures_exist_when_listed() {
 }
 
 #[test]
+fn knip_presets_do_not_scan_configs_under_source_skip_directories() {
+    let root = knip_fixture("knip-workspace-fixtures-pass");
+    let mut files = knip_files(&root);
+    files.push(root.join("fixtures/knip.json"));
+    files.push(root.join(
+        "backend/dependency-cruiser-rules/__tests__/fixtures/build-insert-query/aliased-import.mts",
+    ));
+    let findings = check_with_files(&root, &preset_config(&root), &files).unwrap();
+    assert!(
+        findings
+            .iter()
+            .all(|finding| !finding.file.contains("fixtures/knip.json")),
+        "{findings:?}"
+    );
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+}
+
+#[test]
 fn knip_workspace_entries_under_fixtures_report_missing_literals() {
     let root = knip_fixture("knip-workspace-fixtures-fail");
     let findings = check_with_files(&root, &preset_config(&root), &knip_files(&root)).unwrap();
