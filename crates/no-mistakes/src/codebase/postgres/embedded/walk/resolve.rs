@@ -2,16 +2,18 @@ mod append;
 mod chain;
 mod compose;
 mod functions;
+mod loops;
 
 pub(super) use append::apply_append;
 pub(super) use functions::LocalFunctions;
+pub(super) use loops::{bind_for_statement_left, enter_classic_for, leave_classic_for};
 
 use super::super::{first_call_argument, EmbeddedSqlCall, EmbeddedSqlKind};
 use super::{BindingState, ScopeVisitor};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use compose::classify_init;
 use oxc_ast::ast::{
-    BindingPattern, CallExpression, Declaration, Expression, ForStatementLeft, Function, Statement,
+    BindingPattern, CallExpression, Declaration, Expression, Function, Statement,
     VariableDeclaration, VariableDeclarator,
 };
 
@@ -50,27 +52,6 @@ pub(super) fn for_each_bound_name<'a>(
     }
 }
 
-/// Binds a for-in/for-of declaration-form loop target (`for (const build of
-/// providers) {}`) into the scope `visit_for_in_statement`/
-/// `visit_for_of_statement` just pushed, as a local shadow — matching how
-/// `bind_param` shadows a function parameter. The non-declaration form
-/// (`for (build of providers)`, reassigning an existing outer binding) needs
-/// no such binding: `ReassignedNames` already drops that name from
-/// `LocalFunctions` everywhere, inside the loop and out.
-///
-/// This runs regardless of `var`/`let`/`const`: whatever the loop body sees
-/// while it runs, the per-iteration value shadows a same-named top-level
-/// helper. Whether the name counts as reassigned *after* the loop — where
-/// only `var` leaks — is a separate question `ReassignedNames::
-/// visit_for_statement_left` answers on its own.
-pub(super) fn bind_for_statement_left(left: &ForStatementLeft<'_>, visitor: &mut ScopeVisitor<'_>) {
-    if let ForStatementLeft::VariableDeclaration(declaration) = left {
-        for declarator in &declaration.declarations {
-            visitor.bind_param(&declarator.id);
-        }
-    }
-}
-
 pub(super) fn record_statements(statements: &[Statement<'_>], visitor: &mut ScopeVisitor<'_>) {
     for statement in statements {
         match statement {
@@ -80,12 +61,18 @@ pub(super) fn record_statements(statements: &[Statement<'_>], visitor: &mut Scop
             Statement::FunctionDeclaration(function) => {
                 record_function_declaration(function, visitor);
             }
+            Statement::ClassDeclaration(class) => {
+                record_nested_type_name(class.id.as_ref().map(|id| id.name.as_str()), visitor);
+            }
             Statement::ExportDeclaration(export) => match &export.declaration {
                 Declaration::VariableDeclaration(declaration) => {
                     record_variable_declaration(declaration, visitor);
                 }
                 Declaration::FunctionDeclaration(function) => {
                     record_function_declaration(function, visitor);
+                }
+                Declaration::ClassDeclaration(class) => {
+                    record_nested_type_name(class.id.as_ref().map(|id| id.name.as_str()), visitor);
                 }
                 _ => {}
             },
@@ -121,6 +108,15 @@ fn record_function_declaration(function: &Function<'_>, visitor: &mut ScopeVisit
                 line,
             },
         );
+    }
+}
+
+fn record_nested_type_name(name: Option<&str>, visitor: &mut ScopeVisitor<'_>) {
+    if visitor.scopes.len() <= 1 {
+        return;
+    }
+    if let Some(name) = name {
+        visitor.bind_self_name(name);
     }
 }
 
@@ -179,7 +175,12 @@ pub(super) fn executor_call(
             EmbeddedSqlCall {
                 line,
                 callee,
-                sql_text: binding.as_ref().and_then(|binding| binding.sql.clone()),
+                sql_text: binding.as_ref().and_then(|binding| {
+                    binding
+                        .sql
+                        .clone()
+                        .map(super::super::placeholders::publish_placeholders)
+                }),
                 kind: binding
                     .as_ref()
                     .map(|binding| binding.kind)
@@ -192,7 +193,7 @@ pub(super) fn executor_call(
             EmbeddedSqlCall {
                 line,
                 callee,
-                sql_text: sql,
+                sql_text: sql.map(super::super::placeholders::publish_placeholders),
                 kind: if kind == EmbeddedSqlKind::ImmutableLocal {
                     EmbeddedSqlKind::Inline
                 } else {

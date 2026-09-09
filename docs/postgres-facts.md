@@ -96,14 +96,17 @@ Supported argument shapes:
   spelled `sql` (case-insensitive) that is not lexically shadowed, or a
   default import from `sql-template-strings` under any local name. Other
   `sql`-named imports, including `import * as sql`, remain untrusted shadows.
+  `String.raw` with no interpolations is trusted only when `String` is the
+  intrinsic, not a local import, class, parameter, or callable rebinding.
 - template literals
 - identifiers bound in scope (`const q = \`SELECT ...\`; query(q)`)
 
 Template interpolations become `sql_placeholder_N` (1-based, in source
 order). The first quasi is copied as-is; each later quasi is prefixed with
-the next placeholder. This is the lock-ordering `sqlText` contract. It is
-intentionally different from Filaments' runtime-query helper, which joins
-quasis with `?`.
+the next placeholder. User-authored text that happens to contain the
+`sql_placeholder_` substring is not renumbered when fragments are joined.
+This is the lock-ordering `sqlText` contract. It is intentionally different
+from Filaments' runtime-query helper, which joins quasis with `?`.
 
 ### Executor bindings
 

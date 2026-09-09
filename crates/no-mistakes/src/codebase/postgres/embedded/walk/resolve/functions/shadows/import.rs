@@ -63,7 +63,7 @@ fn record_specifier(
 }
 
 fn shadow_sql_local(local: &str, shadows: &mut TagShadows) {
-    if local.eq_ignore_ascii_case("sql") {
+    if super::is_trusted_tag_name(local) {
         shadows.names.insert(local.to_string());
     }
 }

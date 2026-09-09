@@ -1,11 +1,13 @@
 use super::super::for_each_bound_name;
 use super::shadows::is_function_shaped;
 use oxc_ast::ast::{
-    AssignmentTarget, AssignmentTargetMaybeDefault, AssignmentTargetProperty, ForStatementLeft,
-    Program, SimpleAssignmentTarget, UpdateExpression, VariableDeclaration,
-    VariableDeclarationKind, VariableDeclarator,
+    ArrowFunctionExpression, AssignmentTarget, AssignmentTargetMaybeDefault,
+    AssignmentTargetProperty, ForStatementLeft, FormalParameters, Function, Program,
+    SimpleAssignmentTarget, UpdateExpression, VariableDeclaration, VariableDeclarationKind,
+    VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
+use oxc_syntax::scope::ScopeFlags;
 use std::collections::HashSet;
 
 /// Names assigned anywhere in the program, e.g. `build = externalBuilder;`,
@@ -42,6 +44,7 @@ use std::collections::HashSet;
 #[derive(Default)]
 pub(super) struct ReassignedNames<'a> {
     names: HashSet<&'a str>,
+    param_stack: Vec<HashSet<&'a str>>,
 }
 
 impl<'a> ReassignedNames<'a> {
@@ -54,20 +57,66 @@ impl<'a> ReassignedNames<'a> {
     pub(super) fn contains(&self, name: &str) -> bool {
         self.names.contains(name)
     }
+
+    fn records_name(&self, name: &str) -> bool {
+        !self
+            .param_stack
+            .iter()
+            .rev()
+            .any(|params| params.contains(name))
+    }
+
+    fn push_params(&mut self, params: &FormalParameters<'a>) {
+        let mut names = HashSet::new();
+        for item in &params.items {
+            for_each_bound_name(&item.pattern, &mut |name| {
+                names.insert(name);
+            });
+        }
+        if let Some(rest) = &params.rest {
+            for_each_bound_name(&rest.rest.argument, &mut |name| {
+                names.insert(name);
+            });
+        }
+        self.param_stack.push(names);
+    }
 }
 
 impl<'a> Visit<'a> for ReassignedNames<'a> {
+    fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
+        self.push_params(&function.params);
+        walk::walk_function(self, function, flags);
+        self.param_stack.pop();
+    }
+
+    fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
+        self.push_params(&arrow.params);
+        walk::walk_arrow_function_expression(self, arrow);
+        self.param_stack.pop();
+    }
+
     fn visit_assignment_target(&mut self, target: &AssignmentTarget<'a>) {
-        let names = &mut self.names;
-        for_each_assigned_name(target, &mut |name| {
-            names.insert(name);
-        });
+        let mut assigned = Vec::new();
+        for_each_assigned_name(target, &mut |name| assigned.push(name));
+        for name in assigned {
+            if self.records_name(name) {
+                self.names.insert(name);
+            }
+        }
         walk::walk_assignment_target(self, target);
     }
 
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'a>) {
+        let mut rebound = Vec::new();
         for declarator in &declaration.declarations {
-            record_declarator_reassignment(declaration.kind, declarator, &mut self.names);
+            record_declarator_reassignment(declaration.kind, declarator, &mut |name| {
+                rebound.push(name);
+            });
+        }
+        for name in rebound {
+            if self.records_name(name) {
+                self.names.insert(name);
+            }
         }
         walk::walk_variable_declaration(self, declaration);
     }
@@ -96,11 +145,14 @@ impl<'a> Visit<'a> for ReassignedNames<'a> {
     fn visit_for_statement_left(&mut self, it: &ForStatementLeft<'a>) {
         if let ForStatementLeft::VariableDeclaration(declaration) = it {
             if declaration.kind == VariableDeclarationKind::Var {
-                let names = &mut self.names;
+                let mut rebound = Vec::new();
                 for declarator in &declaration.declarations {
-                    for_each_bound_name(&declarator.id, &mut |name| {
-                        names.insert(name);
-                    });
+                    for_each_bound_name(&declarator.id, &mut |name| rebound.push(name));
+                }
+                for name in rebound {
+                    if self.records_name(name) {
+                        self.names.insert(name);
+                    }
                 }
             }
         }
@@ -116,7 +168,9 @@ impl<'a> Visit<'a> for ReassignedNames<'a> {
     /// not a name `LocalFunctions` tracks, so it's left alone.
     fn visit_update_expression(&mut self, it: &UpdateExpression<'a>) {
         if let SimpleAssignmentTarget::AssignmentTargetIdentifier(ident) = &it.argument {
-            self.names.insert(ident.name.as_str());
+            if self.records_name(ident.name.as_str()) {
+                self.names.insert(ident.name.as_str());
+            }
         }
         walk::walk_update_expression(self, it);
     }
@@ -144,15 +198,13 @@ impl<'a> Visit<'a> for ReassignedNames<'a> {
 fn record_declarator_reassignment<'a>(
     kind: VariableDeclarationKind,
     declarator: &VariableDeclarator<'a>,
-    names: &mut HashSet<&'a str>,
+    on_name: &mut impl FnMut(&'a str),
 ) {
     let is_collectible_helper = kind == VariableDeclarationKind::Const
         && declarator.init.as_ref().is_some_and(is_function_shaped);
     let is_reassignment = declarator.init.is_some() && !is_collectible_helper;
     if is_reassignment {
-        for_each_bound_name(&declarator.id, &mut |name| {
-            names.insert(name);
-        });
+        for_each_bound_name(&declarator.id, on_name);
     }
 }
 

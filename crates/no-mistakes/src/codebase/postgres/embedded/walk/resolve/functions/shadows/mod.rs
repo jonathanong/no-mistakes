@@ -3,8 +3,8 @@ mod import;
 use super::super::for_each_bound_name;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{
-    BindingPattern, Declaration, Expression, Program, Statement, VariableDeclaration,
-    VariableDeclarator,
+    BindingPattern, Class, Declaration, Expression, Function, Program, Statement,
+    VariableDeclaration, VariableDeclarator,
 };
 use std::collections::HashSet;
 
@@ -18,12 +18,10 @@ use std::collections::HashSet;
 /// referencing its own top-level declaration by name.
 ///
 /// The callable-helper-shape exemption never applies to a binding spelled
-/// `sql` (case-insensitively, matching the tag-name check this feeds): the
-/// only thing that consults a shadowed name is whether it is safe to trust a
-/// tagged template's own tag as the trusted SQL-concatenation tag, and a
-/// callable rebinding of `sql` is exactly the shape that can ignore its
-/// template arguments and return arbitrary text — a helper shape doesn't
-/// make that any safer.
+/// `sql` (case-insensitively) or `String`: those are the only names
+/// [`crate::codebase::postgres::embedded::tags`] will treat as a trusted
+/// tagged-template tag, and a callable rebinding of either is exactly the
+/// shape that can ignore its template arguments and return arbitrary text.
 ///
 /// Default imports from `sql-template-strings` are the opposite: they *are*
 /// the trusted tag, recorded in [`TagShadows::imported`] under whatever
@@ -90,11 +88,24 @@ fn record_statement(
         Statement::VariableDeclaration(declaration) => {
             record_declaration(declaration, top_level_functions, shadows);
         }
-        Statement::ExportDeclaration(export) => {
-            if let Declaration::VariableDeclaration(declaration) = &export.declaration {
+        Statement::FunctionDeclaration(function) => {
+            record_function_tag_shadow(function, shadows);
+        }
+        Statement::ClassDeclaration(class) => {
+            record_class_tag_shadow(class, shadows);
+        }
+        Statement::ExportDeclaration(export) => match &export.declaration {
+            Declaration::VariableDeclaration(declaration) => {
                 record_declaration(declaration, top_level_functions, shadows);
             }
-        }
+            Declaration::FunctionDeclaration(function) => {
+                record_function_tag_shadow(function, shadows);
+            }
+            Declaration::ClassDeclaration(class) => {
+                record_class_tag_shadow(class, shadows);
+            }
+            _ => {}
+        },
         Statement::ImportDeclaration(import) => import::record_import(import, shadows),
         _ => {}
     }
@@ -130,7 +141,7 @@ fn record_declarator(
         if top_level_functions.contains(name) {
             return;
         }
-        if !is_helper_shape || name.eq_ignore_ascii_case("sql") {
+        if !is_helper_shape || is_trusted_tag_name(name) {
             shadows.names.insert(name.to_string());
         }
     });
@@ -140,5 +151,57 @@ pub(super) fn is_function_shaped(expr: &Expression<'_>) -> bool {
     matches!(
         unwrap_ts_wrappers(expr),
         Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_)
+    )
+}
+
+pub(super) fn is_trusted_tag_name(name: &str) -> bool {
+    name.eq_ignore_ascii_case("sql") || name == "String"
+}
+
+/// A `function sql()` / `function String()` is a tag shadow unless it looks
+/// like an in-file tagged-template implementation (it takes parameters and
+/// does not return a static SQL fragment). Zero-arg helpers, including
+/// `return process.env.SQL`, must not keep the intrinsic tag trusted.
+fn record_function_tag_shadow(function: &Function<'_>, shadows: &mut TagShadows) {
+    let Some(id) = function.id.as_ref() else {
+        return;
+    };
+    if !is_trusted_tag_name(id.name.as_str()) {
+        return;
+    }
+    if !looks_like_tag_implementation(function) {
+        shadows.names.insert(id.name.to_string());
+    }
+}
+
+fn looks_like_tag_implementation(function: &Function<'_>) -> bool {
+    let has_params = !function.params.items.is_empty() || function.params.rest.is_some();
+    has_params && !returns_static_sql(function)
+}
+
+fn record_class_tag_shadow(class: &Class<'_>, shadows: &mut TagShadows) {
+    let Some(id) = class.id.as_ref() else {
+        return;
+    };
+    if is_trusted_tag_name(id.name.as_str()) {
+        shadows.names.insert(id.name.to_string());
+    }
+}
+
+fn returns_static_sql(function: &Function<'_>) -> bool {
+    let Some(body) = function.body.as_ref() else {
+        return false;
+    };
+    let [oxc_ast::ast::Statement::ReturnStatement(ret)] = body.statements.as_slice() else {
+        return false;
+    };
+    let Some(argument) = ret.argument.as_ref() else {
+        return false;
+    };
+    matches!(
+        unwrap_ts_wrappers(argument),
+        Expression::StringLiteral(_)
+            | Expression::TemplateLiteral(_)
+            | Expression::TaggedTemplateExpression(_)
     )
 }

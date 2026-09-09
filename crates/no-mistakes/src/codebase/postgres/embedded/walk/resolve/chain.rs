@@ -1,5 +1,6 @@
-use super::super::super::sql_text;
+use super::super::super::placeholders::{count_placeholders, renumber_placeholders};
 use super::super::super::tags::interpolating_untrusted_tag;
+use super::super::super::unpublished_sql_text;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{Argument, BinaryOperator, CallExpression, Expression};
 use std::collections::HashSet;
@@ -26,13 +27,15 @@ pub(super) fn resolve_expr(
     let depth = depth.checked_sub(1)?;
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => sql_text(expr),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            unpublished_sql_text(expr)
+        }
         Expression::TaggedTemplateExpression(_)
             if interpolating_untrusted_tag(expr, is_shadowed, imported_sql_tags) =>
         {
             None
         }
-        Expression::TaggedTemplateExpression(_) => sql_text(expr),
+        Expression::TaggedTemplateExpression(_) => unpublished_sql_text(expr),
         Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
             let left = resolve_expr(&binary.left, depth, lookup, is_shadowed, imported_sql_tags)?;
             let right = resolve_expr(&binary.right, depth, lookup, is_shadowed, imported_sql_tags)?;
@@ -82,35 +85,4 @@ fn append_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'a Expression<'a
         Argument::SpreadElement(_) => None,
         other => other.as_expression(),
     }
-}
-
-const PLACEHOLDER_MARKER: &str = "sql_placeholder_";
-
-pub(super) fn count_placeholders(text: &str) -> u32 {
-    text.matches(PLACEHOLDER_MARKER).count() as u32
-}
-
-/// Each independently-resolved fragment numbers its own placeholders from 1,
-/// so joining two fragments via `.append()` would otherwise duplicate
-/// `sql_placeholder_1`. Shift every placeholder in `text` by `offset` (the
-/// placeholder count already used by the fragment it's being joined after)
-/// so the joined result stays sequential in source order.
-pub(super) fn renumber_placeholders(text: &str, offset: u32) -> String {
-    if offset == 0 {
-        return text.to_string();
-    }
-    let mut out = String::with_capacity(text.len());
-    let mut rest = text;
-    let mut seen = 0u32;
-    while let Some(position) = rest.find(PLACEHOLDER_MARKER) {
-        out.push_str(&rest[..position]);
-        let after_marker = &rest[position + PLACEHOLDER_MARKER.len()..];
-        let digits = after_marker.bytes().take_while(u8::is_ascii_digit).count();
-        seen += 1;
-        out.push_str(PLACEHOLDER_MARKER);
-        out.push_str(&(offset + seen).to_string());
-        rest = &after_marker[digits..];
-    }
-    out.push_str(rest);
-    out
 }

@@ -123,7 +123,9 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
+        resolve::enter_classic_for(statement, self);
         self.with_control_flow(|visitor| walk::walk_for_statement(visitor, statement));
+        resolve::leave_classic_for(statement, self);
     }
 
     fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {
@@ -182,5 +184,8 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 fn record_params(params: &FormalParameters<'_>, visitor: &mut ScopeVisitor<'_>) {
     for param in &params.items {
         visitor.bind_param(&param.pattern);
+    }
+    if let Some(rest) = &params.rest {
+        visitor.bind_param(&rest.rest.argument);
     }
 }
