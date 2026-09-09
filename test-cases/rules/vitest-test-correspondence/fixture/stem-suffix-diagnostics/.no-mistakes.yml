@@ -1,0 +1,7 @@
+rules:
+  - rule: vitest-test-correspondence
+    scope: repository
+    options:
+      stemSuffixesToStrip: [".mock", ".generated"]
+      testExtensions: [".test.tsx"]
+      testsDir: __tests__

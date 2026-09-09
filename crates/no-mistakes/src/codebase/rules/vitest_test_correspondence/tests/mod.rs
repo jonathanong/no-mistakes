@@ -534,3 +534,5 @@ fn stem_suffix_source_to_test_in_tests_dir() {
         "page.tsx should find __tests__/page.mock.test.tsx: {findings:?}"
     );
 }
+
+mod stem_suffix_diagnostics;

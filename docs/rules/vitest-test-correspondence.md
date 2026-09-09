@@ -39,8 +39,12 @@ test stem under the test policy; duplicate stem handling follows
 `source-to-test` reports selected sources without a test, `test-to-source`
 reports tests without a source, and `both` performs both checks.
 `stemSuffixesToStrip` removes configured source-name suffixes before matching.
-`duplicateStemGroup` defaults to `exact`; set `first-dot-segment` when variants
-such as `index.edge.test.mts` should share a stem and move under `testsDir`.
+Rejected test names name the suffixes stripped from that stem, or list the
+configured `stemSuffixesToStrip` values when none applied, so the supported
+naming path stays visible. Source-to-test rejections include the same
+configured suffix list. `duplicateStemGroup` defaults to `exact`; set
+`first-dot-segment` when variants such as `index.edge.test.mts` should share a
+stem and move under `testsDir`.
 
 ## Valid example
 
@@ -58,7 +62,9 @@ src/users.ts
 ## Fix
 
 Add the corresponding test, adjust include/exclude ownership, or choose the
-duplicate stem policy that matches the repository naming convention.
+duplicate stem policy that matches the repository naming convention. When
+`stemSuffixesToStrip` is set, use the suffixes named in the finding to map the
+rejected path onto the configured naming convention.
 
 ## Suppression
 
