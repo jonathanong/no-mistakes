@@ -304,11 +304,14 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   `route-test` navigation is the documented exception above.)
 - `call` edges are opt-in and are deliberately soundness-bounded. Only local
   functions, direct named imports, static namespace-member imports, and explicit named re-exports with one
-  resolved target become edges. Computed members, dynamic callees, globals,
-  ambiguous `export *` targets, and unresolved modules remain call-site facts
-  or diagnostics, never guessed graph edges. Call traversal is cycle-safe and
-  reports each target once at its deterministic shortest path; `depth: 0`
-  emits no targets and `depth: 1` is the direct-call boundary.
+  resolved target become edges. String-literal computed members such as
+  `api["run"]()` and TypeScript-wrapped receivers such as
+  `(api as typeof api)["run"]()` resolve the same as `api.run()`. Dynamic
+  computed members, dynamic callees, globals, ambiguous `export *` targets, and
+  unresolved modules remain call-site facts or diagnostics, never guessed graph
+  edges. Call traversal is cycle-safe and reports each target once at its
+  deterministic shortest path; `depth: 0` emits no targets and `depth: 1` is the
+  direct-call boundary.
 - Selector text edges are approximate. Exact selector edges from configured test
   ID attributes are stronger than role/text/label/placeholder matching.
   Configured selector wrappers produce the same exact edge when their declared

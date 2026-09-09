@@ -98,6 +98,29 @@ fn member_callee_unwraps_typescript_receiver_wrappers() {
 }
 
 #[test]
+fn computed_member_callee_unwraps_typescript_receiver_wrappers() {
+    let facts = facts(r#"import * as api from './api.mts'; (api as typeof api)["run"]();"#);
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "api.run" && call.target_identity == CallTargetIdentity::ModuleExport
+    }));
+}
+
+#[test]
+fn dynamic_computed_member_stays_unresolved() {
+    let facts = facts(
+        r#"import * as api from './api.mts'; const name = "run"; (api as typeof api)[name]();"#,
+    );
+    assert!(!facts
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "api.run"));
+    assert!(facts
+        .unknown_calls
+        .iter()
+        .any(|call| { call.invocation == InvocationKind::Call }));
+}
+
+#[test]
 fn dynamic_member_receiver_records_unknown_call_evidence() {
     let source = "function run() { factory().invoke(); new (factory().Handler)(); }";
     let facts = facts(source);

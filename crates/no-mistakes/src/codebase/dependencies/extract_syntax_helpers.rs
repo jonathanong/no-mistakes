@@ -53,7 +53,9 @@ fn has_dynamic_static_member_receiver(expr: &Expression<'_>) -> bool {
 fn simple_computed_member_name(
     member: &oxc_ast::ast::ComputedMemberExpression<'_>,
 ) -> Option<String> {
-    let Expression::Identifier(object) = &member.object else {
+    let Expression::Identifier(object) =
+        crate::codebase::ts_source::unwrap_ts_wrappers(&member.object)
+    else {
         return None;
     };
     let property = match crate::codebase::ts_source::unwrap_ts_wrappers(&member.expression) {

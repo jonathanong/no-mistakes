@@ -17,7 +17,9 @@ input file. The result includes local function calls, direct named imports,
 static namespace-member imports, or explicit named re-exports. `--depth 1`
 returns only direct calls,
 `--depth 0` returns no calls, and larger depths follow the resolved call graph.
-Dynamic computed members, dynamic callees, globals, and ambiguous `export *` targets
+String-literal computed members, including TypeScript-wrapped receivers such as
+`(api as typeof api)["run"]()`, resolve the same as static members. Dynamic
+computed members, dynamic callees, globals, and ambiguous `export *` targets
 are intentionally omitted rather than guessed. This relationship is opt-in;
 the default graph and `--relationship all` do not include it.
 

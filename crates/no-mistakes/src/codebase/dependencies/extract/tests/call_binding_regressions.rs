@@ -118,6 +118,16 @@ fn static_computed_member_calls_keep_a_resolvable_callee() {
     assert!(facts.function_calls.iter().any(|call| {
         call.callee == "playwright.test" && call.target_identity == CallTargetIdentity::ModuleExport
     }));
+    assert_eq!(
+        facts
+            .function_calls
+            .iter()
+            .filter(|call| call.callee == "playwright.test"
+                && call.target_identity == CallTargetIdentity::ModuleExport)
+            .count(),
+        2,
+        "string-computed and TS-wrapped computed playwright.test must share the module-export edge"
+    );
     assert!(facts.unknown_calls.is_empty());
 }
 
