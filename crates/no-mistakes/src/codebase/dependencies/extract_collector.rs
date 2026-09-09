@@ -72,6 +72,7 @@ struct ImportCollector {
     call_import_bindings: Vec<ImportedBinding>,
     call_export_bindings: Vec<ExportedBinding>,
     callable_aliases: Vec<CallableAliasBinding>,
+    callable_alias_index: HashMap<(usize, String), usize>,
     callable_binding_ids: HashSet<(usize, String)>,
     callable_bindings: HashMap<(usize, String), CallableId>,
     reassigned_callable_binding_ids: HashSet<(usize, String)>,

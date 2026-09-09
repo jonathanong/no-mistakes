@@ -125,7 +125,7 @@ impl ImportCollector {
     }
 
     fn push_callable_alias(&mut self, local: String, target: String, declared_at: u32) {
-        self.callable_aliases.push(CallableAliasBinding {
+        self.insert_callable_alias(CallableAliasBinding {
             alias: CallableAlias {
                 scope: self.current_function(),
                 scope_id: self.current_function_id(),
@@ -137,6 +137,18 @@ impl ImportCollector {
             },
             lexical_scope_depth: self.local_stack.len() - 1,
         });
+    }
+
+    fn insert_callable_alias(&mut self, binding: CallableAliasBinding) {
+        let key = (binding.alias.binding_scope, binding.alias.local.clone());
+        let index = self.callable_aliases.len();
+        self.callable_aliases.push(binding);
+        self.callable_alias_index.insert(key, index);
+    }
+
+    fn indexed_callable_alias(&self, scope: usize, local: &str) -> Option<&CallableAlias> {
+        let index = *self.callable_alias_index.get(&(scope, local.to_string()))?;
+        self.callable_aliases.get(index).map(|binding| &binding.alias)
     }
 
     fn record_reassigned_callable_alias(&mut self, name: &str, offset: u32) {
@@ -151,12 +163,15 @@ impl ImportCollector {
         };
         self.reassigned_callable_binding_ids
             .insert((binding_scope, name.to_string()));
-        for alias in &mut self.callable_aliases {
-            if alias.alias.local == name
-                && alias.alias.binding_scope == binding_scope
-                && alias.lexical_scope_depth == lexical_scope_depth
-            {
-                alias.alias.invalidated_at.get_or_insert(offset);
+        if let Some(index) = self
+            .callable_alias_index
+            .get(&(binding_scope, name.to_string()))
+            .copied()
+        {
+            if let Some(alias) = self.callable_aliases.get_mut(index) {
+                if alias.lexical_scope_depth == lexical_scope_depth {
+                    alias.alias.invalidated_at.get_or_insert(offset);
+                }
             }
         }
     }

@@ -60,7 +60,7 @@ impl ImportCollector {
                         call.target_identity = target_identity;
                     }
                 }
-                self.callable_aliases.push(CallableAliasBinding {
+                self.insert_callable_alias(CallableAliasBinding {
                     alias: CallableAlias {
                         scope: owner.clone(),
                         scope_id: owner_id,
@@ -92,10 +92,8 @@ impl ImportCollector {
                 let Some(candidate_scope) = scope else {
                     break None;
                 };
-                if let Some(alias) = self.callable_aliases.iter().find(|alias| {
-                    alias.alias.binding_scope == candidate_scope && alias.alias.local == target
-                }) {
-                    break Some(&alias.alias.target);
+                if let Some(alias) = self.indexed_callable_alias(candidate_scope, &target) {
+                    break Some(alias.target.clone());
                 }
                 scope = self
                     .lexical_scope_parents
@@ -104,7 +102,7 @@ impl ImportCollector {
                     .flatten();
             };
             let Some(alias) = alias else { break };
-            target = alias.clone();
+            target = alias;
         }
 
         let binding = target

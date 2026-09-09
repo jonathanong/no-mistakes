@@ -5,10 +5,10 @@ impl ImportCollector {
             let mut remaining = Vec::new();
             let mut progressed = false;
             for candidate in pending {
-                if self.callable_aliases.iter().any(|alias| {
-                    alias.alias.binding_scope == candidate.binding_scope
-                        && alias.alias.local == candidate.local
-                }) {
+                if self
+                    .callable_alias_index
+                    .contains_key(&(candidate.binding_scope, candidate.local.clone()))
+                {
                     continue;
                 }
                 if !self.deferred_alias_target_is_callable(
@@ -18,7 +18,7 @@ impl ImportCollector {
                     remaining.push(candidate);
                     continue;
                 }
-                self.callable_aliases.push(CallableAliasBinding {
+                self.insert_callable_alias(CallableAliasBinding {
                     alias: CallableAlias {
                         scope: candidate.owner,
                         scope_id: candidate.owner_id,
@@ -52,9 +52,7 @@ impl ImportCollector {
                 {
                     return false;
                 }
-                if self.callable_aliases.iter().any(|alias| {
-                    alias.alias.binding_scope == scope_id && alias.alias.local == target
-                }) {
+                if self.indexed_callable_alias(scope_id, target).is_some() {
                     return true;
                 }
                 let Some(id) = self.callable_bindings.get(&(scope_id, target.to_string())) else {
