@@ -34,22 +34,49 @@ do
   fi
 done
 
-echo "Running ast-grep scan..."
 if ! command -v ast-grep >/dev/null 2>&1; then
   echo "Error: ast-grep is not installed. Install it (e.g. 'brew install ast-grep') and retry."
   exit 1
 fi
-ast-grep test --skip-snapshot-tests || exit 1
-ast-grep scan || exit 1
 
-echo "Running cargo fmt..."
-cargo fmt --all -- --check || exit 1
+root=$(git rev-parse --show-toplevel)
+oxfmt="$root/node_modules/.bin/oxfmt"
+oxlint="$root/node_modules/.bin/oxlint"
+if [ ! -x "$oxfmt" ] || [ ! -x "$oxlint" ]; then
+  echo "Error: oxfmt/oxlint not found under node_modules/.bin. Run 'pnpm install' and retry."
+  exit 1
+fi
 
-echo "Running cargo clippy..."
-cargo clippy --all-targets --all-features -- -D warnings || exit 1
+# cargo fmt and clippy share target/, so they stay sequential. Other checks
+# are independent and run in parallel. Call oxfmt/oxlint directly to skip
+# `pnpm run` lockfile + prepare overhead.
+
+fail=0
+
+echo "Running ast-grep..."
+(
+  ast-grep test --skip-snapshot-tests && ast-grep scan
+) </dev/null &
+pid_ast=$!
+
+echo "Running cargo fmt + clippy..."
+(
+  cargo fmt --all -- --check &&
+    cargo clippy --all-targets --all-features -- -D warnings
+) </dev/null &
+pid_rust=$!
 
 echo "Running oxfmt check..."
-pnpm run fmt:js:check || exit 1
+"$oxfmt" --check packages/ vitest.config.js </dev/null &
+pid_oxfmt=$!
 
 echo "Running oxlint..."
-pnpm run lint:js || exit 1
+"$oxlint" packages/ vitest.config.js </dev/null &
+pid_oxlint=$!
+
+wait "$pid_ast" || fail=1
+wait "$pid_rust" || fail=1
+wait "$pid_oxfmt" || fail=1
+wait "$pid_oxlint" || fail=1
+
+exit "$fail"
