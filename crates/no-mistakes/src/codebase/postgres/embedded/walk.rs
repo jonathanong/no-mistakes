@@ -123,16 +123,9 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
-        self.push_scope();
-        if let Some(oxc_ast::ast::ForStatementInit::VariableDeclaration(declaration)) =
-            &statement.init
-        {
-            for declarator in &declaration.declarations {
-                self.bind_param(&declarator.id);
-            }
-        }
+        resolve::enter_classic_for(statement, self);
         self.with_control_flow(|visitor| walk::walk_for_statement(visitor, statement));
-        self.pop_scope();
+        resolve::leave_classic_for(statement, self);
     }
 
     fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {

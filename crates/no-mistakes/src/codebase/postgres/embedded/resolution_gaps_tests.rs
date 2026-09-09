@@ -41,6 +41,13 @@ fn classic_for_const_initializer_does_not_reassign_the_helper_after_the_loop() {
 }
 
 #[test]
+fn classic_for_var_initializer_remains_visible_after_the_loop() {
+    let facts = extract("composed-chain-classic-for-var-init-is-visible-after.ts");
+    assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Dynamic);
+    assert_eq!(facts.calls[0].sql_text.as_deref(), Some("SELECT 1"));
+}
+
+#[test]
 fn function_declaration_named_sql_is_not_the_trusted_tag() {
     assert_dynamic("composed-chain-shadowed-function-declaration-sql.ts");
 }
@@ -48,6 +55,11 @@ fn function_declaration_named_sql_is_not_the_trusted_tag() {
 #[test]
 fn class_named_string_is_not_the_intrinsic_string_raw_tag() {
     assert_dynamic("composed-chain-shadowed-class-string.ts");
+}
+
+#[test]
+fn nested_class_named_string_is_not_the_intrinsic_string_raw_tag() {
+    assert_dynamic("composed-chain-shadowed-nested-class-string.ts");
 }
 
 #[test]
