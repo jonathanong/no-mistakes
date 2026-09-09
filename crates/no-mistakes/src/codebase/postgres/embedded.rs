@@ -7,6 +7,7 @@ use std::path::{Path, PathBuf};
 
 mod bindings;
 mod options;
+mod placeholders;
 mod tags;
 mod walk;
 
@@ -80,6 +81,10 @@ pub(super) fn first_call_argument<'a>(call: &'a CallExpression<'a>) -> Option<&'
 
 /// SQL text of a literal, tagged template, or template expression.
 pub fn sql_text(expr: &Expression<'_>) -> Option<String> {
+    unpublished_sql_text(expr).map(placeholders::publish_placeholders)
+}
+
+pub(super) fn unpublished_sql_text(expr: &Expression<'_>) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
         Expression::TemplateLiteral(template) => Some(template_sql_text(template, false)),
@@ -113,7 +118,7 @@ fn template_sql_text(template: &TemplateLiteral<'_>, use_raw: bool) -> String {
     let mut out = String::new();
     for (index, quasi) in template.quasis.iter().enumerate() {
         if index > 0 {
-            out.push_str(&format!("sql_placeholder_{index}"));
+            out.push_str(&placeholders::internal_placeholder(index));
         }
         out.push_str(quasi_text(quasi, use_raw));
     }
@@ -142,5 +147,7 @@ mod chain_tests;
 mod compose_classification_tests;
 #[cfg(test)]
 mod imported_sql_tag_tests;
+#[cfg(test)]
+mod resolution_gaps_tests;
 #[cfg(test)]
 mod tests;

@@ -179,7 +179,12 @@ pub(super) fn executor_call(
             EmbeddedSqlCall {
                 line,
                 callee,
-                sql_text: binding.as_ref().and_then(|binding| binding.sql.clone()),
+                sql_text: binding.as_ref().and_then(|binding| {
+                    binding
+                        .sql
+                        .clone()
+                        .map(super::super::placeholders::publish_placeholders)
+                }),
                 kind: binding
                     .as_ref()
                     .map(|binding| binding.kind)
@@ -192,7 +197,7 @@ pub(super) fn executor_call(
             EmbeddedSqlCall {
                 line,
                 callee,
-                sql_text: sql,
+                sql_text: sql.map(super::super::placeholders::publish_placeholders),
                 kind: if kind == EmbeddedSqlKind::ImmutableLocal {
                     EmbeddedSqlKind::Inline
                 } else {

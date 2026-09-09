@@ -1,5 +1,5 @@
+use super::super::super::placeholders::{count_placeholders, renumber_placeholders};
 use super::super::super::EmbeddedSqlKind;
-use super::chain::{count_placeholders, renumber_placeholders};
 use super::compose::static_fragment;
 use super::ScopeVisitor;
 use crate::codebase::ts_source::unwrap_ts_wrappers;

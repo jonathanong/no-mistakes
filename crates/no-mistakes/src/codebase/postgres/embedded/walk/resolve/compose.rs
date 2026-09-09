@@ -1,5 +1,6 @@
+use super::super::super::placeholders::{count_placeholders, renumber_placeholders};
 use super::super::super::tags::{interpolating_untrusted_tag, kind_for_const};
-use super::super::super::{sql_text, EmbeddedSqlKind};
+use super::super::super::{unpublished_sql_text, EmbeddedSqlKind};
 use super::super::ScopeVisitor;
 use super::{chain, functions};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
@@ -18,17 +19,17 @@ pub(super) fn classify_init(
         };
     }
     if untrusted_tag(expr, visitor) {
-        return (sql_text(expr), EmbeddedSqlKind::Dynamic);
+        return (unpublished_sql_text(expr), EmbeddedSqlKind::Dynamic);
     }
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => kind_for_const(literal.value.to_string(), is_const),
         Expression::TaggedTemplateExpression(_) => {
-            kind_for_const(sql_text(expr).unwrap_or_default(), is_const)
+            kind_for_const(unpublished_sql_text(expr).unwrap_or_default(), is_const)
         }
         Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
-            kind_for_const(sql_text(expr).unwrap_or_default(), is_const)
+            kind_for_const(unpublished_sql_text(expr).unwrap_or_default(), is_const)
         }
-        Expression::TemplateLiteral(_) => (sql_text(expr), EmbeddedSqlKind::Dynamic),
+        Expression::TemplateLiteral(_) => (unpublished_sql_text(expr), EmbeddedSqlKind::Dynamic),
         Expression::CallExpression(_) => match resolve_chain(expr, visitor) {
             Some(text) if is_const => (Some(text), EmbeddedSqlKind::Composed),
             Some(text) => (Some(text), EmbeddedSqlKind::Dynamic),
@@ -50,16 +51,18 @@ fn composed_sql(
     }
     let left = static_fragment(&binary.left, visitor)?;
     let right = static_fragment(&binary.right, visitor)?;
-    let right = chain::renumber_placeholders(&right, chain::count_placeholders(&left));
+    let right = renumber_placeholders(&right, count_placeholders(&left));
     Some((format!("{left}{right}"), EmbeddedSqlKind::Composed))
 }
 
 pub(super) fn static_fragment(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),
-        Expression::TemplateLiteral(template) if template.expressions.is_empty() => sql_text(expr),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            unpublished_sql_text(expr)
+        }
         Expression::TaggedTemplateExpression(_) if untrusted_tag(expr, visitor) => None,
-        Expression::TaggedTemplateExpression(_) => sql_text(expr),
+        Expression::TaggedTemplateExpression(_) => unpublished_sql_text(expr),
         Expression::BinaryExpression(_) => composed_sql(expr, visitor).map(|(text, _)| text),
         Expression::CallExpression(_) => resolve_chain(expr, visitor),
         _ => None,

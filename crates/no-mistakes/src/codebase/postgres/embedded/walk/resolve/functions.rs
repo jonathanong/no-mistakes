@@ -81,11 +81,15 @@ impl LocalFunctions {
 }
 
 fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
-    resolvable.params.items.iter().any(|param| {
-        let mut shadows = false;
-        super::for_each_bound_name(&param.pattern, &mut |bound| shadows |= bound == name);
-        shadows
-    })
+    let mut shadows = false;
+    let mut check = |bound: &str| shadows |= bound == name;
+    for param in &resolvable.params.items {
+        super::for_each_bound_name(&param.pattern, &mut check);
+    }
+    if let Some(rest) = &resolvable.params.rest {
+        super::for_each_bound_name(&rest.rest.argument, &mut check);
+    }
+    shadows
 }
 
 /// A function only inlines when its body is exactly one `return <expr>;` —
