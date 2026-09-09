@@ -15,6 +15,9 @@ retaining explicit allowlists.
 `forbiddenModules` is the only rule-local option. When it is empty, the rule
 uses its built-in defaults: `msw`, `nock`, and `sinon`. Shared rule
 `include`/`exclude` filters and the selected test project determine the files.
+The removed `forbiddenCalls` option is rejected: move mock-invocation bans such
+as `vi.mock` and `vi.spyOn` to a [`forbidden-calls`](forbidden-calls.md)
+application.
 
 ## Valid example
 
