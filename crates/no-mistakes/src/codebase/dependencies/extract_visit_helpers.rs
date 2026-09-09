@@ -75,26 +75,40 @@ impl ImportCollector {
         else {
             return;
         };
+        let scope_id = self.lexical_scope_ids[index];
         let Some(scope) = self.local_stack.get_mut(index) else {
             return;
         };
         scope.insert(name.to_string());
+        self.lexical_binding_names
+            .insert((scope_id, name.to_string()));
     }
 
     fn add_binding_names(&mut self, pattern: &BindingPattern<'_>) {
+        let Some(_) = self.local_stack.last() else {
+            return;
+        };
+        let scope_id = self.current_lexical_scope_id();
         let Some(scope) = self.local_stack.last_mut() else {
             return;
         };
         for name in binding_names(pattern) {
-            scope.insert(name);
+            scope.insert(name.clone());
+            self.lexical_binding_names.insert((scope_id, name));
         }
     }
 
     fn add_binding_name(&mut self, name: &str) {
+        let Some(_) = self.local_stack.last() else {
+            return;
+        };
+        let scope_id = self.current_lexical_scope_id();
         let Some(scope) = self.local_stack.last_mut() else {
             return;
         };
         scope.insert(name.to_string());
+        self.lexical_binding_names
+            .insert((scope_id, name.to_string()));
     }
 
     fn add_type_binding_name(&mut self, name: &str) {

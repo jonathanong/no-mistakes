@@ -17,12 +17,24 @@ struct CallableFileIndex {
         std::collections::HashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
     exported:
         std::collections::HashMap<String, crate::codebase::dependencies::extract::ExportedBinding>,
-    aliases: std::collections::HashMap<(usize, String), (String, Option<u32>)>,
+    aliases: std::collections::HashMap<(usize, String), IndexedAlias>,
+    binding_declared_at: std::collections::HashMap<(usize, String), u32>,
+    invocation_offsets: std::collections::HashMap<
+        crate::codebase::dependencies::extract::CallableId,
+        Vec<u32>,
+    >,
     /// Class bindings resolve to their internal class scope and exact parser
     /// identity. A display scope can repeat in sibling blocks.
     class_bindings: std::collections::HashMap<(usize, String), ClassBindingTarget>,
     lexical_scope_parents: std::collections::HashMap<usize, Option<usize>>,
     stars: Vec<String>,
+}
+
+#[derive(Clone)]
+struct IndexedAlias {
+    target: String,
+    declared_at: u32,
+    invalidated_at: Option<u32>,
 }
 
 #[derive(Clone)]
@@ -54,15 +66,18 @@ impl CallableFileIndex {
             .collect::<std::collections::HashMap<_, _>>();
         let members_by_class = index_class_members_by_id(&file.class_member_callable_ids);
         let local_bases = index_local_construct_bases(&file.function_calls);
+        let callable_bindings = file
+            .callable_bindings
+            .iter()
+            .map(|(scope, binding, id)| ((*scope, binding.clone()), *id))
+            .collect::<std::collections::HashMap<_, _>>();
+        let invocation_offsets =
+            invocation_offsets_from_bindings(&callable_bindings, &file.function_calls);
         Self {
             known_scopes: file.callable_scopes.iter().cloned().collect(),
             exported_scopes: file.exported_functions.iter().cloned().collect(),
             class_scopes: file.class_scopes.iter().cloned().collect(),
-            callable_bindings: file
-                .callable_bindings
-                .iter()
-                .map(|(scope, binding, id)| ((*scope, binding.clone()), *id))
-                .collect(),
+            callable_bindings,
             imported: file
                 .imported_bindings
                 .iter()
@@ -74,16 +89,9 @@ impl CallableFileIndex {
                 .iter()
                 .map(|binding| (binding.exported.clone(), binding.clone()))
                 .collect(),
-            aliases: file
-                .callable_aliases
-                .iter()
-                .map(|alias| {
-                    (
-                        (alias.binding_scope, alias.local.clone()),
-                        (alias.target.clone(), alias.invalidated_at),
-                    )
-                })
-                .collect(),
+            aliases: index_callable_aliases(&file.callable_aliases),
+            binding_declared_at: index_binding_declared_at(&file.callable_binding_declared_at),
+            invocation_offsets,
             class_bindings: file
                 .callable_bindings
                 .iter()
@@ -112,6 +120,7 @@ impl CallableFileIndex {
 
 include!("edge_calls/class_resolution.rs");
 include!("edge_calls/alias_resolution.rs");
+include!("edge_calls/alias_liveness.rs");
 include!("edge_calls/traversal_filter.rs");
 
 #[derive(Clone, Default)]

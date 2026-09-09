@@ -106,6 +106,7 @@ pub struct TsFileFacts {
         String,
         crate::codebase::dependencies::extract::CallableId,
     )>,
+    pub callable_binding_declared_at: Vec<(usize, String, u32)>,
     pub class_member_callable_ids: Vec<(
         crate::codebase::dependencies::extract::CallableId,
         String,

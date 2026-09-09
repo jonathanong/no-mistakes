@@ -1,5 +1,6 @@
 use super::*;
 
+mod alias_tdz;
 mod constructor_reachability;
 mod callable_identity;
 mod callback_and_getter_reachability;

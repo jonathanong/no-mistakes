@@ -166,7 +166,7 @@ fn walk_default_class_with_scope<'a>(collector: &mut ImportCollector, class: &Cl
     // Export resolution uses a synthetic default spelling for this class.
     collector.record_callable_binding_id("default", class_id);
     if scope != "default" {
-        collector.push_callable_alias("default".to_string(), scope.clone());
+        collector.push_callable_alias("default".to_string(), scope.clone(), class.span.start);
     }
     collector.callable_scope_ids.insert((class_id, scope.clone()));
     record_class_member_calls(collector, &scope, class_id, class);
