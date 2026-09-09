@@ -1,0 +1,9 @@
+rules:
+  - name: retired-forbidden-calls
+    rule: integration-test-no-mocks
+    scope: repository
+    include:
+      - src/integration/**
+    options:
+      forbiddenCalls:
+        - vi.mock

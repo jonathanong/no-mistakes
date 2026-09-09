@@ -1,0 +1,16 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - name: exclude-integration
+    rule: forbidden-calls
+    scope: repository
+    exclude:
+      - src/integration/**
+    options:
+      roots:
+        - vitest: true
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - global: setTimeout

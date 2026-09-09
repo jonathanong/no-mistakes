@@ -1,0 +1,17 @@
+tests:
+  vitest:
+    configs: missing.config.ts
+    projects:
+      custom:
+        include: [src/unit/timers.test.mts]
+rules:
+  - name: explicit-only
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - vitest: true
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - global: setTimeout

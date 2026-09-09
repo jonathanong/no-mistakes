@@ -1,0 +1,14 @@
+tests:
+  playwright:
+    configs: playwright.config.ts
+rules:
+  - name: exact-unknown-member
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - playwright: true
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - exact: page.waitForTimeout

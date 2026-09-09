@@ -19,10 +19,13 @@ roots. `exact` selectors match the source callee spelling even when the call
 cannot be resolved canonically, so `exact: page.waitForTimeout` still reports
 `page.waitForTimeout()`. `terminal` selectors match the last member of a
 resolved target and, for unresolved member calls, the last segment of that
-source spelling, so `terminal: waitForTimeout` reports a typed Playwright
-callback parameter's `page.waitForTimeout()`. Other unresolved, shadowed,
-computed, or dynamic calls are not reported unless the application sets
-`unknownCalls: finding`.
+source spelling. Identifier receivers (`page.waitForTimeout()`), renamed
+receivers (`browser.waitForTimeout()`), `this.waitForTimeout()`, static
+computed members (`page["waitForTimeout"]()`), and chained receivers recorded
+as `<unknown>.waitForTimeout()` all match `terminal: waitForTimeout`. Dynamic
+computed access such as `page[method]()` stays ignored when
+`unknownCalls: ignore`. Other unresolved, shadowed, computed, or dynamic calls
+are not reported unless the application sets `unknownCalls: finding`.
 
 ## Options and roots
 
@@ -77,8 +80,9 @@ named imports, aliases, re-exports, and static namespace members such as
 resolved. Use `function` when a repository target must remain stable through a
 barrel or import alias. Use `exact` for a full source spelling that the graph
 records as unknown. Use `terminal` for the last member name, including
-unresolved receivers such as typed callback parameters. Other computed or
-dynamic calls are not guessed.
+unresolved receivers such as typed callback parameters, renamed bindings,
+`this`, static computed members, and chained receivers whose source spelling
+ends in that member. Dynamic computed access (`page[method]()`) is not guessed.
 
 ## Valid example
 
@@ -121,6 +125,11 @@ A `glob` root selects the same prepared file universe without a runner
 catalog, for example `glob: e2e/**/*.spec.ts` or a list of patterns. Use
 `playwright: true` when the repository already has Playwright `testDir` /
 `testMatch` selection paths.
+
+The consumer acceptance matrix in
+`test-cases/rules/forbidden-calls/consumer-matrix/` is the packaged-CLI
+contract for repeatable timer, mock-migration, glob, and discovery behavior.
+Release validation runs that fixture through `no-mistakes check --format json`.
 
 ## Unknown calls and suppression
 

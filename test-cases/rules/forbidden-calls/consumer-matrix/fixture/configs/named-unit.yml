@@ -1,0 +1,14 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+rules:
+  - name: named-unit-timers
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots:
+        - vitest: [unit]
+      traversal: file
+      unknownCalls: ignore
+      targets:
+        - global: setTimeout
