@@ -146,6 +146,12 @@ fn record_object_member_calls(
                 collector.insert_object_getter_member(object_id, name);
             }
         }
+        if property.kind == PropertyKind::Set {
+            if let Some(name) = crate::codebase::ts_source::static_property_key_name(&property.key)
+            {
+                collector.insert_object_setter_member(object_id, name);
+            }
+        }
         if matches!(
             property.value,
             Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_)

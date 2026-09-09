@@ -6,9 +6,9 @@ pub enum InvocationKind {
     /// Synthetic aggregate membership used by import reachability. This is
     /// not a JavaScript invocation and must never become a call edge.
     Membership,
-    /// Class getter read, such as `C.value` or the read half of `C.value++`.
+    /// Getter read, such as `C.value`, `api.value`, or the read half of `C.value++`.
     Get,
-    /// Class setter write, such as `C.value = next` or `C.value++`.
+    /// Setter write, such as `C.value = next`, `api.value = next`, or `C.value++`.
     Set,
 }
 
