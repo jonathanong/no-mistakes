@@ -488,4 +488,5 @@ fn source_suppression_filters_call_findings_without_hiding_configuration_errors(
 }
 
 mod explicit_vitest;
+mod file_bounded;
 mod parse_errors;

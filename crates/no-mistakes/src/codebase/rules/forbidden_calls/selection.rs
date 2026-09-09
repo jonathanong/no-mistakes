@@ -7,8 +7,9 @@ use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{CallTraversal, DepGraph, NodeId, ResolvedCallSite};
 use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;
+use crate::fx::FxHashSet;
 use anyhow::Result;
-use std::collections::{BTreeMap, HashSet};
+use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 pub(crate) fn graph_plan(
@@ -75,9 +76,8 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
         || format!("application #{index}"),
         |name| format!("{name}, application #{index}"),
     );
-    let findings = graph
-        .resolved_call_sites()
-        .iter()
+    let findings = candidate_sites(graph, &roots, options)
+        .into_iter()
         .filter(|site| invocations.contains(&site.invocation))
         .filter(|site| path_filter.is_match(&site.file))
         .filter(|site| source_nodes.contains(&site_source_node(site)))
@@ -112,22 +112,50 @@ fn check_application(input: ApplicationCheck<'_>) -> Result<Vec<RuleFinding>> {
     });
     Ok(findings)
 }
+fn candidate_sites<'a>(
+    graph: &'a DepGraph,
+    roots: &[NodeId],
+    options: &Options,
+) -> Vec<&'a ResolvedCallSite> {
+    if matches!(options.traversal, Traversal::File) {
+        root_files(roots)
+            .into_iter()
+            .flat_map(|file| graph.call_sites_in_file(&file))
+            .collect()
+    } else {
+        graph.resolved_call_sites().iter().collect()
+    }
+}
+
+fn root_files(roots: &[NodeId]) -> Vec<PathBuf> {
+    let mut files = roots
+        .iter()
+        .filter_map(|node| node.as_file().map(Path::to_path_buf))
+        .collect::<Vec<_>>();
+    files.sort();
+    files.dedup();
+    files
+}
+
 fn reachable_source_nodes(
     graph: &DepGraph,
     roots: &[NodeId],
     options: &Options,
-) -> HashSet<NodeId> {
+) -> FxHashSet<NodeId> {
+    let mut nodes: FxHashSet<NodeId> = roots.iter().cloned().collect();
+    if matches!(options.traversal, Traversal::File) {
+        return nodes;
+    }
     let traversal = match options.traversal {
         Traversal::Direct => CallTraversal::Direct,
-        Traversal::File => CallTraversal::File,
         Traversal::Transitive => CallTraversal::Transitive,
+        Traversal::File => unreachable!("file traversal returns the expanded roots"),
     };
     let cap = if traversal == CallTraversal::Direct {
         1
     } else {
         options.max_depth.unwrap_or(usize::MAX)
     };
-    let mut nodes = roots.iter().cloned().collect::<HashSet<_>>();
     for trace in graph.call_traces(roots, traversal, options.max_depth) {
         if trace.nodes.len().saturating_sub(1) < cap {
             nodes.insert(trace.target);
