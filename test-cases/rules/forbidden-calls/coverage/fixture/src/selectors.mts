@@ -19,3 +19,7 @@ export function shadowed(setTimeout: () => void) {
 export function unknownCall(runner: Record<string, () => void>, name: string) {
   runner[name]();
 }
+
+export function timeoutCall(page: { waitForTimeout: (ms: number) => void }) {
+  page.waitForTimeout(1);
+}
