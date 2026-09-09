@@ -11,10 +11,15 @@ bindings, and they can flag a shadowed local with the same name.
 
 ```ts
 import { validateUrl as checkUrl } from "ssrf-guard/node";
+import * as ssrf from "ssrf-guard/node";
+
+const { validateUrl: fromNs } = ssrf;
 
 await checkUrl(url);
+await checkUrl?.(url);
 await checkUrl(url, {});
 await checkUrl(url, { ...opts });
+await fromNs(url);
 ```
 
 ## Allowed
@@ -23,8 +28,13 @@ await checkUrl(url, { ...opts });
 import { validateUrl as checkUrl } from "ssrf-guard/node";
 import * as ssrf from "ssrf-guard/node";
 
+const { validateUrl: fromNs } = ssrf;
+
 await checkUrl(url, { timeoutMs });
+await checkUrl?.(url, { timeoutMs });
 await ssrf.validateUrl(url, { signal });
+await ssrf?.validateUrl(url, { signal });
+await fromNs(url, { timeoutMs });
 await checkUrl(url, { timeoutMs: DNS_TIMEOUT_MS, ...rest });
 ```
 
@@ -39,12 +49,16 @@ await checkUrl(url, { timeoutMs: DNS_TIMEOUT_MS, ...rest });
   - optional `propertyMatch`: `"any"` (default) or `"all"`.
 
 Default imports match the local binding name, including
-`import { default as local }`. CommonJS provenance supports `const`, `let`,
+`import { default as local }`. Object destructure from a tracked namespace
+import or CommonJS namespace binding is followed when the property name is
+statically visible. CommonJS provenance supports `const`, `let`,
 and `var` bindings only when their binding has one initialization and no later
-writes. The rule does not follow `const alias = imported` or injected members
-such as `deps.validateUrl()`. Computed CommonJS members and destructuring keys
-must be string literals or expression-free template literals; numeric keys are
-not coerced into export names.
+writes. Parameter, catch, or function-name bindings that share a `var` name
+are treated as unstable. The rule does not follow `const alias = imported` or
+injected members such as `deps.validateUrl()`. Computed CommonJS members and
+destructuring keys must be string literals or expression-free template literals;
+numeric keys are not coerced into export names. Top-level script `var`
+bindings mutated through `globalThis` are unsupported.
 
 ## Fix
 
