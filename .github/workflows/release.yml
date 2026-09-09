@@ -303,6 +303,15 @@ jobs:
         timeout-minutes: 10
         run: cargo publish --dry-run --locked -p no-mistakes
 
+      # rust-cache's post step walks `target/package/**/tests/{target,trybuild}`.
+      # Those dirs are absent from the packaged crate, and Node's ENOENT
+      # (`Error: ENOENT: …, opendir '…'`) becomes a GitHub error annotation
+      # even though the Validate job succeeded.
+      - name: Drop cargo package verification tree
+        if: always()
+        timeout-minutes: 1
+        run: rm -rf target/package
+
       - name: Check npm packages
         timeout-minutes: 2
         run: |
