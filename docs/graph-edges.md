@@ -332,7 +332,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
   class, import, and deferred aliases, including `declared_at` (TDZ) and
   `invalidated_at`. Dotted aliases follow that same cycle-safe chain, so
-  `calls.run` through `invoke` still reaches `target`. Increment and decrement
+  `calls.run` through `invoke` still reaches `target`. Export resolution carries
+  the source binding's `CallableId` through local aliases, named re-exports, and
+  unambiguous `export *`, so duplicate display names cannot select the wrong
+  callable. Increment and decrement
   writes invalidate the same binding as assignment. Object-literal member aliases
   keep last-write for duplicate
   keys and drop earlier members after a later spread. Static setter updates

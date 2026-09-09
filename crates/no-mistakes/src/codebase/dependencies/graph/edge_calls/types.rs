@@ -25,6 +25,7 @@ pub enum ResolvedCallTarget {
         specifier: String,
         export_path: String,
         repository_target: Option<(std::path::PathBuf, String)>,
+        callable_id: Option<crate::codebase::dependencies::extract::CallableId>,
     },
     RepositoryFunction {
         file: std::path::PathBuf,
@@ -37,6 +38,7 @@ fn module_export_target(
     file: &CallableFileIndex,
     callee: &str,
     repository_target: Option<(std::path::PathBuf, String)>,
+    callable_id: Option<crate::codebase::dependencies::extract::CallableId>,
 ) -> Option<ResolvedCallTarget> {
     let (local, member) = callee
         .split_once('.')
@@ -57,5 +59,60 @@ fn module_export_target(
         specifier: binding.specifier.clone(),
         export_path,
         repository_target,
+        callable_id,
     })
+}
+
+fn graph_call_target_node(
+    interner: &crate::codebase::analysis_session::PathInterner,
+    facts: &dyn TsFactLookup,
+    target: &ResolvedCallTarget,
+    local_callable_id: Option<crate::codebase::dependencies::extract::CallableId>,
+) -> Option<NodeId> {
+    match target {
+        ResolvedCallTarget::RepositoryFunction { file, scope } => Some(callable_node_for_call(
+            interner,
+            facts,
+            file,
+            scope,
+            local_callable_id,
+        )),
+        ResolvedCallTarget::ModuleExport {
+            repository_target: Some((file, scope)),
+            callable_id,
+            ..
+        } => Some(callable_node_for_call(
+            interner,
+            facts,
+            file,
+            scope,
+            *callable_id,
+        )),
+        _ => None,
+    }
+}
+
+fn callable_node_for_call(
+    interner: &crate::codebase::analysis_session::PathInterner,
+    facts: &dyn TsFactLookup,
+    file: &std::path::Path,
+    scope: &str,
+    exact_id: Option<crate::codebase::dependencies::extract::CallableId>,
+) -> NodeId {
+    let id = exact_id.or_else(|| {
+        facts.get_ts_facts(file).and_then(|file_facts| {
+            // The resolved file and canonical target scope own this identity.
+            // Importer lexical scopes must not select a same-spelled declaration.
+            let mut ids = file_facts
+                .callable_scope_ids
+                .iter()
+                .filter_map(|(id, display)| (display == scope).then_some(*id));
+            let first = ids.next()?;
+            ids.next().is_none().then_some(first)
+        })
+    });
+    id.map_or_else(
+        || NodeId::symbol_in(interner, file, scope),
+        |id| NodeId::callable_in(interner, file, scope, id),
+    )
 }

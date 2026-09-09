@@ -44,7 +44,7 @@ fn resolve_imported_call_target(
         _ => return Some(ResolvedCallTarget::Unknown),
     };
     let direct_target = || {
-        module_export_target(file, callee, None).expect("callee came from an imported binding")
+        module_export_target(file, callee, None, None).expect("callee came from an imported binding")
     };
     let Some(target_path) = resolver.resolve(&binding.specifier, path) else {
         return Some(direct_target());
@@ -61,8 +61,8 @@ fn resolve_imported_call_target(
         indexes,
         &mut Vec::new(),
     ) {
-        ExportedCallableResolution::Callable(target_file, scope) => {
-            module_export_target(file, callee, Some((target_file, scope)))
+        ExportedCallableResolution::Callable(target_file, scope, callable_id) => {
+            module_export_target(file, callee, Some((target_file, scope)), callable_id)
                 .expect("callee came from an imported binding")
         }
         ExportedCallableResolution::ExternalModuleExport(specifier, export_path) => {
@@ -70,6 +70,7 @@ fn resolve_imported_call_target(
                 specifier,
                 export_path,
                 repository_target: None,
+                callable_id: None,
             }
         }
         ExportedCallableResolution::Absent | ExportedCallableResolution::Unknown => {

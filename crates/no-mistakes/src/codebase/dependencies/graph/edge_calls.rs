@@ -134,7 +134,11 @@ struct CallableResolutionIndexes {
 #[derive(Clone)]
 enum ExportedCallableResolution {
     Absent,
-    Callable(std::path::PathBuf, String),
+    Callable(
+        std::path::PathBuf,
+        String,
+        Option<crate::codebase::dependencies::extract::CallableId>,
+    ),
     ExternalModuleExport(String, String),
     Unknown,
 }

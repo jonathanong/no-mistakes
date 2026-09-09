@@ -202,8 +202,8 @@ impl DepGraph {
         );
         let resolution = self.callable_export_resolutions.get(&key)?;
         match resolution {
-            ExportedCallableResolution::Callable(target_file, target_scope) => self
-                .unique_callable_node(target_file, target_scope)
+            ExportedCallableResolution::Callable(target_file, target_scope, callable_id) => self
+                .unique_callable_node(target_file, target_scope, *callable_id)
                 .map(|target| vec![target]),
             ExportedCallableResolution::Absent => None,
             ExportedCallableResolution::ExternalModuleExport(_, _)
@@ -211,16 +211,30 @@ impl DepGraph {
         }
     }
 
-    fn unique_callable_node(&self, file: &std::path::Path, symbol: &str) -> Option<NodeId> {
-        let mut matches = self
+    fn unique_callable_node(
+        &self,
+        file: &std::path::Path,
+        symbol: &str,
+        callable_id: Option<crate::codebase::dependencies::extract::CallableId>,
+    ) -> Option<NodeId> {
+        let matches = self
             .callable_nodes_by_file
             .get(file)
             .into_iter()
             .flatten()
             .filter(|candidate| {
-                matches!(candidate, NodeId::Symbol { symbol: candidate_symbol, .. } if candidate_symbol.as_ref() == symbol)
+                matches!(
+                    candidate,
+                    NodeId::Symbol {
+                        symbol: candidate_symbol,
+                        callable_id: candidate_id,
+                        ..
+                    } if candidate_symbol.as_ref() == symbol
+                        && callable_id.is_none_or(|id| *candidate_id == Some(id))
+                )
             })
             .cloned();
+        let mut matches = matches;
         let node = matches.next()?;
         matches.next().is_none().then_some(node)
     }
