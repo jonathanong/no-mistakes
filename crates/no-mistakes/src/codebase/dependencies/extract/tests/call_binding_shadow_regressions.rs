@@ -225,6 +225,22 @@ fn static_getter_reads_are_callable_invocations() {
 }
 
 #[test]
+fn computed_class_keys_retain_class_symbol_ownership() {
+    let facts =
+        facts("import { alpha as key } from './source.mts'; export class Client { [key]() {} }");
+    let class_id = facts
+        .callable_scope_ids
+        .iter()
+        .find_map(|(id, scope)| (scope == "Client").then_some(*id))
+        .expect("class callable identity");
+    assert!(facts.symbol_references.iter().any(|reference| {
+        reference.caller.as_deref() == Some("Client")
+            && reference.caller_id == Some(class_id)
+            && reference.callee == "key"
+    }));
+}
+
+#[test]
 fn only_static_class_members_are_callable_through_the_class_binding() {
     let facts =
         facts("class Service { run() {} static reload() {} } Service.run(); Service.reload();");

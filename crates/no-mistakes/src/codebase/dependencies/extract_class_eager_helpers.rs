@@ -24,6 +24,12 @@ fn walk_class_with_scoped_methods<'a>(
     for element in &class.body.body {
         if let ClassElement::MethodDefinition(method) = element {
             let method_id = class_method_callable_id(class, method);
+            record_class_computed_key_symbol_reference(
+                collector,
+                class_name,
+                class_id,
+                &method.key,
+            );
             if let Some(name) =
                 crate::codebase::ts_source::static_property_key_name(&method.key)
             {
@@ -41,6 +47,12 @@ fn walk_class_with_scoped_methods<'a>(
             }
             walk_class_method_with_scope(collector, class_name, class_id, method_id, method);
         } else if let ClassElement::PropertyDefinition(property) = element {
+            record_class_computed_key_symbol_reference(
+                collector,
+                class_name,
+                class_id,
+                &property.key,
+            );
             if let Some((name, callable_id)) = static_callable_field(property) {
                 collector.record_class_member_callable_id(class_id, &name, callable_id);
                 walk_static_callable_field_with_scope(
@@ -61,6 +73,34 @@ fn walk_class_with_scoped_methods<'a>(
         }
     }
     collector.pop_lexical_scope(pushed_class_scope);
+}
+
+fn record_class_computed_key_symbol_reference(
+    collector: &mut ImportCollector,
+    class_name: &str,
+    class_id: CallableId,
+    key: &oxc_ast::ast::PropertyKey<'_>,
+) {
+    let Some(name) = key.as_expression().and_then(simple_callee_name) else {
+        return;
+    };
+    if collector.callee_shadows_import(&name) {
+        return;
+    }
+    collector.symbol_references.push(FunctionCall {
+        caller: Some(class_name.to_string()),
+        caller_id: Some(class_id),
+        syntactic_caller: collector.current_syntactic_caller(),
+        callee_binding_scope: collector.callee_binding_scope(&name),
+        callee: name,
+        line: 0,
+        offset: 0,
+        is_callback: false,
+        invocation: InvocationKind::Call,
+        target_identity: CallTargetIdentity::Unknown,
+        static_arg: None,
+        static_cwd: None,
+    });
 }
 
 fn walk_instance_property_with_class_scope<'a>(
