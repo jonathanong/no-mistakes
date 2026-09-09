@@ -32,7 +32,7 @@ fn signature_target_symbols(
         let known_symbols: BTreeSet<String> = target_symbols.values().flatten().cloned().collect();
         for node in export_nodes {
             match node {
-                NodeId::Symbol { file, symbol } => {
+                NodeId::Symbol { file, symbol, .. } => {
                     let symbol_name = known_symbols
                         .iter()
                         .filter_map(|candidate| {

@@ -21,11 +21,13 @@ fn resource_edges_keep_dynamic_diagnostics_but_never_invent_untracked_targets() 
                 cwd: None,
                 line: 2,
                 function_scope: None,
+                function_scope_id: None,
             }],
             resource_diagnostics: vec![ResourceDiagnostic {
                 kind: ResourceDiagnosticKind::DynamicPath,
                 line: 9,
                 function_scope: None,
+                function_scope_id: None,
             }],
             ..TsFileFacts::default()
         },
@@ -117,6 +119,7 @@ fn module_relative_resource_paths_resolve_against_the_consumer_directory() {
                 cwd: None,
                 line: 5,
                 function_scope: None,
+                function_scope_id: None,
             }],
             ..TsFileFacts::default()
         },

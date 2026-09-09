@@ -12,6 +12,15 @@ process, asset, resource, and React edges can all be included. Use
 `--relationship resource` to restrict output to literal runtime filesystem
 reads, directory reads, and supported static glob matches.
 
+Use `--relationship call` to follow statically resolved lexical calls from the
+input file. The result includes local function calls, direct named imports,
+static namespace-member imports, or explicit named re-exports. `--depth 1`
+returns only direct calls,
+`--depth 0` returns no calls, and larger depths follow the resolved call graph.
+Dynamic computed members, dynamic callees, globals, and ambiguous `export *` targets
+are intentionally omitted rather than guessed. This relationship is opt-in;
+the default graph and `--relationship all` do not include it.
+
 Use `--relationship workflow` to traverse a tracked GitHub Actions workflow's
 jobs and zero-based steps, local reusable workflows/actions, static `run:`
 targets, and same-run artifact handoffs. Virtual IDs are

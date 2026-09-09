@@ -3,6 +3,11 @@ pub struct DepGraph {
     /// Base canonical graph built from source facts. Vitest setup edges stay
     /// compact until a graph traversal requests adjacency.
     edges: EdgeIndex<NodeId, EdgeKind>,
+    /// Per-file callable roots avoid rescanning the whole callable catalog for
+    /// every selected file/Vitest root.
+    callable_nodes_by_file: FxHashMap<PathBuf, Vec<NodeId>>,
+    callable_export_resolutions: FxHashMap<(PathBuf, String), ExportedCallableResolution>,
+    resolved_call_sites: Vec<ResolvedCallSite>,
     vitest_setup_projects: Vec<VitestSetupProject>,
     effective_edges: OnceLock<EdgeIndex<NodeId, EdgeKind>>,
     parse_errors: HashMap<PathBuf, String>,

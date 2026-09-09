@@ -1,6 +1,9 @@
 /// Selects which edge producers run while building a dependency graph.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub struct GraphBuildPlan {
+    /// Build opt-in lexical call edges. This is excluded from `all()` so
+    /// existing dependency output remains stable.
+    pub calls: bool,
     pub imports: bool,
     pub route_imports: bool,
     pub workspace: bool,
@@ -33,6 +36,7 @@ pub struct GraphBuildPlan {
 impl GraphBuildPlan {
     pub fn all() -> Self {
         Self {
+            calls: false,
             imports: true,
             // RouteImport is an alternate, deliberately conservative import
             // view. Legacy unfiltered traversal must opt in by name instead
@@ -88,7 +92,12 @@ impl GraphBuildPlan {
             return Self::all();
         };
         Self {
-            imports: allowed.contains(&EdgeKind::Import)
+            calls: allowed.contains(&EdgeKind::Call),
+            // Resolved call edges use the prepared import projection to find
+            // direct and re-exported callable targets. Traversal still emits
+            // only `Call` edges when that is the selected relationship.
+            imports: allowed.contains(&EdgeKind::Call)
+                || allowed.contains(&EdgeKind::Import)
                 || allowed.contains(&EdgeKind::TypeImport)
                 || allowed.contains(&EdgeKind::DynamicImport)
                 || allowed.contains(&EdgeKind::Require)
@@ -138,6 +147,7 @@ impl GraphBuildPlan {
     }
 
     pub(crate) fn include(&mut self, other: Self) {
+        self.calls |= other.calls;
         self.imports |= other.imports;
         self.route_imports |= other.route_imports;
         self.workspace |= other.workspace;
@@ -171,7 +181,7 @@ impl GraphBuildPlan {
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.route_imports || self.workspace || self.assets,
-            function_calls: self.imports || self.workspace || self.assets || self.symbols || self.resources,
+            function_calls: self.calls || self.imports || self.workspace || self.assets || self.symbols || self.resources,
             resources: self.resources,
             symbols: self.symbols || self.queues,
             react: self.react,

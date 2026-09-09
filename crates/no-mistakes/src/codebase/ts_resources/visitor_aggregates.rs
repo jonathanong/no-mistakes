@@ -4,7 +4,12 @@ use oxc_ast_visit::walk;
 
 impl<'a> ResourceVisitor<'a> {
     pub(super) fn visit_default_class(&mut self, scope: String, class: &Class<'a>) {
-        self.push_aggregate(scope);
+        self.push_aggregate(
+            scope,
+            Some(crate::codebase::dependencies::extract::CallableId(
+                class.span.start,
+            )),
+        );
         walk::walk_class(self, class);
         self.pop_aggregate();
     }
@@ -40,11 +45,14 @@ impl<'a> ResourceVisitor<'a> {
             Expression::ObjectExpression(_) if name.is_some() => {
                 walk::walk_property_key(self, &property.key);
                 if self.function_stack.is_empty() && !self.aggregate_stack.is_empty() {
-                    self.push_aggregate(name.expect("checked above"));
+                    self.push_aggregate(name.expect("checked above"), None);
                     walk::walk_expression(self, &property.value);
                     self.pop_aggregate();
                 } else {
-                    self.push_function(name);
+                    self.push_function(
+                        name,
+                        crate::codebase::dependencies::extract::CallableId(property.span.start),
+                    );
                     walk::walk_expression(self, &property.value);
                     self.pop_function();
                 }
@@ -74,7 +82,12 @@ impl<'a> ResourceVisitor<'a> {
                 && !self.aggregate_stack.is_empty() =>
             {
                 let scope = self.aggregate_stack.join("/");
-                self.push_function(Some(scope));
+                self.push_function(
+                    Some(scope),
+                    self.aggregate_owner_id().unwrap_or(
+                        crate::codebase::dependencies::extract::CallableId(property.span.start),
+                    ),
+                );
                 walk::walk_property_definition(self, property);
                 self.pop_function();
             }

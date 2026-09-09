@@ -8,6 +8,8 @@ struct EdgeMaps<'a> {
     reverse: &'a mut EdgeMap,
     resource_edge_details: &'a mut ResourceEdgeDetails,
     resource_diagnostics: &'a mut Vec<ResourceGraphDiagnostic>,
+    callable_export_resolutions: &'a mut FxHashMap<(PathBuf, String), ExportedCallableResolution>,
+    resolved_call_sites: &'a mut Vec<ResolvedCallSite>,
 }
 
 struct EdgeResolutionContext<'a> {
@@ -29,6 +31,8 @@ fn collect_and_merge_all_edges(
         reverse,
         resource_edge_details,
         resource_diagnostics,
+        callable_export_resolutions,
+        resolved_call_sites,
     } = maps;
     require_core_edge_facts(edge_inputs.plan, facts)?;
     crate::invocation::check_timeout()?;
@@ -41,6 +45,16 @@ fn collect_and_merge_all_edges(
         workspace,
     );
     merge_independent_core_edges(forward, reverse, core);
+    if edge_inputs.plan.calls {
+        let (call_edges, call_sites) = collect_call_edges_for_core(
+            edge_inputs,
+            facts.expect("call plan requires TS facts"),
+            resolution.resolver,
+            callable_export_resolutions,
+        );
+        merge_edges(forward, reverse, call_edges);
+        resolved_call_sites.extend(call_sites);
+    }
 
     collect_remaining_edges(
         edge_inputs,
@@ -52,6 +66,8 @@ fn collect_and_merge_all_edges(
             reverse,
             resource_edge_details,
             resource_diagnostics,
+            callable_export_resolutions,
+            resolved_call_sites,
         },
     )
 }
@@ -62,6 +78,9 @@ fn require_core_edge_facts(plan: GraphBuildPlan, facts: Option<&dyn TsFactLookup
     }
     if plan.symbols && facts.is_none() {
         anyhow::bail!("TS symbol facts are required when symbol edges are requested");
+    }
+    if plan.calls && facts.is_none() {
+        anyhow::bail!("TS call facts are required when call edges are requested");
     }
     Ok(())
 }

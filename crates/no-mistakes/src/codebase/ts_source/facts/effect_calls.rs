@@ -1,66 +1,102 @@
 use super::EffectCallFact;
-use crate::codebase::ts_source::byte_offset_to_line;
-use oxc_ast::ast::{Expression, VariableDeclarator};
-use std::collections::HashMap;
+use crate::codebase::dependencies::extract::{FunctionCall, InvocationKind};
+use std::collections::{HashMap, HashSet};
 
-pub(super) type EffectNames = HashMap<String, Option<String>>;
+pub(crate) type EffectNames = HashMap<String, Option<String>>;
 
-pub(super) struct EffectSink<'a> {
-    pub source: &'a str,
-    pub names: &'a EffectNames,
-    pub caller: Option<&'a str>,
-    pub hits: &'a mut Vec<EffectCallFact>,
-}
-
-pub(super) fn record_effect(sink: EffectSink<'_>, callee: &Expression<'_>, byte_offset: u32) {
-    if let Some((name, category)) = match_callee(callee, sink.names) {
-        sink.hits.push(EffectCallFact {
-            line: byte_offset_to_line(sink.source, byte_offset as usize) as usize,
-            callee: name,
-            category,
-            caller: sink.caller.map(str::to_string),
+/// Projects configured effect occurrences from the canonical call collection.
+///
+/// Effects intentionally remain spelling-based: a configured terminal member
+/// name still matches `client.createSubscriber()`, and a shadowed binding is
+/// still reportable as an effect occurrence. Resolution-sensitive graph users
+/// must inspect `FunctionCall::target_identity` instead.
+pub(crate) fn collect_effect_calls(
+    calls: &[FunctionCall],
+    names: &EffectNames,
+) -> Vec<EffectCallFact> {
+    let canonical_by_offset = calls
+        .iter()
+        .enumerate()
+        .filter(|(_, call)| is_effect_invocation(call, names))
+        .fold(HashMap::new(), |mut canonical, (index, call)| {
+            canonical
+                .entry(effect_occurrence_key(call))
+                .and_modify(|current| {
+                    if prefers_ownership_record(call, &calls[*current]) {
+                        *current = index;
+                    }
+                })
+                .or_insert(index);
+            canonical
         });
+    let canonical_indices = canonical_by_offset
+        .values()
+        .copied()
+        .collect::<HashSet<_>>();
+    calls
+        .iter()
+        .enumerate()
+        .filter(|call| canonical_indices.contains(&call.0) && is_effect_invocation(call.1, names))
+        .filter_map(|(_, call)| {
+            let (callee, category) = effect_match(&call.callee, names)?;
+            Some(EffectCallFact {
+                line: call.line as usize,
+                callee: callee.to_string(),
+                category: category.clone(),
+                caller: call.syntactic_caller.clone(),
+            })
+        })
+        .collect()
+}
+
+fn effect_occurrence_key(call: &FunctionCall) -> (u32, &str, bool) {
+    (
+        call.offset,
+        &call.callee,
+        matches!(call.invocation, InvocationKind::Construct),
+    )
+}
+
+fn is_effect_invocation(call: &FunctionCall, names: &EffectNames) -> bool {
+    let is_source_invocation = matches!(
+        call.invocation,
+        InvocationKind::Call | InvocationKind::Construct
+    ) && !(call.is_callback
+        && matches!(call.invocation, InvocationKind::Construct));
+    is_source_invocation && effect_match(&call.callee, names).is_some()
+}
+
+fn prefers_ownership_record(candidate: &FunctionCall, current: &FunctionCall) -> bool {
+    match (candidate.caller.as_deref(), current.caller.as_deref()) {
+        // An exported initializer can be collected both at module scope and
+        // within its owning callable. Keep the callable-owned record.
+        (Some(_), None) => true,
+        (None, Some(_)) => false,
+        (Some(candidate), Some(current)) => {
+            // Nested traversal projections may emit the same AST occurrence
+            // under more than one callable scope. The shallowest scope is the
+            // canonical owner; retain input order when scopes are peers.
+            callable_scope_depth(candidate) < callable_scope_depth(current)
+        }
+        (None, None) => false,
     }
 }
 
-pub(super) fn declarator_function_name<'a>(declarator: &VariableDeclarator<'a>) -> Option<&'a str> {
-    let is_function = matches!(
-        declarator.init,
-        Some(Expression::ArrowFunctionExpression(_)) | Some(Expression::FunctionExpression(_))
-    );
-    if !is_function {
-        return None;
-    }
-    match &declarator.id {
-        oxc_ast::ast::BindingPattern::BindingIdentifier(id) => Some(id.name.as_str()),
-        _ => None,
-    }
+fn callable_scope_depth(scope: &str) -> usize {
+    scope.matches('/').count()
 }
 
-fn match_callee(callee: &Expression<'_>, names: &EffectNames) -> Option<(String, Option<String>)> {
-    for candidate in callee_candidates(callee) {
-        if let Some(category) = names.get(&candidate) {
-            return Some((candidate, category.clone()));
-        }
-    }
-    None
-}
-
-fn callee_candidates(expr: &Expression<'_>) -> Vec<String> {
-    match expr {
-        Expression::Identifier(ident) => vec![ident.name.to_string()],
-        Expression::ParenthesizedExpression(parenthesized) => {
-            callee_candidates(&parenthesized.expression)
-        }
-        Expression::StaticMemberExpression(member) => {
-            let property = member.property.name.to_string();
-            let mut candidates = Vec::new();
-            if let Expression::Identifier(object) = &member.object {
-                candidates.push(format!("{}.{}", object.name, property));
-            }
-            candidates.push(property);
-            candidates
-        }
-        _ => Vec::new(),
-    }
+fn effect_match<'a>(
+    callee: &'a str,
+    names: &'a EffectNames,
+) -> Option<(&'a str, &'a Option<String>)> {
+    names
+        .get_key_value(callee)
+        .map(|(name, category)| (name.as_str(), category))
+        .or_else(|| {
+            callee
+                .rsplit_once('.')
+                .and_then(|(_, terminal)| names.get_key_value(terminal))
+                .map(|(name, category)| (name.as_str(), category))
+        })
 }

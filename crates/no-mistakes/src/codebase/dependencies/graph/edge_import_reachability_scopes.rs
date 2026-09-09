@@ -23,6 +23,10 @@ fn known_function_scopes(
             .filter_map(|diagnostic| diagnostic.function_scope.clone()),
     );
     scopes.extend(facts.exported_functions.iter().cloned());
+    // Function declarations can be called before their body contributes an
+    // import, resource, or nested call fact. Their canonical callable catalog
+    // is the complete hoisted/local target set.
+    scopes.extend(facts.callable_scopes.iter().cloned());
     scopes.extend(
         facts
             .function_calls

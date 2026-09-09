@@ -30,6 +30,7 @@ fn non_workflow_relationship_edges(relationship: &RelationshipArg) -> &'static [
         return edges;
     }
     match relationship {
+        RelationshipArg::Call => &[EdgeKind::Call],
         RelationshipArg::Import => &[
                 EdgeKind::Import,
                 EdgeKind::TypeImport,

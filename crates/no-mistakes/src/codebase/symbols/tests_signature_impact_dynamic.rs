@@ -49,6 +49,10 @@ fn signature_impact_keeps_dynamic_import_file_callers() {
     assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "dynamic-import-alias-prefix-unused.mts" && entry.get("symbol").is_none()
     }));
+    assert!(!v["productionCallers"].as_array().unwrap().iter().any(|entry| {
+        entry["file"] == "shadowed-import-caller.mts"
+            && entry["symbol"] == "shadowedImportedCaller"
+    }));
     assert!(!v["suggestedTests"].as_array().unwrap().iter().any(|entry| {
         entry["file"] == "dynamic-import-unused.test.mts"
     }));

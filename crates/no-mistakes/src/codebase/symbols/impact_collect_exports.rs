@@ -18,7 +18,7 @@ fn export_paths(
     while let Some((node, current_symbol)) = frontier.pop() {
         if let Some(neighbors) = graph.dependents_of_node(&node) {
             for (neighbor, _) in neighbors {
-                let NodeId::Symbol { file, symbol } = neighbor else {
+                let NodeId::Symbol { file, symbol, .. } = neighbor else {
                     continue;
                 };
                 if seen.insert(neighbor.clone()) {

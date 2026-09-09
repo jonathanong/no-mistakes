@@ -1,5 +1,6 @@
 use super::bindings::Binding;
 use super::ResourceFacts;
+use crate::codebase::dependencies::extract::CallableId;
 use std::collections::HashMap;
 
 pub(super) struct ResourceVisitor<'a> {
@@ -9,6 +10,7 @@ pub(super) struct ResourceVisitor<'a> {
     /// treating a parameter, local, or reassignment as the imported API.
     pub(super) bindings: Vec<HashMap<String, Option<Binding>>>,
     pub(super) function_stack: Vec<String>,
+    pub(super) function_id_stack: Vec<CallableId>,
     /// Indexes in `bindings` that correspond to function scopes. `var` lives
     /// in the closest of these, whereas `let` and `const` live in the current
     /// lexical scope.
@@ -17,6 +19,10 @@ pub(super) struct ResourceVisitor<'a> {
     /// callable members without making eager property initializers look like
     /// deferred function bodies.
     pub(super) aggregate_stack: Vec<String>,
+    /// The callable identity that owns a class aggregate. Object aggregates
+    /// deliberately have no owner identity because their initializers are
+    /// evaluated eagerly rather than through a class callable wrapper.
+    pub(super) aggregate_id_stack: Vec<Option<CallableId>>,
     pub(super) anonymous_scopes: usize,
     pub(super) facts: ResourceFacts,
 }
@@ -27,8 +33,10 @@ impl Default for ResourceVisitor<'_> {
             source: "",
             bindings: vec![HashMap::new()],
             function_stack: Vec::new(),
+            function_id_stack: Vec::new(),
             function_binding_scopes: Vec::new(),
             aggregate_stack: Vec::new(),
+            aggregate_id_stack: Vec::new(),
             anonymous_scopes: 0,
             facts: ResourceFacts::default(),
         }

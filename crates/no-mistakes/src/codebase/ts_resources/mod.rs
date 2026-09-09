@@ -17,6 +17,7 @@ mod visitor_vars;
 mod visitor_visit;
 mod visitor_walk;
 
+use crate::codebase::dependencies::extract::CallableId;
 use oxc_ast::ast::Program;
 use visitor::ResourceVisitor;
 
@@ -49,6 +50,7 @@ pub struct ResourceCall {
     pub cwd: Option<ResourcePath>,
     pub line: usize,
     pub function_scope: Option<String>,
+    pub function_scope_id: Option<CallableId>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Ord, PartialOrd)]
@@ -63,6 +65,7 @@ pub struct ResourceDiagnostic {
     pub kind: ResourceDiagnosticKind,
     pub line: usize,
     pub function_scope: Option<String>,
+    pub function_scope_id: Option<CallableId>,
 }
 
 #[derive(Debug, Clone, Default)]

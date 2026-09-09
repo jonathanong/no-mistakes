@@ -1,7 +1,7 @@
 pub(crate) fn slash_node_name(node: &NodeId, root: &Path) -> String {
     match node {
         NodeId::File(p) => no_mistakes::codebase::ts_source::relative_slash_path(root, p),
-        NodeId::Symbol { file, symbol } => {
+        NodeId::Symbol { file, symbol, .. } => {
             let rel = no_mistakes::codebase::ts_source::relative_slash_path(root, file);
             format!("{}#{}", rel, symbol)
         }
@@ -212,6 +212,7 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::ElixirImport | EdgeKind::ElixirReference => "elixir",
         EdgeKind::DartImport | EdgeKind::DartReference => "dart",
         EdgeKind::TrpcCall | EdgeKind::TrpcProcedure => "trpc",
+        EdgeKind::Call => "call",
         EdgeKind::WorkflowJob => "workflow-job",
         EdgeKind::WorkflowStep => "workflow-step",
         EdgeKind::WorkflowNeeds => "workflow-needs",

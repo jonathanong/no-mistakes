@@ -13,8 +13,20 @@ pub(super) fn deps_entries(
     depth: Option<usize>,
     import_only: bool,
     roots: &[NodeId],
+    entrypoints: &[Entrypoint],
     ctx: &TraversalCtx<'_>,
 ) -> Result<Vec<graph::NodeEntry>> {
+    if has_call_relationship(ctx.allowed) {
+        let graph = graph::DepGraph::build_with_plan_and_files(
+            ctx.root,
+            ctx.tsconfig,
+            ctx.build_plan,
+            ctx.graph_files,
+        )?;
+        let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
+        let roots = roots_with_call_roots(roots, call_roots);
+        return Ok(graph.deps_of(&roots, depth, ctx.allowed));
+    }
     if import_only {
         Ok(graph::lazy_import_deps_of_with_files(
             roots,
@@ -44,7 +56,7 @@ pub(super) fn get_entries(
     ctx: &TraversalCtx<'_>,
 ) -> Result<Vec<graph::NodeEntry>> {
     match direction {
-        Direction::Deps => deps_entries(depth, import_only, roots, ctx),
+        Direction::Deps => deps_entries(depth, import_only, roots, entrypoints, ctx),
         Direction::Dependents => dependents_entries(entrypoints, roots, depth, ctx),
     }
 }
@@ -55,6 +67,17 @@ pub(super) fn dependents_entries(
     depth: Option<usize>,
     ctx: &TraversalCtx<'_>,
 ) -> Result<Vec<graph::NodeEntry>> {
+    if has_call_relationship(ctx.allowed) {
+        let graph = graph::DepGraph::build_with_plan_and_files(
+            ctx.root,
+            ctx.tsconfig,
+            ctx.build_plan,
+            ctx.graph_files,
+        )?;
+        let callable_roots = graph.expand_call_roots(&call_roots(entrypoints));
+        let roots = roots_with_call_roots(roots, callable_roots);
+        return Ok(graph.dependents_of(&roots, depth, ctx.allowed));
+    }
     let any_symbol = entrypoints.iter().any(|e| e.symbol.is_some());
     if ctx.symbols {
         let graph = graph::DepGraph::build_with_plan_and_files(
@@ -102,6 +125,28 @@ pub(super) fn dependents_entries(
         Ok(graph.dependents_of(roots, depth, ctx.allowed))
     }
 }
+
+pub(super) fn has_call_relationship(allowed: Option<&std::collections::HashSet<EdgeKind>>) -> bool {
+    allowed.is_some_and(|allowed| allowed.contains(&EdgeKind::Call))
+}
+
+pub(super) fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
+    entrypoints
+        .iter()
+        .filter_map(|entrypoint| {
+            let file = entrypoint.node.as_file()?.to_path_buf();
+            Some(match &entrypoint.symbol {
+                Some(symbol) => graph::CallRoot::Function {
+                    file,
+                    symbol: symbol.clone(),
+                },
+                None => graph::CallRoot::File(file),
+            })
+        })
+        .collect()
+}
+
+include!("traversal_mixed_relationships_tests.rs");
 
 fn build_dependents_graph(
     ctx: &TraversalCtx<'_>,

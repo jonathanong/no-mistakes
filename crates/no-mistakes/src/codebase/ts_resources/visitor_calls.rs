@@ -56,6 +56,7 @@ impl<'a> ResourceVisitor<'a> {
                 call.span.start as usize,
             ) as usize,
             function_scope: self.current_scope(),
+            function_scope_id: self.current_scope_id(),
         });
     }
 

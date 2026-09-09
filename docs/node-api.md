@@ -104,6 +104,15 @@ const {
 | `impacted-checks`                          | `impactedChecks(options)`                                                                                                                                                                                                                                                  |
 | `planning-impact` (npm package only)       | `writePlanningImpactArtifacts(options)`                                                                                                                                                                                                                                   |
 
+The `dependencies`, `dependents`, and `related` options accept
+`relationships: ["call"]` to select the opt-in lexical call edges. Calls are
+resolved only for local functions, direct named imports, static namespace-member
+imports such as `api.run()` from `import * as api`, and explicit named re-exports.
+`depth: 1` selects direct calls and `depth: 0` selects none;
+computed/dynamic callees, globals, and ambiguous re-exports are omitted rather
+than guessed. The default relationship set and `"all"` intentionally exclude
+call edges.
+
 `writePlanningImpactArtifacts(options)` is an integration helper for callers
 that need private, CLI-compatible planning files without spawning several
 commands. It runs one prepared `analyzeProject()` request, then writes

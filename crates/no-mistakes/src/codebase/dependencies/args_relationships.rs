@@ -9,6 +9,7 @@ pub enum Direction {
 #[clap(rename_all = "kebab-case")]
 #[serde(rename_all = "kebab-case")]
 pub enum RelationshipArg {
+    Call,
     Import,
     ImportStatic,
     ImportDynamic,
@@ -91,6 +92,7 @@ impl RelationshipArg {
 
     fn core_str(&self) -> &'static str {
         match self {
+            Self::Call => "call",
             Self::Import => "import",
             Self::ImportStatic => "import-static",
             Self::ImportDynamic => "import-dynamic",

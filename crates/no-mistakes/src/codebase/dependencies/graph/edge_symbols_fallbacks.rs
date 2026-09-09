@@ -19,7 +19,14 @@ fn fallback_imported_symbols<'a>(
         cached.dedup_by(|a, b| a.0 == b.0);
         return cached.into_iter().map(|(_, target)| target).collect();
     }
-    for call in calls.iter().chain(refs) {
+    for call in calls
+        .iter()
+        .filter(|call| {
+            call.target_identity
+                == crate::codebase::dependencies::extract::CallTargetIdentity::ModuleExport
+        })
+        .chain(refs)
+    {
         if call.caller.is_some() {
             continue;
         }
@@ -45,7 +52,14 @@ fn fallback_namespace_symbols(
     interner: &PathInterner,
 ) -> Vec<(NodeId, EdgeKind)> {
     let mut nodes = Vec::new();
-    for call in calls.iter().chain(refs) {
+    for call in calls
+        .iter()
+        .filter(|call| {
+            call.target_identity
+                == crate::codebase::dependencies::extract::CallTargetIdentity::ModuleExport
+        })
+        .chain(refs)
+    {
         if call.caller.is_some() {
             continue;
         }

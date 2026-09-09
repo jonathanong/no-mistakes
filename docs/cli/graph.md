@@ -22,7 +22,15 @@ and literal dynamic imports without function-reachability pruning, while
 excluding type-only imports and `require()`. This differs from `route`, which
 selects URL-route references, Playwright route tests, and Next.js layouts.
 It is explicit opt-in: omitted relationships and `--relationship all` retain
-the standard call-pruned graph and exclude `route-import`.
+the standard call-pruned graph and exclude `call` and `route-import`.
+
+Use `--relationship call` for the statically resolved lexical call graph. It
+follows local functions, direct named imports, static namespace-member imports
+such as `import * as api from "./api"; api.run()`, and explicit named re-exports;
+`--depth 1` is the direct-call boundary and `--depth 0` returns no related
+nodes. Computed members, dynamic callees, globals, and ambiguous re-exports
+remain unconnected because terminal-name matching would create unsound edges.
+The call relationship is opt-in and is never added by `all`.
 
 `workflow` adds canonical GitHub Actions edges: workflow file -> virtual job ->
 virtual step, `needs`, local `uses`, literal `run:` targets, and same-run

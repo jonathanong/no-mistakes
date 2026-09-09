@@ -10,16 +10,27 @@ impl<'a> ResourceVisitor<'a> {
         self.function_stack.last().cloned()
     }
 
+    pub(super) fn current_scope_id(
+        &self,
+    ) -> Option<crate::codebase::dependencies::extract::CallableId> {
+        self.function_id_stack.last().copied()
+    }
+
     pub(super) fn emit_diagnostic(&mut self, kind: ResourceDiagnosticKind, offset: u32) {
         self.facts.diagnostics.push(ResourceDiagnostic {
             kind,
             line: crate::codebase::ts_source::byte_offset_to_line(self.source, offset as usize)
                 as usize,
             function_scope: self.current_scope(),
+            function_scope_id: self.current_scope_id(),
         });
     }
 
-    pub(super) fn push_function(&mut self, name: Option<String>) {
+    pub(super) fn push_function(
+        &mut self,
+        name: Option<String>,
+        id: crate::codebase::dependencies::extract::CallableId,
+    ) {
         self.anonymous_scopes += usize::from(name.is_none());
         let name = name.unwrap_or_else(|| format!("<anonymous:{}>", self.anonymous_scopes));
         let scope = self
@@ -28,22 +39,30 @@ impl<'a> ResourceVisitor<'a> {
             .map(|parent| format!("{parent}/{name}"))
             .unwrap_or(name);
         self.function_stack.push(scope);
+        self.function_id_stack.push(id);
         self.bindings.push(Default::default());
         self.function_binding_scopes.push(self.bindings.len() - 1);
     }
 
     pub(super) fn pop_function(&mut self) {
         self.function_stack.pop();
+        self.function_id_stack.pop();
         self.bindings.pop();
         self.function_binding_scopes.pop();
     }
 
-    pub(super) fn push_aggregate(&mut self, name: String) {
+    pub(super) fn push_aggregate(
+        &mut self,
+        name: String,
+        id: Option<crate::codebase::dependencies::extract::CallableId>,
+    ) {
         self.aggregate_stack.push(name);
+        self.aggregate_id_stack.push(id);
     }
 
     pub(super) fn pop_aggregate(&mut self) {
         self.aggregate_stack.pop();
+        self.aggregate_id_stack.pop();
     }
 
     pub(super) fn aggregate_member_scope(&self, name: Option<String>) -> Option<String> {
@@ -53,6 +72,17 @@ impl<'a> ResourceVisitor<'a> {
         } else {
             Some(name)
         }
+    }
+
+    pub(super) fn aggregate_owner_id(
+        &self,
+    ) -> Option<crate::codebase::dependencies::extract::CallableId> {
+        self.aggregate_id_stack
+            .iter()
+            .rev()
+            .flatten()
+            .copied()
+            .next()
     }
 
     pub(super) fn push_lexical_scope(&mut self) {

@@ -29,3 +29,29 @@ fn matches_local_callee(callee: &str, local_names: &BTreeSet<String>) -> bool {
                 .is_some_and(|suffix| suffix.starts_with('.'))
     })
 }
+
+/// Legacy signature-impact callers answer resolved symbol usage, unlike call
+/// policy reports. A new retained unknown/shadowed call must not be attributed
+/// to a same-spelled import merely because its text happens to match.
+fn legacy_call_matches_local_target(
+    call: &crate::codebase::dependencies::extract::FunctionCall,
+    local_names: &BTreeSet<String>,
+    facts: &crate::codebase::ts_source::facts::TsFileFacts,
+) -> bool {
+    if !matches_local_callee(&call.callee, local_names) {
+        return false;
+    }
+    use crate::codebase::dependencies::extract::CallTargetIdentity;
+    match call.target_identity {
+        CallTargetIdentity::ModuleExport => true,
+        CallTargetIdentity::RepositoryFunction => !facts.imported_bindings.iter().any(|binding| {
+            call.callee == binding.local
+                || call
+                    .callee
+                    .strip_prefix(&binding.local)
+                    .is_some_and(|suffix| suffix.starts_with('.'))
+        }),
+        CallTargetIdentity::Unknown => false,
+        CallTargetIdentity::Global => false,
+    }
+}

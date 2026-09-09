@@ -67,7 +67,10 @@ fn resource_reachability_keeps_exported_member_scopes_and_resolves_top_level_dot
             .function_calls
             .iter()
             .any(|call| call.caller.is_none() && call.callee == "api.load"));
-        assert!(reachable.contains("api/load"));
+        assert!(file_facts
+            .callable_scope_ids
+            .iter()
+            .any(|(id, scope)| scope == "api/load" && reachable.contains(id)));
         for scope in ["api/load", "Service/load"] {
             let call = file_facts
                 .resource_calls

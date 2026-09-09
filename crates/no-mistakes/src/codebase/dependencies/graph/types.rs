@@ -14,6 +14,7 @@ pub enum NodeId {
     Symbol {
         file: FileNode,
         symbol: InternedStr,
+        callable_id: Option<crate::codebase::dependencies::extract::CallableId>,
     },
     Module(InternedStr),
     QueueJob {
@@ -65,7 +66,7 @@ impl NodeId {
                 let rel = p.strip_prefix(root).unwrap_or(p);
                 rel.display().to_string()
             }
-            NodeId::Symbol { file, symbol } => {
+            NodeId::Symbol { file, symbol, .. } => {
                 let rel = file.strip_prefix(root).unwrap_or(file);
                 format!("{}#{symbol}", rel.display())
             }
@@ -145,7 +146,7 @@ pub struct ResourceGraphDiagnostic {
 type ParsedImports<'a> = Vec<(
     &'a PathBuf,
     &'a crate::codebase::ts_source::facts::TsFileFacts,
-    HashSet<String>,
+    HashSet<crate::codebase::dependencies::extract::CallableId>,
 )>;
 
 #[cfg(test)]

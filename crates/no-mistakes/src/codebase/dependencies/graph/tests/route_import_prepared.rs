@@ -134,6 +134,7 @@ fn route_import_resolution_tolerates_missing_source_directories() {
                 kind: ImportKind::Static,
                 line: 1,
                 function_scope: None,
+                function_scope_id: None,
                 side_effect_only: true,
                 re_export: false,
                 runtime_reachable: false,

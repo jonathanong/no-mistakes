@@ -41,7 +41,7 @@ pub fn write_paths(entries: &[NodeEntry], root_dir: &Path, w: &mut dyn Write) ->
                 let rel = p.strip_prefix(root_dir).unwrap_or(p);
                 writeln!(w, "{}", rel.display())?;
             }
-            NodeId::Symbol { file, symbol } => {
+            NodeId::Symbol { file, symbol, .. } => {
                 let rel = file.strip_prefix(root_dir).unwrap_or(file);
                 writeln!(w, "{}#{}", rel.display(), symbol)?;
             }

@@ -124,7 +124,7 @@ fn build_output(roots: &[String], entries: &[NodeEntry], root_dir: &Path) -> Out
                             via,
                         })
                     }
-                    NodeId::Symbol { file, symbol } => {
+                    NodeId::Symbol { file, symbol, .. } => {
                         let rel = file.strip_prefix(root_dir).unwrap_or(file);
                         OutputNode::Symbol(OutputSymbol {
                             file: rel.to_string_lossy().into_owned(),

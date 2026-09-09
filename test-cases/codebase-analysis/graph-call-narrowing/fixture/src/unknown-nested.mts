@@ -1,5 +1,5 @@
 async function boot() {
-  runner[method]();
+  factory().invoke();
 }
 
 async function hidden() {

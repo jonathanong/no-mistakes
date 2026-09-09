@@ -70,7 +70,7 @@ fn visit_type_alias_declaration_with_scope_name<'a>(
     name: String,
     suppress_imports: bool,
 ) {
-    collector.push_function_scope(Some(name));
+    collector.push_function_scope(Some(name), CallableId(declaration.span.start));
     collector.add_type_parameter_names(declaration.type_parameters.as_deref());
     visit_type_parameter_constraints(collector, declaration.type_parameters.as_deref());
     let saved_suppress_imports = collector.suppress_imports;
@@ -107,7 +107,7 @@ fn visit_interface_declaration_with_scope_name<'a>(
     name: String,
     suppress_imports: bool,
 ) {
-    collector.push_function_scope(Some(name));
+    collector.push_function_scope(Some(name), CallableId(declaration.span.start));
     collector.add_type_parameter_names(declaration.type_parameters.as_deref());
     visit_type_parameter_constraints(collector, declaration.type_parameters.as_deref());
     let saved_suppress_imports = collector.suppress_imports;

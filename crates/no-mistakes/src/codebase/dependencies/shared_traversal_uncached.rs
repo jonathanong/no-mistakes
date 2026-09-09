@@ -63,10 +63,22 @@ fn collect_uncached_entries(
             );
             entries
         }
+        Direction::Deps if has_call_relationship(allowed) => {
+            let graph = shared.graph_shared()?;
+            let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
+            let roots = roots_with_call_roots(roots, call_roots);
+            graph.deps_of(&roots, args.depth, allowed)
+        }
         Direction::Deps if shared.build_plan.symbols && !args.include_symbols => shared
             .request_graph_without_symbols_shared(allowed)?
             .deps_of(roots, args.depth, allowed),
         Direction::Deps => shared.graph_shared()?.deps_of(roots, args.depth, allowed),
+        Direction::Dependents if has_call_relationship(allowed) => {
+            let graph = shared.graph_shared()?;
+            let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
+            let roots = roots_with_call_roots(roots, call_roots);
+            graph.dependents_of(&roots, args.depth, allowed)
+        }
         Direction::Dependents if args.include_symbols => {
             let graph = shared.graph_shared()?;
             let roots = roots_with_existing_queue_jobs(
@@ -108,4 +120,35 @@ fn collect_uncached_entries(
             .dependents_of(roots, args.depth, allowed),
     };
     Ok(entries)
+}
+
+fn has_call_relationship(allowed: Option<&std::collections::HashSet<EdgeKind>>) -> bool {
+    allowed.is_some_and(|allowed| allowed.contains(&EdgeKind::Call))
+}
+
+fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
+    entrypoints
+        .iter()
+        .filter_map(|entrypoint| {
+            let file = entrypoint.node.as_file()?.to_path_buf();
+            Some(match &entrypoint.symbol {
+                Some(symbol) => graph::CallRoot::Function {
+                    file,
+                    symbol: symbol.clone(),
+                },
+                None => graph::CallRoot::File(file),
+            })
+        })
+        .collect()
+}
+
+/// Mixed relationship traversals retain the original file roots for file-level
+/// edges and the expanded callable roots for call edges.
+fn roots_with_call_roots(roots: &[NodeId], call_roots: Vec<NodeId>) -> Vec<NodeId> {
+    let mut combined = Vec::with_capacity(roots.len() + call_roots.len());
+    combined.extend_from_slice(roots);
+    combined.extend(call_roots);
+    combined.sort();
+    combined.dedup();
+    combined
 }

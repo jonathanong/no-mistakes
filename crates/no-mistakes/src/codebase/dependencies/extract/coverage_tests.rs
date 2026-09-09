@@ -151,11 +151,11 @@ fn collector_defensive_scope_helpers_are_noops_without_active_scope() {
     let mut collector = ImportCollector::default();
 
     collector.add_type_parameter_names(Some(type_params));
-    collector.add_function_binding_names(binding);
+    collector.add_var_binding_names(binding);
     collector.add_binding_names(binding);
     collector.add_binding_name("value");
     collector.known_function_scopes.insert("known".to_string());
 
-    assert!(collector.has_local_function_scope("known"));
+    assert!(!collector.has_local_function_scope("known"));
     assert_eq!(binding_names(binding), vec!["value"]);
 }

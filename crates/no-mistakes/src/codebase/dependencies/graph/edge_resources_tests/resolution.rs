@@ -37,6 +37,7 @@ fn resource_edges_resolve_exact_directory_and_glob_with_sorted_provenance() {
             cwd: None,
             line: 7,
             function_scope: None,
+            function_scope_id: None,
         },
         ResourceCall {
             kind: ResourceCallKind::ReadDirectorySync,
@@ -47,6 +48,7 @@ fn resource_edges_resolve_exact_directory_and_glob_with_sorted_provenance() {
             cwd: None,
             line: 3,
             function_scope: None,
+            function_scope_id: None,
         },
         ResourceCall {
             kind: ResourceCallKind::ReadFile,
@@ -57,6 +59,7 @@ fn resource_edges_resolve_exact_directory_and_glob_with_sorted_provenance() {
             cwd: None,
             line: 1,
             function_scope: None,
+            function_scope_id: None,
         },
     ];
     let facts = TsFactMap::from([(
@@ -126,6 +129,7 @@ fn resource_edges_exclude_untracked_candidates_and_unreachable_scopes() {
                 line: 4,
                 // No static call reaches this private helper.
                 function_scope: Some("neverCalled".to_string()),
+                function_scope_id: Some(crate::codebase::dependencies::extract::CallableId(1)),
             }],
             ..TsFileFacts::default()
         },
@@ -159,6 +163,7 @@ fn resource_edges_resolve_absolute_glob_patterns_inside_the_root() {
                 cwd: None,
                 line: 1,
                 function_scope: None,
+                function_scope_id: None,
             }],
             ..TsFileFacts::default()
         },
