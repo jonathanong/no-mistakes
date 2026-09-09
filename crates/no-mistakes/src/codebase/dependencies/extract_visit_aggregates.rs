@@ -157,11 +157,7 @@ fn record_object_member_calls(
         if property.kind == PropertyKind::Get {
             if let Some(name) = crate::codebase::ts_source::static_property_key_name(&property.key)
             {
-                owner_name_insert(
-                    &mut collector.object_getter_member_ids,
-                    object_id,
-                    name.to_string(),
-                );
+                collector.insert_object_getter_member(object_id, name);
             }
         }
         if matches!(

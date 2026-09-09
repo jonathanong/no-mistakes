@@ -233,7 +233,6 @@ include!("extract_entrypoints.rs");
 include!("extract_entrypoints_predeclare.rs");
 include!("extract_export_names.rs");
 include!("extract_collector.rs");
-include!("extract_collector_maps.rs");
 include!("extract_visit.rs");
 include!("extract_visit_modules.rs");
 include!("extract_visit_exports.rs");
@@ -285,7 +284,5 @@ mod coverage_tests;
 mod extra_tests;
 #[cfg(test)]
 mod import_metadata_tests;
-#[cfg(test)]
-mod interned_keys;
 #[cfg(test)]
 mod tests;

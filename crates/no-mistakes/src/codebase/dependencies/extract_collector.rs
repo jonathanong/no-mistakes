@@ -88,3 +88,5 @@ struct ImportCollector {
     runtime_reachable_base_depth: Option<usize>,
     later_exported_type_names: FxHashSet<String>,
 }
+
+include!("extract_collector_maps.rs");

@@ -164,4 +164,12 @@ impl ImportCollector {
     fn has_object_getter_member(&self, object_id: CallableId, member: &str) -> bool {
         owner_name_contains(&self.object_getter_member_ids, object_id, member)
     }
+
+    fn insert_object_getter_member(&mut self, object_id: CallableId, member: &str) {
+        owner_name_insert(
+            &mut self.object_getter_member_ids,
+            object_id,
+            member.to_string(),
+        );
+    }
 }
