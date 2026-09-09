@@ -58,20 +58,7 @@ impl ImportCollector {
                     });
             }
             if let Expression::ObjectExpression(object) = init {
-                for property in &object.properties {
-                    let ObjectPropertyKind::ObjectProperty(property) = property else {
-                        continue;
-                    };
-                    let Some(member) =
-                        crate::codebase::ts_source::static_property_key_name(&property.key)
-                    else {
-                        continue;
-                    };
-                    let Some(target) = self.callable_alias_target(&property.value) else {
-                        continue;
-                    };
-                    self.push_callable_alias(format!("{local}.{member}"), target, declared_at);
-                }
+                self.record_object_member_callable_aliases(local, object, declared_at);
             }
             return;
         }

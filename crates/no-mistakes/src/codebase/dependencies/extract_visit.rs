@@ -111,6 +111,10 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_assignment_expression_with_calls(self, assignment);
     }
 
+    fn visit_update_expression(&mut self, update: &oxc_ast::ast::UpdateExpression<'a>) {
+        visit_update_expression_with_calls(self, update);
+    }
+
     fn visit_block_statement(&mut self, block: &BlockStatement<'a>) {
         visit_block_statement_with_scope(self, block);
     }

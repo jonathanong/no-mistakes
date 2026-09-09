@@ -331,7 +331,11 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   aliases and callable bindings are indexed by lexical `(binding scope, local
   name)`, and cycle-safe `resolve_alias` is the contract for plain, dotted,
   class, import, and deferred aliases, including `declared_at` (TDZ) and
-  `invalidated_at`. Class members stay on a separate per-class identity index.
+  `invalidated_at`. Increment and decrement writes invalidate the same binding
+  as assignment. Object-literal member aliases keep last-write for duplicate
+  keys and drop earlier members after a later spread. Static setter updates
+  such as `C.value++` record a setter invocation instead of invalidating the
+  accessor. Class members stay on a separate per-class identity index.
 - `route-import` deliberately does not apply that function-reachability pruning.
   It remains literal-only, so computed dynamic imports still require an `rg`
   fallback.

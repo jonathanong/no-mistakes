@@ -124,4 +124,32 @@ impl ImportCollector {
             CallTargetIdentity::Unknown
         }
     }
+
+    fn record_object_member_callable_aliases(
+        &mut self,
+        local: &str,
+        object: &ObjectExpression<'_>,
+        declared_at: u32,
+    ) {
+        let mut members = Vec::new();
+        for property in &object.properties {
+            match property {
+                ObjectPropertyKind::SpreadProperty(_) => members.clear(),
+                ObjectPropertyKind::ObjectProperty(property) => {
+                    let Some(member) =
+                        crate::codebase::ts_source::static_property_key_name(&property.key)
+                    else {
+                        continue;
+                    };
+                    members.retain(|(existing, _)| existing != member);
+                    if let Some(target) = self.callable_alias_target(&property.value) {
+                        members.push((member.to_string(), target));
+                    }
+                }
+            }
+        }
+        for (member, target) in members {
+            self.push_callable_alias(format!("{local}.{member}"), target, declared_at);
+        }
+    }
 }
