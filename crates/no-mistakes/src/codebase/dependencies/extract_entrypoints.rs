@@ -44,6 +44,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         .extend(later_named_type_exports(program, &local_type_names));
     collector.visit_program(program);
     collector.materialize_aggregate_aliases();
+    collector.materialize_deferred_simple_aliases();
 
     let reassigned_callable_ids = collector
         .reassigned_callable_binding_ids
@@ -98,6 +99,12 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         .map(|((scope, name), id)| (scope, name, id))
         .collect();
     callable_bindings.sort();
+    let mut callable_binding_declared_at: Vec<_> = collector
+        .callable_binding_declared_at
+        .into_iter()
+        .map(|((scope, name), offset)| (scope, name, offset))
+        .collect();
+    callable_binding_declared_at.sort();
     let mut class_member_callable_ids: Vec<_> =
         collector.class_member_callable_ids.into_iter().collect();
     class_member_callable_ids.sort();
@@ -133,6 +140,7 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         known_function_scopes,
         callable_scope_ids,
         callable_bindings,
+        callable_binding_declared_at,
         class_member_callable_ids,
         lexical_scope_parents,
         callable_scopes,

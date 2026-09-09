@@ -9,6 +9,12 @@ fn reachable_function_scopes(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
 ) -> HashSet<crate::codebase::dependencies::extract::CallableId> {
     let known_scopes = known_function_scopes(facts);
+    let bindings = facts
+        .callable_bindings
+        .iter()
+        .map(|(scope, name, id)| ((*scope, name.clone()), *id))
+        .collect();
+    let invocation_offsets = invocation_offsets_from_bindings(&bindings, &facts.function_calls);
     let mut by_caller: HashMap<Option<crate::codebase::dependencies::extract::CallableId>, Vec<ReachabilityTransition>> = HashMap::new();
     for call in facts.function_calls.iter().filter(|call| {
         // Synthetic callbacks are ownership facts, not module execution
@@ -29,7 +35,7 @@ fn reachable_function_scopes(
                 == crate::codebase::dependencies::extract::InvocationKind::Callback
                 && (call.caller.is_some() || !call.callee.starts_with("<anonymous:")))
     }) {
-        let Some(callee) = reachable_callee_scope(facts, call, &known_scopes) else {
+        let Some(callee) = reachable_callee_scope(facts, call, &known_scopes, &invocation_offsets) else {
             continue;
         };
         by_caller
@@ -77,16 +83,14 @@ fn reachable_callee_scope(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     call: &FunctionCall,
     known_scopes: &HashSet<String>,
+    invocation_offsets: &HashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>>,
 ) -> Option<crate::codebase::dependencies::extract::CallableId> {
     use crate::codebase::dependencies::extract::CallTargetIdentity;
 
     // Canonical immutable aliases win over the raw syntactic classification:
     // a declaration prepass can prove the alias is locally bound before its
     // target has been visited, but only resolution proves which function runs.
-    if let Some(resolved) = resolve_callable_alias(
-        facts,
-        call,
-    ) {
+    if let Some(resolved) = resolve_callable_alias(facts, call, invocation_offsets) {
         let scope = resolve_callee_scope(call.caller.as_deref(), &resolved, known_scopes);
         if known_scopes.contains(&scope) {
             return callable_id_for_scope(facts, &scope, call.callee_binding_scope);
@@ -127,48 +131,6 @@ fn callable_id_for_scope(
         .filter_map(|(id, display)| (display == scope).then_some(*id));
     let first = ids.next()?;
     ids.next().is_none().then_some(first)
-}
-
-fn resolve_callable_alias(
-    facts: &crate::codebase::ts_source::facts::TsFileFacts,
-    call: &FunctionCall,
-) -> Option<String> {
-    let callee = &call.callee;
-    if callee.contains('.') {
-        return None;
-    }
-    let mut binding_scope = call.callee_binding_scope?;
-    let parents: HashMap<_, _> = facts.lexical_scope_parents.iter().copied().collect();
-    let mut target = callee.to_string();
-    let mut resolved_alias = false;
-    let mut visited = HashSet::new();
-    loop {
-        let mut scope = Some(binding_scope);
-        let alias = loop {
-            let Some(candidate_scope) = scope else { break None };
-            if let Some(alias) = facts.callable_aliases.iter().find(|alias| {
-                alias.binding_scope == candidate_scope
-                    && alias.local == target
-                    && alias.invalidated_at.is_none_or(|offset| call.offset < offset)
-            }) {
-                break Some(alias);
-            }
-            if !resolved_alias {
-                break None;
-            }
-            scope = parents.get(&candidate_scope).copied().flatten();
-        };
-        let Some(alias) = alias else {
-            return resolved_alias.then_some(target);
-        };
-        let key = (alias.binding_scope, alias.local.clone());
-        if !visited.insert(key) {
-            return None;
-        }
-        resolved_alias = true;
-        binding_scope = alias.binding_scope;
-        target = alias.target.clone();
-    }
 }
 
 fn resolve_callee_scope(

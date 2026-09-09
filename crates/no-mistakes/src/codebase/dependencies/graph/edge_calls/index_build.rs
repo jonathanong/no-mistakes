@@ -37,3 +37,30 @@ fn index_local_construct_bases(
     }
     bases
 }
+
+fn index_callable_aliases(
+    aliases: &[crate::codebase::dependencies::extract::CallableAlias],
+) -> std::collections::HashMap<(usize, String), IndexedAlias> {
+    aliases
+        .iter()
+        .map(|alias| {
+            (
+                (alias.binding_scope, alias.local.clone()),
+                IndexedAlias {
+                    target: alias.target.clone(),
+                    declared_at: alias.declared_at,
+                    invalidated_at: alias.invalidated_at,
+                },
+            )
+        })
+        .collect()
+}
+
+fn index_binding_declared_at(
+    offsets: &[(usize, String, u32)],
+) -> std::collections::HashMap<(usize, String), u32> {
+    offsets
+        .iter()
+        .map(|(scope, name, offset)| ((*scope, name.clone()), *offset))
+        .collect()
+}

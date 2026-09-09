@@ -6,6 +6,7 @@ impl ImportCollector {
                 lexical_scope_depth,
                 local,
                 target,
+                declared_at,
                 owner,
                 owner_id,
             } = candidate;
@@ -66,6 +67,7 @@ impl ImportCollector {
                         local: local_member,
                         target: target_member,
                         binding_scope: alias_scope,
+                        declared_at,
                         invalidated_at: None,
                     },
                     lexical_scope_depth,

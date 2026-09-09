@@ -35,6 +35,7 @@ fn collect_call_edges_for_core(
                             call.callee_binding_scope,
                             &call.callee,
                             call.offset,
+                            call.caller_id,
                         )
                         .or_else(|| {
                             (call.target_identity

@@ -168,6 +168,9 @@ pub struct CallableAlias {
     pub target: String,
     /// The lexical binding identity of `local`.
     pub binding_scope: usize,
+    /// Byte offset of the alias declaration. Calls in the same lexical frame
+    /// before this position are in the temporal dead zone and must not resolve.
+    pub declared_at: u32,
     /// Byte offset where an assignment invalidates this otherwise immutable
     /// alias. Calls before that source position still have the original
     /// target; later calls must not resolve through it.
@@ -245,6 +248,7 @@ include!("extract_class_callable_helpers.rs");
 include!("extract_visit_object_references.rs");
 include!("extract_collector_aliases.rs");
 include!("extract_collector_aggregate_aliases.rs");
+include!("extract_collector_deferred_aliases.rs");
 include!("extract_visit_helpers.rs");
 include!("extract_visit_variables.rs");
 include!("extract_control_flow_scopes.rs");

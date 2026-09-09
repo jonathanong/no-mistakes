@@ -512,6 +512,8 @@ mod call_binding_regressions;
 mod call_binding_shadow_regressions;
 #[path = "tests/callable_alias_regressions.rs"]
 mod callable_alias_regressions;
+#[path = "tests/callable_alias_tdz.rs"]
+mod callable_alias_tdz;
 #[path = "tests/class_and_overload_regressions.rs"]
 mod class_and_overload_regressions;
 #[path = "tests/static_block_regressions.rs"]

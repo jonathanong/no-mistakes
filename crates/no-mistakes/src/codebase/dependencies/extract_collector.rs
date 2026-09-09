@@ -3,6 +3,7 @@ struct AggregateAliasCandidate {
     lexical_scope_depth: usize,
     local: String,
     target: String,
+    declared_at: u32,
     owner: Option<String>,
     owner_id: Option<CallableId>,
 }
@@ -30,6 +31,11 @@ struct ImportCollector {
     /// `const facade = api` candidates are expanded after traversal, once the
     /// source aggregate's members have been collected.
     aggregate_alias_candidates: Vec<AggregateAliasCandidate>,
+    /// `const inner = later` candidates whose target is not yet proven callable
+    /// during the walk. Materialized after bindings exist so a nested closure
+    /// can alias a later direct function/arrow in the enclosing scope.
+    deferred_simple_aliases: Vec<AggregateAliasCandidate>,
+    callable_binding_declared_at: HashMap<(usize, String), u32>,
     static_getter_member_ids: HashSet<(CallableId, String)>,
     object_getter_member_ids: HashSet<(CallableId, String)>,
     static_setter_member_ids: HashSet<(CallableId, String)>,

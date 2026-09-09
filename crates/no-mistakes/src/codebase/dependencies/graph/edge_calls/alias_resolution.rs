@@ -40,7 +40,9 @@ impl CallableFileIndex {
         binding_scope: Option<usize>,
         callee: &str,
         offset: u32,
+        caller_id: Option<crate::codebase::dependencies::extract::CallableId>,
     ) -> Option<ResolvedLocalCallee> {
+        let call_binding_scope = binding_scope;
         let mut binding_scope = binding_scope?;
         let mut visited = std::collections::HashSet::new();
         if callee.contains('.') {
@@ -52,11 +54,17 @@ impl CallableFileIndex {
                     let Some(candidate_scope) = scope else {
                         break None;
                     };
-                    if let Some((alias, _)) = self
+                    if let Some(alias) = self
                         .aliases
                         .get(&(candidate_scope, target.clone()))
-                        .filter(|(_, invalidated_at)| {
-                            invalidated_at.is_none_or(|cutoff| offset < cutoff)
+                        .filter(|alias| {
+                            self.alias_live_at(
+                                alias,
+                                candidate_scope,
+                                offset,
+                                call_binding_scope,
+                                caller_id,
+                            )
                         })
                     {
                         break Some((candidate_scope, alias));
@@ -75,16 +83,27 @@ impl CallableFileIndex {
                             return Some(class_scope);
                         }
                     }
-                    return resolved_alias.then_some(ResolvedLocalCallee {
-                        callee: target,
-                        callable_id: None,
-                    });
+                    return resolved_alias
+                        .then(|| {
+                            self.target_binding_live(
+                                binding_scope,
+                                &target,
+                                offset,
+                                call_binding_scope,
+                                caller_id,
+                            )
+                            .then_some(ResolvedLocalCallee {
+                                callee: target,
+                                callable_id: None,
+                            })
+                        })
+                        .flatten();
                 };
                 if !visited.insert((alias_scope, target)) {
                     return None;
                 }
                 resolved_alias = true;
-                target = alias.clone();
+                target = alias.target.clone();
                 binding_scope = alias_scope;
             }
         }
@@ -99,11 +118,17 @@ impl CallableFileIndex {
                 let Some(candidate_scope) = scope else {
                     break None;
                 };
-                if let Some((alias, _)) = self
+                if let Some(alias) = self
                     .aliases
                     .get(&(candidate_scope, target.clone()))
-                    .filter(|(_, invalidated_at)| {
-                        invalidated_at.is_none_or(|cutoff| offset < cutoff)
+                    .filter(|alias| {
+                        self.alias_live_at(
+                            alias,
+                            candidate_scope,
+                            offset,
+                            call_binding_scope,
+                            caller_id,
+                        )
                     })
                 {
                     break Some((candidate_scope, alias));
@@ -123,7 +148,7 @@ impl CallableFileIndex {
                     return None;
                 }
                 resolved_alias = true;
-                target = alias.clone();
+                target = alias.target.clone();
                 let class_target =
                     member.map_or_else(|| target.clone(), |member| format!("{target}.{member}"));
                 if let Some(class_scope) =
@@ -145,6 +170,15 @@ impl CallableFileIndex {
                     )
                     .is_some()
                 {
+                    if !self.target_binding_live(
+                        alias_scope,
+                        target_binding,
+                        offset,
+                        call_binding_scope,
+                        caller_id,
+                    ) {
+                        return None;
+                    }
                     return Some(ResolvedLocalCallee {
                         callee: member
                             .map_or_else(|| target.clone(), |member| format!("{target}.{member}")),

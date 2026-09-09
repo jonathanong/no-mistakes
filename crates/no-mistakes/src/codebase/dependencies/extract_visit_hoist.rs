@@ -151,6 +151,8 @@ impl ImportCollector {
                     .insert((binding_scope, name.to_string()));
                 self.callable_bindings
                     .insert((binding_scope, name.to_string()), callable_id);
+                self.callable_binding_declared_at
+                    .insert((binding_scope, name.to_string()), declarator.span.start);
             }
         }
     }
