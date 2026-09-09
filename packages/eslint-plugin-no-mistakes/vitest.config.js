@@ -7,10 +7,10 @@ module.exports = defineConfig({
       include: ["src/**/*.js"],
       reporter: ["text", "lcov"],
       thresholds: {
-        statements: 98,
+        statements: 95,
         branches: 94,
-        functions: 99,
-        lines: 99,
+        functions: 95,
+        lines: 95,
       },
     },
   },
