@@ -136,6 +136,7 @@ impl CallableFileIndex {
 }
 
 include!("edge_calls/class_resolution.rs");
+include!("edge_calls/this_resolution.rs");
 include!("edge_calls/alias_resolution.rs");
 include!("edge_calls/alias_liveness.rs");
 include!("edge_calls/traversal_filter.rs");

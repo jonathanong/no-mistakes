@@ -17,6 +17,7 @@ mod object_spread_reachability;
 mod overloads;
 mod sequence_callees;
 mod static_class_members;
+mod this_member_reachability;
 
 #[test]
 fn call_edges_are_opt_in_and_follow_lexical_function_scopes() {

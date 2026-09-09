@@ -353,7 +353,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   Statically recognizable `fn.call(...)` and `fn.apply(...)` invocations
   normalize to `fn` when `fn` is a known local, imported, or aliased callable
   that does not own a `call`/`apply` member. Dynamic receivers such as
-  `factory().call()` and `this.call()` stay unresolved. A `var` object
+  `factory().call()` and `this.call()` stay unresolved.
+  Class methods that invoke a known instance or static member through `this.member()`
+  resolve to that member's callable; computed `this[name]()` and mixed
+  instance/static `this` dispatch stay unresolved. A `var` object
   aggregate declared in a nested block still binds in the hoisted function
   or module `var` scope, so `api.load()` after that block keeps `load`
   reachable. Static getter reads and setter writes keep distinct callable

@@ -524,3 +524,5 @@ mod class_and_overload_regressions;
 mod object_spread_regressions;
 #[path = "tests/static_block_regressions.rs"]
 mod static_block_regressions;
+#[path = "tests/this_member_regressions.rs"]
+mod this_member_regressions;

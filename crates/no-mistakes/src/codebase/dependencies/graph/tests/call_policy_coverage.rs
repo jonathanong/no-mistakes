@@ -478,6 +478,10 @@ fn callable_alias_resolution_is_indexed_once_per_file() {
         "import reachability must share resolve_alias with call edges",
     );
     assert!(
+        reachability.contains(".resolve_this_member("),
+        "import reachability must resolve this.member through the class index",
+    );
+    assert!(
         !reachability.contains("callable_aliases.iter()"),
         "import reachability must not linear-scan callable_aliases",
     );
@@ -496,6 +500,7 @@ fn callable_file_index_uses_fx_hash_for_interned_keys() {
         include_str!("../edge_calls/collection.rs"),
         include_str!("../edge_calls/local_resolution.rs"),
         include_str!("../edge_calls/class_resolution.rs"),
+        include_str!("../edge_calls/this_resolution.rs"),
         include_str!("../edge_calls/alias_resolution.rs"),
         include_str!("../edge_calls/export_resolution_population.rs"),
         include_str!("../edge_calls/roots.rs"),
