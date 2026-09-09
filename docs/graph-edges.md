@@ -344,8 +344,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   keys and drop earlier members after a later spread. Static setter updates
   such as `C.value++` record a setter invocation instead of invalidating the
   accessor. Class aliases expose only static members, including static getter
-  reads such as `const Alias = C; Alias.value`. Class members stay on a
-  separate per-class identity index.
+  reads such as `const Alias = C; Alias.value`. Named `export default class
+  Service` registers `Service` in the enclosing module binding scope before
+  the class body, so `new Service()` keeps the constructor reachable. Class
+  members stay on a separate per-class identity index.
 - `route-import` deliberately does not apply that function-reachability pruning.
   It remains literal-only, so computed dynamic imports still require an `rg`
   fallback.

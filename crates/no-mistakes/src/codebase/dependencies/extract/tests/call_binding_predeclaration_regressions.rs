@@ -51,6 +51,36 @@ fn named_default_function_predeclaration_records_its_callable_binding_id() {
 }
 
 #[test]
+fn named_default_class_binds_in_the_module_scope() {
+    let facts = facts(
+        r#"export default class Service { constructor() { import("./dep.mts"); } unused() { import("./unused.mts"); } } new Service();"#,
+    );
+    let class_id = facts
+        .callable_scope_ids
+        .iter()
+        .find_map(|(id, scope)| (scope == "Service").then_some(*id))
+        .expect("named default class identity");
+    let construction = facts
+        .function_calls
+        .iter()
+        .find(|call| call.callee == "Service" && call.invocation == InvocationKind::Construct)
+        .expect("module-scope construction");
+
+    assert_eq!(
+        construction.target_identity,
+        CallTargetIdentity::RepositoryFunction
+    );
+    assert!(facts
+        .callable_bindings
+        .iter()
+        .any(|(scope, name, id)| { *scope == 0 && name == "Service" && *id == class_id }));
+    assert!(facts.imports.iter().any(|import| {
+        import.specifier == "./dep.mts"
+            && import.function_scope.as_deref() == Some("Service/constructor")
+    }));
+}
+
+#[test]
 fn manually_walked_callable_bodies_predeclare_later_function_and_shadow_bindings() {
     let facts = facts(
         "const arrow = () => { helper(); function helper() {} setTimeout(); const setTimeout = local; };\
