@@ -493,24 +493,4 @@ fn callable_file_index_uses_fx_hash_for_interned_keys() {
             "rustc-hash 2 FxHashSet has no new(); use fx_set()"
         );
     }
-    let facts = crate::codebase::ts_source::facts::TsFileFacts {
-        callable_bindings: vec![(
-            0,
-            "run".to_string(),
-            crate::codebase::dependencies::extract::CallableId(1),
-        )],
-        callable_aliases: vec![crate::codebase::dependencies::extract::CallableAlias {
-            scope: None,
-            scope_id: None,
-            local: "alias".to_string(),
-            target: "run".to_string(),
-            binding_scope: 0,
-            declared_at: 0,
-            invalidated_at: None,
-        }],
-        ..Default::default()
-    };
-    assert!(
-        crate::codebase::dependencies::graph::benchmark_construct_callable_file_index(&facts) >= 2
-    );
 }

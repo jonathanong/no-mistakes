@@ -160,4 +160,5 @@ include!("edge_calls/roots.rs");
 include!("edge_calls/import_resolution.rs");
 include!("edge_calls/export_resolution.rs");
 include!("edge_calls/local_resolution.rs");
+#[cfg(feature = "test-instrumentation")]
 include!("edge_calls/bench.rs");
