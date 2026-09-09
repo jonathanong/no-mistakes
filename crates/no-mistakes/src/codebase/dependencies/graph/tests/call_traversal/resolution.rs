@@ -23,7 +23,7 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
         3,
         "module, anonymous callback, and nested function aliases retain canonical call edges"
     );
-    for callee in ["first", "second"] {
+    for callee in ["first", "second", "propertyImport"] {
         assert!(
             graph.resolved_call_sites().iter().any(|site| {
                 site.file == aliases
@@ -229,7 +229,6 @@ fn call_resolution_follows_immutable_aliases_and_reexported_defaults_only() {
         "externalCollision",
         "window.setTimeout",
         "targets.deep.member",
-        "propertyImport.call",
         "hidden",
         "missingReexport",
         "absentThroughStar",
