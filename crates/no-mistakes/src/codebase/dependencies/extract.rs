@@ -4,17 +4,17 @@ use oxc_allocator::Allocator;
 use oxc_ast::ast::{
     AccessorProperty, Argument, AssignmentExpression, AssignmentTarget,
     AssignmentTargetMaybeDefault, AssignmentTargetProperty, BindingPattern, BlockStatement,
-    CallExpression, CatchClause, Class, ClassElement, Declaration, ExportAllDeclaration,
-    ExportDeclaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
-    ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier, Expression, ForStatementLeft,
-    FormalParameters, Function, IdentifierReference, ImportDeclaration, ImportDeclarationSpecifier,
-    ImportExpression, JSXOpeningElement, MethodDefinition, MethodDefinitionKind, ModuleExportName,
-    NewExpression, ObjectExpression, ObjectProperty, ObjectPropertyKind, Program,
-    PropertyDefinition, PropertyKind, Statement, StaticBlock, StaticMemberExpression,
-    TSEnumDeclaration, TSImportType, TSInterfaceDeclaration, TSQualifiedName,
-    TSTypeAliasDeclaration, TSTypeName, TSTypeParameter, TSTypeParameterDeclaration,
-    TSTypeReference, TaggedTemplateExpression, VariableDeclaration, VariableDeclarationKind,
-    VariableDeclarator,
+    CallExpression, CatchClause, Class, ClassElement, ComputedMemberExpression, Declaration,
+    ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration,
+    ExportDefaultDeclarationKind, ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier,
+    Expression, ForStatementLeft, FormalParameters, Function, IdentifierReference,
+    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement,
+    MethodDefinition, MethodDefinitionKind, ModuleExportName, NewExpression, ObjectExpression,
+    ObjectProperty, ObjectPropertyKind, Program, PropertyDefinition, PropertyKind, Statement,
+    StaticBlock, StaticMemberExpression, TSEnumDeclaration, TSImportType, TSInterfaceDeclaration,
+    TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
+    TSTypeParameterDeclaration, TSTypeReference, TaggedTemplateExpression, VariableDeclaration,
+    VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::{GetSpan, SourceType};

@@ -79,3 +79,28 @@ fn computed_assignment_keys_still_read_static_getters() {
             && call.invocation == InvocationKind::Set
     }));
 }
+
+#[test]
+fn string_computed_static_getter_reads_are_recorded() {
+    let facts = facts(
+        "class Registry { static get current() { import('./dep.mts'); } } function run() { return Registry['current']; }",
+    );
+    assert!(facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "Registry.current"
+            && call.invocation == InvocationKind::Get
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
+fn dynamic_computed_static_getter_reads_stay_unresolved() {
+    let facts = facts(
+        "class Registry { static get current() { import('./dep.mts'); } } const name = 'current'; function run() { return Registry[name]; }",
+    );
+    assert!(!facts.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "Registry.current"
+            && call.invocation == InvocationKind::Get
+    }));
+}
