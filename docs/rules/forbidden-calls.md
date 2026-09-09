@@ -130,6 +130,8 @@ The consumer acceptance matrix in
 `test-cases/rules/forbidden-calls/consumer-matrix/` is the packaged-CLI
 contract for repeatable timer, mock-migration, glob, and discovery behavior.
 Release validation runs that fixture through `no-mistakes check --format json`.
+Each material source case is asserted by application identity, target, import
+spelling, and line; YAML application indexes must match declaration order.
 
 ## Unknown calls and suppression
 
