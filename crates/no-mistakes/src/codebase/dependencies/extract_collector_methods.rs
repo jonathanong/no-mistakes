@@ -44,7 +44,7 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
                     call.span.start,
                     InvocationKind::Call,
                 );
-                record_callable_argument_transitions(collector, call);
+                record_callable_argument_transitions(collector, &call.arguments);
                 return;
             }
             let target_identity = collector.call_target_identity(&callee);
@@ -78,14 +78,11 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
             InvocationKind::Call,
         );
     }
-    record_callable_argument_transitions(collector, call);
+    record_callable_argument_transitions(collector, &call.arguments);
 }
 
-fn record_callable_argument_transitions(
-    collector: &mut ImportCollector,
-    call: &CallExpression<'_>,
-) {
-    for argument in &call.arguments {
+fn record_callable_argument_transitions(collector: &mut ImportCollector, arguments: &[Argument<'_>]) {
+    for argument in arguments {
         let Some(expression) = argument.as_expression() else {
             continue;
         };
@@ -146,6 +143,7 @@ fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewE
             InvocationKind::Construct,
         );
     }
+    record_callable_argument_transitions(collector, &new.arguments);
 }
 
 fn visit_tagged_template_expression_with_imports(

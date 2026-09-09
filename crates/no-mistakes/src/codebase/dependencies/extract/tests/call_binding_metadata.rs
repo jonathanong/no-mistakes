@@ -25,6 +25,30 @@ fn named_local_callable_arguments_record_callback_transitions() {
 }
 
 #[test]
+fn constructor_callable_arguments_record_callback_transitions() {
+    let source = r#"
+        async function helper() {
+            await import("./reachable.mts");
+        }
+        class Service {
+            constructor(cb) {}
+        }
+        new Service(helper);
+    "#;
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, source, SourceType::ts()).parse();
+
+    let facts = extract_import_facts_from_program_with_source(&parsed.program, source);
+
+    assert!(facts.function_calls.iter().any(|call| {
+        call.callee == "helper"
+            && call.is_callback
+            && call.invocation == InvocationKind::Callback
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}
+
+#[test]
 fn callable_type_parameters_collect_constraint_and_default_imports() {
     let source = r#"
         export function load<T extends import("./constraint.mts").Shape = import("./default.mts").Shape>() {}
