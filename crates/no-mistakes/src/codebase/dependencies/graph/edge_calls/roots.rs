@@ -115,7 +115,7 @@ impl DepGraph {
                 CallTraversal::Direct => Some(1),
                 _ => max_depth,
             };
-            let mut seen = std::collections::HashSet::new();
+            let mut seen = fx_set();
             let mut queue = std::collections::VecDeque::new();
             seen.insert(root.clone());
             queue.push_back((root.clone(), vec![root.clone()], 0usize));

@@ -1,0 +1,27 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/ast-grep/ast-grep/main/schemas/rule.json
+#
+# Callable file indexes use interned local keys (paths, CallableId, lexical
+# (scope, name) pairs). Those must hash with crate::fx, not SipHash. See
+# crates/CLAUDE.md "Interned analysis keys use FxHash" and fx.rs.
+id: no-std-hashmap-call-indexes
+language: rust
+severity: error
+message: >-
+  SipHash map/set in the callable file index. Interned analysis keys must use
+  crate::fx::{FxHashMap, FxHashSet, fx_map, fx_set}. rustc-hash 2 aliases have
+  no new()/with_capacity(); do not land std::collections::HashMap and switch later.
+rule:
+  any:
+    - pattern: std::collections::HashMap
+    - pattern: std::collections::HashSet
+    - pattern: std::collections::HashMap::new()
+    - pattern: std::collections::HashSet::new()
+    - pattern: HashMap::new()
+    - pattern: HashSet::new()
+files:
+  - "crates/no-mistakes/src/codebase/dependencies/graph/edge_calls.rs"
+  - "crates/no-mistakes/src/codebase/dependencies/graph/edge_calls/**"
+ignores:
+  - "crates/no-mistakes/src/**/tests/**"
+  - "crates/no-mistakes/src/**/*_tests.rs"
+  - "crates/no-mistakes/src/**/tests.rs"

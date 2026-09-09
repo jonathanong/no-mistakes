@@ -9,6 +9,7 @@ use anyhow::Result;
 use std::path::Path;
 
 mod bench_shard;
+mod call_index;
 mod language_frontends;
 mod native_frontends;
 mod production_graph;
@@ -19,6 +20,10 @@ pub use bench_shard::{
     parse_bench_shard, shard_should_run, BenchShard, CHECK, GENERAL_MEMORY, GRAPH_CORE,
     GRAPH_FINALIZATION, GRAPH_GATES, GRAPH_PRODUCTION, LANGUAGE_FRONTENDS, NATIVE_FRONTENDS,
     OBSERVER, QUERY, TESTS_PLAN,
+};
+pub use call_index::{
+    callable_file_index_fixture, construct_callable_file_index, CallableFileIndexFixture,
+    CallableFileIndexSummary,
 };
 pub use language_frontends::{
     collect_language_frontend_edges, collect_language_frontend_facts, language_frontend_fixture,

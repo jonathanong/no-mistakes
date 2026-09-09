@@ -1,0 +1,27 @@
+id: no-std-hashmap-call-indexes
+valid:
+  - |
+    fn index() -> FxHashMap<(usize, String), CallableId> {
+        let mut by_class = fx_map();
+        by_class.insert((0, "run".to_string()), CallableId(1));
+        by_class
+    }
+  - |
+    fn seen() -> FxHashSet<String> {
+        let mut names = fx_set();
+        names.insert("run".to_string());
+        names
+    }
+invalid:
+  - |
+    fn index() -> std::collections::HashMap<(usize, String), CallableId> {
+        std::collections::HashMap::new()
+    }
+  - |
+    fn seen() -> std::collections::HashSet<String> {
+        std::collections::HashSet::new()
+    }
+  - |
+    fn index() -> FxHashMap<String, u32> {
+        HashMap::new()
+    }

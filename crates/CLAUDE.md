@@ -71,15 +71,10 @@ invariant with fixture-backed semantic architecture tests that assert one
 prepared catalog is reused, then add a narrow structural rule only once its
 owner and public API are stable.
 
-The N-API JSON bindings have a stable, narrower rule: the binding-only
-`napi_api/*_bindings.rs`/`wrappers_query.rs` includes and the root registration
-module must call `json_binding!`, never hand-write an
-`AsyncTask::new(JsonTask::new(...))` function. Likewise, the two JS facades
-must route direct native JSON conversion through `callJson`/`createJsonApis`
-rather than add another static or computed `native.*` parse/stringify wrapper.
-The ast-grep guards cover that exact boilerplate. They cannot prove that an
-alias, re-export, or wrapper chain ultimately delegates to the right prepared
-operation, so fixture-backed N-API/JS parity tests remain the semantic guard.
+N-API JSON bindings must use `json_binding!`, never a handwritten
+`AsyncTask::new(JsonTask::new(...))`. JS facades must use `callJson`/
+`createJsonApis`. ast-grep covers that boilerplate; parity tests still
+guard aliases and re-exports.
 
 ### Canonical edge finalization
 
@@ -127,6 +122,14 @@ rule failing only its own findings. `git_visible_files` is one
 that snapshot through any path that would rediscover files, e.g. the
 `_from_git_files` variants of `discover_files`/`discover_files_preserving_roots`.
 
+### Interned analysis keys use FxHash
+
+Interned local keys (paths, `NodeId`, `CallableId`, lexical `(scope, name)`)
+use `crate::fx::{FxHashMap, FxHashSet, fx_map, fx_set}`. SipHash
+`std::collections` maps are for public or untrusted keys. New per-file
+indexes must start on FxHash; rustc-hash 2 aliases have no `new()`. The
+`no-std-hashmap-call-indexes` ast-grep rule covers `graph/edge_calls/**`.
+
 ### Shared state in parallel loops
 
 Avoid `Mutex<HashMap<K, V>>` for caches accessed from rayon `par_iter()`. The
@@ -166,12 +169,9 @@ case so pattern expansion does not spawn Git when there is nothing to expand.
 
 ### Never walk the tree without `.gitignore` awareness
 
-A raw recursive `std::fs::read_dir`/`WalkDir` walk has no `.gitignore` awareness beyond
-whatever directory names you hardcode into a denylist. Dependency stores, build
-caches, and other generated directories are routinely gitignored but not in any
-hardcoded skip list, so an unguarded walk can visit hundreds of thousands of entries
-per call on a real repo even though the equivalent `git ls-files` call returns
-instantly.
+A raw recursive `std::fs::read_dir`/`WalkDir` walk has no `.gitignore`
+awareness beyond hardcoded denylists, so it can visit huge generated trees
+(`node_modules`, `.next`) that `git ls-files` would skip.
 
 Prefer, in order:
 1. Derive candidate paths from the already-discovered git-visible file list (tracked

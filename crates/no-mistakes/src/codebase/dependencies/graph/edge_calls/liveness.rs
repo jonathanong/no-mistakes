@@ -1,14 +1,9 @@
 fn invocation_offsets_from_bindings(
-    bindings: &std::collections::HashMap<
-        (usize, String),
-        crate::codebase::dependencies::extract::CallableId,
-    >,
+    bindings: &FxHashMap<(usize, String), crate::codebase::dependencies::extract::CallableId>,
     calls: &[crate::codebase::dependencies::extract::FunctionCall],
-) -> std::collections::HashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>> {
-    let mut offsets: std::collections::HashMap<
-        crate::codebase::dependencies::extract::CallableId,
-        Vec<u32>,
-    > = std::collections::HashMap::new();
+) -> FxHashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>> {
+    let mut offsets: FxHashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>> =
+        fx_map();
     for call in calls {
         if call.is_callback
             && call.invocation
@@ -31,7 +26,7 @@ fn invocation_offsets_from_bindings(
 }
 
 fn lexical_scope_is_nested_in(
-    parents: &std::collections::HashMap<usize, Option<usize>>,
+    parents: &FxHashMap<usize, Option<usize>>,
     child: Option<usize>,
     ancestor: usize,
 ) -> bool {
@@ -52,11 +47,9 @@ struct BindingLivenessQuery<'a> {
     binding_scope: usize,
     call_binding_scope: Option<usize>,
     caller_id: Option<crate::codebase::dependencies::extract::CallableId>,
-    invocation_offsets: &'a std::collections::HashMap<
-        crate::codebase::dependencies::extract::CallableId,
-        Vec<u32>,
-    >,
-    lexical_parents: &'a std::collections::HashMap<usize, Option<usize>>,
+    invocation_offsets:
+        &'a FxHashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>>,
+    lexical_parents: &'a FxHashMap<usize, Option<usize>>,
 }
 
 fn binding_live_at(query: BindingLivenessQuery<'_>) -> bool {
