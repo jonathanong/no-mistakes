@@ -157,6 +157,21 @@ fn walk_default_function_with_scope<'a>(
     collector.pop_syntactic_caller(pushed_syntactic_caller);
 }
 
+fn walk_default_class_declaration<'a>(collector: &mut ImportCollector, class: &Class<'a>) {
+    let class_id = CallableId(class.span.start);
+    let scope = class
+        .id
+        .as_ref()
+        .map_or_else(|| "default".to_string(), |id| id.name.to_string());
+    // Named `export default class Service` binds in the enclosing module
+    // scope. Record it before walk_class_with_scoped_methods pushes the
+    // class lexical scope, or `new Service()` is treated as unknown.
+    if class.id.is_some() {
+        collector.record_callable_binding_id(&scope, class_id);
+    }
+    walk_exported_default_class(collector, class, class_id, scope);
+}
+
 fn walk_default_class_with_scope<'a>(collector: &mut ImportCollector, class: &Class<'a>) {
     let class_id = CallableId(class.span.start);
     let scope = class
@@ -168,6 +183,15 @@ fn walk_default_class_with_scope<'a>(collector: &mut ImportCollector, class: &Cl
     if scope != "default" {
         collector.push_callable_alias("default".to_string(), scope.clone(), class.span.start);
     }
+    walk_exported_default_class(collector, class, class_id, scope);
+}
+
+fn walk_exported_default_class<'a>(
+    collector: &mut ImportCollector,
+    class: &Class<'a>,
+    class_id: CallableId,
+    scope: String,
+) {
     collector.callable_scope_ids.insert((class_id, scope.clone()));
     record_class_member_calls(collector, &scope, class_id, class);
     record_class_base_construction(collector, &scope, class_id, class);

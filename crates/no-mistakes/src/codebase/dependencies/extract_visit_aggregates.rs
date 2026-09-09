@@ -70,21 +70,7 @@ fn visit_export_default_declaration_with_scope<'a>(
             collector.export_depth -= 1;
         }
         ExportDefaultDeclarationKind::ClassDeclaration(class) => {
-            let scope = class
-                .id
-                .as_ref()
-                .map_or_else(|| "default".to_string(), |id| id.name.to_string());
-            collector
-                .callable_scope_ids
-                .insert((CallableId(class.span.start), scope.clone()));
-            record_class_member_calls(collector, &scope, CallableId(class.span.start), class);
-            record_class_base_construction(collector, &scope, CallableId(class.span.start), class);
-            collector.record_exported_resource_root(&scope);
-            record_class_resource_scopes(collector, &scope, class);
-            collector.exported_functions.insert(scope.clone());
-            collector.callable_scopes.insert(scope.clone());
-            collector.class_scopes.insert(scope.clone());
-            walk_class_with_scoped_methods(collector, &scope, CallableId(class.span.start), class);
+            walk_default_class_declaration(collector, class);
             collector.export_depth -= 1;
         }
         _ => {
