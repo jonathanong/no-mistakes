@@ -138,7 +138,7 @@ pub(super) fn check_source_to_test(
                     rule: RULE_ID.to_string(),
                     file: rel.clone(),
                     line: 1,
-                    message: format!("{rel}: no corresponding test file found"),
+                    message: missing_test_message(&rel, &opts.stem_suffixes_to_strip),
                     import: None,
                     target: None,
                 })
@@ -151,4 +151,53 @@ pub(super) fn check_source_to_test(
 
 fn is_declaration_file(rel: &str) -> bool {
     rel.ends_with(".d.ts") || rel.ends_with(".d.mts") || rel.ends_with(".d.cts")
+}
+
+fn formatted_stem_suffixes(suffixes: &[String]) -> Option<String> {
+    if suffixes.is_empty() {
+        return None;
+    }
+    Some(
+        suffixes
+            .iter()
+            .map(|suffix| format!("`{suffix}`"))
+            .collect::<Vec<_>>()
+            .join(", "),
+    )
+}
+
+fn stripped_stem_suffixes(base: &str, suffixes: &[String]) -> Vec<String> {
+    suffixes
+        .iter()
+        .filter(|suffix| {
+            base.strip_suffix(suffix.as_str())
+                .is_some_and(|stripped| !stripped.is_empty())
+        })
+        .map(|suffix| format!("`{suffix}`"))
+        .collect()
+}
+
+pub(super) fn missing_source_message(rel: &str, base: &str, suffixes: &[String]) -> String {
+    let mut message = format!("{rel}: no corresponding source file found");
+    let Some(formatted) = formatted_stem_suffixes(suffixes) else {
+        return message;
+    };
+    let matched = stripped_stem_suffixes(base, suffixes);
+    if matched.is_empty() {
+        message.push_str("; configured stemSuffixesToStrip: ");
+        message.push_str(&formatted);
+    } else {
+        message.push_str("; stripped configured stem suffixes: ");
+        message.push_str(&matched.join(", "));
+    }
+    message
+}
+
+fn missing_test_message(rel: &str, suffixes: &[String]) -> String {
+    let mut message = format!("{rel}: no corresponding test file found");
+    if let Some(formatted) = formatted_stem_suffixes(suffixes) {
+        message.push_str("; configured stemSuffixesToStrip: ");
+        message.push_str(&formatted);
+    }
+    message
 }

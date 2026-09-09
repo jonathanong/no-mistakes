@@ -1,6 +1,6 @@
 mod helpers;
 pub(crate) use helpers::source_candidates;
-use helpers::{check_source_to_test, duplicate_group_base, stem_and_dir};
+use helpers::{check_source_to_test, duplicate_group_base, missing_source_message, stem_and_dir};
 
 use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
@@ -162,7 +162,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFindin
                     rule: RULE_ID.to_string(),
                     file: rel.clone(),
                     line: 1,
-                    message: format!("{rel}: no corresponding source file found"),
+                    message: missing_source_message(rel, &base, &opts.stem_suffixes_to_strip),
                     import: None,
                     target: None,
                 });
