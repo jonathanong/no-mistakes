@@ -8,6 +8,7 @@ mod duplicate_export_identity;
 mod callback_and_getter_reachability;
 mod hoist_bindings;
 mod import_policy;
+mod imported_class_statics;
 mod namespace_alias;
 mod nested_aggregate_callables;
 mod overloads;
