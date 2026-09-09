@@ -91,10 +91,11 @@ rules:
 
 `unknownCalls: ignore` omits unresolved dynamic calls that do not match an
 `exact` selector. `unknownCalls: finding` reports remaining unknown calls as
-explicit policy findings. Configuration errors, such as an invalid root or
-selector, are never suppressible. Source findings honor ordinary
-`no-mistakes-disable-file`, `no-mistakes-disable-line`, and
-`no-mistakes-disable-next-line` directives.
+explicit policy findings. Configuration errors, such as an invalid root,
+selector, or a requested root that fails to parse, are never suppressible.
+Unrelated files that fail to parse are ignored unless they are selected as a
+root. Source findings honor ordinary `no-mistakes-disable-file`,
+`no-mistakes-disable-line`, and `no-mistakes-disable-next-line` directives.
 
 ```ts
 // no-mistakes-disable-next-line forbidden-calls: test intentionally verifies timer integration

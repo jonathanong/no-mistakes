@@ -1,0 +1,12 @@
+tests:
+  vitest:
+    configs: vitest.config.ts
+    projects:
+      unit:
+        include: [src/unit/**/*.test.mts]
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/entry.mts }]
+      targets: [{ global: setTimeout }]

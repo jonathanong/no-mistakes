@@ -486,3 +486,5 @@ fn source_suppression_filters_call_findings_without_hiding_configuration_errors(
         "invalid configuration must not be suppressed"
     );
 }
+
+mod parse_errors;
