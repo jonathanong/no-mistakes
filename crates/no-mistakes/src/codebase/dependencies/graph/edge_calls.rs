@@ -12,27 +12,20 @@
 /// Class-member maps are built separately by `index_class_members_by_id`.
 #[derive(Clone)]
 struct CallableFileIndex {
-    known_scopes: std::collections::HashSet<String>,
-    exported_scopes: std::collections::HashSet<String>,
-    class_scopes: std::collections::HashSet<String>,
-    callable_bindings: std::collections::HashMap<
-        (usize, String),
-        crate::codebase::dependencies::extract::CallableId,
-    >,
-    imported:
-        std::collections::HashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
-    exported:
-        std::collections::HashMap<String, crate::codebase::dependencies::extract::ExportedBinding>,
-    aliases: std::collections::HashMap<(usize, String), IndexedAlias>,
-    binding_declared_at: std::collections::HashMap<(usize, String), u32>,
-    invocation_offsets: std::collections::HashMap<
-        crate::codebase::dependencies::extract::CallableId,
-        Vec<u32>,
-    >,
+    known_scopes: FxHashSet<String>,
+    exported_scopes: FxHashSet<String>,
+    class_scopes: FxHashSet<String>,
+    callable_bindings: FxHashMap<(usize, String), crate::codebase::dependencies::extract::CallableId>,
+    imported: FxHashMap<String, crate::codebase::dependencies::extract::ImportedBinding>,
+    exported: FxHashMap<String, crate::codebase::dependencies::extract::ExportedBinding>,
+    aliases: FxHashMap<(usize, String), IndexedAlias>,
+    binding_declared_at: FxHashMap<(usize, String), u32>,
+    invocation_offsets:
+        FxHashMap<crate::codebase::dependencies::extract::CallableId, Vec<u32>>,
     /// Class bindings resolve to their internal class scope and exact parser
     /// identity. A display scope can repeat in sibling blocks.
-    class_bindings: std::collections::HashMap<(usize, String), ClassBindingTarget>,
-    lexical_scope_parents: std::collections::HashMap<usize, Option<usize>>,
+    class_bindings: FxHashMap<(usize, String), ClassBindingTarget>,
+    lexical_scope_parents: FxHashMap<usize, Option<usize>>,
     stars: Vec<String>,
 }
 
@@ -48,7 +41,7 @@ struct ClassBindingTarget {
     scope: String,
     class_id: crate::codebase::dependencies::extract::CallableId,
     static_member_ids:
-        std::collections::HashMap<String, crate::codebase::dependencies::extract::CallableId>,
+        FxHashMap<String, crate::codebase::dependencies::extract::CallableId>,
     /// A simple local `extends Base` relationship. Imported, computed, and
     /// expression bases intentionally stay unresolved here.
     local_base: Option<String>,
@@ -69,14 +62,14 @@ impl CallableFileIndex {
             .iter()
             .filter(|(_, scope)| file.class_scopes.contains(scope))
             .map(|(id, scope)| (*id, scope.clone()))
-            .collect::<std::collections::HashMap<_, _>>();
+            .collect::<FxHashMap<_, _>>();
         let members_by_class = index_class_members_by_id(&file.class_member_callable_ids);
         let local_bases = index_local_construct_bases(&file.function_calls);
         let callable_bindings = file
             .callable_bindings
             .iter()
             .map(|(scope, binding, id)| ((*scope, binding.clone()), *id))
-            .collect::<std::collections::HashMap<_, _>>();
+            .collect::<FxHashMap<_, _>>();
         let invocation_offsets =
             invocation_offsets_from_bindings(&callable_bindings, &file.function_calls);
         Self {
@@ -167,3 +160,4 @@ include!("edge_calls/roots.rs");
 include!("edge_calls/import_resolution.rs");
 include!("edge_calls/export_resolution.rs");
 include!("edge_calls/local_resolution.rs");
+include!("edge_calls/bench.rs");

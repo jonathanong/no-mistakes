@@ -152,6 +152,12 @@ generic Rust/JS patterns can observe:
   cannot prove that equivalence, so `CLAUDE.md` additionally requires
   baseline-field parity tests
   when an additive flag introduces a broader analysis scope.
+- `no-std-hashmap-call-indexes` covers `graph/edge_calls.rs` and
+  `graph/edge_calls/**`. Interned callable-index keys (lexical
+  `(scope, name)`, `CallableId`, import/export locals) must use
+  `crate::fx` maps, not `std::collections::HashMap`/`HashSet`. rustc-hash 2
+  aliases have no `new()`; `HashMap::new()` in this directory is always
+  SipHash. Public or untrusted keys elsewhere still use SipHash (`fx.rs`).
 - `no-global-edge-vector-dedup` protects canonical graph finalization in
   `edge_index/build.rs`. A full `edges` vector there must be produced by the
   normalized-adjacency flatten, not globally sorted and deduplicated after the

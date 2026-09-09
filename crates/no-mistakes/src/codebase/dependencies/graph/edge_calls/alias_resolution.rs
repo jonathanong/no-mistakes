@@ -44,7 +44,7 @@ impl CallableFileIndex {
     ) -> Option<ResolvedLocalCallee> {
         let call_binding_scope = binding_scope;
         let mut binding_scope = binding_scope?;
-        let mut visited = std::collections::HashSet::new();
+        let mut visited = fx_set();
         if callee.contains('.') {
             let mut target = callee.to_string();
             let mut resolved_alias = false;

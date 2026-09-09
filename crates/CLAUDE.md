@@ -127,6 +127,19 @@ rule failing only its own findings. `git_visible_files` is one
 that snapshot through any path that would rediscover files, e.g. the
 `_from_git_files` variants of `discover_files`/`discover_files_preserving_roots`.
 
+### Interned analysis keys use FxHash
+
+`crate::fx::{FxHashMap, FxHashSet, fx_map, fx_set}` is the map for interned
+local keys: paths, `NodeId`, `CallableId`, and lexical `(scope, name)` pairs.
+`std::collections::HashMap`/`HashSet` is SipHash and is reserved for public or
+untrusted keys (`fx.rs`). New per-file analysis indexes must start on FxHash;
+do not land SipHash and switch later. rustc-hash 2 aliases do not expose
+`new()` or `with_capacity()` — use the `fx_*` constructors.
+
+The `no-std-hashmap-call-indexes` ast-grep rule covers `graph/edge_calls/**`.
+That path is the historical miss: binding-aware call analysis shipped SipHash
+maps after `PreparedRelationshipIndex` had already moved to FxHash.
+
 ### Shared state in parallel loops
 
 Avoid `Mutex<HashMap<K, V>>` for caches accessed from rayon `par_iter()`. The
