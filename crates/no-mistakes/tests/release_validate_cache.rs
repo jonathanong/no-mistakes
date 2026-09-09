@@ -1,7 +1,8 @@
 use std::path::PathBuf;
 
 fn release_workflow() -> String {
-    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.github/workflows/release.yml");
+    let path =
+        PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../.github/workflows/release.yml");
     std::fs::read_to_string(&path).unwrap_or_else(|err| panic!("{}: {err}", path.display()))
 }
 
