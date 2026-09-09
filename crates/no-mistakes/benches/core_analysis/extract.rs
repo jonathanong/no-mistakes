@@ -37,23 +37,23 @@ pub(super) fn bench_extract_import_facts(c: &mut Criterion) {
         return;
     }
     let mut group = c.benchmark_group("extract/import_facts");
-    for callables in [512usize, 2_048] {
-        let source = extract_fixture_source(callables);
-        let allocator = Allocator::default();
-        let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
-        let facts = extract_import_facts_from_program(&parsed.program);
-        assert!(
-            facts.function_calls.len() >= callables * 4,
-            "extract fixture must record calls, aliases, and class members"
-        );
-        group.throughput(Throughput::Elements(callables as u64));
-        group.bench_with_input(
-            BenchmarkId::from_parameter(callables),
-            &parsed.program,
-            |b, program| {
-                b.iter(|| black_box(extract_import_facts_from_program(black_box(program))));
-            },
-        );
-    }
+    // Memory-instrumented CI shards time out on a 2048-callable source.
+    const CALLABLES: usize = 512;
+    let source = extract_fixture_source(CALLABLES);
+    let allocator = Allocator::default();
+    let parsed = Parser::new(&allocator, &source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program(&parsed.program);
+    assert!(
+        facts.function_calls.len() >= CALLABLES * 4,
+        "extract fixture must record calls, aliases, and class members"
+    );
+    group.throughput(Throughput::Elements(CALLABLES as u64));
+    group.bench_with_input(
+        BenchmarkId::from_parameter(CALLABLES),
+        &parsed.program,
+        |b, program| {
+            b.iter(|| black_box(extract_import_facts_from_program(black_box(program))));
+        },
+    );
     group.finish();
 }
