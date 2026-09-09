@@ -96,12 +96,14 @@ ON CONFLICT (left_id, right_id) DO NOTHING
 
 Recovered dynamic SQL whose static fragments identify an `INSERT` fails closed
 by default because an interpolation can add or alter its conflict clause and
-row order. A wholly
-opaque dynamic call has no recoverable conflict shape, so the rule does not
-claim it is safe or unsafe. Make the statement static, use `unanalyzableSql:
-ignore` for a temporary scoped rollout exception, or add a nearby SQL/comment
-directive such as `/* deadlock-safe: single ordered source */` only when the
-ordering is enforced outside the analyzable statement.
+row order. An opaque executor argument (`query(assembleWriter())`,
+`query(...args)`) also fails closed by default: there is no recoverable
+statement, so a zero-finding run cannot mean the writer was checked. Make the
+statement static, use `unanalyzableSql: ignore` for a temporary scoped rollout
+exception, or add a nearby SQL/comment directive such as
+`/* deadlock-safe: single ordered source */` only when the ordering is enforced
+outside the analyzable statement. Recovered dynamic SQL that is not an `INSERT`
+is still ignored.
 
 Use `no-mistakes-disable-next-line postgres-conflict-ordering` or
 `no-mistakes-disable-line` for a one-off. Prefer repairing the writer or a

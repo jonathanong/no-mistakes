@@ -226,6 +226,25 @@ fn prepared_scan_contextualizes_a_missing_embedded_sql_projection() {
 }
 
 #[test]
+fn rejects_opaque_executor_arguments_by_default() {
+    let findings = findings("fail-opaque-executor");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable-sql"));
+}
+
+#[test]
+fn ignores_opaque_executor_arguments_when_unanalyzable_sql_is_ignore() {
+    let root = fixture("fail-opaque-executor");
+    let result = check_with_files(
+        &root,
+        &config_with_options("schemaCatalogPath: schema.json\nunanalyzableSql: ignore"),
+        &files(&root),
+    )
+    .unwrap();
+    assert!(result.is_empty(), "{result:#?}");
+}
+
+#[test]
 fn rejects_recovered_dynamic_conflict_sql_by_default() {
     let root = fixture("pass-canonical-order");
     let result = check_with_files(

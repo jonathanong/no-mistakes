@@ -9,6 +9,11 @@ use crate::codebase::ts_source::relative_slash_path;
 use anyhow::{Context, Result};
 use std::path::{Path, PathBuf};
 
+const OPAQUE_SQL_MESSAGE: &str =
+    "keep executor SQL statically recoverable so canonical ON CONFLICT ordering can be checked";
+const DYNAMIC_INSERT_MESSAGE: &str =
+    "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked";
+
 pub(super) fn scan_with_sources(
     root: &Path,
     opts: &CompiledOptions,
@@ -39,23 +44,25 @@ pub(super) fn scan_with_sources(
             ) {
                 continue;
             }
+            let sql = call.sql_text.as_deref();
             if call.kind == EmbeddedSqlKind::Dynamic {
-                if opts.fail_unanalyzable
-                    && call
-                        .sql_text
-                        .as_deref()
-                        .is_some_and(analysis::contains_insert)
-                {
-                    findings.push(analysis::finding(
+                if opts.fail_unanalyzable && sql.is_none_or(analysis::contains_insert) {
+                    findings.push(unanalyzable_sql(
                         &rel,
-                        call.line as usize,
-                        "unanalyzable-sql",
-                        "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked",
+                        call.line,
+                        if sql.is_none() {
+                            OPAQUE_SQL_MESSAGE
+                        } else {
+                            DYNAMIC_INSERT_MESSAGE
+                        },
                     ));
                 }
                 continue;
             }
-            let Some(sql) = call.sql_text.as_deref() else {
+            let Some(sql) = sql else {
+                if opts.fail_unanalyzable {
+                    findings.push(unanalyzable_sql(&rel, call.line, OPAQUE_SQL_MESSAGE));
+                }
                 continue;
             };
             findings.extend(analysis::findings_for_sql(
@@ -87,4 +94,8 @@ pub(super) fn scan_with_sources(
     }
     crate::codebase::rules::sort_findings(&mut findings);
     Ok(findings)
+}
+
+fn unanalyzable_sql(rel: &str, line: u32, message: &'static str) -> RuleFinding {
+    analysis::finding(rel, line as usize, "unanalyzable-sql", message)
 }
