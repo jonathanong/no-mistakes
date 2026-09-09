@@ -27,10 +27,12 @@ selection, roots, targets, traversal, and message; applications run in YAML
 order and may intentionally overlap.
 
 `options.roots` accepts a `file` or `module` root, a repository `function`
-root, or a Vitest project root. `traversal` is `direct`, `file`, or
-`transitive`; `maxDepth` caps the selected traversal. `direct` always stops
-after one call hop. Call cycles are finite and each distinct reachable call
-occurrence is reported once.
+root, or a Vitest project root. Vitest roots select runner-config projects and
+explicit `tests.vitest.projects` entries with include globs; `vitest: true`
+includes that merged set, and a named list still errors for names present in
+neither source. `traversal` is `direct`, `file`, or `transitive`; `maxDepth`
+caps the selected traversal. `direct` always stops after one call hop. Call
+cycles are finite and each distinct reachable call occurrence is reported once.
 
 `traversal` defaults to `direct`, `unknownCalls` defaults to `ignore`, and
 `invocations` defaults to `call`. An omitted `maxDepth` is unbounded for
