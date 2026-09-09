@@ -30,22 +30,26 @@ fn walk_class_with_scoped_methods<'a>(
                 class_id,
                 &method.key,
             );
-            if let Some(name) =
-                crate::codebase::ts_source::static_property_key_name(&method.key)
-            {
+            if let Some(name) = crate::codebase::ts_source::static_property_key_name(&method.key) {
                 collector.record_aggregate_callable_member_id(class_id, name, method_id);
             }
             if method.r#static {
-                if let Some(name) = crate::codebase::ts_source::static_property_key_name(&method.key) {
+                if let Some(name) =
+                    crate::codebase::ts_source::static_property_key_name(&method.key)
+                {
                     collector.record_class_member_callable_id(class_id, name, method_id);
                     if method.kind == MethodDefinitionKind::Get {
-                        collector
-                            .static_getter_member_ids
-                            .insert((class_id, name.to_string()));
+                        owner_name_insert(
+                            &mut collector.static_getter_member_ids,
+                            class_id,
+                            name.to_string(),
+                        );
                     } else if method.kind == MethodDefinitionKind::Set {
-                        collector
-                            .static_setter_member_ids
-                            .insert((class_id, name.to_string()));
+                        owner_name_insert(
+                            &mut collector.static_setter_member_ids,
+                            class_id,
+                            name.to_string(),
+                        );
                     }
                 }
             }
@@ -131,7 +135,9 @@ fn visit_class_static_block_with_scope<'a>(
 ) {
     let pushed = collector.push_lexical_scope();
     if pushed {
-        collector.var_scope_stack.push(collector.local_stack.len() - 1);
+        collector
+            .var_scope_stack
+            .push(collector.local_stack.len() - 1);
     }
     predeclare_function_declarations(collector, &block.body);
     walk::walk_static_block(collector, block);

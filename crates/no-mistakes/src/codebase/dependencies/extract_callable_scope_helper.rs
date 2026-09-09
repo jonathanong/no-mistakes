@@ -6,25 +6,14 @@ impl ImportCollector {
         let Some(binding_scope) = self.callee_binding_scope(callee) else {
             return false;
         };
-        if self
-            .reassigned_callable_binding_ids
-            .contains(&(binding_scope, binding.to_string()))
-            || self
-                .reassigned_callable_binding_ids
-                .contains(&(binding_scope, callee.to_string()))
+        if self.has_reassigned_callable_at(binding_scope, binding)
+            || self.has_reassigned_callable_at(binding_scope, callee)
         {
             return false;
         }
-        let callable_alias = self
-            .callable_alias_index
-            .contains_key(&(binding_scope, binding.to_string()));
-        if (!self
-            .callable_binding_ids
-            .contains(&(binding_scope, binding.to_string()))
-            && !callable_alias)
-            || self
-                .reassigned_callable_binding_ids
-                .contains(&(binding_scope, binding.to_string()))
+        let callable_alias = self.has_callable_alias_at(binding_scope, binding);
+        if (!self.has_callable_binding_name_at(binding_scope, binding) && !callable_alias)
+            || self.has_reassigned_callable_at(binding_scope, binding)
         {
             return false;
         }
@@ -35,29 +24,23 @@ impl ImportCollector {
             if let Some(class_id) = self.class_id_for_binding(binding_scope, binding) {
                 return self.has_class_static_member(class_id, binding_scope, member);
             }
-            let Some(aggregate_id) = self
-                .callable_bindings
-                .get(&(binding_scope, binding.to_string()))
-            else {
+            let Some(aggregate_id) = self.callable_binding_at(binding_scope, binding) else {
                 return false;
             };
             return self.function_calls.iter().any(|call| {
                 call.invocation == InvocationKind::Membership
-                    && call.caller_id == Some(*aggregate_id)
+                    && call.caller_id == Some(aggregate_id)
                     && call.callee == member
             });
         }
         if callable_alias {
             return true;
         }
-        if let Some(class_id) = self
-            .callable_bindings
-            .get(&(binding_scope, binding.to_string()))
-        {
+        if let Some(class_id) = self.callable_binding_at(binding_scope, binding) {
             if self
                 .callable_scope_ids
                 .iter()
-                .any(|(id, scope)| id == class_id && self.class_scopes.contains(scope))
+                .any(|(id, scope)| *id == class_id && self.class_scopes.contains(scope))
             {
                 return true;
             }
@@ -92,16 +75,12 @@ impl ImportCollector {
         binding_scope: usize,
         member: &str,
     ) -> bool {
-        let mut seen = HashSet::new();
+        let mut seen = fx_set();
         loop {
             if !seen.insert(class_id) {
                 return false;
             }
-            if self.class_member_callable_ids.iter().any(
-                |(candidate_class_id, candidate_member, _)| {
-                    *candidate_class_id == class_id && candidate_member == member
-                },
-            ) {
+            if self.has_class_member(class_id, member) {
                 return true;
             }
             let Some(base) = self.class_local_bases.get(&class_id) else {
@@ -110,8 +89,8 @@ impl ImportCollector {
             let mut scope = Some(binding_scope);
             let base_id = loop {
                 let Some(scope_id) = scope else { break None };
-                if let Some(id) = self.callable_bindings.get(&(scope_id, base.clone())) {
-                    break Some(*id);
+                if let Some(id) = self.callable_binding_at(scope_id, base) {
+                    break Some(id);
                 }
                 scope = self.lexical_scope_parents.get(&scope_id).copied().flatten();
             };
@@ -132,20 +111,20 @@ impl ImportCollector {
     fn class_id_for_binding(&self, binding_scope: usize, binding: &str) -> Option<CallableId> {
         let mut scope = Some(binding_scope);
         let mut name = binding.to_string();
-        let mut seen = HashSet::new();
+        let mut seen = fx_set();
         while let Some(scope_id) = scope {
             if !seen.insert((scope_id, name.clone())) {
                 return None;
             }
-            if let Some(id) = self.callable_bindings.get(&(scope_id, name.clone())) {
+            if let Some(id) = self.callable_binding_at(scope_id, &name) {
                 if self
                     .callable_scope_ids
                     .iter()
                     .any(|(candidate, class_scope)| {
-                        candidate == id && self.class_scopes.contains(class_scope)
+                        *candidate == id && self.class_scopes.contains(class_scope)
                     })
                 {
-                    return Some(*id);
+                    return Some(id);
                 }
             }
             if let Some(alias) = self.indexed_callable_alias(scope_id, &name) {
@@ -155,10 +134,7 @@ impl ImportCollector {
                 name = alias.target.clone();
                 continue;
             }
-            if self
-                .lexical_binding_names
-                .contains(&(scope_id, name.clone()))
-            {
+            if self.has_lexical_binding_at(scope_id, &name) {
                 return None;
             }
             scope = self.lexical_scope_parents.get(&scope_id).copied().flatten();

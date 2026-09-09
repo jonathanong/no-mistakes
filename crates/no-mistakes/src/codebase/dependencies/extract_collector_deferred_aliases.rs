@@ -5,16 +5,12 @@ impl ImportCollector {
             let mut remaining = Vec::new();
             let mut progressed = false;
             for candidate in pending {
-                if self
-                    .callable_alias_index
-                    .contains_key(&(candidate.binding_scope, candidate.local.clone()))
-                {
+                if self.has_callable_alias_at(candidate.binding_scope, &candidate.local) {
                     continue;
                 }
-                if !self.deferred_alias_target_is_callable(
-                    &candidate.target,
-                    candidate.binding_scope,
-                ) {
+                if !self
+                    .deferred_alias_target_is_callable(&candidate.target, candidate.binding_scope)
+                {
                     remaining.push(candidate);
                     continue;
                 }
@@ -42,26 +38,19 @@ impl ImportCollector {
     fn deferred_alias_target_is_callable(&self, target: &str, binding_scope: usize) -> bool {
         let mut scope = Some(binding_scope);
         while let Some(scope_id) = scope {
-            if self
-                .lexical_binding_names
-                .contains(&(scope_id, target.to_string()))
-            {
-                if self
-                    .reassigned_callable_binding_ids
-                    .contains(&(scope_id, target.to_string()))
-                {
+            if self.has_lexical_binding_at(scope_id, target) {
+                if self.has_reassigned_callable_at(scope_id, target) {
                     return false;
                 }
                 if self.indexed_callable_alias(scope_id, target).is_some() {
                     return true;
                 }
-                let Some(id) = self.callable_bindings.get(&(scope_id, target.to_string())) else {
+                let Some(id) = self.callable_binding_at(scope_id, target) else {
                     return false;
                 };
-                return !self
-                    .callable_scope_ids
-                    .iter()
-                    .any(|(candidate, scope)| candidate == id && self.class_scopes.contains(scope));
+                return !self.callable_scope_ids.iter().any(|(candidate, scope)| {
+                    *candidate == id && self.class_scopes.contains(scope)
+                });
             }
             scope = self.lexical_scope_parents.get(&scope_id).copied().flatten();
         }

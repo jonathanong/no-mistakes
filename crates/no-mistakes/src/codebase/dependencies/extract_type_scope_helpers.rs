@@ -62,10 +62,10 @@ impl ImportCollector {
     fn add_type_parameter_names(&mut self, params: Option<&TSTypeParameterDeclaration<'_>>) {
         let Some(params) = params else { return };
         if self.type_local_stack.is_empty() {
-            self.type_local_stack.push(HashSet::new());
+            self.type_local_stack.push(fx_set());
         }
         if self.type_parameter_stack.is_empty() {
-            self.type_parameter_stack.push(HashSet::new());
+            self.type_parameter_stack.push(fx_set());
         }
         for param in &params.params {
             if let Some(scope) = self.type_parameter_stack.last_mut() {

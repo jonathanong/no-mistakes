@@ -2,6 +2,8 @@
 mod aggregate;
 #[path = "core_analysis/call_index.rs"]
 mod call_index;
+#[path = "core_analysis/extract.rs"]
+mod extract;
 #[path = "core_analysis/fixtures.rs"]
 mod fixtures;
 #[path = "core_analysis/graph.rs"]
@@ -28,6 +30,7 @@ use aggregate::{
 };
 use call_index::{bench_call_site_membership, bench_callable_file_index_construction};
 use criterion::{criterion_group, criterion_main};
+use extract::bench_extract_import_facts;
 use graph::{bench_facts_graph_and_query, bench_high_fanout_finalization, bench_lazy_traversal};
 use graph_gates::bench_graph_gates;
 use language_frontends::bench_language_frontends;
@@ -45,6 +48,7 @@ criterion_group!(
     bench_lazy_traversal,
     bench_callable_file_index_construction,
     bench_call_site_membership,
+    bench_extract_import_facts,
     bench_facts_graph_and_query,
     bench_graph_gates,
     bench_language_frontends,
