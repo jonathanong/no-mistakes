@@ -2,6 +2,7 @@
 
 const { unwrapExpression } = require("./async-ast");
 const { compileTargets, matchingTargets } = require("./async-patterns");
+const { isDefinitelyUndefinedValue } = require("./imported-call-undefined");
 const { propertyName, literalString } = require("./module-mock-helpers");
 
 const importedCallOptionsSchema = [
@@ -65,20 +66,32 @@ function staticPropertyName(property) {
   return propertyName(property.key);
 }
 
-function visiblePropertyNames(node) {
-  const names = new Set();
-  if (node?.type !== "ObjectExpression") return names;
+function visiblePropertyValues(node) {
+  const values = new Map();
+  if (node?.type !== "ObjectExpression") return values;
   for (const property of node.properties) {
     const name = staticPropertyName(property);
-    if (name) names.add(name);
+    if (name) values.set(name, property.value);
+  }
+  return values;
+}
+
+function visiblePropertyNames(node) {
+  return new Set(visiblePropertyValues(node).keys());
+}
+
+function presentPropertyNames(node, sourceCode) {
+  const names = new Set();
+  for (const [name, value] of visiblePropertyValues(node)) {
+    if (!isDefinitelyUndefinedValue(value, sourceCode)) names.add(name);
   }
   return names;
 }
 
-function hasRequiredOptions(argument, target) {
+function hasRequiredOptions(argument, target, sourceCode) {
   const object = unwrapExpression(argument);
   if (object?.type !== "ObjectExpression") return false;
-  const names = visiblePropertyNames(object);
+  const names = presentPropertyNames(object, sourceCode);
   if (target.propertyMatch === "all") {
     return target.requiredProperties.every((name) => names.has(name));
   }
@@ -89,6 +102,7 @@ module.exports = {
   compileImportedCallTargets,
   hasRequiredOptions,
   importedCallOptionsSchema,
+  isDefinitelyUndefinedValue,
   matchingTargets,
   staticPropertyName,
   visiblePropertyNames,

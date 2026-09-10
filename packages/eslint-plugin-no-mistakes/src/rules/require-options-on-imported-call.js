@@ -6,6 +6,7 @@ const {
   compileImportedCallTargets,
   hasRequiredOptions,
   importedCallOptionsSchema,
+  isDefinitelyUndefinedValue,
   matchingTargets,
   staticPropertyName,
   visiblePropertyNames,
@@ -41,7 +42,15 @@ module.exports = Object.assign(
             resolved.source,
             resolved.calleeName,
           )) {
-            if (hasRequiredOptions(node.arguments[target.optionsPosition - 1], target)) continue;
+            if (
+              hasRequiredOptions(
+                node.arguments[target.optionsPosition - 1],
+                target,
+                context.sourceCode,
+              )
+            ) {
+              continue;
+            }
             context.report({
               node,
               messageId: "missingOptions",
@@ -62,6 +71,7 @@ module.exports = Object.assign(
     __test: {
       compileImportedCallTargets,
       hasRequiredOptions,
+      isDefinitelyUndefinedValue,
       staticPropertyName,
       visiblePropertyNames,
     },

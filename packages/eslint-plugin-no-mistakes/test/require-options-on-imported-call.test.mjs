@@ -353,6 +353,40 @@ validateUrl(url, { [\`timeoutMs\`]: 1000 });
 `;
     assert.deepEqual(messages(code, RULE, ssrfOptions, "template-key.ts"), []);
   });
+
+  it("rejects definitely undefined required option values", () => {
+    assert.deepEqual(
+      messages(ruleFixture("undefined-missing.ts"), RULE, ssrfOptions, "undefined-missing.ts"),
+      Array.from({ length: 10 }, () => "missingOptions"),
+    );
+  });
+
+  it("accepts unknown or mixed required option values", () => {
+    assert.deepEqual(
+      messages(ruleFixture("undefined-present.ts"), RULE, ssrfOptions, "undefined-present.ts"),
+      [],
+    );
+  });
+
+  it("requires a non-undefined value for every property when propertyMatch is all", () => {
+    const options = {
+      targets: [
+        {
+          ...ssrfOptions.targets[0],
+          propertyMatch: "all",
+        },
+      ],
+    };
+    const code = `import { validateUrl } from "ssrf-guard/node";
+validateUrl(url, { timeoutMs: undefined, signal });
+validateUrl(url, { timeoutMs: 1, signal: undefined });
+validateUrl(url, { timeoutMs: 1, signal });
+`;
+    assert.deepEqual(messages(code, RULE, options, "all-undefined.ts"), [
+      "missingOptions",
+      "missingOptions",
+    ]);
+  });
 });
 
 describe("require-options-on-imported-call helpers", () => {
@@ -500,6 +534,81 @@ describe("require-options-on-imported-call helpers", () => {
       ),
       true,
     );
+    assert.equal(
+      __test.hasRequiredOptions(
+        {
+          type: "ObjectExpression",
+          properties: [
+            {
+              type: "Property",
+              computed: false,
+              key: { type: "Identifier", name: "timeoutMs" },
+              value: { type: "Identifier", name: "undefined" },
+            },
+          ],
+        },
+        { propertyMatch: "any", requiredProperties: ["timeoutMs"] },
+      ),
+      false,
+    );
+    assert.equal(
+      __test.hasRequiredOptions(
+        {
+          type: "ObjectExpression",
+          properties: [
+            {
+              type: "Property",
+              computed: false,
+              key: { type: "Identifier", name: "timeoutMs" },
+              value: {
+                type: "UnaryExpression",
+                operator: "void",
+                argument: { type: "Literal", value: 0 },
+              },
+            },
+            {
+              type: "Property",
+              computed: false,
+              key: { type: "Identifier", name: "signal" },
+              value: { type: "Identifier", name: "signal" },
+            },
+          ],
+        },
+        { propertyMatch: "any", requiredProperties: ["timeoutMs", "signal"] },
+      ),
+      true,
+    );
+    assert.equal(
+      __test.hasRequiredOptions(
+        {
+          type: "ObjectExpression",
+          properties: [
+            {
+              type: "Property",
+              computed: false,
+              key: { type: "Identifier", name: "timeoutMs" },
+              value: {
+                type: "TSAsExpression",
+                expression: { type: "Identifier", name: "undefined" },
+              },
+            },
+            {
+              type: "Property",
+              computed: false,
+              key: { type: "Identifier", name: "signal" },
+              value: { type: "Identifier", name: "undefined" },
+            },
+          ],
+        },
+        { propertyMatch: "all", requiredProperties: ["timeoutMs", "signal"] },
+      ),
+      false,
+    );
+    assert.equal(
+      __test.isDefinitelyUndefinedValue({ type: "Identifier", name: "timeoutMs" }),
+      false,
+    );
+    assert.equal(__test.isDefinitelyUndefinedValue({ type: "Literal", value: 0 }), false);
   });
 
   it("treats parameter, catch, and function-name defs as unstable", () => {

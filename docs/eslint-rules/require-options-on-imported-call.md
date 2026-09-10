@@ -20,6 +20,9 @@ await checkUrl?.(url);
 await checkUrl(url, {});
 await checkUrl(url, { ...opts });
 await fromNs(url);
+await checkUrl(url, { timeoutMs: undefined });
+await checkUrl(url, { signal: void 0 });
+await checkUrl(url, { ["timeoutMs"]: undefined as number | undefined });
 ```
 
 ## Allowed
@@ -36,6 +39,8 @@ await ssrf.validateUrl(url, { signal });
 await ssrf?.validateUrl(url, { signal });
 await fromNs(url, { timeoutMs });
 await checkUrl(url, { timeoutMs: DNS_TIMEOUT_MS, ...rest });
+await checkUrl(url, { timeoutMs: undefined, signal });
+await checkUrl(url, { timeoutMs: maybeTimeoutMs });
 ```
 
 ## Options
@@ -45,8 +50,19 @@ await checkUrl(url, { timeoutMs: DNS_TIMEOUT_MS, ...rest });
   - `sourceSpecifierPatterns` and `calleeNamePatterns`: glob or `/regex/`
     strings that select the import specifier and exported callee name.
   - `optionsPosition`: one-based argument index of the options object.
-  - `requiredProperties`: property names that must be statically visible.
+  - `requiredProperties`: property names that must be statically present with a
+    value that is not definitely `undefined`.
   - optional `propertyMatch`: `"any"` (default) or `"all"`.
+
+A required property is present only when its key is statically visible and its
+value is not definitely `undefined`. `undefined`, `void <expr>`, transparent
+TypeScript wrappers around those values, and `const`/`let`/`var` bindings with
+one initialization to a definitely undefined value and no later writes do not
+satisfy `requiredProperties`. Other expressions stay accepted, including
+unknown identifiers, calls, and parameters, even if they might be undefined at
+runtime. `propertyMatch: "any"` still passes when at least one required
+property has a non-definitely-undefined value; `"all"` fails when any required
+property is missing or definitely undefined.
 
 Default imports match the local binding name, including
 `import { default as local }`. Object destructure from a tracked namespace
@@ -63,7 +79,8 @@ bindings mutated through `globalThis` are unsupported.
 ## Fix
 
 Pass an object literal at the configured argument position that includes the
-required property names. Spreads do not count as known keys.
+required property names with values that are not definitely `undefined`.
+Spreads do not count as known keys.
 
 ## Suppression
 
