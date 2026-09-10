@@ -529,7 +529,7 @@ jobs:
       - build-cli
       - build-napi
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 35
     permissions:
       contents: write
       id-token: write
@@ -646,23 +646,184 @@ jobs:
             gh release create "$tag" dist/* --title "$tag" --generate-notes
           fi
 
-      - name: Publish npm packages with OIDC
-        timeout-minutes: 10
+      - name: Publish npm platform packages with OIDC
+        timeout-minutes: 25
         shell: bash
         run: |
           set -euo pipefail
           version="${{ needs.prepare.outputs.version }}"
+          wait_script="packages/no-mistakes/scripts/wait-npm-tarball.js"
           for pkg in \
             no-mistakes-darwin-arm64 \
             no-mistakes-linux-arm64-gnu \
             no-mistakes-linux-x64-gnu \
-            no-mistakes-win32-x64-msvc \
-            no-mistakes \
-            eslint-plugin-no-mistakes
+            no-mistakes-win32-x64-msvc
           do
+            if node "$wait_script" --package "$pkg" --version "$version" --timeout-ms 0 >/dev/null 2>&1; then
+              echo "$pkg $version tarball is already fetchable; skipping publish"
+              continue
+            fi
             if pnpm view "$pkg@$version" version >/dev/null 2>&1; then
-              echo "$pkg $version is already published on npm; skipping"
+              echo "$pkg $version metadata exists without a fetchable tarball; waiting"
             else
               npm publish "./packages/$pkg" --provenance --access public
             fi
+            node "$wait_script" --package "$pkg" --version "$version"
           done
+
+  verify-npm-platform:
+    name: Verify npm ${{ matrix.package }}
+    needs:
+      - prepare
+      - publish
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: macos-15, package: no-mistakes-darwin-arm64 }
+          - { os: ubuntu-22.04, package: no-mistakes-linux-x64-gnu }
+          - { os: ubuntu-22.04-arm, package: no-mistakes-linux-arm64-gnu }
+          - { os: windows-2025, package: no-mistakes-win32-x64-msvc }
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          ref: ${{ needs.prepare.outputs.release-sha }}
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: 24
+
+      - name: Install and load published native package
+        timeout-minutes: 12
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.prepare.outputs.version }}"
+          pkg="${{ matrix.package }}"
+          node packages/no-mistakes/scripts/wait-npm-tarball.js --package "$pkg" --version "$version"
+          work="$RUNNER_TEMP/npm-platform-smoke"
+          mkdir -p "$work"
+          cd "$work"
+          npm install --omit=dev --no-fund --no-audit "$pkg@$version"
+          node "$GITHUB_WORKSPACE/packages/no-mistakes/scripts/smoke-published-native.js" \
+            --package "$pkg" \
+            --version "$version"
+
+  publish-js:
+    name: Publish JS packages
+    needs:
+      - prepare
+      - verify-npm-platform
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          ref: ${{ needs.prepare.outputs.release-sha }}
+          token: ${{ secrets.RELEASE_TOKEN }}
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: 24
+          registry-url: https://registry.npmjs.org
+
+      - name: Set up pnpm
+        timeout-minutes: 2
+        uses: pnpm/setup@703c52620218391530e48b9e8870d5c0082e1b9b # v2.1.0
+        with:
+          install: false
+
+      - name: Install pnpm dependencies
+        timeout-minutes: 5
+        run: pnpm install --frozen-lockfile --ignore-scripts
+
+      - name: Build JavaScript packages
+        timeout-minutes: 2
+        run: pnpm run build:js
+
+      - name: Publish npm JS packages with OIDC
+        timeout-minutes: 15
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.prepare.outputs.version }}"
+          wait_script="packages/no-mistakes/scripts/wait-npm-tarball.js"
+          for pkg in \
+            no-mistakes \
+            eslint-plugin-no-mistakes
+          do
+            if node "$wait_script" --package "$pkg" --version "$version" --timeout-ms 0 >/dev/null 2>&1; then
+              echo "$pkg $version tarball is already fetchable; skipping publish"
+              continue
+            fi
+            if pnpm view "$pkg@$version" version >/dev/null 2>&1; then
+              echo "$pkg $version metadata exists without a fetchable tarball; waiting"
+            else
+              npm publish "./packages/$pkg" --provenance --access public
+            fi
+            node "$wait_script" --package "$pkg" --version "$version"
+          done
+
+  verify-npm-root:
+    name: Verify npm no-mistakes (${{ matrix.os }})
+    needs:
+      - prepare
+      - publish-js
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+          - macos-15
+          - ubuntu-22.04
+          - ubuntu-22.04-arm
+          - windows-2025
+    steps:
+      - name: Checkout release commit
+        timeout-minutes: 5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 1
+          ref: ${{ needs.prepare.outputs.release-sha }}
+
+      - name: Install Node.js
+        timeout-minutes: 5
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: 24
+
+      - name: Install and load published no-mistakes
+        timeout-minutes: 12
+        shell: bash
+        run: |
+          set -euo pipefail
+          version="${{ needs.prepare.outputs.version }}"
+          node packages/no-mistakes/scripts/wait-npm-tarball.js --package no-mistakes --version "$version"
+          work="$RUNNER_TEMP/npm-root-smoke"
+          mkdir -p "$work"
+          cd "$work"
+          npm install --omit=dev --no-fund --no-audit "no-mistakes@$version"
+          node "$GITHUB_WORKSPACE/packages/no-mistakes/scripts/smoke-published-native.js" \
+            --package no-mistakes \
+            --version "$version"
+
