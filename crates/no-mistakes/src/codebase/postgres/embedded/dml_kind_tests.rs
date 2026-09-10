@@ -65,3 +65,31 @@ fn skips_comma_separated_ctes_and_quoted_names() {
     let sql = r#"WITH "stale" AS (SELECT 1), other AS (SELECT 2) DELETE FROM items"#;
     assert_eq!(top_level_dml_kind(sql), Some(TopLevelDml::Delete));
 }
+
+fn assert_final_update(sql: &str) {
+    assert_eq!(top_level_dml_kind(sql), Some(TopLevelDml::Update), "{sql}");
+}
+
+#[test]
+fn skips_delimited_text_inside_cte_bodies() {
+    assert_final_update("WITH stale AS (SELECT ')') UPDATE items SET x = 1");
+    assert_final_update(r#"WITH stale AS (SELECT ")") UPDATE items SET x = 1"#);
+    assert_final_update("WITH stale AS (SELECT 'it''s') UPDATE items SET x = 1");
+    assert_final_update(r#"WITH stale AS (SELECT "a""b") UPDATE items SET x = 1"#);
+    assert_final_update(r#"WITH stale AS (SELECT 'a\'b') UPDATE items SET x = 1"#);
+    assert_final_update("WITH stale AS (SELECT $$)$$) UPDATE items SET x = 1");
+    assert_final_update("WITH stale AS (SELECT $body$) $body$) UPDATE items SET x = 1");
+    assert_final_update("WITH stale AS (SELECT $_x$) $_x$) UPDATE items SET x = 1");
+    assert_final_update("WITH stale AS (SELECT $1) UPDATE items SET x = 1");
+    assert_final_update("WITH stale AS (SELECT $tag) UPDATE items SET x = 1");
+    assert_final_update("WITH stale AS (SELECT -- )\n1) UPDATE items SET x = 1");
+    assert_final_update("WITH stale AS (SELECT /* ) */ 1) UPDATE items SET x = 1");
+}
+
+#[test]
+fn unterminated_delimiters_inside_ctes_fail_closed() {
+    assert_eq!(top_level_dml_kind("WITH stale AS (SELECT 'nope"), None);
+    assert_eq!(top_level_dml_kind(r#"WITH stale AS (SELECT "nope"#), None);
+    assert_eq!(top_level_dml_kind("WITH stale AS (SELECT $body$nope"), None);
+    assert_eq!(top_level_dml_kind("WITH stale AS (SELECT $"), None);
+}
