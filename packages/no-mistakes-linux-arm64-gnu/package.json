@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes-linux-arm64-gnu",
-  "version": "0.61.6",
+  "version": "0.61.7",
   "description": "Native no-mistakes CLI and N-API addon for Linux ARM64 with glibc",
   "license": "MIT",
   "repository": {
