@@ -143,6 +143,8 @@ mod append_mutation_tests;
 #[cfg(test)]
 mod chain_composition_tests;
 #[cfg(test)]
+mod chain_dynamic_prefix_tests;
+#[cfg(test)]
 mod chain_reassignment_destructuring_tests;
 #[cfg(test)]
 mod chain_tests;
