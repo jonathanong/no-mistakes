@@ -10,6 +10,7 @@ const {
   main,
   nativeCliPath,
   parseArgs,
+  reportCliFailure,
   smokePublishedNative,
   smokePublishedRoot,
 } = require("./smoke-published-native");
@@ -152,6 +153,21 @@ test("main dispatches root vs native packages", async () => {
     spawn: () => ({ status: 0, stdout: "0.1.0", stderr: "" }),
   });
   assert.match(chunks.join(""), /no-mistakes-linux-x64-gnu/);
+  const writes = [];
+  const originalWrite = process.stdout.write.bind(process.stdout);
+  process.stdout.write = (chunk) => {
+    writes.push(String(chunk));
+    return true;
+  };
+  try {
+    await main(["--package", "no-mistakes", "--version", "0.1.0"], {
+      load: () => ({}),
+      spawn: () => ({ status: 0, stdout: "0.1.0", stderr: "" }),
+    });
+  } finally {
+    process.stdout.write = originalWrite;
+  }
+  assert.match(writes.join(""), /no-mistakes\.js/);
 });
 
 test("CLI reports usage errors without installing", () => {
@@ -162,4 +178,12 @@ test("CLI reports usage errors without installing", () => {
   );
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /--package requires a value/);
+});
+
+test("reportCliFailure writes the error and sets a nonzero exit", () => {
+  const chunks = [];
+  const io = { stderr: { write: (chunk) => chunks.push(chunk) }, exitCode: 0 };
+  reportCliFailure(new Error("boom"), io);
+  assert.equal(io.exitCode, 1);
+  assert.deepEqual(chunks, ["boom\n"]);
 });

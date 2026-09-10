@@ -8,6 +8,7 @@ const {
   encodeName,
   main,
   parseArgs,
+  reportCliFailure,
   tarballUrl,
   waitForNpmTarball,
 } = require("./wait-npm-tarball");
@@ -229,7 +230,9 @@ test("main writes JSON when the tarball is ready", async () => {
   const body = Buffer.from("cli");
   const shasum = createHash("sha1").update(body).digest("hex");
   const chunks = [];
+  const writes = [];
   const originalFetch = globalThis.fetch;
+  const originalWrite = process.stdout.write.bind(process.stdout);
   globalThis.fetch = async (url) => {
     if (String(url).endsWith("/pkg"))
       return jsonResponse(200, packument("2.0.0", shasum, `${url}-file.tgz`));
@@ -242,10 +245,17 @@ test("main writes JSON when the tarball is ready", async () => {
         stdout: { write: (chunk) => chunks.push(chunk) },
       },
     );
+    process.stdout.write = (chunk) => {
+      writes.push(String(chunk));
+      return true;
+    };
+    await main(["--package", "pkg", "--version", "2.0.0", "--timeout-ms", "0"]);
   } finally {
     globalThis.fetch = originalFetch;
+    process.stdout.write = originalWrite;
   }
   assert.equal(JSON.parse(chunks.join("")).shasum, shasum);
+  assert.equal(JSON.parse(writes.join("")).shasum, shasum);
 });
 
 test("CLI reports usage errors without publishing", () => {
@@ -258,4 +268,12 @@ test("CLI reports usage errors without publishing", () => {
   );
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /--package requires a value/);
+});
+
+test("reportCliFailure writes the error and sets a nonzero exit", () => {
+  const chunks = [];
+  const io = { stderr: { write: (chunk) => chunks.push(chunk) }, exitCode: 0 };
+  reportCliFailure(new Error("boom"), io);
+  assert.equal(io.exitCode, 1);
+  assert.deepEqual(chunks, ["boom\n"]);
 });

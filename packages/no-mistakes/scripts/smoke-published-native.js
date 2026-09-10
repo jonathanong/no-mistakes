@@ -91,11 +91,13 @@ async function main(argv = process.argv.slice(2), deps = {}) {
   return result;
 }
 
+function reportCliFailure(error, io = process) {
+  io.stderr.write(`${error.message}\n`);
+  io.exitCode = 1;
+}
+
 if (require.main === module) {
-  main().catch((error) => {
-    process.stderr.write(`${error.message}\n`);
-    process.exitCode = 1;
-  });
+  main().catch((error) => reportCliFailure(error));
 }
 
 module.exports = {
@@ -103,6 +105,7 @@ module.exports = {
   main,
   nativeCliPath,
   parseArgs,
+  reportCliFailure,
   smokePublishedNative,
   smokePublishedRoot,
 };
