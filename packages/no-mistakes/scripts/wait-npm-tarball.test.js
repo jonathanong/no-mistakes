@@ -305,7 +305,7 @@ test("aborts a stalled tarball body read at the deadline", async () => {
       version: "1.0.0",
       timeoutMs: 40,
       intervalMs: 0,
-      fetchImpl: async (url, init = {}) => {
+      fetchImpl: async (url) => {
         if (String(url).endsWith("/pkg")) return jsonResponse(200, packument("1.0.0", shasum));
         return {
           ok: true,
