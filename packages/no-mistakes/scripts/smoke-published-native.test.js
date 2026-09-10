@@ -137,6 +137,39 @@ test("root smoke requires a version", async () => {
   await assert.rejects(smokePublishedRoot({}), /version is required/);
 });
 
+test("root smoke loads the installed package, not the repository package", () => {
+  const cwd = mkdtempSync(join(tmpdir(), "smoke-root-isolation-"));
+  try {
+    const packageDir = join(cwd, "node_modules", "no-mistakes");
+    mkdirSync(join(packageDir, "bin"), { recursive: true });
+    writeFileSync(
+      join(packageDir, "package.json"),
+      JSON.stringify({ name: "no-mistakes", version: "9.9.9", main: "index.js" }),
+    );
+    writeFileSync(join(packageDir, "index.js"), "module.exports = { ok: true };\n");
+    writeFileSync(
+      join(packageDir, "bin", "no-mistakes.js"),
+      "process.stdout.write('no-mistakes 9.9.9\\n');\n",
+    );
+    const result = spawnSync(
+      process.execPath,
+      [
+        require.resolve("./smoke-published-native.js"),
+        "--package",
+        "no-mistakes",
+        "--version",
+        "9.9.9",
+      ],
+      { cwd, encoding: "utf8" },
+    );
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /no-mistakes\.js/);
+    assert.doesNotMatch(result.stderr, /no staged artifacts/);
+  } finally {
+    rmSync(cwd, { recursive: true, force: true });
+  }
+});
+
 test("main dispatches root vs native packages", async () => {
   const chunks = [];
   await main(["--package", "no-mistakes", "--version", "0.1.0"], {

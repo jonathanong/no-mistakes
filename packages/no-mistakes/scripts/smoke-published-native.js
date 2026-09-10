@@ -21,7 +21,10 @@ function parseArgs(argv) {
 }
 
 function requireFrom(id, cwd) {
-  return require(require.resolve(id, { paths: [cwd] }));
+  // Resolve through the install prefix, not require.resolve(). This file
+  // lives in packages/no-mistakes, so Node's package self-reference would load
+  // the repository package instead of the published tarball under cwd.
+  return require(join(cwd, "node_modules", id));
 }
 
 function nativeCliPath(packageDir, exists = existsSync) {
