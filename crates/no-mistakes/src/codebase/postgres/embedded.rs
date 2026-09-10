@@ -138,6 +138,8 @@ fn quasi_text<'a>(quasi: &'a oxc_ast::ast::TemplateElement<'a>, use_raw: bool) -
 }
 
 #[cfg(test)]
+mod append_mutation_tests;
+#[cfg(test)]
 mod chain_composition_tests;
 #[cfg(test)]
 mod chain_reassignment_destructuring_tests;

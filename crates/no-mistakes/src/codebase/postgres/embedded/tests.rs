@@ -333,37 +333,6 @@ fn append_static_fragment_is_composed() {
 }
 
 #[test]
-fn append_inside_unbraced_if_is_dynamic() {
-    let facts = extract("composed-append-if.ts");
-    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
-}
-
-#[test]
-fn append_inside_unbraced_loop_is_dynamic() {
-    let facts = extract("composed-append-loop.ts");
-    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
-}
-
-#[test]
-fn append_inside_switch_ternary_or_logical_is_dynamic() {
-    for name in [
-        "composed-append-switch.ts",
-        "composed-append-ternary.ts",
-        "composed-append-and.ts",
-        "composed-append-for.ts",
-        "composed-append-for-in.ts",
-        "composed-append-while.ts",
-        "composed-append-do-while.ts",
-    ] {
-        assert_eq!(
-            extract(name).calls[0].kind,
-            super::EmbeddedSqlKind::Dynamic,
-            "{name}"
-        );
-    }
-}
-
-#[test]
 fn reassigned_let_is_dynamic() {
     let facts = extract("dynamic-let.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);

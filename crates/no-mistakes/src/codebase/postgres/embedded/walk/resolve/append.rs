@@ -19,7 +19,11 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
         visitor.mark_dynamic(ident.name.as_str());
         return;
     };
-    if visitor.control_depth > 0 {
+    // Loops may append a runtime-unknown number of times. Nested functions
+    // that mutate an outer binding are walked even when they never run.
+    // Sequential function-local mutations and conditional static fragments
+    // still compose: the latter over-approximates by including the branch.
+    if visitor.loop_depth > 0 || visitor.append_crosses_function(ident.name.as_str()) {
         visitor.mark_dynamic(ident.name.as_str());
         return;
     }

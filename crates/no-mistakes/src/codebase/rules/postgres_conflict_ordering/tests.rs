@@ -325,6 +325,35 @@ fn honors_the_safe_directive_for_recovered_dynamic_sql() {
 }
 
 #[test]
+fn allows_sql_template_strings_append_mutations() {
+    let root = fixture("pass-append-mutations");
+    let result = check_with_files(
+        &root,
+        &config(),
+        &[
+            root.join("src/select.ts"),
+            root.join("src/update.ts"),
+            root.join("src/conditional.ts"),
+            root.join("src/helper.ts"),
+            root.join("src/insert.ts"),
+            root.join("schema.json"),
+        ],
+    )
+    .unwrap();
+    assert!(result.is_empty(), "{result:#?}");
+}
+
+#[test]
+fn rejects_recovered_append_insert_without_canonical_order() {
+    let findings = findings("fail-append-missing-order");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("missing-canonical-order")
+    );
+}
+
+#[test]
 fn napi_check_reports_the_same_registered_rule() {
     let root = fixture("fail-missing-order");
     let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(

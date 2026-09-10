@@ -65,6 +65,7 @@ pub(super) fn static_fragment(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>)
         Expression::TaggedTemplateExpression(_) => unpublished_sql_text(expr),
         Expression::BinaryExpression(_) => composed_sql(expr, visitor).map(|(text, _)| text),
         Expression::CallExpression(_) => resolve_chain(expr, visitor),
+        Expression::Identifier(ident) => recovered_binding_sql(ident.name.as_str(), visitor),
         _ => None,
     }
 }
@@ -110,4 +111,18 @@ fn untrusted_tag(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> bool {
 /// intermediate helper.
 fn tag_shadowed(name: &str, visitor: &ScopeVisitor<'_>) -> bool {
     visitor.shadowed_locally(name) || visitor.functions.is_tag_shadowed(name)
+}
+
+/// Statement-level `query.append(fragment)` looks up a bound SQLStatement.
+/// Dynamic or missing bindings fail closed. `chain::resolve_expr` still
+/// has no `Identifier` case, so same-file helpers cannot smuggle a parameter
+/// through this path when inlined.
+fn recovered_binding_sql(name: &str, visitor: &ScopeVisitor<'_>) -> Option<String> {
+    let binding = visitor.lookup(name)?;
+    match binding.kind {
+        EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed | EmbeddedSqlKind::Inline => {
+            binding.sql
+        }
+        EmbeddedSqlKind::Dynamic => None,
+    }
 }

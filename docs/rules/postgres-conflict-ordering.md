@@ -98,12 +98,18 @@ Recovered dynamic SQL whose static fragments identify an `INSERT` fails closed
 by default because an interpolation can add or alter its conflict clause and
 row order. An opaque executor argument (`query(assembleWriter())`,
 `query(...args)`) also fails closed by default: there is no recoverable
-statement, so a zero-finding run cannot mean the writer was checked. Make the
-statement static, use `unanalyzableSql: ignore` for a temporary scoped rollout
-exception, or add a nearby SQL/comment directive such as
-`/* deadlock-safe: single ordered source */` only when the ordering is enforced
-outside the analyzable statement. Recovered dynamic SQL that is not an `INSERT`
-is still ignored.
+statement, so a zero-finding run cannot mean the writer was checked.
+Statement-level `sql-template-strings` mutation chains — initialize a bound
+statement, `append` recoverable fragments, then `read`/`write` it — are
+analyzed when those fragments are static, including helper-produced
+`SQLStatement` values and conditional static branches. Recovered non-`INSERT`
+SELECT/UPDATE stays outside this rule; recovered `INSERT … ON CONFLICT` gets
+the ordinary catalog ordering check. Unbound, spread, or otherwise unrecovered
+append arguments stay fail-closed. Make the statement static, use
+`unanalyzableSql: ignore` for a temporary scoped rollout exception, or add a
+nearby SQL/comment directive such as `/* deadlock-safe: single ordered source */`
+only when the ordering is enforced outside the analyzable statement. Recovered
+dynamic SQL that is not an `INSERT` is still ignored.
 
 Use `no-mistakes-disable-next-line postgres-conflict-ordering` or
 `no-mistakes-disable-line` for a one-off. Prefer repairing the writer or a
