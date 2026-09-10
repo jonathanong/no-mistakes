@@ -6,12 +6,14 @@ use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
 mod bindings;
+mod dml_kind;
 mod options;
 mod placeholders;
 mod tags;
 mod walk;
 
 pub use bindings::{executor_bindings, is_database_call};
+pub(crate) use dml_kind::recovered_sql_needs_insert_check;
 pub use options::EmbeddedSqlOptions;
 
 /// One executor call site and its recovered SQL text. For `Dynamic` calls,
@@ -150,6 +152,10 @@ mod chain_reassignment_destructuring_tests;
 mod chain_tests;
 #[cfg(test)]
 mod compose_classification_tests;
+#[cfg(test)]
+mod dml_kind_tests;
+#[cfg(test)]
+mod helper_body_tests;
 #[cfg(test)]
 mod imported_sql_tag_tests;
 #[cfg(test)]

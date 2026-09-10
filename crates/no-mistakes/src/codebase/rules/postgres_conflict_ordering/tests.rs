@@ -347,6 +347,9 @@ fn allows_sql_template_strings_append_mutations() {
             root.join("src/update.ts"),
             root.join("src/conditional.ts"),
             root.join("src/helper.ts"),
+            root.join("src/helper-update.ts"),
+            root.join("src/with-update.ts"),
+            root.join("src/with-insert.ts"),
             root.join("src/insert.ts"),
             root.join("schema.json"),
         ],
@@ -381,6 +384,23 @@ fn rejects_opaque_append_insert_as_unanalyzable() {
             .iter()
             .all(|finding| finding.target.as_deref() == Some("unanalyzable-sql")),
         "{findings:#?}"
+    );
+}
+
+#[test]
+fn rejects_incomplete_with_plus_opaque_append_as_unanalyzable() {
+    let findings = findings("fail-incomplete-with-append");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable-sql"));
+}
+
+#[test]
+fn rejects_recovered_helper_insert_without_canonical_order() {
+    let findings = findings("fail-helper-insert-missing-order");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(
+        findings[0].target.as_deref(),
+        Some("missing-canonical-order")
     );
 }
 

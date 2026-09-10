@@ -6,6 +6,7 @@ pub(in super::super) fn contains_insert_conflict(sql: &str) -> bool {
         && contains_keyword(sql, "conflict")
 }
 
+#[cfg(test)]
 pub(in super::super) fn contains_insert(sql: &str) -> bool {
     contains_keyword(sql, "insert")
 }
