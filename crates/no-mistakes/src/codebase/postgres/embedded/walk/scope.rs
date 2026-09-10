@@ -1,5 +1,5 @@
 use super::{resolve, BindingState, EmbeddedSqlKind, ScopeVisitor};
-use oxc_ast::ast::BindingPattern;
+use oxc_ast::ast::{BindingPattern, FormalParameters};
 use std::collections::HashMap;
 
 impl ScopeVisitor<'_> {
@@ -79,9 +79,60 @@ impl ScopeVisitor<'_> {
         }
     }
 
+    /// Conditional appends must not compose as if the branch always ran, but
+    /// wiping recovered SQL would make non-INSERT executors opaque. Keep the
+    /// text and mark Dynamic: INSERT fails closed, SELECT/UPDATE stay ignored.
+    pub(super) fn mark_dynamic_keep_sql(&mut self, name: &str) {
+        for scope in self.scopes.iter_mut().rev() {
+            if let Some(binding) = scope.get_mut(name) {
+                binding.kind = EmbeddedSqlKind::Dynamic;
+                return;
+            }
+        }
+    }
+
+    pub(super) fn record_params(&mut self, params: &FormalParameters<'_>) {
+        for param in &params.items {
+            self.bind_param(&param.pattern);
+        }
+        if let Some(rest) = &params.rest {
+            self.bind_param(&rest.rest.argument);
+        }
+    }
+
     pub(super) fn with_control_flow(&mut self, walk: impl FnOnce(&mut Self)) {
         self.control_depth += 1;
         walk(self);
         self.control_depth = self.control_depth.saturating_sub(1);
+    }
+
+    pub(super) fn enter_function(&mut self) {
+        self.function_scopes
+            .push(self.scopes.len().saturating_sub(1));
+    }
+
+    pub(super) fn leave_function(&mut self) {
+        self.function_scopes.pop();
+    }
+
+    pub(super) fn with_loop(&mut self, walk: impl FnOnce(&mut Self)) {
+        self.loop_depth += 1;
+        walk(self);
+        self.loop_depth = self.loop_depth.saturating_sub(1);
+    }
+
+    /// True when `name` is an outer function's binding mutated from a nested
+    /// function. Walking a nested declaration is not executing it, so those
+    /// appends must not rewrite the outer SQL.
+    pub(super) fn append_crosses_function(&self, name: &str) -> bool {
+        let Some(&fn_start) = self.function_scopes.last() else {
+            return false;
+        };
+        self.scopes
+            .iter()
+            .enumerate()
+            .rev()
+            .find_map(|(index, scope)| scope.contains_key(name).then_some(index))
+            .is_some_and(|index| index < fn_start)
     }
 }

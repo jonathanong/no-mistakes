@@ -1,8 +1,7 @@
 use super::bindings::callee_name;
 use super::{EmbeddedSqlCall, EmbeddedSqlKind};
 use oxc_ast::ast::{
-    AssignmentTarget, BlockStatement, CallExpression, FormalParameters, Function, FunctionBody,
-    FunctionType, Program,
+    AssignmentTarget, BlockStatement, CallExpression, Function, FunctionBody, FunctionType, Program,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
@@ -29,6 +28,8 @@ pub(super) fn collect_calls(
         scopes: Vec::new(),
         calls: Vec::new(),
         control_depth: 0,
+        loop_depth: 0,
+        function_scopes: Vec::new(),
         functions: resolve::LocalFunctions::collect(program),
     };
     visitor.visit_program(program);
@@ -41,6 +42,8 @@ struct ScopeVisitor<'a> {
     scopes: Vec<HashMap<String, BindingState>>,
     calls: Vec<EmbeddedSqlCall>,
     control_depth: usize,
+    loop_depth: usize,
+    function_scopes: Vec<usize>,
     functions: resolve::LocalFunctions,
 }
 
@@ -70,7 +73,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
         self.push_scope();
-        record_params(&function.params, self);
+        self.record_params(&function.params);
         // A named function expression's own name is visible only inside its
         // own body (unlike a declaration's, hoisted into the enclosing
         // scope by `record_function_declaration`), so it belongs in the
@@ -84,13 +87,15 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
                 self.bind_self_name(id.name.as_str());
             }
         }
-        self.with_control_flow(|visitor| walk::walk_function(visitor, function, flags));
+        self.enter_function();
+        walk::walk_function(self, function, flags);
+        self.leave_function();
         self.pop_scope();
     }
 
     fn visit_function_body(&mut self, body: &FunctionBody<'a>) {
         resolve::record_statements(&body.statements, self);
-        self.with_control_flow(|visitor| walk::walk_function_body(visitor, body));
+        walk::walk_function_body(self, body);
     }
 
     fn visit_arrow_function_expression(
@@ -98,8 +103,10 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
         self.push_scope();
-        record_params(&arrow.params, self);
-        self.with_control_flow(|visitor| walk::walk_arrow_function_expression(visitor, arrow));
+        self.record_params(&arrow.params);
+        self.enter_function();
+        walk::walk_arrow_function_expression(self, arrow);
+        self.leave_function();
         self.pop_scope();
     }
 
@@ -118,36 +125,32 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         walk::walk_call_expression(self, call);
     }
 
-    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) {
-        self.with_control_flow(|visitor| walk::walk_if_statement(visitor, statement));
-    }
-
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
         resolve::enter_classic_for(statement, self);
-        self.with_control_flow(|visitor| walk::walk_for_statement(visitor, statement));
+        self.with_loop(|visitor| walk::walk_for_statement(visitor, statement));
         resolve::leave_classic_for(statement, self);
     }
 
     fn visit_for_in_statement(&mut self, statement: &oxc_ast::ast::ForInStatement<'a>) {
         self.push_scope();
         resolve::bind_for_statement_left(&statement.left, self);
-        self.with_control_flow(|visitor| walk::walk_for_in_statement(visitor, statement));
+        self.with_loop(|visitor| walk::walk_for_in_statement(visitor, statement));
         self.pop_scope();
     }
 
     fn visit_for_of_statement(&mut self, statement: &oxc_ast::ast::ForOfStatement<'a>) {
         self.push_scope();
         resolve::bind_for_statement_left(&statement.left, self);
-        self.with_control_flow(|visitor| walk::walk_for_of_statement(visitor, statement));
+        self.with_loop(|visitor| walk::walk_for_of_statement(visitor, statement));
         self.pop_scope();
     }
 
     fn visit_while_statement(&mut self, statement: &oxc_ast::ast::WhileStatement<'a>) {
-        self.with_control_flow(|visitor| walk::walk_while_statement(visitor, statement));
+        self.with_loop(|visitor| walk::walk_while_statement(visitor, statement));
     }
 
     fn visit_do_while_statement(&mut self, statement: &oxc_ast::ast::DoWhileStatement<'a>) {
-        self.with_control_flow(|visitor| walk::walk_do_while_statement(visitor, statement));
+        self.with_loop(|visitor| walk::walk_do_while_statement(visitor, statement));
     }
 
     fn visit_switch_statement(&mut self, statement: &oxc_ast::ast::SwitchStatement<'a>) {
@@ -167,6 +170,10 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         self.pop_scope();
     }
 
+    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) {
+        self.with_control_flow(|visitor| walk::walk_if_statement(visitor, statement));
+    }
+
     fn visit_conditional_expression(&mut self, expr: &oxc_ast::ast::ConditionalExpression<'a>) {
         self.visit_expression(&expr.test);
         self.with_control_flow(|visitor| {
@@ -178,14 +185,5 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_logical_expression(&mut self, expr: &oxc_ast::ast::LogicalExpression<'a>) {
         self.visit_expression(&expr.left);
         self.with_control_flow(|visitor| visitor.visit_expression(&expr.right));
-    }
-}
-
-fn record_params(params: &FormalParameters<'_>, visitor: &mut ScopeVisitor<'_>) {
-    for param in &params.items {
-        visitor.bind_param(&param.pattern);
-    }
-    if let Some(rest) = &params.rest {
-        visitor.bind_param(&rest.rest.argument);
     }
 }

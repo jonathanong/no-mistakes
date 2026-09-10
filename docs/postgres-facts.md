@@ -134,11 +134,17 @@ Each `EmbeddedSqlCall` records `kind`:
 
 - `Inline` — SQL literal or template at the call site
 - `ImmutableLocal` — `const` binding with static SQL
-- `Composed` — static `+` concatenation, a fluent `.append(...)` chain, or a
-  call into a same-file function whose body is exactly one `return` of such a
-  chain (recursive, up to 8 calls deep). A parameter referenced outside a
-  chain's template-placeholder position, or a callee that isn't a same-file
-  function, fails closed instead of resolving.
+- `Composed` — static `+` concatenation, a fluent `.append(...)` chain, a
+  statement-level `.append(...)` mutation on a bound `SQLStatement` (including
+  `sql-template-strings` init plus later `query.append(...)` in the same
+  function), or a call into a same-file function whose body is exactly one
+  `return` of such a chain (recursive, up to 8 calls deep). Conditional
+  static appends keep the recovered base SQL and classify `Dynamic` so an
+  INSERT cannot pass a branch-only `ORDER BY` as if it always ran; recovered
+  non-INSERT stays ignored by conflict-ordering. Loops, nested functions
+  that mutate an outer binding, a parameter referenced outside a chain's
+  template-placeholder position, or a callee that isn't a same-file function,
+  fail closed instead of resolving.
 - `Dynamic` — `let`, reassignment, interpolating templates, or incomplete
   composition (fail closed)
 

@@ -19,8 +19,17 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
         visitor.mark_dynamic(ident.name.as_str());
         return;
     };
-    if visitor.control_depth > 0 {
+    // Loops may append a runtime-unknown number of times. Nested functions
+    // that mutate an outer binding are walked even when they never run.
+    // Sequential function-local mutations still compose. Conditional static
+    // fragments keep recovered SQL but mark Dynamic so INSERT cannot pass
+    // a branch-only ORDER BY as if it always ran.
+    if visitor.loop_depth > 0 || visitor.append_crosses_function(ident.name.as_str()) {
         visitor.mark_dynamic(ident.name.as_str());
+        return;
+    }
+    if visitor.control_depth > 0 {
+        visitor.mark_dynamic_keep_sql(ident.name.as_str());
         return;
     }
     for scope in visitor.scopes.iter_mut().rev() {
