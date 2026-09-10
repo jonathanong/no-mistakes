@@ -1,8 +1,7 @@
 use super::bindings::callee_name;
 use super::{EmbeddedSqlCall, EmbeddedSqlKind};
 use oxc_ast::ast::{
-    AssignmentTarget, BlockStatement, CallExpression, FormalParameters, Function, FunctionBody,
-    FunctionType, Program,
+    AssignmentTarget, BlockStatement, CallExpression, Function, FunctionBody, FunctionType, Program,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_syntax::scope::ScopeFlags;
@@ -28,6 +27,7 @@ pub(super) fn collect_calls(
         bindings,
         scopes: Vec::new(),
         calls: Vec::new(),
+        control_depth: 0,
         loop_depth: 0,
         function_scopes: Vec::new(),
         functions: resolve::LocalFunctions::collect(program),
@@ -41,6 +41,7 @@ struct ScopeVisitor<'a> {
     bindings: &'a HashSet<String>,
     scopes: Vec<HashMap<String, BindingState>>,
     calls: Vec<EmbeddedSqlCall>,
+    control_depth: usize,
     loop_depth: usize,
     function_scopes: Vec<usize>,
     functions: resolve::LocalFunctions,
@@ -72,7 +73,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
     fn visit_function(&mut self, function: &Function<'a>, flags: ScopeFlags) {
         self.push_scope();
-        record_params(&function.params, self);
+        self.record_params(&function.params);
         // A named function expression's own name is visible only inside its
         // own body (unlike a declaration's, hoisted into the enclosing
         // scope by `record_function_declaration`), so it belongs in the
@@ -102,7 +103,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
     ) {
         self.push_scope();
-        record_params(&arrow.params, self);
+        self.record_params(&arrow.params);
         self.enter_function();
         walk::walk_arrow_function_expression(self, arrow);
         self.leave_function();
@@ -165,16 +166,24 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
         for case in &statement.cases {
             resolve::record_statements(&case.consequent, self);
         }
-        self.visit_switch_cases(&statement.cases);
+        self.with_control_flow(|visitor| visitor.visit_switch_cases(&statement.cases));
         self.pop_scope();
     }
-}
 
-fn record_params(params: &FormalParameters<'_>, visitor: &mut ScopeVisitor<'_>) {
-    for param in &params.items {
-        visitor.bind_param(&param.pattern);
+    fn visit_if_statement(&mut self, statement: &oxc_ast::ast::IfStatement<'a>) {
+        self.with_control_flow(|visitor| walk::walk_if_statement(visitor, statement));
     }
-    if let Some(rest) = &params.rest {
-        visitor.bind_param(&rest.rest.argument);
+
+    fn visit_conditional_expression(&mut self, expr: &oxc_ast::ast::ConditionalExpression<'a>) {
+        self.visit_expression(&expr.test);
+        self.with_control_flow(|visitor| {
+            visitor.visit_expression(&expr.consequent);
+            visitor.visit_expression(&expr.alternate);
+        });
+    }
+
+    fn visit_logical_expression(&mut self, expr: &oxc_ast::ast::LogicalExpression<'a>) {
+        self.visit_expression(&expr.left);
+        self.with_control_flow(|visitor| visitor.visit_expression(&expr.right));
     }
 }

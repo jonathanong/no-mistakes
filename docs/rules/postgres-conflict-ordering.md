@@ -102,14 +102,17 @@ statement, so a zero-finding run cannot mean the writer was checked.
 Statement-level `sql-template-strings` mutation chains — initialize a bound
 statement, `append` recoverable fragments, then `read`/`write` it — are
 analyzed when those fragments are static, including helper-produced
-`SQLStatement` values and conditional static branches. Recovered non-`INSERT`
-SELECT/UPDATE stays outside this rule; recovered `INSERT … ON CONFLICT` gets
-the ordinary catalog ordering check. Unbound, spread, or otherwise opaque
-append arguments stay fail-closed. Make the statement static, use
-`unanalyzableSql: ignore` for a temporary scoped rollout exception, or add a
-nearby SQL/comment directive such as `/* deadlock-safe: single ordered source */`
-only when the ordering is enforced outside the analyzable statement. Recovered
-dynamic SQL that is not an `INSERT` is still ignored.
+`SQLStatement` values. Conditional static appends keep the recovered base
+SQL and classify as dynamic: recovered non-`INSERT` SELECT/UPDATE stays
+outside this rule, while recovered `INSERT` fails closed rather than treating
+a branch-only `ORDER BY` as always present. Sequential recovered
+`INSERT … ON CONFLICT` gets the ordinary catalog ordering check. Unbound,
+spread, or otherwise opaque append arguments stay fail-closed. Make the
+statement static, use `unanalyzableSql: ignore` for a temporary scoped
+rollout exception, or add a nearby SQL/comment directive such as
+`/* deadlock-safe: single ordered source */` only when the ordering is
+enforced outside the analyzable statement. Recovered dynamic SQL that is
+not an `INSERT` is still ignored.
 
 Use `no-mistakes-disable-next-line postgres-conflict-ordering` or
 `no-mistakes-disable-line` for a one-off. Prefer repairing the writer or a

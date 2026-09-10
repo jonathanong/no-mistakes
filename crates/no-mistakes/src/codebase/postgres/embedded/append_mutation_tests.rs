@@ -59,12 +59,12 @@ fn append_of_a_helper_sql_statement_call_is_composed() {
 }
 
 #[test]
-fn function_local_conditional_static_append_is_composed() {
+fn function_local_conditional_static_append_keeps_sql_as_dynamic() {
     let facts = extract("composed-append-if-function-local.ts");
-    assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Composed);
+    assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some("SELECT id FROM topics WHERE published = true ORDER BY id")
+        Some("SELECT id FROM topics WHERE published = true")
     );
 }
 
@@ -83,12 +83,12 @@ fn unbound_append_argument_fails_closed() {
 }
 
 #[test]
-fn append_inside_unbraced_if_is_composed() {
+fn append_inside_unbraced_if_keeps_sql_as_dynamic() {
     let facts = extract("composed-append-if.ts");
-    assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Composed);
+    assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(
         facts.calls[0].sql_text.as_deref(),
-        Some("SELECT id FROM topics WHERE id = 1")
+        Some("SELECT id FROM topics")
     );
 }
 
@@ -99,17 +99,17 @@ fn append_inside_unbraced_loop_is_dynamic() {
 }
 
 #[test]
-fn append_inside_switch_ternary_or_logical_is_composed() {
+fn append_inside_switch_ternary_or_logical_keeps_sql_as_dynamic() {
     for name in [
         "composed-append-switch.ts",
         "composed-append-ternary.ts",
         "composed-append-and.ts",
     ] {
         let facts = extract(name);
-        assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Composed, "{name}");
+        assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Dynamic, "{name}");
         assert_eq!(
             facts.calls[0].sql_text.as_deref(),
-            Some("SELECT id FROM topics WHERE id = 1"),
+            Some("SELECT id FROM topics"),
             "{name}"
         );
     }

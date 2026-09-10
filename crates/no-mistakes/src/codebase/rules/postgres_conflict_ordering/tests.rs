@@ -354,6 +354,13 @@ fn rejects_recovered_append_insert_without_canonical_order() {
 }
 
 #[test]
+fn rejects_conditional_append_insert_as_unanalyzable() {
+    let findings = findings("fail-append-conditional-insert");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable-sql"));
+}
+
+#[test]
 fn napi_check_reports_the_same_registered_rule() {
     let root = fixture("fail-missing-order");
     let report = crate::napi_api::check_json_impl(crate::napi_api::options::test_json_arg(

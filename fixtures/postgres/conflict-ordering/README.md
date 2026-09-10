@@ -6,4 +6,6 @@ that targetless or multiply inferred arbiters fail closed. Opaque executor
 arguments fail closed as `unanalyzable-sql` unless `unanalyzableSql: ignore`.
 `sql-template-strings` statement-level `.append()` mutation chains recover when
 fragments are static; recovered non-INSERT queries stay clean, and recovered
-INSERT/ON CONFLICT still gets the catalog ordering check.
+INSERT/ON CONFLICT still gets the catalog ordering check. Conditional static
+appends keep recovered SQL as dynamic so INSERT cannot pass a branch-only
+order as if it always ran.

@@ -139,7 +139,9 @@ Each `EmbeddedSqlCall` records `kind`:
   `sql-template-strings` init plus later `query.append(...)` in the same
   function), or a call into a same-file function whose body is exactly one
   `return` of such a chain (recursive, up to 8 calls deep). Conditional
-  static appends include the fragment (conservative). Loops, nested functions
+  static appends keep the recovered base SQL and classify `Dynamic` so an
+  INSERT cannot pass a branch-only `ORDER BY` as if it always ran; recovered
+  non-INSERT stays ignored by conflict-ordering. Loops, nested functions
   that mutate an outer binding, a parameter referenced outside a chain's
   template-placeholder position, or a callee that isn't a same-file function,
   fail closed instead of resolving.
