@@ -14,7 +14,8 @@ mod walk;
 pub use bindings::{executor_bindings, is_database_call};
 pub use options::EmbeddedSqlOptions;
 
-/// One executor call site and the SQL text it would execute.
+/// One executor call site and its recovered SQL text. For `Dynamic` calls,
+/// `sql_text` can be only a verified leading statement rather than complete SQL.
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct EmbeddedSqlCall {
     pub line: u32,
@@ -141,6 +142,8 @@ fn quasi_text<'a>(quasi: &'a oxc_ast::ast::TemplateElement<'a>, use_raw: bool) -
 mod append_mutation_tests;
 #[cfg(test)]
 mod chain_composition_tests;
+#[cfg(test)]
+mod chain_dynamic_prefix_tests;
 #[cfg(test)]
 mod chain_reassignment_destructuring_tests;
 #[cfg(test)]
