@@ -104,7 +104,7 @@ statement, `append` recoverable fragments, then `read`/`write` it — are
 analyzed when those fragments are static, including helper-produced
 `SQLStatement` values and conditional static branches. Recovered non-`INSERT`
 SELECT/UPDATE stays outside this rule; recovered `INSERT … ON CONFLICT` gets
-the ordinary catalog ordering check. Unbound, spread, or otherwise unrecovered
+the ordinary catalog ordering check. Unbound, spread, or otherwise opaque
 append arguments stay fail-closed. Make the statement static, use
 `unanalyzableSql: ignore` for a temporary scoped rollout exception, or add a
 nearby SQL/comment directive such as `/* deadlock-safe: single ordered source */`
