@@ -319,11 +319,16 @@ jobs:
             pnpm --filter "$pkg" pack --dry-run
           done
 
-  build-cli:
-    name: Build CLI for ${{ matrix.target }}
+  build-native:
+    name: Build native for ${{ matrix.target }}
+    # Intel Mac used to force split CLI/N-API jobs plus a cache handoff (#809,
+    # #884). ARM macOS and Windows each already compile in ~20m, and the N-API
+    # job still spent another ~20m because cdylib + NO_MISTAKES_BUILD_NAPI missed
+    # the CLI cache. One rustc emitting rlib+cdylib matches native CI. Validate
+    # stays a publish gate, not a compile gate: the release commit is a version
+    # bump on already-tested main.
     needs:
       - prepare
-      - validate
     strategy:
       fail-fast: false
       matrix:
@@ -335,17 +340,36 @@ jobs:
         include:
           - target: aarch64-apple-darwin
             os: macos-15
+            addon: libno_mistakes.dylib
           - target: x86_64-unknown-linux-gnu
             os: ubuntu-22.04
+            addon: libno_mistakes.so
           - target: aarch64-unknown-linux-gnu
             os: ubuntu-22.04-arm
+            addon: libno_mistakes.so
           - target: x86_64-pc-windows-msvc
             os: windows-2025
+            addon: no_mistakes.dll
     runs-on: ${{ matrix.os }}
     timeout-minutes: 80
     permissions:
       contents: read
     steps:
+      - name: Exclude workspace from Microsoft Defender
+        if: ${{ runner.os == 'Windows' }}
+        timeout-minutes: 2
+        continue-on-error: true
+        shell: powershell
+        run: |
+          $paths = @(
+            $env:GITHUB_WORKSPACE,
+            (Join-Path $env:USERPROFILE '.cargo'),
+            (Join-Path $env:USERPROFILE '.rustup')
+          )
+          foreach ($path in $paths) {
+            Add-MpPreference -ExclusionPath $path
+          }
+
       - name: Download prepared source
         timeout-minutes: 5
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
@@ -371,13 +395,27 @@ jobs:
           shared-key: release-${{ matrix.target }}
           cache-bin: "false"
 
-      - name: Build CLI
+      # Rewrite crate-type in this job only so one rustc emits the rlib (CLI)
+      # and the Node cdylib. Do not commit that crate-type: Linux coverage
+      # should not also link a cdylib.
+      - name: Build CLI and N-API addon
         timeout-minutes: 45
         shell: bash
         run: |
-          cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          path = Path("crates/no-mistakes/Cargo.toml")
+          text = path.read_text()
+          old = 'crate-type = ["rlib"]'
+          new = 'crate-type = ["rlib", "cdylib"]'
+          if old not in text:
+              raise SystemExit(f"expected {old!r} in {path}")
+          path.write_text(text.replace(old, new, 1))
+          PY
+          NO_MISTAKES_BUILD_NAPI=1 cargo build --release --locked --target ${{ matrix.target }} -p no-mistakes
 
-      - name: Stage assets
+      - name: Stage CLI assets
         timeout-minutes: 2
         shell: bash
         run: |
@@ -429,7 +467,7 @@ jobs:
             "$hash  $($_.Name)" | Set-Content -Encoding ascii -NoNewline "$($_.Name).sha256"
           }
 
-      - name: Upload asset artifact
+      - name: Upload CLI artifact
         timeout-minutes: 5
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
@@ -437,72 +475,19 @@ jobs:
           path: release-assets/*
           if-no-files-found: error
 
-  build-napi:
-    name: Build N-API for ${{ matrix.target }}
-    needs:
-      - prepare
-      - validate
-      - build-cli
-    strategy:
-      fail-fast: false
-      matrix:
-        target:
-          [
-            aarch64-apple-darwin,
-            x86_64-unknown-linux-gnu,
-            aarch64-unknown-linux-gnu,
-            x86_64-pc-windows-msvc,
-          ]
-        include:
-          - { target: aarch64-apple-darwin, os: macos-15 }
-          - { target: x86_64-unknown-linux-gnu, os: ubuntu-22.04 }
-          - { target: aarch64-unknown-linux-gnu, os: ubuntu-22.04-arm }
-          - { target: x86_64-pc-windows-msvc, os: windows-2025 }
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 30
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+      - name: Install Node.js
         timeout-minutes: 5
-        with: { name: release-source, path: prepared-release }
-      - run: tar -xzf prepared-release/release-source.tgz
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
+        with:
+          node-version: 24
+
+      - name: Stage N-API addon
         timeout-minutes: 2
-      - uses: dtolnay/rust-toolchain@6190aa5fb88a88ee71c12769924bbe63a9ab152e # 1.96.0
-        timeout-minutes: 5
-        with:
-          targets: ${{ matrix.target }}
-      - name: Cache Rust build artifacts
-        timeout-minutes: 5
-        uses: Swatinem/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2
-        with:
-          prefix-key: v1-rust-release
-          shared-key: release-${{ matrix.target }}
-          cache-bin: "false"
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v6
-        timeout-minutes: 5
-        with: { node-version: 24 }
-      - name: Build N-API addon
-        timeout-minutes: 25
         shell: bash
         run: |
-          NO_MISTAKES_BUILD_NAPI=1 cargo rustc --release --locked --target ${{ matrix.target }} -p no-mistakes --lib --crate-type cdylib
-          case "${{ matrix.target }}" in
-            *windows*) pattern='no_mistakes*.dll' ;;
-            *apple*) pattern='libno_mistakes*.dylib' ;;
-            *) pattern='libno_mistakes*.so' ;;
-          esac
-          addons=()
-          while IFS= read -r addon; do
-            addons+=("$addon")
-          done < <(find "target/${{ matrix.target }}/release" -maxdepth 1 -type f -name "$pattern")
-          if [ "${#addons[@]}" -eq 0 ]; then
-            while IFS= read -r addon; do
-              addons+=("$addon")
-            done < <(find "target/${{ matrix.target }}/release/deps" -maxdepth 1 -type f -name "$pattern")
-          fi
-          test "${#addons[@]}" -eq 1 || { echo "::error::Expected exactly one N-API addon candidate for ${{ matrix.target }}, found ${#addons[@]}" >&2; printf '%s\n' "${addons[@]}" >&2; exit 1; }
-          addon="${addons[0]}"
+          set -euo pipefail
+          addon="target/${{ matrix.target }}/release/${{ matrix.addon }}"
+          test -f "$addon"
           case "${{ matrix.target }}" in
             aarch64-apple-darwin) expected_magic='Mach-O.*arm64' ;;
             aarch64-unknown-linux-gnu) expected_magic='ELF 64-bit.*ARM aarch64' ;;
@@ -514,8 +499,10 @@ jobs:
           addon_artifact="no-mistakes-napi-v${{ needs.prepare.outputs.version }}-${{ matrix.target }}.node"
           cp "$addon" "$addon_artifact"
           node -e '(async () => { const addon=require(process.argv[1]); if (typeof addon.version !== "function" || await addon.version() !== process.argv[2]) process.exit(1) })().catch((error) => { console.error(error); process.exit(1) })' "$PWD/$addon_artifact" "${{ needs.prepare.outputs.version }}"
-      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+
+      - name: Upload N-API artifact
         timeout-minutes: 5
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: release-napi-${{ matrix.target }}
           path: no-mistakes-napi-*.node
@@ -526,8 +513,7 @@ jobs:
     needs:
       - prepare
       - validate
-      - build-cli
-      - build-napi
+      - build-native
     runs-on: ubuntu-latest
     timeout-minutes: 35
     permissions:
@@ -580,7 +566,6 @@ jobs:
               echo "$pkg $version is already published on crates.io; skipping"
             else
               publish_log="$RUNNER_TEMP/cargo-publish-$pkg.log"
-              cargo publish --dry-run --locked -p "$pkg"
               if cargo publish --locked -p "$pkg" 2>&1 | tee "$publish_log"; then
                 :
               elif grep -q "already exists on crates.io index" "$publish_log"; then
@@ -829,4 +814,3 @@ jobs:
           node "$GITHUB_WORKSPACE/packages/no-mistakes/scripts/smoke-published-native.js" \
             --package no-mistakes \
             --version "$version"
-

@@ -34,65 +34,40 @@ test("every native optional package has a release target", () => {
   }
 });
 
-test("release native build jobs enforce separate CLI and N-API execution bounds", () => {
+test("release native builds emit CLI and N-API from one rustc without waiting for Validate", () => {
   const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
-  const timeouts = new Map();
-  for (const name of ["build-cli", "build-napi"]) {
-    const job = workflow.match(
-      new RegExp(`^ {2}${name}:[\\s\\S]*?(?=^ {2}(?:build-|publish:))`, "m"),
-    );
-    assert.ok(job, `release workflow must define ${name}`);
-    const jobTimeout = job[0].match(/^ {4}timeout-minutes: (\d+)$/m);
-    const stepTimeouts = [...job[0].matchAll(/^ {8}timeout-minutes: (\d+)$/gm)];
-    const buildCliTimeout = job[0].match(/^ {6}- name: Build CLI\n {8}timeout-minutes: (\d+)$/m);
-    assert.ok(jobTimeout, `${name} must define a timeout`);
-    timeouts.set(name, {
-      buildCli: buildCliTimeout ? Number(buildCliTimeout[1]) : undefined,
-      job: Number(jobTimeout[1]),
-      steps: stepTimeouts.map((timeout) => Number(timeout[1])),
-    });
-  }
-
-  const cli = timeouts.get("build-cli");
-  assert.equal(cli.job, 80, "CLI builds need an 80-minute job envelope");
-  assert.equal(cli.buildCli, 45, "Build CLI needs a 45-minute cold-build budget");
-  assert.ok(
-    cli.steps.every((timeout) => timeout <= 45),
-    "CLI steps must be at most 45 minutes",
-  );
-
-  const napi = timeouts.get("build-napi");
-  assert.ok(napi.job <= 30, "N-API builds must be at most 30 minutes");
-  assert.ok(
-    napi.steps.every((timeout) => timeout <= 25),
-    "N-API steps must be at most 25 minutes",
-  );
-});
-
-test("release N-API builds restore the target-shared Rust cache after CLI builds", () => {
-  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
-  const cliJob = workflow.match(/^ {2}build-cli:[\s\S]*?(?=^ {2}build-napi:)/m);
-  const napiJob = workflow.match(/^ {2}build-napi:[\s\S]*?(?=^ {2}publish:)/m);
-  assert.ok(cliJob, "release workflow must define build-cli");
-  assert.ok(napiJob, "release workflow must define build-napi");
+  const job = workflow.match(/^ {2}build-native:[\s\S]*?(?=^ {2}publish:)/m);
+  assert.ok(job, "release workflow must define build-native");
+  const body = job[0];
+  assert.match(body, /^ {4}needs:\n {6}- prepare$/m, "native builds must start after prepare");
+  assert.match(body, /^ {4}timeout-minutes: 80$/m, "native builds keep an 80-minute job envelope");
   assert.match(
-    napiJob[0],
-    /^ {4}needs:\n {6}- prepare\n {6}- validate\n {6}- build-cli$/m,
-    "N-API builds must wait for CLI builds to save the shared cache",
+    body,
+    /^ {6}- name: Build CLI and N-API addon\n {8}timeout-minutes: 45$/m,
+    "combined compile keeps a 45-minute cold-build budget",
   );
-
-  const cachePattern =
-    /- name: Cache Rust build artifacts\n {8}timeout-minutes: 5\n {8}uses: Swatinem\/rust-cache@f0d9c3887740aee45f6153b24b3a6b815192ec16 # v2\n {8}with:\n {10}prefix-key: v1-rust-release\n {10}shared-key: release-\$\{\{ matrix\.target \}\}\n {10}cache-bin: "false"/;
-  const cliCacheStep = cliJob[0].match(cachePattern);
-  const napiCacheStep = napiJob[0].match(cachePattern);
-  assert.ok(cliCacheStep, "CLI builds must save the target-shared Rust cache");
-  assert.ok(napiCacheStep, "N-API builds must restore the target-shared Rust cache");
-
-  const buildStepOffset = napiJob[0].indexOf("- name: Build N-API addon");
+  const stepTimeouts = [...body.matchAll(/^ {8}timeout-minutes: (\d+)$/gm)].map((timeout) =>
+    Number(timeout[1]),
+  );
   assert.ok(
-    buildStepOffset > napiCacheStep.index,
-    "N-API builds must restore cache before compiling",
+    stepTimeouts.every((timeout) => timeout <= 45),
+    "native steps must be at most 45 minutes",
   );
+  assert.match(
+    body,
+    /crate-type = \["rlib", "cdylib"\]/,
+    "native release jobs must emit rlib and cdylib from one rustc",
+  );
+  assert.doesNotMatch(
+    body,
+    /cargo rustc --release --locked --target .* --lib --crate-type cdylib/,
+    "native release jobs must not compile the crate a second time as cdylib-only",
+  );
+  assert.match(body, /Add-MpPreference -ExclusionPath/);
+  assert.match(body, /name: release-cli-\$\{\{ matrix\.target \}\}/);
+  assert.match(body, /name: release-napi-\$\{\{ matrix\.target \}\}/);
+  assert.match(body, /addon: libno_mistakes\.dylib/);
+  assert.match(body, /addon: no_mistakes\.dll/);
 });
 
 test("release syncs optional native package versions and publishes only through npm OIDC", () => {
@@ -115,7 +90,11 @@ test("release syncs optional native package versions and publishes only through 
   }
   assert.match(publishJs[0], /            no-mistakes \\/);
   assert.match(publishJs[0], /needs:\n {6}- prepare\n {6}- verify-npm-platform/);
-  assert.match(workflow, /Expected exactly one N-API addon candidate/);
+  assert.match(publish[0], /needs:\n {6}- prepare\n {6}- validate\n {6}- build-native/);
+  assert.match(
+    workflow,
+    /addon="target\/\$\{\{ matrix\.target \}\}\/release\/\$\{\{ matrix\.addon \}\}"/,
+  );
   assert.match(workflow, /expected_magic='Mach-O\.\*arm64'/);
   assert.match(workflow, /expected_magic='ELF 64-bit\.\*x86-64'/);
   assert.match(workflow, /expected_magic='PE32\\\+\.\*x86-64'/);
