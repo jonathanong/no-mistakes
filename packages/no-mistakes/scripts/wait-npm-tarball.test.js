@@ -8,6 +8,7 @@ const {
   encodeName,
   main,
   parseArgs,
+  readWithSignal,
   reportCliFailure,
   tarballUrl,
   waitForNpmTarball,
@@ -276,4 +277,68 @@ test("reportCliFailure writes the error and sets a nonzero exit", () => {
   reportCliFailure(new Error("boom"), io);
   assert.equal(io.exitCode, 1);
   assert.deepEqual(chunks, ["boom\n"]);
+});
+
+test("aborts a stalled packument fetch at the deadline", async () => {
+  await assert.rejects(
+    waitForNpmTarball({
+      name: "pkg",
+      version: "1.0.0",
+      timeoutMs: 40,
+      intervalMs: 0,
+      fetchImpl: (_url, init = {}) =>
+        new Promise((_, reject) => {
+          assert.ok(init.signal, "packument fetch must receive AbortSignal");
+          init.signal.addEventListener("abort", () => reject(new Error("aborted")), { once: true });
+        }),
+    }),
+    /Timed out waiting for pkg@1.0.0 tarball/,
+  );
+});
+
+test("aborts a stalled tarball body read at the deadline", async () => {
+  const body = Buffer.from("unused");
+  const shasum = createHash("sha1").update(body).digest("hex");
+  await assert.rejects(
+    waitForNpmTarball({
+      name: "pkg",
+      version: "1.0.0",
+      timeoutMs: 40,
+      intervalMs: 0,
+      fetchImpl: async (url, init = {}) => {
+        if (String(url).endsWith("/pkg")) return jsonResponse(200, packument("1.0.0", shasum));
+        return {
+          ok: true,
+          status: 200,
+          json: async () => ({}),
+          arrayBuffer: () => new Promise(() => {}),
+        };
+      },
+    }),
+    /Timed out waiting for pkg@1.0.0 tarball/,
+  );
+});
+
+test("stops when the overall deadline elapses before another fetch", async () => {
+  let ticks = 0;
+  await assert.rejects(
+    waitForNpmTarball({
+      name: "pkg",
+      version: "1.0.0",
+      timeoutMs: 50,
+      now: () => {
+        ticks += 1;
+        return ticks === 1 ? 0 : 100;
+      },
+    }),
+    /no attempt made for pkg@1.0.0/,
+  );
+});
+
+test("readWithSignal rejects an already aborted signal", async () => {
+  const signal = AbortSignal.abort(new Error("already aborted"));
+  await assert.rejects(readWithSignal(Promise.resolve("ok"), signal), /already aborted/);
+  const bare = new AbortController();
+  bare.abort();
+  await assert.rejects(readWithSignal(Promise.resolve("ok"), bare.signal), /aborted/);
 });

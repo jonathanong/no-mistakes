@@ -132,9 +132,12 @@ test("release does not publish no-mistakes until every platform tarball installs
   assert.ok(verifyPlatform, "release workflow must verify platform packages before JS publish");
   assert.ok(verifyRoot, "release workflow must verify the root package after JS publish");
   assert.match(verifyPlatform[0], /needs:\n {6}- prepare\n {6}- publish/);
-  assert.match(verifyPlatform[0], /no-mistakes-darwin-arm64/);
-  assert.match(verifyPlatform[0], /macos-15/);
-  assert.match(verifyPlatform[0], /ubuntu-22\.04-arm/);
+  assert.match(verifyPlatform[0], /os: macos-15, package: no-mistakes-darwin-arm64/);
+  assert.match(verifyPlatform[0], /os: ubuntu-22\.04, package: no-mistakes-linux-x64-gnu/);
+  assert.match(verifyPlatform[0], /os: ubuntu-22\.04-arm, package: no-mistakes-linux-arm64-gnu/);
+  assert.match(verifyPlatform[0], /os: windows-2025, package: no-mistakes-win32-x64-msvc/);
+  assert.match(verifyPlatform[0], /persist-credentials: false/);
+  assert.match(verifyRoot[0], /persist-credentials: false/);
   assert.match(verifyRoot[0], /needs:\n {6}- prepare\n {6}- publish-js/);
   assert.match(verifyRoot[0], /no-mistakes@\$version/);
 });
