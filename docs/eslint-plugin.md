@@ -61,7 +61,8 @@ and `calleeNamePatterns?: string[]`.
 `targets` is an array whose objects set `sourceSpecifierPatterns: string[]`,
 `calleeNamePatterns: string[]`, `optionsPosition` (one-based),
 `requiredProperties: string[]`, and optional `propertyMatch?: "any" | "all"`
-(default `"any"`). Empty `targets` disables the rule.
+(default `"any"`). Empty `targets` disables the rule. A required property
+whose statically visible value is definitely `undefined` does not count.
 
 ### `module-mock-boundary`
 
