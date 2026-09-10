@@ -96,8 +96,9 @@ ON CONFLICT (left_id, right_id) DO NOTHING
 
 Recovered dynamic SQL whose static fragments identify an `INSERT` fails closed
 by default because an interpolation can add or alter its conflict clause and
-row order. An opaque executor argument (`query(assembleWriter())`,
-`query(...args)`) also fails closed by default: there is no recoverable
+row order. An opaque configured executor argument (`read(assembleWriter())`,
+`write(...args)`, or `query(...args)` by default), as well as an opaque member
+call (`client.query(assembleWriter())`), also fails closed by default: there is no recoverable
 statement, so a zero-finding run cannot mean the writer was checked.
 Statement-level `sql-template-strings` mutation chains — initialize a bound
 statement, `append` recoverable fragments, then `read`/`write` it — are
@@ -107,9 +108,11 @@ SQL and classify as dynamic: recovered non-`INSERT` SELECT/UPDATE stays
 outside this rule, while recovered `INSERT` fails closed rather than treating
 a branch-only `ORDER BY` as always present. Sequential recovered
 `INSERT … ON CONFLICT` gets the ordinary catalog ordering check. Unbound,
-spread, or otherwise opaque append arguments stay fail-closed. Make the
-statement static, use `unanalyzableSql: ignore` for a temporary scoped
-rollout exception, or add a nearby SQL/comment directive such as
+spread, or otherwise opaque append arguments preserve a recovered leading
+statement as dynamic: leading `INSERT` stays fail-closed, while leading
+`SELECT`/`UPDATE` remains outside this rule. A wholly opaque executor argument
+still fails closed. Make the statement static, use `unanalyzableSql: ignore`
+for a temporary scoped rollout exception, or add a nearby SQL/comment directive such as
 `/* deadlock-safe: single ordered source */` only when the ordering is
 enforced outside the analyzable statement. Recovered dynamic SQL that is
 not an `INSERT` is still ignored.

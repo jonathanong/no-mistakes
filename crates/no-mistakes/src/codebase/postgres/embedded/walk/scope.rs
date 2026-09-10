@@ -82,10 +82,10 @@ impl ScopeVisitor<'_> {
     /// Conditional appends must not compose as if the branch always ran, but
     /// wiping recovered SQL would make non-INSERT executors opaque. Keep the
     /// text and mark Dynamic: INSERT fails closed, SELECT/UPDATE stay ignored.
-    pub(super) fn mark_dynamic_keep_sql(&mut self, name: &str) {
+    pub(super) fn mark_dynamic_keep_known_statement(&mut self, name: &str) {
         for scope in self.scopes.iter_mut().rev() {
             if let Some(binding) = scope.get_mut(name) {
-                binding.kind = EmbeddedSqlKind::Dynamic;
+                mark_binding_dynamic_keep_known_statement(binding);
                 return;
             }
         }
@@ -135,4 +135,44 @@ impl ScopeVisitor<'_> {
             .find_map(|(index, scope)| scope.contains_key(name).then_some(index))
             .is_some_and(|index| index < fn_start)
     }
+}
+
+pub(super) fn mark_binding_dynamic_keep_known_statement(binding: &mut BindingState) {
+    binding.kind = EmbeddedSqlKind::Dynamic;
+    if binding
+        .sql
+        .as_deref()
+        .is_none_or(|sql| !has_known_leading_statement(sql))
+    {
+        binding.sql = None;
+    }
+}
+
+pub(super) fn has_known_leading_statement(mut sql: &str) -> bool {
+    loop {
+        sql = sql.trim_start();
+        if let Some(comment) = sql.strip_prefix("--") {
+            let Some((_, rest)) = comment.split_once('\n') else {
+                return false;
+            };
+            sql = rest;
+            continue;
+        }
+        if let Some(comment) = sql.strip_prefix("/*") {
+            let Some((_, rest)) = comment.split_once("*/") else {
+                return false;
+            };
+            sql = rest;
+            continue;
+        }
+        break;
+    }
+
+    let keyword = sql
+        .split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
+        .next()
+        .unwrap_or_default();
+    ["select", "update", "insert", "delete", "merge"]
+        .iter()
+        .any(|candidate| keyword.eq_ignore_ascii_case(candidate))
 }

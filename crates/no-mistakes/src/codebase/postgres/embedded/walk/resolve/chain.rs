@@ -49,6 +49,45 @@ pub(super) fn resolve_expr(
     }
 }
 
+/// Recovers a verified leading statement from a fluent `.append()` chain
+/// whose later composition is opaque. The caller must classify this as
+/// dynamic rather than treating the returned prefix as complete SQL.
+pub(super) fn resolve_dynamic_prefix(
+    expr: &Expression<'_>,
+    depth: u8,
+    lookup: &mut impl FnMut(&str, u8) -> Option<String>,
+    is_shadowed: &mut impl FnMut(&str) -> bool,
+    imported_sql_tags: &HashSet<String>,
+) -> Option<String> {
+    let depth = depth.checked_sub(1)?;
+    let Expression::CallExpression(call) = unwrap_ts_wrappers(expr) else {
+        return None;
+    };
+    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
+        return None;
+    };
+    if member.property.name != "append" {
+        return None;
+    }
+    let base = resolve_expr(
+        &member.object,
+        depth,
+        lookup,
+        is_shadowed,
+        imported_sql_tags,
+    )
+    .or_else(|| {
+        resolve_dynamic_prefix(
+            &member.object,
+            depth,
+            lookup,
+            is_shadowed,
+            imported_sql_tags,
+        )
+    })?;
+    super::super::scope::has_known_leading_statement(&base).then_some(base)
+}
+
 fn resolve_call(
     call: &CallExpression<'_>,
     depth: u8,

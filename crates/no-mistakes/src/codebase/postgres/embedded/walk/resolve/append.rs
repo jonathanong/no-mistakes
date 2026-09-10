@@ -16,7 +16,7 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
         return;
     };
     let Some(arg) = first_static_arg(call, visitor) else {
-        visitor.mark_dynamic(ident.name.as_str());
+        visitor.mark_dynamic_keep_known_statement(ident.name.as_str());
         return;
     };
     // Loops may append a runtime-unknown number of times. Nested functions
@@ -25,11 +25,11 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
     // fragments keep recovered SQL but mark Dynamic so INSERT cannot pass
     // a branch-only ORDER BY as if it always ran.
     if visitor.loop_depth > 0 || visitor.append_crosses_function(ident.name.as_str()) {
-        visitor.mark_dynamic(ident.name.as_str());
+        visitor.mark_dynamic_keep_known_statement(ident.name.as_str());
         return;
     }
     if visitor.control_depth > 0 {
-        visitor.mark_dynamic_keep_sql(ident.name.as_str());
+        visitor.mark_dynamic_keep_known_statement(ident.name.as_str());
         return;
     }
     for scope in visitor.scopes.iter_mut().rev() {
@@ -41,8 +41,7 @@ pub(crate) fn apply_append(visitor: &mut ScopeVisitor<'_>, call: &CallExpression
                     binding.kind = EmbeddedSqlKind::Composed;
                 }
                 _ => {
-                    binding.kind = EmbeddedSqlKind::Dynamic;
-                    binding.sql = None;
+                    super::super::scope::mark_binding_dynamic_keep_known_statement(binding);
                 }
             }
             return;

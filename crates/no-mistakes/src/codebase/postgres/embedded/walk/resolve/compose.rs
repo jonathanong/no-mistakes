@@ -33,7 +33,10 @@ pub(super) fn classify_init(
         Expression::CallExpression(_) => match resolve_chain(expr, visitor) {
             Some(text) if is_const => (Some(text), EmbeddedSqlKind::Composed),
             Some(text) => (Some(text), EmbeddedSqlKind::Dynamic),
-            None => (None, EmbeddedSqlKind::Dynamic),
+            None => (
+                resolve_dynamic_chain_prefix(expr, visitor),
+                EmbeddedSqlKind::Dynamic,
+            ),
         },
         _ => (None, EmbeddedSqlKind::Dynamic),
     }
@@ -85,6 +88,26 @@ fn resolve_chain(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> Option<St
     };
     let mut is_shadowed = |name: &str| tag_shadowed(name, visitor);
     chain::resolve_expr(
+        expr,
+        functions::MAX_RESOLVE_DEPTH,
+        &mut lookup,
+        &mut is_shadowed,
+        visitor.functions.imported_sql_tags(),
+    )
+}
+
+fn resolve_dynamic_chain_prefix(
+    expr: &Expression<'_>,
+    visitor: &ScopeVisitor<'_>,
+) -> Option<String> {
+    let mut lookup = |name: &str, _depth: u8| {
+        if visitor.shadowed_locally(name) {
+            return None;
+        }
+        visitor.functions.get(name)
+    };
+    let mut is_shadowed = |name: &str| tag_shadowed(name, visitor);
+    chain::resolve_dynamic_prefix(
         expr,
         functions::MAX_RESOLVE_DEPTH,
         &mut lookup,

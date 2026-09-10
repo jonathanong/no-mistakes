@@ -141,12 +141,16 @@ Each `EmbeddedSqlCall` records `kind`:
   `return` of such a chain (recursive, up to 8 calls deep). Conditional
   static appends keep the recovered base SQL and classify `Dynamic` so an
   INSERT cannot pass a branch-only `ORDER BY` as if it always ran; recovered
-  non-INSERT stays ignored by conflict-ordering. Loops, nested functions
-  that mutate an outer binding, a parameter referenced outside a chain's
-  template-placeholder position, or a callee that isn't a same-file function,
-  fail closed instead of resolving.
+  non-INSERT stays ignored by conflict-ordering. Opaque statement-level and
+  fluent appends likewise keep a verified leading `SELECT`, `UPDATE`, `INSERT`,
+  `DELETE`, or `MERGE` as partial text. Incomplete prefixes such as `WITH`
+  remain fully opaque. Loops, nested functions that mutate an outer binding,
+  a parameter referenced outside a chain's template-placeholder position, or
+  a callee that isn't a same-file function, classify as dynamic.
 - `Dynamic` — `let`, reassignment, interpolating templates, or incomplete
-  composition (fail closed)
+  composition. A present `sql_text` can be verified leading text rather than
+  the complete runtime statement; consumers must use it only for conservative
+  statement classification.
 
 ## Statement facts
 

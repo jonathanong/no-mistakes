@@ -75,9 +75,13 @@ fn chain_append_of_a_trusted_tagged_template_is_composed() {
 }
 
 #[test]
-fn chain_append_of_an_untrusted_interpolating_tag_fails_closed() {
+fn chain_append_of_an_untrusted_interpolating_tag_keeps_dynamic_prefix() {
     let facts = extract("composed-chain-append-tagged-untrusted.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics")
+    );
 }
 
 #[test]
@@ -94,6 +98,10 @@ fn chain_append_of_a_binary_composition_is_composed() {
 fn chain_append_of_a_spread_argument_fails_closed() {
     let facts = extract("composed-chain-append-spread.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics")
+    );
 }
 
 #[test]

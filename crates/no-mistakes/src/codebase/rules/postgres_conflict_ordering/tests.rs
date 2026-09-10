@@ -228,8 +228,13 @@ fn prepared_scan_contextualizes_a_missing_embedded_sql_projection() {
 #[test]
 fn rejects_opaque_executor_arguments_by_default() {
     let findings = findings("fail-opaque-executor");
-    assert_eq!(findings.len(), 1, "{findings:#?}");
-    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable-sql"));
+    assert_eq!(findings.len(), 3, "{findings:#?}");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.target.as_deref() == Some("unanalyzable-sql")),
+        "{findings:#?}"
+    );
 }
 
 #[test]
@@ -242,6 +247,13 @@ fn ignores_opaque_executor_arguments_when_unanalyzable_sql_is_ignore() {
     )
     .unwrap();
     assert!(result.is_empty(), "{result:#?}");
+}
+
+#[test]
+fn rejects_opaque_member_query_arguments_by_default() {
+    let findings = findings("fail-opaque-member-query");
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+    assert_eq!(findings[0].target.as_deref(), Some("unanalyzable-sql"));
 }
 
 #[test]
@@ -358,6 +370,18 @@ fn rejects_conditional_append_insert_as_unanalyzable() {
     let findings = findings("fail-append-conditional-insert");
     assert_eq!(findings.len(), 1, "{findings:#?}");
     assert_eq!(findings[0].target.as_deref(), Some("unanalyzable-sql"));
+}
+
+#[test]
+fn rejects_opaque_append_insert_as_unanalyzable() {
+    let findings = findings("fail-append-opaque-insert");
+    assert_eq!(findings.len(), 2, "{findings:#?}");
+    assert!(
+        findings
+            .iter()
+            .all(|finding| finding.target.as_deref() == Some("unanalyzable-sql")),
+        "{findings:#?}"
+    );
 }
 
 #[test]

@@ -69,15 +69,28 @@ fn function_local_conditional_static_append_keeps_sql_as_dynamic() {
 }
 
 #[test]
-fn unrecoverable_helper_append_fails_closed() {
+fn unrecoverable_helper_append_keeps_leading_sql_dynamic() {
     let facts = extract("composed-append-unrecoverable-helper.ts");
     assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Dynamic);
-    assert_eq!(facts.calls[0].sql_text, None);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics WHERE published = true")
+    );
 }
 
 #[test]
-fn unbound_append_argument_fails_closed() {
+fn unbound_append_argument_keeps_leading_sql_dynamic() {
     let facts = extract("composed-append-unbound-ident.ts");
+    assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Dynamic);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics WHERE published = true")
+    );
+}
+
+#[test]
+fn unbound_append_after_incomplete_cte_stays_opaque() {
+    let facts = extract("composed-append-cte-unbound.ts");
     assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Dynamic);
     assert_eq!(facts.calls[0].sql_text, None);
 }

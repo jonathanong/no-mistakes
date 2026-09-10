@@ -7,3 +7,16 @@ export async function listTopics(scope: string) {
   query.append(sql` ORDER BY id LIMIT 50`);
   return read(query);
 }
+
+declare const importedProjection: string;
+
+export async function listProjectedTopics() {
+  const query = sql`/* listProjectedTopics */ SELECT `;
+  query.append(importedProjection);
+  query.append(sql` FROM topics ORDER BY id LIMIT 50`);
+  return read(query);
+}
+
+export function listProjectedTopicsFluent() {
+  return read(sql`SELECT `.append(importedProjection));
+}
