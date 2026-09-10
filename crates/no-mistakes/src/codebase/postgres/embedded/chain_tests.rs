@@ -105,6 +105,30 @@ fn chain_append_of_a_spread_argument_fails_closed() {
 }
 
 #[test]
+fn opaque_chain_append_recovers_a_same_file_helper_prefix() {
+    let facts = extract("composed-chain-append-helper-spread.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics")
+    );
+}
+
+#[test]
+fn opaque_chain_append_rejects_a_shadowed_helper_prefix() {
+    let facts = extract("composed-chain-append-shadowed-helper-spread.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+    assert_eq!(facts.calls[0].sql_text, None);
+}
+
+#[test]
+fn non_append_member_call_does_not_recover_a_dynamic_prefix() {
+    let facts = extract("composed-chain-non-append.ts");
+    assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
+    assert_eq!(facts.calls[0].sql_text, None);
+}
+
+#[test]
 fn call_to_a_self_recursive_same_file_function_fails_closed() {
     let facts = extract("composed-chain-function-recursive.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);

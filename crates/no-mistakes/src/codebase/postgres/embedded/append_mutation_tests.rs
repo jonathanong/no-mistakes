@@ -96,6 +96,35 @@ fn unbound_append_after_incomplete_cte_stays_opaque() {
 }
 
 #[test]
+fn opaque_append_classifies_leading_comments_conservatively() {
+    let recovered = extract("composed-append-line-comment.ts");
+    assert_eq!(recovered.calls[0].kind, EmbeddedSqlKind::Dynamic);
+    assert_eq!(
+        recovered.calls[0].sql_text.as_deref(),
+        Some("-- list topics\nSELECT id FROM topics")
+    );
+
+    for name in [
+        "composed-append-line-comment-only.ts",
+        "composed-append-block-comment-only.ts",
+    ] {
+        let opaque = extract(name);
+        assert_eq!(opaque.calls[0].kind, EmbeddedSqlKind::Dynamic, "{name}");
+        assert_eq!(opaque.calls[0].sql_text, None, "{name}");
+    }
+}
+
+#[test]
+fn opaque_append_recovers_a_prefix_before_an_unsupported_member_expression() {
+    let facts = extract("composed-append-member-expression.ts");
+    assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Dynamic);
+    assert_eq!(
+        facts.calls[0].sql_text.as_deref(),
+        Some("SELECT id FROM topics")
+    );
+}
+
+#[test]
 fn append_inside_unbraced_if_keeps_sql_as_dynamic() {
     let facts = extract("composed-append-if.ts");
     assert_eq!(facts.calls[0].kind, EmbeddedSqlKind::Dynamic);
