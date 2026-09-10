@@ -18,6 +18,8 @@ module.exports = defineConfig({
         "packages/no-mistakes/planning-impact-cli.js",
         "packages/no-mistakes/bin/no-mistakes.js",
         "packages/no-mistakes/scripts/native-package.js",
+        "packages/no-mistakes/scripts/wait-npm-tarball.js",
+        "packages/no-mistakes/scripts/smoke-published-native.js",
         "packages/eslint-plugin-no-mistakes/src/**/*.js",
       ],
       reporter: ["text", "lcov"],

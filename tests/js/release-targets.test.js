@@ -100,23 +100,46 @@ test("release syncs optional native package versions and publishes only through 
   assert.match(workflow, /sync-native-package-versions\.js "\$version"/);
   assert.match(workflow, /npm publish "\.\/packages\/\$pkg" --provenance --access public/);
   assert.doesNotMatch(workflow, /NPM_TOKEN|pnpm[^\n]* publish/);
+  const publish = workflow.match(/^ {2}publish:[\s\S]*?(?=^ {2}verify-npm-platform:)/m);
+  const publishJs = workflow.match(/^ {2}publish-js:[\s\S]*?(?=^ {2}verify-npm-root:)/m);
+  assert.ok(publish, "release workflow must define publish");
+  assert.ok(publishJs, "release workflow must define publish-js");
   for (const name of [
     "no-mistakes-darwin-arm64",
     "no-mistakes-linux-arm64-gnu",
     "no-mistakes-linux-x64-gnu",
     "no-mistakes-win32-x64-msvc",
   ]) {
-    const platformIndex = workflow.indexOf(`            ${name}`);
-    const mainIndex = workflow.indexOf("            no-mistakes \\\n", platformIndex);
-    assert.ok(
-      platformIndex >= 0 && mainIndex > platformIndex,
-      `${name} must publish before no-mistakes`,
-    );
+    assert.match(publish[0], new RegExp(`            ${name}(?: \\\\|$)`, "m"));
+    assert.doesNotMatch(publishJs[0], new RegExp(`${name}`));
   }
+  assert.match(publishJs[0], /            no-mistakes \\/);
+  assert.match(publishJs[0], /needs:\n {6}- prepare\n {6}- verify-npm-platform/);
   assert.match(workflow, /Expected exactly one N-API addon candidate/);
   assert.match(workflow, /expected_magic='Mach-O\.\*arm64'/);
   assert.match(workflow, /expected_magic='ELF 64-bit\.\*x86-64'/);
   assert.match(workflow, /expected_magic='PE32\\\+\.\*x86-64'/);
+});
+
+test("release does not publish no-mistakes until every platform tarball installs", () => {
+  const workflow = readFileSync(join(repoRoot, ".github", "workflows", "release.yml"), "utf8");
+  assert.match(workflow, /wait-npm-tarball\.js/);
+  assert.match(workflow, /smoke-published-native\.js/);
+  assert.match(workflow, /metadata exists without a fetchable tarball; waiting/);
+  assert.match(workflow, /--timeout-ms 0/);
+  const verifyPlatform = workflow.match(/^ {2}verify-npm-platform:[\s\S]*?(?=^ {2}publish-js:)/m);
+  const verifyRoot = workflow.match(/^ {2}verify-npm-root:[\s\S]*$/m);
+  assert.ok(verifyPlatform, "release workflow must verify platform packages before JS publish");
+  assert.ok(verifyRoot, "release workflow must verify the root package after JS publish");
+  assert.match(verifyPlatform[0], /needs:\n {6}- prepare\n {6}- publish/);
+  assert.match(verifyPlatform[0], /os: macos-15, package: no-mistakes-darwin-arm64/);
+  assert.match(verifyPlatform[0], /os: ubuntu-22\.04, package: no-mistakes-linux-x64-gnu/);
+  assert.match(verifyPlatform[0], /os: ubuntu-22\.04-arm, package: no-mistakes-linux-arm64-gnu/);
+  assert.match(verifyPlatform[0], /os: windows-2025, package: no-mistakes-win32-x64-msvc/);
+  assert.match(verifyPlatform[0], /persist-credentials: false/);
+  assert.match(verifyRoot[0], /persist-credentials: false/);
+  assert.match(verifyRoot[0], /needs:\n {6}- prepare\n {6}- publish-js/);
+  assert.match(verifyRoot[0], /no-mistakes@\$version/);
 });
 
 test("native CI jobs run only platform-specific Rust tests", () => {
