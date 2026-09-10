@@ -137,16 +137,18 @@ Each `EmbeddedSqlCall` records `kind`:
 - `Composed` — static `+` concatenation, a fluent `.append(...)` chain, a
   statement-level `.append(...)` mutation on a bound `SQLStatement` (including
   `sql-template-strings` init plus later `query.append(...)` in the same
-  function), or a call into a same-file function whose body is exactly one
-  `return` of such a chain (recursive, up to 8 calls deep). Conditional
+  function), or a call into a same-file function whose body is a single
+  `return` of such a chain or a straight-line `const`/`let` plus `.append`
+  mutations ending in `return` (recursive, up to 8 calls deep). Conditional
   static appends keep the recovered base SQL and classify `Dynamic` so an
   INSERT cannot pass a branch-only `ORDER BY` as if it always ran; recovered
   non-INSERT stays ignored by conflict-ordering. Opaque statement-level and
   fluent appends likewise keep a verified leading `SELECT`, `UPDATE`, `INSERT`,
   `DELETE`, or `MERGE` as partial text. Incomplete prefixes such as `WITH`
   remain fully opaque. Loops, nested functions that mutate an outer binding,
-  a parameter referenced outside a chain's template-placeholder position, or
-  a callee that isn't a same-file function, classify as dynamic.
+  control flow in a helper, a parameter referenced outside a chain's
+  template-placeholder position, or a callee that isn't a same-file function,
+  classify as dynamic.
 - `Dynamic` — `let`, reassignment, interpolating templates, or incomplete
   composition. A present `sql_text` can be verified leading text rather than
   the complete runtime statement; consumers must use it only for conservative

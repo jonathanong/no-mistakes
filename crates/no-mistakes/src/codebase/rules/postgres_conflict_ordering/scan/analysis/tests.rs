@@ -1,6 +1,10 @@
 use super::*;
 use crate::codebase::postgres::{CanonicalIndex, SqlInsertSourceShape};
 
+fn contains_insert(sql: &str) -> bool {
+    super::sql::contains_keyword(sql, "insert")
+}
+
 #[test]
 fn malformed_conflict_sql_only_reports_when_the_policy_requires_analysis() {
     let catalog = SchemaCatalog::default();

@@ -2,7 +2,9 @@ mod analysis;
 mod substitute;
 
 use super::{CompiledOptions, RULE_ID};
-use crate::codebase::postgres::{postgres_sql_paths, EmbeddedSqlKind};
+use crate::codebase::postgres::{
+    postgres_sql_paths, recovered_sql_needs_insert_check, EmbeddedSqlKind,
+};
 use crate::codebase::rules::postgres_lock_ordering::directive::has_safe_directive;
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::relative_slash_path;
@@ -46,7 +48,7 @@ pub(super) fn scan_with_sources(
             }
             let sql = call.sql_text.as_deref();
             if call.kind == EmbeddedSqlKind::Dynamic {
-                if opts.fail_unanalyzable && sql.is_none_or(analysis::contains_insert) {
+                if opts.fail_unanalyzable && recovered_sql_needs_insert_check(sql) {
                     findings.push(unanalyzable_sql(
                         &rel,
                         call.line,
@@ -65,6 +67,9 @@ pub(super) fn scan_with_sources(
                 }
                 continue;
             };
+            if !recovered_sql_needs_insert_check(Some(sql)) {
+                continue;
+            }
             findings.extend(analysis::findings_for_sql(
                 &rel,
                 call.line as usize,

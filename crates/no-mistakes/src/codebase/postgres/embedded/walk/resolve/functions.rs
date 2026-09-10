@@ -1,18 +1,19 @@
+mod body;
 mod collect;
 mod reassigned;
 mod shadows;
 
-use super::chain;
 use collect::collect_named_functions;
-use oxc_ast::ast::{FormalParameters, FunctionBody, Program, Statement};
+use oxc_ast::ast::{FormalParameters, FunctionBody, Program};
 use reassigned::ReassignedNames;
 use shadows::TagShadows;
 use std::collections::{HashMap, HashSet};
 
 pub(super) const MAX_RESOLVE_DEPTH: u8 = 8;
 
-/// Same-file functions whose body is a single `return` of a statically
-/// resolvable SQL fragment, pre-resolved once per file.
+/// Same-file functions whose body is a statically resolvable SQL fragment
+/// — a single `return`, or a straight-line `const`/`let` plus `.append`
+/// chain ending in `return` — pre-resolved once per file.
 ///
 /// Collection only walks `program.body` — a helper declared lexically nested
 /// inside another function or block is never collected, so a call to it
@@ -32,7 +33,7 @@ pub(crate) struct LocalFunctions {
 /// reference and arena lifetimes to be the same, so any type built from its
 /// result must use one lifetime throughout rather than distinguishing a
 /// "place" lifetime from an "arena" lifetime.
-struct Resolvable<'a> {
+pub(super) struct Resolvable<'a> {
     params: &'a FormalParameters<'a>,
     body: &'a FunctionBody<'a>,
 }
@@ -80,7 +81,7 @@ impl LocalFunctions {
     }
 }
 
-fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
+pub(super) fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
     let mut shadows = false;
     let mut check = |bound: &str| shadows |= bound == name;
     for param in &resolvable.params.items {
@@ -92,16 +93,15 @@ fn shadows_param(resolvable: &Resolvable<'_>, name: &str) -> bool {
     shadows
 }
 
-/// A function only inlines when its body is exactly one `return <expr>;` —
-/// no local declarations, no control flow, no side effects to reason about.
-/// Parameters used outside a template placeholder never resolve, because
-/// `chain::resolve_expr` has no `Identifier` case: that keeps this sound
-/// without a separate parameter-position check. A callee that shadows one of
-/// this function's own parameters is rejected rather than resolved through
-/// the global declaration of the same name — and so is a tagged template
-/// whose tag name (e.g. `sql`) is one of this function's own parameters, or
-/// is rebound anywhere else at the top level by something other than a
-/// same-file helper (see [`shadows::TagShadows`]), via `is_shadowed`.
+/// A function inlines when [`body::resolve`] can recover its SQL through
+/// the same conservative expression model as a single `return`. Parameters
+/// used outside a template placeholder never resolve, because
+/// `chain::resolve_expr` has no `Identifier` case. A callee that shadows one
+/// of this function's own parameters is rejected rather than resolved
+/// through the global declaration of the same name — and so is a tagged
+/// template whose tag name (e.g. `sql`) is one of this function's own
+/// parameters, or is rebound anywhere else at the top level by something
+/// other than a same-file helper (see [`shadows::TagShadows`]).
 fn resolve_named(
     name: &str,
     depth: u8,
@@ -113,10 +113,6 @@ fn resolve_named(
         return None;
     }
     let resolvable = raw.get(name)?;
-    let [Statement::ReturnStatement(ret)] = resolvable.body.statements.as_slice() else {
-        return None;
-    };
-    let argument = ret.argument.as_ref()?;
     resolving.push(name.to_string());
     let mut lookup = |callee: &str, depth: u8| {
         if shadows_param(resolvable, callee) {
@@ -125,8 +121,8 @@ fn resolve_named(
         resolve_named(callee, depth, raw, resolving, tag_shadows)
     };
     let mut is_shadowed = |tag: &str| shadows_param(resolvable, tag) || tag_shadows.contains(tag);
-    let text = chain::resolve_expr(
-        argument,
+    let text = body::resolve(
+        resolvable,
         depth,
         &mut lookup,
         &mut is_shadowed,

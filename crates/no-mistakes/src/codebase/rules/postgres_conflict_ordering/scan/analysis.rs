@@ -7,7 +7,7 @@ use crate::codebase::postgres::{
 use crate::codebase::rules::RuleFinding;
 
 mod sql;
-pub(super) use sql::{contains_insert, contains_insert_conflict, sql_statements};
+pub(super) use sql::{contains_insert_conflict, sql_statements};
 
 pub(super) fn findings_for_sql(
     file: &str,

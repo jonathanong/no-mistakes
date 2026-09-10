@@ -6,10 +6,6 @@ pub(in super::super) fn contains_insert_conflict(sql: &str) -> bool {
         && contains_keyword(sql, "conflict")
 }
 
-pub(in super::super) fn contains_insert(sql: &str) -> bool {
-    contains_keyword(sql, "insert")
-}
-
 /// Split SQL on statement terminators outside quoted values and comments.
 /// Each returned line points to the statement's first code token.
 pub(in super::super) fn sql_statements(sql: &str) -> Vec<(u32, &str)> {
@@ -33,7 +29,7 @@ pub(in super::super) fn sql_statements(sql: &str) -> Vec<(u32, &str)> {
     statements
 }
 
-fn contains_keyword(sql: &str, keyword: &str) -> bool {
+pub(super) fn contains_keyword(sql: &str, keyword: &str) -> bool {
     let bytes = sql.as_bytes();
     sql_code_spans(sql).into_iter().any(|span| {
         let mut index = span.start;

@@ -102,11 +102,18 @@ call (`client.query(assembleWriter())`), also fails closed by default: there is 
 statement, so a zero-finding run cannot mean the writer was checked.
 Statement-level `sql-template-strings` mutation chains — initialize a bound
 statement, `append` recoverable fragments, then `read`/`write` it — are
-analyzed when those fragments are static, including helper-produced
-`SQLStatement` values. Conditional static appends keep the recovered base
-SQL and classify as dynamic: recovered non-`INSERT` SELECT/UPDATE stays
-outside this rule, while recovered `INSERT` fails closed rather than treating
-a branch-only `ORDER BY` as always present. Sequential recovered
+analyzed when those fragments are static, including a same-file helper whose
+body is a straight-line `const`/`let` plus `.append` chain ending in
+`return` (`write(buildExpireQuery())`). Complete `WITH` text is classified by
+the final top-level `SELECT`/`INSERT`/`UPDATE`/`DELETE`/`MERGE` after
+balanced CTE definitions; catalog ordering runs only when that recovered
+statement is a full `INSERT`/`UPSERT`. An `INSERT` that appears only inside
+a CTE does not make a final `UPDATE` an insert. Incomplete `WITH` prefixes
+and opaque or imported helpers stay fail-closed. Kind-only recovery never
+fabricates SQL. Conditional static appends keep the recovered base SQL and
+classify as dynamic: recovered non-`INSERT` SELECT/UPDATE stays outside this
+rule, while recovered `INSERT` fails closed rather than treating a
+branch-only `ORDER BY` as always present. Sequential recovered
 `INSERT … ON CONFLICT` gets the ordinary catalog ordering check. Unbound,
 spread, or otherwise opaque append arguments preserve a recovered leading
 statement as dynamic: leading `INSERT` stays fail-closed, while leading
