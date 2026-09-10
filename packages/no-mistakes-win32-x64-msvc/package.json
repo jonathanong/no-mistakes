@@ -1,6 +1,6 @@
 {
   "name": "no-mistakes-win32-x64-msvc",
-  "version": "0.61.4",
+  "version": "0.61.5",
   "description": "Native no-mistakes CLI and N-API addon for Windows x64",
   "license": "MIT",
   "repository": {
