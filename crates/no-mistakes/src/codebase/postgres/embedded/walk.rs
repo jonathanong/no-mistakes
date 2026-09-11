@@ -1,5 +1,5 @@
-use super::bindings::{callee_name, sql_statement_type_bindings};
-use super::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
+use super::bindings::callee_name;
+use super::{EmbeddedSqlFragment, EmbeddedSqlKind};
 use oxc_ast::ast::{
     AssignmentTarget, BlockStatement, CallExpression, Function, FunctionBody, FunctionType,
     Program, ReturnStatement,
@@ -7,54 +7,10 @@ use oxc_ast::ast::{
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
-use std::collections::{HashMap, HashSet};
-
 mod resolve;
 mod scope;
-
-#[derive(Clone)]
-struct BindingState {
-    sql: Option<String>,
-    kind: EmbeddedSqlKind,
-    line: u32,
-    sql_builder: bool,
-}
-
-pub(super) fn collect_calls(
-    program: &Program<'_>,
-    source: &str,
-    bindings: &HashSet<String>,
-) -> (Vec<EmbeddedSqlCall>, Vec<EmbeddedSqlFragment>) {
-    let mut visitor = ScopeVisitor {
-        source,
-        bindings,
-        scopes: Vec::new(),
-        calls: Vec::new(),
-        fragments: Vec::new(),
-        suppress_nested_builder_fragments: 0,
-        control_depth: 0,
-        loop_depth: 0,
-        function_scopes: Vec::new(),
-        functions: resolve::LocalFunctions::collect(program),
-        sql_statement_types: sql_statement_type_bindings(program),
-    };
-    visitor.visit_program(program);
-    (visitor.calls, visitor.fragments)
-}
-
-struct ScopeVisitor<'a> {
-    source: &'a str,
-    bindings: &'a HashSet<String>,
-    scopes: Vec<HashMap<String, BindingState>>,
-    calls: Vec<EmbeddedSqlCall>,
-    fragments: Vec<EmbeddedSqlFragment>,
-    suppress_nested_builder_fragments: usize,
-    control_depth: usize,
-    loop_depth: usize,
-    function_scopes: Vec<usize>,
-    functions: resolve::LocalFunctions,
-    sql_statement_types: HashSet<String>,
-}
+mod state;
+pub(super) use state::{collect_calls, BindingState, ScopeVisitor};
 
 impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_program(&mut self, program: &Program<'a>) {
@@ -148,9 +104,6 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
                 }
             }
         }
-        // Capture a fragment before applying the mutation: an append inside
-        // a loop makes the receiver dynamic for subsequent observations, but
-        // the append call itself still has trusted SQL-builder provenance.
         resolve::apply_append(self, call);
         if let Some(callee) = callee_name(call, self.bindings) {
             self.calls.push(resolve::executor_call(self, call, callee));
@@ -207,13 +160,6 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
     fn visit_switch_statement(&mut self, statement: &oxc_ast::ast::SwitchStatement<'a>) {
         self.visit_expression(&statement.discriminant);
-        // All of a switch's cases share one lexical scope (unlike a
-        // `BlockStatement` per case), so a case-local function declaration
-        // is recorded here, once, across every case's statements — not
-        // per-case — before any case is walked. Without this, a `function
-        // build() {}` declared directly in a case body is invisible to
-        // `shadowed_locally`, and a same-named top-level helper is wrongly
-        // resolved through instead.
         self.push_scope();
         for case in &statement.cases {
             resolve::record_statements(&case.consequent, self);
