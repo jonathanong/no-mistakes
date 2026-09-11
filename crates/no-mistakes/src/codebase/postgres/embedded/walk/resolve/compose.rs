@@ -111,13 +111,16 @@ pub(in crate::codebase::postgres::embedded::walk) fn is_builder_append(
     if member.property.name != "append" {
         return false;
     }
-    let Expression::Identifier(receiver) = unwrap_ts_wrappers(&member.object) else {
-        return false;
-    };
-    if !visitor.is_sql_builder(receiver.name.as_str()) {
-        return false;
+    match unwrap_ts_wrappers(&member.object) {
+        Expression::Identifier(receiver) => visitor.is_sql_builder(receiver.name.as_str()),
+        // A direct trusted template begins a fluent SQL builder without a
+        // named binding. Do not generalize this to arbitrary receivers.
+        Expression::TaggedTemplateExpression(_) => !untrusted_tag(&member.object, visitor),
+        Expression::CallExpression(_) => {
+            recover_builder_fragment(&member.object, visitor, false).is_some()
+        }
+        _ => false,
     }
-    true
 }
 
 fn recover_builder_fragment(
