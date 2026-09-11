@@ -1,9 +1,11 @@
-use super::bindings::callee_name;
-use super::{EmbeddedSqlCall, EmbeddedSqlKind};
+use super::bindings::{callee_name, sql_statement_type_bindings};
+use super::{EmbeddedSqlCall, EmbeddedSqlFragment, EmbeddedSqlKind};
 use oxc_ast::ast::{
-    AssignmentTarget, BlockStatement, CallExpression, Function, FunctionBody, FunctionType, Program,
+    AssignmentTarget, BlockStatement, CallExpression, Function, FunctionBody, FunctionType,
+    Program, ReturnStatement,
 };
 use oxc_ast_visit::{walk, Visit};
+use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
 use std::collections::{HashMap, HashSet};
 
@@ -15,25 +17,29 @@ struct BindingState {
     sql: Option<String>,
     kind: EmbeddedSqlKind,
     line: u32,
+    sql_builder: bool,
 }
 
 pub(super) fn collect_calls(
     program: &Program<'_>,
     source: &str,
     bindings: &HashSet<String>,
-) -> Vec<EmbeddedSqlCall> {
+) -> (Vec<EmbeddedSqlCall>, Vec<EmbeddedSqlFragment>) {
     let mut visitor = ScopeVisitor {
         source,
         bindings,
         scopes: Vec::new(),
         calls: Vec::new(),
+        fragments: Vec::new(),
+        suppress_nested_builder_fragments: 0,
         control_depth: 0,
         loop_depth: 0,
         function_scopes: Vec::new(),
         functions: resolve::LocalFunctions::collect(program),
+        sql_statement_types: sql_statement_type_bindings(program),
     };
     visitor.visit_program(program);
-    visitor.calls
+    (visitor.calls, visitor.fragments)
 }
 
 struct ScopeVisitor<'a> {
@@ -41,10 +47,13 @@ struct ScopeVisitor<'a> {
     bindings: &'a HashSet<String>,
     scopes: Vec<HashMap<String, BindingState>>,
     calls: Vec<EmbeddedSqlCall>,
+    fragments: Vec<EmbeddedSqlFragment>,
+    suppress_nested_builder_fragments: usize,
     control_depth: usize,
     loop_depth: usize,
     function_scopes: Vec<usize>,
     functions: resolve::LocalFunctions,
+    sql_statement_types: HashSet<String>,
 }
 
 impl<'a> Visit<'a> for ScopeVisitor<'a> {
@@ -65,7 +74,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
         self.push_scope();
         if let Some(param) = &clause.param {
-            self.bind_param(&param.pattern);
+            self.bind_param(&param.pattern, false);
         }
         walk::walk_catch_clause(self, clause);
         self.pop_scope();
@@ -118,11 +127,54 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        if self.suppress_nested_builder_fragments == 0 {
+            if let Some(argument) = call.arguments.first() {
+                if let Some(sql_text) = resolve::appended_builder_fragment(call, self) {
+                    self.push_fragment(
+                        crate::codebase::ts_source::byte_offset_to_line(
+                            self.source,
+                            argument.span().start as usize,
+                        ),
+                        Some(sql_text),
+                    );
+                } else if resolve::is_builder_append(call, self) {
+                    self.push_fragment(
+                        crate::codebase::ts_source::byte_offset_to_line(
+                            self.source,
+                            argument.span().start as usize,
+                        ),
+                        None,
+                    );
+                }
+            }
+        }
+        // Capture a fragment before applying the mutation: an append inside
+        // a loop makes the receiver dynamic for subsequent observations, but
+        // the append call itself still has trusted SQL-builder provenance.
         resolve::apply_append(self, call);
         if let Some(callee) = callee_name(call, self.bindings) {
             self.calls.push(resolve::executor_call(self, call, callee));
         }
         walk::walk_call_expression(self, call);
+    }
+
+    fn visit_return_statement(&mut self, statement: &ReturnStatement<'a>) {
+        if let Some(argument) = &statement.argument {
+            if let Some(sql_text) = resolve::builder_fragment(argument, self) {
+                self.push_fragment(
+                    crate::codebase::ts_source::byte_offset_to_line(
+                        self.source,
+                        argument.span().start as usize,
+                    ),
+                    Some(sql_text),
+                );
+                self.suppress_nested_builder_fragments += 1;
+                walk::walk_return_statement(self, statement);
+                self.suppress_nested_builder_fragments -= 1;
+                return;
+            }
+        }
+        walk::walk_return_statement(self, statement);
     }
 
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
@@ -185,5 +237,11 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_logical_expression(&mut self, expr: &oxc_ast::ast::LogicalExpression<'a>) {
         self.visit_expression(&expr.left);
         self.with_control_flow(|visitor| visitor.visit_expression(&expr.right));
+    }
+}
+
+impl ScopeVisitor<'_> {
+    fn push_fragment(&mut self, line: u32, sql_text: Option<String>) {
+        self.fragments.push(EmbeddedSqlFragment { line, sql_text });
     }
 }

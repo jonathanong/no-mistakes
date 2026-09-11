@@ -8,6 +8,32 @@ use std::collections::HashSet;
 
 const TRANSACTION_IMPORTS: &[&str] = &["withTransaction", "withTransactionOptions"];
 const QUERY_PROPERTY: &str = "query";
+const SQL_TEMPLATE_STRINGS: &str = "sql-template-strings";
+const SQL_STATEMENT: &str = "SQLStatement";
+
+pub(super) fn sql_statement_type_bindings(program: &Program<'_>) -> HashSet<String> {
+    let mut bindings = HashSet::new();
+    for statement in &program.body {
+        let Statement::ImportDeclaration(import) = statement else {
+            continue;
+        };
+        if import.source.value.as_str() != SQL_TEMPLATE_STRINGS {
+            continue;
+        }
+        let Some(specifiers) = &import.specifiers else {
+            continue;
+        };
+        for specifier in specifiers {
+            let ImportDeclarationSpecifier::ImportSpecifier(named) = specifier else {
+                continue;
+            };
+            if module_export_name(&named.imported) == SQL_STATEMENT {
+                bindings.insert(named.local.name.to_string());
+            }
+        }
+    }
+    bindings
+}
 
 /// Local identifiers bound as SQL executors by the configured specifier.
 pub fn executor_bindings(program: &Program<'_>, options: &EmbeddedSqlOptions) -> HashSet<String> {

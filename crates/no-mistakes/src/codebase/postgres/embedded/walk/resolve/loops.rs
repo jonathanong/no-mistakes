@@ -17,7 +17,7 @@ use oxc_ast::ast::{ForStatement, ForStatementInit, ForStatementLeft, VariableDec
 pub(crate) fn bind_for_statement_left(left: &ForStatementLeft<'_>, visitor: &mut ScopeVisitor<'_>) {
     if let ForStatementLeft::VariableDeclaration(declaration) = left {
         for declarator in &declaration.declarations {
-            visitor.bind_param(&declarator.id);
+            visitor.bind_param(&declarator.id, false);
         }
     }
 }
@@ -35,7 +35,7 @@ pub(crate) fn enter_classic_for(statement: &ForStatement<'_>, visitor: &mut Scop
     visitor.push_scope();
     if let Some(ForStatementInit::VariableDeclaration(declaration)) = &statement.init {
         for declarator in &declaration.declarations {
-            visitor.bind_param(&declarator.id);
+            visitor.bind_param(&declarator.id, false);
         }
     }
 }

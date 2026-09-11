@@ -130,6 +130,15 @@ A call is a database call when:
 `CheckFactPlan.postgres_dml` is set. `postgres_dml` also extracts statement
 facts from matching `.sql` files and from non-`Dynamic` embedded calls.
 
+The extractor also records recoverable SQL fragments returned from builders or
+passed to `.append(...)`. Structural policies may inspect those fragments
+without treating the builder as executed DML. Builder recovery uses the same
+trusted-tag and lexical-shadow rules as executed SQL. A raw appended
+identifier that cannot be resolved becomes a synthetic qualified outer
+reference, so shape policies conservatively retain possible correlation while
+runtime table constants and column fragments remain statically parseable.
+Fragments that exactly match an executed call are inspected once.
+
 Each `EmbeddedSqlCall` records `kind`:
 
 - `Inline` — SQL literal or template at the call site

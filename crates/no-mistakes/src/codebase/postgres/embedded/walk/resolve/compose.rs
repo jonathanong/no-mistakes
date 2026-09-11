@@ -6,6 +6,8 @@ use super::{chain, functions};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BinaryOperator, Expression};
 
+const DYNAMIC_SQL_FRAGMENT: &str = "sql_dynamic_outer.column";
+
 pub(super) fn classify_init(
     expr: &Expression<'_>,
     is_const: bool,
@@ -71,6 +73,98 @@ pub(super) fn static_fragment(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>)
         Expression::Identifier(ident) => recovered_binding_sql(ident.name.as_str(), visitor),
         _ => None,
     }
+}
+
+/// Recovers SQL assembled by a builder without classifying the builder as an
+/// executed query. Existing tag-shadow checks still apply. A raw identifier
+/// appended into SQL becomes a qualified synthetic outer reference: this
+/// intentionally preserves possible correlation for shape policy while
+/// remaining valid PostgreSQL in relation and value positions.
+pub(in crate::codebase::postgres::embedded::walk) fn builder_fragment(
+    expr: &Expression<'_>,
+    visitor: &ScopeVisitor<'_>,
+) -> Option<String> {
+    recover_builder_fragment(expr, visitor, false)
+}
+
+pub(in crate::codebase::postgres::embedded::walk) fn appended_builder_fragment(
+    call: &oxc_ast::ast::CallExpression<'_>,
+    visitor: &ScopeVisitor<'_>,
+) -> Option<String> {
+    if !is_builder_append(call, visitor) {
+        return None;
+    }
+    let Expression::StaticMemberExpression(_) = unwrap_ts_wrappers(&call.callee) else {
+        return None;
+    };
+    let argument = call.arguments.first()?.as_expression()?;
+    builder_fragment(argument, visitor)
+}
+
+pub(in crate::codebase::postgres::embedded::walk) fn is_builder_append(
+    call: &oxc_ast::ast::CallExpression<'_>,
+    visitor: &ScopeVisitor<'_>,
+) -> bool {
+    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
+        return false;
+    };
+    if member.property.name != "append" {
+        return false;
+    }
+    let Expression::Identifier(receiver) = unwrap_ts_wrappers(&member.object) else {
+        return false;
+    };
+    if !visitor.is_sql_builder(receiver.name.as_str()) {
+        return false;
+    }
+    true
+}
+
+fn recover_builder_fragment(
+    expr: &Expression<'_>,
+    visitor: &ScopeVisitor<'_>,
+    allow_dynamic_identifier: bool,
+) -> Option<String> {
+    match unwrap_ts_wrappers(expr) {
+        Expression::StringLiteral(literal) => Some(literal.value.to_string()),
+        Expression::TemplateLiteral(template) if template.expressions.is_empty() => {
+            unpublished_sql_text(expr)
+        }
+        Expression::TaggedTemplateExpression(_) if untrusted_tag(expr, visitor) => None,
+        Expression::TaggedTemplateExpression(_) => unpublished_sql_text(expr),
+        Expression::Identifier(ident) if allow_dynamic_identifier => visitor
+            .lookup(ident.name.as_str())
+            .and_then(|binding| binding.sql)
+            .or_else(|| Some(DYNAMIC_SQL_FRAGMENT.to_string())),
+        Expression::Identifier(ident) => {
+            recovered_builder_binding_sql(ident.name.as_str(), visitor)
+        }
+        Expression::BinaryExpression(binary) if binary.operator == BinaryOperator::Addition => {
+            let left = recover_builder_fragment(&binary.left, visitor, allow_dynamic_identifier)?;
+            let right = recover_builder_fragment(&binary.right, visitor, allow_dynamic_identifier)?;
+            let right = renumber_placeholders(&right, count_placeholders(&left));
+            Some(format!("{left}{right}"))
+        }
+        Expression::CallExpression(call) => recover_builder_append(call, visitor),
+        _ => None,
+    }
+}
+
+fn recover_builder_append(
+    call: &oxc_ast::ast::CallExpression<'_>,
+    visitor: &ScopeVisitor<'_>,
+) -> Option<String> {
+    let Expression::StaticMemberExpression(member) = unwrap_ts_wrappers(&call.callee) else {
+        return None;
+    };
+    if member.property.name != "append" {
+        return None;
+    }
+    let base = recover_builder_fragment(&member.object, visitor, false)?;
+    let argument = call.arguments.first()?.as_expression()?;
+    let appended = recover_builder_fragment(argument, visitor, true)?;
+    let appended = renumber_placeholders(&appended, count_placeholders(&base));
+    Some(format!("{base}{appended}"))
 }
 
 /// Resolves a fluent `.append()` chain or a call into a same-file
@@ -148,4 +242,9 @@ fn recovered_binding_sql(name: &str, visitor: &ScopeVisitor<'_>) -> Option<Strin
         }
         EmbeddedSqlKind::Dynamic => None,
     }
+}
+
+fn recovered_builder_binding_sql(name: &str, visitor: &ScopeVisitor<'_>) -> Option<String> {
+    let binding = visitor.lookup(name)?;
+    binding.sql_builder.then_some(binding.sql).flatten()
 }
