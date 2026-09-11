@@ -27,6 +27,18 @@ pub struct EmbeddedSqlCall {
     pub declaration_line: Option<u32>,
 }
 
+/// A SQL fragment returned from a builder or appended to a
+/// statement builder. These are deliberately separate from executed calls:
+/// structural policies can inspect them without treating builder code as an
+/// executed DML statement.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct EmbeddedSqlFragment {
+    pub line: u32,
+    /// `None` records a proven SQL-builder append whose argument cannot be
+    /// recovered. Structural policies can then honor their fail-closed mode.
+    pub sql_text: Option<String>,
+}
+
 /// How executed SQL was recovered from TypeScript.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum EmbeddedSqlKind {
@@ -43,6 +55,7 @@ pub struct EmbeddedSqlFileFacts {
     pub path: PathBuf,
     pub executor_bindings: Vec<String>,
     pub calls: Vec<EmbeddedSqlCall>,
+    pub fragments: Vec<EmbeddedSqlFragment>,
 }
 
 /// Parse `source` and extract executor SQL call sites.
@@ -67,11 +80,18 @@ pub fn extract_embedded_sql_from_program(
     let bindings = executor_bindings(program, options);
     let mut executor_bindings: Vec<String> = bindings.iter().cloned().collect();
     executor_bindings.sort();
-    let calls = walk::collect_calls(program, source, &bindings);
+    let (calls, mut fragments) = walk::collect_calls(program, source, &bindings);
+    for fragment in &mut fragments {
+        fragment.sql_text = fragment
+            .sql_text
+            .take()
+            .map(placeholders::publish_placeholders);
+    }
     EmbeddedSqlFileFacts {
         path: path.to_path_buf(),
         executor_bindings,
         calls,
+        fragments,
     }
 }
 

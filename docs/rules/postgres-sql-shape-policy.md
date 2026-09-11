@@ -7,8 +7,16 @@ that set-operation body into a nested loop join, so it rebuilds the whole set
 once per outer row. An uncorrelated `EXISTS (… UNION …)` is planned once as an
 InitPlan and is not this shape.
 
-The rule consumes dual-source statement facts (`CheckFactPlan.postgres_dml`).
-Unparseable or dynamic SQL fails closed unless `unanalyzableSql` is `ignore`.
+The rule consumes dual-source statement facts (`CheckFactPlan.postgres_dml`),
+including recoverable SQL returned from builders and fragments appended to a
+known SQL builder (a recovered SQL binding or a parameter typed
+`SQLStatement`). Arbitrary `.append(...)` receivers are not SQL builders.
+Builder recovery honors the same trusted-tag and lexical-shadow rules as
+executed SQL. Unresolved raw appended identifiers become a synthetic qualified
+outer reference, so a builder that may append an outer column is conservatively
+treated as possibly correlated. Identical executed and builder SQL is reported
+once. Unparseable or dynamic SQL, including builder fragments, fails closed
+unless `unanalyzableSql` is `ignore`.
 
 ```yaml
 rules:

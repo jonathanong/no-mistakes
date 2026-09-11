@@ -1,5 +1,5 @@
 use super::{resolve, BindingState, EmbeddedSqlKind, ScopeVisitor};
-use oxc_ast::ast::{BindingPattern, FormalParameters};
+use oxc_ast::ast::{BindingPattern, FormalParameters, TSType, TSTypeName};
 use std::collections::HashMap;
 
 impl ScopeVisitor<'_> {
@@ -22,6 +22,10 @@ impl ScopeVisitor<'_> {
             .find_map(|scope| scope.get(name).cloned())
     }
 
+    pub(super) fn is_sql_builder(&self, name: &str) -> bool {
+        self.lookup(name).is_some_and(|binding| binding.sql_builder)
+    }
+
     /// Whether `name` is bound at a scope more deeply nested than the
     /// top-level program scope — a real lexical shadow of a same-named
     /// top-level helper. A match found only in the outermost scope is the
@@ -33,7 +37,7 @@ impl ScopeVisitor<'_> {
             .is_some_and(|nested| nested.iter().any(|scope| scope.contains_key(name)))
     }
 
-    pub(super) fn bind_param(&mut self, pattern: &BindingPattern<'_>) {
+    pub(super) fn bind_param(&mut self, pattern: &BindingPattern<'_>, sql_builder: bool) {
         let mut names = Vec::new();
         resolve::for_each_bound_name(pattern, &mut |name| names.push(name.to_string()));
         for name in names {
@@ -44,6 +48,7 @@ impl ScopeVisitor<'_> {
                         sql: None,
                         kind: EmbeddedSqlKind::Dynamic,
                         line: 0,
+                        sql_builder,
                     },
                 );
             }
@@ -64,6 +69,7 @@ impl ScopeVisitor<'_> {
                     sql: None,
                     kind: EmbeddedSqlKind::Dynamic,
                     line: 0,
+                    sql_builder: false,
                 },
             );
         }
@@ -73,6 +79,7 @@ impl ScopeVisitor<'_> {
         for scope in self.scopes.iter_mut().rev() {
             if let Some(binding) = scope.get_mut(name) {
                 binding.kind = EmbeddedSqlKind::Dynamic;
+                binding.sql_builder = false;
                 binding.sql = None;
                 return;
             }
@@ -93,10 +100,13 @@ impl ScopeVisitor<'_> {
 
     pub(super) fn record_params(&mut self, params: &FormalParameters<'_>) {
         for param in &params.items {
-            self.bind_param(&param.pattern);
+            self.bind_param(
+                &param.pattern,
+                param_is_sql_statement(param, &self.sql_statement_types),
+            );
         }
         if let Some(rest) = &params.rest {
-            self.bind_param(&rest.rest.argument);
+            self.bind_param(&rest.rest.argument, false);
         }
     }
 
@@ -135,6 +145,22 @@ impl ScopeVisitor<'_> {
             .find_map(|(index, scope)| scope.contains_key(name).then_some(index))
             .is_some_and(|index| index < fn_start)
     }
+}
+
+fn param_is_sql_statement(
+    param: &oxc_ast::ast::FormalParameter<'_>,
+    bindings: &std::collections::HashSet<String>,
+) -> bool {
+    let Some(annotation) = &param.type_annotation else {
+        return false;
+    };
+    let TSType::TSTypeReference(reference) = &annotation.type_annotation else {
+        return false;
+    };
+    matches!(
+        &reference.type_name,
+        TSTypeName::IdentifierReference(identifier) if bindings.contains(identifier.name.as_str())
+    )
 }
 
 pub(super) fn mark_binding_dynamic_keep_known_statement(binding: &mut BindingState) {

@@ -1,51 +1,16 @@
 use super::bindings::callee_name;
-use super::{EmbeddedSqlCall, EmbeddedSqlKind};
+use super::{EmbeddedSqlFragment, EmbeddedSqlKind};
 use oxc_ast::ast::{
-    AssignmentTarget, BlockStatement, CallExpression, Function, FunctionBody, FunctionType, Program,
+    AssignmentTarget, BlockStatement, CallExpression, Function, FunctionBody, FunctionType,
+    Program, ReturnStatement,
 };
 use oxc_ast_visit::{walk, Visit};
+use oxc_span::GetSpan;
 use oxc_syntax::scope::ScopeFlags;
-use std::collections::{HashMap, HashSet};
-
 mod resolve;
 mod scope;
-
-#[derive(Clone)]
-struct BindingState {
-    sql: Option<String>,
-    kind: EmbeddedSqlKind,
-    line: u32,
-}
-
-pub(super) fn collect_calls(
-    program: &Program<'_>,
-    source: &str,
-    bindings: &HashSet<String>,
-) -> Vec<EmbeddedSqlCall> {
-    let mut visitor = ScopeVisitor {
-        source,
-        bindings,
-        scopes: Vec::new(),
-        calls: Vec::new(),
-        control_depth: 0,
-        loop_depth: 0,
-        function_scopes: Vec::new(),
-        functions: resolve::LocalFunctions::collect(program),
-    };
-    visitor.visit_program(program);
-    visitor.calls
-}
-
-struct ScopeVisitor<'a> {
-    source: &'a str,
-    bindings: &'a HashSet<String>,
-    scopes: Vec<HashMap<String, BindingState>>,
-    calls: Vec<EmbeddedSqlCall>,
-    control_depth: usize,
-    loop_depth: usize,
-    function_scopes: Vec<usize>,
-    functions: resolve::LocalFunctions,
-}
+mod state;
+pub(super) use state::{collect_calls, BindingState, ScopeVisitor};
 
 impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_program(&mut self, program: &Program<'a>) {
@@ -65,7 +30,7 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_catch_clause(&mut self, clause: &oxc_ast::ast::CatchClause<'a>) {
         self.push_scope();
         if let Some(param) = &clause.param {
-            self.bind_param(&param.pattern);
+            self.bind_param(&param.pattern, false);
         }
         walk::walk_catch_clause(self, clause);
         self.pop_scope();
@@ -118,11 +83,51 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     }
 
     fn visit_call_expression(&mut self, call: &CallExpression<'a>) {
+        if self.suppress_nested_builder_fragments == 0 {
+            if let Some(argument) = call.arguments.first() {
+                if let Some(sql_text) = resolve::appended_builder_fragment(call, self) {
+                    self.push_fragment(
+                        crate::codebase::ts_source::byte_offset_to_line(
+                            self.source,
+                            argument.span().start as usize,
+                        ),
+                        Some(sql_text),
+                    );
+                } else if resolve::is_builder_append(call, self) {
+                    self.push_fragment(
+                        crate::codebase::ts_source::byte_offset_to_line(
+                            self.source,
+                            argument.span().start as usize,
+                        ),
+                        None,
+                    );
+                }
+            }
+        }
         resolve::apply_append(self, call);
         if let Some(callee) = callee_name(call, self.bindings) {
             self.calls.push(resolve::executor_call(self, call, callee));
         }
         walk::walk_call_expression(self, call);
+    }
+
+    fn visit_return_statement(&mut self, statement: &ReturnStatement<'a>) {
+        if let Some(argument) = &statement.argument {
+            if let Some(sql_text) = resolve::builder_fragment(argument, self) {
+                self.push_fragment(
+                    crate::codebase::ts_source::byte_offset_to_line(
+                        self.source,
+                        argument.span().start as usize,
+                    ),
+                    Some(sql_text),
+                );
+                self.suppress_nested_builder_fragments += 1;
+                walk::walk_return_statement(self, statement);
+                self.suppress_nested_builder_fragments -= 1;
+                return;
+            }
+        }
+        walk::walk_return_statement(self, statement);
     }
 
     fn visit_for_statement(&mut self, statement: &oxc_ast::ast::ForStatement<'a>) {
@@ -155,13 +160,6 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
 
     fn visit_switch_statement(&mut self, statement: &oxc_ast::ast::SwitchStatement<'a>) {
         self.visit_expression(&statement.discriminant);
-        // All of a switch's cases share one lexical scope (unlike a
-        // `BlockStatement` per case), so a case-local function declaration
-        // is recorded here, once, across every case's statements — not
-        // per-case — before any case is walked. Without this, a `function
-        // build() {}` declared directly in a case body is invisible to
-        // `shadowed_locally`, and a same-named top-level helper is wrongly
-        // resolved through instead.
         self.push_scope();
         for case in &statement.cases {
             resolve::record_statements(&case.consequent, self);
@@ -185,5 +183,11 @@ impl<'a> Visit<'a> for ScopeVisitor<'a> {
     fn visit_logical_expression(&mut self, expr: &oxc_ast::ast::LogicalExpression<'a>) {
         self.visit_expression(&expr.left);
         self.with_control_flow(|visitor| visitor.visit_expression(&expr.right));
+    }
+}
+
+impl ScopeVisitor<'_> {
+    fn push_fragment(&mut self, line: u32, sql_text: Option<String>) {
+        self.fragments.push(EmbeddedSqlFragment { line, sql_text });
     }
 }

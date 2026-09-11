@@ -6,6 +6,13 @@ use super::{chain, functions};
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BinaryOperator, Expression};
 
+mod builder;
+pub(in crate::codebase::postgres::embedded::walk) use builder::{
+    appended_builder_fragment, builder_fragment, is_builder_append,
+};
+
+pub(super) const DYNAMIC_SQL_FRAGMENT: &str = "sql_dynamic_outer.column";
+
 pub(super) fn classify_init(
     expr: &Expression<'_>,
     is_const: bool,
@@ -116,7 +123,7 @@ fn resolve_dynamic_chain_prefix(
     )
 }
 
-fn untrusted_tag(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> bool {
+pub(super) fn untrusted_tag(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>) -> bool {
     interpolating_untrusted_tag(
         expr,
         &mut |name| tag_shadowed(name, visitor),
@@ -148,4 +155,12 @@ fn recovered_binding_sql(name: &str, visitor: &ScopeVisitor<'_>) -> Option<Strin
         }
         EmbeddedSqlKind::Dynamic => None,
     }
+}
+
+pub(super) fn recovered_builder_binding_sql(
+    name: &str,
+    visitor: &ScopeVisitor<'_>,
+) -> Option<String> {
+    let binding = visitor.lookup(name)?;
+    binding.sql_builder.then_some(binding.sql).flatten()
 }

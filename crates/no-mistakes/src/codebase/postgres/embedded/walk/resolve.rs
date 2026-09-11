@@ -5,6 +5,9 @@ mod functions;
 mod loops;
 
 pub(super) use append::apply_append;
+pub(in crate::codebase::postgres::embedded::walk) use compose::{
+    appended_builder_fragment, builder_fragment, is_builder_append,
+};
 pub(super) use functions::LocalFunctions;
 pub(super) use loops::{bind_for_statement_left, enter_classic_for, leave_classic_for};
 
@@ -106,6 +109,7 @@ fn record_function_declaration(function: &Function<'_>, visitor: &mut ScopeVisit
                 sql: None,
                 kind: EmbeddedSqlKind::Dynamic,
                 line,
+                sql_builder: false,
             },
         );
     }
@@ -139,7 +143,7 @@ fn record_declarator(
         // Destructuring has no single SQL init to classify; bind every name
         // as a shadow so a nested `const { tag } = …` cannot keep a trusted
         // imported tag alias.
-        visitor.bind_param(&declarator.id);
+        visitor.bind_param(&declarator.id, false);
         return;
     };
     let Some(init) = &declarator.init else {
@@ -149,7 +153,19 @@ fn record_declarator(
         crate::codebase::ts_source::byte_offset_to_line(visitor.source, ident.span.start as usize);
     let (sql, kind) = classify_init(init, is_const, visitor);
     if let Some(scope) = visitor.current_scope() {
-        scope.insert(ident.name.to_string(), BindingState { sql, kind, line });
+        scope.insert(
+            ident.name.to_string(),
+            BindingState {
+                sql_builder: sql.is_some()
+                    && matches!(
+                        kind,
+                        EmbeddedSqlKind::ImmutableLocal | EmbeddedSqlKind::Composed
+                    ),
+                sql,
+                kind,
+                line,
+            },
+        );
     }
 }
 
