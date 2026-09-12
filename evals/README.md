@@ -423,6 +423,14 @@ existed, so the rule could not be chosen to fit whichever candidate won.
    traded away against a better `before-edit` number.
 3. **`signature` is reported, not gated.** See below.
 
+**Amendment**, written after C1's numbers and before C2's, so it constrains a
+decision not yet made: a candidate clearing gates 1 and 2 wins. `signature`
+breaks a tie only between candidates that both clear gate 1 or both fail it. It
+is not promoted to a tiebreaker against `before-edit`, because `before-edit`
+carries real observed traffic and has now been measured at `runs: 3` under
+three descriptions, while `signature` has no observed demand at all and n=12
+per arm — a 6/12 vs 4/12 gap is two runs.
+
 #### `signature` did not regress — the 3/5 vs 2/15 above was a 1-run artifact
 
 Re-measured at `runs: 3`, `--ablation none`, counting the four should-fire cases:
