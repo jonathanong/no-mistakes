@@ -80,6 +80,20 @@ fn github_shorthand_blocked() {
 }
 
 #[test]
+fn remaining_blocked_prefixes_and_npm_alias_versions() {
+    for spec in [
+        "git://github.com/foo/bar.git",
+        "git+ssh://git@github.com/foo/bar.git",
+        "bitbucket:owner/repo",
+        "gitlab:owner/repo",
+        "gist:abc123",
+        "npm:lodash@file:../bad",
+    ] {
+        assert!(is_blocked_specifier(spec), "{spec}");
+    }
+}
+
+#[test]
 fn owner_slash_repo_shorthand_blocked() {
     assert!(is_blocked_specifier("owner/repo"));
 }
