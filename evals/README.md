@@ -250,7 +250,7 @@ judged not worth the cost.
 | **More `napi` cases** | `SKILL.md`'s programmatic-API surface is about one sentence. The existing 5 already return Δ ≈ 0; more would add cost without discrimination. |
 | **More `lang-graph` cases** | The fixture is synthetic — `auto-harness` is TypeScript-only. Additional cases would grade plan shape against an imagined repository. |
 | **Engine correctness** | Covered by `test-cases/**` and the Rust suite. These evals test routing and guidance, not whether the graph is right. |
-| **Sub-skill variant** (splitting into intent-scoped skills) | Designed, then not built: the single reworded description reached 94% tuned and 100% held-out, so a split had nothing left to win. Revisit only if one description provably cannot span the vocabularies. |
+| **Sub-skill variant** (splitting into intent-scoped skills) | Designed, then not built — but the reasoning has weakened. It rested on one description reaching 94% tuned and 100% held-out; against a clean holdout the shipped description manages [5/9](#held-out-confirmation), and coverage turns out to track [which subjects the description names](#the-description-reaches-what-it-names-and-nothing-else) rather than how general its framing is. That is the argument *for* splitting, not against it. Still not built, because the cheaper move — naming more subjects in one description — has not been exhausted. |
 | **A lifecycle case spanning before-edit → after-edit → handoff** | Multi-step flows are graded on a single final message here, so a long chain collapses into one hard-to-attribute verdict. The three phases are tested separately instead. |
 | **Performance / scale behaviour** | No case exercises a large repository, a cold graph build, or concurrency. |
 
