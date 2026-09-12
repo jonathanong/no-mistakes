@@ -463,30 +463,43 @@ grader from every score it prints.
 
 `skill-fired` is binary, which hides the more interesting question: when the
 skill does **not** load, what does the plan say instead? Classifying every
-non-firing run of the step-1 measurement by how it refers to the tool:
+non-firing run, case-matched so each column sees the same questions.
 
-| | shipped | `real-register` |
-| --- | --- | --- |
-| should-fire runs that did not fire | 8 | 9 |
-| … inventing `/no-mistakes <symbol>` | **5** | 0 |
-| … naming a real CLI command | 0 | 2 |
-| … naming the tool, no command | 3 | 7 |
-| `neg-hard` runs that did not fire | 15 | 3 |
-| … still reaching for the tool anyway | **9** | **0** |
+On the four should-fire `signature` cases (12 runs each):
 
-Two things fall out of this that the trigger counts alone do not show.
+| | shipped | `real-register` | C1 | C2 |
+| --- | --- | --- | --- | --- |
+| fired | 4 | 3 | 6 | 10 |
+| did not fire | 8 | 9 | 6 | 2 |
+| … inventing `/no-mistakes <symbol>` | **5** | 0 | **3** | 1 |
+| … naming a real CLI command | 0 | 2 | 1 | 0 |
+| … naming the tool, no command | 3 | 7 | 2 | 1 |
+
+On the four `neg-hard` over-trigger guards (12 runs each; `real-register` was
+never run against this flow, so it has no column):
+
+| | shipped | C1 | C2 |
+| --- | --- | --- | --- |
+| fired | 0 | 0 | 0 |
+| reached for the tool in prose anyway | 9 | 9 | 8 |
+| … inventing `/no-mistakes <symbol>` | **5** | **5** | **0** |
+| … naming the tool, no command | 4 | 4 | 7 |
+| stayed silent | 3 | 3 | 4 |
 
 **A non-firing run is worse than a silent one.** Under the shipped description
-the most common outcome is not "the model forgot the tool exists" — it is the
-model confidently writing `/no-mistakes roleHas`, a command form that does not
-exist. The description advertises the capability well enough to be reached for
-and not well enough to be used, so the plan names something that will fail.
+the common outcome is not "the model forgot the tool exists" — it is the model
+confidently writing `/no-mistakes roleHas`, a command form that does not exist.
+The description is good enough to be reached for and not good enough to be
+used, so the plan names something that will fail. Both descriptions that lead
+with the real register invent it far less; C2 invents it once in 24 non-firing
+runs across both flows, against 10 for the shipped description.
 
-**`neg-hard` has a soft failure mode the indicator misses.** The shipped
-description scores a clean 0/12 there, yet 9 of its 15 non-firing `neg-hard`
-runs still reach for the tool in prose on questions the graph cannot answer.
-`real-register` mentions it zero times on the same cases. Read the over-trigger
-guard as `skill-fired` **plus** this classification, not as `skill-fired` alone.
+**The over-trigger guard needs reading in two parts.** All three descriptions
+score a clean `skill-fired` 0/12 on `neg-hard`, and all three still reach for
+the tool in prose on roughly 8–9 of those 12 runs. Widening the description did
+not make that worse. What changes is the form: shipped and C1 fabricate a
+command on 5 of them, C2 on none. Read the guard as `skill-fired` **plus** this
+classification — `skill-fired` alone reports all three as identical.
 
 To add another variant: create `evals/variants/<name>/` (copy the skill, change
 only the frontmatter), then `python3 evals/generate.py --variant <name>` and run
