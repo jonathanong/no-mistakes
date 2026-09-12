@@ -84,6 +84,7 @@ fn caller_helper_predicates_cover_test_files_exports_and_identities() {
     assert!(matches_local_callee("parseDate", &locals));
     assert!(matches_local_callee("parseDate.format", &locals));
     assert!(!matches_local_callee("parse", &locals));
+    assert!(!matches_local_callee("parseDatefoo", &locals));
 
     let facts = TsFileFacts {
         imported_bindings: vec![ImportedBinding {
@@ -97,6 +98,11 @@ fn caller_helper_predicates_cover_test_files_exports_and_identities() {
     };
     assert!(!legacy_call_matches_local_target(
         &call("parseDate", CallTargetIdentity::RepositoryFunction),
+        &locals,
+        &facts,
+    ));
+    assert!(!legacy_call_matches_local_target(
+        &call("parseDate.format", CallTargetIdentity::RepositoryFunction),
         &locals,
         &facts,
     ));

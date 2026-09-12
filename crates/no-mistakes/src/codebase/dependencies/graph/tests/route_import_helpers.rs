@@ -222,7 +222,7 @@ fn route_import_resolution_follows_symlink_files_and_broken_links() {
         std::ffi::OsString::from("route-helper.ts"),
         vec![link_helper.clone()],
     );
-    let remapped = route_import_visible_target(real_helper, &remap_files, &visible_by_name);
+    let remapped = route_import_visible_target(real_helper.clone(), &remap_files, &visible_by_name);
     assert_eq!(remapped.as_deref(), Some(link_helper.as_path()));
 
     let file_link = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -248,4 +248,27 @@ fn route_import_resolution_follows_symlink_files_and_broken_links() {
     );
     let remapped_file = route_import_visible_target(real_external.clone(), &file_link_files, &file_link_names);
     assert_eq!(remapped_file.as_deref(), Some(file_link.as_path()));
+
+    let unrelated = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("Cargo.toml");
+    let hidden_files = GraphFiles::from_parts(
+        vec![unrelated.clone()],
+        vec![unrelated.clone()],
+        [unrelated.clone()],
+        vec![],
+    );
+    let remapped_hidden =
+        route_import_visible_target(real_helper.clone(), &hidden_files, &visible_by_name);
+    assert_eq!(remapped_hidden.as_deref(), Some(link_helper.as_path()));
+    assert!(route_import_visible_target(
+        PathBuf::from("/"),
+        &hidden_files,
+        &visible_by_name
+    )
+    .is_none());
+    let mut mismatch_names = std::collections::BTreeMap::<std::ffi::OsString, Vec<PathBuf>>::new();
+    mismatch_names.insert(
+        std::ffi::OsString::from("route-helper.ts"),
+        vec![unrelated],
+    );
+    assert!(route_import_visible_target(real_helper, &hidden_files, &mismatch_names).is_none());
 }
