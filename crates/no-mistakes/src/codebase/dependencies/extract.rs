@@ -265,6 +265,9 @@ pub fn is_indexable(path: &Path) -> bool {
 }
 
 #[cfg(test)]
+#[path = "extract/tests/collector_scope_coverage.rs"]
+mod collector_scope_coverage;
+#[cfg(test)]
 mod coverage_tests;
 #[cfg(test)]
 mod extra_tests;

@@ -522,6 +522,8 @@ mod callable_alias_tdz;
 mod class_and_overload_regressions;
 #[path = "tests/coverage_shapes.rs"]
 mod coverage_shapes;
+#[path = "tests/dynamic_callee_shapes.rs"]
+mod dynamic_callee_shapes;
 #[path = "tests/object_spread_regressions.rs"]
 mod object_spread_regressions;
 #[path = "tests/static_block_regressions.rs"]

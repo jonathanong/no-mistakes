@@ -97,6 +97,10 @@ fn class_function_and_destructured_sql_bindings_fail_closed() {
         "const { sql } = providers;\nsql`SELECT 1`;",
         "export class sql {}\nsql`SELECT 1`;",
         "export function sql() { return 'SELECT 1'; }\nsql`SELECT 1`;",
+        "export interface Sql {}\nexport type SqlAlias = string;\nexport enum Kind { A }\nsql`SELECT 1`;",
+        "function sql(strings: TemplateStringsArray): string;\nfunction sql(strings: TemplateStringsArray) { return; }\nsql`SELECT 1`;",
+        "function sql(strings: TemplateStringsArray) { foo(); return 'SELECT 1'; }\nsql`SELECT 1`;",
+        "export default class {}\nsql`SELECT 1`;",
     ] {
         let facts =
             extract_embedded_sql_from_source(std::path::Path::new("shadow.ts"), source, &options);
