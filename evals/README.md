@@ -122,12 +122,12 @@ claude plugin eval . --ablation with-without --judge-model sonnet \
 claude plugin eval . --tag heldout --ablation none --judge-model sonnet
 ```
 
-56 generated cases across 12 flows; 53 excluding the holdout.
+59 generated cases across 12 flows; 53 excluding the holdout.
 
 | tag | cases | what it covers |
 | --- | --- | --- |
 | `before-edit` | 8 | impact scoping before a change — the calibrated core suite |
-| `heldout` | 3 | trigger-only cases in unseen wording, for testing description changes |
+| `heldout` | 6 | trigger-only cases in unseen wording, for testing description changes (3 spent, 3 live — see [Held-out check](#held-out-check)) |
 | `queues` | 5 | producer↔consumer coupling across a queue (no import edge) |
 | `after-edit` | 5 | validation set, moved files, empty-result distrust |
 | `signature` | 5 | call sites, argument shapes, return-type flow, public surface |
