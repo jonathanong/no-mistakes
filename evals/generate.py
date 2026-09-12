@@ -587,7 +587,10 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(exports-of|symbols|dead-exports)",
+                # `check` + its `unique-exports` rule is the repo-wide duplicate
+                # answer, and the duplication flow already accepts it for the same
+                # question. Omitting it fails plans that are correct.
+                r"no-mistakes\s+(check|exports-of|symbols|dead-exports)|unique-exports",
             ),
         ],
     ),

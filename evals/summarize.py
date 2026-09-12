@@ -111,6 +111,17 @@ def summarize(path: str) -> None:
     for case in report["cases"]:
         with_arm = case["arms"].get("with", [])
         without_arm = case["arms"].get("without", [])
+        case_errors = _errors(with_arm) + _errors(without_arm)
+        if case_errors:
+            # Never render a numeric row for a case with a failed run: the
+            # failed run scores 0 in both arms, so the row prints as an
+            # ordinary low score with a clean delta instead of missing data.
+            n = len(case_errors)
+            print(
+                f"    {case['name']:<38} {'--':>7} "
+                f"{('%d run(s) FAILED' % n):>25}"
+            )
+            continue
         fired = _fired(with_arm)
         with_score = _mean_score(with_arm)
         row = f"    {case['name']:<38} {fired:>3}/{len(with_arm):<3} {with_score:>6.2f}"
@@ -120,7 +131,7 @@ def summarize(path: str) -> None:
         else:
             row += f" {'-':>8} {'-':>7}"
         print(row)
-        if _is_should_fire(case["name"]) and not _errors(with_arm):
+        if _is_should_fire(case["name"]):
             fired_total += fired
             runs_total += len(with_arm)
 
@@ -140,11 +151,45 @@ def _evidence(run) -> str:
     return ""
 
 
+#: Every subcommand `SKILL.md` documents. The classification below is only
+#: meaningful if a "real CLI command" is checked against this set — matching any
+#: lowercase token instead would read the invented `no-mistakes roleHas` as real,
+#: because `role` is a lowercase prefix of the symbol.
+SUBCOMMANDS = (
+    "call-sites",
+    "check",
+    "ci",
+    "dead-exports",
+    "dependencies",
+    "dependents",
+    "exports-of",
+    "fetches",
+    "impacted-checks",
+    "importers",
+    "infra",
+    "planning-impact",
+    "playwright",
+    "queues",
+    "react",
+    "resolve-check",
+    "server",
+    "swift",
+    "symbols",
+    "tests",
+)
+
+_REAL_COMMAND = re.compile(
+    r"\bno-mistakes\s+(?:%s)\b" % "|".join(SUBCOMMANDS)
+)
+
+
 def _refers_as(text: str) -> str:
-    if re.search(r"/no-mistakes\b", text):
-        return "invented /no-mistakes form"
-    if re.search(r"\bno-mistakes\s+[a-z-]+", text):
+    if _REAL_COMMAND.search(text):
         return "real CLI command"
+    if re.search(r"/no-mistakes\b", text) or re.search(
+        r"\bno-mistakes\s+[A-Za-z_][A-Za-z0-9_]*", text
+    ):
+        return "invented command form"
     if "no-mistakes" in text:
         return "named, no command"
     return "no mention"
