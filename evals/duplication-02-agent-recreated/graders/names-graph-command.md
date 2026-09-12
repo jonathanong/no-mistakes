@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-relationship|config
+no-mistakes\s+check|unique-exports

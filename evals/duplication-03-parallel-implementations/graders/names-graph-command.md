@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-analyzeProject
+no-mistakes\s+(check|symbols|exports-of|dependents)

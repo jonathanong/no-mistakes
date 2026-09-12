@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-node-api|analyzeProject|\.d\.ts
+analyzeProject|\.d\.ts|docs/node-api

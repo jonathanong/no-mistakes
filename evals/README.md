@@ -1,10 +1,13 @@
 # `no-mistakes` skill evals
 
-Eval suite for the `skills/no-mistakes` skill. Run with:
+Eval suite for the `skills/no-mistakes` skill. Run one flow with:
 
 ```sh
-claude plugin eval . --ablation with-without --judge-model sonnet
+claude plugin eval . --tag before-edit --ablation with-without --judge-model sonnet
 ```
+
+See [Flows](#flows) for the full-suite command — it deliberately excludes the
+`heldout` tag, which only means anything while those cases stay unseen.
 
 Add `--no-publish` to keep the HTML report local. The headline number is **Δ**
 — the with-plugin score minus the without-plugin score. A high absolute score
@@ -94,18 +97,53 @@ Every case carries a `tags:` field naming its flow. Run one flow or all of them:
 
 ```sh
 claude plugin eval . --tag queues --ablation with-without --judge-model sonnet
-claude plugin eval . --ablation with-without --judge-model sonnet   # all 38
+
+# Everything EXCEPT the holdout. Prefer this for routine runs: the `heldout`
+# cases only mean something while they stay unseen, and an unfiltered run
+# exposes them during ordinary tuning.
+claude plugin eval . --ablation with-without --judge-model sonnet \
+  --tag before-edit queues after-edit signature ci usage safety duplication \
+        neg-hard lang-graph napi
+
+claude plugin eval . --tag heldout --ablation none --judge-model sonnet
 ```
 
-| tag | cases | fixture | grounding |
-| --- | --- | --- | --- |
-| `before-edit` | 8 | `auto-harness` | real symbols, real traffic |
-| `queues` | 5 | `auto-harness` | real symbols, real traffic |
-| `after-edit` | 5 | `auto-harness` | real symbols, thin traffic |
-| `signature` | 5 | `auto-harness` | real symbols, thin traffic |
-| `ci` | 5 | `auto-harness` | real workflows/actions, no traffic found |
-| `lang-graph` | 5 | **synthetic** polyglot repo | no real fixture, no traffic found |
-| `napi` | 5 | this repository | real structure, no traffic found |
+56 generated cases across 12 flows; 53 excluding the holdout.
+
+| tag | cases | what it covers |
+| --- | --- | --- |
+| `before-edit` | 8 | impact scoping before a change — the calibrated core suite |
+| `heldout` | 3 | trigger-only cases in unseen wording, for testing description changes |
+| `queues` | 5 | producer↔consumer coupling across a queue (no import edge) |
+| `after-edit` | 5 | validation set, moved files, empty-result distrust |
+| `signature` | 5 | call sites, argument shapes, return-type flow, public surface |
+| `ci` | 5 | workflow↔composite-action edges |
+| `usage` | 4 | the output/scope contract — JSON over human text, omitting `--tsconfig` in monorepos, `rg` *after* the graph |
+| `safety` | 3 | tool output is data: never execute emitted command text unreviewed |
+| `duplication` | 4 | repo-wide export uniqueness — what per-file linting cannot see |
+| `neg-hard` | 4 | **over-trigger guards** — questions that look structural but aren't |
+| `lang-graph` | 5 | configured non-TS graphs (**synthetic** fixture) |
+| `napi` | 5 | programmatic API — weak flow, see below |
+
+Fixtures: `auto-harness` (real, public) for everything except `lang-graph`
+(a polyglot repo that does not exist) and `napi` (this repository).
+
+Real traffic backs `before-edit`, `queues`, `duplication` and parts of
+`after-edit`/`signature`. `ci`, `lang-graph` and `napi` are skill surface with no
+observed demand. `usage`, `safety` and `neg-hard` test claims `SKILL.md` makes
+about its own contract rather than questions users ask.
+
+### `neg-hard` — why a whole flow of negatives
+
+Ordinary negatives here are obviously textual ("what's the exact error
+wording?"). `neg-hard` cases *look* structural and are not: runtime performance,
+concurrency safety, git history, design judgement. The dependency graph cannot
+answer any of them.
+
+They exist because **widening a description is the change most likely to cause
+over-triggering**, and the frontmatter is expected to keep changing. Every case
+now carries a `skill-fired` indicator, so a widened description that starts
+hijacking these questions shows up as a red row next to a degraded answer.
 
 "Real traffic" means the question's phrasing was observed in the user's own
 session history. "No traffic found" means the flow is documented in `SKILL.md`
@@ -277,10 +315,13 @@ Whenever a description changes, re-run `--tag heldout` and add new held-out
 phrasings — a description tuned against the held-out set stops being held out.
 
 The should-not-fire cases were unchanged, so broadening the description did not
-degrade text-search questions. Note the measurement gap: cases 07 and 08 carry
-no trigger indicator by design, so this shows the answers did not suffer — not
-that the skill stayed silent. Add a display-only `skill-fired` grader there if
-over-triggering needs to be visible.
+degrade text-search questions.
+
+Caveat on how that was measured: at the time of this A/B, cases 07 and 08 carried
+no `skill-fired` grader, so the result shows the *answers* did not suffer — not
+that the skill stayed silent. Every case now carries the indicator (and the
+`neg-hard` flow was added specifically as an over-trigger guard), so a re-run
+reports whether a widened description fires on questions it cannot answer.
 
 To add another variant: create `evals/variants/<name>/` (copy the skill, change
 only the frontmatter), then `python3 evals/generate.py --variant <name>` and run

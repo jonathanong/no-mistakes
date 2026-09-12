@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-analyzeProject|n-api|napi|node api|node-api
+analyzeProject|docs/node-api
