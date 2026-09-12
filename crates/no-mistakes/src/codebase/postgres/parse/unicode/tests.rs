@@ -20,5 +20,5 @@ fn tokenizes_uescape_markers_nested_comments_and_non_ascii_identifiers() {
     assert!(!tokenize("SELECT U&'0041'").is_empty());
     assert!(tokenize("U & 'not-adjacent'")
         .iter()
-        .any(|token| { !matches!(token, sqlparser::tokenizer::Token::UnicodeStringLiteral(_)) }));
+        .all(|token| !matches!(token, sqlparser::tokenizer::Token::UnicodeStringLiteral(_))));
 }

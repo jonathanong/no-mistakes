@@ -68,7 +68,14 @@ fn maps_escaped_dollar_and_unicode_literal_source_bytes() {
                 sqlparser::tokenizer::Token::DollarQuotedString(value) => value.value.as_str(),
                 _ => continue,
             };
-            let _ = literal_source_bytes(sql, token, decoded, Some('!'));
+            let mapped = literal_source_bytes(sql, token, decoded, Some('!'));
+            if sql.contains("U&") {
+                continue;
+            }
+            assert!(
+                mapped.is_some(),
+                "{sql}: missing provenance for {decoded:?}"
+            );
         }
     }
 }

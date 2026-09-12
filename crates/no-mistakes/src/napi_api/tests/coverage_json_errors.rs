@@ -138,8 +138,9 @@ fn project_json_helpers_report_invalid_options_and_optional_file_filters() {
         "component": "src/Button.tsx"
     }))
     .is_err());
-    let _ = impacted_checks_json_impl(json!({
+    assert!(impacted_checks_json_impl(json!({
         "root": "/no-mistakes-missing-coverage-root",
         "timings": true
-    }));
+    }))
+    .is_ok());
 }

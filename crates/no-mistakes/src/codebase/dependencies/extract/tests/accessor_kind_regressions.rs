@@ -165,9 +165,16 @@ fn getter_calls_and_cross_kind_accessors_stay_unresolved_or_unknown() {
     let getter_call = facts(
         "class Service { static get value() { return () => 1; } } const api = { get g() { return 1; } }; function run() { Service.value(); api.g(); }",
     );
-    assert!(getter_call.unknown_calls.iter().any(|call| {
-        call.caller.as_deref() == Some("run") && call.invocation == InvocationKind::Call
-    }));
+    assert_eq!(
+        getter_call
+            .unknown_calls
+            .iter()
+            .filter(|call| {
+                call.caller.as_deref() == Some("run") && call.invocation == InvocationKind::Call
+            })
+            .count(),
+        2
+    );
 
     let setter_only =
         facts("class Service { static set value(next) {} } function run() { Service.value; }");

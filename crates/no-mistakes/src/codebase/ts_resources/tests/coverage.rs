@@ -273,14 +273,48 @@ fn glob_cwd_rejects_spreads_and_records_parenthesized_url_and_dirname() {
         glob('paren-url/**/*.txt', { cwd: ('static-cwd') });
         glob('meta-cwd/**/*.txt', { cwd: import.meta.dirname });
         glob('tpl-cwd/**/*.txt', { cwd: `tpl` });
-        fs.readFile(fileURLToPath(new URL('./bound-url.json', import.meta.url)));
-        fs.readFile(require('url').fileURLToPath(new URL('./req-url.json', import.meta.url)));
         import { URL as UrlCtor } from 'node:url';
+        fs.readFile(fileURLToPath(new UrlCtor('./bound-url.json', import.meta.url)));
+        fs.readFile(require('url').fileURLToPath(new UrlCtor('./req-url.json', import.meta.url)));
         fs.readFile(new UrlCtor('./imported-url.json', import.meta.url));
         "#,
     );
-    assert!(
-        !facts.calls.is_empty() || !facts.diagnostics.is_empty(),
-        "{facts:#?}"
-    );
+    assert!(facts
+        .diagnostics
+        .iter()
+        .any(|diagnostic| { diagnostic.kind == ResourceDiagnosticKind::DynamicCwd }));
+    assert!(facts
+        .calls
+        .iter()
+        .any(|call| call.path.value.contains("no-cwd") && call.cwd.is_none()));
+    assert!(facts.calls.iter().any(|call| {
+        call.path.value.contains("paren-url")
+            && call
+                .cwd
+                .as_ref()
+                .is_some_and(|cwd| cwd.value == "static-cwd")
+    }));
+    assert!(facts.calls.iter().any(|call| {
+        call.path.value.contains("meta-cwd")
+            && call
+                .cwd
+                .as_ref()
+                .is_some_and(|cwd| cwd.base == ResourcePathBase::SourceModule)
+    }));
+    assert!(facts.calls.iter().any(|call| {
+        call.path.value.contains("tpl-cwd")
+            && call.cwd.as_ref().is_some_and(|cwd| cwd.value == "tpl")
+    }));
+    assert!(facts
+        .calls
+        .iter()
+        .any(|call| call.path.value.contains("bound-url.json")));
+    assert!(facts
+        .calls
+        .iter()
+        .any(|call| call.path.value.contains("req-url.json")));
+    assert!(facts
+        .calls
+        .iter()
+        .all(|call| call.path.value != "./shadowed.json"));
 }
