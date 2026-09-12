@@ -28,7 +28,7 @@ pub fn prepare(
         Arc::new(tsconfig),
         Arc::new(workspace),
         None,
-        |project, app, snapshot| {
+        &mut |project, app, snapshot| {
             config::load_settings_from_visible(root, config_path, &[], project, app, snapshot)
         },
     )
@@ -57,7 +57,7 @@ pub fn prepare_from_snapshot(
         tsconfig,
         workspace,
         None,
-        |project, app, snapshot| {
+        &mut |project, app, snapshot| {
             config::settings_from_loaded_v2(root, config, &[], project, app, snapshot)
         },
     )
@@ -82,7 +82,7 @@ pub fn prepare_from_snapshot_with_catalog(
         tsconfig,
         workspace,
         Some(tsconfig_catalog),
-        |project, app, snapshot| {
+        &mut |project, app, snapshot| {
             config::settings_from_loaded_v2(root, config, &[], project, app, snapshot)
         },
     )

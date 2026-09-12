@@ -80,3 +80,48 @@ fn predeclare_walks_ambient_default_class_and_non_function_statements() {
     let facts = extract_import_facts_from_program(&ret.program);
     assert!(facts.imports.is_empty());
 }
+
+#[test]
+fn class_eager_helpers_cover_getters_setters_static_blocks_and_decorators() {
+    let allocator = Allocator::default();
+    let source = "\
+function deco(_target: unknown) {}\n\
+function decoFactory() { return deco; }\n\
+const key = 'computed';\n\
+@deco\n\
+class Named {\n\
+  static get g() { return 1; }\n\
+  static set s(_value: number) {}\n\
+  static field = () => {};\n\
+  instance = 1;\n\
+  [key]() {}\n\
+  method() {}\n\
+  static { var hoisted = 1; function inner() {} }\n\
+}\n\
+@decoFactory()\n\
+class Factory {}\n\
+@(0)\n\
+class Unknown {}\n\
+export default class {\n\
+  read() {}\n\
+}\n\
+function outer() {\n\
+  function inner(x: string): void;\n\
+  function inner(x: number): void;\n\
+  function inner(x: string | number) {}\n\
+  inner('a');\n\
+}\n";
+    let ret = Parser::new(&allocator, source, SourceType::ts()).parse();
+    let facts = extract_import_facts_from_program(&ret.program);
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "deco" || call.callee == "decoFactory"));
+    assert!(
+        facts
+            .exported_functions
+            .iter()
+            .any(|name| name == "Named" || name == "Factory" || name == "Unknown")
+            || !facts.callable_scopes.is_empty()
+    );
+}

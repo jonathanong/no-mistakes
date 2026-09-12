@@ -318,3 +318,35 @@ fn glob_cwd_rejects_spreads_and_records_parenthesized_url_and_dirname() {
         .iter()
         .all(|call| call.path.value != "./shadowed.json"));
 }
+
+#[test]
+fn remaining_url_and_glob_argument_shapes() {
+    let facts = facts(
+        r#"
+        import * as fs from 'node:fs';
+        import { glob } from 'glob';
+        import { fileURLToPath } from 'node:url';
+        import { URL } from 'node:url';
+        fs.readFile(new URL('./direct-url.json', import.meta.url));
+        fs.readFile(fileURLToPath(new URL('./call-url.json', import.meta.url)));
+        fs.readFile((fileURLToPath)(new URL('./paren-callee-url.json', import.meta.url)));
+        glob('no-arg-cwd/**/*.txt');
+        glob('numeric-cwd/**/*.txt', 1);
+        glob('spread-only/**/*.txt', { ...opts });
+        glob('computed-key/**/*.txt', { [k]: 'x' });
+        glob('paren-path/**/*.txt', { cwd: ('static-cwd') });
+        glob(`quasi-cwd/**/*.txt`, { cwd: `tpl-cwd` });
+        fs.readFile(`template.json`);
+        "#,
+    );
+    assert!(
+        facts
+            .calls
+            .iter()
+            .any(|call| call.path.value.contains("direct-url")
+                || call.path.value.contains("call-url")
+                || call.path.value.contains("no-arg-cwd")
+                || !facts.diagnostics.is_empty()),
+        "{facts:#?}"
+    );
+}

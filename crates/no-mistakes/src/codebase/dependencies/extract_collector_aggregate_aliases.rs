@@ -1,5 +1,12 @@
+use super::{
+    spread_member_aliases, AggregateAliasCandidate, CallTargetIdentity, CallableAlias,
+    CallableAliasBinding, ImportCollector,
+};
+use crate::fx::{fx_set, FxHashSet};
+use oxc_ast::ast::{ObjectExpression, ObjectPropertyKind};
+
 impl ImportCollector {
-    fn materialize_aggregate_aliases(&mut self) {
+    pub(super) fn materialize_aggregate_aliases(&mut self) {
         for candidate in std::mem::take(&mut self.aggregate_alias_candidates) {
             let AggregateAliasCandidate {
                 binding_scope: alias_scope,
@@ -73,7 +80,7 @@ impl ImportCollector {
         }
     }
 
-    fn materialized_alias_target_identity(
+    pub(super) fn materialized_alias_target_identity(
         &self,
         binding_scope: usize,
         initial_target: &str,
@@ -122,7 +129,7 @@ impl ImportCollector {
         }
     }
 
-    fn record_object_member_callable_aliases(
+    pub(super) fn record_object_member_callable_aliases(
         &mut self,
         local: &str,
         object: &ObjectExpression<'_>,
@@ -131,18 +138,17 @@ impl ImportCollector {
         let mut members = Vec::new();
         for property in &object.properties {
             match property {
-                ObjectPropertyKind::SpreadProperty(spread) => match spread_member_aliases(
-                    self,
-                    &spread.argument,
-                ) {
-                    Some(spread_members) => {
-                        for (member, _) in &spread_members {
-                            members.retain(|(existing, _)| existing != member);
+                ObjectPropertyKind::SpreadProperty(spread) => {
+                    match spread_member_aliases(self, &spread.argument) {
+                        Some(spread_members) => {
+                            for (member, _) in &spread_members {
+                                members.retain(|(existing, _)| existing != member);
+                            }
+                            members.extend(spread_members);
                         }
-                        members.extend(spread_members);
+                        None => members.clear(),
                     }
-                    None => members.clear(),
-                },
+                }
                 ObjectPropertyKind::ObjectProperty(property) => {
                     let Some(member) =
                         crate::codebase::ts_source::static_property_key_name(&property.key)

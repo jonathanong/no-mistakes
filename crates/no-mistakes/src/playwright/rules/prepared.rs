@@ -10,6 +10,9 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+type SettingsForProject<'a> = dyn FnMut(Option<String>, Option<String>, &VisiblePathSnapshot) -> Result<config::Settings>
+    + 'a;
+
 /// Request-scoped Playwright preparation shared by `check` fact collection
 /// and rule execution. The snapshot is intentionally in-memory and is dropped
 /// after the invocation.
@@ -69,11 +72,7 @@ pub(super) fn prepare_with_settings(
     tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,
     workspace: Arc<crate::codebase::workspaces::IndexedWorkspaceMap>,
     tsconfig_catalog: Option<Arc<crate::codebase::ts_resolver::TsConfigCatalog>>,
-    mut settings_for_project: impl FnMut(
-        Option<String>,
-        Option<String>,
-        &VisiblePathSnapshot,
-    ) -> Result<config::Settings>,
+    settings_for_project: &mut SettingsForProject<'_>,
 ) -> Result<Option<PreparedPlaywrightRules>> {
     let root_paths = snapshot.paths_for(root);
     let apps = crate::config::v2::frontend_apps(root, config, &root_paths)?;

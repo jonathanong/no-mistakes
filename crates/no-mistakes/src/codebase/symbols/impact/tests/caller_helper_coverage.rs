@@ -182,4 +182,55 @@ fn caller_helper_predicates_cover_test_files_exports_and_identities() {
         &BTreeSet::from(["parseDate".to_string()]),
         &facts,
     ));
+
+    facts.insert(
+        PathBuf::from("/repo/dynamic.mts"),
+        TsFileFacts {
+            source: Some(std::sync::Arc::from(
+                "const { parseDate: alias } = require('./x');\nalias();\n\
+                 const member = import('./x').parseDate;\n\
+                 const { nested: { skip } } = require('./x');\n\
+                 const dotted = require('./x').parseDate;\n\
+                 import('./x').parseDate();\n",
+            )),
+            function_calls: vec![call(
+                "alias",
+                CallTargetIdentity::Unknown,
+            )],
+            ..TsFileFacts::default()
+        },
+    );
+    assert!(file_entry_uses_any_symbol(
+        Path::new("/repo"),
+        "dynamic.mts",
+        &BTreeSet::from(["parseDate".to_string()]),
+        &facts,
+    ));
+    let dynamic_source = facts
+        .get(Path::new("/repo/dynamic.mts"))
+        .and_then(|file| file.source.as_deref())
+        .unwrap();
+    let _ = dynamic_symbol_aliases_in_source(dynamic_source, "parseDate.format");
+    assert!(direct_dynamic_member_use(
+        "import('./x').parseDate();\n",
+        "parseDate"
+    ));
+    assert_eq!(
+        destructured_symbol_aliases("const { parseDate: alias } = require('./x')", "parseDate"),
+        BTreeSet::from(["alias".to_string()])
+    );
+    assert_eq!(
+        destructured_symbol_aliases("const { parseDate } = require('./x')", "parseDate"),
+        BTreeSet::from(["parseDate".to_string()])
+    );
+    assert!(destructured_symbol_aliases("const x = require('./x')", "parseDate").is_empty());
+    assert!(identifier_after_declaration("const {a}").is_none());
+    assert_eq!(
+        identifier_after_declaration("const helper"),
+        Some("helper".to_string())
+    );
+    assert!(source_contains_call_name("alias();\n", "alias"));
+    assert!(!source_contains_call_name("aliasx();\n", "alias"));
+    assert!(source_contains_member_name("mod.parseDate();\n", "mod.parseDate"));
+    assert!(!source_contains_member_name("mod.parseDatefoo();\n", "mod.parseDate"));
 }

@@ -1,5 +1,9 @@
+use super::{resolve_local_call_scope, CallableFileIndex, ResolvedLocalCallee};
+use crate::codebase::dependencies::extract::InvocationKind;
+use crate::fx::fx_set;
+
 impl CallableFileIndex {
-    fn resolve_local_callable_id(
+    pub(super) fn resolve_local_callable_id(
         &self,
         mut binding_scope: Option<usize>,
         callee: &str,
@@ -17,7 +21,7 @@ impl CallableFileIndex {
         None
     }
 
-    fn resolve_class_binding_in_scope_chain(
+    pub(super) fn resolve_class_binding_in_scope_chain(
         &self,
         mut binding_scope: usize,
         callee: &str,
@@ -35,7 +39,7 @@ impl CallableFileIndex {
         }
     }
 
-    fn resolve_alias(
+    pub(super) fn resolve_alias(
         &self,
         caller: Option<&str>,
         binding_scope: Option<usize>,
