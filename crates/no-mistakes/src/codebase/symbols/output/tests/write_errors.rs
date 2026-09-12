@@ -89,6 +89,12 @@ fn symbol_output_writers_surface_io_errors() {
     exhaust_write(|writer| write_md(&roots, &entries, writer));
     exhaust_write(|writer| write_md(&["src/foo.ts".to_string()], &[], writer));
     exhaust_write(|writer| write_human(&roots, &entries, writer));
-    exhaust_write(|writer| write_human(&["src/foo.ts".to_string()], &[empty.clone()], writer));
+    exhaust_write(|writer| {
+        write_human(
+            &["src/foo.ts".to_string()],
+            std::slice::from_ref(&empty),
+            writer,
+        )
+    });
     exhaust_write(|writer| write_paths(&entries, writer));
 }
