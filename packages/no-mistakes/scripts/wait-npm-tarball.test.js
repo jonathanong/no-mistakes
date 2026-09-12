@@ -347,7 +347,10 @@ test("runs the tarball waiter only when the module is executed directly", async 
     started = false;
   });
   assert.equal(started, true);
-  await startFromCli(async () => {}, () => {});
+  await startFromCli(
+    async () => {},
+    () => {},
+  );
   let caught;
   await startFromCli(
     async () => {

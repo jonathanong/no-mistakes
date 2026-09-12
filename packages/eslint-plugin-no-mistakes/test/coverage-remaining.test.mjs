@@ -15,9 +15,18 @@ const {
 } = require("../src/rules/async-target-bindings.js");
 const { integrationAllows } = require("../src/rules/module-mock-integration.js");
 const { canReachMatcher, executesBefore } = require("../src/rules/test-no-delayed-rejects-flow.js");
-const { possibleResourceExitBeforeMatcher } = require("../src/rules/test-no-delayed-rejects-loop-jumps.js");
-const { alwaysExits, alwaysThrows, breakSkipsMatcher } = require("../src/rules/test-no-delayed-rejects-abrupt.js");
-const { possibleCaughtThrowCanContinue, thrownCompletionCanReachMatcher } = require("../src/rules/test-no-delayed-rejects-transfers.js");
+const {
+  possibleResourceExitBeforeMatcher,
+} = require("../src/rules/test-no-delayed-rejects-loop-jumps.js");
+const {
+  alwaysExits,
+  alwaysThrows,
+  breakSkipsMatcher,
+} = require("../src/rules/test-no-delayed-rejects-abrupt.js");
+const {
+  possibleCaughtThrowCanContinue,
+  thrownCompletionCanReachMatcher,
+} = require("../src/rules/test-no-delayed-rejects-transfers.js");
 const { createReactNodeFacts, typeName } = require("../src/react-node-types.js");
 
 function node(type, extra = {}) {
@@ -137,7 +146,9 @@ describe("remaining alias and matcher arms", () => {
     collectBannedAliases(program, context, aliasMap, config);
     recordVariableTag(program.body[0].declarations[0], context, aliasMap, new Set(), config);
     recordAssignmentTag(program.body[1].expression, context, aliasMap, new Set(), config);
-    const { setOrClearTag } = require("../src/rules/no-banned-import-outside-allowed-paths-aliases.js");
+    const {
+      setOrClearTag,
+    } = require("../src/rules/no-banned-import-outside-allowed-paths-aliases.js");
     const unresolved = { type: "Identifier", name: "missing" };
     const resolved = { type: "Identifier", name: "mod" };
     setOrClearTag(unresolved, { kind: "direct" }, context, aliasMap);
@@ -172,9 +183,9 @@ describe("remaining alias and matcher arms", () => {
       (id, source, name) => recorded.push([id?.name, source, name]),
     );
     expect(recorded[0][0]).toEqual("run");
-    expect(memberPropertyName({ computed: true, property: { type: "Literal", value: "run" } })).toEqual(
-      "run",
-    );
+    expect(
+      memberPropertyName({ computed: true, property: { type: "Literal", value: "run" } }),
+    ).toEqual("run");
     const context = {
       sourceCode: {
         getScope: () => ({
@@ -213,7 +224,11 @@ describe("remaining delayed-rejects control flow", () => {
     const optional = node("CallExpression", {
       range: [0, 20],
       optional: false,
-      callee: node("MemberExpression", { optional: true, object: node("Identifier"), property: node("Identifier") }),
+      callee: node("MemberExpression", {
+        optional: true,
+        object: node("Identifier"),
+        property: node("Identifier"),
+      }),
     });
     optional.callee.parent = optional;
     optional.callee.object.parent = optional.callee;
@@ -235,9 +250,18 @@ describe("remaining delayed-rejects control flow", () => {
     const forIn = node("ForInStatement", { range: [0, 40] });
     alwaysExits(node("IfStatement", { consequent: node("ReturnStatement") }));
     alwaysThrows(node("IfStatement", { consequent: node("ThrowStatement") }));
-    executesBefore(node("Identifier", { parent: doWhile }), node("AwaitExpression", { range: [30, 35] }));
-    executesBefore(node("Identifier", { parent: whileNode }), node("AwaitExpression", { range: [30, 35] }));
-    executesBefore(node("Identifier", { parent: forIn }), node("AwaitExpression", { range: [30, 35] }));
+    executesBefore(
+      node("Identifier", { parent: doWhile }),
+      node("AwaitExpression", { range: [30, 35] }),
+    );
+    executesBefore(
+      node("Identifier", { parent: whileNode }),
+      node("AwaitExpression", { range: [30, 35] }),
+    );
+    executesBefore(
+      node("Identifier", { parent: forIn }),
+      node("AwaitExpression", { range: [30, 35] }),
+    );
   });
 });
 
@@ -280,12 +304,17 @@ describe("remaining lint and helper shapes", () => {
       "async-try-catch-return-await",
       {
         handlers: [
-          { sourceSpecifierPatterns: ["@app/rate-limit"], calleeNamePatterns: ["/^handle.*RateLimit$/"] },
+          {
+            sourceSpecifierPatterns: ["@app/rate-limit"],
+            calleeNamePatterns: ["/^handle.*RateLimit$/"],
+          },
         ],
       },
       "a.ts",
     );
-    expect(integrationAllows("./mod", null, { framework: "vitest" }, scopeContext(), {})).toBe(false);
+    expect(integrationAllows("./mod", null, { framework: "vitest" }, scopeContext(), {})).toBe(
+      false,
+    );
     expect(
       integrationAllows(
         "./mod",
@@ -298,12 +327,22 @@ describe("remaining lint and helper shapes", () => {
     expect(
       typeName({
         type: "TSOptionalType",
-        typeAnnotation: { type: "TSTypeReference", typeName: { type: "Identifier", name: "ReactNode" } },
+        typeAnnotation: {
+          type: "TSTypeReference",
+          typeName: { type: "Identifier", name: "ReactNode" },
+        },
       }),
     ).toEqual("ReactNode");
     createReactNodeFacts({
       body: [
-        { type: "ExportDefaultDeclaration", declaration: { type: "TSInterfaceDeclaration", id: { name: "Props" }, body: { body: null } } },
+        {
+          type: "ExportDefaultDeclaration",
+          declaration: {
+            type: "TSInterfaceDeclaration",
+            id: { name: "Props" },
+            body: { body: null },
+          },
+        },
         { type: "TSInterfaceDeclaration", id: { name: "Empty" }, body: {} },
       ],
     });
@@ -314,7 +353,11 @@ describe("remaining lint and helper shapes", () => {
       options: [{ targets: [{ sourceSpecifierPatterns: ["mod"], calleeNamePatterns: ["run"] }] }],
       sourceCode: {
         getScope: () => ({ set: new Map(), variables: [], upper: null }),
-        visitorKeys: { Program: ["body"], VariableDeclarator: ["id", "init"], ImportDeclaration: ["specifiers"] },
+        visitorKeys: {
+          Program: ["body"],
+          VariableDeclarator: ["id", "init"],
+          ImportDeclaration: ["specifiers"],
+        },
       },
     });
     matcher.visitors.VariableDeclarator({
@@ -347,7 +390,12 @@ describe("remaining lint and helper shapes", () => {
 
 describe("more remaining branch arms", () => {
   it("covers fetch switch fallthrough, empty switch, and for inits", () => {
-    messages("switch (x) {} fetch();", "no-global-fetch-outside-helper", { checkedPathPatterns: [".*"] }, "a.ts");
+    messages(
+      "switch (x) {} fetch();",
+      "no-global-fetch-outside-helper",
+      { checkedPathPatterns: [".*"] },
+      "a.ts",
+    );
     messages(
       "switch (x) { case 1: fetch(); break; default: fetch(); }",
       "no-global-fetch-outside-helper",
@@ -411,7 +459,11 @@ describe("more remaining branch arms", () => {
     const loop = link(fn, node("ForStatement", { range: [1, 90] }));
     const tryNode = link(loop, node("TryStatement", { range: [2, 80] }), "body");
     const throwStmt = node("ThrowStatement", { range: [4, 8] });
-    const block = link(tryNode, node("BlockStatement", { range: [3, 10], body: [throwStmt] }), "block");
+    const block = link(
+      tryNode,
+      node("BlockStatement", { range: [3, 10], body: [throwStmt] }),
+      "block",
+    );
     throwStmt.parent = block;
     const handler = node("CatchClause", { range: [11, 20] });
     handler.body = node("BlockStatement", { range: [12, 19], body: [] });

@@ -10,7 +10,10 @@ const {
   contains,
 } = require("../src/rules/test-no-delayed-rejects-abrupt.js");
 const { canReachMatcher } = require("../src/rules/test-no-delayed-rejects-flow.js");
-const { isNonRejectingHandler, isNonRejectingHandlerOrAbsent } = require("../src/rules/test-no-delayed-rejects-handlers.js");
+const {
+  isNonRejectingHandler,
+  isNonRejectingHandlerOrAbsent,
+} = require("../src/rules/test-no-delayed-rejects-handlers.js");
 const {
   mayThrow,
   possibleCaughtThrowCanContinue,
@@ -23,7 +26,10 @@ const {
   propsFromType,
   typeIncludesNull,
 } = require("../src/rules/nullable-option-defaults-helpers.js");
-const { recordAssignmentTag, setOrClearTag } = require("../src/rules/no-banned-import-outside-allowed-paths-aliases.js");
+const {
+  recordAssignmentTag,
+  setOrClearTag,
+} = require("../src/rules/no-banned-import-outside-allowed-paths-aliases.js");
 
 function node(type, extra = {}) {
   return { type, range: extra.range ?? [0, 10], ...extra };
@@ -90,7 +96,11 @@ describe("delayed-rejects helpers", () => {
     const throwStmt = link(block, node("ThrowStatement", { range: [3, 8] }));
     block.body = [throwStmt];
     const handler = node("CatchClause", { range: [21, 40] });
-    const handlerBody = link(handler, node("BlockStatement", { range: [22, 39], body: [] }), "body");
+    const handlerBody = link(
+      handler,
+      node("BlockStatement", { range: [22, 39], body: [] }),
+      "body",
+    );
     handler.parent = tryNode;
     tryNode.handler = handler;
     const continueStmt = link(handlerBody, node("ContinueStatement", { range: [23, 28] }));
@@ -113,16 +123,20 @@ describe("delayed-rejects helpers", () => {
     canReachMatcher(suspension, matcher, fn);
     const finallyTry = node("TryStatement", { range: [0, 40] });
     const innerThrow = node("ThrowStatement", { range: [2, 4] });
-    const innerBlock = link(finallyTry, node("BlockStatement", { range: [1, 5], body: [innerThrow] }), "block");
+    const innerBlock = link(
+      finallyTry,
+      node("BlockStatement", { range: [1, 5], body: [innerThrow] }),
+      "block",
+    );
     innerThrow.parent = innerBlock;
     const finalizer = link(finallyTry, node("ReturnStatement", { range: [6, 8] }), "finalizer");
     finallyTry.handler = {
       body: node("BlockStatement", { range: [9, 12], body: [node("ExpressionStatement")] }),
     };
     expect(alwaysExits(finallyTry)).toBe(true);
-    expect(alwaysThrows(node("TryStatement", { block: throwStmt, handler: { body: throwStmt } }))).toBe(
-      true,
-    );
+    expect(
+      alwaysThrows(node("TryStatement", { block: throwStmt, handler: { body: throwStmt } })),
+    ).toBe(true);
     expect(contains(finalizer, matcher)).toBe(false);
   });
 
@@ -183,7 +197,9 @@ describe("nullable option helpers", () => {
   it("ignores invalid regex and resolves nested types", () => {
     expect(compilePatterns(["("])).toEqual([]);
     expect(typeIncludesNull({ type: "TSNullKeyword" })).toBe(true);
-    expect(typeIncludesNull({ type: "TSUnionType", types: [{ type: "TSNullKeyword" }] })).toBe(true);
+    expect(typeIncludesNull({ type: "TSUnionType", types: [{ type: "TSNullKeyword" }] })).toBe(
+      true,
+    );
     expect(optionTypeAllowed(null, {}, [])).toBe(true);
     expect(optionTypeAllowed("opts", { optionObjectNames: ["options"] }, [])).toBe(false);
     expect(optionTypeAllowed("opts", { optionObjectNames: ["opts"] }, [])).toBe(true);
@@ -194,9 +210,12 @@ describe("nullable option helpers", () => {
       includeAll: true,
       allTypeProps: new Map([["Extra", new Set(["retry"])]]),
     };
-    expect([...propsFromType({ type: "TSTypeReference", typeName: { type: "Identifier", name: "Alias" } }, facts)]).toContain(
-      "timeout",
-    );
+    expect([
+      ...propsFromType(
+        { type: "TSTypeReference", typeName: { type: "Identifier", name: "Alias" } },
+        facts,
+      ),
+    ]).toContain("timeout");
     expect(
       propsFromType(
         {
@@ -243,13 +262,9 @@ describe("banned-import alias recording", () => {
       cleared,
       { banned: [] },
     );
-    recordAssignmentTag(
-      { operator: "+=", left: identifier },
-      context,
-      aliasMap,
-      cleared,
-      { banned: [] },
-    );
+    recordAssignmentTag({ operator: "+=", left: identifier }, context, aliasMap, cleared, {
+      banned: [],
+    });
     expect(cleared.has(variable)).toBe(true);
   });
 });

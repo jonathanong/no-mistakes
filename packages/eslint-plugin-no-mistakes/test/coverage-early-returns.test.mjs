@@ -8,16 +8,18 @@ const { frameworkBindingModule } = require("../src/rules/module-mock-framework.j
 const { analyzeFactory } = require("../src/rules/module-mock-preserve-factory.js");
 const { createMockAliases } = require("../src/rules/module-mock-preserve-aliases.js");
 const { integrationAllows } = require("../src/rules/module-mock-integration.js");
-const {
-  bindingIdentifiers,
-} = require("../src/rules/no-global-fetch-outside-helper-bindings.js");
+const { bindingIdentifiers } = require("../src/rules/no-global-fetch-outside-helper-bindings.js");
 const { tagForExpression } = require("../src/rules/no-banned-import-outside-allowed-paths-tags.js");
-const { seedImportTags } = require("../src/rules/no-banned-import-outside-allowed-paths-imports.js");
+const {
+  seedImportTags,
+} = require("../src/rules/no-banned-import-outside-allowed-paths-imports.js");
 const {
   recordVariableTag,
   recordAssignmentTag,
 } = require("../src/rules/no-banned-import-outside-allowed-paths-aliases.js");
-const { createAliasScopeTracker } = require("../src/rules/no-banned-import-outside-allowed-paths-scopes.js");
+const {
+  createAliasScopeTracker,
+} = require("../src/rules/no-banned-import-outside-allowed-paths-scopes.js");
 const {
   executorBindings,
   firstCallArgument,
@@ -46,7 +48,10 @@ const { isInsideUncalledNestedFunction } = require("../src/rules/test-no-shared-
 const { createRuleHelpers } = require("../src/rules/test-no-shared-state-rule-helpers.js");
 const { isImmediateObserver } = require("../src/rules/test-no-delayed-rejects-observers.js");
 const { collectEvents } = require("../src/rules/playwright-no-hoisted-unique-token-events.js");
-const { propNamesFromMembers, propsFromType } = require("../src/rules/nullable-option-defaults-helpers.js");
+const {
+  propNamesFromMembers,
+  propsFromType,
+} = require("../src/rules/nullable-option-defaults-helpers.js");
 const { collectPatternNames } = require("../src/rules/ast-pattern-names.js");
 
 function emptyScope() {
@@ -75,12 +80,12 @@ describe("exported helper early returns", () => {
     expect(importSpecifierName({ imported: null })).toBeNull();
     expect(importSpecifierName({ imported: { type: "Literal", value: "each" } })).toEqual("each");
     expect(propertyName({ type: "Literal", value: "" })).toEqual("");
-    expect(isKnownTestCallee({ type: "MemberExpression", computed: true, property: { name: "only" } })).toBe(
-      false,
-    );
-    expect(isTestExtendCall({ type: "CallExpression", callee: { type: "Identifier", name: "it" } })).toBe(
-      false,
-    );
+    expect(
+      isKnownTestCallee({ type: "MemberExpression", computed: true, property: { name: "only" } }),
+    ).toBe(false);
+    expect(
+      isTestExtendCall({ type: "CallExpression", callee: { type: "Identifier", name: "it" } }),
+    ).toBe(false);
     expect(
       setupCallbackKind({
         callee: { type: "Identifier", name: "afterAll" },
@@ -102,30 +107,46 @@ describe("exported helper early returns", () => {
     expect(memberPropertyName(null)).toBeNull();
     expect(firstCallArgument({ arguments: [{ type: "SpreadElement" }] })).toBeNull();
     expect(isDatabaseCall({ type: "Identifier" }, new Set())).toBe(false);
-    expect(executorBindings({
-      body: [
-        {
-          type: "ImportDeclaration",
-          source: { value: "@data-stores/psql" },
-          specifiers: [{ type: "ImportSpecifier", imported: null, local: { name: "query" } }],
-        },
-      ],
-    })).toEqual(new Set());
+    expect(
+      executorBindings({
+        body: [
+          {
+            type: "ImportDeclaration",
+            source: { value: "@data-stores/psql" },
+            specifiers: [{ type: "ImportSpecifier", imported: null, local: { name: "query" } }],
+          },
+        ],
+      }),
+    ).toEqual(new Set());
     expect(executedQueryText({ type: "Identifier", name: "q" }, new Map(), context())).toBeNull();
     expect(postgresCalleeName({ callee: { type: "Identifier", name: "query" } })).toBeNull();
     expect(isOwnerFile(null, ["owner"])).toBe(false);
     expect(isPromiseAllCallee({ type: "Identifier" })).toBe(false);
-    expect(mapCallArgument({ arguments: [{ type: "CallExpression", callee: { type: "Identifier", name: "map" } }] })).toBeNull();
+    expect(
+      mapCallArgument({
+        arguments: [{ type: "CallExpression", callee: { type: "Identifier", name: "map" } }],
+      }),
+    ).toBeNull();
     expect(sqlText(null)).toBeNull();
     expect(containsDatabaseCall(null, new Set())).toBe(false);
-    expect(matchDirectMockCallApply({ callee: { type: "Identifier", name: "mock" } }, context(), new Set(["mock"]))).toBeNull();
+    expect(
+      matchDirectMockCallApply(
+        { callee: { type: "Identifier", name: "mock" } },
+        context(),
+        new Set(["mock"]),
+      ),
+    ).toBeNull();
     expect(
       matchDirectMockCallApply(
         {
           callee: {
             type: "MemberExpression",
             property: { name: "call" },
-            object: { type: "MemberExpression", object: { name: "vi" }, property: { name: "mock" } },
+            object: {
+              type: "MemberExpression",
+              object: { name: "vi" },
+              property: { name: "mock" },
+            },
           },
           arguments: [],
         },
@@ -135,14 +156,25 @@ describe("exported helper early returns", () => {
     ).toBeNull();
     expect(
       frameworkBindingModule(
-        { type: "MemberExpression", computed: false, object: { type: "Identifier", name: "jest" }, property: { name: "jest" } },
+        {
+          type: "MemberExpression",
+          computed: false,
+          object: { type: "Identifier", name: "jest" },
+          property: { name: "jest" },
+        },
         context({
           sourceCode: {
             getScope: () => ({
               variables: [
                 {
                   name: "jest",
-                  defs: [{ type: "ImportBinding", parent: { source: { value: "@jest/globals" } }, node: { imported: { name: "jest" } } }],
+                  defs: [
+                    {
+                      type: "ImportBinding",
+                      parent: { source: { value: "@jest/globals" } },
+                      node: { imported: { name: "jest" } },
+                    },
+                  ],
                 },
               ],
               upper: null,
@@ -160,13 +192,21 @@ describe("exported helper early returns", () => {
       includeAll: true,
       allTypeProps: new Map(),
     };
-    expect(propsFromType({ type: "TSTypeReference", typeName: { type: "Identifier", name: "Alias" } }, facts)).toBeNull();
+    expect(
+      propsFromType(
+        { type: "TSTypeReference", typeName: { type: "Identifier", name: "Alias" } },
+        facts,
+      ),
+    ).toBeNull();
   });
 
   it("covers binding, tag, and scope trackers", () => {
-    expect(bindingIdentifiers({ type: "RestElement", argument: { type: "Identifier", name: "rest" } }).map((id) => id.name)).toEqual([
-      "rest",
-    ]);
+    expect(
+      bindingIdentifiers({
+        type: "RestElement",
+        argument: { type: "Identifier", name: "rest" },
+      }).map((id) => id.name),
+    ).toEqual(["rest"]);
     expect(tagForExpression(null, context(), new Map(), new Map())).toBeNull();
     expect(tagForExpression({ type: "Identifier" }, context(), new Map(), new Map())).toBeNull();
     seedImportTags(
@@ -188,9 +228,19 @@ describe("exported helper early returns", () => {
     tracker.exitSwitch();
     tracker.enterSwitchCase();
     const identifier = { type: "Identifier", name: "mod" };
-    recordVariableTag({ init: { type: "Identifier", name: "x" }, id: identifier }, context(), new Map(), new Set(), new Map());
+    recordVariableTag(
+      { init: { type: "Identifier", name: "x" }, id: identifier },
+      context(),
+      new Map(),
+      new Set(),
+      new Map(),
+    );
     recordAssignmentTag(
-      { operator: "=", left: { type: "ArrayPattern", elements: [identifier] }, right: { type: "Identifier", name: "x" } },
+      {
+        operator: "=",
+        left: { type: "ArrayPattern", elements: [identifier] },
+        right: { type: "Identifier", name: "x" },
+      },
       context(),
       new Map(),
       new Set(),
@@ -206,8 +256,12 @@ describe("exported helper early returns", () => {
     cleanup.remember("state");
     cleanup.enterSuite();
     expect(cleanup.has("state", cleanup.currentSuiteKey())).toBe(true);
-    expect(isInsideUncalledNestedFunction({ parent: { type: "FunctionDeclaration" } }, 1, 0, null)).toBe(true);
-    expect(createRuleHelpers(context(), new Set(["it"])).calleeHasProperty(null, "serial")).toBe(false);
+    expect(
+      isInsideUncalledNestedFunction({ parent: { type: "FunctionDeclaration" } }, 1, 0, null),
+    ).toBe(true);
+    expect(createRuleHelpers(context(), new Set(["it"])).calleeHasProperty(null, "serial")).toBe(
+      false,
+    );
     expect(isImmediateObserver({ type: "Literal" }, {}, context(), () => false)).toBe(false);
     collectEvents(null, context());
     collectPatternNames({ type: "RestElement", argument: { type: "Identifier", name: "rest" } });
@@ -232,7 +286,11 @@ describe("exported helper early returns", () => {
     });
     createMockAliases(context(), new Set(["mock"])).declare(
       { type: "Identifier", name: "mockFn" },
-      { type: "MemberExpression", object: { type: "Identifier", name: "vi" }, property: { name: "unmock" } },
+      {
+        type: "MemberExpression",
+        object: { type: "Identifier", name: "vi" },
+        property: { name: "unmock" },
+      },
     );
   });
 });
@@ -265,16 +323,33 @@ describe("lint edges that hit remaining guards", () => {
       undefined,
       "app/lib.ts",
     );
-    messages("export const { ...metadata } = values;", "nextjs-metadata-exports-location", undefined, "app/lib.ts");
-    expect(messages('"use strict";', "no-import-only-test-files", undefined, "a.test.js")).toEqual([]);
-    messages('export { value as "alias" }; const value = 1;', "ts-no-export-renaming", undefined, "a.ts");
+    messages(
+      "export const { ...metadata } = values;",
+      "nextjs-metadata-exports-location",
+      undefined,
+      "app/lib.ts",
+    );
+    expect(messages('"use strict";', "no-import-only-test-files", undefined, "a.test.js")).toEqual(
+      [],
+    );
+    messages(
+      'export { value as "alias" }; const value = 1;',
+      "ts-no-export-renaming",
+      undefined,
+      "a.ts",
+    );
     messages(
       "const alias = () => helper(); function helper() {}",
       "ts-no-function-aliases",
       undefined,
       "a.ts",
     );
-    messages("foo = function helper() { return helper(); };", "ts-no-function-aliases", undefined, "a.ts");
+    messages(
+      "foo = function helper() { return helper(); };",
+      "ts-no-function-aliases",
+      undefined,
+      "a.ts",
+    );
   });
 
   it("covers jest mocks, optional fetch, and iife seen-set reuse", () => {
@@ -285,8 +360,15 @@ describe("lint edges that hit remaining guards", () => {
       { includePathPatterns: [".*"] },
       "a.test.ts",
     );
-    messages("const x = globalThis.fetch?.();", "no-global-fetch-outside-helper", { checkedPathPatterns: [".*"] }, "a.ts");
-    expect(messages("const n = (() => 1)(); const el = <div>{n}</div>;", "react-no-iife-in-jsx")).toEqual([]);
+    messages(
+      "const x = globalThis.fetch?.();",
+      "no-global-fetch-outside-helper",
+      { checkedPathPatterns: [".*"] },
+      "a.ts",
+    );
+    expect(
+      messages("const n = (() => 1)(); const el = <div>{n}</div>;", "react-no-iife-in-jsx"),
+    ).toEqual([]);
   });
 
   it("fires rule visitors with incomplete nodes", () => {
@@ -294,7 +376,9 @@ describe("lint edges that hit remaining guards", () => {
       type: "CallExpression",
       callee: { type: "Identifier", name: "fn" },
       arguments: [],
-      specifiers: [{ type: "ExportSpecifier", local: { type: "Identifier", name: "a" }, exported: null }],
+      specifiers: [
+        { type: "ExportSpecifier", local: { type: "Identifier", name: "a" }, exported: null },
+      ],
       body: [],
       params: [],
       left: { type: "Literal" },

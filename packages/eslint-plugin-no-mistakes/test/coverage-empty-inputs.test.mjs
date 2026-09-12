@@ -3,11 +3,7 @@ import { describe, expect, it } from "vitest";
 import { require } from "./helpers.mjs";
 
 const { createReactNodeFacts } = require("../src/react-node-types.js");
-const {
-  compileTargets,
-  matchesAny,
-  patternToRegExp,
-} = require("../src/rules/async-patterns.js");
+const { compileTargets, matchesAny, patternToRegExp } = require("../src/rules/async-patterns.js");
 const { createTargetMatcher } = require("../src/rules/async-targets.js");
 const {
   nullablePropsFromMembers,

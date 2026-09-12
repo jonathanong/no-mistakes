@@ -7,8 +7,17 @@ const {
   normalizedComponentOptions,
   shouldCheckComponent,
 } = require("../src/exported-components.js");
-const { functionFromExpression, isFunctionNode, nonEmptyStrings } = require("../src/component-functions.js");
-const { createReactNodeFacts, keyName, typeAnnotation, typeName } = require("../src/react-node-types.js");
+const {
+  functionFromExpression,
+  isFunctionNode,
+  nonEmptyStrings,
+} = require("../src/component-functions.js");
+const {
+  createReactNodeFacts,
+  keyName,
+  typeAnnotation,
+  typeName,
+} = require("../src/react-node-types.js");
 const { jsxTreeHasAttribute, returnedJsxBranches } = require("../src/returned-jsx.js");
 
 describe("component-functions", () => {
@@ -70,7 +79,11 @@ describe("react-node-types", () => {
     expect(
       typeName({
         type: "TSTypeReference",
-        typeName: { type: "TSQualifiedName", left: { type: "ThisType" }, right: { type: "Identifier" } },
+        typeName: {
+          type: "TSQualifiedName",
+          left: { type: "ThisType" },
+          right: { type: "Identifier" },
+        },
       }),
     ).toBeNull();
     expect(typeName({ type: "TSUnionType" })).toBeNull();
@@ -96,7 +109,10 @@ describe("react-node-types", () => {
           declaration: {
             type: "TSTypeAliasDeclaration",
             id: { name: "Alias" },
-            typeAnnotation: { type: "TSTypeReference", typeName: { type: "Identifier", name: "Node" } },
+            typeAnnotation: {
+              type: "TSTypeReference",
+              typeName: { type: "Identifier", name: "Node" },
+            },
           },
         },
         {
@@ -109,7 +125,10 @@ describe("react-node-types", () => {
                 key: { type: "Identifier", name: "title" },
                 typeAnnotation: {
                   typeAnnotation: {
-                    typeAnnotation: { type: "TSTypeReference", typeName: { type: "Identifier", name: "Node" } },
+                    typeAnnotation: {
+                      type: "TSTypeReference",
+                      typeName: { type: "Identifier", name: "Node" },
+                    },
                   },
                 },
               },
@@ -120,7 +139,10 @@ describe("react-node-types", () => {
         {
           type: "TSInterfaceDeclaration",
           id: { name: "Props" },
-          extends: [{ expression: { type: "Identifier", name: "Base" } }, { expression: { type: "Literal" } }],
+          extends: [
+            { expression: { type: "Identifier", name: "Base" } },
+            { expression: { type: "Literal" } },
+          ],
           body: { body: [] },
         },
         {
@@ -134,7 +156,10 @@ describe("react-node-types", () => {
                 key: { type: "Literal", value: "slot" },
                 typeAnnotation: {
                   typeAnnotation: {
-                    typeAnnotation: { type: "TSTypeReference", typeName: { type: "Identifier", name: "Alias" } },
+                    typeAnnotation: {
+                      type: "TSTypeReference",
+                      typeName: { type: "Identifier", name: "Alias" },
+                    },
                   },
                 },
               },
@@ -173,8 +198,17 @@ describe("exported-components", () => {
   });
 
   it("collects named, default, and duplicate exported components", () => {
-    const fn = { type: "FunctionDeclaration", id: { name: "Button" }, range: [1, 2], loc: { start: { line: 1 } } };
-    const duplicate = { type: "FunctionDeclaration", id: { name: "Button" }, loc: { start: { line: 1 } } };
+    const fn = {
+      type: "FunctionDeclaration",
+      id: { name: "Button" },
+      range: [1, 2],
+      loc: { start: { line: 1 } },
+    };
+    const duplicate = {
+      type: "FunctionDeclaration",
+      id: { name: "Button" },
+      loc: { start: { line: 1 } },
+    };
     const program = {
       body: [
         { type: "FunctionDeclaration", id: { name: "Local" } },
@@ -235,7 +269,11 @@ describe("exported-components", () => {
         },
         {
           type: "ExportDefaultDeclaration",
-          declaration: { type: "FunctionDeclaration", id: { name: "NamedDefault" }, range: [11, 12] },
+          declaration: {
+            type: "FunctionDeclaration",
+            id: { name: "NamedDefault" },
+            range: [11, 12],
+          },
         },
         {
           type: "ExportDefaultDeclaration",
@@ -246,15 +284,28 @@ describe("exported-components", () => {
     const components = collectExportedComponents(program, opts);
     expect(components.some((component) => component.name === "Button")).toBe(true);
     const again = collectExportedComponents(
-      { body: [{ type: "ExportNamedDeclaration", declaration: { type: "FunctionDeclaration", id: { name: "Button" }, fn } }] },
+      {
+        body: [
+          {
+            type: "ExportNamedDeclaration",
+            declaration: { type: "FunctionDeclaration", id: { name: "Button" }, fn },
+          },
+        ],
+      },
       opts,
     );
     expect(
       collectExportedComponents(
         {
           body: [
-            { type: "ExportNamedDeclaration", declaration: { type: "FunctionDeclaration", id: { name: "Button" }, ...fn } },
-            { type: "ExportNamedDeclaration", specifiers: [{ local: { type: "Identifier", name: "Missing" } }] },
+            {
+              type: "ExportNamedDeclaration",
+              declaration: { type: "FunctionDeclaration", id: { name: "Button" }, ...fn },
+            },
+            {
+              type: "ExportNamedDeclaration",
+              specifiers: [{ local: { type: "Identifier", name: "Missing" } }],
+            },
           ],
         },
         opts,
@@ -275,11 +326,17 @@ describe("exported-components", () => {
         body: [
           {
             type: "VariableDeclaration",
-            declarations: [{ id: { type: "Identifier", name: "NotFn" }, init: { type: "Literal", value: 1 } }],
+            declarations: [
+              { id: { type: "Identifier", name: "NotFn" }, init: { type: "Literal", value: 1 } },
+            ],
           },
           {
             type: "ExportNamedDeclaration",
-            declaration: { type: "FunctionDeclaration", id: { name: "Button" }, loc: { start: { line: 2 } } },
+            declaration: {
+              type: "FunctionDeclaration",
+              id: { name: "Button" },
+              loc: { start: { line: 2 } },
+            },
           },
           {
             type: "ExportDefaultDeclaration",
@@ -314,9 +371,9 @@ describe("exported-components", () => {
 
 describe("returned-jsx", () => {
   it("skips class bodies and reports missing attributes", () => {
-    expect(returnedJsxBranches({ type: "FunctionDeclaration", body: { type: "ClassDeclaration" } })).toEqual(
-      [],
-    );
+    expect(
+      returnedJsxBranches({ type: "FunctionDeclaration", body: { type: "ClassDeclaration" } }),
+    ).toEqual([]);
     expect(
       returnedJsxBranches({
         type: "ArrowFunctionExpression",

@@ -22,7 +22,9 @@ const {
   thrownCompletionCanReachMatcher,
 } = require("../src/rules/test-no-delayed-rejects-transfers.js");
 const { canReachMatcher, executesBefore } = require("../src/rules/test-no-delayed-rejects-flow.js");
-const { possibleResourceExitBeforeMatcher } = require("../src/rules/test-no-delayed-rejects-loop-jumps.js");
+const {
+  possibleResourceExitBeforeMatcher,
+} = require("../src/rules/test-no-delayed-rejects-loop-jumps.js");
 
 function node(type, extra = {}) {
   return { type, range: extra.range ?? [0, 10], ...extra };
@@ -79,7 +81,11 @@ describe("alias recording branch matrix", () => {
     );
     const assignment = {
       operator: "=",
-      left: { type: "MemberExpression", object: { type: "Identifier", name: "mod" }, property: { name: "x" } },
+      left: {
+        type: "MemberExpression",
+        object: { type: "Identifier", name: "mod" },
+        property: { name: "x" },
+      },
       right: { type: "Identifier", name: "other" },
     };
     recordAssignmentTag(assignment, context, aliasMap, cleared, config);
@@ -96,7 +102,13 @@ describe("alias recording branch matrix", () => {
     };
     optional.parent.arguments.push(optional);
     recordAssignmentTag(optional, context, aliasMap, cleared, config);
-    recordVariableTag({ init: { type: "Literal", value: 1 }, id: { type: "Identifier", name: "n" } }, context, aliasMap, cleared, config);
+    recordVariableTag(
+      { init: { type: "Literal", value: 1 }, id: { type: "Identifier", name: "n" } },
+      context,
+      aliasMap,
+      cleared,
+      config,
+    );
     collectBannedAliases(
       {
         type: "Program",
@@ -106,10 +118,16 @@ describe("alias recording branch matrix", () => {
             declarations: [
               {
                 type: "VariableDeclarator",
-                init: { type: "CallExpression", callee: { type: "Identifier", name: "require" }, arguments: [{ type: "Literal", value: "mod" }] },
+                init: {
+                  type: "CallExpression",
+                  callee: { type: "Identifier", name: "require" },
+                  arguments: [{ type: "Literal", value: "mod" }],
+                },
                 id: {
                   type: "ObjectPattern",
-                  properties: [{ type: "RestElement", argument: { type: "Identifier", name: "rest" } }],
+                  properties: [
+                    { type: "RestElement", argument: { type: "Identifier", name: "rest" } },
+                  ],
                 },
               },
             ],
@@ -130,14 +148,20 @@ describe("target matcher remaining import shapes", () => {
       options: [{ targets: [{ sourceSpecifierPatterns: ["mod"], calleeNamePatterns: ["run"] }] }],
       sourceCode: {
         getScope: () => ({ set: new Map(), variables: [], upper: null }),
-        visitorKeys: { Program: ["body"], VariableDeclarator: ["id", "init"], ImportDeclaration: ["specifiers"] },
+        visitorKeys: {
+          Program: ["body"],
+          VariableDeclarator: ["id", "init"],
+          ImportDeclaration: ["specifiers"],
+        },
       },
     });
     matcher.visitors.VariableDeclarator({
       parent: { type: "VariableDeclaration" },
       id: {
         type: "ObjectPattern",
-        properties: [{ type: "Property", value: { type: "Identifier", name: "run" }, key: { name: "run" } }],
+        properties: [
+          { type: "Property", value: { type: "Identifier", name: "run" }, key: { name: "run" } },
+        ],
       },
       init: {
         type: "CallExpression",
@@ -162,7 +186,13 @@ describe("target matcher remaining import shapes", () => {
     });
     matcher.visitors.ImportDeclaration({
       source: { value: "mod" },
-      specifiers: [{ type: "ImportSpecifier", local: { type: "Identifier", name: "run" }, imported: { type: "Identifier", name: "run" } }],
+      specifiers: [
+        {
+          type: "ImportSpecifier",
+          local: { type: "Identifier", name: "run" },
+          imported: { type: "Identifier", name: "run" },
+        },
+      ],
     });
   });
 });
@@ -173,7 +203,11 @@ describe("delayed-rejects remaining CFG arms", () => {
     const loop = link(fn, node("ForStatement", { range: [1, 90] }));
     const tryNode = link(loop, node("TryStatement", { range: [2, 80] }), "body");
     const throwStmt = node("ThrowStatement", { range: [4, 8] });
-    const block = link(tryNode, node("BlockStatement", { range: [3, 10], body: [throwStmt] }), "block");
+    const block = link(
+      tryNode,
+      node("BlockStatement", { range: [3, 10], body: [throwStmt] }),
+      "block",
+    );
     throwStmt.parent = block;
     const handler = node("CatchClause", { range: [11, 40] });
     const continueStmt = node("ContinueStatement", { range: [13, 16] });
@@ -204,7 +238,11 @@ describe("delayed-rejects remaining CFG arms", () => {
 
     const tryFinally = node("TryStatement", { range: [0, 30] });
     const inner = node("ThrowStatement", { range: [2, 3] });
-    const tryBlock = link(tryFinally, node("BlockStatement", { range: [1, 5], body: [inner] }), "block");
+    const tryBlock = link(
+      tryFinally,
+      node("BlockStatement", { range: [1, 5], body: [inner] }),
+      "block",
+    );
     inner.parent = tryBlock;
     const handler2 = node("CatchClause", { range: [6, 12] });
     const handlerThrow = node("ThrowStatement", { range: [13, 14] });

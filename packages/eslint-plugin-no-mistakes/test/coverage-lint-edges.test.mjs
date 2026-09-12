@@ -3,8 +3,13 @@ import { describe, it } from "vitest";
 
 import { messages, require } from "./helpers.mjs";
 
-const { createAliasScopeTracker } = require("../src/rules/no-banned-import-outside-allowed-paths-scopes.js");
-const { recordAssignmentTag, recordVariableTag } = require("../src/rules/no-banned-import-outside-allowed-paths-aliases.js");
+const {
+  createAliasScopeTracker,
+} = require("../src/rules/no-banned-import-outside-allowed-paths-scopes.js");
+const {
+  recordAssignmentTag,
+  recordVariableTag,
+} = require("../src/rules/no-banned-import-outside-allowed-paths-aliases.js");
 const { matchDirectMockCallApply } = require("../src/rules/module-mock-call-apply.js");
 
 describe("lint early-return edges", () => {
@@ -18,7 +23,12 @@ describe("lint early-return edges", () => {
 
   it("covers placeholder never specifier fallbacks", () => {
     assert.deepEqual(
-      messages("type Keep = string; export type { Keep };", "no-placeholder-never-type-exports", undefined, "a.ts"),
+      messages(
+        "type Keep = string; export type { Keep };",
+        "no-placeholder-never-type-exports",
+        undefined,
+        "a.ts",
+      ),
       [],
     );
     assert.deepEqual(
@@ -34,14 +44,22 @@ describe("lint early-return edges", () => {
 
   it("skips lowercase exported components", () => {
     assert.deepEqual(
-      messages("export function button() { return <button />; }", "playwright-require-exported-component-attribute"),
+      messages(
+        "export function button() { return <button />; }",
+        "playwright-require-exported-component-attribute",
+      ),
       [],
     );
   });
 
   it("covers next metadata and script guard paths", () => {
     assert.deepEqual(
-      messages("export const metadata = {};", "nextjs-metadata-exports-location", undefined, "lib/meta.ts"),
+      messages(
+        "export const metadata = {};",
+        "nextjs-metadata-exports-location",
+        undefined,
+        "lib/meta.ts",
+      ),
       [],
     );
     messages(
@@ -73,19 +91,26 @@ describe("lint early-return edges", () => {
       [],
     );
     assert.deepEqual(
-      messages("export function Button() { return <button data-pw=\"ok\" />; }", "playwright-require-exported-component-attribute"),
+      messages(
+        'export function Button() { return <button data-pw="ok" />; }',
+        "playwright-require-exported-component-attribute",
+      ),
       [],
     );
     messages(
-      "type Placeholder = never; export type { Placeholder as \"alias\" };",
+      'type Placeholder = never; export type { Placeholder as "alias" };',
       "no-placeholder-never-type-exports",
       undefined,
       "a.ts",
     );
-    messages(`<Foo.Button />; <a href="/x" />; <div onClick={() => {}} />; <div role="button" />;`, "playwright-require-interactive-test-id", {
-      interactiveComponents: ["Foo.Button", "/Button/", "/[/"],
-    });
-    messages("<input data-pw=\"ok\" />;", "playwright-require-interactive-test-id");
+    messages(
+      `<Foo.Button />; <a href="/x" />; <div onClick={() => {}} />; <div role="button" />;`,
+      "playwright-require-interactive-test-id",
+      {
+        interactiveComponents: ["Foo.Button", "/Button/", "/[/"],
+      },
+    );
+    messages('<input data-pw="ok" />;', "playwright-require-interactive-test-id");
   });
 });
 
@@ -122,7 +147,11 @@ describe("alias scope and mock apply helpers", () => {
           type: "ObjectPattern",
           properties: [
             { type: "RestElement", argument: identifier },
-            { type: "Property", key: { name: "fn" }, value: { type: "ObjectPattern", properties: [] } },
+            {
+              type: "Property",
+              key: { name: "fn" },
+              value: { type: "ObjectPattern", properties: [] },
+            },
             {
               type: "Property",
               key: { name: "fn" },
@@ -184,7 +213,10 @@ describe("alias scope and mock apply helpers", () => {
             property: { name: "mock" },
           },
         },
-        arguments: [{}, { type: "ArrayExpression", elements: ["mod", { type: "ArrowFunctionExpression" }] }],
+        arguments: [
+          {},
+          { type: "ArrayExpression", elements: ["mod", { type: "ArrowFunctionExpression" }] },
+        ],
       },
       context,
       new Set(["mock"]),
