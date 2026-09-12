@@ -31,7 +31,7 @@ fn apply_own_rejects_invalid_compiler_and_list_shapes() {
     ];
     for (value, expected) in cases {
         let err = config
-            .apply_own(&value, &path, &root, ok)
+            .apply_own(&value, &path, &root, &ok)
             .expect_err("invalid config should fail");
         assert!(
             err.to_ascii_lowercase()
@@ -41,7 +41,7 @@ fn apply_own_rejects_invalid_compiler_and_list_shapes() {
     }
 
     let err = config
-        .apply_own(&json!({ "references": ["pkg"] }), &path, &root, |_| {
+        .apply_own(&json!({ "references": ["pkg"] }), &path, &root, &|_| {
             Err("missing project reference".to_string())
         })
         .expect_err("unresolved project references should fail");
@@ -59,7 +59,7 @@ fn apply_own_rejects_invalid_compiler_and_list_shapes() {
             }),
             &path,
             &root,
-            |value| Ok(root.join(value)),
+            &|value| Ok(root.join(value)),
         )
         .expect("valid include, exclude, paths, and references should apply");
     assert!(config.includes.is_some());
@@ -73,7 +73,7 @@ fn apply_own_rejects_invalid_compiler_and_list_shapes() {
             &json!({ "files": ["src/entry.ts"] }),
             &path,
             &root,
-            |value| Ok(root.join(value)),
+            &|value| Ok(root.join(value)),
         )
         .expect("files-only configs should apply without compilerOptions");
     assert!(files_config.files.is_some());

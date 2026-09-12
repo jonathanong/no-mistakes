@@ -128,7 +128,7 @@ fn apply_own_expands_config_dir_files_and_empty_lists() {
             }),
             &path,
             &root,
-            |value| Ok(root.join(value)),
+            &|value| Ok(root.join(value)),
         )
         .expect("configDir files and empty lists should apply");
     assert!(config.files.is_some());
@@ -158,7 +158,7 @@ fn apply_own_expands_config_dir_files_and_empty_lists() {
         (serde_json::json!({ "references": "lib" }), "references"),
     ] {
         let err = config
-            .apply_own(&value, &path, &root, |value| Ok(root.join(value)))
+            .apply_own(&value, &path, &root, &|value| Ok(root.join(value)))
             .expect_err(needle);
         assert!(err.contains(needle), "{err}");
     }
@@ -167,7 +167,7 @@ fn apply_own_expands_config_dir_files_and_empty_lists() {
             &serde_json::json!({ "references": [{ "path": "./lib" }] }),
             &path,
             &root,
-            |_| Err("missing reference".to_string()),
+            &|_| Err("missing reference".to_string()),
         )
         .expect_err("resolve_reference failure");
     assert!(err.contains("missing reference"));

@@ -5,7 +5,7 @@ impl EffectiveConfig {
         value: &serde_json::Value,
         path: &Path,
         dir: &Path,
-        resolve_reference: impl Fn(&str) -> Result<PathBuf, String>,
+        resolve_reference: &dyn Fn(&str) -> Result<PathBuf, String>,
     ) -> Result<(), String> {
         let compiler = value
             .get("compilerOptions")
