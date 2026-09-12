@@ -30,6 +30,12 @@ fn local_actions_are_found_through_reusable_workflows_and_outside_github_actions
             workflows: &[],
             global: true,
         },
+        Case {
+            name: "nested-action",
+            roots: &[".github/workflows/ci.yml#test-tooling"],
+            workflows: &[".github/workflows/ci.yml"],
+            global: false,
+        },
     ] {
         assert_case(case);
     }

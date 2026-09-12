@@ -228,14 +228,9 @@ fn route_import_resolution_follows_symlink_files_and_broken_links() {
         "{remapped:?}"
     );
 
-    let file_link = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/tsconfig/fixed-root-fast-path/root/src/external.ts"),
-    );
-    let real_external = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/tsconfig/fixed-root-fast-path/outside/external.ts"),
-    );
+    let file_link = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/tsconfig/fixed-root-fast-path/root/src/external.ts");
+    let real_external = file_link.canonicalize().expect("file symlink target exists");
     let _ = route_import_resolution_source(&file_link, &empty);
     let broken = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -254,9 +249,6 @@ fn route_import_resolution_follows_symlink_files_and_broken_links() {
         std::ffi::OsString::from("external.ts"),
         vec![file_link.clone()],
     );
-    let remapped_file = route_import_visible_target(real_external, &file_link_files, &file_link_names);
-    assert!(
-        remapped_file.as_deref() == Some(file_link.as_path()) || remapped_file.is_none(),
-        "{remapped_file:?}"
-    );
+    let remapped_file = route_import_visible_target(real_external.clone(), &file_link_files, &file_link_names);
+    assert_eq!(remapped_file.as_deref(), Some(file_link.as_path()));
 }

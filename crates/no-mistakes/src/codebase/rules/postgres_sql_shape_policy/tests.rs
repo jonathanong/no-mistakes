@@ -88,7 +88,6 @@ fn honors_disable_comments() {
 #[test]
 fn compile_options_default_to_exists_set_op() {
     let compiled = compile_options(&Options::default()).unwrap();
-    assert!(compiled.ban_exists_set_op);
     assert!(compiled.fail_unanalyzable);
 }
 
@@ -174,7 +173,6 @@ fn include_exclude_and_option_overrides() {
     })
     .unwrap();
     assert!(!compiled.fail_unanalyzable);
-    assert!(compiled.ban_exists_set_op);
     assert_eq!(compiled.schema.sql_include, ["migrations/**/*.sql"]);
     assert_eq!(compiled.embedded.import_specifier, "@other/db");
     assert_eq!(compiled.embedded.executor_names, ["run"]);
@@ -360,4 +358,20 @@ fn fails_closed_for_an_unparseable_builder_fragment() {
     )
     .unwrap()
     .is_empty());
+}
+
+#[test]
+fn duplicate_statement_files_dedupe_identical_findings() {
+    let root = fixture("fail");
+    let sql = root.join("sql/001.sql");
+    let findings = check_with_files(&root, &config(), &[sql.clone(), sql]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
+}
+
+#[test]
+fn full_select_builder_fragments_are_analyzed_without_wrapping() {
+    let root = fixture("fail-embedded-select-fragment");
+    let builders = root.join("src/builders.ts");
+    let findings = check_with_files(&root, &config_yaml("{}"), &[builders]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:#?}");
 }

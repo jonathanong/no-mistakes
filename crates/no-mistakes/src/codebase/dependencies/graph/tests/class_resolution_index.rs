@@ -145,6 +145,79 @@ fn alias_resolution_walks_parent_scopes_and_stops_on_cycles() {
 }
 
 #[test]
+fn non_dotted_alias_resolution_exhausts_parents_and_stops_on_cycles() {
+    let index = CallableFileIndex {
+        known_scopes: fx_set(),
+        exported_scopes: fx_set(),
+        class_scopes: fx_set(),
+        callable_bindings: fx_map(),
+        imported: fx_map(),
+        exported: fx_map(),
+        aliases: [
+            (
+                (1, "run".to_string()),
+                IndexedAlias {
+                    target: "ghost".to_string(),
+                    declared_at: 0,
+                    invalidated_at: None,
+                },
+            ),
+            (
+                (0, "cycleA".to_string()),
+                IndexedAlias {
+                    target: "cycleB".to_string(),
+                    declared_at: 0,
+                    invalidated_at: None,
+                },
+            ),
+            (
+                (0, "cycleB".to_string()),
+                IndexedAlias {
+                    target: "cycleA".to_string(),
+                    declared_at: 0,
+                    invalidated_at: None,
+                },
+            ),
+        ]
+        .into_iter()
+        .collect(),
+        binding_declared_at: fx_map(),
+        invocation_offsets: fx_map(),
+        class_bindings: fx_map(),
+        lexical_scope_parents: [(0, None), (1, Some(0))].into_iter().collect(),
+        scope_ids_by_display: fx_map(),
+        stars: Vec::new(),
+    };
+
+    assert!(
+        index
+            .resolve_alias(
+                Some("inner"),
+                Some(1),
+                "run",
+                10,
+                None,
+                InvocationKind::Call,
+            )
+            .is_none(),
+        "an alias to an unknown binding must walk parents until the chain ends"
+    );
+    assert!(
+        index
+            .resolve_alias(
+                Some("inner"),
+                Some(0),
+                "cycleA",
+                10,
+                None,
+                InvocationKind::Call,
+            )
+            .is_none(),
+        "a non-dotted alias cycle must stop instead of looping"
+    );
+}
+
+#[test]
 fn this_member_resolution_stops_on_duplicate_class_ids_and_instance_ids() {
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
         callable_scopes: vec![

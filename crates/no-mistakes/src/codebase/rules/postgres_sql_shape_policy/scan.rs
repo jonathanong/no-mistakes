@@ -45,9 +45,6 @@ pub(super) fn scan(
                 ));
             }
         }
-        if !opts.ban_exists_set_op {
-            continue;
-        }
         for fragment in &file.fragments {
             let Some(sql_text) = fragment.sql_text.as_deref() else {
                 if opts.fail_unanalyzable {
@@ -95,9 +92,6 @@ pub(super) fn scan(
                 1,
                 "SQL could not be analyzed for shape policy",
             ));
-            continue;
-        }
-        if !opts.ban_exists_set_op {
             continue;
         }
         for select in &file.selects {

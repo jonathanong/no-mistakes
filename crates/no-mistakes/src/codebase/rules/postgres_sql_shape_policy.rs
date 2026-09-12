@@ -31,7 +31,6 @@ pub(crate) struct CompiledOptions {
     exclude: GlobMatcher,
     schema: PostgresSchemaOptions,
     embedded: EmbeddedSqlOptions,
-    ban_exists_set_op: bool,
     fail_unanalyzable: bool,
 }
 
@@ -121,9 +120,6 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
                 opts.executor_names.clone()
             },
         },
-        ban_exists_set_op: shapes
-            .iter()
-            .any(|shape| shape.eq_ignore_ascii_case(CORRELATED_EXISTS_SET_OP)),
         fail_unanalyzable: crate::codebase::postgres::fail_unanalyzable_sql(
             RULE_ID,
             &opts.unanalyzable_sql,

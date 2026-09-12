@@ -22,10 +22,10 @@ fn collect_route_import_edges(
     };
     let resolver: &dyn ImportResolution = if let Some(resolver) = scoped_resolver.as_ref() {
         resolver
-    } else if let Some(resolver) = legacy_resolver.as_ref() {
-        resolver
     } else {
-        unreachable!("a scoped or legacy route-import resolver is initialized")
+        legacy_resolver
+            .as_ref()
+            .expect("a scoped or legacy route-import resolver is initialized")
     };
     let import_files = files
         .par_iter()
