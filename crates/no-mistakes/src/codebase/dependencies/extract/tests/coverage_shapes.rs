@@ -149,3 +149,61 @@ fn extract_walks_shadowed_require_spreads_accessors_and_callbacks() {
         .iter()
         .any(|call| call.callee == "Box.m" || call.callee.ends_with(".m")));
 }
+
+#[test]
+fn extract_walks_type_only_imports_exports_defaults_and_process_cwd() {
+    let extracted = facts(
+        r#"
+        import type { Foo } from "./types.mts";
+        import { type Bar, Baz } from "./mixed.mts";
+        export type { Foo } from "./types.mts";
+        export { type Bar } from "./mixed.mts";
+        import { spawn, exec, execFile, fork } from "child_process";
+        spawn("node", [], { cwd: "/tmp" });
+        exec("node", { cwd: "/tmp" });
+        execFile("node", [], { cwd: "/tmp" });
+        fork("worker.mts", [], { cwd: "/tmp" });
+        const helper = () => 1;
+        export default helper;
+        export default function named() { helper(); }
+        export default class Named {
+          static m() { return 1; }
+        }
+        export default class { method() { helper(); } }
+        export enum Kind { A, B }
+        const obj = {
+          get g() { return 1; },
+          set s(_v: number) {},
+          method() { helper(); },
+          ...helper,
+          [computed]: () => 1,
+        };
+        function outer() {
+          class Box { static m() {} }
+          function inner() { Box.m(); Box.constructor(); }
+          inner();
+        }
+        class A extends B {}
+        class B extends A {}
+        A.missing();
+        const Alias = Box.m;
+        Named.m();
+        obj.method();
+        obj["g"];
+        "#,
+    );
+    assert!(extracted
+        .imports
+        .iter()
+        .any(|import| import.kind == ImportKind::Type));
+    assert!(extracted
+        .function_calls
+        .iter()
+        .any(|call| call.callee.contains("spawn")
+            || call.callee.contains("exec")
+            || call.callee.contains("fork")));
+    let jsx = tsx_facts(
+        "export function Icon(props: { n: typeof this }) { return <this.span><ns:item /></this.span>; }",
+    );
+    assert!(jsx.callable_scopes.iter().any(|scope| scope == "Icon"));
+}

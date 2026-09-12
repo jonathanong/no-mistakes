@@ -71,4 +71,40 @@ fn project_json_helpers_report_invalid_options_and_optional_file_filters() {
         "root": "/no-mistakes-missing-coverage-root"
     }))
     .is_err());
+    assert!(tests_targets_json_impl(json!({
+        "framework": "vitest",
+        "files": []
+    }))
+    .is_err());
+    assert!(tests_targets_json_impl(json!({ "unknownField": true })).is_err());
+    assert!(fetches_json_impl(json!({ "unknownField": true })).is_err());
+    assert!(check_json_impl(json!({ "unknownField": true })).is_err());
+    assert!(ci_env_json_impl(json!({ "root": "." })).is_err());
+    assert!(ci_topology_impact_json_impl(json!({ "root": "." })).is_err());
+    assert!(ci_topology_impact_json_impl(json!({
+        "root": ".",
+        "base": "main"
+    }))
+    .is_err());
+    assert!(ci_topology_impact_json_impl(json!({
+        "root": ".",
+        "base": "main",
+        "head": "HEAD"
+    }))
+    .is_err());
+    assert!(queue_edges_json_impl(json!({
+        "root": "/no-mistakes-missing-coverage-root",
+        "tsconfig": "tsconfig.json"
+    }))
+    .is_err());
+    let _ = server_route_related_json_impl(json!({
+        "root": "/no-mistakes-missing-coverage-root",
+        "files": ["src/a.ts"],
+        "direction": "deps"
+    }));
+    assert!(react_analyze_json_impl(json!({
+        "root": "/no-mistakes-missing-coverage-root",
+        "config": "no-mistakes.json"
+    }))
+    .is_err());
 }

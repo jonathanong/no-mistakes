@@ -66,4 +66,14 @@ fn apply_own_rejects_invalid_compiler_and_list_shapes() {
     assert!(config.excludes.is_some());
     assert!(config.paths.is_some());
     assert_eq!(config.references.len(), 2);
+
+    config
+        .apply_own(
+            &json!({ "files": ["src/entry.ts"] }),
+            &path,
+            &root,
+            |value| Ok(root.join(value)),
+        )
+        .expect("files-only configs should apply without compilerOptions");
+    assert!(config.files.is_some());
 }
