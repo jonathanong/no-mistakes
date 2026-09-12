@@ -275,3 +275,20 @@ fn dart_targeted_project_triggers_require_a_top_level_project() {
         "config.yml.testPlan.dart.fullSuiteTriggers.projects.missing references missing top-level projects.missing"
     ));
 }
+
+#[test]
+fn find_config_root_and_empty_rule_names() {
+    assert_eq!(
+        super::find_config_root(Path::new("/repo")),
+        PathBuf::from("/repo")
+    );
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: "  ".to_string(),
+        ..Default::default()
+    });
+    let error = validate_v2_config(&config, Path::new("config.yml"))
+        .unwrap_err()
+        .to_string();
+    assert!(error.contains("rules[0].rule is required"));
+}
