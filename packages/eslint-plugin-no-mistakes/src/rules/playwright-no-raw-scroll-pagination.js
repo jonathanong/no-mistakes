@@ -28,7 +28,6 @@ function isPlaywrightPath(filename) {
 }
 
 function propertyName(node) {
-  if (!node) return null;
   return node.type === "Literal" ? String(node.value) : node.name;
 }
 
@@ -132,7 +131,6 @@ function hasQueryParamBoundary(literal, param, isRegex) {
 // runtime and must not be mistaken for an actual cursor-param check. The value-wrapper expressions
 // above recurse into their runtime `.expression` only, never a type operand.
 function collectLiteralStrings(node, results) {
-  if (!node) return;
   if (node.type.startsWith("TS")) {
     if (TS_VALUE_WRAPPER_TYPES.has(node.type)) collectLiteralStrings(node.expression, results);
     return;
@@ -158,7 +156,6 @@ function staticStringValue(node) {
 }
 
 function collectSearchParamsAccessorArgs(node, results) {
-  if (!node) return;
   if (node.type === "CallExpression" && isSearchParamsAccessorCall(node)) {
     const value = staticStringValue(node.arguments[0]);
     if (value !== null) results.push(value);

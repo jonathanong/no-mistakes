@@ -357,13 +357,13 @@ describe("lint edges that hit remaining guards", () => {
       `import { jest } from "@jest/globals";
        jest.mock("./mod.js", () => ({ value: 1 }));`,
       "module-mock-preserve-exports",
-      { includePathPatterns: [".*"] },
+      { includePathPatterns: ["**"] },
       "a.test.ts",
     );
     messages(
       "const x = globalThis.fetch?.();",
       "no-global-fetch-outside-helper",
-      { checkedPathPatterns: [".*"] },
+      { checkedPathPatterns: ["**"] },
       "a.ts",
     );
     expect(
@@ -392,8 +392,8 @@ describe("lint edges that hit remaining guards", () => {
           filename: "e2e/a.spec.ts",
           options: [
             {
-              includePathPatterns: [".*"],
-              checkedPathPatterns: [".*"],
+              includePathPatterns: ["**"],
+              checkedPathPatterns: ["**"],
               targets: [{ sourceSpecifierPatterns: ["mod"], calleeNamePatterns: ["run"] }],
               handlers: [{ sourceSpecifierPatterns: ["mod"], calleeNamePatterns: ["run"] }],
             },

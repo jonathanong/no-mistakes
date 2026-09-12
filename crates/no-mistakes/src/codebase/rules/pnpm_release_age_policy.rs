@@ -102,4 +102,6 @@ fn rel(root: &Path, path: &Path) -> String {
 }
 
 #[cfg(test)]
+mod scan_edges;
+#[cfg(test)]
 mod tests;

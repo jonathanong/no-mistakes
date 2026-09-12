@@ -370,3 +370,24 @@ test("readWithSignal rejects an already aborted signal", async () => {
   bare.abort();
   await assert.rejects(readWithSignal(Promise.resolve("ok"), bare.signal), /aborted/);
 });
+
+test("readWithSignal falls back when abort has no reason", async () => {
+  await assert.rejects(
+    readWithSignal(Promise.resolve("ok"), {
+      aborted: true,
+      reason: undefined,
+      addEventListener() {},
+    }),
+    /aborted/,
+  );
+  const listeners = [];
+  const pending = readWithSignal(new Promise(() => {}), {
+    aborted: false,
+    reason: undefined,
+    addEventListener(_type, listener) {
+      listeners.push(listener);
+    },
+  });
+  for (const listener of listeners) listener();
+  await assert.rejects(pending, /aborted/);
+});

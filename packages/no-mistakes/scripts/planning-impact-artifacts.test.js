@@ -1799,6 +1799,27 @@ test("uses identity checks when directory descriptors are unavailable", async ()
   }
 });
 
+test("rethrows unexpected output directory open errors", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  try {
+    await withFsOverride(
+      {
+        open: async () => {
+          const error = new Error("permission denied");
+          error.code = "EACCES";
+          throw error;
+        },
+      },
+      async () => {
+        const { validateOutputDirectory } = require("../planning-impact-artifacts-files");
+        await assert.rejects(validateOutputDirectory(directory), /permission denied/);
+      },
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("closes an output descriptor when its initial path identity changes", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");

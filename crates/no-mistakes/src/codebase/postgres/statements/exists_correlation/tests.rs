@@ -395,3 +395,47 @@ fn query_is_correlated_walks_remaining_set_and_join_shapes() {
         let _ = query_is_correlated(&query);
     }
 }
+
+#[test]
+fn query_is_correlated_covers_parser_rare_variants() {
+    use sqlparser::ast::{
+        Expr, GroupByExpr, Ident, JoinOperator, SelectItem, SelectItemQualifiedWildcardKind,
+        SetExpr, TableFactor, WildcardAdditionalOptions,
+    };
+
+    let Statement::Query(mut query) =
+        parse_postgres_sql("SELECT topics.* FROM topics JOIN tags ON tags.id = topics.id")
+            .unwrap()
+            .pop()
+            .unwrap()
+    else {
+        panic!("query");
+    };
+    let SetExpr::Select(select) = query.body.as_mut() else {
+        panic!("select");
+    };
+    select.group_by = GroupByExpr::All(vec![]);
+    select.projection.push(SelectItem::QualifiedWildcard(
+        SelectItemQualifiedWildcardKind::Expr(Expr::Identifier(Ident::new("topics"))),
+        WildcardAdditionalOptions::default(),
+    ));
+    let inner = select.from[0].clone();
+    select.from[0].relation = TableFactor::NestedJoin {
+        table_with_joins: Box::new(inner.clone()),
+        alias: None,
+    };
+    select.from.push(inner.clone());
+    select.from.last_mut().unwrap().relation = TableFactor::TableFunction {
+        expr: Expr::Identifier(Ident::new("topics")),
+        alias: None,
+    };
+    if let Some(join) = select.from[0].joins.first_mut() {
+        join.join_operator = JoinOperator::Inner(sqlparser::ast::JoinConstraint::On(
+            Expr::Identifier(Ident::new("topics")),
+        ));
+    }
+    let _ = query_is_correlated(&query);
+
+    *query.body = SetExpr::Insert(parse_postgres_sql("COMMIT").unwrap().pop().unwrap());
+    assert!(!query_is_correlated(&query));
+}

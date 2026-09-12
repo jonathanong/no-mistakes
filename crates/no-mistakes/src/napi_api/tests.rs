@@ -526,6 +526,7 @@ mod analysis_session_tests;
 mod async_task_tests;
 mod check;
 mod ci;
+mod coverage_json_errors;
 mod playwright_json_exports;
 mod react_usages;
 mod suppression_contract_tests;

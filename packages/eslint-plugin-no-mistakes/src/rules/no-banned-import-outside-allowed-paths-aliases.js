@@ -190,4 +190,6 @@ module.exports = {
   recordAssignmentTag,
   recordVariableTag,
   setOrClearTag,
+  collectPossibleTag,
+  applyObjectPatternTagAddOnly,
 };

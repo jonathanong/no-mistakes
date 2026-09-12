@@ -112,7 +112,7 @@ module.exports = Object.assign(
               child.type === "BreakStatement" ||
               child.type === "ReturnStatement" ||
               child.type === "ThrowStatement",
-          ) ?? false
+          ) === true
         );
       }
 

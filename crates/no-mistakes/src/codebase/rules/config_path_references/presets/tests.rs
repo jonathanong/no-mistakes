@@ -44,6 +44,39 @@ jobs:
 }
 
 #[test]
+fn oxlint_extract_skips_missing_and_non_relative_entries() {
+    let document = serde_yaml::from_str(
+        r#"
+jsPlugins:
+  - 1
+  - specifier: eslint-plugin-oxlint
+  - specifier: ./local-plugin.js
+overrides:
+  - env: {}
+  - files: [1, "src/**/*.ts", "src/ok.ts"]
+rules:
+  1: ["warn"]
+  no-alert: warn
+  no-console:
+    - warn
+    - baseline:
+        - 1
+        - ["!negated.ts"]
+        - ["src/keep.ts"]
+"#,
+    )
+    .unwrap();
+    let extracted = super::oxlint::extract(&document);
+    let values: Vec<_> = extracted.into_iter().map(|item| item.value).collect();
+    assert_eq!(
+        values,
+        vec!["./local-plugin.js", "src/ok.ts", "src/keep.ts"]
+    );
+    let empty = super::oxlint::extract(&serde_yaml::from_str("{}").unwrap());
+    assert!(empty.is_empty());
+}
+
+#[test]
 fn workspace_filters_distinguish_exact_conditional_guards_from_shell_prefixes() {
     let document = serde_yaml::from_str(
         r#"

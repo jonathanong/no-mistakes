@@ -393,31 +393,31 @@ describe("more remaining branch arms", () => {
     messages(
       "switch (x) {} fetch();",
       "no-global-fetch-outside-helper",
-      { checkedPathPatterns: [".*"] },
+      { checkedPathPatterns: ["**"] },
       "a.ts",
     );
     messages(
       "switch (x) { case 1: fetch(); break; default: fetch(); }",
       "no-global-fetch-outside-helper",
-      { checkedPathPatterns: [".*"] },
+      { checkedPathPatterns: ["**"] },
       "a.ts",
     );
     messages(
       "switch (x) { case 1: foo(); default: fetch(); }",
       "no-global-fetch-outside-helper",
-      { checkedPathPatterns: [".*"] },
+      { checkedPathPatterns: ["**"] },
       "a.ts",
     );
     messages(
       "for (let aliased = fetch; i < 1; i++) {}",
       "no-global-fetch-outside-helper",
-      { checkedPathPatterns: [".*"] },
+      { checkedPathPatterns: ["**"] },
       "a.ts",
     );
     messages(
       "for (aliased = fetch; i < 1; i++) {}",
       "no-global-fetch-outside-helper",
-      { checkedPathPatterns: [".*"] },
+      { checkedPathPatterns: ["**"] },
       "a.ts",
     );
   });

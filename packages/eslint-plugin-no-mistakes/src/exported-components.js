@@ -195,4 +195,5 @@ module.exports = {
   collectExportedComponents,
   normalizedComponentOptions,
   shouldCheckComponent,
+  uniqueComponents,
 };

@@ -89,10 +89,6 @@ async function writePlanningImpactArtifactsUnlocked(options, analyzeProject, ren
     );
     return { outputDirectory: output.path, ...artifacts };
   } catch (error) {
-    if (manifestHandle) {
-      await manifestHandle.close().catch(() => {});
-      manifestHandle = undefined;
-    }
     if (mayWriteFailureArtifacts && !artifactErrors.isOutputRestorationFailure(error)) {
       try {
         await updateOutputDirectory(

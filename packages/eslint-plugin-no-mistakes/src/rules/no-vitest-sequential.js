@@ -49,29 +49,32 @@ function hasSequentialOption(node) {
     );
 }
 
-module.exports = rule(
-  {
-    type: "problem",
-    docs: { description: "disallow Vitest sequential test modifiers", recommended: false },
-    schema: [],
-    messages: { sequential: "Use parallel tests instead of .sequential." },
-  },
-  (context) => {
-    let usesVitestImport = false;
-    return {
-      ImportDeclaration(node) {
-        if (node.source.value === "vitest") usesVitestImport = true;
-      },
-      CallExpression(node) {
-        if (!isTestFile(context.filename) && !usesVitestImport) return;
-        if (!TEST_NAMES.has(rootTestName(node.callee))) return;
-        if (node.callee.type === "MemberExpression" && hasSequentialMember(node.callee)) {
+module.exports = Object.assign(
+  rule(
+    {
+      type: "problem",
+      docs: { description: "disallow Vitest sequential test modifiers", recommended: false },
+      schema: [],
+      messages: { sequential: "Use parallel tests instead of .sequential." },
+    },
+    (context) => {
+      let usesVitestImport = false;
+      return {
+        ImportDeclaration(node) {
+          if (node.source.value === "vitest") usesVitestImport = true;
+        },
+        CallExpression(node) {
+          if (!isTestFile(context.filename) && !usesVitestImport) return;
+          if (!TEST_NAMES.has(rootTestName(node.callee))) return;
+          if (node.callee.type === "MemberExpression" && hasSequentialMember(node.callee)) {
+            context.report({ node: node.callee, messageId: "sequential" });
+            return;
+          }
+          if (!hasSequentialOption(node)) return;
           context.report({ node: node.callee, messageId: "sequential" });
-          return;
-        }
-        if (!hasSequentialOption(node)) return;
-        context.report({ node: node.callee, messageId: "sequential" });
-      },
-    };
-  },
+        },
+      };
+    },
+  ),
+  { __test: { hasSequentialMember } },
 );
