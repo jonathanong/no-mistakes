@@ -6,13 +6,11 @@ fn caller_parts_ignores_non_file_backed_nodes() {
     let root = Path::new("/repo");
 
     assert!(caller_parts(&NodeId::module("react"), root).is_none());
-    assert!(
-        caller_parts(
-            &NodeId::queue_job(PathBuf::from("/repo/queue.mts"), "send-email"),
-            root,
-        )
-        .is_none()
-    );
+    assert!(caller_parts(
+        &NodeId::queue_job(PathBuf::from("/repo/queue.mts"), "send-email"),
+        root,
+    )
+    .is_none());
 }
 
 #[test]

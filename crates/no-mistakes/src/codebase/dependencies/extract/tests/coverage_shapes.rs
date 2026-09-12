@@ -92,18 +92,14 @@ fn extract_walks_class_heritage_dynamic_callees_and_resource_scopes() {
         class FactoryDecorated {}
         "#,
     );
-    assert!(
-        facts
-            .function_calls
-            .iter()
-            .any(|call| call.callee == "A.m" || call.callee.ends_with(".m"))
-    );
-    assert!(
-        facts
-            .function_calls
-            .iter()
-            .any(|call| call.callee.contains("constructor"))
-    );
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "A.m" || call.callee.ends_with(".m")));
+    assert!(facts
+        .function_calls
+        .iter()
+        .any(|call| call.callee.contains("constructor")));
     assert!(!facts.unknown_calls.is_empty());
     let jsx = tsx_facts("export function Icon() { return <ns:tag />; }");
     assert!(jsx.callable_scopes.iter().any(|scope| scope == "Icon"));
