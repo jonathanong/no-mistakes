@@ -104,3 +104,44 @@ fn extract_walks_class_heritage_dynamic_callees_and_resource_scopes() {
     let jsx = tsx_facts("export function Icon() { return <ns:tag />; }");
     assert!(jsx.callable_scopes.iter().any(|scope| scope == "Icon"));
 }
+
+#[test]
+fn extract_walks_shadowed_require_spreads_accessors_and_callbacks() {
+    let empty_require = facts("require(); require.resolve();");
+    assert!(empty_require.imports.is_empty());
+    let extracted = facts(
+        r#"
+        function require(id: string) { return id; }
+        require("./shadowed");
+        require.resolve("./still-global");
+        function helper() {}
+        helper(...args);
+        new helper(...args);
+        schedule(helper);
+        class Box {
+          static get g() { return 1; }
+          static set s(_v: number) {}
+          static m() { return 1; }
+        }
+        const value = Box.g;
+        Box.s = 1;
+        Box.m();
+        const Alias = Box;
+        Alias.m();
+        const nested = Box.m;
+        nested();
+        function outer() {
+          function inner() {}
+          inner();
+        }
+        "#,
+    );
+    assert!(extracted
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "helper" && call.is_callback));
+    assert!(extracted
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "Box.m" || call.callee.ends_with(".m")));
+}
