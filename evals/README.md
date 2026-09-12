@@ -560,6 +560,54 @@ forms while KEEPING the general framing, rather than replacing it" — **is not
 supported**. Replacing it is better. What `signature` needed was a clause about
 signatures, not the general framing back.
 
+### The `openai.yaml` gate stays at 90%
+
+Codex consumes this skill through `skills/no-mistakes/agents/openai.yaml`, whose
+`default_prompt` is an always-on imperative to use `no-mistakes`. Claude has
+only the description. The pre-registered condition for removing that imperative
+was an **aggregate should-fire trigger of ≥90% in the full re-baseline** — the
+number standing for "the description carries Claude on its own".
+
+Recorded before that run: **90% is almost certainly not reachable**, and the
+gate stays there anyway.
+
+The re-baseline spans eleven flows. C2's two best measured flows are 89%
+(`before-edit`) and 83% (`signature`); `queues`, `ci`, `napi`, `lang-graph`,
+`usage`, `safety` and `duplication` sat between 0% and 67% under every
+description ever tested here, and C2 names those subjects no better than
+`real-register` did. An aggregate over all eleven cannot clear 90% on those
+inputs.
+
+The tempting move is to restate the gate over the traffic-backed flows only,
+where the 94%-carries-Claude argument actually came from. That is declined: it
+is the same post-hoc redefinition this file just refused on `signature`, and
+choosing a denominator after seeing that the original one is unreachable is not
+a measurement. The gate was set knowing it might not be met. If it is not met,
+the imperative stays and Codex keeps the reliability it buys — which costs
+nothing, since removing it could only ever make Codex worse.
+
+### The description reaches what it names, and nothing else
+
+The single generalizable finding, now supported by two independent flows.
+
+`signature` sat at 25–33% under both the shipped and the reworded description,
+neither of which mentioned signatures, arguments or return types. Adding one
+clause about them took it to 83%. `queues` sat at 1/5 shipped and 2/15
+reworked; C2 says nothing about producers, consumers, queues or jobs, and its
+queue-shaped held-out case fires **0/3** — the worst cell measured anywhere in
+this suite.
+
+Enumeration does not crowd out the unlisted, which is what the struck-through
+guidance above assumed. It simply does not reach it. A description fires on
+the subjects it names, so coverage is a question of which subjects are worth
+the permanently-resident characters — not of finding a general framing abstract
+enough to cover everything.
+
+The obvious next move — add a queue clause and re-screen — is deliberately
+**not** taken here. `heldout-05` is a live held-out case; tuning against it
+spends it, which is the exact failure the holdout exists to prevent. It belongs
+in a follow-up issue with fresh held-out cases written first.
+
 To add another variant: create `evals/variants/<name>/` (copy the skill, change
 only the frontmatter), then `python3 evals/generate.py --variant <name>` and run
 with `--eval-dir evals-variants/<name>`. The plugin under `skills/` is never
