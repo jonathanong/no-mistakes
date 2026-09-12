@@ -171,6 +171,26 @@ describe("upstreamed generic rules", () => {
     );
     assert.deepEqual(
       messages(
+        fixture("mock-name.jest-import.mock.test.ts"),
+        "vitest-mock-test-file-naming",
+        undefined,
+        "mock-name.jest-import.mock.test.ts",
+      ),
+      [],
+      "jest.mock via @jest/globals import should satisfy .mock.test naming",
+    );
+    assert.deepEqual(
+      messages(
+        fixture("mock-name.jest-require.mock.test.cjs"),
+        "vitest-mock-test-file-naming",
+        undefined,
+        "mock-name.jest-require.mock.test.cjs",
+      ),
+      [],
+      "jest.mock via require('@jest/globals') should satisfy .mock.test naming",
+    );
+    assert.deepEqual(
+      messages(
         fixture("mock-name.fn-stub.valid.test.ts"),
         "vitest-mock-test-file-naming",
         undefined,

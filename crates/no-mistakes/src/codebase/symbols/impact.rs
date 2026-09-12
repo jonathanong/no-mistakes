@@ -2,8 +2,8 @@ use crate::codebase::dependencies::graph::{
     DepGraph, EdgeKind, GraphBuildPlan, GraphFiles, NodeEntry, NodeId,
 };
 use crate::codebase::test_filter::TestFileFilter;
-use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::ts_source::facts::TsFactMap;
+use crate::codebase::ts_source::relative_slash_path;
 use crate::codebase::ts_symbols::ExportKind;
 use anyhow::{bail, Context};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
@@ -19,6 +19,9 @@ include!("impact_collect_local_names.rs");
 include!("impact_output.rs");
 
 #[cfg(test)]
+mod impact_collect_targets_tests;
+#[cfg(test)]
 mod impact_test_support;
 #[cfg(test)]
-mod impact_collect_targets_tests;
+#[path = "impact/tests/write_errors.rs"]
+mod impact_write_errors;

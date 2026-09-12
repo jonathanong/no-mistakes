@@ -184,48 +184,4 @@ fn text_reports_render_callers_and_suggested_tests() {
     let human = String::from_utf8(human).unwrap();
     assert!(human.contains("src/app.mts#run"));
     assert!(human.contains("src/date.test.mts"));
-
-    struct FailAfter {
-        remaining_writes: usize,
-    }
-    impl std::io::Write for FailAfter {
-        fn write(&mut self, bytes: &[u8]) -> std::io::Result<usize> {
-            if self.remaining_writes == 0 {
-                return Err(std::io::Error::other("synthetic write failure"));
-            }
-            self.remaining_writes -= 1;
-            Ok(bytes.len())
-        }
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
-        }
-    }
-    let empty = SignatureImpactReport {
-        roots: vec![],
-        symbol: "parseDate".to_string(),
-        definition: report.definition.clone(),
-        exports: vec![],
-        production_callers: vec![],
-        test_callers: vec![],
-        suggested_tests: vec![],
-        warnings: vec![],
-    };
-    for format in [
-        Format::Md,
-        Format::Human,
-        Format::Paths,
-        Format::Json,
-        Format::Yml,
-    ] {
-        for payload in [&report, &empty] {
-            let mut completed = false;
-            for remaining_writes in 0..4096 {
-                if write_report(payload, format, &mut FailAfter { remaining_writes }).is_ok() {
-                    completed = true;
-                    break;
-                }
-            }
-            assert!(completed, "{format:?} should succeed after enough writes");
-        }
-    }
 }
