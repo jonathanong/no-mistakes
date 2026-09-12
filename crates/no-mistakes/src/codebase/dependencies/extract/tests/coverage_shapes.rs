@@ -259,3 +259,51 @@ fn extract_walks_local_scope_chains_anonymous_classes_and_default_kinds() {
         call.caller.as_deref() == Some("run") && call.target_identity == CallTargetIdentity::Unknown
     }));
 }
+
+#[test]
+fn extract_walks_inherited_static_members_nested_helpers_and_aggregates() {
+    let extracted = facts(
+        r#"
+        class A { static m() {} }
+        class B extends A {}
+        class C extends B {}
+        C.m();
+        class Base { static run() {} }
+        function outer() {
+          class Child extends Base {}
+          function mid() {
+            function helper() {}
+            function inner() { Child.run(); helper(); }
+            inner();
+          }
+          mid();
+        }
+        const api = { load() { return 1; } };
+        api.load();
+        function ctor() {}
+        new ctor();
+        top();
+        function top() {}
+        class Ghost { static missing() {} }
+        function hop() {
+          const Alias = Ghost.missing;
+          Alias();
+        }
+        class CycleA extends CycleB { static z() {} }
+        class CycleB extends CycleA {}
+        CycleA.z();
+        CycleA.nope();
+        "#,
+    );
+    assert!(extracted
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "C.m" || call.callee.ends_with(".m")));
+    assert!(extracted.function_calls.iter().any(|call| {
+        call.callee == "helper" && call.caller.as_deref() == Some("outer/mid/inner")
+    }));
+    assert!(extracted
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "api.load" || call.callee.ends_with(".load")));
+}

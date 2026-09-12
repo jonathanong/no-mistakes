@@ -258,3 +258,27 @@ fn module_level_object_and_unnamed_default_class_are_walked() {
         "{facts:#?}"
     );
 }
+
+#[test]
+fn glob_cwd_rejects_spreads_and_records_parenthesized_url_and_dirname() {
+    let facts = facts(
+        r#"
+        import * as fs from 'node:fs';
+        import { glob } from 'glob';
+        import { fileURLToPath } from 'node:url';
+        const URL = String;
+        fs.readFile(new URL('./shadowed.json', import.meta.url));
+        glob('spread-cwd/**/*.txt', { ...opts, cwd: 'x' });
+        glob('no-cwd/**/*.txt');
+        glob('paren-url/**/*.txt', { cwd: ('static-cwd') });
+        glob('meta-cwd/**/*.txt', { cwd: import.meta.dirname });
+        glob('tpl-cwd/**/*.txt', { cwd: `tpl` });
+        fs.readFile(fileURLToPath(new URL('./bound-url.json', import.meta.url)));
+        fs.readFile(require('url').fileURLToPath(new URL('./req-url.json', import.meta.url)));
+        "#,
+    );
+    assert!(
+        !facts.calls.is_empty() || !facts.diagnostics.is_empty(),
+        "{facts:#?}"
+    );
+}

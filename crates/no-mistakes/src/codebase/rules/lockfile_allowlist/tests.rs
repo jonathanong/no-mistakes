@@ -118,3 +118,34 @@ fn check_with_files_works() {
     let findings = check_with_files(root, &config, &[path]).unwrap();
     assert_eq!(findings.len(), 1);
 }
+
+#[test]
+fn invalid_allowed_glob_fails_closed() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::write(root.join("yarn.lock"), "# yarn lockfile v1\n").unwrap();
+    let error = check(
+        root,
+        &config_with_rule("allowed: ['[']\nbannedBasenames: [yarn.lock]"),
+    )
+    .expect_err("invalid allowlist glob must fail");
+    assert!(
+        error.to_string().contains("error parsing glob")
+            || error.to_string().contains("unclosed")
+            || error.to_string().contains("["),
+        "{error:#}"
+    );
+}
+
+#[test]
+fn custom_banned_basenames_ignore_default_npm_lockfile() {
+    let tmp = tempfile::tempdir().unwrap();
+    let root = tmp.path();
+    std::fs::write(root.join("package-lock.json"), "{}").unwrap();
+    let findings = check(
+        root,
+        &config_with_rule("allowed: [pnpm-lock.yaml]\nbannedBasenames: [yarn.lock]"),
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
