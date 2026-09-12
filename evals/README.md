@@ -219,24 +219,47 @@ Not every flow has been measured to the same depth. Single-run numbers carry
 real judge variance — cases have been observed flipping between runs — so treat
 anything marked ⚠️ as directional.
 
-| flow | shipped description | reworded variant |
-| --- | --- | --- |
-| `before-edit` | `runs: 3` | `runs: 3` |
-| `heldout` | `runs: 3` | `runs: 3` |
-| `queues`, `after-edit`, `signature`, `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` |
-| `usage`, `safety`, `duplication`, `neg-hard` | ⚠️ 1 run | not run |
+| flow | shipped | reworded | C1 | C2 = current |
+| --- | --- | --- | --- | --- |
+| `before-edit` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
+| `signature` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
+| `neg-hard` | `runs: 3` | not run | `runs: 3` | `runs: 3` |
+| `heldout` (spent 01–03) | `runs: 3` | `runs: 3` | not run | `runs: 3` |
+| `heldout` (live 04–06) | `runs: 3` | n/a | not run | `runs: 3` |
+| `queues`, `after-edit`, `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** |
+| `usage`, `safety`, `duplication` | ⚠️ 1 run | not run | not run | **not run** |
 
-Completing the grid is ~45 cases × 3 runs × 2 arms ≈ $50. That is deliberately
-unspent: it would precisely measure a description that is expected to change.
-The intended order is (1) confirm the `signature` regression below, (2) revise
-the description, (3) then run the full suite once at `runs: 3` as the new
-baseline.
+#### The full re-baseline is still outstanding
+
+The `runs: 3`, both-arm re-baseline of the current description across all
+eleven flows has **not** been completed. One attempt was made and is void: it
+hit a Claude session limit 27 runs into 318, and the remaining 291 runs
+errored.
+
+That failure is worth recording rather than just retrying, because of how it
+presents. An errored run scores 0 in **both** arms, so 45 of the 53 cases came
+back reading `0.00 / 0.00 / Δ +0.00` — indistinguishable from a genuine "the
+skill made no difference here", across a suite where Δ ≈ 0 is a common and
+expected result. The runner reported `partial: false`. The only immediate tell
+was the cost: $6.08 against an expected ~$50.
+
+`evals/summarize.py` now refuses to render such a run as a result. Anyone
+re-running this should still check the reported cost against the estimate
+below before believing a table of zeros, and should start the run with enough
+session budget for ~320 runs.
+
+Every other number in this file comes from runs with **zero** errored runs,
+verified per file.
 
 ### Approximate cost
 
-At `-j 4`, Opus agent, Sonnet judge: **~$0.18 per run**. A flow of 5 cases costs
-~$1.75 at 1 run and ~$5 at `runs: 3` (both arms). The 8-case `before-edit` flow
-at `runs: 3` was $8.89 / ~10 min.
+At `-j 4`, Opus agent, Sonnet judge: **~$0.16–0.19 per case × run × arm**.
+Measured on this round: 27 runs / $4.25, 51 runs / $9.25, 51 runs / $9.89,
+18 runs / $3.45. A 17-case screen at `runs: 3` single-arm is ~$9.50 and ~20
+minutes; the full 53-case both-arm re-baseline is ~320 runs, ~$50 and ~2 hours.
+
+Concurrency **defaults to 1** — pass `-j 4` or every figure here is wrong by a
+factor of four in wall-clock.
 
 ## Considered and not built
 
@@ -295,7 +318,7 @@ produced silently meaningless scores:
    which refusal happened to mention more taxonomy. The `append_system_prompt`
    block that states the repository is unavailable is load-bearing.
 
-## Baseline (before-edit flow)
+## Baseline (before-edit flow, shipped description as of PR #979)
 
 `claude plugin eval . --tag before-edit --ablation with-without --judge-model sonnet`
 at `runs: 3` — 48 runs, $8.89, ~10 min at `-j 4`.
@@ -311,6 +334,12 @@ at `runs: 3` — 48 runs, $8.89, ~10 min at `-j 4`.
 | negatives (07, 08) | — | n/a | 0.00 |
 
 **Trigger rate 8/18 = 44%.** Fire-only Δ +0.063.
+
+This table describes the description that shipped with #979, which is **no
+longer the one in `skills/no-mistakes/SKILL.md`** — see
+[Candidate screening](#candidate-screening). It is kept as the before-side of
+the comparison. The current description's own both-arm baseline is
+[still outstanding](#the-full-re-baseline-is-still-outstanding).
 
 The split is the finding: the three phrasings drawn from the most common forms
 in real history (`01`, `03`, `05`) fire 1/9 combined, while the three that
