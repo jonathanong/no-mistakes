@@ -307,4 +307,22 @@ fn run_steps_register_tracked_projects_when_triggers_match_source_inputs() {
         BTreeSet::new(),
     );
     assert!(unknown_timeout.indeterminate);
+
+    let invalid_status = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - if: \"${{ success() && fromJSON('not-json') }}\"\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(invalid_status.failed || invalid_status.indeterminate);
+
+    let invalid_continue = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: []\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(invalid_continue.indeterminate || invalid_continue.failed);
+
+    let tolerated_action_without_id = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    uses: actions/checkout@v4\n  - run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_action_without_id.failed);
 }

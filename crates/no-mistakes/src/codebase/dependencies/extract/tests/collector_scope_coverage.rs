@@ -158,4 +158,9 @@ fn class_id_for_binding_follows_aliases_and_stops_on_cycles() {
     });
     collector.callable_alias_index[0].insert("Loop".to_string(), 1);
     assert!(collector.class_id_for_binding(0, "Loop").is_none());
+
+    collector.local_stack[0].insert("plain".to_string());
+    collector.record_callable_binding_id("plain", CallableId(50));
+    assert!(!collector.has_local_function_scope("plain.missing"));
+    assert!(!collector.has_local_function_scope("ghost.member"));
 }

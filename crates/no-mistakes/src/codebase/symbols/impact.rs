@@ -19,6 +19,9 @@ include!("impact_collect_local_names.rs");
 include!("impact_output.rs");
 
 #[cfg(test)]
+#[path = "impact/tests/caller_helper_coverage.rs"]
+mod impact_caller_helper_coverage;
+#[cfg(test)]
 mod impact_collect_targets_tests;
 #[cfg(test)]
 mod impact_test_support;
