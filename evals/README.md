@@ -154,7 +154,9 @@ carry less weight.
 `lang-graph` is the weakest: `auto-harness` is TypeScript-only, so its preamble
 describes a polyglot repository that does not exist. It grades plan shape only.
 
-## Cases
+## Cases (`before-edit`)
+
+The other flows' cases are summarised in the [Flows](#flows) table.
 
 | case | asks | trap it sets |
 | --- | --- | --- |
@@ -196,6 +198,47 @@ that additional sources are fine.
 Because every flow's Δ is gated on triggering, these numbers mostly measure the
 current description's silence. Re-run per flow after adopting a reworded
 description to get uplift figures worth acting on.
+
+## Measurement coverage
+
+Not every flow has been measured to the same depth. Single-run numbers carry
+real judge variance — cases have been observed flipping between runs — so treat
+anything marked ⚠️ as directional.
+
+| flow | shipped description | reworded variant |
+| --- | --- | --- |
+| `before-edit` | `runs: 3` | `runs: 3` |
+| `heldout` | `runs: 3` | `runs: 3` |
+| `queues`, `after-edit`, `signature`, `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` |
+| `usage`, `safety`, `duplication`, `neg-hard` | ⚠️ 1 run | not run |
+
+Completing the grid is ~45 cases × 3 runs × 2 arms ≈ $50. That is deliberately
+unspent: it would precisely measure a description that is expected to change.
+The intended order is (1) confirm the `signature` regression below, (2) revise
+the description, (3) then run the full suite once at `runs: 3` as the new
+baseline.
+
+### Approximate cost
+
+At `-j 4`, Opus agent, Sonnet judge: **~$0.18 per run**. A flow of 5 cases costs
+~$1.75 at 1 run and ~$5 at `runs: 3` (both arms). The 8-case `before-edit` flow
+at `runs: 3` was $8.89 / ~10 min.
+
+## Considered and not built
+
+Recorded so the reasoning is not rediscovered. Each of these was evaluated and
+judged not worth the cost.
+
+| not built | why |
+| --- | --- |
+| **Real-checkout suite** (scaffold a repo + staged native binary into the sandbox) | The only way to measure real-session trigger rate, but unportable to CI and machine-specific. It also has an inverting failure mode: with a repo present and no working binary, the with-plugin arm tries the CLI, fails, and falls back to grep while the without-plugin arm greps successfully — Δ goes negative and the plugin looks actively harmful. Do not attempt without solving the binary staging first. |
+| **Cost/latency vs a broad search agent** | The original motivating hypothesis. Needs a large real repo the agent actually traverses; both arms here answer from an empty directory, so any cost number would be meaningless. |
+| **More `napi` cases** | `SKILL.md`'s programmatic-API surface is about one sentence. The existing 5 already return Δ ≈ 0; more would add cost without discrimination. |
+| **More `lang-graph` cases** | The fixture is synthetic — `auto-harness` is TypeScript-only. Additional cases would grade plan shape against an imagined repository. |
+| **Engine correctness** | Covered by `test-cases/**` and the Rust suite. These evals test routing and guidance, not whether the graph is right. |
+| **Sub-skill variant** (splitting into intent-scoped skills) | Designed, then not built: the single reworded description reached 94% tuned and 100% held-out, so a split had nothing left to win. Revisit only if one description provably cannot span the vocabularies. |
+| **A lifecycle case spanning before-edit → after-edit → handoff** | Multi-step flows are graded on a single final message here, so a long chain collapses into one hard-to-attribute verdict. The three phases are tested separately instead. |
+| **Performance / scale behaviour** | No case exercises a large repository, a cold graph build, or concurrency. |
 
 ## Conventions
 
@@ -313,6 +356,34 @@ no measured gain.
 
 Whenever a description changes, re-run `--tag heldout` and add new held-out
 phrasings — a description tuned against the held-out set stops being held out.
+
+### It does NOT generalize across flows
+
+The A/B above covers `before-edit`. Running the other flows against the same
+variant tells a different story:
+
+| flow | shipped (⚠️ n=5) | reworded (n=15) |
+| --- | --- | --- |
+| `lang-graph` | 3/5 | 10/15 |
+| `after-edit` | 1/5 | 5/15 |
+| `ci` | 1/5 | 3/15 |
+| `queues` | 1/5 | 2/15 |
+| **`signature`** | **3/5** | **2/15** |
+| `napi` | 0/5 | 0/15 |
+
+The rewrite lifts `before-edit` to 94% but leaves the other flows between 0% and
+67%, and **`signature` appears to regress**. The mechanism is plausible: the
+variant enumerates specific question forms (dead / used / references / tests /
+coverage) and drops the general "impact map … before editing to find callers and
+tests" framing that was catching signature-shaped questions. Enumerating helps
+the listed forms and can crowd out the unlisted ones.
+
+Sample sizes differ (5 vs 15), so `signature` warrants confirmation at
+`runs: 3` before acting on it.
+
+**Consequence for the next description: ADD the real-register forms while
+KEEPING the general framing, rather than replacing it.** A description that only
+enumerates is a description that only fires on what it enumerated.
 
 The should-not-fire cases were unchanged, so broadening the description did not
 degrade text-search questions.
