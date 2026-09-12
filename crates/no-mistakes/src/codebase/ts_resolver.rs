@@ -31,6 +31,9 @@ mod catalog_apply_own_errors;
 mod catalog_coverage_tests;
 #[cfg(test)]
 mod catalog_reference_tests;
+#[cfg(test)]
+#[path = "ts_resolver/tests/import_classification.rs"]
+mod import_classification_test_support;
 
 #[cfg(test)]
 mod tests;
