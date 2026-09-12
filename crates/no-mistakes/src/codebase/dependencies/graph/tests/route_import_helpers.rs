@@ -227,4 +227,36 @@ fn route_import_resolution_follows_symlink_files_and_broken_links() {
         remapped.as_deref() == Some(link_helper.as_path()) || remapped.is_none(),
         "{remapped:?}"
     );
+
+    let file_link = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/fixed-root-fast-path/root/src/external.ts"),
+    );
+    let real_external = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/fixed-root-fast-path/outside/external.ts"),
+    );
+    let _ = route_import_resolution_source(&file_link, &empty);
+    let broken = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/finite-set-consistency/path-regex-broken-symlink/delta"),
+    );
+    let _ = route_import_resolution_source(&broken, &empty);
+
+    let file_link_files = GraphFiles::from_parts(
+        vec![file_link.clone()],
+        vec![file_link.clone()],
+        [file_link.clone()],
+        vec![],
+    );
+    let mut file_link_names = std::collections::BTreeMap::<std::ffi::OsString, Vec<PathBuf>>::new();
+    file_link_names.insert(
+        std::ffi::OsString::from("external.ts"),
+        vec![file_link.clone()],
+    );
+    let remapped_file = route_import_visible_target(real_external, &file_link_files, &file_link_names);
+    assert!(
+        remapped_file.as_deref() == Some(file_link.as_path()) || remapped_file.is_none(),
+        "{remapped_file:?}"
+    );
 }
