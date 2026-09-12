@@ -258,5 +258,7 @@ fn renders_formats_and_runs() {
 fn call_site_text_writers_surface_io_errors() {
     let used = compute(&args(fixture_root("queries"), "util.ts", "used")).unwrap();
     let dead = compute(&args(fixture_root("queries"), "util.ts", "dead")).unwrap();
-    crate::codebase::queries::render::assert_report_writers_surface_io_errors(&[&used, &dead]);
+    crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[
+        &used, &dead,
+    ]);
 }

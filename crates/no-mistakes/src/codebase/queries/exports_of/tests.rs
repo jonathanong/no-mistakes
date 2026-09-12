@@ -397,7 +397,7 @@ fn renders_formats_and_runs() {
 fn export_text_writers_surface_io_errors() {
     let with_importers = compute(&args("util.ts", false)).unwrap();
     let without_importers = compute(&args("util.ts", true)).unwrap();
-    crate::codebase::queries::render::assert_report_writers_surface_io_errors(&[
+    crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[
         &with_importers,
         &without_importers,
     ]);

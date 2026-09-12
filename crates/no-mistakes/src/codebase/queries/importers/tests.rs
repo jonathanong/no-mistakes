@@ -258,7 +258,7 @@ fn renders_formats_and_runs() {
 fn importer_text_writers_surface_io_errors() {
     let with_tests = compute(&args("util.ts", true)).unwrap();
     let without_tests = compute(&args("util.ts", false)).unwrap();
-    crate::codebase::queries::render::assert_report_writers_surface_io_errors(&[
+    crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[
         &with_tests,
         &without_tests,
     ]);

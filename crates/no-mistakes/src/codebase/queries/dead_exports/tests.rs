@@ -192,5 +192,7 @@ fn renders_formats_runs_and_exit_codes() {
 fn dead_export_text_writers_surface_io_errors() {
     let dead = compute(&args("util.ts", &[])).unwrap();
     let alive = compute(&args("util.ts", &["used"])).unwrap();
-    crate::codebase::queries::render::assert_report_writers_surface_io_errors(&[&dead, &alive]);
+    crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[
+        &dead, &alive,
+    ]);
 }
