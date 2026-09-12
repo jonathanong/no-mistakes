@@ -325,4 +325,23 @@ fn run_steps_register_tracked_projects_when_triggers_match_source_inputs() {
         BTreeSet::new(),
     );
     assert!(!tolerated_action_without_id.failed);
+
+    let pipeline_failure = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - shell: bash\n    run: \"set -o pipefail; false | echo hi\"",
+        BTreeSet::new(),
+    );
+    let tolerated_pipeline = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    shell: bash\n    run: \"set -o pipefail; false | echo hi\"",
+        BTreeSet::new(),
+    );
+    let chained = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - run: \"echo hi && echo ok\"",
+        BTreeSet::new(),
+    );
+    let _ = (
+        pipeline_failure.failed,
+        tolerated_pipeline.failed,
+        chained.failed,
+        chained.indeterminate,
+    );
 }

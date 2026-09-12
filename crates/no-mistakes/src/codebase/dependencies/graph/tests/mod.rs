@@ -74,6 +74,8 @@ include!("legacy_symbol_channel.rs");
 include!("session_resolver_cache.rs");
 include!("route_import.rs");
 include!("route_import_prepared.rs");
+include!("route_import_helpers.rs");
+include!("lazy_import_neighbors_coverage.rs");
 include!("graph_files.rs");
 include!("extra_cases.rs");
 include!("lazy_import_session.rs");

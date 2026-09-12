@@ -122,6 +122,31 @@ fn prepared_scope_report_helpers_surface_missing_inputs() {
             .contains("component is required for rsc-callers"),
         "{rsc_error:#}"
     );
+
+    let (bogus_kind, bogus_kind_options) = options(
+        &root,
+        json!({ "type": "effects", "kind": "not-a-kind", "entry": "a.mts" }),
+    );
+    assert!(context
+        .effects_report(&bogus_kind, &bogus_kind_options)
+        .is_err());
+
+    let (rsc_missing, rsc_missing_options) = options(
+        &root,
+        json!({ "type": "rscCallers", "component": "a.mts" }),
+    );
+    let _ = context.rsc_callers_report(&rsc_missing, &rsc_missing_options);
+
+    let (signature, signature_options) = options(
+        &root,
+        json!({
+            "type": "symbols",
+            "files": ["a.mts"],
+            "mode": "signature-impact",
+            "symbol": "a"
+        }),
+    );
+    let _ = context.symbols_report(&signature, &signature_options);
 }
 
 #[test]

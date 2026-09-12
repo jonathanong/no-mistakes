@@ -29,6 +29,15 @@ fn caller_helper_predicates_cover_test_files_exports_and_identities() {
     assert!(is_test_like_file(Path::new("src/foo.test.ts")));
     assert!(is_test_like_file(Path::new("src/bar.spec.mts")));
     assert!(!is_test_like_file(Path::new("src/foo.ts")));
+    assert!(!is_test_like_file(Path::new("")));
+    assert!(!is_test_like_file(Path::new("..")));
+    #[cfg(unix)]
+    {
+        use std::os::unix::ffi::OsStrExt;
+        assert!(!is_test_like_file(Path::new(std::ffi::OsStr::from_bytes(
+            b"foo.test.\xff.ts"
+        ))));
+    }
 
     let symbols = FileSymbols {
         exports: vec![Export {
@@ -63,6 +72,12 @@ fn caller_helper_predicates_cover_test_files_exports_and_identities() {
         &path,
         &target_symbols,
         "impl"
+    ));
+    assert!(!caller_is_target_export(
+        &symbols,
+        &path,
+        &target_symbols,
+        "missing"
     ));
 
     let locals = BTreeSet::from(["parseDate".to_string()]);
@@ -104,5 +119,17 @@ fn caller_helper_predicates_cover_test_files_exports_and_identities() {
         &call("other", CallTargetIdentity::ModuleExport),
         &locals,
         &facts,
+    ));
+
+    let local_only = BTreeSet::from(["helper".to_string()]);
+    assert!(legacy_call_matches_local_target(
+        &call("helper", CallTargetIdentity::RepositoryFunction),
+        &local_only,
+        &TsFileFacts::default(),
+    ));
+    assert!(legacy_call_matches_local_target(
+        &call("helper.run", CallTargetIdentity::RepositoryFunction),
+        &local_only,
+        &TsFileFacts::default(),
     ));
 }

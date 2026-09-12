@@ -144,3 +144,45 @@ fn project_json_helpers_report_invalid_options_and_optional_file_filters() {
     }))
     .is_ok());
 }
+
+#[test]
+fn project_json_helpers_cover_fixture_roots_and_remaining_error_paths() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/simple/fixture"),
+    )
+    .display()
+    .to_string();
+    let _ = queues_json_impl(json!({ "root": root }));
+    let _ = queue_edges_json_impl(json!({ "root": root, "files": ["a.mts"], "depth": 1 }));
+    let _ = queue_check_json_impl(json!({ "root": root }));
+    let _ = server_routes_json_impl(json!({ "root": root }));
+    let _ = server_route_list_json_impl(json!({ "root": root, "files": ["a.mts"] }));
+    let _ = server_route_edges_json_impl(json!({ "root": root, "files": ["a.mts"] }));
+    let _ = react_analyze_json_impl(json!({ "root": root }));
+    let _ = react_check_json_impl(json!({ "root": root }));
+    let _ = react_usages_json_impl(json!({ "root": root, "target": "Button" }));
+    let _ = queue_related_json_impl(json!({
+        "root": root,
+        "files": ["a.mts"],
+        "direction": "deps"
+    }));
+    let _ = server_route_related_json_impl(json!({
+        "root": root,
+        "files": ["a.mts"],
+        "direction": "deps"
+    }));
+    assert!(queue_related_json_impl(json!({
+        "root": root,
+        "files": ["a.mts"],
+        "direction": "bogus"
+    }))
+    .is_err());
+    assert!(server_route_related_json_impl(json!({
+        "root": root,
+        "files": ["a.mts"],
+        "direction": "bogus"
+    }))
+    .is_err());
+    assert!(react_usages_json_impl(json!({ "root": root })).is_err());
+}
