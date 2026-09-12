@@ -19,7 +19,9 @@ use impact_collect_caller_helpers::{
     caller_is_target_export, is_test_like_file, legacy_call_matches_local_target,
     matches_local_callee,
 };
-include!("impact_collect_file_usage.rs");
+#[path = "impact_collect_file_usage.rs"]
+mod impact_collect_file_usage;
+use impact_collect_file_usage::*;
 include!("impact_collect_local_names.rs");
 include!("impact_output.rs");
 

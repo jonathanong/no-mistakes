@@ -70,7 +70,10 @@ fn predeclare_walks_ambient_default_class_and_non_function_statements() {
          let {b} = obj;\n\
          class Named {}\n\
          const fn = () => {};\n\
-         const obj = { method() {} };\n",
+         const obj = { method() {} };\n\
+         function overload(x: string): void;\n\
+         function overload(x: number): void;\n\
+         function overload(x: string | number) {}\n",
         SourceType::ts(),
     )
     .parse();

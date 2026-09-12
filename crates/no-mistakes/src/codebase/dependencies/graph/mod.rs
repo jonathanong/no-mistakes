@@ -1,5 +1,5 @@
 use super::extract::{is_indexable, ExtractedImport, FunctionCall, ImportKind};
-use crate::codebase::ts_resolver::{ImportResolution, ImportResolver, TsConfig};
+use crate::codebase::ts_resolver::{ImportResolution, TsConfig};
 use crate::codebase::ts_source::facts::{
     collect_ts_facts, collect_ts_facts_with_session_and_context, TsFactContext, TsFactMap,
     TsFactPlan, TsFileFacts,
@@ -66,7 +66,8 @@ include!("edge_import_reachability_scopes.rs");
 include!("edge_import_reachability.rs");
 include!("edge_imports.rs");
 include!("edge_calls.rs");
-include!("edge_route_imports.rs");
+mod edge_route_imports;
+pub(crate) use edge_route_imports::*;
 include!("edge_symbols_types.rs");
 include!("edge_symbols.rs");
 include!("edge_symbols_file_walk.rs");

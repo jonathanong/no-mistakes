@@ -1,3 +1,4 @@
+use crate::codebase::ts_resolver::ImportResolver;
 use crate::codebase::ts_source::facts::collect_ts_facts_with_context;
 
 fn package_name_from_spec(spec: &str) -> &str {
