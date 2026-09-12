@@ -45,9 +45,11 @@ fn deadline_after_buffering_does_not_publish_a_report() {
 pub(crate) fn assert_report_writers_surface_io_errors<R: Report>(reports: &[&R]) {
     struct FailAfter {
         remaining_writes: usize,
+        attempted: bool,
     }
     impl Write for FailAfter {
         fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            self.attempted = true;
             if self.remaining_writes == 0 {
                 return Err(io::Error::other("synthetic write failure"));
             }
@@ -61,7 +63,18 @@ pub(crate) fn assert_report_writers_surface_io_errors<R: Report>(reports: &[&R])
     fn exhaust(mut write: impl FnMut(&mut FailAfter) -> io::Result<()>) {
         let mut completed = false;
         for remaining_writes in 0..64 {
-            if write(&mut FailAfter { remaining_writes }).is_ok() {
+            let mut writer = FailAfter {
+                remaining_writes,
+                attempted: false,
+            };
+            let result = write(&mut writer);
+            if remaining_writes == 0 && writer.attempted {
+                assert!(
+                    result.is_err(),
+                    "zero-budget writers must fail after a write"
+                );
+            }
+            if result.is_ok() {
                 completed = true;
                 break;
             }

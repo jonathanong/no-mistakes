@@ -4,10 +4,12 @@ use std::io::{self, Write};
 
 struct FailAfter {
     remaining_writes: usize,
+    attempted: bool,
 }
 
 impl Write for FailAfter {
     fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+        self.attempted = true;
         if self.remaining_writes == 0 {
             return Err(io::Error::other("synthetic write failure"));
         }
@@ -23,7 +25,15 @@ impl Write for FailAfter {
 fn exhaust(report: &SignatureImpactReport, format: Format) {
     let mut completed = false;
     for remaining_writes in 0..4096 {
-        if write_report(report, format, &mut FailAfter { remaining_writes }).is_ok() {
+        let mut writer = FailAfter {
+            remaining_writes,
+            attempted: false,
+        };
+        let result = write_report(report, format, &mut writer);
+        if remaining_writes == 0 && writer.attempted {
+            assert!(result.is_err(), "{format:?} zero-budget write must fail");
+        }
+        if result.is_ok() {
             completed = true;
             break;
         }

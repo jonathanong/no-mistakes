@@ -595,15 +595,18 @@ describe("preserve-null, react-node, and helper remaining arms", () => {
         property: { type: "Identifier", name: "value" },
       },
     });
-    messages(
-      `interface Options { value?: string | null }
+    assert.deepEqual(
+      messages(
+        `interface Options { value?: string | null }
        export function copy(options: Options) {
          copied = options.value;
          return copied;
        }`,
-      "ts-preserve-null-option-defaults",
-      undefined,
-      "a.ts",
+        "ts-preserve-null-option-defaults",
+        undefined,
+        "a.ts",
+      ),
+      [],
     );
     visitors["Program:exit"]();
     messages(

@@ -1,5 +1,6 @@
 use super::*;
 use no_mistakes::data_pw_query::DataPwHit;
+use std::io::{self, Write};
 
 fn report() -> DataPwReport {
     DataPwReport {
@@ -60,4 +61,59 @@ fn buffered_structured_and_paths_outputs_preserve_formats() {
     assert!(yaml.contains("value: search-bar"));
     assert!(yaml.ends_with("\n\n"));
     assert_eq!(paths, "app/search.tsx\n");
+}
+
+#[test]
+fn data_pw_text_writers_surface_io_errors() {
+    struct FailAfter {
+        remaining_writes: usize,
+    }
+    impl Write for FailAfter {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            if self.remaining_writes == 0 {
+                return Err(io::Error::other("synthetic write failure"));
+            }
+            self.remaining_writes -= 1;
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+    fn exhaust(mut write: impl FnMut(&mut FailAfter) -> io::Result<()>) {
+        let mut completed = false;
+        for remaining_writes in 0..64 {
+            let mut writer = FailAfter { remaining_writes };
+            if write(&mut writer).is_ok() {
+                assert!(remaining_writes > 0);
+                completed = true;
+                break;
+            }
+        }
+        assert!(completed, "writer should succeed after enough writes");
+    }
+    let populated = DataPwReport {
+        value: "search-bar".to_string(),
+        attributes: vec!["data-pw".to_string()],
+        source: Some(vec![DataPwHit {
+            file: "app/search.tsx".to_string(),
+            line: 7,
+            attribute: "data-pw".to_string(),
+        }]),
+        test: Some(vec![DataPwHit {
+            file: "e2e/search.spec.ts".to_string(),
+            line: 12,
+            attribute: "data-pw".to_string(),
+        }]),
+    };
+    let empty = DataPwReport {
+        value: "missing".to_string(),
+        attributes: vec!["data-pw".to_string()],
+        source: None,
+        test: None,
+    };
+    for report in [&populated, &empty] {
+        exhaust(|writer| write_human(report, writer));
+        exhaust(|writer| write_md(report, writer));
+    }
 }

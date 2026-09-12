@@ -27,6 +27,7 @@ fn exhaust_write(mut write: impl FnMut(&mut FailAfter) -> Result<()>) {
     let mut completed = false;
     for remaining_writes in 0..4096 {
         if write(&mut FailAfter { remaining_writes }).is_ok() {
+            assert!(remaining_writes > 0);
             completed = true;
             break;
         }
