@@ -7,19 +7,24 @@ use super::options::{
 };
 use crate::cli::root_scoped_edge_depth;
 
-pub(crate) fn queues_json_impl(options: serde_json::Value) -> napi::Result<String> {
+fn project_setup(
+    options: serde_json::Value,
+) -> napi::Result<(ProjectOptions, PathBuf, Option<PathBuf>)> {
     let options = parse_options_value::<ProjectOptions>(options)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
     let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
+    Ok((options, root, tsconfig))
+}
+
+pub(crate) fn queues_json_impl(options: serde_json::Value) -> napi::Result<String> {
+    let (options, root, tsconfig) = project_setup(options)?;
     let report = crate::queue::analyze_project(&root, tsconfig.as_deref(), &options.filters)
         .map_err(to_napi_error)?;
     Ok(crate::cli::json_string(&report))
 }
 
 pub(crate) fn queue_edges_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
+    let (options, root, tsconfig) = project_setup(options)?;
     let report =
         crate::queue::analyze_project_indexed(&root, tsconfig.as_deref(), &options.filters)
             .map_err(to_napi_error)?;
@@ -29,14 +34,12 @@ pub(crate) fn queue_edges_json_impl(options: serde_json::Value) -> napi::Result<
 }
 
 pub(crate) fn queue_related_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
+    let (options, root, tsconfig) = project_setup(options)?;
     if options.files.is_empty() {
         return Err(napi::Error::from_reason(
             "files must contain at least one file".to_string(),
         ));
     }
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
     let report =
         crate::queue::analyze_project_indexed(&root, tsconfig.as_deref(), &options.filters)
             .map_err(to_napi_error)?;
@@ -46,18 +49,14 @@ pub(crate) fn queue_related_json_impl(options: serde_json::Value) -> napi::Resul
 }
 
 pub(crate) fn queue_check_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
+    let (options, root, tsconfig) = project_setup(options)?;
     let report = crate::queue::analyze_project(&root, tsconfig.as_deref(), &options.filters)
         .map_err(to_napi_error)?;
     Ok(crate::cli::json_string(&report.check))
 }
 
 pub(crate) fn server_routes_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
+    let (options, root, tsconfig) = project_setup(options)?;
     let report =
         crate::server_routes::analyze_project(&root, tsconfig.as_deref(), &options.filters)
             .map_err(to_napi_error)?;
@@ -65,9 +64,7 @@ pub(crate) fn server_routes_json_impl(options: serde_json::Value) -> napi::Resul
 }
 
 pub(crate) fn server_route_list_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
+    let (options, root, tsconfig) = project_setup(options)?;
     let report =
         crate::server_routes::analyze_project(&root, tsconfig.as_deref(), &options.filters)
             .map_err(to_napi_error)?;
@@ -89,9 +86,7 @@ pub(crate) fn server_route_list_json_impl(options: serde_json::Value) -> napi::R
 }
 
 pub(crate) fn server_route_edges_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
+    let (options, root, tsconfig) = project_setup(options)?;
     let report =
         crate::server_routes::analyze_project_indexed(&root, tsconfig.as_deref(), &options.filters)
             .map_err(to_napi_error)?;
@@ -102,15 +97,13 @@ pub(crate) fn server_route_edges_json_impl(options: serde_json::Value) -> napi::
 }
 
 pub(crate) fn server_route_related_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
+    let (options, root, tsconfig) = project_setup(options)?;
     let roots = project_roots(&options);
     if roots.is_empty() {
         return Err(napi::Error::from_reason(
             "files or roots must contain at least one entry".to_string(),
         ));
     }
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
     let report =
         crate::server_routes::analyze_project_indexed(&root, tsconfig.as_deref(), &options.filters)
             .map_err(to_napi_error)?;
@@ -124,8 +117,7 @@ include!("project_flow_contracts.rs");
 include!("project_query.rs");
 
 pub(crate) fn react_analyze_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
+    let (options, root, _) = project_setup(options)?;
     let config = options.config.as_deref().map(PathBuf::from);
     let report =
         crate::react_traits::run_analyze(&root, config.as_deref(), &options.targets, options.depth)
@@ -134,8 +126,7 @@ pub(crate) fn react_analyze_json_impl(options: serde_json::Value) -> napi::Resul
 }
 
 pub(crate) fn react_usages_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
+    let (options, root, _) = project_setup(options)?;
     let config = options.config.as_deref().map(PathBuf::from);
     let target = options.target.ok_or_else(|| {
         napi::Error::from_reason("target is required for react usages".to_string())
@@ -154,8 +145,7 @@ pub(crate) fn react_usages_json_impl(options: serde_json::Value) -> napi::Result
 }
 
 pub(crate) fn react_check_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
+    let (options, root, _) = project_setup(options)?;
     let config = options.config.as_deref().map(PathBuf::from);
     let report = crate::react_traits::run_check(
         &root,

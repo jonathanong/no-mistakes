@@ -339,20 +339,25 @@ fn run_steps_register_tracked_projects_when_triggers_match_source_inputs() {
         BTreeSet::new(),
     );
     let successful = scan(
-        "runs-on: ubuntu-latest\nsteps:\n  - working-directory: .\n    run: true",
+        "runs-on: ubuntu-latest\nsteps:\n  - working-directory: .\n    run: \"true\"",
         BTreeSet::new(),
     );
     let exit_ok = scan(
-        "runs-on: ubuntu-latest\nsteps:\n  - working-directory: .\n    run: exit 0",
+        "runs-on: ubuntu-latest\nsteps:\n  - working-directory: .\n    run: \"exit 0\"",
         BTreeSet::new(),
     );
     let tolerated_missing_dir = scan(
-        "runs-on: ubuntu-latest\nsteps:\n  - if: true\n    continue-on-error: true\n    working-directory: missing-dir\n    run: echo hi",
+        "runs-on: ubuntu-latest\nsteps:\n  - if: true\n    continue-on-error: true\n    working-directory: missing-dir\n    run: \"echo hi\"",
+        BTreeSet::new(),
+    );
+    let failing_missing_dir = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - if: true\n    working-directory: missing-dir\n    run: \"echo hi\"",
         BTreeSet::new(),
     );
     assert!(!successful.failed && !successful.indeterminate);
     assert!(!exit_ok.failed && !exit_ok.indeterminate);
     assert!(!tolerated_missing_dir.failed && !tolerated_missing_dir.indeterminate);
+    assert!(failing_missing_dir.failed || failing_missing_dir.indeterminate);
     let _ = (
         pipeline_failure.failed,
         tolerated_pipeline.failed,

@@ -1,4 +1,5 @@
 impl EffectiveConfig {
+    #[inline(never)]
     fn apply_own(
         &mut self,
         value: &serde_json::Value,
