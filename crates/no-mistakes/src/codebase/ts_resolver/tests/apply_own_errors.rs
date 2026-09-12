@@ -46,4 +46,24 @@ fn apply_own_rejects_invalid_compiler_and_list_shapes() {
         })
         .expect_err("unresolved project references should fail");
     assert!(err.contains("missing project reference"));
+
+    config
+        .apply_own(
+            &json!({
+                "compilerOptions": {
+                    "paths": { "@lib/*": ["src/*"] }
+                },
+                "include": ["src/**"],
+                "exclude": ["dist"],
+                "references": [{ "path": "pkg" }, "other"]
+            }),
+            &path,
+            &root,
+            |value| Ok(root.join(value)),
+        )
+        .expect("valid include, exclude, paths, and references should apply");
+    assert!(config.includes.is_some());
+    assert!(config.excludes.is_some());
+    assert!(config.paths.is_some());
+    assert_eq!(config.references.len(), 2);
 }

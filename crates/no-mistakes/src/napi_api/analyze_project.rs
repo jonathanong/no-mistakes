@@ -55,6 +55,9 @@ mod tests_dispatch;
 #[cfg(test)]
 #[path = "analyze_project/tracked_banned_paths_tests.rs"]
 mod tracked_banned_paths_tests;
+#[cfg(test)]
+#[path = "analyze_project/tests/unknown_option_fields.rs"]
+mod unknown_option_fields_tests;
 
 #[cfg(any(test, feature = "test-instrumentation"))]
 pub(crate) fn analyze_project_json_impl(options: serde_json::Value) -> napi::Result<String> {
