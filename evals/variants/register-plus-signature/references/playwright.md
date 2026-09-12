@@ -1,0 +1,193 @@
+# `playwright` command reference
+
+## When to use
+
+Use `playwright check` before finishing any Next.js App Router or Playwright
+work — it validates that configured routes and selectors are covered by tests.
+It is run by `no-mistakes check` only when Playwright is configured in
+`.no-mistakes.yml`; call it directly when you need the gate regardless of global
+config.
+
+Use `playwright related` to find Playwright tests that cover a changed page,
+route, or selector-bearing component.
+
+Use `playwright tests` to see what a specific test proves (routes hit, selectors
+asserted, fetches made) before editing it or its coverage expectations.
+
+## Shared options
+
+All `playwright` subcommands accept:
+
+- `--playwright-config <FILE>` — path to a Playwright config (repeatable for
+  multiple configs).
+- `--project <NAME>` — filter by top-level no-mistakes Playwright config name
+  (not Playwright's inner `projects` array).
+- `--app <NAME>` — `.no-mistakes.yml` `projects:` key of the frontend app to
+  analyze (matches the Node `app` option). Only needed with multiple `type:
+  nextjs` projects when `tests.playwright.apps.<project>.project` is unset.
+- `--root <PATH>` — project root.
+- `--config <FILE>` — path to `.no-mistakes.yml`.
+- `--json` — emit JSON output.
+- `--assert-conditional-tests` — require coverage from active (non-conditional)
+  tests only; conditional tests (`test.skip`/`test.fixme`) do not satisfy
+  coverage when this flag is set.
+- `--allow-skipped-tests` — let skipped tests count as coverage (default:
+  skipped tests are ignored).
+- `--assert-unique-test-ids` — fail on duplicate `data-testid` / `data-pw`
+  selectors.
+- `--assert-unique-html-ids` — fail on duplicate HTML `id` attributes.
+
+## `playwright check`
+
+Fail on uncovered routes or uncovered configured selectors. Duplicate selector
+failures require `--assert-unique-test-ids` or `--assert-unique-html-ids` to be
+set (they are not checked by default).
+
+```sh
+no-mistakes playwright check --json
+no-mistakes playwright check --assert-unique-test-ids --json
+```
+
+Node API: `playwrightCheck(options)`.
+
+If a shared helper carries a test ID argument, declare it under
+`tests.playwright.selectors.wrappers` with its JavaScript `module`, imported
+`export`, and zero-based `testIdArgument`. Static ESM named, aliased, default,
+and namespace imports then count like `getByTestId(...)`. Unconfigured helper
+calls remain hints; dynamic values, shadowed bindings, CommonJS, and helper-body
+inference do not count.
+
+## `playwright related`
+
+Tests that cover a route or selector-bearing component.
+
+```sh
+no-mistakes playwright related web/app/users/page.tsx --json
+no-mistakes playwright related src/components/Button.tsx --json
+```
+
+Node API: `playwrightRelated(options)`.
+
+## `playwright tests`
+
+Route, selector, and fetch assertions grouped by test.
+
+```sh
+no-mistakes playwright tests playwright/tests/users.spec.ts --json
+```
+
+Node API: `playwrightTests(options)`.
+
+## `playwright edges`
+
+Raw test-to-route and test-to-selector edges (useful for debugging missing
+coverage or building external tooling). No positional file argument —
+use `playwright tests <test-file>` to inspect a single test's assertions.
+
+```sh
+no-mistakes playwright edges --json
+```
+
+A navigated path whose interpolation is unresolvable at analysis time — a
+template literal like `` `/user/${userId}` `` or a string concatenation like
+`'/user/' + id` — is treated as a wildcard matching one dynamic route segment, so
+it still produces a route edge to the `[param]` page (but never to a sibling
+literal route such as `/user/settings`).
+
+Node API: `playwrightEdges(options)`.
+
+## Selector configuration
+
+Playwright coverage is driven by `tests.playwright` in `.no-mistakes.yml`:
+
+```yaml
+tests:
+  playwright:
+    configs: playwright.config.mts
+    frontendRoot: web/app    # optional override; see "Frontend app resolution" below
+    testIdAttribute: data-pw # the attribute getByTestId(...) resolves to
+    selectors:
+      testIds:
+        - data-pw
+        - data-testid
+      htmlIds: false
+    selectorRoots:
+      - web
+    selectorExclude:
+      - '**/*.stories.tsx'
+```
+
+`frontendRoot` sets the root directory for App Router route discovery;
+`selectorRoots` sets the directories scanned for test ID selectors. Neither is
+required — see "Frontend app resolution" below for the defaults.
+
+`testIdAttribute` sets the attribute that `page.getByTestId(...)` resolves to.
+Set it when your Playwright config builds its options through a helper (e.g.
+`defineConfig(createPlaywrightConfig({ ... }))`), so `testIdAttribute` is not
+statically readable; otherwise coverage falls back to `selectors.testIds`. Without
+either, `getByTestId`-based assertions against a non-`data-testid` attribute are
+reported as uncovered.
+Consult https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/tests.md
+for the full schema.
+
+## Frontend app resolution
+
+`playwright-coverage` and `playwright-unique-test-ids` need to know which
+Next.js app a Playwright project exercises, to answer two questions:
+where its routes live (`frontendRoot`, defaulting to `<root>/src/app` then
+`<root>/app`, whichever exists) and where its testable selectors live
+(`selectorRoots`, defaulting to the whole app package — not just the route
+directory, so sibling directories like `src/components` stay covered).
+
+With exactly one `type: nextjs` project configured, both resolve
+automatically. With more than one, each Playwright project needs an explicit
+binding — an unbound rule with several candidate apps is a configuration
+error, not a guess. With zero `type: nextjs` projects and no discoverable
+`next.config.*` at all, no app can be resolved and both fall back to the
+pre-multi-app defaults instead (`frontendRoot` = `app`, `selectorRoots` =
+`[frontendRoot]`):
+
+```yaml
+projects:
+  control-web:
+    type: nextjs
+    root: services/web
+  agent-web:
+    type: nextjs
+    root: services/agent-web
+
+tests:
+  playwright:
+    configs: playwright.config.ts
+
+rules:
+  # Default: bind via the rule's own `projects:` list.
+  - rule: playwright-coverage
+    projects: [control-web]
+    tests:
+      playwright: [control]
+  - rule: playwright-coverage
+    projects: [agent-web]
+    tests:
+      playwright: [agent]
+```
+
+Or bind per Playwright project directly, which also works without any
+`rules[].projects` list:
+
+```yaml
+tests:
+  playwright:
+    apps:
+      control:
+        project: control-web
+      agent:
+        project: agent-web
+```
+
+`tests.playwright.apps.<name>` also accepts `frontendRoot`, `selectorRoots`,
+`rewrites`, and `ignoreRoutes` overrides scoped to that one Playwright
+project, taking precedence over both the resolved app's defaults and the
+top-level `tests.playwright.frontendRoot`/`selectorRoots`. An entry that
+sets `frontendRoot`, `selectorRoots`, and `rewrites` without `project` is
+fully explicit and does not need a frontend app name.
