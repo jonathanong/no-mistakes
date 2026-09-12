@@ -40,3 +40,71 @@ fn extract_walks_default_wrappers_assignment_aliases_and_syntax_edges() {
     );
     let _ = tsx_facts("export function Icon() { return <this.div />; }");
 }
+
+#[test]
+fn extract_walks_class_heritage_dynamic_callees_and_resource_scopes() {
+    let facts = facts(
+        r#"
+        function helper() {}
+        function deco(_target: unknown) {}
+        require.resolve("./mod");
+        require("./cjs");
+        (0, helper)();
+        obj[dyn].method();
+        new (obj[dyn].Cls)();
+        new (function Anon() {})();
+        obj[dyn].tag`x`;
+        (0)`unknown`;
+        foo().bar();
+
+        class Base<T> {}
+        class Box<T> extends Base<T> {
+          value: number = helper();
+          static field = () => 1;
+          static get g() { return 1; }
+          static set s(_v: number) {}
+          [helper]() {}
+          method() {}
+        }
+        class A extends B {
+          static m() { return 1; }
+        }
+        class B extends A {}
+        A.m();
+        Box.constructor();
+
+        export default function () {
+          return helper();
+        }
+        export class Resource {
+          method() {}
+          field = () => 1;
+          [computed]() {}
+        }
+        export const resource = {
+          nested: {
+            fn() {},
+            [computed]: () => 1,
+          },
+        };
+
+        @(factory())
+        class FactoryDecorated {}
+        "#,
+    );
+    assert!(
+        facts
+            .function_calls
+            .iter()
+            .any(|call| call.callee == "A.m" || call.callee.ends_with(".m"))
+    );
+    assert!(
+        facts
+            .function_calls
+            .iter()
+            .any(|call| call.callee.contains("constructor"))
+    );
+    assert!(!facts.unknown_calls.is_empty());
+    let jsx = tsx_facts("export function Icon() { return <ns:tag />; }");
+    assert!(jsx.callable_scopes.iter().any(|scope| scope == "Icon"));
+}

@@ -11,6 +11,7 @@ mod hoist_bindings;
 mod import_policy;
 mod imported_class_statics;
 mod namespace_alias;
+mod namespace_external;
 mod nested_aggregate_callables;
 mod object_setter_reachability;
 mod object_spread_reachability;

@@ -481,3 +481,4 @@ fn yml_via_included_when_present() {
 
 include!("tests/edge_kinds.rs");
 mod outside_root;
+mod write_errors;
