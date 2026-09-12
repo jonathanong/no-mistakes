@@ -153,3 +153,32 @@ fn reports_are_deterministic_across_identical_revision_queries() {
     assert_eq!(normalize_entry("ci.yml"), ".github/workflows/ci.yml");
     assert_eq!(normalize_entry("./ci.yml"), ".github/workflows/ci.yml");
 }
+
+#[test]
+fn topology_impact_report_rejects_missing_repo_nested_root_and_unknown_revisions() {
+    let missing = tempfile::tempdir().unwrap();
+    let missing_err = topology_impact_report(missing.path(), "HEAD", "HEAD", "ci.yml")
+        .expect_err("non-git roots must fail");
+    assert!(
+        format!("{missing_err:#}").contains("open repository"),
+        "{missing_err:#}"
+    );
+
+    let crate_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    let nested_err = topology_impact_report(&crate_dir.join("src"), "HEAD", "HEAD", "ci.yml")
+        .expect_err("nested roots must fail");
+    let nested = format!("{nested_err:#}");
+    assert!(
+        nested.contains("worktree root") || nested.contains("open repository"),
+        "{nested}"
+    );
+
+    let workspace = crate::codebase::ts_resolver::normalize_path(&crate_dir.join("../.."));
+    let revision_err =
+        topology_impact_report(&workspace, "no-mistakes-missing-base", "HEAD", "ci.yml")
+            .expect_err("unknown base revision must fail");
+    assert!(
+        format!("{revision_err:#}").contains("resolve base"),
+        "{revision_err:#}"
+    );
+}

@@ -19,4 +19,12 @@ fn key_line_covers_comments_headers_quotes_and_missing_segments() {
     );
     assert_eq!(key_line("renamed = 1\n", "tools.missing.rest"), 1);
     assert_eq!(key_line("name-value = 1\n", "name"), 1);
+    assert_eq!(key_line("note # a // b\nname = 2\n", "name"), 2);
+    assert_eq!(key_line("\"name\" leftover = 1\nname = 2\n", "name"), 2);
+    assert_eq!(key_line("xname = 1\nname = 2\n", "name"), 2);
+    assert_eq!(
+        key_line("[workspace.package]\nversion = 1\n", "workspace.package"),
+        1
+    );
+    assert_eq!(key_line("name = 1 # trailing // also\n", "name"), 1);
 }
