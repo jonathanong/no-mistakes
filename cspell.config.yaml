@@ -35,6 +35,7 @@ words:
   - cmark
   - emnapi
   - eprintln
+  - evals
   - errexit
   - extglob
   - fanout
