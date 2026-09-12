@@ -12,7 +12,7 @@ impl PreparedScope {
             &self.queue_indexed_reports,
             &key,
             traversal,
-            || {
+            &|| {
                 crate::queue::analyze_project_with_prepared_facts_and_catalog_and_session(
                     root,
                     tsconfig_catalog,
@@ -21,7 +21,7 @@ impl PreparedScope {
                     &session,
                 )
             },
-            || {
+            &|| {
                 crate::queue::analyze_project_with_prepared_facts_indexed_and_catalog_and_session(
                     root,
                     tsconfig_catalog,
@@ -62,8 +62,8 @@ impl PreparedScope {
             &self.server_indexed_reports,
             &key,
             traversal,
-            || crate::server_routes::analyze_project_with_prepared(prepared, &filters),
-            || crate::server_routes::analyze_project_with_prepared_indexed(prepared, &filters),
+            &|| crate::server_routes::analyze_project_with_prepared(prepared, &filters),
+            &|| crate::server_routes::analyze_project_with_prepared_indexed(prepared, &filters),
         );
         let report = report?;
         match report {
@@ -105,7 +105,7 @@ impl PreparedScope {
             return Ok(crate::cli::json_value(&usages));
         }
         let key = canonical_filter_key(&options.targets)?;
-        let analysis = cached_once(&self.react_analyses, &key, || {
+        let analysis = cached_once(&self.react_analyses, &key, &|| {
             crate::react_traits::pipeline::run_with_facts::run_analyze_with_loaded_config_and_facts(
                 self.traversal.root(),
                 self.traversal.config(),
@@ -138,7 +138,7 @@ enum CachedAnalysis<Plain, Indexed> {
 fn cached_once<T: Clone>(
     cache: &ReportCache<T>,
     key: &str,
-    compute: impl FnOnce() -> Result<T>,
+    compute: &dyn Fn() -> Result<T>,
 ) -> Result<T> {
     let cell = {
         let mut cache = cache.lock().expect("report cache is poisoned");
@@ -159,8 +159,8 @@ fn cached_analysis<Plain, Indexed>(
     indexed: &ReportCache<Indexed>,
     key: &str,
     traversal: bool,
-    analyze_plain: impl FnOnce() -> Result<Plain>,
-    analyze_indexed: impl FnOnce() -> Result<Indexed>,
+    analyze_plain: &dyn Fn() -> Result<Plain>,
+    analyze_indexed: &dyn Fn() -> Result<Indexed>,
 ) -> Result<CachedAnalysis<Plain, Indexed>>
 where
     Plain: Clone,

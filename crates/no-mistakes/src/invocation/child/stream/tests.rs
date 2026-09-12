@@ -6,7 +6,7 @@ fn collect_lines(
     max_line_bytes: usize,
 ) -> std::io::Result<(Vec<String>, StreamOutcome)> {
     let lines = Mutex::new(Vec::new());
-    let outcome = stream_command_lines(command, max_line_bytes, |line| {
+    let outcome = stream_command_lines(command, max_line_bytes, &mut |line| {
         lines.lock().unwrap().push(line.to_string());
         Ok(())
     })?;
@@ -257,7 +257,7 @@ fn on_line_callback_errors_terminate_the_child() {
     let mut command = Command::new("sh");
     command.args(["-c", "printf 'a\\nb\\n'; exec sleep 120"]);
     let start = std::time::Instant::now();
-    let error = stream_command_lines(&mut command, 1024, |line| {
+    let error = stream_command_lines(&mut command, 1024, &mut |line| {
         Err(std::io::Error::other(format!("reject {line}")))
     })
     .unwrap_err();

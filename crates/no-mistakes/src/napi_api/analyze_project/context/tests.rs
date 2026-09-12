@@ -144,11 +144,11 @@ fn report_caches_call_each_analyzer_once_per_canonical_key() {
                 &indexed,
                 if traversal { &equivalent_key } else { &key },
                 traversal,
-                || {
+                &|| {
                     plain_calls.set(plain_calls.get() + 1);
                     Ok(format!("{domain}-plain"))
                 },
-                || {
+                &|| {
                     indexed_calls.set(indexed_calls.get() + 1);
                     Ok(format!("{domain}-indexed"))
                 },
