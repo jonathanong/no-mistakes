@@ -81,11 +81,24 @@ fn reference_outside_the_analysis_root_is_diagnosed() {
 fn catalog_builder_accepts_json_candidate_roots_and_missing_files() {
     let root = fixture("directory-extends");
     let config = root.join("tsconfig.json");
-    let builder = CatalogBuilder::new(&root, &[config.clone()], &[config.clone()], None, None);
+    let builder = CatalogBuilder::new(
+        &root,
+        std::slice::from_ref(&config),
+        std::slice::from_ref(&config),
+        None,
+        None,
+    );
     assert_eq!(builder.candidates(), vec![normalize_path(&config)]);
 
     let missing = root.join("missing-tsconfig.json");
-    let catalog = CatalogBuilder::new(&root, &[missing.clone()], &[missing], None, None).build();
+    let catalog = CatalogBuilder::new(
+        &root,
+        std::slice::from_ref(&missing),
+        std::slice::from_ref(&missing),
+        None,
+        None,
+    )
+    .build();
     assert!(
         catalog.diagnostics().iter().any(|diagnostic| {
             diagnostic.detail.contains("does not exist")
