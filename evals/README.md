@@ -560,6 +560,41 @@ forms while KEEPING the general framing, rather than replacing it" — **is not
 supported**. Replacing it is better. What `signature` needed was a clause about
 signatures, not the general framing back.
 
+### Held-out confirmation
+
+Run against the winner only, at `runs: 3`, `--ablation none`, and against the
+shipped description on the same six cases for a before/after.
+
+| held-out case | shipped | C2 | |
+| --- | --- | --- | --- |
+| `heldout-01-can-this-go` | 1/3 | 3/3 | spent |
+| `heldout-02-more-than-shared-tests` | 2/3 | 3/3 | spent |
+| `heldout-03-still-pointing-at` | 1/3 | 1/3 | spent |
+| **spent subtotal** | **4/9** | **7/9** | |
+| `heldout-04-swap-the-arg` | 1/3 | 3/3 | live |
+| `heldout-05-other-side-of-the-outbox` | 0/3 | **0/3** | live |
+| `heldout-06-two-copies` | 2/3 | 2/3 | live |
+| **live subtotal** | **3/9 (33%)** | **5/9 (56%)** | |
+
+**Read the live subtotal, not the aggregate.** Cases 01–03 are contaminated:
+`real-register` was tuned against them and C2 is `real-register` plus one
+clause, so their 4/9 → 7/9 measures very little. The number that means
+something is **5/9**.
+
+The shipped column reproduces this file's earlier 4/9 on the spent cases
+exactly, measured months apart in a different ablation mode — a useful
+reproducibility signal for the suite itself.
+
+Against C2's tuned 16/18 (89%), a live holdout of 5/9 (56%) is the honest
+generalization estimate, and the gap is large. It is a real improvement over
+the shipped description's 3/9, and it is nothing like 89%. **No "94%"-style
+claim should be made for any description on the strength of a tuned flow.**
+
+The per-case split says why, and it is the same story as everywhere else in
+this file: the signature-shaped held-out case goes 1/3 → 3/3, because C2 added
+a clause about signatures; the queue-shaped one stays at 0/3, because it did
+not add one about queues.
+
 ### The `openai.yaml` gate stays at 90%
 
 Codex consumes this skill through `skills/no-mistakes/agents/openai.yaml`, whose
