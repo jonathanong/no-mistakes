@@ -145,14 +145,14 @@ fn matching_files_cover_roots_excludes_inline_work_and_invalid_options() {
         ..Default::default()
     });
     work.clear();
-    add_inline_tests_work(&root, &tests, &[lib.clone()], &mut work).unwrap();
+    add_inline_tests_work(&root, &tests, std::slice::from_ref(&lib), &mut work).unwrap();
     assert!(work.get(&lib).is_some_and(|entry| entry.inline_tests));
 
     let mut max_lines = config_with_rule(RUST_MAX_LINES_PER_FILE);
     max_lines.rules[0].options = serde_yaml::from_str("{srcMax: 50}").unwrap();
     work.clear();
-    add_max_lines_work(&root, &max_lines, &[lib.clone()], &mut work).unwrap();
-    add_max_lines_work(&root, &max_lines, &[lib.clone()], &mut work).unwrap();
+    add_max_lines_work(&root, &max_lines, std::slice::from_ref(&lib), &mut work).unwrap();
+    add_max_lines_work(&root, &max_lines, std::slice::from_ref(&lib), &mut work).unwrap();
     assert_eq!(work.get(&lib).unwrap().max_limits, vec![50]);
 
     assert!(is_excluded(
