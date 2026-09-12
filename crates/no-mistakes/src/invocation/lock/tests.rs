@@ -1,5 +1,6 @@
 use super::{
-    acquire_lock, classify_try_lock, create_lock_directory, lock_file_path, TryLockOutcome,
+    acquire_lock, classify_try_lock, create_lock_directory, lock_file_path, lock_path,
+    TryLockOutcome,
 };
 use crate::invocation::{InvocationError, InvocationErrorKind};
 use std::fs::TryLockError;
@@ -74,4 +75,23 @@ fn acquire_lock_reports_when_the_path_is_a_directory() {
     let tmp = tempfile::tempdir().unwrap();
     let error = acquire_lock(tmp.path(), Some(Duration::from_millis(1)), false).unwrap_err();
     assert!(error.to_string().contains("opening invocation lock"));
+}
+
+#[test]
+fn lock_path_follows_the_cargo_test_binary_env() {
+    let path = lock_path().unwrap();
+    assert!(path.extension().is_some_and(|ext| ext == "lock"));
+}
+
+#[test]
+fn classify_try_lock_accepts_and_waits() {
+    let path = Path::new("wait.lock");
+    assert!(matches!(
+        classify_try_lock(Ok(()), path, false),
+        TryLockOutcome::Acquired
+    ));
+    assert!(matches!(
+        classify_try_lock(Err(TryLockError::WouldBlock), path, false),
+        TryLockOutcome::Wait
+    ));
 }

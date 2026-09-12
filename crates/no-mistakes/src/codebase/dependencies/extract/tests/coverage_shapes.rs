@@ -190,6 +190,9 @@ fn extract_walks_type_only_imports_exports_defaults_and_process_cwd() {
         Named.m();
         obj.method();
         obj["g"];
+        import {} from "./empty.mts";
+        tagged`plain`;
+        new (0);
         "#,
     );
     assert!(extracted
