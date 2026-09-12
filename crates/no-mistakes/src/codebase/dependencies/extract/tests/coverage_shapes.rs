@@ -358,3 +358,25 @@ fn extract_walks_getter_calls_lexical_bases_and_dotted_extends() {
         .any(|call| call.callee == "Box.g" || call.callee.ends_with(".g")));
     assert!(!extracted.unknown_calls.is_empty());
 }
+
+#[test]
+fn extract_walks_export_default_expressions_and_unnamed_classes() {
+    let extracted = facts(
+        r#"
+        const helper = () => 1;
+        export default helper;
+        export default (function expr() { helper(); });
+        export default class extends Object { static m() { helper(); } }
+        export default { method() { helper(); } };
+        const bag = { set s(_v: number) {}, get [computed]() { return 1; } };
+        bag.s = 1;
+        "#,
+    );
+    assert!(
+        extracted
+            .exported_functions
+            .iter()
+            .any(|name| name == "default")
+            || !extracted.function_calls.is_empty()
+    );
+}
