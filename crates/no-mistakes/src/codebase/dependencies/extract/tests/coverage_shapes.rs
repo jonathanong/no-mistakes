@@ -134,6 +134,10 @@ fn extract_walks_shadowed_require_spreads_accessors_and_callbacks() {
           function inner() {}
           inner();
         }
+        ({ name: renamed, nested: { inner = helper }, ...rest } = source);
+        [first = helper, , ...tail] = items;
+        obj.prop = helper;
+        obj[dyn] = helper;
         "#,
     );
     assert!(extracted
