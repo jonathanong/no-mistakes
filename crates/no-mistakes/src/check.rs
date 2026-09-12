@@ -45,7 +45,6 @@ pub(crate) struct CheckArgs {
     verbose_timings: bool,
 }
 
-#[inline(never)]
 pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     let _diagnostics = no_mistakes::diagnostics::LegacyDiagnosticsGuard::new(
         args.timings || args.verbose_timings,
@@ -77,7 +76,6 @@ pub(crate) fn run(args: CheckArgs) -> Result<ExitCode> {
     })
 }
 
-#[inline(never)]
 fn record_missing_check_timings(results: &check_runner::CheckResults) {
     let Some(observer) = no_mistakes::diagnostics::current() else {
         return;
@@ -98,7 +96,6 @@ fn record_missing_check_timings(results: &check_runner::CheckResults) {
     }
 }
 
-#[inline(never)]
 fn timing_metadata(label: &str) -> Option<(&'static str, no_mistakes::diagnostics::TimingKind)> {
     Some(match label {
         "discover" => ("discovery", no_mistakes::diagnostics::TimingKind::Serial),
@@ -131,7 +128,6 @@ fn timing_metadata(label: &str) -> Option<(&'static str, no_mistakes::diagnostic
     })
 }
 
-#[inline(never)]
 fn has_failures(results: &check_runner::CheckResults) -> bool {
     !results.react.is_empty()
         || !results.queues.is_empty()

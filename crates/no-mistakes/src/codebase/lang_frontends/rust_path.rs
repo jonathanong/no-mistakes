@@ -3,7 +3,6 @@ use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
-#[inline(never)]
 pub(super) fn cargo_path_deps(sources: &SourceStore, manifest: &Path) -> Vec<PathBuf> {
     let Some(source) = sources.read_path(manifest).ok() else {
         return Vec::new();
@@ -24,7 +23,6 @@ pub(super) fn cargo_path_deps(sources: &SourceStore, manifest: &Path) -> Vec<Pat
     deps
 }
 
-#[inline(never)]
 pub(super) fn path_attr_mods(source: &str, file: &Path) -> Vec<PathBuf> {
     let parent = file.parent().unwrap_or(file);
     let mut paths = Vec::new();
@@ -42,13 +40,11 @@ pub(super) fn path_attr_mods(source: &str, file: &Path) -> Vec<PathBuf> {
     paths
 }
 
-#[inline(never)]
 fn cargo_path_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r#"(?m)path\s*=\s*"([^"]+)""#).expect("cargo path"))
 }
 
-#[inline(never)]
 fn rust_path_attr_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {

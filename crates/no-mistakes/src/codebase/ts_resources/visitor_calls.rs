@@ -6,7 +6,6 @@ use super::{ResourceCall, ResourceCallKind, ResourceDiagnosticKind, ResourceVisi
 use oxc_ast::ast::{CallExpression, Expression};
 
 impl<'a> ResourceVisitor<'a> {
-    #[inline(never)]
     pub(super) fn record_call(&mut self, call: &CallExpression<'_>) {
         let Some((binding_name, kind)) = self.resolve_callee(&call.callee) else {
             return;
@@ -61,7 +60,6 @@ impl<'a> ResourceVisitor<'a> {
         });
     }
 
-    #[inline(never)]
     fn resolve_callee<'b>(
         &self,
         callee: &'b Expression<'b>,
@@ -106,7 +104,6 @@ impl<'a> ResourceVisitor<'a> {
         }
     }
 
-    #[inline(never)]
     fn nested_fs_promise_callee<'b>(
         &self,
         callee: &'b Expression<'b>,
@@ -114,7 +111,6 @@ impl<'a> ResourceVisitor<'a> {
         nested_fs_promise_callee(callee, &self.current_bindings())
     }
 
-    #[inline(never)]
     fn inline_require_callee<'b>(
         &self,
         callee: &'b Expression<'b>,

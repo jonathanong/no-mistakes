@@ -5,7 +5,6 @@ use std::path::Path;
 #[cfg(test)]
 mod tests;
 
-#[inline(never)]
 pub(super) fn parse_filters_value_with_sources(
     root: &Path,
     rel: &str,
@@ -60,7 +59,6 @@ pub(super) fn parse_filters_value_with_sources(
     }
 }
 
-#[inline(never)]
 pub(super) fn filter_predicates(value: &Value) -> Vec<Vec<String>> {
     match value {
         Value::Sequence(items) => {
@@ -84,7 +82,6 @@ pub(super) fn filter_predicates(value: &Value) -> Vec<Vec<String>> {
     }
 }
 
-#[inline(never)]
 fn predicate_alternatives(value: &Value) -> Vec<Vec<String>> {
     match value {
         Value::Sequence(items) => {
@@ -109,7 +106,6 @@ fn predicate_alternatives(value: &Value) -> Vec<Vec<String>> {
     }
 }
 
-#[inline(never)]
 fn change_types_cover_source_changes(value: &Value) -> bool {
     let Some(raw) = value.as_str() else {
         return false;

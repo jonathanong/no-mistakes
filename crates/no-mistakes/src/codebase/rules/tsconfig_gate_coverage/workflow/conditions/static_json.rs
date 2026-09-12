@@ -1,7 +1,6 @@
 use super::StaticValue;
 use serde_yaml::Value;
 
-#[inline(never)]
 pub(super) fn literal_from_json_static_value(expression: &str) -> Option<StaticValue> {
     crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::literal_from_json_value(
         expression.trim(),
@@ -10,7 +9,6 @@ pub(super) fn literal_from_json_static_value(expression: &str) -> Option<StaticV
     .or_else(|| invalid_literal_from_json(expression).then_some(StaticValue::Invalid))
 }
 
-#[inline(never)]
 pub(super) fn invalid_literal_from_json(expression: &str) -> bool {
     crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::invalid_literal_from_json(
         &format!("${{{{ {expression} }}}}"),
@@ -20,7 +18,6 @@ pub(super) fn invalid_literal_from_json(expression: &str) -> bool {
 /// `toJSON` returns a pretty-printed JSON string. The static value model only
 /// retains array contents, so mappings and nested non-stringable values remain
 /// unresolved instead of inventing a serialized shape.
-#[inline(never)]
 pub(super) fn to_json_static_value(value: StaticValue) -> Option<StaticValue> {
     match static_json_value(&value) {
         Err(()) => Some(StaticValue::Invalid),
@@ -31,7 +28,6 @@ pub(super) fn to_json_static_value(value: StaticValue) -> Option<StaticValue> {
     }
 }
 
-#[inline(never)]
 pub(super) fn static_json_value(value: &StaticValue) -> Result<Option<serde_json::Value>, ()> {
     match value {
         StaticValue::Sequence(values) => static_json_sequence(values),
@@ -44,7 +40,6 @@ pub(super) fn static_json_value(value: &StaticValue) -> Result<Option<serde_json
     }
 }
 
-#[inline(never)]
 fn static_json_sequence(values: &[StaticValue]) -> Result<Option<serde_json::Value>, ()> {
     let mut serialized = Vec::with_capacity(values.len());
     for value in values {
@@ -56,7 +51,6 @@ fn static_json_sequence(values: &[StaticValue]) -> Result<Option<serde_json::Val
     Ok(Some(serde_json::Value::Array(serialized)))
 }
 
-#[inline(never)]
 fn static_json_scalar(value: &StaticValue) -> Option<serde_json::Value> {
     match value {
         StaticValue::Bool(value) => Some(serde_json::Value::Bool(*value)),
@@ -69,7 +63,6 @@ fn static_json_scalar(value: &StaticValue) -> Option<serde_json::Value> {
     }
 }
 
-#[inline(never)]
 fn static_yaml_value(value: Value) -> StaticValue {
     match value {
         Value::Bool(value) => StaticValue::Bool(value),
@@ -84,7 +77,6 @@ fn static_yaml_value(value: Value) -> StaticValue {
     }
 }
 
-#[inline(never)]
 fn static_sequence_element(value: Value) -> StaticValue {
     match value {
         Value::Sequence(_) | Value::Mapping(_) | Value::Tagged(_) => StaticValue::NonStringable,

@@ -20,7 +20,6 @@ pub(crate) struct Options {
     pub(crate) roots: Option<Vec<PathBuf>>,
 }
 
-#[inline(never)]
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let skip = &config.filesystem.skip_directories;
     let mut findings = Vec::new();
@@ -43,7 +42,6 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     Ok(findings)
 }
 
-#[inline(never)]
 fn normalize_roots(opts: &Options, root: &Path, target_roots: &[PathBuf]) -> Vec<PathBuf> {
     opts.roots
         .as_deref()
@@ -61,13 +59,11 @@ fn normalize_roots(opts: &Options, root: &Path, target_roots: &[PathBuf]) -> Vec
         .unwrap_or_else(|| target_roots.to_vec())
 }
 
-#[inline(never)]
 fn is_excluded(root: &Path, path: &Path, excludes: &[String]) -> bool {
     let rel = path.strip_prefix(root).unwrap_or(path).to_string_lossy();
     excludes.iter().any(|e| rel.contains(e.as_str()))
 }
 
-#[inline(never)]
 fn scan(root: &Path, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
     let mut findings: Vec<RuleFinding> = files
         .par_iter()
@@ -77,7 +73,6 @@ fn scan(root: &Path, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
     Ok(findings)
 }
 
-#[inline(never)]
 pub(crate) fn check_file(path: &Path, root: &Path) -> Vec<RuleFinding> {
     let Ok(content) = std::fs::read_to_string(path) else {
         return Vec::new();
@@ -95,7 +90,6 @@ pub(crate) fn check_file(path: &Path, root: &Path) -> Vec<RuleFinding> {
     findings_from_parsed(path, root, &parsed)
 }
 
-#[inline(never)]
 pub(crate) fn findings_from_parsed(
     path: &Path,
     root: &Path,
@@ -132,7 +126,6 @@ struct AllowAttrFinding {
 }
 
 impl<'ast> Visit<'ast> for AllowAttrVisitor {
-    #[inline(never)]
     fn visit_attribute(&mut self, attr: &'ast Attribute) {
         if attr.path().is_ident("allow") {
             self.findings.push(AllowAttrFinding {
@@ -144,7 +137,6 @@ impl<'ast> Visit<'ast> for AllowAttrVisitor {
     }
 }
 
-#[inline(never)]
 fn allow_lints(attr: &Attribute) -> String {
     match &attr.meta {
         Meta::List(list) => list

@@ -8,7 +8,6 @@ use oxc_ast::ast::{Expression, ObjectExpression, ObjectPropertyKind};
 use std::collections::BTreeSet;
 use std::path::Path;
 
-#[inline(never)]
 pub(super) fn local_member_project_options(
     object: &str,
     member: &str,
@@ -31,7 +30,6 @@ pub(super) fn local_member_project_options(
     imported_spread_member_project_options(map, member, ctx, scope)
 }
 
-#[inline(never)]
 pub(super) fn imported_member_project_options(
     import: &ImportBinding,
     member: &str,
@@ -68,7 +66,6 @@ pub(super) fn imported_member_project_options(
     result
 }
 
-#[inline(never)]
 fn exported_member_project_options(
     program: &oxc_ast::ast::Program<'_>,
     source: &str,
@@ -116,7 +113,6 @@ fn exported_member_project_options(
     project_options_in(object, &mut ctx, scope)
 }
 
-#[inline(never)]
 fn imported_spread_member_project_options(
     object: &ObjectExpression<'_>,
     member: &str,

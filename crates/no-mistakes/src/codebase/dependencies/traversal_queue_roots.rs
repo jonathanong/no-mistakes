@@ -1,4 +1,3 @@
-#[inline(never)]
 fn roots_with_existing_queue_jobs(
     roots: &[NodeId],
     entrypoints: &[Entrypoint],
@@ -13,12 +12,10 @@ fn roots_with_existing_queue_jobs(
     )
 }
 
-#[inline(never)]
 fn roots_with_exported_symbol_roots(roots: &[NodeId], graph: &graph::DepGraph) -> Vec<NodeId> {
     roots_with_exported_symbol_roots_by(roots, |node| graph.dependencies_of_node(node))
 }
 
-#[inline(never)]
 fn roots_with_exported_symbol_roots_by<'a, F>(roots: &[NodeId], dependencies_of: F) -> Vec<NodeId>
 where
     F: Fn(&NodeId) -> Option<&'a Vec<(NodeId, EdgeKind)>>,
@@ -42,7 +39,6 @@ where
     expanded
 }
 
-#[inline(never)]
 fn push_unique_root(
     seen: &mut std::collections::HashSet<NodeId>,
     expanded: &mut Vec<NodeId>,
@@ -53,7 +49,6 @@ fn push_unique_root(
     }
 }
 
-#[inline(never)]
 fn roots_with_existing_queue_jobs_by<F>(
     roots: &[NodeId],
     entrypoints: &[Entrypoint],

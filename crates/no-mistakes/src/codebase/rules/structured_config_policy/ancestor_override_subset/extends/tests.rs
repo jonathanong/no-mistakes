@@ -233,4 +233,15 @@ fn follow_skips_package_specifiers_and_reports_cycles() {
         "{:?}",
         walk.findings
     );
+    walk.visit(
+        root,
+        &serde_yaml::from_str("extends: 1").expect("invalid extends fixture"),
+    );
+    assert!(
+        walk.findings
+            .iter()
+            .any(|finding| finding.message.contains("extends")),
+        "{:?}",
+        walk.findings
+    );
 }

@@ -1,4 +1,3 @@
-#[inline(never)]
 pub fn write_report(
     report: &SignatureImpactReport,
     format: Format,
@@ -21,7 +20,6 @@ pub fn write_report(
     Ok(())
 }
 
-#[inline(never)]
 pub fn report_json(args: SymbolsArgs) -> Result<String> {
     let report = collect_report(&args)?;
     let mut out = Vec::new();
@@ -29,7 +27,6 @@ pub fn report_json(args: SymbolsArgs) -> Result<String> {
     String::from_utf8(out).context("symbols signature-impact JSON output must be UTF-8")
 }
 
-#[inline(never)]
 fn suggested_tests(
     entries: &[NodeEntry],
     root: &Path,
@@ -89,7 +86,6 @@ fn suggested_tests(
     tests
 }
 
-#[inline(never)]
 fn warnings(suggested_tests: &[TestSuggestion]) -> Vec<ImpactWarning> {
     if suggested_tests.is_empty() {
         vec![ImpactWarning {
@@ -101,7 +97,6 @@ fn warnings(suggested_tests: &[TestSuggestion]) -> Vec<ImpactWarning> {
     }
 }
 
-#[inline(never)]
 fn export_location(
     facts: &TsFactMap,
     file: &Path,
@@ -134,7 +129,6 @@ fn export_location(
         }))
 }
 
-#[inline(never)]
 fn export_matches_symbol(
     kind: &ExportKind,
     name: &str,
@@ -150,7 +144,6 @@ fn export_matches_symbol(
     export_name(kind, name) == symbol
 }
 
-#[inline(never)]
 fn export_name<'a>(kind: &ExportKind, name: &'a str) -> &'a str {
     if matches!(kind, ExportKind::Default) {
         "default"
@@ -159,7 +152,6 @@ fn export_name<'a>(kind: &ExportKind, name: &'a str) -> &'a str {
     }
 }
 
-#[inline(never)]
 fn caller_parts(node: &NodeId, root: &Path) -> Option<(String, Option<String>)> {
     match node {
         NodeId::File(path) => Some((relative_slash_path(root, path), None)),
@@ -174,12 +166,10 @@ fn caller_parts(node: &NodeId, root: &Path) -> Option<(String, Option<String>)> 
     }
 }
 
-#[inline(never)]
 fn via_strings(via: &[EdgeKind]) -> Vec<&'static str> {
     via.iter().map(EdgeKind::as_str).collect()
 }
 
-#[inline(never)]
 fn merge_via(target: &mut Vec<&'static str>, source: &[&'static str]) {
     target.extend(source.iter().copied());
     target.sort_unstable();

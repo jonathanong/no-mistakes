@@ -3,7 +3,6 @@ use regex::Regex;
 use std::path::Path;
 use std::sync::OnceLock;
 
-#[inline(never)]
 pub(super) fn python_module(
     package: Option<&str>,
     package_root: Option<&Path>,
@@ -19,7 +18,6 @@ pub(super) fn python_module(
     }
 }
 
-#[inline(never)]
 fn package_prefix(package: &str) -> Option<Option<&str>> {
     let trimmed = package.trim();
     if trimmed.is_empty() || trimmed == "." {
@@ -28,7 +26,6 @@ fn package_prefix(package: &str) -> Option<Option<&str>> {
     Some(Some(trimmed))
 }
 
-#[inline(never)]
 pub(super) fn prefix_package(package: Option<&str>, module: String) -> String {
     match package.and_then(|name| package_prefix(name).flatten()) {
         Some(package) => format!("{package}.{module}"),
@@ -36,7 +33,6 @@ pub(super) fn prefix_package(package: Option<&str>, module: String) -> String {
     }
 }
 
-#[inline(never)]
 pub(super) fn extract_python_imports(
     source: &str,
     path: &Path,
@@ -84,7 +80,6 @@ pub(super) fn extract_python_imports(
     imports
 }
 
-#[inline(never)]
 fn push_imported_members(imports: &mut Vec<String>, module: &str, names: &str) {
     for (name, alias) in imported_bindings(names) {
         let qualified = format!("{module}.{name}");
@@ -95,7 +90,6 @@ fn push_imported_members(imports: &mut Vec<String>, module: &str, names: &str) {
     }
 }
 
-#[inline(never)]
 fn imported_bindings(names: &str) -> Vec<(String, Option<String>)> {
     names
         .trim()
@@ -118,7 +112,6 @@ fn imported_bindings(names: &str) -> Vec<(String, Option<String>)> {
         .collect()
 }
 
-#[inline(never)]
 fn resolve_relative(module: &str, path: &Path, package_root: Option<&Path>) -> Option<String> {
     let dots = module.chars().take_while(|ch| *ch == '.').count();
     if dots == 0 {
@@ -141,7 +134,6 @@ fn resolve_relative(module: &str, path: &Path, package_root: Option<&Path>) -> O
     }
 }
 
-#[inline(never)]
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     let mut values: Vec<String> = re
         .captures_iter(source)
@@ -152,13 +144,11 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values
 }
 
-#[inline(never)]
 fn python_import_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"(?m)^\s*import\s+([^\n]+)").expect("python import"))
 }
 
-#[inline(never)]
 fn python_from_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {

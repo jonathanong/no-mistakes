@@ -13,14 +13,12 @@ use super::{TerraformBlock, TerraformFileFacts, TerraformRef, TfAddr, TfBlockKin
 use crate::codebase::ts_resolver::normalize_path;
 
 /// Parse one `.tf` file into facts. Returns `None` if it cannot be read or parsed.
-#[inline(never)]
 pub(super) fn parse_tf_file(path: &Path) -> Option<TerraformFileFacts> {
     let source = std::fs::read_to_string(path).ok()?;
     parse_source(&source, path)
 }
 
 /// Parse HCL source already in memory. Returns `None` if it cannot be parsed.
-#[inline(never)]
 pub(super) fn parse_source(source: &str, path: &Path) -> Option<TerraformFileFacts> {
     let body = hcl::parse(source).ok()?;
     let module_dir = path.parent().map(Path::to_path_buf).unwrap_or_default();
@@ -40,7 +38,6 @@ pub(super) fn parse_source(source: &str, path: &Path) -> Option<TerraformFileFac
     })
 }
 
-#[inline(never)]
 fn handle_block(
     block: &Block,
     path: &Path,
@@ -134,7 +131,6 @@ fn handle_block(
 
 /// Resolve a `module` block's `source` to a local directory, if it is a relative
 /// or absolute filesystem path (registry/remote sources return `None`).
-#[inline(never)]
 fn module_source(body: &Body, module_dir: &Path) -> Option<PathBuf> {
     for structure in body.iter() {
         if let Structure::Attribute(attr) = structure {
@@ -155,7 +151,6 @@ fn module_source(body: &Body, module_dir: &Path) -> Option<PathBuf> {
 }
 
 /// Addresses referenced by an `output` block's `value` attribute.
-#[inline(never)]
 fn value_refs(body: &Body) -> Vec<TfAddr> {
     for structure in body.iter() {
         if let Structure::Attribute(attr) = structure {

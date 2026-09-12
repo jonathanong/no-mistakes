@@ -7,7 +7,6 @@ use oxc_ast::ast::{Expression, Program};
 use std::collections::BTreeSet;
 use std::path::Path;
 
-#[inline(never)]
 pub(super) fn namespace_member_options(
     member: &oxc_ast::ast::StaticMemberExpression<'_>,
     ctx: &mut Ctx<'_, '_>,
@@ -45,7 +44,6 @@ pub(super) fn namespace_member_options(
     project_options(object, ctx).map(Some)
 }
 
-#[inline(never)]
 fn imported_member_options(
     import: &super::ImportBinding,
     member: &str,
@@ -80,7 +78,6 @@ fn imported_member_options(
     result
 }
 
-#[inline(never)]
 fn exported_member_options(
     program: &Program<'_>,
     source: &str,

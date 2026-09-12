@@ -1,10 +1,8 @@
 impl SharedTraversalContext {
-    #[inline(never)]
     pub(crate) fn prepared_facts(&self) -> &crate::codebase::ts_source::facts::TsFactMap {
         self.facts.as_ref().expect("TS facts are initialized")
     }
 
-    #[inline(never)]
     pub(crate) fn graph_shared(&self) -> Result<std::sync::Arc<graph::DepGraph>> {
         if let Some(graph) = &self.graph {
             return Ok(std::sync::Arc::clone(graph));
@@ -12,7 +10,6 @@ impl SharedTraversalContext {
         self.request_graph_shared(self.build_plan)
     }
 
-    #[inline(never)]
     fn request_graph_shared(
         &self,
         plan: graph::GraphBuildPlan,
@@ -49,7 +46,6 @@ impl SharedTraversalContext {
         Ok(graph)
     }
 
-    #[inline(never)]
     fn request_graph_without_symbols_shared(
         &self,
         allowed: Option<&std::collections::HashSet<EdgeKind>>,
@@ -57,7 +53,6 @@ impl SharedTraversalContext {
         self.request_graph_shared(graph::GraphBuildPlan::from_allowed(allowed))
     }
 
-    #[inline(never)]
     fn symbol_index_shared(&self) -> Result<std::sync::Arc<graph::SymbolIndex>> {
         let key = GraphFileUniverseKey::new(&self.graph_files, self.analysis_generation);
         let workspace = self.dataset.workspace();

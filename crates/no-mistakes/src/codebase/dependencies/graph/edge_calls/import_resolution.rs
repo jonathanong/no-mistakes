@@ -1,6 +1,5 @@
 /// Resolves a direct runtime import binding (including one static namespace
 /// member) to a callable in a visible local module.
-#[inline(never)]
 fn resolve_imported_call_target(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
@@ -87,7 +86,6 @@ fn resolve_imported_call_target(
     })
 }
 
-#[inline(never)]
 fn resolve_imported_class_static_member(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,

@@ -1,11 +1,9 @@
-#[inline(never)]
 fn is_test_like_file(file: &Path) -> bool {
     file.file_name()
         .and_then(|name| name.to_str())
         .is_some_and(|name| name.contains(".test.") || name.contains(".spec."))
 }
 
-#[inline(never)]
 fn caller_is_target_export(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     file: &Path,
@@ -23,7 +21,6 @@ fn caller_is_target_export(
         .is_some_and(|symbol| file_symbols.contains(symbol))
 }
 
-#[inline(never)]
 fn matches_local_callee(callee: &str, local_names: &BTreeSet<String>) -> bool {
     local_names.iter().any(|local| {
         callee == local
@@ -36,7 +33,6 @@ fn matches_local_callee(callee: &str, local_names: &BTreeSet<String>) -> bool {
 /// Legacy signature-impact callers answer resolved symbol usage, unlike call
 /// policy reports. A new retained unknown/shadowed call must not be attributed
 /// to a same-spelled import merely because its text happens to match.
-#[inline(never)]
 fn legacy_call_matches_local_target(
     call: &crate::codebase::dependencies::extract::FunctionCall,
     local_names: &BTreeSet<String>,

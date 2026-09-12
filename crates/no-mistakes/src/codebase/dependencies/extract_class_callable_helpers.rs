@@ -1,4 +1,3 @@
-#[inline(never)]
 fn static_callable_field(property: &PropertyDefinition<'_>) -> Option<(String, CallableId)> {
     if !property.r#static {
         return None;
@@ -13,7 +12,6 @@ fn static_callable_field(property: &PropertyDefinition<'_>) -> Option<(String, C
     Some((name, id))
 }
 
-#[inline(never)]
 fn walk_static_callable_field_with_scope<'a>(
     collector: &mut ImportCollector,
     class_name: &str,
@@ -53,7 +51,6 @@ fn walk_static_callable_field_with_scope<'a>(
     collector.pop_function_scope(true);
 }
 
-#[inline(never)]
 fn class_method_callable_id(class: &Class<'_>, method: &MethodDefinition<'_>) -> CallableId {
     if !matches!(
         method.kind,
@@ -84,7 +81,6 @@ fn class_method_callable_id(class: &Class<'_>, method: &MethodDefinition<'_>) ->
         .unwrap_or(CallableId(method.value.span.start))
 }
 
-#[inline(never)]
 fn walk_class_method_with_scope<'a>(
     collector: &mut ImportCollector,
     class_name: &str,

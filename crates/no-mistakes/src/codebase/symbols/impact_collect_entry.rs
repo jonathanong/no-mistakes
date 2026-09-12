@@ -1,4 +1,3 @@
-#[inline(never)]
 pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     if args.files.len() != 1 {
         bail!("signature-impact mode requires exactly one file");
@@ -119,7 +118,6 @@ pub fn collect_report(args: &SymbolsArgs) -> Result<SignatureImpactReport> {
     )
 }
 
-#[inline(never)]
 pub(super) fn collect_report_with_prepared(
     args: &SymbolsArgs,
     root: &Path,

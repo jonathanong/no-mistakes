@@ -9,7 +9,6 @@ use anyhow::Context;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-#[inline(never)]
 pub(super) fn scan_with_sources(
     root: &Path,
     opts: &CompiledOptions,
@@ -67,7 +66,6 @@ pub(super) fn scan_with_sources(
     Ok(findings)
 }
 
-#[inline(never)]
 fn scan_embedded(
     file: &str,
     facts: Option<&EmbeddedSqlFileFacts>,
@@ -89,7 +87,6 @@ fn scan_embedded(
     findings
 }
 
-#[inline(never)]
 fn scan_sql_file(
     path: &Path,
     file: &str,
@@ -108,7 +105,6 @@ fn scan_sql_file(
         .collect()
 }
 
-#[inline(never)]
 fn line_for_write(source: &str, table: &str, column: &str) -> usize {
     source
         .lines()
@@ -120,7 +116,6 @@ fn line_for_write(source: &str, table: &str, column: &str) -> usize {
         .unwrap_or(1)
 }
 
-#[inline(never)]
 fn contains_ignore_ascii_case(haystack: &str, needle: &str) -> bool {
     haystack
         .to_ascii_lowercase()

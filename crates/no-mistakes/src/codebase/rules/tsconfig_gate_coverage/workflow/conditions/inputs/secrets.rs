@@ -27,7 +27,6 @@ pub(crate) enum SecretAvailability {
 }
 
 impl SecretState {
-    #[inline(never)]
     pub(crate) fn direct() -> Self {
         Self {
             values: BTreeMap::new(),
@@ -35,17 +34,14 @@ impl SecretState {
         }
     }
 
-    #[inline(never)]
     pub(crate) fn unavailable() -> Self {
         Self::reusable(BTreeMap::new(), false)
     }
 
-    #[inline(never)]
     fn reusable(values: BTreeMap<String, StaticValue>, all: bool) -> Self {
         Self { values, all }
     }
 
-    #[inline(never)]
     pub(crate) fn availability(&self, name: &str) -> SecretAvailability {
         if self.all || self.values.contains_key(&normalized_name(name)) {
             SecretAvailability::Available
@@ -54,7 +50,6 @@ impl SecretState {
         }
     }
 
-    #[inline(never)]
     pub(crate) fn value(&self, name: &str) -> Option<StaticValue> {
         self.values
             .get(&normalized_name(name))
@@ -63,7 +58,6 @@ impl SecretState {
     }
 }
 
-#[inline(never)]
 pub(crate) fn callee_secrets(
     contract: &WorkflowCallContract,
     call_job: &Value,
@@ -89,7 +83,6 @@ pub(crate) fn callee_secrets(
         .then(|| SecretState::reusable(values, all))
 }
 
-#[inline(never)]
 fn explicit_secret_bindings(
     contract: &WorkflowCallContract,
     call_job: &Value,
@@ -145,7 +138,6 @@ fn explicit_secret_bindings(
     )
 }
 
-#[inline(never)]
 fn scalar_secret_value(value: &Value) -> Option<StaticValue> {
     match value {
         Value::Null => Some(StaticValue::String(String::new())),

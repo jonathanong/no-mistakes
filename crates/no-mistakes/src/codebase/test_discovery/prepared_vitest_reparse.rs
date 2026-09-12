@@ -2,7 +2,6 @@ impl PreparedTestProjects {
     /// A workspace string can lead to a standalone config below a package
     /// tsconfig. Reparse Vitest once after those parsed scopes seed the final
     /// catalog, reusing the request source store instead of rediscovering files.
-    #[inline(never)]
     pub(crate) fn reparse_vitest_with_final_catalog(
         &mut self,
         root: &std::path::Path,

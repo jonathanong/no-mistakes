@@ -4,7 +4,6 @@ use crate::codebase::postgres::statement_facts::{
     SqlTriggerFact, SqlTriggerPeriod,
 };
 
-#[inline(never)]
 pub(super) fn judge_guarded_select(
     insert: &SqlInsertFact,
     catalog: &Catalog<'_>,
@@ -29,7 +28,6 @@ pub(super) fn judge_guarded_select(
     })
 }
 
-#[inline(never)]
 pub(super) fn judge(
     insert: &SqlInsertFact,
     conflict: &SqlOnConflictFact,
@@ -63,7 +61,6 @@ pub(super) fn judge(
         })
 }
 
-#[inline(never)]
 fn unsafe_reason(
     trigger: &SqlTriggerFact,
     insert: &SqlInsertFact,
@@ -145,7 +142,6 @@ fn unsafe_reason(
     ))
 }
 
-#[inline(never)]
 fn written_columns(trigger: &SqlTriggerFact, catalog: &Catalog<'_>) -> Vec<String> {
     if let Some((_, columns)) = catalog
         .trigger_writes
@@ -165,7 +161,6 @@ fn written_columns(trigger: &SqlTriggerFact, catalog: &Catalog<'_>) -> Vec<Strin
         .collect()
 }
 
-#[inline(never)]
 pub(super) fn fires_insert(trigger: &SqlTriggerFact) -> bool {
     trigger
         .events
@@ -173,7 +168,6 @@ pub(super) fn fires_insert(trigger: &SqlTriggerFact) -> bool {
         .any(|event| matches!(event, SqlTriggerEvent::Insert))
 }
 
-#[inline(never)]
 fn has_update_event(trigger: &SqlTriggerFact) -> bool {
     trigger
         .events
@@ -181,7 +175,6 @@ fn has_update_event(trigger: &SqlTriggerFact) -> bool {
         .any(|event| matches!(event, SqlTriggerEvent::Update { .. }))
 }
 
-#[inline(never)]
 pub(super) fn fires_update(trigger: &SqlTriggerFact, assigned: &[String]) -> bool {
     trigger.events.iter().any(|event| match event {
         SqlTriggerEvent::Update { columns } if columns.is_empty() => true,

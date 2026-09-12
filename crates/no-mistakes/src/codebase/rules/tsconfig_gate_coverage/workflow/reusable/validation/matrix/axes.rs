@@ -6,7 +6,6 @@ pub(super) enum StaticMatrixAxes {
     Invalid,
 }
 
-#[inline(never)]
 pub(super) fn static_matrix_axes(mapping: &serde_yaml::Mapping) -> StaticMatrixAxes {
     let mut axes = Vec::new();
     let mut dynamic = false;
@@ -50,7 +49,6 @@ enum ResolvedStaticAxisValues {
     Invalid,
 }
 
-#[inline(never)]
 fn resolved_static_axis_values(values: &[Value]) -> ResolvedStaticAxisValues {
     let mut resolved = Vec::with_capacity(values.len());
     let mut dynamic = false;

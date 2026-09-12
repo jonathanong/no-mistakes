@@ -9,7 +9,6 @@ use crate::queue::types::QueueKey;
 use globset::GlobSet;
 use std::path::{Path, PathBuf};
 
-#[inline(never)]
 pub(super) fn language_queue_sites(
     root: &Path,
     session: &crate::codebase::analysis_session::AnalysisSession,
@@ -48,7 +47,6 @@ pub(super) fn language_queue_sites(
     (producers, workers)
 }
 
-#[inline(never)]
 fn extend_file(
     root: &Path,
     file: &LangFileFacts,
@@ -72,7 +70,6 @@ fn extend_file(
     }
 }
 
-#[inline(never)]
 fn extend_kafka(
     root: &Path,
     all_files: &[PathBuf],
@@ -108,7 +105,6 @@ fn extend_kafka(
     }
 }
 
-#[inline(never)]
 fn language_producer(
     root: &Path,
     path: &Path,
@@ -128,7 +124,6 @@ fn language_producer(
     }
 }
 
-#[inline(never)]
 fn language_worker(root: &Path, path: &Path, job: &str, cluster: Option<&str>) -> InternalWorker {
     InternalWorker {
         site: WorkerSite {
@@ -144,7 +139,6 @@ fn language_worker(root: &Path, path: &Path, job: &str, cluster: Option<&str>) -
     }
 }
 
-#[inline(never)]
 fn queue_key(root: &Path, cluster: Option<&str>) -> QueueKey {
     let name = cluster.unwrap_or("default");
     QueueKey {
@@ -153,7 +147,6 @@ fn queue_key(root: &Path, cluster: Option<&str>) -> QueueKey {
     }
 }
 
-#[inline(never)]
 fn cli_allows(root: &Path, path: &Path, filter: Option<&GlobSet>) -> bool {
     filter.is_none_or(|filter| filter.is_match(path.strip_prefix(root).unwrap_or(path)))
 }

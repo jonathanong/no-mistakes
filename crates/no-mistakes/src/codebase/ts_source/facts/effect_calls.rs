@@ -10,7 +10,6 @@ pub(crate) type EffectNames = HashMap<String, Option<String>>;
 /// name still matches `client.createSubscriber()`, and a shadowed binding is
 /// still reportable as an effect occurrence. Resolution-sensitive graph users
 /// must inspect `FunctionCall::target_identity` instead.
-#[inline(never)]
 pub(crate) fn collect_effect_calls(
     calls: &[FunctionCall],
     names: &EffectNames,
@@ -50,7 +49,6 @@ pub(crate) fn collect_effect_calls(
         .collect()
 }
 
-#[inline(never)]
 fn effect_occurrence_key(call: &FunctionCall) -> (u32, &str, bool) {
     (
         call.offset,
@@ -59,7 +57,6 @@ fn effect_occurrence_key(call: &FunctionCall) -> (u32, &str, bool) {
     )
 }
 
-#[inline(never)]
 fn is_effect_invocation(call: &FunctionCall, names: &EffectNames) -> bool {
     let is_source_invocation = matches!(
         call.invocation,
@@ -69,7 +66,6 @@ fn is_effect_invocation(call: &FunctionCall, names: &EffectNames) -> bool {
     is_source_invocation && effect_match(&call.callee, names).is_some()
 }
 
-#[inline(never)]
 fn prefers_ownership_record(candidate: &FunctionCall, current: &FunctionCall) -> bool {
     match (candidate.caller.as_deref(), current.caller.as_deref()) {
         // An exported initializer can be collected both at module scope and
@@ -86,12 +82,10 @@ fn prefers_ownership_record(candidate: &FunctionCall, current: &FunctionCall) ->
     }
 }
 
-#[inline(never)]
 fn callable_scope_depth(scope: &str) -> usize {
     scope.matches('/').count()
 }
 
-#[inline(never)]
 fn effect_match<'a>(
     callee: &'a str,
     names: &'a EffectNames,

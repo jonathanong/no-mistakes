@@ -1,5 +1,4 @@
 impl CallableFileIndex {
-    #[inline(never)]
     fn resolve_this_member(
         &self,
         caller: Option<&str>,
@@ -18,7 +17,6 @@ impl CallableFileIndex {
         self.resolve_this_member_on_class(class, member, caller_is_static)
     }
 
-    #[inline(never)]
     fn enclosing_this_class(
         &self,
         caller: Option<&str>,
@@ -38,7 +36,6 @@ impl CallableFileIndex {
         }
     }
 
-    #[inline(never)]
     fn this_caller_is_static(
         &self,
         class: &ClassBindingTarget,
@@ -65,7 +62,6 @@ impl CallableFileIndex {
         (ids.len() == 1).then_some(static_id == Some(ids[0]))
     }
 
-    #[inline(never)]
     fn unique_class_binding(&self, display: &str) -> Option<&ClassBindingTarget> {
         let mut found: Option<&ClassBindingTarget> = None;
         for target in self.class_bindings.values() {
@@ -80,7 +76,6 @@ impl CallableFileIndex {
         found
     }
 
-    #[inline(never)]
     fn unique_class_binding_named(&self, name: &str) -> Option<&ClassBindingTarget> {
         let mut found: Option<&ClassBindingTarget> = None;
         for ((_, binding), target) in &self.class_bindings {
@@ -95,7 +90,6 @@ impl CallableFileIndex {
         found
     }
 
-    #[inline(never)]
     fn resolve_this_member_on_class<'a>(
         &'a self,
         mut class: &'a ClassBindingTarget,
@@ -115,7 +109,6 @@ impl CallableFileIndex {
         }
     }
 
-    #[inline(never)]
     fn this_member_on_own_class(
         &self,
         class: &ClassBindingTarget,
@@ -140,7 +133,6 @@ impl CallableFileIndex {
             .then_some(None)
     }
 
-    #[inline(never)]
     fn this_member_callee(
         &self,
         class: &ClassBindingTarget,
@@ -153,7 +145,6 @@ impl CallableFileIndex {
         }
     }
 
-    #[inline(never)]
     fn instance_member_id(
         &self,
         class: &ClassBindingTarget,

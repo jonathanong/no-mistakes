@@ -1,6 +1,5 @@
 use super::{EnvironmentState, InputState, StaticValue};
 
-#[inline(never)]
 pub(crate) fn complete_expression_static_string_value(
     value: &str,
     inputs: &InputState,
@@ -8,7 +7,6 @@ pub(crate) fn complete_expression_static_string_value(
     complete_expression_static_value_with_environment(value, inputs, &EnvironmentState::default())
 }
 
-#[inline(never)]
 pub(crate) fn complete_expression_static_value_with_environment(
     value: &str,
     inputs: &InputState,
@@ -20,7 +18,6 @@ pub(crate) fn complete_expression_static_value_with_environment(
         .or_else(|| static_expression_value(expression, inputs, environment))
 }
 
-#[inline(never)]
 fn static_expression_value(
     expression: &str,
     inputs: &InputState,
@@ -74,7 +71,6 @@ fn static_expression_value(
     })
 }
 
-#[inline(never)]
 pub(super) fn static_to_json_expression(
     expression: &str,
     inputs: &InputState,
@@ -99,7 +95,6 @@ pub(super) fn static_to_json_expression(
         })?
 }
 
-#[inline(never)]
 pub(super) fn static_from_json_expression(
     expression: &str,
     inputs: &InputState,
@@ -110,7 +105,6 @@ pub(super) fn static_from_json_expression(
         .then(|| static_from_json(call.arguments[0], inputs, environment))?
 }
 
-#[inline(never)]
 fn static_from_json(
     argument: &str,
     inputs: &InputState,

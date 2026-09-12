@@ -22,7 +22,6 @@ pub(crate) struct CheckFileViews {
     pub(crate) graph: Vec<PathBuf>,
 }
 
-#[inline(never)]
 pub(super) fn discover_check_file_views_with_absolute_lookup(
     root: &Path,
     config: &NoMistakesConfig,

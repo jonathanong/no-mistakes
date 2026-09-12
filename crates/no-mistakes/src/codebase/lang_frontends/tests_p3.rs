@@ -2,7 +2,6 @@ use super::*;
 use crate::codebase::lang_frontends::kafka::extract_kafka_topics;
 use std::path::PathBuf;
 
-#[inline(never)]
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -11,14 +10,12 @@ fn fixture(name: &str) -> PathBuf {
     )
 }
 
-#[inline(never)]
 fn store_for(files: &[PathBuf]) -> crate::codebase::ts_source::SourceStore {
     crate::codebase::ts_source::SourceStore::new(std::sync::Arc::new(
         crate::codebase::ts_source::FileInventory::from_paths(files),
     ))
 }
 
-#[inline(never)]
 fn all_files(root: &std::path::Path) -> Vec<PathBuf> {
     let repo = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../.."),

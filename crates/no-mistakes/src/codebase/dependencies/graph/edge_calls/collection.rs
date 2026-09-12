@@ -1,4 +1,3 @@
-#[inline(never)]
 fn collect_call_edges_for_core(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,

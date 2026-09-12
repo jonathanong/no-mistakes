@@ -4,7 +4,6 @@ use std::path::{Path, PathBuf};
 
 pub(crate) use crate::codebase::ts_source::VisiblePathSnapshot;
 
-#[inline(never)]
 pub(crate) fn build_globset(patterns: &[String]) -> Result<GlobSet> {
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
@@ -16,7 +15,6 @@ pub(crate) fn build_globset(patterns: &[String]) -> Result<GlobSet> {
 
 /// Collect visible files under `root`, applying Playwright's hardcoded
 /// directory and symlink policies to the shared ignore-aware candidate list.
-#[inline(never)]
 pub(crate) fn walk_files_from_snapshot(
     root: &Path,
     snapshot: &VisiblePathSnapshot,
@@ -28,7 +26,6 @@ pub(crate) fn walk_files_from_snapshot(
     files
 }
 
-#[inline(never)]
 fn visible_matching_files(
     root: &Path,
     files: &[PathBuf],
@@ -56,7 +53,6 @@ fn visible_matching_files(
 /// True when any directory component of `rel` (a path relative to the walk
 /// root) matches [`is_skipped_dir`], mirroring `WalkDir`'s `filter_entry`
 /// pruning every entry beneath a skipped directory.
-#[inline(never)]
 fn is_under_skipped_dir(rel: &Path) -> bool {
     rel.parent().is_some_and(|parent| {
         parent
@@ -65,7 +61,6 @@ fn is_under_skipped_dir(rel: &Path) -> bool {
     })
 }
 
-#[inline(never)]
 pub(crate) fn is_skipped_dir(path: &Path) -> bool {
     path.file_name()
         .and_then(|name| name.to_str())
@@ -77,19 +72,16 @@ pub(crate) fn is_skipped_dir(path: &Path) -> bool {
         })
 }
 
-#[inline(never)]
 pub(crate) fn relative_string(root: &Path, path: &Path) -> String {
     let root = crate::codebase::ts_resolver::normalize_path(root);
     let path = crate::codebase::ts_resolver::normalize_path(path);
     slash_path(path.strip_prefix(root).unwrap_or(&path))
 }
 
-#[inline(never)]
 pub(crate) fn slash_path(path: &Path) -> String {
     path.to_string_lossy().replace('\\', "/")
 }
 
-#[inline(never)]
 pub(crate) fn absolutize(path: &Path) -> Result<PathBuf> {
     if path.is_absolute() {
         Ok(path.to_path_buf())
@@ -100,7 +92,6 @@ pub(crate) fn absolutize(path: &Path) -> Result<PathBuf> {
     }
 }
 
-#[inline(never)]
 pub(crate) fn read_source_text(
     path: &Path,
     sources: Option<&crate::codebase::ts_source::SourceStore>,
@@ -113,7 +104,6 @@ pub(crate) fn read_source_text(
     }
 }
 
-#[inline(never)]
 pub(crate) fn read_snapshot_source(
     snapshot: &VisiblePathSnapshot,
     root: &Path,

@@ -2,7 +2,6 @@ use super::super::DotnetDependencyDiagnostic;
 
 type XmlAttributes = Vec<(String, String)>;
 
-#[inline(never)]
 pub(in crate::codebase::dotnet) fn parse_open_tag(
     tag: &str,
 ) -> Result<(String, XmlAttributes, bool), DotnetDependencyDiagnostic> {

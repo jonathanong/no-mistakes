@@ -1,4 +1,3 @@
-#[inline(never)]
 fn record_object_value_references(
     collector: &mut ImportCollector,
     object_name: &str,
@@ -34,7 +33,6 @@ fn record_object_value_references(
     }
 }
 
-#[inline(never)]
 fn record_object_computed_key_reference(
     collector: &mut ImportCollector,
     object_name: &str,
@@ -63,7 +61,6 @@ fn record_object_computed_key_reference(
     });
 }
 
-#[inline(never)]
 fn simple_object_reference(expr: &Expression<'_>) -> Option<String> {
     match expr {
         Expression::Identifier(identifier) => Some(identifier.name.to_string()),

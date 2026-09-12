@@ -6,14 +6,12 @@ pub(crate) struct SignalRegistry {
 }
 
 impl SignalRegistry {
-    #[inline(never)]
     pub(crate) fn new() -> Self {
         Self {
             groups: Mutex::new(BTreeSet::new()),
         }
     }
 
-    #[inline(never)]
     pub(crate) fn register(self: &Arc<Self>, process_group: i32) -> GroupRegistration {
         self.groups
             .lock()
@@ -25,7 +23,6 @@ impl SignalRegistry {
         }
     }
 
-    #[inline(never)]
     pub(crate) fn snapshot(&self) -> Vec<i32> {
         self.groups
             .lock()
@@ -42,7 +39,6 @@ pub(crate) struct GroupRegistration {
 }
 
 impl Drop for GroupRegistration {
-    #[inline(never)]
     fn drop(&mut self) {
         self.registry
             .groups
@@ -52,7 +48,6 @@ impl Drop for GroupRegistration {
     }
 }
 
-#[inline(never)]
 fn active_registry() -> &'static Mutex<Option<Weak<SignalRegistry>>> {
     static ACTIVE: OnceLock<Mutex<Option<Weak<SignalRegistry>>>> = OnceLock::new();
     ACTIVE.get_or_init(|| Mutex::new(None))
@@ -65,7 +60,6 @@ pub(crate) struct ParentSignalForwardingGuard {
 }
 
 impl ParentSignalForwardingGuard {
-    #[inline(never)]
     pub(crate) fn install(enabled: bool) -> std::io::Result<Self> {
         if !enabled {
             return Ok(Self {
@@ -97,7 +91,6 @@ impl ParentSignalForwardingGuard {
     }
 }
 
-#[inline(never)]
 pub(crate) fn register_process_group(process_group: i32) -> Option<GroupRegistration> {
     active_registry()
         .lock()
@@ -107,21 +100,18 @@ pub(crate) fn register_process_group(process_group: i32) -> Option<GroupRegistra
         .map(|registry| registry.register(process_group))
 }
 
-#[inline(never)]
 pub(crate) fn forward_signal(process_group: i32, signal: i32) {
     unsafe {
         nix::libc::kill(-process_group, signal);
     }
 }
 
-#[inline(never)]
 pub(crate) fn forward_signal_to_groups(process_groups: &[i32], signal: i32) {
     for process_group in process_groups {
         forward_signal(*process_group, signal);
     }
 }
 
-#[inline(never)]
 pub(crate) fn spawn_signal_listener<R>(
     mut signals: signal_hook::iterator::Signals,
     registry: Arc<SignalRegistry>,
@@ -136,7 +126,6 @@ pub(crate) fn spawn_signal_listener<R>(
 }
 
 impl Drop for ParentSignalForwardingGuard {
-    #[inline(never)]
     fn drop(&mut self) {
         if let Some(registry) = self.registry.take() {
             let mut active = active_registry()

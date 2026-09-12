@@ -1,4 +1,3 @@
-#[inline(never)]
 fn import_neighbors(
     path: &Path,
     resolver: &dyn ImportResolution,
@@ -78,7 +77,6 @@ fn import_neighbors(
     (neighbors, Some(facts))
 }
 
-#[inline(never)]
 fn import_neighbors_from_facts(
     path: &Path,
     file_facts: &TsFileFacts,

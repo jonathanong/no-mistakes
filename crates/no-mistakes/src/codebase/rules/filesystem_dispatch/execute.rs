@@ -35,7 +35,6 @@ pub struct PreparedFilesystemRuleInputs<'a> {
 }
 
 #[doc(hidden)]
-#[inline(never)]
 pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
@@ -61,7 +60,6 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_and_sources(
 /// allowing aggregate CLI and N-API checks to share their one TS fact pass
 /// with AST-backed filesystem rules.
 #[doc(hidden)]
-#[inline(never)]
 pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
@@ -74,7 +72,6 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_and_facts(
 
 /// Aggregate check adapter that defers suppression to the shared result pass.
 #[doc(hidden)]
-#[inline(never)]
 pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppression(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
@@ -85,7 +82,6 @@ pub fn run_filesystem_rules_with_config_snapshot_catalog_sources_facts_and_suppr
     run_prepared_filesystem_rules(root, config, files, prepared, facts, true)
 }
 
-#[inline(never)]
 fn run_prepared_filesystem_rules(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
@@ -153,13 +149,11 @@ fn run_prepared_filesystem_rules(
     Ok(findings)
 }
 
-#[inline(never)]
 fn run_enabled_rules(inputs: &RuleRunInputs<'_>) {
     macro_rules! run_rules { ($($id:expr => $call:path),* $(,)?) => { rayon::scope(|scope| { $( if rule_enabled(inputs.config, $id) { scope.spawn(|_| { let result = trace_rule(inputs.sources, $id, || run_rule::run_rule_with_sources(run_rule::RunRuleRequest { rule_id: $id, fallback: $call, root: inputs.root, config: inputs.config, files: inputs.candidates.candidates($id), sources: inputs.sources, facts: inputs.facts, defer_suppression: inputs.defer_suppression })); inputs.acc.lock().expect("mutex poisoned").push(($id, result)); }); } )*; special::spawn(scope, inputs); }); }; }
     crate::filesystem_rules!(run_rules);
 }
 
-#[inline(never)]
 pub(super) fn trace_rule<T>(
     sources: &crate::codebase::ts_source::SourceStore,
     rule_id: &str,

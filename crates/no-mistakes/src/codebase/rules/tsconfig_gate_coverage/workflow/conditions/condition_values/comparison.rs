@@ -3,7 +3,6 @@ use super::{
     InputState, StaticBool, StaticValue,
 };
 
-#[inline(never)]
 pub(in super::super) fn comparison_bool(
     expression: &str,
     inputs: &InputState,
@@ -38,7 +37,6 @@ pub(in super::super) fn comparison_bool(
     })
 }
 
-#[inline(never)]
 fn compared_false(comparison: logical::Comparison) -> StaticBool {
     match comparison {
         logical::Comparison::Equal => StaticBool::False,
@@ -47,7 +45,6 @@ fn compared_false(comparison: logical::Comparison) -> StaticBool {
     }
 }
 
-#[inline(never)]
 fn impossible_ref_comparison(left: &str, right: &str, inputs: &InputState) -> bool {
     let other = if github_ref(left) { right } else { left };
     let Some(StaticValue::String(reference)) = comparison_literal(other) else {
@@ -70,7 +67,6 @@ fn impossible_ref_comparison(left: &str, right: &str, inputs: &InputState) -> bo
     }
 }
 
-#[inline(never)]
 fn known_not_skipped_comparison(left: &str, right: &str, inputs: &InputState) -> bool {
     [(left, right), (right, left)].into_iter().any(|(actual, expected)| {
         super::super::resolution::needs_result_is_known_not_skipped(actual, inputs)

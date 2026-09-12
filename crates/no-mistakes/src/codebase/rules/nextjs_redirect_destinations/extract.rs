@@ -23,7 +23,6 @@ pub(super) struct ExtractedDestination {
     pub(super) line: usize,
 }
 
-#[inline(never)]
 pub(super) fn extract_named_destinations(
     path: &Path,
     source: &str,
@@ -35,7 +34,6 @@ pub(super) fn extract_named_destinations(
     .unwrap_or_default()
 }
 
-#[inline(never)]
 fn extract_named_destinations_from_program(
     program: &Program<'_>,
     source: &str,
@@ -69,7 +67,6 @@ struct BodyFinder<'a, 'n> {
 }
 
 impl BodyFinder<'_, '_> {
-    #[inline(never)]
     fn collect_from_expression(&mut self, expression: &Expression<'_>) {
         self.body_found = true;
         let mut collector = DestinationCollector {
@@ -84,7 +81,6 @@ impl BodyFinder<'_, '_> {
 }
 
 impl<'a> Visit<'a> for BodyFinder<'a, '_> {
-    #[inline(never)]
     fn visit_object_property(&mut self, property: &ObjectProperty<'a>) {
         if self.body_found {
             return;
@@ -98,7 +94,6 @@ impl<'a> Visit<'a> for BodyFinder<'a, '_> {
         walk::walk_object_property(self, property);
     }
 
-    #[inline(never)]
     fn visit_method_definition(&mut self, method: &MethodDefinition<'a>) {
         if self.body_found {
             return;
@@ -120,7 +115,6 @@ impl<'a> Visit<'a> for BodyFinder<'a, '_> {
         walk::walk_method_definition(self, method);
     }
 
-    #[inline(never)]
     fn visit_property_definition(&mut self, property: &PropertyDefinition<'a>) {
         if self.body_found {
             return;
@@ -144,14 +138,12 @@ struct DestinationCollector<'a> {
 }
 
 impl<'a> Visit<'a> for DestinationCollector<'a> {
-    #[inline(never)]
     fn visit_object_expression(&mut self, object: &ObjectExpression<'a>) {
         inspect_destination_object(object, self.source, self);
         walk::walk_object_expression(self, object);
     }
 }
 
-#[inline(never)]
 fn inspect_destination_object(
     object: &ObjectExpression<'_>,
     source: &str,
@@ -172,7 +164,6 @@ fn inspect_destination_object(
     }
 }
 
-#[inline(never)]
 fn is_function_like(expression: &Expression<'_>) -> bool {
     matches!(
         unwrap_ts_wrappers(expression),
@@ -180,7 +171,6 @@ fn is_function_like(expression: &Expression<'_>) -> bool {
     )
 }
 
-#[inline(never)]
 fn string_literal_value(expression: &Expression<'_>) -> Option<String> {
     match unwrap_ts_wrappers(expression) {
         Expression::StringLiteral(literal) => Some(literal.value.as_str().to_string()),

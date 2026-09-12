@@ -15,7 +15,6 @@ type TestBuckets = (
     BTreeSet<String>,
 );
 
-#[inline(never)]
 pub(crate) fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path) -> TestsReport {
     let filter_files: BTreeSet<String> = files.iter().map(|f| input_file(root, f)).collect();
 
@@ -116,7 +115,6 @@ pub(crate) fn build_tests_report(edges: &[Edge], files: &[PathBuf], root: &Path)
     TestsReport { tests }
 }
 
-#[inline(never)]
 pub(crate) fn print_tests_text(report: &TestsReport) {
     for entry in &report.tests {
         if let Some(name) = &entry.name {
@@ -147,7 +145,6 @@ pub(crate) fn print_tests_text(report: &TestsReport) {
     }
 }
 
-#[inline(never)]
 fn input_file(root: &Path, file: &Path) -> String {
     if file.is_absolute() {
         return relative_string(root, file);

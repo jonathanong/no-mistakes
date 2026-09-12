@@ -1,4 +1,3 @@
-#[inline(never)]
 fn resolve_symbol_dependents(
     root: &Path,
     entrypoints: &[Entrypoint],
@@ -31,7 +30,6 @@ fn resolve_symbol_dependents(
     entries
 }
 
-#[inline(never)]
 fn write_entries(
     format: Format,
     root_strs: &[String],
@@ -48,7 +46,6 @@ fn write_entries(
     }
 }
 
-#[inline(never)]
 fn resolve_format(json: bool, format: Option<Format>, stdout_is_terminal: bool) -> Format {
     if json {
         Format::Json
@@ -61,12 +58,10 @@ fn resolve_format(json: bool, format: Option<Format>, stdout_is_terminal: bool) 
     }
 }
 
-#[inline(never)]
 fn sort_node_entries(entries: &mut [graph::NodeEntry], root: &Path) {
     entries.sort_by_cached_key(|entry| (entry.depth, entry.node.display_name(root)));
 }
 
-#[inline(never)]
 fn merge_node_entries(
     merged: &mut HashMap<NodeId, graph::NodeEntry>,
     entries: Vec<graph::NodeEntry>,

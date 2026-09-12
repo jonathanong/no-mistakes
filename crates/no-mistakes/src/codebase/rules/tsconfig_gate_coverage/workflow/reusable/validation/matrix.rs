@@ -31,7 +31,6 @@ enum StaticMatrixJobCount {
     Invalid,
 }
 
-#[inline(never)]
 pub(crate) fn matrix_shape_valid(job: &Value) -> bool {
     let Some(strategy) = job.get("strategy") else {
         return true;
@@ -54,24 +53,20 @@ pub(crate) fn matrix_shape_valid(job: &Value) -> bool {
     }
 }
 
-#[inline(never)]
 fn matrix_expression_may_be_mapping(value: &str) -> bool {
     matrix_expression_valid(value)
         && complete_literal_expression_value(value).is_none_or(|value| value.as_mapping().is_some())
         && super::super::super::complete_expression_may_be_mapping(value)
 }
 
-#[inline(never)]
 fn matrix_expression_valid(value: &str) -> bool {
     complete_expression_contexts_available(value, MATRIX_CONTEXTS)
 }
 
-#[inline(never)]
 fn matrix_interpolated_expression_valid(value: &str) -> bool {
     interpolated_expression_contexts_available(value, MATRIX_CONTEXTS)
 }
 
-#[inline(never)]
 fn static_matrix_job_count(mapping: &serde_yaml::Mapping) -> StaticMatrixJobCount {
     let axes = match static_matrix_axes(mapping) {
         axes @ (StaticMatrixAxes::Static(_) | StaticMatrixAxes::Dynamic) => axes,

@@ -5,12 +5,10 @@ use std::collections::HashMap;
 
 /// Only static `EXECUTE` expressions become SQL facts. Runtime concatenation is
 /// intentionally opaque; assigned variables are invalidated on nonstatic write.
-#[inline(never)]
 pub(super) fn extract(sql: &str) -> Vec<DynamicSql> {
     bodies(sql).iter().flat_map(extract_body).collect()
 }
 
-#[inline(never)]
 fn extract_body(body: &RoutineBody) -> Vec<DynamicSql> {
     let all = tokenize(&body.sql);
     let mut variables = HashMap::<String, Option<DynamicSql>>::new();
@@ -39,7 +37,6 @@ fn extract_body(body: &RoutineBody) -> Vec<DynamicSql> {
     result
 }
 
-#[inline(never)]
 fn executed_expression(
     tokens: &[&TokenWithSpan],
     variables: &HashMap<String, Option<DynamicSql>>,
@@ -57,7 +54,6 @@ fn executed_expression(
     expression_sql(tokens, variables).map(|sql| DynamicSql::anchored(sql, line))
 }
 
-#[inline(never)]
 fn expression_sql(
     tokens: &[&TokenWithSpan],
     variables: &HashMap<String, Option<DynamicSql>>,
@@ -73,7 +69,6 @@ fn expression_sql(
     })
 }
 
-#[inline(never)]
 fn execution_tokens<'a>(tokens: &'a [&TokenWithSpan]) -> &'a [&'a TokenWithSpan] {
     let end = tokens
         .iter()
@@ -82,7 +77,6 @@ fn execution_tokens<'a>(tokens: &'a [&TokenWithSpan]) -> &'a [&'a TokenWithSpan]
     &tokens[..end]
 }
 
-#[inline(never)]
 fn static_expression(tokens: &[&TokenWithSpan]) -> Option<String> {
     if tokens
         .iter()
@@ -104,7 +98,6 @@ fn static_expression(tokens: &[&TokenWithSpan]) -> Option<String> {
     None
 }
 
-#[inline(never)]
 fn format_argument_start(tokens: &[&TokenWithSpan]) -> Option<usize> {
     if tokens.len() >= 3 && word(tokens[0], "FORMAT") && matches!(tokens[1].token, Token::LParen) {
         return Some(2);
@@ -117,7 +110,6 @@ fn format_argument_start(tokens: &[&TokenWithSpan]) -> Option<usize> {
     .then_some(4)
 }
 
-#[inline(never)]
 fn assignment_name<'a>(tokens: &'a [&TokenWithSpan], assignment: usize) -> Option<&'a str> {
     let line = tokens.get(assignment)?.span.start.line;
     let identifiers = tokens[..assignment]
@@ -135,7 +127,6 @@ fn assignment_name<'a>(tokens: &'a [&TokenWithSpan], assignment: usize) -> Optio
     (!is_control_word(name)).then_some(*name)
 }
 
-#[inline(never)]
 fn assignment_at(tokens: &[&TokenWithSpan]) -> Option<usize> {
     tokens
         .iter()
@@ -150,7 +141,6 @@ fn assignment_at(tokens: &[&TokenWithSpan]) -> Option<usize> {
         })
 }
 
-#[inline(never)]
 fn is_control_word(word: &str) -> bool {
     matches!(
         word.to_ascii_uppercase().as_str(),

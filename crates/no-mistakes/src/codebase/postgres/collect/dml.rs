@@ -7,7 +7,6 @@ use crate::codebase::ts_source::SourceStore;
 use rayon::prelude::*;
 use std::path::{Path, PathBuf};
 
-#[inline(never)]
 pub(super) fn collect(
     root: &Path,
     sources: &SourceStore,
@@ -33,7 +32,6 @@ pub(super) fn collect(
     Ok(facts)
 }
 
-#[inline(never)]
 fn embedded_call_facts(file: &EmbeddedSqlFileFacts) -> Vec<SqlStatementFileFacts> {
     file.calls
         .iter()
@@ -48,7 +46,6 @@ fn embedded_call_facts(file: &EmbeddedSqlFileFacts) -> Vec<SqlStatementFileFacts
         .collect()
 }
 
-#[inline(never)]
 fn rebase_embedded_lines(facts: &mut SqlStatementFileFacts, call: &EmbeddedSqlCall) {
     let base = match call.kind {
         EmbeddedSqlKind::Inline => call.line,

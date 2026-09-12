@@ -2,12 +2,10 @@ use crate::codebase::ts_source::relative_slash_path;
 use serde_yaml::Value;
 use std::path::{Path, PathBuf};
 
-#[inline(never)]
 pub(super) fn configured_rel(rel: &str) -> &str {
     rel.trim_start_matches("./")
 }
 
-#[inline(never)]
 pub(super) fn tracked_rels(root: &Path, files: &[PathBuf]) -> std::collections::HashSet<String> {
     files
         .iter()
@@ -15,7 +13,6 @@ pub(super) fn tracked_rels(root: &Path, files: &[PathBuf]) -> std::collections::
         .collect()
 }
 
-#[inline(never)]
 pub(super) fn parse_source(path: &Path, source: &str) -> Result<Value, String> {
     let extension = path
         .extension()
@@ -28,7 +25,6 @@ pub(super) fn parse_source(path: &Path, source: &str) -> Result<Value, String> {
     }
 }
 
-#[inline(never)]
 fn parse_toml(source: &str) -> Result<Value, String> {
     if source.trim().is_empty() {
         return Ok(Value::Mapping(serde_yaml::Mapping::new()));
@@ -39,7 +35,6 @@ fn parse_toml(source: &str) -> Result<Value, String> {
 }
 
 /// Resolve `section.key` where `key` may contain `:`, `/`, and extra `.`.
-#[inline(never)]
 pub(super) fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value> {
     let Some((section, rest)) = key.split_once('.') else {
         return value.get(key);
@@ -51,7 +46,6 @@ pub(super) fn value_at_key<'a>(value: &'a Value, key: &str) -> Option<&'a Value>
     })
 }
 
-#[inline(never)]
 pub(super) fn pin_kind(value: &Value) -> String {
     match value {
         Value::Number(number) => number.to_string(),

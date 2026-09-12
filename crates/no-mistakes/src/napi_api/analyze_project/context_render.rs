@@ -1,4 +1,3 @@
-#[inline(never)]
 fn render_queue_report(
     report_type: &str,
     options: &ProjectOptions,
@@ -24,7 +23,6 @@ fn render_queue_report(
     }
 }
 
-#[inline(never)]
 fn server_filters(report_type: &str, options: &ProjectOptions) -> Vec<String> {
     let mut filters = options.filters.clone();
     if report_type == "serverContracts" {
@@ -33,7 +31,6 @@ fn server_filters(report_type: &str, options: &ProjectOptions) -> Vec<String> {
     filters
 }
 
-#[inline(never)]
 fn render_server_report(
     report_type: &str,
     options: &ProjectOptions,
@@ -81,7 +78,6 @@ fn render_server_report(
     }
 }
 
-#[inline(never)]
 fn render_playwright_report(
     report_type: &str,
     options: &PlaywrightOptions,
@@ -115,7 +111,6 @@ fn render_playwright_report(
     }
 }
 
-#[inline(never)]
 fn json_value<T: serde::Serialize>(value: &T) -> Value {
     crate::cli::json_value(value)
 }

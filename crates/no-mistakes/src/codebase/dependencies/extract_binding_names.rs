@@ -1,4 +1,3 @@
-#[inline(never)]
 fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
     match pattern {
         BindingPattern::BindingIdentifier(identifier) => vec![identifier.name.to_string()],
@@ -17,7 +16,6 @@ fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
     }
 }
 
-#[inline(never)]
 fn assignment_target_names(target: &AssignmentTarget<'_>) -> Vec<String> {
     match target {
         AssignmentTarget::AssignmentTargetIdentifier(identifier) => {
@@ -63,7 +61,6 @@ fn assignment_target_names(target: &AssignmentTarget<'_>) -> Vec<String> {
     }
 }
 
-#[inline(never)]
 fn assignment_target_maybe_default_names(target: &AssignmentTargetMaybeDefault<'_>) -> Vec<String> {
     match target {
         AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(target) => {

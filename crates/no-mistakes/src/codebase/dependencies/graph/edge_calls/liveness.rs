@@ -1,4 +1,3 @@
-#[inline(never)]
 fn invocation_offsets_from_bindings(
     bindings: &FxHashMap<(usize, String), crate::codebase::dependencies::extract::CallableId>,
     calls: &[crate::codebase::dependencies::extract::FunctionCall],
@@ -26,7 +25,6 @@ fn invocation_offsets_from_bindings(
     offsets
 }
 
-#[inline(never)]
 fn lexical_scope_is_nested_in(
     parents: &FxHashMap<usize, Option<usize>>,
     child: Option<usize>,
@@ -54,7 +52,6 @@ struct BindingLivenessQuery<'a> {
     lexical_parents: &'a FxHashMap<usize, Option<usize>>,
 }
 
-#[inline(never)]
 fn binding_live_at(query: BindingLivenessQuery<'_>) -> bool {
     if query
         .invalidated_at

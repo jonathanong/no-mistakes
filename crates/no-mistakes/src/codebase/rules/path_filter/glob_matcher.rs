@@ -6,7 +6,6 @@ pub(crate) struct GlobMatcher {
 }
 
 impl GlobMatcher {
-    #[inline(never)]
     pub(crate) fn new(patterns: &[String], context: &str) -> Result<Self> {
         let mut builder = GlobSetBuilder::new();
         let mut count = 0usize;
@@ -41,12 +40,10 @@ impl GlobMatcher {
         Ok(Self { globset })
     }
 
-    #[inline(never)]
     pub(crate) fn is_empty(&self) -> bool {
         self.globset.is_none()
     }
 
-    #[inline(never)]
     pub(crate) fn is_match(&self, rel: &str) -> bool {
         self.globset
             .as_ref()

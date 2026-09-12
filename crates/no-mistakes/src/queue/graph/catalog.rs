@@ -2,7 +2,6 @@ use super::{build_filter, build_report, queue_project_facts_from_shared};
 use super::{resolve_queue_relationships_with_resolver, ProjectReport};
 use std::path::Path;
 
-#[inline(never)]
 pub(super) fn analyze(
     root: &Path,
     tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,
@@ -20,7 +19,6 @@ pub(super) fn analyze(
     )
 }
 
-#[inline(never)]
 pub(super) fn analyze_with<T>(
     root: &Path,
     tsconfig_catalog: &crate::codebase::ts_resolver::TsConfigCatalog,

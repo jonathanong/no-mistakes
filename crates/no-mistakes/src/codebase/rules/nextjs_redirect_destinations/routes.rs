@@ -7,7 +7,6 @@ const PAGE_EXTS: &[&str] = &["tsx", "ts", "jsx", "js"];
 ///
 /// `_`-prefixed segments mark the whole route private. `(group)` and `@slot`
 /// segments unwrap. Remaining segments join as `/a/b`; none yields `/`.
-#[inline(never)]
 pub(super) fn build_route_set(files: &[std::path::PathBuf], app_root: &Path) -> BTreeSet<String> {
     let app_root = crate::codebase::ts_resolver::normalize_path(app_root);
     let mut routes = BTreeSet::new();
@@ -26,14 +25,12 @@ pub(super) fn build_route_set(files: &[std::path::PathBuf], app_root: &Path) -> 
     routes
 }
 
-#[inline(never)]
 pub(super) fn is_page_file(path: &Path) -> bool {
     let stem = path.file_stem().and_then(|stem| stem.to_str()) == Some("page");
     let ext = path.extension().and_then(|ext| ext.to_str()).unwrap_or("");
     stem && PAGE_EXTS.contains(&ext)
 }
 
-#[inline(never)]
 pub(super) fn route_from_page_relative(relative: &Path) -> Option<String> {
     if !is_page_file(relative) {
         return None;
@@ -63,7 +60,6 @@ pub(super) fn route_from_page_relative(relative: &Path) -> Option<String> {
     })
 }
 
-#[inline(never)]
 pub(super) fn strip_query_and_hash(destination: &str) -> &str {
     let without_query = destination
         .split_once('?')
@@ -73,7 +69,6 @@ pub(super) fn strip_query_and_hash(destination: &str) -> &str {
         .map_or(without_query, |(path, _)| path)
 }
 
-#[inline(never)]
 pub(super) fn should_skip_destination(dest_path: &str) -> bool {
     dest_path.contains("://")
         || dest_path.starts_with("//")
@@ -83,7 +78,6 @@ pub(super) fn should_skip_destination(dest_path: &str) -> bool {
             .any(|pair| pair[0] == b':' && pair[1].is_ascii_alphabetic())
 }
 
-#[inline(never)]
 pub(super) fn destination_matches(route_set: &BTreeSet<String>, dest_path: &str) -> bool {
     if route_set.contains(dest_path) {
         return true;
@@ -99,7 +93,6 @@ pub(super) fn destination_matches(route_set: &BTreeSet<String>, dest_path: &str)
     })
 }
 
-#[inline(never)]
 pub(super) fn matches_route_segments(route_segs: &[&str], dest_segs: &[&str]) -> bool {
     let last_seg = route_segs.last().copied().unwrap_or("");
     if !last_seg.contains("...") {
@@ -120,7 +113,6 @@ pub(super) fn matches_route_segments(route_segs: &[&str], dest_segs: &[&str]) ->
             .all(|(route, dest)| route.starts_with('[') || route == dest)
 }
 
-#[inline(never)]
 fn path_segments(path: &str) -> Vec<&str> {
     path.split('/')
         .filter(|segment| !segment.is_empty())

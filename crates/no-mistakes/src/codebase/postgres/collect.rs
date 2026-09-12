@@ -12,7 +12,6 @@ use std::path::{Path, PathBuf};
 mod dml;
 
 /// Read `sql_paths` through `sources` and extract migration schema facts.
-#[inline(never)]
 pub fn extract_schema_facts(
     _root: &Path,
     sources: &SourceStore,
@@ -27,7 +26,6 @@ pub fn extract_schema_facts(
 }
 
 /// Filter candidates with `sql_include` globs, then extract schema facts.
-#[inline(never)]
 pub fn collect_schema_facts(
     root: &Path,
     sources: &SourceStore,
@@ -41,7 +39,6 @@ pub fn collect_schema_facts(
 /// Select static PostgreSQL files using the same `sqlInclude` semantics as
 /// schema fact collection. Query rules use this when an opt-in needs to scan
 /// checked-in `.sql` query files rather than only typed executor calls.
-#[inline(never)]
 pub fn postgres_sql_paths(
     root: &Path,
     candidate_paths: &[PathBuf],
@@ -56,7 +53,6 @@ pub fn postgres_sql_paths(
 }
 
 /// Read TS/JS paths through `sources` and extract executor call SQL.
-#[inline(never)]
 pub fn extract_embedded_sql_facts(
     _root: &Path,
     sources: &SourceStore,
@@ -72,7 +68,6 @@ pub fn extract_embedded_sql_facts(
 }
 
 /// Collect only the fact sets requested by `plan`. Later rules call this.
-#[inline(never)]
 pub fn collect_postgres_facts(
     root: &Path,
     sources: &SourceStore,
@@ -108,7 +103,6 @@ pub fn collect_postgres_facts(
     })
 }
 
-#[inline(never)]
 fn schema_file_facts(
     path: &Path,
     sources: &SourceStore,
@@ -119,7 +113,6 @@ fn schema_file_facts(
     Ok(facts)
 }
 
-#[inline(never)]
 fn embedded_file_facts(
     path: &Path,
     sources: &SourceStore,
@@ -129,7 +122,6 @@ fn embedded_file_facts(
     Ok(extract_embedded_sql_from_source(path, &source, options))
 }
 
-#[inline(never)]
 pub(super) fn read_source(
     path: &Path,
     sources: &SourceStore,
@@ -139,7 +131,6 @@ pub(super) fn read_source(
         .map_err(|error| PostgresFactError::for_path(path, format!("failed to read: {error}")))
 }
 
-#[inline(never)]
 pub(super) fn compile_sql_include(patterns: &[String]) -> Result<GlobSet, PostgresFactError> {
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {
@@ -153,7 +144,6 @@ pub(super) fn compile_sql_include(patterns: &[String]) -> Result<GlobSet, Postgr
         .map_err(|error| PostgresFactError::message(format!("invalid sqlInclude globs: {error}")))
 }
 
-#[inline(never)]
 pub(super) fn matches_sql_include(root: &Path, path: &Path, globs: &GlobSet) -> bool {
     let relative = relative_slash_path(root, path);
     globs.is_match(&relative)

@@ -1,5 +1,4 @@
 impl ImportCollector {
-    #[inline(never)]
     fn record_const_callable_aliases(&mut self, declaration: &VariableDeclaration<'_>) {
         if declaration.kind != VariableDeclarationKind::Const {
             return;
@@ -14,7 +13,6 @@ impl ImportCollector {
         }
     }
 
-    #[inline(never)]
     fn record_const_aggregate_alias_candidate(
         &mut self,
         pattern: &BindingPattern<'_>,
@@ -38,7 +36,6 @@ impl ImportCollector {
             });
     }
 
-    #[inline(never)]
     fn record_callable_alias_from_pattern(
         &mut self,
         pattern: &BindingPattern<'_>,
@@ -104,7 +101,6 @@ impl ImportCollector {
         }
     }
 
-    #[inline(never)]
     fn callable_alias_target(&self, init: &Expression<'_>) -> Option<String> {
         simple_callee_name(init).filter(|target| {
             matches!(
@@ -114,7 +110,6 @@ impl ImportCollector {
         })
     }
 
-    #[inline(never)]
     fn push_callable_alias(&mut self, local: String, target: String, declared_at: u32) {
         self.insert_callable_alias(CallableAliasBinding {
             alias: CallableAlias {
@@ -130,7 +125,6 @@ impl ImportCollector {
         });
     }
 
-    #[inline(never)]
     fn insert_callable_alias(&mut self, binding: CallableAliasBinding) {
         let scope = binding.alias.binding_scope;
         let local = binding.alias.local.clone();
@@ -139,7 +133,6 @@ impl ImportCollector {
         self.insert_callable_alias_index_at(scope, local, index);
     }
 
-    #[inline(never)]
     fn indexed_callable_alias(&self, scope: usize, local: &str) -> Option<&CallableAlias> {
         let index = self.callable_alias_index_at(scope, local)?;
         self.callable_aliases
@@ -147,7 +140,6 @@ impl ImportCollector {
             .map(|binding| &binding.alias)
     }
 
-    #[inline(never)]
     fn record_reassigned_callable_alias(&mut self, name: &str, offset: u32) {
         let binding_name = name.split_once('.').map_or(name, |(binding, _)| binding);
         let Some((lexical_scope_depth, binding_scope)) = self

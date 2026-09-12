@@ -1,9 +1,7 @@
-#[inline(never)]
 pub(super) fn nth_insert_line(sql: &str, n: usize) -> usize {
     nth_keyword_pair_line(sql, "insert", "into", n)
 }
 
-#[inline(never)]
 pub(super) fn nth_insert_source(sql: &str, n: usize) -> String {
     let pairs = keyword_pair_words(sql, "insert", "into");
     let start = pairs
@@ -14,7 +12,6 @@ pub(super) fn nth_insert_source(sql: &str, n: usize) -> String {
     sql.get(start..end).unwrap_or_default().to_string()
 }
 
-#[inline(never)]
 pub(super) fn nth_keyword_pair_line(sql: &str, first: &str, second: &str, n: usize) -> usize {
     keyword_pair_lines(sql, first, second)
         .get(n.saturating_sub(1))
@@ -22,7 +19,6 @@ pub(super) fn nth_keyword_pair_line(sql: &str, first: &str, second: &str, n: usi
         .unwrap_or(1)
 }
 
-#[inline(never)]
 fn keyword_pair_lines(sql: &str, first: &str, second: &str) -> Vec<usize> {
     keyword_pair_words(sql, first, second)
         .into_iter()
@@ -30,7 +26,6 @@ fn keyword_pair_lines(sql: &str, first: &str, second: &str) -> Vec<usize> {
         .collect()
 }
 
-#[inline(never)]
 fn keyword_pair_words(sql: &str, first: &str, second: &str) -> Vec<Word> {
     let words = words(sql);
     (0..words.len().saturating_sub(1))
@@ -39,7 +34,6 @@ fn keyword_pair_words(sql: &str, first: &str, second: &str) -> Vec<Word> {
         .collect()
 }
 
-#[inline(never)]
 pub(super) fn line_containing(source: &str, parts: &[&str]) -> usize {
     source
         .lines()
@@ -61,7 +55,6 @@ struct Word {
     text: String,
 }
 
-#[inline(never)]
 fn words(sql: &str) -> Vec<Word> {
     let bytes = sql.as_bytes();
     let mut index = 0usize;
@@ -110,7 +103,6 @@ fn words(sql: &str) -> Vec<Word> {
     out
 }
 
-#[inline(never)]
 fn skip_block_comment(bytes: &[u8], mut index: usize, line: &mut usize) -> usize {
     index += 2;
     let mut depth = 1i32;
@@ -133,7 +125,6 @@ fn skip_block_comment(bytes: &[u8], mut index: usize, line: &mut usize) -> usize
     index.min(bytes.len())
 }
 
-#[inline(never)]
 fn skip_quoted(bytes: &[u8], mut index: usize, quote: u8, line: &mut usize) -> usize {
     index += 1;
     while index < bytes.len() {
@@ -152,7 +143,6 @@ fn skip_quoted(bytes: &[u8], mut index: usize, quote: u8, line: &mut usize) -> u
     index
 }
 
-#[inline(never)]
 fn skip_dollar(bytes: &[u8], start: usize, line: &mut usize) -> Option<usize> {
     let mut index = start + 1;
     while index < bytes.len() && (bytes[index].is_ascii_alphanumeric() || bytes[index] == b'_') {
@@ -175,7 +165,6 @@ fn skip_dollar(bytes: &[u8], start: usize, line: &mut usize) -> Option<usize> {
     Some(bytes.len())
 }
 
-#[inline(never)]
 fn eq(word: &Word, expected: &str) -> bool {
     word.text.eq_ignore_ascii_case(expected)
 }

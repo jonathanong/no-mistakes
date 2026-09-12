@@ -8,7 +8,6 @@ use anyhow::Context;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-#[inline(never)]
 pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
@@ -118,7 +117,6 @@ pub(super) fn scan(
     Ok(findings)
 }
 
-#[inline(never)]
 fn fragment_statement_facts(sql: &str) -> crate::codebase::postgres::SqlStatementFileFacts {
     let direct = extract_sql_statement_facts(sql);
     if !direct.selects.is_empty() {
@@ -135,7 +133,6 @@ fn fragment_statement_facts(sql: &str) -> crate::codebase::postgres::SqlStatemen
     extract_sql_statement_facts(&wrapper)
 }
 
-#[inline(never)]
 fn finding(file: &str, line: usize, message: &str) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),

@@ -26,7 +26,6 @@ struct BaselineEntry {
     mermaid: usize,
 }
 
-#[inline(never)]
 pub(crate) fn check_with_files_sources_and_facts(
     root: &Path,
     config: &NoMistakesConfig,
@@ -89,7 +88,6 @@ pub(crate) fn check_with_files_sources_and_facts(
     super::sort_findings(&mut findings);
     Ok(findings)
 }
-#[inline(never)]
 fn read_baseline(
     root: &Path,
     path: Option<&Path>,
@@ -116,7 +114,6 @@ fn read_baseline(
         .context(format!("read {RULE_ID} baseline {}", path.display()))?;
     serde_json::from_str(&content).context("parse markdown-structure-budget baseline JSON")
 }
-#[inline(never)]
 fn stale(file: &str, message: &str) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),

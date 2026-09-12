@@ -1,4 +1,3 @@
-#[inline(never)]
 fn object_route_pattern(obj: &oxc_ast::ast::ObjectExpression) -> Option<String> {
     let mut pathname = None;
     let mut query_params = BTreeSet::new();
@@ -17,7 +16,6 @@ fn object_route_pattern(obj: &oxc_ast::ast::ObjectExpression) -> Option<String> 
     Some(pattern)
 }
 
-#[inline(never)]
 fn property_key_name<'a>(key: &'a PropertyKey<'_>) -> Option<&'a str> {
     match key {
         PropertyKey::StaticIdentifier(id) => Some(id.name.as_str()),
@@ -26,7 +24,6 @@ fn property_key_name<'a>(key: &'a PropertyKey<'_>) -> Option<&'a str> {
     }
 }
 
-#[inline(never)]
 fn collect_static_query_keys(expr: &Expression<'_>, query_params: &mut BTreeSet<String>) {
     let Expression::ObjectExpression(obj) = expr else {
         return;
@@ -41,7 +38,6 @@ fn collect_static_query_keys(expr: &Expression<'_>, query_params: &mut BTreeSet<
     }
 }
 
-#[inline(never)]
 fn append_query_params(pattern: &mut String, query_params: BTreeSet<String>) {
     for param in query_params {
         pattern.push(if pattern.contains('?') { '&' } else { '?' });

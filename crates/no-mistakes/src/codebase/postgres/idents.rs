@@ -2,7 +2,6 @@ use sqlparser::ast::Expr;
 use std::collections::HashSet;
 
 /// Lowercased identifiers referenced anywhere under `expr`.
-#[inline(never)]
 pub fn collect_ident_names(expr: &Expr) -> Vec<String> {
     let mut names = Vec::new();
     collect_idents(expr, &mut names);
@@ -11,7 +10,6 @@ pub fn collect_ident_names(expr: &Expr) -> Vec<String> {
     names
 }
 
-#[inline(never)]
 pub fn unwrap_expr(expr: &Expr) -> &Expr {
     match expr {
         Expr::Nested(inner) => unwrap_expr(inner),
@@ -19,7 +17,6 @@ pub fn unwrap_expr(expr: &Expr) -> &Expr {
     }
 }
 
-#[inline(never)]
 pub(crate) fn visit_child_exprs(expr: &Expr, visit: &mut impl FnMut(&Expr)) {
     match expr {
         Expr::BinaryOp { left, right, .. }
@@ -77,7 +74,6 @@ pub(crate) fn visit_child_exprs(expr: &Expr, visit: &mut impl FnMut(&Expr)) {
     }
 }
 
-#[inline(never)]
 pub(crate) fn ident_key(ident: &sqlparser::ast::Ident) -> String {
     if ident.quote_style.is_some() {
         ident.value.clone()
@@ -86,7 +82,6 @@ pub(crate) fn ident_key(ident: &sqlparser::ast::Ident) -> String {
     }
 }
 
-#[inline(never)]
 pub(crate) fn object_name_ident(
     name: &sqlparser::ast::ObjectName,
 ) -> Option<&sqlparser::ast::Ident> {
@@ -96,7 +91,6 @@ pub(crate) fn object_name_ident(
     })
 }
 
-#[inline(never)]
 pub(crate) fn insert_ident(local: &mut HashSet<String>, ident: &sqlparser::ast::Ident) {
     let key = ident_key(ident);
     if !key.is_empty() {
@@ -104,7 +98,6 @@ pub(crate) fn insert_ident(local: &mut HashSet<String>, ident: &sqlparser::ast::
     }
 }
 
-#[inline(never)]
 fn collect_idents(expr: &Expr, names: &mut Vec<String>) {
     match unwrap_expr(expr) {
         Expr::Identifier(ident) => names.push(ident.value.to_ascii_lowercase()),
@@ -117,7 +110,6 @@ fn collect_idents(expr: &Expr, names: &mut Vec<String>) {
     }
 }
 
-#[inline(never)]
 fn visit_function_arg_exprs(function: &sqlparser::ast::Function, visit: &mut impl FnMut(&Expr)) {
     let sqlparser::ast::FunctionArguments::List(list) = &function.args else {
         return;
@@ -125,7 +117,6 @@ fn visit_function_arg_exprs(function: &sqlparser::ast::Function, visit: &mut imp
     visit_function_args(&list.args, visit);
 }
 
-#[inline(never)]
 pub(crate) fn visit_function_args(
     args: &[sqlparser::ast::FunctionArg],
     visit: &mut impl FnMut(&Expr),
@@ -137,7 +128,6 @@ pub(crate) fn visit_function_args(
     }
 }
 
-#[inline(never)]
 fn function_arg_expr(arg: &sqlparser::ast::FunctionArg) -> Option<&Expr> {
     match arg {
         sqlparser::ast::FunctionArg::Unnamed(sqlparser::ast::FunctionArgExpr::Expr(expr))

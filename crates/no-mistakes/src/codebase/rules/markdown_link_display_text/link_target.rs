@@ -1,6 +1,5 @@
 use super::*;
 
-#[inline(never)]
 pub(super) fn finding_for_link(
     file: &str,
     source: &str,
@@ -27,7 +26,6 @@ pub(super) fn finding_for_link(
     })
 }
 
-#[inline(never)]
 fn looks_like_md_filename(text: &str, extensions: &[&str]) -> bool {
     extensions.iter().any(|extension| text.ends_with(extension))
         && !text.is_empty()
@@ -36,7 +34,6 @@ fn looks_like_md_filename(text: &str, extensions: &[&str]) -> bool {
             .any(|ch| ch == '/' || ch == '\\' || ch.is_whitespace())
 }
 
-#[inline(never)]
 pub(super) fn href_basename(href: &str) -> Option<String> {
     let bare = href_destination(href);
     let before_fragment = bare.split('#').next().unwrap_or_default();
@@ -52,7 +49,6 @@ pub(super) fn href_basename(href: &str) -> Option<String> {
         .map(markdown_unescape)
 }
 
-#[inline(never)]
 fn percent_decode(value: &str) -> String {
     let bytes = value.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
@@ -71,7 +67,6 @@ fn percent_decode(value: &str) -> String {
     String::from_utf8(out).unwrap_or_else(|_| value.to_string())
 }
 
-#[inline(never)]
 fn markdown_unescape(value: String) -> String {
     let mut out = String::with_capacity(value.len());
     let mut chars = value.chars();
@@ -94,12 +89,10 @@ fn markdown_unescape(value: String) -> String {
     out
 }
 
-#[inline(never)]
 fn decode_hex_byte(high: Option<&u8>, low: Option<&u8>) -> Option<u8> {
     Some(hex_value(*high?)? * 16 + hex_value(*low?)?)
 }
 
-#[inline(never)]
 fn hex_value(byte: u8) -> Option<u8> {
     match byte {
         b'0'..=b'9' => Some(byte - b'0'),
@@ -109,13 +102,11 @@ fn hex_value(byte: u8) -> Option<u8> {
     }
 }
 
-#[inline(never)]
 fn is_non_local_href(href: &str) -> bool {
     let bare = href_destination(href);
     bare.starts_with('#') || bare.starts_with("//") || has_url_scheme(bare)
 }
 
-#[inline(never)]
 fn has_url_scheme(value: &str) -> bool {
     let Some(colon) = value.find(':') else {
         return false;
@@ -131,7 +122,6 @@ fn has_url_scheme(value: &str) -> bool {
             .is_some_and(|ch| ch.is_ascii_alphabetic())
 }
 
-#[inline(never)]
 pub(super) fn href_destination(value: &str) -> &str {
     let trimmed = value.trim();
     if let Some(rest) = trimmed.strip_prefix('<') {

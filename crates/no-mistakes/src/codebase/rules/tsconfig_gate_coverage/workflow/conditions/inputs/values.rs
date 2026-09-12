@@ -12,7 +12,6 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::expressions::{
     complete_expression_type, complete_literal_expression_value, StaticExpressionType,
 };
 
-#[inline(never)]
 pub(super) fn default_value(
     default: Option<&JsonScalar>,
     input_type: WorkflowCallInputType,
@@ -43,7 +42,6 @@ pub(super) fn default_value(
     }
 }
 
-#[inline(never)]
 pub(super) fn nonboolean_binding_value(
     value: &Value,
     parent: &InputState,
@@ -70,7 +68,6 @@ pub(super) fn nonboolean_binding_value(
     }
 }
 
-#[inline(never)]
 pub(super) fn forwarded_input_value(value: &Value, parent: &InputState) -> Option<StaticValue> {
     let body = value
         .as_str()?
@@ -100,7 +97,6 @@ pub(super) fn forwarded_input_value(value: &Value, parent: &InputState) -> Optio
     parent.get(&name.to_lowercase()).cloned()
 }
 
-#[inline(never)]
 pub(super) fn matrix_axis_value(value: &Value) -> Option<StaticValue> {
     match value {
         Value::Bool(value) => Some(StaticValue::Bool(*value)),
@@ -116,7 +112,6 @@ pub(super) fn matrix_axis_value(value: &Value) -> Option<StaticValue> {
     }
 }
 
-#[inline(never)]
 fn static_expression_value(text: &str, activation_inputs: &InputState) -> Option<StaticValue> {
     let body = text.trim().strip_prefix("${{")?.strip_suffix("}}")?.trim();
     if let Some(value) = forwarded_input_value(&Value::String(text.to_string()), activation_inputs)

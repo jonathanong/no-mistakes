@@ -11,7 +11,6 @@ use globset::GlobSet;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
 
-#[inline(never)]
 pub(super) fn merge_remix_route_facts(
     prepared: &PreparedServerAnalysis,
     facts: &mut HashMap<PathBuf, FileFacts>,
@@ -40,7 +39,6 @@ pub(super) fn merge_remix_route_facts(
     }
 }
 
-#[inline(never)]
 fn remix_project_roots(
     workspace: &Path,
     config: &NoMistakesConfig,
@@ -65,7 +63,6 @@ fn remix_project_roots(
     roots
 }
 
-#[inline(never)]
 fn route_site(path: &Path, remix_roots: &[PathBuf]) -> Option<RouteSite> {
     let remix_root = remix_roots.iter().find(|root| path.starts_with(root))?;
     let rel = relative_slash_path(remix_root, path);

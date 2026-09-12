@@ -2,7 +2,6 @@
 /// reachability. This intentionally does not apply ordinary call-scope
 /// pruning: a literal dynamic import anywhere in a route-reachable module may
 /// be executed at runtime, even when the static call graph cannot prove it.
-#[inline(never)]
 fn collect_route_import_edges(
     files: &[PathBuf],
     facts: &dyn TsFactLookup,
@@ -99,7 +98,6 @@ fn collect_route_import_edges(
         .collect()
 }
 
-#[inline(never)]
 fn route_import_resolution_source(
     path: &Path,
     canonical_directories: &std::collections::BTreeMap<PathBuf, PathBuf>,
@@ -121,7 +119,6 @@ fn route_import_resolution_source(
     }
 }
 
-#[inline(never)]
 fn route_import_visible_target(
     target: PathBuf,
     graph_files: &GraphFiles,

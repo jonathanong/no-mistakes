@@ -9,7 +9,6 @@ struct SelectorTextEdgeInputs<'a> {
     test_policy: crate::playwright::playwright_tests::TestPolicy,
 }
 
-#[inline(never)]
 fn finish_selector_text_edges(
     text: SelectorTextEdgeInputs<'_>,
 ) -> Result<crate::playwright::analysis::types::TestFileAnalysis> {
@@ -70,7 +69,6 @@ fn finish_selector_text_edges(
     )
 }
 
-#[inline(never)]
 fn selector_wrapper_resolution(
     root: &Path,
     settings: &crate::playwright::config::Settings,

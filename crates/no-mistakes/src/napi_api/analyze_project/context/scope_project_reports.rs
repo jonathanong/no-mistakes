@@ -1,5 +1,4 @@
 impl PreparedScope {
-    #[inline(never)]
     pub(super) fn project_report(
         &self,
         request: &AnalyzeReportRequest,
@@ -38,7 +37,6 @@ impl PreparedScope {
         }
     }
 
-    #[inline(never)]
     pub(super) fn playwright_report(
         &self,
         request: &AnalyzeReportRequest,

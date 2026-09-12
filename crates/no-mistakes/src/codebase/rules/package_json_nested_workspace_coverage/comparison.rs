@@ -15,7 +15,6 @@ pub(super) struct CheckContext<'a> {
     pub(super) sources: &'a SourceStore,
 }
 
-#[inline(never)]
 pub(super) fn check_manifest(
     context: &CheckContext,
     manifest: &Manifest,
@@ -71,7 +70,6 @@ pub(super) fn check_manifest(
     Ok(())
 }
 
-#[inline(never)]
 fn targets(
     context: &CheckContext,
     manifest: &Manifest,
@@ -99,7 +97,6 @@ fn targets(
         .collect()
 }
 
-#[inline(never)]
 fn declared_paths(opts: &Options, manifests: &[Manifest], root: &Path) -> BTreeSet<String> {
     manifests
         .iter()
@@ -114,7 +111,6 @@ fn declared_paths(opts: &Options, manifests: &[Manifest], root: &Path) -> BTreeS
         .collect()
 }
 
-#[inline(never)]
 fn wildcard_finding(
     file: &str,
     line: usize,
@@ -147,7 +143,6 @@ fn wildcard_finding(
     Ok(false)
 }
 
-#[inline(never)]
 fn report_difference(
     file: &str,
     line: usize,
@@ -166,7 +161,6 @@ fn report_difference(
     }
 }
 
-#[inline(never)]
 fn finding(file: &str, line: usize, message: String) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),

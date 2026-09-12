@@ -5,12 +5,10 @@ pub(crate) struct SelectorValues<'a> {
     pub(crate) has_missing: bool,
 }
 
-#[inline(never)]
 pub(crate) fn values_at_selector<'a>(value: &'a Value, selector: &str) -> SelectorValues<'a> {
     walk(value, selector, false)
 }
 
-#[inline(never)]
 pub(crate) fn any_groups<'a>(value: &'a Value, selector: &str) -> Vec<Vec<&'a Value>> {
     let parts: Vec<&str> = selector
         .split('.')
@@ -49,7 +47,6 @@ pub(crate) fn any_groups<'a>(value: &'a Value, selector: &str) -> Vec<Vec<&'a Va
     groups
 }
 
-#[inline(never)]
 fn walk<'a>(value: &'a Value, selector: &str, skip_missing: bool) -> SelectorValues<'a> {
     let mut current = vec![Some(value)];
     let mut has_missing = false;
@@ -66,7 +63,6 @@ fn walk<'a>(value: &'a Value, selector: &str, skip_missing: bool) -> SelectorVal
     }
 }
 
-#[inline(never)]
 fn step_part<'a>(
     selected: Option<&'a Value>,
     part: &str,
@@ -99,7 +95,6 @@ fn step_part<'a>(
     }
 }
 
-#[inline(never)]
 fn push_missing(skip_missing: bool, next: &mut Vec<Option<&Value>>, has_missing: &mut bool) {
     if skip_missing {
         return;

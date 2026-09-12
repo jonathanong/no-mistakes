@@ -1,6 +1,5 @@
 use crate::playwright::selectors::scoped_defaults::ScopedStaticIdentifierDefault;
 
-#[inline(never)]
 pub(super) fn element_role(
     opening: &oxc_ast::ast::JSXOpeningElement<'_>,
     tag: Option<&str>,
@@ -16,7 +15,6 @@ pub(super) fn element_role(
     implicit_role(opening, tag, source, scoped_static_identifier_defaults).map(str::to_string)
 }
 
-#[inline(never)]
 fn first_role_token(value: &str) -> Option<String> {
     value
         .split_whitespace()
@@ -24,7 +22,6 @@ fn first_role_token(value: &str) -> Option<String> {
         .map(str::to_string)
 }
 
-#[inline(never)]
 fn valid_concrete_role(role: &str) -> bool {
     matches!(
         role,
@@ -113,7 +110,6 @@ fn valid_concrete_role(role: &str) -> bool {
     )
 }
 
-#[inline(never)]
 fn implicit_role(
     opening: &oxc_ast::ast::JSXOpeningElement<'_>,
     tag: Option<&str>,
@@ -142,7 +138,6 @@ fn implicit_role(
     }
 }
 
-#[inline(never)]
 fn input_role(
     opening: &oxc_ast::ast::JSXOpeningElement<'_>,
     source: &str,
@@ -163,7 +158,6 @@ fn input_role(
     }
 }
 
-#[inline(never)]
 fn select_role(
     opening: &oxc_ast::ast::JSXOpeningElement<'_>,
     source: &str,

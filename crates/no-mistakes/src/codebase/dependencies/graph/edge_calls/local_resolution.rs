@@ -1,4 +1,3 @@
-#[inline(never)]
 fn call_target_identity(
     file: &CallableFileIndex,
     call: &crate::codebase::dependencies::extract::FunctionCall,
@@ -29,7 +28,6 @@ fn call_target_identity(
 
 /// Resolves an unqualified name through lexical parent scopes, matching the
 /// existing import-reachability scope behavior without another AST pass.
-#[inline(never)]
 fn resolve_local_call_scope<'a>(
     caller: Option<&str>,
     _binding_scope: Option<usize>,

@@ -3,7 +3,6 @@ use super::common::{blank, blank_range, repeated, starts_with};
 mod string;
 use string::{csharp_string_start, mask_csharp_char, mask_csharp_string};
 
-#[inline(never)]
 pub(crate) fn csharp_code_mask(source: &str) -> String {
     let bytes = source.as_bytes();
     let mut masked = bytes.to_vec();
@@ -11,7 +10,6 @@ pub(crate) fn csharp_code_mask(source: &str) -> String {
     String::from_utf8(masked).expect("masking replaces UTF-8 bytes with ASCII spaces")
 }
 
-#[inline(never)]
 pub(super) fn mask_csharp_code(
     source: &[u8],
     masked: &mut [u8],
@@ -71,7 +69,6 @@ pub(super) fn mask_csharp_code(
     i
 }
 
-#[inline(never)]
 fn mask_interpolation_format(
     source: &[u8],
     masked: &mut [u8],
@@ -89,7 +86,6 @@ fn mask_interpolation_format(
     i
 }
 
-#[inline(never)]
 fn mask_line_comment(source: &[u8], masked: &mut [u8], mut i: usize) -> usize {
     while i < source.len() && source[i] != b'\n' {
         blank(masked, i);
@@ -98,7 +94,6 @@ fn mask_line_comment(source: &[u8], masked: &mut [u8], mut i: usize) -> usize {
     i
 }
 
-#[inline(never)]
 fn mask_block_comment(source: &[u8], masked: &mut [u8], mut i: usize) -> usize {
     while i < source.len() {
         if starts_with(source, i, b"*/") {

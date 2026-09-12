@@ -3,7 +3,6 @@ use crate::integration_tests::test_config::shared;
 use anyhow::Result;
 use oxc_ast::ast::{BindingPattern, Declaration, Expression, FunctionBody, VariableDeclarator};
 
-#[inline(never)]
 pub(super) fn named_export_options(
     export: &oxc_ast::ast::ExportNamedDeclaration<'_>,
     exported: &str,
@@ -31,7 +30,6 @@ pub(super) fn named_export_options(
     None
 }
 
-#[inline(never)]
 pub(super) fn declaration_options(
     declaration: &Declaration<'_>,
     exported: &str,
@@ -56,7 +54,6 @@ pub(super) fn declaration_options(
     }
 }
 
-#[inline(never)]
 pub(super) fn export_from_options(
     export: &oxc_ast::ast::ExportFromDeclaration<'_>,
     exported: &str,
@@ -78,7 +75,6 @@ pub(super) fn export_from_options(
     })
 }
 
-#[inline(never)]
 pub(super) fn default_function_options(
     body: Option<&FunctionBody<'_>>,
     ctx: &mut Ctx<'_, '_>,
@@ -89,7 +85,6 @@ pub(super) fn default_function_options(
     }
 }
 
-#[inline(never)]
 fn declarator_options(
     declarator: &VariableDeclarator<'_>,
     exported: &str,
@@ -105,7 +100,6 @@ fn declarator_options(
         .map(|expression| helper_expression_options(expression, ctx))
 }
 
-#[inline(never)]
 fn destructured_expression<'a>(
     binding: &BindingPattern<'a>,
     init: &'a Expression<'a>,
@@ -136,7 +130,6 @@ fn destructured_expression<'a>(
     None
 }
 
-#[inline(never)]
 fn binding_name<'a>(binding: &'a BindingPattern<'a>) -> Option<&'a str> {
     match binding {
         BindingPattern::BindingIdentifier(identifier) => Some(identifier.name.as_str()),

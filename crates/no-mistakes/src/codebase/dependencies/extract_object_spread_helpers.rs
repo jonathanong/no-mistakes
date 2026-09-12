@@ -1,4 +1,3 @@
-#[inline(never)]
 fn recorded_call_callee(
     collector: &ImportCollector,
     call: &CallExpression<'_>,
@@ -8,7 +7,6 @@ fn recorded_call_callee(
     Some(normalize_function_prototype_call_apply(collector, callee))
 }
 
-#[inline(never)]
 fn object_literal_spread_call_callee(
     collector: &ImportCollector,
     call: &CallExpression<'_>,
@@ -26,7 +24,6 @@ fn object_literal_spread_call_callee(
     object_literal_member_target(collector, object, member.property.name.as_str())
 }
 
-#[inline(never)]
 fn object_literal_member_target(
     collector: &ImportCollector,
     object: &ObjectExpression<'_>,
@@ -58,7 +55,6 @@ fn object_literal_member_target(
     target
 }
 
-#[inline(never)]
 fn known_object_spread_source(
     collector: &ImportCollector,
     argument: &Expression<'_>,
@@ -79,7 +75,6 @@ fn known_object_spread_source(
     Some((name.to_string(), object_id))
 }
 
-#[inline(never)]
 fn object_source_has_member(
     collector: &ImportCollector,
     source_id: CallableId,
@@ -95,7 +90,6 @@ fn object_source_has_member(
             .is_some()
 }
 
-#[inline(never)]
 fn record_object_spread_property(
     collector: &mut ImportCollector,
     _object_binding: &str,
@@ -110,7 +104,6 @@ fn record_object_spread_property(
     true
 }
 
-#[inline(never)]
 fn copy_known_object_spread(
     collector: &mut ImportCollector,
     object_scope: &str,
@@ -147,7 +140,6 @@ fn copy_known_object_spread(
     true
 }
 
-#[inline(never)]
 fn spread_member_aliases(
     collector: &ImportCollector,
     argument: &Expression<'_>,

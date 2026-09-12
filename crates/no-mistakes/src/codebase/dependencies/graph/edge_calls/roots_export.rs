@@ -2,7 +2,6 @@ impl DepGraph {
     /// Resolve an exported root through the canonical export resolution built
     /// alongside call edges. This is populated for every exported spelling,
     /// including exports with no inbound call site.
-    #[inline(never)]
     fn resolve_exported_callable_root(
         &self,
         file: &std::path::Path,
@@ -23,7 +22,6 @@ impl DepGraph {
         }
     }
 
-    #[inline(never)]
     fn unique_callable_node(
         &self,
         file: &std::path::Path,

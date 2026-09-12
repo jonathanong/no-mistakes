@@ -5,7 +5,6 @@ use crate::config::v2::NoMistakesConfig;
 use anyhow::{bail, Result};
 use std::path::Path;
 
-#[inline(never)]
 pub(super) fn validate_shared_graph_plan(
     root: &Path,
     config_path: Option<&Path>,
@@ -35,7 +34,6 @@ pub(super) fn validate_shared_graph_plan(
     Ok(())
 }
 
-#[inline(never)]
 pub(crate) fn check_with_prepared_facts_and_graph(
     root: &Path,
     config: &NoMistakesConfig,

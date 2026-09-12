@@ -25,7 +25,6 @@ pub(crate) struct Options {
     pub(crate) banned_substrings: Vec<String>,
 }
 
-#[inline(never)]
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let skip = &config.filesystem.skip_directories;
     let mut findings = Vec::new();
@@ -43,7 +42,6 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     Ok(findings)
 }
 
-#[inline(never)]
 pub(crate) fn check_with_files(
     root: &Path,
     config: &NoMistakesConfig,
@@ -53,7 +51,6 @@ pub(crate) fn check_with_files(
     check_with_files_and_sources(root, config, all_files, &sources)
 }
 
-#[inline(never)]
 pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
@@ -77,13 +74,11 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
-#[inline(never)]
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
     let sources = super::source_store_for_files(files);
     scan_with_sources(root, opts, files, &sources)
 }
 
-#[inline(never)]
 fn scan_with_sources(
     root: &Path,
     opts: &Options,

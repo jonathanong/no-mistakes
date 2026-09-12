@@ -5,14 +5,12 @@ use crate::codebase::postgres::embedded::unpublished_sql_text;
 use crate::codebase::ts_source::unwrap_ts_wrappers;
 use oxc_ast::ast::{BinaryOperator, CallExpression, Expression};
 
-#[inline(never)]
 pub(in crate::codebase::postgres::embedded::walk) fn builder_fragment(
     expr: &Expression<'_>,
     visitor: &ScopeVisitor<'_>,
 ) -> Option<String> {
     recover(expr, visitor, false)
 }
-#[inline(never)]
 pub(in crate::codebase::postgres::embedded::walk) fn appended_builder_fragment(
     call: &CallExpression<'_>,
     visitor: &ScopeVisitor<'_>,
@@ -26,7 +24,6 @@ pub(in crate::codebase::postgres::embedded::walk) fn appended_builder_fragment(
         })
         .flatten()
 }
-#[inline(never)]
 pub(in crate::codebase::postgres::embedded::walk) fn is_builder_append(
     call: &CallExpression<'_>,
     visitor: &ScopeVisitor<'_>,
@@ -42,7 +39,6 @@ pub(in crate::codebase::postgres::embedded::walk) fn is_builder_append(
             _ => false,
         }
 }
-#[inline(never)]
 fn recover(expr: &Expression<'_>, visitor: &ScopeVisitor<'_>, dynamic: bool) -> Option<String> {
     match unwrap_ts_wrappers(expr) {
         Expression::StringLiteral(literal) => Some(literal.value.to_string()),

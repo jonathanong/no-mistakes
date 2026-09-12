@@ -18,7 +18,6 @@ pub(super) struct DynamicSql {
 }
 
 impl DynamicSql {
-    #[inline(never)]
     fn anchored(sql: String, line: usize) -> Self {
         let line_count = sql.bytes().filter(|byte| *byte == b'\n').count() + 1;
         Self {
@@ -28,7 +27,6 @@ impl DynamicSql {
         }
     }
 
-    #[inline(never)]
     pub(super) fn source_line(&self, decoded_line: usize) -> usize {
         self.source_lines
             .get(decoded_line.saturating_sub(1))
@@ -38,22 +36,18 @@ impl DynamicSql {
     }
 }
 
-#[inline(never)]
 pub(super) fn extract(sql: &str) -> Vec<DynamicSql> {
     expression::extract(sql)
 }
 
-#[inline(never)]
 pub(super) fn schema_bodies(sql: &str) -> Vec<DynamicSql> {
     routine::schema_bodies(sql)
 }
 
-#[inline(never)]
 fn tokenize(sql: &str) -> Vec<TokenWithSpan> {
     super::super::parse::unicode::tokenize_raw_unicode(sql)
 }
 
-#[inline(never)]
 fn statements(tokens: &[TokenWithSpan]) -> Vec<&[TokenWithSpan]> {
     let mut result = Vec::new();
     let mut start = 0;
@@ -69,7 +63,6 @@ fn statements(tokens: &[TokenWithSpan]) -> Vec<&[TokenWithSpan]> {
     result
 }
 
-#[inline(never)]
 fn significant(tokens: &[TokenWithSpan]) -> Vec<&TokenWithSpan> {
     tokens
         .iter()
@@ -77,12 +70,10 @@ fn significant(tokens: &[TokenWithSpan]) -> Vec<&TokenWithSpan> {
         .collect()
 }
 
-#[inline(never)]
 fn word(token: &TokenWithSpan, expected: &str) -> bool {
     identifier(token).is_some_and(|value| value.eq_ignore_ascii_case(expected))
 }
 
-#[inline(never)]
 fn identifier(token: &TokenWithSpan) -> Option<&str> {
     if let Token::Word(word) = &token.token {
         Some(&word.value)
@@ -91,14 +82,12 @@ fn identifier(token: &TokenWithSpan) -> Option<&str> {
     }
 }
 
-#[inline(never)]
 fn body_line(body: &RoutineBody, token: &TokenWithSpan) -> usize {
     location_offset(&body.sql, token.span.start.line, token.span.start.column)
         .and_then(|offset| body.source_bytes.get(offset).copied())
         .unwrap_or(body.line)
 }
 
-#[inline(never)]
 fn location_offset(sql: &str, line: u64, column: u64) -> Option<usize> {
     let line_start = sql
         .split_inclusive('\n')
@@ -117,7 +106,6 @@ fn location_offset(sql: &str, line: u64, column: u64) -> Option<usize> {
     Some(line_start + column_offset)
 }
 
-#[inline(never)]
 fn source_lines(sql: &str, source_bytes: &[usize], fallback: usize) -> Vec<usize> {
     let mut lines = vec![source_bytes.first().copied().unwrap_or(fallback)];
     for (offset, byte) in sql.bytes().enumerate() {
@@ -134,7 +122,6 @@ fn source_lines(sql: &str, source_bytes: &[usize], fallback: usize) -> Vec<usize
     lines
 }
 
-#[inline(never)]
 fn plpgsql(tokens: &[&TokenWithSpan]) -> bool {
     tokens
         .windows(2)

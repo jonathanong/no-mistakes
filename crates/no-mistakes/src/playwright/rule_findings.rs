@@ -14,7 +14,6 @@ pub(crate) struct CoverageFindingOptions {
     pub(crate) selectors: bool,
 }
 
-#[inline(never)]
 pub(crate) fn findings_from_report(
     analysis: &Analysis,
     unique_test_ids: bool,
@@ -46,7 +45,6 @@ pub(crate) fn findings_from_report(
     findings
 }
 
-#[inline(never)]
 fn coverage_findings(report: &CoverageReport, routes: bool, selectors: bool) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     if routes {
@@ -84,7 +82,6 @@ fn coverage_findings(report: &CoverageReport, routes: bool, selectors: bool) -> 
     findings
 }
 
-#[inline(never)]
 fn uncovered_selector_message(
     selector: &crate::playwright::analysis::types::CoverageSelector,
 ) -> String {
@@ -101,7 +98,6 @@ fn uncovered_selector_message(
     message
 }
 
-#[inline(never)]
 fn unique_findings(
     duplicates: &[DuplicateSelector],
     unique_test_ids: bool,
@@ -132,7 +128,6 @@ fn unique_findings(
         .collect()
 }
 
-#[inline(never)]
 fn prefer_test_id_locator_findings(analysis: &Analysis) -> Vec<RuleFinding> {
     let mut by_locator = BTreeMap::new();
     for edge in &analysis.edges.edges {

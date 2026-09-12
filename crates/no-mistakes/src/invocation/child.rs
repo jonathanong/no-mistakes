@@ -19,7 +19,6 @@ const CLEANUP_TIMEOUT: Duration = Duration::from_millis(100);
 type PipeReader = Receiver<std::io::Result<Vec<u8>>>;
 
 /// Run a child process without allowing it to outlive the active invocation deadline.
-#[inline(never)]
 pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
     let remaining = remaining_timeout()?;
     let Some(remaining) = remaining else {
@@ -75,7 +74,6 @@ pub fn command_output(command: &mut Command) -> std::io::Result<Output> {
     })
 }
 
-#[inline(never)]
 pub(super) fn cleanup_wait_error(
     mut child: std::process::Child,
     process_tree: &ProcessTree,
@@ -90,7 +88,6 @@ pub(super) fn cleanup_wait_error(
     cleanup_result(error, cleanup_error)
 }
 
-#[inline(never)]
 pub(super) fn cleanup_result(
     error: std::io::Error,
     cleanup_error: Option<std::io::Error>,
@@ -106,7 +103,6 @@ pub(super) fn cleanup_result(
 /// helper in `child::stream`) so the fold logic — the one branch a real
 /// process-tree termination can't realistically be made to fail in a
 /// portable test — is unit-tested once, not duplicated per call site.
-#[inline(never)]
 pub(super) fn fold_cleanup_error(
     error: std::io::Error,
     cleanup_error: Option<std::io::Error>,
@@ -120,7 +116,6 @@ pub(super) fn fold_cleanup_error(
     }
 }
 
-#[inline(never)]
 pub(super) fn spawn_reader<R: Read + Send + 'static>(pipe: R) -> PipeReader {
     let (sender, receiver) = mpsc::channel();
     std::thread::spawn(move || {
@@ -129,7 +124,6 @@ pub(super) fn spawn_reader<R: Read + Send + 'static>(pipe: R) -> PipeReader {
     receiver
 }
 
-#[inline(never)]
 pub(super) fn receive_reader(reader: &PipeReader) -> std::io::Result<Vec<u8>> {
     match remaining_timeout()? {
         Some(remaining) => match reader.recv_timeout(remaining) {
@@ -153,7 +147,6 @@ pub(super) fn receive_reader(reader: &PipeReader) -> std::io::Result<Vec<u8>> {
     }
 }
 
-#[inline(never)]
 fn receive_or_terminate(
     reader: &PipeReader,
     child: &mut std::process::Child,
@@ -168,7 +161,6 @@ fn receive_or_terminate(
     }
 }
 
-#[inline(never)]
 pub(super) fn read_pipe<R: Read>(mut pipe: R) -> std::io::Result<Vec<u8>> {
     let mut bytes = Vec::new();
     pipe.read_to_end(&mut bytes)?;

@@ -1,7 +1,6 @@
 use super::super::{import_bindings, objects, ImportBinding};
 use oxc_ast::ast::{Declaration, ObjectExpression, Program, Statement};
 
-#[inline(never)]
 pub(in crate::integration_tests::test_config::playwright::project_arrays) fn sourced_reexport(
     program: &Program<'_>,
     exported: &str,
@@ -26,7 +25,6 @@ pub(in crate::integration_tests::test_config::playwright::project_arrays) fn sou
     None
 }
 
-#[inline(never)]
 pub(in crate::integration_tests::test_config::playwright::project_arrays) fn imported_reexport(
     program: &Program<'_>,
     exported: &str,
@@ -51,7 +49,6 @@ pub(in crate::integration_tests::test_config::playwright::project_arrays) fn imp
     None
 }
 
-#[inline(never)]
 pub(in crate::integration_tests::test_config::playwright::project_arrays) fn named_export_object<
     'a,
 >(

@@ -4,7 +4,6 @@ use anyhow::Result;
 use std::collections::HashSet;
 use std::path::{Path, PathBuf};
 
-#[inline(never)]
 pub(crate) fn check_route_matches(
     route: &no_mistakes::routes::Route,
     target_specs: &[TargetSpec],
@@ -67,7 +66,6 @@ pub(crate) struct RouteMatchContext<'a> {
     pub(crate) visible_files: &'a no_mistakes::fx::PathSet,
 }
 
-#[inline(never)]
 fn reaches_target(
     source_file: &Path,
     target_file: &Path,

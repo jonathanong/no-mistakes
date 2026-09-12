@@ -8,7 +8,6 @@ pub(super) struct TargetCall<'a> {
     pub(super) body: &'a str,
 }
 
-#[inline(never)]
 pub(super) fn target_calls(source: &str) -> Vec<TargetCall<'_>> {
     let mut calls = Vec::new();
     let mut scanner = Scanner::new(source);
@@ -45,7 +44,6 @@ pub(super) fn target_calls(source: &str) -> Vec<TargetCall<'_>> {
     calls
 }
 
-#[inline(never)]
 pub(super) fn dependencies_body(target_body: &str) -> Option<&str> {
     let label = find_label_colon(target_body, "dependencies")?;
     let open_bracket = target_body[label + 1..]
@@ -58,7 +56,6 @@ pub(super) fn dependencies_body(target_body: &str) -> Option<&str> {
     target_body.get(open_bracket.0 + 1..close_bracket)
 }
 
-#[inline(never)]
 pub(super) fn manifest_dependencies(
     dependencies_body: &str,
 ) -> (Vec<String>, std::collections::BTreeMap<String, String>) {

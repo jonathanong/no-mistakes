@@ -1,4 +1,3 @@
-#[inline(never)]
 fn with_observer_and_timing<T>(
     observer: Option<std::sync::Arc<crate::diagnostics::InvocationObserver>>,
     kind: crate::diagnostics::TimingKind,
@@ -9,12 +8,10 @@ fn with_observer_and_timing<T>(
     })
 }
 
-#[inline(never)]
 fn collect_unless_timed_out<T: Default>(collect: impl FnOnce() -> T) -> T {
     collect_unless_timed_out_or(T::default(), collect)
 }
 
-#[inline(never)]
 fn collect_unless_timed_out_or<T>(timed_out: T, collect: impl FnOnce() -> T) -> T {
     if crate::invocation::check_timeout().is_err() {
         timed_out
@@ -26,7 +23,6 @@ fn collect_unless_timed_out_or<T>(timed_out: T, collect: impl FnOnce() -> T) -> 
 /// Collect the domain-specific edge kinds that follow the core import, symbol,
 /// workspace, and test relationships. Independent kinds collect `Vec<Edge>`
 /// in parallel and merge on this thread so public graph output stays stable.
-#[inline(never)]
 fn collect_remaining_edges(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     playwright_snapshot: Option<&crate::playwright::fsutil::VisiblePathSnapshot>,

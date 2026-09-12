@@ -1,6 +1,5 @@
 use super::common::{blank, blank_range, repeated, starts_with, utf8_width};
 
-#[inline(never)]
 pub(crate) fn swift_code_mask(source: &str) -> String {
     let bytes = source.as_bytes();
     let mut masked = bytes.to_vec();
@@ -8,7 +7,6 @@ pub(crate) fn swift_code_mask(source: &str) -> String {
     String::from_utf8(masked).expect("masking replaces UTF-8 bytes with ASCII spaces")
 }
 
-#[inline(never)]
 fn mask_swift_code(source: &[u8], masked: &mut [u8], mut i: usize, close_paren: bool) -> usize {
     let mut paren_depth = 0;
     while i < source.len() {
@@ -51,7 +49,6 @@ struct SwiftLiteral {
     delimiter_len: usize,
 }
 
-#[inline(never)]
 fn swift_literal_start(source: &[u8], i: usize) -> Option<SwiftLiteral> {
     if source.get(i) == Some(&b'"') {
         return Some(swift_string_literal(i, 0, i, source));
@@ -74,7 +71,6 @@ fn swift_literal_start(source: &[u8], i: usize) -> Option<SwiftLiteral> {
     }
 }
 
-#[inline(never)]
 fn swift_string_literal(start: usize, hashes: usize, open: usize, source: &[u8]) -> SwiftLiteral {
     SwiftLiteral {
         start,
@@ -89,7 +85,6 @@ fn swift_string_literal(start: usize, hashes: usize, open: usize, source: &[u8])
     }
 }
 
-#[inline(never)]
 fn mask_swift_literal(source: &[u8], masked: &mut [u8], literal: SwiftLiteral) -> usize {
     let mut i = literal.open + literal.delimiter_len;
     blank_range(masked, literal.start, i);
@@ -124,7 +119,6 @@ fn mask_swift_literal(source: &[u8], masked: &mut [u8], literal: SwiftLiteral) -
     i
 }
 
-#[inline(never)]
 fn swift_delimited_ends(
     source: &[u8],
     i: usize,
@@ -138,14 +132,12 @@ fn swift_delimited_ends(
             .is_some_and(|suffix| suffix.iter().all(|&byte| byte == b'#'))
 }
 
-#[inline(never)]
 fn interpolation_starts(source: &[u8], i: usize, hashes: usize) -> bool {
     source.get(i + 1..i + 1 + hashes).is_some_and(|suffix| {
         suffix.iter().all(|&byte| byte == b'#') && source.get(i + 1 + hashes) == Some(&b'(')
     })
 }
 
-#[inline(never)]
 fn swift_escape_end(source: &[u8], i: usize, hashes: usize) -> Option<usize> {
     if !repeated(source, i + 1, b'#', hashes) {
         return None;
@@ -157,7 +149,6 @@ fn swift_escape_end(source: &[u8], i: usize, hashes: usize) -> Option<usize> {
     Some((char_at + utf8_width(source[char_at])).min(source.len()))
 }
 
-#[inline(never)]
 fn mask_swift_block_comment(source: &[u8], masked: &mut [u8], mut i: usize) -> usize {
     let mut depth = 0;
     while i < source.len() {
@@ -182,7 +173,6 @@ fn mask_swift_block_comment(source: &[u8], masked: &mut [u8], mut i: usize) -> u
     i
 }
 
-#[inline(never)]
 fn mask_line_comment(source: &[u8], masked: &mut [u8], mut i: usize) -> usize {
     while i < source.len() && source[i] != b'\n' {
         blank(masked, i);

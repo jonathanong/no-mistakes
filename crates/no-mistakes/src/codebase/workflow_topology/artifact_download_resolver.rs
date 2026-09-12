@@ -20,7 +20,6 @@ use name_download::resolve_name_download;
 
 mod name_download;
 
-#[inline(never)]
 pub fn resolve_artifact_download(
     context: &ArtifactRunContext,
     consumer: &ArtifactOccurrence,
@@ -64,7 +63,6 @@ pub fn resolve_artifact_download(
     }
 }
 
-#[inline(never)]
 fn artifact_candidates(
     context: &ArtifactRunContext,
     consumer: &ArtifactOccurrence,
@@ -73,7 +71,6 @@ fn artifact_candidates(
     super::artifact_resolution_helpers::artifact_candidates(context, consumer, consumer_step)
 }
 
-#[inline(never)]
 fn resolve_all_download(
     context: &ArtifactRunContext,
     consumer: &ArtifactOccurrence,
@@ -103,7 +100,6 @@ fn resolve_all_download(
     }
 }
 
-#[inline(never)]
 fn resolve_pattern_download(
     context: &ArtifactRunContext,
     consumer: &ArtifactOccurrence,
@@ -122,7 +118,6 @@ fn resolve_pattern_download(
     }
 }
 
-#[inline(never)]
 fn pattern_edges(
     context: &ArtifactRunContext,
     candidate: &ArtifactCandidate,
@@ -173,7 +168,6 @@ fn pattern_edges(
     Vec::new()
 }
 
-#[inline(never)]
 fn possible_or(uncertain: bool, certain: ArtifactMatchKind) -> ArtifactMatchKind {
     if uncertain {
         ArtifactMatchKind::Possible

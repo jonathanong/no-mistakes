@@ -21,7 +21,6 @@ mod jobs;
 use job_states::JobStates;
 use jobs::{JobScanner, WorkflowRuntime};
 
-#[inline(never)]
 pub(super) fn scan_activation(
     path: &str,
     document: &WorkflowDocument<'_>,
@@ -48,7 +47,6 @@ pub(super) fn scan_activation(
     result
 }
 
-#[inline(never)]
 fn scan_activation_uncached(
     path: &str,
     document: &WorkflowDocument<'_>,
@@ -87,7 +85,6 @@ fn scan_activation_uncached(
     Some(scan)
 }
 
-#[inline(never)]
 fn static_workflow_outputs(
     document: &WorkflowDocument<'_>,
     inputs: &super::super::conditions::InputState,
@@ -111,7 +108,6 @@ fn static_workflow_outputs(
         .collect()
 }
 
-#[inline(never)]
 fn static_job_output_value(
     value: &str,
     job_outputs: &BTreeMap<String, BTreeMap<String, StaticValue>>,
@@ -124,7 +120,6 @@ fn static_job_output_value(
         .cloned()
 }
 
-#[inline(never)]
 fn reusable_call_target(job: &Value) -> Option<Option<&str>> {
     match job.get("uses") {
         Some(Value::String(target))
@@ -137,7 +132,6 @@ fn reusable_call_target(job: &Value) -> Option<Option<&str>> {
     }
 }
 
-#[inline(never)]
 fn step_job_runner_supported(job: &Value, inputs: &super::super::conditions::InputState) -> bool {
     if !has_static_runnable_runs_on(job, inputs) {
         return false;

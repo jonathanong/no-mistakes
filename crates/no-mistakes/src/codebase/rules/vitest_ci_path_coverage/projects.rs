@@ -30,7 +30,6 @@ pub(super) enum CoverageSource {
 }
 
 impl CoverageSource {
-    #[inline(never)]
     pub(super) fn label(self) -> &'static str {
         match self {
             CoverageSource::TestInclude => "test include",
@@ -39,13 +38,11 @@ impl CoverageSource {
         }
     }
 
-    #[inline(never)]
     pub(super) fn uses_all_files(self) -> bool {
         self != CoverageSource::TestInclude
     }
 }
 
-#[inline(never)]
 pub(super) fn coverage_units_with_catalog(
     root: &Path,
     config: &NoMistakesConfig,
@@ -78,7 +75,6 @@ pub(super) fn coverage_units_with_catalog(
     Ok(units)
 }
 
-#[inline(never)]
 fn vitest_projects(
     root: &Path,
     config: &NoMistakesConfig,
@@ -115,7 +111,6 @@ fn vitest_projects(
     Ok(projects)
 }
 
-#[inline(never)]
 fn explicit_vitest_projects(root: &Path, config: &NoMistakesConfig) -> Vec<ConfigProject> {
     config
         .tests
@@ -128,7 +123,6 @@ fn explicit_vitest_projects(root: &Path, config: &NoMistakesConfig) -> Vec<Confi
         .collect()
 }
 
-#[inline(never)]
 fn project_name(project: &ConfigProject) -> String {
     project
         .policy_name
@@ -136,7 +130,6 @@ fn project_name(project: &ConfigProject) -> String {
         .unwrap_or_else(|| "default".to_string())
 }
 
-#[inline(never)]
 fn include_without_excludes(project: &ConfigProject) -> Vec<String> {
     let mut patterns = project
         .include
@@ -152,7 +145,6 @@ fn include_without_excludes(project: &ConfigProject) -> Vec<String> {
     patterns
 }
 
-#[inline(never)]
 fn project_dependency_patterns(
     project_name: &str,
     project: &Project,

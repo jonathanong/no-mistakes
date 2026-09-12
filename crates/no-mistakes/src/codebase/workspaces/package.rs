@@ -1,4 +1,3 @@
-#[inline(never)]
 fn load_package(
     dir: &Path,
     visible_files: Option<&dyn VisiblePathLookup>,
@@ -6,7 +5,6 @@ fn load_package(
     load_package_with_sources(dir, visible_files, WorkspaceSources::Filesystem)
 }
 
-#[inline(never)]
 fn load_package_with_sources(
     dir: &Path,
     visible_files: Option<&dyn VisiblePathLookup>,
@@ -25,7 +23,6 @@ fn load_package_with_sources(
     Ok(workspace_package_from_json(dir, package, visible_files))
 }
 
-#[inline(never)]
 fn workspace_package_from_json(
     dir: &Path,
     package: PackageJson,
@@ -49,14 +46,12 @@ fn workspace_package_from_json(
     })
 }
 
-#[inline(never)]
 pub fn load_root_package(dir: &Path) -> Result<Option<WorkspacePackage>> {
     let files = crate::codebase::ts_source::discover_visible_paths(dir);
     load_root_package_from_files(dir, &files)
 }
 
 #[doc(hidden)]
-#[inline(never)]
 pub fn load_root_package_from_files(
     dir: &Path,
     files: &[PathBuf],
@@ -71,7 +66,6 @@ pub fn load_root_package_from_files(
 }
 
 #[doc(hidden)]
-#[inline(never)]
 pub fn load_root_package_from_source_store(
     dir: &Path,
     files: &[PathBuf],
@@ -86,7 +80,6 @@ pub fn load_root_package_from_source_store(
     load_package_with_sources(dir, Some(&visible), WorkspaceSources::Store(sources))
 }
 
-#[inline(never)]
 fn resolve_entry_with_visibility(
     dir: &Path,
     pkg: &PackageJson,
@@ -143,7 +136,6 @@ fn resolve_entry_with_visibility(
     None
 }
 
-#[inline(never)]
 fn resolve_workspace_path(
     path: &Path,
     visible_files: Option<&dyn VisiblePathLookup>,

@@ -9,7 +9,6 @@ pub(super) enum LockfileDependencyType {
 }
 
 impl LockfileDependencyType {
-    #[inline(never)]
     pub(super) fn field(self) -> &'static str {
         match self {
             Self::Dependencies => "dependencies",
@@ -19,7 +18,6 @@ impl LockfileDependencyType {
         }
     }
 
-    #[inline(never)]
     pub(super) fn importer_entries(
         self,
         importer: &crate::codebase::lockfile::pnpm::PnpmImporter,
@@ -36,7 +34,6 @@ impl LockfileDependencyType {
     }
 }
 
-#[inline(never)]
 pub(super) fn validate(
     dependency_types: &[&str],
 ) -> std::result::Result<Vec<LockfileDependencyType>, String> {

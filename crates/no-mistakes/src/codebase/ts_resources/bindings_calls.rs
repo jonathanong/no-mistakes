@@ -3,7 +3,6 @@ use super::ResourceCallKind;
 use oxc_ast::ast::Expression;
 use std::collections::HashMap;
 
-#[inline(never)]
 pub(super) fn nested_fs_promise_callee<'a>(
     callee: &'a Expression<'a>,
     bindings: &HashMap<String, Binding>,
@@ -30,7 +29,6 @@ pub(super) fn nested_fs_promise_callee<'a>(
     ))
 }
 
-#[inline(never)]
 pub(super) fn inline_require_callee<'a>(
     callee: &'a Expression<'a>,
 ) -> Option<(&'a str, ResourceCallKind)> {
@@ -53,7 +51,6 @@ pub(super) fn inline_require_callee<'a>(
     Some(("require", fs_promise_method(member.property.name.as_str())?))
 }
 
-#[inline(never)]
 pub(super) fn inline_require_file_url_to_path(callee: &Expression<'_>) -> bool {
     matches!(callee, Expression::StaticMemberExpression(member)
         if member.property.name == "fileURLToPath"

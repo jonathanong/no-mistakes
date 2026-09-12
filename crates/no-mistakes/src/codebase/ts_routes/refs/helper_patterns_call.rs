@@ -1,4 +1,3 @@
-#[inline(never)]
 fn evaluate_helper_call<'a>(
     call: &'a oxc_ast::ast::CallExpression<'a>,
     defs: &HashMap<&'a str, HelperDef<'a>>,
@@ -31,7 +30,6 @@ fn evaluate_helper_call<'a>(
     }
 }
 
-#[inline(never)]
 fn evaluate_url_object_expression<'a>(
     obj: &'a oxc_ast::ast::ObjectExpression<'a>,
     defs: &HashMap<&'a str, HelperDef<'a>>,

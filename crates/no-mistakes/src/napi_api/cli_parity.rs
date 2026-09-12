@@ -17,7 +17,6 @@ pub(crate) use playwright_wrappers::{
     playwright_tests_json_impl,
 };
 
-#[inline(never)]
 pub(crate) fn fetches_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<FetchesOptions>(options)?;
     let base_root = std::env::current_dir()
@@ -38,7 +37,6 @@ pub(crate) fn fetches_json_impl(options: serde_json::Value) -> napi::Result<Stri
     to_pretty_json(&report)
 }
 
-#[inline(never)]
 pub(crate) fn check_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<ProjectOptions>(options)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
@@ -52,7 +50,6 @@ pub(crate) fn check_json_impl(options: serde_json::Value) -> napi::Result<String
     to_pretty_json(&crate::check_runner::json_value(&results))
 }
 
-#[inline(never)]
 pub(crate) fn resolve_config_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<ProjectOptions>(options)?;
     let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
@@ -64,7 +61,6 @@ pub(crate) fn resolve_config_json_impl(options: serde_json::Value) -> napi::Resu
     to_pretty_json(&report)
 }
 
-#[inline(never)]
 pub(crate) fn tests_plan_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<TestsPlanOptions>(options)?;
     let args = build_plan_args(options).map_err(to_napi_error)?;
@@ -72,7 +68,6 @@ pub(crate) fn tests_plan_json_impl(options: serde_json::Value) -> napi::Result<S
     to_pretty_json(&plan)
 }
 
-#[inline(never)]
 pub(crate) fn tests_impact_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<TestsImpactOptions>(options)?;
     let args = build_impact_args(options).map_err(to_napi_error)?;
@@ -80,7 +75,6 @@ pub(crate) fn tests_impact_json_impl(options: serde_json::Value) -> napi::Result
     to_pretty_json(&plan)
 }
 
-#[inline(never)]
 pub(crate) fn tests_targets_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<TestsTargetsOptions>(options)?;
     let framework = options
@@ -109,7 +103,6 @@ pub(crate) fn tests_targets_json_impl(options: serde_json::Value) -> napi::Resul
     to_pretty_json(&report)
 }
 
-#[inline(never)]
 pub(crate) fn ci_impact_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<CiImpactOptions>(options)?;
     let root = options.root.unwrap_or(String::from("."));
@@ -123,7 +116,6 @@ pub(crate) fn ci_impact_json_impl(options: serde_json::Value) -> napi::Result<St
     to_pretty_json(&report)
 }
 
-#[inline(never)]
 pub(crate) fn ci_env_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<CiEnvOptions>(options)?;
     let var = options
@@ -140,7 +132,6 @@ pub(crate) fn ci_env_json_impl(options: serde_json::Value) -> napi::Result<Strin
     to_pretty_json(&report)
 }
 
-#[inline(never)]
 pub(crate) fn ci_topology_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<CiTopologyOptions>(options)?;
     let root = options.root.unwrap_or(String::from("."));
@@ -153,7 +144,6 @@ pub(crate) fn ci_topology_json_impl(options: serde_json::Value) -> napi::Result<
     to_pretty_json(&report)
 }
 
-#[inline(never)]
 pub(crate) fn ci_topology_impact_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<CiTopologyImpactOptions>(options)?;
     let root = options.root.unwrap_or_else(|| ".".to_string());
@@ -174,7 +164,6 @@ pub(crate) fn ci_topology_impact_json_impl(options: serde_json::Value) -> napi::
     to_pretty_json(&report)
 }
 
-#[inline(never)]
 pub(crate) fn impacted_checks_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<ImpactedChecksOptions>(options)?;
     let collect_timings = options.timings;
@@ -194,7 +183,6 @@ pub(crate) fn impacted_checks_json_impl(options: serde_json::Value) -> napi::Res
 
 include!("cli_parity_test_documents.rs");
 
-#[inline(never)]
 fn to_pretty_json<T: serde::Serialize>(value: &T) -> napi::Result<String> {
     Ok(crate::cli::json_string(value))
 }

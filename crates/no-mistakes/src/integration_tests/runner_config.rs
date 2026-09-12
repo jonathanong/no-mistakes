@@ -58,7 +58,6 @@ pub(crate) struct ParsedRunnerConfigs {
 }
 
 impl ParsedRunnerConfigs {
-    #[inline(never)]
     pub(crate) fn with_files(files: BTreeMap<PathBuf, RunnerConfigFileFacts>) -> Self {
         let analyses = files
             .values()
@@ -68,7 +67,6 @@ impl ParsedRunnerConfigs {
         Self { files, analyses }
     }
 
-    #[inline(never)]
     pub(crate) fn covers(&self, plan: &PreparedIntegrationRunnerConfigs) -> bool {
         plan.specs.iter().all(|spec| {
             !plan.visible_files.contains(&spec.path)
@@ -81,7 +79,6 @@ impl ParsedRunnerConfigs {
         })
     }
 
-    #[inline(never)]
     pub(crate) fn analyses_for(&self, source_files: &[PathBuf]) -> BTreeMap<PathBuf, FileAnalysis> {
         let source_files = source_files.iter().collect::<HashSet<_>>();
         let mut analyses = BTreeMap::new();
@@ -93,7 +90,6 @@ impl ParsedRunnerConfigs {
         analyses
     }
 
-    #[inline(never)]
     pub(crate) fn projects_for(
         &self,
         plan: &PreparedIntegrationRunnerConfigs,

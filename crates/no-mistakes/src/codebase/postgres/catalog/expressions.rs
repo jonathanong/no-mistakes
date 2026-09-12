@@ -5,7 +5,6 @@ use sqlparser::ast::{visit_expressions, Expr, SelectItem, SetExpr, Statement};
 use std::ops::ControlFlow;
 use std::sync::OnceLock;
 
-#[inline(never)]
 pub fn order_prefix_matches(
     actual: &[CanonicalOrderKey],
     expected: &[CanonicalOrderKey],
@@ -18,7 +17,6 @@ pub fn order_prefix_matches(
                 && actual.nulls_first == expected.nulls_first
         })
 }
-#[inline(never)]
 pub(super) fn order_prefix_matches_for_qualifiers(
     actual: &[CanonicalOrderKey],
     expected: &[CanonicalOrderKey],
@@ -32,7 +30,6 @@ pub(super) fn order_prefix_matches_for_qualifiers(
                 && actual.nulls_first == expected.nulls_first
         })
 }
-#[inline(never)]
 pub fn expression_matches(left: &str, right: &str, ignore_qualifiers: bool) -> bool {
     let left = normalize_expression(left);
     let right = normalize_expression(right);
@@ -42,13 +39,11 @@ pub fn expression_matches(left: &str, right: &str, ignore_qualifiers: bool) -> b
         left == right
     }
 }
-#[inline(never)]
 pub fn normalize_expression(expression: &str) -> String {
     parse_postgres_expression(expression)
         .map(|expression| normalize_sql_display(&strip_outer_nesting(expression).to_string()))
         .unwrap_or_else(|| normalize_sql_display(expression))
 }
-#[inline(never)]
 pub fn parse_postgres_expression(expression: &str) -> Option<Expr> {
     let mut statements = parse_postgres_sql(&format!("SELECT {expression}")).ok()?;
     let Statement::Query(query) = statements.pop()? else {
@@ -66,14 +61,12 @@ pub fn parse_postgres_expression(expression: &str) -> Option<Expr> {
         _ => None,
     }
 }
-#[inline(never)]
 fn strip_outer_nesting(mut expression: Expr) -> Expr {
     while let Expr::Nested(inner) = expression {
         expression = *inner;
     }
     expression
 }
-#[inline(never)]
 fn normalize_sql_display(sql: &str) -> String {
     let mut normalized = String::with_capacity(sql.len());
     let mut quote = None;
@@ -99,7 +92,6 @@ fn normalize_sql_display(sql: &str) -> String {
     }
     normalized
 }
-#[inline(never)]
 fn strip_qualifiers(expression: &str) -> String {
     static QUALIFIED_IDENTIFIER: OnceLock<Regex> = OnceLock::new();
     QUALIFIED_IDENTIFIER
@@ -109,7 +101,6 @@ fn strip_qualifiers(expression: &str) -> String {
         .replace_all(expression, "$1")
         .into_owned()
 }
-#[inline(never)]
 fn qualifiers_are_allowed(expression: &str, qualifiers: &[String]) -> bool {
     let Some(expression) = parse_postgres_expression(expression) else {
         return false;

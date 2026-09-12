@@ -134,4 +134,41 @@ fn apply_own_expands_config_dir_files_and_empty_lists() {
     assert!(config.files.is_some());
     assert_eq!(config.includes.as_ref().map(Vec::len), Some(0));
     assert_eq!(config.excludes.as_ref().map(Vec::len), Some(0));
+
+    for (value, needle) in [
+        (
+            serde_json::json!({ "compilerOptions": { "paths": [] } }),
+            "paths",
+        ),
+        (
+            serde_json::json!({ "compilerOptions": { "baseUrl": false } }),
+            "baseUrl",
+        ),
+        (
+            serde_json::json!({ "compilerOptions": { "outDir": false } }),
+            "outDir",
+        ),
+        (
+            serde_json::json!({ "compilerOptions": { "moduleResolution": false } }),
+            "moduleResolution",
+        ),
+        (serde_json::json!({ "files": "src/entry.ts" }), "files"),
+        (serde_json::json!({ "include": "src" }), "include"),
+        (serde_json::json!({ "exclude": "src" }), "exclude"),
+        (serde_json::json!({ "references": "lib" }), "references"),
+    ] {
+        let err = config
+            .apply_own(&value, &path, &root, |value| Ok(root.join(value)))
+            .expect_err(needle);
+        assert!(err.contains(needle), "{err}");
+    }
+    let err = config
+        .apply_own(
+            &serde_json::json!({ "references": [{ "path": "./lib" }] }),
+            &path,
+            &root,
+            |_| Err("missing reference".to_string()),
+        )
+        .expect_err("resolve_reference failure");
+    assert!(err.contains("missing reference"));
 }

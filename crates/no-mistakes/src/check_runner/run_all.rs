@@ -10,7 +10,6 @@ use std::path::PathBuf;
 
 mod playwright;
 
-#[inline(never)]
 pub(crate) fn run_all_with_suppressed(
     root: PathBuf,
     config_path: Option<PathBuf>,
