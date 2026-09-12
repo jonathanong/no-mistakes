@@ -2,10 +2,9 @@ use crate::fx::{fx_map, fx_set, FxHashMap, FxHashSet};
 use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    AccessorProperty, Argument, AssignmentExpression, AssignmentTarget,
-    AssignmentTargetMaybeDefault, AssignmentTargetProperty, BindingPattern, BlockStatement,
-    CallExpression, CatchClause, Class, ClassElement, ComputedMemberExpression, Declaration,
-    ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration,
+    AccessorProperty, Argument, AssignmentExpression, AssignmentTarget, BindingPattern,
+    BlockStatement, CallExpression, CatchClause, Class, ClassElement, ComputedMemberExpression,
+    Declaration, ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration,
     ExportDefaultDeclarationKind, ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier,
     Expression, ForStatementLeft, FormalParameters, Function, IdentifierReference,
     ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement,
@@ -244,7 +243,8 @@ include!("extract_resource_scopes.rs");
 include!("extract_type_scope_helpers.rs");
 include!("extract_visit_hoist.rs");
 include!("extract_visit_types.rs");
-include!("extract_binding_names.rs");
+mod extract_binding_names;
+use extract_binding_names::{assignment_target_names, binding_names};
 include!("extract_binding_helpers.rs");
 include!("extract_syntax_helpers.rs");
 
