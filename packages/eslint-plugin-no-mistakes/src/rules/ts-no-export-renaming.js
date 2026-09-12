@@ -69,7 +69,7 @@ module.exports = rule(
     if (!shouldCheckFile(context, options, patterns)) return {};
     return {
       ExportNamedDeclaration(node) {
-        for (const specifier of node.specifiers || []) {
+        for (const specifier of node.specifiers) {
           if (specifier.type !== "ExportSpecifier" || isTypeExport(node, specifier)) {
             continue;
           }

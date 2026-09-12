@@ -27,6 +27,7 @@ pub(crate) fn materialize_saved_fixture_into(source: &Path, destination: TempDir
         .git_global(false)
         .git_exclude(false)
         .require_git(false)
+        .parents(false)
         .build()
         .map(Result::unwrap)
         .filter(|entry| entry.path() != source)

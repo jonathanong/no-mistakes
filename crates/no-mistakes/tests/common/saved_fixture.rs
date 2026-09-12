@@ -19,6 +19,7 @@ fn copy_tree(source: &Path, destination: &Path) {
         .git_global(false)
         .git_exclude(false)
         .require_git(false)
+        .parents(false)
         .build()
         .map(Result::unwrap)
         .filter(|entry| entry.path() != source)

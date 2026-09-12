@@ -2138,6 +2138,42 @@ test("records a failed report schema as aggregate failure", async () => {
   }
 });
 
+test("records omitted reports as aggregate failure", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await assert.rejects(
+      writePlanningImpactArtifacts(
+        { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+        async () => ({ reports: aggregateResult.reports.slice(0, 3) }),
+      ),
+      /omitted the plan report/,
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("stringifies non-error analysis failures", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await assert.rejects(
+      writePlanningImpactArtifacts(
+        { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+        async () => {
+          throw "boom";
+        },
+      ),
+      (error) => error === "boom",
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("exports the artifact writer through the public async Node API", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");

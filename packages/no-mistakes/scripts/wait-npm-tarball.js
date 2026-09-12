@@ -129,9 +129,15 @@ function reportCliFailure(error, io = process) {
   io.exitCode = 1;
 }
 
-if (require.main === module) {
-  main().catch((error) => reportCliFailure(error));
+function runIfMain(mainModule, current, start) {
+  if (mainModule === current) return start();
 }
+
+function startFromCli(run = main, onError = reportCliFailure) {
+  return run().catch((error) => onError(error));
+}
+
+runIfMain(require.main, module, startFromCli);
 
 module.exports = {
   DEFAULT_INTERVAL_MS,
@@ -141,6 +147,8 @@ module.exports = {
   parseArgs,
   readWithSignal,
   reportCliFailure,
+  runIfMain,
+  startFromCli,
   tarballUrl,
   waitForNpmTarball,
 };

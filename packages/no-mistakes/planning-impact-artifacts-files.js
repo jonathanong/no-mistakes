@@ -5,8 +5,7 @@ const { basename, dirname, join } = require("node:path");
 const { randomUUID } = require("node:crypto");
 const { outputRestorationFailure } = require("./planning-impact-artifacts-errors");
 const privacy = require("./planning-impact-artifacts-privacy");
-const MANIFEST_OPEN_FLAGS =
-  constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0);
+const MANIFEST_OPEN_FLAGS = constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK;
 
 async function validateOutputDirectory(outputDirectory) {
   const directory = await realpath(outputDirectory);

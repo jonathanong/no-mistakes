@@ -17,8 +17,9 @@ env:
   CARGO_TERM_COLOR: always
   RUSTFLAGS: "-D warnings"
   # cargo llvm-cov fail-under percentages. Keep codecov.yml rust `target` in sync.
-  RUST_COVERAGE_FAIL_UNDER_LINES: "95"
-  RUST_COVERAGE_FAIL_UNDER_FUNCTIONS: "95"
+  RUST_COVERAGE_FAIL_UNDER_LINES: "99"
+  RUST_COVERAGE_FAIL_UNDER_FUNCTIONS: "99"
+  RUST_COVERAGE_FAIL_UNDER_REGIONS: "99"
 
 jobs:
   changes:
@@ -466,7 +467,8 @@ jobs:
             --lcov \
             --output-path target/llvm-cov/lcov.info \
             --fail-under-lines "${RUST_COVERAGE_FAIL_UNDER_LINES}" \
-            --fail-under-functions "${RUST_COVERAGE_FAIL_UNDER_FUNCTIONS}"
+            --fail-under-functions "${RUST_COVERAGE_FAIL_UNDER_FUNCTIONS}" \
+            --fail-under-regions "${RUST_COVERAGE_FAIL_UNDER_REGIONS}"
 
       - name: Show Rust coverage table (debug)
         if: ${{ failure() && steps.rust-coverage.outcome == 'failure' }}

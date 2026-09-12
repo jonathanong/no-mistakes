@@ -106,3 +106,23 @@ fn paired_static_accessors_keep_distinct_callable_ids() {
 
     assert_eq!(ids.len(), 2, "getter and setter must keep distinct identities");
 }
+
+#[test]
+fn auto_accessor_fields_are_visited_during_call_extraction() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+}

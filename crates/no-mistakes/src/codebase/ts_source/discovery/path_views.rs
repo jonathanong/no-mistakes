@@ -56,9 +56,8 @@ fn classify_git_path_views(root: &Path, views: DiscoveredPathViews) -> Discovere
 }
 
 fn discover_fallback_classified_paths(root: &Path) -> Vec<ClassifiedPath> {
-    let mut paths = WalkBuilder::new(root)
+    let mut paths = ignore_walk_builder(root)
         .hidden(false)
-        .require_git(false)
         .filter_entry(|entry| {
             if crate::invocation::check_timeout().is_err() {
                 return false;

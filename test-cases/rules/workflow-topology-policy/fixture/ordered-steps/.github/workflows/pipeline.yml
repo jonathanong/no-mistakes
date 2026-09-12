@@ -1,0 +1,22 @@
+name: Ordered Steps
+on: push
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - id: first
+        name: first
+        uses: actions/checkout@v4
+      - id: second
+        name: second
+        run: echo build
+  test:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - id: test
+        name: test
+        run: echo test
+  empty:
+    runs-on: ubuntu-latest
+    steps: []

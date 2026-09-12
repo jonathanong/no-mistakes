@@ -192,3 +192,33 @@ export function ignoredBranches(options: Options) {
   const unknown = {};
   return [value ?? "fallback", other ?? "fallback", missing ?? "fallback", unknown.value ?? "fallback"];
 }
+
+export function catchObjectPattern() {
+  try {
+    throw { value: null as string | null };
+  } catch ({ value }: { value?: string | null }) {
+    return value ?? "fallback";
+  }
+}
+
+export function assignNullish(options: Options) {
+  options.value ??= "fallback";
+  options.value ||= "fallback";
+  return options;
+}
+
+export function assignFromMember(options: Options) {
+  let copied;
+  copied = options.value;
+  return copied ?? "fallback";
+}
+
+export function destructureParam({ value }: Options = {}) {
+  return value ?? "fallback";
+}
+
+export function restParam(options: Options) {
+  const { ...rest } = options;
+  ({ ...rest } = options);
+  return rest.value ?? "fallback";
+}

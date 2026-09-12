@@ -11,6 +11,8 @@ const {
   readWithSignal,
   reportCliFailure,
   tarballUrl,
+  runIfMain,
+  startFromCli,
   waitForNpmTarball,
 } = require("./wait-npm-tarball");
 
@@ -333,6 +335,29 @@ test("stops when the overall deadline elapses before another fetch", async () =>
     }),
     /no attempt made for pkg@1.0.0/,
   );
+});
+
+test("runs the tarball waiter only when the module is executed directly", async () => {
+  let started = false;
+  runIfMain(module, module, () => {
+    started = true;
+  });
+  assert.equal(started, true);
+  runIfMain({}, module, () => {
+    started = false;
+  });
+  assert.equal(started, true);
+  await startFromCli(async () => {}, () => {});
+  let caught;
+  await startFromCli(
+    async () => {
+      throw new Error("cli failed");
+    },
+    (error) => {
+      caught = error;
+    },
+  );
+  assert.equal(caught.message, "cli failed");
 });
 
 test("readWithSignal rejects an already aborted signal", async () => {

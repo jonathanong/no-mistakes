@@ -13,7 +13,7 @@ function isIdentifier(node) {
 
 function definePattern(pattern, props, defineBinding, defineReactNode) {
   if (!isObjectPattern(pattern)) return;
-  for (const property of pattern.properties || []) {
+  for (const property of pattern.properties) {
     if (property.type !== "Property") continue;
     const name = keyName(property.key);
     if (isIdentifier(property.value)) {
@@ -63,7 +63,7 @@ module.exports = rule(
     function propsForType(type) {
       if (type && type.type === "TSTypeLiteral") {
         const props = new Set();
-        for (const member of type.members || []) {
+        for (const member of type.members) {
           if (member.type !== "TSPropertySignature" || !isReactNodeType(typeAnnotation(member))) {
             continue;
           }
@@ -161,7 +161,7 @@ module.exports = rule(
 
     function enterFunction(node) {
       pushScope("function");
-      for (const param of node.params || []) {
+      for (const param of node.params) {
         defineParam(param);
       }
     }

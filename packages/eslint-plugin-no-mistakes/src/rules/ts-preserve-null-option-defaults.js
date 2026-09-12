@@ -58,7 +58,7 @@ module.exports = Object.assign(
       const popScope = () => scopes.pop();
       function enterFunction(node) {
         scopes.push(createScope("function"));
-        for (const param of node.params || []) defineParam(param);
+        for (const param of node.params) defineParam(param);
       }
       function defineBinding(name, scope = currentScope()) {
         scope.bindings.add(name);
@@ -82,7 +82,7 @@ module.exports = Object.assign(
         }
       }
       function definePatternBindings(pattern, props, scope = currentScope(), useExisting = false) {
-        for (const property of pattern.properties || []) {
+        for (const property of pattern.properties) {
           if (property.type === "RestElement" && isIdentifier(property.argument)) {
             defineObject(property.argument.name, props, scope);
             continue;

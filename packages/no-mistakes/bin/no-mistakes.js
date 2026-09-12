@@ -83,6 +83,10 @@ async function main(
   }
 }
 
-if (require.main === module) void main();
+function runIfMain(mainModule, current, start) {
+  if (mainModule === current) return start();
+}
 
-module.exports = { firstSubcommand, launchNative, main, planningImpactArgs };
+runIfMain(require.main, module, main);
+
+module.exports = { firstSubcommand, launchNative, main, planningImpactArgs, runIfMain };

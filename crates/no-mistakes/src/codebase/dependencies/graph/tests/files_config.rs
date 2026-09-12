@@ -398,3 +398,27 @@ fn graph_config_options_for_plan_skip_plans_that_do_not_need_config() {
     let config = root.join(".no-mistakes.yml");
     assert!(graph_config_options_for_plan_with_config(&root, routes, Some(&config)).is_some());
 }
+
+#[test]
+fn standalone_session_graph_build_reuses_test_file_filter() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-default-route-config"));
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+    let tsconfig =
+        crate::codebase::ts_resolver::load_tsconfig(&root.join("tsconfig.json")).unwrap();
+    crate::ast::with_request_parse_cache(|| {
+        DepGraph::build_with_plan_and_config_and_session(
+            &root,
+            &tsconfig,
+            GraphBuildPlan {
+                imports: true,
+                routes: true,
+                ..GraphBuildPlan::default()
+            },
+            None,
+            session,
+        )
+        .expect("standalone session graph build");
+        assert_eq!(observer.snapshot().work["test_filter.builds"], 1);
+    });
+}
