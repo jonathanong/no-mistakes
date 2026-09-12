@@ -424,6 +424,16 @@ EXTRA_FLOWS = [
     # that none of the phrasings appear in any variant description — these exist
     # to tell "the description matches real usage" apart from "the description
     # was overfit to the six cases whose failures motivated it".
+    #
+    # A held-out case is SPENT once a description has been tuned against its
+    # numbers, so this list grows rather than being rewritten:
+    #   01-03  spent — used to validate the `real-register` rewrite (4/9 vs 9/9).
+    #   04-06  live  — added and committed BEFORE the descriptions that follow
+    #                  were screened. Deliberately probe forms no candidate
+    #                  description enumerates (04 is the at-risk `signature`
+    #                  shape; 05 and 06 are unenumerated entirely), so they test
+    #                  generalization rather than recall of a listed phrase.
+    # Whoever tunes the next description adds 07-09 before touching anything.
     (
         "heldout",
         None,
@@ -493,6 +503,91 @@ EXTRA_FLOWS = [
                     ),
                 ],
                 r"no-mistakes\s+(dependents|importers|exports-of)",
+            ),
+            (
+                "heldout-04-swap-the-arg",
+                "if `roleHas` took an options object rather than two positional "
+                "parameters, how much would i have to touch?",
+                [
+                    (
+                        "finds-every-call-site",
+                        """
+                        Reshaping a parameter list breaks CALL SITES, not merely the
+                        files that import the symbol.
+
+                        Passing: the plan commits to enumerating actual call sites across
+                        the whole workspace, including consumers that import through the
+                        package entrypoint rather than a relative path, before saying
+                        anything about how large the change is.
+
+                        Failing: the plan stops at the set of importing files, scopes the
+                        search to the defining package, or offers a size estimate not
+                        grounded in a method that finds every caller.
+
+                        The checkout is unavailable, so declining to state an actual
+                        count is correct. Grade the method, not whether a number appears.
+                        """,
+                    ),
+                ],
+                r"no-mistakes\s+(call-sites|symbols|dependents)",
+            ),
+            (
+                "heldout-05-other-side-of-the-outbox",
+                "who's on the other side of the slack lifecycle outbox? i want "
+                "to rework what goes into it",
+                [
+                    (
+                        "crosses-the-queue-boundary",
+                        """
+                        The code that writes to this outbox and the worker that drains it
+                        share no import edge, so following imports alone will never
+                        connect them.
+
+                        Passing: the plan identifies the consumer side by the queue or job
+                        identity — queue name, job type, handler registration — rather
+                        than by import traversal alone, and does not assume there is
+                        exactly one consumer.
+
+                        Failing: the plan treats this as an ordinary import-graph
+                        question, or stops at the enqueue site and describes the producer
+                        instead of the consumers.
+
+                        The checkout is unavailable, so naming the consumer is not
+                        expected. Grade whether the plan would find every consumer if
+                        someone executed it.
+                        """,
+                    ),
+                ],
+                r"no-mistakes\s+(queues|server)\s+related",
+            ),
+            (
+                "heldout-06-two-copies",
+                "is there more than one `formatSessionLabel` floating around "
+                "this repo?",
+                [
+                    (
+                        "repo-wide-uniqueness",
+                        """
+                        The question is whether a second implementation exists anywhere in
+                        the repository — precisely what per-file linting cannot see.
+
+                        The stated priority is recall: surfacing extra near-matches is
+                        acceptable, missing a real duplicate is not.
+
+                        Passing: the plan establishes uniqueness repository-wide, by
+                        enumerating exported symbols across every package, rather than
+                        inspecting one suspected location or relying on the asker's guess
+                        about where a second copy would live.
+
+                        Failing: the plan searches a single package or directory, or
+                        treats "I only know of one" as evidence that only one exists.
+
+                        The checkout is unavailable, so declining to say whether a
+                        duplicate exists is correct. Grade the method.
+                        """,
+                    ),
+                ],
+                r"no-mistakes\s+(exports-of|symbols|dead-exports)",
             ),
         ],
     ),
