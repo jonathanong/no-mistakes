@@ -202,6 +202,7 @@ fn omitted_automatic_and_explicit_tsconfig_use_separate_scopes() {
 }
 
 include!("report_error_tests.rs");
+include!("report_success_tests.rs");
 
 #[test]
 fn command_report_rejects_unknown_type() {

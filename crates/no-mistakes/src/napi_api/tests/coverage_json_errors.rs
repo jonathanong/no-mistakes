@@ -107,4 +107,39 @@ fn project_json_helpers_report_invalid_options_and_optional_file_filters() {
         "config": "no-mistakes.json"
     }))
     .is_err());
+    assert!(flow_json_impl(json!({ "root": "/no-mistakes-missing-coverage-root" })).is_err());
+    assert!(flow_json_impl(json!({
+        "root": "/no-mistakes-missing-coverage-root",
+        "target": "a.ts",
+        "direction": "sideways"
+    }))
+    .is_err());
+    assert!(server_contracts_json_impl(json!({ "unknownField": true })).is_err());
+    assert!(tests_plan_json_impl(json!({ "unknownField": true })).is_err());
+    assert!(tests_impact_json_impl(json!({ "unknownField": true })).is_err());
+    assert!(ci_impact_json_impl(json!({ "unknownField": true })).is_err());
+    assert!(ci_topology_json_impl(json!({ "unknownField": true })).is_err());
+    assert!(impacted_checks_json_impl(json!({ "unknownField": true })).is_err());
+    assert!(resolve_config_json_impl(json!({ "unknownField": true })).is_err());
+    assert!(data_pw_json_impl(json!({
+        "root": "/no-mistakes-missing-coverage-root",
+        "value": "submit",
+        "include": "bogus"
+    }))
+    .is_err());
+    assert!(effects_json_impl(json!({
+        "root": "/no-mistakes-missing-coverage-root",
+        "kind": "fetch",
+        "entry": "src/a.ts"
+    }))
+    .is_err());
+    assert!(rsc_callers_json_impl(json!({
+        "root": "/no-mistakes-missing-coverage-root",
+        "component": "src/Button.tsx"
+    }))
+    .is_err());
+    let _ = impacted_checks_json_impl(json!({
+        "root": "/no-mistakes-missing-coverage-root",
+        "timings": true
+    }));
 }

@@ -210,3 +210,53 @@ fn extract_walks_type_only_imports_exports_defaults_and_process_cwd() {
     );
     assert!(jsx.callable_scopes.iter().any(|scope| scope == "Icon"));
 }
+
+#[test]
+fn extract_walks_local_scope_chains_anonymous_classes_and_default_kinds() {
+    let extracted = facts(
+        r#"
+        function helper() {}
+        helper();
+        function outer() {
+          function helper() {}
+          function inner() { helper(); }
+          inner();
+        }
+        function Base() {}
+        class Child extends Base { static m() {} }
+        Child.m();
+        const Box = 1;
+        Box.m();
+        class Service { static m() {} constructor() { helper(); } get g() { return 1; } set s(_v: number) {} field = 1; }
+        new Service();
+        const Alias = Service;
+        Alias.m();
+        const nested = Service.m;
+        nested();
+        function run() { let fn = helper; fn = other; fn(); }
+        export default helper;
+        export default () => helper();
+        export default function () { helper(); }
+        export default class { method() { helper(); } }
+        const obj = {
+          get [computed]() { return 1; },
+          set [computed](_v: number) {},
+          [computed]: () => 1,
+        };
+        @(0)
+        class DynDeco {}
+        "#,
+    );
+    assert!(extracted
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "helper" && call.caller.is_none()));
+    assert!(extracted
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "helper" && call.caller.as_deref() == Some("outer/inner")));
+    assert!(extracted.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.target_identity == CallTargetIdentity::Unknown
+    }));
+}
