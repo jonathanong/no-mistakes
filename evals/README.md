@@ -395,9 +395,17 @@ the listed forms and can crowd out the unlisted ones.
 Sample sizes differ (5 vs 15), so `signature` warrants confirmation at
 `runs: 3` before acting on it.
 
-**Consequence for the next description: ADD the real-register forms while
+~~**Consequence for the next description: ADD the real-register forms while
 KEEPING the general framing, rather than replacing it.** A description that only
-enumerates is a description that only fires on what it enumerated.
+enumerates is a description that only fires on what it enumerated.~~
+
+**Superseded — this conclusion was wrong.** It rested on the `signature`
+regression, which [did not survive re-measurement](#signature-did-not-regress--the-35-vs-215-above-was-a-1-run-artifact),
+and it was tested directly in [Candidate screening](#candidate-screening): the
+candidate that keeps the general framing (C1) is worse than the one that drops
+it (C2) on every flow measured. Struck through rather than deleted because the
+reasoning is the trap, not the typo — "enumerating crowds out the unlisted" is
+a plausible mechanism that happened not to be what the numbers said.
 
 The should-not-fire cases were unchanged, so broadening the description did not
 degrade text-search questions.
@@ -500,6 +508,57 @@ the tool in prose on roughly 8–9 of those 12 runs. Widening the description di
 not make that worse. What changes is the form: shipped and C1 fabricate a
 command on 5 of them, C2 on none. Read the guard as `skill-fired` **plus** this
 classification — `skill-fired` alone reports all three as identical.
+
+### Candidate screening
+
+Two candidates, screened at `runs: 3` with `--ablation none` on the target
+(`before-edit`), the flow the issue was about (`signature`), and the guard
+(`neg-hard`) — 17 cases, 51 runs, ~$9.50 each. Two rather than three on
+purpose: screening N candidates and taking the best biases the winner's number
+upward, and there are only three live held-out cases to confirm with.
+
+- **C1** `evals/variants/general-plus-register/` — the shipped general framing
+  (*deterministic impact map and test plan … before editing … instead of rg
+  when …*) **plus** the real-register question forms.
+- **C2** `evals/variants/register-plus-signature/` — the measured
+  `real-register` description **plus** one signature clause, general framing
+  still dropped.
+
+Both apply the same two hardenings against the guards: `who imports or calls
+it` became `which files import or call it`, so it does not reach
+`neg-hard-01`'s "why is `roleHas` slow when we **call it** in a tight loop";
+and `safe to delete` is kept adjacent so it does not reach `neg-hard-02`'s "is
+`OutboundQueue` **safe to use** from two workers".
+
+Trigger counts, should-fire cases only:
+
+| flow | shipped | `real-register` | C1 | C2 |
+| --- | --- | --- | --- | --- |
+| `before-edit` | 8/18 (44%) | **17/18 (94%)** | 15/18 (83%) | 16/18 (89%) |
+| `signature` | 4/12 (33%) | 3/12 (25%) | 6/12 (50%) | **10/12 (83%)** |
+| `neg-hard` (lower is better) | 0/12 | not run | 0/12 | 0/12 |
+| `07`/`08` should-not-fire | — | — | 0/6 | 0/6 |
+
+**Neither candidate cleared gate 1.** C2 missed the 17/18 bar by a single run
+and C1 by three. Under the pre-registered amendment — `signature` breaks a tie
+between candidates that both fail gate 1 — **C2 wins**, and not narrowly: it is
+ahead of C1 on every flow measured, at 10/12 versus 6/12 on `signature`, and it
+is the only description of the four that never fabricates a command on the
+`neg-hard` guards.
+
+Read C2's 16/18 against `real-register`'s 17/18 as a tie. They are one run
+apart at n=18, measured in different sessions, and C2 is `real-register` plus
+one clause — the honest claim is that adding the signature clause cost nothing
+on `before-edit` while moving `signature` from 3/12 to 10/12.
+
+C1's result is the more interesting one. Restoring the general framing did not
+help: it is *worse* than C2 on both target flows, and it reproduces the shipped
+description's habit of fabricating `/no-mistakes <symbol>` exactly as often
+(5/12 on `neg-hard`). Combined with the step-1 finding that `signature` never
+regressed, the conclusion the previous section reached — "ADD the real-register
+forms while KEEPING the general framing, rather than replacing it" — **is not
+supported**. Replacing it is better. What `signature` needed was a clause about
+signatures, not the general framing back.
 
 To add another variant: create `evals/variants/<name>/` (copy the skill, change
 only the frontmatter), then `python3 evals/generate.py --variant <name>` and run
