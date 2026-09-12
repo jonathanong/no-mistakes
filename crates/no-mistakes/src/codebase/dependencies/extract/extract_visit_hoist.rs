@@ -1,4 +1,12 @@
-fn walk_function_with_body_bindings<'a>(
+use super::{
+    binding_identifier_name, binding_names, function_name, visit_type_parameter_constraints,
+    CallableId, ImportCollector,
+};
+use crate::fx::{fx_set, FxHashSet};
+use oxc_ast::ast::{Class, Expression, Statement, VariableDeclaration, VariableDeclarationKind};
+use oxc_ast_visit::{walk, Visit};
+
+pub(super) fn walk_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     function: &oxc_ast::ast::Function<'a>,
 ) {
@@ -15,7 +23,7 @@ fn walk_function_with_body_bindings<'a>(
     }
 }
 
-fn walk_arrow_function_with_body_bindings<'a>(
+pub(super) fn walk_arrow_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
 ) {
@@ -33,7 +41,7 @@ fn walk_arrow_function_with_body_bindings<'a>(
     }
 }
 
-fn predeclare_hoisted_var_bindings<'a>(
+pub(super) fn predeclare_hoisted_var_bindings<'a>(
     collector: &mut ImportCollector,
     statements: &[Statement<'a>],
 ) {
@@ -81,7 +89,7 @@ impl<'ast> Visit<'ast> for HoistedVarBindingCollector<'_> {
     fn visit_class(&mut self, _class: &Class<'ast>) {}
 }
 
-fn predeclare_function_declarations<'a>(
+pub(super) fn predeclare_function_declarations<'a>(
     collector: &mut ImportCollector,
     statements: &[Statement<'a>],
 ) {
@@ -133,7 +141,10 @@ fn predeclare_function_declarations<'a>(
 }
 
 impl ImportCollector {
-    fn record_callable_declaration_bindings(&mut self, declaration: &VariableDeclaration<'_>) {
+    pub(super) fn record_callable_declaration_bindings(
+        &mut self,
+        declaration: &VariableDeclaration<'_>,
+    ) {
         let binding_scope = if declaration.kind == VariableDeclarationKind::Var {
             self.var_scope_stack.last().copied().unwrap_or(0)
         } else {

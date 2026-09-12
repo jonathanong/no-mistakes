@@ -1,10 +1,14 @@
-fn is_test_like_file(file: &Path) -> bool {
+use super::exported_symbol_for_local;
+use std::collections::{BTreeMap, BTreeSet};
+use std::path::{Path, PathBuf};
+
+pub(super) fn is_test_like_file(file: &Path) -> bool {
     file.file_name()
         .and_then(|name| name.to_str())
         .is_some_and(|name| name.contains(".test.") || name.contains(".spec."))
 }
 
-fn caller_is_target_export(
+pub(super) fn caller_is_target_export(
     symbols: &crate::codebase::ts_symbols::FileSymbols,
     file: &Path,
     target_symbols: &BTreeMap<PathBuf, BTreeSet<String>>,
@@ -21,7 +25,7 @@ fn caller_is_target_export(
         .is_some_and(|symbol| file_symbols.contains(symbol))
 }
 
-fn matches_local_callee(callee: &str, local_names: &BTreeSet<String>) -> bool {
+pub(super) fn matches_local_callee(callee: &str, local_names: &BTreeSet<String>) -> bool {
     local_names.iter().any(|local| {
         callee == local
             || callee
@@ -33,7 +37,7 @@ fn matches_local_callee(callee: &str, local_names: &BTreeSet<String>) -> bool {
 /// Legacy signature-impact callers answer resolved symbol usage, unlike call
 /// policy reports. A new retained unknown/shadowed call must not be attributed
 /// to a same-spelled import merely because its text happens to match.
-fn legacy_call_matches_local_target(
+pub(super) fn legacy_call_matches_local_target(
     call: &crate::codebase::dependencies::extract::FunctionCall,
     local_names: &BTreeSet<String>,
     facts: &crate::codebase::ts_source::facts::TsFileFacts,

@@ -110,13 +110,14 @@ pub(crate) trait TsFactLookup: Sync {
     }
 }
 
-include!("fact_lookup_fallback.rs");
-
 /// `app_file` → set of test-reachable source files that can navigate to it.
 /// Named here (rather than inlined) because both the trait above and
 /// `CheckFactMap`'s cache field need to name the exact same type.
 pub(crate) type RouteReachableFiles =
     std::collections::BTreeMap<Arc<String>, std::collections::BTreeSet<Arc<String>>>;
+
+mod fact_lookup_fallback;
+pub(crate) use fact_lookup_fallback::*;
 
 include!("fact_lookup_ts_map.rs");
 

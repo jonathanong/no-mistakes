@@ -1,7 +1,14 @@
+use super::{RouteReachableFiles, TsFactLookup};
+use crate::codebase::ts_source::facts::{TsFactMap, TsFactPlan, TsFileFacts};
+use anyhow::Result;
+use std::collections::HashSet;
+use std::path::{Path, PathBuf};
+use std::sync::Arc;
+
 /// Adds facts for files missing from a caller-provided sparse lookup while
 /// preserving per-file Playwright facts. App-wide memoization is safe only
 /// when the primary lookup and this graph describe the same file universe.
-struct FallbackTsFactLookup<'a> {
+pub(crate) struct FallbackTsFactLookup<'a> {
     primary: &'a dyn TsFactLookup,
     fallback: &'a TsFactMap,
     prefer_fallback: bool,
@@ -10,7 +17,7 @@ struct FallbackTsFactLookup<'a> {
 }
 
 impl<'a> FallbackTsFactLookup<'a> {
-    fn new(
+    pub(crate) fn new(
         primary: &'a dyn TsFactLookup,
         fallback: &'a TsFactMap,
         prefer_fallback: bool,
@@ -38,7 +45,7 @@ impl<'a> FallbackTsFactLookup<'a> {
     }
 }
 
-fn playwright_fetch_parse_error(
+pub(crate) fn playwright_fetch_parse_error(
     fallback: &TsFactMap,
     path: &Path,
 ) -> Option<Result<crate::fetch::file_facts::ParsedFileFacts, String>> {
@@ -50,7 +57,7 @@ fn playwright_fetch_parse_error(
     )))
 }
 
-fn same_graph_universe(
+pub(crate) fn same_graph_universe(
     primary_files: &[PathBuf],
     graph_visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
 ) -> bool {

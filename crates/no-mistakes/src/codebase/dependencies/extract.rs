@@ -241,7 +241,11 @@ include!("extract_default_helpers.rs");
 include!("extract_object_scope_helpers.rs");
 include!("extract_resource_scopes.rs");
 include!("extract_type_scope_helpers.rs");
-include!("extract_visit_hoist.rs");
+mod extract_visit_hoist;
+use extract_visit_hoist::{
+    predeclare_function_declarations, predeclare_hoisted_var_bindings,
+    walk_arrow_function_with_body_bindings, walk_function_with_body_bindings,
+};
 include!("extract_visit_types.rs");
 mod extract_binding_names;
 use extract_binding_names::{assignment_target_names, binding_names};
@@ -264,6 +268,9 @@ pub fn is_indexable(path: &Path) -> bool {
     )
 }
 
+#[cfg(test)]
+#[path = "extract/tests/binding_and_hoist_coverage.rs"]
+mod binding_and_hoist_coverage;
 #[cfg(test)]
 #[path = "extract/tests/collector_scope_coverage.rs"]
 mod collector_scope_coverage;
