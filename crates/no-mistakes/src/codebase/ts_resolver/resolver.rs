@@ -136,7 +136,6 @@ pub(crate) struct ImportClassification {
 }
 
 impl ImportClassification {
-    #[cfg(test)]
     pub(crate) fn from_parts(
         resolver_target: Option<PathBuf>,
         workspace_target: Option<PathBuf>,
