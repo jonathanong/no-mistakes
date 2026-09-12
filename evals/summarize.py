@@ -20,6 +20,12 @@ Two things it does that reading the HTML report does not:
     are the cases where firing is the failure. That is the single number
     standing for "the description carries Claude on its own".
 
+It also refuses to let a failed run pass as a result. A run that errors — a
+session limit, a timeout — scores 0 in **both** arms, so the case renders as a
+tidy `Δ +0.00` that is indistinguishable from "the skill made no difference".
+The header counts errored runs, names the cause, and drops those cases from the
+aggregate.
+
 `--mentions` adds a second table classifying how the runs that did NOT fire
 refer to the tool. `skill-fired` is binary and hides the difference between a
 run that never reached for the skill and one that reached for it and invented a
@@ -35,6 +41,10 @@ import sys
 
 def _is_should_fire(name: str) -> bool:
     return "-neg-" not in name and not name.startswith("neg-hard")
+
+
+def _errors(runs) -> list:
+    return [r["error"] for r in runs if r.get("error")]
 
 
 def _fired(runs) -> int:
@@ -73,6 +83,28 @@ def summarize(path: str) -> None:
         f"  partial={report.get('partial')} {report.get('partialReason') or ''}"
     )
     print(f"    plugin: {plugins}")
+    errors = [
+        e
+        for case in report["cases"]
+        for runs in case["arms"].values()
+        for e in _errors(runs)
+    ]
+    if errors:
+        seen = {}
+        for e in errors:
+            seen[str(e)[:100]] = seen.get(str(e)[:100], 0) + 1
+        print()
+        print(f"    !!  {len(errors)} RUNS FAILED — these numbers are NOT a result.")
+        for message, count in sorted(seen.items(), key=lambda kv: -kv[1]):
+            print(f"    !!  {count:>4}x {message}")
+        print(
+            "    !!  A failed run scores 0 in BOTH arms, so the table below reads"
+        )
+        print(
+            "    !!  as a clean Δ of 0.00 rather than as the missing data it is."
+        )
+        print()
+
     print(f"    {'case':<38} {'fired':>7} {'with':>6} {'without':>8} {'delta':>7}")
 
     fired_total = runs_total = 0
@@ -88,15 +120,16 @@ def summarize(path: str) -> None:
         else:
             row += f" {'-':>8} {'-':>7}"
         print(row)
-        if _is_should_fire(case["name"]):
+        if _is_should_fire(case["name"]) and not _errors(with_arm):
             fired_total += fired
             runs_total += len(with_arm)
 
     if runs_total:
         pct = 100 * fired_total / runs_total
+        suffix = "  (errored runs excluded)" if errors else ""
         print(
             f"    should-fire aggregate trigger: "
-            f"{fired_total}/{runs_total} ({pct:.0f}%)"
+            f"{fired_total}/{runs_total} ({pct:.0f}%){suffix}"
         )
 
 
