@@ -19,9 +19,17 @@ Two things it does that reading the HTML report does not:
     across every case except the `-neg-` slugs and the `neg-hard` flow, which
     are the cases where firing is the failure. That is the single number
     standing for "the description carries Claude on its own".
+
+`--mentions` adds a second table classifying how the runs that did NOT fire
+refer to the tool. `skill-fired` is binary and hides the difference between a
+run that never reached for the skill and one that reached for it and invented a
+command form that does not exist — and on the `neg-hard` guard, between a
+description that stays silent and one that leaks into questions the graph
+cannot answer while still scoring 0 fired.
 """
 import json
 import pathlib
+import re
 import sys
 
 
@@ -92,12 +100,53 @@ def summarize(path: str) -> None:
         )
 
 
+def _evidence(run) -> str:
+    for g in run.get("graders", []):
+        if g.get("evidence"):
+            return g["evidence"]
+    return ""
+
+
+def _refers_as(text: str) -> str:
+    if re.search(r"/no-mistakes\b", text):
+        return "invented /no-mistakes form"
+    if re.search(r"\bno-mistakes\s+[a-z-]+", text):
+        return "real CLI command"
+    if "no-mistakes" in text:
+        return "named, no command"
+    return "no mention"
+
+
+def mentions(path: str) -> None:
+    """Classify how the runs that did NOT fire refer to the tool."""
+    report = json.loads(pathlib.Path(path).read_text())
+    groups: dict = {}
+    for case in report["cases"]:
+        group = "should-fire" if _is_should_fire(case["name"]) else "negative"
+        for run in case["arms"].get("with", []):
+            flags = {g["name"]: g.get("passed") for g in run.get("graders", [])}
+            if "skill-fired" not in flags or flags["skill-fired"]:
+                continue
+            bucket = groups.setdefault(group, {})
+            kind = _refers_as(_evidence(run))
+            bucket[kind] = bucket.get(kind, 0) + 1
+    print("    non-firing runs, by how they refer to the tool:")
+    for group, bucket in sorted(groups.items()):
+        total = sum(bucket.values())
+        print(f"      [{group}] {total} runs")
+        for kind, n in sorted(bucket.items(), key=lambda kv: -kv[1]):
+            print(f"        {kind:<26} {n}")
+
+
 def main() -> None:
-    paths = sys.argv[1:]
+    paths = [a for a in sys.argv[1:] if a != "--mentions"]
+    want_mentions = "--mentions" in sys.argv[1:]
     if not paths:
         raise SystemExit(__doc__)
     for path in paths:
         summarize(path)
+        if want_mentions:
+            mentions(path)
 
 
 if __name__ == "__main__":

@@ -196,7 +196,7 @@ so they are low by construction — see the A/B result above.
 
 | flow | fired | reads |
 | --- | --- | --- |
-| `signature` | 3/5 | strongest of the new flows; `signature-01-add-param` scored **1.00 vs 0.00**, the largest single gap measured |
+| `signature` | 3/5 | ⚠️ **superseded** — at `runs: 3` this flow is 4/12, and the 1-run 3/5 is what produced the phantom regression discussed in [Decision rules](#decision-rules-for-a-description-change). `signature-01-add-param` scored **1.00 vs 0.00**, the largest single gap measured |
 | `lang-graph` | 3/5 | unexpectedly strong (Δ +0.67, +1.00, +0.33) despite the synthetic fixture |
 | `ci` | 1/5 | one clear win on `ci-01-action-impact`; rest gated on triggering |
 | `queues` | 1/5 | rubrics clean; Δ suppressed by non-triggering |
@@ -450,6 +450,35 @@ runs, and the number of with-arm runs per case is the same either way. Only the
 *scores* differ in scale, because `skill-fired` is scored under `none` and
 display-only under `with-without` — which is why `evals/summarize.py` drops that
 grader from every score it prints.
+
+#### What a non-firing run actually produces
+
+`skill-fired` is binary, which hides the more interesting question: when the
+skill does **not** load, what does the plan say instead? Classifying every
+non-firing run of the step-1 measurement by how it refers to the tool:
+
+| | shipped | `real-register` |
+| --- | --- | --- |
+| should-fire runs that did not fire | 8 | 9 |
+| … inventing `/no-mistakes <symbol>` | **5** | 0 |
+| … naming a real CLI command | 0 | 2 |
+| … naming the tool, no command | 3 | 7 |
+| `neg-hard` runs that did not fire | 15 | 3 |
+| … still reaching for the tool anyway | **9** | **0** |
+
+Two things fall out of this that the trigger counts alone do not show.
+
+**A non-firing run is worse than a silent one.** Under the shipped description
+the most common outcome is not "the model forgot the tool exists" — it is the
+model confidently writing `/no-mistakes roleHas`, a command form that does not
+exist. The description advertises the capability well enough to be reached for
+and not well enough to be used, so the plan names something that will fail.
+
+**`neg-hard` has a soft failure mode the indicator misses.** The shipped
+description scores a clean 0/12 there, yet 9 of its 15 non-firing `neg-hard`
+runs still reach for the tool in prose on questions the graph cannot answer.
+`real-register` mentions it zero times on the same cases. Read the over-trigger
+guard as `skill-fired` **plus** this classification, not as `skill-fired` alone.
 
 To add another variant: create `evals/variants/<name>/` (copy the skill, change
 only the frontmatter), then `python3 evals/generate.py --variant <name>` and run
