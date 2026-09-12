@@ -273,7 +273,7 @@ judged not worth the cost.
 | **More `napi` cases** | `SKILL.md`'s programmatic-API surface is about one sentence. The existing 5 already return Δ ≈ 0; more would add cost without discrimination. |
 | **More `lang-graph` cases** | The fixture is synthetic — `auto-harness` is TypeScript-only. Additional cases would grade plan shape against an imagined repository. |
 | **Engine correctness** | Covered by `test-cases/**` and the Rust suite. These evals test routing and guidance, not whether the graph is right. |
-| **Sub-skill variant** (splitting into intent-scoped skills) | Designed, then not built — but the reasoning has weakened. It rested on one description reaching 94% tuned and 100% held-out; against a clean holdout the shipped description manages [5/9](#held-out-confirmation), and coverage turns out to track [which subjects the description names](#the-description-reaches-what-it-names-and-nothing-else) rather than how general its framing is. That is the argument *for* splitting, not against it. Still not built, because the cheaper move — naming more subjects in one description — has not been exhausted. |
+| **Sub-skill variant** (splitting into intent-scoped skills) | Designed, then not built — but the reasoning has weakened. It rested on one description reaching 94% tuned and 100% held-out; against a clean holdout the current description manages [5/9 and the previous one 3/9](#held-out-confirmation), and coverage turns out to track [which subjects the description names](#the-description-reaches-what-it-names-and-nothing-else) rather than how general its framing is. That is the argument *for* splitting, not against it. Still not built, because the cheaper move — naming more subjects in one description — has not been exhausted. |
 | **A lifecycle case spanning before-edit → after-edit → handoff** | Multi-step flows are graded on a single final message here, so a long chain collapses into one hard-to-attribute verdict. The three phases are tested separately instead. |
 | **Performance / scale behaviour** | No case exercises a large repository, a cold graph build, or concurrency. |
 
@@ -506,10 +506,10 @@ On the four should-fire `signature` cases (12 runs each):
 
 | | shipped | `real-register` | C1 | C2 |
 | --- | --- | --- | --- | --- |
-| fired | 4 | 3 | 6 | 10 |
+| fired | 4 | 3 | 6 | **10** |
 | did not fire | 8 | 9 | 6 | 2 |
-| … inventing `/no-mistakes <symbol>` | **5** | 0 | **3** | 1 |
-| … naming a real CLI command | 0 | 2 | 1 | 0 |
+| … inventing a command form | **5** | 2 | **4** | 1 |
+| … naming a real subcommand | 0 | 0 | 0 | 0 |
 | … naming the tool, no command | 3 | 7 | 2 | 1 |
 
 On the four `neg-hard` over-trigger guards (12 runs each; `real-register` was
@@ -519,23 +519,31 @@ never run against this flow, so it has no column):
 | --- | --- | --- | --- |
 | fired | 0 | 0 | 0 |
 | reached for the tool in prose anyway | 9 | 9 | 8 |
-| … inventing `/no-mistakes <symbol>` | **5** | **5** | **0** |
+| … inventing a command form | **5** | **5** | **1** |
 | … naming the tool, no command | 4 | 4 | 7 |
 | stayed silent | 3 | 3 | 4 |
 
+**A non-firing run never produces a working command.** Across all four
+descriptions and both flows, the count of non-firing runs that named a real
+subcommand is **zero** — the subcommands live in the skill body, so a plan
+written without loading it cannot get them right. (The classifier checks the
+captured token against the documented subcommand set for exactly this reason;
+matching any lowercase word would score the invented `no-mistakes roleHas` as
+real, since `role` is a lowercase prefix of the symbol.)
+
 **A non-firing run is worse than a silent one.** Under the shipped description
 the common outcome is not "the model forgot the tool exists" — it is the model
-confidently writing `/no-mistakes roleHas`, a command form that does not exist.
-The description is good enough to be reached for and not good enough to be
-used, so the plan names something that will fail. Both descriptions that lead
-with the real register invent it far less; C2 invents it once in 24 non-firing
-runs across both flows, against 10 for the shipped description.
+confidently writing `/no-mistakes roleHas` or `no-mistakes roleHas`, neither of
+which exists. The description is good enough to be reached for and not good
+enough to be used, so the plan names something that will fail. C2 does this
+twice across 22 non-firing runs on both flows, against 10 for the shipped
+description.
 
 **The over-trigger guard needs reading in two parts.** All three descriptions
 score a clean `skill-fired` 0/12 on `neg-hard`, and all three still reach for
 the tool in prose on roughly 8–9 of those 12 runs. Widening the description did
 not make that worse. What changes is the form: shipped and C1 fabricate a
-command on 5 of them, C2 on none. Read the guard as `skill-fired` **plus** this
+command on 5 of them, C2 on 1. Read the guard as `skill-fired` **plus** this
 classification — `skill-fired` alone reports all three as identical.
 
 ### Candidate screening
@@ -571,9 +579,10 @@ Trigger counts, should-fire cases only:
 **Neither candidate cleared gate 1.** C2 missed the 17/18 bar by a single run
 and C1 by three. Under the pre-registered amendment — `signature` breaks a tie
 between candidates that both fail gate 1 — **C2 wins**, and not narrowly: it is
-ahead of C1 on every flow measured, at 10/12 versus 6/12 on `signature`, and it
-is the only description of the four that never fabricates a command on the
-`neg-hard` guards.
+ahead of C1 on every flow measured, at 10/12 versus 6/12 on `signature`, and of the three
+descriptions actually evaluated on the `neg-hard` guards it fabricates a
+command once, against five apiece for the other two. (`real-register` was never
+run against that flow, so it cannot be ranked here.)
 
 Read C2's 16/18 against `real-register`'s 17/18 as a tie. They are one run
 apart at n=18, measured in different sessions, and C2 is `real-register` plus
@@ -582,8 +591,8 @@ on `before-edit` while moving `signature` from 3/12 to 10/12.
 
 C1's result is the more interesting one. Restoring the general framing did not
 help: it is *worse* than C2 on both target flows, and it reproduces the shipped
-description's habit of fabricating `/no-mistakes <symbol>` exactly as often
-(5/12 on `neg-hard`). Combined with the step-1 finding that `signature` never
+description's habit of fabricating a command form exactly as often (5/12 on
+`neg-hard`). Combined with the step-1 finding that `signature` never
 regressed, the conclusion the previous section reached — "ADD the real-register
 forms while KEEPING the general framing, rather than replacing it" — **is not
 supported**. Replacing it is better. What `signature` needed was a clause about
