@@ -256,7 +256,6 @@ fn extract_walks_local_scope_chains_anonymous_classes_and_default_kinds() {
         .iter()
         .any(|call| call.callee == "helper" && call.caller.as_deref() == Some("outer/inner")));
     assert!(extracted.function_calls.iter().any(|call| {
-        call.caller.as_deref() == Some("run")
-            && call.target_identity == CallTargetIdentity::Unknown
+        call.caller.as_deref() == Some("run") && call.target_identity == CallTargetIdentity::Unknown
     }));
 }
