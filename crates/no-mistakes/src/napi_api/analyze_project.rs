@@ -45,6 +45,9 @@ mod import_usages_scope_tests;
 #[cfg(test)]
 mod legacy_test_support;
 #[cfg(test)]
+#[path = "analyze_project/tests/option_merge_shapes.rs"]
+mod option_merge_shapes_tests;
+#[cfg(test)]
 mod options_test_support;
 #[cfg(test)]
 mod options_tests;

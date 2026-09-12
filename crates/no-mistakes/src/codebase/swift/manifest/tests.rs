@@ -320,3 +320,24 @@ fn manifest_readers_ignore_unclosed_or_pathless_declarations() {
         std::collections::BTreeMap::from([("../Core".to_string(), "core".to_string())])
     );
 }
+
+#[test]
+fn manifest_parser_covers_macro_plugin_and_non_array_dependencies() {
+    let source = r#"
+        .macro(name: "Generate")
+        .plugin(name: "SkipMe")
+        .plugin(name: "BuildTool", capability: .buildTool())
+        .target(name: "Odd", dependencies: "Core")
+        .target(name: "UsesByName", dependencies: [.byName(name: "Core")])
+        .executableTarget(name: "Tool")
+    "#;
+    let targets = parse_manifest_targets(source);
+    assert!(targets.iter().any(|target| target.name == "Generate"));
+    assert!(targets.iter().any(|target| target.name == "BuildTool"));
+    assert!(targets
+        .iter()
+        .any(|target| target.name == "UsesByName"
+            && target.dependencies.contains(&"Core".to_string())));
+    assert!(targets.iter().any(|target| target.name == "Tool"));
+    assert!(targets.iter().all(|target| target.name != "SkipMe"));
+}

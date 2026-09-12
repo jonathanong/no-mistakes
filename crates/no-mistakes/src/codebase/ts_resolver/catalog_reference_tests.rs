@@ -76,3 +76,49 @@ fn reference_outside_the_analysis_root_is_diagnosed() {
         catalog.diagnostics()
     );
 }
+
+#[test]
+fn catalog_builder_accepts_json_candidate_roots_and_missing_files() {
+    let root = fixture("directory-extends");
+    let config = root.join("tsconfig.json");
+    let builder = CatalogBuilder::new(&root, &[config.clone()], &[config.clone()], None, None);
+    assert_eq!(builder.candidates(), vec![normalize_path(&config)]);
+
+    let missing = root.join("missing-tsconfig.json");
+    let catalog = CatalogBuilder::new(&root, &[missing.clone()], &[missing], None, None).build();
+    assert!(
+        catalog.diagnostics().iter().any(|diagnostic| {
+            diagnostic.detail.contains("does not exist")
+                || diagnostic.kind == TsConfigDiagnosticKind::InvalidConfig
+        }),
+        "{:#?}",
+        catalog.diagnostics()
+    );
+}
+
+#[test]
+fn apply_own_expands_config_dir_files_and_empty_lists() {
+    let root = fixture("directory-extends");
+    let path = root.join("tsconfig.json");
+    let mut config = EffectiveConfig::new(path.clone(), root.clone());
+    config
+        .apply_own(
+            &serde_json::json!({
+                "compilerOptions": {
+                    "paths": { "@lib/*": ["${configDir}/src/*"] },
+                    "baseUrl": "${configDir}"
+                },
+                "files": ["${configDir}/src/entry.ts"],
+                "include": [],
+                "exclude": [],
+                "references": []
+            }),
+            &path,
+            &root,
+            |value| Ok(root.join(value)),
+        )
+        .expect("configDir files and empty lists should apply");
+    assert!(config.files.is_some());
+    assert_eq!(config.includes.as_ref().map(Vec::len), Some(0));
+    assert_eq!(config.excludes.as_ref().map(Vec::len), Some(0));
+}

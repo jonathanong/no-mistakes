@@ -307,3 +307,54 @@ fn extract_walks_inherited_static_members_nested_helpers_and_aggregates() {
         .iter()
         .any(|call| call.callee == "api.load" || call.callee.ends_with(".load")));
 }
+
+#[test]
+fn extract_walks_getter_calls_lexical_bases_and_dotted_extends() {
+    let extracted = facts(
+        r#"
+        class Box {
+          static get g() { return 1; }
+          static set s(_v: number) {}
+        }
+        Box.g();
+        const obj = {
+          get g() { return 1; },
+          set s(_v: number) {},
+        };
+        obj.g();
+        class Ghost { static missing() {} }
+        const Dotted = Ghost.missing;
+        class ViaDotted extends Dotted {}
+        function outer() {
+          const Base = 1;
+          class Child extends Base { static m() {} }
+          Child.m();
+        }
+        tagged`plain`;
+        (obj[dyn]).tag`x`;
+        obj.s = 1;
+        Box.s = 1;
+        Box["g"];
+        obj["g"]();
+        this.method();
+        foo.bar.baz();
+        (0, obj.method)();
+        import { type Alpha, type Beta } from "./types.mts";
+        export { type Alpha, type Beta } from "./types.mts";
+        import { "k" as renamed } from "./keys.mts";
+        require.resolve(`./tpl`);
+        export enum Kind { A }
+        const Ctor = class { method() {} };
+        export default async () => 1;
+        const mixed = { ...obj, extra() { return 1; }, set s(_v: number) {} };
+        mixed.s = 1;
+        Box.g++;
+        type Nested = Foo.Bar.Baz;
+        "#,
+    );
+    assert!(extracted
+        .function_calls
+        .iter()
+        .any(|call| call.callee == "Box.g" || call.callee.ends_with(".g")));
+    assert!(!extracted.unknown_calls.is_empty());
+}

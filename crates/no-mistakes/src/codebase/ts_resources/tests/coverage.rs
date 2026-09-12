@@ -275,6 +275,8 @@ fn glob_cwd_rejects_spreads_and_records_parenthesized_url_and_dirname() {
         glob('tpl-cwd/**/*.txt', { cwd: `tpl` });
         fs.readFile(fileURLToPath(new URL('./bound-url.json', import.meta.url)));
         fs.readFile(require('url').fileURLToPath(new URL('./req-url.json', import.meta.url)));
+        import { URL as UrlCtor } from 'node:url';
+        fs.readFile(new UrlCtor('./imported-url.json', import.meta.url));
         "#,
     );
     assert!(
