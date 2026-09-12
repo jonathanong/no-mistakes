@@ -70,10 +70,12 @@ fn predeclare_walks_ambient_default_class_and_non_function_statements() {
          let {b} = obj;\n\
          class Named {}\n\
          const fn = () => {};\n\
+         const expr = () => 1;\n\
          const obj = { method() {} };\n\
          function overload(x: string): void;\n\
          function overload(x: number): void;\n\
-         function overload(x: string | number) {}\n",
+         function overload(x: string | number) {}\n\
+         export default function () { var inner = 1; }\n",
         SourceType::ts(),
     )
     .parse();
@@ -93,10 +95,15 @@ class Named {\n\
   static get g() { return 1; }\n\
   static set s(_value: number) {}\n\
   static field = () => {};\n\
+  static n = 1;\n\
   instance = 1;\n\
   [key]() {}\n\
   method() {}\n\
+  accessor a = 1;\n\
   static { var hoisted = 1; function inner() {} }\n\
+}\n\
+class Child extends Named<number> {\n\
+  read() {}\n\
 }\n\
 @decoFactory()\n\
 class Factory {}\n\
@@ -105,6 +112,8 @@ class Unknown {}\n\
 export default class {\n\
   read() {}\n\
 }\n\
+const alias = Named;\n\
+alias.g;\n\
 function outer() {\n\
   function inner(x: string): void;\n\
   function inner(x: number): void;\n\

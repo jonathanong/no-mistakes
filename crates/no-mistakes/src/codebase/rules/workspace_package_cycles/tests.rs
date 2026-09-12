@@ -170,3 +170,25 @@ fn package_dependency_helpers_tolerate_missing_and_invalid_files() {
     );
     assert_eq!(canonical_cycle(""), "");
 }
+
+#[test]
+fn empty_workspace_and_wrapped_cycle_helpers() {
+    let root = fixture_root("invalid-package-json");
+    let files = vec![root.join("packages/api/package.json")];
+    let sources = super::super::source_store_for_files(&files);
+    let findings =
+        check_with_files_and_sources(&root, &config("{}"), &files, sources.as_ref()).unwrap();
+    assert!(findings.is_empty(), "unexpected findings: {findings:?}");
+
+    assert_eq!(canonical_cycle("b -> a -> b"), "a -> b");
+    assert_eq!(canonical_cycle("a -> "), "");
+
+    let mut invalid = NoMistakesConfig::default();
+    invalid.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("true").unwrap(),
+        ..Default::default()
+    });
+    assert!(check_with_files(&root, &invalid, &files).is_err());
+}

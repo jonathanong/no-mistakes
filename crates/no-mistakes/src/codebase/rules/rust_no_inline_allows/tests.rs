@@ -163,3 +163,37 @@ fn helpers_cover_unrooted_excludes_and_non_list_allow_attrs() {
     assert!(findings[0].message.contains("allow()"));
     assert!(check_file(Path::new("/repo/missing.rs"), root).is_empty());
 }
+
+#[test]
+fn check_discovers_relative_absolute_roots_and_skips_test_files() {
+    let root = fixture("roots");
+    let relative = config_with_rule("{roots: [\"sub\"]}");
+    let findings = check(&root, &relative).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert!(
+        findings[0].file.ends_with("sub/b.rs"),
+        "unexpected file: {}",
+        findings[0].file
+    );
+
+    let sub = root.join("sub");
+    let absolute = config_with_rule(&format!("{{roots: [\"{}\"]}}", sub.display()));
+    let findings = check(&root, &absolute).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert!(
+        findings[0].file.ends_with("b.rs"),
+        "unexpected file: {}",
+        findings[0].file
+    );
+
+    let findings = check(&root, &config_with_rule("{}")).unwrap();
+    assert!(findings
+        .iter()
+        .all(|finding| !finding.file.ends_with("tests.rs")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file.ends_with("a.rs")));
+    assert!(check(&root, &NoMistakesConfig::default())
+        .unwrap()
+        .is_empty());
+}

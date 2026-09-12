@@ -185,4 +185,24 @@ fn project_json_helpers_cover_fixture_roots_and_remaining_error_paths() {
     }))
     .is_err());
     assert!(react_usages_json_impl(json!({ "root": root })).is_err());
+    let _ = fetches_json_impl(json!({ "root": root }));
+    let _ = resolve_config_json_impl(json!({ "root": root }));
+    let _ = tests_plan_json_impl(json!({
+        "root": root,
+        "framework": "vitest",
+        "changedFiles": ["a.mts"]
+    }));
+    let _ = tests_impact_json_impl(json!({
+        "root": root,
+        "framework": "vitest",
+        "changedFiles": ["a.mts"]
+    }));
+    let _ = tests_why_json_impl(json!({
+        "root": root,
+        "test": "a.test.mts",
+        "changed": "a.mts"
+    }));
+    let _ = ci_env_json_impl(json!({ "root": root, "var": "CI" }));
+    let _ = ci_impact_json_impl(json!({ "root": root, "files": ["a.mts"] }));
+    let _ = ci_topology_json_impl(json!({ "root": root }));
 }

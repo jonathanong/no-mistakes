@@ -165,7 +165,7 @@ fn lang_route_domain_helpers_cover_glob_aliases_and_handler_shapes() {
         declarations: vec!["UserView".into()],
         ..LangFileFacts::default()
     };
-    let mut facts = facts_from(vec![file.clone(), other.clone(), foreign]);
+    let mut facts = facts_from(vec![file.clone(), other.clone(), foreign.clone()]);
     facts.files_by_module.insert(
         "routes.users.UserView".into(),
         BTreeSet::from([file.path.clone(), other.path.clone()]),
@@ -243,4 +243,38 @@ fn lang_route_domain_helpers_cover_glob_aliases_and_handler_shapes() {
         "other/views",
         "UserView"
     ));
+
+    let skipped = LangFileFacts {
+        path: PathBuf::from("/repo/models/users.py"),
+        route_handlers: vec![("/skip".into(), "models.users.View".into())],
+        ..LangFileFacts::default()
+    };
+    facts.files.insert(skipped.path.clone(), skipped);
+    edges.clear();
+    super::emit_route_edges(root, &facts, &options, &mut edges, &interner);
+
+    let none_pkg = LangFileFacts {
+        path: PathBuf::from("/repo/routes/orphan.py"),
+        package: None,
+        module: Some("routes.orphan".into()),
+        route_handlers: vec![("/orphan".into(), "App::Orphan".into())],
+        ..LangFileFacts::default()
+    };
+    assert!(super::same_lang_package(&none_pkg, &file));
+    assert!(super::handler_module_matches("App::Orphan", &none_pkg));
+    assert!(super::handler_module_matches("admin/users#index", &file));
+    assert!(!super::reference_target_allowed(
+        &file,
+        &LangFileFacts {
+            path: PathBuf::from("/repo/other/unrelated.py"),
+            package: Some("other".into()),
+            module: Some("other.unrelated".into()),
+            ..LangFileFacts::default()
+        },
+        "UserView"
+    ));
+    assert_eq!(
+        super::route_handler_names("users#index"),
+        vec!["UsersController".to_string()]
+    );
 }

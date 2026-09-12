@@ -342,3 +342,39 @@ fn binding_liveness_walks_nested_parents_and_skips_synthetic_callbacks() {
     });
     assert!(!live);
 }
+
+#[test]
+fn local_callable_id_walks_parents_and_rejects_dotted_bindings() {
+    let index = CallableFileIndex {
+        known_scopes: fx_set(),
+        exported_scopes: fx_set(),
+        class_scopes: fx_set(),
+        callable_bindings: [((0, "fn".to_string()), CallableId(1))]
+            .into_iter()
+            .collect(),
+        imported: fx_map(),
+        exported: fx_map(),
+        aliases: fx_map(),
+        binding_declared_at: fx_map(),
+        invocation_offsets: fx_map(),
+        class_bindings: fx_map(),
+        lexical_scope_parents: [(0, None), (1, Some(0))].into_iter().collect(),
+        scope_ids_by_display: fx_map(),
+        stars: Vec::new(),
+    };
+
+    assert!(index.resolve_local_callable_id(None, "fn").is_none());
+    assert!(index
+        .resolve_local_callable_id(Some(0), "obj.fn")
+        .is_none());
+    assert_eq!(
+        index.resolve_local_callable_id(Some(1), "fn"),
+        Some(CallableId(1))
+    );
+    assert!(index
+        .resolve_local_callable_id(Some(1), "missing")
+        .is_none());
+    assert!(index
+        .resolve_class_binding_in_scope_chain(1, "missing.run", InvocationKind::Call)
+        .is_none());
+}

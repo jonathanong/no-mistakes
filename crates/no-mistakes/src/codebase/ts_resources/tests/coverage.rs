@@ -337,6 +337,9 @@ fn remaining_url_and_glob_argument_shapes() {
         glob('paren-path/**/*.txt', { cwd: ('static-cwd') });
         glob(`quasi-cwd/**/*.txt`, { cwd: `tpl-cwd` });
         fs.readFile(`template.json`);
+        glob('paren-meta/**/*.txt', { cwd: (import.meta.dirname) });
+        glob('url-cwd/**/*.txt', { cwd: new URL('./cwd', import.meta.url) });
+        fs.readFile(fileURLToPath('not-a-url'));
         "#,
     );
     assert!(
