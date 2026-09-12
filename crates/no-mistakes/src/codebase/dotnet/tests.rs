@@ -6,6 +6,7 @@ use super::project_static::parse_project_static;
 use super::*;
 use std::collections::BTreeSet;
 
+mod central_packages;
 mod project_static_tests;
 
 fn fixture() -> PathBuf {
