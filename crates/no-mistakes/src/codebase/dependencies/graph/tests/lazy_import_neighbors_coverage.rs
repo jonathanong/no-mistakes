@@ -154,3 +154,190 @@ fn import_neighbors_cover_prepared_facts_source_store_and_classifications() {
     assert!(session_missing.0.is_empty());
     assert!(session_missing.1.and_then(|facts| facts.parse_error).is_some());
 }
+
+struct ScriptedImportResolver {
+    by_specifier: std::collections::HashMap<String, crate::codebase::ts_resolver::ImportClassification>,
+}
+
+impl crate::codebase::ts_resolver::ImportResolution for ScriptedImportResolver {
+    fn resolve(
+        &self,
+        specifier: &str,
+        _importing_file: &Path,
+    ) -> Option<PathBuf> {
+        self.by_specifier
+            .get(specifier)
+            .and_then(|classification| classification.preferred_path().map(Path::to_path_buf))
+    }
+
+    fn resolution_candidates(
+        &self,
+        specifier: &str,
+        importing_file: &Path,
+    ) -> std::collections::BTreeSet<PathBuf> {
+        self.resolve(specifier, importing_file)
+            .into_iter()
+            .collect()
+    }
+
+    fn visible_files(&self) -> Option<&dyn crate::codebase::ts_resolver::VisiblePathLookup> {
+        None
+    }
+
+    fn classify_import(
+        &self,
+        specifier: &str,
+        _importing_file: &Path,
+        _workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        _visible_files: &dyn crate::codebase::ts_resolver::VisiblePathLookup,
+    ) -> crate::codebase::ts_resolver::ImportClassification {
+        self.by_specifier.get(specifier).cloned().unwrap_or_else(|| {
+            crate::codebase::ts_resolver::ImportClassification::from_parts(None, None, false)
+        })
+    }
+}
+
+#[test]
+fn import_neighbors_from_facts_cover_preferred_workspace_and_unresolved_shapes() {
+    let root = simple_fixture_root();
+    let a = root.join("a.mts");
+    let b = root.join("b.mts");
+    let asset = root.join("asset.json");
+    let missing = root.join("ghost.mts");
+    let graph_files = GraphFiles::from_parts(
+        vec![a.clone(), b.clone(), asset.clone()],
+        vec![a.clone(), b.clone()],
+        [a.clone(), b.clone(), asset.clone()],
+        vec![],
+    );
+    let context = TsFactContext::new(&root);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(None);
+    let workspace = crate::codebase::workspaces::IndexedWorkspaceMap::default();
+    let mut prepared = TsFactMap::new();
+    prepared.insert(
+        a.clone(),
+        TsFileFacts {
+            imports: vec![
+                extracted("./workspace.ts", ImportKind::Static),
+                extracted("./workspace-type.ts", ImportKind::Type),
+                extracted("./workspace-resolve.ts", ImportKind::RequireResolve),
+                extracted("./preferred.ts", ImportKind::Dynamic),
+                extracted("./type.ts", ImportKind::Type),
+                extracted("./asset.json", ImportKind::Static),
+                extracted("./asset.json", ImportKind::RequireResolve),
+                extracted("lodash", ImportKind::Static),
+                extracted("@internal/pkg", ImportKind::Static),
+                extracted("./ghost.mts", ImportKind::Static),
+            ],
+            ..TsFileFacts::default()
+        },
+    );
+    let resolver = ScriptedImportResolver {
+        by_specifier: [
+            (
+                "./workspace.ts".to_string(),
+                crate::codebase::ts_resolver::ImportClassification::from_parts(
+                    None,
+                    Some(b.clone()),
+                    true,
+                ),
+            ),
+            (
+                "./workspace-type.ts".to_string(),
+                crate::codebase::ts_resolver::ImportClassification::from_parts(
+                    None,
+                    Some(b.clone()),
+                    true,
+                ),
+            ),
+            (
+                "./workspace-resolve.ts".to_string(),
+                crate::codebase::ts_resolver::ImportClassification::from_parts(
+                    None,
+                    Some(b.clone()),
+                    true,
+                ),
+            ),
+            (
+                "./preferred.ts".to_string(),
+                crate::codebase::ts_resolver::ImportClassification::from_parts(
+                    Some(b.clone()),
+                    None,
+                    false,
+                ),
+            ),
+            (
+                "./type.ts".to_string(),
+                crate::codebase::ts_resolver::ImportClassification::from_parts(
+                    Some(b.clone()),
+                    None,
+                    false,
+                ),
+            ),
+            (
+                "./asset.json".to_string(),
+                crate::codebase::ts_resolver::ImportClassification::from_parts(
+                    Some(asset.clone()),
+                    None,
+                    false,
+                ),
+            ),
+            (
+                "lodash".to_string(),
+                crate::codebase::ts_resolver::ImportClassification::from_parts(None, None, false),
+            ),
+            (
+                "@internal/pkg".to_string(),
+                crate::codebase::ts_resolver::ImportClassification::from_parts(None, None, true),
+            ),
+            (
+                "./ghost.mts".to_string(),
+                crate::codebase::ts_resolver::ImportClassification::from_parts(
+                    Some(missing),
+                    None,
+                    false,
+                ),
+            ),
+        ]
+        .into_iter()
+        .collect(),
+    };
+
+    let (neighbors, collected) = import_neighbors(
+        &a,
+        &resolver,
+        &workspace,
+        &graph_files,
+        None,
+        LazyImportFacts::new(Some(&prepared), TsFactPlan::imports(), &context),
+        &session,
+    );
+    assert!(collected.is_none());
+    assert!(
+        neighbors
+            .iter()
+            .any(|(node, kind)| node.as_file() == Some(b.as_path())
+                && *kind == EdgeKind::WorkspaceImport),
+        "{neighbors:#?}"
+    );
+    assert!(
+        neighbors
+            .iter()
+            .any(|(node, kind)| node.as_file() == Some(b.as_path())
+                && *kind == EdgeKind::WorkspaceTypeImport),
+        "{neighbors:#?}"
+    );
+    assert!(
+        neighbors
+            .iter()
+            .any(|(node, kind)| node.as_file() == Some(b.as_path())
+                && *kind == EdgeKind::RequireResolve),
+        "{neighbors:#?}"
+    );
+    assert!(
+        neighbors
+            .iter()
+            .any(|(node, kind)| node.as_file().is_none() && *kind == EdgeKind::Import),
+        "unresolved lodash should become a module node: {neighbors:#?}"
+    );
+}

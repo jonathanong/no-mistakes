@@ -102,7 +102,7 @@ impl PreparedScope {
                     &self.facts,
                 );
             let usages = usages?;
-            return Ok(serde_json::to_value(usages)?);
+            return Ok(crate::cli::json_value(&usages));
         }
         let key = canonical_filter_key(&options.targets)?;
         let analysis = cached_once(&self.react_analyses, &key, || {
@@ -114,7 +114,7 @@ impl PreparedScope {
             )
         })?;
         if report_type == "reactAnalyze" {
-            return Ok(serde_json::to_value(analysis)?);
+            return Ok(crate::cli::json_value(&analysis));
         }
         let prepared = crate::react_traits::prepare_check_from_loaded_config(
             self.traversal.config(),
@@ -126,7 +126,7 @@ impl PreparedScope {
             &self.facts,
             &prepared,
         );
-        Ok(serde_json::to_value(findings?)?)
+        Ok(crate::cli::json_value(&findings?))
     }
 }
 
@@ -176,5 +176,5 @@ fn canonical_filter_key(filters: &[String]) -> Result<String> {
     let mut filters = filters.to_vec();
     filters.sort();
     filters.dedup();
-    Ok(serde_json::to_string(&filters)?)
+    Ok(crate::cli::json_string(&filters))
 }

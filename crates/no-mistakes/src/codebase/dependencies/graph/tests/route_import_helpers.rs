@@ -14,6 +14,10 @@ fn route_import_helpers_cover_missing_canonical_parents_and_visible_remap() {
         route_import_resolution_source(&file, &directories),
         canonical_parent.join("route.ts")
     );
+    assert_eq!(
+        route_import_resolution_source(&parent.join("."), &directories),
+        parent.join(".")
+    );
     let _ = route_import_resolution_source(Path::new(".."), &directories);
     let _ = route_import_resolution_source(Path::new(""), &directories);
 
@@ -116,6 +120,56 @@ fn route_import_helpers_cover_missing_canonical_parents_and_visible_remap() {
         &session,
     );
     assert!(skipped.is_empty(), "{skipped:#?}");
+
+    let nameless = PathBuf::from(".");
+    let nameless_files = GraphFiles::from_parts(
+        vec![a.clone(), nameless.clone()],
+        vec![a.clone(), nameless.clone()],
+        [a.clone(), nameless.clone()],
+        vec![],
+    );
+    let _ = collect_route_import_edges(
+        std::slice::from_ref(&a),
+        &facts,
+        &tsconfig,
+        None,
+        &nameless_files,
+        &session,
+    );
+
+    let missing_file = PathBuf::from("/no-mistakes-missing-route-import-target/file.ts");
+    let mut missing_facts = TsFactMap::new();
+    missing_facts.insert(
+        missing_file.clone(),
+        TsFileFacts {
+            imports: vec![ExtractedImport {
+                specifier: "./b.mts".to_string(),
+                kind: ImportKind::Dynamic,
+                line: 1,
+                function_scope: None,
+                function_scope_id: None,
+                side_effect_only: false,
+                re_export: false,
+                runtime_reachable: false,
+            }],
+            ..TsFileFacts::default()
+        },
+    );
+    let missing_files = GraphFiles::from_parts(
+        vec![missing_file.clone()],
+        vec![missing_file.clone()],
+        [missing_file.clone()],
+        vec![],
+    );
+    let skipped_missing = collect_route_import_edges(
+        std::slice::from_ref(&missing_file),
+        &missing_facts,
+        &tsconfig,
+        None,
+        &missing_files,
+        &session,
+    );
+    assert!(skipped_missing.is_empty(), "{skipped_missing:#?}");
 }
 
 #[cfg(unix)]
@@ -151,4 +205,26 @@ fn route_import_resolution_follows_symlink_files_and_broken_links() {
         &session,
     );
     let _ = with_catalog;
+
+    let real_helper = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/real/src/route-helper.ts"),
+    );
+    let link_helper = root.join("src/route-helper.ts");
+    let remap_files = GraphFiles::from_parts(
+        vec![link_helper.clone()],
+        vec![link_helper.clone()],
+        [link_helper.clone()],
+        vec![],
+    );
+    let mut visible_by_name = std::collections::BTreeMap::<std::ffi::OsString, Vec<PathBuf>>::new();
+    visible_by_name.insert(
+        std::ffi::OsString::from("route-helper.ts"),
+        vec![link_helper.clone()],
+    );
+    let remapped = route_import_visible_target(real_helper, &remap_files, &visible_by_name);
+    assert!(
+        remapped.as_deref() == Some(link_helper.as_path()) || remapped.is_none(),
+        "{remapped:?}"
+    );
 }

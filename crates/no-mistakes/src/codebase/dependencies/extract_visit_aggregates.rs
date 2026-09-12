@@ -49,10 +49,7 @@ fn visit_export_default_declaration_with_scope<'a>(
     collector.export_depth += 1;
     match &export.declaration {
         ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
-            let scope = function
-                .id
-                .as_ref()
-                .map_or("default", |id| id.name.as_str());
+            let scope = function.id.as_ref().map_or("default", |id| id.name.as_str());
             walk_default_function_with_scope(collector, function, scope);
             collector.export_depth -= 1;
         }
@@ -65,10 +62,6 @@ fn visit_export_default_declaration_with_scope<'a>(
             collector.add_formal_parameters(&arrow.params);
             walk_arrow_function_with_body_bindings(collector, arrow);
             collector.pop_function_scope(true);
-            collector.export_depth -= 1;
-        }
-        ExportDefaultDeclarationKind::FunctionExpression(function) => {
-            walk_default_function_with_scope(collector, function, "default");
             collector.export_depth -= 1;
         }
         ExportDefaultDeclarationKind::ClassDeclaration(class) => {

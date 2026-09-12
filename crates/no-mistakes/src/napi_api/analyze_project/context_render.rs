@@ -112,5 +112,5 @@ fn render_playwright_report(
 }
 
 fn json_value<T: serde::Serialize>(value: &T) -> Value {
-    serde_json::to_value(value).expect("prepared N-API report serialization never fails")
+    crate::cli::json_value(value)
 }

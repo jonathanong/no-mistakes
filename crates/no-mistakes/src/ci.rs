@@ -127,7 +127,7 @@ pub fn run(args: CiArgs) -> Result<ExitCode> {
 
 fn run_topology_impact(args: CiTopologyImpactArgs) -> Result<ExitCode> {
     let report = topology_impact_report(&args.root, &args.base, &args.head, &args.entry_workflow)?;
-    print!("{}", serde_json::to_string_pretty(&report)?);
+    print!("{}", crate::cli::json_pretty(&report));
     Ok(ExitCode::SUCCESS)
 }
 

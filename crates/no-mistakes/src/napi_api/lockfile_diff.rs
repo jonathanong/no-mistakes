@@ -149,7 +149,7 @@ pub(crate) fn lockfile_diff_json_impl(options: serde_json::Value) -> napi::Resul
         });
     }
 
-    Ok(serde_json::to_string(&entries).expect("lockfile diff entries are JSON-serializable"))
+    Ok(crate::cli::json_string(&entries))
 }
 
 fn manager_name(m: PackageManager) -> &'static str {

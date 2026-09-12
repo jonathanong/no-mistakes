@@ -176,17 +176,13 @@ pub(crate) fn impacted_checks_json_impl(options: serde_json::Value) -> napi::Res
     let Some(timings) = timing.into_timings() else {
         return to_pretty_json(&report);
     };
-    let mut value = serde_json::to_value(&report)
-        .map_err(anyhow::Error::from)
-        .map_err(to_napi_error)?;
-    value["timings"] = serde_json::to_value(timings)
-        .map_err(anyhow::Error::from)
-        .map_err(to_napi_error)?;
+    let mut value = crate::cli::json_value(&report);
+    value["timings"] = crate::cli::json_value(&timings);
     to_pretty_json(&value)
 }
 
 include!("cli_parity_test_documents.rs");
 
 fn to_pretty_json<T: serde::Serialize>(value: &T) -> napi::Result<String> {
-    Ok(serde_json::to_string(value).expect("N-API report serialization never fails"))
+    Ok(crate::cli::json_string(value))
 }

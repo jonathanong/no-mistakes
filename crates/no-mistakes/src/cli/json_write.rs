@@ -13,5 +13,21 @@ pub(super) fn write_json<W: Write>(out: &mut W, value: &(impl Serialize + ?Sized
         .expect("writing JSON newline to stdout never fails");
 }
 
+pub(crate) fn json_string<T: Serialize + ?Sized>(value: &T) -> String {
+    serde_json::to_string(value).expect("JSON serialization of Rust structs never fails")
+}
+
+pub(crate) fn json_value<T: Serialize + ?Sized>(value: &T) -> serde_json::Value {
+    serde_json::to_value(value).expect("JSON serialization of Rust structs never fails")
+}
+
+pub(crate) fn json_pretty<T: Serialize + ?Sized>(value: &T) -> String {
+    serde_json::to_string_pretty(value).expect("JSON serialization of Rust structs never fails")
+}
+
+pub(crate) fn yaml_string<T: Serialize + ?Sized>(value: &T) -> String {
+    serde_yaml::to_string(value).expect("YAML serialization of Rust structs never fails")
+}
+
 #[cfg(test)]
 mod tests;

@@ -76,7 +76,7 @@ pub(crate) fn analyze_project_value_impl(options: Value) -> napi::Result<String>
 
 fn analyze_project_options_impl(options: AnalyzeProjectOptions) -> napi::Result<String> {
     let output = analyze_project(options).map_err(to_napi_error)?;
-    Ok(serde_json::to_string(&output).expect("analyzeProject result serialization never fails"))
+    Ok(crate::cli::json_string(&output))
 }
 
 fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjectResult> {

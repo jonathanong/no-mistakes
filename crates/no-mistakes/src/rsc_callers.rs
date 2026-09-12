@@ -55,16 +55,10 @@ pub(crate) fn run(args: RscCallersArgs) -> Result<ExitCode> {
     let report = report?;
     match effective_format {
         Format::Json => {
-            println!(
-                "{}",
-                serde_json::to_string(&report).expect("serialization of Rust structs never fails")
-            );
+            println!("{}", crate::cli::json_string(&report));
         }
         Format::Yml => {
-            println!(
-                "{}",
-                serde_yaml::to_string(&report).expect("serialization of Rust structs never fails")
-            );
+            println!("{}", crate::cli::yaml_string(&report));
         }
         Format::Md => print_md(&report),
         Format::Paths => {

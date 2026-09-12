@@ -73,11 +73,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
                     print_json(&results);
                 }
                 Format::Yml => {
-                    println!(
-                        "{}",
-                        serde_yaml::to_string(&results)
-                            .expect("serialization of Rust structs never fails")
-                    );
+                    println!("{}", crate::cli::yaml_string(&results));
                 }
                 Format::Md => react_traits::print_results_md(&results),
                 Format::Paths => {
@@ -105,11 +101,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
                     print_json(&violations);
                 }
                 Format::Yml => {
-                    println!(
-                        "{}",
-                        serde_yaml::to_string(&violations)
-                            .expect("serialization of Rust structs never fails")
-                    );
+                    println!("{}", crate::cli::yaml_string(&violations));
                 }
                 Format::Md => react_traits::print_violations_md(&violations),
                 Format::Paths => {
@@ -136,11 +128,7 @@ pub(crate) fn run(args: ReactArgs) -> Result<ExitCode> {
                     print_json(&report);
                 }
                 Format::Yml => {
-                    println!(
-                        "{}",
-                        serde_yaml::to_string(&report)
-                            .expect("serialization of Rust structs never fails")
-                    );
+                    println!("{}", crate::cli::yaml_string(&report));
                 }
                 Format::Md => react_traits::print_usages_md(&report),
                 Format::Paths => {
