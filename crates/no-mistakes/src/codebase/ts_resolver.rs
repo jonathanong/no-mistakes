@@ -25,6 +25,9 @@ include!("ts_resolver/project_resolver.rs");
 mod scoped_test_support;
 
 #[cfg(test)]
+#[path = "ts_resolver/tests/apply_own_errors.rs"]
+mod catalog_apply_own_errors;
+#[cfg(test)]
 mod catalog_coverage_tests;
 #[cfg(test)]
 mod catalog_reference_tests;
