@@ -67,7 +67,8 @@ fn apply_own_rejects_invalid_compiler_and_list_shapes() {
     assert!(config.paths.is_some());
     assert_eq!(config.references.len(), 2);
 
-    config
+    let mut files_config = EffectiveConfig::new(path.clone(), root.clone());
+    files_config
         .apply_own(
             &json!({ "files": ["src/entry.ts"] }),
             &path,
@@ -75,5 +76,5 @@ fn apply_own_rejects_invalid_compiler_and_list_shapes() {
             |value| Ok(root.join(value)),
         )
         .expect("files-only configs should apply without compilerOptions");
-    assert!(config.files.is_some());
+    assert!(files_config.files.is_some());
 }

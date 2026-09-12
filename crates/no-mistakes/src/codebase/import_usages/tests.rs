@@ -144,9 +144,11 @@ fn json_output_uses_camel_case_fields() {
 fn import_usage_writers_surface_io_errors() {
     struct FailAfter {
         remaining_writes: usize,
+        attempted: bool,
     }
     impl std::io::Write for FailAfter {
         fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            self.attempted = true;
             if self.remaining_writes == 0 {
                 return Err(io::Error::other("synthetic write failure"));
             }
@@ -175,8 +177,15 @@ fn import_usage_writers_surface_io_errors() {
         ] {
             let mut completed = false;
             for remaining_writes in 0..4096 {
-                let mut writer = FailAfter { remaining_writes };
-                if super::output::write_report(report, format, &mut writer).is_ok() {
+                let mut writer = FailAfter {
+                    remaining_writes,
+                    attempted: false,
+                };
+                let result = super::output::write_report(report, format, &mut writer);
+                if remaining_writes == 0 && writer.attempted {
+                    assert!(result.is_err(), "{format:?} must propagate a write error");
+                }
+                if result.is_ok() {
                     completed = true;
                     break;
                 }
