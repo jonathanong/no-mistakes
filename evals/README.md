@@ -408,6 +408,49 @@ that the skill stayed silent. Every case now carries the indicator (and the
 `neg-hard` flow was added specifically as an over-trigger guard), so a re-run
 reports whether a widened description fires on questions it cannot answer.
 
+### Decision rules for a description change
+
+**Pre-registered**: written and committed before the candidate screening numbers
+existed, so the rule could not be chosen to fit whichever candidate won.
+
+1. **`before-edit` trigger ≥ 17/18** — the `real-register` number. This is the
+   flow with the most real traffic behind it and the only one measured at
+   `runs: 3` under two descriptions, so it is the gate.
+2. **`neg-hard` trigger ≤ 1/12** — the shipped description's floor is **0/12**
+   (measured at `runs: 3`, `--ablation none`). One firing run at n=12 is not
+   distinguishable from judge variance; **2 or more is a fail**, and the
+   offending phrase must be tightened and that flow re-screened rather than
+   traded away against a better `before-edit` number.
+3. **`signature` is reported, not gated.** See below.
+
+#### `signature` did not regress — the 3/5 vs 2/15 above was a 1-run artifact
+
+Re-measured at `runs: 3`, `--ablation none`, counting the four should-fire cases:
+
+| description | `signature` trigger |
+| --- | --- |
+| shipped | 4/12 (33%) |
+| `real-register` | 3/12 (25%) |
+
+A one-count difference at n=12 is noise. The apparent regression in the table
+above came from comparing a **single-run** shipped pilot (3/5) against a
+three-run variant (2/15); the shipped number was inflated by the small sample.
+
+The real finding is less convenient and more useful: `signature` sits at 25–33%
+under *both* descriptions while `before-edit` reaches 94% under one of them. It
+is not a flow one vocabulary wins and the other loses — it is a flow **neither**
+vocabulary reaches. Do not build a gate on a one-count difference; it selects on
+judge variance rather than on the description.
+
+#### Comparing trigger counts across ablation modes
+
+Trigger counts from an `--ablation none` run are directly comparable with those
+from an `--ablation with-without` run: both are counts over the **with-arm**
+runs, and the number of with-arm runs per case is the same either way. Only the
+*scores* differ in scale, because `skill-fired` is scored under `none` and
+display-only under `with-without` — which is why `evals/summarize.py` drops that
+grader from every score it prints.
+
 To add another variant: create `evals/variants/<name>/` (copy the skill, change
 only the frontmatter), then `python3 evals/generate.py --variant <name>` and run
 with `--eval-dir evals-variants/<name>`. The plugin under `skills/` is never
