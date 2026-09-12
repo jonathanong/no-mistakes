@@ -11,8 +11,10 @@ pnpm run evals -- --tag before-edit --ablation with-without --judge-model sonnet
 command: pnpm forwards its own `--` into the script's argv, and the eval CLI
 reads that as end-of-options — it silently discards every flag after it and
 launches an unfiltered full-suite run. The wrapper strips the `--`, and refuses
-to launch unscoped so a mistyped flag cannot cost $60 by accident. Pass `--all`
-when an unfiltered run is what you actually want.
+to launch unscoped, so a mistyped flag cannot cost $60 unintentionally. Pass
+`--all` when an unfiltered run is what you actually want. (Unfiltered is 59
+cases x 3 runs x 2 arms = 354 runs: a path target resolves a plugin, and the
+ablation default is then `with-without`, not `none`.)
 
 See [Flows](#flows) for the full-suite command — it deliberately excludes the
 `heldout` tag, which only means anything while those cases stay unseen.
