@@ -86,11 +86,11 @@ where
     let mut output = Vec::new();
     match format {
         Format::Json => {
-            output.extend_from_slice(crate::cli::json_string(&report).as_bytes());
+            output.extend_from_slice(no_mistakes::cli::json_string(&report).as_bytes());
             output.push(b'\n');
         }
         Format::Yml => {
-            output.extend_from_slice(crate::cli::yaml_string(&report).as_bytes());
+            output.extend_from_slice(no_mistakes::cli::yaml_string(&report).as_bytes());
             output.push(b'\n');
         }
         Format::Md => write_md(report, &mut output)?,

@@ -38,10 +38,10 @@ pub(crate) fn run(args: RegistryExtensionArgs) -> Result<ExitCode> {
     let report = registry_extension_query::run(&root, &registry_file)?;
     match effective_format {
         Format::Json => {
-            println!("{}", crate::cli::json_string(&report));
+            println!("{}", no_mistakes::cli::json_string(&report));
         }
         Format::Yml => {
-            println!("{}", crate::cli::yaml_string(&report));
+            println!("{}", no_mistakes::cli::yaml_string(&report));
         }
         Format::Md => print_md(&report),
         Format::Paths => {

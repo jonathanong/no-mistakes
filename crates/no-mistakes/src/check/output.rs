@@ -23,7 +23,7 @@ fn print_check_json(results: &CheckResults) {
 fn print_check_yml(results: &CheckResults) {
     println!(
         "{}",
-        crate::cli::yaml_string(&check_runner::json_value(results))
+        no_mistakes::cli::yaml_string(&check_runner::json_value(results))
     );
 }
 

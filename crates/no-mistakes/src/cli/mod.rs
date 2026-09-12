@@ -3,8 +3,8 @@ pub mod output_format;
 mod traversal;
 mod traversal_impls;
 
-pub use json_write::print_json;
-pub(crate) use json_write::{json_pretty, json_string, json_value, yaml_string};
+pub(crate) use json_write::json_value;
+pub use json_write::{json_pretty, json_string, print_json, yaml_string};
 pub use output_format::{resolve_format, Format};
 pub(crate) use traversal::related_edge_view;
 pub use traversal::{edge_view, TraversableEdge};

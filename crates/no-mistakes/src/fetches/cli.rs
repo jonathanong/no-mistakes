@@ -91,12 +91,12 @@ fn render_report(
     let mut output = Vec::new();
     match format {
         Format::Json => {
-            let serialized = crate::cli::json_string(&report);
+            let serialized = no_mistakes::cli::json_string(&report);
             output.extend_from_slice(serialized.as_bytes());
             output.push(b'\n');
         }
         Format::Yml => {
-            let serialized = crate::cli::yaml_string(&report);
+            let serialized = no_mistakes::cli::yaml_string(&report);
             output.extend_from_slice(serialized.as_bytes());
             output.push(b'\n');
         }

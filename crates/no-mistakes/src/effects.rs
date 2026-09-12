@@ -65,10 +65,10 @@ pub(crate) fn run(args: EffectsArgs) -> Result<ExitCode> {
     let report = report?;
     match effective_format {
         Format::Json => {
-            println!("{}", crate::cli::json_string(&report));
+            println!("{}", no_mistakes::cli::json_string(&report));
         }
         Format::Yml => {
-            println!("{}", crate::cli::yaml_string(&report));
+            println!("{}", no_mistakes::cli::yaml_string(&report));
         }
         Format::Md => print_md(&report),
         Format::Paths => {
