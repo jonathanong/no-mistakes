@@ -20,6 +20,7 @@ use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
+#[inline(never)]
 pub(crate) fn collect_rust_facts(
     root: &Path,
     all_files: &[PathBuf],
@@ -35,6 +36,7 @@ pub(crate) fn collect_rust_facts(
     facts
 }
 
+#[inline(never)]
 fn parse_rust_file(
     root: &Path,
     path: &Path,
@@ -73,6 +75,7 @@ fn parse_rust_file(
     })
 }
 
+#[inline(never)]
 fn rust_mod_names(text: &str, path: &Path, src_root: Option<&Path>) -> Vec<String> {
     let mut mods = extract_named(text, rust_mod_re());
     if let Some(src_root) = src_root {
@@ -87,6 +90,7 @@ fn rust_mod_names(text: &str, path: &Path, src_root: Option<&Path>) -> Vec<Strin
     mods
 }
 
+#[inline(never)]
 fn record_rust_path_deps(
     roots: &[PathBuf],
     packages: &[String],
@@ -106,6 +110,7 @@ fn record_rust_path_deps(
     }
 }
 
+#[inline(never)]
 fn rust_imports(source: &str, module: Option<&str>) -> Vec<String> {
     let mut imports = Vec::new();
     for cap in rust_use_re().captures_iter(source) {
@@ -129,6 +134,7 @@ fn rust_imports(source: &str, module: Option<&str>) -> Vec<String> {
     imports
 }
 
+#[inline(never)]
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     let mut values: Vec<String> = re
         .captures_iter(source)
@@ -139,6 +145,7 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values
 }
 
+#[inline(never)]
 fn rust_mod_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -146,6 +153,7 @@ fn rust_mod_re() -> &'static Regex {
     })
 }
 
+#[inline(never)]
 fn rust_use_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -154,6 +162,7 @@ fn rust_use_re() -> &'static Regex {
     })
 }
 
+#[inline(never)]
 fn rust_decl_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -164,6 +173,7 @@ fn rust_decl_re() -> &'static Regex {
     })
 }
 
+#[inline(never)]
 fn rust_ref_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"\b([A-Z][A-Za-z0-9_]*)\b").expect("ref"))

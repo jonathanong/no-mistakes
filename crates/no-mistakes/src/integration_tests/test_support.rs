@@ -5,6 +5,7 @@ use anyhow::Result;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+#[inline(never)]
 pub(super) fn tsconfig_without_config(root: &Path) -> TsConfig {
     TsConfig {
         dir: root.to_path_buf(),
@@ -14,6 +15,7 @@ pub(super) fn tsconfig_without_config(root: &Path) -> TsConfig {
     }
 }
 
+#[inline(never)]
 pub(super) fn configured_suites(root: &Path, config: &NoMistakesConfig) -> Result<Vec<Suite>> {
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(root);
     let visible_paths = snapshot.paths_for(root);
@@ -24,10 +26,12 @@ pub(super) fn configured_suites(root: &Path, config: &NoMistakesConfig) -> Resul
     super::config::configured_suites_from_runner_configs(root, config, &runner_configs, &parsed)
 }
 
+#[inline(never)]
 pub(super) fn analyze_files(files: &[PathBuf]) -> Result<BTreeMap<PathBuf, FileAnalysis>> {
     super::analysis::analyze_files_with_seed(files, BTreeMap::new())
 }
 
+#[inline(never)]
 pub(super) fn parse_playwright(
     source: &str,
     path: &Path,
@@ -41,6 +45,7 @@ pub(super) fn parse_playwright(
     })?
 }
 
+#[inline(never)]
 pub(super) fn parse_playwright_from_visible(
     source: &str,
     path: &Path,
@@ -60,6 +65,7 @@ pub(super) fn parse_playwright_from_visible(
     })?
 }
 
+#[inline(never)]
 pub(super) fn parse_vitest(
     source: &str,
     path: &Path,
@@ -74,6 +80,7 @@ pub(super) fn parse_vitest(
     })?
 }
 
+#[inline(never)]
 pub(super) fn parse_vitest_from_visible(
     source: &str,
     path: &Path,

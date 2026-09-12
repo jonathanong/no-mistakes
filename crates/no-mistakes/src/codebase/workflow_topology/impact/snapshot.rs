@@ -9,6 +9,7 @@ use git2::{Delta, Repository, Tree};
 use std::collections::BTreeSet;
 use std::path::Path;
 
+#[inline(never)]
 pub(super) fn changed_paths(
     repo: &Repository,
     base: &Tree<'_>,
@@ -29,6 +30,7 @@ pub(super) fn changed_paths(
     Ok(paths.into_iter().collect())
 }
 
+#[inline(never)]
 pub(super) fn topology_from_tree(repo: &Repository, tree: &Tree<'_>) -> Result<WorkflowTopology> {
     let mut documents = Vec::new();
     collect_workflows(repo, tree, "", &mut documents)?;
@@ -41,6 +43,7 @@ pub(super) fn topology_from_tree(repo: &Repository, tree: &Tree<'_>) -> Result<W
     ))
 }
 
+#[inline(never)]
 fn collect_workflows(
     repo: &Repository,
     tree: &Tree<'_>,
@@ -80,6 +83,7 @@ fn collect_workflows(
     Ok(())
 }
 
+#[inline(never)]
 fn is_workflow_tree(path: &str) -> bool {
     path == ".github" || path == ".github/workflows" || path.starts_with(".github/workflows/")
 }

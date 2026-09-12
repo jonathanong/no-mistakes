@@ -4,6 +4,7 @@ use crate::codebase::lockfile::pnpm::{
 };
 use std::collections::{BTreeMap, BTreeSet, VecDeque};
 
+#[inline(never)]
 pub(super) fn affected_locators(old: &str, new: &str) -> BTreeSet<PnpmLocator> {
     let old_graph = locator_graph(old);
     let new_graph = locator_graph(new);
@@ -26,6 +27,7 @@ struct LocatorGraph {
     reverse: BTreeMap<PnpmLocator, BTreeSet<PnpmLocator>>,
 }
 
+#[inline(never)]
 fn locator_graph(content: &str) -> LocatorGraph {
     let Ok(root) = serde_yaml::from_str::<serde_yaml::Value>(content) else {
         return LocatorGraph::default();
@@ -57,6 +59,7 @@ fn locator_graph(content: &str) -> LocatorGraph {
 /// `packages`, then stores each peer-specific resolution under `snapshots`.
 /// A base package change therefore affects every peer-context snapshot that
 /// resolves that base package.
+#[inline(never)]
 fn add_snapshot_base_package_edge(graph: &mut LocatorGraph, snapshot: &PnpmLocator) {
     if snapshot.peer_context.is_empty() {
         return;
@@ -72,6 +75,7 @@ fn add_snapshot_base_package_edge(graph: &mut LocatorGraph, snapshot: &PnpmLocat
         .insert(snapshot.clone());
 }
 
+#[inline(never)]
 fn add_dependency_edges(graph: &mut LocatorGraph, parent: &PnpmLocator, value: &serde_yaml::Value) {
     for field in ["dependencies", "optionalDependencies", "peerDependencies"] {
         let Some(dependencies) = value.get(field).and_then(serde_yaml::Value::as_mapping) else {
@@ -89,6 +93,7 @@ fn add_dependency_edges(graph: &mut LocatorGraph, parent: &PnpmLocator, value: &
     }
 }
 
+#[inline(never)]
 fn reverse_closure(
     reverse: &BTreeMap<PnpmLocator, BTreeSet<PnpmLocator>>,
     roots: Vec<PnpmLocator>,
@@ -107,6 +112,7 @@ fn reverse_closure(
     found
 }
 
+#[inline(never)]
 fn locator_from_key(key: &str) -> Option<PnpmLocator> {
     let (name, version) = split_name_version(key);
     let peer_context = peer_context(key, name, version);
@@ -117,6 +123,7 @@ fn locator_from_key(key: &str) -> Option<PnpmLocator> {
     })
 }
 
+#[inline(never)]
 fn peer_context(key: &str, name: &str, version: &str) -> String {
     if let Some((_, context)) = key.split_once('(') {
         return context.trim_end_matches(')').to_string();
@@ -136,6 +143,7 @@ fn peer_context(key: &str, name: &str, version: &str) -> String {
         .to_string()
 }
 
+#[inline(never)]
 fn locator_from_dependency(name: &str, value: &serde_yaml::Value) -> Option<PnpmLocator> {
     let version = value
         .as_str()
@@ -148,6 +156,7 @@ fn locator_from_dependency(name: &str, value: &serde_yaml::Value) -> Option<Pnpm
     locator_from_key(&version).or_else(|| locator_from_key(&format!("{name}@{version}")))
 }
 
+#[inline(never)]
 pub(super) fn dependency_locator(dependency: &PnpmImporterDependency) -> Option<PnpmLocator> {
     let name = dependency
         .resolution_name

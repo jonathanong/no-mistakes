@@ -2,6 +2,7 @@ use super::super::config::Invocation;
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{NodeId, ResolvedCallSite};
 
+#[inline(never)]
 pub(super) fn allowed_invocations(configured: &[Invocation]) -> Vec<InvocationKind> {
     let values = configured
         .iter()
@@ -17,6 +18,7 @@ pub(super) fn allowed_invocations(configured: &[Invocation]) -> Vec<InvocationKi
     }
 }
 
+#[inline(never)]
 pub(super) fn site_source_node(site: &ResolvedCallSite) -> NodeId {
     site.caller.as_deref().map_or_else(
         || NodeId::file(&site.file),

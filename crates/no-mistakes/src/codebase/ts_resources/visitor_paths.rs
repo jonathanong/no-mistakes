@@ -5,6 +5,7 @@ use super::{ResourcePath, ResourcePathBase, ResourceVisitor};
 use oxc_ast::ast::{Argument, CallExpression, Expression};
 
 impl<'a> ResourceVisitor<'a> {
+    #[inline(never)]
     pub(super) fn static_resource_path(&self, arg: &Argument<'_>) -> Option<ResourcePath> {
         static_string(arg)
             .map(|value| ResourcePath {
@@ -15,6 +16,7 @@ impl<'a> ResourceVisitor<'a> {
             .or_else(|| self.static_file_url_to_path(arg))
     }
 
+    #[inline(never)]
     fn static_module_url(&self, arg: &Argument<'_>) -> Option<ResourcePath> {
         let Argument::NewExpression(new) = arg else {
             return None;
@@ -22,6 +24,7 @@ impl<'a> ResourceVisitor<'a> {
         self.static_new_module_url(new)
     }
 
+    #[inline(never)]
     fn static_new_module_url(&self, new: &oxc_ast::ast::NewExpression<'_>) -> Option<ResourcePath> {
         let Expression::Identifier(callee) = &new.callee else {
             return None;
@@ -33,6 +36,7 @@ impl<'a> ResourceVisitor<'a> {
         .flatten()
     }
 
+    #[inline(never)]
     fn static_file_url_to_path(&self, arg: &Argument<'_>) -> Option<ResourcePath> {
         let Argument::CallExpression(call) = arg else {
             return None;
@@ -40,6 +44,7 @@ impl<'a> ResourceVisitor<'a> {
         self.static_file_url_call(call)
     }
 
+    #[inline(never)]
     pub(super) fn static_glob_cwd(
         &self,
         argument: Option<&Argument<'_>>,
@@ -66,6 +71,7 @@ impl<'a> ResourceVisitor<'a> {
         cwd.transpose()
     }
 
+    #[inline(never)]
     fn static_resource_expression(&self, expression: &Expression<'_>) -> Option<ResourcePath> {
         match expression {
             Expression::StringLiteral(value) => Some(ResourcePath {
@@ -107,6 +113,7 @@ impl<'a> ResourceVisitor<'a> {
         }
     }
 
+    #[inline(never)]
     fn static_file_url_call(&self, call: &CallExpression<'_>) -> Option<ResourcePath> {
         let file_url_to_path = match &call.callee {
             Expression::Identifier(callee) => {

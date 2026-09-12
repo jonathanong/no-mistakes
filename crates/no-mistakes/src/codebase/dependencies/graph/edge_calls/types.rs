@@ -34,6 +34,7 @@ pub enum ResolvedCallTarget {
     Unknown,
 }
 
+#[inline(never)]
 fn module_export_target(
     file: &CallableFileIndex,
     callee: &str,
@@ -63,6 +64,7 @@ fn module_export_target(
     })
 }
 
+#[inline(never)]
 fn graph_call_target_node(
     interner: &crate::codebase::analysis_session::PathInterner,
     facts: &dyn TsFactLookup,
@@ -95,6 +97,7 @@ fn graph_call_target_node(
     }
 }
 
+#[inline(never)]
 fn callable_node_for_call(
     interner: &crate::codebase::analysis_session::PathInterner,
     facts: &dyn TsFactLookup,

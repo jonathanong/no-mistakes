@@ -1,3 +1,4 @@
+#[inline(never)]
 fn analyze_file_inner(
     path: &Path,
     root: &Path,

@@ -1,3 +1,4 @@
+#[inline(never)]
 fn apply_helper_assignment_expression<'a>(
     assignment: &'a oxc_ast::ast::AssignmentExpression<'a>,
     defs: &HashMap<&'a str, HelperDef<'a>>,
@@ -20,6 +21,7 @@ fn apply_helper_assignment_expression<'a>(
     }
 }
 
+#[inline(never)]
 fn merge_helper_env(
     env: &mut HashMap<String, Vec<String>>,
     branch_env: HashMap<String, Vec<String>>,
@@ -31,6 +33,7 @@ fn merge_helper_env(
     }
 }
 
+#[inline(never)]
 fn replace_helper_env_with_branches(
     env: &mut HashMap<String, Vec<String>>,
     branch_envs: Vec<HashMap<String, Vec<String>>>,

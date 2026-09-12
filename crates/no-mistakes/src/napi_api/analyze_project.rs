@@ -63,22 +63,26 @@ mod tracked_banned_paths_tests;
 mod unknown_option_fields_tests;
 
 #[cfg(any(test, feature = "test-instrumentation"))]
+#[inline(never)]
 pub(crate) fn analyze_project_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<AnalyzeProjectOptions>(options)?;
     analyze_project_options_impl(options)
 }
 
+#[inline(never)]
 pub(crate) fn analyze_project_value_impl(options: Value) -> napi::Result<String> {
     let options = serde_json::from_value::<AnalyzeProjectOptions>(options)
         .map_err(|error| napi::Error::from_reason(format!("invalid options JSON: {error}")))?;
     analyze_project_options_impl(options)
 }
 
+#[inline(never)]
 fn analyze_project_options_impl(options: AnalyzeProjectOptions) -> napi::Result<String> {
     let output = analyze_project(options).map_err(to_napi_error)?;
     Ok(crate::cli::json_string(&output))
 }
 
+#[inline(never)]
 fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjectResult> {
     let context = context::AnalyzeProjectContext::prepare(&options)?;
     let observer = crate::diagnostics::current();
@@ -100,10 +104,12 @@ fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjec
     Ok(AnalyzeProjectResult { reports })
 }
 
+#[inline(never)]
 fn json_raw_value(value: Value) -> Box<RawValue> {
     RawValue::from_string(value.to_string()).expect("JSON Value re-serialize never fails")
 }
 
+#[inline(never)]
 fn run_report(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,
@@ -146,6 +152,7 @@ fn run_report(
     )
 }
 
+#[inline(never)]
 fn is_server_report(report_type: &str) -> bool {
     matches!(
         report_type,
@@ -157,6 +164,7 @@ fn is_server_report(report_type: &str) -> bool {
     )
 }
 
+#[inline(never)]
 fn traverse_args(
     request: &AnalyzeReportRequest,
     options: &AnalyzeProjectOptions,

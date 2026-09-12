@@ -1,3 +1,4 @@
+#[inline(never)]
 fn edge_kind_for_import(import: &ExtractedImport) -> EdgeKind {
     match import.kind {
         ImportKind::Static => EdgeKind::Import,
@@ -8,6 +9,7 @@ fn edge_kind_for_import(import: &ExtractedImport) -> EdgeKind {
     }
 }
 
+#[inline(never)]
 fn import_is_reachable(
     import: &ExtractedImport,
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
@@ -32,6 +34,7 @@ fn import_is_reachable(
             && exported_symbol_scope(facts, import.function_scope.as_deref()))
 }
 
+#[inline(never)]
 fn resource_is_reachable(
     call: &crate::codebase::ts_resources::ResourceCall,
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
@@ -47,6 +50,7 @@ fn resource_is_reachable(
         || exported_resource_symbol_scope(facts, call.function_scope.as_deref())
 }
 
+#[inline(never)]
 fn resource_diagnostic_is_reachable(
     diagnostic: &crate::codebase::ts_resources::ResourceDiagnostic,
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
@@ -62,6 +66,7 @@ fn resource_diagnostic_is_reachable(
         || exported_resource_symbol_scope(facts, diagnostic.function_scope.as_deref())
 }
 
+#[inline(never)]
 fn has_reachable_unknown_call(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     reachable: &HashSet<crate::codebase::dependencies::extract::CallableId>,
@@ -75,6 +80,7 @@ fn has_reachable_unknown_call(
     })
 }
 
+#[inline(never)]
 fn exported_function_scope(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     scope: Option<&str>,
@@ -109,6 +115,7 @@ fn exported_function_scope(
         })
 }
 
+#[inline(never)]
 fn exported_symbol_scope(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     scope: Option<&str>,
@@ -121,6 +128,7 @@ fn exported_symbol_scope(
     })
 }
 
+#[inline(never)]
 fn exported_resource_symbol_scope(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     scope: Option<&str>,

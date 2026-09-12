@@ -1,4 +1,5 @@
 impl AnalyzeProjectContext {
+    #[inline(never)]
     fn scope(
         &self,
         request: &AnalyzeReportRequest,
@@ -11,6 +12,7 @@ impl AnalyzeProjectContext {
             .with_context(|| format!("prepared analyzeProject scope is missing for `{key:?}`"))
     }
 
+    #[inline(never)]
     pub(super) fn graph_report(
         &self,
         request: &AnalyzeReportRequest,
@@ -21,6 +23,7 @@ impl AnalyzeProjectContext {
         scope.graph_report(request, &scope.options, direction)
     }
 
+    #[inline(never)]
     pub(super) fn import_usages_report(
         &self,
         request: &AnalyzeReportRequest,
@@ -30,6 +33,7 @@ impl AnalyzeProjectContext {
         scope.import_usages_report(request, &scope.options)
     }
 
+    #[inline(never)]
     pub(super) fn symbols_report(
         &self,
         request: &AnalyzeReportRequest,
@@ -39,6 +43,7 @@ impl AnalyzeProjectContext {
         scope.symbols_report(request, &scope.options)
     }
 
+    #[inline(never)]
     pub(super) fn flow_report(
         &self,
         request: &AnalyzeReportRequest,
@@ -48,6 +53,7 @@ impl AnalyzeProjectContext {
         scope.flow_report(request, &scope.options)
     }
 
+    #[inline(never)]
     pub(super) fn effects_report(
         &self,
         request: &AnalyzeReportRequest,
@@ -57,6 +63,7 @@ impl AnalyzeProjectContext {
         scope.effects_report(request, &scope.options)
     }
 
+    #[inline(never)]
     pub(super) fn rsc_callers_report(
         &self,
         request: &AnalyzeReportRequest,
@@ -66,6 +73,7 @@ impl AnalyzeProjectContext {
         scope.rsc_callers_report(request, &scope.options)
     }
 
+    #[inline(never)]
     pub(super) fn project_report(
         &self,
         request: &AnalyzeReportRequest,
@@ -75,6 +83,7 @@ impl AnalyzeProjectContext {
         scope.project_report(request, &scope.options)
     }
 
+    #[inline(never)]
     pub(super) fn playwright_report(
         &self,
         request: &AnalyzeReportRequest,

@@ -27,6 +27,7 @@ struct CompiledBan<'a> {
     globset: GlobSet,
 }
 
+#[inline(never)]
 pub(crate) fn check_with_files(
     root: &Path,
     config: &NoMistakesConfig,
@@ -59,6 +60,7 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
+#[inline(never)]
 fn scan(
     root: &Path,
     opts: &Options,
@@ -74,6 +76,7 @@ fn scan(
     Ok(findings)
 }
 
+#[inline(never)]
 fn compile_bans(opts: &Options) -> Result<Vec<CompiledBan<'_>>> {
     opts.banned_paths
         .iter()
@@ -89,6 +92,7 @@ fn compile_bans(opts: &Options) -> Result<Vec<CompiledBan<'_>>> {
         .collect()
 }
 
+#[inline(never)]
 fn add_glob(builder: &mut GlobSetBuilder, pattern: &str) -> Result<()> {
     builder.add(
         GlobBuilder::new(pattern.trim_start_matches("./"))
@@ -99,6 +103,7 @@ fn add_glob(builder: &mut GlobSetBuilder, pattern: &str) -> Result<()> {
     Ok(())
 }
 
+#[inline(never)]
 fn escape_literal_route_brackets(pattern: &str) -> String {
     let mut escaped = String::with_capacity(pattern.len());
     let chars: Vec<char> = pattern.chars().collect();
@@ -128,6 +133,7 @@ fn escape_literal_route_brackets(pattern: &str) -> String {
     escaped
 }
 
+#[inline(never)]
 fn check_file(
     root: &Path,
     path: &Path,

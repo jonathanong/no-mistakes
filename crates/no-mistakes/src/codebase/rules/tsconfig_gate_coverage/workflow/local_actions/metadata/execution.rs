@@ -15,6 +15,7 @@ use std::collections::{BTreeMap, BTreeSet};
 #[path = "execution_tests.rs"]
 mod tests;
 
+#[inline(never)]
 pub(super) fn docker_action_image_valid(
     runs: &Mapping,
     directory: &str,
@@ -32,6 +33,7 @@ pub(super) fn docker_action_image_valid(
     action_file(directory, image).is_some_and(|target| tracked.contains(&target))
 }
 
+#[inline(never)]
 fn docker_image_reference(image: &str) -> Option<&str> {
     image
         .get(.."docker://".len())
@@ -39,6 +41,7 @@ fn docker_image_reference(image: &str) -> Option<&str> {
         .then(|| &image["docker://".len()..])
 }
 
+#[inline(never)]
 pub(super) fn action_file(directory: &str, path: &str) -> Option<String> {
     let path = command_scan::normalize_repo_relative(path)?;
     if directory.is_empty() {
@@ -48,6 +51,7 @@ pub(super) fn action_file(directory: &str, path: &str) -> Option<String> {
     }
 }
 
+#[inline(never)]
 pub(super) fn composite_step_valid(
     step: &Value,
     descriptors: &BTreeMap<String, Value>,
@@ -86,6 +90,7 @@ pub(super) fn composite_step_valid(
     })
 }
 
+#[inline(never)]
 fn composite_run_has_static_failure(run: &str, shell: Option<&str>) -> bool {
     let shell = match shell.map(reduce_context_free_interpolations) {
         Some(ContextFreeInterpolation::Invalid) => return true,
@@ -104,6 +109,7 @@ fn composite_run_has_static_failure(run: &str, shell: Option<&str>) -> bool {
             ))
 }
 
+#[inline(never)]
 fn composite_step_working_directory_valid(step: &Mapping, tracked: &BTreeSet<String>) -> bool {
     let Some(value) = step.get("working-directory") else {
         return true;
@@ -129,6 +135,7 @@ fn composite_step_working_directory_valid(step: &Mapping, tracked: &BTreeSet<Str
     }
 }
 
+#[inline(never)]
 fn composite_step_continues_on_error(step: &Mapping) -> bool {
     match step.get("continue-on-error") {
         Some(Value::Bool(value)) => *value,
@@ -140,6 +147,7 @@ fn composite_step_continues_on_error(step: &Mapping) -> bool {
     }
 }
 
+#[inline(never)]
 fn composite_step_may_run(step: &Mapping) -> bool {
     match step.get("if") {
         Some(Value::Bool(false)) => false,
@@ -151,6 +159,7 @@ fn composite_step_may_run(step: &Mapping) -> bool {
     }
 }
 
+#[inline(never)]
 fn action_input_condition(expression: &str) -> bool {
     !condition_expression_contexts_available(
         expression,
@@ -159,6 +168,7 @@ fn action_input_condition(expression: &str) -> bool {
     )
 }
 
+#[inline(never)]
 fn action_input_interpolation(value: &str) -> bool {
     !interpolation_expressions_all(value, |expression| {
         condition_expression_contexts_available(
@@ -169,6 +179,7 @@ fn action_input_interpolation(value: &str) -> bool {
     })
 }
 
+#[inline(never)]
 pub(super) fn composite_steps_shape_valid(steps: &[Value]) -> bool {
     composite_shape::steps_valid(steps)
 }

@@ -18,6 +18,7 @@ pub struct CallSiteFact {
     pub args: Vec<&'static str>,
 }
 
+#[inline(never)]
 fn callee_name(callee: &Expression<'_>) -> Option<String> {
     match callee {
         Expression::Identifier(identifier) => Some(identifier.name.to_string()),
@@ -34,11 +35,13 @@ fn callee_name(callee: &Expression<'_>) -> Option<String> {
     }
 }
 
+#[inline(never)]
 fn static_first_string_arg_source(call: &CallExpression<'_>, source: &str) -> Option<String> {
     let argument = call.arguments.first()?;
     static_string_arg_source(argument, source)
 }
 
+#[inline(never)]
 fn static_string_arg_source(argument: &Argument<'_>, source: &str) -> Option<String> {
     match argument {
         Argument::ParenthesizedExpression(parenthesized) => {
@@ -52,6 +55,7 @@ fn static_string_arg_source(argument: &Argument<'_>, source: &str) -> Option<Str
     }
 }
 
+#[inline(never)]
 fn static_string_expression_source(expression: &Expression<'_>, source: &str) -> Option<String> {
     match expression {
         Expression::ParenthesizedExpression(parenthesized) => {
@@ -68,6 +72,7 @@ fn static_string_expression_source(expression: &Expression<'_>, source: &str) ->
 }
 
 /// Coarse syntactic shape of one argument — no type inference.
+#[inline(never)]
 fn arg_tag(arg: &Argument<'_>) -> &'static str {
     match arg {
         Argument::SpreadElement(_) => "spread",
@@ -84,6 +89,7 @@ fn arg_tag(arg: &Argument<'_>) -> &'static str {
     }
 }
 
+#[inline(never)]
 pub(crate) fn record_call_site(
     source: &str,
     caller: Option<&str>,

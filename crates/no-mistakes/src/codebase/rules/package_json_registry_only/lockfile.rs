@@ -2,6 +2,7 @@ use super::*;
 
 const BLOCKED_RESOLUTION_KEYS: &[&str] = &["tarball", "repo", "commit", "directory"];
 
+#[inline(never)]
 pub(super) fn check(
     root: &Path,
     lockfile_root: &Path,

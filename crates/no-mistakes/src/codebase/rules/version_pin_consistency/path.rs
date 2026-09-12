@@ -1,6 +1,7 @@
 use crate::codebase::ts_source::is_portably_absolute_path;
 use std::path::{Component, Path, PathBuf};
 
+#[inline(never)]
 pub(super) fn read_text(
     root: &Path,
     rel: &str,
@@ -14,6 +15,7 @@ pub(super) fn read_text(
         .unwrap_or_else(|| std::fs::read_to_string(&path).unwrap_or_default())
 }
 
+#[inline(never)]
 fn contained_regular_file(root: &Path, rel: &str) -> Option<PathBuf> {
     if !repo_relative(rel) {
         return None;
@@ -28,6 +30,7 @@ fn contained_regular_file(root: &Path, rel: &str) -> Option<PathBuf> {
     canonical.starts_with(&canonical_root).then_some(path)
 }
 
+#[inline(never)]
 fn repo_relative(rel: &str) -> bool {
     let path = Path::new(rel);
     !is_portably_absolute_path(path)

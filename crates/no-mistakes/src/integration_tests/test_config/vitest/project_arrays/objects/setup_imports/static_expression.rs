@@ -7,6 +7,7 @@ use std::collections::{BTreeMap, BTreeSet};
 /// Imports only replace their use-site declaration when their exported value
 /// is a literal setup string/array. Calls and other executable values remain
 /// dynamic at the use site so their fallback ownership stays intact.
+#[inline(never)]
 pub(super) fn is_static_setup_expression(
     expression: &Expression<'_>,
     bindings: &BTreeMap<String, &Expression<'_>>,
@@ -39,6 +40,7 @@ pub(super) fn is_static_setup_expression(
     }
 }
 
+#[inline(never)]
 pub(super) fn exported_setup_expression<'a>(
     program: &'a Program<'a>,
     bindings: &BTreeMap<String, &'a Expression<'a>>,

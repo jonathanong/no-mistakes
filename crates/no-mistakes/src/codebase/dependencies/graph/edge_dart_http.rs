@@ -1,3 +1,4 @@
+#[inline(never)]
 fn collect_dart_http_call_edges(
     root: &Path,
     all_files: &[PathBuf],

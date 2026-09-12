@@ -22,6 +22,7 @@ const MODIFIERS: &[&str] = &[
     "package",
 ];
 
+#[inline(never)]
 pub(super) fn scan(
     root: &Path,
     opts: &CompiledOptions,
@@ -35,6 +36,7 @@ pub(super) fn scan(
         .collect()
 }
 
+#[inline(never)]
 fn check_file(
     root: &Path,
     path: &Path,
@@ -79,6 +81,7 @@ fn check_file(
     findings
 }
 
+#[inline(never)]
 fn has_attribute(source: &str, mut i: usize, attr: &str) -> bool {
     let bytes = source.as_bytes();
     loop {
@@ -121,6 +124,7 @@ fn has_attribute(source: &str, mut i: usize, attr: &str) -> bool {
     }
 }
 
+#[inline(never)]
 fn skip_ws(bytes: &[u8], mut i: usize) -> usize {
     while i > 0 && matches!(bytes[i - 1], b' ' | b'\t' | b'\n' | b'\r') {
         i -= 1;
@@ -128,6 +132,7 @@ fn skip_ws(bytes: &[u8], mut i: usize) -> usize {
     i
 }
 
+#[inline(never)]
 fn matching_open_paren(bytes: &[u8], mut i: usize) -> Option<usize> {
     let mut depth = 0;
     while i > 0 {
@@ -146,6 +151,7 @@ fn matching_open_paren(bytes: &[u8], mut i: usize) -> Option<usize> {
     None
 }
 
+#[inline(never)]
 fn ident_ending_at(source: &str, end: usize) -> Option<(&str, usize)> {
     let bytes = source.as_bytes();
     if end == 0 || !is_ident(bytes[end - 1]) {
@@ -158,6 +164,7 @@ fn ident_ending_at(source: &str, end: usize) -> Option<(&str, usize)> {
     Some((&source[start..end], start))
 }
 
+#[inline(never)]
 fn is_ident(b: u8) -> bool {
     b.is_ascii_alphanumeric() || b == b'_'
 }

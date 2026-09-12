@@ -223,10 +223,7 @@ fn route_import_resolution_follows_symlink_files_and_broken_links() {
         vec![link_helper.clone()],
     );
     let remapped = route_import_visible_target(real_helper, &remap_files, &visible_by_name);
-    assert!(
-        remapped.as_deref() == Some(link_helper.as_path()) || remapped.is_none(),
-        "{remapped:?}"
-    );
+    assert_eq!(remapped.as_deref(), Some(link_helper.as_path()));
 
     let file_link = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/tsconfig/fixed-root-fast-path/root/src/external.ts");

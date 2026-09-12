@@ -1,4 +1,5 @@
 impl CatalogBuilder<'_> {
+    #[inline(never)]
     fn resolve_extends(&self, dir: &Path, raw: &str) -> Result<PathBuf, String> {
         let raw = expand_config_dir(raw, dir);
         if raw.starts_with('.') || Path::new(&raw).is_absolute() {
@@ -8,6 +9,7 @@ impl CatalogBuilder<'_> {
         }
     }
 
+    #[inline(never)]
     fn resolve_config_value(&self, dir: &Path, raw: &str) -> Result<PathBuf, String> {
         let raw = expand_config_dir(raw, dir);
         let candidate = PathBuf::from(&raw);
@@ -26,6 +28,7 @@ impl CatalogBuilder<'_> {
         })
     }
 
+    #[inline(never)]
     fn resolve_package_extends(&self, dir: &Path, raw: &str) -> Result<PathBuf, String> {
         let mut current = Some(dir);
         while let Some(base) = current {
@@ -55,6 +58,7 @@ impl CatalogBuilder<'_> {
         Err(format!("cannot resolve npm tsconfig package '{raw}' from {}", dir.display()))
     }
 
+    #[inline(never)]
     fn invalid_config(&mut self, path: &Path, detail: String) {
         let kind = if detail.contains("extend") || detail.contains("npm tsconfig") {
             TsConfigDiagnosticKind::InvalidExtends

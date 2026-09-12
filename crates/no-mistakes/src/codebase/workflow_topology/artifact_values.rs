@@ -28,6 +28,7 @@ enum ArtifactAction {
 /// `uses.match(/^actions\/(upload|download)-artifact@[^/]+$/iu)` —
 /// case-insensitive match against `actions/upload-artifact@<ref>` /
 /// `actions/download-artifact@<ref>` where `<ref>` has no further `/`.
+#[inline(never)]
 fn artifact_action(uses: &str) -> Option<ArtifactAction> {
     let lower = uses.to_ascii_lowercase();
     let rest = lower.strip_prefix("actions/")?;
@@ -41,6 +42,7 @@ fn artifact_action(uses: &str) -> Option<ArtifactAction> {
     (!ref_part.is_empty() && !ref_part.contains('/')).then_some(action)
 }
 
+#[inline(never)]
 pub fn parse_artifact_declaration(
     uses: &str,
     inputs: Option<&Value>,
@@ -102,6 +104,7 @@ pub fn parse_artifact_declaration(
     }))
 }
 
+#[inline(never)]
 fn artifact_flag(value: Option<&Value>, default_value: bool) -> ArtifactActionFlag {
     let raw = value_primitives::string_value(value);
     if let Some(raw) = &raw {
@@ -116,6 +119,7 @@ fn artifact_flag(value: Option<&Value>, default_value: bool) -> ArtifactActionFl
     ArtifactActionFlag::Static { raw, effective }
 }
 
+#[inline(never)]
 fn artifact_download_source(
     mapping: Option<&Value>,
     matrix: Option<&OrderedJson>,
@@ -150,6 +154,7 @@ fn artifact_download_source(
     }
 }
 
+#[inline(never)]
 fn is_current_repository(value: Option<&str>) -> bool {
     match value {
         None => true,
@@ -157,6 +162,7 @@ fn is_current_repository(value: Option<&str>) -> bool {
     }
 }
 
+#[inline(never)]
 fn is_current_run_id(value: Option<&str>) -> bool {
     match value {
         None => true,

@@ -8,6 +8,7 @@ use oxc_ast::ast::{Expression, FunctionBody, Statement};
 use std::collections::BTreeSet;
 use std::path::Path;
 
+#[inline(never)]
 pub(super) fn call_project_options(
     callee: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
@@ -34,6 +35,7 @@ pub(super) fn call_project_options(
     result
 }
 
+#[inline(never)]
 fn imported_project_options(
     import: &ImportBinding,
     base_path: &Path,
@@ -79,6 +81,7 @@ fn imported_project_options(
     result
 }
 
+#[inline(never)]
 fn helper_project_options(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
@@ -104,6 +107,7 @@ fn helper_project_options(
     }
 }
 
+#[inline(never)]
 fn body_return_project_options(
     body: &FunctionBody<'_>,
     ctx: &mut Ctx<'_, '_>,
@@ -131,6 +135,7 @@ fn body_return_project_options(
     body_return_project_options_without_locals(body, ctx, scope)
 }
 
+#[inline(never)]
 fn body_return_project_options_without_locals(
     body: &FunctionBody<'_>,
     ctx: &mut Ctx<'_, '_>,

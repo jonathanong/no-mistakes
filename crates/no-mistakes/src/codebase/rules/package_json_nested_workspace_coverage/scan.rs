@@ -9,6 +9,7 @@ use rayon::prelude::*;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+#[inline(never)]
 pub(super) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
@@ -25,6 +26,7 @@ pub(super) fn check_with_files_and_sources(
     Ok(findings)
 }
 
+#[inline(never)]
 fn scan(
     root: &Path,
     opts: &Options,
@@ -71,6 +73,7 @@ fn scan(
     Ok(findings)
 }
 
+#[inline(never)]
 fn root_globs(roots: &[String]) -> Result<GlobSet> {
     let mut builder = GlobSetBuilder::new();
     for root in roots {

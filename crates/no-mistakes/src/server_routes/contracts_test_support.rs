@@ -3,10 +3,12 @@ use crate::codebase::ts_resolver::{find_tsconfig_from_visible, load_tsconfig, Ts
 use anyhow::Context;
 use std::path::PathBuf;
 
+#[inline(never)]
 pub(super) fn resolve_tsconfig(root: &Path, explicit: Option<&Path>) -> anyhow::Result<TsConfig> {
     resolve_tsconfig_from_visible(root, explicit, &[])
 }
 
+#[inline(never)]
 pub(super) fn resolve_tsconfig_from_visible(
     root: &Path,
     explicit: Option<&Path>,
@@ -27,6 +29,7 @@ pub(super) fn resolve_tsconfig_from_visible(
     }
 }
 
+#[inline(never)]
 fn empty_tsconfig(root: &Path) -> TsConfig {
     TsConfig {
         dir: root.to_path_buf(),

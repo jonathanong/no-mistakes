@@ -1,3 +1,4 @@
+#[inline(never)]
 fn record_object_getter_read(
     collector: &mut ImportCollector,
     member: &StaticMemberExpression<'_>,
@@ -36,6 +37,7 @@ fn record_object_getter_read(
     });
 }
 
+#[inline(never)]
 fn is_object_getter(collector: &ImportCollector, callee: &str) -> bool {
     let Some((binding, property)) = callee.split_once('.') else {
         return false;
@@ -54,6 +56,7 @@ fn is_object_getter(collector: &ImportCollector, callee: &str) -> bool {
     collector.has_object_getter_member(object_id, property)
 }
 
+#[inline(never)]
 fn record_object_setter_assignment(
     collector: &mut ImportCollector,
     callee: &str,

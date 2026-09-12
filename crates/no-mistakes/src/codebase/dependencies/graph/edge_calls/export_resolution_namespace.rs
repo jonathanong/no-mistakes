@@ -1,3 +1,4 @@
+#[inline(never)]
 fn resolve_exported_namespace_reexport_member(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
@@ -38,6 +39,7 @@ fn resolve_exported_namespace_reexport_member(
     }
 }
 
+#[inline(never)]
 fn resolve_exported_namespace_member_alias(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,
@@ -79,6 +81,7 @@ fn resolve_exported_namespace_member_alias(
     })
 }
 
+#[inline(never)]
 fn exported_local_callable(
     file: &CallableFileIndex,
     path: &std::path::Path,

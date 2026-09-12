@@ -10,6 +10,7 @@ use std::collections::{HashMap, HashSet};
 /// Straight-line same-file helper bodies: `const`/`let` SQL inits, `.append`
 /// mutations, and a final `return`. Control flow, assignment, and parameter
 /// identifiers fail closed rather than guessing SQL.
+#[inline(never)]
 pub(super) fn resolve(
     resolvable: &Resolvable<'_>,
     depth: u8,
@@ -64,6 +65,7 @@ pub(super) fn resolve(
     None
 }
 
+#[inline(never)]
 fn bind_declaration(
     declaration: &VariableDeclaration<'_>,
     resolvable: &Resolvable<'_>,
@@ -93,6 +95,7 @@ fn bind_declaration(
     Some(())
 }
 
+#[inline(never)]
 fn bind_declarator(
     declarator: &VariableDeclarator<'_>,
     resolvable: &Resolvable<'_>,

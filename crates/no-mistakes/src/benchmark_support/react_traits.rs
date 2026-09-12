@@ -20,6 +20,7 @@ pub struct ReactTraitsSummary {
     pub with_children: usize,
 }
 
+#[inline(never)]
 pub fn react_traits_many_components_fixture() -> ReactTraitsFixture {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/performance/react-traits"),
@@ -30,6 +31,7 @@ pub fn react_traits_many_components_fixture() -> ReactTraitsFixture {
     }
 }
 
+#[inline(never)]
 pub fn analyze_react_traits_file(fixture: &ReactTraitsFixture) -> ReactTraitsSummary {
     let analysis = crate::react_traits::analyze::file::analyze_file(&fixture.file, &fixture.root)
         .unwrap_or_else(|error| {

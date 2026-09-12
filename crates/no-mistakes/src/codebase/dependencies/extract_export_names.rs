@@ -10,6 +10,7 @@ struct DefaultExportIdentifierCollector {
 }
 
 impl<'a> Visit<'a> for DefaultExportIdentifierCollector {
+    #[inline(never)]
     fn visit_identifier_reference(&mut self, identifier: &oxc_ast::ast::IdentifierReference<'a>) {
         self.names.push(identifier.name.to_string());
     }
@@ -17,6 +18,7 @@ impl<'a> Visit<'a> for DefaultExportIdentifierCollector {
     // Do not descend into nested function/arrow bodies: their locals can shadow
     // outer bindings, and a reference inside an uninvoked callback does not make
     // the outer value part of the default export.
+    #[inline(never)]
     fn visit_function(
         &mut self,
         _function: &oxc_ast::ast::Function<'a>,
@@ -24,6 +26,7 @@ impl<'a> Visit<'a> for DefaultExportIdentifierCollector {
     ) {
     }
 
+    #[inline(never)]
     fn visit_arrow_function_expression(
         &mut self,
         _arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
@@ -31,6 +34,7 @@ impl<'a> Visit<'a> for DefaultExportIdentifierCollector {
     }
 
     // Type-position identifiers (e.g. `{} as Lazy`) are not runtime value uses.
+    #[inline(never)]
     fn visit_ts_type(&mut self, _ty: &oxc_ast::ast::TSType<'a>) {}
 }
 
@@ -40,6 +44,7 @@ impl<'a> Visit<'a> for DefaultExportIdentifierCollector {
 /// Foo;` or `export default memo(Foo);` — keep its dynamic import reachable even
 /// though the binding is visited first. Function/class/arrow defaults create
 /// their own scope and are handled by the visitor, so they are skipped here.
+#[inline(never)]
 fn later_default_export_value_names<'a>(program: &Program<'a>) -> Vec<String> {
     let Some(export) = program.body.iter().find_map(|statement| match statement {
         Statement::ExportDefaultDeclaration(export) => Some(export),
@@ -67,6 +72,7 @@ fn later_default_export_value_names<'a>(program: &Program<'a>) -> Vec<String> {
     collector.names
 }
 
+#[inline(never)]
 fn later_named_value_exports<'a>(
     program: &Program<'a>,
     local_type_names: &FxHashSet<String>,
@@ -98,6 +104,7 @@ fn later_named_value_exports<'a>(
     exports
 }
 
+#[inline(never)]
 fn later_named_type_exports<'a>(
     program: &Program<'a>,
     local_type_names: &FxHashSet<String>,
@@ -122,6 +129,7 @@ fn later_named_type_exports<'a>(
     exports
 }
 
+#[inline(never)]
 fn local_type_declaration_names<'a>(program: &Program<'a>) -> FxHashSet<String> {
     program
         .body

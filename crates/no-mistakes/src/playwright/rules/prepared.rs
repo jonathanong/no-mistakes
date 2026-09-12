@@ -25,6 +25,7 @@ pub(super) struct PreparedRuleSelection {
 }
 
 impl PreparedPlaywrightRules {
+    #[inline(never)]
     pub fn fact_plan(&self) -> PlaywrightFactPlan {
         self.fact_plan.clone()
     }
@@ -39,6 +40,7 @@ impl PreparedPlaywrightRules {
     /// non-shared standalone resolution. When the caller does supply an
     /// `app`, it must match — that guards against reusing one app's cached
     /// settings for a request that explicitly named a different one.
+    #[inline(never)]
     pub(crate) fn report_view(
         &self,
         project: Option<&str>,
@@ -62,6 +64,7 @@ impl PreparedPlaywrightRules {
     }
 }
 
+#[inline(never)]
 pub(super) fn prepare_with_settings(
     root: &Path,
     config: &NoMistakesConfig,
@@ -145,6 +148,7 @@ pub(super) fn prepare_with_settings(
 #[cfg(test)]
 mod tests;
 
+#[inline(never)]
 fn add_settings_facts(
     root: &Path,
     settings: &config::Settings,

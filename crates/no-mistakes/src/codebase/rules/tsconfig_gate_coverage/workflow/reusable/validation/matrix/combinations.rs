@@ -16,6 +16,7 @@ pub(in super::super::super) enum MatrixCombinations {
     Dynamic(Vec<BTreeMap<String, Value>>),
 }
 
+#[inline(never)]
 pub(in super::super::super) fn static_matrix_combinations_for_inputs(
     job: &Value,
     inputs: &InputState,
@@ -40,6 +41,7 @@ pub(in super::super::super) fn static_matrix_combinations_for_inputs(
     }
 }
 
+#[inline(never)]
 fn static_matrix_combinations_for_value(matrix: &Value) -> Option<MatrixCombinations> {
     let Some(matrix) = matrix.as_mapping() else {
         return super::matrix_expression_may_be_mapping(matrix.as_str()?)
@@ -48,6 +50,7 @@ fn static_matrix_combinations_for_value(matrix: &Value) -> Option<MatrixCombinat
     static_matrix_combinations_for_mapping(matrix)
 }
 
+#[inline(never)]
 fn static_matrix_combinations_for_mapping(
     matrix: &serde_yaml::Mapping,
 ) -> Option<MatrixCombinations> {
@@ -115,6 +118,7 @@ fn static_matrix_combinations_for_mapping(
 impl std::ops::Deref for MatrixCombinations {
     type Target = Vec<BTreeMap<String, Value>>;
 
+    #[inline(never)]
     fn deref(&self) -> &Self::Target {
         match self {
             Self::Static(values) | Self::Dynamic(values) => values,
@@ -122,6 +126,7 @@ impl std::ops::Deref for MatrixCombinations {
     }
 }
 
+#[inline(never)]
 fn collect_combinations(
     axes: &[(String, Vec<Value>)],
     exclusions: &[serde_yaml::Mapping],
@@ -165,6 +170,7 @@ fn collect_combinations(
     true
 }
 
+#[inline(never)]
 fn include_compatible(
     include: &serde_yaml::Mapping,
     original: &BTreeMap<String, Value>,

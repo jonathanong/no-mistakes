@@ -3,6 +3,7 @@ use super::yaml::yaml_at;
 use git2::{Repository, Tree};
 use std::collections::{BTreeSet, HashMap};
 
+#[inline(never)]
 pub(super) fn entry_changed_jobs(
     repo: &Repository,
     base: &Tree<'_>,
@@ -35,6 +36,7 @@ pub(super) fn entry_changed_jobs(
         .collect()
 }
 
+#[inline(never)]
 pub(super) fn entry_job_ids(
     entry: &str,
     changed: &BTreeSet<String>,
@@ -49,6 +51,7 @@ pub(super) fn entry_job_ids(
         .collect()
 }
 
+#[inline(never)]
 pub(super) fn add_needs_closure(
     selected: &mut BTreeSet<String>,
     base: &WorkflowTopology,
@@ -78,6 +81,7 @@ pub(super) fn add_needs_closure(
     }
 }
 
+#[inline(never)]
 pub(super) fn entry_change_is_global(
     repo: &Repository,
     base: &Tree<'_>,

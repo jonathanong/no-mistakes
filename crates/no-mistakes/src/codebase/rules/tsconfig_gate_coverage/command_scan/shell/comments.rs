@@ -1,3 +1,4 @@
+#[inline(never)]
 pub(super) fn strip_static_comments(script: &str) -> String {
     let mut output = String::with_capacity(script.len());
     let mut single_quoted = false;

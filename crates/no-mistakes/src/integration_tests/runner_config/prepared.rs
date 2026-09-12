@@ -19,6 +19,7 @@ pub(crate) use setup::{prepare, prepare_with_catalog_and_sources};
 /// Prepare configured runner files with the request's importer-scoped
 /// TypeScript catalog and source store.
 #[doc(hidden)]
+#[inline(never)]
 pub fn prepare_runner_configs_with_catalog(
     root: &Path,
     config: &NoMistakesConfig,
@@ -34,6 +35,7 @@ pub fn prepare_runner_configs_with_catalog(
 /// is parsed, so its imports use the owning package's aliases even outside a
 /// declared workspace.
 #[doc(hidden)]
+#[inline(never)]
 pub fn configured_runner_config_dirs(root: &Path, config: &NoMistakesConfig) -> Vec<PathBuf> {
     [
         config.tests.vitest.configs.as_ref(),
@@ -51,15 +53,18 @@ pub fn configured_runner_config_dirs(root: &Path, config: &NoMistakesConfig) -> 
 }
 
 impl PreparedIntegrationRunnerConfigs {
+    #[inline(never)]
     pub(crate) fn paths(&self) -> impl Iterator<Item = &PathBuf> {
         self.specs.iter().map(|spec| &spec.path)
     }
 
+    #[inline(never)]
     pub(crate) fn contains(&self, path: &Path) -> bool {
         let path = crate::codebase::ts_resolver::normalize_path(path);
         self.specs.iter().any(|spec| spec.path == path)
     }
 
+    #[inline(never)]
     pub(crate) fn parse_program(
         &self,
         path: &Path,
@@ -110,6 +115,7 @@ impl PreparedIntegrationRunnerConfigs {
         Some(RunnerConfigFileFacts { results, analyses })
     }
 
+    #[inline(never)]
     fn read_source(&self, path: &Path) -> Result<std::sync::Arc<str>> {
         match &self.sources {
             Some(sources) => sources
@@ -119,10 +125,12 @@ impl PreparedIntegrationRunnerConfigs {
         }
     }
 
+    #[inline(never)]
     pub(crate) fn parse_all(&self) -> Result<ParsedRunnerConfigs> {
         self.with_request_cache(None, || self.parse_all_inner()).0
     }
 
+    #[inline(never)]
     fn parse_all_inner(&self) -> Result<ParsedRunnerConfigs> {
         let mut parsed = ParsedRunnerConfigs::default();
         let mut seen = HashSet::new();
@@ -159,6 +167,7 @@ impl PreparedIntegrationRunnerConfigs {
         Ok(parsed)
     }
 
+    #[inline(never)]
     pub(crate) fn parse_path_for_facts_with_session(
         &self,
         session: &crate::codebase::analysis_session::AnalysisSession,

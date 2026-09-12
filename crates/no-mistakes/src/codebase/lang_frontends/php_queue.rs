@@ -3,6 +3,7 @@ use regex::Regex;
 use std::path::Path;
 use std::sync::OnceLock;
 
+#[inline(never)]
 pub(super) fn extract_php_requires(source: &str) -> Vec<String> {
     extract_named(source, php_require_re())
         .into_iter()
@@ -14,6 +15,7 @@ pub(super) fn extract_php_requires(source: &str) -> Vec<String> {
         .collect()
 }
 
+#[inline(never)]
 fn php_require_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -24,6 +26,7 @@ fn php_require_re() -> &'static Regex {
     })
 }
 
+#[inline(never)]
 pub(super) fn extract_laravel_dispatches(source: &str) -> Vec<String> {
     let uses = extract_php_uses(source);
     let namespace = php_namespace_re()
@@ -39,6 +42,7 @@ pub(super) fn extract_laravel_dispatches(source: &str) -> Vec<String> {
     names
 }
 
+#[inline(never)]
 fn resolve_php_queue_name(name: &str, uses: &[String], namespace: Option<&str>) -> Vec<String> {
     let mut names = vec![name.to_string()];
     if let Some((_, short)) = name.rsplit_once('.') {
@@ -65,6 +69,7 @@ fn resolve_php_queue_name(name: &str, uses: &[String], namespace: Option<&str>) 
     names
 }
 
+#[inline(never)]
 pub(super) fn laravel_queue_identities(classes: &[String]) -> Vec<String> {
     let qualified: Vec<String> = classes
         .iter()
@@ -78,6 +83,7 @@ pub(super) fn laravel_queue_identities(classes: &[String]) -> Vec<String> {
     }
 }
 
+#[inline(never)]
 fn laravel_dispatch_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -85,15 +91,18 @@ fn laravel_dispatch_re() -> &'static Regex {
     })
 }
 
+#[inline(never)]
 pub(super) fn php_should_queue_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"\bimplements\s+[^{;]*\bShouldQueue\b").expect("shouldqueue"))
 }
 
+#[inline(never)]
 pub(super) fn extract_messenger_dispatches(source: &str) -> Vec<String> {
     extract_named(source, messenger_dispatch_re())
 }
 
+#[inline(never)]
 pub(super) fn extract_messenger_workers(source: &str) -> Vec<String> {
     let mut names = extract_named(source, messenger_as_handler_re());
     names.extend(extract_named(source, messenger_interface_re()));
@@ -103,6 +112,7 @@ pub(super) fn extract_messenger_workers(source: &str) -> Vec<String> {
     names
 }
 
+#[inline(never)]
 fn messenger_dispatch_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -111,6 +121,7 @@ fn messenger_dispatch_re() -> &'static Regex {
     })
 }
 
+#[inline(never)]
 fn messenger_as_handler_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -119,6 +130,7 @@ fn messenger_as_handler_re() -> &'static Regex {
     })
 }
 
+#[inline(never)]
 fn messenger_interface_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -129,6 +141,7 @@ fn messenger_interface_re() -> &'static Regex {
     })
 }
 
+#[inline(never)]
 fn messenger_invoke_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {

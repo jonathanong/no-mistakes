@@ -1,10 +1,12 @@
 mod regex_literal;
 mod template;
 
+#[inline(never)]
 pub(super) fn comments_and_regex_literals(content: &str) -> String {
     strip(content, false, true)
 }
 
+#[inline(never)]
 pub(super) fn strip(content: &str, strings: bool, regex_literals: bool) -> String {
     let mut out = String::with_capacity(content.len());
     let bytes = content.as_bytes();
@@ -43,6 +45,7 @@ pub(super) fn strip(content: &str, strings: bool, regex_literals: bool) -> Strin
     out
 }
 
+#[inline(never)]
 pub(super) fn push_line_comment(bytes: &[u8], mut index: usize, out: &mut String) -> usize {
     out.push_str("  ");
     while index < bytes.len() && bytes[index] != b'\n' {
@@ -56,6 +59,7 @@ pub(super) fn push_line_comment(bytes: &[u8], mut index: usize, out: &mut String
     index
 }
 
+#[inline(never)]
 pub(super) fn push_block_comment(bytes: &[u8], mut index: usize, out: &mut String) -> usize {
     out.push_str("  ");
     while index < bytes.len() {
@@ -69,6 +73,7 @@ pub(super) fn push_block_comment(bytes: &[u8], mut index: usize, out: &mut Strin
     index
 }
 
+#[inline(never)]
 pub(super) fn push_erased_string(bytes: &[u8], start: usize, out: &mut String) -> usize {
     let quote = bytes[start];
     out.push(' ');
@@ -93,6 +98,7 @@ pub(super) fn push_erased_string(bytes: &[u8], start: usize, out: &mut String) -
     index
 }
 
+#[inline(never)]
 pub(super) fn push_erased_escape(bytes: &[u8], index: &mut usize, out: &mut String) {
     out.push(' ');
     if let Some(next) = bytes.get(*index + 1) {
@@ -103,6 +109,7 @@ pub(super) fn push_erased_escape(bytes: &[u8], index: &mut usize, out: &mut Stri
     }
 }
 
+#[inline(never)]
 pub(super) fn push_preserved_string(bytes: &[u8], start: usize, out: &mut String) -> usize {
     let quote = bytes[start];
     out.push(quote as char);

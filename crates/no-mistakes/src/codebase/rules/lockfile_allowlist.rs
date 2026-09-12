@@ -26,6 +26,7 @@ pub(crate) struct Options {
     pub(crate) banned_basenames: Vec<String>,
 }
 
+#[inline(never)]
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let skip = &config.filesystem.skip_directories;
     let all: Result<Vec<Vec<RuleFinding>>> = config
@@ -47,6 +48,7 @@ pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>>
     Ok(findings)
 }
 
+#[inline(never)]
 pub(crate) fn check_with_files(
     root: &Path,
     config: &NoMistakesConfig,
@@ -73,6 +75,7 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
+#[inline(never)]
 fn build_glob_set(patterns: &[&str]) -> Result<GlobSet> {
     let mut builder = GlobSetBuilder::new();
     for pat in patterns {
@@ -81,6 +84,7 @@ fn build_glob_set(patterns: &[&str]) -> Result<GlobSet> {
     Ok(builder.build()?)
 }
 
+#[inline(never)]
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Result<Vec<RuleFinding>> {
     let banned: HashSet<&str> = if opts.banned_basenames.is_empty() {
         DEFAULT_BANNED_BASENAMES.iter().copied().collect()

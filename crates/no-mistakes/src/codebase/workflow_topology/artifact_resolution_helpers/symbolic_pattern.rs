@@ -9,6 +9,7 @@
 /// in `pattern`, with identical, glob-metacharacter-free literal text
 /// around it. This never proves a match, only that one is *possible* — the
 /// caller always records it with `match: "possible"`.
+#[inline(never)]
 pub fn symbolic_pattern_match(template: &str, pattern: &str) -> bool {
     let template_chars: Vec<char> = template.chars().collect();
     let pattern_chars: Vec<char> = pattern.chars().collect();
@@ -34,6 +35,7 @@ pub fn symbolic_pattern_match(template: &str, pattern: &str) -> bool {
     !has_glob_syntax(suffix) && pattern_chars[pattern_cursor..] == *suffix
 }
 
+#[inline(never)]
 fn has_glob_syntax(value: &[char]) -> bool {
     value.iter().any(|&c| {
         matches!(
@@ -43,10 +45,12 @@ fn has_glob_syntax(value: &[char]) -> bool {
     })
 }
 
+#[inline(never)]
 fn starts_with_at(haystack: &[char], start: usize, needle: &[char]) -> bool {
     haystack.len() >= start + needle.len() && haystack[start..start + needle.len()] == *needle
 }
 
+#[inline(never)]
 fn wildcard_prefix_len(chars: &[char]) -> Option<usize> {
     if chars.starts_with(&['*', '*']) {
         Some(2)
@@ -59,6 +63,7 @@ fn wildcard_prefix_len(chars: &[char]) -> Option<usize> {
 
 /// Finds every `${{ ... }}` span: a `${{` opener, one or more non-`}`
 /// characters, then a `}}` closer — matching `/\$\{\{[^}]+\}\}/gu`.
+#[inline(never)]
 fn find_expression_spans(chars: &[char]) -> Vec<(usize, usize)> {
     let mut spans = Vec::new();
     let mut i = 0usize;

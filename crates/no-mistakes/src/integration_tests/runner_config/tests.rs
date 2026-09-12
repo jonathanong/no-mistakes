@@ -422,3 +422,20 @@ fn parse_program_and_session_facts_ignore_paths_that_were_not_prepared() {
         )
         .is_none());
 }
+
+#[test]
+fn configured_runner_config_dirs_collect_vitest_and_playwright_parents() {
+    let root = Path::new("/repo");
+    let empty = configured_runner_config_dirs(root, &NoMistakesConfig::default());
+    assert!(empty.is_empty());
+
+    let mut config = NoMistakesConfig::default();
+    config.tests.vitest.configs = Some(StringOrList::One("apps/web/vitest.config.ts".into()));
+    config.tests.playwright.configs = Some(StringOrList::Many(vec![
+        "apps/web/playwright.config.ts".into(),
+        "e2e/playwright.config.ts".into(),
+    ]));
+    let dirs = configured_runner_config_dirs(root, &config);
+    assert!(dirs.iter().any(|path| path.ends_with("apps/web")));
+    assert!(dirs.iter().any(|path| path.ends_with("e2e")));
+}

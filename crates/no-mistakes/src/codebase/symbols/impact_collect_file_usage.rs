@@ -1,3 +1,4 @@
+#[inline(never)]
 fn file_entry_uses_any_symbol(
     root: &Path,
     file: &str,
@@ -9,10 +10,12 @@ fn file_entry_uses_any_symbol(
         .any(|target_symbol| file_entry_uses_symbol(root, file, target_symbol, facts))
 }
 
+#[inline(never)]
 fn has_file_level_import_edge(via: &[EdgeKind]) -> bool {
     via.contains(&EdgeKind::DynamicImport) || via.contains(&EdgeKind::Require)
 }
 
+#[inline(never)]
 fn file_entry_uses_symbol(
     root: &Path,
     file: &str,
@@ -54,6 +57,7 @@ fn file_entry_uses_symbol(
         .any(|alias| callees.contains(alias) || source_contains_call_name(source, alias))
 }
 
+#[inline(never)]
 fn direct_dynamic_member_use(source: &str, target_symbol: &str) -> bool {
     source
         .lines()
@@ -61,6 +65,7 @@ fn direct_dynamic_member_use(source: &str, target_symbol: &str) -> bool {
         .any(|line| line.contains(&format!(").{target_symbol}")))
 }
 
+#[inline(never)]
 fn source_contains_member_name(source: &str, member: &str) -> bool {
     source.match_indices(member).any(|(index, _)| {
         let after = source[index + member.len()..].chars().next();
@@ -68,6 +73,7 @@ fn source_contains_member_name(source: &str, member: &str) -> bool {
     })
 }
 
+#[inline(never)]
 fn source_contains_call_name(source: &str, name: &str) -> bool {
     source.match_indices(name).any(|(index, _)| {
         let before = source[..index].chars().next_back();
@@ -77,10 +83,12 @@ fn source_contains_call_name(source: &str, name: &str) -> bool {
     })
 }
 
+#[inline(never)]
 fn is_identifier_char(ch: char) -> bool {
     ch.is_ascii_alphanumeric() || ch == '_' || ch == '$'
 }
 
+#[inline(never)]
 fn dynamic_module_bindings(source: &str) -> BTreeSet<String> {
     source
         .lines()
@@ -95,6 +103,7 @@ fn dynamic_module_bindings(source: &str) -> BTreeSet<String> {
         .collect()
 }
 
+#[inline(never)]
 fn dynamic_symbol_aliases_in_source(source: &str, target_symbol: &str) -> BTreeSet<String> {
     let mut aliases = BTreeSet::new();
     for line in source
@@ -120,6 +129,7 @@ fn dynamic_symbol_aliases_in_source(source: &str, target_symbol: &str) -> BTreeS
     aliases
 }
 
+#[inline(never)]
 fn destructured_symbol_aliases(line: &str, target_symbol: &str) -> BTreeSet<String> {
     let mut aliases = BTreeSet::new();
     let Some(start) = line.find('{') else {
@@ -140,6 +150,7 @@ fn destructured_symbol_aliases(line: &str, target_symbol: &str) -> BTreeSet<Stri
     aliases
 }
 
+#[inline(never)]
 fn member_assignment_alias(line: &str, target_symbol: &str) -> BTreeSet<String> {
     let mut aliases = BTreeSet::new();
     let destructured = format!("{target_symbol}:");
@@ -168,6 +179,7 @@ fn member_assignment_alias(line: &str, target_symbol: &str) -> BTreeSet<String> 
     aliases
 }
 
+#[inline(never)]
 fn identifier_after_declaration(value: &str) -> Option<String> {
     let name = value
         .strip_prefix("const ")

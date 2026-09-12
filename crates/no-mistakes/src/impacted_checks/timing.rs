@@ -20,6 +20,7 @@ pub(crate) struct PhaseTimer {
 }
 
 impl TimingTracker {
+    #[inline(never)]
     pub(crate) fn new(emit_progress: bool, collect: bool) -> Self {
         let observer = crate::diagnostics::current();
         let enabled = emit_progress || collect || observer.is_some();
@@ -34,6 +35,7 @@ impl TimingTracker {
     }
 
     /// Run one phase and record its duration after completion.
+    #[inline(never)]
     pub(crate) fn run_phase<T>(
         &mut self,
         phase: &'static str,
@@ -47,6 +49,7 @@ impl TimingTracker {
     /// Finish a phase whose operation had to receive this tracker for nested
     /// phase timing and therefore could not be passed directly to
     /// [`Self::run_phase`].
+    #[inline(never)]
     pub(crate) fn finish_phase_result<T>(
         &mut self,
         phase: &'static str,
@@ -65,6 +68,7 @@ impl TimingTracker {
         }
     }
 
+    #[inline(never)]
     pub(crate) fn start_phase(&self, phase: &'static str) -> PhaseTimer {
         let _ = phase;
         PhaseTimer {
@@ -73,12 +77,14 @@ impl TimingTracker {
         }
     }
 
+    #[inline(never)]
     pub(crate) fn finish_phase(&mut self, phase: &'static str, timer: PhaseTimer) {
         let duration = self.exclusive_duration(&timer);
         self.completed_phase_time += duration;
         self.record_success(phase, duration);
     }
 
+    #[inline(never)]
     pub(crate) fn fail_phase(&mut self, phase: &'static str, timer: PhaseTimer) {
         let duration = self.exclusive_duration(&timer);
         self.completed_phase_time += duration;
@@ -89,11 +95,13 @@ impl TimingTracker {
         }
     }
 
+    #[inline(never)]
     pub(crate) fn into_timings(self) -> Option<Vec<ImpactedChecksTiming>> {
         self.collect.then_some(self.timings)
     }
 
     /// Finish the invocation-level timer after all nested phases complete.
+    #[inline(never)]
     pub(crate) fn finish_total(&mut self) {
         let duration = self
             .invocation_started
@@ -112,6 +120,7 @@ impl TimingTracker {
 
     /// Report an invocation that failed after its active phase reported the
     /// more specific failure.
+    #[inline(never)]
     pub(crate) fn fail_total(&self) {
         if self.emit_progress && self.observer.is_none() {
             let duration = self
@@ -122,6 +131,7 @@ impl TimingTracker {
         }
     }
 
+    #[inline(never)]
     fn record_success(&mut self, phase: &'static str, duration: Duration) {
         if let Some(observer) = &self.observer {
             observer.record_duration(phase, duration, crate::diagnostics::TimingKind::Serial);
@@ -136,6 +146,7 @@ impl TimingTracker {
         }
     }
 
+    #[inline(never)]
     fn exclusive_duration(&self, timer: &PhaseTimer) -> Duration {
         let nested = self
             .completed_phase_time

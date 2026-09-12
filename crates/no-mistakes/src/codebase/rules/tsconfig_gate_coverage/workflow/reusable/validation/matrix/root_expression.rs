@@ -10,6 +10,7 @@ pub(super) enum ResolvedRootMatrix {
     Dynamic,
 }
 
+#[inline(never)]
 pub(super) fn resolve(expression: &str, inputs: &InputState) -> ResolvedRootMatrix {
     if let Some(value) = complete_literal_expression_value(expression) {
         return yaml_value(value);
@@ -46,6 +47,7 @@ pub(super) fn resolve(expression: &str, inputs: &InputState) -> ResolvedRootMatr
     }
 }
 
+#[inline(never)]
 fn static_value(value: StaticValue) -> ResolvedRootMatrix {
     match value {
         StaticValue::Unknown => ResolvedRootMatrix::Dynamic,
@@ -61,6 +63,7 @@ fn static_value(value: StaticValue) -> ResolvedRootMatrix {
     }
 }
 
+#[inline(never)]
 fn yaml_value(value: Value) -> ResolvedRootMatrix {
     match value {
         Value::Mapping(matrix) => ResolvedRootMatrix::Mapping(matrix),

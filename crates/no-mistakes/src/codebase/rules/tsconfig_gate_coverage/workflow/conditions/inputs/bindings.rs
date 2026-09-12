@@ -12,6 +12,7 @@ use std::collections::BTreeMap;
 const REUSABLE_CALL_INPUT_CONTEXTS: &[&str] =
     &["github", "needs", "strategy", "matrix", "inputs", "vars"];
 
+#[inline(never)]
 pub(super) fn normalized_bindings(
     mapping: &serde_yaml::Mapping,
 ) -> Option<BTreeMap<String, &Value>> {
@@ -25,6 +26,7 @@ pub(super) fn normalized_bindings(
     Some(bindings)
 }
 
+#[inline(never)]
 pub(super) fn binding_matches_type(
     value: &Value,
     input_type: WorkflowCallInputType,
@@ -69,6 +71,7 @@ pub(super) fn binding_matches_type(
 #[cfg(test)]
 mod tests;
 
+#[inline(never)]
 pub(super) fn binding_bool(value: &Value, parent: &InputState) -> StaticValue {
     if let Some(value) = value.as_bool() {
         StaticValue::Bool(value)

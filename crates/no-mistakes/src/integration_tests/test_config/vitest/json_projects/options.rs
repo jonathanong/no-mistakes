@@ -6,6 +6,7 @@ use serde_json::{Map, Value};
 use std::collections::BTreeSet;
 use std::path::Path;
 
+#[inline(never)]
 pub(super) fn parse(object: &Map<String, Value>, path: &Path) -> Result<Options> {
     Ok(Options {
         name: optional_name(object)?,
@@ -31,6 +32,7 @@ pub(super) fn parse(object: &Map<String, Value>, path: &Path) -> Result<Options>
     })
 }
 
+#[inline(never)]
 pub(super) fn merge(base: &mut Options, nested: Options) {
     base.name = nested.name.or(base.name.take());
     base.root = nested.root.or(base.root.take());
@@ -43,6 +45,7 @@ pub(super) fn merge(base: &mut Options, nested: Options) {
     base.extends = nested.extends.or(base.extends.take());
 }
 
+#[inline(never)]
 fn optional_name(object: &Map<String, Value>) -> Result<Option<String>> {
     object
         .get("name")
@@ -64,6 +67,7 @@ fn optional_name(object: &Map<String, Value>) -> Result<Option<String>> {
         .transpose()
 }
 
+#[inline(never)]
 fn optional_string(object: &Map<String, Value>, key: &str) -> Result<Option<String>> {
     object
         .get(key)
@@ -76,6 +80,7 @@ fn optional_string(object: &Map<String, Value>, key: &str) -> Result<Option<Stri
         .transpose()
 }
 
+#[inline(never)]
 fn optional_bool(object: &Map<String, Value>, key: &str) -> Result<Option<bool>> {
     object
         .get(key)
@@ -87,10 +92,12 @@ fn optional_bool(object: &Map<String, Value>, key: &str) -> Result<Option<bool>>
         .transpose()
 }
 
+#[inline(never)]
 fn optional_strings(object: &Map<String, Value>, key: &str) -> Result<Option<Vec<String>>> {
     object.get(key).map(|value| strings(value, key)).transpose()
 }
 
+#[inline(never)]
 fn strings(value: &Value, key: &str) -> Result<Vec<String>> {
     if let Some(value) = value.as_str() {
         return Ok(vec![value.to_string()]);
@@ -108,6 +115,7 @@ fn strings(value: &Value, key: &str) -> Result<Vec<String>> {
         .collect()
 }
 
+#[inline(never)]
 fn dependencies(
     object: &Map<String, Value>,
     key: &str,

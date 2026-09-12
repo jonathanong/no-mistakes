@@ -1,4 +1,5 @@
 impl ImportCollector {
+    #[inline(never)]
     fn materialize_aggregate_aliases(&mut self) {
         for candidate in std::mem::take(&mut self.aggregate_alias_candidates) {
             let AggregateAliasCandidate {
@@ -73,6 +74,7 @@ impl ImportCollector {
         }
     }
 
+    #[inline(never)]
     fn materialized_alias_target_identity(
         &self,
         binding_scope: usize,
@@ -122,6 +124,7 @@ impl ImportCollector {
         }
     }
 
+    #[inline(never)]
     fn record_object_member_callable_aliases(
         &mut self,
         local: &str,

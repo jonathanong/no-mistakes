@@ -14,6 +14,7 @@ pub(crate) use globs::{build_globset, prefix_globs};
 pub(super) use json::load_vitest_json_projects;
 pub(in crate::integration_tests) use parse::load_config_projects_from_program;
 
+#[inline(never)]
 pub(crate) fn load_projects(
     root: &Path,
     framework: Framework,
@@ -26,6 +27,7 @@ pub(crate) fn load_projects(
     load_projects_from_visible(root, framework, configs, &visible_paths, &tsconfig)
 }
 
+#[inline(never)]
 pub(crate) fn load_projects_from_visible(
     root: &Path,
     framework: Framework,
@@ -38,6 +40,7 @@ pub(crate) fn load_projects_from_visible(
     load_projects_from_visible_with_catalog(root, framework, configs, visible_paths, &catalog)
 }
 
+#[inline(never)]
 pub(crate) fn load_projects_from_visible_with_catalog(
     root: &Path,
     framework: Framework,
@@ -115,6 +118,7 @@ pub(super) struct ConfigProjectInput<'a> {
     pub(super) resolver: &'a dyn ImportResolution,
 }
 
+#[inline(never)]
 pub(super) fn load_config_projects_inner(
     input: ConfigProjectInput<'_>,
     visible_files: Option<&crate::fx::PathSet>,

@@ -1,6 +1,7 @@
 // Included into `registry_extension_query` via `include!`; shares that
 // module's imports. Argument/callee import-resolution helpers.
 
+#[inline(never)]
 fn slice(source: &str, start: u32, end: u32) -> String {
     source
         .get(start as usize..end as usize)
@@ -12,6 +13,7 @@ fn slice(source: &str, start: u32, end: u32) -> String {
 /// callee text so different registries that share a method name
 /// (`alpha.register` vs `beta.register`) are not collapsed; `display` is the
 /// same verbatim callee text reported as the registrant.
+#[inline(never)]
 fn callee_key(callee: &Expression<'_>, source: &str) -> Option<(String, String)> {
     match callee {
         Expression::Identifier(ident) => Some((ident.name.to_string(), ident.name.to_string())),
@@ -23,6 +25,7 @@ fn callee_key(callee: &Expression<'_>, source: &str) -> Option<(String, String)>
     }
 }
 
+#[inline(never)]
 fn argument_import(
     arg: &Argument<'_>,
     imports: &HashMap<String, EntryImport>,
@@ -30,6 +33,7 @@ fn argument_import(
     expression_import(arg.as_expression()?, imports)
 }
 
+#[inline(never)]
 fn expression_import(
     expr: &Expression<'_>,
     imports: &HashMap<String, EntryImport>,
@@ -50,6 +54,7 @@ fn expression_import(
     }
 }
 
+#[inline(never)]
 fn new_expression_import(
     new: &NewExpression<'_>,
     imports: &HashMap<String, EntryImport>,
@@ -69,12 +74,14 @@ fn new_expression_import(
 }
 
 /// Find a `() => import("...")` dynamic import inside a function body.
+#[inline(never)]
 fn dynamic_import(body: &oxc_ast::ast::FunctionBody<'_>) -> Option<EntryImport> {
     let mut finder = ImportExprFinder { specifier: None };
     finder.visit_function_body(body);
     finder.into_entry_import()
 }
 
+#[inline(never)]
 fn dynamic_import_expression(expression: &Expression<'_>) -> Option<EntryImport> {
     let mut finder = ImportExprFinder { specifier: None };
     finder.visit_expression(expression);
@@ -82,6 +89,7 @@ fn dynamic_import_expression(expression: &Expression<'_>) -> Option<EntryImport>
 }
 
 impl ImportExprFinder {
+    #[inline(never)]
     fn into_entry_import(self) -> Option<EntryImport> {
         self.specifier.map(|specifier| EntryImport {
             specifier,
@@ -97,6 +105,7 @@ struct ImportExprFinder {
 }
 
 impl<'a> Visit<'a> for ImportExprFinder {
+    #[inline(never)]
     fn visit_import_expression(&mut self, import: &ImportExpression<'a>) {
         if self.specifier.is_none() {
             if let Expression::StringLiteral(literal) = &import.source {

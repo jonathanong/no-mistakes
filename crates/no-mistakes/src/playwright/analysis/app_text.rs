@@ -29,6 +29,7 @@ pub(crate) use extract::extract_app_text_targets_from_program;
 use jsx_text::*;
 use roles::*;
 
+#[inline(never)]
 pub(crate) fn collect_app_text_targets_from_visible(
     root: &Path,
     settings: &Settings,
@@ -79,6 +80,7 @@ struct AppTextVisitor<'a> {
 }
 
 impl AppTextVisitor<'_> {
+    #[inline(never)]
     fn string_attr(
         &self,
         opening: &oxc_ast::ast::JSXOpeningElement<'_>,
@@ -92,11 +94,13 @@ impl AppTextVisitor<'_> {
         )
     }
 
+    #[inline(never)]
     fn element_is_hidden(&self, opening: &oxc_ast::ast::JSXOpeningElement<'_>) -> bool {
         bool_attr(opening, "hidden").unwrap_or(false)
             || aria_bool_attr(opening, "aria-hidden").unwrap_or(false)
     }
 
+    #[inline(never)]
     fn push(
         &mut self,
         kind: AppTextKind,
@@ -115,6 +119,7 @@ impl AppTextVisitor<'_> {
         });
     }
 
+    #[inline(never)]
     fn nested_label_control(
         &self,
         children: &[oxc_ast::ast::JSXChild<'_>],

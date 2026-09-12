@@ -14,6 +14,7 @@ pub struct PreparedVitestProjectCatalog {
 }
 
 #[doc(hidden)]
+#[inline(never)]
 pub fn prepare_vitest_project_catalog(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
@@ -40,10 +41,12 @@ pub fn prepare_vitest_project_catalog(
 }
 
 impl PreparedVitestProjectCatalog {
+    #[inline(never)]
     pub(crate) fn config_projects(&self) -> anyhow::Result<Vec<ConfigProject>> {
         self.config_projects.clone().map_err(anyhow::Error::msg)
     }
 
+    #[inline(never)]
     pub(crate) fn merged_projects(&self) -> anyhow::Result<Vec<ConfigProject>> {
         Ok(merge_explicit_vitest_projects(
             self.config_projects()?,
@@ -52,6 +55,7 @@ impl PreparedVitestProjectCatalog {
     }
 
     /// Reuse parsed Vitest ownership for graph-backed call policy roots.
+    #[inline(never)]
     pub(crate) fn matching_files(
         &self,
         root: &Path,
@@ -68,6 +72,7 @@ impl PreparedVitestProjectCatalog {
     }
 }
 
+#[inline(never)]
 pub(crate) fn explicit_vitest_projects(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,
@@ -83,6 +88,7 @@ pub(crate) fn explicit_vitest_projects(
         .collect()
 }
 
+#[inline(never)]
 pub(crate) fn merge_explicit_vitest_projects(
     projects: Vec<ConfigProject>,
     explicit: Vec<ConfigProject>,
@@ -90,6 +96,7 @@ pub(crate) fn merge_explicit_vitest_projects(
     super::runner_project_catalog::merge_explicit_projects(projects, explicit)
 }
 
+#[inline(never)]
 pub(crate) fn config_projects_required(
     root: &Path,
     config: &crate::config::v2::NoMistakesConfig,

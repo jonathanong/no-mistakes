@@ -11,6 +11,7 @@ use serde_yaml::Value;
 
 const STRATEGY_CONTEXTS: &[&str] = &["github", "needs", "vars", "inputs"];
 
+#[inline(never)]
 pub(in super::super) fn strategy_shape_valid(value: Option<&Value>) -> bool {
     value.is_none_or(|value| {
         value.as_mapping().is_some_and(|strategy| {
@@ -32,6 +33,7 @@ pub(in super::super) fn strategy_shape_valid(value: Option<&Value>) -> bool {
     })
 }
 
+#[inline(never)]
 pub(crate) fn strategy_configuration_valid_for_inputs(job: &Value, inputs: &InputState) -> bool {
     let Some(strategy) = job.get("strategy").and_then(Value::as_mapping) else {
         return true;
@@ -47,6 +49,7 @@ pub(crate) fn strategy_configuration_valid_for_inputs(job: &Value, inputs: &Inpu
 /// GitHub Actions enables matrix fail-fast unless a statically resolved value
 /// explicitly disables it. Dynamic values cannot prove that queued siblings
 /// were cancelled, so callers must continue scanning them.
+#[inline(never)]
 pub(crate) fn strategy_fail_fast_enabled_for_inputs(job: &Value, inputs: &InputState) -> bool {
     matches!(
         strategy_context_values_for_inputs(job, inputs, None).0,
@@ -54,6 +57,7 @@ pub(crate) fn strategy_fail_fast_enabled_for_inputs(job: &Value, inputs: &InputS
     )
 }
 
+#[inline(never)]
 pub(crate) fn strategy_context_values_for_inputs(
     job: &Value,
     inputs: &InputState,
@@ -82,6 +86,7 @@ pub(crate) fn strategy_context_values_for_inputs(
     (fail_fast, max_parallel)
 }
 
+#[inline(never)]
 fn max_parallel_static_value(value: &Value, inputs: &InputState) -> StaticValue {
     if let Some(value) = value.as_u64().filter(|value| *value > 0) {
         return StaticValue::Number(value.to_string());
@@ -97,6 +102,7 @@ fn max_parallel_static_value(value: &Value, inputs: &InputState) -> StaticValue 
         .unwrap_or(StaticValue::Unknown)
 }
 
+#[inline(never)]
 fn fail_fast_valid_for_inputs(value: &Value, inputs: &InputState) -> bool {
     if value.is_bool() {
         return true;
@@ -107,6 +113,7 @@ fn fail_fast_valid_for_inputs(value: &Value, inputs: &InputState) -> bool {
     })
 }
 
+#[inline(never)]
 fn max_parallel_valid_for_inputs(max_parallel: &Value, inputs: &InputState) -> bool {
     if max_parallel.as_u64().is_some_and(|value| value > 0) {
         return true;
@@ -124,6 +131,7 @@ fn max_parallel_valid_for_inputs(max_parallel: &Value, inputs: &InputState) -> b
     )
 }
 
+#[inline(never)]
 fn strategy_fail_fast_expression_valid(value: &str) -> bool {
     complete_expression_contexts_available(value, STRATEGY_CONTEXTS)
         && !invalid_literal_from_json(value)
@@ -134,6 +142,7 @@ fn strategy_fail_fast_expression_valid(value: &str) -> bool {
         && complete_literal_expression_value(value).is_none_or(|literal| literal.is_bool())
 }
 
+#[inline(never)]
 fn strategy_max_parallel_expression_valid(value: &str) -> bool {
     complete_expression_contexts_available(value, STRATEGY_CONTEXTS)
         && !invalid_literal_from_json(value)

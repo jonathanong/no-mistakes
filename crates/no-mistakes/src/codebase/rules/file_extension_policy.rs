@@ -23,11 +23,13 @@ pub(crate) struct Options {
     pub(crate) scopes: Vec<ScopeSpec>,
 }
 
+#[inline(never)]
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let files = discover_files(root, &config.filesystem.skip_directories);
     check_with_files(root, config, &files)
 }
 
+#[inline(never)]
 pub(crate) fn check_with_files(
     root: &Path,
     config: &NoMistakesConfig,
@@ -54,6 +56,7 @@ pub(crate) fn check_with_files(
     Ok(findings)
 }
 
+#[inline(never)]
 fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFinding> {
     let allowlist: HashSet<&str> = opts.allowlist.iter().map(String::as_str).collect();
     let mut findings: Vec<RuleFinding> = files
@@ -64,6 +67,7 @@ fn scan(root: &Path, opts: &Options, files: &[PathBuf]) -> Vec<RuleFinding> {
     findings
 }
 
+#[inline(never)]
 pub(crate) fn check_file(
     path: &Path,
     root: &Path,
@@ -110,6 +114,7 @@ pub(crate) fn check_file(
     Vec::new()
 }
 
+#[inline(never)]
 fn file_extension(rel: &str) -> &str {
     match rel.rfind('.') {
         Some(i) => &rel[i..],
@@ -117,6 +122,7 @@ fn file_extension(rel: &str) -> &str {
     }
 }
 
+#[inline(never)]
 fn is_typescript_declaration_file(rel: &str) -> bool {
     rel.ends_with(".d.ts") || rel.ends_with(".d.mts") || rel.ends_with(".d.cts")
 }

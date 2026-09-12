@@ -11,6 +11,7 @@ use triggers::{
     has_workflow_call_trigger, workflow_call_trigger_keys_valid, workflow_trigger_configs_valid,
 };
 
+#[inline(never)]
 pub(crate) fn workflow_call_shape_valid(on: Option<&Value>) -> bool {
     let Some(on) = on else {
         return true;
@@ -35,6 +36,7 @@ pub(crate) fn workflow_call_shape_valid(on: Option<&Value>) -> bool {
         && declaration_group_valid(contract.get("outputs"), output_declaration_valid)
 }
 
+#[inline(never)]
 fn declaration_group_valid(
     declarations: Option<&Value>,
     declaration_valid: fn(&serde_yaml::Mapping) -> bool,
@@ -48,6 +50,7 @@ fn declaration_group_valid(
     })
 }
 
+#[inline(never)]
 fn input_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
     let Some(input_type) = declaration.get("type").and_then(Value::as_str) else {
         return false;
@@ -59,6 +62,7 @@ fn input_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
         && string_field_valid(declaration, "description")
 }
 
+#[inline(never)]
 fn input_default_valid(value: Option<&Value>, input_type: &str) -> bool {
     const INPUT_DEFAULT_CONTEXTS: &[&str] = &["github", "inputs", "vars"];
     let Some(value) = value else {
@@ -79,12 +83,14 @@ fn input_default_valid(value: Option<&Value>, input_type: &str) -> bool {
     }
 }
 
+#[inline(never)]
 fn secret_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
     only_keys(declaration, &["required", "description"])
         && bool_field_valid(declaration, "required")
         && string_field_valid(declaration, "description")
 }
 
+#[inline(never)]
 fn output_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
     const OUTPUT_CONTEXTS: &[&str] = &["github", "jobs", "vars", "inputs"];
     only_keys(declaration, &["value", "description"])
@@ -95,16 +101,19 @@ fn output_declaration_valid(declaration: &serde_yaml::Mapping) -> bool {
         && string_field_valid(declaration, "description")
 }
 
+#[inline(never)]
 fn only_keys(mapping: &serde_yaml::Mapping, allowed: &[&str]) -> bool {
     mapping
         .keys()
         .all(|key| key.as_str().is_some_and(|key| allowed.contains(&key)))
 }
 
+#[inline(never)]
 fn string_field_valid(mapping: &serde_yaml::Mapping, field: &str) -> bool {
     mapping.get(field).is_none_or(Value::is_string)
 }
 
+#[inline(never)]
 fn bool_field_valid(mapping: &serde_yaml::Mapping, field: &str) -> bool {
     mapping.get(field).is_none_or(Value::is_bool)
 }

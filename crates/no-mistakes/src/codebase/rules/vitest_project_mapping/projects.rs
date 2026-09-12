@@ -12,6 +12,7 @@ pub(super) struct ProjectGlob {
     pub(super) exclude: GlobSet,
 }
 
+#[inline(never)]
 pub(super) fn build_project_globs(projects: &[ConfigProject]) -> Result<Vec<ProjectGlob>> {
     projects
         .iter()
@@ -30,6 +31,7 @@ pub(super) fn build_project_globs(projects: &[ConfigProject]) -> Result<Vec<Proj
         .collect()
 }
 
+#[inline(never)]
 pub(super) fn matching_projects(rel: &str, projects: &[ProjectGlob]) -> Vec<String> {
     let matches = projects
         .iter()
@@ -54,6 +56,7 @@ pub(super) fn matching_projects(rel: &str, projects: &[ProjectGlob]) -> Vec<Stri
 }
 
 impl ProjectGlob {
+    #[inline(never)]
     fn matches(&self, rel: &str) -> bool {
         self.scope
             .as_deref()
@@ -63,6 +66,7 @@ impl ProjectGlob {
     }
 }
 
+#[inline(never)]
 fn scope_depth(scope: &str) -> usize {
     normalize_scope(scope)
         .split('/')

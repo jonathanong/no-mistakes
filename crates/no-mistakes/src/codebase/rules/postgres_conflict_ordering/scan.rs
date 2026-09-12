@@ -16,6 +16,7 @@ const OPAQUE_SQL_MESSAGE: &str =
 const DYNAMIC_INSERT_MESSAGE: &str =
     "keep dynamic INSERT SQL statically parseable so canonical ON CONFLICT ordering can be checked";
 
+#[inline(never)]
 pub(super) fn scan_with_sources(
     root: &Path,
     opts: &CompiledOptions,
@@ -101,6 +102,7 @@ pub(super) fn scan_with_sources(
     Ok(findings)
 }
 
+#[inline(never)]
 fn unanalyzable_sql(rel: &str, line: u32, message: &'static str) -> RuleFinding {
     analysis::finding(rel, line as usize, "unanalyzable-sql", message)
 }

@@ -1,5 +1,6 @@
 use super::*;
 use crate::codebase::ts_source::FileInventory;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 #[test]
@@ -177,4 +178,59 @@ fn preserves_each_non_cycle_occurrence_in_a_diamond_extends_graph() {
         .parsed_ancestors
         .values
         .contains_key(&root.join("diamond/shared.json")));
+}
+
+#[test]
+fn follow_skips_package_specifiers_and_reports_cycles() {
+    let root_buf = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .canonicalize()
+        .unwrap();
+    let root = root_buf.as_path();
+    let cargo = root.join("Cargo.toml");
+    let rust_src = root.join("src/lib.rs");
+    let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&[
+        cargo.clone(),
+        rust_src,
+    ])));
+    let assertion = ValueAssertion::default();
+    let keys = Keys::from_assertion(&assertion);
+    let mut findings = Vec::new();
+    let mut parsed_ancestors = ParsedAncestorCache::default();
+    let mut walk = Walk {
+        root,
+        nested_rel: ".oxlintrc.json",
+        sources: &sources,
+        assertion: &assertion,
+        keys: &keys,
+        stack: vec![cargo],
+        occurrences: 0,
+        max_occurrences: MAX_EXTENDS_OCCURRENCES,
+        traversal_exhausted: false,
+        parsed_ancestors: &mut parsed_ancestors,
+        ancestors: Vec::new(),
+        findings: &mut findings,
+    };
+
+    walk.follow(root, "@scope/config");
+    assert!(walk.findings.is_empty(), "{:?}", walk.findings);
+    walk.traversal_exhausted = true;
+    walk.follow(root, "./Cargo.toml");
+    assert!(walk.findings.is_empty(), "{:?}", walk.findings);
+    walk.traversal_exhausted = false;
+    walk.follow(root, "./Cargo.toml");
+    assert!(
+        walk.findings
+            .iter()
+            .any(|finding| finding.message.contains("cycle")),
+        "{:?}",
+        walk.findings
+    );
+    walk.follow(root, "./src/lib.rs");
+    assert!(
+        walk.findings
+            .iter()
+            .any(|finding| finding.message.contains("lib.rs")),
+        "{:?}",
+        walk.findings
+    );
 }

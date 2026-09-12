@@ -7,6 +7,7 @@ use regex::Regex;
 use std::path::{Path, PathBuf};
 use std::sync::OnceLock;
 
+#[inline(never)]
 pub(crate) fn collect_kotlin_facts(
     root: &Path,
     all_files: &[PathBuf],
@@ -20,6 +21,7 @@ pub(crate) fn collect_kotlin_facts(
     })
 }
 
+#[inline(never)]
 fn parse_kotlin_file(
     path: &Path,
     roots: &[PathBuf],
@@ -55,12 +57,14 @@ fn parse_kotlin_file(
     })
 }
 
+#[inline(never)]
 fn extract_package(source: &str) -> Option<String> {
     kotlin_package_re()
         .captures(source)
         .and_then(|cap| cap.get(1).map(|m| m.as_str().to_string()))
 }
 
+#[inline(never)]
 fn primary_type(declarations: &[String], file_stem: Option<&str>) -> Option<String> {
     if let Some(stem) = file_stem.filter(|stem| declarations.iter().any(|name| name == *stem)) {
         Some(stem.to_string())
@@ -69,6 +73,7 @@ fn primary_type(declarations: &[String], file_stem: Option<&str>) -> Option<Stri
     }
 }
 
+#[inline(never)]
 fn extract_kotlin_imports(source: &str) -> Vec<String> {
     let mut values: Vec<String> = kotlin_import_re()
         .captures_iter(source)
@@ -86,6 +91,7 @@ fn extract_kotlin_imports(source: &str) -> Vec<String> {
     values
 }
 
+#[inline(never)]
 fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     let mut values: Vec<String> = re
         .captures_iter(source)
@@ -96,11 +102,13 @@ fn extract_named(source: &str, re: &Regex) -> Vec<String> {
     values
 }
 
+#[inline(never)]
 fn kotlin_package_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"(?m)^\s*package\s+([A-Za-z_][\w.]*)\s*;?").expect("pkg"))
 }
 
+#[inline(never)]
 fn kotlin_import_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -109,6 +117,7 @@ fn kotlin_import_re() -> &'static Regex {
     })
 }
 
+#[inline(never)]
 fn kotlin_decl_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| {
@@ -119,6 +128,7 @@ fn kotlin_decl_re() -> &'static Regex {
     })
 }
 
+#[inline(never)]
 fn kotlin_ref_re() -> &'static Regex {
     static RE: OnceLock<Regex> = OnceLock::new();
     RE.get_or_init(|| Regex::new(r"\b([A-Z][A-Za-z0-9_]*)\b").expect("ref"))

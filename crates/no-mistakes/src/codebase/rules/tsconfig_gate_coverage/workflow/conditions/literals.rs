@@ -1,6 +1,7 @@
 use super::StaticBool;
 use super::StaticValue;
 
+#[inline(never)]
 pub(super) fn hexadecimal_bool(expression: &str) -> Option<StaticBool> {
     let expression = expression.strip_prefix('-').unwrap_or(expression);
     let digits = expression
@@ -16,6 +17,7 @@ pub(super) fn hexadecimal_bool(expression: &str) -> Option<StaticBool> {
     })
 }
 
+#[inline(never)]
 pub(super) fn number_bool(value: Option<f64>) -> StaticBool {
     match value {
         Some(0.0) => StaticBool::False,
@@ -24,6 +26,7 @@ pub(super) fn number_bool(value: Option<f64>) -> StaticBool {
     }
 }
 
+#[inline(never)]
 pub(super) fn quoted_string_bool(expression: &str) -> Option<StaticBool> {
     let body = quoted_string_body(expression)?;
     Some(if body.is_empty() {
@@ -33,6 +36,7 @@ pub(super) fn quoted_string_bool(expression: &str) -> Option<StaticBool> {
     })
 }
 
+#[inline(never)]
 pub(super) fn quoted_string_body(expression: &str) -> Option<&str> {
     let body = expression.strip_prefix('\'')?.strip_suffix('\'')?;
     let bytes = body.as_bytes();
@@ -48,6 +52,7 @@ pub(super) fn quoted_string_body(expression: &str) -> Option<&str> {
     Some(body)
 }
 
+#[inline(never)]
 pub(super) fn strip_expression(expression: &str) -> &str {
     expression
         .strip_prefix("${{")
@@ -56,6 +61,7 @@ pub(super) fn strip_expression(expression: &str) -> &str {
         .unwrap_or(expression)
 }
 
+#[inline(never)]
 pub(super) fn status_function_bool(
     expression: &str,
     status: super::ConditionStatus,
@@ -83,6 +89,7 @@ pub(super) fn status_function_bool(
     }
 }
 
+#[inline(never)]
 pub(super) fn job_status_value(status: super::ConditionStatus) -> StaticValue {
     match status.success {
         StaticBool::True => StaticValue::String("success".to_string()),

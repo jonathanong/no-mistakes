@@ -18,6 +18,7 @@ mod comparison;
 mod static_bool;
 pub(super) use comparison::comparison_bool;
 use static_bool::static_bool_value;
+#[inline(never)]
 pub(super) fn condition_value(
     operand: &str,
     inputs: &InputState,
@@ -99,6 +100,7 @@ pub(super) fn condition_value(
                 .map(static_bool_value)
         })
 }
+#[inline(never)]
 fn logical_value(
     expression: &str,
     inputs: &InputState,

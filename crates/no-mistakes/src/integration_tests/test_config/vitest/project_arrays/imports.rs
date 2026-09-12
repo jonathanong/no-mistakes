@@ -11,6 +11,7 @@ pub(super) struct ImportBinding {
     pub(super) imported: String,
 }
 
+#[inline(never)]
 pub(super) fn import_bindings(program: &Program<'_>) -> BTreeMap<String, ImportBinding> {
     let mut bindings = BTreeMap::new();
     for statement in &program.body {
@@ -73,6 +74,7 @@ pub(super) fn import_bindings(program: &Program<'_>) -> BTreeMap<String, ImportB
     bindings
 }
 
+#[inline(never)]
 fn commonjs_bindings(
     pattern: &BindingPattern<'_>,
     source: String,
@@ -116,6 +118,7 @@ fn commonjs_bindings(
     }
 }
 
+#[inline(never)]
 fn is_commonjs_vitest_namespace_source(source: &str) -> bool {
     source == "vitest/config"
 }
@@ -123,6 +126,7 @@ fn is_commonjs_vitest_namespace_source(source: &str) -> bool {
 /// Runtime module sources, including side-effect imports, re-exports, and
 /// literal CommonJS `require` and `require.resolve` calls. Dynamic Vitest
 /// setup values use this for a bounded helper-module closure.
+#[inline(never)]
 pub(in crate::integration_tests::test_config::vitest) fn import_sources(
     program: &Program<'_>,
 ) -> BTreeSet<String> {

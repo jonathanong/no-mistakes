@@ -19,6 +19,7 @@ const DEFAULT_ALLOWED_FIELDS: &[&str] =
     &["dependencies", "optionalDependencies", "peerDependencies"];
 const DEFAULT_TEST_FILE_PATTERNS: &[&str] = &["**/__tests__/**", "**/*.test.*", "**/*.d.*ts"];
 
+#[inline(never)]
 pub(super) fn run(
     root: &Path,
     workspace_roots: &[PathBuf],
@@ -102,6 +103,7 @@ pub(super) fn run(
     Ok(findings)
 }
 
+#[inline(never)]
 fn emit_finding(
     root: &Path,
     file: &Path,
@@ -147,6 +149,7 @@ fn emit_finding(
     }
 }
 
+#[inline(never)]
 fn allowed_fields(opts: &Options) -> Result<BTreeSet<String>, String> {
     if opts.allowed_fields.is_empty() {
         return Ok(DEFAULT_ALLOWED_FIELDS
@@ -167,6 +170,7 @@ fn allowed_fields(opts: &Options) -> Result<BTreeSet<String>, String> {
     Ok(validated)
 }
 
+#[inline(never)]
 fn test_file_patterns(opts: &Options) -> Vec<String> {
     if opts.test_file_patterns.is_empty() {
         DEFAULT_TEST_FILE_PATTERNS
@@ -178,6 +182,7 @@ fn test_file_patterns(opts: &Options) -> Vec<String> {
     }
 }
 
+#[inline(never)]
 fn build_globset(patterns: &[String]) -> Result<GlobSet, globset::Error> {
     let mut builder = GlobSetBuilder::new();
     for pattern in patterns {

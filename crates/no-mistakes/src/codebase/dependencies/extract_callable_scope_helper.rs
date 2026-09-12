@@ -1,4 +1,5 @@
 impl ImportCollector {
+    #[inline(never)]
     fn has_local_function_scope(&self, callee: &str) -> bool {
         let binding = callee
             .split_once('.')
@@ -69,6 +70,7 @@ impl ImportCollector {
 }
 
 impl ImportCollector {
+    #[inline(never)]
     fn has_class_static_member(
         &self,
         mut class_id: CallableId,
@@ -108,6 +110,7 @@ impl ImportCollector {
         }
     }
 
+    #[inline(never)]
     fn class_id_for_binding(&self, binding_scope: usize, binding: &str) -> Option<CallableId> {
         let mut scope = Some(binding_scope);
         let mut name = binding.to_string();

@@ -10,6 +10,7 @@ struct ExportEdgeInputs<'a> {
     interner: &'a PathInterner,
 }
 
+#[inline(never)]
 fn collect_export_edges(
     inputs: ExportEdgeInputs<'_>,
     exported_values: &mut Vec<String>,
@@ -40,6 +41,7 @@ fn collect_export_edges(
     }
 }
 
+#[inline(never)]
 fn collect_direct_reexport_edge(
     inputs: &ExportEdgeInputs<'_>,
     export: &crate::codebase::ts_symbols::Export,
@@ -112,6 +114,7 @@ fn collect_direct_reexport_edge(
     }
 }
 
+#[inline(never)]
 fn collect_export_reference_edges(
     inputs: ExportEdgeInputs<'_>,
     imported_symbols: &HashMap<String, ImportedSymbolTarget>,

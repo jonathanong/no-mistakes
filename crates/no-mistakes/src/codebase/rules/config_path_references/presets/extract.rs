@@ -5,6 +5,7 @@ use crate::codebase::rules::no_mistakes_config::paths::{self, Kind};
 use crate::config::v2::NoMistakesConfig;
 use serde_yaml::Value;
 
+#[inline(never)]
 pub(crate) fn matches_preset(preset: &str, filename: &str, rel: &str) -> bool {
     match preset {
         "oxlintrc" => filename == ".oxlintrc.json" || filename == ".oxlintrc.jsonc",
@@ -24,6 +25,7 @@ pub(crate) fn matches_preset(preset: &str, filename: &str, rel: &str) -> bool {
     }
 }
 
+#[inline(never)]
 pub(crate) fn is_supported_preset(preset: &str) -> bool {
     matches!(
         preset,
@@ -38,6 +40,7 @@ pub(crate) fn is_supported_preset(preset: &str) -> bool {
     )
 }
 
+#[inline(never)]
 pub(crate) fn no_mistakes(config: &NoMistakesConfig) -> Vec<Extracted> {
     paths::references(config)
         .into_iter()
@@ -50,6 +53,7 @@ pub(crate) fn no_mistakes(config: &NoMistakesConfig) -> Vec<Extracted> {
         .collect()
 }
 
+#[inline(never)]
 pub(crate) fn extract(preset: &str, value: &Value) -> Vec<Extracted> {
     match preset {
         "oxlintrc" => oxlint::extract(value),
@@ -62,6 +66,7 @@ pub(crate) fn extract(preset: &str, value: &Value) -> Vec<Extracted> {
     }
 }
 
+#[inline(never)]
 fn strings(value: &Value) -> Vec<String> {
     match value {
         Value::String(value) => vec![value.clone()],
@@ -73,6 +78,7 @@ fn strings(value: &Value) -> Vec<String> {
     }
 }
 
+#[inline(never)]
 fn strings_at(
     value: &Value,
     key: &str,
@@ -92,6 +98,7 @@ fn strings_at(
         .collect()
 }
 
+#[inline(never)]
 fn dependabot(value: &Value) -> Vec<Extracted> {
     let Some(updates) = value.get("updates").and_then(Value::as_sequence) else {
         return Vec::new();
@@ -111,6 +118,7 @@ fn dependabot(value: &Value) -> Vec<Extracted> {
         .collect()
 }
 
+#[inline(never)]
 fn normalize_root_directory(directory: &str) -> String {
     let trimmed = directory.trim_start_matches('/');
     if trimmed.is_empty() {
@@ -120,6 +128,7 @@ fn normalize_root_directory(directory: &str) -> String {
     }
 }
 
+#[inline(never)]
 fn coverage_rules(value: &Value) -> Vec<Extracted> {
     let Some(rules) = value.get("rules").and_then(Value::as_sequence) else {
         return Vec::new();
@@ -142,6 +151,7 @@ fn coverage_rules(value: &Value) -> Vec<Extracted> {
         .collect()
 }
 
+#[inline(never)]
 fn knip(value: &Value) -> Vec<Extracted> {
     let Some(workspaces) = value.get("workspaces").and_then(Value::as_mapping) else {
         return Vec::new();
@@ -156,6 +166,7 @@ fn knip(value: &Value) -> Vec<Extracted> {
     extracted
 }
 
+#[inline(never)]
 fn knip_workspace(extracted: &mut Vec<Extracted>, workspace: &str, config: &Value) {
     let prefix = if workspace == "." {
         String::new()

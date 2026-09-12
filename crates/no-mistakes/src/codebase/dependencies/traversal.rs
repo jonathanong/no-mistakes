@@ -9,6 +9,7 @@ pub(super) struct TraversalCtx<'a> {
     pub(super) symbols: bool,
 }
 
+#[inline(never)]
 pub(super) fn deps_entries(
     depth: Option<usize>,
     import_only: bool,
@@ -47,6 +48,7 @@ pub(super) fn deps_entries(
     }
 }
 
+#[inline(never)]
 pub(super) fn get_entries(
     direction: Direction,
     roots: &[NodeId],
@@ -61,6 +63,7 @@ pub(super) fn get_entries(
     }
 }
 
+#[inline(never)]
 pub(super) fn dependents_entries(
     entrypoints: &[Entrypoint],
     roots: &[NodeId],
@@ -126,10 +129,12 @@ pub(super) fn dependents_entries(
     }
 }
 
+#[inline(never)]
 pub(super) fn has_call_relationship(allowed: Option<&std::collections::HashSet<EdgeKind>>) -> bool {
     allowed.is_some_and(|allowed| allowed.contains(&EdgeKind::Call))
 }
 
+#[inline(never)]
 pub(super) fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
     entrypoints
         .iter()
@@ -148,6 +153,7 @@ pub(super) fn call_roots(entrypoints: &[Entrypoint]) -> Vec<graph::CallRoot> {
 
 include!("traversal_mixed_relationships_tests.rs");
 
+#[inline(never)]
 fn build_dependents_graph(
     ctx: &TraversalCtx<'_>,
     symbol_facts: Option<&crate::codebase::ts_source::facts::TsFactMap>,

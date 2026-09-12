@@ -10,6 +10,7 @@ struct FallbackTsFactLookup<'a> {
 }
 
 impl<'a> FallbackTsFactLookup<'a> {
+    #[inline(never)]
     fn new(
         primary: &'a dyn TsFactLookup,
         fallback: &'a TsFactMap,
@@ -29,6 +30,7 @@ impl<'a> FallbackTsFactLookup<'a> {
         }
     }
 
+    #[inline(never)]
     fn playwright_scan_lookup(&self) -> &dyn TsFactLookup {
         if self.reuse_primary_playwright_cache {
             self.primary
@@ -38,6 +40,7 @@ impl<'a> FallbackTsFactLookup<'a> {
     }
 }
 
+#[inline(never)]
 fn playwright_fetch_parse_error(
     fallback: &TsFactMap,
     path: &Path,
@@ -50,6 +53,7 @@ fn playwright_fetch_parse_error(
     )))
 }
 
+#[inline(never)]
 fn same_graph_universe(
     primary_files: &[PathBuf],
     graph_visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup,

@@ -1,4 +1,5 @@
 impl CatalogBuilder<'_> {
+    #[inline(never)]
     fn load_effective(&mut self, path: &Path) -> Result<EffectiveConfig, String> {
         let path = normalize_path(path);
         let identity = match real_path(&path) {
@@ -20,6 +21,7 @@ impl CatalogBuilder<'_> {
         result
     }
 
+    #[inline(never)]
     fn parse_effective(&mut self, path: &Path) -> Result<EffectiveConfig, String> {
         let dir = path
             .parent()
@@ -78,6 +80,7 @@ impl CatalogBuilder<'_> {
         Ok(effective)
     }
 
+    #[inline(never)]
     fn queue_references(
         &mut self,
         path: &Path,
@@ -124,6 +127,7 @@ impl CatalogBuilder<'_> {
     }
 }
 
+#[inline(never)]
 fn is_package_extends(dir: &Path, value: &str) -> bool {
     let value = expand_config_dir(value, dir);
     !value.starts_with('.') && !Path::new(&value).is_absolute()

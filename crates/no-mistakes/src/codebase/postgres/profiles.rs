@@ -30,6 +30,7 @@ struct CatalogRuleOptions {
 /// Resolve every distinct embedded-SQL projection requested by the supplied
 /// configured rules. Unknown rule-specific options are deliberately ignored;
 /// their owning rule validates the complete option object.
+#[inline(never)]
 pub(crate) fn configured_embedded_sql_options(
     config: &NoMistakesConfig,
     rule_ids: &[&str],
@@ -49,12 +50,14 @@ pub(crate) fn configured_embedded_sql_options(
     Ok(profiles)
 }
 
+#[inline(never)]
 pub fn configured_embedded_sql_options_for_checks(
     config: &NoMistakesConfig,
 ) -> Result<Vec<EmbeddedSqlOptions>> {
     configured_embedded_sql_options(config, PREPARED_EMBEDDED_SQL_RULE_IDS)
 }
 
+#[inline(never)]
 pub fn configured_schema_catalog_paths(
     config: &NoMistakesConfig,
     rule_ids: &[&str],
@@ -80,6 +83,7 @@ pub fn configured_schema_catalog_paths(
 /// Build one standalone request-scoped fact map for callers that do not
 /// already own aggregate check facts. Every configured projection is derived
 /// from the same parsed program for each file.
+#[inline(never)]
 pub(crate) fn prepare_embedded_sql_facts(
     root: &Path,
     files: &[PathBuf],
@@ -102,6 +106,7 @@ pub(crate) fn prepare_embedded_sql_facts(
     )
 }
 
+#[inline(never)]
 pub(crate) fn load_schema_catalogs(
     root: &Path,
     sources: &crate::codebase::ts_source::SourceStore,

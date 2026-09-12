@@ -36,11 +36,13 @@ pub(crate) struct Options {
     pub(crate) scopes: Vec<PathBuf>,
 }
 
+#[inline(never)]
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
     let files = discover_files(root, &config.filesystem.skip_directories);
     check_with_files(root, config, &files)
 }
 
+#[inline(never)]
 pub(crate) fn check_with_files(
     root: &Path,
     config: &NoMistakesConfig,
@@ -50,6 +52,7 @@ pub(crate) fn check_with_files(
     check_with_files_and_sources(root, config, all_files, &sources)
 }
 
+#[inline(never)]
 pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
@@ -85,6 +88,7 @@ pub(crate) fn check_with_files_and_sources(
     Ok(findings)
 }
 
+#[inline(never)]
 pub(crate) fn is_blocked_specifier(spec: &str) -> bool {
     if spec.starts_with("workspace:") || spec.starts_with("catalog:") {
         return false;
@@ -101,6 +105,7 @@ pub(crate) fn is_blocked_specifier(spec: &str) -> bool {
         || (spec.starts_with('@') && spec.splitn(3, '/').count() > 2)
 }
 
+#[inline(never)]
 fn scan(
     root: &Path,
     opts: &Options,
@@ -145,6 +150,7 @@ fn scan(
     findings
 }
 
+#[inline(never)]
 fn check_package_json_with_sources(
     path: &Path,
     root: &Path,
@@ -156,6 +162,7 @@ fn check_package_json_with_sources(
     check_package_json_value(path, root, &json)
 }
 
+#[inline(never)]
 fn check_package_json_value(
     path: &Path,
     root: &Path,

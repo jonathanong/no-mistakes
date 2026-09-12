@@ -15,6 +15,7 @@ pub(crate) struct FileIdMap<T> {
 }
 
 impl<T> Default for FileIdMap<T> {
+    #[inline(never)]
     fn default() -> Self {
         Self {
             inventory: Arc::new(FileInventory::from_lookup_paths(
@@ -27,6 +28,7 @@ impl<T> Default for FileIdMap<T> {
 }
 
 impl<T> FileIdMap<T> {
+    #[inline(never)]
     pub(crate) fn with_inventory(inventory: Arc<FileInventory>) -> Self {
         let slots = (0..inventory.len()).map(|_| None).collect();
         Self {
@@ -36,6 +38,7 @@ impl<T> FileIdMap<T> {
         }
     }
 
+    #[inline(never)]
     pub(crate) fn from_iter_with_inventory(
         entries: impl IntoIterator<Item = (PathBuf, T)>,
         inventory: Arc<FileInventory>,
@@ -47,6 +50,7 @@ impl<T> FileIdMap<T> {
         map
     }
 
+    #[inline(never)]
     pub(crate) fn from_entries(entries: impl IntoIterator<Item = (PathBuf, T)>) -> Self {
         let entries: Vec<_> = entries.into_iter().collect();
         let inventory = Arc::new(FileInventory::from_lookup_paths(
@@ -55,6 +59,7 @@ impl<T> FileIdMap<T> {
         Self::from_iter_with_inventory(entries, inventory)
     }
 
+    #[inline(never)]
     fn slot_index(&self, path: &Path) -> Option<usize> {
         let id = self.inventory.id_for_path(path)?;
         // Inventory lookup may collapse equivalent spellings. Map keys stay
@@ -62,6 +67,7 @@ impl<T> FileIdMap<T> {
         (self.inventory.path(id)? == path).then_some(id.index())
     }
 
+    #[inline(never)]
     pub(crate) fn get(&self, path: &Path) -> Option<&T> {
         if let Some(index) = self.slot_index(path) {
             if let Some(value) = self.slots.get(index).and_then(Option::as_ref) {
@@ -71,6 +77,7 @@ impl<T> FileIdMap<T> {
         self.overflow.get(path)
     }
 
+    #[inline(never)]
     pub(crate) fn get_mut(&mut self, path: &Path) -> Option<&mut T> {
         if let Some(index) = self.slot_index(path) {
             if let Some(value) = self.slots[index].as_mut() {
@@ -80,6 +87,7 @@ impl<T> FileIdMap<T> {
         self.overflow.get_mut(path)
     }
 
+    #[inline(never)]
     pub(crate) fn insert(&mut self, path: PathBuf, value: T) -> Option<T> {
         if let Some(index) = self.slot_index(&path) {
             let previous = self.slots.get_mut(index).and_then(Option::take);
@@ -89,6 +97,7 @@ impl<T> FileIdMap<T> {
         self.overflow.insert(path, value)
     }
 
+    #[inline(never)]
     pub(crate) fn remove(&mut self, path: &Path) -> Option<T> {
         if let Some(index) = self.slot_index(path) {
             let previous = self.slots.get_mut(index).and_then(Option::take);
@@ -97,18 +106,22 @@ impl<T> FileIdMap<T> {
         self.overflow.remove(path)
     }
 
+    #[inline(never)]
     pub(crate) fn contains_key(&self, path: &Path) -> bool {
         self.get(path).is_some()
     }
 
+    #[inline(never)]
     pub(crate) fn is_empty(&self) -> bool {
         self.len() == 0
     }
 
+    #[inline(never)]
     pub(crate) fn len(&self) -> usize {
         self.slots.iter().filter(|slot| slot.is_some()).count() + self.overflow.len()
     }
 
+    #[inline(never)]
     pub(crate) fn keys(&self) -> impl Iterator<Item = &PathBuf> {
         self.inventory
             .as_paths()
@@ -118,10 +131,12 @@ impl<T> FileIdMap<T> {
             .chain(self.overflow.keys())
     }
 
+    #[inline(never)]
     pub(crate) fn iter(&self) -> FileIdMapIter<'_, T> {
         self.into_iter()
     }
 
+    #[inline(never)]
     pub(crate) fn values(&self) -> impl Iterator<Item = &T> {
         self.slots
             .iter()
@@ -129,12 +144,14 @@ impl<T> FileIdMap<T> {
             .chain(self.overflow.values())
     }
 
+    #[inline(never)]
     pub(crate) fn extend(&mut self, other: Self) {
         for (path, value) in other {
             self.insert(path, value);
         }
     }
 
+    #[inline(never)]
     pub(crate) fn map_values<U>(self, mut map: impl FnMut(T) -> U) -> FileIdMap<U> {
         FileIdMap {
             inventory: self.inventory,

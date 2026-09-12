@@ -7,6 +7,7 @@ use crate::codebase::rules::tsconfig_gate_coverage::workflow::conditions::{
 
 use super::{images, options, ContainerKind};
 
+#[inline(never)]
 pub(crate) fn container_configuration_valid_for_inputs(
     job: &Value,
     inputs: &InputState,
@@ -20,6 +21,7 @@ pub(crate) fn container_configuration_valid_for_inputs(
     ) && services_valid_for_inputs(job.get("services"), inputs, environment)
 }
 
+#[inline(never)]
 fn services_valid_for_inputs(
     value: Option<&Value>,
     inputs: &InputState,
@@ -49,6 +51,7 @@ fn services_valid_for_inputs(
     true
 }
 
+#[inline(never)]
 fn service_mapping_valid_for_inputs(
     service: &Mapping,
     inputs: &InputState,
@@ -72,6 +75,7 @@ fn service_mapping_valid_for_inputs(
         && container_mapping_valid_for_inputs(service, ContainerKind::Service, inputs, environment)
 }
 
+#[inline(never)]
 fn service_host_bindings(
     service: &Mapping,
     inputs: &InputState,
@@ -96,6 +100,7 @@ fn service_host_bindings(
         .collect()
 }
 
+#[inline(never)]
 fn static_host_binding(port: &str) -> Option<String> {
     let (mapping, protocol) = port.split_once('/').map_or((port, "tcp"), |parts| parts);
     let mut parts = mapping.split(':');
@@ -105,6 +110,7 @@ fn static_host_binding(port: &str) -> Option<String> {
         .then(|| format!("{host}/{protocol}"))
 }
 
+#[inline(never)]
 fn container_value_valid_for_inputs(
     value: Option<&Value>,
     kind: ContainerKind,
@@ -120,6 +126,7 @@ fn container_value_valid_for_inputs(
     })
 }
 
+#[inline(never)]
 fn container_mapping_valid_for_inputs(
     container: &Mapping,
     kind: ContainerKind,
@@ -145,6 +152,7 @@ fn container_mapping_valid_for_inputs(
         )
 }
 
+#[inline(never)]
 fn container_image_valid_for_inputs(
     image: &str,
     inputs: &InputState,
@@ -155,6 +163,7 @@ fn container_image_valid_for_inputs(
             .is_some_and(|image| images::valid_static_reference(&image))
 }
 
+#[inline(never)]
 fn credentials_valid_for_inputs(
     value: Option<&Value>,
     inputs: &InputState,

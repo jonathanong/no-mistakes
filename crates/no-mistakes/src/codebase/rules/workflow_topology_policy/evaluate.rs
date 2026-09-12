@@ -14,6 +14,7 @@ pub(super) struct Index<'a> {
 }
 
 impl<'a> Index<'a> {
+    #[inline(never)]
     pub(super) fn new(topology: &'a WorkflowTopology) -> Self {
         let jobs: BTreeMap<&str, _> = topology
             .jobs
@@ -67,10 +68,12 @@ impl<'a> Index<'a> {
         }
     }
 
+    #[inline(never)]
     pub(super) fn direct_downstream(&self, job: &str) -> Vec<&str> {
         sorted(self.downstream.get(job))
     }
 
+    #[inline(never)]
     pub(super) fn transitive_downstream(&self, job: &str) -> Vec<&str> {
         let mut visited = BTreeSet::new();
         let mut pending: Vec<&str> = self.direct_downstream(job);
@@ -83,20 +86,24 @@ impl<'a> Index<'a> {
         visited.into_iter().collect()
     }
 
+    #[inline(never)]
     pub(super) fn direct_upstream(&self, job: &str) -> Vec<&str> {
         sorted(self.upstream.get(job))
     }
 
+    #[inline(never)]
     pub(super) fn direct_caller_jobs(&self, workflow: &str) -> Vec<&str> {
         sorted(self.caller_jobs.get(workflow))
     }
 }
 
+#[inline(never)]
 fn sorted<'a>(set: Option<&BTreeSet<&'a str>>) -> Vec<&'a str> {
     set.map(|values| values.iter().copied().collect())
         .unwrap_or_default()
 }
 
+#[inline(never)]
 pub(super) fn lint(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFinding> {
     let index = Index::new(topology);
     let mut findings = Vec::new();
@@ -109,6 +116,7 @@ pub(super) fn lint(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFindi
     findings
 }
 
+#[inline(never)]
 fn inventory(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     let mut actual = BTreeMap::new();
@@ -146,6 +154,7 @@ fn inventory(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFinding> {
     findings
 }
 
+#[inline(never)]
 fn job_presence(index: &Index<'_>, opts: &Options) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
     for id in &opts.required_jobs {

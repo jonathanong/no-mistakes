@@ -35,11 +35,13 @@ pub(super) struct CiFilter {
 }
 
 impl CiFilter {
+    #[inline(never)]
     pub(super) fn workflow_allows(&self, path: &str) -> bool {
         self.workflow_paths.allows(path)
     }
 }
 
+#[inline(never)]
 pub(super) fn ci_filters_from_snapshot_with_sources(
     root: &Path,
     config: &NoMistakesConfig,
@@ -55,6 +57,7 @@ pub(super) fn ci_filters_from_snapshot_with_sources(
     )
 }
 
+#[inline(never)]
 pub(super) fn ci_filters_from_parsed_with_sources(
     root: &Path,
     selectors: &[WorkflowSelector],
@@ -92,6 +95,7 @@ pub(super) fn ci_filters_from_parsed_with_sources(
     (filters, findings)
 }
 
+#[inline(never)]
 fn ci_filters_from_paths(
     root: &Path,
     selectors: &[WorkflowSelector],
@@ -125,6 +129,7 @@ fn ci_filters_from_paths(
     (filters, findings)
 }
 
+#[inline(never)]
 fn selector_allows(selectors: &[WorkflowSelector], rel: &str) -> bool {
     if selectors.is_empty() {
         return true;
@@ -137,10 +142,12 @@ fn selector_allows(selectors: &[WorkflowSelector], rel: &str) -> bool {
     false
 }
 
+#[inline(never)]
 fn sort_filters(filters: &mut [CiFilter]) {
     filters.sort_by(|a, b| (&a.workflow, &a.name).cmp(&(&b.workflow, &b.name)));
 }
 
+#[inline(never)]
 pub(super) fn workflow_finding(file: &str, message: String, target: Option<String>) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),

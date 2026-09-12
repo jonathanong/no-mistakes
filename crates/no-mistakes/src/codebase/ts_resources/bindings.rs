@@ -14,6 +14,7 @@ pub(super) enum Binding {
     FileUrlToPath,
 }
 
+#[inline(never)]
 pub(super) fn import_binding(module: &str, imported: &str) -> Option<Binding> {
     match module {
         "fs" | "node:fs" => match imported {
@@ -40,6 +41,7 @@ pub(super) fn import_binding(module: &str, imported: &str) -> Option<Binding> {
     }
 }
 
+#[inline(never)]
 pub(super) fn fs_method(name: &str) -> Option<ResourceCallKind> {
     match name {
         "readFile" => Some(ResourceCallKind::ReadFile),
@@ -50,6 +52,7 @@ pub(super) fn fs_method(name: &str) -> Option<ResourceCallKind> {
     }
 }
 
+#[inline(never)]
 pub(super) fn fs_promise_method(name: &str) -> Option<ResourceCallKind> {
     match name {
         "readFile" => Some(ResourceCallKind::ReadFile),
@@ -58,6 +61,7 @@ pub(super) fn fs_promise_method(name: &str) -> Option<ResourceCallKind> {
     }
 }
 
+#[inline(never)]
 pub(super) fn glob_method(name: &str) -> Option<ResourceCallKind> {
     match name {
         "glob" => Some(ResourceCallKind::Glob),
@@ -66,6 +70,7 @@ pub(super) fn glob_method(name: &str) -> Option<ResourceCallKind> {
     }
 }
 
+#[inline(never)]
 pub(super) fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
     match pattern {
         BindingPattern::BindingIdentifier(id) => vec![id.name.to_string()],
@@ -84,6 +89,7 @@ pub(super) fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
     }
 }
 
+#[inline(never)]
 pub(super) fn require_module<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
     let Expression::CallExpression(call) = expr else {
         return None;
@@ -100,6 +106,7 @@ pub(super) fn require_module<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
     }
 }
 
+#[inline(never)]
 pub(super) fn require_module_or_promises<'a>(expr: &'a Expression<'a>) -> Option<&'a str> {
     if let Some(module) = require_module(expr) {
         return Some(module);
@@ -116,6 +123,7 @@ pub(super) fn require_module_or_promises<'a>(expr: &'a Expression<'a>) -> Option
     }
 }
 
+#[inline(never)]
 pub(super) fn require_member_binding(expr: &Expression<'_>) -> Option<Binding> {
     let Expression::StaticMemberExpression(member) = expr else {
         return None;
@@ -126,6 +134,7 @@ pub(super) fn require_member_binding(expr: &Expression<'_>) -> Option<Binding> {
     )
 }
 
+#[inline(never)]
 pub(super) fn register_require_binding(
     pattern: &BindingPattern<'_>,
     module: &str,

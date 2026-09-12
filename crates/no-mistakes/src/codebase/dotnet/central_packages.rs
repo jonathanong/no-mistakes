@@ -1,6 +1,7 @@
 use std::collections::BTreeSet;
 use std::path::{Path, PathBuf};
 
+#[inline(never)]
 pub(crate) fn central_package_imports(
     central: &Path,
     source: &str,
@@ -23,6 +24,7 @@ pub(crate) fn central_package_imports(
         .collect()
 }
 
+#[inline(never)]
 pub(crate) fn central_ancestor_files(
     central: &Path,
     central_files: &BTreeSet<PathBuf>,
@@ -42,6 +44,7 @@ pub(crate) fn central_ancestor_files(
         .collect()
 }
 
+#[inline(never)]
 fn import_project_value(tag: &str) -> Option<&str> {
     static PROJECT_ATTRIBUTE: std::sync::LazyLock<regex::Regex> = std::sync::LazyLock::new(|| {
         regex::Regex::new(r"(?is)\bProject\s*=\s*").expect("valid MSBuild Project attribute regex")
@@ -52,6 +55,7 @@ fn import_project_value(tag: &str) -> Option<&str> {
     Some(value.split_once(quote)?.0)
 }
 
+#[inline(never)]
 fn central_package_import_target(
     central: &Path,
     project: &str,
@@ -85,6 +89,7 @@ fn central_package_import_target(
     central_files.contains(&target).then_some(target)
 }
 
+#[inline(never)]
 fn without_xml_ignored_regions(source: &str) -> Option<String> {
     let mut remaining = source;
     let mut result = String::with_capacity(source.len());
@@ -98,6 +103,7 @@ fn without_xml_ignored_regions(source: &str) -> Option<String> {
     Some(result)
 }
 
+#[inline(never)]
 fn ignored_region_start(source: &str) -> Option<(usize, &str, usize)> {
     match (source.find("<!--"), source.find("<![CDATA[")) {
         (Some(comment), Some(cdata)) if comment < cdata => Some((comment, "-->", 4)),

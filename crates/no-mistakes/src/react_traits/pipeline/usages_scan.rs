@@ -1,3 +1,4 @@
+#[inline(never)]
 fn run_usages_from_visible(
     root: &Path,
     target: &str,
@@ -72,6 +73,7 @@ fn run_usages_from_visible(
     })
 }
 
+#[inline(never)]
 fn analyze_one(
     file: &Path,
     root: &Path,

@@ -26,6 +26,7 @@ use {
     configuration::{job_runtime, job_working_directory, step_configuration_validity},
 };
 
+#[inline(never)]
 pub(super) fn scan_job_steps(
     job: &Value,
     triggers: &CompiledTriggers,

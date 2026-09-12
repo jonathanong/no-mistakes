@@ -10,6 +10,7 @@ use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 use std::path::{Path, PathBuf};
 
+#[inline(never)]
 pub(crate) fn discover_test_files_from_visible(
     root: &Path,
     settings: &Settings,
@@ -87,6 +88,7 @@ pub(crate) fn discover_test_files_from_visible(
         .collect())
 }
 
+#[inline(never)]
 pub(crate) fn build_project_discovery(
     root: &Path,
     settings: &Settings,
@@ -109,6 +111,7 @@ pub(crate) fn build_project_discovery(
     Ok(discovery)
 }
 
+#[inline(never)]
 pub(crate) fn test_project_contexts(projects: &[TestProjectDiscovery]) -> Vec<TestProjectContext> {
     let mut contexts: Vec<TestProjectContext> = projects
         .iter()
@@ -119,6 +122,7 @@ pub(crate) fn test_project_contexts(projects: &[TestProjectDiscovery]) -> Vec<Te
     contexts
 }
 
+#[inline(never)]
 pub(crate) fn matching_project_contexts(
     root: &Path,
     projects: &[TestProjectDiscovery],

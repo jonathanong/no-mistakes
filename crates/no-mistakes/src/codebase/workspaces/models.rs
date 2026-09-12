@@ -19,6 +19,7 @@ pub struct WorkspaceMap {
 }
 
 impl Default for WorkspaceMap {
+    #[inline(never)]
     fn default() -> Self {
         Self::from_packages(Vec::new())
     }
@@ -26,16 +27,19 @@ impl Default for WorkspaceMap {
 
 impl WorkspaceMap {
     /// Build a workspace map and its deterministic package lookup indexes.
+    #[inline(never)]
     pub fn from_packages(packages: Vec<WorkspacePackage>) -> Self {
         Self { packages }
     }
 
     /// Return the package with the requested workspace name.
+    #[inline(never)]
     pub fn package_by_name(&self, name: &str) -> Option<&WorkspacePackage> {
         self.packages.iter().find(|package| package.name == name)
     }
 
     /// Return the package rooted at the requested directory.
+    #[inline(never)]
     pub fn package_by_dir(&self, dir: &Path) -> Option<&WorkspacePackage> {
         let dir = normalize_path(dir);
         self.packages
@@ -44,15 +48,18 @@ impl WorkspaceMap {
     }
 
     /// Resolve a workspace package name to its entry file.
+    #[inline(never)]
     pub fn resolve_package(&self, name: &str) -> Option<&PathBuf> {
         self.package_by_name(name)
             .and_then(|package| package.entry.as_ref())
     }
 
     /// Resolve a bare workspace import specifier to the package entry or an exported subpath.
+    #[inline(never)]
     pub fn resolve_specifier(&self, specifier: &str) -> Option<PathBuf> {
         self.resolve_specifier_inner(specifier, None)
     }
+    #[inline(never)]
     fn resolve_specifier_inner(
         &self,
         specifier: &str,
@@ -69,6 +76,7 @@ impl WorkspaceMap {
     }
 
     /// Resolve a package specifier from the importing file's package context.
+    #[inline(never)]
     pub fn resolve_specifier_from(
         &self,
         specifier: &str,
@@ -77,6 +85,7 @@ impl WorkspaceMap {
         self.resolve_specifier_from_inner(specifier, importing_file, None)
     }
 
+    #[inline(never)]
     pub(crate) fn resolve_specifier_from_file_visible(
         &self,
         specifier: &str,
@@ -85,6 +94,7 @@ impl WorkspaceMap {
     ) -> Option<PathBuf> {
         self.resolve_specifier_from_inner(specifier, importing_file, Some(visible_files))
     }
+    #[inline(never)]
     fn resolve_specifier_from_inner(
         &self,
         specifier: &str,
@@ -98,6 +108,7 @@ impl WorkspaceMap {
         self.resolve_specifier_inner(specifier, visible_files)
     }
 
+    #[inline(never)]
     fn nearest_package(&self, importing_file: &Path) -> Option<&WorkspacePackage> {
         let importing_file = normalize_path(importing_file);
         importing_file

@@ -8,6 +8,7 @@ struct ExportNameEdges {
     namespaces: Vec<(String, std::path::PathBuf)>,
 }
 
+#[inline(never)]
 fn exported_names_for_file(
     path: &std::path::Path,
     edges: &FxHashMap<std::path::PathBuf, ExportNameEdges>,
@@ -39,6 +40,7 @@ fn exported_names_for_file(
     names
 }
 
+#[inline(never)]
 fn populate_callable_export_resolutions(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     facts: &dyn TsFactLookup,

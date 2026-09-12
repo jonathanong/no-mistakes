@@ -1,7 +1,9 @@
+#[inline(never)]
 pub fn collect_entries(args: &SymbolsArgs) -> Result<(Vec<FileEntry>, Vec<String>)> {
     collect_entries_with_timings(args, None)
 }
 
+#[inline(never)]
 pub(crate) fn collect_entries_with_prepared_facts(
     args: &SymbolsArgs,
     root: &Path,
@@ -68,6 +70,7 @@ pub(crate) fn collect_entries_with_prepared_facts(
     Ok((entries, root_strs))
 }
 
+#[inline(never)]
 fn collect_entries_with_timings(
     args: &SymbolsArgs,
     mut timings: Option<&mut crate::codebase::timing::PhaseTimings>,

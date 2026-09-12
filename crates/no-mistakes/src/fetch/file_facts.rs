@@ -25,6 +25,7 @@ pub struct ParsedFileCache {
 }
 
 impl ParsedFileCache {
+    #[inline(never)]
     pub(crate) fn load_with_session(
         &mut self,
         session: &crate::codebase::analysis_session::AnalysisSession,
@@ -58,16 +59,19 @@ impl ParsedFileCache {
         cached.map_err(anyhow::Error::msg)
     }
 
+    #[inline(never)]
     pub(crate) fn insert(&mut self, path: PathBuf, facts: ParsedFileFacts) {
         self.files.insert(path, Ok(facts));
     }
 
+    #[inline(never)]
     pub(crate) fn insert_error(&mut self, path: PathBuf, error: String) {
         self.files.insert(path, Err(error));
     }
 }
 
 impl ParsedFileFacts {
+    #[inline(never)]
     pub(crate) fn from_program(
         path: &Path,
         root: &Path,

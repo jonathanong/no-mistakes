@@ -11,36 +11,43 @@ use crate::codebase::dependencies::{Direction, TraverseArgs};
 use crate::codebase::import_usages::ImportUsagesArgs;
 use crate::codebase::symbols::SymbolsArgs;
 
+#[inline(never)]
 pub(crate) fn dependencies_json_impl(options: serde_json::Value) -> napi::Result<String> {
     traverse_json(options, Direction::Deps)
 }
 
+#[inline(never)]
 pub(crate) fn dependents_json_impl(options: serde_json::Value) -> napi::Result<String> {
     traverse_json(options, Direction::Dependents)
 }
 
+#[inline(never)]
 pub(crate) fn related_json_impl(options: serde_json::Value) -> napi::Result<String> {
     traverse_json(options, Direction::Dependents)
 }
 
+#[inline(never)]
 pub(crate) fn symbols_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<SymbolOptions>(options)?;
     let args = build_symbols_args(options).map_err(to_napi_error)?;
     crate::codebase::symbols::run_json(args).map_err(to_napi_error)
 }
 
+#[inline(never)]
 pub(crate) fn import_usages_json_impl(options: serde_json::Value) -> napi::Result<String> {
     let options = parse_options_value::<ImportUsagesOptions>(options)?;
     let args = build_import_usages_args(options);
     crate::codebase::import_usages::run_json(args).map_err(to_napi_error)
 }
 
+#[inline(never)]
 fn traverse_json(options: serde_json::Value, direction: Direction) -> napi::Result<String> {
     let options = parse_options_value::<TraverseOptions>(options)?;
     let args = build_traverse_args(options).map_err(to_napi_error)?;
     crate::codebase::dependencies::run_json(args, direction).map_err(to_napi_error)
 }
 
+#[inline(never)]
 pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<TraverseArgs> {
     if options.files.is_empty() {
         bail!("files must contain at least one file");
@@ -68,6 +75,7 @@ pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<Trav
     })
 }
 
+#[inline(never)]
 pub(crate) fn build_import_usages_args(options: ImportUsagesOptions) -> ImportUsagesArgs {
     ImportUsagesArgs {
         files: strings_to_paths(options.files),
@@ -80,6 +88,7 @@ pub(crate) fn build_import_usages_args(options: ImportUsagesOptions) -> ImportUs
     }
 }
 
+#[inline(never)]
 pub(crate) fn build_symbols_args(options: SymbolOptions) -> AnyhowResult<SymbolsArgs> {
     if options.files.is_empty() {
         bail!("files must contain at least one file");
@@ -104,10 +113,12 @@ pub(crate) fn build_symbols_args(options: SymbolOptions) -> AnyhowResult<Symbols
     })
 }
 
+#[inline(never)]
 fn strings_to_paths(values: Vec<String>) -> Vec<PathBuf> {
     values.into_iter().map(PathBuf::from).collect()
 }
 
+#[inline(never)]
 fn entrypoint_files(values: &[super::options::EntrypointOption]) -> Vec<PathBuf> {
     values
         .iter()
@@ -116,6 +127,7 @@ fn entrypoint_files(values: &[super::options::EntrypointOption]) -> Vec<PathBuf>
         .collect()
 }
 
+#[inline(never)]
 fn entrypoint_symbols(values: Vec<super::options::EntrypointOption>) -> Vec<Option<String>> {
     values
         .into_iter()
@@ -123,6 +135,7 @@ fn entrypoint_symbols(values: Vec<super::options::EntrypointOption>) -> Vec<Opti
         .collect()
 }
 
+#[inline(never)]
 fn entrypoint_structured(values: &[super::options::EntrypointOption]) -> Vec<bool> {
     values.iter().map(|value| value.is_structured()).collect()
 }

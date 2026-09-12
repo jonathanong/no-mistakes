@@ -1,5 +1,6 @@
 use oxc_ast::ast::{Expression, Program, Statement};
 
+#[inline(never)]
 pub fn collect_string_leaves(expression: &Expression<'_>) -> Vec<String> {
     match expression {
         Expression::StringLiteral(lit) => vec![lit.value.to_string()],
@@ -24,6 +25,7 @@ pub fn collect_string_leaves(expression: &Expression<'_>) -> Vec<String> {
     }
 }
 
+#[inline(never)]
 pub fn collect_object_string_values(expr: &Expression<'_>) -> Vec<String> {
     let obj = match expr {
         Expression::ObjectExpression(obj) => obj,
@@ -50,6 +52,7 @@ pub fn collect_object_string_values(expr: &Expression<'_>) -> Vec<String> {
     values
 }
 
+#[inline(never)]
 pub fn collect_function_return_strings(fn_name: &str, program: &Program<'_>) -> Vec<String> {
     let mut values = Vec::new();
     for stmt in &program.body {
@@ -73,6 +76,7 @@ pub fn collect_function_return_strings(fn_name: &str, program: &Program<'_>) -> 
     values
 }
 
+#[inline(never)]
 pub fn collect_returns_from_statements(statements: &[Statement<'_>], values: &mut Vec<String>) {
     for stmt in statements {
         match stmt {
@@ -95,6 +99,7 @@ pub fn collect_returns_from_statements(statements: &[Statement<'_>], values: &mu
     }
 }
 
+#[inline(never)]
 fn collect_returns_from_stmt(stmt: &Statement<'_>, values: &mut Vec<String>) {
     match stmt {
         Statement::ReturnStatement(ret) => {
@@ -109,6 +114,7 @@ fn collect_returns_from_stmt(stmt: &Statement<'_>, values: &mut Vec<String>) {
     }
 }
 
+#[inline(never)]
 pub(super) fn binding_identifier_name(
     pattern: &oxc_ast::ast::BindingPattern<'_>,
 ) -> Option<String> {
@@ -118,6 +124,7 @@ pub(super) fn binding_identifier_name(
     }
 }
 
+#[inline(never)]
 pub(super) fn call_identifier_name(callee: &Expression<'_>) -> Option<String> {
     match callee {
         Expression::Identifier(id) => Some(id.name.to_string()),
@@ -125,6 +132,7 @@ pub(super) fn call_identifier_name(callee: &Expression<'_>) -> Option<String> {
     }
 }
 
+#[inline(never)]
 pub(super) fn extract_computed_member_object_name<'a>(expr: &'a Expression<'_>) -> Option<&'a str> {
     match expr {
         Expression::ComputedMemberExpression(member) => {
@@ -149,6 +157,7 @@ pub(super) fn extract_computed_member_object_name<'a>(expr: &'a Expression<'_>) 
     }
 }
 
+#[inline(never)]
 pub(super) fn collect_assignments_from_stmt<F>(stmt: &Statement<'_>, collector: &mut F)
 where
     F: FnMut(&str, &str),

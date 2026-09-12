@@ -22,10 +22,12 @@ pub(crate) struct PlanStats {
 }
 
 /// Compute the impacted-checks report (shared by the CLI and N-API).
+#[inline(never)]
 pub fn generate_impacted_checks(args: &ImpactedChecksArgs) -> Result<ImpactedChecksReport> {
     Ok(generate_impacted_checks_with_stats(args)?.0)
 }
 
+#[inline(never)]
 pub(crate) fn generate_impacted_checks_with_stats(
     args: &ImpactedChecksArgs,
 ) -> Result<(ImpactedChecksReport, PlanStats)> {
@@ -33,6 +35,7 @@ pub(crate) fn generate_impacted_checks_with_stats(
     generate_impacted_checks_with_timing(args, &mut timing)
 }
 
+#[inline(never)]
 pub(crate) fn generate_impacted_checks_with_timing(
     args: &ImpactedChecksArgs,
     timing: &mut super::timing::TimingTracker,
@@ -42,6 +45,7 @@ pub(crate) fn generate_impacted_checks_with_timing(
     })
 }
 
+#[inline(never)]
 fn generate_impacted_checks_with_timing_and_cache(
     args: &ImpactedChecksArgs,
     timing: &mut super::timing::TimingTracker,
@@ -103,6 +107,7 @@ fn generate_impacted_checks_with_timing_and_cache(
     Ok((report, stats))
 }
 
+#[inline(never)]
 fn empty_result(report: &ImpactedChecksReport) -> Option<ImpactedChecksEmptyResult> {
     if !report.checks.is_empty() {
         return None;
@@ -118,6 +123,7 @@ fn empty_result(report: &ImpactedChecksReport) -> Option<ImpactedChecksEmptyResu
     })
 }
 
+#[inline(never)]
 fn append_test_checks(checks: &mut Vec<CheckCommand>, plan: &crate::tests::TestPlan) {
     for test in &plan.selected_tests {
         for target in &test.targets {

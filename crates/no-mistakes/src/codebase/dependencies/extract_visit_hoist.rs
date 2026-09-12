@@ -1,3 +1,4 @@
+#[inline(never)]
 fn walk_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     function: &oxc_ast::ast::Function<'a>,
@@ -15,6 +16,7 @@ fn walk_function_with_body_bindings<'a>(
     }
 }
 
+#[inline(never)]
 fn walk_arrow_function_with_body_bindings<'a>(
     collector: &mut ImportCollector,
     arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
@@ -33,6 +35,7 @@ fn walk_arrow_function_with_body_bindings<'a>(
     }
 }
 
+#[inline(never)]
 fn predeclare_hoisted_var_bindings<'a>(
     collector: &mut ImportCollector,
     statements: &[Statement<'a>],
@@ -52,6 +55,7 @@ struct HoistedVarBindingCollector<'a> {
 }
 
 impl<'ast> Visit<'ast> for HoistedVarBindingCollector<'_> {
+    #[inline(never)]
     fn visit_variable_declaration(&mut self, declaration: &VariableDeclaration<'ast>) {
         if declaration.kind == VariableDeclarationKind::Var {
             for declarator in &declaration.declarations {
@@ -62,6 +66,7 @@ impl<'ast> Visit<'ast> for HoistedVarBindingCollector<'_> {
     }
 
     // Nested callables own their own `var` environments.
+    #[inline(never)]
     fn visit_function(
         &mut self,
         _function: &oxc_ast::ast::Function<'ast>,
@@ -69,6 +74,7 @@ impl<'ast> Visit<'ast> for HoistedVarBindingCollector<'_> {
     ) {
     }
 
+    #[inline(never)]
     fn visit_arrow_function_expression(
         &mut self,
         _arrow: &oxc_ast::ast::ArrowFunctionExpression<'ast>,
@@ -78,9 +84,11 @@ impl<'ast> Visit<'ast> for HoistedVarBindingCollector<'_> {
     // Class static blocks own their own `var` environment, just like class
     // methods own their function environments. Neither can hoist into the
     // surrounding module or function.
+    #[inline(never)]
     fn visit_class(&mut self, _class: &Class<'ast>) {}
 }
 
+#[inline(never)]
 fn predeclare_function_declarations<'a>(
     collector: &mut ImportCollector,
     statements: &[Statement<'a>],
@@ -133,6 +141,7 @@ fn predeclare_function_declarations<'a>(
 }
 
 impl ImportCollector {
+    #[inline(never)]
     fn record_callable_declaration_bindings(&mut self, declaration: &VariableDeclaration<'_>) {
         let binding_scope = if declaration.kind == VariableDeclarationKind::Var {
             self.var_scope_stack.last().copied().unwrap_or(0)

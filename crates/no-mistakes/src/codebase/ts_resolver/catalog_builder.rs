@@ -14,6 +14,7 @@ struct CatalogBuilder<'a> {
 }
 
 impl<'a> CatalogBuilder<'a> {
+    #[inline(never)]
     fn new(
         root: &Path,
         candidate_roots: &[PathBuf],
@@ -69,6 +70,7 @@ impl<'a> CatalogBuilder<'a> {
         }
     }
 
+    #[inline(never)]
     fn build(mut self) -> TsConfigCatalog {
         let mut pending = self.candidates();
         let seeded_configs = self.seeded_configs();
@@ -130,6 +132,7 @@ impl<'a> CatalogBuilder<'a> {
         }
     }
 
+    #[inline(never)]
     fn candidates(&self) -> Vec<PathBuf> {
         let mut paths = BTreeSet::new();
         for root in &self.candidate_roots {
@@ -146,6 +149,7 @@ impl<'a> CatalogBuilder<'a> {
     // selects its primary `tsconfig.json`; sibling `tsconfig.*.json` files are
     // auxiliary until a project reference selects them. Explicit callers use
     // the forced catalog to deliberately select a non-primary config.
+    #[inline(never)]
     fn seeded_configs(&self) -> BTreeSet<PathBuf> {
         self.candidate_roots
             .iter()
@@ -160,6 +164,7 @@ impl<'a> CatalogBuilder<'a> {
             .collect()
     }
 
+    #[inline(never)]
     fn is_visible(&self, path: &Path) -> bool {
         self.visible.contains(path) || self.visible_real.contains(path)
     }

@@ -132,4 +132,48 @@ fn caller_helper_predicates_cover_test_files_exports_and_identities() {
         &local_only,
         &TsFileFacts::default(),
     ));
+
+    assert!(!has_file_level_import_edge(&[EdgeKind::Import, EdgeKind::Call]));
+    assert!(has_file_level_import_edge(&[EdgeKind::Require]));
+    assert!(has_file_level_import_edge(&[EdgeKind::DynamicImport]));
+    assert!(!file_entry_uses_any_symbol(
+        Path::new("/repo"),
+        "missing.mts",
+        &BTreeSet::from(["parseDate".to_string()]),
+        &TsFactMap::new(),
+    ));
+
+    let used = PathBuf::from("/repo/used.mts");
+    let mut facts = TsFactMap::new();
+    facts.insert(
+        used,
+        TsFileFacts {
+            source: Some(std::sync::Arc::from(
+                "const mod = import('./x');\nmod.parseDate();\n",
+            )),
+            ..TsFileFacts::default()
+        },
+    );
+    assert!(file_entry_uses_any_symbol(
+        Path::new("/repo"),
+        "used.mts",
+        &BTreeSet::from(["parseDate".to_string()]),
+        &facts,
+    ));
+    assert!(!file_entry_uses_any_symbol(
+        Path::new("/repo"),
+        "used.mts",
+        &BTreeSet::from(["missing".to_string()]),
+        &facts,
+    ));
+    facts.insert(
+        PathBuf::from("/repo/empty.mts"),
+        TsFileFacts::default(),
+    );
+    assert!(!file_entry_uses_any_symbol(
+        Path::new("/repo"),
+        "empty.mts",
+        &BTreeSet::from(["parseDate".to_string()]),
+        &facts,
+    ));
 }

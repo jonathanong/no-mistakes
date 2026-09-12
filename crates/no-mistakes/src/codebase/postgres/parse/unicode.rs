@@ -5,18 +5,23 @@ use sqlparser::tokenizer::{Token, TokenWithSpan, Tokenizer};
 struct RawPostgresDialect;
 
 impl Dialect for RawPostgresDialect {
+    #[inline(never)]
     fn is_delimited_identifier_start(&self, character: char) -> bool {
         character == '"'
     }
+    #[inline(never)]
     fn is_identifier_start(&self, character: char) -> bool {
         character.is_alphabetic() || character == '_' || !character.is_ascii()
     }
+    #[inline(never)]
     fn is_identifier_part(&self, character: char) -> bool {
         character.is_alphanumeric() || matches!(character, '$' | '_') || !character.is_ascii()
     }
+    #[inline(never)]
     fn supports_nested_comments(&self) -> bool {
         true
     }
+    #[inline(never)]
     fn supports_string_escape_constant(&self) -> bool {
         true
     }
@@ -31,6 +36,7 @@ struct RawUnicodeLiteral {
     escape: char,
 }
 
+#[inline(never)]
 pub(super) fn tokenize(sql: &str) -> Vec<Token> {
     tokenize_with_location(sql, false)
         .into_iter()
@@ -38,10 +44,12 @@ pub(super) fn tokenize(sql: &str) -> Vec<Token> {
         .collect()
 }
 
+#[inline(never)]
 pub(crate) fn tokenize_raw_unicode(sql: &str) -> Vec<TokenWithSpan> {
     tokenize_with_location(sql, true)
 }
 
+#[inline(never)]
 fn tokenize_with_location(sql: &str, raw_unicode: bool) -> Vec<TokenWithSpan> {
     let Some((masked, literals)) = mask_literals(sql) else {
         return Vec::new();
@@ -72,6 +80,7 @@ fn tokenize_with_location(sql: &str, raw_unicode: bool) -> Vec<TokenWithSpan> {
     tokens
 }
 
+#[inline(never)]
 fn mask_literals(sql: &str) -> Option<(String, Vec<RawUnicodeLiteral>)> {
     let tokens = Tokenizer::new(&RawPostgresDialect, sql)
         .with_unescape(false)
@@ -119,6 +128,7 @@ fn mask_literals(sql: &str) -> Option<(String, Vec<RawUnicodeLiteral>)> {
     Some((masked, literals))
 }
 
+#[inline(never)]
 fn unicode_escape_after(tokens: &[TokenWithSpan], start: usize) -> Option<char> {
     let mut tokens = tokens[start..]
         .iter()
@@ -134,10 +144,12 @@ fn unicode_escape_after(tokens: &[TokenWithSpan], start: usize) -> Option<char> 
     chars.next().is_none().then_some(escape)
 }
 
+#[inline(never)]
 fn word(token: &TokenWithSpan, expected: &str) -> bool {
     matches!(&token.token, Token::Word(word) if word.value.eq_ignore_ascii_case(expected))
 }
 
+#[inline(never)]
 fn location_offset(sql: &str, line: u64, column: u64) -> Option<usize> {
     let line_start = sql
         .split_inclusive('\n')
@@ -152,6 +164,7 @@ fn location_offset(sql: &str, line: u64, column: u64) -> Option<usize> {
     Some(line_start + column_offset)
 }
 
+#[inline(never)]
 pub(crate) fn decode_unicode_string(value: &str, escape: char) -> Option<String> {
     super::unicode_decode::decode(value, escape)
 }

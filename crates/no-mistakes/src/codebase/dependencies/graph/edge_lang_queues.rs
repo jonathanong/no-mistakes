@@ -2,6 +2,7 @@ struct CompiledQueueGlobs {
     matchers: Vec<(globset::GlobMatcher, String)>,
 }
 
+#[inline(never)]
 fn compile_queue_globs(globs: &[String]) -> CompiledQueueGlobs {
     CompiledQueueGlobs {
         matchers: globs
@@ -15,6 +16,7 @@ fn compile_queue_globs(globs: &[String]) -> CompiledQueueGlobs {
     }
 }
 
+#[inline(never)]
 fn emit_queue_edges(
     root: &Path,
     facts: &LangFactMap,
@@ -63,6 +65,7 @@ fn emit_queue_edges(
     }
 }
 
+#[inline(never)]
 fn matching_queue_cluster(
     root: &Path,
     path: &Path,
@@ -83,6 +86,7 @@ fn matching_queue_cluster(
     })
 }
 
+#[inline(never)]
 fn emit_kafka_edges(
     root: &Path,
     all_files: &[PathBuf],

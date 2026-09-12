@@ -8,6 +8,7 @@ use super::super::topology_identifiers;
 use super::{call_diagnostic, resolved_callable_callee};
 use std::collections::{HashMap, HashSet};
 
+#[inline(never)]
 pub(super) fn diagnose_secrets(
     edge: &model::WorkflowCallEdge,
     callee: &model::WorkflowNode,
@@ -60,6 +61,7 @@ pub(super) fn diagnose_secrets(
     }
 }
 
+#[inline(never)]
 pub(super) fn diagnose_outputs(
     jobs: &[model::WorkflowJobNode],
     call_edges: &[&model::WorkflowCallEdge],

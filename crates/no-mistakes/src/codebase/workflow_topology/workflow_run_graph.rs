@@ -14,6 +14,7 @@ use std::collections::{HashMap, HashSet};
 
 mod cycle_diagnostics;
 
+#[inline(never)]
 pub fn resolve_workflow_run_graph(
     workflows: &[model::WorkflowNode],
     diagnostics: &mut Vec<model::WorkflowTopologyDiagnostic>,
@@ -95,6 +96,7 @@ pub fn resolve_workflow_run_graph(
         .collect()
 }
 
+#[inline(never)]
 fn quoted(value: &str) -> String {
     serde_json::to_string(value).unwrap_or_default()
 }
@@ -105,6 +107,7 @@ struct WorkflowRunMetadata {
     branches_ignore: Option<Vec<String>>,
 }
 
+#[inline(never)]
 fn workflow_run_metadata(config: &OrderedJson) -> WorkflowRunMetadata {
     let types = json_string_list(config.get("types"));
     let branches = json_string_list(config.get("branches"));
@@ -116,6 +119,7 @@ fn workflow_run_metadata(config: &OrderedJson) -> WorkflowRunMetadata {
     }
 }
 
+#[inline(never)]
 fn json_string_list(value: Option<&OrderedJson>) -> Vec<String> {
     match value {
         Some(OrderedJson::String(text)) => vec![text.clone()],

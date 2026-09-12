@@ -10,6 +10,7 @@ mod imports;
 
 use imports::imported_workspace_options;
 
+#[inline(never)]
 pub(crate) fn workspace_default_options(
     program: &Program<'_>,
     ctx: &mut Ctx<'_, '_>,
@@ -17,6 +18,7 @@ pub(crate) fn workspace_default_options(
     workspace_exported_options(program, ctx, "default")
 }
 
+#[inline(never)]
 pub(super) fn workspace_exported_options(
     program: &Program<'_>,
     ctx: &mut Ctx<'_, '_>,
@@ -102,6 +104,7 @@ pub(super) fn workspace_exported_options(
     Ok(Vec::new())
 }
 
+#[inline(never)]
 fn exported_declaration_expression<'a>(
     declaration: &'a Declaration<'a>,
     exported: &str,
@@ -116,6 +119,7 @@ fn exported_declaration_expression<'a>(
     })
 }
 
+#[inline(never)]
 fn workspace_expression_options(
     expression: &Expression<'_>,
     ctx: &mut Ctx<'_, '_>,
@@ -141,6 +145,7 @@ fn workspace_expression_options(
     }
 }
 
+#[inline(never)]
 fn workspace_local_options(name: &str, ctx: &mut Ctx<'_, '_>) -> Result<Vec<Options>> {
     if let Some(expression) = ctx.bindings.get(name).copied() {
         workspace_expression_options(expression, ctx)
@@ -151,6 +156,7 @@ fn workspace_local_options(name: &str, ctx: &mut Ctx<'_, '_>) -> Result<Vec<Opti
     }
 }
 
+#[inline(never)]
 fn is_define_workspace_call(callee: &Expression<'_>, ctx: &Ctx<'_, '_>) -> bool {
     match unwrap_ts_wrappers(callee) {
         Expression::Identifier(identifier) => ctx
@@ -177,6 +183,7 @@ fn is_define_workspace_call(callee: &Expression<'_>, ctx: &Ctx<'_, '_>) -> bool 
     }
 }
 
+#[inline(never)]
 fn is_vitest_source(source: &str) -> bool {
     matches!(source, "vitest" | "vitest/config")
 }

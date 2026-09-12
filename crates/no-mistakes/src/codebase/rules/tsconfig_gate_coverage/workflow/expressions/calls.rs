@@ -9,6 +9,7 @@ pub(crate) struct ConditionFunctionCall<'a> {
 /// grammar has accepted it. Keeping argument boundaries here means condition
 /// evaluation cannot mistake commas or parentheses inside valid nested calls
 /// and escaped string literals for argument separators.
+#[inline(never)]
 pub(crate) fn condition_function_call(expression: &str) -> Option<ConditionFunctionCall<'_>> {
     let expression = expression.trim();
     let tokens = lexer::tokenize(expression)?;
@@ -34,6 +35,7 @@ pub(crate) fn condition_function_call(expression: &str) -> Option<ConditionFunct
     })
 }
 
+#[inline(never)]
 fn arguments(body: &str) -> Option<Vec<&str>> {
     let bytes = body.as_bytes();
     let mut arguments = Vec::new();

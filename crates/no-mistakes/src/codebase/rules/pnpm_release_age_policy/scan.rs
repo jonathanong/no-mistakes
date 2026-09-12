@@ -14,6 +14,7 @@ const DEP_FIELDS: [&str; 4] = [
     "peerDependencies",
 ];
 
+#[inline(never)]
 pub(super) fn scan(
     root: &Path,
     opts: &Options,
@@ -64,6 +65,7 @@ pub(super) fn scan(
         .collect()
 }
 
+#[inline(never)]
 fn exclude_entries(yaml: &Yaml) -> Vec<ExcludeEntry> {
     match yaml.get("minimumReleaseAgeExclude") {
         Some(Yaml::Sequence(seq)) => seq
@@ -77,6 +79,7 @@ fn exclude_entries(yaml: &Yaml) -> Vec<ExcludeEntry> {
     }
 }
 
+#[inline(never)]
 fn cooldown(sources: &SourceStore, path: &Path) -> Option<Vec<CooldownEntry>> {
     let source = sources.read_path(path).ok()?;
     let yaml: Yaml = serde_yaml::from_str(&source).ok()?;
@@ -97,6 +100,7 @@ fn cooldown(sources: &SourceStore, path: &Path) -> Option<Vec<CooldownEntry>> {
     })
 }
 
+#[inline(never)]
 fn active_names(files: &[PathBuf], sources: &SourceStore) -> HashSet<String> {
     let mut names = HashSet::new();
     for path in files {
@@ -116,6 +120,7 @@ fn active_names(files: &[PathBuf], sources: &SourceStore) -> HashSet<String> {
     names
 }
 
+#[inline(never)]
 fn lockfile_keys(sources: &SourceStore, path: &Path) -> Option<Vec<String>> {
     let source = sources.read_path(path).ok()?;
     let yaml: Yaml = serde_yaml::from_str(&source).ok()?;
@@ -129,6 +134,7 @@ fn lockfile_keys(sources: &SourceStore, path: &Path) -> Option<Vec<String>> {
     Some(keys)
 }
 
+#[inline(never)]
 fn issue_finding(
     root: &Path,
     opts: &Options,
@@ -151,6 +157,7 @@ fn issue_finding(
     )
 }
 
+#[inline(never)]
 fn finding(file: String, message: String, target: &str) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),
