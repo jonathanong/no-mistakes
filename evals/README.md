@@ -650,6 +650,13 @@ a measurement. The gate was set knowing it might not be met. If it is not met,
 the imperative stays and Codex keeps the reliability it buys — which costs
 nothing, since removing it could only ever make Codex worse.
 
+**Outcome: the imperative stays.** The re-baseline that would have measured the
+gate is [void](#the-full-re-baseline-is-still-outstanding), so the gate is
+unmet — not because the description fell short, but because the number does not
+exist. `skills/no-mistakes/agents/openai.yaml` is unchanged. Re-evaluate against
+the same 90% bar once the re-baseline completes; do not re-open the denominator
+question at that point.
+
 ### The description reaches what it names, and nothing else
 
 The single generalizable finding, now supported by two independent flows.
