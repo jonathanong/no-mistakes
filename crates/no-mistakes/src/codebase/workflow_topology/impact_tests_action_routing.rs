@@ -47,6 +47,10 @@ fn unresolved_nested_reachable_actions_fail_open_even_when_the_parent_resolves()
         "nested-action-missing",
         "nested-action-malformed",
         "nested-action-malformed-revision",
+        "nested-action-no-runs",
+        "nested-action-scalar",
+        "nested-action-unparseable",
+        "nested-action-directory-descriptor",
     ] {
         let report = super::tests::report(name);
         assert!(report.global_fallback, "{name}");

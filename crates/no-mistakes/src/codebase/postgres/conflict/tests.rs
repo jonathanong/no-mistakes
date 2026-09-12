@@ -310,3 +310,17 @@ fn preserves_raw_target_alignment_across_ctes_and_outer_insert() {
     assert_eq!(inserts[0].table, "items");
     assert_eq!(inserts[1].table, "summaries");
 }
+
+#[test]
+fn analyzes_default_values_and_union_sources() {
+    let defaults =
+        analyze_conflict_inserts("INSERT INTO items DEFAULT VALUES ON CONFLICT DO NOTHING")
+            .unwrap();
+    assert_eq!(defaults.len(), 1);
+    assert!(!defaults[0].source.multi_row);
+
+    let union = analyze_conflict_inserts(
+        "INSERT INTO items (id) SELECT id FROM input UNION SELECT id FROM extra ON CONFLICT (id) DO NOTHING",
+    );
+    assert!(union.is_ok(), "{union:?}");
+}
