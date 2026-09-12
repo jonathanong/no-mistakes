@@ -360,7 +360,7 @@ fn query_is_correlated_walks_remaining_set_and_join_shapes() {
     .unwrap() else {
         panic!("query");
     };
-    let _ = query_is_correlated(&query);
+    assert!(query_is_correlated(&query));
     let Statement::Query(values) = parse_postgres_sql("VALUES (posts.id), (1)")
         .unwrap()
         .pop()
@@ -387,13 +387,21 @@ fn query_is_correlated_walks_remaining_set_and_join_shapes() {
         "SELECT 1 FROM generate_series(1, posts.n) AS g",
         "SELECT 1 WHERE posts.id IN (SELECT id FROM topics)",
         "SELECT (SELECT posts.id)",
-        "SELECT 1 FROM (SELECT 1 FROM nested JOIN extra ON true) AS wrap",
     ] {
         let Statement::Query(query) = parse_postgres_sql(sql).unwrap().pop().unwrap() else {
             panic!("{sql}");
         };
-        let _ = query_is_correlated(&query);
+        assert!(query_is_correlated(&query), "{sql} should be correlated");
     }
+    let Statement::Query(wrap) =
+        parse_postgres_sql("SELECT 1 FROM (SELECT 1 FROM nested JOIN extra ON true) AS wrap")
+            .unwrap()
+            .pop()
+            .unwrap()
+    else {
+        panic!("wrap");
+    };
+    assert!(!query_is_correlated(&wrap));
 }
 
 #[test]
@@ -434,7 +442,7 @@ fn query_is_correlated_covers_parser_rare_variants() {
             Expr::Identifier(Ident::new("topics")),
         ));
     }
-    let _ = query_is_correlated(&query);
+    assert!(!query_is_correlated(&query));
 
     *query.body = SetExpr::Insert(parse_postgres_sql("COMMIT").unwrap().pop().unwrap());
     assert!(!query_is_correlated(&query));

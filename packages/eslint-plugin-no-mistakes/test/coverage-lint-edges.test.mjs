@@ -202,44 +202,50 @@ describe("alias scope and mock apply helpers", () => {
         getScope: () => ({ variables: [], upper: null }),
       },
     };
-    const result = matchDirectMockCallApply(
-      {
-        callee: {
-          type: "MemberExpression",
-          property: { name: "apply" },
-          object: {
+    const result = expectMatch(
+      matchDirectMockCallApply(
+        {
+          callee: {
             type: "MemberExpression",
-            object: { type: "Identifier", name: "vi" },
-            property: { name: "mock" },
+            property: { name: "apply" },
+            object: {
+              type: "MemberExpression",
+              object: { type: "Identifier", name: "vi" },
+              property: { name: "mock" },
+            },
           },
+          arguments: [
+            {},
+            { type: "ArrayExpression", elements: ["mod", { type: "ArrowFunctionExpression" }] },
+          ],
         },
-        arguments: [
-          {},
-          { type: "ArrayExpression", elements: ["mod", { type: "ArrowFunctionExpression" }] },
-        ],
-      },
-      context,
-      new Set(["mock"]),
+        context,
+        new Set(["mock"]),
+      ),
     );
-    expectDefined(result);
-    const applyIdentifier = matchDirectMockCallApply(
-      {
-        callee: {
-          type: "MemberExpression",
-          property: { name: "apply" },
-          object: {
+    assert.equal(result.specifierNode, "mod");
+    assert.equal(result.factory.type, "ArrowFunctionExpression");
+    const applyIdentifier = expectMatch(
+      matchDirectMockCallApply(
+        {
+          callee: {
             type: "MemberExpression",
-            object: { type: "Identifier", name: "vi" },
-            property: { name: "mock" },
+            property: { name: "apply" },
+            object: {
+              type: "MemberExpression",
+              object: { type: "Identifier", name: "vi" },
+              property: { name: "mock" },
+            },
           },
+          arguments: [{}, { type: "Identifier", name: "args" }],
         },
-        arguments: [{}, { type: "Identifier", name: "args" }],
-      },
-      context,
-      new Set(["mock"]),
+        context,
+        new Set(["mock"]),
+      ),
     );
-    expectDefined(applyIdentifier);
-    expectDefined(
+    assert.equal(applyIdentifier.specifierNode, undefined);
+    assert.equal(applyIdentifier.factory, undefined);
+    const callMatch = expectMatch(
       matchDirectMockCallApply(
         {
           callee: {
@@ -257,9 +263,17 @@ describe("alias scope and mock apply helpers", () => {
         new Set(["mock"]),
       ),
     );
+    assert.equal(callMatch.specifierNode, "mod");
+    assert.equal(callMatch.factory.type, "ArrowFunctionExpression");
   });
 });
 
 function expectDefined(value) {
   assert.ok(value !== undefined);
+}
+
+function expectMatch(value) {
+  assert.ok(value, "expected a match result");
+  assert.ok(value.mock, "expected a resolved mock");
+  return value;
 }

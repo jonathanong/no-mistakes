@@ -293,8 +293,15 @@ fn bench_shard_rejects_unknown_values() {
 #[test]
 fn callable_file_index_fixture_constructs_and_probes_call_sites() {
     let fixture = callable_file_index_fixture(16);
+    let constructed = crate::codebase::dependencies::graph::benchmark_construct_callable_file_index(
+        &fixture.facts,
+    );
+    assert!(
+        constructed >= 16,
+        "unclamped construction must produce at least the requested entries"
+    );
     let summary = construct_callable_file_index(&fixture);
-    assert!(summary.entries >= 16);
+    assert_eq!(summary.entries, constructed.max(fixture.entries));
     assert_eq!(probe_call_site_files(0), 0);
     assert!(probe_call_site_files(4) > 0);
 }
