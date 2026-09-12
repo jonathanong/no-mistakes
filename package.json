@@ -19,6 +19,7 @@
   "scripts": {
     "build:js": "pnpm --recursive --if-present run build",
     "build:native": "node packages/no-mistakes/scripts/local-stage-native.js",
+    "evals": "bash scripts/run-evals.sh",
     "test": "vitest run --coverage",
     "test:ci": "vitest run --coverage --reporter=dot --reporter=github-actions",
     "fmt:js": "oxfmt --write packages/ vitest.config.js",

@@ -3,15 +3,29 @@
 Eval suite for the `skills/no-mistakes` skill. Run one flow with:
 
 ```sh
-claude plugin eval . --tag before-edit --ablation with-without --judge-model sonnet
+pnpm run evals -- --tag before-edit --ablation with-without --judge-model sonnet
 ```
+
+`pnpm run evals` wraps `claude plugin eval .` via
+[`scripts/run-evals.sh`](../scripts/run-evals.sh). Prefer it over the raw
+command: pnpm forwards its own `--` into the script's argv, and the eval CLI
+reads that as end-of-options — it silently discards every flag after it and
+launches an unfiltered full-suite run. The wrapper strips the `--`, and refuses
+to launch unscoped so a mistyped flag cannot cost $60 by accident. Pass `--all`
+when an unfiltered run is what you actually want.
 
 See [Flows](#flows) for the full-suite command — it deliberately excludes the
 `heldout` tag, which only means anything while those cases stay unseen.
 
-Add `--no-publish` to keep the HTML report local. The headline number is **Δ**
-— the with-plugin score minus the without-plugin score. A high absolute score
-with Δ ≈ 0 means the model would have done just as well without the skill.
+Add `--no-publish` to keep the HTML report local. Other flags the numbers below
+depend on: `-j 4` (concurrency defaults to **1**, so every cost and duration
+figure here assumes `-j 4`), `--runs <n>` to override the per-case `runs: 3`,
+`--max-cost-usd <n>` as a hard ceiling, and `--json <path>` for machine-readable
+per-run results alongside the HTML report.
+
+The headline number is **Δ** — the with-plugin score minus the without-plugin
+score. A high absolute score with Δ ≈ 0 means the model would have done just as
+well without the skill.
 
 ## What this suite measures
 
