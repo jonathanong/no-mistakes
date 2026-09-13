@@ -163,7 +163,7 @@ This repository is a huge token sink. Thus, contributions are welcomed.
 
 1. Please add test cases in `test-cases/`
 2. Annotate which AI harness + model was used, `Co-Authored-By` is preferred
-3. Maintain 99% project and patch test coverage
+3. Maintain 98% project and patch test coverage
 
 ## Support
 

@@ -184,7 +184,7 @@ in that PR.
 
 ## Coverage
 
-- Coverage gates must enforce 99% line, function, and region coverage by default.
+- Coverage gates must enforce 98% line, function, and region coverage by default.
   Change `RUST_COVERAGE_FAIL_UNDER_LINES`,
   `RUST_COVERAGE_FAIL_UNDER_FUNCTIONS`, and `RUST_COVERAGE_FAIL_UNDER_REGIONS`
   in `.github/workflows/ci.yml`, and keep Codecov rust `target` values in

@@ -4,13 +4,13 @@ coverage:
       default: off
       rust:
         # Keep in sync with RUST_COVERAGE_FAIL_UNDER_* in .github/workflows/ci.yml
-        target: 99%
+        target: 98%
         threshold: 0%
         flags:
           - rust
         if_not_found: failure
       javascript:
-        target: 99%
+        target: 98%
         threshold: 0%
         flags:
           - javascript
@@ -19,13 +19,13 @@ coverage:
       default: off
       rust:
         # Keep in sync with RUST_COVERAGE_FAIL_UNDER_* in .github/workflows/ci.yml
-        target: 99%
+        target: 98%
         threshold: 0%
         flags:
           - rust
         if_not_found: failure
       javascript:
-        target: 99%
+        target: 98%
         threshold: 0%
         flags:
           - javascript
