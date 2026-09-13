@@ -597,14 +597,12 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                # `check` is the repo-wide duplicate answer and is accepted here,
-                # which is what the duplication flow relies on for the same
-                # question. `unique-exports` is deliberately NOT an alternative:
-                # it is a rule that `no-mistakes check` runs, not a subcommand, so
-                # crediting `no-mistakes unique-exports` would score an unusable
-                # command as a real one. The two duplication cases carry the looser
-                # form and are left alone, since their published numbers were
-                # graded with it.
+                # `check` is the repo-wide duplicate answer and is accepted here.
+                # `unique-exports` is deliberately NOT an alternative: it is a rule
+                # that `no-mistakes check` runs, not a subcommand, so crediting
+                # `no-mistakes unique-exports` would score an unusable command as
+                # a real one. The duplication cases now scope it inside the command
+                # group for the same reason.
                 r"no-mistakes\s+(check|exports-of|symbols|dead-exports)(?![\w-])",
             ),
             # 07-09: written and committed BEFORE the queue clause was screened.
