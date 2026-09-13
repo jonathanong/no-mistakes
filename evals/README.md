@@ -1,6 +1,71 @@
 # `no-mistakes` skill evals
 
-Eval suite for the `skills/no-mistakes` skill. Run one flow with:
+Eval suite for the `skills/no-mistakes` skill.
+
+## Results
+
+The shipped `description:` was reworked in #981 on the strength of these runs.
+All at `runs: 3`, `--ablation none`, should-fire cases only, from files with
+**zero** errored runs. "Before" is the description PR #979 measured; "after" is
+the one in `skills/no-mistakes/SKILL.md` today.
+
+| flow | before | after |
+| --- | --- | --- |
+| [`before-edit`](#candidate-screening) | 8/18 (44%) | **16/18 (89%)** |
+| [`signature`](#candidate-screening) | 4/12 (33%) | **10/12 (83%)** |
+| [`neg-hard`](#candidate-screening) — over-trigger guard, lower is better | 0/12 | 0/12 |
+| [**live holdout**](#held-out-confirmation) — never tuned against | **3/9 (33%)** | **5/9 (56%)** |
+| [spent holdout](#held-out-confirmation) — contaminated, shown for continuity | 4/9 | 7/9 |
+
+**Read the holdout row, not the tuned rows.** 56% is what generalizes; 89% is
+the flow the description was written against. No "94%"-style claim survives a
+clean holdout, and none is made here.
+
+### What the runs established
+
+- **[A description fires on the subjects it names, and nothing
+  else.](#the-description-reaches-what-it-names-and-nothing-else)** One clause
+  about signatures moved that flow from 25–33% to 83%. `queues` has no clause
+  in any description tested and its held-out case fires **0/3**. Coverage is a
+  question of which subjects earn the permanently-resident characters, not of
+  finding a framing general enough to span everything.
+- **[`signature` never
+  regressed.](#signature-did-not-regress--the-35-vs-215-above-was-a-1-run-artifact)**
+  The 3/5 → 2/15 drop that motivated the rework compared a *single-run* pilot
+  against a three-run variant. Re-measured, both descriptions sit at 25–33%.
+- **[Keeping the general framing is
+  worse.](#candidate-screening)** The candidate that kept it and added the real
+  register lost on every axis to the one that replaced it.
+- **[A non-firing run is worse than a silent
+  one.](#what-a-non-firing-run-actually-produces)** The old description's
+  common failure is not "forgot the tool exists" — it is confidently writing
+  `/no-mistakes roleHas`, which does not exist. It does that 10 times across 20
+  non-firing runs; the current description, twice across 14. Across every
+  description and flow, a non-firing run named a real subcommand **zero** times.
+- **[Codex reads the same description Claude
+  does.](#codex-reads-the-same-description--the-openaiyaml-gate-was-never-real)**
+  An earlier revision of this file claimed `agents/openai.yaml` gives Codex an
+  always-on imperative. It does not — the description is the whole of what
+  either agent gets. That makes the description Codex's trigger surface too,
+  but the **rates above are Claude's**: every case runs `claude-opus-5`, and
+  the suite has no Codex arm.
+
+### Caveats
+
+- **[Δ is not measured for the current
+  description.](#the-full-re-baseline-is-still-outstanding)** The table above is
+  trigger rate from single-arm runs. The full both-arm re-baseline across all
+  eleven flows is still outstanding, so [Baseline](#baseline-before-edit-flow-shipped-description-as-of-pr-979)
+  and [Measurement coverage](#measurement-coverage) still describe the *old*
+  description.
+- **[Eight flows are unmeasured under the new
+  description.](#it-does-not-generalize-across-flows)** `queues`, `ci`, `napi`,
+  `lang-graph`, `usage`, `safety` and `duplication` sat between 0% and 67%
+  under every description tested here.
+
+---
+
+Run one flow with:
 
 ```sh
 pnpm run evals -- --tag before-edit --ablation with-without --judge-model sonnet
@@ -531,12 +596,14 @@ subcommand is **zero** — the subcommands live in the skill body, so a plan
 written without loading it cannot get them right. (The classifier checks the
 captured token against the real subcommand set for exactly this reason;
 matching any lowercase word would score the invented `no-mistakes roleHas` as
-real, since `role` is a lowercase prefix of the symbol. That set is read from
-`docs/cli/*.md` at runtime rather than hand-listed — the hand-listed tuple this
-file first shipped with held 20 of the 61 real commands, so a run naming
-`no-mistakes lockfile` or `no-mistakes data-pw` would have been scored as a
-fabrication. Re-running the classification with all 61 moved none of the counts
-in these two tables, so the zero above is measured against the full set.)
+real, since `role` is a lowercase prefix of the symbol. That set is the 50
+complete invocation paths read from `docs/cli/` link text at runtime — the
+hand-listed tuple this file first shipped with held 20 of them, so a run naming
+`no-mistakes lockfile` would have been scored as a fabrication; filename stems
+then over-corrected, accepting the concept pages `graph.md` and
+`diagnostics.md` as commands and `no-mistakes tests-plan` for the real `tests
+plan`. Re-running the classification under each of the three moved none of the
+counts in these two tables, so the zero above holds against complete paths.)
 
 **A non-firing run is worse than a silent one.** Under the shipped description
 the common outcome is not "the model forgot the tool exists" — it is the model
@@ -667,9 +734,17 @@ So Codex is injected with the `SKILL.md` description, implicitly, exactly as
 Claude is. There is no Codex-side crutch, no asymmetry, and nothing for a
 trigger-rate gate to unlock.
 
-This matters in the direction that helps: **every trigger number in this file
-describes both harnesses**, not Claude alone. The suite was always measuring
-the one surface both agents share.
+What this does and does not license, since the first draft of this correction
+overshot it: the **input** is now known to be the same on both sides — the
+description is the whole of what either agent gets, so a change to it is a
+change to Codex's trigger surface too, and there is no Codex-side instruction
+that would absorb a regression. What stays unmeasured is the **rate**. Every
+case here runs `model: claude-opus-5` through `claude plugin eval`, so these
+numbers are Claude's decision to invoke the skill. A different model with a
+different skill-routing implementation can read identical metadata and trigger
+at a different rate. **Do not quote a number in this file as a Codex result**;
+a Codex-specific regression would be invisible here. Measuring that needs a
+Codex arm the suite does not have.
 
 **Outcome: `skills/no-mistakes/agents/openai.yaml` is unchanged** — not because
 a gate went unmet, but because the thing the gate proposed to remove is a UI
@@ -712,12 +787,15 @@ only the frontmatter), then `python3 evals/generate.py --variant <name>` and run
 with `--eval-dir evals-variants/<name>`. The plugin under `skills/` is never
 modified to run a comparison.
 
-These results are **not** Claude-only. Codex is injected with the same
-`SKILL.md` description, so a trigger number measured here applies to it too —
-see [Codex reads the same
+Every number here is measured on `claude-opus-5` and is a **Claude** result.
+Codex is injected with the same `SKILL.md` description — see [Codex reads the
+same
 description](#codex-reads-the-same-description--the-openaiyaml-gate-was-never-real)
 for why the `agents/openai.yaml` `default_prompt` is a UI example prompt rather
-than the always-on imperative an earlier revision of this file claimed.
+than the always-on imperative an earlier revision of this file claimed — so the
+description is Codex's trigger surface too. That is a statement about the
+input, not the rate: a different model and skill router can read the same
+metadata and trigger differently, and this suite has no Codex arm to catch it.
 
 ## Known environment issue
 

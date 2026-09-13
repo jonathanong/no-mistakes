@@ -18,9 +18,9 @@ Two things it does that reading the HTML report does not:
 2.  **A should-fire aggregate.** It counts trigger across every case except the
     `-neg-` slugs and the `neg-hard` flow, which are the cases where firing is
     the failure. That is the single number standing for "the description
-    carries the agent on its own" — and because Codex reads the same
-    `SKILL.md` description (see `evals/README.md`, "Codex reads the same
-    description"), it stands for both harnesses, not just Claude.
+    carries the agent on its own". Every case runs `claude-opus-5`, so it is a
+    Claude number; Codex reads the same description but is never evaluated
+    here (see `evals/README.md`, "Codex reads the same description").
 
 It also refuses to let a failed run pass as a result. A run that errors — a
 session limit, a timeout — scores 0 in **both** arms, so the case renders as a
@@ -113,7 +113,8 @@ def summarize(path: str) -> None:
     for case in report["cases"]:
         with_arm = case["arms"].get("with", [])
         without_arm = case["arms"].get("without", [])
-        case_errors = _errors(with_arm) + _errors(without_arm)
+        with_errors = _errors(with_arm)
+        case_errors = with_errors + _errors(without_arm)
         if case_errors:
             # Never render a numeric row for a case with a failed run: the
             # failed run scores 0 in both arms, so the row prints as an
@@ -123,6 +124,13 @@ def summarize(path: str) -> None:
                 f"    {case['name']:<38} {'--':>7} "
                 f"{('%d run(s) FAILED' % n):>25}"
             )
+            # Trigger is defined on the with arm alone, so a baseline-only
+            # failure invalidates the score and the delta but not the trigger
+            # observations. Dropping them too would thin the headline rate on
+            # whichever cases happened to lose a baseline run.
+            if not with_errors and _is_should_fire(case["name"]):
+                fired_total += _fired(with_arm)
+                runs_total += len(with_arm)
             continue
         fired = _fired(with_arm)
         with_score = _mean_score(with_arm)
@@ -158,30 +166,46 @@ def _evidence(run) -> str:
     return "\n".join(g["evidence"] for g in run.get("graders", []) if g.get("evidence"))
 
 
-def _load_subcommands() -> tuple:
-    """The real subcommand set, read from `docs/cli/` rather than hand-listed.
+#: `[`tests plan`](tests-plan.md)` — the docs write each command's real
+#: invocation path as the link text, so the path is read from there rather than
+#: from the filename. `docs_coverage.rs` keeps this index in sync with the clap
+#: enums, so the set cannot drift from the CLI.
+_DOC_LINK = re.compile(r"\[`([a-z0-9][a-z0-9 -]*)`\]\([a-z0-9-]+\.md\)")
 
-    A hardcoded tuple silently rots: it shipped without `data-pw`, `lockfile`,
-    `graph`, `flow` and eight others, so a response naming one of them was
-    counted as an invented command form. `docs/cli/<name>.md` is the source of
-    truth `docs_coverage.rs` already enforces, and nested pages are named
-    `<top>-<sub>.md`, so the stems cover both `no-mistakes tests plan` (via
-    `tests`) and `no-mistakes tests-plan`.
+
+def _load_commands() -> tuple:
+    """Every complete `no-mistakes` invocation path, from `docs/cli/`.
+
+    Two earlier attempts were wrong in opposite directions. A hand-listed tuple
+    held 20 of the real commands, so `no-mistakes lockfile` scored as a
+    fabrication. Filename stems then over-corrected: they treat `graph.md` and
+    `diagnostics.md` as commands when both are concept pages, and they accept
+    `no-mistakes tests-plan` for a command that is really `tests plan`.
+
+    So: take the link text, which is the invocation path; drop a hyphenated
+    spelling whenever the spaced path exists (`README.md` writes `ci-env` in
+    prose, `ci.md` writes the real `ci env`); and drop bare group names, since
+    `no-mistakes tests` without a subcommand is not a runnable command.
     """
     cli_docs = pathlib.Path(__file__).resolve().parent.parent / "docs" / "cli"
-    names = {p.stem for p in cli_docs.glob("*.md")} - {"README"}
-    if not names:
+    paths = {m.group(1) for p in cli_docs.glob("*.md") for m in _DOC_LINK.finditer(p.read_text())}
+    paths -= {p.replace(" ", "-") for p in paths if " " in p}
+    groups = {p.split()[0] for p in paths if " " in p}
+    paths -= groups
+    if not paths:
         # An empty set would classify every real command as invented and quietly
         # turn the fabrication tables into noise. Fail instead.
-        raise SystemExit(f"summarize: no CLI docs found under {cli_docs}")
-    # Longest first, so `ci-env` is preferred over the `ci` prefix.
-    return tuple(sorted(names, key=lambda n: (-len(n), n)))
+        raise SystemExit(f"summarize: no CLI commands found under {cli_docs}")
+    # Longest first, so `tests plan` is preferred over any shorter prefix.
+    return tuple(sorted(paths, key=lambda n: (-len(n), n)))
 
 
-SUBCOMMANDS = _load_subcommands()
+COMMANDS = _load_commands()
 
+#: `(?![-\w])` rather than `\b`, so `no-mistakes tests-plan` does not match the
+#: real `tests` — a hyphen is a word boundary, which is what made stems wrong.
 _REAL_COMMAND = re.compile(
-    r"\bno-mistakes\s+(?:%s)\b" % "|".join(re.escape(s) for s in SUBCOMMANDS)
+    r"\bno-mistakes\s+(?:%s)(?![-\w])" % "|".join(re.escape(s) for s in COMMANDS)
 )
 
 

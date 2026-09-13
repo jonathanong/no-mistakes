@@ -558,7 +558,13 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(queues|server)\s+related",
+                # `queues edges` with no roots prints every producer/worker edge
+                # (docs/cli/queues-edges.md), so filtering those by the outbox
+                # identity finds the consumers as well as `queues related` does.
+                # The four `queues-0*` cases carry the narrower form and the same
+                # defect; they are left alone because their published pilot
+                # numbers were graded with it.
+                r"no-mistakes\s+(queues\s+(related|edges)|server\s+related)",
             ),
             (
                 "heldout-06-two-copies",
