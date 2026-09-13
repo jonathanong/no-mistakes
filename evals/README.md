@@ -529,17 +529,22 @@ never run against this flow, so it has no column):
 descriptions and both flows, the count of non-firing runs that named a real
 subcommand is **zero** — the subcommands live in the skill body, so a plan
 written without loading it cannot get them right. (The classifier checks the
-captured token against the documented subcommand set for exactly this reason;
+captured token against the real subcommand set for exactly this reason;
 matching any lowercase word would score the invented `no-mistakes roleHas` as
-real, since `role` is a lowercase prefix of the symbol.)
+real, since `role` is a lowercase prefix of the symbol. That set is read from
+`docs/cli/*.md` at runtime rather than hand-listed — the hand-listed tuple this
+file first shipped with held 20 of the 61 real commands, so a run naming
+`no-mistakes lockfile` or `no-mistakes data-pw` would have been scored as a
+fabrication. Re-running the classification with all 61 moved none of the counts
+in these two tables, so the zero above is measured against the full set.)
 
 **A non-firing run is worse than a silent one.** Under the shipped description
 the common outcome is not "the model forgot the tool exists" — it is the model
 confidently writing `/no-mistakes roleHas` or `no-mistakes roleHas`, neither of
 which exists. The description is good enough to be reached for and not good
 enough to be used, so the plan names something that will fail. C2 does this
-twice across 22 non-firing runs on both flows, against 10 for the shipped
-description.
+twice across its 14 non-firing runs on the two flows; the shipped description
+does it 10 times across 20.
 
 **The over-trigger guard needs reading in two parts.** All three descriptions
 score a clean `skill-fired` 0/12 on `neg-hard`, and all three still reach for
@@ -635,38 +640,50 @@ this file: the signature-shaped held-out case goes 1/3 → 3/3, because C2 added
 a clause about signatures; the queue-shaped one stays at 0/3, because it did
 not add one about queues.
 
-### The `openai.yaml` gate stays at 90%
+### Codex reads the same description — the `openai.yaml` gate was never real
 
-Codex consumes this skill through `skills/no-mistakes/agents/openai.yaml`, whose
-`default_prompt` is an always-on imperative to use `no-mistakes`. Claude has
-only the description. The pre-registered condition for removing that imperative
-was an **aggregate should-fire trigger of ≥90% in the full re-baseline** — the
-number standing for "the description carries Claude on its own".
+An earlier revision of this file asserted that Codex consumes this skill
+through an **always-on imperative** in `skills/no-mistakes/agents/openai.yaml`
+(`interface.default_prompt`), while Claude gets only the description. A
+pre-registered gate followed from that: remove the imperative once the
+aggregate should-fire trigger reached ≥90%.
 
-Recorded before that run: **90% is almost certainly not reachable**, and the
-gate stays there anyway.
+**That execution model is wrong, and the gate it justified does not exist.**
+Per Codex's own spec (`skill-creator/references/openai_yaml.md`, shipped with
+the Codex CLI):
 
-The re-baseline spans eleven flows. C2's two best measured flows are 89%
-(`before-edit`) and 83% (`signature`); `queues`, `ci`, `napi`, `lang-graph`,
-`usage`, `safety` and `duplication` sat between 0% and 67% under every
-description ever tested here, and C2 names those subjects no better than
-`real-register` did. An aggregate over all eleven cannot clear 90% on those
-inputs.
+- `agents/openai.yaml` is "an extended, product-specific config intended for
+  the machine/harness to read, **not the agent**".
+- `interface.default_prompt` is the "default prompt snippet inserted **when
+  invoking** the skill" — a one-sentence example starting prompt for the UI,
+  which is why the spec requires it to name the skill as `$skill-name`. It
+  sits beside `display_name` and `short_description` under `interface:`
+  because it is UI presentation.
+- The field that actually governs ambient injection is
+  `policy.allow_implicit_invocation`, which **defaults to true**. This skill
+  declares no `policy` block, so it takes the default.
 
-The tempting move is to restate the gate over the traffic-backed flows only,
-where the 94%-carries-Claude argument actually came from. That is declined: it
-is the same post-hoc redefinition this file just refused on `signature`, and
-choosing a denominator after seeing that the original one is unreachable is not
-a measurement. The gate was set knowing it might not be met. If it is not met,
-the imperative stays and Codex keeps the reliability it buys — which costs
-nothing, since removing it could only ever make Codex worse.
+So Codex is injected with the `SKILL.md` description, implicitly, exactly as
+Claude is. There is no Codex-side crutch, no asymmetry, and nothing for a
+trigger-rate gate to unlock.
 
-**Outcome: the imperative stays.** The re-baseline that would have measured the
-gate is [void](#the-full-re-baseline-is-still-outstanding), so the gate is
-unmet — not because the description fell short, but because the number does not
-exist. `skills/no-mistakes/agents/openai.yaml` is unchanged. Re-evaluate against
-the same 90% bar once the re-baseline completes; do not re-open the denominator
-question at that point.
+This matters in the direction that helps: **every trigger number in this file
+describes both harnesses**, not Claude alone. The suite was always measuring
+the one surface both agents share.
+
+**Outcome: `skills/no-mistakes/agents/openai.yaml` is unchanged** — not because
+a gate went unmet, but because the thing the gate proposed to remove is a UI
+example prompt whose deletion would not change any agent's behaviour. The 90%
+bar is withdrawn rather than deferred; there is no measurement that would
+reinstate it.
+
+One real defect survives this correction, and is left for a follow-up rather
+than folded in here: `default_prompt` still quotes the **old** description's
+register ("*before editing to find callers and tests … instead of rg when …*"),
+so the Codex UI now suggests a starting prompt written in the vocabulary this
+PR replaced. It is also three sentences where the spec asks for roughly one.
+Fixing it is a user-facing string change with no measurement behind it, which
+is out of scope for a PR whose whole claim is that its changes are measured.
 
 ### The description reaches what it names, and nothing else
 
@@ -695,11 +712,12 @@ only the frontmatter), then `python3 evals/generate.py --variant <name>` and run
 with `--eval-dir evals-variants/<name>`. The plugin under `skills/` is never
 modified to run a comparison.
 
-Relevant asymmetry to keep in mind when interpreting results: Codex consumes
-this skill through `skills/no-mistakes/agents/openai.yaml`, whose
-`default_prompt` is an **always-on imperative** to use `no-mistakes`. Claude has
-only the description to match against. That difference — not model quality — is
-the leading explanation for Codex invoking the tool more reliably.
+These results are **not** Claude-only. Codex is injected with the same
+`SKILL.md` description, so a trigger number measured here applies to it too —
+see [Codex reads the same
+description](#codex-reads-the-same-description--the-openaiyaml-gate-was-never-real)
+for why the `agents/openai.yaml` `default_prompt` is a UI example prompt rather
+than the always-on imperative an earlier revision of this file claimed.
 
 ## Known environment issue
 

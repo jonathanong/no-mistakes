@@ -15,10 +15,12 @@ Two things it does that reading the HTML report does not:
     incomparable with two-arm ones. Dropping it everywhere keeps every number
     in this file on one scale.
 
-2.  **The should-fire aggregate is the `openai.yaml` gate.** It counts trigger
-    across every case except the `-neg-` slugs and the `neg-hard` flow, which
-    are the cases where firing is the failure. That is the single number
-    standing for "the description carries Claude on its own".
+2.  **A should-fire aggregate.** It counts trigger across every case except the
+    `-neg-` slugs and the `neg-hard` flow, which are the cases where firing is
+    the failure. That is the single number standing for "the description
+    carries the agent on its own" — and because Codex reads the same
+    `SKILL.md` description (see `evals/README.md`, "Codex reads the same
+    description"), it stands for both harnesses, not just Claude.
 
 It also refuses to let a failed run pass as a result. A run that errors — a
 session limit, a timeout — scores 0 in **both** arms, so the case renders as a
@@ -145,41 +147,41 @@ def summarize(path: str) -> None:
 
 
 def _evidence(run) -> str:
-    for g in run.get("graders", []):
-        if g.get("evidence"):
-            return g["evidence"]
-    return ""
+    """Every grader's evidence, joined.
+
+    A grader's `evidence` is the run's final response text, so taking only the
+    first non-empty one drops nothing when the graders agree — but a case whose
+    graders captured different turns would be classified off a partial view.
+    Joining is safe precisely because evidence is model output, never rubric
+    text: concatenating cannot invent a command the model did not write.
+    """
+    return "\n".join(g["evidence"] for g in run.get("graders", []) if g.get("evidence"))
 
 
-#: Every subcommand `SKILL.md` documents. The classification below is only
-#: meaningful if a "real CLI command" is checked against this set — matching any
-#: lowercase token instead would read the invented `no-mistakes roleHas` as real,
-#: because `role` is a lowercase prefix of the symbol.
-SUBCOMMANDS = (
-    "call-sites",
-    "check",
-    "ci",
-    "dead-exports",
-    "dependencies",
-    "dependents",
-    "exports-of",
-    "fetches",
-    "impacted-checks",
-    "importers",
-    "infra",
-    "planning-impact",
-    "playwright",
-    "queues",
-    "react",
-    "resolve-check",
-    "server",
-    "swift",
-    "symbols",
-    "tests",
-)
+def _load_subcommands() -> tuple:
+    """The real subcommand set, read from `docs/cli/` rather than hand-listed.
+
+    A hardcoded tuple silently rots: it shipped without `data-pw`, `lockfile`,
+    `graph`, `flow` and eight others, so a response naming one of them was
+    counted as an invented command form. `docs/cli/<name>.md` is the source of
+    truth `docs_coverage.rs` already enforces, and nested pages are named
+    `<top>-<sub>.md`, so the stems cover both `no-mistakes tests plan` (via
+    `tests`) and `no-mistakes tests-plan`.
+    """
+    cli_docs = pathlib.Path(__file__).resolve().parent.parent / "docs" / "cli"
+    names = {p.stem for p in cli_docs.glob("*.md")} - {"README"}
+    if not names:
+        # An empty set would classify every real command as invented and quietly
+        # turn the fabrication tables into noise. Fail instead.
+        raise SystemExit(f"summarize: no CLI docs found under {cli_docs}")
+    # Longest first, so `ci-env` is preferred over the `ci` prefix.
+    return tuple(sorted(names, key=lambda n: (-len(n), n)))
+
+
+SUBCOMMANDS = _load_subcommands()
 
 _REAL_COMMAND = re.compile(
-    r"\bno-mistakes\s+(?:%s)\b" % "|".join(SUBCOMMANDS)
+    r"\bno-mistakes\s+(?:%s)\b" % "|".join(re.escape(s) for s in SUBCOMMANDS)
 )
 
 
@@ -202,6 +204,11 @@ def mentions(path: str) -> None:
     for case in report["cases"]:
         group = "should-fire" if _is_should_fire(case["name"]) else "negative"
         for run in case["arms"].get("with", []):
+            if run.get("error"):
+                # An errored run has no response to classify; counting it as
+                # "no mention" would read a session limit as model silence —
+                # the same misleading-zero the numeric table refuses to print.
+                continue
             flags = {g["name"]: g.get("passed") for g in run.get("graders", [])}
             if "skill-fired" not in flags or flags["skill-fired"]:
                 continue
