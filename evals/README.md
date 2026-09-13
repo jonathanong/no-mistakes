@@ -4,32 +4,55 @@ Eval suite for the `skills/no-mistakes` skill.
 
 ## Results
 
-The shipped `description:` was reworked in #981 on the strength of these runs.
-All at `runs: 3`, `--ablation none`, should-fire cases only, from files with
-**zero** errored runs. "Before" is the description PR #979 measured; "after" is
-the one in `skills/no-mistakes/SKILL.md` today.
+The shipped `description:` was reworked in #981 and corrected in #985. All at
+`runs: 3`, `--ablation none`, should-fire cases only, from files with **zero**
+errored runs.
 
-| flow | before | after |
-| --- | --- | --- |
-| [`before-edit`](#candidate-screening) | 8/18 (44%) | **16/18 (89%)** |
-| [`signature`](#candidate-screening) | 4/12 (33%) | **10/12 (83%)** |
-| [`neg-hard`](#candidate-screening) — over-trigger guard, lower is better | 0/12 | 0/12 |
-| [**live holdout**](#held-out-confirmation) — never tuned against | **3/9 (33%)** | **5/9 (56%)** |
-| [spent holdout](#held-out-confirmation) — contaminated, shown for continuity | 4/9 | 7/9 |
+- **#979** — the description PR #979 measured.
+- **#981** — the rework. Won `before-edit` and `signature`, and silently lost
+  `after-edit`.
+- **current** — #981 plus a validation clause, in
+  `skills/no-mistakes/SKILL.md` today.
 
-**Read the holdout row, not the tuned rows.** 56% is what generalizes; 89% is
-the flow the description was written against. No "94%"-style claim survives a
-clean holdout, and none is made here.
+| flow | #979 | #981 | current |
+| --- | --- | --- | --- |
+| [`before-edit`](#candidate-screening) | 8/18 (44%) | 16/18 (89%) | **16/18 (89%)** |
+| [`signature`](#candidate-screening) | 4/12 (33%) | 10/12 (83%) | **10/12 (83%)** |
+| [`after-edit`](#the-after-edit-regression-981-shipped) | 9/12 (75%) | **3/12 (25%)** | **12/12 (100%)** |
+| [`neg-hard`](#candidate-screening) — over-trigger guard, lower is better | 0/12 | 0/12 | 0/12 |
+| … of which fabricate a command form | 5/12 | 1/12 | **0/12** |
+| [**live holdout**](#held-out-confirmation) — never tuned against | **3/9 (33%)** | **5/9 (56%)** | not re-run |
+
+**Read the holdout row, not the tuned rows.** 56% is what generalizes; the
+90%-ish figures are flows their description was written against. No
+"94%"-style claim survives a clean holdout, and none is made here. The holdout
+was not re-run for the current description — the validation clause was screened
+on `after-edit`, which is now tuning-visible, so a fresh holdout needs [fresh
+cases](#writing-new-cases) written first.
+
+**The `after-edit` row is why this table has three columns.** #981 reported two
+wins and listed `after-edit` as merely unmeasured. It was not neutral: it fell
+from the best measured flow to the worst, 75% → 25%, and $3 of eval would have
+caught it before merge. See [the regression](#the-after-edit-regression-981-shipped).
 
 ### What the runs established
 
 - **[Naming a subject reliably reaches it; not naming one is a coin
   flip.](#naming-a-subject-reliably-reaches-it-not-naming-one-is-a-coin-flip)**
-  One clause about signatures moved that flow from 25–33% to 83%, and its
-  held-out case from 1/3 to 3/3. Unnamed subjects are unpredictable rather than
-  dead: the queue-shaped held-out case fires 0/3, the duplication-shaped one
-  2/3, and neither subject appears in any description tested. So name what
-  matters — but do not read every low flow as merely unnamed.
+  Now measured in both directions. *Adding* a name lifts its flow: signatures
+  25–33% → 83%, and post-edit validation 25% → 100%. *Removing* one drops it:
+  #981 deleted "after editing to validate" and `after-edit` fell 75% → 25%.
+  Unnamed subjects are unpredictable rather than dead — the queue-shaped
+  held-out case fires 0/3, the duplication-shaped one 2/3, and neither subject
+  appears in any description tested. So name what matters, treat any deletion
+  as a change to be measured, and do not read every low flow as merely unnamed.
+- **[A description is a budget, not a
+  bag.](#the-after-edit-regression-981-shipped)** #981's rework was framed as
+  replacing a vague framing with a concrete one. What it actually did was
+  reallocate: two subjects gained roughly what one lost. The fix was not a
+  better framing but more named subjects — the current description is #981 plus
+  two clauses, and it holds every flow #981 won while restoring the one it
+  broke, at 684 characters against a 1536 cap.
 - **[`signature` never
   regressed.](#signature-did-not-regress--the-35-vs-215-above-was-a-1-run-artifact)**
   The 3/5 → 2/15 drop that motivated the rework compared a *single-run* pilot
@@ -59,13 +82,14 @@ clean holdout, and none is made here.
   eleven flows is still outstanding, so [Baseline](#baseline-before-edit-flow-shipped-description-as-of-pr-979)
   and [Measurement coverage](#measurement-coverage) still describe the *old*
   description.
-- **[Eight flows are unmeasured under the new
-  description.](#it-does-not-generalize-across-flows)** `after-edit`, `queues`,
+- **Seven flows are still unmeasured under the current description.** `queues`,
   `ci`, `napi`, `lang-graph`, `usage`, `safety` and `duplication` sat between
-  0% and 67% under every description tested here. `after-edit` is the one to
-  watch: the old description named post-edit validation explicitly ("*use …
-  after editing to validate*") and the new one drops that wording, so it is the
-  likeliest place for a regression this PR did not measure.
+  0% and 67% under every description tested here, and none has been re-run
+  since. `after-edit` used to head this list and is now measured — it was not
+  merely unmeasured, it was broken, which is the reason to shorten this list
+  rather than keep describing it. Each remaining flow is ~$3 to check at
+  `runs: 3` single-arm, on the [pattern this
+  correction used](#the-after-edit-regression-981-shipped).
 
 ---
 
@@ -290,15 +314,27 @@ Not every flow has been measured to the same depth. Single-run numbers carry
 real judge variance — cases have been observed flipping between runs — so treat
 anything marked ⚠️ as directional.
 
-| flow | shipped | reworded | C1 | C2 = current |
-| --- | --- | --- | --- | --- |
-| `before-edit` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
-| `signature` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
-| `neg-hard` | `runs: 3` | not run | `runs: 3` | `runs: 3` |
-| `heldout` (spent 01–03) | `runs: 3` | `runs: 3` | not run | `runs: 3` |
-| `heldout` (live 04–06) | `runs: 3` | n/a | not run | `runs: 3` |
-| `queues`, `after-edit`, `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** |
-| `usage`, `safety`, `duplication` | ⚠️ 1 run | not run | not run | **not run** |
+Columns are descriptions, oldest first. **C2 is the description #981 shipped —
+it is no longer current**; `register-plus-validate` is, and it is the column to
+read when planning what still needs measuring.
+
+| flow | #979 shipped | reworded | C1 | C2 = #981 | current (`register-plus-validate`) |
+| --- | --- | --- | --- | --- | --- |
+| `before-edit` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
+| `signature` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
+| `neg-hard` | `runs: 3` | not run | `runs: 3` | `runs: 3` | `runs: 3` |
+| `after-edit` | `runs: 3` | `runs: 3` | not run | `runs: 3` | `runs: 3` |
+| `heldout` (spent 01–03) | `runs: 3` | `runs: 3` | not run | `runs: 3` | **not run** |
+| `heldout` (live 04–06) | `runs: 3` | n/a | not run | `runs: 3` | **not run** |
+| `queues`, `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** | **not run** |
+| `usage`, `safety`, `duplication` | ⚠️ 1 run | not run | not run | **not run** | **not run** |
+
+The `after-edit` row is `runs: 3` under `#979 shipped`, `C2` and `current`
+because [the regression check](#the-after-edit-regression-981-shipped) measured
+all three; the ⚠️ 1-run pilot it used to carry has been superseded and must not
+be quoted. The `heldout` rows are **not run** for the current description on
+purpose — `after-edit` is now tuning-visible, so a clean holdout needs [fresh
+cases](#writing-new-cases) first.
 
 ### The full re-baseline is still outstanding
 
@@ -676,6 +712,70 @@ forms while KEEPING the general framing, rather than replacing it" — **is not
 supported**. Replacing it is better. What `signature` needed was a clause about
 signatures, not the general framing back.
 
+### The `after-edit` regression #981 shipped
+
+#981 changed the description on the strength of `before-edit`, `signature` and
+the holdout, and listed `after-edit` among the flows it had not measured. That
+framing was wrong in a specific way worth recording: the flow was not neutral
+and unobserved, it was **broken by the change**, and the file's own finding
+predicted it.
+
+The old description said "*use … **after editing to validate***" and "*empty
+plans that are not actually empty*". The rework dropped both. Measured
+afterwards, case-matched at `runs: 3`, `--ablation none`, zero errored runs in
+either file:
+
+| case | #979 | #981 | current |
+| --- | --- | --- | --- |
+| `after-edit-01-what-to-run` | 3/3 | 1/3 | 3/3 |
+| `after-edit-02-empty-plan` | 3/3 | **0/3** | 3/3 |
+| `after-edit-03-moved-file` | 3/3 | 2/3 | 3/3 |
+| `after-edit-04-handoff` | **0/3** | **0/3** | **3/3** |
+| **should-fire** | **9/12 (75%)** | **3/12 (25%)** | **12/12 (100%)** |
+| `after-edit-05-neg-script-name` (guard) | 0/3 | 0/3 | 0/3 |
+
+`02-empty-plan` is the cleanest single datapoint in the suite. The case asks
+"*I ran the test planner and it came back empty — does that mean nothing is
+affected?*". The old description named that situation almost literally; the
+rework deleted the phrase; the case went 3/3 → 0/3.
+
+`04-handoff` is the control. It asks what to check before handing a branch off,
+which **neither** older description named — and both score 0/3. The current
+description names it and it goes 3/3. Same mechanism, observed as a null and
+then as a fix.
+
+**The correction.** Two clauses appended to #981's description, in its own
+register, screened as a candidate rather than assumed:
+
+> … does a route have e2e coverage; **what to run to validate a change before
+> pushing or handing it off; does an empty test plan really mean nothing is
+> affected.**
+
+Gates were pre-registered before the numbers landed: restore `after-edit` to
+≥9/12, hold `before-edit` ≥15/18 and `signature` ≥9/12 so #981's gains are not
+spent, and keep `neg-hard` no worse than shipped. Screened on all four flows at
+once — 22 cases, 66 runs, $12.61:
+
+| flow | gate | result |
+| --- | --- | --- |
+| `after-edit` | ≥ 9/12 | **12/12** |
+| `before-edit` | ≥ 15/18 | **16/18** |
+| `signature` | ≥ 9/12 | **10/12** |
+| `neg-hard` trigger | 0/12 | **0/12** |
+| `neg-hard` fabrication | ≤ 1/12 | **0/12** |
+
+Every gate passed, and two improved on #981 rather than merely holding: the
+guard stopped fabricating a command form entirely, and `after-edit` beat the
+old description as well as the new one. All eight should-not-fire cases across
+the four flows stayed at 0.
+
+**What this changes about how to read this file.** A flow listed as unmeasured
+is not evidence of nothing; it is an absence of evidence, and when the change
+under review *deletes* wording that named that flow, the absence is
+load-bearing. The cost of being wrong here was $3 and ten minutes against a
+merged regression. Any future description change should measure every flow
+whose subject the diff removes, not only the flows it targets.
+
 ### Held-out confirmation
 
 Run against the winner only, at `runs: 3`, `--ablation none`, and against the
@@ -804,6 +904,61 @@ To add another variant: create `evals/variants/<name>/` (copy the skill, change
 only the frontmatter), then `python3 evals/generate.py --variant <name>` and run
 with `--eval-dir evals-variants/<name>`. The plugin under `skills/` is never
 modified to run a comparison.
+
+Screened candidates are kept under `evals/variants/` so their comparison can be
+re-run. Replicas of *past shipped* descriptions are not — they live in git
+history, and checking each one in permanently would double the diff of every
+description change for no added information. To rebuild one (this is exactly
+how the `#979` and `#981` columns above were produced):
+
+```sh
+name=shipped-pre-981
+sha=<the commit that shipped that description>
+
+mkdir -p "evals/variants/$name"
+cp -R skills/no-mistakes/references "evals/variants/$name/"
+cp skills/no-mistakes/SKILL.md "evals/variants/$name/SKILL.md"
+
+# Overwrite the `description:` line in the COPY with the historical one. Reading
+# the old line without writing it is the whole trap: the copy keeps the current
+# description, the variant run looks fine, and it silently measures the arm you
+# already have.
+python3 - "$name" "$sha" <<'PY'
+import pathlib, subprocess, sys
+name, sha = sys.argv[1], sys.argv[2]
+old = subprocess.run(
+    ["git", "show", f"{sha}:skills/no-mistakes/SKILL.md"],
+    capture_output=True, text=True, check=True,
+).stdout
+desc = next(l for l in old.splitlines() if l.startswith("description:"))
+p = pathlib.Path(f"evals/variants/{name}/SKILL.md")
+lines = p.read_text().splitlines(keepends=True)
+for i, l in enumerate(lines):
+    if l.startswith("description:"):
+        assert lines[i] != desc + "\n", "copy already has the historical line — wrong sha?"
+        lines[i] = desc + "\n"
+        break
+else:
+    raise SystemExit("no description: line found")
+p.write_text("".join(lines))
+print("wrote:", desc[:80])
+PY
+
+python3 evals/generate.py --variant "$name"
+```
+
+**Verify before spending**, or the run measures something other than the
+description:
+
+```sh
+sed '3d' skills/no-mistakes/SKILL.md > /tmp/a.md
+sed '3d' "evals/variants/$name/SKILL.md" > /tmp/b.md
+diff /tmp/a.md /tmp/b.md && echo "only line 3 differs"
+diff -r skills/no-mistakes/references "evals/variants/$name/references" && echo "references identical"
+```
+
+Both must be clean, and the two `description:` lines must actually differ —
+that is the check the assertion above enforces.
 
 Every number here is measured on `claude-opus-5` and is a **Claude** result.
 Codex is injected with the same `SKILL.md` description — see [Codex reads the
