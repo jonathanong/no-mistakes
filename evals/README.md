@@ -552,6 +552,32 @@ that the skill stayed silent. Every case now carries the indicator (and the
 `neg-hard` flow was added specifically as an over-trigger guard), so a re-run
 reports whether a widened description fires on questions it cannot answer.
 
+### Gates for the queue clause (#984 item 6)
+
+**Pre-registered**: committed before the screening run started, and before the
+`queues` baseline for the current description existed.
+
+The `after-edit` lesson applies directly — a clause is judged against a
+case-matched baseline at `runs: 3`, never against a 1-run pilot, and never on
+its target flow alone. So the screen covers the target *and* every flow the
+current description already wins.
+
+1. **`queues` trigger ≥ current + 3/12.** The current description names nothing
+   about queues; the clause must move the flow, not merely fail to hurt it. A
+   one- or two-run improvement at n=12 is judge variance.
+2. **`before-edit` ≥ 15/18**, **`signature` ≥ 9/12**, **`after-edit` ≥ 10/12** —
+   hold what #981 and #985 bought, within one to two runs of the measured
+   16/18, 10/12 and 12/12.
+3. **`neg-hard` trigger 0/12 and fabrication ≤ 1/12.** A clause about producers
+   and consumers is the most plausible thing yet written to reach
+   `neg-hard-02` ("is `OutboundQueue` safe to use from two workers"). If it
+   does, the clause is retuned or dropped — not traded against the `queues`
+   win.
+
+Miss any of these and the clause does not ship; the flow stays unnamed and the
+finding is recorded as-is. The holdout is judged separately and after, on cases
+07-09, which were committed before this section.
+
 ### Decision rules for a description change
 
 **Pre-registered**: written and committed before the candidate screening numbers
