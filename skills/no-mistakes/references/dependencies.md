@@ -69,7 +69,7 @@ no-mistakes dependencies src/main.mts --root /path/to/project --tsconfig tsconfi
 | `--projection <KIND>` | `graph` | `graph` keeps the full JSON node list. `paths` with JSON is `{ files, diagnostics }`. |
 | `--target-module <GLOB>` | none | Include only matching external module nodes (repeatable, OR) |
 | `--test <FRAMEWORK>` | none | Expand to well-known test globs: `vitest`, `playwright`, `cargo`, `dotnet`, `swift` (repeatable) |
-| `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `import`, `import-static`, `import-dynamic`, `import-type`, `import-require`, `route-import`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `workflow`, `workflow-job`, `workflow-step`, `workflow-needs`, `workflow-uses`, `workflow-run`, `workflow-artifact`, `http`, `process`, `asset`, `react`, `dotnet`, `swift`, `terraform`, `all` |
+| `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `call`, `import`, `import-static`, `import-dynamic`, `import-type`, `import-require`, `route-import`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `workflow`, `workflow-job`, `workflow-step`, `workflow-needs`, `workflow-uses`, `workflow-run`, `workflow-artifact`, `http`, `process`, `asset`, `react`, `dotnet`, `swift`, `terraform`, `python`, `go`, `rust`, `ruby`, `php`, `java`, `kotlin`, `elixir`, `dart`, `resource`, `trpc`, `all` |
 | `--format <FORMAT>` | human (TTY) / json (pipe) | Output format: `json`, `md`, `yml`, `paths`, `human` |
 | `--json` | false | Shorthand for `--format json` |
 | `-j / --jobs <N>` | all cores | Worker threads. `0` or omitted = all cores. Honors `RAYON_NUM_THREADS`. |

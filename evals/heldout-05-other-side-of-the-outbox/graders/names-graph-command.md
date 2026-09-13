@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-no-mistakes\s+(queues\s+(related|edges)|server\s+related)
+no-mistakes\s+(queues\s+(related|edges)|server\s+related)(?![\w-])
