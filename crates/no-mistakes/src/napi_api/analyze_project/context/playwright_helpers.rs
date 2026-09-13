@@ -74,7 +74,7 @@ fn same_config_path(root: &Path, left: Option<&Path>, right: Option<&Path>) -> b
 fn playwright_analysis_key(options: &PlaywrightOptions) -> Result<String> {
     let mut options = options.clone();
     options.files.clear();
-    Ok(serde_json::to_string(&options)?)
+    Ok(crate::cli::json_string(&options))
 }
 
 fn playwright_unique_policy(

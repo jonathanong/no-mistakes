@@ -15,6 +15,9 @@ mod local_action;
 mod model;
 mod run;
 #[cfg(test)]
+#[path = "steps/tests/run_coverage.rs"]
+mod run_coverage;
+#[cfg(test)]
 mod tests;
 mod working_directory;
 pub(super) use model::StepScan;

@@ -5,6 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: ./.github/actions/outer
+      - uses: ./.github/actions/outer
   test-web:
     runs-on: ubuntu-latest
     steps:

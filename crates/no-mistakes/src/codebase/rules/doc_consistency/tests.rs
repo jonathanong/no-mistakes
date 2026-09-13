@@ -206,3 +206,26 @@ fn banned_substring_in_unreadable_file_skipped() {
         "unreadable file in banned_substrings loop should be silently skipped"
     );
 }
+
+#[test]
+fn invalid_options_and_empty_rule_set() {
+    let root = fixture_root("pass");
+    let mut invalid = NoMistakesConfig::default();
+    invalid.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("true").unwrap(),
+        ..Default::default()
+    });
+    assert!(check(&root, &invalid).is_err());
+    assert!(check(&root, &NoMistakesConfig::default())
+        .unwrap()
+        .is_empty());
+
+    let files = [root.join("CLAUDE.md")];
+    let sources = super::super::source_store_for_files(&files);
+    let findings =
+        check_with_files_and_sources(&root, &config_with_rule("{}"), &files, sources.as_ref())
+            .unwrap();
+    assert!(findings.is_empty());
+}

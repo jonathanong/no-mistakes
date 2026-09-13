@@ -10,9 +10,6 @@ fn binding_identifier_name<'a>(pattern: &'a oxc_ast::ast::BindingPattern<'a>) ->
 fn simple_callee_name(expr: &Expression<'_>) -> Option<String> {
     match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
         Expression::Identifier(ident) => Some(ident.name.to_string()),
-        Expression::ParenthesizedExpression(parenthesized) => {
-            simple_callee_name(&parenthesized.expression)
-        }
         Expression::SequenceExpression(sequence) => sequence
             .expressions
             .last()

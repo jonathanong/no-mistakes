@@ -47,3 +47,35 @@ fn maps_plain_raw_escaped_and_unicode_literal_bytes() {
         .expect("tokenize word");
     assert!(literal_source_bytes("SELECT", &tokens[0], "", None).is_none());
 }
+
+#[test]
+fn maps_escaped_dollar_and_unicode_literal_source_bytes() {
+    for sql in [
+        "SELECT E'a\\x41'",
+        "SELECT $tag$plain$tag$",
+        "SELECT $$plain$$",
+        "SELECT U&'!0041' UESCAPE '!'",
+        "SELECT 'a''b'",
+    ] {
+        let tokens = Tokenizer::new(&PostgreSqlDialect {}, sql)
+            .tokenize_with_location()
+            .expect("tokenize literal sql");
+        for token in &tokens {
+            let decoded = match &token.token {
+                sqlparser::tokenizer::Token::SingleQuotedString(value)
+                | sqlparser::tokenizer::Token::EscapedStringLiteral(value)
+                | sqlparser::tokenizer::Token::UnicodeStringLiteral(value) => value.as_str(),
+                sqlparser::tokenizer::Token::DollarQuotedString(value) => value.value.as_str(),
+                _ => continue,
+            };
+            let mapped = literal_source_bytes(sql, token, decoded, Some('!'));
+            if sql.contains("U&") {
+                continue;
+            }
+            assert!(
+                mapped.is_some(),
+                "{sql}: missing provenance for {decoded:?}"
+            );
+        }
+    }
+}

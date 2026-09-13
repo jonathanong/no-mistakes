@@ -82,7 +82,7 @@ pub(crate) fn stream_git_diff(
         .current_dir(root);
 
     let mut parser = DiffStreamParser::new();
-    let outcome = stream_command_lines(&mut command, MAX_DIFF_LINE_BYTES, |line| {
+    let outcome = stream_command_lines(&mut command, MAX_DIFF_LINE_BYTES, &mut |line| {
         parser.push_line(line);
         Ok(())
     });

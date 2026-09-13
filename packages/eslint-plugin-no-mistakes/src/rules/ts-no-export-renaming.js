@@ -41,48 +41,51 @@ function isDefaultReExportAlias(node, specifier) {
   return exportName(specifier.local) === "default" && Boolean(node.source);
 }
 
-module.exports = rule(
-  {
-    type: "problem",
-    docs: {
-      description: "disallow value export renaming",
-      recommended: true,
-    },
-    messages: {
-      renamed:
-        "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
-    },
-    schema: [
-      {
-        type: "object",
-        properties: {
-          allowDefaultReExports: { type: "boolean" },
-          includePathPatterns: { type: "array", items: { type: "string" } },
+module.exports = Object.assign(
+  rule(
+    {
+      type: "problem",
+      docs: {
+        description: "disallow value export renaming",
+        recommended: true,
+      },
+      messages: {
+        renamed:
+          "Do not rename value exports. Export the original name or rename the declaration itself so agents can trace symbols directly.",
+      },
+      schema: [
+        {
+          type: "object",
+          properties: {
+            allowDefaultReExports: { type: "boolean" },
+            includePathPatterns: { type: "array", items: { type: "string" } },
+          },
+          additionalProperties: false,
         },
-        additionalProperties: false,
-      },
-    ],
-  },
-  (context) => {
-    const options = context.options[0] || {};
-    const patterns = pathPatterns(options);
-    if (!shouldCheckFile(context, options, patterns)) return {};
-    return {
-      ExportNamedDeclaration(node) {
-        for (const specifier of node.specifiers || []) {
-          if (specifier.type !== "ExportSpecifier" || isTypeExport(node, specifier)) {
-            continue;
+      ],
+    },
+    (context) => {
+      const options = context.options[0] || {};
+      const patterns = pathPatterns(options);
+      if (!shouldCheckFile(context, options, patterns)) return {};
+      return {
+        ExportNamedDeclaration(node) {
+          for (const specifier of node.specifiers) {
+            if (specifier.type !== "ExportSpecifier" || isTypeExport(node, specifier)) {
+              continue;
+            }
+            if (options.allowDefaultReExports && isDefaultReExportAlias(node, specifier)) {
+              continue;
+            }
+            const local = exportName(specifier.local);
+            const exported = exportName(specifier.exported);
+            if (local && exported && local !== exported) {
+              context.report({ node: specifier, messageId: "renamed" });
+            }
           }
-          if (options.allowDefaultReExports && isDefaultReExportAlias(node, specifier)) {
-            continue;
-          }
-          const local = exportName(specifier.local);
-          const exported = exportName(specifier.exported);
-          if (local && exported && local !== exported) {
-            context.report({ node: specifier, messageId: "renamed" });
-          }
-        }
-      },
-    };
-  },
+        },
+      };
+    },
+  ),
+  { __test: { exportName } },
 );

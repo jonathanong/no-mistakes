@@ -6,13 +6,11 @@ fn caller_parts_ignores_non_file_backed_nodes() {
     let root = Path::new("/repo");
 
     assert!(caller_parts(&NodeId::module("react"), root).is_none());
-    assert!(
-        caller_parts(
-            &NodeId::queue_job(PathBuf::from("/repo/queue.mts"), "send-email"),
-            root,
-        )
-        .is_none()
-    );
+    assert!(caller_parts(
+        &NodeId::queue_job(PathBuf::from("/repo/queue.mts"), "send-email"),
+        root,
+    )
+    .is_none());
 }
 
 #[test]
@@ -109,14 +107,7 @@ fn suggested_tests_filters_file_level_edges_without_matching_target_usage() {
     );
 
     let facts = impact_test_support::signature_test_facts(&root);
-    let tests = suggested_tests(
-        &entries,
-        &root,
-        &filter,
-        &[],
-        &file_target_symbols,
-        &facts,
-    );
+    let tests = suggested_tests(&entries, &root, &filter, &[], &file_target_symbols, &facts);
 
     assert!(tests.is_empty());
 }
@@ -144,4 +135,53 @@ fn markdown_report_uses_symbol_title_when_roots_are_empty() {
 
     let rendered = String::from_utf8(out).unwrap();
     assert!(rendered.starts_with("# `parseDate`"));
+}
+
+#[test]
+fn text_reports_render_callers_and_suggested_tests() {
+    let report = SignatureImpactReport {
+        roots: vec!["src/date.mts".to_string()],
+        symbol: "parseDate".to_string(),
+        definition: SymbolLocation {
+            file: "src/date.mts".to_string(),
+            symbol: "parseDate".to_string(),
+            line: 1,
+            kind: "const",
+        },
+        exports: vec![SymbolLocation {
+            file: "src/date.mts".to_string(),
+            symbol: "parseDate".to_string(),
+            line: 1,
+            kind: "const",
+        }],
+        production_callers: vec![CallerEntry {
+            file: "src/app.mts".to_string(),
+            symbol: Some("run".to_string()),
+            depth: 1,
+            via: vec!["import"],
+        }],
+        test_callers: vec![CallerEntry {
+            file: "src/date.test.mts".to_string(),
+            symbol: None,
+            depth: 1,
+            via: vec!["test"],
+        }],
+        suggested_tests: vec![TestSuggestion {
+            file: "src/date.test.mts".to_string(),
+            depth: 1,
+            via: vec!["test"],
+        }],
+        warnings: vec![],
+    };
+    let mut markdown = Vec::new();
+    write_report(&report, Format::Md, &mut markdown).unwrap();
+    let markdown = String::from_utf8(markdown).unwrap();
+    assert!(markdown.contains("# `src/date.mts`"));
+    assert!(markdown.contains("`src/app.mts#run`"));
+    assert!(markdown.contains("`src/date.test.mts`"));
+    let mut human = Vec::new();
+    write_report(&report, Format::Human, &mut human).unwrap();
+    let human = String::from_utf8(human).unwrap();
+    assert!(human.contains("src/app.mts#run"));
+    assert!(human.contains("src/date.test.mts"));
 }

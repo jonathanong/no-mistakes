@@ -454,3 +454,17 @@ fn run_returns_exit_codes() {
     let _ = compute(&args("broken.ts")).unwrap().exit_code();
     let _ = compute(&args("consumer.ts")).unwrap().exit_code();
 }
+
+#[test]
+fn resolve_check_text_writers_surface_io_errors() {
+    let broken = compute(&args("broken.ts")).unwrap();
+    let clean = compute(&args("consumer.ts")).unwrap();
+    crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[
+        &broken, &clean,
+    ]);
+    let mut many = args("broken.ts");
+    many.files = vec![PathBuf::from("broken.ts"), PathBuf::from("consumer.ts")];
+    crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[
+        &super::batch_report(super::compute_many(&many).unwrap()),
+    ]);
+}

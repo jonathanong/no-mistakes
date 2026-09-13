@@ -72,3 +72,48 @@ fn project_xml_supports_trivia_but_rejects_invalid_document_structure() {
         );
     }
 }
+
+#[test]
+fn dependency_items_cover_conditions_processing_instructions_and_dynamic_names() {
+    let items = super::super::xml::dependency_items(
+        r#"<Project><?xml version="1.0"?><ItemGroup><PackageReference Include="Alpha" Version="1" /><PackageReference Update="Beta" Version="2" /></ItemGroup></Project>"#,
+        &["PackageReference"],
+    )
+    .unwrap();
+    assert_eq!(
+        items
+            .iter()
+            .map(|item| item.name.as_str())
+            .collect::<Vec<_>>(),
+        vec!["Alpha", "Beta"]
+    );
+
+    assert_eq!(
+        super::super::xml::validate_xml("<Project></Project>"),
+        Ok(())
+    );
+    assert_eq!(
+        super::super::xml::normalize_xml("<Project>\n  <Item />\n</Project>"),
+        "<Project><Item /></Project>"
+    );
+
+    for source in [
+        "<Project><!DOCTYPE project></Project>",
+        "<Project></ ></Project>",
+        "<Project></ItemGroup></Project>",
+        "<Import Project=\"Packages.props\" />",
+        r#"<Project><PackageReference Include="Alpha" Condition="'$(OS)'=='Windows'" /></Project>"#,
+        r#"<Project><PackageReference Include="Alpha*" /></Project>"#,
+        "<Project><!-- unterminated",
+        "<Project>trailing</Project> text",
+    ] {
+        assert!(
+            super::super::xml::dependency_items(source, &["PackageReference"]).is_err(),
+            "{source}"
+        );
+    }
+    assert_eq!(
+        super::super::xml::validate_xml("<Project><Import Project=\"x\" /></Project>"),
+        Err(DotnetDependencyDiagnostic::UnsupportedDynamicDeclaration)
+    );
+}

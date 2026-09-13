@@ -29,6 +29,8 @@ const CHUNK_QUEUE_CAPACITY: usize = 2;
 /// discarded — a `git diff` failure's stderr is a short diagnostic line.
 const STDERR_CAP_BYTES: usize = 64 * 1024;
 
+type LineHandler<'a> = dyn FnMut(&str) -> std::io::Result<()> + 'a;
+
 #[derive(Debug)]
 pub(crate) struct StreamOutcome {
     pub(crate) status: ExitStatus,
@@ -45,7 +47,7 @@ pub(crate) struct StreamOutcome {
 pub(crate) fn stream_command_lines(
     command: &mut Command,
     max_line_bytes: usize,
-    mut on_line: impl FnMut(&str) -> std::io::Result<()>,
+    on_line: &mut LineHandler<'_>,
 ) -> std::io::Result<StreamOutcome> {
     // Fail fast, matching `command_output`, if the invocation deadline has
     // already elapsed — never spawn a child with no time budget left.
@@ -76,7 +78,7 @@ pub(crate) fn stream_command_lines(
     std::thread::spawn(move || read_chunks(&mut stdout, chunk_tx));
     let stderr_reader = spawn_bounded_stderr_reader(stderr);
 
-    if let Err(error) = drain_lines(&chunk_rx, max_line_bytes, &mut on_line) {
+    if let Err(error) = drain_lines(&chunk_rx, max_line_bytes, on_line) {
         let cleanup_error = process_tree.terminate(&mut child).err();
         let _ = child.wait_timeout(CLEANUP_TIMEOUT);
         // Wake any sender still blocked on the now-abandoned channel so its
@@ -174,7 +176,7 @@ fn terminate_and_reap(
 fn drain_lines(
     rx: &Receiver<std::io::Result<Vec<u8>>>,
     max_line_bytes: usize,
-    on_line: &mut impl FnMut(&str) -> std::io::Result<()>,
+    on_line: &mut LineHandler<'_>,
 ) -> std::io::Result<()> {
     let mut pending: Vec<u8> = Vec::new();
     loop {

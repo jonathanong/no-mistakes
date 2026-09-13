@@ -42,7 +42,7 @@ pub(super) fn import_usages_report(
         crate::codebase::import_usages::prepare_file_universe(&args, &root, &cwd, &session)?;
     let report =
         crate::codebase::import_usages::collect_with_facts(&root, &prepared, shared.facts())?;
-    Ok(serde_json::to_value(report)?)
+    Ok(crate::cli::json_value(&report))
 }
 
 pub(super) fn prepare_shared_traversal(

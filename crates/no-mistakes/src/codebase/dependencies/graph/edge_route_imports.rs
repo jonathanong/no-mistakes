@@ -1,8 +1,13 @@
+use super::{is_indexable, Edge, EdgeKind, GraphFiles, ImportKind, NodeId, TsFactLookup};
+use crate::codebase::ts_resolver::{ImportResolution, ImportResolver, TsConfig};
+use rayon::prelude::*;
+use std::path::{Path, PathBuf};
+
 /// Build the conservative runtime-import graph used by Playwright route
 /// reachability. This intentionally does not apply ordinary call-scope
 /// pruning: a literal dynamic import anywhere in a route-reachable module may
 /// be executed at runtime, even when the static call graph cannot prove it.
-fn collect_route_import_edges(
+pub(crate) fn collect_route_import_edges(
     files: &[PathBuf],
     facts: &dyn TsFactLookup,
     tsconfig: &TsConfig,
@@ -22,10 +27,10 @@ fn collect_route_import_edges(
     };
     let resolver: &dyn ImportResolution = if let Some(resolver) = scoped_resolver.as_ref() {
         resolver
-    } else if let Some(resolver) = legacy_resolver.as_ref() {
-        resolver
     } else {
-        unreachable!("a scoped or legacy route-import resolver is initialized")
+        legacy_resolver
+            .as_ref()
+            .expect("a scoped or legacy route-import resolver is initialized")
     };
     let import_files = files
         .par_iter()
@@ -98,7 +103,7 @@ fn collect_route_import_edges(
         .collect()
 }
 
-fn route_import_resolution_source(
+pub(crate) fn route_import_resolution_source(
     path: &Path,
     canonical_directories: &std::collections::BTreeMap<PathBuf, PathBuf>,
 ) -> PathBuf {
@@ -110,7 +115,10 @@ fn route_import_resolution_source(
             };
         }
     }
-    match path.parent().and_then(|parent| canonical_directories.get(parent)) {
+    match path
+        .parent()
+        .and_then(|parent| canonical_directories.get(parent))
+    {
         Some(canonical_parent) => path
             .file_name()
             .map(|name| canonical_parent.join(name))
@@ -119,7 +127,7 @@ fn route_import_resolution_source(
     }
 }
 
-fn route_import_visible_target(
+pub(crate) fn route_import_visible_target(
     target: PathBuf,
     graph_files: &GraphFiles,
     visible_by_name: &std::collections::BTreeMap<std::ffi::OsString, Vec<PathBuf>>,

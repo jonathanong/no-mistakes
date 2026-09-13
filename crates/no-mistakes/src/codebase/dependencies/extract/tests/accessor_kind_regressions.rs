@@ -159,3 +159,39 @@ fn object_data_property_writes_invalidate_the_replaced_member() {
             && call.target_identity == CallTargetIdentity::Unknown
     }));
 }
+
+#[test]
+fn getter_calls_and_cross_kind_accessors_stay_unresolved_or_unknown() {
+    let getter_call = facts(
+        "class Service { static get value() { return () => 1; } } const api = { get g() { return 1; } }; function run() { Service.value(); api.g(); }",
+    );
+    assert_eq!(
+        getter_call
+            .unknown_calls
+            .iter()
+            .filter(|call| {
+                call.caller.as_deref() == Some("run") && call.invocation == InvocationKind::Call
+            })
+            .count(),
+        2
+    );
+
+    let setter_only =
+        facts("class Service { static set value(next) {} } function run() { Service.value; }");
+    assert!(!setter_only.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "Service.value"
+            && call.invocation == InvocationKind::Get
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+
+    let getter_only_write = facts(
+        "class Service { static get value() { return 1; } } function run() { Service.value = 1; }",
+    );
+    assert!(!getter_only_write.function_calls.iter().any(|call| {
+        call.caller.as_deref() == Some("run")
+            && call.callee == "Service.value"
+            && call.invocation == InvocationKind::Set
+            && call.target_identity == CallTargetIdentity::RepositoryFunction
+    }));
+}

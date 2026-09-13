@@ -43,12 +43,8 @@ fn sort_dedup(mut files: Vec<PathBuf>) -> Vec<PathBuf> {
 fn walk_non_ignored_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<PathBuf> {
     let entry_extra_skip = extra_skip.clone();
     let file_extra_skip: HashSet<&str> = extra_skip.iter().map(String::as_str).collect();
-    WalkBuilder::new(root)
+    ignore_walk_builder(root)
         .hidden(true)
-        // Outside a Git checkout, `ignore` defaults to requiring `.git`
-        // metadata before it applies `.gitignore`. Discovery must keep the
-        // same ignore semantics for source archives and ad-hoc directories.
-        .require_git(false)
         .filter_entry(move |e| {
             let name = e.file_name().to_str().unwrap_or("");
             !(e.depth() > 0
@@ -76,9 +72,8 @@ fn walk_github_workflow_files(root: &Path, extra_skip: &HashSet<String>) -> Vec<
     let extra_skip = extra_skip.clone();
     let filter_root = root.to_path_buf();
     let file_root = root.to_path_buf();
-    WalkBuilder::new(root)
+    ignore_walk_builder(root)
         .hidden(false)
-        .require_git(false)
         .filter_entry(move |e| {
             let name = e.file_name().to_str().unwrap_or("");
             let allowed_directory = !(e.depth() > 0
@@ -190,6 +185,7 @@ pub fn discover_source_files_from_visible(
 }
 
 include!("discovery/helpers.rs");
+include!("discovery/ignore_walk.rs");
 include!("discovery/visible.rs");
 include!("discovery/git_ls.rs");
 include!("discovery/path_views.rs");

@@ -41,3 +41,52 @@ fn deadline_after_buffering_does_not_publish_a_report() {
     assert!(error.to_string().contains("synthetic timeout"));
     assert!(destination.is_empty());
 }
+
+pub(crate) fn assert_report_writers_surface_io_errors<R: Report>(reports: &[&R]) {
+    struct FailAfter {
+        remaining_writes: usize,
+        attempted: bool,
+    }
+    impl Write for FailAfter {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            self.attempted = true;
+            if self.remaining_writes == 0 {
+                return Err(io::Error::other("synthetic write failure"));
+            }
+            self.remaining_writes -= 1;
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+    fn exhaust(mut write: impl FnMut(&mut FailAfter) -> io::Result<()>) {
+        let mut completed = false;
+        for remaining_writes in 0..64 {
+            let mut writer = FailAfter {
+                remaining_writes,
+                attempted: false,
+            };
+            let result = write(&mut writer);
+            if remaining_writes == 0 && writer.attempted {
+                assert!(
+                    result.is_err(),
+                    "zero-budget writers must fail after a write"
+                );
+            }
+            if result.is_ok() {
+                completed = true;
+                break;
+            }
+        }
+        assert!(
+            completed,
+            "report writers should succeed after enough writes"
+        );
+    }
+    for report in reports {
+        exhaust(|writer| report.write_human(writer));
+        exhaust(|writer| report.write_paths(writer));
+        exhaust(|writer| report.write_md(writer));
+    }
+}

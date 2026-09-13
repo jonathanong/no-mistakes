@@ -310,3 +310,78 @@ fn preserves_raw_target_alignment_across_ctes_and_outer_insert() {
     assert_eq!(inserts[0].table, "items");
     assert_eq!(inserts[1].table, "summaries");
 }
+
+#[test]
+fn analyzes_default_values_and_union_sources() {
+    let defaults =
+        analyze_conflict_inserts("INSERT INTO items DEFAULT VALUES ON CONFLICT DO NOTHING")
+            .unwrap();
+    assert_eq!(defaults.len(), 1);
+    assert!(!defaults[0].source.multi_row);
+
+    let union = analyze_conflict_inserts(
+        "INSERT INTO items (id) SELECT id FROM input UNION SELECT id FROM extra ON CONFLICT (id) DO NOTHING",
+    );
+    assert!(union.is_ok(), "{union:?}");
+}
+
+#[test]
+fn remaining_set_expr_and_insert_shapes() {
+    let nested = analyze_conflict_inserts(
+        "INSERT INTO items (id) SELECT id FROM (
+            INSERT INTO nested (id) VALUES (1) ON CONFLICT (id) DO NOTHING RETURNING id
+         ) AS src ON CONFLICT (id) DO NOTHING",
+    );
+    assert!(
+        nested
+            .unwrap_err()
+            .to_string()
+            .contains("could not align ON CONFLICT"),
+        "nested INSERT..ON CONFLICT should fail alignment"
+    );
+
+    let except = analyze_conflict_inserts(
+        "INSERT INTO items (id) SELECT id FROM first EXCEPT SELECT id FROM second ON CONFLICT (id) DO NOTHING",
+    );
+    assert!(except.is_ok(), "{except:?}");
+
+    let intersecting = analyze_conflict_inserts(
+        "INSERT INTO items (id) SELECT id FROM first INTERSECT SELECT id FROM extra ON CONFLICT (id) DO NOTHING",
+    );
+    assert!(intersecting.is_ok(), "{intersecting:?}");
+
+    let values_query = analyze_conflict_inserts(
+        "INSERT INTO items (id) (VALUES (1), (2)) ON CONFLICT (id) DO NOTHING",
+    )
+    .unwrap();
+    assert!(values_query[0].source.multi_row);
+
+    let Statement::Query(query) = parse_postgres_sql("SELECT 1 UNION SELECT 2")
+        .unwrap()
+        .pop()
+        .unwrap()
+    else {
+        panic!("union query");
+    };
+    assert!(query_is_potentially_multi_row(query.body.as_ref()));
+
+    let Statement::Query(wrapped) = parse_postgres_sql("(SELECT 1)").unwrap().pop().unwrap() else {
+        panic!("wrapped");
+    };
+    assert!(query_is_potentially_multi_row(wrapped.body.as_ref()));
+
+    let insert_stmt = parse_postgres_sql("INSERT INTO items VALUES (1)")
+        .unwrap()
+        .pop()
+        .unwrap();
+    let mut raw = Vec::new().into_iter();
+    let mut inserts = Vec::new();
+    collect_statement(&insert_stmt, &mut raw, &mut inserts).unwrap();
+    assert!(inserts.is_empty());
+
+    let update = parse_postgres_sql("UPDATE items SET id = 1")
+        .unwrap()
+        .pop()
+        .unwrap();
+    collect_statement(&update, &mut Vec::new().into_iter(), &mut inserts).unwrap();
+}

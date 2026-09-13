@@ -15,6 +15,7 @@ const {
   launchNative,
   main: launcherMain,
   planningImpactArgs,
+  runIfMain,
 } = require("../bin/no-mistakes.js");
 
 test("parses the planning-impact artifact command and its invocation controls", () => {
@@ -163,6 +164,18 @@ test("bounds CLI diagnostics without splitting UTF-8 characters", () => {
   assert.equal(boundedDiagnostic(new Error(detail)).includes("\ufffd"), false);
 });
 
+test("runs the CLI entry only when the module is executed directly", () => {
+  let started = false;
+  runIfMain(module, module, () => {
+    started = true;
+  });
+  assert.equal(started, true);
+  runIfMain({}, module, () => {
+    started = false;
+  });
+  assert.equal(started, true);
+});
+
 test("recognizes planning-impact only as the first actual subcommand", () => {
   assert.equal(firstSubcommand(["--timeout", "5", "planning-impact"]), "planning-impact");
   assert.equal(firstSubcommand(["--jobs=2", "planning-impact"]), "planning-impact");
@@ -260,6 +273,8 @@ test("reports native spawn errors and preserves signal or null-code exits", () =
   handlers.error(new Error("spawn failed"));
   assert.equal(io.exitCode, 1);
   assert.equal(io.error, "spawn failed\n");
+  handlers.error("spawn failed");
+  assert.equal(io.error, "spawn failed\n");
   handlers.exit(null, null);
   assert.equal(io.exitCode, 1);
 
@@ -290,6 +305,18 @@ test("reports a selected-platform resolver failure before attempting to spawn", 
   assert.equal(result, undefined);
   assert.equal(io.exitCode, 1);
   assert.match(io.error, /no-mistakes-darwin-arm64/);
+  const stringIo = { exitCode: undefined, stderr: { write: (value) => (stringIo.error = value) } };
+  launchNative(
+    ["dependencies"],
+    () => assert.fail("the CLI must not spawn without its matching platform package"),
+    stringIo,
+    process.kill,
+    () => {
+      throw "unavailable";
+    },
+  );
+  assert.equal(stringIo.exitCode, 1);
+  assert.equal(stringIo.error, "unavailable\n");
 });
 
 test(

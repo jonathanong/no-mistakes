@@ -1530,6 +1530,41 @@ test("rejects every reserved artifact destination as a changed-files manifest be
   }
 });
 
+test("rejects a manifest that becomes a reserved inode after validation", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const reserved = join(directory, "plan.status");
+  const fs = require("node:fs/promises");
+  const originalStat = fs.stat;
+  let manifestStatChecks = 0;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    const canonicalManifest = await fs.realpath(manifest);
+    await withFsOverride(
+      {
+        stat: async (path, ...args) => {
+          if (path === canonicalManifest) {
+            manifestStatChecks += 1;
+            if (manifestStatChecks === 2) await link(canonicalManifest, reserved);
+          }
+          return originalStat(path, ...args);
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          /must not use a reserved artifact destination/,
+        );
+      },
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("rejects reserved artifact manifests through case-insensitive path aliases", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "PLAN.STATUS");
@@ -1799,6 +1834,27 @@ test("uses identity checks when directory descriptors are unavailable", async ()
   }
 });
 
+test("rethrows unexpected output directory open errors", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  try {
+    await withFsOverride(
+      {
+        open: async () => {
+          const error = new Error("permission denied");
+          error.code = "EACCES";
+          throw error;
+        },
+      },
+      async () => {
+        const { validateOutputDirectory } = require("../planning-impact-artifacts-files");
+        await assert.rejects(validateOutputDirectory(directory), /permission denied/);
+      },
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
 test("closes an output descriptor when its initial path identity changes", async () => {
   const directory = await privateDirectory("no-mistakes-impact-");
   const manifest = join(directory, "changed-files.txt");
@@ -1932,6 +1988,38 @@ test("rejects a hardlinked staged artifact before publication", async () => {
   } finally {
     await rm(directory, { recursive: true, force: true });
     await rm(outside, { recursive: true, force: true });
+  }
+});
+
+test("rejects a staged artifact whose link count changes before publication", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  const fs = require("node:fs/promises");
+  const originalLstat = fs.lstat;
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await withFsOverride(
+      {
+        lstat: async (path, ...args) => {
+          const metadata = await originalLstat(path, ...args);
+          if (path.includes(".dependencies.json.")) {
+            Object.defineProperty(metadata, "nlink", { value: 2 });
+          }
+          return metadata;
+        },
+      },
+      async ({ writePlanningImpactArtifacts: writeArtifacts }) => {
+        await assert.rejects(
+          writeArtifacts(
+            { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+            async () => aggregateResult,
+          ),
+          /staged artifact changed before publication: dependencies\.json/,
+        );
+      },
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
   }
 });
 
@@ -2133,6 +2221,42 @@ test("records a failed report schema as aggregate failure", async () => {
       /dependencies type symbols; expected dependencies/,
     );
     assert.equal(await readFile(join(directory, "symbols.status"), "utf8"), "1\n");
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("records omitted reports as aggregate failure", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await assert.rejects(
+      writePlanningImpactArtifacts(
+        { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+        async () => ({ reports: aggregateResult.reports.slice(0, 3) }),
+      ),
+      /omitted the plan report/,
+    );
+  } finally {
+    await rm(directory, { recursive: true, force: true });
+  }
+});
+
+test("stringifies non-error analysis failures", async () => {
+  const directory = await privateDirectory("no-mistakes-impact-");
+  const manifest = join(directory, "changed-files.txt");
+  try {
+    await writeFile(manifest, "a.mts\n");
+    await assert.rejects(
+      writePlanningImpactArtifacts(
+        { root: "/repo", changedFilesManifest: manifest, outputDirectory: directory },
+        async () => {
+          throw "boom";
+        },
+      ),
+      (error) => error === "boom",
+    );
   } finally {
     await rm(directory, { recursive: true, force: true });
   }

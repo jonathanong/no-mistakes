@@ -45,6 +45,9 @@ mod import_usages_scope_tests;
 #[cfg(test)]
 mod legacy_test_support;
 #[cfg(test)]
+#[path = "analyze_project/tests/option_merge_shapes.rs"]
+mod option_merge_shapes_tests;
+#[cfg(test)]
 mod options_test_support;
 #[cfg(test)]
 mod options_tests;
@@ -55,6 +58,9 @@ mod tests_dispatch;
 #[cfg(test)]
 #[path = "analyze_project/tracked_banned_paths_tests.rs"]
 mod tracked_banned_paths_tests;
+#[cfg(test)]
+#[path = "analyze_project/tests/unknown_option_fields.rs"]
+mod unknown_option_fields_tests;
 
 #[cfg(any(test, feature = "test-instrumentation"))]
 pub(crate) fn analyze_project_json_impl(options: serde_json::Value) -> napi::Result<String> {
@@ -70,7 +76,7 @@ pub(crate) fn analyze_project_value_impl(options: Value) -> napi::Result<String>
 
 fn analyze_project_options_impl(options: AnalyzeProjectOptions) -> napi::Result<String> {
     let output = analyze_project(options).map_err(to_napi_error)?;
-    Ok(serde_json::to_string(&output).expect("analyzeProject result serialization never fails"))
+    Ok(crate::cli::json_string(&output))
 }
 
 fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjectResult> {

@@ -146,3 +146,5 @@ module.exports = rule(
     };
   },
 );
+
+module.exports.__test = { propertyName };

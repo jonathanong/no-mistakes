@@ -15,7 +15,7 @@ pub(super) fn symbols_options(
 ) -> AnyhowResult<String> {
     let value = merged_options(request, options, true, false, true)?;
     let _: SymbolOptions = serde_json::from_value(value.clone())?;
-    Ok(serde_json::to_string(&value)?)
+    Ok(crate::cli::json_string(&value))
 }
 
 pub(super) fn import_usages_options(
@@ -24,7 +24,7 @@ pub(super) fn import_usages_options(
 ) -> AnyhowResult<String> {
     let value = merged_options(request, options, false, true, false)?;
     let _: ImportUsagesOptions = serde_json::from_value(value.clone())?;
-    Ok(serde_json::to_string(&value)?)
+    Ok(crate::cli::json_string(&value))
 }
 
 pub(super) fn project_options(
@@ -34,7 +34,7 @@ pub(super) fn project_options(
     let value = merged_options(request, options, true, true, true)?;
     let project_options: ProjectOptions = serde_json::from_value(value.clone())?;
     let _ = project_roots(&project_options);
-    Ok(serde_json::to_string(&value)?)
+    Ok(crate::cli::json_string(&value))
 }
 
 pub(super) fn flow_options(
@@ -43,7 +43,7 @@ pub(super) fn flow_options(
 ) -> AnyhowResult<String> {
     let value = merged_options(request, options, true, false, true)?;
     let _: FlowOptions = serde_json::from_value(value.clone())?;
-    Ok(serde_json::to_string(&value)?)
+    Ok(crate::cli::json_string(&value))
 }
 
 pub(super) fn playwright_options(
@@ -52,7 +52,7 @@ pub(super) fn playwright_options(
 ) -> AnyhowResult<String> {
     let value = merged_options(request, options, false, false, true)?;
     let _: PlaywrightOptions = serde_json::from_value(value.clone())?;
-    Ok(serde_json::to_string(&value)?)
+    Ok(crate::cli::json_string(&value))
 }
 
 pub(super) fn effects_options(

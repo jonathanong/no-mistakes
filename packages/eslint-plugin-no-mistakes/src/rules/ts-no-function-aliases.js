@@ -63,14 +63,7 @@ function isSelfCall(node, call) {
   if (!callee) return false;
   const wrapper = variableWrapperName(node);
   if (wrapper) return wrapper === callee;
-  if (node.id && node.id.name === callee) return true;
-  const parent = node.parent;
-  return (
-    parent &&
-    parent.type === "VariableDeclarator" &&
-    parent.id.type === "Identifier" &&
-    parent.id.name === callee
-  );
+  return Boolean(node.id && node.id.name === callee);
 }
 
 function assignmentWrapperName(node) {
@@ -112,28 +105,31 @@ function reportIfAlias(node, context) {
   }
 }
 
-module.exports = rule(
-  {
-    type: "problem",
-    docs: {
-      description: "disallow function wrappers that only alias another function",
-      recommended: true,
+module.exports = Object.assign(
+  rule(
+    {
+      type: "problem",
+      docs: {
+        description: "disallow function wrappers that only alias another function",
+        recommended: true,
+      },
+      schema: [],
+      messages: {
+        alias:
+          "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
+      },
     },
-    schema: [],
-    messages: {
-      alias:
-        "Do not create a function that only aliases another function call. Export or call the original function name directly so agents can trace behavior.",
-    },
-  },
-  (context) => ({
-    ArrowFunctionExpression(node) {
-      reportIfAlias(node, context);
-    },
-    FunctionDeclaration(node) {
-      reportIfAlias(node, context);
-    },
-    FunctionExpression(node) {
-      reportIfAlias(node, context);
-    },
-  }),
+    (context) => ({
+      ArrowFunctionExpression(node) {
+        reportIfAlias(node, context);
+      },
+      FunctionDeclaration(node) {
+        reportIfAlias(node, context);
+      },
+      FunctionExpression(node) {
+        reportIfAlias(node, context);
+      },
+    }),
+  ),
+  { __test: { onlyCallExpression, isSelfCall } },
 );

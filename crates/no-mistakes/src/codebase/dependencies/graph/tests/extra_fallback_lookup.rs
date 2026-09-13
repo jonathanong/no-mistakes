@@ -1,4 +1,63 @@
 #[test]
+fn fallback_lookup_playwright_parse_error_covers_prefer_and_primary_channels() {
+    struct ParseErrors {
+        facts: TsFactMap,
+        files: Vec<PathBuf>,
+        errors: std::collections::HashMap<PathBuf, String>,
+    }
+    impl TsFactLookup for ParseErrors {
+        fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
+            self.facts.get(path)
+        }
+        fn graph_files(&self) -> Option<&[PathBuf]> {
+            Some(&self.files)
+        }
+        fn get_playwright_parse_error(&self, path: &Path) -> Option<&str> {
+            self.errors.get(path).map(String::as_str)
+        }
+    }
+
+    let path = PathBuf::from("/repo/a.ts");
+    let files = vec![path.clone()];
+    let visible: crate::fx::PathSet = files.clone().into_iter().collect();
+    let primary = ParseErrors {
+        facts: TsFactMap::from([(path.clone(), TsFileFacts::default())]),
+        files: files.clone(),
+        errors: [(path.clone(), "primary".to_string())].into_iter().collect(),
+    };
+    let fallback_error = TsFactMap::from([(
+        path.clone(),
+        TsFileFacts {
+            parse_error: Some("fallback".into()),
+            ..Default::default()
+        },
+    )]);
+    let fallback_empty = TsFactMap::from([(path.clone(), TsFileFacts::default())]);
+
+    let prefer = FallbackTsFactLookup::new(&primary, &fallback_error, true, &files, &visible);
+    assert_eq!(lookup_error(&prefer, &path), Some("fallback"));
+    let prefer_primary =
+        FallbackTsFactLookup::new(&primary, &fallback_empty, true, &files, &visible);
+    assert_eq!(lookup_error(&prefer_primary, &path), Some("primary"));
+
+    let primary_first =
+        FallbackTsFactLookup::new(&primary, &fallback_error, false, &files, &visible);
+    assert_eq!(lookup_error(&primary_first, &path), Some("primary"));
+    let empty_primary = ParseErrors {
+        facts: TsFactMap::from([(path.clone(), TsFileFacts::default())]),
+        files: files.clone(),
+        errors: Default::default(),
+    };
+    let fallback_only =
+        FallbackTsFactLookup::new(&empty_primary, &fallback_error, false, &files, &visible);
+    assert_eq!(lookup_error(&fallback_only, &path), Some("fallback"));
+}
+
+fn lookup_error<'a>(lookup: &'a FallbackTsFactLookup<'a>, path: &Path) -> Option<&'a str> {
+    lookup.get_playwright_parse_error(path)
+}
+
+#[test]
 fn fallback_lookup_forwards_scan_helpers_through_primary_and_fallback() {
     struct Files(TsFactMap, Vec<PathBuf>);
     impl TsFactLookup for Files {

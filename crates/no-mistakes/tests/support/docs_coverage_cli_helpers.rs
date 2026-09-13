@@ -248,6 +248,7 @@ fn inventories_the_requested_source_tree_without_git_commands() {
         .git_global(false)
         .git_exclude(false)
         .require_git(false)
+        .parents(false)
         .build()
         .map(Result::unwrap)
         .filter(|entry| entry.path() != source)

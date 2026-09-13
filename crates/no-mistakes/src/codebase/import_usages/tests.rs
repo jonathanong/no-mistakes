@@ -1,5 +1,6 @@
-use super::model::package_name_from_specifier;
+use super::model::{package_name_from_specifier, ImportUsageFile, ImportUsagesReport};
 use super::*;
+use std::io;
 
 fn fixture_root() -> PathBuf {
     PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -137,4 +138,59 @@ fn json_output_uses_camel_case_fields() {
     assert!(imports.iter().any(|row| row["sideEffectOnly"] == true));
     assert!(imports.iter().any(|row| row["reExport"] == true));
     assert!(imports.iter().any(|row| row["kind"] == "require-resolve"));
+}
+
+#[test]
+fn import_usage_writers_surface_io_errors() {
+    struct FailAfter {
+        remaining_writes: usize,
+        attempted: bool,
+    }
+    impl std::io::Write for FailAfter {
+        fn write(&mut self, bytes: &[u8]) -> io::Result<usize> {
+            self.attempted = true;
+            if self.remaining_writes == 0 {
+                return Err(io::Error::other("synthetic write failure"));
+            }
+            self.remaining_writes -= 1;
+            Ok(bytes.len())
+        }
+        fn flush(&mut self) -> io::Result<()> {
+            Ok(())
+        }
+    }
+    let populated = collect(&args(vec!["src/main.mts"])).unwrap();
+    let empty = ImportUsagesReport {
+        roots: vec![],
+        files: vec![ImportUsageFile {
+            path: "src/empty.ts".to_string(),
+            imports: vec![],
+        }],
+    };
+    for report in [&populated, &empty] {
+        for format in [
+            Format::Json,
+            Format::Yml,
+            Format::Human,
+            Format::Md,
+            Format::Paths,
+        ] {
+            let mut completed = false;
+            for remaining_writes in 0..4096 {
+                let mut writer = FailAfter {
+                    remaining_writes,
+                    attempted: false,
+                };
+                let result = super::output::write_report(report, format, &mut writer);
+                if remaining_writes == 0 && writer.attempted {
+                    assert!(result.is_err(), "{format:?} must propagate a write error");
+                }
+                if result.is_ok() {
+                    completed = true;
+                    break;
+                }
+            }
+            assert!(completed, "{format:?} should succeed after enough writes");
+        }
+    }
 }

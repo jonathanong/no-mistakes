@@ -151,7 +151,7 @@ fn apply_own_records_out_dir_files_and_boolean_compiler_flags() {
             }),
             &path,
             &root,
-            |value| Ok(root.join(value)),
+            &|value| Ok(root.join(value)),
         )
         .expect("valid compiler options apply");
     assert!(config.out_dir.is_some());
@@ -163,7 +163,7 @@ fn apply_own_records_out_dir_files_and_boolean_compiler_flags() {
             &serde_json::json!({ "compilerOptions": "nope" }),
             &path,
             &root,
-            |value| Ok(root.join(value)),
+            &|value| Ok(root.join(value)),
         )
         .expect_err("compilerOptions must be an object");
     assert!(err.contains("must be an object"));
@@ -172,7 +172,7 @@ fn apply_own_records_out_dir_files_and_boolean_compiler_flags() {
             &serde_json::json!({ "compilerOptions": { "allowJs": "yes" } }),
             &path,
             &root,
-            |value| Ok(root.join(value)),
+            &|value| Ok(root.join(value)),
         )
         .expect_err("allowJs must be a boolean");
     assert!(err.contains("allowJs"));

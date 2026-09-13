@@ -50,7 +50,7 @@ impl PreparedScope {
                 "distinct Playwright settings require a separate prepared analyzeProject context"
             );
         };
-        let analysis = cached_once(&self.playwright_analyses, &key, || {
+        let analysis = cached_once(&self.playwright_analyses, &key, &|| {
             Ok(std::sync::Arc::new(
                 crate::playwright::analysis::pipeline::analyze_with_policy_and_facts_from_snapshot(
                     self.traversal.root(),

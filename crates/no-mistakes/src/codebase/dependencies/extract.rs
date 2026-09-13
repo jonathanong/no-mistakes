@@ -2,10 +2,9 @@ use crate::fx::{fx_map, fx_set, FxHashMap, FxHashSet};
 use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    AccessorProperty, Argument, AssignmentExpression, AssignmentTarget,
-    AssignmentTargetMaybeDefault, AssignmentTargetProperty, BindingPattern, BlockStatement,
-    CallExpression, CatchClause, Class, ClassElement, ComputedMemberExpression, Declaration,
-    ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration,
+    AccessorProperty, Argument, AssignmentExpression, AssignmentTarget, BindingPattern,
+    BlockStatement, CallExpression, CatchClause, Class, ClassElement, ComputedMemberExpression,
+    Declaration, ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration,
     ExportDefaultDeclarationKind, ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier,
     Expression, ForStatementLeft, FormalParameters, Function, IdentifierReference,
     ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement,
@@ -233,7 +232,8 @@ include!("extract_class_eager_helpers.rs");
 include!("extract_class_callable_helpers.rs");
 include!("extract_visit_object_references.rs");
 include!("extract_collector_aliases.rs");
-include!("extract_collector_aggregate_aliases.rs");
+#[path = "extract_collector_aggregate_aliases.rs"]
+mod extract_collector_aggregate_aliases;
 include!("extract_collector_deferred_aliases.rs");
 include!("extract_visit_helpers.rs");
 include!("extract_visit_variables.rs");
@@ -242,9 +242,14 @@ include!("extract_default_helpers.rs");
 include!("extract_object_scope_helpers.rs");
 include!("extract_resource_scopes.rs");
 include!("extract_type_scope_helpers.rs");
-include!("extract_visit_hoist.rs");
+mod extract_visit_hoist;
+use extract_visit_hoist::{
+    predeclare_function_declarations, predeclare_hoisted_var_bindings,
+    walk_arrow_function_with_body_bindings, walk_function_with_body_bindings,
+};
 include!("extract_visit_types.rs");
-include!("extract_binding_names.rs");
+mod extract_binding_names;
+use extract_binding_names::{assignment_target_names, binding_names};
 include!("extract_binding_helpers.rs");
 include!("extract_syntax_helpers.rs");
 
@@ -264,6 +269,12 @@ pub fn is_indexable(path: &Path) -> bool {
     )
 }
 
+#[cfg(test)]
+#[path = "extract/tests/binding_and_hoist_coverage.rs"]
+mod binding_and_hoist_coverage;
+#[cfg(test)]
+#[path = "extract/tests/collector_scope_coverage.rs"]
+mod collector_scope_coverage;
 #[cfg(test)]
 mod coverage_tests;
 #[cfg(test)]

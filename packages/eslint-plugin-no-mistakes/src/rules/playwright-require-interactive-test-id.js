@@ -126,3 +126,5 @@ function matchesAny(name, matchers) {
     }),
   );
 }
+
+module.exports.__test = { compileMatchers };

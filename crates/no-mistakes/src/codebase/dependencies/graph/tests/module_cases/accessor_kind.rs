@@ -14,7 +14,9 @@ fn paired_static_accessor_reads_keep_only_the_getter_import() {
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::file(root.join("src/paired-static-accessor-read.mts"))],
+        &[NodeId::file(
+            root.join("src/paired-static-accessor-read.mts"),
+        )],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -46,7 +48,9 @@ fn paired_static_accessor_writes_keep_only_the_setter_import() {
         DepGraph::build_with_plan(&root, &tsconfig, GraphBuildPlan::imports_and_workspace())
             .unwrap();
     let deps = graph.deps_of(
-        &[NodeId::file(root.join("src/paired-static-accessor-write.mts"))],
+        &[NodeId::file(
+            root.join("src/paired-static-accessor-write.mts"),
+        )],
         None,
         Some(&[EdgeKind::DynamicImport].into()),
     );
@@ -104,5 +108,64 @@ fn paired_static_accessors_keep_distinct_callable_ids() {
         })
         .collect::<HashSet<_>>();
 
-    assert_eq!(ids.len(), 2, "getter and setter must keep distinct identities");
+    assert_eq!(
+        ids.len(),
+        2,
+        "getter and setter must keep distinct identities"
+    );
+}
+
+#[test]
+fn auto_accessor_fields_are_visited_during_call_extraction() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+}
+
+#[test]
+fn cyclic_and_inherited_static_accessor_calls_stay_sound() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("graph-call-narrowing"));
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph = DepGraph::build_with_plan(
+        &root,
+        &tsconfig,
+        GraphBuildPlan {
+            calls: true,
+            ..GraphBuildPlan::default()
+        },
+    )
+    .unwrap();
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.source_callee == "Alpha.run"
+            && matches!(
+                &site.target,
+                crate::codebase::dependencies::graph::ResolvedCallTarget::RepositoryFunction { .. }
+            )
+    }));
+    assert!(graph.resolved_call_sites().iter().any(|site| {
+        site.source_callee == "Alpha.missing"
+            && site.target == crate::codebase::dependencies::graph::ResolvedCallTarget::Unknown
+    }));
+    assert!(graph
+        .resolved_call_sites()
+        .iter()
+        .any(|site| { site.source_callee == "Child.value" }));
 }

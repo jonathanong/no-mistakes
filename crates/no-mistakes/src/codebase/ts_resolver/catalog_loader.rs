@@ -72,7 +72,7 @@ impl CatalogBuilder<'_> {
             };
             effective.inherit(base);
         }
-        effective.apply_own(&value, path, &dir, |reference| {
+        effective.apply_own(&value, path, &dir, &|reference| {
             self.resolve_config_value(&dir, reference)
         })?;
         Ok(effective)

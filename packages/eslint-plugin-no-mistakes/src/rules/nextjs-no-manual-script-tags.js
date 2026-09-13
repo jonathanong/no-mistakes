@@ -65,39 +65,42 @@ function isAllowedInlineScript(node, options, patterns) {
   );
 }
 
-module.exports = rule(
-  {
-    type: "problem",
-    docs: { description: "prefer next/script over raw script JSX tags", recommended: false },
-    schema: [
-      {
-        type: "object",
-        properties: {
-          allowInlineScriptIds: { type: "array", items: { type: "string" } },
-          allowInlineScriptIdPatterns: { type: "array", items: { type: "string" } },
+module.exports = Object.assign(
+  rule(
+    {
+      type: "problem",
+      docs: { description: "prefer next/script over raw script JSX tags", recommended: false },
+      schema: [
+        {
+          type: "object",
+          properties: {
+            allowInlineScriptIds: { type: "array", items: { type: "string" } },
+            allowInlineScriptIdPatterns: { type: "array", items: { type: "string" } },
+          },
+          additionalProperties: false,
         },
-        additionalProperties: false,
-      },
-    ],
-    messages: { script: "Use next/script instead of a raw <script> tag." },
-  },
-  (context) => {
-    const options = context.options[0] || {};
-    const patterns = allowedIdPatterns(options);
-    let isNextFile = isNextPath(context.filename);
-    return {
-      ImportDeclaration(node) {
-        if (typeof node.source.value === "string" && node.source.value.startsWith("next/")) {
-          isNextFile = true;
-        }
-      },
-      JSXOpeningElement(node) {
-        if (!isNextFile) return;
-        if (node.name.type !== "JSXIdentifier" || node.name.name !== "script") return;
-        if (isJsonLdScript(node)) return;
-        if (isAllowedInlineScript(node, options, patterns)) return;
-        context.report({ node, messageId: "script" });
-      },
-    };
-  },
+      ],
+      messages: { script: "Use next/script instead of a raw <script> tag." },
+    },
+    (context) => {
+      const options = context.options[0] || {};
+      const patterns = allowedIdPatterns(options);
+      let isNextFile = isNextPath(context.filename);
+      return {
+        ImportDeclaration(node) {
+          if (typeof node.source.value === "string" && node.source.value.startsWith("next/")) {
+            isNextFile = true;
+          }
+        },
+        JSXOpeningElement(node) {
+          if (!isNextFile) return;
+          if (node.name.type !== "JSXIdentifier" || node.name.name !== "script") return;
+          if (isJsonLdScript(node)) return;
+          if (isAllowedInlineScript(node, options, patterns)) return;
+          context.report({ node, messageId: "script" });
+        },
+      };
+    },
+  ),
+  { __test: { attributeValue } },
 );

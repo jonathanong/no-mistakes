@@ -93,3 +93,30 @@ fn unterminated_delimiters_inside_ctes_fail_closed() {
     assert_eq!(top_level_dml_kind("WITH stale AS (SELECT $body$nope"), None);
     assert_eq!(top_level_dml_kind("WITH stale AS (SELECT $"), None);
 }
+
+#[test]
+fn skip_cte_column_lists_materialized_and_malformed_prefixes() {
+    assert_eq!(
+        top_level_dml_kind("WITH cte(a, b) AS (SELECT 1) SELECT 1"),
+        Some(TopLevelDml::Select)
+    );
+    assert_eq!(
+        top_level_dml_kind("WITH cte AS MATERIALIZED (SELECT 1) SELECT 1"),
+        Some(TopLevelDml::Select)
+    );
+    assert_eq!(top_level_dml_kind("WITH AS (SELECT 1) SELECT 1"), None);
+    assert_eq!(top_level_dml_kind("WITH cte (SELECT 1) SELECT 1"), None);
+    assert_eq!(
+        top_level_dml_kind("WITH cte AS NOT (SELECT 1) SELECT 1"),
+        None
+    );
+    assert_eq!(
+        top_level_dml_kind(r#"WITH "unclosed AS (SELECT 1) SELECT 1"#),
+        None
+    );
+    assert_eq!(top_level_dml_kind(""), None);
+    assert_eq!(top_level_dml_kind("CREATE TABLE items (id int)"), None);
+    assert!(recovered_sql_needs_insert_check(Some(
+        "WITH cte AS (SELECT 1) MERGE INTO items USING src ON true WHEN MATCHED THEN DELETE"
+    )));
+}

@@ -360,3 +360,13 @@ fn recovered_typescript_parse_counts_diagnostics_and_hard_failures() {
     let work = observer.snapshot().work;
     assert_eq!(work["parse.errors"], 1);
 }
+
+#[test]
+fn test_file_filter_reuses_the_request_scoped_cell() {
+    let root = normalize_path(&fixture_root());
+    let session = AnalysisSession::new(None);
+    let config = crate::config::v2::NoMistakesConfig::default();
+    let first = session.test_file_filter(&root, &config);
+    let second = session.test_file_filter(&root, &config);
+    assert!(std::sync::Arc::ptr_eq(&first, &second));
+}

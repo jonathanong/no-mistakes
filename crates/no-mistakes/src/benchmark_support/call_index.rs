@@ -6,8 +6,8 @@ use crate::codebase::ts_source::facts::TsFileFacts;
 /// Synthetic per-file call facts for measuring `CallableFileIndex::from_facts`.
 #[derive(Clone)]
 pub struct CallableFileIndexFixture {
-    facts: TsFileFacts,
-    entries: usize,
+    pub(crate) facts: TsFileFacts,
+    pub(crate) entries: usize,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

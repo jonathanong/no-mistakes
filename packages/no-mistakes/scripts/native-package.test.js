@@ -222,6 +222,20 @@ test("directs a local package with missing artifacts to explicit staging", () =>
   );
 });
 
+test("uses a local staged Windows CLI with an .exe suffix", () => {
+  const resolved = resolveNativePackage({
+    platform: "win32",
+    arch: "x64",
+    resolve: () => {
+      throw new Error("not installed");
+    },
+    resolveLocalPackage: () => "/repo/packages/no-mistakes-win32-x64-msvc",
+    localArtifactExists: () => true,
+    isUsableCli: () => true,
+  });
+  assert.equal(resolved.cliPath, "/repo/packages/no-mistakes-win32-x64-msvc/bin/no-mistakes.exe");
+});
+
 test("Windows verifies CLI presence without Unix execute-bit semantics", () => {
   const resolved = resolveNativePackage({
     platform: "win32",

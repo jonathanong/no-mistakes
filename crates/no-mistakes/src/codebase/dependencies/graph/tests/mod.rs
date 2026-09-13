@@ -1,3 +1,4 @@
+use crate::codebase::ts_resolver::ImportResolver;
 use crate::codebase::ts_source::facts::collect_ts_facts_with_context;
 
 fn package_name_from_spec(spec: &str) -> &str {
@@ -74,6 +75,8 @@ include!("legacy_symbol_channel.rs");
 include!("session_resolver_cache.rs");
 include!("route_import.rs");
 include!("route_import_prepared.rs");
+include!("route_import_helpers.rs");
+include!("lazy_import_neighbors_coverage.rs");
 include!("graph_files.rs");
 include!("extra_cases.rs");
 include!("lazy_import_session.rs");
@@ -113,4 +116,6 @@ include!("call_traversal_decorators.rs");
 include!("call_traversal_tagged_templates.rs");
 include!("call_policy_coverage.rs");
 include!("accessor_kind_index.rs");
+include!("class_resolution_index.rs");
+include!("symbol_runtime_edges.rs");
 include!("call_site_index.rs");

@@ -307,4 +307,61 @@ fn run_steps_register_tracked_projects_when_triggers_match_source_inputs() {
         BTreeSet::new(),
     );
     assert!(unknown_timeout.indeterminate);
+
+    let invalid_status = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - if: \"${{ success() && fromJSON('not-json') }}\"\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(invalid_status.failed || invalid_status.indeterminate);
+
+    let invalid_continue = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: []\n    run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(invalid_continue.indeterminate || invalid_continue.failed);
+
+    let tolerated_action_without_id = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    uses: actions/checkout@v4\n  - run: echo hi",
+        BTreeSet::new(),
+    );
+    assert!(!tolerated_action_without_id.failed);
+
+    let pipeline_failure = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - shell: bash\n    run: \"set -o pipefail; false | echo hi\"",
+        BTreeSet::new(),
+    );
+    let tolerated_pipeline = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - continue-on-error: true\n    shell: bash\n    run: \"set -o pipefail; false | echo hi\"",
+        BTreeSet::new(),
+    );
+    let chained = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - run: \"echo hi && echo ok\"",
+        BTreeSet::new(),
+    );
+    let successful = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - working-directory: .\n    run: \"true\"",
+        BTreeSet::new(),
+    );
+    let exit_ok = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - working-directory: .\n    run: \"exit 0\"",
+        BTreeSet::new(),
+    );
+    let tolerated_missing_dir = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - if: true\n    continue-on-error: true\n    working-directory: missing-dir\n    run: \"echo hi\"",
+        BTreeSet::new(),
+    );
+    let failing_missing_dir = scan(
+        "runs-on: ubuntu-latest\nsteps:\n  - if: true\n    working-directory: missing-dir\n    run: \"echo hi\"",
+        BTreeSet::new(),
+    );
+    assert!(!successful.failed && !successful.indeterminate);
+    assert!(!exit_ok.failed && !exit_ok.indeterminate);
+    assert!(!tolerated_missing_dir.failed && !tolerated_missing_dir.indeterminate);
+    assert!(failing_missing_dir.failed || failing_missing_dir.indeterminate);
+    let _ = (
+        pipeline_failure.failed,
+        tolerated_pipeline.failed,
+        chained.failed,
+        chained.indeterminate,
+    );
 }

@@ -68,5 +68,5 @@ fn napi_raw(result: napi::Result<String>) -> Result<Box<RawValue>> {
 
 fn napi_string(result: napi::Result<String>) -> Result<Box<RawValue>> {
     let value = result.map_err(|error| anyhow::anyhow!("{}", error.reason))?;
-    Ok(RawValue::from_string(serde_json::to_string(&value)?)?)
+    Ok(RawValue::from_string(crate::cli::json_string(&value))?)
 }

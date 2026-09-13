@@ -255,6 +255,16 @@ fn renders_formats_and_runs() {
 }
 
 #[test]
+fn importer_text_writers_surface_io_errors() {
+    let with_tests = compute(&args("util.ts", true)).unwrap();
+    let without_tests = compute(&args("util.ts", false)).unwrap();
+    crate::codebase::queries::render::tests::assert_report_writers_surface_io_errors(&[
+        &with_tests,
+        &without_tests,
+    ]);
+}
+
+#[test]
 fn expired_deadline_rejects_output_before_rendering() {
     let report = compute(&args("util.ts", false)).unwrap();
     let _deadline = crate::invocation::install_test_deadline(std::time::Duration::ZERO).unwrap();

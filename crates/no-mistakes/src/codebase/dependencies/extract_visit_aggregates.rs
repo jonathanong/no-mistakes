@@ -49,10 +49,7 @@ fn visit_export_default_declaration_with_scope<'a>(
     collector.export_depth += 1;
     match &export.declaration {
         ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
-            let scope = function
-                .id
-                .as_ref()
-                .map_or("default", |id| id.name.as_str());
+            let scope = function.id.as_ref().map_or("default", |id| id.name.as_str());
             walk_default_function_with_scope(collector, function, scope);
             collector.export_depth -= 1;
         }
@@ -65,10 +62,6 @@ fn visit_export_default_declaration_with_scope<'a>(
             collector.add_formal_parameters(&arrow.params);
             walk_arrow_function_with_body_bindings(collector, arrow);
             collector.pop_function_scope(true);
-            collector.export_depth -= 1;
-        }
-        ExportDefaultDeclarationKind::FunctionExpression(function) => {
-            walk_default_function_with_scope(collector, function, "default");
             collector.export_depth -= 1;
         }
         ExportDefaultDeclarationKind::ClassDeclaration(class) => {
@@ -137,16 +130,14 @@ fn record_object_member_calls(
 ) {
     collector.record_callable_binding_id(object_binding, object_id);
     for property in &object.properties {
-        if record_object_spread_property(
-            collector,
-            object_binding,
-            object_scope,
-            object_id,
-            property,
-        ) {
-            continue;
-        }
         let ObjectPropertyKind::ObjectProperty(property) = property else {
+            record_object_spread_property(
+                collector,
+                object_binding,
+                object_scope,
+                object_id,
+                property,
+            );
             continue;
         };
         if property.kind == PropertyKind::Get {
@@ -161,22 +152,16 @@ fn record_object_member_calls(
                 collector.insert_object_setter_member(object_id, name);
             }
         }
-        if matches!(
-            property.value,
-            Expression::FunctionExpression(_) | Expression::ArrowFunctionExpression(_)
-        ) {
-            let Some(name) = crate::codebase::ts_source::static_property_key_name(&property.key)
-            else {
-                continue;
-            };
-            let callable_id = match &property.value {
-                Expression::FunctionExpression(function) => CallableId(function.span.start),
-                Expression::ArrowFunctionExpression(arrow) => CallableId(arrow.span.start),
-                _ => unreachable!("callable property checked above"),
-            };
-            collector.record_aggregate_callable_member_id(object_id, name, callable_id);
-            record_member_call(collector, object_scope, object_id, Some(name));
-        }
+        let callable_id = match &property.value {
+            Expression::FunctionExpression(function) => CallableId(function.span.start),
+            Expression::ArrowFunctionExpression(arrow) => CallableId(arrow.span.start),
+            _ => continue,
+        };
+        let Some(name) = crate::codebase::ts_source::static_property_key_name(&property.key) else {
+            continue;
+        };
+        collector.record_aggregate_callable_member_id(object_id, name, callable_id);
+        record_member_call(collector, object_scope, object_id, Some(name));
     }
 }
 

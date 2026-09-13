@@ -1,4 +1,9 @@
-fn file_entry_uses_any_symbol(
+use super::EdgeKind;
+use crate::codebase::ts_source::facts::TsFactMap;
+use std::collections::BTreeSet;
+use std::path::Path;
+
+pub(super) fn file_entry_uses_any_symbol(
     root: &Path,
     file: &str,
     target_symbols: &BTreeSet<String>,
@@ -9,11 +14,11 @@ fn file_entry_uses_any_symbol(
         .any(|target_symbol| file_entry_uses_symbol(root, file, target_symbol, facts))
 }
 
-fn has_file_level_import_edge(via: &[EdgeKind]) -> bool {
+pub(super) fn has_file_level_import_edge(via: &[EdgeKind]) -> bool {
     via.contains(&EdgeKind::DynamicImport) || via.contains(&EdgeKind::Require)
 }
 
-fn file_entry_uses_symbol(
+pub(super) fn file_entry_uses_symbol(
     root: &Path,
     file: &str,
     target_symbol: &str,
@@ -54,21 +59,21 @@ fn file_entry_uses_symbol(
         .any(|alias| callees.contains(alias) || source_contains_call_name(source, alias))
 }
 
-fn direct_dynamic_member_use(source: &str, target_symbol: &str) -> bool {
+pub(super) fn direct_dynamic_member_use(source: &str, target_symbol: &str) -> bool {
     source
         .lines()
         .filter(|line| line.contains("import(") || line.contains("require("))
         .any(|line| line.contains(&format!(").{target_symbol}")))
 }
 
-fn source_contains_member_name(source: &str, member: &str) -> bool {
+pub(super) fn source_contains_member_name(source: &str, member: &str) -> bool {
     source.match_indices(member).any(|(index, _)| {
         let after = source[index + member.len()..].chars().next();
         !after.is_some_and(|ch| ch.is_ascii_alphanumeric() || ch == '_' || ch == '$')
     })
 }
 
-fn source_contains_call_name(source: &str, name: &str) -> bool {
+pub(super) fn source_contains_call_name(source: &str, name: &str) -> bool {
     source.match_indices(name).any(|(index, _)| {
         let before = source[..index].chars().next_back();
         let mut after = source[index + name.len()..].chars();
@@ -77,11 +82,11 @@ fn source_contains_call_name(source: &str, name: &str) -> bool {
     })
 }
 
-fn is_identifier_char(ch: char) -> bool {
+pub(super) fn is_identifier_char(ch: char) -> bool {
     ch.is_ascii_alphanumeric() || ch == '_' || ch == '$'
 }
 
-fn dynamic_module_bindings(source: &str) -> BTreeSet<String> {
+pub(super) fn dynamic_module_bindings(source: &str) -> BTreeSet<String> {
     source
         .lines()
         .filter(|line| line.contains("import(") || line.contains("require("))
@@ -95,7 +100,7 @@ fn dynamic_module_bindings(source: &str) -> BTreeSet<String> {
         .collect()
 }
 
-fn dynamic_symbol_aliases_in_source(source: &str, target_symbol: &str) -> BTreeSet<String> {
+pub(super) fn dynamic_symbol_aliases_in_source(source: &str, target_symbol: &str) -> BTreeSet<String> {
     let mut aliases = BTreeSet::new();
     for line in source
         .lines()
@@ -120,7 +125,7 @@ fn dynamic_symbol_aliases_in_source(source: &str, target_symbol: &str) -> BTreeS
     aliases
 }
 
-fn destructured_symbol_aliases(line: &str, target_symbol: &str) -> BTreeSet<String> {
+pub(super) fn destructured_symbol_aliases(line: &str, target_symbol: &str) -> BTreeSet<String> {
     let mut aliases = BTreeSet::new();
     let Some(start) = line.find('{') else {
         return aliases;
@@ -140,7 +145,7 @@ fn destructured_symbol_aliases(line: &str, target_symbol: &str) -> BTreeSet<Stri
     aliases
 }
 
-fn member_assignment_alias(line: &str, target_symbol: &str) -> BTreeSet<String> {
+pub(super) fn member_assignment_alias(line: &str, target_symbol: &str) -> BTreeSet<String> {
     let mut aliases = BTreeSet::new();
     let destructured = format!("{target_symbol}:");
     let mut rest = line;
@@ -168,7 +173,7 @@ fn member_assignment_alias(line: &str, target_symbol: &str) -> BTreeSet<String> 
     aliases
 }
 
-fn identifier_after_declaration(value: &str) -> Option<String> {
+pub(super) fn identifier_after_declaration(value: &str) -> Option<String> {
     let name = value
         .strip_prefix("const ")
         .or_else(|| value.strip_prefix("let "))

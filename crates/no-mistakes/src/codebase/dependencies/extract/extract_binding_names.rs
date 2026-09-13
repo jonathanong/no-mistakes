@@ -1,4 +1,9 @@
-fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
+use oxc_ast::ast::{
+    AssignmentTarget, AssignmentTargetMaybeDefault, AssignmentTargetProperty, BindingPattern,
+};
+
+#[inline(never)]
+pub(super) fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
     match pattern {
         BindingPattern::BindingIdentifier(identifier) => vec![identifier.name.to_string()],
         BindingPattern::ObjectPattern(object) => object
@@ -16,7 +21,8 @@ fn binding_names(pattern: &BindingPattern<'_>) -> Vec<String> {
     }
 }
 
-fn assignment_target_names(target: &AssignmentTarget<'_>) -> Vec<String> {
+#[inline(never)]
+pub(super) fn assignment_target_names(target: &AssignmentTarget<'_>) -> Vec<String> {
     match target {
         AssignmentTarget::AssignmentTargetIdentifier(identifier) => {
             vec![identifier.name.to_string()]
@@ -51,17 +57,24 @@ fn assignment_target_names(target: &AssignmentTarget<'_>) -> Vec<String> {
                     .flat_map(|rest| assignment_target_names(&rest.target)),
             )
             .collect(),
-        AssignmentTarget::StaticMemberExpression(member) => simple_static_member_name(member)
-            .into_iter()
-            .collect(),
-        AssignmentTarget::ComputedMemberExpression(member) => simple_computed_member_name(member)
-            .into_iter()
-            .collect(),
+        AssignmentTarget::StaticMemberExpression(member) => {
+            super::simple_static_member_name(member)
+                .into_iter()
+                .collect()
+        }
+        AssignmentTarget::ComputedMemberExpression(member) => {
+            super::simple_computed_member_name(member)
+                .into_iter()
+                .collect()
+        }
         _ => Vec::new(),
     }
 }
 
-fn assignment_target_maybe_default_names(target: &AssignmentTargetMaybeDefault<'_>) -> Vec<String> {
+#[inline(never)]
+pub(super) fn assignment_target_maybe_default_names(
+    target: &AssignmentTargetMaybeDefault<'_>,
+) -> Vec<String> {
     match target {
         AssignmentTargetMaybeDefault::AssignmentTargetWithDefault(target) => {
             assignment_target_names(&target.binding)

@@ -6,7 +6,7 @@ fn collect_lines(
     max_line_bytes: usize,
 ) -> std::io::Result<(Vec<String>, StreamOutcome)> {
     let lines = Mutex::new(Vec::new());
-    let outcome = stream_command_lines(command, max_line_bytes, |line| {
+    let outcome = stream_command_lines(command, max_line_bytes, &mut |line| {
         lines.lock().unwrap().push(line.to_string());
         Ok(())
     })?;
@@ -250,4 +250,29 @@ fn propagates_spawn_failure_for_a_missing_binary() {
     let mut command = Command::new("no-mistakes-definitely-not-a-real-binary");
     let result = collect_lines(&mut command, 1024);
     assert!(result.is_err());
+}
+
+#[test]
+fn on_line_callback_errors_terminate_the_child() {
+    let mut command = Command::new("sh");
+    command.args(["-c", "printf 'a\\nb\\n'; exec sleep 120"]);
+    let start = std::time::Instant::now();
+    let error = stream_command_lines(&mut command, 1024, &mut |line| {
+        Err(std::io::Error::other(format!("reject {line}")))
+    })
+    .unwrap_err();
+    assert_eq!(error.kind(), std::io::ErrorKind::Other);
+    assert!(
+        start.elapsed() < std::time::Duration::from_secs(60),
+        "child should have been terminated after the callback error, took {:?}",
+        start.elapsed()
+    );
+}
+
+#[test]
+fn rejects_a_newline_terminated_line_exceeding_the_cap() {
+    let mut command = Command::new("sh");
+    command.args(["-c", "printf '%0200d\\n' 0"]);
+    let error = collect_lines(&mut command, 32).unwrap_err();
+    assert_eq!(error.kind(), std::io::ErrorKind::InvalidData);
 }

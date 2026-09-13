@@ -983,7 +983,7 @@ describe("ts-preserve-null-option-defaults", () => {
         undefined,
         "coverage.ts",
       ),
-      Array(33).fill("default"),
+      Array(38).fill("default"),
     );
   });
 });

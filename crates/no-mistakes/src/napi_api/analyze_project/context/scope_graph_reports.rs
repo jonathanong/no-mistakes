@@ -35,7 +35,7 @@ impl PreparedScope {
             self.traversal.prepared_facts(),
         );
         let report = report?;
-        Ok(serde_json::to_value(report)?)
+        Ok(crate::cli::json_value(&report))
     }
 
     pub(super) fn symbols_report(
@@ -74,7 +74,7 @@ impl PreparedScope {
         let raw = super::flow_options(request, options)?;
         let parsed: crate::napi_api::options::FlowOptions = serde_json::from_str(&raw)?;
         let options = crate::napi_api::project::build_flow_options(parsed)?;
-        Ok(serde_json::to_value(self.traversal.flow_report(&options)?)?)
+        Ok(crate::cli::json_value(&self.traversal.flow_report(&options)?))
     }
 
     pub(super) fn effects_report(
@@ -100,7 +100,7 @@ impl PreparedScope {
         let report = self
             .traversal
             .effects_report(&selection, Path::new(entry), parsed.depth)?;
-        Ok(serde_json::to_value(report)?)
+        Ok(crate::cli::json_value(&report))
     }
 
     pub(super) fn rsc_callers_report(
@@ -116,6 +116,6 @@ impl PreparedScope {
         let report = self
             .traversal
             .rsc_callers_report(Path::new(component), parsed.depth)?;
-        Ok(serde_json::to_value(report)?)
+        Ok(crate::cli::json_value(&report))
     }
 }

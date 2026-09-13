@@ -1,5 +1,4 @@
 use super::*;
-use ignore::WalkBuilder;
 use no_mistakes::config::v2::NoMistakesConfig;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -100,33 +99,30 @@ fn collect_descendant_dirs_matching_suffix(
     let filter_base = base.clone();
     let filter_suffix = suffix.clone();
 
-    let mut builder = WalkBuilder::new(dir);
-    builder
-        .hidden(true)
-        .require_git(false)
-        .filter_entry(move |entry| {
-            if entry.depth() == 0
-                || !entry
-                    .file_type()
-                    .is_some_and(|file_type| file_type.is_dir())
-            {
-                return true;
-            }
-            let path = entry.path();
-            if path
-                .strip_prefix(&filter_base)
-                .ok()
-                .is_some_and(|rel| rel.ends_with(&filter_suffix))
-            {
-                matches_for_filter
-                    .lock()
-                    .expect("preserved-root match lock should not be poisoned")
-                    .push(path.to_path_buf());
-            }
-            let name = entry.file_name().to_str().unwrap_or_default();
-            !no_mistakes::codebase::ts_source::is_skipped_dir(name)
-                && !skip_directories.iter().any(|skip| skip == name)
-        });
+    let mut builder = no_mistakes::codebase::ts_source::ignore_walk_builder(dir);
+    builder.hidden(true).filter_entry(move |entry| {
+        if entry.depth() == 0
+            || !entry
+                .file_type()
+                .is_some_and(|file_type| file_type.is_dir())
+        {
+            return true;
+        }
+        let path = entry.path();
+        if path
+            .strip_prefix(&filter_base)
+            .ok()
+            .is_some_and(|rel| rel.ends_with(&filter_suffix))
+        {
+            matches_for_filter
+                .lock()
+                .expect("preserved-root match lock should not be poisoned")
+                .push(path.to_path_buf());
+        }
+        let name = entry.file_name().to_str().unwrap_or_default();
+        !no_mistakes::codebase::ts_source::is_skipped_dir(name)
+            && !skip_directories.iter().any(|skip| skip == name)
+    });
     for _ in builder.build() {}
     drop(builder);
 

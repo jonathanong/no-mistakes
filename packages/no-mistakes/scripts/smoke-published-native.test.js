@@ -11,8 +11,10 @@ const {
   nativeCliPath,
   parseArgs,
   reportCliFailure,
+  runIfMain,
   smokePublishedNative,
   smokePublishedRoot,
+  startFromCli,
 } = require("./smoke-published-native");
 
 test("parses CLI flags and rejects incomplete argv", () => {
@@ -211,6 +213,32 @@ test("CLI reports usage errors without installing", () => {
   );
   assert.notEqual(result.status, 0);
   assert.match(result.stderr, /--package requires a value/);
+});
+
+test("runs the smoke checker only when the module is executed directly", async () => {
+  let started = false;
+  runIfMain(module, module, () => {
+    started = true;
+  });
+  assert.equal(started, true);
+  runIfMain({}, module, () => {
+    started = false;
+  });
+  assert.equal(started, true);
+  await startFromCli(
+    async () => {},
+    () => {},
+  );
+  let caught;
+  await startFromCli(
+    async () => {
+      throw new Error("cli failed");
+    },
+    (error) => {
+      caught = error;
+    },
+  );
+  assert.equal(caught.message, "cli failed");
 });
 
 test("reportCliFailure writes the error and sets a nonzero exit", () => {

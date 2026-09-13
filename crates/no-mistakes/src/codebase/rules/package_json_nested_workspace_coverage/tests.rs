@@ -158,3 +158,22 @@ fn preserves_wildcard_parent_traversal_that_cannot_be_normalized_lexically() {
         "../packages/*/../utils"
     );
 }
+
+#[test]
+fn empty_roots_or_prefixes_are_silent_and_invalid_root_globs_fail_closed() {
+    assert!(findings("valid", "roots: []\ndependencyNamePrefixes: ['@shared/']\n").is_empty());
+    assert!(findings("valid", "roots: [apps]\ndependencyNamePrefixes: []\n").is_empty());
+    let root = fixture_root("valid");
+    let error = check_with_files(
+        &root,
+        &config("roots: ['[']\ndependencyNamePrefixes: ['@shared/']\n"),
+        &files(&root),
+    )
+    .expect_err("invalid root glob must fail");
+    assert!(
+        error.to_string().contains("error parsing glob")
+            || error.to_string().contains("invalid")
+            || error.to_string().contains("["),
+        "{error:#}"
+    );
+}

@@ -184,9 +184,10 @@ in that PR.
 
 ## Coverage
 
-- Coverage gates must enforce 95% line and function coverage by default.
-  Change `RUST_COVERAGE_FAIL_UNDER_LINES` and
-  `RUST_COVERAGE_FAIL_UNDER_FUNCTIONS` in `.github/workflows/ci.yml`, and keep
-  Codecov rust `target` values in `codecov.yml` in sync.
+- Coverage gates must enforce 98% line, function, and region coverage by default.
+  Change `RUST_COVERAGE_FAIL_UNDER_LINES`,
+  `RUST_COVERAGE_FAIL_UNDER_FUNCTIONS`, and `RUST_COVERAGE_FAIL_UNDER_REGIONS`
+  in `.github/workflows/ci.yml`, and keep Codecov rust `target` values in
+  `codecov.yml` in sync.
 - **Never** use `cargo llvm-cov --ignore-filename-regex` to suppress uncovered source files. The only files exempt from coverage are test files (`tests/`, sibling `tests.rs`) and test fixtures (`fixtures/`), which `cargo llvm-cov` already excludes by default.
 - If a file cannot be brought to the configured gate, refactor it (extract logic to a lib, thin the entry point) — do not add an exception.

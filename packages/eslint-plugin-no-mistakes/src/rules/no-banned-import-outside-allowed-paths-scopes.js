@@ -84,7 +84,7 @@ function createAliasScopeTracker() {
   }
 
   function exitsSwitchCase(node) {
-    return node.consequent?.some(terminatesCase) ?? false;
+    return node.consequent?.some(terminatesCase) === true;
   }
 
   function exitSwitchCase(node) {

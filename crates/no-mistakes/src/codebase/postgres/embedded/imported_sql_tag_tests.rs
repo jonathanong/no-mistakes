@@ -85,3 +85,32 @@ fn named_non_sql_export_aliased_to_sql_fails_closed() {
     let facts = extract("imported-sql-template-strings-named-alias.ts");
     assert_eq!(facts.calls[0].kind, super::EmbeddedSqlKind::Dynamic);
 }
+
+#[test]
+fn class_function_and_destructured_sql_bindings_fail_closed() {
+    let options = EmbeddedSqlOptions::default();
+    for source in [
+        "class sql {}\nsql`SELECT 1`;",
+        "class String {}\nString`SELECT 1`;",
+        "function sql() { return 'SELECT 1'; }\nsql`SELECT 1`;",
+        "function sql(strings: TemplateStringsArray) { return strings; }\nsql`SELECT 1`;",
+        "const { sql } = providers;\nsql`SELECT 1`;",
+        "export class sql {}\nsql`SELECT 1`;",
+        "export function sql() { return 'SELECT 1'; }\nsql`SELECT 1`;",
+        "export interface Sql {}\nexport type SqlAlias = string;\nexport enum Kind { A }\nsql`SELECT 1`;",
+        "function sql(strings: TemplateStringsArray): string;\nfunction sql(strings: TemplateStringsArray) { return; }\nsql`SELECT 1`;",
+        "function sql(strings: TemplateStringsArray) { foo(); return 'SELECT 1'; }\nsql`SELECT 1`;",
+        "export default class {}\nsql`SELECT 1`;",
+    ] {
+        let facts =
+            extract_embedded_sql_from_source(std::path::Path::new("shadow.ts"), source, &options);
+        assert!(
+            facts.calls.is_empty()
+                || facts
+                    .calls
+                    .iter()
+                    .any(|call| call.kind == super::EmbeddedSqlKind::Dynamic),
+            "{source}: {facts:#?}"
+        );
+    }
+}

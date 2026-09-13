@@ -58,6 +58,13 @@ fn static_join_value_resolves_known_scalars_and_sequences() {
         ),
         ("join(inputs.invalids)", Some(StaticValue::Invalid)),
         ("join(inputs.invalid-singleton)", Some(StaticValue::Invalid)),
+        (
+            "join(fromJSON('[]'))",
+            Some(StaticValue::String(String::new())),
+        ),
+        ("join(fromJSON('[{}]'))", None),
+        ("join(fromJSON('[\"a\"]'), fromJSON('{}'))", None),
+        ("join(contains(github.event, 'x'))", None),
     ] {
         assert_eq!(
             static_join_value(

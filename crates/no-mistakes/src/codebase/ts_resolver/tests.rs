@@ -955,7 +955,7 @@ fn catalog_extends_merge_preserves_independent_fields() {
             }),
             &root.join("first.json"),
             &root,
-            |value| Ok(root.join(value)),
+            &|value| Ok(root.join(value)),
         )
         .unwrap();
     let mut second = EffectiveConfig::new(root.join("second.json"), root.clone());
@@ -964,7 +964,7 @@ fn catalog_extends_merge_preserves_independent_fields() {
             &serde_json::json!({"compilerOptions": {"baseUrl": ".", "allowJs": true}}),
             &root.join("second.json"),
             &root,
-            |value| Ok(root.join(value)),
+            &|value| Ok(root.join(value)),
         )
         .unwrap();
     let mut child = EffectiveConfig::new(root.join("child.json"), root.clone());
@@ -991,7 +991,7 @@ fn catalog_effective_config_rejects_invalid_compiler_and_project_fields() {
     ] {
         let mut config = EffectiveConfig::new(path.clone(), root.clone());
         assert!(config
-            .apply_own(&value, &path, &root, |value| Ok(root.join(value)))
+            .apply_own(&value, &path, &root, &|value| Ok(root.join(value)))
             .is_err());
     }
     let mut config = EffectiveConfig::new(path.clone(), root.clone());
@@ -1000,7 +1000,7 @@ fn catalog_effective_config_rejects_invalid_compiler_and_project_fields() {
             &serde_json::json!({"references": [{"path": "./child"}]}),
             &path,
             &root,
-            |_| Err("reference failure".to_string()),
+            &|_| Err("reference failure".to_string()),
         )
         .is_err());
 }

@@ -164,4 +164,4 @@ function possibleResourceExitBeforeMatcher(node, matcher, resourceLoop) {
   return false;
 }
 
-module.exports = { possibleResourceExitBeforeMatcher };
+module.exports = { possibleResourceExitBeforeMatcher, branchOutcome };

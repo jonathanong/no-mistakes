@@ -1,5 +1,5 @@
 use super::super::preserved_roots::{leading_globstar_literal_prefix, literal_include_prefix};
-use ignore::{DirEntry, WalkBuilder};
+use ignore::DirEntry;
 use std::path::{Path, PathBuf};
 
 /// Walks one known-non-Git base exactly once, reopening built-in skipped
@@ -23,20 +23,17 @@ pub(in crate::check_discovery) fn walk_ignore_aware_universe(
     let filter_root = root.clone();
     let reopened_roots = reopened_roots.to_vec();
     let reopened_suffixes = reopened_suffixes.to_vec();
-    let mut builder = WalkBuilder::new(&root);
-    builder
-        .hidden(false)
-        .require_git(false)
-        .filter_entry(move |entry| {
-            visible_entry(
-                entry,
-                &filter_root,
-                &literal_roots,
-                &suffixes,
-                &reopened_roots,
-                &reopened_suffixes,
-            )
-        });
+    let mut builder = no_mistakes::codebase::ts_source::ignore_walk_builder(&root);
+    builder.hidden(false).filter_entry(move |entry| {
+        visible_entry(
+            entry,
+            &filter_root,
+            &literal_roots,
+            &suffixes,
+            &reopened_roots,
+            &reopened_suffixes,
+        )
+    });
 
     let mut files: Vec<_> = builder
         .build()

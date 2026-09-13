@@ -16,6 +16,7 @@ use tempfile::TempDir;
 
 mod discovery_preserve;
 mod gitignore;
+mod ignore_walk;
 mod source_and_discovery;
 
 #[test]

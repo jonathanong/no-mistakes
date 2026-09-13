@@ -78,4 +78,4 @@ pub(crate) fn resolve_format(json: bool, format: Option<Format>, is_tty: bool) -
 }
 
 #[cfg(test)]
-mod tests;
+pub(crate) mod tests;

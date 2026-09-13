@@ -1,7 +1,5 @@
 pub(crate) fn server_contracts_json_impl(options: serde_json::Value) -> napi::Result<String> {
-    let options = parse_options_value::<ProjectOptions>(options)?;
-    let root = resolve_project_root(options.root.as_deref()).map_err(to_napi_error)?;
-    let tsconfig = options.tsconfig.as_deref().map(PathBuf::from);
+    let (options, root, tsconfig) = project_setup(options)?;
     let filters = server_contract_filters(&options);
     let prepared = crate::server_routes::prepare_analysis(&root, tsconfig.as_deref())
         .map_err(to_napi_error)?;
@@ -10,10 +8,7 @@ pub(crate) fn server_contracts_json_impl(options: serde_json::Value) -> napi::Re
     let contracts =
         crate::server_routes::analyze_contracts_with_prepared(&prepared, &report, &filters)
             .map_err(to_napi_error)?;
-    Ok(
-        serde_json::to_string(&contracts)
-            .expect("server contract serialization never fails"),
-    )
+    Ok(crate::cli::json_string(&contracts))
 }
 
 fn server_contract_filters(options: &ProjectOptions) -> Vec<String> {
@@ -26,7 +21,7 @@ pub(crate) fn flow_json_impl(options: serde_json::Value) -> napi::Result<String>
     let options = parse_options_value::<super::options::FlowOptions>(options)?;
     let options = build_flow_options(options).map_err(to_napi_error)?;
     let report = crate::flow_query::run(&options).map_err(to_napi_error)?;
-    Ok(serde_json::to_string(&report).expect("flow report serialization never fails"))
+    Ok(crate::cli::json_string(&report))
 }
 
 pub(crate) fn build_flow_options(

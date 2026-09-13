@@ -447,3 +447,34 @@ fn invalid_dependabot_globs_do_not_cover_permanent_packages() {
         "{messages:#?}"
     );
 }
+
+#[test]
+fn scan_covers_non_mapping_workspace_invalid_json_and_non_npm_dependabot() {
+    let dir = tempfile::tempdir().unwrap();
+    let root = crate::codebase::ts_resolver::normalize_path(dir.path());
+    std::fs::create_dir_all(root.join(".github")).unwrap();
+    std::fs::write(root.join("pnpm-workspace.yaml"), "- packages\n").unwrap();
+    assert!(
+        check_with_files(&root, &config(), &[root.join("pnpm-workspace.yaml")])
+            .unwrap()
+            .is_empty()
+    );
+
+    std::fs::write(
+        root.join("pnpm-workspace.yaml"),
+        "packages: ['.']\nminimumReleaseAgeExclude: true\n",
+    )
+    .unwrap();
+    std::fs::write(root.join("package.json"), "{ not json").unwrap();
+    std::fs::write(
+        root.join(".github/dependabot.yml"),
+        "updates:\n  - package-ecosystem: pip\n    directory: /\n    cooldown:\n      exclude:\n        - 1\n",
+    )
+    .unwrap();
+    std::fs::write(
+        root.join("pnpm-lock.yaml"),
+        "packages:\n  1: {}\n  '@acme/core@1.0.0': {}\n",
+    )
+    .unwrap();
+    let _ = check_with_files(&root, &config(), &files(&root)).unwrap();
+}

@@ -52,48 +52,50 @@ function numericLiteral(node) {
 }
 
 function propertyName(node) {
-  if (!node) return null;
   if (node.type === "Identifier") return node.name;
   return node.type === "Literal" ? String(node.value) : null;
 }
 
-module.exports = rule(
-  {
-    type: "problem",
-    docs: { description: "cap Playwright assertion timeouts", recommended: false },
-    schema: [
-      {
-        type: "object",
-        properties: { max: { type: "number" } },
-        additionalProperties: false,
+module.exports = Object.assign(
+  rule(
+    {
+      type: "problem",
+      docs: { description: "cap Playwright assertion timeouts", recommended: false },
+      schema: [
+        {
+          type: "object",
+          properties: { max: { type: "number" } },
+          additionalProperties: false,
+        },
+      ],
+      messages: {
+        timeout:
+          "Assertion timeout must not exceed {{max}} ms. Increase the test timeout or fix the slow condition instead.",
       },
-    ],
-    messages: {
-      timeout:
-        "Assertion timeout must not exceed {{max}} ms. Increase the test timeout or fix the slow condition instead.",
     },
-  },
-  (context) => {
-    const max = context.options[0]?.max ?? DEFAULT_MAX_TIMEOUT_MS;
-    let isPlaywrightFile = isPlaywrightPath(context.filename);
-    return {
-      ImportDeclaration(node) {
-        if (node.source.value === "@playwright/test") isPlaywrightFile = true;
-      },
-      CallExpression(node) {
-        if (!isPlaywrightFile) return;
-        if (node.callee.type !== "MemberExpression" || !isExpectChain(node.callee)) return;
-        const method = propertyName(node.callee.property);
-        if (!TIMEOUT_MATCHERS.has(method)) return;
-        const options = node.arguments.at(-1);
-        if (options?.type !== "ObjectExpression") return;
-        const timeout = options.properties.find(
-          (property) => property.type === "Property" && propertyName(property.key) === "timeout",
-        );
-        if (numericLiteral(timeout?.value) > max) {
-          context.report({ node, messageId: "timeout", data: { max } });
-        }
-      },
-    };
-  },
+    (context) => {
+      const max = context.options[0]?.max ?? DEFAULT_MAX_TIMEOUT_MS;
+      let isPlaywrightFile = isPlaywrightPath(context.filename);
+      return {
+        ImportDeclaration(node) {
+          if (node.source.value === "@playwright/test") isPlaywrightFile = true;
+        },
+        CallExpression(node) {
+          if (!isPlaywrightFile) return;
+          if (node.callee.type !== "MemberExpression" || !isExpectChain(node.callee)) return;
+          const method = propertyName(node.callee.property);
+          if (!TIMEOUT_MATCHERS.has(method)) return;
+          const options = node.arguments.at(-1);
+          if (options?.type !== "ObjectExpression") return;
+          const timeout = options.properties.find(
+            (property) => property.type === "Property" && propertyName(property.key) === "timeout",
+          );
+          if (numericLiteral(timeout?.value) > max) {
+            context.report({ node, messageId: "timeout", data: { max } });
+          }
+        },
+      };
+    },
+  ),
+  { __test: { propertyName } },
 );

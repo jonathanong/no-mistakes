@@ -136,3 +136,64 @@ fn check_with_files_respects_absolute_roots() {
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, "sub/b.rs");
 }
+
+#[test]
+fn helpers_cover_unrooted_excludes_and_non_list_allow_attrs() {
+    let root = Path::new("/repo");
+    assert!(is_excluded(
+        root,
+        Path::new("/elsewhere/generated.rs"),
+        &["generated".to_string()]
+    ));
+    assert!(!is_excluded(
+        root,
+        Path::new("/repo/src/lib.rs"),
+        &["generated".to_string()]
+    ));
+    let opts = Options {
+        roots: Some(vec![PathBuf::from("src"), PathBuf::from("/abs")]),
+        excludes: vec![],
+    };
+    let roots = normalize_roots(&opts, root, &[PathBuf::from("/repo/fallback")]);
+    assert!(roots.contains(&PathBuf::from("/repo/src")));
+    assert!(roots.contains(&PathBuf::from("/abs")));
+    let parsed = syn::parse_file("#[allow] fn f() {}").unwrap();
+    let findings = findings_from_parsed(Path::new("/repo/a.rs"), root, &parsed);
+    assert_eq!(findings.len(), 1);
+    assert!(findings[0].message.contains("allow()"));
+    assert!(check_file(Path::new("/repo/missing.rs"), root).is_empty());
+}
+
+#[test]
+fn check_discovers_relative_absolute_roots_and_skips_test_files() {
+    let root = fixture("roots");
+    let relative = config_with_rule("{roots: [\"sub\"]}");
+    let findings = check(&root, &relative).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert!(
+        findings[0].file.ends_with("sub/b.rs"),
+        "unexpected file: {}",
+        findings[0].file
+    );
+
+    let sub = root.join("sub");
+    let absolute = config_with_rule(&format!("{{roots: [\"{}\"]}}", sub.display()));
+    let findings = check(&root, &absolute).unwrap();
+    assert_eq!(findings.len(), 1);
+    assert!(
+        findings[0].file.ends_with("b.rs"),
+        "unexpected file: {}",
+        findings[0].file
+    );
+
+    let findings = check(&root, &config_with_rule("{}")).unwrap();
+    assert!(findings
+        .iter()
+        .all(|finding| !finding.file.ends_with("tests.rs")));
+    assert!(findings
+        .iter()
+        .any(|finding| finding.file.ends_with("a.rs")));
+    assert!(check(&root, &NoMistakesConfig::default())
+        .unwrap()
+        .is_empty());
+}

@@ -210,4 +210,5 @@ function integrationAllows(specifier, factory, mock, context, options) {
 
 module.exports = {
   integrationAllows,
+  mockedExportNames,
 };

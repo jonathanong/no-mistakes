@@ -159,3 +159,19 @@ fn collector_defensive_scope_helpers_are_noops_without_active_scope() {
     assert!(!collector.has_local_function_scope("known"));
     assert_eq!(binding_names(binding), vec!["value"]);
 }
+
+#[test]
+fn object_array_and_assignment_bindings_are_extracted() {
+    let allocator = Allocator::default();
+    let ret = Parser::new(
+        &allocator,
+        "const {a, b = 1, c: d} = require('./mod.mts');\n({e, f: g} = obj);\n[h, i] = arr;",
+        SourceType::ts(),
+    )
+    .parse();
+    let facts = extract_import_facts_from_program(&ret.program);
+    assert!(facts
+        .imports
+        .iter()
+        .any(|import| import.specifier.contains("mod.mts")));
+}

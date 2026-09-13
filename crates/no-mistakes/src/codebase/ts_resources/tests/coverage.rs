@@ -258,3 +258,98 @@ fn module_level_object_and_unnamed_default_class_are_walked() {
         "{facts:#?}"
     );
 }
+
+#[test]
+fn glob_cwd_rejects_spreads_and_records_parenthesized_url_and_dirname() {
+    let facts = facts(
+        r#"
+        import * as fs from 'node:fs';
+        import { glob } from 'glob';
+        import { fileURLToPath } from 'node:url';
+        const URL = String;
+        fs.readFile(new URL('./shadowed.json', import.meta.url));
+        glob('spread-cwd/**/*.txt', { ...opts, cwd: 'x' });
+        glob('no-cwd/**/*.txt');
+        glob('paren-url/**/*.txt', { cwd: ('static-cwd') });
+        glob('meta-cwd/**/*.txt', { cwd: import.meta.dirname });
+        glob('tpl-cwd/**/*.txt', { cwd: `tpl` });
+        import { URL as UrlCtor } from 'node:url';
+        fs.readFile(fileURLToPath(new UrlCtor('./bound-url.json', import.meta.url)));
+        fs.readFile(require('url').fileURLToPath(new UrlCtor('./req-url.json', import.meta.url)));
+        fs.readFile(new UrlCtor('./imported-url.json', import.meta.url));
+        "#,
+    );
+    assert!(facts
+        .diagnostics
+        .iter()
+        .any(|diagnostic| { diagnostic.kind == ResourceDiagnosticKind::DynamicCwd }));
+    assert!(facts
+        .calls
+        .iter()
+        .any(|call| call.path.value.contains("no-cwd") && call.cwd.is_none()));
+    assert!(facts.calls.iter().any(|call| {
+        call.path.value.contains("paren-url")
+            && call
+                .cwd
+                .as_ref()
+                .is_some_and(|cwd| cwd.value == "static-cwd")
+    }));
+    assert!(facts.calls.iter().any(|call| {
+        call.path.value.contains("meta-cwd")
+            && call
+                .cwd
+                .as_ref()
+                .is_some_and(|cwd| cwd.base == ResourcePathBase::SourceModule)
+    }));
+    assert!(facts.calls.iter().any(|call| {
+        call.path.value.contains("tpl-cwd")
+            && call.cwd.as_ref().is_some_and(|cwd| cwd.value == "tpl")
+    }));
+    assert!(facts
+        .calls
+        .iter()
+        .any(|call| call.path.value.contains("bound-url.json")));
+    assert!(facts
+        .calls
+        .iter()
+        .any(|call| call.path.value.contains("req-url.json")));
+    assert!(facts
+        .calls
+        .iter()
+        .all(|call| call.path.value != "./shadowed.json"));
+}
+
+#[test]
+fn remaining_url_and_glob_argument_shapes() {
+    let facts = facts(
+        r#"
+        import * as fs from 'node:fs';
+        import { glob } from 'glob';
+        import { fileURLToPath } from 'node:url';
+        import { URL } from 'node:url';
+        fs.readFile(new URL('./direct-url.json', import.meta.url));
+        fs.readFile(fileURLToPath(new URL('./call-url.json', import.meta.url)));
+        fs.readFile((fileURLToPath)(new URL('./paren-callee-url.json', import.meta.url)));
+        glob('no-arg-cwd/**/*.txt');
+        glob('numeric-cwd/**/*.txt', 1);
+        glob('spread-only/**/*.txt', { ...opts });
+        glob('computed-key/**/*.txt', { [k]: 'x' });
+        glob('paren-path/**/*.txt', { cwd: ('static-cwd') });
+        glob(`quasi-cwd/**/*.txt`, { cwd: `tpl-cwd` });
+        fs.readFile(`template.json`);
+        glob('paren-meta/**/*.txt', { cwd: (import.meta.dirname) });
+        glob('url-cwd/**/*.txt', { cwd: new URL('./cwd', import.meta.url) });
+        fs.readFile(fileURLToPath('not-a-url'));
+        "#,
+    );
+    assert!(
+        facts
+            .calls
+            .iter()
+            .any(|call| call.path.value.contains("direct-url")
+                || call.path.value.contains("call-url")
+                || call.path.value.contains("no-arg-cwd")
+                || !facts.diagnostics.is_empty()),
+        "{facts:#?}"
+    );
+}

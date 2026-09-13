@@ -165,3 +165,43 @@ fn static_or_lists_remain_outside_the_supported_shell_subset() {
         assert!(!shell_body_is_statically_successful(script), "{script}");
     }
 }
+
+#[test]
+fn static_group_outcome_covers_builtin_command_wrappers_and_exit_status() {
+    for script in [
+        "builtin true",
+        "builtin -- true",
+        "command -p true",
+        "command -p -p true",
+        "command -pp true",
+        "command -p -- true",
+        "true && true",
+        "true && exit 0",
+    ] {
+        assert!(shell_body_is_statically_successful(script), "{script}");
+        assert!(!shell_body_has_static_failure(script), "{script}");
+    }
+    for script in [
+        "builtin -- false",
+        "command -p false",
+        "command -p -- false",
+        "builtin false",
+        "exit 1",
+        "exit 257",
+        "exit invalid",
+        "exit 1 2",
+    ] {
+        assert!(shell_body_has_static_failure(script), "{script}");
+    }
+    for script in [
+        "builtin -x true",
+        "command -v true",
+        "command --verbose true",
+        "builtin --",
+        "command -p",
+        "true || false",
+    ] {
+        assert!(!shell_body_has_static_failure(script), "{script}");
+        assert!(!shell_body_is_statically_successful(script), "{script}");
+    }
+}

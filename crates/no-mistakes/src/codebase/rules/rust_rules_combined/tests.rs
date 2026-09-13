@@ -115,3 +115,54 @@ fn combined_sources_are_memoized_for_all_rust_rules() {
     assert_eq!(overlapping_sources.physical_read_count(), 1);
     assert_eq!(exclusive, overlapping);
 }
+
+#[test]
+fn matching_files_cover_roots_excludes_inline_work_and_invalid_options() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/rules/filesystem-dispatch/rust-combined/fixture");
+    let root = crate::codebase::ts_resolver::normalize_path(&root);
+    let lib = root.join("src/lib.rs");
+    let invalid = root.join("src/invalid.rs");
+
+    let mut allows = NoMistakesConfig::default();
+    allows.rules.push(RuleDef {
+        rule: RUST_NO_INLINE_ALLOWS.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("{roots: [\"src\"], excludes: [\"invalid\"]}").unwrap(),
+        ..Default::default()
+    });
+    let mut work = BTreeMap::new();
+    add_inline_allows_work(&root, &allows, &[lib.clone(), invalid.clone()], &mut work).unwrap();
+    assert!(work.get(&lib).is_some_and(|entry| entry.inline_allows));
+    assert!(!work.contains_key(&invalid));
+
+    let mut tests = NoMistakesConfig::default();
+    tests.rules.push(RuleDef {
+        rule: RUST_NO_INLINE_TESTS.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str(&format!("{{roots: [\"{}\"]}}", root.join("src").display()))
+            .unwrap(),
+        ..Default::default()
+    });
+    work.clear();
+    add_inline_tests_work(&root, &tests, std::slice::from_ref(&lib), &mut work).unwrap();
+    assert!(work.get(&lib).is_some_and(|entry| entry.inline_tests));
+
+    let mut max_lines = config_with_rule(RUST_MAX_LINES_PER_FILE);
+    max_lines.rules[0].options = serde_yaml::from_str("{srcMax: 50}").unwrap();
+    work.clear();
+    add_max_lines_work(&root, &max_lines, std::slice::from_ref(&lib), &mut work).unwrap();
+    add_max_lines_work(&root, &max_lines, std::slice::from_ref(&lib), &mut work).unwrap();
+    assert_eq!(work.get(&lib).unwrap().max_limits, vec![50]);
+
+    assert!(is_excluded(
+        Path::new("/repo"),
+        Path::new("/elsewhere/generated.rs"),
+        &["generated".to_string()]
+    ));
+
+    let mut invalid_opts = config_with_rule(RUST_MAX_LINES_PER_FILE);
+    invalid_opts.rules[0].options = serde_yaml::from_str("true").unwrap();
+    work.clear();
+    assert!(add_max_lines_work(&root, &invalid_opts, &[lib], &mut work).is_err());
+}
