@@ -1,6 +1,6 @@
 ---
 name: no-mistakes
-description: "Answers questions about how code connects: is this dead, still used, or safe to delete; is it only used by tests; where is a symbol used, and which files import or call it; did a rename update every reference; what has to change if a signature, argument, or return type changes; which tests actually need to run for a change, or why the whole suite is running; does a route have e2e coverage. Resolves the import graph instead of searching text, so consumers behind workspace aliases, barrel re-exports and transitive test chains are not missed."
+description: "Deterministic impact map and test plan from the import graph. Use before editing to find callers and tests, after editing to validate, and instead of rg when the question crosses packages, workspace aliases, barrel re-exports, Playwright routes, or configured Python/Go/Rust graphs. Typical questions: is this dead, still used, or safe to delete; is it only used by tests; where is a symbol used, and which files import or call it; did a rename update every reference; what has to change if a signature, argument, or return type changes; which tests actually need to run, or why the whole suite is running; does a route have e2e coverage. Skipping it misses tests, duplicate exports, uncovered App Router pages, and empty plans that are not actually empty."
 allowed-tools: Bash(no-mistakes:*) Bash(rg:*) Read Glob
 ---
 

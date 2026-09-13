@@ -1,17 +1,102 @@
 # `no-mistakes` skill evals
 
-Eval suite for the `skills/no-mistakes` skill. Run one flow with:
+Eval suite for the `skills/no-mistakes` skill.
+
+## Results
+
+The shipped `description:` was reworked in #981 on the strength of these runs.
+All at `runs: 3`, `--ablation none`, should-fire cases only, from files with
+**zero** errored runs. "Before" is the description PR #979 measured; "after" is
+the one in `skills/no-mistakes/SKILL.md` today.
+
+| flow | before | after |
+| --- | --- | --- |
+| [`before-edit`](#candidate-screening) | 8/18 (44%) | **16/18 (89%)** |
+| [`signature`](#candidate-screening) | 4/12 (33%) | **10/12 (83%)** |
+| [`neg-hard`](#candidate-screening) — over-trigger guard, lower is better | 0/12 | 0/12 |
+| [**live holdout**](#held-out-confirmation) — never tuned against | **3/9 (33%)** | **5/9 (56%)** |
+| [spent holdout](#held-out-confirmation) — contaminated, shown for continuity | 4/9 | 7/9 |
+
+**Read the holdout row, not the tuned rows.** 56% is what generalizes; 89% is
+the flow the description was written against. No "94%"-style claim survives a
+clean holdout, and none is made here.
+
+### What the runs established
+
+- **[Naming a subject reliably reaches it; not naming one is a coin
+  flip.](#naming-a-subject-reliably-reaches-it-not-naming-one-is-a-coin-flip)**
+  One clause about signatures moved that flow from 25–33% to 83%, and its
+  held-out case from 1/3 to 3/3. Unnamed subjects are unpredictable rather than
+  dead: the queue-shaped held-out case fires 0/3, the duplication-shaped one
+  2/3, and neither subject appears in any description tested. So name what
+  matters — but do not read every low flow as merely unnamed.
+- **[`signature` never
+  regressed.](#signature-did-not-regress--the-35-vs-215-above-was-a-1-run-artifact)**
+  The 3/5 → 2/15 drop that motivated the rework compared a *single-run* pilot
+  against a three-run variant. Re-measured, both descriptions sit at 25–33%.
+- **[Keeping the general framing is
+  worse.](#candidate-screening)** The candidate that kept it and added the real
+  register lost on every axis to the one that replaced it.
+- **[A non-firing run is worse than a silent
+  one.](#what-a-non-firing-run-actually-produces)** The old description's
+  common failure is not "forgot the tool exists" — it is confidently writing
+  `/no-mistakes roleHas`, which does not exist. It does that 10 times across 20
+  non-firing runs; the current description, twice across 14. Across every
+  description and flow, a non-firing run named a real subcommand **zero** times.
+- **[Codex reads the same description Claude
+  does.](#codex-reads-the-same-description--the-openaiyaml-gate-was-never-real)**
+  An earlier revision of this file claimed `agents/openai.yaml` gives Codex an
+  always-on imperative. It does not — the description is the whole of what
+  either agent gets. That makes the description Codex's trigger surface too,
+  but the **rates above are Claude's**: every case runs `claude-opus-5`, and
+  the suite has no Codex arm.
+
+### Caveats
+
+- **[Δ is not measured for the current
+  description.](#the-full-re-baseline-is-still-outstanding)** The table above is
+  trigger rate from single-arm runs. The full both-arm re-baseline across all
+  eleven flows is still outstanding, so [Baseline](#baseline-before-edit-flow-shipped-description-as-of-pr-979)
+  and [Measurement coverage](#measurement-coverage) still describe the *old*
+  description.
+- **[Eight flows are unmeasured under the new
+  description.](#it-does-not-generalize-across-flows)** `after-edit`, `queues`,
+  `ci`, `napi`, `lang-graph`, `usage`, `safety` and `duplication` sat between
+  0% and 67% under every description tested here. `after-edit` is the one to
+  watch: the old description named post-edit validation explicitly ("*use …
+  after editing to validate*") and the new one drops that wording, so it is the
+  likeliest place for a regression this PR did not measure.
+
+---
+
+Run one flow with:
 
 ```sh
-claude plugin eval . --tag before-edit --ablation with-without --judge-model sonnet
+pnpm run evals -- --tag before-edit --ablation with-without --judge-model sonnet
 ```
+
+`pnpm run evals` wraps `claude plugin eval .` via
+[`scripts/run-evals.sh`](../scripts/run-evals.sh). Prefer it over the raw
+command: pnpm forwards its own `--` into the script's argv, and the eval CLI
+reads that as end-of-options — it silently discards every flag after it and
+launches an unfiltered full-suite run. The wrapper strips the `--`, and refuses
+to launch unscoped, so a mistyped flag cannot cost $60 unintentionally. Pass
+`--all` when an unfiltered run is what you actually want. (Unfiltered is 59
+cases x 3 runs x 2 arms = 354 runs: a path target resolves a plugin, and the
+ablation default is then `with-without`, not `none`.)
 
 See [Flows](#flows) for the full-suite command — it deliberately excludes the
 `heldout` tag, which only means anything while those cases stay unseen.
 
-Add `--no-publish` to keep the HTML report local. The headline number is **Δ**
-— the with-plugin score minus the without-plugin score. A high absolute score
-with Δ ≈ 0 means the model would have done just as well without the skill.
+Add `--no-publish` to keep the HTML report local. Other flags the numbers below
+depend on: `-j 4` (concurrency defaults to **1**, so every cost and duration
+figure here assumes `-j 4`), `--runs <n>` to override the per-case `runs: 3`,
+`--max-cost-usd <n>` as a hard ceiling, and `--json <path>` for machine-readable
+per-run results alongside the HTML report.
+
+The headline number is **Δ** — the with-plugin score minus the without-plugin
+score. A high absolute score with Δ ≈ 0 means the model would have done just as
+well without the skill.
 
 ## What this suite measures
 
@@ -108,12 +193,12 @@ claude plugin eval . --ablation with-without --judge-model sonnet \
 claude plugin eval . --tag heldout --ablation none --judge-model sonnet
 ```
 
-56 generated cases across 12 flows; 53 excluding the holdout.
+59 generated cases across 12 flows; 53 excluding the holdout.
 
 | tag | cases | what it covers |
 | --- | --- | --- |
 | `before-edit` | 8 | impact scoping before a change — the calibrated core suite |
-| `heldout` | 3 | trigger-only cases in unseen wording, for testing description changes |
+| `heldout` | 6 | trigger-only cases in unseen wording, for testing description changes (3 spent, 3 live — see [Held-out check](#held-out-check)) |
 | `queues` | 5 | producer↔consumer coupling across a queue (no import edge) |
 | `after-edit` | 5 | validation set, moved files, empty-result distrust |
 | `signature` | 5 | call sites, argument shapes, return-type flow, public surface |
@@ -182,7 +267,7 @@ so they are low by construction — see the A/B result above.
 
 | flow | fired | reads |
 | --- | --- | --- |
-| `signature` | 3/5 | strongest of the new flows; `signature-01-add-param` scored **1.00 vs 0.00**, the largest single gap measured |
+| `signature` | 3/5 | ⚠️ **superseded** — at `runs: 3` this flow is 4/12, and the 1-run 3/5 is what produced the phantom regression discussed in [Decision rules](#decision-rules-for-a-description-change). `signature-01-add-param` scored **1.00 vs 0.00**, the largest single gap measured |
 | `lang-graph` | 3/5 | unexpectedly strong (Δ +0.67, +1.00, +0.33) despite the synthetic fixture |
 | `ci` | 1/5 | one clear win on `ci-01-action-impact`; rest gated on triggering |
 | `queues` | 1/5 | rubrics clean; Δ suppressed by non-triggering |
@@ -205,24 +290,47 @@ Not every flow has been measured to the same depth. Single-run numbers carry
 real judge variance — cases have been observed flipping between runs — so treat
 anything marked ⚠️ as directional.
 
-| flow | shipped description | reworded variant |
-| --- | --- | --- |
-| `before-edit` | `runs: 3` | `runs: 3` |
-| `heldout` | `runs: 3` | `runs: 3` |
-| `queues`, `after-edit`, `signature`, `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` |
-| `usage`, `safety`, `duplication`, `neg-hard` | ⚠️ 1 run | not run |
+| flow | shipped | reworded | C1 | C2 = current |
+| --- | --- | --- | --- | --- |
+| `before-edit` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
+| `signature` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
+| `neg-hard` | `runs: 3` | not run | `runs: 3` | `runs: 3` |
+| `heldout` (spent 01–03) | `runs: 3` | `runs: 3` | not run | `runs: 3` |
+| `heldout` (live 04–06) | `runs: 3` | n/a | not run | `runs: 3` |
+| `queues`, `after-edit`, `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** |
+| `usage`, `safety`, `duplication` | ⚠️ 1 run | not run | not run | **not run** |
 
-Completing the grid is ~45 cases × 3 runs × 2 arms ≈ $50. That is deliberately
-unspent: it would precisely measure a description that is expected to change.
-The intended order is (1) confirm the `signature` regression below, (2) revise
-the description, (3) then run the full suite once at `runs: 3` as the new
-baseline.
+### The full re-baseline is still outstanding
+
+The `runs: 3`, both-arm re-baseline of the current description across all
+eleven flows has **not** been completed. One attempt was made and is void: it
+hit a Claude session limit 27 runs into 318, and the remaining 291 runs
+errored.
+
+That failure is worth recording rather than just retrying, because of how it
+presents. An errored run scores 0 in **both** arms, so 45 of the 53 cases came
+back reading `0.00 / 0.00 / Δ +0.00` — indistinguishable from a genuine "the
+skill made no difference here", across a suite where Δ ≈ 0 is a common and
+expected result. The runner reported `partial: false`. The only immediate tell
+was the cost: $6.08 against an expected ~$50.
+
+`evals/summarize.py` now refuses to render such a run as a result. Anyone
+re-running this should still check the reported cost against the estimate
+below before believing a table of zeros, and should start the run with enough
+session budget for ~320 runs.
+
+Every other number in this file comes from runs with **zero** errored runs,
+verified per file.
 
 ### Approximate cost
 
-At `-j 4`, Opus agent, Sonnet judge: **~$0.18 per run**. A flow of 5 cases costs
-~$1.75 at 1 run and ~$5 at `runs: 3` (both arms). The 8-case `before-edit` flow
-at `runs: 3` was $8.89 / ~10 min.
+At `-j 4`, Opus agent, Sonnet judge: **~$0.16–0.19 per case × run × arm**.
+Measured on this round: 27 runs / $4.25, 51 runs / $9.25, 51 runs / $9.89,
+18 runs / $3.45. A 17-case screen at `runs: 3` single-arm is ~$9.50 and ~20
+minutes; the full 53-case both-arm re-baseline is ~320 runs, ~$50 and ~2 hours.
+
+Concurrency **defaults to 1** — pass `-j 4` or every figure here is wrong by a
+factor of four in wall-clock.
 
 ## Considered and not built
 
@@ -236,7 +344,7 @@ judged not worth the cost.
 | **More `napi` cases** | `SKILL.md`'s programmatic-API surface is about one sentence. The existing 5 already return Δ ≈ 0; more would add cost without discrimination. |
 | **More `lang-graph` cases** | The fixture is synthetic — `auto-harness` is TypeScript-only. Additional cases would grade plan shape against an imagined repository. |
 | **Engine correctness** | Covered by `test-cases/**` and the Rust suite. These evals test routing and guidance, not whether the graph is right. |
-| **Sub-skill variant** (splitting into intent-scoped skills) | Designed, then not built: the single reworded description reached 94% tuned and 100% held-out, so a split had nothing left to win. Revisit only if one description provably cannot span the vocabularies. |
+| **Sub-skill variant** (splitting into intent-scoped skills) | Designed, then not built — but the reasoning has weakened. It rested on one description reaching 94% tuned and 100% held-out; against a clean holdout the current description manages [5/9 and the previous one 3/9](#held-out-confirmation), and coverage turns out to track [which subjects the description names](#naming-a-subject-reliably-reaches-it-not-naming-one-is-a-coin-flip) rather than how general its framing is. That is the argument *for* splitting, not against it. Still not built, because the cheaper move — naming more subjects in one description — has not been exhausted. |
 | **A lifecycle case spanning before-edit → after-edit → handoff** | Multi-step flows are graded on a single final message here, so a long chain collapses into one hard-to-attribute verdict. The three phases are tested separately instead. |
 | **Performance / scale behaviour** | No case exercises a large repository, a cold graph build, or concurrency. |
 
@@ -281,7 +389,7 @@ produced silently meaningless scores:
    which refusal happened to mention more taxonomy. The `append_system_prompt`
    block that states the repository is unavailable is load-bearing.
 
-## Baseline (before-edit flow)
+## Baseline (before-edit flow, shipped description as of PR #979)
 
 `claude plugin eval . --tag before-edit --ablation with-without --judge-model sonnet`
 at `runs: 3` — 48 runs, $8.89, ~10 min at `-j 4`.
@@ -297,6 +405,12 @@ at `runs: 3` — 48 runs, $8.89, ~10 min at `-j 4`.
 | negatives (07, 08) | — | n/a | 0.00 |
 
 **Trigger rate 8/18 = 44%.** Fire-only Δ +0.063.
+
+This table describes the description that shipped with #979, which is **no
+longer the one in `skills/no-mistakes/SKILL.md`** — see
+[Candidate screening](#candidate-screening). It is kept as the before-side of
+the comparison. The current description's own both-arm baseline is
+[still outstanding](#the-full-re-baseline-is-still-outstanding).
 
 The split is the finding: the three phrasings drawn from the most common forms
 in real history (`01`, `03`, `05`) fire 1/9 combined, while the three that
@@ -381,9 +495,17 @@ the listed forms and can crowd out the unlisted ones.
 Sample sizes differ (5 vs 15), so `signature` warrants confirmation at
 `runs: 3` before acting on it.
 
-**Consequence for the next description: ADD the real-register forms while
+~~**Consequence for the next description: ADD the real-register forms while
 KEEPING the general framing, rather than replacing it.** A description that only
-enumerates is a description that only fires on what it enumerated.
+enumerates is a description that only fires on what it enumerated.~~
+
+**Superseded — this conclusion was wrong.** It rested on the `signature`
+regression, which [did not survive re-measurement](#signature-did-not-regress--the-35-vs-215-above-was-a-1-run-artifact),
+and it was tested directly in [Candidate screening](#candidate-screening): the
+candidate that keeps the general framing (C1) is worse than the one that drops
+it (C2) on every flow measured. Struck through rather than deleted because the
+reasoning is the trap, not the typo — "enumerating crowds out the unlisted" is
+a plausible mechanism that happened not to be what the numbers said.
 
 The should-not-fire cases were unchanged, so broadening the description did not
 degrade text-search questions.
@@ -394,16 +516,304 @@ that the skill stayed silent. Every case now carries the indicator (and the
 `neg-hard` flow was added specifically as an over-trigger guard), so a re-run
 reports whether a widened description fires on questions it cannot answer.
 
+### Decision rules for a description change
+
+**Pre-registered**: written and committed before the candidate screening numbers
+existed, so the rule could not be chosen to fit whichever candidate won.
+
+1. **`before-edit` trigger ≥ 17/18** — the `real-register` number. This is the
+   flow with the most real traffic behind it and the only one measured at
+   `runs: 3` under two descriptions, so it is the gate.
+2. **`neg-hard` trigger ≤ 1/12** — the shipped description's floor is **0/12**
+   (measured at `runs: 3`, `--ablation none`). One firing run at n=12 is not
+   distinguishable from judge variance; **2 or more is a fail**, and the
+   offending phrase must be tightened and that flow re-screened rather than
+   traded away against a better `before-edit` number.
+3. **`signature` is reported, not gated.** See below.
+
+**Amendment**, written after C1's numbers and before C2's, so it constrains a
+decision not yet made: a candidate clearing gates 1 and 2 wins. `signature`
+breaks a tie only between candidates that both clear gate 1 or both fail it. It
+is not promoted to a tiebreaker against `before-edit`, because `before-edit`
+carries real observed traffic and has now been measured at `runs: 3` under
+three descriptions, while `signature` has no observed demand at all and n=12
+per arm — a 6/12 vs 4/12 gap is two runs.
+
+#### `signature` did not regress — the 3/5 vs 2/15 above was a 1-run artifact
+
+Re-measured at `runs: 3`, `--ablation none`, counting the four should-fire cases:
+
+| description | `signature` trigger |
+| --- | --- |
+| shipped | 4/12 (33%) |
+| `real-register` | 3/12 (25%) |
+
+A one-count difference at n=12 is noise. The apparent regression in the table
+above came from comparing a **single-run** shipped pilot (3/5) against a
+three-run variant (2/15); the shipped number was inflated by the small sample.
+
+The real finding is less convenient and more useful: `signature` sits at 25–33%
+under *both* descriptions while `before-edit` reaches 94% under one of them. It
+is not a flow one vocabulary wins and the other loses — it is a flow **neither**
+vocabulary reaches. Do not build a gate on a one-count difference; it selects on
+judge variance rather than on the description.
+
+#### Comparing trigger counts across ablation modes
+
+Trigger counts from an `--ablation none` run are directly comparable with those
+from an `--ablation with-without` run: both are counts over the **with-arm**
+runs, and the number of with-arm runs per case is the same either way. Only the
+*scores* differ in scale, because `skill-fired` is scored under `none` and
+display-only under `with-without` — which is why `evals/summarize.py` drops that
+grader from every score it prints.
+
+#### What a non-firing run actually produces
+
+`skill-fired` is binary, which hides the more interesting question: when the
+skill does **not** load, what does the plan say instead? Classifying every
+non-firing run, case-matched so each column sees the same questions.
+
+On the four should-fire `signature` cases (12 runs each):
+
+| | shipped | `real-register` | C1 | C2 |
+| --- | --- | --- | --- | --- |
+| fired | 4 | 3 | 6 | **10** |
+| did not fire | 8 | 9 | 6 | 2 |
+| … inventing a command form | **5** | 2 | **4** | 1 |
+| … naming a real subcommand | 0 | 0 | 0 | 0 |
+| … naming the tool, no command | 3 | 7 | 2 | 1 |
+
+On the four `neg-hard` over-trigger guards (12 runs each; `real-register` was
+never run against this flow, so it has no column):
+
+| | shipped | C1 | C2 |
+| --- | --- | --- | --- |
+| fired | 0 | 0 | 0 |
+| reached for the tool in prose anyway | 9 | 9 | 8 |
+| … inventing a command form | **5** | **5** | **1** |
+| … naming the tool, no command | 4 | 4 | 7 |
+| stayed silent | 3 | 3 | 4 |
+
+**A non-firing run never produces a working command.** Across all four
+descriptions and both flows, the count of non-firing runs that named a real
+subcommand is **zero** — the subcommands live in the skill body, so a plan
+written without loading it cannot get them right. (The classifier checks the
+captured token against the real subcommand set for exactly this reason;
+matching any lowercase word would score the invented `no-mistakes roleHas` as
+real, since `role` is a lowercase prefix of the symbol. That set is the 50
+complete invocation paths read from `docs/cli/` link text at runtime — the
+hand-listed tuple this file first shipped with held 20 of them, so a run naming
+`no-mistakes lockfile` would have been scored as a fabrication; filename stems
+then over-corrected, accepting the concept pages `graph.md` and
+`diagnostics.md` as commands and `no-mistakes tests-plan` for the real `tests
+plan`. Re-running the classification under each of the three moved none of the
+counts in these two tables, so the zero above holds against complete paths.)
+
+**A non-firing run is worse than a silent one.** Under the shipped description
+the common outcome is not "the model forgot the tool exists" — it is the model
+confidently writing `/no-mistakes roleHas` or `no-mistakes roleHas`, neither of
+which exists. The description is good enough to be reached for and not good
+enough to be used, so the plan names something that will fail. C2 does this
+twice across its 14 non-firing runs on the two flows; the shipped description
+does it 10 times across 20.
+
+**The over-trigger guard needs reading in two parts.** All three descriptions
+score a clean `skill-fired` 0/12 on `neg-hard`, and all three still reach for
+the tool in prose on roughly 8–9 of those 12 runs. Widening the description did
+not make that worse. What changes is the form: shipped and C1 fabricate a
+command on 5 of them, C2 on 1. Read the guard as `skill-fired` **plus** this
+classification — `skill-fired` alone reports all three as identical.
+
+### Candidate screening
+
+Two candidates, screened at `runs: 3` with `--ablation none` on the target
+(`before-edit`), the flow the issue was about (`signature`), and the guard
+(`neg-hard`) — 17 cases, 51 runs, ~$9.50 each. Two rather than three on
+purpose: screening N candidates and taking the best biases the winner's number
+upward, and there are only three live held-out cases to confirm with.
+
+- **C1** `evals/variants/general-plus-register/` — the shipped general framing
+  (*deterministic impact map and test plan … before editing … instead of rg
+  when …*) **plus** the real-register question forms.
+- **C2** `evals/variants/register-plus-signature/` — the measured
+  `real-register` description **plus** one signature clause, general framing
+  still dropped.
+
+Both apply the same two hardenings against the guards: `who imports or calls
+it` became `which files import or call it`, so it does not reach
+`neg-hard-01`'s "why is `roleHas` slow when we **call it** in a tight loop";
+and `safe to delete` is kept adjacent so it does not reach `neg-hard-02`'s "is
+`OutboundQueue` **safe to use** from two workers".
+
+Trigger counts, should-fire cases only:
+
+| flow | shipped | `real-register` | C1 | C2 |
+| --- | --- | --- | --- | --- |
+| `before-edit` | 8/18 (44%) | **17/18 (94%)** | 15/18 (83%) | 16/18 (89%) |
+| `signature` | 4/12 (33%) | 3/12 (25%) | 6/12 (50%) | **10/12 (83%)** |
+| `neg-hard` (lower is better) | 0/12 | not run | 0/12 | 0/12 |
+| `07`/`08` should-not-fire | — | — | 0/6 | 0/6 |
+
+**Neither candidate cleared gate 1.** C2 missed the 17/18 bar by a single run
+and C1 by three. Under the pre-registered amendment — `signature` breaks a tie
+between candidates that both fail gate 1 — **C2 wins**, and not narrowly: it is
+ahead of C1 on every flow measured, at 10/12 versus 6/12 on `signature`, and of the three
+descriptions actually evaluated on the `neg-hard` guards it fabricates a
+command once, against five apiece for the other two. (`real-register` was never
+run against that flow, so it cannot be ranked here.)
+
+Read C2's 16/18 against `real-register`'s 17/18 as a tie. They are one run
+apart at n=18, measured in different sessions, and C2 is `real-register` plus
+one clause — the honest claim is that adding the signature clause cost nothing
+on `before-edit` while moving `signature` from 3/12 to 10/12.
+
+C1's result is the more interesting one. Restoring the general framing did not
+help: it is *worse* than C2 on both target flows, and it reproduces the shipped
+description's habit of fabricating a command form exactly as often (5/12 on
+`neg-hard`). Combined with the step-1 finding that `signature` never
+regressed, the conclusion the previous section reached — "ADD the real-register
+forms while KEEPING the general framing, rather than replacing it" — **is not
+supported**. Replacing it is better. What `signature` needed was a clause about
+signatures, not the general framing back.
+
+### Held-out confirmation
+
+Run against the winner only, at `runs: 3`, `--ablation none`, and against the
+shipped description on the same six cases for a before/after.
+
+| held-out case | shipped | C2 | |
+| --- | --- | --- | --- |
+| `heldout-01-can-this-go` | 1/3 | 3/3 | spent |
+| `heldout-02-more-than-shared-tests` | 2/3 | 3/3 | spent |
+| `heldout-03-still-pointing-at` | 1/3 | 1/3 | spent |
+| **spent subtotal** | **4/9** | **7/9** | |
+| `heldout-04-swap-the-arg` | 1/3 | 3/3 | live |
+| `heldout-05-other-side-of-the-outbox` | 0/3 | **0/3** | live |
+| `heldout-06-two-copies` | 2/3 | 2/3 | live |
+| **live subtotal** | **3/9 (33%)** | **5/9 (56%)** | |
+
+**Read the live subtotal, not the aggregate.** Cases 01–03 are contaminated:
+`real-register` was tuned against them and C2 is `real-register` plus one
+clause, so their 4/9 → 7/9 measures very little. The number that means
+something is **5/9**.
+
+The shipped column reproduces this file's earlier 4/9 on the spent cases
+exactly, measured months apart in a different ablation mode — a useful
+reproducibility signal for the suite itself.
+
+Against C2's tuned 16/18 (89%), a live holdout of 5/9 (56%) is the honest
+generalization estimate, and the gap is large. It is a real improvement over
+the shipped description's 3/9, and it is nothing like 89%. **No "94%"-style
+claim should be made for any description on the strength of a tuned flow.**
+
+The per-case split says why, and it is the same story as everywhere else in
+this file: the signature-shaped held-out case goes 1/3 → 3/3, because C2 added
+a clause about signatures; the queue-shaped one stays at 0/3, because it did
+not add one about queues.
+
+### Codex reads the same description — the `openai.yaml` gate was never real
+
+An earlier revision of this file asserted that Codex consumes this skill
+through an **always-on imperative** in `skills/no-mistakes/agents/openai.yaml`
+(`interface.default_prompt`), while Claude gets only the description. A
+pre-registered gate followed from that: remove the imperative once the
+aggregate should-fire trigger reached ≥90%.
+
+**That execution model is wrong, and the gate it justified does not exist.**
+Per Codex's own spec (`skill-creator/references/openai_yaml.md`, shipped with
+the Codex CLI):
+
+- `agents/openai.yaml` is "an extended, product-specific config intended for
+  the machine/harness to read, **not the agent**".
+- `interface.default_prompt` is the "default prompt snippet inserted **when
+  invoking** the skill" — a one-sentence example starting prompt for the UI,
+  which is why the spec requires it to name the skill as `$skill-name`. It
+  sits beside `display_name` and `short_description` under `interface:`
+  because it is UI presentation.
+- The field that actually governs ambient injection is
+  `policy.allow_implicit_invocation`, which **defaults to true**. This skill
+  declares no `policy` block, so it takes the default.
+
+So Codex is injected with the `SKILL.md` description, implicitly, exactly as
+Claude is. There is no Codex-side crutch, no asymmetry, and nothing for a
+trigger-rate gate to unlock.
+
+What this does and does not license, since the first draft of this correction
+overshot it: the **input** is now known to be the same on both sides — the
+description is the whole of what either agent gets, so a change to it is a
+change to Codex's trigger surface too, and there is no Codex-side instruction
+that would absorb a regression. What stays unmeasured is the **rate**. Every
+case here runs `model: claude-opus-5` through `claude plugin eval`, so these
+numbers are Claude's decision to invoke the skill. A different model with a
+different skill-routing implementation can read identical metadata and trigger
+at a different rate. **Do not quote a number in this file as a Codex result**;
+a Codex-specific regression would be invisible here. Measuring that needs a
+Codex arm the suite does not have.
+
+**Outcome: `skills/no-mistakes/agents/openai.yaml` is unchanged** — not because
+a gate went unmet, but because the thing the gate proposed to remove is a UI
+example prompt whose deletion would not change any agent's behaviour. The 90%
+bar is withdrawn rather than deferred; there is no measurement that would
+reinstate it.
+
+One real defect survives this correction, and is left for a follow-up rather
+than folded in here: `default_prompt` still quotes the **old** description's
+register ("*before editing to find callers and tests … instead of rg when …*"),
+so the Codex UI now suggests a starting prompt written in the vocabulary this
+PR replaced. It is also three sentences where the spec asks for roughly one.
+Fixing it is a user-facing string change with no measurement behind it, which
+is out of scope for a PR whose whole claim is that its changes are measured.
+
+### Naming a subject reliably reaches it; not naming one is a coin flip
+
+**Naming works.** `signature` sat at 25–33% under both the shipped and the
+reworded description, neither of which mentioned signatures, arguments or
+return types. Adding one clause about them took it to 83%, and the
+signature-shaped held-out case — worded so it reuses none of that clause's
+language — went 1/3 → 3/3.
+
+**Not naming a subject is where it stops being predictable.** C2 says nothing
+about producers, consumers, queues or jobs, and its queue-shaped held-out case
+fires **0/3**, the worst cell measured anywhere in this suite. But it says
+nothing about duplicates or repository-wide uniqueness either, and *that*
+held-out case fires **2/3**.
+
+So an earlier draft of this section overreached. It claimed the description
+reaches what it names "and nothing else", which the holdout contradicts: an
+unnamed subject scored 0/3 in one case and 2/3 in another. What the data
+supports is asymmetric —
+
+- a named subject is reached reliably (two flows, both lifted, and the lift
+  survives held-out wording);
+- an unnamed subject may or may not be, and nothing here predicts which.
+
+That is still enough to act on, and it points the same way: if a subject
+matters, name it, because leaving it to generalization is a gamble this suite
+cannot handicap. What it does **not** support is the inference that every
+low-scoring flow is low because it went unnamed — `duplication` shows an
+unnamed subject can do fine. Enumeration does not crowd out the unlisted, which
+is what the struck-through guidance above assumed; it simply does not reliably
+reach it.
+
+The obvious next move — add a queue clause and re-screen — is deliberately
+**not** taken here. `heldout-05` is a live held-out case; tuning against it
+spends it, which is the exact failure the holdout exists to prevent. It belongs
+in a follow-up issue with fresh held-out cases written first.
+
 To add another variant: create `evals/variants/<name>/` (copy the skill, change
 only the frontmatter), then `python3 evals/generate.py --variant <name>` and run
 with `--eval-dir evals-variants/<name>`. The plugin under `skills/` is never
 modified to run a comparison.
 
-Relevant asymmetry to keep in mind when interpreting results: Codex consumes
-this skill through `skills/no-mistakes/agents/openai.yaml`, whose
-`default_prompt` is an **always-on imperative** to use `no-mistakes`. Claude has
-only the description to match against. That difference — not model quality — is
-the leading explanation for Codex invoking the tool more reliably.
+Every number here is measured on `claude-opus-5` and is a **Claude** result.
+Codex is injected with the same `SKILL.md` description — see [Codex reads the
+same
+description](#codex-reads-the-same-description--the-openaiyaml-gate-was-never-real)
+for why the `agents/openai.yaml` `default_prompt` is a UI example prompt rather
+than the always-on imperative an earlier revision of this file claimed — so the
+description is Codex's trigger surface too. That is a statement about the
+input, not the rate: a different model and skill router can read the same
+metadata and trigger differently, and this suite has no Codex arm to catch it.
 
 ## Known environment issue
 
