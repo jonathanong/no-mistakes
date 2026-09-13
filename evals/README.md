@@ -296,7 +296,7 @@ anything marked ⚠️ as directional.
 | `queues`, `after-edit`, `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** |
 | `usage`, `safety`, `duplication` | ⚠️ 1 run | not run | not run | **not run** |
 
-#### The full re-baseline is still outstanding
+### The full re-baseline is still outstanding
 
 The `runs: 3`, both-arm re-baseline of the current description across all
 eleven flows has **not** been completed. One attempt was made and is void: it
