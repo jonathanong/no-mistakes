@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-no-mistakes\s+tests\s+plan
+no-mistakes\s+tests\s+plan(?![\w-])
