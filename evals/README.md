@@ -314,15 +314,27 @@ Not every flow has been measured to the same depth. Single-run numbers carry
 real judge variance — cases have been observed flipping between runs — so treat
 anything marked ⚠️ as directional.
 
-| flow | shipped | reworded | C1 | C2 = current |
-| --- | --- | --- | --- | --- |
-| `before-edit` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
-| `signature` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
-| `neg-hard` | `runs: 3` | not run | `runs: 3` | `runs: 3` |
-| `heldout` (spent 01–03) | `runs: 3` | `runs: 3` | not run | `runs: 3` |
-| `heldout` (live 04–06) | `runs: 3` | n/a | not run | `runs: 3` |
-| `queues`, `after-edit`, `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** |
-| `usage`, `safety`, `duplication` | ⚠️ 1 run | not run | not run | **not run** |
+Columns are descriptions, oldest first. **C2 is the description #981 shipped —
+it is no longer current**; `register-plus-validate` is, and it is the column to
+read when planning what still needs measuring.
+
+| flow | #979 shipped | reworded | C1 | C2 = #981 | current (`register-plus-validate`) |
+| --- | --- | --- | --- | --- | --- |
+| `before-edit` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
+| `signature` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` | `runs: 3` |
+| `neg-hard` | `runs: 3` | not run | `runs: 3` | `runs: 3` | `runs: 3` |
+| `after-edit` | `runs: 3` | `runs: 3` | not run | `runs: 3` | `runs: 3` |
+| `heldout` (spent 01–03) | `runs: 3` | `runs: 3` | not run | `runs: 3` | **not run** |
+| `heldout` (live 04–06) | `runs: 3` | n/a | not run | `runs: 3` | **not run** |
+| `queues`, `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** | **not run** |
+| `usage`, `safety`, `duplication` | ⚠️ 1 run | not run | not run | **not run** | **not run** |
+
+The `after-edit` row is `runs: 3` under `#979 shipped`, `C2` and `current`
+because [the regression check](#the-after-edit-regression-981-shipped) measured
+all three; the ⚠️ 1-run pilot it used to carry has been superseded and must not
+be quoted. The `heldout` rows are **not run** for the current description on
+purpose — `after-edit` is now tuning-visible, so a clean holdout needs [fresh
+cases](#writing-new-cases) first.
 
 ### The full re-baseline is still outstanding
 
@@ -901,17 +913,52 @@ how the `#979` and `#981` columns above were produced):
 
 ```sh
 name=shipped-pre-981
+sha=<the commit that shipped that description>
+
 mkdir -p "evals/variants/$name"
 cp -R skills/no-mistakes/references "evals/variants/$name/"
 cp skills/no-mistakes/SKILL.md "evals/variants/$name/SKILL.md"
-# then replace only the `description:` line with the one from that commit:
-git show <sha>:skills/no-mistakes/SKILL.md | grep '^description:'
+
+# Overwrite the `description:` line in the COPY with the historical one. Reading
+# the old line without writing it is the whole trap: the copy keeps the current
+# description, the variant run looks fine, and it silently measures the arm you
+# already have.
+python3 - "$name" "$sha" <<'PY'
+import pathlib, subprocess, sys
+name, sha = sys.argv[1], sys.argv[2]
+old = subprocess.run(
+    ["git", "show", f"{sha}:skills/no-mistakes/SKILL.md"],
+    capture_output=True, text=True, check=True,
+).stdout
+desc = next(l for l in old.splitlines() if l.startswith("description:"))
+p = pathlib.Path(f"evals/variants/{name}/SKILL.md")
+lines = p.read_text().splitlines(keepends=True)
+for i, l in enumerate(lines):
+    if l.startswith("description:"):
+        assert lines[i] != desc + "\n", "copy already has the historical line — wrong sha?"
+        lines[i] = desc + "\n"
+        break
+else:
+    raise SystemExit("no description: line found")
+p.write_text("".join(lines))
+print("wrote:", desc[:80])
+PY
+
 python3 evals/generate.py --variant "$name"
 ```
 
-Verify before spending: `diff` the two `SKILL.md` files with line 3 removed and
-`diff -r` the `references/` trees. If anything but the description differs, the
-run measures something other than the description.
+**Verify before spending**, or the run measures something other than the
+description:
+
+```sh
+sed '3d' skills/no-mistakes/SKILL.md > /tmp/a.md
+sed '3d' "evals/variants/$name/SKILL.md" > /tmp/b.md
+diff /tmp/a.md /tmp/b.md && echo "only line 3 differs"
+diff -r skills/no-mistakes/references "evals/variants/$name/references" && echo "references identical"
+```
+
+Both must be clean, and the two `description:` lines must actually differ —
+that is the check the assertion above enforces.
 
 Every number here is measured on `claude-opus-5` and is a **Claude** result.
 Codex is injected with the same `SKILL.md` description — see [Codex reads the
