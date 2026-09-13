@@ -597,16 +597,15 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                # `check` + its `unique-exports` rule is the repo-wide duplicate
-                # answer, and the duplication flow already accepts it for the same
-                # question. Omitting it fails plans that are correct.
-                #
-                # `unique-exports` stays INSIDE the group: as a bare alternative it
-                # matched the rule name anywhere in the response, so a plan that
-                # never named a command still took the credit. The two duplication
-                # cases carry that looser form and are left alone, since their
-                # published numbers were graded with it.
-                r"no-mistakes\s+(check|exports-of|symbols|dead-exports|unique-exports)",
+                # `check` is the repo-wide duplicate answer and is accepted here,
+                # which is what the duplication flow relies on for the same
+                # question. `unique-exports` is deliberately NOT an alternative:
+                # it is a rule that `no-mistakes check` runs, not a subcommand, so
+                # crediting `no-mistakes unique-exports` would score an unusable
+                # command as a real one. The two duplication cases carry the looser
+                # form and are left alone, since their published numbers were
+                # graded with it.
+                r"no-mistakes\s+(check|exports-of|symbols|dead-exports)",
             ),
         ],
     ),

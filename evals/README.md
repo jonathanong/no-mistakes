@@ -23,12 +23,13 @@ clean holdout, and none is made here.
 
 ### What the runs established
 
-- **[A description fires on the subjects it names, and nothing
-  else.](#the-description-reaches-what-it-names-and-nothing-else)** One clause
-  about signatures moved that flow from 25–33% to 83%. `queues` has no clause
-  in any description tested and its held-out case fires **0/3**. Coverage is a
-  question of which subjects earn the permanently-resident characters, not of
-  finding a framing general enough to span everything.
+- **[Naming a subject reliably reaches it; not naming one is a coin
+  flip.](#naming-a-subject-reliably-reaches-it-not-naming-one-is-a-coin-flip)**
+  One clause about signatures moved that flow from 25–33% to 83%, and its
+  held-out case from 1/3 to 3/3. Unnamed subjects are unpredictable rather than
+  dead: the queue-shaped held-out case fires 0/3, the duplication-shaped one
+  2/3, and neither subject appears in any description tested. So name what
+  matters — but do not read every low flow as merely unnamed.
 - **[`signature` never
   regressed.](#signature-did-not-regress--the-35-vs-215-above-was-a-1-run-artifact)**
   The 3/5 → 2/15 drop that motivated the rework compared a *single-run* pilot
@@ -340,7 +341,7 @@ judged not worth the cost.
 | **More `napi` cases** | `SKILL.md`'s programmatic-API surface is about one sentence. The existing 5 already return Δ ≈ 0; more would add cost without discrimination. |
 | **More `lang-graph` cases** | The fixture is synthetic — `auto-harness` is TypeScript-only. Additional cases would grade plan shape against an imagined repository. |
 | **Engine correctness** | Covered by `test-cases/**` and the Rust suite. These evals test routing and guidance, not whether the graph is right. |
-| **Sub-skill variant** (splitting into intent-scoped skills) | Designed, then not built — but the reasoning has weakened. It rested on one description reaching 94% tuned and 100% held-out; against a clean holdout the current description manages [5/9 and the previous one 3/9](#held-out-confirmation), and coverage turns out to track [which subjects the description names](#the-description-reaches-what-it-names-and-nothing-else) rather than how general its framing is. That is the argument *for* splitting, not against it. Still not built, because the cheaper move — naming more subjects in one description — has not been exhausted. |
+| **Sub-skill variant** (splitting into intent-scoped skills) | Designed, then not built — but the reasoning has weakened. It rested on one description reaching 94% tuned and 100% held-out; against a clean holdout the current description manages [5/9 and the previous one 3/9](#held-out-confirmation), and coverage turns out to track [which subjects the description names](#naming-a-subject-reliably-reaches-it-not-naming-one-is-a-coin-flip) rather than how general its framing is. That is the argument *for* splitting, not against it. Still not built, because the cheaper move — naming more subjects in one description — has not been exhausted. |
 | **A lifecycle case spanning before-edit → after-edit → handoff** | Multi-step flows are graded on a single final message here, so a long chain collapses into one hard-to-attribute verdict. The three phases are tested separately instead. |
 | **Performance / scale behaviour** | No case exercises a large repository, a cold graph build, or concurrency. |
 
@@ -760,22 +761,36 @@ PR replaced. It is also three sentences where the spec asks for roughly one.
 Fixing it is a user-facing string change with no measurement behind it, which
 is out of scope for a PR whose whole claim is that its changes are measured.
 
-### The description reaches what it names, and nothing else
+### Naming a subject reliably reaches it; not naming one is a coin flip
 
-The single generalizable finding, now supported by two independent flows.
+**Naming works.** `signature` sat at 25–33% under both the shipped and the
+reworded description, neither of which mentioned signatures, arguments or
+return types. Adding one clause about them took it to 83%, and the
+signature-shaped held-out case — worded so it reuses none of that clause's
+language — went 1/3 → 3/3.
 
-`signature` sat at 25–33% under both the shipped and the reworded description,
-neither of which mentioned signatures, arguments or return types. Adding one
-clause about them took it to 83%. `queues` sat at 1/5 shipped and 2/15
-reworked; C2 says nothing about producers, consumers, queues or jobs, and its
-queue-shaped held-out case fires **0/3** — the worst cell measured anywhere in
-this suite.
+**Not naming a subject is where it stops being predictable.** C2 says nothing
+about producers, consumers, queues or jobs, and its queue-shaped held-out case
+fires **0/3**, the worst cell measured anywhere in this suite. But it says
+nothing about duplicates or repository-wide uniqueness either, and *that*
+held-out case fires **2/3**.
 
-Enumeration does not crowd out the unlisted, which is what the struck-through
-guidance above assumed. It simply does not reach it. A description fires on
-the subjects it names, so coverage is a question of which subjects are worth
-the permanently-resident characters — not of finding a general framing abstract
-enough to cover everything.
+So an earlier draft of this section overreached. It claimed the description
+reaches what it names "and nothing else", which the holdout contradicts: an
+unnamed subject scored 0/3 in one case and 2/3 in another. What the data
+supports is asymmetric —
+
+- a named subject is reached reliably (two flows, both lifted, and the lift
+  survives held-out wording);
+- an unnamed subject may or may not be, and nothing here predicts which.
+
+That is still enough to act on, and it points the same way: if a subject
+matters, name it, because leaving it to generalization is a gamble this suite
+cannot handicap. What it does **not** support is the inference that every
+low-scoring flow is low because it went unnamed — `duplication` shows an
+unnamed subject can do fine. Enumeration does not crowd out the unlisted, which
+is what the struck-through guidance above assumed; it simply does not reliably
+reach it.
 
 The obvious next move — add a queue clause and re-screen — is deliberately
 **not** taken here. `heldout-05` is a live held-out case; tuning against it

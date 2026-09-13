@@ -107,6 +107,19 @@ def summarize(path: str) -> None:
         )
         print()
 
+    # `partial` is the other way a run stops short. A `--max-cost-usd` ceiling or
+    # an interruption leaves completed runs with no per-run `error`, so nothing
+    # above catches it — but the cases that finished are an order-dependent
+    # prefix of the suite, not a sample of it, and an aggregate over them reads
+    # like a result for the whole tag set.
+    partial = bool(report.get("partial"))
+    if partial:
+        print(f"    !!  PARTIAL RUN — {report.get('partialReason') or 'no reason given'}")
+        print("    !!  The cases below are the prefix that finished, not the suite")
+        print("    !!  that was asked for. Per-case rows stand; the aggregate is")
+        print("    !!  suppressed, since its denominator is an accident of ordering.")
+        print()
+
     print(f"    {'case':<38} {'fired':>7} {'with':>6} {'without':>8} {'delta':>7}")
 
     fired_total = runs_total = 0
@@ -145,7 +158,11 @@ def summarize(path: str) -> None:
             fired_total += fired
             runs_total += len(with_arm)
 
-    if runs_total:
+    if partial:
+        print(
+            "    should-fire aggregate trigger: SUPPRESSED (partial run)"
+        )
+    elif runs_total:
         pct = 100 * fired_total / runs_total
         suffix = "  (errored runs excluded)" if errors else ""
         print(
@@ -172,6 +189,13 @@ def _evidence(run) -> str:
 #: enums, so the set cannot drift from the CLI.
 _DOC_LINK = re.compile(r"\[`([a-z0-9][a-z0-9 -]*)`\]\([a-z0-9-]+\.md\)")
 
+#: "`no-mistakes test` is an alias for `no-mistakes tests`." — clap declares the
+#: alias (`#[command(alias = "test")]`) and the docs state it in this fixed form,
+#: so an aliased invocation is real and must not read as a fabrication.
+_DOC_ALIAS = re.compile(
+    r"`no-mistakes ([a-z0-9][a-z0-9 -]*)` is an alias for `no-mistakes ([a-z0-9][a-z0-9 -]*)`"
+)
+
 
 def _load_commands() -> tuple:
     """Every complete `no-mistakes` invocation path, from `docs/cli/`.
@@ -188,10 +212,20 @@ def _load_commands() -> tuple:
     `no-mistakes tests` without a subcommand is not a runnable command.
     """
     cli_docs = pathlib.Path(__file__).resolve().parent.parent / "docs" / "cli"
-    paths = {m.group(1) for p in cli_docs.glob("*.md") for m in _DOC_LINK.finditer(p.read_text())}
+    texts = [p.read_text() for p in cli_docs.glob("*.md")]
+    paths = {m.group(1) for t in texts for m in _DOC_LINK.finditer(t)}
     paths -= {p.replace(" ", "-") for p in paths if " " in p}
     groups = {p.split()[0] for p in paths if " " in p}
     paths -= groups
+    # `no-mistakes test plan` is as real as `tests plan`; mirror every path that
+    # starts with an aliased name onto the alias.
+    for text in texts:
+        for alias, canonical in _DOC_ALIAS.findall(text):
+            paths |= {
+                f"{alias}{p[len(canonical):]}"
+                for p in paths
+                if p == canonical or p.startswith(f"{canonical} ")
+            }
     if not paths:
         # An empty set would classify every real command as invented and quietly
         # turn the fabrication tables into noise. Fail instead.
