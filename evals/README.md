@@ -60,9 +60,12 @@ clean holdout, and none is made here.
   and [Measurement coverage](#measurement-coverage) still describe the *old*
   description.
 - **[Eight flows are unmeasured under the new
-  description.](#it-does-not-generalize-across-flows)** `queues`, `ci`, `napi`,
-  `lang-graph`, `usage`, `safety` and `duplication` sat between 0% and 67%
-  under every description tested here.
+  description.](#it-does-not-generalize-across-flows)** `after-edit`, `queues`,
+  `ci`, `napi`, `lang-graph`, `usage`, `safety` and `duplication` sat between
+  0% and 67% under every description tested here. `after-edit` is the one to
+  watch: the old description named post-edit validation explicitly ("*use …
+  after editing to validate*") and the new one drops that wording, so it is the
+  likeliest place for a regression this PR did not measure.
 
 ---
 
