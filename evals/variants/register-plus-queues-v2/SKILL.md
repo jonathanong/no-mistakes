@@ -58,10 +58,9 @@ context, option propagation, and safe command execution.
 - Pass `--root <workspace>` explicitly. In normal monorepos omit `--tsconfig`
   so each importing file uses its owning config; pass a package tsconfig only
   to force one resolver for debugging or a deliberately scoped request.
-- Static literals produce the strongest results. `resolve-check` reports computed
-  `import()` / `require()` specifiers as unresolved; graph traversal still skips
-  them. Route paths, selectors, queue names, fetch URLs, and process commands
-  require inspection or `rg`; see [limits and fallbacks](references/limits-and-fallbacks.md).
+- Static literals produce the strongest results. Dynamic imports, route paths,
+  selectors, queue names, fetch URLs, and process commands require inspection
+  or `rg`; see [limits and fallbacks](references/limits-and-fallbacks.md).
 
 For several related reports in one Node process, use the async N-API
 `analyzeProject({ root, reports: [...] })` rather than repeated CLI calls. It
