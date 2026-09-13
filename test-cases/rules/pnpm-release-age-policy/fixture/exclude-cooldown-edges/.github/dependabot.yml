@@ -1,0 +1,5 @@
+updates:
+  - package-ecosystem: npm
+    directory: /
+    cooldown:
+      exclude: [ok, {nested: 1}]

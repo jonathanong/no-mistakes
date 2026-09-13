@@ -54,54 +54,40 @@ fn fail_fixture_has_findings() {
 
 #[test]
 fn allowed_lockfile_passes() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::write(root.join("pnpm-lock.yaml"), "lockfileVersion: '9.0'\n").unwrap();
+    let root = fixture_root("allowed-pnpm");
     let config = config_with_rule(
         "allowed: [pnpm-lock.yaml]\nbannedBasenames: [package-lock.json, yarn.lock]",
     );
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(findings.is_empty());
 }
 
 #[test]
 fn banned_lockfile_flagged() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::write(root.join("yarn.lock"), "# yarn lockfile v1\n").unwrap();
+    let root = fixture_root("banned-yarn");
     let config = config_with_rule(
         "allowed: [pnpm-lock.yaml]\nbannedBasenames: [package-lock.json, yarn.lock]",
     );
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert_eq!(findings.len(), 1);
     assert!(findings[0].file.contains("yarn.lock"));
 }
 
 #[test]
 fn default_banned_basenames_includes_npm() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::write(root.join("package-lock.json"), "{}").unwrap();
-    // No options = use defaults
+    let root = fixture_root("default-banned-npm");
     let config = config_with_rule("{}");
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert_eq!(findings.len(), 1);
     assert!(findings[0].file.contains("package-lock.json"));
 }
 
 #[test]
 fn glob_pattern_in_allowed() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::create_dir_all(root.join("packages/a")).unwrap();
-    std::fs::write(
-        root.join("packages/a/pnpm-lock.yaml"),
-        "lockfileVersion: '9.0'\n",
-    )
-    .unwrap();
+    let root = fixture_root("glob-nested");
     let config =
         config_with_rule("allowed: [\"**/pnpm-lock.yaml\"]\nbannedBasenames: [pnpm-lock.yaml]");
-    let findings = check(root, &config).unwrap();
+    let findings = check(&root, &config).unwrap();
     assert!(
         findings.is_empty(),
         "glob should match nested pnpm-lock.yaml"
@@ -110,22 +96,18 @@ fn glob_pattern_in_allowed() {
 
 #[test]
 fn check_with_files_works() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
+    let root = fixture_root("banned-yarn");
     let path = root.join("yarn.lock");
-    std::fs::write(&path, "# yarn lockfile v1\n").unwrap();
     let config = config_with_rule("allowed: [pnpm-lock.yaml]\nbannedBasenames: [yarn.lock]");
-    let findings = check_with_files(root, &config, &[path]).unwrap();
+    let findings = check_with_files(&root, &config, &[path]).unwrap();
     assert_eq!(findings.len(), 1);
 }
 
 #[test]
 fn invalid_allowed_glob_fails_closed() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::write(root.join("yarn.lock"), "# yarn lockfile v1\n").unwrap();
+    let root = fixture_root("invalid-allowed-glob");
     let error = check(
-        root,
+        &root,
         &config_with_rule("allowed: ['[']\nbannedBasenames: [yarn.lock]"),
     )
     .expect_err("invalid allowlist glob must fail");
@@ -139,11 +121,9 @@ fn invalid_allowed_glob_fails_closed() {
 
 #[test]
 fn custom_banned_basenames_ignore_default_npm_lockfile() {
-    let tmp = tempfile::tempdir().unwrap();
-    let root = tmp.path();
-    std::fs::write(root.join("package-lock.json"), "{}").unwrap();
+    let root = fixture_root("custom-banned-basenames");
     let findings = check(
-        root,
+        &root,
         &config_with_rule("allowed: [pnpm-lock.yaml]\nbannedBasenames: [yarn.lock]"),
     )
     .unwrap();
