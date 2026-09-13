@@ -1,0 +1,6 @@
+updates:
+  - package-ecosystem: pip
+    directory: /
+    cooldown:
+      exclude:
+        - 1

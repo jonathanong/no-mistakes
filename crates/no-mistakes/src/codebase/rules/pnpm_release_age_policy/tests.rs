@@ -133,10 +133,9 @@ fn missing_workspace_yaml_is_clean() {
 
 #[test]
 fn malformed_workspace_yaml_is_reported() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::codebase::ts_resolver::normalize_path(dir.path());
+    // Intentionally invalid YAML so scan reports a parse error.
+    let root = fixture("malformed-workspace");
     let yaml = root.join("pnpm-workspace.yaml");
-    std::fs::write(&yaml, "{ invalid yaml: }}}\n").unwrap();
     let findings = check_with_files(&root, &config(), &[yaml]).unwrap();
     assert!(
         findings
@@ -449,32 +448,19 @@ fn invalid_dependabot_globs_do_not_cover_permanent_packages() {
 }
 
 #[test]
-fn scan_covers_non_mapping_workspace_invalid_json_and_non_npm_dependabot() {
-    let dir = tempfile::tempdir().unwrap();
-    let root = crate::codebase::ts_resolver::normalize_path(dir.path());
-    std::fs::create_dir_all(root.join(".github")).unwrap();
-    std::fs::write(root.join("pnpm-workspace.yaml"), "- packages\n").unwrap();
+fn scan_covers_non_mapping_workspace() {
+    let root = fixture("non-mapping-workspace");
     assert!(
         check_with_files(&root, &config(), &[root.join("pnpm-workspace.yaml")])
             .unwrap()
             .is_empty()
     );
+}
 
-    std::fs::write(
-        root.join("pnpm-workspace.yaml"),
-        "packages: ['.']\nminimumReleaseAgeExclude: true\n",
-    )
-    .unwrap();
-    std::fs::write(root.join("package.json"), "{ not json").unwrap();
-    std::fs::write(
-        root.join(".github/dependabot.yml"),
-        "updates:\n  - package-ecosystem: pip\n    directory: /\n    cooldown:\n      exclude:\n        - 1\n",
-    )
-    .unwrap();
-    std::fs::write(
-        root.join("pnpm-lock.yaml"),
-        "packages:\n  1: {}\n  '@acme/core@1.0.0': {}\n",
-    )
-    .unwrap();
+#[test]
+fn scan_covers_invalid_json_and_non_npm_dependabot() {
+    let root = fixture("invalid-json-and-non-npm-dependabot");
+    // Coverage for skip/parse arms: invalid package.json, pip Dependabot, and
+    // a non-string lockfile package key. Findings are not the assertion.
     let _ = check_with_files(&root, &config(), &files(&root)).unwrap();
 }
