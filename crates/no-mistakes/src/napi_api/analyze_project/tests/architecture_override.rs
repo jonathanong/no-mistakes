@@ -60,8 +60,10 @@ fn import_only_reports_project_from_one_lazy_graph() {
     );
     let expand = include_str!("../../../codebase/dependencies/graph/lazy_import_parallel.rs");
     assert!(
-        expand.contains("collect_ts_facts") && expand.contains("par_iter"),
-        "import-graph seed must collect facts in one par_iter like check"
+        expand.contains("collect_ts_facts")
+            && expand.contains("par_iter")
+            && expand.contains("with_import_graph_pool"),
+        "import-graph seed must collect facts on an explicit Rayon pool like check"
     );
 }
 
