@@ -24,6 +24,7 @@ pub(crate) struct SharedTraversalContext {
     pending_lazy_facts: std::sync::Mutex<Option<crate::codebase::ts_source::facts::TsFactMap>>,
     live_lazy_facts:
         dashmap::DashMap<PathBuf, std::sync::Arc<crate::codebase::ts_source::facts::TsFileFacts>>,
+    provenance_by_canonical: std::sync::OnceLock<HashMap<PathBuf, PathBuf>>,
     analysis_generation: u64,
     pub(crate) graph_builds: usize,
     pub(crate) symbol_index_builds: usize,

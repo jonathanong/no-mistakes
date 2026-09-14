@@ -158,6 +158,10 @@ Allowed cache shapes:
 7. `GraphFiles.visible`: path membership for resolver and graph checks.
 8. Graph and symbol-index results keyed by normalized plan and file universe.
 9. Local traversal caches for expensive per-root searches.
+10. Request-scoped canonical `tsconfig.json` / `jsconfig.json` path map used
+    when rendering `tsconfig_provenance`. The map is filled once from those
+    config files only. Report projection must not canonicalize every visible
+    path to recover a relative config spelling.
 
 Disallowed cache shapes:
 
