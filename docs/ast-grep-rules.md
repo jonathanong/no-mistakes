@@ -188,12 +188,15 @@ direct boilerplate; parity tests still cover alias, re-export, and
 descriptor-resolution semantics.
 
 Overlapping import-only `analyzeProject` `dependencies` reports must parse each
-reachable file once. The walks still fan out via `reports.par_iter()`; they
-share a `DashMap` live cache wired in `shared_traversal_uncached.rs`.
-ast-grep cannot see that cross-function shape, so
+reachable file once, build one import graph, then project. Preparation seeds
+that graph from the union of report roots; `reports.par_iter()` only runs
+`deps_of`. ast-grep cannot see that cross-function shape, so
 `overlapping_import_only_dependency_reports_parse_each_file_once` locks
-`parse.files` to the unique reachable set, and
-`import_only_lazy_walks_share_a_live_parse_cache` requires `with_live_cache`.
+`parse.files` to the unique reachable set,
+`overlapping_import_only_reports_share_one_graph_and_shared_neighbors` locks
+`graph.builds` to 1 with per-report closures, and
+`import_only_reports_project_from_one_lazy_graph` requires the seed and
+`lazy_import_graph` projection.
 
 ### `no-process-spawn-in-file-loop`
 

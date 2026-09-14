@@ -122,6 +122,7 @@ impl SharedTraversalContext {
             prepared_test_projects: Some(prepared_test_projects),
             test_filter,
             graph: None,
+            lazy_import_graph: None,
             graph_cache: SharedBuildCache::default(),
             symbol_index_cache: SharedBuildCache::default(),
             import_resolution_cache: Default::default(),

@@ -25,37 +25,7 @@ fn collect_uncached_entries(
     } = request;
     let root = shared.root.clone();
     let entries = match direction {
-        Direction::Deps if import_only => {
-            let sources = shared.dataset.sources_for(&shared.root);
-            let workspace = shared.dataset.workspace();
-            let (entries, collected) =
-                graph::lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(
-                    graph::LazyImportBuild {
-                        roots,
-                        tsconfig: &shared.tsconfig,
-                        tsconfig_catalog: Some(&shared.tsconfig_catalog),
-                        max_depth: args.depth,
-                        graph_files: &shared.graph_files,
-                        allowed,
-                        facts: graph::LazyImportFacts::new(
-                            shared
-                                .facts
-                                .as_ref()
-                                .map(|facts| facts as &dyn graph::TsFactLookup),
-                            shared.fact_plan,
-                            &shared.fact_context,
-                        )
-                        .with_live_cache(&shared.live_lazy_facts)
-                        .with_source_store(&sources)
-                        .retain_collected(),
-                        workspace: &workspace,
-                        import_resolution_cache: Some(&shared.import_resolution_cache),
-                    },
-                    &shared.session,
-                );
-            shared.publish_lazy_facts(collected);
-            entries
-        }
+        Direction::Deps if import_only => import_only_deps(args, roots, allowed, shared),
         Direction::Deps if has_call_relationship(allowed) => {
             let graph = shared.graph_shared()?;
             let call_roots = graph.expand_call_roots(&call_roots(entrypoints));
@@ -113,6 +83,46 @@ fn collect_uncached_entries(
             .dependents_of(roots, args.depth, allowed),
     };
     Ok(entries)
+}
+
+fn import_only_deps(
+    args: &TraverseArgs,
+    roots: &[NodeId],
+    allowed: Option<&std::collections::HashSet<EdgeKind>>,
+    shared: &SharedTraversalContext,
+) -> Vec<graph::NodeEntry> {
+    if let Some(graph) = shared.lazy_import_graph() {
+        return graph.deps_of(roots, args.depth, allowed);
+    }
+    let sources = shared.dataset.sources_for(&shared.root);
+    let workspace = shared.dataset.workspace();
+    let (entries, collected) =
+        graph::lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(
+            graph::LazyImportBuild {
+                roots,
+                tsconfig: &shared.tsconfig,
+                tsconfig_catalog: Some(&shared.tsconfig_catalog),
+                max_depth: args.depth,
+                graph_files: &shared.graph_files,
+                allowed,
+                facts: graph::LazyImportFacts::new(
+                    shared
+                        .facts
+                        .as_ref()
+                        .map(|facts| facts as &dyn graph::TsFactLookup),
+                    shared.fact_plan,
+                    &shared.fact_context,
+                )
+                .with_live_cache(&shared.live_lazy_facts)
+                .with_source_store(&sources)
+                .retain_collected(),
+                workspace: &workspace,
+                import_resolution_cache: Some(&shared.import_resolution_cache),
+            },
+            &shared.session,
+        );
+    shared.publish_lazy_facts(collected);
+    entries
 }
 
 fn has_call_relationship(allowed: Option<&std::collections::HashSet<EdgeKind>>) -> bool {

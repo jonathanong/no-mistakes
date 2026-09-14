@@ -16,6 +16,7 @@ pub(crate) struct SharedTraversalContext {
     test_filter: crate::codebase::test_filter::TestFileFilter,
     facts: Option<crate::codebase::ts_source::facts::TsFactMap>,
     graph: Option<std::sync::Arc<graph::DepGraph>>,
+    lazy_import_graph: Option<std::sync::Arc<graph::DepGraph>>,
     graph_cache: SharedBuildCache<EffectiveGraphPlanKey, graph::DepGraph>,
     symbol_index_cache: SharedBuildCache<GraphFileUniverseKey, graph::SymbolIndex>,
     import_resolution_cache: crate::codebase::ts_resolver::ImportResolutionCache,

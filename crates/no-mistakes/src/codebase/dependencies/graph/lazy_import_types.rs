@@ -59,6 +59,13 @@ pub(crate) struct LazyImportBuild<'a> {
         Option<&'a crate::codebase::ts_resolver::ImportResolutionCache>,
 }
 
+pub(crate) struct LazyImportWalk {
+    pub(crate) entries: Vec<NodeEntry>,
+    pub(crate) facts: Vec<(PathBuf, TsFileFacts)>,
+    pub(crate) edges: Vec<CanonicalEdge<NodeId, EdgeKind>>,
+    pub(crate) nodes: Vec<NodeId>,
+}
+
 struct ExpandedImportNode {
     node: NodeId,
     neighbors: Vec<(NodeId, EdgeKind)>,

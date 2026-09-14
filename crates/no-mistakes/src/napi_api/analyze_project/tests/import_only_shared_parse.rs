@@ -75,4 +75,61 @@ fn overlapping_import_only_dependency_reports_parse_each_file_once() {
     let work = observer.snapshot().work;
     assert_eq!(work["parse.files"], 4, "{work:#?}");
     assert_eq!(work["source.reads"], 4, "{work:#?}");
+    assert_eq!(work["graph.builds"], 1, "{work:#?}");
+}
+
+#[test]
+fn overlapping_import_only_reports_share_one_graph_and_shared_neighbors() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/lazy-import-shared/fixture"),
+    );
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let output = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "reports": [
+                    {
+                        "id": "a",
+                        "type": "dependencies",
+                        "files": ["src/a.mts"],
+                        "relationships": ["import-static"]
+                    },
+                    {
+                        "id": "c",
+                        "type": "dependencies",
+                        "files": ["src/c.mts"],
+                        "relationships": ["import-static"]
+                    }
+                ]
+            })
+            .to_string(),
+        ))
+        .unwrap()
+    };
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let from_a = report_paths(&value, 0);
+    let from_c = report_paths(&value, 1);
+    assert!(
+        from_a.iter().any(|path| path.ends_with("src/b.mts")),
+        "{from_a:?}"
+    );
+    assert!(
+        from_c.iter().any(|path| path.ends_with("src/b.mts")),
+        "{from_c:?}"
+    );
+    assert!(
+        !from_a.iter().any(|path| path.ends_with("src/c.mts")),
+        "{from_a:?}"
+    );
+    assert!(
+        !from_c.iter().any(|path| path.ends_with("src/a.mts")),
+        "{from_c:?}"
+    );
+
+    let work = observer.snapshot().work;
+    assert_eq!(work["parse.files"], 3, "{work:#?}");
+    assert_eq!(work["graph.builds"], 1, "{work:#?}");
 }

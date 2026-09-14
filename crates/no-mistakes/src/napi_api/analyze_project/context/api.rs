@@ -110,6 +110,9 @@ impl AnalyzeProjectContext {
                 .expect("supplemental call-site facts are collected");
             scopes.insert(key, plan.materialize(facts, supplemental, call_site_facts)?);
         }
+        for scope in scopes.values_mut() {
+            scope.seed_import_only_dependency_graph()?;
+        }
         // Every effective scope may seed facts from programs parsed while the
         // scope plans were prepared. Retain those programs until all scopes
         // have materialized, then release them before report execution.
