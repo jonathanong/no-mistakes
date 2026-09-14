@@ -3,11 +3,7 @@ fn with_import_graph_pool<T: Send>(run: impl FnOnce() -> T + Send) -> T {
     // is initialized from that thread and does not keep cores busy. `check`
     // initializes Rayon on the CLI main thread and parses Filaments in ~21s.
     rayon::ThreadPoolBuilder::new()
-        .num_threads(
-            std::thread::available_parallelism()
-                .map(|n| n.get())
-                .unwrap_or(8),
-        )
+        .num_threads(num_cpus::get().max(2))
         .build()
         .expect("import-graph Rayon pool")
         .install(run)

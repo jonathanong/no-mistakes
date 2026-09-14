@@ -40,9 +40,18 @@ pub fn init_rayon_threads(args: JobsArg) {
     let raw_threads = std::env::var("RAYON_NUM_THREADS").ok();
     let threads = rayon_thread_count(args, raw_threads.as_deref());
     INIT.call_once(|| {
-        let _ = rayon::ThreadPoolBuilder::new()
-            .num_threads(threads)
-            .build_global();
+        // N-API `compute` runs on a libuv worker. Building the global Rayon
+        // pool from that thread leaves `par_iter` at one core; `check` inits
+        // from the CLI main thread and saturates. Always build from a plain
+        // OS thread so N-API and CLI share the same pool behavior.
+        let (tx, rx) = std::sync::mpsc::channel();
+        std::thread::spawn(move || {
+            let _ = rayon::ThreadPoolBuilder::new()
+                .num_threads(threads)
+                .build_global();
+            let _ = tx.send(());
+        });
+        let _ = rx.recv();
     });
 }
 
