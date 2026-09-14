@@ -6,7 +6,7 @@ impl PreparedScope {
         let mut union: Option<crate::codebase::dependencies::TraverseArgs> = None;
         for request in &self.options.reports {
             match super::graph_direction(&request.report_type) {
-                Some(Direction::Dependents) => return Ok(()),
+                Some(Direction::Dependents) => continue,
                 Some(Direction::Deps) => {}
                 None => continue,
             }
@@ -16,7 +16,7 @@ impl PreparedScope {
                     &args.relationships,
                 )
             {
-                return Ok(());
+                continue;
             }
             match &mut union {
                 None => union = Some(args),

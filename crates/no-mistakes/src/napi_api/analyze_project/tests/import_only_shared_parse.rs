@@ -133,3 +133,58 @@ fn overlapping_import_only_reports_share_one_graph_and_shared_neighbors() {
     assert_eq!(work["parse.files"], 3, "{work:#?}");
     assert_eq!(work["graph.builds"], 1, "{work:#?}");
 }
+
+#[test]
+fn mixed_dependents_still_seed_later_import_only_reports() {
+    let root = lazy_import_root();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let output = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "reports": [
+                    {
+                        "id": "dependents",
+                        "type": "dependents",
+                        "files": ["src/b.mts"],
+                        "relationships": ["import-static"]
+                    },
+                    {
+                        "id": "a",
+                        "type": "dependencies",
+                        "files": ["src/a.mts"],
+                        "relationships": ["import-static"]
+                    },
+                    {
+                        "id": "unrelated",
+                        "type": "dependencies",
+                        "files": ["src/unrelated.mts"],
+                        "relationships": ["import-static"]
+                    }
+                ]
+            })
+            .to_string(),
+        ))
+        .unwrap()
+    };
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let from_a = report_paths(&value, 1);
+    let unrelated = report_paths(&value, 2);
+    assert!(
+        from_a.iter().any(|path| path.ends_with("src/b.mts")),
+        "{from_a:?}"
+    );
+    assert!(
+        unrelated
+            .iter()
+            .any(|path| path.ends_with("src/unrelated-dep.mts")),
+        "{unrelated:?}"
+    );
+    assert!(
+        !from_a.iter().any(|path| path.contains("unrelated")),
+        "{from_a:?}"
+    );
+    let work = observer.snapshot().work;
+    assert!(work["graph.builds"] >= 1, "{work:#?}");
+}
