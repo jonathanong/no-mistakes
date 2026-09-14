@@ -28,14 +28,9 @@ pub(crate) fn lazy_import_graph_with_session(
 
 fn expand_import_node(
     node: &NodeId,
+    input: &LazyImportBuild<'_>,
     resolver: &dyn ImportResolution,
-    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    graph_files: &GraphFiles,
-    allowed: Option<&HashSet<EdgeKind>>,
-    facts: LazyImportFacts<'_>,
     session: &crate::codebase::analysis_session::AnalysisSession,
-    until: Option<&UntilMatcher>,
-    root: &Path,
 ) -> ExpandedImportNode {
     let Some(path) = node.as_file() else {
         return ExpandedImportNode {
@@ -44,14 +39,17 @@ fn expand_import_node(
             collected: None,
         };
     };
-    if !graph_files.contains_visible(path) || !is_indexable(path) {
+    if !input.graph_files.contains_visible(path) || !is_indexable(path) {
         return ExpandedImportNode {
             node: node.clone(),
             neighbors: Vec::new(),
             collected: None,
         };
     }
-    if until.is_some_and(|until| until.matches(root, path)) {
+    if input
+        .until
+        .is_some_and(|until| until.matches(input.root, path))
+    {
         return ExpandedImportNode {
             node: node.clone(),
             neighbors: Vec::new(),
@@ -61,16 +59,16 @@ fn expand_import_node(
     let (neighbors, collected) = import_neighbors(
         path,
         resolver,
-        workspace,
-        graph_files,
-        allowed,
-        facts,
+        input.workspace,
+        input.graph_files,
+        input.allowed,
+        input.facts,
         session,
     );
     ExpandedImportNode {
         node: node.clone(),
         neighbors,
-        collected: if facts.retain_collected {
+        collected: if input.facts.retain_collected {
             collected.map(|facts| (path.to_path_buf(), facts))
         } else {
             None
@@ -82,27 +80,14 @@ fn lazy_import_walk(
     input: LazyImportBuild<'_>,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> LazyImportWalk {
-    let LazyImportBuild {
-        roots,
-        tsconfig,
-        tsconfig_catalog,
-        max_depth,
-        graph_files,
-        allowed,
-        facts,
-        workspace,
-        import_resolution_cache,
-        until,
-        root,
-    } = input;
     let resolver = crate::codebase::ts_resolver::ProjectImportResolver::new(
-        tsconfig,
-        tsconfig_catalog,
-        graph_files,
-        import_resolution_cache,
+        input.tsconfig,
+        input.tsconfig_catalog,
+        input.graph_files,
+        input.import_resolution_cache,
         session,
     );
-    let fact_plan = facts.collect_plan;
+    let fact_plan = input.facts.collect_plan;
     // Intern owns each NodeId once. Clone a neighbor only into that map, then
     // move it onto the next frontier; rebuild NodeEntry results at the end.
     let mut intern: FxHashMap<NodeId, LazyVisit> = fx_map();
@@ -111,7 +96,7 @@ fn lazy_import_walk(
     let mut edges: Vec<CanonicalEdge<NodeId, EdgeKind>> = Vec::new();
     let mut emit_order = 0usize;
 
-    for root in roots {
+    for root in input.roots {
         if intern.contains_key(root) {
             continue;
         }
@@ -125,30 +110,20 @@ fn lazy_import_walk(
         );
         frontier.push(root.clone());
     }
-    let root_nodes: FxHashSet<NodeId> = roots.iter().cloned().collect();
+    let root_nodes: FxHashSet<NodeId> = input.roots.iter().cloned().collect();
 
     let mut depth = 0;
     while !frontier.is_empty() && crate::invocation::check_timeout().is_ok() {
-        if max_depth.is_some_and(|max| depth >= max) {
+        if input.max_depth.is_some_and(|max| depth >= max) {
             break;
         }
 
         let mut expanded: Vec<ExpandedImportNode> = frontier
             .par_iter()
             .map(|node| {
-                crate::invocation::check_timeout().ok().map(|()| {
-                    expand_import_node(
-                        node,
-                        &resolver,
-                        workspace,
-                        graph_files,
-                        allowed,
-                        facts,
-                        session,
-                        until,
-                        root,
-                    )
-                })
+                crate::invocation::check_timeout()
+                    .ok()
+                    .map(|()| expand_import_node(node, &input, &resolver, session))
             })
             .while_some()
             .collect();
