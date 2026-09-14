@@ -283,6 +283,43 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         &crate::codebase::analysis_session::PathInterner::new()
     )
     .is_empty());
+    let require_resolve_path = root.join("packages/api/src/users.mts");
+    let require_resolve_items = vec![ExtractedImport {
+        specifier: "@x/web".to_string(),
+        kind: ImportKind::RequireResolve,
+        line: 1,
+        function_scope: None,
+        function_scope_id: None,
+        side_effect_only: false,
+        re_export: false,
+        runtime_reachable: false,
+    }];
+    let require_resolve_facts = crate::codebase::ts_source::facts::TsFileFacts {
+        imports: require_resolve_items,
+        ..Default::default()
+    };
+    let require_resolve_imports = vec![(
+        &require_resolve_path,
+        &require_resolve_facts,
+        Default::default(),
+    )];
+    let require_resolve_edges = collect_import_edges(
+        &require_resolve_imports,
+        &resolver,
+        &workspace,
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    );
+    assert_eq!(require_resolve_edges.len(), 1);
+    assert_eq!(require_resolve_edges[0].2, EdgeKind::RequireResolve);
+    assert!(collect_workspace_edges(
+        &require_resolve_imports,
+        &resolver,
+        &workspace,
+        &graph_files,
+        &crate::codebase::analysis_session::PathInterner::new(),
+    )
+    .is_empty());
     assert_eq!(package_name_from_spec("@scope/pkg/path"), "@scope/pkg");
     assert_eq!(package_name_from_spec("@scope"), "@scope");
 }
@@ -392,8 +429,9 @@ fn graph_helpers_cover_test_markdown_ci_symbol_and_queue_paths() {
     assert!(missing_forward.is_empty());
 
     let nested_root = crate::codebase::ts_resolver::normalize_path(&fixture("cargo-nested-bin"));
-    let nested_visible: crate::fx::PathSet =
-        [nested_root.join("src/bin/nested/main.rs")].into_iter().collect();
+    let nested_visible: crate::fx::PathSet = [nested_root.join("src/bin/nested/main.rs")]
+        .into_iter()
+        .collect();
     assert_eq!(
         resolve_cargo_bin_source(&nested_root, "nested", "missing.rs", &nested_visible),
         Some(nested_root.join("src/bin/nested/main.rs"))
