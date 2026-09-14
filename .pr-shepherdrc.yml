@@ -10,4 +10,5 @@ ignoreChecks:
   - 'CodSpeed*'
   # Codecov project statuses fail with "No coverage information found on base
   # report" when main has no upload for that flag. Patch coverage still blocks.
+  - 'codecov/project'
   - 'codecov/project/*'
