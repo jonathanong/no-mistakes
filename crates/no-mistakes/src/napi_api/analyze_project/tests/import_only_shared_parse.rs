@@ -252,3 +252,38 @@ fn ineligible_reports_do_not_block_import_only_graph_seed() {
     let work = observer.snapshot().work;
     assert!(work["graph.builds"] >= 1, "{work:#?}");
 }
+
+#[test]
+fn import_only_union_merges_distinct_relationships() {
+    let root = lazy_import_root();
+    let value: Value = serde_json::from_str(
+        &analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "reports": [
+                    {
+                        "id": "static",
+                        "type": "dependencies",
+                        "files": ["src/a.mts"],
+                        "relationships": ["import-static"]
+                    },
+                    {
+                        "id": "dynamic",
+                        "type": "dependencies",
+                        "files": ["src/unrelated.mts"],
+                        "relationships": ["import-dynamic"]
+                    }
+                ]
+            })
+            .to_string(),
+        ))
+        .unwrap(),
+    )
+    .unwrap();
+    let from_a = report_paths(&value, 0);
+    assert!(
+        from_a.iter().any(|path| path.ends_with("src/b.mts")),
+        "{from_a:?}"
+    );
+    assert_eq!(value["reports"].as_array().unwrap().len(), 2);
+}
