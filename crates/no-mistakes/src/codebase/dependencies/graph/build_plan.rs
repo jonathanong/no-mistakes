@@ -104,8 +104,7 @@ impl GraphBuildPlan {
                 || allowed.contains(&EdgeKind::RequireResolve),
             route_imports: allowed.contains(&EdgeKind::RouteImport),
             workspace: allowed.contains(&EdgeKind::WorkspaceImport)
-                || allowed.contains(&EdgeKind::WorkspaceTypeImport)
-                || allowed.contains(&EdgeKind::RequireResolve),
+                || allowed.contains(&EdgeKind::WorkspaceTypeImport),
             package: allowed.contains(&EdgeKind::PackageDependency),
             tests: allowed.contains(&EdgeKind::TestOf)
                 || allowed.contains(&EdgeKind::VitestSetup(VitestSetupField::SetupFiles))
@@ -178,10 +177,33 @@ impl GraphBuildPlan {
         self
     }
 
+    /// Import-only plans can walk reachable files lazily. Any other domain flag
+    /// requires eager facts for the whole visible universe.
+    pub fn is_lazy_import_plan(self) -> bool {
+        let mut domains = self;
+        domains.imports = false;
+        domains.route_imports = false;
+        self.imports && domains == Self::default()
+    }
+
+    /// Reverse walks need the full fact index even when the plan is import-only.
+    pub fn collect_eager_graph_facts(
+        self,
+        include_check_plan: bool,
+        needs_reverse_graph: bool,
+    ) -> bool {
+        !include_check_plan && (!self.is_lazy_import_plan() || needs_reverse_graph)
+    }
+
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.route_imports || self.workspace || self.assets,
-            function_calls: self.calls || self.imports || self.workspace || self.assets || self.symbols || self.resources,
+            function_calls: self.calls
+                || self.imports
+                || self.workspace
+                || self.assets
+                || self.symbols
+                || self.resources,
             resources: self.resources,
             symbols: self.symbols || self.queues,
             react: self.react,

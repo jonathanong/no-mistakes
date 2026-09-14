@@ -1,14 +1,21 @@
+fn request_needs_reverse_graph(options: &AnalyzeProjectOptions) -> bool {
+    options.reports.iter().any(|request| {
+        matches!(
+            super::graph_direction(&request.report_type),
+            Some(Direction::Dependents)
+        )
+    })
+}
+
 fn graph_build_plan(options: &AnalyzeProjectOptions) -> Result<GraphBuildPlan> {
     let mut plan = GraphBuildPlan::default();
     for request in &options.reports {
         if super::graph_direction(&request.report_type).is_some() {
             let args = super::traverse_args(request, options)?;
             let allowed = relationship_filter(&args.relationships);
-            plan.include(
-                GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(
-                    crate::codebase::dependencies::traversal_needs_symbol_facts(&args),
-                ),
-            );
+            plan.include(GraphBuildPlan::from_allowed(allowed.as_ref()).with_symbols(
+                crate::codebase::dependencies::traversal_needs_symbol_facts(&args),
+            ));
         } else if request.report_type == "importUsages" {
             plan.include(GraphBuildPlan {
                 imports: true,
@@ -83,7 +90,9 @@ fn check_fact_plan(
         graph.0.route_refs = true;
         graph.0.server_routes = true;
         crate::server_routes::configure_fact_context(
-            &mut graph.1, traversal.root(), traversal.config(),
+            &mut graph.1,
+            traversal.root(),
+            traversal.config(),
         );
     }
     for request in &options.reports {

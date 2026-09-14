@@ -29,13 +29,14 @@ fn collect_import_edges(
                 .filter(|imp| import_is_reachable(imp, facts, reachable))
                 .filter_map(|imp| {
                     let kind = edge_kind_for_import(imp);
-                    let classification = resolver.classify_import(
-                        &imp.specifier,
-                        path,
-                        workspace,
-                        graph_files,
-                    );
-                    if let Some(target) = classification.resolver_path() {
+                    let classification =
+                        resolver.classify_import(&imp.specifier, path, workspace, graph_files);
+                    let target = if kind == EdgeKind::RequireResolve {
+                        classification.preferred_path()
+                    } else {
+                        classification.resolver_path()
+                    };
+                    if let Some(target) = target {
                         let target = graph_files.visible_path(target)?;
                         return (is_indexable(target) || kind == EdgeKind::RequireResolve).then(
                             || {
@@ -48,9 +49,8 @@ fn collect_import_edges(
                         );
                     }
                     if classification.is_unresolved_external() {
-                        return bare_module_node_in(interner, &imp.specifier).map(|module| {
-                            (NodeId::file_in(interner, *path), module, kind)
-                        });
+                        return bare_module_node_in(interner, &imp.specifier)
+                            .map(|module| (NodeId::file_in(interner, *path), module, kind));
                     }
                     None
                 })
@@ -110,6 +110,7 @@ fn collect_workspace_edges(
                 .imports
                 .iter()
                 .filter(|imp| import_is_reachable(imp, facts, reachable))
+                .filter(|imp| !matches!(imp.kind, ImportKind::RequireResolve))
                 .filter_map(|imp| {
                     let spec = &imp.specifier;
                     if spec.starts_with('.') {

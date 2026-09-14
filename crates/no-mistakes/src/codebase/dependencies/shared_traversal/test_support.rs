@@ -32,6 +32,7 @@ impl SharedTraversalContext {
             build_plan,
             session,
             framework_plan,
+            false,
         )
     }
 }

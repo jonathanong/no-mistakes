@@ -78,7 +78,7 @@ fn init_rayon_threads_uses_cpu_default_without_jobs_or_env() {
 }
 
 #[test]
-fn init_rayon_threads_if_requested_skips_unset_jobs() {
+fn init_rayon_threads_if_requested_defaults_unset_jobs_to_cpu_count() {
     init_rayon_threads_if_requested(None);
     init_rayon_threads_if_requested(Some(0));
 }

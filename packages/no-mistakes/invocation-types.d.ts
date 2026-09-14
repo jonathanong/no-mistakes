@@ -7,8 +7,8 @@ export interface InvocationOptions {
   /** Fail immediately instead of waiting when another invocation holds the lock. */
   failOnLock?: boolean;
   /**
-   * Rayon worker count. Omit to leave the process pool unchanged.
-   * `0` uses the CPU count, matching CLI `--jobs 0`.
+   * Rayon worker count. Omit or `0` uses the CPU count, matching CLI `--jobs 0`.
+   * A positive integer pins the process pool on the first N-API call.
    */
   jobs?: number | null;
   /** `ci` sets unbounded command and lock timeouts. CLI `--profile ci` does the same. */
