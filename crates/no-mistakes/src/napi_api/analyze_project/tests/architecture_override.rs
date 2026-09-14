@@ -61,6 +61,19 @@ fn import_only_reports_project_from_one_lazy_graph() {
 }
 
 #[test]
+fn provenance_paths_cache_tsconfig_files_instead_of_scanning_visible() {
+    let source = include_str!("../../../codebase/dependencies/shared_traversal_provenance.rs");
+    assert!(
+        source.contains("provenance_by_canonical"),
+        "tsconfig provenance must cache canonical config paths once per request"
+    );
+    assert!(
+        !source.contains("visible.iter().find"),
+        "must not canonicalize every visible path per report"
+    );
+}
+
+#[test]
 fn production_dispatch_has_no_standalone_wrappers_or_placeholder_bails() {
     let sources = [
         (
