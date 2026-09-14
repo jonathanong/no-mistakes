@@ -24,47 +24,28 @@ fn import_neighbors(
             None,
         );
     }
-
-    let facts = {
-        let source_result = match fact_source.sources {
-            Some(sources) => sources.read_path(path).map_err(|error| error.to_string()),
-            None => session.read_source(path).map_err(|error| error.to_string()),
-        };
-        let source = match source_result {
-            Ok(source) => source,
-            Err(error) => {
-                return (
-                    Vec::new(),
-                    Some(TsFileFacts {
-                        parse_error: Some(format!("failed to read {}: {error}", path.display())),
-                        ..TsFileFacts::default()
-                    }),
-                );
-            }
-        };
-        match session.with_program(path, &source, |program, parsed| {
-            crate::codebase::ts_source::facts::collect_file_facts_from_program(
+    if let Some(cache) = fact_source.live_cache {
+        let facts = cache
+            .entry(path.to_path_buf())
+            .or_insert_with(|| {
+                std::sync::Arc::new(collect_lazy_file_facts(path, fact_source, session))
+            })
+            .clone();
+        return (
+            import_neighbors_from_facts(
                 path,
-                fact_source.collect_plan,
-                fact_source.context,
-                parsed,
-                program,
-                None,
-                if fact_source.collect_plan.source {
-                    Some(std::sync::Arc::clone(&source))
-                } else {
-                    None
-                },
-            )
-        }) {
-            Ok(facts) => facts,
-            Err(error) => TsFileFacts {
-                parse_error: Some(error.to_string()),
-                ..TsFileFacts::default()
-            },
-        }
-    };
+                facts.as_ref(),
+                resolver,
+                workspace,
+                graph_files,
+                allowed,
+                session.interner(),
+            ),
+            fact_source.retain_collected.then(|| facts.as_ref().clone()),
+        );
+    }
 
+    let facts = collect_lazy_file_facts(path, fact_source, session);
     let neighbors = import_neighbors_from_facts(
         path,
         &facts,
@@ -75,6 +56,47 @@ fn import_neighbors(
         session.interner(),
     );
     (neighbors, Some(facts))
+}
+
+fn collect_lazy_file_facts(
+    path: &Path,
+    fact_source: LazyImportFacts<'_>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> TsFileFacts {
+    let source_result = match fact_source.sources {
+        Some(sources) => sources.read_path(path).map_err(|error| error.to_string()),
+        None => session.read_source(path).map_err(|error| error.to_string()),
+    };
+    let source = match source_result {
+        Ok(source) => source,
+        Err(error) => {
+            return TsFileFacts {
+                parse_error: Some(format!("failed to read {}: {error}", path.display())),
+                ..TsFileFacts::default()
+            };
+        }
+    };
+    match session.with_program(path, &source, |program, parsed| {
+        crate::codebase::ts_source::facts::collect_file_facts_from_program(
+            path,
+            fact_source.collect_plan,
+            fact_source.context,
+            parsed,
+            program,
+            None,
+            if fact_source.collect_plan.source {
+                Some(std::sync::Arc::clone(&source))
+            } else {
+                None
+            },
+        )
+    }) {
+        Ok(facts) => facts,
+        Err(error) => TsFileFacts {
+            parse_error: Some(error.to_string()),
+            ..TsFileFacts::default()
+        },
+    }
 }
 
 fn import_neighbors_from_facts(

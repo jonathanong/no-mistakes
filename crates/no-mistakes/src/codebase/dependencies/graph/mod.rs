@@ -36,6 +36,7 @@ include!("builder.rs");
 include!("builder_session.rs");
 include!("builder_check_facts.rs");
 include!("builder_observability.rs");
+include!("builder_from_import.rs");
 include!("builder_parse_errors.rs");
 include!("builder_core_resolution.rs");
 include!("builder_core.rs");

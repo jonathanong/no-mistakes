@@ -26,6 +26,7 @@ include!("symbol_resolution.rs");
 include!("shared_traversal.rs");
 include!("shared_traversal_prepare.rs");
 include!("shared_traversal_facts.rs");
+include!("shared_traversal_lazy_graph.rs");
 include!("shared_traversal_prepare_catalog.rs");
 include!("shared_traversal_reports.rs");
 include!("output_results.rs");
@@ -44,6 +45,8 @@ include!("run.rs");
 mod shared_traversal_collect_cache_tests;
 #[cfg(test)]
 mod shared_traversal_facts_tests;
+#[cfg(test)]
+mod shared_traversal_lazy_graph_tests;
 #[cfg(test)]
 mod shared_traversal_test_api;
 #[cfg(test)]

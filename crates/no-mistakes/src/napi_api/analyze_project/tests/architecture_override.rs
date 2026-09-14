@@ -47,6 +47,20 @@ fn analyze_project_runs_independent_reports_in_parallel() {
 }
 
 #[test]
+fn import_only_reports_project_from_one_lazy_graph() {
+    let seed = include_str!("../context/scope_seed_import.rs");
+    assert!(
+        seed.contains("seed_import_only_dependency_graph"),
+        "import-only analyzeProject reports must seed one reachable import graph"
+    );
+    let uncached = include_str!("../../../codebase/dependencies/shared_traversal_uncached.rs");
+    assert!(
+        uncached.contains("lazy_import_graph") && uncached.contains("deps_of"),
+        "import-only reports must project from the seeded graph, not walk again"
+    );
+}
+
+#[test]
 fn production_dispatch_has_no_standalone_wrappers_or_placeholder_bails() {
     let sources = [
         (
@@ -333,7 +347,7 @@ fn equivalent_relative_and_absolute_roots_share_one_analysis_scope() {
     assert_eq!(work["analysis.requests"], 1, "{work:#?}");
     assert_eq!(work["discovery.roots"], 1, "{work:#?}");
     assert_eq!(work["manifest.parses"], 2, "{work:#?}");
-    assert_eq!(work.get("graph.builds").copied().unwrap_or_default(), 0);
+    assert_eq!(work["graph.builds"], 1, "{work:#?}");
     assert_eq!(work["traversal.computations"], 1, "{work:#?}");
     assert_eq!(work["traversal.reuses"], 1, "{work:#?}");
 }

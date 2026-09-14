@@ -10,6 +10,26 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
     input: LazyImportBuild<'_>,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> (Vec<NodeEntry>, Vec<(PathBuf, TsFileFacts)>) {
+    let walk = lazy_import_walk(input, session);
+    (walk.entries, walk.facts)
+}
+
+pub(crate) fn lazy_import_graph_with_session(
+    input: LazyImportBuild<'_>,
+    root: &Path,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> (DepGraph, Vec<(PathBuf, TsFileFacts)>) {
+    let walk = lazy_import_walk(input, session);
+    (
+        DepGraph::from_import_edges(root.to_path_buf(), walk.edges, walk.nodes, session),
+        walk.facts,
+    )
+}
+
+fn lazy_import_walk(
+    input: LazyImportBuild<'_>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> LazyImportWalk {
     let LazyImportBuild {
         roots,
         tsconfig,
@@ -34,6 +54,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
     let mut intern: FxHashMap<NodeId, LazyVisit> = fx_map();
     let mut frontier: Vec<NodeId> = Vec::new();
     let mut collected_facts = Vec::new();
+    let mut edges: Vec<CanonicalEdge<NodeId, EdgeKind>> = Vec::new();
     let mut emit_order = 0usize;
 
     for root in roots {
@@ -115,6 +136,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
                 if is_symbol_owner_bridge(&node, &neighbor) && !root_nodes.contains(&node) {
                     continue;
                 }
+                edges.push(CanonicalEdge::new(node.clone(), neighbor.clone(), kind));
                 if let Some(visit) = intern.get_mut(&neighbor) {
                     if visit.result_order.is_some() {
                         add_via_kind_to(&mut visit.via, kind);
@@ -137,6 +159,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
         depth = next_depth;
     }
 
+    let nodes = intern.keys().cloned().collect();
     let mut ordered: Vec<(usize, NodeEntry)> = intern
         .into_iter()
         .filter_map(|(node, visit)| {
@@ -154,10 +177,12 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_workspace_resolution_cache_an
     let result: Vec<NodeEntry> = ordered.into_iter().map(|(_, entry)| entry).collect();
 
     session.record_work("traversal.lazy_nodes", result.len() as u64);
-    (
-        result,
-        TsFactMap::from_iter_with_plan(collected_facts, fact_plan)
+    LazyImportWalk {
+        entries: result,
+        facts: TsFactMap::from_iter_with_plan(collected_facts, fact_plan)
             .into_iter()
             .collect(),
-    )
+        edges,
+        nodes,
+    }
 }
