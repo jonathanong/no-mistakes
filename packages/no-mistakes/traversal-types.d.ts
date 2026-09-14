@@ -49,6 +49,12 @@ export interface TraverseOptions {
   depth?: number;
   filters?: string[];
   targetModules?: string[];
+  /**
+   * Terminal files (globs relative to `root`). Start files are `files`.
+   * Matching files are included as sinks: they are not parsed and their
+   * imports are not followed.
+   */
+  until?: string[];
   tests?: string[];
   relationships?: Relationship[];
   includeSymbols?: boolean;

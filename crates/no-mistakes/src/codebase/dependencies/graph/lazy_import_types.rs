@@ -57,6 +57,8 @@ pub(crate) struct LazyImportBuild<'a> {
     pub(crate) workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     pub(crate) import_resolution_cache:
         Option<&'a crate::codebase::ts_resolver::ImportResolutionCache>,
+    pub(crate) until: Option<&'a UntilMatcher>,
+    pub(crate) root: &'a Path,
 }
 
 pub(crate) struct LazyImportWalk {

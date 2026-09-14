@@ -92,6 +92,8 @@ fn lazy_import_session_does_not_parse_files_twice() {
                     facts: LazyImportFacts::new(None, TsFactPlan::imports(), &context),
                     workspace: &workspace,
                     import_resolution_cache: None,
+                    until: None,
+                    root: &root,
                 },
                 &session,
             );
@@ -121,6 +123,8 @@ fn lazy_import_session_does_not_parse_files_twice() {
                     facts: LazyImportFacts::new(None, TsFactPlan::imports(), &context),
                     workspace: &workspace,
                     import_resolution_cache: None,
+                    until: None,
+                    root: &root,
                 },
                 &session,
             );
@@ -174,6 +178,8 @@ fn live_lazy_cache_prevents_reparse_across_walks() {
                 .with_live_cache(&cache),
             workspace: &workspace,
             import_resolution_cache: None,
+            until: None,
+            root: &root,
         },
         &session,
     );
@@ -193,6 +199,8 @@ fn live_lazy_cache_prevents_reparse_across_walks() {
                 .with_live_cache(&cache),
             workspace: &workspace,
             import_resolution_cache: None,
+            until: None,
+            root: &root,
         },
         &session,
     );

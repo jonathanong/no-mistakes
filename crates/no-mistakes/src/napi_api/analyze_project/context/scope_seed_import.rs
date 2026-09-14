@@ -31,6 +31,11 @@ impl PreparedScope {
                             existing.relationships.push(relationship);
                         }
                     }
+                    for pattern in args.until {
+                        if !existing.until.contains(&pattern) {
+                            existing.until.push(pattern);
+                        }
+                    }
                 }
             }
         }

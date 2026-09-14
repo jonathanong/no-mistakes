@@ -19,7 +19,7 @@ pub(crate) fn lazy_import_graph_with_session(
     root: &Path,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> (DepGraph, Vec<(PathBuf, TsFileFacts)>) {
-    let walk = lazy_import_walk_parallel(input, session);
+    let walk = lazy_import_walk(input, session);
     (
         DepGraph::from_import_edges(root.to_path_buf(), walk.edges, walk.nodes, session),
         walk.facts,
@@ -34,6 +34,8 @@ fn expand_import_node(
     allowed: Option<&HashSet<EdgeKind>>,
     facts: LazyImportFacts<'_>,
     session: &crate::codebase::analysis_session::AnalysisSession,
+    until: Option<&UntilMatcher>,
+    root: &Path,
 ) -> ExpandedImportNode {
     let Some(path) = node.as_file() else {
         return ExpandedImportNode {
@@ -43,6 +45,13 @@ fn expand_import_node(
         };
     };
     if !graph_files.contains_visible(path) || !is_indexable(path) {
+        return ExpandedImportNode {
+            node: node.clone(),
+            neighbors: Vec::new(),
+            collected: None,
+        };
+    }
+    if until.is_some_and(|until| until.matches(root, path)) {
         return ExpandedImportNode {
             node: node.clone(),
             neighbors: Vec::new(),
@@ -83,6 +92,8 @@ fn lazy_import_walk(
         facts,
         workspace,
         import_resolution_cache,
+        until,
+        root,
     } = input;
     let resolver = crate::codebase::ts_resolver::ProjectImportResolver::new(
         tsconfig,
@@ -134,6 +145,8 @@ fn lazy_import_walk(
                         allowed,
                         facts,
                         session,
+                        until,
+                        root,
                     )
                 })
             })

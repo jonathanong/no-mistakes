@@ -71,6 +71,7 @@ pub(super) fn traverse_args_relationships(
         depth: None,
         filters: Vec::new(),
         target_modules: Vec::new(),
+        until: Vec::new(),
         tests: Vec::new(),
         format: None,
         json: true,

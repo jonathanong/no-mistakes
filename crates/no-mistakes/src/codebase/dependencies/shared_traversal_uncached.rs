@@ -118,6 +118,8 @@ fn import_only_deps(
                 .retain_collected(),
                 workspace: &workspace,
                 import_resolution_cache: Some(&shared.import_resolution_cache),
+                until: None,
+                root: &shared.root,
             },
             &shared.session,
         );

@@ -35,6 +35,7 @@ impl SharedTraversalContext {
             return Ok(());
         }
         let allowed = relationship_filter(&args.relationships);
+        let until_matcher = graph::UntilMatcher::parse(&args.until)?;
         let sources = self.dataset.sources_for(&self.root);
         let (graph, collected) = graph::lazy_import_graph_with_session(
             graph::LazyImportBuild {
@@ -56,6 +57,8 @@ impl SharedTraversalContext {
                 .retain_collected(),
                 workspace: &workspace,
                 import_resolution_cache: Some(&self.import_resolution_cache),
+                until: (!args.until.is_empty()).then_some(&until_matcher),
+                root: &self.root,
             },
             &self.root,
             &self.session,

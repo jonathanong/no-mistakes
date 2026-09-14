@@ -30,6 +30,12 @@ pub struct TraverseArgs {
     #[arg(long = "target-module", value_name = "GLOB")]
     pub target_modules: Vec<String>,
 
+    /// Terminal files for the import walk. Matching files stay in the graph
+    /// as sinks: they are not parsed and their imports are not followed.
+    /// Start files are `files`. Can be repeated (OR logic).
+    #[arg(long = "until", value_name = "GLOB")]
+    pub until: Vec<String>,
+
     /// Filter to test files for a specific framework. Can be repeated.
     /// Values: vitest, playwright, cargo, dotnet, swift, python, go, rails, php.
     #[arg(long = "test", value_name = "FRAMEWORK")]

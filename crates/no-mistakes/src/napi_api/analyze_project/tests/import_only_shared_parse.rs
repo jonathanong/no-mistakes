@@ -75,7 +75,6 @@ fn overlapping_import_only_dependency_reports_parse_each_file_once() {
     let work = observer.snapshot().work;
     assert_eq!(work["source.reads"], 4, "{work:#?}");
     assert_eq!(work["graph.builds"], 1, "{work:#?}");
-    assert_eq!(work["traversal.lazy_parallel_expand"], 1, "{work:#?}");
 }
 
 #[test]
@@ -131,7 +130,6 @@ fn overlapping_import_only_reports_share_one_graph_and_shared_neighbors() {
 
     let work = observer.snapshot().work;
     assert_eq!(work["graph.builds"], 1, "{work:#?}");
-    assert_eq!(work["traversal.lazy_parallel_expand"], 1, "{work:#?}");
 }
 
 #[test]
@@ -286,4 +284,44 @@ fn import_only_union_merges_distinct_relationships() {
         "{from_a:?}"
     );
     assert_eq!(value["reports"].as_array().unwrap().len(), 2);
+}
+
+#[test]
+fn until_sinks_are_not_expanded() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/lazy-import-until/fixture"),
+    );
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let output = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "reports": [{
+                    "id": "page",
+                    "type": "dependencies",
+                    "files": ["src/page.mts"],
+                    "relationships": ["import-static"],
+                    "until": ["**/i18n.mts"]
+                }]
+            })
+            .to_string(),
+        ))
+        .unwrap()
+    };
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let paths = report_paths(&value, 0);
+    assert!(
+        paths.iter().any(|path| path.ends_with("src/widget.mts")),
+        "{paths:?}"
+    );
+    assert!(
+        paths.iter().any(|path| path.ends_with("src/dead.mts")),
+        "{paths:?}"
+    );
+    assert!(
+        !paths.iter().any(|path| path.ends_with("src/deep.mts")),
+        "{paths:?}"
+    );
 }

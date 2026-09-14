@@ -83,12 +83,11 @@ reachable frontier and reuses any prepared per-file facts already supplied by
 an enclosing request.
 
 `analyzeProject` with import-only `dependencies` reports still follows
-facts → one graph → commands. The seed collects import facts with the same
-`par_iter` over indexable files that `check` uses, emits import edges from
-those facts in a second `par_iter`, then each report projects `deps_of`.
-That keeps cores busy; a wave-synchronous lazy BFS does not. The resulting
-graph is an import adjacency over the prepared indexable universe, not the
-canonical multi-domain check graph.
+facts → one graph → commands: one lazy walk of the union of report roots,
+then `deps_of` per report. `files` are start nodes. `until` globs are
+terminal sinks (the localization module): matching files stay in the graph
+but are not parsed and their imports are not followed, so analysis does not
+run past that subgraph.
 
 ## Current Pipeline Shape
 

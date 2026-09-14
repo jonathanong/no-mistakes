@@ -69,6 +69,7 @@ pub(crate) struct TraverseOptions {
     pub(crate) depth: Option<usize>,
     pub(crate) filters: Vec<String>,
     pub(crate) target_modules: Vec<String>,
+    pub(crate) until: Vec<String>,
     pub(crate) tests: Vec<String>,
     pub(crate) relationships: Vec<String>,
     pub(crate) include_symbols: bool,

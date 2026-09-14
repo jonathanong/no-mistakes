@@ -18,6 +18,7 @@ fn import_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
         depth: None,
         filters: Vec::new(),
         target_modules: Vec::new(),
+        until: Vec::new(),
         tests: Vec::new(),
         relationships: vec![RelationshipArg::ImportStatic],
         include_symbols: false,

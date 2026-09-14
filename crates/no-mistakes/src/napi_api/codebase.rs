@@ -55,6 +55,7 @@ pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<Trav
         depth: options.depth,
         filters: options.filters,
         target_modules: options.target_modules,
+        until: options.until,
         tests: options.tests,
         format: Some(Format::Json),
         json: true,

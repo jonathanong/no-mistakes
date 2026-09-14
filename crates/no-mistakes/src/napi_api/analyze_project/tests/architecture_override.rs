@@ -58,10 +58,10 @@ fn import_only_reports_project_from_one_lazy_graph() {
         uncached.contains("lazy_import_graph") && uncached.contains("deps_of"),
         "import-only reports must project from the seeded graph, not walk again"
     );
-    let expand = include_str!("../../../codebase/dependencies/graph/lazy_import_parallel.rs");
+    let until = include_str!("../../../codebase/dependencies/graph/lazy_import_until.rs");
     assert!(
-        expand.contains("collect_ts_facts") && expand.contains("par_iter"),
-        "import-graph seed must collect facts in one par_iter like check"
+        until.contains("UntilMatcher") && until.contains("matches"),
+        "import walks must honor until sinks so localization internals are not parsed"
     );
 }
 

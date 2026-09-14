@@ -47,6 +47,7 @@ fn run_surfaces_tsconfig_errors() {
         depth: None,
         filters: Vec::new(),
         target_modules: Vec::new(),
+        until: Vec::new(),
         tests: Vec::new(),
         format: Some(Format::Json),
         json: false,
@@ -93,6 +94,22 @@ fn filter_flag_repeatable() {
         "**/*.spec.mts",
     ]);
     assert_eq!(a.filters.len(), 2);
+}
+
+#[test]
+fn until_flag_repeatable() {
+    let a = parse(&[
+        "deps",
+        "a.mts",
+        "--until",
+        "web/lib/i18n/**",
+        "--until",
+        "src/i18n.mts",
+    ]);
+    assert_eq!(
+        a.until,
+        vec!["web/lib/i18n/**".to_string(), "src/i18n.mts".to_string()]
+    );
 }
 
 #[test]
@@ -271,7 +288,9 @@ fn language_frontend_globs_are_explicit() {
         .iter()
         .any(|glob| glob.contains("Test.kt")));
     for (framework, needle) in [("elixir", "_test.exs"), ("dart", "_test.dart")] {
-        assert!(test_globs(framework).iter().any(|glob| glob.contains(needle)));
+        assert!(test_globs(framework)
+            .iter()
+            .any(|glob| glob.contains(needle)));
     }
 }
 
