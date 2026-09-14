@@ -1,7 +1,7 @@
 #[derive(Clone, Copy)]
 pub(crate) struct LazyImportFacts<'a> {
     prepared: Option<&'a dyn TsFactLookup>,
-    live_cache: Option<&'a dashmap::DashMap<PathBuf, TsFileFacts>>,
+    live_cache: Option<&'a dashmap::DashMap<PathBuf, std::sync::Arc<TsFileFacts>>>,
     collect_plan: TsFactPlan,
     context: &'a TsFactContext,
     sources: Option<&'a crate::codebase::ts_source::SourceStore>,
@@ -26,7 +26,7 @@ impl<'a> LazyImportFacts<'a> {
 
     pub(crate) fn with_live_cache(
         mut self,
-        live_cache: &'a dashmap::DashMap<PathBuf, TsFileFacts>,
+        live_cache: &'a dashmap::DashMap<PathBuf, std::sync::Arc<TsFileFacts>>,
     ) -> Self {
         self.live_cache = Some(live_cache);
         self
