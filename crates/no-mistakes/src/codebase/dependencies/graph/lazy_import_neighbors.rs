@@ -41,7 +41,7 @@ fn import_neighbors(
                 allowed,
                 session.interner(),
             ),
-            None,
+            fact_source.retain_collected.then(|| facts.as_ref().clone()),
         );
     }
 
