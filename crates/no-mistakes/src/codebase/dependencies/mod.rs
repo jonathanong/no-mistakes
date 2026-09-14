@@ -77,12 +77,13 @@ pub(crate) fn collect_and_filter_entries(
     let mut framework_plan =
         crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan);
     framework_plan.include_framework_names(args.tests.iter().map(String::as_str));
-    let shared = SharedTraversalContext::prepare_with_framework_plan(
+    let shared = SharedTraversalContext::prepare_with_framework_plan_for_direction(
         root,
         args.tsconfig.as_deref(),
         None,
         build_plan,
         framework_plan,
+        direction,
     );
     let mut shared = shared?;
 

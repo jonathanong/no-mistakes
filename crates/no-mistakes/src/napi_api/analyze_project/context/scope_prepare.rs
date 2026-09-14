@@ -38,6 +38,7 @@ impl PreparedScopePlan {
                     visible_paths,
                     session: session.clone(),
                     include_check_plan,
+                    needs_reverse_graph: request_needs_reverse_graph(options),
                     framework_plan,
                 },
             )?;

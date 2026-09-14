@@ -70,6 +70,16 @@ fn import_relationships_do_not_enable_workspace_graph_facts() {
     );
     assert!(plan.is_lazy_import_plan());
     assert!(!graph::GraphBuildPlan::imports_and_workspace().is_lazy_import_plan());
+    assert!(
+        !plan.collect_eager_graph_facts(false, false),
+        "forward import-only walks skip the full-universe fact pass"
+    );
+    assert!(
+        plan.collect_eager_graph_facts(false, true),
+        "dependents still need reverse-index facts for an import-only plan"
+    );
+    assert!(!plan.collect_eager_graph_facts(true, true));
+    assert!(!plan.collect_eager_graph_facts(true, false));
 }
 
 #[test]

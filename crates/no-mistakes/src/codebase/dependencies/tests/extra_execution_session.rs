@@ -46,6 +46,7 @@ fn shared_traversal_keeps_the_session_owned_seeded_dataset() {
             visible_paths: std::sync::Arc::clone(&visible_paths),
             session: std::sync::Arc::clone(&session),
             include_check_plan: false,
+            needs_reverse_graph: false,
             framework_plan: crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(
                 build_plan,
             ),

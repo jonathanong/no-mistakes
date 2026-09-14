@@ -93,7 +93,8 @@ fn graph_build_plan_from_allowed_covers_each_edge_family() {
     let require_resolve_only: HashSet<_> = [EdgeKind::RequireResolve].into();
     let plan = GraphBuildPlan::from_allowed(Some(&require_resolve_only));
     assert!(plan.imports);
-    assert!(plan.workspace);
+    // require.resolve is an import edge, not a reason to parse every workspace file.
+    assert!(!plan.workspace);
 
     let workspace_type_only: HashSet<_> = [EdgeKind::WorkspaceTypeImport].into();
     assert!(GraphBuildPlan::from_allowed(Some(&workspace_type_only)).workspace);
@@ -166,11 +167,12 @@ fn fact_lookup_defaults_and_sparse_fallback_are_complete() {
         assert!(lookup.get_ts_facts(&primary_path).is_some());
         assert!(lookup.get_ts_facts(&fallback_path).is_some());
         assert!(lookup.covers_ts_fact_plan(TsFactPlan::imports()));
-        assert_eq!(lookup.graph_files(), Some([fallback_path.clone()].as_slice()));
+        assert_eq!(
+            lookup.graph_files(),
+            Some([fallback_path.clone()].as_slice())
+        );
         assert!(lookup.get_playwright_facts(&primary_path).is_none());
-        assert!(lookup
-            .get_playwright_parse_error(&primary_path)
-            .is_none());
+        assert!(lookup.get_playwright_parse_error(&primary_path).is_none());
         assert!(lookup
             .get_or_compute_app_selector_occurrences(&cache_settings(), false, &|| Ok(Vec::new()))
             .expect("selector occurrences compute")
@@ -219,11 +221,10 @@ fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
     primary.ts.insert(
         primary_path.clone(),
         CheckFileFacts {
-            playwright: Some(
-                crate::codebase::check_facts::PlaywrightTestFacts::empty(),
-            ),
+            playwright: Some(crate::codebase::check_facts::PlaywrightTestFacts::empty()),
             ..CheckFileFacts::default()
-        }.into(),
+        }
+        .into(),
     );
     let fallback = TsFactMap::from([(
         fallback_path.clone(),
@@ -233,13 +234,7 @@ fn sparse_fallback_preserves_check_fact_playwright_data_and_caches() {
         },
     )]);
     let graph_visible: crate::fx::PathSet = graph_files.clone().into_iter().collect();
-    let lookup = FallbackTsFactLookup::new(
-        &primary,
-        &fallback,
-        true,
-        &graph_files,
-        &graph_visible,
-    );
+    let lookup = FallbackTsFactLookup::new(&primary, &fallback, true, &graph_files, &graph_visible);
 
     assert_eq!(lookup.graph_files(), Some(graph_files.as_slice()));
     assert!(lookup.get_playwright_facts(&primary_path).is_some());
@@ -323,7 +318,8 @@ fn sparse_fallback_prefers_primary_playwright_fetch_errors_when_requested() {
         CheckFileFacts {
             parse_error: Some("primary parse error".to_string()),
             ..CheckFileFacts::default()
-        }.into(),
+        }
+        .into(),
     );
     let fallback = TsFactMap::from([(
         path.clone(),
@@ -482,7 +478,10 @@ fn route_import_edges_are_runtime_only_and_do_not_prune_uncalled_functions() {
         root.join("web/app/components/wrapped-template-button.tsx")
             .as_path()
     ));
-    assert!(!files.contains(root.join("web/app/components/required-button.tsx").as_path()));
+    assert!(!files.contains(
+        root.join("web/app/components/required-button.tsx")
+            .as_path()
+    ));
 }
 
 #[test]
@@ -518,7 +517,6 @@ fn route_import_edges_fill_present_but_sparse_check_facts() {
     );
 
     assert!(dependencies.iter().any(|entry| {
-        entry.node.as_file()
-            == Some(root.join("web/app/components/wrapped-button.tsx").as_path())
+        entry.node.as_file() == Some(root.join("web/app/components/wrapped-button.tsx").as_path())
     }));
 }

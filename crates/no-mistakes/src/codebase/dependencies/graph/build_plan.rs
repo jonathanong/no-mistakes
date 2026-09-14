@@ -186,6 +186,15 @@ impl GraphBuildPlan {
         self.imports && domains == Self::default()
     }
 
+    /// Reverse walks need the full fact index even when the plan is import-only.
+    pub fn collect_eager_graph_facts(
+        self,
+        include_check_plan: bool,
+        needs_reverse_graph: bool,
+    ) -> bool {
+        !include_check_plan && (!self.is_lazy_import_plan() || needs_reverse_graph)
+    }
+
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.route_imports || self.workspace || self.assets,

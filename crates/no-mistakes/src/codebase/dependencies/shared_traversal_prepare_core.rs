@@ -10,6 +10,7 @@ impl SharedTraversalContext {
             dataset,
             session,
             include_check_plan,
+            needs_reverse_graph,
             mut framework_plan,
         } = preparation;
         session.record_work("analysis.requests", 1);
@@ -76,7 +77,8 @@ impl SharedTraversalContext {
                 sources: dataset.sources_for(&root),
                 build_plan,
                 graph_files: &graph_files,
-                collect_graph_facts: !include_check_plan && !build_plan.is_lazy_import_plan(),
+                collect_graph_facts: build_plan
+                    .collect_eager_graph_facts(include_check_plan, needs_reverse_graph),
                 framework_plan: &framework_plan,
             })?;
         let tsconfig_build_diagnostics = tsconfig_catalog.diagnostics();

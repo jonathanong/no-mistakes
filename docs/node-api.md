@@ -498,14 +498,15 @@ disable. `failOnLock: true` fails immediately on contention and overrides
 Pass `0` or omit it to use the CPU count (matching CLI `--jobs 0`). A
 positive integer pins the pool on the first N-API call in the process.
 
-Dependency, dependents, and related reports stay on the lazy reachable-file
-walk only when every requested relationship is an import kind (`import`,
-`import-static`, `import-dynamic`, `import-type`, `import-require`). Adding
-`workspace`, `test`, `route`, or any other relationship prepares facts for the
-entire visible universe. Prefer import-only relationships plus explicit `files`
-when the caller only needs a module closure. `analyzeProject()` without a
-`check` report no longer eagerly parses every indexable file for an import-only
-plan.
+Forward `dependencies` reports stay on the lazy reachable-file walk when every
+requested relationship is an import kind (`import`, `import-static`,
+`import-dynamic`, `import-type`, `import-require`). `dependents` and `related`
+reports still prepare reverse-index facts for the visible universe. Adding
+`workspace`, `test`, `route`, or any other relationship also prepares facts for
+the entire visible universe. Prefer import-only relationships plus explicit
+`files` when the caller only needs a module closure. `analyzeProject()` without
+a `check` report no longer eagerly parses every indexable file for an
+import-only `dependencies` plan.
 
 The lock is shared by CLI and Node/N-API analyses for the current OS user across
 all repositories. While waiting, stderr reports `waiting for lock held by pid
