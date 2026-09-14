@@ -58,6 +58,7 @@ include!("methods_lazy.rs");
 include!("lazy_import_types.rs");
 include!("lazy_import_entrypoints.rs");
 include!("lazy_imports.rs");
+include!("lazy_import_parallel.rs");
 include!("lazy_imports_owner_bridge.rs");
 include!("lazy_import_symbols.rs");
 include!("lazy_import_neighbors.rs");

@@ -19,11 +19,54 @@ pub(crate) fn lazy_import_graph_with_session(
     root: &Path,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> (DepGraph, Vec<(PathBuf, TsFileFacts)>) {
-    let walk = lazy_import_walk(input, session);
+    let walk = lazy_import_walk_parallel(input, session);
     (
         DepGraph::from_import_edges(root.to_path_buf(), walk.edges, walk.nodes, session),
         walk.facts,
     )
+}
+
+fn expand_import_node(
+    node: &NodeId,
+    resolver: &dyn ImportResolution,
+    workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+    graph_files: &GraphFiles,
+    allowed: Option<&HashSet<EdgeKind>>,
+    facts: LazyImportFacts<'_>,
+    session: &crate::codebase::analysis_session::AnalysisSession,
+) -> ExpandedImportNode {
+    let Some(path) = node.as_file() else {
+        return ExpandedImportNode {
+            node: node.clone(),
+            neighbors: Vec::new(),
+            collected: None,
+        };
+    };
+    if !graph_files.contains_visible(path) || !is_indexable(path) {
+        return ExpandedImportNode {
+            node: node.clone(),
+            neighbors: Vec::new(),
+            collected: None,
+        };
+    }
+    let (neighbors, collected) = import_neighbors(
+        path,
+        resolver,
+        workspace,
+        graph_files,
+        allowed,
+        facts,
+        session,
+    );
+    ExpandedImportNode {
+        node: node.clone(),
+        neighbors,
+        collected: if facts.retain_collected {
+            collected.map(|facts| (path.to_path_buf(), facts))
+        } else {
+            None
+        },
+    }
 }
 
 fn lazy_import_walk(
@@ -83,38 +126,15 @@ fn lazy_import_walk(
             .par_iter()
             .map(|node| {
                 crate::invocation::check_timeout().ok().map(|()| {
-                    let Some(path) = node.as_file() else {
-                        return ExpandedImportNode {
-                            node: node.clone(),
-                            neighbors: Vec::new(),
-                            collected: None,
-                        };
-                    };
-                    if !graph_files.contains_visible(path) || !is_indexable(path) {
-                        return ExpandedImportNode {
-                            node: node.clone(),
-                            neighbors: Vec::new(),
-                            collected: None,
-                        };
-                    }
-                    let (neighbors, collected) = import_neighbors(
-                        path,
+                    expand_import_node(
+                        node,
                         &resolver,
                         workspace,
                         graph_files,
                         allowed,
                         facts,
                         session,
-                    );
-                    ExpandedImportNode {
-                        node: node.clone(),
-                        neighbors,
-                        collected: if facts.retain_collected {
-                            collected.map(|facts| (path.to_path_buf(), facts))
-                        } else {
-                            None
-                        },
-                    }
+                    )
                 })
             })
             .while_some()

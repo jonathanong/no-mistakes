@@ -58,6 +58,11 @@ fn import_only_reports_project_from_one_lazy_graph() {
         uncached.contains("lazy_import_graph") && uncached.contains("deps_of"),
         "import-only reports must project from the seeded graph, not walk again"
     );
+    let expand = include_str!("../../../codebase/dependencies/graph/lazy_import_parallel.rs");
+    assert!(
+        expand.contains("rayon::scope") && expand.contains("scope.spawn"),
+        "reachable import expansion must keep Rayon workers busy across depths"
+    );
 }
 
 #[test]

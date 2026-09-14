@@ -83,10 +83,12 @@ reachable frontier and reuses any prepared per-file facts already supplied by
 an enclosing request.
 
 `analyzeProject` with import-only `dependencies` reports still follows
-facts → one graph → commands: one lazy walk of the union of those report roots
-builds one reachable import adjacency graph; each report projects `deps_of`
-from that graph. That graph is the reachable import subgraph for the request,
-not a full-universe index.
+facts → one graph → commands: one lazy expansion of the union of those report
+roots builds one reachable import adjacency graph; each report projects
+`deps_of` from that graph. Expansion is work-stealing (`rayon::scope` spawn
+per newly reached file) so cores stay busy across depths the way `check`
+keeps them busy with one `par_iter` over the indexable universe. The graph is
+the reachable import subgraph for the request, not a full-universe index.
 
 ## Current Pipeline Shape
 
