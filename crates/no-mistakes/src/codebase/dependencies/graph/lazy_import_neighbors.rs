@@ -24,6 +24,23 @@ fn import_neighbors(
             None,
         );
     }
+    if let Some(facts) = fact_source
+        .live_cache
+        .and_then(|cache| cache.get(path).map(|entry| entry.clone()))
+    {
+        return (
+            import_neighbors_from_facts(
+                path,
+                &facts,
+                resolver,
+                workspace,
+                graph_files,
+                allowed,
+                session.interner(),
+            ),
+            None,
+        );
+    }
 
     let facts = {
         let source_result = match fact_source.sources {
@@ -65,6 +82,9 @@ fn import_neighbors(
         }
     };
 
+    if let Some(cache) = fact_source.live_cache {
+        cache.insert(path.to_path_buf(), facts.clone());
+    }
     let neighbors = import_neighbors_from_facts(
         path,
         &facts,

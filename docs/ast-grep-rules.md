@@ -187,14 +187,13 @@ constructor shape. The Rust/JS wrapper rules above only catch their exact
 direct boilerplate; parity tests still cover alias, re-export, and
 descriptor-resolution semantics.
 
-Overlapping import-only `analyzeProject` `dependencies` reports must share one
-lazy walk of the union of their entry files. The walk lives in
-`shared_traversal_uncached.rs` (a legitimate single-walk owner); the fan-out
-is `reports.par_iter()` in `analyze_project.rs`. ast-grep cannot see that
-cross-function shape, so `overlapping_import_only_dependency_reports_parse_each_file_once`
-locks `parse.files` to the unique reachable set, and
-`import_only_union_is_seeded_before_parse_cache_release` requires the seed to
-run before `clear_request_parse_cache`.
+Overlapping import-only `analyzeProject` `dependencies` reports must parse each
+reachable file once. The walks still fan out via `reports.par_iter()`; they
+share a `DashMap` live cache wired in `shared_traversal_uncached.rs`.
+ast-grep cannot see that cross-function shape, so
+`overlapping_import_only_dependency_reports_parse_each_file_once` locks
+`parse.files` to the unique reachable set, and
+`import_only_lazy_walks_share_a_live_parse_cache` requires `with_live_cache`.
 
 ### `no-process-spawn-in-file-loop`
 

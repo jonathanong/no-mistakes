@@ -21,6 +21,7 @@ pub(crate) struct SharedTraversalContext {
     import_resolution_cache: crate::codebase::ts_resolver::ImportResolutionCache,
     traversal_results: TraversalResultCache,
     pending_lazy_facts: std::sync::Mutex<Option<crate::codebase::ts_source::facts::TsFactMap>>,
+    live_lazy_facts: dashmap::DashMap<PathBuf, crate::codebase::ts_source::facts::TsFileFacts>,
     analysis_generation: u64,
     pub(crate) graph_builds: usize,
     pub(crate) symbol_index_builds: usize,

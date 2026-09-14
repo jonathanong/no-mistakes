@@ -47,17 +47,11 @@ fn analyze_project_runs_independent_reports_in_parallel() {
 }
 
 #[test]
-fn import_only_union_is_seeded_before_parse_cache_release() {
-    let prepare = include_str!("../context/api.rs");
-    let seed = prepare
-        .find("seed_import_only_dependency_union")
-        .expect("prepare must seed one import-only walk for all dependency reports");
-    let clear = prepare
-        .find("clear_request_parse_cache")
-        .expect("prepare still owns parse-cache lifetime");
+fn import_only_lazy_walks_share_a_live_parse_cache() {
+    let uncached = include_str!("../../../codebase/dependencies/shared_traversal_uncached.rs");
     assert!(
-        seed < clear,
-        "union lazy facts must be collected while the request parse cache is live"
+        uncached.contains("with_live_cache"),
+        "overlapping import-only reports must memoize lazy parses across par_iter walks"
     );
 }
 

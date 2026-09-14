@@ -45,6 +45,7 @@ fn collect_uncached_entries(
                             shared.fact_plan,
                             &shared.fact_context,
                         )
+                        .with_live_cache(&shared.live_lazy_facts)
                         .with_source_store(&sources)
                         .retain_collected(),
                         workspace: &workspace,

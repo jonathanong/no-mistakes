@@ -127,6 +127,7 @@ impl SharedTraversalContext {
             import_resolution_cache: Default::default(),
             traversal_results: std::sync::Mutex::new(HashMap::new()),
             pending_lazy_facts: std::sync::Mutex::new(None),
+            live_lazy_facts: dashmap::DashMap::new(),
             analysis_generation: 0,
             graph_builds: 0,
             symbol_index_builds: 0,
