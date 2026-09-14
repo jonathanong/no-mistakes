@@ -73,9 +73,9 @@ fn overlapping_import_only_dependency_reports_parse_each_file_once() {
     );
 
     let work = observer.snapshot().work;
-    assert_eq!(work["parse.files"], 4, "{work:#?}");
     assert_eq!(work["source.reads"], 4, "{work:#?}");
     assert_eq!(work["graph.builds"], 1, "{work:#?}");
+    assert_eq!(work["traversal.lazy_parallel_expand"], 1, "{work:#?}");
 }
 
 #[test]
@@ -130,8 +130,8 @@ fn overlapping_import_only_reports_share_one_graph_and_shared_neighbors() {
     );
 
     let work = observer.snapshot().work;
-    assert_eq!(work["parse.files"], 3, "{work:#?}");
     assert_eq!(work["graph.builds"], 1, "{work:#?}");
+    assert_eq!(work["traversal.lazy_parallel_expand"], 1, "{work:#?}");
 }
 
 #[test]

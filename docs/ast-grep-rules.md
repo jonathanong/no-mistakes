@@ -196,7 +196,7 @@ that graph from the union of report roots; `reports.par_iter()` only runs
 `overlapping_import_only_reports_share_one_graph_and_shared_neighbors` locks
 `graph.builds` to 1 with per-report closures, and
 `import_only_reports_project_from_one_lazy_graph` requires the seed,
-`lazy_import_graph` projection, and work-stealing `rayon::scope` expansion.
+`lazy_import_graph` projection, and `collect_ts_facts` `par_iter` seeding.
 
 ### `no-process-spawn-in-file-loop`
 
