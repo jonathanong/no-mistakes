@@ -180,29 +180,10 @@ impl GraphBuildPlan {
     /// Import-only plans can walk reachable files lazily. Any other domain flag
     /// requires eager facts for the whole visible universe.
     pub fn is_lazy_import_plan(self) -> bool {
-        self.imports
-            && !self.calls
-            && !self.workspace
-            && !self.package
-            && !self.tests
-            && !self.markdown
-            && !self.ci
-            && !self.workflow_topology
-            && !self.routes
-            && !self.queues
-            && !self.playwright_routes
-            && !self.playwright_selectors
-            && !self.http
-            && !self.process
-            && !self.assets
-            && !self.resources
-            && !self.react
-            && !self.symbols
-            && !self.dotnet
-            && !self.swift
-            && !self.terraform
-            && !self.language_frontends
-            && !self.trpc
+        let mut domains = self;
+        domains.imports = false;
+        domains.route_imports = false;
+        self.imports && domains == Self::default()
     }
 
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
