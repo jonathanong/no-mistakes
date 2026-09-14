@@ -95,11 +95,9 @@ fn lazy_import_session_does_not_parse_files_twice() {
                 },
                 &session,
             );
-        assert!(
-            first
-                .iter()
-                .any(|entry| entry.node.as_file() == Some(reached.as_path()))
-        );
+        assert!(first
+            .iter()
+            .any(|entry| entry.node.as_file() == Some(reached.as_path())));
 
         let first_work = observer.snapshot().work;
         let parse_files = first_work["parse.files"];
@@ -140,6 +138,69 @@ fn lazy_import_session_does_not_parse_files_twice() {
 }
 
 #[test]
+fn live_lazy_cache_prevents_reparse_across_walks() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/lazy-import/fixture"),
+    );
+    let entry = root.join("src/a.mts");
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph_files = GraphFiles::discover(&root);
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(
+        std::sync::Arc::clone(&observer),
+    ));
+    let _ = session.visible_paths(&root);
+    let workspace = crate::codebase::workspaces::load_indexed_from_files(&root, graph_files.all())
+        .unwrap_or_default();
+    let context = TsFactContext::new(&root);
+    let roots = [NodeId::file(&entry)];
+    let cache = dashmap::DashMap::new();
+
+    let first = lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(
+        LazyImportBuild {
+            roots: &roots,
+            tsconfig: &tsconfig,
+            tsconfig_catalog: None,
+            max_depth: None,
+            graph_files: &graph_files,
+            allowed: None,
+            facts: LazyImportFacts::new(None, TsFactPlan::imports(), &context)
+                .with_live_cache(&cache),
+            workspace: &workspace,
+            import_resolution_cache: None,
+        },
+        &session,
+    );
+    let parse_files = observer.snapshot().work["parse.files"];
+    assert!(parse_files > 0);
+    assert!(!cache.is_empty());
+
+    let second = lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(
+        LazyImportBuild {
+            roots: &roots,
+            tsconfig: &tsconfig,
+            tsconfig_catalog: None,
+            max_depth: None,
+            graph_files: &graph_files,
+            allowed: None,
+            facts: LazyImportFacts::new(None, TsFactPlan::imports(), &context)
+                .with_live_cache(&cache),
+            workspace: &workspace,
+            import_resolution_cache: None,
+        },
+        &session,
+    );
+    assert_eq!(first.0, second.0);
+    assert_eq!(observer.snapshot().work["parse.files"], parse_files);
+}
+
+#[test]
 fn import_neighbors_report_source_store_read_failures() {
     let missing = PathBuf::from("/missing-lazy-import.mts");
     let tsconfig = TsConfig {
@@ -164,9 +225,7 @@ fn import_neighbors_report_source_store_read_failures() {
         &session,
     );
     assert!(neighbors.is_empty());
-    assert!(
-        collected
-            .and_then(|facts| facts.parse_error)
-            .is_some_and(|error| error.contains("failed to read"))
-    );
+    assert!(collected
+        .and_then(|facts| facts.parse_error)
+        .is_some_and(|error| error.contains("failed to read")));
 }
