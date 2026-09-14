@@ -188,3 +188,67 @@ fn mixed_dependents_still_seed_later_import_only_reports() {
     let work = observer.snapshot().work;
     assert!(work["graph.builds"] >= 1, "{work:#?}");
 }
+
+#[test]
+fn ineligible_reports_do_not_block_import_only_graph_seed() {
+    let root = lazy_import_root();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let output = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "reports": [
+                    {
+                        "id": "missing",
+                        "type": "dependencies",
+                        "files": ["src/missing.mts"],
+                        "relationships": ["import-static"]
+                    },
+                    {
+                        "id": "symbols",
+                        "type": "dependencies",
+                        "files": ["src/a.mts"],
+                        "relationships": ["import-static"],
+                        "includeSymbols": true
+                    },
+                    {
+                        "id": "workspace",
+                        "type": "dependencies",
+                        "files": ["src/a.mts"],
+                        "relationships": ["workspace"]
+                    },
+                    {
+                        "id": "a",
+                        "type": "dependencies",
+                        "files": ["src/a.mts"],
+                        "relationships": ["import-static"]
+                    },
+                    {
+                        "id": "unrelated",
+                        "type": "dependencies",
+                        "files": ["src/unrelated.mts"],
+                        "relationships": ["import-static"]
+                    }
+                ]
+            })
+            .to_string(),
+        ))
+        .unwrap()
+    };
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let from_a = report_paths(&value, 3);
+    let unrelated = report_paths(&value, 4);
+    assert!(
+        from_a.iter().any(|path| path.ends_with("src/b.mts")),
+        "{from_a:?}"
+    );
+    assert!(
+        unrelated
+            .iter()
+            .any(|path| path.ends_with("src/unrelated-dep.mts")),
+        "{unrelated:?}"
+    );
+    let work = observer.snapshot().work;
+    assert!(work["graph.builds"] >= 1, "{work:#?}");
+}
