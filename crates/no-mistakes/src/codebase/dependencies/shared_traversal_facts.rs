@@ -16,19 +16,20 @@ impl SharedTraversalContext {
         let context = self.fact_context.clone();
         let sources = self.dataset.sources_for(&self.root);
         let session = self.session.clone();
-        let collected = crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
-            paths
-                .iter()
-                .filter(|path| {
-                    self.facts
-                        .as_ref()
-                        .is_none_or(|facts| !facts.contains_key(path))
-                })
-                .filter_map(|path| {
-                    let source = sources.read_path(path).ok()?;
-                    session
-                        .with_recovered_program(path, &source, |program, parsed, error| {
-                            error.is_none().then(|| {
+        let collected =
+            crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
+                paths
+                    .iter()
+                    .filter(|path| {
+                        self.facts
+                            .as_ref()
+                            .is_none_or(|facts| !facts.contains_key(path))
+                    })
+                    .filter_map(|path| {
+                        let source = sources.read_path(path).ok()?;
+                        session
+                            .with_recovered_program(path, &source, |program, parsed, error| {
+                                error.is_none().then(|| {
                                 crate::codebase::ts_source::facts::collect_file_facts_from_program(
                                     path,
                                     self.fact_plan,
@@ -39,13 +40,13 @@ impl SharedTraversalContext {
                                     self.fact_plan.source.then(|| std::sync::Arc::clone(&source)),
                                 )
                             })
-                        })
-                        .ok()
-                        .flatten()
-                        .map(|facts| (path.clone(), facts))
-                }),
-            self.fact_plan,
-        );
+                            })
+                            .ok()
+                            .flatten()
+                            .map(|facts| (path.clone(), facts))
+                    }),
+                self.fact_plan,
+            );
         self.facts
             .get_or_insert_with(|| {
                 crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
@@ -80,6 +81,27 @@ impl SharedTraversalContext {
         self.symbol_index_cache.clear();
         self.graph_builds = self.graph_cache.build_count();
         self.symbol_index_builds = self.symbol_index_cache.build_count();
+    }
+
+    pub(crate) fn publish_lazy_facts(
+        &self,
+        collected: Vec<(PathBuf, crate::codebase::ts_source::facts::TsFileFacts)>,
+    ) {
+        if collected.is_empty() {
+            return;
+        }
+        let incoming = crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
+            collected,
+            self.fact_plan,
+        );
+        let mut pending = self
+            .pending_lazy_facts
+            .lock()
+            .expect("lazy fact sink is poisoned");
+        match pending.as_mut() {
+            Some(existing) => existing.extend(incoming),
+            None => *pending = Some(incoming),
+        }
     }
 
     pub(crate) fn add_explicit_roots(&mut self, paths: &[PathBuf]) {

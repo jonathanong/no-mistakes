@@ -1,0 +1,78 @@
+use super::*;
+use serde_json::{json, Value};
+use std::path::PathBuf;
+
+fn lazy_import_root() -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/lazy-import/fixture"),
+    )
+}
+
+fn report_paths(value: &Value, index: usize) -> Vec<String> {
+    value["reports"][index]["result"]["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|entry| entry["path"].as_str().map(str::to_string))
+        .collect()
+}
+
+#[test]
+fn overlapping_import_only_dependency_reports_parse_each_file_once() {
+    let root = lazy_import_root();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let output = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "reports": [
+                    {
+                        "id": "a",
+                        "type": "dependencies",
+                        "files": ["src/a.mts"],
+                        "relationships": ["import-static"]
+                    },
+                    {
+                        "id": "a-again",
+                        "type": "dependencies",
+                        "files": ["src/a.mts"],
+                        "relationships": ["import-static"]
+                    },
+                    {
+                        "id": "unrelated",
+                        "type": "dependencies",
+                        "files": ["src/unrelated.mts"],
+                        "relationships": ["import-static"]
+                    }
+                ]
+            })
+            .to_string(),
+        ))
+        .unwrap()
+    };
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let first = report_paths(&value, 0);
+    let second = report_paths(&value, 1);
+    let unrelated = report_paths(&value, 2);
+    assert!(
+        first.iter().any(|path| path.ends_with("src/b.mts")),
+        "{first:?}"
+    );
+    assert_eq!(first, second);
+    assert!(
+        unrelated
+            .iter()
+            .any(|path| path.ends_with("src/unrelated-dep.mts")),
+        "{unrelated:?}"
+    );
+    assert!(
+        !first.iter().any(|path| path.contains("unrelated")),
+        "{first:?}"
+    );
+
+    let work = observer.snapshot().work;
+    assert_eq!(work["parse.files"], 4, "{work:#?}");
+    assert_eq!(work["source.reads"], 4, "{work:#?}");
+}

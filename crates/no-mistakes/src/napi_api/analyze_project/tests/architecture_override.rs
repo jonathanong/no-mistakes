@@ -47,6 +47,21 @@ fn analyze_project_runs_independent_reports_in_parallel() {
 }
 
 #[test]
+fn import_only_union_is_seeded_before_parse_cache_release() {
+    let prepare = include_str!("../context/api.rs");
+    let seed = prepare
+        .find("seed_import_only_dependency_union")
+        .expect("prepare must seed one import-only walk for all dependency reports");
+    let clear = prepare
+        .find("clear_request_parse_cache")
+        .expect("prepare still owns parse-cache lifetime");
+    assert!(
+        seed < clear,
+        "union lazy facts must be collected while the request parse cache is live"
+    );
+}
+
+#[test]
 fn production_dispatch_has_no_standalone_wrappers_or_placeholder_bails() {
     let sources = [
         (

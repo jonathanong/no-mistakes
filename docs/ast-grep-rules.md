@@ -3,7 +3,7 @@
 This repo uses [`ast-grep`](https://ast-grep.github.io) for pure structural
 (AST-shape) checks over this crate's own Rust source, in addition to
 `no-mistakes check` (which answers graph-aware and config-aware questions
-about the *codebases `no-mistakes` analyzes*, not about `no-mistakes`'s own
+about the _codebases `no-mistakes` analyzes_, not about `no-mistakes`'s own
 source).
 
 ## Why `ast-grep`, not a native `no-mistakes check` rule
@@ -85,7 +85,7 @@ effect performed indirectly (a helper method call, `std::mem::replace`,
 
 Flags a direct call to `crate::routes::collect_routes(...)` from
 `codebase/dependencies/graph/**` — the `DepGraph` edge-producer directory.
-`get_or_compute_playwright_routes` (`graph/fact_lookup.rs`) is a *no-key*
+`get_or_compute_playwright_routes` (`graph/fact_lookup.rs`) is a _no-key_
 shared cache: every caller within one `no-mistakes check` invocation wants
 the exact same app-wide Playwright route scan, so there is never a
 legitimate reason for an edge producer to call `collect_routes` directly
@@ -186,6 +186,15 @@ observer tests because its ownership is semantic rather than a single stable
 constructor shape. The Rust/JS wrapper rules above only catch their exact
 direct boilerplate; parity tests still cover alias, re-export, and
 descriptor-resolution semantics.
+
+Overlapping import-only `analyzeProject` `dependencies` reports must share one
+lazy walk of the union of their entry files. The walk lives in
+`shared_traversal_uncached.rs` (a legitimate single-walk owner); the fan-out
+is `reports.par_iter()` in `analyze_project.rs`. ast-grep cannot see that
+cross-function shape, so `overlapping_import_only_dependency_reports_parse_each_file_once`
+locks `parse.files` to the unique reachable set, and
+`import_only_union_is_seeded_before_parse_cache_release` requires the seed to
+run before `clear_request_parse_cache`.
 
 ### `no-process-spawn-in-file-loop`
 

@@ -52,15 +52,7 @@ fn collect_uncached_entries(
                     },
                     &shared.session,
                 );
-            *shared
-                .pending_lazy_facts
-                .lock()
-                .expect("lazy fact sink is poisoned") = Some(
-                crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
-                    collected,
-                    shared.fact_plan,
-                ),
-            );
+            shared.publish_lazy_facts(collected);
             entries
         }
         Direction::Deps if has_call_relationship(allowed) => {
@@ -151,9 +143,8 @@ fn roots_with_call_roots(
     entrypoints: &[Entrypoint],
     allowed: Option<&std::collections::HashSet<EdgeKind>>,
 ) -> Vec<NodeId> {
-    let call_only = allowed.is_some_and(|kinds| {
-        kinds.len() == 1 && kinds.contains(&EdgeKind::Call)
-    });
+    let call_only =
+        allowed.is_some_and(|kinds| kinds.len() == 1 && kinds.contains(&EdgeKind::Call));
     let mut combined = Vec::with_capacity(roots.len() + call_roots.len());
     combined.extend(
         roots
