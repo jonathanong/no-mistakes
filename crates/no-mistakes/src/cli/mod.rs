@@ -47,9 +47,9 @@ pub fn init_rayon_threads(args: JobsArg) {
 }
 
 pub fn init_rayon_threads_if_requested(jobs: Option<usize>) {
-    if let Some(jobs) = jobs {
-        init_rayon_threads(JobsArg { jobs });
-    }
+    init_rayon_threads(JobsArg {
+        jobs: jobs.unwrap_or(0),
+    });
 }
 
 fn rayon_thread_count(args: JobsArg, raw_threads: Option<&str>) -> usize {

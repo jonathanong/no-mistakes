@@ -38,6 +38,42 @@ pub(super) fn bench_lazy_traversal(c: &mut Criterion) {
     group.finish();
 }
 
+pub(super) fn bench_import_only_vs_workspace_relationships(c: &mut Criterion) {
+    if !shard::should_run(shard::GRAPH_CORE) {
+        return;
+    }
+    let root = fixture_root();
+    let roots = ["src/app.tsx", "src/jobs/send.ts"];
+    let mut group = c.benchmark_group("relationship_scope");
+    for (label, relationships) in [
+        ("import_only", vec![RelationshipArg::Import]),
+        (
+            "import_and_workspace",
+            vec![RelationshipArg::Import, RelationshipArg::Workspace],
+        ),
+    ] {
+        let args =
+            super::fixtures::traverse_args_relationships(&root, &roots, relationships.clone());
+        let expected = dependencies::run_json(args, Direction::Deps)
+            .expect("relationship-scope preflight should succeed");
+        assert!(expected.contains("packages/core/src/index.ts"), "{label}");
+        group.bench_function(label, |b| {
+            b.iter(|| {
+                let args = super::fixtures::traverse_args_relationships(
+                    &root,
+                    &roots,
+                    relationships.clone(),
+                );
+                black_box(
+                    dependencies::run_json(black_box(args), Direction::Deps)
+                        .expect("relationship-scope traversal should succeed"),
+                )
+            });
+        });
+    }
+    group.finish();
+}
+
 pub(super) fn bench_facts_graph_and_query(c: &mut Criterion) {
     if !shard::should_run(shard::GRAPH_CORE) {
         return;

@@ -104,8 +104,7 @@ impl GraphBuildPlan {
                 || allowed.contains(&EdgeKind::RequireResolve),
             route_imports: allowed.contains(&EdgeKind::RouteImport),
             workspace: allowed.contains(&EdgeKind::WorkspaceImport)
-                || allowed.contains(&EdgeKind::WorkspaceTypeImport)
-                || allowed.contains(&EdgeKind::RequireResolve),
+                || allowed.contains(&EdgeKind::WorkspaceTypeImport),
             package: allowed.contains(&EdgeKind::PackageDependency),
             tests: allowed.contains(&EdgeKind::TestOf)
                 || allowed.contains(&EdgeKind::VitestSetup(VitestSetupField::SetupFiles))
@@ -178,10 +177,43 @@ impl GraphBuildPlan {
         self
     }
 
+    /// Import-only plans can walk reachable files lazily. Any other domain flag
+    /// requires eager facts for the whole visible universe.
+    pub fn is_lazy_import_plan(self) -> bool {
+        self.imports
+            && !self.calls
+            && !self.workspace
+            && !self.package
+            && !self.tests
+            && !self.markdown
+            && !self.ci
+            && !self.workflow_topology
+            && !self.routes
+            && !self.queues
+            && !self.playwright_routes
+            && !self.playwright_selectors
+            && !self.http
+            && !self.process
+            && !self.assets
+            && !self.resources
+            && !self.react
+            && !self.symbols
+            && !self.dotnet
+            && !self.swift
+            && !self.terraform
+            && !self.language_frontends
+            && !self.trpc
+    }
+
     pub(crate) fn ts_fact_plan(self) -> TsFactPlan {
         TsFactPlan {
             imports: self.imports || self.route_imports || self.workspace || self.assets,
-            function_calls: self.calls || self.imports || self.workspace || self.assets || self.symbols || self.resources,
+            function_calls: self.calls
+                || self.imports
+                || self.workspace
+                || self.assets
+                || self.symbols
+                || self.resources,
             resources: self.resources,
             symbols: self.symbols || self.queues,
             react: self.react,

@@ -31,7 +31,10 @@ use aggregate::{
 use call_index::{bench_call_site_membership, bench_callable_file_index_construction};
 use criterion::{criterion_group, criterion_main};
 use extract::bench_extract_import_facts;
-use graph::{bench_facts_graph_and_query, bench_high_fanout_finalization, bench_lazy_traversal};
+use graph::{
+    bench_facts_graph_and_query, bench_high_fanout_finalization,
+    bench_import_only_vs_workspace_relationships, bench_lazy_traversal,
+};
 use graph_gates::bench_graph_gates;
 use language_frontends::bench_language_frontends;
 use observer::bench_observer_overhead;
@@ -46,6 +49,7 @@ use reports::{bench_symbols, bench_workspace};
 criterion_group!(
     benches,
     bench_lazy_traversal,
+    bench_import_only_vs_workspace_relationships,
     bench_callable_file_index_construction,
     bench_call_site_membership,
     bench_extract_import_facts,

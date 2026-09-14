@@ -39,11 +39,12 @@ impl SharedTraversalContext {
             .tracked_paths_for(&root)
             .as_ref()
             .clone();
-        let graph_files = graph::GraphFiles::from_files_with_resource_candidates_excluding_indexable(
-            graph_all_files,
-            graph_resource_candidates,
-            &excluded_configs,
-        );
+        let graph_files =
+            graph::GraphFiles::from_files_with_resource_candidates_excluding_indexable(
+                graph_all_files,
+                graph_resource_candidates,
+                &excluded_configs,
+            );
         let tsconfig = session
             .tsconfig(&root, tsconfig_path)
             .map(|config| (*config).clone())
@@ -75,7 +76,7 @@ impl SharedTraversalContext {
                 sources: dataset.sources_for(&root),
                 build_plan,
                 graph_files: &graph_files,
-                collect_graph_facts: !include_check_plan,
+                collect_graph_facts: !include_check_plan && !build_plan.is_lazy_import_plan(),
                 framework_plan: &framework_plan,
             })?;
         let tsconfig_build_diagnostics = tsconfig_catalog.diagnostics();

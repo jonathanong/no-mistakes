@@ -47,6 +47,29 @@ fn import_only_detection_requires_nonempty_all_import_relationships() {
         RelationshipArg::ImportStatic,
         RelationshipArg::Test,
     ]));
+    assert!(
+        !relationships_are_import_only(&[RelationshipArg::Import, RelationshipArg::Workspace,]),
+        "workspace edges disable lazy reachable-file traversal and parse the whole visible universe"
+    );
+}
+
+#[test]
+fn import_relationships_do_not_enable_workspace_graph_facts() {
+    let allowed = relationship_filter(&[
+        RelationshipArg::Import,
+        RelationshipArg::ImportStatic,
+        RelationshipArg::ImportDynamic,
+        RelationshipArg::ImportType,
+    ])
+    .unwrap();
+    let plan = graph::GraphBuildPlan::from_allowed(Some(&allowed));
+    assert!(plan.imports);
+    assert!(
+        !plan.workspace,
+        "require.resolve is an import edge, not a reason to parse every workspace file"
+    );
+    assert!(plan.is_lazy_import_plan());
+    assert!(!graph::GraphBuildPlan::imports_and_workspace().is_lazy_import_plan());
 }
 
 #[test]

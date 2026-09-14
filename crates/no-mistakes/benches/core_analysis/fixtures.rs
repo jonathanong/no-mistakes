@@ -55,6 +55,14 @@ pub(super) fn traverse_args(
     roots: &[&str],
     relationship: RelationshipArg,
 ) -> TraverseArgs {
+    traverse_args_relationships(root, roots, vec![relationship])
+}
+
+pub(super) fn traverse_args_relationships(
+    root: &Path,
+    roots: &[&str],
+    relationships: Vec<RelationshipArg>,
+) -> TraverseArgs {
     TraverseArgs {
         file_symbols: vec![None; roots.len()],
         file_entrypoints_are_structured: vec![false; roots.len()],
@@ -66,7 +74,7 @@ pub(super) fn traverse_args(
         tests: Vec::new(),
         format: None,
         json: true,
-        relationships: vec![relationship],
+        relationships,
         include_symbols: false,
         timings: false,
         files: roots.iter().map(PathBuf::from).collect(),
