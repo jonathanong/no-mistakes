@@ -71,7 +71,7 @@ pub fn extract_symbols_at_path(
         SourceType::ts()
     };
     let ret = crate::ast::parse(path, &allocator, source, source_type);
-    if ret.panicked {
+    if ret.fatal_error {
         let detail = ret
             .diagnostics
             .first()

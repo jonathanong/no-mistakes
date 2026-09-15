@@ -17,7 +17,7 @@ pub(in crate::codebase::rules::require_storybook_stories) fn extract_storybook_s
         source,
         SourceType::ts(),
     );
-    if parsed.panicked || !parsed.diagnostics.is_empty() {
+    if parsed.fatal_error || !parsed.diagnostics.is_empty() {
         return Vec::new();
     }
     export_config::stories_expression(&parsed.program)

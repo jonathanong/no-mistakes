@@ -16,7 +16,7 @@ pub(super) fn parse_program(
     };
     CachedProgram::try_new(owner, |owner| {
         let parsed = crate::ast::parse(path, &owner.allocator, &owner.source, owner.source_type);
-        let strict_error = if parsed.panicked || !parsed.diagnostics.is_empty() {
+        let strict_error = if parsed.fatal_error || !parsed.diagnostics.is_empty() {
             Some(
                 parsed
                     .diagnostics
@@ -27,10 +27,10 @@ pub(super) fn parse_program(
         } else {
             None
         };
-        let diagnostic_error = (parsed.panicked || !parsed.diagnostics.is_empty()).then(|| {
+        let diagnostic_error = (parsed.fatal_error || !parsed.diagnostics.is_empty()).then(|| {
             crate::codebase::ts_source::format_parse_diagnostic(path, &parsed.diagnostics)
         });
-        let panic_error = parsed.panicked.then(|| {
+        let panic_error = parsed.fatal_error.then(|| {
             let detail = parsed
                 .diagnostics
                 .first()
