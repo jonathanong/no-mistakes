@@ -40,6 +40,12 @@ mod domain_parity_tests;
 #[path = "analyze_project/flow_server_tests.rs"]
 mod flow_server_tests;
 #[cfg(test)]
+#[path = "analyze_project/tests/import_only_provenance.rs"]
+mod import_only_provenance_tests;
+#[cfg(test)]
+#[path = "analyze_project/tests/import_only_shared_parse.rs"]
+mod import_only_shared_parse_tests;
+#[cfg(test)]
 #[path = "analyze_project/import_usages_scope_tests.rs"]
 mod import_usages_scope_tests;
 #[cfg(test)]

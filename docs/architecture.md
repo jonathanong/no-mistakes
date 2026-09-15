@@ -77,25 +77,31 @@ One-pass fixture tests enforce these ceilings:
 5. At most one graph/index build per effective request plan.
 6. One traversal computation per roots/direction/edge-set/depth/symbol-mode key.
 
-Lazy import-only traversal remains deliberately free of canonical graph builds.
-It reuses any prepared per-file facts already supplied by an enclosing request,
-then reads and parses only missing files reached through the import frontier. It
-never eagerly prepares the full indexable universe for the lazy query itself.
+Lazy import-only traversal does not eagerly prepare the full indexable universe
+or build the canonical multi-domain graph. A single import-only query walks the
+reachable frontier and reuses any prepared per-file facts already supplied by
+an enclosing request.
+
+`analyzeProject` with import-only `dependencies` reports still follows
+facts → one graph → commands: one lazy walk of the union of those report roots
+builds one reachable import adjacency graph; each report projects `deps_of`
+from that graph. That graph is the reachable import subgraph for the request,
+not a full-universe index.
 
 ## Current Pipeline Shape
 
 The main graph pipeline is centered in `no-mistakes`:
 
-| Stage | Current type/module | Role |
-| --- | --- | --- |
-| Request dataset | `AnalysisDataset` | Owns the immutable request-scoped inventory, sources, and parsed configuration/workspace metadata. |
-| Request analysis | `SharedTraversalContext` | Owns shared immutable facts, the canonical resolver, and normalized graph/symbol caches. |
-| File universe | `FileInventory`, `GraphFiles` | Assigns stable lexical file identities and exposes the selected visible/indexable views. |
-| Source text | `SourceStore` | Lazily memoizes successful and failed reads without changing consumer-specific error policy. |
-| TS/JS facts | `TsFactPlan`, `TsFileFacts`, `TsFactMap` | Selects and stores facts extracted from one OXC parse per required semantic mode. |
-| Import resolution | `ImportResolver` | Resolves relative imports and tsconfig aliases using an invocation-scoped cache. |
-| Graph build | `DepGraph`, `GraphBuildPlan` | Builds forward and reverse adjacency maps once per normalized plan and file universe. |
-| Traversal | `deps_of`, `dependents_of`, `related` | Runs BFS over the canonical graph with optional edge and path filters. |
+| Stage             | Current type/module                      | Role                                                                                               |
+| ----------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| Request dataset   | `AnalysisDataset`                        | Owns the immutable request-scoped inventory, sources, and parsed configuration/workspace metadata. |
+| Request analysis  | `SharedTraversalContext`                 | Owns shared immutable facts, the canonical resolver, and normalized graph/symbol caches.           |
+| File universe     | `FileInventory`, `GraphFiles`            | Assigns stable lexical file identities and exposes the selected visible/indexable views.           |
+| Source text       | `SourceStore`                            | Lazily memoizes successful and failed reads without changing consumer-specific error policy.       |
+| TS/JS facts       | `TsFactPlan`, `TsFileFacts`, `TsFactMap` | Selects and stores facts extracted from one OXC parse per required semantic mode.                  |
+| Import resolution | `ImportResolver`                         | Resolves relative imports and tsconfig aliases using an invocation-scoped cache.                   |
+| Graph build       | `DepGraph`, `GraphBuildPlan`             | Builds forward and reverse adjacency maps once per normalized plan and file universe.              |
+| Traversal         | `deps_of`, `dependents_of`, `related`    | Runs BFS over the canonical graph with optional edge and path filters.                             |
 
 The top-level `check` command also shares precomputed facts across domain
 checks and runs those checks through `rayon::join`.
@@ -152,6 +158,10 @@ Allowed cache shapes:
 7. `GraphFiles.visible`: path membership for resolver and graph checks.
 8. Graph and symbol-index results keyed by normalized plan and file universe.
 9. Local traversal caches for expensive per-root searches.
+10. Request-scoped canonical `tsconfig.json` / `jsconfig.json` path map used
+    when rendering `tsconfig_provenance`. The map is filled once from those
+    config files only. Report projection must not canonicalize every visible
+    path to recover a relative config spelling.
 
 Disallowed cache shapes:
 

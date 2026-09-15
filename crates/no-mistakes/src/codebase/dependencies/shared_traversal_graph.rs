@@ -86,6 +86,7 @@ impl SharedTraversalContext {
 
     fn invalidate_analysis_caches(&mut self) {
         self.graph = None;
+        self.lazy_import_graph = None;
         self.analysis_generation = self.analysis_generation.wrapping_add(1);
         if let Some(facts) = &mut self.facts {
             facts.bump_playwright_scan_generation();

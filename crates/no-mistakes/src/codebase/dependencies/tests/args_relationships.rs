@@ -118,6 +118,7 @@ fn granular_imports_map_to_respective_edge_kinds() {
     assert!(!dynamic_set.contains(&EdgeKind::Import));
     assert!(!dynamic_set.contains(&EdgeKind::TypeImport));
     assert!(dynamic_set.contains(&EdgeKind::DynamicImport));
+    assert!(dynamic_set.contains(&EdgeKind::ConditionalDynamicImport));
     assert!(!dynamic_set.contains(&EdgeKind::Require));
 
     let type_set = relationship_filter(&[RelationshipArg::ImportType]).unwrap();

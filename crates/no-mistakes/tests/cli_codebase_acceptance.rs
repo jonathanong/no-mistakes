@@ -8,6 +8,8 @@ mod data_pw;
 mod effects;
 #[path = "cli_codebase_acceptance/graph.rs"]
 mod graph;
+#[path = "cli_codebase_acceptance/graph_import_dynamic.rs"]
+mod graph_import_dynamic;
 #[path = "cli_codebase_acceptance/registry_extension.rs"]
 mod registry_extension;
 #[path = "cli_codebase_acceptance/rsc_callers.rs"]

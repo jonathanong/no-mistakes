@@ -182,6 +182,81 @@ fn lazy_import_deps_filters_granular_relationships() {
     assert!(all_paths.contains(require_file.as_path()));
 }
 
+#[test]
+fn lazy_import_walk_follows_jsx_onclick_as_conditional_dynamic_import() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("import-forms"));
+    let entry = root.join("conditional-dynamic.tsx");
+    let target = root.join("target.mts");
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph_files = GraphFiles::discover(&root);
+    let allowed = Some([EdgeKind::DynamicImport, EdgeKind::ConditionalDynamicImport].into());
+    let deps = lazy_import_deps_of_with_files(
+        &[NodeId::file(entry)],
+        &root,
+        &tsconfig,
+        None,
+        &graph_files,
+        allowed.as_ref(),
+    );
+    let hit = deps
+        .iter()
+        .find(|entry| entry.node.as_file() == Some(target.as_path()));
+    let hit = hit.unwrap_or_else(|| panic!("expected {target:?} in {deps:?}"));
+    assert!(
+        hit.via.contains(&EdgeKind::ConditionalDynamicImport),
+        "{hit:?}"
+    );
+}
+
+#[test]
+fn lazy_import_dynamic_follows_if_switch_nested_function_and_jsx_handler() {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture("import-forms"));
+    let entry = root.join("dynamic-all-shapes.tsx");
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let graph_files = GraphFiles::discover(&root);
+    let allowed = Some([EdgeKind::DynamicImport, EdgeKind::ConditionalDynamicImport].into());
+    let deps = lazy_import_deps_of_with_files(
+        &[NodeId::file(entry)],
+        &root,
+        &tsconfig,
+        None,
+        &graph_files,
+        allowed.as_ref(),
+    );
+    let mut paths: Vec<_> = deps
+        .iter()
+        .filter_map(|entry| {
+            entry
+                .node
+                .as_file()
+                .and_then(|path| path.file_name())
+                .and_then(|name| name.to_str())
+                .map(str::to_string)
+        })
+        .collect();
+    paths.sort();
+    assert_eq!(
+        paths,
+        vec![
+            "dynamic-click-target.mts",
+            "dynamic-if-target.mts",
+            "dynamic-nested-target.mts",
+            "dynamic-switch-target.mts",
+        ],
+        "{deps:?}"
+    );
+}
+
 // ── build_filter / apply_filter ─────────────────────────────────────────
 
 #[test]

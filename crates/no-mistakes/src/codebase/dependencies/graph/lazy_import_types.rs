@@ -1,6 +1,7 @@
 #[derive(Clone, Copy)]
 pub(crate) struct LazyImportFacts<'a> {
     prepared: Option<&'a dyn TsFactLookup>,
+    live_cache: Option<&'a dashmap::DashMap<PathBuf, std::sync::Arc<TsFileFacts>>>,
     collect_plan: TsFactPlan,
     context: &'a TsFactContext,
     sources: Option<&'a crate::codebase::ts_source::SourceStore>,
@@ -15,11 +16,20 @@ impl<'a> LazyImportFacts<'a> {
     ) -> Self {
         Self {
             prepared,
+            live_cache: None,
             collect_plan,
             context,
             sources: None,
             retain_collected: false,
         }
+    }
+
+    pub(crate) fn with_live_cache(
+        mut self,
+        live_cache: &'a dashmap::DashMap<PathBuf, std::sync::Arc<TsFileFacts>>,
+    ) -> Self {
+        self.live_cache = Some(live_cache);
+        self
     }
 
     pub(crate) fn with_source_store(
@@ -47,6 +57,13 @@ pub(crate) struct LazyImportBuild<'a> {
     pub(crate) workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     pub(crate) import_resolution_cache:
         Option<&'a crate::codebase::ts_resolver::ImportResolutionCache>,
+}
+
+pub(crate) struct LazyImportWalk {
+    pub(crate) entries: Vec<NodeEntry>,
+    pub(crate) facts: Vec<(PathBuf, TsFileFacts)>,
+    pub(crate) edges: Vec<CanonicalEdge<NodeId, EdgeKind>>,
+    pub(crate) nodes: Vec<NodeId>,
 }
 
 struct ExpandedImportNode {

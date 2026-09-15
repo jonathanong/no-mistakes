@@ -32,6 +32,16 @@ targets, and same-run artifact handoffs. Virtual IDs are
 `--relationship ci` filter remains only workflow-file-to-Rust-binary Cargo
 invocations; it does not include workflow topology or package scripts.
 
+`--relationship import-dynamic` follows both executed `import()` loaders
+(`dynamic-import`, including `next/dynamic(() => import("./x"))`) and
+string-literal `import()` in functions the static call graph does not prove
+runs (`conditional-dynamic-import`, for example a JSX `onClick` loader).
+
+`--relationship import-dynamic` follows every string-literal `import()`,
+including loaders inside `if`/`switch`, nested functions, and JSX handlers.
+Executed loaders are `dynamic-import`; the rest are
+`conditional-dynamic-import`.
+
 Use `--relationship route-import` when you need the conservative runtime module
 closure used by Playwright route analysis. It follows runtime static
 imports/re-exports and literal dynamic imports without function-reachability

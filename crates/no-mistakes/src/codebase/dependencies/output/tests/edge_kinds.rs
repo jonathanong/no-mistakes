@@ -4,14 +4,16 @@ fn edge_kind_str_all_variants() {
     assert_eq!(EdgeKind::Import.as_str(), "import");
     assert_eq!(EdgeKind::TypeImport.as_str(), "type-import");
     assert_eq!(EdgeKind::DynamicImport.as_str(), "dynamic-import");
+    assert_eq!(
+        EdgeKind::ConditionalDynamicImport.as_str(),
+        "conditional-dynamic-import"
+    );
     assert_eq!(EdgeKind::Require.as_str(), "require");
     assert_eq!(EdgeKind::RequireResolve.as_str(), "require-resolve");
     assert_eq!(EdgeKind::TestOf.as_str(), "test");
     assert_eq!(
-        EdgeKind::VitestSetup(
-            crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,
-        )
-        .as_str(),
+        EdgeKind::VitestSetup(crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,)
+            .as_str(),
         "vitest-setup"
     );
     assert_eq!(EdgeKind::RouteRef.as_str(), "route");
@@ -52,16 +54,13 @@ fn serialized_edge_kinds_are_documented() {
         EdgeKind::Import,
         EdgeKind::TypeImport,
         EdgeKind::DynamicImport,
+        EdgeKind::ConditionalDynamicImport,
         EdgeKind::RouteImport,
         EdgeKind::Require,
         EdgeKind::RequireResolve,
         EdgeKind::TestOf,
-        EdgeKind::VitestSetup(
-            crate::codebase::dependencies::graph::VitestSetupField::SetupFiles,
-        ),
-        EdgeKind::VitestSetup(
-            crate::codebase::dependencies::graph::VitestSetupField::GlobalSetup,
-        ),
+        EdgeKind::VitestSetup(crate::codebase::dependencies::graph::VitestSetupField::SetupFiles),
+        EdgeKind::VitestSetup(crate::codebase::dependencies::graph::VitestSetupField::GlobalSetup),
         EdgeKind::RouteRef,
         EdgeKind::QueueEnqueue,
         EdgeKind::QueueWorker,
@@ -120,6 +119,7 @@ fn serialized_edge_kinds_are_documented() {
             EdgeKind::Import => {}
             EdgeKind::TypeImport => {}
             EdgeKind::DynamicImport => {}
+            EdgeKind::ConditionalDynamicImport => {}
             EdgeKind::RouteImport => {}
             EdgeKind::Require => {}
             EdgeKind::RequireResolve => {}

@@ -374,7 +374,7 @@ fn push_warning(
     warnings_seen: &mut HashSet<WarningKey>,
 ) {
     let (warn_type, message, file) = match kind {
-        EdgeKind::DynamicImport => {
+        EdgeKind::DynamicImport | EdgeKind::ConditionalDynamicImport => {
             let file = slash_node_name(curr, root);
             (
                 "dynamic-import",
