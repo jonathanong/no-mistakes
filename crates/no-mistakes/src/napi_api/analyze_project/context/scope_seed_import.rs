@@ -1,50 +1,62 @@
 impl PreparedScope {
-    /// Reports that cannot use the lazy import graph still share one canonical
-    /// `DepGraph`. Build it on the preparing thread so `reports.par_iter()`
-    /// only projects. Nested rayon inside that parallel loop deadlocks when a
-    /// worker waits on the graph `OnceLock` that another worker is building.
+    /// Reports that cannot use the lazy import graph still share prepared
+    /// `DepGraph`s. Build those graphs on the preparing thread so
+    /// `reports.par_iter()` only projects. Nested rayon inside that parallel
+    /// loop deadlocks when a worker waits on the graph `OnceLock` that another
+    /// worker is building.
+    ///
+    /// Prewarm the same plan each report will request: a symbols-enabled
+    /// `build_plan` is a different cache key from `from_allowed` without
+    /// symbols, and seeding the wrong one adds a second graph build.
     fn seed_canonical_graph_if_needed(&self) -> Result<()> {
-        if !self.needs_canonical_graph()? {
-            return Ok(());
+        for request in &self.options.reports {
+            self.prewarm_graph_for_report(request)?;
         }
-        self.traversal.graph_shared()?;
         Ok(())
     }
 
-    fn needs_canonical_graph(&self) -> Result<bool> {
-        for request in &self.options.reports {
-            match super::graph_direction(&request.report_type) {
-                Some(Direction::Dependents) => return Ok(true),
-                Some(Direction::Deps) => {
-                    let args = super::traverse_args(request, &self.options)?;
-                    if args.include_symbols
-                        || !crate::codebase::dependencies::relationships_are_import_only(
-                            &args.relationships,
-                        )
-                    {
-                        return Ok(true);
-                    }
+    fn prewarm_graph_for_report(&self, request: &AnalyzeReportRequest) -> Result<()> {
+        match super::graph_direction(&request.report_type) {
+            Some(direction) => {
+                let args = super::traverse_args(request, &self.options)?;
+                let import_only = !args.include_symbols
+                    && crate::codebase::dependencies::relationships_are_import_only(
+                        &args.relationships,
+                    );
+                if import_only && matches!(direction, Direction::Deps) {
+                    return Ok(());
                 }
-                None => {
-                    if matches!(
-                        request.report_type.as_str(),
-                        "flow" | "effects" | "rscCallers" | "check"
-                    ) {
-                        return Ok(true);
-                    }
-                    if request.report_type == "symbols"
-                        && request
-                            .options
-                            .get("mode")
-                            .and_then(serde_json::Value::as_str)
-                            == Some("signature-impact")
-                    {
-                        return Ok(true);
-                    }
+                let allowed =
+                    crate::codebase::dependencies::relationship_filter(&args.relationships);
+                let has_call = allowed.as_ref().is_some_and(|set| {
+                    set.contains(&crate::codebase::dependencies::EdgeKind::Call)
+                });
+                if has_call || args.include_symbols {
+                    self.traversal.graph_shared()?;
+                } else if self.traversal.build_plan().symbols {
+                    self.traversal
+                        .request_graph_without_symbols_shared(allowed.as_ref())?;
+                } else {
+                    self.traversal.graph_shared()?;
                 }
+                Ok(())
+            }
+            None => {
+                if matches!(
+                    request.report_type.as_str(),
+                    "flow" | "effects" | "rscCallers" | "check"
+                ) || (request.report_type == "symbols"
+                    && request
+                        .options
+                        .get("mode")
+                        .and_then(serde_json::Value::as_str)
+                        == Some("signature-impact"))
+                {
+                    self.traversal.graph_shared()?;
+                }
+                Ok(())
             }
         }
-        Ok(false)
     }
 
     /// Import-only `dependencies` reports share one reachable import graph.

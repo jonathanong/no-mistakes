@@ -46,7 +46,7 @@ impl SharedTraversalContext {
         Ok(graph)
     }
 
-    fn request_graph_without_symbols_shared(
+    pub(crate) fn request_graph_without_symbols_shared(
         &self,
         allowed: Option<&std::collections::HashSet<EdgeKind>>,
     ) -> Result<std::sync::Arc<graph::DepGraph>> {
