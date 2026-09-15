@@ -235,78 +235,17 @@ async function findBeforeJob({ repository, workflow, jobName, baseSha, baseRef }
   return { job: null, sha: null };
 }
 
-function ghWrite(args, payload) {
-  const { spawnSync } = require("node:child_process");
-  const result = spawnSync("gh", args, {
-    input: payload,
-    encoding: "utf8",
-    env: process.env,
-  });
-  if (result.status !== 0) {
-    throw new Error(result.stderr || `gh ${args.join(" ")} failed`);
-  }
-}
-
-async function upsertComment({ repository, prNumber, marker, body }) {
-  const { execFileSync } = require("node:child_process");
-  const output = execFileSync(
-    "gh",
-    ["api", "--paginate", `repos/${repository}/issues/${prNumber}/comments`, "--jq", ".[]"],
-    { encoding: "utf8", env: process.env, stdio: ["ignore", "pipe", "pipe"] },
-  );
-  const comments = output
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => JSON.parse(line));
-  const existing = comments.find((comment) => (comment.body ?? "").includes(marker));
-  const payload = JSON.stringify({ body });
-  if (existing) {
-    ghWrite(
-      [
-        "api",
-        "-X",
-        "PATCH",
-        `repos/${repository}/issues/comments/${existing.id}`,
-        "-H",
-        "Content-Type: application/json",
-        "--input",
-        "-",
-      ],
-      payload,
-    );
-    return;
-  }
-
-  ghWrite(
-    [
-      "api",
-      "-X",
-      "POST",
-      `repos/${repository}/issues/${prNumber}/comments`,
-      "-H",
-      "Content-Type: application/json",
-      "--input",
-      "-",
-    ],
-    payload,
-  );
-}
-
 async function main() {
   const repository = process.env.GITHUB_REPOSITORY;
   const runId = process.env.GITHUB_RUN_ID;
-  const prNumber = process.env.PR_NUMBER;
   const jobName = process.env.JOB_NAME;
   const baseSha = process.env.BASE_SHA;
   const baseRef = process.env.BASE_REF;
   const workflow = process.env.WORKFLOW_NAME || "Test CI";
   const headSha = process.env.HEAD_SHA;
 
-  if (!repository || !runId || !prNumber || !jobName || !baseSha || !baseRef) {
-    throw new Error(
-      "missing GITHUB_REPOSITORY, GITHUB_RUN_ID, PR_NUMBER, JOB_NAME, BASE_SHA, or BASE_REF",
-    );
+  if (!repository || !runId || !jobName || !baseSha || !baseRef) {
+    throw new Error("missing GITHUB_REPOSITORY, GITHUB_RUN_ID, JOB_NAME, BASE_SHA, or BASE_REF");
   }
 
   const afterJobs = await loadJobs(repository, runId);
@@ -335,12 +274,6 @@ async function main() {
     require("node:fs").appendFileSync(summaryPath, `${markdown}\n`);
   }
 
-  await upsertComment({
-    repository,
-    prNumber,
-    marker: commentMarker(jobName),
-    body: markdown,
-  });
   process.stdout.write(markdown);
 }
 

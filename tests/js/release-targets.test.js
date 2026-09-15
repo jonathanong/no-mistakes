@@ -151,10 +151,20 @@ test("native CI jobs run only platform-specific Rust tests", () => {
     "Windows must run the Job Object regression as an integration test",
   );
   assert.match(body, /rust_test: ["']invocation::["']/);
+  assert.doesNotMatch(
+    body,
+    /pull-requests:\s*write/,
+    "native jobs must not request pull-requests write; timing stays in the job summary",
+  );
+  assert.doesNotMatch(
+    body,
+    /PR_NUMBER/,
+    "native timing reports must not take a pull-request number for commenting",
+  );
   assert.match(
     body,
     /head\.repo\.full_name == github\.repository/,
-    "native timing comments must not run on fork PRs where GITHUB_TOKEN cannot write",
+    "native timing reports must not run on fork PRs",
   );
   const defenderStep = body.match(
     /- name: Exclude workspace from Microsoft Defender[\s\S]*?(?=\n      - name: Checkout)/,

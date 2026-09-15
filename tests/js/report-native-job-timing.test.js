@@ -1,4 +1,6 @@
 const assert = require("node:assert/strict");
+const { readFileSync } = require("node:fs");
+const { join } = require("node:path");
 const {
   buildMarkdown,
   commentMarker,
@@ -20,7 +22,7 @@ test("formats durations and deltas", () => {
   assert.equal(formatDelta(10, 10), "0s");
 });
 
-test("builds a before/after comment for the native job", () => {
+test("builds a before/after job summary for the native job", () => {
   const markdown = buildMarkdown({
     jobName: "Windows x64",
     afterSha: "abcdef123456",
@@ -218,6 +220,18 @@ test("a skipped required step on the baseline suppresses the performance delta",
     nowMs: Date.parse("2026-09-07T12:50:00Z"),
   });
   assert.match(markdown, /n\/a \(base run incomplete\)/);
+});
+
+test("reporter does not post or update pull-request comments", () => {
+  const source = readFileSync(
+    join(__dirname, "../../.github/scripts/report-native-job-timing.cjs"),
+    "utf8",
+  );
+  assert.doesNotMatch(source, /issues\/\$\{prNumber\}\/comments/);
+  assert.doesNotMatch(source, /issues\/comments\//);
+  assert.doesNotMatch(source, /\bupsertComment\b/);
+  assert.doesNotMatch(source, /\bghWrite\b/);
+  assert.doesNotMatch(source, /\bPR_NUMBER\b/);
 });
 
 test("a skipped Defender step on an otherwise successful job stays comparable", () => {

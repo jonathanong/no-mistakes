@@ -271,7 +271,6 @@ jobs:
     permissions:
       contents: read
       actions: read
-      pull-requests: write
     strategy:
       fail-fast: false
       matrix:
@@ -398,7 +397,6 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
           JOB_NAME: Native tests (${{ matrix.name }})
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           BASE_REF: ${{ github.event.pull_request.base.ref }}
