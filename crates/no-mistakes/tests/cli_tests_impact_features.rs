@@ -197,48 +197,23 @@ fn impact_traverses_wrapped_default_next_dynamic_boundary() {
 }
 
 #[test]
-fn impact_does_not_overseed_parenthesized_function_default() {
+fn impact_follows_unused_next_dynamic_binding() {
     let root = fixture("tests-impact-next-dynamic");
-    // `paren-fn-default.mts` only assigns the lazy binding to an unused private
-    // const and shadows its name inside a parenthesized function default, so its
-    // test must NOT be surfaced by a change to `foo.mts`.
+    // Unused `const Lazy = dynamic(() => import('./foo.mts'))` is still a
+    // string-literal `import()`, so a `foo.mts` change surfaces these tests.
     let plan = impact_json(&root, &["foo.mts"]);
     let names = selected_files(&plan);
     assert!(
-        !names.contains(&"paren-fn-default.test.mts".to_string()),
-        "parenthesized function default must not over-seed: {names:?}"
-    );
-}
-
-#[test]
-fn impact_does_not_overseed_shadowed_or_type_default_references() {
-    let root = fixture("tests-impact-next-dynamic");
-    // A lazy binding referenced only by a shadowed name inside a nested callback,
-    // or only in a type position, must NOT pull its test into a `foo.mts` change.
-    let plan = impact_json(&root, &["foo.mts"]);
-    let names = selected_files(&plan);
-    assert!(
-        !names.contains(&"nested-callback-default.test.mts".to_string()),
-        "nested callback shadow must not over-seed: {names:?}"
+        names.contains(&"paren-fn-default.test.mts".to_string()),
+        "expected paren-fn-default.test.mts: {names:?}"
     );
     assert!(
-        !names.contains(&"type-collision-default.test.mts".to_string()),
-        "type-position reference must not over-seed: {names:?}"
+        names.contains(&"nested-callback-default.test.mts".to_string()),
+        "expected nested-callback-default.test.mts: {names:?}"
     );
-}
-
-#[test]
-fn impact_registry_hint_skips_deeply_nested_uninvoked_loader() {
-    let root = fixture("tests-impact-registry");
-    // `deep-loader-registry.mts` buries its dynamic import in an uninvoked nested
-    // function, so reachability prunes the edge and no hint is emitted for it.
-    let plan = impact_json(&root, &["feature.mts"]);
     assert!(
-        !registry_hints(&plan)
-            .iter()
-            .any(|hint| hint.contains("deep-loader-registry.mts")),
-        "deeply-nested uninvoked loader must not produce a hint: {:?}",
-        registry_hints(&plan)
+        names.contains(&"type-collision-default.test.mts".to_string()),
+        "expected type-collision-default.test.mts: {names:?}"
     );
 }
 
@@ -255,6 +230,7 @@ fn impact_emits_registry_hint_per_target_and_registry() {
         registry_hints(&plan),
         vec![
             "`feature.mts` is registered in `auth-gated-code-splitting.mts`; verify the registry entry is up to date".to_string(),
+            "`feature.mts` is registered in `deep-loader-registry.mts`; verify the registry entry is up to date".to_string(),
             "`feature.mts` is registered in `deferred-registry.mts`; verify the registry entry is up to date".to_string(),
             "`feature.mts` is registered in `widgets-registry.mts`; verify the registry entry is up to date".to_string(),
             "`feature2.mts` is registered in `auth-gated-code-splitting.mts`; verify the registry entry is up to date".to_string(),
@@ -271,6 +247,7 @@ fn impact_registry_hint_dedups_repeated_target() {
         registry_hints(&plan),
         vec![
             "`feature.mts` is registered in `auth-gated-code-splitting.mts`; verify the registry entry is up to date".to_string(),
+            "`feature.mts` is registered in `deep-loader-registry.mts`; verify the registry entry is up to date".to_string(),
             "`feature.mts` is registered in `deferred-registry.mts`; verify the registry entry is up to date".to_string(),
             "`feature.mts` is registered in `widgets-registry.mts`; verify the registry entry is up to date".to_string(),
         ]

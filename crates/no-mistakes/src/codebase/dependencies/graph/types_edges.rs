@@ -1,7 +1,7 @@
-#[path = "types_edges_sort.rs"]
-mod sort;
 #[path = "types_edges_domain.rs"]
 mod domain;
+#[path = "types_edges_sort.rs"]
+mod sort;
 
 /// The kind of dependency edge connecting two nodes.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize)]
@@ -16,6 +16,9 @@ pub enum EdgeKind {
     TypeImport,
     /// Runtime dynamic import (`import("...")`).
     DynamicImport,
+    /// String-literal `import("...")` inside a function the static call graph
+    /// does not prove executes (for example a JSX `onClick` loader).
+    ConditionalDynamicImport,
     /// Conservative runtime import used for Playwright route reachability.
     RouteImport,
     /// CommonJS `require("...")` call.
@@ -143,6 +146,7 @@ impl EdgeKind {
             Self::Import => Some("import"),
             Self::TypeImport => Some("type-import"),
             Self::DynamicImport => Some("dynamic-import"),
+            Self::ConditionalDynamicImport => Some("conditional-dynamic-import"),
             Self::RouteImport => Some("route-import"),
             Self::Require => Some("require"),
             Self::RequireResolve => Some("require-resolve"),

@@ -20,7 +20,8 @@ intentionally not added to unfiltered `dependencies --relationship all` output.
 | `call` | `Call` | `call` | lexical caller function (or file top level) -> statically resolved local function, direct named import, static namespace-member import, or explicit named re-export | [`call-traversal`](../test-cases/codebase-analysis/call-traversal), [`graph-call-narrowing`](../test-cases/codebase-analysis/graph-call-narrowing), extractor and graph tests |
 | `import` | `Import` | `import`, `import-static` | TS/JS file -> statically imported TS/JS file | [`import-forms/static.mts`](../test-cases/codebase-analysis/import-forms/fixture/static.mts), asserted by `graph_edge_kind_acceptance` |
 | `type-import` | `TypeImport` | `import`, `import-type` | TS/JS file -> type-only dependency | [`import-forms/type-only.mts`](../test-cases/codebase-analysis/import-forms/fixture/type-only.mts), [`inline-type.mts`](../test-cases/codebase-analysis/import-forms/fixture/inline-type.mts), [`import-type.mts`](../test-cases/codebase-analysis/import-forms/fixture/import-type.mts) |
-| `dynamic-import` | `DynamicImport` | `import`, `import-dynamic` | TS/JS file -> string-literal `import("...")` target | [`import-forms/dynamic.mts`](../test-cases/codebase-analysis/import-forms/fixture/dynamic.mts) |
+| `dynamic-import` | `DynamicImport` | `import`, `import-dynamic` | TS/JS file -> string-literal `import("...")` the static call graph treats as executed | [`import-forms/dynamic.mts`](../test-cases/codebase-analysis/import-forms/fixture/dynamic.mts) |
+| `conditional-dynamic-import` | `ConditionalDynamicImport` | `import`, `import-dynamic` | TS/JS file -> string-literal `import("...")` in an `if`/`switch`, nested function, JSX handler, or other scope the static call graph does not prove executes | [`import-forms/dynamic-all-shapes.tsx`](../test-cases/codebase-analysis/import-forms/fixture/dynamic-all-shapes.tsx) |
 | `require` | `Require` | `import`, `import-require` | JS/TS file -> string-literal `require("...")` target | [`import-forms/require.js`](../test-cases/codebase-analysis/import-forms/fixture/require.js) |
 | `require-resolve` | `RequireResolve` | `import`, `import-require` | JS/TS file -> string-literal `require.resolve("...")` lookup target | [`import-forms/require-resolve.js`](../test-cases/codebase-analysis/import-forms/fixture/require-resolve.js) |
 | `route-import` | `RouteImport` | `route-import` | TS/JS file -> runtime static import/re-export or literal dynamic-import target, without function-reachability pruning | [`nextjs-selectors/frontend-tsconfig/page.tsx`](../test-cases/nextjs-selectors/frontend-tsconfig/fixture/web/app/page.tsx), asserted by route-reachability tests |
@@ -97,10 +98,10 @@ their configured roots, mounts, test exclusions, and any explicit filter.
 | Filter | Included edge kinds |
 | --- | --- |
 | `call` | `call` |
-| `import` | `import`, `type-import`, `dynamic-import`, `require`, `require-resolve` |
+| `import` | `import`, `type-import`, `dynamic-import`, `conditional-dynamic-import`, `require`, `require-resolve` |
 | `import-static` | `import` |
 | `import-type` | `type-import` |
-| `import-dynamic` | `dynamic-import` |
+| `import-dynamic` | `dynamic-import`, `conditional-dynamic-import` |
 | `import-require` | `require`, `require-resolve` |
 | `route-import` | `route-import` |
 | `workspace` | `workspace`, `workspace-type-import` |

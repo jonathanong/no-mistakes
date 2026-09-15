@@ -1,9 +1,8 @@
-// A *parenthesized* function default that shadows the outer lazy binding name in
-// its body. The pre-seed must NOT treat the (unused) outer `Lazy` as exported,
-// so `foo.mts` is NOT reachable from this file's test.
-import dynamic from 'next/dynamic';
+// Unused `const Lazy = dynamic(() => import('./foo.mts'))` is still a
+// string-literal `import()`, so `foo.mts` is reachable from this file's test.
+import dynamic from "next/dynamic";
 
-const Lazy = dynamic(() => import('./foo.mts'));
+const Lazy = dynamic(() => import("./foo.mts"));
 
 export default (function Page() {
   const Lazy = 1;
