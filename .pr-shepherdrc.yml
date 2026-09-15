@@ -1,7 +1,14 @@
 # ignoreChecks entries must be the RAW name -- either a Checks API check_run
 # `name` or a Statuses API commit status `context`, not the composite display
 # name shown in the PR UI. pr-shepherd matches against the raw name; composite
-# entries silently never match.
+# entries silently never match. Patterns are case-insensitive globs.
 ignoreChecks:
   - 'CodeRabbit'
+  # CodSpeed GitHub app check, e.g. "CodSpeed Performance Analysis".
+  # Local Criterion is the source of truth (CLAUDE.md); GHA runners are not a
+  # consistent architecture.
   - 'CodSpeed*'
+  # Codecov project statuses fail with "No coverage information found on base
+  # report" when main has no upload for that flag. Patch coverage still blocks.
+  - 'codecov/project'
+  - 'codecov/project/*'
