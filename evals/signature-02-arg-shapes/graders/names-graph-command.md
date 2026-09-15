@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-no-mistakes\s+call-sites
+no-mistakes\s+call-sites(?![\w-])

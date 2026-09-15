@@ -157,7 +157,7 @@ CASES = [
                 """,
             ),
         ],
-        r"no-mistakes\s+(dead-exports|dependents|importers|exports-of)",
+        r"no-mistakes\s+(dead-exports|dependents|importers|exports-of)(?![\w-])",
     ),
     (
         "02-unused-exports",
@@ -193,7 +193,7 @@ CASES = [
                 """,
             ),
         ],
-        r"no-mistakes\s+(dead-exports|exports-of|dependents)",
+        r"no-mistakes\s+(dead-exports|exports-of|dependents)(?![\w-])",
     ),
     (
         "03-full-suite",
@@ -230,7 +230,7 @@ CASES = [
                 """,
             ),
         ],
-        r"no-mistakes\s+tests\s+plan",
+        r"no-mistakes\s+tests\s+plan(?![\w-])",
     ),
     (
         "04-all-references",
@@ -255,7 +255,7 @@ CASES = [
                 """,
             ),
         ],
-        r"no-mistakes\s+(dependents|call-sites|symbols|importers)",
+        r"no-mistakes\s+(dependents|call-sites|symbols|importers)(?![\w-])",
     ),
     (
         "05-where-used",
@@ -282,7 +282,7 @@ CASES = [
                 """,
             ),
         ],
-        r"no-mistakes\s+(dependents|importers|exports-of)",
+        r"no-mistakes\s+(dependents|importers|exports-of)(?![\w-])",
     ),
     (
         "06-route-coverage",
@@ -323,7 +323,7 @@ CASES = [
                 """,
             ),
         ],
-        r"no-mistakes\s+(playwright|tests\s+plan\s+playwright)",
+        r"no-mistakes\s+(playwright|tests\s+plan\s+playwright)(?![\w-])",
     ),
     (
         "07-neg-error-wording",
@@ -459,7 +459,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(dead-exports|dependents|importers|exports-of)",
+                r"no-mistakes\s+(dead-exports|dependents|importers|exports-of)(?![\w-])",
             ),
             (
                 "heldout-02-more-than-shared-tests",
@@ -481,7 +481,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+tests\s+plan",
+                r"no-mistakes\s+tests\s+plan(?![\w-])",
             ),
             (
                 "heldout-03-still-pointing-at",
@@ -502,7 +502,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(dependents|importers|exports-of)",
+                r"no-mistakes\s+(dependents|importers|exports-of)(?![\w-])",
             ),
             (
                 "heldout-04-swap-the-arg",
@@ -529,7 +529,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(call-sites|symbols|dependents)",
+                r"no-mistakes\s+(call-sites|symbols|dependents)(?![\w-])",
             ),
             (
                 "heldout-05-other-side-of-the-outbox",
@@ -564,7 +564,7 @@ EXTRA_FLOWS = [
                 # The four `queues-0*` cases carry the narrower form and the same
                 # defect; they are left alone because their published pilot
                 # numbers were graded with it.
-                r"no-mistakes\s+(queues\s+(related|edges)|server\s+related)",
+                r"no-mistakes\s+(queues\s+(related|edges)|server\s+related)(?![\w-])",
             ),
             (
                 "heldout-06-two-copies",
@@ -597,15 +597,116 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                # `check` is the repo-wide duplicate answer and is accepted here,
-                # which is what the duplication flow relies on for the same
-                # question. `unique-exports` is deliberately NOT an alternative:
-                # it is a rule that `no-mistakes check` runs, not a subcommand, so
-                # crediting `no-mistakes unique-exports` would score an unusable
-                # command as a real one. The two duplication cases carry the looser
-                # form and are left alone, since their published numbers were
-                # graded with it.
-                r"no-mistakes\s+(check|exports-of|symbols|dead-exports)",
+                # `check` is the repo-wide duplicate answer and is accepted here.
+                # `unique-exports` is deliberately NOT an alternative: it is a rule
+                # that `no-mistakes check` runs, not a subcommand, so crediting
+                # `no-mistakes unique-exports` would score an unusable command as
+                # a real one. The duplication cases now scope it inside the command
+                # group for the same reason.
+                r"no-mistakes\s+(check|exports-of|symbols|dead-exports)(?![\w-])",
+            ),
+            # 07-09: written and committed BEFORE the queue clause was screened.
+            # 07 probes a subject that clause names, in wording it does not use;
+            # 08 probes a subject the description already names, also reworded;
+            # 09 probes a subject no description names, to keep testing whether
+            # an unnamed subject is reached at all.
+            (
+                "heldout-07-second-producer",
+                "we're about to add another writer to the slack lifecycle "
+                "outbox. what already puts things on it, and what reads them "
+                "back off?",
+                [
+                    (
+                        "both-sides-of-the-queue",
+                        """
+                        The question asks for both ends of a queue: everything that
+                        enqueues onto it, and everything that consumes from it. Producer
+                        and consumer share no import edge, so following imports alone
+                        cannot connect them.
+
+                        The stated priority is recall: naming an extra candidate is
+                        acceptable, missing a real producer or consumer is not.
+
+                        Passing: the plan identifies both sides by queue or job identity
+                        — the queue name, job name, or the queue definition they share —
+                        rather than by import-following from the file the asker named. It
+                        must cover both directions; a plan that finds only consumers, or
+                        only producers, is incomplete for this question.
+
+                        Failing: the plan follows imports from one file and stops, treats
+                        the enqueue site as the whole answer, or assumes every producer
+                        lives in the same package.
+
+                        The checkout is unavailable, so declining to name the actual
+                        producers is correct. Grade the method.
+                        """,
+                    ),
+                ],
+                r"no-mistakes\s+queues\s+(related|edges)(?![\w-])",
+            ),
+            (
+                "heldout-08-deleting-a-page",
+                "we're deleting `services/web/src/app/admin/billing/page.tsx`. "
+                "will anything in `e2e/` go red?",
+                [
+                    (
+                        "route-to-spec-coverage",
+                        """
+                        The question is whether Playwright specs exercise the route this
+                        file backs. The link is the ROUTE PATH, not the file path: a spec
+                        navigates to `/admin/billing` and never mentions
+                        `page.tsx`, so grepping the filename across `e2e/` finds nothing
+                        and would wrongly report no coverage.
+
+                        The stated priority is recall: listing a spec that turns out to be
+                        unaffected is acceptable, missing one that breaks is not.
+
+                        Passing: the plan maps the file to its App Router route path and
+                        then finds specs by that route, or uses a command that resolves
+                        route-to-spec coverage directly. Mentioning selectors or test ids
+                        the page owns is a valid addition.
+
+                        Failing: the only proposed method is a text search for the file
+                        name or component name inside `e2e/`, or the plan concludes there
+                        is no coverage without having mapped the route.
+
+                        The checkout is unavailable, so declining to say which specs exist
+                        is correct. Grade the method.
+                        """,
+                    ),
+                ],
+                r"no-mistakes\s+(playwright|tests\s+plan\s+playwright)(?![\w-])",
+            ),
+            (
+                "heldout-09-which-workflows",
+                "if i touch `modules/shared`, which github actions workflows "
+                "actually end up running?",
+                [
+                    (
+                        "workflow-trigger-impact",
+                        """
+                        The question is which CI workflows a change to one package
+                        actually triggers — a function of path filters, workflow triggers,
+                        and job dependencies, not of what the workflow files are named.
+
+                        The stated priority is recall: naming a workflow that turns out
+                        not to run is acceptable, missing one that does is not.
+
+                        Passing: the plan reads the workflow definitions and reasons about
+                        path filters / triggers to decide which fire for the changed
+                        paths, and accounts for jobs pulled in by `needs` rather than only
+                        directly triggered ones.
+
+                        Failing: the plan lists every workflow file as if all of them run,
+                        guesses from workflow names, or checks only whether a workflow
+                        mentions the package by name.
+
+                        The checkout is unavailable, so declining to name the actual
+                        workflows is correct. Grade the method.
+                        """,
+                    ),
+                ],
+                r"no-mistakes\s+ci\s+(impact|topology)(?![\w-])",
             ),
         ],
     ),
@@ -635,7 +736,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(queues|server)\s+related",
+                r"no-mistakes\s+queues\s+(related|edges)(?![\w-])",
             ),
             (
                 "queues-02-consumers",
@@ -656,7 +757,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(queues|server)\s+related",
+                r"no-mistakes\s+queues\s+(related|edges)(?![\w-])",
             ),
             (
                 "queues-03-payload-change",
@@ -677,7 +778,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(queues|server)\s+related",
+                r"no-mistakes\s+queues\s+(related|edges)(?![\w-])",
             ),
             (
                 "queues-04-architecture",
@@ -697,7 +798,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(queues|server)\s+related",
+                r"no-mistakes\s+queues\s+(related|edges)(?![\w-])",
             ),
             (
                 "queues-05-neg-retry-comment",
@@ -745,7 +846,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(impacted-checks|check|resolve-check)",
+                r"no-mistakes\s+(impacted-checks|check|resolve-check)(?![\w-])",
             ),
             (
                 "after-edit-02-empty-plan",
@@ -789,7 +890,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(resolve-check|dependents|importers)",
+                r"no-mistakes\s+(resolve-check|dependents|importers)(?![\w-])",
             ),
             (
                 "after-edit-04-handoff",
@@ -809,7 +910,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(resolve-check|check|impacted-checks)",
+                r"no-mistakes\s+(resolve-check|check|impacted-checks)(?![\w-])",
             ),
             (
                 "after-edit-05-neg-script-name",
@@ -853,7 +954,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(call-sites|symbols|dependents)",
+                r"no-mistakes\s+(call-sites|symbols|dependents)(?![\w-])",
             ),
             (
                 "signature-02-arg-shapes",
@@ -875,7 +976,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+call-sites",
+                r"no-mistakes\s+call-sites(?![\w-])",
             ),
             (
                 "signature-03-return-type",
@@ -895,7 +996,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(symbols|call-sites|dependents)",
+                r"no-mistakes\s+(symbols|call-sites|dependents)(?![\w-])",
             ),
             (
                 "signature-04-public-api",
@@ -915,7 +1016,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(exports-of|symbols|dependents)",
+                r"no-mistakes\s+(exports-of|symbols|dependents)(?![\w-])",
             ),
             (
                 "signature-05-neg-jsdoc",
@@ -961,7 +1062,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+ci\s+(impact|topology)",
+                r"no-mistakes\s+ci\s+(impact|topology)(?![\w-])",
             ),
             (
                 "ci-02-why-ran",
@@ -981,7 +1082,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+ci\s+(impact|topology)",
+                r"no-mistakes\s+ci\s+(impact|topology)(?![\w-])",
             ),
             (
                 "ci-03-topology",
@@ -1001,7 +1102,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+ci\s+topology",
+                r"no-mistakes\s+ci\s+topology(?![\w-])",
             ),
             (
                 "ci-04-unused-action",
@@ -1022,7 +1123,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+ci\s+(impact|topology)",
+                r"no-mistakes\s+ci\s+(impact|topology)(?![\w-])",
             ),
             (
                 "ci-05-neg-runs-on",
@@ -1286,7 +1387,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"--format\s+json|--json",
+                r"(--format\s+json|--json)(?![\w-])",
             ),
             (
                 "usage-02-monorepo-tsconfig",
@@ -1352,7 +1453,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"--format\s+json|--json",
+                r"(--format\s+json|--json)(?![\w-])",
             ),
         ],
     ),
@@ -1411,7 +1512,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"--format\s+json|--json",
+                r"(--format\s+json|--json)(?![\w-])",
             ),
             (
                 "safety-03-neg-json-flag",
@@ -1457,7 +1558,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(check|symbols|exports-of|dead-exports)|unique-exports",
+                r"no-mistakes\s+(check|symbols|exports-of|dead-exports|unique-exports)(?![\w-])",
             ),
             (
                 "duplication-02-agent-recreated",
@@ -1476,7 +1577,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+check|unique-exports",
+                r"no-mistakes\s+(check|unique-exports)(?![\w-])",
             ),
             (
                 "duplication-03-parallel-implementations",
@@ -1498,7 +1599,7 @@ EXTRA_FLOWS = [
                         """,
                     ),
                 ],
-                r"no-mistakes\s+(check|symbols|exports-of|dependents)",
+                r"no-mistakes\s+(check|symbols|exports-of|dependents)(?![\w-])",
             ),
             (
                 "duplication-04-neg-diff-two-functions",

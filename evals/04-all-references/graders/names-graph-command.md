@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-no-mistakes\s+(dependents|call-sites|symbols|importers)
+no-mistakes\s+(dependents|call-sites|symbols|importers)(?![\w-])

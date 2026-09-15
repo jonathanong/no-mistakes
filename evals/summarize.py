@@ -244,11 +244,14 @@ _REAL_COMMAND = re.compile(
 
 
 def _refers_as(text: str) -> str:
+    # Slash form first. `\b` in `_REAL_COMMAND` also matches between `/` and `no`,
+    # so testing real commands first would score the nonexistent
+    # `/no-mistakes check` as a real CLI command and hide it from the tables.
+    if re.search(r"/no-mistakes\b", text):
+        return "invented command form"
     if _REAL_COMMAND.search(text):
         return "real CLI command"
-    if re.search(r"/no-mistakes\b", text) or re.search(
-        r"\bno-mistakes\s+[A-Za-z_][A-Za-z0-9_]*", text
-    ):
+    if re.search(r"\bno-mistakes\s+[A-Za-z_][A-Za-z0-9_]*", text):
         return "invented command form"
     if "no-mistakes" in text:
         return "named, no command"
@@ -258,6 +261,12 @@ def _refers_as(text: str) -> str:
 def mentions(path: str) -> None:
     """Classify how the runs that did NOT fire refer to the tool."""
     report = json.loads(pathlib.Path(path).read_text())
+    if report.get("partial"):
+        # Same reasoning as the suppressed trigger aggregate: these buckets are
+        # comparable across descriptions only if they cover the same cases, and
+        # a partial run covers whichever prefix happened to finish.
+        print("    non-firing runs: SUPPRESSED (partial run)")
+        return
     groups: dict = {}
     for case in report["cases"]:
         group = "should-fire" if _is_should_fire(case["name"]) else "negative"
