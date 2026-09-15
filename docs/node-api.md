@@ -498,6 +498,10 @@ disable. `failOnLock: true` fails immediately on contention and overrides
 Pass `0` or omit it to use the CPU count (matching CLI `--jobs 0`). A
 positive integer pins the pool on the first N-API call in the process.
 
+`import-dynamic` follows every string-literal `import()`, including `if` /
+`switch` / nested-function / JSX-handler loaders (`conditional-dynamic-import`
+when the static call graph does not prove they run).
+
 Forward `dependencies` reports stay on the lazy reachable-file walk when every
 requested relationship is an import kind (`import`, `import-static`,
 `import-dynamic`, `import-type`, `import-require`). `dependents` and `related`

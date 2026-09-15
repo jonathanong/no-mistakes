@@ -100,6 +100,9 @@ src/main.mts
 - Bare npm specifiers (`express`, `@scope/pkg`) are terminal module nodes
 - `package.json` dependency declarations are reported as `package` edges
 - Static imports/re-exports, type-only imports/references, string-literal dynamic `import()`, and string-literal `require()` are tracked under `--relationship import`
+- `--relationship import-dynamic` follows every string-literal `import()`,
+  including `if`/`switch`, nested functions, and JSX handlers
+  (`conditional-dynamic-import` when the call graph does not prove execution)
 - `--relationship route-import` follows runtime static imports/re-exports and
   literal dynamic imports without function-reachability pruning. It excludes
   type-only imports and `require()`. Use `route` for URL-route, Playwright

@@ -26,9 +26,8 @@ fn collect_import_edges(
             facts
                 .imports
                 .iter()
-                .filter(|imp| import_is_reachable(imp, facts, reachable))
                 .filter_map(|imp| {
-                    let kind = edge_kind_for_import(imp);
+                    let kind = graph_edge_kind_for_extracted_import(imp, facts, reachable)?;
                     let classification =
                         resolver.classify_import(&imp.specifier, path, workspace, graph_files);
                     let target = if kind == EdgeKind::RequireResolve {

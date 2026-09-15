@@ -164,7 +164,9 @@ pub(crate) fn path_confidence(edges: &[EdgeKind]) -> Confidence {
             | EdgeKind::TerraformReference
             | EdgeKind::TerraformModuleRef
             | EdgeKind::TerraformOutputRef => return Confidence::Low,
-            EdgeKind::DynamicImport => conf = Confidence::Medium,
+            EdgeKind::DynamicImport | EdgeKind::ConditionalDynamicImport => {
+                conf = Confidence::Medium
+            }
             _ => {}
         }
     }
@@ -176,6 +178,7 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::Import
         | EdgeKind::TypeImport
         | EdgeKind::DynamicImport
+        | EdgeKind::ConditionalDynamicImport
         | EdgeKind::RouteImport
         | EdgeKind::Require
         | EdgeKind::RequireResolve
@@ -195,11 +198,11 @@ pub(crate) fn impact_reason_label(edge: EdgeKind) -> &'static str {
         EdgeKind::Resource => "resource",
         EdgeKind::ReactRender => "react-render",
         EdgeKind::Selector => "selector",
-            EdgeKind::SwiftImport | EdgeKind::SwiftReference => "swift",
-            EdgeKind::SwiftPackageDependency => "swift package dependency",
-            EdgeKind::DotnetUsing | EdgeKind::DotnetReference => "dotnet",
-            EdgeKind::DotnetProjectDependency => "dotnet project dependency",
-            EdgeKind::TerraformReference => "terraform-ref",
+        EdgeKind::SwiftImport | EdgeKind::SwiftReference => "swift",
+        EdgeKind::SwiftPackageDependency => "swift package dependency",
+        EdgeKind::DotnetUsing | EdgeKind::DotnetReference => "dotnet",
+        EdgeKind::DotnetProjectDependency => "dotnet project dependency",
+        EdgeKind::TerraformReference => "terraform-ref",
         EdgeKind::TerraformModuleRef => "terraform-module",
         EdgeKind::TerraformOutputRef => "terraform-output",
         EdgeKind::PythonImport | EdgeKind::PythonReference => "python",

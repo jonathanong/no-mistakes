@@ -337,7 +337,7 @@ fn generate_plan_with_prepared_inner(
                     reverse_details.push(resource_edge_detail(graph, &curr, parent, *kind, root));
 
                     match kind {
-                        EdgeKind::DynamicImport => {
+                        EdgeKind::DynamicImport | EdgeKind::ConditionalDynamicImport => {
                             let warn = Warning {
                                 r#type: "dynamic-import".to_string(),
                                 message: format!(

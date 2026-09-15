@@ -62,7 +62,7 @@ documented limit. The TS/JS command is the reference behavior.
 
 **Module graph.** `dependencies`, `dependents`, and `related` over typed
 edges in the canonical `DepGraph`. TS/JS uses `import`, `type-import`,
-`dynamic-import`, `require`, `workspace`, and `package`. Swift and .NET
+`dynamic-import`, `conditional-dynamic-import`, `require`, `workspace`, and `package`. Swift and .NET
 already show the non-TS pattern: language-specific edge kinds behind
 `--relationship swift` or `--relationship dotnet`. `importers` stays the
 fast TS/JS-only reverse static-import scan; it does not walk language

@@ -112,9 +112,8 @@ fn import_neighbors_from_facts(
     let mut neighbors: Vec<(NodeId, EdgeKind)> = file_facts
         .imports
         .iter()
-        .filter(|imp| import_is_reachable(imp, file_facts, &reachable))
         .filter_map(|imp| {
-            let kind = edge_kind_for_import(imp);
+            let kind = graph_edge_kind_for_extracted_import(imp, file_facts, &reachable)?;
             let classification =
                 resolver.classify_import(&imp.specifier, path, workspace, graph_files);
             if let Some(target) = classification.workspace_path() {

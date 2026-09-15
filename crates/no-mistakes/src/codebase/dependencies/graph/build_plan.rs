@@ -100,6 +100,7 @@ impl GraphBuildPlan {
                 || allowed.contains(&EdgeKind::Import)
                 || allowed.contains(&EdgeKind::TypeImport)
                 || allowed.contains(&EdgeKind::DynamicImport)
+                || allowed.contains(&EdgeKind::ConditionalDynamicImport)
                 || allowed.contains(&EdgeKind::Require)
                 || allowed.contains(&EdgeKind::RequireResolve),
             route_imports: allowed.contains(&EdgeKind::RouteImport),

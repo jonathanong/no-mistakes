@@ -19,11 +19,9 @@ fn graph_includes_external_module_and_package_dependency_nodes() {
         entry.node == NodeId::file(root.join("packages/local/src/index.mts"))
             && entry.via.contains(&EdgeKind::WorkspaceImport)
     }));
-    assert!(
-        !deps
-            .iter()
-            .any(|entry| entry.node == NodeId::module("@local/pkg"))
-    );
+    assert!(!deps
+        .iter()
+        .any(|entry| entry.node == NodeId::module("@local/pkg")));
 
     let manifest_deps = graph.deps_of(&[NodeId::file(root.join("package.json"))], None, None);
     assert!(manifest_deps.iter().any(|entry| {
@@ -61,6 +59,31 @@ fn import_fact_kinds_map_to_edge_kinds() {
     assert_eq!(edge_kind_for_import(&import), EdgeKind::Require);
     import.kind = ImportKind::RequireResolve;
     assert_eq!(edge_kind_for_import(&import), EdgeKind::RequireResolve);
+}
+
+#[test]
+fn unproven_dynamic_import_is_a_conditional_edge() {
+    let import = ExtractedImport {
+        specifier: "./target.mts".to_string(),
+        kind: ImportKind::Dynamic,
+        line: 1,
+        function_scope: Some("<anonymous:1>".to_string()),
+        function_scope_id: Some(crate::codebase::dependencies::extract::CallableId(10)),
+        side_effect_only: false,
+        re_export: false,
+        runtime_reachable: false,
+    };
+    let facts = crate::codebase::ts_source::facts::TsFileFacts::default();
+    assert_eq!(
+        graph_edge_kind_for_extracted_import(&import, &facts, &HashSet::new()),
+        Some(EdgeKind::ConditionalDynamicImport)
+    );
+    let mut reachable = import;
+    reachable.runtime_reachable = true;
+    assert_eq!(
+        graph_edge_kind_for_extracted_import(&reachable, &facts, &HashSet::new()),
+        Some(EdgeKind::DynamicImport)
+    );
 }
 
 #[test]

@@ -8,6 +8,21 @@ fn edge_kind_for_import(import: &ExtractedImport) -> EdgeKind {
     }
 }
 
+/// Reachable `import()` stays `DynamicImport`. Unproven `import()` (JSX
+/// handlers, uncalled loaders) is still a graph edge, tagged separately.
+fn graph_edge_kind_for_extracted_import(
+    import: &ExtractedImport,
+    facts: &crate::codebase::ts_source::facts::TsFileFacts,
+    reachable: &HashSet<crate::codebase::dependencies::extract::CallableId>,
+) -> Option<EdgeKind> {
+    let reachable_import = import_is_reachable(import, facts, reachable);
+    match import.kind {
+        ImportKind::Dynamic if !reachable_import => Some(EdgeKind::ConditionalDynamicImport),
+        _ if !reachable_import => None,
+        _ => Some(edge_kind_for_import(import)),
+    }
+}
+
 fn import_is_reachable(
     import: &ExtractedImport,
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
@@ -69,7 +84,8 @@ fn has_reachable_unknown_call(
     facts.unknown_calls.iter().any(|call| match call.caller_id {
         None if call.caller.is_none() => true,
         Some(id) => {
-            reachable.contains(&id) || exported_function_scope(facts, call.caller.as_deref(), Some(id))
+            reachable.contains(&id)
+                || exported_function_scope(facts, call.caller.as_deref(), Some(id))
         }
         None => exported_function_scope(facts, call.caller.as_deref(), None),
     })
@@ -84,9 +100,10 @@ fn exported_function_scope(
         .exported_functions
         .iter()
         .any(|exported| Some(exported.as_str()) == scope)
-        || facts.exported_bindings.iter().any(|binding| {
-            binding.specifier.is_none() && Some(binding.local.as_str()) == scope
-        });
+        || facts
+            .exported_bindings
+            .iter()
+            .any(|binding| binding.specifier.is_none() && Some(binding.local.as_str()) == scope);
     if !name_exported {
         return false;
     }
