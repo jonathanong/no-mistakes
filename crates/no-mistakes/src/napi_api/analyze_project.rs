@@ -22,6 +22,9 @@ use types::{
 };
 
 #[cfg(test)]
+#[path = "analyze_project/tests/architecture_override_seed.rs"]
+mod architecture_override_seed_tests;
+#[cfg(test)]
 #[path = "analyze_project/tests/architecture_override.rs"]
 mod architecture_override_tests;
 #[cfg(test)]

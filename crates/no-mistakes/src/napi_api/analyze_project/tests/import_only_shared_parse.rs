@@ -191,6 +191,8 @@ fn mixed_dependents_still_seed_later_import_only_reports() {
 
 #[test]
 fn ineligible_reports_do_not_block_import_only_graph_seed() {
+    // Mixed includeSymbols/workspace reports used to build the canonical graph
+    // inside par_iter and deadlock (release Validate job 104231016976).
     let root = lazy_import_root();
     let observer = crate::diagnostics::InvocationObserver::new(true);
     let output = {

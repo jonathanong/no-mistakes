@@ -190,13 +190,18 @@ descriptor-resolution semantics.
 Overlapping import-only `analyzeProject` `dependencies` reports must parse each
 reachable file once, build one import graph, then project. Preparation seeds
 that graph from the union of report roots; `reports.par_iter()` only runs
-`deps_of`. ast-grep cannot see that cross-function shape, so
+`deps_of`. Mixed ineligible reports (`includeSymbols`, `workspace`, dependents)
+must seed the canonical graph on the preparing thread as well — nested rayon
+inside `par_iter` deadlocks when one worker builds `graph_shared` and another
+waits on its `OnceLock`. ast-grep cannot see that cross-function shape, so
 `overlapping_import_only_dependency_reports_parse_each_file_once` locks
 `parse.files` to the unique reachable set,
 `overlapping_import_only_reports_share_one_graph_and_shared_neighbors` locks
-`graph.builds` to 1 with per-report closures, and
+`graph.builds` to 1 with per-report closures,
 `import_only_reports_project_from_one_lazy_graph` requires the seed and
-`lazy_import_graph` projection.
+`lazy_import_graph` projection, and
+`mixed_graph_reports_seed_canonical_graph_before_parallel_projection` requires
+the canonical-graph seed before report execution.
 
 ### `no-process-spawn-in-file-loop`
 
