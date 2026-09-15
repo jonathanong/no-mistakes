@@ -164,19 +164,20 @@ fn topology_impact_report_rejects_missing_repo_nested_root_and_unknown_revisions
         "{missing_err:#}"
     );
 
-    let crate_dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    let nested_err = topology_impact_report(&crate_dir.join("src"), "HEAD", "HEAD", "ci.yml")
+    // Use a materialized fixture git repo, not the checkout. Release Validate
+    // unpacks a `git archive` tarball with no `.git`, so CARGO_MANIFEST_DIR
+    // cannot open a repository or resolve revisions.
+    let fixture = fixture("reusable-renamed");
+    let repo = fixture.path().join("base");
+    let nested_err = topology_impact_report(&repo.join(".github"), "HEAD", "HEAD", "ci.yml")
         .expect_err("nested roots must fail");
-    let nested = format!("{nested_err:#}");
     assert!(
-        nested.contains("worktree root") || nested.contains("open repository"),
-        "{nested}"
+        format!("{nested_err:#}").contains("worktree root"),
+        "{nested_err:#}"
     );
 
-    let workspace = crate::codebase::ts_resolver::normalize_path(&crate_dir.join("../.."));
-    let revision_err =
-        topology_impact_report(&workspace, "no-mistakes-missing-base", "HEAD", "ci.yml")
-            .expect_err("unknown base revision must fail");
+    let revision_err = topology_impact_report(&repo, "no-mistakes-missing-base", "HEAD", "ci.yml")
+        .expect_err("unknown base revision must fail");
     assert!(
         format!("{revision_err:#}").contains("resolve base"),
         "{revision_err:#}"
