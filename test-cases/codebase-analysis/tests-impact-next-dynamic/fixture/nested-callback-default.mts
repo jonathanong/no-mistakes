@@ -1,8 +1,8 @@
-// The lazy binding is unused; the default wraps a callback that shadows its
-// name. `foo.mts` must NOT be reachable from this file's test.
-import dynamic from 'next/dynamic';
+// Unused `const Lazy = dynamic(() => import('./foo.mts'))` is still a
+// string-literal `import()`, so `foo.mts` is reachable from this file's test.
+import dynamic from "next/dynamic";
 
-const Lazy = dynamic(() => import('./foo.mts'));
+const Lazy = dynamic(() => import("./foo.mts"));
 
 const wrap = (component: () => unknown) => component;
 
