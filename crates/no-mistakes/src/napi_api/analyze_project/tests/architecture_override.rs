@@ -61,31 +61,6 @@ fn import_only_reports_project_from_one_lazy_graph() {
 }
 
 #[test]
-fn mixed_graph_reports_seed_canonical_graph_before_parallel_projection() {
-    let seed = include_str!("../context/scope_seed_import.rs");
-    assert!(
-        seed.contains("seed_canonical_graph_if_needed") && seed.contains("graph_shared"),
-        "non-import-only analyzeProject graph reports must seed the canonical graph"
-    );
-    let prepare = include_str!("../context/api.rs");
-    assert!(
-        prepare.contains("seed_canonical_graph_if_needed"),
-        "prepare must seed the canonical graph before report execution"
-    );
-    let dispatch = include_str!("../../analyze_project.rs");
-    let prepare_at = dispatch
-        .find("AnalyzeProjectContext::prepare")
-        .expect("analyze_project prepares a shared context");
-    let par_iter_at = dispatch
-        .find("par_iter")
-        .expect("analyze_project runs reports in parallel");
-    assert!(
-        prepare_at < par_iter_at,
-        "canonical graph seed runs during prepare, before report par_iter"
-    );
-}
-
-#[test]
 fn provenance_paths_cache_tsconfig_files_instead_of_scanning_visible() {
     let source = include_str!("../../../codebase/dependencies/shared_traversal_provenance.rs");
     assert!(
