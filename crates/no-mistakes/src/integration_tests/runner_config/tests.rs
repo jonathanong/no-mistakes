@@ -242,6 +242,43 @@ fn runner_config_request_cache_reuses_program_for_graph_facts() {
 }
 
 #[test]
+fn runner_config_request_cache_skips_non_js_ts_paths_for_helper_facts() {
+    // A JSON path reached through a vitest setup import chain (see
+    // `setup_resolution.rs`) is never handed to `ParsedProgramCache`, so it
+    // must never gain a synthetic TS `parse_error` helper fact: that would
+    // abort the whole check run for a file type this crate never parses.
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/check/integration-setup-json-import"),
+    );
+    let path = crate::codebase::ts_resolver::normalize_path(
+        &root.join("localization/catalog/aliases.json"),
+    );
+    let prepared = prepare_vitest(&root, StringOrList::One("vitest.config.mts".to_string()));
+    let fact_plan = RunnerConfigFactPlan {
+        root: root.clone(),
+        primary_files: [path.clone()].into(),
+        graph_files: Default::default(),
+        primary_plan: Default::default(),
+        graph_plan: Default::default(),
+        playwright: None,
+    };
+    let source = std::fs::read_to_string(&path).unwrap();
+
+    let (_, helper_facts) = prepared.with_request_cache(Some(fact_plan), || {
+        // `with_program` rejects `.json` (`unsupported JavaScript/TypeScript
+        // file`); the resulting cached parse error must not leak into
+        // helper facts for a path `is_indexable` would never admit.
+        let _ = with_program(&path, &source, |_, _| ());
+    });
+
+    assert!(
+        !helper_facts.contains_key(&path),
+        "a non-JS/TS path must never gain a synthetic TS parse_error fact"
+    );
+}
+
+#[test]
 fn parsed_runner_configs_filter_analyses_and_return_matching_projects() {
     let root = PathBuf::from("fixture");
     let config_path = root.join("vitest.config.ts");

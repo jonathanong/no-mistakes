@@ -39,6 +39,15 @@ impl RequestCache {
                 if self.helper_facts.contains_key(path) {
                     continue;
                 }
+                // Mirror the admission check ordinary collection uses
+                // (`collect_fact_map_with_sources`/`_sequential_with_sources`).
+                // A primary/graph path can be a non-JS/TS file reached only as
+                // a setup-dependency trigger candidate (e.g. a JSON import),
+                // and it is never handed to `ParsedProgramCache`, so it must
+                // never gain a synthetic TS `parse_error` fact here either.
+                if !crate::codebase::dependencies::extract::is_indexable(path) {
+                    continue;
+                }
                 let Some(detail) = self.programs.parse_error(path) else {
                     continue;
                 };
