@@ -266,6 +266,21 @@ fn check_json_enforces_exact_postgres_add_column_migration_allowlist() {
 }
 
 #[test]
+fn check_json_tolerates_json_imports_reached_through_a_vitest_setup_file() {
+    // A downstream monorepo's vitest setup file transitively imports a JSON
+    // catalog via `with { type: 'json' }`. The setup-dependency walk must
+    // keep that JSON path as a trigger candidate without ever handing it to
+    // the TS/JS parser, so the aggregate check must not abort.
+    let root = static_check_fixture("integration-setup-json-import");
+    let result = check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root }).to_string(),
+    ));
+    if let Err(error) = result {
+        panic!("{error:#}");
+    }
+}
+
+#[test]
 fn check_json_reports_both_markdown_rule_ids() {
     let source = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../test-cases/rules/markdown-report/fixture");

@@ -86,6 +86,15 @@ fn collect_runtime_setup_candidates(
     if seen.len() >= MAX_RUNTIME_SETUP_MODULES || !seen.insert(path.to_path_buf()) {
         return;
     }
+    // A resolved specifier can point at a non-JS/TS runtime asset, e.g. a
+    // JSON catalog imported with `with { type: 'json' }`. The caller already
+    // recorded it in `candidates` (via `resolution_candidates`) before
+    // recursing here, so it stays a deletion-trigger candidate; it just has
+    // no AST to walk for further transitive imports, and must never reach
+    // `with_program` (which rejects non-JS/TS extensions).
+    if !crate::codebase::dependencies::extract::is_indexable(path) {
+        return;
+    }
     let Ok(source) = crate::integration_tests::runner_config::read_request_source(path) else {
         return;
     };
