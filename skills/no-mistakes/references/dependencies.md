@@ -37,6 +37,12 @@ no-mistakes dependencies src/main.mts --root /path/to/project --test vitest
 # Follow only import edges (skip test/route/queue/md/ci/workspace edges)
 no-mistakes dependencies src/main.mts --root /path/to/project --relationship import
 
+# Bound the initial inventory and emit compact `{ files, diagnostics }` JSON
+no-mistakes dependencies web/app/page.tsx --root /path/to/project \
+  --relationship import-static --relationship import-dynamic --relationship import-type \
+  --candidate-include 'web/**' --candidate-exclude '**/*.test.*' \
+  --projection paths --format json
+
 # Follow the conservative runtime module closure used by Playwright routes
 no-mistakes dependencies web/app/page.tsx --root /path/to/project --relationship route-import
 

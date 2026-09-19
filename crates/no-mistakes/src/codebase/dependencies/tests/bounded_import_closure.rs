@@ -187,11 +187,18 @@ fn bounded_inventory_excludes_unrelated_tests_and_escapes_workspace_paths() {
     );
     assert!(value.get("roots").is_none(), "{value}");
     assert!(value.get("tsconfig_provenance").is_none(), "{value}");
-    assert!(value.get("diagnostics").is_some(), "{value}");
+    assert_eq!(
+        value.as_object().unwrap().keys().collect::<Vec<_>>(),
+        ["files", "diagnostics"]
+    );
 
     let work = observer.snapshot().work;
     assert!(work["graph.candidate_excluded"] >= 2, "{work:#?}");
     assert!(work["graph.candidate_files"] >= 1, "{work:#?}");
+    assert!(
+        work["parse.files"] >= 1 && work["parse.files"] <= 4,
+        "{work:#?}"
+    );
     let inventory =
         CandidateInventory::new(&["web/**".to_string()], &["**/*.test.*".to_string()]).unwrap();
     assert!(!inventory.matches(&root, &root.join("web/app/page.test.tsx")));
@@ -208,7 +215,7 @@ fn compact_projection_does_not_change_reachable_paths() {
         serde_json::from_str(&run_json(graph_args, Direction::Deps).unwrap()).unwrap();
     let compact: Value = serde_json::from_str(
         &run_json(
-            bounded_args(root, vec![PathBuf::from("web/app/page.tsx")]),
+            bounded_args(root.clone(), vec![PathBuf::from("web/app/page.tsx")]),
             Direction::Deps,
         )
         .unwrap(),
@@ -217,6 +224,15 @@ fn compact_projection_does_not_change_reachable_paths() {
     assert_eq!(sorted_graph_paths(&graph), closure_paths(&compact));
     assert!(graph.get("roots").is_some());
     assert!(compact.get("roots").is_none());
+    let again: Value = serde_json::from_str(
+        &run_json(
+            bounded_args(root, vec![PathBuf::from("web/app/page.tsx")]),
+            Direction::Deps,
+        )
+        .unwrap(),
+    )
+    .unwrap();
+    assert_eq!(compact, again);
 }
 
 #[test]

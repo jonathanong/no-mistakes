@@ -20,6 +20,53 @@ fn bounded_root() -> String {
 }
 
 #[test]
+fn additive_bounded_report_does_not_change_unbounded_deps_fields() {
+    let root = simple_root();
+    let baseline = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": root,
+            "reports": [{
+                "type": "dependencies",
+                "id": "open",
+                "files": ["a.mts"],
+                "relationships": ["import-static", "import-dynamic", "import-type"]
+            }]
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let mixed = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": root,
+            "reports": [
+                {
+                    "type": "dependencies",
+                    "id": "open",
+                    "files": ["a.mts"],
+                    "relationships": ["import-static", "import-dynamic", "import-type"]
+                },
+                {
+                    "type": "dependencies",
+                    "id": "closure",
+                    "files": ["a.mts"],
+                    "relationships": ["import-static"],
+                    "candidateInclude": ["**/*"],
+                    "projection": "paths"
+                }
+            ]
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let baseline: Value = serde_json::from_str(&baseline).unwrap();
+    let mixed: Value = serde_json::from_str(&mixed).unwrap();
+    assert_eq!(
+        mixed["reports"][0]["result"],
+        baseline["reports"][0]["result"]
+    );
+}
+
+#[test]
 fn additive_bounded_report_does_not_change_dependents_fields() {
     let root = simple_root();
     let baseline = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
@@ -168,5 +215,22 @@ fn dependents_report_rejects_candidate_include() {
     let err =
         analyze_project_json_impl(crate::napi_api::options::test_json_arg(request.to_string()))
             .unwrap_err();
+    assert!(format!("{err}").contains("dependencies"), "{err}");
+}
+
+#[test]
+fn related_report_rejects_candidate_exclude() {
+    let err = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": simple_root(),
+            "reports": [{
+                "type": "related",
+                "files": ["b.mts"],
+                "candidateExclude": ["**/*.test.*"]
+            }]
+        })
+        .to_string(),
+    ))
+    .unwrap_err();
     assert!(format!("{err}").contains("dependencies"), "{err}");
 }
