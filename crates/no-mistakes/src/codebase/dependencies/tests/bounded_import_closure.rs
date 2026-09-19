@@ -153,6 +153,45 @@ fn bounded_import_key_ignores_glob_order_and_duplicates() {
 }
 
 #[test]
+fn scoped_seed_diagnostics_keep_fileless_and_skip_duplicates() {
+    let file = PathBuf::from("/repo/src/a.ts");
+    let other = PathBuf::from("/repo/src/b.ts");
+    let duplicate = crate::codebase::ts_resolver::TsConfigDiagnostic {
+        kind: crate::codebase::ts_resolver::TsConfigDiagnosticKind::AmbiguousOwnership,
+        config: None,
+        file: Some(file.clone()),
+        detail: "dup".into(),
+        candidates: Vec::new(),
+    };
+    let fileless = crate::codebase::ts_resolver::TsConfigDiagnostic {
+        kind: crate::codebase::ts_resolver::TsConfigDiagnosticKind::InvalidConfig,
+        config: None,
+        file: None,
+        detail: "global".into(),
+        candidates: Vec::new(),
+    };
+    let outside = crate::codebase::ts_resolver::TsConfigDiagnostic {
+        kind: crate::codebase::ts_resolver::TsConfigDiagnosticKind::AmbiguousOwnership,
+        config: None,
+        file: Some(other),
+        detail: "out".into(),
+        candidates: Vec::new(),
+    };
+    let entries = [graph::NodeEntry {
+        node: graph::NodeId::file(file),
+        depth: 0,
+        via: Vec::new(),
+    }];
+    let mut runtime = vec![duplicate.clone()];
+    extend_scoped_seed_diagnostics(
+        &mut runtime,
+        &[duplicate.clone(), fileless.clone(), outside],
+        &entries,
+    );
+    assert_eq!(runtime, vec![duplicate, fileless]);
+}
+
+#[test]
 fn candidate_bounds_reject_dependents() {
     let args = bounded_args(bounded_root(), vec![PathBuf::from("web/app/page.tsx")]);
     let err = validate_candidate_bounds(&args, Direction::Dependents).unwrap_err();

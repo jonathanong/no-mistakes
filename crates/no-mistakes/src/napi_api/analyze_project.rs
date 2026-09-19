@@ -28,6 +28,9 @@ mod architecture_override_seed_tests;
 #[path = "analyze_project/tests/architecture_override.rs"]
 mod architecture_override_tests;
 #[cfg(test)]
+#[path = "analyze_project/tests/bounded_import_closure_seed.rs"]
+mod bounded_import_closure_seed_tests;
+#[cfg(test)]
 #[path = "analyze_project/tests/bounded_import_closure.rs"]
 mod bounded_import_closure_tests;
 #[cfg(test)]
