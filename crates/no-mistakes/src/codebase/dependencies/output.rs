@@ -4,6 +4,7 @@ use std::io::Write;
 use std::path::Path;
 
 include!("output_structured.rs");
+include!("output_paths_json.rs");
 
 /// Write findings as a JSON object: `{ "roots": [...], "files": [...] }`.
 pub fn write_json(

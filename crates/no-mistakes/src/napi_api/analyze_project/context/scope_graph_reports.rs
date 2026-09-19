@@ -6,6 +6,7 @@ impl PreparedScope {
         direction: Direction,
     ) -> Result<Box<RawValue>> {
         let args = super::traverse_args(request, options)?;
+        crate::codebase::dependencies::validate_candidate_bounds(&args, direction)?;
         let cwd = std::env::current_dir().context("reading current directory")?;
         let result = crate::codebase::dependencies::collect_and_filter_entries_prepared(
             &args,

@@ -23,6 +23,7 @@ impl SharedTraversalContext {
             root: &self.root,
             cwd,
             graph_files: &self.graph_files,
+            visible_lookup: None,
             include_symbols: args.include_symbols,
             workspace: &workspace,
             interner: self.session.interner(),
@@ -43,6 +44,7 @@ impl SharedTraversalContext {
                 tsconfig_catalog: Some(&self.tsconfig_catalog),
                 max_depth: None,
                 graph_files: &self.graph_files,
+                resolution_visible: None,
                 allowed: allowed.as_ref(),
                 facts: graph::LazyImportFacts::new(
                     self.facts

@@ -2,7 +2,7 @@ fn import_neighbors(
     path: &Path,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    graph_files: &GraphFiles,
+    visibility: ImportNeighborVisibility<'_>,
     allowed: Option<&HashSet<EdgeKind>>,
     fact_source: LazyImportFacts<'_>,
     session: &crate::codebase::analysis_session::AnalysisSession,
@@ -17,7 +17,7 @@ fn import_neighbors(
                 facts,
                 resolver,
                 workspace,
-                graph_files,
+                visibility,
                 allowed,
                 session.interner(),
             ),
@@ -37,7 +37,7 @@ fn import_neighbors(
                 facts.as_ref(),
                 resolver,
                 workspace,
-                graph_files,
+                visibility,
                 allowed,
                 session.interner(),
             ),
@@ -51,7 +51,7 @@ fn import_neighbors(
         &facts,
         resolver,
         workspace,
-        graph_files,
+        visibility,
         allowed,
         session.interner(),
     );
@@ -104,7 +104,7 @@ fn import_neighbors_from_facts(
     file_facts: &TsFileFacts,
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
-    graph_files: &GraphFiles,
+    visibility: ImportNeighborVisibility<'_>,
     allowed: Option<&HashSet<EdgeKind>>,
     interner: &PathInterner,
 ) -> Vec<(NodeId, EdgeKind)> {
@@ -114,24 +114,25 @@ fn import_neighbors_from_facts(
         .iter()
         .filter_map(|imp| {
             let kind = graph_edge_kind_for_extracted_import(imp, file_facts, &reachable)?;
+            let lookup = visibility.lookup();
             let classification =
-                resolver.classify_import(&imp.specifier, path, workspace, graph_files);
+                resolver.classify_import(&imp.specifier, path, workspace, lookup);
+            if let Some(target) = classification.resolver_path() {
+                let target = visibility.visible_path(target)?;
+                if is_indexable(&target) || kind == EdgeKind::RequireResolve {
+                    return Some((NodeId::file_in(interner, &target), kind));
+                }
+                return None;
+            }
             if let Some(target) = classification.workspace_path() {
-                let target = graph_files.visible_path(target)?;
+                let target = visibility.visible_path(target)?;
                 let kind = match imp.kind {
                     ImportKind::Type => EdgeKind::WorkspaceTypeImport,
                     ImportKind::RequireResolve => EdgeKind::RequireResolve,
                     _ => EdgeKind::WorkspaceImport,
                 };
-                if is_indexable(target) || kind == EdgeKind::RequireResolve {
-                    return Some((NodeId::file_in(interner, target), kind));
-                }
-                return None;
-            }
-            if let Some(target) = classification.preferred_path() {
-                let target = graph_files.visible_path(target)?;
-                if is_indexable(target) || kind == EdgeKind::RequireResolve {
-                    return Some((NodeId::file_in(interner, target), kind));
+                if is_indexable(&target) || kind == EdgeKind::RequireResolve {
+                    return Some((NodeId::file_in(interner, &target), kind));
                 }
                 return None;
             }

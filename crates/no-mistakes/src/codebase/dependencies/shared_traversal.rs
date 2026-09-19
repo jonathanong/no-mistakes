@@ -17,6 +17,11 @@ pub(crate) struct SharedTraversalContext {
     facts: Option<crate::codebase::ts_source::facts::TsFactMap>,
     graph: Option<std::sync::Arc<graph::DepGraph>>,
     lazy_import_graph: Option<std::sync::Arc<graph::DepGraph>>,
+    bounded_lazy_import_graphs: HashMap<BoundedImportKey, std::sync::Arc<graph::DepGraph>>,
+    bounded_seed_diagnostics:
+        HashMap<BoundedImportKey, Vec<crate::codebase::ts_resolver::TsConfigDiagnostic>>,
+    candidate_inventory_applied: bool,
+    escape_universe: Option<graph::GraphFiles>,
     graph_cache: SharedBuildCache<EffectiveGraphPlanKey, graph::DepGraph>,
     symbol_index_cache: SharedBuildCache<GraphFileUniverseKey, graph::SymbolIndex>,
     import_resolution_cache: crate::codebase::ts_resolver::ImportResolutionCache,
@@ -43,6 +48,8 @@ struct TraversalCacheKey {
     allowed: Vec<EdgeKind>,
     include_symbols: bool,
     import_only: bool,
+    candidate_include: Vec<String>,
+    candidate_exclude: Vec<String>,
 }
 
 #[derive(Clone)]

@@ -1,4 +1,4 @@
-#[derive(clap::Parser)]
+#[derive(Clone, clap::Parser)]
 pub struct TraverseArgs {
     /// Programmatic API symbol entrypoints parallel to `files`.
     #[arg(skip)]
@@ -54,6 +54,20 @@ pub struct TraverseArgs {
     #[arg(long = "symbols", default_value_t = false)]
     pub include_symbols: bool,
 
+    /// Pre-traversal include globs for the initial candidate inventory.
+    /// Import-only `dependencies` only. Unrelated excluded files are not parsed.
+    #[arg(long = "candidate-include", value_name = "GLOB")]
+    pub candidate_include: Vec<String>,
+
+    /// Pre-traversal exclude globs for the initial candidate inventory.
+    /// Import-only `dependencies` only. Reachable imports still escape this set.
+    #[arg(long = "candidate-exclude", value_name = "GLOB")]
+    pub candidate_exclude: Vec<String>,
+
+    /// Result projection. `paths` is a compact path-only JSON object.
+    #[arg(long = "projection", value_enum, default_value_t = TraverseProjection::Graph)]
+    pub projection: TraverseProjection,
+
     /// Legacy programmatic timing switch. CLI timing flags are root-global.
     #[arg(skip)]
     pub timings: bool,
@@ -63,4 +77,34 @@ pub struct TraverseArgs {
     /// Can be relative to --root or absolute.
     #[arg(required = true, value_name = "FILE")]
     pub files: Vec<PathBuf>,
+}
+
+impl Default for TraverseArgs {
+    fn default() -> Self {
+        Self {
+            file_symbols: Vec::new(),
+            file_entrypoints_are_structured: Vec::new(),
+            root: None,
+            tsconfig: None,
+            depth: None,
+            filters: Vec::new(),
+            target_modules: Vec::new(),
+            tests: Vec::new(),
+            format: None,
+            json: false,
+            relationships: Vec::new(),
+            include_symbols: false,
+            candidate_include: Vec::new(),
+            candidate_exclude: Vec::new(),
+            projection: TraverseProjection::Graph,
+            timings: false,
+            files: Vec::new(),
+        }
+    }
+}
+
+impl TraverseArgs {
+    pub(crate) fn has_candidate_bounds(&self) -> bool {
+        !self.candidate_include.is_empty() || !self.candidate_exclude.is_empty()
+    }
 }

@@ -675,7 +675,11 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type: "dependencies" \| "dependents" \| "related"; id\?: string } & BatchedTraverseOptions/,
+    /type: "dependencies"; id\?: string } & BatchedDependencyTraverseOptions/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "dependents" \| "related"; id\?: string } & BatchedTraverseOptions/,
   );
   assert.doesNotMatch(
     analyzeProjectDeclarations,
@@ -834,6 +838,31 @@ test("graph declarations expose tRPC relationships and virtual nodes", () => {
 test("graph declarations expose opt-in call relationships", () => {
   const declarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
   assert.match(declarations, /\| "call"/);
+});
+
+test("dependency declarations expose bounded import-closure inputs and compact output", () => {
+  const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  const closureDeclarations = readFileSync(join(packageRoot, "import-closure-types.d.ts"), "utf8");
+  const indexDeclarations = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  assert.doesNotMatch(traversalDeclarations, /candidateInclude\?: string\[\];/);
+  assert.match(closureDeclarations, /candidateInclude\?: string\[\];/);
+  assert.match(closureDeclarations, /candidateExclude\?: string\[\];/);
+  assert.match(closureDeclarations, /projection\?: "graph";/);
+  assert.match(closureDeclarations, /projection: "paths";/);
+  assert.match(closureDeclarations, /export type TraverseProjection = "graph" \| "paths";/);
+  assert.match(
+    closureDeclarations,
+    /export interface ImportClosureResult \{\n  files: string\[\];\n  diagnostics: TsConfigDiagnostic\[\];\n\}/,
+  );
+  assert.match(
+    indexDeclarations,
+    /options: WithInvocationOptions<TraversePathsOptions>,\n\): Promise<ImportClosureResult>;/,
+  );
+  assert.match(
+    indexDeclarations,
+    /options: WithInvocationOptions<TraverseGraphOptions>,\n\): Promise<DependencyResult>;/,
+  );
+  assert.doesNotMatch(indexDeclarations, /TraverseGraphOptions \| TraverseOptions/);
 });
 
 test("declarations expose invocation controls on every analysis", () => {

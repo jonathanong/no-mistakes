@@ -75,7 +75,7 @@ One-pass fixture tests enforce these ceilings:
    including cached failures.
 4. One resolver computation per normalized resolution key, including misses.
 5. At most one graph/index build per effective request plan.
-6. One traversal computation per roots/direction/edge-set/depth/symbol-mode key.
+6. One traversal computation per roots/direction/edge-set/depth/symbol-mode/candidate-inventory key.
 
 Lazy import-only traversal does not eagerly prepare the full indexable universe
 or build the canonical multi-domain graph. A single import-only query walks the
@@ -87,6 +87,20 @@ facts → one graph → commands: one lazy walk of the union of those report roo
 builds one reachable import adjacency graph; each report projects `deps_of`
 from that graph. That graph is the reachable import subgraph for the request,
 not a full-universe index.
+
+Bounded import-closure reports add a second, report-scoped universe:
+
+- The session `VisiblePathSnapshot` remaps symlink spellings back to the
+  request-root namespace.
+- `candidateInclude` / `candidateExclude` select the initial GraphFiles
+  inventory for that report. Shared GraphFiles stay full unless every graph
+  consumer in the request is import-only `dependencies` with the same bounds.
+- Escape admission uses the pre-filter GraphFiles universe, not every
+  git-visible snapshot path, so skipped directories such as `dist` and
+  `fixtures` stay invisible. A local/workspace source in that universe can
+  still leave the candidate inventory; the walk then escapes and parses it.
+- `projection: "paths"` is presentation only and is not part of the
+  traversal cache key.
 
 ## Current Pipeline Shape
 

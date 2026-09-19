@@ -13,7 +13,8 @@ Find every file that the given file(s) transitively import.
 
 ```
 no-mistakes dependencies <FILE>... [--root <PATH>] [--tsconfig <FILE>] [--depth <N>]
-             [--filter <GLOB>]... [--test <FRAMEWORK>]...
+             [--filter <GLOB>]... [--candidate-include <GLOB>]... [--candidate-exclude <GLOB>]...
+             [--projection graph|paths] [--test <FRAMEWORK>]...
              [--relationship <KIND>]...
              [--format <FORMAT>] [--json] [-j <N>]
 ```
@@ -36,6 +37,12 @@ no-mistakes dependencies src/main.mts --root /path/to/project --test vitest
 # Follow only import edges (skip test/route/queue/md/ci/workspace edges)
 no-mistakes dependencies src/main.mts --root /path/to/project --relationship import
 
+# Bound the initial inventory and emit compact `{ files, diagnostics }` JSON
+no-mistakes dependencies web/app/page.tsx --root /path/to/project \
+  --relationship import-static --relationship import-dynamic --relationship import-type \
+  --candidate-include 'web/**' --candidate-exclude '**/*.test.*' \
+  --projection paths --format json
+
 # Follow the conservative runtime module closure used by Playwright routes
 no-mistakes dependencies web/app/page.tsx --root /path/to/project --relationship route-import
 
@@ -56,7 +63,10 @@ no-mistakes dependencies src/main.mts --root /path/to/project --tsconfig tsconfi
 | `--root <PATH>` | cwd | Project root |
 | `--tsconfig <FILE>` | auto-detected | Path to tsconfig.json |
 | `--depth <N>` | unlimited | Max traversal depth |
-| `--filter <GLOB>` | none | Include only matching files (repeatable, OR) |
+| `--filter <GLOB>` | none | Include only matching files (repeatable, OR). Post-traversal. |
+| `--candidate-include <GLOB>` | all visible | Initial import-only inventory (repeatable, OR). Not `--filter`. |
+| `--candidate-exclude <GLOB>` | none | Subtract from the initial inventory. Reachable imports still escape. |
+| `--projection <KIND>` | `graph` | `graph` keeps the full JSON node list. `paths` with JSON is `{ files, diagnostics }`. |
 | `--target-module <GLOB>` | none | Include only matching external module nodes (repeatable, OR) |
 | `--test <FRAMEWORK>` | none | Expand to well-known test globs: `vitest`, `playwright`, `cargo`, `dotnet`, `swift` (repeatable) |
 | `--relationship <KIND>` | all | Follow only edges of this kind (repeatable, OR). Values: `import`, `import-static`, `import-dynamic`, `import-type`, `import-require`, `route-import`, `workspace`, `package`, `test`, `route`, `queue`, `md`, `ci`, `workflow`, `workflow-job`, `workflow-step`, `workflow-needs`, `workflow-uses`, `workflow-run`, `workflow-artifact`, `http`, `process`, `asset`, `react`, `dotnet`, `swift`, `terraform`, `all` |

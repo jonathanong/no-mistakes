@@ -156,7 +156,7 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
         },
         &resolver,
         &workspace,
-        &graph_files,
+        ImportNeighborVisibility::new(&graph_files, None),
         None,
         &crate::codebase::analysis_session::PathInterner::new(),
     );

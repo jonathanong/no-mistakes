@@ -72,6 +72,9 @@ pub(crate) struct TraverseOptions {
     pub(crate) tests: Vec<String>,
     pub(crate) relationships: Vec<String>,
     pub(crate) include_symbols: bool,
+    pub(crate) candidate_include: Vec<String>,
+    pub(crate) candidate_exclude: Vec<String>,
+    pub(crate) projection: Option<String>,
 }
 
 #[derive(Debug, Default, Deserialize)]

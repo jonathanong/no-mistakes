@@ -250,6 +250,9 @@ fn deps_direction_rejects_symbol_entrypoints() {
         include_symbols: false,
         format: Some(Format::Json),
         json: false,
+        candidate_include: Vec::new(),
+        candidate_exclude: Vec::new(),
+        projection: TraverseProjection::Graph,
         timings: false,
     };
 
@@ -299,6 +302,9 @@ fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
         include_symbols: false,
         format: Some(Format::Json),
         json: false,
+        candidate_include: Vec::new(),
+        candidate_exclude: Vec::new(),
+        projection: TraverseProjection::Graph,
         timings: false,
     }
 }

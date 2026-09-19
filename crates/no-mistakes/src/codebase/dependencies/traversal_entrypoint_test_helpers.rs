@@ -18,6 +18,7 @@ pub(super) fn resolve_entrypoints_with_files(
         root,
         cwd,
         graph_files,
+        visible_lookup: None,
         include_symbols,
         workspace: &workspace,
         interner: &PathInterner::new(),

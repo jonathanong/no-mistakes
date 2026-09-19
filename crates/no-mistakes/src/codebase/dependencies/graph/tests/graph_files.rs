@@ -279,6 +279,10 @@ fn graph_files_visible_path_is_safe_for_concurrent_lookups() {
     );
     let page = root.join("web/app/page.tsx");
     let files = GraphFiles::from_files(vec![page.clone()]);
+    assert_eq!(
+        crate::codebase::ts_resolver::VisiblePathLookup::visible_alias(&files, &page),
+        Some(page.clone())
+    );
     std::thread::scope(|scope| {
         for _ in 0..16 {
             let files = &files;

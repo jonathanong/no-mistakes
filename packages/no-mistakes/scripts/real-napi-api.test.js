@@ -18,6 +18,13 @@ const selectorGroupingFixtureRoot = join(
   "test-runner-selector-grouping",
 );
 const pathsPrecedenceFixtureRoot = join(repositoryRoot, "fixtures", "tsconfig", "paths-precedence");
+const boundedImportClosureFixtureRoot = join(
+  repositoryRoot,
+  "fixtures",
+  "codebase",
+  "dependencies",
+  "bounded-import-closure",
+);
 const lockHolderFixture = join(
   repositoryRoot,
   "fixtures",
@@ -229,6 +236,43 @@ test(
         "src/replacement/value.ts",
         "shadowed/value",
       ],
+    );
+  },
+);
+
+test(
+  "compiled dependencies compact projection matches standalone and batched analyzeProject",
+  { skip: !compiledAddonPath, timeout: 20_000 },
+  async () => {
+    const api = require("../index.js");
+    const options = {
+      root: boundedImportClosureFixtureRoot,
+      files: ["web/app/page.tsx"],
+      relationships: ["import-static", "import-dynamic", "import-type"],
+      candidateInclude: ["web/**"],
+      candidateExclude: ["**/*.test.*"],
+      projection: "paths",
+    };
+    const direct = await api.dependencies(options);
+    const aggregate = await api.analyzeProject({
+      root: boundedImportClosureFixtureRoot,
+      reports: [{ type: "dependencies", ...options }],
+    });
+
+    assert.deepEqual(aggregate.reports[0].result, direct);
+    assert.deepEqual(Object.keys(direct).sort(), ["diagnostics", "files"]);
+    assert.ok(Array.isArray(direct.files));
+    assert.ok(
+      direct.files.some((path) => path.replaceAll("\\", "/").endsWith("packages/ui/src/button.ts")),
+    );
+    assert.ok(
+      direct.files.some((path) =>
+        path.replaceAll("\\", "/").endsWith("packages/data/src/registry.ts"),
+      ),
+    );
+    assert.equal(
+      direct.files.some((path) => path.includes("page.test") || path.includes("unrelated.test")),
+      false,
     );
   },
 );

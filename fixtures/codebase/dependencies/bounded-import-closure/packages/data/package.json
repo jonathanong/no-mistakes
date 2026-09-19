@@ -1,0 +1,5 @@
+{
+  "name": "@acme/data",
+  "private": true,
+  "main": "src/registry.ts"
+}

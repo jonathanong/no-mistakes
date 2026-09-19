@@ -1,5 +1,7 @@
 use clap::Parser;
-use no_mistakes::codebase::dependencies::{RelationshipArg, TraverseArgs, TsConfig};
+use no_mistakes::codebase::dependencies::{
+    RelationshipArg, TraverseArgs, TraverseProjection, TsConfig,
+};
 use no_mistakes::codebase::ts_source::discover_visible_paths;
 use no_mistakes::impacted_checks::ImpactedChecksArgs;
 use std::path::{Path, PathBuf};
@@ -77,6 +79,9 @@ pub(super) fn traverse_args_relationships(
         json: true,
         relationships,
         include_symbols: false,
+        candidate_include: Vec::new(),
+        candidate_exclude: Vec::new(),
+        projection: TraverseProjection::Graph,
         timings: false,
         files: roots.iter().map(PathBuf::from).collect(),
     }

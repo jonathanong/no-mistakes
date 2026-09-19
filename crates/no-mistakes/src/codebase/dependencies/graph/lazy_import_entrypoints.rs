@@ -78,6 +78,7 @@ pub(crate) fn lazy_import_deps_of_with_files_facts_and_workspace(
         tsconfig_catalog: None,
         max_depth,
         graph_files,
+        resolution_visible: None,
         allowed,
         facts,
         workspace,

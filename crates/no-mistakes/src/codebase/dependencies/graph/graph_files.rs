@@ -104,4 +104,23 @@ impl GraphFiles {
     pub(crate) fn resource_candidates(&self) -> &[PathBuf] {
         &self.resource_candidates
     }
+
+    /// Build a new universe from a subset of currently visible paths.
+    pub(crate) fn visible_subset(&self, mut paths: Vec<PathBuf>) -> Self {
+        crate::codebase::ts_source::sort_os_str_paths(&mut paths);
+        paths.dedup();
+        let resource_candidates = self
+            .resource_candidates
+            .iter()
+            .filter(|path| {
+                paths
+                    .binary_search_by(|candidate| {
+                        crate::codebase::ts_source::cmp_os_str_paths(candidate, path)
+                    })
+                    .is_ok()
+            })
+            .cloned()
+            .collect();
+        Self::from_files_with_resource_candidates(paths, resource_candidates)
+    }
 }

@@ -36,6 +36,14 @@ fn reference_and_arc_lookups_delegate_to_the_inner_universe() {
         <&HashSet<PathBuf> as VisiblePathLookup>::visible_cache_key(&by_ref),
         expected_key
     );
+    assert_eq!(
+        <&HashSet<PathBuf> as VisiblePathLookup>::visible_alias(&by_ref, path),
+        Some(PathBuf::from("/fixture/a.ts"))
+    );
+    assert_eq!(
+        <&HashSet<PathBuf> as VisiblePathLookup>::visible_alias(&by_ref, missing),
+        None
+    );
 
     assert!(<Arc<HashSet<PathBuf>> as VisiblePathLookup>::contains_visible(&by_arc, path));
     assert!(!<Arc<HashSet<PathBuf>> as VisiblePathLookup>::contains_visible(&by_arc, missing));
@@ -46,6 +54,14 @@ fn reference_and_arc_lookups_delegate_to_the_inner_universe() {
     assert_eq!(
         <Arc<HashSet<PathBuf>> as VisiblePathLookup>::visible_cache_key(&by_arc),
         expected_key
+    );
+    assert_eq!(
+        <Arc<HashSet<PathBuf>> as VisiblePathLookup>::visible_alias(&by_arc, path),
+        Some(PathBuf::from("/fixture/a.ts"))
+    );
+    assert_eq!(
+        VisiblePathLookup::visible_alias(&visible, path),
+        Some(PathBuf::from("/fixture/a.ts"))
     );
 }
 
@@ -64,6 +80,10 @@ fn path_set_lookups_match_hash_set_membership() {
             PathBuf::from("/fixture/a.ts"),
             PathBuf::from("/fixture/b.ts")
         ]
+    );
+    assert_eq!(
+        VisiblePathLookup::visible_alias(&visible, path),
+        Some(PathBuf::from("/fixture/a.ts"))
     );
 }
 

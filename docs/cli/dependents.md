@@ -45,5 +45,7 @@ dynamic paths are reported by test-impact diagnostics rather than guessed here.
 Key options match [`dependencies`](dependencies.md): `--root`, `--tsconfig`,
 `--depth`, `--filter`, `--target-module`, `--relationship`, `--test`,
 `--format`, `--json`, and `--timings`.
+`--candidate-include` / `--candidate-exclude` are not valid on `dependents`
+or `related`; they are import-only forward-closure inputs.
 
 Node API: `dependents(options)`.

@@ -56,4 +56,34 @@ impl SharedTraversalContext {
     pub(crate) fn prepared_graph(&self) -> &graph::PreparedGraphConfig {
         &self.prepared_graph
     }
+
+    pub(crate) fn candidate_inventory_applied(&self) -> bool {
+        self.candidate_inventory_applied
+    }
+
+    pub(crate) fn resolution_universe(&self) -> &graph::GraphFiles {
+        self.escape_universe.as_ref().unwrap_or(&self.graph_files)
+    }
+
+    pub(crate) fn snapshot_resolution_visible<'a>(
+        &'a self,
+        graph_files: &'a graph::GraphFiles,
+    ) -> graph::SnapshotResolutionVisible<'a> {
+        graph::SnapshotResolutionVisible::new(
+            graph_files,
+            self.resolution_universe(),
+            self.dataset.visible_paths(),
+            &self.root,
+        )
+    }
+
+    pub(crate) fn bounded_seed_diagnostics(
+        &self,
+        args: &TraverseArgs,
+    ) -> &[crate::codebase::ts_resolver::TsConfigDiagnostic] {
+        self.bounded_seed_diagnostics
+            .get(&BoundedImportKey::from_args(args))
+            .map(Vec::as_slice)
+            .unwrap_or(&[])
+    }
 }

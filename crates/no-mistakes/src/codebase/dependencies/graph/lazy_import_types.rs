@@ -52,6 +52,7 @@ pub(crate) struct LazyImportBuild<'a> {
     pub(crate) tsconfig_catalog: Option<&'a crate::codebase::ts_resolver::TsConfigCatalog>,
     pub(crate) max_depth: Option<usize>,
     pub(crate) graph_files: &'a GraphFiles,
+    pub(crate) resolution_visible: Option<&'a dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     pub(crate) allowed: Option<&'a HashSet<EdgeKind>>,
     pub(crate) facts: LazyImportFacts<'a>,
     pub(crate) workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
