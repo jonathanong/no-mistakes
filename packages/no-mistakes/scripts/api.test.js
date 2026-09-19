@@ -856,10 +856,7 @@ test("dependency declarations expose bounded import-closure inputs and compact o
     indexDeclarations,
     /options: WithInvocationOptions<TraverseGraphOptions>,\n\): Promise<DependencyResult>;/,
   );
-  assert.doesNotMatch(
-    indexDeclarations,
-    /TraverseGraphOptions \| TraverseOptions/,
-  );
+  assert.doesNotMatch(indexDeclarations, /TraverseGraphOptions \| TraverseOptions/);
 });
 
 test("declarations expose invocation controls on every analysis", () => {
