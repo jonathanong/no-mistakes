@@ -33,6 +33,26 @@ fn expression_free_require_resolve_template_is_not_computed() {
 }
 
 #[test]
+fn expression_free_require_template_is_not_computed() {
+    let imports = ts_extractor()
+        .extract("const mod = require(`./cjs.js`);")
+        .unwrap();
+    assert_eq!(specs(&imports), vec!["./cjs.js"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::Require]);
+    assert!(!imports[0].computed);
+}
+
+#[test]
+fn interpolated_require_template_is_computed() {
+    let imports = ts_extractor()
+        .extract("const mod = require(`./${name}`);")
+        .unwrap();
+    assert_eq!(specs(&imports), vec!["./${}"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::Require]);
+    assert!(imports[0].computed);
+}
+
+#[test]
 fn non_literal_require_resolve_call_is_computed() {
     let imports = ts_extractor()
         .extract("const path = require.resolve(moduleName);")

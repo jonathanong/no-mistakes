@@ -119,9 +119,7 @@ fn computed_import_specifiers_are_omitted() {
         .collect();
 
     assert_eq!(specifiers, vec!["./local.cjs"]);
-    assert!(!specifiers
-        .iter()
-        .any(|specifier| *specifier == "moduleName"));
+    assert!(!specifiers.contains(&"moduleName"));
 }
 
 #[test]
