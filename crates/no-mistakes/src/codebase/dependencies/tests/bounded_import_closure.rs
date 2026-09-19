@@ -135,6 +135,24 @@ fn candidate_include_flag_is_repeatable() {
 }
 
 #[test]
+fn bounded_import_key_ignores_glob_order_and_duplicates() {
+    let mut left = bounded_args(bounded_root(), vec![PathBuf::from("web/app/page.tsx")]);
+    left.candidate_include = vec!["web/**".to_string(), "lib/**".to_string()];
+    left.candidate_exclude = vec!["**/*.test.*".to_string(), "**/*.spec.*".to_string()];
+    let mut right = left.clone();
+    right.candidate_include = vec![
+        "lib/**".to_string(),
+        "web/**".to_string(),
+        "web/**".to_string(),
+    ];
+    right.candidate_exclude = vec!["**/*.spec.*".to_string(), "**/*.test.*".to_string()];
+    assert_eq!(
+        BoundedImportKey::from_args(&left),
+        BoundedImportKey::from_args(&right)
+    );
+}
+
+#[test]
 fn candidate_bounds_reject_dependents() {
     let args = bounded_args(bounded_root(), vec![PathBuf::from("web/app/page.tsx")]);
     let err = validate_candidate_bounds(&args, Direction::Dependents).unwrap_err();

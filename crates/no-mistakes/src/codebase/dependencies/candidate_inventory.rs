@@ -9,10 +9,17 @@ pub(crate) struct CandidateBounds {
 impl CandidateBounds {
     pub(crate) fn from_args(args: &TraverseArgs) -> Self {
         Self {
-            include: args.candidate_include.clone(),
-            exclude: args.candidate_exclude.clone(),
+            include: canonicalize_globs(&args.candidate_include),
+            exclude: canonicalize_globs(&args.candidate_exclude),
         }
     }
+}
+
+fn canonicalize_globs(globs: &[String]) -> Vec<String> {
+    let mut globs = globs.to_vec();
+    globs.sort();
+    globs.dedup();
+    globs
 }
 
 pub(crate) fn validate_candidate_bounds(args: &TraverseArgs, direction: Direction) -> Result<()> {
