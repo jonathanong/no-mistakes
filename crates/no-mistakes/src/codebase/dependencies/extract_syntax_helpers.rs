@@ -168,13 +168,6 @@ fn static_import_specifier(expr: &Expression<'_>) -> Option<String> {
     }
 }
 
-fn string_literal_argument<'a>(arg: &'a Argument<'a>) -> Option<&'a str> {
-    match arg {
-        Argument::StringLiteral(s) => Some(s.value.as_str()),
-        _ => None,
-    }
-}
-
 fn static_path_argument(arg: &Argument<'_>) -> Option<String> {
     match arg {
         Argument::StringLiteral(s) => Some(s.value.as_str().to_string()),

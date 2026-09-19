@@ -275,3 +275,50 @@ fn route_import_resolution_follows_symlink_files_and_broken_links() {
     );
     assert!(route_import_visible_target(real_helper, &hidden_files, &mismatch_names).is_none());
 }
+
+#[test]
+fn computed_route_import_is_not_resolved_as_a_literal_edge() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/simple/fixture"),
+    );
+    let a = root.join("a.mts");
+    let b = root.join("b.mts");
+    let graph_files = GraphFiles::from_files(vec![a.clone(), b.clone()]);
+    let tsconfig = TsConfig {
+        dir: root.clone(),
+        paths: vec![],
+        paths_dir: root.clone(),
+        base_url: None,
+    };
+    let session = crate::codebase::analysis_session::AnalysisSession::new(None);
+    let mut facts = TsFactMap::new();
+    facts.insert(
+        a.clone(),
+        TsFileFacts {
+            imports: vec![ExtractedImport {
+                specifier: "./b.mts".to_string(),
+                kind: ImportKind::Dynamic,
+                line: 1,
+                function_scope: None,
+                function_scope_id: None,
+                side_effect_only: false,
+                re_export: false,
+                runtime_reachable: true,
+                computed: true,
+            }],
+            ..TsFileFacts::default()
+        },
+    );
+
+    let edges = collect_route_import_edges(
+        std::slice::from_ref(&a),
+        &facts,
+        &tsconfig,
+        None,
+        &graph_files,
+        &session,
+    );
+
+    assert!(edges.is_empty(), "{edges:#?}");
+}

@@ -52,6 +52,15 @@ fn computed_specifiers_are_unresolved_and_literal_dynamic_stays_resolved() {
     assert!(matches!(literal.status, Status::Resolved));
     assert!(!literal.computed);
     assert_eq!(literal.resolved.as_deref(), Some("dep.ts"));
+
+    let static_require = report
+        .imports
+        .iter()
+        .find(|row| row.specifier == "./dep" && row.kind == "require")
+        .expect("expression-free require(`./dep`)");
+    assert!(matches!(static_require.status, Status::Resolved));
+    assert!(!static_require.computed);
+    assert_eq!(static_require.resolved.as_deref(), Some("dep.ts"));
 }
 
 #[test]

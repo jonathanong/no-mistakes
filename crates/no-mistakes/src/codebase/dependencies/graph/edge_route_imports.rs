@@ -85,7 +85,10 @@ pub(crate) fn collect_route_import_edges(
             file_facts
                 .imports
                 .iter()
-                .filter(|import| matches!(import.kind, ImportKind::Static | ImportKind::Dynamic))
+                .filter(|import| {
+                    !import.computed
+                        && matches!(import.kind, ImportKind::Static | ImportKind::Dynamic)
+                })
                 .filter_map(|import| resolver.resolve(&import.specifier, &resolution_source))
                 .filter_map(|target| {
                     route_import_visible_target(target, graph_files, &visible_by_name)

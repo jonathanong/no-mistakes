@@ -404,6 +404,8 @@ reports may override `root`, `tsconfig`, and `config`; `reactUsages` accepts
 the request `root`/`tsconfig`/`config` and dispatch through the dedicated Node
 APIs. `resolveCheck` import rows include `computed: true` for non-literal
 `import()` / `require()` specifiers, which are classified `unresolved`.
+`importUsages` omits those computed rows and keeps string literals, including
+expression-free templates such as ``require(`./mod`)``.
 Reports with the same effective scope share
 one request-scoped in-memory dataset. Sources, parsed metadata, and compact file
 facts are reused; each normalized graph or symbol-index plan is built at most

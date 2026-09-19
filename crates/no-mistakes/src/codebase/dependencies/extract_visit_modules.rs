@@ -76,15 +76,19 @@ fn record_runtime_require_import(
     let Some(first) = call.arguments.first() else {
         return;
     };
-    if let Some(specifier) = string_literal_argument(first) {
-        collector.push(specifier, kind, call.span.start as usize);
+    let Some(expr) = first.as_expression() else {
+        collector.push_computed("<computed>", kind, call.span.start as usize);
+        return;
+    };
+    if let Some(specifier) = static_import_specifier(expr) {
+        collector.push(&specifier, kind, call.span.start as usize);
         return;
     }
-    let specifier = first
-        .as_expression()
-        .map(computed_import_specifier)
-        .unwrap_or_else(|| "<computed>".to_string());
-    collector.push_computed(&specifier, kind, call.span.start as usize);
+    collector.push_computed(
+        &computed_import_specifier(expr),
+        kind,
+        call.span.start as usize,
+    );
 }
 
 fn computed_import_specifier(expr: &Expression<'_>) -> String {

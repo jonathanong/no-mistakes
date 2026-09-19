@@ -22,6 +22,10 @@ export function loadConcat(suffix: string) {
 
 export const Lazy = dynamic(() => import("./dep"));
 
+export function loadStaticRequire() {
+  return require(`./dep`);
+}
+
 function dynamic(loader: () => Promise<unknown>) {
   return loader;
 }

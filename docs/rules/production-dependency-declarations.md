@@ -15,7 +15,10 @@ reachable if an external package imports it (directly or through a chain of
 relative/self-reference imports), unless every external importer matches
 `testFilePatterns`. Package-internal tooling that nothing outside the package
 imports is out of scope. `import type` specifiers are exempt, since
-`verbatimModuleSyntax` erases them before runtime. Specifiers using a non-npm
+`verbatimModuleSyntax` erases them before runtime. Computed `import()` /
+`require()` specifiers (identifiers, interpolations, concatenation) are not
+treated as package names; `resolve-check` reports those as unresolved instead.
+Specifiers using a non-npm
 URL/loader scheme (e.g. Vite's `virtual:app-config`, a `data:` URI) are also
 exempt — npm package names can never contain `:`, so these are never a
 `package.json` dependency question.
@@ -109,7 +112,8 @@ tooling often masks.
 
 Every runtime-reachable external package import must be declared in an allowed
 runtime field of its owning `package.json`. Type-only imports, test-only roots,
-and non-npm loader schemes are excluded as described above.
+computed `import()`/`require()` specifiers, and non-npm loader schemes are
+excluded as described above.
 
 ## Options and defaults
 

@@ -184,5 +184,5 @@ pub(super) fn file_imports_with_sources(
         .unwrap_or_default();
     imports
         .iter()
-        .any(|import| import.specifier == expected_specifier)
+        .any(|import| !import.computed && import.specifier == expected_specifier)
 }

@@ -58,7 +58,8 @@ pub struct ExtractedImport {
     /// imports are reachable through the exported binding even though no static
     /// call reaches their anonymous scope.
     pub runtime_reachable: bool,
-    /// Non-literal `import()`/`require()` specifier; skipped by the graph.
+    /// Non-literal `import()`/`require()` specifier. Literal-only consumers skip
+    /// these; `resolve-check` reports them unresolved instead of omitting them.
     pub computed: bool,
 }
 

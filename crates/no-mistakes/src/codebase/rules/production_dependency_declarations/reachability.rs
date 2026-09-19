@@ -31,9 +31,12 @@ pub(super) struct FileImport {
     pub(super) kind: ImportKind,
 }
 
-/// Extract every import specifier from `file`, tagged with its syntax kind
-/// and line number. Returns an empty list for unreadable or unparsable
-/// sources, matching every other consumer of `ImportExtractor`.
+/// Extract every literal import specifier from `file`, tagged with its syntax
+/// kind and line number. Computed `import()`/`require()` facts stay in
+/// `resolve-check`; treating their identifier/`<computed>` stand-ins as package
+/// names would emit spurious undeclared-dependency findings. Returns an empty
+/// list for unreadable or unparsable sources, matching every other consumer of
+/// `ImportExtractor`.
 pub(super) fn file_imports(
     file: &Path,
     sources: &crate::codebase::ts_source::SourceStore,
@@ -50,6 +53,7 @@ pub(super) fn file_imports(
         .and_then(|extractor| extractor.extract(&source))
         .unwrap_or_default()
         .into_iter()
+        .filter(|import| !import.computed)
         .map(|import| FileImport {
             line: import.line,
             specifier: import.specifier,

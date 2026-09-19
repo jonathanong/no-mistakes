@@ -42,7 +42,10 @@ type-only imports and `require()`.
 
 ## CJS require()
 
-String-literal `require("...")` calls are tracked as `require` edges under `--relationship import`. Non-literal calls are not graph edges. `resolve-check` reports them as unresolved computed imports.
+String-literal `require("...")` calls, including expression-free templates such
+as ``require(`./mod`)``, are tracked as `require` edges under `--relationship import`.
+Non-literal calls are not graph edges. `resolve-check` reports them as unresolved
+computed imports.
 
 **Workaround for graph traversal of non-literals:** `rg "require(" src/` to find call sites.
 

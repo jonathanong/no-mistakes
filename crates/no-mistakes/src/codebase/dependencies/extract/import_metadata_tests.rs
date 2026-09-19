@@ -23,6 +23,16 @@ fn extracts_require_resolve_call() {
 }
 
 #[test]
+fn expression_free_require_resolve_template_is_not_computed() {
+    let imports = ts_extractor()
+        .extract("const path = require.resolve(`@scope/pkg/register`);")
+        .unwrap();
+    assert_eq!(specs(&imports), vec!["@scope/pkg/register"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::RequireResolve]);
+    assert!(!imports[0].computed);
+}
+
+#[test]
 fn non_literal_require_resolve_call_is_computed() {
     let imports = ts_extractor()
         .extract("const path = require.resolve(moduleName);")
