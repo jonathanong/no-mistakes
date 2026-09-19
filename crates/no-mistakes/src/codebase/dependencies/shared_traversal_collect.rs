@@ -34,13 +34,9 @@ pub(crate) fn collect_and_filter_entries_prepared(
     validate_candidate_bounds(args, direction)?;
     shared.session.record_work("traversal.requests", 1);
     let workspace = shared.dataset.workspace();
-    let overlay = args.has_candidate_bounds().then(|| {
-        graph::SnapshotResolutionVisible::new(
-            &shared.graph_files,
-            shared.dataset.visible_paths(),
-            &shared.root,
-        )
-    });
+    let overlay = args
+        .has_candidate_bounds()
+        .then(|| shared.snapshot_resolution_visible(&shared.graph_files));
     let entrypoints = resolve_entrypoints_with_files_and_workspace(EntrypointResolution {
         raw_entrypoints: &args.files,
         symbol_entrypoints: &args.file_symbols,
@@ -137,7 +133,11 @@ pub(crate) fn collect_and_filter_entries_prepared(
                 .collect();
             Ok((entries, tsconfig_provenance))
         })?;
-    runtime_diagnostics.extend(shared.bounded_seed_diagnostics(args).iter().cloned());
+    extend_scoped_seed_diagnostics(
+        &mut runtime_diagnostics,
+        shared.bounded_seed_diagnostics(args),
+        &entries,
+    );
     crate::invocation::check_timeout()?;
     let entries = apply_filters(
         entries,

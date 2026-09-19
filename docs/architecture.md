@@ -90,13 +90,15 @@ not a full-universe index.
 
 Bounded import-closure reports add a second, report-scoped universe:
 
-- The session `VisiblePathSnapshot` remains the git-visible resolution
-  universe for the request.
+- The session `VisiblePathSnapshot` remaps symlink spellings back to the
+  request-root namespace.
 - `candidateInclude` / `candidateExclude` select the initial GraphFiles
   inventory for that report. Shared GraphFiles stay full unless every graph
   consumer in the request is import-only `dependencies` with the same bounds.
-- A snapshot-backed resolver overlay still resolves a local/workspace source
-  outside that inventory; the walk then escapes and parses it.
+- Escape admission uses the pre-filter GraphFiles universe, not every
+  git-visible snapshot path, so skipped directories such as `dist` and
+  `fixtures` stay invisible. A local/workspace source in that universe can
+  still leave the candidate inventory; the walk then escapes and parses it.
 - `projection: "paths"` is presentation only and is not part of the
   traversal cache key.
 

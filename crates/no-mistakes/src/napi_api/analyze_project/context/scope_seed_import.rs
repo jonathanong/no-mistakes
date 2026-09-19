@@ -72,11 +72,10 @@ impl PreparedScope {
                     .seed_lazy_import_graph_from_args(&args, &cwd)?;
             }
         }
-        for mut args in plan.bounded.into_values() {
+        for args in plan.bounded.into_values() {
             if args.files.is_empty() {
                 continue;
             }
-            args.depth = None;
             self.traversal
                 .seed_bounded_lazy_import_graph_from_args(&args, &cwd)?;
         }
@@ -174,6 +173,10 @@ fn union_import_args(
 ) {
     existing.files.extend(args.files);
     existing.file_symbols.extend(args.file_symbols);
+    existing.depth = match (existing.depth, args.depth) {
+        (Some(left), Some(right)) => Some(left.max(right)),
+        _ => None,
+    };
     existing
         .file_entrypoints_are_structured
         .extend(args.file_entrypoints_are_structured);

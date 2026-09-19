@@ -512,8 +512,11 @@ the entire visible universe. Prefer import-only relationships plus explicit
 a `check` report no longer eagerly parses every indexable file for an
 import-only `dependencies` plan.
 
-`candidateInclude` / `candidateExclude` on a forward import-only
-`dependencies` report (or `dependencies()`) define the initial candidate
+`candidateInclude` / `candidateExclude` belong only to forward import-only
+`dependencies()` / `{ type: "dependencies" }` options (`TraverseGraphOptions` /
+`TraversePathsOptions`). `dependents()`, `related()`, and
+`{ type: "dependents" | "related" }` take `TraverseOptions` and do not accept
+those fields or `projection`. The globs define the initial candidate
 inventory before GraphFiles / fact preparation. They are not `filters` and
 are not merged from top-level `analyzeProject` `filters`. Unrelated excluded
 files are omitted from that inventory and receive no parse/fact work on a
@@ -521,13 +524,13 @@ standalone `dependencies()` call or an exclusive same-bounds import-only
 `analyzeProject` request. Mixed requests that also run `check`, `dependents`,
 or unbounded graph reports keep the shared GraphFiles universe, so those
 other reports may still parse the excluded files. A
-resolved local or workspace source outside the include set still escapes into
-the closure. `projection: "paths"` returns
+resolved local or workspace source that is in the pre-filter GraphFiles
+universe still escapes into the closure. `projection: "paths"` returns
 `{ files: string[], diagnostics: TsConfigDiagnostic[] }` — sorted unique
 repository-relative paths plus bounded diagnostics — and does not change
 which paths are walked. Omit `projection` or pass `"graph"` to keep
-`DependencyResult`. These candidate options are invalid on `dependents`,
-`related`, `includeSymbols`, or non-import relationships.
+`DependencyResult`. These candidate options are also invalid at runtime on
+`includeSymbols` or non-import relationships.
 `analyzeProject` report `result` stays loosely typed: a `dependencies`
 report body is `ImportClosureResult` when that report sets
 `projection: "paths"`, and `DependencyResult` otherwise.

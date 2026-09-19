@@ -20,11 +20,7 @@ fn seed_bounded_lazy_import_graph(
     }
     let workspace = shared.dataset.workspace();
     let entrypoints = {
-        let overlay = graph::SnapshotResolutionVisible::new(
-            &graph_files,
-            shared.dataset.visible_paths(),
-            &shared.root,
-        );
+        let overlay = shared.snapshot_resolution_visible(&graph_files);
         resolve_entrypoints_with_files_and_workspace(EntrypointResolution {
             raw_entrypoints: &args.files,
             symbol_entrypoints: &args.file_symbols,
@@ -52,11 +48,7 @@ fn seed_bounded_lazy_import_graph(
     }
     let allowed = relationship_filter(&args.relationships);
     let sources = shared.dataset.sources_for(&shared.root);
-    let overlay = graph::SnapshotResolutionVisible::new(
-        &graph_files,
-        shared.dataset.visible_paths(),
-        &shared.root,
-    );
+    let overlay = shared.snapshot_resolution_visible(&graph_files);
     let ((graph, collected), diagnostics) =
         shared.tsconfig_catalog.isolate_runtime_diagnostics(|| {
             graph::lazy_import_graph_with_session(
@@ -64,7 +56,7 @@ fn seed_bounded_lazy_import_graph(
                     roots: &roots,
                     tsconfig: &shared.tsconfig,
                     tsconfig_catalog: Some(&shared.tsconfig_catalog),
-                    max_depth: None,
+                    max_depth: args.depth,
                     graph_files: &graph_files,
                     resolution_visible: Some(&overlay),
                     allowed: allowed.as_ref(),

@@ -21,6 +21,7 @@ pub(crate) struct SharedTraversalContext {
     bounded_seed_diagnostics:
         HashMap<BoundedImportKey, Vec<crate::codebase::ts_resolver::TsConfigDiagnostic>>,
     candidate_inventory_applied: bool,
+    escape_universe: Option<graph::GraphFiles>,
     graph_cache: SharedBuildCache<EffectiveGraphPlanKey, graph::DepGraph>,
     symbol_index_cache: SharedBuildCache<GraphFileUniverseKey, graph::SymbolIndex>,
     import_resolution_cache: crate::codebase::ts_resolver::ImportResolutionCache,

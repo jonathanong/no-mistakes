@@ -4,7 +4,8 @@ impl SharedTraversalContext {
             return Ok(());
         }
         let filtered = self.record_candidate_paths(args)?;
-        self.graph_files = self.graph_files.visible_subset(filtered);
+        let subset = self.graph_files.visible_subset(filtered);
+        self.escape_universe = Some(std::mem::replace(&mut self.graph_files, subset));
         self.fact_context
             .set_visible_file_set(self.graph_files.visible_path_set());
         self.candidate_inventory_applied = true;
@@ -68,11 +69,7 @@ fn bounded_import_only_deps(
     let graph_files = owned.as_ref().unwrap_or(&shared.graph_files);
     let sources = shared.dataset.sources_for(&shared.root);
     let workspace = shared.dataset.workspace();
-    let overlay = graph::SnapshotResolutionVisible::new(
-        graph_files,
-        shared.dataset.visible_paths(),
-        &shared.root,
-    );
+    let overlay = shared.snapshot_resolution_visible(graph_files);
     let (entries, collected) =
         graph::lazy_import_deps_of_with_files_facts_workspace_resolution_cache_and_session(
             graph::LazyImportBuild {

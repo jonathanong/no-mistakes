@@ -126,6 +126,7 @@ impl SharedTraversalContext {
             bounded_lazy_import_graphs: HashMap::new(),
             bounded_seed_diagnostics: HashMap::new(),
             candidate_inventory_applied: false,
+            escape_universe: None,
             graph_cache: SharedBuildCache::default(),
             symbol_index_cache: SharedBuildCache::default(),
             import_resolution_cache: Default::default(),

@@ -3,10 +3,11 @@ use crate::codebase::ts_source::{cmp_os_str_paths, VisiblePathSnapshot};
 
 /// Resolution membership for a bounded import walk.
 ///
-/// `GraphFiles` may start as a candidate subset. The request snapshot is the
-/// git-visible universe used to resolve escapes without admitting ignored files.
+/// `graph_files` may start as a candidate subset. `universe` is the pre-filter
+/// GraphFiles membership. The snapshot only remaps symlink spellings.
 pub(crate) struct SnapshotResolutionVisible<'a> {
     graph_files: &'a GraphFiles,
+    universe: &'a GraphFiles,
     snapshot: &'a VisiblePathSnapshot,
     root: &'a Path,
 }
@@ -14,29 +15,36 @@ pub(crate) struct SnapshotResolutionVisible<'a> {
 impl<'a> SnapshotResolutionVisible<'a> {
     pub(crate) fn new(
         graph_files: &'a GraphFiles,
+        universe: &'a GraphFiles,
         snapshot: &'a VisiblePathSnapshot,
         root: &'a Path,
     ) -> Self {
         Self {
             graph_files,
+            universe,
             snapshot,
             root,
         }
+    }
+
+    fn admits(&self, path: &Path) -> bool {
+        self.graph_files.contains_visible(path) || self.universe.contains_visible(path)
     }
 }
 
 impl VisiblePathLookup for SnapshotResolutionVisible<'_> {
     fn contains_visible(&self, path: &Path) -> bool {
-        self.graph_files.contains_visible(path)
-            || snapshot_visible_path(self.snapshot, self.root, path).is_some()
+        self.admits(path)
+            || snapshot_visible_path(self.snapshot, self.root, path)
+                .is_some_and(|alias| self.admits(&alias))
     }
 
     fn visible_len(&self) -> usize {
-        self.snapshot.paths_for(self.root).len()
+        self.universe.visible_len()
     }
 
     fn visible_cache_key(&self) -> Vec<PathBuf> {
-        let mut paths = self.snapshot.paths_for(self.root).as_ref().clone();
+        let mut paths = self.universe.visible_cache_key();
         paths.extend(self.graph_files.iter_visible().cloned());
         crate::codebase::ts_source::sort_os_str_paths(&mut paths);
         paths.dedup();
@@ -47,7 +55,11 @@ impl VisiblePathLookup for SnapshotResolutionVisible<'_> {
         self.graph_files
             .visible_path(path)
             .map(Path::to_path_buf)
-            .or_else(|| snapshot_visible_path(self.snapshot, self.root, path))
+            .or_else(|| self.universe.visible_path(path).map(Path::to_path_buf))
+            .or_else(|| {
+                snapshot_visible_path(self.snapshot, self.root, path)
+                    .filter(|alias| self.admits(alias))
+            })
     }
 }
 

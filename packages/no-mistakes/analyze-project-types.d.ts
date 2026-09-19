@@ -42,12 +42,16 @@ import type {
   ProjectOptions,
   SymbolsListOptions,
   SymbolsSignatureImpactOptions,
+  TraverseGraphOptions,
   TraverseOptions,
+  TraversePathsOptions,
 } from "./traversal-types";
 
 type BatchedProjectOptions = Omit<ProjectOptions, "root" | "tsconfig" | "config">;
 type BatchedFlowOptions = Omit<FlowOptions, "root" | "tsconfig" | "config">;
 type BatchedTraverseOptions = TraverseOptions & Pick<ProjectOptions, "config">;
+type BatchedDependencyTraverseOptions = (TraverseGraphOptions | TraversePathsOptions) &
+  Pick<ProjectOptions, "config">;
 type BatchedQueueRelatedOptions = BatchedProjectOptions & { files: string[] };
 type BatchedServerRouteRelatedOptions = BatchedProjectOptions &
   ({ files: string[] } | { roots: string[] });
@@ -62,7 +66,8 @@ type BatchedRootConfigOptions<T> = Omit<T, "root" | "config">;
 type BatchedRootTsConfigOptions<T> = Omit<T, "root" | "tsconfig" | "config">;
 
 export type AnalyzeProjectReportRequest =
-  | ({ type: "dependencies" | "dependents" | "related"; id?: string } & BatchedTraverseOptions)
+  | ({ type: "dependencies"; id?: string } & BatchedDependencyTraverseOptions)
+  | ({ type: "dependents" | "related"; id?: string } & BatchedTraverseOptions)
   | ({ type: "symbols"; id?: string } & (SymbolsListOptions | SymbolsSignatureImpactOptions))
   | ({ type: "importUsages"; id?: string } & Omit<ImportUsagesOptions, "root">)
   | ({ type: "flow"; id?: string } & BatchedFlowOptions)

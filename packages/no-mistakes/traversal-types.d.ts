@@ -52,19 +52,13 @@ export interface TraverseOptions {
   tests?: string[];
   relationships?: Relationship[];
   includeSymbols?: boolean;
-  /** Pre-traversal include globs for the initial candidate inventory. Import-only `dependencies` only. */
-  candidateInclude?: string[];
-  /** Pre-traversal exclude globs for the initial candidate inventory. Reachable imports still escape this set. */
-  candidateExclude?: string[];
-  /** `paths` returns a compact sorted path list plus diagnostics. Default `graph`. */
-  projection?: TraverseProjection;
 }
 
-export type TraverseProjection = "graph" | "paths";
 export type {
   ImportClosureResult,
   TraverseGraphOptions,
   TraversePathsOptions,
+  TraverseProjection,
 } from "./import-closure-types";
 
 export interface DependencyFile {

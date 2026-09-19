@@ -675,7 +675,11 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type: "dependencies" \| "dependents" \| "related"; id\?: string } & BatchedTraverseOptions/,
+    /type: "dependencies"; id\?: string } & BatchedDependencyTraverseOptions/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
+    /type: "dependents" \| "related"; id\?: string } & BatchedTraverseOptions/,
   );
   assert.doesNotMatch(
     analyzeProjectDeclarations,
@@ -840,10 +844,12 @@ test("dependency declarations expose bounded import-closure inputs and compact o
   const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
   const closureDeclarations = readFileSync(join(packageRoot, "import-closure-types.d.ts"), "utf8");
   const indexDeclarations = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
-  assert.match(traversalDeclarations, /candidateInclude\?: string\[\];/);
-  assert.match(traversalDeclarations, /candidateExclude\?: string\[\];/);
-  assert.match(traversalDeclarations, /projection\?: TraverseProjection;/);
-  assert.match(traversalDeclarations, /export type TraverseProjection = "graph" \| "paths";/);
+  assert.doesNotMatch(traversalDeclarations, /candidateInclude\?: string\[\];/);
+  assert.match(closureDeclarations, /candidateInclude\?: string\[\];/);
+  assert.match(closureDeclarations, /candidateExclude\?: string\[\];/);
+  assert.match(closureDeclarations, /projection\?: "graph";/);
+  assert.match(closureDeclarations, /projection: "paths";/);
+  assert.match(closureDeclarations, /export type TraverseProjection = "graph" \| "paths";/);
   assert.match(
     closureDeclarations,
     /export interface ImportClosureResult \{\n  files: string\[\];\n  diagnostics: TsConfigDiagnostic\[\];\n\}/,

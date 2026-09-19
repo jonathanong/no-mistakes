@@ -38,6 +38,7 @@ include!("shared_graph_cache.rs");
 include!("shared_traversal_graph.rs");
 include!("shared_traversal_graph_shared.rs");
 include!("shared_traversal_collect.rs");
+include!("shared_traversal_collect_diagnostics.rs");
 include!("shared_traversal_collect_cache.rs");
 include!("shared_traversal_collect_roots.rs");
 include!("shared_traversal_provenance.rs");

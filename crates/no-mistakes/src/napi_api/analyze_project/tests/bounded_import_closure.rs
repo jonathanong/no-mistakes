@@ -241,13 +241,110 @@ fn exclusive_analyze_project_keeps_seed_diagnostics() {
     ))
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
+    let ambiguous = value["reports"][0]["result"]["diagnostics"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter(|diagnostic| diagnostic["kind"] == "ambiguous-ownership")
+        .count();
+    assert_eq!(ambiguous, 1, "{value}");
+}
+
+#[test]
+fn shared_bounds_do_not_replay_other_report_seed_diagnostics() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/workspace-resolution"),
+    );
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": root,
+            "reports": [
+                {
+                    "type": "dependencies",
+                    "id": "ambiguous",
+                    "files": ["apps/ambiguous/src/entry.ts"],
+                    "relationships": ["import-static", "import-dynamic", "import-type"],
+                    "candidateInclude": ["**/*"],
+                    "projection": "paths"
+                },
+                {
+                    "type": "dependencies",
+                    "id": "web",
+                    "files": ["apps/web/src/entry.ts"],
+                    "relationships": ["import-static", "import-dynamic", "import-type"],
+                    "candidateInclude": ["**/*"],
+                    "projection": "paths"
+                }
+            ]
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let reports = value["reports"].as_array().unwrap();
+    let ambiguous = reports
+        .iter()
+        .find(|report| report["id"] == "ambiguous")
+        .unwrap();
+    let web = reports.iter().find(|report| report["id"] == "web").unwrap();
     assert!(
-        value["reports"][0]["result"]["diagnostics"]
+        ambiguous["result"]["diagnostics"]
             .as_array()
             .unwrap()
             .iter()
             .any(|diagnostic| diagnostic["kind"] == "ambiguous-ownership"),
         "{value}"
+    );
+    assert!(
+        web["result"]["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .all(|diagnostic| diagnostic["kind"] != "ambiguous-ownership"),
+        "{value}"
+    );
+}
+
+#[test]
+fn exclusive_analyze_project_honors_finite_depth() {
+    let root = bounded_root();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let output = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "reports": [{
+                    "type": "dependencies",
+                    "id": "closure",
+                    "files": ["web/app/page.tsx"],
+                    "relationships": ["import-static", "import-dynamic", "import-type"],
+                    "candidateInclude": ["web/**"],
+                    "candidateExclude": ["**/*.test.*"],
+                    "depth": 0,
+                    "projection": "paths"
+                }]
+            })
+            .to_string(),
+        ))
+        .unwrap()
+    };
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let files = value["reports"][0]["result"]["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|entry| entry.as_str())
+        .collect::<Vec<_>>();
+    assert!(
+        !files.iter().any(|path| path.contains("packages/ui")),
+        "{files:?}"
+    );
+    let work = observer.snapshot().work;
+    assert!(
+        work.get("parse.files").copied().unwrap_or(0) <= 1,
+        "{work:#?}"
     );
 }
 
