@@ -25,6 +25,7 @@ fn graph_collectors_cover_defensive_empty_and_error_paths() {
             &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
             &graph_files,
             None,
+            None,
             LazyImportFacts::new(None, TsFactPlan::imports(), &fact_context),
             &session,
         )
@@ -162,6 +163,7 @@ fn lazy_import_facts_memoize_parse_errors() {
         &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
         &graph_files,
         None,
+        None,
         LazyImportFacts::new(None, TsFactPlan::imports(), &context),
         &session,
     );
@@ -224,6 +226,7 @@ fn lazy_import_neighbors_read_through_a_source_store_and_typed_imports() {
         &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
         &graph_files,
         None,
+        None,
         LazyImportFacts::new(None, TsFactPlan::imports(), &context).with_source_store(&sources),
         &session,
     );
@@ -267,6 +270,7 @@ fn lazy_import_neighbors_read_through_a_source_store_and_typed_imports() {
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
         &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
         &graph_files,
+        None,
         Some(&allowed),
         LazyImportFacts::new(Some(&facts), TsFactPlan::imports(), &context),
         &session,
@@ -306,6 +310,7 @@ fn lazy_import_neighbors_parse_typed_and_require_resolve_without_prepared_facts(
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
         &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
         &graph_files,
+        None,
         Some(&allowed),
         LazyImportFacts::new(None, TsFactPlan::imports(), &context),
         &session,
@@ -324,6 +329,7 @@ fn lazy_import_neighbors_parse_typed_and_require_resolve_without_prepared_facts(
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
         &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
         &graph_files,
+        None,
         Some(&none_allowed),
         LazyImportFacts::new(None, TsFactPlan::imports(), &context),
         &session,

@@ -63,44 +63,92 @@ impl PreparedScope {
     /// Each report then projects its own closure from that graph.
     fn seed_import_only_dependency_graph(&mut self) -> Result<()> {
         let cwd = std::env::current_dir().context("reading current directory")?;
-        let mut union: Option<crate::codebase::dependencies::TraverseArgs> = None;
+        let mut unbounded: Option<crate::codebase::dependencies::TraverseArgs> = None;
+        let mut bounded: std::collections::HashMap<
+            crate::codebase::dependencies::BoundedImportKey,
+            crate::codebase::dependencies::TraverseArgs,
+        > = std::collections::HashMap::new();
+        let mut other_graph_consumer = false;
         for request in &self.options.reports {
             match super::graph_direction(&request.report_type) {
-                Some(Direction::Dependents) => continue,
+                Some(Direction::Dependents) => {
+                    let args = super::traverse_args(request, &self.options)?;
+                    crate::codebase::dependencies::validate_candidate_bounds(
+                        &args,
+                        Direction::Dependents,
+                    )?;
+                    other_graph_consumer = true;
+                    continue;
+                }
                 Some(Direction::Deps) => {}
-                None => continue,
+                None => {
+                    other_graph_consumer = true;
+                    continue;
+                }
             }
             let args = super::traverse_args(request, &self.options)?;
+            crate::codebase::dependencies::validate_candidate_bounds(&args, Direction::Deps)?;
             if args.include_symbols
                 || !crate::codebase::dependencies::relationships_are_import_only(
                     &args.relationships,
                 )
             {
+                other_graph_consumer = true;
                 continue;
             }
-            match &mut union {
-                None => union = Some(args),
-                Some(existing) => {
-                    existing.files.extend(args.files);
-                    existing.file_symbols.extend(args.file_symbols);
-                    existing
-                        .file_entrypoints_are_structured
-                        .extend(args.file_entrypoints_are_structured);
-                    for relationship in args.relationships {
-                        if !existing.relationships.contains(&relationship) {
-                            existing.relationships.push(relationship);
-                        }
+            if args.has_candidate_bounds() {
+                let key = crate::codebase::dependencies::BoundedImportKey::from_args(&args);
+                match bounded.entry(key) {
+                    std::collections::hash_map::Entry::Vacant(entry) => {
+                        entry.insert(args);
+                    }
+                    std::collections::hash_map::Entry::Occupied(mut entry) => {
+                        union_import_args(entry.get_mut(), args);
                     }
                 }
+                continue;
+            }
+            match &mut unbounded {
+                None => unbounded = Some(args),
+                Some(existing) => union_import_args(existing, args),
             }
         }
-        let Some(mut args) = union else {
-            return Ok(());
-        };
-        if args.files.is_empty() {
-            return Ok(());
+        if !other_graph_consumer && unbounded.is_none() && bounded.len() == 1 {
+            if let Some(args) = bounded.values().next() {
+                self.traversal.apply_candidate_inventory(args)?;
+            }
         }
-        args.depth = None;
-        self.traversal.seed_lazy_import_graph_from_args(&args, &cwd)
+        if let Some(mut args) = unbounded {
+            if !args.files.is_empty() {
+                args.depth = None;
+                self.traversal
+                    .seed_lazy_import_graph_from_args(&args, &cwd)?;
+            }
+        }
+        for mut args in bounded.into_values() {
+            if args.files.is_empty() {
+                continue;
+            }
+            args.depth = None;
+            self.traversal
+                .seed_bounded_lazy_import_graph_from_args(&args, &cwd)?;
+        }
+        Ok(())
+    }
+}
+
+fn union_import_args(
+    existing: &mut crate::codebase::dependencies::TraverseArgs,
+    args: crate::codebase::dependencies::TraverseArgs,
+) {
+    existing.files.extend(args.files);
+    existing.file_symbols.extend(args.file_symbols);
+    existing
+        .file_entrypoints_are_structured
+        .extend(args.file_entrypoints_are_structured);
+    for relationship in args.relationships {
+        if !existing.relationships.contains(&relationship) {
+            existing.relationships.push(relationship);
+        }
     }
 }

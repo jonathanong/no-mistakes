@@ -23,7 +23,11 @@ fn import_args(root: PathBuf, file: &str) -> TraverseArgs {
         include_symbols: false,
         format: Some(Format::Json),
         json: false,
+        candidate_include: Vec::new(),
+        candidate_exclude: Vec::new(),
+        projection: TraverseProjection::Graph,
         timings: false,
+        ..Default::default()
     }
 }
 

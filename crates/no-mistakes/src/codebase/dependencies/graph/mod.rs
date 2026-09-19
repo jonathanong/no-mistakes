@@ -24,6 +24,7 @@ include!("build_plan_facts.rs");
 include!("canonical.rs");
 include!("graph_files.rs");
 include!("graph_files_visible.rs");
+include!("resolution_overlay.rs");
 include!("files_config.rs");
 include!("files_config_session.rs");
 include!("files_config_prepared.rs");

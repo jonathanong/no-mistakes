@@ -6,9 +6,12 @@ pub(crate) fn collect_and_filter_entries_shared(
 ) -> Result<TraversalResult> {
     let explicit_roots = explicit_existing_entry_files(args, &shared.root, cwd_early);
     shared.add_explicit_roots(&explicit_roots);
+    validate_candidate_bounds(args, direction)?;
     let import_only = !args.include_symbols && relationships_are_import_only(&args.relationships);
     if !(import_only && matches!(direction, Direction::Deps)) {
         shared.ensure_facts();
+    } else if args.has_candidate_bounds() {
+        shared.seed_bounded_lazy_import_graph_from_args(args, cwd_early)?;
     }
     let result = collect_and_filter_entries_prepared(args, direction, cwd_early, shared)?;
     let collected = shared
@@ -30,6 +33,7 @@ pub(crate) fn collect_and_filter_entries_prepared(
     cwd_early: &Path,
     shared: &SharedTraversalContext,
 ) -> Result<TraversalResult> {
+    validate_candidate_bounds(args, direction)?;
     shared.session.record_work("traversal.requests", 1);
     let workspace = shared.dataset.workspace();
     let entrypoints = resolve_entrypoints_with_files_and_workspace(EntrypointResolution {
@@ -80,6 +84,8 @@ pub(crate) fn collect_and_filter_entries_prepared(
         allowed: allowed_key,
         include_symbols: args.include_symbols,
         import_only,
+        candidate_include: args.candidate_include.clone(),
+        candidate_exclude: args.candidate_exclude.clone(),
     };
     let (entries, runtime_diagnostics, tsconfig_provenance) =
         cached_traversal_entries(shared, traversal_key, || {
@@ -174,5 +180,6 @@ pub(crate) fn collect_and_filter_entries_prepared(
         root: shared.root.clone(),
         diagnostics,
         tsconfig_provenance,
+        projection: args.projection,
     })
 }

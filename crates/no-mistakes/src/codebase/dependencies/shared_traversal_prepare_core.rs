@@ -123,6 +123,8 @@ impl SharedTraversalContext {
             test_filter,
             graph: None,
             lazy_import_graph: None,
+            bounded_lazy_import_graphs: HashMap::new(),
+            candidate_inventory_applied: false,
             graph_cache: SharedBuildCache::default(),
             symbol_index_cache: SharedBuildCache::default(),
             import_resolution_cache: Default::default(),

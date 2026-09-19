@@ -52,7 +52,23 @@ export interface TraverseOptions {
   tests?: string[];
   relationships?: Relationship[];
   includeSymbols?: boolean;
+  /** Pre-traversal include globs for the initial candidate inventory. Import-only `dependencies` only. */
+  candidateInclude?: string[];
+  /** Pre-traversal exclude globs for the initial candidate inventory. Reachable imports still escape this set. */
+  candidateExclude?: string[];
+  /** `paths` returns a compact sorted path list plus diagnostics. Default `graph`. */
+  projection?: TraverseProjection;
 }
+
+export type TraverseProjection = "graph" | "paths";
+
+export type TraverseGraphOptions = Omit<TraverseOptions, "projection"> & {
+  projection?: "graph";
+};
+
+export type TraversePathsOptions = Omit<TraverseOptions, "projection"> & {
+  projection: "paths";
+};
 
 export interface DependencyFile {
   path?: string;
@@ -98,6 +114,11 @@ export interface DependencyResult {
   files: DependencyFile[];
   diagnostics: TsConfigDiagnostic[];
   tsconfig_provenance: TsConfigProvenance[];
+}
+
+export interface ImportClosureResult {
+  files: string[];
+  diagnostics: TsConfigDiagnostic[];
 }
 
 export type ExportKind =

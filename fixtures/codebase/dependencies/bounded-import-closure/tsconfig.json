@@ -1,0 +1,9 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@acme/ui": ["packages/ui/src/button.ts"],
+      "@acme/data": ["packages/data/src/registry.ts"]
+    }
+  }
+}

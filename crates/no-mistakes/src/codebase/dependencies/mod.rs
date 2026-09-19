@@ -18,12 +18,15 @@ pub use crate::cli::Format;
 
 include!("args_test_globs.rs");
 include!("args_relationships.rs");
+include!("projection.rs");
+include!("candidate_inventory.rs");
 
 include!("traversal_entrypoints.rs");
 include!("traversal_validation.rs");
 include!("traversal_queue_roots.rs");
 include!("symbol_resolution.rs");
 include!("shared_traversal.rs");
+include!("shared_traversal_bounded.rs");
 include!("shared_traversal_prepare.rs");
 include!("shared_traversal_facts.rs");
 include!("shared_traversal_lazy_graph.rs");
@@ -39,6 +42,7 @@ include!("shared_traversal_collect_roots.rs");
 include!("shared_traversal_provenance.rs");
 include!("shared_traversal_uncached.rs");
 include!("output_args.rs");
+include!("collect_standalone.rs");
 include!("run.rs");
 
 #[cfg(test)]
@@ -64,38 +68,7 @@ pub(crate) struct TraversalResult {
     root: PathBuf,
     diagnostics: Vec<crate::codebase::ts_resolver::TsConfigDiagnostic>,
     tsconfig_provenance: Vec<crate::codebase::ts_resolver::TsConfigProvenance>,
-}
-
-pub(crate) fn collect_and_filter_entries(
-    args: &TraverseArgs,
-    direction: Direction,
-    cwd_early: &Path,
-    timings: &mut crate::codebase::timing::PhaseTimings,
-) -> Result<TraversalResult> {
-    let root = resolve_root(args, cwd_early);
-    let root = crate::codebase::ts_resolver::normalize_path(&root);
-    let allowed = relationship_filter(&args.relationships);
-    let build_plan = graph::GraphBuildPlan::from_allowed(allowed.as_ref())
-        .with_symbols(traversal_needs_symbol_facts(args));
-    let mut framework_plan =
-        crate::codebase::test_discovery::FrameworkPreparationPlan::for_graph(build_plan);
-    framework_plan.include_framework_names(args.tests.iter().map(String::as_str));
-    let shared = SharedTraversalContext::prepare_with_framework_plan_for_direction(
-        root,
-        args.tsconfig.as_deref(),
-        None,
-        build_plan,
-        framework_plan,
-        direction,
-    );
-    let mut shared = shared?;
-
-    timings.mark("search");
-    timings.mark("ingest");
-    let result = collect_and_filter_entries_shared(args, direction, cwd_early, &mut shared)?;
-    timings.mark("parse");
-    timings.mark("analysis");
-    Ok(result)
+    projection: TraverseProjection,
 }
 
 fn apply_filters(

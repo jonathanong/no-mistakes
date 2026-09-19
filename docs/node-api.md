@@ -512,6 +512,44 @@ the entire visible universe. Prefer import-only relationships plus explicit
 a `check` report no longer eagerly parses every indexable file for an
 import-only `dependencies` plan.
 
+`candidateInclude` / `candidateExclude` on a forward import-only
+`dependencies` report (or `dependencies()`) define the initial candidate
+inventory before GraphFiles / fact preparation. They are not `filters` and
+are not merged from top-level `analyzeProject` `filters`. Unrelated excluded
+files are omitted from that inventory and receive no parse/fact work. A
+resolved local or workspace source outside the include set still escapes into
+the closure. `projection: "paths"` returns
+`{ files: string[], diagnostics: TsConfigDiagnostic[] }` — sorted unique
+repository-relative paths plus bounded diagnostics — and does not change
+which paths are walked. Omit `projection` or pass `"graph"` to keep
+`DependencyResult`. These candidate options are invalid on `dependents`,
+`related`, `includeSymbols`, or non-import relationships.
+`analyzeProject` report `result` stays loosely typed: a `dependencies`
+report body is `ImportClosureResult` when that report sets
+`projection: "paths"`, and `DependencyResult` otherwise.
+
+```js
+const closure = await dependencies({
+  root,
+  files: ["web/app/page.tsx"],
+  relationships: ["import-static", "import-dynamic", "import-type"],
+  candidateInclude: ["web/**"],
+  candidateExclude: ["**/*.test.*"],
+  projection: "paths",
+});
+const report = await analyzeProject({
+  root,
+  reports: [{
+    type: "dependencies",
+    files: ["web/app/page.tsx"],
+    relationships: ["import-static", "import-dynamic", "import-type"],
+    candidateInclude: ["web/**"],
+    candidateExclude: ["**/*.test.*"],
+    projection: "paths",
+  }],
+});
+```
+
 The lock is shared by CLI and Node/N-API analyses for the current OS user across
 all repositories. While waiting, stderr reports `waiting for lock held by pid
 <pid> for <n>s`. Successful return values keep their existing shapes, and lock

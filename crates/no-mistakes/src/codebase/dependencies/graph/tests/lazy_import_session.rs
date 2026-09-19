@@ -36,6 +36,7 @@ fn lazy_import_facts_memoize_parse_errors() {
                 &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
                 &graph_files,
                 None,
+                None,
                 LazyImportFacts::new(None, TsFactPlan::imports(), &context),
                 &session,
             );
@@ -88,6 +89,7 @@ fn lazy_import_session_does_not_parse_files_twice() {
                     tsconfig_catalog: None,
                     max_depth: None,
                     graph_files: &graph_files,
+                    resolution_visible: None,
                     allowed: None,
                     facts: LazyImportFacts::new(None, TsFactPlan::imports(), &context),
                     workspace: &workspace,
@@ -117,6 +119,7 @@ fn lazy_import_session_does_not_parse_files_twice() {
                     tsconfig_catalog: None,
                     max_depth: None,
                     graph_files: &graph_files,
+                    resolution_visible: None,
                     allowed: None,
                     facts: LazyImportFacts::new(None, TsFactPlan::imports(), &context),
                     workspace: &workspace,
@@ -169,6 +172,7 @@ fn live_lazy_cache_prevents_reparse_across_walks() {
             tsconfig_catalog: None,
             max_depth: None,
             graph_files: &graph_files,
+            resolution_visible: None,
             allowed: None,
             facts: LazyImportFacts::new(None, TsFactPlan::imports(), &context)
                 .with_live_cache(&cache),
@@ -188,6 +192,7 @@ fn live_lazy_cache_prevents_reparse_across_walks() {
             tsconfig_catalog: None,
             max_depth: None,
             graph_files: &graph_files,
+            resolution_visible: None,
             allowed: None,
             facts: LazyImportFacts::new(None, TsFactPlan::imports(), &context)
                 .with_live_cache(&cache),
@@ -220,6 +225,7 @@ fn import_neighbors_report_source_store_read_failures() {
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
         &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
         &graph_files,
+        None,
         None,
         LazyImportFacts::new(None, TsFactPlan::imports(), &context).with_source_store(&sources),
         &session,

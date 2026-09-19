@@ -56,7 +56,21 @@ virtual nodes. Empty `projects.*.trpc.routers` lists disable extraction;
 
 Key options: `--tsconfig`, `--depth`/`--max-depth`, repeatable `--filter`,
 repeatable `--target-module`, repeatable `--relationship`, repeatable `--test`,
-`--format`, `--json`, and `--timings`.
+repeatable `--candidate-include`, repeatable `--candidate-exclude`,
+`--projection`, `--format`, `--json`, and `--timings`.
+
+`--candidate-include` / `--candidate-exclude` define the **initial** import-only
+candidate inventory before GraphFiles / fact preparation. They are not
+`--filter`: excluded unrelated tests are omitted from that inventory and are
+not parsed unless a reachable import escapes to them. A resolved local or
+workspace source outside the include set still stays in the closure. These
+flags require forward import-only `dependencies` (`--relationship` limited to
+import kinds, no `--symbols`).
+
+`--projection paths` with JSON emits `{ "files": [...], "diagnostics": [...] }`
+— sorted unique repository-relative paths plus bounded diagnostics, without
+`roots`, `via`, `depth`, or `tsconfig_provenance`. It does not change which
+paths are walked. CLI `--format paths` remains the line-oriented listing.
 
 Without `--tsconfig`, the resolver automatically uses the config owning each
 importing file, including referenced workspace projects. `--tsconfig <FILE>`

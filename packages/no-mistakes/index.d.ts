@@ -50,7 +50,10 @@ import type {
   TestsTargetsOptions,
   TestsTargetsReport,
   TestsWhyOptions,
+  TraverseGraphOptions,
   TraverseOptions,
+  TraversePathsOptions,
+  ImportClosureResult,
   WhyStep,
   WithInvocationOptions,
   WritePlanningImpactArtifactsOptions,
@@ -61,7 +64,10 @@ export * from "./types";
 export * from "./index-ci-infra";
 
 export function dependencies(
-  options: WithInvocationOptions<TraverseOptions>,
+  options: WithInvocationOptions<TraversePathsOptions>,
+): Promise<ImportClosureResult>;
+export function dependencies(
+  options: WithInvocationOptions<TraverseGraphOptions | TraverseOptions>,
 ): Promise<DependencyResult>;
 export function dependents(
   options: WithInvocationOptions<TraverseOptions>,

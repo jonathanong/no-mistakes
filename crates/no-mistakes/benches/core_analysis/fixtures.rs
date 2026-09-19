@@ -77,8 +77,12 @@ pub(super) fn traverse_args_relationships(
         json: true,
         relationships,
         include_symbols: false,
+        candidate_include: Vec::new(),
+        candidate_exclude: Vec::new(),
+        projection: TraverseProjection::Graph,
         timings: false,
         files: roots.iter().map(PathBuf::from).collect(),
+        ..Default::default()
     }
 }
 

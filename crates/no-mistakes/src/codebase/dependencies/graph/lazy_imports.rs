@@ -36,15 +36,18 @@ fn lazy_import_walk(
         tsconfig_catalog,
         max_depth,
         graph_files,
+        resolution_visible,
         allowed,
         facts,
         workspace,
         import_resolution_cache,
     } = input;
+    let visible: &dyn crate::codebase::ts_resolver::VisiblePathLookup =
+        resolution_visible.unwrap_or(graph_files);
     let resolver = crate::codebase::ts_resolver::ProjectImportResolver::new(
         tsconfig,
         tsconfig_catalog,
-        graph_files,
+        visible,
         import_resolution_cache,
         session,
     );
@@ -90,7 +93,11 @@ fn lazy_import_walk(
                             collected: None,
                         };
                     };
-                    if !graph_files.contains_visible(path) || !is_indexable(path) {
+                    if !is_indexable(path)
+                        || !(graph_files.contains_visible(path)
+                            || resolution_visible
+                                .is_some_and(|visible| visible.contains_visible(path)))
+                    {
                         return ExpandedImportNode {
                             node: node.clone(),
                             neighbors: Vec::new(),
@@ -102,6 +109,7 @@ fn lazy_import_walk(
                         &resolver,
                         workspace,
                         graph_files,
+                        resolution_visible,
                         allowed,
                         facts,
                         session,

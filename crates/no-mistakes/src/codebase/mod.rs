@@ -40,5 +40,5 @@ pub mod unique_exports;
 pub mod workflow_topology;
 pub mod workspaces;
 
-pub use dependencies::{Direction, TraverseArgs};
+pub use dependencies::{Direction, TraverseArgs, TraverseProjection};
 pub use symbols::SymbolsArgs;

@@ -836,6 +836,23 @@ test("graph declarations expose opt-in call relationships", () => {
   assert.match(declarations, /\| "call"/);
 });
 
+test("dependency declarations expose bounded import-closure inputs and compact output", () => {
+  const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  const indexDeclarations = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
+  assert.match(traversalDeclarations, /candidateInclude\?: string\[\];/);
+  assert.match(traversalDeclarations, /candidateExclude\?: string\[\];/);
+  assert.match(traversalDeclarations, /projection\?: TraverseProjection;/);
+  assert.match(traversalDeclarations, /export type TraverseProjection = "graph" \| "paths";/);
+  assert.match(
+    traversalDeclarations,
+    /export interface ImportClosureResult \{\n  files: string\[\];\n  diagnostics: TsConfigDiagnostic\[\];\n\}/,
+  );
+  assert.match(
+    indexDeclarations,
+    /options: WithInvocationOptions<TraversePathsOptions>,\n\): Promise<ImportClosureResult>;/,
+  );
+});
+
 test("declarations expose invocation controls on every analysis", () => {
   const indexDeclarations = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
   const invocationDeclarations = readFileSync(join(packageRoot, "invocation-types.d.ts"), "utf8");

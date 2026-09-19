@@ -48,7 +48,11 @@ fn cli_call_relationship_uses_real_fixture_graph_edges() {
             json: true,
             relationships: vec![RelationshipArg::Call],
             include_symbols: false,
+            candidate_include: Vec::new(),
+            candidate_exclude: Vec::new(),
+            projection: TraverseProjection::Graph,
             timings: false,
+            ..Default::default()
         },
         Direction::Deps,
     )
@@ -97,7 +101,11 @@ fn call_dependents_expand_callable_roots_without_importer_edges() {
             json: true,
             relationships: vec![RelationshipArg::Call],
             include_symbols: false,
+            candidate_include: Vec::new(),
+            candidate_exclude: Vec::new(),
+            projection: TraverseProjection::Graph,
             timings: false,
+            ..Default::default()
         },
         Direction::Dependents,
     )
@@ -133,7 +141,11 @@ fn call_dependents_expand_callable_roots_without_importer_edges() {
             json: true,
             relationships: vec![RelationshipArg::Call],
             include_symbols: false,
+            candidate_include: Vec::new(),
+            candidate_exclude: Vec::new(),
+            projection: TraverseProjection::Graph,
             timings: false,
+            ..Default::default()
         },
         Direction::Dependents,
     )

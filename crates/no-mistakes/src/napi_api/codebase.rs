@@ -64,8 +64,21 @@ pub(crate) fn build_traverse_args(options: TraverseOptions) -> AnyhowResult<Trav
             .map(|value| parse_relationship(value))
             .collect::<AnyhowResult<Vec<_>>>()?,
         include_symbols: options.include_symbols,
+        candidate_include: options.candidate_include,
+        candidate_exclude: options.candidate_exclude,
+        projection: parse_projection(options.projection.as_deref())?,
         timings: false,
     })
+}
+
+fn parse_projection(
+    value: Option<&str>,
+) -> AnyhowResult<crate::codebase::dependencies::TraverseProjection> {
+    match value {
+        None | Some("graph") => Ok(crate::codebase::dependencies::TraverseProjection::Graph),
+        Some("paths") => Ok(crate::codebase::dependencies::TraverseProjection::Paths),
+        Some(other) => bail!("unknown projection `{other}`"),
+    }
 }
 
 pub(crate) fn build_import_usages_args(options: ImportUsagesOptions) -> ImportUsagesArgs {

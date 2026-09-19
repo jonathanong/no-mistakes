@@ -52,7 +52,11 @@ fn run_surfaces_tsconfig_errors() {
         json: false,
         relationships: Vec::new(),
         include_symbols: false,
+        candidate_include: Vec::new(),
+        candidate_exclude: Vec::new(),
+        projection: TraverseProjection::Graph,
         timings: false,
+        ..Default::default()
     };
 
     let err = run(args, Direction::Deps).unwrap_err();
