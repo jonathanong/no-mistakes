@@ -20,7 +20,6 @@ fn cli_mixed_import_and_call_relationships_traverse_as_one_union() {
             candidate_exclude: Vec::new(),
             projection: TraverseProjection::Graph,
             timings: false,
-            ..Default::default()
         },
         Direction::Deps,
     )
@@ -70,7 +69,6 @@ fn cli_mixed_import_and_call_dependents_traverse_as_one_union() {
             candidate_exclude: Vec::new(),
             projection: TraverseProjection::Graph,
             timings: false,
-            ..Default::default()
         },
         Direction::Dependents,
     )
@@ -120,7 +118,6 @@ fn cli_call_symbol_query_omits_unrelated_top_level_calls() {
             candidate_exclude: Vec::new(),
             projection: TraverseProjection::Graph,
             timings: false,
-            ..Default::default()
         },
         Direction::Deps,
     )

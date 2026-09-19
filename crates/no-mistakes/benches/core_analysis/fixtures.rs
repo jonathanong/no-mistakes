@@ -84,7 +84,6 @@ pub(super) fn traverse_args_relationships(
         projection: TraverseProjection::Graph,
         timings: false,
         files: roots.iter().map(PathBuf::from).collect(),
-        ..Default::default()
     }
 }
 

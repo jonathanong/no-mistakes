@@ -254,7 +254,6 @@ fn deps_direction_rejects_symbol_entrypoints() {
         candidate_exclude: Vec::new(),
         projection: TraverseProjection::Graph,
         timings: false,
-        ..Default::default()
     };
 
     let err = run(args, Direction::Deps).unwrap_err();
@@ -307,7 +306,6 @@ fn traverse_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
         candidate_exclude: Vec::new(),
         projection: TraverseProjection::Graph,
         timings: false,
-        ..Default::default()
     }
 }
 

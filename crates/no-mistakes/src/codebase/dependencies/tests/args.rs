@@ -56,7 +56,6 @@ fn run_surfaces_tsconfig_errors() {
         candidate_exclude: Vec::new(),
         projection: TraverseProjection::Graph,
         timings: false,
-        ..Default::default()
     };
 
     let err = run(args, Direction::Deps).unwrap_err();

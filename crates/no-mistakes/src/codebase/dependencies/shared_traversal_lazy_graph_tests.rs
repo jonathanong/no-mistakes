@@ -27,7 +27,6 @@ fn import_args(root: PathBuf, files: Vec<PathBuf>) -> TraverseArgs {
         candidate_exclude: Vec::new(),
         projection: TraverseProjection::Graph,
         timings: false,
-        ..Default::default()
     }
 }
 
