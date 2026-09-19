@@ -22,8 +22,16 @@ input or operational error exits 2 without a partial report.
 
 Each import is classified `resolved` (points at a local file), `external` (a bare
 npm package, Node builtin, or subpath import), or `unresolved` (a relative or
-aliased import whose target is missing). The command exits non-zero when any
-import is unresolved, and lists the offending specifiers under `unresolved`.
+aliased import whose target is missing, or a computed `import()` / `require()` /
+`require.resolve()` specifier). Computed specifiers such as
+`import(\`./${name}\`)` and `import(moduleName)` are included in `imports` with
+`computed: true` and `status: "unresolved"` rather than omitted. Identifier
+specifiers are still `unresolved`, not `external`. Literal
+`next/dynamic(() => import('./x'))` stays `resolved` when `./x` exists. Package
+string literals such as `import('express')` stay `external`. The command exits
+non-zero when any import is unresolved, and lists the offending specifiers under
+`unresolved`. Graph edges remain literal-only: computed imports do not become
+module neighbors.
 
 A configured tsconfig path alias whose target is missing counts as `unresolved`,
 not `external`. In a workspace, the omitted default selects the config owning

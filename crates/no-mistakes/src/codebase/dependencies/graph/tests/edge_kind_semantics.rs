@@ -146,6 +146,7 @@ fn workspace_paths_preserve_runtime_and_non_runtime_edge_kinds() {
             side_effect_only: false,
             re_export: false,
             runtime_reachable: false,
+            computed: false,
         })
         .collect();
     let lazy_neighbors = import_neighbors_from_facts(

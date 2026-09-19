@@ -242,6 +242,7 @@ fn lazy_import_neighbors_read_through_a_source_store_and_typed_imports() {
                     side_effect_only: false,
                     re_export: false,
                     runtime_reachable: false,
+                    computed: false,
                 },
                 ExtractedImport {
                     specifier: "./b".to_string(),
@@ -252,6 +253,7 @@ fn lazy_import_neighbors_read_through_a_source_store_and_typed_imports() {
                     side_effect_only: false,
                     re_export: false,
                     runtime_reachable: true,
+                    computed: false,
                 },
             ],
             ..TsFileFacts::default()
@@ -354,6 +356,7 @@ fn route_import_edges_resolve_through_an_unbounded_catalog() {
                 side_effect_only: false,
                 re_export: false,
                 runtime_reachable: true,
+                computed: false,
             }],
             ..TsFileFacts::default()
         },
@@ -395,6 +398,7 @@ fn route_import_edges_skip_uncanonical_parents_and_nameless_visible_files() {
                 side_effect_only: false,
                 re_export: false,
                 runtime_reachable: true,
+                computed: false,
             }],
             ..TsFileFacts::default()
         },
@@ -443,6 +447,7 @@ fn route_import_edges_skip_uncanonical_parents_and_nameless_visible_files() {
                 side_effect_only: false,
                 re_export: false,
                 runtime_reachable: true,
+                computed: false,
             }],
             ..TsFileFacts::default()
         },

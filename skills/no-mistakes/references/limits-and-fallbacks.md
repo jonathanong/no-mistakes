@@ -21,14 +21,18 @@ shared across workspace packages.
 
 ## Dynamic import()
 
-String-literal `import("...")` expressions are tracked as `dynamic-import` edges under `--relationship import`. Non-literal expressions are not resolved.
+String-literal `import("...")` expressions are tracked as `dynamic-import` edges under `--relationship import`. Non-literal expressions are not graph edges.
 
 ```ts
 const mod = await import('./heavy-module.mts');  // tracked
-const other = await import(moduleName);          // NOT tracked
+const other = await import(moduleName);          // NOT a graph edge
 ```
 
-**Workaround for non-literals:** `rg "import\\(" src/` to find call sites.
+`no-mistakes resolve-check` still lists those computed specifiers with
+`status: "unresolved"` and `computed: true`, so fail-closed consumers can see
+them without an `rg` scan.
+
+**Workaround for graph traversal of non-literals:** `rg "import\\(" src/` to find call sites.
 
 `--relationship route-import` uses the same literal-only resolution, but is
 more conservative about execution: it retains literal dynamic imports inside
@@ -38,9 +42,9 @@ type-only imports and `require()`.
 
 ## CJS require()
 
-String-literal `require("...")` calls are tracked as `require` edges under `--relationship import`. Non-literal calls are not resolved.
+String-literal `require("...")` calls are tracked as `require` edges under `--relationship import`. Non-literal calls are not graph edges. `resolve-check` reports them as unresolved computed imports.
 
-**Workaround for non-literals:** `rg "require(" src/` to find call sites.
+**Workaround for graph traversal of non-literals:** `rg "require(" src/` to find call sites.
 
 ## package.json#exports subpaths
 

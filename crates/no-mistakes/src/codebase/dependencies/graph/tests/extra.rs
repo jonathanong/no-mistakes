@@ -186,6 +186,7 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         side_effect_only: false,
         re_export: false,
         runtime_reachable: false,
+        computed: false,
     }];
     let imports_facts = crate::codebase::ts_source::facts::TsFileFacts {
         imports: imports_items,
@@ -210,6 +211,7 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         side_effect_only: false,
         re_export: false,
         runtime_reachable: false,
+        computed: false,
     }];
     let hidden_workspace_facts = crate::codebase::ts_source::facts::TsFileFacts {
         imports: hidden_workspace_items,
@@ -265,6 +267,7 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         side_effect_only: false,
         re_export: false,
         runtime_reachable: false,
+        computed: false,
     }];
     let hidden_imports_facts = crate::codebase::ts_source::facts::TsFileFacts {
         imports: hidden_imports_items,
@@ -293,6 +296,7 @@ fn low_level_collectors_cover_empty_invalid_and_non_visible_branches() {
         side_effect_only: false,
         re_export: false,
         runtime_reachable: false,
+        computed: false,
     }];
     let require_resolve_facts = crate::codebase::ts_source::facts::TsFileFacts {
         imports: require_resolve_items,

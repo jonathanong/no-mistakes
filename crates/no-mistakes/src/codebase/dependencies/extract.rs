@@ -58,6 +58,11 @@ pub struct ExtractedImport {
     /// imports are reachable through the exported binding even though no static
     /// call reaches their anonymous scope.
     pub runtime_reachable: bool,
+    /// `true` when the specifier is not a string literal or empty template.
+    /// Graph construction skips these rows; `resolve-check` reports them
+    /// `unresolved` instead of omitting them or classifying identifier
+    /// specifiers as `external`.
+    pub computed: bool,
 }
 
 /// A statically visible function call in a file.

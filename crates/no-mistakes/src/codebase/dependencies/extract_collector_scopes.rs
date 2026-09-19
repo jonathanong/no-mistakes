@@ -12,11 +12,15 @@ impl ImportCollector {
     }
 
     fn push(&mut self, specifier: &str, kind: ImportKind, byte_offset: usize) {
-        self.push_with_side_effect(specifier, kind, byte_offset, false, false);
+        self.push_with_side_effect(specifier, kind, byte_offset, false, false, false);
+    }
+
+    fn push_computed(&mut self, specifier: &str, kind: ImportKind, byte_offset: usize) {
+        self.push_with_side_effect(specifier, kind, byte_offset, false, false, true);
     }
 
     fn push_reexport(&mut self, specifier: &str, kind: ImportKind, byte_offset: usize) {
-        self.push_with_side_effect(specifier, kind, byte_offset, false, true);
+        self.push_with_side_effect(specifier, kind, byte_offset, false, true, false);
     }
 
     fn is_exported_top_level_name(&self, name: &str) -> bool {
@@ -34,6 +38,7 @@ impl ImportCollector {
         byte_offset: usize,
         side_effect_only: bool,
         re_export: bool,
+        computed: bool,
     ) {
         let runtime_import = matches!(
             kind,
@@ -61,6 +66,7 @@ impl ImportCollector {
                 side_effect_only,
                 re_export,
                 runtime_reachable,
+                computed,
             });
         }
     }

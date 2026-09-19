@@ -1,6 +1,7 @@
 use super::render::{render, resolve_format, to_json, Report};
 use crate::cli::Format;
-use crate::codebase::dependencies::extract::ImportKind;
+use crate::codebase::dependencies::extract::{ExtractedImport, ImportKind};
+use crate::codebase::ts_resolver::ImportResolver;
 use anyhow::Result;
 use is_terminal::IsTerminal;
 use serde::Serialize;
@@ -48,6 +49,7 @@ struct ImportRow {
     status: Status,
     #[serde(skip_serializing_if = "Option::is_none")]
     resolved: Option<String>,
+    computed: bool,
 }
 
 #[derive(Serialize, Clone)]
@@ -85,6 +87,39 @@ fn kind_str(kind: ImportKind) -> &'static str {
 fn is_declaration_file(path: &Path) -> bool {
     let name = path.to_string_lossy();
     name.ends_with(".d.ts") || name.ends_with(".d.mts") || name.ends_with(".d.cts")
+}
+
+fn classify(
+    imp: &ExtractedImport,
+    target: &super::shared::Target,
+    resolver: &ImportResolver,
+) -> ImportRow {
+    if imp.computed {
+        return ImportRow {
+            specifier: imp.specifier.clone(),
+            kind: kind_str(imp.kind),
+            status: Status::Unresolved,
+            resolved: None,
+            computed: true,
+        };
+    }
+    let resolved = resolver
+        .resolve(&imp.specifier, &target.abs_file)
+        .filter(|path| imp.kind == ImportKind::Type || !is_declaration_file(path));
+    let status = if resolved.is_some() {
+        Status::Resolved
+    } else if imp.specifier.starts_with('.') || resolver.matches_alias(&imp.specifier) {
+        Status::Unresolved
+    } else {
+        Status::External
+    };
+    ImportRow {
+        specifier: imp.specifier.clone(),
+        kind: kind_str(imp.kind),
+        status,
+        resolved: resolved.map(|abs| super::shared::rel_str(&abs, &target.root)),
+        computed: false,
+    }
 }
 
 fn compute(args: &ResolveCheckArgs) -> Result<ResolveCheckReport> {
@@ -151,5 +186,7 @@ pub fn run_json_batch(args: ResolveCheckArgs) -> Result<String> {
     to_json(&batch_report(compute_many(&args)?))
 }
 
+#[cfg(test)]
+mod computed_tests;
 #[cfg(test)]
 mod tests;

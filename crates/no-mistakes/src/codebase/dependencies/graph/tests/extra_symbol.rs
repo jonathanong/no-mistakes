@@ -358,6 +358,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
                 side_effect_only: false,
                 re_export: false,
                 runtime_reachable: false,
+                computed: false,
             },
             ExtractedImport {
                 specifier: "./missing.mts".to_string(),
@@ -368,6 +369,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
                 side_effect_only: false,
                 re_export: false,
                 runtime_reachable: false,
+                computed: false,
             },
             ExtractedImport {
                 specifier: "react".to_string(),
@@ -378,6 +380,7 @@ fn symbol_import_target_helpers_cover_node_kinds() {
                 side_effect_only: false,
                 re_export: false,
                 runtime_reachable: false,
+                computed: false,
             },
         ],
         &current,

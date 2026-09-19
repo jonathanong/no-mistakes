@@ -179,14 +179,37 @@ fn extracts_dynamic_import() {
         .unwrap();
     assert_eq!(specs(&imports), vec!["./dyn.mts"]);
     assert_eq!(kinds(&imports), vec![ImportKind::Dynamic]);
+    assert!(!imports[0].computed);
 }
 
 #[test]
-fn non_literal_dynamic_import_is_ignored() {
+fn non_literal_dynamic_import_is_computed() {
     let imports = ts_extractor()
         .extract("const m = await import(moduleName);")
         .unwrap();
-    assert!(imports.is_empty());
+    assert_eq!(specs(&imports), vec!["moduleName"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::Dynamic]);
+    assert!(imports[0].computed);
+}
+
+#[test]
+fn interpolated_dynamic_import_is_computed() {
+    let imports = ts_extractor()
+        .extract("const m = await import(`./${name}`);")
+        .unwrap();
+    assert_eq!(specs(&imports), vec!["./${}"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::Dynamic]);
+    assert!(imports[0].computed);
+}
+
+#[test]
+fn concatenated_dynamic_import_is_computed() {
+    let imports = ts_extractor()
+        .extract(r#"const m = import("./" + name);"#)
+        .unwrap();
+    assert_eq!(specs(&imports), vec!["<computed>"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::Dynamic]);
+    assert!(imports[0].computed);
 }
 
 #[test]
@@ -199,17 +222,37 @@ fn extracts_require_call() {
 }
 
 #[test]
-fn non_literal_require_call_is_ignored() {
+fn non_literal_require_call_is_computed() {
     let imports = ts_extractor()
         .extract("const mod = require(moduleName);")
         .unwrap();
-    assert!(imports.is_empty());
+    assert_eq!(specs(&imports), vec!["moduleName"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::Require]);
+    assert!(imports[0].computed);
+}
+
+#[test]
+fn spread_require_call_is_computed() {
+    let imports = ts_extractor().extract("require(...mods);").unwrap();
+    assert_eq!(specs(&imports), vec!["<computed>"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::Require]);
+    assert!(imports[0].computed);
 }
 
 #[test]
 fn require_without_arguments_is_ignored() {
     let imports = ts_extractor().extract("require();").unwrap();
     assert!(imports.is_empty());
+}
+
+#[test]
+fn exported_dynamic_loader_literal_is_not_computed() {
+    let imports = ts_extractor()
+        .extract("export const Lazy = dynamic(() => import('./Foo'));")
+        .unwrap();
+    assert!(imports
+        .iter()
+        .any(|imp| imp.specifier == "./Foo" && !imp.computed && imp.kind == ImportKind::Dynamic));
 }
 
 // ── General behavior ────────────────────────────────────────────────

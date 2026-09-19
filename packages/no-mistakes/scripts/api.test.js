@@ -750,6 +750,7 @@ test("resolveCheck declarations mirror its mutually exclusive runtime inputs", (
   assert.match(declarations, /ResolveCheckOptions = QueryFileOptions & \{\n  files\?: never;/);
   assert.match(declarations, /files: \[string, \.\.\.string\[\]\];/);
   assert.match(declarations, /file\?: never;/);
+  assert.match(declarations, /computed: boolean;/);
 });
 
 test("resolveConfig declarations expose additive per-framework triggers", () => {

@@ -71,6 +71,7 @@ fn route_import_helpers_cover_missing_canonical_parents_and_visible_remap() {
                 side_effect_only: false,
                 re_export: false,
                 runtime_reachable: false,
+                computed: false,
             }],
             ..TsFileFacts::default()
         },
@@ -105,6 +106,7 @@ fn route_import_helpers_cover_missing_canonical_parents_and_visible_remap() {
                     side_effect_only: false,
                     re_export: false,
                     runtime_reachable: false,
+                    computed: false,
                 }],
                 ..TsFileFacts::default()
             },
@@ -151,6 +153,7 @@ fn route_import_helpers_cover_missing_canonical_parents_and_visible_remap() {
                 side_effect_only: false,
                 re_export: false,
                 runtime_reachable: false,
+                computed: false,
             }],
             ..TsFileFacts::default()
         },

@@ -23,11 +23,13 @@ fn extracts_require_resolve_call() {
 }
 
 #[test]
-fn non_literal_require_resolve_call_is_ignored() {
+fn non_literal_require_resolve_call_is_computed() {
     let imports = ts_extractor()
         .extract("const path = require.resolve(moduleName);")
         .unwrap();
-    assert!(imports.is_empty());
+    assert_eq!(specs(&imports), vec!["moduleName"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::RequireResolve]);
+    assert!(imports[0].computed);
 }
 
 #[test]

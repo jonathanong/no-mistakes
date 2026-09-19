@@ -42,6 +42,7 @@ fn scoped_import_targets_preserve_workspace_edges() {
             side_effect_only: false,
             re_export: false,
             runtime_reachable: false,
+            computed: false,
         }],
         &current,
         &resolver,

@@ -178,7 +178,7 @@ alias or reproducing a legacy result. Omit it for normal monorepo analysis so
 each source uses its owning package config.
 
 **When no-mistakes dependents returns fewer results than expected:**
-Check if the import uses a bare external specifier, a non-literal dynamic `import()` / `require()`, or an alias that requires a specific package `tsconfig`. See `limits-and-fallbacks.md` for workarounds.
+Check if the import uses a bare external specifier, a non-literal dynamic `import()` / `require()` (those are unresolved in `resolve-check` but are not graph edges), or an alias that requires a specific package `tsconfig`. See `limits-and-fallbacks.md` for workarounds.
 
 **Graph edge caveats:**
 See https://github.com/jonathanong/no-mistakes/blob/main/docs/graph-edges.md for
