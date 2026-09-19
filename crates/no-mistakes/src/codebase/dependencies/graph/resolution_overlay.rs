@@ -63,10 +63,13 @@ pub(crate) struct ImportNeighborVisibility<'a> {
 }
 
 impl<'a> ImportNeighborVisibility<'a> {
-    pub(crate) fn new(graph_files: &'a GraphFiles) -> Self {
+    pub(crate) fn new(
+        graph_files: &'a GraphFiles,
+        resolution_visible: Option<&'a dyn VisiblePathLookup>,
+    ) -> Self {
         Self {
             graph_files,
-            resolution_visible: None,
+            resolution_visible,
         }
     }
 

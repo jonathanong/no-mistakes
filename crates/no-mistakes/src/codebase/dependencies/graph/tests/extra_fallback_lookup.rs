@@ -161,7 +161,7 @@ fn lazy_import_neighbors_skip_invisible_targets_and_keep_external_modules() {
         &a,
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
         &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
-        ImportNeighborVisibility::new(&graph_files),
+        ImportNeighborVisibility::new(&graph_files, None),
         None,
         LazyImportFacts::new(
             Some(&facts),
@@ -195,7 +195,7 @@ fn lazy_import_neighbors_collect_source_type_and_non_indexable_targets() {
         &a,
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
         &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
-        ImportNeighborVisibility::new(&GraphFiles::from_files(vec![a.clone(), b.clone()])),
+        ImportNeighborVisibility::new(&GraphFiles::from_files(vec![a.clone(), b.clone()]), None),
         None,
         LazyImportFacts::new(None, source_plan, &TsFactContext::new(&root)),
         &session,
@@ -239,7 +239,7 @@ fn lazy_import_neighbors_collect_source_type_and_non_indexable_targets() {
         &a,
         &crate::codebase::ts_resolver::ImportResolver::new(&tsconfig),
         &crate::codebase::workspaces::IndexedWorkspaceMap::default(),
-        ImportNeighborVisibility::new(&GraphFiles::from_files(vec![a.clone(), b.clone()])),
+        ImportNeighborVisibility::new(&GraphFiles::from_files(vec![a.clone(), b.clone()]), None),
         None,
         LazyImportFacts::new(
             Some(&facts),
