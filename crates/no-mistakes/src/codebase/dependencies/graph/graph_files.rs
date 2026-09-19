@@ -106,7 +106,7 @@ impl GraphFiles {
     }
 
     /// Build a new universe from a subset of currently visible paths.
-    pub(crate) fn from_visible_subset(&self, mut paths: Vec<PathBuf>) -> Self {
+    pub(crate) fn visible_subset(&self, mut paths: Vec<PathBuf>) -> Self {
         crate::codebase::ts_source::sort_os_str_paths(&mut paths);
         paths.dedup();
         let resource_candidates = self

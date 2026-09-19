@@ -108,8 +108,10 @@ fn lazy_import_walk(
                         path,
                         &resolver,
                         workspace,
-                        graph_files,
-                        resolution_visible,
+                        ImportNeighborVisibility {
+                            graph_files,
+                            resolution_visible,
+                        },
                         allowed,
                         facts,
                         session,

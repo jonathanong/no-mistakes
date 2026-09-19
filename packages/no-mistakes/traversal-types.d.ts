@@ -61,7 +61,11 @@ export interface TraverseOptions {
 }
 
 export type TraverseProjection = "graph" | "paths";
-export type { ImportClosureResult, TraverseGraphOptions, TraversePathsOptions } from "./import-closure-types";
+export type {
+  ImportClosureResult,
+  TraverseGraphOptions,
+  TraversePathsOptions,
+} from "./import-closure-types";
 
 export interface DependencyFile {
   path?: string;
@@ -176,41 +180,13 @@ export interface SymbolsResult {
   files: SymbolFile[];
 }
 
-export interface SignatureImpactLocation {
-  file: string;
-  symbol: string;
-  line: number;
-  kind: string;
-}
-
-export interface SignatureImpactCaller {
-  file: string;
-  symbol?: string;
-  depth: number;
-  via: string[];
-}
-
-export interface SignatureImpactTest {
-  file: string;
-  depth: number;
-  via: string[];
-}
-
-export interface SignatureImpactWarning {
-  type: string;
-  message: string;
-}
-
-export interface SignatureImpactResult {
-  roots: string[];
-  symbol: string;
-  definition: SignatureImpactLocation;
-  exports: SignatureImpactLocation[];
-  productionCallers: SignatureImpactCaller[];
-  testCallers: SignatureImpactCaller[];
-  suggestedTests: SignatureImpactTest[];
-  warnings: SignatureImpactWarning[];
-}
+export type {
+  SignatureImpactCaller,
+  SignatureImpactLocation,
+  SignatureImpactResult,
+  SignatureImpactTest,
+  SignatureImpactWarning,
+} from "./signature-impact-types";
 
 export interface ProjectOptions {
   /** Project root. Defaults to the current working directory. */

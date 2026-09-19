@@ -4,7 +4,7 @@ impl SharedTraversalContext {
             return Ok(());
         }
         let filtered = self.record_candidate_paths(args)?;
-        self.graph_files = self.graph_files.from_visible_subset(filtered);
+        self.graph_files = self.graph_files.visible_subset(filtered);
         self.fact_context
             .set_visible_file_set(self.graph_files.visible_path_set());
         self.candidate_inventory_applied = true;
@@ -15,10 +15,10 @@ impl SharedTraversalContext {
         if !args.has_candidate_bounds() {
             return Ok(self
                 .graph_files
-                .from_visible_subset(self.graph_files.iter_visible().cloned().collect()));
+                .visible_subset(self.graph_files.iter_visible().cloned().collect()));
         }
         let filtered = self.record_candidate_paths(args)?;
-        Ok(self.graph_files.from_visible_subset(filtered))
+        Ok(self.graph_files.visible_subset(filtered))
     }
 
     pub(crate) fn bounded_lazy_import_graph(
@@ -41,7 +41,7 @@ impl SharedTraversalContext {
         }
         let mut graph_files = if self.candidate_inventory_applied {
             self.graph_files
-                .from_visible_subset(self.graph_files.iter_visible().cloned().collect())
+                .visible_subset(self.graph_files.iter_visible().cloned().collect())
         } else {
             self.candidate_graph_files(args)?
         };

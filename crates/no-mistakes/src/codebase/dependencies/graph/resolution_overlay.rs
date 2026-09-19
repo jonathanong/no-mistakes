@@ -57,6 +57,28 @@ fn contains_sorted(paths: &[PathBuf], path: &Path) -> bool {
         .is_ok()
 }
 
+pub(crate) struct ImportNeighborVisibility<'a> {
+    pub(crate) graph_files: &'a GraphFiles,
+    pub(crate) resolution_visible: Option<&'a dyn VisiblePathLookup>,
+}
+
+impl<'a> ImportNeighborVisibility<'a> {
+    pub(crate) fn new(graph_files: &'a GraphFiles) -> Self {
+        Self {
+            graph_files,
+            resolution_visible: None,
+        }
+    }
+
+    fn lookup(&self) -> &dyn VisiblePathLookup {
+        self.resolution_visible.unwrap_or(self.graph_files)
+    }
+
+    fn visible_path(&self, target: &Path) -> Option<PathBuf> {
+        visible_or_escaped_path(self.graph_files, self.resolution_visible, target)
+    }
+}
+
 pub(crate) fn visible_or_escaped_path(
     graph_files: &GraphFiles,
     resolution_visible: Option<&dyn VisiblePathLookup>,
