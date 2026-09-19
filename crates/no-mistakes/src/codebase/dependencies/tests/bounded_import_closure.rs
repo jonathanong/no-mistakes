@@ -213,7 +213,7 @@ fn scoped_seed_diagnostics_match_symlink_spellings() {
         via: Vec::new(),
     }];
     let mut runtime = Vec::new();
-    extend_scoped_seed_diagnostics(&mut runtime, &[diagnostic.clone()], &entries);
+    extend_scoped_seed_diagnostics(&mut runtime, std::slice::from_ref(&diagnostic), &entries);
     assert_eq!(runtime, vec![diagnostic]);
 }
 
