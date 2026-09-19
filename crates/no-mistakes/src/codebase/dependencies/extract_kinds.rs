@@ -19,3 +19,19 @@ pub enum CallTargetIdentity {
     RepositoryFunction,
     Unknown,
 }
+
+/// Returns `true` for `.tsx` / `.jsx` files (which need the TSX grammar).
+pub fn is_tsx_file(path: &Path) -> bool {
+    matches!(
+        path.extension().and_then(|e| e.to_str()),
+        Some("tsx" | "jsx")
+    )
+}
+
+/// Returns `true` for any TypeScript/JavaScript source file we should index.
+pub fn is_indexable(path: &Path) -> bool {
+    matches!(
+        path.extension().and_then(|e| e.to_str()),
+        Some("ts" | "mts" | "tsx" | "cts" | "js" | "mjs" | "jsx" | "cjs")
+    )
+}
