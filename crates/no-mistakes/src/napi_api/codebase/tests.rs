@@ -58,6 +58,17 @@ fn dependency_rows(root: &std::path::Path, tsconfig: Option<&str>) -> Vec<serde_
 }
 
 #[test]
+fn dependencies_json_rejects_unknown_projection() {
+    let err = dependencies_json_impl(crate::napi_api::options::test_json_arg(serde_json::json!({
+        "root": workspace_tsconfig_fixture_root(),
+        "files": ["apps/web/src/entry.ts"],
+        "projection": "wat"
+    })))
+    .unwrap_err();
+    assert!(format!("{err}").contains("unknown projection"), "{err}");
+}
+
+#[test]
 fn import_usages_json_impl_reports_direct_imports() {
     let options = serde_json::json!({
         "root": import_usages_fixture_root(),

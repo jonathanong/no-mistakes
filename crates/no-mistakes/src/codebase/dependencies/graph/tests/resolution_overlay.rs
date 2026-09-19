@@ -21,10 +21,7 @@ fn snapshot_overlay_exposes_escaped_universe_paths() {
     let escaped = root.join("packages/ui/src/button.ts");
     let snapshot_only = root.join("web/lib/unrelated.test.ts");
     let graph_files = GraphFiles::from_files(vec![root.join("web/app/page.tsx")]);
-    let universe = GraphFiles::from_files(vec![
-        root.join("web/app/page.tsx"),
-        escaped.clone(),
-    ]);
+    let universe = GraphFiles::from_files(vec![root.join("web/app/page.tsx"), escaped.clone()]);
     let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
     let overlay = SnapshotResolutionVisible::new(&graph_files, &universe, &snapshot, &root);
     assert!(overlay.contains_visible(&escaped));
@@ -33,10 +30,15 @@ fn snapshot_overlay_exposes_escaped_universe_paths() {
     assert!(!overlay.contains_visible(&root.join("does-not-exist.ts")));
     assert!(!overlay.contains_visible(&root.join("packages/ui")));
     assert_eq!(
-        overlay.visible_alias(&root.join("web/app/page.tsx")).as_deref(),
+        overlay
+            .visible_alias(&root.join("web/app/page.tsx"))
+            .as_deref(),
         Some(root.join("web/app/page.tsx").as_path())
     );
-    assert_eq!(overlay.visible_alias(&escaped).as_deref(), Some(escaped.as_path()));
+    assert_eq!(
+        overlay.visible_alias(&escaped).as_deref(),
+        Some(escaped.as_path())
+    );
     assert_eq!(overlay.visible_len(), universe.visible_len());
     assert!(overlay.visible_cache_key().contains(&escaped));
     assert!(!overlay.visible_cache_key().contains(&snapshot_only));
@@ -72,5 +74,52 @@ fn snapshot_overlay_remaps_canonical_targets_to_the_symlink_namespace() {
     assert_eq!(
         visible_or_escaped_path(&graph_files, Some(&overlay), &canonical),
         Some(lexical)
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn snapshot_overlay_matches_canonical_paths_already_in_the_snapshot() {
+    let real_root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/real"),
+    );
+    let lexical = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link/src/value.ts"),
+    );
+    let canonical = crate::codebase::ts_resolver::normalize_path(&lexical.canonicalize().unwrap());
+    assert_eq!(canonical, real_root.join("src/value.ts"));
+    let graph_files = GraphFiles::from_files(vec![real_root.join("src/entry.ts")]);
+    let universe = GraphFiles::from_files(vec![real_root.join("src/entry.ts"), canonical.clone()]);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&real_root);
+    let overlay = SnapshotResolutionVisible::new(&graph_files, &universe, &snapshot, &real_root);
+    assert!(overlay.contains_visible(&lexical));
+    assert_eq!(
+        overlay.visible_alias(&lexical).as_deref(),
+        Some(canonical.as_path())
+    );
+}
+
+#[test]
+fn visible_or_escaped_path_normalizes_unresolvable_relative_components() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/bounded-import-closure"),
+    );
+    let escaped = root.join("packages/ui/src/button.ts");
+    let ghost = escaped
+        .parent()
+        .unwrap()
+        .join("does-not-exist")
+        .join("..")
+        .join("button.ts");
+    let graph_files = GraphFiles::from_files(vec![root.join("web/app/page.tsx")]);
+    let universe = GraphFiles::from_files(vec![root.join("web/app/page.tsx"), escaped.clone()]);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::new(&root);
+    let overlay = SnapshotResolutionVisible::new(&graph_files, &universe, &snapshot, &root);
+    assert_eq!(
+        visible_or_escaped_path(&graph_files, Some(&overlay), &ghost),
+        Some(escaped)
     );
 }

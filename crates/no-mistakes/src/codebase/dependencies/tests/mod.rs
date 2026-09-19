@@ -1,6 +1,7 @@
 include!("args.rs");
 include!("args_entrypoints.rs");
 include!("bounded_import_closure.rs");
+include!("bounded_import_closure_coverage.rs");
 include!("execution.rs");
 include!("execution_mixed_relationships.rs");
 mod framework_ownership;
