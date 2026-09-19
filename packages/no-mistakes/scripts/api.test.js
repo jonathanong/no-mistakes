@@ -838,13 +838,14 @@ test("graph declarations expose opt-in call relationships", () => {
 
 test("dependency declarations expose bounded import-closure inputs and compact output", () => {
   const traversalDeclarations = readFileSync(join(packageRoot, "traversal-types.d.ts"), "utf8");
+  const closureDeclarations = readFileSync(join(packageRoot, "import-closure-types.d.ts"), "utf8");
   const indexDeclarations = readFileSync(join(packageRoot, "index.d.ts"), "utf8");
   assert.match(traversalDeclarations, /candidateInclude\?: string\[\];/);
   assert.match(traversalDeclarations, /candidateExclude\?: string\[\];/);
   assert.match(traversalDeclarations, /projection\?: TraverseProjection;/);
   assert.match(traversalDeclarations, /export type TraverseProjection = "graph" \| "paths";/);
   assert.match(
-    traversalDeclarations,
+    closureDeclarations,
     /export interface ImportClosureResult \{\n  files: string\[\];\n  diagnostics: TsConfigDiagnostic\[\];\n\}/,
   );
   assert.match(

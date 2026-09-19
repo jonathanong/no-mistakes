@@ -165,7 +165,8 @@ fn dependents_report_rejects_candidate_include() {
         args.candidate_include,
         args.candidate_exclude
     );
-    let err = analyze_project_json_impl(crate::napi_api::options::test_json_arg(request.to_string()))
-        .unwrap_err();
+    let err =
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(request.to_string()))
+            .unwrap_err();
     assert!(format!("{err}").contains("dependencies"), "{err}");
 }

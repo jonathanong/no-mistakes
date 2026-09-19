@@ -61,14 +61,11 @@ export interface TraverseOptions {
 }
 
 export type TraverseProjection = "graph" | "paths";
-
-export type TraverseGraphOptions = Omit<TraverseOptions, "projection"> & {
-  projection?: "graph";
-};
-
-export type TraversePathsOptions = Omit<TraverseOptions, "projection"> & {
-  projection: "paths";
-};
+export type {
+  ImportClosureResult,
+  TraverseGraphOptions,
+  TraversePathsOptions,
+} from "./import-closure-types";
 
 export interface DependencyFile {
   path?: string;
@@ -114,11 +111,6 @@ export interface DependencyResult {
   files: DependencyFile[];
   diagnostics: TsConfigDiagnostic[];
   tsconfig_provenance: TsConfigProvenance[];
-}
-
-export interface ImportClosureResult {
-  files: string[];
-  diagnostics: TsConfigDiagnostic[];
 }
 
 export type ExportKind =
