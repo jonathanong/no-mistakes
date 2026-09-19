@@ -61,11 +61,7 @@ export interface TraverseOptions {
 }
 
 export type TraverseProjection = "graph" | "paths";
-export type {
-  ImportClosureResult,
-  TraverseGraphOptions,
-  TraversePathsOptions,
-} from "./import-closure-types";
+export type { ImportClosureResult, TraverseGraphOptions, TraversePathsOptions } from "./import-closure-types";
 
 export interface DependencyFile {
   path?: string;
