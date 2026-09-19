@@ -516,7 +516,11 @@ import-only `dependencies` plan.
 `dependencies` report (or `dependencies()`) define the initial candidate
 inventory before GraphFiles / fact preparation. They are not `filters` and
 are not merged from top-level `analyzeProject` `filters`. Unrelated excluded
-files are omitted from that inventory and receive no parse/fact work. A
+files are omitted from that inventory and receive no parse/fact work on a
+standalone `dependencies()` call or an exclusive same-bounds import-only
+`analyzeProject` request. Mixed requests that also run `check`, `dependents`,
+or unbounded graph reports keep the shared GraphFiles universe, so those
+other reports may still parse the excluded files. A
 resolved local or workspace source outside the include set still escapes into
 the closure. `projection: "paths"` returns
 `{ files: string[], diagnostics: TsConfigDiagnostic[] }` — sorted unique

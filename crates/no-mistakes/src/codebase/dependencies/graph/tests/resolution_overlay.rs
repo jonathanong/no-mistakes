@@ -25,10 +25,11 @@ fn snapshot_overlay_exposes_escaped_snapshot_paths() {
     assert!(overlay.contains_visible(&escaped));
     assert_eq!(overlay.visible_alias(&escaped).as_deref(), Some(escaped.as_path()));
     assert_eq!(overlay.visible_len(), snapshot.paths_for(&root).len());
-    assert_eq!(
-        overlay.visible_cache_key(),
-        snapshot.paths_for(&root).as_ref().clone()
-    );
+    assert!(overlay.visible_cache_key().contains(&escaped));
+    let ghost = PathBuf::from("/not-in-snapshot/ghost.ts");
+    let graph_files = GraphFiles::from_files(vec![ghost.clone()]);
+    let overlay = SnapshotResolutionVisible::new(&graph_files, &snapshot, &root);
+    assert!(overlay.visible_cache_key().contains(&ghost));
     assert_eq!(
         visible_or_escaped_path(&graph_files, Some(&overlay), &escaped),
         Some(escaped)

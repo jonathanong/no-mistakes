@@ -36,7 +36,11 @@ impl VisiblePathLookup for SnapshotResolutionVisible<'_> {
     }
 
     fn visible_cache_key(&self) -> Vec<PathBuf> {
-        self.snapshot.paths_for(self.root).as_ref().clone()
+        let mut paths = self.snapshot.paths_for(self.root).as_ref().clone();
+        paths.extend(self.graph_files.iter_visible().cloned());
+        crate::codebase::ts_source::sort_os_str_paths(&mut paths);
+        paths.dedup();
+        paths
     }
 
     fn visible_alias(&self, path: &Path) -> Option<PathBuf> {
