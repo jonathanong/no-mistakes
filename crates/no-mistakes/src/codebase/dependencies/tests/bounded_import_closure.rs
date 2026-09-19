@@ -256,6 +256,8 @@ fn omitted_projection_keeps_graph_shape() {
 
 #[test]
 fn bounded_inventory_does_not_parse_excluded_tests() {
+    // Only this test may begin_parse_count this fixture: the session is keyed
+    // by root and parallel tests overwrite each other's counts.
     let root = bounded_root();
     let cwd = std::env::current_dir().unwrap();
     crate::ast::begin_parse_count(&root);
@@ -327,18 +329,27 @@ fn bounded_closure_matches_unbounded_path_alias_paths() {
 #[test]
 fn bounded_finite_depth_does_not_parse_the_full_closure() {
     let root = bounded_root();
-    crate::ast::begin_parse_count(&root);
-    let mut args = bounded_args(root.clone(), vec![PathBuf::from("web/app/page.tsx")]);
-    args.depth = Some(0);
-    run_json(args, Direction::Deps).unwrap();
-    let counts = crate::ast::finish_parse_count(&root);
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let output = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        let mut args = bounded_args(root, vec![PathBuf::from("web/app/page.tsx")]);
+        args.depth = Some(0);
+        run_json(args, Direction::Deps).unwrap()
+    };
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let files = closure_paths(&value);
     assert!(
-        !counts.contains_key(&root.join("packages/ui/src/button.ts")),
-        "{counts:#?}"
+        !files.iter().any(|path| path.contains("packages/ui")),
+        "{files:?}"
     );
     assert!(
-        !counts.contains_key(&root.join("packages/data/src/registry.ts")),
-        "{counts:#?}"
+        !files.iter().any(|path| path.contains("packages/data")),
+        "{files:?}"
+    );
+    let work = observer.snapshot().work;
+    assert!(
+        work.get("parse.files").copied().unwrap_or(0) <= 1,
+        "{work:#?}"
     );
 }
 

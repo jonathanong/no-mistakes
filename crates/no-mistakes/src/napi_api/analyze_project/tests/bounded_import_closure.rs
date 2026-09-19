@@ -253,32 +253,47 @@ fn exclusive_analyze_project_keeps_seed_diagnostics() {
 
 #[test]
 fn exclusive_analyze_project_does_not_parse_excluded_tests() {
-    let root = PathBuf::from(bounded_root());
-    crate::ast::begin_parse_count(&root);
-    analyze_project_json_impl(crate::napi_api::options::test_json_arg(
-        json!({
-            "root": root,
-            "reports": [{
-                "type": "dependencies",
-                "id": "closure",
-                "files": ["web/app/page.tsx"],
-                "relationships": ["import-static", "import-dynamic", "import-type"],
-                "candidateInclude": ["web/**"],
-                "candidateExclude": ["**/*.test.*"],
-                "projection": "paths"
-            }]
-        })
-        .to_string(),
-    ))
-    .unwrap();
-    let counts = crate::ast::finish_parse_count(&root);
+    let root = bounded_root();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let output = {
+        let _guard = crate::diagnostics::InvocationGuard::install(observer.clone());
+        analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+            json!({
+                "root": root,
+                "reports": [{
+                    "type": "dependencies",
+                    "id": "closure",
+                    "files": ["web/app/page.tsx"],
+                    "relationships": ["import-static", "import-dynamic", "import-type"],
+                    "candidateInclude": ["web/**"],
+                    "candidateExclude": ["**/*.test.*"],
+                    "projection": "paths"
+                }]
+            })
+            .to_string(),
+        ))
+        .unwrap()
+    };
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let files = value["reports"][0]["result"]["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|entry| entry.as_str())
+        .collect::<Vec<_>>();
     assert!(
-        !counts.contains_key(&root.join("web/app/page.test.tsx")),
-        "{counts:#?}"
+        !files.iter().any(|path| path.contains("page.test")),
+        "{files:?}"
     );
     assert!(
-        !counts.contains_key(&root.join("web/lib/unrelated.test.ts")),
-        "{counts:#?}"
+        !files.iter().any(|path| path.contains("unrelated.test")),
+        "{files:?}"
+    );
+    let work = observer.snapshot().work;
+    assert!(work["graph.candidate_excluded"] >= 2, "{work:#?}");
+    assert!(
+        work["parse.files"] >= 1 && work["parse.files"] <= 4,
+        "{work:#?}"
     );
 }
 
