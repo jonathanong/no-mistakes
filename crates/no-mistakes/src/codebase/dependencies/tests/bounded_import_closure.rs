@@ -191,9 +191,43 @@ fn scoped_seed_diagnostics_keep_fileless_and_skip_duplicates() {
     assert_eq!(runtime, vec![duplicate, fileless]);
 }
 
+#[cfg(unix)]
+#[test]
+fn scoped_seed_diagnostics_match_symlink_spellings() {
+    let lexical = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/symlink-workspace/link/src/value.ts"),
+    );
+    let canonical = crate::codebase::ts_resolver::normalize_path(&lexical.canonicalize().unwrap());
+    assert_ne!(canonical, lexical);
+    let diagnostic = crate::codebase::ts_resolver::TsConfigDiagnostic {
+        kind: crate::codebase::ts_resolver::TsConfigDiagnosticKind::AmbiguousOwnership,
+        config: None,
+        file: Some(canonical),
+        detail: "symlink".into(),
+        candidates: Vec::new(),
+    };
+    let entries = [graph::NodeEntry {
+        node: graph::NodeId::file(lexical),
+        depth: 0,
+        via: Vec::new(),
+    }];
+    let mut runtime = Vec::new();
+    extend_scoped_seed_diagnostics(&mut runtime, &[diagnostic.clone()], &entries);
+    assert_eq!(runtime, vec![diagnostic]);
+}
+
 #[test]
 fn candidate_bounds_reject_dependents() {
     let args = bounded_args(bounded_root(), vec![PathBuf::from("web/app/page.tsx")]);
+    let err = validate_candidate_bounds(&args, Direction::Dependents).unwrap_err();
+    assert!(format!("{err}").contains("dependencies"));
+}
+
+#[test]
+fn paths_projection_rejects_dependents() {
+    let mut args = import_only_args(bounded_root(), vec![PathBuf::from("web/app/page.tsx")]);
+    args.projection = TraverseProjection::Paths;
     let err = validate_candidate_bounds(&args, Direction::Dependents).unwrap_err();
     assert!(format!("{err}").contains("dependencies"));
 }

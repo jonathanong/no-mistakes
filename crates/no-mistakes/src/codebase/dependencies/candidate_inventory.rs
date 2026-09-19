@@ -23,6 +23,9 @@ fn canonicalize_globs(globs: &[String]) -> Vec<String> {
 }
 
 pub(crate) fn validate_candidate_bounds(args: &TraverseArgs, direction: Direction) -> Result<()> {
+    if args.projection.is_paths() && !matches!(direction, Direction::Deps) {
+        bail!("projection paths is only valid for dependencies");
+    }
     if !args.has_candidate_bounds() {
         return Ok(());
     }
