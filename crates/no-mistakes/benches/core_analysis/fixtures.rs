@@ -1,5 +1,7 @@
 use clap::Parser;
-use no_mistakes::codebase::dependencies::{RelationshipArg, TraverseArgs, TsConfig};
+use no_mistakes::codebase::dependencies::{
+    RelationshipArg, TraverseArgs, TraverseProjection, TsConfig,
+};
 use no_mistakes::codebase::ts_source::discover_visible_paths;
 use no_mistakes::impacted_checks::ImpactedChecksArgs;
 use std::path::{Path, PathBuf};
