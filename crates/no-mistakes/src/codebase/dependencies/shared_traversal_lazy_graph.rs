@@ -23,6 +23,7 @@ impl SharedTraversalContext {
             root: &self.root,
             cwd,
             graph_files: &self.graph_files,
+            visible_lookup: None,
             include_symbols: args.include_symbols,
             workspace: &workspace,
             interner: self.session.interner(),

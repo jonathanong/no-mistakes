@@ -18,6 +18,12 @@ pub(crate) trait VisiblePathLookup: Send + Sync {
     fn normalized_visible(&self) -> Arc<crate::fx::PathSet> {
         Arc::new(normalized_visible_path_set(self.visible_cache_key()))
     }
+
+    /// Preferred visible spelling for `path`, including symlink aliases.
+    fn visible_alias(&self, path: &Path) -> Option<PathBuf> {
+        self.contains_visible(path)
+            .then(|| crate::codebase::ts_resolver::normalize_path(path))
+    }
 }
 
 pub(crate) fn normalized_visible_path_set(
@@ -83,6 +89,10 @@ impl<T: VisiblePathLookup + ?Sized> VisiblePathLookup for &T {
     fn normalized_visible(&self) -> Arc<crate::fx::PathSet> {
         (**self).normalized_visible()
     }
+
+    fn visible_alias(&self, path: &Path) -> Option<PathBuf> {
+        (**self).visible_alias(path)
+    }
 }
 
 impl<T: VisiblePathLookup + ?Sized> VisiblePathLookup for std::sync::Arc<T> {
@@ -100,6 +110,10 @@ impl<T: VisiblePathLookup + ?Sized> VisiblePathLookup for std::sync::Arc<T> {
 
     fn normalized_visible(&self) -> Arc<crate::fx::PathSet> {
         (**self).normalized_visible()
+    }
+
+    fn visible_alias(&self, path: &Path) -> Option<PathBuf> {
+        (**self).visible_alias(path)
     }
 }
 

@@ -67,7 +67,7 @@ export function dependencies(
   options: WithInvocationOptions<TraversePathsOptions>,
 ): Promise<ImportClosureResult>;
 export function dependencies(
-  options: WithInvocationOptions<TraverseGraphOptions | TraverseOptions>,
+  options: WithInvocationOptions<TraverseGraphOptions>,
 ): Promise<DependencyResult>;
 export function dependents(
   options: WithInvocationOptions<TraverseOptions>,

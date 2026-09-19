@@ -63,69 +63,16 @@ impl PreparedScope {
     /// Each report then projects its own closure from that graph.
     fn seed_import_only_dependency_graph(&mut self) -> Result<()> {
         let cwd = std::env::current_dir().context("reading current directory")?;
-        let mut unbounded: Option<crate::codebase::dependencies::TraverseArgs> = None;
-        let mut bounded: std::collections::HashMap<
-            crate::codebase::dependencies::BoundedImportKey,
-            crate::codebase::dependencies::TraverseArgs,
-        > = std::collections::HashMap::new();
-        let mut other_graph_consumer = false;
-        for request in &self.options.reports {
-            match super::graph_direction(&request.report_type) {
-                Some(Direction::Dependents) => {
-                    let args = super::traverse_args(request, &self.options)?;
-                    crate::codebase::dependencies::validate_candidate_bounds(
-                        &args,
-                        Direction::Dependents,
-                    )?;
-                    other_graph_consumer = true;
-                    continue;
-                }
-                Some(Direction::Deps) => {}
-                None => {
-                    other_graph_consumer = true;
-                    continue;
-                }
-            }
-            let args = super::traverse_args(request, &self.options)?;
-            crate::codebase::dependencies::validate_candidate_bounds(&args, Direction::Deps)?;
-            if args.include_symbols
-                || !crate::codebase::dependencies::relationships_are_import_only(
-                    &args.relationships,
-                )
-            {
-                other_graph_consumer = true;
-                continue;
-            }
-            if args.has_candidate_bounds() {
-                let key = crate::codebase::dependencies::BoundedImportKey::from_args(&args);
-                match bounded.entry(key) {
-                    std::collections::hash_map::Entry::Vacant(entry) => {
-                        entry.insert(args);
-                    }
-                    std::collections::hash_map::Entry::Occupied(mut entry) => {
-                        union_import_args(entry.get_mut(), args);
-                    }
-                }
-                continue;
-            }
-            match &mut unbounded {
-                None => unbounded = Some(args),
-                Some(existing) => union_import_args(existing, args),
-            }
-        }
-        if !other_graph_consumer && unbounded.is_none() && bounded.len() == 1 {
-            if let Some(args) = bounded.values().next() {
-                self.traversal.apply_candidate_inventory(args)?;
-            }
-        }
-        if let Some(mut args) = unbounded {
+        let plan = classify_import_seed_requests(&self.options)?;
+        apply_exclusive_candidate_inventory(&self.options, &mut self.traversal)?;
+        if let Some(mut args) = plan.unbounded {
             if !args.files.is_empty() {
                 args.depth = None;
                 self.traversal
                     .seed_lazy_import_graph_from_args(&args, &cwd)?;
             }
         }
-        for mut args in bounded.into_values() {
+        for mut args in plan.bounded.into_values() {
             if args.files.is_empty() {
                 continue;
             }
@@ -135,6 +82,90 @@ impl PreparedScope {
         }
         Ok(())
     }
+}
+
+struct ImportSeedPlan {
+    unbounded: Option<crate::codebase::dependencies::TraverseArgs>,
+    bounded: std::collections::HashMap<
+        crate::codebase::dependencies::BoundedImportKey,
+        crate::codebase::dependencies::TraverseArgs,
+    >,
+    other_graph_consumer: bool,
+}
+
+impl ImportSeedPlan {
+    fn exclusive_bounds(&self) -> Option<&crate::codebase::dependencies::TraverseArgs> {
+        (!self.other_graph_consumer && self.unbounded.is_none() && self.bounded.len() == 1)
+            .then(|| self.bounded.values().next())
+            .flatten()
+    }
+}
+
+fn apply_exclusive_candidate_inventory(
+    options: &AnalyzeProjectOptions,
+    traversal: &mut crate::codebase::dependencies::SharedTraversalContext,
+) -> Result<()> {
+    if traversal.candidate_inventory_applied() {
+        return Ok(());
+    }
+    if let Some(args) = classify_import_seed_requests(options)?.exclusive_bounds() {
+        traversal.apply_candidate_inventory(args)?;
+    }
+    Ok(())
+}
+
+fn classify_import_seed_requests(options: &AnalyzeProjectOptions) -> Result<ImportSeedPlan> {
+    let mut plan = ImportSeedPlan {
+        unbounded: None,
+        bounded: std::collections::HashMap::new(),
+        other_graph_consumer: false,
+    };
+    for request in &options.reports {
+        match super::graph_direction(&request.report_type) {
+            Some(Direction::Dependents) => {
+                let args = super::traverse_args(request, options)?;
+                crate::codebase::dependencies::validate_candidate_bounds(
+                    &args,
+                    Direction::Dependents,
+                )?;
+                plan.other_graph_consumer = true;
+                continue;
+            }
+            Some(Direction::Deps) => {}
+            None => {
+                plan.other_graph_consumer = true;
+                continue;
+            }
+        }
+        let args = super::traverse_args(request, options)?;
+        crate::codebase::dependencies::validate_candidate_bounds(&args, Direction::Deps)?;
+        if args.include_symbols
+            || !crate::codebase::dependencies::relationships_are_import_only(&args.relationships)
+        {
+            plan.other_graph_consumer = true;
+            continue;
+        }
+        if args.has_candidate_bounds() {
+            match plan
+                .bounded
+                .entry(crate::codebase::dependencies::BoundedImportKey::from_args(
+                    &args,
+                )) {
+                std::collections::hash_map::Entry::Vacant(entry) => {
+                    entry.insert(args);
+                }
+                std::collections::hash_map::Entry::Occupied(mut entry) => {
+                    union_import_args(entry.get_mut(), args);
+                }
+            }
+            continue;
+        }
+        match &mut plan.unbounded {
+            None => plan.unbounded = Some(args),
+            Some(existing) => union_import_args(existing, args),
+        }
+    }
+    Ok(plan)
 }
 
 fn union_import_args(

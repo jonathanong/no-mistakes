@@ -323,3 +323,54 @@ fn bounded_closure_matches_unbounded_workspace_resolution_paths() {
 fn bounded_closure_matches_unbounded_path_alias_paths() {
     assert_compact_matches_unbounded(paths_precedence_root(), "src/entry.ts");
 }
+
+#[test]
+fn bounded_finite_depth_does_not_parse_the_full_closure() {
+    let root = bounded_root();
+    crate::ast::begin_parse_count(&root);
+    let mut args = bounded_args(root.clone(), vec![PathBuf::from("web/app/page.tsx")]);
+    args.depth = Some(0);
+    run_json(args, Direction::Deps).unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+    assert!(
+        !counts.contains_key(&root.join("packages/ui/src/button.ts")),
+        "{counts:#?}"
+    );
+    assert!(
+        !counts.contains_key(&root.join("packages/data/src/registry.ts")),
+        "{counts:#?}"
+    );
+}
+
+#[test]
+fn bounded_package_dir_root_resolves_outside_candidate_include() {
+    let root = bounded_root();
+    let mut args = bounded_args(root, vec![PathBuf::from("packages/ui")]);
+    args.candidate_include = vec!["web/**".to_string()];
+    args.projection = TraverseProjection::Graph;
+    let value: Value = serde_json::from_str(&run_json(args, Direction::Deps).unwrap()).unwrap();
+    assert_eq!(
+        value["tsconfig_provenance"][0]["importer"],
+        "packages/ui/src/button.ts",
+        "{value}"
+    );
+}
+
+#[test]
+fn bounded_compact_projection_keeps_ambiguous_ownership_diagnostics() {
+    let mut args = import_only_args(
+        workspace_resolution_root(),
+        vec![PathBuf::from("apps/ambiguous/src/entry.ts")],
+    );
+    args.candidate_include = vec!["**/*".to_string()];
+    args.projection = TraverseProjection::Paths;
+    let value: Value = serde_json::from_str(&run_json(args, Direction::Deps).unwrap()).unwrap();
+    assert!(
+        value["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|diagnostic| diagnostic["kind"] == "ambiguous-ownership"),
+        "{value}"
+    );
+}

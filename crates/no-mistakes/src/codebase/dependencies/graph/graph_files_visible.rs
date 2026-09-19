@@ -117,4 +117,8 @@ impl crate::codebase::ts_resolver::VisiblePathLookup for GraphFiles {
     fn visible_len(&self) -> usize {
         GraphFiles::visible_len(self)
     }
+
+    fn visible_alias(&self, path: &Path) -> Option<PathBuf> {
+        GraphFiles::visible_path(self, path).map(Path::to_path_buf)
+    }
 }

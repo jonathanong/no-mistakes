@@ -78,6 +78,7 @@ include!("route_import_prepared.rs");
 include!("route_import_helpers.rs");
 include!("lazy_import_neighbors_coverage.rs");
 include!("graph_files.rs");
+include!("resolution_overlay.rs");
 include!("extra_cases.rs");
 include!("lazy_import_session.rs");
 include!("extra_playwright_routes.rs");

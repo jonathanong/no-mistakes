@@ -43,6 +43,7 @@ impl PreparedScopePlan {
                 },
             )?;
         let authoritative_report_files = authoritative_report_files(options, &root)?;
+        apply_exclusive_candidate_inventory(options, &mut traversal)?;
         traversal.add_explicit_roots(&authoritative_report_files);
         let check = options
             .reports

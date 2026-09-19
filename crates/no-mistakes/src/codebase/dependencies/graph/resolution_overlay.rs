@@ -27,10 +27,8 @@ impl<'a> SnapshotResolutionVisible<'a> {
 
 impl VisiblePathLookup for SnapshotResolutionVisible<'_> {
     fn contains_visible(&self, path: &Path) -> bool {
-        if self.graph_files.contains_visible(path) {
-            return true;
-        }
-        snapshot_contains_file(self.snapshot, self.root, path)
+        self.graph_files.contains_visible(path)
+            || snapshot_visible_path(self.snapshot, self.root, path).is_some()
     }
 
     fn visible_len(&self) -> usize {
@@ -40,15 +38,42 @@ impl VisiblePathLookup for SnapshotResolutionVisible<'_> {
     fn visible_cache_key(&self) -> Vec<PathBuf> {
         self.snapshot.paths_for(self.root).as_ref().clone()
     }
+
+    fn visible_alias(&self, path: &Path) -> Option<PathBuf> {
+        self.graph_files
+            .visible_path(path)
+            .map(Path::to_path_buf)
+            .or_else(|| snapshot_visible_path(self.snapshot, self.root, path))
+    }
 }
 
-fn snapshot_contains_file(snapshot: &VisiblePathSnapshot, root: &Path, path: &Path) -> bool {
+fn snapshot_visible_path(
+    snapshot: &VisiblePathSnapshot,
+    root: &Path,
+    path: &Path,
+) -> Option<PathBuf> {
     let paths = snapshot.paths_for(root);
-    if contains_sorted(&paths, path) {
-        return path.is_file();
+    if let Some(hit) = visible_sorted_file(&paths, path) {
+        return Some(hit);
     }
     let normalized = crate::codebase::ts_resolver::normalize_path(path);
-    contains_sorted(&paths, &normalized) && normalized.is_file()
+    if let Some(hit) = visible_sorted_file(&paths, &normalized) {
+        return Some(hit);
+    }
+    let canonical = crate::codebase::ts_resolver::normalize_path(&path.canonicalize().ok()?);
+    if let Some(hit) = visible_sorted_file(&paths, &canonical) {
+        return Some(hit);
+    }
+    let real_root = crate::codebase::ts_resolver::normalize_path(&root.canonicalize().ok()?);
+    let relative = canonical.strip_prefix(&real_root).ok()?;
+    let lexical = crate::codebase::ts_resolver::normalize_path(&root.join(relative));
+    visible_sorted_file(&paths, &lexical)
+}
+
+fn visible_sorted_file(paths: &[PathBuf], path: &Path) -> Option<PathBuf> {
+    contains_sorted(paths, path)
+        .then(|| path.to_path_buf())
+        .filter(|hit| hit.is_file())
 }
 
 fn contains_sorted(paths: &[PathBuf], path: &Path) -> bool {
@@ -90,9 +115,8 @@ pub(crate) fn visible_or_escaped_path(
     if let Some(path) = graph_files.visible_path(target) {
         return Some(path.to_path_buf());
     }
-    let normalized = crate::codebase::ts_resolver::normalize_path(target);
-    let visible = resolution_visible.is_some_and(|lookup| {
-        lookup.contains_visible(target) || lookup.contains_visible(&normalized)
-    });
-    visible.then_some(normalized)
+    let lookup = resolution_visible?;
+    lookup
+        .visible_alias(target)
+        .or_else(|| lookup.visible_alias(&crate::codebase::ts_resolver::normalize_path(target)))
 }

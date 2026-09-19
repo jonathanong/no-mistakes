@@ -5,6 +5,7 @@ struct EntrypointResolution<'a> {
     root: &'a Path,
     cwd: &'a Path,
     graph_files: &'a graph::GraphFiles,
+    visible_lookup: Option<&'a dyn crate::codebase::ts_resolver::VisiblePathLookup>,
     include_symbols: bool,
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
     interner: &'a PathInterner,
@@ -20,6 +21,7 @@ fn resolve_entrypoints_with_files_and_workspace(
         root,
         cwd,
         graph_files,
+        visible_lookup,
         include_symbols,
         workspace,
         interner,
@@ -55,7 +57,7 @@ fn resolve_entrypoints_with_files_and_workspace(
                 &normalized,
                 workspace,
                 root_dependencies,
-                graph_files,
+                visible_lookup.unwrap_or(graph_files),
                 interner,
             );
             let file = match &node {

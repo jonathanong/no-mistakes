@@ -1,6 +1,6 @@
 impl SharedTraversalContext {
     pub(crate) fn apply_candidate_inventory(&mut self, args: &TraverseArgs) -> Result<()> {
-        if !args.has_candidate_bounds() {
+        if self.candidate_inventory_applied || !args.has_candidate_bounds() {
             return Ok(());
         }
         let filtered = self.record_candidate_paths(args)?;
@@ -35,83 +35,7 @@ impl SharedTraversalContext {
         args: &TraverseArgs,
         cwd: &Path,
     ) -> Result<()> {
-        let key = BoundedImportKey::from_args(args);
-        if self.bounded_lazy_import_graphs.contains_key(&key) {
-            return Ok(());
-        }
-        let mut graph_files = if self.candidate_inventory_applied {
-            self.graph_files
-                .visible_subset(self.graph_files.iter_visible().cloned().collect())
-        } else {
-            self.candidate_graph_files(args)?
-        };
-        let explicit = explicit_existing_entry_files(args, &self.root, cwd);
-        for path in &explicit {
-            graph_files.add_explicit_root(path);
-        }
-        let workspace = self.dataset.workspace();
-        let entrypoints = resolve_entrypoints_with_files_and_workspace(EntrypointResolution {
-            raw_entrypoints: &args.files,
-            symbol_entrypoints: &args.file_symbols,
-            structured_entrypoints: &args.file_entrypoints_are_structured,
-            root: &self.root,
-            cwd,
-            graph_files: &graph_files,
-            include_symbols: args.include_symbols,
-            workspace: &workspace,
-            interner: self.session.interner(),
-        });
-        let roots: Vec<graph::NodeId> = entrypoints
-            .iter()
-            .map(|entrypoint| entrypoint.node.clone())
-            .collect();
-        if roots.is_empty() {
-            return Ok(());
-        }
-        let allowed = relationship_filter(&args.relationships);
-        let sources = self.dataset.sources_for(&self.root);
-        let (graph, collected) = {
-            let overlay = graph::SnapshotResolutionVisible::new(
-                &graph_files,
-                self.dataset.visible_paths(),
-                &self.root,
-            );
-            graph::lazy_import_graph_with_session(
-                graph::LazyImportBuild {
-                    roots: &roots,
-                    tsconfig: &self.tsconfig,
-                    tsconfig_catalog: Some(&self.tsconfig_catalog),
-                    max_depth: None,
-                    graph_files: &graph_files,
-                    resolution_visible: Some(&overlay),
-                    allowed: allowed.as_ref(),
-                    facts: graph::LazyImportFacts::new(
-                        self.facts
-                            .as_ref()
-                            .map(|facts| facts as &dyn graph::TsFactLookup),
-                        self.fact_plan,
-                        &self.fact_context,
-                    )
-                    .with_live_cache(&self.live_lazy_facts)
-                    .with_source_store(&sources)
-                    .retain_collected(),
-                    workspace: &workspace,
-                    import_resolution_cache: Some(&self.import_resolution_cache),
-                },
-                &self.root,
-                &self.session,
-            )
-        };
-        escape_reached_files(&mut graph_files, &collected);
-        self.extend_lazy_facts(
-            crate::codebase::ts_source::facts::TsFactMap::from_iter_with_plan(
-                collected,
-                self.fact_plan,
-            ),
-        );
-        self.bounded_lazy_import_graphs
-            .insert(key, std::sync::Arc::new(graph));
-        Ok(())
+        seed_bounded_lazy_import_graph(self, args, cwd)
     }
 
     fn record_candidate_paths(&self, args: &TraverseArgs) -> Result<Vec<PathBuf>> {

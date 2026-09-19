@@ -27,6 +27,7 @@ include!("traversal_queue_roots.rs");
 include!("symbol_resolution.rs");
 include!("shared_traversal.rs");
 include!("shared_traversal_bounded.rs");
+include!("shared_traversal_bounded_seed.rs");
 include!("shared_traversal_prepare.rs");
 include!("shared_traversal_facts.rs");
 include!("shared_traversal_lazy_graph.rs");

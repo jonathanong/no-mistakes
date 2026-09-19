@@ -18,6 +18,8 @@ pub(crate) struct SharedTraversalContext {
     graph: Option<std::sync::Arc<graph::DepGraph>>,
     lazy_import_graph: Option<std::sync::Arc<graph::DepGraph>>,
     bounded_lazy_import_graphs: HashMap<BoundedImportKey, std::sync::Arc<graph::DepGraph>>,
+    bounded_seed_diagnostics:
+        HashMap<BoundedImportKey, Vec<crate::codebase::ts_resolver::TsConfigDiagnostic>>,
     candidate_inventory_applied: bool,
     graph_cache: SharedBuildCache<EffectiveGraphPlanKey, graph::DepGraph>,
     symbol_index_cache: SharedBuildCache<GraphFileUniverseKey, graph::SymbolIndex>,

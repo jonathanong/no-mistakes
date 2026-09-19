@@ -88,6 +88,7 @@ impl SharedTraversalContext {
         self.graph = None;
         self.lazy_import_graph = None;
         self.bounded_lazy_import_graphs.clear();
+        self.bounded_seed_diagnostics.clear();
         self.analysis_generation = self.analysis_generation.wrapping_add(1);
         if let Some(facts) = &mut self.facts {
             facts.bump_playwright_scan_generation();

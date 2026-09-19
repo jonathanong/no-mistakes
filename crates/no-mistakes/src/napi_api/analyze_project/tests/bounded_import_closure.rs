@@ -1,5 +1,6 @@
 use super::*;
 use serde_json::{json, Value};
+use std::path::PathBuf;
 
 fn simple_root() -> String {
     crate::codebase::ts_resolver::normalize_path(
@@ -216,6 +217,69 @@ fn dependents_report_rejects_candidate_include() {
         analyze_project_json_impl(crate::napi_api::options::test_json_arg(request.to_string()))
             .unwrap_err();
     assert!(format!("{err}").contains("dependencies"), "{err}");
+}
+
+#[test]
+fn exclusive_analyze_project_keeps_seed_diagnostics() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/tsconfig/workspace-resolution"),
+    );
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": root,
+            "reports": [{
+                "type": "dependencies",
+                "id": "closure",
+                "files": ["apps/ambiguous/src/entry.ts"],
+                "relationships": ["import-static", "import-dynamic", "import-type"],
+                "candidateInclude": ["**/*"],
+                "projection": "paths"
+            }]
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    assert!(
+        value["reports"][0]["result"]["diagnostics"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|diagnostic| diagnostic["kind"] == "ambiguous-ownership"),
+        "{value}"
+    );
+}
+
+#[test]
+fn exclusive_analyze_project_does_not_parse_excluded_tests() {
+    let root = PathBuf::from(bounded_root());
+    crate::ast::begin_parse_count(&root);
+    analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": root,
+            "reports": [{
+                "type": "dependencies",
+                "id": "closure",
+                "files": ["web/app/page.tsx"],
+                "relationships": ["import-static", "import-dynamic", "import-type"],
+                "candidateInclude": ["web/**"],
+                "candidateExclude": ["**/*.test.*"],
+                "projection": "paths"
+            }]
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let counts = crate::ast::finish_parse_count(&root);
+    assert!(
+        !counts.contains_key(&root.join("web/app/page.test.tsx")),
+        "{counts:#?}"
+    );
+    assert!(
+        !counts.contains_key(&root.join("web/lib/unrelated.test.ts")),
+        "{counts:#?}"
+    );
 }
 
 #[test]

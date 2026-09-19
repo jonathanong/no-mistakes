@@ -56,4 +56,18 @@ impl SharedTraversalContext {
     pub(crate) fn prepared_graph(&self) -> &graph::PreparedGraphConfig {
         &self.prepared_graph
     }
+
+    pub(crate) fn candidate_inventory_applied(&self) -> bool {
+        self.candidate_inventory_applied
+    }
+
+    pub(crate) fn bounded_seed_diagnostics(
+        &self,
+        args: &TraverseArgs,
+    ) -> &[crate::codebase::ts_resolver::TsConfigDiagnostic] {
+        self.bounded_seed_diagnostics
+            .get(&BoundedImportKey::from_args(args))
+            .map(Vec::as_slice)
+            .unwrap_or(&[])
+    }
 }

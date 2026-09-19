@@ -10,8 +10,6 @@ pub(crate) fn collect_and_filter_entries_shared(
     let import_only = !args.include_symbols && relationships_are_import_only(&args.relationships);
     if !(import_only && matches!(direction, Direction::Deps)) {
         shared.ensure_facts();
-    } else if args.has_candidate_bounds() {
-        shared.seed_bounded_lazy_import_graph_from_args(args, cwd_early)?;
     }
     let result = collect_and_filter_entries_prepared(args, direction, cwd_early, shared)?;
     let collected = shared
@@ -36,6 +34,13 @@ pub(crate) fn collect_and_filter_entries_prepared(
     validate_candidate_bounds(args, direction)?;
     shared.session.record_work("traversal.requests", 1);
     let workspace = shared.dataset.workspace();
+    let overlay = args.has_candidate_bounds().then(|| {
+        graph::SnapshotResolutionVisible::new(
+            &shared.graph_files,
+            shared.dataset.visible_paths(),
+            &shared.root,
+        )
+    });
     let entrypoints = resolve_entrypoints_with_files_and_workspace(EntrypointResolution {
         raw_entrypoints: &args.files,
         symbol_entrypoints: &args.file_symbols,
@@ -43,6 +48,9 @@ pub(crate) fn collect_and_filter_entries_prepared(
         root: &shared.root,
         cwd: cwd_early,
         graph_files: &shared.graph_files,
+        visible_lookup: overlay
+            .as_ref()
+            .map(|lookup| lookup as &dyn crate::codebase::ts_resolver::VisiblePathLookup),
         include_symbols: args.include_symbols,
         workspace: &workspace,
         interner: shared.session.interner(),
@@ -87,7 +95,7 @@ pub(crate) fn collect_and_filter_entries_prepared(
         candidate_include: args.candidate_include.clone(),
         candidate_exclude: args.candidate_exclude.clone(),
     };
-    let (entries, runtime_diagnostics, tsconfig_provenance) =
+    let (entries, mut runtime_diagnostics, tsconfig_provenance) =
         cached_traversal_entries(shared, traversal_key, || {
             let symbol_index = if matches!(direction, Direction::Dependents)
                 && any_symbol
@@ -129,6 +137,7 @@ pub(crate) fn collect_and_filter_entries_prepared(
                 .collect();
             Ok((entries, tsconfig_provenance))
         })?;
+    runtime_diagnostics.extend(shared.bounded_seed_diagnostics(args).iter().cloned());
     crate::invocation::check_timeout()?;
     let entries = apply_filters(
         entries,
