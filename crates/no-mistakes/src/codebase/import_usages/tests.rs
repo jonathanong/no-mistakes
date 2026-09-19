@@ -105,6 +105,24 @@ fn reports_all_direct_import_usage_rows() {
 }
 
 #[test]
+fn computed_import_specifiers_are_omitted() {
+    let report = collect(&args(vec!["src/computed.mts"])).unwrap();
+    let file = report
+        .files
+        .iter()
+        .find(|file| file.path == "src/computed.mts")
+        .unwrap();
+    let specifiers: Vec<_> = file
+        .imports
+        .iter()
+        .map(|row| row.specifier.as_str())
+        .collect();
+
+    assert_eq!(specifiers, vec!["./local.cjs"]);
+    assert!(!specifiers.contains(&"moduleName"));
+}
+
+#[test]
 fn root_scan_and_filters_limit_source_files() {
     let mut scan_args = args(Vec::new());
     scan_args.filters = vec!["src/other.ts".to_string()];

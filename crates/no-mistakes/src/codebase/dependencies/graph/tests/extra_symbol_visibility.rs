@@ -87,6 +87,7 @@ fn symbol_edges_reject_workspace_targets_outside_visible_files() {
                 side_effect_only: false,
                 re_export: false,
                 runtime_reachable: true,
+                computed: false,
             }],
             ..TsFileFacts::default()
         },

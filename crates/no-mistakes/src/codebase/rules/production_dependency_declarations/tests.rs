@@ -225,6 +225,24 @@ fn import_type_of_dev_dependency_is_exempt() {
 }
 
 #[test]
+fn computed_import_from_production_file_is_not_a_package_finding() {
+    let root = fixture_root("computed-import");
+    let files = scenario_files(
+        &root,
+        &[
+            "packages/app/package.json",
+            "packages/app/index.mts",
+            "packages/lib/package.json",
+            "packages/lib/index.mts",
+        ],
+    );
+
+    let findings = check_with_files(&root, &config(""), &files).unwrap();
+
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn self_reference_subpath_import_is_exempt() {
     let root = fixture_root("self-reference-import");
     let files = scenario_files(

@@ -23,11 +23,43 @@ fn extracts_require_resolve_call() {
 }
 
 #[test]
-fn non_literal_require_resolve_call_is_ignored() {
+fn expression_free_require_resolve_template_is_not_computed() {
+    let imports = ts_extractor()
+        .extract("const path = require.resolve(`@scope/pkg/register`);")
+        .unwrap();
+    assert_eq!(specs(&imports), vec!["@scope/pkg/register"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::RequireResolve]);
+    assert!(!imports[0].computed);
+}
+
+#[test]
+fn expression_free_require_template_is_not_computed() {
+    let imports = ts_extractor()
+        .extract("const mod = require(`./cjs.js`);")
+        .unwrap();
+    assert_eq!(specs(&imports), vec!["./cjs.js"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::Require]);
+    assert!(!imports[0].computed);
+}
+
+#[test]
+fn interpolated_require_template_is_computed() {
+    let imports = ts_extractor()
+        .extract("const mod = require(`./${name}`);")
+        .unwrap();
+    assert_eq!(specs(&imports), vec!["./${}"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::Require]);
+    assert!(imports[0].computed);
+}
+
+#[test]
+fn non_literal_require_resolve_call_is_computed() {
     let imports = ts_extractor()
         .extract("const path = require.resolve(moduleName);")
         .unwrap();
-    assert!(imports.is_empty());
+    assert_eq!(specs(&imports), vec!["moduleName"]);
+    assert_eq!(kinds(&imports), vec![ImportKind::RequireResolve]);
+    assert!(imports[0].computed);
 }
 
 #[test]

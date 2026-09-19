@@ -141,7 +141,12 @@ pub(crate) fn collect_from_facts(
         .par_iter()
         .filter_map(|path| {
             let file_facts = facts.get_ts_facts(path)?;
-            let mut imports: Vec<_> = file_facts.imports.iter().map(import_usage).collect();
+            let mut imports: Vec<_> = file_facts
+                .imports
+                .iter()
+                .filter(|import| !import.computed)
+                .map(import_usage)
+                .collect();
             imports.sort_by(|a, b| {
                 (a.line, a.kind, &a.specifier).cmp(&(b.line, b.kind, &b.specifier))
             });

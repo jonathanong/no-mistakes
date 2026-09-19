@@ -1,7 +1,5 @@
-use super::{
-    is_declaration_file, kind_str, ImportRow, ResolveCheckArgs, ResolveCheckReport, Status,
-};
-use crate::codebase::dependencies::extract::{is_indexable, ExtractedImport, ImportKind};
+use super::{classify, ImportRow, ResolveCheckArgs, ResolveCheckReport, Status};
+use crate::codebase::dependencies::extract::{is_indexable, ExtractedImport};
 use crate::codebase::queries::render::Report;
 use crate::codebase::ts_resolver::ImportResolver;
 use anyhow::Result;
@@ -20,29 +18,6 @@ pub struct BatchResolveCheckReport {
     all_resolve: bool,
     unresolved_files: Vec<String>,
     results: Vec<ResolveCheckReport>,
-}
-
-fn classify(
-    imp: &ExtractedImport,
-    target: &super::super::shared::Target,
-    resolver: &ImportResolver,
-) -> ImportRow {
-    let resolved = resolver
-        .resolve(&imp.specifier, &target.abs_file)
-        .filter(|path| imp.kind == ImportKind::Type || !is_declaration_file(path));
-    let status = if resolved.is_some() {
-        Status::Resolved
-    } else if imp.specifier.starts_with('.') || resolver.matches_alias(&imp.specifier) {
-        Status::Unresolved
-    } else {
-        Status::External
-    };
-    ImportRow {
-        specifier: imp.specifier.clone(),
-        kind: kind_str(imp.kind),
-        status,
-        resolved: resolved.map(|abs| super::super::shared::rel_str(&abs, &target.root)),
-    }
 }
 
 fn compute_target(

@@ -10,7 +10,10 @@ no-mistakes import-usages src/index.mts --format json
 Use this when checking package dependency declarations from actual source
 imports. The report includes static imports, re-exports, dynamic `import()`,
 TypeScript `import("pkg")` type references, `require()`, and
-`require.resolve()`.
+`require.resolve()`. Expression-free templates such as ``import(`./mod`)`` and
+``require(`./mod`)`` count as literals. Computed `import()` / `require()` /
+`require.resolve()` specifiers are omitted; use `resolve-check` when you need
+those rows as `computed: true` / `unresolved`.
 
 Usage:
 

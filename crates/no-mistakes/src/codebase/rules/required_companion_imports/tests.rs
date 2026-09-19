@@ -495,4 +495,9 @@ fn helper_branches_cover_empty_dirs_missing_files_and_extension_normalization() 
         "src/components/DoesNotExist.stories.tsx",
         "@/components/Missing"
     ));
+    assert!(!file_imports(
+        &fixture_root("fixture"),
+        "src/components/Computed.tsx",
+        "moduleName"
+    ));
 }

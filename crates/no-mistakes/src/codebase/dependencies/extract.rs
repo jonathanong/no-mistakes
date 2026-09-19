@@ -58,6 +58,9 @@ pub struct ExtractedImport {
     /// imports are reachable through the exported binding even though no static
     /// call reaches their anonymous scope.
     pub runtime_reachable: bool,
+    /// Non-literal `import()`/`require()` specifier. Literal-only consumers skip
+    /// these; `resolve-check` reports them unresolved instead of omitting them.
+    pub computed: bool,
 }
 
 /// A statically visible function call in a file.
@@ -252,22 +255,6 @@ mod extract_binding_names;
 use extract_binding_names::{assignment_target_names, binding_names};
 include!("extract_binding_helpers.rs");
 include!("extract_syntax_helpers.rs");
-
-/// Returns `true` for `.tsx` / `.jsx` files (which need the TSX grammar).
-pub fn is_tsx_file(path: &Path) -> bool {
-    matches!(
-        path.extension().and_then(|e| e.to_str()),
-        Some("tsx" | "jsx")
-    )
-}
-
-/// Returns `true` for any TypeScript/JavaScript source file we should index.
-pub fn is_indexable(path: &Path) -> bool {
-    matches!(
-        path.extension().and_then(|e| e.to_str()),
-        Some("ts" | "mts" | "tsx" | "cts" | "js" | "mjs" | "jsx" | "cjs")
-    )
-}
 
 #[cfg(test)]
 #[path = "extract/tests/binding_and_hoist_coverage.rs"]

@@ -8,6 +8,7 @@ fn extracted(specifier: &str, kind: ImportKind) -> ExtractedImport {
         side_effect_only: false,
         re_export: false,
         runtime_reachable: false,
+        computed: false,
     }
 }
 

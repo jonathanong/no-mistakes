@@ -48,6 +48,7 @@ fn import_fact_kinds_map_to_edge_kinds() {
         side_effect_only: false,
         re_export: false,
         runtime_reachable: false,
+        computed: false,
     };
 
     assert_eq!(edge_kind_for_import(&import), EdgeKind::Import);
@@ -72,6 +73,7 @@ fn unproven_dynamic_import_is_a_conditional_edge() {
         side_effect_only: false,
         re_export: false,
         runtime_reachable: false,
+        computed: false,
     };
     let facts = crate::codebase::ts_source::facts::TsFileFacts::default();
     assert_eq!(
@@ -87,6 +89,27 @@ fn unproven_dynamic_import_is_a_conditional_edge() {
 }
 
 #[test]
+fn computed_import_is_not_a_graph_edge() {
+    let import = ExtractedImport {
+        specifier: "moduleName".to_string(),
+        kind: ImportKind::Dynamic,
+        line: 1,
+        function_scope: None,
+        function_scope_id: None,
+        side_effect_only: false,
+        re_export: false,
+        runtime_reachable: true,
+        computed: true,
+    };
+    let facts = crate::codebase::ts_source::facts::TsFileFacts::default();
+    assert_eq!(
+        graph_edge_kind_for_extracted_import(&import, &facts, &HashSet::new()),
+        None
+    );
+    assert!(!import_is_reachable(&import, &facts, &HashSet::new()));
+}
+
+#[test]
 fn type_imports_in_exported_symbol_scopes_are_reachable() {
     let import = ExtractedImport {
         specifier: "./target.mts".to_string(),
@@ -97,6 +120,7 @@ fn type_imports_in_exported_symbol_scopes_are_reachable() {
         side_effect_only: false,
         re_export: false,
         runtime_reachable: false,
+        computed: false,
     };
     let facts = crate::codebase::ts_source::facts::TsFileFacts {
         symbols: Some(std::sync::Arc::new(

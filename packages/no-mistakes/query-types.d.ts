@@ -121,6 +121,12 @@ export interface ResolveCheckImport {
   status: ImportResolutionStatus;
   /** Root-relative resolved target, when the import resolves locally. */
   resolved?: string;
+  /**
+   * `true` when the specifier is not a string literal or empty template
+   * (`import(\`./${name}\`)`, `import(moduleName)`, `require(name)`).
+   * Computed imports are always `unresolved`.
+   */
+  computed: boolean;
 }
 
 export interface ResolveCheckResult {

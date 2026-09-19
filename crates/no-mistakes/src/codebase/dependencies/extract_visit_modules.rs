@@ -13,6 +13,7 @@ fn visit_import_declaration_with_scope(
         import.span.start as usize,
         side_effect_only,
         false,
+        false,
     );
     collector.record_imported_bindings(import);
 }
@@ -35,11 +36,7 @@ fn visit_export_all_declaration_with_scope(
     // namespace marker rather than treating it as a transparent star source:
     // a later named import of that name may call one member of its source.
     if !export.export_kind.is_type() {
-        if let Some(exported) = export
-            .exported
-            .as_ref()
-            .and_then(module_export_name_name)
-        {
+        if let Some(exported) = export.exported.as_ref().and_then(module_export_name_name) {
             collector.call_export_bindings.push(ExportedBinding {
                 specifier: Some(export.source.value.to_string()),
                 // `*` cannot be an ECMAScript export name. It distinguishes
@@ -55,11 +52,64 @@ fn visit_export_all_declaration_with_scope(
     }
 }
 
-fn visit_import_expression_with_scope(collector: &mut ImportCollector, import: &ImportExpression<'_>) {
+fn visit_import_expression_with_scope(
+    collector: &mut ImportCollector,
+    import: &ImportExpression<'_>,
+) {
     if let Some(specifier) = static_import_specifier(&import.source) {
         collector.push(&specifier, ImportKind::Dynamic, import.span.start as usize);
+    } else {
+        collector.push_computed(
+            &computed_import_specifier(&import.source),
+            ImportKind::Dynamic,
+            import.span.start as usize,
+        );
     }
     walk::walk_import_expression(collector, import);
+}
+
+fn record_runtime_require_import(
+    collector: &mut ImportCollector,
+    call: &CallExpression<'_>,
+    kind: ImportKind,
+) {
+    let Some(first) = call.arguments.first() else {
+        return;
+    };
+    let Some(expr) = first.as_expression() else {
+        collector.push_computed("<computed>", kind, call.span.start as usize);
+        return;
+    };
+    if let Some(specifier) = static_import_specifier(expr) {
+        collector.push(&specifier, kind, call.span.start as usize);
+        return;
+    }
+    collector.push_computed(
+        &computed_import_specifier(expr),
+        kind,
+        call.span.start as usize,
+    );
+}
+
+fn computed_import_specifier(expr: &Expression<'_>) -> String {
+    match crate::codebase::ts_source::unwrap_ts_wrappers(expr) {
+        Expression::Identifier(ident) => ident.name.to_string(),
+        Expression::TemplateLiteral(template) => {
+            let mut specifier = String::new();
+            for (i, quasi) in template.quasis.iter().enumerate() {
+                specifier.push_str(quasi.value.cooked.as_ref().unwrap_or(&quasi.value.raw));
+                if i < template.expressions.len() {
+                    specifier.push_str("${}");
+                }
+            }
+            if specifier.is_empty() {
+                "<computed>".to_string()
+            } else {
+                specifier
+            }
+        }
+        _ => "<computed>".to_string(),
+    }
 }
 
 fn visit_ts_import_type_with_scope(collector: &mut ImportCollector, import: &TSImportType<'_>) {

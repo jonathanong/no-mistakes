@@ -21,21 +21,9 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
         }
     }
     if is_require_resolve_callee(&call.callee) && !collector.local_binding_shadows("require") {
-        if let Some(first) = call.arguments.first() {
-            if let Some(specifier) = string_literal_argument(first) {
-                collector.push(
-                    specifier,
-                    ImportKind::RequireResolve,
-                    call.span.start as usize,
-                );
-            }
-        }
+        record_runtime_require_import(collector, call, ImportKind::RequireResolve);
     } else if is_require_callee(&call.callee) && !collector.local_binding_shadows("require") {
-        if let Some(first) = call.arguments.first() {
-            if let Some(specifier) = string_literal_argument(first) {
-                collector.push(specifier, ImportKind::Require, call.span.start as usize);
-            }
-        }
+        record_runtime_require_import(collector, call, ImportKind::Require);
     } else if let Some(callee) = recorded_call_callee(collector, call) {
         if collector.should_record_call(&callee) {
             if is_static_getter(collector, &callee) || is_object_getter(collector, &callee) {
@@ -81,7 +69,10 @@ fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &Ca
     record_callable_argument_transitions(collector, &call.arguments);
 }
 
-fn record_callable_argument_transitions(collector: &mut ImportCollector, arguments: &[Argument<'_>]) {
+fn record_callable_argument_transitions(
+    collector: &mut ImportCollector,
+    arguments: &[Argument<'_>],
+) {
     for argument in arguments {
         let Some(expression) = argument.as_expression() else {
             continue;

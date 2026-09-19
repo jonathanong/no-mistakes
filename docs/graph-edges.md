@@ -378,8 +378,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   exported name. Class
   members stay on a separate per-class identity index.
 - `route-import` deliberately does not apply that function-reachability pruning.
-  It remains literal-only, so computed dynamic imports still require an `rg`
-  fallback.
+  It remains literal-only, so computed dynamic imports are not graph edges even
+  when the recorded specifier string happens to match a path or alias.
+  `resolve-check` reports those specifiers as unresolved instead of omitting
+  them.
 - `resource` edges are literal-only. Files outside the tracked inventory,
   untracked/ignored files, and symlinks resolving outside the analysis root are
   excluded. `readdir` covers immediate tracked children; glob support is a

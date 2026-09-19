@@ -54,6 +54,17 @@ fn file_imports_uses_the_tsx_extractor_for_a_tsx_file() {
 }
 
 #[test]
+fn file_imports_omits_computed_specifiers() {
+    let root = fixture_root("computed-import");
+    let file = root.join("packages/lib/index.mts");
+    let sources = crate::codebase::rules::source_store_for_files(std::slice::from_ref(&file));
+
+    let imports = file_imports(&file, &sources);
+
+    assert!(imports.is_empty());
+}
+
+#[test]
 fn try_resolve_matches_an_exact_visible_path() {
     let candidate = PathBuf::from("/repo/packages/lib/helper.mts");
     let visible: crate::fx::PathSet = [candidate.clone()].into_iter().collect();

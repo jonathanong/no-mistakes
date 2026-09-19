@@ -140,6 +140,7 @@ fn lazy_import_neighbors_skip_invisible_targets_and_keep_external_modules() {
                     side_effect_only: false,
                     re_export: false,
                     runtime_reachable: true,
+                    computed: false,
                 },
                 ExtractedImport {
                     specifier: "lodash".to_string(),
@@ -150,6 +151,7 @@ fn lazy_import_neighbors_skip_invisible_targets_and_keep_external_modules() {
                     side_effect_only: false,
                     re_export: false,
                     runtime_reachable: true,
+                    computed: false,
                 },
             ],
             ..TsFileFacts::default()
@@ -220,6 +222,7 @@ fn lazy_import_neighbors_collect_source_type_and_non_indexable_targets() {
                     side_effect_only: false,
                     re_export: false,
                     runtime_reachable: true,
+                    computed: false,
                 },
                 ExtractedImport {
                     specifier: "./b.mts".to_string(),
@@ -230,6 +233,7 @@ fn lazy_import_neighbors_collect_source_type_and_non_indexable_targets() {
                     side_effect_only: false,
                     re_export: false,
                     runtime_reachable: true,
+                    computed: false,
                 },
             ],
             ..TsFileFacts::default()

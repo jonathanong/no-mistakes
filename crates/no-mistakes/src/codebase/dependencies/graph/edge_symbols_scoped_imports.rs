@@ -9,6 +9,9 @@ fn scoped_import_map_with_graph_files(
     const TOP_LEVEL_SIDE_EFFECT_SCOPE: &str = "";
     let mut map: HashMap<String, Vec<(NodeId, EdgeKind)>> = HashMap::new();
     for import in imports {
+        if import.computed {
+            continue;
+        }
         let scope = if let Some(scope) = &import.function_scope {
             scope.as_str()
         } else if import.side_effect_only {

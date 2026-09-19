@@ -15,6 +15,9 @@ fn graph_edge_kind_for_extracted_import(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     reachable: &HashSet<crate::codebase::dependencies::extract::CallableId>,
 ) -> Option<EdgeKind> {
+    if import.computed {
+        return None;
+    }
     let reachable_import = import_is_reachable(import, facts, reachable);
     match import.kind {
         ImportKind::Dynamic if !reachable_import => Some(EdgeKind::ConditionalDynamicImport),
@@ -28,6 +31,9 @@ fn import_is_reachable(
     facts: &crate::codebase::ts_source::facts::TsFileFacts,
     reachable: &HashSet<crate::codebase::dependencies::extract::CallableId>,
 ) -> bool {
+    if import.computed {
+        return false;
+    }
     // A runtime `import()`/`require()` collected from inside an exported binding
     // initializer (e.g. `next/dynamic(() => import('./Foo'))`) lives in an
     // anonymous callback scope that no static call reaches, but it is still
