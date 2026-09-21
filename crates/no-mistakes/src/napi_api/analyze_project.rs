@@ -67,6 +67,9 @@ mod options_test_support;
 #[cfg(test)]
 mod options_tests;
 #[cfg(test)]
+#[path = "analyze_project/tests/playwright_prewarm.rs"]
+mod playwright_prewarm_tests;
+#[cfg(test)]
 mod tests;
 #[cfg(test)]
 mod tests_dispatch;
