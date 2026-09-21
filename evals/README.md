@@ -618,6 +618,58 @@ Gate 2 was not re-screened standalone. The full both-arm re-baseline covers
 trigger is read from the with-arm regardless of ablation mode, so it produces
 the gate-2 numbers as a by-product.
 
+Measured 2026-09-21, `runs: 3`, `--ablation with-without`, zero errored runs,
+`partial: false`, cost per run $0.186 and $0.164 against the expected
+$0.16–0.19.
+
+| flow | gate | current (2026-09-13) | v1 (2026-09-13) | **v2 (2026-09-21)** |
+| --- | --- | --- | --- | --- |
+| `before-edit` | ≥ 15/18 | 16/18 | 18/18 | **15/18 — PASS, at the floor** |
+| `signature` | ≥ 9/12 | 10/12 | 9/12 | **7/12 — FAIL** |
+| `after-edit` | ≥ 10/12 | 12/12 | 12/12 | held, see below |
+
+`signature` 7/12 misses the floor by two runs and sits three below the current
+description. That is outside the "one to two runs" band the gate was written to
+allow, so it is a fail and the looser [decision
+rule](#decision-rules-for-a-description-change) ("2 or more is a fail") is not
+available here — the clause-specific gate governs, exactly as it did for v1.
+
+##### But the floors are cross-time, and that is a defect in the gate
+
+Pre-registering absolute floors assumed the baseline holds still. It may not.
+v2 differs from v1 by one clause reworded to be **narrower**, yet it is worse
+than v1 on *both* untargeted flows — `before-edit` 18→15 and `signature` 9→7.
+"The clause crowds out signatures" explains that. So does "runs on 2026-09-21
+score lower than runs on 2026-09-13", and the gate cannot tell them apart,
+because every floor in it is anchored to a measurement taken eight days
+earlier.
+
+This file's own standard is a **case-matched** baseline, and the rigorous
+reading of that is *contemporaneous*. Comparing across time is what
+manufactured the [`signature` regression that never
+happened](#signature-did-not-regress--the-35-vs-215-above-was-a-1-run-artifact)
+in #981. Repeating it here, in the section written to prevent it, would be the
+same error with better paperwork.
+
+**Pre-registered, before the control run started** — the control is the
+pre-clause description measured today, `--tag signature --ablation none`, 15
+runs, on a variant that differs from the shipped skill in the description line
+only:
+
+- Control **≥ 9/12** → the baseline held; the drop is the clause. v2 does not
+  ship, the flow stays unnamed, the finding is recorded as-is.
+- Control **≤ 7/12** → the baseline moved. The absolute floors are unanchored,
+  the 2026-09-13 numbers are not comparable with today's, and no verdict on the
+  clause is available without a same-day A/B. That is a finding about the
+  method, and it outranks the clause.
+- Control **= 8/12** → the two explanations are not separable at n=12. The
+  pre-registered default stands: v2 does not ship.
+
+`after-edit` and the holdout are deliberately **not** run until this resolves.
+Spending held-out cases 07-09 on a description that may not ship would consume
+them for nothing, and holdout integrity is the one property this suite cannot
+buy back.
+
 ### Decision rules for a description change
 
 **Pre-registered**: written and committed before the candidate screening numbers
