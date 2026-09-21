@@ -416,3 +416,5 @@ fn derived_resolve_check_propagates_source_and_fatal_parse_failures() {
         assert!(derived.reason.contains(file), "{derived}");
     }
 }
+
+include!("derived_resolve_batching.rs");

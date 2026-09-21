@@ -19,7 +19,7 @@ impl PreparedScope {
             !ids.is_empty(),
             "dependencyReportIds must contain at least one ID"
         );
-        let mut files = std::collections::BTreeSet::new();
+        let mut grouped = std::collections::BTreeMap::<DerivedClosureKey, DerivedClosureGroup>::new();
         let mut seen_ids = std::collections::HashSet::new();
         let cwd = std::env::current_dir().context("reading current directory")?;
         for id in ids {
@@ -62,15 +62,26 @@ impl PreparedScope {
                 "dependency report `{id}` must use import or workspace relationships without includeSymbols"
             );
             let concrete_args = concrete_file_closure_args(&args);
+            match grouped.entry(DerivedClosureKey::from_args(&args, &concrete_args)) {
+                std::collections::btree_map::Entry::Vacant(entry) => {
+                    entry.insert(DerivedClosureGroup { concrete_args });
+                }
+                std::collections::btree_map::Entry::Occupied(mut entry) => {
+                    entry.get_mut().extend(concrete_args);
+                }
+            }
+        }
+        let mut files = std::collections::BTreeSet::new();
+        for group in grouped.values() {
             let result = crate::codebase::dependencies::collect_and_filter_entries_prepared(
-                &concrete_args,
+                &group.concrete_args,
                 Direction::Deps,
                 &cwd,
                 &self.traversal,
             )?;
             files.extend(
                 crate::codebase::dependencies::explicit_existing_entry_files(
-                    &args,
+                    &group.concrete_args,
                     self.traversal.root(),
                     &cwd,
                 ),
@@ -98,6 +109,80 @@ impl PreparedScope {
         )?;
         Ok(crate::cli::json_value(&report))
     }
+}
+
+/// Fields whose values affect a dependency closure before the derived resolve
+/// check removes presentation-only output projections. Entry files deliberately
+/// do not participate: unioning compatible roots has the same reachable set as
+/// traversing each root independently.
+#[derive(Eq, Ord, PartialEq, PartialOrd)]
+struct DerivedClosureKey {
+    root: Option<std::path::PathBuf>,
+    tsconfig: Option<std::path::PathBuf>,
+    depth: Option<usize>,
+    filters: Vec<String>,
+    target_modules: Vec<String>,
+    tests: Vec<String>,
+    relationships: Vec<String>,
+    candidate_include: Vec<String>,
+    candidate_exclude: Vec<String>,
+    paths_projection: bool,
+}
+
+impl DerivedClosureKey {
+    fn from_args(
+        original: &crate::codebase::dependencies::TraverseArgs,
+        concrete: &crate::codebase::dependencies::TraverseArgs,
+    ) -> Self {
+        Self {
+            root: original.root.clone(),
+            tsconfig: original.tsconfig.clone(),
+            depth: original.depth,
+            filters: canonical_strings(&concrete.filters),
+            // These output projections are deliberately retained in the key.
+            // The derived check expands them to concrete files, but reports
+            // with different public closure semantics must not be combined.
+            target_modules: canonical_strings(&original.target_modules),
+            tests: canonical_strings(&original.tests),
+            relationships: canonical_relationships(&original.relationships),
+            candidate_include: canonical_strings(&original.candidate_include),
+            candidate_exclude: canonical_strings(&original.candidate_exclude),
+            paths_projection: original.projection.is_paths(),
+        }
+    }
+}
+
+struct DerivedClosureGroup {
+    concrete_args: crate::codebase::dependencies::TraverseArgs,
+}
+
+impl DerivedClosureGroup {
+    fn extend(&mut self, args: crate::codebase::dependencies::TraverseArgs) {
+        self.concrete_args.files.extend(args.files);
+        self.concrete_args.file_symbols.extend(args.file_symbols);
+        self.concrete_args
+            .file_entrypoints_are_structured
+            .extend(args.file_entrypoints_are_structured);
+    }
+}
+
+fn canonical_strings(values: &[String]) -> Vec<String> {
+    let mut values = values.to_vec();
+    values.sort();
+    values.dedup();
+    values
+}
+
+fn canonical_relationships(
+    relationships: &[crate::codebase::dependencies::RelationshipArg],
+) -> Vec<String> {
+    let mut relationships = relationships
+        .iter()
+        .map(|relationship| relationship.as_str().to_string())
+        .collect::<Vec<_>>();
+    relationships.sort();
+    relationships.dedup();
+    relationships
 }
 
 /// Undo output projections that hide reachable source files so derived

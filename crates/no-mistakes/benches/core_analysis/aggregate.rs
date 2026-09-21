@@ -119,6 +119,57 @@ pub(super) fn bench_aggregate_and_multi_report(c: &mut Criterion) {
             )
         });
     });
+
+    // Models consumers that derive one resolve check from many route/global
+    // dependency reports sharing the same import closure semantics.
+    let derived_report_count = 429;
+    let mut derived_reports = (0..derived_report_count)
+        .map(|index| {
+            json!({
+                "id": format!("derived-{index}"),
+                "type": "dependencies",
+                "files": ["src/app.tsx"],
+                "relationships": ["import-static", "import-dynamic", "import-type"]
+            })
+        })
+        .collect::<Vec<_>>();
+    derived_reports.push(json!({
+        "type": "resolveCheckDependencies",
+        "dependencyReportIds": (0..derived_report_count)
+            .map(|index| format!("derived-{index}"))
+            .collect::<Vec<_>>(),
+    }));
+    let derived_options = json!({
+        "root": fixture_root(),
+        "tsconfig": fixture_root().join("tsconfig.json"),
+        "reports": derived_reports,
+    })
+    .to_string();
+    let derived_preflight = benchmark_support::analyze_project_json(derived_options.clone())
+        .expect("many derived resolve reports should succeed");
+    let derived_value: serde_json::Value =
+        serde_json::from_str(&derived_preflight).expect("derived resolve output should be JSON");
+    assert_eq!(
+        derived_value["reports"].as_array().map(Vec::len),
+        Some((derived_report_count + 1) as usize)
+    );
+    let (observed_derived, derived_diagnostics) =
+        benchmark_support::analyze_project_json_observed(derived_options.clone())
+            .expect("observed many derived resolve reports should succeed");
+    assert_eq!(observed_derived, derived_preflight);
+    assert_eq!(
+        derived_diagnostics.work["traversal.requests"],
+        (derived_report_count + 1) as u64,
+        "compatible references must share one derived traversal"
+    );
+    c.bench_function("aggregate/batched_derived_resolve_many_reports", |b| {
+        b.iter(|| {
+            black_box(
+                benchmark_support::analyze_project_json(black_box(derived_options.clone()))
+                    .expect("many derived resolve reports should succeed"),
+            )
+        });
+    });
 }
 
 pub(super) fn bench_impacted_checks(c: &mut Criterion) {
