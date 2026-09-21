@@ -14,14 +14,27 @@ errored runs.
 - **current** — #981 plus a validation clause, in
   `skills/no-mistakes/SKILL.md` today.
 
-| flow | #979 | #981 | current |
-| --- | --- | --- | --- |
-| [`before-edit`](#candidate-screening) | 8/18 (44%) | 16/18 (89%) | **16/18 (89%)** |
-| [`signature`](#candidate-screening) | 4/12 (33%) | 10/12 (83%) | **10/12 (83%)** |
-| [`after-edit`](#the-after-edit-regression-981-shipped) | 9/12 (75%) | **3/12 (25%)** | **12/12 (100%)** |
-| [`neg-hard`](#candidate-screening) — over-trigger guard, lower is better | 0/12 | 0/12 | 0/12 |
-| … of which fabricate a command form | 5/12 | 1/12 | **0/12** |
-| [**live holdout**](#held-out-confirmation) — never tuned against | **3/9 (33%)** | **5/9 (56%)** | not re-run |
+| flow | #979 | #981 | current | current, re-measured 2026-09-21 |
+| --- | --- | --- | --- | --- |
+| [`before-edit`](#candidate-screening) | 8/18 (44%) | 16/18 (89%) | **16/18 (89%)** | — |
+| [`signature`](#candidate-screening) | 4/12 (33%) | 10/12 (83%) | **10/12 (83%)** | **9/12 (75%)** |
+| [`after-edit`](#the-after-edit-regression-981-shipped) | 9/12 (75%) | **3/12 (25%)** | **12/12 (100%)** | — |
+| [`queues`](#control-result-the-baseline-held-the-clause-does-not-ship) | — | — | **3/12 (25%)** | — |
+| [`neg-hard`](#candidate-screening) — over-trigger guard, lower is better | 0/12 | 0/12 | 0/12 | — |
+| … of which fabricate a command form | 5/12 | 1/12 | **0/12** | — |
+| [**live holdout**](#held-out-confirmation) — never tuned against | **3/9 (33%)** | **5/9 (56%)** | not re-run | held, see below |
+
+The last column is a same-day reproducibility check, not a new result: the
+current description re-measured on 2026-09-21 lands one run below its
+2026-09-13 number on `signature`. That is the control which [priced and
+rejected](#control-result-the-baseline-held-the-clause-does-not-ship) the queue
+clause, and it is the reason to read gate floors as a control arm rather than
+as a fixed count.
+
+**The live holdout is still 5/9, and cases 07-09 are still unspent.** They were
+committed ahead of the queue clause to judge it, and were deliberately not run
+once the clause failed gate 2 — a held-out case spent on a description that
+does not ship is spent for nothing. The next candidate inherits them.
 
 **Read the holdout row, not the tuned rows.** 56% is what generalizes; the
 90%-ish figures are flows their description was written against. No
@@ -30,29 +43,48 @@ was not re-run for the current description — the validation clause was screene
 on `after-edit`, which is now tuning-visible, so a fresh holdout needs [fresh
 cases](#writing-new-cases) written first.
 
-**The `after-edit` row is why this table has three columns.** #981 reported two
+**The `after-edit` row is why this table has a column per description.** #981 reported two
 wins and listed `after-edit` as merely unmeasured. It was not neutral: it fell
 from the best measured flow to the worst, 75% → 25%, and $3 of eval would have
 caught it before merge. See [the regression](#the-after-edit-regression-981-shipped).
 
 ### What the runs established
 
+- **[A named subject is bought, not
+  free.](#control-result-the-baseline-held-the-clause-does-not-ship)** The
+  queue clause did exactly what the naming model predicts — `queues` 3/12 →
+  12/12 — and was still **rejected**, because a same-day control showed it
+  charged `signature` 9/12 → 7/12 and `before-edit` 16/18 → 15/18 to do it.
+  The budget model was inferred from #981's reallocation; this is the first
+  time the price was measured directly, against a case-matched control run on
+  the same day.
 - **[Naming a subject reliably reaches it; not naming one is a coin
   flip.](#naming-a-subject-reliably-reaches-it-not-naming-one-is-a-coin-flip)**
   Now measured in both directions. *Adding* a name lifts its flow: signatures
-  25–33% → 83%, and post-edit validation 25% → 100%. *Removing* one drops it:
-  #981 deleted "after editing to validate" and `after-edit` fell 75% → 25%.
+  25–33% → 83%, post-edit validation 25% → 100%, and queues 25% → 100%.
+  *Removing* one drops it: #981 deleted "after editing to validate" and
+  `after-edit` fell 75% → 25%.
   Unnamed subjects are unpredictable rather than dead — the queue-shaped
-  held-out case fires 0/3, the duplication-shaped one 2/3, and neither subject
-  appears in any description tested. So name what matters, treat any deletion
-  as a change to be measured, and do not read every low flow as merely unnamed.
+  held-out case fires 0/3 and the duplication-shaped one 2/3 under the shipped
+  description, which names neither. So name what matters, treat any deletion
+  as a change to be measured, and do not read every low flow as merely unnamed
+  — nor as cheap to fix, which is what the queue clause turned out not to be.
 - **[A description is a budget, not a
   bag.](#the-after-edit-regression-981-shipped)** #981's rework was framed as
   replacing a vague framing with a concrete one. What it actually did was
   reallocate: two subjects gained roughly what one lost. The fix was not a
   better framing but more named subjects — the current description is #981 plus
   two clauses, and it holds every flow #981 won while restoring the one it
-  broke, at 684 characters against a 1536 cap.
+  broke, at 684 characters against a 1536 cap. The [rejected queue
+  clause](#control-result-the-baseline-held-the-clause-does-not-ship) is the
+  limit of that move: the budget is real, it binds well under the character
+  cap, and a twelfth clause is not obviously affordable.
+- **[Absolute gate floors expire.](#but-the-floors-are-cross-time-and-that-is-a-defect-in-the-gate)**
+  Gate 2 pre-registered floors as fixed counts against eight-day-old
+  measurements. That is a cross-time comparison — the exact error that
+  manufactured the [phantom `signature`
+  regression](#signature-did-not-regress--the-35-vs-215-above-was-a-1-run-artifact).
+  Pre-register the floors as a **same-day control arm**, not as a number.
 - **[`signature` never
   regressed.](#signature-did-not-regress--the-35-vs-215-above-was-a-1-run-artifact)**
   The 3/5 → 2/15 drop that motivated the rework compared a *single-run* pilot
@@ -82,14 +114,21 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
   eleven flows is still outstanding, so [Baseline](#baseline-before-edit-flow-shipped-description-as-of-pr-979)
   and [Measurement coverage](#measurement-coverage) still describe the *old*
   description.
-- **Seven flows are still unmeasured under the current description.** `queues`,
-  `ci`, `napi`, `lang-graph`, `usage`, `safety` and `duplication` sat between
-  0% and 67% under every description tested here, and none has been re-run
-  since. `after-edit` used to head this list and is now measured — it was not
-  merely unmeasured, it was broken, which is the reason to shorten this list
-  rather than keep describing it. Each remaining flow is ~$3 to check at
-  `runs: 3` single-arm, on the [pattern this
-  correction used](#the-after-edit-regression-981-shipped).
+- **Six flows are still unmeasured under the current description.** `ci`,
+  `napi`, `lang-graph`, `usage`, `safety` and `duplication` sat between 0% and
+  67% under every description tested here, and none has been re-run since.
+  `after-edit` used to head this list and is now measured — it was not merely
+  unmeasured, it was broken, which is the reason to shorten this list rather
+  than keep describing it. `queues` has now left it too: it is **3/12 (25%)**
+  under the current description, and the [clause that would have fixed
+  it](#control-result-the-baseline-held-the-clause-does-not-ship) was measured,
+  priced and rejected. Each remaining flow is ~$3 to check at `runs: 3`
+  single-arm, on the [pattern this correction
+  used](#the-after-edit-regression-981-shipped).
+- **A low flow is not automatically a bug to fix.** `queues` is the worked
+  example: the subject is unnamed, naming it works, and naming it still was not
+  worth the price. Before opening the next "flow X is low" issue, budget what
+  the fix costs the flows that are high.
 
 ---
 
@@ -217,12 +256,12 @@ claude plugin eval . --ablation with-without --judge-model sonnet \
 claude plugin eval . --tag heldout --ablation none --judge-model sonnet
 ```
 
-59 generated cases across 12 flows; 53 excluding the holdout.
+62 generated cases across 12 flows; 53 excluding the holdout.
 
 | tag | cases | what it covers |
 | --- | --- | --- |
 | `before-edit` | 8 | impact scoping before a change — the calibrated core suite |
-| `heldout` | 6 | trigger-only cases in unseen wording, for testing description changes (3 spent, 3 live — see [Held-out check](#held-out-check)) |
+| `heldout` | 9 | trigger-only cases in unseen wording, for testing description changes (3 spent, 3 live, 3 never run — see [Held-out check](#held-out-check)) |
 | `queues` | 5 | producer↔consumer coupling across a queue (no import edge) |
 | `after-edit` | 5 | validation set, moved files, empty-result distrust |
 | `signature` | 5 | call sites, argument shapes, return-type flow, public surface |
@@ -326,7 +365,9 @@ read when planning what still needs measuring.
 | `after-edit` | `runs: 3` | `runs: 3` | not run | `runs: 3` | `runs: 3` |
 | `heldout` (spent 01–03) | `runs: 3` | `runs: 3` | not run | `runs: 3` | **not run** |
 | `heldout` (live 04–06) | `runs: 3` | n/a | not run | `runs: 3` | **not run** |
-| `queues`, `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** | **not run** |
+| `heldout` (live 07–09, added #986) | n/a | n/a | n/a | n/a | **never run — unspent** |
+| `queues` | ⚠️ 1 run | `runs: 3` | not run | `runs: 3` | `runs: 3` |
+| `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** | **not run** |
 | `usage`, `safety`, `duplication` | ⚠️ 1 run | not run | not run | **not run** | **not run** |
 
 The `after-edit` row is `runs: 3` under `#979 shipped`, `C2` and `current`
@@ -357,6 +398,19 @@ session budget for ~320 runs.
 
 Every other number in this file comes from runs with **zero** errored runs,
 verified per file.
+
+A second attempt, 2026-09-21, ran **flow by flow instead of as one job** —
+`before-edit` and `signature` both-arm, then a single-arm control — for exactly
+this reason. One invocation per flow means a session limit costs the flow in
+flight, not the whole suite, and each flow's `aggregate-result.json` is checked
+for errored runs and against `$0.16–0.19` per run before its numbers are
+written down. Those three runs came in at $0.186, $0.164 and $0.183 per run
+with zero errors. **Run the re-baseline this way**; the monolith has now failed
+once and has no advantage.
+
+Write the `--json` file somewhere **outside** the worktree. `evals/results/` is
+gitignored, so results produced in a throwaway worktree die with it — which is
+how the 2026-09-13 numbers were lost and had to be re-measured here.
 
 ### Approximate cost
 
@@ -669,6 +723,67 @@ only:
 Spending held-out cases 07-09 on a description that may not ship would consume
 them for nothing, and holdout integrity is the one property this suite cannot
 buy back.
+
+##### Control result: the baseline held. The clause does not ship.
+
+Same-day, same machine, `--ablation none`, 15 runs, $2.75 at $0.183 per run,
+zero errored runs, `partial: false`.
+
+| `signature`, same four should-fire cases | trigger |
+| --- | --- |
+| pre-clause description, 2026-09-13 | 10/12 (83%) |
+| **pre-clause description, 2026-09-21 (control)** | **9/12 (75%)** |
+| **v2 clause, 2026-09-21** | **7/12 (58%)** |
+
+The control lands one run below its own eight-day-old measurement — the
+baseline held. Drift does not explain a three-run drop, so the first
+pre-registered branch applies and **the queue clause does not ship**. `queues`
+stays at 3/12, the subject stays unnamed, and the finding is recorded as-is.
+
+The clause was reverted from `skills/no-mistakes/SKILL.md` in this PR;
+`SKILL.md` is byte-identical to `main` again.
+
+**This is the budget model's first measured price.** Every earlier run measured
+what naming a subject *buys*; this one measures what it *costs*. The clause
+bought `queues` 3/12 → 12/12 and charged `signature` 9/12 → 7/12 and
+`before-edit` 16/18 → 15/18 for it. [A description is a budget, not a
+bag](#the-after-edit-regression-981-shipped) was inferred from #981's
+reallocation; it is now a direct observation, with the price named on a
+case-matched, same-day control.
+
+The honest summary is not "the clause is bad". It is that **this suite has no
+evidence a clause can be added for free**, and the two flows it charged are the
+one with the most real traffic behind it and the one the #984 issue was about.
+
+##### What the control cost to get right, and the trap it exposed
+
+The obvious way to run this control is to point it at
+`evals/variants/register-plus-validate/`, the stored variant holding the
+pre-clause description. **That would have measured the wrong thing.** The
+stored variants are frozen copies of `SKILL.md` *and* its `references/`, so
+every one of them rots the moment the skill body changes — and the body had
+changed under them (#1001, #1007, #1008 edited `SKILL.md` and
+`references/dependencies.md`). A control run against a stale variant differs
+from the shipped skill in the description **and** the body, and reports the sum
+as if it were the clause.
+
+Build a control from the shipped skill instead, never from a stored variant:
+
+```sh
+mkdir -p evals/variants/<name>
+cp -R skills/no-mistakes/references evals/variants/<name>/references
+cp skills/no-mistakes/SKILL.md evals/variants/<name>/SKILL.md
+# replace ONLY the description: line, then prove it:
+diff skills/no-mistakes/SKILL.md evals/variants/<name>/SKILL.md   # line 3 only
+diff -r skills/no-mistakes/references evals/variants/<name>/references  # silent
+python3 evals/generate.py --variant <name>
+```
+
+The two `diff`s are the point: [screening
+discipline](#candidate-screening) says "verify only line 3 differs", and that
+check is what catches the rot. The variants committed in this repo are correct
+*as of the run that produced them* and must not be reused for a later
+comparison without re-verifying both diffs.
 
 ### Decision rules for a description change
 

@@ -1,6 +1,6 @@
 ---
 name: no-mistakes
-description: "Answers questions about how code connects: is this dead, still used, or safe to delete; is it only used by tests; where is a symbol used, and which files import or call it; did a rename update every reference; what has to change if a signature, argument, or return type changes; which tests actually need to run for a change, or why the whole suite is running; does a route have e2e coverage; what to run to validate a change before pushing or handing it off; does an empty test plan really mean nothing is affected; which files enqueue a job and which files process it, when producer and consumer share no import. Resolves the import graph instead of searching text, so consumers behind workspace aliases, barrel re-exports and transitive test chains are not missed."
+description: "Answers questions about how code connects: is this dead, still used, or safe to delete; is it only used by tests; where is a symbol used, and which files import or call it; did a rename update every reference; what has to change if a signature, argument, or return type changes; which tests actually need to run for a change, or why the whole suite is running; does a route have e2e coverage; what to run to validate a change before pushing or handing it off; does an empty test plan really mean nothing is affected. Resolves the import graph instead of searching text, so consumers behind workspace aliases, barrel re-exports and transitive test chains are not missed."
 allowed-tools: Bash(no-mistakes:*) Bash(rg:*) Read Glob
 ---
 
