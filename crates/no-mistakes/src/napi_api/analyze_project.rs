@@ -99,6 +99,13 @@ fn analyze_project_options_impl(options: AnalyzeProjectOptions) -> napi::Result<
 
 fn analyze_project(options: AnalyzeProjectOptions) -> AnyhowResult<AnalyzeProjectResult> {
     let context = context::AnalyzeProjectContext::prepare(&options)?;
+    analyze_project_with_context(&options, &context)
+}
+
+fn analyze_project_with_context(
+    options: &AnalyzeProjectOptions,
+    context: &context::AnalyzeProjectContext,
+) -> AnyhowResult<AnalyzeProjectResult> {
     let observer = crate::diagnostics::current();
     let reports = options
         .reports
