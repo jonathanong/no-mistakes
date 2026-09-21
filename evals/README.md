@@ -578,6 +578,46 @@ Miss any of these and the clause does not ship; the flow stays unnamed and the
 finding is recorded as-is. The holdout is judged separately and after, on cases
 07-09, which were committed before this section.
 
+#### Screening result — the first clause failed the guard it was warned about
+
+Two clauses were screened. Gate 3 caught the first one, on the exact case the
+gate had named in advance.
+
+| | v1 `evals/variants/register-plus-queues/` | v2 `evals/variants/register-plus-queues-v2/` |
+| --- | --- | --- |
+| clause | "which **producers and consumers** a queue or job connects, when they share no import" | "which **files enqueue** a job and **which files process** it, when producer and consumer share no import" |
+| `queues` (gate ≥ 6/12) | 9/12 **PASS** | **12/12 (100%) PASS** |
+| `neg-hard` (gate 0/12) | **1/12 FAIL** | **0/12 PASS** |
+| … fabricated command forms | — | **0 PASS** |
+| `before-edit` (gate ≥ 15/18) | 18/18 PASS | [gate 2 below](#gate-2-confirmation-under-the-shipped-v2-clause) |
+| `signature` (gate ≥ 9/12) | 9/12 PASS | [gate 2 below](#gate-2-confirmation-under-the-shipped-v2-clause) |
+| `after-edit` (gate ≥ 10/12) | 12/12 PASS | [gate 2 below](#gate-2-confirmation-under-the-shipped-v2-clause) |
+
+v1's single firing run was `neg-hard-02-concurrency` — "is `OutboundQueue` safe
+to use from two workers at the same time?" — which gate 3 named in advance,
+together with the instruction to retune or drop rather than trade it against a
+`queues` win of +6.
+
+**The looser standard was available and was not taken.** The older [decision
+rule](#decision-rules-for-a-description-change) reads "one firing run at n=12 is
+not distinguishable from judge variance; 2 or more is a fail". Reaching for it
+*after* seeing v1's +6 is exactly the post-hoc rule-fitting this suite exists to
+prevent, so the clause-specific gate 3 governs and 1/12 fails.
+
+The retune applies the same hardening that kept earlier descriptions off
+`neg-hard-01` — "who imports or calls it" became "which files import or call
+it". Frame the subject as **locating files**, not as a property of the queue:
+"is this queue safe under concurrency" is a question about the queue, and a
+clause phrased as a property of the queue reaches it. One phrased as a file
+lookup does not.
+
+#### Gate 2 confirmation under the shipped v2 clause
+
+Gate 2 was not re-screened standalone. The full both-arm re-baseline covers
+`before-edit`, `signature` and `after-edit` under this exact description, and
+trigger is read from the with-arm regardless of ablation mode, so it produces
+the gate-2 numbers as a by-product.
+
 ### Decision rules for a description change
 
 **Pre-registered**: written and committed before the candidate screening numbers
