@@ -367,6 +367,9 @@ fn exclusive_analyze_project_does_not_parse_excluded_tests() {
                     "candidateInclude": ["web/**"],
                     "candidateExclude": ["**/*.test.*"],
                     "projection": "paths"
+                }, {
+                    "type": "resolveCheckDependencies",
+                    "dependencyReportIds": ["closure"]
                 }]
             })
             .to_string(),
@@ -387,6 +390,13 @@ fn exclusive_analyze_project_does_not_parse_excluded_tests() {
     assert!(
         !files.iter().any(|path| path.contains("unrelated.test")),
         "{files:?}"
+    );
+    let checked = value["reports"][1]["result"]["results"].as_array().unwrap();
+    assert!(
+        checked
+            .iter()
+            .all(|result| !result["file"].as_str().unwrap().contains(".test.")),
+        "{checked:?}"
     );
     let work = observer.snapshot().work;
     assert!(work["graph.candidate_excluded"] >= 2, "{work:#?}");

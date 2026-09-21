@@ -80,6 +80,59 @@ fn derived_resolve_check_rejects_non_import_dependency_report() {
 }
 
 #[test]
+fn derived_resolve_check_rejects_default_dependency_relationships() {
+    let error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": simple_root(), "reports": [
+            { "type": "dependencies", "id": "default", "files": ["a.mts"] },
+            { "type": "resolveCheckDependencies", "dependencyReportIds": ["default"] }
+        ] }).to_string(),
+    )).unwrap_err();
+    assert!(error.reason.contains("must use import or workspace relationships"), "{error}");
+}
+
+#[test]
+fn derived_resolve_check_rejects_ignored_options() {
+    let error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": simple_root(), "reports": [
+            { "type": "dependencies", "id": "closure", "files": ["a.mts"], "relationships": ["import-static"] },
+            { "type": "resolveCheckDependencies", "dependencyReportIds": ["closure"], "files": ["a.mts"] }
+        ] })
+        .to_string(),
+    ))
+    .unwrap_err();
+    assert!(
+        error.reason.contains("does not accept option `files`"),
+        "{error}"
+    );
+}
+
+#[test]
+fn derived_resolve_check_keeps_files_collapsed_by_folder_filters() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/folder-suffix/fixture"),
+    );
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root, "reports": [
+            { "type": "dependencies", "id": "closure", "files": ["main.mts"], "relationships": ["import-static"], "filters": ["backend/systems/*/"] },
+            { "type": "resolveCheckDependencies", "dependencyReportIds": ["closure"] }
+        ] })
+        .to_string(),
+    ))
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let files = value["reports"][1]["result"]["results"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|result| result["file"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    for system in ["emails", "users", "search"] {
+        assert!(files.contains(&format!("backend/systems/{system}/index.mts").as_str()));
+    }
+}
+
+#[test]
 fn derived_resolve_check_matches_standalone_for_local_alias_and_external_imports() {
     let root = crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -198,4 +251,3 @@ fn derived_resolve_check_honors_an_explicit_tsconfig() {
     );
     assert_eq!(standalone["results"][0]["imports"][0]["status"], "external");
 }
-

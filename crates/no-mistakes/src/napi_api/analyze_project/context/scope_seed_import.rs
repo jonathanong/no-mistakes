@@ -120,6 +120,9 @@ fn classify_import_seed_requests(options: &AnalyzeProjectOptions) -> Result<Impo
         other_graph_consumer: false,
     };
     for request in &options.reports {
+        if request.report_type == "resolveCheckDependencies" {
+            continue;
+        }
         match super::graph_direction(&request.report_type) {
             Some(Direction::Dependents) => {
                 let args = super::traverse_args(request, options)?;
