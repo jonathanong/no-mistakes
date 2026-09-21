@@ -28,6 +28,8 @@ pub struct AnalysisSession {
     datasets: DashMap<PathBuf, Arc<DatasetCell>>,
     supplemental_sources: Arc<SourceStore>,
     resolver_caches: DashMap<ResolverCacheScopeKey, Arc<ResolverResultCache>>,
+    #[cfg(test)]
+    resolver_cache_requests_for_test: std::sync::atomic::AtomicUsize,
     registry_extension_reports: DashMap<RegistryExtensionKey, RegistryExtensionCell>,
     parse_attempts: Option<DashMap<PathBuf, u64>>,
     interner: Arc<PathInterner>,
@@ -80,6 +82,8 @@ impl AnalysisSession {
             datasets: DashMap::new(),
             supplemental_sources,
             resolver_caches: DashMap::new(),
+            #[cfg(test)]
+            resolver_cache_requests_for_test: std::sync::atomic::AtomicUsize::new(0),
             registry_extension_reports: DashMap::new(),
             parse_attempts: collect_keyed_work.then(DashMap::new),
             interner: Arc::new(PathInterner::new()),
@@ -103,6 +107,9 @@ impl AnalysisSession {
         tsconfig: &TsConfig,
         visible: Option<&[std::path::PathBuf]>,
     ) -> Arc<ResolverResultCache> {
+        #[cfg(test)]
+        self.resolver_cache_requests_for_test
+            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         self.resolver_cache_for_scope(ResolverCacheScopeKey::new(tsconfig, visible, None, &[]))
     }
 
@@ -118,6 +125,12 @@ impl AnalysisSession {
                 cache
             }
         }
+    }
+
+    #[cfg(test)]
+    pub(crate) fn resolver_cache_request_count_for_test(&self) -> usize {
+        self.resolver_cache_requests_for_test
+            .load(std::sync::atomic::Ordering::Relaxed)
     }
 
     /// Return the canonical visible-path snapshot for `root`, discovering a

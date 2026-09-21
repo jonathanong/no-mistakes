@@ -44,6 +44,15 @@ fn benchmark_adapters_preserve_output_with_and_without_observers() {
 }
 
 #[test]
+fn prepared_resolve_check_fixture_retains_every_route_report() {
+    let fixture = prepared_resolve_check_fixture();
+    assert_eq!(
+        run_prepared_resolve_check(&fixture),
+        VOUCHINGTON_RESOLVE_CHECK_FILE_COUNT
+    );
+}
+
+#[test]
 fn high_fanout_finalization_dedupes_and_preserves_canonical_order() {
     let first = high_fanout_finalization_fixture(32, 7);
     let second = high_fanout_finalization_fixture(32, 7);

@@ -112,6 +112,24 @@ impl<'a> ImportResolver<'a> {
         resolver
     }
 
+    /// Build a session resolver with a caller-prepared cache for this exact
+    /// configuration and visibility universe. Batch callers use this after
+    /// resolving their distinct configurations once, avoiding repeated
+    /// construction of the repository-sized session cache key per importer.
+    pub(crate) fn new_in_session_with_cache(
+        tsconfig: &'a TsConfig,
+        visible: Option<&'a dyn VisiblePathLookup>,
+        cache: std::sync::Arc<ResolverResultCache>,
+        session: &crate::codebase::analysis_session::AnalysisSession,
+    ) -> Self {
+        let mut resolver = Self::new_observed(tsconfig, session.observer().cloned());
+        resolver.cache = cache;
+        resolver.visible = visible.map(ResolverVisible::Borrowed);
+        resolver.session_scoped = true;
+        resolver.interner = Some(session.interner_arc());
+        resolver
+    }
+
     pub fn with_visible(self, visible: &'a crate::fx::PathSet) -> Self {
         self.with_visible_lookup(visible)
     }

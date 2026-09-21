@@ -170,6 +170,22 @@ pub(super) fn bench_aggregate_and_multi_report(c: &mut Criterion) {
             )
         });
     });
+    let resolve_fixture = benchmark_support::prepared_resolve_check_fixture();
+    assert_eq!(
+        benchmark_support::run_prepared_resolve_check(&resolve_fixture),
+        benchmark_support::VOUCHINGTON_RESOLVE_CHECK_FILE_COUNT,
+        "prepared resolve-check benchmark must retain every derived file report"
+    );
+    c.bench_function(
+        "aggregate/prepared_resolve_check_2120_files_17028_visible",
+        |b| {
+            b.iter(|| {
+                black_box(benchmark_support::run_prepared_resolve_check(black_box(
+                    &resolve_fixture,
+                )))
+            });
+        },
+    );
 }
 
 pub(super) fn bench_impacted_checks(c: &mut Criterion) {

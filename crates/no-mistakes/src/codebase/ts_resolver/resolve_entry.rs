@@ -41,6 +41,60 @@ pub fn find_tsconfig_from_visible(start: &Path, visible_paths: &[PathBuf]) -> Op
     }
 }
 
+/// Find the nearest visible `tsconfig.json` from an already normalized exact
+/// membership set. This preserves [`find_tsconfig_from_visible`] semantics
+/// without rescanning the request's entire path inventory per ancestor.
+pub(crate) fn find_tsconfig_from_normalized_visible(
+    start: &Path,
+    visible_paths: &crate::fx::PathSet,
+) -> Option<PathBuf> {
+    let mut current = if start.is_file() {
+        start.parent()?.to_path_buf()
+    } else {
+        start.to_path_buf()
+    };
+    loop {
+        let candidate = normalize_path(&current.join("tsconfig.json"));
+        if visible_paths.contains(&candidate) {
+            return Some(candidate);
+        }
+        if !current.pop() {
+            return None;
+        }
+    }
+}
+
+pub(crate) fn resolve_tsconfig_from_normalized_visible_and_sources(
+    arg: Option<&Path>,
+    root: &Path,
+    visible_paths: &crate::fx::PathSet,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<TsConfig> {
+    let path = if let Some(path) = arg {
+        Some(if path.is_absolute() { path.to_path_buf() } else { root.join(path) })
+    } else {
+        find_tsconfig_from_normalized_visible(root, visible_paths)
+    };
+    load_selected_tsconfig_from_sources(path, root, sources)
+}
+
+fn load_selected_tsconfig_from_sources(
+    path: Option<PathBuf>,
+    root: &Path,
+    sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<TsConfig> {
+    match path {
+        Some(path) => load_tsconfig_from_source_store(&path, sources)
+            .context(format!("loading tsconfig {}", path.display())),
+        None => Ok(TsConfig {
+            dir: root.to_path_buf(),
+            paths: Vec::new(),
+            paths_dir: root.to_path_buf(),
+            base_url: None,
+        }),
+    }
+}
+
 /// Resolve the request's TypeScript configuration without consulting an
 /// ignored auto-discovered `tsconfig.json`.
 ///
@@ -87,16 +141,7 @@ pub(crate) fn resolve_tsconfig_from_visible_and_sources(
     } else {
         find_tsconfig_from_visible(root, visible_paths)
     };
-    match path {
-        Some(path) => load_tsconfig_from_source_store(&path, sources)
-            .context(format!("loading tsconfig {}", path.display())),
-        None => Ok(TsConfig {
-            dir: root.to_path_buf(),
-            paths: Vec::new(),
-            paths_dir: root.to_path_buf(),
-            base_url: None,
-        }),
-    }
+    load_selected_tsconfig_from_sources(path, root, sources)
 }
 
 const EXTENSIONS: &[&str] = &[
