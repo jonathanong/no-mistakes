@@ -815,6 +815,35 @@ carries real observed traffic and has now been measured at `runs: 3` under
 three descriptions, while `signature` has no observed demand at all and n=12
 per arm — a 6/12 vs 4/12 gap is two runs.
 
+**Amendment 2 (#986), and it supersedes the form of every rule above.** Each
+gate here is written as an absolute count against a number measured on some
+earlier day. [That is the defect #986
+found](#but-the-floors-are-cross-time-and-that-is-a-defect-in-the-gate): the
+suite's scores move between days, so a candidate can miss a fixed floor either
+because it is worse or because the day is. The counts above stay as written —
+rewriting a pre-registered rule after the fact is the thing this file exists to
+prevent — but **from #986 onward a gate is a comparison against a control arm
+measured in the same session, not against a stored number.**
+
+Concretely, for the next candidate:
+
+1. **Re-measure the shipped description today**, on every flow the candidate is
+   gated on, as the control arm. This is the baseline — not the number in any
+   table in this file.
+2. **Build the control from today's skill, never from a stored variant.** See
+   [why](#what-the-control-cost-to-get-right-and-the-trap-it-exposed).
+3. **State each gate as a delta against that control**, with a margin wider
+   than the reproducibility the control itself shows (#986's control moved one
+   run at n=12 against its own eight-day-old measurement, so a one-run gap is
+   not a result).
+4. **Budget the cost, not just the win.** A clause that lifts its own flow can
+   [charge another one](#control-result-the-baseline-held-the-clause-does-not-ship);
+   gate on the flows the candidate does *not* target, and treat a flow the
+   current description wins as something to hold, not something to spend.
+5. **Judge the holdout last, and only if the gates pass.** Held-out cases
+   07-09 are live and unspent for exactly this. A candidate that fails its
+   gates must not be run against them.
+
 #### `signature` did not regress — the 3/5 vs 2/15 above was a 1-run artifact
 
 Re-measured at `runs: 3`, `--ablation none`, counting the four should-fire cases:
