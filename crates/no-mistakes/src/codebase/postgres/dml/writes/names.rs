@@ -49,6 +49,13 @@ pub(super) fn push_if_generated(
     }
 }
 
+pub(super) fn push_all_generated(meta: &GeneratedTable, writes: &mut Vec<GeneratedColumnWrite>) {
+    writes.extend(meta.generated.iter().map(|column| GeneratedColumnWrite {
+        table: meta.name.clone(),
+        column: column.clone(),
+    }));
+}
+
 fn assignment_column_names(target: &AssignmentTarget) -> Vec<String> {
     match target {
         AssignmentTarget::ColumnName(name) => vec![relation_name(name)],

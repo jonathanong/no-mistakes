@@ -1,9 +1,9 @@
 use super::parse::{parse_postgres_sql, PostgresParseError};
 use super::schema::relation_name;
-use super::CanonicalOrderKey;
+use super::{canonical_order_keys, CanonicalOrderKey};
 use sqlparser::ast::{
-    BinaryOperator, Expr, Function, LockClause, LockType, NonBlock, OrderByKind, Query, SetExpr,
-    Statement, TableFactor, TableWithJoins,
+    BinaryOperator, Expr, Function, LockClause, LockType, NonBlock, Query, SetExpr, Statement,
+    TableFactor, TableWithJoins,
 };
 
 mod relations;
@@ -59,22 +59,7 @@ fn collect_from_query(query: &Query, out: &mut Vec<LockingSelectMetadata>) {
 }
 
 fn order_keys(order: &sqlparser::ast::OrderBy) -> Option<Vec<CanonicalOrderKey>> {
-    let OrderByKind::Expressions(expressions) = &order.kind else {
-        return None;
-    };
-    Some(
-        expressions
-            .iter()
-            .map(|expression| {
-                let ascending = expression.options.asc.unwrap_or(true);
-                CanonicalOrderKey {
-                    expression: expression.expr.to_string(),
-                    ascending,
-                    nulls_first: expression.options.nulls_first.unwrap_or(!ascending),
-                }
-            })
-            .collect(),
-    )
+    canonical_order_keys(order)
 }
 
 fn collect_from_set_expr(expr: &SetExpr, out: &mut Vec<LockingSelectMetadata>) {

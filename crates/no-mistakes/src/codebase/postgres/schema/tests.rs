@@ -185,7 +185,7 @@ fn index_column_name_reads_identifiers() {
         column: OrderByExpr {
             expr: Expr::Identifier(Ident::new("id")),
             options: OrderByOptions {
-                asc: None,
+                sort: None,
                 nulls_first: None,
             },
             with_fill: None,
@@ -197,7 +197,7 @@ fn index_column_name_reads_identifiers() {
         column: OrderByExpr {
             expr: Expr::CompoundIdentifier(vec![Ident::new("public"), Ident::new("id")]),
             options: OrderByOptions {
-                asc: None,
+                sort: None,
                 nulls_first: None,
             },
             with_fill: None,
@@ -209,7 +209,7 @@ fn index_column_name_reads_identifiers() {
         column: OrderByExpr {
             expr: Expr::Value(sqlparser::ast::Value::Number("1".into(), false).into()),
             options: OrderByOptions {
-                asc: None,
+                sort: None,
                 nulls_first: None,
             },
             with_fill: None,
@@ -301,7 +301,7 @@ fn function_argument_column_names_skip_wildcards() {
         alias: Ident::new("y"),
     };
     let _ = OrderByKind::All(OrderByOptions {
-        asc: None,
+        sort: None,
         nulls_first: None,
     });
 }

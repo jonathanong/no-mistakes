@@ -1,6 +1,7 @@
 use super::*;
 
 mod expressions;
+mod order;
 mod resolve;
 
 #[test]

@@ -1,9 +1,7 @@
-use crate::codebase::postgres::{parse_postgres_sql, CanonicalOrderKey};
+use crate::codebase::postgres::{canonical_order_keys, parse_postgres_sql, CanonicalOrderKey};
 use anyhow::{bail, Result};
 use raw::{raw_conflicts, sanitize};
-use sqlparser::ast::{
-    Insert, OnInsert, OrderByKind, Query, SelectItem, SetExpr, Statement, TableObject,
-};
+use sqlparser::ast::{Insert, OnInsert, Query, SelectItem, SetExpr, Statement, TableObject};
 use std::collections::BTreeMap;
 
 mod raw;
@@ -148,22 +146,7 @@ fn query_is_potentially_multi_row(body: &SetExpr) -> bool {
 }
 
 fn order_keys(order: &sqlparser::ast::OrderBy) -> Option<Vec<CanonicalOrderKey>> {
-    let OrderByKind::Expressions(expressions) = &order.kind else {
-        return None;
-    };
-    Some(
-        expressions
-            .iter()
-            .map(|expression| CanonicalOrderKey {
-                expression: expression.expr.to_string(),
-                ascending: expression.options.asc.unwrap_or(true),
-                nulls_first: expression
-                    .options
-                    .nulls_first
-                    .unwrap_or(!expression.options.asc.unwrap_or(true)),
-            })
-            .collect(),
-    )
+    canonical_order_keys(order)
 }
 
 fn projection_map(insert: &Insert, body: &SetExpr) -> Option<BTreeMap<String, String>> {

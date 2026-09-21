@@ -6,6 +6,7 @@ use std::path::{Component, Path, PathBuf};
 
 mod expressions;
 mod names;
+mod order;
 mod resolve;
 #[cfg(test)]
 mod tests;
@@ -13,6 +14,7 @@ mod tests;
 pub use expressions::{
     expression_matches, normalize_expression, order_prefix_matches, parse_postgres_expression,
 };
+pub(crate) use order::{canonical_order_keys, order_by_ascending};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CanonicalOrderKey {

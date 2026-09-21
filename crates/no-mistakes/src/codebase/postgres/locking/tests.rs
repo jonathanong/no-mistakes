@@ -45,6 +45,13 @@ fn order_by_is_recorded() {
 }
 
 #[test]
+fn using_operator_order_by_is_unanalyzable() {
+    let meta = first("SELECT * FROM t WHERE id = ANY($1) ORDER BY id USING > FOR UPDATE");
+    assert!(meta.has_order_by);
+    assert_eq!(meta.order, None);
+}
+
+#[test]
 fn non_expression_order_by_has_no_canonical_key_projection() {
     assert!(order_keys(&OrderBy {
         kind: OrderByKind::All(OrderByOptions::default()),
