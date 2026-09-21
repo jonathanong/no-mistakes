@@ -23,6 +23,36 @@ pub(crate) fn order_by_ascending(options: &sqlparser::ast::OrderByOptions) -> Op
     }
 }
 
+/// Canonical `ORDER BY` keys. `USING` operators make the whole list unanalyzable.
+pub(crate) fn canonical_order_keys(
+    order: &sqlparser::ast::OrderBy,
+) -> Option<Vec<CanonicalOrderKey>> {
+    let sqlparser::ast::OrderByKind::Expressions(expressions) = &order.kind else {
+        return None;
+    };
+    if expressions.iter().any(|expression| {
+        matches!(
+            expression.options.sort,
+            Some(sqlparser::ast::OrderBySort::Using(_))
+        )
+    }) {
+        return None;
+    }
+    Some(
+        expressions
+            .iter()
+            .map(|expression| {
+                let ascending = order_by_ascending(&expression.options).unwrap_or(true);
+                CanonicalOrderKey {
+                    expression: expression.expr.to_string(),
+                    ascending,
+                    nulls_first: expression.options.nulls_first.unwrap_or(!ascending),
+                }
+            })
+            .collect(),
+    )
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CanonicalOrderKey {
     pub expression: String,

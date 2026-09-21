@@ -185,6 +185,16 @@ fn flags_merge_wildcard_insert_update_and_skips_do_nothing() {
             column: "created_at".to_string(),
         }]
     );
+    assert_eq!(
+        find_generated_column_writes(
+            "MERGE INTO votes t USING s ON true WHEN NOT MATCHED THEN INSERT *",
+            &tables
+        ),
+        [GeneratedColumnWrite {
+            table: "votes".to_string(),
+            column: "created_at".to_string(),
+        }]
+    );
 }
 
 #[test]

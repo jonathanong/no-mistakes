@@ -36,13 +36,17 @@ pub(super) fn collect_merge_writes(
                 MergeUpdateKind::Wildcard => push_all_generated(meta, writes),
             },
             MergeAction::Insert(insert) => {
-                collect_named_or_positional(
-                    &table,
-                    meta,
-                    &insert.columns,
-                    merge_insert_width(&insert.kind, meta),
-                    writes,
-                );
+                if matches!(insert.kind, MergeInsertKind::Wildcard) && insert.columns.is_empty() {
+                    push_all_generated(meta, writes);
+                } else {
+                    collect_named_or_positional(
+                        &table,
+                        meta,
+                        &insert.columns,
+                        merge_insert_width(&insert.kind, meta),
+                        writes,
+                    );
+                }
             }
             MergeAction::Delete { .. } | MergeAction::DoNothing { .. } => {}
         }

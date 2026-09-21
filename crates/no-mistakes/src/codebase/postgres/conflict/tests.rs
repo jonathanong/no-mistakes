@@ -226,6 +226,15 @@ fn declines_non_expression_order_and_projection_shapes() {
 }
 
 #[test]
+fn using_operator_order_is_unanalyzable() {
+    let inserts = analyze_conflict_inserts(
+        "INSERT INTO items (id, note) SELECT id, note FROM input ORDER BY id USING > ON CONFLICT (id) DO NOTHING",
+    )
+    .unwrap();
+    assert_eq!(inserts[0].source.order, None);
+}
+
+#[test]
 fn order_by_all_is_ignored_directly() {
     let order = sqlparser::ast::OrderBy {
         kind: sqlparser::ast::OrderByKind::All(Default::default()),
