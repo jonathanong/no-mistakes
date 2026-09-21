@@ -546,8 +546,8 @@ report body is `ImportClosureResult` when that report sets
 reports are matched by effective `root`, `tsconfig`, and `config`; report-level
 scope overrides are supported, and IDs are resolved only within that scope. It
 checks the union of each report's seed files and reachable local files using
-the already-prepared facts,
-resolver catalog, and source store. `targetModules` and folder `filters` on a
+the already-prepared facts, resolver catalog, and source store. `targetModules`
+and folder `filters` on a
 referenced report are output projections; the derived check uses the
 pre-projection file closure. Referenced reports may use import and
 workspace relationships, and each needs an `id`; this report does not accept
