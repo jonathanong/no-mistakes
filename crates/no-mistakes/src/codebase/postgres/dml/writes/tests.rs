@@ -129,6 +129,10 @@ fn flags_tuple_assignments_merge_row_and_set_operations() {
         Some(3)
     );
     assert_eq!(
+        super::update::merge_insert_width(&sqlparser::ast::MergeInsertKind::Wildcard, items),
+        Some(3)
+    );
+    assert_eq!(
         columns("INSERT INTO items SELECT 1, now() UNION ALL SELECT 2, now()"),
         ["created_at"]
     );
@@ -150,6 +154,37 @@ fn flags_tuple_assignments_merge_row_and_set_operations() {
         "UPDATE items SET note = 'x'; MERGE INTO (SELECT * FROM items) t USING s ON true WHEN MATCHED THEN UPDATE SET created_at = now();"
     )
     .is_empty());
+}
+
+#[test]
+fn flags_merge_wildcard_insert_update_and_skips_do_nothing() {
+    assert_eq!(
+        columns("MERGE INTO items t USING s ON true WHEN NOT MATCHED THEN INSERT *"),
+        ["created_at"]
+    );
+    assert_eq!(
+        columns("MERGE INTO items t USING s ON true WHEN MATCHED THEN UPDATE SET *"),
+        ["created_at"]
+    );
+    assert!(
+        columns("MERGE INTO items t USING s ON true WHEN NOT MATCHED THEN DO NOTHING").is_empty()
+    );
+    let mut tables = GeneratedTableColumns::default();
+    tables.insert_table(GeneratedTable {
+        name: "votes".to_string(),
+        generated: ["created_at".to_string()].into_iter().collect(),
+        column_order: None,
+    });
+    assert_eq!(
+        find_generated_column_writes(
+            "MERGE INTO votes t USING s ON true WHEN MATCHED THEN UPDATE SET *",
+            &tables
+        ),
+        [GeneratedColumnWrite {
+            table: "votes".to_string(),
+            column: "created_at".to_string(),
+        }]
+    );
 }
 
 #[test]

@@ -1,6 +1,6 @@
 use super::parse::{parse_postgres_sql, PostgresParseError};
 use super::schema::relation_name;
-use super::CanonicalOrderKey;
+use super::{order_by_ascending, CanonicalOrderKey};
 use sqlparser::ast::{
     BinaryOperator, Expr, Function, LockClause, LockType, NonBlock, OrderByKind, Query, SetExpr,
     Statement, TableFactor, TableWithJoins,
@@ -66,7 +66,7 @@ fn order_keys(order: &sqlparser::ast::OrderBy) -> Option<Vec<CanonicalOrderKey>>
         expressions
             .iter()
             .map(|expression| {
-                let ascending = expression.options.asc.unwrap_or(true);
+                let ascending = order_by_ascending(&expression.options).unwrap_or(true);
                 CanonicalOrderKey {
                     expression: expression.expr.to_string(),
                     ascending,

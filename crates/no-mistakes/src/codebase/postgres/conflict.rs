@@ -1,4 +1,4 @@
-use crate::codebase::postgres::{parse_postgres_sql, CanonicalOrderKey};
+use crate::codebase::postgres::{order_by_ascending, parse_postgres_sql, CanonicalOrderKey};
 use anyhow::{bail, Result};
 use raw::{raw_conflicts, sanitize};
 use sqlparser::ast::{
@@ -154,13 +154,13 @@ fn order_keys(order: &sqlparser::ast::OrderBy) -> Option<Vec<CanonicalOrderKey>>
     Some(
         expressions
             .iter()
-            .map(|expression| CanonicalOrderKey {
-                expression: expression.expr.to_string(),
-                ascending: expression.options.asc.unwrap_or(true),
-                nulls_first: expression
-                    .options
-                    .nulls_first
-                    .unwrap_or(!expression.options.asc.unwrap_or(true)),
+            .map(|expression| {
+                let ascending = order_by_ascending(&expression.options).unwrap_or(true);
+                CanonicalOrderKey {
+                    expression: expression.expr.to_string(),
+                    ascending,
+                    nulls_first: expression.options.nulls_first.unwrap_or(!ascending),
+                }
             })
             .collect(),
     )

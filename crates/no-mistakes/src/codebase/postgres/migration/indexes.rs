@@ -1,4 +1,5 @@
 use super::{leading_index_column, qualified_relation};
+use crate::codebase::postgres::order_by_ascending;
 use crate::codebase::postgres::types::{
     SqlCreateIndexMetadata, SqlDropIndexMetadata, SqlIndexParam,
 };
@@ -133,7 +134,7 @@ fn index_param(column: &IndexColumn) -> SqlIndexParam {
         name: leading_index_column(column),
         expression: column.column.expr.to_string(),
         opclass: column.operator_class.as_ref().map(qualified_relation),
-        ordering: match column.column.options.asc {
+        ordering: match order_by_ascending(&column.column.options) {
             Some(true) => Some("asc".to_string()),
             Some(false) => Some("desc".to_string()),
             None => None,

@@ -14,6 +14,15 @@ pub use expressions::{
     expression_matches, normalize_expression, order_prefix_matches, parse_postgres_expression,
 };
 
+/// PostgreSQL `USING` operators leave sort direction unspecified.
+pub(crate) fn order_by_ascending(options: &sqlparser::ast::OrderByOptions) -> Option<bool> {
+    match options.sort.as_ref() {
+        Some(sqlparser::ast::OrderBySort::Asc) => Some(true),
+        Some(sqlparser::ast::OrderBySort::Desc) => Some(false),
+        Some(sqlparser::ast::OrderBySort::Using(_)) | None => None,
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CanonicalOrderKey {
     pub expression: String,

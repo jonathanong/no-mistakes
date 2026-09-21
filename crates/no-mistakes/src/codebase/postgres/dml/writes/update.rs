@@ -1,8 +1,9 @@
 use super::names::{
-    collect_named_or_positional, push_assignment_writes, table_factor_name, table_with_joins_name,
+    collect_named_or_positional, push_all_generated, push_assignment_writes, table_factor_name,
+    table_with_joins_name,
 };
 use super::{GeneratedColumnWrite, GeneratedTable, GeneratedTableColumns};
-use sqlparser::ast::{Merge, MergeAction, MergeInsertKind, Update};
+use sqlparser::ast::{Merge, MergeAction, MergeInsertKind, MergeUpdateKind, Update};
 
 pub(super) fn collect_update_writes(
     update: &Update,
@@ -28,9 +29,12 @@ pub(super) fn collect_merge_writes(
     };
     for clause in &merge.clauses {
         match &clause.action {
-            MergeAction::Update(update) => {
-                push_assignment_writes(&table, &update.assignments, catalog, writes);
-            }
+            MergeAction::Update(update) => match &update.kind {
+                MergeUpdateKind::Set(assignments) => {
+                    push_assignment_writes(&table, assignments, catalog, writes);
+                }
+                MergeUpdateKind::Wildcard => push_all_generated(meta, writes),
+            },
             MergeAction::Insert(insert) => {
                 collect_named_or_positional(
                     &table,
@@ -40,7 +44,7 @@ pub(super) fn collect_merge_writes(
                     writes,
                 );
             }
-            MergeAction::Delete { .. } => {}
+            MergeAction::Delete { .. } | MergeAction::DoNothing { .. } => {}
         }
     }
 }
@@ -48,6 +52,8 @@ pub(super) fn collect_merge_writes(
 pub(super) fn merge_insert_width(kind: &MergeInsertKind, meta: &GeneratedTable) -> Option<usize> {
     match kind {
         MergeInsertKind::Values(values) => values.rows.iter().map(|row| row.len()).max(),
-        MergeInsertKind::Row => meta.column_order.as_ref().map(Vec::len),
+        MergeInsertKind::Row | MergeInsertKind::Wildcard => {
+            meta.column_order.as_ref().map(Vec::len)
+        }
     }
 }
