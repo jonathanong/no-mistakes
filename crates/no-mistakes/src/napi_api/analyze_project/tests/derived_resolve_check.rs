@@ -74,10 +74,7 @@ fn derived_resolve_check_rejects_duplicate_dependency_report_ids() {
         .to_string(),
     ))
     .unwrap_err();
-    assert!(
-        error.reason.contains("duplicate ID `closure`"),
-        "{error}"
-    );
+    assert!(error.reason.contains("duplicate ID `closure`"), "{error}");
 }
 
 #[test]
@@ -112,9 +109,16 @@ fn derived_resolve_check_rejects_default_dependency_relationships() {
         json!({ "root": simple_root(), "reports": [
             { "type": "dependencies", "id": "default", "files": ["a.mts"] },
             { "type": "resolveCheckDependencies", "dependencyReportIds": ["default"] }
-        ] }).to_string(),
-    )).unwrap_err();
-    assert!(error.reason.contains("must use import or workspace relationships"), "{error}");
+        ] })
+        .to_string(),
+    ))
+    .unwrap_err();
+    assert!(
+        error
+            .reason
+            .contains("must use import or workspace relationships"),
+        "{error}"
+    );
 }
 
 #[test]
@@ -130,6 +134,62 @@ fn derived_resolve_check_rejects_ignored_options() {
     assert!(
         error.reason.contains("does not accept option `files`"),
         "{error}"
+    );
+}
+
+#[test]
+fn derived_resolve_check_keeps_files_hidden_by_target_modules() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase/dependencies/target-module-closure"),
+    );
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root, "reports": [
+            {
+                "type": "dependencies",
+                "id": "closure",
+                "files": ["seed.mts"],
+                "relationships": ["import-static"],
+                "targetModules": ["@react/*"]
+            },
+            { "type": "resolveCheckDependencies", "dependencyReportIds": ["closure"] }
+        ] })
+        .to_string(),
+    ))
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let projected = value["reports"][0]["result"]["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|entry| {
+            entry["module"]
+                .as_str()
+                .or_else(|| entry["path"].as_str())
+                .unwrap()
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(projected, vec!["@react/client"]);
+    let derived = &value["reports"][1]["result"];
+    assert_eq!(derived["allResolve"], false, "{derived}");
+    let results = derived["results"].as_array().unwrap();
+    let files = results
+        .iter()
+        .map(|result| result["file"].as_str().unwrap())
+        .collect::<Vec<_>>();
+    assert!(files.contains(&"seed.mts"), "{derived}");
+    assert!(files.contains(&"intermediate.mts"), "{derived}");
+    let intermediate = results
+        .iter()
+        .find(|result| result["file"] == "intermediate.mts")
+        .unwrap();
+    assert!(
+        intermediate["unresolved"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .any(|specifier| specifier == "./missing.mts"),
+        "{intermediate}"
     );
 }
 
