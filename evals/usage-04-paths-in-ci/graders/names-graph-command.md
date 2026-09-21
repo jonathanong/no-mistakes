@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
---format\s+json|--json
+(--format\s+json|--json)(?![\w-])

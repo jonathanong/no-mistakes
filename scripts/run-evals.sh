@@ -8,7 +8,7 @@
 #     and launches an unfiltered full-suite run. Strip it.
 #
 #  2. Refuse to launch without an explicit scope. An unfiltered run is 2 arms x
-#     every case (59 x 3 x 2 = 354 runs, ~$60) and sweeps in the `heldout` flow,
+#     every case (62 x 3 x 2 = 372 runs, ~$65) and sweeps in the `heldout` flow,
 #     which only means anything while it stays unseen. `--all` opts in
 #     deliberately.
 set -euo pipefail
@@ -31,7 +31,7 @@ if [ "$scoped" -eq 0 ] && [ "$allow_full" -eq 0 ]; then
   cat >&2 <<'MSG'
 run-evals: refusing to launch an unfiltered run.
 
-  Unfiltered is 2 arms x every case (59 x 3 x 2 = 354 runs, ~$60) and includes the
+  Unfiltered is 2 arms x every case (62 x 3 x 2 = 372 runs, ~$65) and includes the
   `heldout` flow, which is only meaningful while it stays unseen.
 
   Scope it with --tag <flow>..., or pass --all to run everything on purpose.

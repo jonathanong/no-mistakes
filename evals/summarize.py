@@ -243,12 +243,29 @@ _REAL_COMMAND = re.compile(
 )
 
 
+#: The slash INVOCATION form (`/no-mistakes check`), which does not exist as a
+#: command. The leading boundary is the whole point: `crates/no-mistakes`,
+#: `packages/no-mistakes` and `github.com/jonathanong/no-mistakes` are ordinary
+#: references to this repository and appear in most responses. Matching every
+#: `/no-mistakes` scored any run that merely named a path as a fabrication, and
+#: because this check runs BEFORE the real-command one it also hid genuine
+#: invocations sitting in the same response. Require the slash to start a token.
+_SLASH_COMMAND = re.compile(r"(?:^|[\s`'\"(\[])/no-mistakes(?![-\w])")
+
+
 def _refers_as(text: str) -> str:
+    # Slash form first. `\b` in `_REAL_COMMAND` also matches between `/` and `no`,
+    # so testing real commands first would score the nonexistent
+    # `/no-mistakes check` as a real CLI command and hide it from the tables.
+    if _SLASH_COMMAND.search(text):
+        return "invented command form"
     if _REAL_COMMAND.search(text):
         return "real CLI command"
-    if re.search(r"/no-mistakes\b", text) or re.search(
-        r"\bno-mistakes\s+[A-Za-z_][A-Za-z0-9_]*", text
-    ):
+    # `(?<![/\w-])` for the same reason as `_SLASH_COMMAND`: after a path
+    # separator this is a repo reference, and the next prose word is not a
+    # subcommand -- `packages/no-mistakes for the binding` is not a fabricated
+    # `no-mistakes for`.
+    if re.search(r"(?<![/\w-])no-mistakes\s+[A-Za-z_][A-Za-z0-9_]*", text):
         return "invented command form"
     if "no-mistakes" in text:
         return "named, no command"
@@ -258,6 +275,12 @@ def _refers_as(text: str) -> str:
 def mentions(path: str) -> None:
     """Classify how the runs that did NOT fire refer to the tool."""
     report = json.loads(pathlib.Path(path).read_text())
+    if report.get("partial"):
+        # Same reasoning as the suppressed trigger aggregate: these buckets are
+        # comparable across descriptions only if they cover the same cases, and
+        # a partial run covers whichever prefix happened to finish.
+        print("    non-firing runs: SUPPRESSED (partial run)")
+        return
     groups: dict = {}
     for case in report["cases"]:
         group = "should-fire" if _is_should_fire(case["name"]) else "negative"
@@ -281,7 +304,41 @@ def mentions(path: str) -> None:
             print(f"        {kind:<26} {n}")
 
 
+#: Regression cases for `_refers_as`. The repo-path rows are the ones that
+#: matter: a response naming `crates/no-mistakes` used to be filed as a
+#: fabrication, which inflates the very fabrication count a shipping gate reads.
+_REFERS_AS_CASES = (
+    ("/no-mistakes check", "invented command form"),
+    ("run `/no-mistakes roleHas` next", "invented command form"),
+    ("no-mistakes check", "real CLI command"),
+    ("no-mistakes tests plan vitest", "real CLI command"),
+    # A path plus a genuine invocation: the path must not win.
+    ("edit crates/no-mistakes/src/lib.rs then run no-mistakes check",
+     "real CLI command"),
+    ("see packages/no-mistakes for the binding", "named, no command"),
+    ("https://github.com/jonathanong/no-mistakes", "named, no command"),
+    ("no-mistakes roleHas", "invented command form"),
+    ("just grep for it", "no mention"),
+)
+
+
+def _self_test() -> None:
+    bad = [
+        (text, want, got)
+        for text, want in _REFERS_AS_CASES
+        if (got := _refers_as(text)) != want
+    ]
+    for text, want, got in bad:
+        print(f"    FAIL {text!r}\n         want {want!r}, got {got!r}")
+    if bad:
+        raise SystemExit(f"{len(bad)}/{len(_REFERS_AS_CASES)} classifier cases failed")
+    print(f"classifier self-test: {len(_REFERS_AS_CASES)}/{len(_REFERS_AS_CASES)} pass")
+
+
 def main() -> None:
+    if "--self-test" in sys.argv[1:]:
+        _self_test()
+        return
     paths = [a for a in sys.argv[1:] if a != "--mentions"]
     want_mentions = "--mentions" in sys.argv[1:]
     if not paths:

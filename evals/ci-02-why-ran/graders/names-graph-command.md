@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-no-mistakes\s+ci\s+(impact|topology)
+no-mistakes\s+ci\s+(impact|topology)(?![\w-])

@@ -63,7 +63,10 @@ For directory imports (no file suffix), it appends `/index.<ext>` in the same or
 1. Relative path with extension fallback
 2. tsconfig `paths` alias (longest match first)
 3. npm workspace package by `name`
-4. Bare specifier → silently dropped (not a graph edge)
+4. Non-workspace bare npm specifier → **terminal module node**. An edge *is*
+   created, so the dependency shows up; the node is terminal because
+   `node_modules` is never traversed. Node built-ins (`node:*`) and subpath
+   imports (`#*`) produce no node at all.
 
 ## Common patterns
 

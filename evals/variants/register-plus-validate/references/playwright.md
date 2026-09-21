@@ -4,9 +4,11 @@
 
 Use `playwright check` before finishing any Next.js App Router or Playwright
 work — it validates that configured routes and selectors are covered by tests.
-It is run by `no-mistakes check` only when Playwright is configured in
-`.no-mistakes.yml`; call it directly when you need the gate regardless of global
-config.
+It is run by `no-mistakes check` only when Playwright is configured in the
+effective no-mistakes configuration — discovery accepts `.no-mistakes.yml`,
+`.no-mistakes.yaml`, `.no-mistakes.json` and `.no-mistakes.jsonc`, and an
+explicit `--config <path>` overrides discovery. Call `playwright check`
+directly when you need the gate regardless of global config.
 
 Use `playwright related` to find Playwright tests that cover a changed page,
 route, or selector-bearing component.

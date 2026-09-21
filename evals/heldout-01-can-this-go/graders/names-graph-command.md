@@ -6,4 +6,4 @@ flags: i
 weight: 0.5
 ---
 
-no-mistakes\s+(dead-exports|dependents|importers|exports-of)
+no-mistakes\s+(dead-exports|dependents|importers|exports-of)(?![\w-])
