@@ -74,6 +74,8 @@ fn prepared_batch_reuses_one_resolver_cache_for_one_tsconfig() {
         &files,
         crate::codebase::ts_source::facts::TsFactPlan::imports(),
     );
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
     batch_report_from_prepared_facts(
         &root,
         files,
@@ -81,12 +83,12 @@ fn prepared_batch_reuses_one_resolver_cache_for_one_tsconfig() {
         targets[0].visible_files(),
         &targets[0].sources,
         None,
-        &targets[0].session,
+        &session,
     )
     .unwrap();
 
     assert_eq!(
-        targets[0].session.resolver_cache_request_count_for_test(),
+        observer.snapshot().work["resolver.scope_cache_requests"],
         1,
         "one effective tsconfig must request one session resolver cache"
     );
@@ -116,7 +118,8 @@ fn prepared_batch_keeps_distinct_nearest_visible_tsconfig_scopes() {
             .map(|file| (file, TsFileFacts::default())),
         TsFactPlan::imports(),
     );
-    let session = crate::codebase::analysis_session::AnalysisSession::disabled();
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
 
     let report =
         batch_report_from_prepared_facts(&root, files, &facts, &visible, &sources, None, &session)
@@ -124,7 +127,7 @@ fn prepared_batch_keeps_distinct_nearest_visible_tsconfig_scopes() {
 
     assert_eq!(report.results.len(), 3);
     assert_eq!(
-        session.resolver_cache_request_count_for_test(),
+        observer.snapshot().work["resolver.scope_cache_requests"],
         2,
         "the two web files share their nearest visible config while the package file uses its own"
     );

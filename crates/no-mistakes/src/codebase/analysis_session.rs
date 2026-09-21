@@ -6,15 +6,17 @@ use crate::diagnostics::InvocationObserver;
 use dashmap::mapref::entry::Entry;
 use dashmap::DashMap;
 use std::collections::BTreeMap;
-use std::fmt;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, OnceLock};
 
 mod intern;
 mod io;
 mod parsing;
+mod registry_extension;
 
 pub use intern::PathInterner;
+pub use io::SourceReadError;
+use registry_extension::{RegistryExtensionCell, RegistryExtensionKey};
 
 /// Invocation-owned analysis gateways and memoized work.
 ///
@@ -28,8 +30,6 @@ pub struct AnalysisSession {
     datasets: DashMap<PathBuf, Arc<DatasetCell>>,
     supplemental_sources: Arc<SourceStore>,
     resolver_caches: DashMap<ResolverCacheScopeKey, Arc<ResolverResultCache>>,
-    #[cfg(test)]
-    resolver_cache_requests_for_test: std::sync::atomic::AtomicUsize,
     registry_extension_reports: DashMap<RegistryExtensionKey, RegistryExtensionCell>,
     parse_attempts: Option<DashMap<PathBuf, u64>>,
     interner: Arc<PathInterner>,
@@ -38,31 +38,7 @@ pub struct AnalysisSession {
 
 type AnalysisDataset = crate::codebase::analysis_dataset::AnalysisDataset;
 type DatasetCell = OnceLock<Arc<AnalysisDataset>>;
-type SourceReadResult = Result<Arc<str>, SourceReadError>;
-type RegistryExtensionResult =
-    Result<Arc<crate::registry_extension_query::RegistryExtensionReport>, Arc<str>>;
-type RegistryExtensionCell = Arc<OnceLock<RegistryExtensionResult>>;
 type TestFilterCell = OnceLock<Arc<crate::codebase::test_filter::TestFileFilter>>;
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
-struct RegistryExtensionKey {
-    root: PathBuf,
-    path: PathBuf,
-}
-
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct SourceReadError {
-    pub path: PathBuf,
-    detail: Arc<str>,
-}
-
-impl fmt::Display for SourceReadError {
-    fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(formatter, "{}", self.detail)
-    }
-}
-
-impl std::error::Error for SourceReadError {}
 
 #[derive(Clone, Debug, Default, PartialEq, Eq)]
 pub struct SessionWorkSnapshot {
@@ -82,8 +58,6 @@ impl AnalysisSession {
             datasets: DashMap::new(),
             supplemental_sources,
             resolver_caches: DashMap::new(),
-            #[cfg(test)]
-            resolver_cache_requests_for_test: std::sync::atomic::AtomicUsize::new(0),
             registry_extension_reports: DashMap::new(),
             parse_attempts: collect_keyed_work.then(DashMap::new),
             interner: Arc::new(PathInterner::new()),
@@ -107,9 +81,7 @@ impl AnalysisSession {
         tsconfig: &TsConfig,
         visible: Option<&[std::path::PathBuf]>,
     ) -> Arc<ResolverResultCache> {
-        #[cfg(test)]
-        self.resolver_cache_requests_for_test
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+        self.increment("resolver.scope_cache_requests", 1);
         self.resolver_cache_for_scope(ResolverCacheScopeKey::new(tsconfig, visible, None, &[]))
     }
 
@@ -125,12 +97,6 @@ impl AnalysisSession {
                 cache
             }
         }
-    }
-
-    #[cfg(test)]
-    pub(crate) fn resolver_cache_request_count_for_test(&self) -> usize {
-        self.resolver_cache_requests_for_test
-            .load(std::sync::atomic::Ordering::Relaxed)
     }
 
     /// Return the canonical visible-path snapshot for `root`, discovering a
@@ -223,38 +189,6 @@ impl AnalysisSession {
             Some((root, cell)) => self.dataset_from_cell(&root, &cell).sources_for(&root),
             None => Arc::clone(&self.supplemental_sources),
         }
-    }
-
-    /// Memoize a request-owned registry-extension report projection for one
-    /// root/file pair. This is not a canonical TS fact because it is the
-    /// query's rendered report, but it owns no OXC data and can therefore be
-    /// reused without parsing the same source again.
-    pub(crate) fn registry_extension_report(
-        &self,
-        root: &Path,
-        path: &Path,
-        build: impl FnOnce() -> anyhow::Result<crate::registry_extension_query::RegistryExtensionReport>,
-    ) -> anyhow::Result<crate::registry_extension_query::RegistryExtensionReport> {
-        let key = RegistryExtensionKey {
-            root: normalize_path(root),
-            path: normalize_path(path),
-        };
-        let cell = match self.registry_extension_reports.entry(key) {
-            Entry::Occupied(entry) => Arc::clone(entry.get()),
-            Entry::Vacant(entry) => {
-                let cell = Arc::new(OnceLock::new());
-                entry.insert(Arc::clone(&cell));
-                cell
-            }
-        };
-        cell.get_or_init(|| {
-            build()
-                .map(Arc::new)
-                .map_err(|error| Arc::<str>::from(format!("{error:#}")))
-        })
-        .clone()
-        .map(|report| (*report).clone())
-        .map_err(|error| anyhow::anyhow!(error))
     }
 }
 
