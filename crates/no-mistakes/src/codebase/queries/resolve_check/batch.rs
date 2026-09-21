@@ -121,6 +121,7 @@ pub(crate) fn batch_report_from_prepared_facts(
     facts: &crate::codebase::ts_source::facts::TsFactMap,
     visible: &dyn VisiblePathLookup,
     source_store: &crate::codebase::ts_source::SourceStore,
+    explicit_tsconfig: Option<&crate::codebase::ts_resolver::TsConfig>,
     session: &crate::codebase::analysis_session::AnalysisSession,
 ) -> Result<BatchResolveCheckReport> {
     let mut files: Vec<_> = files
@@ -149,12 +150,21 @@ pub(crate) fn batch_report_from_prepared_facts(
                         .unwrap_or("parser panicked without a diagnostic")
                 );
             }
-            let tsconfig = crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
-                None,
-                file,
-                &visible_cache_key,
-                source_store,
-            )?;
+            let tsconfig = match explicit_tsconfig {
+                Some(config) => config.clone(),
+                None => crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
+                    None,
+                    file,
+                    &visible_cache_key,
+                    source_store,
+                )
+                .unwrap_or_else(|_| crate::codebase::ts_resolver::TsConfig {
+                    dir: root.to_path_buf(),
+                    paths: Vec::new(),
+                    paths_dir: root.to_path_buf(),
+                    base_url: None,
+                }),
+            };
             let resolver = ImportResolver::new_in_session_with_visible_cache_key(
                 &tsconfig,
                 Some(visible),

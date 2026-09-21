@@ -306,6 +306,50 @@ fn derived_resolve_check_keeps_computed_imports_unresolved() {
 }
 
 #[test]
+fn derived_resolve_check_falls_back_for_an_automatic_invalid_tsconfig() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/codebase-analysis/query-invalid-tsconfig"),
+    )
+    .display()
+    .to_string();
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({"root": root, "reports": [
+            {"type":"dependencies","id":"closure","files":["entry.ts"],"relationships":["import-static"]},
+            {"type":"resolveCheckDependencies","dependencyReportIds":["closure"]}
+        ]}).to_string(),
+    ))
+    .unwrap();
+    assert_eq!(
+        serde_json::from_str::<Value>(&output).unwrap()["reports"][1]["result"]["allResolve"],
+        true
+    );
+}
+
+#[test]
+fn derived_resolve_check_honors_an_explicit_tsconfig() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/queries/nested-target-alias"),
+    );
+    let request = json!({"root": root, "tsconfig":"tsconfig.json", "reports": [
+        {"type":"dependencies","id":"closure","files":["nested/src/alias-consumer.ts"],"relationships":["import-static"]},
+        {"type":"resolveCheckDependencies","dependencyReportIds":["closure"]}
+    ]});
+    let derived: Value = serde_json::from_str(
+        &analyze_project_json_impl(crate::napi_api::options::test_json_arg(request.to_string()))
+            .unwrap(),
+    )
+    .unwrap();
+    let standalone: Value = serde_json::from_str(&crate::napi_api::queries::resolve_check_json_impl(crate::napi_api::options::test_json_arg(json!({"root": root, "tsconfig":"tsconfig.json", "files":["nested/src/alias-consumer.ts"]}).to_string())).unwrap()).unwrap();
+    assert_eq!(
+        derived["reports"][1]["result"]["results"][0],
+        standalone["results"][0]
+    );
+    assert_eq!(standalone["results"][0]["imports"][0]["status"], "external");
+}
+
+#[test]
 fn analyze_project_graph_projection_matches_standalone() {
     let root = bounded_root();
     let standalone =

@@ -65,6 +65,7 @@ impl PreparedScope {
             self.traversal.prepared_facts(),
             &visible,
             &source_store,
+            self.options.tsconfig.as_deref().map(|_| self.traversal.tsconfig()),
             &session,
         )?;
         Ok(crate::cli::json_value(&report))
