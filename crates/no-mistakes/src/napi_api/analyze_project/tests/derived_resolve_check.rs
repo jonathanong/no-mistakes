@@ -121,6 +121,12 @@ fn derived_resolve_check_keeps_files_collapsed_by_folder_filters() {
     ))
     .unwrap();
     let value: Value = serde_json::from_str(&output).unwrap();
+    let collapsed = value["reports"][0]["result"]["files"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|entry| entry["path"].as_str().unwrap())
+        .collect::<Vec<_>>();
     let files = value["reports"][1]["result"]["results"]
         .as_array()
         .unwrap()
@@ -128,6 +134,7 @@ fn derived_resolve_check_keeps_files_collapsed_by_folder_filters() {
         .map(|result| result["file"].as_str().unwrap())
         .collect::<Vec<_>>();
     for system in ["emails", "users", "search"] {
+        assert!(collapsed.contains(&format!("backend/systems/{system}").as_str()));
         assert!(files.contains(&format!("backend/systems/{system}/index.mts").as_str()));
     }
 }
