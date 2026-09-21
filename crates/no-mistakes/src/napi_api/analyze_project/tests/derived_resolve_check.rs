@@ -54,6 +54,33 @@ fn derived_resolve_check_rejects_unknown_dependency_report_id() {
 }
 
 #[test]
+fn derived_resolve_check_rejects_duplicate_dependency_report_ids() {
+    let error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": simple_root(),
+            "reports": [
+                {
+                    "type": "dependencies",
+                    "id": "closure",
+                    "files": ["a.mts"],
+                    "relationships": ["import-static"]
+                },
+                {
+                    "type": "resolveCheckDependencies",
+                    "dependencyReportIds": ["closure", "closure"]
+                }
+            ]
+        })
+        .to_string(),
+    ))
+    .unwrap_err();
+    assert!(
+        error.reason.contains("duplicate ID `closure`"),
+        "{error}"
+    );
+}
+
+#[test]
 fn derived_resolve_check_rejects_non_import_dependency_report() {
     let error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
         json!({
