@@ -127,6 +127,11 @@ fn run_report(
     if let Some(direction) = graph_direction(&request.report_type) {
         return context.graph_report(request, options, direction);
     }
+    if request.report_type == "resolveCheckDependencies" {
+        return Ok(json_raw_value(
+            context.resolve_check_dependencies_report(request, options)?,
+        ));
+    }
     if is_symbols_report(&request.report_type) {
         return Ok(json_raw_value(context.symbols_report(request, options)?));
     }

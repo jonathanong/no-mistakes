@@ -539,6 +539,13 @@ which paths are walked. Omit `projection` or pass `"graph"` to keep
 report body is `ImportClosureResult` when that report sets
 `projection: "paths"`, and `DependencyResult` otherwise.
 
+`resolveCheckDependencies` derives a batch `resolveCheck` result from named
+`dependencies` reports in the same request. It checks the union of each
+report's seed files and reachable local files using the already-prepared facts,
+resolver catalog, and source store. Referenced reports may use import and
+workspace relationships, and each needs an `id`; this report does not accept
+`file` or `files`.
+
 ```js
 const closure = await dependencies({
   root,
@@ -558,6 +565,25 @@ const report = await analyzeProject({
     candidateExclude: ["**/*.test.*"],
     projection: "paths",
   }],
+});
+```
+
+```js
+const report = await analyzeProject({
+  root,
+  reports: [
+    {
+      type: "dependencies",
+      id: "route-closure",
+      files: ["web/app/page.tsx"],
+      relationships: ["import-static", "import-dynamic", "import-type"],
+      projection: "paths",
+    },
+    {
+      type: "resolveCheckDependencies",
+      dependencyReportIds: ["route-closure"],
+    },
+  ],
 });
 ```
 

@@ -10,6 +10,7 @@ use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
 mod batch;
+pub(crate) use batch::batch_report_from_prepared_facts;
 pub use batch::BatchResolveCheckReport;
 use batch::{batch_report, compute_many};
 
@@ -43,7 +44,7 @@ enum Status {
 
 #[derive(Serialize, Clone)]
 #[serde(rename_all = "camelCase")]
-struct ImportRow {
+pub(super) struct ImportRow {
     specifier: String,
     kind: &'static str,
     status: Status,
@@ -94,6 +95,15 @@ fn classify(
     target: &super::shared::Target,
     resolver: &ImportResolver,
 ) -> ImportRow {
+    classify_for_importer(imp, &target.abs_file, &target.root, resolver)
+}
+
+fn classify_for_importer(
+    imp: &ExtractedImport,
+    importing_file: &Path,
+    root: &Path,
+    resolver: &ImportResolver,
+) -> ImportRow {
     if imp.computed {
         return ImportRow {
             specifier: imp.specifier.clone(),
@@ -104,7 +114,7 @@ fn classify(
         };
     }
     let resolved = resolver
-        .resolve(&imp.specifier, &target.abs_file)
+        .resolve(&imp.specifier, importing_file)
         .filter(|path| imp.kind == ImportKind::Type || !is_declaration_file(path));
     let status = if resolved.is_some() {
         Status::Resolved
@@ -117,9 +127,21 @@ fn classify(
         specifier: imp.specifier.clone(),
         kind: kind_str(imp.kind),
         status,
-        resolved: resolved.map(|abs| super::shared::rel_str(&abs, &target.root)),
+        resolved: resolved.map(|path| super::shared::rel_str(&path, root)),
         computed: false,
     }
+}
+
+/// Classify imports from facts already collected by a prepared project
+/// analysis. The resolver matches the standalone resolve-check resolver for
+/// this importer, preserving its local and alias unresolved semantics.
+pub(super) fn classify_prepared(
+    imp: &ExtractedImport,
+    importing_file: &Path,
+    root: &Path,
+    resolver: &ImportResolver,
+) -> ImportRow {
+    classify_for_importer(imp, importing_file, root, resolver)
 }
 
 fn compute(args: &ResolveCheckArgs) -> Result<ResolveCheckReport> {

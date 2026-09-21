@@ -1,4 +1,13 @@
 impl AnalyzeProjectContext {
+    pub(super) fn resolve_check_dependencies_report(
+        &self,
+        request: &AnalyzeReportRequest,
+        options: &AnalyzeProjectOptions,
+    ) -> Result<Value> {
+        let scope = self.scope(request, options)?;
+        scope.resolve_check_dependencies_report(request)
+    }
+
     fn scope(
         &self,
         request: &AnalyzeReportRequest,

@@ -679,6 +679,10 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
+    /type: "resolveCheckDependencies";\n      id\?: string;\n      dependencyReportIds: string\[\];/,
+  );
+  assert.match(
+    analyzeProjectDeclarations,
     /type: "dependents" \| "related"; id\?: string } & BatchedTraverseOptions/,
   );
   assert.doesNotMatch(

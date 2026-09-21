@@ -73,6 +73,14 @@ pub(crate) struct TraversalResult {
     projection: TraverseProjection,
 }
 
+impl TraversalResult {
+    /// File nodes in a traversal result. Derived reports use this projection
+    /// instead of re-running source discovery or graph traversal.
+    pub(crate) fn file_paths(&self) -> impl Iterator<Item = &std::path::Path> {
+        self.entries.iter().filter_map(|entry| entry.node.as_file())
+    }
+}
+
 fn apply_filters(
     entries: Vec<graph::NodeEntry>,
     args: &TraverseArgs,

@@ -18,6 +18,7 @@ include!("context/supplemental_call_sites.rs");
 include!("context/scope_materialize.rs");
 include!("context/scope_seed_import.rs");
 include!("context/traversal_report_keys.rs");
+include!("context/scope_derived_resolve.rs");
 include!("context/scope_graph_reports.rs");
 include!("context/scope_project_reports.rs");
 include!("context/scope_cached_reports.rs");

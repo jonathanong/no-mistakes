@@ -1,4 +1,8 @@
-fn explicit_existing_entry_files(args: &TraverseArgs, root: &Path, cwd: &Path) -> Vec<PathBuf> {
+pub(crate) fn explicit_existing_entry_files(
+    args: &TraverseArgs,
+    root: &Path,
+    cwd: &Path,
+) -> Vec<PathBuf> {
     args.files
         .iter()
         .enumerate()
