@@ -102,6 +102,7 @@ fn collect_variant(
             recovery,
         );
     }
+    // Fatal parser results always carry a diagnostic and return above.
     let mut facts = collect_file_facts_from_program(
         variant.root,
         path,
@@ -111,9 +112,6 @@ fn collect_variant(
         program,
         should_store_source(variant.plan).then(|| Arc::clone(source)),
     );
-    if recovery.fatal_parse_error {
-        Arc::make_mut(&mut facts.ts).fatal_parse_error = true;
-    }
     if recovery.symbols {
         facts.legacy_symbols = facts.symbols.clone();
     }

@@ -129,7 +129,8 @@ fn collect_file_facts_from_source(
                 ..CheckFileFacts::default()
             };
         }
-        let mut facts = collect_file_facts_from_program(
+        // Fatal parser results always carry a diagnostic and return above.
+        collect_file_facts_from_program(
             root,
             path,
             plan,
@@ -137,11 +138,7 @@ fn collect_file_facts_from_source(
             parsed_source,
             program,
             should_store_source(plan).then(|| Arc::clone(&source)),
-        );
-        if fatal_parse_error {
-            Arc::make_mut(&mut facts.ts).fatal_parse_error = true;
-        }
-        facts
+        )
     };
     let collected = if legacy_symbols {
         session.with_legacy_symbols_program(path, &source, |program, source, error| {
