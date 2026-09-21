@@ -112,7 +112,7 @@ fn analyze_project_with_context(
         .par_iter()
         .map(|request| {
             crate::diagnostics::with_observer(observer.clone(), || {
-                run_report(request, &options, &context).map(|result| AnalyzeReportResult {
+                run_report(request, options, context).map(|result| AnalyzeReportResult {
                     id: request.id.clone(),
                     report_type: request.report_type.clone(),
                     result,
