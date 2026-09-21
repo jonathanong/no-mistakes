@@ -105,6 +105,9 @@ export type AnalyzeProjectReportRequest =
       type: "resolveCheckDependencies";
       id?: string;
       dependencyReportIds: string[];
+      root?: string;
+      tsconfig?: string;
+      config?: string;
     }
   | ({ type: "fetches"; id?: string } & BatchedRootConfigOptions<FetchesOptions>)
   | ({ type: "dataPw"; id?: string } & BatchedRootConfigOptions<DataPwOptions>)

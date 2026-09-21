@@ -679,7 +679,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type: "resolveCheckDependencies";\n      id\?: string;\n      dependencyReportIds: string\[\];/,
+    /type: "resolveCheckDependencies";\n      id\?: string;\n      dependencyReportIds: string\[\];\n      root\?: string;\n      tsconfig\?: string;\n      config\?: string;/,
   );
   assert.match(
     analyzeProjectDeclarations,
