@@ -1337,7 +1337,7 @@ dependencies = [
 
 [[package]]
 name = "no-mistakes"
-version = "0.64.0"
+version = "0.64.1"
 dependencies = [
  "anyhow",
  "assert_cmd",
