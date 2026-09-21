@@ -429,15 +429,19 @@ is one draw. The same description measured `signature` at 9/12 and 7/12 hours
 apart, so a two-run gap between any two cells here is not a result, and
 neither is a two-run gap against the 09-13 column.
 
-Four observations that do **not** depend on resolving two runs:
+Four observations that are less fragile than a two-run gap — though none is
+beyond re-measurement, since every count here is stochastic:
 
-- **`queues` is stable at 3/12**, and today's per-case shape —
+- **`queues` came back at 3/12 again**, and today's per-case shape —
   `queues-03-payload-change` 3/3, the three pure topology questions 0/3 —
   matches the shape #986 recorded for 09-13. (That earlier run's result file
   is gone, so this is a comparison against a recorded description of it, not
-  against data still in hand.) A flow that fails 0/3 on three cases is failing
-  structurally rather than marginally: the subject is unnamed, and unlike a
-  two-run gap, re-running does not move it.
+  against data still in hand.) Two independent runs landing on the same total
+  *and* the same per-case split is the pattern you would expect if the three
+  topology cases were failing for a structural reason — the subject is
+  unnamed — and it is a reason to investigate that, **not** evidence that a
+  later run cannot come back different. It can: this document records the
+  same description at 9/12 and 7/12 on `signature`.
 - **Three flows sit at zero**: `duplication` 0/9, `safety` 0/6, `napi` 0/12.
   Do not read these as structurally dead. With 6-12 trials the exact one-sided
   95% upper bounds are 39%, 28% and 22% respectively, so a substantial true
