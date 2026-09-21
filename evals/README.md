@@ -22,17 +22,25 @@ condition differs and is labelled here rather than inferred.
 | flow | #979 | #981 | current, 09-13 | current, 09-21 |
 | --- | --- | --- | --- | --- |
 | [`before-edit`](#candidate-screening) | 8/18 (44%) | 16/18 (89%) | 16/18 (89%) | **14/18 (78%)** |
-| [`signature`](#candidate-screening) | 4/12 (33%) | 10/12 (83%) | 10/12 (83%) | **9/12 and 7/12** |
+| [`signature`](#candidate-screening) | 4/12 (33%) | 10/12 (83%) | 10/12 (83%) | **7/12 (58%)** [^sigctl] |
 | [`after-edit`](#the-after-edit-regression-981-shipped) | 9/12 (75%) | **3/12 (25%)** | 12/12 (100%) | **10/12 (83%)** |
 | [`queues`](#the-full-re-baseline) | — | — | 3/12 (25%) | **3/12 (25%)** |
 | [`neg-hard`](#candidate-screening) — over-trigger guard, lower is better | 0/12 | 0/12 | 0/12 | **0/12** |
 | [**live holdout**](#held-out-confirmation) — never tuned against | **3/9 (33%)** | **5/9 (56%)** | not re-run | not re-run |
 
+[^sigctl]: A **separate** `--ablation none` control run, earlier the same day
+    and not part of the 318-run re-baseline, measured this same description at
+    **9/12**. It is kept out of the column because the column is defined as
+    the both-arm re-baseline — but the two numbers together are the whole
+    [variance
+    finding](#the-gate-cannot-resolve-the-difference-it-was-built-on).
+
 > [!WARNING]
 > **The last two columns are the same description.** `signature` was measured
-> twice on 2026-09-21 — 9/12 and 7/12 — so the gaps between these columns are
-> mostly the instrument, not the description. A two-run difference anywhere in
-> this table is **not** a result. See [the variance
+> twice on 2026-09-21 — 9/12 in a single-arm control and 7/12 in the
+> re-baseline — so the gaps between these columns are mostly the instrument,
+> not the description. A two-run difference anywhere in this table is **not**
+> a result. See [the variance
 > finding](#the-gate-cannot-resolve-the-difference-it-was-built-on), which
 > retracted a price claim this file made earlier the same day.
 
@@ -113,8 +121,13 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
   one.](#what-a-non-firing-run-actually-produces)** The old description's
   common failure is not "forgot the tool exists" — it is confidently writing
   `/no-mistakes roleHas`, which does not exist. It does that 10 times across 20
-  non-firing runs; the current description, twice across 14. Across every
-  description and flow, a non-firing run named a real subcommand **zero** times.
+  non-firing runs; the current description, twice across 14 — **both counts
+  scoped to the two-flow screen** (`signature` and `neg-hard`) that produced
+  them. The [2026-09-21 re-baseline](#the-full-re-baseline) is a wider sample
+  and a worse one: on `neg-hard` alone the current description invents a
+  command form in **4 of 12** non-firing runs. Treat "twice across 14" as a
+  historical screen figure, not the current rate. Across every description and
+  flow, a non-firing run named a real subcommand **zero** times.
 - **[Codex reads the same description Claude
   does.](#codex-reads-the-same-description--the-openaiyaml-gate-was-never-real)**
   An earlier revision of this file claimed `agents/openai.yaml` gives Codex an
@@ -136,9 +149,11 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
   ([re-baseline](#the-full-re-baseline), 2026-09-21, 318 runs, zero errored
   runs). [Baseline](#baseline-before-edit-flow-shipped-description-as-of-pr-979)
   is kept as the #979 historical record and is **not** the current description.
-- **Every flow now has a `runs: 3` measurement under the current description**,
-  which is what the previous "six flows are still unmeasured" caveat asked
-  for. Three of them came back at **zero** — `duplication` 0/9, `safety` 0/6,
+- **Every flow in the routine suite now has a `runs: 3` measurement under the
+  current description** — the eleven non-holdout flows, which is what the
+  previous "six flows are still unmeasured" caveat asked for. `heldout` is
+  *deliberately* excluded and remains unmeasured under this description;
+  running it would spend cases 07-09. Three of them came back at **zero** — `duplication` 0/9, `safety` 0/6,
   `napi` 0/12. A zero count is **not** thereby certain: the exact one-sided
   95% upper bounds are 39% (0/6), 28% (0/9) and 22% (0/12), so the true
   trigger rate could still be substantial. What a zero does rule out is a
