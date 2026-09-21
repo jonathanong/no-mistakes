@@ -679,7 +679,7 @@ test("analyzeProject declarations mirror report-specific runtime requirements", 
   );
   assert.match(
     analyzeProjectDeclarations,
-    /type: "resolveCheckDependencies";\n      id\?: string;\n      dependencyReportIds: string\[\];/,
+    /type: "resolveCheckDependencies";\n      id\?: string;\n      dependencyReportIds: string\[\];\n      \/\*\* Project root\. Defaults to the current working directory\. \*\/\n      root\?: string;\n      \/\*\* Path to tsconfig\.json for alias resolution\. Searched upward if omitted\. \*\/\n      tsconfig\?: string;\n      \/\*\* Path to the no-mistakes config file \(e\.g\. \.no-mistakes\.yml\)\. Auto-discovered in root if omitted\. \*\/\n      config\?: string;/,
   );
   assert.match(
     analyzeProjectDeclarations,

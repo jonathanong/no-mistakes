@@ -395,7 +395,9 @@ the configured `markdown-mermaid-validation` rule when validating tracked
 repository files.
 
 Each `analyzeProject()` report may use its report-specific options. Graph
-reports may override `root`, `tsconfig`, and `config`; `reactUsages` accepts
+reports may override `root`, `tsconfig`, and `config`; `resolveCheckDependencies`
+accepts the same scope overrides, and referenced dependency report IDs are
+resolved within that report's effective scope. `reactUsages` accepts
 `target`, `targets`, `include`, and scope options; and `check` may override
 `root`, `tsconfig`, and `config`. Lightweight queries (`importers`, `exportsOf`,
 `deadExports`, `callSites`, `resolveCheck`), `fetches`, test-plan reports,
@@ -540,9 +542,12 @@ report body is `ImportClosureResult` when that report sets
 `projection: "paths"`, and `DependencyResult` otherwise.
 
 `resolveCheckDependencies` derives a batch `resolveCheck` result from named
-`dependencies` reports in the same request. It checks the union of each
-report's seed files and reachable local files using the already-prepared facts,
-resolver catalog, and source store. `targetModules` and folder `filters` on a
+`dependencies` reports in the same request. The derived report and referenced
+reports are matched by effective `root`, `tsconfig`, and `config`; report-level
+scope overrides are supported, and IDs are resolved only within that scope. It
+checks the union of each report's seed files and reachable local files using
+the already-prepared facts, resolver catalog, and source store. `targetModules`
+and folder `filters` on a
 referenced report are output projections; the derived check uses the
 pre-projection file closure. Referenced reports may use import and
 workspace relationships, and each needs an `id`; this report does not accept
