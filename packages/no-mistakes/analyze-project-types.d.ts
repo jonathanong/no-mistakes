@@ -100,6 +100,12 @@ export type AnalyzeProjectReportRequest =
       type: "resolveCheck";
       id?: string;
     } & BatchedQueryFileOptions<ResolveCheckOptions | ResolveCheckFilesOptions>)
+  | {
+      /** Checks the union of seed and reachable files from dependency reports in this request. */
+      type: "resolveCheckDependencies";
+      id?: string;
+      dependencyReportIds: string[];
+    }
   | ({ type: "fetches"; id?: string } & BatchedRootConfigOptions<FetchesOptions>)
   | ({ type: "dataPw"; id?: string } & BatchedRootConfigOptions<DataPwOptions>)
   | ({ type: "registryExtension"; id?: string } & Omit<RegistryExtensionOptions, "root">)

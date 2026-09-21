@@ -86,9 +86,26 @@ impl<'a> ImportResolver<'a> {
         visible: Option<&'a dyn VisiblePathLookup>,
         session: &crate::codebase::analysis_session::AnalysisSession,
     ) -> Self {
-        let mut resolver = Self::new_observed(tsconfig, session.observer().cloned());
         let visible_paths = visible.map(VisiblePathLookup::visible_cache_key);
-        resolver.cache = session.resolver_cache(tsconfig, visible_paths.as_deref());
+        Self::new_in_session_with_visible_cache_key(
+            tsconfig,
+            visible,
+            visible_paths.as_deref(),
+            session,
+        )
+    }
+
+    /// Build a session resolver using a cache key that the caller already
+    /// projected from the same visible universe. Batch callers reuse it across
+    /// importers instead of cloning the complete universe per file.
+    pub(crate) fn new_in_session_with_visible_cache_key(
+        tsconfig: &'a TsConfig,
+        visible: Option<&'a dyn VisiblePathLookup>,
+        visible_cache_key: Option<&[std::path::PathBuf]>,
+        session: &crate::codebase::analysis_session::AnalysisSession,
+    ) -> Self {
+        let mut resolver = Self::new_observed(tsconfig, session.observer().cloned());
+        resolver.cache = session.resolver_cache(tsconfig, visible_cache_key);
         resolver.visible = visible.map(ResolverVisible::Borrowed);
         resolver.session_scoped = true;
         resolver.interner = Some(session.interner_arc());

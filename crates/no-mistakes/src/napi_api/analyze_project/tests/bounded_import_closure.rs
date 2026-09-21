@@ -149,6 +149,163 @@ fn analyze_project_paths_projection_matches_standalone() {
 }
 
 #[test]
+fn derived_resolve_check_reuses_dependency_closure() {
+    let root = simple_root();
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": root,
+            "reports": [
+                {
+                    "type": "dependencies",
+                    "id": "closure",
+                    "files": ["a.mts"],
+                    "relationships": ["import-static", "import-dynamic", "import-type", "workspace"],
+                    "projection": "paths"
+                },
+                {
+                    "type": "resolveCheckDependencies",
+                    "dependencyReportIds": ["closure"]
+                }
+            ]
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let derived = &value["reports"][1]["result"];
+    assert_eq!(derived["allResolve"], true, "{derived}");
+    assert_eq!(derived["results"].as_array().unwrap().len(), 3, "{derived}");
+    assert!(derived["results"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|result| result["file"] == "c.mts"));
+}
+
+#[test]
+fn derived_resolve_check_rejects_unknown_dependency_report_id() {
+    let error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": simple_root(),
+            "reports": [{
+                "type": "resolveCheckDependencies",
+                "dependencyReportIds": ["missing"]
+            }]
+        })
+        .to_string(),
+    ))
+    .unwrap_err();
+    assert!(
+        error
+            .reason
+            .contains("no dependencies report with id `missing`"),
+        "{error}"
+    );
+}
+
+#[test]
+fn derived_resolve_check_rejects_non_import_dependency_report() {
+    let error = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": simple_root(),
+            "reports": [
+                {
+                    "type": "dependencies",
+                    "id": "mixed",
+                    "files": ["a.mts"],
+                    "relationships": ["call"]
+                },
+                { "type": "resolveCheckDependencies", "dependencyReportIds": ["mixed"] }
+            ]
+        })
+        .to_string(),
+    ))
+    .unwrap_err();
+    assert!(
+        error
+            .reason
+            .contains("must use import or workspace relationships"),
+        "{error}"
+    );
+}
+
+#[test]
+fn derived_resolve_check_matches_standalone_for_local_alias_and_external_imports() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/queries/fixture"),
+    )
+    .display()
+    .to_string();
+    let standalone =
+        crate::napi_api::queries::resolve_check_json_impl(crate::napi_api::options::test_json_arg(
+            json!({ "root": root, "files": ["broken.ts"] }).to_string(),
+        ))
+        .unwrap();
+    let derived = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": root,
+            "reports": [
+                {
+                    "type": "dependencies",
+                    "id": "closure",
+                    "files": ["broken.ts"],
+                    "relationships": ["import-static", "import-dynamic", "import-type"]
+                },
+                { "type": "resolveCheckDependencies", "dependencyReportIds": ["closure"] }
+            ]
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let standalone: Value = serde_json::from_str(&standalone).unwrap();
+    let derived: Value = serde_json::from_str(&derived).unwrap();
+    assert_eq!(
+        derived["reports"][1]["result"]["results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|result| result["file"] == "broken.ts")
+            .unwrap(),
+        &standalone["results"][0]
+    );
+}
+
+#[test]
+fn derived_resolve_check_keeps_computed_imports_unresolved() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/codebase-analysis/queries-kinds/fixture"),
+    )
+    .display()
+    .to_string();
+    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": root,
+            "reports": [
+                {
+                    "type": "dependencies",
+                    "id": "closure",
+                    "files": ["computed.ts"],
+                    "relationships": ["import-static", "import-dynamic", "import-type"]
+                },
+                { "type": "resolveCheckDependencies", "dependencyReportIds": ["closure"] }
+            ]
+        })
+        .to_string(),
+    ))
+    .unwrap();
+    let value: Value = serde_json::from_str(&output).unwrap();
+    let result = &value["reports"][1]["result"]["results"][0];
+    assert_eq!(result["allResolve"], false, "{result}");
+    assert!(result["imports"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|row| row["computed"] == true && row["status"] == "unresolved"));
+}
+
+#[test]
 fn analyze_project_graph_projection_matches_standalone() {
     let root = bounded_root();
     let standalone =
