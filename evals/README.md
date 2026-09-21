@@ -54,10 +54,9 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
   free.](#control-result-the-baseline-held-the-clause-does-not-ship)** The
   queue clause did exactly what the naming model predicts — `queues` 3/12 →
   12/12 — and was still **rejected**, because a same-day control showed it
-  charged `signature` 9/12 → 7/12 and `before-edit` 16/18 → 15/18 to do it.
-  The budget model was inferred from #981's reallocation; this is the first
-  time the price was measured directly, against a case-matched control run on
-  the same day.
+  charged `signature` 9/12 → 7/12 to do it. The budget model was inferred from
+  #981's reallocation; this is the first time the price was measured directly,
+  against a case-matched control run on the same day.
 - **[Naming a subject reliably reaches it; not naming one is a coin
   flip.](#naming-a-subject-reliably-reaches-it-not-naming-one-is-a-coin-flip)**
   Now measured in both directions. *Adding* a name lifts its flow: signatures
@@ -366,7 +365,7 @@ read when planning what still needs measuring.
 | `heldout` (spent 01–03) | `runs: 3` | `runs: 3` | not run | `runs: 3` | **not run** |
 | `heldout` (live 04–06) | `runs: 3` | n/a | not run | `runs: 3` | **not run** |
 | `heldout` (live 07–09, added #986) | n/a | n/a | n/a | n/a | **never run — unspent** |
-| `queues` | ⚠️ 1 run | `runs: 3` | not run | `runs: 3` | `runs: 3` |
+| `queues` | ⚠️ 1 run | `runs: 3` | not run | **not run** | `runs: 3` |
 | `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** | **not run** |
 | `usage`, `safety`, `duplication` | ⚠️ 1 run | not run | not run | **not run** | **not run** |
 
@@ -745,11 +744,19 @@ The clause was reverted from `skills/no-mistakes/SKILL.md` in this PR;
 
 **This is the budget model's first measured price.** Every earlier run measured
 what naming a subject *buys*; this one measures what it *costs*. The clause
-bought `queues` 3/12 → 12/12 and charged `signature` 9/12 → 7/12 and
-`before-edit` 16/18 → 15/18 for it. [A description is a budget, not a
-bag](#the-after-edit-regression-981-shipped) was inferred from #981's
-reallocation; it is now a direct observation, with the price named on a
-case-matched, same-day control.
+bought `queues` 3/12 → 12/12 and charged `signature` 9/12 → 7/12 for it. [A
+description is a budget, not a bag](#the-after-edit-regression-981-shipped) was
+inferred from #981's reallocation; it is now a direct observation, with the
+price named on a case-matched, same-day control.
+
+**`before-edit` is not part of that price, and saying it were would repeat the
+error this section is about.** v2 measured 15/18 against the current
+description's 16/18, but those are eight days apart with no same-day
+`before-edit` control, so the one-run difference is not attributable to the
+clause — it is the same cross-time comparison the gate defect above describes.
+By the gate itself, `before-edit` **passed, within the band**. Splitting drift
+from clause on that flow needs its own control arm, which was not run because
+`signature` had already decided the verdict.
 
 The honest summary is not "the clause is bad". It is that **this suite has no
 evidence a clause can be added for free**, and the two flows it charged are the
