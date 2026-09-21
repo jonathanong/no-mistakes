@@ -44,7 +44,20 @@ impl PreparedScope {
     ) -> Result<Value> {
         let raw = playwright_options(request, options)?;
         let parsed: PlaywrightOptions = serde_json::from_str(&raw)?;
-        let key = playwright_analysis_key(&parsed)?;
+        let analysis = self.playwright_analysis(&parsed)?;
+        render_playwright_report(
+            &request.report_type,
+            &parsed,
+            self.traversal.root(),
+            analysis.as_ref(),
+        )
+    }
+
+    fn playwright_analysis(
+        &self,
+        options: &PlaywrightOptions,
+    ) -> Result<std::sync::Arc<crate::playwright::analysis::types::Analysis>> {
+        let key = playwright_analysis_key(options)?;
         let Some(prepared) = self.playwright.get(&key) else {
             bail!(
                 "distinct Playwright settings require a separate prepared analyzeProject context"
@@ -56,20 +69,15 @@ impl PreparedScope {
                     self.traversal.root(),
                     &prepared.settings,
                     crate::playwright::playwright_tests::TestPolicy {
-                        assert_conditional_tests: parsed.assert_conditional_tests,
-                        allow_skipped_tests: parsed.allow_skipped_tests,
+                        assert_conditional_tests: options.assert_conditional_tests,
+                        allow_skipped_tests: options.allow_skipped_tests,
                     },
-                    playwright_unique_policy(&parsed),
+                    playwright_unique_policy(options),
                     &self.facts,
                     self.traversal.visible_paths(),
                 )?,
             ))
         })?;
-        render_playwright_report(
-            &request.report_type,
-            &parsed,
-            self.traversal.root(),
-            analysis.as_ref(),
-        )
+        Ok(analysis)
     }
 }

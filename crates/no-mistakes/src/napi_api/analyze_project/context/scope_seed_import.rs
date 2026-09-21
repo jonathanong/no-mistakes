@@ -1,4 +1,21 @@
 impl PreparedScope {
+    /// Playwright analysis uses nested rayon work. Initialize each distinct
+    /// analysis before `reports.par_iter()` so report workers only read cached
+    /// results and cannot starve the initializer on a small rayon pool.
+    fn seed_playwright_analyses(&self) -> Result<()> {
+        for request in self
+            .options
+            .reports
+            .iter()
+        .filter(|request| super::is_playwright_report(&request.report_type))
+        {
+            let raw = playwright_options(request, &self.options)?;
+            let options: PlaywrightOptions = serde_json::from_str(&raw)?;
+            self.playwright_analysis(&options)?;
+        }
+        Ok(())
+    }
+
     /// Reports that cannot use the lazy import graph still share prepared
     /// `DepGraph`s. Build those graphs on the preparing thread so
     /// `reports.par_iter()` only projects. Nested rayon inside that parallel

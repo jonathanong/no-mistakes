@@ -113,6 +113,7 @@ impl AnalyzeProjectContext {
         for scope in scopes.values_mut() {
             scope.seed_import_only_dependency_graph()?;
             scope.seed_canonical_graph_if_needed()?;
+            scope.seed_playwright_analyses()?;
         }
         // Every effective scope may seed facts from programs parsed while the
         // scope plans were prepared. Retain those programs until all scopes
@@ -123,4 +124,5 @@ impl AnalyzeProjectContext {
             scope_aliases,
         })
     }
+
 }

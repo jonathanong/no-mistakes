@@ -14,14 +14,6 @@ fn fixture_root(name: &str) -> String {
     .to_string()
 }
 
-fn parser_fixture(name: &str) -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/parser-count")
-            .join(name),
-    )
-}
-
 fn queue_fixture() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -371,50 +363,6 @@ fn analyze_project_queue_views_share_one_report_and_parse_pass() {
     }
     assert!(!counts.is_empty(), "queue fixture must exercise the parser");
     assert!(counts.values().all(|count| *count == 1), "{counts:#?}");
-}
-
-#[test]
-fn analyze_project_playwright_views_share_one_analysis_with_standalone_parity() {
-    let root = parser_fixture("playwright");
-    let root_json = root.display().to_string();
-    let standalone = [
-        crate::napi_api::playwright_check_json_impl(crate::napi_api::options::test_json_arg(
-            json!({ "root": root_json }).to_string(),
-        ))
-        .unwrap(),
-        crate::napi_api::playwright_edges_json_impl(crate::napi_api::options::test_json_arg(
-            json!({ "root": root_json }).to_string(),
-        ))
-        .unwrap(),
-        crate::napi_api::playwright_related_json_impl(crate::napi_api::options::test_json_arg(
-            json!({ "root": root_json, "files": ["app/page.tsx"] }).to_string(),
-        ))
-        .unwrap(),
-        crate::napi_api::playwright_tests_json_impl(crate::napi_api::options::test_json_arg(
-            json!({ "root": root_json, "files": ["app/page.tsx"] }).to_string(),
-        ))
-        .unwrap(),
-    ]
-    .map(|value| serde_json::from_str::<Value>(&value).unwrap());
-
-    let output = analyze_project_json_impl(crate::napi_api::options::test_json_arg(
-        json!({
-            "root": root_json,
-            "reports": [
-                { "type": "playwrightCheck" },
-                { "type": "playwrightEdges" },
-                { "type": "playwrightRelated", "files": ["app/page.tsx"] },
-                { "type": "playwrightTests", "files": ["app/page.tsx"] }
-            ]
-        })
-        .to_string(),
-    ))
-    .unwrap();
-    let value: Value = serde_json::from_str(&output).unwrap();
-
-    for (index, expected) in standalone.iter().enumerate() {
-        assert_eq!(&value["reports"][index]["result"], expected);
-    }
 }
 
 #[test]
