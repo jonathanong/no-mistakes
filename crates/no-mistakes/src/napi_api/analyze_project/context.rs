@@ -38,6 +38,8 @@ fn json_raw_bytes(bytes: Vec<u8>) -> Result<Box<RawValue>> {
 #[cfg(test)]
 mod api_tests;
 #[cfg(test)]
+mod scope_derived_resolve_tests;
+#[cfg(test)]
 mod scope_helpers_tests;
 #[cfg(test)]
 mod tests;
