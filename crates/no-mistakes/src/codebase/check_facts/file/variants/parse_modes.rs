@@ -1,4 +1,4 @@
-use super::{collect_variant, fill_parse_errors, CheckFactVariant};
+use super::{collect_variant, fill_parse_errors, CheckFactVariant, VariantRecovery};
 use crate::codebase::check_facts::CheckFileFacts;
 use std::path::Path;
 use std::sync::Arc;
@@ -60,8 +60,10 @@ pub(super) fn collect_standard_variants(
                         program,
                         parsed,
                         error.clone(),
-                        false,
-                        fatal_parse_error,
+                        VariantRecovery {
+                            symbols: false,
+                            fatal_parse_error,
+                        },
                     ),
                 )
             })
@@ -112,8 +114,10 @@ pub(super) fn collect_legacy_variants(
                         program,
                         parsed,
                         error.clone(),
-                        true,
-                        false,
+                        VariantRecovery {
+                            symbols: true,
+                            fatal_parse_error: false,
+                        },
                     );
                     (*index, Some(facts), None)
                 }

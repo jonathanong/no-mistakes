@@ -76,6 +76,12 @@ pub(crate) fn collect_file_fact_variants_from_source_with_session(
     results
 }
 
+#[derive(Clone, Copy)]
+struct VariantRecovery {
+    symbols: bool,
+    fatal_parse_error: bool,
+}
+
 fn collect_variant(
     path: &Path,
     variant: &CheckFactVariant<'_>,
@@ -83,8 +89,7 @@ fn collect_variant(
     program: &oxc_ast::ast::Program<'_>,
     parsed_source: &str,
     parse_error: Option<String>,
-    recover_symbols: bool,
-    fatal_parse_error: bool,
+    recovery: VariantRecovery,
 ) -> CheckFileFacts {
     if let Some(parse_error) = parse_error {
         return recovered_error_facts(
@@ -94,8 +99,7 @@ fn collect_variant(
             program,
             parsed_source,
             parse_error,
-            recover_symbols,
-            fatal_parse_error,
+            recovery,
         );
     }
     let mut facts = collect_file_facts_from_program(
@@ -107,10 +111,10 @@ fn collect_variant(
         program,
         should_store_source(variant.plan).then(|| Arc::clone(source)),
     );
-    if fatal_parse_error {
+    if recovery.fatal_parse_error {
         Arc::make_mut(&mut facts.ts).fatal_parse_error = true;
     }
-    if recover_symbols {
+    if recovery.symbols {
         facts.legacy_symbols = facts.symbols.clone();
     }
     facts
@@ -123,8 +127,7 @@ fn recovered_error_facts(
     program: &oxc_ast::ast::Program<'_>,
     parsed_source: &str,
     parse_error: String,
-    recover_symbols: bool,
-    fatal_parse_error: bool,
+    recovery: VariantRecovery,
 ) -> CheckFileFacts {
     let stored_source = should_store_source(plan).then(|| Arc::clone(source));
     let mut ts = super::super::file_parse_error::ts_facts(
@@ -134,8 +137,8 @@ fn recovered_error_facts(
         program,
         parse_error.clone(),
     );
-    ts.fatal_parse_error = fatal_parse_error;
-    let symbols = (recover_symbols && (plan.symbols || plan.graph.symbols)).then(|| {
+    ts.fatal_parse_error = recovery.fatal_parse_error;
+    let symbols = (recovery.symbols && (plan.symbols || plan.graph.symbols)).then(|| {
         Arc::new(crate::codebase::ts_symbols::extract_symbols_from_program(
             program,
             parsed_source,
