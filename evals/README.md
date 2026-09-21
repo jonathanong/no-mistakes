@@ -5,8 +5,13 @@ Eval suite for the `skills/no-mistakes` skill.
 ## Results
 
 The shipped `description:` was reworked in #981 and corrected in #985. All at
-`runs: 3`, `--ablation none`, should-fire cases only, from files with **zero**
-errored runs.
+`runs: 3`, should-fire cases only, from files with **zero** errored runs. The
+**#979**, **#981** and **current, 09-13** columns are `--ablation none`; the
+**current, 09-21** column is `--ablation with-without`, and its figures are
+trigger counts taken from the **with** arm. Those are [directly
+comparable](#comparing-trigger-counts-across-ablation-modes) — both are counts
+over the with-arm, with the same number of with-arm runs per case — but the
+condition differs and is labelled here rather than inferred.
 
 - **#979** — the description PR #979 measured.
 - **#981** — the rework. Won `before-edit` and `signature`, and silently lost
@@ -14,22 +19,35 @@ errored runs.
 - **current** — #981 plus a validation clause, in
   `skills/no-mistakes/SKILL.md` today.
 
-| flow | #979 | #981 | current | current, re-measured 2026-09-21 |
+| flow | #979 | #981 | current, 09-13 | current, 09-21 |
 | --- | --- | --- | --- | --- |
-| [`before-edit`](#candidate-screening) | 8/18 (44%) | 16/18 (89%) | **16/18 (89%)** | — |
-| [`signature`](#candidate-screening) | 4/12 (33%) | 10/12 (83%) | **10/12 (83%)** | **9/12 (75%)** |
-| [`after-edit`](#the-after-edit-regression-981-shipped) | 9/12 (75%) | **3/12 (25%)** | **12/12 (100%)** | — |
-| [`queues`](#control-result-the-baseline-held-the-clause-does-not-ship) | — | — | **3/12 (25%)** | — |
-| [`neg-hard`](#candidate-screening) — over-trigger guard, lower is better | 0/12 | 0/12 | 0/12 | — |
-| … of which fabricate a command form | 5/12 | 1/12 | **0/12** | — |
-| [**live holdout**](#held-out-confirmation) — never tuned against | **3/9 (33%)** | **5/9 (56%)** | not re-run | held, see below |
+| [`before-edit`](#candidate-screening) | 8/18 (44%) | 16/18 (89%) | 16/18 (89%) | **14/18 (78%)** |
+| [`signature`](#candidate-screening) | 4/12 (33%) | 10/12 (83%) | 10/12 (83%) | **7/12 (58%)** [^sigctl] |
+| [`after-edit`](#the-after-edit-regression-981-shipped) | 9/12 (75%) | **3/12 (25%)** | 12/12 (100%) | **10/12 (83%)** |
+| [`queues`](#the-full-re-baseline) | — | — | 3/12 (25%) | **3/12 (25%)** |
+| [`neg-hard`](#candidate-screening) — over-trigger guard, lower is better | 0/12 | 0/12 | 0/12 | **0/12** |
+| [**live holdout**](#held-out-confirmation) — never tuned against | **3/9 (33%)** | **5/9 (56%)** | not re-run | not re-run |
 
-The last column is a same-day reproducibility check, not a new result: the
-current description re-measured on 2026-09-21 lands one run below its
-2026-09-13 number on `signature`. That is the control which [priced and
-rejected](#control-result-the-baseline-held-the-clause-does-not-ship) the queue
-clause, and it is the reason to read gate floors as a control arm rather than
-as a fixed count.
+[^sigctl]: A **separate** `--ablation none` control run, earlier the same day
+    and not part of the 318-run re-baseline, measured this same description at
+    **9/12**. It is kept out of the column because the column is defined as
+    the both-arm re-baseline — but the two numbers together are the whole
+    [variance
+    finding](#the-gate-cannot-resolve-the-difference-it-was-built-on).
+
+> [!WARNING]
+> **The last two columns are the same description.** `signature` was measured
+> twice on 2026-09-21 — 9/12 in a single-arm control and 7/12 in the
+> re-baseline — so the gaps between these columns are mostly the instrument,
+> not the description. A two-run difference anywhere in this table is **not**
+> a result. See [the variance
+> finding](#the-gate-cannot-resolve-the-difference-it-was-built-on), which
+> retracted a price claim this file made earlier the same day.
+
+The 09-21 column is the [full re-baseline](#the-full-re-baseline): all eleven
+flows, both arms, 318 runs, $52.60, zero errored runs. Six flows are measured
+at `runs: 3` for the first time there — `usage` 5/12, `ci` 2/12, `duplication`
+0/9, `safety` 0/6, `napi` 0/12, `lang-graph` 10/12 (synthetic fixture).
 
 **The live holdout is still 5/9, and cases 07-09 are still unspent.** They were
 committed ahead of the queue clause to judge it, and were deliberately not run
@@ -50,13 +68,18 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
 
 ### What the runs established
 
-- **[A named subject is bought, not
-  free.](#control-result-the-baseline-held-the-clause-does-not-ship)** The
-  queue clause did exactly what the naming model predicts — `queues` 3/12 →
-  12/12 — and was still **rejected**, because a same-day control showed it
-  charged `signature` 9/12 → 7/12 to do it. The budget model was inferred from
-  #981's reallocation; this is the first time the price was measured directly,
-  against a case-matched control run on the same day.
+- **[The instrument cannot resolve the differences these gates are built
+  on.](#the-gate-cannot-resolve-the-difference-it-was-built-on)** The shipped
+  description scored `signature` 9/12 and 7/12 on the same day; the queue
+  clause rejected for scoring 7/12 scored exactly what the description
+  reproduces against itself. `runs: 3` at n=12 cannot see a two-run effect,
+  and every gate here is written in two-run units. This retracted a price
+  claim made earlier the same day, and it outranks every trigger number below.
+- **A named subject is reached, but its cost is unmeasured.** The queue clause
+  did what the naming model predicts — `queues` 3/12 → 12/12 — and was
+  rejected on a `signature` gate the instrument could not resolve. Whether a
+  twelfth clause is affordable is **still an open question**; this suite has
+  not answered it in either direction.
 - **[Naming a subject reliably reaches it; not naming one is a coin
   flip.](#naming-a-subject-reliably-reaches-it-not-naming-one-is-a-coin-flip)**
   Now measured in both directions. *Adding* a name lifts its flow: signatures
@@ -66,18 +89,21 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
   Unnamed subjects are unpredictable rather than dead — the queue-shaped
   held-out case fires 0/3 and the duplication-shaped one 2/3 under the shipped
   description, which names neither. So name what matters, treat any deletion
-  as a change to be measured, and do not read every low flow as merely unnamed
-  — nor as cheap to fix, which is what the queue clause turned out not to be.
+  as a change to be measured, and do not read every low flow as merely
+  unnamed. Whether naming one is *cheap* is a separate question this suite
+  has not answered — the queue clause was the attempt, and its cost [could
+  not be
+  resolved](#the-gate-cannot-resolve-the-difference-it-was-built-on).
 - **[A description is a budget, not a
   bag.](#the-after-edit-regression-981-shipped)** #981's rework was framed as
   replacing a vague framing with a concrete one. What it actually did was
   reallocate: two subjects gained roughly what one lost. The fix was not a
   better framing but more named subjects — the current description is #981 plus
   two clauses, and it holds every flow #981 won while restoring the one it
-  broke, at 684 characters against a 1536 cap. The [rejected queue
-  clause](#control-result-the-baseline-held-the-clause-does-not-ship) is the
-  limit of that move: the budget is real, it binds well under the character
-  cap, and a twelfth clause is not obviously affordable.
+  broke, at 684 characters against a 1536 cap. Whether a *twelfth* clause is
+  affordable is untested: the [queue
+  clause](#the-gate-cannot-resolve-the-difference-it-was-built-on) was the
+  attempt, and the instrument could not resolve its cost either way.
 - **[Absolute gate floors expire.](#but-the-floors-are-cross-time-and-that-is-a-defect-in-the-gate)**
   Gate 2 pre-registered floors as fixed counts against eight-day-old
   measurements. That is a cross-time comparison — the exact error that
@@ -95,8 +121,13 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
   one.](#what-a-non-firing-run-actually-produces)** The old description's
   common failure is not "forgot the tool exists" — it is confidently writing
   `/no-mistakes roleHas`, which does not exist. It does that 10 times across 20
-  non-firing runs; the current description, twice across 14. Across every
-  description and flow, a non-firing run named a real subcommand **zero** times.
+  non-firing runs; the current description, twice across 14 — **both counts
+  scoped to the two-flow screen** (`signature` and `neg-hard`) that produced
+  them. The [2026-09-21 re-baseline](#the-full-re-baseline) is a wider sample
+  and a worse one: on `neg-hard` alone the current description invents a
+  command form in **4 of 12** non-firing runs. Treat "twice across 14" as a
+  historical screen figure, not the current rate. Across every description and
+  flow, a non-firing run named a real subcommand **zero** times.
 - **[Codex reads the same description Claude
   does.](#codex-reads-the-same-description--the-openaiyaml-gate-was-never-real)**
   An earlier revision of this file claimed `agents/openai.yaml` gives Codex an
@@ -107,27 +138,34 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
 
 ### Caveats
 
-- **[Δ is not measured for the current
-  description.](#the-full-re-baseline-is-still-outstanding)** The table above is
-  trigger rate from single-arm runs. The full both-arm re-baseline across all
-  eleven flows is still outstanding, so [Baseline](#baseline-before-edit-flow-shipped-description-as-of-pr-979)
-  and [Measurement coverage](#measurement-coverage) still describe the *old*
-  description.
-- **Six flows are still unmeasured under the current description.** `ci`,
-  `napi`, `lang-graph`, `usage`, `safety` and `duplication` sat between 0% and
-  67% under every description tested here, and none has been re-run since.
-  `after-edit` used to head this list and is now measured — it was not merely
-  unmeasured, it was broken, which is the reason to shorten this list rather
-  than keep describing it. `queues` has now left it too: it is **3/12 (25%)**
-  under the current description, and the [clause that would have fixed
-  it](#control-result-the-baseline-held-the-clause-does-not-ship) was measured,
-  priced and rejected. Each remaining flow is ~$3 to check at `runs: 3`
-  single-arm, on the [pattern this correction
-  used](#the-after-edit-regression-981-shipped).
-- **A low flow is not automatically a bug to fix.** `queues` is the worked
-  example: the subject is unnamed, naming it works, and naming it still was not
-  worth the price. Before opening the next "flow X is low" issue, budget what
-  the fix costs the flows that are high.
+- **[The instrument cannot resolve a two-run
+  difference.](#the-gate-cannot-resolve-the-difference-it-was-built-on)** This
+  is the caveat that governs every other number in this file. The shipped
+  description measured `signature` at 9/12 and 7/12 hours apart on the same
+  day, and every gate here is written in two-run units. Treat a two-run gap —
+  between descriptions, between dates, or between flows — as unresolved, not
+  as a finding.
+- **Δ is now measured for all eleven flows**
+  ([re-baseline](#the-full-re-baseline), 2026-09-21, 318 runs, zero errored
+  runs). [Baseline](#baseline-before-edit-flow-shipped-description-as-of-pr-979)
+  is kept as the #979 historical record and is **not** the current description.
+- **Every flow in the routine suite now has a `runs: 3` measurement under the
+  current description** — the eleven non-holdout flows, which is what the
+  previous "six flows are still unmeasured" caveat asked for. `heldout` is
+  *deliberately* excluded and remains unmeasured under this description;
+  running it would spend cases 07-09. Three of them came back at **zero** — `duplication` 0/9, `safety` 0/6,
+  `napi` 0/12. A zero count is **not** thereby certain: the exact one-sided
+  95% upper bounds are 39% (0/6), 28% (0/9) and 22% (0/12), so the true
+  trigger rate could still be substantial. What a zero does rule out is a
+  *high* rate, which is more than a two-run gap rules out — but these are
+  first observations needing repeated measurement, not settled facts.
+- **A low flow is not automatically a bug to fix.** `queues` is still the
+  worked example, though for a different reason than this file claimed
+  earlier: naming the subject does lift it, the attempt to price that lift
+  [could not be resolved by the
+  instrument](#the-gate-cannot-resolve-the-difference-it-was-built-on), and
+  the flow stays at 3/12. Before opening the next "flow X is low" issue,
+  check that the suite can actually measure the fix.
 
 ---
 
@@ -366,8 +404,8 @@ read when planning what still needs measuring.
 | `heldout` (live 04–06) | `runs: 3` | n/a | not run | `runs: 3` | **not run** |
 | `heldout` (live 07–09, added #986) | n/a | n/a | n/a | n/a | **never run — unspent** |
 | `queues` | ⚠️ 1 run | `runs: 3` | not run | **not run** | `runs: 3` |
-| `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** | **not run** |
-| `usage`, `safety`, `duplication` | ⚠️ 1 run | not run | not run | **not run** | **not run** |
+| `ci`, `lang-graph`, `napi` | ⚠️ 1 run | `runs: 3` | not run | **not run** | `runs: 3` |
+| `usage`, `safety`, `duplication` | ⚠️ 1 run | not run | not run | **not run** | `runs: 3` |
 
 The `after-edit` row is `runs: 3` under `#979 shipped`, `C2` and `current`
 because [the regression check](#the-after-edit-regression-981-shipped) measured
@@ -376,12 +414,100 @@ be quoted. The `heldout` rows are **not run** for the current description on
 purpose — `after-edit` is now tuning-visible, so a clean holdout needs [fresh
 cases](#writing-new-cases) first.
 
-### The full re-baseline is still outstanding
+### The full re-baseline
 
-The `runs: 3`, both-arm re-baseline of the current description across all
-eleven flows has **not** been completed. One attempt was made and is void: it
-hit a Claude session limit 27 runs into 318, and the remaining 291 runs
-errored.
+**Completed 2026-09-21** (#984 item 5), after two earlier attempts. All eleven
+flows, `runs: 3`, `--ablation with-without`, `-j 4`, Opus agent / Sonnet judge,
+against the shipped description at `a722b2036`. **318 runs, $52.60, zero
+errored runs, `partial: false` on every flow**, $0.165 per run against the
+expected $0.16–0.19.
+
+| flow | trigger (with-arm) | n | note |
+| --- | --- | --- | --- |
+| `before-edit` | **14/18 (78%)** | 18 | was 16/18 on 09-13 — see [the spread](#the-gate-cannot-resolve-the-difference-it-was-built-on) |
+| `after-edit` | **10/12 (83%)** | 12 | was 12/12 on 09-13 |
+| `lang-graph` | **10/12 (83%)** | 12 | **synthetic fixture** — grades plan shape against a repo that does not exist |
+| `signature` | **7/12 (58%)** | 12 | also 9/12 earlier the same day |
+| `usage` | **5/12 (42%)** | 12 | first `runs: 3` measurement |
+| `queues` | **3/12 (25%)** | 12 | same total as 09-13; per-case shape matches what #986 recorded |
+| `ci` | **2/12 (17%)** | 12 | first `runs: 3` measurement |
+| `duplication` | **0/9 (0%)** | 9 | first `runs: 3` measurement |
+| `safety` | **0/6 (0%)** | 6 | first `runs: 3` measurement |
+| `napi` | **0/12 (0%)** | 12 | first `runs: 3` measurement |
+| `neg-hard` — guard, lower is better | **0/12** | 12 | guard holds; 4 of 12 non-firing runs still invent a command form |
+
+`heldout` is excluded on purpose: 07-09 stay unspent.
+
+**Read this table with the [variance
+finding](#the-gate-cannot-resolve-the-difference-it-was-built-on).** Each cell
+is one draw. The same description measured `signature` at 9/12 and 7/12 hours
+apart, so a two-run gap between any two cells here is not a result, and
+neither is a two-run gap against the 09-13 column.
+
+Four observations that are less fragile than a two-run gap — though none is
+beyond re-measurement, since every count here is stochastic:
+
+- **`queues` came back at 3/12 again**, and today's per-case shape —
+  `queues-03-payload-change` 3/3, the three pure topology questions 0/3 —
+  matches the shape #986 recorded for 09-13. (That earlier run's result file
+  is gone, so this is a comparison against a recorded description of it, not
+  against data still in hand.) Two independent runs landing on the same total
+  *and* the same per-case split is the pattern you would expect if the three
+  topology cases were failing for a structural reason — the subject is
+  unnamed — and it is a reason to investigate that, **not** evidence that a
+  later run cannot come back different. It can: this document records the
+  same description at 9/12 and 7/12 on `signature`.
+- **Three flows sit at zero**: `duplication` 0/9, `safety` 0/6, `napi` 0/12.
+  Do not read these as structurally dead. With 6-12 trials the exact one-sided
+  95% upper bounds are 39%, 28% and 22% respectively, so a substantial true
+  rate is still consistent with observing none. A zero bounds the rate from
+  above more usefully than a two-run gap bounds a difference, and that is the
+  whole of the claim. None had a prior `runs: 3` shipped-description
+  measurement, so these are first observations, not regressions.
+- **`lang-graph` at 10/12 is the highest non-`before-edit` flow and means the
+  least.** Its fixture is a polyglot repository that does not exist, so it
+  grades plan shape against an imagined codebase.
+- **Δ is now measured** for every flow for the first time, which is what this
+  section existed to deliver. The values are below rather than only in a
+  result file — those files were written outside the worktree and are not
+  committed, which is precisely how the 2026-09-13 numbers were lost.
+
+**Δ, mean weighted grader score per run** (`skill-fired` excluded, as
+[`summarize.py`](summarize.py) does everywhere). Should-fire cases and
+negatives are kept apart because a negative's with-arm is supposed to score
+*no better* than its baseline:
+
+| flow | should-fire with | without | **Δ** | negatives with | without | **Δ** |
+| --- | --- | --- | --- | --- | --- | --- |
+| `lang-graph` | 0.97 | 0.47 | **+0.50** | 1.00 | 1.00 | +0.00 |
+| `signature` | 0.81 | 0.50 | **+0.31** | 0.67 | 1.00 | **−0.33** |
+| `usage` | 0.64 | 0.36 | **+0.28** | — | — | — |
+| `after-edit` | 0.94 | 0.75 | **+0.19** | 1.00 | 1.00 | +0.00 |
+| `before-edit` | 0.87 | 0.73 | **+0.14** | 1.00 | 1.00 | +0.00 |
+| `queues` | 0.64 | 0.56 | +0.08 | 1.00 | 1.00 | +0.00 |
+| `napi` | 0.86 | 0.81 | +0.06 | 1.00 | 1.00 | +0.00 |
+| `ci` | 0.61 | 0.61 | +0.00 | 0.33 | 0.67 | **−0.33** |
+| `duplication` | 0.67 | 0.67 | +0.00 | 0.67 | 0.67 | +0.00 |
+| `safety` | 0.83 | 0.83 | +0.00 | 0.33 | 0.67 | **−0.33** |
+| `neg-hard` | n/a — all negatives | | | 1.00 | 1.00 | +0.00 |
+
+Read these with the same caution as the trigger counts: each is one draw, and
+the per-case n is 3. Two things stand out and are worth naming rather than
+averaging away:
+
+- **`lang-graph` has the largest Δ (+0.50) and the least meaning** — its
+  fixture is a repository that does not exist, so a large Δ says the skill
+  changes the plan's *shape*, not that the plan is right.
+- **Three flows show a negative Δ on their negative cases** (`ci`, `safety`,
+  `signature`, all −0.33, each a single case at n=3). That is the direction
+  that would matter if it held: the plugin arm scoring *worse* than no plugin
+  on a question the graph cannot answer. At n=3 per case it is one run
+  flipping, so it is a thing to re-measure, not a finding.
+
+#### The two attempts before it
+
+The first attempt is void: it hit a Claude session limit 27 runs into 318, and
+the remaining 291 runs errored.
 
 That failure is worth recording rather than just retrying, because of how it
 presents. An errored run scores 0 in **both** arms, so 45 of the 53 cases came
@@ -498,8 +624,8 @@ at `runs: 3` — 48 runs, $8.89, ~10 min at `-j 4`.
 This table describes the description that shipped with #979, which is **no
 longer the one in `skills/no-mistakes/SKILL.md`** — see
 [Candidate screening](#candidate-screening). It is kept as the before-side of
-the comparison. The current description's own both-arm baseline is
-[still outstanding](#the-full-re-baseline-is-still-outstanding).
+the comparison. The current description's own both-arm baseline was
+[completed on 2026-09-21](#the-full-re-baseline).
 
 The split is the finding: the three phrasings drawn from the most common forms
 in real history (`01`, `03`, `05`) fire 1/9 combined, while the three that
@@ -742,12 +868,19 @@ stays at 3/12, the subject stays unnamed, and the finding is recorded as-is.
 The clause was reverted from `skills/no-mistakes/SKILL.md` in this PR;
 `SKILL.md` is byte-identical to `main` again.
 
-**This is the budget model's first measured price.** Every earlier run measured
-what naming a subject *buys*; this one measures what it *costs*. The clause
-bought `queues` 3/12 → 12/12 and charged `signature` 9/12 → 7/12 for it. [A
-description is a budget, not a bag](#the-after-edit-regression-981-shipped) was
-inferred from #981's reallocation; it is now a direct observation, with the
-price named on a case-matched, same-day control.
+~~**This is the budget model's first measured price.** Every earlier run
+measured what naming a subject *buys*; this one measures what it *costs*. The
+clause bought `queues` 3/12 → 12/12 and charged `signature` 9/12 → 7/12 for
+it.~~
+
+> [!WARNING]
+> **Retracted the same day, by the re-baseline below.** The shipped
+> description was measured on `signature` a *second* time on 2026-09-21 and
+> came back **7/12** — the clause's number. The 9/12 control and the 7/12
+> clause run are two draws from the same distribution, not a price. See
+> [the variance finding](#the-gate-cannot-resolve-the-difference-it-was-built-on).
+> No price for the queue clause has been measured, and none of the numbers
+> here establish one.
 
 **`before-edit` is not part of that price, and saying it were would repeat the
 error this section is about.** v2 measured 15/18 against the current
@@ -758,9 +891,68 @@ By the gate itself, `before-edit` **passed, within the band**. Splitting drift
 from clause on that flow needs its own control arm, which was not run because
 `signature` had already decided the verdict.
 
-The honest summary is not "the clause is bad". It is that **this suite has no
+~~The honest summary is not "the clause is bad". It is that **this suite has no
 evidence a clause can be added for free**, and the two flows it charged are the
-one with the most real traffic behind it and the one the #984 issue was about.
+one with the most real traffic behind it and the one the #984 issue was
+about.~~ The honest summary is that **the suite could not tell**, which the
+next section establishes directly.
+
+##### The gate cannot resolve the difference it was built on
+
+The [re-baseline](#the-full-re-baseline) measured the shipped description
+across all eleven flows on 2026-09-21, hours after the control above. It
+measured `signature` again — same description, same four cases, same machine,
+same day:
+
+| `signature`, shipped description | trigger | when |
+| --- | --- | --- |
+| 2026-09-13, `--ablation none` | 10/12 (83%) | eight days earlier |
+| 2026-09-21, `--ablation none` (the control) | **9/12 (75%)** | ~20:05 UTC |
+| 2026-09-21, `--ablation with-without` (re-baseline) | **7/12 (58%)** | ~21:25 UTC |
+| *v2 clause*, 2026-09-21 | *7/12 (58%)* | *~20:25 UTC* |
+
+**The shipped description scored 9/12 and 7/12 on the same day, and the clause
+that was rejected scored 7/12.** The rejection rests on a gap the description
+reproduces against itself.
+
+This is not two different objects being compared. #986 left
+`skills/no-mistakes/SKILL.md` byte-identical — its diff for that file across
+the merge commit is empty, and the `description:` line has the same md5 on
+both sides. Trigger counts are comparable across ablation modes: [both are
+counts over the with-arm, with the same number of with-arm runs per
+case](#comparing-trigger-counts-across-ablation-modes).
+
+The same pattern appears on the other two gated flows:
+
+| flow | shipped, 09-13 | shipped, 09-21 | v2 clause, 09-21 |
+| --- | --- | --- | --- |
+| `before-edit` | 16/18 | **14/18** | 15/18 — *between the two* |
+| `after-edit` | 12/12 | **10/12** | not run |
+| `signature` | 10/12 | **9/12 and 7/12** | 7/12 |
+
+On `before-edit` the clause sits *between* two measurements of the description
+it was compared against.
+
+**What is and is not established.**
+
+- **Not** that the clause should have shipped. Nothing here shows it is free;
+  this is a coin flip, not an acquittal.
+- **Not** that the pre-registration was misapplied. The control did land
+  ≥9/12, branch one did apply, and the verdict followed the rule as written.
+  The rule itself had no power.
+- **That `runs: 3` at n=12 cannot resolve a two-run difference**, and every
+  gate in this file is written in two-run units. The clause verdict is
+  collateral; *this* is the finding.
+
+**Consequence for the next candidate.** A gate margin must exceed the shipped
+description's own same-day spread, and that spread is now measured rather than
+assumed: it is **at least 2 runs at n=12**, so a margin that *exceeds* it is
+**at least 3 runs at n=12** — and 2 runs is the observed floor, not an
+estimate of the spread, so 3 is itself a lower bound on a defensible margin.
+Either raise `runs` until the standard
+error is smaller than the effect being gated, or widen the margin past it. Do
+not re-run the queue clause against the current gates and read the answer —
+the instrument cannot see a difference that size, whichever way it lands.
 
 ##### What the control cost to get right, and the trap it exposed
 
