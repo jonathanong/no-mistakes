@@ -142,9 +142,9 @@ pnpm run evals -- --tag before-edit --ablation with-without --judge-model sonnet
 command: pnpm forwards its own `--` into the script's argv, and the eval CLI
 reads that as end-of-options — it silently discards every flag after it and
 launches an unfiltered full-suite run. The wrapper strips the `--`, and refuses
-to launch unscoped, so a mistyped flag cannot cost $60 unintentionally. Pass
-`--all` when an unfiltered run is what you actually want. (Unfiltered is 59
-cases x 3 runs x 2 arms = 354 runs: a path target resolves a plugin, and the
+to launch unscoped, so a mistyped flag cannot cost $65 unintentionally. Pass
+`--all` when an unfiltered run is what you actually want. (Unfiltered is 62
+cases x 3 runs x 2 arms = 372 runs: a path target resolves a plugin, and the
 ablation default is then `with-without`, not `none`.)
 
 See [Flows](#flows) for the full-suite command — it deliberately excludes the
@@ -1119,19 +1119,27 @@ at a different rate. **Do not quote a number in this file as a Codex result**;
 a Codex-specific regression would be invisible here. Measuring that needs a
 Codex arm the suite does not have.
 
-**Outcome: `skills/no-mistakes/agents/openai.yaml` is unchanged** — not because
-a gate went unmet, but because the thing the gate proposed to remove is a UI
-example prompt whose deletion would not change any agent's behaviour. The 90%
-bar is withdrawn rather than deferred; there is no measurement that would
-reinstate it.
+**Outcome: the `default_prompt` was not *removed*** — not because a gate went
+unmet, but because the thing the gate proposed to remove is a UI example prompt
+whose deletion would not change any agent's behaviour. The 90% bar is withdrawn
+rather than deferred; there is no measurement that would reinstate it.
 
-One real defect survives this correction, and is left for a follow-up rather
-than folded in here: `default_prompt` still quotes the **old** description's
+**It was, however, rewritten in #986.** The defect this section had left for a
+follow-up was that `default_prompt` still quoted the **old** description's
 register ("*before editing to find callers and tests … instead of rg when …*"),
-so the Codex UI now suggests a starting prompt written in the vocabulary this
-PR replaced. It is also three sentences where the spec asks for roughly one.
-Fixing it is a user-facing string change with no measurement behind it, which
-is out of scope for a PR whose whole claim is that its changes are measured.
+so the Codex UI suggested a starting prompt written in the vocabulary #981
+replaced — three sentences where the spec asks for roughly one. It now reads:
+
+> Use $no-mistakes to find every consumer of this symbol and the tests a change
+> to it would need.
+
+**No number in this file measures that string, and none can.** It is a UI
+example prompt, not part of the trigger surface: `policy.allow_implicit_invocation`
+governs ambient injection and the `description:` is what both agents actually
+read. Every case here runs `claude plugin eval`, which never loads
+`agents/openai.yaml` at all. It is changed here as a docs-consistency fix — the
+shipped example should quote the shipped register — and it is explicitly **not**
+covered by the gates the rest of this file describes.
 
 ### Naming a subject reliably reaches it; not naming one is a coin flip
 
