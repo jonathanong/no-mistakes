@@ -403,7 +403,7 @@ expected $0.16–0.19.
 | `lang-graph` | **10/12 (83%)** | 12 | **synthetic fixture** — grades plan shape against a repo that does not exist |
 | `signature` | **7/12 (58%)** | 12 | also 9/12 earlier the same day |
 | `usage` | **5/12 (42%)** | 12 | first `runs: 3` measurement |
-| `queues` | **3/12 (25%)** | 12 | reproduces 09-13 exactly, per case |
+| `queues` | **3/12 (25%)** | 12 | same total as 09-13; per-case shape matches what #986 recorded |
 | `ci` | **2/12 (17%)** | 12 | first `runs: 3` measurement |
 | `duplication` | **0/9 (0%)** | 9 | first `runs: 3` measurement |
 | `safety` | **0/6 (0%)** | 6 | first `runs: 3` measurement |
@@ -420,10 +420,13 @@ neither is a two-run gap against the 09-13 column.
 
 Four observations that do **not** depend on resolving two runs:
 
-- **`queues` reproduces exactly**, per case: `queues-03-payload-change` 3/3 and
-  the three pure topology questions 0/3, identical to 09-13. The one flow whose
-  shape is stable is the one whose failure is structural rather than marginal —
-  the subject is unnamed, and no amount of re-running moves it.
+- **`queues` is stable at 3/12**, and today's per-case shape —
+  `queues-03-payload-change` 3/3, the three pure topology questions 0/3 —
+  matches the shape #986 recorded for 09-13. (That earlier run's result file
+  is gone, so this is a comparison against a recorded description of it, not
+  against data still in hand.) A flow that fails 0/3 on three cases is failing
+  structurally rather than marginally: the subject is unnamed, and unlike a
+  two-run gap, re-running does not move it.
 - **Three flows sit at zero**: `duplication` 0/9, `safety` 0/6, `napi` 0/12.
   Zero is not a two-run question. None had a prior `runs: 3` shipped-description
   measurement, so these are first observations, not regressions.
