@@ -142,6 +142,7 @@ fn legacy_symbol_facts_retain_a_meaningful_fatal_parse_error() {
         "{error}"
     );
     assert_eq!(facts.ts.parse_error.as_deref(), Some(error));
+    assert!(facts.ts.fatal_parse_error);
     assert!(facts.symbols.is_none());
 }
 

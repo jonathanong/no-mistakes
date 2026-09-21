@@ -345,3 +345,74 @@ fn derived_resolve_check_honors_an_explicit_tsconfig() {
     );
     assert_eq!(standalone["results"][0]["imports"][0]["status"], "external");
 }
+
+fn derived_resolve_fact_parity_root() -> String {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/napi/derived-resolve-fact-parity"),
+    )
+    .display()
+    .to_string()
+}
+
+fn standalone_resolve_check(root: &str, file: &str) -> napi::Result<String> {
+    crate::napi_api::queries::resolve_check_json_impl(crate::napi_api::options::test_json_arg(
+        json!({ "root": root, "files": [file] }).to_string(),
+    ))
+}
+
+fn derived_resolve_check(root: &str, file: &str) -> napi::Result<String> {
+    analyze_project_json_impl(crate::napi_api::options::test_json_arg(
+        json!({
+            "root": root,
+            "reports": [
+                {
+                    "type": "dependencies",
+                    "id": "closure",
+                    "files": [file],
+                    "relationships": ["import-static"]
+                },
+                { "type": "resolveCheckDependencies", "dependencyReportIds": ["closure"] }
+            ]
+        })
+        .to_string(),
+    ))
+}
+
+#[test]
+fn derived_resolve_check_matches_standalone_for_recoverable_parse_diagnostics() {
+    let root = derived_resolve_fact_parity_root();
+    let standalone: Value =
+        serde_json::from_str(&standalone_resolve_check(&root, "recoverable.ts").unwrap()).unwrap();
+    let derived: Value =
+        serde_json::from_str(&derived_resolve_check(&root, "recoverable.ts").unwrap()).unwrap();
+
+    assert_eq!(
+        derived["reports"][1]["result"]["results"]
+            .as_array()
+            .unwrap()
+            .iter()
+            .find(|result| result["file"] == "recoverable.ts")
+            .unwrap(),
+        &standalone["results"][0]
+    );
+    assert_eq!(standalone["results"][0]["imports"][0]["status"], "resolved");
+}
+
+#[test]
+fn derived_resolve_check_propagates_source_and_fatal_parse_failures() {
+    let root = derived_resolve_fact_parity_root();
+
+    for (file, expected) in [
+        ("invalid-utf8.ts", "failed to read"),
+        ("fatal.ts", "failed to parse"),
+    ] {
+        let standalone = standalone_resolve_check(&root, file).unwrap_err();
+        let derived = derived_resolve_check(&root, file).unwrap_err();
+
+        assert!(standalone.reason.contains(expected), "{standalone}");
+        assert!(standalone.reason.contains(file), "{standalone}");
+        assert!(derived.reason.contains(expected), "{derived}");
+        assert!(derived.reason.contains(file), "{derived}");
+    }
+}

@@ -15,6 +15,7 @@ pub(super) fn read_errors(
         .map(|variant| {
             Some(CheckFileFacts {
                 ts: Arc::new(TsFileFacts {
+                    operational_error: Some(parse_error.clone()),
                     parse_error: Some(parse_error.clone()),
                     ..TsFileFacts::default()
                 }),
@@ -46,6 +47,7 @@ pub(super) fn fill_parse_errors(
         };
         results[index] = Some(CheckFileFacts {
             ts: Arc::new(TsFileFacts {
+                fatal_parse_error: legacy,
                 parse_error: Some(parse_error.clone()),
                 source: stored_source.clone(),
                 ..TsFileFacts::default()

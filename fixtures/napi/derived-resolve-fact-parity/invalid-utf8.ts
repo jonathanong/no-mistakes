@@ -1,0 +1,1 @@
+ÿexport const invalid = true;
