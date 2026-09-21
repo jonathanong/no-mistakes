@@ -5,8 +5,13 @@ Eval suite for the `skills/no-mistakes` skill.
 ## Results
 
 The shipped `description:` was reworked in #981 and corrected in #985. All at
-`runs: 3`, `--ablation none`, should-fire cases only, from files with **zero**
-errored runs.
+`runs: 3`, should-fire cases only, from files with **zero** errored runs. The
+**#979**, **#981** and **current, 09-13** columns are `--ablation none`; the
+**current, 09-21** column is `--ablation with-without`, and its figures are
+trigger counts taken from the **with** arm. Those are [directly
+comparable](#comparing-trigger-counts-across-ablation-modes) — both are counts
+over the with-arm, with the same number of with-arm runs per case — but the
+condition differs and is labelled here rather than inferred.
 
 - **#979** — the description PR #979 measured.
 - **#981** — the rework. Won `before-edit` and `signature`, and silently lost
@@ -76,8 +81,11 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
   Unnamed subjects are unpredictable rather than dead — the queue-shaped
   held-out case fires 0/3 and the duplication-shaped one 2/3 under the shipped
   description, which names neither. So name what matters, treat any deletion
-  as a change to be measured, and do not read every low flow as merely unnamed
-  — nor as cheap to fix, which is what the queue clause turned out not to be.
+  as a change to be measured, and do not read every low flow as merely
+  unnamed. Whether naming one is *cheap* is a separate question this suite
+  has not answered — the queue clause was the attempt, and its cost [could
+  not be
+  resolved](#the-gate-cannot-resolve-the-difference-it-was-built-on).
 - **[A description is a budget, not a
   bag.](#the-after-edit-regression-981-shipped)** #981's rework was framed as
   replacing a vague framing with a concrete one. What it actually did was
@@ -131,8 +139,11 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
 - **Every flow now has a `runs: 3` measurement under the current description**,
   which is what the previous "six flows are still unmeasured" caveat asked
   for. Three of them came back at **zero** — `duplication` 0/9, `safety` 0/6,
-  `napi` 0/12 — and zero is not a two-run question, so those three are real
-  and unexplained by variance.
+  `napi` 0/12. A zero count is **not** thereby certain: the exact one-sided
+  95% upper bounds are 39% (0/6), 28% (0/9) and 22% (0/12), so the true
+  trigger rate could still be substantial. What a zero does rule out is a
+  *high* rate, which is more than a two-run gap rules out — but these are
+  first observations needing repeated measurement, not settled facts.
 - **A low flow is not automatically a bug to fix.** `queues` is still the
   worked example, though for a different reason than this file claimed
   earlier: naming the subject does lift it, the attempt to price that lift
@@ -428,13 +439,51 @@ Four observations that do **not** depend on resolving two runs:
   structurally rather than marginally: the subject is unnamed, and unlike a
   two-run gap, re-running does not move it.
 - **Three flows sit at zero**: `duplication` 0/9, `safety` 0/6, `napi` 0/12.
-  Zero is not a two-run question. None had a prior `runs: 3` shipped-description
+  Do not read these as structurally dead. With 6-12 trials the exact one-sided
+  95% upper bounds are 39%, 28% and 22% respectively, so a substantial true
+  rate is still consistent with observing none. A zero bounds the rate from
+  above more usefully than a two-run gap bounds a difference, and that is the
+  whole of the claim. None had a prior `runs: 3` shipped-description
   measurement, so these are first observations, not regressions.
 - **`lang-graph` at 10/12 is the highest non-`before-edit` flow and means the
   least.** Its fixture is a polyglot repository that does not exist, so it
   grades plan shape against an imagined codebase.
 - **Δ is now measured** for every flow for the first time, which is what this
-  section existed to deliver.
+  section existed to deliver. The values are below rather than only in a
+  result file — those files were written outside the worktree and are not
+  committed, which is precisely how the 2026-09-13 numbers were lost.
+
+**Δ, mean weighted grader score per run** (`skill-fired` excluded, as
+[`summarize.py`](summarize.py) does everywhere). Should-fire cases and
+negatives are kept apart because a negative's with-arm is supposed to score
+*no better* than its baseline:
+
+| flow | should-fire with | without | **Δ** | negatives with | without | **Δ** |
+| --- | --- | --- | --- | --- | --- | --- |
+| `lang-graph` | 0.97 | 0.47 | **+0.50** | 1.00 | 1.00 | +0.00 |
+| `signature` | 0.81 | 0.50 | **+0.31** | 0.67 | 1.00 | **−0.33** |
+| `usage` | 0.64 | 0.36 | **+0.28** | — | — | — |
+| `after-edit` | 0.94 | 0.75 | **+0.19** | 1.00 | 1.00 | +0.00 |
+| `before-edit` | 0.87 | 0.73 | **+0.14** | 1.00 | 1.00 | +0.00 |
+| `queues` | 0.64 | 0.56 | +0.08 | 1.00 | 1.00 | +0.00 |
+| `napi` | 0.86 | 0.81 | +0.06 | 1.00 | 1.00 | +0.00 |
+| `ci` | 0.61 | 0.61 | +0.00 | 0.33 | 0.67 | **−0.33** |
+| `duplication` | 0.67 | 0.67 | +0.00 | 0.67 | 0.67 | +0.00 |
+| `safety` | 0.83 | 0.83 | +0.00 | 0.33 | 0.67 | **−0.33** |
+| `neg-hard` | n/a — all negatives | | | 1.00 | 1.00 | +0.00 |
+
+Read these with the same caution as the trigger counts: each is one draw, and
+the per-case n is 3. Two things stand out and are worth naming rather than
+averaging away:
+
+- **`lang-graph` has the largest Δ (+0.50) and the least meaning** — its
+  fixture is a repository that does not exist, so a large Δ says the skill
+  changes the plan's *shape*, not that the plan is right.
+- **Three flows show a negative Δ on their negative cases** (`ci`, `safety`,
+  `signature`, all −0.33, each a single case at n=3). That is the direction
+  that would matter if it held: the plugin arm scoring *worse* than no plugin
+  on a question the graph cannot answer. At n=3 per case it is one run
+  flipping, so it is a thing to re-measure, not a finding.
 
 #### The two attempts before it
 
@@ -878,7 +927,10 @@ it was compared against.
 
 **Consequence for the next candidate.** A gate margin must exceed the shipped
 description's own same-day spread, and that spread is now measured rather than
-assumed: **at least 2 runs at n=12**. Either raise `runs` until the standard
+assumed: it is **at least 2 runs at n=12**, so a margin that *exceeds* it is
+**at least 3 runs at n=12** — and 2 runs is the observed floor, not an
+estimate of the spread, so 3 is itself a lower bound on a defensible margin.
+Either raise `runs` until the standard
 error is smaller than the effect being gated, or widen the margin past it. Do
 not re-run the queue clause against the current gates and read the answer —
 the instrument cannot see a difference that size, whichever way it lands.
