@@ -35,6 +35,7 @@ pub(crate) fn collect_file_facts_with_session_and_sources(
             let parse_error = format!("failed to read {}: {err}", path.display());
             return Some(CheckFileFacts {
                 ts: Arc::new(TsFileFacts {
+                    operational_error: Some(parse_error.clone()),
                     parse_error: Some(parse_error.clone()),
                     ..TsFileFacts::default()
                 }),
@@ -85,7 +86,8 @@ fn collect_file_facts_from_source(
         .contains(&crate::codebase::ts_resolver::normalize_path(path));
     let collect = |program: &oxc_ast::ast::Program<'_>,
                    parsed_source: &str,
-                   parse_error: Option<String>| {
+                   parse_error: Option<String>,
+                   fatal_parse_error: bool| {
         if let Some(parse_error) = parse_error {
             let stored_source = should_store_source(plan).then(|| Arc::clone(&source));
             let mut ts = super::file_parse_error::ts_facts(
@@ -95,6 +97,7 @@ fn collect_file_facts_from_source(
                 program,
                 parse_error.clone(),
             );
+            ts.fatal_parse_error = fatal_parse_error;
             let symbols = (legacy_symbols && (plan.symbols || plan.graph.symbols)).then(|| {
                 Arc::new(crate::codebase::ts_symbols::extract_symbols_from_program(
                     program,
@@ -126,6 +129,7 @@ fn collect_file_facts_from_source(
                 ..CheckFileFacts::default()
             };
         }
+        // Fatal parser results always carry a diagnostic and return above.
         collect_file_facts_from_program(
             root,
             path,
@@ -137,9 +141,11 @@ fn collect_file_facts_from_source(
         )
     };
     let collected = if legacy_symbols {
-        session.with_legacy_symbols_program(path, &source, collect)
+        session.with_legacy_symbols_program(path, &source, |program, source, error| {
+            collect(program, source, error, false)
+        })
     } else {
-        session.with_recovered_program(path, &source, collect)
+        session.with_recovered_program_status(path, &source, collect)
     };
     let facts = match collected {
         Ok(facts) => Some(facts),
@@ -152,6 +158,7 @@ fn collect_file_facts_from_source(
             };
             Some(CheckFileFacts {
                 ts: Arc::new(TsFileFacts {
+                    fatal_parse_error: legacy_symbols,
                     parse_error: Some(parse_error.clone()),
                     source: stored_source.clone(),
                     ..TsFileFacts::default()

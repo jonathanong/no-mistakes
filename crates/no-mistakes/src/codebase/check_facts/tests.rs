@@ -77,6 +77,11 @@ fn collect_check_facts_records_read_errors() {
         .parse_error
         .as_deref()
         .is_some_and(|error| error.contains("failed to read")));
+    assert!(file_facts
+        .ts
+        .operational_error
+        .as_deref()
+        .is_some_and(|error| error.contains("failed to read")));
 }
 
 #[test]

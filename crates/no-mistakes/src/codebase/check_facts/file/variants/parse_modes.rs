@@ -1,4 +1,4 @@
-use super::{collect_variant, fill_parse_errors, CheckFactVariant};
+use super::{collect_variant, fill_parse_errors, CheckFactVariant, VariantRecovery};
 use crate::codebase::check_facts::CheckFileFacts;
 use std::path::Path;
 use std::sync::Arc;
@@ -44,18 +44,32 @@ pub(super) fn collect_standard_variants(
     if requested.is_empty() {
         return;
     }
-    let collect = |program: &oxc_ast::ast::Program<'_>, parsed: &str, error: Option<String>| {
+    let collect = |program: &oxc_ast::ast::Program<'_>,
+                   parsed: &str,
+                   error: Option<String>,
+                   fatal_parse_error: bool| {
         requested
             .iter()
             .map(|(index, variant, _)| {
                 (
                     *index,
-                    collect_variant(path, variant, source, program, parsed, error.clone(), false),
+                    collect_variant(
+                        path,
+                        variant,
+                        source,
+                        program,
+                        parsed,
+                        error.clone(),
+                        VariantRecovery {
+                            symbols: false,
+                            fatal_parse_error,
+                        },
+                    ),
                 )
             })
             .collect::<Vec<_>>()
     };
-    match session.with_recovered_program(path, source, collect) {
+    match session.with_recovered_program_status(path, source, collect) {
         Ok(collected) => set_results(results, collected),
         Err(error) => fill_parse_errors(
             results,
@@ -100,7 +114,10 @@ pub(super) fn collect_legacy_variants(
                         program,
                         parsed,
                         error.clone(),
-                        true,
+                        VariantRecovery {
+                            symbols: true,
+                            fatal_parse_error: false,
+                        },
                     );
                     (*index, Some(facts), None)
                 }
