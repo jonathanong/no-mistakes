@@ -64,6 +64,21 @@ def _fired(runs) -> int:
     )
 
 
+def _partial(report, path: str) -> bool:
+    """A partial report is a prefix of the suite, not a sample of it.
+
+    `summarize.py` already refuses to render one as a result. Sizing is worse:
+    the cases that finished are whichever ones happened to run first, so their
+    per-case rates are an accident of ordering, and `gap95` would be computed
+    over a case set that is not the one a gate would read.
+    """
+    if not report.get("partial"):
+        return False
+    reason = report.get("partialReason") or "no reason given"
+    print(f"{pathlib.Path(path).stem:<14} PARTIAL RUN ({reason}) — no sizing")
+    return True
+
+
 def _cases(report) -> list:
     """(name, fired, n) for should-fire cases with no errored with-arm run."""
     out = []
@@ -100,6 +115,8 @@ def _flow(report, m: int) -> tuple:
 
 def analyse(path: str, m: int) -> None:
     report = json.loads(pathlib.Path(path).read_text())
+    if _partial(report, path):
+        return
     got = _flow(report, m)
     name = pathlib.Path(path).stem
     if not got:
@@ -117,6 +134,8 @@ def analyse(path: str, m: int) -> None:
 def size(path: str, targets) -> None:
     """Smallest `runs` whose min-detectable gap is under each target rate."""
     report = json.loads(pathlib.Path(path).read_text())
+    if report.get("partial"):
+        return
     cases = _cases(report)
     if not cases:
         return
@@ -138,6 +157,8 @@ def size(path: str, targets) -> None:
 def subsample(path: str, m: int = 3, trials: int = 20000) -> None:
     """Observed spread of a `runs: m` statistic, resampled from a deep run."""
     report = json.loads(pathlib.Path(path).read_text())
+    if _partial(report, path):
+        return
     cases = [
         [
             1 if _fired([r]) else 0
@@ -148,6 +169,9 @@ def subsample(path: str, m: int = 3, trials: int = 20000) -> None:
         and case["arms"].get("with")
         and not any(r.get("error") for r in case["arms"]["with"])
     ]
+    if not cases:
+        print(f"{pathlib.Path(path).stem:<16} no clean should-fire cases")
+        return
     depth = min(len(c) for c in cases)
     if depth < m * 2:
         print(f"    needs >= {m * 2} runs per case; deepest common is {depth}")
@@ -201,11 +225,52 @@ def _self_test() -> None:
     if not rate12 < rate3 / 1.99:
         bad.append(f"rate must shrink ~1/sqrt(m): {rate3:.4f} -> {rate12:.4f}")
 
+    # A partial report must never reach the model: its case set is a prefix
+    # of the suite, so gap95 would be computed over cases a gate never reads.
+    import tempfile
+
+    checks = 4
+    with tempfile.TemporaryDirectory() as d:
+        part = pathlib.Path(d) / "partial.json"
+        body = {
+            "partial": True,
+            "partialReason": "self-test",
+            "cases": [
+                {
+                    "name": "x-one",
+                    "arms": {"with": [{"graders": [
+                        {"name": "skill-fired", "passed": True}
+                    ]}]},
+                }
+            ],
+        }
+        part.write_text(json.dumps(body))
+        for label, fn in (
+            ("analyse", lambda: analyse(str(part), 3)),
+            ("subsample", lambda: subsample(str(part))),
+        ):
+            checks += 1
+            try:
+                fn()
+            except Exception as exc:  # noqa: BLE001 - any escape is the bug
+                bad.append(f"{label}() raised on a partial report: {exc!r}")
+
+        # --subsample on an all-negative report must not raise on min().
+        neg = pathlib.Path(d) / "neg.json"
+        neg.write_text(json.dumps({"cases": [
+            {"name": "neg-hard-01", "arms": {"with": [{"graders": []}]}}
+        ]}))
+        checks += 1
+        try:
+            subsample(str(neg))
+        except Exception as exc:  # noqa: BLE001
+            bad.append(f"subsample() raised with no should-fire cases: {exc!r}")
+
     for line in bad:
         print(f"    FAIL {line}")
     if bad:
         raise SystemExit(f"{len(bad)} power-model checks failed")
-    print("power self-test: 4/4 pass")
+    print(f"power self-test: {checks}/{checks} pass")
 
 
 def main() -> None:
