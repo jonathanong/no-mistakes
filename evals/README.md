@@ -138,13 +138,18 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
 
 ### Caveats
 
-- **[The instrument cannot resolve a two-run
-  difference.](#the-gate-cannot-resolve-the-difference-it-was-built-on)** This
-  is the caveat that governs every other number in this file. The shipped
-  description measured `signature` at 9/12 and 7/12 hours apart on the same
-  day, and every gate here is written in two-run units. Treat a two-run gap —
-  between descriptions, between dates, or between flows — as unresolved, not
-  as a finding.
+- **[This suite cannot resolve a difference smaller than about four
+  counts.](#how-large-an-effect-can-a-gate-here-actually-resolve-1025)** The
+  caveat that governs every other number in this file, and it is now
+  quantified rather than asserted: at `runs: 3` the 95% same-description
+  gate must tolerate a wrong-way gap of **4** counts on `before-edit`, **3**
+  on `signature` and `after-edit`, **2** on the `neg-hard` guard — and more
+  when conditioning on a realized control. These are one-sided simulated
+  quantiles; `1.96 * sd` is anti-conservative on counts this small. Two runs
+  of the *identical* description differ by ≥2 in **44%** of pairs. Treat any
+  gap within the tolerance — between descriptions, dates, or flows — as
+  unresolved, not as a finding, and run [`evals/power.py`](power.py) before
+  writing a gate.
 - **Δ is now measured for all eleven flows**
   ([re-baseline](#the-full-re-baseline), 2026-09-21, 318 runs, zero errored
   runs). [Baseline](#baseline-before-edit-flow-shipped-description-as-of-pr-979)
@@ -731,6 +736,146 @@ that the skill stayed silent. Every case now carries the indicator (and the
 `neg-hard` flow was added specifically as an over-trigger guard), so a re-run
 reports whether a widened description fires on questions it cannot answer.
 
+### How large an effect can a gate here actually resolve? (#1025)
+
+Measured, not assumed. [`evals/power.py`](power.py) answers this from any
+run's `aggregate-result.json`; the numbers below are from the
+[2026-09-21 re-baseline](#the-full-re-baseline) plus a deep `signature` run
+(`--runs 15`, 75 runs, $12.77, zero errored runs) done specifically to check
+the model against reality.
+
+**The question a gate asks** is not "what is this description's rate" but "are
+these two measurements different". Under the null both measure the *same*
+description, so each case has one unknown rate `p_i` shared by both arms, and
+uncertainty about `p_i` **cancels in the difference** instead of adding to it:
+
+    Var(X - Y) = 2 * m * sum_i E[p_i (1 - p_i)]
+
+with `E[p(1-p)]` taken over each case's Jeffreys posterior.
+
+**The threshold is a one-sided simulated discrete quantile**, not `1.96 * sd`.
+Two corrections, pulling in opposite directions:
+
+- **Discrete, not normal.** These are small bounded counts and the normal
+  approximation is anti-conservative on them: `1.96 * sd = 3.9` on `signature`
+  rounds to 4, but `P(D >= 4) = 7.1%` two-sided.
+- **One-sided, not two.** Every gate here rejects in one direction only — a
+  should-fire flow rejects a *drop*, an over-trigger guard rejects a *rise*.
+  Scoring `|D|` spends half the 5% budget on a tail no gate reads.
+
+`allowed` below is the largest wrong-way gap a gate may tolerate. Write the
+gate as `candidate >= control - allowed`: it passes on equality and first
+fails one count later, which is exactly where the tail was simulated.
+
+| flow | dir | n at `runs: 3` | **allowed** | tail | **a\|obs** | tail |
+| --- | --- | --- | --- | --- | --- | --- |
+| `before-edit` | fire | 18 | **4** | 2.7% | **5** | 3.3% |
+| `signature` | fire | 12 | **3** | 2.6% | **3** | 3.2% |
+| `after-edit` | fire | 12 | **3** | 1.8% | **4** | 1.7% |
+| `neg-hard` | neg | 12 | **2** | 4.1% | **4** | 2.9% |
+
+**The shipped gates carried margins of 1.** Against an allowed gap of 4 on
+`before-edit`, a margin of 1 rejects on noise roughly a third of the time.
+That is [the variance
+finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) with a
+number on it.
+
+**`a|obs` is the column to use for the documented workflow**, and it is
+usually the *looser* one. The two-arm `allowed` assumes both arms are future
+draws. But Amendment 3 measures the shipped description once and compares a
+later candidate against *that realized number* — and a control that came in
+high regresses down, which looks exactly like the candidate failing.
+Conditioning on the realized control accounts for it. Ignoring the
+distinction is anti-conservative: with four cases at 3/3, a two-arm cutoff
+carries a 2.1% tail while conditioning on the realized 12/12 gives **8.6%**.
+Use `allowed` only when both arms will be re-run.
+
+`neg-hard` is in that table because it is a **gated** flow that an earlier
+revision could not size at all — every negative case was filtered out by
+name, so the documented procedure printed "no clean should-fire cases" for
+the over-trigger guard.
+
+#### Checked against resampling — after the first check turned out circular
+
+~~The model is 8% conservative, which is the direction to err in.~~
+
+> [!WARNING]
+> **Retracted.** The first version of this check resampled `runs: 3` draws
+> from the deep run **without replacement**, which imposes a
+> finite-population correction of `sqrt((15-3)/(15-1)) = 0.9258`. And
+> `1.96 × 0.9258 = 1.815` against the 1.81 that was reported as agreement:
+> the check was measuring its own resampler. Re-done by drawing *fresh*
+> Bernoulli runs from each case's observed rate:
+
+| | sd of the difference |
+| --- | --- |
+| model | **1.96** |
+| observed, 20 000 fresh-draw pairs | **1.96** |
+
+The model is neither conservative nor optimistic; it is right. Per-case rates
+on the deep run were 13/15, 10/15, 6/15 and 1/15. The blunt version of the
+same resampling: **two runs of the identical description differ by ≥2 in 44%
+of pairs, ≥3 in 20%, ≥4 in 7%.** The 9-vs-7 gap that rejected the queue
+clause is a 44% event.
+
+#### What a real gate costs
+
+A gate whose critical gap merely *equals* the effect you care about catches
+that effect about **half** the time. `power.py` sizes for 80% power instead,
+which roughly doubles the count a critical-value calculation gives.
+`--runs` is *per case*, and the flow's negative cases run too:
+
+| flow at 10% | `runs` | allowed | total runs | one arm | both arms |
+| --- | --- | --- | --- | --- | --- |
+| `before-edit` | 35 | 13 | 8 × 35 = 280 | $48 | **$95** |
+| `signature` | 58 | 13 | 5 × 58 = 290 | $49 | **$99** |
+| `neg-hard` | 35 | 8 | 4 × 35 = 140 | $24 | **$48** |
+
+At 20% the same flows need `runs: 10`, `17` and `10` — 3–6× the current
+depth.
+
+**Direction is a parameter, not a detail.** The default sizes for catching a
+*regression*. A target gate such as `queues >= current + 3/12` is an
+**improvement** gate, and on a low-rate flow the two are not symmetric,
+because a downward shift clips at zero. On `queues` — three cases at 0/3, one
+at 3/3 — a nominal 20% drop lands as 12% and needs `runs: 26`, while the
+upward alternative the gate actually cares about lands as 17% and needs
+`runs: 13`. Pass `--improve` for a target gate, or size twice the runs you
+need.
+
+**The `neg-hard` gate has two halves and both need sizing.** `skill-fired`
+0/12 is one; fabrication ≤ 1/12 is the other, and it is a different outcome
+computed from the non-firing runs. `power.py --fabrication` sizes it: the
+re-baseline observed **4/12** fabricated with a tolerated gap of **3**,
+against a shipped threshold of 1. Classification comes from
+[`summarize.py`](summarize.py)'s classifier rather than a second copy, so
+the two cannot drift. At $0.17/run, **one properly-powered gated flow at 10% costs about
+what [the entire eleven-flow re-baseline](#the-full-re-baseline) did**
+($52.60). That is the real reason the old gates were written the way they
+were, and wanting it otherwise does not change it: either pay for the runs,
+or gate on effects large enough to see at `runs: 3`, which means **allowing
+2–4 counts of slack**, not 1.
+
+The `real` column `power.py` prints matters on low-rate flows. The modelled
+alternative shifts every case's rate by the target amount, clipped at 0, so
+on `signature` — where one case sits at 1/15 — a nominal 10% shift lands as
+9%. Sizing against the nominal figure would understate the cost.
+
+#### Two limits on these numbers
+
+- **Resampling within one session cannot see between-session drift.** The four
+  measurements of this description on `signature` span 10/12, 9/12, 7/12 and
+  6/12 (the deep run). A same-day comparison of the last two groups is *not*
+  significant (16/24 vs 30/60, z = 1.39, p = 0.17), so there is no drift claim
+  here — but the deep run sits at the bottom of the range, and an unmodelled
+  between-session component would make the margin **larger**, never smaller. Treat
+  these as lower bounds and keep the control arm in the same session as the
+  candidate.
+- **The margin is per flow, and the model is validated on one.** It was checked
+  against resampling on `signature` only; `before-edit` and `after-edit` are
+  the same model applied to their own per-case rates. That is a reasonable
+  extrapolation — the model has one moving part — but it is an extrapolation.
+
 ### Gates for the queue clause (#984 item 6)
 
 **Pre-registered**: committed before the screening run started, and before the
@@ -1035,6 +1180,38 @@ Concretely, for the next candidate:
 5. **Judge the holdout last, and only if the gates pass.** Held-out cases
    07-09 are live and unspent for exactly this. A candidate that fails its
    gates must not be run against them.
+
+**Amendment 3 (#1025): a gate margin must clear the measured margin, which is
+now a computed number.** Amendment 2 said to size gates to the same-day spread but
+left the spread unmeasured. It is measured: see [how large an effect a gate
+can resolve](#how-large-an-effect-can-a-gate-here-actually-resolve-1025). The
+procedure is mechanical:
+
+```sh
+# 1. measure the shipped description today, on each gated flow
+pnpm run evals -- --tag <flow> --ablation none --judge-model sonnet -j 4 \
+  --no-publish --trust-plugin --json "$OUT/<flow>-control.json"
+
+# 2. ask what that run can resolve, and what more runs would buy
+python3 evals/power.py "$OUT/<flow>-control.json"
+```
+
+Then pick one, in the open, **before** the candidate runs:
+
+- **Accept the coarse gate.** At `runs: 3` the gate must tolerate the
+  simulated wrong-way gap — 2–4 counts on the gated flows, or up to 5 when
+  conditioning on a realized control — where the shipped gates tolerated 1.
+  Read the `a|obs` column, not `allowed`, whenever the control arm is a run
+  you already have. A gate this coarse only
+  catches large effects, and saying so up front is the point.
+- **Or pay for resolution.** `power.py` prints the `runs` for a 20/15/10%
+  target **at 80% power**, not merely at the critical value — a gate sized to
+  its critical value alone catches the effect half the time. `--runs` is per
+  case, so 10% on one flow is **$48–112 both arms**, about what the whole
+  eleven-flow re-baseline cost; 20% is 3–6× `runs: 3`.
+
+A gate whose margin is below the measured one is not a weak gate, it is a
+coin flip with a number next to it. Do not write one.
 
 #### `signature` did not regress — the 3/5 vs 2/15 above was a 1-run artifact
 
