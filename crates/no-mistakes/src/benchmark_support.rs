@@ -15,6 +15,7 @@ mod native_frontends;
 mod production_graph;
 mod react_traits;
 mod relationships;
+mod resolve_check;
 mod scoped_resolver;
 pub use bench_shard::{
     parse_bench_shard, shard_should_run, BenchShard, CHECK, GENERAL_MEMORY, GRAPH_CORE,
@@ -45,6 +46,10 @@ pub use relationships::{
     project_all_relationship_edges, project_relationship_edges, relationship_construction_fixture,
     relationship_index_from_fixture, relationship_projection_fixture,
     RelationshipConstructionFixture, RelationshipProjectionFixture, RelationshipProjectionSummary,
+};
+pub use resolve_check::{
+    prepared_resolve_check_fixture, run_prepared_resolve_check, PreparedResolveCheckFixture,
+    VOUCHINGTON_RESOLVE_CHECK_FILE_COUNT,
 };
 pub use scoped_resolver::{
     build_repeated_scoped_resolvers, resolve_repeated_scoped_imports,

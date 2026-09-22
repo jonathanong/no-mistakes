@@ -41,6 +41,44 @@ fn import_resolution_cache_clear_removes_raw_and_classified_entries() {
 }
 
 #[test]
+fn normalized_visible_tsconfig_lookup_matches_visible_path_scan() {
+    let root = workspace_tsconfig_fixture();
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let normalized_visible = visible_paths
+        .iter()
+        .map(|path| normalize_path(path))
+        .collect::<crate::fx::PathSet>();
+    let cases = [
+        root.join("apps/web/src/entry.ts"),
+        root.join("packages/base-owner/src/value.ts"),
+        root.join("missing/no-config.ts"),
+    ];
+    for source in cases {
+        assert_eq!(
+            find_tsconfig_from_normalized_visible(&source, &normalized_visible),
+            find_tsconfig_from_visible(&source, &visible_paths),
+            "normalized membership must preserve nearest-config selection for {}",
+            source.display()
+        );
+    }
+
+    let without_configs = visible_paths
+        .into_iter()
+        .filter(|path| path.file_name().is_none_or(|name| name != "tsconfig.json"))
+        .collect::<Vec<_>>();
+    let normalized_without_configs = without_configs
+        .iter()
+        .map(|path| normalize_path(path))
+        .collect::<crate::fx::PathSet>();
+    let source = root.join("apps/web/src/entry.ts");
+    assert_eq!(
+        find_tsconfig_from_normalized_visible(&source, &normalized_without_configs),
+        find_tsconfig_from_visible(&source, &without_configs),
+        "an on-disk but omitted config must remain ignored"
+    );
+}
+
+#[test]
 fn interned_resolve_keys_hit_shared_cache() {
     let interner = crate::codebase::analysis_session::PathInterner::new();
     let first = ResolveKey {

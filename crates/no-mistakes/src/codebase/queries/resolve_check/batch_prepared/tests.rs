@@ -1,7 +1,9 @@
 use super::batch_report_from_prepared_facts;
 use crate::codebase::queries::shared::resolve_targets;
-use crate::codebase::ts_source::facts::{TsFactMap, TsFileFacts};
+use crate::codebase::ts_source::facts::{TsFactMap, TsFactPlan, TsFileFacts};
+use crate::codebase::ts_source::{FileInventory, SourceStore};
 use std::path::PathBuf;
+use std::sync::Arc;
 
 #[test]
 fn derived_resolve_check_propagates_prepared_fact_failures() {
@@ -49,4 +51,84 @@ fn derived_resolve_check_propagates_prepared_fact_failures() {
         .expect("prepared fact failure must abort the report");
         assert!(error.to_string().contains(expected), "{error:#}");
     }
+}
+
+#[test]
+fn prepared_batch_reuses_one_resolver_cache_for_one_tsconfig() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../test-cases/codebase-analysis/queries/fixture");
+    let targets = resolve_targets(
+        &[
+            PathBuf::from("consumer.ts"),
+            PathBuf::from("consumer.test.ts"),
+        ],
+        Some(&root),
+        None,
+    )
+    .unwrap();
+    let files = targets
+        .iter()
+        .map(|target| target.abs_file.clone())
+        .collect::<Vec<_>>();
+    let facts = crate::codebase::ts_source::facts::collect_ts_facts(
+        &files,
+        crate::codebase::ts_source::facts::TsFactPlan::imports(),
+    );
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+    batch_report_from_prepared_facts(
+        &root,
+        files,
+        &facts,
+        targets[0].visible_files(),
+        &targets[0].sources,
+        None,
+        &session,
+    )
+    .unwrap();
+
+    assert_eq!(
+        observer.snapshot().work["resolver.scope_cache_requests"],
+        1,
+        "one effective tsconfig must request one session resolver cache"
+    );
+}
+
+#[test]
+fn prepared_batch_keeps_distinct_nearest_visible_tsconfig_scopes() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/tsconfig/workspace-resolution")
+        .canonicalize()
+        .unwrap();
+    let files = vec![
+        root.join("apps/web/src/entry.ts"),
+        root.join("apps/web/tests/entry.test.ts"),
+        root.join("packages/base-owner/src/value.ts"),
+    ];
+    let visible_paths = crate::codebase::ts_source::discover_visible_paths(&root);
+    let visible = visible_paths
+        .iter()
+        .cloned()
+        .collect::<crate::fx::PathSet>();
+    let sources = SourceStore::new(Arc::new(FileInventory::from_paths(&visible_paths)));
+    let facts = TsFactMap::from_iter_with_plan(
+        files
+            .iter()
+            .cloned()
+            .map(|file| (file, TsFileFacts::default())),
+        TsFactPlan::imports(),
+    );
+    let observer = crate::diagnostics::InvocationObserver::new(true);
+    let session = crate::codebase::analysis_session::AnalysisSession::new(Some(observer.clone()));
+
+    let report =
+        batch_report_from_prepared_facts(&root, files, &facts, &visible, &sources, None, &session)
+            .unwrap();
+
+    assert_eq!(report.results.len(), 3);
+    assert_eq!(
+        observer.snapshot().work["resolver.scope_cache_requests"],
+        2,
+        "the two web files share their nearest visible config while the package file uses its own"
+    );
 }

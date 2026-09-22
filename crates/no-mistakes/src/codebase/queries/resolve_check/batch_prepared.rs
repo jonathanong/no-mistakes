@@ -23,6 +23,11 @@ pub(crate) fn batch_report_from_prepared_facts(
     files.sort();
     files.dedup();
     let visible_cache_key = visible.visible_cache_key();
+    let normalized_visible = visible_cache_key
+        .iter()
+        .map(|path| crate::codebase::ts_resolver::normalize_path(path))
+        .collect::<crate::fx::PathSet>();
+    let resolver_caches = dashmap::DashMap::new();
     let mut results = files
         .par_iter()
         .map(|file| {
@@ -44,10 +49,10 @@ pub(crate) fn batch_report_from_prepared_facts(
             }
             let tsconfig = match explicit_tsconfig {
                 Some(config) => config.clone(),
-                None => crate::codebase::ts_resolver::resolve_tsconfig_from_visible_and_sources(
+                None => crate::codebase::ts_resolver::resolve_tsconfig_from_normalized_visible_and_sources(
                     None,
                     file,
-                    &visible_cache_key,
+                    &normalized_visible,
                     source_store,
                 )
                 .unwrap_or_else(|_| crate::codebase::ts_resolver::TsConfig {
@@ -57,10 +62,14 @@ pub(crate) fn batch_report_from_prepared_facts(
                     base_url: None,
                 }),
             };
-            let resolver = ImportResolver::new_in_session_with_visible_cache_key(
+            let resolver_cache = resolver_caches
+                .entry(tsconfig.clone())
+                .or_insert_with(|| session.resolver_cache(&tsconfig, Some(&visible_cache_key)))
+                .clone();
+            let resolver = ImportResolver::new_in_session_with_cache(
                 &tsconfig,
                 Some(visible),
-                Some(&visible_cache_key),
+                resolver_cache,
                 session,
             );
             let imports = file_facts

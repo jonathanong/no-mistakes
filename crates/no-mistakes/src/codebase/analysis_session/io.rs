@@ -1,5 +1,21 @@
 use super::*;
 
+type SourceReadResult = Result<Arc<str>, SourceReadError>;
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct SourceReadError {
+    pub path: PathBuf,
+    detail: Arc<str>,
+}
+
+impl std::fmt::Display for SourceReadError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "{}", self.detail)
+    }
+}
+
+impl std::error::Error for SourceReadError {}
+
 impl AnalysisSession {
     /// Read through the canonical store for the most-specific prepared dataset.
     /// This keeps source identity stable when one fact universe spans roots.

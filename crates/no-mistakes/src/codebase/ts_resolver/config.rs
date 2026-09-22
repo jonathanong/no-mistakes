@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Default, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
 pub struct TsConfig {
     /// Directory containing the entry tsconfig (used as base for relative-path resolution).
     pub dir: PathBuf,
