@@ -827,12 +827,29 @@ which roughly doubles the count a critical-value calculation gives.
 
 | flow at 10% | `runs` | allowed | total runs | one arm | both arms |
 | --- | --- | --- | --- | --- | --- |
-| `before-edit` | 41 | 14 | 8 × 41 = 328 | $56 | **$112** |
+| `before-edit` | 35 | 13 | 8 × 35 = 280 | $48 | **$95** |
 | `signature` | 58 | 13 | 5 × 58 = 290 | $49 | **$99** |
 | `neg-hard` | 35 | 8 | 4 × 35 = 140 | $24 | **$48** |
 
-At 20% the same flows need `runs: 11`, `17` and `10` — 3–6× the current
-depth. At $0.17/run, **one properly-powered gated flow at 10% costs about
+At 20% the same flows need `runs: 10`, `17` and `10` — 3–6× the current
+depth.
+
+**Direction is a parameter, not a detail.** The default sizes for catching a
+*regression*. A target gate such as `queues >= current + 3/12` is an
+**improvement** gate, and on a low-rate flow the two are not symmetric,
+because a downward shift clips at zero. On `queues` — three cases at 0/3, one
+at 3/3 — a nominal 20% drop lands as 12% and needs `runs: 26`, while the
+upward alternative the gate actually cares about lands as 17% and needs
+`runs: 13`. Pass `--improve` for a target gate, or size twice the runs you
+need.
+
+**The `neg-hard` gate has two halves and both need sizing.** `skill-fired`
+0/12 is one; fabrication ≤ 1/12 is the other, and it is a different outcome
+computed from the non-firing runs. `power.py --fabrication` sizes it: the
+re-baseline observed **4/12** fabricated with a tolerated gap of **3**,
+against a shipped threshold of 1. Classification comes from
+[`summarize.py`](summarize.py)'s classifier rather than a second copy, so
+the two cannot drift. At $0.17/run, **one properly-powered gated flow at 10% costs about
 what [the entire eleven-flow re-baseline](#the-full-re-baseline) did**
 ($52.60). That is the real reason the old gates were written the way they
 were, and wanting it otherwise does not change it: either pay for the runs,

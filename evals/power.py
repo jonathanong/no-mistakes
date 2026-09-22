@@ -121,10 +121,44 @@ def _reject(report, path: str) -> bool:
     return False
 
 
-def _group(report, negative: bool) -> list:
-    """(name, fired, n) for one direction's cases, read from the with-arm."""
+def _fabricated(runs) -> int:
+    """Non-firing runs that invented a command form.
+
+    The `neg-hard` gate is two conditions -- `skill-fired` 0/12 AND
+    fabrication <= 1/12 -- and only the first was sizeable here, so following
+    Amendment 3 left the fabrication half at its old unsized one-count
+    threshold. Classification is `summarize.py`'s rather than a second copy,
+    so the two cannot drift apart.
+    """
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+    import summarize
+
+    count = 0
+    for r in runs:
+        if r.get("error"):
+            continue
+        if any(g["name"] == "skill-fired" and g.get("passed")
+               for g in r.get("graders", [])):
+            continue
+        if summarize._refers_as(summarize._evidence(r)) == "invented command form":
+            count += 1
+    return count
+
+
+METRICS = {"fired": _fired, "fabricated": _fabricated}
+
+
+def _dir_label(metric: str, negative: bool) -> str:
+    if metric == "fabricated":
+        return "fab"
+    return "neg" if negative else "fire"
+
+
+def _group(report, negative: bool, metric: str = "fired") -> list:
+    """(name, count, n) for one direction's cases, read from the with-arm."""
+    tally = METRICS[metric]
     return [
-        (c["name"], _fired(c["arms"]["with"]), len(c["arms"]["with"]))
+        (c["name"], tally(c["arms"]["with"]), len(c["arms"]["with"]))
         for c in report["cases"]
         if c["arms"].get("with") and _is_negative(c["name"]) == negative
     ]
@@ -234,13 +268,13 @@ def _achieved(cases, shift: float, up: bool = False, trials=20_000) -> float:
     return total / (len(cases) * per)
 
 
-def analyse(path: str, m: int) -> None:
+def analyse(path: str, m: int, metric: str = "fired") -> None:
     report = json.loads(pathlib.Path(path).read_text())
     if _reject(report, path):
         return
     name = _label(path)
     for negative in (False, True):
-        cases = _group(report, negative)
+        cases = _group(report, negative, metric)
         if not cases:
             continue
         fired = sum(x for _, x, _ in cases)
@@ -255,57 +289,78 @@ def analyse(path: str, m: int) -> None:
         else:
             cond = f"{'-':>9}{'-':>7}"
         print(
-            f"{name:<14}{'neg' if negative else 'fire':>5}"
+            f"{name:<14}{_dir_label(metric, negative):>5}"
             f"{f'{fired}/{runs}':>9}{len(cases):>6}{n_m:>5}"
             f"{rej - 1:>9}{tail:>7.1%}{cond}"
         )
 
 
-def size(path: str, targets) -> None:
-    """`runs` needed to catch a target-sized shift with POWER probability."""
+def size(path: str, targets, improve=None, metric="fired") -> None:
+    """`runs` needed to catch a target-sized shift with POWER probability.
+
+    `improve` names the direction the gate cares about on should-fire flows.
+    The default (None) sizes for detecting a **regression** -- the candidate
+    firing less. But a target gate like `queues >= current + 3/12` is an
+    *improvement* gate, and on a low-rate flow the two are not symmetric,
+    because a downward shift clips at zero: on the `queues` shape (three 0/3
+    cases and one 3/3) a nominal 20% drop lands as ~12% and needs roughly
+    twice the runs of the upward alternative it was meant to size.
+    """
     report = json.loads(pathlib.Path(path).read_text())
     if _reject(report, path):
         return
     for negative in (False, True):
-        cases = _group(report, negative)
+        cases = _group(report, negative, metric)
         if not cases:
             continue
         kind = "negatives" if negative else "should-fire"
-        print(f"\n=== {_label(path)} [{kind}]: runs for {POWER:.0%} power")
+        way = "rise" if (negative if improve is None else improve) else "drop"
+        print(
+            f"\n=== {_label(path)} [{kind}]: runs for {POWER:.0%} power "
+            f"to catch a {way}"
+        )
         print(
             f"    {'target':>8}{'real':>7}{'runs':>7}{'n':>7}"
             f"{'allowed':>9}{'power':>8}{'cost':>8}"
         )
-        s = sum(_e_p_q(x, n) for _, x, n in cases)
+        up = negative if improve is None else (improve if not negative
+                                               else not improve)
         for t in targets:
-            # The normal approximation picks a starting point; the simulation
-            # decides. Sizing on the critical value alone would halve this.
-            m0 = max(3, math.ceil(
-                2 * s * (Z_ALPHA + Z_POWER) ** 2 / (t * len(cases)) ** 2
-            ))
-            cap = min(m0 * 8, 800)
-            hit = None
-            for m in range(m0, cap):
-                margin, _ = _null_margin(
-                    cases, m, trials=15_000, up=negative
-                )
-                if _power_at(
-                    cases, m, t, margin, trials=15_000, up=negative
-                ) >= POWER:
-                    hit = (m, margin)
-                    break
-            if hit is None:
+            # Power rises monotonically with runs, so bisect rather than scan
+            # up from a normal-approximation guess. An earlier revision used
+            # that guess as the scan's floor, which made a two-sided heuristic
+            # a hard lower bound on a one-sided gate and never tested smaller,
+            # valid run counts -- overstating `runs` and therefore cost.
+            cap = 800
+
+            def ok(m, trials=15_000):
+                margin, _ = _null_margin(cases, m, trials=trials, up=up)
+                return _power_at(
+                    cases, m, t, margin, trials=trials, up=up
+                ) >= POWER, margin
+
+            reached, _ = ok(cap)
+            if not reached:
                 print(f"    {t:>8.0%}   not reached below runs: {cap}")
                 continue
+            lo, hi = 3, cap
+            while lo < hi:
+                mid = (lo + hi) // 2
+                good, _ = ok(mid)
+                if good:
+                    hi = mid
+                else:
+                    lo = mid + 1
+            hit = (lo, ok(lo)[1])
             # The scan runs at 15k trials, so its crossing point carries Monte
             # Carlo noise. Re-check at full depth on an independent seed and
             # step up rather than print an m that only just cleared by luck.
             m, margin = hit
             got = 0.0
             while m < cap:
-                margin, _ = _null_margin(cases, m, up=negative)
+                margin, _ = _null_margin(cases, m, up=up)
                 got = _power_at(cases, m, t, margin, seed=SEED + 7,
-                                up=negative)
+                                up=up)
                 if got >= POWER:
                     break
                 m += 1
@@ -316,7 +371,7 @@ def size(path: str, targets) -> None:
                 print(f"    {t:>8.0%}   not reached below runs: {cap}")
                 continue
             print(
-                f"    {t:>8.0%}{_achieved(cases, t, negative):>7.0%}{m:>7}"
+                f"    {t:>8.0%}{_achieved(cases, t, up):>7.0%}{m:>7}"
                 f"{len(cases) * m:>7}{margin - 1:>9}{got:>8.0%}{m / 3:>7.0f}x"
             )
 
@@ -504,6 +559,27 @@ def _self_test() -> None:
     if abs(mean - 3.0) > 0.25:
         bad.append(f"_binom mean {mean:.2f} should be near 3.0")
 
+    # Direction is a real parameter, not cosmetic: on a low-rate flow a
+    # downward shift clips and a upward one does not, so sizing the wrong
+    # direction roughly doubles the run count.
+    checks += 1
+    lowrate = [("a", 0, 3), ("b", 0, 3), ("c", 0, 3), ("d", 3, 3)]
+    if not _achieved(lowrate, 0.20, up=True) > _achieved(lowrate, 0.20) * 1.2:
+        bad.append("an upward shift must land harder than a clipped downward one")
+
+    # The fabrication half of the neg-hard gate must be countable.
+    checks += 1
+    inv = {"graders": [{"name": "skill-fired", "passed": False,
+                        "evidence": "run /no-mistakes roleHas next"}]}
+    real = {"graders": [{"name": "skill-fired", "passed": False,
+                         "evidence": "run no-mistakes check"}]}
+    got = _fabricated([inv, real, {"error": "x"}])
+    if got != 1:
+        bad.append(f"_fabricated counted {got}, want 1 (invented only)")
+    checks += 1
+    if set(METRICS) != {"fired", "fabricated"}:
+        bad.append(f"METRICS should expose both gate outcomes, got {set(METRICS)}")
+
     # `neg-hard` is a gated flow and must be sizeable, not filtered out by name.
     checks += 1
     negatives = _group(
@@ -531,6 +607,14 @@ def main() -> None:
         for p in (a for a in args if a != "--subsample"):
             subsample(p)
         return
+    metric = "fired"
+    if "--fabrication" in args:
+        metric = "fabricated"
+        args = [a for a in args if a != "--fabrication"]
+    improve = None
+    if "--improve" in args:
+        improve = True
+        args = [a for a in args if a != "--improve"]
     m = 3
     if "--runs" in args:
         i = args.index("--runs")
@@ -542,7 +626,7 @@ def main() -> None:
         f"{'allowed':>9}{'tail':>7}{'a|obs':>9}{'tail':>7}"
     )
     for p in args:
-        analyse(p, m)
+        analyse(p, m, metric)
     print(
         f"\n`allowed` is the largest wrong-way gap a gate may tolerate: write it\n"
         f"as `candidate >= control - allowed`, which first fails one count\n"
@@ -559,7 +643,7 @@ def main() -> None:
         f"control to condition on.\n"
     )
     for p in args:
-        size(p, (0.20, 0.15, 0.10))
+        size(p, (0.20, 0.15, 0.10), improve, metric)
 
 
 if __name__ == "__main__":
