@@ -44,6 +44,14 @@ import pathlib
 import random
 import sys
 
+def _binom(rng, n: int, p: float) -> int:
+    """`Random.binomialvariate` landed in 3.12; the README says `python3`."""
+    try:
+        return rng.binomialvariate(n, p)
+    except AttributeError:
+        return sum(1 for _ in range(n) if rng.random() < p)
+
+
 JEFFREYS = 0.5
 ALPHA = 0.05
 POWER = 0.80
@@ -135,28 +143,59 @@ def _diff_sd(cases, m: int) -> float:
     return math.sqrt(2 * m * sum(_e_p_q(x, n) for _, x, n in cases))
 
 
-def _draw(cases, m: int, rng, shift: float = 0.0, up: bool = False) -> int:
-    """One X - Y draw. `shift` moves the candidate arm's rate.
+def _draw(cases, m, rng, shift=0.0, up=False, conditional=False) -> int:
+    """One signed regression statistic: how far the candidate moved the wrong way.
 
-    Direction matters and is not cosmetic. On should-fire cases the
-    regression is firing *less*, so the candidate shifts down. On an
-    over-trigger guard the regression is firing *more*, and those cases sit
-    at 0 — shifting them down is a no-op, which made an earlier revision
-    report that `before-edit [negatives]` needed 137x the runs to detect a
-    10% effect. It needs 2x; the effect was simply being clipped away.
+    **Directional, not two-sided.** Every gate in the README rejects in one
+    direction only — a should-fire flow rejects a *drop*, an over-trigger
+    guard rejects a *rise*. Scoring `abs(X - Y)` spends the 5% error budget on
+    a tail no gate ever looks at, which inflates the margin by about one count
+    (on the deep `signature` data, two-sided 5 against one-sided 4).
+
+    The shift direction matters for the same reason. On an over-trigger guard
+    the cases sit at 0, so shifting them *down* is a no-op — an earlier
+    revision did that and reported `before-edit [negatives]` needing 137x the
+    runs. It needs 4x; the effect was being clipped away.
+
+    **`conditional` fixes the control arm at what was actually observed.** The
+    documented workflow measures the shipped description once and compares a
+    later candidate against that realized number. Simulating two fresh arms
+    answers a different question and is anti-conservative, because a control
+    that came in high has nowhere to regress but down: with four cases at 3/3,
+    a two-arm cutoff of 4 carries a 2.1% tail, while conditioning on the
+    realized 12/12 gives 8.6%. Use `conditional` when this report *is* the
+    gate's control arm; leave it off when both arms will be re-run.
     """
     total = 0
     for _, x, n in cases:
         p = rng.betavariate(x + JEFFREYS, n - x + JEFFREYS)
         q = min(1.0, max(0.0, p + shift if up else p - shift))
-        total += rng.binomialvariate(m, p) - rng.binomialvariate(m, q)
+        # Conditioning is only meaningful when the report was run at this
+        # depth; `_conditionable` refuses the extrapolation otherwise.
+        control = x if conditional else _binom(rng, m, p)
+        candidate = _binom(rng, m, q)
+        # Positive means "moved the wrong way": down for should-fire cases,
+        # up for a guard, where firing is itself the failure.
+        total += candidate - control if up else control - candidate
     return total
 
 
-def _null_margin(cases, m: int, alpha=ALPHA, trials=TRIALS) -> tuple:
-    """Smallest integer margin whose null exceedance is <= alpha."""
+def _conditionable(cases, m: int) -> bool:
+    """Only condition when the report was actually run at this depth."""
+    return all(n == m for _, _, n in cases)
+
+
+def _null_margin(cases, m, alpha=ALPHA, trials=TRIALS, up=False,
+                 conditional=False) -> tuple:
+    """Smallest wrong-way difference whose one-sided null tail is <= alpha.
+
+    Returns `(reject_at, tail)`. The *allowed* margin a gate should carry is
+    `reject_at - 1`: the README writes gates as `candidate >= control - k`,
+    which passes on equality and first fails at `k + 1`.
+    """
     rng = random.Random(SEED)
-    draws = [abs(_draw(cases, m, rng)) for _ in range(trials)]
+    draws = [_draw(cases, m, rng, up=up, conditional=conditional)
+             for _ in range(trials)]
     for d in range(1, len(cases) * m + 2):
         tail = sum(1 for v in draws if v >= d) / trials
         if tail <= alpha:
@@ -165,12 +204,12 @@ def _null_margin(cases, m: int, alpha=ALPHA, trials=TRIALS) -> tuple:
 
 
 def _power_at(cases, m, shift, margin, trials=TRIALS, seed=SEED + 1,
-              up=False) -> float:
+              up=False, conditional=False) -> float:
     rng = random.Random(seed)
     hit = sum(
         1
         for _ in range(trials)
-        if abs(_draw(cases, m, rng, shift, up)) >= margin
+        if _draw(cases, m, rng, shift, up, conditional) >= margin
     )
     return hit / trials
 
@@ -206,13 +245,19 @@ def analyse(path: str, m: int) -> None:
             continue
         fired = sum(x for _, x, _ in cases)
         runs = sum(n for _, _, n in cases)
-        margin, tail = _null_margin(cases, m)
+        rej, tail = _null_margin(cases, m, up=negative)
         n_m = len(cases) * m
+        if _conditionable(cases, m):
+            crej, ctail = _null_margin(
+                cases, m, up=negative, conditional=True
+            )
+            cond = f"{crej - 1:>9}{ctail:>7.1%}"
+        else:
+            cond = f"{'-':>9}{'-':>7}"
         print(
             f"{name:<14}{'neg' if negative else 'fire':>5}"
             f"{f'{fired}/{runs}':>9}{len(cases):>6}{n_m:>5}"
-            f"{_diff_sd(cases, m):>8.2f}{margin:>8}{tail:>8.1%}"
-            f"{margin / n_m:>9.0%}"
+            f"{rej - 1:>9}{tail:>7.1%}{cond}"
         )
 
 
@@ -229,7 +274,7 @@ def size(path: str, targets) -> None:
         print(f"\n=== {_label(path)} [{kind}]: runs for {POWER:.0%} power")
         print(
             f"    {'target':>8}{'real':>7}{'runs':>7}{'n':>7}"
-            f"{'margin':>9}{'power':>8}{'cost':>8}"
+            f"{'allowed':>9}{'power':>8}{'cost':>8}"
         )
         s = sum(_e_p_q(x, n) for _, x, n in cases)
         for t in targets:
@@ -241,7 +286,9 @@ def size(path: str, targets) -> None:
             cap = min(m0 * 8, 800)
             hit = None
             for m in range(m0, cap):
-                margin, _ = _null_margin(cases, m, trials=15_000)
+                margin, _ = _null_margin(
+                    cases, m, trials=15_000, up=negative
+                )
                 if _power_at(
                     cases, m, t, margin, trials=15_000, up=negative
                 ) >= POWER:
@@ -256,7 +303,7 @@ def size(path: str, targets) -> None:
             m, margin = hit
             got = 0.0
             while m < cap:
-                margin, _ = _null_margin(cases, m)
+                margin, _ = _null_margin(cases, m, up=negative)
                 got = _power_at(cases, m, t, margin, seed=SEED + 7,
                                 up=negative)
                 if got >= POWER:
@@ -270,7 +317,7 @@ def size(path: str, targets) -> None:
                 continue
             print(
                 f"    {t:>8.0%}{_achieved(cases, t, negative):>7.0%}{m:>7}"
-                f"{len(cases) * m:>7}{margin:>9}{got:>8.0%}{m / 3:>7.0f}x"
+                f"{len(cases) * m:>7}{margin - 1:>9}{got:>8.0%}{m / 3:>7.0f}x"
             )
 
 
@@ -299,8 +346,8 @@ def subsample(path: str, m: int = 3, trials: int = 20_000) -> None:
     rates = [x / n for _, x, n in cases]
     totals, diffs = [], []
     for _ in range(trials):
-        a = sum(rng.binomialvariate(m, p) for p in rates)
-        b = sum(rng.binomialvariate(m, p) for p in rates)
+        a = sum(_binom(rng, m, p) for p in rates)
+        b = sum(_binom(rng, m, p) for p in rates)
         totals.append(a)
         diffs.append(abs(a - b))
     mean = sum(totals) / len(totals)
@@ -424,6 +471,39 @@ def _self_test() -> None:
     if margin < 1:
         bad.append("a margin must be at least 1")
 
+    # One-sided, because every gate rejects in one direction. A two-sided
+    # tail spends half the error budget where no gate looks, inflating the
+    # margin by about a count.
+    checks += 1
+    one = _null_margin(cases, 3, trials=40_000)[0]
+    two = math.ceil(1.96 * _diff_sd(cases, 3))
+    if one > two:
+        bad.append(f"one-sided reject {one} should not exceed two-sided {two}")
+
+    # Conditioning needs a control actually run at this depth.
+    checks += 1
+    if _conditionable(cases, 12) or not _conditionable(cases, 3):
+        bad.append("_conditionable must accept depth 3 and refuse depth 12")
+
+    # A control observed at its ceiling regresses down, and that must RAISE
+    # the tolerated gap rather than lower it -- the anti-conservative case.
+    checks += 1
+    ceil_cases = [("a", 3, 3), ("b", 3, 3), ("c", 3, 3), ("d", 3, 3)]
+    free = _null_margin(ceil_cases, 3, trials=30_000)[0]
+    cond = _null_margin(ceil_cases, 3, trials=30_000, conditional=True)[0]
+    if not cond > free:
+        bad.append(
+            f"conditioning on a 12/12 control should raise the cutoff "
+            f"above {free}, got {cond}"
+        )
+
+    # The portable sampler must agree with the stdlib one in distribution.
+    checks += 1
+    r1, r2 = random.Random(4), random.Random(4)
+    mean = sum(_binom(r1, 10, 0.3) for _ in range(4000)) / 4000
+    if abs(mean - 3.0) > 0.25:
+        bad.append(f"_binom mean {mean:.2f} should be near 3.0")
+
     # `neg-hard` is a gated flow and must be sizeable, not filtered out by name.
     checks += 1
     negatives = _group(
@@ -459,16 +539,24 @@ def main() -> None:
     print(f"spread between two runs:{m} measurements of the SAME description\n")
     print(
         f"{'run':<14}{'dir':>5}{'observed':>9}{'cases':>6}{'n':>5}"
-        f"{'sd':>8}{'margin':>8}{'tail':>8}{'as rate':>9}"
+        f"{'allowed':>9}{'tail':>7}{'a|obs':>9}{'tail':>7}"
     )
     for p in args:
         analyse(p, m)
     print(
-        f"\nmargin = smallest integer count difference whose null exceedance is\n"
-        f"<= {ALPHA:.0%}, simulated. NOT 1.96*sd, which is anti-conservative on\n"
-        f"counts this small. A gate margin below it cannot resolve what it\n"
-        f"gates on. `dir` is which direction the counted event points: `fire`\n"
-        f"for should-fire cases, `neg` for over-trigger guards."
+        f"\n`allowed` is the largest wrong-way gap a gate may tolerate: write it\n"
+        f"as `candidate >= control - allowed`, which first fails one count\n"
+        f"later, exactly where the {ALPHA:.0%} one-sided tail was simulated. The tail is\n"
+        f"ONE-sided because every gate here rejects in one direction only --\n"
+        f"a drop for `fire` rows, a rise for `neg` guards.\n\n"
+        f"`a|obs` conditions on THIS run being the gate's control arm rather\n"
+        f"than simulating two fresh arms. Use it when you will compare a\n"
+        f"candidate against the numbers above; use `allowed` when both arms\n"
+        f"get re-run. It is usually the LOOSER of the two, and that is not\n"
+        f"slack: a control that came in high regresses down, and the gate must\n"
+        f"not read that regression as the candidate failing. `-` means this\n"
+        f"report was not run at the depth asked for, so there is no realized\n"
+        f"control to condition on.\n"
     )
     for p in args:
         size(p, (0.20, 0.15, 0.10))
