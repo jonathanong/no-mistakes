@@ -814,11 +814,20 @@ which roughly doubles the count a critical-value calculation gives:
 | 15% | `runs: 21` (7×) | `runs: 35` (12×) | `runs: 19` (6×) |
 | 10% | `runs: 45` (15×) | `runs: 75` (25×) | `runs: 42` (14×) |
 
-**A 10%-resolution gate costs 14–25× current spend** — at $0.17/run, $45–50
-per flow per arm. This is the real reason the old gates were written the way
-they were, and wanting it otherwise does not change it: either pay for the
-runs, or gate on effects large enough to see at `runs: 3`, which means
-**margins of 4–6 counts**, not 1–2.
+**A 10%-resolution gate costs 14–25× current spend.** `--runs` is *per case*,
+so the bill is `cases × runs × arms`, and the flow's negative cases run too:
+
+| flow at 10% | cases | `runs` | total runs | one arm | both arms |
+| --- | --- | --- | --- | --- | --- |
+| `before-edit` | 8 | 45 | 360 | $61 | **$122** |
+| `signature` | 5 | 75 | 375 | $64 | **$128** |
+| `neg-hard` | 4 | 42 | 168 | $29 | **$57** |
+
+At $0.17/run, one properly-powered gated flow costs more than [the entire
+eleven-flow re-baseline](#the-full-re-baseline) did ($52.60). That is the real
+reason the old gates were written the way they were, and wanting it otherwise
+does not change it: either pay for the runs, or gate on effects large enough
+to see at `runs: 3`, which means **margins of 4–6 counts**, not 1–2.
 
 The `real` column `power.py` prints matters on low-rate flows. The modelled
 alternative shifts every case's rate by the target amount, clipped at 0, so
@@ -1168,8 +1177,9 @@ Then pick one, in the open, **before** the candidate runs:
   catches large effects, and saying so up front is the point.
 - **Or pay for resolution.** `power.py` prints the `runs` for a 20/15/10%
   target **at 80% power**, not merely at the critical value — a gate sized to
-  its critical value alone catches the effect half the time. 10% costs 14–25×
-  current spend; 20% costs 4–7×.
+  its critical value alone catches the effect half the time. `--runs` is per
+  case, so 10% on one flow is **$57–128 both arms**, more than the whole
+  eleven-flow re-baseline cost; 20% is 4–7× `runs: 3`.
 
 A gate whose margin is below the measured one is not a weak gate, it is a
 coin flip with a number next to it. Do not write one.

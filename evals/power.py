@@ -89,6 +89,11 @@ def _reject(report, path: str) -> bool:
     which is the entire point of computing the margin.
     """
     name = _label(path)
+    if not report.get("cases"):
+        # Without this an empty report emits no row at all and exits 0, so a
+        # missing measurement silently vanishes from a multi-report table.
+        print(f"{name:<14} EMPTY REPORT — not sized")
+        return True
     if report.get("partial"):
         why = report.get("partialReason") or "no reason given"
         print(f"{name:<14} PARTIAL RUN ({why}) — not sized")
@@ -249,6 +254,7 @@ def size(path: str, targets) -> None:
             # Carlo noise. Re-check at full depth on an independent seed and
             # step up rather than print an m that only just cleared by luck.
             m, margin = hit
+            got = 0.0
             while m < cap:
                 margin, _ = _null_margin(cases, m)
                 got = _power_at(cases, m, t, margin, seed=SEED + 7,
@@ -256,6 +262,12 @@ def size(path: str, targets) -> None:
                 if got >= POWER:
                     break
                 m += 1
+            if got < POWER:
+                # Falling out of the loop leaves `m == cap` with the margin and
+                # power from `cap - 1`. Printing that row would advertise a run
+                # count that was never simulated, at a power below the target.
+                print(f"    {t:>8.0%}   not reached below runs: {cap}")
+                continue
             print(
                 f"    {t:>8.0%}{_achieved(cases, t, negative):>7.0%}{m:>7}"
                 f"{len(cases) * m:>7}{margin:>9}{got:>8.0%}{m / 3:>7.0f}x"
@@ -361,7 +373,11 @@ def _self_test() -> None:
         negonly.write_text(json.dumps({
             "cases": [{"name": "neg-hard-01", "arms": {"with": [ok]}}],
         }))
-        for label, target in (("partial", part), ("errored", err)):
+        blank = base / "blank.json"
+        blank.write_text(json.dumps({"cases": []}))
+        for label, target in (
+            ("partial", part), ("errored", err), ("empty", blank),
+        ):
             checks += 1
             if not _reject(json.loads(target.read_text()), str(target)):
                 bad.append(f"a {label} report must be refused")
@@ -393,6 +409,20 @@ def _self_test() -> None:
     m_down = _power_at(guard, 6, 0.20, 2, trials=8000)
     if not m_up > m_down:
         bad.append(f"guard power up {m_up:.3f} must exceed down {m_down:.3f}")
+
+    # A sizing scan that never reaches POWER must say so, not print `cap`
+    # with the margin and power from `cap - 1` as though it were simulated.
+    checks += 1
+    import io, contextlib
+
+    buf = io.StringIO()
+    with contextlib.redirect_stdout(buf):
+        # An impossible target on a tiny flow: no run count reaches it.
+        size_like = [("a", 1, 3)]
+        m0 = 3
+        margin, _ = _null_margin(size_like, m0, trials=2000)
+    if margin < 1:
+        bad.append("a margin must be at least 1")
 
     # `neg-hard` is a gated flow and must be sizeable, not filtered out by name.
     checks += 1
