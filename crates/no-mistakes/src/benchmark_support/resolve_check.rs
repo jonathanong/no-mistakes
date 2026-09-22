@@ -23,9 +23,9 @@ pub struct PreparedResolveCheckFixture {
 
 pub fn prepared_resolve_check_fixture() -> PreparedResolveCheckFixture {
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/performance/core-analysis")
+        .join("../../fixtures/performance/resolve-check")
         .canonicalize()
-        .expect("core-analysis performance fixture should exist");
+        .expect("resolve-check performance fixture should exist");
     let files = (0..VOUCHINGTON_RESOLVE_CHECK_FILE_COUNT)
         .map(|index| root.join(format!("web/app/routes/closure-{index}/page.tsx")))
         .collect::<Vec<_>>();
