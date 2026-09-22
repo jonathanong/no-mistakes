@@ -2,45 +2,41 @@
 """How large an effect can a gate on this suite actually resolve?
 
     python3 evals/power.py evals/results/*/aggregate-result.json
-    python3 evals/power.py --runs 9 <report.json>     # size a future gate
+    python3 evals/power.py --runs 9 <report.json>     # spread at other depths
     python3 evals/power.py --subsample <deep-report.json>
 
 Exists because #1025: the same description scored `signature` 9/12 and 7/12
 hours apart, and every gate in `evals/README.md` was written in two-run units.
-A gate is only meaningful when its margin exceeds the spread of the statistic
+A gate only means something when its margin exceeds the spread of the statistic
 it reads, so that spread has to be a number rather than an assumption.
 
-**The question a gate asks** is not "what is this description's rate" but
-"are these two measurements different". Under the null they measure the *same*
-description, so each case has one unknown rate `p_i` shared by both arms, and
-a `runs: m` measurement of it is Binomial(m, p_i).
+**The question a gate asks** is not "what is this description's rate" but "are
+these two measurements different". Under the null both measure the *same*
+description, so each case has one unknown rate `p_i` shared by both arms. That
+sharing matters: uncertainty about `p_i` cancels out of the difference instead
+of adding to it. Each case carries a Jeffreys posterior Beta(x+0.5, n-x+0.5),
+and the null distribution of `X - Y` is simulated by drawing `p_i` from it once
+and then two independent Binomial(m, p_i) draws from it.
 
-That sharing matters. Given `p`, the difference of two independent
-measurements has variance `2 * m * sum_i p_i (1 - p_i)`. The `p_i` are unknown,
-but they are the *same* unknown on both sides, so uncertainty about them
-cancels out of the difference rather than adding to it. Averaging over the
-Jeffreys posterior Beta(x+0.5, n-x+0.5) for each case:
+**`margin` is a discrete quantile, not `1.96 * sd`.** These are small bounded
+counts and the normal approximation is anti-conservative on them: on the deep
+`signature` run `1.96 * sd = 3.9` rounds to a margin of 4, but
+`P(|X-Y| >= 4) = 7.1%` — a gate at 4 rejects a correct description 7% of the
+time, not 5%. `margin` is the smallest integer whose exceedance is genuinely
+<= ALPHA.
 
-    E[p (1-p)] = mu (1-mu) * s / (s + 1),    mu = a/(a+b),  s = a+b
-    Var(X - Y) = 2 * m * sum_i E[p_i (1-p_i)]
+**Sizing targets power, not just the critical value.** A gate whose critical
+gap equals the effect you care about catches that effect about half the time.
+`runs` is chosen so a shift of the target size is caught with POWER
+probability, which roughly doubles what a critical-value-only calculation
+gives. The alternative modelled is a uniform absolute shift of every case's
+`p_i`, clipped at zero -- the `real` column reports the mean drop that
+actually lands, which is below the target on flows with cases already near
+zero. An effect concentrated in one case needs more runs than this reports.
 
-(An earlier draft used the Beta-Binomial *predictive* variance of a single
-measurement here. That is the right answer to a different question, and it is
-wrong for this one: it charges parameter uncertainty to both arms without
-letting it cancel, so the implied gap grows linearly in `m` and no amount of
-extra runs ever closes it. The bug is worth naming because its output looked
-like a finding — "no feasible `runs` fixes this" — rather than like a bug.)
-
-**Reading the output.** `sd(diff)` is the spread of the difference between two
-measurements of one description. `gap95 = 1.96 * sd(diff)` is the smallest
-count difference that re-running the identical description does **not**
-routinely produce. A gate margin below `gap95` cannot resolve what it gates
-on. `as rate` restates it as a fraction of `n`, so flows of different sizes
-are comparable.
-
-`--subsample` skips the model entirely: given a report with many runs per case,
-it resamples `runs: 3` measurements directly and reports the observed spread.
-Use it to check the model rather than to replace it — it needs a deep run.
+**Negative flows are sized too.** `neg-hard` is a gated flow, so it gets its
+own row: the event counted is *firing*, which there is the failure. The
+difference calculation does not care which direction is the good one.
 """
 import json
 import math
@@ -49,10 +45,30 @@ import random
 import sys
 
 JEFFREYS = 0.5
+ALPHA = 0.05
+POWER = 0.80
+TRIALS = 60_000
+SEED = 0
+#: Only used to pick a starting `runs` before the simulation checks it:
+#: z(1 - ALPHA/2) and z(POWER).
+Z_ALPHA, Z_POWER = 1.959964, 0.841621
+GENERIC_STEMS = {"aggregate-result", "result", "results"}
 
 
-def _is_should_fire(name: str) -> bool:
-    return "-neg-" not in name and not name.startswith("neg-hard")
+def _label(path: str) -> str:
+    """`evals/results/<run>/aggregate-result.json` -> `<run>`.
+
+    The documented invocation globs `*/aggregate-result.json`, so every input
+    shares a stem and every row would otherwise carry the same name.
+    """
+    p = pathlib.Path(path)
+    if p.stem in GENERIC_STEMS and p.parent.name:
+        return p.parent.name
+    return p.stem
+
+
+def _is_negative(name: str) -> bool:
+    return "-neg-" in name or name.startswith("neg-hard")
 
 
 def _fired(runs) -> int:
@@ -64,31 +80,41 @@ def _fired(runs) -> int:
     )
 
 
-def _partial(report, path: str) -> bool:
-    """A partial report is a prefix of the suite, not a sample of it.
+def _reject(report, path: str) -> bool:
+    """Refuse anything that is not a complete, clean measurement.
 
-    `summarize.py` already refuses to render one as a result. Sizing is worse:
-    the cases that finished are whichever ones happened to run first, so their
-    per-case rates are an accident of ordering, and `gap95` would be computed
-    over a case set that is not the one a gate would read.
+    A partial report is an order-dependent prefix of the suite; a report with
+    errored runs is a thinned one. Sizing either silently changes the case set
+    the margin describes, so a control and a candidate stop being comparable —
+    which is the entire point of computing the margin.
     """
-    if not report.get("partial"):
-        return False
-    reason = report.get("partialReason") or "no reason given"
-    print(f"{pathlib.Path(path).stem:<14} PARTIAL RUN ({reason}) — no sizing")
-    return True
+    name = _label(path)
+    if report.get("partial"):
+        why = report.get("partialReason") or "no reason given"
+        print(f"{name:<14} PARTIAL RUN ({why}) — not sized")
+        return True
+    errored = [
+        c["name"]
+        for c in report["cases"]
+        for arm in c["arms"].values()
+        if any(r.get("error") for r in arm)
+    ]
+    if errored:
+        print(
+            f"{name:<14} {len(errored)} case(s) with errored runs "
+            f"({errored[0]}) — not sized"
+        )
+        return True
+    return False
 
 
-def _cases(report) -> list:
-    """(name, fired, n) for should-fire cases with no errored with-arm run."""
-    out = []
-    for case in report["cases"]:
-        arm = case["arms"].get("with", [])
-        if not arm or any(r.get("error") for r in arm):
-            continue
-        if _is_should_fire(case["name"]):
-            out.append((case["name"], _fired(arm), len(arm)))
-    return out
+def _group(report, negative: bool) -> list:
+    """(name, fired, n) for one direction's cases, read from the with-arm."""
+    return [
+        (c["name"], _fired(c["arms"]["with"]), len(c["arms"]["with"]))
+        for c in report["cases"]
+        if c["arms"].get("with") and _is_negative(c["name"]) == negative
+    ]
 
 
 def _e_p_q(x: int, n: int) -> float:
@@ -100,176 +126,287 @@ def _e_p_q(x: int, n: int) -> float:
 
 
 def _diff_sd(cases, m: int) -> float:
-    """SD of the difference between two `runs: m` measurements of one flow."""
+    """Normal-approximation SD of the difference of two `runs: m` measures."""
     return math.sqrt(2 * m * sum(_e_p_q(x, n) for _, x, n in cases))
 
 
-def _flow(report, m: int) -> tuple:
-    cases = _cases(report)
-    if not cases:
-        return None
-    fired = sum(x for _, x, _ in cases)
-    runs = sum(n for _, _, n in cases)
-    return cases, fired, runs, _diff_sd(cases, m)
+def _draw(cases, m: int, rng, shift: float = 0.0, up: bool = False) -> int:
+    """One X - Y draw. `shift` moves the candidate arm's rate.
+
+    Direction matters and is not cosmetic. On should-fire cases the
+    regression is firing *less*, so the candidate shifts down. On an
+    over-trigger guard the regression is firing *more*, and those cases sit
+    at 0 — shifting them down is a no-op, which made an earlier revision
+    report that `before-edit [negatives]` needed 137x the runs to detect a
+    10% effect. It needs 2x; the effect was simply being clipped away.
+    """
+    total = 0
+    for _, x, n in cases:
+        p = rng.betavariate(x + JEFFREYS, n - x + JEFFREYS)
+        q = min(1.0, max(0.0, p + shift if up else p - shift))
+        total += rng.binomialvariate(m, p) - rng.binomialvariate(m, q)
+    return total
+
+
+def _null_margin(cases, m: int, alpha=ALPHA, trials=TRIALS) -> tuple:
+    """Smallest integer margin whose null exceedance is <= alpha."""
+    rng = random.Random(SEED)
+    draws = [abs(_draw(cases, m, rng)) for _ in range(trials)]
+    for d in range(1, len(cases) * m + 2):
+        tail = sum(1 for v in draws if v >= d) / trials
+        if tail <= alpha:
+            return d, tail
+    return len(cases) * m + 1, 0.0
+
+
+def _power_at(cases, m, shift, margin, trials=TRIALS, seed=SEED + 1,
+              up=False) -> float:
+    rng = random.Random(seed)
+    hit = sum(
+        1
+        for _ in range(trials)
+        if abs(_draw(cases, m, rng, shift, up)) >= margin
+    )
+    return hit / trials
+
+
+def _achieved(cases, shift: float, up: bool = False, trials=20_000) -> float:
+    """The mean per-case rate drop a nominal `shift` actually produces.
+
+    `_draw` clips the candidate rate at 0, so on a flow with cases already
+    near zero -- `signature-04` at 1/15, the three `queues` topology cases at
+    0/3 -- a nominal 10% shift moves those cases by less than 10% and the
+    real effect is smaller than the target. Reporting the achieved shift
+    keeps the sizing table from quietly understating what it costs to detect
+    a genuine 10%.
+    """
+    rng = random.Random(SEED + 2)
+    total = 0.0
+    per = trials // len(cases)
+    for _, x, n in cases:
+        for _ in range(per):
+            p = rng.betavariate(x + JEFFREYS, n - x + JEFFREYS)
+            total += min(1.0 - p, shift) if up else min(p, shift)
+    return total / (len(cases) * per)
 
 
 def analyse(path: str, m: int) -> None:
     report = json.loads(pathlib.Path(path).read_text())
-    if _partial(report, path):
+    if _reject(report, path):
         return
-    got = _flow(report, m)
-    name = pathlib.Path(path).stem
-    if not got:
-        print(f"{name:<16} no clean should-fire cases")
-        return
-    cases, fired, runs, sd = got
-    n_m = len(cases) * m
-    gap = 1.96 * sd
-    print(
-        f"{name:<14}{f'{fired}/{runs}':>10}{len(cases):>7}{n_m:>5}"
-        f"{sd:>10.2f}{gap:>8.1f}{gap / n_m:>9.0%}"
-    )
+    name = _label(path)
+    for negative in (False, True):
+        cases = _group(report, negative)
+        if not cases:
+            continue
+        fired = sum(x for _, x, _ in cases)
+        runs = sum(n for _, _, n in cases)
+        margin, tail = _null_margin(cases, m)
+        n_m = len(cases) * m
+        print(
+            f"{name:<14}{'neg' if negative else 'fire':>5}"
+            f"{f'{fired}/{runs}':>9}{len(cases):>6}{n_m:>5}"
+            f"{_diff_sd(cases, m):>8.2f}{margin:>8}{tail:>8.1%}"
+            f"{margin / n_m:>9.0%}"
+        )
 
 
 def size(path: str, targets) -> None:
-    """Smallest `runs` whose min-detectable gap is under each target rate."""
+    """`runs` needed to catch a target-sized shift with POWER probability."""
     report = json.loads(pathlib.Path(path).read_text())
-    if report.get("partial"):
+    if _reject(report, path):
         return
-    cases = _cases(report)
-    if not cases:
-        return
-    print(f"\n=== {pathlib.Path(path).stem}: runs needed per case")
-    print(f"    {'target':>8}{'runs':>7}{'n':>7}{'gap95':>10}{'cost':>9}")
-    for t in targets:
-        for m in range(3, 500):
-            gap = 1.96 * _diff_sd(cases, m)
-            if gap / (len(cases) * m) <= t:
-                print(
-                    f"    {t:>8.0%}{m:>7}{len(cases) * m:>7}"
-                    f"{gap:>9.1f}{m / 3:>8.0f}x"
-                )
-                break
-        else:
-            print(f"    {t:>8.0%}   not reached below runs: 500")
+    for negative in (False, True):
+        cases = _group(report, negative)
+        if not cases:
+            continue
+        kind = "negatives" if negative else "should-fire"
+        print(f"\n=== {_label(path)} [{kind}]: runs for {POWER:.0%} power")
+        print(
+            f"    {'target':>8}{'real':>7}{'runs':>7}{'n':>7}"
+            f"{'margin':>9}{'power':>8}{'cost':>8}"
+        )
+        s = sum(_e_p_q(x, n) for _, x, n in cases)
+        for t in targets:
+            # The normal approximation picks a starting point; the simulation
+            # decides. Sizing on the critical value alone would halve this.
+            m0 = max(3, math.ceil(
+                2 * s * (Z_ALPHA + Z_POWER) ** 2 / (t * len(cases)) ** 2
+            ))
+            cap = min(m0 * 8, 800)
+            hit = None
+            for m in range(m0, cap):
+                margin, _ = _null_margin(cases, m, trials=15_000)
+                if _power_at(
+                    cases, m, t, margin, trials=15_000, up=negative
+                ) >= POWER:
+                    hit = (m, margin)
+                    break
+            if hit is None:
+                print(f"    {t:>8.0%}   not reached below runs: {cap}")
+                continue
+            # The scan runs at 15k trials, so its crossing point carries Monte
+            # Carlo noise. Re-check at full depth on an independent seed and
+            # step up rather than print an m that only just cleared by luck.
+            m, margin = hit
+            while m < cap:
+                margin, _ = _null_margin(cases, m)
+                got = _power_at(cases, m, t, margin, seed=SEED + 7,
+                                up=negative)
+                if got >= POWER:
+                    break
+                m += 1
+            print(
+                f"    {t:>8.0%}{_achieved(cases, t, negative):>7.0%}{m:>7}"
+                f"{len(cases) * m:>7}{margin:>9}{got:>8.0%}{m / 3:>7.0f}x"
+            )
 
 
-def subsample(path: str, m: int = 3, trials: int = 20000) -> None:
-    """Observed spread of a `runs: m` statistic, resampled from a deep run."""
+def subsample(path: str, m: int = 3, trials: int = 20_000) -> None:
+    """Observed spread of a `runs: m` statistic, from a deep run.
+
+    Draws *fresh* Bernoulli runs from each case's observed rate rather than
+    resampling the recorded runs without replacement. Without replacement is
+    wrong here: taking 3 of 15 imposes a finite-population correction of
+    `sqrt((15-3)/(15-1)) = 0.926`, shrinking the spread 7% for reasons that
+    have nothing to do with the description. An earlier revision did exactly
+    that and read the shrinkage back as the model being 8% conservative.
+    """
     report = json.loads(pathlib.Path(path).read_text())
-    if _partial(report, path):
+    if _reject(report, path):
         return
-    cases = [
-        [
-            1 if _fired([r]) else 0
-            for r in case["arms"].get("with", [])
-        ]
-        for case in report["cases"]
-        if _is_should_fire(case["name"])
-        and case["arms"].get("with")
-        and not any(r.get("error") for r in case["arms"]["with"])
-    ]
+    cases = _group(report, negative=False)
     if not cases:
-        print(f"{pathlib.Path(path).stem:<16} no clean should-fire cases")
+        print(f"{_label(path):<14} no should-fire cases")
         return
-    depth = min(len(c) for c in cases)
-    if depth < m * 2:
-        print(f"    needs >= {m * 2} runs per case; deepest common is {depth}")
+    depth = min(n for _, _, n in cases)
+    if depth < m:
+        print(f"    needs >= {m} runs per case; deepest common is {depth}")
         return
-    rng = random.Random(0)
-    totals = []
+    rng = random.Random(SEED)
+    rates = [x / n for _, x, n in cases]
+    totals, diffs = [], []
     for _ in range(trials):
-        totals.append(sum(sum(rng.sample(c, m)) for c in cases))
+        a = sum(rng.binomialvariate(m, p) for p in rates)
+        b = sum(rng.binomialvariate(m, p) for p in rates)
+        totals.append(a)
+        diffs.append(abs(a - b))
     mean = sum(totals) / len(totals)
     sd = math.sqrt(sum((t - mean) ** 2 for t in totals) / (len(totals) - 1))
-    lo, hi = min(totals), max(totals)
     n_m = len(cases) * m
-    print(f"\n=== {pathlib.Path(path).stem}: observed runs:{m} spread")
-    print(f"    depth {depth} runs/case, {len(cases)} cases, resampled {trials}x")
-    print(f"    mean {mean:.2f}/{n_m}   sd {sd:.2f}   range {lo}-{hi}")
-    pairs = [
-        abs(a - b)
-        for a, b in zip(totals[::2], totals[1::2])
-    ]
+    print(f"\n=== {_label(path)}: observed runs:{m} spread")
+    print(f"    depth {depth} runs/case, {len(cases)} cases, {trials} draws")
     print(
-        f"    two runs of the SAME description differ by "
-        f">= 2 in {sum(1 for d in pairs if d >= 2) / len(pairs):.0%} of pairs, "
-        f">= 3 in {sum(1 for d in pairs if d >= 3) / len(pairs):.0%}"
+        f"    mean {mean:.2f}/{n_m}   sd {sd:.2f}   "
+        f"sd(diff) {sd * 2 ** 0.5:.2f}"
     )
+    for d in (2, 3, 4):
+        share = sum(1 for v in diffs if v >= d) / len(diffs)
+        print(
+            f"    two runs of the SAME description differ by >= {d} "
+            f"in {share:.0%} of pairs"
+        )
 
 
-#: Known-answer checks. The scaling one is the regression guard: an earlier
-#: draft used the single-measurement predictive variance here, which makes the
-#: gap grow with `runs` so no run count ever resolves anything. If `gap95` as a
-#: RATE stops shrinking when `runs` rises, that bug is back.
 def _self_test() -> None:
-    bad = []
-
-    # E[p(1-p)] for 3/3 under Jeffreys: mu=0.875, s=4 -> .875*.125*4/5
-    got = _e_p_q(3, 3)
-    if abs(got - 0.0875) > 1e-9:
-        bad.append(f"_e_p_q(3,3)={got!r}, want 0.0875")
-
-    # A case seen 3/3 must still carry spread; p=1 would give zero.
-    if _e_p_q(3, 3) <= 0:
-        bad.append("a 3/3 case must not have zero variance")
-
-    cases = [("a", 3, 3), ("b", 2, 3), ("c", 2, 3), ("d", 0, 3)]
-    # sd(diff) grows as sqrt(m)...
-    r = _diff_sd(cases, 12) / _diff_sd(cases, 3)
-    if abs(r - 2.0) > 1e-9:
-        bad.append(f"sd(diff) should double from runs 3->12, got {r:.3f}x")
-    # ...so the same gap expressed as a RATE must halve. This is the bug guard.
-    rate3 = 1.96 * _diff_sd(cases, 3) / (len(cases) * 3)
-    rate12 = 1.96 * _diff_sd(cases, 12) / (len(cases) * 12)
-    if not rate12 < rate3 / 1.99:
-        bad.append(f"rate must shrink ~1/sqrt(m): {rate3:.4f} -> {rate12:.4f}")
-
-    # A partial report must never reach the model: its case set is a prefix
-    # of the suite, so gap95 would be computed over cases a gate never reads.
     import tempfile
 
-    checks = 4
-    with tempfile.TemporaryDirectory() as d:
-        part = pathlib.Path(d) / "partial.json"
-        body = {
-            "partial": True,
-            "partialReason": "self-test",
-            "cases": [
-                {
-                    "name": "x-one",
-                    "arms": {"with": [{"graders": [
-                        {"name": "skill-fired", "passed": True}
-                    ]}]},
-                }
-            ],
-        }
-        part.write_text(json.dumps(body))
-        for label, fn in (
-            ("analyse", lambda: analyse(str(part), 3)),
-            ("subsample", lambda: subsample(str(part))),
-        ):
-            checks += 1
-            try:
-                fn()
-            except Exception as exc:  # noqa: BLE001 - any escape is the bug
-                bad.append(f"{label}() raised on a partial report: {exc!r}")
+    bad, checks = [], 0
+    cases = [("a", 3, 3), ("b", 2, 3), ("c", 2, 3), ("d", 0, 3)]
 
-        # --subsample on an all-negative report must not raise on min().
-        neg = pathlib.Path(d) / "neg.json"
-        neg.write_text(json.dumps({"cases": [
-            {"name": "neg-hard-01", "arms": {"with": [{"graders": []}]}}
-        ]}))
+    checks += 1
+    if abs(_e_p_q(3, 3) - 0.0875) > 1e-9:
+        bad.append(f"_e_p_q(3,3)={_e_p_q(3, 3)!r}, want 0.0875")
+    checks += 1
+    if _e_p_q(3, 3) <= 0:
+        bad.append("a 3/3 case must not have zero variance")
+    checks += 1
+    if abs(_diff_sd(cases, 12) / _diff_sd(cases, 3) - 2.0) > 1e-9:
+        bad.append("sd(diff) should double from runs 3->12")
+
+    # The margin as a RATE must shrink with runs. An earlier model used the
+    # single-measurement predictive variance, which held it constant, so no
+    # run count ever resolved anything -- output that read like a finding.
+    checks += 1
+    r3 = _null_margin(cases, 3, trials=8000)[0] / 12
+    r24 = _null_margin(cases, 24, trials=8000)[0] / 96
+    if not r24 < r3:
+        bad.append(f"margin rate must shrink with runs: {r3:.3f} -> {r24:.3f}")
+
+    # The margin must be a real quantile. 1.96*sd is anti-conservative here.
+    checks += 1
+    margin, tail = _null_margin(cases, 3, trials=40_000)
+    if tail > ALPHA:
+        bad.append(f"margin {margin} has null tail {tail:.3f} > {ALPHA}")
+    checks += 1
+    if margin < math.ceil(1.96 * _diff_sd(cases, 3)):
+        bad.append(
+            f"margin {margin} undercuts the normal approximation "
+            f"{1.96 * _diff_sd(cases, 3):.2f}, which is already too small"
+        )
+
+    with tempfile.TemporaryDirectory() as d:
+        base = pathlib.Path(d)
+        ok = {"graders": [{"name": "skill-fired", "passed": True}]}
+        part = base / "partial.json"
+        part.write_text(json.dumps({
+            "partial": True, "partialReason": "self-test",
+            "cases": [{"name": "x-one", "arms": {"with": [ok]}}],
+        }))
+        err = base / "errored.json"
+        err.write_text(json.dumps({
+            "cases": [{"name": "x-one", "arms": {"with": [{"error": "boom"}]}}],
+        }))
+        negonly = base / "neg.json"
+        negonly.write_text(json.dumps({
+            "cases": [{"name": "neg-hard-01", "arms": {"with": [ok]}}],
+        }))
+        for label, target in (("partial", part), ("errored", err)):
+            checks += 1
+            if not _reject(json.loads(target.read_text()), str(target)):
+                bad.append(f"a {label} report must be refused")
         checks += 1
         try:
-            subsample(str(neg))
-        except Exception as exc:  # noqa: BLE001
+            subsample(str(negonly))
+        except Exception as exc:  # noqa: BLE001 - any escape is the bug
             bad.append(f"subsample() raised with no should-fire cases: {exc!r}")
+        checks += 1
+        run = base / "2026-01-01T00-00-00Z"
+        run.mkdir()
+        if _label(str(run / "aggregate-result.json")) != run.name:
+            bad.append("a generic stem must fall back to the run directory")
+
+    # An over-trigger guard sits at 0, so a DOWNWARD shift is a no-op there
+    # and sizing reports absurd run counts (137x was the observed symptom).
+    # Shifting up must move it; shifting down must not.
+    guard = [("neg-hard-01", 0, 3), ("neg-hard-02", 0, 3)]
+    checks += 1
+    up_hit, down_hit = _achieved(guard, 0.10, up=True), _achieved(guard, 0.10)
+    # Upward lands in full (there is headroom above 0); downward is clipped.
+    if not (abs(up_hit - 0.10) < 0.005 and down_hit < 0.08):
+        bad.append(
+            f"guard shift should land up={up_hit:.3f} (~0.10) vs clipped "
+            f"down={down_hit:.3f} (<0.08)"
+        )
+    checks += 1
+    m_up = _power_at(guard, 6, 0.20, 2, trials=8000, up=True)
+    m_down = _power_at(guard, 6, 0.20, 2, trials=8000)
+    if not m_up > m_down:
+        bad.append(f"guard power up {m_up:.3f} must exceed down {m_down:.3f}")
+
+    # `neg-hard` is a gated flow and must be sizeable, not filtered out by name.
+    checks += 1
+    negatives = _group(
+        {"cases": [{"name": "neg-hard-01", "arms": {"with": [{"graders": []}]}}]},
+        negative=True,
+    )
+    if not negatives:
+        bad.append("negative cases must be available for sizing")
 
     for line in bad:
         print(f"    FAIL {line}")
     if bad:
-        raise SystemExit(f"{len(bad)} power-model checks failed")
+        raise SystemExit(f"{len(bad)} power checks failed")
     print(f"power self-test: {checks}/{checks} pass")
 
 
@@ -289,19 +426,19 @@ def main() -> None:
         i = args.index("--runs")
         m = int(args[i + 1])
         args = args[:i] + args[i + 2:]
+    print(f"spread between two runs:{m} measurements of the SAME description\n")
     print(
-        f"spread between two runs:{m} measurements of the SAME description\n"
-    )
-    print(
-        f"{'flow':<14}{'observed':>10}{'cases':>7}{'n':>5}"
-        f"{'sd(diff)':>10}{'gap95':>8}{'as rate':>9}"
+        f"{'run':<14}{'dir':>5}{'observed':>9}{'cases':>6}{'n':>5}"
+        f"{'sd':>8}{'margin':>8}{'tail':>8}{'as rate':>9}"
     )
     for p in args:
         analyse(p, m)
     print(
-        "\ngap95 = 1.96 * sd(diff): the smallest count difference between two\n"
-        "measurements that re-running ONE description does NOT routinely\n"
-        "produce. A gate margin below it cannot resolve what it gates on."
+        f"\nmargin = smallest integer count difference whose null exceedance is\n"
+        f"<= {ALPHA:.0%}, simulated. NOT 1.96*sd, which is anti-conservative on\n"
+        f"counts this small. A gate margin below it cannot resolve what it\n"
+        f"gates on. `dir` is which direction the counted event points: `fire`\n"
+        f"for should-fire cases, `neg` for over-trigger guards."
     )
     for p in args:
         size(p, (0.20, 0.15, 0.10))

@@ -142,11 +142,13 @@ caught it before merge. See [the regression](#the-after-edit-regression-981-ship
   counts.](#how-large-an-effect-can-a-gate-here-actually-resolve-1025)** The
   caveat that governs every other number in this file, and it is now
   quantified rather than asserted: at `runs: 3` the 95% same-description
-  difference threshold (`gap95`) is **4.6** counts on `before-edit`, **3.9**
-  on `signature`, **3.2** on `after-edit`. Two runs of the *identical*
-  description differ by ≥2 in **40%** of pairs. Treat any gap below `gap95` —
-  between descriptions, dates, or flows — as unresolved, not as a finding,
-  and run [`evals/power.py`](power.py) before writing a gate.
+  difference threshold is **6** counts on `before-edit`, **5** on
+  `signature`, **4** on `after-edit` and **4** on the `neg-hard` guard — a
+  simulated discrete quantile, because `1.96 * sd` is anti-conservative on
+  counts this small. Two runs of the *identical* description differ by ≥2 in
+  **44%** of pairs. Treat any gap below the margin — between descriptions,
+  dates, or flows — as unresolved, not as a finding, and run
+  [`evals/power.py`](power.py) before writing a gate.
 - **Δ is now measured for all eleven flows**
   ([re-baseline](#the-full-re-baseline), 2026-09-21, 318 runs, zero errored
   runs). [Baseline](#baseline-before-edit-flow-shipped-description-as-of-pr-979)
@@ -748,55 +750,80 @@ uncertainty about `p_i` **cancels in the difference** instead of adding to it:
 
     Var(X - Y) = 2 * m * sum_i E[p_i (1 - p_i)]
 
-with `E[p(1-p)]` taken over each case's Jeffreys posterior. `gap95 = 1.96 *
-sd` is then the smallest count difference that re-running **one identical
-description** does not routinely produce.
+with `E[p(1-p)]` taken over each case's Jeffreys posterior.
 
-| flow | n at `runs: 3` | sd of difference | **gap95** | as rate |
-| --- | --- | --- | --- | --- |
-| `before-edit` | 18 | 2.36 | **4.6** | 26% |
-| `after-edit` | 12 | 1.64 | **3.2** | 27% |
-| `signature` | 12 | 1.96 | **3.9** | 32% |
+**The threshold is a simulated discrete quantile, not `1.96 * sd`.** These
+are small bounded counts and the normal approximation is anti-conservative on
+them. On the deep `signature` run `1.96 * sd = 3.9` rounds to a margin of 4 —
+but `P(|X-Y| >= 4) = 7.1%`, so a gate at 4 rejects a correct description 7%
+of the time, not 5%. `margin` below is the smallest integer whose simulated
+exceedance is genuinely ≤ 5%.
 
-**The shipped gates were roughly one quarter of the resolvable difference.**
+| flow | dir | n at `runs: 3` | sd | **margin** | null tail | as rate |
+| --- | --- | --- | --- | --- | --- | --- |
+| `before-edit` | fire | 18 | 2.36 | **6** | 1.9% | 33% |
+| `signature` | fire | 12 | 1.82 | **5** | 1.4% | 42% |
+| `after-edit` | fire | 12 | 1.64 | **4** | 3.5% | 33% |
+| `neg-hard` | neg | 12 | 1.45 | **4** | 2.1% | 33% |
+
+**The shipped gates were a fifth to a sixth of the resolvable difference.**
 `before-edit ≥ 15/18` is a margin of 1 against a measured 16/18, and
-`signature ≥ 9/12` a margin of 1 against 10/12 — against gap95 of 4.6 and 3.9.
-That is the whole of [the variance
-finding](#the-gate-cannot-resolve-the-difference-it-was-built-on), now with a
+`signature ≥ 9/12` a margin of 1 against 10/12 — against margins of 6 and 5.
+That is [the variance
+finding](#the-gate-cannot-resolve-the-difference-it-was-built-on) with a
 number on it.
 
-#### The model checks out against resampling
+`neg-hard` is in that table because it is a **gated** flow. An earlier
+revision of `power.py` filtered every negative case out by name, so running
+the documented procedure on the over-trigger guard printed "no clean
+should-fire cases" and sized nothing — one of the required gates was
+silently unsizeable.
 
-The deep run gives 15 runs per case, so `runs: 3` measurements can be
-resampled from it directly rather than modelled. Per-case rates came in at
-13/15, 10/15, 6/15 and 1/15:
+#### Checked against resampling — after the first check turned out circular
+
+~~The model is 8% conservative, which is the direction to err in.~~
+
+> [!WARNING]
+> **Retracted.** The first version of this check resampled `runs: 3` draws
+> from the deep run **without replacement**, which imposes a
+> finite-population correction of `sqrt((15-3)/(15-1)) = 0.9258`. And
+> `1.96 × 0.9258 = 1.815` against the 1.81 that was reported as agreement:
+> the check was measuring its own resampler. Re-done by drawing *fresh*
+> Bernoulli runs from each case's observed rate:
 
 | | sd of the difference |
 | --- | --- |
-| model, from the deep run | 1.96 |
-| **observed**, 20 000 resampled `runs: 3` pairs | **1.81** |
+| model | **1.96** |
+| observed, 20 000 fresh-draw pairs | **1.96** |
 
-The model is 8% conservative, which is the direction to err in. The blunt
-version of the same resampling: **two runs of the identical description differ
-by ≥2 in 40% of pairs and by ≥3 in 16%.** The 9-vs-7 gap that rejected the
-queue clause is a 40% event.
+The model is neither conservative nor optimistic; it is right. Per-case rates
+on the deep run were 13/15, 10/15, 6/15 and 1/15. The blunt version of the
+same resampling: **two runs of the identical description differ by ≥2 in 44%
+of pairs, ≥3 in 20%, ≥4 in 7%.** The 9-vs-7 gap that rejected the queue
+clause is a 44% event.
 
 #### What a real gate costs
 
-`power.py` inverts the relationship — the `runs` needed for a target
-resolution, and what that multiplies the bill by:
+A gate whose critical gap merely *equals* the effect you care about catches
+that effect about **half** the time. `power.py` sizes for 80% power instead,
+which roughly doubles the count a critical-value calculation gives:
 
-| target | `before-edit` | `after-edit` | `signature` |
+| target | `before-edit` | `signature` | `neg-hard` (guard) |
 | --- | --- | --- | --- |
-| 20% | `runs: 5` (2×) | `runs: 6` (2×) | `runs: 8` (3×) |
-| 15% | `runs: 9` (3×) | `runs: 10` (3×) | `runs: 14` (5×) |
-| 10% | `runs: 20` (7×) | `runs: 22` (7×) | `runs: 31` (10×) |
+| 20% | `runs: 12` (4×) | `runs: 21` (7×) | `runs: 12` (4×) |
+| 15% | `runs: 21` (7×) | `runs: 35` (12×) | `runs: 19` (6×) |
+| 10% | `runs: 45` (15×) | `runs: 75` (25×) | `runs: 42` (14×) |
 
-**A 10%-resolution gate costs 7–10× current spend.** At $0.17/run that is
-roughly $20–35 per flow per arm. This is the real reason the old gates were
-written the way they were, and it does not go away by wanting it to: either
-pay for the runs, or gate on effects large enough to see at `runs: 3`, which
-means **margins of 4–5 counts**, not 1–2.
+**A 10%-resolution gate costs 14–25× current spend** — at $0.17/run, $45–50
+per flow per arm. This is the real reason the old gates were written the way
+they were, and wanting it otherwise does not change it: either pay for the
+runs, or gate on effects large enough to see at `runs: 3`, which means
+**margins of 4–6 counts**, not 1–2.
+
+The `real` column `power.py` prints matters on low-rate flows. The modelled
+alternative shifts every case's rate by the target amount, clipped at 0, so
+on `signature` — where one case sits at 1/15 — a nominal 10% shift lands as
+9%. Sizing against the nominal figure would understate the cost.
 
 #### Two limits on these numbers
 
@@ -805,10 +832,10 @@ means **margins of 4–5 counts**, not 1–2.
   6/12 (the deep run). A same-day comparison of the last two groups is *not*
   significant (16/24 vs 30/60, z = 1.39, p = 0.17), so there is no drift claim
   here — but the deep run sits at the bottom of the range, and an unmodelled
-  between-session component would make gap95 **larger**, never smaller. Treat
+  between-session component would make the margin **larger**, never smaller. Treat
   these as lower bounds and keep the control arm in the same session as the
   candidate.
-- **`gap95` is per flow, and the model is validated on one.** It was checked
+- **The margin is per flow, and the model is validated on one.** It was checked
   against resampling on `signature` only; `before-edit` and `after-edit` are
   the same model applied to their own per-case rates. That is a reasonable
   extrapolation — the model has one moving part — but it is an extrapolation.
@@ -1118,8 +1145,8 @@ Concretely, for the next candidate:
    07-09 are live and unspent for exactly this. A candidate that fails its
    gates must not be run against them.
 
-**Amendment 3 (#1025): a gate margin must clear `gap95`, and `gap95` is now a
-computed number.** Amendment 2 said to size gates to the same-day spread but
+**Amendment 3 (#1025): a gate margin must clear the measured margin, which is
+now a computed number.** Amendment 2 said to size gates to the same-day spread but
 left the spread unmeasured. It is measured: see [how large an effect a gate
 can resolve](#how-large-an-effect-can-a-gate-here-actually-resolve-1025). The
 procedure is mechanical:
@@ -1135,14 +1162,17 @@ python3 evals/power.py "$OUT/<flow>-control.json"
 
 Then pick one, in the open, **before** the candidate runs:
 
-- **Accept the coarse gate.** At `runs: 3` the margin must be **≥ gap95**,
-  which is 4–5 counts on the gated flows — not 1–2. A gate this coarse only
+- **Accept the coarse gate.** At `runs: 3` the margin must be **≥ the
+  simulated margin**, which is 4–6 counts on the gated flows — not 1–2. A
+  gate this coarse only
   catches large effects, and saying so up front is the point.
 - **Or pay for resolution.** `power.py` prints the `runs` for a 20/15/10%
-  target. 10% costs 7–10× current spend; 20% costs about 2–3×.
+  target **at 80% power**, not merely at the critical value — a gate sized to
+  its critical value alone catches the effect half the time. 10% costs 14–25×
+  current spend; 20% costs 4–7×.
 
-A gate whose margin is below `gap95` is not a weak gate, it is a coin flip
-with a number next to it. Do not write one.
+A gate whose margin is below the measured one is not a weak gate, it is a
+coin flip with a number next to it. Do not write one.
 
 #### `signature` did not regress — the 3/5 vs 2/15 above was a 1-run artifact
 
