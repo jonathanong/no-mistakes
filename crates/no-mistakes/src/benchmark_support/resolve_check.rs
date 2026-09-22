@@ -10,9 +10,9 @@ const VOUCHINGTON_VISIBLE_FILE_COUNT: usize = 17_028;
 
 /// Synthetic prepared request shaped like the Vouchington route batch: many
 /// prepared resolve-check file closure from Vouchington's 429 route roots,
-/// sharing its current request-visible repository universe. File facts are
-/// already prepared; only the root tsconfig remains readable for automatic
-/// nearest-config selection.
+/// sharing its current request-visible repository universe. The route files
+/// exist on disk so nearest-config lookup takes its production file branch.
+/// File facts are already prepared; only the root tsconfig is read.
 pub struct PreparedResolveCheckFixture {
     root: PathBuf,
     files: Vec<PathBuf>,
@@ -84,3 +84,6 @@ pub fn run_prepared_resolve_check(fixture: &PreparedResolveCheckFixture) -> usiz
         .map(Vec::len)
         .expect("batch report must contain a results array")
 }
+
+#[cfg(test)]
+mod tests;
