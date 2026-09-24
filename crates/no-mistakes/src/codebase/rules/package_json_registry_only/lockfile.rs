@@ -1,4 +1,5 @@
 use super::*;
+use std::collections::BTreeSet;
 
 const BLOCKED_RESOLUTION_KEYS: &[&str] = &["tarball", "repo", "commit", "directory"];
 
@@ -28,6 +29,9 @@ pub(super) fn check(
     }
     pairs.sort_by(|(a, _), (b, _)| a.as_str().unwrap_or("").cmp(b.as_str().unwrap_or("")));
     let mut findings = Vec::new();
+    // The same key can appear in the env document and the project document.
+    // One finding per key and blocked resolution; distinct resolutions stay.
+    let mut seen = BTreeSet::new();
     for (key, pkg_val) in pairs {
         let pkg_name = key.as_str().unwrap_or("");
         let Some(resolution) = pkg_val.get("resolution") else {
@@ -35,6 +39,9 @@ pub(super) fn check(
         };
         for &blocked_key in BLOCKED_RESOLUTION_KEYS {
             if resolution.get(blocked_key).is_some() {
+                if !seen.insert((pkg_name.to_string(), blocked_key.to_string())) {
+                    break;
+                }
                 findings.push(RuleFinding {
                     rule: RULE_ID.to_string(),
                     file: file.clone(),
