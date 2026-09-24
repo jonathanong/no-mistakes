@@ -31,10 +31,16 @@ pub(crate) fn load_documents(content: &str) -> Result<PnpmDocuments, PnpmValidat
         saw_document = true;
         let value =
             serde_yaml::Value::deserialize(document).map_err(|_| PnpmValidationError::Malformed)?;
-        // A leading `---` can surface as a null document. It is not a lockfile.
-        if !value.is_null() {
-            documents.push(value);
+        // A leading `---` can surface as a null document. A null document after
+        // real content is an empty later document; dropping it would make the
+        // env document look like the project.
+        if value.is_null() {
+            if !documents.is_empty() {
+                return Err(PnpmValidationError::Malformed);
+            }
+            continue;
         }
+        documents.push(value);
     }
     if !saw_document {
         return Err(PnpmValidationError::Malformed);

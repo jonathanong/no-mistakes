@@ -409,6 +409,15 @@ fn env_prefix_rejects_documents_that_are_not_env_lockfiles() {
 }
 
 #[test]
+fn trailing_empty_document_is_malformed() {
+    let content = format!("{}\n---\n", v12("two-doc-package-manager").trim_end());
+    assert!(matches!(
+        validate_for_planning(&content),
+        Err(PnpmValidationError::Malformed)
+    ));
+}
+
+#[test]
 fn non_env_prefix_is_an_explicit_error() {
     assert!(matches!(
         validate_for_planning(&issue_lock("non-env")),

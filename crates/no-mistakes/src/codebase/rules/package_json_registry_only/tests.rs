@@ -213,7 +213,7 @@ fn finding_message_format() {
 fn lockfile_non_registry_resolution_flagged() {
     let tmp = tempfile::tempdir().unwrap();
     let lockfile_content =
-        "packages:\n  my-pkg@1.0.0:\n    resolution:\n      tarball: https://example.com/pkg.tgz\n";
+        "lockfileVersion: '9.0'\npackages:\n  my-pkg@1.0.0:\n    resolution:\n      tarball: https://example.com/pkg.tgz\n";
     std::fs::write(tmp.path().join("pnpm-lock.yaml"), lockfile_content).unwrap();
     let config = config_with_options("lockfile: pnpm-lock.yaml");
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
@@ -225,7 +225,7 @@ fn lockfile_non_registry_resolution_flagged() {
 fn lockfile_path_filters_are_honored() {
     let tmp = tempfile::tempdir().unwrap();
     let lockfile_content =
-        "packages:\n  my-pkg@1.0.0:\n    resolution:\n      tarball: https://example.com/pkg.tgz\n";
+        "lockfileVersion: '9.0'\npackages:\n  my-pkg@1.0.0:\n    resolution:\n      tarball: https://example.com/pkg.tgz\n";
     std::fs::write(tmp.path().join("pnpm-lock.yaml"), lockfile_content).unwrap();
     let mut config = config_with_options("lockfile: pnpm-lock.yaml");
     config.rules[0].exclude = vec!["pnpm-lock.yaml".to_string()];
@@ -347,7 +347,7 @@ fn pnpm12_project_git_resolution_is_reported() {
 fn lockfile_registry_integrity_allowed() {
     let tmp = tempfile::tempdir().unwrap();
     let lockfile_content =
-        "packages:\n  lodash@4.17.21:\n    resolution:\n      integrity: sha512-abc\n";
+        "lockfileVersion: '9.0'\npackages:\n  acme-sample@4.17.21:\n    resolution:\n      integrity: sha512-abc\n";
     std::fs::write(tmp.path().join("pnpm-lock.yaml"), lockfile_content).unwrap();
     let config = config_with_options("lockfile: pnpm-lock.yaml");
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
@@ -447,8 +447,10 @@ fn lockfile_yaml_without_packages_key_is_skipped() {
     let config = config_with_options("lockfile: pnpm-lock.yaml");
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
     assert!(
-        findings.is_empty(),
-        "lockfile without 'packages' key should produce no findings"
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("unsupported schema")),
+        "lockfile without a packages mapping should be reported: {findings:?}"
     );
 }
 
@@ -456,7 +458,8 @@ fn lockfile_yaml_without_packages_key_is_skipped() {
 fn lockfile_package_without_resolution_is_skipped() {
     // Package entry exists but has no "resolution" key → continue (line 178).
     let tmp = tempfile::tempdir().unwrap();
-    let lockfile = "packages:\n  my-pkg@1.0.0:\n    engines:\n      node: '>=18'\n";
+    let lockfile =
+        "lockfileVersion: '9.0'\npackages:\n  my-pkg@1.0.0:\n    engines:\n      node: '>=18'\n";
     std::fs::write(tmp.path().join("pnpm-lock.yaml"), lockfile).unwrap();
     let config = config_with_options("lockfile: pnpm-lock.yaml");
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
@@ -472,7 +475,7 @@ fn absolute_lockfile_path_is_resolved_correctly() {
     let tmp = tempfile::tempdir().unwrap();
     let lockfile = tmp.path().join("pnpm-lock.yaml");
     let lockfile_content =
-        "packages:\n  my-pkg@1.0.0:\n    resolution:\n      integrity: sha512-abc\n";
+        "lockfileVersion: '9.0'\npackages:\n  acme-sample@4.17.21:\n    resolution:\n      integrity: sha512-abc\n";
     std::fs::write(&lockfile, lockfile_content).unwrap();
     // Pass the absolute path as the lockfile option
     let abs_path = lockfile.to_string_lossy().to_string();

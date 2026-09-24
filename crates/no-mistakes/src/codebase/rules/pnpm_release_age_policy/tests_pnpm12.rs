@@ -90,7 +90,7 @@ fn missing_lockfile_file_is_not_a_parse_error() {
     assert!(
         !findings
             .iter()
-            .any(|finding| finding.message.contains("failed to parse")),
+            .any(|finding| finding.message.contains("could not be parsed")),
         "{findings:?}"
     );
 }
@@ -101,7 +101,7 @@ fn bad_lockfile_is_reported() {
     assert!(
         malformed
             .iter()
-            .any(|finding| finding.message.contains("failed to parse")),
+            .any(|finding| finding.message.contains("could not be parsed")),
         "{malformed:?}"
     );
     let non_env = issue_findings("non-env");
