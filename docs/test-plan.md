@@ -125,6 +125,8 @@ version and config dependencies; the project document is the workspace graph. A 
 only adds or updates that env document is a package diff. It does not by itself warn about an
 unmodeled installation section. Changes to project `settings`, `overrides`, or
 `patchedDependencies` still do, and still require global fallback opt-in for a full suite.
+A document before the project document that is not an env lockfile is an unsupported lockfile
+and uses that same fallback.
 
 For framework (Playwright/Vitest/Swift) plans the BFS-found tests are injected into the
 `dependencies` group, exactly mirroring the non-framework path.

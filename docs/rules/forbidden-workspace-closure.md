@@ -14,6 +14,8 @@ It follows configured manifest dependency types, workspace aliases, and the
 lockfile when configured, then reports a path to each forbidden package.
 pnpm lockfile edges come from the project document. The env document's `.`
 importer, used for config and package-manager dependencies, is not a workspace root.
+A lockfile that cannot be parsed, or whose leading document is not an env
+lockfile, is reported instead of "no pnpm importers".
 
 ## Options
 

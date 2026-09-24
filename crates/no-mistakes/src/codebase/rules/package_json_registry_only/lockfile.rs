@@ -16,10 +16,17 @@ pub(super) fn check(
     let Some(content) = super::super::read_source(sources, &lockfile_abs) else {
         return Vec::new();
     };
-    let Ok(docs) = crate::codebase::lockfile::pnpm::load_documents(&content) else {
-        return Vec::new();
-    };
     let file = relative_slash_path(root, &lockfile_abs);
+    let docs = match crate::codebase::lockfile::pnpm::load_documents(&content) {
+        Ok(docs) => docs,
+        Err(_) => return vec![parse_finding(&file, "could not be parsed")],
+    };
+    if crate::codebase::lockfile::pnpm::validate_env_prefix(&docs).is_err() {
+        return vec![parse_finding(
+            &file,
+            "has a non-env document before the project lockfile",
+        )];
+    }
     let mut pairs: Vec<(&serde_yaml::Value, &serde_yaml::Value)> = Vec::new();
     for packages in crate::codebase::lockfile::pnpm::package_maps(&docs) {
         pairs.extend(packages.iter());
@@ -58,4 +65,15 @@ pub(super) fn check(
         }
     }
     findings
+}
+
+fn parse_finding(file: &str, detail: &str) -> RuleFinding {
+    RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: file.to_string(),
+        line: 1,
+        message: format!("{file}: pnpm lockfile {detail}"),
+        import: None,
+        target: None,
+    }
 }

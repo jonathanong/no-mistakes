@@ -3,7 +3,9 @@ mod documents;
 mod impact;
 mod importers;
 mod resolution;
-pub(crate) use documents::{load_documents, package_key_strings, package_maps};
+pub(crate) use documents::{
+    load_documents, package_key_strings, package_maps, validate_env_prefix,
+};
 pub(crate) use impact::{impact_importer_paths, impact_names};
 pub use importers::{parse_importers, PnpmImporter, PnpmImporterDependency};
 pub(crate) use importers::{parse_importers_for_impact, PnpmImpactImporter};
@@ -36,11 +38,14 @@ pub fn parse(content: &str) -> Vec<ResolvedPackage> {
 pub(crate) enum PnpmValidationError {
     Malformed,
     UnsupportedSchema,
+    /// A document before the last one is not an env lockfile.
+    NotEnvPrefix,
 }
 
 pub(crate) fn validate_for_planning(content: &str) -> Result<(), PnpmValidationError> {
     let docs = documents::load_documents(content)?;
-    documents::validate_supported(&docs)
+    documents::validate_supported(&docs)?;
+    documents::validate_env_prefix(&docs)
 }
 
 /// Returns changed top-level fields that alter installation behavior but are

@@ -109,3 +109,45 @@ fn validate_document(document: &serde_yaml::Value) -> Result<(), PnpmValidationE
     }
     Ok(())
 }
+
+/// Documents before the project document must be env lockfiles. Their `.`
+/// importer holds only config and package-manager dependencies, so a future
+/// format that puts a second project graph first fails instead of being read
+/// as the workspace.
+pub(crate) fn validate_env_prefix(docs: &PnpmDocuments) -> Result<(), PnpmValidationError> {
+    let Some((_, prefix)) = docs.documents.split_last() else {
+        return Ok(());
+    };
+    if prefix.iter().all(is_env_document) {
+        Ok(())
+    } else {
+        Err(PnpmValidationError::NotEnvPrefix)
+    }
+}
+
+fn is_env_document(document: &serde_yaml::Value) -> bool {
+    let Some(importers) = document
+        .get("importers")
+        .and_then(|value| value.as_mapping())
+    else {
+        return false;
+    };
+    let mut entries = importers.iter();
+    let Some((key, importer)) = entries.next() else {
+        return false;
+    };
+    if entries.next().is_some() || key.as_str() != Some(".") {
+        return false;
+    }
+    let Some(fields) = importer.as_mapping() else {
+        return false;
+    };
+    let mut saw_env_field = false;
+    for field in fields.keys() {
+        match field.as_str() {
+            Some("configDependencies" | "packageManagerDependencies") => saw_env_field = true,
+            _ => return false,
+        }
+    }
+    saw_env_field
+}

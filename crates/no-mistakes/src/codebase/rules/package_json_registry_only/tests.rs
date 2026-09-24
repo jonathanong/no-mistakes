@@ -259,6 +259,60 @@ fn pnpm12_env_tarball_is_reported() {
     );
 }
 
+fn issue_1035_root(name: &str) -> std::path::PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/pnpm12-issue-1035")
+        .join(name)
+}
+
+#[test]
+fn issue_1035_exotic_tarball_in_the_project_document_is_reported() {
+    let root = issue_1035_root("exotic");
+    let config = config_with_options("lockfile: pnpm-lock.yaml");
+    let findings = check_with_files(&root, &config, &[]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("is-buffer@1.1.6"),
+        "{findings:?}"
+    );
+    assert!(findings[0].message.contains("tarball"), "{findings:?}");
+    assert!(!findings[0].message.contains("@pnpm/exe"), "{findings:?}");
+}
+
+#[test]
+fn issue_1035_registry_lockfile_has_no_findings() {
+    for variant in ["two-doc", "single-doc"] {
+        let findings = check_with_files(
+            &issue_1035_root(variant),
+            &config_with_options("lockfile: pnpm-lock.yaml"),
+            &[],
+        )
+        .unwrap();
+        assert!(findings.is_empty(), "{variant}: {findings:?}");
+    }
+}
+
+#[test]
+fn issue_1035_unreadable_lockfile_does_not_pass() {
+    let malformed = check_with_files(
+        &issue_1035_root("malformed"),
+        &config_with_options("lockfile: pnpm-lock.yaml"),
+        &[],
+    )
+    .unwrap();
+    assert!(
+        malformed[0].message.contains("could not be parsed"),
+        "{malformed:?}"
+    );
+    let non_env = check_with_files(
+        &issue_1035_root("non-env"),
+        &config_with_options("lockfile: pnpm-lock.yaml"),
+        &[],
+    )
+    .unwrap();
+    assert!(non_env[0].message.contains("non-env"), "{non_env:?}");
+}
+
 #[test]
 fn pnpm12_duplicate_key_is_reported_once() {
     // The same non-registry key is in both documents. Diff identity stays a set;

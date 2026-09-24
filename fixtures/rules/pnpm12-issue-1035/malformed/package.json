@@ -1,0 +1,5 @@
+{
+  "name": "fixture-root",
+  "private": true,
+  "packageManager": "pnpm@12.5.1"
+}

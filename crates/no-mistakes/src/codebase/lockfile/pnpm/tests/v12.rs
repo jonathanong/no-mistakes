@@ -7,6 +7,15 @@ use crate::codebase::pnpm_lock::parse_pnpm_lock;
 use std::collections::BTreeSet;
 use std::path::PathBuf;
 
+fn issue_lock(name: &str) -> String {
+    let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/pnpm12-issue-1035")
+        .join(name)
+        .join("pnpm-lock.yaml");
+    std::fs::read_to_string(&path)
+        .unwrap_or_else(|error| panic!("failed to read {}: {error}", path.display()))
+}
+
 fn v12(name: &str) -> String {
     let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/lockfile/pnpm12")
@@ -341,6 +350,49 @@ fn unsupported_and_non_mapping_project_documents_are_rejected() {
             "{name}"
         );
     }
+}
+
+#[test]
+fn issue_1035_root_importer_is_the_project_document() {
+    // Issue #1035: `.` in the env document pins pnpm. The project document's
+    // `.` importer is empty and must win.
+    let content = issue_lock("two-doc");
+    assert!(validate_for_planning(&content).is_ok());
+    let root = parse_importers(&content)
+        .into_iter()
+        .find(|importer| importer.path == ".")
+        .unwrap();
+    assert!(root.dependencies.is_empty(), "{root:?}");
+    let names = package_names(&content);
+    assert!(names.contains("kind-of"));
+    assert!(names.contains("@pnpm/exe.darwin-arm64"));
+    assert!(names.contains("pnpm"));
+}
+
+#[test]
+fn issue_1035_second_document_diff_matches_dropping_is_number_7() {
+    // A pnpm pin lives only in the env document. Bumping is-number in the
+    // project document is the same package change the single-document form has.
+    let two = diff(
+        &parse(&issue_lock("two-doc")),
+        &parse(&issue_lock("diff-new")),
+    );
+    assert_eq!(two.changed, vec!["is-number".to_string()]);
+    assert!(two.added.is_empty(), "{two:?}");
+    assert!(two.removed.is_empty(), "{two:?}");
+    let single = diff(
+        &parse(&issue_lock("single-doc")),
+        &parse(&issue_lock("single-doc-new")),
+    );
+    assert_eq!(single.changed, two.changed);
+}
+
+#[test]
+fn non_env_prefix_is_an_explicit_error() {
+    assert!(matches!(
+        validate_for_planning(&issue_lock("non-env")),
+        Err(PnpmValidationError::NotEnvPrefix)
+    ));
 }
 
 #[test]

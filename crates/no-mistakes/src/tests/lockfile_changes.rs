@@ -110,6 +110,10 @@ pub(crate) fn analyze_lockfile_changes(
                         "lockfile-pnpm-unsupported-schema",
                         "unsupported pnpm lockfile schema",
                     ),
+                    lockfile::pnpm::PnpmValidationError::NotEnvPrefix => (
+                        "lockfile-pnpm-non-env-document",
+                        "a non-env document before the project lockfile",
+                    ),
                 };
                 warnings.push(Warning {
                     r#type: kind.to_string(),
@@ -143,6 +147,10 @@ pub(crate) fn analyze_lockfile_changes(
                             lockfile::pnpm::PnpmValidationError::UnsupportedSchema => (
                                 "lockfile-pnpm-unsupported-schema",
                                 "unsupported pnpm lockfile schema",
+                            ),
+                            lockfile::pnpm::PnpmValidationError::NotEnvPrefix => (
+                                "lockfile-pnpm-non-env-document",
+                                "a non-env document before the project lockfile",
                             ),
                         };
                         warnings.push(Warning {
