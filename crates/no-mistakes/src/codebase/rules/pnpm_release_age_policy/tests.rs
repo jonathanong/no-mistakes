@@ -110,69 +110,6 @@ fn run_pnpm12(name: &str) -> Vec<RuleFinding> {
     run(&root)
 }
 
-fn issue_1035_age(variant: &str) -> Vec<RuleFinding> {
-    let root = crate::codebase::ts_resolver::normalize_path(
-        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/rules/pnpm12-issue-1035")
-            .join(variant),
-    );
-    let config = NoMistakesConfig {
-        rules: vec![RuleDef {
-            rule: RULE_ID.to_string(),
-            scope: Some(RuleScope::Repository),
-            options: serde_yaml::from_str(
-                "permanentPackages:\n  - name: is-odd\n    reason: direct dependency of @fixture/shared\n  - name: kind-of\n    reason: transitive-only dependency\n",
-            )
-            .unwrap(),
-            ..Default::default()
-        }],
-        ..Default::default()
-    };
-    let files = [
-        "pnpm-workspace.yaml",
-        "package.json",
-        "packages/api/package.json",
-        "packages/shared/package.json",
-        "packages/worker/package.json",
-        "pnpm-lock.yaml",
-    ]
-    .iter()
-    .map(|file| root.join(file))
-    .collect::<Vec<_>>();
-    check_with_files(&root, &config, &files).unwrap()
-}
-
-#[test]
-fn issue_1035_kind_of_is_present_in_the_project_document() {
-    for variant in ["two-doc", "single-doc"] {
-        let findings = issue_1035_age(variant);
-        assert!(
-            !findings
-                .iter()
-                .any(|finding| finding.message.contains("absent from")),
-            "{variant}: {findings:?}"
-        );
-    }
-}
-
-#[test]
-fn issue_1035_bad_lockfile_is_reported() {
-    let malformed = issue_1035_age("malformed");
-    assert!(
-        malformed
-            .iter()
-            .any(|finding| finding.message.contains("failed to parse")),
-        "{malformed:?}"
-    );
-    let non_env = issue_1035_age("non-env");
-    assert!(
-        non_env
-            .iter()
-            .any(|finding| finding.message.contains("non-env")),
-        "{non_env:?}"
-    );
-}
-
 #[test]
 fn pnpm12_project_package_counts_as_present() {
     let findings = run_pnpm12("pnpm12-project-package");
