@@ -388,6 +388,27 @@ fn issue_1035_second_document_diff_matches_dropping_is_number_7() {
 }
 
 #[test]
+fn env_prefix_rejects_documents_that_are_not_env_lockfiles() {
+    for name in [
+        "env-prefix-no-importers",
+        "env-prefix-empty-importers",
+        "env-prefix-two-importers",
+        "env-prefix-not-dot",
+        "env-prefix-importer-list",
+        "env-prefix-empty-dot",
+        "env-prefix-dependencies",
+    ] {
+        assert!(
+            matches!(
+                validate_for_planning(&v12(name)),
+                Err(PnpmValidationError::NotEnvPrefix)
+            ),
+            "{name}"
+        );
+    }
+}
+
+#[test]
 fn non_env_prefix_is_an_explicit_error() {
     assert!(matches!(
         validate_for_planning(&issue_lock("non-env")),

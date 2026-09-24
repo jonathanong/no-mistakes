@@ -55,6 +55,47 @@ fn kind_of_is_present_in_the_project_document() {
 }
 
 #[test]
+fn missing_lockfile_file_is_not_a_parse_error() {
+    let root = issue_root("two-doc");
+    let config = NoMistakesConfig {
+        rules: vec![RuleDef {
+            rule: RULE_ID.to_string(),
+            scope: Some(RuleScope::Repository),
+            options: serde_yaml::from_str(
+                "permanentPackages:\n  - name: is-odd\n    reason: direct dependency of @fixture/shared\n  - name: kind-of\n    reason: transitive-only dependency\nlockfilePath: missing-lock.yaml\n",
+            )
+            .unwrap(),
+            ..Default::default()
+        }],
+        ..Default::default()
+    };
+    let files = [
+        "pnpm-workspace.yaml",
+        "package.json",
+        "packages/api/package.json",
+        "packages/shared/package.json",
+        "packages/worker/package.json",
+        "missing-lock.yaml",
+    ]
+    .iter()
+    .map(|file| root.join(file))
+    .collect::<Vec<_>>();
+    let findings = check_with_files(&root, &config, &files).unwrap();
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("absent from")),
+        "{findings:?}"
+    );
+    assert!(
+        !findings
+            .iter()
+            .any(|finding| finding.message.contains("failed to parse")),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn bad_lockfile_is_reported() {
     let malformed = issue_findings("malformed");
     assert!(

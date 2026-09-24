@@ -87,11 +87,8 @@ fn issue_1035_reports_is_odd_through_the_workspace_link() {
 
 #[test]
 fn issue_1035_does_not_flag_is_even_for_api() {
-    assert!(
-        issue_closure("two-doc", "is-even").is_empty(),
-        "{:?}",
-        issue_closure("two-doc", "is-even")
-    );
+    let findings = issue_closure("two-doc", "is-even");
+    assert!(findings.is_empty(), "{findings:?}");
 }
 
 #[test]
