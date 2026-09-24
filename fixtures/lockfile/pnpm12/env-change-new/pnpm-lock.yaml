@@ -1,0 +1,33 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.4.0
+        version: 12.4.0
+
+packages:
+  pnpm@12.4.0:
+    resolution: {integrity: sha512-pnpm-new}
+
+snapshots:
+  pnpm@12.4.0: {}
+---
+lockfileVersion: '9.0'
+
+importers:
+  packages/app:
+    dependencies:
+      react:
+        specifier: ^19.0.0
+        version: 19.0.0
+
+packages:
+  react@19.0.0:
+    resolution: {integrity: sha512-react}
+
+snapshots:
+  react@19.0.0: {}

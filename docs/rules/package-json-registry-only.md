@@ -14,6 +14,8 @@ registry policy.
 
 `scopes` maps package scopes to allowed registries and `lockfile` chooses the
 checked lockfile; omitted values use the documented registry-only defaults.
+A pnpm lockfile check reads `packages` in every YAML document, so a non-registry
+config dependency in the env document is reported along with project packages.
 
 ## Valid example
 

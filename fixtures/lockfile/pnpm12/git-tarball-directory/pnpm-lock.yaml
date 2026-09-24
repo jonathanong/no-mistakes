@@ -1,0 +1,29 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.3.4
+        version: 12.3.4
+
+packages:
+  pnpm@12.3.4:
+    resolution: {integrity: sha512-pnpm}
+
+snapshots:
+  pnpm@12.3.4: {}
+---
+lockfileVersion: '9.0'
+
+packages:
+  github.com/org/repo:
+    resolution: {repo: https://github.com/org/repo, commit: abc123}
+  some-tarball@1.0.0:
+    resolution: {tarball: https://example.com/pkg.tgz}
+  local-pkg@1.0.0:
+    resolution: {directory: ../local-pkg}
+  commit-only@1.0.0:
+    resolution: {commit: deadbeef}

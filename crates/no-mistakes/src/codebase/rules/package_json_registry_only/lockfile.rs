@@ -15,14 +15,17 @@ pub(super) fn check(
     let Some(content) = super::super::read_source(sources, &lockfile_abs) else {
         return Vec::new();
     };
-    let Ok(yaml) = serde_yaml::from_str::<serde_yaml::Value>(&content) else {
+    let Ok(docs) = crate::codebase::lockfile::pnpm::load_documents(&content) else {
         return Vec::new();
     };
     let file = relative_slash_path(root, &lockfile_abs);
-    let Some(packages) = yaml.get("packages").and_then(|p| p.as_mapping()) else {
+    let mut pairs: Vec<(&serde_yaml::Value, &serde_yaml::Value)> = Vec::new();
+    for packages in crate::codebase::lockfile::pnpm::package_maps(&docs) {
+        pairs.extend(packages.iter());
+    }
+    if pairs.is_empty() {
         return Vec::new();
-    };
-    let mut pairs: Vec<(&serde_yaml::Value, &serde_yaml::Value)> = packages.iter().collect();
+    }
     pairs.sort_by(|(a, _), (b, _)| a.as_str().unwrap_or("").cmp(b.as_str().unwrap_or("")));
     let mut findings = Vec::new();
     for (key, pkg_val) in pairs {

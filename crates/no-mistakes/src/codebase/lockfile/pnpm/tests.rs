@@ -3,6 +3,8 @@ use super::*;
 use crate::codebase::lockfile::ResolutionKind;
 use std::path::PathBuf;
 
+mod v12;
+
 fn fixture(name: &str) -> String {
     let manifest_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
     let semantic_path = manifest_dir

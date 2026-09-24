@@ -27,7 +27,10 @@ struct LocatorGraph {
 }
 
 fn locator_graph(content: &str) -> LocatorGraph {
-    let Ok(root) = serde_yaml::from_str::<serde_yaml::Value>(content) else {
+    let Ok(docs) = super::super::documents::load_documents(content) else {
+        return LocatorGraph::default();
+    };
+    let Some(root) = docs.project() else {
         return LocatorGraph::default();
     };
     let mut graph = LocatorGraph::default();

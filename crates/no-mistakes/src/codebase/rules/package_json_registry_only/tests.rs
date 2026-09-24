@@ -235,6 +235,45 @@ fn lockfile_path_filters_are_honored() {
     assert!(findings.is_empty());
 }
 
+fn pnpm12_rule_root(name: &str) -> std::path::PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/package-json-registry-only")
+        .join(name)
+}
+
+#[test]
+fn pnpm12_env_tarball_is_reported() {
+    // A first-document reader reports this package. A last-document reader misses it.
+    let root = pnpm12_rule_root("pnpm12-env-tarball");
+    let config = config_with_options("lockfile: pnpm-lock.yaml");
+    let findings = check_with_files(&root, &config, &[]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("config-plugin@1.0.0"),
+        "{findings:?}"
+    );
+    assert!(findings[0].message.contains("tarball"), "{findings:?}");
+    assert!(
+        !findings[0].message.contains("react@19.0.0"),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn pnpm12_project_git_resolution_is_reported() {
+    // A first-document reader misses this package because it only sees the pnpm pin.
+    let root = pnpm12_rule_root("pnpm12-project-git");
+    let config = config_with_options("lockfile: pnpm-lock.yaml");
+    let findings = check_with_files(&root, &config, &[]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("github.com/org/repo"),
+        "{findings:?}"
+    );
+    assert!(findings[0].message.contains("repo"), "{findings:?}");
+    assert!(!findings[0].message.contains("pnpm@12.3.4"), "{findings:?}");
+}
+
 #[test]
 fn lockfile_registry_integrity_allowed() {
     let tmp = tempfile::tempdir().unwrap();

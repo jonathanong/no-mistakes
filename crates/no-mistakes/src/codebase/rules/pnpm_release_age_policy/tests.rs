@@ -97,6 +97,54 @@ fn flags_dependabot_cooldown_miss() {
     );
 }
 
+fn pnpm12_age_root(name: &str) -> PathBuf {
+    crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../fixtures/rules/pnpm-release-age-policy")
+            .join(name),
+    )
+}
+
+fn run_pnpm12(name: &str) -> Vec<RuleFinding> {
+    let root = pnpm12_age_root(name);
+    run(&root)
+}
+
+#[test]
+fn pnpm12_project_package_counts_as_present() {
+    let findings = run_pnpm12("pnpm12-project-package");
+    assert!(
+        !findings
+            .iter()
+            .any(|finding| finding.message.contains("absent from lockfile")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn pnpm12_env_package_counts_as_present() {
+    let findings = run_pnpm12("pnpm12-env-package");
+    assert!(
+        !findings
+            .iter()
+            .any(|finding| finding.message.contains("absent from lockfile")),
+        "{findings:?}"
+    );
+}
+
+#[test]
+fn pnpm12_selector_missing_from_both_documents_is_absent() {
+    // The env document has packages, so a first-document reader must not treat
+    // that as "the lockfile was unreadable" and skip the absence check.
+    let findings = run_pnpm12("pnpm12-absent-project");
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("absent from lockfile")),
+        "{findings:?}"
+    );
+}
+
 #[test]
 fn flags_temporary_selector_missing_from_lockfile() {
     let findings = run(&fixture("fail-lockfile"));

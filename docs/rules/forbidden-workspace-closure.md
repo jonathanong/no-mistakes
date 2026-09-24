@@ -12,6 +12,8 @@ from bringing a prohibited package into its install/runtime closure.
 
 It follows configured manifest dependency types, workspace aliases, and the
 lockfile when configured, then reports a path to each forbidden package.
+pnpm lockfile edges come from the project document. The env document's `.`
+importer, used for config and package-manager dependencies, is not a workspace root.
 
 ## Options
 

@@ -118,15 +118,8 @@ fn active_names(files: &[PathBuf], sources: &SourceStore) -> HashSet<String> {
 
 fn lockfile_keys(sources: &SourceStore, path: &Path) -> Option<Vec<String>> {
     let source = sources.read_path(path).ok()?;
-    let yaml: Yaml = serde_yaml::from_str(&source).ok()?;
-    let packages = yaml.get("packages")?.as_mapping()?;
-    let mut keys = Vec::new();
-    for key in packages.keys() {
-        if let Some(key) = key.as_str() {
-            keys.push(key.to_string());
-        }
-    }
-    Some(keys)
+    let docs = crate::codebase::lockfile::pnpm::load_documents(&source).ok()?;
+    crate::codebase::lockfile::pnpm::package_key_strings(&docs)
 }
 
 fn issue_finding(

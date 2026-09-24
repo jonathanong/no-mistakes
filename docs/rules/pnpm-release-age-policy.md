@@ -28,6 +28,9 @@ rules:
       lockfilePath: pnpm-lock.yaml
 ```
 
+Lockfile presence uses package keys from every YAML document in `pnpm-lock.yaml`.
+A selector that appears only as a pnpm 12 config dependency still counts as present.
+
 Counterexample: a first-party package missing from `minimumReleaseAgeExclude`.
 
 ```yaml

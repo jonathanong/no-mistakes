@@ -1,0 +1,21 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.3.4
+        version: 12.3.4
+
+packages:
+  pnpm@12.3.4:
+    resolution: {integrity: sha512-pnpm}
+---
+lockfileVersion: '9.0'
+
+packages:
+  acme-lib@1.0.0:
+    resolution: {integrity: sha512-acme}
+  '@acme/core@1.0.0':
+    resolution: {integrity: sha512-core}
