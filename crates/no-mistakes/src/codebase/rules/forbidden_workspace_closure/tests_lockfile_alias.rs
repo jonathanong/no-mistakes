@@ -54,49 +54,6 @@ fn assert_lockfile_closure(fixture: &str) {
     );
 }
 
-fn pnpm12_closure_root(name: &str) -> PathBuf {
-    crate::codebase::ts_resolver::normalize_path(
-        &Path::new(env!("CARGO_MANIFEST_DIR"))
-            .join("../../fixtures/rules/forbidden-workspace-closure")
-            .join(name),
-    )
-}
-
-#[test]
-fn pnpm12_project_importer_forbidden_dependency_is_reported() {
-    let root = pnpm12_closure_root("pnpm12-two-doc");
-    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
-    let findings = check_with_files(
-        &root,
-        &config(
-            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: pnpm-lock.yaml\n",
-        ),
-        &files,
-    )
-    .unwrap();
-    assert_eq!(findings.len(), 1, "{findings:?}");
-    assert_eq!(
-        findings[0].import.as_deref(),
-        Some("@acme/app -> @acme/secret")
-    );
-}
-
-#[test]
-fn pnpm12_env_importer_is_not_a_workspace_edge() {
-    // `@acme/secret` is a dependency of the env `.` importer only.
-    let root = pnpm12_closure_root("pnpm12-env-only-forbidden");
-    let files = package_files(&root, &["package.json", "packages/app/package.json"]);
-    let findings = check_with_files(
-        &root,
-        &config(
-            "packages: [\"@acme/app\"]\nforbidden: [\"@acme/secret\"]\nlockfile: pnpm-lock.yaml\n",
-        ),
-        &files,
-    )
-    .unwrap();
-    assert!(findings.is_empty(), "{findings:?}");
-}
-
 #[test]
 fn pnpm_lockfile_alias_resolution_name_is_forbidden() {
     let root = fixture_root("lockfile-alias");

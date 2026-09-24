@@ -12,11 +12,6 @@ pub(crate) struct PnpmDocuments {
 }
 
 impl PnpmDocuments {
-    #[cfg(test)]
-    pub(crate) fn iter(&self) -> impl Iterator<Item = &serde_yaml::Value> {
-        self.documents.iter()
-    }
-
     pub(crate) fn project(&self) -> Option<&serde_yaml::Value> {
         self.documents.last()
     }

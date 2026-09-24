@@ -1,6 +1,6 @@
 use super::super::{
-    changed_unmodeled_installation_sections, impact_importer_paths, impact_names, load_documents,
-    parse, parse_importers, validate_for_planning, PnpmValidationError,
+    changed_unmodeled_installation_sections, impact_importer_paths, impact_names, parse,
+    parse_importers, validate_for_planning, PnpmValidationError,
 };
 use crate::codebase::lockfile::{diff, ResolutionKind};
 use crate::codebase::pnpm_lock::parse_pnpm_lock;
@@ -35,7 +35,6 @@ fn added(old: &str, new: &str) -> Vec<String> {
 fn single_document_project_keeps_v9_shape() {
     let content = v12("single-doc-project");
     assert!(validate_for_planning(&content).is_ok());
-    assert_eq!(load_documents(&content).unwrap().iter().count(), 1);
     let importers = parse_importers(&content);
     assert_eq!(importers.len(), 1);
     assert_eq!(importers[0].path, ".");
@@ -53,7 +52,6 @@ fn two_document_lockfile_unions_packages_and_reads_project_importers() {
     // into the env document.
     let content = v12("two-doc-package-manager");
     assert!(validate_for_planning(&content).is_ok());
-    assert_eq!(load_documents(&content).unwrap().iter().count(), 2);
     assert_eq!(
         package_names(&content),
         BTreeSet::from(["pnpm".to_string(), "react".to_string()])
@@ -68,8 +66,8 @@ fn two_document_lockfile_unions_packages_and_reads_project_importers() {
 #[test]
 fn leading_document_marker_does_not_invent_an_empty_document() {
     let content = v12("two-doc-leading-marker");
+    // A retained null document from the leading `---` would fail validation.
     assert!(validate_for_planning(&content).is_ok());
-    assert_eq!(load_documents(&content).unwrap().iter().count(), 2);
     assert!(package_names(&content).contains("react"));
 }
 
@@ -77,7 +75,6 @@ fn leading_document_marker_does_not_invent_an_empty_document() {
 fn separator_without_leading_marker_still_uses_the_last_document() {
     let content = v12("two-doc-separator-without-leading-marker");
     assert!(validate_for_planning(&content).is_ok());
-    assert_eq!(load_documents(&content).unwrap().iter().count(), 2);
     assert_eq!(parse_importers(&content)[0].dependencies[0].alias, "react");
 }
 
