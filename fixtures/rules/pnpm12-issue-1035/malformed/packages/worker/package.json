@@ -1,0 +1,1 @@
+{"name":"@fixture/worker","private":true,"dependencies":{"@fixture/shared":"workspace:*","is-even":"1.0.0"}}

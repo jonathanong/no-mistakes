@@ -1,0 +1,48 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.3.4
+        version: 12.3.4
+
+packages:
+  pnpm@12.3.4:
+    resolution: {integrity: sha512-pnpm}
+  tooling@1.0.0:
+    resolution: {integrity: sha512-tooling}
+
+snapshots:
+  pnpm@12.3.4: {}
+  tooling@1.0.0: {}
+---
+lockfileVersion: '9.0'
+
+importers:
+  packages/app:
+    dependencies:
+      right:
+        specifier: '1.0.0'
+        version: 1.0.0(left@1.0.0)
+  packages/other:
+    dependencies:
+      left:
+        specifier: '1.0.0'
+        version: 1.0.0(right@1.0.0)
+
+packages:
+  left@1.0.0:
+    resolution: {integrity: sha512-left}
+  right@1.0.0:
+    resolution: {integrity: sha512-right}
+
+snapshots:
+  left@1.0.0(right@1.0.0):
+    dependencies:
+      right: 1.0.0(left@1.0.0)
+  right@1.0.0(left@1.0.0):
+    dependencies:
+      left: 1.0.0(right@1.0.0)

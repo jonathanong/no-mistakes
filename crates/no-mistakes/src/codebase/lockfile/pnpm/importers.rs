@@ -39,7 +39,12 @@ pub fn parse_importers(content: &str) -> Vec<PnpmImporter> {
 }
 
 pub(crate) fn parse_importers_for_impact(content: &str) -> Vec<PnpmImpactImporter> {
-    let Ok(root) = serde_yaml::from_str::<serde_yaml::Value>(content) else {
+    // Importers come from the project document. The env document reuses `.`
+    // for config and package-manager dependencies and is not a workspace root.
+    let Ok(docs) = super::documents::load_documents(content) else {
+        return Vec::new();
+    };
+    let Some(root) = docs.project() else {
         return Vec::new();
     };
     let Some(importers_map) = root.get("importers").and_then(|v| v.as_mapping()) else {

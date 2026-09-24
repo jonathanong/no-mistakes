@@ -1,0 +1,29 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.3.4
+        version: 12.3.4
+
+packages:
+  pnpm@12.3.4:
+    resolution: {integrity: sha512-pnpm}
+
+snapshots:
+  pnpm@12.3.4: {}
+---
+lockfileVersion: '9.0'
+
+importers:
+  packages/app:
+    dependencies:
+      secret-alias:
+        specifier: npm:@acme/secret@1.0.0
+        version: 1.0.0
+      domain-alias:
+        specifier: workspace:@acme/domain@*
+        version: link:../domain

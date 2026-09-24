@@ -7,30 +7,25 @@ pub struct PnpmLockPackage {
     pub resolution_kind: String,
 }
 
-/// Parse the `packages` section of a pnpm-lock.yaml v9 file.
+/// Parse `packages` from every document in a pnpm-lock.yaml file.
 ///
-/// Returns an empty vec if the file cannot be parsed or has no `packages`
-/// section.
+/// pnpm 12 may write an env document before the project document. Entries from
+/// both are returned. An unparsable file, including a later broken document,
+/// returns an empty vec.
 pub fn parse_pnpm_lock(content: &str) -> Vec<PnpmLockPackage> {
-    let Ok(root) = serde_yaml::from_str::<serde_yaml::Value>(content) else {
+    let Ok(docs) = crate::codebase::lockfile::pnpm::load_documents(content) else {
         return Vec::new();
     };
-
-    let Some(packages_map) = root.get("packages").and_then(|v| v.as_mapping()) else {
-        return Vec::new();
-    };
-
-    packages_map
-        .iter()
-        .map(|(key, value)| {
-            let key_str = yaml_value_to_string(key);
-            let resolution_kind = resolve_kind(value);
-            PnpmLockPackage {
-                key: key_str,
-                resolution_kind,
-            }
-        })
-        .collect()
+    let mut packages = Vec::new();
+    for packages_map in crate::codebase::lockfile::pnpm::package_maps(&docs) {
+        for (key, value) in packages_map {
+            packages.push(PnpmLockPackage {
+                key: yaml_value_to_string(key),
+                resolution_kind: resolve_kind(value),
+            });
+        }
+    }
+    packages
 }
 
 /// Determine `resolution_kind` from a package entry value.

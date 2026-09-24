@@ -213,7 +213,7 @@ fn finding_message_format() {
 fn lockfile_non_registry_resolution_flagged() {
     let tmp = tempfile::tempdir().unwrap();
     let lockfile_content =
-        "packages:\n  my-pkg@1.0.0:\n    resolution:\n      tarball: https://example.com/pkg.tgz\n";
+        "lockfileVersion: '9.0'\npackages:\n  my-pkg@1.0.0:\n    resolution:\n      tarball: https://example.com/pkg.tgz\n";
     std::fs::write(tmp.path().join("pnpm-lock.yaml"), lockfile_content).unwrap();
     let config = config_with_options("lockfile: pnpm-lock.yaml");
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
@@ -225,7 +225,7 @@ fn lockfile_non_registry_resolution_flagged() {
 fn lockfile_path_filters_are_honored() {
     let tmp = tempfile::tempdir().unwrap();
     let lockfile_content =
-        "packages:\n  my-pkg@1.0.0:\n    resolution:\n      tarball: https://example.com/pkg.tgz\n";
+        "lockfileVersion: '9.0'\npackages:\n  my-pkg@1.0.0:\n    resolution:\n      tarball: https://example.com/pkg.tgz\n";
     std::fs::write(tmp.path().join("pnpm-lock.yaml"), lockfile_content).unwrap();
     let mut config = config_with_options("lockfile: pnpm-lock.yaml");
     config.rules[0].exclude = vec!["pnpm-lock.yaml".to_string()];
@@ -235,11 +235,119 @@ fn lockfile_path_filters_are_honored() {
     assert!(findings.is_empty());
 }
 
+fn pnpm12_rule_root(name: &str) -> std::path::PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/package-json-registry-only")
+        .join(name)
+}
+
+#[test]
+fn pnpm12_env_tarball_is_reported() {
+    // A first-document reader reports this package. A last-document reader misses it.
+    let root = pnpm12_rule_root("pnpm12-env-tarball");
+    let config = config_with_options("lockfile: pnpm-lock.yaml");
+    let findings = check_with_files(&root, &config, &[]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("config-plugin@1.0.0"),
+        "{findings:?}"
+    );
+    assert!(findings[0].message.contains("tarball"), "{findings:?}");
+    assert!(
+        !findings[0].message.contains("react@19.0.0"),
+        "{findings:?}"
+    );
+}
+
+fn issue_1035_root(name: &str) -> std::path::PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/rules/pnpm12-issue-1035")
+        .join(name)
+}
+
+#[test]
+fn issue_1035_exotic_tarball_in_the_project_document_is_reported() {
+    let root = issue_1035_root("exotic");
+    let config = config_with_options("lockfile: pnpm-lock.yaml");
+    let findings = check_with_files(&root, &config, &[]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("is-buffer@1.1.6"),
+        "{findings:?}"
+    );
+    assert!(findings[0].message.contains("tarball"), "{findings:?}");
+    assert!(!findings[0].message.contains("@pnpm/exe"), "{findings:?}");
+}
+
+#[test]
+fn issue_1035_registry_lockfile_has_no_findings() {
+    for variant in ["two-doc", "single-doc"] {
+        let findings = check_with_files(
+            &issue_1035_root(variant),
+            &config_with_options("lockfile: pnpm-lock.yaml"),
+            &[],
+        )
+        .unwrap();
+        assert!(findings.is_empty(), "{variant}: {findings:?}");
+    }
+}
+
+#[test]
+fn issue_1035_unreadable_lockfile_does_not_pass() {
+    let malformed = check_with_files(
+        &issue_1035_root("malformed"),
+        &config_with_options("lockfile: pnpm-lock.yaml"),
+        &[],
+    )
+    .unwrap();
+    assert!(
+        malformed[0].message.contains("could not be parsed"),
+        "{malformed:?}"
+    );
+    let non_env = check_with_files(
+        &issue_1035_root("non-env"),
+        &config_with_options("lockfile: pnpm-lock.yaml"),
+        &[],
+    )
+    .unwrap();
+    assert!(non_env[0].message.contains("non-env"), "{non_env:?}");
+}
+
+#[test]
+fn pnpm12_duplicate_key_is_reported_once() {
+    // The same non-registry key is in both documents. Diff identity stays a set;
+    // this rule must not emit two findings for one key and resolution.
+    let root = pnpm12_rule_root("pnpm12-duplicate-tarball");
+    let config = config_with_options("lockfile: pnpm-lock.yaml");
+    let findings = check_with_files(&root, &config, &[]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("config-plugin@1.0.0"),
+        "{findings:?}"
+    );
+    assert!(findings[0].message.contains("tarball"), "{findings:?}");
+}
+
+#[test]
+fn pnpm12_project_git_resolution_is_reported() {
+    // A first-document reader misses this package because it only sees the pnpm pin.
+    let root = pnpm12_rule_root("pnpm12-project-git");
+    let config = config_with_options("lockfile: pnpm-lock.yaml");
+    let findings = check_with_files(&root, &config, &[]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+    assert!(
+        findings[0].message.contains("github.com/org/repo"),
+        "{findings:?}"
+    );
+    assert!(findings[0].message.contains("repo"), "{findings:?}");
+    assert!(!findings[0].message.contains("pnpm@12.3.4"), "{findings:?}");
+}
+
 #[test]
 fn lockfile_registry_integrity_allowed() {
     let tmp = tempfile::tempdir().unwrap();
     let lockfile_content =
-        "packages:\n  lodash@4.17.21:\n    resolution:\n      integrity: sha512-abc\n";
+        "lockfileVersion: '9.0'\npackages:\n  acme-sample@4.17.21:\n    resolution:\n      integrity: sha512-abc\n";
     std::fs::write(tmp.path().join("pnpm-lock.yaml"), lockfile_content).unwrap();
     let config = config_with_options("lockfile: pnpm-lock.yaml");
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
@@ -314,15 +422,16 @@ fn absolute_scope_path_is_supported() {
 }
 
 #[test]
-fn lockfile_with_invalid_yaml_is_skipped() {
-    // check_lockfile returns Vec::new() on YAML parse error (line 163).
+fn lockfile_with_invalid_yaml_is_reported() {
+    // A configured lockfile that cannot be parsed must not pass silently.
     let tmp = tempfile::tempdir().unwrap();
     std::fs::write(tmp.path().join("pnpm-lock.yaml"), ": invalid: yaml: {{{").unwrap();
     let config = config_with_options("lockfile: pnpm-lock.yaml");
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(
-        findings.is_empty(),
-        "invalid YAML lockfile should be skipped"
+        findings[0].message.contains("could not be parsed"),
+        "{findings:?}"
     );
 }
 
@@ -339,7 +448,7 @@ fn lockfile_yaml_without_packages_key_is_skipped() {
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
     assert!(
         findings.is_empty(),
-        "lockfile without 'packages' key should produce no findings"
+        "lockfile without a packages mapping should produce no findings: {findings:?}"
     );
 }
 
@@ -347,7 +456,8 @@ fn lockfile_yaml_without_packages_key_is_skipped() {
 fn lockfile_package_without_resolution_is_skipped() {
     // Package entry exists but has no "resolution" key → continue (line 178).
     let tmp = tempfile::tempdir().unwrap();
-    let lockfile = "packages:\n  my-pkg@1.0.0:\n    engines:\n      node: '>=18'\n";
+    let lockfile =
+        "lockfileVersion: '9.0'\npackages:\n  my-pkg@1.0.0:\n    engines:\n      node: '>=18'\n";
     std::fs::write(tmp.path().join("pnpm-lock.yaml"), lockfile).unwrap();
     let config = config_with_options("lockfile: pnpm-lock.yaml");
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
@@ -363,7 +473,7 @@ fn absolute_lockfile_path_is_resolved_correctly() {
     let tmp = tempfile::tempdir().unwrap();
     let lockfile = tmp.path().join("pnpm-lock.yaml");
     let lockfile_content =
-        "packages:\n  my-pkg@1.0.0:\n    resolution:\n      integrity: sha512-abc\n";
+        "lockfileVersion: '9.0'\npackages:\n  acme-sample@4.17.21:\n    resolution:\n      integrity: sha512-abc\n";
     std::fs::write(&lockfile, lockfile_content).unwrap();
     // Pass the absolute path as the lockfile option
     let abs_path = lockfile.to_string_lossy().to_string();

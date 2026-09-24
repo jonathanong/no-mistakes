@@ -1,0 +1,14 @@
+# The env document is valid. The project document is not. The file is malformed.
+---
+lockfileVersion: '9.0'
+importers:
+  .:
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.3.4
+        version: 12.3.4
+packages:
+  pnpm@12.3.4:
+    resolution: {integrity: sha512-pnpm}
+---
+{ invalid: yaml: [[[

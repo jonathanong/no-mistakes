@@ -39,9 +39,15 @@ pub(super) fn scan(
             )];
         }
     };
-    let lockfile_keys = by_rel
-        .get(opts.lockfile_path())
-        .and_then(|path| lockfile_keys(sources, path));
+    let lockfile_keys = match by_rel.get(opts.lockfile_path()) {
+        Some(path) => match lockfile_keys(sources, path) {
+            Ok(keys) => keys,
+            Err(message) => {
+                return vec![finding(rel(root, path), message, opts.lockfile_path())];
+            }
+        },
+        None => None,
+    };
     let mut active_names = active_names(files, sources);
     if let Some(keys) = &lockfile_keys {
         for key in keys {
@@ -116,17 +122,17 @@ fn active_names(files: &[PathBuf], sources: &SourceStore) -> HashSet<String> {
     names
 }
 
-fn lockfile_keys(sources: &SourceStore, path: &Path) -> Option<Vec<String>> {
-    let source = sources.read_path(path).ok()?;
-    let yaml: Yaml = serde_yaml::from_str(&source).ok()?;
-    let packages = yaml.get("packages")?.as_mapping()?;
-    let mut keys = Vec::new();
-    for key in packages.keys() {
-        if let Some(key) = key.as_str() {
-            keys.push(key.to_string());
-        }
-    }
-    Some(keys)
+fn lockfile_keys(sources: &SourceStore, path: &Path) -> Result<Option<Vec<String>>, String> {
+    let source = match sources.read_path(path) {
+        Ok(source) => source,
+        Err(_) => return Ok(None),
+    };
+    let docs = crate::codebase::lockfile::pnpm::load_documents(&source)
+        .map_err(|_| "pnpm lockfile could not be parsed".to_string())?;
+    crate::codebase::lockfile::pnpm::validate_env_prefix(&docs).map_err(|_| {
+        "pnpm lockfile has a non-env document before the project lockfile".to_string()
+    })?;
+    Ok(crate::codebase::lockfile::pnpm::package_key_strings(&docs))
 }
 
 fn issue_finding(

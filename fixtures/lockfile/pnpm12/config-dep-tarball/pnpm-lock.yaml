@@ -1,0 +1,32 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    configDependencies:
+      config-plugin:
+        specifier: 1.0.0
+        version: 1.0.0
+
+packages:
+  config-plugin@1.0.0:
+    resolution: {tarball: https://example.com/config-plugin.tgz, integrity: sha512-tb}
+
+snapshots:
+  config-plugin@1.0.0: {}
+---
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    dependencies:
+      react:
+        specifier: ^19.0.0
+        version: 19.0.0
+
+packages:
+  react@19.0.0:
+    resolution: {integrity: sha512-react}
+
+snapshots:
+  react@19.0.0: {}

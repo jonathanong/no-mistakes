@@ -1,0 +1,21 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    configDependencies:
+      demo-temporary-package:
+        specifier: 9.9.9
+        version: 9.9.9
+
+packages:
+  demo-temporary-package@9.9.9:
+    resolution: {integrity: sha512-temp}
+---
+lockfileVersion: '9.0'
+
+packages:
+  acme-lib@1.0.0:
+    resolution: {integrity: sha512-acme}
+  '@acme/core@1.0.0':
+    resolution: {integrity: sha512-core}

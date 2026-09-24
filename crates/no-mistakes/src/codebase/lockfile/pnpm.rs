@@ -1,89 +1,71 @@
 use super::ResolvedPackage;
+mod documents;
 mod impact;
 mod importers;
 mod resolution;
+pub(crate) use documents::{
+    load_documents, package_key_strings, package_maps, validate_env_prefix, PnpmDocuments,
+};
 pub(crate) use impact::{impact_importer_paths, impact_names};
 pub use importers::{parse_importers, PnpmImporter, PnpmImporterDependency};
 pub(crate) use importers::{parse_importers_for_impact, PnpmImpactImporter};
 pub fn parse(content: &str) -> Vec<ResolvedPackage> {
-    let Ok(root) = serde_yaml::from_str::<serde_yaml::Value>(content) else {
+    // Malformed input stays an empty inventory. Schema rejection is separate
+    // and belongs to `validate_for_planning`.
+    let Ok(docs) = documents::load_documents(content) else {
         return Vec::new();
     };
-    let Some(packages_map) = root.get("packages").and_then(|v| v.as_mapping()) else {
-        return Vec::new();
-    };
-    packages_map
-        .iter()
-        .map(|(key, value)| {
+    let mut packages = Vec::new();
+    for packages_map in documents::package_maps(&docs) {
+        for (key, value) in packages_map {
             let key_str = yaml_key_to_string(key);
             let (name, version) = split_name_version(&key_str);
             let (fingerprint, kind) = resolution::resolution_info(value);
-            ResolvedPackage {
+            packages.push(ResolvedPackage {
                 name: name.to_string(),
                 version: version.to_string(),
                 fingerprint,
                 kind,
-            }
-        })
-        .collect()
+            });
+        }
+    }
+    packages
 }
 
 /// Planning needs to distinguish unsafe input from an intentionally empty
 /// parse result. Keep the public parser's historical empty-result behavior.
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub(crate) enum PnpmValidationError {
     Malformed,
     UnsupportedSchema,
+    /// A document before the last one is not an env lockfile.
+    NotEnvPrefix,
+}
+
+pub(crate) fn prepare_documents(content: &str) -> Result<PnpmDocuments, PnpmValidationError> {
+    let docs = documents::load_documents(content)?;
+    documents::validate_supported(&docs)?;
+    documents::validate_env_prefix(&docs)?;
+    Ok(docs)
 }
 
 pub(crate) fn validate_for_planning(content: &str) -> Result<(), PnpmValidationError> {
-    let root = serde_yaml::from_str::<serde_yaml::Value>(content)
-        .map_err(|_| PnpmValidationError::Malformed)?;
-    let root = root
-        .as_mapping()
-        .ok_or(PnpmValidationError::UnsupportedSchema)?;
-    let version = root
-        .get(serde_yaml::Value::String("lockfileVersion".to_string()))
-        .ok_or(PnpmValidationError::UnsupportedSchema)?;
-    let major = match version {
-        serde_yaml::Value::String(value) => value
-            .split('.')
-            .next()
-            .and_then(|major| major.parse::<u8>().ok()),
-        serde_yaml::Value::Number(value) => value.as_f64().map(|value| value as u8),
-        _ => None,
-    };
-    if !matches!(major, Some(5..=9)) {
-        return Err(PnpmValidationError::UnsupportedSchema);
-    }
-    let mut has_supported_section = false;
-    for section in ["packages", "importers", "snapshots"] {
-        if let Some(value) = root.get(serde_yaml::Value::String(section.to_string())) {
-            value
-                .as_mapping()
-                .ok_or(PnpmValidationError::UnsupportedSchema)?;
-            has_supported_section = true;
-        }
-    }
-    if !has_supported_section {
-        return Err(PnpmValidationError::UnsupportedSchema);
-    }
-    Ok(())
+    prepare_documents(content).map(|_| ())
 }
 
 /// Returns changed top-level fields that alter installation behavior but are
 /// not represented by the importer/package/snapshot dependency graph.
 pub(crate) fn changed_unmodeled_installation_sections(old: &str, new: &str) -> Vec<String> {
-    let Ok(old) = serde_yaml::from_str::<serde_yaml::Value>(old) else {
+    let Ok(old) = documents::load_documents(old) else {
         return Vec::new();
     };
-    let Ok(new) = serde_yaml::from_str::<serde_yaml::Value>(new) else {
+    let Ok(new) = documents::load_documents(new) else {
         return Vec::new();
     };
-    let Some(old) = old.as_mapping() else {
+    let Some(old) = old.project_mapping() else {
         return Vec::new();
     };
-    let Some(new) = new.as_mapping() else {
+    let Some(new) = new.project_mapping() else {
         return Vec::new();
     };
     old.keys()

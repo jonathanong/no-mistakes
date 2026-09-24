@@ -1,0 +1,21 @@
+---
+lockfileVersion: '9.0'
+importers:
+  .:
+    configDependencies: {}
+  packages/app:
+    configDependencies: {}
+packages:
+  left@1.0.0:
+    resolution: {integrity: sha512-left}
+---
+lockfileVersion: '9.0'
+importers:
+  .:
+    dependencies:
+      right:
+        specifier: 1.0.0
+        version: 1.0.0
+packages:
+  right@1.0.0:
+    resolution: {integrity: sha512-right}

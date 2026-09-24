@@ -1,0 +1,6 @@
+packages:
+  - packages/*
+minimumReleaseAge: 2880
+minimumReleaseAgeExclude:
+  - is-odd
+  - kind-of

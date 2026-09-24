@@ -1,0 +1,44 @@
+---
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    configDependencies: {}
+    packageManagerDependencies:
+      pnpm:
+        specifier: 12.3.4
+        version: 12.3.4
+
+packages:
+  pnpm@12.3.4:
+    resolution: {integrity: sha512-pnpm}
+
+snapshots:
+  pnpm@12.3.4: {}
+---
+lockfileVersion: '9.0'
+
+importers:
+  .:
+    dependencies:
+      react:
+        specifier: ^19.0.0
+        version: 19.0.0
+  packages/app:
+    dependencies:
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+  packages/lib:
+    dependencies:
+      chalk:
+        specifier: ^5.0.0
+        version: 5.0.0
+
+packages:
+  react@19.0.0:
+    resolution: {integrity: sha512-react}
+  lodash@4.17.21:
+    resolution: {integrity: sha512-lodash}
+  chalk@5.0.0:
+    resolution: {integrity: sha512-chalk}
