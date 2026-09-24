@@ -352,9 +352,9 @@ fn schema_majors_five_through_nine_stay_supported() {
         assert!(validate_for_planning(&v12(name)).is_ok(), "{name}");
     }
     let v5 = parse(&v12("v5"));
-    assert_eq!(v5[0].name, "lodash");
+    assert_eq!(v5[0].name, "acme-sample");
     assert_eq!(v5[0].version, "4.17.21");
     let v6 = parse(&v12("v6"));
-    assert_eq!(v6[0].name, "lodash");
+    assert_eq!(v6[0].name, "acme-sample");
     assert_eq!(v6[0].version, "4.17.21");
 }
