@@ -106,9 +106,7 @@ fn env_package_change_is_a_package_diff_without_an_installation_warning() {
     let names = impact_names(&old, &new, changed(&old, &new));
     assert!(names.contains(&"pnpm".to_string()), "{names:?}");
     assert!(
-        impact_importer_paths(&old, &new, &names)
-            .get("pnpm")
-            .is_none(),
+        !impact_importer_paths(&old, &new, &names).contains_key("pnpm"),
         "the env importer is not a workspace importer"
     );
     assert!(impact_names(&old, &new, std::iter::empty()).is_empty());
