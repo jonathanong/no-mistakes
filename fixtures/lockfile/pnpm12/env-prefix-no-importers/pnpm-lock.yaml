@@ -4,7 +4,6 @@ packages:
   left@1.0.0:
     resolution: {integrity: sha512-left}
 ---
----
 lockfileVersion: '9.0'
 importers:
   .:

@@ -39,12 +39,13 @@ pub(super) fn lockfile_nodes(
         )
     })?;
     let rel_lockfile = relative_slash_path(root, &lockfile_path);
-    crate::codebase::lockfile::pnpm::prepare_documents(&content).map_err(|error| {
-        format!(
-            "{RULE_ID}: lockfile {rel_lockfile} {}",
-            crate::codebase::lockfile::pnpm::validation_detail(error)
-        )
-    })?;
+    let docs = crate::codebase::lockfile::pnpm::load_documents(&content)
+        .map_err(|_| format!("{RULE_ID}: lockfile {rel_lockfile} could not be parsed"))?;
+    if crate::codebase::lockfile::pnpm::validate_env_prefix(&docs).is_err() {
+        return Err(format!(
+            "{RULE_ID}: lockfile {rel_lockfile} has a non-env document before the project lockfile"
+        ));
+    }
     let importers = crate::codebase::lockfile::pnpm::parse_importers(&content);
     if importers.is_empty() {
         return Err(format!(

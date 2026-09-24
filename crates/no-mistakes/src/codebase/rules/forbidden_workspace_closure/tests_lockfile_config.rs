@@ -75,7 +75,7 @@ fn lockfile_without_importers_emits_config_finding() {
 
     assert_eq!(findings.len(), 1);
     assert_eq!(findings[0].file, ".no-mistakes.yml");
-    assert!(findings[0].message.contains("unsupported schema"));
+    assert!(findings[0].message.contains("has no pnpm importers"));
 }
 
 #[test]

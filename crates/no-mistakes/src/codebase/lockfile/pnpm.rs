@@ -3,7 +3,9 @@ mod documents;
 mod impact;
 mod importers;
 mod resolution;
-pub(crate) use documents::{load_documents, package_key_strings, package_maps, PnpmDocuments};
+pub(crate) use documents::{
+    load_documents, package_key_strings, package_maps, validate_env_prefix, PnpmDocuments,
+};
 pub(crate) use impact::{impact_importer_paths, impact_names};
 pub use importers::{parse_importers, PnpmImporter, PnpmImporterDependency};
 pub(crate) use importers::{parse_importers_for_impact, PnpmImpactImporter};
@@ -38,14 +40,6 @@ pub(crate) enum PnpmValidationError {
     UnsupportedSchema,
     /// A document before the last one is not an env lockfile.
     NotEnvPrefix,
-}
-
-pub(crate) fn validation_detail(error: PnpmValidationError) -> &'static str {
-    match error {
-        PnpmValidationError::Malformed => "could not be parsed",
-        PnpmValidationError::NotEnvPrefix => "has a non-env document before the project lockfile",
-        PnpmValidationError::UnsupportedSchema => "has an unsupported schema",
-    }
 }
 
 pub(crate) fn prepare_documents(content: &str) -> Result<PnpmDocuments, PnpmValidationError> {

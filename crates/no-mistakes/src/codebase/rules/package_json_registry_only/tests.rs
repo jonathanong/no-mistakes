@@ -447,10 +447,8 @@ fn lockfile_yaml_without_packages_key_is_skipped() {
     let config = config_with_options("lockfile: pnpm-lock.yaml");
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
     assert!(
-        findings
-            .iter()
-            .any(|finding| finding.message.contains("unsupported schema")),
-        "lockfile without a packages mapping should be reported: {findings:?}"
+        findings.is_empty(),
+        "lockfile without a packages mapping should produce no findings: {findings:?}"
     );
 }
 

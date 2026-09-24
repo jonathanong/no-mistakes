@@ -127,11 +127,10 @@ fn lockfile_keys(sources: &SourceStore, path: &Path) -> Result<Option<Vec<String
         Ok(source) => source,
         Err(_) => return Ok(None),
     };
-    let docs = crate::codebase::lockfile::pnpm::prepare_documents(&source).map_err(|error| {
-        format!(
-            "pnpm lockfile {}",
-            crate::codebase::lockfile::pnpm::validation_detail(error)
-        )
+    let docs = crate::codebase::lockfile::pnpm::load_documents(&source)
+        .map_err(|_| "pnpm lockfile could not be parsed".to_string())?;
+    crate::codebase::lockfile::pnpm::validate_env_prefix(&docs).map_err(|_| {
+        "pnpm lockfile has a non-env document before the project lockfile".to_string()
     })?;
     Ok(crate::codebase::lockfile::pnpm::package_key_strings(&docs))
 }

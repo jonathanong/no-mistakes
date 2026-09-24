@@ -17,15 +17,16 @@ pub(super) fn check(
         return Vec::new();
     };
     let file = relative_slash_path(root, &lockfile_abs);
-    let docs = match crate::codebase::lockfile::pnpm::prepare_documents(&content) {
+    let docs = match crate::codebase::lockfile::pnpm::load_documents(&content) {
         Ok(docs) => docs,
-        Err(error) => {
-            return vec![parse_finding(
-                &file,
-                crate::codebase::lockfile::pnpm::validation_detail(error),
-            )];
-        }
+        Err(_) => return vec![parse_finding(&file, "could not be parsed")],
     };
+    if crate::codebase::lockfile::pnpm::validate_env_prefix(&docs).is_err() {
+        return vec![parse_finding(
+            &file,
+            "has a non-env document before the project lockfile",
+        )];
+    }
     let mut pairs: Vec<(&serde_yaml::Value, &serde_yaml::Value)> = Vec::new();
     for packages in crate::codebase::lockfile::pnpm::package_maps(&docs) {
         pairs.extend(packages.iter());
