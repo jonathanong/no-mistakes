@@ -422,15 +422,16 @@ fn absolute_scope_path_is_supported() {
 }
 
 #[test]
-fn lockfile_with_invalid_yaml_is_skipped() {
-    // check_lockfile returns Vec::new() on YAML parse error (line 163).
+fn lockfile_with_invalid_yaml_is_reported() {
+    // A configured lockfile that cannot be parsed must not pass silently.
     let tmp = tempfile::tempdir().unwrap();
     std::fs::write(tmp.path().join("pnpm-lock.yaml"), ": invalid: yaml: {{{").unwrap();
     let config = config_with_options("lockfile: pnpm-lock.yaml");
     let findings = check_with_files(tmp.path(), &config, &[]).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
     assert!(
-        findings.is_empty(),
-        "invalid YAML lockfile should be skipped"
+        findings[0].message.contains("could not be parsed"),
+        "{findings:?}"
     );
 }
 
