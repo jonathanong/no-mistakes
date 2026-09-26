@@ -117,6 +117,20 @@ fn delete_set_null_expression_is_not_accepted_as_not_valid() {
 }
 
 #[test]
+fn delete_set_null_reserved_word_is_not_accepted_as_not_valid() {
+    // Unquoted NULL is reserved, so it is not a column name. A quoted
+    // identifier would be valid; this form must not pair.
+    let facts = extract_migration_facts(
+        "ALTER TABLE child ADD CONSTRAINT child_null_fk \
+         FOREIGN KEY (result_id) REFERENCES parent (result_id) \
+         ON DELETE SET NULL (NULL) NOT VALID;\n\
+         ALTER TABLE child VALIDATE CONSTRAINT child_null_fk;",
+    );
+    assert!(facts.not_valid_constraints.is_empty(), "{facts:?}");
+    assert_eq!(facts.validated_constraints[0].name, "child_null_fk");
+}
+
+#[test]
 fn column_default_expressions_stay_intact() {
     let facts = extract_migration_facts(
         "ALTER TABLE child ADD COLUMN result_id uuid DEFAULT (gen_random_uuid());",

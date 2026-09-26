@@ -2,14 +2,18 @@ use super::{keyword_of, next_non_ws};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::Token;
 
+mod column;
+
+use column::is_column_name;
+
 /// Drop PostgreSQL column lists on `ON DELETE SET NULL` and
 /// `ON DELETE SET DEFAULT`. sqlparser 0.63 rejects `SET NULL (column)`, which
 /// hides the named `NOT VALID` add and makes a later `VALIDATE CONSTRAINT`
 /// look unmatched. The action keyword stays, so the recorded delete action is
 /// still `SET NULL` or `SET DEFAULT`. Only a nonempty comma-separated
-/// identifier list is removed. Empty lists, expressions, `ON UPDATE` lists,
-/// and column `SET DEFAULT (expression)` stay, so invalid SQL is not
-/// rewritten into a constraint PostgreSQL would accept.
+/// identifier list is removed. Empty lists, expressions, unquoted reserved
+/// words, `ON UPDATE` lists, and column `SET DEFAULT (expression)` stay, so
+/// invalid SQL is not rewritten into a constraint PostgreSQL would accept.
 pub(super) fn rewrite_referential_set_column_lists(tokens: &mut Vec<Token>) {
     let mut index = 0;
     while index < tokens.len() {
@@ -56,7 +60,7 @@ fn column_name_list(tokens: &[Token], open: usize, end: usize) -> bool {
             continue;
         }
         if expect_ident {
-            if !matches!(token, Token::Word(_)) {
+            if !is_column_name(token) {
                 return false;
             }
             saw_ident = true;
