@@ -43,7 +43,9 @@ pub fn parse_postgres_sql(sql: &str) -> Result<Vec<Statement>, PostgresParseErro
 /// inside them is recovered, including `ALTER TABLE` after PL/pgSQL `IF/THEN`.
 /// Other unparseable SQL is still skipped. PostgreSQL 18
 /// `GENERATED ALWAYS AS (...) VIRTUAL` is rewritten to `STORED` so those
-/// `CREATE TABLE` statements parse.
+/// `CREATE TABLE` statements parse. Column lists on referential
+/// `SET NULL` / `SET DEFAULT` (`ON DELETE SET NULL (column)`) are removed
+/// before parsing; the action keyword and constraint name stay.
 pub fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     lenient::parse_postgres_sql_lenient(sql)
 }

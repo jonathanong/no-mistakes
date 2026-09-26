@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-constraint-validate
+    scope: repository
+    options:
+      sqlInclude: ["migrations/**/*.sql"]

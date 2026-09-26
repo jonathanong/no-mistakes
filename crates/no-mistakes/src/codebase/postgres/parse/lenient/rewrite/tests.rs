@@ -31,6 +31,46 @@ fn rewrites_chr_to_a_string_literal() {
 }
 
 #[test]
+fn strips_referential_set_column_lists_only() {
+    for sql in [
+        "ON DELETE SET NULL (result_id)",
+        "ON UPDATE SET NULL (result_id, topic_id)",
+        "ON DELETE SET DEFAULT (\"result_id\")",
+        "ON UPDATE SET DEFAULT (result_id)",
+    ] {
+        let mut parsed = tokens(sql);
+        rewrite_referential_set_column_lists(&mut parsed);
+        assert!(
+            parsed.iter().all(|token| !matches!(token, Token::LParen)),
+            "{sql}: {parsed:?}"
+        );
+        assert!(
+            parsed
+                .iter()
+                .any(|token| keyword_of(token) == Some(Keyword::SET)),
+            "{sql}"
+        );
+    }
+}
+
+#[test]
+fn leaves_non_referential_parentheses() {
+    for sql in [
+        "ON DELETE SET NULL",
+        "ON DELETE CASCADE",
+        "ON CONFLICT DO NOTHING",
+        "ALTER COLUMN result_id SET DEFAULT (gen_random_uuid())",
+        "REFERENCES parent (result_id) ON DELETE SET NULL",
+        "ON DELETE SET NULL (result_id",
+    ] {
+        let mut parsed = tokens(sql);
+        let before = parsed.clone();
+        rewrite_referential_set_column_lists(&mut parsed);
+        assert_eq!(parsed, before, "{sql}");
+    }
+}
+
+#[test]
 fn leaves_chr_without_call_parens_or_a_numeric_arg() {
     for sql in ["ESCAPE chr 92", "ESCAPE chr(id)"] {
         let mut parsed = tokens(sql);

@@ -2,6 +2,46 @@ use super::{keyword_of, next_non_ws};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::Token;
 
+/// Drop PostgreSQL column lists on `ON DELETE` / `ON UPDATE` `SET NULL` and
+/// `SET DEFAULT`. sqlparser 0.63 rejects `SET NULL (column)`, which hides the
+/// named `NOT VALID` add and makes a later `VALIDATE CONSTRAINT` look unmatched.
+/// The action keyword stays, so the recorded delete action is still `SET NULL`
+/// or `SET DEFAULT`. Column `SET DEFAULT (expression)` is left alone.
+pub(super) fn rewrite_referential_set_column_lists(tokens: &mut Vec<Token>) {
+    let mut index = 0;
+    while index < tokens.len() {
+        if let Some(open) = referential_set_column_list_at(tokens, index) {
+            if let Some(end) = super::skip_balanced_parens(tokens, open) {
+                tokens.drain(open..end);
+                continue;
+            }
+        }
+        index += 1;
+    }
+}
+
+fn referential_set_column_list_at(tokens: &[Token], on_at: usize) -> Option<usize> {
+    if keyword_of(tokens.get(on_at)?) != Some(Keyword::ON) {
+        return None;
+    }
+    let action_at = next_non_ws(tokens, on_at + 1)?;
+    match keyword_of(tokens.get(action_at)?) {
+        Some(Keyword::DELETE | Keyword::UPDATE) => {}
+        _ => return None,
+    }
+    let set_at = next_non_ws(tokens, action_at + 1)?;
+    if keyword_of(tokens.get(set_at)?) != Some(Keyword::SET) {
+        return None;
+    }
+    let value_at = next_non_ws(tokens, set_at + 1)?;
+    match keyword_of(tokens.get(value_at)?) {
+        Some(Keyword::NULL | Keyword::DEFAULT) => {}
+        _ => return None,
+    }
+    let open = next_non_ws(tokens, value_at + 1)?;
+    matches!(tokens.get(open)?, Token::LParen).then_some(open)
+}
+
 pub(super) fn rewrite_drop_index_concurrently(tokens: &mut Vec<Token>) {
     let mut index = 0;
     while index < tokens.len() {

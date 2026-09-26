@@ -94,6 +94,30 @@ fn postgres_constraint_validate_passes_when_not_valid_is_inside_do() {
 }
 
 #[test]
+fn postgres_constraint_validate_passes_column_specific_set_null() {
+    let root = fixture("postgres-constraint-validate", "pass-set-null-columns");
+    let out = check_fixture_config(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_constraint_validate_passes_ordinary_set_null() {
+    let root = fixture("postgres-constraint-validate", "pass-set-null");
+    let out = check_fixture_config(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_constraint_validate_fails_unmatched_column_specific_set_null() {
+    let root = fixture("postgres-constraint-validate", "fail-set-null-columns");
+    let out = check_fixture_config(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert!(body.contains("child_topic_result_fk"), "{body}");
+    assert!(body.contains("child_other_fk"), "{body}");
+}
+
+#[test]
 fn postgres_constraint_validate_fails_when_do_block_add_is_unvalidated() {
     let root = fixture("postgres-constraint-validate", "fail-do-missing");
     let out = check_fixture_config(&root);

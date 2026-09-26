@@ -1,6 +1,7 @@
 use super::extract_migration_facts;
 
 mod routines;
+mod set_null;
 
 #[test]
 fn extracts_indexes_foreign_keys_and_constraint_pairing() {
