@@ -37,6 +37,7 @@ fn strips_referential_set_column_lists_only() {
         "ON DELETE SET NULL (result_id, topic_id)",
         "ON DELETE SET DEFAULT (\"result_id\")",
         "ON DELETE SET NULL (\"NULL\")",
+        "ON DELETE SET NULL (key)",
     ] {
         let mut parsed = tokens(sql);
         rewrite_referential_set_column_lists(&mut parsed);
@@ -67,6 +68,10 @@ fn leaves_non_referential_parentheses() {
         "ON DELETE SET NULL ()",
         "ON DELETE SET NULL (1)",
         "ON DELETE SET NULL (NULL)",
+        "ON DELETE SET NULL (CURRENT_DATE)",
+        "ON DELETE SET NULL (ARRAY)",
+        "ON DELETE SET NULL (ANALYZE)",
+        "ON DELETE SET NULL (ISNULL)",
         "ON DELETE SET NULL (result_id + 1)",
         "ON DELETE SET NULL (result_id,)",
         "ON DELETE SET NULL (result_id",
