@@ -117,7 +117,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`rust-no-inline-allows`](rust-no-inline-allows.md)                           | Ban inline Rust `allow` attributes.                                             |
 | [`rust-no-inline-tests`](rust-no-inline-tests.md)                             | Ban inline Rust test modules.                                                   |
 | [`server-route-client-boundary`](server-route-client-boundary.md)             | Keep generated/direct clients out of server route folders.                      |
-| [`shellcheck-runner`](shellcheck-runner.md)                                   | Run ShellCheck for shell files/scripts.                                         |
+| [`shellcheck-runner`](shellcheck-runner.md)                                   | Run ShellCheck for shell files/scripts, optionally limited to tracked files.   |
 | [`strict-package-layout`](strict-package-layout.md)                           | Enforce configured package file layout.                                         |
 | [`structured-config-policy`](structured-config-policy.md)                     | Require or ban structured config keys.                                          |
 | [`swift-no-raw-print`](swift-no-raw-print.md)                                 | Ban raw print() and Swift.print() in Swift sources.                             |

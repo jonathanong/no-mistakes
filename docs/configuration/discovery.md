@@ -39,6 +39,10 @@ Outside a Git checkout, `.gitignore` and `.ignore` files are still applied by
 the fallback walker. Because there is no Git index, rules that normally use the
 tracked-only view use this ignore-aware visible set instead.
 
+The [`shellcheck-runner`](../rules/shellcheck-runner.md) rule can opt into this
+view with `trackedOnly: true`. Its default remains the visible-file set; the
+tracked-only option also applies to explicit `shellFiles` paths.
+
 Source, dependency-graph, and test discovery derive narrower views from that
 inventory and prune built-in source skip directories such as `fixtures`,
 `build`, `dist`, and `target`. Repository-state policies such as a

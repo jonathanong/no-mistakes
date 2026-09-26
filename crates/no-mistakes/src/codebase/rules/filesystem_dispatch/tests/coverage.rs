@@ -29,12 +29,14 @@ fn dispatch_uses_fallback_for_an_unknown_rule() {
     let config = crate::config::v2::NoMistakesConfig::default();
     let files = Vec::new();
     let sources = crate::codebase::rules::source_store_for_files(&files);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(root, &files);
     let findings = super::run_rule::run_rule_with_sources(super::run_rule::RunRuleRequest {
         rule_id: "future-filesystem-rule",
         fallback,
         root,
         config: &config,
         files: &files,
+        snapshot: &snapshot,
         sources: &sources,
         facts: None,
         defer_suppression: false,
@@ -59,12 +61,14 @@ fn run_rule_dispatches_markdown_link_display_text() {
     let config = crate::config::v2::NoMistakesConfig::default();
     let files = Vec::new();
     let sources = crate::codebase::rules::source_store_for_files(&files);
+    let snapshot = crate::codebase::ts_source::VisiblePathSnapshot::from_paths(&root, &files);
     let findings = super::run_rule::run_rule_with_sources(super::run_rule::RunRuleRequest {
         rule_id: MARKDOWN_LINK_DISPLAY_TEXT,
         fallback,
         root: &root,
         config: &config,
         files: &files,
+        snapshot: &snapshot,
         sources: &sources,
         facts: None,
         defer_suppression: false,

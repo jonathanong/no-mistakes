@@ -1,5 +1,5 @@
 use super::RuleFinding;
-use crate::codebase::ts_source::{discover_files, relative_slash_path};
+use crate::codebase::ts_source::{relative_slash_path, SourceStore, VisiblePathSnapshot};
 use crate::config::v2::NoMistakesConfig;
 use anyhow::Result;
 use rayon::prelude::*;
@@ -13,7 +13,8 @@ const DEFAULT_SEVERITY: &str = "warning";
 const VALID_SEVERITIES: [&str; 4] = ["error", "warning", "info", "style"];
 
 mod candidates;
-use candidates::{filtered_shell_files, filtered_shell_files_with_sources};
+mod selection;
+use selection::{scan, scan_with_sources};
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -26,25 +27,31 @@ pub(crate) struct ShellcheckOptions {
 pub(crate) struct Options {
     pub(crate) shell_files: Vec<String>,
     pub(crate) shebang_dirs: Vec<String>,
+    pub(crate) tracked_only: bool,
     pub(crate) shellcheck: ShellcheckOptions,
     pub(crate) skills_lockfile: Option<String>,
 }
 
 pub fn check(root: &Path, config: &NoMistakesConfig) -> Result<Vec<RuleFinding>> {
-    let skip = &config.filesystem.skip_directories;
-    let all: Result<Vec<Vec<RuleFinding>>> = config
-        .rule_applications(RULE_ID)
+    let rules = config.rule_applications(RULE_ID);
+    if rules.is_empty() {
+        return Ok(Vec::new());
+    }
+    let snapshot = VisiblePathSnapshot::new(root);
+    let skip = super::skip_dir_set(config);
+    let all: Result<Vec<Vec<RuleFinding>>> = rules
         .into_par_iter()
         .map(|rule| -> Result<Vec<RuleFinding>> {
             let opts: Options = rule.try_rule_options()?;
             let target_roots = super::target_roots(root, config, rule);
             let files: Vec<PathBuf> = target_roots
                 .iter()
-                .flat_map(|r| discover_files(r, skip))
+                .flat_map(|r| snapshot.paths_for(r).iter().cloned().collect::<Vec<_>>())
+                .filter(|p| super::file_allowed_by_roots_and_skip(root, &skip, p, &target_roots))
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
             let rule_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
-            scan(root, &opts, &files, &target_roots, &rule_filter)
+            scan(root, &opts, &files, &target_roots, &rule_filter, &snapshot)
         })
         .collect();
     merge(all)
@@ -65,6 +72,17 @@ pub(crate) fn check_with_files_and_sources(
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
 ) -> Result<Vec<RuleFinding>> {
+    let snapshot = VisiblePathSnapshot::from_paths(root, all_files);
+    check_with_files_sources_and_snapshot(root, config, all_files, sources, &snapshot)
+}
+
+pub(crate) fn check_with_files_sources_and_snapshot(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &SourceStore,
+    snapshot: &VisiblePathSnapshot,
+) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
         .into_par_iter()
@@ -79,7 +97,15 @@ pub(crate) fn check_with_files_and_sources(
                 .collect();
             let files = super::path_filter::filter_rule_files(root, config, rule, &files)?;
             let rule_filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
-            scan_with_sources(root, &opts, &files, &target_roots, &rule_filter, sources)
+            scan_with_sources(
+                root,
+                &opts,
+                &files,
+                &target_roots,
+                &rule_filter,
+                sources,
+                snapshot,
+            )
         })
         .collect();
     merge(all)
@@ -89,36 +115,6 @@ fn merge(all: Result<Vec<Vec<RuleFinding>>>) -> Result<Vec<RuleFinding>> {
     let mut v: Vec<RuleFinding> = all?.into_iter().flatten().collect();
     super::sort_findings(&mut v);
     Ok(v)
-}
-
-fn scan(
-    root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
-    target_roots: &[PathBuf],
-    rule_filter: &super::path_filter::RulePathFilter,
-) -> Result<Vec<RuleFinding>> {
-    let shell_candidates = filtered_shell_files(root, opts, files, target_roots, rule_filter);
-    if shell_candidates.is_empty() {
-        return Ok(Vec::new());
-    }
-    run_shellcheck(root, opts, &shell_candidates)
-}
-
-fn scan_with_sources(
-    root: &Path,
-    opts: &Options,
-    files: &[PathBuf],
-    target_roots: &[PathBuf],
-    rule_filter: &super::path_filter::RulePathFilter,
-    sources: &crate::codebase::ts_source::SourceStore,
-) -> Result<Vec<RuleFinding>> {
-    let shell_candidates =
-        filtered_shell_files_with_sources(root, opts, files, target_roots, rule_filter, sources);
-    if shell_candidates.is_empty() {
-        return Ok(Vec::new());
-    }
-    run_shellcheck(root, opts, &shell_candidates)
 }
 
 pub(crate) fn run_shellcheck(
