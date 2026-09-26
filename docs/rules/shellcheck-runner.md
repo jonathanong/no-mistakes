@@ -30,6 +30,15 @@ defaults to `[]`. `shebangDirs` adds non-`.sh` files below the listed
 repository-relative directories when their first line is a supported Bash or
 sh shebang; it also defaults to `[]`. Selected `.sh` files are always checked.
 
+`trackedOnly` defaults to `false`. When `true`, the rule selects only files
+present in the Git index and working tree, including modified or staged files.
+It filters `.sh` files, supported shebang candidates, and explicit `shellFiles`
+against the same tracked view. Outside a Git checkout, this option uses the
+ignore-aware visible file set because no Git index exists. With the default
+`false`, visible untracked files and explicit paths keep their existing behavior.
+The tracked view comes from the request's shared discovery snapshot, so the
+option does not start another file scan.
+
 `skillsLockfile` optionally names a repository-relative skills lockfile for the
 rule's path-bearing configuration. It defaults to unset and does not add files
 to the ShellCheck candidate set; candidates still come from `.sh`, supported
