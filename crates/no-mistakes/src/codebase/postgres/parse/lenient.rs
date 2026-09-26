@@ -5,9 +5,12 @@ use sqlparser::tokenizer::{Token, Word};
 mod recover;
 mod rewrite;
 
-use rewrite::{rewrite_chr_calls, rewrite_drop_index_concurrently};
+use rewrite::{
+    rewrite_chr_calls, rewrite_drop_index_concurrently, rewrite_referential_set_column_lists,
+};
 
-/// Tokenize, rewrite PG18 virtual generated columns and
+/// Tokenize, rewrite PG18 virtual generated columns,
+/// `ON DELETE` column lists on `SET NULL` / `SET DEFAULT`, and
 /// `DROP INDEX CONCURRENTLY`, then parse each statement.
 ///
 /// Unparseable `DO $tag$ … $tag$` statements are peeled so schema DDL inside
@@ -16,6 +19,7 @@ use rewrite::{rewrite_chr_calls, rewrite_drop_index_concurrently};
 pub(super) fn parse_postgres_sql_lenient(sql: &str) -> Vec<Statement> {
     let mut tokens = super::unicode::tokenize(sql);
     rewrite_virtual_generated_columns(&mut tokens);
+    rewrite_referential_set_column_lists(&mut tokens);
     rewrite_drop_index_concurrently(&mut tokens);
     recover::parse_chunks(split_statement_tokens(tokens))
 }

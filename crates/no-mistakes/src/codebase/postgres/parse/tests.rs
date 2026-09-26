@@ -59,6 +59,40 @@ fn lenient_parse_skips_create_type_in_do_and_accepts_virtual_generated() {
 }
 
 #[test]
+fn lenient_parse_keeps_named_not_valid_fk_with_column_specific_set_null() {
+    let statements = parse_postgres_sql_lenient(
+        "ALTER TABLE child ADD CONSTRAINT child_topic_result_fk \
+         FOREIGN KEY (topic_id, result_id) \
+         REFERENCES parent (topic_id, result_id) \
+         ON DELETE SET NULL (result_id) NOT VALID;",
+    );
+    assert_eq!(statements.len(), 1, "{statements:#?}");
+    let sqlparser::ast::Statement::AlterTable(alter) = &statements[0] else {
+        panic!("{statements:#?}");
+    };
+    let sqlparser::ast::AlterTableOperation::AddConstraint {
+        constraint,
+        not_valid,
+    } = &alter.operations[0]
+    else {
+        panic!("{alter:#?}");
+    };
+    assert!(*not_valid);
+    let sqlparser::ast::TableConstraint::ForeignKey(fk) = constraint else {
+        panic!("{constraint:#?}");
+    };
+    assert_eq!(
+        fk.name.as_ref().map(|name| name.value.as_str()),
+        Some("child_topic_result_fk")
+    );
+    assert_eq!(
+        fk.on_delete.as_ref().map(ToString::to_string).as_deref(),
+        Some("SET NULL")
+    );
+    assert_eq!(fk.columns.len(), 2);
+}
+
+#[test]
 fn lenient_parse_recovers_alter_table_from_plpgsql_do_body() {
     let statements = parse_postgres_sql_lenient(
         "DO $$ BEGIN\n\

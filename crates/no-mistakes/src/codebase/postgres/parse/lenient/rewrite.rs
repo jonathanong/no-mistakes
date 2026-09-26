@@ -2,6 +2,57 @@ use super::{keyword_of, next_non_ws};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::Token;
 
+mod column;
+mod members;
+
+use members::action_list_matches_foreign_key;
+
+/// Drop PostgreSQL column lists on `ON DELETE SET NULL` and
+/// `ON DELETE SET DEFAULT`. sqlparser 0.63 rejects `SET NULL (column)`, which
+/// hides the named `NOT VALID` add and makes a later `VALIDATE CONSTRAINT`
+/// look unmatched. The action keyword stays, so the recorded delete action is
+/// still `SET NULL` or `SET DEFAULT`. Only a nonempty comma-separated
+/// identifier list is removed, and only when every name is one of the
+/// foreign key's referencing columns. Empty lists, expressions, unquoted
+/// reserved words, columns outside the key, `ON UPDATE` lists, and column
+/// `SET DEFAULT (expression)` stay, so invalid SQL is not rewritten into a
+/// constraint PostgreSQL would accept.
+pub(super) fn rewrite_referential_set_column_lists(tokens: &mut Vec<Token>) {
+    let mut index = 0;
+    while index < tokens.len() {
+        if let Some((open, end)) = referential_set_column_list_at(tokens, index) {
+            tokens.drain(open..end);
+            continue;
+        }
+        index += 1;
+    }
+}
+
+fn referential_set_column_list_at(tokens: &[Token], on_at: usize) -> Option<(usize, usize)> {
+    if keyword_of(tokens.get(on_at)?) != Some(Keyword::ON) {
+        return None;
+    }
+    let action_at = next_non_ws(tokens, on_at + 1)?;
+    if keyword_of(tokens.get(action_at)?) != Some(Keyword::DELETE) {
+        return None;
+    }
+    let set_at = next_non_ws(tokens, action_at + 1)?;
+    if keyword_of(tokens.get(set_at)?) != Some(Keyword::SET) {
+        return None;
+    }
+    let value_at = next_non_ws(tokens, set_at + 1)?;
+    match keyword_of(tokens.get(value_at)?) {
+        Some(Keyword::NULL | Keyword::DEFAULT) => {}
+        _ => return None,
+    }
+    let open = next_non_ws(tokens, value_at + 1)?;
+    if !matches!(tokens.get(open)?, Token::LParen) {
+        return None;
+    }
+    let end = super::skip_balanced_parens(tokens, open)?;
+    action_list_matches_foreign_key(tokens, open, end, on_at).then_some((open, end))
+}
+
 pub(super) fn rewrite_drop_index_concurrently(tokens: &mut Vec<Token>) {
     let mut index = 0;
     while index < tokens.len() {

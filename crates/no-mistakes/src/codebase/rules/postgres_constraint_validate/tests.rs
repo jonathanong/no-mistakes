@@ -55,6 +55,34 @@ fn paired_not_valid_inside_do_block_passes() {
 }
 
 #[test]
+fn paired_column_specific_set_null_passes() {
+    assert!(run(&fixture("pass-set-null-columns")).is_empty());
+}
+
+#[test]
+fn paired_ordinary_set_null_passes() {
+    assert!(run(&fixture("pass-set-null")).is_empty());
+}
+
+#[test]
+fn column_specific_set_null_still_flags_an_unmatched_validate() {
+    let findings = run(&fixture("fail-set-null-columns"));
+    assert_eq!(findings.len(), 2, "{findings:?}");
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("child_topic_result_fk")),
+        "{findings:?}"
+    );
+    assert!(
+        findings
+            .iter()
+            .any(|finding| finding.message.contains("child_other_fk")),
+        "{findings:?}"
+    );
+}
+
+#[test]
 fn flags_not_valid_inside_do_block_without_validate() {
     let findings = run(&fixture("fail-do-missing"));
     assert_eq!(findings.len(), 1, "{findings:?}");
