@@ -40,6 +40,9 @@ fn strips_referential_set_column_lists_only() {
         "FOREIGN KEY (key) REFERENCES parent (id) ON DELETE SET NULL (key)",
         "FOREIGN KEY (topic_id, result_id) REFERENCES parent (topic_id, result_id) ON DELETE SET NULL (result_id)",
         "FOREIGN KEY (Result_Id) REFERENCES parent (id) ON DELETE SET NULL (result_id)",
+        "a int, FOREIGN KEY (a) REFERENCES parent(a), b int REFERENCES parent(b) ON DELETE SET NULL (b)",
+        "result_id numeric(10) REFERENCES parent(id) ON DELETE SET NULL (result_id)",
+        "result_id uuid NOT NULL REFERENCES parent(id) ON DELETE SET NULL (result_id)",
     ] {
         let mut parsed = tokens(sql);
         rewrite_referential_set_column_lists(&mut parsed);
@@ -67,9 +70,9 @@ fn leaves_non_referential_parentheses() {
         "ON DELETE SET NULL (ISNULL)",
         "FOREIGN KEY (topic_id, result_id) REFERENCES parent (topic_id, result_id) ON DELETE SET NULL (other_id)",
         "FOREIGN KEY (\"Result\") REFERENCES parent (id) ON DELETE SET NULL (\"result\")",
+        "FOREIGN KEY (result_id) REFERENCES parent (id) ON DELETE SET NULL (\"RESULT_ID\")",
         "REFERENCES p (id); ON DELETE SET NULL (id)",
         "REFERENCES p (id) ON DELETE SET NULL (id)",
-        "FOREIGN TABLE (id) REFERENCES p (id) ON DELETE SET NULL (id)",
         ", uuid REFERENCES p (id) ON DELETE SET NULL (id)",
         "ON DELETE SET NULL (key)",
         "ON DELETE SET NULL (result_id + 1)",

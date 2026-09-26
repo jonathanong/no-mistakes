@@ -68,45 +68,65 @@ fn foreign_key_columns(tokens: &[Token], references_at: usize) -> Option<Vec<Wor
 }
 
 fn column_constraint_name(tokens: &[Token], references_at: usize) -> Option<Word> {
-    let type_at = prev_non_ws(tokens, references_at)?;
-    if !matches!(tokens.get(type_at)?, Token::Word(_)) {
-        return None;
-    }
-    let name_at = prev_non_ws(tokens, type_at)?;
-    let Token::Word(word) = tokens.get(name_at)? else {
-        return None;
-    };
-    is_column_word(word).then(|| word.clone())
+    let start = element_start(tokens, references_at);
+    tokens[start..references_at].iter().find_map(|token| {
+        let Token::Word(word) = token else {
+            return None;
+        };
+        is_column_word(word).then(|| word.clone())
+    })
 }
 
 fn same_column(action: &Word, column: &Word) -> bool {
-    match (action.quote_style, column.quote_style) {
-        (Some(_), Some(_)) => action.value == column.value,
-        _ => action.value.eq_ignore_ascii_case(&column.value),
+    folded_name(action) == folded_name(column)
+}
+
+fn folded_name(word: &Word) -> String {
+    if word.quote_style.is_some() {
+        word.value.clone()
+    } else {
+        word.value.to_ascii_lowercase()
     }
 }
 
 fn keyword_before(tokens: &[Token], before: usize, keyword: Keyword) -> Option<usize> {
     let mut index = before;
+    let mut depth = 0i32;
     while index > 0 {
         index -= 1;
-        if matches!(tokens[index], Token::SemiColon) {
-            return None;
-        }
-        if keyword_of(&tokens[index]) == Some(keyword) {
+        if depth == 0 && keyword_of(&tokens[index]) == Some(keyword) {
             return Some(index);
+        }
+        if at_element_boundary(&tokens[index], &mut depth) {
+            return None;
         }
     }
     None
 }
 
-fn prev_non_ws(tokens: &[Token], start: usize) -> Option<usize> {
-    let mut index = start;
+fn element_start(tokens: &[Token], before: usize) -> usize {
+    let mut index = before;
+    let mut depth = 0i32;
     while index > 0 {
         index -= 1;
-        if !matches!(tokens[index], Token::Whitespace(_)) {
-            return Some(index);
+        if at_element_boundary(&tokens[index], &mut depth) {
+            return index + 1;
         }
     }
-    None
+    0
+}
+
+fn at_element_boundary(token: &Token, depth: &mut i32) -> bool {
+    match token {
+        Token::RParen => *depth += 1,
+        Token::LParen => {
+            *depth -= 1;
+            if *depth < 0 {
+                return true;
+            }
+        }
+        Token::SemiColon | Token::Comma if *depth == 0 => return true,
+        _ => {}
+    }
+    false
 }
