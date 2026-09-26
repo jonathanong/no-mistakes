@@ -57,11 +57,16 @@ fn leaves_non_referential_parentheses() {
     for sql in [
         "ON DELETE SET NULL",
         "ON DELETE CASCADE",
+        "ON DELETE SET RESTRICT",
         "ON CONFLICT DO NOTHING",
         "ALTER COLUMN result_id SET DEFAULT (gen_random_uuid())",
         "REFERENCES parent (result_id) ON DELETE SET NULL",
         "ON UPDATE SET NULL (result_id)",
         "ON UPDATE SET DEFAULT (result_id, topic_id)",
+        "ON DELETE SET NULL ()",
+        "ON DELETE SET NULL (1)",
+        "ON DELETE SET NULL (result_id + 1)",
+        "ON DELETE SET NULL (result_id,)",
         "ON DELETE SET NULL (result_id",
     ] {
         let mut parsed = tokens(sql);

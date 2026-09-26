@@ -103,6 +103,20 @@ fn on_update_column_list_is_not_accepted_as_not_valid() {
 }
 
 #[test]
+fn delete_set_null_expression_is_not_accepted_as_not_valid() {
+    // An expression is not a column list. Stripping it would hide SQL
+    // PostgreSQL rejects and let the NOT VALID add pair.
+    let facts = extract_migration_facts(
+        "ALTER TABLE child ADD CONSTRAINT child_expr_fk \
+         FOREIGN KEY (result_id) REFERENCES parent (result_id) \
+         ON DELETE SET NULL (result_id + 1) NOT VALID;\n\
+         ALTER TABLE child VALIDATE CONSTRAINT child_expr_fk;",
+    );
+    assert!(facts.not_valid_constraints.is_empty(), "{facts:?}");
+    assert_eq!(facts.validated_constraints[0].name, "child_expr_fk");
+}
+
+#[test]
 fn column_default_expressions_stay_intact() {
     let facts = extract_migration_facts(
         "ALTER TABLE child ADD COLUMN result_id uuid DEFAULT (gen_random_uuid());",
