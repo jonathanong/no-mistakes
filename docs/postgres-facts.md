@@ -43,9 +43,11 @@ those literals (`chr(85)||chr(80)||…`) are recovered as SQL when the chunk is
 otherwise unparseable. `DROP INDEX CONCURRENTLY` is accepted.
 Incomplete statements are still skipped. PostgreSQL 18
 `GENERATED ALWAYS AS (...) VIRTUAL` is accepted (rewritten to `STORED`
-for the parser). Column lists on referential `ON DELETE` / `ON UPDATE`
-`SET NULL` and `SET DEFAULT` are accepted; the recorded action omits the
+for the parser). Column lists on `ON DELETE SET NULL` and
+`ON DELETE SET DEFAULT` are accepted; the recorded action omits the
 column list (`SET NULL`, `SET DEFAULT`) and the constraint name is unchanged.
+`ON UPDATE` column lists are not rewritten, because PostgreSQL accepts a
+column subset only for `ON DELETE`.
 A file that cannot be tokenized yields no tables. The
 extractors do not panic.
 
@@ -67,8 +69,8 @@ request `SourceStore` and runs `extract_migration_facts`, which includes
   table's indexes
 - Foreign keys from `CREATE TABLE` and `ALTER TABLE`: table, columns,
   referenced table, optional `ON DELETE` action (column lists on
-  `SET NULL` / `SET DEFAULT` are omitted from the action string), and a
-  source line
+  `ON DELETE SET NULL` / `SET DEFAULT` are omitted from the action string),
+  and a source line
 - `ALTER TABLE … ADD COLUMN`: table, column name, and a source line
 - Named `ALTER TABLE … ADD CONSTRAINT … NOT VALID` rows
 - `ALTER TABLE … VALIDATE CONSTRAINT` rows

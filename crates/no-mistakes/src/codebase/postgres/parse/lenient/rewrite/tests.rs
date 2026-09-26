@@ -34,9 +34,8 @@ fn rewrites_chr_to_a_string_literal() {
 fn strips_referential_set_column_lists_only() {
     for sql in [
         "ON DELETE SET NULL (result_id)",
-        "ON UPDATE SET NULL (result_id, topic_id)",
+        "ON DELETE SET NULL (result_id, topic_id)",
         "ON DELETE SET DEFAULT (\"result_id\")",
-        "ON UPDATE SET DEFAULT (result_id)",
     ] {
         let mut parsed = tokens(sql);
         rewrite_referential_set_column_lists(&mut parsed);
@@ -61,6 +60,8 @@ fn leaves_non_referential_parentheses() {
         "ON CONFLICT DO NOTHING",
         "ALTER COLUMN result_id SET DEFAULT (gen_random_uuid())",
         "REFERENCES parent (result_id) ON DELETE SET NULL",
+        "ON UPDATE SET NULL (result_id)",
+        "ON UPDATE SET DEFAULT (result_id, topic_id)",
         "ON DELETE SET NULL (result_id",
     ] {
         let mut parsed = tokens(sql);

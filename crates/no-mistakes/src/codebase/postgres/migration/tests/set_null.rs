@@ -44,7 +44,7 @@ fn keeps_unmatched_names_when_column_specific_set_null_parses() {
     let facts = extract_migration_facts(
         "ALTER TABLE child ADD CONSTRAINT child_topic_result_fk \
          FOREIGN KEY (topic_id, result_id) REFERENCES parent (topic_id, result_id) \
-         ON UPDATE SET DEFAULT (result_id) ON DELETE SET NULL (result_id, topic_id) NOT VALID;\n\
+         ON DELETE SET NULL (result_id, topic_id) NOT VALID;\n\
          ALTER TABLE child VALIDATE CONSTRAINT child_other_fk;",
     );
     assert_eq!(facts.not_valid_constraints[0].name, "child_topic_result_fk");
@@ -86,6 +86,20 @@ fn create_table_column_specific_set_null_keeps_delete_action() {
         Some("SET NULL")
     );
     assert!(facts.not_valid_constraints.is_empty());
+}
+
+#[test]
+fn on_update_column_list_is_not_accepted_as_not_valid() {
+    // PostgreSQL allows a SET NULL / SET DEFAULT column list only on ON DELETE.
+    // Rewriting ON UPDATE would hide SQL the server rejects and pair the add.
+    let facts = extract_migration_facts(
+        "ALTER TABLE child ADD CONSTRAINT child_update_fk \
+         FOREIGN KEY (result_id) REFERENCES parent (result_id) \
+         ON UPDATE SET NULL (result_id) NOT VALID;\n\
+         ALTER TABLE child VALIDATE CONSTRAINT child_update_fk;",
+    );
+    assert!(facts.not_valid_constraints.is_empty(), "{facts:?}");
+    assert_eq!(facts.validated_constraints[0].name, "child_update_fk");
 }
 
 #[test]

@@ -10,7 +10,7 @@ use rewrite::{
 };
 
 /// Tokenize, rewrite PG18 virtual generated columns,
-/// column-specific `SET NULL` / `SET DEFAULT` referential actions, and
+/// `ON DELETE` column lists on `SET NULL` / `SET DEFAULT`, and
 /// `DROP INDEX CONCURRENTLY`, then parse each statement.
 ///
 /// Unparseable `DO $tag$ … $tag$` statements are peeled so schema DDL inside

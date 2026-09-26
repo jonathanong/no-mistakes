@@ -18,9 +18,9 @@ included SQL file. Unnamed `NOT VALID` adds are ignored because they cannot be
 validated by name. `NOT VALID` adds inside `DO $$` blocks (including
 idempotent `IF NOT EXISTS` wrappers) pair with a later `VALIDATE CONSTRAINT`,
 whether that validate sits inside the same block or at top level.
-PostgreSQL column lists on referential `SET NULL` and `SET DEFAULT`
-(`ON DELETE SET NULL (column)`) still pair by constraint name. The recorded
-delete action stays `SET NULL` or `SET DEFAULT`.
+PostgreSQL column lists on `ON DELETE SET NULL` and `ON DELETE SET DEFAULT`
+still pair by constraint name. The recorded delete action stays `SET NULL`
+or `SET DEFAULT`. A column list on `ON UPDATE` is not treated as that syntax.
 
 Counterexample: a check is added `NOT VALID` and never validated.
 
