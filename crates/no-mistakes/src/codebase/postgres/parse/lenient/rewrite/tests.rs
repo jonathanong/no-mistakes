@@ -43,6 +43,7 @@ fn strips_referential_set_column_lists_only() {
         "a int, FOREIGN KEY (a) REFERENCES parent(a), b int REFERENCES parent(b) ON DELETE SET NULL (b)",
         "result_id numeric(10) REFERENCES parent(id) ON DELETE SET NULL (result_id)",
         "result_id uuid NOT NULL REFERENCES parent(id) ON DELETE SET NULL (result_id)",
+        "ALTER TABLE child ADD COLUMN result_id uuid REFERENCES parent(id) ON DELETE SET NULL (result_id)",
     ] {
         let mut parsed = tokens(sql);
         rewrite_referential_set_column_lists(&mut parsed);
@@ -72,6 +73,7 @@ fn leaves_non_referential_parentheses() {
         "FOREIGN KEY (\"Result\") REFERENCES parent (id) ON DELETE SET NULL (\"result\")",
         "FOREIGN KEY (result_id) REFERENCES parent (id) ON DELETE SET NULL (\"RESULT_ID\")",
         "FOREIGN KEY (result_id, topic_id) REFERENCES parent (result_id, topic_id) ON DELETE SET NULL (result_id, result_id)",
+        "FOREIGN KEY (result_id, result_id) REFERENCES parent (result_id, result_id) ON DELETE SET NULL (result_id)",
         "REFERENCES p (id); ON DELETE SET NULL (id)",
         "REFERENCES p (id) ON DELETE SET NULL (id)",
         ", uuid REFERENCES p (id) ON DELETE SET NULL (id)",

@@ -16,6 +16,7 @@ pub(super) fn action_list_matches_foreign_key(
         return false;
     };
     unique_names(&names)
+        && unique_names(&local)
         && names
             .iter()
             .all(|name| local.iter().any(|column| same_column(name, column)))
@@ -139,6 +140,7 @@ fn at_element_boundary(token: &Token, depth: &mut i32) -> bool {
             }
         }
         Token::SemiColon | Token::Comma if *depth == 0 => return true,
+        token if *depth == 0 && keyword_of(token) == Some(Keyword::COLUMN) => return true,
         _ => {}
     }
     false
