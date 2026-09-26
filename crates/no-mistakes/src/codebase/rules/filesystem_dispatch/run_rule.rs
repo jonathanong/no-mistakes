@@ -7,6 +7,7 @@ pub(super) struct RunRuleRequest<'a> {
     pub(super) root: &'a Path,
     pub(super) config: &'a crate::config::v2::NoMistakesConfig,
     pub(super) files: &'a [PathBuf],
+    pub(super) snapshot: &'a crate::codebase::ts_source::VisiblePathSnapshot,
     pub(super) sources: &'a std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     pub(super) facts: Option<&'a crate::codebase::check_facts::CheckFactMap>,
     pub(super) defer_suppression: bool,
@@ -19,6 +20,7 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         root,
         config,
         files,
+        snapshot,
         sources,
         facts,
         defer_suppression,
@@ -54,9 +56,9 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
         DOC_CONSISTENCY => {
             doc_consistency::check_with_files_and_sources(root, config, files, sources)
         }
-        SHELLCHECK_RUNNER => {
-            shellcheck_runner::check_with_files_and_sources(root, config, files, sources)
-        }
+        SHELLCHECK_RUNNER => shellcheck_runner::check_with_files_sources_and_snapshot(
+            root, config, files, sources, snapshot,
+        ),
         PACKAGE_JSON_REQUIRED_FIELDS => {
             package_json_required_fields::check_with_files_and_sources(root, config, files, sources)
         }
@@ -114,6 +116,7 @@ pub(super) fn run_rule_with_sources(request: RunRuleRequest<'_>) -> Result<Vec<R
             root,
             config,
             files,
+            snapshot,
             sources,
             facts,
             defer_suppression,

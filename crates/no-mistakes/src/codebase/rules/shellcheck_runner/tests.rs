@@ -55,6 +55,8 @@ fn shellcheck_available() -> bool {
         .is_ok_and(|o| o.status.success())
 }
 
+mod tracked_only;
+
 #[test]
 fn pass_fixture_has_no_findings_or_skips_without_shellcheck() {
     let root = fixture_root("pass");
