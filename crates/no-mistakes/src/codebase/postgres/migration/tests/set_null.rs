@@ -131,6 +131,19 @@ fn delete_set_null_reserved_word_is_not_accepted_as_not_valid() {
 }
 
 #[test]
+fn delete_set_null_outside_the_foreign_key_is_not_accepted() {
+    // other_id is not one of the referencing columns, so PostgreSQL rejects it.
+    let facts = extract_migration_facts(
+        "ALTER TABLE child ADD CONSTRAINT child_other_fk \
+         FOREIGN KEY (topic_id, result_id) REFERENCES parent (topic_id, result_id) \
+         ON DELETE SET NULL (other_id) NOT VALID;\n\
+         ALTER TABLE child VALIDATE CONSTRAINT child_other_fk;",
+    );
+    assert!(facts.not_valid_constraints.is_empty(), "{facts:?}");
+    assert_eq!(facts.validated_constraints[0].name, "child_other_fk");
+}
+
+#[test]
 fn column_default_expressions_stay_intact() {
     let facts = extract_migration_facts(
         "ALTER TABLE child ADD COLUMN result_id uuid DEFAULT (gen_random_uuid());",

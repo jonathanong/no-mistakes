@@ -33,24 +33,16 @@ fn rewrites_chr_to_a_string_literal() {
 #[test]
 fn strips_referential_set_column_lists_only() {
     for sql in [
-        "ON DELETE SET NULL (result_id)",
-        "ON DELETE SET NULL (result_id, topic_id)",
-        "ON DELETE SET DEFAULT (\"result_id\")",
-        "ON DELETE SET NULL (\"NULL\")",
-        "ON DELETE SET NULL (key)",
+        "FOREIGN KEY (result_id) REFERENCES parent (id) ON DELETE SET NULL (result_id)",
+        "FOREIGN KEY (result_id, topic_id) REFERENCES parent (result_id, topic_id) ON DELETE SET NULL (result_id, topic_id)",
+        "FOREIGN KEY (result_id) REFERENCES parent (id) ON DELETE SET DEFAULT (\"result_id\")",
+        "FOREIGN KEY (\"NULL\") REFERENCES parent (id) ON DELETE SET NULL (\"NULL\")",
+        "FOREIGN KEY (key) REFERENCES parent (id) ON DELETE SET NULL (key)",
+        "FOREIGN KEY (topic_id, result_id) REFERENCES parent (topic_id, result_id) ON DELETE SET NULL (result_id)",
     ] {
         let mut parsed = tokens(sql);
         rewrite_referential_set_column_lists(&mut parsed);
-        assert!(
-            parsed.iter().all(|token| !matches!(token, Token::LParen)),
-            "{sql}: {parsed:?}"
-        );
-        assert!(
-            parsed
-                .iter()
-                .any(|token| keyword_of(token) == Some(Keyword::SET)),
-            "{sql}"
-        );
+        assert!(action_column_list_removed(&parsed), "{sql}: {parsed:?}");
     }
 }
 
@@ -72,6 +64,8 @@ fn leaves_non_referential_parentheses() {
         "ON DELETE SET NULL (ARRAY)",
         "ON DELETE SET NULL (ANALYZE)",
         "ON DELETE SET NULL (ISNULL)",
+        "FOREIGN KEY (topic_id, result_id) REFERENCES parent (topic_id, result_id) ON DELETE SET NULL (other_id)",
+        "ON DELETE SET NULL (key)",
         "ON DELETE SET NULL (result_id + 1)",
         "ON DELETE SET NULL (result_id,)",
         "ON DELETE SET NULL (result_id",
@@ -81,6 +75,24 @@ fn leaves_non_referential_parentheses() {
         rewrite_referential_set_column_lists(&mut parsed);
         assert_eq!(parsed, before, "{sql}");
     }
+}
+
+fn action_column_list_removed(tokens: &[Token]) -> bool {
+    let Some(value_at) = tokens.iter().rposition(|token| {
+        matches!(keyword_of(token), Some(Keyword::NULL | Keyword::DEFAULT))
+            && token_is_unquoted(token)
+    }) else {
+        return false;
+    };
+    tokens
+        .iter()
+        .skip(value_at + 1)
+        .find(|token| !matches!(token, Token::Whitespace(_)))
+        .is_none_or(|token| !matches!(token, Token::LParen))
+}
+
+fn token_is_unquoted(token: &Token) -> bool {
+    matches!(token, Token::Word(word) if word.quote_style.is_none())
 }
 
 #[test]
