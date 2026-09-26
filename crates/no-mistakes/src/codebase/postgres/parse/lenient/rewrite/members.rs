@@ -15,9 +15,22 @@ pub(super) fn action_list_matches_foreign_key(
     let Some(local) = referencing_columns(tokens, on_at) else {
         return false;
     };
-    names
-        .iter()
-        .all(|name| local.iter().any(|column| same_column(name, column)))
+    unique_names(&names)
+        && names
+            .iter()
+            .all(|name| local.iter().any(|column| same_column(name, column)))
+}
+
+fn unique_names(names: &[Word]) -> bool {
+    let mut seen = Vec::with_capacity(names.len());
+    for name in names {
+        let folded = folded_name(name);
+        if seen.iter().any(|existing: &String| existing == &folded) {
+            return false;
+        }
+        seen.push(folded);
+    }
+    true
 }
 
 fn action_names(tokens: &[Token], open: usize, end: usize) -> Option<Vec<Word>> {

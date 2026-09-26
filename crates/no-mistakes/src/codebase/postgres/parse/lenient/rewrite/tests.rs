@@ -71,6 +71,7 @@ fn leaves_non_referential_parentheses() {
         "FOREIGN KEY (topic_id, result_id) REFERENCES parent (topic_id, result_id) ON DELETE SET NULL (other_id)",
         "FOREIGN KEY (\"Result\") REFERENCES parent (id) ON DELETE SET NULL (\"result\")",
         "FOREIGN KEY (result_id) REFERENCES parent (id) ON DELETE SET NULL (\"RESULT_ID\")",
+        "FOREIGN KEY (result_id, topic_id) REFERENCES parent (result_id, topic_id) ON DELETE SET NULL (result_id, result_id)",
         "REFERENCES p (id); ON DELETE SET NULL (id)",
         "REFERENCES p (id) ON DELETE SET NULL (id)",
         ", uuid REFERENCES p (id) ON DELETE SET NULL (id)",
