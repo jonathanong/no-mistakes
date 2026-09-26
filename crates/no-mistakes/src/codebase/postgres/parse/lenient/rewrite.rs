@@ -20,17 +20,15 @@ use members::action_list_matches_foreign_key;
 pub(super) fn rewrite_referential_set_column_lists(tokens: &mut Vec<Token>) {
     let mut index = 0;
     while index < tokens.len() {
-        if let Some(open) = referential_set_column_list_at(tokens, index) {
-            if let Some(end) = super::skip_balanced_parens(tokens, open) {
-                tokens.drain(open..end);
-                continue;
-            }
+        if let Some((open, end)) = referential_set_column_list_at(tokens, index) {
+            tokens.drain(open..end);
+            continue;
         }
         index += 1;
     }
 }
 
-fn referential_set_column_list_at(tokens: &[Token], on_at: usize) -> Option<usize> {
+fn referential_set_column_list_at(tokens: &[Token], on_at: usize) -> Option<(usize, usize)> {
     if keyword_of(tokens.get(on_at)?) != Some(Keyword::ON) {
         return None;
     }
@@ -52,7 +50,7 @@ fn referential_set_column_list_at(tokens: &[Token], on_at: usize) -> Option<usiz
         return None;
     }
     let end = super::skip_balanced_parens(tokens, open)?;
-    action_list_matches_foreign_key(tokens, open, end, on_at).then_some(open)
+    action_list_matches_foreign_key(tokens, open, end, on_at).then_some((open, end))
 }
 
 pub(super) fn rewrite_drop_index_concurrently(tokens: &mut Vec<Token>) {

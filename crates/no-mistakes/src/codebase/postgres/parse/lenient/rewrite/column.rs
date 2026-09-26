@@ -1,5 +1,5 @@
 use sqlparser::keywords::Keyword;
-use sqlparser::tokenizer::Token;
+use sqlparser::tokenizer::Word;
 
 /// Unquoted PostgreSQL reserved keywords. They are not column names.
 /// Non-reserved keywords such as `KEY` stay eligible.
@@ -105,16 +105,12 @@ const RESERVED_COLUMN_NAME: &[Keyword] = &[
     Keyword::WITH,
 ];
 
-pub(super) fn is_column_name(token: &Token) -> bool {
-    match token {
-        Token::Word(word) if word.quote_style.is_some() => true,
-        Token::Word(word)
-            if word.value.eq_ignore_ascii_case("analyse")
-                || word.value.eq_ignore_ascii_case("isnull") =>
-        {
-            false
-        }
-        Token::Word(word) => !RESERVED_COLUMN_NAME.contains(&word.keyword),
-        _ => false,
+pub(super) fn is_column_word(word: &Word) -> bool {
+    if word.quote_style.is_some() {
+        return true;
     }
+    if word.value.eq_ignore_ascii_case("analyse") || word.value.eq_ignore_ascii_case("isnull") {
+        return false;
+    }
+    !RESERVED_COLUMN_NAME.contains(&word.keyword)
 }

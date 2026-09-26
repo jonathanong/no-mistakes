@@ -1,4 +1,4 @@
-use super::column::is_column_name;
+use super::column::is_column_word;
 use super::{keyword_of, next_non_ws};
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, Word};
@@ -31,7 +31,7 @@ fn action_names(tokens: &[Token], open: usize, end: usize) -> Option<Vec<Word>> 
             let Token::Word(word) = token else {
                 return None;
             };
-            if !is_column_name(token) {
+            if !is_column_word(word) {
                 return None;
             }
             names.push(word.clone());
@@ -76,7 +76,7 @@ fn column_constraint_name(tokens: &[Token], references_at: usize) -> Option<Word
     let Token::Word(word) = tokens.get(name_at)? else {
         return None;
     };
-    is_column_name(&tokens[name_at]).then(|| word.clone())
+    is_column_word(word).then(|| word.clone())
 }
 
 fn same_column(action: &Word, column: &Word) -> bool {
