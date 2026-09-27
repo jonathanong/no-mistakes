@@ -3,6 +3,9 @@
 `tests` config describes runner configs, project policies, and Playwright
 selector extraction.
 
+For opt-in canonical route credit from registered Vitest integration tests, see
+[integration route coverage](integration-route-coverage.md).
+
 ```yaml
 tests:
   playwright:

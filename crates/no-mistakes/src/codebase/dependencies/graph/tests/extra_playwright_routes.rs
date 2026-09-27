@@ -1,6 +1,24 @@
 use crate::codebase::dependencies::graph::playwright_route_layouts::collect_layout_chain_files_from_file_set;
 
 #[test]
+fn integration_route_edges_preserve_the_real_vitest_entry_owner() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/playwright/integration-route-coverage"),
+    );
+    let snapshot = crate::playwright::fsutil::VisiblePathSnapshot::new(&root);
+    let settings = crate::playwright::config::load_settings_from_visible(&root, None, &[], None, None, &snapshot).unwrap();
+    let facts = crate::playwright::analysis::pipeline_facts::standalone_facts(&root, &settings, Default::default(), &snapshot).unwrap();
+    let all_files = snapshot.paths_for(&root);
+    let edges = collect_playwright_route_edges(&root, None, &all_files, Some(&facts));
+    assert!(edges.contains(&(
+        NodeId::file(root.join("integration/web.test.ts")),
+        NodeId::file(root.join("web/app/healthz/page.tsx")), EdgeKind::RouteTest,
+    )), "{edges:?}");
+    assert!(!edges.iter().any(|(owner, _, kind)| *kind == EdgeKind::RouteTest && *owner == NodeId::file(root.join("integration/cases.ts"))));
+    assert!(!edges.iter().any(|(_, route, kind)| *kind == EdgeKind::RouteTest && *route == NodeId::file(root.join("web/app/unregistered/page.tsx"))));
+}
+
+#[test]
 fn playwright_layout_edges_use_discovered_file_set() {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("playwright-impact-routing"));
     let frontend_root = root.join("web/app");

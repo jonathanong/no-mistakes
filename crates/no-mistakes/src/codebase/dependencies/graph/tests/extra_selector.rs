@@ -93,6 +93,7 @@ fn selector_dep_edge_returns_none_for_route_edge() {
 
     let root = p("/root");
     let edge = PwEdge::Route {
+        attribution: None,
         test_file: Arc::new("tests/e2e/nav.spec.ts".to_string()),
         test_name: None,
         describe_path: Arc::new(vec![]),
@@ -379,4 +380,3 @@ fn collect_playwright_selector_edges_uses_explicit_config_path_not_default_disco
         "expected selector edges when passing the explicit --config path (data-pw)"
     );
 }
-

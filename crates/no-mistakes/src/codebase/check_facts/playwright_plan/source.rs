@@ -23,6 +23,7 @@ impl PlaywrightFactPlan {
         scan_html_ids: bool,
         snapshot: &crate::codebase::ts_source::VisiblePathSnapshot,
     ) -> anyhow::Result<()> {
+        crate::playwright::integration_routes::validate(&settings.route_coverage_sources)?;
         let sources = snapshot.source_store_for(root);
         let visible_files = sources
             .inventory()
@@ -72,6 +73,16 @@ impl PlaywrightFactPlan {
             settings.html_ids || scan_html_ids,
         );
         let settings_key = PlaywrightSettingsKey::new(&settings);
+        let integration_sources = settings
+            .route_coverage_sources
+            .iter()
+            .map(|source| {
+                Ok((
+                    source.clone(),
+                    crate::playwright::fsutil::build_globset(&source.include)?,
+                ))
+            })
+            .collect::<anyhow::Result<Vec<_>>>()?;
         self.merge_source_plan(PlaywrightSourceFactPlan {
             app_source_files: Arc::new(app_source_files),
             selector_regexes,
@@ -79,6 +90,7 @@ impl PlaywrightFactPlan {
             visible_files: Arc::new(visible_files),
             scan_html_ids,
             settings_key,
+            integration_sources,
         });
         Ok(())
     }
@@ -94,6 +106,29 @@ impl PlaywrightFactPlan {
         };
         source_plan.scan_html_ids = true;
         self.merge_source_plan(source_plan);
+    }
+
+    pub(crate) fn integration_route_settings(
+        &self,
+    ) -> impl Iterator<Item = &crate::playwright::config::Settings> {
+        self.source_plans
+            .iter()
+            .map(|plan| plan.settings.as_ref())
+            .filter(|settings| !settings.route_coverage_sources.is_empty())
+    }
+
+    pub(crate) fn integration_route_sources(
+        &self,
+        root: &Path,
+        path: &Path,
+    ) -> impl Iterator<Item = &crate::config::v2::schema::RouteCoverageSource> {
+        let normalized_root = crate::codebase::ts_resolver::normalize_path(root);
+        let relative = crate::playwright::fsutil::relative_string(&normalized_root, path);
+        self.source_plans
+            .iter()
+            .flat_map(|plan| plan.integration_sources.iter())
+            .filter(move |(_, include)| include.is_match(&relative))
+            .map(|(source, _)| source)
     }
 
     pub(crate) fn set_test_files_by_project(

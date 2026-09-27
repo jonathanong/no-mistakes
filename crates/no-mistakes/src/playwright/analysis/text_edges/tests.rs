@@ -20,6 +20,7 @@ fn route_signal_matches_test(
         route: Arc::new("/".to_string()),
         url: Arc::new("/".to_string()),
         hook: route_is_hook,
+        attribution: None,
         line: 1,
     };
     route_signal_matches_locator(
@@ -185,6 +186,7 @@ fn route_reachability_demand_scope_matches_final_route_reason_scope() {
         route: Arc::new("/".to_string()),
         url: Arc::new("/".to_string()),
         hook,
+        attribution: None,
         line,
     };
     let describe_path = vec!["suite".to_string(), "nested".to_string()];
@@ -356,6 +358,7 @@ fn hook_route_signal_ignores_declaration_line_order() {
         route: Arc::new("/".to_string()),
         url: Arc::new("/".to_string()),
         hook: true,
+        attribution: None,
         line,
     };
 

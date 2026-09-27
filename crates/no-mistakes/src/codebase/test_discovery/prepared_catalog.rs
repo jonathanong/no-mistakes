@@ -59,6 +59,11 @@ impl PreparedTestProjects {
         &self.graph_facts
     }
 
+    #[doc(hidden)]
+    pub(crate) fn graph_route_occurrences(&self) -> &BTreeMap<PathBuf, Vec<crate::playwright::integration_routes::RouteOccurrence>> {
+        &self.graph_route_occurrences
+    }
+
     /// Parsed runner projects retained for request-scoped graph features.
     /// Callers must not fall back to reparsing configuration when this returns
     /// `None`; the runner was simply not requested for this invocation.

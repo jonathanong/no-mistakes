@@ -114,6 +114,8 @@ fn has_configured_html_id_via_component_attributes() {
         ignore_routes: vec![],
         rewrites: vec![],
         navigation_helpers: vec![],
+        route_coverage_sources: Vec::new(),
+        route_coverage_vitest: Default::default(),
         selector_wrappers: vec![],
         selector_attributes: vec![],
         test_id_attribute_override: None,
@@ -139,6 +141,8 @@ fn default_settings(selector_attributes: Vec<String>) -> Settings {
         ignore_routes: vec![],
         rewrites: vec![],
         navigation_helpers: vec![],
+        route_coverage_sources: Vec::new(),
+        route_coverage_vitest: Default::default(),
         selector_wrappers: vec![],
         selector_attributes,
         test_id_attribute_override: None,
@@ -282,6 +286,7 @@ fn route_edges_mark_routes_covered() {
         route: std::sync::Arc::new("/users/:id".to_string()),
         url: std::sync::Arc::new("/users/42".to_string()),
         hook: false,
+        attribution: None,
         line: 1,
     }];
     let settings = default_settings(vec!["data-testid".to_string()]);

@@ -92,6 +92,10 @@ pub(crate) fn collect_check_facts_with_precollected_graph_facts(
     mut plan: CheckFactPlan,
     playwright: PlaywrightFactPlan,
     precollected_ts: crate::codebase::ts_source::facts::TsFactMap,
+    precollected_routes: std::collections::BTreeMap<
+        PathBuf,
+        Vec<crate::playwright::integration_routes::RouteOccurrence>,
+    >,
 ) -> CheckFactMap {
     if plan.graph_context.visible_files.is_none() {
         let mut visible_files = graph_files.clone();
@@ -105,7 +109,10 @@ pub(crate) fn collect_check_facts_with_precollected_graph_facts(
         true,
         plan,
         playwright,
-        precollected_ts,
+        super::super::PrecollectedRouteFacts {
+            ts: precollected_ts,
+            routes: precollected_routes,
+        },
     )
 }
 

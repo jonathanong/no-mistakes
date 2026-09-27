@@ -138,6 +138,7 @@ fn text_printers_cover_routes_and_selectors() {
                 route: std::sync::Arc::new("/".to_string()),
                 url: std::sync::Arc::new("/".to_string()),
                 hook: false,
+                attribution: None,
                 line: 1,
             },
             Edge::Selector {
@@ -202,6 +203,7 @@ fn related_report_includes_fetch_apis() {
             route: std::sync::Arc::new("/".to_string()),
             url: std::sync::Arc::new("/".to_string()),
             hook: false,
+            attribution: None,
             line: 1,
         },
         Edge::Fetch {
@@ -293,6 +295,7 @@ fn edge_report_json_schema_is_stable_with_arc_fields() {
                 route: std::sync::Arc::new("/".to_string()),
                 url: std::sync::Arc::new("/api/health".to_string()),
                 hook: false,
+                attribution: None,
                 line: 1,
             },
             Edge::Selector {

@@ -62,8 +62,14 @@ pub(crate) fn collect_file_facts_from_program(
                 plan.source_file_set(),
             )
         });
-    let playwright_source =
-        super::playwright_source::collect(root, path, source, program, playwright);
+    let playwright_source = super::playwright_source::collect(
+        root,
+        path,
+        source,
+        program,
+        playwright,
+        &ts.imported_bindings,
+    );
     let playwright_static_exports = playwright_fetch
         .as_ref()
         .map(|_| crate::playwright::selectors::collect_static_export_values(program));
@@ -90,6 +96,7 @@ pub(crate) fn collect_file_facts_from_program(
         playwright_app_selectors: playwright_source.selectors,
         playwright_app_text_targets: playwright_source.text_targets,
         playwright_static_exports,
+        integration_route_occurrences: playwright_source.integration_routes,
         parse_error: None,
         legacy_symbol_parse_error: None,
         parsed: true,

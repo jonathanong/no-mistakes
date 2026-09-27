@@ -18,6 +18,8 @@ fn settings() -> Settings {
         ignore_routes: vec![],
         rewrites: vec![],
         navigation_helpers: vec![],
+        route_coverage_sources: Vec::new(),
+        route_coverage_vitest: Default::default(),
         selector_wrappers: vec![],
         selector_attributes: vec!["data-pw".to_string()],
         test_id_attribute_override: None,

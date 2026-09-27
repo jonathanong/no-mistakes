@@ -7,6 +7,7 @@ use std::sync::Arc;
 impl Default for TsFactMap {
     fn default() -> Self {
         Self {
+            integration_route_links: Default::default(),
             facts: FileIdMap::default(),
             plan: TsFactPlan::default(),
             // Start at 1 so the first bump cannot reuse generation 0.

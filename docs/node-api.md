@@ -4,6 +4,12 @@ The `no-mistakes` npm package exposes async functions backed by the same Rust
 analysis as the CLI. Use it when an agent or tool needs repeated structured
 queries without subprocess overhead.
 
+`playwrightCheck` and `playwrightEdges` honor opt-in
+[integration route coverage sources](configuration/integration-route-coverage.md).
+`resolveConfig` exposes those declarations as `routeCoverageSources`; the
+exported `RouteCoverageSource`, `RouteCoverageHelper`, `RouteCoverageFramework`,
+and `RouteCoverageAttribution` types describe the contract.
+
 ````js
 const {
   analyzeProject,

@@ -7,6 +7,7 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 pub(super) struct FinishMapInput {
+    pub(super) integration_route_links: crate::playwright::integration_routes::PreparedLinks,
     pub(super) root: PathBuf,
     pub(super) sources: Arc<crate::codebase::ts_source::SourceStore>,
     pub(super) files: Vec<PathBuf>,
@@ -23,6 +24,7 @@ pub(super) struct FinishMapInput {
 
 pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
     let FinishMapInput {
+        integration_route_links,
         root,
         sources,
         files,
@@ -54,6 +56,7 @@ pub(super) fn finish_map(input: FinishMapInput) -> CheckFactMap {
         &plan.postgres_schema_catalog_paths,
     );
     CheckFactMap {
+        integration_route_links,
         files,
         graph_files,
         graph_files_complete,

@@ -33,6 +33,8 @@ pub struct ResolvedFrontendApp {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ResolvedPlaywright {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub route_coverage_sources: Vec<super::v2::schema::RouteCoverageSource>,
     pub coverage_routes: bool,
     pub coverage_selectors: bool,
     pub frontend_root: Option<String>,
@@ -43,6 +45,8 @@ pub struct ResolvedPlaywright {
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct ResolvedPlaywrightApp {
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    pub route_coverage_sources: Vec<super::v2::schema::RouteCoverageSource>,
     pub playwright_project: String,
     pub project: Option<String>,
     pub frontend_root: Option<String>,
@@ -94,6 +98,7 @@ fn resolved_app(app: FrontendApp) -> ResolvedFrontendApp {
 fn resolved_playwright(config: &NoMistakesConfig, apps: &[FrontendApp]) -> ResolvedPlaywright {
     let playwright = &config.tests.playwright;
     ResolvedPlaywright {
+        route_coverage_sources: playwright.route_coverage_sources.clone(),
         coverage_routes: playwright.coverage.routes,
         coverage_selectors: playwright.coverage.selectors,
         frontend_root: playwright.frontend_root.clone(),
@@ -117,6 +122,11 @@ fn resolved_playwright_app(
             .find(|app| app.project.as_deref() == Some(project.as_str()))
     });
     ResolvedPlaywrightApp {
+        route_coverage_sources: if binding.route_coverage_sources.is_empty() {
+            playwright.route_coverage_sources.clone()
+        } else {
+            binding.route_coverage_sources.clone()
+        },
         playwright_project: name.to_string(),
         project: binding.project.clone(),
         frontend_root: binding

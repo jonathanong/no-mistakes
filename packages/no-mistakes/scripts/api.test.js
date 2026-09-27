@@ -779,6 +779,19 @@ test("resolveConfig declarations expose additive per-framework triggers", () => 
   );
 });
 
+test("route coverage declarations expose integration ownership and helper arguments", () => {
+  const declarations = readFileSync(join(packageRoot, "resolve-config-types.d.ts"), "utf8");
+  for (const name of ["RouteCoverageHelper", "RouteCoverageSource", "RouteCoverageAttribution"]) {
+    assert.match(declarations, new RegExp(`export interface ${name} \\{`));
+  }
+  assert.match(declarations, /export type RouteCoverageFramework = "vitest";/);
+  assert.equal(
+    (declarations.match(/routeCoverageSources\?: RouteCoverageSource\[\];/g) || []).length,
+    2,
+  );
+  assert.match(declarations, /urlArgument: number;/);
+});
+
 test("test plan declarations require current results but accept saved legacy plan documents", () => {
   const declarations = readFileSync(join(packageRoot, "test-types.d.ts"), "utf8");
 

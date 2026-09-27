@@ -51,6 +51,8 @@ fn aggregate_resolves_deferred_selectors_from_precollected_exports() {
         ignore_routes: Vec::new(),
         rewrites: Vec::new(),
         navigation_helpers: Vec::new(),
+        route_coverage_sources: Vec::new(),
+        route_coverage_vitest: Default::default(),
         selector_wrappers: Vec::new(),
         selector_attributes: vec!["data-pw".to_string()],
         test_id_attribute_override: None,

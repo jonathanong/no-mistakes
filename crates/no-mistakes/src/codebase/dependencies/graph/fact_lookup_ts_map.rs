@@ -1,4 +1,7 @@
 impl TsFactLookup for TsFactMap {
+    fn integration_route_links(&self, source: &crate::config::v2::schema::RouteCoverageSource) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
+        self.integration_route_links.get(source)
+    }
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
         self.get(path)
     }

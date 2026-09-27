@@ -6,6 +6,7 @@ pub struct PreparedTestProjects {
     projects: BTreeMap<TestRunner, std::result::Result<Vec<ConfigProject>, String>>,
     discovery_files: Vec<PathBuf>,
     graph_facts: crate::codebase::ts_source::facts::TsFactMap,
+    graph_route_occurrences: BTreeMap<PathBuf, Vec<crate::playwright::integration_routes::RouteOccurrence>>,
     dotnet_facts: Option<crate::codebase::dotnet::DotnetFactMap>,
     swift_facts: Option<crate::codebase::swift::SwiftFactMap>,
 }
@@ -23,6 +24,7 @@ pub struct PreparedTestProjectRequest<'a> {
     ),
     pub sources: std::sync::Arc<crate::codebase::ts_source::SourceStore>,
     pub collect_graph_facts: bool,
+    pub playwright: Option<crate::codebase::check_facts::PlaywrightFactPlan>,
     pub preparation_plan: &'a FrameworkPreparationPlan,
 }
 
@@ -38,11 +40,15 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
 ) -> PreparedTestProjects {
     let PreparedTestProjectRequest {
         discovery_files,
-        graph: (graph_indexable_files, graph_plan, graph_context),
+        graph: (graph_indexable_files, mut graph_plan, graph_context),
         sources,
         collect_graph_facts,
+        playwright,
         preparation_plan,
     } = request;
+    if playwright.as_ref().is_some_and(|plan| plan.integration_route_settings().next().is_some()) {
+        graph_plan.imports = true;
+    }
     let discovery_files = discovery_files.to_vec();
     let prepared_dotnet = preparation_plan
         .runners
@@ -84,7 +90,7 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
             graph_context,
             ..Default::default()
         },
-        playwright: None,
+        playwright,
     };
     let (projects, helper_facts) =
         runner_configs.with_request_cache(collect_graph_facts.then_some(runner_fact_plan), || {
@@ -127,9 +133,10 @@ pub fn prepare_test_projects_from_visible_with_sources_and_plan(
         swift_facts: prepared_swift,
         graph_facts: crate::codebase::ts_source::facts::TsFactMap::from_shared_iter_with_plan(
             helper_facts
-                .into_iter()
-                .map(|(path, facts)| (path, facts.ts)),
+                .iter()
+                .map(|(path, facts)| (path.clone(), std::sync::Arc::clone(&facts.ts))),
             graph_plan,
         ),
+        graph_route_occurrences: helper_facts.into_iter().map(|(path, facts)| (path, facts.integration_route_occurrences)).collect(),
     }
 }

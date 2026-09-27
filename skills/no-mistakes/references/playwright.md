@@ -1,5 +1,11 @@
 # `playwright` command reference
 
+For explicitly scoped route tests in Vitest, configure
+[`tests.playwright.routeCoverageSources`](https://github.com/jonathanong/no-mistakes/blob/main/docs/configuration/integration-route-coverage.md).
+Use imported helper ownership, exact routes, and the real runner project.
+Do not add synthetic browser navigation or classify integration tests as
+Playwright tests to satisfy the route gate.
+
 ## When to use
 
 Use `playwright check` before finishing any Next.js App Router or Playwright

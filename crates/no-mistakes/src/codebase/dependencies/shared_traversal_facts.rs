@@ -9,6 +9,7 @@ impl SharedTraversalContext {
                 shared.graph_plan(),
             ),
         );
+        self.facts.as_mut().expect("projected check facts").integration_route_links = shared.integration_route_links.clone();
         self.invalidate_analysis_caches();
     }
 

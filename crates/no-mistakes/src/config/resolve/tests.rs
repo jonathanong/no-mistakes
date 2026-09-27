@@ -14,6 +14,33 @@ fn named_triggers_fixture() -> PathBuf {
 }
 
 #[test]
+fn integration_routes_app_sources_replace_inherited_sources() {
+    let source = crate::config::v2::schema::RouteCoverageSource {
+        framework: crate::config::v2::schema::RouteCoverageFramework::Vitest,
+        project: "registered".into(),
+        include: vec!["integration/**/*.ts".into()],
+        routes: vec!["/health".into()],
+        helpers: Vec::new(),
+    };
+    let config = crate::config::v2::schema::PlaywrightTestConfig {
+        route_coverage_sources: vec![source.clone()],
+        ..Default::default()
+    };
+    let mut binding = PlaywrightAppBinding::default();
+    assert_eq!(
+        super::resolved_playwright_app("web", &binding, &[], &config).route_coverage_sources,
+        vec![source.clone()]
+    );
+    let mut explicit = source;
+    explicit.project = "another-runner".into();
+    binding.route_coverage_sources = vec![explicit.clone()];
+    assert_eq!(
+        super::resolved_playwright_app("web", &binding, &[], &config).route_coverage_sources,
+        vec![explicit]
+    );
+}
+
+#[test]
 fn resolve_config_reports_named_triggers_and_coverage_gates() {
     let report = resolve_config(&named_triggers_fixture(), None).unwrap();
     assert!(report

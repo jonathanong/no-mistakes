@@ -21,8 +21,8 @@ pub use tests_config::{
     DartConfig, DotnetConfig, DotnetProjectConfig, ElixirConfig, GoConfig, ImpactConfig,
     JavaConfig, JestConfig, KotlinConfig, PhpConfig, PlaywrightAppBinding,
     PlaywrightCoverageConfig, PlaywrightSelectorWrapper, PlaywrightSelectors, PlaywrightTestConfig,
-    PythonConfig, RailsConfig, RustLangConfig, StorybookConfig, SwiftConfig, TestProjectPolicy,
-    Tests, VitestConfig,
+    PythonConfig, RailsConfig, RouteCoverageFramework, RouteCoverageHelper, RouteCoverageSource,
+    RustLangConfig, StorybookConfig, SwiftConfig, TestProjectPolicy, Tests, VitestConfig,
 };
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

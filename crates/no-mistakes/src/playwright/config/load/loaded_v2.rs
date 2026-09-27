@@ -100,6 +100,11 @@ pub(super) fn settings_from_v2(
         ignore_routes,
         rewrites,
         navigation_helpers: playwright.navigation_helpers.clone(),
+        route_coverage_sources: binding
+            .map(|binding| binding.route_coverage_sources.clone())
+            .filter(|sources| !sources.is_empty())
+            .unwrap_or_else(|| playwright.route_coverage_sources.clone()),
+        route_coverage_vitest: config.tests.vitest.clone(),
         selector_wrappers: playwright.selectors.wrappers.clone(),
         selector_attributes,
         test_id_attribute_override: playwright.test_id_attribute.clone(),

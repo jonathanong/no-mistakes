@@ -99,6 +99,7 @@ fn route_edges(
                 .into_iter()
                 .filter(|route| route_specificity(&route.segments) == best_specificity)
                 .map(|route| Edge::Route {
+                    attribution: None,
                     test_file: rel_test_file.clone(),
                     test_name: test_name.clone(),
                     describe_path: describe_path.clone(),

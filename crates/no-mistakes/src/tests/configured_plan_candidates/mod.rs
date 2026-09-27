@@ -9,6 +9,7 @@ use no_mistakes::config::v2::schema::TestPlanGroupType;
 use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::path::{Path, PathBuf};
 
+mod coverage_group;
 mod hint_emit;
 use hint_emit::{
     append_queue_hint_candidates, append_removed_id_candidates, append_route_hint_candidates,
@@ -71,6 +72,7 @@ impl CoverageHints {
 #[allow(clippy::too_many_arguments)]
 pub(super) fn group_candidates(
     group: TestPlanGroupType,
+    framework: super::args::TestFramework,
     root: &Path,
     changed_files: &[PathBuf],
     graph: &DepGraph,
@@ -94,6 +96,7 @@ pub(super) fn group_candidates(
         ),
         TestPlanGroupType::Coverage | TestPlanGroupType::Dependencies => graph_candidates(
             group,
+            framework,
             root,
             changed_files,
             graph,
@@ -214,6 +217,7 @@ fn is_direct_owner_edge(kind: EdgeKind) -> bool {
 #[allow(clippy::too_many_arguments)]
 fn graph_candidates(
     group: TestPlanGroupType,
+    framework: super::args::TestFramework,
     root: &Path,
     changed_files: &[PathBuf],
     graph: &DepGraph,
@@ -236,12 +240,7 @@ fn graph_candidates(
             let NodeId::File(test_path) = &test_node else {
                 continue;
             };
-            let is_coverage = edge_path.iter().any(|edge| {
-                matches!(
-                    edge,
-                    EdgeKind::RouteTest | EdgeKind::Layout | EdgeKind::Selector
-                )
-            });
+            let is_coverage = coverage_group::is_browser_coverage(framework, &edge_path);
             if (group == TestPlanGroupType::Coverage) != is_coverage {
                 continue;
             }
