@@ -5,7 +5,7 @@
 ignoreChecks:
   - 'CodeRabbit'
   # CodSpeed GitHub app check, e.g. "CodSpeed Performance Analysis".
-  # Local Criterion is the source of truth (CLAUDE.md); GHA runners are not a
+  # Local Criterion is the source of truth (AGENTS.md); GHA runners are not a
   # consistent architecture.
   - 'CodSpeed*'
   # Codecov project statuses fail with "No coverage information found on base

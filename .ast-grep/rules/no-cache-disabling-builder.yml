@@ -2,7 +2,7 @@
 #
 # Flags a consuming builder method (`fn foo(mut self, ...) -> Self`) whose body
 # assigns `false` to a field whose name looks cache-related, as an undocumented
-# side effect of configuring something unrelated. See crates/CLAUDE.md's
+# side effect of configuring something unrelated. See crates/AGENTS.md's
 # "Verify a builder method doesn't silently disable an existing cache" section
 # for the historical bug this catches (`ImportResolver::with_visible` used to
 # bundle `self.cache_enabled = false` into a method that only needed to set a
@@ -25,7 +25,7 @@ message: >-
   cache-flag-looking field as a side effect. If this is an intentional,
   explicit opt-out, rename the method to start with `without_`, `no_`, or
   `disable_` so the exemption below applies and the intent is clear at call
-  sites. See crates/CLAUDE.md, "Verify a builder method doesn't silently
+  sites. See crates/AGENTS.md, "Verify a builder method doesn't silently
   disable an existing cache".
 rule:
   all:

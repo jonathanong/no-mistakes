@@ -49,7 +49,7 @@ under `crates/no-mistakes/src/**`. Neither has `.gitignore` awareness beyond
 whatever directory names get hardcoded into a denylist, so an unguarded
 recursive walk can descend into huge generated/vendored directories
 (`node_modules`, `.next`, build output) that `git ls-files` would never
-surface — see `crates/CLAUDE.md`'s "Never walk the tree without `.gitignore`
+surface — see `crates/AGENTS.md`'s "Never walk the tree without `.gitignore`
 awareness" section for the full explanation and the preferred fix order
 (derive from the git-visible file list first; fall back to the `ignore`
 crate's `WalkBuilder` only outside a git repo).
@@ -66,7 +66,7 @@ Flags a consuming builder method (`fn foo(mut self, ...) -> Self`) whose body
 assigns `false` to a field whose name looks cache-related (matched via a
 `regex` constraint on the captured field, e.g. `cache_enabled`), as an
 undocumented side effect of configuring something unrelated. See
-`crates/CLAUDE.md`'s "Verify a builder method doesn't silently disable an
+`crates/AGENTS.md`'s "Verify a builder method doesn't silently disable an
 existing cache" section — this is the exact shape of the historical
 `ImportResolver::with_visible` bug, where setting a visible-file set also
 silently set `cache_enabled = false`.
@@ -89,7 +89,7 @@ Flags a direct call to `crate::routes::collect_routes(...)` from
 shared cache: every caller within one `no-mistakes check` invocation wants
 the exact same app-wide Playwright route scan, so there is never a
 legitimate reason for an edge producer to call `collect_routes` directly
-instead of going through the shared cache. See `crates/CLAUDE.md`'s "Edge
+instead of going through the shared cache. See `crates/AGENTS.md`'s "Edge
 producer smell" note — this is the exact shape of the historical
 `collect_playwright_route_edges` bug, which independently re-ran the entire
 app-wide route scan the `playwright` rule's own check pipeline already
@@ -149,7 +149,7 @@ generic Rust/JS patterns can observe:
   to the prepared build owner in the `reverse` module. Prepared inputs are
   reusable only when their resolver catalog, candidate files, fallbacks, and
   relationship filters preserve the query's semantics; the structural rule
-  cannot prove that equivalence, so `CLAUDE.md` additionally requires
+  cannot prove that equivalence, so `AGENTS.md` additionally requires
   baseline-field parity tests
   when an additive flag introduces a broader analysis scope.
 - `no-std-hashmap-call-indexes` covers `graph/edge_calls.rs` and

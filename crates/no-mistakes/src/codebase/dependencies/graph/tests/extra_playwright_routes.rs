@@ -77,7 +77,7 @@ fn playwright_route_edges_use_app_root_and_filter_graph_files() {
 /// change: `collect_playwright_route_edges` must resolve routes via the shared
 /// `facts.get_or_compute_playwright_routes` cache when a caller has one, not by
 /// independently re-collecting routes from disk. Asserts on a disagreement, not output
-/// equality (`crates/CLAUDE.md`: "assert on a call count, not value equality" / "construct a
+/// equality (`crates/AGENTS.md`: "assert on a call count, not value equality" / "construct a
 /// case where the two approaches would disagree") — pre-populates the shared cache with an
 /// empty route list, deliberately different from the real `web/app/page.tsx` route this
 /// fixture has on disk. A version that bypasses the cache would still find that real route and

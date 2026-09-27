@@ -47,8 +47,8 @@ static route/queue edges. Use `rg` after a graph query for exact call lines.
 
 ## Recommended Agent Instructions
 
-Add project-specific versions of these instructions to `AGENTS.md`, `CLAUDE.md`,
-or the repository's agent guide:
+Add project-specific versions of these instructions to `AGENTS.md`
+or the repository's agent guide. The size check also reads a legacy `CLAUDE.md` when that file is still present:
 
 ```md
 Use no-mistakes for structural questions before falling back to grep. Skipping it misses callers behind aliases, covering tests, and uncovered App Router pages.
