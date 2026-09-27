@@ -2,7 +2,7 @@
 #
 # Callable file indexes use interned local keys (paths, CallableId, lexical
 # (scope, name) pairs). Those must hash with crate::fx, not SipHash. See
-# crates/CLAUDE.md "Interned analysis keys use FxHash" and fx.rs.
+# crates/AGENTS.md "Interned analysis keys use FxHash" and fx.rs.
 id: no-std-hashmap-call-indexes
 language: rust
 severity: error

@@ -189,7 +189,7 @@ jobs:
             skills/**/*.md
             packages/*/README.md
             crates/*/README.md
-            CLAUDE.md
+            AGENTS.md
           fail: true
 
       - name: Check Cargo packages

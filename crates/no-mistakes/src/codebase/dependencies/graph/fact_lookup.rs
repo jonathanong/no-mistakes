@@ -2,7 +2,7 @@
 /// memoization for a handful of app-wide Playwright scans that independent
 /// call paths within one invocation would otherwise repeat (e.g. the
 /// `playwright` rule and `forbidden-dependencies`'s `DepGraph` build each
-/// analyze the whole app). See `crates/CLAUDE.md`'s "Duplicate full-repo work
+/// analyze the whole app). See `crates/AGENTS.md`'s "Duplicate full-repo work
 /// across independent call paths" section for the pattern this backs.
 pub(crate) trait TsFactLookup: Sync {
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts>;

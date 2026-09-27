@@ -4,7 +4,7 @@
 # discovery code. Neither has `.gitignore` awareness beyond whatever directory
 # names get hardcoded into a denylist, so an unguarded walk can descend into
 # huge generated/vendored directories (`node_modules`, `.next`, build output)
-# that `git ls-files` would never surface. See crates/CLAUDE.md's
+# that `git ls-files` would never surface. See crates/AGENTS.md's
 # "Never walk the tree without `.gitignore` awareness" section for the full
 # explanation, the preferred fix order (derive from the git-visible file list;
 # fall back to the `ignore` crate's `WalkBuilder` only outside a git repo), and
@@ -22,7 +22,7 @@ message: >-
   Raw std::fs::read_dir/WalkDir::new walk with no .gitignore awareness. Prefer
   deriving matches from the canonical visible-path snapshot (see
   no_mistakes::codebase::ts_source::discover_visible_paths), falling back to
-  ignore::WalkBuilder only outside a git repo. See crates/CLAUDE.md, "Never
+  ignore::WalkBuilder only outside a git repo. See crates/AGENTS.md, "Never
   walk the tree without `.gitignore` awareness".
 rule:
   any:

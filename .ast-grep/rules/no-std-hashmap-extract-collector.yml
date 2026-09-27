@@ -2,7 +2,7 @@
 #
 # ImportCollector walk tables use interned local keys (CallableId, lexical
 # (scope, name), binding names). Those must hash with crate::fx, not SipHash.
-# See crates/CLAUDE.md "Interned analysis keys use FxHash" and fx.rs.
+# See crates/AGENTS.md "Interned analysis keys use FxHash" and fx.rs.
 id: no-std-hashmap-extract-collector
 language: rust
 severity: error

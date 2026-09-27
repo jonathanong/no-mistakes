@@ -6,7 +6,7 @@
 # shared cache: every caller within one `no-mistakes check` invocation wants
 # the exact same app-wide Playwright route scan, so there is never a
 # legitimate reason for an edge producer to call `collect_routes` directly
-# instead of going through the shared cache. See crates/CLAUDE.md's "Edge
+# instead of going through the shared cache. See crates/AGENTS.md's "Edge
 # producer smell" note (under "Duplicate full-repo work across independent
 # call paths") for the full explanation and the historical bug this catches:
 # `collect_playwright_route_edges` independently re-ran the entire app-wide
@@ -29,7 +29,7 @@ severity: error
 message: >-
   Direct crate::routes::collect_routes call in a DepGraph edge producer.
   Route through the shared facts.get_or_compute_playwright_routes cache
-  instead (see crates/CLAUDE.md, "Duplicate full-repo work across
+  instead (see crates/AGENTS.md, "Duplicate full-repo work across
   independent call paths" / "Edge producer smell") so this doesn't
   duplicate the playwright rule's own app-wide route scan.
 rule:

@@ -102,7 +102,7 @@ fn prepare_local_caller_context_resolves_workspace_packages_once() {
 /// Regression test: `prepare_local_caller_context` must use exactly the `TsFactMap` and
 /// discovery file list it's handed, never independently re-derive either via its own
 /// `collect_ts_facts`/`discover_files` calls. Constructs disagreement cases
-/// (`crates/CLAUDE.md`: "assert on a call count, not value equality" / "construct a case where
+/// (`crates/AGENTS.md`: "assert on a call count, not value equality" / "construct a case where
 /// the two approaches would disagree") rather than checking output equality, which a
 /// re-deriving version would also satisfy: hands in a deliberately empty `TsFactMap` (for facts)
 /// and a deliberately empty discovery file list (for the workspace map), for a fixture that has
