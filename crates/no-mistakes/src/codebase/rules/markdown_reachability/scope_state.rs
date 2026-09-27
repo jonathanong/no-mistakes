@@ -1,6 +1,6 @@
 use super::{is_named, RuleState, RuleStates};
 use crate::codebase::rules::markdown_reachability::graph::{
-    direct_or_readme_hop, link_graph, shortest_depths,
+    index_reachable, link_graph, shortest_depths,
 };
 use anyhow::Result;
 use std::collections::{BTreeMap, BTreeSet};
@@ -46,6 +46,7 @@ pub(super) fn scoped_states(
             .unwrap_or_default();
         let graph = link_graph(&scope_root, scoped_markdown, options.facts, &remapper)?;
         let depths = shortest_depths(options.roots, &graph);
+        let reachable = index_reachable(options.roots, options.indexes, &graph, options.max_depth);
         for target in scoped_targets
             .into_iter()
             .filter(|path| !is_named(path, options.roots))
@@ -59,13 +60,7 @@ pub(super) fn scoped_states(
                 );
             }
             let depth = depths.get(target).copied();
-            let allowed = direct_or_readme_hop(
-                target,
-                options.roots,
-                options.indexes,
-                &graph,
-                options.max_depth,
-            );
+            let allowed = reachable.contains(target);
             states.insert(
                 baseline_key,
                 RuleState {

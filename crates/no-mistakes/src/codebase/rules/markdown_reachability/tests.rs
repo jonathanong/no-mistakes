@@ -4,6 +4,7 @@ use crate::config::v2::{
     NoMistakesConfig,
 };
 
+mod depth_three;
 mod scope_partition;
 
 fn config(options: &str, include: &[&str], exclude: &[&str]) -> NoMistakesConfig {
@@ -84,7 +85,8 @@ fn accepts_only_supported_depths() {
     assert_eq!(validate_max_depth(None).unwrap(), 2);
     assert_eq!(validate_max_depth(Some(1)).unwrap(), 1);
     assert!(validate_max_depth(Some(0)).is_err());
-    assert!(validate_max_depth(Some(3)).is_err());
+    assert_eq!(validate_max_depth(Some(3)).unwrap(), 3);
+    assert!(validate_max_depth(Some(4)).is_err());
 }
 
 #[test]
