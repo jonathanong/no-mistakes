@@ -2,6 +2,10 @@
 
 Runs Playwright route and selector coverage from `no-mistakes check`.
 
+Registered integration tests can cover an explicitly configured finite set of
+routes through [route coverage sources](../configuration/integration-route-coverage.md).
+The feature does not contribute selector or frontend-fetch coverage.
+
 ```yaml
 rules:
   - rule: playwright-coverage

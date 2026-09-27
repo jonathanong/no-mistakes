@@ -34,6 +34,7 @@ type RouteReachableFilesCache = Arc<
 
 #[derive(Default)]
 pub struct CheckFactMap {
+    pub(crate) integration_route_links: crate::playwright::integration_routes::PreparedLinks,
     pub(crate) files: Vec<PathBuf>,
     pub(crate) graph_files: Vec<PathBuf>,
     pub(crate) graph_files_complete: bool,
@@ -81,6 +82,8 @@ pub(crate) struct CheckFileFacts {
     pub(crate) playwright_app_selectors: HashMap<(PlaywrightSettingsKey, bool), Vec<AppSelector>>,
     pub(crate) playwright_app_text_targets: HashMap<PlaywrightSettingsKey, Vec<AppTextTarget>>,
     pub(crate) playwright_static_exports: Option<StaticExportValues>,
+    pub(crate) integration_route_occurrences:
+        Vec<crate::playwright::integration_routes::RouteOccurrence>,
     pub parse_error: Option<String>,
     pub(crate) legacy_symbol_parse_error: Option<String>,
     pub(crate) parsed: bool,
@@ -171,6 +174,7 @@ impl CheckFactMap {
         graph_plan.include(supplemental.graph_plan);
         Self {
             files: self.files.clone(),
+            integration_route_links: self.integration_route_links.clone(),
             graph_files,
             graph_files_complete: self.graph_files_complete,
             ts,

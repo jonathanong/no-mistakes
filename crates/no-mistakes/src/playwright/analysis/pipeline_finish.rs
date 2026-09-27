@@ -20,6 +20,12 @@ pub(crate) fn finish_analysis(
 ) -> Result<Analysis> {
     let route_root = root.join(&settings.frontend_root);
     let mut edges = test_analysis.edges;
+    edges.extend(crate::playwright::integration_routes::edges(
+        root,
+        settings,
+        &setup.routes,
+        facts,
+    )?);
     let fetch_idx = if setup.routes.is_empty() {
         Default::default()
     } else {

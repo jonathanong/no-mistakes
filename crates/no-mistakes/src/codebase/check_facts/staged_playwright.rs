@@ -12,6 +12,7 @@ mod partitions;
 mod precollect;
 
 pub(super) use entrypoints::collect_with_precollected_ts;
+pub(crate) use entrypoints::{collect_precollected_route_facts, PrecollectedRouteFacts};
 use finish::{finish_map, FinishMapInput};
 use helpers::{graph_plan, has_indexable_graph_only, with_imports};
 use partition_collection::collect_partitions;
@@ -21,18 +22,23 @@ use precollect::cached_config_file_facts;
 pub(super) struct PrecollectedFacts {
     ts: crate::codebase::ts_source::facts::TsFactMap,
     files: FileIdMap<super::CheckFileFacts>,
+    routes: std::collections::BTreeMap<
+        PathBuf,
+        Vec<crate::playwright::integration_routes::RouteOccurrence>,
+    >,
 }
 
 pub(super) fn collect_with_sources_and_session(
     session: &crate::codebase::analysis_session::AnalysisSession,
     root: &Path,
     file_scope: (Vec<PathBuf>, Vec<PathBuf>, bool),
-    plan: CheckFactPlan,
+    mut plan: CheckFactPlan,
     mut playwright: PlaywrightFactPlan,
     sources: Arc<crate::codebase::ts_source::SourceStore>,
     mut precollected: FileIdMap<super::CheckFileFacts>,
 ) -> CheckFactMap {
     module_resolution::initialize_if_missing(root, &mut playwright, &sources);
+    crate::playwright::integration_routes::runner_plan(root, &mut plan, &playwright, &sources);
     let config_facts = cached_config_file_facts(
         session,
         root,
@@ -52,6 +58,7 @@ pub(super) fn collect_with_sources_and_session(
         PrecollectedFacts {
             ts: crate::codebase::ts_source::facts::TsFactMap::new(),
             files: precollected,
+            routes: Default::default(),
         },
         sources,
     )
@@ -69,8 +76,13 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
     let PrecollectedFacts {
         ts: precollected_ts,
         files: precollected,
+        routes: mut precollected_routes,
     } = precollected;
     let (files, graph_files, graph_files_complete) = file_scope;
+    crate::playwright::integration_routes::runner_plan(root, &mut plan, &playwright, &sources);
+    if playwright.integration_route_settings().next().is_some() {
+        plan.graph.imports = true;
+    }
     assert!(
         precollected_ts.is_empty() || precollected_ts.plan().covers(plan.graph),
         "precollected graph facts must cover the staged graph plan"
@@ -85,6 +97,8 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         precollected_ts.into_iter().map(|(path, ts)| {
             let parse_error = ts.parse_error.clone();
             let source = ts.source.clone();
+            let integration_route_occurrences =
+                precollected_routes.remove(&path).unwrap_or_default();
             (
                 path,
                 super::CheckFileFacts {
@@ -92,6 +106,7 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
                     source,
                     parse_error,
                     parsed: true,
+                    integration_route_occurrences,
                     ..super::CheckFileFacts::default()
                 },
             )
@@ -134,7 +149,15 @@ pub(super) fn collect_with_precollected_ts_sources_and_session(
         &sources,
         &mut ts,
     );
+    let integration_route_links = crate::playwright::integration_routes::prepare_links(
+        root,
+        &plan,
+        &playwright,
+        &ts,
+        integration_runner_configs.clone(),
+    );
     finish_map(FinishMapInput {
+        integration_route_links,
         root: root.to_path_buf(),
         sources,
         files,

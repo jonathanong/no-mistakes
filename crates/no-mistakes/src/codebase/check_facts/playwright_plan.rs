@@ -32,6 +32,10 @@ pub(crate) struct PlaywrightSourceFactPlan {
     pub(crate) visible_files: Arc<crate::fx::PathSet>,
     pub(crate) scan_html_ids: bool,
     pub(crate) settings_key: PlaywrightSettingsKey,
+    pub(crate) integration_sources: Vec<(
+        crate::config::v2::schema::RouteCoverageSource,
+        globset::GlobSet,
+    )>,
 }
 
 #[derive(Clone, Debug, Eq, Hash, PartialEq)]
@@ -44,6 +48,7 @@ pub(crate) struct PlaywrightSettingsKey {
     ignore_routes: Vec<String>,
     rewrites: Vec<(String, String)>,
     navigation_helpers: Vec<String>,
+    route_coverage_sources: Vec<crate::config::v2::schema::RouteCoverageSource>,
     selector_attributes: Vec<String>,
     test_id_attribute_override: Option<String>,
     component_selector_attributes: Vec<(String, String)>,
@@ -75,6 +80,7 @@ impl PlaywrightSettingsKey {
                 .map(|rewrite| (rewrite.source.clone(), rewrite.destination.clone()))
                 .collect(),
             navigation_helpers: normalized(&settings.navigation_helpers),
+            route_coverage_sources: normalized(&settings.route_coverage_sources),
             selector_attributes: normalized(&settings.selector_attributes),
             test_id_attribute_override: settings.test_id_attribute_override.clone(),
             component_selector_attributes: settings

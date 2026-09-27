@@ -123,7 +123,7 @@ fn collect_playwright_route_edges_for_settings(
         },
     };
 
-    let test_edges: Vec<crate::playwright::analysis::types::Edge> = test_files
+    let mut test_edges: Vec<crate::playwright::analysis::types::Edge> = test_files
         .par_iter()
         .filter_map(|test_file| {
             match facts.and_then(|facts| facts.get_playwright_facts(&test_file.path)) {
@@ -163,6 +163,9 @@ fn collect_playwright_route_edges_for_settings(
         })
         .flatten()
         .collect();
+    if let Ok(integration) = crate::playwright::integration_routes::edges(root, settings, &routes, facts) {
+        test_edges.extend(integration);
+    }
 
     let mut edges = Vec::new();
     for edge in test_edges {

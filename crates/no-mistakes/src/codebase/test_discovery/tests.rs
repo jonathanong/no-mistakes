@@ -481,6 +481,7 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
             graph: (&[], graph_plan, graph_context.clone()),
             sources: std::sync::Arc::clone(&sources),
             collect_graph_facts: false,
+            playwright: None,
             preparation_plan: &FrameworkPreparationPlan::default(),
         },
     );
@@ -509,6 +510,7 @@ fn framework_preparation_plan_prepares_only_requested_runners() {
             graph: (&[], graph_plan, graph_context),
             sources,
             collect_graph_facts: false,
+            playwright: None,
             preparation_plan: &requested,
         },
     );

@@ -16,6 +16,7 @@ export interface ResolvedFrontendApp {
 }
 
 export interface ResolvedPlaywright {
+  routeCoverageSources?: RouteCoverageSource[];
   coverageRoutes: boolean;
   coverageSelectors: boolean;
   frontendRoot?: string | null;
@@ -24,6 +25,7 @@ export interface ResolvedPlaywright {
 }
 
 export interface ResolvedPlaywrightApp {
+  routeCoverageSources?: RouteCoverageSource[];
   playwrightProject: string;
   project?: string | null;
   frontendRoot?: string | null;
@@ -35,6 +37,32 @@ export interface ResolvedPlaywrightApp {
 export interface ResolvedRewrite {
   source: string;
   destination: string;
+}
+
+export type RouteCoverageFramework = "vitest";
+
+export interface RouteCoverageHelper {
+  /** Exact repository-relative helper module or import-resolvable specifier. */
+  module: string;
+  export: string;
+  /** An imported class instance method; omit for an imported function. */
+  method?: string | null;
+  urlArgument: number;
+}
+
+export interface RouteCoverageSource {
+  framework: RouteCoverageFramework;
+  project: string;
+  include: string[];
+  /** Exact canonical page route identifiers, optionally with named parameters. */
+  routes: string[];
+  helpers: RouteCoverageHelper[];
+}
+
+export interface RouteCoverageAttribution {
+  framework: RouteCoverageFramework;
+  project: string;
+  declarationFile: string;
 }
 
 export interface ResolvedTrigger {

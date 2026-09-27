@@ -44,6 +44,7 @@ fn prepare_inner(
         config.tests.playwright.configs.as_ref(),
         &config.tests.playwright.projects,
         visible_paths,
+        false,
     );
     add_framework_specs(
         &mut specs,
@@ -52,6 +53,13 @@ fn prepare_inner(
         config.tests.vitest.configs.as_ref(),
         &config.tests.vitest.projects,
         visible_paths,
+        !config.tests.playwright.route_coverage_sources.is_empty()
+            || config
+                .tests
+                .playwright
+                .apps
+                .values()
+                .any(|app| !app.route_coverage_sources.is_empty()),
     );
     let mut visible_files = visible_paths
         .iter()
@@ -78,11 +86,12 @@ fn add_framework_specs(
     configs: Option<&StringOrList>,
     policies: &BTreeMap<String, TestProjectPolicy>,
     visible_paths: &[PathBuf],
+    force: bool,
 ) {
     let needs_projects = policies
         .values()
         .any(|policy| !policy.integration_suites.is_empty() && policy.include.is_empty());
-    if !needs_projects {
+    if !needs_projects && !force {
         return;
     }
     let raw_configs = configs.map_or_else(

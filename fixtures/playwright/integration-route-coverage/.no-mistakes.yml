@@ -1,0 +1,29 @@
+version: 2
+projects:
+  web:
+    type: nextjs
+    root: web
+tests:
+  vitest:
+    configs: vitest.config.ts
+  playwright:
+    configs: playwright.config.ts
+    frontendRoot: web/app
+    selectorRoots: [web]
+    testInclude: [e2e/**/*.spec.ts]
+    routeCoverageSources:
+      - framework: vitest
+        project: integration
+        include: [integration/**/*.ts]
+        routes: [/healthz, /copyright, /wrong-helper, /unregistered, /skipped, /unbound, /wrong-route, /shadow, '/user/:id/posts']
+        helpers:
+          - module: integration/client.ts
+            export: WebClient
+            method: request
+            urlArgument: 0
+          - module: integration/client.ts
+            export: loadPage
+            urlArgument: 1
+rules:
+  - rule: playwright-coverage
+    scope: repository

@@ -3,6 +3,7 @@ mod ast;
 mod cli;
 pub(crate) mod config;
 pub(crate) mod fsutil;
+pub(crate) mod integration_routes;
 pub(crate) mod matcher;
 pub mod playwright_config;
 pub mod playwright_tests;

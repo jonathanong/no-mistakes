@@ -49,6 +49,7 @@ fn is_v2_playwright_configured(playwright: &PlaywrightTestConfig) -> bool {
         || !playwright.selector_include.is_empty()
         || !playwright.selector_exclude.is_empty()
         || !playwright.navigation_helpers.is_empty()
+        || !playwright.route_coverage_sources.is_empty()
         || playwright.frontend_root.is_some()
         || playwright.ignore_routes.is_some()
         || !playwright.apps.is_empty()

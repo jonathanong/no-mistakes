@@ -5,6 +5,11 @@ and JavaScript are the reference implementation for the full product surface.
 This page is the contract for bringing other languages and their key frameworks
 up to that surface.
 
+TypeScript/JavaScript route coverage includes opt-in registered Vitest integration
+sources for exact canonical Next.js page routes. These retain Vitest ownership and share
+the canonical `route-test` graph, while selector and fetch coverage remain browser
+coverage. See [integration route coverage](configuration/integration-route-coverage.md).
+
 A language or framework is supported when an agent can ask the same structural
 questions it already asks of TS/JS, get deterministic structured output, and
 do so without shelling out to `rg` for the graph itself.

@@ -281,6 +281,7 @@ pub(crate) fn generate_configured_plan_with_prepared(
         } else {
             group_candidates(
                 group.type_,
+                framework,
                 root,
                 changed_files,
                 graph,

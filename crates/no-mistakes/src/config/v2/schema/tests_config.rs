@@ -4,6 +4,10 @@ use std::collections::BTreeMap;
 
 mod coverage;
 pub use coverage::PlaywrightCoverageConfig;
+mod route_coverage;
+pub use route_coverage::{RouteCoverageFramework, RouteCoverageHelper, RouteCoverageSource};
+mod impact;
+pub use impact::ImpactConfig;
 #[path = "tests_config_jvm.rs"]
 mod tests_config_jvm;
 pub use tests_config_jvm::{DartConfig, ElixirConfig, JavaConfig, KotlinConfig};
@@ -28,22 +32,6 @@ pub struct Tests {
     pub storybook: StorybookConfig,
     pub impact: ImpactConfig,
 }
-/// Opt-in knobs for the `tests impact` query. Both lists default to empty, so
-/// without configuration `tests impact` behaves exactly as before.
-#[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
-#[serde(rename_all = "camelCase", default)]
-pub struct ImpactConfig {
-    /// Glob patterns for stub/mock test files (e.g. `**/*.mock.test.*`) that
-    /// `tests impact` must always surface when they transitively import a
-    /// changed file, even when a configured test-suite `exclude` glob would
-    /// otherwise drop them from test discovery.
-    pub always_include_tests: Vec<String>,
-    /// Glob patterns for "registry" files (e.g. `**/auth-gated-code-splitting.mts`,
-    /// `**/*-registry.mts`). When a changed file is imported by a file matching one
-    /// of these globs, `tests impact` emits a hint to verify the registry entry.
-    pub registries: Vec<String>,
-}
-
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]
 #[serde(rename_all = "camelCase", default)]
 pub struct PlaywrightTestConfig {
@@ -62,6 +50,8 @@ pub struct PlaywrightTestConfig {
     pub selector_include: Vec<String>,
     pub selector_exclude: Vec<String>,
     pub navigation_helpers: Vec<String>,
+    /// Explicit, runner-owned integration tests that may cover exact static routes.
+    pub route_coverage_sources: Vec<RouteCoverageSource>,
     pub frontend_root: Option<String>,
     pub ignore_routes: Option<Vec<String>>,
     /// Explicit per-Playwright-project frontend app bindings, keyed by the
@@ -93,6 +83,7 @@ pub struct PlaywrightAppBinding {
     pub selector_roots: Vec<String>,
     pub rewrites: Vec<RewriteRule>,
     pub ignore_routes: Option<Vec<String>>,
+    pub route_coverage_sources: Vec<RouteCoverageSource>,
 }
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default, PartialEq)]

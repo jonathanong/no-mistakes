@@ -1,5 +1,22 @@
 impl SharedTraversalContext {
     pub(crate) fn ensure_facts(&mut self) {
+        if crate::playwright::integration_routes::configured(&self.config)
+            && self.facts.as_ref().is_none_or(|facts| facts.integration_route_links.is_empty())
+        {
+            if let Ok(Some(playwright)) = self.prepared_graph.playwright_fact_plan(
+                &self.root, &self.tsconfig, self.dataset.visible_paths(),
+            ) {
+                let routes = self.prepared_test_projects.as_ref()
+                    .map(|projects| projects.graph_route_occurrences().clone()).unwrap_or_default();
+                let collected = crate::codebase::check_facts::collect_precollected_route_facts(
+                    &self.session, &self.root, (Vec::new(), self.graph_files.indexable().to_vec(), true),
+                    crate::codebase::check_facts::CheckFactPlan { graph: self.fact_plan, graph_context: self.fact_context.clone(), ..Default::default() },
+                    playwright, crate::codebase::check_facts::PrecollectedRouteFacts { ts: self.facts.take().unwrap_or_default(), routes }, self.dataset.sources_for(&self.root),
+                );
+                self.use_check_facts(&collected);
+                return;
+            }
+        }
         let remaining = self
             .graph_files
             .indexable()

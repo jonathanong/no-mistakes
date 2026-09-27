@@ -187,6 +187,7 @@ impl TsFactSlot {
 
 #[derive(Clone)]
 pub struct TsFactMap {
+    pub(crate) integration_route_links: crate::playwright::integration_routes::PreparedLinks,
     facts: crate::codebase::ts_source::FileIdMap<TsFactSlot>,
     plan: TsFactPlan,
     /// Shared by clones. `bump_playwright_scan_generation` takes the next

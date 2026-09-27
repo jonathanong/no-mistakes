@@ -237,10 +237,15 @@ impl PreparedTestPlanInputs {
         }
         // Framework plans historically ignore --symbols. The non-framework
         // planner is the only stable surface that opts into symbol edges.
-        let graph_plan = args
+        let mut graph_plan = args
             .framework
             .map_or_else(GraphBuildPlan::all, framework_graph_plan)
             .with_symbols(args.framework.is_none() && args.include_symbols);
+        if no_mistakes::playwright::integration_routes::configured(&config)
+            && matches!(args.framework, None | Some(TestFramework::Vitest))
+        {
+            graph_plan.playwright_routes = true;
+        }
         let codebase_config = no_mistakes::codebase::config::config_from_loaded_v2(
             &root,
             args.config.as_deref(),
@@ -272,6 +277,9 @@ impl PreparedTestPlanInputs {
                     graph: (graph_files.indexable(), runner_graph_plan, runner_graph_context),
                     sources: Arc::clone(&sources),
                     collect_graph_facts: true,
+                    playwright: if no_mistakes::playwright::integration_routes::configured(&config) {
+                        preliminary_graph_config.playwright_fact_plan(&root, &tsconfig, &visible_paths)?
+                    } else { None },
                     preparation_plan: &framework_plan,
                 },
             );
@@ -418,6 +426,7 @@ impl PreparedTestPlanRequest {
                         },
                         playwright,
                         self.prepared_test_projects.graph_facts().clone(),
+                        self.prepared_test_projects.graph_route_occurrences().clone(),
                     ))
                 } else {
                     let mut facts = self.prepared_test_projects.graph_facts().clone();

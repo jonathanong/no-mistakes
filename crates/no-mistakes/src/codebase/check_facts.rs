@@ -11,6 +11,7 @@ mod playwright_facts;
 mod playwright_plan;
 mod runner;
 mod staged_playwright;
+pub(crate) use staged_playwright::{collect_precollected_route_facts, PrecollectedRouteFacts};
 mod stats;
 
 use rustc_hash::FxHashSet;

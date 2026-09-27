@@ -13,7 +13,7 @@ use std::sync::Arc;
 /// state). Each importer selects a catalog scope once, while classifications
 /// keep workspace recognition as well as resolved targets.
 pub(super) struct CatalogModuleResolver {
-    catalog: Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
+    pub(super) catalog: Arc<crate::codebase::ts_resolver::TsConfigCatalog>,
     pub(super) universe: Arc<crate::codebase::ts_source::FrozenPathRemapper>,
     interner: Arc<PathInterner>,
     importer_scopes: DashMap<Arc<Path>, Option<usize>>,

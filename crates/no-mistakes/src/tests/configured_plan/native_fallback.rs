@@ -39,6 +39,7 @@ pub(super) fn native_traceable_changed_files(
     let mut warnings_seen = HashSet::new();
     group_candidates(
         TestPlanGroupType::Dependencies,
+        framework,
         root,
         changed_files,
         graph,

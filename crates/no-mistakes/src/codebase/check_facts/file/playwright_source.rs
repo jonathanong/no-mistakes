@@ -7,6 +7,7 @@ use std::path::Path;
 pub(super) struct SourceFacts {
     pub(super) selectors: HashMap<(PlaywrightSettingsKey, bool), Vec<AppSelector>>,
     pub(super) text_targets: HashMap<PlaywrightSettingsKey, Vec<AppTextTarget>>,
+    pub(super) integration_routes: Vec<crate::playwright::integration_routes::RouteOccurrence>,
 }
 
 pub(super) fn collect(
@@ -15,10 +16,19 @@ pub(super) fn collect(
     source: &str,
     program: &oxc_ast::ast::Program<'_>,
     playwright: Option<&PlaywrightFactPlan>,
+    imports: &[crate::codebase::dependencies::extract::ImportedBinding],
 ) -> SourceFacts {
     let mut selectors = HashMap::new();
     let mut text_targets = HashMap::new();
+    let mut integration_routes = Vec::new();
     if let Some(plan) = playwright {
+        if let Some(resolution) = plan.module_resolution() {
+            for config in plan.integration_route_sources(root, path) {
+                integration_routes.extend(crate::playwright::integration_routes::collect(
+                    root, path, program, source, imports, config, resolution,
+                ));
+            }
+        }
         for source_plan in plan.source_plans_for(path) {
             selectors
                 .entry((source_plan.settings_key.clone(), source_plan.scan_html_ids))
@@ -54,5 +64,6 @@ pub(super) fn collect(
     SourceFacts {
         selectors,
         text_targets,
+        integration_routes,
     }
 }

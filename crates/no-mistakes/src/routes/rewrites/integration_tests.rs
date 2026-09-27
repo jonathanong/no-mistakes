@@ -34,6 +34,8 @@ fn pipeline_expands_rewrites_into_route_edges() {
             },
         ],
         navigation_helpers: vec![],
+        route_coverage_sources: Vec::new(),
+        route_coverage_vitest: Default::default(),
         selector_wrappers: vec![],
         selector_attributes: vec![],
         test_id_attribute_override: None,

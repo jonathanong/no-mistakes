@@ -9,30 +9,13 @@ use crate::playwright::config::Settings;
 use crate::playwright::routes::Route;
 use crate::playwright::selectors;
 
-#[derive(Serialize)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct Summary {
-    pub(crate) total_routes: usize,
-    pub(crate) covered_routes: usize,
-    pub(crate) uncovered_routes: usize,
-    pub(crate) total_selectors: usize,
-    pub(crate) covered_selectors: usize,
-    pub(crate) uncovered_selectors: usize,
-    pub(crate) duplicate_selectors: usize,
-    pub(crate) total_fetch_apis: usize,
-    pub(crate) covered_fetch_apis: usize,
-    pub(crate) uncovered_fetch_apis: usize,
-}
+#[path = "types/summary.rs"]
+mod summary;
+pub(crate) use summary::Summary;
 
-#[derive(Serialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
-#[serde(rename_all = "camelCase")]
-pub(crate) struct TestRef {
-    pub(crate) file: Arc<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub(crate) name: Option<Arc<String>>,
-    #[serde(skip_serializing_if = "is_arc_empty", default)]
-    pub(crate) describe_path: Arc<Vec<String>>,
-}
+#[path = "types/test_ref.rs"]
+mod test_ref;
+pub(crate) use test_ref::{RouteCoverageAttribution, TestRef};
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -125,6 +108,8 @@ pub(crate) enum Edge {
         url: Arc<String>,
         hook: bool,
         line: u32,
+        #[serde(skip_serializing_if = "Option::is_none")]
+        attribution: Option<RouteCoverageAttribution>,
     },
     #[serde(rename_all = "camelCase")]
     Selector {

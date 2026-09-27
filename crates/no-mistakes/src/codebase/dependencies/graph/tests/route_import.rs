@@ -1,5 +1,7 @@
 fn cache_settings() -> crate::playwright::config::Settings {
     crate::playwright::config::Settings {
+        route_coverage_sources: Vec::new(),
+        route_coverage_vitest: Default::default(),
         frontend_root: ".".to_string(),
         playwright_configs: Vec::new(),
         project: None,

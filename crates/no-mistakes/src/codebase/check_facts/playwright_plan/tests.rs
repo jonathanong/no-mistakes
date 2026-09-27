@@ -137,6 +137,8 @@ fn catalog_wrapper_resolution_does_not_treat_unresolved_workspace_packages_as_ex
 
 fn base_settings() -> crate::playwright::config::Settings {
     crate::playwright::config::Settings {
+        route_coverage_sources: Vec::new(),
+        route_coverage_vitest: Default::default(),
         frontend_root: "web".to_string(),
         playwright_configs: vec![PathBuf::from("b.ts"), PathBuf::from("a.ts")],
         project: None,
@@ -316,6 +318,7 @@ fn source_plans_coalesce_when_only_selector_wrappers_differ() {
     let source_plan = |settings: crate::playwright::config::Settings, file: &str| {
         let settings_key = PlaywrightSettingsKey::new(&settings);
         super::PlaywrightSourceFactPlan {
+            integration_sources: Vec::new(),
             app_source_files: Arc::new([PathBuf::from(file)].into_iter().collect()),
             selector_regexes: Arc::clone(&regexes),
             settings: Arc::new(settings),

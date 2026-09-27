@@ -29,6 +29,7 @@ pub(super) fn prepare_test_projects_from_visible(
             graph: (graph_indexable_files, graph_plan, graph_context),
             sources: snapshot.source_store_for(root),
             collect_graph_facts: true,
+            playwright: None,
             preparation_plan: &FrameworkPreparationPlan::all(),
         },
     )
@@ -69,6 +70,7 @@ fn requested_dotnet_project_errors_are_retained_in_the_prepared_catalog() {
             ),
             sources: snapshot.source_store_for(&root),
             collect_graph_facts: false,
+            playwright: None,
             preparation_plan: &plan,
         },
     );

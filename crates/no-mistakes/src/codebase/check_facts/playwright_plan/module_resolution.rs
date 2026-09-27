@@ -28,6 +28,8 @@ enum PlaywrightTsConfig {
     Catalog,
 }
 
+include!("module_resolution_routes.rs");
+
 impl PlaywrightModuleResolution {
     pub(crate) fn new(
         tsconfig: Arc<crate::codebase::ts_resolver::TsConfig>,

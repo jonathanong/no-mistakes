@@ -16,8 +16,17 @@ pub(super) fn seed_coverage_from_edges<'a>(
                 describe_path,
                 route,
                 url,
+                attribution,
                 ..
-            } => seed_route(by_route, route, url, test_file, test_name, describe_path),
+            } => seed_route(
+                by_route,
+                route,
+                url,
+                test_file,
+                test_name,
+                describe_path,
+                attribution,
+            ),
             Edge::Selector {
                 test_file,
                 test_name,
@@ -93,15 +102,16 @@ fn seed_route<'a>(
     test_file: &std::sync::Arc<String>,
     test_name: &Option<std::sync::Arc<String>>,
     describe_path: &std::sync::Arc<Vec<String>>,
+    attribution: &Option<crate::playwright::analysis::types::RouteCoverageAttribution>,
 ) {
     let entry = by_route
         .entry(route)
         .or_insert_with(|| (Default::default(), Default::default(), Default::default()));
     entry.0.insert(test_file.clone());
     entry.1.insert(url.clone());
-    entry
-        .2
-        .insert(test_ref(test_file, test_name, describe_path));
+    let mut reference = test_ref(test_file, test_name, describe_path);
+    reference.attribution = attribution.clone();
+    entry.2.insert(reference);
 }
 
 fn seed_selector(
@@ -131,5 +141,6 @@ fn test_ref(
         file: test_file.clone(),
         name: test_name.clone(),
         describe_path: describe_path.clone(),
+        attribution: None,
     }
 }

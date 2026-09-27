@@ -221,6 +221,9 @@ fn build_test_impact_graph_for_request(
                 graph: (graph_files.indexable(), runner_fact_plan, runner_fact_context),
                 sources: Arc::clone(&sources),
                 collect_graph_facts: true,
+                playwright: if no_mistakes::playwright::integration_routes::configured(config) {
+                    preliminary_graph_config.playwright_fact_plan(root, &tsconfig, visible)?
+                } else { None },
                 preparation_plan: &framework_plan,
             },
         );
@@ -323,7 +326,36 @@ fn build_test_impact_graph_for_request(
     let mut serial_fact_paths = recovered_error_paths.into_iter().collect::<Vec<_>>();
     serial_fact_paths.sort();
     serial_fact_paths.dedup();
-    facts.extend(
+    if no_mistakes::playwright::integration_routes::configured(config) {
+        let playwright = prepared_graph_config
+            .playwright_fact_plan(root, &tsconfig, visible)?
+            .ok_or_else(|| anyhow::anyhow!("routeCoverageSources requires prepared graph facts"))?;
+        let checks = no_mistakes::codebase::check_facts::collect_precollected_route_facts(
+            session,
+            root,
+            (Vec::new(), fact_paths, true),
+            no_mistakes::codebase::check_facts::CheckFactPlan {
+                graph: fact_plan,
+                graph_context: fact_context.clone(),
+                ..Default::default()
+            },
+            playwright,
+            no_mistakes::codebase::check_facts::PrecollectedRouteFacts {
+                ts: facts,
+                routes: projects.graph_route_occurrences().clone(),
+            },
+            Arc::clone(&sources),
+        );
+        facts = no_mistakes::codebase::ts_source::facts::TsFactMap::from_shared_iter_with_plan(
+            checks
+                .ts
+                .iter()
+                .map(|(path, facts)| (path.clone(), Arc::clone(&facts.ts))),
+            checks.graph_plan(),
+        );
+        facts.integration_route_links = checks.integration_route_links.clone();
+    } else {
+        facts.extend(
         crate::codebase::ts_source::facts::collect_ts_facts_with_context_sources_and_session_serializing_paths(
             session,
             &remaining,
@@ -332,7 +364,8 @@ fn build_test_impact_graph_for_request(
             &sources,
             &serial_fact_paths,
         ),
-    );
+      );
+    }
     let graph = DepGraph::build_with_plan_files_prepared_config_facts_resolution_cache_and_session(
         PreparedGraphBuild {
             root,

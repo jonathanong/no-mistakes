@@ -72,6 +72,9 @@ pub(crate) fn same_graph_universe(
 }
 
 impl TsFactLookup for FallbackTsFactLookup<'_> {
+    fn integration_route_links(&self, source: &crate::config::v2::schema::RouteCoverageSource) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
+        self.primary.integration_route_links(source).or_else(|| self.fallback.integration_route_links(source))
+    }
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
         if self.prefer_fallback {
             match self.fallback.get(path) {

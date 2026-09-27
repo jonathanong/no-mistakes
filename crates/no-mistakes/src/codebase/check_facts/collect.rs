@@ -99,6 +99,7 @@ fn collect_check_facts_inner(
         &plan.postgres_schema_catalog_paths,
     );
     CheckFactMap {
+        integration_route_links: Default::default(),
         files,
         graph_files,
         graph_files_complete,

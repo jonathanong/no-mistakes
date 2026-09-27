@@ -18,3 +18,7 @@ and do not create coverage.
 Shared Playwright options are documented in [`playwright`](playwright.md).
 
 Node API: `playwrightCheck(options)`.
+
+Optional [integration route coverage sources](../configuration/integration-route-coverage.md)
+retain the registered Vitest entry, declaration module, and framework provenance
+in route coverage details. Configuration omitted preserves existing behavior.

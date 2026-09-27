@@ -142,6 +142,8 @@ fn selector_refs_skip_non_string_jsx_expressions_and_keep_as_strings() {
                         ignore_routes: vec![],
                         rewrites: vec![],
                         navigation_helpers: vec![],
+                        route_coverage_sources: Vec::new(),
+                        route_coverage_vitest: Default::default(),
                         selector_wrappers: vec![],
                         selector_attributes: vec![
                             "data-pw".into(),

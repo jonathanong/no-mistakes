@@ -194,6 +194,7 @@ fn expand_skips_routes_not_in_fetch_index() {
         route: std::sync::Arc::new("/missing".to_string()),
         url: std::sync::Arc::new("/missing".to_string()),
         hook: false,
+        attribution: None,
         line: 1,
     };
     let index = FetchIndex::new();
@@ -211,6 +212,7 @@ fn expand_skips_dynamic_and_unsupported_fetches() {
         route: std::sync::Arc::new("/".to_string()),
         url: std::sync::Arc::new("/".to_string()),
         hook: false,
+        attribution: None,
         line: 1,
     };
     let dynamic = FetchOccurrence {
@@ -239,6 +241,7 @@ fn expand_produces_client_side_fetch_edge() {
         route: std::sync::Arc::new("/".to_string()),
         url: std::sync::Arc::new("/".to_string()),
         hook: false,
+        attribution: None,
         line: 1,
     };
     let client_fetch = FetchOccurrence {

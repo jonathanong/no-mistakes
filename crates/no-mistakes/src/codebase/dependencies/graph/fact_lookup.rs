@@ -5,6 +5,9 @@
 /// analyze the whole app). See `crates/AGENTS.md`'s "Duplicate full-repo work
 /// across independent call paths" section for the pattern this backs.
 pub(crate) trait TsFactLookup: Sync {
+    fn integration_route_links(&self, _source: &crate::config::v2::schema::RouteCoverageSource) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
+        None
+    }
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts>;
 
     /// Whether every returned TS fact was collected with at least this plan.
@@ -132,6 +135,9 @@ fn check_file_facts_for_path<'a>(
 }
 
 impl TsFactLookup for crate::codebase::check_facts::CheckFactMap {
+    fn integration_route_links(&self, source: &crate::config::v2::schema::RouteCoverageSource) -> Option<&Result<Vec<crate::playwright::integration_routes::RouteLink>, String>> {
+        self.integration_route_links.get(source)
+    }
     fn get_ts_facts(&self, path: &Path) -> Option<&TsFileFacts> {
         check_file_facts_for_path(self, path).map(|facts| facts.ts.as_ref())
     }

@@ -129,6 +129,7 @@ pub(crate) fn expand_fetch_edges(edges: &[Edge], fetch_index: &FetchIndex) -> Ve
             describe_path,
             route_file,
             route,
+            attribution: None,
             ..
         } = edge
         else {
