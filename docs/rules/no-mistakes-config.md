@@ -11,6 +11,10 @@ It validates configuration path references, scoped project globs, full-suite
 trigger paths, empty ignore/exclude patterns, and incompatible `limit` plus
 `direct` groups.
 
+`tests.playwright.navigationHelpers` contains bare or dotted callee names,
+not filesystem paths. Names such as `navigateTo` and `navigation.navigateTo`
+do not require corresponding files.
+
 ## Options
 
 There are no rule-specific options or defaults. It validates the active

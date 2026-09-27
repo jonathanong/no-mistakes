@@ -46,14 +46,6 @@ fn collect_tests(config: &NoMistakesConfig, refs: &mut Vec<Ref>) {
         Kind::Directory,
         playwright.frontend_root.as_deref(),
     );
-    for (index, helper) in playwright.navigation_helpers.iter().enumerate() {
-        push(
-            refs,
-            format!("tests.playwright.navigationHelpers[{index}]"),
-            Kind::File,
-            helper,
-        );
-    }
     push_list(
         refs,
         "tests.vitest.configs",

@@ -79,7 +79,7 @@ is ignored when its path is not present.
 
 The `no-mistakes` preset validates repository paths that the no-mistakes schema
 defines as required. It includes project roots, test runner configs, Playwright
-roots and helpers, TestPlan project and named-trigger paths, plus these
+roots, TestPlan project and named-trigger paths, plus these
 rule-specific option fields:
 
 | Rule | Path fields |
@@ -103,7 +103,10 @@ rule-specific option fields:
 
 Rule option names are not treated as paths globally. For example,
 `workspace-package-cycles.allowlist` contains package-cycle identities and is
-not path-validated. Negative selectors and empty values are ignored.
+not path-validated. Likewise, `tests.playwright.navigationHelpers` contains
+callee names such as `navigateTo` or `navigation.navigateTo`, not helper-module
+paths. These names are not filesystem references. Negative selectors and empty
+values are ignored.
 
 ## Suppression
 
