@@ -116,8 +116,8 @@ fn collect_findings(
 
 fn validate_max_depth(configured: Option<usize>) -> Result<usize> {
     let depth = configured.unwrap_or(DEFAULT_MAX_DEPTH);
-    if !(1..=2).contains(&depth) {
-        anyhow::bail!("{RULE_ID} options.maxDepth must be 1 or 2; README-only discovery supports no deeper graph")
+    if !(1..=3).contains(&depth) {
+        anyhow::bail!("{RULE_ID} options.maxDepth must be 1, 2, or 3; index-only discovery supports no deeper graph")
     }
     Ok(depth)
 }

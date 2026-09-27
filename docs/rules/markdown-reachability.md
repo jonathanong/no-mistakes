@@ -19,7 +19,11 @@ not satisfy that requirement.
 ## Options
 
 `rootFilenames` defaults to `CLAUDE.md`, `indexFilenames` defaults to
-`README.md`, and `maxDepth` defaults to `2`. `baselineFile` is optional and
+`README.md`, and `maxDepth` defaults to `2`. Supported depths are `1`, `2`,
+and `3`; depth counts links from a root. Depth `3` allows two configured index
+intermediaries, such as `AGENTS.md -> docs/README.md -> domain/README.md -> doc`.
+Every intermediary must match `indexFilenames`, even when a shorter route through
+an arbitrary Markdown page also exists. `baselineFile` is optional and
 must be a tracked JSON baseline; generic include/exclude chooses targets.
 
 ## Valid example
@@ -57,8 +61,10 @@ path to `{ "state": "depth", "depth": N }` or
 `{ "state": "unreachable" }`. Entries must exactly match current violations;
 resolved, changed, malformed, and deleted entries fail as stale.
 
-Fix: add a direct link from a root or a direct root-to-README and README-to-doc
-path. Prefer removing baseline entries as documents are repaired.
+Fix: add a direct root link or a path through configured indexes within the
+selected depth. Keep the default two-hop budget unless the documentation map
+needs a second index level; set `maxDepth: 3` explicitly for that layout.
+Prefer removing baseline entries as documents are repaired.
 
 Suppressions use standard `no-mistakes` directives. Prefer fixing the map;
 suppression hides future discoverability regressions.

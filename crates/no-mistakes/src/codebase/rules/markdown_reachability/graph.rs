@@ -70,32 +70,34 @@ pub(super) fn normalize_inside(root: &Path, path: &Path) -> Option<PathBuf> {
     Some(root.join(relative))
 }
 
-pub(super) fn direct_or_readme_hop(
-    target: &Path,
+pub(super) fn index_reachable(
     roots: &BTreeSet<String>,
     indexes: &BTreeSet<String>,
     graph: &BTreeMap<PathBuf, Vec<PathBuf>>,
     max_depth: usize,
-) -> bool {
-    graph
+) -> BTreeSet<PathBuf> {
+    let mut queue = graph
         .keys()
         .filter(|path| is_named(path, roots))
-        .any(|root| {
-            graph
-                .get(root)
-                .is_some_and(|links| links.contains(&target.to_path_buf()))
-                || (max_depth >= 2
-                    && graph
-                        .get(root)
-                        .into_iter()
-                        .flatten()
-                        .filter(|path| is_named(path, indexes))
-                        .any(|index| {
-                            graph
-                                .get(index)
-                                .is_some_and(|links| links.contains(&target.to_path_buf()))
-                        }))
-        })
+        .cloned()
+        .map(|path| (path, 0usize))
+        .collect::<VecDeque<_>>();
+    let mut expanded = BTreeSet::new();
+    let mut reachable = BTreeSet::new();
+    while let Some((current, depth)) = queue.pop_front() {
+        if !expanded.insert(current.clone()) || depth >= max_depth {
+            continue;
+        }
+        for next in graph.get(&current).into_iter().flatten() {
+            reachable.insert(next.clone());
+            // Any Markdown file can be an endpoint; only configured indexes
+            // may supply another discovery hop after an instruction root.
+            if depth + 1 < max_depth && is_named(next, indexes) {
+                queue.push_back((next.clone(), depth + 1));
+            }
+        }
+    }
+    reachable
 }
 
 pub(super) fn shortest_depths(

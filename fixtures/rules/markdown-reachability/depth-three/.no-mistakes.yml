@@ -1,0 +1,7 @@
+rules:
+  - rule: markdown-reachability
+    scope: repository
+    include: [domain/guide.md, domain/deeper/deep.md, first.md, second.md]
+    options:
+      rootFilenames: [AGENTS.md]
+      maxDepth: 3
