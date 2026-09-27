@@ -1,6 +1,8 @@
 use crate::playwright::{report_json, PlaywrightReportKind, PlaywrightReportOptions};
 use std::path::PathBuf;
 
+include!("coverage_tests.rs");
+
 fn root() -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -259,7 +261,7 @@ fn integration_routes_credit_only_registered_tests_with_bound_helpers_and_exact_
             .as_ref()
             .unwrap()
             .len(),
-        8
+        13
     );
     let report: serde_json::Value =
         serde_json::from_str(&report_json(PlaywrightReportKind::Check, options()).unwrap())

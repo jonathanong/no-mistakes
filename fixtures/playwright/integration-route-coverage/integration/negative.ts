@@ -1,6 +1,13 @@
-import { it } from 'vitest'
+import { describe, it } from 'vitest'
 import { WebClient } from './lookalike'
 import { loadPage } from './client'
+
+it('nested registrations do not run', () => {
+  it('invalid nested test', () => loadPage('', '/unregistered'))
+  describe('invalid nested suite', () => {
+    it('invalid suite test', () => loadPage('', '/unregistered'))
+  })
+})
 const client = new WebClient()
 it('wrong helper', async () => { await client.request('/wrong-helper') })
 it.skip('skipped', async () => { await loadPage('', '/skipped') })

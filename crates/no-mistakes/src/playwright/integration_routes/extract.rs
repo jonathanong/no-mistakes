@@ -46,7 +46,10 @@ impl Collector<'_, '_> {
     fn helper_argument(&self, callee: &[String]) -> Option<usize> {
         let (local, method) = match callee {
             [function] => (function.as_str(), None),
-            [receiver, method] => (self.receivers.constructor(receiver)?, Some(method.as_str())),
+            [receiver, method] => (
+                self.receivers.constructor(receiver, &self.scope)?,
+                Some(method.as_str()),
+            ),
             _ => return None,
         };
         let binding = self.imported(local)?;
@@ -91,6 +94,9 @@ impl<'a> Visit<'a> for Collector<'a, '_> {
             return walk::walk_call_expression(self, call);
         };
         if let Some(kind) = self.runner_kind(&callee) {
+            if self.test.is_some() {
+                return;
+            }
             let describe = kind == "describe";
             let Some(name) = call.arguments.first().and_then(literal) else {
                 return;
@@ -101,8 +107,10 @@ impl<'a> Visit<'a> for Collector<'a, '_> {
             };
             if describe {
                 self.describes.push(name);
+                self.scope.describes.push(call.span.start);
             } else {
                 self.test = Some(name);
+                self.scope.test = Some(call.span.start);
             }
             match &call.arguments[index] {
                 Argument::ArrowFunctionExpression(function) => {
@@ -115,8 +123,10 @@ impl<'a> Visit<'a> for Collector<'a, '_> {
             }
             if describe {
                 self.describes.pop();
+                self.scope.describes.pop();
             } else {
                 self.test = None;
+                self.scope.test = None;
             }
             return;
         }

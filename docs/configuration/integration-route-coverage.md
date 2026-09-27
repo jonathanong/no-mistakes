@@ -51,6 +51,15 @@ module specifier and an exported binding. Import aliases are supported. Set
 receivers must have a concrete imported constructor. Shadowed, reassigned, or
 ambiguous bindings receive no credit.
 
+Constructor ownership is scoped to real registrations. A direct top-level
+constructor, a constructor local to the consuming test callback, or an assignment
+in a bound unconditional Vitest `beforeEach`/`beforeAll` callback may establish
+ownership. A hook applies only to tests in its own `describe` scope or descendants;
+sibling scopes and duplicate titles do not share initialization. Hook-local
+declarations, another test's assignments, uncalled initializer functions, and
+conditional initializer paths do not establish ownership. Destructuring or member
+mutation invalidates affected receivers without invalidating unrelated instances.
+
 Only statically bound `test`/`it` callbacks from `vitest`, optionally nested in
 bound `describe` callbacks, contribute occurrences. Skipped and conditional
 registrations, unbound declarations, uncalled function bodies, and wholly dynamic

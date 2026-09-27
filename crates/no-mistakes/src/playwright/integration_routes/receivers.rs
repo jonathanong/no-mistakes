@@ -12,11 +12,35 @@ pub(super) struct Receivers {
     declarations: BTreeMap<String, usize>,
     constructors: BTreeMap<String, String>,
     invalid: BTreeSet<String>,
+    runner_imports: BTreeMap<String, String>,
+    constructor_origins: BTreeMap<String, BTreeSet<String>>,
+    constructor_scopes: BTreeMap<String, BTreeSet<RegistrationScope>>,
+    declaration_scopes: BTreeMap<String, RegistrationScope>,
+    scope: RegistrationScope,
+    origins: Vec<String>,
+    initialization_context: bool,
+    registration_context: bool,
 }
 
+include!("receivers_initialization.rs");
+include!("receivers_mutation.rs");
+include!("receivers_scope.rs");
+
 impl Receivers {
-    pub(super) fn collect(program: &Program<'_>) -> Self {
-        let mut census = Self::default();
+    pub(super) fn collect(
+        program: &Program<'_>,
+        imports: &[crate::codebase::dependencies::extract::ImportedBinding],
+    ) -> Self {
+        let mut census = Self {
+            initialization_context: true,
+            registration_context: true,
+            runner_imports: imports
+                .iter()
+                .filter(|binding| !binding.is_type_only && binding.specifier == "vitest")
+                .map(|binding| (binding.local.clone(), binding.imported.clone()))
+                .collect(),
+            ..Default::default()
+        };
         census.visit_program(program);
         census
     }
@@ -25,14 +49,42 @@ impl Receivers {
         self.declarations.get(name) == Some(&1) && !self.invalid.contains(name)
     }
 
-    pub(super) fn constructor(&self, name: &str) -> Option<&str> {
+    pub(super) fn constructor(&self, name: &str, scope: &RegistrationScope) -> Option<&str> {
         self.unique(name)
             .then(|| self.constructors.get(name).map(String::as_str))
             .flatten()
             .filter(|constructor| self.unique(constructor))
+            .filter(|_| {
+                self.constructor_origins
+                    .get(name)
+                    .is_none_or(|origins| origins.iter().all(|origin| self.unique(origin)))
+            })
+            .filter(|_| {
+                self.declaration_scopes
+                    .get(name)
+                    .is_some_and(|declaration| {
+                        declaration.hook.is_none()
+                            && declaration.applies_to(scope)
+                            && self
+                                .constructor_scopes
+                                .get(name)
+                                .is_some_and(|initializers| {
+                                    initializers.iter().any(|initializer| {
+                                        initializer.applies_to(scope)
+                                            && declaration.applies_to(initializer)
+                                            && (initializer.test.is_none()
+                                                || initializer == declaration)
+                                    })
+                                })
+                    })
+            })
     }
 
     fn assign(&mut self, name: &str, value: Option<&Expression<'_>>) {
+        if value.is_some() && !self.initialization_context {
+            self.invalid.insert(name.to_string());
+            return;
+        }
         let constructor = value.and_then(|value| match value {
             Expression::NewExpression(new) => ast::expression_path(&new.callee)
                 .filter(|path| path.len() == 1)
@@ -53,41 +105,18 @@ impl Receivers {
             self.invalid.insert(name.to_string());
         }
         self.constructors.insert(name.to_string(), constructor);
+        self.constructor_origins
+            .entry(name.to_string())
+            .or_default()
+            .extend(self.origins.iter().cloned());
+        self.constructor_scopes
+            .entry(name.to_string())
+            .or_default()
+            .insert(self.scope.clone());
     }
 }
 
-impl<'a> Visit<'a> for Receivers {
-    fn visit_binding_identifier(&mut self, identifier: &BindingIdentifier<'a>) {
-        *self
-            .declarations
-            .entry(identifier.name.to_string())
-            .or_default() += 1;
-    }
-
-    fn visit_variable_declarator(&mut self, declaration: &VariableDeclarator<'a>) {
-        if let oxc_ast::ast::BindingPattern::BindingIdentifier(binding) = &declaration.id {
-            self.assign(binding.name.as_str(), declaration.init.as_ref());
-        }
-        walk::walk_variable_declarator(self, declaration);
-    }
-
-    fn visit_assignment_expression(&mut self, assignment: &AssignmentExpression<'a>) {
-        use oxc_ast::ast::AssignmentTarget;
-        match &assignment.left {
-            AssignmentTarget::AssignmentTargetIdentifier(binding) => {
-                self.assign(binding.name.as_str(), Some(&assignment.right));
-            }
-            AssignmentTarget::StaticMemberExpression(member) => {
-                self.invalidate_object(&member.object)
-            }
-            AssignmentTarget::ComputedMemberExpression(member) => {
-                self.invalidate_object(&member.object)
-            }
-            _ => {}
-        }
-        walk::walk_assignment_expression(self, assignment);
-    }
-}
+include!("receivers_visit.rs");
 
 impl Receivers {
     fn invalidate_object(&mut self, object: &Expression<'_>) {

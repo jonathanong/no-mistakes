@@ -7,10 +7,10 @@ pub(crate) fn collect(
     config: &RouteCoverageSource,
     resolution: &PlaywrightModuleResolution,
 ) -> Vec<RouteOccurrence> {
-    let receivers = Receivers::collect(program);
+    let receivers = Receivers::collect(program, imports);
     let mut visitor = Collector {
         root, path, source, imports, config, resolution, receivers: &receivers,
-        test: None, describes: Vec::new(), occurrences: Vec::new(),
+        test: None, describes: Vec::new(), occurrences: Vec::new(), scope: Default::default(),
     };
     visitor.visit_program(program);
     visitor.occurrences.sort();
@@ -26,6 +26,7 @@ struct Collector<'a, 'p> {
     config: &'p RouteCoverageSource,
     resolution: &'p PlaywrightModuleResolution,
     receivers: &'p Receivers,
+    scope: super::receivers::RegistrationScope,
     test: Option<String>,
     describes: Vec<String>,
     occurrences: Vec<RouteOccurrence>,

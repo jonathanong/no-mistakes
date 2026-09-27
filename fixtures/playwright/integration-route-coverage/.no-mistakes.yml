@@ -24,6 +24,10 @@ tests:
           - module: integration/client.ts
             export: loadPage
             urlArgument: 1
+          - module: integration/client.ts
+            export: WebClient
+            method: loadPage
+            urlArgument: 0
 rules:
   - rule: playwright-coverage
     scope: repository

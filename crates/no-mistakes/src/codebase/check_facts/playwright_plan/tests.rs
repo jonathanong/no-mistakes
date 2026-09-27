@@ -105,6 +105,32 @@ fn wrapper_module_resolution_keeps_external_packages_as_terminal_identities() {
 }
 
 #[test]
+fn integration_route_module_identity_is_exact_for_scoped_and_catalog_resolvers() {
+    let root = selector_wrapper_resolution_fixture();
+    let importer = root.join("tests/page.spec.ts");
+    for (index, resolution) in [
+        selector_wrapper_module_resolution(),
+        catalog_module_resolution(&root),
+    ]
+    .into_iter()
+    .enumerate()
+    {
+        assert!(resolution.strict_modules_match(&root, "./helpers.js", "./helpers", &importer));
+        assert!(!resolution.strict_modules_match(&root, "./missing", "./missing", &importer));
+        assert!(!resolution.strict_modules_match(
+            &root,
+            "./helpers",
+            "./default-locator",
+            &importer
+        ));
+        let catalog = resolution.catalog(&root);
+        let provenance = catalog.provenance_for(&importer);
+        assert_eq!(provenance.importer, importer);
+        assert_eq!(provenance.forced, index == 0);
+    }
+}
+
+#[test]
 fn catalog_wrapper_resolution_preserves_symlinked_alias_identity_without_rebuilding_scopes() {
     let root = symlinked_catalog_resolution_fixture();
     let importer = root.join("tests/dynamic-manual-mock.test.ts");
