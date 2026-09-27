@@ -1,0 +1,13 @@
+tests:
+  playwright:
+    configs: playwright.config.ts
+    selectorRoots: [selectors]
+    frontendRoot: app
+    navigationHelpers: [navigateTo, navigation.navigateTo]
+rules:
+  - rule: no-mistakes-config
+    scope: repository
+  - rule: config-path-references
+    scope: repository
+    options:
+      presets: [no-mistakes]

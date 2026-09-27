@@ -5,6 +5,8 @@ use crate::config::v2::{
 };
 use std::path::{Path, PathBuf};
 
+include!("navigation_helper_tests.rs");
+
 fn fixture(name: &str) -> PathBuf {
     crate::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
@@ -167,7 +169,7 @@ tests:
     configs: [vitest.config.ts, ""]
     selectorRoots: [web]
     frontendRoot: web
-    navigationHelpers: [vitest.config.ts]
+    navigationHelpers: [navigateTo, navigation.navigateTo]
   vitest:
     configs: vitest.config.ts
   jest:
