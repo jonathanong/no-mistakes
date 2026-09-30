@@ -184,7 +184,7 @@ fn fail_fixture_reports_each_runtime_pin() {
     let root = fixture("fail");
     let findings = check_with_files(&root, &config_with_options("{}"), &fail_files(&root)).unwrap();
     for (file, reason, count) in [
-        ("src/container-image.test.mts", "container image tag", 11),
+        ("src/container-image.test.mts", "container image tag", 12),
         ("src/container-image.test.mts", "container image digest", 2),
         ("src/setup-version.test.mts", "setup action version", 6),
         (

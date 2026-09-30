@@ -68,6 +68,7 @@ fn container_image_tags_are_pins() {
             "mcr.microsoft.com/dotnet/sdk:9.0",
             "mcr.microsoft.com/dotnet/sdk:9.0",
         ),
+        ("owner/name:v1.2.3", "owner/name:v1.2.3"),
         ("pgvector/pgvector:pg18", "pgvector/pgvector:pg18"),
         ("pgvector/pgvector:pg18.1", "pgvector/pgvector:pg18.1"),
         ("otel/collector:0.153.0", "otel/collector:0.153.0"),
@@ -91,10 +92,35 @@ fn container_image_digests_are_pins() {
     }
     let tagged = format!("pgvector/pgvector:pg18@sha256:{digest}");
     assert_pins(&tagged, &[&tagged]);
-    assert_pins(
-        "image: pgvector/pgvector:pg18@sha256:",
-        &["pgvector/pgvector:pg18@sha256:"],
-    );
+}
+
+#[test]
+fn a_tag_with_an_interpolated_or_short_digest_reports_only_the_tag() {
+    // The digest is not concrete, but the tag in front of it is.
+    for (line, expected) in [
+        (
+            "image: app/service:1.2.3@sha256:${imageDigest}",
+            "app/service:1.2.3",
+        ),
+        (
+            "mirror.gcr.io/library/node:26-trixie-slim@sha256:${imageDigest}",
+            "mirror.gcr.io/library/node:26-trixie-slim",
+        ),
+        (
+            "image: pgvector/pgvector:pg18@sha256:",
+            "pgvector/pgvector:pg18",
+        ),
+        ("image: node:24@sha256:abc123", "node:24"),
+        (
+            "registry.io/team/api:5000@sha256:${digest}",
+            "registry.io/team/api:5000",
+        ),
+    ] {
+        assert_pins(line, &[expected]);
+    }
+    // A digest longer than 64 hex characters is not a digest either.
+    let overlong = format!("app/service:1.2.3@sha256:{}", "a".repeat(65));
+    assert_pins(&overlong, &["app/service:1.2.3"]);
 }
 
 #[test]
@@ -185,6 +211,8 @@ fn lookalikes_are_not_pins() {
     for line in [
         "https://example.com/foo:8080/bar",
         "foo/bar:baz",
+        // Known recall gap: a bare `v2` tag has no dot, so it is not version-shaped.
+        "owner/name:v2",
         "at run (src/file.mts:12:5) at dev/initialize:2",
         "node:internal/modules/run_main:107",
         "github.com/acme/app/internal/binder.go:1755 +0x1a4",

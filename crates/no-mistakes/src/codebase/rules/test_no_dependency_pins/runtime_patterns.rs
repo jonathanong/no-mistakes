@@ -69,9 +69,19 @@ macro_rules! sfx {
     };
 }
 
+/// An optional trailing digest is part of the pin only when it is complete.
 macro_rules! digest_opt {
     () => {
-        r"(?:@sha256:[0-9a-f]*)?"
+        r"(?:@sha256:[0-9a-f]{64})?"
+    };
+}
+
+/// End of a tagged image: a normal pin end, or the `@sha256:` of an
+/// interpolated or short digest, so `app:1.2.3@sha256:${digest}` reports only
+/// the concrete tag instead of being dropped or reported with a stub digest.
+macro_rules! image_end {
+    () => {
+        concat!("(?:", right!(), "|@sha256:)")
     };
 }
 
@@ -109,7 +119,7 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
             ")",
             digest_opt!(),
             ")",
-            right!()
+            image_end!()
         ),
         None,
     ),
@@ -128,7 +138,7 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
             r")+:\d+)",
             digest_opt!(),
             ")",
-            right!()
+            image_end!()
         ),
         None,
     ),

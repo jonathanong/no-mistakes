@@ -103,8 +103,9 @@ only the pin (not the surrounding line), and reports several pins per line.
 
 - `container image tag`: `owner/name:9.1.0`, `host.io/name:2.4`, `name:24-slim`,
   `owner/name:pg18`, and `image: owner/name:9`, with or without a trailing
-  `@sha256:` digest. Not `name:latest`, untagged images, `${tag}` interpolation,
-  or ports.
+  `@sha256:` digest of 64 hex characters. A tag followed by an interpolated or
+  short digest (`owner/name:9.1.0@sha256:${digest}`) reports only the tag. Not
+  `name:latest`, untagged images, `${tag}` interpolation, or ports.
 - `container image digest`: an untagged `name@sha256:` plus 64 hex characters.
   Not short or repeated digests, or `${digest}` interpolation.
 - `setup action version`: `node-version: 26`, `python-version: "3.13"`, and the
@@ -119,8 +120,9 @@ only the pin (not the surrounding line), and reports several pins per line.
 
 An image is recognized by its grammar, not by a word list. A path under a
 dotted registry host with a version-shaped or bare integer tag, or an
-`owner/name` path with a version-shaped tag (`1.2.3`, `v2`, `24-slim`, `pg18`),
-is an image anywhere on the line. A bare integer tag on an `owner/name` path
+`owner/name` path with a version-shaped tag (`1.2.3`, `v1.2.3`, `24-slim`,
+`pg18`), is an image anywhere on the line. A bare integer tag on an `owner/name`
+path
 (`owner/name:9`) and a `name:tag` with no slash are only images after `image:` or
 `FROM`, because `file.mts:12`, `dev/initialize:2`, and Go or Node stack frames
 have the same shape. Repository components never contain dots, which keeps
