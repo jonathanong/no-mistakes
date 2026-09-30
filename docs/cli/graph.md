@@ -27,7 +27,9 @@ the standard call-pruned graph and exclude `call` and `route-import`.
 Use `--relationship call` for the statically resolved lexical call graph. It
 follows local functions, direct named imports, static namespace-member imports
 such as `import * as api from "./api"; api.run()`, named and default imports of
-a class followed by a static member such as `Service.run()`, and explicit named re-exports;
+a class followed by a static member such as `Service.run()`, and explicit named re-exports.
+Imports resolve like the import graph, including workspace package names
+(`@scope/pkg`) and their `exports` subpaths.
 `--depth 1` is the direct-call boundary and `--depth 0` returns no related
 nodes. Computed members, dynamic callees, globals, and ambiguous re-exports
 remain unconnected because terminal-name matching would create unsound edges.

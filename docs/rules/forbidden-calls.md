@@ -77,8 +77,13 @@ Targets may select a global name, an exact source spelling, a terminal member
 name, an imported module export, or a canonical repository function. Static
 named imports, aliases, re-exports, and static namespace members such as
 `import * as timers from "node:timers/promises"; timers.setTimeout()` are
-resolved. Use `function` when a repository target must remain stable through a
-barrel or import alias. Use `exact` for a full source spelling that the graph
+resolved. Import specifiers resolve the way the import graph resolves them,
+including workspace package names such as `@scope/pkg`, their `exports`
+subpaths, and package `imports` (`#name`), so a call through a workspace package
+reaches the package source. A specifier that resolves nowhere, such as an
+external package outside the repository, stays a `moduleExport` target. Use `function` when
+a repository target must remain stable through a barrel, a workspace package
+name, or an import alias. Use `exact` for a full source spelling that the graph
 records as unknown. Use `terminal` for the last member name, including
 unresolved receivers such as typed callback parameters, renamed bindings,
 `this`, static computed members, and chained receivers whose source spelling
@@ -132,6 +137,8 @@ contract for repeatable timer, mock-migration, glob, and discovery behavior.
 Release validation runs that fixture through `no-mistakes check --format json`.
 Each material source case is asserted by application identity, target, import
 spelling, and line; YAML application indexes must match declaration order.
+`test-cases/rules/forbidden-calls/workspace-package/` covers `function` targets
+reached through a workspace package name and one of its `exports` subpaths.
 
 ## Unknown calls and suppression
 

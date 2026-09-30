@@ -1,0 +1,10 @@
+{
+  "name": "@scope/lib",
+  "version": "1.0.0",
+  "exports": {
+    ".": "./index.ts",
+    "./util": "./src/util.ts",
+    "./barrel": "./src/barrel.ts",
+    "./data": "./src/data.ts"
+  }
+}

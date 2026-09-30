@@ -305,7 +305,14 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   `route-test` navigation is the documented exception above.)
 - `call` edges are opt-in and are deliberately soundness-bounded. Only local
   functions, direct named imports, static namespace-member imports, and explicit named re-exports with one
-  resolved target become edges. String-literal computed members such as
+  resolved target become edges. Import specifiers resolve as they do for
+  `import` edges, including workspace package names (`@scope/pkg`), their
+  `exports` subpaths, and package `imports` (`#name`); a bare specifier that no
+  workspace package or configured alias claims stays unresolved, and an export of
+  a resolved workspace module that is not callable is an unknown call, as it is
+  for a relative import
+  ([`call-workspace-packages`](../test-cases/codebase-analysis/call-workspace-packages)).
+  String-literal computed members such as
   `api["run"]()` and TypeScript-wrapped receivers such as
   `(api as typeof api)["run"]()` resolve the same as `api.run()`. Dynamic
   computed members, dynamic callees, globals, ambiguous `export *` targets, and

@@ -1,0 +1,7 @@
+{
+  "name": "forbidden-calls-workspace-package-fixture",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
+}
