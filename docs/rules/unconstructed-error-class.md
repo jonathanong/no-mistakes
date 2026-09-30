@@ -38,9 +38,6 @@ A `new this()` or `new` of an unresolved value inside a class member counts as
 constructing that class, so static factories such as
 `static create() { return new this(); }` keep their class alive.
 
-The finding points at the class declaration, so a `no-mistakes-disable-next-line`
-directive goes on the line above it.
-
 ## Options
 
 ```yaml
@@ -126,17 +123,17 @@ until it is clean.
 
 ## Suppression
 
-Use a directive on the line above the class declaration when the class is built
-in a way the graph cannot see, for example by a plugin loader or a dynamic
-lookup:
+The finding points at the class declaration. Suppress a class that is built in
+a way the graph cannot see, for example by a plugin loader or a dynamic lookup:
 
 ```ts
 // no-mistakes-disable-next-line unconstructed-error-class: built by the plugin loader
 export class PluginError extends Error {}
 ```
 
-`no-mistakes-disable-file unconstructed-error-class` at the top of a file
-suppresses every class in it.
+`no-mistakes-disable-line` on the declaration line and
+`no-mistakes-disable-file unconstructed-error-class` at the top of a file (every
+class in it) work too.
 
 ## Limitations
 

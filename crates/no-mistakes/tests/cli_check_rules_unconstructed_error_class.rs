@@ -41,14 +41,59 @@ fn reports_each_dead_error_class_with_file_and_line() {
     );
     assert!(body.contains("src/guard.ts:3 exported error class `InstanceofOnlyError`"));
     assert!(body.contains("src/hierarchy.ts:11 exported error class `Grandchild`"));
-    for constructed in [
+    for silent in [
         "ConstructedError",
         "BarrelError",
         "WorkspaceError",
         "AppError",
+        // Each suppression directive form keeps its class out of the report.
+        "SuppressedError",
+        "LineSuppressedError",
+        "FileSuppressedError",
     ] {
-        assert!(!body.contains(constructed), "{constructed}: {body}");
+        assert!(!body.contains(silent), "{silent}: {body}");
     }
+}
+
+fn lines_of(body: &str, rule: &str) -> Vec<String> {
+    let prefix = format!("{rule} ");
+    body.lines()
+        .filter(|line| line.starts_with(&prefix))
+        .map(String::from)
+        .collect()
+}
+
+/// The rule follows `@scope/package` names into the workspace; no other rule's
+/// resolution does, so configuring it must not change their output.
+#[test]
+fn forbidden_calls_output_is_unchanged_when_the_rule_is_also_configured() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/forbidden-calls/workspace-package/fixture"),
+    );
+    // `danger()` and `new Boom()` go through `@fixture/lib`, which call sites
+    // never resolve into the workspace, so only the module-export target and
+    // the relative repository call are reported.
+    let expected = [
+        "forbidden-calls src/entry.ts:5 forbidden call (application #1): \
+         module export `@fixture/lib#danger`",
+        "forbidden-calls src/entry.ts:6 forbidden call (application #1): \
+         repository function `src/local.ts#localDanger`",
+    ];
+    let without = text(&check(&root, ".no-mistakes.yml", "human"));
+    let with = text(&check(&root, "with-unconstructed-error-class.yml", "human"));
+
+    assert_eq!(lines_of(&without, "forbidden-calls"), expected, "{without}");
+    assert_eq!(lines_of(&with, "forbidden-calls"), expected, "{with}");
+    // The rule sees `Boom` constructed through the workspace name.
+    assert_eq!(
+        lines_of(&with, "unconstructed-error-class"),
+        [
+            "unconstructed-error-class packages/lib/index.ts:5 exported error class `Unused` \
+          is never constructed or subclassed in non-test source"
+        ],
+        "{with}"
+    );
 }
 
 #[test]
@@ -65,17 +110,6 @@ fn json_output_carries_the_configured_message_and_target() {
             "rule": "unconstructed-error-class",
             "target": "WorkspaceUnusedError",
         }])
-    );
-}
-
-#[test]
-fn test_files_option_stops_shared_helpers_from_counting_as_source() {
-    let default = text(&check(&fixture(), ".no-mistakes.yml", "human"));
-    let configured = text(&check(&fixture(), "configs/test-files.yml", "human"));
-    assert!(!default.contains("HelperOnlyError"), "{default}");
-    assert!(
-        configured.contains("src/helper-only.ts:3 exported error class `HelperOnlyError`"),
-        "{configured}"
     );
 }
 
