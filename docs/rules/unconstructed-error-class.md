@@ -41,6 +41,20 @@ constructing that class, so static factories such as
 Declaration files (`.d.ts`, `.d.mts`, `.d.cts`) are skipped: they describe code
 outside the analyzed source, so their classes are never reported.
 
+Two more kinds of class are never reported, even in a regular `.ts` file:
+
+- a class declared with `declare` (`export declare class X extends Error {}`) or
+  inside an ambient block (`declare module "x" { ... }`, `declare global { ... }`),
+  which describes code outside the analyzed source like a declaration file does;
+- a class declared inside a TypeScript `namespace` (including dotted names such
+  as `namespace A.B`), because the call graph does not resolve a reference to a
+  namespace member, so `new Errors.TopicError()` and a bare `new TopicError()`
+  inside the namespace never credit the class. Reporting it would call a class
+  dead that something builds.
+
+Such a class still counts as an error class and still counts as a use of its
+base, so a subclass elsewhere keeps its base alive.
+
 ## Files that fail to parse
 
 When a non-test source file fails to parse or read, the rule stops with an error
@@ -53,7 +67,8 @@ finding there, never add one.
 
 Fix the file, or, if it really is test-only, classify it as a test file with
 `testFiles`. Test files that fail to parse do not stop the rule, because they
-never count as construction.
+never count as construction. Declaration files that fail to parse do not stop it
+either: they hold no construction.
 
 ## Options
 
@@ -167,9 +182,9 @@ class in it) work too.
 
 ## Limitations
 
-The rule reads static code only. Some limitations below hide a dead class;
-others report a class that is not really dead or not really exported, which a
-suppression comment resolves.
+The rule reads static code only. Most limitations below hide a dead class; the
+first reports a class that is not really dead, which a suppression comment
+resolves.
 
 - Dynamic construction (`new (registry[name])()`, `Reflect.construct`) is not
   seen, so such a class is reported; suppress it.
@@ -182,21 +197,14 @@ suppression comment resolves.
   runs as you delete dead classes.
 - Only exported classes are reported. A non-exported class that nothing uses is
   a plain unused declaration.
-- `export declare class X extends Error {}` in a regular `.ts` file is treated
-  like a real class, because the `declare` modifier is not tracked. Only
-  declaration files are skipped; move the declaration there or suppress it.
+- A dead class inside a `namespace`, or declared with `declare`, is not
+  reported (see [What it catches](#what-it-catches)).
 - An exported alias of a class is not recognized as an export, so the class is
   not reported. With `const PublicError = InternalError;` and
   `export { PublicError };`, `InternalError` is skipped.
 - An alias of a built-in error used as a base is not followed, so the class is
   not reported. With `const BaseError = Error;`, a class that extends
   `BaseError` is skipped.
-- A class declared without `export` inside an exported namespace
-  (`export namespace Errors { class HiddenError extends Error {} }`) is treated
-  as exported, because the shared extractor flattens the export depth of
-  namespace members. It is reported when nothing constructs it. The class is
-  still dead, but the message's word "exported" is wrong: delete the class or
-  suppress the finding.
 - An unresolved `new`, such as `new this()`, credits the outermost class of the
   member it sits in. A class nested inside an error class's method can
   therefore hide that error class.

@@ -145,6 +145,7 @@ impl CallSiteResolution<'_, '_> {
         let lines: FxHashMap<_, _> = file.class_declaration_lines.iter().copied().collect();
         let exported: FxHashSet<&str> =
             file.exported_functions.iter().map(String::as_str).collect();
+        let namespaced: FxHashSet<_> = file.namespaced_or_ambient_class_ids.iter().collect();
         let mut edges = Vec::new();
         let mut classes = Vec::new();
         for (call, (class_id, scope)) in file
@@ -160,6 +161,7 @@ impl CallSiteResolution<'_, '_> {
                 callable_id: class_id,
                 line: lines.get(&class_id).copied().unwrap_or(0),
                 exported: exported.contains(scope),
+                namespaced_or_ambient: namespaced.contains(&class_id),
                 global_base: match site.target {
                     ResolvedCallTarget::Global { name } => Some(name),
                     _ => None,

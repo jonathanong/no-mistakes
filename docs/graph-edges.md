@@ -331,8 +331,12 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   produces no `call` edge, no call site, and no callable export resolution, so
   `forbidden-calls` and `call` traversal do not see it. A companion
   `ClassDeclaration` record carries what an edge cannot (the declaration line,
-  whether the class is exported, and a global base such as `Error`). Mixin and
-  expression bases (`extends mixin(Error)`) are not tracked.
+  whether the class is exported, whether it sits inside a `namespace`,
+  `declare module`, or `declare global` block or is itself `declare`d, and a
+  global base such as `Error`). The extractor scopes a namespaced class by its
+  own name and does not resolve references to namespace members, so a consumer
+  that needs to know whether a class is built must treat that flag as "cannot
+  tell". Mixin and expression bases (`extends mixin(Error)`) are not tracked.
 - Selector text edges are approximate. Exact selector edges from configured test
   ID attributes are stronger than role/text/label/placeholder matching.
   Configured selector wrappers produce the same exact edge when their declared

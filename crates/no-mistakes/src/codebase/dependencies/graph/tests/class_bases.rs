@@ -2,7 +2,11 @@ use super::*;
 use crate::codebase::dependencies::extract::{CallTargetIdentity, CallableId};
 
 fn build(extends: bool, calls: bool) -> (PathBuf, DepGraph) {
-    let root = crate::codebase::ts_resolver::normalize_path(&fixture("class-bases"));
+    build_fixture("class-bases", extends, calls)
+}
+
+fn build_fixture(name: &str, extends: bool, calls: bool) -> (PathBuf, DepGraph) {
+    let root = crate::codebase::ts_resolver::normalize_path(&fixture(name));
     let tsconfig = TsConfig {
         dir: root.clone(),
         paths: vec![],
@@ -74,6 +78,34 @@ fn class_declarations_record_line_export_state_and_global_base() {
             ("src/classes.ts", "FromPackage", true, 11, None),
             ("src/classes.ts", "Private", true, 15, Some("Error")),
             ("src/classes.ts", "default", true, 18, Some("Error")),
+        ]
+    );
+}
+
+/// A class inside any `namespace`, dotted namespace, `declare namespace`,
+/// `declare module 'x'` or `declare global` block, or declared with `declare`,
+/// is marked. The classes on both sides of the blocks are not: a depth counter
+/// that missed a decrement would mark `After`.
+#[test]
+fn classes_in_module_blocks_or_declared_are_marked() {
+    let (_, graph) = build_fixture("class-blocks", true, false);
+    let marked: Vec<_> = graph
+        .class_declarations()
+        .iter()
+        .map(|class| (class.scope.as_str(), class.namespaced_or_ambient))
+        .collect();
+    assert_eq!(
+        marked,
+        [
+            ("Before", false),
+            ("InNamespace", true),
+            ("InNested", true),
+            ("InDotted", true),
+            ("InDeclareNamespace", true),
+            ("InModule", true),
+            ("InGlobal", true),
+            ("Declared", true),
+            ("After", false),
         ]
     );
 }

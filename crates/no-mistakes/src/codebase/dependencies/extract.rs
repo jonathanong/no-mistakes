@@ -11,7 +11,7 @@ use oxc_ast::ast::{
     MethodDefinition, MethodDefinitionKind, ModuleExportName, NewExpression, ObjectExpression,
     ObjectProperty, ObjectPropertyKind, Program, PropertyDefinition, PropertyKind, Statement,
     StaticBlock, StaticMemberExpression, TSEnumDeclaration, TSImportType, TSInterfaceDeclaration,
-    TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
+    TSModuleBlock, TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
     TSTypeParameterDeclaration, TSTypeReference, TaggedTemplateExpression, VariableDeclaration,
     VariableDeclarationKind, VariableDeclarator,
 };

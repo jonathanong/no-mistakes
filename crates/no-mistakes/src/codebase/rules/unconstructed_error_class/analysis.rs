@@ -9,8 +9,10 @@ use std::path::Path;
 /// scope component, so same-named classes in two namespaces of one file share a
 /// key. An `extends` base whose display scope two declarations share resolves to
 /// no `Extends` edge, so a shared key never merges two parents: a subclass of
-/// `B.Base` cannot become an error class through `A.Base`. The `collide.ts` and
-/// `collide-grand.ts` files of the rule fixture pin this.
+/// `B.Base` cannot become an error class through `A.Base`. The key matters only
+/// to `error_flags` and crediting: a namespaced class is never reported, so the
+/// top-level `CollideGrand` of the rule fixture's `collide-grand.ts` is what
+/// pins this.
 type ClassKey<'a> = (&'a Path, &'a str);
 
 const BUILTIN_ERRORS: &[&str] = &[
@@ -36,7 +38,7 @@ fn builtin_error(name: &str) -> bool {
 
 /// Declaration files describe code that lives outside the analyzed source, so
 /// a class they declare is never a dead export of this project.
-fn is_declaration_file(path: &Path) -> bool {
+pub(super) fn is_declaration_file(path: &Path) -> bool {
     let name = path.to_string_lossy();
     [".d.ts", ".d.mts", ".d.cts"]
         .iter()
@@ -116,6 +118,11 @@ fn error_flags(graph: &DepGraph, classes: &[ClassDeclaration]) -> Vec<bool> {
 
 /// Exported error classes with no construction or subclass in non-test source.
 ///
+/// A class declared in a namespace or module block, or with `declare`, is never
+/// reported: the graph does not resolve a reference to a namespace member such
+/// as `new Errors.TopicError()`, so it cannot see that such a class is built.
+/// It still takes part in `error_flags` and crediting.
+///
 /// `is_test` classifies files whose uses do not count, and `is_reported`
 /// selects the declarations the caller wants findings for.
 pub(super) fn unconstructed<'a>(
@@ -128,7 +135,7 @@ pub(super) fn unconstructed<'a>(
     for (class, _) in classes
         .iter()
         .zip(error_flags(graph, classes))
-        .filter(|(class, error)| *error && class.exported)
+        .filter(|(class, error)| *error && class.exported && !class.namespaced_or_ambient)
         .filter(|(class, _)| {
             !is_test(&class.file) && is_reported(&class.file) && !is_declaration_file(&class.file)
         })

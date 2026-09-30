@@ -38,7 +38,7 @@ fn reports_each_dead_error_class_with_file_and_line() {
     let out = check(&fixture(), ".no-mistakes.yml", "human");
     let body = text(&out);
     assert_eq!(out.status.code(), Some(1), "{body}");
-    assert_eq!(body.lines().count(), 17, "{body}");
+    assert_eq!(body.lines().count(), 14, "{body}");
     assert!(
         body.contains(
             "unconstructed-error-class src/errors.ts:2 exported error class `UnusedError` \
@@ -48,16 +48,20 @@ fn reports_each_dead_error_class_with_file_and_line() {
     );
     assert!(body.contains("src/guard.ts:3 exported error class `InstanceofOnlyError`"));
     assert!(body.contains("src/hierarchy.ts:11 exported error class `Grandchild`"));
-    // A class nested in a namespace is reported by its own name.
-    assert!(body.contains("src/namespaced.ts:14 exported error class `DeadNamespacedError`"));
-    // The error class of two same-named namespace classes is reported alone.
-    assert!(body.contains("src/collide.ts:8 exported error class `CollideBase`"));
     for silent in [
-        // Subclasses of the `Array`-based namesake are not error classes.
+        // The graph cannot see a namespace member built, so a namespaced class
+        // is never reported: dead, dotted, private, and same-named alike.
+        "DeadNamespacedError",
+        "DeadDottedError",
+        "TopicError",
+        "CollideBase",
         "CollideChild",
         "CollideGrand",
-        // `new this()` in the factory of a class nested in a namespace builds it.
-        "TopicError",
+        "Qualified",
+        "Hidden",
+        // `declare` classes, in a `.ts` file or an ambient module block.
+        "DeclaredError",
+        "ModuleBlockError",
         "ConstructedError",
         "BarrelError",
         "WorkspaceError",
@@ -177,8 +181,9 @@ fn a_broken_non_test_file_stops_the_rule_instead_of_reporting() {
     let prefix = "rules check skipped: unconstructed-error-class: \
                   cannot prove error classes unconstructed:";
     for (config, named) in [
-        // `src/__tests__/broken.ts` is also broken but is a test, so it is
-        // left out of the count: `other-broken.ts` and `test-helpers/` remain.
+        // `src/__tests__/broken.ts` is also broken but is a test, and
+        // `src/broken.d.ts` is a declaration file, so neither is counted:
+        // `other-broken.ts` and `test-helpers/` remain.
         (
             ".no-mistakes.yml",
             "`src/broken.ts` (and 2 other files) failed to parse",
@@ -209,7 +214,9 @@ fn a_broken_non_test_file_stops_the_rule_instead_of_reporting() {
 
 /// Test files never count as construction, so a broken one cannot hide a
 /// construction and does not stop the rule. `src/__tests__/` is a test by
-/// default; `testFiles` classifies the other broken files.
+/// default; `testFiles` classifies the other broken files. `src/broken.d.ts`
+/// is broken too and is no test: a declaration file holds no construction, so
+/// it never stops the rule either.
 #[test]
 fn broken_test_files_do_not_stop_the_rule() {
     let out = check(

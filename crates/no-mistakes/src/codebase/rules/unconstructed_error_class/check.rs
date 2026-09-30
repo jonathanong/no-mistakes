@@ -1,4 +1,4 @@
-use super::analysis::unconstructed;
+use super::analysis::{is_declaration_file, unconstructed};
 use super::config::Options;
 use super::RULE_ID;
 use crate::codebase::dependencies::graph::{ClassDeclaration, DepGraph, GraphBuildPlan};
@@ -49,6 +49,7 @@ pub(crate) fn check_with_graph(
 /// The rule concludes that no non-test file constructs a class, so a file whose
 /// facts could not be collected might hold the construction it looks for.
 /// `path_filter` is not consulted: a construction outside `include` still counts.
+/// Declaration files are skipped: they hold no runtime construction.
 fn reject_unseen_source(
     root: &Path,
     graph: &DepGraph,
@@ -56,7 +57,7 @@ fn reject_unseen_source(
 ) -> Result<()> {
     let mut unseen: Vec<_> = graph
         .parse_errors()
-        .filter(|(file, _)| !is_test(file))
+        .filter(|(file, _)| !is_test(file) && !is_declaration_file(file))
         .map(|(file, error)| (relative_slash_path(root, file), error))
         .collect();
     unseen.sort();

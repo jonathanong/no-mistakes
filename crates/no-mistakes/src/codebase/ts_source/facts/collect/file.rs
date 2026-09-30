@@ -182,6 +182,7 @@ pub(crate) fn collect_file_facts_from_program(
         callable_scopes: import_facts.callable_scopes,
         class_scopes: import_facts.class_scopes,
         class_declaration_lines: import_facts.class_declaration_lines,
+        namespaced_or_ambient_class_ids: import_facts.namespaced_or_ambient_class_ids,
         has_unknown_top_level_call: import_facts.has_unknown_top_level_call,
         symbols,
         route_refs: domain.route_refs,

@@ -49,7 +49,10 @@ fn visit_export_default_declaration_with_scope<'a>(
     collector.export_depth += 1;
     match &export.declaration {
         ExportDefaultDeclarationKind::FunctionDeclaration(function) => {
-            let scope = function.id.as_ref().map_or("default", |id| id.name.as_str());
+            let scope = function
+                .id
+                .as_ref()
+                .map_or("default", |id| id.name.as_str());
             walk_default_function_with_scope(collector, function, scope);
             collector.export_depth -= 1;
         }
@@ -72,6 +75,19 @@ fn visit_export_default_declaration_with_scope<'a>(
             walk_default_expression(collector, export);
             collector.export_depth -= 1;
         }
+    }
+}
+
+fn visit_ts_enum_declaration_with_scope<'a>(
+    collector: &mut ImportCollector,
+    declaration: &TSEnumDeclaration<'a>,
+) {
+    if collector.function_stack.is_empty()
+        && collector.is_exported_top_level_name(declaration.id.name.as_str())
+    {
+        visit_exported_enum_declaration(collector, declaration);
+    } else {
+        walk::walk_ts_enum_declaration(collector, declaration);
     }
 }
 

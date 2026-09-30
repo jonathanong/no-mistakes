@@ -2,9 +2,11 @@
 // display scope `CollideBase`. An `extends` (or `new`) naming a scope that two
 // declarations share resolves to no edge, so the shared key never merges the
 // two parents: the Array-based `B.CollideBase` must not make `B.CollideChild`
-// an error class, and must not credit the error class in `A`.
+// an error class, and must not credit the error class in `A`. The rule never
+// reports a namespaced class, so `collide-grand.ts` holds the top-level check.
 export namespace A {
-  // Flagged: an error class that nothing constructs or subclasses.
+  // Not flagged: a namespaced class is never reported, though it is an error
+  // class that nothing constructs or subclasses.
   export class CollideBase extends Error {}
 }
 

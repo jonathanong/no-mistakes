@@ -39,10 +39,6 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             // Workspace package: only the class nothing constructs.
             "packages/lib/index.ts:5 WorkspaceUnusedError",
             "src/anonymous.ts:2 default",
-            // Same-named classes in two namespaces: only the error one, which
-            // nothing builds; `Array`-based `CollideChild` and `CollideGrand`
-            // are not error classes.
-            "src/collide.ts:8 CollideBase",
             // Only a test, or only a `__tests__` file, builds these.
             "src/errors.ts:2 UnusedError",
             "src/errors.ts:8 TestOnlyError",
@@ -58,9 +54,6 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             // The leaf and the orphan base; the middle of the chain is satisfied.
             "src/hierarchy.ts:11 Grandchild",
             "src/hierarchy.ts:14 OrphanBase",
-            // Classes inside (dotted) namespaces are analysed like top-level ones.
-            "src/namespaced.ts:14 DeadNamespacedError",
-            "src/namespaced.ts:28 DeadDottedError",
             "src/reexported.ts:14 BarrelUnusedError",
             "src/workspace-use.ts:6 LocalFromLib",
         ]
@@ -82,12 +75,37 @@ fn constructions_through_aliases_barrels_namespaces_and_workspaces_count() {
         "WorkspaceError",
         "ThisFactoryError",
         "NamedFactoryError",
-        // `new this()` inside a class nested in a namespace credits the class,
-        // not the namespace: the graph never scopes a class by its namespace.
-        "TopicError",
-        "DeepError",
     ] {
         assert!(!found.contains(constructed), "{constructed} was reported");
+    }
+}
+
+/// The graph cannot resolve a reference to a namespace member, such as
+/// `new Built.Qualified()` or a bare `new Local()` inside its namespace, so it
+/// cannot tell a namespaced class is built. `declare` classes and classes in an
+/// ambient module block describe code outside the analyzed source. Each of
+/// these is an exported error class that nothing else constructs, so the rule
+/// stays silent on all of them.
+#[test]
+fn namespaced_and_ambient_classes_are_never_reported() {
+    let found = findings(".no-mistakes.yml").unwrap();
+    let targets: Vec<_> = found
+        .iter()
+        .filter_map(|finding| finding.target.as_deref())
+        .collect();
+    for silent in [
+        "DeadNamespacedError",
+        "DeadDottedError",
+        "TopicError",
+        "DeepError",
+        "CollideBase",
+        "Qualified",
+        "Local",
+        "Hidden",
+        "DeclaredError",
+        "ModuleBlockError",
+    ] {
+        assert!(!targets.contains(&silent), "{silent} was reported");
     }
 }
 
