@@ -1,0 +1,5 @@
+expect(script).toContain('brew install postgresql@18')
+expect(script).toContain('brew link --force libpq@17 openssl@3.5')
+expect(script).toContain('brew install --cask temurin@21')
+expect(script).toContain('brew services start postgresql@18')
+expect(script).toContain('HOMEBREW_PREFIX=$(brew --prefix postgresql@18)')

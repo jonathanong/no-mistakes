@@ -10,8 +10,12 @@ use std::sync::LazyLock;
 mod assertion_ranges;
 mod delimiters;
 mod jsx_text_ranges;
+mod line_scan;
 mod raw_literal_arg;
 mod received_prefix;
+mod synthetic;
+
+use line_scan::scan_lines;
 
 pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
     let mut findings = Vec::new();
@@ -144,26 +148,6 @@ fn has_code_matcher(matched: &str, start: usize, non_code_ranges: &[(usize, usiz
     .iter()
     .flat_map(|token| matched.match_indices(token).map(|(offset, _)| offset))
     .any(|offset| is_code(non_code_ranges, start + offset))
-}
-
-fn scan_lines(
-    file: &str,
-    content: &str,
-    pattern: &CompiledPattern,
-    findings: &mut Vec<RuleFinding>,
-) {
-    for (index, line_with_ending) in content.split_inclusive('\n').enumerate() {
-        let line = line_with_ending.trim_end_matches(['\r', '\n']);
-        for matched in pattern.regex.find_iter(line) {
-            if pattern.reject_preceding_at
-                && matched.start() > 0
-                && line.as_bytes()[matched.start() - 1] == b'@'
-            {
-                continue;
-            }
-            findings.push(finding(file, index + 1, pattern, matched.as_str()));
-        }
-    }
 }
 
 fn line_at(content: &str, offset: usize) -> usize {

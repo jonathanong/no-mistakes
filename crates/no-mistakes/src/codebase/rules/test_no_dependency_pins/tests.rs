@@ -39,6 +39,10 @@ fn fail_files(root: &Path) -> Vec<PathBuf> {
         root.join("src/jsx.test.tsx"),
         root.join("src/__tests__/nested.ts"),
         root.join("src/helper.mock.test.js"),
+        root.join("src/container-image.test.mts"),
+        root.join("src/setup-version.test.mts"),
+        root.join("src/homebrew-formula.test.mts"),
+        root.join("src/runner-label.test.mts"),
     ]
 }
 
@@ -98,6 +102,11 @@ fn fail_fixture_reports_all_pin_shapes() {
         "versioned tool log",
         "package.json dependency assertion",
         "parsed dependency version assertion",
+        "container image tag",
+        "container image digest",
+        "setup action version",
+        "versioned Homebrew formula",
+        "versioned runner label",
     ] {
         assert!(reasons.contains(&reason), "missing {reason}: {findings:#?}");
     }
@@ -171,6 +180,65 @@ fn fail_fixture_reports_all_pin_shapes() {
 }
 
 #[test]
+fn fail_fixture_reports_each_runtime_pin() {
+    let root = fixture("fail");
+    let findings = check_with_files(&root, &config_with_options("{}"), &fail_files(&root)).unwrap();
+    for (file, reason, count) in [
+        ("src/container-image.test.mts", "container image tag", 11),
+        ("src/container-image.test.mts", "container image digest", 2),
+        ("src/setup-version.test.mts", "setup action version", 6),
+        (
+            "src/homebrew-formula.test.mts",
+            "versioned Homebrew formula",
+            6,
+        ),
+        ("src/runner-label.test.mts", "versioned runner label", 9),
+    ] {
+        let actual = findings
+            .iter()
+            .filter(|finding| finding.file == file && finding.target.as_deref() == Some(reason))
+            .count();
+        assert_eq!(actual, count, "{file} {reason}: {findings:#?}");
+    }
+    for file in [
+        "src/container-image.test.mts",
+        "src/setup-version.test.mts",
+        "src/homebrew-formula.test.mts",
+        "src/runner-label.test.mts",
+    ] {
+        let others = findings
+            .iter()
+            .filter(|finding| {
+                finding.file == file && finding.target.as_deref() == Some("exact action ref")
+            })
+            .count();
+        assert_eq!(others, 0, "{file}: {findings:#?}");
+    }
+}
+
+#[test]
+fn custom_patterns_do_not_get_the_placeholder_exemption() {
+    let options = Options {
+        include: Vec::new(),
+        patterns: vec![PatternOption {
+            reason: "custom pin".to_string(),
+            regex: r"(?<!@)tool-\d+\.\d+\.\d+".to_string(),
+        }],
+    };
+    let compiled = compile_options(&options).unwrap();
+    let findings = check_source(
+        "src/pin.test.mts",
+        "tool-0.0.0\n@tool-1.2.3\ntool-2.0.0 tool-3.0.0\n",
+        &compiled,
+    );
+    let pins: Vec<_> = findings
+        .iter()
+        .filter_map(|f| f.import.as_deref())
+        .collect();
+    assert_eq!(pins, ["tool-0.0.0", "tool-2.0.0", "tool-3.0.0"]);
+}
+
+#[test]
 fn negatives_and_non_test_files_are_ignored() {
     let root = fixture("pass");
     let files = vec![
@@ -178,6 +246,7 @@ fn negatives_and_non_test_files_are_ignored() {
         root.join("src/not-a-test.ts"),
         root.join("src/installer.spec.ts"),
         root.join("src/comparison.test.js"),
+        root.join("src/synthetic-and-lookalikes.test.mts"),
     ];
     let findings = check_with_files(&root, &config_with_options("{}"), &files).unwrap();
     assert!(findings.is_empty(), "{findings:#?}");

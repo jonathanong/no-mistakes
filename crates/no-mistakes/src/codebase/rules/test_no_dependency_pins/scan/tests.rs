@@ -261,6 +261,8 @@ fn malformed_version_delimiters_do_not_report_a_finding() {
         regex: Regex::new(r#"(?P<version>"1\.2\.3)"#).unwrap(),
         reject_preceding_at: false,
         multiline: true,
+        builtin: false,
+        line_context: None,
     }];
 
     let findings = check_source(

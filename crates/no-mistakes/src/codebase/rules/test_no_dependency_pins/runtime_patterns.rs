@@ -1,0 +1,177 @@
+//! Default line patterns for pins in container images, CI setup inputs,
+//! Homebrew formulae, and runner labels.
+//!
+//! Every pattern captures the pin in a named `pin` group and carries its own
+//! left and right boundary so prose, stack frames, paths, and `file.ts:12`
+//! locations are not read as versions. The scanner resumes each search at the
+//! end of the pin, which lets one separator character close a pin and open the
+//! next.
+
+/// `(reason, regex, line_context)`: the pattern only runs on lines matching
+/// `line_context` when one is given.
+pub(super) type RuntimePattern = (&'static str, &'static str, Option<&'static str>);
+
+/// A pin may start at the line start, after a JavaScript `\n`/`\r`/`\t` escape,
+/// or after a character that cannot continue a path, name, or version.
+macro_rules! left {
+    () => {
+        r"(?:^|\\[nrt]|[^A-Za-z0-9_.:/@\\-])"
+    };
+}
+
+/// A pin ends at the line end or at a character that cannot continue a tag.
+/// A single trailing `.` (sentence end) is allowed.
+macro_rules! right {
+    () => {
+        r"(?:$|[^A-Za-z0-9_.:/@+-]|\.(?:$|[^0-9A-Za-z_-]))"
+    };
+}
+
+/// Repository path component; Docker forbids dots here, which keeps
+/// `binder.go:1755` and `page.tsx:1:1` out.
+macro_rules! comp {
+    () => {
+        r"[a-z0-9]+(?:[_-][a-z0-9]+)*"
+    };
+}
+
+/// Component that starts with a letter, so `51088:6379` is never an image.
+macro_rules! comp_l {
+    () => {
+        r"[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*"
+    };
+}
+
+/// Registry host: a dotted name (with optional port) or `localhost:port`.
+macro_rules! host {
+    () => {
+        r"(?:(?:[a-z0-9-]+\.)+[a-z0-9-]+(?::\d{1,5})?|localhost:\d{1,5})"
+    };
+}
+
+/// Version-shaped tags: dotted numeric, `N-variant`, or `pgN`.
+macro_rules! tag {
+    () => {
+        concat!(
+            r"(?:v?\d+(?:\.\d+)+",
+            sfx!(),
+            r"|\d+-[A-Za-z][A-Za-z0-9_]*(?:[.-][A-Za-z0-9_]+)*",
+            r"|pg\d+(?:\.\d+)*",
+            sfx!(),
+            ")"
+        )
+    };
+}
+
+macro_rules! sfx {
+    () => {
+        r"(?:[-+][A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)*)?"
+    };
+}
+
+macro_rules! digest_opt {
+    () => {
+        r"(?:@sha256:[0-9a-f]*)?"
+    };
+}
+
+/// `image:` values, `FROM` lines: the only places a slashless `postgres:18`
+/// or a bare-integer `valkey/valkey-bundle:9` is unambiguously an image.
+macro_rules! image_context {
+    () => {
+        r#"(?:\bimage\\?["']?:\s*(?:\\?["'])?|\bFROM\s+(?:--platform=\S+\s+)?["']?)"#
+    };
+}
+
+pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
+    (
+        "container image tag",
+        concat!(
+            left!(),
+            r"(?P<pin>(?:",
+            host!(),
+            "/",
+            comp!(),
+            "(?:/",
+            comp!(),
+            r")*:\d+|(?:",
+            host!(),
+            "/",
+            comp!(),
+            "|",
+            comp_l!(),
+            "/",
+            comp!(),
+            ")(?:/",
+            comp!(),
+            ")*:",
+            tag!(),
+            ")",
+            digest_opt!(),
+            ")",
+            right!()
+        ),
+        None,
+    ),
+    (
+        "container image tag",
+        concat!(
+            image_context!(),
+            "(?P<pin>(?:",
+            comp_l!(),
+            ":(?:",
+            tag!(),
+            r"|\d+)|",
+            comp_l!(),
+            "(?:/",
+            comp!(),
+            r")+:\d+)",
+            digest_opt!(),
+            ")",
+            right!()
+        ),
+        None,
+    ),
+    (
+        "container image digest",
+        concat!(
+            left!(),
+            "(?P<pin>(?:",
+            host!(),
+            "/)?",
+            comp!(),
+            "(?:/",
+            comp!(),
+            ")*@sha256:[0-9a-f]{64})",
+            right!()
+        ),
+        None,
+    ),
+    (
+        "setup action version",
+        concat!(
+            r"(?:^|[^A-Za-z0-9_.-])(?P<pin>(?:node|python|go|java|ruby|dotnet|php|bun|deno)",
+            r#"-version(?:\\?["'])?:\s*(?:"#,
+            r#"\\?"\d[A-Za-z0-9._+-]*\\?"|\\?'\d[A-Za-z0-9._+-]*\\?'|\d[A-Za-z0-9._+-]*))"#
+        ),
+        None,
+    ),
+    (
+        "versioned Homebrew formula",
+        r"(?:^|[^A-Za-z0-9_.@-])(?P<pin>[a-z][a-z0-9+_-]*@\d+(?:\.\d+)?)(?:$|[^A-Za-z0-9_@-]|\.(?:$|[^0-9A-Za-z_-]))",
+        Some(r"(?i)\b(?:brew|homebrew|linuxbrew)\b|/Cellar/"),
+    ),
+    (
+        "versioned runner label",
+        concat!(
+            left!(),
+            r"(?P<pin>ubuntu-\d{2}\.\d{2}(?:-arm)?|macos-\d{2}(?:-(?:intel|large|xlarge))?",
+            r"|windows-(?:20\d{2}|11-arm)(?:-vs\d{4})?)",
+            r"(?:$|[^A-Za-z0-9_.-]|\.(?:$|[^0-9A-Za-z_-]))"
+        ),
+        None,
+    ),
+];
+
+#[cfg(test)]
+mod tests;
