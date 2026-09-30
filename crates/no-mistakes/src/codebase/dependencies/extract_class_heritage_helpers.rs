@@ -11,6 +11,9 @@ fn record_class_base_construction(
         return;
     };
     collector.record_class_local_base(class_id, base.clone());
+    collector
+        .class_declaration_lines
+        .push((class_id, import_line_at(&collector.line_starts, class.span.start as usize)));
     collector.function_calls.push(FunctionCall {
         caller: Some(class_name.to_string()),
         caller_id: Some(class_id),

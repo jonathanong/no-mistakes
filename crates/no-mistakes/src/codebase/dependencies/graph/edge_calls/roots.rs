@@ -2,6 +2,12 @@ impl DepGraph {
     pub fn resolved_call_sites(&self) -> &[ResolvedCallSite] {
         &self.resolved_call_sites
     }
+
+    /// Statically named `extends` bases in every analyzed file. Empty unless the
+    /// graph was built with call analysis.
+    pub fn resolved_class_bases(&self) -> &[ResolvedClassBase] {
+        &self.resolved_class_bases
+    }
 }
 
 /// Root selector primitives consumed by call-policy checks. Test catalogs turn

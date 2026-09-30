@@ -178,6 +178,7 @@ impl CallableResolutionIndexes {
     }
 }
 
+include!("edge_calls/call_site_resolution.rs");
 include!("edge_calls/collection.rs");
 include!("edge_calls/types.rs");
 include!("edge_calls/roots.rs");

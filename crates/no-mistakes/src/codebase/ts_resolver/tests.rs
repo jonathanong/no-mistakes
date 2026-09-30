@@ -1816,3 +1816,4 @@ fn match_alias_wildcard_subpath() {
 }
 
 mod extends;
+mod workspace_fallback;

@@ -82,3 +82,51 @@ impl ImportResolverFacade for ScopedImportResolver<'_> {
         )
     }
 }
+
+/// Falls back to workspace package manifests for specifiers the wrapped
+/// resolver leaves unresolved, so `@scope/package` and its `exports` subpaths
+/// reach the package source the same way the import graph reaches it.
+pub(crate) struct WorkspaceFallbackResolver<'a> {
+    inner: &'a dyn ImportResolverFacade,
+    workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+}
+
+impl<'a> WorkspaceFallbackResolver<'a> {
+    pub(crate) fn new(
+        inner: &'a dyn ImportResolverFacade,
+        workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    ) -> Self {
+        Self { inner, workspace }
+    }
+}
+
+impl ImportResolverFacade for WorkspaceFallbackResolver<'_> {
+    fn resolve(&self, specifier: &str, importing_file: &Path) -> Option<PathBuf> {
+        self.inner.resolve(specifier, importing_file).or_else(|| {
+            self.workspace.resolve_specifier_from_file_visible(
+                specifier,
+                importing_file,
+                self.inner.visible_files()?,
+            )
+        })
+    }
+
+    fn resolution_candidates(&self, specifier: &str, importing_file: &Path) -> BTreeSet<PathBuf> {
+        self.inner.resolution_candidates(specifier, importing_file)
+    }
+
+    fn visible_files(&self) -> Option<&dyn VisiblePathLookup> {
+        self.inner.visible_files()
+    }
+
+    fn classify_import(
+        &self,
+        specifier: &str,
+        importing_file: &Path,
+        workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
+        visible_files: &dyn VisiblePathLookup,
+    ) -> ImportClassification {
+        self.inner
+            .classify_import(specifier, importing_file, workspace, visible_files)
+    }
+}

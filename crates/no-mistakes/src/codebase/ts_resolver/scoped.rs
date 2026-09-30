@@ -6,7 +6,7 @@ use std::sync::Arc as ScopedArc;
 
 #[path = "scoped_facade.rs"]
 mod facade;
-pub(crate) use facade::{ImportResolution, ImportResolverFacade};
+pub(crate) use facade::{ImportResolution, ImportResolverFacade, WorkspaceFallbackResolver};
 
 /// Identity of one selected catalog resolver scope within this facade.
 ///

@@ -42,6 +42,8 @@ struct ImportCollector {
     object_setter_member_ids: FxHashMap<CallableId, FxHashSet<String>>,
     static_setter_member_ids: FxHashMap<CallableId, FxHashMap<String, CallableId>>,
     class_local_bases: FxHashMap<CallableId, String>,
+    /// One-based declaration line of each class that has a statically named base.
+    class_declaration_lines: Vec<(CallableId, u32)>,
     syntactic_caller_stack: Vec<String>,
     local_stack: Vec<FxHashSet<String>>,
     /// Stable identities parallel to `local_stack`. Scope depth alone is not

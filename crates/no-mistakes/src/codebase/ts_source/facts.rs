@@ -125,6 +125,8 @@ pub struct TsFileFacts {
     pub lexical_scope_parents: Vec<(usize, Option<usize>)>,
     pub callable_scopes: Vec<String>,
     pub class_scopes: Vec<String>,
+    /// One-based declaration line of each class that names a static base.
+    pub class_declaration_lines: Vec<(crate::codebase::dependencies::extract::CallableId, u32)>,
     pub has_unknown_top_level_call: bool,
     pub symbols: Option<Arc<FileSymbols>>,
     pub route_refs: Vec<RouteRef>,
