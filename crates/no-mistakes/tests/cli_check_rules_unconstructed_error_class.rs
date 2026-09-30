@@ -71,17 +71,18 @@ fn lines_of(body: &str, rule: &str) -> Vec<String> {
         .collect()
 }
 
-/// The rule shares the canonical call graph with `forbidden-calls`, so
-/// configuring it must not change that rule's output.
+/// The rule shares the canonical graph with `forbidden-calls` and with the
+/// consumers that walk every edge kind, so configuring it must not change what
+/// any of them report.
 #[test]
-fn forbidden_calls_output_is_unchanged_when_the_rule_is_also_configured() {
+fn other_graph_rules_are_unchanged_when_the_rule_is_also_configured() {
     let root = no_mistakes::codebase::ts_resolver::normalize_path(
         &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
             .join("../../test-cases/rules/forbidden-calls/shared-graph-parity/fixture"),
     );
     // `danger()` and `new Boom()` go through `@fixture/lib`, which the call
     // graph resolves into the workspace package.
-    let expected = [
+    let forbidden_calls = [
         "forbidden-calls src/entry.ts:5 forbidden call (application #1): \
          repository function `packages/lib/index.ts#danger`",
         "forbidden-calls src/entry.ts:6 forbidden call (application #1): \
@@ -89,12 +90,31 @@ fn forbidden_calls_output_is_unchanged_when_the_rule_is_also_configured() {
         "forbidden-calls src/entry.ts:7 forbidden call (application #1): \
          repository function `packages/lib/index.ts#Boom`",
     ];
+    // Configuring the rule adds the `Child extends Parent` edge to the graph
+    // both walkers read; they must report exactly what they do without it.
+    let forbidden_dependencies = [
+        "forbidden-dependencies src/hierarchy-entry.ts:1 src/hierarchy-entry.ts reaches \
+         forbidden file 'src/parent.ts' via import. Reproduce: no-mistakes dependencies \
+         'src/hierarchy-entry.ts' --filter 'src/parent.ts' --relationship all --format json",
+    ];
+    let reachability = [
+        "required-entrypoint-reachability src/orphan.ts:1 src/orphan.ts is not \
+         runtime-reachable from configured entrypoints: src/entry.ts,src/hierarchy-entry.ts",
+    ];
     let without = text(&check(&root, ".no-mistakes.yml", "human"));
     let with = text(&check(&root, "with-unconstructed-error-class.yml", "human"));
 
-    assert_eq!(lines_of(&without, "forbidden-calls"), expected, "{without}");
-    assert_eq!(lines_of(&with, "forbidden-calls"), expected, "{with}");
-    // The rule sees `Boom` constructed through the workspace name.
+    for (rule, expected) in [
+        ("forbidden-calls", &forbidden_calls[..]),
+        ("forbidden-dependencies", &forbidden_dependencies[..]),
+        ("required-entrypoint-reachability", &reachability[..]),
+    ] {
+        assert_eq!(lines_of(&without, rule), expected, "{without}");
+        assert_eq!(lines_of(&with, rule), expected, "{with}");
+    }
+    assert!(lines_of(&without, "unconstructed-error-class").is_empty());
+    // The rule sees `Boom` constructed through the workspace name and `Parent`
+    // subclassed by the constructed `Child`.
     assert_eq!(
         lines_of(&with, "unconstructed-error-class"),
         [

@@ -8,5 +8,15 @@ rules:
         - function: { file: src/local.ts, symbol: localDanger }
         - function: { file: packages/lib/index.ts, symbol: danger }
         - function: { file: packages/lib/index.ts, symbol: Boom }
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [src/hierarchy-entry.ts]
+      forbiddenFiles: [src/parent.ts]
+  - rule: required-entrypoint-reachability
+    scope: repository
+    options:
+      entrypoints: [src/entry.ts, src/hierarchy-entry.ts]
+      sourceGlobs: ["src/**/*.ts"]
   - rule: unconstructed-error-class
     scope: repository

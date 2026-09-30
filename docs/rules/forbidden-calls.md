@@ -89,6 +89,12 @@ unresolved receivers such as typed callback parameters, renamed bindings,
 `this`, static computed members, and chained receivers whose source spelling
 ends in that member. Dynamic computed access (`page[method]()`) is not guessed.
 
+A class's `extends` clause is not a call. `class Child extends Base {}` never
+matches a target naming `Base`, whether `function` or `construct`; only `new Base()`
+does. Other rules that read the class hierarchy, such as
+[`unconstructed-error-class`](unconstructed-error-class.md), share this call
+graph without changing what `forbidden-calls` reports.
+
 ## Valid example
 
 Compliant example: a test injects a clock or imports an approved timer wrapper

@@ -1,0 +1,25 @@
+rules:
+  # `Child extends Base` is a class base, not a call. Neither application may
+  # report it, while the `new Base()` in `src/direct.ts` is a genuine construct.
+  - name: function-target
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/entry.ts }, { file: src/direct.ts }]
+      traversal: transitive
+      invocations: [call, construct]
+      targets:
+        - function: { file: src/base.ts, symbol: Base }
+  - name: construct-target
+    rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/entry.ts }, { file: src/direct.ts }]
+      traversal: transitive
+      invocations: [construct]
+      targets:
+        - exact: Base
+  # Configuring this rule adds `extends` edges to the shared graph, so the
+  # applications above run against a graph that has them.
+  - rule: unconstructed-error-class
+    scope: repository
