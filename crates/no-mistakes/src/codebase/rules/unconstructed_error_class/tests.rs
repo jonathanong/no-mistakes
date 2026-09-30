@@ -54,6 +54,9 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             // The leaf and the orphan base; the middle of the chain is satisfied.
             "src/hierarchy.ts:11 Grandchild",
             "src/hierarchy.ts:14 OrphanBase",
+            // Classes inside (dotted) namespaces are analysed like top-level ones.
+            "src/namespaced.ts:14 DeadNamespacedError",
+            "src/namespaced.ts:28 DeadDottedError",
             "src/reexported.ts:14 BarrelUnusedError",
             "src/workspace-use.ts:6 LocalFromLib",
         ]
@@ -75,6 +78,10 @@ fn constructions_through_aliases_barrels_namespaces_and_workspaces_count() {
         "WorkspaceError",
         "ThisFactoryError",
         "NamedFactoryError",
+        // `new this()` inside a class nested in a namespace credits the class,
+        // not the namespace: the graph never scopes a class by its namespace.
+        "TopicError",
+        "DeepError",
     ] {
         assert!(!found.contains(constructed), "{constructed} was reported");
     }

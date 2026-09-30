@@ -31,7 +31,7 @@ fn reports_each_dead_error_class_with_file_and_line() {
     let out = check(&fixture(), ".no-mistakes.yml", "human");
     let body = text(&out);
     assert_eq!(out.status.code(), Some(1), "{body}");
-    assert_eq!(body.lines().count(), 14, "{body}");
+    assert_eq!(body.lines().count(), 16, "{body}");
     assert!(
         body.contains(
             "unconstructed-error-class src/errors.ts:2 exported error class `UnusedError` \
@@ -41,7 +41,11 @@ fn reports_each_dead_error_class_with_file_and_line() {
     );
     assert!(body.contains("src/guard.ts:3 exported error class `InstanceofOnlyError`"));
     assert!(body.contains("src/hierarchy.ts:11 exported error class `Grandchild`"));
+    // A class nested in a namespace is reported by its own name.
+    assert!(body.contains("src/namespaced.ts:14 exported error class `DeadNamespacedError`"));
     for silent in [
+        // `new this()` in the factory of a class nested in a namespace builds it.
+        "TopicError",
         "ConstructedError",
         "BarrelError",
         "WorkspaceError",
