@@ -7,7 +7,7 @@ use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::{is_test_file, relative_slash_path};
 use crate::config::v2::schema::RuleDef;
 use crate::config::v2::NoMistakesConfig;
-use anyhow::Result;
+use anyhow::{bail, Result};
 use std::path::Path;
 
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
@@ -36,6 +36,7 @@ pub(crate) fn check_with_graph(
             // top-level `__tests__` directory the slash it expects.
             is_test_file(&format!("/{relative}")) || extra_tests.is_match(&relative)
         };
+        reject_unseen_source(&root, graph, &is_test)?;
         findings.extend(
             unconstructed(graph, is_test, |file| path_filter.is_match(file))
                 .into_iter()
@@ -43,6 +44,34 @@ pub(crate) fn check_with_graph(
         );
     }
     Ok(findings)
+}
+
+/// The rule concludes that no non-test file constructs a class, so a file whose
+/// facts could not be collected might hold the construction it looks for.
+/// `path_filter` is not consulted: a construction outside `include` still counts.
+fn reject_unseen_source(
+    root: &Path,
+    graph: &DepGraph,
+    is_test: &impl Fn(&Path) -> bool,
+) -> Result<()> {
+    let mut unseen: Vec<_> = graph
+        .parse_errors()
+        .filter(|(file, _)| !is_test(file))
+        .map(|(file, error)| (relative_slash_path(root, file), error))
+        .collect();
+    unseen.sort();
+    let [(file, error), others @ ..] = unseen.as_slice() else {
+        return Ok(());
+    };
+    let others = match others.len() {
+        0 => String::new(),
+        1 => " (and 1 other file)".to_string(),
+        count => format!(" (and {count} other files)"),
+    };
+    bail!(
+        "{RULE_ID}: cannot prove error classes unconstructed: `{file}`{others} failed to parse: \
+         {error}"
+    );
 }
 
 fn finding(root: &Path, application: &RuleDef, class: &ClassDeclaration) -> RuleFinding {

@@ -8,6 +8,13 @@ fn fixture() -> PathBuf {
     )
 }
 
+fn parse_failure_fixture() -> PathBuf {
+    no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/unconstructed-error-class/parse-failure/fixture"),
+    )
+}
+
 fn check(root: &Path, config: &str, format: &str) -> Output {
     Command::new(env!("CARGO_BIN_EXE_no-mistakes"))
         .args(["check", "--format", format, "--root"])
@@ -154,4 +161,66 @@ fn invalid_options_skip_the_check_and_fail() {
     let invalid = check(&fixture(), "configs/invalid-test-files.yml", "human");
     assert_eq!(invalid.status.code(), Some(1), "{}", text(&invalid));
     assert!(text(&invalid).contains("options.testFiles contains invalid glob"));
+}
+
+/// The rule concludes that no non-test file constructs a class, so a file that
+/// fails to parse could hold the construction. `src/broken.ts` holds the only
+/// `new Used()`; reporting `Used` would be a false finding, so the rule stops.
+#[test]
+fn a_broken_non_test_file_stops_the_rule_instead_of_reporting() {
+    let root = parse_failure_fixture();
+    let prefix = "rules check skipped: unconstructed-error-class: \
+                  cannot prove error classes unconstructed:";
+    for (config, named) in [
+        // `src/__tests__/broken.ts` is also broken but is a test, so it is
+        // left out of the count: `other-broken.ts` and `test-helpers/` remain.
+        (
+            ".no-mistakes.yml",
+            "`src/broken.ts` (and 2 other files) failed to parse",
+        ),
+        (
+            "configs/test-helpers.yml",
+            "`src/broken.ts` (and 1 other file) failed to parse",
+        ),
+        (
+            "configs/one-broken-source.yml",
+            "`src/broken.ts` failed to parse",
+        ),
+    ] {
+        let out = check(&root, config, "human");
+        let body = text(&out);
+        assert_eq!(out.status.code(), Some(1), "{config}: {body}");
+        assert!(
+            body.contains(&format!("{prefix} {named}: ")),
+            "{config}: {body}"
+        );
+        assert!(
+            lines_of(&body, "unconstructed-error-class").is_empty(),
+            "{body}"
+        );
+        assert!(!body.contains("`Used`"), "{config}: {body}");
+    }
+}
+
+/// Test files never count as construction, so a broken one cannot hide a
+/// construction and does not stop the rule. `src/__tests__/` is a test by
+/// default; `testFiles` classifies the other broken files.
+#[test]
+fn broken_test_files_do_not_stop_the_rule() {
+    let out = check(
+        &parse_failure_fixture(),
+        "configs/all-broken-are-tests.yml",
+        "human",
+    );
+    let body = text(&out);
+    assert_eq!(out.status.code(), Some(1), "{body}");
+    assert!(!body.contains("failed to parse"), "{body}");
+    assert_eq!(
+        lines_of(&body, "unconstructed-error-class"),
+        [
+            "unconstructed-error-class src/used.ts:2 exported error class `Used` \
+             is never constructed or subclassed in non-test source"
+        ],
+        "{body}"
+    );
 }

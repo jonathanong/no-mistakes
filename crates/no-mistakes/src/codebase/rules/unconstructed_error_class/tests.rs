@@ -177,3 +177,24 @@ fn graph_plan_requests_calls_and_extends_when_configured() {
     assert!(plan.calls && plan.extends);
     assert!(graph_plan(&NoMistakesConfig::default()).is_none());
 }
+
+/// A file the graph could not parse might hold the only construction of a
+/// class, so the rule errors instead of reporting from an incomplete view.
+#[test]
+fn a_broken_source_file_is_a_rule_error_naming_the_file() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("../../test-cases/rules/unconstructed-error-class/parse-failure/fixture"),
+    );
+    let config = root.join("configs/one-broken-source.yml");
+    let error = run_check(&root, Some(&config), None)
+        .unwrap_err()
+        .to_string();
+    assert!(
+        error.starts_with(
+            "unconstructed-error-class: cannot prove error classes unconstructed: \
+             `src/broken.ts` failed to parse: "
+        ),
+        "{error}"
+    );
+}
