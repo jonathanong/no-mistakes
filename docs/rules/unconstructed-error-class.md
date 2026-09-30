@@ -156,6 +156,15 @@ The rule reads static code only.
 - `export declare class X extends Error {}` in a regular `.ts` file is treated
   like a real class, because the `declare` modifier is not tracked. Only
   declaration files are skipped; move the declaration there or suppress it.
+- An exported alias of a class is not recognized as an export, so the class is
+  not reported. With `const PublicError = InternalError;` and
+  `export { PublicError };`, `InternalError` is skipped.
+- An alias of a built-in error used as a base is not followed, so the class is
+  not reported. With `const BaseError = Error;`, a class that extends
+  `BaseError` is skipped.
+- An unresolved `new`, such as `new this()`, credits the outermost class of the
+  member it sits in. A class nested inside an error class's method can
+  therefore hide that error class.
 
 ## Related rules
 
