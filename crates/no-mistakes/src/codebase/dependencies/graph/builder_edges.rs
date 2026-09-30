@@ -46,10 +46,14 @@ fn collect_and_merge_all_edges(
     );
     merge_independent_core_edges(forward, reverse, core);
     if edge_inputs.plan.calls {
+        // Call targets follow workspace package names exactly like import edges;
+        // every consumer of the call graph reads through this one resolver.
+        let call_resolver =
+            WorkspaceFallbackResolver::new(resolution.resolver, workspace, edge_inputs.graph_files);
         let (call_edges, call_sites) = collect_call_edges_for_core(
             edge_inputs,
             facts.expect("call plan requires TS facts"),
-            resolution.resolver,
+            &call_resolver,
             callable_export_resolutions,
         );
         merge_edges(forward, reverse, call_edges);
