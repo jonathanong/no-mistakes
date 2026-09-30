@@ -1,8 +1,8 @@
-import { Boom, danger } from "@fixture/lib";
-import { localDanger } from "./local";
+import { danger, safe } from "@fixture/lib";
+import { subDanger } from "@fixture/lib/sub";
 
 export function run() {
+  safe();
   danger();
-  localDanger();
-  return new Boom("boom");
+  subDanger();
 }

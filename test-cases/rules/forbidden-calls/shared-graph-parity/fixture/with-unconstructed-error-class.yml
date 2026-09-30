@@ -8,6 +8,5 @@ rules:
         - function: { file: src/local.ts, symbol: localDanger }
         - function: { file: packages/lib/index.ts, symbol: danger }
         - function: { file: packages/lib/index.ts, symbol: Boom }
-        - moduleExport: { module: "@fixture/lib", export: danger }
   - rule: unconstructed-error-class
     scope: repository

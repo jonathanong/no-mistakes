@@ -36,8 +36,11 @@ fn collect_class_hierarchy(
     resolver: &dyn ImportResolution,
     workspace: &crate::codebase::workspaces::IndexedWorkspaceMap,
 ) -> ClassHierarchy {
-    let resolver =
-        crate::codebase::ts_resolver::WorkspaceFallbackResolver::new(resolver, workspace);
+    let resolver = crate::codebase::ts_resolver::WorkspaceFallbackResolver::new(
+        resolver,
+        workspace,
+        edge_inputs.graph_files,
+    );
     // Export resolution depends on the resolver, so this pass keeps its own cache.
     let indexes = CallableResolutionIndexes::default();
     resolve_files(

@@ -84,19 +84,33 @@ impl ImportResolverFacade for ScopedImportResolver<'_> {
 }
 
 /// Falls back to workspace package manifests for specifiers the wrapped
-/// resolver leaves unresolved, so `@scope/package` and its `exports` subpaths
-/// reach the package source the same way the import graph reaches it.
+/// resolver leaves unresolved, so `@scope/package`, its `exports` subpaths, and
+/// package `imports` (`#name`) reach the package source the same way import
+/// edges reach it. Canonical call resolution wraps the graph's resolver in this
+/// type so call edges, resolved call sites, and callable export resolutions
+/// follow the same specifiers as the import graph.
+///
+/// The workspace map is consulted only when the wrapped resolver returns
+/// `None`, and only against the visible-file lookup supplied at construction
+/// (the graph's own files, exactly what import classification uses), so a
+/// workspace entry outside the graph stays unresolved.
 pub(crate) struct WorkspaceFallbackResolver<'a> {
     inner: &'a dyn ImportResolverFacade,
     workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+    visible: &'a dyn VisiblePathLookup,
 }
 
 impl<'a> WorkspaceFallbackResolver<'a> {
     pub(crate) fn new(
         inner: &'a dyn ImportResolverFacade,
         workspace: &'a crate::codebase::workspaces::IndexedWorkspaceMap,
+        visible: &'a dyn VisiblePathLookup,
     ) -> Self {
-        Self { inner, workspace }
+        Self {
+            inner,
+            workspace,
+            visible,
+        }
     }
 }
 
@@ -106,7 +120,7 @@ impl ImportResolverFacade for WorkspaceFallbackResolver<'_> {
             self.workspace.resolve_specifier_from_file_visible(
                 specifier,
                 importing_file,
-                self.inner.visible_files()?,
+                self.visible,
             )
         })
     }
