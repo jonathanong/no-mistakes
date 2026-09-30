@@ -67,10 +67,7 @@ impl CallSiteResolution<'_, '_> {
         let source = call.caller.as_deref().map_or_else(
             || NodeId::file_in(&self.edge_inputs.interner, path),
             |caller| {
-                call.caller_id.map_or_else(
-                    || NodeId::symbol_in(&self.edge_inputs.interner, path, caller),
-                    |id| NodeId::callable_in(&self.edge_inputs.interner, path, caller, id),
-                )
+                NodeId::scoped_in(&self.edge_inputs.interner, path, caller, call.caller_id)
             },
         );
         let resolved_target = match (target_identity, target) {

@@ -44,6 +44,19 @@ impl NodeId {
         }
     }
 
+    /// The callable node when the callable is identified, else the plain symbol node.
+    pub fn scoped_in(
+        interner: &PathInterner,
+        path: impl AsRef<Path>,
+        symbol: impl AsRef<str>,
+        callable_id: Option<crate::codebase::dependencies::extract::CallableId>,
+    ) -> Self {
+        match callable_id {
+            Some(id) => Self::callable_in(interner, path, symbol, id),
+            None => Self::symbol_in(interner, path, symbol),
+        }
+    }
+
     pub fn callable(
         path: impl AsRef<Path>,
         symbol: impl Into<InternedStr>,

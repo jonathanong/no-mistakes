@@ -220,3 +220,27 @@ fn only_owned_callback_constructs_are_class_bases() {
         None
     );
 }
+
+/// A call's caller is a callable node only when the extractor identified it.
+#[test]
+fn a_caller_node_carries_its_callable_id_only_when_identified() {
+    let interner = crate::codebase::analysis_session::PathInterner::new();
+    let file = Path::new("/repo/src/file.ts");
+    let unidentified = NodeId::scoped_in(&interner, file, "Boom", None);
+    assert!(matches!(
+        unidentified,
+        NodeId::Symbol {
+            callable_id: None,
+            ..
+        }
+    ));
+    let identified = NodeId::scoped_in(&interner, file, "Boom", Some(CallableId(3)));
+    assert!(matches!(
+        identified,
+        NodeId::Symbol {
+            callable_id: Some(CallableId(3)),
+            ..
+        }
+    ));
+    assert_eq!(unidentified.as_symbol(), identified.as_symbol());
+}
