@@ -144,9 +144,9 @@ where the tag is version-shaped, the line has an `image:`/`FROM` context, or the
 pin is an `@sha256:` digest, so a
 filename with a line number (`src/a.b.mts:12`, `at x (src/a.b.mts:12:5)`,
 `docs/a.b.md:12`) is not read as an image. The one exception is the context-free
-bare-integer tag on a dotted registry host, whose components stay dotless:
-that keeps `github.com/acme/app/internal/binder.go:1755` out. `-p 51088:6379`
-port mappings never match.
+bare-integer tag on a dotted registry host, whose components still cannot
+contain dots: that keeps `github.com/acme/app/internal/binder.go:1755` out.
+`-p 51088:6379` port mappings never match.
 
 ### Placeholder values
 
