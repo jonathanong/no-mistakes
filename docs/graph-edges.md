@@ -323,8 +323,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   direct-call boundary.
 - `extends` edges are opt-in like `call`, but no `--relationship` value selects
   them: only a rule that reads class hierarchy asks the graph for them, through
-  the build plan. Unfiltered traversal and `--relationship all` never include
-  them, and traversals that name their own edge kinds skip them. The base of an
+  the build plan. The `dependencies` graph never builds them, so unfiltered
+  traversal and `--relationship all` never include them. When a rule builds
+  them, traversals that name their own edge kinds, including the default
+  relationship set, skip them. The base of an
   `extends` clause is resolved by the call pass, but it is never a call: it
   produces no `call` edge, no call site, and no callable export resolution, so
   `forbidden-calls` and `call` traversal do not see it. A companion
