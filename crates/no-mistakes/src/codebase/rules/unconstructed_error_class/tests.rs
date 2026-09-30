@@ -39,6 +39,10 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             // Workspace package: only the class nothing constructs.
             "packages/lib/index.ts:5 WorkspaceUnusedError",
             "src/anonymous.ts:2 default",
+            // Same-named classes in two namespaces: only the error one, which
+            // nothing builds; `Array`-based `CollideChild` and `CollideGrand`
+            // are not error classes.
+            "src/collide.ts:8 CollideBase",
             // Only a test, or only a `__tests__` file, builds these.
             "src/errors.ts:2 UnusedError",
             "src/errors.ts:8 TestOnlyError",
@@ -124,6 +128,8 @@ fn unrelated_and_opaque_classes_are_ignored() {
         "ExpressionError",
         "CycleA",
         "CycleB",
+        "CollideChild",
+        "CollideGrand",
         "SuppressedError",
     ] {
         assert!(!found.contains(ignored), "{ignored} was reported");

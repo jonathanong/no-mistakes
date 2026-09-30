@@ -7,7 +7,10 @@ use std::path::Path;
 
 /// A class identified by declaration file and display scope. Namespaces add no
 /// scope component, so same-named classes in two namespaces of one file share a
-/// key; that collision only makes the rule quieter, never noisier.
+/// key. An `extends` base whose display scope two declarations share resolves to
+/// no `Extends` edge, so a shared key never merges two parents: a subclass of
+/// `B.Base` cannot become an error class through `A.Base`. The `collide.ts` and
+/// `collide-grand.ts` files of the rule fixture pin this.
 type ClassKey<'a> = (&'a Path, &'a str);
 
 const BUILTIN_ERRORS: &[&str] = &[
