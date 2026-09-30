@@ -1,0 +1,8 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/entry.ts }]
+      targets:
+        - function: { file: packages/lib/index.ts, symbol: danger }
+        - function: { file: packages/lib/src/sub.ts, symbol: subDanger }
