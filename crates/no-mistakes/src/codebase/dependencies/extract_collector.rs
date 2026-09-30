@@ -42,6 +42,15 @@ struct ImportCollector {
     object_setter_member_ids: FxHashMap<CallableId, FxHashSet<String>>,
     static_setter_member_ids: FxHashMap<CallableId, FxHashMap<String, CallableId>>,
     class_local_bases: FxHashMap<CallableId, String>,
+    /// One-based declaration line of each class that has a statically named base.
+    class_declaration_lines: Vec<(CallableId, u32)>,
+    /// Classes with a statically named base that sit inside a TypeScript
+    /// namespace, `declare module`, or `declare global` block, or are
+    /// themselves `declare`d.
+    namespaced_or_ambient_class_ids: Vec<CallableId>,
+    /// Depth of TypeScript module blocks (`namespace`, `declare module`,
+    /// `declare global`) the visitor is inside. Balanced around every block.
+    module_block_depth: usize,
     syntactic_caller_stack: Vec<String>,
     local_stack: Vec<FxHashSet<String>>,
     /// Stable identities parallel to `local_stack`. Scope depth alone is not

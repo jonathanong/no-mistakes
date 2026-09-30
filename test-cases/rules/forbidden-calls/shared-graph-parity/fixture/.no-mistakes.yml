@@ -1,0 +1,22 @@
+rules:
+  - rule: forbidden-calls
+    scope: repository
+    options:
+      roots: [{ file: src/entry.ts }]
+      invocations: [call, construct]
+      targets:
+        - function: { file: src/local.ts, symbol: localDanger }
+        - function: { file: packages/lib/index.ts, symbol: danger }
+        - function: { file: packages/lib/index.ts, symbol: Boom }
+  # Consumers that walk the whole graph rather than only calls. They must
+  # report the same with or without a rule that adds `extends` edges.
+  - rule: forbidden-dependencies
+    scope: repository
+    options:
+      roots: [src/hierarchy-entry.ts]
+      forbiddenFiles: [src/parent.ts]
+  - rule: required-entrypoint-reachability
+    scope: repository
+    options:
+      entrypoints: [src/entry.ts, src/hierarchy-entry.ts]
+      sourceGlobs: ["src/**/*.ts"]

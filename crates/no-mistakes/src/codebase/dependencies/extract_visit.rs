@@ -148,13 +148,15 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_ts_enum_declaration(&mut self, declaration: &TSEnumDeclaration<'a>) {
-        if self.function_stack.is_empty()
-            && self.is_exported_top_level_name(declaration.id.name.as_str())
-        {
-            visit_exported_enum_declaration(self, declaration);
-        } else {
-            walk::walk_ts_enum_declaration(self, declaration);
-        }
+        visit_ts_enum_declaration_with_scope(self, declaration);
+    }
+
+    /// Every `namespace`, dotted `namespace A.B`, `declare module 'x'` and
+    /// `declare global` body is a module block, so one hook covers them all.
+    fn visit_ts_module_block(&mut self, block: &TSModuleBlock<'a>) {
+        self.module_block_depth += 1;
+        walk::walk_ts_module_block(self, block);
+        self.module_block_depth -= 1;
     }
 
     fn visit_import_declaration(&mut self, import: &ImportDeclaration<'a>) {

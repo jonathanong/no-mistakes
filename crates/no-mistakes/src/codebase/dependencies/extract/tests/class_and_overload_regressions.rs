@@ -305,3 +305,50 @@ fn nested_aggregate_callables_keep_their_owner_and_member_identity() {
         );
     }
 }
+
+#[test]
+fn class_declaration_lines_cover_only_classes_with_a_statically_named_base() {
+    let facts = facts(
+        "class Plain {}\n\nexport class Child extends Base {}\nclass Nested extends ns.Base {}\nclass Opaque extends mixin(Base) {}\n",
+    );
+
+    let mut lines: Vec<(&str, u32)> = facts
+        .class_declaration_lines
+        .iter()
+        .map(|(class_id, line)| {
+            let scope = facts
+                .callable_scope_ids
+                .iter()
+                .find_map(|(id, scope)| (id == class_id).then_some(scope.as_str()));
+            (scope.expect("class scope"), *line)
+        })
+        .collect();
+    lines.sort_by_key(|(_, line)| *line);
+
+    assert_eq!(lines, [("Child", 3), ("Nested", 4)]);
+}
+
+#[test]
+fn namespaced_or_ambient_class_ids_cover_block_members_and_declared_classes_only() {
+    let facts = facts(concat!(
+        "class Top extends Base {}\n",
+        "namespace N { class InNamespace extends Base {} }\n",
+        "declare class Declared extends Base {}\n",
+        "class After extends Base {}\n",
+    ));
+
+    let mut scopes: Vec<&str> = facts
+        .namespaced_or_ambient_class_ids
+        .iter()
+        .map(|class_id| {
+            facts
+                .callable_scope_ids
+                .iter()
+                .find_map(|(id, scope)| (id == class_id).then_some(scope.as_str()))
+                .expect("class scope")
+        })
+        .collect();
+    scopes.sort_unstable();
+
+    assert_eq!(scopes, ["Declared", "InNamespace"]);
+}

@@ -1,0 +1,7 @@
+rules:
+  - rule: unconstructed-error-class
+    scope: repository
+    options:
+      testFiles:
+        - test-helpers/**
+        - src/other-broken.ts

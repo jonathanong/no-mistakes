@@ -2,10 +2,10 @@ use super::{
     any_codebase_rule_enabled, forbidden_calls, forbidden_dependencies, nextjs_no_api_routes,
     nextjs_no_caching, require_storybook_stories, required_entrypoint_reachability, rule_enabled,
     server_route_client_boundary, suppress_rule_findings_with_sources,
-    test_no_unmocked_dynamic_imports, PreparedRuleFindings, RuleFinding, FORBIDDEN_CALLS,
-    FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
+    test_no_unmocked_dynamic_imports, unconstructed_error_class, PreparedRuleFindings, RuleFinding,
+    FORBIDDEN_CALLS, FORBIDDEN_DEPENDENCIES, NEXTJS_NO_API_ROUTES, NEXTJS_NO_CACHING,
     REQUIRED_ENTRYPOINT_REACHABILITY, REQUIRE_STORYBOOK_STORIES, SERVER_ROUTE_CLIENT_BOUNDARY,
-    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS,
+    TEST_NO_UNMOCKED_DYNAMIC_IMPORTS, UNCONSTRUCTED_ERROR_CLASS,
 };
 use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan};
 use anyhow::Result;
@@ -61,6 +61,10 @@ pub fn canonical_graph_plan(
         plan.include(forbidden_plan);
         needed = true;
     }
+    if let Some(unconstructed_plan) = unconstructed_error_class::graph_plan(config) {
+        plan.include(unconstructed_plan);
+        needed = true;
+    }
     needed.then_some(plan)
 }
 
@@ -87,6 +91,10 @@ pub fn try_canonical_graph_plan(
         plan.include(forbidden_plan);
         needed = true;
     }
+    if let Some(unconstructed_plan) = unconstructed_error_class::graph_plan(config) {
+        plan.include(unconstructed_plan);
+        needed = true;
+    }
     Ok(needed.then_some(plan))
 }
 
@@ -98,6 +106,7 @@ pub fn canonical_graph_requires_full_file_universe(
     required_entrypoint_reachability::graph_plan(config).is_some()
         || config.rule_configured(FORBIDDEN_DEPENDENCIES)
         || config.rule_configured(FORBIDDEN_CALLS)
+        || config.rule_configured(UNCONSTRUCTED_ERROR_CLASS)
 }
 
 pub fn run_check_with_config_and_facts_and_playwright(

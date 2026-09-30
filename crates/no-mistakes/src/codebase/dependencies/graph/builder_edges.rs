@@ -10,6 +10,7 @@ struct EdgeMaps<'a> {
     resource_diagnostics: &'a mut Vec<ResourceGraphDiagnostic>,
     callable_export_resolutions: &'a mut FxHashMap<(PathBuf, String), ExportedCallableResolution>,
     resolved_call_sites: &'a mut Vec<ResolvedCallSite>,
+    class_declarations: &'a mut Vec<ClassDeclaration>,
 }
 
 struct EdgeResolutionContext<'a> {
@@ -33,6 +34,7 @@ fn collect_and_merge_all_edges(
         resource_diagnostics,
         callable_export_resolutions,
         resolved_call_sites,
+        class_declarations,
     } = maps;
     require_core_edge_facts(edge_inputs.plan, facts)?;
     crate::invocation::check_timeout()?;
@@ -45,19 +47,21 @@ fn collect_and_merge_all_edges(
         workspace,
     );
     merge_independent_core_edges(forward, reverse, core);
-    if edge_inputs.plan.calls {
-        // Call targets follow workspace package names exactly like import edges;
-        // every consumer of the call graph reads through this one resolver.
+    if edge_inputs.plan.calls || edge_inputs.plan.extends {
+        // Call targets and class bases follow workspace package names exactly
+        // like import edges; every consumer of the call graph reads through
+        // this one resolver.
         let call_resolver =
             WorkspaceFallbackResolver::new(resolution.resolver, workspace, edge_inputs.graph_files);
-        let (call_edges, call_sites) = collect_call_edges_for_core(
+        let pass = collect_call_edges_for_core(
             edge_inputs,
             facts.expect("call plan requires TS facts"),
             &call_resolver,
             callable_export_resolutions,
         );
-        merge_edges(forward, reverse, call_edges);
-        resolved_call_sites.extend(call_sites);
+        merge_edges(forward, reverse, pass.edges);
+        resolved_call_sites.extend(pass.sites);
+        class_declarations.extend(pass.classes);
     }
 
     collect_remaining_edges(
@@ -72,21 +76,9 @@ fn collect_and_merge_all_edges(
             resource_diagnostics,
             callable_export_resolutions,
             resolved_call_sites,
+            class_declarations,
         },
     )
-}
-
-fn require_core_edge_facts(plan: GraphBuildPlan, facts: Option<&dyn TsFactLookup>) -> Result<()> {
-    if plan.route_imports && facts.is_none() {
-        anyhow::bail!("TS import facts are required for route-import edges");
-    }
-    if plan.symbols && facts.is_none() {
-        anyhow::bail!("TS symbol facts are required when symbol edges are requested");
-    }
-    if plan.calls && facts.is_none() {
-        anyhow::bail!("TS call facts are required when call edges are requested");
-    }
-    Ok(())
 }
 
 fn collect_import_edges_for_core(

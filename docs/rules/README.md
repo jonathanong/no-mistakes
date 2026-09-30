@@ -31,7 +31,7 @@ behavior.
 
 | If you need to… | Start with |
 | --- | --- |
-| Keep agent context concise and code easy to analyze | [`agents-md-max-size`](agents-md-max-size.md), [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md), [`unique-exports`](unique-exports.md) |
+| Keep agent context concise and code easy to analyze | [`agents-md-max-size`](agents-md-max-size.md), [`no-empty-or-comments-only-files`](no-empty-or-comments-only-files.md), [`unconstructed-error-class`](unconstructed-error-class.md), [`unique-exports`](unique-exports.md) |
 | Protect documentation structure and navigation | [`doc-consistency`](doc-consistency.md), [`markdown-reachability`](markdown-reachability.md), [`markdown-child-links`](markdown-child-links.md) |
 | Enforce package and workspace boundaries | [`forbidden-dependencies`](forbidden-dependencies.md), [`production-dependency-declarations`](production-dependency-declarations.md), [`workspace-package-cycles`](workspace-package-cycles.md) |
 | Make CI reproducible and bounded | [`github-actions-pinned-hash`](github-actions-pinned-hash.md), [`github-actions-job-timeouts`](github-actions-job-timeouts.md), [`workflow-topology-policy`](workflow-topology-policy.md) |
@@ -128,6 +128,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)           | Enforce alias/folder consistency.                                               |
 | [`tsconfig-file-coverage`](tsconfig-file-coverage.md)                         | Require tracked TypeScript files to belong to a tsconfig program.               |
 | [`tsconfig-gate-coverage`](tsconfig-gate-coverage.md)                         | Require tracked TypeScript projects to have CI and local typecheck registrations. |
+| [`unconstructed-error-class`](unconstructed-error-class.md)                   | Flag exported error classes that no production code constructs or subclasses.   |
 | [`unique-exports`](unique-exports.md)                                         | Prevent ambiguous duplicate public export names.                                |
 | [`version-pin-consistency`](version-pin-consistency.md)                       | Keep a structured source pin in lockstep with other files.                      |
 | [`vitest-ci-path-coverage`](vitest-ci-path-coverage.md)                       | Require Vitest inputs to be covered by CI path filters.                         |

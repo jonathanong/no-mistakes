@@ -48,6 +48,14 @@ impl NodeId {
         }
     }
 
+    /// The declaration file and display scope of a symbol node.
+    pub fn as_symbol(&self) -> Option<(&Path, &str)> {
+        match self {
+            NodeId::Symbol { file, symbol, .. } => Some((file.as_ref(), &**symbol)),
+            _ => None,
+        }
+    }
+
     fn is_in_file_universe(&self, universe: &crate::fx::PathSet) -> bool {
         match self {
             Self::File(path) | Self::Symbol { file: path, .. } => universe.contains(path.as_ref()),

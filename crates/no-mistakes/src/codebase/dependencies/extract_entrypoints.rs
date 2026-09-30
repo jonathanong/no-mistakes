@@ -93,6 +93,10 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
     callable_scopes.sort();
     let mut class_scopes: Vec<_> = collector.class_scopes.into_iter().collect();
     class_scopes.sort();
+    let mut class_declaration_lines = collector.class_declaration_lines;
+    class_declaration_lines.sort();
+    let mut namespaced_or_ambient_class_ids = collector.namespaced_or_ambient_class_ids;
+    namespaced_or_ambient_class_ids.sort();
     let mut callable_bindings = flatten_scope_map(collector.callable_bindings);
     callable_bindings.sort();
     let mut callable_binding_declared_at =
@@ -143,6 +147,8 @@ pub(crate) fn extract_import_facts_from_program_with_source_and_resource_roots<'
         lexical_scope_parents,
         callable_scopes,
         class_scopes,
+        class_declaration_lines,
+        namespaced_or_ambient_class_ids,
         has_unknown_top_level_call: collector.has_unknown_top_level_call,
     }
 }

@@ -69,6 +69,12 @@ fn node_display_and_normalization_cover_file_and_queue_nodes() {
     assert!(file.as_file().is_some());
     assert!(module.as_file().is_none());
     assert!(queue.as_file().is_none());
+    let symbol = NodeId::symbol(p("/repo/src/file.ts"), "Boom");
+    assert_eq!(
+        symbol.as_symbol(),
+        Some((p("/repo/src/file.ts").as_path(), "Boom"))
+    );
+    assert_eq!(file.as_symbol(), None);
 
     let nodes = normalize_nodes(&[file, module, queue]);
     assert_eq!(nodes.len(), 3);

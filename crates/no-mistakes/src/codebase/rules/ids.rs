@@ -75,6 +75,7 @@ pub use super::test_no_unmocked_dynamic_imports::RULE_ID as TEST_NO_UNMOCKED_DYN
 pub use super::tsconfig_alias_folder_mapping::RULE_ID as TSCONFIG_ALIAS_FOLDER_MAPPING;
 pub use super::tsconfig_file_coverage::RULE_ID as TSCONFIG_FILE_COVERAGE;
 pub use super::tsconfig_gate_coverage::RULE_ID as TSCONFIG_GATE_COVERAGE;
+pub use super::unconstructed_error_class::RULE_ID as UNCONSTRUCTED_ERROR_CLASS;
 pub use super::version_pin_consistency::RULE_ID as VERSION_PIN_CONSISTENCY;
 pub use super::vitest_ci_path_coverage::RULE_ID as VITEST_CI_PATH_COVERAGE;
 pub use super::vitest_project_mapping::RULE_ID as VITEST_PROJECT_MAPPING;

@@ -37,6 +37,7 @@ fn collect_remaining_edges(
         resource_diagnostics,
         callable_export_resolutions: _,
         resolved_call_sites: _,
+        class_declarations: _,
     } = maps;
     let resolver = resolution.resolver;
     let session = resolution.session;

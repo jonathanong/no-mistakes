@@ -34,6 +34,22 @@ fn canonical_graph_plans_include_forbidden_call_edges() {
 }
 
 #[test]
+fn canonical_graph_plans_include_calls_and_extends_for_unconstructed_error_class() {
+    let mut config = crate::config::v2::NoMistakesConfig::default();
+    config.rules.push(crate::config::v2::schema::RuleDef {
+        rule: UNCONSTRUCTED_ERROR_CLASS.to_string(),
+        scope: Some(crate::config::v2::schema::RuleScope::Repository),
+        ..Default::default()
+    });
+
+    let calls_and_extends = |plan: GraphBuildPlan| plan.calls && plan.extends;
+    assert!(canonical_graph_plan(&config).is_some_and(calls_and_extends));
+    assert!(try_canonical_graph_plan(&config)
+        .unwrap()
+        .is_some_and(calls_and_extends));
+}
+
+#[test]
 fn legacy_prepared_request_without_sources_uses_the_request_session() {
     let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("../../fixtures/check-runner/empty");

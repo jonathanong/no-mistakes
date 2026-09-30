@@ -46,6 +46,12 @@ fn other_domain_str(kind: &EdgeKind) -> &'static str {
         EdgeKind::TerraformReference => "terraform-ref",
         EdgeKind::TerraformModuleRef => "terraform-module",
         EdgeKind::TerraformOutputRef => "terraform-output",
+        EdgeKind::WorkflowJob => "workflow-job",
+        EdgeKind::WorkflowStep => "workflow-step",
+        EdgeKind::WorkflowNeeds => "workflow-needs",
+        EdgeKind::WorkflowUses => "workflow-uses",
+        EdgeKind::WorkflowRun => "workflow-run",
+        EdgeKind::WorkflowArtifact => "workflow-artifact",
         _ => unreachable!("core edge kinds are handled before domain rendering"),
     }
 }

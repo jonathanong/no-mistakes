@@ -41,6 +41,7 @@ fn empty_relationships_returns_standard_edges() {
     let set = relationship_filter(&[]).expect("unfiltered traversal has an explicit standard set");
     assert!(set.contains(&EdgeKind::Import));
     assert!(!set.contains(&EdgeKind::Call));
+    assert!(!set.contains(&EdgeKind::Extends));
     assert!(!set.contains(&EdgeKind::RouteImport));
     assert!(!set.contains(&EdgeKind::TrpcCall));
 }
@@ -51,6 +52,7 @@ fn all_keyword_returns_standard_edges() {
         relationship_filter(&[RelationshipArg::All]).expect("all excludes opt-in alternate edges");
     assert!(set.contains(&EdgeKind::Selector));
     assert!(!set.contains(&EdgeKind::Call));
+    assert!(!set.contains(&EdgeKind::Extends));
     assert!(!set.contains(&EdgeKind::RouteImport));
     assert!(!set.contains(&EdgeKind::TrpcCall));
 }

@@ -46,6 +46,14 @@ impl DepGraph {
         self.parse_errors.get(path).map(String::as_str)
     }
 
+    /// Every file whose facts could not be collected, with the reason. The
+    /// order is unspecified, so a caller that reports these must sort.
+    pub(crate) fn parse_errors(&self) -> impl Iterator<Item = (&Path, &str)> {
+        self.parse_errors
+            .iter()
+            .map(|(path, error)| (path.as_path(), error.as_str()))
+    }
+
     pub(crate) fn contains_file(&self, path: &Path) -> bool {
         self.traversal_edges().forward().contains_key(&NodeId::file(
             crate::codebase::ts_resolver::normalize_path(path),

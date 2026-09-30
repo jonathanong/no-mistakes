@@ -338,3 +338,15 @@ fn aggregate_runner_propagates_invalid_common_filters() {
         "unexpected error: {error:#}"
     );
 }
+
+/// Runtime reachability follows imports only. `Call` and `Extends` edges are
+/// requested by other rules; a shared graph carrying them must not change which
+/// files this rule considers reachable.
+#[test]
+fn runtime_edge_kinds_exclude_call_and_extends() {
+    let kinds = runtime_edge_kinds();
+    assert!(!kinds.contains(&EdgeKind::Call));
+    assert!(!kinds.contains(&EdgeKind::Extends));
+    let plan = GraphBuildPlan::from_allowed(Some(&kinds));
+    assert!(!plan.calls && !plan.extends);
+}

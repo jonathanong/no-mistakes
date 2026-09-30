@@ -1,0 +1,7 @@
+{
+  "name": "unconstructed-error-class-fixture",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ]
+}

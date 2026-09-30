@@ -8,6 +8,9 @@ pub struct DepGraph {
     callable_nodes_by_file: FxHashMap<PathBuf, Vec<NodeId>>,
     callable_export_resolutions: FxHashMap<(PathBuf, String), ExportedCallableResolution>,
     resolved_call_sites: Vec<ResolvedCallSite>,
+    /// Classes with a statically named `extends` base, in file order. Empty
+    /// unless the graph was built with [`GraphBuildPlan::extends`].
+    class_declarations: Vec<ClassDeclaration>,
     /// Ranges into the sorted `resolved_call_sites` vector, keyed by file.
     /// Per-file membership and scans must use this instead of walking the
     /// whole-repo site list.

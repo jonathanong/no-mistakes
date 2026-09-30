@@ -3,6 +3,7 @@ use super::{EdgeKind, VitestSetupField};
 pub(super) const fn key(kind: EdgeKind) -> (u8, u8) {
     match kind {
         EdgeKind::Call
+        | EdgeKind::Extends
         | EdgeKind::Import
         | EdgeKind::TypeImport
         | EdgeKind::DynamicImport
@@ -69,6 +70,7 @@ pub(super) const fn key(kind: EdgeKind) -> (u8, u8) {
 const fn core(kind: EdgeKind) -> (u8, u8) {
     match kind {
         EdgeKind::Call => (60, 0),
+        EdgeKind::Extends => (61, 0),
         EdgeKind::Import => (0, 0),
         EdgeKind::TypeImport => (1, 0),
         EdgeKind::DynamicImport => (2, 0),

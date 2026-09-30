@@ -90,8 +90,10 @@ fn non_workflow_relationship_edges(relationship: &RelationshipArg) -> &'static [
 }
 
 /// Edge kinds included by legacy unfiltered traversal and `--relationship all`.
-/// `RouteImport` is intentionally absent: it is a conservative alternate view
-/// that must be requested explicitly to avoid weakening ordinary call pruning.
+/// `Call`, `Extends` and `RouteImport` are intentionally absent: they are
+/// opt-in views that must be requested explicitly to avoid weakening ordinary
+/// call pruning. `Extends` has no `--relationship` value at all: only rules
+/// that read class hierarchy ask the graph for it.
 fn standard_relationship_edges() -> std::collections::HashSet<EdgeKind> {
     [
         EdgeKind::Import,
