@@ -1,7 +1,7 @@
 use super::analysis::unconstructed;
 use super::config::Options;
 use super::RULE_ID;
-use crate::codebase::dependencies::graph::{DepGraph, GraphBuildPlan, ResolvedClassBase};
+use crate::codebase::dependencies::graph::{ClassDeclaration, DepGraph, GraphBuildPlan};
 use crate::codebase::rules::path_filter::{GlobMatcher, RulePathFilter};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::ts_source::{is_test_file, relative_slash_path};
@@ -12,7 +12,8 @@ use std::path::Path;
 
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config.rule_configured(RULE_ID).then(|| GraphBuildPlan {
-        class_hierarchy: true,
+        calls: true,
+        extends: true,
         ..Default::default()
     })
 }
@@ -44,11 +45,11 @@ pub(crate) fn check_with_graph(
     Ok(findings)
 }
 
-fn finding(root: &Path, application: &RuleDef, class: &ResolvedClassBase) -> RuleFinding {
+fn finding(root: &Path, application: &RuleDef, class: &ClassDeclaration) -> RuleFinding {
     let name = class
-        .class_scope
+        .scope
         .rsplit_once('/')
-        .map_or(class.class_scope.as_str(), |(_, name)| name);
+        .map_or(class.scope.as_str(), |(_, name)| name);
     // An anonymous default export is scoped as `default`, which no class can
     // be named.
     let subject = if name == "default" {

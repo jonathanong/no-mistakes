@@ -34,6 +34,8 @@ fn public_sort_key_delegates_all_groups_and_non_vitest_detail_is_none() {
     assert_eq!(EdgeKind::ElixirReference.sort_key(), (57, 0));
     assert_eq!(EdgeKind::DartImport.sort_key(), (58, 0));
     assert_eq!(EdgeKind::DartReference.sort_key(), (59, 0));
+    assert_eq!(EdgeKind::Call.sort_key(), (60, 0));
+    assert_eq!(EdgeKind::Extends.sort_key(), (61, 0));
 }
 
 #[test]

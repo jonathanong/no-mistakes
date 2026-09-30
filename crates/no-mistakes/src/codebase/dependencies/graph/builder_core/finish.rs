@@ -70,7 +70,7 @@
             callable_nodes_by_file,
             callable_export_resolutions,
             resolved_call_sites,
-            class_hierarchy,
+            class_declarations,
             call_sites_by_file,
             vitest_setup_projects: Vec::new(),
             effective_edges: OnceLock::new(),

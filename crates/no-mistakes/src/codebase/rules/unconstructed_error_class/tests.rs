@@ -169,11 +169,11 @@ fn default_messages_name_the_class_or_the_default_export() {
 }
 
 #[test]
-fn graph_plan_requests_only_the_class_hierarchy_when_configured() {
+fn graph_plan_requests_calls_and_extends_when_configured() {
     let root = fixture();
     let configured =
         crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
     let plan = graph_plan(&configured).expect("configured rule needs a graph");
-    assert!(plan.class_hierarchy && !plan.calls);
+    assert!(plan.calls && plan.extends);
     assert!(graph_plan(&NoMistakesConfig::default()).is_none());
 }

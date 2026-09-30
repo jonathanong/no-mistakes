@@ -22,7 +22,8 @@ and literal dynamic imports without function-reachability pruning, while
 excluding type-only imports and `require()`. This differs from `route`, which
 selects URL-route references, Playwright route tests, and Next.js layouts.
 It is explicit opt-in: omitted relationships and `--relationship all` retain
-the standard call-pruned graph and exclude `call` and `route-import`.
+the standard call-pruned graph and exclude `call`, `route-import`, and the
+rule-only `extends` class-hierarchy edge (see [Graph Edges](../graph-edges.md)).
 
 Use `--relationship call` for the statically resolved lexical call graph. It
 follows local functions, direct named imports, static namespace-member imports

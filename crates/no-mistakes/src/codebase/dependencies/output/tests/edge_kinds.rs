@@ -1,6 +1,7 @@
 #[test]
 fn edge_kind_str_all_variants() {
     assert_eq!(EdgeKind::Call.as_str(), "call");
+    assert_eq!(EdgeKind::Extends.as_str(), "extends");
     assert_eq!(EdgeKind::Import.as_str(), "import");
     assert_eq!(EdgeKind::TypeImport.as_str(), "type-import");
     assert_eq!(EdgeKind::DynamicImport.as_str(), "dynamic-import");
@@ -51,6 +52,7 @@ fn serialized_edge_kinds_are_documented() {
     .unwrap();
     for kind in [
         EdgeKind::Call,
+        EdgeKind::Extends,
         EdgeKind::Import,
         EdgeKind::TypeImport,
         EdgeKind::DynamicImport,
@@ -116,6 +118,7 @@ fn serialized_edge_kinds_are_documented() {
     ] {
         match kind {
             EdgeKind::Call => {}
+            EdgeKind::Extends => {}
             EdgeKind::Import => {}
             EdgeKind::TypeImport => {}
             EdgeKind::DynamicImport => {}

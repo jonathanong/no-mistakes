@@ -10,6 +10,10 @@ pub enum EdgeKind {
     /// Statically resolved lexical function invocation. This opt-in edge is
     /// intentionally excluded from the default graph until callers request it.
     Call,
+    /// Statically resolved class `extends` relationship: derived class ->
+    /// base class. Nothing is invoked at an `extends` clause, so this is not a
+    /// `Call`. Opt-in like `Call`, and excluded from the default graph.
+    Extends,
     /// Regular TS/JS static import.
     Import,
     /// Type-only import (`import type ...`).
@@ -143,6 +147,7 @@ impl EdgeKind {
     fn as_core_str(&self) -> Option<&'static str> {
         match self {
             Self::Call => Some("call"),
+            Self::Extends => Some("extends"),
             Self::Import => Some("import"),
             Self::TypeImport => Some("type-import"),
             Self::DynamicImport => Some("dynamic-import"),

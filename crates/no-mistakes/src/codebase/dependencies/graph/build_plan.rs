@@ -4,9 +4,10 @@ pub struct GraphBuildPlan {
     /// Build opt-in lexical call edges. This is excluded from `all()` so
     /// existing dependency output remains stable.
     pub calls: bool,
-    /// Opt-in class `extends` and `new` resolution, which also follows
-    /// workspace package names. Absent from `all()` so no other graph changes.
-    pub class_hierarchy: bool,
+    /// Build opt-in class `extends` edges and class declaration records.
+    /// Runs the call resolution pass but keeps its `Call` edges and call sites
+    /// out unless `calls` is also set. Excluded from `all()`.
+    pub extends: bool,
     pub imports: bool,
     pub route_imports: bool,
     pub workspace: bool,
@@ -40,7 +41,7 @@ impl GraphBuildPlan {
     pub fn all() -> Self {
         Self {
             calls: false,
-            class_hierarchy: false,
+            extends: false,
             imports: true,
             // RouteImport is an alternate, deliberately conservative import
             // view. Legacy unfiltered traversal must opt in by name instead
@@ -97,11 +98,12 @@ impl GraphBuildPlan {
         };
         Self {
             calls: allowed.contains(&EdgeKind::Call),
-            class_hierarchy: false,
-            // Resolved call edges use the prepared import projection to find
-            // direct and re-exported callable targets. Traversal still emits
-            // only `Call` edges when that is the selected relationship.
+            extends: allowed.contains(&EdgeKind::Extends),
+            // Resolved call and extends edges use the prepared import projection
+            // to find direct and re-exported callable targets. Traversal still
+            // emits only the selected relationship's edges.
             imports: allowed.contains(&EdgeKind::Call)
+                || allowed.contains(&EdgeKind::Extends)
                 || allowed.contains(&EdgeKind::Import)
                 || allowed.contains(&EdgeKind::TypeImport)
                 || allowed.contains(&EdgeKind::DynamicImport)
@@ -153,7 +155,7 @@ impl GraphBuildPlan {
 
     pub(crate) fn include(&mut self, other: Self) {
         self.calls |= other.calls;
-        self.class_hierarchy |= other.class_hierarchy;
+        self.extends |= other.extends;
         self.imports |= other.imports;
         self.route_imports |= other.route_imports;
         self.workspace |= other.workspace;
@@ -206,7 +208,7 @@ impl GraphBuildPlan {
         TsFactPlan {
             imports: self.imports || self.route_imports || self.workspace || self.assets,
             function_calls: self.calls
-                || self.class_hierarchy
+                || self.extends
                 || self.imports
                 || self.workspace
                 || self.assets

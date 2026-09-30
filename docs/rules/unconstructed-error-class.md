@@ -70,6 +70,19 @@ never constructed or subclassed in non-test source.
 
 The rule builds the repository call graph, so give it `scope: repository`.
 
+## How it works
+
+The rule reads the same canonical call graph as `forbidden-calls`; it has no
+resolver of its own. A `new` expression is a resolved `construct` call site, so
+an alias, a barrel, a namespace import, and a workspace package name (`@scope/pkg`)
+all reach the class the way they do for `forbidden-calls`. An `extends` clause
+is an opt-in `extends` edge from the subclass to its base class, plus a
+declaration record with the class line and export state
+([graph edges](../graph-edges.md)). The base of an `extends` clause is not a
+call, so it never shows up in `forbidden-calls` and never counts as a
+construction. The rule follows `extends` edges to a built-in error, and treats a
+subclass in non-test source as a use of its base.
+
 ## Valid example
 
 Compliant example: every exported error class is thrown somewhere.

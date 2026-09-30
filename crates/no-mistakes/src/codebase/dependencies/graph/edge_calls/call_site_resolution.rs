@@ -140,24 +140,36 @@ impl CallSiteResolution<'_, '_> {
             .collect()
     }
 
-    /// The statically named `extends` base of every class in `file`. Its
-    /// synthetic construct record is not a source call, so it is projected
-    /// here instead of into the call graph.
-    fn class_bases(&self, file: &TsFileFacts) -> Vec<ResolvedClassBase> {
+    /// The statically named `extends` base of every class in `file`, resolved
+    /// like a call target. The base's synthetic construct record is not a
+    /// source call, so it becomes an `Extends` edge and a class declaration
+    /// instead of a `Call` edge and a call site.
+    fn class_bases(&self, file: &TsFileFacts) -> (Vec<Edge>, Vec<ClassDeclaration>) {
         let lines: FxHashMap<_, _> = file.class_declaration_lines.iter().copied().collect();
         let exported: FxHashSet<&str> =
             file.exported_functions.iter().map(String::as_str).collect();
-        file.function_calls
+        let mut edges = Vec::new();
+        let mut classes = Vec::new();
+        for (call, (class_id, scope)) in file
+            .function_calls
             .iter()
             .filter_map(|call| class_base_owner(call).map(|owner| (call, owner)))
-            .map(|(call, (class_id, class_scope))| ResolvedClassBase {
+        {
+            let (edge, site) = self.resolve(call);
+            edges.extend(edge.map(|(class, base, _)| (class, base, EdgeKind::Extends)));
+            classes.push(ClassDeclaration {
                 file: self.path.to_path_buf(),
-                exported: exported.contains(class_scope),
-                class_scope: class_scope.to_string(),
+                scope: scope.to_string(),
+                callable_id: class_id,
                 line: lines.get(&class_id).copied().unwrap_or(0),
-                base: self.resolve(call).1.target,
-            })
-            .collect()
+                exported: exported.contains(scope),
+                global_base: match site.target {
+                    ResolvedCallTarget::Global { name } => Some(name),
+                    _ => None,
+                },
+            });
+        }
+        (edges, classes)
     }
 }
 

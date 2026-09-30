@@ -1,5 +1,6 @@
+use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{
-    DepGraph, ResolvedCallSite, ResolvedCallTarget, ResolvedClassBase,
+    ClassDeclaration, DepGraph, EdgeKind, NodeId, ResolvedCallSite, ResolvedCallTarget,
 };
 use crate::fx::{fx_map, FxHashMap};
 use std::path::Path;
@@ -66,30 +67,47 @@ fn constructed_class(site: &ResolvedCallSite) -> Option<ClassKey<'_>> {
     }
 }
 
+/// The repository classes `class` extends, read from its `Extends` edges. A
+/// global or external-package base has no edge. Targets are compared by file
+/// and scope rather than whole `NodeId`, which also carries a parser id that
+/// two declarations sharing a display scope do not share.
+fn bases<'a>(graph: &'a DepGraph, class: &ClassDeclaration) -> impl Iterator<Item = ClassKey<'a>> {
+    graph
+        .dependencies_of_node(&class.node())
+        .into_iter()
+        .flatten()
+        .filter_map(|(target, kind)| match (kind, target) {
+            (EdgeKind::Extends, NodeId::Symbol { file, symbol, .. }) => {
+                Some((file.as_ref(), &**symbol))
+            }
+            _ => None,
+        })
+}
+
 /// Marks every class whose `extends` chain reaches a built-in error. A base
 /// from an external package is not a root: its ancestry is unknown here.
-fn error_flags(bases: &[ResolvedClassBase]) -> Vec<bool> {
+fn error_flags(graph: &DepGraph, classes: &[ClassDeclaration]) -> Vec<bool> {
     let mut by_key: FxHashMap<ClassKey<'_>, Vec<usize>> = fx_map();
-    for (index, class) in bases.iter().enumerate() {
+    for (index, class) in classes.iter().enumerate() {
         by_key
-            .entry((class.file.as_path(), class.class_scope.as_str()))
+            .entry((class.file.as_path(), class.scope.as_str()))
             .or_default()
             .push(index);
     }
-    let mut flags = vec![false; bases.len()];
+    let mut flags = vec![false; classes.len()];
     let mut changed = true;
     while changed {
         changed = false;
-        for (index, class) in bases.iter().enumerate() {
+        for (index, class) in classes.iter().enumerate() {
             if flags[index] {
                 continue;
             }
-            let error = match &class.base {
-                ResolvedCallTarget::Global { name } => builtin_error(name),
-                other => class_key(other)
-                    .and_then(|key| by_key.get(&key))
-                    .is_some_and(|parents| parents.iter().any(|parent| flags[*parent])),
-            };
+            let error = class.global_base.as_deref().is_some_and(builtin_error)
+                || bases(graph, class).any(|key| {
+                    by_key
+                        .get(&key)
+                        .is_some_and(|parents| parents.iter().any(|parent| flags[*parent]))
+                });
             flags[index] = error;
             changed |= error;
         }
@@ -105,44 +123,44 @@ pub(super) fn unconstructed<'a>(
     graph: &'a DepGraph,
     is_test: impl Fn(&Path) -> bool,
     is_reported: impl Fn(&Path) -> bool,
-) -> Vec<&'a ResolvedClassBase> {
-    let hierarchy = graph.class_hierarchy();
-    let bases = hierarchy.bases.as_slice();
-    let mut unused: FxHashMap<ClassKey<'a>, Vec<&'a ResolvedClassBase>> = fx_map();
-    for (class, _) in bases
+) -> Vec<&'a ClassDeclaration> {
+    let classes = graph.class_declarations();
+    let mut unused: FxHashMap<ClassKey<'a>, Vec<&'a ClassDeclaration>> = fx_map();
+    for (class, _) in classes
         .iter()
-        .zip(error_flags(bases))
+        .zip(error_flags(graph, classes))
         .filter(|(class, error)| *error && class.exported)
         .filter(|(class, _)| {
             !is_test(&class.file) && is_reported(&class.file) && !is_declaration_file(&class.file)
         })
     {
         unused
-            .entry((class.file.as_path(), class.class_scope.as_str()))
+            .entry((class.file.as_path(), class.scope.as_str()))
             .or_default()
             .push(class);
     }
-    let constructed = hierarchy
-        .constructions
+    let mut credit = |key: ClassKey<'a>, file: &Path| {
+        if !is_test(file) {
+            unused.remove(&key);
+        }
+    };
+    for site in graph
+        .resolved_call_sites()
         .iter()
-        .map(|site| (constructed_class(site), site.file.as_path()));
-    let subclassed = bases
-        .iter()
-        .map(|class| (class_key(&class.base), class.file.as_path()));
-    for (key, file) in constructed.chain(subclassed) {
-        if let Some(key) = key.filter(|key| unused.contains_key(key)) {
-            if !is_test(file) {
-                unused.remove(&key);
-            }
+        .filter(|site| site.invocation == InvocationKind::Construct)
+    {
+        if let Some(key) = constructed_class(site) {
+            credit(key, &site.file);
+        }
+    }
+    for class in classes {
+        for key in bases(graph, class) {
+            credit(key, &class.file);
         }
     }
     let mut classes: Vec<_> = unused.into_values().flatten().collect();
     classes.sort_by(|left, right| {
-        (&left.file, left.line, &left.class_scope).cmp(&(
-            &right.file,
-            right.line,
-            &right.class_scope,
-        ))
+        (&left.file, left.line, &left.scope).cmp(&(&right.file, right.line, &right.scope))
     });
     classes
 }
