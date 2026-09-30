@@ -30,6 +30,15 @@ fn builtin_error(name: &str) -> bool {
     BUILTIN_ERRORS.contains(&name)
 }
 
+/// Declaration files describe code that lives outside the analyzed source, so
+/// a class they declare is never a dead export of this project.
+fn is_declaration_file(path: &Path) -> bool {
+    let name = path.to_string_lossy();
+    [".d.ts", ".d.mts", ".d.cts"]
+        .iter()
+        .any(|extension| name.ends_with(extension))
+}
+
 /// The repository class a resolved target names, when it names one.
 fn class_key(target: &ResolvedCallTarget) -> Option<ClassKey<'_>> {
     match target {
@@ -104,7 +113,9 @@ pub(super) fn unconstructed<'a>(
         .iter()
         .zip(error_flags(bases))
         .filter(|(class, error)| *error && class.exported)
-        .filter(|(class, _)| !is_test(&class.file) && is_reported(&class.file))
+        .filter(|(class, _)| {
+            !is_test(&class.file) && is_reported(&class.file) && !is_declaration_file(&class.file)
+        })
     {
         unused
             .entry((class.file.as_path(), class.class_scope.as_str()))

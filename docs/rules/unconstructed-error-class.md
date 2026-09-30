@@ -38,6 +38,9 @@ A `new this()` or `new` of an unresolved value inside a class member counts as
 constructing that class, so static factories such as
 `static create() { return new this(); }` keep their class alive.
 
+Declaration files (`.d.ts`, `.d.mts`, `.d.cts`) are skipped: they describe code
+outside the analyzed source, so their classes are never reported.
+
 ## Options
 
 ```yaml
@@ -150,6 +153,9 @@ The rule reads static code only.
   runs as you delete dead classes.
 - Only exported classes are reported. A non-exported class that nothing uses is
   a plain unused declaration.
+- `export declare class X extends Error {}` in a regular `.ts` file is treated
+  like a real class, because the `declare` modifier is not tracked. Only
+  declaration files are skipped; move the declaration there or suppress it.
 
 ## Related rules
 

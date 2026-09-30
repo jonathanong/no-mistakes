@@ -50,6 +50,10 @@ fn reports_each_dead_error_class_with_file_and_line() {
         "BarrelError",
         "WorkspaceError",
         "AppError",
+        // Declaration files describe code outside the analyzed source.
+        "AmbientClientError",
+        "AmbientModuleError",
+        "AmbientCommonError",
         // Each suppression directive form keeps its class out of the report.
         "SuppressedError",
         "LineSuppressedError",

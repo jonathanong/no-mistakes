@@ -96,6 +96,22 @@ fn subclassing_satisfies_a_base_even_when_the_subclass_is_dead() {
     assert!(found.contains("Grandchild"));
 }
 
+/// Declaration files describe code outside the analyzed source, so nothing
+/// constructing their classes is expected to be visible. Each extension has its
+/// own fixture: a `.d.ts`, `.d.mts`, and `.d.cts` class that nothing builds.
+#[test]
+fn classes_declared_in_declaration_files_are_never_reported() {
+    let found = reported(&findings(".no-mistakes.yml").unwrap()).join("\n");
+    assert!(!found.contains("src/ambient."), "{found}");
+    for ambient in [
+        "AmbientClientError",
+        "AmbientModuleError",
+        "AmbientCommonError",
+    ] {
+        assert!(!found.contains(ambient), "{ambient} was reported");
+    }
+}
+
 #[test]
 fn unrelated_and_opaque_classes_are_ignored() {
     let found = reported(&findings(".no-mistakes.yml").unwrap()).join("\n");
