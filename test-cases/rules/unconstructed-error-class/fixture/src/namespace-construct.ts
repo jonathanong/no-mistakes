@@ -25,3 +25,11 @@ export namespace Private {
     throw new Hidden();
   }
 }
+
+// Not flagged: subclassed only from inside a namespace. Nothing constructs
+// `NsBase`, so it stays unreported only if that `extends` still credits it.
+export class NsBase extends Error {}
+
+export namespace Sub {
+  export class Child extends NsBase {}
+}

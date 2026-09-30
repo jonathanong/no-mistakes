@@ -59,6 +59,8 @@ fn reports_each_dead_error_class_with_file_and_line() {
         "CollideGrand",
         "Qualified",
         "Hidden",
+        // A namespaced subclass still credits its top-level base.
+        "NsBase",
         // `declare` classes, in a `.ts` file or an ambient module block.
         "DeclaredError",
         "ModuleBlockError",

@@ -6,6 +6,14 @@ export class ThisFactoryError extends Error {
   }
 }
 
+// Not flagged: `new this()` inside a nested arrow function still builds the
+// class.
+export class NestedFactoryError extends Error {
+  static create(): NestedFactoryError {
+    return (() => new this())();
+  }
+}
+
 // Not flagged: the factory names the class.
 export class NamedFactoryError extends Error {
   static create(): NamedFactoryError {

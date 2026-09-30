@@ -74,6 +74,7 @@ fn constructions_through_aliases_barrels_namespaces_and_workspaces_count() {
         "NamespaceError",
         "WorkspaceError",
         "ThisFactoryError",
+        "NestedFactoryError",
         "NamedFactoryError",
     ] {
         assert!(!found.contains(constructed), "{constructed} was reported");
@@ -107,6 +108,21 @@ fn namespaced_and_ambient_classes_are_never_reported() {
     ] {
         assert!(!targets.contains(&silent), "{silent} was reported");
     }
+}
+
+/// A namespaced subclass is exempt from the report but still counts as a use of
+/// its base: nothing constructs the top-level `NsBase`, and its only subclass
+/// is `Sub.Child`, so it stays unreported only because that `extends` credits
+/// it.
+#[test]
+fn a_namespaced_subclass_still_credits_its_top_level_base() {
+    let found = findings(".no-mistakes.yml").unwrap();
+    let targets: Vec<_> = found
+        .iter()
+        .filter_map(|finding| finding.target.as_deref())
+        .collect();
+    assert!(!targets.contains(&"NsBase"), "NsBase was reported");
+    assert!(!targets.contains(&"Child"), "Child was reported");
 }
 
 #[test]
