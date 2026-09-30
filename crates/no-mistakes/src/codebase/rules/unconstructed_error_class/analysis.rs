@@ -4,9 +4,9 @@ use crate::codebase::dependencies::graph::{
 use crate::fx::{fx_map, FxHashMap};
 use std::path::Path;
 
-/// A class identified by declaration file and display scope. Exported classes
-/// are top level, so the pair is unique in practice; a collision only makes the
-/// rule quieter, never noisier.
+/// A class identified by declaration file and display scope. Namespaces add no
+/// scope component, so same-named classes in two namespaces of one file share a
+/// key; that collision only makes the rule quieter, never noisier.
 type ClassKey<'a> = (&'a Path, &'a str);
 
 const BUILTIN_ERRORS: &[&str] = &[
