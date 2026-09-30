@@ -15,7 +15,7 @@ pub(super) fn is_synthetic(pin: &str) -> bool {
 /// True when every dotted version in the pin is `0.0.0`-shaped, as in
 /// `lychee-v0.0.0-test-x86_64-unknown-linux-gnu.tar.gz`. Pins without a dotted
 /// version are never exempt.
-fn only_zero_versions(pin: &str) -> bool {
+pub(super) fn only_zero_versions(pin: &str) -> bool {
     let mut found = false;
     for group in pin.split(|c: char| !c.is_ascii_digit() && c != '.') {
         let parts: Vec<&str> = group.split('.').collect();

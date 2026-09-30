@@ -184,13 +184,13 @@ fn fail_fixture_reports_each_runtime_pin() {
     let root = fixture("fail");
     let findings = check_with_files(&root, &config_with_options("{}"), &fail_files(&root)).unwrap();
     for (file, reason, count) in [
-        ("src/container-image.test.mts", "container image tag", 12),
+        ("src/container-image.test.mts", "container image tag", 15),
         ("src/container-image.test.mts", "container image digest", 2),
         ("src/setup-version.test.mts", "setup action version", 6),
         (
             "src/homebrew-formula.test.mts",
             "versioned Homebrew formula",
-            6,
+            7,
         ),
         ("src/runner-label.test.mts", "versioned runner label", 9),
     ] {
@@ -236,6 +236,51 @@ fn custom_patterns_do_not_get_the_placeholder_exemption() {
         .filter_map(|f| f.import.as_deref())
         .collect();
     assert_eq!(pins, ["tool-0.0.0", "tool-2.0.0", "tool-3.0.0"]);
+}
+
+fn default_pins(source: &str) -> Vec<String> {
+    let compiled = compile_options(&Options::default()).unwrap();
+    check_source("src/pin.test.mts", source, &compiled)
+        .into_iter()
+        .filter_map(|finding| finding.import)
+        .collect()
+}
+
+#[test]
+fn zero_version_placeholders_are_not_dependency_assertions() {
+    // The `0.0.0` exemption of the line patterns applies to the multiline
+    // dependency assertions too: `0.0.0` is a placeholder, not a pinned version.
+    for source in [
+        "expect(packageJson.dependencies.foo).toBe('0.0.0')",
+        "expect(packageJson.devDependencies.foo).toEqual('^0.0.0')",
+        "expect('0.0.0').toBe(packageJson.dependencies.foo)",
+        "expect(packageJson.devDependencies).toHaveProperty('foo', '0.0.0')",
+        "expect(packageJson).toHaveProperty('devDependencies.foo', '0.0.0')",
+        "expect.poll(() => packageJson.dependencies.foo).toBe('0.0.0')",
+        "expect(readFileSync('package.json', 'utf8')).toContain('\"foo\": \"0.0.0\"')",
+        "expect(packageJson.dependencies.foo).toBe('npm:bar@0.0.0')",
+    ] {
+        assert!(default_pins(source).is_empty(), "{source}");
+    }
+}
+
+#[test]
+fn real_versions_are_still_dependency_assertions() {
+    // The counterparts of the placeholder cases above, and mixed values: a
+    // range that contains a real version is not a placeholder.
+    for source in [
+        "expect(packageJson.dependencies.foo).toBe('1.2.3')",
+        "expect(packageJson.devDependencies.foo).toEqual('^0.0.1')",
+        "expect('1.2.3').toBe(packageJson.dependencies.foo)",
+        "expect(packageJson.devDependencies).toHaveProperty('foo', '1.2.3')",
+        "expect(packageJson).toHaveProperty('devDependencies.foo', '1.2.3')",
+        "expect.poll(() => packageJson.dependencies.foo).toBe('1.2.3')",
+        "expect(readFileSync('package.json', 'utf8')).toContain('\"foo\": \"1.2.3\"')",
+        "expect(packageJson.dependencies.foo).toBe('npm:bar@1.2.3')",
+        "expect(packageJson.dependencies.foo).toBe('>=0.0.0 <2.0.0')",
+    ] {
+        assert_eq!(default_pins(source).len(), 1, "{source}");
+    }
 }
 
 #[test]

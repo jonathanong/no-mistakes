@@ -22,3 +22,12 @@ const filenames = ['ubuntu-24.04.iso', 'docs/ubuntu-22.04-notes.md', 'macos-15.p
 const npm = ['undici@1.0.1', 'pnpm@12', 'brewery@2', 'postgresql@\\d+']
 const brewProse = 'brew services start postgresql@\\d+'
 const brewUnversioned = 'brew install postgresql pnpm && brew --version'
+// Not a formula shape (`foo@1.2.3` must not be read as `foo@1.2`).
+const brewThreeParts = 'brew install foo@1.2.3'
+// Dotted filenames with a line number are not `owner/my.image:tag`.
+const dottedLocations = ['src/a.b.mts:12', 'at x (src/a.b.mts:12:5)', 'docs/a.b.md:12']
+// `v2` is an image tag only after `image:` or `FROM`.
+const routes = ['users/list:v2', 'api/keys:v2', 'image: repo:v2beta']
+// A `0.0.0` dependency assertion is a placeholder, like the `0.0.0` asset above.
+expect(packageJson.dependencies.foo).toBe('0.0.0')
+expect(packageJson).toHaveProperty('devDependencies.foo', '0.0.0')

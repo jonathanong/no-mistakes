@@ -27,18 +27,28 @@ macro_rules! right {
     };
 }
 
-/// Repository path component; Docker forbids dots here, which keeps
-/// `binder.go:1755` and `page.tsx:1:1` out.
-macro_rules! comp {
+/// Repository path component in Docker's grammar: alphanumeric runs joined by
+/// `.`, `_`, `__`, or `-`+, as in `my.image`. Used only where the tag is
+/// version-shaped, after `image:`/`FROM`, or on a digest, so `a.b.mts:12`
+/// is never read as an image.
+macro_rules! comp_dot {
     () => {
-        r"[a-z0-9]+(?:[_-][a-z0-9]+)*"
+        r"[a-z0-9]+(?:(?:\.|_{1,2}|-+)[a-z0-9]+)*"
     };
 }
 
-/// Component that starts with a letter, so `51088:6379` is never an image.
+/// Dotless component for the context-free bare-integer tag; a dot would let
+/// `internal/binder.go:1755` and `page.tsx:1:1` through.
+macro_rules! comp {
+    () => {
+        r"[a-z0-9]+(?:(?:_{1,2}|-+)[a-z0-9]+)*"
+    };
+}
+
+/// First component: starts with a letter, so `51088:6379` is never an image.
 macro_rules! comp_l {
     () => {
-        r"[a-z][a-z0-9]*(?:[_-][a-z0-9]+)*"
+        r"[a-z][a-z0-9]*(?:(?:_{1,2}|-+)[a-z0-9]+)*"
     };
 }
 
@@ -85,8 +95,9 @@ macro_rules! image_end {
     };
 }
 
-/// `image:` values, `FROM` lines: the only places a slashless `postgres:18`
-/// or a bare-integer `valkey/valkey-bundle:9` is unambiguously an image.
+/// `image:` values, `FROM` lines: the only places a slashless `postgres:18`,
+/// a bare-integer `valkey/valkey-bundle:9`, or a major-only `repo:v2` is
+/// unambiguously an image (`users/list:v2` is an API key elsewhere).
 macro_rules! image_context {
     () => {
         r#"(?:\bimage\\?["']?:\s*(?:\\?["'])?|\bFROM\s+(?:--platform=\S+\s+)?["']?)"#
@@ -107,13 +118,13 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
             r")*:\d+|(?:",
             host!(),
             "/",
-            comp!(),
+            comp_dot!(),
             "|",
             comp_l!(),
             "/",
-            comp!(),
+            comp_dot!(),
             ")(?:/",
-            comp!(),
+            comp_dot!(),
             ")*:",
             tag!(),
             ")",
@@ -131,11 +142,17 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
             comp_l!(),
             ":(?:",
             tag!(),
-            r"|\d+)|",
+            r"|v?\d+)|",
             comp_l!(),
             "(?:/",
-            comp!(),
-            r")+:\d+)",
+            comp_dot!(),
+            r")+:v?\d+|",
+            host!(),
+            "/",
+            comp_dot!(),
+            "(?:/",
+            comp_dot!(),
+            r")*:v\d+)",
             digest_opt!(),
             ")",
             image_end!()
@@ -149,9 +166,9 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
             "(?P<pin>(?:",
             host!(),
             "/)?",
-            comp!(),
+            comp_dot!(),
             "(?:/",
-            comp!(),
+            comp_dot!(),
             ")*@sha256:[0-9a-f]{64})",
             right!()
         ),
@@ -168,7 +185,7 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
     ),
     (
         "versioned Homebrew formula",
-        r"(?:^|[^A-Za-z0-9_.@-])(?P<pin>[a-z][a-z0-9+_-]*@\d+(?:\.\d+)?)(?:$|[^A-Za-z0-9_@-]|\.(?:$|[^0-9A-Za-z_-]))",
+        r"(?:^|[^A-Za-z0-9_.@-])(?P<pin>[a-z][a-z0-9+_-]*@\d+(?:\.\d+)?)(?:$|[^A-Za-z0-9_.@-]|\.(?:$|[^0-9A-Za-z_-]))",
         Some(r"(?i)\b(?:brew|homebrew|linuxbrew)\b|/Cellar/"),
     ),
     (

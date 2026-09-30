@@ -69,6 +69,19 @@ fn container_image_tags_are_pins() {
             "mcr.microsoft.com/dotnet/sdk:9.0",
         ),
         ("owner/name:v1.2.3", "owner/name:v1.2.3"),
+        // Docker path components may contain `.`, `__`, and runs of `-`.
+        ("owner/my.image:1.2.3", "owner/my.image:1.2.3"),
+        ("image: owner/my.image:1.2.3", "owner/my.image:1.2.3"),
+        ("owner/my__image--x:1.2.3", "owner/my__image--x:1.2.3"),
+        (
+            "image: owner/my__image--x:1.2.3",
+            "owner/my__image--x:1.2.3",
+        ),
+        (
+            "ghcr.io/acme/team/my.image:24-slim",
+            "ghcr.io/acme/team/my.image:24-slim",
+        ),
+        ("image: owner/my.image:9", "owner/my.image:9"),
         ("pgvector/pgvector:pg18", "pgvector/pgvector:pg18"),
         ("pgvector/pgvector:pg18.1", "pgvector/pgvector:pg18.1"),
         ("otel/collector:0.153.0", "otel/collector:0.153.0"),
@@ -84,9 +97,48 @@ fn container_image_tags_are_pins() {
 }
 
 #[test]
+fn a_major_only_v_tag_is_an_image_only_after_image_or_from() {
+    for (line, expected) in [
+        ("image: repo:v2", "repo:v2"),
+        ("image: owner/repo:v2", "owner/repo:v2"),
+        ("\"image\": \"owner/repo:v2\"", "owner/repo:v2"),
+        ("image: ghcr.io/acme/api:v2", "ghcr.io/acme/api:v2"),
+        (
+            "image: registry.io:5000/acme/api:v2",
+            "registry.io:5000/acme/api:v2",
+        ),
+        ("FROM node:v2 AS build", "node:v2"),
+        ("image: owner/repo:v2@sha256:${digest}", "owner/repo:v2"),
+        // A dotted tag is still reported once, by the context-free pattern.
+        ("image: owner/repo:v2.1", "owner/repo:v2.1"),
+        ("image: repo:v2.1", "repo:v2.1"),
+        ("image: ghcr.io/acme/api:v2.1", "ghcr.io/acme/api:v2.1"),
+        ("image: owner/repo:9", "owner/repo:9"),
+        ("image: ghcr.io/acme/api:9", "ghcr.io/acme/api:9"),
+    ] {
+        assert_pins(line, &[expected]);
+    }
+    for line in [
+        "image: repo:v2beta",
+        "image: owner/repo:v2beta",
+        "image: ghcr.io/acme/api:v2beta",
+        "image: repo:vNext",
+        "owner/repo:v2 ghcr.io/acme/api:v2",
+    ] {
+        assert!(pins(line).is_empty(), "{line}: {:?}", pins(line));
+    }
+}
+
+#[test]
 fn container_image_digests_are_pins() {
     let digest = "06ada57c26aa5cf429e9f2c0a99e3e4a42daecd45fc4c955d7c1399ab4227ae8";
-    for image in ["docker.io/library/redis", "redis", "ghcr.io/acme/app"] {
+    for image in [
+        "docker.io/library/redis",
+        "redis",
+        "ghcr.io/acme/app",
+        "ghcr.io/acme/my.image",
+        "acme/my__image--x",
+    ] {
         let pin = format!("{image}@sha256:{digest}");
         assert_pins(&format!("expect(image).toBe('{pin}')"), &[&pin]);
     }
@@ -186,6 +238,68 @@ fn homebrew_formulae_need_homebrew_context() {
 }
 
 #[test]
+fn a_homebrew_formula_version_has_at_most_two_components() {
+    // `foo@1.2.3` is not a formula shape; it must not be cut down to `foo@1.2`.
+    for line in [
+        "brew install foo@1.2.3",
+        "brew install postgresql@18.1.2",
+        "brew install foo@1.2.3.4",
+    ] {
+        assert!(pins(line).is_empty(), "{line}: {:?}", pins(line));
+    }
+    // A dot that ends a sentence still closes the formula.
+    for (line, expected) in [
+        ("brew install foo@18.", "foo@18"),
+        ("brew install openssl@3.5.", "openssl@3.5"),
+        ("Run brew install foo@18. Then continue.", "foo@18"),
+        ("brew install foo@1.2, brew install bar@3", "foo@1.2"),
+    ] {
+        assert_eq!(pins(line).first().map(String::as_str), Some(expected));
+    }
+}
+
+fn readings(line: &str) -> Vec<(String, String)> {
+    let options = compile_options(&Options::default()).unwrap();
+    check_source("src/app.test.mts", line, &options)
+        .into_iter()
+        .filter_map(|finding| Some((finding.target?, finding.import?)))
+        .collect()
+}
+
+#[test]
+fn a_homebrew_formula_is_reported_once_not_also_as_an_action_ref() {
+    // The action-ref pattern reads `core/postgresql@18` and `opt/postgresql@18`
+    // as `owner/repo@ref`; the Homebrew pattern owns that text.
+    let formula = ("versioned Homebrew formula", "postgresql@18");
+    for line in [
+        "brew install homebrew/core/postgresql@18",
+        "brew install homebrew/core/postgresql@18.",
+        "/opt/homebrew/opt/postgresql@18/bin",
+        "/usr/local/Cellar/postgresql@18/18.1",
+    ] {
+        let expected = vec![(formula.0.to_string(), formula.1.to_string())];
+        assert_eq!(readings(line), expected, "{line}");
+    }
+}
+
+#[test]
+fn an_action_ref_on_a_homebrew_line_is_still_reported() {
+    // Dropping action refs on Homebrew lines would hide this pinned action.
+    let sha = "de0fac2e4500dabe0009e67214ff5f5447ce83dd";
+    let line = format!("uses: Homebrew/actions/setup-homebrew@{sha}");
+    assert_eq!(
+        readings(&line),
+        [(
+            "exact action ref".to_string(),
+            format!("actions/setup-homebrew@{sha}")
+        )]
+    );
+    // A formula and an unrelated action ref on one line are both reported.
+    let both = readings("brew install foo@18 && uses: actions/checkout@v4");
+    assert_eq!(both.len(), 2, "{both:?}");
+}
+
+#[test]
 fn runner_labels_are_pins() {
     for (line, expected) in [
         ("runs-on: ubuntu-24.04-arm", "ubuntu-24.04-arm"),
@@ -211,8 +325,20 @@ fn lookalikes_are_not_pins() {
     for line in [
         "https://example.com/foo:8080/bar",
         "foo/bar:baz",
-        // Known recall gap: a bare `v2` tag has no dot, so it is not version-shaped.
+        // Known recall gap: outside `image:`/`FROM`, a bare `v2` is not version-shaped
+        // and `owner/name:v2` reads like an API or route key.
         "owner/name:v2",
+        "users/list:v2 api/keys:v2",
+        // Dotted path components must not turn filenames with a line number into images.
+        "src/a.b.mts:12",
+        "at x (src/a.b.mts:12:5)",
+        "cdn.jsdelivr.net/npm/pkg/dist/index.min.js:1",
+        "https://github.com/org/repo/blob/main/src/a.b.ts:12",
+        "see docs/a.b.md:12 and lib/x.test.mts:3:9",
+        // Not Docker separators: `..`, `___`, and a leading `-`.
+        "owner/my..image:1.2.3",
+        "owner/my___image:1.2.3",
+        "owner/-image:1.2.3",
         "at run (src/file.mts:12:5) at dev/initialize:2",
         "node:internal/modules/run_main:107",
         "github.com/acme/app/internal/binder.go:1755 +0x1a4",

@@ -101,19 +101,27 @@ Five default pin kinds cover pins that live in workflow, Compose, Dockerfile, an
 install-script text rather than in a manifest. Each runs line by line, reports
 only the pin (not the surrounding line), and reports several pins per line.
 
-- `container image tag`: `owner/name:9.1.0`, `host.io/name:2.4`, `name:24-slim`,
-  `owner/name:pg18`, and `image: owner/name:9`, with or without a trailing
-  `@sha256:` digest of 64 hex characters. A tag followed by an interpolated or
-  short digest (`owner/name:9.1.0@sha256:${digest}`) reports only the tag. Not
-  `name:latest`, untagged images, `${tag}` interpolation, or ports.
+- `container image tag`: `owner/name:9.1.0`, `owner/my.image:1.2.3`,
+  `host.io/name:2.4`, `name:24-slim`, `owner/name:pg18`, `image: owner/name:9`,
+  and `image: owner/name:v2`, with or without a trailing `@sha256:` digest of 64
+  hex characters. A tag followed by an interpolated or short digest
+  (`owner/name:9.1.0@sha256:${digest}`) reports only the tag. Not `name:latest`,
+  untagged images, `${tag}` interpolation, or ports.
 - `container image digest`: an untagged `name@sha256:` plus 64 hex characters.
   Not short or repeated digests, or `${digest}` interpolation.
 - `setup action version`: `node-version: 26`, `python-version: "3.13"`, and the
   `go`, `java`, `ruby`, `dotnet`, `php`, `bun`, and `deno` forms. Not
   `node-version-file:`, `lts/*`, or `${{ matrix.node }}`.
 - `versioned Homebrew formula`: `postgresql@18` or `openssl@3.5` on a line that
-  mentions `brew`, `homebrew`, `linuxbrew`, or `/Cellar/`. Not `pnpm@12` or
-  `undici@1.0.1` without that context.
+  mentions `brew`, `homebrew`, `linuxbrew`, or `/Cellar/`. The version has one or
+  two components, so `foo@1.2.3` is not a formula and is not cut down to `foo@1.2`;
+  a single trailing `.` (`brew install foo@18.`) ends the sentence, not the
+  version. A tap-qualified formula (`brew install homebrew/core/postgresql@18`)
+  is one finding for `postgresql@18`, not also an `exact action ref` for
+  `core/postgresql@18`: the Homebrew pattern owns its text and a context-free pin
+  overlapping it is dropped. A real action ref on a Homebrew line
+  (`uses: Homebrew/actions/setup-homebrew@<sha>`) is still reported. Not `pnpm@12`
+  or `undici@1.0.1` without that context.
 - `versioned runner label`: `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15`,
   `macos-15-intel`, `windows-2025`, and `windows-11-arm`. Not `ubuntu-latest`,
   `ubuntu-slim`, `macos-latest`, or `windows-1252`.
@@ -122,11 +130,22 @@ An image is recognized by its grammar, not by a word list. A path under a
 dotted registry host with a version-shaped or bare integer tag, or an
 `owner/name` path with a version-shaped tag (`1.2.3`, `v1.2.3`, `24-slim`,
 `pg18`), is an image anywhere on the line. A bare integer tag on an `owner/name`
-path
-(`owner/name:9`) and a `name:tag` with no slash are only images after `image:` or
-`FROM`, because `file.mts:12`, `dev/initialize:2`, and Go or Node stack frames
-have the same shape. Repository components never contain dots, which keeps
-`binder.go:1755` out, and `-p 51088:6379` port mappings never match.
+path (`owner/name:9`), a major-only `v` tag (`repo:v2`, `owner/name:v2`,
+`ghcr.io/owner/name:v2`), and a `name:tag` with no slash are only images after
+`image:` or `FROM`, because `file.mts:12`, `dev/initialize:2`, `users/list:v2`
+API keys, and Go or Node stack frames have the same shape. `image: repo:v2beta`
+and `image: repo:vNext` are not pins.
+
+Repository path components follow Docker's grammar: alphanumeric runs joined by
+`.`, `_` or `__`, or one or more `-`, so `owner/my.image:1.2.3`,
+`owner/my__image--x:1.2.3`, and `image: owner/my.image:9` are images. `..`,
+`___`, and a leading `-` are not separators. A dotted component is accepted only
+where the tag is version-shaped or the line has an `image:`/`FROM` context, so a
+filename with a line number (`src/a.b.mts:12`, `at x (src/a.b.mts:12:5)`,
+`docs/a.b.md:12`) is not read as an image. The one exception is the context-free
+bare-integer tag on a dotted registry host, whose components stay dotless:
+that keeps `github.com/acme/app/internal/binder.go:1755` out. `-p 51088:6379`
+port mappings never match.
 
 ### Placeholder values
 
@@ -142,6 +161,14 @@ value without a suppression comment:
   and the `.test`, `.example`, `.invalid`, and `.localhost` top-level domains;
 - an untagged image digest is one short block repeated to 64 characters, such
   as `sha256:` followed by 64 zeros or `0123456789abcdef` four times.
+
+The all-zero rule also applies to the multiline dependency assertions, which
+judge the asserted value after any `"name":` or `npm:` prefix:
+`expect(packageJson.dependencies.foo).toBe('0.0.0')`,
+`toHaveProperty('foo', '^0.0.0')`, and `toContain('"foo": "0.0.0"')` are not
+reported, while `'1.2.3'`, `'^0.0.1'`, and a range that contains a real version
+(`'>=0.0.0 <2.0.0'`) still are. The reserved-registry and repeated-digest rules
+only concern image pins.
 
 The exemption is structural: a value is never exempt because it contains the
 word `test` or `fake`, and `1.2.3`, `0.0.1`, and a tagged image on a real
@@ -161,6 +188,12 @@ Not caught, by design:
   multi-part concatenation;
 - an image with no slash, or with a bare integer tag, outside `image:` and
   `FROM` lines, such as `docker run postgres:18`;
+- a major-only `v` tag outside `image:` and `FROM` lines (`owner/name:v2`,
+  `ghcr.io/owner/name:v2`). After `image:` or `FROM` it is reported
+  (`image: repo:v2`), because the line says what it is. Elsewhere `v2` is the
+  most common non-image key suffix (`users/list:v2`, `cache/keys:v2`, API and
+  route versions), while a dotted tag (`v2.1`) or an `N-variant` tag (`24-slim`)
+  has a shape that non-image text rarely has;
 - an image written inside a JavaScript regular expression, where the path
   separator is escaped (`/^grafana\/loki:3.4$/`);
 - non-version tags such as `latest`, `stable`, or `bookworm`;

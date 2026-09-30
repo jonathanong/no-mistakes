@@ -12,3 +12,8 @@ expect(log).toContain('mirror.gcr.io/library/node:26-trixie-slim@sha256:${imageD
 expect(image).toBe('docker.io/library/redis@sha256:06ada57c26aa5cf429e9f2c0a99e3e4a42daecd45fc4c955d7c1399ab4227ae8')
 expect(image).toBe('redis@sha256:e0ef56d6eb603d9ffe87e74c28b8210b0ea93839e2ea4fb64f1fc2c66e95e391')
 expect(images).toEqual(['valkey/valkey-bundle:9.1.0', 'otel/collector:0.153.0'])
+// Docker path components may contain dots, so `my.image` is one repository name.
+expect(compose).toContain('image: owner/my.image:1.2.3')
+// A major-only `v2` tag is an image after `image:`, where `users/list:v2` cannot be a key.
+expect(compose).toContain('image: repo:v2')
+expect(compose).toContain('image: owner/repo:v2')
