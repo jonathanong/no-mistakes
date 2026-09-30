@@ -115,6 +115,31 @@ impl CallSiteResolution<'_, '_> {
         )
     }
 
+    /// Calls whose callee the extractor could not name, unless a traversable
+    /// call already records the same site.
+    fn unknown_sites(&self, file: &TsFileFacts) -> Vec<ResolvedCallSite> {
+        let recorded = file
+            .function_calls
+            .iter()
+            .filter(|call| is_traversable_call(self.index, call))
+            .map(|call| (call.caller_id, call.offset, call.invocation))
+            .collect::<FxHashSet<_>>();
+        file.unknown_calls
+            .iter()
+            .filter(|call| !recorded.contains(&(call.caller_id, call.offset, call.invocation)))
+            .map(|call| ResolvedCallSite {
+                file: self.path.to_path_buf(),
+                caller: call.caller.clone(),
+                caller_id: call.caller_id,
+                source_callee: "<unknown>".to_string(),
+                line: call.line,
+                offset: call.offset,
+                invocation: call.invocation,
+                target: ResolvedCallTarget::Unknown,
+            })
+            .collect()
+    }
+
     /// The statically named `extends` base of every class in `file`. Its
     /// synthetic construct record is not a source call, so it is projected
     /// here instead of into the call graph.
@@ -125,17 +150,12 @@ impl CallSiteResolution<'_, '_> {
         file.function_calls
             .iter()
             .filter_map(|call| class_base_owner(call).map(|owner| (call, owner)))
-            .map(|(call, (class_id, class_scope))| {
-                let (_, site) = self.resolve(call);
-                ResolvedClassBase {
-                    file: self.path.to_path_buf(),
-                    exported: exported.contains(class_scope),
-                    class_scope: class_scope.to_string(),
-                    class_id,
-                    line: lines.get(&class_id).copied().unwrap_or(0),
-                    source_base: site.source_callee,
-                    base: site.target,
-                }
+            .map(|(call, (class_id, class_scope))| ResolvedClassBase {
+                file: self.path.to_path_buf(),
+                exported: exported.contains(class_scope),
+                class_scope: class_scope.to_string(),
+                line: lines.get(&class_id).copied().unwrap_or(0),
+                base: self.resolve(call).1.target,
             })
             .collect()
     }

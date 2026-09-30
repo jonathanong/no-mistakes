@@ -16,26 +16,6 @@ pub struct ResolvedCallSite {
     pub target: ResolvedCallTarget,
 }
 
-/// A class's statically named `extends` base, resolved with the same rules as
-/// a call. It is not a source call site: nothing is invoked at the `extends`
-/// clause, so it lives apart from [`ResolvedCallSite`] and call edges.
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub struct ResolvedClassBase {
-    pub file: std::path::PathBuf,
-    /// Display scope of the derived class within `file`.
-    pub class_scope: String,
-    /// Opaque parser identity of the derived class.
-    pub class_id: crate::codebase::dependencies::extract::CallableId,
-    /// One-based line of the derived class declaration; zero when the source
-    /// text was not available at extraction.
-    pub line: u32,
-    /// Whether the module exports the class under any name.
-    pub exported: bool,
-    /// Exact source spelling of the base expression.
-    pub source_base: String,
-    pub base: ResolvedCallTarget,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ResolvedCallTarget {
     Global {

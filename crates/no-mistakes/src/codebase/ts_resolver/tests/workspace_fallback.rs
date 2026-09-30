@@ -21,7 +21,7 @@ fn workspace(entry: &Path) -> IndexedWorkspaceMap {
 }
 
 #[test]
-fn workspace_specifiers_resolve_after_the_wrapped_resolver_gives_up() {
+fn workspace_specifiers_resolve_last_and_the_rest_is_delegated() {
     let importer = PathBuf::from("/repo/apps/web/src/entry.ts");
     let sibling = PathBuf::from("/repo/apps/web/src/local.ts");
     let entry = PathBuf::from("/repo/packages/core/src/index.ts");
@@ -41,27 +41,14 @@ fn workspace_specifiers_resolve_after_the_wrapped_resolver_gives_up() {
     // The wrapped resolver still answers first for everything it can resolve.
     assert_eq!(
         ImportResolverFacade::resolve(&resolver, "./local", &importer),
-        Some(sibling)
+        Some(sibling.clone())
     );
     assert_eq!(
         ImportResolverFacade::resolve(&resolver, "@fixture/missing", &importer),
         None
     );
-}
 
-#[test]
-fn everything_but_resolution_is_delegated_to_the_wrapped_resolver() {
-    let importer = PathBuf::from("/repo/apps/web/src/entry.ts");
-    let sibling = PathBuf::from("/repo/apps/web/src/local.ts");
-    let entry = PathBuf::from("/repo/packages/core/src/index.ts");
-    let visible: crate::fx::PathSet = [importer.clone(), sibling.clone(), entry.clone()]
-        .into_iter()
-        .collect();
-    let tsconfig = tsconfig();
-    let inner = ImportResolver::new(&tsconfig).with_visible(&visible);
-    let workspace = workspace(&entry);
-    let resolver = WorkspaceFallbackResolver::new(&inner, &workspace);
-
+    // Everything but resolution is the wrapped resolver's answer.
     assert!(ImportResolverFacade::visible_files(&resolver).is_some());
     assert_eq!(
         ImportResolverFacade::resolution_candidates(&resolver, "./local", &importer),

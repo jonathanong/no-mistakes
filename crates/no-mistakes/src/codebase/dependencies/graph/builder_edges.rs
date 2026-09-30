@@ -10,7 +10,6 @@ struct EdgeMaps<'a> {
     resource_diagnostics: &'a mut Vec<ResourceGraphDiagnostic>,
     callable_export_resolutions: &'a mut FxHashMap<(PathBuf, String), ExportedCallableResolution>,
     resolved_call_sites: &'a mut Vec<ResolvedCallSite>,
-    resolved_class_bases: &'a mut Vec<ResolvedClassBase>,
 }
 
 struct EdgeResolutionContext<'a> {
@@ -34,7 +33,6 @@ fn collect_and_merge_all_edges(
         resource_diagnostics,
         callable_export_resolutions,
         resolved_call_sites,
-        resolved_class_bases,
     } = maps;
     require_core_edge_facts(edge_inputs.plan, facts)?;
     crate::invocation::check_timeout()?;
@@ -48,16 +46,14 @@ fn collect_and_merge_all_edges(
     );
     merge_independent_core_edges(forward, reverse, core);
     if edge_inputs.plan.calls {
-        let calls = collect_call_edges_for_core(
+        let (call_edges, call_sites) = collect_call_edges_for_core(
             edge_inputs,
             facts.expect("call plan requires TS facts"),
             resolution.resolver,
-            workspace,
             callable_export_resolutions,
         );
-        merge_edges(forward, reverse, calls.edges);
-        resolved_call_sites.extend(calls.sites);
-        resolved_class_bases.extend(calls.class_bases);
+        merge_edges(forward, reverse, call_edges);
+        resolved_call_sites.extend(call_sites);
     }
 
     collect_remaining_edges(
@@ -72,7 +68,6 @@ fn collect_and_merge_all_edges(
             resource_diagnostics,
             callable_export_resolutions,
             resolved_call_sites,
-            resolved_class_bases,
         },
     )
 }

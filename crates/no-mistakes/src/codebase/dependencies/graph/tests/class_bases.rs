@@ -1,7 +1,7 @@
 use super::*;
 use crate::codebase::dependencies::extract::{CallTargetIdentity, CallableId};
 
-fn build(calls: bool) -> (PathBuf, DepGraph) {
+fn build(class_hierarchy: bool, calls: bool) -> (PathBuf, DepGraph) {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture("class-bases"));
     let tsconfig = TsConfig {
         dir: root.clone(),
@@ -13,6 +13,7 @@ fn build(calls: bool) -> (PathBuf, DepGraph) {
         &root,
         &tsconfig,
         GraphBuildPlan {
+            class_hierarchy,
             calls,
             ..GraphBuildPlan::default()
         },
@@ -51,12 +52,12 @@ fn assert_module_export(
 
 #[test]
 fn class_bases_record_owner_line_export_state_and_resolved_base() {
-    let (root, graph) = build(true);
+    let (root, graph) = build(true, false);
     let classes = root.join("src/classes.ts");
     let base = root.join("src/base.ts");
     let lib = root.join("packages/lib/index.ts");
-    let summary: Vec<_> = graph
-        .resolved_class_bases()
+    let bases = &graph.class_hierarchy().bases;
+    let summary: Vec<_> = bases
         .iter()
         .map(|class| {
             (
@@ -64,28 +65,26 @@ fn class_bases_record_owner_line_export_state_and_resolved_base() {
                 class.class_scope.as_str(),
                 class.exported,
                 class.line,
-                class.source_base.as_str(),
             )
         })
         .collect();
     assert_eq!(
         summary,
         [
-            ("packages/lib/index.ts", "LibError", true, 1, "Error"),
-            ("src/classes.ts", "Local", true, 6, "Base"),
-            ("src/classes.ts", "FromNamespace", true, 7, "base.Base"),
-            ("src/classes.ts", "FromWorkspace", true, 8, "LibError"),
-            ("src/classes.ts", "SameFile", true, 9, "Local"),
-            ("src/classes.ts", "Builtin", true, 10, "TypeError"),
-            ("src/classes.ts", "FromPackage", true, 11, "Missing"),
-            ("src/classes.ts", "Private", true, 15, "Error"),
-            ("src/classes.ts", "default", true, 18, "Error"),
+            ("packages/lib/index.ts", "LibError", true, 1),
+            ("src/classes.ts", "Local", true, 6),
+            ("src/classes.ts", "FromNamespace", true, 7),
+            ("src/classes.ts", "FromWorkspace", true, 8),
+            ("src/classes.ts", "SameFile", true, 9),
+            ("src/classes.ts", "Builtin", true, 10),
+            ("src/classes.ts", "FromPackage", true, 11),
+            ("src/classes.ts", "Private", true, 15),
+            ("src/classes.ts", "default", true, 18),
         ]
     );
 
     let target = |scope: &str| {
-        &graph
-            .resolved_class_bases()
+        &bases
             .iter()
             .find(|class| class.class_scope == scope)
             .unwrap()
@@ -121,34 +120,50 @@ fn class_bases_record_owner_line_export_state_and_resolved_base() {
 }
 
 #[test]
-fn class_bases_are_not_call_sites_and_calls_through_workspaces_resolve() {
-    let (root, graph) = build(true);
-    let classes = root.join("src/classes.ts");
-    assert!(!graph
-        .resolved_call_sites()
-        .iter()
-        .any(|site| site.file == classes && site.invocation == InvocationKind::Construct));
-
+fn only_the_class_hierarchy_follows_workspace_names_and_class_bases_are_not_call_sites() {
+    let (root, graph) = build(true, true);
     let use_file = root.join("src/use.ts");
-    let site = graph
-        .resolved_call_sites()
-        .iter()
-        .find(|site| site.file == use_file && site.source_callee == "LibError")
-        .expect("the construction is recorded");
-    assert_eq!(site.invocation, InvocationKind::Construct);
     let lib = root.join("packages/lib/index.ts");
+    let liberror = |sites: &[ResolvedCallSite]| {
+        sites
+            .iter()
+            .find(|site| site.file == use_file && site.source_callee == "LibError")
+            .expect("the construction is recorded")
+            .clone()
+    };
+    let construction = liberror(&graph.class_hierarchy().constructions);
+    assert_eq!(construction.invocation, InvocationKind::Construct);
     assert_module_export(
-        &site.target,
+        &construction.target,
         "@fixture/lib",
         "LibError",
         Some((&lib, "LibError")),
     );
+    // The same call stays unresolved for everything that reads call sites.
+    assert_module_export(
+        &liberror(graph.resolved_call_sites()).target,
+        "@fixture/lib",
+        "LibError",
+        None,
+    );
+
+    let classes = root.join("src/classes.ts");
+    let constructs_in_classes = |site: &&ResolvedCallSite| {
+        site.file == classes && site.invocation == InvocationKind::Construct
+    };
+    let hierarchy = &graph.class_hierarchy().constructions;
+    assert_eq!(hierarchy.iter().filter(constructs_in_classes).count(), 0);
+    let sites = graph.resolved_call_sites();
+    assert_eq!(sites.iter().filter(constructs_in_classes).count(), 0);
 }
 
 #[test]
-fn class_bases_are_empty_without_call_analysis() {
-    let (_, graph) = build(false);
-    assert!(graph.resolved_class_bases().is_empty());
+fn the_class_hierarchy_is_empty_unless_requested() {
+    for calls in [false, true] {
+        let (_, graph) = build(false, calls);
+        assert!(graph.class_hierarchy().bases.is_empty());
+        assert!(graph.class_hierarchy().constructions.is_empty());
+    }
 }
 
 fn call(is_callback: bool, invocation: InvocationKind, owned: bool) -> FunctionCall {

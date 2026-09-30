@@ -1,4 +1,3 @@
-use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{
     DepGraph, ResolvedCallSite, ResolvedCallTarget, ResolvedClassBase,
 };
@@ -98,7 +97,8 @@ pub(super) fn unconstructed<'a>(
     is_test: impl Fn(&Path) -> bool,
     is_reported: impl Fn(&Path) -> bool,
 ) -> Vec<&'a ResolvedClassBase> {
-    let bases = graph.resolved_class_bases();
+    let hierarchy = graph.class_hierarchy();
+    let bases = hierarchy.bases.as_slice();
     let mut unused: FxHashMap<ClassKey<'a>, Vec<&'a ResolvedClassBase>> = fx_map();
     for (class, _) in bases
         .iter()
@@ -111,13 +111,9 @@ pub(super) fn unconstructed<'a>(
             .or_default()
             .push(class);
     }
-    if unused.is_empty() {
-        return Vec::new();
-    }
-    let constructed = graph
-        .resolved_call_sites()
+    let constructed = hierarchy
+        .constructions
         .iter()
-        .filter(|site| site.invocation == InvocationKind::Construct)
         .map(|site| (constructed_class(site), site.file.as_path()));
     let subclassed = bases
         .iter()

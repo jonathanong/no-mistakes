@@ -12,7 +12,7 @@ use std::path::Path;
 
 pub(crate) fn graph_plan(config: &NoMistakesConfig) -> Option<GraphBuildPlan> {
     config.rule_configured(RULE_ID).then(|| GraphBuildPlan {
-        calls: true,
+        class_hierarchy: true,
         ..Default::default()
     })
 }

@@ -34,7 +34,7 @@ fn canonical_graph_plans_include_forbidden_call_edges() {
 }
 
 #[test]
-fn canonical_graph_plans_include_class_base_calls_for_unconstructed_error_class() {
+fn canonical_graph_plans_include_class_hierarchy_for_unconstructed_error_class() {
     let mut config = crate::config::v2::NoMistakesConfig::default();
     config.rules.push(crate::config::v2::schema::RuleDef {
         rule: UNCONSTRUCTED_ERROR_CLASS.to_string(),
@@ -42,10 +42,11 @@ fn canonical_graph_plans_include_class_base_calls_for_unconstructed_error_class(
         ..Default::default()
     });
 
-    assert!(canonical_graph_plan(&config).is_some_and(|plan| plan.calls));
+    let hierarchy_without_calls = |plan: GraphBuildPlan| plan.class_hierarchy && !plan.calls;
+    assert!(canonical_graph_plan(&config).is_some_and(hierarchy_without_calls));
     assert!(try_canonical_graph_plan(&config)
         .unwrap()
-        .is_some_and(|plan| plan.calls));
+        .is_some_and(hierarchy_without_calls));
 }
 
 #[test]

@@ -63,14 +63,6 @@
                 &right.source_callee,
             ))
         });
-        resolved_class_bases.sort_by(|left: &ResolvedClassBase, right| {
-            (&left.file, left.line, &left.class_scope, &left.source_base).cmp(&(
-                &right.file,
-                right.line,
-                &right.class_scope,
-                &right.source_base,
-            ))
-        });
         let call_sites_by_file = index_sorted_call_sites_by_file(&resolved_call_sites);
         let mut graph = Self {
             root: root.to_path_buf(),
@@ -78,7 +70,7 @@
             callable_nodes_by_file,
             callable_export_resolutions,
             resolved_call_sites,
-            resolved_class_bases,
+            class_hierarchy,
             call_sites_by_file,
             vitest_setup_projects: Vec::new(),
             effective_edges: OnceLock::new(),

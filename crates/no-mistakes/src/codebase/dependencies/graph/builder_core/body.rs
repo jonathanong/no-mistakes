@@ -102,7 +102,6 @@
             ExportedCallableResolution,
         > = fx_map();
         let mut resolved_call_sites = Vec::new();
-        let mut resolved_class_bases = Vec::new();
         let files = graph_files.indexable();
 
         for file in files {
@@ -114,7 +113,7 @@
         let parsed_imports = parsed_imports_for_plan(plan, files, facts)?;
         crate::invocation::check_timeout()?;
         let needs_workspace =
-            plan.imports || plan.workspace || plan.package || plan.symbols || plan.calls;
+            plan.imports || plan.workspace || plan.package || plan.symbols || plan.class_hierarchy;
         let owned_workspace = (needs_workspace && supplied_workspace.is_none()).then(|| {
             crate::codebase::workspaces::load_indexed_from_files(root, graph_files.all())
                 .unwrap_or_default()
@@ -156,9 +155,18 @@
                 resource_diagnostics: &mut resource_diagnostics,
                 callable_export_resolutions: &mut callable_export_resolutions,
                 resolved_call_sites: &mut resolved_call_sites,
-                resolved_class_bases: &mut resolved_class_bases,
             },
         )?;
+        let class_hierarchy = if plan.class_hierarchy {
+            collect_class_hierarchy(
+                &edge_inputs,
+                facts.expect("class hierarchy plan requires TS facts"),
+                &resolver,
+                workspace,
+            )
+        } else {
+            ClassHierarchy::default()
+        };
 
         include!("finish.rs")
 }

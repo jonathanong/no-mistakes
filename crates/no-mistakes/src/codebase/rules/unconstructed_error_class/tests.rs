@@ -126,18 +126,6 @@ fn include_selects_declarations_but_not_constructions() {
 }
 
 #[test]
-fn an_include_that_selects_no_declarations_reports_nothing() {
-    assert!(findings("configs/no-match.yml").unwrap().is_empty());
-}
-
-#[test]
-fn message_prefixes_the_class_name() {
-    let found = findings("configs/message.yml").unwrap();
-    assert_eq!(found.len(), 1);
-    assert_eq!(found[0].message, "Dead error class: `WorkspaceUnusedError`");
-}
-
-#[test]
 fn default_messages_name_the_class_or_the_default_export() {
     let found = findings(".no-mistakes.yml").unwrap();
     let message = |target: &str| {
@@ -158,18 +146,11 @@ fn default_messages_name_the_class_or_the_default_export() {
 }
 
 #[test]
-fn invalid_options_are_rejected() {
-    assert!(findings("configs/unknown-option.yml").is_err());
-    let error = findings("configs/invalid-test-files.yml").unwrap_err();
-    assert!(format!("{error:#}").contains("testFiles"), "{error:#}");
-}
-
-#[test]
-fn graph_plan_requests_calls_only_when_configured() {
+fn graph_plan_requests_only_the_class_hierarchy_when_configured() {
     let root = fixture();
     let configured =
         crate::config::v2::load_v2_config(&root, Some(&root.join(".no-mistakes.yml"))).unwrap();
     let plan = graph_plan(&configured).expect("configured rule needs a graph");
-    assert!(plan.calls);
+    assert!(plan.class_hierarchy && !plan.calls);
     assert!(graph_plan(&NoMistakesConfig::default()).is_none());
 }

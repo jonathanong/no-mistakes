@@ -4,6 +4,9 @@ pub struct GraphBuildPlan {
     /// Build opt-in lexical call edges. This is excluded from `all()` so
     /// existing dependency output remains stable.
     pub calls: bool,
+    /// Opt-in class `extends` and `new` resolution, which also follows
+    /// workspace package names. Absent from `all()` so no other graph changes.
+    pub class_hierarchy: bool,
     pub imports: bool,
     pub route_imports: bool,
     pub workspace: bool,
@@ -37,6 +40,7 @@ impl GraphBuildPlan {
     pub fn all() -> Self {
         Self {
             calls: false,
+            class_hierarchy: false,
             imports: true,
             // RouteImport is an alternate, deliberately conservative import
             // view. Legacy unfiltered traversal must opt in by name instead
@@ -93,6 +97,7 @@ impl GraphBuildPlan {
         };
         Self {
             calls: allowed.contains(&EdgeKind::Call),
+            class_hierarchy: false,
             // Resolved call edges use the prepared import projection to find
             // direct and re-exported callable targets. Traversal still emits
             // only `Call` edges when that is the selected relationship.
@@ -148,6 +153,7 @@ impl GraphBuildPlan {
 
     pub(crate) fn include(&mut self, other: Self) {
         self.calls |= other.calls;
+        self.class_hierarchy |= other.class_hierarchy;
         self.imports |= other.imports;
         self.route_imports |= other.route_imports;
         self.workspace |= other.workspace;
@@ -200,6 +206,7 @@ impl GraphBuildPlan {
         TsFactPlan {
             imports: self.imports || self.route_imports || self.workspace || self.assets,
             function_calls: self.calls
+                || self.class_hierarchy
                 || self.imports
                 || self.workspace
                 || self.assets
