@@ -140,7 +140,8 @@ Repository path components follow Docker's grammar: alphanumeric runs joined by
 `.`, `_` or `__`, or one or more `-`, so `owner/my.image:1.2.3`,
 `owner/my__image--x:1.2.3`, and `image: owner/my.image:9` are images. `..`,
 `___`, and a leading `-` are not separators. A dotted component is accepted only
-where the tag is version-shaped or the line has an `image:`/`FROM` context, so a
+where the tag is version-shaped, the line has an `image:`/`FROM` context, or the
+pin is an `@sha256:` digest, so a
 filename with a line number (`src/a.b.mts:12`, `at x (src/a.b.mts:12:5)`,
 `docs/a.b.md:12`) is not read as an image. The one exception is the context-free
 bare-integer tag on a dotted registry host, whose components stay dotless:
@@ -188,12 +189,14 @@ Not caught, by design:
   multi-part concatenation;
 - an image with no slash, or with a bare integer tag, outside `image:` and
   `FROM` lines, such as `docker run postgres:18`;
-- a major-only `v` tag outside `image:` and `FROM` lines (`owner/name:v2`,
-  `ghcr.io/owner/name:v2`). After `image:` or `FROM` it is reported
-  (`image: repo:v2`), because the line says what it is. Elsewhere `v2` is the
-  most common non-image key suffix (`users/list:v2`, `cache/keys:v2`, API and
-  route versions), while a dotted tag (`v2.1`) or an `N-variant` tag (`24-slim`)
-  has a shape that non-image text rarely has;
+- a major-only `v` tag outside `image:` and `FROM` lines. After `image:` or
+  `FROM` it is reported (`image: repo:v2`), because the line says what it is.
+  On a slash-only path (`owner/name:v2`), `v2` is the most common non-image key
+  suffix (`users/list:v2`, `cache/keys:v2`, API and route versions), while a
+  dotted tag (`v2.1`) or an `N-variant` tag (`24-slim`) has a shape that
+  non-image text rarely has. A path under a registry host
+  (`ghcr.io/owner/name:v2`) is not ambiguous that way; it stays context-only so
+  that `v<N>` follows one rule, not because it would be noisy;
 - an image written inside a JavaScript regular expression, where the path
   separator is escaped (`/^grafana\/loki:3.4$/`);
 - non-version tags such as `latest`, `stable`, or `bookworm`;
