@@ -10,3 +10,8 @@ export class MixinError extends withCode(Error) {}
 
 // Ignored: a class expression is not a class declaration.
 export const ExpressionError = class extends Error {};
+
+// Not repository classes: building a global or an external-package class
+// credits no error class in this repository.
+export const registry = new Map<string, string>();
+export const failure = new HttpError("boom");
