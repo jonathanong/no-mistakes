@@ -58,6 +58,7 @@ words:
   - invalidators
   - jsonc
   - Laravel
+  - linuxbrew
   - linecount
   - libuv
   - lockfiles

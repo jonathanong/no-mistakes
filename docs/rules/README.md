@@ -123,7 +123,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`swift-no-raw-print`](swift-no-raw-print.md)                                 | Ban raw print() and Swift.print() in Swift sources.                             |
 | [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md)                 | Require @MainActor on Swift classes whose names end with ViewModel.             |
 | [`test-email-domain-policy`](test-email-domain-policy.md)                     | Ban configured email domains in tracked fixtures and docs.                      |
-| [`test-no-dependency-pins`](test-no-dependency-pins.md)                       | Ban exact dependency-version assertions in tests.                               |
+| [`test-no-dependency-pins`](test-no-dependency-pins.md)                       | Ban exact dependency, image, runtime, and runner version pins in tests.         |
 | [`test-no-unmocked-dynamic-imports`](test-no-unmocked-dynamic-imports.md)     | Require dynamic imports in tests to be mocked.                                  |
 | [`tsconfig-alias-folder-mapping`](tsconfig-alias-folder-mapping.md)           | Enforce alias/folder consistency.                                               |
 | [`tsconfig-file-coverage`](tsconfig-file-coverage.md)                         | Require tracked TypeScript files to belong to a tsconfig program.               |

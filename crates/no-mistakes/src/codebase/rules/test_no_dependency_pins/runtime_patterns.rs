@@ -1,0 +1,204 @@
+//! Default line patterns for pins in container images, CI setup inputs,
+//! Homebrew formulae, and runner labels.
+//!
+//! Every pattern captures the pin in a named `pin` group and carries its own
+//! left and right boundary so prose, stack frames, paths, and `file.ts:12`
+//! locations are not read as versions. The scanner resumes each search at the
+//! end of the pin, which lets one separator character close a pin and open the
+//! next.
+
+/// `(reason, regex, line_context)`: the pattern only runs on lines matching
+/// `line_context` when one is given.
+pub(super) type RuntimePattern = (&'static str, &'static str, Option<&'static str>);
+
+/// A pin may start at the line start, after a JavaScript `\n`/`\r`/`\t` escape,
+/// or after a character that cannot continue a path, name, or version.
+macro_rules! left {
+    () => {
+        r"(?:^|\\[nrt]|[^A-Za-z0-9_.:/@\\-])"
+    };
+}
+
+/// A pin ends at the line end or at a character that cannot continue a tag.
+/// A single trailing `.` (sentence end) is allowed.
+macro_rules! right {
+    () => {
+        r"(?:$|[^A-Za-z0-9_.:/@+-]|\.(?:$|[^0-9A-Za-z_-]))"
+    };
+}
+
+/// Repository path component in Docker's grammar: alphanumeric runs joined by
+/// `.`, `_`, `__`, or `-`+, as in `my.image`. Used only where the tag is
+/// version-shaped, after `image:`/`FROM`, or on a digest, so `a.b.mts:12`
+/// is never read as an image.
+macro_rules! comp_dot {
+    () => {
+        r"[a-z0-9]+(?:(?:\.|_{1,2}|-+)[a-z0-9]+)*"
+    };
+}
+
+/// Dotless component for the context-free bare-integer tag; a dot would let
+/// `internal/binder.go:1755` and `page.tsx:1:1` through.
+macro_rules! comp {
+    () => {
+        r"[a-z0-9]+(?:(?:_{1,2}|-+)[a-z0-9]+)*"
+    };
+}
+
+/// First component: starts with a letter, so `51088:6379` is never an image.
+macro_rules! comp_l {
+    () => {
+        r"[a-z][a-z0-9]*(?:(?:_{1,2}|-+)[a-z0-9]+)*"
+    };
+}
+
+/// Registry host: a dotted name (with optional port) or `localhost:port`.
+macro_rules! host {
+    () => {
+        r"(?:(?:[a-z0-9-]+\.)+[a-z0-9-]+(?::\d{1,5})?|localhost:\d{1,5})"
+    };
+}
+
+/// Version-shaped tags: dotted numeric, `N-variant`, or `pgN`.
+macro_rules! tag {
+    () => {
+        concat!(
+            r"(?:v?\d+(?:\.\d+)+",
+            sfx!(),
+            r"|\d+-[A-Za-z][A-Za-z0-9_]*(?:[.-][A-Za-z0-9_]+)*",
+            r"|pg\d+(?:\.\d+)*",
+            sfx!(),
+            ")"
+        )
+    };
+}
+
+macro_rules! sfx {
+    () => {
+        r"(?:[-+][A-Za-z0-9_]+(?:[.-][A-Za-z0-9_]+)*)?"
+    };
+}
+
+/// An optional trailing digest is part of the pin only when it is complete.
+macro_rules! digest_opt {
+    () => {
+        r"(?:@sha256:[0-9a-f]{64})?"
+    };
+}
+
+/// End of a tagged image: a normal pin end, or the `@sha256:` of an
+/// interpolated or short digest, so `app:1.2.3@sha256:${digest}` reports only
+/// the concrete tag instead of being dropped or reported with a stub digest.
+macro_rules! image_end {
+    () => {
+        concat!("(?:", right!(), "|@sha256:)")
+    };
+}
+
+/// `image:` values, `FROM` lines: the only places a slashless `postgres:18`,
+/// a bare-integer `valkey/valkey-bundle:9`, or a major-only `repo:v2` is
+/// unambiguously an image (`users/list:v2` is an API key elsewhere).
+macro_rules! image_context {
+    () => {
+        r#"(?:\bimage\\?["']?:\s*(?:\\?["'])?|\bFROM\s+(?:--platform=\S+\s+)?["']?)"#
+    };
+}
+
+pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
+    (
+        "container image tag",
+        concat!(
+            left!(),
+            r"(?P<pin>(?:",
+            host!(),
+            "/",
+            comp!(),
+            "(?:/",
+            comp!(),
+            r")*:\d+|(?:",
+            host!(),
+            "/",
+            comp_dot!(),
+            "|",
+            comp_l!(),
+            "/",
+            comp_dot!(),
+            ")(?:/",
+            comp_dot!(),
+            ")*:",
+            tag!(),
+            ")",
+            digest_opt!(),
+            ")",
+            image_end!()
+        ),
+        None,
+    ),
+    (
+        "container image tag",
+        concat!(
+            image_context!(),
+            "(?P<pin>(?:",
+            comp_l!(),
+            ":(?:",
+            tag!(),
+            r"|v?\d+)|",
+            comp_l!(),
+            "(?:/",
+            comp_dot!(),
+            r")+:v?\d+|",
+            host!(),
+            "/",
+            comp_dot!(),
+            "(?:/",
+            comp_dot!(),
+            r")*:v\d+)",
+            digest_opt!(),
+            ")",
+            image_end!()
+        ),
+        None,
+    ),
+    (
+        "container image digest",
+        concat!(
+            left!(),
+            "(?P<pin>(?:",
+            host!(),
+            "/)?",
+            comp_dot!(),
+            "(?:/",
+            comp_dot!(),
+            ")*@sha256:[0-9a-f]{64})",
+            right!()
+        ),
+        None,
+    ),
+    (
+        "setup action version",
+        concat!(
+            r"(?:^|[^A-Za-z0-9_.-])(?P<pin>(?:node|python|go|java|ruby|dotnet|php|bun|deno)",
+            r#"-version(?:\\?["'])?:\s*(?:"#,
+            r#"\\?"\d[A-Za-z0-9._+-]*\\?"|\\?'\d[A-Za-z0-9._+-]*\\?'|\d[A-Za-z0-9._+-]*))"#
+        ),
+        None,
+    ),
+    (
+        "versioned Homebrew formula",
+        r"(?:^|[^A-Za-z0-9_.@-])(?P<pin>[a-z][a-z0-9+_-]*@\d+(?:\.\d+)?)(?:$|[^A-Za-z0-9_.@-]|\.(?:$|[^0-9A-Za-z_-]))",
+        Some(r"(?i)\b(?:brew|homebrew|linuxbrew)\b|/Cellar/"),
+    ),
+    (
+        "versioned runner label",
+        concat!(
+            left!(),
+            r"(?P<pin>ubuntu-\d{2}\.\d{2}(?:-arm)?|macos-\d{2}(?:-(?:intel|large|xlarge))?",
+            r"|windows-(?:20\d{2}|11-arm)(?:-vs\d{4})?)",
+            r"(?:$|[^A-Za-z0-9_.-]|\.(?:$|[^0-9A-Za-z_-]))"
+        ),
+        None,
+    ),
+];
+
+#[cfg(test)]
+mod tests;

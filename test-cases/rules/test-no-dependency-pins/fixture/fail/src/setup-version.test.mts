@@ -1,0 +1,6 @@
+expect(workflow).toContain("node-version: '26'")
+expect(workflow).toContain('python-version: 3.13')
+expect(workflow).toContain('go-version: "1.26"')
+expect(workflow).toContain('  node-version: 24.11.1\n')
+expect(yaml).toBe("      - uses: actions/setup-node\n        with:\n          node-version: 26\n")
+expect(inline).toContain('with: { java-version: 21 }')

@@ -10,11 +10,16 @@ use std::sync::LazyLock;
 mod assertion_ranges;
 mod delimiters;
 mod jsx_text_ranges;
+mod line_scan;
 mod raw_literal_arg;
 mod received_prefix;
+mod synthetic;
+
+use line_scan::{into_findings, scan_lines, Found};
+use synthetic::only_zero_versions;
 
 pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) -> Vec<RuleFinding> {
-    let mut findings = Vec::new();
+    let mut found = Vec::new();
     let ranges = if opts.patterns.iter().any(|pattern| pattern.multiline) {
         let jsx_text_ranges = jsx_text_ranges::collect(file, content);
         let lexical_source = jsx_text_ranges::mask(content, &jsx_text_ranges);
@@ -51,6 +56,11 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
                 let version_literal = captures
                     .name("version")
                     .map_or(displayed, |version| version.as_str());
+                // A `0.0.0` value is a placeholder, like the line patterns'
+                // exemption. Judge the value after any `"name":` or `npm:` prefix.
+                if only_zero_versions(version_literal.rsplit(':').next().unwrap_or_default()) {
+                    continue;
+                }
                 if !has_matching_version_delimiters(version_literal, raw_assertion) {
                     continue;
                 }
@@ -77,13 +87,13 @@ pub(super) fn check_source(file: &str, content: &str, opts: &CompiledOptions) ->
                 }
                 let line = line_at(content, start);
                 let normalized = displayed.split_whitespace().collect::<Vec<_>>().join(" ");
-                findings.push(finding(file, line, pattern, &normalized));
+                found.push(Found::whole(finding(file, line, pattern, &normalized)));
             }
         } else {
-            scan_lines(file, content, pattern, &mut findings);
+            scan_lines(file, content, pattern, &mut found);
         }
     }
-    findings
+    into_findings(found)
 }
 
 fn merge_ranges(ranges: &mut Vec<(usize, usize)>) {
@@ -144,26 +154,6 @@ fn has_code_matcher(matched: &str, start: usize, non_code_ranges: &[(usize, usiz
     .iter()
     .flat_map(|token| matched.match_indices(token).map(|(offset, _)| offset))
     .any(|offset| is_code(non_code_ranges, start + offset))
-}
-
-fn scan_lines(
-    file: &str,
-    content: &str,
-    pattern: &CompiledPattern,
-    findings: &mut Vec<RuleFinding>,
-) {
-    for (index, line_with_ending) in content.split_inclusive('\n').enumerate() {
-        let line = line_with_ending.trim_end_matches(['\r', '\n']);
-        for matched in pattern.regex.find_iter(line) {
-            if pattern.reject_preceding_at
-                && matched.start() > 0
-                && line.as_bytes()[matched.start() - 1] == b'@'
-            {
-                continue;
-            }
-            findings.push(finding(file, index + 1, pattern, matched.as_str()));
-        }
-    }
 }
 
 fn line_at(content: &str, offset: usize) -> usize {

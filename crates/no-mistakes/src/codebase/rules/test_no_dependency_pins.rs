@@ -1,14 +1,18 @@
+mod compile;
 mod patterns;
+mod runtime_patterns;
 mod scan;
 
 use super::path_filter::GlobMatcher;
 use super::RuleFinding;
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
-use anyhow::{Context, Result};
+use anyhow::Result;
+use compile::{compile_builtin, compile_pattern};
 use patterns::DEFAULT_PATTERNS;
 use rayon::prelude::*;
 use regex::Regex;
+use runtime_patterns::RUNTIME_PATTERNS;
 use scan::check_source;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
@@ -18,8 +22,6 @@ pub const RULE_ID: &str = "test-no-dependency-pins";
 /// Filaments `TEST_FILE_RE`.
 const DEFAULT_INCLUDE_RE: &str =
     r"(?:^|/)(?:__tests__/.*|[^/]+(?:\.mock)?\.test\.(?:mts|ts|tsx|mjs|js|cts|cjs))$";
-
-const LOOKBEHIND_NOT_AT: &str = "(?<!@)";
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -40,6 +42,10 @@ struct CompiledPattern {
     regex: Regex,
     reject_preceding_at: bool,
     multiline: bool,
+    /// Default patterns report their `pin` capture, skip placeholder values,
+    /// and honor `line_context`; custom patterns report every match.
+    builtin: bool,
+    line_context: Option<Regex>,
 }
 
 struct CompiledOptions {
@@ -119,10 +125,13 @@ fn scan_with_sources(
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let patterns = if opts.patterns.is_empty() {
-        DEFAULT_PATTERNS
+        let dependency = DEFAULT_PATTERNS
             .iter()
-            .map(|(reason, regex, multiline)| compile_pattern(reason, regex, *multiline))
-            .collect::<Result<Vec<_>>>()?
+            .map(|(reason, regex, multiline)| compile_builtin(reason, regex, *multiline, None));
+        let runtime = RUNTIME_PATTERNS
+            .iter()
+            .map(|(reason, regex, context)| compile_builtin(reason, regex, false, *context));
+        dependency.chain(runtime).collect::<Result<Vec<_>>>()?
     } else {
         opts.patterns
             .iter()
@@ -138,21 +147,6 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
 
 fn default_include_regex() -> Regex {
     Regex::new(DEFAULT_INCLUDE_RE).expect("default test-file include regex is valid")
-}
-
-fn compile_pattern(reason: &str, source: &str, multiline: bool) -> Result<CompiledPattern> {
-    let (pattern, reject_preceding_at) = match source.strip_prefix(LOOKBEHIND_NOT_AT) {
-        Some(rest) => (rest, true),
-        None => (source, false),
-    };
-    let regex = Regex::new(pattern)
-        .with_context(|| format!("{RULE_ID} contains invalid pattern `{source}`"))?;
-    Ok(CompiledPattern {
-        reason: reason.to_string(),
-        regex,
-        reject_preceding_at,
-        multiline,
-    })
 }
 
 fn check_file_with_sources(

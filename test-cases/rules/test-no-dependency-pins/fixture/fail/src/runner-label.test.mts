@@ -1,0 +1,7 @@
+expect(workflow).toContain('runs-on: ubuntu-24.04-arm')
+expect(workflow).toContain('runs-on: ubuntu-22.04')
+expect(workflow).toContain('runs-on: macos-15')
+expect(workflow).toContain('runs-on: macos-15-intel')
+expect(workflow).toContain('runs-on: windows-2025')
+expect(workflow).toContain('runs-on: windows-11-arm')
+expect(matrix).toEqual(['ubuntu-24.04', 'macos-14', 'windows-2022'])
