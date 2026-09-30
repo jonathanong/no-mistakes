@@ -83,6 +83,7 @@ pub mod test_no_unmocked_dynamic_imports;
 pub mod tsconfig_alias_folder_mapping;
 pub mod tsconfig_file_coverage;
 pub mod tsconfig_gate_coverage;
+pub mod unconstructed_error_class;
 pub mod version_pin_consistency;
 pub mod vitest_ci_path_coverage;
 mod vitest_project_catalog;

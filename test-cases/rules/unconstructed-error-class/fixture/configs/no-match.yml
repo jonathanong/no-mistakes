@@ -1,0 +1,5 @@
+rules:
+  - rule: unconstructed-error-class
+    scope: repository
+    include:
+      - nothing-here/**

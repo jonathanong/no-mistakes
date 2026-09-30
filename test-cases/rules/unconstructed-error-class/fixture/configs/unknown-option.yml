@@ -1,0 +1,6 @@
+rules:
+  - rule: unconstructed-error-class
+    scope: repository
+    options:
+      testGlobs:
+        - test-helpers/**

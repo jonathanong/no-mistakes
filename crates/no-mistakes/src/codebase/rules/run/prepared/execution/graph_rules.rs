@@ -71,6 +71,18 @@ pub(super) fn graph_rule_findings(request: GraphRuleRequest<'_>) -> Result<Vec<R
             },
         )?);
     }
+    if rule_enabled(config, UNCONSTRUCTED_ERROR_CLASS) {
+        findings.extend(crate::perf_trace::trace(
+            "rules.unconstructed_error_class",
+            || {
+                unconstructed_error_class::check_with_graph(
+                    root,
+                    config,
+                    dependency_graph.expect("unconstructed-error-class requires canonical graph"),
+                )
+            },
+        )?);
+    }
     Ok(findings)
 }
 
