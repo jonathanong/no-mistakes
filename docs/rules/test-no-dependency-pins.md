@@ -159,7 +159,13 @@ Not caught, by design:
   multi-part concatenation;
 - an image with no slash, or with a bare integer tag, outside `image:` and
   `FROM` lines, such as `docker run postgres:18`;
+- an image written inside a JavaScript regular expression, where the path
+  separator is escaped (`/^grafana\/loki:3.4$/`);
 - non-version tags such as `latest`, `stable`, or `bookworm`;
+- tool versions in log output (`lychee 0.24.2`, `gitleaks version 8.30.1`) and
+  release URLs whose tag has a name prefix
+  (`releases/download/lychee-v0.24.2/`), which the existing release patterns
+  do not match either;
 - Homebrew formulae on a line with no Homebrew context, and `@N` package
   specifiers in other package managers (`pnpm@12`, `npm i undici@1`);
 - runner labels other than the `ubuntu`, `macos`, and `windows` families;
