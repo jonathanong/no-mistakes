@@ -42,6 +42,7 @@ include!("builder_parse_errors.rs");
 include!("builder_core_resolution.rs");
 include!("builder_core.rs");
 include!("builder_edges.rs");
+include!("builder_edge_requirements.rs");
 include!("builder_core_edges_independent.rs");
 include!("builder_remaining_edges.rs");
 include!("builder_remaining_edges_independent.rs");

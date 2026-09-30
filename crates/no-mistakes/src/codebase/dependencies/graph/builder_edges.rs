@@ -81,22 +81,6 @@ fn collect_and_merge_all_edges(
     )
 }
 
-fn require_core_edge_facts(plan: GraphBuildPlan, facts: Option<&dyn TsFactLookup>) -> Result<()> {
-    if plan.route_imports && facts.is_none() {
-        anyhow::bail!("TS import facts are required for route-import edges");
-    }
-    if plan.symbols && facts.is_none() {
-        anyhow::bail!("TS symbol facts are required when symbol edges are requested");
-    }
-    if plan.calls && facts.is_none() {
-        anyhow::bail!("TS call facts are required when call edges are requested");
-    }
-    if plan.extends && facts.is_none() {
-        anyhow::bail!("TS call facts are required when extends edges are requested");
-    }
-    Ok(())
-}
-
 fn collect_import_edges_for_core(
     edge_inputs: &GraphEdgeBuildInputs<'_>,
     parsed_imports: &ParsedImports<'_>,
