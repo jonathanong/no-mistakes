@@ -41,6 +41,20 @@ constructing that class, so static factories such as
 Declaration files (`.d.ts`, `.d.mts`, `.d.cts`) are skipped: they describe code
 outside the analyzed source, so their classes are never reported.
 
+## Files that fail to parse
+
+When a non-test source file fails to parse or read, the rule stops with an error
+naming that file (and how many others failed too). A construction in a file the
+rule cannot see would go unnoticed, so reporting a class as unconstructed would
+risk a false finding. This differs on purpose from
+[`forbidden-calls`](forbidden-calls.md#unknown-calls-and-suppression), which
+ignores unrelated files that fail to parse: a file it cannot read can only hide a
+finding there, never add one.
+
+Fix the file, or, if it really is test-only, classify it as a test file with
+`testFiles`. Test files that fail to parse do not stop the rule, because they
+never count as construction.
+
 ## Options
 
 ```yaml
@@ -153,7 +167,9 @@ class in it) work too.
 
 ## Limitations
 
-The rule reads static code only.
+The rule reads static code only. Some limitations below hide a dead class;
+others report a class that is not really dead or not really exported, which a
+suppression comment resolves.
 
 - Dynamic construction (`new (registry[name])()`, `Reflect.construct`) is not
   seen, so such a class is reported; suppress it.
@@ -175,6 +191,12 @@ The rule reads static code only.
 - An alias of a built-in error used as a base is not followed, so the class is
   not reported. With `const BaseError = Error;`, a class that extends
   `BaseError` is skipped.
+- A class declared without `export` inside an exported namespace
+  (`export namespace Errors { class HiddenError extends Error {} }`) is treated
+  as exported, because the shared extractor flattens the export depth of
+  namespace members. It is reported when nothing constructs it. The class is
+  still dead, but the message's word "exported" is wrong: delete the class or
+  suppress the finding.
 - An unresolved `new`, such as `new this()`, credits the outermost class of the
   member it sits in. A class nested inside an error class's method can
   therefore hide that error class.
