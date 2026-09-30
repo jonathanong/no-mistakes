@@ -1,6 +1,6 @@
 use crate::codebase::dependencies::extract::InvocationKind;
 use crate::codebase::dependencies::graph::{
-    ClassDeclaration, DepGraph, EdgeKind, NodeId, ResolvedCallSite, ResolvedCallTarget,
+    ClassDeclaration, DepGraph, EdgeKind, ResolvedCallSite, ResolvedCallTarget,
 };
 use crate::fx::{fx_map, FxHashMap};
 use std::path::Path;
@@ -76,12 +76,8 @@ fn bases<'a>(graph: &'a DepGraph, class: &ClassDeclaration) -> impl Iterator<Ite
         .dependencies_of_node(&class.node())
         .into_iter()
         .flatten()
-        .filter_map(|(target, kind)| match (kind, target) {
-            (EdgeKind::Extends, NodeId::Symbol { file, symbol, .. }) => {
-                Some((file.as_ref(), &**symbol))
-            }
-            _ => None,
-        })
+        .filter(|(_, kind)| *kind == EdgeKind::Extends)
+        .filter_map(|(target, _)| target.as_symbol())
 }
 
 /// Marks every class whose `extends` chain reaches a built-in error. A base
