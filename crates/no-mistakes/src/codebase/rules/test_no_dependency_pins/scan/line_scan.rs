@@ -1,6 +1,15 @@
 use super::synthetic::is_synthetic;
 use super::{finding, CompiledPattern, RuleFinding};
-use regex::Match;
+use regex::{Match, Regex};
+use std::sync::LazyLock;
+
+/// The text before a pin when the pin ends a `uses:` value: the key (bare,
+/// quoted, or escaped), an optional opening quote, then `owner/` path
+/// components. The key may follow a JavaScript `\n`/`\r`/`\t` escape.
+static USES_VALUE_PREFIX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?:^|\\[nrt]|[^A-Za-z0-9_-])uses\\?["']?\s*:\s*\\?["']?(?:[\w.-]+/)*$"#)
+        .expect("uses value prefix regex")
+});
 
 /// A finding and, for a line-scanned pin, the byte span it covers in the file.
 pub(super) struct Found {
@@ -48,7 +57,9 @@ pub(super) fn scan_lines(
 /// A pattern that needs a line context knows what its text is, so its pin owns
 /// that span. A context-free pin overlapping it is a second reading of the same
 /// text (the action ref `core/postgresql@18` inside the Homebrew formula
-/// `homebrew/core/postgresql@18`) and is dropped.
+/// `homebrew/core/postgresql@18`) and is dropped. A pin that is not claimed in
+/// the first place (see `builtin_pins`) leaves the span to the context-free
+/// pin.
 pub(super) fn into_findings(found: Vec<Found>) -> Vec<RuleFinding> {
     let owned: Vec<(usize, usize)> = found
         .iter()
@@ -84,6 +95,12 @@ fn custom_pins<'l>(line: &'l str, pattern: &CompiledPattern) -> Vec<Match<'l>> {
 ///
 /// The search resumes at the end of the pin rather than the end of the match,
 /// so the separator that closed one pin can open the next.
+///
+/// A pattern with a line context never claims the tail of a `uses:` value: that
+/// text is an action ref, and `uses: Homebrew/actions/setup-homebrew@4` is not
+/// the formula `setup-homebrew@4` even though the line mentions Homebrew. A
+/// tap-qualified formula (`brew install homebrew/core/postgresql@18`) has no
+/// `uses:` key in front of it and is still claimed.
 fn builtin_pins<'l>(line: &'l str, pattern: &CompiledPattern) -> Vec<Match<'l>> {
     if pattern
         .line_context
@@ -100,11 +117,19 @@ fn builtin_pins<'l>(line: &'l str, pattern: &CompiledPattern) -> Vec<Match<'l>> 
             .or_else(|| captures.get(0))
             .expect("a regex match has a full match");
         at = pin.end();
-        if !follows_at(line, pattern, &pin) && !is_synthetic(pin.as_str()) {
+        if !follows_at(line, pattern, &pin)
+            && !is_synthetic(pin.as_str())
+            && !ends_uses_value(line, pattern, &pin)
+        {
             pins.push(pin);
         }
     }
     pins
+}
+
+/// True for a pin of a line-context pattern that ends a `uses:` value.
+fn ends_uses_value(line: &str, pattern: &CompiledPattern, pin: &Match<'_>) -> bool {
+    pattern.line_context.is_some() && USES_VALUE_PREFIX.is_match(&line[..pin.start()])
 }
 
 fn follows_at(line: &str, pattern: &CompiledPattern, matched: &Match<'_>) -> bool {

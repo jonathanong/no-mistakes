@@ -119,9 +119,12 @@ only the pin (not the surrounding line), and reports several pins per line.
   version. A tap-qualified formula (`brew install homebrew/core/postgresql@18`)
   is one finding for `postgresql@18`, not also an `exact action ref` for
   `core/postgresql@18`: the Homebrew pattern owns its text and a context-free pin
-  overlapping it is dropped. A real action ref on a Homebrew line
-  (`uses: Homebrew/actions/setup-homebrew@<sha>`) is still reported. Not `pnpm@12`
-  or `undici@1.0.1` without that context.
+  overlapping it is dropped. The tail of a `uses:` value is never a formula, so an
+  action ref on a Homebrew line is reported as an `exact action ref`:
+  `uses: Homebrew/actions/setup-homebrew@4` is the action ref
+  `actions/setup-homebrew@4` and never the formula `setup-homebrew@4`, however
+  the value is quoted or keyed (`uses: '...'`, `"uses": "..."`, `- uses: ...`).
+  Not `pnpm@12` or `undici@1.0.1` without that context.
 - `versioned runner label`: `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15`,
   `macos-15-intel`, `windows-2025`, and `windows-11-arm`. Not `ubuntu-latest`,
   `ubuntu-slim`, `macos-latest`, or `windows-1252`.

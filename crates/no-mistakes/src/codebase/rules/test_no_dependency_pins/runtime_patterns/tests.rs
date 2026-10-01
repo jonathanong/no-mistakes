@@ -3,6 +3,8 @@ use super::super::{check_source, compile_options, Options};
 use super::RUNTIME_PATTERNS;
 use regex::Regex;
 
+mod homebrew_tests;
+
 fn pins(line: &str) -> Vec<String> {
     let options = compile_options(&Options::default()).unwrap();
     check_source("src/app.test.mts", line, &options)
@@ -206,97 +208,6 @@ fn setup_versions_are_pins_in_every_quoting_style() {
     ] {
         assert_pins(line, &[expected]);
     }
-}
-
-#[test]
-fn homebrew_formulae_need_homebrew_context() {
-    for line in [
-        "brew install postgresql@18",
-        "brew services start postgresql@18",
-        "brew install --cask temurin@21",
-        "/opt/homebrew/opt/postgresql@18/bin",
-        "/usr/local/Cellar/postgresql@18/18.1",
-        "Homebrew formula postgresql@18.",
-    ] {
-        assert!(
-            pins(line)
-                .iter()
-                .any(|pin| pin.starts_with("postgresql@") || pin.starts_with("temurin@")),
-            "{line}"
-        );
-    }
-    for line in [
-        "undici@1.0.1",
-        "pnpm@12",
-        "packageManager: 'pnpm@12.0.0'",
-        "brewery@2",
-        "brew install postgresql",
-        "brew services start postgresql@\\d+",
-    ] {
-        assert!(pins(line).is_empty(), "{line}");
-    }
-}
-
-#[test]
-fn a_homebrew_formula_version_has_at_most_two_components() {
-    // `foo@1.2.3` is not a formula shape; it must not be cut down to `foo@1.2`.
-    for line in [
-        "brew install foo@1.2.3",
-        "brew install postgresql@18.1.2",
-        "brew install foo@1.2.3.4",
-    ] {
-        assert!(pins(line).is_empty(), "{line}: {:?}", pins(line));
-    }
-    // A dot that ends a sentence still closes the formula.
-    for (line, expected) in [
-        ("brew install foo@18.", "foo@18"),
-        ("brew install openssl@3.5.", "openssl@3.5"),
-        ("Run brew install foo@18. Then continue.", "foo@18"),
-        ("brew install foo@1.2, brew install bar@3", "foo@1.2"),
-    ] {
-        assert_eq!(pins(line).first().map(String::as_str), Some(expected));
-    }
-}
-
-fn readings(line: &str) -> Vec<(String, String)> {
-    let options = compile_options(&Options::default()).unwrap();
-    check_source("src/app.test.mts", line, &options)
-        .into_iter()
-        .filter_map(|finding| Some((finding.target?, finding.import?)))
-        .collect()
-}
-
-#[test]
-fn a_homebrew_formula_is_reported_once_not_also_as_an_action_ref() {
-    // The action-ref pattern reads `core/postgresql@18` and `opt/postgresql@18`
-    // as `owner/repo@ref`; the Homebrew pattern owns that text.
-    let formula = ("versioned Homebrew formula", "postgresql@18");
-    for line in [
-        "brew install homebrew/core/postgresql@18",
-        "brew install homebrew/core/postgresql@18.",
-        "/opt/homebrew/opt/postgresql@18/bin",
-        "/usr/local/Cellar/postgresql@18/18.1",
-    ] {
-        let expected = vec![(formula.0.to_string(), formula.1.to_string())];
-        assert_eq!(readings(line), expected, "{line}");
-    }
-}
-
-#[test]
-fn an_action_ref_on_a_homebrew_line_is_still_reported() {
-    // Dropping action refs on Homebrew lines would hide this pinned action.
-    let sha = "de0fac2e4500dabe0009e67214ff5f5447ce83dd";
-    let line = format!("uses: Homebrew/actions/setup-homebrew@{sha}");
-    assert_eq!(
-        readings(&line),
-        [(
-            "exact action ref".to_string(),
-            format!("actions/setup-homebrew@{sha}")
-        )]
-    );
-    // A formula and an unrelated action ref on one line are both reported.
-    let both = readings("brew install foo@18 && uses: actions/checkout@v4");
-    assert_eq!(both.len(), 2, "{both:?}");
 }
 
 #[test]
