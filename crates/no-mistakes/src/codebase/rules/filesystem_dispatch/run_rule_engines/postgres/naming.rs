@@ -37,6 +37,40 @@ pub(super) fn finite_text(
     }
 }
 
+pub(super) fn status_lifecycle(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    match facts {
+        Some(facts) => {
+            postgres_status_with_lifecycle_timestamps::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            )
+        }
+        None => postgres_status_with_lifecycle_timestamps::check_with_files_and_sources(
+            root, config, files, sources,
+        ),
+    }
+}
+
+pub(super) fn table_shape(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    match facts {
+        Some(facts) => postgres_table_shape::check_with_files_sources_and_facts(
+            root, config, files, sources, facts,
+        ),
+        None => postgres_table_shape::check_with_files_and_sources(root, config, files, sources),
+    }
+}
+
 pub(super) fn object_naming(
     root: &Path,
     config: &NoMistakesConfig,
