@@ -1,6 +1,9 @@
 mod refs;
 mod sets;
 
+#[cfg(test)]
+mod tests;
+
 use crate::codebase::postgres::idents::unwrap_expr;
 use sqlparser::ast::{BinaryOperator, Expr};
 use std::collections::BTreeSet;
