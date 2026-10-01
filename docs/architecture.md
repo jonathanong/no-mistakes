@@ -339,8 +339,10 @@ Each shard's two-minute step limit cannot reliably absorb an apt install of
 CodSpeed's instruments (valgrind and `libc6-dbg`). The action's instrument cache
 key omits libc, so after a runner image updates libc6 an exact-key hit restores
 debug symbols that no longer match and every run reinstalls. The workflow keys
-the cache directory by the installed libc6 version so an update saves a fresh
-entry.
+the cache directory by the installed libc6 version, so the first run after an
+update saves a fresh entry. That entry matches only while the Ubuntu archive's
+`libc6-dbg` is the image's libc6 version; until images catch up to a newer
+archive release, runs may still reinstall.
 
 ### Interpreting CodSpeed results
 
