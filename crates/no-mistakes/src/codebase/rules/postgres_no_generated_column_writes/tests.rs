@@ -1,3 +1,5 @@
+mod trigger;
+
 use super::*;
 use crate::config::v2::{
     schema::{RuleDef, RuleScope},

@@ -3,7 +3,7 @@ use super::RuleFinding;
 use crate::codebase::postgres::{EmbeddedSqlOptions, PostgresSchemaOptions};
 use crate::codebase::ts_source::{discover_files, relative_slash_path};
 use crate::config::v2::NoMistakesConfig;
-use anyhow::Result;
+use anyhow::{bail, Result};
 use rayon::prelude::*;
 use serde::Deserialize;
 use std::path::{Path, PathBuf};
@@ -23,6 +23,7 @@ pub(crate) struct Options {
     pub(crate) import_specifier: Option<String>,
     pub(crate) executor_names: Vec<String>,
     pub(crate) extra_generated_columns: Vec<ExtraGeneratedColumn>,
+    pub(crate) trigger_maintained_columns: Vec<String>,
 }
 
 #[derive(Deserialize, Default, Clone)]
@@ -37,6 +38,7 @@ struct CompiledOptions {
     schema: PostgresSchemaOptions,
     embedded: EmbeddedSqlOptions,
     extra_generated_columns: Vec<ExtraGeneratedColumn>,
+    trigger_maintained_columns: Vec<String>,
 }
 
 impl CompiledOptions {
@@ -107,7 +109,26 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
         },
         embedded: embedded_options(opts),
         extra_generated_columns: opts.extra_generated_columns.clone(),
+        trigger_maintained_columns: trigger_columns(&opts.trigger_maintained_columns)?,
     })
+}
+
+fn trigger_columns(values: &[String]) -> Result<Vec<String>> {
+    let mut names = Vec::new();
+    let mut seen = Vec::new();
+    for value in values {
+        let name = value.trim();
+        if name.is_empty() {
+            bail!("{RULE_ID} option triggerMaintainedColumns: empty column name");
+        }
+        let key = name.to_ascii_lowercase();
+        if seen.contains(&key) {
+            bail!("{RULE_ID} option triggerMaintainedColumns: duplicate entry {key}");
+        }
+        seen.push(key);
+        names.push(name.to_string());
+    }
+    Ok(names)
 }
 
 fn embedded_options(opts: &Options) -> EmbeddedSqlOptions {
@@ -137,6 +158,20 @@ fn finding(file: &str, line: usize, table: &str, column: &str) -> RuleFinding {
         message: format!(
             "{file}:{line}: do not write generated column `{table}.{column}`; \
 PostgreSQL computes GENERATED ALWAYS columns — omit it from INSERT/UPDATE and write the source column instead"
+        ),
+        import: Some(format!("{table}.{column}")),
+        target: Some(column.to_string()),
+    }
+}
+
+fn trigger_finding(file: &str, line: usize, table: &str, column: &str) -> RuleFinding {
+    RuleFinding {
+        rule: RULE_ID.to_string(),
+        file: file.to_string(),
+        line,
+        message: format!(
+            "{file}:{line}: do not write trigger-maintained column `{table}.{column}`; \
+it is listed in triggerMaintainedColumns, so the database sets it — remove it from the INSERT/UPDATE"
         ),
         import: Some(format!("{table}.{column}")),
         target: Some(column.to_string()),
