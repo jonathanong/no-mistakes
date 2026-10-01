@@ -1,0 +1,120 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "accounts": {
+      "relationKind": "table",
+      "comment": "customer accounts",
+      "columns": {
+        "display_name": {
+          "dataType": "text",
+          "nullable": true,
+          "ordinalPosition": 2
+        },
+        "id": {
+          "dataType": "uuid",
+          "nullable": false,
+          "comment": "primary key",
+          "ordinalPosition": 1
+        },
+        "is_active": {
+          "dataType": "boolean",
+          "nullable": false,
+          "defaultExpression": "true",
+          "ordinalPosition": 3
+        },
+        "created_at": {
+          "dataType": "timestamp with time zone",
+          "nullable": false,
+          "generated": "VIRTUAL",
+          "generatedExpression": "uuid_extract_timestamp(id)",
+          "ordinalPosition": 4
+        }
+      },
+      "primaryKey": { "columns": ["id"] },
+      "foreignKeys": {
+        "accounts_owner_fk": {
+          "columns": ["owner_id"],
+          "referencedTable": "users",
+          "referencedColumns": ["id"],
+          "onDelete": "SET NULL",
+          "onUpdate": "NO ACTION",
+          "validated": false
+        }
+      },
+      "checkConstraints": {
+        "accounts_active_check": { "definition": "CHECK ((is_active = true))" }
+      },
+      "uniqueConstraints": {
+        "accounts_display_name_key": { "columns": ["display_name"] }
+      },
+      "indexes": {
+        "accounts_pkey": {
+          "accessMethod": "btree",
+          "unique": true,
+          "primary": true,
+          "constraintBacked": true,
+          "valid": true,
+          "ready": true,
+          "keys": [{ "column": "id", "expression": "id" }],
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX accounts_pkey ON accounts USING btree (id)"
+        },
+        "accounts_active_idx": {
+          "accessMethod": "btree",
+          "unique": false,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "keys": [{ "column": "is_active", "expression": "is_active" }],
+          "predicate": "is_active",
+          "definition": "CREATE INDEX accounts_active_idx ON accounts USING btree (is_active) WHERE is_active"
+        },
+        "accounts_display_name_hash": {
+          "accessMethod": "hash",
+          "unique": true,
+          "primary": false,
+          "constraintBacked": false,
+          "valid": true,
+          "ready": true,
+          "keys": [{ "column": "display_name", "expression": "display_name" }],
+          "predicate": null,
+          "definition": "CREATE UNIQUE INDEX accounts_display_name_hash ON accounts USING hash (display_name)"
+        }
+      },
+      "triggers": {
+        "trigger_accounts_touch": {
+          "definition": "CREATE TRIGGER trigger_accounts_touch BEFORE UPDATE OF display_name ON public.accounts FOR EACH ROW EXECUTE FUNCTION fn_touch('updated_at')"
+        }
+      }
+    },
+    "events": {
+      "relationKind": "partitioned table",
+      "primaryKey": null,
+      "physicalPartition": { "key": "RANGE (account_id)" }
+    }
+  },
+  "functions": {
+    "fn_touch": {
+      "definition": "CREATE FUNCTION public.fn_touch() RETURNS trigger LANGUAGE plpgsql AS $fn$\nBEGIN\n  NEW.updated_at = now();\n  RETURN NEW; -- $$\nEND\n$fn$"
+    },
+    "fn_touch(col text)": {
+      "definition": "CREATE FUNCTION public.fn_touch(col text) RETURNS trigger LANGUAGE plpgsql AS $$\nBEGIN\n  RETURN NEW;\nEND\n$$"
+    }
+  },
+  "enums": {
+    "account_plans": { "values": ["free", "pro"] }
+  },
+  "views": {
+    "account_counts": {
+      "materialized": true,
+      "definition": "SELECT count(*) AS n FROM accounts",
+      "comment": null
+    },
+    "active_accounts": {
+      "materialized": false,
+      "definition": "SELECT id, display_name FROM accounts WHERE is_active",
+      "comment": "active accounts"
+    }
+  }
+}

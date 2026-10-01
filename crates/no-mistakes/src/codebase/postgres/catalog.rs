@@ -1,20 +1,36 @@
 use crate::codebase::ts_source::SourceStore;
 use anyhow::{bail, Context, Result};
-use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Component, Path, PathBuf};
 
+mod build;
 mod expressions;
+mod findings;
+mod function;
+mod model;
 mod names;
 mod order;
+mod partition;
 mod resolve;
+mod snapshot;
 #[cfg(test)]
 mod tests;
+mod trigger;
 
 pub use expressions::{
     expression_matches, normalize_expression, order_prefix_matches, parse_postgres_expression,
 };
+pub use findings::{
+    catalog_finding, require_catalog_path, AllowEntry, AllowList, CatalogObjectRef,
+};
+pub use model::{
+    CatalogCheck, CatalogColumn, CatalogEnum, CatalogForeignKey, CatalogFunction, CatalogIndexInfo,
+    CatalogIndexKey, CatalogTable, CatalogTrigger, CatalogUnique, CatalogView, GeneratedKind,
+    PartitionKey, PartitionKeyElement, PartitionStrategy, RelationKind, TriggerEvent,
+    TriggerTiming,
+};
 pub(crate) use order::{canonical_order_keys, order_by_ascending};
+use snapshot::Snapshot;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct CanonicalOrderKey {
@@ -37,63 +53,16 @@ pub enum ResolvedArbiter {
 }
 #[derive(Debug, Clone, Default)]
 pub struct SchemaCatalog {
-    tables: BTreeMap<String, CatalogTable>,
+    tables: BTreeMap<String, ArbiterTable>,
+    model_tables: BTreeMap<String, CatalogTable>,
+    functions: BTreeMap<String, CatalogFunction>,
+    enums: BTreeMap<String, CatalogEnum>,
+    views: BTreeMap<String, CatalogView>,
 }
 #[derive(Debug, Clone, Default)]
-struct CatalogTable {
+struct ArbiterTable {
     indexes: Vec<CanonicalIndex>,
     unique_constraints: BTreeMap<String, Vec<String>>,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "camelCase")]
-struct Snapshot {
-    format_version: u32,
-    #[serde(default)]
-    tables: BTreeMap<String, SnapshotTable>,
-}
-#[derive(Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-struct SnapshotTable {
-    #[serde(default)]
-    indexes: BTreeMap<String, SnapshotIndex>,
-    #[serde(default)]
-    unique_constraints: BTreeMap<String, SnapshotKeyConstraint>,
-}
-#[derive(Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-struct SnapshotKeyConstraint {
-    #[serde(default)]
-    columns: Vec<String>,
-}
-#[derive(Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-struct SnapshotIndex {
-    #[serde(default)]
-    access_method: String,
-    #[serde(default)]
-    unique: bool,
-    #[serde(default)]
-    primary: bool,
-    #[serde(default)]
-    constraint_backed: bool,
-    #[serde(default)]
-    valid: bool,
-    #[serde(default)]
-    ready: bool,
-    #[serde(default)]
-    keys: Vec<SnapshotIndexKey>,
-    predicate: Option<String>,
-}
-#[derive(Deserialize, Default)]
-#[serde(rename_all = "camelCase")]
-struct SnapshotIndexKey {
-    #[serde(default)]
-    expression: String,
-    #[serde(default)]
-    descending: bool,
-    #[serde(default)]
-    nulls_first: bool,
 }
 
 impl SchemaCatalog {
@@ -113,65 +82,31 @@ impl SchemaCatalog {
                 path.display()
             );
         }
-        Ok(Self::from_snapshot(snapshot))
+        Self::from_snapshot(&path.display().to_string(), snapshot)
     }
 
-    fn from_snapshot(snapshot: Snapshot) -> Self {
-        let tables = snapshot
-            .tables
-            .into_iter()
-            .map(|(name, table)| {
-                let indexes = table
-                    .indexes
-                    .into_iter()
-                    .filter_map(|(name, index)| {
-                        ((index.unique || index.primary)
-                            && index.valid
-                            && index.ready
-                            && index.access_method.eq_ignore_ascii_case("btree")
-                            && !index.keys.is_empty())
-                        .then(|| CanonicalIndex {
-                            name,
-                            constraint_backed: index.constraint_backed,
-                            predicate: index.predicate.map(|value| normalize_expression(&value)),
-                            keys: index
-                                .keys
-                                .into_iter()
-                                .filter(|key| !key.expression.is_empty())
-                                .map(|key| CanonicalOrderKey {
-                                    expression: key.expression,
-                                    ascending: !key.descending,
-                                    nulls_first: key.nulls_first,
-                                })
-                                .collect(),
-                        })
-                    })
-                    .filter(|index| !index.keys.is_empty())
-                    .collect();
-                let unique_constraints = table
-                    .unique_constraints
-                    .into_iter()
-                    .map(|(name, constraint)| {
-                        (
-                            names::normalize_identifier(&name),
-                            constraint
-                                .columns
-                                .into_iter()
-                                .map(|column| normalize_expression(&column))
-                                .collect(),
-                        )
-                    })
-                    .collect();
-                (
-                    names::normalize_table_name(&name),
-                    CatalogTable {
-                        indexes,
-                        unique_constraints,
-                    },
-                )
-            })
-            .collect();
-        Self { tables }
+    fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<Self> {
+        build::from_snapshot(path, snapshot)
+    }
+
+    pub fn tables(&self) -> impl Iterator<Item = &CatalogTable> {
+        self.model_tables.values()
+    }
+
+    pub fn table(&self, name: &str) -> Option<&CatalogTable> {
+        self.model_tables.get(name)
+    }
+
+    pub fn functions(&self) -> impl Iterator<Item = &CatalogFunction> {
+        self.functions.values()
+    }
+
+    pub fn enums(&self) -> impl Iterator<Item = &CatalogEnum> {
+        self.enums.values()
+    }
+
+    pub fn views(&self) -> impl Iterator<Item = &CatalogView> {
+        self.views.values()
     }
 }
 

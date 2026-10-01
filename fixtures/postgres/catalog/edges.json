@@ -1,0 +1,123 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "Order": {
+      "relationKind": "table",
+      "columns": {
+        "legacy_id": {
+          "dataType": "integer",
+          "nullable": false,
+          "identity": "always",
+          "ordinalPosition": 1
+        },
+        "cached_name": {
+          "dataType": "text",
+          "nullable": true,
+          "generated": "stored",
+          "generatedExpression": "lower(display_name)",
+          "ordinalPosition": 1
+        },
+        "tags": {
+          "dataType": "text[]",
+          "nullable": true,
+          "ordinalPosition": 2
+        }
+      },
+      "triggers": {
+        "quoted_instead": {
+          "definition": "CREATE TRIGGER quoted_instead INSTEAD OF DELETE ON public.\"Order\" FOR EACH STATEMENT EXECUTE PROCEDURE public.\"fn_X\"('it''s', 'a,b');"
+        },
+        "truncate_row": {
+          "definition": "CREATE TRIGGER truncate_row AFTER TRUNCATE ON public.\"Order\" FOR EACH ROW WHEN ((\"a)\") = ')') EXECUTE FUNCTION fn_trunc()"
+        },
+        "multi": {
+          "definition": "CREATE TRIGGER multi BEFORE INSERT OR UPDATE OF \"Order\", a OR DELETE ON public.\"Order\" FOR EACH ROW EXECUTE FUNCTION public.fn_multi()"
+        },
+        "bare": {
+          "definition": "CREATE TRIGGER bare AFTER INSERT ON public.\"Order\" EXECUTE FUNCTION fn_bare()"
+        },
+        "escaped_ident": {
+          "definition": "CREATE TRIGGER escaped_ident BEFORE UPDATE OF \"a\"\"b\", fn$1 ON public.\"Order\" EXECUTE FUNCTION public.\"fn\"\"x\"()"
+        }
+      }
+    },
+    "events_expr": {
+      "relationKind": "partitioned table",
+      "physicalPartition": { "key": "RANGE (date_trunc('day'::text, created_at), \"Order\")" }
+    },
+    "events_call": {
+      "relationKind": "partitioned table",
+      "physicalPartition": { "key": "RANGE (coalesce('it''s', 'a,b'))" }
+    },
+    "listed": {
+      "relationKind": "partitioned table",
+      "physicalPartition": { "key": "LIST (region)" }
+    },
+    "hashed": {
+      "relationKind": "partitioned table",
+      "physicalPartition": { "key": "hash (id)" }
+    },
+    "multi_key": {
+      "relationKind": "partitioned table",
+      "physicalPartition": { "key": "RANGE (tenant_id, id)" }
+    },
+    "quoted_key": {
+      "relationKind": "partitioned table",
+      "physicalPartition": { "key": "RANGE (\"a\"\"b\")" }
+    },
+    "paren_expr": {
+      "relationKind": "partitioned table",
+      "physicalPartition": { "key": "RANGE ((created_at))" }
+    }
+  },
+  "functions": {
+    "fn_plain": {
+      "definition": "CREATE FUNCTION fn_plain() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$;"
+    },
+    "fn_setof": {
+      "definition": "CREATE FUNCTION fn_setof() RETURNS SETOF integer LANGUAGE sql AS $$ SELECT 1 $$;"
+    },
+    "fn_no_body": {
+      "definition": "CREATE FUNCTION fn_no_body() RETURNS trigger LANGUAGE internal"
+    },
+    "fn_trigger(a uuid, b text)": {
+      "definition": "CREATE FUNCTION fn_trigger(a uuid, b text) RETURNS trigger LANGUAGE plpgsql AS $fn$ BEGIN RETURN NEW; END $fn$"
+    },
+    "fn_cast": {
+      "definition": "CREATE FUNCTION fn_cast() RETURNS text AS CAST LANGUAGE sql AS $$ SELECT 1 $$"
+    },
+    "fn_word": {
+      "definition": "CREATE FUNCTION fn_word() -- xreturns trigger €\nRETURNS integer LANGUAGE sql"
+    },
+    "fn_unclosed": {
+      "definition": "CREATE FUNCTION fn_unclosed() RETURNS integer AS $fn$ BEGIN SELECT 1"
+    },
+    "fn_bare_language": {
+      "definition": "CREATE FUNCTION fn_bare_language() RETURNS integer LANGUAGE"
+    },
+    "returns_trigger_name": {
+      "definition": "CREATE FUNCTION returns_trigger_name() RETURNS integer LANGUAGE sql"
+    },
+    "fn_open(uuid": {
+      "definition": "CREATE FUNCTION fn_open(uuid RETURNS integer AS $tag BEGIN SELECT 1"
+    },
+    "fn_head_as": {
+      "definition": "AS $$z$$"
+    },
+    "fn_head_language": {
+      "definition": "LANGUAGE sql"
+    },
+    "fn_returns_only": {
+      "definition": "RETURNS"
+    },
+    "fn_trigger_word": {
+      "definition": "RETURNS trigger_fn"
+    },
+    "fn_returns_at_start": {
+      "definition": "RETURNS trigger"
+    },
+    "fn_aside": {
+      "definition": "CREATE FUNCTION fn_aside() aside languages sql"
+    }
+  }
+}
