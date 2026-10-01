@@ -17,6 +17,7 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
                 || *id == POSTGRES_COLUMN_REQUIRES_TRIGGER
                 || *id == POSTGRES_REQUIRED_COMMENTS
                 || *id == POSTGRES_DUPLICATE_FUNCTION_BODY
+                || *id == POSTGRES_TABLE_SHAPE
             {
                 format!(
                     "  - rule: {id}\n    scope: repository\n    options:\n      schemaCatalogPath: schema.json\n"

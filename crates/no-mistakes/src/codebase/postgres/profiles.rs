@@ -22,6 +22,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-lock-ordering",
     "postgres-required-comments",
     "postgres-duplicate-function-body",
+    "postgres-table-shape",
 ];
 
 #[derive(Default, Deserialize)]

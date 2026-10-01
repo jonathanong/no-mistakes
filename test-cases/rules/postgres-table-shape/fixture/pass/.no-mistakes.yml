@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-table-shape
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      shapes:
+        - name: revision-history
+          tablePattern: '_revisions$'

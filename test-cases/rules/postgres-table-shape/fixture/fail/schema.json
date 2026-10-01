@@ -1,0 +1,15 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "order_history": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "nullable": false,
+          "ordinalPosition": 1,
+          "dataType": "uuid"
+        }
+      }
+    }
+  }
+}
