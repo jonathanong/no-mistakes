@@ -87,4 +87,56 @@ fn language_and_body_ignore_headers_and_keep_atomic_sql() {
         "CREATE FUNCTION n() RETURNS int LANGUAGE sql /* outer /* inner */ AS $$fake$$ */ AS $$ SELECT 7 $$",
     );
     assert_eq!(nested_comment.body.as_deref(), Some(" SELECT 7 "));
+
+    let positional = function_from_definition(
+        "p(int)",
+        "CREATE FUNCTION p(n int DEFAULT $1) RETURNS int LANGUAGE sql AS $$ SELECT 2 $$",
+    );
+    assert_eq!(positional.body.as_deref(), Some(" SELECT 2 "));
+
+    let escaped_default = function_from_definition(
+        "d(text)",
+        "CREATE FUNCTION d(note text DEFAULT E'it\\'s AS $$fake$$') RETURNS int LANGUAGE sql AS $$ SELECT 8 $$",
+    );
+    assert_eq!(escaped_default.body.as_deref(), Some(" SELECT 8 "));
+    assert_eq!(
+        function_from_definition(
+            "arr()",
+            "CREATE FUNCTION arr() RETURNS integer[] LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .return_contract,
+        "integer[]"
+    );
+    assert_eq!(
+        function_from_definition(
+            "safe()",
+            "CREATE FUNCTION safe() RETURNS int LANGUAGE sql PARALLEL SAFE AS $$ SELECT 1 $$",
+        )
+        .parallel,
+        "safe"
+    );
+    assert_eq!(
+        function_from_definition(
+            "plain()",
+            "CREATE FUNCTION plain() RETURNS int LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .parallel,
+        "unsafe"
+    );
+    assert_eq!(
+        function_from_definition(
+            "limited()",
+            "CREATE FUNCTION limited() RETURNS int LANGUAGE sql PARALLEL RESTRICTED AS $$ SELECT 1 $$",
+        )
+        .parallel,
+        "restricted"
+    );
+    assert_eq!(
+        function_from_definition(
+            "marked()",
+            "CREATE FUNCTION marked() RETURNS int LANGUAGE sql PARALLEL SAFE PARALLEL UNSAFE AS $$ SELECT 1 $$",
+        )
+        .parallel,
+        "unsafe"
+    );
 }

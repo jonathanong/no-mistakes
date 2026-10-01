@@ -144,11 +144,19 @@ fn unescape_escape_string(inner: &str) -> String {
 }
 
 pub(super) fn opening_dollar(definition: &str, index: usize) -> Option<(String, usize)> {
+    if let Some(before) = definition[..index].chars().next_back() {
+        if before.is_alphanumeric() || before == '_' {
+            return None;
+        }
+    }
     let rest = definition[index..].strip_prefix('$')?;
     let end = rest.find('$')?;
     let tag = &rest[..end];
     let valid = tag.is_empty()
-        || (tag.chars().next().is_some_and(|c| c.is_alphabetic() || c == '_')
+        || (tag
+            .chars()
+            .next()
+            .is_some_and(|c| c.is_alphabetic() || c == '_')
             && tag.chars().all(|c| c.is_alphanumeric() || c == '_'));
     valid.then(|| (tag.to_string(), index + end + 2))
 }
@@ -157,7 +165,7 @@ fn quoted_sql_body(definition: &str, cursor: usize) -> Option<(String, usize, us
     if !definition[cursor..].starts_with('\'') {
         return None;
     }
-    let end = super::function_body::skip_quoted(definition, cursor, '\'');
+    let end = super::function_comment::skip_quoted(definition, cursor, '\'');
     if end <= cursor + 1 || definition.as_bytes().get(end - 1) != Some(&b'\'') {
         return None;
     }

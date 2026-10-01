@@ -129,7 +129,7 @@ pub(super) fn language_name(definition: &str, mut cursor: usize) -> Option<Strin
     let rest = definition.get(cursor..)?;
     if rest.starts_with('\'') || rest.starts_with('"') {
         let quote = rest.chars().next()?;
-        let end = skip_quoted(definition, cursor, quote);
+        let end = super::function_comment::skip_quoted(definition, cursor, quote);
         let inner =
             definition.get(cursor + quote.len_utf8()..end.saturating_sub(quote.len_utf8()))?;
         return Some(if quote == '"' {
@@ -156,28 +156,23 @@ fn skip_ignored(definition: &str, index: usize) -> Option<usize> {
         ));
     }
     let quote = rest.chars().next()?;
-    if quote == '\'' || quote == '"' {
-        return Some(skip_quoted(definition, index, quote));
+    if quote == '\'' {
+        if let Some(end) = super::function_comment::skip_escape_string(definition, index) {
+            return Some(end);
+        }
+        return Some(super::function_comment::skip_quoted(
+            definition, index, quote,
+        ));
+    }
+    if quote == '"' {
+        return Some(super::function_comment::skip_quoted(
+            definition, index, quote,
+        ));
     }
     if quote == '$' {
         return skip_dollar_body(definition, index);
     }
     None
-}
-
-pub(super) fn skip_quoted(definition: &str, index: usize, quote: char) -> usize {
-    let mut chars = definition[index + quote.len_utf8()..].char_indices();
-    while let Some((offset, character)) = chars.next() {
-        if character == quote {
-            let next = chars.clone().next();
-            if next.is_some_and(|(_, doubled)| doubled == quote) {
-                chars.next();
-                continue;
-            }
-            return index + quote.len_utf8() + offset + quote.len_utf8();
-        }
-    }
-    definition.len()
 }
 
 pub(super) fn is_word_at(text: &str, index: usize, word: &str) -> bool {

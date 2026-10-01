@@ -155,6 +155,7 @@ pub struct CatalogFunction {
     pub body_span: Option<(usize, usize)>,
     pub null_input: String,
     pub security: String,
+    pub parallel: String,
     pub volatility: String,
     pub return_contract: String,
 }

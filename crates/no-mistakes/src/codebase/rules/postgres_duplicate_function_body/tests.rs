@@ -451,6 +451,18 @@ fn security_definer_is_not_the_same_copy_as_invoker() {
 }
 
 #[test]
+fn array_parallel_and_escape_defaults_stay_apart() {
+    let arrays = messages("schemaCatalogPath: arrays.json\n").join("\n");
+    assert!(arrays.contains("function:fn_int:"), "{arrays}");
+    assert!(!arrays.contains("function:fn_array:"));
+    let parallel = messages("schemaCatalogPath: parallel.json\n").join("\n");
+    assert!(parallel.contains("function:fn_safe:"), "{parallel}");
+    assert!(!parallel.contains("function:fn_unsafe:"));
+    let escaped = messages("schemaCatalogPath: escape-default.json\n").join("\n");
+    assert!(escaped.is_empty(), "{escaped}");
+}
+
+#[test]
 fn different_search_paths_are_not_the_same_copy() {
     let joined = messages("schemaCatalogPath: search-path.json\n").join("\n");
     assert!(joined.contains("function:fn_tenant_a:"), "{joined}");

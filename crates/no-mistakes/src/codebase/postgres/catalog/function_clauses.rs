@@ -2,6 +2,7 @@ pub(super) struct HeaderModes {
     pub(super) null_input: String,
     pub(super) volatility: String,
     pub(super) security: String,
+    pub(super) parallel: String,
     pub(super) return_contract: String,
 }
 
@@ -10,6 +11,7 @@ pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> He
     let mut null_input = "called";
     let mut volatility = "volatile";
     let mut security = "invoker";
+    let mut parallel = "unsafe";
     for index in 0..words.len() {
         match words[index].as_str() {
             "strict" => null_input = "strict",
@@ -29,11 +31,19 @@ pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> He
         } else if phrase_at(&words, index, &["security", "invoker"]) {
             security = "invoker";
         }
+        if phrase_at(&words, index, &["parallel", "restricted"]) {
+            parallel = "restricted";
+        } else if phrase_at(&words, index, &["parallel", "unsafe"]) {
+            parallel = "unsafe";
+        } else if phrase_at(&words, index, &["parallel", "safe"]) {
+            parallel = "safe";
+        }
     }
     HeaderModes {
         null_input: null_input.to_string(),
         volatility: volatility.to_string(),
         security: security.to_string(),
+        parallel: parallel.to_string(),
         return_contract: return_contract(&words),
     }
 }
@@ -110,7 +120,14 @@ fn words_outside_literals(text: &str) -> Vec<String> {
         let Some(character) = text[index..].chars().next() else {
             break;
         };
-        if character.is_ascii_alphanumeric() || character == '_' {
+        if character == '[' || character == ']' {
+            push_word(&mut words, &mut current);
+            if let Some(last) = words.last_mut() {
+                last.push(character);
+            } else {
+                words.push(character.to_string());
+            }
+        } else if character.is_ascii_alphanumeric() || character == '_' {
             current.push(character.to_ascii_lowercase());
         } else {
             push_word(&mut words, &mut current);

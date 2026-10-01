@@ -73,7 +73,10 @@ not match. The body is located by its delimiter, so an earlier copy of the
 body text does not hide those clauses. `STRICT` and `RETURNS NULL ON NULL INPUT`
 are a separate group from `CALLED ON NULL INPUT` and the default. `IMMUTABLE`,
 `STABLE`, and `VOLATILE` are separate groups, and so are different return
-contracts. Names before `=>` or `:=` stay distinct. `AS E'...'` is a body, and adjacent string literals are one body.
+contracts, including `integer` versus `integer[]`. `PARALLEL SAFE`,
+`PARALLEL RESTRICTED`, and the default `PARALLEL UNSAFE` are separate groups.
+A dollar-quote tag is empty or an identifier, and `$` inside an identifier is
+not a quote. An escape-string default does not hide the real body. Names before `=>` or `:=` stay distinct. `AS E'...'` is a body, and adjacent string literals are one body.
 `LANGUAGE SQL RETURN expression` is a body. `LANGUAGE` after `BEGIN ATOMIC`
 is the function language, not a word in the body. A comment or literal that
 says `SECURITY DEFINER` does not make the function a definer. Quoted
