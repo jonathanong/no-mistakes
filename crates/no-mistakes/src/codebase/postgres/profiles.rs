@@ -16,8 +16,11 @@ pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] =
 /// Schema-only rules append their ids here. This is not an alias of
 /// [`PREPARED_EMBEDDED_SQL_RULE_IDS`].
 #[doc(hidden)]
-pub const SCHEMA_CATALOG_RULE_IDS: &[&str] =
-    &["postgres-conflict-ordering", "postgres-lock-ordering"];
+pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
+    "postgres-column-requires-trigger",
+    "postgres-conflict-ordering",
+    "postgres-lock-ordering",
+];
 
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]

@@ -23,7 +23,7 @@ impl<'a> Cursor<'a> {
         if end == 0 || !is_ident_start(rest.chars().next().unwrap()) {
             return Err("expected identifier".to_string());
         }
-        let name = rest[..end].to_string();
+        let name = rest[..end].to_ascii_lowercase();
         self.index += end;
         Ok(name)
     }

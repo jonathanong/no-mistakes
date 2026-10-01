@@ -184,3 +184,17 @@ fn partition_parser_rejects_syntax_and_keeps_trailing_quoted_text_as_an_expressi
         vec![PartitionKeyElement::Expression("$id".to_string())]
     );
 }
+
+#[test]
+fn trigger_function_folds_unquoted_names_and_keeps_quoted_case() {
+    let folded = parse_trigger(
+        "CREATE TRIGGER t BEFORE UPDATE ON t FOR EACH ROW EXECUTE FUNCTION public.Fn_Touch()",
+    )
+    .unwrap();
+    assert_eq!(folded.function, "fn_touch");
+    let quoted = parse_trigger(
+        "CREATE TRIGGER t BEFORE UPDATE ON t FOR EACH ROW EXECUTE FUNCTION public.\"Touch\"()",
+    )
+    .unwrap();
+    assert_eq!(quoted.function, "Touch");
+}

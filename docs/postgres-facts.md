@@ -5,7 +5,8 @@ work. Check rules consume these facts instead of re-parsing SQL or
 TypeScript.
 
 These extractors are library APIs. There is no CLI command or N-API dump.
-`postgres-conflict-ordering`, `postgres-lock-ordering`, `postgres-no-offset`,
+`postgres-conflict-ordering`, `postgres-lock-ordering`,
+`postgres-column-requires-trigger`, `postgres-no-offset`,
 `postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`,
@@ -220,7 +221,11 @@ instead of re-parsing SQL with a private parser. `postgres-conflict-ordering`
 also consumes request-prepared embedded-SQL facts, then resolves its conflict
 arbiter against the configured PostgreSQL schema snapshot. Distinct executor
 configurations and catalog paths are prepared once per request and reused by
-every rule application that selects them.
+every rule application that selects them. `postgres-column-requires-trigger`
+reads column names and trigger definitions from the same schema catalog.
+Trigger matching compares the unqualified function, timing, event subset, and
+row-ness. Snapshot findings use `table:<name>` object refs and `allow`
+entries.
 
 `analyze_conflict_inserts(sql)` exposes the same structured SQL projection to
 Rust callers as `SqlConflictInsertFact`, `SqlConflictTarget`, and
@@ -287,9 +292,11 @@ are skipped. Events are separated by `OR`. `WHEN (...)` keeps its text without
 the outer parentheses.
 Arguments are single-quoted SQL literals (`''` is an escaped quote, and a
 comma inside quotes does not split). The function name drops its schema
-qualifier and double quotes (`public."fn_X"` becomes `fn_X`).
+qualifier. An unquoted name folds to lowercase (`public.Fn_Touch` becomes
+`fn_touch`). A quoted name keeps its case and loses the quotes
+(`public."Touch"` becomes `Touch`).
 `CatalogTrigger::matches(function, timing, events, for_each_row)` is true
-when the unqualified function, timing, and row-ness are equal and `events`
+when that stored function, timing, and row-ness are equal and `events`
 is a subset of the trigger's events.
 
 A function object carries `definition`. `name` is the snapshot key up to the

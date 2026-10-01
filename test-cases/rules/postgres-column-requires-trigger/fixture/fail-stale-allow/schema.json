@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "orders": {
+      "relationKind": "table",
+      "columns": {
+        "updated_at": { "type": "timestamp with time zone", "nullable": false, "ordinalPosition": 1 }
+      },
+      "triggers": {
+        "trigger_orders_touch": "CREATE TRIGGER trigger_orders_touch BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+      }
+    }
+  }
+}

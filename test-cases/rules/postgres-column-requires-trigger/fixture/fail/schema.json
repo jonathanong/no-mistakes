@@ -1,0 +1,11 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "orders": {
+      "relationKind": "table",
+      "columns": {
+        "updated_at": { "type": "timestamp with time zone", "nullable": false, "ordinalPosition": 1 }
+      }
+    }
+  }
+}

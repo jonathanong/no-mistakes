@@ -1,0 +1,91 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "orders": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "updated_at": { "type": "timestamp with time zone", "nullable": false, "ordinalPosition": 2 }
+      },
+      "triggers": {
+        "trigger_orders_touch": "CREATE TRIGGER trigger_orders_touch BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION public.fn_touch_updated_at()"
+      }
+    },
+    "order_events": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 }
+      }
+    },
+    "invoices": {
+      "relationKind": "table",
+      "columns": {
+        "updated_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 1 }
+      },
+      "triggers": {
+        "trigger_invoices_touch": "CREATE TRIGGER trigger_invoices_touch BEFORE INSERT OR UPDATE ON public.invoices FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+      }
+    },
+    "late_orders": {
+      "relationKind": "table",
+      "columns": {
+        "updated_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 1 }
+      },
+      "triggers": {
+        "trigger_late_touch": "CREATE TRIGGER trigger_late_touch AFTER UPDATE ON public.late_orders FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+      }
+    },
+    "statement_orders": {
+      "relationKind": "table",
+      "columns": {
+        "updated_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 1 }
+      },
+      "triggers": {
+        "trigger_statement_touch": "CREATE TRIGGER trigger_statement_touch BEFORE UPDATE ON public.statement_orders FOR EACH STATEMENT EXECUTE FUNCTION fn_touch_updated_at()"
+      }
+    },
+    "partial_orders": {
+      "relationKind": "table",
+      "columns": {
+        "updated_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 1 }
+      },
+      "triggers": {
+        "trigger_orders_touch": "CREATE TRIGGER trigger_orders_touch BEFORE UPDATE OF status ON public.partial_orders FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+      }
+    },
+    "ghosts": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 }
+      },
+      "triggers": {
+        "trigger_orders_touch": "CREATE TRIGGER trigger_orders_touch BEFORE UPDATE ON public.ghosts FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+      }
+    },
+    "both_cols": {
+      "relationKind": "table",
+      "columns": {
+        "updated_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 1 },
+        "deleted_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 }
+      },
+      "triggers": {
+        "trigger_both_touch": "CREATE TRIGGER trigger_both_touch BEFORE UPDATE ON public.both_cols FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+      }
+    },
+    "events": {
+      "relationKind": "partitioned table",
+      "columns": {
+        "updated_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 1 }
+      },
+      "triggers": {
+        "trigger_events_touch": "CREATE TRIGGER trigger_events_touch BEFORE UPDATE ON public.events FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+      }
+    },
+    "import_rows": {
+      "relationKind": "table",
+      "columns": {
+        "updated_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 1 }
+      }
+    }
+  }
+}
