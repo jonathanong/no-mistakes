@@ -104,11 +104,14 @@ fn push(
 fn comment_text(comment: Option<&str>, min_length: u64) -> Option<String> {
     let trimmed = comment.unwrap_or("").trim();
     let length = trimmed.chars().count() as u64;
+    let remedy = format!(
+        " Add COMMENT ON {{target}} with at least {min_length} characters so agents know what the object is for."
+    );
     if length == 0 {
-        Some("{subject} has no COMMENT ON {target}".to_string())
+        Some(format!("{{subject}} has no COMMENT ON {{target}}.{remedy}"))
     } else if length < min_length {
         Some(format!(
-            "{{subject}} comment is shorter than {min_length} characters"
+            "{{subject}} comment is shorter than {min_length} characters.{remedy}"
         ))
     } else {
         None

@@ -35,7 +35,8 @@ counts as missing. `table` includes partitioned tables, and a column comment
 recorded on the partitioned parent counts.
 
 - `table:<name>`: `table has no COMMENT ON TABLE`, or
-  `table comment is shorter than <minLength> characters`.
+  `table comment is shorter than <minLength> characters`. The finding also
+  says to add `COMMENT ON` with at least `minLength` characters.
 - `column:<table>.<column>`: `column has no COMMENT ON COLUMN`, or
   `column comment is shorter than <minLength> characters`.
 - `view:<name>`: `view has no COMMENT ON VIEW`, or
@@ -54,7 +55,9 @@ when a pattern selected it.
 list, an unknown value, or a duplicate value is a configuration error.
 `columnNamePatterns` and `exemptColumnNamePatterns` default to `[]`. An
 invalid regex is a configuration error. `minLength` defaults to `1` and must
-be at least 1. `allow` defaults to `[]`.
+be at least 1. `allow` defaults to `[]`. `include`, `exclude`, and `projects`
+apply to the schema catalog path. An application whose filters miss that path
+reports nothing for it.
 
 ## Valid example
 

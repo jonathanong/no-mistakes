@@ -215,8 +215,18 @@ fn option_errors_name_the_field() {
 }
 
 #[test]
+fn include_that_misses_the_catalog_reports_nothing() {
+    let mut compiled = config("schemaCatalogPath: schema.json\nobjects: [table]\n");
+    compiled.rules[0].include = vec!["services/api/**".to_string()];
+    let root = fixture();
+    let findings = check_with_files(&root, &compiled, &[root.join("schema.json")]).unwrap();
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn finding_text_helpers_cover_each_listed_sentence() {
     let body = texts(ALL);
+    let remedy = " Add COMMENT ON ";
     for text in [
         "table has no COMMENT ON TABLE",
         "table comment is shorter than 10 characters",
@@ -224,6 +234,10 @@ fn finding_text_helpers_cover_each_listed_sentence() {
         "view has no COMMENT ON VIEW",
         "materialized view has no COMMENT ON MATERIALIZED VIEW",
     ] {
-        assert!(body.iter().any(|line| line == text), "missing {text}");
+        assert!(
+            body.iter()
+                .any(|line| line.starts_with(text) && line.contains(remedy)),
+            "missing {text} in {body:?}"
+        );
     }
 }
