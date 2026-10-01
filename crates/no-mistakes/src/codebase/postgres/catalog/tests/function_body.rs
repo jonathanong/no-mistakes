@@ -150,6 +150,36 @@ fn language_and_body_ignore_headers_and_keep_atomic_sql() {
         "CREATE FUNCTION coded() RETURNS text LANGUAGE sql AS E'\\x31\\101\\u0041\\U00000042\\q'",
     );
     assert_eq!(coded.body.as_deref(), Some("1AABq"));
+    let atomic_if = function_from_definition(
+        "t()",
+        "CREATE FUNCTION t() RETURNS int LANGUAGE sql BEGIN ATOMIC CREATE TABLE IF NOT EXISTS widgets(id int); SELECT 1; END",
+    );
+    assert!(atomic_if.body.unwrap().contains("SELECT 1"));
+    let if_exists = function_from_definition(
+        "e()",
+        "CREATE FUNCTION e() RETURNS int LANGUAGE sql BEGIN ATOMIC DROP TABLE IF EXISTS widgets; SELECT 2; END",
+    );
+    assert!(if_exists.body.unwrap().contains("SELECT 2"));
+    let if_block = function_from_definition(
+        "b()",
+        "CREATE FUNCTION b() RETURNS int LANGUAGE sql BEGIN ATOMIC IF 1 SELECT 3; END END",
+    );
+    assert!(if_block.body.unwrap().contains("SELECT 3"));
+    let path_security = function_from_definition(
+        "s()",
+        "CREATE FUNCTION s() RETURNS int LANGUAGE sql SET search_path TO security, definer AS $$ SELECT 1 $$",
+    );
+    assert_eq!(path_security.security, "invoker");
+    let outs = function_from_definition(
+        "o(int,text)",
+        "CREATE FUNCTION o(OUT a int, OUT b text) RETURNS record LANGUAGE sql AS $$ SELECT 1, 2 $$",
+    );
+    assert!(
+        outs.return_contract.contains("out a int"),
+        "{}",
+        outs.return_contract
+    );
+    assert!(outs.return_contract.contains("out b text"));
     assert_eq!(
         function_from_definition(
             "plain()",

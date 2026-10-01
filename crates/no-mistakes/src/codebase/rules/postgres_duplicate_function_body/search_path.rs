@@ -50,6 +50,27 @@ pub(super) fn fold(clause: &str) -> String {
     parts.join(" ")
 }
 
+fn skip_dollar(header: &str, index: usize) -> Option<usize> {
+    let rest = header[index..].strip_prefix('$')?;
+    let end = rest.find('$')?;
+    let tag = &rest[..end];
+    let valid = tag.is_empty()
+        || (tag
+            .chars()
+            .next()
+            .is_some_and(|character| character.is_alphabetic() || character == '_')
+            && tag
+                .chars()
+                .all(|character| character.is_alphanumeric() || character == '_'));
+    if !valid {
+        return None;
+    }
+    let body_start = index + end + 2;
+    let close = format!("${tag}$");
+    let relative = header[body_start..].find(&close)?;
+    Some(body_start + relative + close.len())
+}
+
 fn is_name_byte(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'$'
 }
@@ -87,6 +108,11 @@ fn word_at(text: &str, index: usize, word: &str) -> bool {
 
 fn skip_token(header: &str, index: usize) -> usize {
     let bytes = header.as_bytes();
+    if bytes[index] == b'$' {
+        if let Some(end) = skip_dollar(header, index) {
+            return end;
+        }
+    }
     if bytes[index] == b'\'' || bytes[index] == b'"' {
         return skip_quote(header, index);
     }

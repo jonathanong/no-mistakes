@@ -451,6 +451,24 @@ fn security_definer_is_not_the_same_copy_as_invoker() {
 }
 
 #[test]
+fn positional_parameters_are_not_search_path_quotes() {
+    let path = super::search_path::extract("SET search_path TO $1, tenant_a");
+    assert!(path.contains("tenant_a"), "{path}");
+}
+
+#[test]
+fn clause_words_do_not_leak_into_the_group_key() {
+    let security = messages("schemaCatalogPath: security-path.json\n").join("\n");
+    assert!(security.contains("function:fn_path:"), "{security}");
+    assert!(!security.contains("function:fn_definer:"));
+    let atomic = messages("schemaCatalogPath: atomic-if.json\n").join("\n");
+    assert!(atomic.contains("function:fn_if:"), "{atomic}");
+    assert!(!atomic.contains("function:fn_other:"));
+    assert!(messages("schemaCatalogPath: dollar-path.json\n").is_empty());
+    assert!(messages("schemaCatalogPath: out-params.json\n").is_empty());
+}
+
+#[test]
 fn header_details_keep_distinct_functions_apart() {
     let paths = messages("schemaCatalogPath: newline-path.json\n").join("\n");
     assert!(paths.contains("function:fn_tenant_a:"), "{paths}");

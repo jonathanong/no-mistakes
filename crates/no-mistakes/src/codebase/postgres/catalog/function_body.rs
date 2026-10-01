@@ -93,6 +93,18 @@ pub(super) fn skip_as_gap(definition: &str, mut cursor: usize) -> usize {
     }
 }
 
+fn exists_predicate(definition: &str, index: usize) -> bool {
+    let after_if = skip_as_gap(definition, index + 2);
+    if is_word_at(definition, after_if, "exists") {
+        return true;
+    }
+    if !is_word_at(definition, after_if, "not") {
+        return false;
+    }
+    let after_not = skip_as_gap(definition, after_if + 3);
+    is_word_at(definition, after_not, "exists")
+}
+
 fn matching_end(definition: &str, mut index: usize) -> Option<usize> {
     let mut depth = 1i32;
     while index < definition.len() {
@@ -102,7 +114,7 @@ fn matching_end(definition: &str, mut index: usize) -> Option<usize> {
         }
         if is_word_at(definition, index, "begin")
             || is_word_at(definition, index, "case")
-            || is_word_at(definition, index, "if")
+            || (is_word_at(definition, index, "if") && !exists_predicate(definition, index))
             || is_word_at(definition, index, "loop")
         {
             depth += 1;

@@ -77,14 +77,22 @@ fn return_contract(words: &[String]) -> String {
                 contract.push(words[index].as_str());
                 index += 1;
             }
-            return contract.join(" ");
+            let outputs = super::function_outputs::output_parameters(words);
+            let joined = contract.join(" ");
+            if outputs.is_empty() {
+                return joined;
+            }
+            if joined.is_empty() {
+                return outputs;
+            }
+            return format!("{joined} {outputs}");
         }
         index += 1;
     }
-    String::new()
+    super::function_outputs::output_parameters(words)
 }
 
-fn ends_return(word: &str) -> bool {
+pub(super) fn ends_return(word: &str) -> bool {
     matches!(
         word,
         "language"
@@ -142,7 +150,10 @@ fn words_outside_literals(text: &str) -> Vec<String> {
         let Some(character) = text[index..].chars().next() else {
             break;
         };
-        if character == '[' || character == ']' {
+        if character == ',' {
+            push_word(&mut words, &mut current);
+            words.push(",".to_string());
+        } else if character == '[' || character == ']' {
             push_word(&mut words, &mut current);
             if let Some(last) = words.last_mut() {
                 last.push(character);

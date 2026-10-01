@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_if": {
+      "definition": "CREATE FUNCTION fn_if() RETURNS int LANGUAGE sql BEGIN ATOMIC CREATE TABLE IF NOT EXISTS widgets(id int); SELECT widget; END"
+    },
+    "fn_if_copy": {
+      "definition": "CREATE FUNCTION fn_if_copy() RETURNS int LANGUAGE sql BEGIN ATOMIC CREATE TABLE IF NOT EXISTS widgets(id int); SELECT gadget; END"
+    },
+    "fn_other": {
+      "definition": "CREATE FUNCTION fn_other() RETURNS int LANGUAGE sql BEGIN ATOMIC CREATE TABLE IF NOT EXISTS widgets(id int); SELECT other_fn(); END"
+    }
+  }
+}

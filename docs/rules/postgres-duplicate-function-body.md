@@ -78,7 +78,10 @@ contracts, including `integer` versus `integer[]`. `PARALLEL SAFE`,
 A dollar-quote tag is empty or an identifier, and `$` inside an identifier is
 not a quote. `SET` and `search_path` may be separated by whitespace or a
 comment. Quoted return types keep their case. `LEAKPROOF` is a separate group
-from the default. A kept identifier stays quoted when the function quotes it.
+from the default. `SET search_path TO security, definer` is not `SECURITY
+DEFINER`. `IF NOT EXISTS` does not hide a `BEGIN ATOMIC` body. A dollar-quoted
+default is not a `search_path` clause. `OUT` and `INOUT` parameters stay in
+the return contract. A kept identifier stays quoted when the function quotes it.
 Escape strings decode hex, octal, and Unicode sequences. An escape-string default does not hide the real body. Names before `=>` or `:=` stay distinct. `AS E'...'` is a body, and adjacent string literals are one body.
 `LANGUAGE SQL RETURN expression` is a body. `LANGUAGE` after `BEGIN ATOMIC`
 is the function language, not a word in the body. A comment or literal that
