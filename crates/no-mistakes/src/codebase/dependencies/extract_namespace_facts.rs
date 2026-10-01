@@ -61,8 +61,12 @@ pub struct NamespaceFacts {
 struct NamespaceState {
     facts: NamespaceFacts,
     member_ids: FxHashSet<CallableId>,
-    /// Names whose value uses matter: namespace segments and import locals.
+    /// Names whose value uses matter: namespace segments, the classes declared
+    /// in them, and import locals.
     names: FxHashSet<String>,
+    /// Dotted path of every class declared in a tracked namespace, so a bare
+    /// reference to one inside its namespace body names it.
+    classes: FxHashSet<String>,
     /// Dotted path of each namespace the walk is inside.
     stack: Vec<String>,
     /// Source offsets of identifiers that head a position the graph resolves.

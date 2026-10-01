@@ -84,9 +84,17 @@ might build any of its classes:
   re-exports `Exposed` by name leaves a namespace it does not re-export
   reported, while `export *` or an export the graph cannot follow exposes every
   namespace of that module. A namespace import read through one static member
-  (`lib.version`, or `lib.Errors` handed on as a value) exposes only the export
-  that member names, so reading `lib.version` leaves a namespace `lib` exports
-  reported;
+  (`lib.version`, `lib["version"]`, or `lib.Errors` handed on as a value) exposes
+  only the export that member names, so reading `lib.version` leaves a namespace
+  `lib` exports reported;
+- a class named bare inside the namespace that declares it, or inside a nested
+  namespace of it, and read as a value or handed on through `bind`, `call`, or
+  `apply` (`register(TopicError)`, `const E = TopicError`), the same as
+  `register(Errors.TopicError)` from outside. A read of one of its properties that
+  is not a call (`TopicError.prototype`) counts the same way, because the value
+  it yields can be used to build the class. Building it, extending it, an
+  `instanceof` check, or calling a static guard (`TopicError.is(value)`) is not
+  such a use;
 - a construction that names a member the namespace does not declare
   (`new Errors.Missing()`, or `new Errors.Missing.Factory()` when `Errors` has no
   `Missing` namespace);

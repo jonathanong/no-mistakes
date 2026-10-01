@@ -190,10 +190,13 @@ fn add_namespace_member(
         return;
     };
     let id = CallableId(class.span.start);
+    let path = format!("{namespace}.{}", name.name);
     collector.namespace.member_ids.insert(id);
-    collector.namespace.facts.members.push(NamespaceMember {
-        path: format!("{namespace}.{}", name.name),
-        id,
-        exported,
-    });
+    collector.namespace.names.insert(name.name.to_string());
+    collector.namespace.classes.insert(path.clone());
+    collector
+        .namespace
+        .facts
+        .members
+        .push(NamespaceMember { path, id, exported });
 }

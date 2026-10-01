@@ -405,13 +405,28 @@ fn a_local_in_a_namespace_body_hides_a_declared_namespace_of_its_name() {
     assert!(!dead.namespace_escaped);
 }
 
-/// An import read through one static member (`target.version`) is a use of that
-/// export alone: it escapes the namespace the member names, and no other.
+/// An import read through one static member (`target.version`, or a string
+/// literal for the same member) is a use of that export alone: it escapes the
+/// namespace the member names, and no other.
 #[test]
 fn a_member_read_through_a_namespace_import_escapes_only_that_export() {
     let (_, graph) = build();
     assert!(!escaped_in(&graph, "ReadKeptDead", "ReadKept"));
     assert!(escaped_in(&graph, "ReadHandedDead", "ReadHanded"));
+    assert!(escaped_in(&graph, "ReadLiteralDead", "ReadLiteral"));
+}
+
+/// A class named bare in the body that declares it, or in a namespace nested
+/// there, is a value like `Errors.Dead` would be: handing it on, or binding it,
+/// escapes the namespace. A parameter of the class's name, a guard, and a type
+/// hand nothing on.
+#[test]
+fn a_class_named_bare_in_its_namespace_body_escapes_when_read_as_a_value() {
+    let (_, graph) = build();
+    assert!(escaped_in(&graph, "BareHandedDead", "BareHanded"));
+    assert!(escaped_in(&graph, "BareNestedDead", "BareNested"));
+    assert!(escaped_in(&graph, "BareBoundDead", "BareBound"));
+    assert!(!escaped_in(&graph, "BareKeptDead", "BareKept"));
 }
 
 /// A bare decorator is a call of the member it names, so it is not a value use

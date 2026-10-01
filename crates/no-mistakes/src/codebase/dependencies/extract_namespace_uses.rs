@@ -4,19 +4,40 @@ impl ImportCollector {
     /// on, so the namespace is read as a value. Other static members, such as
     /// the guard `Errors.Dead.is(error)`, leave the class where it is.
     fn mark_call_namespace_head(&mut self, callee: &Expression<'_>) {
-        if !hands_on_member_value(callee) {
+        if !hands_on_member_value(callee) && !self.hands_on_bare_member(callee) {
             self.mark_namespace_head(callee);
         }
     }
 
-    /// `mod.version`: remembers the one member read through a name whose uses
-    /// matter, so that an import read this way is a use of that export alone.
-    fn note_selected_member(&mut self, member: &StaticMemberExpression<'_>) {
-        let Expression::Identifier(object) = &member.object else {
+    /// `Dead.bind(..)` written inside the namespace that declares `Dead`: the
+    /// receiver is the class itself, so it is handed on like `Errors.Dead.bind`.
+    fn hands_on_bare_member(&self, callee: &Expression<'_>) -> bool {
+        let Expression::StaticMemberExpression(member) =
+            crate::codebase::ts_source::unwrap_ts_wrappers(callee)
+        else {
+            return false;
+        };
+        let Expression::Identifier(object) =
+            crate::codebase::ts_source::unwrap_ts_wrappers(&member.object)
+        else {
+            return false;
+        };
+        matches!(member.property.name.as_str(), "bind" | "call" | "apply")
+            && self.namespace.stack.iter().any(|parent| {
+                let path = format!("{parent}.{}", object.name);
+                self.namespace.classes.contains(&path)
+            })
+    }
+
+    /// `mod.version` or `mod['version']`: remembers the one member read through
+    /// a name whose uses matter, so that an import read this way is a use of
+    /// that export alone.
+    fn note_selected_member(&mut self, object: &Expression<'_>, property: &str) {
+        let Expression::Identifier(object) = object else {
             return;
         };
         if self.namespace.names.contains(object.name.as_str()) {
-            let property = member.property.name.to_string();
+            let property = property.to_string();
             self.namespace.selected.insert(object.span.start, property);
         }
     }
@@ -54,13 +75,18 @@ impl ImportCollector {
 
     /// What `name` denotes at this point: the nearest declared namespace of
     /// that name, looking outward from the namespace the walk is inside, else
-    /// an import. A same-named value that is no namespace is none of them.
+    /// an import. A class declared in an enclosing namespace names that
+    /// namespace, which the class handed on as a value reaches. A same-named
+    /// value that is none of them is no use.
     fn namespace_path_of(&self, name: &str) -> Option<String> {
         let declared = &self.namespace.facts.declared;
         for parent in self.namespace.stack.iter().rev() {
             let path = format!("{parent}.{name}");
             if declared.binary_search(&path).is_ok() {
                 return Some(path);
+            }
+            if self.namespace.classes.contains(&path) {
+                return Some(parent.clone());
             }
         }
         let top_level = declared

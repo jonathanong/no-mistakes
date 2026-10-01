@@ -353,9 +353,16 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   module read whole exposes only the namespaces it exports: a barrel that
   re-exports one namespace by name leaves its sibling unescaped, while an
   `export *` or an export the graph cannot follow takes the whole module. A
-  namespace import read through one static member (`target.version`, or
-  `target.Errors` handed on as a value) uses only the export that member names, so
-  a read of `version` leaves the namespaces the module exports unescaped. A name is a
+  namespace import read through one static member (`target.version`,
+  `target["version"]`, or `target.Errors` handed on as a value) uses only the
+  export that member names, so a read of `version` leaves the namespaces the
+  module exports unescaped. A class named bare inside the body that declares it,
+  or inside a nested namespace of it, escapes its namespace when it is read as a
+  value or handed on through `bind`, `call`, or `apply` (`register(Dead)`), the
+  same as `register(Errors.Dead)` would from outside, and so does a property
+  read that is not a call (`Dead.prototype`); built, extended,
+  `instanceof`-checked, or called through any other static method, it is no use.
+  A name is a
   value use only when it resolves to a declared namespace path or an imported
   binding, so a parameter or local that shadows the namespace or its class names
   that binding, and a same-named value elsewhere, are no use. A namespace body is

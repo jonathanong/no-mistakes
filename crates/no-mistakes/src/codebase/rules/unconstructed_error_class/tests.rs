@@ -54,6 +54,8 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             // The leaf and the orphan base; the middle of the chain is satisfied.
             "src/hierarchy.ts:11 Grandchild",
             "src/hierarchy.ts:14 OrphanBase",
+            // A parameter of the class's name, a guard, and a type hand nothing on.
+            "src/namespace-bare-member.ts:28 BareKept.BareKeptDead",
             // A local of a namespace body does not hide an import outside it.
             "src/namespace-body-scope-lib.ts:5 BodyScope.ScopeDead",
             "src/namespace-body-scope-lib.ts:11 BodyVar.VarDead",
@@ -74,7 +76,7 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             "src/namespace-lib.ts:31 Lib.Deep.DeepDead",
             "src/namespace-lib.ts:40 Renamed.RenamedDead",
             // A member read through a namespace import uses that export alone.
-            "src/namespace-member-read-lib.ts:6 ReadKept.ReadKeptDead",
+            "src/namespace-member-read-lib.ts:7 ReadKept.ReadKeptDead",
             "src/namespace-merged.ts:10 Merged.Second",
             "src/namespace-merged.ts:23 Mix.Inner.NestedPart",
             // A barrel read whole exposes only what it re-exports.
@@ -229,8 +231,14 @@ fn a_namespace_that_escapes_is_never_reported() {
         "ViaArgument.ViaArgumentDead",
         "ViaComputed.ViaComputedDead",
         "ViaMember.ViaMemberDead",
-        // The namespace export that a member read through an import names.
+        // The namespace export that a member read through an import names, by
+        // a dot or a string literal.
         "ReadHanded.ReadHandedDead",
+        "ReadLiteral.ReadLiteralDead",
+        // A class named bare in its namespace body, handed on or bound.
+        "BareHanded.BareHandedDead",
+        "BareNested.BareNestedDead",
+        "BareBound.BareBoundDead",
     ] {
         assert!(!targets.contains(&silent), "{silent} was reported");
     }
