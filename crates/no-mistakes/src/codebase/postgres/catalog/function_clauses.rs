@@ -162,7 +162,7 @@ fn words_outside_literals(text: &str) -> Vec<String> {
             } else {
                 words.push(character.to_string());
             }
-        } else if character.is_ascii_alphanumeric() || character == '_' {
+        } else if character.is_alphanumeric() || character == '_' {
             current.push(character.to_ascii_lowercase());
         } else {
             push_word(&mut words, &mut current);

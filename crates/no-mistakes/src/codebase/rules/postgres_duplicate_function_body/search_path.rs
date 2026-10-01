@@ -37,13 +37,13 @@ pub(super) fn fold(clause: &str) -> String {
             index = end;
             continue;
         }
-        if !is_name_byte(bytes[index]) {
-            index += 1;
+        if !name_char_at(clause, index) {
+            index += clause[index..].chars().next().map_or(1, char::len_utf8);
             continue;
         }
         let start = index;
-        while index < clause.len() && is_name_byte(bytes[index]) {
-            index += 1;
+        while index < clause.len() && name_char_at(clause, index) {
+            index += clause[index..].chars().next().map_or(1, char::len_utf8);
         }
         parts.push(clause[start..index].to_ascii_lowercase());
     }
@@ -75,6 +75,14 @@ fn is_name_byte(byte: u8) -> bool {
     byte.is_ascii_alphanumeric() || byte == b'_' || byte == b'$'
 }
 
+fn is_ident_char(character: char) -> bool {
+    character.is_alphanumeric() || character == '_' || character == '$'
+}
+
+fn name_char_at(text: &str, index: usize) -> bool {
+    text[index..].chars().next().is_some_and(is_ident_char)
+}
+
 fn skip_gap(header: &str, mut index: usize) -> usize {
     while index < header.len() {
         if header[index..].starts_with("--") {
@@ -101,9 +109,11 @@ fn word_at(text: &str, index: usize, word: &str) -> bool {
     if !slice.eq_ignore_ascii_case(word) {
         return false;
     }
-    let before = index == 0 || !is_name_byte(text.as_bytes()[index - 1]);
-    let after = text.as_bytes().get(index + word.len());
-    before && after.is_none_or(|byte| !is_name_byte(*byte))
+    let before = index == 0 || !text[..index].chars().next_back().is_some_and(is_ident_char);
+    let after = text
+        .get(index + word.len()..)
+        .and_then(|rest| rest.chars().next());
+    before && after.is_none_or(|character| !is_ident_char(character))
 }
 
 fn skip_token(header: &str, index: usize) -> usize {

@@ -37,6 +37,31 @@ fn parameter_names_do_not_set_volatility() {
 }
 
 #[test]
+fn unicode_return_types_and_search_paths_stay_distinct() {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/duplicate-function-body");
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str("schemaCatalogPath: unicode.json").unwrap(),
+        ..Default::default()
+    });
+    let text = check_with_files(&root, &config, &[root.join("unicode.json")])
+        .unwrap()
+        .into_iter()
+        .map(|finding| finding.message)
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(text.contains("fn_alpha"), "{text}");
+    assert!(text.contains("fn_alpha_copy"), "{text}");
+    assert!(!text.contains("fn_beta"), "{text}");
+    assert!(text.contains("fn_cafe"), "{text}");
+    assert!(text.contains("fn_cafe_copy"), "{text}");
+    assert!(!text.contains("fn_public"), "{text}");
+}
+
+#[test]
 fn search_path_stops_at_volatility_and_skips_noise() {
     let path = search_path::extract(
         "CREATE FUNCTION f() SET work_mem TO x SET search_path TO /* nest /* in */ */ tenant_a -- note\n, \"ten\"\"ant\", $1$ IMMUTABLE",
@@ -50,6 +75,9 @@ fn search_path_stops_at_volatility_and_skips_noise() {
     assert!(!stopped.contains("language"), "{stopped}");
     let commented = search_path::extract("SET -- note\n search_path TO public");
     assert!(commented.contains("public"), "{commented}");
+    let unicode = search_path::extract("SET search_path TO café, public");
+    assert!(unicode.contains("café"), "{unicode}");
+    assert!(unicode.contains("public"), "{unicode}");
 }
 
 #[test]

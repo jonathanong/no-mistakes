@@ -385,4 +385,23 @@ fn parameter_names_are_not_modes_and_defensive_clauses_parse() {
         super::super::function_outputs::after_parameter_list("CREATE FUNCTION f RETURNS int"),
         "CREATE FUNCTION f RETURNS int"
     );
+    let alpha = function_from_definition(
+        "fn_alpha()",
+        "CREATE FUNCTION fn_alpha() RETURNS α LANGUAGE sql AS $$ SELECT 1 $$",
+    );
+    let beta = function_from_definition(
+        "fn_beta()",
+        "CREATE FUNCTION fn_beta() RETURNS β LANGUAGE sql AS $$ SELECT 1 $$",
+    );
+    assert!(
+        alpha.return_contract.contains('α'),
+        "{}",
+        alpha.return_contract
+    );
+    assert!(
+        beta.return_contract.contains('β'),
+        "{}",
+        beta.return_contract
+    );
+    assert_ne!(alpha.return_contract, beta.return_contract);
 }

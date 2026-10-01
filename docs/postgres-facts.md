@@ -311,10 +311,16 @@ A function object carries `definition`. `name` is the snapshot key up to the
 first `(`, and `signature` is the text inside those parentheses. `language`
 is the word after `LANGUAGE`, lowercased. `returns_trigger` is true when the
 definition, before its body, contains `RETURNS trigger` as a word, ignoring
-comments and quoted text. `RETURNS event_trigger` is false, and so is a
-`RETURNS` clause that yields a set of rows. `body` is the text
-between the first `AS $tag$` and its matching closer, including the empty
-`$$` tag. It is absent when there is no dollar-quoted body. Enum objects
+comments and quoted text. An event trigger, or a `RETURNS` clause that yields
+a set of rows, does not set it. An event trigger is recorded on its own.
+`body` is the SQL inside a
+dollar quote (including an empty `$$` tag), a plain or escape string after
+`AS`, a `BEGIN ATOMIC` block, or a `RETURN` expression, and the body's byte
+range is kept with it. Both are absent when no body is found. Null-input
+behavior, security, parallel mode, leakproof, and volatility are stored on
+their own. Those mode words count only after the argument list. The return
+contract keeps the `RETURNS` clause, `OUT` and `INOUT` parameters, and
+Unicode letters in type names. Enum objects
 carry `values`. View objects carry `materialized`, `definition`, and
 `comment`.
 
