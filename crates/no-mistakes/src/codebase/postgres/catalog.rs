@@ -7,6 +7,7 @@ mod build;
 mod expressions;
 mod findings;
 mod function;
+mod function_body;
 mod model;
 mod names;
 mod order;

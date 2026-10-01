@@ -59,6 +59,12 @@ at least 2. `minTokens` defaults to `1` and must be at least 1.
 `normalizeIdentifiers` and `normalizeRaise` default to `true`.
 `keepIdentifiers` and `allow` default to `[]`. An empty allow reason, an
 invalid object ref, or a duplicate allow object fails configuration.
+`include`, `exclude`, and `projects` apply to the schema catalog path. Only
+`sql` and `plpgsql` bodies are compared; a missing language is compared only
+with other bodies that also omit it. Unquoted call names fold;
+quoted call names and schema qualifiers stay distinct. Bare `RAISE;` stays
+distinct from `RAISE EXCEPTION`. A top-level `message` replaces the generated
+finding text.
 
 ## Valid example
 
@@ -77,8 +83,9 @@ OLD.body` while `normalizeIdentifiers` is true.
 
 ## Fix
 
-Replace the copies with one function parameterised by `TG_TABLE_NAME` or
-`TG_ARGV`. Raise the `minTokens` floor when the shared shape is too small to
+Replace trigger copies with one function parameterised by `TG_TABLE_NAME`
+or `TG_ARGV`. Replace other copies with one function that takes the varying
+values as arguments. Raise the `minTokens` floor when the shared shape is too small to
 be worth merging. Set `normalizeIdentifiers` or `normalizeRaise` to false when
 those differences are intentional.
 

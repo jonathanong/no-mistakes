@@ -27,6 +27,7 @@ pub(crate) struct Compiled {
     schema_catalog_path: String,
     min_cluster_size: usize,
     min_tokens: usize,
+    message: Option<String>,
     settings: normalize::Settings,
     allow: AllowList,
 }
@@ -60,14 +61,19 @@ pub(crate) fn check_with_files_and_sources(
 }
 
 pub(crate) fn check_with_files_sources_and_facts(
-    _root: &Path,
+    root: &Path,
     config: &NoMistakesConfig,
     _files: &[PathBuf],
     _sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
-    for compiled in compile_applications(config)? {
+    for rule in config.rule_applications(RULE_ID) {
+        let compiled = compile_options(&rule.try_rule_options()?, rule.message.clone())?;
+        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+        if !filter.is_match(Path::new(&compiled.schema_catalog_path)) {
+            continue;
+        }
         let catalog = facts.postgres_schema_catalog(&compiled.schema_catalog_path)?;
         findings.extend(scan::scan(compiled, catalog));
     }
@@ -79,16 +85,17 @@ fn compile_applications(config: &NoMistakesConfig) -> Result<Vec<Compiled>> {
     config
         .rule_applications(RULE_ID)
         .into_iter()
-        .map(|rule| compile_options(&rule.try_rule_options()?))
+        .map(|rule| compile_options(&rule.try_rule_options()?, rule.message.clone()))
         .collect()
 }
 
-fn compile_options(opts: &Options) -> Result<Compiled> {
+fn compile_options(opts: &Options, message: Option<String>) -> Result<Compiled> {
     require_catalog_path(RULE_ID, &opts.schema_catalog_path)?;
     Ok(Compiled {
         schema_catalog_path: opts.schema_catalog_path.clone(),
         min_cluster_size: minimum("minClusterSize", opts.min_cluster_size.unwrap_or(2), 2)?,
         min_tokens: minimum("minTokens", opts.min_tokens.unwrap_or(1), 1)?,
+        message,
         settings: normalize::Settings {
             normalize_identifiers: opts.normalize_identifiers.unwrap_or(true),
             normalize_raise: opts.normalize_raise.unwrap_or(true),

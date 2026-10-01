@@ -2,7 +2,7 @@ use super::model::CatalogFunction;
 
 pub(super) fn function_from_definition(key: &str, definition: &str) -> CatalogFunction {
     let (name, signature) = split_key(key);
-    let (header, body) = split_body(definition);
+    let (header, body) = super::function_body::split_body(definition);
     CatalogFunction {
         key: key.to_string(),
         name,
@@ -24,52 +24,36 @@ fn split_key(key: &str) -> (String, Option<String>) {
     }
 }
 
-fn split_body(definition: &str) -> (String, Option<String>) {
-    let bytes = definition.as_bytes();
-    for (index, _) in definition.char_indices() {
-        if !is_word_at(definition, index, "as") {
-            continue;
-        }
-        let mut cursor = index + 2;
-        while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
-            cursor += 1;
-        }
-        if let Some((tag, open_end)) = opening_dollar(definition, cursor) {
-            let close = format!("${tag}$");
-            if let Some(relative) = definition[open_end..].find(&close) {
-                return (
-                    definition[..index].to_string(),
-                    Some(definition[open_end..open_end + relative].to_string()),
-                );
-            }
-        }
-    }
-    (definition.to_string(), None)
-}
-
-fn opening_dollar(definition: &str, index: usize) -> Option<(String, usize)> {
-    let rest = definition[index..].strip_prefix('$')?;
-    let end = rest.find('$')?;
-    Some((rest[..end].to_string(), index + end + 2))
-}
-
 fn language(definition: &str) -> Option<String> {
     let bytes = definition.as_bytes();
-    for (index, _) in definition.char_indices() {
-        if !is_word_at(definition, index, "language") {
-            continue;
+    let mut index = 0;
+    let mut depth = 0i32;
+    while index < definition.len() {
+        if definition[index..].starts_with('$') {
+            if let Some(end) = super::function_body::skip_dollar_body(definition, index) {
+                index = end;
+                continue;
+            }
         }
-        let mut cursor = index + "language".len();
-        while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
-            cursor += 1;
+        match bytes[index] {
+            b'(' => depth += 1,
+            b')' => depth -= 1,
+            _ => {}
         }
-        let start = cursor;
-        while bytes.get(cursor).is_some_and(is_ident_byte) {
-            cursor += 1;
+        if depth == 0 && is_word_at(definition, index, "language") {
+            let mut cursor = index + "language".len();
+            while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
+                cursor += 1;
+            }
+            let start = cursor;
+            while bytes.get(cursor).is_some_and(is_ident_byte) {
+                cursor += 1;
+            }
+            if cursor > start {
+                return Some(definition[start..cursor].to_ascii_lowercase());
+            }
         }
-        if cursor > start {
-            return Some(definition[start..cursor].to_ascii_lowercase());
-        }
+        index += definition[index..].chars().next()?.len_utf8();
     }
     None
 }

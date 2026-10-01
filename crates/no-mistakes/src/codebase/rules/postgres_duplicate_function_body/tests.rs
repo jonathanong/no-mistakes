@@ -42,6 +42,7 @@ fn tokens(body: &str, identifiers: bool, raise: bool, keep: &[&str]) -> Vec<Stri
             normalize_raise: raise,
             keep_identifiers: keep.iter().map(|word| word.to_ascii_uppercase()).collect(),
         },
+        Some("plpgsql"),
     )
     .unwrap_or_default()
 }
@@ -130,7 +131,7 @@ fn min_tokens_and_disabled_normalisers_split_copies() {
 fn clusters_above_five_list_the_rest_as_and_more() {
     let joined = messages("schemaCatalogPath: many.json\n").join("\n");
     assert!(joined.contains(
-        "function:fn_01: function body duplicates 6 other function(s) after normalising names and literals: fn_02, fn_03, fn_04, fn_05, fn_06 and 1 more; replace them with one function parameterised by TG_TABLE_NAME / TG_ARGV"
+        "function:fn_01: function body duplicates 6 other function(s) after normalising names and literals: fn_02, fn_03, fn_04, fn_05, fn_06 and 1 more; replace them with one function that takes the varying values as arguments"
     ));
     assert_eq!(joined.matches("function:fn_").count(), 7, "{joined}");
 }
@@ -285,4 +286,56 @@ fn option_errors_name_the_field() {
             "{expected} not in {error}"
         );
     }
+}
+
+#[test]
+fn names_keep_qualifiers_quotes_and_bare_raise() {
+    assert_ne!(
+        tokens("PERFORM accounting.refresh()", true, true, &[]),
+        tokens("PERFORM reporting.refresh()", true, true, &[])
+    );
+    assert_eq!(
+        tokens("SELECT Do_Work()", true, true, &[]),
+        tokens("SELECT do_work()", true, true, &[])
+    );
+    assert_ne!(
+        tokens("SELECT \"Do_Work\"()", true, true, &[]),
+        tokens("SELECT do_work()", true, true, &[])
+    );
+    assert_ne!(
+        tokens("BEGIN RAISE; END", true, true, &[]),
+        tokens("BEGIN RAISE EXCEPTION 'x'; END", true, true, &[])
+    );
+    assert_ne!(
+        normalize::normalized_tokens("SELECT raise;", &plain_settings(), Some("sql")),
+        normalize::normalized_tokens("SELECT raise + 1;", &plain_settings(), Some("sql"))
+    );
+}
+
+fn plain_settings() -> normalize::Settings {
+    normalize::Settings {
+        normalize_identifiers: true,
+        normalize_raise: true,
+        keep_identifiers: Vec::new(),
+    }
+}
+
+#[test]
+fn include_and_custom_message_apply_to_the_catalog() {
+    let mut compiled = config("schemaCatalogPath: rejects.json\n");
+    compiled.rules[0].include = vec!["services/api/**".to_string()];
+    let root = fixture();
+    let findings = check_with_files(&root, &compiled, &[root.join("rejects.json")]).unwrap();
+    assert!(findings.is_empty());
+
+    let mut compiled = config("schemaCatalogPath: many.json\n");
+    compiled.rules[0].message = Some("merge the copies".to_string());
+    let joined = check_with_files(&root, &compiled, &[root.join("many.json")])
+        .unwrap()
+        .into_iter()
+        .map(|finding| finding.message)
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(joined.contains("merge the copies"));
+    assert!(!joined.contains("TG_TABLE_NAME"));
 }

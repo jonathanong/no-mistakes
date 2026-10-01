@@ -8,7 +8,11 @@ pub(super) struct Settings {
     pub(super) keep_identifiers: Vec<String>,
 }
 
-pub(super) fn normalized_tokens(body: &str, settings: &Settings) -> Option<Vec<String>> {
+pub(super) fn normalized_tokens(
+    body: &str,
+    settings: &Settings,
+    language: Option<&str>,
+) -> Option<Vec<String>> {
     let mut tokens = Tokenizer::new(&PostgreSqlDialect {}, body)
         .tokenize()
         .ok()?
@@ -21,22 +25,45 @@ pub(super) fn normalized_tokens(body: &str, settings: &Settings) -> Option<Vec<S
     {
         tokens.pop();
     }
+    let plpgsql = language.is_some_and(|name| name.eq_ignore_ascii_case("plpgsql"));
     let mut out = Vec::new();
     let mut index = 0;
     while index < tokens.len() {
-        if settings.normalize_raise && is_word(&tokens[index], "raise") {
+        if plpgsql && settings.normalize_raise && is_word(&tokens[index], "raise") {
+            if bare_raise(&tokens, index) {
+                out.extend(["RAISE".to_string(), ";".to_string()]);
+                index += 2;
+                continue;
+            }
             let (level, next) = consume_raise(&tokens, index);
             out.extend(["RAISE".to_string(), level, "?".to_string(), ";".to_string()]);
             index = next;
             continue;
         }
-        let call = tokens
-            .get(index + 1)
-            .is_some_and(|token| matches!(token, Token::LParen));
+        let call = call_name(&tokens, index);
         out.push(render(&tokens[index], call, settings));
         index += 1;
     }
     Some(out)
+}
+
+fn bare_raise(tokens: &[Token], start: usize) -> bool {
+    matches!(tokens.get(start + 1), Some(Token::SemiColon) | None)
+}
+
+fn call_name(tokens: &[Token], index: usize) -> bool {
+    let mut cursor = index;
+    loop {
+        match tokens.get(cursor + 1) {
+            Some(Token::LParen) => return is_name(&tokens[cursor]),
+            Some(Token::Period) if tokens.get(cursor + 2).is_some_and(is_name) => cursor += 2,
+            _ => return false,
+        }
+    }
+}
+
+fn is_name(token: &Token) -> bool {
+    matches!(token, Token::Word(_) | Token::DoubleQuotedString(_))
 }
 
 fn consume_raise(tokens: &[Token], start: usize) -> (String, usize) {
@@ -79,22 +106,26 @@ fn render(token: &Token, call: bool, settings: &Settings) -> String {
     match token {
         Token::Number(_, _) => "0".to_string(),
         Token::Word(word) => render_word(word, call, settings),
-        Token::DoubleQuotedString(value) => render_name(value, call, settings),
+        Token::DoubleQuotedString(value) => render_name(value, call, true, settings),
         other if is_string(other) => "'?'".to_string(),
         other => other.to_string(),
     }
 }
 
 fn render_word(word: &Word, call: bool, settings: &Settings) -> String {
-    if word.quote_style.is_none() && word.keyword != Keyword::NoKeyword {
+    if word.quote_style.is_none() && word.keyword != Keyword::NoKeyword && !call {
         return word.value.to_ascii_uppercase();
     }
-    render_name(&word.value, call, settings)
+    render_name(&word.value, call, word.quote_style.is_some(), settings)
 }
 
-fn render_name(value: &str, call: bool, settings: &Settings) -> String {
+fn render_name(value: &str, call: bool, quoted: bool, settings: &Settings) -> String {
     if call {
-        return value.to_string();
+        return if quoted {
+            value.to_string()
+        } else {
+            value.to_ascii_lowercase()
+        };
     }
     let upper = value.to_ascii_uppercase();
     if upper == "NEW" || upper == "OLD" || upper.starts_with("TG_") {
