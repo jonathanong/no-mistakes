@@ -18,7 +18,7 @@ pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> 
             path,
             &mut findings,
         );
-        if function.returns_trigger {
+        if function.returns_trigger || function.returns_event_trigger {
             consider(
                 named("triggerFunction", &name, object, None, NameFlags::default()),
                 compiled,
@@ -60,9 +60,26 @@ pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> 
         );
     }
     super::super::sort_findings(&mut findings);
+    apply_message(compiled, &mut findings);
     let mut findings = compiled.allow.clone().apply(path, findings);
     super::super::sort_findings(&mut findings);
     findings
+}
+
+fn apply_message(compiled: &Compiled, findings: &mut [RuleFinding]) {
+    let Some(message) = compiled
+        .message
+        .as_deref()
+        .filter(|message| !message.trim().is_empty())
+    else {
+        return;
+    };
+    for finding in findings {
+        let Some(target) = &finding.target else {
+            continue;
+        };
+        finding.message = format!("{}: {target}: {message}", finding.file);
+    }
 }
 
 fn scan_table(

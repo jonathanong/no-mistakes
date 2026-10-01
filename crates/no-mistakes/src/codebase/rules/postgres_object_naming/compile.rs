@@ -17,6 +17,7 @@ pub(super) struct Compiled {
     pub(super) spelling: Vec<(String, String, String)>,
     pub(super) double_underscore: Option<UnderscoreRule>,
     pub(super) allow: AllowList,
+    pub(super) message: Option<String>,
 }
 
 pub(super) struct UnderscoreRule {
@@ -24,7 +25,7 @@ pub(super) struct UnderscoreRule {
     pub(super) allow: Option<Regex>,
 }
 
-pub(super) fn compile(options: &Options) -> Result<Compiled> {
+pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Compiled> {
     require_catalog_path(super::RULE_ID, options.schema_catalog_path.trim())?;
     let mut patterns = BTreeMap::new();
     for (kind, raw) in &options.patterns {
@@ -51,6 +52,7 @@ pub(super) fn compile(options: &Options) -> Result<Compiled> {
         spelling: compile_spelling(&options.spelling)?,
         double_underscore: compile_underscore(&options.double_underscore)?,
         allow: AllowList::compile(super::RULE_ID, options.allow.clone())?,
+        message,
     })
 }
 

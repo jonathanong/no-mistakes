@@ -57,7 +57,7 @@ pub(super) fn messages(yaml: &str, body: serde_json::Value) -> Vec<String> {
 
 pub(super) fn findings(yaml: &str, body: serde_json::Value) -> Vec<RuleFinding> {
     let options: Options = serde_yaml::from_str(yaml).unwrap();
-    let compiled = compile(&options).unwrap();
+    let compiled = compile(&options, None).unwrap();
     let mut root = body;
     if root.get("formatVersion").is_none() {
         root["formatVersion"] = serde_json::json!(2);
@@ -77,7 +77,7 @@ pub(super) fn expect_none(yaml: &str, body: serde_json::Value) {
 
 pub(super) fn expect_err(yaml: &str, snippet: &str) {
     let options: Options = serde_yaml::from_str(yaml).unwrap();
-    let error = match compile(&options) {
+    let error = match compile(&options, None) {
         Err(error) => error.to_string(),
         Ok(_) => panic!("expected config error containing {snippet}"),
     };

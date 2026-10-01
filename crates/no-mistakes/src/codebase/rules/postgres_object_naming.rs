@@ -119,6 +119,7 @@ pub(crate) fn check_with_files_and_sources(
         Vec::new(),
         catalog_paths,
     );
+    let _ = compile_applications(config)?;
     check_with_files_sources_and_facts(root, config, all_files, sources, &facts)
 }
 
@@ -129,16 +130,27 @@ pub(crate) fn check_with_files_sources_and_facts(
     _sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
-    let _ = root;
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let options: Options = rule.try_rule_options()?;
-        let compiled = compile::compile(&options)?;
+        let compiled = compile::compile(&options, rule.message.clone())?;
+        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
+        if !filter.is_match(Path::new(&options.schema_catalog_path)) {
+            continue;
+        }
         let catalog = facts.postgres_schema_catalog(&options.schema_catalog_path)?;
         findings.extend(scan::scan(catalog, &compiled, &options.schema_catalog_path));
     }
     super::sort_findings(&mut findings);
     Ok(findings)
+}
+
+fn compile_applications(config: &NoMistakesConfig) -> Result<Vec<compile::Compiled>> {
+    config
+        .rule_applications(RULE_ID)
+        .into_iter()
+        .map(|rule| compile::compile(&rule.try_rule_options()?, rule.message.clone()))
+        .collect()
 }
 
 #[cfg(test)]

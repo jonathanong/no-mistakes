@@ -72,7 +72,8 @@ Each configured `patterns` kind is applied with `Regex::is_match`. Unset kinds
 are not checked. Tables and partitioned tables use `table`. Columns use
 `column`. A unique index uses `uniqueIndex` when that pattern is set, and
 `index` otherwise. Trigger functions must match `function` and, when set,
-`triggerFunction`. Materialized views use `materializedView` and do not fall
+`triggerFunction`. Functions that return `event_trigger` use
+`triggerFunction` as well. Materialized views use `materializedView` and do not fall
 back to `view`. Schema-qualified snapshot keys are checked by their last
 identifier. Finding targets and `allow` entries keep the full snapshot key.
 A leading inline flag such as `(?i)`, including one placed immediately after
@@ -103,7 +104,9 @@ defaults to `[table]`. `plural.irregularPlurals` defaults to `{}`.
 `plural.ignorePatterns` defaults to `[]`. `deniedTokens` defaults to `[]`.
 `spelling` defaults to `{}`. `doubleUnderscore` defaults to unset.
 `doubleUnderscore.allowPattern` defaults to unset when the key is present, and
-then every `__` is reported. `allow` defaults to `[]`.
+then every `__` is reported. `allow` defaults to `[]`. `include`, `exclude`, and `projects` filter
+`schemaCatalogPath`. A non-empty `message` replaces the finding text and keeps
+the `file: object:` locator.
 
 Unknown pattern kinds, invalid regexes, `{table}` outside index, unique index,
 and trigger patterns, `tableMinWords` or `minLetters` below 1, an empty or

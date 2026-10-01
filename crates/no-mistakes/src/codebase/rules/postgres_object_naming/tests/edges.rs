@@ -130,6 +130,20 @@ abbreviations:\n  enabled: true\n";
 }
 
 #[test]
+fn event_triggers_use_the_trigger_function_pattern() {
+    let definition = "CREATE FUNCTION fn_guard() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NULL; END; $$";
+    let yaml = "\
+schemaCatalogPath: schema.json\n\
+patterns:\n  function: '^fn_[a-z0-9_]+$'\n  triggerFunction: '^fn_(reject|update|project|create|lock)_[a-z0-9_]+$'\n";
+    expect(
+        yaml,
+        serde_json::json!({"functions": {"fn_guard()": {"definition": definition}}}),
+        "schema.json: function:fn_guard(): trigger function name does not match pattern ^fn_(reject|update|project|create|lock)_[a-z0-9_]+$",
+    );
+    expect_none(yaml, trigger_fn("fn_lock_orders", "event_trigger"));
+}
+
+#[test]
 fn trigger_functions_patterns_are_independent() {
     let yaml = "\
 schemaCatalogPath: schema.json\n\
