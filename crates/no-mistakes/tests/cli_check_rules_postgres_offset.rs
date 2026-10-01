@@ -87,6 +87,31 @@ fn postgres_no_offset_json_has_rule_id() {
 }
 
 #[test]
+fn postgres_no_offset_flags_sql_files() {
+    let root = fixture("fail-sql");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    let body = stdout(&out);
+    assert!(!out.status.success(), "expected exit 1: {body}");
+    assert!(body.contains(RULE), "{body}");
+    assert!(body.contains("optimizer fence"), "{body}");
+    assert!(body.contains("do not use SQL OFFSET"), "{body}");
+}
+
+#[test]
+fn postgres_no_offset_passes_materialized_cte() {
+    let root = fixture("pass-sql");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_no_offset_ignores_sql_when_sql_include_is_empty() {
+    let root = fixture("pass-default");
+    let out = check_fixture_config(&root, ".no-mistakes.yml");
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
 fn postgres_no_offset_filesystem_runner_discovers_files() {
     let root = fixture("fail");
     let findings = no_mistakes::codebase::rules::run_filesystem_rules(&root, None).unwrap();

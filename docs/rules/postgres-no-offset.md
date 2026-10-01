@@ -17,6 +17,7 @@ rules:
     options:
       include: ["src/**/*.ts"]
       exclude: ["src/generated/**"]
+      sqlInclude: ["db/views/**/*.sql", "db/migrations/**/*.sql"]
       importSpecifier: "@data-stores/psql"
       executorNames: [query, read, write]
 ```
@@ -57,15 +58,29 @@ less stable as rows are inserted or deleted between requests.
 ## What it catches/requires
 
 Executed, statically recoverable PostgreSQL SQL must not contain `OFFSET`.
-Interpolated offsets are checked after placeholder normalization; prose and
-unparseable SQL are ignored.
+`.sql` files are checked only when `sqlInclude` matches them. Interpolated
+offsets are checked after placeholder normalization; prose and unparseable
+SQL are ignored. `OFFSET 0` asks for a `MATERIALIZED` CTE. Any other offset
+asks for cursor pagination, `LIMIT + 1`, `COUNT`, `EXISTS`, or `ROW_NUMBER()`.
 
 ## Options and defaults
 
-`include` and `exclude` select source files. `importSpecifier` defaults to
-`@data-stores/psql`, and `executorNames` defaults to `[query, read, write]`.
+`include` and `exclude` select source files. `sqlInclude` defaults to `[]`,
+so `.sql` files are not scanned unless a glob selects them. `importSpecifier`
+defaults to `@data-stores/psql`, and `executorNames` defaults to
+`[query, read, write]`.
+
+`OFFSET 0` is reported as an optimizer fence: use a `MATERIALIZED` CTE
+(`WITH x AS MATERIALIZED (...)`). Any other offset keeps the pagination
+message.
 
 ## Valid example
+
+```sql
+CREATE VIEW view_recent_orders AS
+WITH o AS MATERIALIZED (SELECT id, account_id FROM orders WHERE id > '0190')
+SELECT o.id FROM o JOIN accounts a ON a.id = o.account_id;
+```
 
 ```ts
 query(`SELECT id FROM posts ORDER BY id DESC LIMIT ${limit + 1}`);
@@ -73,13 +88,20 @@ query(`SELECT id FROM posts ORDER BY id DESC LIMIT ${limit + 1}`);
 
 ## Counterexample
 
+```sql
+CREATE VIEW view_recent_orders AS
+SELECT * FROM (SELECT id, account_id FROM orders WHERE id > '0190' OFFSET 0) o
+JOIN accounts a ON a.id = o.account_id;
+```
+
 ```ts
 query(`SELECT id FROM posts ORDER BY id DESC OFFSET 10`);
 ```
 
 ## Fix
 
-Use a cursor predicate with a deterministic order, or use `LIMIT + 1`,
+Replace `OFFSET 0` with `WITH x AS MATERIALIZED (...)`. For any other offset,
+use a cursor predicate with a deterministic order, or use `LIMIT + 1`,
 `COUNT`, `EXISTS`, or `ROW_NUMBER()` when that is the actual query need.
 
 ## Suppression

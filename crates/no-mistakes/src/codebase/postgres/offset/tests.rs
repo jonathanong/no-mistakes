@@ -1,4 +1,4 @@
-use super::sql_has_offset_clause;
+use super::{sql_has_offset_clause, sql_offset_uses, OffsetUse};
 
 #[test]
 fn offset_keyword_is_detected() {
@@ -302,4 +302,25 @@ fn function_args_and_modifying_cte_offsets_are_detected() {
         "SELECT * FROM generate_series(1, (SELECT id FROM limits OFFSET 1 LIMIT 1)) AS g"
     )
     .unwrap());
+}
+
+#[test]
+fn zero_and_other_offsets_are_collected_separately() {
+    assert_eq!(
+        sql_offset_uses("SELECT id FROM posts OFFSET 0").unwrap(),
+        vec![OffsetUse::Zero]
+    );
+    assert_eq!(
+        sql_offset_uses("SELECT id FROM posts OFFSET 0 ROWS").unwrap(),
+        vec![OffsetUse::Zero]
+    );
+    assert_eq!(
+        sql_offset_uses("SELECT id FROM posts OFFSET $1").unwrap(),
+        vec![OffsetUse::Other]
+    );
+    let uses =
+        sql_offset_uses("SELECT * FROM (SELECT id FROM posts OFFSET 0) o OFFSET 40").unwrap();
+    assert_eq!(uses.len(), 2, "{uses:?}");
+    assert!(uses.contains(&OffsetUse::Zero));
+    assert!(uses.contains(&OffsetUse::Other));
 }

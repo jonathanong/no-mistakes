@@ -19,20 +19,28 @@ use scan::scan_with_sources;
 pub(crate) struct Options {
     pub(crate) include: Vec<String>,
     pub(crate) exclude: Vec<String>,
+    pub(crate) sql_include: Vec<String>,
     pub(crate) import_specifier: String,
     pub(crate) executor_names: Vec<String>,
 }
 
-struct CompiledOptions {
+pub(crate) struct CompiledOptions {
     include: GlobMatcher,
     exclude: GlobMatcher,
-    embedded: EmbeddedSqlOptions,
+    pub(crate) sql_include: GlobMatcher,
+    pub(crate) embedded: EmbeddedSqlOptions,
 }
 
 impl CompiledOptions {
     fn includes(&self, rel: &str) -> bool {
-        (self.include.is_empty() || self.include.is_match(rel))
-            && (self.exclude.is_empty() || !self.exclude.is_match(rel))
+        let excluded = !self.exclude.is_empty() && self.exclude.is_match(rel);
+        if excluded {
+            return false;
+        }
+        if rel.ends_with(".sql") {
+            return self.sql_include.is_match(rel);
+        }
+        self.include.is_empty() || self.include.is_match(rel)
     }
 }
 
@@ -82,10 +90,12 @@ pub(crate) fn check_with_files_and_sources(
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
+    let sql_include = GlobMatcher::new(&opts.sql_include, &format!("{RULE_ID} sqlInclude"))?;
     let defaults = EmbeddedSqlOptions::default();
     Ok(CompiledOptions {
         include,
         exclude,
+        sql_include,
         embedded: EmbeddedSqlOptions {
             import_specifier: if opts.import_specifier.is_empty() {
                 defaults.import_specifier
@@ -101,5 +111,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     })
 }
 
+#[cfg(test)]
+mod sql_tests;
 #[cfg(test)]
 mod tests;
