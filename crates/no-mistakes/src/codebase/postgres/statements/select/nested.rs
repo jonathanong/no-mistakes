@@ -37,12 +37,15 @@ pub(super) fn walk_expr(
     out: &mut Vec<SqlSelectFact>,
 ) {
     match expr {
-        Expr::Exists { subquery, .. } | Expr::Subquery(subquery) => {
-            super::collect_query(sql, subquery, ctes, in_insert_select, out);
+        Expr::Exists { subquery, .. } => {
+            super::collect_query(sql, subquery, ctes, in_insert_select, true, out);
+        }
+        Expr::Subquery(subquery) => {
+            super::collect_query(sql, subquery, ctes, in_insert_select, false, out);
         }
         Expr::InSubquery { expr, subquery, .. } => {
             walk_expr(sql, expr, ctes, in_insert_select, out);
-            super::collect_query(sql, subquery, ctes, in_insert_select, out);
+            super::collect_query(sql, subquery, ctes, in_insert_select, false, out);
         }
         Expr::AnyOp { left, right, .. } | Expr::AllOp { left, right, .. } => {
             walk_expr(sql, left, ctes, in_insert_select, out);

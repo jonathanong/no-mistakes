@@ -88,6 +88,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-finite-text-columns",
             "postgres-array-columns",
             "postgres-required-predicates",
+            "postgres-explicit-columns",
         ]
     );
 }

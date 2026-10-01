@@ -36,7 +36,7 @@ fn collect_derived_factor(
 ) {
     match table {
         TableFactor::Derived { subquery, .. } => {
-            super::collect_query(sql, subquery, ctes, in_insert_select, out);
+            super::collect_query(sql, subquery, ctes, in_insert_select, false, out);
         }
         TableFactor::NestedJoin {
             table_with_joins, ..

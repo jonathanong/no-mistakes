@@ -108,6 +108,39 @@ fn postgres_sql_shape_policy_passes_suppressed_shapes() {
 }
 
 #[test]
+fn postgres_explicit_columns_json_has_rule_id() {
+    let root = fixture("postgres-explicit-columns", "fail");
+    let out = check_json(&root);
+    let body = stdout(&out);
+    assert!(body.contains("postgres-explicit-columns"), "{body}");
+    assert!(body.contains("40 columns of orders"), "{body}");
+    assert!(!out.status.success());
+}
+
+#[test]
+fn postgres_explicit_columns_passes_narrow_and_wrapped_stars() {
+    let root = fixture("postgres-explicit-columns", "pass");
+    let out = check_json(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_explicit_columns_passes_suppressed_stars() {
+    let root = fixture("postgres-explicit-columns", "pass-suppressed");
+    let out = check_json(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_explicit_columns_flags_embedded_sql() {
+    let root = fixture("postgres-explicit-columns", "embedded");
+    let out = check_json(&root);
+    let body = stdout(&out);
+    assert!(body.contains("40 columns of orders"), "{body}");
+    assert!(!out.status.success());
+}
+
+#[test]
 fn postgres_idempotent_insert_json_has_rule_id() {
     let root = fixture("postgres-idempotent-insert", "fail");
     let out = check_json(&root);

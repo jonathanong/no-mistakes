@@ -222,6 +222,13 @@ sqlparser AST:
   `NOT (… IN (SELECT …))`. `count_existence_checks` records lines where
   `COUNT(...)` is compared with 0 or 1 to test existence (`postgres-sql-shape-policy`
   reads both when those shapes are banned).
+  `star_projections` records each bare `*` (one fact per base FROM relation) and
+  each `alias.*` (that alias's base relation). Stars inside `EXISTS` / `NOT EXISTS`,
+  `COUNT(*)`, CTEs, and derived-table aliases are omitted. A star passed to a
+  function records `within_function` so `postgres-explicit-columns` can apply
+  `allowWholeRowFunctions` without parsing SQL again.
+  `returning_stars` on the file facts records `RETURNING *` / `RETURNING t.*`
+  for INSERT, UPDATE, and DELETE.
 - `CREATE TRIGGER` table, function, period, row/statement, and events
 
 Unparseable files set `parse_failed` and count quote-masked `INSERT INTO`

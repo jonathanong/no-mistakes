@@ -29,6 +29,7 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
                 || *id == POSTGRES_COLUMN_NAMING
                 || *id == POSTGRES_FINITE_TEXT_COLUMNS
                 || *id == POSTGRES_ARRAY_COLUMNS
+                || *id == POSTGRES_EXPLICIT_COLUMNS
             {
                 format!(
                     "  - rule: {id}\n    scope: repository\n    options:\n      schemaCatalogPath: schema.json\n"
