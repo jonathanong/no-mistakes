@@ -335,6 +335,15 @@ test and lint jobs always stay on GitHub-hosted runners. Flipping the variable
 changes CPU architecture and must not be treated as an implementation
 regression until both the CodSpeed base and the PR head use the same family.
 
+Each shard's two-minute step limit cannot reliably absorb an apt install of
+CodSpeed's instruments (valgrind and `libc6-dbg`). The action's instrument cache
+key omits libc, so after a runner image updates libc6 an exact-key hit restores
+debug symbols that no longer match and every run reinstalls. The workflow keys
+the cache directory by the installed libc6 version, so the first run after an
+update saves a fresh entry. That entry matches only while the Ubuntu archive's
+`libc6-dbg` is the image's libc6 version; until images catch up to a newer
+archive release, runs may still reinstall.
+
 ### Interpreting CodSpeed results
 
 GitHub-hosted `ubuntu-latest` runners do not guarantee one CPU architecture or

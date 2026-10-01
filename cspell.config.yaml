@@ -63,6 +63,7 @@ words:
   - leakproof
   - linuxbrew
   - linecount
+  - libc
   - libuv
   - lockfiles
   - markdown
