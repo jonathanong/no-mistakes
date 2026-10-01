@@ -17,6 +17,21 @@ pub const RULE_ID: &str = "postgres-required-predicates";
 pub(crate) struct RelationOption {
     pub(crate) table: String,
     pub(crate) require: Vec<String>,
+    pub(crate) require_columns: Vec<String>,
+}
+
+#[derive(Deserialize, Default, Clone)]
+#[serde(default, rename_all = "camelCase")]
+pub(crate) struct PartitionExemption {
+    pub(crate) table: String,
+    pub(crate) reason: String,
+}
+
+#[derive(Deserialize, Default, Clone)]
+#[serde(default, rename_all = "camelCase")]
+pub(crate) struct AllowEntry {
+    pub(crate) object: String,
+    pub(crate) reason: String,
 }
 
 #[derive(Deserialize, Default)]
@@ -29,6 +44,10 @@ pub(crate) struct Options {
     pub(crate) executor_names: Vec<String>,
     pub(crate) relations: Vec<RelationOption>,
     pub(crate) unanalyzable_sql: String,
+    pub(crate) schema_catalog_path: String,
+    pub(crate) partition_keys: String,
+    pub(crate) partition_key_exemptions: Vec<PartitionExemption>,
+    pub(crate) allow: Vec<AllowEntry>,
 }
 
 pub(crate) struct CompiledOptions {
@@ -38,6 +57,10 @@ pub(crate) struct CompiledOptions {
     embedded: EmbeddedSqlOptions,
     relations: Vec<RelationOption>,
     fail_unanalyzable: bool,
+    schema_catalog_path: Option<String>,
+    partition_keys: bool,
+    partition_key_exemptions: Vec<PartitionExemption>,
+    allow: Vec<AllowEntry>,
 }
 
 impl CompiledOptions {
@@ -56,11 +79,31 @@ pub(crate) fn check_with_files(
     check_with_files_and_sources(root, config, all_files, &sources)
 }
 
+pub(crate) fn check_with_files_sources_and_facts(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: &crate::codebase::check_facts::CheckFactMap,
+) -> Result<Vec<RuleFinding>> {
+    check_applications(root, config, all_files, sources, Some(facts))
+}
+
 pub(crate) fn check_with_files_and_sources(
     root: &Path,
     config: &NoMistakesConfig,
     all_files: &[PathBuf],
     sources: &crate::codebase::ts_source::SourceStore,
+) -> Result<Vec<RuleFinding>> {
+    check_applications(root, config, all_files, sources, None)
+}
+
+fn check_applications(
+    root: &Path,
+    config: &NoMistakesConfig,
+    all_files: &[PathBuf],
+    sources: &crate::codebase::ts_source::SourceStore,
+    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Result<Vec<RuleFinding>> {
     let all: Result<Vec<Vec<RuleFinding>>> = config
         .rule_applications(RULE_ID)
@@ -82,7 +125,7 @@ pub(crate) fn check_with_files_and_sources(
                 .into_iter()
                 .filter(|path| compiled.includes(&relative_slash_path(root, path)))
                 .collect();
-            scan::scan(root, &compiled, &files, sources)
+            scan::scan(root, &compiled, &files, sources, facts)
         })
         .collect();
     let mut findings: Vec<RuleFinding> = all?.into_iter().flatten().collect();
@@ -91,9 +134,11 @@ pub(crate) fn check_with_files_and_sources(
 }
 
 fn compile_options(opts: &Options) -> Result<CompiledOptions> {
+    validate_options(opts)?;
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
     let defaults = EmbeddedSqlOptions::default();
+    let partition_keys = opts.partition_keys == "require";
     Ok(CompiledOptions {
         include,
         exclude,
@@ -121,9 +166,22 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             RULE_ID,
             &opts.unanalyzable_sql,
         )?,
+        schema_catalog_path: (!opts.schema_catalog_path.trim().is_empty())
+            .then(|| opts.schema_catalog_path.clone()),
+        partition_keys,
+        partition_key_exemptions: opts.partition_key_exemptions.clone(),
+        allow: opts.allow.clone(),
     })
 }
 
+fn validate_options(opts: &Options) -> Result<()> {
+    validate::check(opts)
+}
+
+mod validate;
+
+#[cfg(test)]
+mod columns_tests;
 #[cfg(test)]
 mod options_tests;
 #[cfg(test)]

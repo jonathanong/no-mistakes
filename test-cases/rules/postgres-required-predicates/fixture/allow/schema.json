@@ -1,0 +1,21 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "events": {
+      "relationKind": "partitioned table",
+      "physicalPartition": {
+        "key": "RANGE (date_trunc('day'::text, created_at))"
+      },
+      "columns": {
+        "id": {
+          "dataType": "integer",
+          "ordinalPosition": 1
+        },
+        "created_at": {
+          "dataType": "integer",
+          "ordinalPosition": 2
+        }
+      }
+    }
+  }
+}

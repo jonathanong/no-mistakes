@@ -1,13 +1,16 @@
 # `postgres-required-predicates`
 
-Require configured WHERE/JOIN predicates whenever a query reads a named
-PostgreSQL relation. Use this for tables that must always be filtered (for
-example a `parent_id IS NOT NULL` bound) without hardcoding those table names
-in the checker.
+Require configured predicates whenever a query reads a named PostgreSQL
+relation. A relation may require textual predicate fragments, named columns,
+or — when `partitionKeys` is `require` — every column of its catalog partition
+key. Table names come from configuration and the schema catalog, not from
+hardcoded conventions. With `relations` empty and `partitionKeys` left at
+`off`, the rule reports nothing.
 
-The rule consumes dual-source statement facts (`CheckFactPlan.postgres_dml`):
-matching `.sql` files plus statically recoverable embedded executor SQL. Dynamic
-or unparseable SQL fails closed unless `unanalyzableSql` is `ignore`.
+The rule reads prepared statement facts (`CheckFactPlan.postgres_dml`):
+matching `.sql` files plus statically recoverable embedded executor SQL. It
+does not re-parse SQL. Dynamic or unparseable SQL fails closed unless
+`unanalyzableSql` is `ignore`.
 
 ```yaml
 rules:
@@ -15,83 +18,100 @@ rules:
     scope: repository
     options:
       sqlInclude: ["**/*.sql"]
+      schemaCatalogPath: db/schema.json
+      partitionKeys: require
       relations:
         - table: topics
           require:
             - parent_id IS NOT NULL
+        - table: orders
+          requireColumns: [account_id]
       unanalyzableSql: fail
 ```
-
-`sqlInclude` defaults to `**/*.sql`. `relations` defaults to empty (no
-findings). `unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other
-values are a configuration error). `importSpecifier` defaults to
-`@data-stores/psql`; `executorNames` defaults to `[query, read, write]`.
-
-Counterexample: `SELECT id FROM topics WHERE id = $1` when `topics` requires
-`parent_id IS NOT NULL`.
-
-```sql
-SELECT id FROM topics WHERE id = $1;
-```
-
-Fix: include every required predicate, typically AND-ed with the rest of the
-WHERE/JOIN clause.
-
-```sql
-SELECT id FROM topics WHERE parent_id IS NOT NULL AND id = $1;
-```
-
-Use `no-mistakes-disable-next-line postgres-required-predicates` or
-`no-mistakes-disable-line` for a one-off, or `no-mistakes-disable-file`
-when a whole file is an intentional exception.
 
 ## Why and when
 
 Use this rule when some relations are unsafe to scan unbound (deleted rows,
-unpublished rows, or a required parent key) and every SELECT/JOIN must carry
-those predicates.
+unpublished rows, a required tenant column, or a partition key the planner
+must see) and every SELECT, UPDATE, DELETE, and INSERT…SELECT must constrain
+those columns.
 
 ## What it catches/requires
 
-SELECT (and INSERT…SELECT) statements whose FROM/JOIN list names a configured
-`table` must include each `require` predicate string in the WHERE/JOIN SQL,
-compared case-insensitively after whitespace normalization.
+A configured `relations[].require` entry still matches the relation's
+WHERE/JOIN SQL as a case-insensitive, whitespace-normalized substring. That
+behavior is unchanged.
+
+`relations[].requireColumns` applies to every base-table instance in SELECT
+(including subqueries and CTE bodies), UPDATE, DELETE, and the SELECT of
+`INSERT … SELECT`. A column counts as constrained when a top-level AND
+conjunct is an equality, comparison, `IN`, `= ANY`, or `BETWEEN` on that
+column. `OR` counts only when every branch constrains it. `IS NULL`,
+`IS NOT NULL`, `<>`, and `LIKE` do not. An unqualified name in a join counts
+only when the schema catalog shows no other FROM relation has that column.
+
+`partitionKeys: require` checks each instance whose catalog table is a
+partitioned table. Every column of the partition key must be constrained.
+Expression partition keys are not guessed from queries: the rule reports one
+catalog finding for that table. Tables in `partitionKeyExemptions` are
+skipped. An exemption for a table that is not a partitioned catalog table is
+stale. A relation may set `requireColumns` without `require`. MERGE is out of
+scope.
 
 ## Options and defaults
 
 `include` / `exclude` select source files (empty include means all files).
-`sqlInclude` defaults to `**/*.sql`. `relations` defaults to `[]`.
+`sqlInclude` defaults to `**/*.sql`. `relations` defaults to `[]`. Each
+relation's `require` and `requireColumns` default to `[]`. An empty
+`requireColumns` string is a configuration error.
+`schemaCatalogPath` defaults to unset and is required when `partitionKeys` is
+`require`. `partitionKeys` defaults to `off` (`require` or `off`; any other
+value is a configuration error). `partitionKeyExemptions` defaults to `[]`;
+an empty table, an empty reason, or a duplicate table is a configuration
+error. `allow` defaults to `[]` and suppresses catalog findings by object ref
+(`table:<name>`); an empty object, an empty reason, or a duplicate object is
+a configuration error, and an unmatched entry is reported stale.
 `unanalyzableSql` defaults to `fail` (`fail` or `ignore`; other values are a
-configuration error).
-`importSpecifier` defaults to `@data-stores/psql`. `executorNames` defaults to
-`[query, read, write]`.
+configuration error). `importSpecifier` defaults to `@data-stores/psql`.
+`executorNames` defaults to `[query, read, write]`.
 
 ## Valid example
 
 ```sql
 SELECT id FROM topics WHERE parent_id IS NOT NULL AND id = $1;
+SELECT id FROM events WHERE account_id = $1;
+SELECT id FROM events WHERE account_id = ANY($1::uuid[]) AND kind = 'login';
+UPDATE orders SET status = 'paid' WHERE account_id = $1 AND id = $2;
 ```
 
-`LEFT JOIN` / `RIGHT JOIN` `ON` predicates count the same as `WHERE`.
+`LEFT JOIN` / `RIGHT JOIN` `ON` predicates count for the joined relation.
+A schema-qualified `public.events` matches `events`. A CTE named `events` is
+not the partitioned table.
 
 ## Counterexample
 
 ```sql
 SELECT id FROM topics WHERE id = $1;
+SELECT id FROM events WHERE kind = 'login';
+DELETE FROM orders WHERE id = $1;
 ```
 
 ## Fix
 
-Add the required predicate to WHERE or JOIN ON for that relation.
+Add the required predicate or a comparison, `IN`, `= ANY`, or `BETWEEN` on
+the required column. For a partition key, constrain every key column or add a
+`partitionKeyExemptions` entry with a reason. For an expression partition key,
+add that exemption instead of a query predicate.
 
 ## Suppression
 
-Use `no-mistakes-disable-next-line postgres-required-predicates` or
-`no-mistakes-disable-line`; use the file directive only for an intentional
-unfiltered reporting query.
+SQL findings honor `no-mistakes-disable-next-line postgres-required-predicates`,
+`no-mistakes-disable-line`, and `no-mistakes-disable-file`. Catalog findings
+(expression partition keys) have no source line to comment, so suppress them
+with `allow: [{object, reason}]`, for example `object: table:events`.
 
 ## Related rules
 
 [`postgres-sql-shape-policy`](postgres-sql-shape-policy.md) bans correlated
-`EXISTS` set operations; [`postgres-idempotent-insert`](postgres-idempotent-insert.md) covers
-replay-safe INSERT.
+`EXISTS` set operations; [`postgres-idempotent-insert`](postgres-idempotent-insert.md)
+covers replay-safe INSERT.

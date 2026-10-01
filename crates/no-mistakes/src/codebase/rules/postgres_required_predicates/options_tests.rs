@@ -61,6 +61,7 @@ fn include_exclude_and_option_overrides() {
         relations: vec![RelationOption {
             table: "topics".into(),
             require: vec!["parent_id IS NOT NULL".into()],
+            ..Default::default()
         }],
         ..Default::default()
     })
@@ -117,6 +118,7 @@ fn dynamic_unparseable_and_unrelated_tables() {
         relations: vec![RelationOption {
             table: "accounts".into(),
             require: vec!["id IS NOT NULL".into()],
+            ..Default::default()
         }],
         ..Default::default()
     })
@@ -127,6 +129,7 @@ fn dynamic_unparseable_and_unrelated_tables() {
         &unrelated,
         std::slice::from_ref(&sql),
         &super::super::source_store_for_files(std::slice::from_ref(&sql)),
+        None,
     )
     .unwrap();
     assert!(findings.is_empty(), "{findings:?}");

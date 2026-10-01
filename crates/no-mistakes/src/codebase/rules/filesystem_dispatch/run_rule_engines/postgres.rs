@@ -8,7 +8,8 @@ use std::sync::Arc;
 mod naming;
 
 use naming::{
-    array_columns, column_naming, finite_text, object_naming, status_lifecycle, table_shape,
+    array_columns, column_naming, finite_text, object_naming, required_predicates,
+    status_lifecycle, table_shape,
 };
 
 pub(super) fn run(
@@ -71,9 +72,7 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
-        POSTGRES_REQUIRED_PREDICATES => {
-            postgres_required_predicates::check_with_files_and_sources(root, config, files, sources)
-        }
+        POSTGRES_REQUIRED_PREDICATES => required_predicates(root, config, files, sources, facts),
         POSTGRES_SQL_SHAPE_POLICY => {
             postgres_sql_shape_policy::check_with_files_and_sources(root, config, files, sources)
         }

@@ -40,6 +40,41 @@ fn postgres_required_predicates_json_has_rule_id() {
 }
 
 #[test]
+fn postgres_required_predicates_flags_missing_partition_key() {
+    let root = fixture("postgres-required-predicates", "fail-partition");
+    let out = check_json(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "{body}");
+    assert!(body.contains("partition key column account_id"), "{body}");
+}
+
+#[test]
+fn postgres_required_predicates_passes_constrained_partition_key() {
+    let root = fixture("postgres-required-predicates", "pass-partition");
+    let out = check_json(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_required_predicates_passes_suppressed_sql() {
+    let root = fixture("postgres-required-predicates", "pass-suppressed");
+    let out = check_json(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_required_predicates_flags_stale_allow() {
+    let root = fixture("postgres-required-predicates", "fail-stale-allow");
+    let out = check_json(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "{body}");
+    assert!(
+        body.contains("stale postgres-required-predicates allow entry: table:missing"),
+        "{body}"
+    );
+}
+
+#[test]
 fn postgres_sql_shape_policy_json_has_rule_id() {
     let root = fixture("postgres-sql-shape-policy", "fail");
     let out = check_json(&root);

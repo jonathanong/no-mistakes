@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-required-predicates
+    scope: repository
+    options:
+      sqlInclude: ["sql/**/*.sql"]
+      schemaCatalogPath: schema.json
+      partitionKeys: require
+      partitionKeyExemptions: []

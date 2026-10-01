@@ -7,7 +7,9 @@ mod fallback;
 mod insert;
 mod insert_source;
 mod lines;
+mod mutations;
 mod not_exists;
+mod predicates;
 mod select;
 mod trigger;
 mod value;
@@ -28,6 +30,8 @@ pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
     let statements = parse_postgres_sql_lenient(sql);
     let mut inserts = Vec::new();
     let mut selects = Vec::new();
+    let mut updates = Vec::new();
+    let mut deletes = Vec::new();
     let mut triggers = Vec::new();
     let mut insert_n = 0usize;
     let mut trigger_n = 0usize;
@@ -35,21 +39,24 @@ pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
     for statement in &statements {
         wrappers::walk_executed(statement, &mut executed);
     }
+    let mut out = FactOut {
+        insert_n: &mut insert_n,
+        trigger_n: &mut trigger_n,
+        inserts: &mut inserts,
+        selects: &mut selects,
+        updates: &mut updates,
+        deletes: &mut deletes,
+        triggers: &mut triggers,
+    };
     for statement in executed {
-        collect_one(
-            sql,
-            statement,
-            &mut insert_n,
-            &mut trigger_n,
-            &mut inserts,
-            &mut selects,
-            &mut triggers,
-        );
+        collect_one(sql, statement, &mut out);
     }
     SqlStatementFileFacts {
         path: Default::default(),
         inserts,
         selects,
+        updates,
+        deletes,
         triggers,
         parse_failed,
         insert_keyword_count,
@@ -58,34 +65,37 @@ pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
     }
 }
 
-fn collect_one(
-    sql: &str,
-    statement: &Statement,
-    insert_n: &mut usize,
-    trigger_n: &mut usize,
-    inserts: &mut Vec<SqlInsertFact>,
-    selects: &mut Vec<SqlSelectFact>,
-    triggers: &mut Vec<SqlTriggerFact>,
-) {
+struct FactOut<'a> {
+    insert_n: &'a mut usize,
+    trigger_n: &'a mut usize,
+    inserts: &'a mut Vec<SqlInsertFact>,
+    selects: &'a mut Vec<SqlSelectFact>,
+    updates: &'a mut Vec<Vec<SqlRelationPredicateFact>>,
+    deletes: &'a mut Vec<Vec<SqlRelationPredicateFact>>,
+    triggers: &'a mut Vec<SqlTriggerFact>,
+}
+
+fn collect_one(sql: &str, statement: &Statement, out: &mut FactOut<'_>) {
     if let Statement::Insert(insert) = statement {
-        *insert_n += 1;
-        if let Some(fact) = insert::from_statement(sql, statement, *insert_n) {
-            inserts.push(fact);
+        *out.insert_n += 1;
+        if let Some(fact) = insert::from_statement(sql, statement, *out.insert_n) {
+            out.inserts.push(fact);
         }
         if let Some(source) = insert.source.as_deref() {
-            collect_query_inserts(sql, source, insert_n, inserts);
+            collect_query_inserts(sql, source, out.insert_n, out.inserts);
         }
     }
     if matches!(statement, Statement::CreateTrigger(_)) {
-        *trigger_n += 1;
-        if let Some(fact) = trigger::from_statement(sql, statement, *trigger_n) {
-            triggers.push(fact);
+        *out.trigger_n += 1;
+        if let Some(fact) = trigger::from_statement(sql, statement, *out.trigger_n) {
+            out.triggers.push(fact);
         }
     }
     if let Statement::Query(query) = statement {
-        collect_query_inserts(sql, query, insert_n, inserts);
+        collect_query_inserts(sql, query, out.insert_n, out.inserts);
     }
-    select::collect(sql, statement, selects);
+    select::collect(sql, statement, out.selects);
+    mutations::collect(sql, statement, out.updates, out.deletes, out.selects);
 }
 
 fn collect_query_inserts(

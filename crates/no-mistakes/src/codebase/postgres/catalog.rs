@@ -103,6 +103,20 @@ impl SchemaCatalog {
         self.model_tables.get(name)
     }
 
+    pub fn relation(&self, name: &str) -> Option<&CatalogTable> {
+        let normalized = names::normalize_table_name(name);
+        if let Some(table) = self.model_tables.get(&normalized) {
+            return Some(table);
+        }
+        let tail = normalized.rsplit('.').next().unwrap_or(&normalized);
+        let mut matches = self
+            .model_tables
+            .iter()
+            .filter(|(key, _)| key.rsplit('.').next().unwrap_or(key) == tail);
+        let (_, table) = matches.next()?;
+        matches.next().is_none().then_some(table)
+    }
+
     pub fn functions(&self) -> impl Iterator<Item = &CatalogFunction> {
         self.functions.values()
     }
