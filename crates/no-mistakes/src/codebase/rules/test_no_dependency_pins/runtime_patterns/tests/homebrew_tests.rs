@@ -164,6 +164,8 @@ fn a_formula_is_still_a_formula_when_uses_is_not_its_key() {
     for line in [
         "brew install homebrew/core/postgresql@18",
         "brew reuses: homebrew/core/postgresql@18",
+        "brew package.uses: homebrew/core/postgresql@18",
+        "brew steps/uses: homebrew/core/postgresql@18",
         "brew uses homebrew/core/postgresql@18",
         "brew install postgresql@18 # uses: homebrew/core",
     ] {

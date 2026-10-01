@@ -7,3 +7,5 @@ expect(script).toContain('HOMEBREW_PREFIX=$(brew --prefix postgresql@18)')
 expect(script).toContain('brew install homebrew/core/postgresql@18')
 // A slashless `uses:` value is not an action ref, so it stays a formula.
 expect(output).toContain('Homebrew uses: postgresql@18')
+// A key that only ends in `uses` is not the `uses:` key, so this is a formula.
+expect(script).toContain('brew package.uses: homebrew/core/postgresql@18')
