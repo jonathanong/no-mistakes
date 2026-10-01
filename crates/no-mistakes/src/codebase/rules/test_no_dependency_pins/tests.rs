@@ -200,9 +200,9 @@ fn fail_fixture_reports_each_runtime_pin() {
         ),
         ("src/runner-label.test.mts", "versioned runner label", 9),
         // `uses` is a key through escaped quotes at every JavaScript layer; the
-        // last line is prose, so its formula is not an action ref.
-        ("src/uses-key.test.mts", "exact action ref", 4),
-        ("src/uses-key.test.mts", "versioned Homebrew formula", 1),
+        // last two lines are prose, so their formulas are not action refs.
+        ("src/uses-key.test.mts", "exact action ref", 5),
+        ("src/uses-key.test.mts", "versioned Homebrew formula", 2),
     ] {
         let actual = findings
             .iter()

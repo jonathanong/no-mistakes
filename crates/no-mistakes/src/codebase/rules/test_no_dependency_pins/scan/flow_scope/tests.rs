@@ -125,7 +125,6 @@ fn an_escaped_quote_inside_an_escaped_string_does_not_end_it() {
     for text in [
         r#""{ name: \"a\\\"}x\""#,
         r#""{ name: \"a\\\"]x\""#,
-        r#"'{ name: \'a\\\'}x\'"#,
         r#""{ name: \"\\\"}\""#,
         // A different quote kind inside the string is content, not its end.
         r#"{ name: \"it\'s}\""#,
@@ -138,6 +137,30 @@ fn an_escaped_quote_inside_an_escaped_string_does_not_end_it() {
     // string closes the one that is open.
     assert!(!inside_flow(r#"{ a: \"x\\\"{\" }"#));
     assert!(!inside_flow(r#"{ a: \"x\\\"{\" }, b: \"y\\\"{\" }"#));
+}
+
+#[test]
+fn a_backslash_in_a_single_quoted_scalar_is_literal() {
+    // YAML single quotes have no backslash escape, so `\'x\\\'` is the scalar
+    // `x\` and the quote after the backslash ends it. The brace after it closes
+    // the collection, and the brace of the next scalar is quoted.
+    assert!(!inside_flow(r#"{ a: \'x\\\' }"#));
+    assert!(!inside_flow(r#"{ a: \'x\\\' }, note: \'y\'"#));
+    assert!(!inside_flow(r#"'{ name: \'a\\\'}x\'"#));
+    assert!(inside_flow(r#"{ a: \'x\\\', b: \'}\'"#));
+    // Any number of literal backslashes ends it, odd or even.
+    assert!(!inside_flow(r#"{ a: \'x\\\\\' }"#));
+    assert!(inside_flow(r#"{ a: \'x\\\\\', b: \'}\'"#));
+    // Two JavaScript layers write the quote with three backslashes, and a literal
+    // backslash before it adds four more.
+    assert!(inside_flow(r#"{ a: \\\'}\\\'"#));
+    assert!(!inside_flow(r#"{ a: \\\'x\\\\\\\' }"#));
+    // A quote of another kind inside the scalar is content.
+    assert!(inside_flow(r#"{ a: \'it\"s}\'"#));
+    // An empty scalar ends at once.
+    assert!(!inside_flow(r#"{ a: \'\' }"#));
+    // The same run in a double-quoted scalar is a quote of the scalar.
+    assert!(inside_flow(r#"{ a: \"x\\\" }\""#));
 }
 
 #[test]

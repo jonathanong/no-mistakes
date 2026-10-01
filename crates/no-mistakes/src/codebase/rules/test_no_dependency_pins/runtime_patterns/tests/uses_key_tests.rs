@@ -25,7 +25,6 @@ fn uses_stays_a_key_through_escaped_quotes_at_every_javascript_layer() {
     for line in [
         // A `\\\"` inside a `\"` scalar is a quote of the scalar, so its brace is quoted.
         r#""{ name: \"a\\\"}x\", uses: Homebrew/actions/setup-homebrew@4 }""#,
-        r#"'{ name: \'a\\\'}x\', uses: Homebrew/actions/setup-homebrew@4 }'"#,
         r#""{ name: \"a\\\"]x\", uses: Homebrew/actions/setup-homebrew@4 }""#,
         // Two layers write the quote itself with three backslashes.
         r#""{ name: \\\"}\\\", uses: Homebrew/actions/setup-homebrew@4 }""#,
@@ -34,6 +33,12 @@ fn uses_stays_a_key_through_escaped_quotes_at_every_javascript_layer() {
         r#""{ name: \"}\", uses: Homebrew/actions/setup-homebrew@4 }""#,
         r#""{ name: \"a\\\"b\", uses: Homebrew/actions/setup-homebrew@4 }""#,
         r#""{ name: \"x\\\\\", uses: Homebrew/actions/setup-homebrew@4 }""#,
+        // A single-quoted scalar has no backslash escape: the quote ends it, so
+        // `a\` is a scalar and the mapping goes on.
+        r#"'{ name: \'}\', uses: Homebrew/actions/setup-homebrew@4 }'"#,
+        r#"'{ name: \\\'}\\\', uses: Homebrew/actions/setup-homebrew@4 }'"#,
+        r#"'{ name: \'a\\\', uses: Homebrew/actions/setup-homebrew@4 }'"#,
+        r#"'{ name: \'a\\\', env: \'}\', uses: Homebrew/actions/setup-homebrew@4 }'"#,
         // Raw YAML with an escaped quote in a plain-quoted scalar.
         r#"{ name: "a\"}x", uses: Homebrew/actions/setup-homebrew@4 }"#,
     ] {
@@ -47,6 +52,10 @@ fn a_comma_after_a_closed_escaped_mapping_is_prose_not_a_uses_key() {
         // The scalar ends at its closing quote, so the brace after it closes the mapping.
         r#"brew { a: \"x\\\"{\" }, uses: homebrew/core/postgresql@18"#,
         r#"brew { a: \\\"x\\\" }, uses: homebrew/core/postgresql@18"#,
+        // In single quotes a backslash is literal, so the quote after it ends the
+        // scalar and the brace after that closes the mapping.
+        r#"{ a: \'x\\\' }, note: \'y\', uses: homebrew/core/postgresql@18"#,
+        r#"'{ name: \'a\\\'}x\', uses: Homebrew/actions/setup-homebrew@4 }'"#,
         // An even run of backslashes writes no quote, so the brace it hides counts.
         r#"brew { a: \\"}, uses: homebrew/core/postgresql@18"#,
         r#"brew { a: \\\\"}, uses: homebrew/core/postgresql@18"#,
@@ -84,6 +93,15 @@ fn a_block_scalar_and_a_value_on_the_next_line_are_not_known() {
         reasons("- uses:\n    Homebrew/actions/setup-homebrew@4"),
         [reason(2, FORMULA)]
     );
+}
+
+#[test]
+fn a_doubled_quote_in_an_escaped_single_quoted_scalar_is_not_known() {
+    // Limit: `\'\'` is a quote of the scalar, so `\'it\'\'s}\'` holds `it's}` and
+    // `uses` is a key. The scalar is read as ending at the first `\'`, so the
+    // brace closes the mapping and the formula reason is chosen.
+    let line = r#"{ a: \'it\'\'s}\', uses: Homebrew/actions/setup-homebrew@4 }"#;
+    assert_eq!(reasons(line), [reason(1, FORMULA)], "{line}");
 }
 
 #[test]

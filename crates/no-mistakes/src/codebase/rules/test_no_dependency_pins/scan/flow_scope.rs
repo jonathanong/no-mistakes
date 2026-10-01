@@ -112,17 +112,27 @@ fn step_in_string(bytes: &[u8], at: usize, span: &Span) -> (usize, bool) {
 /// One step inside a string whose quotes are written with backslashes. Every
 /// JavaScript layer doubles the backslashes of the YAML text and writes a quote
 /// with one more, so a run of `escapes + (escapes + 1) * k` backslashes before the
-/// quote holds `k` YAML backslashes. The quote ends the string when `k` is even
-/// and is a quote of the scalar when `k` is odd: `\"a\\\"}x\"` is one string
-/// holding `a"}x`, not a string that ends at `\\\"`.
+/// quote holds `k` YAML backslashes.
 fn step_in_escaped_string(bytes: &[u8], at: usize, span: &Span) -> (usize, bool) {
     if bytes[at] != b'\\' {
         return (at + 1, false);
     }
     let run = backslash_run(bytes, at);
-    let ends =
-        bytes.get(at + run) == Some(&span.quote) && run % (2 * (span.escapes + 1)) == span.escapes;
+    let ends = bytes.get(at + run) == Some(&span.quote) && closes_scalar(run, span);
     (at + run + usize::from(ends), ends)
+}
+
+/// Whether a quote written after `run` backslashes ends the scalar. In double
+/// quotes the quote ends it when `k` is even and is a quote of the scalar when
+/// `k` is odd: `\"a\\\"}x\"` is one string holding `a"}x`, not a string that ends
+/// at `\\\"`. In single quotes a backslash is literal, so any `k` ends it:
+/// `\'a\\\'` is the scalar `a\`.
+fn closes_scalar(run: usize, span: &Span) -> bool {
+    let layer = span.escapes + 1;
+    let Some(extra) = run.checked_sub(span.escapes) else {
+        return false;
+    };
+    extra % layer == 0 && (span.quote == b'\'' || (extra / layer) % 2 == 0)
 }
 
 fn is_quote(byte: Option<&u8>) -> bool {

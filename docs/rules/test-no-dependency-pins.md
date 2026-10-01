@@ -166,7 +166,9 @@ only the pin (not the surrounding line), and reports several pins per line.
   comma after an unclosed `{` or `[` also starts a key, with quoted scalars such
   as `{ name: "}", uses: ... }` skipped, including quotes written with a
   backslash for a JavaScript string, one layer deep (`\"`) or two (`\\\"`), and
-  the quotes of a scalar inside one: `\"a\\\"}x\"`), or a list item. Not
+  the quotes of a scalar inside one: `\"a\\\"}x\"`; a single-quoted scalar has
+  no backslash escape, so `\'a\\\'` is the scalar `a\` and the quote after the
+  backslash ends it), or a list item. Not
   `pnpm@12` or `undici@1.0.1` without that context.
 
   Each line is read on its own, so a few layouts pick the other reason. The
@@ -177,8 +179,10 @@ only the pin (not the surrounding line), and reports several pins per line.
   scalar (`run: |`) reports the action ref; a value on the line after `uses:`
   reports the formula; and a plain-quoted scalar with a JavaScript-escaped
   backslash before its quote (`'{ name: "a\\"}x", uses: ... }'`) is read as raw
-  YAML, so its quote ends the scalar. Telling them apart needs a YAML parser or
-  state across lines, so these stay as they are and tests pin them.
+  YAML, so its quote ends the scalar, and in a single-quoted scalar written with
+  escaped quotes a doubled `''` (`\'it\'\'s}\'`) is read as ending at the first
+  `\'`. Telling them apart needs a YAML parser or state across lines, so these
+  stay as they are and tests pin them.
 - `versioned runner label`: `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15`,
   `macos-15-intel`, `windows-2025`, and `windows-11-arm`. Not `ubuntu-latest`,
   `ubuntu-slim`, `macos-latest`, or `windows-1252`.
