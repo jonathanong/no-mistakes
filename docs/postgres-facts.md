@@ -14,7 +14,7 @@ These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`,
 `postgres-constraint-validate`, `postgres-no-add-column`,
-and `postgres-column-naming`
+`postgres-column-naming`, and `postgres-identifier-length`
 consume the facts through `no-mistakes check`. Forthcoming DML rules
 (`postgres-required-predicates`, `postgres-sql-shape-policy`,
 `postgres-idempotent-insert`) will consume the same INSERT/SELECT facts
@@ -77,6 +77,17 @@ request `SourceStore` and runs `extract_migration_facts`, which includes
   `ON DELETE SET NULL` / `SET DEFAULT` are omitted from the action string),
   and a source line
 - `ALTER TABLE … ADD COLUMN`: table, column name, and a source line
+- Declared identifiers: each name a statement introduces, unquoted and without
+  a schema qualifier, plus that statement's line. This covers `CREATE TABLE`
+  (the table, its columns, and inline or table `CONSTRAINT` names),
+  `CREATE [UNIQUE] INDEX`, `CREATE TRIGGER`, `CREATE [OR REPLACE] FUNCTION`,
+  `CREATE PROCEDURE`, `CREATE [MATERIALIZED] VIEW`, `CREATE TYPE`, and
+  `ALTER TABLE` / `ALTER INDEX` names introduced by `ADD CONSTRAINT`,
+  `ADD COLUMN`, `RENAME TO`, `RENAME COLUMN … TO`, and `RENAME CONSTRAINT … TO`.
+  Referenced names, including `REFERENCES` targets, are omitted. Dollar-quoted
+  `DO` bodies are included in this list; routine bodies are merged with lines
+  remapped onto the outer file. `postgres-identifier-length` reads this list
+  and does not parse SQL itself.
 - Named `ALTER TABLE … ADD CONSTRAINT … NOT VALID` rows
 - `ALTER TABLE … VALIDATE CONSTRAINT` rows
 

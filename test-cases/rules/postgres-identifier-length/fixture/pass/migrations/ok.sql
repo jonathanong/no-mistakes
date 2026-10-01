@@ -1,0 +1,5 @@
+CREATE TABLE ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp (id uuid);
+CREATE INDEX ON ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp (id);
+CREATE INDEX short_idx ON ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp (id);
+SELECT 1;
+ALTER TABLE ppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp DROP COLUMN id;

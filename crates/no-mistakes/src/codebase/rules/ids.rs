@@ -44,6 +44,7 @@ pub use super::postgres_constraint_validate::RULE_ID as POSTGRES_CONSTRAINT_VALI
 pub use super::postgres_duplicate_function_body::RULE_ID as POSTGRES_DUPLICATE_FUNCTION_BODY;
 pub use super::postgres_fk_index::RULE_ID as POSTGRES_FK_INDEX;
 pub use super::postgres_idempotent_insert::RULE_ID as POSTGRES_IDEMPOTENT_INSERT;
+pub use super::postgres_identifier_length::RULE_ID as POSTGRES_IDENTIFIER_LENGTH;
 pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;
 pub use super::postgres_no_add_column::RULE_ID as POSTGRES_NO_ADD_COLUMN;
 pub use super::postgres_no_generated_column_writes::RULE_ID as POSTGRES_NO_GENERATED_COLUMN_WRITES;

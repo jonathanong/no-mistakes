@@ -49,6 +49,7 @@ words:
   - DeleteMapping
   - Dtest
   - RequestMapping
+  - fkey
   - frontends
   - funcs
   - gitignore
@@ -69,6 +70,8 @@ words:
   - markdown
   - maccatalyst
   - msvc
+  - multibyte
+  - NAMEDATALEN
   - napi
   - nextjs
   - NestJS
