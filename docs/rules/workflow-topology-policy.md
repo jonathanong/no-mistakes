@@ -174,6 +174,10 @@ concurrency:
 # concurrency group collision: shared: .github/workflows/one.yml, .github/workflows/two.yml
 ```
 
+Give each owner its own group. Include `${{ github.workflow }}` or another
+value that differs per workflow, and use different text for a workflow lock
+and a job lock in the same file.
+
 ## Valid example
 
 ```yaml
@@ -193,7 +197,8 @@ jobs:
 ## Fix
 
 Add the missing topology edge or ordered step, or update the policy with the
-intended graph and a reason for an intentionally unlocked workflow.
+intended graph and a reason for an intentionally unlocked workflow. For a
+concurrency group collision, give each owner its own group.
 
 ## Suppression
 
