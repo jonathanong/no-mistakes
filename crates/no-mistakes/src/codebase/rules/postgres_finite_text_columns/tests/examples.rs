@@ -221,6 +221,47 @@ fn edges_cover_casts_quotes_names_generated_and_truncation() {
 }
 
 #[test]
+fn one_peer_and_three_peers_use_the_matching_join() {
+    let definition = "CHECK ((status = ANY (ARRAY['a'::text, 'b'::text])))";
+    let pair = messages(
+        PATH,
+        serde_json::json!({
+            "tables": {
+                "bills": {
+                    "columns": { "status": { "dataType": "text" } },
+                    "checkConstraints": { "ck": { "definition": definition } }
+                },
+                "invoices": {
+                    "columns": { "status": { "dataType": "text" } },
+                    "checkConstraints": { "ck": { "definition": definition } }
+                }
+            }
+        }),
+    );
+    assert!(
+        pair.iter()
+            .any(|message| message.contains("bills.status has the same values")),
+        "{pair:#?}"
+    );
+    let mut tables = serde_json::Map::new();
+    for name in ["a", "b", "c", "d"] {
+        tables.insert(
+            name.to_string(),
+            serde_json::json!({
+                "columns": { "status": { "dataType": "text" } },
+                "checkConstraints": { "ck": { "definition": definition } }
+            }),
+        );
+    }
+    let messages = messages(PATH, serde_json::json!({ "tables": tables }));
+    assert!(
+        messages.iter().any(|message| message
+            .contains("b.status, c.status and d.status have the same values")),
+        "{messages:#?}"
+    );
+}
+
+#[test]
 fn long_value_lists_and_peer_lists_truncate() {
     let values = (0..12).map(|index| format!("v{index}")).collect::<Vec<_>>();
     let list = values

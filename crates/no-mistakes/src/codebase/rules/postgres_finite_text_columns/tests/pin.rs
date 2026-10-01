@@ -79,4 +79,9 @@ fn negated_forms_other_columns_and_functions_do_not_pin() {
     );
     eq("this is not sql !!!", "status", None);
     eq("status = 'draft', trailing", "status", Some(&["draft"]));
+    eq("(')", "status", None);
+    eq("status = ANY (other_status)", "status", None);
+    eq("status = E'draft'", "status", Some(&["draft"]));
+    eq("status = N'draft'", "status", Some(&["draft"]));
+    eq("status = $$draft$$", "status", Some(&["draft"]));
 }
