@@ -187,13 +187,13 @@ fn fail_fixture_reports_each_runtime_pin() {
         // The two plain refs and three `uses:` refs on Homebrew lines; none is a formula.
         ("src/action-ref.test.mts", "exact action ref", 5),
         ("src/action-ref.test.mts", "versioned Homebrew formula", 0),
-        ("src/container-image.test.mts", "container image tag", 18),
+        ("src/container-image.test.mts", "container image tag", 19),
         ("src/container-image.test.mts", "container image digest", 2),
         ("src/setup-version.test.mts", "setup action version", 6),
         (
             "src/homebrew-formula.test.mts",
             "versioned Homebrew formula",
-            7,
+            8,
         ),
         ("src/runner-label.test.mts", "versioned runner label", 9),
     ] {

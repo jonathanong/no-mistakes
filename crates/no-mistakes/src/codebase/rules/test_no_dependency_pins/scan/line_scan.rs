@@ -4,10 +4,12 @@ use regex::{Match, Regex};
 use std::sync::LazyLock;
 
 /// The text before a pin when the pin ends a `uses:` value: the key (bare,
-/// quoted, or escaped), an optional opening quote, then `owner/` path
-/// components. The key may follow a JavaScript `\n`/`\r`/`\t` escape.
+/// quoted, or escaped), an optional opening quote, then one or more `owner/`
+/// path components, the shape the exact-action-ref pattern reads. A slashless
+/// value (`uses: postgresql@18`) is not an action ref, so it stays a formula.
+/// The key may follow a JavaScript `\n`/`\r`/`\t` escape.
 static USES_VALUE_PREFIX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?:^|\\[nrt]|[^A-Za-z0-9_-])uses\\?["']?\s*:\s*\\?["']?(?:[\w.-]+/)*$"#)
+    Regex::new(r#"(?:^|\\[nrt]|[^A-Za-z0-9_-])uses\\?["']?\s*:\s*\\?["']?(?:[\w.-]+/)+$"#)
         .expect("uses value prefix regex")
 });
 

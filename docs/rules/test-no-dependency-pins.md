@@ -119,12 +119,13 @@ only the pin (not the surrounding line), and reports several pins per line.
   version. A tap-qualified formula (`brew install homebrew/core/postgresql@18`)
   is one finding for `postgresql@18`, not also an `exact action ref` for
   `core/postgresql@18`: the Homebrew pattern owns its text and a context-free pin
-  overlapping it is dropped. The tail of a `uses:` value is never a formula, so an
-  action ref on a Homebrew line is reported as an `exact action ref`:
+  overlapping it is dropped. The tail of an `owner/repo` `uses:` value is never a
+  formula, so an action ref on a Homebrew line is reported as an `exact action ref`:
   `uses: Homebrew/actions/setup-homebrew@4` is the action ref
   `actions/setup-homebrew@4` and never the formula `setup-homebrew@4`, however
   the value is quoted or keyed (`uses: '...'`, `"uses": "..."`, `- uses: ...`).
-  Not `pnpm@12` or `undici@1.0.1` without that context.
+  A value with no `/` (`Homebrew uses: postgresql@18`) is not an action ref, so it
+  stays a formula. Not `pnpm@12` or `undici@1.0.1` without that context.
 - `versioned runner label`: `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15`,
   `macos-15-intel`, `windows-2025`, and `windows-11-arm`. Not `ubuntu-latest`,
   `ubuntu-slim`, `macos-latest`, or `windows-1252`.
@@ -140,7 +141,8 @@ or `FROM`, because `file.mts:12`, `dev/initialize:2`, `users/list:v2` API keys,
 and Go or Node stack frames have the same shape. `image: repo:v2beta` and
 `image: repo:vNext` are not pins, and neither is a registry-host tag that a
 `/`, `-suffix`, or word follows (`ghcr.io/owner/name:v2/path`) or a URL
-(`https://ghcr.io/owner/name:v2`).
+(`https://ghcr.io/owner/name:v2`). A registry-host `v` tag written with no
+space or quote after the key (`image:ghcr.io/owner/name:v2`) is also a pin.
 
 Repository path components follow Docker's grammar: alphanumeric runs joined by
 `.`, `_` or `__`, or one or more `-`, so `owner/my.image:1.2.3`,

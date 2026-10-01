@@ -22,3 +22,5 @@ expect(compose).toContain('image: owner/repo:v2')
 expect(image).toBe('ghcr.io/acme/api:v2')
 expect(image).toBe('registry.internal:5000/acme/api:v3')
 expect(images).toEqual(['owner/repo:v2', 'ghcr.io/acme/api:v4'])
+// With no space or quote after `image:`, a tight-context pattern still reads the host tag.
+expect(compose).toContain('image:ghcr.io/acme/api:v5')

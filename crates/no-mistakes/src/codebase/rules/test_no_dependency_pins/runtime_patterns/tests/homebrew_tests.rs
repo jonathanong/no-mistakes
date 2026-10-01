@@ -169,6 +169,16 @@ fn a_formula_is_still_a_formula_when_uses_is_not_its_key() {
     ] {
         assert_eq!(readings(line), [formula("postgresql@18")], "{line}");
     }
+    // A slashless value is not an action ref (`owner/repo@ref`), so no action-ref
+    // finding replaces the formula and it must not be dropped.
+    for line in [
+        "Homebrew uses: postgresql@18",
+        "expect(output).toContain('Homebrew uses: postgresql@18')",
+        "brew uses: \"postgresql@18\"",
+        "\"uses\": \"postgresql@18\" // brew",
+    ] {
+        assert_eq!(readings(line), [formula("postgresql@18")], "{line}");
+    }
     let mut mixed =
         readings("uses: actions/checkout@v4 && brew install homebrew/core/postgresql@18");
     mixed.sort();

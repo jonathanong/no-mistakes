@@ -160,6 +160,27 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
         ),
         None,
     ),
+    // `image:ghcr.io/acme/api:v2` with nothing between the key and the host: the
+    // context-free pattern's left boundary rejects the `:`, so this tight form
+    // keeps it. Any space or quote after the colon belongs to that pattern, so a
+    // tag is never reported twice.
+    (
+        "container image tag",
+        concat!(
+            r#"\bimage\\?["']?:"#,
+            "(?P<pin>",
+            host!(),
+            "/",
+            comp_dot!(),
+            "(?:/",
+            comp_dot!(),
+            r")*:v\d+",
+            digest_opt!(),
+            ")",
+            image_end!()
+        ),
+        None,
+    ),
     (
         "container image digest",
         concat!(

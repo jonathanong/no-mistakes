@@ -174,6 +174,34 @@ fn a_registry_host_v_tag_is_an_image_without_context() {
 }
 
 #[test]
+fn a_registry_host_v_tag_right_after_the_image_key_is_one_pin() {
+    // With nothing between `image:` and the host, the context-free pattern's left
+    // boundary sits on the `:`, so a tight-context pattern reads the tag. Every
+    // spaced or quoted form is the context-free pattern's alone: one pin, not two.
+    for line in [
+        "image:ghcr.io/acme/api:v2",
+        "{\"image\":ghcr.io/acme/api:v2}",
+        "'image':ghcr.io/acme/api:v2",
+        "image: ghcr.io/acme/api:v2",
+        "image:\tghcr.io/acme/api:v2",
+        "image: \"ghcr.io/acme/api:v2\"",
+        "\"image\":\"ghcr.io/acme/api:v2\"",
+        "image:'ghcr.io/acme/api:v2'",
+        "FROM ghcr.io/acme/api:v2",
+    ] {
+        assert_pins(line, &["ghcr.io/acme/api:v2"]);
+    }
+    for line in [
+        "image:ghcr.io/acme/api:v2/path",
+        "image:ghcr.io/acme/api:v2-beta",
+        "image:ghcr.io/acme/api:v",
+        "image:https://ghcr.io/acme/api:v2",
+    ] {
+        assert_pins(line, &[]);
+    }
+}
+
+#[test]
 fn container_image_digests_are_pins() {
     let digest = "06ada57c26aa5cf429e9f2c0a99e3e4a42daecd45fc4c955d7c1399ab4227ae8";
     for image in [
