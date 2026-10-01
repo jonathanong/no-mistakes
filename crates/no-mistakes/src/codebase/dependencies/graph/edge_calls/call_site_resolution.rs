@@ -10,6 +10,11 @@ struct CallSiteResolution<'a, 'b> {
     indexes: &'a CallableResolutionIndexes,
     path: &'a std::path::Path,
     index: &'a CallableFileIndex,
+    /// Whether any file declares a namespace; without one, no import can
+    /// lead to a namespace member and the lookups are skipped.
+    namespaces_in_repo: bool,
+    /// Namespace uses found while resolving this file's calls.
+    escapes: std::cell::RefCell<FxHashSet<(std::path::PathBuf, String)>>,
 }
 
 impl CallSiteResolution<'_, '_> {
@@ -64,12 +69,9 @@ impl CallSiteResolution<'_, '_> {
             | CallTargetIdentity::Global
             | CallTargetIdentity::Unknown => None,
         };
-        let source = call.caller.as_deref().map_or_else(
-            || NodeId::file_in(&self.edge_inputs.interner, path),
-            |caller| {
-                NodeId::scoped_in(&self.edge_inputs.interner, path, caller, call.caller_id)
-            },
-        );
+        if let Some((target, id)) = self.namespace_member(call, target_identity) {
+            return self.finish(call, target, Some(id));
+        }
         let resolved_target = match (target_identity, target) {
             (CallTargetIdentity::RepositoryFunction, Some((file, scope))) => {
                 ResolvedCallTarget::RepositoryFunction { file, scope }
@@ -83,33 +85,19 @@ impl CallSiteResolution<'_, '_> {
                 &resolved_callee.callee,
                 self.indexes,
             )
+            .filter(|target| *target != ResolvedCallTarget::Unknown)
+            .or_else(|| {
+                (self.namespaces_in_repo && call.invocation == InvocationKind::Construct)
+                    .then(|| self.imported_namespace_member(&resolved_callee.callee))
+                    .flatten()
+            })
             .unwrap_or(ResolvedCallTarget::Unknown),
             (CallTargetIdentity::Global, _) => ResolvedCallTarget::Global {
                 name: call.callee.clone(),
             },
             _ => ResolvedCallTarget::Unknown,
         };
-        let edge = graph_call_target_node(
-            &self.edge_inputs.interner,
-            self.facts,
-            self.indexes,
-            &resolved_target,
-            callable_id,
-        )
-        .map(|target| (source, target, EdgeKind::Call));
-        (
-            edge,
-            ResolvedCallSite {
-                file: path.to_path_buf(),
-                caller: call.caller.clone(),
-                caller_id: call.caller_id,
-                source_callee: call.callee.clone(),
-                line: call.line,
-                offset: call.offset,
-                invocation: call.invocation,
-                target: resolved_target,
-            },
-        )
+        self.finish(call, resolved_target, callable_id)
     }
 
     /// Calls whose callee the extractor could not name, unless a traversable
@@ -145,7 +133,13 @@ impl CallSiteResolution<'_, '_> {
         let lines: FxHashMap<_, _> = file.class_declaration_lines.iter().copied().collect();
         let exported: FxHashSet<&str> =
             file.exported_functions.iter().map(String::as_str).collect();
-        let namespaced: FxHashSet<_> = file.namespaced_or_ambient_class_ids.iter().collect();
+        let ambient: FxHashSet<_> = file.namespaces.unreported_class_ids.iter().collect();
+        let members: FxHashMap<_, _> = file
+            .namespaces
+            .members
+            .iter()
+            .map(|member| (member.id, member))
+            .collect();
         let mut edges = Vec::new();
         let mut classes = Vec::new();
         for (call, (class_id, scope)) in file
@@ -155,13 +149,18 @@ impl CallSiteResolution<'_, '_> {
         {
             let (edge, site) = self.resolve(call);
             edges.extend(edge.map(|(class, base, _)| (class, base, EdgeKind::Extends)));
+            let member = members.get(&class_id);
             classes.push(ClassDeclaration {
                 file: self.path.to_path_buf(),
                 scope: scope.to_string(),
                 callable_id: class_id,
                 line: lines.get(&class_id).copied().unwrap_or(0),
-                exported: exported.contains(scope),
-                namespaced_or_ambient: namespaced.contains(&class_id),
+                exported: member.map_or_else(|| exported.contains(scope), |member| member.exported),
+                ambient: ambient.contains(&class_id),
+                namespace: member
+                    .and_then(|member| member.path.rsplit_once('.'))
+                    .map(|(namespace, _)| namespace.to_string()),
+                namespace_escaped: false,
                 global_base: match site.target {
                     ResolvedCallTarget::Global { name } => Some(name),
                     _ => None,

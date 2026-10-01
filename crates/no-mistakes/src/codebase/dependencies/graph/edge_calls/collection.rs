@@ -6,6 +6,8 @@ struct CallPass {
     edges: Vec<Edge>,
     sites: Vec<ResolvedCallSite>,
     classes: Vec<ClassDeclaration>,
+    /// Namespaces whose use the graph cannot follow to a class, per file.
+    escapes: Vec<(std::path::PathBuf, String)>,
 }
 
 fn collect_call_edges_for_core(
@@ -20,6 +22,12 @@ fn collect_call_edges_for_core(
     use rayon::prelude::*;
     let plan = edge_inputs.plan;
     let indexes = CallableResolutionIndexes::default();
+    let namespaces_in_repo = plan.extends
+        && edge_inputs.graph_files.indexable().iter().any(|path| {
+            facts
+                .get_ts_facts(path)
+                .is_some_and(|file| !file.namespaces.roots.is_empty())
+        });
     let per_file = edge_inputs
         .graph_files
         .indexable()
@@ -34,6 +42,8 @@ fn collect_call_edges_for_core(
                 indexes: &indexes,
                 path,
                 index: &index,
+                namespaces_in_repo,
+                escapes: Default::default(),
             };
             let mut output = CallPass::default();
             if plan.calls {
@@ -52,6 +62,10 @@ fn collect_call_edges_for_core(
                 let (edges, classes) = resolution.class_bases(file);
                 output.edges.extend(edges);
                 output.classes.extend(classes);
+                if namespaces_in_repo {
+                    resolution.record_namespace_escapes(file);
+                    output.escapes.extend(resolution.escapes.take());
+                }
             }
             Some(output)
         })
@@ -65,12 +79,21 @@ fn collect_call_edges_for_core(
             callable_export_resolutions,
         );
     }
-    per_file
+    let mut pass = per_file
         .into_iter()
         .fold(CallPass::default(), |mut all, part| {
             all.edges.extend(part.edges);
             all.sites.extend(part.sites);
             all.classes.extend(part.classes);
+            all.escapes.extend(part.escapes);
             all
-        })
+        });
+    if namespaces_in_repo {
+        let mut escapes = NamespaceEscapes::default();
+        for (file, root) in pass.escapes.drain(..) {
+            escapes.entry(file).or_default().insert(root);
+        }
+        mark_escaped_namespaces(&mut pass.classes, &escapes);
+    }
+    pass
 }

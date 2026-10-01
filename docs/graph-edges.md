@@ -305,7 +305,8 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   literals and supported expression-free shapes produce edges. (Playwright
   `route-test` navigation is the documented exception above.)
 - `call` edges are opt-in and are deliberately soundness-bounded. Only local
-  functions, direct named imports, static namespace-member imports, and explicit named re-exports with one
+  functions, direct named imports, static namespace-member imports, explicit named re-exports, and
+  `new` of a TypeScript `namespace` member (see `extends` below) with one
   resolved target become edges. Import specifiers resolve as they do for
   `import` edges, including workspace package names (`@scope/pkg`), their
   `exports` subpaths, and package `imports` (`#name`); a bare specifier that no
@@ -331,12 +332,23 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   produces no `call` edge, no call site, and no callable export resolution, so
   `forbidden-calls` and `call` traversal do not see it. A companion
   `ClassDeclaration` record carries what an edge cannot (the declaration line,
-  whether the class is exported, whether it sits inside a `namespace`,
-  `declare module`, or `declare global` block or is itself `declare`d, and a
-  global base such as `Error`). The extractor scopes a namespaced class by its
-  own name and does not resolve references to namespace members, so a consumer
-  that needs to know whether a class is built must treat that flag as "cannot
-  tell". Mixin and expression bases (`extends mixin(Error)`) are not tracked.
+  whether the class is exported, the namespace path that declares it, whether it
+  is ambient (`declare`d, or inside `declare namespace`, `declare module`, or
+  `declare global`), whether its namespace escaped, and a global base such as
+  `Error`). A construction or `extends` that names a TypeScript `namespace`
+  member resolves to that class by its declaration: `new Errors.X()` and
+  `new Outer.Inner.X()` where the namespace is declared in the same file or is an
+  exported namespace imported through named, renamed, default, barrel, or
+  `export *` bindings, `new A.B.C()` for `namespace A.B`, and a bare `new X()`
+  inside the body that declares `X`. Same-named classes in different namespaces
+  keep their own callable ids. A namespace escapes when any use of it is not
+  one of those static member accesses: an alias, a value argument, a computed
+  access, `export default` or `export =`, a declaration merged across blocks or
+  with a class, enum, or function, a missing member, or a module that exports it
+  and is imported whole, dynamically, or through `require`. A consumer that
+  needs to know whether a class is built must treat `namespace_escaped` as
+  "cannot tell". Mixin and expression bases (`extends mixin(Error)`) are not
+  tracked.
 - Selector text edges are approximate. Exact selector edges from configured test
   ID attributes are stronger than role/text/label/placeholder matching.
   Configured selector wrappers produce the same exact edge when their declared

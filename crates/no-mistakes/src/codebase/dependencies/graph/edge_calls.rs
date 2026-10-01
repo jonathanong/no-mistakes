@@ -30,6 +30,7 @@ struct CallableFileIndex {
     lexical_scope_parents: FxHashMap<usize, Option<usize>>,
     scope_ids_by_display: FxHashMap<String, Vec<crate::codebase::dependencies::extract::CallableId>>,
     stars: Vec<String>,
+    namespaces: NamespaceTable,
 }
 
 #[derive(Clone)]
@@ -61,6 +62,7 @@ struct ResolvedLocalCallee {
 }
 
 include!("edge_calls/index_build.rs");
+include!("edge_calls/namespace_table.rs");
 
 impl CallableFileIndex {
     fn from_facts(file: &crate::codebase::ts_source::facts::TsFileFacts) -> Self {
@@ -131,6 +133,7 @@ impl CallableFileIndex {
             lexical_scope_parents: file.lexical_scope_parents.iter().copied().collect(),
             scope_ids_by_display: index_scope_ids_by_display(&file.callable_scope_ids),
             stars: file.star_reexport_specifiers.clone(),
+            namespaces: NamespaceTable::from_facts(file),
         }
     }
 }
@@ -146,6 +149,7 @@ include!("edge_calls/traversal_filter.rs");
 struct CallableResolutionIndexes {
     files: dashmap::DashMap<std::path::PathBuf, std::sync::Arc<CallableFileIndex>>,
     exports: dashmap::DashMap<(std::path::PathBuf, String), ExportedCallableResolution>,
+    namespace_roots: dashmap::DashMap<(std::path::PathBuf, String), RootLookup>,
 }
 
 /// An `export *` branch can prove that a name is exported without proving it
@@ -181,6 +185,9 @@ impl CallableResolutionIndexes {
 include!("edge_calls/call_site_resolution.rs");
 include!("edge_calls/collection.rs");
 include!("edge_calls/class_declarations.rs");
+include!("edge_calls/call_site_namespace.rs");
+include!("edge_calls/namespace_imports.rs");
+include!("edge_calls/namespace_escapes.rs");
 include!("edge_calls/types.rs");
 include!("edge_calls/roots.rs");
 include!("edge_calls/import_resolution.rs");

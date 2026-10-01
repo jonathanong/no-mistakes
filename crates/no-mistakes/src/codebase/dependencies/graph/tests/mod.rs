@@ -116,6 +116,7 @@ mod call_traversal_unknown_dedup;
 mod call_workspace_packages;
 mod class_bases;
 mod extends_plan;
+mod namespace_members;
 include!("call_traversal_decorators.rs");
 include!("call_traversal_tagged_templates.rs");
 include!("call_policy_coverage.rs");
