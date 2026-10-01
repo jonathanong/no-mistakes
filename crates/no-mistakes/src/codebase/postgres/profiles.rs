@@ -23,6 +23,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-required-comments",
     "postgres-duplicate-function-body",
     "postgres-table-shape",
+    "postgres-status-with-lifecycle-timestamps",
 ];
 
 #[derive(Default, Deserialize)]

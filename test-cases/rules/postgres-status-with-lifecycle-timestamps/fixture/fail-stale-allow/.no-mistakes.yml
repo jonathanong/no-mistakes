@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-status-with-lifecycle-timestamps
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      statusColumns: [status, state]
+      lifecycleVerbs: [sent, failed]
+      allow:
+        - object: table:missing
+          reason: not in this snapshot

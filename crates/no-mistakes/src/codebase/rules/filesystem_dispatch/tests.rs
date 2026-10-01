@@ -13,6 +13,13 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
                     "  - rule: {id}\n    scope: repository\n    options:\n      \
                      workspaceRoots: [\".\"]\n"
                 )
+            } else if *id == POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS {
+                format!(
+                    "  - rule: {id}\n    scope: repository\n    options:\n{}",
+                    include_str!(
+                        "../../../../../../fixtures/rules/filesystem-dispatch/all-rules/status-lifecycle-options.yml"
+                    )
+                )
             } else if *id == POSTGRES_CONFLICT_ORDERING
                 || *id == POSTGRES_COLUMN_REQUIRES_TRIGGER
                 || *id == POSTGRES_REQUIRED_COMMENTS

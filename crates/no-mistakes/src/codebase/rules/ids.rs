@@ -55,6 +55,7 @@ pub use super::postgres_required_comments::RULE_ID as POSTGRES_REQUIRED_COMMENTS
 pub use super::postgres_required_predicates::RULE_ID as POSTGRES_REQUIRED_PREDICATES;
 pub use super::postgres_sql_shape_policy::RULE_ID as POSTGRES_SQL_SHAPE_POLICY;
 pub use super::postgres_sql_statement_policy::RULE_ID as POSTGRES_SQL_STATEMENT_POLICY;
+pub use super::postgres_status_with_lifecycle_timestamps::RULE_ID as POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS;
 pub use super::postgres_table_shape::RULE_ID as POSTGRES_TABLE_SHAPE;
 pub use super::production_dependency_declarations::RULE_ID as PRODUCTION_DEPENDENCY_DECLARATIONS;
 pub use super::require_files_in_subdirs::RULE_ID as REQUIRE_FILES_IN_SUBDIRS;
