@@ -8,6 +8,7 @@ pub(super) fn active_flags(pre: &str) -> String {
     let mut in_class = false;
     let mut verbose = false;
     let mut comment = false;
+    let mut scopes: Vec<bool> = Vec::new();
     while index < chars.len() {
         let character = chars[index];
         if comment {
@@ -55,8 +56,12 @@ pub(super) fn active_flags(pre: &str) -> String {
                 continue;
             }
             depth += 1;
+            scopes.push(verbose);
         } else if character == ')' && depth > 0 {
             depth -= 1;
+            if let Some(previous) = scopes.pop() {
+                verbose = previous;
+            }
         }
         index += 1;
     }
@@ -98,7 +103,7 @@ pub(super) fn walk_placeholders(pattern: &str) -> PlaceholderWalk {
     let mut ok = false;
     let mut bad = false;
     let mut offsets = Vec::new();
-    let mut scopes: Vec<Option<bool>> = Vec::new();
+    let mut scopes: Vec<bool> = Vec::new();
     while index < chars.len() {
         let (byte, character) = chars[index];
         if comment {
@@ -140,7 +145,7 @@ pub(super) fn walk_placeholders(pattern: &str) -> PlaceholderWalk {
                     .map(|(_, char)| char)
                     .collect();
                 if span.scoped {
-                    scopes.push(Some(verbose));
+                    scopes.push(verbose);
                     depth += 1;
                 }
                 apply_verbose(&body, &mut verbose);
@@ -148,11 +153,11 @@ pub(super) fn walk_placeholders(pattern: &str) -> PlaceholderWalk {
                 continue;
             }
             depth += 1;
-            scopes.push(None);
+            scopes.push(verbose);
         }
         if character == ')' && depth > 0 {
             depth -= 1;
-            if let Some(Some(previous)) = scopes.pop() {
+            if let Some(previous) = scopes.pop() {
                 verbose = previous;
             }
         }

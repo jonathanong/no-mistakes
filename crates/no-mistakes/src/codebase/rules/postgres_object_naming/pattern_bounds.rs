@@ -15,6 +15,7 @@ pub(super) fn bounds(raw: &str) -> Bounds {
     let mut recent = String::new();
     let mut assertion = false;
     let mut after_table = false;
+    let mut scopes: Vec<bool> = Vec::new();
     while index < chars.len() {
         let character = chars[index];
         if comment {
@@ -67,13 +68,19 @@ pub(super) fn bounds(raw: &str) -> Bounds {
             index += 1;
             continue;
         }
-        if character == '(' {
-            if let Some(end) = flag_end(&chars, index) {
-                let body: String = chars[index + 2..end].iter().collect();
-                apply_verbose(&body, &mut verbose);
-                index = end + 1;
-                continue;
+        if character == '(' || character == ')' {
+            if character == '(' {
+                let saved = verbose;
+                if open_group(&chars, &mut index, &mut verbose) {
+                    scopes.push(saved);
+                }
+            } else {
+                if let Some(previous) = scopes.pop() {
+                    verbose = previous;
+                }
+                index += 1;
             }
+            continue;
         }
         if verbose && character.is_whitespace() {
             index += 1;
@@ -132,23 +139,41 @@ fn byte_at(chars: &[char], index: usize) -> usize {
         .sum()
 }
 
-fn flag_end(chars: &[char], start: usize) -> Option<usize> {
-    if chars.get(start + 1) != Some(&'?') {
-        return None;
+fn open_group(chars: &[char], index: &mut usize, verbose: &mut bool) -> bool {
+    let start = *index;
+    let mut cursor = start + 1;
+    if chars.get(cursor) != Some(&'?') {
+        *index = cursor;
+        return true;
     }
-    let mut index = start + 2;
+    let body_at = cursor + 1;
+    cursor = body_at;
     let mut dash = false;
     let mut flag = false;
-    while let Some(character) = chars.get(index) {
+    while let Some(character) = chars.get(cursor).copied() {
         match character {
+            ':' | '=' | '!' if !flag && cursor == body_at => {
+                *index = cursor + 1;
+                return true;
+            }
             '-' if !dash => dash = true,
             'i' | 'm' | 's' | 'u' | 'U' | 'x' | 'R' => flag = true,
-            ')' if flag => return Some(index),
-            _ => return None,
+            ')' if flag => {
+                apply_verbose(&chars[body_at..cursor].iter().collect::<String>(), verbose);
+                *index = cursor + 1;
+                return false;
+            }
+            ':' if flag => {
+                apply_verbose(&chars[body_at..cursor].iter().collect::<String>(), verbose);
+                *index = cursor + 1;
+                return true;
+            }
+            _ => break,
         }
-        index += 1;
+        cursor += 1;
     }
-    None
+    *index = start + 1;
+    true
 }
 
 fn apply_verbose(body: &str, verbose: &mut bool) {

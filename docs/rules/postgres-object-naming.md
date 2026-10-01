@@ -82,7 +82,9 @@ An inline flag such as `(?i)` that is still active at `{table}` applies to
 both sides. That includes a flag in the middle of the prefix, such as
 `^idx_(?i){table}__[a-z]+$`. `{table}` inside a verbose-mode `#` comment is
 not a placeholder, including inside a scoped group such as `(?x:...)`, and
-neither is a flag written inside that comment.
+neither is a flag written inside that comment. A verbose flag turned on
+inside a group ends when that group ends, so a later `#` stays literal.
+`{table}` cannot sit next to a boundary wrapped in a group such as `(?:\b)`.
 `{table}` cannot sit next to a zero-width assertion such as `\b` or `\z`,
 including when verbose mode ignores the space between them. A `{table}`
 match has to cover its
@@ -128,7 +130,7 @@ that is also a key, an irregular singular that is also uncountable, an irregular
 is more than one word, a multi-word `uncountable` or `nonPluralTokens` entry,
 empty or duplicate
 denied tokens, a denied token that is more than one word, an empty
-denied-token replacement, a denied-token replacement that is also a denied token, a denied-token replacement equal to its token
+denied-token replacement, a denied-token replacement that is also a denied token, a denied token that is also a spelling key, a denied-token replacement equal to its token
 ignoring ASCII case, a spelling key equal to its value ignoring ASCII case,
 an empty spelling value, a spelling value that is also a key,
 a spelling key that is more than one word, duplicate

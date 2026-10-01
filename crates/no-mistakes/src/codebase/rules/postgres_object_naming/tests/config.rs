@@ -157,6 +157,14 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
         "option deniedTokens: replacement \"tmp\" is also a token",
     );
     expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: cfg, replacement: configuration}\nspelling:\n  CFG: config\n",
+        "option deniedTokens: token \"cfg\" is also a spelling key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^idx_{table}(?:\\b)__x$'\n",
+        "option patterns.index: {table} must not sit next to a zero-width assertion",
+    );
+    expect_err(
         "schemaCatalogPath: schema.json\nspelling:\n  '': acknowledgment\n",
         "option spelling: empty key",
     );

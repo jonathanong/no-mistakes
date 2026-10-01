@@ -342,6 +342,19 @@ fn quoted_names_min_words_and_active_flags() {
 }
 
 #[test]
+fn grouped_verbose_flags_do_not_leak() {
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: \"^(?:(?x)a)#{table}$\"\n",
+        index("orders", "a#orders", false, false),
+    );
+    expect(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: \"^(?:(?x)a)#{table}$\"\n",
+        index("orders", "aorders", false, false),
+        "schema.json: index:orders.aorders: index name does not match pattern ^(?:(?x)a)#{table}$ ({table} = orders)",
+    );
+}
+
+#[test]
 fn scoped_verbose_comments_hide_placeholders() {
     expect_none(
         "schemaCatalogPath: schema.json\npatterns:\n  index: \"^(?x:idx_ # {table}\\n){table}__#$\"\n",

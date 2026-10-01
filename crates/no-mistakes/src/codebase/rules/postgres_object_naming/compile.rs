@@ -44,6 +44,17 @@ pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Comp
     if options.abbreviations.min_letters < 1 {
         bail!("postgres-object-naming option abbreviations.minLetters: must be at least 1");
     }
+    let denied = compile_denied(&options.denied_tokens)?;
+    let spelling = super::compile_spelling::compile(&options.spelling)?;
+    if let Some((token, _)) = denied.iter().find(|(token, _)| {
+        spelling
+            .iter()
+            .any(|(key, _, _)| key.eq_ignore_ascii_case(token))
+    }) {
+        bail!(
+            "postgres-object-naming option deniedTokens: token \"{token}\" is also a spelling key"
+        );
+    }
     Ok(Compiled {
         patterns,
         check_constraint_backed_indexes: options.check_constraint_backed_indexes,
@@ -51,8 +62,8 @@ pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Comp
         abbreviations: options.abbreviations.enabled,
         min_letters: usize::try_from(options.abbreviations.min_letters).unwrap_or(1),
         plural: compile_plural(options)?,
-        denied: compile_denied(&options.denied_tokens)?,
-        spelling: super::compile_spelling::compile(&options.spelling)?,
+        denied,
+        spelling,
         double_underscore: compile_underscore(&options.double_underscore)?,
         allow: AllowList::compile(super::RULE_ID, options.allow.clone())?,
         message,
