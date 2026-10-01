@@ -64,7 +64,8 @@ invalid object ref, or a duplicate allow object fails configuration.
 with other bodies that also omit it. Unquoted call names fold;
 quoted call names and schema qualifiers stay distinct. Other identifiers
 become stable placeholders, so a consistent rename still matches and a swapped
-use does not. Different `SET search_path` clauses do not match. Bare `RAISE;` stays
+use does not. Different `SET search_path` clauses do not match. Trigger functions, event
+triggers, and ordinary functions are separate groups. Bare `RAISE;` stays
 distinct from `RAISE EXCEPTION`. A top-level `message` replaces the generated
 finding text.
 

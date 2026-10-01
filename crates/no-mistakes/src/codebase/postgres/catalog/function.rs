@@ -7,7 +7,7 @@ pub(super) fn function_from_definition(key: &str, definition: &str) -> CatalogFu
         key: key.to_string(),
         name,
         signature,
-        language: language(&strip_quotes_and_comments(definition)),
+        language: language(definition),
         returns_trigger: returns_trigger(&strip_quotes_and_comments(&header)),
         definition: definition.to_string(),
         body,
@@ -29,11 +29,9 @@ fn language(definition: &str) -> Option<String> {
     let mut index = 0;
     let mut depth = 0i32;
     while index < definition.len() {
-        if definition[index..].starts_with('$') {
-            if let Some(end) = super::function_body::skip_dollar_body(definition, index) {
-                index = end;
-                continue;
-            }
+        if let Some(end) = super::function_body::skip_noise(definition, index) {
+            index = end;
+            continue;
         }
         match bytes[index] {
             b'(' => depth += 1,
@@ -45,12 +43,8 @@ fn language(definition: &str) -> Option<String> {
             while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
                 cursor += 1;
             }
-            let start = cursor;
-            while bytes.get(cursor).is_some_and(is_ident_byte) {
-                cursor += 1;
-            }
-            if cursor > start {
-                return Some(definition[start..cursor].to_ascii_lowercase());
+            if let Some(name) = super::function_body::language_name(definition, cursor) {
+                return Some(name);
             }
         }
         index += definition[index..].chars().next()?.len_utf8();

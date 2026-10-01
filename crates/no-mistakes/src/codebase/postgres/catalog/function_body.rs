@@ -61,7 +61,7 @@ fn atomic_body(definition: &str) -> Option<(String, Option<String>)> {
             }
             if is_word_at(definition, cursor, "atomic") {
                 let body_start = cursor + "atomic".len();
-                let end = find_word(definition, body_start, "end")?;
+                let end = matching_end(definition, body_start)?;
                 return Some((
                     definition[..index].to_string(),
                     Some(definition[body_start..end].to_string()),
@@ -79,18 +79,56 @@ fn opening_dollar(definition: &str, index: usize) -> Option<(String, usize)> {
     Some((rest[..end].to_string(), index + end + 2))
 }
 
-fn find_word(definition: &str, mut index: usize, word: &str) -> Option<usize> {
+fn matching_end(definition: &str, mut index: usize) -> Option<usize> {
+    let mut depth = 1i32;
     while index < definition.len() {
         if let Some(next) = skip_ignored(definition, index) {
             index = next;
             continue;
         }
-        if is_word_at(definition, index, word) {
-            return Some(index);
+        if is_word_at(definition, index, "begin")
+            || is_word_at(definition, index, "case")
+            || is_word_at(definition, index, "if")
+            || is_word_at(definition, index, "loop")
+        {
+            depth += 1;
+        } else if is_word_at(definition, index, "end") {
+            depth -= 1;
+            if depth == 0 {
+                return Some(index);
+            }
         }
         index += definition[index..].chars().next()?.len_utf8();
     }
     None
+}
+
+pub(super) fn skip_noise(definition: &str, index: usize) -> Option<usize> {
+    skip_ignored(definition, index)
+}
+
+pub(super) fn language_name(definition: &str, mut cursor: usize) -> Option<String> {
+    let bytes = definition.as_bytes();
+    while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
+        cursor += 1;
+    }
+    let rest = definition.get(cursor..)?;
+    if rest.starts_with('\'') || rest.starts_with('"') {
+        let quote = rest.chars().next()?;
+        let end = skip_quoted(definition, cursor, quote);
+        let inner =
+            definition.get(cursor + quote.len_utf8()..end.saturating_sub(quote.len_utf8()))?;
+        return Some(if quote == '"' {
+            inner.to_string()
+        } else {
+            inner.to_ascii_lowercase()
+        });
+    }
+    let start = cursor;
+    while bytes.get(cursor).is_some_and(is_ident_byte) {
+        cursor += 1;
+    }
+    (cursor > start).then(|| definition[start..cursor].to_ascii_lowercase())
 }
 
 fn skip_ignored(definition: &str, index: usize) -> Option<usize> {
@@ -104,6 +142,9 @@ fn skip_ignored(definition: &str, index: usize) -> Option<usize> {
     let quote = rest.chars().next()?;
     if quote == '\'' || quote == '"' {
         return Some(skip_quoted(definition, index, quote));
+    }
+    if quote == '$' {
+        return skip_dollar_body(definition, index);
     }
     None
 }

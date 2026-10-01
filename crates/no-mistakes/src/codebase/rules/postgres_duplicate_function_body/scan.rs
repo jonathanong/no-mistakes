@@ -3,17 +3,16 @@ use crate::codebase::postgres::{catalog_finding, CatalogObjectRef, SchemaCatalog
 use crate::codebase::rules::RuleFinding;
 use std::collections::BTreeMap;
 
-type Member = (String, bool);
-
 #[derive(Ord, PartialOrd, Eq, PartialEq)]
 struct GroupKey {
     language: String,
     search_path: String,
+    kind: &'static str,
     tokens: Vec<String>,
 }
 
 pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFinding> {
-    let mut groups: BTreeMap<GroupKey, Vec<Member>> = BTreeMap::new();
+    let mut groups: BTreeMap<GroupKey, Vec<String>> = BTreeMap::new();
     for function in catalog.functions() {
         let Some(body) = function.body.as_deref() else {
             continue;
@@ -32,31 +31,33 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
         if tokens.len() < compiled.min_tokens {
             continue;
         }
+        let kind = function_kind(function.returns_trigger, &function.definition, Some(body));
         groups
             .entry(GroupKey {
                 language,
                 search_path: search_path(&function.definition, Some(body)),
+                kind,
                 tokens,
             })
             .or_default()
-            .push((function.key.clone(), function.returns_trigger));
+            .push(function.key.clone());
     }
     let mut findings = Vec::new();
-    for members in groups.into_values() {
+    for (key, members) in groups {
         if members.len() < compiled.min_cluster_size {
             continue;
         }
         let count = members.len() - 1;
-        for (index, (key, returns_trigger)) in members.iter().enumerate() {
+        for (index, name) in members.iter().enumerate() {
             let names = other_names(&members, index);
             let text = compiled
                 .message
                 .clone()
-                .unwrap_or_else(|| finding_text(count, &names, *returns_trigger));
+                .unwrap_or_else(|| finding_text(count, &names, key.kind));
             findings.push(catalog_finding(
                 RULE_ID,
                 &compiled.schema_catalog_path,
-                &CatalogObjectRef::Function(key.clone()),
+                &CatalogObjectRef::Function(name.clone()),
                 &text,
             ));
         }
@@ -66,9 +67,9 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
         .apply(&compiled.schema_catalog_path, findings)
 }
 
-fn other_names(members: &[Member], index: usize) -> Vec<&str> {
+fn other_names(members: &[String], index: usize) -> Vec<&str> {
     let mut names = Vec::new();
-    for (other_index, (other, _)) in members.iter().enumerate() {
+    for (other_index, other) in members.iter().enumerate() {
         if other_index == index {
             continue;
         }
@@ -78,6 +79,32 @@ fn other_names(members: &[Member], index: usize) -> Vec<&str> {
         }
     }
     names
+}
+
+fn function_kind(returns_trigger: bool, definition: &str, body: Option<&str>) -> &'static str {
+    if returns_trigger {
+        "trigger"
+    } else if event_trigger(definition, body) {
+        "event"
+    } else {
+        "routine"
+    }
+}
+
+fn event_trigger(definition: &str, body: Option<&str>) -> bool {
+    let header = body
+        .and_then(|body| definition.find(body).map(|index| &definition[..index]))
+        .unwrap_or(definition);
+    let mut words = header
+        .split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
+        .filter(|word| !word.is_empty())
+        .map(|word| word.to_ascii_lowercase());
+    while let Some(word) = words.next() {
+        if word == "returns" && words.next().as_deref() == Some("event_trigger") {
+            return true;
+        }
+    }
+    false
 }
 
 fn search_path(definition: &str, body: Option<&str>) -> String {
@@ -106,16 +133,18 @@ fn search_path(definition: &str, body: Option<&str>) -> String {
         .to_ascii_lowercase()
 }
 
-fn finding_text(count: usize, others: &[&str], returns_trigger: bool) -> String {
+fn finding_text(count: usize, others: &[&str], kind: &str) -> String {
     let listed = if count <= 5 {
         others.join(", ")
     } else {
         format!("{} and {} more", others.join(", "), count - 5)
     };
-    let remedy = if returns_trigger {
-        "replace them with one function parameterised by TG_TABLE_NAME / TG_ARGV"
-    } else {
-        "replace them with one function that takes the varying values as arguments"
+    let remedy = match kind {
+        "trigger" => "replace them with one function parameterised by TG_TABLE_NAME / TG_ARGV",
+        "event" => {
+            "replace them with one event trigger function; event triggers cannot take arguments"
+        }
+        _ => "replace them with one function that takes the varying values as arguments",
     };
     format!(
         "function body duplicates {count} other function(s) after normalising names and literals: {listed}; {remedy}",

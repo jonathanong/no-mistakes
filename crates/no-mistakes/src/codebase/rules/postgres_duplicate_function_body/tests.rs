@@ -321,6 +321,15 @@ fn names_keep_qualifiers_quotes_and_bare_raise() {
 }
 
 #[test]
+fn trigger_event_and_ordinary_functions_stay_in_separate_groups() {
+    let joined = messages("schemaCatalogPath: kinds.json\n").join("\n");
+    assert!(joined.contains("function:fn_event_a:"));
+    assert!(joined.contains("event trigger function"));
+    assert!(!joined.contains("function:fn_void_same:"));
+    assert!(!joined.contains("function:fn_row_trigger:"));
+}
+
+#[test]
 fn different_search_paths_are_not_the_same_copy() {
     let joined = messages("schemaCatalogPath: search-path.json\n").join("\n");
     assert!(joined.contains("function:fn_tenant_a:"), "{joined}");
