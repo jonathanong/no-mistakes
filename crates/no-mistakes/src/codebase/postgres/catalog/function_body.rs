@@ -1,11 +1,14 @@
 pub(super) fn split_body(definition: &str) -> (String, Option<String>, Option<(usize, usize)>) {
-    if let Some((header, body, span)) = dollar_body(definition) {
-        return (header, Some(body), Some(span));
-    }
-    if let Some((header, body, span)) = atomic_body(definition) {
-        return (header, Some(body), Some(span));
-    }
-    if let Some((header, body, span)) = super::function_quote::return_expression(definition) {
+    let candidates = [
+        dollar_body(definition),
+        atomic_body(definition),
+        super::function_quote::return_expression(definition),
+    ];
+    if let Some((header, body, span)) = candidates
+        .into_iter()
+        .flatten()
+        .min_by_key(|(_, _, span)| span.0)
+    {
         return (header, Some(body), Some(span));
     }
     (definition.to_string(), None, None)
@@ -187,9 +190,19 @@ pub(super) fn is_word_at(text: &str, index: usize, word: &str) -> bool {
     if !slice.eq_ignore_ascii_case(word) {
         return false;
     }
-    let before_ok = index == 0 || !is_ident_byte(&text.as_bytes()[index - 1]);
-    let after = text.as_bytes().get(index + word.len());
-    before_ok && after.is_none_or(|byte| !is_ident_byte(byte))
+    let before_ok = text[..index]
+        .chars()
+        .next_back()
+        .is_none_or(|character| !is_ident_char(character));
+    let after_ok = text[index + word.len()..]
+        .chars()
+        .next()
+        .is_none_or(|character| !is_ident_char(character));
+    before_ok && after_ok
+}
+
+fn is_ident_char(character: char) -> bool {
+    character.is_alphanumeric() || character == '_'
 }
 
 fn is_ident_byte(byte: &u8) -> bool {

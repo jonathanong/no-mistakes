@@ -95,7 +95,10 @@ in the return contract. `OPERATOR(schema.+)` keeps that schema. A `SUPPORT`
 name keeps its schema. The character after `UESCAPE` decodes a Unicode body.
 A comment may sit between `LANGUAGE` and its name, or between `BEGIN` and
 `ATOMIC`. The first `search_path` value is kept when that schema is named
-`stable`, `immutable`, or `volatile`. `COST` and `ROWS` keep a decimal point. Escape strings decode hex, octal, and
+`stable`, `immutable`, or `volatile`. `COST` and `ROWS` keep a decimal point.
+A dotted return type such as `public.stable` stays intact. An identifier
+that contains `end` does not close a `BEGIN ATOMIC` body, and an `AS` body
+nested inside that block is not the outer body. Escape strings decode hex, octal, and
 Unicode sequences. `AS U&'...'` is a body. A qualified `raise(...)` call stays
 a call. An escape-string default does not hide the real body. Names before `=>` or `:=` stay distinct. `AS E'...'` is a body, and adjacent string literals are one body.
 `LANGUAGE SQL RETURN expression` is a body. `LANGUAGE` after `BEGIN ATOMIC`

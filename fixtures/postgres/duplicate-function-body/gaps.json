@@ -39,6 +39,33 @@
     },
     "fn_cost_high()": {
       "definition": "CREATE FUNCTION fn_cost_high() RETURNS int LANGUAGE sql COST 1.9 AS $$ SELECT cost_body() $$"
+    },
+    "fn_eend()": {
+      "definition": "CREATE FUNCTION fn_eend() RETURNS int LANGUAGE sql BEGIN ATOMIC SELECT éend; SELECT kept_body(); END"
+    },
+    "fn_eend_copy()": {
+      "definition": "CREATE FUNCTION fn_eend_copy() RETURNS int LANGUAGE sql BEGIN ATOMIC SELECT éend; SELECT kept_body(); END"
+    },
+    "fn_eend_other()": {
+      "definition": "CREATE FUNCTION fn_eend_other() RETURNS int LANGUAGE sql BEGIN ATOMIC SELECT éend; SELECT other_body(); END"
+    },
+    "fn_type_stable()": {
+      "definition": "CREATE FUNCTION fn_type_stable() RETURNS public.stable LANGUAGE sql AS $$ SELECT type_body() $$"
+    },
+    "fn_type_stable_copy()": {
+      "definition": "CREATE FUNCTION fn_type_stable_copy() RETURNS public.stable LANGUAGE sql AS $$ SELECT type_body() $$"
+    },
+    "fn_type_volatile()": {
+      "definition": "CREATE FUNCTION fn_type_volatile() RETURNS public.volatile LANGUAGE sql AS $$ SELECT type_body() $$"
+    },
+    "fn_outer()": {
+      "definition": "CREATE FUNCTION fn_outer() RETURNS int LANGUAGE sql BEGIN ATOMIC CREATE FUNCTION inner() AS $$ SELECT nested_body() $$; SELECT outer_body(); END"
+    },
+    "fn_outer_copy()": {
+      "definition": "CREATE FUNCTION fn_outer_copy() RETURNS int LANGUAGE sql BEGIN ATOMIC CREATE FUNCTION inner() AS $$ SELECT nested_body() $$; SELECT outer_body(); END"
+    },
+    "fn_outer_other()": {
+      "definition": "CREATE FUNCTION fn_outer_other() RETURNS int LANGUAGE sql BEGIN ATOMIC CREATE FUNCTION inner() AS $$ SELECT nested_body() $$; SELECT other_outer(); END"
     }
   }
 }

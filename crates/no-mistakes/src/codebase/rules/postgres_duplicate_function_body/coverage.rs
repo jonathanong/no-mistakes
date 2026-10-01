@@ -118,6 +118,12 @@ fn comments_and_decimal_costs_keep_distinct_functions_apart() {
     assert!(!text.contains("fn_path_immutable"), "{text}");
     assert!(text.contains("fn_cost_low"), "{text}");
     assert!(!text.contains("fn_cost_high"), "{text}");
+    assert!(text.contains("fn_eend"), "{text}");
+    assert!(!text.contains("fn_eend_other"), "{text}");
+    assert!(text.contains("fn_type_stable"), "{text}");
+    assert!(!text.contains("fn_type_volatile"), "{text}");
+    assert!(text.contains("fn_outer"), "{text}");
+    assert!(!text.contains("fn_outer_other"), "{text}");
 }
 
 #[test]
