@@ -20,3 +20,5 @@ expect(workflow).toContain('uses: owner/repo/v1.0.0/x/y@v1')
 // A port stays with its host, and a component with no name in it ends the path.
 expect(url).toContain('https://registry.npmjs.org:443/o/r@v1')
 expect(workflow).toContain('uses: owner/repo/../path/action@v1')
+// A bracketed IPv6 host stays with its port.
+expect(url).toContain('https://[2001:db8::1]:443/actions/checkout@v4')

@@ -27,7 +27,7 @@ rules:
         - "**/__tests__/**"
       patterns:
         - reason: exact action ref
-          regex: '(?<!@)\b(?:[\w.-]*\w[\w.-]*(?::[0-9]+)?/)?(?:[\w.-]*\w[\w.-]*/)*[.-]*\b(?P<versions>[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?)\b'
+          regex: '(?<!@)(?:\[[0-9A-Fa-f.]*:[0-9A-Fa-f:.]*\](?::[0-9]+)?/|\b(?:[\w.-]*\w[\w.-]*(?::[0-9]+)?/)?)(?:[\w.-]*\w[\w.-]*/)*[.-]*\b(?P<versions>[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?)\b'
 ```
 
 Counterexample: a test asserts a concrete dependency entry read from
@@ -102,9 +102,10 @@ An action ref is reported whole, as `owner/repo/path@ref`: for example
 `my-org/example-repo/.github/workflows/reusable.yml@v1`, not its last two
 components. The reported text is every `/`-separated component before the `@`,
 so a path in front of the ref is part of it: a URL host with its port
-(`github.com/actions/checkout@v4`, `registry.my-org.io:8443/a/b@v1`), a Go
-module path (`golang.org/x/tools@v0.1.0`), or a directory is kept, while a
-leading `/`, `./` or scheme is not. A component with no name in it (`..`, `.`,
+(`github.com/actions/checkout@v4`, `registry.my-org.io:8443/a/b@v1`,
+`[::1]:8080/a/b@v1` for a bracketed IPv6 address), a Go module path
+(`golang.org/x/tools@v0.1.0`), or a directory is kept, while a leading `/`,
+`./` or scheme is not. A component with no name in it (`..`, `.`,
 `-`, or an empty segment) is not part of a path and ends it, so
 `owner/repo/../path/action@v1` is reported as `path/action@v1`. Three
 consequences:
@@ -116,7 +117,8 @@ consequences:
   `localhost:5000/a/b@v1`, `my.test/a/b@v1`) makes it a
   [placeholder](#placeholder-values), as it does for an image registry. A hostname
   is case-insensitive, and only the first component is a host, so `a/b.test/c@v1`
-  is reported.
+  is reported. An IP address is not a reserved host, so `127.0.0.1:5000/a/b@v1`
+  and `[::1]/a/b@v1` are reported.
 - The all-zero placeholder rule reads the last two path components and the ref,
   with any trailing `# v1.2.3` comment, not the whole text. `owner/repo@v0.0.0`
   and `foo-v0.0.0/bar@v1` are placeholders, but a `v0.0.0` directory higher up

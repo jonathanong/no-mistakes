@@ -186,6 +186,41 @@ fn a_port_stays_with_its_host() {
 }
 
 #[test]
+fn a_bracketed_ip_literal_host_stays_with_its_port() {
+    // `[2001:db8::1]:443` is one host. Without the brackets in the prefix, the
+    // ref would restart at the port and report `443/actions/checkout@v4`.
+    for (line, expected) in [
+        (
+            "https://[2001:db8::1]:443/actions/checkout@v4",
+            "[2001:db8::1]:443/actions/checkout@v4",
+        ),
+        ("https://[::1]/a/b@v1", "[::1]/a/b@v1"),
+        ("https://[::1]:8080/o/r/sub@v1", "[::1]:8080/o/r/sub@v1"),
+        (
+            "uses: [::ffff:192.0.2.1]:443/a/b@v1",
+            "[::ffff:192.0.2.1]:443/a/b@v1",
+        ),
+        // Loopback by address is not a reserved host, as on `127.0.0.1`.
+        ("127.0.0.1:5000/a/b@v1", "127.0.0.1:5000/a/b@v1"),
+    ] {
+        assert_eq!(refs(line), [expected], "{line}");
+    }
+    // Brackets that are not an IP literal stay out of the path, with the text
+    // they have always had.
+    for (line, expected) in [
+        ("arr[0]/a/b@v1", "a/b@v1"),
+        ("[abc]/x/y@v1", "x/y@v1"),
+        ("x[ab]/c/d@v1", "c/d@v1"),
+    ] {
+        assert_eq!(refs(line), [expected], "{line}");
+    }
+    // A host after an `@` is not an action ref, bracketed or not.
+    for line in ["user@[::1]:443/a/b@v1", "ssh://git@[2001:db8::1]/a/b@v1"] {
+        assert!(refs(line).is_empty(), "{line}: {:?}", refs(line));
+    }
+}
+
+#[test]
 fn a_reserved_host_in_the_path_makes_the_ref_synthetic() {
     // The synthetic exemption judges the whole text. It used to see only the
     // last two components, so `example.com/` in front of them was invisible.
