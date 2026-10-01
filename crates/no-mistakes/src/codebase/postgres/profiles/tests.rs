@@ -83,6 +83,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-duplicate-function-body",
             "postgres-table-shape",
             "postgres-status-with-lifecycle-timestamps",
+            "postgres-object-naming",
         ]
     );
 }

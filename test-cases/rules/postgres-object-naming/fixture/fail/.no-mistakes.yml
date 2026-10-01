@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-object-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      plural:
+        enabled: true
