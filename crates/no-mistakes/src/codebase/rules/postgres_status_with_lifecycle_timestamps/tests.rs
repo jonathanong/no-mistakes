@@ -56,6 +56,9 @@ fn reports_stored_status_beside_lifecycle_timestamps() {
     assert!(body.contains(&format!(
         "table:payments: table stores status column status next to lifecycle timestamps payment_failed_at, paid_at; {ADVICE}"
     )));
+    assert!(body.contains(
+        "table:precise_events: table stores status column status next to lifecycle timestamps sent_at, failed_at;"
+    ));
     assert!(body.contains(&format!(
         "table:both_names: table stores status column state next to lifecycle timestamps started_at, finished_at; {ADVICE}"
     )));
@@ -81,6 +84,7 @@ fn valid_shapes_and_non_lifecycle_columns_pass() {
         "projected_events",
         "event_lists",
         "status_history",
+        "named_types",
     ] {
         assert!(
             !body.contains(&format!("table:{table}:")),

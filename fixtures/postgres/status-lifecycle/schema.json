@@ -127,6 +127,22 @@
         "sent_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
         "failed_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
       }
+    },
+    "precise_events": {
+      "relationKind": "table",
+      "columns": {
+        "status": { "dataType": "text", "nullable": false, "ordinalPosition": 1 },
+        "sent_at": { "dataType": "timestamp(6) with time zone", "nullable": true, "ordinalPosition": 2 },
+        "failed_at": { "dataType": "timestamptz(6)", "nullable": true, "ordinalPosition": 3 }
+      }
+    },
+    "named_types": {
+      "relationKind": "table",
+      "columns": {
+        "status": { "dataType": "text", "nullable": false, "ordinalPosition": 1 },
+        "sent_at": { "dataType": "timestamp_status", "nullable": true, "ordinalPosition": 2 },
+        "failed_at": { "dataType": "timestamptz_flag", "nullable": true, "ordinalPosition": 3 }
+      }
     }
   }
 }

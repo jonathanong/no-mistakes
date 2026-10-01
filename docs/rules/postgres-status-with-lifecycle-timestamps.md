@@ -1,8 +1,8 @@
 # `postgres-status-with-lifecycle-timestamps`
 
 A stored status column next to lifecycle timestamps records the same fact
-twice. With only `schemaCatalogPath` set, `lifecycleVerbs` defaults to `[]`
-and the rule reports nothing. `schemaCatalogPath` is required.
+twice. `schemaCatalogPath` and `statusColumns` are required. With those set
+and `lifecycleVerbs` left empty, the rule reports nothing.
 
 ```yaml
 rules:
@@ -32,8 +32,9 @@ whose `generated` is not set. An enum is reported the same way as `text`.
 
 A lifecycle column is not generated, stores one timestamp, and has a name
 that is `<verb>_at` or ends with `_<verb>_at` for a verb in `lifecycleVerbs`.
-The type is `timestamp`, `timestamptz`, or `timestamp` with precision or a
-time zone. Array types such as `timestamp[]` do not count, and neither does
+The type is `timestamp` or `timestamptz`, optionally with a precision and
+`with time zone` or `without time zone`. A name such as `timestamp_status`
+does not count. Array types such as `timestamp[]` do not count, and neither does
 a generated projection of `status`. `payment_failed_at` counts for `failed`.
 `resent_at` does not count for `sent`. A `date` column does not count.
 `created_at` and `updated_at` count only when those verbs are configured.

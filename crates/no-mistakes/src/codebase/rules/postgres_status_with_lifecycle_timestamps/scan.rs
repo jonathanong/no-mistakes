@@ -73,9 +73,32 @@ fn is_lifecycle(column: &CatalogColumn, verbs: &[String]) -> bool {
 }
 
 fn is_scalar_timestamp(data_type: &str) -> bool {
-    let data_type = data_type.to_ascii_lowercase();
-    !is_array(&data_type)
-        && (data_type.starts_with("timestamp") || data_type.starts_with("timestamptz"))
+    let data_type = data_type.trim().to_ascii_lowercase();
+    if is_array(&data_type) {
+        return false;
+    }
+    let rest = if let Some(rest) = data_type.strip_prefix("timestamptz") {
+        rest
+    } else if let Some(rest) = data_type.strip_prefix("timestamp") {
+        rest
+    } else {
+        return false;
+    };
+    let rest = match precision(rest.trim_start()) {
+        Some(after) => after.trim_start(),
+        None => rest.trim_start(),
+    };
+    rest.is_empty() || rest == "with time zone" || rest == "without time zone"
+}
+
+fn precision(rest: &str) -> Option<&str> {
+    let rest = rest.strip_prefix('(')?;
+    let (digits, after) = rest.split_once(')')?;
+    digits
+        .chars()
+        .all(|character| character.is_ascii_digit())
+        .then_some(after)
+        .filter(|_| !digits.is_empty())
 }
 
 fn is_array(data_type: &str) -> bool {
