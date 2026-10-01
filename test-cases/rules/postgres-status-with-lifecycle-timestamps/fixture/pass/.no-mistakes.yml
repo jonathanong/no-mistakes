@@ -1,0 +1,6 @@
+rules:
+  - rule: postgres-status-with-lifecycle-timestamps
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      lifecycleVerbs: [sent, paid]

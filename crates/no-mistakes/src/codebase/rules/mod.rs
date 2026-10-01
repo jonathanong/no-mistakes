@@ -62,6 +62,7 @@ pub mod postgres_required_comments;
 pub mod postgres_required_predicates;
 pub mod postgres_sql_shape_policy;
 pub mod postgres_sql_statement_policy;
+pub mod postgres_status_with_lifecycle_timestamps;
 pub mod postgres_table_shape;
 pub mod production_dependency_declarations;
 pub mod require_files_in_subdirs;

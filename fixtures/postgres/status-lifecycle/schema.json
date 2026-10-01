@@ -1,0 +1,108 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "deliveries": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "state": { "type": "text", "nullable": false, "ordinalPosition": 2 },
+        "sent_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 },
+        "failed_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 4 }
+      }
+    },
+    "payments": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "status": { "type": "payment_statuses", "nullable": false, "ordinalPosition": 2 },
+        "payment_failed_at": { "type": "timestamp", "nullable": true, "ordinalPosition": 3 },
+        "paid_at": { "type": "timestamptz", "nullable": true, "ordinalPosition": 4 }
+      }
+    },
+    "invoices": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "status": { "type": "invoice_statuses", "nullable": false, "generated": "stored", "ordinalPosition": 2 },
+        "sent_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 },
+        "paid_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 4 }
+      }
+    },
+    "invoice_drafts": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "status": { "type": "text", "nullable": false, "ordinalPosition": 2 },
+        "sent_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
+      }
+    },
+    "receipts": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "sent_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
+        "paid_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
+      }
+    },
+    "orders": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "status": { "type": "text", "nullable": false, "ordinalPosition": 2 },
+        "created_at": { "type": "timestamp with time zone", "nullable": false, "ordinalPosition": 3 },
+        "updated_at": { "type": "timestamp with time zone", "nullable": false, "ordinalPosition": 4 }
+      }
+    },
+    "dated_approvals": {
+      "relationKind": "table",
+      "columns": {
+        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 },
+        "status": { "type": "text", "nullable": false, "ordinalPosition": 2 },
+        "approved_at": { "type": "date", "nullable": true, "ordinalPosition": 3 },
+        "started_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 4 }
+      }
+    },
+    "both_names": {
+      "relationKind": "table",
+      "columns": {
+        "state": { "type": "text", "nullable": false, "ordinalPosition": 1 },
+        "status": { "type": "text", "nullable": false, "ordinalPosition": 2 },
+        "started_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 },
+        "finished_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 4 }
+      }
+    },
+    "generated_state": {
+      "relationKind": "table",
+      "columns": {
+        "status": { "type": "text", "nullable": false, "generated": "stored", "ordinalPosition": 1 },
+        "state": { "type": "text", "nullable": false, "ordinalPosition": 2 },
+        "sent_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 },
+        "bounced_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 4 }
+      }
+    },
+    "preview_invoices": {
+      "relationKind": "table",
+      "columns": {
+        "status": { "type": "text", "nullable": true, "generated": "virtual", "ordinalPosition": 1 },
+        "sent_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
+        "paid_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
+      }
+    },
+    "resent_jobs": {
+      "relationKind": "table",
+      "columns": {
+        "status": { "type": "text", "nullable": false, "ordinalPosition": 1 },
+        "resent_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
+        "failed_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
+      }
+    },
+    "payment_intents": {
+      "relationKind": "table",
+      "columns": {
+        "status": { "type": "text", "nullable": false, "ordinalPosition": 1 },
+        "sent_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
+        "failed_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
+      }
+    }
+  }
+}

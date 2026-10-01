@@ -1,0 +1,27 @@
+schemaCatalogPath: schema.json
+statusColumns: [status, state]
+lifecycleVerbs:
+  [
+    approved,
+    rejected,
+    claimed,
+    paid,
+    bounced,
+    completed,
+    cancelled,
+    failed,
+    started,
+    finished,
+    sent,
+    delivered,
+    published,
+    archived,
+    revoked,
+    expired,
+    resolved,
+    dismissed,
+  ]
+minLifecycleColumns: 2
+allow:
+  - object: table:payment_intents
+    reason: "status mirrors the payment provider's state machine"

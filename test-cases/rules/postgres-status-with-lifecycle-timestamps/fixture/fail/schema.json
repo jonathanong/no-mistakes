@@ -1,0 +1,13 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "deliveries": {
+      "relationKind": "table",
+      "columns": {
+        "state": { "type": "text", "nullable": false, "ordinalPosition": 1 },
+        "sent_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
+        "failed_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
+      }
+    }
+  }
+}
