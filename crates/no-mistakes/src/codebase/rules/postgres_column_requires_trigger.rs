@@ -87,7 +87,7 @@ pub(crate) fn check_with_files_sources_and_facts(
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let compiled = compile_options(&rule.try_rule_options()?)?;
-        let filter = super::path_filter::RulePathFilter::new(root, config, &rule)?;
+        let filter = super::path_filter::RulePathFilter::new(root, config, rule)?;
         if !filter.is_match(Path::new(&compiled.schema_catalog_path)) {
             continue;
         }
