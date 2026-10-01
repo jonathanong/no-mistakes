@@ -1,0 +1,4 @@
+{
+  "formatVersion": 2,
+  "tables": { "broken": { "columns": { "id": { "generated": "always" } } } }
+}

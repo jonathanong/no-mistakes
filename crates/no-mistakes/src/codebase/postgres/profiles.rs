@@ -11,8 +11,13 @@ use std::sync::Arc;
 pub const PREPARED_EMBEDDED_SQL_RULE_IDS: &[&str] =
     &["postgres-conflict-ordering", "postgres-lock-ordering"];
 
+/// Rules whose `schemaCatalogPath` is loaded for the request.
+///
+/// Schema-only rules append their ids here. This is not an alias of
+/// [`PREPARED_EMBEDDED_SQL_RULE_IDS`].
 #[doc(hidden)]
-pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = PREPARED_EMBEDDED_SQL_RULE_IDS;
+pub const SCHEMA_CATALOG_RULE_IDS: &[&str] =
+    &["postgres-conflict-ordering", "postgres-lock-ordering"];
 
 #[derive(Default, Deserialize)]
 #[serde(default, rename_all = "camelCase")]

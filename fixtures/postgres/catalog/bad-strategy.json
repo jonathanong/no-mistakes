@@ -1,0 +1,9 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "broken": {
+      "relationKind": "partitioned table",
+      "physicalPartition": { "key": "MAGIC (id)" }
+    }
+  }
+}

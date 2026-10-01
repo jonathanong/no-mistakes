@@ -1,8 +1,22 @@
 use super::*;
 
+mod edges;
+mod errors;
 mod expressions;
+mod findings;
+mod model;
 mod order;
+mod parse;
 mod resolve;
+
+fn load_fixture(name: &str) -> Result<SchemaCatalog, String> {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../fixtures/postgres/catalog");
+    let path = root.join(name);
+    let sources = SourceStore::new(std::sync::Arc::new(
+        crate::codebase::ts_source::FileInventory::from_paths(&[path]),
+    ));
+    SchemaCatalog::load(&root, name, &sources).map_err(|error| error.to_string())
+}
 
 #[test]
 fn expressions_ignore_formatting_but_not_source_bindings() {

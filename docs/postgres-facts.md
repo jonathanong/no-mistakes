@@ -246,6 +246,97 @@ exempt, including when they already carry a leading block comment. Line
 comments (`-- name`) and empty `/* */` comments are not annotations.
 `postgres-require-query-annotation` consumes this helper.
 
+## Schema catalog model
+
+`SchemaCatalog::load` reads a repository-relative PostgreSQL snapshot with
+`formatVersion: 2`. Missing snapshot fields default, so a catalog that only
+records indexes still loads. `postgres-conflict-ordering` and
+`postgres-lock-ordering` keep resolving arbiters from valid, ready, unique or
+primary btree indexes only. `tables()`, `table(name)`, `functions()`,
+`enums()`, and `views()` expose the rest of the snapshot. Iterators are in
+name order. Function order follows the snapshot key. `table(name)` matches
+that key exactly.
+
+`SCHEMA_CATALOG_RULE_IDS` selects which configured rules load a snapshot.
+It is a separate list from `PREPARED_EMBEDDED_SQL_RULE_IDS`, so a schema-only
+rule can append its id without declaring an embedded-SQL executor.
+
+JSON keys are camelCase. A table object may contain `relationKind`
+(`table`, the default, or `partitioned table`), `comment`, `columns`,
+`primaryKey` (`null` means no primary key), `foreignKeys`,
+`checkConstraints`, `uniqueConstraints`, `indexes` (every index, not only
+unique btree indexes), `triggers`, and `physicalPartition` (`null` means the
+table is not partitioned). Column objects carry `dataType` (verbatim, such
+as `timestamp with time zone` or `text[]`), `nullable`, `defaultExpression`,
+`generated` (`stored` or `virtual`), `generatedExpression`, `identity`,
+`comment`, and `ordinalPosition`. Columns are sorted by `ordinalPosition`,
+then name. Foreign-key `onDelete` and `onUpdate` are stored lowercased.
+`physicalPartition.key` is text such as `RANGE (id)`, `LIST (region)`,
+`HASH (id)`, or `RANGE (tenant_id, id)`. The first word is the strategy.
+Top-level commas split the parenthesized elements. A bare or double-quoted
+identifier is a column. Anything else is an expression. A comma that sits
+inside a function call stays part of that expression.
+An unknown strategy fails the load with
+`schemaCatalogPath <path>: table <t> has unsupported partition strategy <s>`.
+
+Trigger objects carry `definition`. The definition is parsed with a small
+tokenizer, including the legacy `EXECUTE PROCEDURE` spelling. A `CONSTRAINT`
+keyword may sit between `CREATE` and `TRIGGER`. Clauses that name a referenced
+table, say whether the trigger is deferrable, or introduce transition tables
+are skipped. Events are separated by `OR`. `WHEN (...)` keeps its text without
+the outer parentheses.
+Arguments are single-quoted SQL literals (`''` is an escaped quote, and a
+comma inside quotes does not split). The function name drops its schema
+qualifier and double quotes (`public."fn_X"` becomes `fn_X`).
+`CatalogTrigger::matches(function, timing, events, for_each_row)` is true
+when the unqualified function, timing, and row-ness are equal and `events`
+is a subset of the trigger's events.
+
+A function object carries `definition`. `name` is the snapshot key up to the
+first `(`, and `signature` is the text inside those parentheses. `language`
+is the word after `LANGUAGE`, lowercased. `returns_trigger` is true when the
+definition, before its body, contains `RETURNS trigger` as a word, ignoring
+comments and quoted text. `RETURNS event_trigger` is false, and so is a
+`RETURNS` clause that yields a set of rows. `body` is the text
+between the first `AS $tag$` and its matching closer, including the empty
+`$$` tag. It is absent when there is no dollar-quoted body. Enum objects
+carry `values`. View objects carry `materialized`, `definition`, and
+`comment`.
+
+Snapshot findings use an object ref as their stable id. `Display` and
+`FromStr` share this syntax. An unknown prefix or an empty part is an error.
+
+- `table:<t>`
+- `column:<t>.<c>`
+- `index:<t>.<i>`
+- `trigger:<t>.<trg>`
+- `constraint:<t>.<name>`
+- `function:<snapshot key>`
+- `enum:<e>`
+- `view:<v>`
+- `materialized-view:<v>`
+
+For a column, index, trigger, or constraint, the last `.` separates the
+snapshot table key from the object name. `column:public.orders.id` is table
+`public.orders` and column `id`.
+
+`catalog_finding(rule_id, catalog_path, object, text)` sets `file` to the
+slash-normalized catalog path, `line` to 1, `target` to the object ref, and
+`message` to `{catalog_path}: {object}: {text}`. Line 1 is deliberate: a
+snapshot has no source comment to attach a suppression to. The object ref is
+the locator.
+
+`AllowList::compile(rule_id, entries)` reads `{object, reason}` entries. An
+empty or whitespace `reason` fails with
+`<rule-id> option allow: entry <object> needs a reason`. An unparseable
+object fails with `<rule-id> option allow: invalid object ref <object>`. A
+duplicate object fails with `<rule-id> option allow: duplicate entry <object>`.
+`AllowList::apply` drops findings whose `target` equals an entry and adds one
+finding per unused entry:
+`{catalog_path}: stale <rule-id> allow entry: <object>`, again at line 1.
+`require_catalog_path(rule_id, path)` fails with
+`<rule-id> option schemaCatalogPath: required` when the path is empty.
+
 ## Out of scope
 
 Lock-ordering and runtime-query _rules_ are not part of this fact layer.

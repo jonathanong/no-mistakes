@@ -1,7 +1,7 @@
 use super::expressions::order_prefix_matches_for_qualifiers;
 use super::{
     names::{normalize_identifier, normalize_table_name},
-    normalize_expression, order_prefix_matches, CanonicalIndex, CanonicalOrderKey, CatalogTable,
+    normalize_expression, order_prefix_matches, ArbiterTable, CanonicalIndex, CanonicalOrderKey,
     ResolvedArbiter, SchemaCatalog,
 };
 impl SchemaCatalog {
@@ -11,7 +11,7 @@ impl SchemaCatalog {
         target: &[String],
         predicate: Option<&str>,
     ) -> ResolvedArbiter {
-        let Some(table) = self.table(table) else {
+        let Some(table) = self.arbiter_table(table) else {
             return ResolvedArbiter::Unresolved;
         };
         let mut target = target
@@ -40,7 +40,7 @@ impl SchemaCatalog {
         )
     }
     pub fn resolve_constraint(&self, table: &str, name: &str) -> ResolvedArbiter {
-        let Some(table) = self.table(table) else {
+        let Some(table) = self.arbiter_table(table) else {
             return ResolvedArbiter::Unresolved;
         };
         let name = normalize_identifier(name);
@@ -74,7 +74,7 @@ impl SchemaCatalog {
         )
     }
     pub fn has_canonical_prefix(&self, table: &str, order: &[CanonicalOrderKey]) -> bool {
-        self.table(table).is_some_and(|table| {
+        self.arbiter_table(table).is_some_and(|table| {
             table
                 .indexes
                 .iter()
@@ -88,7 +88,7 @@ impl SchemaCatalog {
         qualifiers: &[String],
         order: &[CanonicalOrderKey],
     ) -> bool {
-        self.table(table).is_some_and(|table| {
+        self.arbiter_table(table).is_some_and(|table| {
             table
                 .indexes
                 .iter()
@@ -96,7 +96,7 @@ impl SchemaCatalog {
                 .any(|index| order_prefix_matches_for_qualifiers(order, &index.keys, qualifiers))
         })
     }
-    fn table(&self, table: &str) -> Option<&CatalogTable> {
+    fn arbiter_table(&self, table: &str) -> Option<&ArbiterTable> {
         self.tables.get(&normalize_table_name(table))
     }
 }
