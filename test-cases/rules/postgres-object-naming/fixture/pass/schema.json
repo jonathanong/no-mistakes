@@ -1,0 +1,13 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "order_line_items": {
+      "columns": {
+        "order_id": { "type": "bigint", "ordinalPosition": 1 }
+      },
+      "indexes": {
+        "idx_order_line_items__order_id": { "unique": false }
+      }
+    }
+  }
+}

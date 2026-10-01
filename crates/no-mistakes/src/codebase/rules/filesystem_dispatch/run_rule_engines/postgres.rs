@@ -43,6 +43,14 @@ pub(super) fn run(
         POSTGRES_NO_OFFSET => {
             postgres_no_offset::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_OBJECT_NAMING => match facts {
+            Some(facts) => postgres_object_naming::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            ),
+            None => {
+                postgres_object_naming::check_with_files_and_sources(root, config, files, sources)
+            }
+        },
         POSTGRES_REQUIRE_FK_ON_DELETE => {
             postgres_require_fk_on_delete::check_with_files_and_sources(
                 root, config, files, sources,

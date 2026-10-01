@@ -91,6 +91,17 @@ impl SchemaCatalog {
         Self::from_snapshot(&path.display().to_string(), snapshot)
     }
 
+    /// Parse a snapshot JSON string. Unit tests use this instead of a fixture file.
+    #[cfg(test)]
+    pub fn from_json(json: &str) -> Result<Self> {
+        let snapshot: Snapshot =
+            serde_json::from_str(json).context("schema catalog JSON is not valid")?;
+        if snapshot.format_version != 2 {
+            bail!("schema catalog JSON must use formatVersion 2");
+        }
+        Self::from_snapshot("schema.json", snapshot)
+    }
+
     fn from_snapshot(path: &str, snapshot: Snapshot) -> Result<Self> {
         build::from_snapshot(path, snapshot)
     }

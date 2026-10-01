@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-object-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      patterns:
+        table: '^[a-z][a-z0-9_]*$'
+        column: '^[a-z][a-z0-9_]*$'
+        index: '^idx_{table}__[a-z0-9_]+$'
+      plural:
+        enabled: true
