@@ -1,0 +1,13 @@
+name: CI
+on: push
+# Same expression on the workflow and its job collides inside this file.
+# `ci topology --format mermaid` still draws one lock per declaration.
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: "${{ github.workflow }}-${{ github.ref }}"
+    steps:
+      - run: echo build

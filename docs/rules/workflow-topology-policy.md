@@ -4,7 +4,8 @@ Declarative GitHub Actions topology assertions over the graph produced by
 `ciTopology()` / `createWorkflowTopologyIndex()`. Configure inventory,
 required and forbidden jobs and `needs` edges, artifact edges, exact
 fan-in, reusable-workflow callers, step order, unlocked-workflow
-reasons, and the intended behavior of each `concurrency:` block.
+reasons, the intended behavior of each `concurrency:` block, and shared
+concurrency groups.
 
 ```yaml
 rules:
@@ -51,7 +52,8 @@ part of the delivery contract and should be checked as a graph.
 
 Configured inventory and assertions must match workflow topology: required or
 forbidden edges, exact fan-in, artifacts, callers, step order, documented
-unlocked workflows, and declared concurrency intent.
+unlocked workflows, declared concurrency intent, and shared concurrency
+groups.
 
 ## Options and defaults
 
@@ -72,6 +74,8 @@ All collections default to empty, so omitted assertions impose no requirement:
   scope behavior of that lock. `{}` checks nothing. An owner id is a workflow
   path or a job id `<path>#<key>`. Quote job ids in YAML, because `#` starts a
   comment.
+- `forbidConcurrencyGroupCollisions`: when `true`, report workflows and jobs
+  that share one concurrency group. `false` reports nothing.
 
 Empty maps do not assert that every possible workflow is listed; each supplied
 job or edge is checked and stale required targets are findings.
@@ -138,6 +142,36 @@ concurrency:
   group: "ci-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
   cancel-in-progress: true
 # concurrency cancellation mismatch: .github/workflows/ci.yml: expected conditional, got cancel-running
+```
+
+### `forbidConcurrencyGroupCollisions`
+
+`false` by default, which reports nothing. `true` reports every set of two or
+more workflows or jobs whose `concurrency` group is the same text after
+Unicode lowercasing, so `Deploy-Prod` and `deploy-prod` collide. Owners with
+no `concurrency` block are ignored. Identical expression text collides,
+including two copies of `${{ github.ref }}`.
+
+A group that contains the exact placeholder `${{ github.workflow }}`, with
+optional whitespace inside the braces, is compared only with owners in the
+same workflow file. That context expands to the file's workflow name, so
+`${{ github.workflow }}-${{ github.ref }}` in two files does not collide, while
+the same text on a workflow lock and one of its jobs does. A longer expression
+such as `${{ github.workflow || 'x' }}` is not partitioned.
+
+`ci topology --format mermaid` still draws a separate lock for every group
+that contains `${{ }}`, and joins only literal groups. This option treats
+identical expression text as one lock. The diagram does not change.
+
+```text
+concurrency group collision: <lowered group>: <id1>, <id2>
+```
+
+```yaml
+# .github/workflows/one.yml and .github/workflows/two.yml
+concurrency:
+  group: shared
+# concurrency group collision: shared: .github/workflows/one.yml, .github/workflows/two.yml
 ```
 
 ## Valid example

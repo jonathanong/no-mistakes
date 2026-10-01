@@ -148,6 +148,7 @@ fn reviewed_commands_and_rule_options_stay_accurate() {
                 "`stepOrders`",
                 "`unlockedWorkflowReasons`",
                 "`concurrencyPolicy`",
+                "`forbidConcurrencyGroupCollisions`",
             ][..],
         ),
     ];

@@ -112,6 +112,9 @@ pub(super) fn lint(
     findings.extend(super::evaluate_graph::lint(topology, &index, opts));
     findings.extend(super::evaluate_steps::lint(topology, &index, opts));
     findings.extend(super::evaluate_concurrency::lint(topology, concurrency));
+    if opts.forbid_concurrency_group_collisions {
+        findings.extend(super::evaluate_collisions::lint(topology));
+    }
     findings
 }
 

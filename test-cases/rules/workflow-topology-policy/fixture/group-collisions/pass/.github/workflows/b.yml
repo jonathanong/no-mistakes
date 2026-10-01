@@ -1,0 +1,10 @@
+name: B
+on: push
+# Pair of a.yml. The placeholder keeps this group out of a.yml's partition.
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo b
