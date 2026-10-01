@@ -54,6 +54,7 @@ finding.
 A `namePattern` column passes when at least one column matches the pattern and
 every given property. The same column may also satisfy a named requirement.
 `foreignKey: false` rejects a sole-column foreign key; omitting it does not.
+`foreignKey: false` with `references` or `onDelete` is a configuration error.
 A missing match names `nullable: true` as `nullable`.
 `forbiddenColumns` are exact names. `requiredTriggers` use
 `CatalogTrigger::matches`, with the same defaults as

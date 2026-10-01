@@ -180,6 +180,10 @@ fn option_errors_name_the_field() {
             "option onDelete: unknown value whenever",
         ),
         (
+            "schemaCatalogPath: schema.json\nshapes:\n  - name: s\n    tablePattern: t\n    requiredColumns:\n      - name: id\n        foreignKey: false\n        onDelete: cascade\n",
+            "option foreignKey: false conflicts with references or onDelete",
+        ),
+        (
             "schemaCatalogPath: schema.json\nshapes:\n  - name: s\n    tablePattern: t\n    primaryKeyTypes: ['']\n",
             "option primaryKeyTypes: empty string",
         ),

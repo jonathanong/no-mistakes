@@ -13,12 +13,15 @@ pub(super) fn present_type(data_type: Option<&str>) -> Result<Option<String>> {
     Ok(Some(data_type.to_string()))
 }
 
-pub(super) fn foreign_key_mode(configured: Option<bool>, implied: bool) -> Option<bool> {
-    match configured {
+pub(super) fn foreign_key_mode(configured: Option<bool>, implied: bool) -> Result<Option<bool>> {
+    if configured == Some(false) && implied {
+        bail!("{RULE_ID} option foreignKey: false conflicts with references or onDelete");
+    }
+    Ok(match configured {
         Some(value) => Some(value),
         None if implied => Some(true),
         None => None,
-    }
+    })
 }
 
 pub(super) fn parse_on_delete(raw: &str) -> Result<String> {

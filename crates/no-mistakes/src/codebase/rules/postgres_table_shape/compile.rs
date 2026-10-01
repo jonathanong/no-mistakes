@@ -131,7 +131,7 @@ fn compile_column(column: &ColumnOptions) -> Result<RequiredColumn> {
         foreign_key: foreign_key_mode(
             column.foreign_key,
             on_delete.is_some() || references.is_some(),
-        ),
+        )?,
         on_delete,
         references,
     })
