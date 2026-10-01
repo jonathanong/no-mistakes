@@ -1,4 +1,4 @@
-use super::{finite_set_consistency, preserved, FILESYSTEM_RULE_IDS};
+use super::{preserved, FILESYSTEM_RULE_IDS};
 use crate::codebase::rules::{rule_enabled, RuleFinding};
 use anyhow::Result;
 use std::path::{Path, PathBuf};
@@ -164,29 +164,7 @@ fn run_filesystem_rules_with_config_snapshot_path_and_catalog(
     )
 }
 
-pub(super) fn prepare_call_site_facts(
-    root: &Path,
-    config: &crate::config::v2::NoMistakesConfig,
-    sources: &std::sync::Arc<crate::codebase::ts_source::SourceStore>,
-) -> Result<Option<crate::codebase::check_facts::CheckFactMap>> {
-    let call_site_files = finite_set_consistency::try_required_call_site_fact_files(root, config)?;
-    Ok((!call_site_files.is_empty()).then(|| {
-        crate::codebase::check_facts::collect_check_facts_with_graph_files_playwright_and_sources(
-            root,
-            call_site_files,
-            Vec::new(),
-            crate::codebase::check_facts::CheckFactPlan {
-                graph: crate::codebase::ts_source::facts::TsFactPlan {
-                    call_sites: true,
-                    ..Default::default()
-                },
-                ..Default::default()
-            },
-            None,
-            std::sync::Arc::clone(sources),
-        )
-    }))
-}
+pub(super) use super::call_site_facts::prepare_call_site_facts;
 
 #[doc(hidden)]
 pub fn run_filesystem_rules_with_config_snapshot_and_vitest_catalog(

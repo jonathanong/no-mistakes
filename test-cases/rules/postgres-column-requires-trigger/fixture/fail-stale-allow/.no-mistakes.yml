@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-column-requires-trigger
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      requirements:
+        - column: updated_at
+          function: fn_touch_updated_at
+      allow:
+        - object: table:missing
+          reason: not a table in this snapshot
