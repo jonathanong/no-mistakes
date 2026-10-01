@@ -161,7 +161,12 @@ workflow can avoid subprocess overhead.
 
 This repository is a huge token sink. Thus, contributions are welcomed.
 
-1. Please add test cases in `test-cases/`
+1. Please add test cases as files on disk, never built inside a test:
+   - New scenarios go in `test-cases/<category>/<scenario>/fixture/`. Rule pass/fail pairs go in
+     `test-cases/rules/<rule>/fixture/{pass,fail}`.
+   - A suite whose loader reads `fixtures/<category>/<name>/` (benchmarks, N-API, test-plan, and
+     some per-rule cases) keeps its cases there. Both trees hold some `rules/`, `lockfile/`, and
+     `check-runner/` cases, so find the suite's loader with `rg` and add to the tree it reads.
 2. Annotate which AI harness + model was used, `Co-Authored-By` is preferred
 3. Maintain 98% project and patch test coverage
 
