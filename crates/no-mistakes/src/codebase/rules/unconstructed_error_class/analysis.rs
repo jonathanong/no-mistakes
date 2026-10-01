@@ -121,15 +121,17 @@ fn error_flags(graph: &DepGraph, classes: &[ClassDeclaration]) -> Vec<bool> {
                 continue;
             }
             // A base's exact id picks one declaration out of those sharing its
-            // scope. Without a known id, any declaration of the scope will do.
+            // scope; a class with no `extends` has no declaration here, so an
+            // id with none is no error class. Without a known id, any
+            // declaration of the scope will do.
             let error = class.global_base.as_deref().is_some_and(builtin_error)
-                || bases(graph, class).any(|base| {
-                    match base.id.and_then(|id| by_id.get(&(base.key.0, id))) {
-                        Some(parent) => flags[*parent],
-                        None => by_key
-                            .get(&base.key)
-                            .is_some_and(|parents| parents.iter().any(|parent| flags[*parent])),
-                    }
+                || bases(graph, class).any(|base| match base.id {
+                    Some(id) => by_id
+                        .get(&(base.key.0, id))
+                        .is_some_and(|parent| flags[*parent]),
+                    None => by_key
+                        .get(&base.key)
+                        .is_some_and(|parents| parents.iter().any(|parent| flags[*parent])),
                 });
             flags[index] = error;
             changed |= error;

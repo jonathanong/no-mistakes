@@ -53,7 +53,10 @@ the member, nested and dotted namespaces included:
 - `new Errors.TopicError()`, where `Errors` is declared in the same file or is an
   exported namespace imported from another module, directly, under an alias
   (`import { Errors as E }`), under a renamed export (`export { Errors as
-default }`), or through barrels and `export *`;
+default }`), or through barrels and `export *`. A name that another `export *`
+  source of the same barrel may also supply (a second namespace, a value, or a
+  package outside the repository) is ambiguous, so a construction through it
+  builds nothing the rule can see and the namespace's classes stay quiet;
 - a bare `new TopicError()` written inside the body of the namespace that
   declares `TopicError`, including inside a nested namespace or function there;
 - `new Outer.Inner.DeepError()`, and `new A.B.C()` for `namespace A.B { export

@@ -341,7 +341,10 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   exported namespace imported through named, renamed, default, barrel, or
   `export *` bindings, `new A.B.C()` for `namespace A.B`, and a bare `new X()`
   inside the body that declares `X`; a graph built for `call` edges alone
-  resolves the constructions the same way. Same-named classes in different
+  resolves the constructions the same way. A name that another `export *`
+  source of the same barrel may also supply (a second namespace, a value, or a
+  package outside the repository) is ambiguous: a construction through it is
+  no edge, and the namespace escapes. Same-named classes in different
   namespaces keep their own callable ids. A namespace escapes when any use of it is not
   one of those static member accesses: an alias, a value argument, a computed
   access, `export default` or `export =`, a declaration merged with a class,

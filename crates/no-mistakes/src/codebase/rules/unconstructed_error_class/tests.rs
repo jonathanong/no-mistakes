@@ -87,6 +87,9 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             "src/namespace-lib.ts:40 Renamed.RenamedDead",
             // A member read through a namespace import uses that export alone.
             "src/namespace-member-read-lib.ts:7 ReadKept.ReadKeptDead",
+            // A nested namespace merged with a class resolves through its name.
+            "src/namespace-merged-nested.ts:15 MergedNested.Holder.Unused",
+            "src/namespace-merged-nested.ts:21 MergedNested.Child",
             "src/namespace-merged.ts:10 Merged.Second",
             "src/namespace-merged.ts:23 Mix.Inner.NestedPart",
             // A barrel read whole exposes only what it re-exports.

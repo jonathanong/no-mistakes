@@ -5,8 +5,11 @@ use crate::codebase::dependencies::extract::{ExportedBinding, ImportedBindingKin
 enum RootLookup {
     /// The namespace root `name` declared in `file`.
     Root(std::path::PathBuf, String),
-    /// Not a namespace of this repository.
+    /// Exported, but not a namespace of this repository: a value, or an
+    /// export of a package outside it.
     Other,
+    /// Not exported by the module at all.
+    Absent,
     /// Might be a namespace, but the chain cannot be followed to one: a cycle,
     /// an ambiguous `export *`, or `export * as ns`.
     Unresolved,
@@ -49,7 +52,7 @@ impl CallSiteResolution<'_, '_> {
                 self.escape_closure(&target);
                 None
             }
-            RootLookup::Other => None,
+            RootLookup::Other | RootLookup::Absent => None,
         }
     }
 
@@ -98,22 +101,27 @@ impl CallSiteResolution<'_, '_> {
         }
         // `export *` never carries `default`.
         if export == "default" {
-            return RootLookup::Other;
+            return RootLookup::Absent;
         }
+        // Only a source that lacks the name stays out of the way: any other
+        // export of it, a value or a package's, collides with a namespace.
         let mut roots = Vec::new();
+        let mut other = false;
         for specifier in &index.stars {
             match self.follow(file, specifier, export, visited) {
                 RootLookup::Root(root_file, root) => roots.push((root_file, root)),
-                RootLookup::Other => {}
+                RootLookup::Other => other = true,
+                RootLookup::Absent => {}
                 RootLookup::Unresolved => return RootLookup::Unresolved,
             }
         }
         roots.sort();
         roots.dedup();
-        match (roots.pop(), roots.is_empty()) {
-            (Some((root_file, root)), true) => RootLookup::Root(root_file, root),
-            (Some(_), false) => RootLookup::Unresolved,
-            (None, _) => RootLookup::Other,
+        match (roots.pop(), roots.is_empty(), other) {
+            (None, _, false) => RootLookup::Absent,
+            (None, _, true) => RootLookup::Other,
+            (Some((root_file, root)), true, false) => RootLookup::Root(root_file, root),
+            (Some(_), _, _) => RootLookup::Unresolved,
         }
     }
 
@@ -148,8 +156,8 @@ impl CallSiteResolution<'_, '_> {
     }
 
     /// Looks `export` up in the module `specifier` names. A module outside the
-    /// repository holds none of its namespaces; a relative one the graph does
-    /// not see is unknown.
+    /// repository holds none of its namespaces, but may export the name; a
+    /// relative one the graph does not see is unknown.
     fn follow(
         &self,
         from: &std::path::Path,

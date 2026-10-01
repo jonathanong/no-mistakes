@@ -61,7 +61,7 @@ impl CallSiteResolution<'_, '_> {
         match self.resolve_namespace_root(&target, export, &mut Vec::new()) {
             RootLookup::Root(file, root) => self.escape(&file, &root),
             RootLookup::Unresolved => self.escape_closure(&target),
-            RootLookup::Other => {}
+            RootLookup::Other | RootLookup::Absent => {}
         }
     }
 
@@ -84,7 +84,7 @@ impl CallSiteResolution<'_, '_> {
             for (name, binding) in &index.exported {
                 match self.resolve_namespace_root(&current, name, &mut Vec::new()) {
                     RootLookup::Root(root_file, root) => self.escape(&root_file, &root),
-                    RootLookup::Other => {}
+                    RootLookup::Other | RootLookup::Absent => {}
                     RootLookup::Unresolved => {
                         let imported = index.imported.get(&binding.local);
                         let specifier = binding
