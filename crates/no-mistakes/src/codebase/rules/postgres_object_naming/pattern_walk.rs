@@ -1,3 +1,5 @@
+use super::pattern_flags::{apply_verbose, flag_span};
+
 pub(super) fn active_flags(pre: &str) -> String {
     let chars: Vec<char> = pre.chars().collect();
     let mut flags = String::new();
@@ -96,6 +98,7 @@ pub(super) fn walk_placeholders(pattern: &str) -> PlaceholderWalk {
     let mut ok = false;
     let mut bad = false;
     let mut offsets = Vec::new();
+    let mut scopes: Vec<Option<bool>> = Vec::new();
     while index < chars.len() {
         let (byte, character) = chars[index];
         if comment {
@@ -131,16 +134,27 @@ pub(super) fn walk_placeholders(pattern: &str) -> PlaceholderWalk {
             continue;
         }
         if character == '(' {
-            if let Some(end) = flag_end(&chars, index) {
-                let body: String = chars[index + 2..end].iter().map(|(_, char)| char).collect();
+            if let Some(span) = flag_span(&chars, index) {
+                let body: String = chars[index + 2..span.end]
+                    .iter()
+                    .map(|(_, char)| char)
+                    .collect();
+                if span.scoped {
+                    scopes.push(Some(verbose));
+                    depth += 1;
+                }
                 apply_verbose(&body, &mut verbose);
-                index = end + 1;
+                index = span.end + 1;
                 continue;
             }
             depth += 1;
+            scopes.push(None);
         }
         if character == ')' && depth > 0 {
             depth -= 1;
+            if let Some(Some(previous)) = scopes.pop() {
+                verbose = previous;
+            }
         }
         if character == '|' && depth == 0 {
             top_alt = true;
@@ -157,35 +171,6 @@ pub(super) fn walk_placeholders(pattern: &str) -> PlaceholderWalk {
     PlaceholderWalk {
         offsets,
         plain: ok && !top_alt && !bad,
-    }
-}
-
-fn flag_end(chars: &[(usize, char)], start: usize) -> Option<usize> {
-    if chars.get(start + 1).is_none_or(|(_, char)| *char != '?') {
-        return None;
-    }
-    let mut index = start + 2;
-    let mut dash = false;
-    let mut flag = false;
-    while let Some((_, character)) = chars.get(index) {
-        match character {
-            '-' if !dash => dash = true,
-            'i' | 'm' | 's' | 'u' | 'U' | 'x' | 'R' => flag = true,
-            ')' if flag => return Some(index),
-            _ => return None,
-        }
-        index += 1;
-    }
-    None
-}
-
-fn apply_verbose(body: &str, verbose: &mut bool) {
-    let (on, off) = body.split_once('-').unwrap_or((body, ""));
-    if on.contains('x') {
-        *verbose = true;
-    }
-    if off.contains('x') {
-        *verbose = false;
     }
 }
 

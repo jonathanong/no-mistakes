@@ -81,7 +81,8 @@ A spelling value must not be empty. Finding targets and `allow` entries keep the
 An inline flag such as `(?i)` that is still active at `{table}` applies to
 both sides. That includes a flag in the middle of the prefix, such as
 `^idx_(?i){table}__[a-z]+$`. `{table}` inside a verbose-mode `#` comment is
-not a placeholder, and neither is a flag written inside that comment.
+not a placeholder, including inside a scoped group such as `(?x:...)`, and
+neither is a flag written inside that comment.
 `{table}` cannot sit next to a zero-width assertion such as `\b` or `\z`,
 including when verbose mode ignores the space between them. A `{table}`
 match has to cover its

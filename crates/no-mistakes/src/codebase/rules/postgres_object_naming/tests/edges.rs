@@ -1,4 +1,4 @@
-use super::support::{expect, expect_none, findings, index, table, trigger_fn, INDEX};
+use super::support::{expect, expect_err, expect_none, findings, index, table, trigger_fn, INDEX};
 
 #[test]
 fn column_denied_token_does_not_repeat_on_the_table() {
@@ -338,6 +338,18 @@ fn quoted_names_min_words_and_active_flags() {
     expect_none(
         "schemaCatalogPath: schema.json\npatterns:\n  index: '^idx_{table}_\\$x$'\n",
         index("orders", "idx_orders_$x", false, false),
+    );
+}
+
+#[test]
+fn scoped_verbose_comments_hide_placeholders() {
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: \"^(?x:idx_ # {table}\\n){table}__#$\"\n",
+        index("orders", "idx_orders__#", false, false),
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^(?x:idx_{table})__$'\n",
+        "option patterns.index: {table} must not be inside a group, a character class or an alternation",
     );
 }
 
