@@ -191,7 +191,7 @@ fn views_enums_and_partitioned_tables_use_their_kinds() {
     );
     assert_eq!(
         enum_only,
-        vec!["schema.json: table:invoice: table name has 1 word; use at least 2 that name the owner and the thing (for example <owner>_invoice)"]
+        vec!["schema.json: table:invoice: table name has 1 word; use at least 2 that name the owner and the thing (for example owner_invoice)"]
     );
     let partitioned = super::support::messages(
         "schemaCatalogPath: schema.json\npatterns:\n  table: '^[a-z_]+$'\nplural:\n  enabled: true\ntableMinWords: 2\n",
@@ -200,7 +200,7 @@ fn views_enums_and_partitioned_tables_use_their_kinds() {
     assert_eq!(
         partitioned,
         vec![
-            "schema.json: table:widget: table name has 1 word; use at least 2 that name the owner and the thing (for example <owner>_widget)",
+            "schema.json: table:widget: table name has 1 word; use at least 2 that name the owner and the thing (for example owner_widget)",
             "schema.json: table:widget: table name must end in a plural word; \"widget\" is singular",
         ]
     );
@@ -297,6 +297,48 @@ allow:\n  - {object: 'table:widgets', reason: core}\n  - {object: 'table:retired
     );
     let again = findings(yaml, table("widgets"));
     assert_eq!(found, again);
+}
+
+#[test]
+fn quoted_names_min_words_and_active_flags() {
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  table: '^order_items$'\n",
+        table("public.\"order_items\""),
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  table: '^a\"b$'\n",
+        table("public.\"a\"\"b\""),
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\nplural:\n  enabled: true\n",
+        table("___"),
+    );
+    expect(
+        "schemaCatalogPath: schema.json\ntableMinWords: 3\n",
+        table("widgets"),
+        "schema.json: table:widgets: table name has 1 word; use at least 3 that name the owner and the thing (for example owner_part_widgets)",
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^idx_(?i){table}__[a-z]+$'\n",
+        index("orders", "idx_orders__ID", false, false),
+    );
+    expect(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '(?i)(?-i)^idx_{table}__[a-z]+$'\n",
+        index("orders", "IDX_orders__id", false, false),
+        "schema.json: index:orders.IDX_orders__id: index name does not match pattern (?i)(?-i)^idx_{table}__[a-z]+$ ({table} = orders)",
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^.*{table}.*$'\n",
+        index("ab", "abab", false, false),
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^idx_{table}_[^]]x$'\n",
+        index("orders", "idx_orders_bx", false, false),
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^idx_{table}_\\$x$'\n",
+        index("orders", "idx_orders_$x", false, false),
+    );
 }
 
 #[test]

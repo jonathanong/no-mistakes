@@ -125,6 +125,10 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
         "option deniedTokens: duplicate token CFG",
     );
     expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: ID, replacement: id}\n",
+        "option deniedTokens: token \"ID\" equals its replacement",
+    );
+    expect_err(
         "schemaCatalogPath: schema.json\nspelling:\n  '': acknowledgment\n",
         "option spelling: empty key",
     );
@@ -135,6 +139,22 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
     expect_err(
         "schemaCatalogPath: schema.json\nspelling:\n  ID: id\n",
         "option spelling: key \"ID\" equals its value",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  Teh: the\n  teh: the\n",
+        "option spelling: duplicate key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {species: species}\n",
+        "option plural.irregularPlurals: key \"species\" equals its value; use uncountable",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {species: Species}\n",
+        "option plural.irregularPlurals: key \"species\" equals its value; use uncountable",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '(?q)^idx_{table}__$'\n",
+        "option patterns.index: a pattern with {table} must start with ^ and end with $",
     );
     expect_err(
         "schemaCatalogPath: schema.json\ndoubleUnderscore:\n  allowPattern: '['\n",

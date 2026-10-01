@@ -72,6 +72,11 @@ fn compile_plural(options: &Options) -> Result<Option<PluralPolicy>> {
         if value.trim().is_empty() {
             bail!("postgres-object-naming option plural.irregularPlurals: empty value");
         }
+        if key.eq_ignore_ascii_case(value) {
+            bail!(
+                "postgres-object-naming option plural.irregularPlurals: key \"{key}\" equals its value; use uncountable"
+            );
+        }
     }
     let mut ignore = Vec::new();
     for pattern in &options.plural.ignore_patterns {
@@ -100,6 +105,12 @@ fn compile_denied(tokens: &[super::DeniedToken]) -> Result<Vec<(String, String)>
         if token.token.trim().is_empty() {
             bail!("postgres-object-naming option deniedTokens: empty token");
         }
+        if token.token.eq_ignore_ascii_case(&token.replacement) {
+            bail!(
+                "postgres-object-naming option deniedTokens: token \"{}\" equals its replacement",
+                token.token
+            );
+        }
         if !seen.insert(token.token.to_ascii_lowercase()) {
             bail!(
                 "postgres-object-naming option deniedTokens: duplicate token {}",
@@ -112,6 +123,7 @@ fn compile_denied(tokens: &[super::DeniedToken]) -> Result<Vec<(String, String)>
 }
 
 fn compile_spelling(spelling: &BTreeMap<String, String>) -> Result<Vec<(String, String, String)>> {
+    let mut seen = BTreeSet::new();
     let mut compiled = Vec::new();
     for (key, value) in spelling {
         if key.trim().is_empty() {
@@ -119,6 +131,9 @@ fn compile_spelling(spelling: &BTreeMap<String, String>) -> Result<Vec<(String, 
         }
         if key.eq_ignore_ascii_case(value) {
             bail!("postgres-object-naming option spelling: key \"{key}\" equals its value");
+        }
+        if !seen.insert(key.to_ascii_lowercase()) {
+            bail!("postgres-object-naming option spelling: duplicate key {key}");
         }
         compiled.push((key.to_ascii_lowercase(), key.clone(), value.clone()));
     }

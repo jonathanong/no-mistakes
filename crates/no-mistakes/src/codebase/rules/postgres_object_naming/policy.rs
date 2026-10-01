@@ -138,8 +138,19 @@ pub(super) fn spelling_text(token: &str, replacement: &str) -> String {
 
 pub(super) fn min_words_text(count: usize, minimum: usize, name: &str) -> String {
     let word = if count == 1 { "word" } else { "words" };
+    let mut example = String::new();
+    for index in 0..minimum.saturating_sub(count) {
+        if index > 0 {
+            example.push('_');
+        }
+        example.push_str(if index == 0 { "owner" } else { "part" });
+    }
+    if !example.is_empty() && !name.is_empty() {
+        example.push('_');
+    }
+    example.push_str(name);
     format!(
-        "table name has {count} {word}; use at least {minimum} that name the owner and the thing (for example <owner>_{name})"
+        "table name has {count} {word}; use at least {minimum} that name the owner and the thing (for example {example})"
     )
 }
 

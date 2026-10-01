@@ -1,5 +1,5 @@
 use super::expand::{middle_matches, suggestion};
-use super::pattern_walk::{ends_unescaped_dollar, placeholder_is_plain};
+use super::pattern_walk::{active_flags, ends_unescaped_dollar, placeholder_is_plain};
 use anyhow::{bail, Result};
 use regex::Regex;
 
@@ -44,7 +44,7 @@ pub(super) fn compile_pattern(kind: &str, raw: &str) -> Result<CompiledPattern> 
     }
     validate_placeholder(kind, raw, count)?;
     let (pre, post) = raw.split_once("{table}").expect("count checked");
-    let flags = copied_flags(pre);
+    let flags = active_flags(pre);
     let pre = Regex::new(&format!("{pre}$")).map_err(|error| invalid(kind, &error.to_string()))?;
     let post = Regex::new(&format!("{flags}^(?:{post})"))
         .map_err(|error| invalid(kind, &error.to_string()))?;
@@ -146,22 +146,6 @@ fn validate_placeholder(kind: &str, raw: &str, count: usize) -> Result<()> {
 fn without_leading_flags(raw: &str) -> &str {
     let mut rest = raw;
     while let Some(next) = strip_flags(rest) {
-        rest = next;
-    }
-    rest
-}
-
-fn copied_flags(pre: &str) -> String {
-    let mut flags = String::new();
-    let rest = take_flags(pre, &mut flags);
-    take_flags(rest.strip_prefix('^').unwrap_or(rest), &mut flags);
-    flags
-}
-
-fn take_flags<'a>(mut rest: &'a str, flags: &mut String) -> &'a str {
-    while let Some(next) = strip_flags(rest) {
-        let taken = rest.len() - next.len();
-        flags.push_str(&rest[..taken]);
         rest = next;
     }
     rest

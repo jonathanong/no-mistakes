@@ -75,9 +75,7 @@ fn apply_message(compiled: &Compiled, findings: &mut [RuleFinding]) {
         return;
     };
     for finding in findings {
-        let Some(target) = &finding.target else {
-            continue;
-        };
+        let target = finding.target.as_deref().unwrap_or_default();
         finding.message = format!("{}: {target}: {message}", finding.file);
     }
 }

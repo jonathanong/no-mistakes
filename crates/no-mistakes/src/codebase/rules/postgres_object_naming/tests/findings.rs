@@ -80,7 +80,7 @@ abbreviations:\n  enabled: true\n";
     expect(
         "schemaCatalogPath: schema.json\ntableMinWords: 2\n",
         table("widgets"),
-        "schema.json: table:widgets: table name has 1 word; use at least 2 that name the owner and the thing (for example <owner>_widgets)",
+        "schema.json: table:widgets: table name has 1 word; use at least 2 that name the owner and the thing (for example owner_widgets)",
     );
     let pattern = "^link__[a-z0-9]+(_[a-z0-9]+)*__[a-z0-9_]+__[a-z0-9_]+$";
     expect(

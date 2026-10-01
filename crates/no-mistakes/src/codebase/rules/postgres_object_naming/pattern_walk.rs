@@ -1,3 +1,49 @@
+pub(super) fn active_flags(pre: &str) -> String {
+    let chars: Vec<char> = pre.chars().collect();
+    let mut flags = String::new();
+    let mut depth = 0i32;
+    let mut index = 0;
+    while index < chars.len() {
+        if chars[index] == '\\' {
+            index += 2;
+            continue;
+        }
+        if chars[index] == '(' {
+            if let Some(end) = persistent_flag(&chars, index) {
+                if depth == 0 {
+                    flags.extend(chars[index..=end].iter());
+                }
+                index = end + 1;
+                continue;
+            }
+            depth += 1;
+        } else if chars[index] == ')' && depth > 0 {
+            depth -= 1;
+        }
+        index += 1;
+    }
+    flags
+}
+
+fn persistent_flag(chars: &[char], start: usize) -> Option<usize> {
+    if chars.get(start + 1) != Some(&'?') {
+        return None;
+    }
+    let mut index = start + 2;
+    let mut dash = false;
+    let mut flag = false;
+    while let Some(character) = chars.get(index).copied() {
+        match character {
+            '-' if !dash => dash = true,
+            'i' | 'm' | 's' | 'u' | 'U' | 'x' | 'R' => flag = true,
+            ')' if flag => return Some(index),
+            _ => return None,
+        }
+        index += 1;
+    }
+    None
+}
+
 pub(super) fn ends_unescaped_dollar(pattern: &str) -> bool {
     let bytes = pattern.as_bytes();
     if bytes.last() != Some(&b'$') {
