@@ -149,6 +149,7 @@ pub struct CatalogFunction {
     pub signature: Option<String>,
     pub language: Option<String>,
     pub returns_trigger: bool,
+    pub returns_event_trigger: bool,
     pub definition: String,
     pub body: Option<String>,
 }

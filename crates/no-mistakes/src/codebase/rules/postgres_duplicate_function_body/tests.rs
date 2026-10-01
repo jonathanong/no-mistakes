@@ -81,9 +81,9 @@ fn copied_raise_functions_normalize_to_one_body_and_report_all_three() {
     let joined = messages("schemaCatalogPath: rejects.json\n").join("\n");
     assert_eq!(joined.matches("function:").count(), 3, "{joined}");
     for text in [
-        "function:fn_reject_orders_update: function body duplicates 2 other function(s) after normalising names and literals: fn_reject_invoices_update, fn_reject_refunds_update; replace them with one function parameterised by TG_TABLE_NAME / TG_ARGV",
-        "function:fn_reject_invoices_update: function body duplicates 2 other function(s) after normalising names and literals: fn_reject_orders_update, fn_reject_refunds_update; replace them with one function parameterised by TG_TABLE_NAME / TG_ARGV",
-        "function:fn_reject_refunds_update: function body duplicates 2 other function(s) after normalising names and literals: fn_reject_invoices_update, fn_reject_orders_update; replace them with one function parameterised by TG_TABLE_NAME / TG_ARGV",
+        "function:fn_reject_orders_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_invoices_update, fn_reject_refunds_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+        "function:fn_reject_invoices_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_orders_update, fn_reject_refunds_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
+        "function:fn_reject_refunds_update: function body duplicates 2 other function(s) after normalizing names and literals: fn_reject_invoices_update, fn_reject_orders_update. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
     ] {
         assert!(joined.contains(text), "missing {text}\n{joined}");
     }
@@ -131,7 +131,7 @@ fn min_tokens_and_disabled_normalisers_split_copies() {
 fn clusters_above_five_list_the_rest_as_and_more() {
     let joined = messages("schemaCatalogPath: many.json\n").join("\n");
     assert!(joined.contains(
-        "function:fn_01: function body duplicates 6 other function(s) after normalising names and literals: fn_02, fn_03, fn_04, fn_05, fn_06 and 1 more; replace them with one function that takes the varying values as arguments"
+        "function:fn_01: function body duplicates 6 other function(s) after normalizing names and literals: fn_02, fn_03, fn_04, fn_05, fn_06 and 1 more. Copied functions drift, so a fix has to be repeated in each copy; replace them with one function that takes the varying values as arguments"
     ));
     assert_eq!(joined.matches("function:fn_").count(), 7, "{joined}");
 }
@@ -335,6 +335,19 @@ fn trigger_event_and_ordinary_functions_stay_in_separate_groups() {
     assert!(joined.contains("event trigger function"));
     assert!(!joined.contains("function:fn_void_same:"));
     assert!(!joined.contains("function:fn_row_trigger:"));
+}
+
+#[test]
+fn single_quoted_bodies_are_compared() {
+    let joined = messages("schemaCatalogPath: quoted.json\n").join("\n");
+    assert!(joined.contains("function:fn_quote_a:"), "{joined}");
+    assert!(joined.contains("function:fn_quote_b:"));
+}
+
+#[test]
+fn a_default_string_does_not_make_an_event_trigger() {
+    let joined = messages("schemaCatalogPath: event-default.json\n").join("\n");
+    assert!(joined.is_empty(), "{joined}");
 }
 
 #[test]

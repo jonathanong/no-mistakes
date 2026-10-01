@@ -6,7 +6,7 @@ pub(super) fn split_body(definition: &str) -> (String, Option<String>) {
 }
 
 pub(super) fn skip_dollar_body(definition: &str, index: usize) -> Option<usize> {
-    let (tag, open_end) = opening_dollar(definition, index)?;
+    let (tag, open_end) = super::function_quote::opening_dollar(definition, index)?;
     let close = format!("${tag}$");
     let relative = definition[open_end..].find(&close)?;
     Some(open_end + relative + close.len())
@@ -20,22 +20,9 @@ fn dollar_body(definition: &str) -> Option<(String, String)> {
             continue;
         }
         if is_word_at(definition, index, "as") {
-            let mut cursor = index + 2;
-            while definition
-                .as_bytes()
-                .get(cursor)
-                .is_some_and(u8::is_ascii_whitespace)
-            {
-                cursor += 1;
-            }
-            if let Some((tag, open_end)) = opening_dollar(definition, cursor) {
-                let close = format!("${tag}$");
-                if let Some(relative) = definition[open_end..].find(&close) {
-                    return Some((
-                        definition[..index].to_string(),
-                        definition[open_end..open_end + relative].to_string(),
-                    ));
-                }
+            let cursor = skip_as_gap(definition, index + 2);
+            if let Some(body) = super::function_quote::body_after_as(definition, cursor) {
+                return Some((definition[..index].to_string(), body));
             }
         }
         index += definition[index..].chars().next()?.len_utf8();
@@ -73,10 +60,28 @@ fn atomic_body(definition: &str) -> Option<(String, Option<String>)> {
     None
 }
 
-fn opening_dollar(definition: &str, index: usize) -> Option<(String, usize)> {
-    let rest = definition[index..].strip_prefix('$')?;
-    let end = rest.find('$')?;
-    Some((rest[..end].to_string(), index + end + 2))
+fn skip_as_gap(definition: &str, mut cursor: usize) -> usize {
+    loop {
+        while definition
+            .as_bytes()
+            .get(cursor)
+            .is_some_and(u8::is_ascii_whitespace)
+        {
+            cursor += 1;
+        }
+        let Some(rest) = definition.get(cursor..) else {
+            return cursor;
+        };
+        if rest.starts_with("--") {
+            cursor += rest.find('\n').unwrap_or(rest.len());
+            continue;
+        }
+        if rest.starts_with("/*") {
+            cursor = super::function_comment::skip_block_comment(definition, cursor);
+            continue;
+        }
+        return cursor;
+    }
 }
 
 fn matching_end(definition: &str, mut index: usize) -> Option<usize> {
@@ -151,7 +156,7 @@ fn skip_ignored(definition: &str, index: usize) -> Option<usize> {
     None
 }
 
-fn skip_quoted(definition: &str, index: usize, quote: char) -> usize {
+pub(super) fn skip_quoted(definition: &str, index: usize, quote: char) -> usize {
     let mut chars = definition[index + quote.len_utf8()..].char_indices();
     while let Some((offset, character)) = chars.next() {
         if character == quote {

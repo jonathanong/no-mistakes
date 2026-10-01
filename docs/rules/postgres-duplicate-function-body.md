@@ -32,8 +32,11 @@ them.
 ## What it catches/requires
 
 The rule reads function bodies from the schema catalog. A function with no
-body, or a body that fails to tokenize, is skipped. Whitespace and comments
-are dropped, and a trailing `;` is dropped so `END;` and `END` match.
+body, or a body that fails to tokenize, is skipped. `AS '...'` is a body, and
+a doubled quote inside it is one quote. Whitespace and comments are dropped,
+and a trailing `;` is dropped so `END;` and `END` match. A default or comment
+that contains `returns event_trigger` does not make the function an event
+trigger.
 
 When `normalizeRaise` is true, each `RAISE` statement becomes
 `RAISE <level> ? ;`. The level is `EXCEPTION`, `WARNING`, `NOTICE`, `INFO`,
@@ -50,7 +53,8 @@ operators stay in uppercase where they are words.
 The group key is the language plus that token sequence. Every member of a
 group of size at least `minClusterSize`, with at least `minTokens` tokens, is
 reported as `function:<snapshot key>`. The text lists the other keys in
-snapshot-key order, at most five, then `and <m> more`.
+snapshot-key order, at most five, then `and <m> more`, and says the copies
+drift so a fix has to be repeated in each copy.
 
 ## Options and defaults
 

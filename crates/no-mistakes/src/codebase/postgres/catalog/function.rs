@@ -3,12 +3,14 @@ use super::model::CatalogFunction;
 pub(super) fn function_from_definition(key: &str, definition: &str) -> CatalogFunction {
     let (name, signature) = split_key(key);
     let (header, body) = super::function_body::split_body(definition);
+    let plain = strip_quotes_and_comments(&header);
     CatalogFunction {
         key: key.to_string(),
         name,
         signature,
         language: language(definition),
-        returns_trigger: returns_trigger(&strip_quotes_and_comments(&header)),
+        returns_trigger: returns_clause(&plain, "trigger"),
+        returns_event_trigger: returns_clause(&plain, "event_trigger"),
         definition: definition.to_string(),
         body,
     }
@@ -54,60 +56,29 @@ fn language(definition: &str) -> Option<String> {
 
 fn strip_quotes_and_comments(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
-    let mut chars = text.chars().peekable();
-    while let Some(character) = chars.next() {
-        if character == '-' && chars.peek() == Some(&'-') {
-            chars.next();
-            while chars.next().is_some_and(|next| next != '\n') {}
+    let mut index = 0;
+    while index < text.len() {
+        if let Some(end) = super::function_body::skip_noise(text, index) {
             out.push(' ');
+            index = end;
             continue;
         }
-        if character == '/' && chars.peek() == Some(&'*') {
-            chars.next();
-            let mut depth = 1i32;
-            while depth > 0 {
-                match chars.next() {
-                    Some('/') if chars.peek() == Some(&'*') => {
-                        chars.next();
-                        depth += 1;
-                    }
-                    Some('*') if chars.peek() == Some(&'/') => {
-                        chars.next();
-                        depth -= 1;
-                    }
-                    Some(_) => {}
-                    None => break,
-                }
-            }
-            out.push(' ');
-            continue;
-        }
-        if character == '\'' || character == '"' {
-            let quote = character;
-            while let Some(next) = chars.next() {
-                if next == quote {
-                    if chars.peek() == Some(&quote) {
-                        chars.next();
-                        continue;
-                    }
-                    break;
-                }
-            }
-            out.push(' ');
-            continue;
-        }
+        let Some(character) = text[index..].chars().next() else {
+            break;
+        };
         out.push(character);
+        index += character.len_utf8();
     }
     out
 }
 
-fn returns_trigger(header: &str) -> bool {
+fn returns_clause(header: &str, word: &str) -> bool {
     let lower = header.to_ascii_lowercase();
     let mut rest = lower.as_str();
     while let Some(index) = rest.find("returns") {
         let before = index == 0 || !is_ident_byte(&rest.as_bytes()[index - 1]);
         let after = rest[index + "returns".len()..].trim_start();
-        if before && word_starts(after, "trigger") {
+        if before && word_starts(after, word) {
             return true;
         }
         rest = &rest[index + "returns".len()..];

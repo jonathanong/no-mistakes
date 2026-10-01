@@ -32,7 +32,7 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
         if tokens.len() < compiled.min_tokens {
             continue;
         }
-        let kind = function_kind(function.returns_trigger, &function.definition, Some(body));
+        let kind = function_kind(function.returns_trigger, function.returns_event_trigger);
         groups
             .entry(GroupKey {
                 language,
@@ -110,30 +110,14 @@ fn phrase(header: &str, first: &str, second: &str) -> bool {
     false
 }
 
-fn function_kind(returns_trigger: bool, definition: &str, body: Option<&str>) -> &'static str {
+fn function_kind(returns_trigger: bool, returns_event_trigger: bool) -> &'static str {
     if returns_trigger {
         "trigger"
-    } else if event_trigger(definition, body) {
+    } else if returns_event_trigger {
         "event"
     } else {
         "routine"
     }
-}
-
-fn event_trigger(definition: &str, body: Option<&str>) -> bool {
-    let header = body
-        .and_then(|body| definition.find(body).map(|index| &definition[..index]))
-        .unwrap_or(definition);
-    let mut words = header
-        .split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
-        .filter(|word| !word.is_empty())
-        .map(|word| word.to_ascii_lowercase());
-    while let Some(word) = words.next() {
-        if word == "returns" && words.next().as_deref() == Some("event_trigger") {
-            return true;
-        }
-    }
-    false
 }
 
 fn search_path(definition: &str, body: Option<&str>) -> String {
@@ -169,13 +153,13 @@ fn finding_text(count: usize, others: &[&str], kind: &str) -> String {
         format!("{} and {} more", others.join(", "), count - 5)
     };
     let remedy = match kind {
-        "trigger" => "replace them with one function parameterised by TG_TABLE_NAME / TG_ARGV",
+        "trigger" => "replace them with one function parameterized by TG_TABLE_NAME / TG_ARGV",
         "event" => {
             "replace them with one event trigger function; event triggers cannot take arguments"
         }
         _ => "replace them with one function that takes the varying values as arguments",
     };
     format!(
-        "function body duplicates {count} other function(s) after normalising names and literals: {listed}; {remedy}",
+        "function body duplicates {count} other function(s) after normalizing names and literals: {listed}. Copied functions drift, so a fix has to be repeated in each copy; {remedy}",
     )
 }

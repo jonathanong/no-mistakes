@@ -10,10 +10,32 @@ fn language_and_body_ignore_headers_and_keep_atomic_sql() {
     assert_eq!(parameter.body.as_deref(), Some(" SELECT 1 "));
 
     let quoted = function_from_definition(
-        "g()",
-        "CREATE FUNCTION g() RETURNS int LANGUAGE sql AS 'not body' AS $$ SELECT 2 $$",
+        "g(text)",
+        "CREATE FUNCTION g(x text DEFAULT 'not body') RETURNS int LANGUAGE sql AS $$ SELECT 2 $$",
     );
     assert_eq!(quoted.body.as_deref(), Some(" SELECT 2 "));
+
+    let sql_string = function_from_definition(
+        "s()",
+        "CREATE FUNCTION s() RETURNS int LANGUAGE sql AS 'SELECT ''widget'''",
+    );
+    assert_eq!(sql_string.body.as_deref(), Some("SELECT 'widget'"));
+
+    let fake_event = function_from_definition(
+        "e(text)",
+        "CREATE FUNCTION e(note text DEFAULT 'returns event_trigger') RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$",
+    );
+    assert!(!fake_event.returns_event_trigger);
+    let commented_event = function_from_definition(
+        "c()",
+        "CREATE FUNCTION c() /* returns event_trigger */ RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$",
+    );
+    assert!(!commented_event.returns_event_trigger);
+    let event = function_from_definition(
+        "ev()",
+        "CREATE FUNCTION ev() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$",
+    );
+    assert!(event.returns_event_trigger);
 
     let commented = function_from_definition(
         "h()",

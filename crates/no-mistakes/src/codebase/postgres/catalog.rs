@@ -9,6 +9,7 @@ mod findings;
 mod function;
 mod function_body;
 mod function_comment;
+mod function_quote;
 mod model;
 mod names;
 mod order;
