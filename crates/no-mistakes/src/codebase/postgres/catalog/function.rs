@@ -26,13 +26,25 @@ pub(super) fn function_from_definition(key: &str, definition: &str) -> CatalogFu
 }
 
 fn split_key(key: &str) -> (String, Option<String>) {
-    match key.split_once('(') {
-        None => (key.trim().to_string(), None),
-        Some((name, rest)) => {
-            let signature = rest.trim().strip_suffix(')').unwrap_or(rest.trim());
-            (name.trim().to_string(), Some(signature.trim().to_string()))
+    let mut quoted = false;
+    let mut chars = key.char_indices().peekable();
+    while let Some((index, character)) = chars.next() {
+        if character == '"' {
+            if quoted && chars.peek().is_some_and(|(_, next)| *next == '"') {
+                chars.next();
+                continue;
+            }
+            quoted = !quoted;
+            continue;
+        }
+        if character == '(' && !quoted {
+            let name = key[..index].trim().to_string();
+            let rest = key[index + 1..].trim();
+            let signature = rest.strip_suffix(')').unwrap_or(rest).trim();
+            return (name, Some(signature.to_string()));
         }
     }
+    (key.trim().to_string(), None)
 }
 
 fn language(definition: &str, span: Option<(usize, usize)>) -> Option<String> {

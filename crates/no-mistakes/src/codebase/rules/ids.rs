@@ -47,6 +47,7 @@ pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;
 pub use super::postgres_no_add_column::RULE_ID as POSTGRES_NO_ADD_COLUMN;
 pub use super::postgres_no_generated_column_writes::RULE_ID as POSTGRES_NO_GENERATED_COLUMN_WRITES;
 pub use super::postgres_no_offset::RULE_ID as POSTGRES_NO_OFFSET;
+pub use super::postgres_object_naming::RULE_ID as POSTGRES_OBJECT_NAMING;
 pub use super::postgres_redundant_index::RULE_ID as POSTGRES_REDUNDANT_INDEX;
 pub use super::postgres_require_fk_on_delete::RULE_ID as POSTGRES_REQUIRE_FK_ON_DELETE;
 pub use super::postgres_require_named_constraints::RULE_ID as POSTGRES_REQUIRE_NAMED_CONSTRAINTS;

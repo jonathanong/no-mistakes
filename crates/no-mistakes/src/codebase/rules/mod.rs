@@ -54,6 +54,7 @@ pub mod postgres_lock_ordering;
 pub mod postgres_no_add_column;
 pub mod postgres_no_generated_column_writes;
 pub mod postgres_no_offset;
+pub mod postgres_object_naming;
 pub mod postgres_redundant_index;
 pub mod postgres_require_fk_on_delete;
 pub mod postgres_require_named_constraints;
