@@ -27,6 +27,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-object-naming",
     "postgres-column-naming",
     "postgres-finite-text-columns",
+    "postgres-array-columns",
 ];
 
 #[derive(Default, Deserialize)]

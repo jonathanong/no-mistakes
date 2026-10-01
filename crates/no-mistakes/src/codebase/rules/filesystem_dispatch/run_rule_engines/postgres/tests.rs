@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::rules::postgres_array_columns::RULE_ID as ARRAY_COLUMNS_RULE;
 use crate::codebase::rules::postgres_column_naming::RULE_ID as COLUMN_NAMING_RULE;
 use crate::codebase::rules::postgres_column_requires_trigger::RULE_ID as COLUMN_RULE;
 use crate::codebase::rules::postgres_conflict_ordering::RULE_ID as CONFLICT_RULE;
@@ -27,6 +28,7 @@ fn missing_facts_use_the_file_checkers() {
         COLUMN_NAMING_RULE,
         IDENTIFIER_LENGTH_RULE,
         FINITE_TEXT_RULE,
+        ARRAY_COLUMNS_RULE,
     ] {
         assert!(run(rule_id, Path::new("."), &config, files, &sources, None).is_some());
     }
@@ -42,6 +44,7 @@ fn prepared_facts_use_the_fact_checkers() {
         NAMING_RULE,
         COLUMN_NAMING_RULE,
         FINITE_TEXT_RULE,
+        ARRAY_COLUMNS_RULE,
         TABLE_RULE,
         STATUS_RULE,
     ] {

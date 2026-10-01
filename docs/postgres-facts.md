@@ -14,7 +14,8 @@ These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`,
 `postgres-constraint-validate`, `postgres-no-add-column`,
-`postgres-column-naming`, `postgres-finite-text-columns`, and
+`postgres-column-naming`, `postgres-finite-text-columns`,
+`postgres-array-columns`, and
 `postgres-identifier-length`
 consume the facts through `no-mistakes check`. Forthcoming DML rules
 (`postgres-required-predicates`, `postgres-sql-shape-policy`,
@@ -284,7 +285,9 @@ comments (`-- name`) and empty `/* */` comments are not annotations.
 `SchemaCatalog::load` reads a repository-relative PostgreSQL snapshot with
 `formatVersion: 2`. Missing snapshot fields default, so a catalog that only
 records indexes still loads. `postgres-finite-text-columns` reads column types,
-foreign keys, and `CHECK` definitions from this snapshot. `postgres-conflict-ordering` and
+foreign keys, and `CHECK` definitions from this snapshot. `postgres-array-columns`
+reads column `data_type` values and enum names from this snapshot.
+`postgres-conflict-ordering` and
 `postgres-lock-ordering` keep resolving arbiters from valid, ready, unique or
 primary btree indexes only. `tables()`, `table(name)`, `functions()`,
 `enums()`, and `views()` expose the rest of the snapshot. Iterators are in

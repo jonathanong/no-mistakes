@@ -7,7 +7,9 @@ use std::sync::Arc;
 
 mod naming;
 
-use naming::{column_naming, finite_text, object_naming, status_lifecycle, table_shape};
+use naming::{
+    array_columns, column_naming, finite_text, object_naming, status_lifecycle, table_shape,
+};
 
 pub(super) fn run(
     rule_id: &str,
@@ -50,6 +52,7 @@ pub(super) fn run(
         POSTGRES_IDENTIFIER_LENGTH => {
             postgres_identifier_length::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_ARRAY_COLUMNS => array_columns(root, config, files, sources, facts),
         POSTGRES_FINITE_TEXT_COLUMNS => finite_text(root, config, files, sources, facts),
         POSTGRES_COLUMN_NAMING => column_naming(root, config, files, sources, facts),
         POSTGRES_OBJECT_NAMING => object_naming(root, config, files, sources, facts),
