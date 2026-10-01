@@ -79,6 +79,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-column-requires-trigger",
             "postgres-conflict-ordering",
             "postgres-lock-ordering",
+            "postgres-required-comments",
         ]
     );
 }

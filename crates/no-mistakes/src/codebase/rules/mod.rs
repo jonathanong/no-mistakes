@@ -57,6 +57,7 @@ pub mod postgres_redundant_index;
 pub mod postgres_require_fk_on_delete;
 pub mod postgres_require_named_constraints;
 pub mod postgres_require_query_annotation;
+pub mod postgres_required_comments;
 pub mod postgres_required_predicates;
 pub mod postgres_sql_shape_policy;
 pub mod postgres_sql_statement_policy;

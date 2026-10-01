@@ -20,6 +20,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-column-requires-trigger",
     "postgres-conflict-ordering",
     "postgres-lock-ordering",
+    "postgres-required-comments",
 ];
 
 #[derive(Default, Deserialize)]

@@ -6,7 +6,8 @@ TypeScript.
 
 These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-conflict-ordering`, `postgres-lock-ordering`,
-`postgres-column-requires-trigger`, `postgres-no-offset`,
+`postgres-column-requires-trigger`, `postgres-required-comments`,
+`postgres-no-offset`,
 `postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`,
@@ -225,7 +226,10 @@ every rule application that selects them. `postgres-column-requires-trigger`
 reads column names and trigger definitions from the same schema catalog.
 Trigger matching compares the unqualified function, timing, event subset, and
 row-ness. Snapshot findings use `table:<name>` object refs and `allow`
-entries.
+entries. `postgres-required-comments` reads table, column, and view comments
+from that catalog. `table` includes partitioned tables. An empty
+`columnNamePatterns` list checks every column, then
+`exemptColumnNamePatterns` skips matches.
 
 `analyze_conflict_inserts(sql)` exposes the same structured SQL projection to
 Rust callers as `SqlConflictInsertFact`, `SqlConflictTarget`, and
