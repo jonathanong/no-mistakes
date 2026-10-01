@@ -119,4 +119,6 @@ fn minimum(option: &str, value: i64, floor: i64) -> Result<usize> {
 }
 
 #[cfg(test)]
+mod coverage;
+#[cfg(test)]
 mod tests;

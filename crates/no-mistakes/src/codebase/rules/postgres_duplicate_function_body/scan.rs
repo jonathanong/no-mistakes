@@ -94,7 +94,7 @@ fn other_names(members: &[String], index: usize) -> Vec<&str> {
     names
 }
 
-fn outside_body(definition: &str, span: Option<(usize, usize)>) -> String {
+pub(super) fn outside_body(definition: &str, span: Option<(usize, usize)>) -> String {
     let Some((start, end)) = span else {
         return definition.to_string();
     };

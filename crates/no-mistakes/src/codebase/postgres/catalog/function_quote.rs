@@ -133,7 +133,7 @@ pub(super) fn opening_dollar(definition: &str, index: usize) -> Option<(String, 
     valid.then(|| (tag.to_string(), index + end + 2))
 }
 
-fn quoted_sql_body(definition: &str, cursor: usize) -> Option<(String, usize, usize)> {
+pub(super) fn quoted_sql_body(definition: &str, cursor: usize) -> Option<(String, usize, usize)> {
     if !definition[cursor..].starts_with('\'') {
         return None;
     }

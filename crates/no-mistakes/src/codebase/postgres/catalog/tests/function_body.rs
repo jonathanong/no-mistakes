@@ -205,3 +205,184 @@ fn language_and_body_ignore_headers_and_keep_atomic_sql() {
         "unsafe"
     );
 }
+
+#[test]
+fn parameter_names_are_not_modes_and_defensive_clauses_parse() {
+    let named = function_from_definition(
+        "fn_param(integer)",
+        "CREATE FUNCTION fn_param(immutable int) RETURNS int LANGUAGE sql AS $$ SELECT 1 $$",
+    );
+    assert_eq!(named.volatility, "volatile");
+    assert_eq!(
+        function_from_definition(
+            "fn_real()",
+            "CREATE FUNCTION fn_real() RETURNS int IMMUTABLE LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .volatility,
+        "immutable"
+    );
+    assert_eq!(
+        function_from_definition(
+            "fn_nested(integer)",
+            "CREATE FUNCTION fn_nested(a int DEFAULT (1)) RETURNS int IMMUTABLE LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .volatility,
+        "immutable"
+    );
+    assert_eq!(
+        function_from_definition(
+            "fn_comment(integer)",
+            "CREATE FUNCTION fn_comment(a int /* (immutable) */) RETURNS int IMMUTABLE LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .volatility,
+        "immutable"
+    );
+    assert_eq!(
+        function_from_definition(
+            "fn_called()",
+            "CREATE FUNCTION fn_called() RETURNS int STRICT CALLED ON NULL INPUT LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .null_input,
+        "called"
+    );
+    assert_eq!(
+        function_from_definition(
+            "fn_invoker()",
+            "CREATE FUNCTION fn_invoker() RETURNS int SECURITY DEFINER SECURITY INVOKER LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .security,
+        "invoker"
+    );
+    assert_eq!(
+        function_from_definition(
+            "fn_nulls()",
+            "CREATE FUNCTION fn_nulls() RETURNS NULL ON NULL INPUT LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .null_input,
+        "strict"
+    );
+    let outputs = function_from_definition(
+        "fn_out(integer)",
+        "CREATE FUNCTION fn_out(OUT a int) RETURNS LANGUAGE sql AS $$ SELECT 1 $$",
+    );
+    assert!(
+        outputs.return_contract.contains("out a int"),
+        "{}",
+        outputs.return_contract
+    );
+    assert_eq!(
+        function_from_definition(
+            "fn_gap()",
+            "CREATE FUNCTION fn_gap() RETURNS int LANGUAGE sql AS /* note */ $$ SELECT 3 $$",
+        )
+        .body
+        .as_deref(),
+        Some(" SELECT 3 ")
+    );
+    assert!(function_from_definition(
+        "fn_atomic()",
+        "CREATE FUNCTION fn_atomic() RETURNS int LANGUAGE sql BEGIN ATOMIC /* c */ SELECT 4; END",
+    )
+    .body
+    .is_some());
+    assert!(function_from_definition(
+        "fn_open()",
+        "CREATE FUNCTION fn_open() RETURNS int LANGUAGE sql BEGIN ATOMIC SELECT 5",
+    )
+    .body
+    .is_none());
+    assert_eq!(
+        function_from_definition(
+            "fn_lang()",
+            "CREATE FUNCTION fn_lang() RETURNS int LANGUAGE 'SQL' AS $$ SELECT 6 $$",
+        )
+        .language
+        .as_deref(),
+        Some("sql")
+    );
+    assert_eq!(
+        function_from_definition(
+            "fn_doubled()",
+            "CREATE FUNCTION fn_doubled(x text DEFAULT E'it''s') RETURNS int LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .body
+        .as_deref(),
+        Some(" SELECT 1 ")
+    );
+    assert_eq!(
+        function_from_definition(
+            "fn_hex()",
+            "CREATE FUNCTION fn_hex() RETURNS int LANGUAGE sql AS E'\\u12'",
+        )
+        .body
+        .as_deref(),
+        Some("u12")
+    );
+    assert_eq!(
+        function_from_definition(
+            "fn_octal()",
+            "CREATE FUNCTION fn_octal() RETURNS int LANGUAGE sql AS E'\\18'",
+        )
+        .body
+        .as_deref(),
+        Some("\u{1}8")
+    );
+    assert!(function_from_definition(
+        "fn_unclosed()",
+        "CREATE FUNCTION fn_unclosed(x text DEFAULT E'unterminated",
+    )
+    .body
+    .is_none());
+    assert!(function_from_definition(
+        "fn_plain()",
+        "CREATE FUNCTION fn_plain() RETURNS int LANGUAGE sql AS 'unterminated",
+    )
+    .body
+    .is_none());
+    assert_eq!(
+        function_from_definition(
+            "fn_bare()",
+            "CREATE FUNCTION fn_bare RETURNS int IMMUTABLE LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .volatility,
+        "immutable"
+    );
+    assert_eq!(super::super::function_body::skip_as_gap("abc", 10), 10);
+    assert_eq!(
+        super::super::function_body::language_name("  sql", 0).as_deref(),
+        Some("sql")
+    );
+    assert_eq!(
+        super::super::function_clauses::header_modes(
+            "CREATE FUNCTION f() RETURNS int IMMUTABLE",
+            Some((8, 2)),
+        )
+        .volatility,
+        "immutable"
+    );
+    assert_eq!(
+        super::super::function_clauses::header_modes("[]", None).volatility,
+        "volatile"
+    );
+    assert_eq!(
+        super::super::function_comment::skip_escape_string("noteE'abc'", 5),
+        None
+    );
+    assert_eq!(
+        super::super::function_comment::skip_escape_string("E'unterminated", 1),
+        Some("E'unterminated".len())
+    );
+    assert_eq!(
+        super::super::function_quote::opening_dollar("a$tag$", 1),
+        None
+    );
+    assert_eq!(super::super::function_quote::opening_dollar("$1$", 0), None);
+    assert_eq!(
+        super::super::function_quote::quoted_sql_body("abc", 0),
+        None
+    );
+    assert_eq!(
+        super::super::function_outputs::after_parameter_list("CREATE FUNCTION f RETURNS int"),
+        "CREATE FUNCTION f RETURNS int"
+    );
+}

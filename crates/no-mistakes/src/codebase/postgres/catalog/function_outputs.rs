@@ -1,3 +1,29 @@
+pub(super) fn after_parameter_list(header: &str) -> &str {
+    let mut index = 0;
+    let mut depth = 0i32;
+    let mut saw_list = false;
+    while index < header.len() {
+        if let Some(end) = super::function_body::skip_noise(header, index) {
+            index = end;
+            continue;
+        }
+        let Some(character) = header[index..].chars().next() else {
+            return header;
+        };
+        if character == '(' {
+            depth += 1;
+            saw_list = true;
+        } else if character == ')' && saw_list {
+            depth -= 1;
+            if depth == 0 {
+                return header.get(index + 1..).unwrap_or("");
+            }
+        }
+        index += character.len_utf8();
+    }
+    header
+}
+
 pub(super) fn output_parameters(words: &[String]) -> String {
     let mut parts = Vec::new();
     let mut index = 0;

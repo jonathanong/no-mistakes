@@ -72,8 +72,10 @@ use does not. Different `SET search_path` clauses and `SECURITY DEFINER` versus 
 not match. The body is located by its delimiter, so an earlier copy of the
 body text does not hide those clauses. `STRICT` and `RETURNS NULL ON NULL INPUT`
 are a separate group from `CALLED ON NULL INPUT` and the default. `IMMUTABLE`,
-`STABLE`, and `VOLATILE` are separate groups, and so are different return
-contracts, including `integer` versus `integer[]`. `PARALLEL SAFE`,
+`STABLE`, and `VOLATILE` are separate groups. Those words count only after the
+argument list, so a parameter named `immutable` stays in the default group. A
+`search_path` clause also stops at those words. Different return
+contracts stay separate, including `integer` versus `integer[]`. `PARALLEL SAFE`,
 `PARALLEL RESTRICTED`, and the default `PARALLEL UNSAFE` are separate groups.
 A dollar-quote tag is empty or an identifier, and `$` inside an identifier is
 not a quote. `SET` and `search_path` may be separated by whitespace or a

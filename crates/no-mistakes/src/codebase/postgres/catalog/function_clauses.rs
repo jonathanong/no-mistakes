@@ -8,40 +8,42 @@ pub(super) struct HeaderModes {
 }
 
 pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> HeaderModes {
-    let words = words_outside_literals(&blank_body(definition, span));
+    let header = blank_body(definition, span);
+    let words = words_outside_literals(&header);
+    let clauses = words_outside_literals(super::function_outputs::after_parameter_list(&header));
     let mut null_input = "called";
     let mut volatility = "volatile";
     let mut security = "invoker";
     let mut parallel = "unsafe";
     let mut leakproof = "no";
-    for index in 0..words.len() {
-        match words[index].as_str() {
+    for index in 0..clauses.len() {
+        match clauses[index].as_str() {
             "strict" => null_input = "strict",
             "immutable" => volatility = "immutable",
             "stable" => volatility = "stable",
             "volatile" => volatility = "volatile",
-            "called" if phrase_at(&words, index, &["called", "on", "null", "input"]) => {
+            "called" if phrase_at(&clauses, index, &["called", "on", "null", "input"]) => {
                 null_input = "called";
             }
             _ => {}
         }
-        if phrase_at(&words, index, &["returns", "null", "on", "null", "input"]) {
+        if phrase_at(&clauses, index, &["returns", "null", "on", "null", "input"]) {
             null_input = "strict";
         }
-        if phrase_at(&words, index, &["security", "definer"]) {
+        if phrase_at(&clauses, index, &["security", "definer"]) {
             security = "definer";
-        } else if phrase_at(&words, index, &["security", "invoker"]) {
+        } else if phrase_at(&clauses, index, &["security", "invoker"]) {
             security = "invoker";
         }
-        if phrase_at(&words, index, &["parallel", "restricted"]) {
+        if phrase_at(&clauses, index, &["parallel", "restricted"]) {
             parallel = "restricted";
-        } else if phrase_at(&words, index, &["parallel", "unsafe"]) {
+        } else if phrase_at(&clauses, index, &["parallel", "unsafe"]) {
             parallel = "unsafe";
-        } else if phrase_at(&words, index, &["parallel", "safe"]) {
+        } else if phrase_at(&clauses, index, &["parallel", "safe"]) {
             parallel = "safe";
         }
-        if words[index] == "leakproof" {
-            leakproof = if index > 0 && words[index - 1] == "not" {
+        if clauses[index] == "leakproof" {
+            leakproof = if index > 0 && clauses[index - 1] == "not" {
                 "no"
             } else {
                 "yes"
