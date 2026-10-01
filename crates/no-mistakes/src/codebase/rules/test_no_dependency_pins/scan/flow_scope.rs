@@ -132,7 +132,7 @@ fn closes_scalar(run: usize, span: &Span) -> bool {
     let Some(extra) = run.checked_sub(span.escapes) else {
         return false;
     };
-    extra % layer == 0 && (span.quote == b'\'' || (extra / layer) % 2 == 0)
+    extra % layer == 0 && (span.quote == b'\'' || (extra / layer).is_multiple_of(2))
 }
 
 fn is_quote(byte: Option<&u8>) -> bool {
