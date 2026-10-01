@@ -153,7 +153,8 @@ fn builtin_pins<'l>(line: &'l str, pattern: &CompiledPattern) -> Vec<Match<'l>> 
             .or_else(|| captures.get(0))
             .expect("a regex match has a full match");
         at = pin.end();
-        if !follows_at(line, pattern, &pin) && !is_synthetic(pin.as_str()) {
+        let versions = captures.name("versions").unwrap_or(pin);
+        if !follows_at(line, pattern, &pin) && !is_synthetic(pin.as_str(), versions.as_str()) {
             pins.push(pin);
         }
     }

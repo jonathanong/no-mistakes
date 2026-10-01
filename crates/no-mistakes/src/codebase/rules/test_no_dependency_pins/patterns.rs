@@ -1,7 +1,7 @@
 pub(super) const DEFAULT_PATTERNS: &[(&str, &str, bool)] = &[
     (
         "exact action ref",
-        r"(?<!@)\b[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?\b",
+        r"(?<!@)(?:\[[0-9A-Fa-f.]*:[0-9A-Fa-f:.]*(?:%[\w.~%-]+)?\](?::[0-9]+)?/|\b(?:[\w.-]*\w[\w.-]*(?::[0-9]+)?/)?)(?:[\w.-]*\w[\w.-]*/)*[.-]*\b(?P<versions>[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?)\b",
         false,
     ),
     (
@@ -55,3 +55,6 @@ pub(super) const DEFAULT_PATTERNS: &[(&str, &str, bool)] = &[
         true,
     ),
 ];
+
+#[cfg(test)]
+mod tests;

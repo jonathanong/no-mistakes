@@ -2,6 +2,22 @@ expect(workflow).toContain('uses: actions/checkout@main')
 expect(pkg).toBe('@actions/checkout')
 expect(mention).toBe('@actions/checkout@v4')
 expect(short).toBe('owner/repo@abc')
+// A scoped package with a subpath, a path with no versioned ref and a path with an
+// empty segment are not action refs; a reserved host in front of the ref is synthetic.
+expect(scopedSub).toBe('@scope/pkg/sub@1.2.3')
+expect(workflow).toContain('uses: github/codeql-action/init@main')
+expect(workflow).toContain('uses: github/codeql-action//init@v3')
+expect(url).toContain('https://example.com/actions/checkout@v4')
+// A zero version in the last two path components or in the ref is a placeholder.
+expect(workflow).toContain('uses: owner/repo@v0.0.0')
+expect(workflow).toContain('uses: foo-v0.0.0/bar@v1')
+expect(workflow).toContain('uses: a/b/foo-v0.0.0/bar@v1')
+// A reserved host is reserved with a port and in any letter case.
+expect(url).toContain('https://localhost:5000/actions/checkout@v4')
+expect(url).toContain('https://EXAMPLE.COM/actions/checkout@v4')
+expect(url).toContain('https://EXAMPLE.COM./actions/checkout@v4')
+// A host after an `@` is not an action ref.
+expect(url).toContain('ssh://git@[2001:db8::1]/a/b@v1')
 expect(env).toContain("NODE_VERSION: 'latest'")
 expect(env).toContain('node_version: 20.11.0')
 expect(script).toContain('releases/download/latest')
