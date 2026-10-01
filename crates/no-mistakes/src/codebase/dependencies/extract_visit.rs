@@ -42,10 +42,7 @@ impl<'a> Visit<'a> for ImportCollector {
         self.pop_syntactic_caller(pushed_syntactic_caller);
     }
 
-    fn visit_arrow_function_expression(
-        &mut self,
-        arrow: &oxc_ast::ast::ArrowFunctionExpression<'a>,
-    ) {
+    fn visit_arrow_function_expression(&mut self, arrow: &ArrowFunctionExpression<'a>) {
         self.push_anonymous_function_scope(CallableId(arrow.span.start));
         self.add_type_parameter_names(arrow.type_parameters.as_deref());
         self.add_formal_parameters(&arrow.params);
@@ -151,12 +148,16 @@ impl<'a> Visit<'a> for ImportCollector {
         visit_ts_enum_declaration_with_scope(self, declaration);
     }
 
-    /// Every `namespace`, dotted `namespace A.B`, `declare module 'x'` and
-    /// `declare global` body is a module block, so one hook covers them all.
     fn visit_ts_module_block(&mut self, block: &TSModuleBlock<'a>) {
-        self.module_block_depth += 1;
-        walk::walk_ts_module_block(self, block);
-        self.module_block_depth -= 1;
+        visit_ts_module_block_with_depth(self, block);
+    }
+
+    fn visit_ts_namespace_declaration(&mut self, namespace: &TSNamespaceDeclaration<'a>) {
+        visit_ts_namespace_declaration_with_path(self, namespace);
+    }
+
+    fn visit_binary_expression(&mut self, binary: &BinaryExpression<'a>) {
+        visit_binary_expression_with_namespaces(self, binary);
     }
 
     fn visit_import_declaration(&mut self, import: &ImportDeclaration<'a>) {
@@ -207,8 +208,7 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_identifier_reference(&mut self, identifier: &IdentifierReference<'a>) {
-        self.push_value_symbol_reference(identifier.name.to_string());
-        walk::walk_identifier_reference(self, identifier);
+        visit_identifier_reference_with_namespaces(self, identifier);
     }
 
     fn visit_static_member_expression(&mut self, member: &StaticMemberExpression<'a>) {

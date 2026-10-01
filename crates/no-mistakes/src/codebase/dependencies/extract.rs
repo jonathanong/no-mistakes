@@ -2,18 +2,19 @@ use crate::fx::{fx_map, fx_set, FxHashMap, FxHashSet};
 use anyhow::Result;
 use oxc_allocator::Allocator;
 use oxc_ast::ast::{
-    AccessorProperty, Argument, AssignmentExpression, AssignmentTarget, BindingPattern,
-    BlockStatement, CallExpression, CatchClause, Class, ClassElement, ComputedMemberExpression,
-    Declaration, ExportAllDeclaration, ExportDeclaration, ExportDefaultDeclaration,
-    ExportDefaultDeclarationKind, ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier,
-    Expression, ForStatementLeft, FormalParameters, Function, IdentifierReference,
-    ImportDeclaration, ImportDeclarationSpecifier, ImportExpression, JSXOpeningElement,
-    MethodDefinition, MethodDefinitionKind, ModuleExportName, NewExpression, ObjectExpression,
-    ObjectProperty, ObjectPropertyKind, Program, PropertyDefinition, PropertyKind, Statement,
-    StaticBlock, StaticMemberExpression, TSEnumDeclaration, TSImportType, TSInterfaceDeclaration,
-    TSModuleBlock, TSQualifiedName, TSTypeAliasDeclaration, TSTypeName, TSTypeParameter,
-    TSTypeParameterDeclaration, TSTypeReference, TaggedTemplateExpression, VariableDeclaration,
-    VariableDeclarationKind, VariableDeclarator,
+    AccessorProperty, Argument, ArrowFunctionExpression, AssignmentExpression, AssignmentTarget,
+    BinaryExpression, BinaryOperator, BindingPattern, BlockStatement, CallExpression, CatchClause,
+    Class, ClassElement, ComputedMemberExpression, Declaration, ExportAllDeclaration,
+    ExportDeclaration, ExportDefaultDeclaration, ExportDefaultDeclarationKind,
+    ExportFromDeclaration, ExportNamedDeclaration, ExportSpecifier, Expression, ForStatementLeft,
+    FormalParameters, Function, IdentifierReference, ImportDeclaration, ImportDeclarationSpecifier,
+    ImportExpression, JSXOpeningElement, MethodDefinition, MethodDefinitionKind, ModuleExportName,
+    NewExpression, ObjectExpression, ObjectProperty, ObjectPropertyKind, Program,
+    PropertyDefinition, PropertyKind, Statement, StaticBlock, StaticMemberExpression,
+    TSEnumDeclaration, TSImportType, TSInterfaceDeclaration, TSModuleBlock, TSModuleReference,
+    TSNamespaceDeclaration, TSNamespaceDeclarationBody, TSQualifiedName, TSTypeAliasDeclaration,
+    TSTypeName, TSTypeParameter, TSTypeParameterDeclaration, TSTypeReference,
+    TaggedTemplateExpression, VariableDeclaration, VariableDeclarationKind, VariableDeclarator,
 };
 use oxc_ast_visit::{walk, Visit};
 use oxc_span::{GetSpan, SourceType};
@@ -217,6 +218,9 @@ impl ImportExtractor {
 
 include!("extract_entrypoints.rs");
 include!("extract_entrypoints_predeclare.rs");
+include!("extract_namespace_facts.rs");
+include!("extract_namespace_scan.rs");
+include!("extract_namespace_walk.rs");
 include!("extract_export_names.rs");
 include!("extract_collector.rs");
 include!("extract_visit.rs");

@@ -567,6 +567,9 @@ mod class_and_overload_regressions;
 mod coverage_shapes;
 #[path = "tests/dynamic_callee_shapes.rs"]
 mod dynamic_callee_shapes;
+#[cfg(test)]
+#[path = "tests/namespace_facts.rs"]
+mod namespace_facts;
 #[path = "tests/object_spread_regressions.rs"]
 mod object_spread_regressions;
 #[path = "tests/static_block_regressions.rs"]

@@ -6,6 +6,7 @@ fn predeclare_program_value_bindings<'a>(collector: &mut ImportCollector, progra
         predeclare_program_statement_binding(collector, statement);
     }
     predeclare_hoisted_var_bindings(collector, &program.body);
+    scan_program_namespaces(collector, program);
 }
 
 fn predeclare_hoisted_function_identity(

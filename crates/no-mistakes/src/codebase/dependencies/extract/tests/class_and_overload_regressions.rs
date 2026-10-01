@@ -329,16 +329,18 @@ fn class_declaration_lines_cover_only_classes_with_a_statically_named_base() {
 }
 
 #[test]
-fn namespaced_or_ambient_class_ids_cover_block_members_and_declared_classes_only() {
+fn ambient_classes_are_flagged_and_namespace_members_are_tracked() {
     let facts = facts(concat!(
         "class Top extends Base {}\n",
         "namespace N { class InNamespace extends Base {} }\n",
         "declare class Declared extends Base {}\n",
+        "declare module 'x' { class InModule extends Base {} }\n",
         "class After extends Base {}\n",
     ));
 
     let mut scopes: Vec<&str> = facts
-        .namespaced_or_ambient_class_ids
+        .namespaces
+        .unreported_class_ids
         .iter()
         .map(|class_id| {
             facts
@@ -350,5 +352,13 @@ fn namespaced_or_ambient_class_ids_cover_block_members_and_declared_classes_only
         .collect();
     scopes.sort_unstable();
 
-    assert_eq!(scopes, ["Declared", "InNamespace"]);
+    // A namespace member is tracked with its path, not flagged ambient.
+    assert_eq!(scopes, ["Declared", "InModule"]);
+    let members: Vec<_> = facts
+        .namespaces
+        .members
+        .iter()
+        .map(|member| (member.path.as_str(), member.exported))
+        .collect();
+    assert_eq!(members, [("N.InNamespace", false)]);
 }

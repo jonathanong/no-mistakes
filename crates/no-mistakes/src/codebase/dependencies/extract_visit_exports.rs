@@ -11,6 +11,7 @@ impl ImportCollector {
     }
 
     fn collect_local_export_specifiers(&mut self, export: &ExportNamedDeclaration<'_>) {
+        self.mark_export_clause_locals(export);
         if !export.export_kind.is_type() {
             for specifier in &export.specifiers {
                 if !specifier.export_kind.is_type() {

@@ -1,4 +1,5 @@
 fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &CallExpression<'_>) {
+    collector.mark_namespace_head(&call.callee);
     let require_callee = is_require_resolve_callee(&call.callee)
         .then_some("require.resolve")
         .or_else(|| is_require_callee(&call.callee).then_some("require"));
@@ -101,6 +102,7 @@ fn record_callable_argument_transitions(
 }
 
 fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewExpression<'_>) {
+    collector.mark_namespace_head(&new.callee);
     if let Some(callee) = simple_callee_name(&new.callee) {
         if collector.should_record_call(&callee) {
             let target_identity = collector.call_target_identity(&callee);
@@ -119,6 +121,7 @@ fn visit_new_expression_with_imports(collector: &mut ImportCollector, new: &NewE
                 callee_binding_scope,
                 static_arg: new.arguments.first().and_then(static_path_argument),
             });
+            collector.record_namespace_site(collector.current_function_id(), new.span.start);
             if has_dynamic_static_member_receiver(&new.callee) {
                 collector.record_unknown_call(
                     import_line_at(&collector.line_starts, new.span.start as usize),
@@ -141,6 +144,7 @@ fn visit_tagged_template_expression_with_imports(
     collector: &mut ImportCollector,
     tagged: &TaggedTemplateExpression<'_>,
 ) {
+    collector.mark_namespace_head(&tagged.tag);
     if let Some(callee) = simple_callee_name(&tagged.tag) {
         if collector.should_record_call(&callee) {
             let target_identity = collector.call_target_identity(&callee);
