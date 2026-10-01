@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-array-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allow:
+        - object: column:oauth_clients.redirect_uris
+          reason: OAuth 2.0 client metadata (RFC 7591) defines this as a list

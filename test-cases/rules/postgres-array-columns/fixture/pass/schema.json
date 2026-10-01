@@ -1,0 +1,10 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "oauth_clients": {
+      "columns": {
+        "redirect_uris": { "dataType": "text[]" }
+      }
+    }
+  }
+}

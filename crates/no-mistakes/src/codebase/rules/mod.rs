@@ -44,6 +44,7 @@ pub mod package_json_workspace_coverage;
 mod playwright_project_catalog;
 pub mod pnpm_overrides_ban;
 pub mod pnpm_release_age_policy;
+pub mod postgres_array_columns;
 pub mod postgres_column_naming;
 pub mod postgres_column_requires_trigger;
 pub mod postgres_conflict_ordering;
