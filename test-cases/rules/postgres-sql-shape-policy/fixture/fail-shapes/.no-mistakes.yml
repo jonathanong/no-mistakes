@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-sql-shape-policy
+    scope: repository
+    options:
+      sqlInclude: ["sql/**/*.sql"]
+      bannedShapes:
+        - correlated-exists-set-operation
+        - not-in-subquery
+        - count-for-existence

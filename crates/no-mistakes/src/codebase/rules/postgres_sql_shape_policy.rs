@@ -13,6 +13,15 @@ mod scan;
 pub const RULE_ID: &str = "postgres-sql-shape-policy";
 
 const CORRELATED_EXISTS_SET_OP: &str = "correlated-exists-set-operation";
+const NOT_IN_SUBQUERY: &str = "not-in-subquery";
+const COUNT_FOR_EXISTENCE: &str = "count-for-existence";
+
+#[derive(Clone, Copy, Default)]
+pub(crate) struct BannedShapes {
+    correlated_exists_set_operation: bool,
+    not_in_subquery: bool,
+    count_for_existence: bool,
+}
 
 #[derive(Deserialize, Default)]
 #[serde(default, rename_all = "camelCase")]
@@ -32,6 +41,7 @@ pub(crate) struct CompiledOptions {
     schema: PostgresSchemaOptions,
     embedded: EmbeddedSqlOptions,
     fail_unanalyzable: bool,
+    shapes: BannedShapes,
 }
 
 impl CompiledOptions {
@@ -88,16 +98,7 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
     let include = GlobMatcher::new(&opts.include, &format!("{RULE_ID} include"))?;
     let exclude = GlobMatcher::new(&opts.exclude, &format!("{RULE_ID} exclude"))?;
     let defaults = EmbeddedSqlOptions::default();
-    let shapes = if opts.banned_shapes.is_empty() {
-        vec![CORRELATED_EXISTS_SET_OP.to_string()]
-    } else {
-        opts.banned_shapes.clone()
-    };
-    for shape in &shapes {
-        if !shape.eq_ignore_ascii_case(CORRELATED_EXISTS_SET_OP) {
-            anyhow::bail!("{RULE_ID}: unknown bannedShapes value `{shape}`");
-        }
-    }
+    let shapes = banned_shapes(&opts.banned_shapes)?;
     Ok(CompiledOptions {
         include,
         exclude,
@@ -124,8 +125,32 @@ fn compile_options(opts: &Options) -> Result<CompiledOptions> {
             RULE_ID,
             &opts.unanalyzable_sql,
         )?,
+        shapes,
     })
 }
 
+fn banned_shapes(values: &[String]) -> Result<BannedShapes> {
+    let mut shapes = BannedShapes::default();
+    let values = if values.is_empty() {
+        vec![CORRELATED_EXISTS_SET_OP.to_string()]
+    } else {
+        values.to_vec()
+    };
+    for shape in &values {
+        if shape.eq_ignore_ascii_case(CORRELATED_EXISTS_SET_OP) {
+            shapes.correlated_exists_set_operation = true;
+        } else if shape.eq_ignore_ascii_case(NOT_IN_SUBQUERY) {
+            shapes.not_in_subquery = true;
+        } else if shape.eq_ignore_ascii_case(COUNT_FOR_EXISTENCE) {
+            shapes.count_for_existence = true;
+        } else {
+            anyhow::bail!("{RULE_ID}: unknown bannedShapes value `{shape}`");
+        }
+    }
+    Ok(shapes)
+}
+
+#[cfg(test)]
+mod shape_tests;
 #[cfg(test)]
 mod tests;

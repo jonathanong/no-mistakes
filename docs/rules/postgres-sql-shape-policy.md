@@ -26,11 +26,14 @@ rules:
       sqlInclude: ["**/*.sql"]
       bannedShapes:
         - correlated-exists-set-operation
+        - not-in-subquery
+        - count-for-existence
       unanalyzableSql: fail
 ```
 
 `sqlInclude` defaults to `**/*.sql`. `bannedShapes` defaults to
-`[correlated-exists-set-operation]`. Unknown `bannedShapes` values are a
+`[correlated-exists-set-operation]`. `not-in-subquery` and
+`count-for-existence` are opt-in. Unknown `bannedShapes` values are a
 configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
 other values are a configuration error).
 `importSpecifier` defaults to `@data-stores/psql`; `executorNames` defaults to
@@ -84,6 +87,15 @@ subquery names a relation that is not local to the subquery's FROM/WITH
 (including SELECT-list and HAVING `EXISTS`). Set operations nested inside a
 derived-table `FROM` of the `EXISTS` subquery are not this shape.
 
+When `not-in-subquery` is banned, `NOT IN (SELECT …)` and
+`NOT (… IN (SELECT …))` are findings. `NOT IN` of a value list and `IN (SELECT …)`
+are not. When `count-for-existence` is banned, a `COUNT(*)` or `COUNT(expr)`
+(including `COUNT(DISTINCT …)`) compared with 0 or 1 to test existence is a
+finding: `> 0`, `>= 1`, `<> 0`, `!= 0`, `= 0`, `< 1`, `<= 0`, and the mirrored
+forms. The count may be a scalar subquery with no `GROUP BY`, or a bare
+`COUNT` in a SELECT list or WHERE of a query with no `GROUP BY`. `HAVING
+COUNT(*) > 0` and comparisons with any other number are not findings.
+
 Correlation is a syntax heuristic: only qualified references count, an
 aliased inner relation hides its base name, `schema.table.col` uses the table
 component, UNION branches share one local-name set, and nested subquery
@@ -93,7 +105,8 @@ scopes are not tracked.
 
 `include` / `exclude` select source files (empty include means all files).
 `sqlInclude` defaults to `**/*.sql`. `bannedShapes` defaults to
-`[correlated-exists-set-operation]`. Unknown `bannedShapes` values are a
+`[correlated-exists-set-operation]`. Also accepted, and off unless listed:
+`not-in-subquery`, `count-for-existence`. Unknown `bannedShapes` values are a
 configuration error. `unanalyzableSql` defaults to `fail` (`fail` or `ignore`;
 other values are a configuration error). `importSpecifier` defaults to
 `@data-stores/psql`. `executorNames` defaults to `[query, read, write]`.
@@ -106,6 +119,9 @@ SELECT 1 WHERE EXISTS (
   UNION ALL
   SELECT 1 FROM topics WHERE id = $1
 );
+SELECT id FROM accounts a WHERE NOT EXISTS (SELECT 1 FROM bans b WHERE b.account_id = a.id);
+SELECT id FROM accounts WHERE id NOT IN (1, 2, 3);
+SELECT account_id FROM orders GROUP BY account_id HAVING COUNT(*) > 0;
 ```
 
 ## Counterexample
@@ -117,18 +133,22 @@ WHERE EXISTS (
   UNION ALL
   SELECT 1 FROM tags WHERE tags.post_id = posts.id
 );
+SELECT id FROM accounts WHERE id NOT IN (SELECT account_id FROM bans);
+SELECT COUNT(*) > 0 AS has_orders FROM orders WHERE account_id = $1;
 ```
 
 ## Fix
 
 Rewrite so the set operation is not inside a correlated `EXISTS`: test
 `IN (SELECT … FROM (<set-operation>) alias)` or use one restricted subquery.
+Replace `NOT IN (SELECT …)` and a `COUNT(...)` compared with 0 or 1 with
+`NOT EXISTS (SELECT 1 FROM … WHERE …)` or `EXISTS (SELECT 1 FROM … WHERE …)`.
 
 ## Suppression
 
 Use `no-mistakes-disable-next-line postgres-sql-shape-policy` immediately
-before the `EXISTS`, or `no-mistakes-disable-line` on that line; use the file
-directive only for an intentional correlated existence check.
+before the finding, or `no-mistakes-disable-line` on that line; use the file
+directive only for an intentional exception.
 
 ## Related rules
 
