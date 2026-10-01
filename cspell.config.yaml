@@ -37,6 +37,7 @@ words:
   - eprintln
   - evals
   - errexit
+  - errcode
   - extglob
   - fanout
   - fastapi
@@ -77,6 +78,7 @@ words:
   - PCRE
   - phpunit
   - pipefail
+  - plpgsql
   - Pipfile
   - pkey
   - pnpm

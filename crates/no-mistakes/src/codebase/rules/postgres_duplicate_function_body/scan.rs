@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 struct GroupKey {
     language: String,
     search_path: String,
+    security: String,
     kind: &'static str,
     tokens: Vec<String>,
 }
@@ -36,6 +37,7 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
             .entry(GroupKey {
                 language,
                 search_path: search_path(&function.definition, Some(body)),
+                security: security_mode(&function.definition, Some(body)),
                 kind,
                 tokens,
             })
@@ -79,6 +81,33 @@ fn other_names(members: &[String], index: usize) -> Vec<&str> {
         }
     }
     names
+}
+
+fn security_mode(definition: &str, body: Option<&str>) -> String {
+    let header = header_before_body(definition, body);
+    if phrase(&header, "security", "definer") {
+        "definer".to_string()
+    } else {
+        "invoker".to_string()
+    }
+}
+
+fn header_before_body<'a>(definition: &'a str, body: Option<&str>) -> &'a str {
+    body.and_then(|body| definition.find(body).map(|index| &definition[..index]))
+        .unwrap_or(definition)
+}
+
+fn phrase(header: &str, first: &str, second: &str) -> bool {
+    let mut words = header
+        .split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
+        .filter(|word| !word.is_empty())
+        .map(|word| word.to_ascii_lowercase());
+    while let Some(word) = words.next() {
+        if word == first && words.next().as_deref() == Some(second) {
+            return true;
+        }
+    }
+    false
 }
 
 fn function_kind(returns_trigger: bool, definition: &str, body: Option<&str>) -> &'static str {

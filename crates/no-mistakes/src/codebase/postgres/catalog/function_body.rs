@@ -137,7 +137,9 @@ fn skip_ignored(definition: &str, index: usize) -> Option<usize> {
         return Some(index + rest.find('\n').unwrap_or(rest.len()));
     }
     if rest.starts_with("/*") {
-        return Some(index + rest.find("*/").map(|end| end + 2).unwrap_or(rest.len()));
+        return Some(super::function_comment::skip_block_comment(
+            definition, index,
+        ));
     }
     let quote = rest.chars().next()?;
     if quote == '\'' || quote == '"' {

@@ -163,7 +163,7 @@ fn normaliser_covers_literals_calls_levels_and_kept_words() {
     );
     assert_eq!(
         tokens("RETURN NEW.\"Body\"", false, true, &[]),
-        ["RETURN", "NEW", ".", "Body"]
+        ["RETURN", "NEW", ".", "\"Body\""]
     );
     assert_eq!(
         tokens("BEGIN RETURN now; END", true, true, &["now"]),
@@ -303,6 +303,14 @@ fn names_keep_qualifiers_quotes_and_bare_raise() {
         tokens("SELECT do_work()", true, true, &[])
     );
     assert_ne!(
+        tokens("SELECT MixedCase", false, true, &[]),
+        tokens("SELECT \"MixedCase\"", false, true, &[])
+    );
+    assert_eq!(
+        tokens("SELECT MixedCase", false, true, &[]),
+        tokens("SELECT mixedcase", false, true, &[])
+    );
+    assert_ne!(
         tokens("BEGIN RAISE; END", true, true, &[]),
         tokens("BEGIN RAISE EXCEPTION 'x'; END", true, true, &[])
     );
@@ -327,6 +335,14 @@ fn trigger_event_and_ordinary_functions_stay_in_separate_groups() {
     assert!(joined.contains("event trigger function"));
     assert!(!joined.contains("function:fn_void_same:"));
     assert!(!joined.contains("function:fn_row_trigger:"));
+}
+
+#[test]
+fn security_definer_is_not_the_same_copy_as_invoker() {
+    let joined = messages("schemaCatalogPath: security.json\n").join("\n");
+    assert!(joined.contains("function:fn_definer:"), "{joined}");
+    assert!(joined.contains("function:fn_definer_copy:"));
+    assert!(!joined.contains("function:fn_invoker:"));
 }
 
 #[test]

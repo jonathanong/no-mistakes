@@ -233,7 +233,7 @@ from that catalog. `table` includes partitioned tables. An empty
 `exemptColumnNamePatterns` skips matches.
 `postgres-duplicate-function-body` reads function bodies and languages from
 that catalog, tokenizes each body with the PostgreSQL lexer, and groups
-functions whose normalised tokens match.
+functions whose normalized tokens match.
 
 `analyze_conflict_inserts(sql)` exposes the same structured SQL projection to
 Rust callers as `SqlConflictInsertFact`, `SqlConflictTarget`, and

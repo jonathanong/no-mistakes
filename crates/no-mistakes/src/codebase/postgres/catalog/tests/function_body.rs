@@ -34,16 +34,22 @@ fn language_and_body_ignore_headers_and_keep_atomic_sql() {
     );
     assert!(nested.body.unwrap().contains("SELECT 2"));
 
-    let quoted = function_from_definition(
+    let quoted_language = function_from_definition(
         "q()",
         "CREATE FUNCTION q() RETURNS int LANGUAGE \"sql\" AS $$ SELECT 1 $$",
     );
-    assert_eq!(quoted.language.as_deref(), Some("sql"));
-    assert_eq!(quoted.body.as_deref(), Some(" SELECT 1 "));
+    assert_eq!(quoted_language.language.as_deref(), Some("sql"));
+    assert_eq!(quoted_language.body.as_deref(), Some(" SELECT 1 "));
 
     let dollar = function_from_definition(
         "d(text)",
         "CREATE FUNCTION d(x text DEFAULT $d$ AS $$fake$$ $d$) RETURNS int LANGUAGE sql AS $$ SELECT 9 $$",
     );
     assert_eq!(dollar.body.as_deref(), Some(" SELECT 9 "));
+
+    let nested_comment = function_from_definition(
+        "n()",
+        "CREATE FUNCTION n() RETURNS int LANGUAGE sql /* outer /* inner */ AS $$fake$$ */ AS $$ SELECT 7 $$",
+    );
+    assert_eq!(nested_comment.body.as_deref(), Some(" SELECT 7 "));
 }

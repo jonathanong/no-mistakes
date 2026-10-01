@@ -95,7 +95,7 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-required-predicates`](postgres-required-predicates.md)                 | Require configured predicates on named PostgreSQL relations.                |
 | [`postgres-idempotent-insert`](postgres-idempotent-insert.md)                     | Require replay-safe INSERT (ON CONFLICT / NOT EXISTS).                      |
 | [`postgres-column-requires-trigger`](postgres-column-requires-trigger.md)     | Require a configured trigger for a column, and flag a leftover trigger.    |
-| [`postgres-duplicate-function-body`](postgres-duplicate-function-body.md)         | Report Postgres functions whose bodies match after normalisation.          |
+| [`postgres-duplicate-function-body`](postgres-duplicate-function-body.md)         | Report Postgres functions whose bodies match after normalization.          |
 | [`postgres-required-comments`](postgres-required-comments.md)                     | Require COMMENT ON for tables and, when configured, columns and views.     |
 | [`postgres-conflict-ordering`](postgres-conflict-ordering.md)                     | Require catalog-canonical order for multi-row ON CONFLICT writers.          |
 | [`postgres-fk-index`](postgres-fk-index.md)                                       | Require a leading btree/hash index on each foreign key column.              |

@@ -1,6 +1,6 @@
 # `postgres-duplicate-function-body`
 
-Functions whose bodies are the same once names and literals are normalised are
+Functions whose bodies are the same once names and literals are normalized are
 reported as one cluster. A single function, a body below `minTokens`, or the
 same text in two languages produces nothing. `schemaCatalogPath` is required;
 enabling the rule without it is a configuration error. With only that path
@@ -45,7 +45,7 @@ String literals, including dollar quotes, become `'?'`. Numbers become `0`.
 When `normalizeIdentifiers` is true, non-keyword words and quoted identifiers
 become `ID`, except a word immediately followed by `(` which is kept. SQL
 keywords, `NEW`, `OLD`, words starting with `TG_`, `keepIdentifiers`, and
-operators stay, uppercased where they are words.
+operators stay in uppercase where they are words.
 
 The group key is the language plus that token sequence. Every member of a
 group of size at least `minClusterSize`, with at least `minTokens` tokens, is
@@ -64,7 +64,8 @@ invalid object ref, or a duplicate allow object fails configuration.
 with other bodies that also omit it. Unquoted call names fold;
 quoted call names and schema qualifiers stay distinct. Other identifiers
 become stable placeholders, so a consistent rename still matches and a swapped
-use does not. Different `SET search_path` clauses do not match. Trigger functions, event
+use does not. Different `SET search_path` clauses and `SECURITY DEFINER` versus invoker do
+not match. Trigger functions, event
 triggers, and ordinary functions are separate groups. Bare `RAISE;` stays
 distinct from `RAISE EXCEPTION`. A top-level `message` replaces the generated
 finding text.
@@ -79,14 +80,14 @@ match. `minTokens: 12` ignores the six-token always-raise copies.
 ## Counterexample
 
 `fn_reject_orders_update`, `fn_reject_invoices_update`, and
-`fn_reject_refunds_update` all normalise to `BEGIN RAISE EXCEPTION ? ; END`,
+`fn_reject_refunds_update` all normalize to `BEGIN RAISE EXCEPTION ? ; END`,
 including a copy that uses `USING ERRCODE`, a format argument, or `END;`.
 `NEW.title IS DISTINCT FROM OLD.title` matches `NEW.body IS DISTINCT FROM
 OLD.body` while `normalizeIdentifiers` is true.
 
 ## Fix
 
-Replace trigger copies with one function parameterised by `TG_TABLE_NAME`
+Replace trigger copies with one function parameterized by `TG_TABLE_NAME`
 or `TG_ARGV`. Replace other copies with one function that takes the varying
 values as arguments. Raise the `minTokens` floor when the shared shape is too small to
 be worth merging. Set `normalizeIdentifiers` or `normalizeRaise` to false when
