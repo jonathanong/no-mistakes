@@ -135,7 +135,7 @@ fn compile_trigger(trigger: &TriggerOptions) -> Result<TriggerNeed> {
         bail!("{RULE_ID} option function: required");
     }
     Ok(TriggerNeed {
-        function: crate::codebase::postgres::unqualified_function_name(&trigger.function),
+        function: super::name::normalize_function_name(&trigger.function),
         timing: parse_timing(trigger.timing.as_deref().unwrap_or("before"))?,
         events: parse_events(trigger.events.as_deref())?,
         for_each_row: trigger.for_each_row.unwrap_or(true),

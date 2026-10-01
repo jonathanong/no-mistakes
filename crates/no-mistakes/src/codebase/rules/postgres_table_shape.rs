@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 mod check;
 mod compile;
+mod name;
 mod scan;
 
 pub const RULE_ID: &str = "postgres-table-shape";
