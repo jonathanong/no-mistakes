@@ -99,7 +99,7 @@ fn container_image_tags_are_pins() {
 }
 
 #[test]
-fn a_major_only_v_tag_is_an_image_only_after_image_or_from() {
+fn a_major_only_v_tag_is_an_image_after_image_or_from() {
     for (line, expected) in [
         ("image: repo:v2", "repo:v2"),
         ("image: owner/repo:v2", "owner/repo:v2"),
@@ -125,10 +125,52 @@ fn a_major_only_v_tag_is_an_image_only_after_image_or_from() {
         "image: owner/repo:v2beta",
         "image: ghcr.io/acme/api:v2beta",
         "image: repo:vNext",
-        "owner/repo:v2 ghcr.io/acme/api:v2",
     ] {
         assert!(pins(line).is_empty(), "{line}: {:?}", pins(line));
     }
+}
+
+#[test]
+fn a_registry_host_v_tag_is_an_image_without_context() {
+    let digest = "06ada57c26aa5cf429e9f2c0a99e3e4a42daecd45fc4c955d7c1399ab4227ae8";
+    for (line, expected) in [
+        ("ghcr.io/acme/api:v2", "ghcr.io/acme/api:v2"),
+        (
+            "expect(image).toBe('ghcr.io/acme/api:v2')",
+            "ghcr.io/acme/api:v2",
+        ),
+        ("docker pull ghcr.io/acme/app:v2.", "ghcr.io/acme/app:v2"),
+        (
+            "registry.io:5000/acme/api:v2",
+            "registry.io:5000/acme/api:v2",
+        ),
+        (
+            "ghcr.io/acme/team/my.image:v2",
+            "ghcr.io/acme/team/my.image:v2",
+        ),
+        ("ghcr.io/acme/api:v10", "ghcr.io/acme/api:v10"),
+        // An interpolated digest leaves only the tag; a complete one is part of the pin.
+        (
+            "ghcr.io/acme/api:v2@sha256:${digest}",
+            "ghcr.io/acme/api:v2",
+        ),
+        (
+            &format!("ghcr.io/acme/api:v2@sha256:{digest}"),
+            &format!("ghcr.io/acme/api:v2@sha256:{digest}"),
+        ),
+    ] {
+        assert_pins(line, &[expected]);
+    }
+    // Only a registry host drops the context: the same shape on a slash-only
+    // path stays an API or route key (`users/list:v2`) unless `image:` says otherwise.
+    assert_pins(
+        "owner/repo:v2 ghcr.io/acme/api:v2",
+        &["ghcr.io/acme/api:v2"],
+    );
+    assert_pins(
+        "image: ghcr.io/acme/api:v2 # ghcr.io/acme/api:v3",
+        &["ghcr.io/acme/api:v2", "ghcr.io/acme/api:v3"],
+    );
 }
 
 #[test]
@@ -255,6 +297,24 @@ fn lookalikes_are_not_pins() {
         "github.com/acme/app/internal/binder.go:1755 +0x1a4",
         "docs/rules.md:12 127.0.0.1:5432 localhost:3000/health",
         "https://github.com/org/repo/blob/main/src/a.ts:12",
+        // A registry-host `:v<N>` needs a clean boundary on both sides: a scheme
+        // or `//` in front, a path, `-suffix`, or word after the tag are not images.
+        "https://ghcr.io/acme/api:v2",
+        "https://api.acme.io/users:v2/list",
+        "http://10.0.0.5:8080/api:v2",
+        "git+ssh://git.acme.io/team/repo:v2",
+        "ghcr.io/acme/api:v2/path",
+        "ghcr.io/acme/api:v2-beta",
+        "ghcr.io/acme/api:v2beta ghcr.io/acme/api:vNext ghcr.io/acme/api:v",
+        // Go module paths carry `/v2` as a path element, never as a `:` tag.
+        "github.com/acme/app/v2",
+        "go get github.com/acme/app/v2/pkg",
+        "github.com/acme/app/v2/internal/binder.go:1755 +0x1a4",
+        "github.com/acme/app/v2/internal/binder.go:12:5",
+        // A host with a port, or a host followed by a bare tag, has no repository path.
+        "api.acme.io:8080/v2",
+        "api.acme.io:v2",
+        "db.acme.io:5432 v2",
         "http://localhost:3000/a:1.2",
         "ssh://git@github.com:22/org/repo.git",
         "-p 51088:6379 valkey/valkey-bundle:",
@@ -290,6 +350,9 @@ fn placeholder_values_are_not_pins() {
         "registry.test/example/cache:1.2.3",
         "registry.example.com/app:2.4.1",
         "localhost:5000/app:2.4.1",
+        "registry.example.com/checkout:v1",
+        "registry.test/app:v2",
+        "localhost:5000/app:v2",
         &format!("app@sha256:{zeroed}"),
         &format!("registry.test/app@sha256:{cycled}"),
     ] {

@@ -29,8 +29,8 @@ macro_rules! right {
 
 /// Repository path component in Docker's grammar: alphanumeric runs joined by
 /// `.`, `_`, `__`, or `-`+, as in `my.image`. Used only where the tag is
-/// version-shaped, after `image:`/`FROM`, or on a digest, so `a.b.mts:12`
-/// is never read as an image.
+/// version-shaped or `v<N>`, after `image:`/`FROM`, or on a digest, so
+/// `a.b.mts:12` is never read as an image.
 macro_rules! comp_dot {
     () => {
         r"[a-z0-9]+(?:(?:\.|_{1,2}|-+)[a-z0-9]+)*"
@@ -97,7 +97,8 @@ macro_rules! image_end {
 
 /// `image:` values, `FROM` lines: the only places a slashless `postgres:18`,
 /// a bare-integer `valkey/valkey-bundle:9`, or a major-only `repo:v2` is
-/// unambiguously an image (`users/list:v2` is an API key elsewhere).
+/// unambiguously an image (`users/list:v2` is an API key elsewhere). A path
+/// under a registry host needs no context for either `:9` or `:v2`.
 macro_rules! image_context {
     () => {
         r#"(?:\bimage\\?["']?:\s*(?:\\?["'])?|\bFROM\s+(?:--platform=\S+\s+)?["']?)"#
@@ -127,7 +128,13 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
             comp_dot!(),
             ")*:",
             tag!(),
-            ")",
+            "|",
+            host!(),
+            "/",
+            comp_dot!(),
+            "(?:/",
+            comp_dot!(),
+            r")*:v\d+)",
             digest_opt!(),
             ")",
             image_end!()
@@ -146,13 +153,7 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
             comp_l!(),
             "(?:/",
             comp_dot!(),
-            r")+:v?\d+|",
-            host!(),
-            "/",
-            comp_dot!(),
-            "(?:/",
-            comp_dot!(),
-            r")*:v\d+)",
+            r")+:v?\d+)",
             digest_opt!(),
             ")",
             image_end!()
