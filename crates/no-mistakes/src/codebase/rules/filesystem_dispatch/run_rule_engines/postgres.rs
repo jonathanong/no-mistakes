@@ -64,6 +64,14 @@ pub(super) fn run(
         POSTGRES_SQL_SHAPE_POLICY => {
             postgres_sql_shape_policy::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_TABLE_SHAPE => match facts {
+            Some(facts) => postgres_table_shape::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            ),
+            None => {
+                postgres_table_shape::check_with_files_and_sources(root, config, files, sources)
+            }
+        },
         POSTGRES_SQL_STATEMENT_POLICY => {
             postgres_sql_statement_policy::check_with_files_and_sources(
                 root, config, files, sources,

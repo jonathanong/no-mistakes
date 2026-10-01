@@ -1,0 +1,60 @@
+schemaCatalogPath: schema.json
+shapes:
+  - name: revision-history
+    tablePattern: '_revisions$'
+    requiredColumns:
+      - { name: id, type: uuid, nullable: false }
+      - { namePattern: '_id$', foreignKey: true }
+      - { name: revised_by_id, type: uuid, foreignKey: true, onDelete: 'set null' }
+      - { name: changes, type: jsonb, nullable: false }
+    forbiddenColumns: [updated_at, deleted_at]
+    requiredTriggers:
+      - { function: fn_reject_mutation, timing: before, events: [update, delete] }
+  - name: change-ledger
+    tablePattern: '_changes$'
+    requiredColumns:
+      - { name: id, type: uuid, nullable: false }
+      - { name: change_type, nullable: false }
+      - name: changed_by_id
+        type: uuid
+        references: [deleted_user_identities]
+        onDelete: restrict
+    forbiddenColumns: [updated_at, changed_at]
+    requiredTriggers:
+      - { function: fn_reject_mutation, timing: before, events: [update, delete] }
+  - name: work-queue
+    tablePattern: '_work_items$'
+    requiredColumns:
+      - { name: lease_token, type: uuid }
+      - { name: leased_at, type: 'timestamp with time zone' }
+      - { name: lease_expires_at, type: 'timestamp with time zone' }
+      - { name: available_at, type: 'timestamp with time zone', nullable: false }
+      - { name: attempt_count, type: integer, nullable: false }
+      - { name: completed_at, type: 'timestamp with time zone' }
+    forbiddenColumns: [claim_token, claimed_at, locked_by, leased_until_at]
+  - name: append-only-events
+    tablePattern: '_events$'
+    requiredColumns:
+      - { name: occurred_at, type: 'timestamp with time zone', nullable: false }
+    forbiddenColumns: [updated_at]
+    requiredTriggers:
+      - { function: fn_reject_mutation, timing: before, events: [update, delete] }
+  - name: per-target-votes
+    tablePattern: '_votes$'
+    requiredColumns:
+      - { name: user_id, type: uuid, nullable: false, foreignKey: true, onDelete: cascade }
+      - { name: score, type: smallint, nullable: false }
+    forbiddenColumns: [target_table, target_type]
+  - name: job-cursor
+    tablePattern: '_cursors$'
+    primaryKeyTypes: [boolean, enum]
+    requiredColumns:
+      - { namePattern: '^cursor_|_through_at$' }
+      - { name: updated_at, type: 'timestamp with time zone', nullable: false }
+    forbiddenColumns: [singleton]
+bannedTablePatterns:
+  - pattern: '_(history|change_logs|audit_logs)$'
+    message: 'use a *_revisions table'
+allow:
+  - object: table:vendor_sync_history
+    reason: Mirror of a vendor table; shape owned by the vendor

@@ -7,7 +7,7 @@ TypeScript.
 These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-conflict-ordering`, `postgres-lock-ordering`,
 `postgres-column-requires-trigger`, `postgres-required-comments`,
-`postgres-duplicate-function-body`,
+`postgres-duplicate-function-body`, `postgres-table-shape`,
 `postgres-no-offset`,
 `postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
@@ -233,7 +233,9 @@ from that catalog. `table` includes partitioned tables. An empty
 `exemptColumnNamePatterns` skips matches.
 `postgres-duplicate-function-body` reads function bodies and languages from
 that catalog, tokenizes each body with the PostgreSQL lexer, and groups
-functions whose normalized tokens match.
+functions whose normalized tokens match. `postgres-table-shape` reads
+tables, columns, foreign keys, primary keys, triggers, and enum names from
+that catalog and checks them against configured name patterns.
 
 `analyze_conflict_inserts(sql)` exposes the same structured SQL projection to
 Rust callers as `SqlConflictInsertFact`, `SqlConflictTarget`, and

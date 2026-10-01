@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-table-shape
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      bannedTablePatterns:
+        - pattern: '_(history|change_logs|audit_logs)$'
+          message: use a *_revisions table

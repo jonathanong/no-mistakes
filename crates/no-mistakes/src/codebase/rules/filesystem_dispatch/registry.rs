@@ -66,6 +66,7 @@ macro_rules! filesystem_rules {
             POSTGRES_REQUIRED_PREDICATES => postgres_required_predicates::check_with_files,
             POSTGRES_SQL_SHAPE_POLICY => postgres_sql_shape_policy::check_with_files,
             POSTGRES_SQL_STATEMENT_POLICY => postgres_sql_statement_policy::check_with_files,
+            POSTGRES_TABLE_SHAPE => postgres_table_shape::check_with_files,
             POSTGRES_IDEMPOTENT_INSERT => postgres_idempotent_insert::check_with_files,
             LOCKFILE_ALLOWLIST => lockfile_allowlist::check_with_files,
             DOC_CONSISTENCY => doc_consistency::check_with_files,
