@@ -82,7 +82,15 @@ fn table_placeholder_shape_errors() {
     );
     expect_err(
         &format!("{prefix}'^idx_\\b{{table}}__x$'\n"),
-        "option patterns.index: {table} must not sit next to a word-boundary assertion",
+        "option patterns.index: {table} must not sit next to a zero-width assertion",
+    );
+    expect_err(
+        &format!("{prefix}'^idx_\\z{{table}}__x$'\n"),
+        "option patterns.index: {table} must not sit next to a zero-width assertion",
+    );
+    expect_err(
+        &format!("{prefix}\"(?x)^idx_\\\\b {{table}}__x$\"\n"),
+        "option patterns.index: {table} must not sit next to a zero-width assertion",
     );
 }
 
@@ -159,6 +167,10 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
     expect_err(
         "schemaCatalogPath: schema.json\nspelling:\n  app_cfg: configuration\n",
         "option spelling: key \"app_cfg\" must be a single word",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  teh: ''\n",
+        "option spelling: empty value",
     );
     expect_err(
         "schemaCatalogPath: schema.json\nspelling:\n  Teh: the\n  teh: the\n",

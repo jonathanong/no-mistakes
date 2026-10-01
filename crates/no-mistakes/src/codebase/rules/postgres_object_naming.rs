@@ -10,6 +10,7 @@ mod compile;
 mod expand;
 mod name_flags;
 mod pattern;
+mod pattern_bounds;
 mod pattern_walk;
 mod policy;
 mod scan;

@@ -76,12 +76,15 @@ are not checked. Tables and partitioned tables use `table`. Columns use
 `triggerFunction`. Functions that return `event_trigger` use
 `triggerFunction` as well. Materialized views use `materializedView` and do not fall
 back to `view`. Schema-qualified snapshot keys are checked by their last
-identifier. Finding targets and `allow` entries keep the full snapshot key.
+identifier. Quoted function names keep parentheses that sit inside the quotes.
+A spelling value must not be empty. Finding targets and `allow` entries keep the full snapshot key.
 An inline flag such as `(?i)` that is still active at `{table}` applies to
 both sides. That includes a flag in the middle of the prefix, such as
 `^idx_(?i){table}__[a-z]+$`. `{table}` inside a verbose-mode `#` comment is
 not a placeholder, and neither is a flag written inside that comment.
-`{table}` cannot sit next to `\b` or `\B`. A `{table}` match has to cover its
+`{table}` cannot sit next to a zero-width assertion such as `\b` or `\z`,
+including when verbose mode ignores the space between them. A `{table}`
+match has to cover its
 whole prefix and suffix, so a multiline `$` cannot stop at an earlier line.
 
 `{table}` stands for the unqualified owning table. A matching abbreviation

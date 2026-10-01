@@ -342,6 +342,28 @@ fn quoted_names_min_words_and_active_flags() {
 }
 
 #[test]
+fn verbose_anchors_and_quoted_function_names() {
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: \"(?x)^idx_{table}__[a-z]+$ # naming\"\n",
+        index("orders", "idx_orders__id", false, false),
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: \"(?x) # note\\n^idx_{table}__[a-z]+$\"\n",
+        index("orders", "idx_orders__id", false, false),
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  function: '^fn\\(foo$'\n",
+        serde_json::json!({
+            "functions": {
+                "\"fn(foo\"()": {
+                    "definition": "CREATE FUNCTION \"fn(foo\"() RETURNS void LANGUAGE sql AS $$ SELECT 1; $$"
+                }
+            }
+        }),
+    );
+}
+
+#[test]
 fn verbose_flag_comments_stay_literal() {
     let yaml = "schemaCatalogPath: schema.json\npatterns:\n  index: \"(?x)^idx_ # (?i)\\n{table}__[a-z]+$\"\n";
     expect_none(yaml, index("orders", "idx_orders__id", false, false));

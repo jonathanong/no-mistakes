@@ -82,14 +82,10 @@ fn compile_plural(options: &Options) -> Result<Option<PluralPolicy>> {
             );
         }
         if !super::policy::is_single_word(key) {
-            bail!(
-                "postgres-object-naming option plural.irregularPlurals: key \"{key}\" must be a single word"
-            );
+            bail!("postgres-object-naming option plural.irregularPlurals: key \"{key}\" must be a single word");
         }
         if !super::policy::is_single_word(value) {
-            bail!(
-                "postgres-object-naming option plural.irregularPlurals: value \"{value}\" must be a single word"
-            );
+            bail!("postgres-object-naming option plural.irregularPlurals: value \"{value}\" must be a single word");
         }
         if !irregular_keys.insert(key.to_ascii_lowercase()) {
             bail!("postgres-object-naming option plural.irregularPlurals: duplicate key {key}");
@@ -173,6 +169,9 @@ fn compile_spelling(spelling: &BTreeMap<String, String>) -> Result<Vec<(String, 
         }
         if !super::policy::is_single_word(key) {
             bail!("postgres-object-naming option spelling: key \"{key}\" must be a single word");
+        }
+        if value.trim().is_empty() {
+            bail!("postgres-object-naming option spelling: empty value");
         }
         if key.eq_ignore_ascii_case(value) {
             bail!("postgres-object-naming option spelling: key \"{key}\" equals its value");

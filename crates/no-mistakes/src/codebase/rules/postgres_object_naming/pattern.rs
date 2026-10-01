@@ -48,7 +48,7 @@ pub(super) fn compile_pattern(kind: &str, raw: &str) -> Result<CompiledPattern> 
     let post = &raw[at + "{table}".len()..];
     let flags = active_flags(pre);
     let pre = Regex::new(&format!("{pre}$")).map_err(|error| invalid(kind, &error.to_string()))?;
-    let post = Regex::new(&format!("{flags}^(?:{post})"))
+    let post = Regex::new(&suffix_regex(&flags, post))
         .map_err(|error| invalid(kind, &error.to_string()))?;
     Ok(CompiledPattern {
         raw: raw.to_string(),
@@ -142,69 +142,36 @@ fn validate_placeholder(kind: &str, raw: &str, count: usize) -> Result<()> {
     if count > 1 {
         bail!("postgres-object-naming option patterns.{kind}: {{table}} may appear only once");
     }
-    if !without_leading_flags(raw).starts_with('^') || !ends_unescaped_dollar(raw) {
+    let bounds = super::pattern_bounds::bounds(raw);
+    if !bounds.anchors {
         bail!("postgres-object-naming option patterns.{kind}: a pattern with {{table}} must start with ^ and end with $");
     }
     if !placeholder_is_plain(raw) {
         bail!("postgres-object-naming option patterns.{kind}: {{table}} must not be inside a group, a character class or an alternation");
     }
-    if split_touches_boundary(raw) {
-        bail!("postgres-object-naming option patterns.{kind}: {{table}} must not sit next to a word-boundary assertion");
+    if bounds.assertion {
+        bail!("postgres-object-naming option patterns.{kind}: {{table}} must not sit next to a zero-width assertion");
     }
     Ok(())
 }
 
-fn split_touches_boundary(raw: &str) -> bool {
-    let Some(at) = walk_placeholders(raw).offsets.first().copied() else {
-        return false;
+fn suffix_regex(flags: &str, post: &str) -> String {
+    let tail = if verbose_flags(&active_flags(&format!("{flags}{post}"))) {
+        "\n"
+    } else {
+        ""
     };
-    let pre = &raw[..at];
-    let post = &raw[at + "{table}".len()..];
-    pre.ends_with("\\b")
-        || pre.ends_with("\\B")
-        || post.starts_with("\\b")
-        || post.starts_with("\\B")
+    format!("{flags}^(?:{post}{tail})")
 }
 
-fn ends_unescaped_dollar(pattern: &str) -> bool {
-    let bytes = pattern.as_bytes();
-    if bytes.last() != Some(&b'$') {
-        return false;
+fn verbose_flags(flags: &str) -> bool {
+    let mut verbose = false;
+    for group in flags.split_inclusive(')') {
+        let body = group.trim_matches(|character| "()?".contains(character));
+        let (on, off) = body.split_once('-').unwrap_or((body, ""));
+        verbose = (verbose || on.contains('x')) && !off.contains('x');
     }
-    let mut slashes = 0;
-    let mut index = bytes.len() - 1;
-    while index > 0 && bytes[index - 1] == b'\\' {
-        slashes += 1;
-        index -= 1;
-    }
-    slashes % 2 == 0
-}
-
-fn without_leading_flags(raw: &str) -> &str {
-    let mut rest = raw;
-    while let Some(next) = strip_flags(rest) {
-        rest = next;
-    }
-    rest
-}
-
-fn strip_flags(raw: &str) -> Option<&str> {
-    let body = raw.strip_prefix("(?")?;
-    let end = body.find(')')?;
-    flag_body(&body[..end]).then_some(&body[end + 1..])
-}
-
-fn flag_body(body: &str) -> bool {
-    let mut dash = false;
-    let mut flag = false;
-    for character in body.chars() {
-        match character {
-            '-' if !dash => dash = true,
-            'i' | 'm' | 's' | 'u' | 'U' | 'x' | 'R' => flag = true,
-            _ => return false,
-        }
-    }
-    flag
+    verbose
 }
 
 fn invalid(kind: &str, error: &str) -> anyhow::Error {
