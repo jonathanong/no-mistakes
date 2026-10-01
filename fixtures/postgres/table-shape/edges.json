@@ -1,0 +1,72 @@
+{
+  "formatVersion": 2,
+  "enums": {
+    "public.report_types": {
+      "values": ["daily"]
+    }
+  },
+  "tables": {
+    "keyed": {
+      "relationKind": "table",
+      "columns": {
+        "kind": {
+          "nullable": false,
+          "ordinalPosition": 1,
+          "dataType": "report_types"
+        }
+      },
+      "primaryKey": {
+        "columns": ["kind"]
+      }
+    },
+    "empty_key": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "nullable": false,
+          "ordinalPosition": 1,
+          "dataType": "uuid"
+        }
+      },
+      "primaryKey": {
+        "columns": []
+      }
+    },
+    "partial": {
+      "relationKind": "table",
+      "columns": {
+        "id": {
+          "nullable": false,
+          "ordinalPosition": 1,
+          "dataType": "uuid"
+        },
+        "note": {
+          "nullable": true,
+          "ordinalPosition": 2,
+          "dataType": "text"
+        },
+        "owner_id": {
+          "nullable": false,
+          "ordinalPosition": 3,
+          "dataType": "uuid"
+        }
+      },
+      "foreignKeys": {
+        "partial_owner_id_fkey": {
+          "columns": ["owner_id"],
+          "referencedTable": "\"audit.events\"",
+          "referencedColumns": ["id"],
+          "onDelete": "cascade"
+        }
+      },
+      "triggers": {
+        "touch_column": {
+          "definition": "CREATE TRIGGER touch_column BEFORE UPDATE OF note ON partial FOR EACH ROW EXECUTE FUNCTION fn_touch()"
+        },
+        "guarded": {
+          "definition": "CREATE TRIGGER guarded BEFORE UPDATE ON partial FOR EACH ROW WHEN (OLD.note IS DISTINCT FROM NEW.note) EXECUTE FUNCTION fn_touch()"
+        }
+      }
+    }
+  }
+}

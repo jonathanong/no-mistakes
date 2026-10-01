@@ -14,7 +14,11 @@ pub(super) fn check_primary_key(
     catalog: &SchemaCatalog,
     object: &CatalogObjectRef,
 ) {
-    let Some(columns) = &table.primary_key else {
+    let Some(columns) = table
+        .primary_key
+        .as_ref()
+        .filter(|columns| !columns.is_empty())
+    else {
         findings.push(report(
             path,
             object,
@@ -58,7 +62,8 @@ fn type_allowed(data_type: &str, allowed: &[String], catalog: &SchemaCatalog) ->
 fn is_enum(catalog: &SchemaCatalog, data_type: &str) -> bool {
     let name = unqualified(data_type);
     catalog.enums().any(|enum_type| {
-        enum_type.name.eq_ignore_ascii_case(name) || enum_type.name.eq_ignore_ascii_case(data_type)
+        unqualified(&enum_type.name).eq_ignore_ascii_case(&name)
+            || enum_type.name.eq_ignore_ascii_case(data_type)
     })
 }
 

@@ -28,6 +28,14 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
             }
         }
     }
+    if let Some(message) = compiled
+        .message
+        .filter(|message| !message.trim().is_empty())
+    {
+        for finding in &mut findings {
+            finding.message = message.clone();
+        }
+    }
     compiled
         .allow
         .apply(&compiled.schema_catalog_path, findings)

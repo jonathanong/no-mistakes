@@ -208,6 +208,14 @@ fn option_errors_name_the_field() {
             "option events: unknown event merge",
         ),
         (
+            "schemaCatalogPath: schema.json\nshapes:\n  - name: s\n    tablePattern: t\n    requiredColumns:\n      - name: id\n        type: ' '\n",
+            "option type: required",
+        ),
+        (
+            "schemaCatalogPath: schema.json\nshapes:\n  - name: s\n    tablePattern: t\n    requiredTriggers:\n      - function: fn\n        events: [truncate]\n",
+            "option forEachRow: truncate triggers are FOR EACH STATEMENT",
+        ),
+        (
             "schemaCatalogPath: schema.json\nallow:\n  - object: table:orders\n    reason: ' '\n",
             "option allow: entry table:orders needs a reason",
         ),
@@ -227,4 +235,92 @@ fn option_errors_name_the_field() {
             "{expected} not in {error}"
         );
     }
+}
+
+#[test]
+fn column_lists_when_clauses_and_quoted_names_stay_distinct() {
+    let options = "schemaCatalogPath: edges.json
+shapes:
+  - name: enum_key
+    tablePattern: ^keyed$
+    primaryKeyTypes: [enum]
+  - name: empty
+    tablePattern: ^empty_key$
+    primaryKeyTypes: [uuid]
+  - name: triggers
+    tablePattern: ^partial$
+    requiredTriggers:
+      - function: fn_touch
+        events: [update]
+  - name: not_fk
+    tablePattern: ^partial$
+    requiredColumns:
+      - name: owner_id
+        foreignKey: false
+  - name: quoted
+    tablePattern: ^partial$
+    requiredColumns:
+      - name: owner_id
+        references: ['\"audit.events\"']
+  - name: other
+    tablePattern: ^partial$
+    requiredColumns:
+      - name: owner_id
+        references: ['\"other.events\"']
+  - name: pattern
+    tablePattern: ^partial$
+    requiredColumns:
+      - namePattern: ^absent$
+        nullable: true
+";
+    let root = fixture();
+    let body = check_with_files(&root, &config(options), &[root.join("edges.json")])
+        .unwrap()
+        .into_iter()
+        .map(|finding| finding.message)
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(!body.contains("keyed"), "{body}");
+    assert!(
+        body.contains("(shape empty) table has no primary key"),
+        "{body}"
+    );
+    assert!(
+        body.contains("(shape triggers) no BEFORE UPDATE FOR EACH ROW trigger"),
+        "{body}"
+    );
+    assert!(
+        body.contains("(shape not_fk) column owner_id must not be a foreign key"),
+        "{body}"
+    );
+    assert!(!body.contains("(shape quoted)"), "{body}");
+    assert!(
+        body.contains("(shape other) foreign key on owner_id must reference"),
+        "{body}"
+    );
+    assert!(
+        body.contains("no column matches ^absent$ with nullable"),
+        "{body}"
+    );
+}
+
+#[test]
+fn custom_message_and_include_filter_the_catalog() {
+    let mut configured = config(
+        "schemaCatalogPath: edges.json\nshapes:\n  - name: empty\n    tablePattern: ^empty_key$\n    primaryKeyTypes: [uuid]\n",
+    );
+    configured.rules[0].message = Some("use a real key".to_string());
+    let root = fixture();
+    let messages = check_with_files(&root, &configured, &[root.join("edges.json")])
+        .unwrap()
+        .into_iter()
+        .map(|finding| finding.message)
+        .collect::<Vec<_>>();
+    assert_eq!(messages, vec!["use a real key".to_string()]);
+    configured.rules[0].include = vec!["missing.json".to_string()];
+    assert!(
+        check_with_files(&root, &configured, &[root.join("edges.json")])
+            .unwrap()
+            .is_empty()
+    );
 }

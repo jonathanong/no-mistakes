@@ -53,14 +53,23 @@ finding.
 
 A `namePattern` column passes when at least one column matches the pattern and
 every given property. The same column may also satisfy a named requirement.
+`foreignKey: false` rejects a sole-column foreign key; omitting it does not.
+A missing match names `nullable: true` as `nullable`.
 `forbiddenColumns` are exact names. `requiredTriggers` use
 `CatalogTrigger::matches`, with the same defaults as
 `postgres-column-requires-trigger` (`before`, `[update]`, `forEachRow: true`).
+A `WHEN` clause or an `UPDATE OF` column list does not satisfy a table-wide
+update trigger. `forEachRow: true` with `truncate` is a configuration error.
 
-When `primaryKeyTypes` is non-empty, a missing primary key is reported.
-Otherwise each key column, in key order, must have a listed `data_type`. The
-word `enum` matches any catalog enum. An empty list leaves keys unchecked.
+When `primaryKeyTypes` is non-empty, a missing primary key or an empty column
+list is reported. Otherwise each key column, in key order, must have a listed
+`data_type`. The word `enum` matches a catalog enum after dropping the schema
+from both names. An empty list leaves keys unchecked.
+`references` splits quoted identifiers before dropping the schema.
+A blank `type` is a configuration error.
 `bannedTablePatterns` apply whether or not a shape matches.
+`include`, `exclude`, and `projects` filter the catalog path.
+A non-empty rule `message` replaces each finding's text.
 
 Findings use `table:<name>`. Shape texts start with `(shape <name>)`.
 

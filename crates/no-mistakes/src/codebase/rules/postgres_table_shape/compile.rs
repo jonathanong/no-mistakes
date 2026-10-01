@@ -1,6 +1,11 @@
+mod parse;
+
 use super::{BannedOptions, ColumnOptions, Options, ShapeOptions, TriggerOptions, RULE_ID};
 use crate::codebase::postgres::{AllowList, TriggerEvent, TriggerTiming};
 use anyhow::{bail, Result};
+use parse::{
+    foreign_key_mode, parse_events, parse_on_delete, parse_timing, present_type, regex_of,
+};
 use regex::Regex;
 
 pub(super) struct Shape {
@@ -18,7 +23,7 @@ pub(super) struct RequiredColumn {
     pub(super) pattern_source: String,
     pub(super) data_type: Option<String>,
     pub(super) nullable: Option<bool>,
-    pub(super) foreign_key: bool,
+    pub(super) foreign_key: Option<bool>,
     pub(super) on_delete: Option<String>,
     pub(super) references: Option<Vec<String>>,
 }
@@ -36,7 +41,7 @@ pub(super) struct Banned {
     pub(super) message: String,
 }
 
-pub(super) fn compile(opts: &Options) -> Result<super::Compiled> {
+pub(super) fn compile(opts: &Options, message: Option<String>) -> Result<super::Compiled> {
     crate::codebase::postgres::require_catalog_path(RULE_ID, &opts.schema_catalog_path)?;
     let mut names = Vec::new();
     let mut shapes = Vec::new();
@@ -61,6 +66,7 @@ pub(super) fn compile(opts: &Options) -> Result<super::Compiled> {
         shapes,
         banned,
         allow: AllowList::compile(RULE_ID, opts.allow.clone())?,
+        message,
     })
 }
 
@@ -120,11 +126,12 @@ fn compile_column(column: &ColumnOptions) -> Result<RequiredColumn> {
             .as_deref()
             .map(|pattern| regex_of("namePattern", pattern))
             .transpose()?,
-        data_type: column.data_type.clone(),
+        data_type: present_type(column.data_type.as_deref())?,
         nullable: column.nullable,
-        foreign_key: column.foreign_key.unwrap_or(false)
-            || on_delete.is_some()
-            || references.is_some(),
+        foreign_key: foreign_key_mode(
+            column.foreign_key,
+            on_delete.is_some() || references.is_some(),
+        ),
         on_delete,
         references,
     })
@@ -134,11 +141,16 @@ fn compile_trigger(trigger: &TriggerOptions) -> Result<TriggerNeed> {
     if trigger.function.trim().is_empty() {
         bail!("{RULE_ID} option function: required");
     }
+    let events = parse_events(trigger.events.as_deref())?;
+    let for_each_row = trigger.for_each_row.unwrap_or(true);
+    if for_each_row && events.contains(&TriggerEvent::Truncate) {
+        bail!("{RULE_ID} option forEachRow: truncate triggers are FOR EACH STATEMENT");
+    }
     Ok(TriggerNeed {
         function: super::name::normalize_function_name(&trigger.function),
         timing: parse_timing(trigger.timing.as_deref().unwrap_or("before"))?,
-        events: parse_events(trigger.events.as_deref())?,
-        for_each_row: trigger.for_each_row.unwrap_or(true),
+        events,
+        for_each_row,
     })
 }
 
@@ -153,47 +165,5 @@ fn compile_banned(banned: &BannedOptions) -> Result<Banned> {
         pattern: regex_of("pattern", &banned.pattern)?,
         source: banned.pattern.clone(),
         message: banned.message.clone(),
-    })
-}
-
-fn parse_on_delete(raw: &str) -> Result<String> {
-    let value = raw.trim().to_ascii_lowercase();
-    match value.as_str() {
-        "cascade" | "restrict" | "set null" | "set default" | "no action" => Ok(value),
-        _ => bail!("{RULE_ID} option onDelete: unknown value {raw}"),
-    }
-}
-
-fn parse_timing(raw: &str) -> Result<TriggerTiming> {
-    match raw {
-        "before" => Ok(TriggerTiming::Before),
-        "after" => Ok(TriggerTiming::After),
-        "instead-of" => Ok(TriggerTiming::InsteadOf),
-        _ => bail!("{RULE_ID} option timing: unknown value {raw}"),
-    }
-}
-
-fn parse_events(events: Option<&[String]>) -> Result<Vec<TriggerEvent>> {
-    let Some(events) = events else {
-        return Ok(vec![TriggerEvent::Update]);
-    };
-    if events.is_empty() {
-        bail!("{RULE_ID} option events: must not be empty");
-    }
-    events
-        .iter()
-        .map(|event| match event.as_str() {
-            "insert" => Ok(TriggerEvent::Insert),
-            "update" => Ok(TriggerEvent::Update),
-            "delete" => Ok(TriggerEvent::Delete),
-            "truncate" => Ok(TriggerEvent::Truncate),
-            _ => bail!("{RULE_ID} option events: unknown event {event}"),
-        })
-        .collect()
-}
-
-fn regex_of(option: &str, pattern: &str) -> Result<Regex> {
-    Regex::new(pattern).map_err(|error| {
-        anyhow::anyhow!("{RULE_ID} option {option}: invalid regex {pattern}: {error}")
     })
 }

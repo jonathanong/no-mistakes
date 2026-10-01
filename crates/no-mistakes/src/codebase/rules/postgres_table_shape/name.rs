@@ -9,7 +9,7 @@ pub(super) fn normalize_function_name(name: &str) -> String {
     quoted.replace("\"\"", "\"")
 }
 
-fn last_identifier(name: &str) -> String {
+pub(super) fn last_identifier(name: &str) -> String {
     let mut parts = Vec::new();
     let mut current = String::new();
     let mut quoted = false;

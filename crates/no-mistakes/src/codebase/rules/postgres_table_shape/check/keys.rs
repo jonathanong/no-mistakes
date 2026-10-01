@@ -12,7 +12,17 @@ pub(super) fn push_foreign_key(
     name: &str,
     required: &RequiredColumn,
 ) {
-    if !required.foreign_key {
+    if required.foreign_key == Some(false) {
+        if !sole_keys(table, name).is_empty() {
+            findings.push(report(
+                path,
+                object,
+                &shape_text(shape, &format!("column {name} must not be a foreign key")),
+            ));
+        }
+        return;
+    }
+    if required.foreign_key != Some(true) {
         return;
     }
     let keys = sole_keys(table, name);
@@ -87,7 +97,7 @@ fn references_ok(key: &CatalogForeignKey, tables: &[String]) -> bool {
     let found = unqualified(&key.referenced_table);
     tables
         .iter()
-        .any(|table| unqualified(table).eq_ignore_ascii_case(found))
+        .any(|table| unqualified(table).eq_ignore_ascii_case(&found))
 }
 
 pub(super) fn pattern_suffix(required: &RequiredColumn) -> String {
@@ -98,8 +108,13 @@ pub(super) fn pattern_suffix(required: &RequiredColumn) -> String {
     if required.nullable == Some(false) {
         parts.push("NOT NULL".to_string());
     }
-    if required.foreign_key {
-        parts.push("a foreign key".to_string());
+    if required.nullable == Some(true) {
+        parts.push("nullable".to_string());
+    }
+    match required.foreign_key {
+        Some(true) => parts.push("a foreign key".to_string()),
+        Some(false) => parts.push("not a foreign key".to_string()),
+        None => {}
     }
     if let Some(tables) = &required.references {
         parts.push(format!("references {}", tables.join(", ")));
@@ -118,6 +133,10 @@ fn display_action(action: &str) -> String {
     action.to_ascii_uppercase()
 }
 
-pub(super) fn unqualified(name: &str) -> &str {
-    name.rsplit('.').next().unwrap_or(name).trim_matches('"')
+pub(super) fn unqualified(name: &str) -> String {
+    let last = super::super::name::last_identifier(name.trim());
+    last.strip_prefix('"')
+        .and_then(|rest| rest.strip_suffix('"'))
+        .map(|inner| inner.replace("\"\"", "\""))
+        .unwrap_or(last)
 }

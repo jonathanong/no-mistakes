@@ -3,7 +3,9 @@ mod pk;
 
 use super::compile::{RequiredColumn, Shape};
 use super::scan::{report, shape_text};
-use crate::codebase::postgres::{CatalogColumn, CatalogObjectRef, CatalogTable, SchemaCatalog};
+use crate::codebase::postgres::{
+    CatalogColumn, CatalogObjectRef, CatalogTable, CatalogTrigger, SchemaCatalog, TriggerEvent,
+};
 use crate::codebase::rules::RuleFinding;
 
 pub(super) fn check_shape(
@@ -31,14 +33,11 @@ pub(super) fn check_shape(
         }
     }
     for trigger in &shape.triggers {
-        if !table.triggers.iter().any(|existing| {
-            existing.matches(
-                &trigger.function,
-                trigger.timing,
-                &trigger.events,
-                trigger.for_each_row,
-            )
-        }) {
+        if !table
+            .triggers
+            .iter()
+            .any(|existing| trigger_covers(existing, trigger))
+        {
             findings.push(report(
                 path,
                 &object,
@@ -166,10 +165,22 @@ fn column_properties_match(
     {
         return false;
     }
-    if !required.foreign_key {
-        return true;
+    match required.foreign_key {
+        Some(true) => keys::sole_keys(table, &column.name)
+            .into_iter()
+            .any(|key| keys::foreign_key_ok(key, required)),
+        Some(false) => keys::sole_keys(table, &column.name).is_empty(),
+        None => true,
     }
-    keys::sole_keys(table, &column.name)
-        .into_iter()
-        .any(|key| keys::foreign_key_ok(key, required))
+}
+
+fn trigger_covers(existing: &CatalogTrigger, trigger: &super::compile::TriggerNeed) -> bool {
+    existing.when.is_none()
+        && existing.matches(
+            &trigger.function,
+            trigger.timing,
+            &trigger.events,
+            trigger.for_each_row,
+        )
+        && (!trigger.events.contains(&TriggerEvent::Update) || existing.update_columns.is_empty())
 }
