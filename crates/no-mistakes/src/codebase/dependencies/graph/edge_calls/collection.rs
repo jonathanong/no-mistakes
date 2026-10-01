@@ -22,7 +22,9 @@ fn collect_call_edges_for_core(
     use rayon::prelude::*;
     let plan = edge_inputs.plan;
     let indexes = CallableResolutionIndexes::default();
-    let namespaces_in_repo = plan.extends
+    // Resolving a namespace member is part of `calls` as much as of `extends`:
+    // a graph built for calls alone still needs `new Errors.X()` to be an edge.
+    let namespaces_in_repo = (plan.calls || plan.extends)
         && edge_inputs.graph_files.indexable().iter().any(|path| {
             facts
                 .get_ts_facts(path)

@@ -79,6 +79,7 @@ fn reports_each_dead_error_class_with_file_and_line() {
         "AliasedDead",
         "ComputedDead",
         "DefaultedDead",
+        "GapDead",
         "DynamicDead",
         "ViaAliasDead",
         "ViaComputedDead",

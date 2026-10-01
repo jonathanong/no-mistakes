@@ -175,6 +175,7 @@ fn a_namespace_that_escapes_is_never_reported() {
         "Dynamic.DynamicDead",
         "Required.RequiredDead",
         "Backstop.BackstopDead",
+        "Gap.GapDead",
         // Another file imports the namespace, and uses it as a value.
         "ViaAlias.ViaAliasDead",
         "ViaArgument.ViaArgumentDead",

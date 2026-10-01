@@ -53,11 +53,11 @@ the member, nested and dotted namespaces included:
 - `new Errors.TopicError()`, where `Errors` is declared in the same file or is an
   exported namespace imported from another module, directly, under an alias
   (`import { Errors as E }`), under a renamed export (`export { Errors as
-  default }`), or through barrels and `export *`;
+default }`), or through barrels and `export *`;
 - a bare `new TopicError()` written inside the body of the namespace that
   declares `TopicError`, including inside a nested namespace or function there;
 - `new Outer.Inner.DeepError()`, and `new A.B.C()` for `namespace A.B { export
-  class C extends Error {} }`;
+class C extends Error {} }`;
 - `class Child extends Errors.Base {}`, which subclasses `Errors.Base`.
 
 The rule stays quiet about every class of a namespace when any use of that
@@ -68,13 +68,22 @@ might build any of its classes:
   its members as a value (`register(Errors)`, `register(Errors.TopicError)`), or
   a computed access (`new Errors[name]()`);
 - `export default Errors`, `export = Errors`, or `import Alias = Errors.Inner`;
-- a namespace declared in several blocks, or merged with a class, enum or
-  function of the same name;
+- a namespace merged with a class, function, variable, enum, or import of the
+  same name, whose statics or members the graph cannot tell apart from the
+  namespace's classes. Several `namespace` blocks of one name are not a merge of
+  this kind: they share one member table, and each block's classes are reported
+  like any other;
 - a module imported as a whole (`import * as errors`, `import("./errors")`,
   `require`, `import x = require()`) when it exports or re-exports the namespace,
-  and `new Errors.Missing()` naming a member the namespace does not declare;
+  and a construction that names a member the namespace does not declare
+  (`new Errors.Missing()`, or `new Errors.Missing.Factory()` when `Errors` has no
+  `Missing` namespace);
 - a namespace in a global script file, one with no `import` or `export`, which
   any other file can reach.
+
+These uses count wherever they are written, test files included: a test file that
+copies a namespace into a variable keeps its classes quiet, even though a test
+that constructs a class never keeps that class alive.
 
 Only a class another module can reach is exported: an `export class` inside a
 namespace that its module exports, at every level of nesting. A class without

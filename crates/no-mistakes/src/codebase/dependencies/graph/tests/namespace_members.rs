@@ -109,6 +109,80 @@ fn a_namespace_member_construction_is_a_call_edge_to_the_class() {
     }
 }
 
+/// A namespace is also reached through the ways a module passes one on: a
+/// named or renamed re-export, an import that is exported again, a default
+/// import exported under another name, and `export *`. A default export is not
+/// carried by `export *`, and an export that is not a namespace reaches no class.
+#[test]
+fn a_namespace_reached_through_a_re_export_is_a_call_edge() {
+    let (root, graph) = build();
+    let cases = [
+        (
+            "HubClass",
+            "Hub",
+            owned(&[
+                ("src/relay/user.ts", Some("named")),
+                ("src/relay/user.ts", Some("repeated")),
+                ("src/relay/user.ts", Some("viaStar")),
+            ]),
+        ),
+        (
+            "OtherClass",
+            "Other",
+            owned(&[("src/relay/user.ts", Some("renamed"))]),
+        ),
+        (
+            "SpareClass",
+            "Spare",
+            owned(&[("src/relay/user.ts", Some("spare"))]),
+        ),
+        (
+            "PivotClass",
+            "Pivot",
+            owned(&[
+                ("src/relay/user.ts", Some("direct")),
+                ("src/relay/user.ts", Some("hinge")),
+            ]),
+        ),
+    ];
+    for (scope, namespace, expected) in cases {
+        let found = callers(&root, &graph, class(&graph, scope, Some(namespace)));
+        assert_eq!(found, expected, "{namespace}.{scope}");
+    }
+}
+
+/// A graph built for calls alone resolves `new Errors.X()` through an import
+/// the same way: the edge does not depend on the class declarations that an
+/// `extends` pass records.
+#[test]
+fn a_graph_built_for_calls_alone_still_resolves_namespace_members() {
+    let (root, graph) = build_fixture("namespace-members", false, true);
+    assert!(graph.class_declarations().is_empty());
+    let targets: Vec<_> = graph
+        .edges
+        .edges()
+        .iter()
+        .filter(|edge| edge.kind == EdgeKind::Call)
+        .filter_map(|edge| match (&edge.from, &edge.to) {
+            (
+                NodeId::Symbol { file, symbol, .. },
+                NodeId::Symbol {
+                    file: target,
+                    symbol: class,
+                    ..
+                },
+            ) if relative(&root, file) == "src/consumer.ts" && &**symbol == "viaModule" => {
+                Some((relative(&root, target).to_string(), class.to_string()))
+            }
+            _ => None,
+        })
+        .collect();
+    assert_eq!(
+        targets,
+        [("src/errors.ts".to_string(), "Built".to_string())]
+    );
+}
+
 /// An `extends` that names a namespace member reaches that class by its id,
 /// from the namespace body, the top level, another file, and between two
 /// same-named classes of different namespaces.
@@ -133,63 +207,62 @@ fn a_namespace_member_base_is_an_extends_edge_to_the_exact_class() {
 #[test]
 fn a_namespace_is_marked_escaped_when_a_use_cannot_be_followed() {
     let (_, graph) = build();
-    let marked: Vec<_> = [
+    let escaped = |scope: &str| {
+        graph
+            .class_declarations()
+            .iter()
+            .find(|class| class.scope == scope)
+            .unwrap_or_else(|| panic!("no class {scope}"))
+            .namespace_escaped
+    };
+    let resolved = [
         "CleanClass",
         "UsedClass",
         "Built",
         "Local",
         "Deep",
         "C",
+        // Reached through a re-export the graph follows.
+        "HubClass",
+        "OtherClass",
+        "SpareClass",
+        "PivotClass",
+    ];
+    let used_in_place = [
         "AliasedClass",
         "ArgumentClass",
         "ComputedClass",
         "LostClass",
+        // `Gap.Missing.Factory`: `Gap` has no `Missing`.
+        "GapClass",
         "MixedClass",
         "DefaultedClass",
         "LegacyClass",
+    ];
+    let used_elsewhere = [
         "CopiedClass",
         "WholeClass",
         "DynamicClass",
         "RequiredClass",
-    ]
-    .into_iter()
-    .map(|scope| {
-        let class = graph
-            .class_declarations()
-            .iter()
-            .find(|class| class.scope == scope)
-            .unwrap_or_else(|| panic!("no class {scope}"));
-        (scope, class.namespace_escaped)
-    })
-    .collect();
-    let escaped: Vec<_> = marked.iter().filter(|(_, e)| *e).map(|(s, _)| *s).collect();
-    let resolved: Vec<_> = marked
-        .iter()
-        .filter(|(_, e)| !*e)
-        .map(|(s, _)| *s)
-        .collect();
-    assert_eq!(
-        resolved,
-        ["CleanClass", "UsedClass", "Built", "Local", "Deep", "C"]
-    );
-    assert_eq!(
-        escaped,
-        [
-            // Used in the file that declares it.
-            "AliasedClass",
-            "ArgumentClass",
-            "ComputedClass",
-            "LostClass",
-            "MixedClass",
-            "DefaultedClass",
-            "LegacyClass",
-            // Used from another file.
-            "CopiedClass",
-            "WholeClass",
-            "DynamicClass",
-            "RequiredClass",
-        ]
-    );
+        // The chain of exports cannot be followed to a namespace.
+        "StarredClass",
+        "WrappedClass",
+        "HauntedClass",
+        "LoopAClass",
+        "LoopBClass",
+        "SharedOne",
+        "SharedTwo",
+        "NowhereClass",
+        // An import read as a value.
+        "FallbackClass",
+        "CopiedStarClass",
+    ];
+    for scope in resolved {
+        assert!(!escaped(scope), "{scope} should resolve");
+    }
+    for scope in used_in_place.into_iter().chain(used_elsewhere) {
+        assert!(escaped(scope), "{scope} should escape");
+    }
 }
 
 /// Only a namespace's classes are marked. A top-level class is never escaped,

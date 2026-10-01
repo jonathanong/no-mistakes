@@ -55,3 +55,10 @@ export namespace Defaulted {
   export class DefaultedDead extends Error {}
 }
 export default Defaulted;
+
+export namespace Gap {
+  // Not flagged: `Gap` declares no `Missing`, so the construction below could
+  // build any class.
+  export class GapDead extends Error {}
+}
+export const viaGap = () => new Gap.Missing.Factory();

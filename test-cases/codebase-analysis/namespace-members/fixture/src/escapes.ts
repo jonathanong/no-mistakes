@@ -28,6 +28,12 @@ export namespace Lost {
 // `Lost` declares no `Missing`, so the construction could build any class.
 export const lost = () => new Lost.Missing();
 
+export namespace Gap {
+  export class GapClass extends Error {}
+}
+// `Gap` declares no `Missing` namespace, so the construction could build any class.
+export const gap = () => new Gap.Missing.Factory();
+
 export class Mixed {}
 
 // A namespace merged with a class: statics and members cannot be told apart.

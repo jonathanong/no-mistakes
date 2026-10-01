@@ -340,13 +340,16 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   `new Outer.Inner.X()` where the namespace is declared in the same file or is an
   exported namespace imported through named, renamed, default, barrel, or
   `export *` bindings, `new A.B.C()` for `namespace A.B`, and a bare `new X()`
-  inside the body that declares `X`. Same-named classes in different namespaces
-  keep their own callable ids. A namespace escapes when any use of it is not
+  inside the body that declares `X`; a graph built for `call` edges alone
+  resolves the constructions the same way. Same-named classes in different
+  namespaces keep their own callable ids. A namespace escapes when any use of it is not
   one of those static member accesses: an alias, a value argument, a computed
-  access, `export default` or `export =`, a declaration merged across blocks or
-  with a class, enum, or function, a missing member, or a module that exports it
-  and is imported whole, dynamically, or through `require`. A consumer that
-  needs to know whether a class is built must treat `namespace_escaped` as
+  access, `export default` or `export =`, a declaration merged with a class,
+  function, variable, enum, or import of the same name (blocks of one namespace
+  share a member table and are not a merge), a missing member or missing
+  intermediate namespace, or a module that exports it and is imported whole,
+  dynamically, or through `require`. Uses in test files count too. A consumer
+  that needs to know whether a class is built must treat `namespace_escaped` as
   "cannot tell". Mixin and expression bases (`extends mixin(Error)`) are not
   tracked.
 - Selector text edges are approximate. Exact selector edges from configured test

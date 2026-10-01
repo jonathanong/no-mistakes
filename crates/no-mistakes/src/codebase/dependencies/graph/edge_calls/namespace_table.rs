@@ -25,6 +25,11 @@ enum NamespaceLookup<'a> {
     Absent,
 }
 
+/// `Errors.Inner` for `Errors.Inner.X`: the path without its last segment.
+fn enclosing_path(path: &str) -> Option<&str> {
+    path.rsplit_once('.').map(|(head, _)| head)
+}
+
 impl NamespaceTable {
     fn from_facts(file: &crate::codebase::ts_source::facts::TsFileFacts) -> Self {
         let facts = &file.namespaces;
@@ -68,10 +73,10 @@ impl NamespaceTable {
 
     /// Resolves `callee` the way a namespace body does: the innermost
     /// enclosing namespace first, then each one outward, then the file's top
-    /// level. `Errors.Missing` that finds the declared `Errors` but no class
-    /// is [`NamespaceLookup::Missing`].
+    /// level. `Errors.Missing` and `Errors.Missing.Factory` that find the
+    /// declared `Errors` but no class are [`NamespaceLookup::Missing`].
     fn lookup(&self, context: Option<&str>, callee: &str) -> NamespaceLookup<'_> {
-        let parent = callee.rsplit_once('.').map(|(parent, _)| parent);
+        let parents = std::iter::successors(enclosing_path(callee), |&path| enclosing_path(path));
         let mut missing = None;
         let mut context = context;
         loop {
@@ -83,11 +88,13 @@ impl NamespaceTable {
                 return NamespaceLookup::Member { scope, id: *id };
             }
             if missing.is_none() {
-                let declared = parent.and_then(|parent| self.declared.get(&qualify(parent)));
+                let declared = parents
+                    .clone()
+                    .find_map(|parent| self.declared.get(&qualify(parent)));
                 missing = declared.map(|declared| declared.split('.').next().unwrap_or(declared));
             }
             let Some(current) = context else { break };
-            context = current.rsplit_once('.').map(|(outer, _)| outer);
+            context = enclosing_path(current);
         }
         missing.map_or(NamespaceLookup::Absent, |root| NamespaceLookup::Missing {
             root,
