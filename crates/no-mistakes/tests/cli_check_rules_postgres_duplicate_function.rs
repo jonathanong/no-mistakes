@@ -44,7 +44,7 @@ fn postgres_duplicate_function_body_fails_when_bodies_match() {
     assert!(body.contains(RULE), "{body}");
     assert!(
         body.contains(
-            "function body duplicates 2 other function(s) after normalising names and literals"
+            "function body duplicates 2 other function(s) after normalizing names and literals"
         ),
         "{body}"
     );
