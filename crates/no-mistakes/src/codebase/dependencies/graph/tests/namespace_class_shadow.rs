@@ -52,13 +52,44 @@ fn a_namespace_in_a_namespace_body_hides_an_import_of_its_name() {
 }
 
 /// A class declared in one block of a merged namespace is private to that
-/// block, so a construction in another block still names the import.
+/// block, so a construction in another block still names the import. So is an
+/// unexported namespace: one in each block is two namespaces, and the second
+/// cannot see the first one's member.
 #[test]
 fn a_declaration_in_one_block_of_a_merged_namespace_hides_nothing_in_another() {
     let (root, graph) = build();
-    let imported = class(&graph, "MergedDead", Some("MergedErrors"));
-    assert_eq!(
-        callers(&root, &graph, imported),
-        owned(&[(SHADOW, None), (SHADOW, Some("second"))])
-    );
+    for (dead, namespace, caller) in [
+        ("MergedDead", "MergedErrors", "second"),
+        ("SplitDead", "SplitErrors", "split"),
+    ] {
+        let imported = class(&graph, dead, Some(namespace));
+        assert_eq!(
+            callers(&root, &graph, imported),
+            owned(&[(SHADOW, None), (SHADOW, Some(caller))]),
+            "{dead}"
+        );
+    }
+}
+
+/// An exported member is shared by every block of a merged namespace, one
+/// level down too, and a dotted declaration exports its last name: another
+/// block's construction builds that member's class, none of the import's.
+#[test]
+fn an_exported_member_of_a_merged_namespace_hides_an_import_in_every_block() {
+    let (root, graph) = build();
+    for (dead, local, caller) in [
+        ("SharedDead", "SharedBlocks.SharedErrors", "shared"),
+        ("DeepDead", "DeepBlocks.Inner.DeepErrors", "deep"),
+        ("DottedDead", "DottedBlocks.DottedErrors", "dotted"),
+    ] {
+        let built = class(&graph, dead, Some(local));
+        assert_eq!(
+            callers(&root, &graph, built),
+            owned(&[(SHADOW, None), (SHADOW, Some(caller))]),
+            "{dead}"
+        );
+        // The import is the namespace of the local one's last name.
+        let imported = class(&graph, dead, local.rsplit('.').next());
+        assert_eq!(callers(&root, &graph, imported), owned(&[]), "{dead}");
+    }
 }

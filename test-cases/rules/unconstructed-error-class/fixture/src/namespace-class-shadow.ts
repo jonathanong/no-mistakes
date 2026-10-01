@@ -11,6 +11,8 @@ import {
   LaterShadow,
   MergedShadow,
   NestedShadow,
+  SharedShadow,
+  SplitShadow,
 } from "./namespace-class-shadow-lib";
 
 declare function make(): any;
@@ -55,4 +57,32 @@ export namespace MergedBlocks {
 
 export namespace MergedBlocks {
   export const second = new MergedShadow.MergedBuilt();
+}
+
+// An exported member is shared by every block of a merged namespace, so the
+// second block's `new` builds the first block's class, none of the import's.
+export namespace SharedBlocks {
+  export namespace SharedShadow {
+    export class SharedShadowDead extends Error {}
+  }
+}
+
+export namespace SharedBlocks {
+  export const shared = new SharedShadow.SharedShadowDead();
+}
+
+// An unexported `Inner` in each block is two namespaces, so the second cannot
+// see the first one's member and its `new` still names the import.
+export namespace SplitBlocks {
+  namespace Inner {
+    export namespace SplitShadow {
+      export class SplitBuilt extends Error {}
+    }
+  }
+}
+
+export namespace SplitBlocks {
+  namespace Inner {
+    export const split = new SplitShadow.SplitBuilt();
+  }
 }

@@ -1,7 +1,7 @@
 // `namespace-class-shadow.ts` hides these names with declarations in a namespace
 // body, so it builds none of the `Dead` classes and extends neither base. It
-// builds `MergedBuilt`: the name is declared in another block of its namespace,
-// which is private to that block.
+// builds `MergedBuilt` and `SplitBuilt`, whose names are private to another
+// block of their namespace; another block exports its own `SharedShadow`.
 export namespace ClassShadow {
   export class ClassShadowDead extends Error {}
 
@@ -32,4 +32,12 @@ export class BareShadowed extends Error {}
 
 export namespace AliasShadow {
   export class AliasShadowDead extends Error {}
+}
+
+export namespace SharedShadow {
+  export class SharedShadowDead extends Error {}
+}
+
+export namespace SplitShadow {
+  export class SplitBuilt extends Error {}
 }

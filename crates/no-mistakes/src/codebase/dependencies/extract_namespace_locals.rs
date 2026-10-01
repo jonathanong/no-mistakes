@@ -10,12 +10,29 @@ fn scan_namespace_locals(
     statements: &[Statement<'_>],
     path: &str,
 ) {
-    let locals = &mut collector.namespace.facts.locals;
+    let state = &mut collector.namespace;
     for statement in statements {
+        if let Statement::TSNamespaceDeclaration(inner) = statement {
+            let inner = format!("{path}.{}", inner.id.name);
+            state.private_namespaces.insert(inner);
+        }
+        let exported = matches!(statement, Statement::ExportDeclaration(_));
         for name in statement_value_names(statement) {
-            locals.push((path.to_string(), name));
+            let local = (path.to_string(), name);
+            if exported {
+                state.exported_locals.insert(local.clone());
+            }
+            state.facts.locals.push(local);
         }
     }
+}
+
+/// A dotted `namespace A.B` exports `B` from `A`, so `B` is a value of `A`'s
+/// body.
+fn add_dotted_local(collector: &mut ImportCollector, path: &str, name: &str) {
+    let local = (path.to_string(), name.to_string());
+    collector.namespace.exported_locals.insert(local.clone());
+    collector.namespace.facts.locals.push(local);
 }
 
 fn statement_value_names(statement: &Statement<'_>) -> Vec<String> {
@@ -56,12 +73,22 @@ fn variable_value_names(declaration: &VariableDeclaration<'_>) -> Vec<String> {
         .collect()
 }
 
-/// Drops the locals of every namespace declared in more than one block, and of
-/// the namespaces inside one. A block's unexported declarations are private to
-/// it, but the facts name a namespace by path alone, so a merged namespace's
-/// blocks cannot be told apart and its constructions keep the import. Runs
-/// before `declared` is deduplicated, while it still lists every block.
-fn retain_unmerged_locals(facts: &mut NamespaceFacts) {
+/// Drops each local of a namespace declared in more than one block that not
+/// every block shares. A block's unexported declarations are private to it, but
+/// the facts name a namespace by path alone, so the blocks cannot be told apart
+/// and their constructions keep the import. An exported one is shared when the
+/// blocks are one namespace: top-level blocks of a name always are, and nested
+/// ones are when each is exported and their parent's blocks are one namespace
+/// too. A path with one block keeps its locals, because only constructions in
+/// that block read them. Runs before `declared` is deduplicated, while it still
+/// lists every block.
+fn retain_unmerged_locals(state: &mut NamespaceState) {
+    let NamespaceState {
+        facts,
+        exported_locals,
+        private_namespaces,
+        ..
+    } = state;
     let mut blocks = facts.declared.clone();
     blocks.sort();
     let merged: FxHashSet<&str> = blocks
@@ -69,11 +96,16 @@ fn retain_unmerged_locals(facts: &mut NamespaceFacts) {
         .filter(|pair| pair[0] == pair[1])
         .map(|pair| pair[0].as_str())
         .collect();
-    facts.locals.retain(|(path, _)| {
-        std::iter::successors(Some(path.as_str()), |&path| {
+    let one_namespace = |path: &str| {
+        std::iter::successors(Some(path), |&path| {
             path.rsplit_once('.').map(|(parent, _)| parent)
         })
-        .all(|path| !merged.contains(path))
+        .take_while(|path| merged.contains(path))
+        .all(|path| !private_namespaces.contains(path))
+    };
+    facts.locals.retain(|local| {
+        let path = local.0.as_str();
+        !merged.contains(path) || exported_locals.contains(local) && one_namespace(path)
     });
     facts.locals.sort();
     facts.locals.dedup();

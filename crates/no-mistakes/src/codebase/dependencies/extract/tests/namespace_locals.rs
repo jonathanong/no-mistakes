@@ -32,7 +32,10 @@ fn a_namespace_body_records_the_values_it_declares() {
         ("namespace N { var a = 1; }", vec![("N", "a")]),
         ("namespace N { import A = X.Y; }", vec![("N", "A")]),
         ("namespace N { export import A = X.Y; }", vec![("N", "A")]),
-        ("namespace N.M { class A {} }", vec![("N.M", "A")]),
+        (
+            "namespace N.M { class A {} }",
+            vec![("N", "M"), ("N.M", "A")],
+        ),
         (
             "namespace N { interface I {} type T = number; export interface J {} }",
             vec![],
@@ -47,22 +50,37 @@ fn a_namespace_body_records_the_values_it_declares() {
     }
 }
 
-/// A namespace declared in several blocks, and every namespace inside one,
-/// records no locals: a block's unexported declarations are private to it, and
-/// the facts name a namespace by its path alone.
+/// A namespace declared in several blocks records only what every block
+/// shares: a block's unexported declarations are private to it, and the facts
+/// name a namespace by its path alone. Its exported members are shared when its
+/// blocks are one namespace: top-level blocks always are, and nested blocks are
+/// when each is exported from blocks that are. A dotted `namespace N.M` exports
+/// `M` from `N`.
 #[test]
-fn a_namespace_declared_in_several_blocks_records_no_locals() {
+fn a_namespace_declared_in_several_blocks_records_only_what_they_share() {
     for (source, declared) in [
         (
             "namespace N { class A {} }\nnamespace N { class B {} }",
             vec![],
         ),
         (
+            "namespace N { export class A {} }\nnamespace N { export const b = 1; }",
+            vec![("N", "A"), ("N", "b")],
+        ),
+        (
             "namespace N { class A {} }\nnamespace N { export namespace M { class B {} } }",
-            vec![],
+            vec![("N", "M"), ("N.M", "B")],
         ),
         (
             "namespace N { namespace M { class A {} } }\nnamespace N { namespace M { class B {} } }",
+            vec![],
+        ),
+        (
+            "namespace N { export namespace M { export class A {} } }\nnamespace N { export namespace M { class B {} } }",
+            vec![("N", "M"), ("N.M", "A")],
+        ),
+        (
+            "namespace N { namespace M { export class A {} } }\nnamespace N { namespace M {} }",
             vec![],
         ),
         (
@@ -71,11 +89,11 @@ fn a_namespace_declared_in_several_blocks_records_no_locals() {
         ),
         (
             "namespace N.M { class A {} }\nnamespace N { class B {} }",
-            vec![],
+            vec![("N", "M"), ("N.M", "A")],
         ),
         (
             "namespace N.M { class A {} }\nnamespace O.P { class B {} }",
-            vec![("N.M", "A"), ("O.P", "B")],
+            vec![("N", "M"), ("N.M", "A"), ("O", "P"), ("O.P", "B")],
         ),
     ] {
         assert_eq!(locals(&namespaces(source)), declared, "{source}");

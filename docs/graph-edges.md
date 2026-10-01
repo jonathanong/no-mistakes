@@ -378,9 +378,12 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   that body or one nested in it, so
   `namespace Helpers { class Errors {} new Errors.Dead(); }` builds no class of an
   imported `Errors`. The extractor records those names as the `locals` fact.
-  A namespace declared in several blocks hides nothing, because a block's
-  unexported declarations are private to it, and only constructions and base
-  classes are covered; any other call resolves as before. A class and a nested
+  In a namespace declared in several blocks, only an exported declaration
+  hides the import, and it does so in every block, because a block's unexported
+  declarations are private to it. An unexported namespace in each of two blocks
+  is two namespaces, so neither block sees the other's members. A dotted
+  `namespace A.B` exports `B` from `A`. Only constructions and base classes are
+  covered; any other call resolves as before. A class and a nested
   namespace of one name in one body are a single merged value that hides nothing.
   A string-literal member (`Errors["Dead"]`, `Errors["Inner"].Dead`) is followed
   like a dot, but `new Errors.Inner["Dead"]()` reads `Errors.Inner` as a value, so

@@ -119,9 +119,12 @@ even when declared after the code that reads it) declared in a body hides an
 imported or declared namespace of the same name for every `new` and `extends`
 written in that body or one nested in it, so
 `namespace Helpers { class Errors {} new Errors.Dead(); }` builds no class
-of an imported `Errors`. A namespace declared in several blocks hides nothing,
-because a block's unexported declarations are private to it, and only
-constructions and base classes are covered; any other call resolves as before. A
+of an imported `Errors`. In a namespace declared in several blocks, only an
+exported declaration hides the import, and it does so in every block, because a
+block's unexported declarations are private to it. An unexported namespace in
+each of two blocks is two namespaces, so neither block sees the other's members.
+A dotted `namespace A.B` exports `B` from `A`. Only constructions and base
+classes are covered; any other call resolves as before. A
 class and a nested namespace of one name in one body are a single merged value
 that hides nothing. A string-literal member (`Errors["Dead"]`,
 `Errors["Inner"].Dead`) is followed like a dot, but `new Errors.Inner["Dead"]()`

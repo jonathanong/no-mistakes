@@ -73,6 +73,8 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             "src/namespace-class-shadow-lib.ts:24 NestedShadow.NestedShadowDead",
             "src/namespace-class-shadow-lib.ts:31 BareShadowed",
             "src/namespace-class-shadow-lib.ts:34 AliasShadow.AliasShadowDead",
+            // Another block of a merged namespace exports a namespace of its name.
+            "src/namespace-class-shadow-lib.ts:38 SharedShadow.SharedShadowDead",
             // A constant or a parameter that shares a name is not the namespace.
             "src/namespace-collision.ts:7 Collide.Inner.CollideDead",
             "src/namespace-collision.ts:16 Hide.HideDead",
@@ -170,6 +172,9 @@ fn namespace_members_built_through_a_resolved_reference_are_not_reported() {
         // Built from another block of a merged namespace, where a class of the
         // import's name is private to its own block.
         "MergedShadow.MergedBuilt",
+        "SplitShadow.SplitBuilt",
+        // The exported member of another block of a merged namespace.
+        "SharedBlocks.SharedShadow.SharedShadowDead",
         // Another file, by every way to reach the namespace.
         "Lib.Used",
         "Lib.Deep.DeepUsed",

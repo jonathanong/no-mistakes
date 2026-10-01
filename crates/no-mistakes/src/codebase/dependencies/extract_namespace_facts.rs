@@ -51,7 +51,8 @@ pub struct NamespaceFacts {
     /// `(namespace path, name)` for each value a tracked namespace body
     /// declares: a class, function, enum, namespace, or variable. The name
     /// hides an import of the same name in constructions written in that body.
-    /// A namespace declared in several blocks has none.
+    /// A namespace declared in several blocks keeps only the exported ones that
+    /// all of its blocks share.
     pub locals: Vec<(String, String)>,
     /// Specifiers of `import x = require("...")`, whose module is used whole.
     pub opaque_specifiers: Vec<String>,
@@ -83,6 +84,11 @@ struct NamespaceState {
     /// Offset of an identifier that is the object of a static member
     /// expression to the member it reads.
     selected: FxHashMap<u32, String>,
+    /// The `locals` a body exports, which every block of its namespace shares.
+    exported_locals: FxHashSet<(String, String)>,
+    /// Paths of namespaces declared without `export` in another namespace's
+    /// body: two such blocks of one path are two namespaces.
+    private_namespaces: FxHashSet<String>,
     /// Nesting depth of erased type names (`typeof X`, `implements X.I`).
     type_depth: u32,
 }

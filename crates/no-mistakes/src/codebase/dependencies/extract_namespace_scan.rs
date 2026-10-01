@@ -31,7 +31,7 @@ fn scan_program_namespaces(collector: &mut ImportCollector, program: &Program<'_
         add_namespace_root(collector, name, exports, enums.contains(name));
         scan_namespace(collector, namespace, "", reachable);
     }
-    retain_unmerged_locals(&mut collector.namespace.facts);
+    retain_unmerged_locals(&mut collector.namespace);
     collector.namespace.facts.declared.sort();
     collector.namespace.facts.declared.dedup();
 }
@@ -147,6 +147,7 @@ fn scan_namespace(
     collector.namespace.facts.declared.push(path.clone());
     match &namespace.body {
         TSNamespaceDeclarationBody::TSNamespaceDeclaration(inner) => {
+            add_dotted_local(collector, &path, inner.id.name.as_str());
             scan_namespace(collector, inner, &path, reachable);
         }
         TSNamespaceDeclarationBody::TSModuleBlock(block) => {

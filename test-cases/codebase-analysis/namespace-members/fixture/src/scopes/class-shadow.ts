@@ -6,11 +6,15 @@ import {
   AliasErrors,
   BareImported,
   ClassErrors,
+  DeepErrors,
+  DottedErrors,
   EnumErrors,
   FunctionErrors,
   LaterErrors,
   MergedErrors,
   NestedErrors,
+  SharedErrors,
+  SplitErrors,
 } from "./class-shadow-lib";
 
 declare function make(): any;
@@ -55,4 +59,56 @@ export namespace MergedBlocks {
 
 export namespace MergedBlocks {
   export const second = new MergedErrors.MergedDead();
+}
+
+// An exported member is shared by every block of a merged namespace, so the
+// second block's `new` builds the first block's nested class, not the import.
+export namespace SharedBlocks {
+  export namespace SharedErrors {
+    export class SharedDead extends Error {}
+  }
+}
+
+export namespace SharedBlocks {
+  export const shared = new SharedErrors.SharedDead();
+}
+
+// So are the exported members of an exported namespace merged one level down.
+export namespace DeepBlocks {
+  export namespace Inner {
+    export namespace DeepErrors {
+      export class DeepDead extends Error {}
+    }
+  }
+}
+
+export namespace DeepBlocks {
+  export namespace Inner {
+    export const deep = new DeepErrors.DeepDead();
+  }
+}
+
+// A dotted declaration exports its last name from the namespace before it.
+export namespace DottedBlocks.DottedErrors {
+  export class DottedDead extends Error {}
+}
+
+export namespace DottedBlocks {
+  export const dotted = new DottedErrors.DottedDead();
+}
+
+// An unexported `Inner` in each block is two namespaces, so the second cannot
+// see the first one's member and its `new` still names the import.
+export namespace SplitBlocks {
+  namespace Inner {
+    export namespace SplitErrors {
+      export class SplitDead extends Error {}
+    }
+  }
+}
+
+export namespace SplitBlocks {
+  namespace Inner {
+    export const split = new SplitErrors.SplitDead();
+  }
 }
