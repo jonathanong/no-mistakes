@@ -149,8 +149,17 @@ pub struct CatalogFunction {
     pub signature: Option<String>,
     pub language: Option<String>,
     pub returns_trigger: bool,
+    pub returns_event_trigger: bool,
     pub definition: String,
     pub body: Option<String>,
+    pub body_span: Option<(usize, usize)>,
+    pub null_input: String,
+    pub security: String,
+    pub parallel: String,
+    pub leakproof: String,
+    pub volatility: String,
+    pub return_contract: String,
+    pub planner: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -1,0 +1,11 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_plain": {
+      "definition": "CREATE FUNCTION fn_plain() RETURNS int LANGUAGE sql AS $$ SELECT MixedCase $$"
+    },
+    "fn_quoted": {
+      "definition": "CREATE FUNCTION fn_quoted() RETURNS int LANGUAGE sql AS $$ SELECT \"MixedCase\" $$"
+    }
+  }
+}

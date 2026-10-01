@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_01": { "definition": "CREATE FUNCTION fn_01() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN 1; END $$;" },
+    "fn_02": { "definition": "CREATE FUNCTION fn_02() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN 1; END $$;" },
+    "fn_03": { "definition": "CREATE FUNCTION fn_03() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN 1; END $$;" },
+    "fn_04": { "definition": "CREATE FUNCTION fn_04() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN 1; END $$;" },
+    "fn_05": { "definition": "CREATE FUNCTION fn_05() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN 1; END $$;" },
+    "fn_06": { "definition": "CREATE FUNCTION fn_06() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN 1; END $$;" },
+    "fn_07": { "definition": "CREATE FUNCTION fn_07() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN 1; END $$;" }
+  }
+}

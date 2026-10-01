@@ -1,0 +1,18 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "invoices": {
+      "relationKind": "table",
+      "columns": {
+        "status": {
+          "dataType": "invoice_statuses",
+          "nullable": false,
+          "generated": "stored",
+          "ordinalPosition": 1
+        },
+        "sent_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
+        "paid_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
+      }
+    }
+  }
+}

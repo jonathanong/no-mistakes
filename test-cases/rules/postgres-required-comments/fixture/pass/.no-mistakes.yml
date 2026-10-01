@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-required-comments
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json

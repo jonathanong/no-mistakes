@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_left": {
+      "definition": "CREATE FUNCTION fn_left() RETURNS int LANGUAGE sql AS $$ SELECT target(left_value => 1) $$"
+    },
+    "fn_left_copy": {
+      "definition": "CREATE FUNCTION fn_left_copy() RETURNS int LANGUAGE sql AS $$ SELECT target(left_value => 2) $$"
+    },
+    "fn_right": {
+      "definition": "CREATE FUNCTION fn_right() RETURNS int LANGUAGE sql AS $$ SELECT target(right_value => 1) $$"
+    }
+  }
+}

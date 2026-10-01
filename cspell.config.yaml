@@ -37,6 +37,7 @@ words:
   - eprintln
   - evals
   - errexit
+  - errcode
   - extglob
   - fanout
   - fastapi
@@ -55,11 +56,14 @@ words:
   - globset
   - greppable
   - guardrailsrc
+  - inout
   - invalidators
   - jsonc
   - Laravel
+  - leakproof
   - linuxbrew
   - linecount
+  - libc
   - libuv
   - lockfiles
   - markdown
@@ -77,6 +81,7 @@ words:
   - PCRE
   - phpunit
   - pipefail
+  - plpgsql
   - Pipfile
   - pkey
   - pnpm
@@ -91,6 +96,7 @@ words:
   - regclass
   - rustfmt
   - serde
+  - smallint
   - sqlparser
   - quasis
   - unanalyzable

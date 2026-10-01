@@ -1,0 +1,71 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_lang_sql()": {
+      "definition": "CREATE FUNCTION fn_lang_sql() RETURNS int LANGUAGE /* note */ sql AS $$ SELECT lang_body() $$"
+    },
+    "fn_lang_sql_copy()": {
+      "definition": "CREATE FUNCTION fn_lang_sql_copy() RETURNS int LANGUAGE /* note */ sql AS $$ SELECT lang_body() $$"
+    },
+    "fn_lang_c()": {
+      "definition": "CREATE FUNCTION fn_lang_c() RETURNS int LANGUAGE /* extension */ c AS $$ SELECT lang_body() $$"
+    },
+    "fn_lang_c_copy()": {
+      "definition": "CREATE FUNCTION fn_lang_c_copy() RETURNS int LANGUAGE /* extension */ c AS $$ SELECT lang_body() $$"
+    },
+    "fn_atomic_gap()": {
+      "definition": "CREATE FUNCTION fn_atomic_gap() RETURNS int LANGUAGE sql BEGIN /* explanation */ ATOMIC SELECT atomic_gap(); END"
+    },
+    "fn_atomic_gap_copy()": {
+      "definition": "CREATE FUNCTION fn_atomic_gap_copy() RETURNS int LANGUAGE sql BEGIN /* explanation */ ATOMIC SELECT atomic_gap(); END"
+    },
+    "fn_atomic_string()": {
+      "definition": "CREATE FUNCTION fn_atomic_string() RETURNS int LANGUAGE sql AS $$ SELECT atomic_gap() $$"
+    },
+    "fn_path_stable()": {
+      "definition": "CREATE FUNCTION fn_path_stable() RETURNS int LANGUAGE sql SET search_path TO stable AS $$ SELECT path_body() $$"
+    },
+    "fn_path_stable_copy()": {
+      "definition": "CREATE FUNCTION fn_path_stable_copy() RETURNS int LANGUAGE sql SET search_path TO stable AS $$ SELECT path_body() $$"
+    },
+    "fn_path_immutable()": {
+      "definition": "CREATE FUNCTION fn_path_immutable() RETURNS int LANGUAGE sql SET search_path TO immutable AS $$ SELECT path_body() $$"
+    },
+    "fn_cost_low()": {
+      "definition": "CREATE FUNCTION fn_cost_low() RETURNS int LANGUAGE sql COST 1.1 AS $$ SELECT cost_body() $$"
+    },
+    "fn_cost_low_copy()": {
+      "definition": "CREATE FUNCTION fn_cost_low_copy() RETURNS int LANGUAGE sql COST 1.1 AS $$ SELECT cost_body() $$"
+    },
+    "fn_cost_high()": {
+      "definition": "CREATE FUNCTION fn_cost_high() RETURNS int LANGUAGE sql COST 1.9 AS $$ SELECT cost_body() $$"
+    },
+    "fn_eend()": {
+      "definition": "CREATE FUNCTION fn_eend() RETURNS int LANGUAGE sql BEGIN ATOMIC SELECT éend; SELECT kept_body(); END"
+    },
+    "fn_eend_copy()": {
+      "definition": "CREATE FUNCTION fn_eend_copy() RETURNS int LANGUAGE sql BEGIN ATOMIC SELECT éend; SELECT kept_body(); END"
+    },
+    "fn_eend_other()": {
+      "definition": "CREATE FUNCTION fn_eend_other() RETURNS int LANGUAGE sql BEGIN ATOMIC SELECT éend; SELECT other_body(); END"
+    },
+    "fn_type_stable()": {
+      "definition": "CREATE FUNCTION fn_type_stable() RETURNS public.stable LANGUAGE sql AS $$ SELECT type_body() $$"
+    },
+    "fn_type_stable_copy()": {
+      "definition": "CREATE FUNCTION fn_type_stable_copy() RETURNS public.stable LANGUAGE sql AS $$ SELECT type_body() $$"
+    },
+    "fn_type_volatile()": {
+      "definition": "CREATE FUNCTION fn_type_volatile() RETURNS public.volatile LANGUAGE sql AS $$ SELECT type_body() $$"
+    },
+    "fn_outer()": {
+      "definition": "CREATE FUNCTION fn_outer() RETURNS int LANGUAGE sql BEGIN ATOMIC CREATE FUNCTION inner() AS $$ SELECT nested_body() $$; SELECT outer_body(); END"
+    },
+    "fn_outer_copy()": {
+      "definition": "CREATE FUNCTION fn_outer_copy() RETURNS int LANGUAGE sql BEGIN ATOMIC CREATE FUNCTION inner() AS $$ SELECT nested_body() $$; SELECT outer_body(); END"
+    },
+    "fn_outer_other()": {
+      "definition": "CREATE FUNCTION fn_outer_other() RETURNS int LANGUAGE sql BEGIN ATOMIC CREATE FUNCTION inner() AS $$ SELECT nested_body() $$; SELECT other_outer(); END"
+    }
+  }
+}

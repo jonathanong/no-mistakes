@@ -1,0 +1,11 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_ret_a": {
+      "definition": "CREATE FUNCTION fn_ret_a() RETURNS int LANGUAGE sql RETURN widget"
+    },
+    "fn_ret_b": {
+      "definition": "CREATE FUNCTION fn_ret_b() RETURNS int LANGUAGE sql RETURN gadget"
+    }
+  }
+}

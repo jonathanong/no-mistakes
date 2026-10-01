@@ -36,7 +36,7 @@ behavior.
 | Enforce package and workspace boundaries | [`forbidden-dependencies`](forbidden-dependencies.md), [`production-dependency-declarations`](production-dependency-declarations.md), [`workspace-package-cycles`](workspace-package-cycles.md) |
 | Make CI reproducible and bounded | [`github-actions-pinned-hash`](github-actions-pinned-hash.md), [`github-actions-job-timeouts`](github-actions-job-timeouts.md), [`workflow-topology-policy`](workflow-topology-policy.md) |
 | Keep browser tests statically traceable | [`playwright-coverage`](playwright-coverage.md), [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md), [`playwright-unique-test-ids`](playwright-unique-test-ids.md) |
-| Check PostgreSQL migrations and query safety | [`postgres-column-requires-trigger`](postgres-column-requires-trigger.md), [`postgres-conflict-ordering`](postgres-conflict-ordering.md), [`postgres-constraint-validate`](postgres-constraint-validate.md), [`postgres-fk-index`](postgres-fk-index.md), [`postgres-lock-ordering`](postgres-lock-ordering.md) |
+| Check PostgreSQL migrations and query safety | [`postgres-column-requires-trigger`](postgres-column-requires-trigger.md), [`postgres-conflict-ordering`](postgres-conflict-ordering.md), [`postgres-constraint-validate`](postgres-constraint-validate.md), [`postgres-fk-index`](postgres-fk-index.md), [`postgres-lock-ordering`](postgres-lock-ordering.md), [`postgres-duplicate-function-body`](postgres-duplicate-function-body.md), [`postgres-required-comments`](postgres-required-comments.md), [`postgres-table-shape`](postgres-table-shape.md), [`postgres-status-with-lifecycle-timestamps`](postgres-status-with-lifecycle-timestamps.md), [`postgres-object-naming`](postgres-object-naming.md) |
 | Enforce language-specific source policy | [`csharp-no-async-void-delegate`](csharp-no-async-void-delegate.md), [`rust-no-inline-tests`](rust-no-inline-tests.md), [`swift-viewmodel-main-actor`](swift-viewmodel-main-actor.md) |
 
 These are starting points, not presets. The related-rules section on each page
@@ -95,11 +95,16 @@ explains which checks compose well and which one owns an overlapping concern.
 | [`postgres-required-predicates`](postgres-required-predicates.md)                 | Require configured predicates on named PostgreSQL relations.                |
 | [`postgres-idempotent-insert`](postgres-idempotent-insert.md)                     | Require replay-safe INSERT (ON CONFLICT / NOT EXISTS).                      |
 | [`postgres-column-requires-trigger`](postgres-column-requires-trigger.md)     | Require a configured trigger for a column, and flag a leftover trigger.    |
+| [`postgres-duplicate-function-body`](postgres-duplicate-function-body.md)         | Report Postgres functions whose bodies match after normalization.          |
+| [`postgres-table-shape`](postgres-table-shape.md)                                 | Require a configured column, key, and trigger shape for named tables.      |
+| [`postgres-status-with-lifecycle-timestamps`](postgres-status-with-lifecycle-timestamps.md) | Report a stored status column beside lifecycle timestamps.            |
+| [`postgres-required-comments`](postgres-required-comments.md)                     | Require COMMENT ON for tables and, when configured, columns and views.     |
 | [`postgres-conflict-ordering`](postgres-conflict-ordering.md)                     | Require catalog-canonical order for multi-row ON CONFLICT writers.          |
 | [`postgres-fk-index`](postgres-fk-index.md)                                       | Require a leading btree/hash index on each foreign key column.              |
 | [`postgres-redundant-index`](postgres-redundant-index.md)                         | Flag btree indexes whose keys are a strict prefix of another live index.    |
 | [`postgres-no-generated-column-writes`](postgres-no-generated-column-writes.md) | Ban DML writes to PostgreSQL generated columns.                               |
 | [`postgres-no-offset`](postgres-no-offset.md)                                 | Ban SQL OFFSET in executed PostgreSQL queries.                                  |
+| [`postgres-object-naming`](postgres-object-naming.md)                         | Check PostgreSQL object names against configured patterns, plurals, and tokens. |
 | [`postgres-require-query-annotation`](postgres-require-query-annotation.md)   | Require a leading /* name */ annotation on executed PostgreSQL SQL.             |
 | [`playwright-coverage`](playwright-coverage.md)                               | Require Playwright route/selector coverage.                                     |
 | [`playwright-prefer-test-id-locators`](playwright-prefer-test-id-locators.md) | Prefer test ID locators when matched app elements expose test IDs.              |

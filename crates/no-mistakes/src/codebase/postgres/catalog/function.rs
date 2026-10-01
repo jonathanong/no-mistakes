@@ -2,134 +2,107 @@ use super::model::CatalogFunction;
 
 pub(super) fn function_from_definition(key: &str, definition: &str) -> CatalogFunction {
     let (name, signature) = split_key(key);
-    let (header, body) = split_body(definition);
+    let (header, body, body_span) = super::function_body::split_body(definition);
+    let plain = strip_quotes_and_comments(&header);
+    let modes = super::function_clauses::header_modes(definition, body_span);
     CatalogFunction {
         key: key.to_string(),
         name,
         signature,
-        language: language(&strip_quotes_and_comments(definition)),
-        returns_trigger: returns_trigger(&strip_quotes_and_comments(&header)),
+        language: language(definition, body_span),
+        returns_trigger: returns_clause(&plain, "trigger"),
+        returns_event_trigger: returns_clause(&plain, "event_trigger"),
         definition: definition.to_string(),
         body,
+        null_input: modes.null_input,
+        security: modes.security,
+        parallel: modes.parallel,
+        leakproof: modes.leakproof,
+        volatility: modes.volatility,
+        return_contract: modes.return_contract,
+        planner: modes.planner,
+        body_span,
     }
 }
 
 fn split_key(key: &str) -> (String, Option<String>) {
-    match key.split_once('(') {
-        None => (key.trim().to_string(), None),
-        Some((name, rest)) => {
-            let signature = rest.trim().strip_suffix(')').unwrap_or(rest.trim());
-            (name.trim().to_string(), Some(signature.trim().to_string()))
-        }
-    }
-}
-
-fn split_body(definition: &str) -> (String, Option<String>) {
-    let bytes = definition.as_bytes();
-    for (index, _) in definition.char_indices() {
-        if !is_word_at(definition, index, "as") {
+    let mut quoted = false;
+    let mut chars = key.char_indices().peekable();
+    while let Some((index, character)) = chars.next() {
+        if character == '"' {
+            if quoted && chars.peek().is_some_and(|(_, next)| *next == '"') {
+                chars.next();
+                continue;
+            }
+            quoted = !quoted;
             continue;
         }
-        let mut cursor = index + 2;
-        while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
-            cursor += 1;
+        if character == '(' && !quoted {
+            let name = key[..index].trim().to_string();
+            let rest = key[index + 1..].trim();
+            let signature = rest.strip_suffix(')').unwrap_or(rest).trim();
+            return (name, Some(signature.to_string()));
         }
-        if let Some((tag, open_end)) = opening_dollar(definition, cursor) {
-            let close = format!("${tag}$");
-            if let Some(relative) = definition[open_end..].find(&close) {
-                return (
-                    definition[..index].to_string(),
-                    Some(definition[open_end..open_end + relative].to_string()),
-                );
+    }
+    (key.trim().to_string(), None)
+}
+
+fn language(definition: &str, span: Option<(usize, usize)>) -> Option<String> {
+    let bytes = definition.as_bytes();
+    let mut index = 0;
+    let mut depth = 0i32;
+    while index < definition.len() {
+        if let Some((start, end)) = span {
+            if index >= start && index < end {
+                index = end;
+                continue;
             }
         }
-    }
-    (definition.to_string(), None)
-}
-
-fn opening_dollar(definition: &str, index: usize) -> Option<(String, usize)> {
-    let rest = definition[index..].strip_prefix('$')?;
-    let end = rest.find('$')?;
-    Some((rest[..end].to_string(), index + end + 2))
-}
-
-fn language(definition: &str) -> Option<String> {
-    let bytes = definition.as_bytes();
-    for (index, _) in definition.char_indices() {
-        if !is_word_at(definition, index, "language") {
+        if let Some(end) = super::function_body::skip_noise(definition, index) {
+            index = end;
             continue;
         }
-        let mut cursor = index + "language".len();
-        while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
-            cursor += 1;
+        match bytes[index] {
+            b'(' => depth += 1,
+            b')' => depth -= 1,
+            _ => {}
         }
-        let start = cursor;
-        while bytes.get(cursor).is_some_and(is_ident_byte) {
-            cursor += 1;
+        if depth == 0 && is_word_at(definition, index, "language") {
+            let cursor = super::function_body::skip_as_gap(definition, index + "language".len());
+            if let Some(name) = super::function_body::language_name(definition, cursor) {
+                return Some(name);
+            }
         }
-        if cursor > start {
-            return Some(definition[start..cursor].to_ascii_lowercase());
-        }
+        index += definition[index..].chars().next()?.len_utf8();
     }
     None
 }
 
 fn strip_quotes_and_comments(text: &str) -> String {
     let mut out = String::with_capacity(text.len());
-    let mut chars = text.chars().peekable();
-    while let Some(character) = chars.next() {
-        if character == '-' && chars.peek() == Some(&'-') {
-            chars.next();
-            while chars.next().is_some_and(|next| next != '\n') {}
+    let mut index = 0;
+    while index < text.len() {
+        if let Some(end) = super::function_body::skip_noise(text, index) {
             out.push(' ');
+            index = end;
             continue;
         }
-        if character == '/' && chars.peek() == Some(&'*') {
-            chars.next();
-            let mut depth = 1i32;
-            while depth > 0 {
-                match chars.next() {
-                    Some('/') if chars.peek() == Some(&'*') => {
-                        chars.next();
-                        depth += 1;
-                    }
-                    Some('*') if chars.peek() == Some(&'/') => {
-                        chars.next();
-                        depth -= 1;
-                    }
-                    Some(_) => {}
-                    None => break,
-                }
-            }
-            out.push(' ');
-            continue;
-        }
-        if character == '\'' || character == '"' {
-            let quote = character;
-            while let Some(next) = chars.next() {
-                if next == quote {
-                    if chars.peek() == Some(&quote) {
-                        chars.next();
-                        continue;
-                    }
-                    break;
-                }
-            }
-            out.push(' ');
-            continue;
-        }
+        let Some(character) = text[index..].chars().next() else {
+            break;
+        };
         out.push(character);
+        index += character.len_utf8();
     }
     out
 }
 
-fn returns_trigger(header: &str) -> bool {
+fn returns_clause(header: &str, word: &str) -> bool {
     let lower = header.to_ascii_lowercase();
     let mut rest = lower.as_str();
     while let Some(index) = rest.find("returns") {
         let before = index == 0 || !is_ident_byte(&rest.as_bytes()[index - 1]);
         let after = rest[index + "returns".len()..].trim_start();
-        if before && word_starts(after, "trigger") {
+        if before && word_starts(after, word) {
             return true;
         }
         rest = &rest[index + "returns".len()..];

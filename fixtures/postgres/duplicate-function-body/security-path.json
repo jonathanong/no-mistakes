@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_path": {
+      "definition": "CREATE FUNCTION fn_path() RETURNS int LANGUAGE sql SET search_path TO security, definer AS $$ SELECT widget $$"
+    },
+    "fn_path_copy": {
+      "definition": "CREATE FUNCTION fn_path_copy() RETURNS int LANGUAGE sql SET search_path TO security, definer AS $$ SELECT gadget $$"
+    },
+    "fn_definer": {
+      "definition": "CREATE FUNCTION fn_definer() RETURNS int LANGUAGE sql SECURITY DEFINER AS $$ SELECT widget $$"
+    }
+  }
+}

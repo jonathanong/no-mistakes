@@ -1,0 +1,62 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_title": {
+      "definition": "CREATE FUNCTION fn_title() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW.title IS DISTINCT FROM OLD.title; END $$;"
+    },
+    "fn_body": {
+      "definition": "CREATE FUNCTION fn_body() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW.body IS DISTINCT FROM OLD.body; END $$;"
+    },
+    "fn_touch_orders": {
+      "definition": "CREATE FUNCTION fn_touch_orders() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM fn_touch_orders(); RETURN NEW; END $$;"
+    },
+    "fn_touch_invoices": {
+      "definition": "CREATE FUNCTION fn_touch_invoices() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN PERFORM fn_touch_invoices(); RETURN NEW; END $$;"
+    },
+    "fn_sql_copy": {
+      "definition": "CREATE FUNCTION fn_sql_copy() RETURNS integer LANGUAGE sql AS $$ BEGIN RETURN 1; END $$;"
+    },
+    "fn_plpgsql_copy": {
+      "definition": "CREATE FUNCTION fn_plpgsql_copy() RETURNS integer LANGUAGE plpgsql AS $$ BEGIN RETURN 1; END $$;"
+    },
+    "fn_semi_a": {
+      "definition": "CREATE FUNCTION fn_semi_a() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'a; b'; RETURN NULL; END $$;"
+    },
+    "fn_semi_b": {
+      "definition": "CREATE FUNCTION fn_semi_b() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'c'; RETURN NULL; END $$;"
+    },
+    "fn_audit(integer)": {
+      "definition": "CREATE FUNCTION fn_audit(integer) RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$;"
+    },
+    "fn_audit(text)": {
+      "definition": "CREATE FUNCTION fn_audit(text) RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN NEW; END $$;"
+    },
+    "fn_dollar_a": {
+      "definition": "CREATE FUNCTION fn_dollar_a() RETURNS trigger LANGUAGE plpgsql AS $fn$ BEGIN RETURN $$hello$$; END $fn$;"
+    },
+    "fn_dollar_b": {
+      "definition": "CREATE FUNCTION fn_dollar_b() RETURNS trigger LANGUAGE plpgsql AS $fn$ BEGIN RETURN $$hello$$; END $fn$;"
+    },
+    "fn_nolang_a": {
+      "definition": "CREATE FUNCTION fn_nolang_a() RETURNS void AS $$ BEGIN RETURN 7; END $$;"
+    },
+    "fn_nolang_b": {
+      "definition": "CREATE FUNCTION fn_nolang_b() RETURNS void AS $$ BEGIN RETURN 7; END $$;"
+    },
+    "fn_reject_mutation": {
+      "definition": "CREATE FUNCTION fn_reject_mutation() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION '% is immutable', TG_TABLE_NAME; END $$;"
+    },
+    "fn_flow_if": {
+      "definition": "CREATE FUNCTION fn_flow_if() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN IF NEW.id IS NULL THEN RETURN NULL; END IF; RETURN NEW; END $$;"
+    },
+    "fn_flow_case": {
+      "definition": "CREATE FUNCTION fn_flow_case() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN CASE WHEN NEW.id IS NULL THEN RETURN NULL; ELSE RETURN NEW; END CASE; END $$;"
+    },
+    "fn_bad": {
+      "definition": "CREATE FUNCTION fn_bad() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'unterminated $$;"
+    },
+    "fn_nobody": {
+      "definition": "CREATE FUNCTION fn_nobody() RETURNS void LANGUAGE sql"
+    }
+  }
+}

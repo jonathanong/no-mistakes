@@ -1,9 +1,22 @@
 use super::*;
+use anyhow::Context;
+
+impl SchemaCatalog {
+    pub fn from_json(json: &str) -> anyhow::Result<Self> {
+        let snapshot: super::snapshot::Snapshot =
+            serde_json::from_str(json).context("schema catalog JSON is not valid")?;
+        if snapshot.format_version != 2 {
+            anyhow::bail!("schema catalog JSON must use formatVersion 2");
+        }
+        Self::from_snapshot("schema.json", snapshot)
+    }
+}
 
 mod edges;
 mod errors;
 mod expressions;
 mod findings;
+mod function_body;
 mod model;
 mod order;
 mod parse;

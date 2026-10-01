@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_reject_orders_update": {
+      "definition": "CREATE FUNCTION fn_reject_orders_update() RETURNS trigger LANGUAGE plpgsql AS $$\nBEGIN RAISE EXCEPTION 'orders rows are immutable' USING ERRCODE = '23514'; END $$;"
+    },
+    "fn_reject_invoices_update": {
+      "definition": "CREATE FUNCTION fn_reject_invoices_update() RETURNS trigger LANGUAGE plpgsql AS $$\nBEGIN RAISE EXCEPTION 'invoices rows are immutable'; END $$;"
+    },
+    "fn_reject_refunds_update": {
+      "definition": "CREATE FUNCTION fn_reject_refunds_update() RETURNS trigger LANGUAGE plpgsql AS $$\nBEGIN\n  RAISE EXCEPTION '% rows are immutable', TG_TABLE_NAME USING ERRCODE = 'check_violation';\nEND;\n$$;"
+    }
+  }
+}
