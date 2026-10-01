@@ -161,6 +161,14 @@ fn a_registry_host_v_tag_is_an_image_without_context() {
     ] {
         assert_pins(line, &[expected]);
     }
+    // Docker tags are ASCII: an Arabic-Indic digit is a lookalike, not a major.
+    for line in [
+        "ghcr.io/acme/api:v٢",
+        "expect(image).toBe('ghcr.io/acme/api:v٢')",
+        "image: ghcr.io/acme/api:v٢",
+    ] {
+        assert_pins(line, &[]);
+    }
     // Only a registry host drops the context: the same shape on a slash-only
     // path stays an API or route key (`users/list:v2`) unless `image:` says otherwise.
     assert_pins(
@@ -196,6 +204,8 @@ fn a_registry_host_v_tag_right_after_the_image_key_is_one_pin() {
         "image:ghcr.io/acme/api:v2-beta",
         "image:ghcr.io/acme/api:v",
         "image:https://ghcr.io/acme/api:v2",
+        // Docker tags are ASCII: an Arabic-Indic digit is a lookalike, not a major.
+        "image:ghcr.io/acme/api:v٢",
     ] {
         assert_pins(line, &[]);
     }

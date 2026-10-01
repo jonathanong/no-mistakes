@@ -13,3 +13,5 @@ expect(script).toContain('brew package.uses: homebrew/core/postgresql@18')
 expect(script).toContain('brew $uses: homebrew/core/postgresql@18')
 // Prose before `uses:` does not make a key, so a tap-qualified formula stays one finding.
 expect(output).toContain('Homebrew uses: homebrew/core/postgresql@18')
+// A comma is a key start only inside a flow mapping, so prose with a comma stays one formula.
+expect(output).toContain('Homebrew, uses: homebrew/core/postgresql@18')

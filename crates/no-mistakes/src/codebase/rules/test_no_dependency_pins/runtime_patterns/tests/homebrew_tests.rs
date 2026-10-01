@@ -170,6 +170,16 @@ fn a_uses_value_on_a_homebrew_line_is_an_action_ref_not_a_formula() {
             "steps: [uses: Homebrew/actions/setup-homebrew@4]",
             "actions/setup-homebrew@4",
         ),
+        // A comma starts a key inside a flow mapping or sequence, after any
+        // number of entries, including entries that contain spaces.
+        (
+            "{ name: Setup Homebrew, uses: Homebrew/actions/setup-homebrew@4 }",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "steps: [name: x, with: y, uses: Homebrew/actions/setup-homebrew@4]",
+            "actions/setup-homebrew@4",
+        ),
         // The key may follow a JavaScript escape with no separator before it.
         (
             "'name: Setup\\nuses: Homebrew/actions/setup-homebrew@4'",
@@ -203,6 +213,11 @@ fn a_formula_is_still_a_formula_when_uses_is_not_its_key() {
         "expect(output).toContain('Homebrew uses: homebrew/core/postgresql@18')",
         "brew note: uses: homebrew/core/postgresql@18",
         "brew install foo - uses: homebrew/core/postgresql@18",
+        // A comma is a key start only inside a flow mapping or sequence.
+        "Homebrew, uses: homebrew/core/postgresql@18",
+        "expect(output).toContain('Homebrew, uses: homebrew/core/postgresql@18')",
+        "Homebrew {see}, uses: homebrew/core/postgresql@18",
+        "Homebrew [see note], uses: homebrew/core/postgresql@18",
         "-uses: homebrew/core/postgresql@18",
         "uses homebrew/core/postgresql@18",
         "brew $uses: homebrew/core/postgresql@18",

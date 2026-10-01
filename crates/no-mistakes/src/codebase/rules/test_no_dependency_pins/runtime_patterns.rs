@@ -134,7 +134,7 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
             comp_dot!(),
             "(?:/",
             comp_dot!(),
-            r")*:v\d+)",
+            r")*:v[0-9]+)",
             digest_opt!(),
             ")",
             image_end!()
@@ -174,7 +174,7 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
             comp_dot!(),
             "(?:/",
             comp_dot!(),
-            r")*:v\d+",
+            r")*:v[0-9]+",
             digest_opt!(),
             ")",
             image_end!()

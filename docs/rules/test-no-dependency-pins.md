@@ -127,8 +127,10 @@ only the pin (not the surrounding line), and reports several pins per line.
   A value with no `/` (`Homebrew uses: postgresql@18`) is not an action ref, so it
   stays a formula. So does a formula after prose or a name that only ends in
   `uses` (`Homebrew uses: homebrew/core/postgresql@18`,
+  `Homebrew, uses: homebrew/core/postgresql@18`,
   `brew package.uses: homebrew/core/postgresql@18`, `$uses:`): `uses` is a key
-  only at the start of a line, a string, a flow mapping, or a list item. Not
+  only at the start of a line, a string, a flow mapping or sequence (where a
+  comma also starts a key), or a list item. Not
   `pnpm@12` or `undici@1.0.1` without that context.
 - `versioned runner label`: `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15`,
   `macos-15-intel`, `windows-2025`, and `windows-11-arm`. Not `ubuntu-latest`,
@@ -136,7 +138,7 @@ only the pin (not the surrounding line), and reports several pins per line.
 
 An image is recognized by its grammar, not by a word list. A path under a
 dotted registry host with a version-shaped, bare integer (`ghcr.io/owner/name:9`),
-or major-only `v` (`ghcr.io/owner/name:v2`) tag, or an `owner/name` path with a
+or major-only `v` (`ghcr.io/owner/name:v2`, ASCII digits only) tag, or an `owner/name` path with a
 version-shaped tag (`1.2.3`, `v1.2.3`, `24-slim`, `pg18`), is an image anywhere
 on the line. A bare integer tag on an `owner/name` path (`owner/name:9`), a
 major-only `v` tag on a path without a registry host (`repo:v2`,
