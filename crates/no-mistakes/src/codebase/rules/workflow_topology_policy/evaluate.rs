@@ -1,3 +1,4 @@
+use super::concurrency_compile::CompiledIntent;
 use super::{finding, Options};
 use crate::codebase::rules::RuleFinding;
 use crate::codebase::workflow_topology::model::WorkflowTopology;
@@ -97,7 +98,11 @@ fn sorted<'a>(set: Option<&BTreeSet<&'a str>>) -> Vec<&'a str> {
         .unwrap_or_default()
 }
 
-pub(super) fn lint(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFinding> {
+pub(super) fn lint(
+    topology: &WorkflowTopology,
+    opts: &Options,
+    concurrency: &BTreeMap<String, CompiledIntent>,
+) -> Vec<RuleFinding> {
     let index = Index::new(topology);
     let mut findings = Vec::new();
     if !opts.job_inventory.is_empty() {
@@ -106,6 +111,7 @@ pub(super) fn lint(topology: &WorkflowTopology, opts: &Options) -> Vec<RuleFindi
     findings.extend(job_presence(&index, opts));
     findings.extend(super::evaluate_graph::lint(topology, &index, opts));
     findings.extend(super::evaluate_steps::lint(topology, &index, opts));
+    findings.extend(super::evaluate_concurrency::lint(topology, concurrency));
     findings
 }
 

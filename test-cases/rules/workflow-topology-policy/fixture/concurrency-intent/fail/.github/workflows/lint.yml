@@ -1,0 +1,9 @@
+name: Lint
+on: push
+concurrency:
+  group: "lint-${{ github.ref }}"
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo lint

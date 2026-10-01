@@ -3,8 +3,8 @@
 Declarative GitHub Actions topology assertions over the graph produced by
 `ciTopology()` / `createWorkflowTopologyIndex()`. Configure inventory,
 required and forbidden jobs and `needs` edges, artifact edges, exact
-fan-in, reusable-workflow callers, step order, and unlocked-workflow
-reasons.
+fan-in, reusable-workflow callers, step order, unlocked-workflow
+reasons, and the intended behavior of each `concurrency:` block.
 
 ```yaml
 rules:
@@ -50,8 +50,8 @@ part of the delivery contract and should be checked as a graph.
 ## What it catches/requires
 
 Configured inventory and assertions must match workflow topology: required or
-forbidden edges, exact fan-in, artifacts, callers, step order, and documented
-unlocked workflows.
+forbidden edges, exact fan-in, artifacts, callers, step order, documented
+unlocked workflows, and declared concurrency intent.
 
 ## Options and defaults
 
@@ -68,9 +68,77 @@ All collections default to empty, so omitted assertions impose no requirement:
 - `exactFanIns`: job ID to the complete sorted list of direct upstream jobs.
 - `exactCallerJobs`, `stepOrders`, and `unlockedWorkflowReasons`: reusable
   caller, ordered-step, and documented-unlocked-workflow policies.
+- `concurrencyPolicy`: owner id to the intended pending, cancellation, and
+  scope behavior of that lock. `{}` checks nothing. An owner id is a workflow
+  path or a job id `<path>#<key>`. Quote job ids in YAML, because `#` starts a
+  comment.
 
 Empty maps do not assert that every possible workflow is listed; each supplied
 job or edge is checked and stale required targets are findings.
+`unlockedWorkflowReasons` still documents workflows that have no lock.
+`concurrencyPolicy` checks workflows and jobs that have one. The two options
+are independent.
+
+### `concurrencyPolicy`
+
+Checked only when the map is non-empty. Every workflow or job whose
+`concurrency` is present needs a row, and every row needs an owner that still
+has a lock.
+
+| Field | Values | Meaning |
+| --- | --- | --- |
+| `pending` | `coalesce-latest`, `fifo` | `queue: max` is `fifo`. Any other queue, including the default, is `coalesce-latest`. |
+| `cancellation` | `cancel-running`, `retain-running`, `conditional` | `cancel-in-progress: true` is `cancel-running`, `false` is `retain-running`, and an expression string is `conditional`. |
+| `scope` | non-empty list | `pull-request`, `ref`, `sha`, `run`, `event`, `input-resource`, `fixed-resource`. |
+
+Unknown names, a missing field, an empty `scope`, a duplicate scope entry, or
+`fixed-resource` combined with another scope is a config error:
+`workflow-topology-policy option concurrencyPolicy: ...`.
+
+`cancel-in-progress` expressions must be one complete `${{ ... }}` value after
+trimming. Anything else, such as `github.ref == main`, reports
+`conditional cancel-in-progress expression invalid: <id>: <value>`.
+
+Scope is read from `concurrency.effective.group`. Each `github.*` or `inputs.*`
+reference is classified below. References are de-duplicated and ordered
+`pull-request`, `ref`, `sha`, `run`, `event`, `input-resource`.
+`github.workflow` and `github.run_attempt` are ignored. `fixed-resource` means
+the group has no `github.*` or `inputs.*` reference. Any other reference is
+`unsupported:<reference>` and cannot match a declared scope.
+
+| Scope | References |
+| --- | --- |
+| `pull-request` | `github.event.pull_request.number`, `github.event.workflow_run.pull_requests` |
+| `sha` | `github.sha`, `github.event.pull_request.head.sha`, `github.event.workflow_run.head_sha` |
+| `ref` | `github.ref`, `github.ref_name`, `github.event.workflow_run.head_branch` |
+| `run` | `github.run_id` |
+| `input-resource` | `inputs.*`, `github.event.inputs`, `github.event.inputs.*` |
+| `event` | `github.event_name`, `github.event.action`, `github.event.label.name`, `github.event.issue.number`, `github.event.schedule`, `github.event.workflow_run.event`, `github.event.workflow_run.id`, `github.event.workflow_run.workflow_id` |
+
+The most specific table entry wins, so
+`github.event.workflow_run.head_branch` is `ref` and
+`github.event.workflow_run.head_sha` is `sha`. A reference the table does not
+list, such as `github.actor`, is reported rather than guessed.
+
+```text
+concurrency intent missing: <id>
+concurrency intent stale: <id>
+concurrency pending mismatch: <id>: expected <declared>, got <actual>
+concurrency cancellation mismatch: <id>: expected <declared>, got <actual>
+concurrency scope mismatch: <id>: expected <a, b>, got <c, d>
+conditional cancel-in-progress expression invalid: <id>: <value>
+```
+
+Quote `group` and `cancel-in-progress` values that contain `{`, and quote job-id
+keys. With `cancellation: conditional` and `scope: [pull-request, sha]`
+declared for `.github/workflows/ci.yml`:
+
+```yaml
+concurrency:
+  group: "ci-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}"
+  cancel-in-progress: true
+# concurrency cancellation mismatch: .github/workflows/ci.yml: expected conditional, got cancel-running
+```
 
 ## Valid example
 

@@ -147,6 +147,7 @@ fn reviewed_commands_and_rule_options_stay_accurate() {
                 "`exactCallerJobs`",
                 "`stepOrders`",
                 "`unlockedWorkflowReasons`",
+                "`concurrencyPolicy`",
             ][..],
         ),
     ];

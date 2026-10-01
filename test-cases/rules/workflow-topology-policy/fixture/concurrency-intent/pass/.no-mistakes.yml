@@ -1,0 +1,19 @@
+version: 2
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      concurrencyPolicy:
+        .github/workflows/ci.yml:
+          pending: coalesce-latest
+          cancellation: conditional
+          scope: [pull-request, sha]
+        .github/workflows/deploy.yml:
+          pending: coalesce-latest
+          cancellation: retain-running
+          scope: [fixed-resource]
+        # Job ids contain `#`, which YAML treats as a comment unless the key is quoted.
+        ".github/workflows/release.yml#publish":
+          pending: fifo
+          cancellation: retain-running
+          scope: [run]
