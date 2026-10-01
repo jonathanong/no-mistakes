@@ -37,6 +37,13 @@ pub struct SqlColumnMetadata {
     pub generated_source_columns: Vec<String>,
 }
 
+/// A name introduced by one migration statement, unquoted and schema-unqualified.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlDeclaredIdentifier {
+    pub name: String,
+    pub line: usize,
+}
+
 /// Schema facts for one SQL file read through [`crate::codebase::ts_source::SourceStore`].
 #[derive(Debug, Clone, PartialEq, Eq, Default)]
 pub struct SqlSchemaFileFacts {
@@ -51,6 +58,7 @@ pub struct SqlSchemaFileFacts {
     pub statement_kinds: Vec<SqlStatementKind>,
     pub not_valid_constraints: Vec<SqlNamedConstraint>,
     pub validated_constraints: Vec<SqlNamedConstraint>,
+    pub declared_identifiers: Vec<SqlDeclaredIdentifier>,
 }
 
 /// One key column of a btree index, including opclass and sort options.

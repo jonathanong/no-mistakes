@@ -51,6 +51,7 @@ pub mod postgres_constraint_validate;
 pub mod postgres_duplicate_function_body;
 pub mod postgres_fk_index;
 pub mod postgres_idempotent_insert;
+pub mod postgres_identifier_length;
 pub mod postgres_lock_ordering;
 pub mod postgres_no_add_column;
 pub mod postgres_no_generated_column_writes;

@@ -47,6 +47,9 @@ pub(super) fn run(
         POSTGRES_NO_OFFSET => {
             postgres_no_offset::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_IDENTIFIER_LENGTH => {
+            postgres_identifier_length::check_with_files_and_sources(root, config, files, sources)
+        }
         POSTGRES_COLUMN_NAMING => column_naming(root, config, files, sources, facts),
         POSTGRES_OBJECT_NAMING => object_naming(root, config, files, sources, facts),
         POSTGRES_REQUIRE_FK_ON_DELETE => {
