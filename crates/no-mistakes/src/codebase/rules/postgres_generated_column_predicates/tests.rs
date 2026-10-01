@@ -27,17 +27,10 @@ fn config_yaml(yaml: &str) -> NoMistakesConfig {
 
 const SQL: &str = "sqlInclude: [\"sql/**/*.sql\"]\n";
 
-fn messages(root: &str, yaml: &str) -> Vec<String> {
+fn messages(root: &str, yaml: &str, files: &[&str]) -> Vec<String> {
     let root = fixture(root);
-    let mut files = Vec::new();
-    for entry in std::fs::read_dir(root.join("sql")).unwrap() {
-        let path = entry.unwrap().path();
-        if path.extension().and_then(|ext| ext.to_str()) == Some("sql") {
-            files.push(path);
-        }
-    }
-    files.sort();
-    check_with_files(&root, &config_yaml(yaml), &files)
+    let paths: Vec<PathBuf> = files.iter().map(|file| root.join(file)).collect();
+    check_with_files(&root, &config_yaml(yaml), &paths)
         .unwrap()
         .into_iter()
         .map(|finding| finding.message)
@@ -46,7 +39,17 @@ fn messages(root: &str, yaml: &str) -> Vec<String> {
 
 #[test]
 fn invalid_examples_are_reported() {
-    let body = messages("fail", SQL).join("\n");
+    let body = messages(
+        "fail",
+        SQL,
+        &[
+            "sql/schema.sql",
+            "sql/where.sql",
+            "sql/order.sql",
+            "sql/between.sql",
+        ],
+    )
+    .join("\n");
     assert!(
         body.contains(
             "WHERE filters orders.created_at, which is generated from uuid_extract_timestamp(id)"
@@ -67,13 +70,33 @@ fn invalid_examples_are_reported() {
 
 #[test]
 fn valid_examples_are_quiet() {
-    let body = messages("pass", SQL);
+    let body = messages(
+        "pass",
+        SQL,
+        &[
+            "sql/schema.sql",
+            "sql/order-id.sql",
+            "sql/where-id.sql",
+            "sql/isnull.sql",
+            "sql/trunc.sql",
+            "sql/invoices.sql",
+        ],
+    );
     assert!(body.is_empty(), "{body:?}");
 }
 
 #[test]
 fn stored_columns_are_tracked_and_non_pk_arguments_are_not() {
-    let body = messages("edges", SQL).join("\n");
+    let edges = [
+        "sql/schema.sql",
+        "sql/stored.sql",
+        "sql/join.sql",
+        "sql/note.sql",
+        "sql/ambiguous.sql",
+        "sql/unique.sql",
+        "sql/virtual.sql",
+    ];
+    let body = messages("edges", SQL, &edges).join("\n");
     assert!(body.contains("WHERE filters orders.stored_at"), "{body}");
     assert!(body.contains("WHERE filters orders.virtual_at"), "{body}");
     assert!(
@@ -85,6 +108,7 @@ fn stored_columns_are_tracked_and_non_pk_arguments_are_not() {
     let off = messages(
         "edges",
         "sqlInclude: [\"sql/**/*.sql\"]\nrequireArgumentIsPrimaryKey: false\n",
+        &edges,
     )
     .join("\n");
     assert!(off.contains("note_at"), "{off}");
@@ -92,19 +116,42 @@ fn stored_columns_are_tracked_and_non_pk_arguments_are_not() {
 
 #[test]
 fn each_clause_can_be_switched_off() {
-    let where_only =
-        messages("fail", "sqlInclude: [\"sql/**/*.sql\"]\nclauses: [where]\n").join("\n");
+    let fail = [
+        "sql/schema.sql",
+        "sql/where.sql",
+        "sql/order.sql",
+        "sql/between.sql",
+    ];
+    let where_only = messages(
+        "fail",
+        "sqlInclude: [\"sql/**/*.sql\"]\nclauses: [where]\n",
+        &fail,
+    )
+    .join("\n");
     assert!(where_only.contains("WHERE filters"), "{where_only}");
     assert!(!where_only.contains("ORDER BY"), "{where_only}");
     let order_only = messages(
         "fail",
         "sqlInclude: [\"sql/**/*.sql\"]\nclauses: [order-by]\n",
+        &fail,
     )
     .join("\n");
     assert!(order_only.contains("ORDER BY"), "{order_only}");
     assert!(!order_only.contains("WHERE filters"), "{order_only}");
-    let join_only =
-        messages("edges", "sqlInclude: [\"sql/**/*.sql\"]\nclauses: [join]\n").join("\n");
+    let join_only = messages(
+        "edges",
+        "sqlInclude: [\"sql/**/*.sql\"]\nclauses: [join]\n",
+        &[
+            "sql/schema.sql",
+            "sql/stored.sql",
+            "sql/join.sql",
+            "sql/note.sql",
+            "sql/ambiguous.sql",
+            "sql/unique.sql",
+            "sql/virtual.sql",
+        ],
+    )
+    .join("\n");
     assert!(join_only.contains("JOIN ON"), "{join_only}");
     assert!(!join_only.contains("WHERE filters"), "{join_only}");
 }
@@ -114,6 +161,12 @@ fn stale_extra_generated_columns_are_reported() {
     let body = messages(
         "fail",
         "sqlInclude: [\"sql/**/*.sql\"]\nextraGeneratedColumns:\n  - {table: orders, column: created_at, sourceColumn: id}\n",
+        &[
+            "sql/schema.sql",
+            "sql/where.sql",
+            "sql/order.sql",
+            "sql/between.sql",
+        ],
     )
     .join("\n");
     assert!(
@@ -126,7 +179,13 @@ fn stale_extra_generated_columns_are_reported() {
 
 #[test]
 fn repeated_scans_match() {
-    assert_eq!(messages("fail", SQL), messages("fail", SQL));
+    let fail = [
+        "sql/schema.sql",
+        "sql/where.sql",
+        "sql/order.sql",
+        "sql/between.sql",
+    ];
+    assert_eq!(messages("fail", SQL, &fail), messages("fail", SQL, &fail));
 }
 
 #[test]
