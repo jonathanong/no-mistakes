@@ -133,6 +133,10 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
         "option spelling: key \"acknowledgement\" equals its value",
     );
     expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  ID: id\n",
+        "option spelling: key \"ID\" equals its value",
+    );
+    expect_err(
         "schemaCatalogPath: schema.json\ndoubleUnderscore:\n  allowPattern: '['\n",
         "option doubleUnderscore.allowPattern: invalid regex:",
     );

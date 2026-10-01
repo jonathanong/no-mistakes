@@ -59,6 +59,40 @@ fn table_placeholder_comparison_is_ascii_case_insensitive() {
 }
 
 #[test]
+fn qualified_names_use_the_unqualified_identifier() {
+    let yaml = "\
+schemaCatalogPath: schema.json\n\
+patterns:\n  table: '^[a-z][a-z0-9_]*$'\n  index: '^idx_{table}__[a-z0-9_]+$'\n\
+allow:\n  - {object: 'table:public.order_items', reason: kept}\n";
+    expect(
+        yaml,
+        serde_json::json!({"tables": {"public.order_items": {"indexes": {"idx_order_items__id": {}}}}}),
+        "schema.json: stale postgres-object-naming allow entry: table:public.order_items",
+    );
+}
+
+#[test]
+fn inline_flag_applies_to_both_sides_of_the_table_placeholder() {
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^(?i)idx_{table}__[a-z]+$'\n",
+        index("orders", "idx_orders__ID", false, false),
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '(?i)^idx_{table}__[a-z]+$'\n",
+        index("orders", "IDX_orders__id", false, false),
+    );
+}
+
+#[test]
+fn abbreviation_only_denied_tokens_stay_visible() {
+    expect(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^idx_{table}__[a-z0-9_]+$'\nabbreviations:\n  enabled: true\ndeniedTokens:\n  - {token: cfg, replacement: configuration}\n",
+        index("configuration", "idx_cfg__id", false, false),
+        "schema.json: index:configuration.idx_cfg__id: name uses denied token \"cfg\"; use \"configuration\"",
+    );
+}
+
+#[test]
 fn matching_index_skips_denied_tokens_inside_the_table_middle() {
     let yaml = format!("{INDEX}deniedTokens:\n  - {{token: cfg, replacement: configuration}}\n");
     let messages = super::support::messages(

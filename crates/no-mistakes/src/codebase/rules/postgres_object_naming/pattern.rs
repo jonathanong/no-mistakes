@@ -44,9 +44,10 @@ pub(super) fn compile_pattern(kind: &str, raw: &str) -> Result<CompiledPattern> 
     }
     validate_placeholder(kind, raw, count)?;
     let (pre, post) = raw.split_once("{table}").expect("count checked");
+    let flags = copied_flags(pre);
     let pre = Regex::new(&format!("{pre}$")).map_err(|error| invalid(kind, &error.to_string()))?;
-    let post =
-        Regex::new(&format!("^(?:{post})")).map_err(|error| invalid(kind, &error.to_string()))?;
+    let post = Regex::new(&format!("{flags}^(?:{post})"))
+        .map_err(|error| invalid(kind, &error.to_string()))?;
     Ok(CompiledPattern {
         raw: raw.to_string(),
         kind: PatternBody::Table { pre, post },
@@ -133,13 +134,56 @@ fn validate_placeholder(kind: &str, raw: &str, count: usize) -> Result<()> {
     if count > 1 {
         bail!("postgres-object-naming option patterns.{kind}: {{table}} may appear only once");
     }
-    if !raw.starts_with('^') || !ends_unescaped_dollar(raw) {
+    if !without_leading_flags(raw).starts_with('^') || !ends_unescaped_dollar(raw) {
         bail!("postgres-object-naming option patterns.{kind}: a pattern with {{table}} must start with ^ and end with $");
     }
     if !placeholder_is_plain(raw) {
         bail!("postgres-object-naming option patterns.{kind}: {{table}} must not be inside a group, a character class or an alternation");
     }
     Ok(())
+}
+
+fn without_leading_flags(raw: &str) -> &str {
+    let mut rest = raw;
+    while let Some(next) = strip_flags(rest) {
+        rest = next;
+    }
+    rest
+}
+
+fn copied_flags(pre: &str) -> String {
+    let mut flags = String::new();
+    let rest = take_flags(pre, &mut flags);
+    take_flags(rest.strip_prefix('^').unwrap_or(rest), &mut flags);
+    flags
+}
+
+fn take_flags<'a>(mut rest: &'a str, flags: &mut String) -> &'a str {
+    while let Some(next) = strip_flags(rest) {
+        let taken = rest.len() - next.len();
+        flags.push_str(&rest[..taken]);
+        rest = next;
+    }
+    rest
+}
+
+fn strip_flags(raw: &str) -> Option<&str> {
+    let body = raw.strip_prefix("(?")?;
+    let end = body.find(')')?;
+    flag_body(&body[..end]).then_some(&body[end + 1..])
+}
+
+fn flag_body(body: &str) -> bool {
+    let mut dash = false;
+    let mut flag = false;
+    for character in body.chars() {
+        match character {
+            '-' if !dash => dash = true,
+            'i' | 'm' | 's' | 'u' | 'U' | 'x' | 'R' => flag = true,
+            _ => return false,
+        }
+    }
+    flag
 }
 
 fn invalid(kind: &str, error: &str) -> anyhow::Error {

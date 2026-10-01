@@ -1,6 +1,6 @@
 use super::compile::Compiled;
 use super::policy::{min_words_text, tokens, NameFlags};
-use super::scan_name::{consider, push, NameCheck};
+use super::scan_name::{consider, push, unqualified, NameCheck};
 use crate::codebase::postgres::{CatalogIndexInfo, CatalogObjectRef, CatalogTable, SchemaCatalog};
 use crate::codebase::rules::RuleFinding;
 
@@ -10,28 +10,17 @@ pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> 
         scan_table(table, compiled, path, &mut findings);
     }
     for function in catalog.functions() {
+        let name = unqualified(&function.name);
         let object = CatalogObjectRef::Function(function.key.clone());
         consider(
-            named(
-                "function",
-                &function.name,
-                object.clone(),
-                None,
-                NameFlags::tokens(),
-            ),
+            named("function", &name, object.clone(), None, NameFlags::tokens()),
             compiled,
             path,
             &mut findings,
         );
         if function.returns_trigger {
             consider(
-                named(
-                    "triggerFunction",
-                    &function.name,
-                    object,
-                    None,
-                    NameFlags::default(),
-                ),
+                named("triggerFunction", &name, object, None, NameFlags::default()),
                 compiled,
                 path,
                 &mut findings,
@@ -39,6 +28,7 @@ pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> 
         }
     }
     for view in catalog.views() {
+        let name = unqualified(&view.name);
         let (kind, object) = if view.materialized {
             (
                 "materializedView",
@@ -48,17 +38,18 @@ pub(super) fn scan(catalog: &SchemaCatalog, compiled: &Compiled, path: &str) -> 
             ("view", CatalogObjectRef::View(view.name.clone()))
         };
         consider(
-            named(kind, &view.name, object, None, NameFlags::underscore()),
+            named(kind, &name, object, None, NameFlags::underscore()),
             compiled,
             path,
             &mut findings,
         );
     }
     for enum_type in catalog.enums() {
+        let name = unqualified(&enum_type.name);
         consider(
             named(
                 "enum",
-                &enum_type.name,
+                &name,
                 CatalogObjectRef::Enum(enum_type.name.clone()),
                 None,
                 NameFlags::enum_name(),
@@ -80,10 +71,11 @@ fn scan_table(
     path: &str,
     findings: &mut Vec<RuleFinding>,
 ) {
+    let relation = unqualified(&table.name);
     consider(
         named(
             "table",
-            &table.name,
+            &relation,
             CatalogObjectRef::Table(table.name.clone()),
             None,
             NameFlags::table(),
@@ -93,13 +85,13 @@ fn scan_table(
         findings,
     );
     if let Some(minimum) = compiled.table_min_words {
-        let count = tokens(&table.name).len();
+        let count = tokens(&relation).len();
         if count < minimum {
             push(
                 findings,
                 path,
                 CatalogObjectRef::Table(table.name.clone()),
-                &min_words_text(count, minimum, &table.name),
+                &min_words_text(count, minimum, &relation),
             );
         }
     }
@@ -124,7 +116,7 @@ fn scan_table(
         if index.constraint_backed && !compiled.check_constraint_backed_indexes {
             continue;
         }
-        scan_index(table, index, compiled, path, findings);
+        scan_index(table, &relation, index, compiled, path, findings);
     }
     for trigger in &table.triggers {
         consider(
@@ -135,7 +127,7 @@ fn scan_table(
                     table: table.name.clone(),
                     trigger: trigger.name.clone(),
                 },
-                Some(table.name.as_str()),
+                Some(relation.as_str()),
                 NameFlags::tokens(),
             ),
             compiled,
@@ -147,6 +139,7 @@ fn scan_table(
 
 fn scan_index(
     table: &CatalogTable,
+    relation: &str,
     index: &CatalogIndexInfo,
     compiled: &Compiled,
     path: &str,
@@ -165,7 +158,7 @@ fn scan_index(
                 table: table.name.clone(),
                 index: index.name.clone(),
             },
-            Some(table.name.as_str()),
+            Some(relation),
             NameFlags::tokens(),
         ),
         compiled,

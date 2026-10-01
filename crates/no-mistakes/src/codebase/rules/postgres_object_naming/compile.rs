@@ -115,7 +115,7 @@ fn compile_spelling(spelling: &BTreeMap<String, String>) -> Result<Vec<(String, 
         if key.trim().is_empty() {
             bail!("postgres-object-naming option spelling: empty key");
         }
-        if key == value {
+        if key.eq_ignore_ascii_case(value) {
             bail!("postgres-object-naming option spelling: key \"{key}\" equals its value");
         }
         compiled.push((key.to_ascii_lowercase(), key.clone(), value.clone()));

@@ -73,13 +73,18 @@ are not checked. Tables and partitioned tables use `table`. Columns use
 `column`. A unique index uses `uniqueIndex` when that pattern is set, and
 `index` otherwise. Trigger functions must match `function` and, when set,
 `triggerFunction`. Materialized views use `materializedView` and do not fall
-back to `view`.
+back to `view`. Schema-qualified snapshot keys are checked by their last
+identifier. Finding targets and `allow` entries keep the full snapshot key.
+A leading inline flag such as `(?i)`, including one placed immediately after
+`^`, applies to both sides of `{table}`.
 
-`{table}` stands for the owning table. A matching abbreviation keeps every
-word, in order, with the first letter and at least `minLetters` characters
-taken from the word. The mismatch text suggests one abbreviation by dropping
-later ASCII vowels. Tokens inside a matched `{table}` middle are not checked
-again; the table's own finding covers them.
+`{table}` stands for the unqualified owning table. A matching abbreviation
+keeps every word, in order, with the first letter and at least `minLetters`
+characters taken from the word. The mismatch text suggests one abbreviation
+by dropping later ASCII vowels. Tokens inside a matched `{table}` middle are
+skipped only when that token also appears in the real table name. An
+abbreviation-only token, such as a denied `cfg` standing in for
+`configuration`, is still reported.
 
 Plural checks, when enabled, require the last word to be plural and reject
 other plural words unless they are uncountable. `tableMinWords` counts `_`
@@ -103,7 +108,7 @@ then every `__` is reported. `allow` defaults to `[]`.
 Unknown pattern kinds, invalid regexes, `{table}` outside index, unique index,
 and trigger patterns, `tableMinWords` or `minLetters` below 1, an empty or
 unknown `plural.objects` list, empty irregular keys or values, empty or
-duplicate denied tokens, a spelling key equal to its value, and allow entries
+duplicate denied tokens, a spelling key equal to its value ignoring ASCII case, and allow entries
 with an empty reason, a duplicate object, or an invalid object ref are
 configuration errors.
 
