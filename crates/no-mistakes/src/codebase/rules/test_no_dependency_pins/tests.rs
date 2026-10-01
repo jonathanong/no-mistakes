@@ -193,7 +193,7 @@ fn fail_fixture_reports_each_runtime_pin() {
         (
             "src/homebrew-formula.test.mts",
             "versioned Homebrew formula",
-            10,
+            11,
         ),
         ("src/runner-label.test.mts", "versioned runner label", 9),
     ] {

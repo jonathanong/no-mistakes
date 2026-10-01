@@ -7,12 +7,13 @@ use std::sync::LazyLock;
 /// quoted, or escaped), an optional opening quote, then one or more `owner/`
 /// path components, the shape the exact-action-ref pattern reads. A slashless
 /// value (`uses: postgresql@18`) is not an action ref, so it stays a formula.
-/// The key may follow a JavaScript `\n`/`\r`/`\t` escape, but not a name, path,
-/// or identifier-prefix character (any Unicode word character, `.`, `:`, `/`,
-/// `@`, `$`, `\`, `-`): `package.uses:`, `steps/uses:`, and `$uses:` are not the
-/// `uses:` key.
+/// `uses` is a key only where a key can start: the line start, a JavaScript
+/// `\n`/`\r`/`\t` escape, a flow-mapping `{`, `[`, or `,`, or the opening quote
+/// of a string, then indentation and an optional `- ` list marker. Prose
+/// (`Homebrew uses: homebrew/core/postgresql@18`) and a name that only ends in
+/// `uses` (`package.uses:`, `steps/uses:`, `$uses:`) are not keys.
 static USES_VALUE_PREFIX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?:^|\\[nrt]|[^\w.:/@$\\-])uses\\?["']?\s*:\s*\\?["']?(?:[\w.-]+/)+$"#)
+    Regex::new(r#"(?:^|\\[nrt]|[{\[,"'`])\s*(?:-\s+)?uses\\?["']?\s*:\s*\\?["']?(?:[\w.-]+/)+$"#)
         .expect("uses value prefix regex")
 });
 

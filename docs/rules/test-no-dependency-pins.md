@@ -125,9 +125,11 @@ only the pin (not the surrounding line), and reports several pins per line.
   `actions/setup-homebrew@4` and never the formula `setup-homebrew@4`, however
   the value is quoted or keyed (`uses: '...'`, `"uses": "..."`, `- uses: ...`).
   A value with no `/` (`Homebrew uses: postgresql@18`) is not an action ref, so it
-  stays a formula, and so does a value after a key that only ends in `uses`
-  (`brew package.uses: homebrew/core/postgresql@18`, `$uses:`, `@uses:`).
-  Not `pnpm@12` or `undici@1.0.1` without that context.
+  stays a formula. So does a formula after prose or a name that only ends in
+  `uses` (`Homebrew uses: homebrew/core/postgresql@18`,
+  `brew package.uses: homebrew/core/postgresql@18`, `$uses:`): `uses` is a key
+  only at the start of a line, a string, a flow mapping, or a list item. Not
+  `pnpm@12` or `undici@1.0.1` without that context.
 - `versioned runner label`: `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15`,
   `macos-15-intel`, `windows-2025`, and `windows-11-arm`. Not `ubuntu-latest`,
   `ubuntu-slim`, `macos-latest`, or `windows-1252`.

@@ -139,6 +139,36 @@ fn a_uses_value_on_a_homebrew_line_is_an_action_ref_not_a_formula() {
             "expect(workflow).toContain('uses: Homebrew/actions/setup-homebrew@4')",
             "actions/setup-homebrew@4",
         ),
+        // A key starts at an opening quote (any kind), indentation inside a string,
+        // a flow-mapping opener, or a list marker.
+        (
+            "const workflow = 'uses: Homebrew/actions/setup-homebrew@4'",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "const workflow = \"uses: Homebrew/actions/setup-homebrew@4\"",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "const workflow = `uses: Homebrew/actions/setup-homebrew@4`",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "expect(workflow).toContain('  uses: Homebrew/actions/setup-homebrew@4')",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "{\"uses\": \"Homebrew/actions/setup-homebrew@4\"}",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "with: {uses: Homebrew/actions/setup-homebrew@4}",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "steps: [uses: Homebrew/actions/setup-homebrew@4]",
+            "actions/setup-homebrew@4",
+        ),
         // The key may follow a JavaScript escape with no separator before it.
         (
             "'name: Setup\\nuses: Homebrew/actions/setup-homebrew@4'",
@@ -167,6 +197,12 @@ fn a_formula_is_still_a_formula_when_uses_is_not_its_key() {
         "brew package.uses: homebrew/core/postgresql@18",
         "brew steps/uses: homebrew/core/postgresql@18",
         "brew pre-uses: homebrew/core/postgresql@18",
+        // Prose, not a key: the word before `uses:` is not a key opener.
+        "Homebrew uses: homebrew/core/postgresql@18",
+        "expect(output).toContain('Homebrew uses: homebrew/core/postgresql@18')",
+        "brew note: uses: homebrew/core/postgresql@18",
+        "brew install foo - uses: homebrew/core/postgresql@18",
+        "-uses: homebrew/core/postgresql@18",
         "brew $uses: homebrew/core/postgresql@18",
         "brew @uses: homebrew/core/postgresql@18",
         "brew key:uses: homebrew/core/postgresql@18",
