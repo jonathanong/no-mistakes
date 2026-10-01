@@ -59,6 +59,7 @@ words:
   - invalidators
   - jsonc
   - Laravel
+  - leakproof
   - linuxbrew
   - linecount
   - libuv
