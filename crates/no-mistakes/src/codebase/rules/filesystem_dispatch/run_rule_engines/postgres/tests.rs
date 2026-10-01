@@ -25,3 +25,22 @@ fn missing_facts_use_the_file_checkers() {
         assert!(run(rule_id, Path::new("."), &config, files, &sources, None).is_some());
     }
 }
+
+#[test]
+fn prepared_facts_use_the_fact_checkers() {
+    let sources = Arc::new(SourceStore::new(Arc::new(FileInventory::from_paths(&[]))));
+    let config = NoMistakesConfig::default();
+    let files: &[PathBuf] = &[];
+    let facts = CheckFactMap::default();
+    for rule_id in [NAMING_RULE, COLUMN_NAMING_RULE] {
+        assert!(run(
+            rule_id,
+            Path::new("."),
+            &config,
+            files,
+            &sources,
+            Some(&facts)
+        )
+        .is_some());
+    }
+}

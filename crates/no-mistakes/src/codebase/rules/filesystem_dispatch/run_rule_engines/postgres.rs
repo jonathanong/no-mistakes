@@ -5,6 +5,10 @@ use crate::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod naming;
+
+use naming::{column_naming, object_naming};
+
 pub(super) fn run(
     rule_id: &str,
     root: &Path,
@@ -43,22 +47,8 @@ pub(super) fn run(
         POSTGRES_NO_OFFSET => {
             postgres_no_offset::check_with_files_and_sources(root, config, files, sources)
         }
-        POSTGRES_COLUMN_NAMING => match facts {
-            Some(facts) => postgres_column_naming::check_with_files_sources_and_facts(
-                root, config, files, sources, facts,
-            ),
-            None => {
-                postgres_column_naming::check_with_files_and_sources(root, config, files, sources)
-            }
-        },
-        POSTGRES_OBJECT_NAMING => match facts {
-            Some(facts) => postgres_object_naming::check_with_files_sources_and_facts(
-                root, config, files, sources, facts,
-            ),
-            None => {
-                postgres_object_naming::check_with_files_and_sources(root, config, files, sources)
-            }
-        },
+        POSTGRES_COLUMN_NAMING => column_naming(root, config, files, sources, facts),
+        POSTGRES_OBJECT_NAMING => object_naming(root, config, files, sources, facts),
         POSTGRES_REQUIRE_FK_ON_DELETE => {
             postgres_require_fk_on_delete::check_with_files_and_sources(
                 root, config, files, sources,
