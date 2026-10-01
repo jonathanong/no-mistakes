@@ -9,6 +9,8 @@ struct GroupKey {
     search_path: String,
     security: String,
     null_input: String,
+    volatility: String,
+    return_contract: String,
     kind: &'static str,
     tokens: Vec<String>,
 }
@@ -41,6 +43,8 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
                 search_path: search_path(&outside),
                 security: security_mode(&outside),
                 null_input: function.null_input.clone(),
+                volatility: function.volatility.clone(),
+                return_contract: function.return_contract.clone(),
                 kind,
                 tokens,
             })

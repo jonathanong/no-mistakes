@@ -154,6 +154,8 @@ pub struct CatalogFunction {
     pub body: Option<String>,
     pub body_span: Option<(usize, usize)>,
     pub null_input: String,
+    pub volatility: String,
+    pub return_contract: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

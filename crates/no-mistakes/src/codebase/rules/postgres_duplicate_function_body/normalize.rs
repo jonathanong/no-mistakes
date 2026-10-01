@@ -42,7 +42,7 @@ pub(super) fn normalized_tokens(
             index = next;
             continue;
         }
-        let call = call_name(&tokens, index);
+        let call = call_name(&tokens, index) || named_argument(&tokens, index);
         out.push(render(&tokens[index], call, settings, &mut names));
         index += 1;
     }
@@ -66,6 +66,27 @@ fn call_name(tokens: &[Token], index: usize) -> bool {
 
 fn is_name(token: &Token) -> bool {
     matches!(token, Token::Word(_) | Token::DoubleQuotedString(_))
+}
+
+fn named_argument(tokens: &[Token], index: usize) -> bool {
+    if !is_name(&tokens[index]) {
+        return false;
+    }
+    match tokens.get(index + 1) {
+        Some(Token::RArrow) => true,
+        Some(Token::Assignment) => {
+            tokens
+                .iter()
+                .take(index)
+                .fold(0i32, |depth, token| match token {
+                    Token::LParen => depth + 1,
+                    Token::RParen => depth - 1,
+                    _ => depth,
+                })
+                > 0
+        }
+        _ => false,
+    }
 }
 
 fn consume_raise(tokens: &[Token], start: usize) -> (String, usize) {

@@ -359,6 +359,52 @@ fn a_body_that_repeats_the_language_name_keeps_security_definer() {
 }
 
 #[test]
+fn volatility_return_contract_and_named_arguments_split_copies() {
+    let volatility = messages("schemaCatalogPath: volatility.json\n").join("\n");
+    let immutable = volatility
+        .lines()
+        .find(|line| line.contains("function:fn_immutable:"))
+        .unwrap_or("");
+    assert!(immutable.contains("fn_immutable_copy"), "{volatility}");
+    assert!(!immutable.contains("fn_volatile"), "{volatility}");
+
+    let returns = messages("schemaCatalogPath: returns.json\n").join("\n");
+    let integer = returns
+        .lines()
+        .find(|line| line.contains("function:fn_int:"))
+        .unwrap_or("");
+    assert!(integer.contains("fn_int_copy"), "{returns}");
+    assert!(!integer.contains("fn_bigint"), "{returns}");
+    assert!(!returns.contains("function:fn_bigint:"), "{returns}");
+
+    assert_ne!(
+        tokens("SELECT target(left_value => 1)", true, true, &[]),
+        tokens("SELECT target(right_value => 1)", true, true, &[])
+    );
+    assert_ne!(
+        tokens("SELECT target(left_value := 1)", true, true, &[]),
+        tokens("SELECT target(right_value := 1)", true, true, &[])
+    );
+    let named = messages("schemaCatalogPath: named.json\n").join("\n");
+    let left = named
+        .lines()
+        .find(|line| line.contains("function:fn_left:"))
+        .unwrap_or("");
+    assert!(left.contains("fn_left_copy"), "{named}");
+    assert!(!left.contains("fn_right"), "{named}");
+}
+
+#[test]
+fn escape_strings_and_atomic_language_are_compared() {
+    let escaped = messages("schemaCatalogPath: escape.json\n").join("\n");
+    assert!(escaped.contains("function:fn_escape_a:"), "{escaped}");
+    assert!(escaped.contains("function:fn_escape_b:"));
+    let atomic = messages("schemaCatalogPath: atomic.json\n").join("\n");
+    assert!(atomic.contains("function:fn_atomic_a:"), "{atomic}");
+    assert!(atomic.contains("function:fn_atomic_b:"));
+}
+
+#[test]
 fn strict_functions_are_not_the_same_copy_as_called_on_null() {
     let joined = messages("schemaCatalogPath: strict.json\n").join("\n");
     let strict = joined

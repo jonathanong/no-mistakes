@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_int": {
+      "definition": "CREATE FUNCTION fn_int() RETURNS integer LANGUAGE sql AS $$ SELECT 1 $$"
+    },
+    "fn_int_copy": {
+      "definition": "CREATE FUNCTION fn_int_copy() RETURNS integer LANGUAGE sql AS $$ SELECT 2 $$"
+    },
+    "fn_bigint": {
+      "definition": "CREATE FUNCTION fn_bigint() RETURNS bigint LANGUAGE sql AS $$ SELECT 1 $$"
+    }
+  }
+}

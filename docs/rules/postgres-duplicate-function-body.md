@@ -71,7 +71,10 @@ become stable placeholders, so a consistent rename still matches and a swapped
 use does not. Different `SET search_path` clauses and `SECURITY DEFINER` versus invoker do
 not match. The body is located by its delimiter, so an earlier copy of the
 body text does not hide those clauses. `STRICT` and `RETURNS NULL ON NULL INPUT`
-are a separate group from `CALLED ON NULL INPUT` and the default. Trigger functions, event
+are a separate group from `CALLED ON NULL INPUT` and the default. `IMMUTABLE`,
+`STABLE`, and `VOLATILE` are separate groups, and so are different return
+contracts. Names before `=>` or `:=` stay distinct. `AS E'...'` is a body.
+`LANGUAGE` after `BEGIN ATOMIC` is the function language, not a word in the body. Trigger functions, event
 triggers, and ordinary functions are separate groups. Bare `RAISE;` stays
 distinct from `RAISE EXCEPTION`. A top-level `message` replaces the generated
 finding text.

@@ -8,6 +8,7 @@ mod expressions;
 mod findings;
 mod function;
 mod function_body;
+mod function_clauses;
 mod function_comment;
 mod function_quote;
 mod model;

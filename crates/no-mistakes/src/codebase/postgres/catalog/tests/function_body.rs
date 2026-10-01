@@ -37,6 +37,19 @@ fn language_and_body_ignore_headers_and_keep_atomic_sql() {
     );
     assert!(event.returns_event_trigger);
 
+    let escaped = function_from_definition(
+        "e()",
+        "CREATE FUNCTION e() RETURNS int LANGUAGE sql AS E'SELECT \\'widget\\''",
+    );
+    assert_eq!(escaped.body.as_deref(), Some("SELECT 'widget'"));
+
+    let atomic_language = function_from_definition(
+        "a()",
+        "CREATE FUNCTION a() RETURNS int BEGIN ATOMIC SELECT language FROM settings; SELECT 1; END LANGUAGE sql",
+    );
+    assert_eq!(atomic_language.language.as_deref(), Some("sql"));
+    assert!(atomic_language.body.unwrap().contains("SELECT 1"));
+
     let commented = function_from_definition(
         "h()",
         "CREATE FUNCTION h() RETURNS int LANGUAGE sql AS $$ SELECT 3 $$ -- as $$nope$$",
