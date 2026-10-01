@@ -58,7 +58,7 @@ fn finding(file: &str, line: usize, name: &str, max_bytes: usize) -> RuleFinding
     }
 }
 
-fn truncate_identifier(name: &str, max_bytes: usize) -> String {
+pub(super) fn truncate_identifier(name: &str, max_bytes: usize) -> String {
     if name.len() <= max_bytes {
         return name.to_string();
     }

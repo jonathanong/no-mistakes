@@ -85,6 +85,57 @@ fn procedure_names_drop_the_schema_and_unescape_quotes() {
     assert_eq!(facts.declared_identifiers[0].line, 1);
 }
 
+#[test]
+fn procedure_scan_skips_a_name_it_cannot_read() {
+    let names =
+        super::procedure_names("CREATE PROCEDURE (\nCREATE PROCEDURE \"open\nCREATE PROCEDURE   ");
+    assert!(names.is_empty());
+}
+
+#[test]
+fn unnamed_primary_key_adds_no_constraint_name() {
+    let facts =
+        super::super::extract_migration_facts("CREATE TABLE items (id int, PRIMARY KEY (id));");
+    let names: Vec<_> = facts
+        .declared_identifiers
+        .iter()
+        .map(|identifier| identifier.name.as_str())
+        .collect();
+    assert_eq!(names, ["items", "id"]);
+}
+
+#[test]
+fn column_constraint_name_is_declared() {
+    let facts = super::super::extract_migration_facts(
+        "CREATE TABLE items (id int CONSTRAINT must_be_positive CHECK (id > 0));",
+    );
+    let names: Vec<_> = facts
+        .declared_identifiers
+        .iter()
+        .map(|identifier| identifier.name.as_str())
+        .collect();
+    assert!(names.contains(&"must_be_positive"), "{names:?}");
+}
+
+#[test]
+fn statements_without_declared_names_are_ignored() {
+    let statement = crate::codebase::postgres::parse_postgres_sql("SELECT 1")
+        .unwrap()
+        .into_iter()
+        .next()
+        .unwrap();
+    let mut names = Vec::new();
+    super::push_statement(&mut names, &statement, 1);
+    assert!(names.is_empty());
+}
+
+#[test]
+fn unterminated_comments_and_quotes_do_not_hide_a_later_name() {
+    assert!(super::locate::find_opening("-- comment", &["create", "table"]).is_none());
+    assert!(super::locate::find_opening("/* comment", &["create", "table"]).is_none());
+    assert!(super::locate::find_opening("'unterminated", &["create", "table"]).is_none());
+}
+
 fn name_of(constraint: &TableConstraint) -> Option<&str> {
     constraint_name(constraint).map(|name| name.value.as_str())
 }

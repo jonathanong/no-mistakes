@@ -264,6 +264,11 @@ fn sql_include_can_skip_a_migration_file() {
 }
 
 #[test]
+fn a_short_name_is_left_unchanged() {
+    assert_eq!(scan::truncate_identifier("id", 63), "id");
+}
+
+#[test]
 fn embedded_typescript_sql_is_out_of_scope() {
     assert!(run(
         &unit("ignored.ts"),
