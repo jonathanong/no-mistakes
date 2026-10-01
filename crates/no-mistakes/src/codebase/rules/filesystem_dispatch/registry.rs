@@ -55,6 +55,7 @@ macro_rules! filesystem_rules {
             POSTGRES_DUPLICATE_FUNCTION_BODY => postgres_duplicate_function_body::check_with_files,
             POSTGRES_CONFLICT_ORDERING => postgres_conflict_ordering::check_with_files,
             POSTGRES_NO_ADD_COLUMN => postgres_no_add_column::check_with_files,
+            POSTGRES_FINITE_TEXT_COLUMNS => postgres_finite_text_columns::check_with_files,
             POSTGRES_FK_INDEX => postgres_fk_index::check_with_files,
             POSTGRES_REDUNDANT_INDEX => postgres_redundant_index::check_with_files,
             POSTGRES_NO_GENERATED_COLUMN_WRITES => postgres_no_generated_column_writes::check_with_files,

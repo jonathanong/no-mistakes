@@ -20,6 +20,23 @@ pub(super) fn column_naming(
     }
 }
 
+pub(super) fn finite_text(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    match facts {
+        Some(facts) => postgres_finite_text_columns::check_with_files_sources_and_facts(
+            root, config, files, sources, facts,
+        ),
+        None => {
+            postgres_finite_text_columns::check_with_files_and_sources(root, config, files, sources)
+        }
+    }
+}
+
 pub(super) fn object_naming(
     root: &Path,
     config: &NoMistakesConfig,
