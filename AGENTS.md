@@ -90,8 +90,8 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
 ## Development
 
 - When finding an error, always create a regression test
-- Continuously add test fixtures to `fixtures/**` for cases you find
-- Test fixtures live under `fixtures/<category>/<name>/` at the repo root. Do NOT create fixtures inline in test code (no `fs::create_dir_all` / `fs::write` to build a fixture during a test run). Save the files to `fixtures/*` and reference them via the per-crate / per-package fixture helper.
+- Continuously add test fixtures for cases you find. Which tree (`test-cases/` or `fixtures/`) a suite loads is in [Contributing](README.md#contributing); add to the tree its loader reads.
+- Do NOT create fixtures inline in test code (no `fs::create_dir_all` / `fs::write` to build a fixture during a test run). Save the files to that fixture tree and reference them via the per-crate / per-package fixture helper.
 - After broad mechanical renames, run `rg` for the old names before the first
   compile to catch stragglers.
 - After editing nearby test arguments or fixture paths, re-read the exact diff
