@@ -51,7 +51,8 @@ keywords, `NEW`, `OLD`, words starting with `TG_`, `keepIdentifiers`, and
 operators stay in uppercase where they are words.
 
 The group key is the language, that token sequence, the search path, security,
-parallel mode, null-input behavior, volatility, leakproof, the return contract,
+parallel mode, null-input behavior, volatility, leakproof, `COST`, `ROWS`,
+`SUPPORT`, the return contract,
 whether the body is a string or a parsed `BEGIN ATOMIC` / `RETURN` expression,
 and whether the routine is a trigger, an event trigger, or an ordinary
 function. Every member of a
@@ -89,7 +90,8 @@ DEFINER`. `IF NOT EXISTS` does not hide a `BEGIN ATOMIC` body. A dollar-quoted
 default is not a `search_path` clause. `OUT` and `INOUT` parameters stay in
 the return contract. A kept identifier stays quoted when the function quotes it.
 A `SET` value is not a function mode, and a `returns` call in a parameter
-default is not the return contract. Escape strings decode hex, octal, and
+default is not the return contract. A name inside `RETURNS TABLE (...)` stays
+in the return contract. `OPERATOR(schema.+)` keeps that schema. Escape strings decode hex, octal, and
 Unicode sequences. `AS U&'...'` is a body. A qualified `raise(...)` call stays
 a call. An escape-string default does not hide the real body. Names before `=>` or `:=` stay distinct. `AS E'...'` is a body, and adjacent string literals are one body.
 `LANGUAGE SQL RETURN expression` is a body. `LANGUAGE` after `BEGIN ATOMIC`

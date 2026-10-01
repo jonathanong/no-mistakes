@@ -70,6 +70,68 @@ fn option_boundary(word: &str) -> bool {
     )
 }
 
+pub(super) fn contract_words(clauses: &[String], mut index: usize) -> Vec<String> {
+    let mut contract = Vec::new();
+    let mut depth = 0i32;
+    while index < clauses.len() {
+        let word = clauses[index].as_str();
+        if word == "(" {
+            depth += 1;
+        } else if word == ")" {
+            depth -= 1;
+        } else if depth == 0 && ends_contract(clauses, index) {
+            break;
+        }
+        contract.push(word.to_string());
+        index += 1;
+        if word == ")" && depth <= 0 {
+            break;
+        }
+    }
+    contract
+}
+
+fn ends_contract(clauses: &[String], index: usize) -> bool {
+    super::function_clauses::ends_return(&clauses[index])
+        || (clauses[index] == "not"
+            && clauses
+                .get(index + 1)
+                .is_some_and(|word| word == "leakproof"))
+}
+
+pub(super) fn planner_clauses(clauses: &[String]) -> String {
+    let mut parts = Vec::new();
+    let mut index = 0;
+    let mut depth = 0i32;
+    while index < clauses.len() {
+        if clauses[index] == "(" {
+            depth += 1;
+            index += 1;
+            continue;
+        }
+        if clauses[index] == ")" {
+            depth -= 1;
+            index += 1;
+            continue;
+        }
+        if clauses[index] == "set" {
+            index = after_set_clause(clauses, index);
+            continue;
+        }
+        if depth == 0 && matches!(clauses[index].as_str(), "cost" | "rows" | "support") {
+            if let Some(value) = clauses.get(index + 1) {
+                if value != "(" && value != ")" {
+                    parts.push(format!("{} {value}", clauses[index]));
+                    index += 2;
+                    continue;
+                }
+            }
+        }
+        index += 1;
+    }
+    parts.join(" ")
+}
+
 pub(super) fn output_parameters(words: &[String]) -> String {
     let mut parts = Vec::new();
     let mut index = 0;

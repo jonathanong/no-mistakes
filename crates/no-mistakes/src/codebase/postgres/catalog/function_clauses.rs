@@ -5,6 +5,7 @@ pub(super) struct HeaderModes {
     pub(super) parallel: String,
     pub(super) leakproof: String,
     pub(super) return_contract: String,
+    pub(super) planner: String,
 }
 
 pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> HeaderModes {
@@ -63,6 +64,7 @@ pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> He
         parallel: parallel.to_string(),
         leakproof: leakproof.to_string(),
         return_contract: return_contract(&clauses, &words),
+        planner: super::function_outputs::planner_clauses(&clauses),
     }
 }
 
@@ -75,18 +77,7 @@ fn return_contract(clauses: &[String], words: &[String]) -> String {
                 continue;
             }
             index += 1;
-            let mut contract = Vec::new();
-            while index < clauses.len() && !ends_return(&clauses[index]) {
-                if clauses[index] == "not"
-                    && clauses
-                        .get(index + 1)
-                        .is_some_and(|word| word == "leakproof")
-                {
-                    break;
-                }
-                contract.push(clauses[index].as_str());
-                index += 1;
-            }
+            let contract = super::function_outputs::contract_words(clauses, index);
             let outputs = super::function_outputs::output_parameters(words);
             let joined = contract.join(" ");
             if outputs.is_empty() {
@@ -160,9 +151,9 @@ fn words_outside_literals(text: &str) -> Vec<String> {
         let Some(character) = text[index..].chars().next() else {
             break;
         };
-        if character == ',' {
+        if character == ',' || character == '(' || character == ')' {
             push_word(&mut words, &mut current);
-            words.push(",".to_string());
+            words.push(character.to_string());
         } else if character == '[' || character == ']' {
             push_word(&mut words, &mut current);
             if let Some(last) = words.last_mut() {

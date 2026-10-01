@@ -46,7 +46,9 @@ pub(super) fn normalized_tokens(
             index = next;
             continue;
         }
-        let call = call_name(&tokens, index) || named_argument(&tokens, index);
+        let call = call_name(&tokens, index)
+            || named_argument(&tokens, index)
+            || super::token_class::inside_operator(&tokens, index);
         out.push(render(&tokens[index], call, settings, &mut names));
         index += 1;
     }

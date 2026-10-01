@@ -159,6 +159,7 @@ pub struct CatalogFunction {
     pub leakproof: String,
     pub volatility: String,
     pub return_contract: String,
+    pub planner: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

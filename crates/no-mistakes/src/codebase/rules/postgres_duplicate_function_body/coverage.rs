@@ -85,6 +85,17 @@ fn clause_boundaries_keep_distinct_functions_apart() {
 }
 
 #[test]
+fn table_columns_planner_estimates_and_operators_stay_distinct() {
+    let text = messages("planner.json");
+    assert!(text.contains("fn_table_int"), "{text}");
+    assert!(!text.contains("fn_table_text"), "{text}");
+    assert!(text.contains("fn_rows_one"), "{text}");
+    assert!(!text.contains("fn_rows_many"), "{text}");
+    assert!(text.contains("fn_op_a"), "{text}");
+    assert!(!text.contains("fn_op_b"), "{text}");
+}
+
+#[test]
 fn qualified_raise_calls_stay_calls() {
     let tokens = normalize::normalized_tokens(
         "PERFORM public.raise(send_email())",

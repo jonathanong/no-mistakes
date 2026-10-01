@@ -319,8 +319,9 @@ dollar quote (including an empty `$$` tag), a plain or escape string after
 range is kept with it. Both are absent when no body is found. Null-input
 behavior, security, parallel mode, leakproof, and volatility are stored on
 their own. Those mode words count only after the argument list. The return
-contract keeps the `RETURNS` clause, `OUT` and `INOUT` parameters, and
-Unicode letters in type names. Enum objects
+contract keeps the `RETURNS` clause, including a `RETURNS TABLE` column list,
+`OUT` and `INOUT` parameters, and Unicode letters in type names. `COST`,
+`ROWS`, and `SUPPORT` are stored separately from the body. Enum objects
 carry `values`. View objects carry `materialized`, `definition`, and
 `comment`.
 

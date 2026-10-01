@@ -20,6 +20,7 @@ pub(super) fn function_from_definition(key: &str, definition: &str) -> CatalogFu
         leakproof: modes.leakproof,
         volatility: modes.volatility,
         return_contract: modes.return_contract,
+        planner: modes.planner,
         body_span,
     }
 }

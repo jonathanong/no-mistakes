@@ -1,0 +1,32 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_table_int()": {
+      "definition": "CREATE FUNCTION fn_table_int() RETURNS TABLE(language integer) LANGUAGE sql AS $$ SELECT table_body() $$"
+    },
+    "fn_table_int_copy()": {
+      "definition": "CREATE FUNCTION fn_table_int_copy() RETURNS TABLE(language integer) LANGUAGE sql AS $$ SELECT table_body() $$"
+    },
+    "fn_table_text()": {
+      "definition": "CREATE FUNCTION fn_table_text() RETURNS TABLE(language text) LANGUAGE sql AS $$ SELECT table_body() $$"
+    },
+    "fn_rows_one()": {
+      "definition": "CREATE FUNCTION fn_rows_one() RETURNS SETOF int LANGUAGE sql ROWS 1 AS $$ SELECT rows_body() $$"
+    },
+    "fn_rows_one_copy()": {
+      "definition": "CREATE FUNCTION fn_rows_one_copy() RETURNS SETOF int LANGUAGE sql ROWS 1 AS $$ SELECT rows_body() $$"
+    },
+    "fn_rows_many()": {
+      "definition": "CREATE FUNCTION fn_rows_many() RETURNS SETOF int LANGUAGE sql ROWS 1000 AS $$ SELECT rows_body() $$"
+    },
+    "fn_op_a()": {
+      "definition": "CREATE FUNCTION fn_op_a() RETURNS int LANGUAGE sql AS $$ SELECT 1 OPERATOR(schema_a.+) 2 $$"
+    },
+    "fn_op_a_copy()": {
+      "definition": "CREATE FUNCTION fn_op_a_copy() RETURNS int LANGUAGE sql AS $$ SELECT 1 OPERATOR(schema_a.+) 2 $$"
+    },
+    "fn_op_b()": {
+      "definition": "CREATE FUNCTION fn_op_b() RETURNS int LANGUAGE sql AS $$ SELECT 1 OPERATOR(schema_b.+) 2 $$"
+    }
+  }
+}
