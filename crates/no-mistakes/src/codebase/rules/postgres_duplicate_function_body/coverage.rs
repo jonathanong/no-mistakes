@@ -93,6 +93,10 @@ fn table_columns_planner_estimates_and_operators_stay_distinct() {
     assert!(!text.contains("fn_rows_many"), "{text}");
     assert!(text.contains("fn_op_a"), "{text}");
     assert!(!text.contains("fn_op_b"), "{text}");
+    assert!(text.contains("fn_support_one"), "{text}");
+    assert!(!text.contains("fn_support_two"), "{text}");
+    assert!(text.contains("fn_bang"), "{text}");
+    assert!(!text.contains("fn_cang"), "{text}");
 }
 
 #[test]

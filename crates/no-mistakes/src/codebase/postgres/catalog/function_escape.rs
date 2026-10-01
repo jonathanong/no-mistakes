@@ -67,17 +67,17 @@ fn hex_exact(chars: &mut std::iter::Peekable<Chars<'_>>, digits: usize) -> Optio
     char::from_u32(u32::from_str_radix(&peeked, 16).ok()?)
 }
 
-pub(super) fn unescape_unicode(inner: &str) -> String {
+pub(super) fn unescape_unicode_with_escape(inner: &str, escape: char) -> String {
     let mut out = String::with_capacity(inner.len());
     let mut chars = inner.chars().peekable();
     while let Some(character) = chars.next() {
-        if character != '\\' {
+        if character != escape {
             out.push(character);
             continue;
         }
-        if chars.peek() == Some(&'\\') {
+        if chars.peek() == Some(&escape) {
             chars.next();
-            out.push('\\');
+            out.push(escape);
             continue;
         }
         if chars.peek() == Some(&'+') {
@@ -85,7 +85,7 @@ pub(super) fn unescape_unicode(inner: &str) -> String {
             out.push(hex_exact(&mut chars, 6).unwrap_or('+'));
             continue;
         }
-        out.push(hex_exact(&mut chars, 4).unwrap_or('\\'));
+        out.push(hex_exact(&mut chars, 4).unwrap_or(escape));
     }
     out
 }

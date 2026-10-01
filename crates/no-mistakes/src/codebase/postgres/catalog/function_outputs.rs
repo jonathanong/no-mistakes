@@ -118,7 +118,14 @@ pub(super) fn planner_clauses(clauses: &[String]) -> String {
             index = after_set_clause(clauses, index);
             continue;
         }
-        if depth == 0 && matches!(clauses[index].as_str(), "cost" | "rows" | "support") {
+        if depth == 0 && clauses[index] == "support" {
+            if let Some((clause, next)) = support_name(clauses, index) {
+                parts.push(clause);
+                index = next;
+                continue;
+            }
+        }
+        if depth == 0 && matches!(clauses[index].as_str(), "cost" | "rows") {
             if let Some(value) = clauses.get(index + 1) {
                 if value != "(" && value != ")" {
                     parts.push(format!("{} {value}", clauses[index]));
@@ -130,6 +137,25 @@ pub(super) fn planner_clauses(clauses: &[String]) -> String {
         index += 1;
     }
     parts.join(" ")
+}
+
+fn support_name(clauses: &[String], index: usize) -> Option<(String, usize)> {
+    let first = clauses.get(index + 1)?;
+    if first == "(" || first == ")" {
+        return None;
+    }
+    let mut end = index + 2;
+    if clauses.get(end).is_some_and(|word| name_continuation(word)) {
+        end += 1;
+    }
+    Some((
+        format!("support {}", clauses[index + 1..end].join(".")),
+        end,
+    ))
+}
+
+fn name_continuation(word: &str) -> bool {
+    word != "(" && word != ")" && word != "," && !option_boundary(word)
 }
 
 pub(super) fn output_parameters(words: &[String]) -> String {

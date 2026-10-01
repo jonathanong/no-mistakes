@@ -116,12 +116,29 @@ fn unicode_literal(definition: &str, cursor: usize) -> Option<(String, usize, us
         return None;
     }
     let (raw, start, end) = quoted_sql_body(definition, after + 1)?;
+    let escape = unicode_escape_character(definition, end + 1)?;
     Some((
-        super::function_escape::unescape_unicode(&raw),
+        super::function_escape::unescape_unicode_with_escape(&raw, escape),
         start,
         end,
         end + 1,
     ))
+}
+
+fn unicode_escape_character(definition: &str, cursor: usize) -> Option<char> {
+    let cursor = super::function_body::skip_as_gap(definition, cursor);
+    if !super::function_body::is_word_at(definition, cursor, "uescape") {
+        return Some('\\');
+    }
+    let cursor = super::function_body::skip_as_gap(definition, cursor + "uescape".len());
+    let (value, _, _) = quoted_sql_body(definition, cursor)?;
+    let mut chars = value.chars();
+    let escape = chars.next()?;
+    (chars.next().is_none()
+        && !escape.is_ascii_hexdigit()
+        && !matches!(escape, '+' | '\'' | '"')
+        && !escape.is_whitespace())
+    .then_some(escape)
 }
 
 fn quote_at(definition: &str, cursor: usize) -> Option<(usize, bool)> {

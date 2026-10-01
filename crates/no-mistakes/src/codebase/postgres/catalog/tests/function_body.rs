@@ -440,4 +440,27 @@ fn parameter_names_are_not_modes_and_defensive_clauses_parse() {
         .as_deref(),
         Some("SELECT 1")
     );
+    assert_eq!(
+        function_from_definition(
+            "fn_bang()",
+            "CREATE FUNCTION fn_bang() RETURNS int LANGUAGE sql AS U&'SELECT !0031' UESCAPE '!'",
+        )
+        .body
+        .as_deref(),
+        Some("SELECT 1")
+    );
+    let support_one = function_from_definition(
+        "fn_support_one()",
+        "CREATE FUNCTION fn_support_one() RETURNS int LANGUAGE sql SUPPORT schema_a.one AS $$ SELECT 1 $$",
+    );
+    let support_two = function_from_definition(
+        "fn_support_two()",
+        "CREATE FUNCTION fn_support_two() RETURNS int LANGUAGE sql SUPPORT schema_a.two AS $$ SELECT 1 $$",
+    );
+    assert_ne!(support_one.planner, support_two.planner);
+    assert!(
+        support_one.planner.contains("schema_a.one"),
+        "{}",
+        support_one.planner
+    );
 }
