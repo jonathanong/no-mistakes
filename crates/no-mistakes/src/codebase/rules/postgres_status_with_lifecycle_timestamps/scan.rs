@@ -7,12 +7,13 @@ use crate::codebase::rules::RuleFinding;
 const ADVICE: &str = "keep one source of truth: make status a GENERATED ALWAYS AS (...) STORED column computed from the timestamps, or, if rows return to earlier states, record each attempt or change in a history table";
 
 pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFinding> {
+    if compiled.lifecycle_verbs.is_empty() {
+        return Vec::new();
+    }
     let mut findings = Vec::new();
-    if !compiled.lifecycle_verbs.is_empty() {
-        for table in catalog.tables() {
-            if let Some(finding) = table_finding(&compiled, table) {
-                findings.push(finding);
-            }
+    for table in catalog.tables() {
+        if let Some(finding) = table_finding(&compiled, table) {
+            findings.push(finding);
         }
     }
     compiled

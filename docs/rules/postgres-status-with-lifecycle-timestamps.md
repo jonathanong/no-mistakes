@@ -2,7 +2,8 @@
 
 A stored status column next to lifecycle timestamps records the same fact
 twice. `schemaCatalogPath` and `statusColumns` are required. With those set
-and `lifecycleVerbs` left empty, the rule reports nothing.
+and `lifecycleVerbs` left empty, the rule reports nothing, including no stale
+allow entries.
 
 ```yaml
 rules:

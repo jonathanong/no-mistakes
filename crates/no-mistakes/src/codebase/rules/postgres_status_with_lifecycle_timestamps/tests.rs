@@ -99,7 +99,7 @@ fn defaults_skip_empty_verbs_and_apply_the_minimum() {
         messages("schemaCatalogPath: schema.json\nstatusColumns: [status, state]\n").is_empty()
     );
     assert!(messages(
-        "schemaCatalogPath: schema.json\nstatusColumns: [status, state]\nlifecycleVerbs: []\n"
+        "schemaCatalogPath: schema.json\nstatusColumns: [status, state]\nlifecycleVerbs: []\nallow:\n  - object: table:deliveries\n    reason: unused\n"
     )
     .is_empty());
     let defaults = joined(&format!(
