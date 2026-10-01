@@ -38,7 +38,7 @@ fn reports_each_dead_error_class_with_file_and_line() {
     let out = check(&fixture(), ".no-mistakes.yml", "human");
     let body = text(&out);
     assert_eq!(out.status.code(), Some(1), "{body}");
-    assert_eq!(body.lines().count(), 14, "{body}");
+    assert_eq!(body.lines().count(), 27, "{body}");
     assert!(
         body.contains(
             "unconstructed-error-class src/errors.ts:2 exported error class `UnusedError` \
@@ -48,22 +48,45 @@ fn reports_each_dead_error_class_with_file_and_line() {
     );
     assert!(body.contains("src/guard.ts:3 exported error class `InstanceofOnlyError`"));
     assert!(body.contains("src/hierarchy.ts:11 exported error class `Grandchild`"));
+    // A dead namespace member is reported by its qualified name.
+    assert!(
+        body.contains(
+            "unconstructed-error-class src/namespaced.ts:14 exported error class \
+             `Errors.DeadNamespacedError` is never constructed or subclassed in non-test source"
+        ),
+        "{body}"
+    );
+    assert!(body.contains("src/namespace-lib.ts:31 exported error class `Lib.Deep.DeepDead`"));
+    assert!(
+        body.contains("src/namespaced.ts:57 exported error class `Dotted.Path.DeadDottedError`")
+    );
     for silent in [
-        // The graph cannot see a namespace member built, so a namespaced class
-        // is never reported: dead, dotted, private, and same-named alike.
-        "DeadNamespacedError",
-        "DeadDottedError",
-        "TopicError",
+        // A namespace member built through a reference the graph resolves.
+        "Errors.TopicError",
+        "Errors.Built",
+        "Lib.Used",
+        "Lib.Deep.DeepUsed",
         "CollideBase",
         "CollideChild",
         "CollideGrand",
-        "Qualified",
+        // A member its namespace does not export.
         "Hidden",
-        // A namespaced subclass still credits its top-level base.
+        // A namespace subclass still credits its base.
         "NsBase",
+        "Errors.Base",
+        // A namespace that escapes through an alias, a computed access, a
+        // default export, or a dynamic import is never reported.
+        "AliasedDead",
+        "ComputedDead",
+        "DefaultedDead",
+        "DynamicDead",
+        "ViaAliasDead",
+        "ViaComputedDead",
+        "Standard.Built",
         // `declare` classes, in a `.ts` file or an ambient module block.
         "DeclaredError",
         "ModuleBlockError",
+        "AmbientNamespaceError",
         "ConstructedError",
         "BarrelError",
         "WorkspaceError",

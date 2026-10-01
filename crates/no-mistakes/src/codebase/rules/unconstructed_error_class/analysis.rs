@@ -1,18 +1,16 @@
-use crate::codebase::dependencies::extract::InvocationKind;
+use crate::codebase::dependencies::extract::{CallableId, InvocationKind};
 use crate::codebase::dependencies::graph::{
-    ClassDeclaration, DepGraph, EdgeKind, ResolvedCallSite, ResolvedCallTarget,
+    ClassDeclaration, DepGraph, EdgeKind, NodeId, ResolvedCallSite, ResolvedCallTarget,
 };
 use crate::fx::{fx_map, FxHashMap};
 use std::path::Path;
 
 /// A class identified by declaration file and display scope. Namespaces add no
 /// scope component, so same-named classes in two namespaces of one file share a
-/// key. An `extends` base whose display scope two declarations share resolves to
-/// no `Extends` edge, so a shared key never merges two parents: a subclass of
-/// `B.Base` cannot become an error class through `A.Base`. The key matters only
-/// to `error_flags` and crediting: a namespaced class is never reported, so the
-/// top-level `CollideGrand` of the rule fixture's `collide-grand.ts` is what
-/// pins this.
+/// key. Crediting works by key, so a construction or subclass of one credits
+/// both: the rule stays quiet rather than guess. Ancestry is exact: an `Extends`
+/// edge carries the base's parser id (see [`Base`]), so a subclass of `B.Base`
+/// never becomes an error class through `A.Base`.
 type ClassKey<'a> = (&'a Path, &'a str);
 
 const BUILTIN_ERRORS: &[&str] = &[
@@ -72,28 +70,47 @@ fn constructed_class(site: &ResolvedCallSite) -> Option<ClassKey<'_>> {
     }
 }
 
+/// A repository class an `Extends` edge names: its file and display scope, and
+/// its parser id when the edge carries one.
+struct Base<'a> {
+    key: ClassKey<'a>,
+    id: Option<CallableId>,
+}
+
 /// The repository classes `class` extends, read from its `Extends` edges. A
 /// global or external-package base has no edge. Targets are compared by file
 /// and scope rather than whole `NodeId`, which also carries a parser id that
 /// two declarations sharing a display scope do not share.
-fn bases<'a>(graph: &'a DepGraph, class: &ClassDeclaration) -> impl Iterator<Item = ClassKey<'a>> {
+fn bases<'a>(graph: &'a DepGraph, class: &ClassDeclaration) -> impl Iterator<Item = Base<'a>> {
     graph
         .dependencies_of_node(&class.node())
         .into_iter()
         .flatten()
         .filter(|(_, kind)| *kind == EdgeKind::Extends)
-        .filter_map(|(target, _)| target.as_symbol())
+        .filter_map(|(target, _)| match target {
+            NodeId::Symbol {
+                file,
+                symbol,
+                callable_id,
+            } => Some(Base {
+                key: (file.as_ref(), &**symbol),
+                id: *callable_id,
+            }),
+            _ => None,
+        })
 }
 
 /// Marks every class whose `extends` chain reaches a built-in error. A base
 /// from an external package is not a root: its ancestry is unknown here.
 fn error_flags(graph: &DepGraph, classes: &[ClassDeclaration]) -> Vec<bool> {
     let mut by_key: FxHashMap<ClassKey<'_>, Vec<usize>> = fx_map();
+    let mut by_id: FxHashMap<(&Path, CallableId), usize> = fx_map();
     for (index, class) in classes.iter().enumerate() {
         by_key
             .entry((class.file.as_path(), class.scope.as_str()))
             .or_default()
             .push(index);
+        by_id.insert((class.file.as_path(), class.callable_id), index);
     }
     let mut flags = vec![false; classes.len()];
     let mut changed = true;
@@ -103,11 +120,16 @@ fn error_flags(graph: &DepGraph, classes: &[ClassDeclaration]) -> Vec<bool> {
             if flags[index] {
                 continue;
             }
+            // A base's exact id picks one declaration out of those sharing its
+            // scope. Without a known id, any declaration of the scope will do.
             let error = class.global_base.as_deref().is_some_and(builtin_error)
-                || bases(graph, class).any(|key| {
-                    by_key
-                        .get(&key)
-                        .is_some_and(|parents| parents.iter().any(|parent| flags[*parent]))
+                || bases(graph, class).any(|base| {
+                    match base.id.and_then(|id| by_id.get(&(base.key.0, id))) {
+                        Some(parent) => flags[*parent],
+                        None => by_key
+                            .get(&base.key)
+                            .is_some_and(|parents| parents.iter().any(|parent| flags[*parent])),
+                    }
                 });
             flags[index] = error;
             changed |= error;
@@ -118,10 +140,11 @@ fn error_flags(graph: &DepGraph, classes: &[ClassDeclaration]) -> Vec<bool> {
 
 /// Exported error classes with no construction or subclass in non-test source.
 ///
-/// A class declared in a namespace or module block, or with `declare`, is never
-/// reported: the graph does not resolve a reference to a namespace member such
-/// as `new Errors.TopicError()`, so it cannot see that such a class is built.
-/// It still takes part in `error_flags` and crediting.
+/// A class declared with `declare` or in an ambient block is never reported. A
+/// namespace member is reported like any class, unless its namespace escapes:
+/// when some use of the namespace is not a reference the graph resolves to a
+/// class, whether the member is built is unknowable. Either kind still takes
+/// part in `error_flags` and crediting.
 ///
 /// `is_test` classifies files whose uses do not count, and `is_reported`
 /// selects the declarations the caller wants findings for.
@@ -135,7 +158,9 @@ pub(super) fn unconstructed<'a>(
     for (class, _) in classes
         .iter()
         .zip(error_flags(graph, classes))
-        .filter(|(class, error)| *error && class.exported && !class.namespaced_or_ambient)
+        .filter(|(class, error)| {
+            *error && class.exported && !class.ambient && !class.namespace_escaped
+        })
         .filter(|(class, _)| {
             !is_test(&class.file) && is_reported(&class.file) && !is_declaration_file(&class.file)
         })
@@ -160,8 +185,8 @@ pub(super) fn unconstructed<'a>(
         }
     }
     for class in classes {
-        for key in bases(graph, class) {
-            credit(key, &class.file);
+        for base in bases(graph, class) {
+            credit(base.key, &class.file);
         }
     }
     let mut classes: Vec<_> = unused.into_values().flatten().collect();

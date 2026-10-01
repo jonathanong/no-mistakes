@@ -41,16 +41,46 @@ constructing that class, so static factories such as
 Declaration files (`.d.ts`, `.d.mts`, `.d.cts`) are skipped: they describe code
 outside the analyzed source, so their classes are never reported.
 
-Two more kinds of class are never reported, even in a regular `.ts` file:
+A class declared with `declare` (`export declare class X extends Error {}`) or
+inside an ambient block (`declare namespace N { ... }`, `declare module "x" { ... }`,
+`declare global { ... }`) is never reported, even in a regular `.ts` file: it
+describes code outside the analyzed source like a declaration file does.
 
-- a class declared with `declare` (`export declare class X extends Error {}`) or
-  inside an ambient block (`declare module "x" { ... }`, `declare global { ... }`),
-  which describes code outside the analyzed source like a declaration file does;
-- a class declared inside a TypeScript `namespace` (including dotted names such
-  as `namespace A.B`), because the call graph does not resolve a reference to a
-  namespace member, so `new Errors.TopicError()` and a bare `new TopicError()`
-  inside the namespace never credit the class. Reporting it would call a class
-  dead that something builds.
+A class declared inside a TypeScript `namespace` is reported like any other class
+when nothing constructs or subclasses it. The graph resolves these references to
+the member, nested and dotted namespaces included:
+
+- `new Errors.TopicError()`, where `Errors` is declared in the same file or is an
+  exported namespace imported from another module, directly, under an alias
+  (`import { Errors as E }`), under a renamed export (`export { Errors as
+  default }`), or through barrels and `export *`;
+- a bare `new TopicError()` written inside the body of the namespace that
+  declares `TopicError`, including inside a nested namespace or function there;
+- `new Outer.Inner.DeepError()`, and `new A.B.C()` for `namespace A.B { export
+  class C extends Error {} }`;
+- `class Child extends Errors.Base {}`, which subclasses `Errors.Base`.
+
+The rule stays quiet about every class of a namespace when any use of that
+namespace is not a static member access the graph can follow, because that use
+might build any of its classes:
+
+- an alias or destructuring (`const E = Errors`), passing the namespace or one of
+  its members as a value (`register(Errors)`, `register(Errors.TopicError)`), or
+  a computed access (`new Errors[name]()`);
+- `export default Errors`, `export = Errors`, or `import Alias = Errors.Inner`;
+- a namespace declared in several blocks, or merged with a class, enum or
+  function of the same name;
+- a module imported as a whole (`import * as errors`, `import("./errors")`,
+  `require`, `import x = require()`) when it exports or re-exports the namespace,
+  and `new Errors.Missing()` naming a member the namespace does not declare;
+- a namespace in a global script file, one with no `import` or `export`, which
+  any other file can reach.
+
+Only a class another module can reach is exported: an `export class` inside a
+namespace that its module exports, at every level of nesting. A class without
+`export`, or in a namespace its module does not export, is never reported. Two
+classes that share a name in different namespaces of one file share a scope key,
+so a use of either silences both.
 
 Such a class still counts as an error class and still counts as a use of its
 base, so a subclass elsewhere keeps its base alive.
@@ -111,6 +141,12 @@ declaration record with the class line and export state
 call, so it never shows up in `forbidden-calls` and never counts as a
 construction. The rule follows `extends` edges to a built-in error, and treats a
 subclass in non-test source as a use of its base.
+
+A class inside a `namespace` is resolved the same way, through the namespace's
+member path: the extractor records each namespace member, and each namespace
+used as a value, in the one parse it already does per file. The graph then looks
+`Errors.Inner.X` up in the namespace the name reaches, within the file or through
+imports and re-exports, and credits the class by its exact declaration.
 
 ## Valid example
 
@@ -197,8 +233,9 @@ resolves.
   runs as you delete dead classes.
 - Only exported classes are reported. A non-exported class that nothing uses is
   a plain unused declaration.
-- A dead class inside a `namespace`, or declared with `declare`, is not
-  reported (see [What it catches](#what-it-catches)).
+- A class declared with `declare` or inside an ambient block is not reported, and
+  neither is a namespaced class whose namespace is used in a way the graph cannot
+  follow (see [What it catches](#what-it-catches)).
 - An exported alias of a class is not recognized as an export, so the class is
   not reported. With `const PublicError = InternalError;` and
   `export { PublicError };`, `InternalError` is skipped.

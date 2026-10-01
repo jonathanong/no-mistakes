@@ -76,10 +76,16 @@ fn reject_unseen_source(
 }
 
 fn finding(root: &Path, application: &RuleDef, class: &ClassDeclaration) -> RuleFinding {
-    let name = class
+    let bare = class
         .scope
         .rsplit_once('/')
         .map_or(class.scope.as_str(), |(_, name)| name);
+    // A namespace member is named by its path, as it is written at a use.
+    let qualified = class
+        .namespace
+        .as_ref()
+        .map(|namespace| format!("{namespace}.{bare}"));
+    let name = qualified.as_deref().unwrap_or(bare);
     // An anonymous default export is scoped as `default`, which no class can
     // be named.
     let subject = if name == "default" {
