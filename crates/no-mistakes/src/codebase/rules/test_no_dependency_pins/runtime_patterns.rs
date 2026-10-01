@@ -6,6 +6,10 @@
 //! locations are not read as versions. The scanner resumes each search at the
 //! end of the pin, which lets one separator character close a pin and open the
 //! next.
+//!
+//! Docker references are ASCII-only. Digits are `[0-9]` and word boundaries are
+//! `(?-u:\b)`, never `\d`/`\b`, so a non-ASCII character always ends a reference
+//! (`ghcr.io/acme/api:v2β` reports `ghcr.io/acme/api:v2`) and is never a digit.
 
 /// `(reason, regex, line_context)`: the pattern only runs on lines matching
 /// `line_context` when one is given.
@@ -52,21 +56,35 @@ macro_rules! comp_l {
     };
 }
 
-/// Registry host: a dotted name (with optional port) or `localhost:port`.
-macro_rules! host {
+/// One DNS label (RFC 1123): alphanumeric at both ends, hyphens only inside.
+macro_rules! label {
     () => {
-        r"(?:(?:[a-z0-9-]+\.)+[a-z0-9-]+(?::\d{1,5})?|localhost:\d{1,5})"
+        "[a-z0-9](?:[a-z0-9-]*[a-z0-9])?"
     };
 }
 
-/// Version-shaped tags: dotted numeric, `N-variant`, or `pgN`.
+/// Registry host: a dotted name (with optional port) or `localhost:port`.
+macro_rules! host {
+    () => {
+        concat!(
+            "(?:(?:",
+            label!(),
+            r"\.)+",
+            label!(),
+            "(?::[0-9]{1,5})?|localhost:[0-9]{1,5})"
+        )
+    };
+}
+
+/// Version-shaped tags: dotted numeric, `N-variant`, or `pgN`. Digits are
+/// ASCII, never `\d`, so Unicode digits are not versions.
 macro_rules! tag {
     () => {
         concat!(
-            r"(?:v?\d+(?:\.\d+)+",
+            r"(?:v?[0-9]+(?:\.[0-9]+)+",
             sfx!(),
-            r"|\d+-[A-Za-z][A-Za-z0-9_]*(?:[.-][A-Za-z0-9_]+)*",
-            r"|pg\d+(?:\.\d+)*",
+            r"|[0-9]+-[A-Za-z][A-Za-z0-9_]*(?:[.-][A-Za-z0-9_]+)*",
+            r"|pg[0-9]+(?:\.[0-9]+)*",
             sfx!(),
             ")"
         )
@@ -101,7 +119,7 @@ macro_rules! image_end {
 /// under a registry host needs no context for either `:9` or `:v2`.
 macro_rules! image_context {
     () => {
-        r#"(?:\bimage\\?["']?:\s*(?:\\?["'])?|\bFROM\s+(?:--platform=\S+\s+)?["']?)"#
+        r#"(?:(?-u:\b)image\\?["']?:\s*(?:\\?["'])?|(?-u:\b)FROM\s+(?:--platform=\S+\s+)?["']?)"#
     };
 }
 
@@ -116,7 +134,7 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
             comp!(),
             "(?:/",
             comp!(),
-            r")*:\d+|(?:",
+            r")*:[0-9]+|(?:",
             host!(),
             "/",
             comp_dot!(),
@@ -149,11 +167,11 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
             comp_l!(),
             ":(?:",
             tag!(),
-            r"|v?\d+)|",
+            r"|v?[0-9]+)|",
             comp_l!(),
             "(?:/",
             comp_dot!(),
-            r")+:v?\d+)",
+            r")+:v?[0-9]+)",
             digest_opt!(),
             ")",
             image_end!()
@@ -167,7 +185,7 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
     (
         "container image tag",
         concat!(
-            r#"\bimage\\?["']?:"#,
+            r#"(?-u:\b)image\\?["']?:"#,
             "(?P<pin>",
             host!(),
             "/",
@@ -201,21 +219,21 @@ pub(super) const RUNTIME_PATTERNS: &[RuntimePattern] = &[
         concat!(
             r"(?:^|[^A-Za-z0-9_.-])(?P<pin>(?:node|python|go|java|ruby|dotnet|php|bun|deno)",
             r#"-version(?:\\?["'])?:\s*(?:"#,
-            r#"\\?"\d[A-Za-z0-9._+-]*\\?"|\\?'\d[A-Za-z0-9._+-]*\\?'|\d[A-Za-z0-9._+-]*))"#
+            r#"\\?"[0-9][A-Za-z0-9._+-]*\\?"|\\?'[0-9][A-Za-z0-9._+-]*\\?'|[0-9][A-Za-z0-9._+-]*))"#
         ),
         None,
     ),
     (
         "versioned Homebrew formula",
-        r"(?:^|[^A-Za-z0-9_.@-])(?P<pin>[a-z][a-z0-9+_-]*@\d+(?:\.\d+)?)(?:$|[^A-Za-z0-9_.@-]|\.(?:$|[^0-9A-Za-z_-]))",
-        Some(r"(?i)\b(?:brew|homebrew|linuxbrew)\b|/Cellar/"),
+        r"(?:^|[^A-Za-z0-9_.@-])(?P<pin>[a-z][a-z0-9+_-]*@[0-9]+(?:\.[0-9]+)?)(?:$|[^A-Za-z0-9_.@-]|\.(?:$|[^0-9A-Za-z_-]))",
+        Some(r"(?i)(?-u:\b)(?:brew|homebrew|linuxbrew)(?-u:\b)|/Cellar/"),
     ),
     (
         "versioned runner label",
         concat!(
             left!(),
-            r"(?P<pin>ubuntu-\d{2}\.\d{2}(?:-arm)?|macos-\d{2}(?:-(?:intel|large|xlarge))?",
-            r"|windows-(?:20\d{2}|11-arm)(?:-vs\d{4})?)",
+            r"(?P<pin>ubuntu-[0-9]{2}\.[0-9]{2}(?:-arm)?|macos-[0-9]{2}(?:-(?:intel|large|xlarge))?",
+            r"|windows-(?:20[0-9]{2}|11-arm)(?:-vs[0-9]{4})?)",
             r"(?:$|[^A-Za-z0-9_.-]|\.(?:$|[^0-9A-Za-z_-]))"
         ),
         None,

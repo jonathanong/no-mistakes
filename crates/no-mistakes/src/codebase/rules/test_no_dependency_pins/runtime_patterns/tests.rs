@@ -4,6 +4,7 @@ use super::RUNTIME_PATTERNS;
 use regex::Regex;
 
 mod homebrew_tests;
+mod image_grammar_tests;
 
 fn pins(line: &str) -> Vec<String> {
     let options = compile_options(&Options::default()).unwrap();
