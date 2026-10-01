@@ -17,6 +17,7 @@ pub(super) fn function_from_definition(key: &str, definition: &str) -> CatalogFu
         null_input: modes.null_input,
         security: modes.security,
         parallel: modes.parallel,
+        leakproof: modes.leakproof,
         volatility: modes.volatility,
         return_contract: modes.return_contract,
         body_span,

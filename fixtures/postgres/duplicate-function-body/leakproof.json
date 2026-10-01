@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_plain": {
+      "definition": "CREATE FUNCTION fn_plain() RETURNS int LANGUAGE sql AS $$ SELECT widget $$"
+    },
+    "fn_not": {
+      "definition": "CREATE FUNCTION fn_not() RETURNS int NOT LEAKPROOF LANGUAGE sql AS $$ SELECT gadget $$"
+    },
+    "fn_leak": {
+      "definition": "CREATE FUNCTION fn_leak() RETURNS int LANGUAGE sql LEAKPROOF AS $$ SELECT widget $$"
+    }
+  }
+}

@@ -172,7 +172,11 @@ fn render_name(
         return upper;
     }
     if settings.keep_identifiers.iter().any(|kept| kept == &upper) {
-        return upper;
+        return if quoted {
+            format!("\"{value}\"")
+        } else {
+            upper
+        };
     }
     if settings.normalize_identifiers {
         let key = if quoted {

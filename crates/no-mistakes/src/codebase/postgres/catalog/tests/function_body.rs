@@ -47,10 +47,7 @@ fn language_and_body_ignore_headers_and_keep_atomic_sql() {
         "CREATE FUNCTION esc() RETURNS text LANGUAGE sql AS E'a\\n\\t\\r\\b\\f\\\\\\x''y'",
     );
     assert_eq!(escapes.body.as_deref(), Some("a\n\t\r\u{8}\u{c}\\x'y"));
-    assert_eq!(
-        super::super::function_quote::unescape_escape_string("\\"),
-        "\\"
-    );
+    assert_eq!(super::super::function_escape::unescape("\\"), "\\");
 
     let atomic_language = function_from_definition(
         "a()",
@@ -124,6 +121,35 @@ fn language_and_body_ignore_headers_and_keep_atomic_sql() {
         .parallel,
         "safe"
     );
+    assert_eq!(
+        function_from_definition(
+            "typed()",
+            "CREATE FUNCTION typed() RETURNS \"TypeA\" LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .return_contract,
+        "\"TypeA\""
+    );
+    assert_eq!(
+        function_from_definition(
+            "barrier()",
+            "CREATE FUNCTION barrier() RETURNS int LANGUAGE sql LEAKPROOF AS $$ SELECT 1 $$",
+        )
+        .leakproof,
+        "yes"
+    );
+    assert_eq!(
+        function_from_definition(
+            "open()",
+            "CREATE FUNCTION open() RETURNS int NOT LEAKPROOF LANGUAGE sql AS $$ SELECT 1 $$",
+        )
+        .leakproof,
+        "no"
+    );
+    let coded = function_from_definition(
+        "coded()",
+        "CREATE FUNCTION coded() RETURNS text LANGUAGE sql AS E'\\x31\\101\\u0041\\U00000042\\q'",
+    );
+    assert_eq!(coded.body.as_deref(), Some("1AABq"));
     assert_eq!(
         function_from_definition(
             "plain()",

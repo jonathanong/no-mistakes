@@ -156,6 +156,7 @@ pub struct CatalogFunction {
     pub null_input: String,
     pub security: String,
     pub parallel: String,
+    pub leakproof: String,
     pub volatility: String,
     pub return_contract: String,
 }

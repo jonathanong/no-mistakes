@@ -3,6 +3,7 @@ pub(super) struct HeaderModes {
     pub(super) volatility: String,
     pub(super) security: String,
     pub(super) parallel: String,
+    pub(super) leakproof: String,
     pub(super) return_contract: String,
 }
 
@@ -12,6 +13,7 @@ pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> He
     let mut volatility = "volatile";
     let mut security = "invoker";
     let mut parallel = "unsafe";
+    let mut leakproof = "no";
     for index in 0..words.len() {
         match words[index].as_str() {
             "strict" => null_input = "strict",
@@ -38,12 +40,20 @@ pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> He
         } else if phrase_at(&words, index, &["parallel", "safe"]) {
             parallel = "safe";
         }
+        if words[index] == "leakproof" {
+            leakproof = if index > 0 && words[index - 1] == "not" {
+                "no"
+            } else {
+                "yes"
+            };
+        }
     }
     HeaderModes {
         null_input: null_input.to_string(),
         volatility: volatility.to_string(),
         security: security.to_string(),
         parallel: parallel.to_string(),
+        leakproof: leakproof.to_string(),
         return_contract: return_contract(&words),
     }
 }
@@ -59,6 +69,11 @@ fn return_contract(words: &[String]) -> String {
             index += 1;
             let mut contract = Vec::new();
             while index < words.len() && !ends_return(&words[index]) {
+                if words[index] == "not"
+                    && words.get(index + 1).is_some_and(|word| word == "leakproof")
+                {
+                    break;
+                }
                 contract.push(words[index].as_str());
                 index += 1;
             }
@@ -112,6 +127,13 @@ fn words_outside_literals(text: &str) -> Vec<String> {
     let mut index = 0;
     let mut current = String::new();
     while index < text.len() {
+        if text.as_bytes().get(index) == Some(&b'"') {
+            push_word(&mut words, &mut current);
+            let end = super::function_comment::skip_quoted(text, index, '"');
+            words.push(text[index..end].to_string());
+            index = end;
+            continue;
+        }
         if let Some(end) = super::function_body::skip_noise(text, index) {
             push_word(&mut words, &mut current);
             index = end;

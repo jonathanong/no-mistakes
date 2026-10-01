@@ -92,7 +92,7 @@ fn escape_string_body(definition: &str, quote_at: usize) -> Option<(String, usiz
             }
             let start = quote_at + 1;
             return Some((
-                unescape_escape_string(&definition[start..index]),
+                super::function_escape::unescape(&definition[start..index]),
                 start,
                 index,
             ));
@@ -113,34 +113,6 @@ fn quote_at(definition: &str, cursor: usize) -> Option<(usize, bool)> {
         return Some((cursor + prefix.len_utf8(), true));
     }
     None
-}
-
-pub(super) fn unescape_escape_string(inner: &str) -> String {
-    let mut out = String::with_capacity(inner.len());
-    let mut chars = inner.chars().peekable();
-    while let Some(character) = chars.next() {
-        if character == '\'' && chars.peek() == Some(&'\'') {
-            chars.next();
-            out.push('\'');
-            continue;
-        }
-        if character != '\\' {
-            out.push(character);
-            continue;
-        }
-        match chars.next() {
-            Some('n') => out.push('\n'),
-            Some('t') => out.push('\t'),
-            Some('r') => out.push('\r'),
-            Some('b') => out.push('\u{0008}'),
-            Some('f') => out.push('\u{000c}'),
-            Some('\\') => out.push('\\'),
-            Some('\'') => out.push('\''),
-            Some(other) => out.push(other),
-            None => out.push('\\'),
-        }
-    }
-    out
 }
 
 pub(super) fn opening_dollar(definition: &str, index: usize) -> Option<(String, usize)> {

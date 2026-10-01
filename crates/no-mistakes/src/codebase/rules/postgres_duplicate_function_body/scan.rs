@@ -11,6 +11,7 @@ struct GroupKey {
     parallel: String,
     null_input: String,
     volatility: String,
+    leakproof: String,
     return_contract: String,
     kind: &'static str,
     tokens: Vec<String>,
@@ -46,6 +47,7 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
                 parallel: function.parallel.clone(),
                 null_input: function.null_input.clone(),
                 volatility: function.volatility.clone(),
+                leakproof: function.leakproof.clone(),
                 return_contract: function.return_contract.clone(),
                 kind,
                 tokens,
@@ -117,22 +119,7 @@ fn function_kind(returns_trigger: bool, returns_event_trigger: bool) -> &'static
 }
 
 fn search_path(header: &str) -> String {
-    let lower = header.to_ascii_lowercase();
-    let Some(start) = lower.find("set search_path") else {
-        return String::new();
-    };
-    if start > 0 && header.as_bytes()[start - 1].is_ascii_alphanumeric() {
-        return String::new();
-    }
-    let after = header[start + "set search_path".len()..].trim_start();
-    let lower_after = after.to_ascii_lowercase();
-    let mut end = after.len();
-    for marker in [" language ", " as ", " as$", " begin ", ";"] {
-        if let Some(index) = lower_after.find(marker) {
-            end = end.min(index);
-        }
-    }
-    super::search_path::fold(&after[..end])
+    super::search_path::extract(header)
 }
 
 fn finding_text(count: usize, others: &[&str], kind: &str) -> String {

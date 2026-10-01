@@ -76,7 +76,10 @@ are a separate group from `CALLED ON NULL INPUT` and the default. `IMMUTABLE`,
 contracts, including `integer` versus `integer[]`. `PARALLEL SAFE`,
 `PARALLEL RESTRICTED`, and the default `PARALLEL UNSAFE` are separate groups.
 A dollar-quote tag is empty or an identifier, and `$` inside an identifier is
-not a quote. An escape-string default does not hide the real body. Names before `=>` or `:=` stay distinct. `AS E'...'` is a body, and adjacent string literals are one body.
+not a quote. `SET` and `search_path` may be separated by whitespace or a
+comment. Quoted return types keep their case. `LEAKPROOF` is a separate group
+from the default. A kept identifier stays quoted when the function quotes it.
+Escape strings decode hex, octal, and Unicode sequences. An escape-string default does not hide the real body. Names before `=>` or `:=` stay distinct. `AS E'...'` is a body, and adjacent string literals are one body.
 `LANGUAGE SQL RETURN expression` is a body. `LANGUAGE` after `BEGIN ATOMIC`
 is the function language, not a word in the body. A comment or literal that
 says `SECURITY DEFINER` does not make the function a definer. Quoted

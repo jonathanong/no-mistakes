@@ -451,6 +451,20 @@ fn security_definer_is_not_the_same_copy_as_invoker() {
 }
 
 #[test]
+fn header_details_keep_distinct_functions_apart() {
+    let paths = messages("schemaCatalogPath: newline-path.json\n").join("\n");
+    assert!(paths.contains("function:fn_tenant_a:"), "{paths}");
+    assert!(!paths.contains("function:fn_tenant_b:"));
+    assert!(messages("schemaCatalogPath: quoted-return.json\n").is_empty());
+    assert!(messages("schemaCatalogPath: hex-escape.json\n").is_empty());
+    let kept = messages("schemaCatalogPath: kept-name.json\nkeepIdentifiers:\n  - MixedCase\n");
+    assert!(kept.is_empty(), "{kept:?}");
+    let leak = messages("schemaCatalogPath: leakproof.json\n").join("\n");
+    assert!(leak.contains("function:fn_plain:"), "{leak}");
+    assert!(!leak.contains("function:fn_leak:"));
+}
+
+#[test]
 fn array_parallel_and_escape_defaults_stay_apart() {
     let arrays = messages("schemaCatalogPath: arrays.json\n").join("\n");
     assert!(arrays.contains("function:fn_int:"), "{arrays}");
