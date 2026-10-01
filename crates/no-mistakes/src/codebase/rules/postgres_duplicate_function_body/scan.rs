@@ -85,7 +85,7 @@ fn other_names(members: &[String], index: usize) -> Vec<&str> {
 
 fn security_mode(definition: &str, body: Option<&str>) -> String {
     let header = header_before_body(definition, body);
-    if phrase(&header, "security", "definer") {
+    if phrase(header, "security", "definer") {
         "definer".to_string()
     } else {
         "invoker".to_string()
