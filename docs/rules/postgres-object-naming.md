@@ -98,7 +98,8 @@ pattern is omitted.
 ## Options and defaults
 
 `schemaCatalogPath` is required. `patterns.<kind>` defaults to unset.
-`tableMinWords` defaults to unset. `checkConstraintBackedIndexes` defaults to
+`tableMinWords` defaults to unset and, when set, must be from 1 to 32.
+`checkConstraintBackedIndexes` defaults to
 `false`. `abbreviations.enabled` defaults to `false`. `abbreviations.minLetters`
 defaults to `3`. `plural.enabled` defaults to `false`. `plural.objects`
 defaults to `[table]`. `plural.irregularPlurals` defaults to `{}`.
@@ -111,9 +112,10 @@ then every `__` is reported. `allow` defaults to `[]`. `include`, `exclude`, and
 the `file: object:` locator.
 
 Unknown pattern kinds, invalid regexes, `{table}` outside index, unique index,
-and trigger patterns, `tableMinWords` or `minLetters` below 1, an empty or
+and trigger patterns, `tableMinWords` outside 1 to 32, `minLetters` below 1, an empty or
 unknown `plural.objects` list, empty irregular keys or values, an irregular
-plural equal to its singular form ignoring ASCII case, empty or duplicate
+plural equal to its singular form ignoring ASCII case, a multi-word irregular
+plural, duplicate irregular keys ignoring ASCII case, empty or duplicate
 denied tokens, a denied-token replacement equal to its token ignoring ASCII
 case, a spelling key equal to its value ignoring ASCII case, duplicate
 spelling keys ignoring ASCII case, and allow entries

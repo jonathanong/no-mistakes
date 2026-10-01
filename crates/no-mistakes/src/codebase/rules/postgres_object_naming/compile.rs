@@ -35,7 +35,10 @@ pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Comp
         Some(value) if value < 1 => {
             bail!("postgres-object-naming option tableMinWords: must be at least 1")
         }
-        Some(value) => Some(usize::try_from(value).unwrap_or(usize::MAX)),
+        Some(value) if value > 32 => {
+            bail!("postgres-object-naming option tableMinWords: must be at most 32")
+        }
+        Some(value) => Some(usize::try_from(value).unwrap_or(1)),
         None => None,
     };
     if options.abbreviations.min_letters < 1 {
@@ -65,6 +68,7 @@ fn compile_plural(options: &Options) -> Result<Option<PluralPolicy>> {
             bail!("postgres-object-naming option plural.objects: unknown value {object}");
         }
     }
+    let mut irregular_keys = BTreeSet::new();
     for (key, value) in &options.plural.irregular_plurals {
         if key.trim().is_empty() {
             bail!("postgres-object-naming option plural.irregularPlurals: empty key");
@@ -76,6 +80,15 @@ fn compile_plural(options: &Options) -> Result<Option<PluralPolicy>> {
             bail!(
                 "postgres-object-naming option plural.irregularPlurals: key \"{key}\" equals its value; use uncountable"
             );
+        }
+        let parts = super::policy::tokens(value);
+        if parts.len() != 1 || parts[0].text != *value {
+            bail!(
+                "postgres-object-naming option plural.irregularPlurals: value \"{value}\" must be a single word"
+            );
+        }
+        if !irregular_keys.insert(key.to_ascii_lowercase()) {
+            bail!("postgres-object-naming option plural.irregularPlurals: duplicate key {key}");
         }
     }
     let mut ignore = Vec::new();

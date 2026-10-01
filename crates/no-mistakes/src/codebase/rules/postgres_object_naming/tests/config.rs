@@ -89,6 +89,10 @@ fn numeric_and_plural_options_fail_closed() {
         "option tableMinWords: must be at least 1",
     );
     expect_err(
+        "schemaCatalogPath: schema.json\ntableMinWords: 33\n",
+        "option tableMinWords: must be at most 32",
+    );
+    expect_err(
         "schemaCatalogPath: schema.json\nabbreviations:\n  minLetters: 0\n",
         "option abbreviations.minLetters: must be at least 1",
     );
@@ -151,6 +155,14 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
     expect_err(
         "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {species: Species}\n",
         "option plural.irregularPlurals: key \"species\" equals its value; use uncountable",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {Person: people, person: persons}\n",
+        "option plural.irregularPlurals: duplicate key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {person: people_group}\n",
+        "option plural.irregularPlurals: value \"people_group\" must be a single word",
     );
     expect_err(
         "schemaCatalogPath: schema.json\npatterns:\n  index: '(?q)^idx_{table}__$'\n",

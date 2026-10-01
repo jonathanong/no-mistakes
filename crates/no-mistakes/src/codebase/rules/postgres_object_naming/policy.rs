@@ -139,7 +139,8 @@ pub(super) fn spelling_text(token: &str, replacement: &str) -> String {
 pub(super) fn min_words_text(count: usize, minimum: usize, name: &str) -> String {
     let word = if count == 1 { "word" } else { "words" };
     let mut example = String::new();
-    for index in 0..minimum.saturating_sub(count) {
+    let extra = minimum.saturating_sub(count).min(32);
+    for index in 0..extra {
         if index > 0 {
             example.push('_');
         }
