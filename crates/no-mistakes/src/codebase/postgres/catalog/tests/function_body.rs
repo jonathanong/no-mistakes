@@ -42,6 +42,15 @@ fn language_and_body_ignore_headers_and_keep_atomic_sql() {
         "CREATE FUNCTION e() RETURNS int LANGUAGE sql AS E'SELECT \\'widget\\''",
     );
     assert_eq!(escaped.body.as_deref(), Some("SELECT 'widget'"));
+    let escapes = function_from_definition(
+        "esc()",
+        "CREATE FUNCTION esc() RETURNS text LANGUAGE sql AS E'a\\n\\t\\r\\b\\f\\\\\\x''y'",
+    );
+    assert_eq!(escapes.body.as_deref(), Some("a\n\t\r\u{8}\u{c}\\x'y"));
+    assert_eq!(
+        super::super::function_quote::unescape_escape_string("\\"),
+        "\\"
+    );
 
     let atomic_language = function_from_definition(
         "a()",

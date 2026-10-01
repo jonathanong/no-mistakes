@@ -115,7 +115,7 @@ fn quote_at(definition: &str, cursor: usize) -> Option<(usize, bool)> {
     None
 }
 
-fn unescape_escape_string(inner: &str) -> String {
+pub(super) fn unescape_escape_string(inner: &str) -> String {
     let mut out = String::with_capacity(inner.len());
     let mut chars = inner.chars().peekable();
     while let Some(character) = chars.next() {
