@@ -47,6 +47,7 @@ pub mod pnpm_release_age_policy;
 pub mod postgres_column_requires_trigger;
 pub mod postgres_conflict_ordering;
 pub mod postgres_constraint_validate;
+pub mod postgres_duplicate_function_body;
 pub mod postgres_fk_index;
 pub mod postgres_idempotent_insert;
 pub mod postgres_lock_ordering;

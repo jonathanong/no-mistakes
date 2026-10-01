@@ -16,6 +16,7 @@ fn write_config(dir: &std::path::Path, rules: &[&str]) -> std::path::PathBuf {
             } else if *id == POSTGRES_CONFLICT_ORDERING
                 || *id == POSTGRES_COLUMN_REQUIRES_TRIGGER
                 || *id == POSTGRES_REQUIRED_COMMENTS
+                || *id == POSTGRES_DUPLICATE_FUNCTION_BODY
             {
                 format!(
                     "  - rule: {id}\n    scope: repository\n    options:\n      schemaCatalogPath: schema.json\n"
