@@ -41,6 +41,12 @@
         }
       }
     },
+    "bare": {
+      "relationKind": "partitioned table",
+      "columns": {
+        "id": { "dataType": "integer", "ordinalPosition": 1 }
+      }
+    },
     "accounts": {
       "columns": {
         "id": {

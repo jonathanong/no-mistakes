@@ -83,18 +83,13 @@ pub(super) fn partition_columns(
     let Some(table) = catalog.relation(&relation.table) else {
         return Vec::new();
     };
-    if table.relation_kind != RelationKind::PartitionedTable || has_expression(&table) {
+    if table.relation_kind != RelationKind::PartitionedTable || has_expression(table) {
         return Vec::new();
     }
     let Some(key) = &table.partition_key else {
         return Vec::new();
     };
-    key.elements
-        .iter()
-        .filter_map(|element| match element {
-            PartitionKeyElement::Column(column) => Some(column.as_str()),
-            PartitionKeyElement::Expression(_) => None,
-        })
+    key.elements.iter().filter_map(column_element)
         .filter(|required| !columns.iter().any(|column| column.eq_ignore_ascii_case(required)))
         .map(|required| {
             check::sql_finding(
@@ -129,6 +124,13 @@ fn allowed(opts: &CompiledOptions, target: &str) -> bool {
     opts.allow.iter().any(|entry| entry.object == target)
 }
 
+fn column_element(element: &PartitionKeyElement) -> Option<&str> {
+    match element {
+        PartitionKeyElement::Column(column) => Some(column.as_str()),
+        PartitionKeyElement::Expression(_) => None,
+    }
+}
+
 fn has_expression(table: &CatalogTable) -> bool {
     table.partition_key.as_ref().is_some_and(|key| {
         key.elements
@@ -149,5 +151,53 @@ fn catalog_finding(path: &str, object: &str, text: &str) -> RuleFinding {
         message: format!("{path}: {object}: {text}"),
         import: None,
         target: Some(object.to_string()),
+    }
+}
+
+#[cfg(test)]
+mod element_tests {
+    use super::column_element;
+    use crate::codebase::postgres::PartitionKeyElement;
+
+    #[test]
+    fn expression_partition_elements_are_not_required_columns() {
+        assert_eq!(
+            column_element(&PartitionKeyElement::Expression(
+                "date_trunc('day', created_at)".into()
+            )),
+            None
+        );
+        assert_eq!(
+            column_element(&PartitionKeyElement::Column("account_id".into())),
+            Some("account_id")
+        );
+    }
+
+    #[test]
+    fn a_missing_catalog_adds_no_partition_findings() {
+        use crate::codebase::postgres::SqlRelationPredicateFact;
+        use std::collections::BTreeSet;
+
+        let opts = super::super::super::compile_options(
+            &serde_yaml::from_str("partitionKeys: require\nschemaCatalogPath: schema.json\n")
+                .unwrap(),
+        )
+        .unwrap();
+        let relation = SqlRelationPredicateFact {
+            table: "events".into(),
+            alias: None,
+            constrained_columns: Vec::new(),
+            unqualified_columns: Vec::new(),
+            line: 1,
+        };
+        assert!(super::partition_columns(
+            "query.sql",
+            &relation,
+            "SELECT",
+            &opts,
+            None,
+            &BTreeSet::new(),
+        )
+        .is_empty());
     }
 }

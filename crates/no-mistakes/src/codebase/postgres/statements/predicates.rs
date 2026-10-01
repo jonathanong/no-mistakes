@@ -1,6 +1,8 @@
 mod constrain;
 
 #[cfg(test)]
+mod coverage_tests;
+#[cfg(test)]
 mod tests;
 
 use super::SqlRelationPredicateFact;

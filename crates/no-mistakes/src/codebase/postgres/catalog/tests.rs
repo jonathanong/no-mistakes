@@ -20,6 +20,7 @@ mod function_body;
 mod model;
 mod order;
 mod parse;
+mod relation;
 mod resolve;
 
 fn load_fixture(name: &str) -> Result<SchemaCatalog, String> {

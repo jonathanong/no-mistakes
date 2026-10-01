@@ -30,9 +30,6 @@ pub(super) fn collect(
             push_group(sql, &tables, delete.selection.as_ref(), deletes);
             walk_side_queries(sql, &tables, delete.selection.as_ref(), selects);
         }
-        Statement::Explain { statement, .. } => {
-            collect(sql, statement, updates, deletes, selects);
-        }
         _ => {}
     }
 }
