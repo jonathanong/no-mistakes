@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 mod compile;
+mod compile_spelling;
 mod expand;
 mod name_flags;
 mod pattern;

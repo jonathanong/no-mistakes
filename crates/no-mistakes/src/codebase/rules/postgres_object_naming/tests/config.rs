@@ -153,6 +153,10 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
         "option deniedTokens: empty replacement",
     );
     expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: cfg, replacement: tmp}\n  - {token: tmp, replacement: temporary}\n",
+        "option deniedTokens: replacement \"tmp\" is also a token",
+    );
+    expect_err(
         "schemaCatalogPath: schema.json\nspelling:\n  '': acknowledgment\n",
         "option spelling: empty key",
     );
@@ -195,6 +199,10 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
     expect_err(
         "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {person: people, people: peoples}\n",
         "option plural.irregularPlurals: value \"people\" is also a key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  uncountable: [data]\n  irregularPlurals: {data: datas}\n",
+        "option plural.irregularPlurals: key \"data\" is uncountable",
     );
     expect_err(
         "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {person: people_group}\n",

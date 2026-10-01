@@ -124,11 +124,11 @@ and trigger patterns, `tableMinWords` outside 1 to 32, `minLetters` below 1, an 
 unknown `plural.objects` list, empty irregular keys or values, an irregular
 plural equal to its singular form ignoring ASCII case, a multi-word irregular
 plural, duplicate irregular keys ignoring ASCII case, an irregular value
-that is also a key, an irregular key that
+that is also a key, an irregular singular that is also uncountable, an irregular key that
 is more than one word, a multi-word `uncountable` or `nonPluralTokens` entry,
 empty or duplicate
 denied tokens, a denied token that is more than one word, an empty
-denied-token replacement, a denied-token replacement equal to its token
+denied-token replacement, a denied-token replacement that is also a denied token, a denied-token replacement equal to its token
 ignoring ASCII case, a spelling key equal to its value ignoring ASCII case,
 an empty spelling value, a spelling value that is also a key,
 a spelling key that is more than one word, duplicate

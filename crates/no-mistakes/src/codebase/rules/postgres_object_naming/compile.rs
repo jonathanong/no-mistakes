@@ -52,7 +52,7 @@ pub(super) fn compile(options: &Options, message: Option<String>) -> Result<Comp
         min_letters: usize::try_from(options.abbreviations.min_letters).unwrap_or(1),
         plural: compile_plural(options)?,
         denied: compile_denied(&options.denied_tokens)?,
-        spelling: compile_spelling(&options.spelling)?,
+        spelling: super::compile_spelling::compile(&options.spelling)?,
         double_underscore: compile_underscore(&options.double_underscore)?,
         allow: AllowList::compile(super::RULE_ID, options.allow.clone())?,
         message,
@@ -89,6 +89,14 @@ fn compile_plural(options: &Options) -> Result<Option<PluralPolicy>> {
         }
         if !irregular_keys.insert(key.to_ascii_lowercase()) {
             bail!("postgres-object-naming option plural.irregularPlurals: duplicate key {key}");
+        }
+        if options
+            .plural
+            .uncountable
+            .iter()
+            .any(|word| word.eq_ignore_ascii_case(key))
+        {
+            bail!("postgres-object-naming option plural.irregularPlurals: key \"{key}\" is uncountable");
         }
     }
     for value in options.plural.irregular_plurals.values() {
@@ -149,35 +157,11 @@ fn compile_denied(tokens: &[super::DeniedToken]) -> Result<Vec<(String, String)>
         }
         compiled.push((token.token.clone(), token.replacement.clone()));
     }
-    Ok(compiled)
-}
-
-fn compile_spelling(spelling: &BTreeMap<String, String>) -> Result<Vec<(String, String, String)>> {
-    let mut seen = BTreeSet::new();
-    let mut compiled = Vec::new();
-    for (key, value) in spelling {
-        if key.trim().is_empty() {
-            bail!("postgres-object-naming option spelling: empty key");
-        }
-        if !super::policy::is_single_word(key) {
-            bail!("postgres-object-naming option spelling: key \"{key}\" must be a single word");
-        }
-        if value.trim().is_empty() {
-            bail!("postgres-object-naming option spelling: empty value");
-        }
-        if key.eq_ignore_ascii_case(value) {
-            bail!("postgres-object-naming option spelling: key \"{key}\" equals its value");
-        }
-        if !seen.insert(key.to_ascii_lowercase()) {
-            bail!("postgres-object-naming option spelling: duplicate key {key}");
-        }
-        if spelling
-            .keys()
-            .any(|other| other.eq_ignore_ascii_case(value))
-        {
-            bail!("postgres-object-naming option spelling: value \"{value}\" is also a key");
-        }
-        compiled.push((key.to_ascii_lowercase(), key.clone(), value.clone()));
+    if let Some(replacement) = compiled.iter().find_map(|(_, replacement)| {
+        seen.contains(&replacement.to_ascii_lowercase())
+            .then_some(replacement.as_str())
+    }) {
+        bail!("postgres-object-naming option deniedTokens: replacement \"{replacement}\" is also a token");
     }
     Ok(compiled)
 }
