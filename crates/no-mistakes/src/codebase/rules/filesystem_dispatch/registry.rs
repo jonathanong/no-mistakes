@@ -52,6 +52,7 @@ macro_rules! filesystem_rules {
             POSTGRES_CONSTRAINT_VALIDATE => postgres_constraint_validate::check_with_files,
             POSTGRES_COLUMN_REQUIRES_TRIGGER => postgres_column_requires_trigger::check_with_files,
             POSTGRES_REQUIRED_COMMENTS => postgres_required_comments::check_with_files,
+            POSTGRES_DUPLICATE_FUNCTION_BODY => postgres_duplicate_function_body::check_with_files,
             POSTGRES_CONFLICT_ORDERING => postgres_conflict_ordering::check_with_files,
             POSTGRES_NO_ADD_COLUMN => postgres_no_add_column::check_with_files,
             POSTGRES_FK_INDEX => postgres_fk_index::check_with_files,

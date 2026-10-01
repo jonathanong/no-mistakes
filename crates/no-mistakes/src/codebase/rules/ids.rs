@@ -40,6 +40,7 @@ pub use super::pnpm_release_age_policy::RULE_ID as PNPM_RELEASE_AGE_POLICY;
 pub use super::postgres_column_requires_trigger::RULE_ID as POSTGRES_COLUMN_REQUIRES_TRIGGER;
 pub use super::postgres_conflict_ordering::RULE_ID as POSTGRES_CONFLICT_ORDERING;
 pub use super::postgres_constraint_validate::RULE_ID as POSTGRES_CONSTRAINT_VALIDATE;
+pub use super::postgres_duplicate_function_body::RULE_ID as POSTGRES_DUPLICATE_FUNCTION_BODY;
 pub use super::postgres_fk_index::RULE_ID as POSTGRES_FK_INDEX;
 pub use super::postgres_idempotent_insert::RULE_ID as POSTGRES_IDEMPOTENT_INSERT;
 pub use super::postgres_lock_ordering::RULE_ID as POSTGRES_LOCK_ORDERING;

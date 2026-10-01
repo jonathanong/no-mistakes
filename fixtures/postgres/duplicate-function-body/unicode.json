@@ -1,0 +1,23 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_alpha()": {
+      "definition": "CREATE FUNCTION fn_alpha() RETURNS α LANGUAGE sql AS $$ SELECT widget $$"
+    },
+    "fn_alpha_copy()": {
+      "definition": "CREATE FUNCTION fn_alpha_copy() RETURNS α LANGUAGE sql AS $$ SELECT gadget $$"
+    },
+    "fn_beta()": {
+      "definition": "CREATE FUNCTION fn_beta() RETURNS β LANGUAGE sql AS $$ SELECT widget $$"
+    },
+    "fn_cafe()": {
+      "definition": "CREATE FUNCTION fn_cafe() RETURNS int LANGUAGE sql SET search_path TO café AS $$ SELECT widget $$"
+    },
+    "fn_cafe_copy()": {
+      "definition": "CREATE FUNCTION fn_cafe_copy() RETURNS int LANGUAGE sql SET search_path TO café AS $$ SELECT gadget $$"
+    },
+    "fn_public()": {
+      "definition": "CREATE FUNCTION fn_public() RETURNS int LANGUAGE sql SET search_path TO public AS $$ SELECT widget $$"
+    }
+  }
+}

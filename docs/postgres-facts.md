@@ -7,6 +7,7 @@ TypeScript.
 These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-conflict-ordering`, `postgres-lock-ordering`,
 `postgres-column-requires-trigger`, `postgres-required-comments`,
+`postgres-duplicate-function-body`,
 `postgres-no-offset`,
 `postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
@@ -230,6 +231,9 @@ entries. `postgres-required-comments` reads table, column, and view comments
 from that catalog. `table` includes partitioned tables. An empty
 `columnNamePatterns` list checks every column, then
 `exemptColumnNamePatterns` skips matches.
+`postgres-duplicate-function-body` reads function bodies and languages from
+that catalog, tokenizes each body with the PostgreSQL lexer, and groups
+functions whose normalized tokens match.
 
 `analyze_conflict_inserts(sql)` exposes the same structured SQL projection to
 Rust callers as `SqlConflictInsertFact`, `SqlConflictTarget`, and
@@ -307,10 +311,17 @@ A function object carries `definition`. `name` is the snapshot key up to the
 first `(`, and `signature` is the text inside those parentheses. `language`
 is the word after `LANGUAGE`, lowercased. `returns_trigger` is true when the
 definition, before its body, contains `RETURNS trigger` as a word, ignoring
-comments and quoted text. `RETURNS event_trigger` is false, and so is a
-`RETURNS` clause that yields a set of rows. `body` is the text
-between the first `AS $tag$` and its matching closer, including the empty
-`$$` tag. It is absent when there is no dollar-quoted body. Enum objects
+comments and quoted text. An event trigger, or a `RETURNS` clause that yields
+a set of rows, does not set it. An event trigger is recorded on its own.
+`body` is the SQL inside a
+dollar quote (including an empty `$$` tag), a plain or escape string after
+`AS`, a `BEGIN ATOMIC` block, or a `RETURN` expression, and the body's byte
+range is kept with it. Both are absent when no body is found. Null-input
+behavior, security, parallel mode, leakproof, and volatility are stored on
+their own. Those mode words count only after the argument list. The return
+contract keeps the `RETURNS` clause, including a `RETURNS TABLE` column list,
+`OUT` and `INOUT` parameters, and Unicode letters in type names. `COST`,
+`ROWS`, and `SUPPORT` are stored separately from the body. Enum objects
 carry `values`. View objects carry `materialized`, `definition`, and
 `comment`.
 

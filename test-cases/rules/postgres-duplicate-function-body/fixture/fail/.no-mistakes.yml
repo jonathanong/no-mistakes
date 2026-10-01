@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-duplicate-function-body
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json

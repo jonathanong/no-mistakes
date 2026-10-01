@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_quoted_a": {
+      "definition": "CREATE FUNCTION fn_quoted_a() RETURNS int LANGUAGE sql SET search_path TO \"TenantA\" AS $$ SELECT widget $$"
+    },
+    "fn_quoted_a_copy": {
+      "definition": "CREATE FUNCTION fn_quoted_a_copy() RETURNS int LANGUAGE sql SET search_path TO \"TenantA\" AS $$ SELECT gadget $$"
+    },
+    "fn_quoted_lower": {
+      "definition": "CREATE FUNCTION fn_quoted_lower() RETURNS int LANGUAGE sql SET search_path TO \"tenanta\" AS $$ SELECT widget $$"
+    }
+  }
+}

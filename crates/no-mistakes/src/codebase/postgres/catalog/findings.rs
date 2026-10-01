@@ -97,7 +97,7 @@ pub fn catalog_finding(
 }
 
 pub fn require_catalog_path(rule_id: &str, path: &str) -> Result<()> {
-    if path.is_empty() {
+    if path.trim().is_empty() {
         bail!("{rule_id} option schemaCatalogPath: required");
     }
     Ok(())

@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_strict": {
+      "definition": "CREATE FUNCTION fn_strict(n int) RETURNS int LANGUAGE sql STRICT AS $$ SELECT widget $$"
+    },
+    "fn_strict_long": {
+      "definition": "CREATE FUNCTION fn_strict_long(n int) RETURNS int LANGUAGE sql RETURNS NULL ON NULL INPUT AS $$ SELECT gadget $$"
+    },
+    "fn_called": {
+      "definition": "CREATE FUNCTION fn_called(n int) RETURNS int LANGUAGE sql AS $$ SELECT widget $$"
+    },
+    "fn_default_word": {
+      "definition": "CREATE FUNCTION fn_default_word(note text DEFAULT 'strict') RETURNS int LANGUAGE sql AS $$ SELECT widget $$"
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_param(integer)": {
+      "definition": "CREATE FUNCTION fn_param(immutable integer) RETURNS int LANGUAGE sql AS $$ SELECT widget $$"
+    },
+    "fn_param_copy(integer)": {
+      "definition": "CREATE FUNCTION fn_param_copy(immutable integer) RETURNS int LANGUAGE sql AS $$ SELECT gadget $$"
+    },
+    "fn_real()": {
+      "definition": "CREATE FUNCTION fn_real() RETURNS int IMMUTABLE LANGUAGE sql AS $$ SELECT widget $$"
+    },
+    "fn_c()": {
+      "definition": "CREATE FUNCTION fn_c() RETURNS int LANGUAGE c AS $$ SELECT 9 $$"
+    }
+  }
+}

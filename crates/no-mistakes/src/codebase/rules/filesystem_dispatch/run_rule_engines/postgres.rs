@@ -1,41 +1,27 @@
 use super::super::*;
+use crate::codebase::check_facts::CheckFactMap;
 use crate::codebase::ts_source::SourceStore;
 use crate::config::v2::NoMistakesConfig;
 use std::path::{Path, PathBuf};
+use std::sync::Arc;
 
 pub(super) fn run(
     rule_id: &str,
     root: &Path,
     config: &NoMistakesConfig,
     files: &[PathBuf],
-    sources: &std::sync::Arc<SourceStore>,
-    facts: Option<&crate::codebase::check_facts::CheckFactMap>,
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
 ) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
-        POSTGRES_REQUIRED_COMMENTS => match facts {
-            Some(facts) => postgres_required_comments::check_with_files_sources_and_facts(
-                root, config, files, sources, facts,
-            ),
-            None => postgres_required_comments::check_with_files_and_sources(
-                root, config, files, sources,
-            ),
-        },
-        POSTGRES_COLUMN_REQUIRES_TRIGGER => match facts {
-            Some(facts) => postgres_column_requires_trigger::check_with_files_sources_and_facts(
-                root, config, files, sources, facts,
-            ),
-            None => postgres_column_requires_trigger::check_with_files_and_sources(
-                root, config, files, sources,
-            ),
-        },
-        POSTGRES_CONFLICT_ORDERING => match facts {
-            Some(facts) => postgres_conflict_ordering::check_with_files_sources_and_facts(
-                root, config, files, sources, facts,
-            ),
-            None => postgres_conflict_ordering::check_with_files_and_sources(
-                root, config, files, sources,
-            ),
-        },
+        POSTGRES_DUPLICATE_FUNCTION_BODY => {
+            duplicate_function_body(root, config, files, sources, facts)
+        }
+        POSTGRES_REQUIRED_COMMENTS => required_comments(root, config, files, sources, facts),
+        POSTGRES_COLUMN_REQUIRES_TRIGGER => {
+            column_requires_trigger(root, config, files, sources, facts)
+        }
+        POSTGRES_CONFLICT_ORDERING => conflict_ordering(root, config, files, sources, facts),
         POSTGRES_CONSTRAINT_VALIDATE => {
             postgres_constraint_validate::check_with_files_and_sources(root, config, files, sources)
         }
@@ -53,14 +39,7 @@ pub(super) fn run(
                 root, config, files, sources,
             )
         }
-        POSTGRES_LOCK_ORDERING => match facts {
-            Some(facts) => postgres_lock_ordering::check_with_files_sources_and_facts(
-                root, config, files, sources, facts,
-            ),
-            None => {
-                postgres_lock_ordering::check_with_files_and_sources(root, config, files, sources)
-            }
-        },
+        POSTGRES_LOCK_ORDERING => lock_ordering(root, config, files, sources, facts),
         POSTGRES_NO_OFFSET => {
             postgres_no_offset::check_with_files_and_sources(root, config, files, sources)
         }
@@ -96,3 +75,89 @@ pub(super) fn run(
         _ => return None,
     })
 }
+
+fn duplicate_function_body(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    match facts {
+        Some(facts) => postgres_duplicate_function_body::check_with_files_sources_and_facts(
+            root, config, files, sources, facts,
+        ),
+        None => postgres_duplicate_function_body::check_with_files_and_sources(
+            root, config, files, sources,
+        ),
+    }
+}
+
+fn required_comments(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    match facts {
+        Some(facts) => postgres_required_comments::check_with_files_sources_and_facts(
+            root, config, files, sources, facts,
+        ),
+        None => {
+            postgres_required_comments::check_with_files_and_sources(root, config, files, sources)
+        }
+    }
+}
+
+fn column_requires_trigger(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    match facts {
+        Some(facts) => postgres_column_requires_trigger::check_with_files_sources_and_facts(
+            root, config, files, sources, facts,
+        ),
+        None => postgres_column_requires_trigger::check_with_files_and_sources(
+            root, config, files, sources,
+        ),
+    }
+}
+
+fn conflict_ordering(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    match facts {
+        Some(facts) => postgres_conflict_ordering::check_with_files_sources_and_facts(
+            root, config, files, sources, facts,
+        ),
+        None => {
+            postgres_conflict_ordering::check_with_files_and_sources(root, config, files, sources)
+        }
+    }
+}
+
+fn lock_ordering(
+    root: &Path,
+    config: &NoMistakesConfig,
+    files: &[PathBuf],
+    sources: &Arc<SourceStore>,
+    facts: Option<&CheckFactMap>,
+) -> Result<Vec<RuleFinding>> {
+    match facts {
+        Some(facts) => postgres_lock_ordering::check_with_files_sources_and_facts(
+            root, config, files, sources, facts,
+        ),
+        None => postgres_lock_ordering::check_with_files_and_sources(root, config, files, sources),
+    }
+}
+
+#[cfg(test)]
+mod tests;

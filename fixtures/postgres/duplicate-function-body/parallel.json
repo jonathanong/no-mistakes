@@ -1,0 +1,14 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_safe": {
+      "definition": "CREATE FUNCTION fn_safe() RETURNS int LANGUAGE sql PARALLEL SAFE AS $$ SELECT widget $$"
+    },
+    "fn_safe_copy": {
+      "definition": "CREATE FUNCTION fn_safe_copy() RETURNS int LANGUAGE sql PARALLEL SAFE AS $$ SELECT gadget $$"
+    },
+    "fn_unsafe": {
+      "definition": "CREATE FUNCTION fn_unsafe() RETURNS int LANGUAGE sql AS $$ SELECT widget $$"
+    }
+  }
+}

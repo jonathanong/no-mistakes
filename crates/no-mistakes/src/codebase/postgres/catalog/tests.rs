@@ -4,6 +4,7 @@ mod edges;
 mod errors;
 mod expressions;
 mod findings;
+mod function_body;
 mod model;
 mod order;
 mod parse;

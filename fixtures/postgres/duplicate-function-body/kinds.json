@@ -1,0 +1,17 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_event_a": {
+      "definition": "CREATE FUNCTION fn_event_a() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$"
+    },
+    "fn_event_b": {
+      "definition": "CREATE FUNCTION fn_event_b() RETURNS event_trigger LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$"
+    },
+    "fn_void_same": {
+      "definition": "CREATE FUNCTION fn_void_same() RETURNS void LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$"
+    },
+    "fn_row_trigger": {
+      "definition": "CREATE FUNCTION fn_row_trigger() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RETURN; END $$"
+    }
+  }
+}

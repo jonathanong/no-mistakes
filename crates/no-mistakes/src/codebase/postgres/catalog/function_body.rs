@@ -1,0 +1,210 @@
+pub(super) fn split_body(definition: &str) -> (String, Option<String>, Option<(usize, usize)>) {
+    let candidates = [
+        dollar_body(definition),
+        atomic_body(definition),
+        super::function_quote::return_expression(definition),
+    ];
+    if let Some((header, body, span)) = candidates
+        .into_iter()
+        .flatten()
+        .min_by_key(|(_, _, span)| span.0)
+    {
+        return (header, Some(body), Some(span));
+    }
+    (definition.to_string(), None, None)
+}
+
+pub(super) fn skip_dollar_body(definition: &str, index: usize) -> Option<usize> {
+    let (tag, open_end) = super::function_quote::opening_dollar(definition, index)?;
+    let close = format!("${tag}$");
+    let relative = definition[open_end..].find(&close)?;
+    Some(open_end + relative + close.len())
+}
+
+fn dollar_body(definition: &str) -> Option<(String, String, (usize, usize))> {
+    let mut index = 0;
+    while index < definition.len() {
+        if let Some(next) = skip_ignored(definition, index) {
+            index = next;
+            continue;
+        }
+        if is_word_at(definition, index, "as") {
+            let cursor = skip_as_gap(definition, index + 2);
+            if let Some((body, start, end)) =
+                super::function_quote::body_after_as(definition, cursor)
+            {
+                return Some((definition[..index].to_string(), body, (start, end)));
+            }
+        }
+        index += definition[index..].chars().next()?.len_utf8();
+    }
+    None
+}
+
+fn atomic_body(definition: &str) -> Option<(String, String, (usize, usize))> {
+    let mut index = 0;
+    while index < definition.len() {
+        if let Some(next) = skip_ignored(definition, index) {
+            index = next;
+            continue;
+        }
+        if is_word_at(definition, index, "begin") {
+            let cursor = skip_as_gap(definition, index + "begin".len());
+            if is_word_at(definition, cursor, "atomic") {
+                let body_start = cursor + "atomic".len();
+                let end = matching_end(definition, body_start)?;
+                return Some((
+                    definition[..index].to_string(),
+                    definition[body_start..end].to_string(),
+                    (body_start, end),
+                ));
+            }
+        }
+        index += definition[index..].chars().next()?.len_utf8();
+    }
+    None
+}
+
+pub(super) fn skip_as_gap(definition: &str, mut cursor: usize) -> usize {
+    loop {
+        while definition
+            .as_bytes()
+            .get(cursor)
+            .is_some_and(u8::is_ascii_whitespace)
+        {
+            cursor += 1;
+        }
+        let Some(rest) = definition.get(cursor..) else {
+            return cursor;
+        };
+        if rest.starts_with("--") {
+            cursor += rest.find('\n').unwrap_or(rest.len());
+            continue;
+        }
+        if rest.starts_with("/*") {
+            cursor = super::function_comment::skip_block_comment(definition, cursor);
+            continue;
+        }
+        return cursor;
+    }
+}
+
+fn exists_predicate(definition: &str, index: usize) -> bool {
+    let after_if = skip_as_gap(definition, index + 2);
+    if is_word_at(definition, after_if, "exists") {
+        return true;
+    }
+    if !is_word_at(definition, after_if, "not") {
+        return false;
+    }
+    let after_not = skip_as_gap(definition, after_if + 3);
+    is_word_at(definition, after_not, "exists")
+}
+
+fn matching_end(definition: &str, mut index: usize) -> Option<usize> {
+    let mut depth = 1i32;
+    while index < definition.len() {
+        if let Some(next) = skip_ignored(definition, index) {
+            index = next;
+            continue;
+        }
+        if is_word_at(definition, index, "begin")
+            || is_word_at(definition, index, "case")
+            || (is_word_at(definition, index, "if") && !exists_predicate(definition, index))
+            || is_word_at(definition, index, "loop")
+        {
+            depth += 1;
+        } else if is_word_at(definition, index, "end") {
+            depth -= 1;
+            if depth == 0 {
+                return Some(index);
+            }
+        }
+        index += definition[index..].chars().next()?.len_utf8();
+    }
+    None
+}
+
+pub(super) fn skip_noise(definition: &str, index: usize) -> Option<usize> {
+    skip_ignored(definition, index)
+}
+
+pub(super) fn language_name(definition: &str, mut cursor: usize) -> Option<String> {
+    let bytes = definition.as_bytes();
+    while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
+        cursor += 1;
+    }
+    let rest = definition.get(cursor..)?;
+    if rest.starts_with('\'') || rest.starts_with('"') {
+        let quote = rest.chars().next()?;
+        let end = super::function_comment::skip_quoted(definition, cursor, quote);
+        let inner =
+            definition.get(cursor + quote.len_utf8()..end.saturating_sub(quote.len_utf8()))?;
+        return Some(if quote == '"' {
+            inner.to_string()
+        } else {
+            inner.to_ascii_lowercase()
+        });
+    }
+    let start = cursor;
+    while bytes.get(cursor).is_some_and(is_ident_byte) {
+        cursor += 1;
+    }
+    (cursor > start).then(|| definition[start..cursor].to_ascii_lowercase())
+}
+
+fn skip_ignored(definition: &str, index: usize) -> Option<usize> {
+    let rest = &definition[index..];
+    if rest.starts_with("--") {
+        return Some(index + rest.find('\n').unwrap_or(rest.len()));
+    }
+    if rest.starts_with("/*") {
+        return Some(super::function_comment::skip_block_comment(
+            definition, index,
+        ));
+    }
+    let quote = rest.chars().next()?;
+    if quote == '\'' {
+        if let Some(end) = super::function_comment::skip_escape_string(definition, index) {
+            return Some(end);
+        }
+        return Some(super::function_comment::skip_quoted(
+            definition, index, quote,
+        ));
+    }
+    if quote == '"' {
+        return Some(super::function_comment::skip_quoted(
+            definition, index, quote,
+        ));
+    }
+    if quote == '$' {
+        return skip_dollar_body(definition, index);
+    }
+    None
+}
+
+pub(super) fn is_word_at(text: &str, index: usize, word: &str) -> bool {
+    let Some(slice) = text.get(index..index + word.len()) else {
+        return false;
+    };
+    if !slice.eq_ignore_ascii_case(word) {
+        return false;
+    }
+    let before_ok = text[..index]
+        .chars()
+        .next_back()
+        .is_none_or(|character| !is_ident_char(character));
+    let after_ok = text[index + word.len()..]
+        .chars()
+        .next()
+        .is_none_or(|character| !is_ident_char(character));
+    before_ok && after_ok
+}
+
+fn is_ident_char(character: char) -> bool {
+    character.is_alphanumeric() || character == '_'
+}
+
+fn is_ident_byte(byte: &u8) -> bool {
+    byte.is_ascii_alphanumeric() || *byte == b'_'
+}
