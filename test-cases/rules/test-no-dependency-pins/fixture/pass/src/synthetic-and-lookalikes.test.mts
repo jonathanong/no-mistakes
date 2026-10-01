@@ -28,6 +28,15 @@ const brewThreeParts = 'brew install foo@1.2.3'
 const dottedLocations = ['src/a.b.mts:12', 'at x (src/a.b.mts:12:5)', 'docs/a.b.md:12']
 // `v2` is an image tag only after `image:` or `FROM`.
 const routes = ['users/list:v2', 'api/keys:v2', 'image: repo:v2beta']
+// A registry-host `v2` tag is an image, but a URL, a path after the tag, a Go module path,
+// and a host with a port or a bare tag are not.
+const urls = ['https://ghcr.io/acme/api:v2', 'http://10.0.0.5:8080/api:v2', 'ghcr.io/acme/api:v2/path']
+const goModules = ['github.com/acme/app/v2', 'github.com/acme/app/v2/internal/binder.go:12:5']
+const hostOnly = ['api.acme.io:8080/v2', 'api.acme.io:v2', 'ghcr.io/acme/api:v2-beta']
+// Docker tags are ASCII, so an Arabic-Indic digit is a lookalike, not a major version.
+const nonAsciiTags = ['ghcr.io/acme/api:v٢', 'image:ghcr.io/acme/api:v٢']
+// Reserved registries stay placeholders for `v<N>` tags too.
+const reservedV = ['registry.example.com/checkout:v1', 'localhost:5000/app:v2']
 // A `0.0.0` dependency assertion is a placeholder, like the `0.0.0` asset above.
 expect(packageJson.dependencies.foo).toBe('0.0.0')
 expect(packageJson).toHaveProperty('devDependencies.foo', '0.0.0')

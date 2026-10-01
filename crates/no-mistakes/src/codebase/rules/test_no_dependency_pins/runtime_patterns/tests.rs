@@ -3,6 +3,8 @@ use super::super::{check_source, compile_options, Options};
 use super::RUNTIME_PATTERNS;
 use regex::Regex;
 
+mod homebrew_tests;
+
 fn pins(line: &str) -> Vec<String> {
     let options = compile_options(&Options::default()).unwrap();
     check_source("src/app.test.mts", line, &options)
@@ -97,7 +99,7 @@ fn container_image_tags_are_pins() {
 }
 
 #[test]
-fn a_major_only_v_tag_is_an_image_only_after_image_or_from() {
+fn a_major_only_v_tag_is_an_image_after_image_or_from() {
     for (line, expected) in [
         ("image: repo:v2", "repo:v2"),
         ("image: owner/repo:v2", "owner/repo:v2"),
@@ -123,9 +125,89 @@ fn a_major_only_v_tag_is_an_image_only_after_image_or_from() {
         "image: owner/repo:v2beta",
         "image: ghcr.io/acme/api:v2beta",
         "image: repo:vNext",
-        "owner/repo:v2 ghcr.io/acme/api:v2",
     ] {
         assert!(pins(line).is_empty(), "{line}: {:?}", pins(line));
+    }
+}
+
+#[test]
+fn a_registry_host_v_tag_is_an_image_without_context() {
+    let digest = "06ada57c26aa5cf429e9f2c0a99e3e4a42daecd45fc4c955d7c1399ab4227ae8";
+    for (line, expected) in [
+        ("ghcr.io/acme/api:v2", "ghcr.io/acme/api:v2"),
+        (
+            "expect(image).toBe('ghcr.io/acme/api:v2')",
+            "ghcr.io/acme/api:v2",
+        ),
+        ("docker pull ghcr.io/acme/app:v2.", "ghcr.io/acme/app:v2"),
+        (
+            "registry.io:5000/acme/api:v2",
+            "registry.io:5000/acme/api:v2",
+        ),
+        (
+            "ghcr.io/acme/team/my.image:v2",
+            "ghcr.io/acme/team/my.image:v2",
+        ),
+        ("ghcr.io/acme/api:v10", "ghcr.io/acme/api:v10"),
+        // An interpolated digest leaves only the tag; a complete one is part of the pin.
+        (
+            "ghcr.io/acme/api:v2@sha256:${digest}",
+            "ghcr.io/acme/api:v2",
+        ),
+        (
+            &format!("ghcr.io/acme/api:v2@sha256:{digest}"),
+            &format!("ghcr.io/acme/api:v2@sha256:{digest}"),
+        ),
+    ] {
+        assert_pins(line, &[expected]);
+    }
+    // Docker tags are ASCII: an Arabic-Indic digit is a lookalike, not a major.
+    for line in [
+        "ghcr.io/acme/api:v٢",
+        "expect(image).toBe('ghcr.io/acme/api:v٢')",
+        "image: ghcr.io/acme/api:v٢",
+    ] {
+        assert_pins(line, &[]);
+    }
+    // Only a registry host drops the context: the same shape on a slash-only
+    // path stays an API or route key (`users/list:v2`) unless `image:` says otherwise.
+    assert_pins(
+        "owner/repo:v2 ghcr.io/acme/api:v2",
+        &["ghcr.io/acme/api:v2"],
+    );
+    assert_pins(
+        "image: ghcr.io/acme/api:v2 # ghcr.io/acme/api:v3",
+        &["ghcr.io/acme/api:v2", "ghcr.io/acme/api:v3"],
+    );
+}
+
+#[test]
+fn a_registry_host_v_tag_right_after_the_image_key_is_one_pin() {
+    // With nothing between `image:` and the host, the context-free pattern's left
+    // boundary sits on the `:`, so a tight-context pattern reads the tag. Every
+    // spaced or quoted form is the context-free pattern's alone: one pin, not two.
+    for line in [
+        "image:ghcr.io/acme/api:v2",
+        "{\"image\":ghcr.io/acme/api:v2}",
+        "'image':ghcr.io/acme/api:v2",
+        "image: ghcr.io/acme/api:v2",
+        "image:\tghcr.io/acme/api:v2",
+        "image: \"ghcr.io/acme/api:v2\"",
+        "\"image\":\"ghcr.io/acme/api:v2\"",
+        "image:'ghcr.io/acme/api:v2'",
+        "FROM ghcr.io/acme/api:v2",
+    ] {
+        assert_pins(line, &["ghcr.io/acme/api:v2"]);
+    }
+    for line in [
+        "image:ghcr.io/acme/api:v2/path",
+        "image:ghcr.io/acme/api:v2-beta",
+        "image:ghcr.io/acme/api:v",
+        "image:https://ghcr.io/acme/api:v2",
+        // Docker tags are ASCII: an Arabic-Indic digit is a lookalike, not a major.
+        "image:ghcr.io/acme/api:v٢",
+    ] {
+        assert_pins(line, &[]);
     }
 }
 
@@ -209,97 +291,6 @@ fn setup_versions_are_pins_in_every_quoting_style() {
 }
 
 #[test]
-fn homebrew_formulae_need_homebrew_context() {
-    for line in [
-        "brew install postgresql@18",
-        "brew services start postgresql@18",
-        "brew install --cask temurin@21",
-        "/opt/homebrew/opt/postgresql@18/bin",
-        "/usr/local/Cellar/postgresql@18/18.1",
-        "Homebrew formula postgresql@18.",
-    ] {
-        assert!(
-            pins(line)
-                .iter()
-                .any(|pin| pin.starts_with("postgresql@") || pin.starts_with("temurin@")),
-            "{line}"
-        );
-    }
-    for line in [
-        "undici@1.0.1",
-        "pnpm@12",
-        "packageManager: 'pnpm@12.0.0'",
-        "brewery@2",
-        "brew install postgresql",
-        "brew services start postgresql@\\d+",
-    ] {
-        assert!(pins(line).is_empty(), "{line}");
-    }
-}
-
-#[test]
-fn a_homebrew_formula_version_has_at_most_two_components() {
-    // `foo@1.2.3` is not a formula shape; it must not be cut down to `foo@1.2`.
-    for line in [
-        "brew install foo@1.2.3",
-        "brew install postgresql@18.1.2",
-        "brew install foo@1.2.3.4",
-    ] {
-        assert!(pins(line).is_empty(), "{line}: {:?}", pins(line));
-    }
-    // A dot that ends a sentence still closes the formula.
-    for (line, expected) in [
-        ("brew install foo@18.", "foo@18"),
-        ("brew install openssl@3.5.", "openssl@3.5"),
-        ("Run brew install foo@18. Then continue.", "foo@18"),
-        ("brew install foo@1.2, brew install bar@3", "foo@1.2"),
-    ] {
-        assert_eq!(pins(line).first().map(String::as_str), Some(expected));
-    }
-}
-
-fn readings(line: &str) -> Vec<(String, String)> {
-    let options = compile_options(&Options::default()).unwrap();
-    check_source("src/app.test.mts", line, &options)
-        .into_iter()
-        .filter_map(|finding| Some((finding.target?, finding.import?)))
-        .collect()
-}
-
-#[test]
-fn a_homebrew_formula_is_reported_once_not_also_as_an_action_ref() {
-    // The action-ref pattern reads `core/postgresql@18` and `opt/postgresql@18`
-    // as `owner/repo@ref`; the Homebrew pattern owns that text.
-    let formula = ("versioned Homebrew formula", "postgresql@18");
-    for line in [
-        "brew install homebrew/core/postgresql@18",
-        "brew install homebrew/core/postgresql@18.",
-        "/opt/homebrew/opt/postgresql@18/bin",
-        "/usr/local/Cellar/postgresql@18/18.1",
-    ] {
-        let expected = vec![(formula.0.to_string(), formula.1.to_string())];
-        assert_eq!(readings(line), expected, "{line}");
-    }
-}
-
-#[test]
-fn an_action_ref_on_a_homebrew_line_is_still_reported() {
-    // Dropping action refs on Homebrew lines would hide this pinned action.
-    let sha = "de0fac2e4500dabe0009e67214ff5f5447ce83dd";
-    let line = format!("uses: Homebrew/actions/setup-homebrew@{sha}");
-    assert_eq!(
-        readings(&line),
-        [(
-            "exact action ref".to_string(),
-            format!("actions/setup-homebrew@{sha}")
-        )]
-    );
-    // A formula and an unrelated action ref on one line are both reported.
-    let both = readings("brew install foo@18 && uses: actions/checkout@v4");
-    assert_eq!(both.len(), 2, "{both:?}");
-}
-
-#[test]
 fn runner_labels_are_pins() {
     for (line, expected) in [
         ("runs-on: ubuntu-24.04-arm", "ubuntu-24.04-arm"),
@@ -344,6 +335,24 @@ fn lookalikes_are_not_pins() {
         "github.com/acme/app/internal/binder.go:1755 +0x1a4",
         "docs/rules.md:12 127.0.0.1:5432 localhost:3000/health",
         "https://github.com/org/repo/blob/main/src/a.ts:12",
+        // A registry-host `:v<N>` needs a clean boundary on both sides: a scheme
+        // or `//` in front, a path, `-suffix`, or word after the tag are not images.
+        "https://ghcr.io/acme/api:v2",
+        "https://api.acme.io/users:v2/list",
+        "http://10.0.0.5:8080/api:v2",
+        "git+ssh://git.acme.io/team/repo:v2",
+        "ghcr.io/acme/api:v2/path",
+        "ghcr.io/acme/api:v2-beta",
+        "ghcr.io/acme/api:v2beta ghcr.io/acme/api:vNext ghcr.io/acme/api:v",
+        // Go module paths carry `/v2` as a path element, never as a `:` tag.
+        "github.com/acme/app/v2",
+        "go get github.com/acme/app/v2/pkg",
+        "github.com/acme/app/v2/internal/binder.go:1755 +0x1a4",
+        "github.com/acme/app/v2/internal/binder.go:12:5",
+        // A host with a port, or a host followed by a bare tag, has no repository path.
+        "api.acme.io:8080/v2",
+        "api.acme.io:v2",
+        "db.acme.io:5432 v2",
         "http://localhost:3000/a:1.2",
         "ssh://git@github.com:22/org/repo.git",
         "-p 51088:6379 valkey/valkey-bundle:",
@@ -379,6 +388,9 @@ fn placeholder_values_are_not_pins() {
         "registry.test/example/cache:1.2.3",
         "registry.example.com/app:2.4.1",
         "localhost:5000/app:2.4.1",
+        "registry.example.com/checkout:v1",
+        "registry.test/app:v2",
+        "localhost:5000/app:v2",
         &format!("app@sha256:{zeroed}"),
         &format!("registry.test/app@sha256:{cycled}"),
     ] {

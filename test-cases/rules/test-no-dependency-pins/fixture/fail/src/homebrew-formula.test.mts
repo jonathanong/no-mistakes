@@ -5,3 +5,15 @@ expect(script).toContain('brew services start postgresql@18')
 expect(script).toContain('HOMEBREW_PREFIX=$(brew --prefix postgresql@18)')
 // A tap-qualified formula is one finding, not also an action ref.
 expect(script).toContain('brew install homebrew/core/postgresql@18')
+// A slashless `uses:` value is not an action ref, so it stays a formula.
+expect(output).toContain('Homebrew uses: postgresql@18')
+// A key that only ends in `uses` is not the `uses:` key, so this is a formula.
+expect(script).toContain('brew package.uses: homebrew/core/postgresql@18')
+// An identifier prefix such as `$` does not make a standalone `uses:` key either.
+expect(script).toContain('brew $uses: homebrew/core/postgresql@18')
+// Prose before `uses:` does not make a key, so a tap-qualified formula stays one finding.
+expect(output).toContain('Homebrew uses: homebrew/core/postgresql@18')
+// A comma is a key start only inside a flow mapping, so prose with a comma stays one formula.
+expect(output).toContain('Homebrew, uses: homebrew/core/postgresql@18')
+// No action name can hold a `+`, so this `uses:` value is not an action ref and the formula is the finding.
+expect(workflow).toContain('uses: Homebrew/core/libc++@18')

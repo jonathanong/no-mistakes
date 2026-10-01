@@ -102,9 +102,9 @@ install-script text rather than in a manifest. Each runs line by line, reports
 only the pin (not the surrounding line), and reports several pins per line.
 
 - `container image tag`: `owner/name:9.1.0`, `owner/my.image:1.2.3`,
-  `host.io/name:2.4`, `name:24-slim`, `owner/name:pg18`, `image: owner/name:9`,
-  and `image: owner/name:v2`, with or without a trailing `@sha256:` digest of 64
-  hex characters. A tag followed by an interpolated or short digest
+  `host.io/name:2.4`, `host.io/name:v2`, `name:24-slim`, `owner/name:pg18`,
+  `image: owner/name:9`, and `image: owner/name:v2`, with or without a trailing
+  `@sha256:` digest of 64 hex characters. A tag followed by an interpolated or short digest
   (`owner/name:9.1.0@sha256:${digest}`) reports only the tag. Not `name:latest`,
   untagged images, `${tag}` interpolation, or ports.
 - `container image digest`: an untagged `name@sha256:` plus 64 hex characters.
@@ -119,22 +119,39 @@ only the pin (not the surrounding line), and reports several pins per line.
   version. A tap-qualified formula (`brew install homebrew/core/postgresql@18`)
   is one finding for `postgresql@18`, not also an `exact action ref` for
   `core/postgresql@18`: the Homebrew pattern owns its text and a context-free pin
-  overlapping it is dropped. A real action ref on a Homebrew line
-  (`uses: Homebrew/actions/setup-homebrew@<sha>`) is still reported. Not `pnpm@12`
-  or `undici@1.0.1` without that context.
+  overlapping it is dropped. The tail of a `uses:` value gives way the other
+  way round: an action ref on a Homebrew line is reported as an `exact action ref`,
+  so `uses: Homebrew/actions/setup-homebrew@4` is the action ref
+  `actions/setup-homebrew@4` and never the formula `setup-homebrew@4`, however
+  the value is quoted or keyed (`uses: '...'`, `"uses": "..."`, `- uses: ...`).
+  That is only a choice between two readings of the same text: when no action ref
+  covers it (`uses: Homebrew/core/g++@13`, a name with a `+` no action name can
+  hold, or `Homebrew uses: postgresql@18`, a value with no `/`), the formula stays
+  the finding. A formula after prose or a name that only ends in
+  `uses` (`Homebrew uses: homebrew/core/postgresql@18`,
+  `Homebrew, uses: homebrew/core/postgresql@18`,
+  `brew package.uses: homebrew/core/postgresql@18`, `$uses:`): `uses` is a key
+  only at the start of a line, a string, a flow mapping or sequence (where a
+  comma after an unclosed `{` or `[` also starts a key, with quoted scalars such
+  as `{ name: "}", uses: ... }` skipped), or a list item. Not
+  `pnpm@12` or `undici@1.0.1` without that context.
 - `versioned runner label`: `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15`,
   `macos-15-intel`, `windows-2025`, and `windows-11-arm`. Not `ubuntu-latest`,
   `ubuntu-slim`, `macos-latest`, or `windows-1252`.
 
 An image is recognized by its grammar, not by a word list. A path under a
-dotted registry host with a version-shaped or bare integer tag, or an
-`owner/name` path with a version-shaped tag (`1.2.3`, `v1.2.3`, `24-slim`,
-`pg18`), is an image anywhere on the line. A bare integer tag on an `owner/name`
-path (`owner/name:9`), a major-only `v` tag (`repo:v2`, `owner/name:v2`,
-`ghcr.io/owner/name:v2`), and a `name:tag` with no slash are only images after
-`image:` or `FROM`, because `file.mts:12`, `dev/initialize:2`, `users/list:v2`
-API keys, and Go or Node stack frames have the same shape. `image: repo:v2beta`
-and `image: repo:vNext` are not pins.
+dotted registry host with a version-shaped, bare integer (`ghcr.io/owner/name:9`),
+or major-only `v` (`ghcr.io/owner/name:v2`, ASCII digits only) tag, or an `owner/name` path with a
+version-shaped tag (`1.2.3`, `v1.2.3`, `24-slim`, `pg18`), is an image anywhere
+on the line. A bare integer tag on an `owner/name` path (`owner/name:9`), a
+major-only `v` tag on a path without a registry host (`repo:v2`,
+`owner/name:v2`), and a `name:tag` with no slash are only images after `image:`
+or `FROM`, because `file.mts:12`, `dev/initialize:2`, `users/list:v2` API keys,
+and Go or Node stack frames have the same shape. `image: repo:v2beta` and
+`image: repo:vNext` are not pins, and neither is a registry-host tag that a
+`/`, `-suffix`, or word follows (`ghcr.io/owner/name:v2/path`) or a URL
+(`https://ghcr.io/owner/name:v2`). A registry-host `v` tag written with no
+space or quote after the key (`image:ghcr.io/owner/name:v2`) is also a pin.
 
 Repository path components follow Docker's grammar: alphanumeric runs joined by
 `.`, `_` or `__`, or one or more `-`, so `owner/my.image:1.2.3`,
@@ -189,14 +206,14 @@ Not caught, by design:
   multi-part concatenation;
 - an image with no slash, or with a bare integer tag, outside `image:` and
   `FROM` lines, such as `docker run postgres:18`;
-- a major-only `v` tag outside `image:` and `FROM` lines. After `image:` or
-  `FROM` it is reported (`image: repo:v2`), because the line says what it is.
-  On a slash-only path (`owner/name:v2`), `v2` is the most common non-image key
-  suffix (`users/list:v2`, `cache/keys:v2`, API and route versions), while a
-  dotted tag (`v2.1`) or an `N-variant` tag (`24-slim`) has a shape that
-  non-image text rarely has. A path under a registry host
-  (`ghcr.io/owner/name:v2`) is not ambiguous that way; it stays context-only so
-  that `v<N>` follows one rule, not because it would be noisy;
+- a major-only `v` tag on a path with no registry host, outside `image:` and
+  `FROM` lines. After `image:` or `FROM` it is reported (`image: repo:v2`),
+  because the line says what it is. On a slash-only path (`owner/name:v2`), `v2`
+  is the most common non-image key suffix (`users/list:v2`, `cache/keys:v2`, API
+  and route versions), while a dotted tag (`v2.1`) or an `N-variant` tag
+  (`24-slim`) has a shape that non-image text rarely has. Under a registry host
+  (`ghcr.io/owner/name:v2`) the tag is reported anywhere, exactly like the bare
+  integer form (`ghcr.io/owner/name:9`);
 - an image written inside a JavaScript regular expression, where the path
   separator is escaped (`/^grafana\/loki:3.4$/`);
 - non-version tags such as `latest`, `stable`, or `bookworm`;
@@ -208,7 +225,9 @@ Not caught, by design:
   specifiers in other package managers (`pnpm@12`, `npm i undici@1`);
 - runner labels other than the `ubuntu`, `macos`, and `windows` families;
 - ambiguous shapes: `pkg/sub:1.2` reads as an image, because Docker Hub images
-  such as `grafana/loki:3.4` have exactly that form.
+  such as `grafana/loki:3.4` have exactly that form. Likewise a key under a
+  dotted, host-looking prefix (`acme.cache/users:v2`, `acme.cache/users:2`) reads
+  as a registry image.
 
 ## Options and defaults
 

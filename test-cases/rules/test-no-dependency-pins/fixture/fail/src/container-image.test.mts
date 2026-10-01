@@ -17,3 +17,10 @@ expect(compose).toContain('image: owner/my.image:1.2.3')
 // A major-only `v2` tag is an image after `image:`, where `users/list:v2` cannot be a key.
 expect(compose).toContain('image: repo:v2')
 expect(compose).toContain('image: owner/repo:v2')
+// Under a registry host a major-only `v2` tag is an image anywhere on the line: it cannot be
+// an API key there. The slash-only `owner/repo:v2` beside it is not a pin, only the host path is.
+expect(image).toBe('ghcr.io/acme/api:v2')
+expect(image).toBe('registry.internal:5000/acme/api:v3')
+expect(images).toEqual(['owner/repo:v2', 'ghcr.io/acme/api:v4'])
+// With no space or quote after `image:`, a tight-context pattern still reads the host tag.
+expect(compose).toContain('image:ghcr.io/acme/api:v5')

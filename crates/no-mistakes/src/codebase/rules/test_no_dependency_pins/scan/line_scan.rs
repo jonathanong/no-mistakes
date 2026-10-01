@@ -1,13 +1,43 @@
+use super::flow_scope::inside_flow;
 use super::synthetic::is_synthetic;
 use super::{finding, CompiledPattern, RuleFinding};
-use regex::Match;
+use regex::{Match, Regex};
+use std::sync::LazyLock;
+
+/// The text before a pin when the pin is the tail of a `uses:` value: the key
+/// (bare, quoted, or escaped), an optional opening quote, then any `owner/` path
+/// components, the shape the exact-action-ref pattern reads.
+/// `uses` is a key only where a key can start: the line start, a JavaScript
+/// `\n`/`\r`/`\t` escape, the opening quote of a string, a flow-mapping `{` or
+/// `[`, or a `,` that separates entries inside one (see `inside_flow`), then
+/// indentation and an optional `- ` list marker. Prose
+/// (`Homebrew uses: homebrew/core/postgresql@18`, `Homebrew, uses: ...`) and a
+/// name that only ends in `uses` (`package.uses:`, `steps/uses:`, `$uses:`) are
+/// not keys.
+static USES_VALUE_PREFIX: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r#"(?:^|\\[nrt]|["'`{\[]|(?P<comma>,))\s*(?:-\s+)?uses\\?["']?\s*:\s*\\?["']?(?:[\w.-]+/)*$"#)
+        .expect("uses value prefix regex")
+});
+
+/// How a pin relates to another pin that reads the same text.
+#[derive(Clone, Copy, PartialEq)]
+enum Reading {
+    /// The pattern runs on any line.
+    Free,
+    /// The pattern needs a line context, so it knows what its text is and owns
+    /// the span.
+    Owns,
+    /// A line-context pin that is the tail of a `uses:` value. It is the formula
+    /// reading of what is probably an action ref, so it gives way to a pin that
+    /// reads the text as an action ref, and stands when nothing else does.
+    Yields,
+}
 
 /// A finding and, for a line-scanned pin, the byte span it covers in the file.
 pub(super) struct Found {
     finding: RuleFinding,
     span: Option<(usize, usize)>,
-    /// The pattern only runs on lines with a `line_context`.
-    scoped: bool,
+    reading: Reading,
 }
 
 impl Found {
@@ -15,7 +45,7 @@ impl Found {
         Self {
             finding,
             span: None,
-            scoped: false,
+            reading: Reading::Free,
         }
     }
 }
@@ -35,10 +65,17 @@ pub(super) fn scan_lines(
             custom_pins(line, pattern)
         };
         for pin in pins {
+            let reading = if pattern.line_context.is_none() {
+                Reading::Free
+            } else if ends_uses_value(&line[..pin.start()]) {
+                Reading::Yields
+            } else {
+                Reading::Owns
+            };
             found.push(Found {
                 finding: finding(file, index + 1, pattern, pin.as_str()),
                 span: Some((offset + pin.start(), offset + pin.end())),
-                scoped: pattern.line_context.is_some(),
+                reading,
             });
         }
         offset += line_with_ending.len();
@@ -49,15 +86,31 @@ pub(super) fn scan_lines(
 /// that span. A context-free pin overlapping it is a second reading of the same
 /// text (the action ref `core/postgresql@18` inside the Homebrew formula
 /// `homebrew/core/postgresql@18`) and is dropped.
+///
+/// A line-context pin that is the tail of a `uses:` value owns nothing. It is
+/// dropped only when a context-free pin overlaps it, which is the case when the
+/// value is an action ref (`uses: Homebrew/actions/setup-homebrew@4`). When no
+/// context-free pin reads the text, it is the only finding for it and stays
+/// (`uses: Homebrew/core/libc++@18` has a `+`, which an action name cannot
+/// contain). Deciding whether `uses` is a key therefore only picks which reason
+/// a pin is reported under; it never makes a finding disappear.
 pub(super) fn into_findings(found: Vec<Found>) -> Vec<RuleFinding> {
-    let owned: Vec<(usize, usize)> = found
-        .iter()
-        .filter(|pin| pin.scoped)
-        .filter_map(|pin| pin.span)
-        .collect();
+    let spans = |wanted: Reading| -> Vec<(usize, usize)> {
+        found
+            .iter()
+            .filter(|pin| pin.reading == wanted)
+            .filter_map(|pin| pin.span)
+            .collect()
+    };
+    let owned = spans(Reading::Owns);
+    let free = spans(Reading::Free);
     found
         .into_iter()
-        .filter(|pin| pin.scoped || !overlaps_any(pin.span, &owned))
+        .filter(|pin| match pin.reading {
+            Reading::Free => !overlaps_any(pin.span, &owned),
+            Reading::Owns => true,
+            Reading::Yields => !overlaps_any(pin.span, &free),
+        })
         .map(|pin| pin.finding)
         .collect()
 }
@@ -105,6 +158,14 @@ fn builtin_pins<'l>(line: &'l str, pattern: &CompiledPattern) -> Vec<Match<'l>> 
         }
     }
     pins
+}
+
+/// True when the text before a pin ends in a `uses:` key and the start of its value.
+fn ends_uses_value(before: &str) -> bool {
+    USES_VALUE_PREFIX.captures(before).is_some_and(|key| {
+        key.name("comma")
+            .is_none_or(|comma| inside_flow(&before[..comma.start()]))
+    })
 }
 
 fn follows_at(line: &str, pattern: &CompiledPattern, matched: &Match<'_>) -> bool {
