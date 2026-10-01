@@ -103,6 +103,30 @@
         "sent_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
         "failed_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
       }
+    },
+    "projected_events": {
+      "relationKind": "table",
+      "columns": {
+        "status": { "dataType": "text", "nullable": false, "ordinalPosition": 1 },
+        "sent_at": { "dataType": "timestamp with time zone", "nullable": true, "generated": "stored", "ordinalPosition": 2 },
+        "failed_at": { "dataType": "timestamptz", "nullable": true, "generated": "stored", "ordinalPosition": 3 }
+      }
+    },
+    "event_lists": {
+      "relationKind": "table",
+      "columns": {
+        "status": { "dataType": "text", "nullable": false, "ordinalPosition": 1 },
+        "sent_at": { "dataType": "timestamp[]", "nullable": true, "ordinalPosition": 2 },
+        "failed_at": { "dataType": "timestamptz[]", "nullable": true, "ordinalPosition": 3 }
+      }
+    },
+    "status_history": {
+      "relationKind": "table",
+      "columns": {
+        "status": { "dataType": "text[]", "nullable": false, "ordinalPosition": 1 },
+        "sent_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
+        "failed_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
+      }
     }
   }
 }

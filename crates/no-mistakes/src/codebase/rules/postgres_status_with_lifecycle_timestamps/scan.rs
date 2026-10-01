@@ -26,11 +26,17 @@ fn table_finding(compiled: &Compiled, table: &CatalogTable) -> Option<RuleFindin
     if timestamps.len() < compiled.min_lifecycle_columns {
         return None;
     }
-    let text = format!(
-        "table stores status column {} next to lifecycle timestamps {}; {ADVICE}",
-        status.name,
-        timestamps.join(", ")
-    );
+    let text = compiled
+        .message
+        .clone()
+        .filter(|message| !message.trim().is_empty())
+        .unwrap_or_else(|| {
+            format!(
+                "table stores status column {} next to lifecycle timestamps {}; {ADVICE}",
+                status.name,
+                timestamps.join(", ")
+            )
+        });
     Some(catalog_finding(
         RULE_ID,
         &compiled.schema_catalog_path,
@@ -40,10 +46,11 @@ fn table_finding(compiled: &Compiled, table: &CatalogTable) -> Option<RuleFindin
 }
 
 fn stored_status<'a>(table: &'a CatalogTable, names: &[String]) -> Option<&'a CatalogColumn> {
-    table
-        .columns
-        .iter()
-        .find(|column| column.generated.is_none() && names.iter().any(|name| name == &column.name))
+    table.columns.iter().find(|column| {
+        column.generated.is_none()
+            && !is_array(&column.data_type)
+            && names.iter().any(|name| name == &column.name)
+    })
 }
 
 fn lifecycle_names(table: &CatalogTable, verbs: &[String]) -> Vec<String> {
@@ -56,15 +63,21 @@ fn lifecycle_names(table: &CatalogTable, verbs: &[String]) -> Vec<String> {
 }
 
 fn is_lifecycle(column: &CatalogColumn, verbs: &[String]) -> bool {
-    if !column
-        .data_type
-        .to_ascii_lowercase()
-        .starts_with("timestamp")
-    {
+    if column.generated.is_some() || !is_scalar_timestamp(&column.data_type) {
         return false;
     }
     verbs.iter().any(|verb| {
         let exact = format!("{verb}_at");
         column.name == exact || column.name.ends_with(&format!("_{verb}_at"))
     })
+}
+
+fn is_scalar_timestamp(data_type: &str) -> bool {
+    let data_type = data_type.to_ascii_lowercase();
+    !is_array(&data_type)
+        && (data_type.starts_with("timestamp") || data_type.starts_with("timestamptz"))
+}
+
+fn is_array(data_type: &str) -> bool {
+    data_type.contains('[')
 }

@@ -37,6 +37,10 @@ fn joined(options: &str) -> String {
     messages(options).join("\n")
 }
 
+fn columns() -> &'static str {
+    "statusColumns: [status, state]"
+}
+
 fn verbs() -> &'static str {
     "lifecycleVerbs: [sent, failed, paid, started, finished, bounced]"
 }
@@ -74,6 +78,9 @@ fn valid_shapes_and_non_lifecycle_columns_pass() {
         "preview_invoices",
         "resent_jobs",
         "payment_intents",
+        "projected_events",
+        "event_lists",
+        "status_history",
     ] {
         assert!(
             !body.contains(&format!("table:{table}:")),
@@ -84,9 +91,18 @@ fn valid_shapes_and_non_lifecycle_columns_pass() {
 
 #[test]
 fn defaults_skip_empty_verbs_and_apply_the_minimum() {
-    assert!(messages("schemaCatalogPath: schema.json\n").is_empty());
-    assert!(messages("schemaCatalogPath: schema.json\nlifecycleVerbs: []\n").is_empty());
-    let defaults = joined(&format!("schemaCatalogPath: schema.json\n{}\n", verbs()));
+    assert!(
+        messages("schemaCatalogPath: schema.json\nstatusColumns: [status, state]\n").is_empty()
+    );
+    assert!(messages(
+        "schemaCatalogPath: schema.json\nstatusColumns: [status, state]\nlifecycleVerbs: []\n"
+    )
+    .is_empty());
+    let defaults = joined(&format!(
+        "schemaCatalogPath: schema.json\n{}\n{}\n",
+        columns(),
+        verbs()
+    ));
     assert!(defaults.contains("table:deliveries:"));
     assert!(defaults.contains("table:payments:"));
     assert!(!defaults.contains("table:invoice_drafts:"));
@@ -97,14 +113,16 @@ fn defaults_skip_empty_verbs_and_apply_the_minimum() {
     assert!(status_only.contains("table:payments:"));
     assert!(!status_only.contains("table:deliveries:"));
     let one = joined(&format!(
-        "schemaCatalogPath: schema.json\nminLifecycleColumns: 1\n{}\n",
+        "schemaCatalogPath: schema.json\n{}\nminLifecycleColumns: 1\n{}\n",
+        columns(),
         verbs()
     ));
     assert!(one.contains(
         "table:invoice_drafts: table stores status column status next to lifecycle timestamps sent_at;"
     ));
     let three = joined(&format!(
-        "schemaCatalogPath: schema.json\nminLifecycleColumns: 3\n{}\n",
+        "schemaCatalogPath: schema.json\n{}\nminLifecycleColumns: 3\n{}\n",
+        columns(),
         verbs()
     ));
     assert!(!three.contains("table:deliveries:"));
@@ -113,14 +131,15 @@ fn defaults_skip_empty_verbs_and_apply_the_minimum() {
 #[test]
 fn allow_suppresses_a_table_and_runs_match() {
     let options = format!(
-        "schemaCatalogPath: schema.json\n{}\nallow:\n  - object: table:deliveries\n    reason: provider mirror\n",
+        "schemaCatalogPath: schema.json\n{}\n{}\nallow:\n  - object: table:deliveries\n    reason: provider mirror\n",
+        columns(),
         verbs()
     );
     let body = joined(&options);
     assert!(!body.contains("table:deliveries: table stores"));
     assert!(body.contains("table:payments:"));
     let stale = joined(
-        "schemaCatalogPath: schema.json\nlifecycleVerbs: [sent, failed]\nallow:\n  - object: table:missing\n    reason: gone\n",
+        "schemaCatalogPath: schema.json\nstatusColumns: [status]\nlifecycleVerbs: [sent, failed]\nallow:\n  - object: table:missing\n    reason: gone\n",
     );
     assert!(stale
         .contains("stale postgres-status-with-lifecycle-timestamps allow entry: table:missing"));
@@ -137,6 +156,9 @@ fn option_errors_name_the_field() {
     };
     assert!(err("lifecycleVerbs: [sent]\n").contains("option schemaCatalogPath: required"));
     assert!(err("schemaCatalogPath: \" \"\n").contains("option schemaCatalogPath: required"));
+    assert!(
+        err("schemaCatalogPath: schema.json\n").contains("option statusColumns: must not be empty")
+    );
     assert!(err("schemaCatalogPath: schema.json\nstatusColumns: []\n")
         .contains("option statusColumns: must not be empty"));
     assert!(err("schemaCatalogPath: schema.json\nstatusColumns: ['']\n")
@@ -146,13 +168,13 @@ fn option_errors_name_the_field() {
             .contains("option statusColumns: duplicate entry status")
     );
     assert!(
-        err("schemaCatalogPath: schema.json\nlifecycleVerbs: ['']\n")
+        err("schemaCatalogPath: schema.json\nstatusColumns: [status]\nlifecycleVerbs: ['']\n")
             .contains("option lifecycleVerbs: empty string")
     );
-    assert!(
-        err("schemaCatalogPath: schema.json\nlifecycleVerbs: [sent, sent]\n")
-            .contains("option lifecycleVerbs: duplicate entry sent")
-    );
+    assert!(err(
+        "schemaCatalogPath: schema.json\nstatusColumns: [status]\nlifecycleVerbs: [sent, sent]\n"
+    )
+    .contains("option lifecycleVerbs: duplicate entry sent"));
     assert!(
         err("schemaCatalogPath: schema.json\nminLifecycleColumns: 0\n")
             .contains("option minLifecycleColumns: must be at least 1")
@@ -162,15 +184,38 @@ fn option_errors_name_the_field() {
             .contains("option minLifecycleColumns: must be at least 1")
     );
     assert!(err(
-        "schemaCatalogPath: schema.json\nallow:\n  - object: table:orders\n    reason: \" \"\n"
+        "schemaCatalogPath: schema.json\nstatusColumns: [status]\nallow:\n  - object: table:orders\n    reason: \" \"\n"
     )
     .contains("option allow: entry table:orders needs a reason"));
     assert!(
-        err("schemaCatalogPath: schema.json\nallow:\n  - object: nope\n    reason: why\n")
+        err("schemaCatalogPath: schema.json\nstatusColumns: [status]\nallow:\n  - object: nope\n    reason: why\n")
             .contains("option allow: invalid object ref nope")
     );
     assert!(err(
-        "schemaCatalogPath: schema.json\nallow:\n  - object: table:orders\n    reason: one\n  - object: table:orders\n    reason: two\n"
+        "schemaCatalogPath: schema.json\nstatusColumns: [status]\nallow:\n  - object: table:orders\n    reason: one\n  - object: table:orders\n    reason: two\n"
     )
     .contains("option allow: duplicate entry table:orders"));
+}
+
+#[test]
+fn custom_message_and_include_filter_the_catalog() {
+    let mut configured = config(
+        "schemaCatalogPath: schema.json\nstatusColumns: [state]\nlifecycleVerbs: [sent, failed]\n",
+    );
+    configured.rules[0].message = Some("use one source of truth".to_string());
+    let root = fixture();
+    let messages = check_with_files(&root, &configured, &[root.join("schema.json")])
+        .unwrap()
+        .into_iter()
+        .map(|finding| finding.message)
+        .collect::<Vec<_>>();
+    assert!(messages
+        .iter()
+        .any(|message| { message.contains("table:deliveries: use one source of truth") }));
+    configured.rules[0].include = vec!["missing.json".to_string()];
+    assert!(
+        check_with_files(&root, &configured, &[root.join("schema.json")])
+            .unwrap()
+            .is_empty()
+    );
 }

@@ -3,4 +3,5 @@ rules:
     scope: repository
     options:
       schemaCatalogPath: schema.json
+      statusColumns: [status, state]
       lifecycleVerbs: [sent, failed]

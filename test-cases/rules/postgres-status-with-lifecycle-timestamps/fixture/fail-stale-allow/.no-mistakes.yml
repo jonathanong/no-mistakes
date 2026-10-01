@@ -3,6 +3,7 @@ rules:
     scope: repository
     options:
       schemaCatalogPath: schema.json
+      statusColumns: [status, state]
       lifecycleVerbs: [sent, failed]
       allow:
         - object: table:missing

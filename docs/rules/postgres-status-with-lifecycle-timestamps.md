@@ -30,11 +30,14 @@ The rule reads table columns from the schema catalog, including `generated`
 and `data_type`. A stored status column is a column named in `statusColumns`
 whose `generated` is not set. An enum is reported the same way as `text`.
 
-A lifecycle column has a `data_type` that starts with `timestamp` and a name
+A lifecycle column is not generated, stores one timestamp, and has a name
 that is `<verb>_at` or ends with `_<verb>_at` for a verb in `lifecycleVerbs`.
-`payment_failed_at` counts for `failed`. `resent_at` does not count for
-`sent`. A `date` column does not count. `created_at` and `updated_at` count
-only when those verbs are configured.
+The type is `timestamp`, `timestamptz`, or `timestamp` with precision or a
+time zone. Array types such as `timestamp[]` do not count, and neither does
+a generated projection of `status`. `payment_failed_at` counts for `failed`.
+`resent_at` does not count for `sent`. A `date` column does not count.
+`created_at` and `updated_at` count only when those verbs are configured.
+An array-valued status column, such as `text[]`, is not a stored status.
 
 A table matches when it has a stored status column and at least
 `minLifecycleColumns` lifecycle columns. The finding is `table:<name>` and
@@ -44,11 +47,14 @@ columns in ordinal order. A generated `status` beside a stored `state` names
 
 ## Options and defaults
 
-`schemaCatalogPath` is required. `statusColumns` defaults to `[status, state]`;
-an empty list, an empty string, or a duplicate name is an error.
+`schemaCatalogPath` is required. `statusColumns` is required and has no
+default; an empty list, an empty string, or a duplicate name is an error.
 `lifecycleVerbs` defaults to `[]`, which reports nothing. An empty string or
 a duplicate verb is an error. `minLifecycleColumns` defaults to `2`; a value
 below `1` is an error. `allow` defaults to `[]`.
+`include`, `exclude`, and `projects` filter the catalog path.
+A non-empty rule `message` replaces the finding text and keeps the
+`table:<name>` locator.
 
 ## Valid example
 
