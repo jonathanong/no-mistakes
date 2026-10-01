@@ -1,0 +1,10 @@
+name: A
+on: push
+# `${{ github.workflow }}` is per file, so this matches b.yml without colliding.
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo a

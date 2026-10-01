@@ -1,0 +1,6 @@
+version: 2
+rules:
+  - rule: workflow-topology-policy
+    scope: repository
+    options:
+      forbidConcurrencyGroupCollisions: true

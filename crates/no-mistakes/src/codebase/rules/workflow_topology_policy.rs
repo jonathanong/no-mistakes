@@ -8,6 +8,7 @@ use std::path::{Path, PathBuf};
 mod concurrency_compile;
 mod concurrency_scope;
 mod evaluate;
+mod evaluate_collisions;
 mod evaluate_concurrency;
 mod evaluate_graph;
 mod evaluate_steps;
@@ -30,6 +31,7 @@ pub(crate) struct Options {
     pub(crate) exact_caller_jobs: BTreeMap<String, Vec<String>>,
     pub(crate) step_orders: Vec<StepOrderRule>,
     pub(crate) concurrency_policy: BTreeMap<String, concurrency_compile::ConcurrencyIntent>,
+    pub(crate) forbid_concurrency_group_collisions: bool,
 }
 
 #[derive(Deserialize, Default, Clone)]
