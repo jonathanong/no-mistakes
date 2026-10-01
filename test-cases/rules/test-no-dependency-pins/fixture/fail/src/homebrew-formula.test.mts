@@ -9,3 +9,5 @@ expect(script).toContain('brew install homebrew/core/postgresql@18')
 expect(output).toContain('Homebrew uses: postgresql@18')
 // A key that only ends in `uses` is not the `uses:` key, so this is a formula.
 expect(script).toContain('brew package.uses: homebrew/core/postgresql@18')
+// An identifier prefix such as `$` does not make a standalone `uses:` key either.
+expect(script).toContain('brew $uses: homebrew/core/postgresql@18')

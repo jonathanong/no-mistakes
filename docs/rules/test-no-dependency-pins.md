@@ -126,8 +126,8 @@ only the pin (not the surrounding line), and reports several pins per line.
   the value is quoted or keyed (`uses: '...'`, `"uses": "..."`, `- uses: ...`).
   A value with no `/` (`Homebrew uses: postgresql@18`) is not an action ref, so it
   stays a formula, and so does a value after a key that only ends in `uses`
-  (`brew package.uses: homebrew/core/postgresql@18`). Not `pnpm@12` or
-  `undici@1.0.1` without that context.
+  (`brew package.uses: homebrew/core/postgresql@18`, `$uses:`, `@uses:`).
+  Not `pnpm@12` or `undici@1.0.1` without that context.
 - `versioned runner label`: `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15`,
   `macos-15-intel`, `windows-2025`, and `windows-11-arm`. Not `ubuntu-latest`,
   `ubuntu-slim`, `macos-latest`, or `windows-1252`.
