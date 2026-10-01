@@ -348,8 +348,13 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   function, variable, enum, or import of the same name (blocks of one namespace
   share a member table and are not a merge), a missing member or missing
   intermediate namespace, or a module that exports it and is imported whole,
-  dynamically, or through `require`. Uses in test files count too. A consumer
-  that needs to know whether a class is built must treat `namespace_escaped` as
+  dynamically, or through `require`. A parameter or local that shadows the
+  namespace or its class names that binding and is no use; `import type x =
+require()` is erased and uses nothing; and a sourced `export { X } from "./m"`
+  names `m`'s export, not a local namespace. Uses in test files count too. A
+  graph built for `extends` alone drops the `Call` edges but still records which
+  namespaces an unfollowable qualified construction escapes. A consumer that
+  needs to know whether a class is built must treat `namespace_escaped` as
   "cannot tell". Mixin and expression bases (`extends mixin(Error)`) are not
   tracked.
 - Selector text edges are approximate. Exact selector edges from configured test

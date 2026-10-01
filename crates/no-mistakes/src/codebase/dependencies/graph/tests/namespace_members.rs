@@ -81,6 +81,11 @@ fn a_namespace_member_construction_is_a_call_edge_to_the_class() {
         ),
         ("Local", "Errors", owned(&[("src/errors.ts", Some("make"))])),
         (
+            "SelfBuilt",
+            "Errors",
+            owned(&[("src/errors.ts", Some("SelfBuilt/create"))]),
+        ),
+        (
             "Deep",
             "Errors.Inner",
             owned(&[
@@ -275,4 +280,69 @@ fn classes_outside_a_namespace_are_never_marked_escaped() {
         .iter()
         .filter(|class| class.namespace.is_none())
         .all(|class| !class.namespace_escaped));
+}
+
+/// A parameter named like the namespace, or like one of its classes, shadows
+/// it: the construction builds no class of the namespace, and is no escape.
+#[test]
+fn a_construction_through_a_shadowing_binding_is_not_a_namespace_member() {
+    let (root, graph) = build();
+    for scope in ["ShadowDead", "InnerShadow"] {
+        let shadowed = class(&graph, scope, Some("Shadowed"));
+        assert!(callers(&root, &graph, shadowed).is_empty(), "{scope}");
+        assert!(!shadowed.namespace_escaped, "{scope}");
+    }
+}
+
+/// `export { Hidden as Public } from "./m"` exports the namespace of `m`, not
+/// the local namespace of the same name, which this file never exports.
+#[test]
+fn a_sourced_export_clause_does_not_export_a_local_namespace() {
+    let (root, graph) = build();
+    let remote = class(&graph, "RemoteLive", Some("Hidden"));
+    assert_eq!(
+        callers(&root, &graph, remote),
+        owned(&[("src/scopes/sourced-use.ts", Some("live"))])
+    );
+    assert!(!remote.namespace_escaped);
+    assert!(!class(&graph, "LocalHidden", Some("Hidden")).exported);
+}
+
+/// An import of the namespace's name merges with it, so it escapes; an erased
+/// `import type x = require()` is no use of the module at all.
+#[test]
+fn an_import_merges_with_a_namespace_but_an_erased_one_uses_nothing() {
+    let (_, graph) = build();
+    assert!(class(&graph, "ImportMergedClass", Some("Imported")).namespace_escaped);
+    assert!(!class(&graph, "TypeOnlyClass", Some("TypeOnly")).namespace_escaped);
+}
+
+/// A graph built for `extends` alone has no call edge, but its class
+/// declarations still say which namespaces a construction could not follow.
+#[test]
+fn an_extends_only_graph_marks_the_same_namespaces_escaped() {
+    let (_, full) = build();
+    let (_, extends_only) = build_fixture("namespace-members", true, false);
+    let flags = |graph: &DepGraph| {
+        let mut flags: Vec<_> = graph
+            .class_declarations()
+            .iter()
+            .map(|class| {
+                (
+                    class.file.clone(),
+                    class.scope.clone(),
+                    class.namespace_escaped,
+                )
+            })
+            .collect();
+        flags.sort();
+        flags
+    };
+    assert_eq!(flags(&extends_only), flags(&full));
+    assert!(class(&extends_only, "LostClass", Some("Lost")).namespace_escaped);
+    assert!(extends_only
+        .edges
+        .edges()
+        .iter()
+        .all(|edge| edge.kind != EdgeKind::Call));
 }

@@ -38,7 +38,7 @@ fn reports_each_dead_error_class_with_file_and_line() {
     let out = check(&fixture(), ".no-mistakes.yml", "human");
     let body = text(&out);
     assert_eq!(out.status.code(), Some(1), "{body}");
-    assert_eq!(body.lines().count(), 27, "{body}");
+    assert_eq!(body.lines().count(), 31, "{body}");
     assert!(
         body.contains(
             "unconstructed-error-class src/errors.ts:2 exported error class `UnusedError` \
@@ -60,6 +60,11 @@ fn reports_each_dead_error_class_with_file_and_line() {
     assert!(
         body.contains("src/namespaced.ts:57 exported error class `Dotted.Path.DeadDottedError`")
     );
+    // A shadowing parameter, a sourced export clause, and an erased
+    // `import type x = require()` each leave a dead class reported.
+    assert!(body.contains("src/namespace-shadowed.ts:4 exported error class `Shadowed.ShadowDead`"));
+    assert!(body.contains("exported error class `Unseen.RemoteDead`"));
+    assert!(body.contains("exported error class `TypeOnly.TypeOnlyError`"));
     for silent in [
         // A namespace member built through a reference the graph resolves.
         "Errors.TopicError",

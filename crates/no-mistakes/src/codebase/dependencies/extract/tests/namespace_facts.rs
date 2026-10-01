@@ -236,6 +236,29 @@ fn a_required_module_is_recorded_as_used_whole() {
 }
 
 #[test]
+fn an_erased_type_only_import_equals_uses_no_module() {
+    let facts = namespaces("import type erased = require('./erased');\n");
+    assert!(facts.opaque_specifiers.is_empty());
+}
+
+/// `export { X as Y } from "./m"` names `m`'s export, never a local `X`.
+#[test]
+fn a_sourced_export_clause_does_not_export_a_local_namespace() {
+    let facts = namespaces(concat!(
+        "namespace Hidden { export class A extends Error {} }\n",
+        "export { Hidden as Public } from './m';\n",
+    ));
+    assert_eq!(members(&facts), [("Hidden.A", false)]);
+    assert!(facts.roots[0].exports.is_empty());
+}
+
+#[test]
+fn an_import_of_the_same_name_merges_with_the_namespace() {
+    let facts = namespaces("import { Ns } from './m';\nnamespace Ns { export class A {} }\n");
+    assert!(facts.roots[0].merged);
+}
+
+#[test]
 fn a_file_without_namespaces_or_imports_has_no_namespace_facts() {
     let facts = namespaces("class A extends Error {}\nconst x = new A();\nexport { x };\n");
     assert_eq!(facts, NamespaceFacts::default());

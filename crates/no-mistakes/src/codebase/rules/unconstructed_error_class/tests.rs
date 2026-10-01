@@ -63,6 +63,13 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             "src/namespace-lib.ts:40 Renamed.RenamedDead",
             "src/namespace-merged.ts:10 Merged.Second",
             "src/namespace-merged.ts:23 Mix.Inner.NestedPart",
+            // A parameter that shadows the namespace or a class is not a use.
+            "src/namespace-shadowed.ts:4 Shadowed.ShadowDead",
+            "src/namespace-shadowed.ts:6 Shadowed.InnerShadow",
+            // A sourced clause exports the target's namespace, not a local one.
+            "src/namespace-sourced-target.ts:5 Unseen.RemoteDead",
+            // `import type X = require()` is erased, so it uses nothing.
+            "src/namespace-type-only-target.ts:2 TypeOnly.TypeOnlyError",
             "src/namespaced.ts:14 Errors.DeadNamespacedError",
             "src/namespaced.ts:30 Errors.Child",
             "src/namespaced.ts:34 Errors.Inner.DeepDeadError",
@@ -130,6 +137,8 @@ fn namespace_members_built_through_a_resolved_reference_are_not_reported() {
         "Renamed.ViaExportRename",
         // A default import of a namespace exported as `default`.
         "Standard.Built",
+        // Through a sourced clause: `Public` is the target's namespace.
+        "Unseen.RemoteLive",
     ] {
         assert!(!targets.contains(&silent), "{silent} was reported");
     }
@@ -176,6 +185,8 @@ fn a_namespace_that_escapes_is_never_reported() {
         "Required.RequiredDead",
         "Backstop.BackstopDead",
         "Gap.GapDead",
+        // An import and a namespace of one name.
+        "Imported.ImportMergedError",
         // Another file imports the namespace, and uses it as a value.
         "ViaAlias.ViaAliasDead",
         "ViaArgument.ViaArgumentDead",
@@ -202,6 +213,8 @@ fn ambient_and_unexported_namespace_classes_are_never_reported() {
         "GlobalAugmentationError",
         "ScriptDead",
         "LegacyDead",
+        // In a namespace that only a sourced clause of the same name exports.
+        "LocalUnseen",
         "Hidden",
         "InternalError",
         "LocalError",

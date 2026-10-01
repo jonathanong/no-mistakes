@@ -10,6 +10,14 @@ export namespace Errors {
     return new Local();
   }
 
+  // A class built by its own static method: the bare name is the class itself,
+  // which the class scope does not shadow.
+  export class SelfBuilt extends Error {
+    static create() {
+      return new SelfBuilt();
+    }
+  }
+
   export class Base extends Error {}
 
   // A bare `extends Base` names the class of the enclosing namespace.

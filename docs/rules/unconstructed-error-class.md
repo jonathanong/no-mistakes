@@ -81,6 +81,13 @@ might build any of its classes:
 - a namespace in a global script file, one with no `import` or `export`, which
   any other file can reach.
 
+Three things are not uses of a namespace. A parameter or local that shadows the
+namespace or one of its classes (`function f(Errors) { return new Errors.X(); }`)
+names that binding, so the construction builds no class of the namespace and does
+not keep it quiet. `import type x = require("./m")` is erased at compile time and
+uses no module. A sourced clause (`export { Errors } from "./m"`) exports the
+`Errors` of `./m`, never a namespace of the same name declared locally.
+
 These uses count wherever they are written, test files included: a test file that
 copies a namespace into a variable keeps its classes quiet, even though a test
 that constructs a class never keeps that class alive.

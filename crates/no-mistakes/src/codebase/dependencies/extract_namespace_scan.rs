@@ -48,7 +48,7 @@ fn top_level_namespace<'p, 'a>(
 }
 
 /// The module of `import x = require("...")`: the whole module becomes a value,
-/// which the graph does not follow.
+/// which the graph does not follow. `import type x = require(...)` is erased.
 fn require_import_specifier(statement: &Statement<'_>) -> Option<String> {
     let declaration = match statement {
         Statement::TSImportEqualsDeclaration(declaration) => declaration,
@@ -59,14 +59,18 @@ fn require_import_specifier(statement: &Statement<'_>) -> Option<String> {
         _ => return None,
     };
     match &declaration.module_reference {
-        TSModuleReference::ExternalModuleReference(reference) => {
+        TSModuleReference::ExternalModuleReference(reference)
+            if !declaration.import_kind.is_type() =>
+        {
             Some(reference.expression.value.to_string())
         }
         _ => None,
     }
 }
 
-/// `(local, exported)` for each value specifier of an `export { ... }` clause.
+/// `(local, exported)` for each value specifier of an `export { ... }` clause
+/// that names a local binding. `export { X } from "./m"` names `m`'s export and
+/// is a different node (`ExportFromDeclaration`), so it never reaches this match.
 fn local_export_clauses(program: &Program<'_>) -> Vec<(String, String)> {
     let clauses = program.body.iter().filter_map(|statement| match statement {
         Statement::ExportNamedDeclaration(export) if !export.export_kind.is_type() => Some(export),
@@ -105,11 +109,16 @@ fn add_namespace_root(
 ) {
     let roots = &mut collector.namespace.facts.roots;
     if let Some(root) = roots.iter_mut().find(|root| root.name == name) {
-        let new: Vec<_> = exports.into_iter().filter(|export| !root.exports.contains(export)).collect();
+        let new: Vec<_> = exports
+            .into_iter()
+            .filter(|export| !root.exports.contains(export))
+            .collect();
         root.exports.extend(new);
         return;
     }
-    let merged = is_enum || collector.local_stack[0].contains(name);
+    let merged = is_enum
+        || collector.local_stack[0].contains(name)
+        || collector.predeclared_imported_bindings.contains(name);
     roots.push(NamespaceRoot {
         name: name.to_string(),
         exports,

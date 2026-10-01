@@ -59,6 +59,16 @@ fn collect_call_edges_for_core(
                     output.sites.push(site);
                 }
                 output.sites.extend(resolution.unknown_sites(file));
+            } else if plan.extends && namespaces_in_repo {
+                // No call edge is wanted, but a construction that cannot be
+                // followed into a namespace still keeps its classes quiet.
+                for call in file.function_calls.iter().filter(|call| {
+                    call.invocation == InvocationKind::Construct
+                        && call.callee.contains('.')
+                        && is_traversable_call(&index, call)
+                }) {
+                    resolution.resolve(call);
+                }
             }
             if plan.extends {
                 let (edges, classes) = resolution.class_bases(file);
