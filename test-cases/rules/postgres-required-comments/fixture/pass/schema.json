@@ -1,0 +1,12 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "orders": {
+      "relationKind": "table",
+      "comment": "One row per checkout; immutable after payment",
+      "columns": {
+        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 }
+      }
+    }
+  }
+}

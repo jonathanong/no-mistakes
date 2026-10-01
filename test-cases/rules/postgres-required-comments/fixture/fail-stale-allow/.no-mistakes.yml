@@ -1,0 +1,8 @@
+rules:
+  - rule: postgres-required-comments
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      allow:
+        - object: table:missing
+          reason: not in this snapshot

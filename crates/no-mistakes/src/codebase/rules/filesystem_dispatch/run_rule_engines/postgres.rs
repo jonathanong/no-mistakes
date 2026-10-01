@@ -12,6 +12,14 @@ pub(super) fn run(
     facts: Option<&crate::codebase::check_facts::CheckFactMap>,
 ) -> Option<Result<Vec<RuleFinding>>> {
     Some(match rule_id {
+        POSTGRES_REQUIRED_COMMENTS => match facts {
+            Some(facts) => postgres_required_comments::check_with_files_sources_and_facts(
+                root, config, files, sources, facts,
+            ),
+            None => postgres_required_comments::check_with_files_and_sources(
+                root, config, files, sources,
+            ),
+        },
         POSTGRES_COLUMN_REQUIRES_TRIGGER => match facts {
             Some(facts) => postgres_column_requires_trigger::check_with_files_sources_and_facts(
                 root, config, files, sources, facts,
