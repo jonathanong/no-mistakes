@@ -22,3 +22,4 @@ expect(url).toContain('https://registry.npmjs.org:443/o/r@v1')
 expect(workflow).toContain('uses: owner/repo/../path/action@v1')
 // A bracketed IPv6 host stays with its port.
 expect(url).toContain('https://[2001:db8::1]:443/actions/checkout@v4')
+expect(url).toContain('https://[fe80::1%25eth0]:443/actions/checkout@v4')

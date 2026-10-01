@@ -15,6 +15,7 @@ expect(workflow).toContain('uses: a/b/foo-v0.0.0/bar@v1')
 // A reserved host is reserved with a port and in any letter case.
 expect(url).toContain('https://localhost:5000/actions/checkout@v4')
 expect(url).toContain('https://EXAMPLE.COM/actions/checkout@v4')
+expect(url).toContain('https://EXAMPLE.COM./actions/checkout@v4')
 // A host after an `@` is not an action ref.
 expect(url).toContain('ssh://git@[2001:db8::1]/a/b@v1')
 expect(env).toContain("NODE_VERSION: 'latest'")

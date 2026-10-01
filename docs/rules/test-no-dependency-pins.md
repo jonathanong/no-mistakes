@@ -27,7 +27,7 @@ rules:
         - "**/__tests__/**"
       patterns:
         - reason: exact action ref
-          regex: '(?<!@)(?:\[[0-9A-Fa-f.]*:[0-9A-Fa-f:.]*\](?::[0-9]+)?/|\b(?:[\w.-]*\w[\w.-]*(?::[0-9]+)?/)?)(?:[\w.-]*\w[\w.-]*/)*[.-]*\b(?P<versions>[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?)\b'
+          regex: '(?<!@)(?:\[[0-9A-Fa-f.]*:[0-9A-Fa-f:.]*(?:%[\w.~%-]+)?\](?::[0-9]+)?/|\b(?:[\w.-]*\w[\w.-]*(?::[0-9]+)?/)?)(?:[\w.-]*\w[\w.-]*/)*[.-]*\b(?P<versions>[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?)\b'
 ```
 
 Counterexample: a test asserts a concrete dependency entry read from
@@ -105,7 +105,9 @@ so a path in front of the ref is part of it: a URL host with its port
 (`github.com/actions/checkout@v4`, `registry.my-org.io:8443/a/b@v1`,
 `[::1]:8080/a/b@v1` for a bracketed IPv6 address), a Go module path
 (`golang.org/x/tools@v0.1.0`), or a directory is kept, while a leading `/`,
-`./` or scheme is not. A component with no name in it (`..`, `.`,
+`./` or scheme is not, nor is a dot or dash at the very start of the first
+component (`.cache/owner/repo@v1` is reported as `cache/owner/repo@v1`). A
+component with no name in it (`..`, `.`,
 `-`, or an empty segment) is not part of a path and ends it, so
 `owner/repo/../path/action@v1` is reported as `path/action@v1`. Three
 consequences:
@@ -232,7 +234,7 @@ value without a suppression comment:
   testing and documentation: `registry.test/app:1.2.3`,
   `localhost:5000/app:1.2.3`, `example.com/app:1.2.3`, `my.test/a/b@v1`, and the
   `.test`, `.example`, `.invalid`, and `.localhost` top-level domains, in any
-  letter case (`EXAMPLE.COM`);
+  letter case and with or without a trailing root dot (`EXAMPLE.COM.`);
 - an untagged image digest is one short block repeated to 64 characters, such
   as `sha256:` followed by 64 zeros or `0123456789abcdef` four times.
 

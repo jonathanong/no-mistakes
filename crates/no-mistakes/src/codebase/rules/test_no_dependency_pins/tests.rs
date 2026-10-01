@@ -185,9 +185,9 @@ fn fail_fixture_reports_each_runtime_pin() {
     let findings = check_with_files(&root, &config_with_options("{}"), &fail_files(&root)).unwrap();
     for (file, reason, count) in [
         // The two plain refs, five `uses:` refs on Homebrew lines (none is a
-        // formula) and eight refs with a deeper path, a zero-version directory, a
+        // formula) and nine refs with a deeper path, a zero-version directory, a
         // host with a port or a bracketed IPv6 address, or a `..` segment.
-        ("src/action-ref.test.mts", "exact action ref", 15),
+        ("src/action-ref.test.mts", "exact action ref", 16),
         ("src/action-ref.test.mts", "versioned Homebrew formula", 0),
         ("src/container-image.test.mts", "container image tag", 24),
         ("src/container-image.test.mts", "container image digest", 2),
@@ -219,6 +219,7 @@ fn fail_fixture_reports_each_runtime_pin() {
         "owner/repo/v1.0.0/x/y@v1",
         "registry.npmjs.org:443/o/r@v1",
         "[2001:db8::1]:443/actions/checkout@v4",
+        "[fe80::1%25eth0]:443/actions/checkout@v4",
         "path/action@v1",
     ] {
         assert!(action_refs.contains(&whole), "{whole}: {action_refs:#?}");

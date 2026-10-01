@@ -128,6 +128,10 @@ fn a_path_before_the_ref_is_part_of_the_reported_text() {
         ),
         ("/home/runner/x/y@v1", "home/runner/x/y@v1"),
         ("./a/b/c@v1", "a/b/c@v1"),
+        // The path starts at the first letter or digit, so a dot or dash at the
+        // very start of the first component is not part of it.
+        (".cache/owner/repo@v1", "cache/owner/repo@v1"),
+        ("-dir/owner/repo@v1", "dir/owner/repo@v1"),
     ] {
         assert_eq!(refs(line), [expected], "{line}");
     }
@@ -195,6 +199,12 @@ fn a_bracketed_ip_literal_host_stays_with_its_port() {
             "[2001:db8::1]:443/actions/checkout@v4",
         ),
         ("https://[::1]/a/b@v1", "[::1]/a/b@v1"),
+        // A zone identifier belongs to the address.
+        (
+            "https://[fe80::1%25eth0]:443/actions/checkout@v4",
+            "[fe80::1%25eth0]:443/actions/checkout@v4",
+        ),
+        ("https://[fe80::1%eth0]/a/b@v1", "[fe80::1%eth0]/a/b@v1"),
         ("https://[::1]:8080/o/r/sub@v1", "[::1]:8080/o/r/sub@v1"),
         (
             "uses: [::ffff:192.0.2.1]:443/a/b@v1",
@@ -236,6 +246,10 @@ fn a_reserved_host_in_the_path_makes_the_ref_synthetic() {
         "https://Example.Org/actions/checkout@v4",
         "https://REGISTRY.TEST/actions/checkout@v4",
         "https://LOCALHOST/actions/checkout@v4",
+        // An absolute name ends in the root dot.
+        "https://EXAMPLE.COM./actions/checkout@v4",
+        "https://localhost.:5000/actions/checkout@v4",
+        "registry.test./a/b@v1",
     ] {
         assert!(refs(line).is_empty(), "{line}: {:?}", refs(line));
     }
@@ -248,6 +262,7 @@ fn a_reserved_host_in_the_path_makes_the_ref_synthetic() {
         ("example.com.evil.io/a/b@v1", "example.com.evil.io/a/b@v1"),
         ("notexample.com/a/b@v1", "notexample.com/a/b@v1"),
         ("NotExample.com/a/b@v1", "NotExample.com/a/b@v1"),
+        ("notexample.com./a/b@v1", "notexample.com./a/b@v1"),
         ("Ghcr.IO/a/b@v1", "Ghcr.IO/a/b@v1"),
         ("example.io/a/b@v1", "example.io/a/b@v1"),
         // Only the first component is a host; a repo or directory named `b.test`

@@ -36,7 +36,8 @@ pub(super) fn only_zero_versions(pin: &str) -> bool {
 
 /// True for `registry.test/app:1.2.3`, `localhost:5000/app:1.2.3`, and
 /// `example.com/app:1.2.3`: hosts that can never serve a real dependency. A
-/// hostname is case-insensitive, so `EXAMPLE.COM` is as reserved as `example.com`.
+/// hostname is case-insensitive and may end in the DNS root dot, so
+/// `EXAMPLE.COM.` is as reserved as `example.com`.
 fn reserved_registry(pin: &str) -> bool {
     let Some((authority, _)) = pin.split_once('/') else {
         return false;
@@ -46,7 +47,7 @@ fn reserved_registry(pin: &str) -> bool {
         .next()
         .unwrap_or_default()
         .to_ascii_lowercase();
-    let host = host.as_str();
+    let host = host.strip_suffix('.').unwrap_or(&host);
     host == "localhost"
         || host
             .rsplit_once('.')

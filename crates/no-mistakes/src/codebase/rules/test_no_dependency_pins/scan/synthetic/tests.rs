@@ -52,6 +52,10 @@ fn reserved_registries_are_synthetic() {
         "Example.COM/app:1.2.3",
         "LOCALHOST:5000/app:1.2.3",
         "Registry.Example.Com/app:1.2.3",
+        // An absolute name ends in the root dot.
+        "example.com./app:1.2.3",
+        "LOCALHOST.:5000/app:1.2.3",
+        "registry.test./app:1.2.3",
     ] {
         assert!(is_synthetic(pin), "{pin}");
     }
@@ -60,6 +64,7 @@ fn reserved_registries_are_synthetic() {
         "GHCR.IO/example/app:1.2.3",
         "NotExample.com/app:1.2.3",
         "notexample.com/app:1.2.3",
+        "notexample.com./app:1.2.3",
         "example.com.evil.io/app:1.2.3",
         "ghcr.io/example/app:1.2.3",
         "valkey/valkey-bundle:9.1.0",
