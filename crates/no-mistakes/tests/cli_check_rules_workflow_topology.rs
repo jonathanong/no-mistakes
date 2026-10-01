@@ -30,7 +30,10 @@ fn concurrency_intent_fail_json_is_stable_and_names_each_mismatch() {
     let first = check_json("fail");
     let second = check_json("fail");
     assert_eq!(first.stdout, second.stdout);
-    assert!(!first.status.success(), "expected the fail fixture to exit 1");
+    assert!(
+        !first.status.success(),
+        "expected the fail fixture to exit 1"
+    );
     let body = String::from_utf8(first.stdout).unwrap();
     for message in [
         "concurrency cancellation mismatch: .github/workflows/ci.yml: expected conditional, got cancel-running",
