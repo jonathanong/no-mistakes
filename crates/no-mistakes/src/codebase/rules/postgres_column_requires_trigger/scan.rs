@@ -12,6 +12,7 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
             findings.extend(findings_for(
                 &compiled.schema_catalog_path,
                 table,
+                &compiled.requirements,
                 requirement,
             ));
         }
@@ -24,6 +25,7 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
 fn findings_for(
     catalog_path: &str,
     table: &CatalogTable,
+    requirements: &[Requirement],
     requirement: &Requirement,
 ) -> Vec<RuleFinding> {
     let object = CatalogObjectRef::Table(table.name.clone());
@@ -35,7 +37,17 @@ fn findings_for(
         return table
             .triggers
             .iter()
-            .filter(|trigger| same_function(trigger, requirement))
+            .filter(|trigger| {
+                same_function(trigger, requirement)
+                    && !requirements.iter().any(|other| {
+                        other.column != requirement.column
+                            && table
+                                .columns
+                                .iter()
+                                .any(|column| column.name == other.column)
+                            && covers(trigger, other)
+                    })
+            })
             .map(|trigger| {
                 catalog_finding(
                     RULE_ID,

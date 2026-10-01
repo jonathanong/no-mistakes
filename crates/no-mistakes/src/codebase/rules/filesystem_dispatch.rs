@@ -28,6 +28,7 @@ use super::{
     vitest_test_correspondence, workflow_topology_policy, workspace_package_cycles,
 };
 
+mod call_site_facts;
 mod candidate_helpers;
 mod candidate_index;
 mod entrypoints;

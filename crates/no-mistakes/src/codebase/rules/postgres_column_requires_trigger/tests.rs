@@ -84,6 +84,23 @@ fn wrong_timing_and_statement_triggers_are_missing() {
 }
 
 #[test]
+fn shared_function_is_not_leftover_for_a_covered_column() {
+    let options = "schemaCatalogPath: schema.json\nrequirements:\n  - column: updated_at\n    function: fn_touch_updated_at\n  - column: deleted_at\n    function: fn_touch_updated_at\n";
+    let joined = messages(options).join("\n");
+    assert!(!joined.contains("table:orders:"));
+    assert!(joined.contains("table:ghosts:"));
+}
+
+#[test]
+fn include_that_misses_the_catalog_reports_nothing() {
+    let mut compiled = config(TOUCH);
+    compiled.rules[0].include = vec!["services/api/**".to_string()];
+    let root = fixture();
+    let findings = check_with_files(&root, &compiled, &[root.join("schema.json")]).unwrap();
+    assert!(findings.is_empty());
+}
+
+#[test]
 fn two_requirements_are_checked_independently() {
     let options = "schemaCatalogPath: schema.json\nrequirements:\n  - column: updated_at\n    function: fn_touch_updated_at\n  - column: deleted_at\n    function: fn_touch_deleted_at\n";
     let joined = messages(options).join("\n");

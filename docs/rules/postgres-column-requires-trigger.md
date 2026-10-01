@@ -41,7 +41,8 @@ schema catalog:
 - When `allowColumnList` is false, `UPDATE OF a, b` does not count as covering
   `update`. If that trigger is the only candidate, the finding names it.
 - If a trigger executes `function` and the table has no `column`, that leftover
-  trigger is reported too.
+  trigger is reported too. It is not leftover when another requirement's column
+  is present and that same trigger satisfies the other requirement.
 - `BEFORE INSERT OR UPDATE` satisfies `events: [update]`. A schema qualifier on
   the function is ignored. Periods inside a quoted identifier stay part of the
   name. The function body is not checked.
@@ -58,6 +59,8 @@ are required and non-empty. `timing` defaults to `before` (`before`, `after`,
 or `instead-of`). `events` defaults to `[update]` and must be a non-empty list
 of `insert`, `update`, `delete`, or `truncate`. `forEachRow` defaults to
 `true`. `allowColumnList` defaults to `false`. `allow` defaults to `[]`.
+`include`, `exclude`, and `projects` apply to the schema catalog path. An
+application whose filters miss that path reports nothing for it.
 
 An unknown timing or event, an empty required string, a missing
 `schemaCatalogPath`, `truncate` combined with `forEachRow: true`, an allow

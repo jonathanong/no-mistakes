@@ -78,14 +78,19 @@ pub(crate) fn check_with_files_and_sources(
 }
 
 pub(crate) fn check_with_files_sources_and_facts(
-    _root: &Path,
+    root: &Path,
     config: &NoMistakesConfig,
     _files: &[PathBuf],
     _sources: &crate::codebase::ts_source::SourceStore,
     facts: &crate::codebase::check_facts::CheckFactMap,
 ) -> Result<Vec<RuleFinding>> {
     let mut findings = Vec::new();
-    for compiled in compile_applications(config)? {
+    for rule in config.rule_applications(RULE_ID) {
+        let compiled = compile_options(&rule.try_rule_options()?)?;
+        let filter = super::path_filter::RulePathFilter::new(root, config, &rule)?;
+        if !filter.is_match(Path::new(&compiled.schema_catalog_path)) {
+            continue;
+        }
         let catalog = facts.postgres_schema_catalog(&compiled.schema_catalog_path)?;
         findings.extend(scan::scan(compiled, catalog));
     }
