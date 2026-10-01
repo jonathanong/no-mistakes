@@ -182,6 +182,30 @@ bare-integer tag on a dotted registry host, whose components still cannot
 contain dots: that keeps `github.com/acme/app/internal/binder.go:1755` out.
 `-p 51088:6379` port mappings never match.
 
+References are ASCII-only, like Docker's grammar, and a non-ASCII character is
+never part of one. It ends a reference and is a boundary on both sides, so the
+ASCII part is still reported: `ghcr.io/owner/name:v2β`, `ghcr.io/owner/name:2.1β`,
+`image: postgres:18β`, and `ubuntu-22.04β` report the pin in front of the `β`, a
+`β` directly before a reference does not hide it, and typographic quotes around
+`“ghcr.io/owner/name:2.1”` delimit it. The `image`, `FROM`, and `brew` context
+words follow the same rule: a non-ASCII letter next to one is not part of the
+word, so it is still that key.
+
+Digits are ASCII only. A tag, registry port, or runner label written with other
+digits (Arabic-Indic or full-width forms) is not a version: `ghcr.io/owner/name:v٢`,
+`ghcr.io/owner/name:٢.١`, `ghcr.io:٥٠٠٠/owner/name:2`, `ubuntu-٢٢.٠٤`,
+`brew install postgresql@١٨`, and `node-version: ٢٢` are not pins. An ASCII
+reference followed by a non-ASCII digit is still reported up to the digit, so
+`ghcr.io/owner/name:1.٢` reports `ghcr.io/owner/name:1`.
+
+A registry host is dotted RFC 1123 labels, each starting and ending with a letter
+or digit (hyphens only inside), with an optional `:port`, or `localhost:port`:
+`registry-eu.acme.io/owner/name:2.4.1` and `10.0.0.5:5000/owner/name:2` are hosts.
+A label that starts or ends with `-` makes the text not a host, and nothing is
+reported for it: `bad-.acme.io/owner/name:9` and `-bad.acme.io/owner/name:9` are
+not pins, and their valid-looking suffix (`acme.io/owner/name:9`) is not reported
+either, because `-` and `.` never start a pin.
+
 ### Placeholder values
 
 A pin made only of zero versions or of reserved test values is a placeholder,

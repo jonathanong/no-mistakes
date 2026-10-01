@@ -188,7 +188,7 @@ fn fail_fixture_reports_each_runtime_pin() {
         // formula) and three refs with a deeper path.
         ("src/action-ref.test.mts", "exact action ref", 10),
         ("src/action-ref.test.mts", "versioned Homebrew formula", 0),
-        ("src/container-image.test.mts", "container image tag", 19),
+        ("src/container-image.test.mts", "container image tag", 24),
         ("src/container-image.test.mts", "container image digest", 2),
         ("src/setup-version.test.mts", "setup action version", 6),
         (
