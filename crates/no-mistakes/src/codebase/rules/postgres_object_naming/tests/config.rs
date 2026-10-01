@@ -177,6 +177,14 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
         "option deniedTokens: token \" cfg\" must be a single word",
     );
     expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  uncountable: [sales_data]\n",
+        "option plural.uncountable: value \"sales_data\" must be a single word",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  nonPluralTokens: [sales_data]\n",
+        "option plural.nonPluralTokens: value \"sales_data\" must be a single word",
+    );
+    expect_err(
         "schemaCatalogPath: schema.json\npatterns:\n  index: '(?q)^idx_{table}__$'\n",
         "option patterns.index: a pattern with {table} must start with ^ and end with $",
     );

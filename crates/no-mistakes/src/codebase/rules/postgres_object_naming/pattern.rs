@@ -1,5 +1,7 @@
 use super::expand::{middle_matches, suggestion};
-use super::pattern_walk::{active_flags, ends_unescaped_dollar, placeholder_is_plain};
+use super::pattern_walk::{
+    active_flags, ends_unescaped_dollar, placeholder_is_plain, walk_placeholders,
+};
 use anyhow::{bail, Result};
 use regex::Regex;
 
@@ -34,16 +36,18 @@ pub(super) fn compile_pattern(kind: &str, raw: &str) -> Result<CompiledPattern> 
     if !KINDS.contains(&kind) {
         bail!("postgres-object-naming option patterns.{kind}: unknown pattern kind");
     }
-    let count = raw.matches("{table}").count();
-    if count == 0 {
+    let found = walk_placeholders(raw);
+    if found.offsets.is_empty() {
         let regex = Regex::new(raw).map_err(|error| invalid(kind, &error.to_string()))?;
         return Ok(CompiledPattern {
             raw: raw.to_string(),
             kind: PatternBody::Plain(regex),
         });
     }
-    validate_placeholder(kind, raw, count)?;
-    let (pre, post) = raw.split_once("{table}").expect("count checked");
+    validate_placeholder(kind, raw, found.offsets.len())?;
+    let at = found.offsets[0];
+    let pre = &raw[..at];
+    let post = &raw[at + "{table}".len()..];
     let flags = active_flags(pre);
     let pre = Regex::new(&format!("{pre}$")).map_err(|error| invalid(kind, &error.to_string()))?;
     let post = Regex::new(&format!("{flags}^(?:{post})"))
@@ -70,12 +74,12 @@ pub(super) fn match_name(
             for start in bounds
                 .iter()
                 .copied()
-                .filter(|index| pre.is_match(&name[..*index]))
+                .filter(|index| covers(pre, &name[..*index]))
             {
                 for end in bounds
                     .iter()
                     .copied()
-                    .filter(|index| post.is_match(&name[*index..]))
+                    .filter(|index| covers(post, &name[*index..]))
                 {
                     if start <= end
                         && middle_matches(&name[start..end], table, abbreviations, min_letters)
@@ -107,6 +111,12 @@ pub(super) fn table_note(
         Some(hint) => format!(" ({{table}} = {table} or an abbreviation such as {hint})"),
         None => format!(" ({{table}} = {table})"),
     }
+}
+
+fn covers(regex: &Regex, text: &str) -> bool {
+    regex
+        .find(text)
+        .is_some_and(|found| found.start() == 0 && found.end() == text.len())
 }
 
 fn prefer(best: Option<(usize, usize)>, start: usize, end: usize) -> (usize, usize) {

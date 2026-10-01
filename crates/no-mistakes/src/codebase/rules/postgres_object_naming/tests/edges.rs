@@ -342,6 +342,22 @@ fn quoted_names_min_words_and_active_flags() {
 }
 
 #[test]
+fn verbose_comments_and_multiline_anchors() {
+    let verbose =
+        "schemaCatalogPath: schema.json\npatterns:\n  index: \"(?x)^idx_ # {table}\\n[a-z]+$\"\n";
+    expect_none(verbose, index("orders", "idx_ab", false, false));
+    expect(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '(?m)^idx_{table}__x$'\n",
+        index("orders", "idx_\nJUNKorders__x", false, false),
+        "schema.json: index:orders.idx_\nJUNKorders__x: index name does not match pattern (?m)^idx_{table}__x$ ({table} = orders)",
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '(?m)^idx_{table}__x$'\n",
+        index("orders", "idx_orders__x", false, false),
+    );
+}
+
+#[test]
 fn primary_indexes_and_flags_inside_classes() {
     let primary = serde_json::json!({
         "tables": {

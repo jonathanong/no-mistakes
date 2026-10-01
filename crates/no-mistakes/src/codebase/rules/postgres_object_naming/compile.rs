@@ -95,6 +95,8 @@ fn compile_plural(options: &Options) -> Result<Option<PluralPolicy>> {
             bail!("postgres-object-naming option plural.irregularPlurals: duplicate key {key}");
         }
     }
+    require_single_words("plural.uncountable", &options.plural.uncountable)?;
+    require_single_words("plural.nonPluralTokens", &options.plural.non_plural_tokens)?;
     let mut ignore = Vec::new();
     for pattern in &options.plural.ignore_patterns {
         ignore.push(Regex::new(pattern).map_err(|error| {
@@ -113,6 +115,15 @@ fn compile_plural(options: &Options) -> Result<Option<PluralPolicy>> {
         options.plural.non_plural_tokens.clone(),
         ignore,
     )))
+}
+
+fn require_single_words(option: &str, words: &[String]) -> Result<()> {
+    for word in words {
+        if !super::policy::is_single_word(word) {
+            bail!("postgres-object-naming option {option}: value \"{word}\" must be a single word");
+        }
+    }
+    Ok(())
 }
 
 fn compile_denied(tokens: &[super::DeniedToken]) -> Result<Vec<(String, String)>> {

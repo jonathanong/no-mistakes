@@ -78,22 +78,39 @@ pub(super) fn ends_unescaped_dollar(pattern: &str) -> bool {
     slashes % 2 == 0
 }
 
-pub(super) fn placeholder_is_plain(pattern: &str) -> bool {
+pub(super) struct PlaceholderWalk {
+    pub offsets: Vec<usize>,
+    pub plain: bool,
+}
+
+pub(super) fn walk_placeholders(pattern: &str) -> PlaceholderWalk {
     let chars: Vec<(usize, char)> = pattern.char_indices().collect();
     let mut index = 0;
     let mut depth = 0i32;
     let mut in_class = false;
     let mut top_alt = false;
+    let mut verbose = false;
+    let mut comment = false;
     let mut ok = false;
+    let mut bad = false;
+    let mut offsets = Vec::new();
     while index < chars.len() {
         let (byte, character) = chars[index];
+        if comment {
+            if character == '\n' {
+                comment = false;
+            }
+            index += 1;
+            continue;
+        }
         if character == '\\' {
             index += 2;
             continue;
         }
         if in_class {
             if pattern[byte..].starts_with("{table}") {
-                return false;
+                offsets.push(byte);
+                bad = true;
             }
             if character == ']' {
                 in_class = false;
@@ -106,7 +123,18 @@ pub(super) fn placeholder_is_plain(pattern: &str) -> bool {
             in_class = true;
             continue;
         }
+        if character == '#' && verbose {
+            comment = true;
+            index += 1;
+            continue;
+        }
         if character == '(' {
+            if let Some(end) = flag_end(&chars, index) {
+                let body: String = chars[index + 2..end].iter().map(|(_, char)| char).collect();
+                apply_verbose(&body, &mut verbose);
+                index = end + 1;
+                continue;
+            }
             depth += 1;
         }
         if character == ')' && depth > 0 {
@@ -116,14 +144,51 @@ pub(super) fn placeholder_is_plain(pattern: &str) -> bool {
             top_alt = true;
         }
         if pattern[byte..].starts_with("{table}") {
-            if depth != 0 || in_class {
-                return false;
+            offsets.push(byte);
+            if depth != 0 {
+                bad = true;
             }
             ok = true;
         }
         index += 1;
     }
-    ok && !top_alt
+    PlaceholderWalk {
+        offsets,
+        plain: ok && !top_alt && !bad,
+    }
+}
+
+fn flag_end(chars: &[(usize, char)], start: usize) -> Option<usize> {
+    if chars.get(start + 1).is_none_or(|(_, char)| *char != '?') {
+        return None;
+    }
+    let mut index = start + 2;
+    let mut dash = false;
+    let mut flag = false;
+    while let Some((_, character)) = chars.get(index) {
+        match character {
+            '-' if !dash => dash = true,
+            'i' | 'm' | 's' | 'u' | 'U' | 'x' | 'R' => flag = true,
+            ')' if flag => return Some(index),
+            _ => return None,
+        }
+        index += 1;
+    }
+    None
+}
+
+fn apply_verbose(body: &str, verbose: &mut bool) {
+    let (on, off) = body.split_once('-').unwrap_or((body, ""));
+    if on.contains('x') {
+        *verbose = true;
+    }
+    if off.contains('x') {
+        *verbose = false;
+    }
+}
+
+pub(super) fn placeholder_is_plain(pattern: &str) -> bool {
+    walk_placeholders(pattern).plain
 }
 
 fn open_class(chars: &[(usize, char)], mut index: usize) -> usize {
