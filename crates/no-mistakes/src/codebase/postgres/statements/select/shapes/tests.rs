@@ -117,3 +117,18 @@ fn grouped_bare_count_is_not_an_existence_check() {
     assert!(counts("SELECT COUNT(*) > 0 FROM orders GROUP BY account_id").is_empty());
     assert!(counts("SELECT (SELECT COUNT(*) FROM orders GROUP BY account_id) > 0").is_empty());
 }
+
+#[test]
+fn other_count_forms_are_not_existence_checks() {
+    for sql in [
+        "SELECT (SELECT COUNT(*) FROM orders) = 1",
+        "SELECT (SELECT COUNT(*) FROM orders UNION SELECT COUNT(*) FROM bans) > 0",
+        "SELECT (SELECT COUNT(*), 1 FROM orders) > 0",
+        "SELECT (SELECT * FROM orders) > 0",
+        "SELECT (SELECT 1 FROM orders) > 0",
+        "SELECT (SELECT COUNT(*) FROM orders) > id FROM accounts",
+        "SELECT (SELECT COUNT(*) FROM orders) = '0'",
+    ] {
+        assert!(counts(sql).is_empty(), "{sql}");
+    }
+}

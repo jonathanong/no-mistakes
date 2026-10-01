@@ -1,0 +1,1 @@
+SELECT id FROM accounts WHERE id NOT IN (SELECT 1) AND id NOT IN (SELECT 2);

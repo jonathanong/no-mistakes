@@ -128,6 +128,28 @@ fn suppression_directives_hide_the_new_shapes() {
 }
 
 #[test]
+fn disabling_the_exists_shape_skips_that_finding() {
+    let root = fixture("fail");
+    let sql = root.join("sql/001.sql");
+    let findings = check_with_files(
+        &root,
+        &config_yaml("sqlInclude: [\"sql/**/*.sql\"]\nbannedShapes: [not-in-subquery]\n"),
+        std::slice::from_ref(&sql),
+    )
+    .unwrap();
+    assert!(findings.is_empty(), "{findings:?}");
+}
+
+#[test]
+fn identical_shapes_on_one_line_are_reported_once() {
+    let root = fixture("fail-shapes");
+    let sql = root.join("sql/same-line.sql");
+    let findings =
+        check_with_files(&root, &config_yaml(BANNED), std::slice::from_ref(&sql)).unwrap();
+    assert_eq!(findings.len(), 1, "{findings:?}");
+}
+
+#[test]
 fn repeated_shape_scans_match() {
     let root = fixture("fail-shapes");
     let sql = root.join("sql/not-in.sql");

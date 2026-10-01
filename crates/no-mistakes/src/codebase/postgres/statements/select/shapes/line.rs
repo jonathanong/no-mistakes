@@ -46,3 +46,6 @@ fn starts_with(chars: &[(usize, char)], needle: &[char]) -> bool {
     }
     needle_at == needle.len()
 }
+
+#[cfg(test)]
+mod tests;
