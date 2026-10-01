@@ -67,10 +67,11 @@ list is reported. Otherwise each key column, in key order, must have a listed
 `data_type`. The word `enum` matches a catalog enum after dropping the schema
 from both names. An empty list leaves keys unchecked.
 `references` splits quoted identifiers before dropping the schema.
+A blank entry in `references` is a configuration error.
 A blank `type` is a configuration error.
 `bannedTablePatterns` apply whether or not a shape matches.
 `include`, `exclude`, and `projects` filter the catalog path.
-A non-empty rule `message` replaces each finding's text.
+A non-empty rule `message` replaces the finding text and keeps the catalog path and `table:<name>` locator.
 
 Findings use `table:<name>`. Shape texts start with `(shape <name>)`.
 

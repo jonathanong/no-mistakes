@@ -176,6 +176,18 @@ fn option_errors_name_the_field() {
             "option references: must not be empty",
         ),
         (
+            "schemaCatalogPath: schema.json\nshapes:\n  - name: s\n    tablePattern: t\n    requiredColumns:\n      - name: id\n        references: [' ']\n",
+            "option references: blank table",
+        ),
+        (
+            "schemaCatalogPath: schema.json\nshapes:\n  - name: s\n    tablePattern: t\n    requiredColumns:\n      - name: ' '\n",
+            "option requiredColumns: exactly one of name or namePattern",
+        ),
+        (
+            "schemaCatalogPath: schema.json\nbannedTablePatterns:\n  - pattern: ' '\n    message: because\n",
+            "option pattern: required",
+        ),
+        (
             "schemaCatalogPath: schema.json\nshapes:\n  - name: s\n    tablePattern: t\n    requiredColumns:\n      - name: id\n        onDelete: whenever\n",
             "option onDelete: unknown value whenever",
         ),
@@ -320,11 +332,81 @@ fn custom_message_and_include_filter_the_catalog() {
         .into_iter()
         .map(|finding| finding.message)
         .collect::<Vec<_>>();
-    assert_eq!(messages, vec!["use a real key".to_string()]);
+    assert_eq!(
+        messages,
+        vec!["edges.json: table:empty_key: use a real key".to_string()]
+    );
     configured.rules[0].include = vec!["missing.json".to_string()];
     assert!(
         check_with_files(&root, &configured, &[root.join("edges.json")])
             .unwrap()
             .is_empty()
+    );
+}
+
+#[test]
+fn pattern_diagnostics_name_every_constraint() {
+    let options = "schemaCatalogPath: edges.json
+shapes:
+  - name: typed
+    tablePattern: ^partial$
+    requiredColumns:
+      - namePattern: ^note$
+        type: uuid
+  - name: required
+    tablePattern: ^partial$
+    requiredColumns:
+      - namePattern: ^note$
+        nullable: false
+  - name: plain
+    tablePattern: ^partial$
+    requiredColumns:
+      - namePattern: ^owner_id$
+        foreignKey: false
+  - name: action
+    tablePattern: ^partial$
+    requiredColumns:
+      - namePattern: ^absent$
+        onDelete: cascade
+  - name: labels
+    tablePattern: ^empty_key$
+    requiredTriggers:
+      - function: '\"a\"\"b\"'
+        timing: after
+        events: [insert]
+      - function: fn_trunc
+        events: [truncate]
+        forEachRow: false
+";
+    let root = fixture();
+    let body = check_with_files(&root, &config(options), &[root.join("edges.json")])
+        .unwrap()
+        .into_iter()
+        .map(|finding| finding.message)
+        .collect::<Vec<_>>()
+        .join("\n");
+    assert!(
+        body.contains("no column matches ^note$ with type uuid"),
+        "{body}"
+    );
+    assert!(
+        body.contains("no column matches ^note$ with NOT NULL"),
+        "{body}"
+    );
+    assert!(
+        body.contains("no column matches ^owner_id$ with not a foreign key"),
+        "{body}"
+    );
+    assert!(
+        body.contains("no column matches ^absent$ with a foreign key, ON DELETE CASCADE"),
+        "{body}"
+    );
+    assert!(
+        body.contains("no AFTER INSERT FOR EACH ROW trigger executing a\"b()"),
+        "{body}"
+    );
+    assert!(
+        body.contains("no BEFORE TRUNCATE FOR EACH STATEMENT trigger executing fn_trunc()"),
+        "{body}"
     );
 }

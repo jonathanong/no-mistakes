@@ -110,6 +110,9 @@ fn compile_column(column: &ColumnOptions) -> Result<RequiredColumn> {
         Some(tables) if tables.is_empty() => {
             bail!("{RULE_ID} option references: must not be empty");
         }
+        Some(tables) if tables.iter().any(|table| table.trim().is_empty()) => {
+            bail!("{RULE_ID} option references: blank table");
+        }
         Some(tables) => Some(tables.clone()),
         None => None,
     };

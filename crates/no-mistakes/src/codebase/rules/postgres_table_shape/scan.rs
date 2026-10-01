@@ -33,7 +33,8 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
         .filter(|message| !message.trim().is_empty())
     {
         for finding in &mut findings {
-            finding.message = message.clone();
+            let object = finding.target.clone().unwrap_or_default();
+            finding.message = format!("{}: {object}: {message}", finding.file);
         }
     }
     compiled
