@@ -8,16 +8,32 @@ use std::sync::LazyLock;
 /// path components, the shape the exact-action-ref pattern reads. A slashless
 /// value (`uses: postgresql@18`) is not an action ref, so it stays a formula.
 /// `uses` is a key only where a key can start: the line start, a JavaScript
-/// `\n`/`\r`/`\t` escape, the opening quote of a string, or a flow-mapping `{`
-/// or `[` (a `,` starts a key only after one, so `{ name: x, uses: ... }` is a
-/// key but `Homebrew, uses: ...` is not), then indentation and an optional `- `
-/// list marker. Prose (`Homebrew uses: homebrew/core/postgresql@18`) and a name
-/// that only ends in `uses` (`package.uses:`, `steps/uses:`, `$uses:`) are not
-/// keys.
+/// `\n`/`\r`/`\t` escape, the opening quote of a string, a flow-mapping `{` or
+/// `[`, or a `,` that separates entries inside one (see `inside_flow`), then
+/// indentation and an optional `- ` list marker. Prose
+/// (`Homebrew uses: homebrew/core/postgresql@18`, `Homebrew, uses: ...`) and a
+/// name that only ends in `uses` (`package.uses:`, `steps/uses:`, `$uses:`) are
+/// not keys.
 static USES_VALUE_PREFIX: LazyLock<Regex> = LazyLock::new(|| {
-    Regex::new(r#"(?:^|\\[nrt]|["'`]|[{\[](?:[^}\],]*,)*)\s*(?:-\s+)?uses\\?["']?\s*:\s*\\?["']?(?:[\w.-]+/)+$"#)
+    Regex::new(r#"(?:^|\\[nrt]|["'`{\[]|(?P<comma>,))\s*(?:-\s+)?uses\\?["']?\s*:\s*\\?["']?(?:[\w.-]+/)+$"#)
         .expect("uses value prefix regex")
 });
+
+/// True when `text` leaves a `{` or `[` open, so a comma after it separates the
+/// entries of a flow mapping or sequence (`{ env: { A: 1 }, uses: ... }`).
+/// Prose with a comma (`Homebrew, uses: ...`) or a closed bracket
+/// (`Homebrew [see note], uses: ...`) does not.
+fn inside_flow(text: &str) -> bool {
+    let mut open = 0_usize;
+    for byte in text.bytes() {
+        match byte {
+            b'{' | b'[' => open += 1,
+            b'}' | b']' => open = open.saturating_sub(1),
+            _ => {}
+        }
+    }
+    open > 0
+}
 
 /// A finding and, for a line-scanned pin, the byte span it covers in the file.
 pub(super) struct Found {
@@ -137,7 +153,14 @@ fn builtin_pins<'l>(line: &'l str, pattern: &CompiledPattern) -> Vec<Match<'l>> 
 
 /// True for a pin of a line-context pattern that ends a `uses:` value.
 fn ends_uses_value(line: &str, pattern: &CompiledPattern, pin: &Match<'_>) -> bool {
-    pattern.line_context.is_some() && USES_VALUE_PREFIX.is_match(&line[..pin.start()])
+    if pattern.line_context.is_none() {
+        return false;
+    }
+    let before = &line[..pin.start()];
+    USES_VALUE_PREFIX.captures(before).is_some_and(|key| {
+        key.name("comma")
+            .is_none_or(|comma| inside_flow(&before[..comma.start()]))
+    })
 }
 
 fn follows_at(line: &str, pattern: &CompiledPattern, matched: &Match<'_>) -> bool {

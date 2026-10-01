@@ -130,7 +130,7 @@ only the pin (not the surrounding line), and reports several pins per line.
   `Homebrew, uses: homebrew/core/postgresql@18`,
   `brew package.uses: homebrew/core/postgresql@18`, `$uses:`): `uses` is a key
   only at the start of a line, a string, a flow mapping or sequence (where a
-  comma also starts a key), or a list item. Not
+  comma after an unclosed `{` or `[` also starts a key), or a list item. Not
   `pnpm@12` or `undici@1.0.1` without that context.
 - `versioned runner label`: `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15`,
   `macos-15-intel`, `windows-2025`, and `windows-11-arm`. Not `ubuntu-latest`,
