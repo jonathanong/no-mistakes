@@ -1,0 +1,5 @@
+rules:
+  - rule: postgres-identifier-length
+    scope: repository
+    options:
+      sqlInclude: ["migrations/**/*.sql"]

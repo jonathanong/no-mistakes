@@ -1,0 +1,1 @@
+CREATE INDEX app.qualified_indexxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx ON accounts (id);

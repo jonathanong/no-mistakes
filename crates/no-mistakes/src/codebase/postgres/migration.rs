@@ -4,12 +4,21 @@ use sqlparser::ast::{ObjectName, ObjectNamePart, ObjectType, Statement};
 
 mod constraints;
 mod dynamic;
+mod identifiers;
 mod indexes;
 mod lines;
 mod predicate;
 mod statements;
 
 pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
+    let mut facts = extract_parsed_migration_facts(sql);
+    facts
+        .declared_identifiers
+        .extend(identifiers::procedure_names(sql));
+    facts
+}
+
+fn extract_parsed_migration_facts(sql: &str) -> SqlSchemaFileFacts {
     let mut facts = SqlSchemaFileFacts {
         tables: extract_create_table_metadata(sql),
         ..Default::default()
@@ -17,7 +26,13 @@ pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
     let mut create_index_n = 0usize;
     let mut drop_index_n = 0usize;
     let mut drop_table_n = 0usize;
+    let mut identifier_from = 0usize;
     for statement in super::parse::parse_postgres_sql_lenient(sql) {
+        facts.declared_identifiers.extend(identifiers::collect(
+            sql,
+            &statement,
+            &mut identifier_from,
+        ));
         statements::record(sql, &statement, &mut facts);
         match statement {
             Statement::CreateIndex(index) => {
@@ -71,7 +86,7 @@ pub fn extract_migration_facts(sql: &str) -> SqlSchemaFileFacts {
         .into_iter()
         .chain(dynamic::extract(sql))
     {
-        let mut dynamic_facts = extract_migration_facts(&dynamic_sql.sql);
+        let mut dynamic_facts = extract_parsed_migration_facts(&dynamic_sql.sql);
         remap_dynamic_fact_lines(&mut dynamic_facts, &dynamic_sql);
         merge_dynamic_facts(&mut facts, dynamic_facts);
     }
@@ -106,6 +121,9 @@ fn remap_dynamic_fact_lines(facts: &mut SqlSchemaFileFacts, dynamic: &dynamic::D
     for constraint in &mut facts.validated_constraints {
         constraint.line = dynamic.source_line(constraint.line);
     }
+    for identifier in &mut facts.declared_identifiers {
+        identifier.line = dynamic.source_line(identifier.line);
+    }
 }
 
 fn merge_dynamic_facts(facts: &mut SqlSchemaFileFacts, dynamic: SqlSchemaFileFacts) {
@@ -125,6 +143,9 @@ fn merge_dynamic_facts(facts: &mut SqlSchemaFileFacts, dynamic: SqlSchemaFileFac
     facts
         .validated_constraints
         .extend(dynamic.validated_constraints);
+    facts
+        .declared_identifiers
+        .extend(dynamic.declared_identifiers);
 }
 
 pub(super) fn relation(name: &ObjectName) -> String {
