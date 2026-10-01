@@ -5,7 +5,10 @@ use serde::Deserialize;
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
+mod concurrency_compile;
+mod concurrency_scope;
 mod evaluate;
+mod evaluate_concurrency;
 mod evaluate_graph;
 mod evaluate_steps;
 
@@ -26,6 +29,7 @@ pub(crate) struct Options {
     pub(crate) exact_fan_ins: BTreeMap<String, Vec<String>>,
     pub(crate) exact_caller_jobs: BTreeMap<String, Vec<String>>,
     pub(crate) step_orders: Vec<StepOrderRule>,
+    pub(crate) concurrency_policy: BTreeMap<String, concurrency_compile::ConcurrencyIntent>,
 }
 
 #[derive(Deserialize, Default, Clone)]
@@ -71,9 +75,10 @@ pub(crate) fn check_with_files_and_sources(
     let mut findings = Vec::new();
     for rule in config.rule_applications(RULE_ID) {
         let opts: Options = rule.try_rule_options()?;
+        let concurrency = concurrency_compile::compile(&opts.concurrency_policy)?;
         let topology =
             crate::codebase::workflow_topology::load_workflow_topology(root, &config.ci, &[]);
-        findings.extend(evaluate::lint(&topology, &opts));
+        findings.extend(evaluate::lint(&topology, &opts, &concurrency));
     }
     super::sort_findings(&mut findings);
     Ok(findings)
