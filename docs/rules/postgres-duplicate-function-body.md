@@ -92,7 +92,10 @@ the return contract. A kept identifier stays quoted when the function quotes it.
 A `SET` value is not a function mode, and a `returns` call in a parameter
 default is not the return contract. A name inside `RETURNS TABLE (...)` stays
 in the return contract. `OPERATOR(schema.+)` keeps that schema. A `SUPPORT`
-name keeps its schema. The character after `UESCAPE` decodes a Unicode body. Escape strings decode hex, octal, and
+name keeps its schema. The character after `UESCAPE` decodes a Unicode body.
+A comment may sit between `LANGUAGE` and its name, or between `BEGIN` and
+`ATOMIC`. The first `search_path` value is kept when that schema is named
+`stable`, `immutable`, or `volatile`. `COST` and `ROWS` keep a decimal point. Escape strings decode hex, octal, and
 Unicode sequences. `AS U&'...'` is a body. A qualified `raise(...)` call stays
 a call. An escape-string default does not hide the real body. Names before `=>` or `:=` stay distinct. `AS E'...'` is a body, and adjacent string literals are one body.
 `LANGUAGE SQL RETURN expression` is a body. `LANGUAGE` after `BEGIN ATOMIC`

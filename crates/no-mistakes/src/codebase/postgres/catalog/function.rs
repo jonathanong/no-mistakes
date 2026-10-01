@@ -56,10 +56,7 @@ fn language(definition: &str, span: Option<(usize, usize)>) -> Option<String> {
             _ => {}
         }
         if depth == 0 && is_word_at(definition, index, "language") {
-            let mut cursor = index + "language".len();
-            while bytes.get(cursor).is_some_and(u8::is_ascii_whitespace) {
-                cursor += 1;
-            }
+            let cursor = super::function_body::skip_as_gap(definition, index + "language".len());
             if let Some(name) = super::function_body::language_name(definition, cursor) {
                 return Some(name);
             }

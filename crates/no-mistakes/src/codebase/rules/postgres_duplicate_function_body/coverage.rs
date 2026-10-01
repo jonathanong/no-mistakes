@@ -59,6 +59,14 @@ fn search_path_stops_at_volatility_and_skips_noise() {
     assert!(path.contains("tenant_a"), "{path}");
     assert!(path.contains("\"ten\"\"ant\""), "{path}");
     assert!(!path.contains("immutable"), "{path}");
+    assert_eq!(
+        search_path::extract("SET search_path TO stable"),
+        "to stable"
+    );
+    assert_eq!(
+        search_path::extract("SET search_path TO immutable"),
+        "to immutable"
+    );
     assert!(!search_path::extract("SET search_path TO tenant_a STABLE").contains("stable"));
     assert!(!search_path::extract("SET search_path TO tenant_a VOLATILE").contains("volatile"));
     let stopped = search_path::extract("SET search_path TO tenant_a; LANGUAGE sql");
@@ -97,6 +105,19 @@ fn table_columns_planner_estimates_and_operators_stay_distinct() {
     assert!(!text.contains("fn_support_two"), "{text}");
     assert!(text.contains("fn_bang"), "{text}");
     assert!(!text.contains("fn_cang"), "{text}");
+}
+
+#[test]
+fn comments_and_decimal_costs_keep_distinct_functions_apart() {
+    let text = messages("gaps.json");
+    assert!(text.contains("fn_lang_sql"), "{text}");
+    assert!(!text.contains("fn_lang_c"), "{text}");
+    assert!(text.contains("fn_atomic_gap"), "{text}");
+    assert!(!text.contains("fn_atomic_string"), "{text}");
+    assert!(text.contains("fn_path_stable"), "{text}");
+    assert!(!text.contains("fn_path_immutable"), "{text}");
+    assert!(text.contains("fn_cost_low"), "{text}");
+    assert!(!text.contains("fn_cost_high"), "{text}");
 }
 
 #[test]

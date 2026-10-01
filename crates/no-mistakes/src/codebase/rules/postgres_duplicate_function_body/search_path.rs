@@ -136,7 +136,14 @@ fn skip_token(header: &str, index: usize) -> usize {
     index + header[index..].chars().next().map_or(1, char::len_utf8)
 }
 
+fn ends_clause(header: &str, index: usize) -> bool {
+    "language as begin set immutable stable volatile"
+        .split(' ')
+        .any(|word| word_at(header, index, word))
+}
+
 fn clause_end(header: &str, mut index: usize) -> usize {
+    let mut saw_value = false;
     while index < header.len() {
         if header.as_bytes()[index] == b';' {
             return index;
@@ -146,15 +153,14 @@ fn clause_end(header: &str, mut index: usize) -> usize {
             index = next;
             continue;
         }
-        if word_at(header, index, "language")
-            || word_at(header, index, "as")
-            || word_at(header, index, "begin")
-            || word_at(header, index, "set")
-            || word_at(header, index, "immutable")
-            || word_at(header, index, "stable")
-            || word_at(header, index, "volatile")
-        {
+        if saw_value && ends_clause(header, index) {
             return index;
+        }
+        let marker = header.as_bytes()[index] == b'='
+            || word_at(header, index, "to")
+            || word_at(header, index, "from");
+        if !marker {
+            saw_value = true;
         }
         let skipped = skip_token(header, index);
         if skipped == index {

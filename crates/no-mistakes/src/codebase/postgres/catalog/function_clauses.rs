@@ -154,6 +154,11 @@ fn words_outside_literals(text: &str) -> Vec<String> {
         if character == ',' || character == '(' || character == ')' {
             push_word(&mut words, &mut current);
             words.push(character.to_string());
+        } else if character == '.'
+            && !current.is_empty()
+            && current.bytes().all(|byte| byte.is_ascii_digit())
+        {
+            current.push('.');
         } else if character == '[' || character == ']' {
             push_word(&mut words, &mut current);
             if let Some(last) = words.last_mut() {

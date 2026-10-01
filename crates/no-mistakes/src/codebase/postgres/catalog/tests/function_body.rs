@@ -463,4 +463,31 @@ fn parameter_names_are_not_modes_and_defensive_clauses_parse() {
         "{}",
         support_one.planner
     );
+    assert_eq!(
+        function_from_definition(
+            "fn_lang()",
+            "CREATE FUNCTION fn_lang() RETURNS int LANGUAGE /* note */ sql AS $$ SELECT 1 $$",
+        )
+        .language
+        .as_deref(),
+        Some("sql")
+    );
+    let atomic = function_from_definition(
+        "fn_gap()",
+        "CREATE FUNCTION fn_gap() RETURNS int LANGUAGE sql BEGIN /* note */ ATOMIC SELECT 1; END",
+    );
+    assert!(
+        atomic.body.as_deref().unwrap_or("").contains("SELECT 1"),
+        "{atomic:?}"
+    );
+    let low = function_from_definition(
+        "fn_cost_low()",
+        "CREATE FUNCTION fn_cost_low() RETURNS int LANGUAGE sql COST 1.1 AS $$ SELECT 1 $$",
+    );
+    let high = function_from_definition(
+        "fn_cost_high()",
+        "CREATE FUNCTION fn_cost_high() RETURNS int LANGUAGE sql COST 1.9 AS $$ SELECT 1 $$",
+    );
+    assert!(low.planner.contains("1.1"), "{}", low.planner);
+    assert_ne!(low.planner, high.planner);
 }

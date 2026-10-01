@@ -46,14 +46,7 @@ fn atomic_body(definition: &str) -> Option<(String, String, (usize, usize))> {
             continue;
         }
         if is_word_at(definition, index, "begin") {
-            let mut cursor = index + "begin".len();
-            while definition
-                .as_bytes()
-                .get(cursor)
-                .is_some_and(u8::is_ascii_whitespace)
-            {
-                cursor += 1;
-            }
+            let cursor = skip_as_gap(definition, index + "begin".len());
             if is_word_at(definition, cursor, "atomic") {
                 let body_start = cursor + "atomic".len();
                 let end = matching_end(definition, body_start)?;
