@@ -181,8 +181,11 @@ only the pin (not the surrounding line), and reports several pins per line.
   backslash before its quote (`'{ name: "a\\"}x", uses: ... }'`) is read as raw
   YAML, so its quote ends the scalar, and in a single-quoted scalar written with
   escaped quotes a doubled `''` (`\'it\'\'s}\'`) is read as ending at the first
-  `\'`. Telling them apart needs a YAML parser or state across lines, so these
-  stay as they are and tests pin them.
+  `\'`, and a quote written across JavaScript layers with different delimiters
+  (a `"..."` literal inside a `'...'` string writes it with two backslashes,
+  `'"{ name: \\"a}x\\", uses: ... }"'`) is not read as a quote. Telling them apart
+  needs a YAML parser or state across lines, so these stay as they are and tests
+  pin them.
 - `versioned runner label`: `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15`,
   `macos-15-intel`, `windows-2025`, and `windows-11-arm`. Not `ubuntu-latest`,
   `ubuntu-slim`, `macos-latest`, or `windows-1252`.

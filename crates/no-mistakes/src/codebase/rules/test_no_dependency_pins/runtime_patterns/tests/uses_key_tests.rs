@@ -112,3 +112,24 @@ fn a_plain_quoted_scalar_is_read_as_raw_yaml() {
     let line = r#"'{ name: "a\\"}x", uses: Homebrew/actions/setup-homebrew@4 }'"#;
     assert_eq!(reasons(line), [reason(1, FORMULA)], "{line}");
 }
+
+#[test]
+fn a_quote_across_javascript_layers_with_different_delimiters_is_not_known() {
+    // Limit: a layer whose delimiter differs from the quote doubles the backslashes
+    // without adding one, so the YAML quote is written with two (`\\"`), which the
+    // scan does not take as a quote opener: `\\"` is as likely an escaped backslash
+    // before a raw quote. Main reads these the same way.
+    //
+    // `uses` is a key, so the action ref is reported under the formula reason.
+    for line in [
+        r#"'"{ name: \\"a}x\\", uses: Homebrew/actions/setup-homebrew@4 }"'"#,
+        r#"`"{ name: \\"a}x\\", uses: Homebrew/actions/setup-homebrew@4 }"`"#,
+        r#""'{ name: \\'a}x\\', uses: Homebrew/actions/setup-homebrew@4 }'""#,
+    ] {
+        assert_eq!(reasons(line), [reason(1, FORMULA)], "{line}");
+    }
+    // The brace of the quoted scalar opens a collection that is not there, so the
+    // prose after the closed mapping is read as a key.
+    let prose = r#"'"brew { a: \\"x{\\" }, uses: homebrew/core/postgresql@18"'"#;
+    assert_eq!(reasons(prose), [reason(1, ACTION_REF)], "{prose}");
+}
