@@ -24,3 +24,10 @@ expect(image).toBe('registry.internal:5000/acme/api:v3')
 expect(images).toEqual(['owner/repo:v2', 'ghcr.io/acme/api:v4'])
 // With no space or quote after `image:`, a tight-context pattern still reads the host tag.
 expect(compose).toContain('image:ghcr.io/acme/api:v5')
+// A registry host label may hold hyphens inside it, and an IP address is a host.
+expect(image).toBe('registry-eu.acme.io/acme/api:2.4.1')
+expect(image).toBe('10.0.0.5:5000/acme/api:2')
+// A non-ASCII character ends a reference and is a boundary on either side, so the ASCII part is still a pin.
+expect(image).toBe('ghcr.io/acme/api:v6β')
+expect(image).toBe('βghcr.io/acme/api:7')
+expect(compose).toContain('éimage: postgres:18')

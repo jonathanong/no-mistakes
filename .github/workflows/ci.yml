@@ -579,19 +579,17 @@ jobs:
     name: Build benchmarks
     needs: changes
     if: ${{ needs.changes.outputs.benchmarks == 'true' }}
-    # Must match benchmark-shards. CodSpeed macro runners are ARM64;
-    # ubuntu-latest is x86_64, so the uploaded harness cannot cross families.
-    # vars.USE_CODSPEED_MACRO_RUNNERS must be the literal "true"; other values,
-    # including "false", keep GitHub-hosted runners.
-    runs-on: ${{ vars.USE_CODSPEED_MACRO_RUNNERS == 'true' && 'codspeed-macro' || 'ubuntu-latest' }}
+    # Must match benchmark-shards. ubuntu-latest mixes Intel and AMD, which
+    # changes CodSpeed's simulated cycles. ubuntu-24.04-arm is one CPU
+    # generation, and the uploaded harness must be built for that machine.
+    runs-on: ubuntu-24.04-arm
     timeout-minutes: 60
     env:
       RAYON_NUM_THREADS: "4"
       # CodSpeed simulation/memory do not need production fat LTO. The release
       # profile's lto=true + codegen-units=1 OOMs or forces CARGO_BUILD_JOBS=1
-      # on ubuntu-latest (~16 min). Relative CodSpeed comparisons are meaningful
-      # only when base and head use the same runner family (GitHub-hosted x86_64
-      # or CodSpeed macro ARM64).
+      # on a four-core hosted runner. Relative CodSpeed comparisons are meaningful
+      # only when base and head both use ubuntu-24.04-arm.
       CARGO_PROFILE_BENCH_LTO: "false"
       CARGO_PROFILE_BENCH_CODEGEN_UNITS: "16"
 
@@ -658,8 +656,10 @@ jobs:
       - bench
     if: ${{ needs.changes.outputs.benchmarks == 'true' }}
     # Must match bench so the downloaded harness matches this machine's arch.
-    runs-on: ${{ vars.USE_CODSPEED_MACRO_RUNNERS == 'true' && 'codspeed-macro' || 'ubuntu-latest' }}
-    timeout-minutes: 8
+    runs-on: ubuntu-24.04-arm
+    # Six minutes below covers a cold valgrind install. Leave room for checkout
+    # and the harness download around that step.
+    timeout-minutes: 12
     permissions:
       contents: read
       id-token: write
@@ -793,7 +793,9 @@ jobs:
 
       - name: Run benchmarks
         if: ${{ env.BENCHMARK_SELECTED == 'true' }}
-        timeout-minutes: 2
+        # A cache hit finishes quickly. The first run on this runner, and the
+        # first run after a libc6 update, installs valgrind and libc6-dbg.
+        timeout-minutes: 6
         uses: CodSpeedHQ/action@373d6868929f444bc08d901fd0eb0ad52a8875ea # v5.2.1
         with:
           mode: ${{ matrix.mode }}

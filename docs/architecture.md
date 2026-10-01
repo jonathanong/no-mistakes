@@ -326,41 +326,41 @@ workloads must use checked-in fixtures,
 `BenchmarkId` for meaningful variants, `Throughput` where a stable unit exists,
 and must not generate repositories or launch the CLI as a subprocess.
 
-The `bench` and `benchmark-shards` jobs share one runner family so the uploaded
-harness matches the machine that executes it. Set the repository Actions
-variable `USE_CODSPEED_MACRO_RUNNERS` to the literal `true` to run those jobs
-on CodSpeed Macro Runners (`codspeed-macro`, ARM64). Any other value, including
-unset or `false`, keeps free GitHub-hosted `ubuntu-latest` (x86_64). Regular
-test and lint jobs always stay on GitHub-hosted runners. Flipping the variable
-changes CPU architecture and must not be treated as an implementation
-regression until both the CodSpeed base and the PR head use the same family.
+The `bench` and `benchmark-shards` jobs both run on GitHub-hosted
+`ubuntu-24.04-arm` so the uploaded harness matches the machine that executes
+it. That label is one ARM64 CPU generation, so glibc dispatch and CodSpeed's
+simulated cache sizes stay aligned between base and head. `ubuntu-latest`
+mixes Intel and AMD on x86_64 and is not used for these jobs. Regular test
+and lint jobs stay on GitHub-hosted x86_64 runners. CodSpeed Macro Runners
+are not used: they register an organization-level runner, and this repository
+lives on a personal account. A CodSpeed report is not an implementation
+regression until both the base and the PR head ran on `ubuntu-24.04-arm`.
 
-Each shard's two-minute step limit cannot reliably absorb an apt install of
-CodSpeed's instruments (valgrind and `libc6-dbg`). The action's instrument cache
-key omits libc, so after a runner image updates libc6 an exact-key hit restores
-debug symbols that no longer match and every run reinstalls. The workflow keys
-the cache directory by the installed libc6 version, so the first run after an
-update saves a fresh entry. That entry matches only while the Ubuntu archive's
-`libc6-dbg` is the image's libc6 version; until images catch up to a newer
-archive release, runs may still reinstall.
+Each shard's benchmark step allows six minutes so a cold install of CodSpeed's
+instruments (valgrind and `libc6-dbg`) can finish. The action's instrument
+cache key omits libc, so after a runner image updates libc6 an exact-key hit
+restores debug symbols that no longer match and every run reinstalls. The
+workflow keys the cache directory by the installed libc6 version, so the first
+run after an update saves a fresh entry. That entry matches only while the
+Ubuntu archive's `libc6-dbg` is the image's libc6 version; until images catch
+up to a newer archive release, runs may still reinstall.
 
 ### Interpreting CodSpeed results
 
-GitHub-hosted `ubuntu-latest` runners do not guarantee one CPU architecture or
-model. A base run may use Intel while a PR run uses AMD (or the reverse), which
-can produce large apparent CPU and memory changes without any implementation
-change. CodSpeed Macro Runners are a single ARM64 machine class, so they avoid
-that hosted-runner lottery when `USE_CODSPEED_MACRO_RUNNERS` is `true`. CodSpeed
-also falls back to an older base when the PR's exact base has no successful
-benchmark run. Neither comparison is reliable enough to prove a regression.
+`ubuntu-24.04-arm` is one ARM64 CPU generation, so a base and a head that both
+ran there share glibc dispatch and simulated cache sizes. CodSpeed still falls
+back to an older base when the PR's exact base has no successful benchmark
+run. A report that names a different runtime environment, including any
+x86_64 base from before this runner, is not evidence of a regression.
 
-Treat a CodSpeed failure as actionable only when the report compares the same
-runtime environment and the expected base commit. If CodSpeed reports different
+Treat a CodSpeed failure as actionable only when the report compares
+`ubuntu-24.04-arm` with the expected base commit. If CodSpeed reports different
 runtime environments or an unexpected base, inspect the changed files first. A
 docs-only or otherwise unrelated change should record the mismatch in the PR's
-Shepherd Journal and acknowledge the result; code changes should be rerun on a
-matching runner before performance work begins. Local before/after measurements
-must use the same machine, toolchain, benchmark mode, thread count, and fixture.
+Shepherd Journal and acknowledge the result; code changes should be rerun on
+`ubuntu-24.04-arm` before performance work begins. Local before/after
+measurements must use the same machine, toolchain, benchmark mode, thread
+count, and fixture.
 
 ## Anti-Patterns
 

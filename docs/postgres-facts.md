@@ -13,7 +13,8 @@ These extractors are library APIs. There is no CLI command or N-API dump.
 `postgres-require-query-annotation`,
 `postgres-no-generated-column-writes`,
 `postgres-fk-index`, `postgres-redundant-index`,
-`postgres-constraint-validate`, and `postgres-no-add-column`
+`postgres-constraint-validate`, `postgres-no-add-column`,
+and `postgres-column-naming`
 consume the facts through `no-mistakes check`. Forthcoming DML rules
 (`postgres-required-predicates`, `postgres-sql-shape-policy`,
 `postgres-idempotent-insert`) will consume the same INSERT/SELECT facts
@@ -240,6 +241,7 @@ that catalog and checks them against configured name patterns.
 `postgres-status-with-lifecycle-timestamps` reads column names, data types,
 and generated flags from that catalog. `postgres-object-naming` reads table,
 index, trigger, function, view, and enum names from that catalog.
+`postgres-column-naming` reads columns and foreign keys from that catalog.
 
 `analyze_conflict_inserts(sql)` exposes the same structured SQL projection to
 Rust callers as `SqlConflictInsertFact`, `SqlConflictTarget`, and

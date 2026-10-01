@@ -8,8 +8,12 @@
 const RESERVED_TLDS: [&str; 4] = ["test", "example", "invalid", "localhost"];
 const RESERVED_DOMAINS: [&str; 3] = ["example.com", "example.net", "example.org"];
 
-pub(super) fn is_synthetic(pin: &str) -> bool {
-    only_zero_versions(pin) || reserved_registry(pin) || repeated_digest_only(pin)
+/// `versions` is the part of `pin` the all-zero rule reads, normally the whole
+/// pin. An action ref is reported whole but its zero versions are read in the
+/// last two path components and the ref, so a `v0.0.0` directory higher up the
+/// path cannot hide a real ref.
+pub(super) fn is_synthetic(pin: &str, versions: &str) -> bool {
+    only_zero_versions(versions) || reserved_registry(pin) || repeated_digest_only(pin)
 }
 
 /// True when every dotted version in the pin is `0.0.0`-shaped, as in
@@ -31,12 +35,19 @@ pub(super) fn only_zero_versions(pin: &str) -> bool {
 }
 
 /// True for `registry.test/app:1.2.3`, `localhost:5000/app:1.2.3`, and
-/// `example.com/app:1.2.3`: hosts that can never serve a real dependency.
+/// `example.com/app:1.2.3`: hosts that can never serve a real dependency. A
+/// hostname is case-insensitive and may end in the DNS root dot, so
+/// `EXAMPLE.COM.` is as reserved as `example.com`.
 fn reserved_registry(pin: &str) -> bool {
     let Some((authority, _)) = pin.split_once('/') else {
         return false;
     };
-    let host = authority.split(':').next().unwrap_or_default();
+    let host = authority
+        .split(':')
+        .next()
+        .unwrap_or_default()
+        .to_ascii_lowercase();
+    let host = host.strip_suffix('.').unwrap_or(&host);
     host == "localhost"
         || host
             .rsplit_once('.')

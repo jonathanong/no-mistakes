@@ -27,7 +27,7 @@ rules:
         - "**/__tests__/**"
       patterns:
         - reason: exact action ref
-          regex: '(?<!@)\b[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?\b'
+          regex: '(?<!@)(?:\[[0-9A-Fa-f.]*:[0-9A-Fa-f:.]*(?:%[\w.~%-]+)?\](?::[0-9]+)?/|\b(?:[\w.-]*\w[\w.-]*(?::[0-9]+)?/)?)(?:[\w.-]*\w[\w.-]*/)*[.-]*\b(?P<versions>[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?)\b'
 ```
 
 Counterexample: a test asserts a concrete dependency entry read from
@@ -95,6 +95,37 @@ concatenations, nested bracket expressions, array-form property paths, and
 computed expected-version strings are not matched. Negated assertions and
 malformed version prefixes are not matched.
 
+## Action refs
+
+An action ref is reported whole, as `owner/repo/path@ref`: for example
+`github/codeql-action/init@v3` or
+`my-org/example-repo/.github/workflows/reusable.yml@v1`, not its last two
+components. The reported text is every `/`-separated component before the `@`,
+so a path in front of the ref is part of it: a URL host with its port
+(`github.com/actions/checkout@v4`, `registry.my-org.io:8443/a/b@v1`,
+`[::1]:8080/a/b@v1` for a bracketed IPv6 address), a Go module path
+(`golang.org/x/tools@v0.1.0`), or a directory is kept, while a leading `/`,
+`./` or scheme is not, nor is a dot or dash at the very start of the first
+component (`.cache/owner/repo@v1` is reported as `cache/owner/repo@v1`). A
+component with no name in it (`..`, `.`,
+`-`, or an empty segment) is not part of a path and ends it, so
+`owner/repo/../path/action@v1` is reported as `path/action@v1`. Three
+consequences:
+
+- A scoped package with a subpath (`@scope/pkg/sub@1.2.3`) starts at the `@`, so
+  like `@scope/pkg@1.2.3` it is not an action ref. Neither is a host after an `@`
+  (`git@github.com:22/a/b@v1`).
+- A reserved host in front of the ref (`https://example.com/actions/checkout@v4`,
+  `localhost:5000/a/b@v1`, `my.test/a/b@v1`) makes it a
+  [placeholder](#placeholder-values), as it does for an image registry. A hostname
+  is case-insensitive, and only the first component is a host, so `a/b.test/c@v1`
+  is reported. An IP address is not a reserved host, so `127.0.0.1:5000/a/b@v1`
+  and `[::1]/a/b@v1` are reported.
+- The all-zero placeholder rule reads the last two path components and the ref,
+  with any trailing `# v1.2.3` comment, not the whole text. `owner/repo@v0.0.0`
+  and `foo-v0.0.0/bar@v1` are placeholders, but a `v0.0.0` directory higher up
+  (`owner/repo/v0.0.0/path/action@v1`) does not hide a real ref.
+
 ## Container images, setup versions, formulae, and runners
 
 Five default pin kinds cover pins that live in workflow, Compose, Dockerfile, and
@@ -122,8 +153,8 @@ only the pin (not the surrounding line), and reports several pins per line.
   overlapping it is dropped. The tail of a `uses:` value gives way the other
   way round: an action ref on a Homebrew line is reported as an `exact action ref`,
   so `uses: Homebrew/actions/setup-homebrew@4` is the action ref
-  `actions/setup-homebrew@4` and never the formula `setup-homebrew@4`, however
-  the value is quoted or keyed (`uses: '...'`, `"uses": "..."`, `- uses: ...`).
+  `Homebrew/actions/setup-homebrew@4` and never the formula `setup-homebrew@4`,
+  however the value is quoted or keyed (`uses: '...'`, `"uses": "..."`, `- uses: ...`).
   That is only a choice between two readings of the same text: when no action ref
   covers it (`uses: Homebrew/core/g++@13`, a name with a `+` no action name can
   hold, or `Homebrew uses: postgresql@18`, a value with no `/`), the formula stays
@@ -178,6 +209,30 @@ bare-integer tag on a dotted registry host, whose components still cannot
 contain dots: that keeps `github.com/acme/app/internal/binder.go:1755` out.
 `-p 51088:6379` port mappings never match.
 
+References are ASCII-only, like Docker's grammar, and a non-ASCII character is
+never part of one. It ends a reference and is a boundary on both sides, so the
+ASCII part is still reported: `ghcr.io/owner/name:v2β`, `ghcr.io/owner/name:2.1β`,
+`image: postgres:18β`, and `ubuntu-22.04β` report the pin in front of the `β`, a
+`β` directly before a reference does not hide it, and typographic quotes around
+`“ghcr.io/owner/name:2.1”` delimit it. The `image`, `FROM`, and `brew` context
+words follow the same rule: a non-ASCII letter next to one is not part of the
+word, so it is still that key.
+
+Digits are ASCII only. A tag, registry port, or runner label written with other
+digits (Arabic-Indic or full-width forms) is not a version: `ghcr.io/owner/name:v٢`,
+`ghcr.io/owner/name:٢.١`, `ghcr.io:٥٠٠٠/owner/name:2`, `ubuntu-٢٢.٠٤`,
+`brew install postgresql@١٨`, and `node-version: ٢٢` are not pins. An ASCII
+reference followed by a non-ASCII digit is still reported up to the digit, so
+`ghcr.io/owner/name:1.٢` reports `ghcr.io/owner/name:1`.
+
+A registry host is dotted RFC 1123 labels, each starting and ending with a letter
+or digit (hyphens only inside), with an optional `:port`, or `localhost:port`:
+`registry-eu.acme.io/owner/name:2.4.1` and `10.0.0.5:5000/owner/name:2` are hosts.
+A label that starts or ends with `-` makes the text not a host, and nothing is
+reported for it: `bad-.acme.io/owner/name:9` and `-bad.acme.io/owner/name:9` are
+not pins, and their valid-looking suffix (`acme.io/owner/name:9`) is not reported
+either, because `-` and `.` never start a pin.
+
 ### Placeholder values
 
 A pin made only of zero versions or of reserved test values is a placeholder,
@@ -186,10 +241,13 @@ value without a suppression comment:
 
 - every dotted version in the value is all zeros:
   `lychee-v0.0.0-test-x86_64-unknown-linux-gnu.tar.gz`,
-  `releases/download/0.0.0-test`;
-- an image registry is reserved for testing and documentation:
-  `registry.test/app:1.2.3`, `localhost:5000/app:1.2.3`, `example.com/app:1.2.3`,
-  and the `.test`, `.example`, `.invalid`, and `.localhost` top-level domains;
+  `releases/download/0.0.0-test`, `owner/repo@v0.0.0` (an action ref is read in
+  its last two path components and the ref, see [Action refs](#action-refs));
+- an image registry, or the host in front of an action ref, is reserved for
+  testing and documentation: `registry.test/app:1.2.3`,
+  `localhost:5000/app:1.2.3`, `example.com/app:1.2.3`, `my.test/a/b@v1`, and the
+  `.test`, `.example`, `.invalid`, and `.localhost` top-level domains, in any
+  letter case and with or without a trailing root dot (`EXAMPLE.COM.`);
 - an untagged image digest is one short block repeated to 64 characters, such
   as `sha256:` followed by 64 zeros or `0123456789abcdef` four times.
 
@@ -198,8 +256,8 @@ judge the asserted value after any `"name":` or `npm:` prefix:
 `expect(packageJson.dependencies.foo).toBe('0.0.0')`,
 `toHaveProperty('foo', '^0.0.0')`, and `toContain('"foo": "0.0.0"')` are not
 reported, while `'1.2.3'`, `'^0.0.1'`, and a range that contains a real version
-(`'>=0.0.0 <2.0.0'`) still are. The reserved-registry and repeated-digest rules
-only concern image pins.
+(`'>=0.0.0 <2.0.0'`) still are. The repeated-digest rule only concerns image
+pins, and the reserved-registry rule only concerns image pins and action refs.
 
 The exemption is structural: a value is never exempt because it contains the
 word `test` or `fake`, and `1.2.3`, `0.0.1`, and a tagged image on a real

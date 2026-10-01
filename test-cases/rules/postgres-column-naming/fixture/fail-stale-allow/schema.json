@@ -1,0 +1,10 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "invoices": {
+      "columns": {
+        "due_at": { "dataType": "timestamp with time zone", "ordinalPosition": 1 }
+      }
+    }
+  }
+}
