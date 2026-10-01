@@ -1,3 +1,4 @@
+use super::super::model::{TriggerEvent, TriggerTiming};
 use super::super::partition::{parse_partition_key, PartitionParseError};
 use super::super::trigger::parse_trigger;
 use super::super::PartitionKeyElement;
@@ -76,6 +77,61 @@ fn trigger_parser_reports_each_malformed_clause() {
         (
             "CREATE TRIGGER t BEFORE INSERT ON t EXECUTE FUNCTION fn() EXTRA",
             "trailing trigger syntax",
+        ),
+    ];
+    for (definition, message) in cases {
+        let error = parse_trigger(definition).unwrap_err();
+        assert!(error.contains(message), "{definition} => {error}");
+    }
+}
+
+#[test]
+fn constraint_triggers_skip_referenced_tables_deferral_and_transition_tables() {
+    let parsed = parse_trigger(
+        "CREATE CONSTRAINT TRIGGER t AFTER INSERT ON public.accounts FROM public.users NOT DEFERRABLE INITIALLY IMMEDIATE REFERENCING NEW TABLE new_rows FOR EACH ROW EXECUTE PROCEDURE fn()",
+    )
+    .unwrap();
+    assert_eq!(parsed.timing, TriggerTiming::After);
+    assert_eq!(parsed.events, vec![TriggerEvent::Insert]);
+    assert!(parsed.for_each_row);
+    assert_eq!(parsed.function, "fn");
+    assert!(parsed.arguments.is_empty());
+
+    let deferred = parse_trigger(
+        "CREATE TRIGGER t AFTER DELETE ON t DEFERRABLE INITIALLY DEFERRED REFERENCING OLD TABLE AS old_rows EXECUTE FUNCTION fn()",
+    )
+    .unwrap();
+    assert_eq!(deferred.events, vec![TriggerEvent::Delete]);
+    assert!(!deferred.for_each_row);
+    assert_eq!(deferred.function, "fn");
+
+    let initially = parse_trigger(
+        "CREATE TRIGGER t BEFORE UPDATE ON t INITIALLY IMMEDIATE REFERENCING FOR EACH ROW EXECUTE FUNCTION fn()",
+    )
+    .unwrap();
+    assert_eq!(initially.timing, TriggerTiming::Before);
+    assert!(initially.for_each_row);
+
+    let cases = [
+        (
+            "CREATE TRIGGER t AFTER INSERT ON t NOT EXECUTE FUNCTION fn()",
+            "expected deferrable",
+        ),
+        (
+            "CREATE TRIGGER t AFTER INSERT ON t INITIALLY SOON EXECUTE FUNCTION fn()",
+            "expected immediate or deferred",
+        ),
+        (
+            "CREATE TRIGGER t AFTER INSERT ON t REFERENCING OLD ROW AS x EXECUTE FUNCTION fn()",
+            "expected table",
+        ),
+        (
+            "CREATE TRIGGER t AFTER INSERT ON t FROM , EXECUTE FUNCTION fn()",
+            "expected identifier",
+        ),
+        (
+            "CREATE TRIGGER t AFTER INSERT ON t REFERENCING OLD TABLE , EXECUTE FUNCTION fn()",
+            "expected identifier",
         ),
     ];
     for (definition, message) in cases {

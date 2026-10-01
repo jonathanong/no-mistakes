@@ -107,6 +107,28 @@ impl<'a> Cursor<'a> {
         }
         Ok((events, update_columns))
     }
+
+    pub(super) fn skip_constraint_clauses(&mut self) -> Result<(), String> {
+        if self.eat_kw("from") {
+            self.take_qualified()?;
+        }
+        if self.eat_kw("not") {
+            self.expect_kw("deferrable")?;
+        } else {
+            let _ = self.eat_kw("deferrable");
+        }
+        if self.eat_kw("initially") && !(self.eat_kw("immediate") || self.eat_kw("deferred")) {
+            return Err("expected immediate or deferred".to_string());
+        }
+        if self.eat_kw("referencing") {
+            while self.eat_kw("old") || self.eat_kw("new") {
+                self.expect_kw("table")?;
+                let _ = self.eat_kw("as");
+                self.take_ident()?;
+            }
+        }
+        Ok(())
+    }
 }
 
 pub(super) fn is_ident_start(character: char) -> bool {

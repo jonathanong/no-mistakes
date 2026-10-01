@@ -9,9 +9,13 @@ fn object_refs_round_trip_and_reject_bad_syntax() {
     let refs = [
         "table:accounts",
         "column:accounts.id",
+        "column:public.orders.id",
         "index:accounts.accounts_pkey",
+        "index:public.orders.orders_pkey",
         "trigger:accounts.trigger_accounts_touch",
+        "trigger:public.orders.touch",
         "constraint:accounts.accounts_owner_fk",
+        "constraint:public.orders.orders_fk",
         "function:fn_touch(col text)",
         "enum:account_plans",
         "view:active_accounts",
@@ -30,6 +34,8 @@ fn object_refs_round_trip_and_reject_bad_syntax() {
         "column:accounts",
         "column:.id",
         "column:accounts.",
+        "column:public.orders.",
+        "index:public.",
         "function:",
         "materialized-view:",
     ] {

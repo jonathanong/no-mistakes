@@ -38,6 +38,9 @@
         },
         "escaped_ident": {
           "definition": "CREATE TRIGGER escaped_ident BEFORE UPDATE OF \"a\"\"b\", fn$1 ON public.\"Order\" EXECUTE FUNCTION public.\"fn\"\"x\"()"
+        },
+        "constraint_touch": {
+          "definition": "CREATE CONSTRAINT TRIGGER constraint_touch AFTER UPDATE ON public.\"Order\" FROM public.accounts DEFERRABLE INITIALLY DEFERRED REFERENCING OLD TABLE AS old_rows NEW TABLE new_rows FOR EACH ROW WHEN (id IS NOT NULL) EXECUTE FUNCTION fn_touch()"
         }
       }
     },
@@ -118,6 +121,36 @@
     },
     "fn_aside": {
       "definition": "CREATE FUNCTION fn_aside() aside languages sql"
+    },
+    "fn_quoted_language": {
+      "definition": "CREATE FUNCTION public.\"language\"() RETURNS integer LANGUAGE sql"
+    },
+    "fn_default_returns": {
+      "definition": "CREATE FUNCTION fn_default_returns(note text DEFAULT 'returns trigger') RETURNS integer LANGUAGE sql"
+    },
+    "fn_comment_language": {
+      "definition": "CREATE FUNCTION fn_comment_language() RETURNS integer -- LANGUAGE plpgsql\nLANGUAGE sql"
+    },
+    "fn_line_eof": {
+      "definition": "CREATE FUNCTION fn_line_eof() RETURNS integer LANGUAGE sql -- RETURNS trigger"
+    },
+    "fn_block_returns": {
+      "definition": "CREATE FUNCTION fn_block_returns() RETURNS integer /* RETURNS trigger */ LANGUAGE sql"
+    },
+    "fn_nested_comment": {
+      "definition": "CREATE FUNCTION fn_nested_comment() RETURNS integer /* outer /* RETURNS trigger */ still */ LANGUAGE sql"
+    },
+    "fn_unclosed_comment": {
+      "definition": "CREATE FUNCTION fn_unclosed_comment() RETURNS integer /* RETURNS trigger LANGUAGE sql"
+    },
+    "fn_doubled_quote": {
+      "definition": "CREATE FUNCTION fn_doubled_quote() RETURNS integer DEFAULT 'it''s returns trigger' LANGUAGE sql"
+    },
+    "fn_quoted_ident": {
+      "definition": "CREATE FUNCTION \"returns trigger\"() RETURNS integer LANGUAGE sql"
+    },
+    "fn_unclosed_quote": {
+      "definition": "CREATE FUNCTION fn_unclosed_quote() RETURNS integer DEFAULT 'returns trigger LANGUAGE sql"
     }
   }
 }

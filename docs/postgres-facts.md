@@ -272,15 +272,19 @@ as `timestamp with time zone` or `text[]`), `nullable`, `defaultExpression`,
 `comment`, and `ordinalPosition`. Columns are sorted by `ordinalPosition`,
 then name. Foreign-key `onDelete` and `onUpdate` are stored lowercased.
 `physicalPartition.key` is text such as `RANGE (id)`, `LIST (region)`,
-`HASH (id)`, or `RANGE (date_trunc('day'::text, created_at))`. The first word
-is the strategy. Top-level commas split the parenthesized elements. A bare
-or double-quoted identifier is a column. Anything else is an expression.
+`HASH (id)`, or `RANGE (tenant_id, id)`. The first word is the strategy.
+Top-level commas split the parenthesized elements. A bare or double-quoted
+identifier is a column. Anything else is an expression. A comma that sits
+inside a function call stays part of that expression.
 An unknown strategy fails the load with
 `schemaCatalogPath <path>: table <t> has unsupported partition strategy <s>`.
 
 Trigger objects carry `definition`. The definition is parsed with a small
-tokenizer, including the legacy `EXECUTE PROCEDURE` spelling. Events are
-separated by `OR`. `WHEN (...)` keeps its text without the outer parentheses.
+tokenizer, including the legacy `EXECUTE PROCEDURE` spelling. A `CONSTRAINT`
+keyword may sit between `CREATE` and `TRIGGER`. Clauses that name a referenced
+table, say whether the trigger is deferrable, or introduce transition tables
+are skipped. Events are separated by `OR`. `WHEN (...)` keeps its text without
+the outer parentheses.
 Arguments are single-quoted SQL literals (`''` is an escaped quote, and a
 comma inside quotes does not split). The function name drops its schema
 qualifier and double quotes (`public."fn_X"` becomes `fn_X`).
@@ -291,8 +295,9 @@ is a subset of the trigger's events.
 A function object carries `definition`. `name` is the snapshot key up to the
 first `(`, and `signature` is the text inside those parentheses. `language`
 is the word after `LANGUAGE`, lowercased. `returns_trigger` is true when the
-definition, before its body, contains `RETURNS trigger` as a word.
-`RETURNS event_trigger` and `RETURNS SETOF …` are false. `body` is the text
+definition, before its body, contains `RETURNS trigger` as a word, ignoring
+comments and quoted text. `RETURNS event_trigger` is false, and so is a
+`RETURNS` clause that yields a set of rows. `body` is the text
 between the first `AS $tag$` and its matching closer, including the empty
 `$$` tag. It is absent when there is no dollar-quoted body. Enum objects
 carry `values`. View objects carry `materialized`, `definition`, and
@@ -310,6 +315,10 @@ Snapshot findings use an object ref as their stable id. `Display` and
 - `enum:<e>`
 - `view:<v>`
 - `materialized-view:<v>`
+
+For a column, index, trigger, or constraint, the last `.` separates the
+snapshot table key from the object name. `column:public.orders.id` is table
+`public.orders` and column `id`.
 
 `catalog_finding(rule_id, catalog_path, object, text)` sets `file` to the
 slash-normalized catalog path, `line` to 1, `target` to the object ref, and

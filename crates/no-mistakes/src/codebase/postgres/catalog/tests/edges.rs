@@ -87,6 +87,16 @@ fn edge_fixtures_cover_trigger_partition_and_function_shapes() {
         vec!["a\"b".to_string(), "fn$1".to_string()]
     );
     assert_eq!(escaped.function, "fn\"x");
+    let constraint = order
+        .triggers
+        .iter()
+        .find(|trigger| trigger.name == "constraint_touch")
+        .unwrap();
+    assert_eq!(constraint.timing, TriggerTiming::After);
+    assert_eq!(constraint.events, vec![TriggerEvent::Update]);
+    assert!(constraint.for_each_row);
+    assert_eq!(constraint.function, "fn_touch");
+    assert_eq!(constraint.when.as_deref(), Some("id IS NOT NULL"));
 
     let expr = &catalog
         .table("events_expr")
@@ -206,4 +216,45 @@ fn edge_fixtures_cover_trigger_partition_and_function_shapes() {
     assert!(!functions["fn_trigger_word"].returns_trigger);
     assert!(functions["fn_returns_at_start"].returns_trigger);
     assert_eq!(functions["fn_aside"].language, None);
+    assert_eq!(
+        functions["fn_quoted_language"].language.as_deref(),
+        Some("sql")
+    );
+    assert!(!functions["fn_quoted_language"].returns_trigger);
+    assert!(!functions["fn_default_returns"].returns_trigger);
+    assert_eq!(
+        functions["fn_default_returns"].language.as_deref(),
+        Some("sql")
+    );
+    assert_eq!(
+        functions["fn_comment_language"].language.as_deref(),
+        Some("sql")
+    );
+    assert!(!functions["fn_comment_language"].returns_trigger);
+    assert_eq!(functions["fn_line_eof"].language.as_deref(), Some("sql"));
+    assert!(!functions["fn_line_eof"].returns_trigger);
+    assert_eq!(
+        functions["fn_block_returns"].language.as_deref(),
+        Some("sql")
+    );
+    assert!(!functions["fn_block_returns"].returns_trigger);
+    assert_eq!(
+        functions["fn_nested_comment"].language.as_deref(),
+        Some("sql")
+    );
+    assert!(!functions["fn_nested_comment"].returns_trigger);
+    assert_eq!(functions["fn_unclosed_comment"].language, None);
+    assert!(!functions["fn_unclosed_comment"].returns_trigger);
+    assert!(!functions["fn_doubled_quote"].returns_trigger);
+    assert_eq!(
+        functions["fn_doubled_quote"].language.as_deref(),
+        Some("sql")
+    );
+    assert!(!functions["fn_quoted_ident"].returns_trigger);
+    assert_eq!(
+        functions["fn_quoted_ident"].language.as_deref(),
+        Some("sql")
+    );
+    assert!(!functions["fn_unclosed_quote"].returns_trigger);
+    assert_eq!(functions["fn_unclosed_quote"].language, None);
 }

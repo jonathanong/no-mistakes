@@ -18,12 +18,14 @@ pub(super) struct ParsedTrigger {
 pub(super) fn parse_trigger(definition: &str) -> Result<ParsedTrigger, String> {
     let mut cursor = Cursor::new(definition);
     cursor.expect_kw("create")?;
+    let _ = cursor.eat_kw("constraint");
     cursor.expect_kw("trigger")?;
     cursor.take_ident()?;
     let timing = cursor.take_timing()?;
     let (events, update_columns) = cursor.take_events()?;
     cursor.expect_kw("on")?;
     cursor.take_qualified()?;
+    cursor.skip_constraint_clauses()?;
     let mut for_each_row = false;
     if cursor.eat_kw("for") {
         cursor.expect_kw("each")?;

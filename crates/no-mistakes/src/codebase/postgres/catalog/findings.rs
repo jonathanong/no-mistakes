@@ -74,7 +74,7 @@ fn non_empty(raw: &str) -> Result<String, ()> {
 }
 
 fn pair(raw: &str) -> Result<(String, String), ()> {
-    let (left, right) = raw.split_once('.').ok_or(())?;
+    let (left, right) = raw.rsplit_once('.').ok_or(())?;
     Ok((non_empty(left)?, non_empty(right)?))
 }
 

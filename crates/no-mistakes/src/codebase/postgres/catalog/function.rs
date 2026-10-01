@@ -7,8 +7,8 @@ pub(super) fn function_from_definition(key: &str, definition: &str) -> CatalogFu
         key: key.to_string(),
         name,
         signature,
-        language: language(definition),
-        returns_trigger: returns_trigger(&header),
+        language: language(&strip_quotes_and_comments(definition)),
+        returns_trigger: returns_trigger(&strip_quotes_and_comments(&header)),
         definition: definition.to_string(),
         body,
     }
@@ -70,9 +70,57 @@ fn language(definition: &str) -> Option<String> {
         if cursor > start {
             return Some(definition[start..cursor].to_ascii_lowercase());
         }
-        return None;
     }
     None
+}
+
+fn strip_quotes_and_comments(text: &str) -> String {
+    let mut out = String::with_capacity(text.len());
+    let mut chars = text.chars().peekable();
+    while let Some(character) = chars.next() {
+        if character == '-' && chars.peek() == Some(&'-') {
+            chars.next();
+            while chars.next().is_some_and(|next| next != '\n') {}
+            out.push(' ');
+            continue;
+        }
+        if character == '/' && chars.peek() == Some(&'*') {
+            chars.next();
+            let mut depth = 1i32;
+            while depth > 0 {
+                match chars.next() {
+                    Some('/') if chars.peek() == Some(&'*') => {
+                        chars.next();
+                        depth += 1;
+                    }
+                    Some('*') if chars.peek() == Some(&'/') => {
+                        chars.next();
+                        depth -= 1;
+                    }
+                    Some(_) => {}
+                    None => break,
+                }
+            }
+            out.push(' ');
+            continue;
+        }
+        if character == '\'' || character == '"' {
+            let quote = character;
+            while let Some(next) = chars.next() {
+                if next == quote {
+                    if chars.peek() == Some(&quote) {
+                        chars.next();
+                        continue;
+                    }
+                    break;
+                }
+            }
+            out.push(' ');
+            continue;
+        }
+        out.push(character);
+    }
+    out
 }
 
 fn returns_trigger(header: &str) -> bool {
