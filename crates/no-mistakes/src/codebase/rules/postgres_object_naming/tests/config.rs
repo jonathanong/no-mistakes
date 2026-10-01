@@ -177,6 +177,10 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
         "option spelling: duplicate key",
     );
     expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  teh: recieve\n  recieve: receive\n",
+        "option spelling: value \"recieve\" is also a key",
+    );
+    expect_err(
         "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {species: species}\n",
         "option plural.irregularPlurals: key \"species\" equals its value; use uncountable",
     );

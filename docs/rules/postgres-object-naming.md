@@ -130,6 +130,7 @@ empty or duplicate
 denied tokens, a denied token that is more than one word, an empty
 denied-token replacement, a denied-token replacement equal to its token
 ignoring ASCII case, a spelling key equal to its value ignoring ASCII case,
+an empty spelling value, a spelling value that is also a key,
 a spelling key that is more than one word, duplicate
 spelling keys ignoring ASCII case, and allow entries
 with an empty reason, a duplicate object, or an invalid object ref are

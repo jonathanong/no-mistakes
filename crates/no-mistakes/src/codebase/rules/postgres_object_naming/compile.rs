@@ -137,23 +137,15 @@ fn compile_denied(tokens: &[super::DeniedToken]) -> Result<Vec<(String, String)>
         if token.replacement.trim().is_empty() {
             bail!("postgres-object-naming option deniedTokens: empty replacement");
         }
-        if !super::policy::is_single_word(&token.token) {
-            bail!(
-                "postgres-object-naming option deniedTokens: token \"{}\" must be a single word",
-                token.token
-            );
+        let word = &token.token;
+        if !super::policy::is_single_word(word) {
+            bail!("postgres-object-naming option deniedTokens: token \"{word}\" must be a single word");
         }
-        if token.token.eq_ignore_ascii_case(&token.replacement) {
-            bail!(
-                "postgres-object-naming option deniedTokens: token \"{}\" equals its replacement",
-                token.token
-            );
+        if word.eq_ignore_ascii_case(&token.replacement) {
+            bail!("postgres-object-naming option deniedTokens: token \"{word}\" equals its replacement");
         }
-        if !seen.insert(token.token.to_ascii_lowercase()) {
-            bail!(
-                "postgres-object-naming option deniedTokens: duplicate token {}",
-                token.token
-            );
+        if !seen.insert(word.to_ascii_lowercase()) {
+            bail!("postgres-object-naming option deniedTokens: duplicate token {word}");
         }
         compiled.push((token.token.clone(), token.replacement.clone()));
     }
@@ -178,6 +170,12 @@ fn compile_spelling(spelling: &BTreeMap<String, String>) -> Result<Vec<(String, 
         }
         if !seen.insert(key.to_ascii_lowercase()) {
             bail!("postgres-object-naming option spelling: duplicate key {key}");
+        }
+        if spelling
+            .keys()
+            .any(|other| other.eq_ignore_ascii_case(value))
+        {
+            bail!("postgres-object-naming option spelling: value \"{value}\" is also a key");
         }
         compiled.push((key.to_ascii_lowercase(), key.clone(), value.clone()));
     }
