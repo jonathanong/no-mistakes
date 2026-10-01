@@ -342,6 +342,37 @@ fn quoted_names_min_words_and_active_flags() {
 }
 
 #[test]
+fn primary_indexes_and_flags_inside_classes() {
+    let primary = serde_json::json!({
+        "tables": {
+            "orders": {
+                "indexes": {
+                    "orders_pkey": { "unique": true, "primary": true }
+                }
+            }
+        }
+    });
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^idx_'\n",
+        primary.clone(),
+    );
+    expect(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^idx_'\ncheckConstraintBackedIndexes: true\n",
+        primary,
+        "schema.json: index:orders.orders_pkey: index name does not match pattern ^idx_",
+    );
+    expect_none(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^[x(?i)]{table}__[a-z]+$'\n",
+        index("orders", "xorders__id", false, false),
+    );
+    expect(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^[x(?i)]{table}__[a-z]+$'\n",
+        index("orders", "xorders__ID", false, false),
+        "schema.json: index:orders.xorders__ID: index name does not match pattern ^[x(?i)]{table}__[a-z]+$ ({table} = orders)",
+    );
+}
+
+#[test]
 fn loose_pattern_uses_the_longest_middle_for_tokens() {
     let yaml = "\
 schemaCatalogPath: schema.json\n\

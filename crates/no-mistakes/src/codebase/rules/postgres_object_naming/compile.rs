@@ -81,8 +81,12 @@ fn compile_plural(options: &Options) -> Result<Option<PluralPolicy>> {
                 "postgres-object-naming option plural.irregularPlurals: key \"{key}\" equals its value; use uncountable"
             );
         }
-        let parts = super::policy::tokens(value);
-        if parts.len() != 1 || parts[0].text != *value {
+        if !super::policy::is_single_word(key) {
+            bail!(
+                "postgres-object-naming option plural.irregularPlurals: key \"{key}\" must be a single word"
+            );
+        }
+        if !super::policy::is_single_word(value) {
             bail!(
                 "postgres-object-naming option plural.irregularPlurals: value \"{value}\" must be a single word"
             );
@@ -117,6 +121,12 @@ fn compile_denied(tokens: &[super::DeniedToken]) -> Result<Vec<(String, String)>
     for token in tokens {
         if token.token.trim().is_empty() {
             bail!("postgres-object-naming option deniedTokens: empty token");
+        }
+        if !super::policy::is_single_word(&token.token) {
+            bail!(
+                "postgres-object-naming option deniedTokens: token \"{}\" must be a single word",
+                token.token
+            );
         }
         if token.token.eq_ignore_ascii_case(&token.replacement) {
             bail!(

@@ -165,6 +165,18 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
         "option plural.irregularPlurals: value \"people_group\" must be a single word",
     );
     expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {sales_person: people}\n",
+        "option plural.irregularPlurals: key \"sales_person\" must be a single word",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: app_cfg, replacement: configuration}\n",
+        "option deniedTokens: token \"app_cfg\" must be a single word",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: ' cfg', replacement: configuration}\n",
+        "option deniedTokens: token \" cfg\" must be a single word",
+    );
+    expect_err(
         "schemaCatalogPath: schema.json\npatterns:\n  index: '(?q)^idx_{table}__$'\n",
         "option patterns.index: a pattern with {table} must start with ^ and end with $",
     );

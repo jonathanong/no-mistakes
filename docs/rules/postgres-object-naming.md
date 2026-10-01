@@ -10,7 +10,8 @@ abbreviated: every word remains, in order, starting with its first letter.
 With only `schemaCatalogPath` set, the rule reports nothing. Patterns, plural
 checks, denied tokens, spelling, `tableMinWords`, and double-underscore
 checks stay off until configured. Constraint-backed indexes are skipped by
-default because PostgreSQL names them after their constraint.
+default because PostgreSQL names them after their constraint. A primary
+index is treated as constraint-backed even when the snapshot omits that flag.
 
 ```yaml
 rules:
@@ -115,8 +116,10 @@ Unknown pattern kinds, invalid regexes, `{table}` outside index, unique index,
 and trigger patterns, `tableMinWords` outside 1 to 32, `minLetters` below 1, an empty or
 unknown `plural.objects` list, empty irregular keys or values, an irregular
 plural equal to its singular form ignoring ASCII case, a multi-word irregular
-plural, duplicate irregular keys ignoring ASCII case, empty or duplicate
-denied tokens, a denied-token replacement equal to its token ignoring ASCII
+plural, duplicate irregular keys ignoring ASCII case, an irregular key that
+is more than one word, empty or duplicate
+denied tokens, a denied token that is more than one word, a denied-token
+replacement equal to its token ignoring ASCII
 case, a spelling key equal to its value ignoring ASCII case, duplicate
 spelling keys ignoring ASCII case, and allow entries
 with an empty reason, a duplicate object, or an invalid object ref are

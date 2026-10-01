@@ -3,12 +3,32 @@ pub(super) fn active_flags(pre: &str) -> String {
     let mut flags = String::new();
     let mut depth = 0i32;
     let mut index = 0;
+    let mut in_class = false;
     while index < chars.len() {
-        if chars[index] == '\\' {
+        let character = chars[index];
+        if character == '\\' {
             index += 2;
             continue;
         }
-        if chars[index] == '(' {
+        if in_class {
+            if character == ']' {
+                in_class = false;
+            }
+            index += 1;
+            continue;
+        }
+        if character == '[' {
+            index += 1;
+            if chars.get(index) == Some(&'^') {
+                index += 1;
+            }
+            if chars.get(index) == Some(&']') {
+                index += 1;
+            }
+            in_class = true;
+            continue;
+        }
+        if character == '(' {
             if let Some(end) = persistent_flag(&chars, index) {
                 if depth == 0 {
                     flags.extend(chars[index..=end].iter());
@@ -17,7 +37,7 @@ pub(super) fn active_flags(pre: &str) -> String {
                 continue;
             }
             depth += 1;
-        } else if chars[index] == ')' && depth > 0 {
+        } else if character == ')' && depth > 0 {
             depth -= 1;
         }
         index += 1;

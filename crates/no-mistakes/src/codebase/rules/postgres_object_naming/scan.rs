@@ -128,7 +128,7 @@ fn scan_table(
         );
     }
     for index in &table.indexes {
-        if index.constraint_backed && !compiled.check_constraint_backed_indexes {
+        if (index.constraint_backed || index.primary) && !compiled.check_constraint_backed_indexes {
             continue;
         }
         scan_index(table, &relation, index, compiled, path, findings);

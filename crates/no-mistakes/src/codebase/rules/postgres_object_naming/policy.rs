@@ -99,6 +99,11 @@ pub(super) struct Token {
     pub(super) text: String,
 }
 
+pub(super) fn is_single_word(value: &str) -> bool {
+    let parts = tokens(value);
+    value.trim() == value && parts.len() == 1 && parts[0].text == value
+}
+
 pub(super) fn tokens(name: &str) -> Vec<Token> {
     let mut tokens = Vec::new();
     let mut start = 0;
