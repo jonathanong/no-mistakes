@@ -24,11 +24,13 @@ pub(super) fn inside_flow(text: &str) -> bool {
     }
 }
 
-/// A string opened at `start`, and whether its quotes are written `\"`.
+/// A string opened at `start`, and how many backslashes write each of its quotes:
+/// none for `"`, one for `\"` (YAML inside one JavaScript string), three for
+/// `\\\"` (inside two).
 struct Span {
     start: usize,
     quote: u8,
-    escaped: bool,
+    escapes: usize,
 }
 
 /// The bracket depth after the whole text, or the start of a string that never
@@ -55,15 +57,17 @@ fn open_depth(bytes: &[u8], literal_until: usize) -> Result<usize, usize> {
                 span = Some(Span {
                     start: at,
                     quote: byte,
-                    escaped: false,
+                    escapes: 0,
                 });
             }
-            b'\\' if may_open && is_quote(bytes.get(at + 1)) => {
-                span = Some(Span {
-                    start: at,
-                    quote: bytes[at + 1],
-                    escaped: true,
-                });
+            b'\\' if may_open => {
+                if let Some((escapes, quote)) = escaped_opener(bytes, at) {
+                    span = Some(Span {
+                        start: at,
+                        quote,
+                        escapes,
+                    });
+                }
             }
             _ => {}
         }
@@ -72,24 +76,63 @@ fn open_depth(bytes: &[u8], literal_until: usize) -> Result<usize, usize> {
     span.map_or(Ok(depth), |open| Err(open.start))
 }
 
+/// The backslash run at `at` and the quote it escapes, when the run writes a
+/// quote one or more JavaScript string layers deep: `\"` is one layer and
+/// `\\\"` is two (each layer doubles the backslashes and adds the one that
+/// escapes the quote, so the run is one less than a power of two).
+fn escaped_opener(bytes: &[u8], at: usize) -> Option<(usize, u8)> {
+    let run = backslash_run(bytes, at);
+    let quote = *bytes.get(at + run).filter(|&byte| is_quote(Some(byte)))?;
+    (run + 1).is_power_of_two().then_some((run, quote))
+}
+
+fn backslash_run(bytes: &[u8], at: usize) -> usize {
+    bytes[at..]
+        .iter()
+        .take_while(|&&byte| byte == b'\\')
+        .count()
+}
+
 /// One step inside a string: the next position and whether the string ended.
-/// A plain string ends at its quote and a backslash skips the next byte; a
-/// `\"` string ends at `\"`. In single quotes a doubled `''` is a literal quote.
+/// A plain string ends at its quote and a backslash skips the next byte. In
+/// single quotes a doubled `''` is a literal quote.
 fn step_in_string(bytes: &[u8], at: usize, span: &Span) -> (usize, bool) {
-    let next = bytes.get(at + 1);
-    if span.escaped {
-        return if bytes[at] == b'\\' && next == Some(&span.quote) {
-            (at + 2, true)
-        } else {
-            (at + 1, false)
-        };
+    if span.escapes > 0 {
+        return step_in_escaped_string(bytes, at, span);
     }
+    let next = bytes.get(at + 1);
     let doubled_quote = bytes[at] == span.quote && span.quote == b'\'' && next == Some(&b'\'');
     if bytes[at] == b'\\' || doubled_quote {
         (at + 2, false)
     } else {
         (at + 1, bytes[at] == span.quote)
     }
+}
+
+/// One step inside a string whose quotes are written with backslashes. Every
+/// JavaScript layer doubles the backslashes of the YAML text and writes a quote
+/// with one more, so a run of `escapes + (escapes + 1) * k` backslashes before the
+/// quote holds `k` YAML backslashes.
+fn step_in_escaped_string(bytes: &[u8], at: usize, span: &Span) -> (usize, bool) {
+    if bytes[at] != b'\\' {
+        return (at + 1, false);
+    }
+    let run = backslash_run(bytes, at);
+    let ends = bytes.get(at + run) == Some(&span.quote) && closes_scalar(run, span);
+    (at + run + usize::from(ends), ends)
+}
+
+/// Whether a quote written after `run` backslashes ends the scalar. In double
+/// quotes the quote ends it when `k` is even and is a quote of the scalar when
+/// `k` is odd: `\"a\\\"}x\"` is one string holding `a"}x`, not a string that ends
+/// at `\\\"`. In single quotes a backslash is literal, so any `k` ends it:
+/// `\'a\\\'` is the scalar `a\`.
+fn closes_scalar(run: usize, span: &Span) -> bool {
+    let layer = span.escapes + 1;
+    let Some(extra) = run.checked_sub(span.escapes) else {
+        return false;
+    };
+    extra % layer == 0 && (span.quote == b'\'' || (extra / layer).is_multiple_of(2))
 }
 
 fn is_quote(byte: Option<&u8>) -> bool {

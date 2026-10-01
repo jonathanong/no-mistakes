@@ -43,6 +43,7 @@ fn fail_files(root: &Path) -> Vec<PathBuf> {
         root.join("src/setup-version.test.mts"),
         root.join("src/homebrew-formula.test.mts"),
         root.join("src/runner-label.test.mts"),
+        root.join("src/uses-key.test.mts"),
     ]
 }
 
@@ -198,6 +199,10 @@ fn fail_fixture_reports_each_runtime_pin() {
             13,
         ),
         ("src/runner-label.test.mts", "versioned runner label", 9),
+        // `uses` is a key through escaped quotes at every JavaScript layer; the
+        // last two lines are prose, so their formulas are not action refs.
+        ("src/uses-key.test.mts", "exact action ref", 5),
+        ("src/uses-key.test.mts", "versioned Homebrew formula", 2),
     ] {
         let actual = findings
             .iter()
