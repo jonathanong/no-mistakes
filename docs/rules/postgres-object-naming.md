@@ -80,8 +80,9 @@ identifier. Finding targets and `allow` entries keep the full snapshot key.
 An inline flag such as `(?i)` that is still active at `{table}` applies to
 both sides. That includes a flag in the middle of the prefix, such as
 `^idx_(?i){table}__[a-z]+$`. `{table}` inside a verbose-mode `#` comment is
-not a placeholder. A `{table}` match has to cover its whole prefix and suffix,
-so a multiline `$` cannot stop at an earlier line.
+not a placeholder, and neither is a flag written inside that comment.
+`{table}` cannot sit next to `\b` or `\B`. A `{table}` match has to cover its
+whole prefix and suffix, so a multiline `$` cannot stop at an earlier line.
 
 `{table}` stands for the unqualified owning table. A matching abbreviation
 keeps every word, in order, with the first letter and at least `minLetters`
@@ -118,12 +119,14 @@ Unknown pattern kinds, invalid regexes, `{table}` outside index, unique index,
 and trigger patterns, `tableMinWords` outside 1 to 32, `minLetters` below 1, an empty or
 unknown `plural.objects` list, empty irregular keys or values, an irregular
 plural equal to its singular form ignoring ASCII case, a multi-word irregular
-plural, duplicate irregular keys ignoring ASCII case, an irregular key that
+plural, duplicate irregular keys ignoring ASCII case, an irregular value
+that is also a key, an irregular key that
 is more than one word, a multi-word `uncountable` or `nonPluralTokens` entry,
 empty or duplicate
-denied tokens, a denied token that is more than one word, a denied-token
-replacement equal to its token ignoring ASCII
-case, a spelling key equal to its value ignoring ASCII case, duplicate
+denied tokens, a denied token that is more than one word, an empty
+denied-token replacement, a denied-token replacement equal to its token
+ignoring ASCII case, a spelling key equal to its value ignoring ASCII case,
+a spelling key that is more than one word, duplicate
 spelling keys ignoring ASCII case, and allow entries
 with an empty reason, a duplicate object, or an invalid object ref are
 configuration errors.

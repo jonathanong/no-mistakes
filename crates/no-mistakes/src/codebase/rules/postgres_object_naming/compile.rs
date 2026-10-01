@@ -95,6 +95,11 @@ fn compile_plural(options: &Options) -> Result<Option<PluralPolicy>> {
             bail!("postgres-object-naming option plural.irregularPlurals: duplicate key {key}");
         }
     }
+    for value in options.plural.irregular_plurals.values() {
+        if irregular_keys.contains(&value.to_ascii_lowercase()) {
+            bail!("postgres-object-naming option plural.irregularPlurals: value \"{value}\" is also a key");
+        }
+    }
     require_single_words("plural.uncountable", &options.plural.uncountable)?;
     require_single_words("plural.nonPluralTokens", &options.plural.non_plural_tokens)?;
     let mut ignore = Vec::new();
@@ -133,6 +138,9 @@ fn compile_denied(tokens: &[super::DeniedToken]) -> Result<Vec<(String, String)>
         if token.token.trim().is_empty() {
             bail!("postgres-object-naming option deniedTokens: empty token");
         }
+        if token.replacement.trim().is_empty() {
+            bail!("postgres-object-naming option deniedTokens: empty replacement");
+        }
         if !super::policy::is_single_word(&token.token) {
             bail!(
                 "postgres-object-naming option deniedTokens: token \"{}\" must be a single word",
@@ -162,6 +170,9 @@ fn compile_spelling(spelling: &BTreeMap<String, String>) -> Result<Vec<(String, 
     for (key, value) in spelling {
         if key.trim().is_empty() {
             bail!("postgres-object-naming option spelling: empty key");
+        }
+        if !super::policy::is_single_word(key) {
+            bail!("postgres-object-naming option spelling: key \"{key}\" must be a single word");
         }
         if key.eq_ignore_ascii_case(value) {
             bail!("postgres-object-naming option spelling: key \"{key}\" equals its value");

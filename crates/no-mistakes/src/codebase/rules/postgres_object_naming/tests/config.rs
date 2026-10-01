@@ -80,6 +80,10 @@ fn table_placeholder_shape_errors() {
         &format!("{prefix}'^idx_{{table}}*$'\n"),
         "option patterns.index: invalid regex:",
     );
+    expect_err(
+        &format!("{prefix}'^idx_\\b{{table}}__x$'\n"),
+        "option patterns.index: {table} must not sit next to a word-boundary assertion",
+    );
 }
 
 #[test]
@@ -133,6 +137,14 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
         "option deniedTokens: token \"ID\" equals its replacement",
     );
     expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: cfg}\n",
+        "option deniedTokens: empty replacement",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: cfg, replacement: ''}\n",
+        "option deniedTokens: empty replacement",
+    );
+    expect_err(
         "schemaCatalogPath: schema.json\nspelling:\n  '': acknowledgment\n",
         "option spelling: empty key",
     );
@@ -143,6 +155,10 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
     expect_err(
         "schemaCatalogPath: schema.json\nspelling:\n  ID: id\n",
         "option spelling: key \"ID\" equals its value",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  app_cfg: configuration\n",
+        "option spelling: key \"app_cfg\" must be a single word",
     );
     expect_err(
         "schemaCatalogPath: schema.json\nspelling:\n  Teh: the\n  teh: the\n",
@@ -159,6 +175,10 @@ fn token_spelling_underscore_and_allow_options_fail_closed() {
     expect_err(
         "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {Person: people, person: persons}\n",
         "option plural.irregularPlurals: duplicate key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {person: people, people: peoples}\n",
+        "option plural.irregularPlurals: value \"people\" is also a key",
     );
     expect_err(
         "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {person: people_group}\n",

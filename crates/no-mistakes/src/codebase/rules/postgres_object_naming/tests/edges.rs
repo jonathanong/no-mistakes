@@ -342,6 +342,17 @@ fn quoted_names_min_words_and_active_flags() {
 }
 
 #[test]
+fn verbose_flag_comments_stay_literal() {
+    let yaml = "schemaCatalogPath: schema.json\npatterns:\n  index: \"(?x)^idx_ # (?i)\\n{table}__[a-z]+$\"\n";
+    expect_none(yaml, index("orders", "idx_orders__id", false, false));
+    expect(
+        yaml,
+        index("orders", "idx_orders__ID", false, false),
+        "schema.json: index:orders.idx_orders__ID: index name does not match pattern (?x)^idx_ # (?i)\n{table}__[a-z]+$ ({table} = orders)",
+    );
+}
+
+#[test]
 fn verbose_comments_and_multiline_anchors() {
     let verbose =
         "schemaCatalogPath: schema.json\npatterns:\n  index: \"(?x)^idx_ # {table}\\n[a-z]+$\"\n";

@@ -1,7 +1,5 @@
 use super::expand::{middle_matches, suggestion};
-use super::pattern_walk::{
-    active_flags, ends_unescaped_dollar, placeholder_is_plain, walk_placeholders,
-};
+use super::pattern_walk::{active_flags, placeholder_is_plain, walk_placeholders};
 use anyhow::{bail, Result};
 use regex::Regex;
 
@@ -150,7 +148,36 @@ fn validate_placeholder(kind: &str, raw: &str, count: usize) -> Result<()> {
     if !placeholder_is_plain(raw) {
         bail!("postgres-object-naming option patterns.{kind}: {{table}} must not be inside a group, a character class or an alternation");
     }
+    if split_touches_boundary(raw) {
+        bail!("postgres-object-naming option patterns.{kind}: {{table}} must not sit next to a word-boundary assertion");
+    }
     Ok(())
+}
+
+fn split_touches_boundary(raw: &str) -> bool {
+    let Some(at) = walk_placeholders(raw).offsets.first().copied() else {
+        return false;
+    };
+    let pre = &raw[..at];
+    let post = &raw[at + "{table}".len()..];
+    pre.ends_with("\\b")
+        || pre.ends_with("\\B")
+        || post.starts_with("\\b")
+        || post.starts_with("\\B")
+}
+
+fn ends_unescaped_dollar(pattern: &str) -> bool {
+    let bytes = pattern.as_bytes();
+    if bytes.last() != Some(&b'$') {
+        return false;
+    }
+    let mut slashes = 0;
+    let mut index = bytes.len() - 1;
+    while index > 0 && bytes[index - 1] == b'\\' {
+        slashes += 1;
+        index -= 1;
+    }
+    slashes % 2 == 0
 }
 
 fn without_leading_flags(raw: &str) -> &str {

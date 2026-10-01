@@ -4,8 +4,17 @@ pub(super) fn active_flags(pre: &str) -> String {
     let mut depth = 0i32;
     let mut index = 0;
     let mut in_class = false;
+    let mut verbose = false;
+    let mut comment = false;
     while index < chars.len() {
         let character = chars[index];
+        if comment {
+            if character == '\n' {
+                comment = false;
+            }
+            index += 1;
+            continue;
+        }
         if character == '\\' {
             index += 2;
             continue;
@@ -28,8 +37,15 @@ pub(super) fn active_flags(pre: &str) -> String {
             in_class = true;
             continue;
         }
+        if character == '#' && verbose {
+            comment = true;
+            index += 1;
+            continue;
+        }
         if character == '(' {
             if let Some(end) = persistent_flag(&chars, index) {
+                let body: String = chars[index + 2..end].iter().collect();
+                apply_verbose(&body, &mut verbose);
                 if depth == 0 {
                     flags.extend(chars[index..=end].iter());
                 }
@@ -62,20 +78,6 @@ fn persistent_flag(chars: &[char], start: usize) -> Option<usize> {
         index += 1;
     }
     None
-}
-
-pub(super) fn ends_unescaped_dollar(pattern: &str) -> bool {
-    let bytes = pattern.as_bytes();
-    if bytes.last() != Some(&b'$') {
-        return false;
-    }
-    let mut slashes = 0;
-    let mut index = bytes.len() - 1;
-    while index > 0 && bytes[index - 1] == b'\\' {
-        slashes += 1;
-        index -= 1;
-    }
-    slashes % 2 == 0
 }
 
 pub(super) struct PlaceholderWalk {
