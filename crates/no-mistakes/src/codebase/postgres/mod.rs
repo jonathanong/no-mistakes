@@ -26,8 +26,12 @@ pub(crate) use catalog::canonical_order_keys;
 pub(crate) use catalog::normalize_catalog_path as normalize_schema_catalog_path;
 pub(crate) use catalog::order_by_ascending;
 pub use catalog::{
-    expression_matches, order_prefix_matches, parse_postgres_expression, CanonicalIndex,
-    CanonicalOrderKey, ResolvedArbiter, SchemaCatalog,
+    catalog_finding, expression_matches, order_prefix_matches, parse_postgres_expression,
+    require_catalog_path, AllowEntry, AllowList, CanonicalIndex, CanonicalOrderKey, CatalogCheck,
+    CatalogColumn, CatalogEnum, CatalogForeignKey, CatalogFunction, CatalogIndexInfo,
+    CatalogIndexKey, CatalogObjectRef, CatalogTable, CatalogTrigger, CatalogUnique, CatalogView,
+    GeneratedKind, PartitionKey, PartitionKeyElement, PartitionStrategy, RelationKind,
+    ResolvedArbiter, SchemaCatalog, TriggerEvent, TriggerTiming,
 };
 pub use collect::{
     collect_postgres_facts, collect_schema_facts, extract_embedded_sql_facts, extract_schema_facts,
