@@ -63,6 +63,15 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             "src/namespace-body-shadow.ts:5 ShadowErrors.ShadowDead",
             // `bind`, `call` and `apply` hand a class on; a static guard does not.
             "src/namespace-bound.ts:25 Guarded.GuardedDead",
+            // A class, function, enum, or namespace declared in a namespace body
+            // hides an import of its name there: it builds none of these.
+            "src/namespace-class-shadow-lib.ts:6 ClassShadow.ClassShadowDead",
+            "src/namespace-class-shadow-lib.ts:8 ClassShadow.ClassShadowBase",
+            "src/namespace-class-shadow-lib.ts:12 FunctionShadow.FunctionShadowDead",
+            "src/namespace-class-shadow-lib.ts:16 EnumShadow.EnumShadowDead",
+            "src/namespace-class-shadow-lib.ts:20 LaterShadow.LaterShadowDead",
+            "src/namespace-class-shadow-lib.ts:24 NestedShadow.NestedShadowDead",
+            "src/namespace-class-shadow-lib.ts:31 BareShadowed",
             // A constant or a parameter that shares a name is not the namespace.
             "src/namespace-collision.ts:7 Collide.Inner.CollideDead",
             "src/namespace-collision.ts:16 Hide.HideDead",
@@ -154,6 +163,9 @@ fn namespace_members_built_through_a_resolved_reference_are_not_reported() {
         // hide.
         "BodyScope.ScopeBuilt",
         "BodyVar.VarBuilt",
+        // Built from another block of a merged namespace, where a class of the
+        // import's name is private to its own block.
+        "MergedShadow.MergedBuilt",
         // Another file, by every way to reach the namespace.
         "Lib.Used",
         "Lib.Deep.DeepUsed",
@@ -239,6 +251,8 @@ fn a_namespace_that_escapes_is_never_reported() {
         "BareHanded.BareHandedDead",
         "BareNested.BareNestedDead",
         "BareBound.BareBoundDead",
+        // A string-literal member after another member cannot be named.
+        "LiteralNested.Inner.LiteralNestedDead",
     ] {
         assert!(!targets.contains(&silent), "{silent} was reported");
     }

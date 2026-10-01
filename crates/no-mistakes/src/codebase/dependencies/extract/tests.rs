@@ -571,6 +571,9 @@ mod dynamic_callee_shapes;
 #[path = "tests/namespace_facts.rs"]
 mod namespace_facts;
 #[cfg(test)]
+#[path = "tests/namespace_locals.rs"]
+mod namespace_locals;
+#[cfg(test)]
 #[path = "tests/namespace_uses.rs"]
 mod namespace_uses;
 #[path = "tests/object_spread_regressions.rs"]

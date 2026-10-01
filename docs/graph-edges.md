@@ -368,9 +368,19 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   that binding, and a same-named value elsewhere, are no use. A namespace body is
   a scope of its own, like a function body: a `const`, `let`, or hoisted `var`
   declared in it hides a name inside that body only, so the same name after the
-  body still names the import, and a local that shares a declared namespace's name
-  hides that namespace there, so a construction through it builds no class of it. A class and a nested namespace of one name in
-  one body are a single merged value that hides nothing. A bare decorator
+  body still names the import. A class, function, enum, nested namespace, or
+  variable (`const` and `let` too, even when declared after the code that reads
+  it) declared in a body hides an imported or declared namespace of the same name
+  for every `new` and `extends` written in that body or one nested in it, so
+  `namespace Helpers { class Errors {} new Errors.Dead(); }` builds no class of an
+  imported `Errors`. The extractor records those names as the `locals` fact.
+  A namespace declared in several blocks hides nothing, because a block's
+  unexported declarations are private to it, and only constructions and base
+  classes are covered; any other call resolves as before. A class and a nested
+  namespace of one name in one body are a single merged value that hides nothing.
+  A string-literal member (`Errors["Dead"]`, `Errors["Inner"].Dead`) is followed
+  like a dot, but `new Errors.Inner["Dead"]()` reads `Errors.Inner` as a value, so
+  the namespace escapes. A bare decorator
   (`@Errors.mark`) calls the member it names and is no use of the namespace. A
   name written only in an erased type (`typeof X`, `implements X.Marker`, an
   interface base) is no use either. An erased `import type x = require()` uses nothing, and a sourced

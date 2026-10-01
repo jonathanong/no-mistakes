@@ -48,6 +48,11 @@ pub struct NamespaceFacts {
     /// member names is read.
     pub member_uses: Vec<(String, String)>,
     pub sites: Vec<NamespaceSite>,
+    /// `(namespace path, name)` for each value a tracked namespace body
+    /// declares: a class, function, enum, namespace, or variable. The name
+    /// hides an import of the same name in constructions written in that body.
+    /// A namespace declared in several blocks has none.
+    pub locals: Vec<(String, String)>,
     /// Specifiers of `import x = require("...")`, whose module is used whole.
     pub opaque_specifiers: Vec<String>,
     /// Classes in an ambient declaration or in a module block that is not a

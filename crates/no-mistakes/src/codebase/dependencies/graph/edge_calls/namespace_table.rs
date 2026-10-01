@@ -11,6 +11,8 @@ struct NamespaceTable {
     roots: Vec<NamespaceRoot>,
     /// The innermost namespace around each construction written in a body.
     sites: FxHashMap<(Option<CallableId>, u32), String>,
+    /// The values each namespace body declares, by namespace path.
+    locals: FxHashMap<String, FxHashSet<String>>,
 }
 
 enum NamespaceLookup<'a> {
@@ -36,6 +38,10 @@ impl NamespaceTable {
         if facts.roots.is_empty() {
             return Self::default();
         }
+        let mut locals: FxHashMap<String, FxHashSet<String>> = FxHashMap::default();
+        for (path, name) in &facts.locals {
+            locals.entry(path.clone()).or_default().insert(name.clone());
+        }
         let member_ids: FxHashSet<CallableId> = facts.members.iter().map(|m| m.id).collect();
         let scopes: FxHashMap<CallableId, &String> = file
             .callable_scope_ids
@@ -59,7 +65,19 @@ impl NamespaceTable {
                 .iter()
                 .map(|site| ((site.caller_id, site.offset), site.namespace.clone()))
                 .collect(),
+            locals,
         }
+    }
+
+    /// Whether the body of `context`, or of a namespace around it, declares a
+    /// value named like the head of `callee`, which then hides an import of
+    /// that name for a construction written there.
+    fn binds_head(&self, context: &str, callee: &str) -> bool {
+        let head = callee.split_once('.').map_or(callee, |(head, _)| head);
+        let paths = std::iter::successors(Some(context), |&path| enclosing_path(path));
+        paths
+            .filter_map(|path| self.locals.get(path))
+            .any(|names| names.contains(head))
     }
 
     fn is_empty(&self) -> bool {

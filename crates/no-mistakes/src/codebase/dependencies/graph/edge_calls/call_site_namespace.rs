@@ -79,6 +79,19 @@ impl CallSiteResolution<'_, '_> {
         }
     }
 
+    /// A construction written in a namespace body whose head names a value that
+    /// body (or one around it) declares: a class, function, enum, namespace,
+    /// or variable. That value hides an import of the same name, so the import
+    /// is not what the construction builds, whichever side of the declaration
+    /// it is written on.
+    fn import_hidden_by_body(&self, call: &FunctionCall, callee: &str) -> bool {
+        let table = &self.index.namespaces;
+        call.invocation == InvocationKind::Construct
+            && table
+                .context(call.caller_id, call.offset)
+                .is_some_and(|context| table.binds_head(context, callee))
+    }
+
     /// Records that a use of `root` in `file` (`"*"`: every root there) cannot
     /// be followed to a class, so none of its classes may be reported.
     fn escape(&self, file: &std::path::Path, root: &str) {

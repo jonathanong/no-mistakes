@@ -55,7 +55,14 @@ impl CallSiteResolution<'_, '_> {
         let callable_id = resolved_callee.callable_id.or_else(|| {
             index.resolve_local_callable_id(call.callee_binding_scope, &resolved_callee.callee)
         });
-        let target_identity = call_target_identity(index, call, &resolved_callee.callee);
+        let target_identity = match call_target_identity(index, call, &resolved_callee.callee) {
+            CallTargetIdentity::ModuleExport
+                if self.import_hidden_by_body(call, &resolved_callee.callee) =>
+            {
+                CallTargetIdentity::Unknown
+            }
+            identity => identity,
+        };
         let target = match target_identity {
             CallTargetIdentity::RepositoryFunction => resolve_local_call_scope(
                 call.caller.as_deref(),

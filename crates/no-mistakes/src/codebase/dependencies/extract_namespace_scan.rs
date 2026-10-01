@@ -31,6 +31,7 @@ fn scan_program_namespaces(collector: &mut ImportCollector, program: &Program<'_
         add_namespace_root(collector, name, exports, enums.contains(name));
         scan_namespace(collector, namespace, "", reachable);
     }
+    retain_unmerged_locals(&mut collector.namespace.facts);
     collector.namespace.facts.declared.sort();
     collector.namespace.facts.declared.dedup();
 }
@@ -149,6 +150,7 @@ fn scan_namespace(
             scan_namespace(collector, inner, &path, reachable);
         }
         TSNamespaceDeclarationBody::TSModuleBlock(block) => {
+            scan_namespace_locals(collector, &block.body, &path);
             for statement in &block.body {
                 scan_namespace_statement(collector, statement, &path, reachable);
             }

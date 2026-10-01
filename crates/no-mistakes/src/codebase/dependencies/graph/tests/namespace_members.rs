@@ -2,12 +2,16 @@ use super::class_bases::{build_fixture, relative};
 use super::*;
 use crate::codebase::dependencies::extract::CallableId;
 
-fn build() -> (PathBuf, DepGraph) {
+pub(super) fn build() -> (PathBuf, DepGraph) {
     build_fixture("namespace-members", true, true)
 }
 
 /// The class `scope` declared in `namespace`, or at the top level for `None`.
-fn class<'a>(graph: &'a DepGraph, scope: &str, namespace: Option<&str>) -> &'a ClassDeclaration {
+pub(super) fn class<'a>(
+    graph: &'a DepGraph,
+    scope: &str,
+    namespace: Option<&str>,
+) -> &'a ClassDeclaration {
     graph
         .class_declarations()
         .iter()
@@ -16,7 +20,7 @@ fn class<'a>(graph: &'a DepGraph, scope: &str, namespace: Option<&str>) -> &'a C
 }
 
 /// Where each `Call` edge into `class` starts, as `(file, caller scope)`.
-fn callers(
+pub(super) fn callers(
     root: &Path,
     graph: &DepGraph,
     class: &ClassDeclaration,
@@ -41,7 +45,7 @@ fn callers(
 }
 
 /// The ids of the classes `class` extends, by its `Extends` edges.
-fn bases(graph: &DepGraph, class: &ClassDeclaration) -> Vec<Option<CallableId>> {
+pub(super) fn bases(graph: &DepGraph, class: &ClassDeclaration) -> Vec<Option<CallableId>> {
     let source = class.node();
     graph
         .edges
@@ -55,7 +59,7 @@ fn bases(graph: &DepGraph, class: &ClassDeclaration) -> Vec<Option<CallableId>> 
         .collect()
 }
 
-fn owned(callers: &[(&str, Option<&str>)]) -> Vec<(String, Option<String>)> {
+pub(super) fn owned(callers: &[(&str, Option<&str>)]) -> Vec<(String, Option<String>)> {
     callers
         .iter()
         .map(|(file, caller)| (file.to_string(), caller.map(str::to_string)))
@@ -295,7 +299,7 @@ fn a_construction_through_a_shadowing_binding_is_not_a_namespace_member() {
 }
 
 /// Whether the namespace of the class `scope` declared in `namespace` escaped.
-fn escaped_in(graph: &DepGraph, scope: &str, namespace: &str) -> bool {
+pub(super) fn escaped_in(graph: &DepGraph, scope: &str, namespace: &str) -> bool {
     class(graph, scope, Some(namespace)).namespace_escaped
 }
 

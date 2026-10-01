@@ -220,6 +220,7 @@ include!("extract_entrypoints.rs");
 include!("extract_entrypoints_predeclare.rs");
 include!("extract_namespace_facts.rs");
 include!("extract_namespace_scan.rs");
+include!("extract_namespace_locals.rs");
 include!("extract_namespace_walk.rs");
 include!("extract_namespace_uses.rs");
 include!("extract_export_names.rs");

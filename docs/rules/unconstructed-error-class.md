@@ -110,10 +110,18 @@ is no use of the nested namespace: a name counts as a use only when it resolves
 to a declared namespace path or an imported binding. A namespace body is a scope
 of its own, like a function body: a `const`, `let`, or hoisted `var` in it hides
 a name inside that body only, so `namespace Helpers { const Errors = {}; }` leaves
-a later `new Errors.X()` naming the imported namespace. A local in a body that
-shares a declared namespace's name hides that namespace there, so a construction
-through it builds no class of the namespace. A class and a nested namespace of one
-name in one body are a single merged value that hides nothing.
+a later `new Errors.X()` naming the imported namespace. A class, function, enum,
+nested namespace, or variable (`const` and `let` too, even when declared after the
+code that reads it) declared in a body hides an imported or declared namespace of
+the same name for every `new` and `extends` written in that body or one nested in
+it, so `namespace Helpers { class Errors {} new Errors.Dead(); }` builds no class
+of an imported `Errors`. A namespace declared in several blocks hides nothing,
+because a block's unexported declarations are private to it, and only
+constructions and base classes are covered; any other call resolves as before. A
+class and a nested namespace of one name in one body are a single merged value
+that hides nothing. A string-literal member (`Errors["Dead"]`,
+`Errors["Inner"].Dead`) is followed like a dot, but `new Errors.Inner["Dead"]()`
+reads `Errors.Inner` as a value, so the namespace stays quiet.
 A bare decorator (`@Errors.mark`) calls the member it names and is not a use of
 the namespace. A name written only in an erased type (`typeof Errors`,
 `implements Errors.Marker`, an interface that extends `Errors.Base`) is not a use
