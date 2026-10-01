@@ -1,4 +1,5 @@
 use super::*;
+use crate::codebase::rules::postgres_column_naming::RULE_ID as COLUMN_NAMING_RULE;
 use crate::codebase::rules::postgres_column_requires_trigger::RULE_ID as COLUMN_RULE;
 use crate::codebase::rules::postgres_conflict_ordering::RULE_ID as CONFLICT_RULE;
 use crate::codebase::rules::postgres_duplicate_function_body::RULE_ID as DUPLICATE_RULE;
@@ -19,6 +20,7 @@ fn missing_facts_use_the_file_checkers() {
         CONFLICT_RULE,
         TABLE_RULE,
         NAMING_RULE,
+        COLUMN_NAMING_RULE,
     ] {
         assert!(run(rule_id, Path::new("."), &config, files, &sources, None).is_some());
     }
