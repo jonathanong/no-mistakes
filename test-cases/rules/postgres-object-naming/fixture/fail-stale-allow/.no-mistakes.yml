@@ -1,0 +1,10 @@
+rules:
+  - rule: postgres-object-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      plural:
+        enabled: true
+      allow:
+        - object: table:retired_widgets
+          reason: removed from the snapshot

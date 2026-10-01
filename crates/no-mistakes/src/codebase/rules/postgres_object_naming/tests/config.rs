@@ -1,0 +1,259 @@
+use super::support::expect_err;
+
+#[test]
+fn schema_catalog_path_is_required() {
+    expect_err("patterns: {}", "option schemaCatalogPath: required");
+    expect_err(
+        "schemaCatalogPath: '   '\n",
+        "option schemaCatalogPath: required",
+    );
+}
+
+#[test]
+fn unknown_pattern_kind_and_invalid_regex_fail() {
+    expect_err(
+        "schemaCatalogPath: schema.json\npatterns:\n  sequence: '^[a-z]+$'\n",
+        "option patterns.sequence: unknown pattern kind",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\npatterns:\n  table: '('\n",
+        "option patterns.table: invalid regex:",
+    );
+}
+
+#[test]
+fn table_placeholder_is_rejected_outside_index_trigger_and_unique_index() {
+    for kind in [
+        "table",
+        "column",
+        "function",
+        "triggerFunction",
+        "view",
+        "materializedView",
+        "enum",
+    ] {
+        expect_err(
+            &format!("schemaCatalogPath: schema.json\npatterns:\n  {kind}: '^x_{{table}}$'\n"),
+            &format!(
+                "option patterns.{kind}: {{table}} is only allowed in index, uniqueIndex and trigger"
+            ),
+        );
+    }
+}
+
+#[test]
+fn table_placeholder_shape_errors() {
+    let prefix = "schemaCatalogPath: schema.json\npatterns:\n  index: ";
+    expect_err(
+        &format!("{prefix}'^idx_{{table}}_{{table}}$'\n"),
+        "option patterns.index: {table} may appear only once",
+    );
+    expect_err(
+        &format!("{prefix}'idx_{{table}}$'\n"),
+        "option patterns.index: a pattern with {table} must start with ^ and end with $",
+    );
+    expect_err(
+        &format!("{prefix}'^idx_{{table}}'\n"),
+        "option patterns.index: a pattern with {table} must start with ^ and end with $",
+    );
+    expect_err(
+        &format!("{prefix}'^idx_{{table}}\\$'\n"),
+        "option patterns.index: a pattern with {table} must start with ^ and end with $",
+    );
+    expect_err(
+        &format!("{prefix}'^(idx_{{table}})$'\n"),
+        "option patterns.index: {table} must not be inside a group, a character class or an alternation",
+    );
+    expect_err(
+        &format!("{prefix}'^[{{table}}]$'\n"),
+        "option patterns.index: {table} must not be inside a group, a character class or an alternation",
+    );
+    expect_err(
+        &format!("{prefix}'^idx_{{table}}$|^plain$'\n"),
+        "option patterns.index: {table} must not be inside a group, a character class or an alternation",
+    );
+    expect_err(
+        &format!("{prefix}'^a{{1{{table}}$'\n"),
+        "option patterns.index: invalid regex:",
+    );
+    expect_err(
+        &format!("{prefix}'^idx_{{table}}*$'\n"),
+        "option patterns.index: invalid regex:",
+    );
+    expect_err(
+        &format!("{prefix}'^idx_\\b{{table}}__x$'\n"),
+        "option patterns.index: {table} must not sit next to a zero-width assertion",
+    );
+    expect_err(
+        &format!("{prefix}'^idx_\\z{{table}}__x$'\n"),
+        "option patterns.index: {table} must not sit next to a zero-width assertion",
+    );
+    expect_err(
+        &format!("{prefix}\"(?x)^idx_\\\\b {{table}}__x$\"\n"),
+        "option patterns.index: {table} must not sit next to a zero-width assertion",
+    );
+}
+
+#[test]
+fn numeric_and_plural_options_fail_closed() {
+    expect_err(
+        "schemaCatalogPath: schema.json\ntableMinWords: 0\n",
+        "option tableMinWords: must be at least 1",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ntableMinWords: 33\n",
+        "option tableMinWords: must be at most 32",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nabbreviations:\n  minLetters: 0\n",
+        "option abbreviations.minLetters: must be at least 1",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  objects: []\n",
+        "option plural.objects: must not be empty",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  enabled: true\n  objects: [view]\n",
+        "option plural.objects: unknown value view",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {'': people}\n",
+        "option plural.irregularPlurals: empty key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {person: ''}\n",
+        "option plural.irregularPlurals: empty value",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  enabled: false\n  ignorePatterns: ['[']\n",
+        "option plural.ignorePatterns: invalid regex:",
+    );
+}
+
+#[test]
+fn token_spelling_underscore_and_allow_options_fail_closed() {
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - token: ''\n    replacement: configuration\n",
+        "option deniedTokens: empty token",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: cfg, replacement: configuration}\n  - {token: CFG, replacement: config}\n",
+        "option deniedTokens: duplicate token CFG",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: ID, replacement: id}\n",
+        "option deniedTokens: token \"ID\" equals its replacement",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: cfg}\n",
+        "option deniedTokens: empty replacement",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: cfg, replacement: ''}\n",
+        "option deniedTokens: empty replacement",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: cfg, replacement: tmp}\n  - {token: tmp, replacement: temporary}\n",
+        "option deniedTokens: replacement \"tmp\" is also a token",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: cfg, replacement: configuration}\nspelling:\n  CFG: config\n",
+        "option deniedTokens: token \"cfg\" is also a spelling key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '^idx_{table}(?:\\b)__x$'\n",
+        "option patterns.index: {table} must not sit next to a zero-width assertion",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  '': acknowledgment\n",
+        "option spelling: empty key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  acknowledgement: acknowledgement\n",
+        "option spelling: key \"acknowledgement\" equals its value",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  ID: id\n",
+        "option spelling: key \"ID\" equals its value",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  app_cfg: configuration\n",
+        "option spelling: key \"app_cfg\" must be a single word",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  teh: ''\n",
+        "option spelling: empty value",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  Teh: the\n  teh: the\n",
+        "option spelling: duplicate key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nspelling:\n  teh: recieve\n  recieve: receive\n",
+        "option spelling: value \"recieve\" is also a key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {species: species}\n",
+        "option plural.irregularPlurals: key \"species\" equals its value; use uncountable",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {species: Species}\n",
+        "option plural.irregularPlurals: key \"species\" equals its value; use uncountable",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {Person: people, person: persons}\n",
+        "option plural.irregularPlurals: duplicate key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {person: people, people: peoples}\n",
+        "option plural.irregularPlurals: value \"people\" is also a key",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  uncountable: [data]\n  irregularPlurals: {data: datas}\n",
+        "option plural.irregularPlurals: key \"data\" is uncountable",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {person: people_group}\n",
+        "option plural.irregularPlurals: value \"people_group\" must be a single word",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  irregularPlurals: {sales_person: people}\n",
+        "option plural.irregularPlurals: key \"sales_person\" must be a single word",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: app_cfg, replacement: configuration}\n",
+        "option deniedTokens: token \"app_cfg\" must be a single word",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndeniedTokens:\n  - {token: ' cfg', replacement: configuration}\n",
+        "option deniedTokens: token \" cfg\" must be a single word",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  uncountable: [sales_data]\n",
+        "option plural.uncountable: value \"sales_data\" must be a single word",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nplural:\n  nonPluralTokens: [sales_data]\n",
+        "option plural.nonPluralTokens: value \"sales_data\" must be a single word",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\npatterns:\n  index: '(?q)^idx_{table}__$'\n",
+        "option patterns.index: a pattern with {table} must start with ^ and end with $",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\ndoubleUnderscore:\n  allowPattern: '['\n",
+        "option doubleUnderscore.allowPattern: invalid regex:",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nallow:\n  - {object: table:accounts, reason: '   '}\n",
+        "option allow: entry table:accounts needs a reason",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nallow:\n  - {object: nope, reason: kept}\n",
+        "option allow: invalid object ref nope",
+    );
+    expect_err(
+        "schemaCatalogPath: schema.json\nallow:\n  - {object: 'table:accounts', reason: kept}\n  - {object: 'table:accounts', reason: again}\n",
+        "option allow: duplicate entry table:accounts",
+    );
+}

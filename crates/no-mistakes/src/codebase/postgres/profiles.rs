@@ -24,6 +24,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-duplicate-function-body",
     "postgres-table-shape",
     "postgres-status-with-lifecycle-timestamps",
+    "postgres-object-naming",
 ];
 
 #[derive(Default, Deserialize)]

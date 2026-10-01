@@ -2,6 +2,7 @@ use super::*;
 use crate::codebase::rules::postgres_column_requires_trigger::RULE_ID as COLUMN_RULE;
 use crate::codebase::rules::postgres_conflict_ordering::RULE_ID as CONFLICT_RULE;
 use crate::codebase::rules::postgres_duplicate_function_body::RULE_ID as DUPLICATE_RULE;
+use crate::codebase::rules::postgres_object_naming::RULE_ID as NAMING_RULE;
 use crate::codebase::rules::postgres_required_comments::RULE_ID as COMMENTS_RULE;
 use crate::codebase::rules::postgres_table_shape::RULE_ID as TABLE_RULE;
 use crate::codebase::ts_source::FileInventory;
@@ -17,6 +18,7 @@ fn missing_facts_use_the_file_checkers() {
         COLUMN_RULE,
         CONFLICT_RULE,
         TABLE_RULE,
+        NAMING_RULE,
     ] {
         assert!(run(rule_id, Path::new("."), &config, files, &sources, None).is_some());
     }

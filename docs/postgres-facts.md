@@ -238,7 +238,8 @@ functions whose normalized tokens match. `postgres-table-shape` reads
 tables, columns, foreign keys, primary keys, triggers, and enum names from
 that catalog and checks them against configured name patterns.
 `postgres-status-with-lifecycle-timestamps` reads column names, data types,
-and generated flags from that catalog.
+and generated flags from that catalog. `postgres-object-naming` reads table,
+index, trigger, function, view, and enum names from that catalog.
 
 `analyze_conflict_inserts(sql)` exposes the same structured SQL projection to
 Rust callers as `SqlConflictInsertFact`, `SqlConflictTarget`, and
