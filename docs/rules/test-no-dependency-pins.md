@@ -27,7 +27,7 @@ rules:
         - "**/__tests__/**"
       patterns:
         - reason: exact action ref
-          regex: '(?<!@)\b(?:[\w.-]+/)*[.-]*\b(?P<versions>[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?)\b'
+          regex: '(?<!@)\b(?:[\w.-]*\w[\w.-]*(?::[0-9]+)?/)?(?:[\w.-]*\w[\w.-]*/)*[.-]*\b(?P<versions>[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?)\b'
 ```
 
 Counterexample: a test asserts a concrete dependency entry read from
@@ -101,17 +101,22 @@ An action ref is reported whole, as `owner/repo/path@ref`: for example
 `github/codeql-action/init@v3` or
 `my-org/example-repo/.github/workflows/reusable.yml@v1`, not its last two
 components. The reported text is every `/`-separated component before the `@`,
-so a path in front of the ref is part of it: a URL host
-(`github.com/actions/checkout@v4`), a Go module path
-(`golang.org/x/tools@v0.1.0`), or a directory is kept, while a leading `/`, `./`
-or scheme is not. Three consequences:
+so a path in front of the ref is part of it: a URL host with its port
+(`github.com/actions/checkout@v4`, `registry.my-org.io:8443/a/b@v1`), a Go
+module path (`golang.org/x/tools@v0.1.0`), or a directory is kept, while a
+leading `/`, `./` or scheme is not. A component with no name in it (`..`, `.`,
+`-`, or an empty segment) is not part of a path and ends it, so
+`owner/repo/../path/action@v1` is reported as `path/action@v1`. Three
+consequences:
 
 - A scoped package with a subpath (`@scope/pkg/sub@1.2.3`) starts at the `@`, so
-  like `@scope/pkg@1.2.3` it is not an action ref.
+  like `@scope/pkg@1.2.3` it is not an action ref. Neither is a host after an `@`
+  (`git@github.com:22/a/b@v1`).
 - A reserved host in front of the ref (`https://example.com/actions/checkout@v4`,
-  `my.test/a/b@v1`) makes it a [placeholder](#placeholder-values), as it does for
-  an image registry. Only the first component is a host, so `a/b.test/c@v1` is
-  reported.
+  `localhost:5000/a/b@v1`, `my.test/a/b@v1`) makes it a
+  [placeholder](#placeholder-values), as it does for an image registry. A hostname
+  is case-insensitive, and only the first component is a host, so `a/b.test/c@v1`
+  is reported.
 - The all-zero placeholder rule reads the last two path components and the ref,
   with any trailing `# v1.2.3` comment, not the whole text. `owner/repo@v0.0.0`
   and `foo-v0.0.0/bar@v1` are placeholders, but a `v0.0.0` directory higher up
@@ -224,7 +229,8 @@ value without a suppression comment:
 - an image registry, or the host in front of an action ref, is reserved for
   testing and documentation: `registry.test/app:1.2.3`,
   `localhost:5000/app:1.2.3`, `example.com/app:1.2.3`, `my.test/a/b@v1`, and the
-  `.test`, `.example`, `.invalid`, and `.localhost` top-level domains;
+  `.test`, `.example`, `.invalid`, and `.localhost` top-level domains, in any
+  letter case (`EXAMPLE.COM`);
 - an untagged image digest is one short block repeated to 64 characters, such
   as `sha256:` followed by 64 zeros or `0123456789abcdef` four times.
 

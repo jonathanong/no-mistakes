@@ -134,6 +134,58 @@ fn a_path_before_the_ref_is_part_of_the_reported_text() {
 }
 
 #[test]
+fn a_component_with_no_name_in_it_ends_the_reported_path() {
+    // `..`, `.` and `-` are not components of a ref, just as an empty segment is
+    // not. The ref restarts after them, so a malformed path keeps the text it
+    // was reported with before the path was reported whole, and is still found.
+    for (line, expected) in [
+        ("uses: owner/repo/../path/action@v1", "path/action@v1"),
+        ("uses: owner/repo/./path/action@v1", "path/action@v1"),
+        ("uses: owner/repo/-/path/action@v1", "path/action@v1"),
+        ("uses: ../../a/b/c@v1", "a/b/c@v1"),
+        ("uses: a//b/c@v1", "b/c@v1"),
+        // A name with dots or dashes around it is a component.
+        ("uses: owner/repo/-a-/b/c@v1", "owner/repo/-a-/b/c@v1"),
+        (
+            "uses: owner/repo/.github/workflows/x.yml@v1",
+            "owner/repo/.github/workflows/x.yml@v1",
+        ),
+    ] {
+        assert_eq!(refs(line), [expected], "{line}");
+    }
+}
+
+#[test]
+fn a_port_stays_with_its_host() {
+    // A port belongs to the host, so it is not read as the first path
+    // component, and a reserved host is still reserved with one.
+    for line in [
+        "https://localhost:5000/actions/checkout@v4",
+        "localhost:5000/a/b@v1",
+        "https://example.com:8443/o/r@v1",
+        "registry.test:5000/a/b@v1",
+    ] {
+        assert!(refs(line).is_empty(), "{line}: {:?}", refs(line));
+    }
+    for (line, expected) in [
+        (
+            "https://registry.npmjs.org:443/o/r@v1",
+            "registry.npmjs.org:443/o/r@v1",
+        ),
+        ("uses: node:18/foo/bar@1.2.3", "node:18/foo/bar@1.2.3"),
+    ] {
+        assert_eq!(refs(line), [expected], "{line}");
+    }
+    // A host after an `@` is not an action ref, with or without a port.
+    for line in [
+        "git@github.com:22/a/b@v1",
+        "ssh://git@github.com:22/a/b/c@v1",
+    ] {
+        assert!(refs(line).is_empty(), "{line}: {:?}", refs(line));
+    }
+}
+
+#[test]
 fn a_reserved_host_in_the_path_makes_the_ref_synthetic() {
     // The synthetic exemption judges the whole text. It used to see only the
     // last two components, so `example.com/` in front of them was invisible.
@@ -144,6 +196,11 @@ fn a_reserved_host_in_the_path_makes_the_ref_synthetic() {
         "my.test/actions/checkout@v4",
         "localhost/actions/checkout@v4",
         "a.test/b/c@v1",
+        // A hostname is case-insensitive.
+        "https://EXAMPLE.COM/actions/checkout@v4",
+        "https://Example.Org/actions/checkout@v4",
+        "https://REGISTRY.TEST/actions/checkout@v4",
+        "https://LOCALHOST/actions/checkout@v4",
     ] {
         assert!(refs(line).is_empty(), "{line}: {:?}", refs(line));
     }
@@ -155,6 +212,8 @@ fn a_reserved_host_in_the_path_makes_the_ref_synthetic() {
         ),
         ("example.com.evil.io/a/b@v1", "example.com.evil.io/a/b@v1"),
         ("notexample.com/a/b@v1", "notexample.com/a/b@v1"),
+        ("NotExample.com/a/b@v1", "NotExample.com/a/b@v1"),
+        ("Ghcr.IO/a/b@v1", "Ghcr.IO/a/b@v1"),
         ("example.io/a/b@v1", "example.io/a/b@v1"),
         // Only the first component is a host; a repo or directory named `b.test`
         // is not.
