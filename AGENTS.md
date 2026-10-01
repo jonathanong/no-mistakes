@@ -120,10 +120,10 @@ Goal: AI-powered AST-based codebase intelligence for AI Agents.
   worktree is the main workspace.
 - Local Criterion is the source of truth for performance before/after only
   when both runs use the same machine, toolchain, benchmark mode, thread
-  count, and fixture. Ignore CodSpeed: GitHub Actions runners are not a
-  consistent CPU architecture (Intel vs AMD; Macro Runners are ARM64), so
-  the numbers are not stable and must not be treated as a win, a regression,
-  or a reason to change code.
+  count, and fixture. Benchmark jobs run on `ubuntu-24.04-arm`. Treat a
+  CodSpeed delta as a code regression only when the report compares that
+  runner with the expected base commit. A comparison against an x86_64 base,
+  or a fallback base, is noise and must not change code.
 
 ### Public surface checklist
 
