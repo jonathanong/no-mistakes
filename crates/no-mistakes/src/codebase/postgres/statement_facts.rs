@@ -6,6 +6,10 @@ pub struct SqlStatementFileFacts {
     pub path: PathBuf,
     pub inserts: Vec<SqlInsertFact>,
     pub selects: Vec<SqlSelectFact>,
+    /// One entry per `UPDATE`. Each entry is that statement's relation instances.
+    pub updates: Vec<Vec<SqlRelationPredicateFact>>,
+    /// One entry per `DELETE`. Each entry is that statement's relation instances.
+    pub deletes: Vec<Vec<SqlRelationPredicateFact>>,
     pub triggers: Vec<SqlTriggerFact>,
     pub parse_failed: bool,
     pub insert_keyword_count: usize,
@@ -84,6 +88,25 @@ pub struct SqlSelectFact {
     pub tables: Vec<String>,
     pub predicate_sql: String,
     pub exists_set_operations: Vec<SqlExistsSetOpFact>,
+    /// Base-table instances in this SELECT, with columns proven constrained.
+    pub relations: Vec<SqlRelationPredicateFact>,
+    /// True when this SELECT is the query of `INSERT … SELECT` (including nested
+    /// selects inside that query).
+    pub in_insert_select: bool,
+}
+
+/// One base-table instance and the columns a predicate constrains on it.
+///
+/// `constrained_columns` are resolved (qualified, or unqualified in a
+/// single-item FROM). `unqualified_columns` are bare names from a
+/// multi-relation FROM whose owner a configured catalog may still prove.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlRelationPredicateFact {
+    pub table: String,
+    pub alias: Option<String>,
+    pub constrained_columns: Vec<String>,
+    pub unqualified_columns: Vec<String>,
+    pub line: usize,
 }
 
 /// An `EXISTS` whose subquery uses a set operation.

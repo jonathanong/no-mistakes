@@ -8,6 +8,7 @@ use crate::codebase::rules::postgres_finite_text_columns::RULE_ID as FINITE_TEXT
 use crate::codebase::rules::postgres_identifier_length::RULE_ID as IDENTIFIER_LENGTH_RULE;
 use crate::codebase::rules::postgres_object_naming::RULE_ID as NAMING_RULE;
 use crate::codebase::rules::postgres_required_comments::RULE_ID as COMMENTS_RULE;
+use crate::codebase::rules::postgres_required_predicates::RULE_ID as REQUIRED_PREDICATES_RULE;
 use crate::codebase::rules::postgres_status_with_lifecycle_timestamps::RULE_ID as STATUS_RULE;
 use crate::codebase::rules::postgres_table_shape::RULE_ID as TABLE_RULE;
 use crate::codebase::ts_source::FileInventory;
@@ -29,6 +30,7 @@ fn missing_facts_use_the_file_checkers() {
         IDENTIFIER_LENGTH_RULE,
         FINITE_TEXT_RULE,
         ARRAY_COLUMNS_RULE,
+        REQUIRED_PREDICATES_RULE,
     ] {
         assert!(run(rule_id, Path::new("."), &config, files, &sources, None).is_some());
     }
@@ -45,6 +47,7 @@ fn prepared_facts_use_the_fact_checkers() {
         COLUMN_NAMING_RULE,
         FINITE_TEXT_RULE,
         ARRAY_COLUMNS_RULE,
+        REQUIRED_PREDICATES_RULE,
         TABLE_RULE,
         STATUS_RULE,
     ] {

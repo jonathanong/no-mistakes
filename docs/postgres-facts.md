@@ -208,6 +208,16 @@ sqlparser AST:
 - SELECT FROM/JOIN relation names, predicate SQL, and `EXISTS` set-operation
   facts (`restricted` when every arm has a placeholder or literal bound;
   `correlated` when a qualified identifier is outside the subquery FROM/WITH)
+- one `SqlRelationPredicateFact` per base-table instance of each SELECT
+  (`relations`), plus grouped `updates` and `deletes` (one group per
+  statement). Each fact records the table, optional alias, source line,
+  `constrained_columns` (qualified, or unqualified when that statement has a
+  single FROM item), and `unqualified_columns` (bare names from a
+  multi-relation FROM that a schema catalog may still prove). A column is
+  constrained by a top-level AND conjunct that is an equality, comparison,
+  `IN`, `= ANY`, or `BETWEEN`; `OR` keeps a column only when every branch
+  constrains it. `in_insert_select` marks SELECT facts that belong to
+  `INSERT … SELECT`, including selects nested in that query
 - `CREATE TRIGGER` table, function, period, row/statement, and events
 
 Unparseable files set `parse_failed` and count quote-masked `INSERT INTO`
@@ -215,8 +225,10 @@ keywords so multi-INSERT fragments fail closed. A top-level conjunctive
 `WHERE NOT EXISTS` / `AND NOT EXISTS` (paren-depth zero) is recorded even
 when the AST is missing.
 
-`postgres-required-predicates`, `postgres-sql-shape-policy`, and
-`postgres-idempotent-insert` consume these facts.
+`postgres-required-predicates` consumes the relation-predicate facts and, when
+`partitionKeys` is `require`, the schema catalog's relation kind, columns, and
+partition key. `postgres-sql-shape-policy` and `postgres-idempotent-insert`
+consume the same statement facts.
 
 ## Locking-select facts
 

@@ -67,8 +67,9 @@ pub use schema::extract_create_table_metadata;
 pub use statements::{
     extract_sql_statement_facts, has_top_level_not_exists_in, insert_keyword_count,
     mask_quoted_sql, SqlAssignmentFact, SqlConflictArbiter, SqlConflictWhereProof,
-    SqlExistsSetOpFact, SqlInsertFact, SqlOnConflictAction, SqlOnConflictFact, SqlSelectFact,
-    SqlStatementFileFacts, SqlTriggerEvent, SqlTriggerFact, SqlTriggerPeriod, SqlValueForm,
+    SqlExistsSetOpFact, SqlInsertFact, SqlOnConflictAction, SqlOnConflictFact,
+    SqlRelationPredicateFact, SqlSelectFact, SqlStatementFileFacts, SqlTriggerEvent,
+    SqlTriggerFact, SqlTriggerPeriod, SqlValueForm,
 };
 pub use types::{
     PostgresFactError, PostgresFacts, PostgresSchemaOptions, SqlAddColumnMetadata,
