@@ -1,6 +1,7 @@
 use sqlparser::dialect::PostgreSqlDialect;
 use sqlparser::keywords::Keyword;
 use sqlparser::tokenizer::{Token, Tokenizer, Word};
+use std::collections::BTreeMap;
 
 pub(super) struct Settings {
     pub(super) normalize_identifiers: bool,
@@ -26,6 +27,7 @@ pub(super) fn normalized_tokens(
         tokens.pop();
     }
     let plpgsql = language.is_some_and(|name| name.eq_ignore_ascii_case("plpgsql"));
+    let mut names = Names::default();
     let mut out = Vec::new();
     let mut index = 0;
     while index < tokens.len() {
@@ -41,7 +43,7 @@ pub(super) fn normalized_tokens(
             continue;
         }
         let call = call_name(&tokens, index);
-        out.push(render(&tokens[index], call, settings));
+        out.push(render(&tokens[index], call, settings, &mut names));
         index += 1;
     }
     Some(out)
@@ -101,25 +103,42 @@ fn is_level(value: &str) -> bool {
 fn is_word(token: &Token, expected: &str) -> bool {
     matches!(token, Token::Word(word) if word.value.eq_ignore_ascii_case(expected))
 }
+#[derive(Default)]
+struct Names {
+    next: u32,
+    assigned: BTreeMap<String, String>,
+}
 
-fn render(token: &Token, call: bool, settings: &Settings) -> String {
+fn render(token: &Token, call: bool, settings: &Settings, names: &mut Names) -> String {
     match token {
         Token::Number(_, _) => "0".to_string(),
-        Token::Word(word) => render_word(word, call, settings),
-        Token::DoubleQuotedString(value) => render_name(value, call, true, settings),
+        Token::Word(word) => render_word(word, call, settings, names),
+        Token::DoubleQuotedString(value) => render_name(value, call, true, settings, names),
         other if is_string(other) => "'?'".to_string(),
         other => other.to_string(),
     }
 }
 
-fn render_word(word: &Word, call: bool, settings: &Settings) -> String {
+fn render_word(word: &Word, call: bool, settings: &Settings, names: &mut Names) -> String {
     if word.quote_style.is_none() && word.keyword != Keyword::NoKeyword && !call {
         return word.value.to_ascii_uppercase();
     }
-    render_name(&word.value, call, word.quote_style.is_some(), settings)
+    render_name(
+        &word.value,
+        call,
+        word.quote_style.is_some(),
+        settings,
+        names,
+    )
 }
 
-fn render_name(value: &str, call: bool, quoted: bool, settings: &Settings) -> String {
+fn render_name(
+    value: &str,
+    call: bool,
+    quoted: bool,
+    settings: &Settings,
+    names: &mut Names,
+) -> String {
     if call {
         return if quoted {
             value.to_string()
@@ -135,10 +154,25 @@ fn render_name(value: &str, call: bool, quoted: bool, settings: &Settings) -> St
         return upper;
     }
     if settings.normalize_identifiers {
-        "ID".to_string()
+        let key = if quoted {
+            format!("\"{value}\"")
+        } else {
+            upper
+        };
+        placeholder(names, key)
     } else {
         value.to_string()
     }
+}
+
+fn placeholder(names: &mut Names, key: String) -> String {
+    if let Some(existing) = names.assigned.get(&key) {
+        return existing.clone();
+    }
+    names.next += 1;
+    let assigned = format!("ID{}", names.next);
+    names.assigned.insert(key, assigned.clone());
+    assigned
 }
 
 fn is_string(token: &Token) -> bool {

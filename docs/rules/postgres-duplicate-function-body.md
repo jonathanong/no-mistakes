@@ -62,7 +62,9 @@ invalid object ref, or a duplicate allow object fails configuration.
 `include`, `exclude`, and `projects` apply to the schema catalog path. Only
 `sql` and `plpgsql` bodies are compared; a missing language is compared only
 with other bodies that also omit it. Unquoted call names fold;
-quoted call names and schema qualifiers stay distinct. Bare `RAISE;` stays
+quoted call names and schema qualifiers stay distinct. Other identifiers
+become stable placeholders, so a consistent rename still matches and a swapped
+use does not. Different `SET search_path` clauses do not match. Bare `RAISE;` stays
 distinct from `RAISE EXCEPTION`. A top-level `message` replaces the generated
 finding text.
 

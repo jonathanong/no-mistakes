@@ -140,7 +140,7 @@ fn clusters_above_five_list_the_rest_as_and_more() {
 fn normaliser_covers_literals_calls_levels_and_kept_words() {
     assert_eq!(
         tokens("BEGIN PERFORM fn_a(); RETURN NEW; END", true, true, &[]),
-        ["BEGIN", "ID", "fn_a", "(", ")", ";", "RETURN", "NEW", ";", "END"]
+        ["BEGIN", "ID1", "fn_a", "(", ")", ";", "RETURN", "NEW", ";", "END"]
     );
     assert_ne!(
         tokens("BEGIN PERFORM fn_a(); END", true, true, &[]),
@@ -159,7 +159,7 @@ fn normaliser_covers_literals_calls_levels_and_kept_words() {
     assert_eq!(tokens("RETURN 2.5", true, true, &[]), ["RETURN", "0"]);
     assert_eq!(
         tokens("RETURN NEW.title", true, true, &[]),
-        ["RETURN", "NEW", ".", "ID"]
+        ["RETURN", "NEW", ".", "ID1"]
     );
     assert_eq!(
         tokens("RETURN NEW.\"Body\"", false, true, &[]),
@@ -310,6 +310,22 @@ fn names_keep_qualifiers_quotes_and_bare_raise() {
         normalize::normalized_tokens("SELECT raise;", &plain_settings(), Some("sql")),
         normalize::normalized_tokens("SELECT raise + 1;", &plain_settings(), Some("sql"))
     );
+    assert_ne!(
+        tokens("BEGIN a := 1; b := 2; RETURN a - b; END", true, true, &[]),
+        tokens("BEGIN a := 1; b := 2; RETURN b - a; END", true, true, &[])
+    );
+    assert_eq!(
+        tokens("BEGIN a := 1; b := 2; RETURN a - b; END", true, true, &[]),
+        tokens("BEGIN x := 1; y := 2; RETURN x - y; END", true, true, &[])
+    );
+}
+
+#[test]
+fn different_search_paths_are_not_the_same_copy() {
+    let joined = messages("schemaCatalogPath: search-path.json\n").join("\n");
+    assert!(joined.contains("function:fn_tenant_a:"), "{joined}");
+    assert!(joined.contains("function:fn_tenant_a_copy:"));
+    assert!(!joined.contains("function:fn_tenant_b:"));
 }
 
 fn plain_settings() -> normalize::Settings {
