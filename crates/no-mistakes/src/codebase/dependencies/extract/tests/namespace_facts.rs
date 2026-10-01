@@ -126,8 +126,22 @@ fn only_the_uses_the_graph_resolves_leave_a_namespace_unescaped() {
         "const viaString = new Errors['A']();\n",
         // A type annotation names the class as a type, never as a value.
         "function typed(error: Errors.A): Errors.A { return error; }\n",
+        // A bare decorator is an invocation of the member it names.
+        "@Errors.make\nclass Decorated { @Errors.make method() {} @Errors.make field = 1; }\n",
     ));
     assert!(uses(&facts).is_empty(), "{:?}", facts.value_uses);
+}
+
+#[test]
+fn every_module_block_body_is_a_scope_of_its_own() {
+    let facts = namespaces("namespace A { namespace B {} }\ndeclare module 'x' {}");
+    assert_eq!(facts.body_scope_ids.len(), 3);
+    assert!(facts
+        .body_scope_ids
+        .windows(2)
+        .all(|pair| pair[0] < pair[1]));
+    assert!(!facts.body_scope_ids.contains(&0));
+    assert!(namespaces("const x = 1;").body_scope_ids.is_empty());
 }
 
 #[test]
@@ -201,6 +215,32 @@ fn a_value_use_names_the_declared_namespace_it_resolves_to() {
         (
             "import { Lib } from './lib';\nfunction f(Lib: unknown) { register(Lib); }",
             vec![],
+        ),
+        // A local of a namespace body hides the name inside that body only.
+        (
+            "import { Lib } from './lib';\nnamespace H { const Lib = {}; export const p = Lib; }",
+            vec![],
+        ),
+        (
+            "import { Lib } from './lib';\nnamespace H { var Lib = {}; export const p = Lib; }",
+            vec![],
+        ),
+        (
+            "import { Lib } from './lib';\nnamespace H { const Lib = {}; }\nregister(Lib);",
+            vec!["Lib"],
+        ),
+        (
+            "import { Lib } from './lib';\nnamespace H { var Lib = {}; }\nregister(Lib);",
+            vec!["Lib"],
+        ),
+        (
+            "namespace Inner {}\nnamespace B { const Inner = 1; export const x = Inner; }",
+            vec![],
+        ),
+        // A class that merges with a namespace of its own body hides nothing.
+        (
+            "namespace A { export class Inner {} export namespace Inner {} export const x = Inner; }",
+            vec!["A.Inner"],
         ),
     ] {
         let facts = namespaces(source);

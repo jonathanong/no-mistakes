@@ -49,6 +49,10 @@ pub struct NamespaceFacts {
     /// Classes in an ambient declaration or in a module block that is not a
     /// tracked namespace: `declare class`, `declare module`, `declare global`.
     pub unreported_class_ids: Vec<CallableId>,
+    /// The lexical scope id of every module block body, in walk order. A name
+    /// bound in one of these scopes can still name a namespace member; one bound
+    /// in any other nested scope cannot.
+    pub body_scope_ids: Vec<usize>,
 }
 
 /// Walk state for [`NamespaceFacts`]. The pre-scan fills `facts` before the

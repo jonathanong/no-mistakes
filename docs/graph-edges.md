@@ -355,9 +355,14 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   `export *` or an export the graph cannot follow takes the whole module. A name is a
   value use only when it resolves to a declared namespace path or an imported
   binding, so a parameter or local that shadows the namespace or its class names
-  that binding, and a same-named value elsewhere, are no use. A name written only
-  in an erased type (`typeof X`, `implements X.Marker`, an interface base) is no
-  use either. An erased `import type x = require()` uses nothing, and a sourced
+  that binding, and a same-named value elsewhere, are no use. A namespace body is
+  a scope of its own, like a function body: a `const`, `let`, or hoisted `var`
+  declared in it hides a name inside that body only, so the same name after the
+  body still names the import, and a class and a nested namespace of one name in
+  one body are a single merged value that hides nothing. A bare decorator
+  (`@Errors.mark`) calls the member it names and is no use of the namespace. A
+  name written only in an erased type (`typeof X`, `implements X.Marker`, an
+  interface base) is no use either. An erased `import type x = require()` uses nothing, and a sourced
   `export { X } from "./m"`
   names `m`'s export, not a local namespace. Uses in test files count too. A
   graph built for `extends` alone drops the `Call` edges but still records which

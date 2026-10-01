@@ -96,10 +96,15 @@ names that binding, so the construction builds no class of the namespace and doe
 not keep it quiet. A value that only shares the name, such as a top-level
 `const Inner = {}` beside `namespace Errors { export namespace Inner { ... } }`,
 is no use of the nested namespace: a name counts as a use only when it resolves
-to a declared namespace path or an imported binding. A name written only in an
-erased type (`typeof Errors`, `implements Errors.Marker`, an interface that
-extends `Errors.Base`) is not a use of the namespace, because it runs no code.
-`import type x = require("./m")` is erased at compile time and uses no module. A
+to a declared namespace path or an imported binding. A namespace body is a scope
+of its own, like a function body: a `const`, `let`, or hoisted `var` in it hides
+a name inside that body only, so `namespace Helpers { const Errors = {}; }` leaves
+a later `new Errors.X()` naming the imported namespace, and a class and a nested
+namespace of one name in one body are a single merged value that hides nothing.
+A bare decorator (`@Errors.mark`) calls the member it names and is not a use of
+the namespace. A name written only in an erased type (`typeof Errors`,
+`implements Errors.Marker`, an interface that extends `Errors.Base`) is not a use
+of the namespace, because it runs no code. `import type x = require("./m")` is erased at compile time and uses no module. A
 sourced clause (`export { Errors } from "./m"`) exports the `Errors` of `./m`,
 never a namespace of the same name declared locally.
 

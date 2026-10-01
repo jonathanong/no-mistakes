@@ -40,8 +40,8 @@ impl CallSiteResolution<'_, '_> {
     /// different namespaces apart. Dotted names are left to the regular
     /// resolver when it already knows what they are, such as a class static. A
     /// name bound in a nested scope (a parameter or local named `Errors`) is
-    /// not the namespace; the program scope is `0`, and namespace bodies add
-    /// no scope of their own.
+    /// not the namespace; only the program scope `0` and the namespace bodies
+    /// bind names a namespace lookup may resolve.
     fn namespace_member(
         &self,
         call: &FunctionCall,
@@ -58,7 +58,7 @@ impl CallSiteResolution<'_, '_> {
         if call.invocation != InvocationKind::Construct
             || table.is_empty()
             || (call.callee.contains('.') && known)
-            || call.callee_binding_scope.is_some_and(|scope| scope != 0)
+            || !table.binds_namespace_names(call.callee_binding_scope)
         {
             return None;
         }

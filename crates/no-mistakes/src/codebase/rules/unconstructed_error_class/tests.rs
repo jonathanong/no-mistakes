@@ -54,6 +54,9 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             // The leaf and the orphan base; the middle of the chain is satisfied.
             "src/hierarchy.ts:11 Grandchild",
             "src/hierarchy.ts:14 OrphanBase",
+            // A local of a namespace body does not hide an import outside it.
+            "src/namespace-body-scope-lib.ts:5 BodyScope.ScopeDead",
+            "src/namespace-body-scope-lib.ts:11 BodyVar.VarDead",
             // `bind`, `call` and `apply` hand a class on; a static guard does not.
             "src/namespace-bound.ts:25 Guarded.GuardedDead",
             // A constant or a parameter that shares a name is not the namespace.
@@ -62,6 +65,8 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             // Namespace members: reported by qualified name, like any class.
             "src/namespace-construct.ts:23 Sub.Child",
             "src/namespace-consumer-lib.ts:30 Standard.StandardDead",
+            // A bare decorator calls its member; it does not read the namespace.
+            "src/namespace-decorated.ts:8 Decorated.DecoratedDead",
             "src/namespace-lib.ts:9 Lib.DeadLibError",
             "src/namespace-lib.ts:21 Lib.TestOnlyBuilt",
             "src/namespace-lib.ts:31 Lib.Deep.DeepDead",
@@ -139,6 +144,10 @@ fn namespace_members_built_through_a_resolved_reference_are_not_reported() {
         "Dotted.Path.BuiltDotted",
         "Merged.First",
         "Mix.Inner.DottedPart",
+        // Through an import that a namespace-body local of the same name does not
+        // hide.
+        "BodyScope.ScopeBuilt",
+        "BodyVar.VarBuilt",
         // Another file, by every way to reach the namespace.
         "Lib.Used",
         "Lib.Deep.DeepUsed",
@@ -206,6 +215,9 @@ fn a_namespace_that_escapes_is_never_reported() {
         "Handed.HandedDead",
         // A bare name in the body that denotes the nested namespace.
         "Reach.Inner.ReachDead",
+        // A class merged with a namespace of one body, read as a value.
+        "MergedBody.Inner",
+        "MergedBody.Inner.MergedDeep",
         // A barrel that re-exports the namespace, read whole.
         "Exposed.ExposedDead",
         // Another file imports the namespace, and uses it as a value.

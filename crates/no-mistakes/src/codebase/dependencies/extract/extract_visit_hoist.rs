@@ -3,7 +3,9 @@ use super::{
     CallableId, ImportCollector,
 };
 use crate::fx::{fx_set, FxHashSet};
-use oxc_ast::ast::{Class, Expression, Statement, VariableDeclaration, VariableDeclarationKind};
+use oxc_ast::ast::{
+    Class, Expression, Statement, TSModuleBlock, VariableDeclaration, VariableDeclarationKind,
+};
 use oxc_ast_visit::{walk, Visit};
 
 pub(super) fn walk_function_with_body_bindings<'a>(
@@ -87,6 +89,9 @@ impl<'ast> Visit<'ast> for HoistedVarBindingCollector<'_> {
     // methods own their function environments. Neither can hoist into the
     // surrounding module or function.
     fn visit_class(&mut self, _class: &Class<'ast>) {}
+
+    // A namespace body is a function-like scope: its `var`s stay inside it.
+    fn visit_ts_module_block(&mut self, _block: &TSModuleBlock<'ast>) {}
 }
 
 pub(super) fn predeclare_function_declarations<'a>(

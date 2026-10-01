@@ -94,13 +94,27 @@ fn visit_ts_namespace_declaration_with_path<'a>(
 }
 
 /// Every `namespace`, dotted `namespace A.B`, `declare module 'x'` and
-/// `declare global` body is a module block, so one hook covers them all.
+/// `declare global` body is a module block, so one hook covers them all. The
+/// body is a function-like scope: its declarations, `var` included, stay out of
+/// the enclosing scope, so a local named like an import does not shadow it.
 fn visit_ts_module_block_with_depth<'a>(
     collector: &mut ImportCollector,
     block: &TSModuleBlock<'a>,
 ) {
     collector.module_block_depth += 1;
+    let pushed = collector.push_lexical_scope();
+    if pushed {
+        let var_scope = collector.local_stack.len() - 1;
+        collector.var_scope_stack.push(var_scope);
+        let scope_id = collector.current_lexical_scope_id();
+        collector.namespace.facts.body_scope_ids.push(scope_id);
+        predeclare_hoisted_var_bindings(collector, &block.body);
+    }
     walk::walk_ts_module_block(collector, block);
+    if pushed {
+        collector.var_scope_stack.pop();
+    }
+    collector.pop_lexical_scope(pushed);
     collector.module_block_depth -= 1;
 }
 

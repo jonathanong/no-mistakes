@@ -372,6 +372,45 @@ fn an_import_merges_with_a_namespace_but_an_erased_one_uses_nothing() {
     assert!(!class(&graph, "TypeOnlyClass", Some("TypeOnly")).namespace_escaped);
 }
 
+/// A local declared in one namespace's body, `const` or hoisted `var`, is bound
+/// only there, so the construction written after it still names the imported
+/// namespace.
+#[test]
+fn a_local_in_a_namespace_body_does_not_shadow_an_import_outside_it() {
+    let (root, graph) = build();
+    for (scope, namespace, dead, caller) in [
+        ("Built", "BodyErrors", "BodyDead", "built"),
+        ("VarBuilt", "VarErrors", "VarDead", "varBuilt"),
+    ] {
+        let built = class(&graph, scope, Some(namespace));
+        assert_eq!(
+            callers(&root, &graph, built),
+            owned(&[
+                ("src/scopes/body-scope.ts", None),
+                ("src/scopes/body-scope.ts", Some(caller)),
+            ])
+        );
+        assert!(!built.namespace_escaped);
+        assert!(!escaped_in(&graph, dead, namespace));
+    }
+}
+
+/// A bare decorator is a call of the member it names, so it is not a value use
+/// of its namespace; the dead class beside it stays unescaped.
+#[test]
+fn a_bare_decorator_does_not_escape_its_namespace() {
+    let (_, graph) = build();
+    assert!(!escaped_in(&graph, "DecoratedDead", "Decorated"));
+}
+
+/// A class and a namespace of one name in one body are a single value, so
+/// reading it hands on the namespace's classes too.
+#[test]
+fn a_class_merged_with_a_namespace_in_one_body_escapes_when_read() {
+    let (_, graph) = build();
+    assert!(escaped_in(&graph, "Deep", "MergedBody.Inner"));
+}
+
 /// A graph built for `extends` alone has no call edge, but its class
 /// declarations still say which namespaces a construction could not follow.
 #[test]
