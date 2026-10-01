@@ -1,0 +1,11 @@
+rules:
+  - rule: postgres-column-naming
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      typeRules:
+        - types: ['timestamp with time zone']
+          namePattern: '_at$'
+      allow:
+        - object: column:gone.column
+          reason: removed from the snapshot

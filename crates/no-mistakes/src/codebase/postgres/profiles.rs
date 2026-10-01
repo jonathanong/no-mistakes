@@ -25,6 +25,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-table-shape",
     "postgres-status-with-lifecycle-timestamps",
     "postgres-object-naming",
+    "postgres-column-naming",
 ];
 
 #[derive(Default, Deserialize)]

@@ -35,6 +35,11 @@ const goModules = ['github.com/acme/app/v2', 'github.com/acme/app/v2/internal/bi
 const hostOnly = ['api.acme.io:8080/v2', 'api.acme.io:v2', 'ghcr.io/acme/api:v2-beta']
 // Docker tags are ASCII, so an Arabic-Indic digit is a lookalike, not a major version.
 const nonAsciiTags = ['ghcr.io/acme/api:v٢', 'image:ghcr.io/acme/api:v٢']
+// Docker references are ASCII, so non-ASCII digits are never a version, port, or runner label.
+const nonAsciiDigits = ['ghcr.io/acme/api:٢.١', 'ghcr.io:٥٠٠٠/acme/api:2', 'image: postgres:١٨', 'FROM node:٢٤']
+const nonAsciiLabels = ['ubuntu-٢٢.٠٤', 'macos-١٤', 'windows-20٢٢', 'brew install postgresql@١٨', 'node-version: ٢٢']
+// A host label starts and ends with an alphanumeric: neither the host nor its suffix is a pin.
+const badHostLabels = ['bad-.acme.io/acme/api:9', '-bad.acme.io/acme/api:1.2', 'a.b-.io/x/y:v2']
 // Reserved registries stay placeholders for `v<N>` tags too.
 const reservedV = ['registry.example.com/checkout:v1', 'localhost:5000/app:v2']
 // A `0.0.0` dependency assertion is a placeholder, like the `0.0.0` asset above.
