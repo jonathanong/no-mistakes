@@ -27,6 +27,14 @@ fn uses(facts: &NamespaceFacts) -> Vec<&str> {
     facts.value_uses.iter().map(String::as_str).collect()
 }
 
+fn member_reads(facts: &NamespaceFacts) -> Vec<(&str, &str)> {
+    facts
+        .member_uses
+        .iter()
+        .map(|(local, member)| (local.as_str(), member.as_str()))
+        .collect()
+}
+
 #[test]
 fn members_carry_their_path_and_whether_another_module_can_reach_them() {
     let facts = namespaces(concat!(
@@ -130,18 +138,6 @@ fn only_the_uses_the_graph_resolves_leave_a_namespace_unescaped() {
         "@Errors.make\nclass Decorated { @Errors.make method() {} @Errors.make field = 1; }\n",
     ));
     assert!(uses(&facts).is_empty(), "{:?}", facts.value_uses);
-}
-
-#[test]
-fn every_module_block_body_is_a_scope_of_its_own() {
-    let facts = namespaces("namespace A { namespace B {} }\ndeclare module 'x' {}");
-    assert_eq!(facts.body_scope_ids.len(), 3);
-    assert!(facts
-        .body_scope_ids
-        .windows(2)
-        .all(|pair| pair[0] < pair[1]));
-    assert!(!facts.body_scope_ids.contains(&0));
-    assert!(namespaces("const x = 1;").body_scope_ids.is_empty());
 }
 
 #[test]
@@ -276,16 +272,67 @@ fn a_member_handed_on_by_bind_call_or_apply_is_a_value_use() {
         ("namespace N {}\nN.A.apply(null, []);", vec!["N"]),
         ("namespace N {}\nN['A'].bind(null);", vec!["N"]),
         ("namespace N {}\n(N.A as any).bind(null);", vec!["N"]),
-        (
-            "import { Lib } from './lib';\nLib.A.bind(null);",
-            vec!["Lib"],
-        ),
         ("namespace N {}\nN.A.is(value);", vec![]),
         ("namespace N {}\nN.bind(null);", vec![]),
         ("import { fn } from './m';\nfn.bind(this);", vec![]),
     ] {
         let facts = namespaces(source);
         assert_eq!(uses(&facts), used, "{source}");
+    }
+}
+
+/// A name read through one static member uses the export that member names, not
+/// every export of the module, so the graph can escape just that one. A bare,
+/// computed, wrapped or handed-on name still uses the whole of it, and a
+/// declared namespace is escaped whole either way.
+#[test]
+fn a_name_read_through_a_static_member_is_a_use_of_that_member_alone() {
+    for (source, read, whole) in [
+        (
+            "import * as mod from './m';\nconst v = mod.version;",
+            vec![("mod", "version")],
+            vec![],
+        ),
+        (
+            "import * as mod from './m';\nregister(mod.Errors.Dead);",
+            vec![("mod", "Errors")],
+            vec![],
+        ),
+        (
+            "import { Lib } from './lib';\nLib.A.bind(null);",
+            vec![("Lib", "A")],
+            vec![],
+        ),
+        (
+            "import * as mod from './m';\nconst whole = mod;",
+            vec![],
+            vec!["mod"],
+        ),
+        (
+            "import * as mod from './m';\nregister(mod);",
+            vec![],
+            vec!["mod"],
+        ),
+        (
+            "import * as mod from './m';\nconst v = mod[name];",
+            vec![],
+            vec!["mod"],
+        ),
+        (
+            "import * as mod from './m';\nconst v = (mod as any).version;",
+            vec![],
+            vec!["mod"],
+        ),
+        (
+            "import * as mod from './m';\nfunction f(mod: any) { return mod.version; }",
+            vec![],
+            vec![],
+        ),
+        ("namespace N {}\nconst v = N.A;", vec![], vec!["N"]),
+    ] {
+        let facts = namespaces(source);
+        assert_eq!(member_reads(&facts), read, "{source}");
+        assert_eq!(uses(&facts), whole, "{source}");
     }
 }
 

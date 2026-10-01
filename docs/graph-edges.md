@@ -352,13 +352,17 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   that exports it and is imported whole, dynamically, or through `require`. A
   module read whole exposes only the namespaces it exports: a barrel that
   re-exports one namespace by name leaves its sibling unescaped, while an
-  `export *` or an export the graph cannot follow takes the whole module. A name is a
+  `export *` or an export the graph cannot follow takes the whole module. A
+  namespace import read through one static member (`target.version`, or
+  `target.Errors` handed on as a value) uses only the export that member names, so
+  a read of `version` leaves the namespaces the module exports unescaped. A name is a
   value use only when it resolves to a declared namespace path or an imported
   binding, so a parameter or local that shadows the namespace or its class names
   that binding, and a same-named value elsewhere, are no use. A namespace body is
   a scope of its own, like a function body: a `const`, `let`, or hoisted `var`
   declared in it hides a name inside that body only, so the same name after the
-  body still names the import, and a class and a nested namespace of one name in
+  body still names the import, and a local that shares a declared namespace's name
+  hides that namespace there, so a construction through it builds no class of it. A class and a nested namespace of one name in
   one body are a single merged value that hides nothing. A bare decorator
   (`@Errors.mark`) calls the member it names and is no use of the namespace. A
   name written only in an erased type (`typeof X`, `implements X.Marker`, an

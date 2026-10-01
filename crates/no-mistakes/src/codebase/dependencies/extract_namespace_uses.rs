@@ -9,8 +9,22 @@ impl ImportCollector {
         }
     }
 
+    /// `mod.version`: remembers the one member read through a name whose uses
+    /// matter, so that an import read this way is a use of that export alone.
+    fn note_selected_member(&mut self, member: &StaticMemberExpression<'_>) {
+        let Expression::Identifier(object) = &member.object else {
+            return;
+        };
+        if self.namespace.names.contains(object.name.as_str()) {
+            let property = member.property.name.to_string();
+            self.namespace.selected.insert(object.span.start, property);
+        }
+    }
+
     /// Records `identifier` as a value use of the namespace it names. A type
-    /// name, a resolved head, and a local that shadows the name are no use.
+    /// name, a resolved head, and a local that shadows the name are no use. An
+    /// import read through one static member (`mod.version`) is a use of that
+    /// export alone, never of the whole module.
     fn note_namespace_value_use(&mut self, identifier: &IdentifierReference<'_>) {
         let name = identifier.name.as_str();
         if self.namespace.type_depth > 0
@@ -24,8 +38,17 @@ impl ImportCollector {
         {
             return;
         }
-        if let Some(path) = self.namespace_path_of(name) {
-            self.namespace.value_uses.insert(path);
+        let Some(path) = self.namespace_path_of(name) else {
+            return;
+        };
+        let selected = self.namespace.selected.get(&identifier.span.start).cloned();
+        match selected {
+            Some(member) if self.namespace.facts.declared.binary_search(&path).is_err() => {
+                self.namespace.member_uses.insert((path, member));
+            }
+            _ => {
+                self.namespace.value_uses.insert(path);
+            }
         }
     }
 

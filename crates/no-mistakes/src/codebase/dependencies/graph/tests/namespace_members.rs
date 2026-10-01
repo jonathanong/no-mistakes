@@ -395,6 +395,25 @@ fn a_local_in_a_namespace_body_does_not_shadow_an_import_outside_it() {
     }
 }
 
+/// A local of a namespace body that shares a declared namespace's name is that
+/// local inside the body: the `new` there reaches no class of the namespace.
+#[test]
+fn a_local_in_a_namespace_body_hides_a_declared_namespace_of_its_name() {
+    let (root, graph) = build();
+    let dead = class(&graph, "ShadowDead", Some("ShadowErrors"));
+    assert_eq!(callers(&root, &graph, dead), owned(&[]));
+    assert!(!dead.namespace_escaped);
+}
+
+/// An import read through one static member (`target.version`) is a use of that
+/// export alone: it escapes the namespace the member names, and no other.
+#[test]
+fn a_member_read_through_a_namespace_import_escapes_only_that_export() {
+    let (_, graph) = build();
+    assert!(!escaped_in(&graph, "ReadKeptDead", "ReadKept"));
+    assert!(escaped_in(&graph, "ReadHandedDead", "ReadHanded"));
+}
+
 /// A bare decorator is a call of the member it names, so it is not a value use
 /// of its namespace; the dead class beside it stays unescaped.
 #[test]

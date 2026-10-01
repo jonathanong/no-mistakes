@@ -106,8 +106,6 @@ fn visit_ts_module_block_with_depth<'a>(
     if pushed {
         let var_scope = collector.local_stack.len() - 1;
         collector.var_scope_stack.push(var_scope);
-        let scope_id = collector.current_lexical_scope_id();
-        collector.namespace.facts.body_scope_ids.push(scope_id);
         predeclare_hoisted_var_bindings(collector, &block.body);
     }
     walk::walk_ts_module_block(collector, block);
@@ -158,6 +156,8 @@ fn finish_namespace_facts(state: NamespaceState) -> NamespaceFacts {
     facts.roots.sort_by(|a, b| a.name.cmp(&b.name));
     facts.value_uses = state.value_uses.into_iter().collect();
     facts.value_uses.sort();
+    facts.member_uses = state.member_uses.into_iter().collect();
+    facts.member_uses.sort();
     facts
         .sites
         .sort_by_key(|site| (site.caller_id, site.offset));

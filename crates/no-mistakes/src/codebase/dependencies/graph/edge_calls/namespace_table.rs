@@ -11,8 +11,6 @@ struct NamespaceTable {
     roots: Vec<NamespaceRoot>,
     /// The innermost namespace around each construction written in a body.
     sites: FxHashMap<(Option<CallableId>, u32), String>,
-    /// Lexical scope ids of the namespace bodies.
-    body_scopes: FxHashSet<usize>,
 }
 
 enum NamespaceLookup<'a> {
@@ -61,19 +59,11 @@ impl NamespaceTable {
                 .iter()
                 .map(|site| ((site.caller_id, site.offset), site.namespace.clone()))
                 .collect(),
-            body_scopes: facts.body_scope_ids.iter().copied().collect(),
         }
     }
 
     fn is_empty(&self) -> bool {
         self.declared.is_empty()
-    }
-
-    /// Whether a name bound in lexical scope `scope` is a program-level or
-    /// namespace-body binding, which a namespace lookup may still resolve; a
-    /// parameter, local or block binding of the same name is not the namespace.
-    fn binds_namespace_names(&self, scope: Option<usize>) -> bool {
-        scope.is_none_or(|scope| scope == 0 || self.body_scopes.contains(&scope))
     }
 
     /// The namespace around the construction at `offset` in `caller`, if any.

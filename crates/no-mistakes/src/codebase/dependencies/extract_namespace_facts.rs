@@ -43,16 +43,16 @@ pub struct NamespaceFacts {
     /// access, `export default`. Only names of declared namespaces and
     /// imports are recorded.
     pub value_uses: Vec<String>,
+    /// Imports read through one static member, `(local, member)` for
+    /// `mod.version`, that are no use of the whole module: only the export the
+    /// member names is read.
+    pub member_uses: Vec<(String, String)>,
     pub sites: Vec<NamespaceSite>,
     /// Specifiers of `import x = require("...")`, whose module is used whole.
     pub opaque_specifiers: Vec<String>,
     /// Classes in an ambient declaration or in a module block that is not a
     /// tracked namespace: `declare class`, `declare module`, `declare global`.
     pub unreported_class_ids: Vec<CallableId>,
-    /// The lexical scope id of every module block body, in walk order. A name
-    /// bound in one of these scopes can still name a namespace member; one bound
-    /// in any other nested scope cannot.
-    pub body_scope_ids: Vec<usize>,
 }
 
 /// Walk state for [`NamespaceFacts`]. The pre-scan fills `facts` before the
@@ -69,6 +69,11 @@ struct NamespaceState {
     benign_heads: FxHashSet<u32>,
     /// Declared namespace paths and import names read as a value.
     value_uses: FxHashSet<String>,
+    /// Imports read through one static member.
+    member_uses: FxHashSet<(String, String)>,
+    /// Offset of an identifier that is the object of a static member
+    /// expression to the member it reads.
+    selected: FxHashMap<u32, String>,
     /// Nesting depth of erased type names (`typeof X`, `implements X.I`).
     type_depth: u32,
 }

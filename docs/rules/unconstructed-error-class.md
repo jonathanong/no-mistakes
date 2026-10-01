@@ -83,7 +83,10 @@ might build any of its classes:
   A module read whole exposes only the namespaces it exports: a barrel that
   re-exports `Exposed` by name leaves a namespace it does not re-export
   reported, while `export *` or an export the graph cannot follow exposes every
-  namespace of that module;
+  namespace of that module. A namespace import read through one static member
+  (`lib.version`, or `lib.Errors` handed on as a value) exposes only the export
+  that member names, so reading `lib.version` leaves a namespace `lib` exports
+  reported;
 - a construction that names a member the namespace does not declare
   (`new Errors.Missing()`, or `new Errors.Missing.Factory()` when `Errors` has no
   `Missing` namespace);
@@ -99,8 +102,10 @@ is no use of the nested namespace: a name counts as a use only when it resolves
 to a declared namespace path or an imported binding. A namespace body is a scope
 of its own, like a function body: a `const`, `let`, or hoisted `var` in it hides
 a name inside that body only, so `namespace Helpers { const Errors = {}; }` leaves
-a later `new Errors.X()` naming the imported namespace, and a class and a nested
-namespace of one name in one body are a single merged value that hides nothing.
+a later `new Errors.X()` naming the imported namespace. A local in a body that
+shares a declared namespace's name hides that namespace there, so a construction
+through it builds no class of the namespace. A class and a nested namespace of one
+name in one body are a single merged value that hides nothing.
 A bare decorator (`@Errors.mark`) calls the member it names and is not a use of
 the namespace. A name written only in an erased type (`typeof Errors`,
 `implements Errors.Marker`, an interface that extends `Errors.Base`) is not a use

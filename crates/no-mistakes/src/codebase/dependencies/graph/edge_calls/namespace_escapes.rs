@@ -20,7 +20,12 @@ impl CallSiteResolution<'_, '_> {
                 self.escape(self.path, used.split('.').next().unwrap_or(used));
             }
             if let Some(binding) = self.index.imported.get(used) {
-                self.escape_imported_value(binding);
+                self.escape_imported_value(binding, None);
+            }
+        }
+        for (local, member) in &facts.member_uses {
+            if let Some(binding) = self.index.imported.get(local) {
+                self.escape_imported_value(binding, Some(member));
             }
         }
         let runtime_imports = file
@@ -35,18 +40,23 @@ impl CallSiteResolution<'_, '_> {
         }
     }
 
-    /// An import read as a value: the namespace behind it, if any, escapes.
+    /// An import read as a value: the namespace behind it, if any, escapes. A
+    /// namespace import read through one static member (`mod.version`) reads
+    /// only that export, so only a namespace it names escapes; the module
+    /// object itself, handed on whole, exposes everything it exports.
     fn escape_imported_value(
         &self,
         binding: &crate::codebase::dependencies::extract::ImportedBinding,
+        member: Option<&str>,
     ) {
         let Some(target) = self.visible_target(self.path, &binding.specifier) else {
             return;
         };
-        let export = match binding.kind {
-            ImportedBindingKind::Named => binding.imported.as_str(),
-            ImportedBindingKind::Default => "default",
-            ImportedBindingKind::Namespace => return self.escape_closure(&target),
+        let export = match (binding.kind, member) {
+            (ImportedBindingKind::Named, _) => binding.imported.as_str(),
+            (ImportedBindingKind::Default, _) => "default",
+            (ImportedBindingKind::Namespace, Some(member)) => member,
+            (ImportedBindingKind::Namespace, None) => return self.escape_closure(&target),
         };
         match self.resolve_namespace_root(&target, export, &mut Vec::new()) {
             RootLookup::Root(file, root) => self.escape(&file, &root),

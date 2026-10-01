@@ -57,6 +57,8 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             // A local of a namespace body does not hide an import outside it.
             "src/namespace-body-scope-lib.ts:5 BodyScope.ScopeDead",
             "src/namespace-body-scope-lib.ts:11 BodyVar.VarDead",
+            // A local of a namespace body hides a declared namespace of its name.
+            "src/namespace-body-shadow.ts:5 ShadowErrors.ShadowDead",
             // `bind`, `call` and `apply` hand a class on; a static guard does not.
             "src/namespace-bound.ts:25 Guarded.GuardedDead",
             // A constant or a parameter that shares a name is not the namespace.
@@ -71,6 +73,8 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             "src/namespace-lib.ts:21 Lib.TestOnlyBuilt",
             "src/namespace-lib.ts:31 Lib.Deep.DeepDead",
             "src/namespace-lib.ts:40 Renamed.RenamedDead",
+            // A member read through a namespace import uses that export alone.
+            "src/namespace-member-read-lib.ts:6 ReadKept.ReadKeptDead",
             "src/namespace-merged.ts:10 Merged.Second",
             "src/namespace-merged.ts:23 Mix.Inner.NestedPart",
             // A barrel read whole exposes only what it re-exports.
@@ -225,6 +229,8 @@ fn a_namespace_that_escapes_is_never_reported() {
         "ViaArgument.ViaArgumentDead",
         "ViaComputed.ViaComputedDead",
         "ViaMember.ViaMemberDead",
+        // The namespace export that a member read through an import names.
+        "ReadHanded.ReadHandedDead",
     ] {
         assert!(!targets.contains(&silent), "{silent} was reported");
     }

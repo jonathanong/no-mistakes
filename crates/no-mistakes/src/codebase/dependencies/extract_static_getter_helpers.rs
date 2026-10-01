@@ -2,6 +2,7 @@ fn visit_static_member_expression_with_getters<'a>(
     collector: &mut ImportCollector,
     member: &StaticMemberExpression<'a>,
 ) {
+    collector.note_selected_member(member);
     if let Some(name) = simple_static_member_name(member) {
         record_static_getter_read(collector, member.span.start, &name);
         record_object_getter_read(collector, member, &name);
