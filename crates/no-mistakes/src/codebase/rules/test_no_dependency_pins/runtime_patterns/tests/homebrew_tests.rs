@@ -115,6 +115,7 @@ fn a_uses_value_on_a_homebrew_line_is_an_action_ref_not_a_formula() {
         ),
         ("uses: Homebrew/brew@4.1", "Homebrew/brew@4.1"),
         ("uses:   Homebrew/brew@4", "Homebrew/brew@4"),
+        ("uses : Homebrew/brew@4", "Homebrew/brew@4"),
         (
             "- uses: Homebrew/actions/setup-homebrew@4",
             "actions/setup-homebrew@4",
@@ -203,6 +204,7 @@ fn a_formula_is_still_a_formula_when_uses_is_not_its_key() {
         "brew note: uses: homebrew/core/postgresql@18",
         "brew install foo - uses: homebrew/core/postgresql@18",
         "-uses: homebrew/core/postgresql@18",
+        "uses homebrew/core/postgresql@18",
         "brew $uses: homebrew/core/postgresql@18",
         "brew @uses: homebrew/core/postgresql@18",
         "brew key:uses: homebrew/core/postgresql@18",
