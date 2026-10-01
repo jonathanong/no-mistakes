@@ -2,6 +2,12 @@ expect(workflow).toContain('uses: actions/checkout@main')
 expect(pkg).toBe('@actions/checkout')
 expect(mention).toBe('@actions/checkout@v4')
 expect(short).toBe('owner/repo@abc')
+// A scoped package with a subpath, a path with no versioned ref and a path with an
+// empty segment are not action refs; a reserved host in front of the ref is synthetic.
+expect(scopedSub).toBe('@scope/pkg/sub@1.2.3')
+expect(workflow).toContain('uses: github/codeql-action/init@main')
+expect(workflow).toContain('uses: github/codeql-action//init@v3')
+expect(url).toContain('https://example.com/actions/checkout@v4')
 expect(env).toContain("NODE_VERSION: 'latest'")
 expect(env).toContain('node_version: 20.11.0')
 expect(script).toContain('releases/download/latest')

@@ -84,7 +84,7 @@ fn an_action_ref_on_a_homebrew_line_is_still_reported() {
         readings(&line),
         [(
             "exact action ref".to_string(),
-            format!("actions/setup-homebrew@{sha}")
+            format!("Homebrew/actions/setup-homebrew@{sha}")
         )]
     );
     // A formula and an unrelated action ref on one line are both reported.
@@ -110,7 +110,10 @@ fn a_uses_value_that_is_not_an_action_ref_keeps_its_formula() {
     both.sort();
     assert_eq!(
         both,
-        [action_ref("actions/setup-homebrew@4"), formula("libc++@18")]
+        [
+            action_ref("Homebrew/actions/setup-homebrew@4"),
+            formula("libc++@18")
+        ]
     );
 }
 
@@ -129,130 +132,140 @@ fn a_uses_value_on_a_homebrew_line_is_an_action_ref_not_a_formula() {
     for (line, expected) in [
         (
             "uses: Homebrew/actions/setup-homebrew@4",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "uses: Homebrew/actions/setup-homebrew@4.1",
-            "actions/setup-homebrew@4.1",
+            "Homebrew/actions/setup-homebrew@4.1",
         ),
         ("uses: Homebrew/brew@4.1", "Homebrew/brew@4.1"),
         ("uses:   Homebrew/brew@4", "Homebrew/brew@4"),
         ("uses : Homebrew/brew@4", "Homebrew/brew@4"),
+        // The whole path is the ref, and its last segment still has the formula
+        // shape (`setup@4`), so it yields to the action ref.
+        (
+            "uses: Homebrew/actions/sub/dir/setup@4",
+            "Homebrew/actions/sub/dir/setup@4",
+        ),
+        (
+            "uses: Homebrew/actions/.github/workflows/brew.yml@4",
+            "Homebrew/actions/.github/workflows/brew.yml@4",
+        ),
         (
             "- uses: Homebrew/actions/setup-homebrew@4",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "uses: 'Homebrew/actions/setup-homebrew@4'",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "uses: \"Homebrew/actions/setup-homebrew@4\"",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "\"uses\": \"Homebrew/actions/setup-homebrew@4\"",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "{ name: x, uses: Homebrew/actions/setup-homebrew@4 }",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "expect(workflow).toContain('uses: Homebrew/actions/setup-homebrew@4')",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         // A key starts at an opening quote (any kind), indentation inside a string,
         // a flow-mapping opener, or a list marker.
         (
             "const workflow = 'uses: Homebrew/actions/setup-homebrew@4'",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "const workflow = \"uses: Homebrew/actions/setup-homebrew@4\"",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "const workflow = `uses: Homebrew/actions/setup-homebrew@4`",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "expect(workflow).toContain('  uses: Homebrew/actions/setup-homebrew@4')",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "{\"uses\": \"Homebrew/actions/setup-homebrew@4\"}",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "with: {uses: Homebrew/actions/setup-homebrew@4}",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "steps: [uses: Homebrew/actions/setup-homebrew@4]",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         // A comma starts a key inside a flow mapping or sequence, after any
         // number of entries (spaces and nested flow values included).
         (
             "{ name: Setup Homebrew, uses: Homebrew/actions/setup-homebrew@4 }",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "steps: [name: x, with: y, uses: Homebrew/actions/setup-homebrew@4]",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "{ env: { HOMEBREW: yes }, uses: Homebrew/actions/setup-homebrew@4 }",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "steps: [{ name: x }, [a, b], uses: Homebrew/actions/setup-homebrew@4]",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         // A quoted scalar before the key may hold a closer or a comma.
         (
             "{ name: \"}\", uses: Homebrew/actions/setup-homebrew@4 }",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "{ name: '}', uses: Homebrew/actions/setup-homebrew@4 }",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "{ \"name\": \"]\", uses: Homebrew/actions/setup-homebrew@4 }",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "\"{ name: \\\"}\\\", uses: Homebrew/actions/setup-homebrew@4 }\"",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "{ name: don't, uses: Homebrew/actions/setup-homebrew@4 }",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "toEqual(['{ name: x, uses: Homebrew/actions/setup-homebrew@4 }'])",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         // A closer left over from a collection opened on an earlier line does not
         // cancel the opener that follows it.
         (
             "], { name: x, uses: Homebrew/actions/setup-homebrew@4 }",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         // The key may follow a JavaScript escape with no separator before it.
         (
             "'name: Setup\\nuses: Homebrew/actions/setup-homebrew@4'",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "'steps:\\n  - uses: \\'Homebrew/actions/setup-homebrew@4\\''",
-            "actions/setup-homebrew@4",
+            "Homebrew/actions/setup-homebrew@4",
         ),
         (
             "uses: Homebrew/actions/setup-homebrew@4 # v4",
-            "actions/setup-homebrew@4 # v4",
+            "Homebrew/actions/setup-homebrew@4 # v4",
         ),
     ] {
         assert_eq!(readings(line), [action_ref(expected)], "{line}");
@@ -314,6 +327,9 @@ fn a_formula_is_still_a_formula_when_uses_is_not_its_key() {
     after.sort();
     assert_eq!(
         after,
-        [action_ref("actions/setup-homebrew@4"), formula("foo@18")]
+        [
+            action_ref("Homebrew/actions/setup-homebrew@4"),
+            formula("foo@18")
+        ]
     );
 }

@@ -9,3 +9,7 @@ expect(workflow).toContain('"uses": "Homebrew/actions/setup-homebrew@4"')
 expect(workflow).toContain('{ env: { HOMEBREW: yes }, uses: Homebrew/actions/setup-homebrew@4 }')
 // A quoted closer before `uses` does not end the flow mapping.
 expect(workflow).toContain('{ name: "}", uses: Homebrew/actions/setup-homebrew@4 }')
+// The whole `owner/repo/path` is the ref, not its last two components.
+expect(workflow).toContain('uses: github/codeql-action/init@v3')
+expect(workflow).toContain('uses: octo-org/example-repo/.github/workflows/reusable.yml@v1')
+expect(workflow).toContain('uses: github/codeql-action/upload-sarif@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v3.25.0')

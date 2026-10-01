@@ -27,7 +27,7 @@ rules:
         - "**/__tests__/**"
       patterns:
         - reason: exact action ref
-          regex: '(?<!@)\b[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?\b'
+          regex: '(?<!@)\b[\w.-]+/[\w.-]+(?:/[\w.-]+)*@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?\b'
 ```
 
 Counterexample: a test asserts a concrete dependency entry read from
@@ -94,6 +94,23 @@ Computed dependency keys are limited to identifiers and member paths; calls,
 concatenations, nested bracket expressions, array-form property paths, and
 computed expected-version strings are not matched. Negated assertions and
 malformed version prefixes are not matched.
+
+## Action refs
+
+An action ref is reported whole, as `owner/repo/path@ref`: for example
+`github/codeql-action/init@v3` or
+`my-org/example-repo/.github/workflows/reusable.yml@v1`, not its last two
+components. The reported text is every `/`-separated component before the `@`,
+so a path in front of the ref is part of it: a URL host
+(`github.com/actions/checkout@v4`), a Go module path
+(`golang.org/x/tools@v0.1.0`), or a directory is kept, while a leading `/`, `./`
+or scheme is not. Two consequences:
+
+- A scoped package with a subpath (`@scope/pkg/sub@1.2.3`) starts at the `@`, so
+  like `@scope/pkg@1.2.3` it is not an action ref.
+- The placeholder exemption judges the whole text, so a reserved host in front of
+  the ref (`https://example.com/actions/checkout@v4`, `my.test/a/b@v1`) makes it
+  synthetic.
 
 ## Container images, setup versions, formulae, and runners
 

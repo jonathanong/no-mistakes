@@ -184,8 +184,9 @@ fn fail_fixture_reports_each_runtime_pin() {
     let root = fixture("fail");
     let findings = check_with_files(&root, &config_with_options("{}"), &fail_files(&root)).unwrap();
     for (file, reason, count) in [
-        // The two plain refs and five `uses:` refs on Homebrew lines; none is a formula.
-        ("src/action-ref.test.mts", "exact action ref", 7),
+        // The two plain refs, five `uses:` refs on Homebrew lines (none is a
+        // formula) and three refs with a deeper path.
+        ("src/action-ref.test.mts", "exact action ref", 10),
         ("src/action-ref.test.mts", "versioned Homebrew formula", 0),
         ("src/container-image.test.mts", "container image tag", 19),
         ("src/container-image.test.mts", "container image digest", 2),
@@ -202,6 +203,19 @@ fn fail_fixture_reports_each_runtime_pin() {
             .filter(|finding| finding.file == file && finding.target.as_deref() == Some(reason))
             .count();
         assert_eq!(actual, count, "{file} {reason}: {findings:#?}");
+    }
+    let action_refs: Vec<&str> = findings
+        .iter()
+        .filter(|finding| finding.file == "src/action-ref.test.mts")
+        .filter_map(|finding| finding.import.as_deref())
+        .collect();
+    for whole in [
+        "github/codeql-action/init@v3",
+        "octo-org/example-repo/.github/workflows/reusable.yml@v1",
+        "github/codeql-action/upload-sarif@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v3.25.0",
+        "Homebrew/actions/setup-homebrew@4",
+    ] {
+        assert!(action_refs.contains(&whole), "{whole}: {action_refs:#?}");
     }
     for file in [
         "src/container-image.test.mts",
