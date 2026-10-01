@@ -354,13 +354,13 @@ run. A report that names a different runtime environment, including any
 x86_64 base from before this runner, is not evidence of a regression.
 
 Treat a CodSpeed failure as actionable only when the report compares
-`ubuntu-24.04-arm` with the expected base commit. If CodSpeed reports a
-different runtime environment or an unexpected base, inspect the changed
-files first. A docs-only or otherwise unrelated change should record the
-mismatch in the PR's Shepherd Journal and acknowledge the result; code
-changes should be rerun on `ubuntu-24.04-arm` before performance work begins.
-Local before/after measurements must use the same machine, toolchain,
-benchmark mode, thread count, and fixture.
+`ubuntu-24.04-arm` with the expected base commit. If CodSpeed reports different
+runtime environments or an unexpected base, inspect the changed files first. A
+docs-only or otherwise unrelated change should record the mismatch in the PR's
+Shepherd Journal and acknowledge the result; code changes should be rerun on
+`ubuntu-24.04-arm` before performance work begins. Local before/after
+measurements must use the same machine, toolchain, benchmark mode, thread
+count, and fixture.
 
 ## Anti-Patterns
 
