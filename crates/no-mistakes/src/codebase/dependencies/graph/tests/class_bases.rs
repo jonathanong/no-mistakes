@@ -5,7 +5,7 @@ fn build(extends: bool, calls: bool) -> (PathBuf, DepGraph) {
     build_fixture("class-bases", extends, calls)
 }
 
-fn build_fixture(name: &str, extends: bool, calls: bool) -> (PathBuf, DepGraph) {
+pub(super) fn build_fixture(name: &str, extends: bool, calls: bool) -> (PathBuf, DepGraph) {
     let root = crate::codebase::ts_resolver::normalize_path(&fixture(name));
     let tsconfig = TsConfig {
         dir: root.clone(),
@@ -26,7 +26,7 @@ fn build_fixture(name: &str, extends: bool, calls: bool) -> (PathBuf, DepGraph) 
     (root, graph)
 }
 
-fn relative<'a>(root: &Path, path: &'a Path) -> &'a str {
+pub(super) fn relative<'a>(root: &Path, path: &'a Path) -> &'a str {
     path.strip_prefix(root).unwrap().to_str().unwrap()
 }
 
@@ -82,30 +82,38 @@ fn class_declarations_record_line_export_state_and_global_base() {
     );
 }
 
-/// A class inside any `namespace`, dotted namespace, `declare namespace`,
-/// `declare module 'x'` or `declare global` block, or declared with `declare`,
-/// is marked. The classes on both sides of the blocks are not: a depth counter
-/// that missed a decrement would mark `After`.
+/// A class in a `namespace` (nested or dotted) is a member, named by its path.
+/// A class in `declare namespace`, `declare module 'x'` or `declare global`, or
+/// declared with `declare`, is ambient and in no namespace. The classes on both
+/// sides of the blocks are neither: a depth counter that missed a decrement
+/// would mark `After`.
 #[test]
-fn classes_in_module_blocks_or_declared_are_marked() {
+fn namespace_members_and_ambient_classes_are_told_apart() {
     let (_, graph) = build_fixture("class-blocks", true, false);
     let marked: Vec<_> = graph
         .class_declarations()
         .iter()
-        .map(|class| (class.scope.as_str(), class.namespaced_or_ambient))
+        .map(|class| {
+            (
+                class.scope.as_str(),
+                class.ambient,
+                class.namespace.as_deref(),
+                class.namespace_escaped,
+            )
+        })
         .collect();
     assert_eq!(
         marked,
         [
-            ("Before", false),
-            ("InNamespace", true),
-            ("InNested", true),
-            ("InDotted", true),
-            ("InDeclareNamespace", true),
-            ("InModule", true),
-            ("InGlobal", true),
-            ("Declared", true),
-            ("After", false),
+            ("Before", false, None, false),
+            ("InNamespace", false, Some("Outer"), false),
+            ("InNested", false, Some("Outer.Inner"), false),
+            ("InDotted", false, Some("Dotted.Path"), false),
+            ("InDeclareNamespace", true, None, false),
+            ("InModule", true, None, false),
+            ("InGlobal", true, None, false),
+            ("Declared", true, None, false),
+            ("After", false, None, false),
         ]
     );
 }

@@ -41,16 +41,110 @@ constructing that class, so static factories such as
 Declaration files (`.d.ts`, `.d.mts`, `.d.cts`) are skipped: they describe code
 outside the analyzed source, so their classes are never reported.
 
-Two more kinds of class are never reported, even in a regular `.ts` file:
+A class declared with `declare` (`export declare class X extends Error {}`) or
+inside an ambient block (`declare namespace N { ... }`, `declare module "x" { ... }`,
+`declare global { ... }`) is never reported, even in a regular `.ts` file: it
+describes code outside the analyzed source like a declaration file does.
 
-- a class declared with `declare` (`export declare class X extends Error {}`) or
-  inside an ambient block (`declare module "x" { ... }`, `declare global { ... }`),
-  which describes code outside the analyzed source like a declaration file does;
-- a class declared inside a TypeScript `namespace` (including dotted names such
-  as `namespace A.B`), because the call graph does not resolve a reference to a
-  namespace member, so `new Errors.TopicError()` and a bare `new TopicError()`
-  inside the namespace never credit the class. Reporting it would call a class
-  dead that something builds.
+A class declared inside a TypeScript `namespace` is reported like any other class
+when nothing constructs or subclasses it. The graph resolves these references to
+the member, nested and dotted namespaces included:
+
+- `new Errors.TopicError()`, where `Errors` is declared in the same file or is an
+  exported namespace imported from another module, directly, under an alias
+  (`import { Errors as E }`), under a renamed export (`export { Errors as
+default }`), or through barrels and `export *`. A name that another `export *`
+  source of the same barrel may also supply (a second namespace, a value, or a
+  package outside the repository) is ambiguous, so a construction through it
+  builds nothing the rule can see and the namespace's classes stay quiet;
+- a bare `new TopicError()` written inside the body of the namespace that
+  declares `TopicError`, including inside a nested namespace or function there;
+- `new Outer.Inner.DeepError()`, and `new A.B.C()` for `namespace A.B { export
+class C extends Error {} }`;
+- `class Child extends Errors.Base {}`, which subclasses `Errors.Base`.
+
+The rule stays quiet about every class of a namespace when any use of that
+namespace is not a static member access the graph can follow, because that use
+might build any of its classes:
+
+- an alias or destructuring (`const E = Errors`), passing the namespace or one of
+  its members as a value (`register(Errors)`, `register(Errors.TopicError)`), or
+  a computed access (`new Errors[name]()`);
+- a member handed on through `bind`, `call`, or `apply`
+  (`new (Errors.TopicError.bind(null))()`), which can build the class somewhere
+  the graph does not see. The list is deliberately these three: any other method
+  on a member, such as a static guard (`Errors.TopicError.is(value)`), only reads
+  the class, so it neither keeps the class quiet nor builds it;
+- `export default Errors`, `export = Errors`, or `import Alias = Errors.Inner`;
+- a namespace merged with a class, function, variable, enum, or import of the
+  same name, whose statics or members the graph cannot tell apart from the
+  namespace's classes. Several `namespace` blocks of one name are not a merge of
+  this kind: they share one member table, and each block's classes are reported
+  like any other;
+- a module imported as a whole (`import * as errors`, `import("./errors")`,
+  `require`, `import x = require()`) when it exports or re-exports the namespace.
+  A module read whole exposes only the namespaces it exports: a barrel that
+  re-exports `Exposed` by name leaves a namespace it does not re-export
+  reported, while `export *` or an export the graph cannot follow exposes every
+  namespace of that module. A namespace import read through one static member
+  (`lib.version`, `lib["version"]`, or `lib.Errors` handed on as a value) exposes
+  only the export that member names, so reading `lib.version` leaves a namespace
+  `lib` exports reported;
+- a class named bare inside the namespace that declares it, or inside a nested
+  namespace of it, and read as a value or handed on through `bind`, `call`, or
+  `apply` (`register(TopicError)`, `const E = TopicError`), the same as
+  `register(Errors.TopicError)` from outside. A read of one of its properties that
+  is not a call (`TopicError.prototype`) counts the same way, because the value
+  it yields can be used to build the class. Building it, extending it, an
+  `instanceof` check, or calling a static guard (`TopicError.is(value)`) is not
+  such a use;
+- a construction that names a member the namespace does not declare
+  (`new Errors.Missing()`, or `new Errors.Missing.Factory()` when `Errors` has no
+  `Missing` namespace);
+- a namespace in a global script file, one with no `import` or `export`, which
+  any other file can reach.
+
+Several things are not uses of a namespace. A parameter or local that shadows the
+namespace or one of its classes (`function f(Errors) { return new Errors.X(); }`)
+names that binding, so the construction builds no class of the namespace and does
+not keep it quiet. A value that only shares the name, such as a top-level
+`const Inner = {}` beside `namespace Errors { export namespace Inner { ... } }`,
+is no use of the nested namespace: a name counts as a use only when it resolves
+to a declared namespace path or an imported binding. A namespace body is a scope
+of its own, like a function body: a `const`, `let`, or hoisted `var` in it hides
+a name inside that body only, so `namespace Helpers { const Errors = {}; }` leaves
+a later `new Errors.X()` naming the imported namespace. A class, function, enum,
+nested namespace, `import Alias = ...` alias, or variable (`const` and `let` too,
+even when declared after the code that reads it) declared in a body hides an
+imported or declared namespace of the same name for every `new` and `extends`
+written in that body or one nested in it, so
+`namespace Helpers { class Errors {} new Errors.Dead(); }` builds no class
+of an imported `Errors`. In a namespace declared in several blocks, only an
+exported declaration hides the import, and it does so in every block, because a
+block's unexported declarations are private to it. An unexported namespace in
+each of two blocks is two namespaces, so neither block sees the other's members.
+A dotted `namespace A.B` exports `B` from `A`. Only constructions and base
+classes are covered; any other call resolves as before. A
+class and a nested namespace of one name in one body are a single merged value
+that hides nothing. A string-literal member (`Errors["Dead"]`,
+`Errors["Inner"].Dead`) is followed like a dot, but `new Errors.Inner["Dead"]()`
+reads `Errors.Inner` as a value, so the namespace stays quiet.
+A bare decorator (`@Errors.mark`) calls the member it names and is not a use of
+the namespace. A name written only in an erased type (`typeof Errors`,
+`implements Errors.Marker`, an interface that extends `Errors.Base`) is not a use
+of the namespace, because it runs no code. `import type x = require("./m")` is erased at compile time and uses no module. A
+sourced clause (`export { Errors } from "./m"`) exports the `Errors` of `./m`,
+never a namespace of the same name declared locally.
+
+These uses count wherever they are written, test files included: a test file that
+copies a namespace into a variable keeps its classes quiet, even though a test
+that constructs a class never keeps that class alive.
+
+Only a class another module can reach is exported: an `export class` inside a
+namespace that its module exports, at every level of nesting. A class without
+`export`, or in a namespace its module does not export, is never reported. Two
+classes that share a name in different namespaces of one file share a scope key,
+so a use of either silences both.
 
 Such a class still counts as an error class and still counts as a use of its
 base, so a subclass elsewhere keeps its base alive.
@@ -67,8 +161,10 @@ finding there, never add one.
 
 Fix the file, or, if it really is test-only, classify it as a test file with
 `testFiles`. Test files that fail to parse do not stop the rule, because they
-never count as construction. Declaration files that fail to parse do not stop it
-either: they hold no construction.
+never count as construction, unless the rule would report a namespace member: a
+use of a namespace in a test file keeps its classes quiet, so a test file the
+rule cannot read might hold that use. Declaration files that fail to parse do not
+stop it either: they hold no construction.
 
 ## Options
 
@@ -111,6 +207,12 @@ declaration record with the class line and export state
 call, so it never shows up in `forbidden-calls` and never counts as a
 construction. The rule follows `extends` edges to a built-in error, and treats a
 subclass in non-test source as a use of its base.
+
+A class inside a `namespace` is resolved the same way, through the namespace's
+member path: the extractor records each namespace member, and each namespace
+used as a value, in the one parse it already does per file. The graph then looks
+`Errors.Inner.X` up in the namespace the name reaches, within the file or through
+imports and re-exports, and credits the class by its exact declaration.
 
 ## Valid example
 
@@ -197,8 +299,9 @@ resolves.
   runs as you delete dead classes.
 - Only exported classes are reported. A non-exported class that nothing uses is
   a plain unused declaration.
-- A dead class inside a `namespace`, or declared with `declare`, is not
-  reported (see [What it catches](#what-it-catches)).
+- A class declared with `declare` or inside an ambient block is not reported, and
+  neither is a namespaced class whose namespace is used in a way the graph cannot
+  follow (see [What it catches](#what-it-catches)).
 - An exported alias of a class is not recognized as an export, so the class is
   not reported. With `const PublicError = InternalError;` and
   `export { PublicError };`, `InternalError` is skipped.

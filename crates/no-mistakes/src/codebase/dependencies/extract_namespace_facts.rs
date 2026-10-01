@@ -1,0 +1,94 @@
+/// A class declared in a TypeScript namespace body, named by its dotted path
+/// from the file's top-level namespace (`Errors.Inner.DeepError`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NamespaceMember {
+    pub path: String,
+    pub id: CallableId,
+    /// Reachable from another module: the class and every namespace between it
+    /// and the root are `export`ed, and the file exports the root.
+    pub exported: bool,
+}
+
+/// A top-level (non-ambient) namespace declaration.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NamespaceRoot {
+    pub name: String,
+    /// The names the file exports the namespace as: `export namespace X`, an
+    /// `export { X as Y }` clause, or both.
+    pub exports: Vec<String>,
+    /// A class, function, variable, enum or import shares the name, so a member
+    /// access may mean either declaration.
+    pub merged: bool,
+}
+
+/// A construction written inside a namespace body, so a bare `new Local()` can
+/// be resolved against the members of the namespaces around it.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NamespaceSite {
+    pub caller_id: Option<CallableId>,
+    pub offset: u32,
+    /// Dotted path of the innermost enclosing namespace.
+    pub namespace: String,
+}
+
+/// Namespace declarations and the uses of their names in one file.
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct NamespaceFacts {
+    pub members: Vec<NamespaceMember>,
+    pub roots: Vec<NamespaceRoot>,
+    /// Every non-ambient namespace path, nested and dotted ones included.
+    pub declared: Vec<String>,
+    /// Names that appear as a value other than the head of a call, `new`,
+    /// `extends`, `instanceof` or re-export: an alias, an argument, a computed
+    /// access, `export default`. Only names of declared namespaces and
+    /// imports are recorded.
+    pub value_uses: Vec<String>,
+    /// Imports read through one static member, `(local, member)` for
+    /// `mod.version`, that are no use of the whole module: only the export the
+    /// member names is read.
+    pub member_uses: Vec<(String, String)>,
+    pub sites: Vec<NamespaceSite>,
+    /// `(namespace path, name)` for each value a tracked namespace body
+    /// declares: a class, function, enum, namespace, or variable. The name
+    /// hides an import of the same name in constructions written in that body.
+    /// A namespace declared in several blocks keeps only the exported ones that
+    /// all of its blocks share.
+    pub locals: Vec<(String, String)>,
+    /// Specifiers of `import x = require("...")`, whose module is used whole.
+    pub opaque_specifiers: Vec<String>,
+    /// Classes in an ambient declaration or in a module block that is not a
+    /// tracked namespace: `declare class`, `declare module`, `declare global`.
+    pub unreported_class_ids: Vec<CallableId>,
+}
+
+/// Walk state for [`NamespaceFacts`]. The pre-scan fills `facts` before the
+/// walk, which adds sites and uses.
+#[derive(Default)]
+struct NamespaceState {
+    facts: NamespaceFacts,
+    member_ids: FxHashSet<CallableId>,
+    /// Names whose value uses matter: namespace segments, the classes declared
+    /// in them, and import locals.
+    names: FxHashSet<String>,
+    /// Dotted path of every class declared in a tracked namespace, so a bare
+    /// reference to one inside its namespace body names it.
+    classes: FxHashSet<String>,
+    /// Dotted path of each namespace the walk is inside.
+    stack: Vec<String>,
+    /// Source offsets of identifiers that head a position the graph resolves.
+    benign_heads: FxHashSet<u32>,
+    /// Declared namespace paths and import names read as a value.
+    value_uses: FxHashSet<String>,
+    /// Imports read through one static member.
+    member_uses: FxHashSet<(String, String)>,
+    /// Offset of an identifier that is the object of a static member
+    /// expression to the member it reads.
+    selected: FxHashMap<u32, String>,
+    /// The `locals` a body exports, which every block of its namespace shares.
+    exported_locals: FxHashSet<(String, String)>,
+    /// Paths of namespaces declared without `export` in another namespace's
+    /// body: two such blocks of one path are two namespaces.
+    private_namespaces: FxHashSet<String>,
+    /// Nesting depth of erased type names (`typeof X`, `implements X.I`).
+    type_depth: u32,
+}

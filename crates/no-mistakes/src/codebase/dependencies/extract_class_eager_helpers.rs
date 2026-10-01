@@ -169,6 +169,7 @@ fn record_decorator_invocations<'a>(
     for decorator in decorators {
         let line = import_line_at(&collector.line_starts, decorator.span.start as usize);
         if let Some(callee) = simple_callee_name(&decorator.expression) {
+            collector.mark_call_namespace_head(&decorator.expression);
             let target_identity = collector.call_target_identity(&callee);
             let callee_binding_scope = collector.callee_binding_scope(&callee);
             collector.function_calls.push(FunctionCall {

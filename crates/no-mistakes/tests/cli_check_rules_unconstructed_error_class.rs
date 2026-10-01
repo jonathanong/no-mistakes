@@ -38,7 +38,7 @@ fn reports_each_dead_error_class_with_file_and_line() {
     let out = check(&fixture(), ".no-mistakes.yml", "human");
     let body = text(&out);
     assert_eq!(out.status.code(), Some(1), "{body}");
-    assert_eq!(body.lines().count(), 14, "{body}");
+    assert_eq!(body.lines().count(), 55, "{body}");
     assert!(
         body.contains(
             "unconstructed-error-class src/errors.ts:2 exported error class `UnusedError` \
@@ -48,22 +48,57 @@ fn reports_each_dead_error_class_with_file_and_line() {
     );
     assert!(body.contains("src/guard.ts:3 exported error class `InstanceofOnlyError`"));
     assert!(body.contains("src/hierarchy.ts:11 exported error class `Grandchild`"));
+    // A dead namespace member is reported by its qualified name.
+    assert!(
+        body.contains(
+            "unconstructed-error-class src/namespaced.ts:14 exported error class \
+             `Errors.DeadNamespacedError` is never constructed or subclassed in non-test source"
+        ),
+        "{body}"
+    );
+    assert!(body.contains("src/namespace-lib.ts:31 exported error class `Lib.Deep.DeepDead`"));
+    assert!(
+        body.contains("src/namespaced.ts:57 exported error class `Dotted.Path.DeadDottedError`")
+    );
+    // A shadowing parameter, a sourced export clause, and an erased
+    // `import type x = require()` each leave a dead class reported.
+    assert!(body.contains("src/namespace-shadowed.ts:4 exported error class `Shadowed.ShadowDead`"));
+    assert!(body.contains("exported error class `Unseen.RemoteDead`"));
+    assert!(body.contains("exported error class `TypeOnly.TypeOnlyError`"));
+    // A namespace named only in an erased type, a same-named constant, and a
+    // static guard on a class are no use of the namespace.
+    assert!(body.contains("exported error class `Queried.QueriedDead`"));
+    assert!(body.contains("exported error class `Collide.Inner.CollideDead`"));
+    assert!(body.contains("exported error class `Guarded.GuardedDead`"));
+    assert!(body.contains("exported error class `Kept.KeptDead`"));
     for silent in [
-        // The graph cannot see a namespace member built, so a namespaced class
-        // is never reported: dead, dotted, private, and same-named alike.
-        "DeadNamespacedError",
-        "DeadDottedError",
-        "TopicError",
+        // A namespace member built through a reference the graph resolves.
+        "Errors.TopicError",
+        "Errors.Built",
+        "Lib.Used",
+        "Lib.Deep.DeepUsed",
         "CollideBase",
         "CollideChild",
         "CollideGrand",
-        "Qualified",
+        // A member its namespace does not export.
         "Hidden",
-        // A namespaced subclass still credits its top-level base.
+        // A namespace subclass still credits its base.
         "NsBase",
+        "Errors.Base",
+        // A namespace that escapes through an alias, a computed access, a
+        // default export, or a dynamic import is never reported.
+        "AliasedDead",
+        "ComputedDead",
+        "DefaultedDead",
+        "GapDead",
+        "DynamicDead",
+        "ViaAliasDead",
+        "ViaComputedDead",
+        "Standard.Built",
         // `declare` classes, in a `.ts` file or an ambient module block.
         "DeclaredError",
         "ModuleBlockError",
+        "AmbientNamespaceError",
         "ConstructedError",
         "BarrelError",
         "WorkspaceError",
@@ -214,11 +249,11 @@ fn a_broken_non_test_file_stops_the_rule_instead_of_reporting() {
     }
 }
 
-/// Test files never count as construction, so a broken one cannot hide a
-/// construction and does not stop the rule. `src/__tests__/` is a test by
-/// default; `testFiles` classifies the other broken files. `src/broken.d.ts`
-/// is broken too and is no test: a declaration file holds no construction, so
-/// it never stops the rule either.
+/// Test files never count as construction, so while no namespace member would
+/// be reported a broken one cannot hide a construction and does not stop the
+/// rule. `src/__tests__/` is a test by default; `testFiles` classifies the
+/// other broken files. `src/broken.d.ts` is broken too and is no test: a
+/// declaration file holds no construction, so it never stops the rule either.
 #[test]
 fn broken_test_files_do_not_stop_the_rule() {
     let out = check(
@@ -235,6 +270,32 @@ fn broken_test_files_do_not_stop_the_rule() {
             "unconstructed-error-class src/used.ts:2 exported error class `Used` \
              is never constructed or subclassed in non-test source"
         ],
+        "{body}"
+    );
+}
+
+/// A test file's alias of a namespace keeps its classes quiet, so the broken
+/// `src/__tests__/alias.ts` might hold the use that keeps `Errors.Dead` quiet:
+/// the rule stops instead of reporting it.
+#[test]
+fn a_broken_test_file_stops_the_rule_before_it_reports_a_namespace_member() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../test-cases/rules/unconstructed-error-class/test-escape-parse-failure/fixture",
+        ),
+    );
+    let out = check(&root, ".no-mistakes.yml", "human");
+    let body = text(&out);
+    assert_eq!(out.status.code(), Some(1), "{body}");
+    assert!(
+        body.contains(
+            "rules check skipped: unconstructed-error-class: cannot prove error classes \
+             unconstructed: `src/__tests__/alias.ts` failed to parse: "
+        ),
+        "{body}"
+    );
+    assert!(
+        lines_of(&body, "unconstructed-error-class").is_empty(),
         "{body}"
     );
 }

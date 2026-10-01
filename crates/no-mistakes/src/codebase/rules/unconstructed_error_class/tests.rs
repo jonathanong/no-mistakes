@@ -54,6 +54,64 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             // The leaf and the orphan base; the middle of the chain is satisfied.
             "src/hierarchy.ts:11 Grandchild",
             "src/hierarchy.ts:14 OrphanBase",
+            // A parameter of the class's name, a guard, and a type hand nothing on.
+            "src/namespace-bare-member.ts:28 BareKept.BareKeptDead",
+            // A local of a namespace body does not hide an import outside it.
+            "src/namespace-body-scope-lib.ts:5 BodyScope.ScopeDead",
+            "src/namespace-body-scope-lib.ts:11 BodyVar.VarDead",
+            // A local of a namespace body hides a declared namespace of its name.
+            "src/namespace-body-shadow.ts:5 ShadowErrors.ShadowDead",
+            // `bind`, `call` and `apply` hand a class on; a static guard does not.
+            "src/namespace-bound.ts:25 Guarded.GuardedDead",
+            // A class, function, enum, or namespace declared in a namespace body
+            // hides an import of its name there: it builds none of these.
+            "src/namespace-class-shadow-lib.ts:6 ClassShadow.ClassShadowDead",
+            "src/namespace-class-shadow-lib.ts:8 ClassShadow.ClassShadowBase",
+            "src/namespace-class-shadow-lib.ts:12 FunctionShadow.FunctionShadowDead",
+            "src/namespace-class-shadow-lib.ts:16 EnumShadow.EnumShadowDead",
+            "src/namespace-class-shadow-lib.ts:20 LaterShadow.LaterShadowDead",
+            "src/namespace-class-shadow-lib.ts:24 NestedShadow.NestedShadowDead",
+            "src/namespace-class-shadow-lib.ts:31 BareShadowed",
+            "src/namespace-class-shadow-lib.ts:34 AliasShadow.AliasShadowDead",
+            // Another block of a merged namespace exports a namespace of its name.
+            "src/namespace-class-shadow-lib.ts:38 SharedShadow.SharedShadowDead",
+            // A constant or a parameter that shares a name is not the namespace.
+            "src/namespace-collision.ts:7 Collide.Inner.CollideDead",
+            "src/namespace-collision.ts:16 Hide.HideDead",
+            // Namespace members: reported by qualified name, like any class.
+            "src/namespace-construct.ts:23 Sub.Child",
+            "src/namespace-consumer-lib.ts:30 Standard.StandardDead",
+            // A bare decorator calls its member; it does not read the namespace.
+            "src/namespace-decorated.ts:8 Decorated.DecoratedDead",
+            "src/namespace-lib.ts:9 Lib.DeadLibError",
+            "src/namespace-lib.ts:21 Lib.TestOnlyBuilt",
+            "src/namespace-lib.ts:31 Lib.Deep.DeepDead",
+            "src/namespace-lib.ts:40 Renamed.RenamedDead",
+            // A member read through a namespace import uses that export alone.
+            "src/namespace-member-read-lib.ts:7 ReadKept.ReadKeptDead",
+            // A nested namespace merged with a class resolves through its name.
+            "src/namespace-merged-nested.ts:15 MergedNested.Holder.Unused",
+            "src/namespace-merged-nested.ts:21 MergedNested.Child",
+            "src/namespace-merged.ts:10 Merged.Second",
+            "src/namespace-merged.ts:23 Mix.Inner.NestedPart",
+            // A barrel read whole exposes only what it re-exports.
+            "src/namespace-selective-target.ts:4 Kept.KeptDead",
+            // A parameter that shadows the namespace or a class is not a use.
+            "src/namespace-shadowed.ts:4 Shadowed.ShadowDead",
+            "src/namespace-shadowed.ts:6 Shadowed.InnerShadow",
+            // A sourced clause exports the target's namespace, not a local one.
+            "src/namespace-sourced-target.ts:5 Unseen.RemoteDead",
+            // `typeof`, `implements` and an interface base are erased types.
+            "src/namespace-type-names.ts:4 Queried.QueriedDead",
+            "src/namespace-type-names.ts:10 Marked.MarkedDead",
+            "src/namespace-type-names.ts:16 Extended.ExtendedDead",
+            // `import type X = require()` is erased, so it uses nothing.
+            "src/namespace-type-only-target.ts:2 TypeOnly.TypeOnlyError",
+            "src/namespaced.ts:14 Errors.DeadNamespacedError",
+            "src/namespaced.ts:30 Errors.Child",
+            "src/namespaced.ts:34 Errors.Inner.DeepDeadError",
+            "src/namespaced.ts:53 TopLevelChild",
+            "src/namespaced.ts:57 Dotted.Path.DeadDottedError",
             "src/reexported.ts:14 BarrelUnusedError",
             "src/workspace-use.ts:6 LocalFromLib",
         ]
@@ -81,48 +139,160 @@ fn constructions_through_aliases_barrels_namespaces_and_workspaces_count() {
     }
 }
 
-/// The graph cannot resolve a reference to a namespace member, such as
-/// `new Built.Qualified()` or a bare `new Local()` inside its namespace, so it
-/// cannot tell a namespaced class is built. `declare` classes and classes in an
-/// ambient module block describe code outside the analyzed source. Each of
-/// these is an exported error class that nothing else constructs, so the rule
-/// stays silent on all of them.
-#[test]
-fn namespaced_and_ambient_classes_are_never_reported() {
-    let found = findings(".no-mistakes.yml").unwrap();
-    let targets: Vec<_> = found
+fn targets(findings: &[RuleFinding]) -> Vec<&str> {
+    findings
         .iter()
         .filter_map(|finding| finding.target.as_deref())
-        .collect();
+        .collect()
+}
+
+/// A namespace member is built through `new Errors.Built()`, a bare `new
+/// Local()` in the namespace body, a nested or dotted path, and an import of the
+/// namespace by name, rename, namespace import, or barrel. Each of these classes
+/// is an exported error class that no other code builds, so the rule would
+/// report it if the graph did not resolve the reference.
+#[test]
+fn namespace_members_built_through_a_resolved_reference_are_not_reported() {
+    let found = findings(".no-mistakes.yml").unwrap();
+    let targets = targets(&found);
     for silent in [
-        "DeadNamespacedError",
-        "DeadDottedError",
-        "TopicError",
-        "DeepError",
-        "CollideBase",
-        "Qualified",
-        "Local",
-        "Hidden",
-        "DeclaredError",
-        "ModuleBlockError",
+        // Same file: qualified, bare, nested, dotted, and `new this()`.
+        "Errors.Built",
+        "Errors.Local",
+        "Errors.TopicError",
+        "Errors.Inner.DeepBuilt",
+        "Errors.Inner.DeepError",
+        "Dotted.Path.BuiltDotted",
+        "Merged.First",
+        "Mix.Inner.DottedPart",
+        // Through an import that a namespace-body local of the same name does not
+        // hide.
+        "BodyScope.ScopeBuilt",
+        "BodyVar.VarBuilt",
+        // Built from another block of a merged namespace, where a class of the
+        // import's name is private to its own block.
+        "MergedShadow.MergedBuilt",
+        "SplitShadow.SplitBuilt",
+        // The exported member of another block of a merged namespace.
+        "SharedBlocks.SharedShadow.SharedShadowDead",
+        // Another file, by every way to reach the namespace.
+        "Lib.Used",
+        "Lib.Deep.DeepUsed",
+        "Lib.ViaImportRename",
+        "Lib.ViaStar",
+        "Lib.ViaBarrel",
+        "Renamed.ViaExportRename",
+        // A default import of a namespace exported as `default`.
+        "Standard.Built",
+        // Through a sourced clause: `Public` is the target's namespace.
+        "Unseen.RemoteLive",
     ] {
         assert!(!targets.contains(&silent), "{silent} was reported");
     }
 }
 
-/// A namespaced subclass is exempt from the report but still counts as a use of
-/// its base: nothing constructs the top-level `NsBase`, and its only subclass
-/// is `Sub.Child`, so it stays unreported only because that `extends` credits
-/// it.
+/// A namespace subclass credits its base the way a top-level subclass does,
+/// whether the `extends` is written in the namespace body (`extends Base`) or
+/// outside it (`extends Errors.Base`, `extends Lib.Base`). Nothing constructs
+/// the bases, so each is silent only because that `extends` credits it.
 #[test]
-fn a_namespaced_subclass_still_credits_its_top_level_base() {
+fn a_subclass_of_a_namespace_member_credits_its_base() {
     let found = findings(".no-mistakes.yml").unwrap();
-    let targets: Vec<_> = found
-        .iter()
-        .filter_map(|finding| finding.target.as_deref())
-        .collect();
-    assert!(!targets.contains(&"NsBase"), "NsBase was reported");
-    assert!(!targets.contains(&"Child"), "Child was reported");
+    let targets = targets(&found);
+    for credited in ["Errors.Base", "Lib.Base", "NsBase"] {
+        assert!(!targets.contains(&credited), "{credited} was reported");
+    }
+    // A top-level class that extends `Errors.Base` is an error class, and a
+    // dead one, even though its base is in a namespace.
+    assert!(targets.contains(&"TopLevelChild"));
+    assert!(targets.contains(&"Sub.Child"));
+}
+
+/// A namespace is reported on only while every use of it is a static member
+/// access the graph resolves. Each namespace below has a dead class that would
+/// be flagged but for one use that could reach the class: an alias, a
+/// destructuring, an argument, a computed access, a default export, a merge with
+/// a class, a module namespace used as a value, a dynamic import or `require`,
+/// and a construction of a member the graph cannot find.
+#[test]
+fn a_namespace_that_escapes_is_never_reported() {
+    let found = findings(".no-mistakes.yml").unwrap();
+    let targets = targets(&found);
+    for silent in [
+        "Aliased.AliasedDead",
+        "Picked.PickedDead",
+        "Destructured.DestructuredDead",
+        "Passed.PassedDead",
+        "Argument.ArgumentDead",
+        "Computed.ComputedDead",
+        "Mixed.MixedDead",
+        "Defaulted.DefaultedDead",
+        "Whole.WholeDead",
+        "Dynamic.DynamicDead",
+        "Required.RequiredDead",
+        "Backstop.BackstopDead",
+        "Gap.GapDead",
+        // An import and a namespace of one name.
+        "Imported.ImportMergedError",
+        // A member handed on by `bind`, `call` or `apply`, in the file or
+        // through an import.
+        "Bound.BoundDead",
+        "Called.CalledDead",
+        "Applied.AppliedDead",
+        "Handed.HandedDead",
+        // A bare name in the body that denotes the nested namespace.
+        "Reach.Inner.ReachDead",
+        // A class merged with a namespace of one body, read as a value.
+        "MergedBody.Inner",
+        "MergedBody.Inner.MergedDeep",
+        // A barrel that re-exports the namespace, read whole.
+        "Exposed.ExposedDead",
+        // Another file imports the namespace, and uses it as a value.
+        "ViaAlias.ViaAliasDead",
+        "ViaArgument.ViaArgumentDead",
+        "ViaComputed.ViaComputedDead",
+        "ViaMember.ViaMemberDead",
+        // The namespace export that a member read through an import names, by
+        // a dot or a string literal.
+        "ReadHanded.ReadHandedDead",
+        "ReadLiteral.ReadLiteralDead",
+        // A class named bare in its namespace body, handed on or bound.
+        "BareHanded.BareHandedDead",
+        "BareNested.BareNestedDead",
+        "BareBound.BareBoundDead",
+        // A string-literal member after another member cannot be named.
+        "LiteralNested.Inner.LiteralNestedDead",
+    ] {
+        assert!(!targets.contains(&silent), "{silent} was reported");
+    }
+}
+
+/// `declare` classes, classes in a `declare namespace`, an ambient module
+/// block, or `declare global`, and a script file's global namespace describe
+/// code outside the analyzed source or are not exports of the file. Each is an
+/// error class that nothing builds, and none is reported. A member its
+/// namespace does not export, a class declared in a function or as an
+/// expression, and a member of an unexported namespace are not exports either.
+#[test]
+fn ambient_and_unexported_namespace_classes_are_never_reported() {
+    let found = reported(&findings(".no-mistakes.yml").unwrap()).join("\n");
+    for silent in [
+        "DeclaredError",
+        "ModuleBlockError",
+        "AmbientNamespaceError",
+        "GlobalAugmentationError",
+        "ScriptDead",
+        "LegacyDead",
+        // In a namespace that only a sourced clause of the same name exports.
+        "LocalUnseen",
+        "Hidden",
+        "InternalError",
+        "LocalError",
+        "ExpressionMemberError",
+        "CollideBase",
+    ] {
+        assert!(!found.contains(silent), "{silent} was reported: {found}");
+    }
 }
 
 #[test]
@@ -234,6 +404,26 @@ fn a_broken_source_file_is_a_rule_error_naming_the_file() {
         error.starts_with(
             "unconstructed-error-class: cannot prove error classes unconstructed: \
              `src/broken.ts` failed to parse: "
+        ),
+        "{error}"
+    );
+}
+
+/// A test file's alias of a namespace keeps its classes quiet, so a broken test
+/// file might hold the use that keeps `Errors.Dead` quiet: the rule errors
+/// instead of reporting it.
+#[test]
+fn a_broken_test_file_is_a_rule_error_when_a_namespace_member_would_be_reported() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../test-cases/rules/unconstructed-error-class/test-escape-parse-failure/fixture",
+        ),
+    );
+    let error = run_check(&root, None, None).unwrap_err().to_string();
+    assert!(
+        error.starts_with(
+            "unconstructed-error-class: cannot prove error classes unconstructed: \
+             `src/__tests__/alias.ts` failed to parse: "
         ),
         "{error}"
     );

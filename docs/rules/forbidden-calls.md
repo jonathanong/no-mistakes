@@ -89,6 +89,13 @@ unresolved receivers such as typed callback parameters, renamed bindings,
 `this`, static computed members, and chained receivers whose source spelling
 ends in that member. Dynamic computed access (`page[method]()`) is not guessed.
 
+A callable declared in a TypeScript `namespace` body has the scope of its own
+name, as it does everywhere the graph names a scope, so `symbol: Twin` selects
+`new A.Twin()` and `new B.Twin()` alike when two namespaces of one file both
+declare `Twin`. The `Call` edge keeps the exact declaration, and
+`unconstructed-error-class` reads that edge, but a `function` selector carries a
+file and a symbol and no namespace path.
+
 A class's `extends` clause is not a call. `class Child extends Base {}` never
 matches a target naming `Base`, whether `function` or `construct`; only `new Base()`
 does. Other rules that read the class hierarchy, such as

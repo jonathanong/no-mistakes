@@ -63,6 +63,7 @@ fn callable_alias_resolution_uses_the_callee_binding_scope() {
         lexical_scope_parents: [(0, None), (1, Some(0))].into_iter().collect(),
         scope_ids_by_display: fx_map(),
         stars: Vec::new(),
+        namespaces: NamespaceTable::default(),
     };
 
     assert_eq!(

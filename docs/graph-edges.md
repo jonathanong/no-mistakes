@@ -305,7 +305,8 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   literals and supported expression-free shapes produce edges. (Playwright
   `route-test` navigation is the documented exception above.)
 - `call` edges are opt-in and are deliberately soundness-bounded. Only local
-  functions, direct named imports, static namespace-member imports, and explicit named re-exports with one
+  functions, direct named imports, static namespace-member imports, explicit named re-exports, and
+  `new` of a TypeScript `namespace` member (see `extends` below) with one
   resolved target become edges. Import specifiers resolve as they do for
   `import` edges, including workspace package names (`@scope/pkg`), their
   `exports` subpaths, and package `imports` (`#name`); a bare specifier that no
@@ -331,12 +332,72 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   produces no `call` edge, no call site, and no callable export resolution, so
   `forbidden-calls` and `call` traversal do not see it. A companion
   `ClassDeclaration` record carries what an edge cannot (the declaration line,
-  whether the class is exported, whether it sits inside a `namespace`,
-  `declare module`, or `declare global` block or is itself `declare`d, and a
-  global base such as `Error`). The extractor scopes a namespaced class by its
-  own name and does not resolve references to namespace members, so a consumer
-  that needs to know whether a class is built must treat that flag as "cannot
-  tell". Mixin and expression bases (`extends mixin(Error)`) are not tracked.
+  whether the class is exported, the namespace path that declares it, whether it
+  is ambient (`declare`d, or inside `declare namespace`, `declare module`, or
+  `declare global`), whether its namespace escaped, and a global base such as
+  `Error`). A construction or `extends` that names a TypeScript `namespace`
+  member resolves to that class by its declaration: `new Errors.X()` and
+  `new Outer.Inner.X()` where the namespace is declared in the same file or is an
+  exported namespace imported through named, renamed, default, barrel, or
+  `export *` bindings, `new A.B.C()` for `namespace A.B`, and a bare `new X()`
+  inside the body that declares `X`; a graph built for `call` edges alone
+  resolves the constructions the same way. A name that another `export *`
+  source of the same barrel may also supply (a second namespace, a value, or a
+  package outside the repository) is ambiguous: a construction through it is
+  no edge, and the namespace escapes. Same-named classes in different
+  namespaces keep their own callable ids. A namespace escapes when any use of it is not
+  one of those static member accesses: an alias, a value argument, a computed
+  access, `export default` or `export =`, a declaration merged with a class,
+  function, variable, enum, or import of the same name (blocks of one namespace
+  share a member table and are not a merge), a missing member or missing
+  intermediate namespace, a member handed on through `bind`, `call`, or `apply`
+  (any other method, such as a static guard, only reads the class), or a module
+  that exports it and is imported whole, dynamically, or through `require`. A
+  module read whole exposes only the namespaces it exports: a barrel that
+  re-exports one namespace by name leaves its sibling unescaped, while an
+  `export *` or an export the graph cannot follow takes the whole module. A
+  namespace import read through one static member (`target.version`,
+  `target["version"]`, or `target.Errors` handed on as a value) uses only the
+  export that member names, so a read of `version` leaves the namespaces the
+  module exports unescaped. A class named bare inside the body that declares it,
+  or inside a nested namespace of it, escapes its namespace when it is read as a
+  value or handed on through `bind`, `call`, or `apply` (`register(Dead)`), the
+  same as `register(Errors.Dead)` would from outside, and so does a property
+  read that is not a call (`Dead.prototype`); built, extended,
+  `instanceof`-checked, or called through any other static method, it is no use.
+  A name is a
+  value use only when it resolves to a declared namespace path or an imported
+  binding, so a parameter or local that shadows the namespace or its class names
+  that binding, and a same-named value elsewhere, are no use. A namespace body is
+  a scope of its own, like a function body: a `const`, `let`, or hoisted `var`
+  declared in it hides a name inside that body only, so the same name after the
+  body still names the import. A class, function, enum, nested namespace,
+  `import Alias = ...` alias, or variable (`const` and `let` too, even when
+  declared after the code that reads it) declared in a body hides an imported or
+  declared namespace of the same name for every `new` and `extends` written in
+  that body or one nested in it, so
+  `namespace Helpers { class Errors {} new Errors.Dead(); }` builds no class of an
+  imported `Errors`. The extractor records those names as the `locals` fact.
+  In a namespace declared in several blocks, only an exported declaration
+  hides the import, and it does so in every block, because a block's unexported
+  declarations are private to it. An unexported namespace in each of two blocks
+  is two namespaces, so neither block sees the other's members. A dotted
+  `namespace A.B` exports `B` from `A`. Only constructions and base classes are
+  covered; any other call resolves as before. A class and a nested
+  namespace of one name in one body are a single merged value that hides nothing.
+  A string-literal member (`Errors["Dead"]`, `Errors["Inner"].Dead`) is followed
+  like a dot, but `new Errors.Inner["Dead"]()` reads `Errors.Inner` as a value, so
+  the namespace escapes. A bare decorator
+  (`@Errors.mark`) calls the member it names and is no use of the namespace. A
+  name written only in an erased type (`typeof X`, `implements X.Marker`, an
+  interface base) is no use either. An erased `import type x = require()` uses nothing, and a sourced
+  `export { X } from "./m"`
+  names `m`'s export, not a local namespace. Uses in test files count too. A
+  graph built for `extends` alone drops the `Call` edges but still records which
+  namespaces a qualified construction it cannot follow escapes. A consumer that
+  needs to know whether a class is built must treat `namespace_escaped` as
+  "cannot tell". Mixin and expression bases (`extends mixin(Error)`) are not
+  tracked.
 - Selector text edges are approximate. Exact selector edges from configured test
   ID attributes are stronger than role/text/label/placeholder matching.
   Configured selector wrappers produce the same exact edge when their declared

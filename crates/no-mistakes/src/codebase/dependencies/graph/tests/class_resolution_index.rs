@@ -113,6 +113,7 @@ fn alias_resolution_walks_parent_scopes_and_stops_on_cycles() {
         lexical_scope_parents: [(0, None), (1, Some(0))].into_iter().collect(),
         scope_ids_by_display: fx_map(),
         stars: Vec::new(),
+        namespaces: NamespaceTable::default(),
     };
 
     assert_eq!(
@@ -187,6 +188,7 @@ fn non_dotted_alias_resolution_exhausts_parents_and_stops_on_cycles() {
         lexical_scope_parents: [(0, None), (1, Some(0))].into_iter().collect(),
         scope_ids_by_display: fx_map(),
         stars: Vec::new(),
+        namespaces: NamespaceTable::default(),
     };
 
     assert!(
@@ -361,6 +363,7 @@ fn local_callable_id_walks_parents_and_rejects_dotted_bindings() {
         lexical_scope_parents: [(0, None), (1, Some(0))].into_iter().collect(),
         scope_ids_by_display: fx_map(),
         stars: Vec::new(),
+        namespaces: NamespaceTable::default(),
     };
 
     assert!(index.resolve_local_callable_id(None, "fn").is_none());

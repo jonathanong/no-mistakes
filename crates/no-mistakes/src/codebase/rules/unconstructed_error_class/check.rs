@@ -37,8 +37,14 @@ pub(crate) fn check_with_graph(
             is_test_file(&format!("/{relative}")) || extra_tests.is_match(&relative)
         };
         reject_unseen_source(&root, graph, &is_test)?;
+        let classes = unconstructed(graph, is_test, |file| path_filter.is_match(file));
+        // A use of a namespace keeps its members quiet even in a test file, so
+        // a test file that failed to parse might hold the use that would.
+        if classes.iter().any(|class| class.namespace.is_some()) {
+            reject_unseen_source(&root, graph, &|_: &Path| false)?;
+        }
         findings.extend(
-            unconstructed(graph, is_test, |file| path_filter.is_match(file))
+            classes
                 .into_iter()
                 .map(|class| finding(&root, application, class)),
         );
@@ -48,16 +54,17 @@ pub(crate) fn check_with_graph(
 
 /// The rule concludes that no non-test file constructs a class, so a file whose
 /// facts could not be collected might hold the construction it looks for.
+/// `ignored` files cannot: test files, unless a namespace member is at stake.
 /// `path_filter` is not consulted: a construction outside `include` still counts.
 /// Declaration files are skipped: they hold no runtime construction.
 fn reject_unseen_source(
     root: &Path,
     graph: &DepGraph,
-    is_test: &impl Fn(&Path) -> bool,
+    ignored: &impl Fn(&Path) -> bool,
 ) -> Result<()> {
     let mut unseen: Vec<_> = graph
         .parse_errors()
-        .filter(|(file, _)| !is_test(file) && !is_declaration_file(file))
+        .filter(|(file, _)| !ignored(file) && !is_declaration_file(file))
         .map(|(file, error)| (relative_slash_path(root, file), error))
         .collect();
     unseen.sort();
@@ -76,10 +83,16 @@ fn reject_unseen_source(
 }
 
 fn finding(root: &Path, application: &RuleDef, class: &ClassDeclaration) -> RuleFinding {
-    let name = class
+    let bare = class
         .scope
         .rsplit_once('/')
         .map_or(class.scope.as_str(), |(_, name)| name);
+    // A namespace member is named by its path, as it is written at a use.
+    let qualified = class
+        .namespace
+        .as_ref()
+        .map(|namespace| format!("{namespace}.{bare}"));
+    let name = qualified.as_deref().unwrap_or(bare);
     // An anonymous default export is scoped as `default`, which no class can
     // be named.
     let subject = if name == "default" {
