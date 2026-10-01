@@ -1,0 +1,15 @@
+{
+  "formatVersion": 2,
+  "tables": {
+    "accounts": {
+      "columns": {
+        "display_name": { "dataType": "text" }
+      }
+    },
+    "webhook_deliveries": {
+      "columns": {
+        "event_type": { "dataType": "text" }
+      }
+    }
+  }
+}

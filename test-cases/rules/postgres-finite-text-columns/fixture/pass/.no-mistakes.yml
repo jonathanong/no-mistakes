@@ -1,0 +1,9 @@
+rules:
+  - rule: postgres-finite-text-columns
+    scope: repository
+    options:
+      schemaCatalogPath: schema.json
+      namePatterns: ['(^|_)(status|state|kind|type|source|category|mode|channel)$']
+      allow:
+        - object: column:webhook_deliveries.event_type
+          reason: Values are defined by the webhook provider and change without a migration

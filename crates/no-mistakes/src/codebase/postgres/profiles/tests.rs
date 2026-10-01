@@ -85,6 +85,7 @@ fn schema_catalog_paths_follow_the_supplied_rule_id() {
             "postgres-status-with-lifecycle-timestamps",
             "postgres-object-naming",
             "postgres-column-naming",
+            "postgres-finite-text-columns",
         ]
     );
 }

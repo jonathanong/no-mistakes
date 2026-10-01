@@ -7,7 +7,7 @@ use std::sync::Arc;
 
 mod naming;
 
-use naming::{column_naming, object_naming};
+use naming::{column_naming, finite_text, object_naming, status_lifecycle, table_shape};
 
 pub(super) fn run(
     rule_id: &str,
@@ -50,6 +50,7 @@ pub(super) fn run(
         POSTGRES_IDENTIFIER_LENGTH => {
             postgres_identifier_length::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_FINITE_TEXT_COLUMNS => finite_text(root, config, files, sources, facts),
         POSTGRES_COLUMN_NAMING => column_naming(root, config, files, sources, facts),
         POSTGRES_OBJECT_NAMING => object_naming(root, config, files, sources, facts),
         POSTGRES_REQUIRE_FK_ON_DELETE => {
@@ -73,24 +74,10 @@ pub(super) fn run(
         POSTGRES_SQL_SHAPE_POLICY => {
             postgres_sql_shape_policy::check_with_files_and_sources(root, config, files, sources)
         }
-        POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS => match facts {
-            Some(facts) => {
-                postgres_status_with_lifecycle_timestamps::check_with_files_sources_and_facts(
-                    root, config, files, sources, facts,
-                )
-            }
-            None => postgres_status_with_lifecycle_timestamps::check_with_files_and_sources(
-                root, config, files, sources,
-            ),
-        },
-        POSTGRES_TABLE_SHAPE => match facts {
-            Some(facts) => postgres_table_shape::check_with_files_sources_and_facts(
-                root, config, files, sources, facts,
-            ),
-            None => {
-                postgres_table_shape::check_with_files_and_sources(root, config, files, sources)
-            }
-        },
+        POSTGRES_STATUS_WITH_LIFECYCLE_TIMESTAMPS => {
+            status_lifecycle(root, config, files, sources, facts)
+        }
+        POSTGRES_TABLE_SHAPE => table_shape(root, config, files, sources, facts),
         POSTGRES_SQL_STATEMENT_POLICY => {
             postgres_sql_statement_policy::check_with_files_and_sources(
                 root, config, files, sources,
