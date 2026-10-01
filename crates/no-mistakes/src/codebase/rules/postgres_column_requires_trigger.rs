@@ -152,7 +152,10 @@ fn parse_events(events: Option<&[String]>) -> Result<Vec<TriggerEvent>> {
 fn normalize_function_name(name: &str) -> String {
     let trimmed = name.trim();
     let last = trimmed.rsplit('.').next().unwrap_or(trimmed).trim();
-    let Some(quoted) = last.strip_prefix('"').and_then(|rest| rest.strip_suffix('"')) else {
+    let Some(quoted) = last
+        .strip_prefix('"')
+        .and_then(|rest| rest.strip_suffix('"'))
+    else {
         return last.to_ascii_lowercase();
     };
     quoted.replace("\"\"", "\"")

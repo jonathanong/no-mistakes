@@ -4,7 +4,11 @@
     "orders": {
       "relationKind": "table",
       "columns": {
-        "updated_at": { "type": "timestamp with time zone", "nullable": false, "ordinalPosition": 1 }
+        "updated_at": {
+          "nullable": false,
+          "ordinalPosition": 1,
+          "dataType": "timestamp with time zone"
+        }
       }
     }
   }

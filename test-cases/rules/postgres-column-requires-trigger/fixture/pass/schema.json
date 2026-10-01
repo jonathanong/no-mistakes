@@ -4,16 +4,26 @@
     "orders": {
       "relationKind": "table",
       "columns": {
-        "updated_at": { "type": "timestamp with time zone", "nullable": false, "ordinalPosition": 1 }
+        "updated_at": {
+          "nullable": false,
+          "ordinalPosition": 1,
+          "dataType": "timestamp with time zone"
+        }
       },
       "triggers": {
-        "trigger_orders_touch": "CREATE TRIGGER trigger_orders_touch BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+        "trigger_orders_touch": {
+          "definition": "CREATE TRIGGER trigger_orders_touch BEFORE UPDATE ON public.orders FOR EACH ROW EXECUTE FUNCTION fn_touch_updated_at()"
+        }
       }
     },
     "order_events": {
       "relationKind": "table",
       "columns": {
-        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 }
+        "id": {
+          "nullable": false,
+          "ordinalPosition": 1,
+          "dataType": "uuid"
+        }
       }
     }
   }
