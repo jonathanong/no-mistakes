@@ -184,8 +184,8 @@ fn fail_fixture_reports_each_runtime_pin() {
     let root = fixture("fail");
     let findings = check_with_files(&root, &config_with_options("{}"), &fail_files(&root)).unwrap();
     for (file, reason, count) in [
-        // The two plain refs and four `uses:` refs on Homebrew lines; none is a formula.
-        ("src/action-ref.test.mts", "exact action ref", 6),
+        // The two plain refs and five `uses:` refs on Homebrew lines; none is a formula.
+        ("src/action-ref.test.mts", "exact action ref", 7),
         ("src/action-ref.test.mts", "versioned Homebrew formula", 0),
         ("src/container-image.test.mts", "container image tag", 19),
         ("src/container-image.test.mts", "container image digest", 2),
@@ -193,7 +193,7 @@ fn fail_fixture_reports_each_runtime_pin() {
         (
             "src/homebrew-formula.test.mts",
             "versioned Homebrew formula",
-            12,
+            13,
         ),
         ("src/runner-label.test.mts", "versioned runner label", 9),
     ] {

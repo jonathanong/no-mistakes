@@ -92,6 +92,28 @@ fn an_action_ref_on_a_homebrew_line_is_still_reported() {
     assert_eq!(both.len(), 2, "{both:?}");
 }
 
+#[test]
+fn a_uses_value_that_is_not_an_action_ref_keeps_its_formula() {
+    // A formula name may hold `+`, an action name may not, so no action-ref
+    // finding covers this text and dropping the formula would report nothing.
+    for line in [
+        "uses: Homebrew/core/libc++@18",
+        "- uses: homebrew/core/libc++@18",
+        "{ name: x, uses: Homebrew/core/libc++@18 }",
+        "expect(workflow).toContain('uses: Homebrew/core/libc++@18')",
+        "brew install homebrew/core/libc++@18",
+    ] {
+        assert_eq!(readings(line), [formula("libc++@18")], "{line}");
+    }
+    // A neighbouring action ref is still its own finding.
+    let mut both = readings("uses: Homebrew/actions/setup-homebrew@4 && brew install libc++@18");
+    both.sort();
+    assert_eq!(
+        both,
+        [action_ref("actions/setup-homebrew@4"), formula("libc++@18")]
+    );
+}
+
 fn action_ref(pin: &str) -> (String, String) {
     ("exact action ref".to_string(), pin.to_string())
 }
@@ -188,6 +210,31 @@ fn a_uses_value_on_a_homebrew_line_is_an_action_ref_not_a_formula() {
             "steps: [{ name: x }, [a, b], uses: Homebrew/actions/setup-homebrew@4]",
             "actions/setup-homebrew@4",
         ),
+        // A quoted scalar before the key may hold a closer or a comma.
+        (
+            "{ name: \"}\", uses: Homebrew/actions/setup-homebrew@4 }",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "{ name: '}', uses: Homebrew/actions/setup-homebrew@4 }",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "{ \"name\": \"]\", uses: Homebrew/actions/setup-homebrew@4 }",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "\"{ name: \\\"}\\\", uses: Homebrew/actions/setup-homebrew@4 }\"",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "{ name: don't, uses: Homebrew/actions/setup-homebrew@4 }",
+            "actions/setup-homebrew@4",
+        ),
+        (
+            "toEqual(['{ name: x, uses: Homebrew/actions/setup-homebrew@4 }'])",
+            "actions/setup-homebrew@4",
+        ),
         // A closer left over from a collection opened on an earlier line does not
         // cancel the opener that follows it.
         (
@@ -233,6 +280,7 @@ fn a_formula_is_still_a_formula_when_uses_is_not_its_key() {
         "Homebrew {see}, uses: homebrew/core/postgresql@18",
         "Homebrew [see note], uses: homebrew/core/postgresql@18",
         "Homebrew {a: [b]}, uses: homebrew/core/postgresql@18",
+        "Homebrew { a: \"[\" }, uses: homebrew/core/postgresql@18",
         "-uses: homebrew/core/postgresql@18",
         "uses homebrew/core/postgresql@18",
         "brew $uses: homebrew/core/postgresql@18",

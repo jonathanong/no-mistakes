@@ -119,18 +119,21 @@ only the pin (not the surrounding line), and reports several pins per line.
   version. A tap-qualified formula (`brew install homebrew/core/postgresql@18`)
   is one finding for `postgresql@18`, not also an `exact action ref` for
   `core/postgresql@18`: the Homebrew pattern owns its text and a context-free pin
-  overlapping it is dropped. The tail of an `owner/repo` `uses:` value is never a
-  formula, so an action ref on a Homebrew line is reported as an `exact action ref`:
-  `uses: Homebrew/actions/setup-homebrew@4` is the action ref
+  overlapping it is dropped. The tail of a `uses:` value gives way the other
+  way round: an action ref on a Homebrew line is reported as an `exact action ref`,
+  so `uses: Homebrew/actions/setup-homebrew@4` is the action ref
   `actions/setup-homebrew@4` and never the formula `setup-homebrew@4`, however
   the value is quoted or keyed (`uses: '...'`, `"uses": "..."`, `- uses: ...`).
-  A value with no `/` (`Homebrew uses: postgresql@18`) is not an action ref, so it
-  stays a formula. So does a formula after prose or a name that only ends in
+  That is only a choice between two readings of the same text: when no action ref
+  covers it (`uses: Homebrew/core/g++@13`, a name with a `+` no action name can
+  hold, or `Homebrew uses: postgresql@18`, a value with no `/`), the formula stays
+  the finding. A formula after prose or a name that only ends in
   `uses` (`Homebrew uses: homebrew/core/postgresql@18`,
   `Homebrew, uses: homebrew/core/postgresql@18`,
   `brew package.uses: homebrew/core/postgresql@18`, `$uses:`): `uses` is a key
   only at the start of a line, a string, a flow mapping or sequence (where a
-  comma after an unclosed `{` or `[` also starts a key), or a list item. Not
+  comma after an unclosed `{` or `[` also starts a key, with quoted scalars such
+  as `{ name: "}", uses: ... }` skipped), or a list item. Not
   `pnpm@12` or `undici@1.0.1` without that context.
 - `versioned runner label`: `ubuntu-24.04`, `ubuntu-24.04-arm`, `macos-15`,
   `macos-15-intel`, `windows-2025`, and `windows-11-arm`. Not `ubuntu-latest`,

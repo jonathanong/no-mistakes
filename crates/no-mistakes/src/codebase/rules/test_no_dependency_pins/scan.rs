@@ -9,6 +9,7 @@ use std::sync::LazyLock;
 
 mod assertion_ranges;
 mod delimiters;
+mod flow_scope;
 mod jsx_text_ranges;
 mod line_scan;
 mod raw_literal_arg;

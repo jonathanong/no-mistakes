@@ -15,3 +15,5 @@ expect(script).toContain('brew $uses: homebrew/core/postgresql@18')
 expect(output).toContain('Homebrew uses: homebrew/core/postgresql@18')
 // A comma is a key start only inside a flow mapping, so prose with a comma stays one formula.
 expect(output).toContain('Homebrew, uses: homebrew/core/postgresql@18')
+// No action name can hold a `+`, so this `uses:` value is not an action ref and the formula is the finding.
+expect(workflow).toContain('uses: Homebrew/core/libc++@18')
