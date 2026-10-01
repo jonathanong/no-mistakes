@@ -8,8 +8,12 @@
 const RESERVED_TLDS: [&str; 4] = ["test", "example", "invalid", "localhost"];
 const RESERVED_DOMAINS: [&str; 3] = ["example.com", "example.net", "example.org"];
 
-pub(super) fn is_synthetic(pin: &str) -> bool {
-    only_zero_versions(pin) || reserved_registry(pin) || repeated_digest_only(pin)
+/// `versions` is the part of `pin` the all-zero rule reads, normally the whole
+/// pin. An action ref is reported whole but its zero versions are read in the
+/// last two path components and the ref, so a `v0.0.0` directory higher up the
+/// path cannot hide a real ref.
+pub(super) fn is_synthetic(pin: &str, versions: &str) -> bool {
+    only_zero_versions(versions) || reserved_registry(pin) || repeated_digest_only(pin)
 }
 
 /// True when every dotted version in the pin is `0.0.0`-shaped, as in

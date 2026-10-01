@@ -77,6 +77,10 @@ fn a_path_that_is_not_a_versioned_ref_is_not_reported() {
         "uses: owner/repo//path@v1",
         "uses: owner/repo/@v1",
         "uses: owner@v1",
+        // A segment with no name in it is not a component of the ref.
+        "uses: a/../b@v1",
+        "uses: a/./b@v1",
+        "uses: a/-/b@v1",
     ] {
         assert!(refs(line).is_empty(), "{line}: {:?}", refs(line));
     }
@@ -139,6 +143,7 @@ fn a_reserved_host_in_the_path_makes_the_ref_synthetic() {
         "registry.example/a/b@v1",
         "my.test/actions/checkout@v4",
         "localhost/actions/checkout@v4",
+        "a.test/b/c@v1",
     ] {
         assert!(refs(line).is_empty(), "{line}: {:?}", refs(line));
     }
@@ -151,9 +156,56 @@ fn a_reserved_host_in_the_path_makes_the_ref_synthetic() {
         ("example.com.evil.io/a/b@v1", "example.com.evil.io/a/b@v1"),
         ("notexample.com/a/b@v1", "notexample.com/a/b@v1"),
         ("example.io/a/b@v1", "example.io/a/b@v1"),
+        // Only the first component is a host; a repo or directory named `b.test`
+        // is not.
+        ("a/b.test/c@v1", "a/b.test/c@v1"),
+        ("x/.test/b@v1", "x/.test/b@v1"),
     ] {
         assert_eq!(refs(line), [expected], "{line}");
     }
+}
+
+#[test]
+fn a_zero_version_directory_does_not_hide_a_real_ref() {
+    // Zero versions are read in the last two path components and the ref, as
+    // when only those were reported, so a `v0.0.0` directory above them is a
+    // path and the ref after it is still a pin.
+    for line in [
+        "uses: owner/repo/v0.0.0/path/action@v1",
+        "uses: owner/repo/v1.0.0/x/y@v1",
+        "uses: a/0.0.0/b/c@v1",
+        "uses: a/0.0/b/c@v1.2.3",
+        "uses: owner/repo/0.0.0/.github/workflows/x.yml@v1",
+    ] {
+        let expected = line.strip_prefix("uses: ").unwrap();
+        assert_eq!(refs(line), [expected], "{line}");
+    }
+}
+
+#[test]
+fn a_zero_version_in_the_last_two_components_or_the_ref_is_a_placeholder() {
+    let sha = "de0fac2e4500dabe0009e67214ff5f5447ce83dd";
+    let commented = format!("uses: a/b@{sha} # v0.0.0");
+    for line in [
+        "uses: owner/repo@v0.0.0",
+        "uses: owner/repo@0.0",
+        "uses: a/b/c/d/e@0.0.0",
+        "uses: a/0.0.0/b@v1",
+        "uses: foo-v0.0.0/bar@v1",
+        "uses: a/b/foo-v0.0.0/bar@v1",
+        "uses: a/b/c@v1 # v0.0.0",
+        commented.as_str(),
+        // The window starts at the first letter or digit of its first
+        // component, so a leading `.` or `-` does not hide the zero version.
+        "uses: x/.0.0/b@v1",
+        "uses: x/-0.0.0/b@v1",
+        "uses: owner/-.0.0/foo@v1",
+    ] {
+        assert!(refs(line).is_empty(), "{line}: {:?}", refs(line));
+    }
+    // A real version in the window keeps it a pin, zero versions beside it or not.
+    assert_eq!(refs("uses: a/0.0.0/b@v1.2"), ["a/0.0.0/b@v1.2"]);
+    assert_eq!(refs("uses: a/b/c@v1.0.0"), ["a/b/c@v1.0.0"]);
 }
 
 #[test]

@@ -1,4 +1,8 @@
-use super::is_synthetic;
+use super::{is_synthetic as judge, only_zero_versions};
+
+fn is_synthetic(pin: &str) -> bool {
+    judge(pin, pin)
+}
 
 #[test]
 fn all_zero_versions_are_synthetic() {
@@ -79,4 +83,18 @@ fn repeated_digests_are_synthetic_only_when_untagged() {
         "pgvector/pgvector:pg18@sha256:{}",
         "0".repeat(64)
     )));
+}
+
+#[test]
+fn the_zero_rule_reads_only_the_versions_it_is_given() {
+    // An action ref is judged whole for hosts but its zero versions are read
+    // in a window, so a zero-version directory outside it is not a placeholder.
+    let pin = "owner/repo/v0.0.0/path/action@v1";
+    assert!(only_zero_versions(pin));
+    assert!(is_synthetic(pin));
+    assert!(!judge(pin, "path/action@v1"));
+    // The reserved-host rule still sees the whole pin.
+    assert!(judge("registry.test/a/b@v1", "a/b@v1"));
+    // A placeholder inside the window is still one.
+    assert!(judge("a/b/c@v0.0.0", "b/c@v0.0.0"));
 }

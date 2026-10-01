@@ -27,7 +27,7 @@ rules:
         - "**/__tests__/**"
       patterns:
         - reason: exact action ref
-          regex: '(?<!@)\b[\w.-]+/[\w.-]+(?:/[\w.-]+)*@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?\b'
+          regex: '(?<!@)\b(?:[\w.-]+/)*[.-]*\b(?P<versions>[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?)\b'
 ```
 
 Counterexample: a test asserts a concrete dependency entry read from
@@ -104,13 +104,18 @@ components. The reported text is every `/`-separated component before the `@`,
 so a path in front of the ref is part of it: a URL host
 (`github.com/actions/checkout@v4`), a Go module path
 (`golang.org/x/tools@v0.1.0`), or a directory is kept, while a leading `/`, `./`
-or scheme is not. Two consequences:
+or scheme is not. Three consequences:
 
 - A scoped package with a subpath (`@scope/pkg/sub@1.2.3`) starts at the `@`, so
   like `@scope/pkg@1.2.3` it is not an action ref.
-- The placeholder exemption judges the whole text, so a reserved host in front of
-  the ref (`https://example.com/actions/checkout@v4`, `my.test/a/b@v1`) makes it
-  synthetic.
+- A reserved host in front of the ref (`https://example.com/actions/checkout@v4`,
+  `my.test/a/b@v1`) makes it a [placeholder](#placeholder-values), as it does for
+  an image registry. Only the first component is a host, so `a/b.test/c@v1` is
+  reported.
+- The all-zero placeholder rule reads the last two path components and the ref,
+  with any trailing `# v1.2.3` comment, not the whole text. `owner/repo@v0.0.0`
+  and `foo-v0.0.0/bar@v1` are placeholders, but a `v0.0.0` directory higher up
+  (`owner/repo/v0.0.0/path/action@v1`) does not hide a real ref.
 
 ## Container images, setup versions, formulae, and runners
 
@@ -139,8 +144,8 @@ only the pin (not the surrounding line), and reports several pins per line.
   overlapping it is dropped. The tail of a `uses:` value gives way the other
   way round: an action ref on a Homebrew line is reported as an `exact action ref`,
   so `uses: Homebrew/actions/setup-homebrew@4` is the action ref
-  `actions/setup-homebrew@4` and never the formula `setup-homebrew@4`, however
-  the value is quoted or keyed (`uses: '...'`, `"uses": "..."`, `- uses: ...`).
+  `Homebrew/actions/setup-homebrew@4` and never the formula `setup-homebrew@4`,
+  however the value is quoted or keyed (`uses: '...'`, `"uses": "..."`, `- uses: ...`).
   That is only a choice between two readings of the same text: when no action ref
   covers it (`uses: Homebrew/core/g++@13`, a name with a `+` no action name can
   hold, or `Homebrew uses: postgresql@18`, a value with no `/`), the formula stays
@@ -214,10 +219,12 @@ value without a suppression comment:
 
 - every dotted version in the value is all zeros:
   `lychee-v0.0.0-test-x86_64-unknown-linux-gnu.tar.gz`,
-  `releases/download/0.0.0-test`;
-- an image registry is reserved for testing and documentation:
-  `registry.test/app:1.2.3`, `localhost:5000/app:1.2.3`, `example.com/app:1.2.3`,
-  and the `.test`, `.example`, `.invalid`, and `.localhost` top-level domains;
+  `releases/download/0.0.0-test`, `owner/repo@v0.0.0` (an action ref is read in
+  its last two path components and the ref, see [Action refs](#action-refs));
+- an image registry, or the host in front of an action ref, is reserved for
+  testing and documentation: `registry.test/app:1.2.3`,
+  `localhost:5000/app:1.2.3`, `example.com/app:1.2.3`, `my.test/a/b@v1`, and the
+  `.test`, `.example`, `.invalid`, and `.localhost` top-level domains;
 - an untagged image digest is one short block repeated to 64 characters, such
   as `sha256:` followed by 64 zeros or `0123456789abcdef` four times.
 
@@ -226,8 +233,8 @@ judge the asserted value after any `"name":` or `npm:` prefix:
 `expect(packageJson.dependencies.foo).toBe('0.0.0')`,
 `toHaveProperty('foo', '^0.0.0')`, and `toContain('"foo": "0.0.0"')` are not
 reported, while `'1.2.3'`, `'^0.0.1'`, and a range that contains a real version
-(`'>=0.0.0 <2.0.0'`) still are. The reserved-registry and repeated-digest rules
-only concern image pins.
+(`'>=0.0.0 <2.0.0'`) still are. The repeated-digest rule only concerns image
+pins, and the reserved-registry rule only concerns image pins and action refs.
 
 The exemption is structural: a value is never exempt because it contains the
 word `test` or `fake`, and `1.2.3`, `0.0.1`, and a tagged image on a real

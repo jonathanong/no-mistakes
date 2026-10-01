@@ -186,7 +186,7 @@ fn fail_fixture_reports_each_runtime_pin() {
     for (file, reason, count) in [
         // The two plain refs, five `uses:` refs on Homebrew lines (none is a
         // formula) and three refs with a deeper path.
-        ("src/action-ref.test.mts", "exact action ref", 10),
+        ("src/action-ref.test.mts", "exact action ref", 12),
         ("src/action-ref.test.mts", "versioned Homebrew formula", 0),
         ("src/container-image.test.mts", "container image tag", 24),
         ("src/container-image.test.mts", "container image digest", 2),
@@ -214,6 +214,8 @@ fn fail_fixture_reports_each_runtime_pin() {
         "octo-org/example-repo/.github/workflows/reusable.yml@v1",
         "github/codeql-action/upload-sarif@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v3.25.0",
         "Homebrew/actions/setup-homebrew@4",
+        "owner/repo/v0.0.0/path/action@v1",
+        "owner/repo/v1.0.0/x/y@v1",
     ] {
         assert!(action_refs.contains(&whole), "{whole}: {action_refs:#?}");
     }

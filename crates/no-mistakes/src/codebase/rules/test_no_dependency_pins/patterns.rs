@@ -1,7 +1,7 @@
 pub(super) const DEFAULT_PATTERNS: &[(&str, &str, bool)] = &[
     (
         "exact action ref",
-        r"(?<!@)\b[\w.-]+/[\w.-]+(?:/[\w.-]+)*@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?\b",
+        r"(?<!@)\b(?:[\w.-]+/)*[.-]*\b(?P<versions>[\w.-]+/[\w.-]+@(?:v?\d+(?:\.\d+)*|[a-f0-9]{40})(?:\s*#\s*v?\d+(?:\.\d+)*)?)\b",
         false,
     ),
     (
