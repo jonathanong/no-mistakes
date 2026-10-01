@@ -368,10 +368,11 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   that binding, and a same-named value elsewhere, are no use. A namespace body is
   a scope of its own, like a function body: a `const`, `let`, or hoisted `var`
   declared in it hides a name inside that body only, so the same name after the
-  body still names the import. A class, function, enum, nested namespace, or
-  variable (`const` and `let` too, even when declared after the code that reads
-  it) declared in a body hides an imported or declared namespace of the same name
-  for every `new` and `extends` written in that body or one nested in it, so
+  body still names the import. A class, function, enum, nested namespace,
+  `import Alias = ...` alias, or variable (`const` and `let` too, even when
+  declared after the code that reads it) declared in a body hides an imported or
+  declared namespace of the same name for every `new` and `extends` written in
+  that body or one nested in it, so
   `namespace Helpers { class Errors {} new Errors.Dead(); }` builds no class of an
   imported `Errors`. The extractor records those names as the `locals` fact.
   A namespace declared in several blocks hides nothing, because a block's

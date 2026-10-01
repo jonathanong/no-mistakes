@@ -2,10 +2,11 @@ use super::namespace_members::{bases, build, callers, class, escaped_in, owned};
 
 const SHADOW: &str = "src/scopes/class-shadow.ts";
 
-/// A class, function, or enum declared in a namespace body is a name of that
-/// body, so it hides an import of the same name there, as a `var` does. The
-/// constructions and the base in `scopes/class-shadow.ts` name those values:
-/// none of them is a call or an `extends` edge into the imported classes.
+/// A class, function, enum, or `import` alias declared in a namespace body is a
+/// name of that body, so it hides an import of the same name there, as a `var`
+/// does. The constructions and the base in `scopes/class-shadow.ts` name those
+/// values: none of them is a call or an `extends` edge into the imported
+/// classes.
 #[test]
 fn a_declaration_in_a_namespace_body_hides_an_import_of_its_name() {
     let (root, graph) = build();
@@ -14,6 +15,7 @@ fn a_declaration_in_a_namespace_body_hides_an_import_of_its_name() {
         ("FunctionDead", "FunctionErrors"),
         ("EnumDead", "EnumErrors"),
         ("LaterDead", "LaterErrors"),
+        ("AliasDead", "AliasErrors"),
         ("ClassBase", "ClassErrors"),
     ] {
         let imported = class(&graph, dead, Some(namespace));

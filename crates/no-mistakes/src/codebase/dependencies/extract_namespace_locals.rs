@@ -1,9 +1,10 @@
 /// Records the values a namespace body declares, `(namespace path, name)`: a
-/// class, function, enum, namespace, or variable, `export`ed or not and wherever
-/// it sits in the body. The body is a scope of its own, so each of them hides an
-/// import of the same name for every construction written there, including one
-/// above a `const` or beside a class, which the walk's own bindings do not
-/// cover. Types are erased and bind no value.
+/// class, function, enum, namespace, variable, or `import Alias = ...` alias,
+/// `export`ed or not and wherever it sits in the body. The body is a scope of
+/// its own, so each of them hides an import of the same name for every
+/// construction written there, including one above a `const` or beside a class,
+/// which the walk's own bindings do not cover. Types are erased and bind no
+/// value.
 fn scan_namespace_locals(
     collector: &mut ImportCollector,
     statements: &[Statement<'_>],
@@ -24,6 +25,7 @@ fn statement_value_names(statement: &Statement<'_>) -> Vec<String> {
         Statement::TSEnumDeclaration(declaration) => vec![declaration.id.name.to_string()],
         Statement::TSNamespaceDeclaration(declaration) => vec![declaration.id.name.to_string()],
         Statement::VariableDeclaration(declaration) => variable_value_names(declaration),
+        Statement::TSImportEqualsDeclaration(declaration) => vec![declaration.id.name.to_string()],
         Statement::ExportDeclaration(export) => match &export.declaration {
             Declaration::ClassDeclaration(class) => class_value_names(class),
             Declaration::FunctionDeclaration(function) => {
@@ -34,6 +36,9 @@ fn statement_value_names(statement: &Statement<'_>) -> Vec<String> {
                 vec![declaration.id.name.to_string()]
             }
             Declaration::VariableDeclaration(declaration) => variable_value_names(declaration),
+            Declaration::TSImportEqualsDeclaration(declaration) => {
+                vec![declaration.id.name.to_string()]
+            }
             _ => Vec::new(),
         },
         _ => Vec::new(),

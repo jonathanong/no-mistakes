@@ -29,3 +29,7 @@ export namespace MergedShadow {
 }
 
 export class BareShadowed extends Error {}
+
+export namespace AliasShadow {
+  export class AliasShadowDead extends Error {}
+}

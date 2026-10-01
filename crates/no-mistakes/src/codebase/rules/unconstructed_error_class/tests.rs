@@ -72,6 +72,7 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             "src/namespace-class-shadow-lib.ts:20 LaterShadow.LaterShadowDead",
             "src/namespace-class-shadow-lib.ts:24 NestedShadow.NestedShadowDead",
             "src/namespace-class-shadow-lib.ts:31 BareShadowed",
+            "src/namespace-class-shadow-lib.ts:34 AliasShadow.AliasShadowDead",
             // A constant or a parameter that shares a name is not the namespace.
             "src/namespace-collision.ts:7 Collide.Inner.CollideDead",
             "src/namespace-collision.ts:16 Hide.HideDead",

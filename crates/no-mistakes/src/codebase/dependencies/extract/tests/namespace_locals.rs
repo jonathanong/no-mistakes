@@ -30,6 +30,8 @@ fn a_namespace_body_records_the_values_it_declares() {
         ),
         ("namespace N { export let a = 1; }", vec![("N", "a")]),
         ("namespace N { var a = 1; }", vec![("N", "a")]),
+        ("namespace N { import A = X.Y; }", vec![("N", "A")]),
+        ("namespace N { export import A = X.Y; }", vec![("N", "A")]),
         ("namespace N.M { class A {} }", vec![("N.M", "A")]),
         (
             "namespace N { interface I {} type T = number; export interface J {} }",

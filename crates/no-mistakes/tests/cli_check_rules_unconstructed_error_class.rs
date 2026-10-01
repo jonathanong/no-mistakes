@@ -38,7 +38,7 @@ fn reports_each_dead_error_class_with_file_and_line() {
     let out = check(&fixture(), ".no-mistakes.yml", "human");
     let body = text(&out);
     assert_eq!(out.status.code(), Some(1), "{body}");
-    assert_eq!(body.lines().count(), 51, "{body}");
+    assert_eq!(body.lines().count(), 52, "{body}");
     assert!(
         body.contains(
             "unconstructed-error-class src/errors.ts:2 exported error class `UnusedError` \

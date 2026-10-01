@@ -1,8 +1,9 @@
 // A class, function, or enum declared in a namespace body hides an import of
-// its name inside that body, and so does a nested namespace, and a `const`
-// declared after the code that reads it. The constructions and the base below
-// name those values, never the imported ones.
+// its name inside that body, and so does a nested namespace, an `import`
+// alias, and a `const` declared after the code that reads it. The constructions
+// and the base below name those values, never the imported ones.
 import {
+  AliasErrors,
   BareImported,
   ClassErrors,
   EnumErrors,
@@ -31,7 +32,13 @@ export namespace ShadowBodies {
   export const byClass = new ClassErrors.ClassDead();
   export const byFunction = new FunctionErrors.FunctionDead();
   export const byEnum = new EnumErrors.EnumDead();
+  export namespace AliasTarget {
+    export class AliasLocal extends Error {}
+  }
+  import AliasErrors = AliasTarget;
+
   export const byNested = new NestedErrors.NestedLocal();
+  export const byAlias = new AliasErrors.AliasLocal();
   export const byBare = new BareImported();
   export class Sub extends ClassErrors.ClassBase {}
   export function later() {

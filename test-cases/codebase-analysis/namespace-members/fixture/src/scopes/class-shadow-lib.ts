@@ -24,6 +24,10 @@ export namespace NestedErrors {
   export class NestedDead extends Error {}
 }
 
+export namespace AliasErrors {
+  export class AliasDead extends Error {}
+}
+
 export namespace MergedErrors {
   export class MergedDead extends Error {}
 }

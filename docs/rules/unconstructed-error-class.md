@@ -111,10 +111,11 @@ to a declared namespace path or an imported binding. A namespace body is a scope
 of its own, like a function body: a `const`, `let`, or hoisted `var` in it hides
 a name inside that body only, so `namespace Helpers { const Errors = {}; }` leaves
 a later `new Errors.X()` naming the imported namespace. A class, function, enum,
-nested namespace, or variable (`const` and `let` too, even when declared after the
-code that reads it) declared in a body hides an imported or declared namespace of
-the same name for every `new` and `extends` written in that body or one nested in
-it, so `namespace Helpers { class Errors {} new Errors.Dead(); }` builds no class
+nested namespace, `import Alias = ...` alias, or variable (`const` and `let` too,
+even when declared after the code that reads it) declared in a body hides an
+imported or declared namespace of the same name for every `new` and `extends`
+written in that body or one nested in it, so
+`namespace Helpers { class Errors {} new Errors.Dead(); }` builds no class
 of an imported `Errors`. A namespace declared in several blocks hides nothing,
 because a block's unexported declarations are private to it, and only
 constructions and base classes are covered; any other call resolves as before. A
