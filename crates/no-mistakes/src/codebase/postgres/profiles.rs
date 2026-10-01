@@ -29,6 +29,7 @@ pub const SCHEMA_CATALOG_RULE_IDS: &[&str] = &[
     "postgres-finite-text-columns",
     "postgres-array-columns",
     "postgres-required-predicates",
+    "postgres-explicit-columns",
 ];
 
 #[derive(Default, Deserialize)]

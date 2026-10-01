@@ -11,6 +11,8 @@ pub struct SqlStatementFileFacts {
     /// One entry per `DELETE`. Each entry is that statement's relation instances.
     pub deletes: Vec<Vec<SqlRelationPredicateFact>>,
     pub triggers: Vec<SqlTriggerFact>,
+    /// `RETURNING *` / `RETURNING t.*` on INSERT, UPDATE, and DELETE.
+    pub returning_stars: Vec<SqlStarProjectionFact>,
     pub parse_failed: bool,
     pub insert_keyword_count: usize,
     pub has_top_level_not_exists: bool,
@@ -97,6 +99,21 @@ pub struct SqlSelectFact {
     pub not_in_subqueries: Vec<usize>,
     /// Lines of `COUNT(...)` compared with 0 or 1 to test existence.
     pub count_existence_checks: Vec<usize>,
+    /// `*` / `alias.*` projections over base FROM relations.
+    pub star_projections: Vec<SqlStarProjectionFact>,
+}
+
+/// A star projection resolved to one base relation.
+///
+/// `within_function` is set when the star is an argument (`row_to_json(o.*)`).
+/// Bare `COUNT(*)` is not recorded. The rule applies `allowWholeRowFunctions`
+/// to that name; the statement pass does not know the configured list.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SqlStarProjectionFact {
+    pub relation: String,
+    pub qualified: bool,
+    pub within_function: Option<String>,
+    pub line: usize,
 }
 
 /// One base-table instance and the columns a predicate constrains on it.

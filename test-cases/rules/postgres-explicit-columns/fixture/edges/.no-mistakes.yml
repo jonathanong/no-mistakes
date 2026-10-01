@@ -1,0 +1,7 @@
+rules:
+  - rule: postgres-explicit-columns
+    scope: repository
+    options:
+      sqlInclude: ["sql/**/*.sql"]
+      schemaCatalogPath: schema.json
+      relations: [accounts]

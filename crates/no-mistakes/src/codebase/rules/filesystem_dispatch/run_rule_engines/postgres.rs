@@ -8,8 +8,8 @@ use std::sync::Arc;
 mod naming;
 
 use naming::{
-    array_columns, column_naming, finite_text, object_naming, required_predicates,
-    status_lifecycle, table_shape,
+    array_columns, column_naming, explicit_columns, finite_text, object_naming,
+    required_predicates, status_lifecycle, table_shape,
 };
 
 pub(super) fn run(
@@ -32,6 +32,7 @@ pub(super) fn run(
         POSTGRES_CONSTRAINT_VALIDATE => {
             postgres_constraint_validate::check_with_files_and_sources(root, config, files, sources)
         }
+        POSTGRES_EXPLICIT_COLUMNS => explicit_columns(root, config, files, sources, facts),
         POSTGRES_NO_ADD_COLUMN => {
             postgres_no_add_column::check_with_files_and_sources(root, config, files, sources)
         }

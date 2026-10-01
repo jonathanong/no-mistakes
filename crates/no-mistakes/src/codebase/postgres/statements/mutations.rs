@@ -81,7 +81,7 @@ fn walk_side_queries(
 fn walk_factor(sql: &str, factor: &TableFactor, selects: &mut Vec<SqlSelectFact>) {
     match factor {
         TableFactor::Derived { subquery, .. } => {
-            super::select::collect_query(sql, subquery, &[], false, selects);
+            super::select::collect_query(sql, subquery, &[], false, false, selects);
         }
         TableFactor::NestedJoin {
             table_with_joins, ..

@@ -33,6 +33,7 @@ pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
     let mut updates = Vec::new();
     let mut deletes = Vec::new();
     let mut triggers = Vec::new();
+    let mut returning_stars = Vec::new();
     let mut insert_n = 0usize;
     let mut trigger_n = 0usize;
     let mut executed = Vec::new();
@@ -47,6 +48,7 @@ pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
         updates: &mut updates,
         deletes: &mut deletes,
         triggers: &mut triggers,
+        returning_stars: &mut returning_stars,
     };
     for statement in executed {
         collect_one(sql, statement, &mut out);
@@ -58,6 +60,7 @@ pub fn extract_sql_statement_facts(sql: &str) -> SqlStatementFileFacts {
         updates,
         deletes,
         triggers,
+        returning_stars,
         parse_failed,
         insert_keyword_count,
         has_top_level_not_exists: not_exists::has_top_level_conjunctive_not_exists(&masked),
@@ -73,6 +76,7 @@ struct FactOut<'a> {
     updates: &'a mut Vec<Vec<SqlRelationPredicateFact>>,
     deletes: &'a mut Vec<Vec<SqlRelationPredicateFact>>,
     triggers: &'a mut Vec<SqlTriggerFact>,
+    returning_stars: &'a mut Vec<SqlStarProjectionFact>,
 }
 
 fn collect_one(sql: &str, statement: &Statement, out: &mut FactOut<'_>) {
@@ -95,6 +99,8 @@ fn collect_one(sql: &str, statement: &Statement, out: &mut FactOut<'_>) {
         collect_query_inserts(sql, query, out.insert_n, out.inserts);
     }
     select::collect(sql, statement, out.selects);
+    out.returning_stars
+        .extend(select::returning_stars(sql, statement));
     mutations::collect(sql, statement, out.updates, out.deletes, out.selects);
 }
 
