@@ -140,6 +140,9 @@ fn clause_end(header: &str, mut index: usize) -> usize {
             || word_at(header, index, "as")
             || word_at(header, index, "begin")
             || word_at(header, index, "set")
+            || word_at(header, index, "immutable")
+            || word_at(header, index, "stable")
+            || word_at(header, index, "volatile")
         {
             return index;
         }
