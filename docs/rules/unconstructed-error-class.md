@@ -67,6 +67,11 @@ might build any of its classes:
 - an alias or destructuring (`const E = Errors`), passing the namespace or one of
   its members as a value (`register(Errors)`, `register(Errors.TopicError)`), or
   a computed access (`new Errors[name]()`);
+- a member handed on through `bind`, `call`, or `apply`
+  (`new (Errors.TopicError.bind(null))()`), which can build the class somewhere
+  the graph does not see. The list is deliberately these three: any other method
+  on a member, such as a static guard (`Errors.TopicError.is(value)`), only reads
+  the class, so it neither keeps the class quiet nor builds it;
 - `export default Errors`, `export = Errors`, or `import Alias = Errors.Inner`;
 - a namespace merged with a class, function, variable, enum, or import of the
   same name, whose statics or members the graph cannot tell apart from the
@@ -74,19 +79,29 @@ might build any of its classes:
   this kind: they share one member table, and each block's classes are reported
   like any other;
 - a module imported as a whole (`import * as errors`, `import("./errors")`,
-  `require`, `import x = require()`) when it exports or re-exports the namespace,
-  and a construction that names a member the namespace does not declare
+  `require`, `import x = require()`) when it exports or re-exports the namespace.
+  A module read whole exposes only the namespaces it exports: a barrel that
+  re-exports `Exposed` by name leaves a namespace it does not re-export
+  reported, while `export *` or an export the graph cannot follow exposes every
+  namespace of that module;
+- a construction that names a member the namespace does not declare
   (`new Errors.Missing()`, or `new Errors.Missing.Factory()` when `Errors` has no
   `Missing` namespace);
 - a namespace in a global script file, one with no `import` or `export`, which
   any other file can reach.
 
-Three things are not uses of a namespace. A parameter or local that shadows the
+Several things are not uses of a namespace. A parameter or local that shadows the
 namespace or one of its classes (`function f(Errors) { return new Errors.X(); }`)
 names that binding, so the construction builds no class of the namespace and does
-not keep it quiet. `import type x = require("./m")` is erased at compile time and
-uses no module. A sourced clause (`export { Errors } from "./m"`) exports the
-`Errors` of `./m`, never a namespace of the same name declared locally.
+not keep it quiet. A value that only shares the name, such as a top-level
+`const Inner = {}` beside `namespace Errors { export namespace Inner { ... } }`,
+is no use of the nested namespace: a name counts as a use only when it resolves
+to a declared namespace path or an imported binding. A name written only in an
+erased type (`typeof Errors`, `implements Errors.Marker`, an interface that
+extends `Errors.Base`) is not a use of the namespace, because it runs no code.
+`import type x = require("./m")` is erased at compile time and uses no module. A
+sourced clause (`export { Errors } from "./m"`) exports the `Errors` of `./m`,
+never a namespace of the same name declared locally.
 
 These uses count wherever they are written, test files included: a test file that
 copies a namespace into a variable keeps its classes quiet, even though a test

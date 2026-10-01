@@ -13,19 +13,13 @@ impl CallSiteResolution<'_, '_> {
         for root in facts.roots.iter().filter(|root| root.merged) {
             self.escape(self.path, &root.name);
         }
-        for declared in &facts.declared {
-            let used = declared.split('.').any(|segment| {
-                facts
-                    .value_uses
-                    .binary_search_by(|name| name.as_str().cmp(segment))
-                    .is_ok()
-            });
-            if used {
-                self.escape(self.path, declared.split('.').next().unwrap_or(declared));
+        // A value use names a declared path (`Errors.Inner`) or an import
+        // local; a same-named value that is neither never reaches here.
+        for used in &facts.value_uses {
+            if facts.declared.binary_search(used).is_ok() {
+                self.escape(self.path, used.split('.').next().unwrap_or(used));
             }
-        }
-        for name in &facts.value_uses {
-            if let Some(binding) = self.index.imported.get(name) {
+            if let Some(binding) = self.index.imported.get(used) {
                 self.escape_imported_value(binding);
             }
         }
@@ -61,8 +55,11 @@ impl CallSiteResolution<'_, '_> {
         }
     }
 
-    /// Every namespace `file` exports or re-exports, directly or through other
-    /// modules, escapes: the module is used as a whole.
+    /// Every namespace `file` exports, directly or through re-exports, escapes:
+    /// the module is used as a whole. Each named export is followed to the
+    /// namespace it exposes, so a module that re-exports only a value does not
+    /// reach the namespaces its source declares. `export *` and an export that
+    /// cannot be followed to a namespace take their whole module.
     fn escape_closure(&self, file: &std::path::Path) {
         let mut seen: FxHashSet<std::path::PathBuf> = FxHashSet::default();
         let mut pending = vec![file.to_path_buf()];
@@ -74,17 +71,22 @@ impl CallSiteResolution<'_, '_> {
             let Some(index) = self.indexes.file(self.facts, &current) else {
                 continue;
             };
-            let exported = index.exported.values().filter_map(|binding| {
-                binding.specifier.as_deref().or_else(|| {
-                    index
-                        .imported
-                        .get(&binding.local)
-                        .map(|imported| imported.specifier.as_str())
-                })
-            });
-            for specifier in index.stars.iter().map(String::as_str).chain(exported) {
-                pending.extend(self.visible_target(&current, specifier));
+            for (name, binding) in &index.exported {
+                match self.resolve_namespace_root(&current, name, &mut Vec::new()) {
+                    RootLookup::Root(root_file, root) => self.escape(&root_file, &root),
+                    RootLookup::Other => {}
+                    RootLookup::Unresolved => {
+                        let imported = index.imported.get(&binding.local);
+                        let specifier = binding
+                            .specifier
+                            .as_deref()
+                            .or(imported.map(|imported| imported.specifier.as_str()));
+                        pending.extend(specifier.and_then(|s| self.visible_target(&current, s)));
+                    }
+                }
             }
+            let stars = index.stars.iter();
+            pending.extend(stars.filter_map(|s| self.visible_target(&current, s)));
         }
     }
 }

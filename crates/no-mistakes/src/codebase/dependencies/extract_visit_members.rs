@@ -8,7 +8,10 @@ fn visit_method_definition_with_scope<'a>(
     walk_decorators_as_invocations(collector, &method.decorators);
     walk::walk_property_key(collector, &method.key);
     let pushed = name.is_some();
-    collector.push_function_scope(name.map(str::to_string), CallableId(method.value.span.start));
+    collector.push_function_scope(
+        name.map(str::to_string),
+        CallableId(method.value.span.start),
+    );
     if let Some(scope) = collector.current_function() {
         collector.callable_scopes.insert(scope);
     }
@@ -16,6 +19,36 @@ fn visit_method_definition_with_scope<'a>(
     collector.add_formal_parameters(&method.value.params);
     walk_function_with_body_bindings(collector, &method.value);
     collector.pop_function_scope(pushed);
+}
+
+/// A class field evaluates its decorators and key first, then its annotation and
+/// initializer, all in the enclosing scope.
+fn visit_property_definition_with_decorators<'a>(
+    collector: &mut ImportCollector,
+    property: &PropertyDefinition<'a>,
+) {
+    walk_decorators_as_invocations(collector, &property.decorators);
+    collector.visit_property_key(&property.key);
+    if let Some(type_annotation) = &property.type_annotation {
+        collector.visit_ts_type_annotation(type_annotation);
+    }
+    if let Some(value) = &property.value {
+        collector.visit_expression(value);
+    }
+}
+
+fn visit_accessor_property_with_decorators<'a>(
+    collector: &mut ImportCollector,
+    property: &AccessorProperty<'a>,
+) {
+    walk_decorators_as_invocations(collector, &property.decorators);
+    collector.visit_property_key(&property.key);
+    if let Some(type_annotation) = &property.type_annotation {
+        collector.visit_ts_type_annotation(type_annotation);
+    }
+    if let Some(value) = &property.value {
+        collector.visit_expression(value);
+    }
 }
 
 fn visit_object_property_with_scope<'a>(
@@ -26,10 +59,10 @@ fn visit_object_property_with_scope<'a>(
     match &property.value {
         Expression::FunctionExpression(function) => {
             walk::walk_property_key(collector, &property.key);
-            let pushed_syntactic_caller =
-                collector.push_syntactic_caller(function_name(function));
+            let pushed_syntactic_caller = collector.push_syntactic_caller(function_name(function));
             let pushed = name.is_some();
-            collector.push_function_scope(name.map(str::to_string), CallableId(function.span.start));
+            collector
+                .push_function_scope(name.map(str::to_string), CallableId(function.span.start));
             if let Some(scope) = collector.current_function() {
                 collector.callable_scopes.insert(scope);
             }

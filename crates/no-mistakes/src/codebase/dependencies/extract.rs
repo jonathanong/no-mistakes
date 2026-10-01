@@ -221,6 +221,7 @@ include!("extract_entrypoints_predeclare.rs");
 include!("extract_namespace_facts.rs");
 include!("extract_namespace_scan.rs");
 include!("extract_namespace_walk.rs");
+include!("extract_namespace_uses.rs");
 include!("extract_export_names.rs");
 include!("extract_collector.rs");
 include!("extract_visit.rs");

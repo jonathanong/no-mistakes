@@ -294,6 +294,61 @@ fn a_construction_through_a_shadowing_binding_is_not_a_namespace_member() {
     }
 }
 
+/// Whether the namespace of the class `scope` declared in `namespace` escaped.
+fn escaped_in(graph: &DepGraph, scope: &str, namespace: &str) -> bool {
+    class(graph, scope, Some(namespace)).namespace_escaped
+}
+
+/// A constant named like a nested namespace and a parameter named like a root
+/// are not those namespaces; a bare name in the body that does denote the
+/// nested namespace is a use of it.
+#[test]
+fn a_value_that_only_shares_a_name_with_a_namespace_is_no_use_of_it() {
+    let (_, graph) = build();
+    assert!(!escaped_in(&graph, "CollideDead", "Collide.Inner"));
+    assert!(!escaped_in(&graph, "HideDead", "Hide"));
+    assert!(escaped_in(&graph, "ReachClass", "Reach.Inner"));
+}
+
+/// `typeof Ns`, `implements Ns.I` and `interface X extends Ns.I` name the
+/// namespace in erased code, so none of them is a use at run time.
+#[test]
+fn a_namespace_named_only_in_erased_types_is_not_escaped() {
+    let (_, graph) = build();
+    for (scope, namespace) in [
+        ("QueriedClass", "Queried"),
+        ("MarkedClass", "Marked"),
+        ("ExtendedClass", "Extended"),
+    ] {
+        assert!(!escaped_in(&graph, scope, namespace), "{namespace}");
+    }
+}
+
+/// `Ns.X.bind(..)`, `.call(..)` and `.apply(..)` hand the class on as a value,
+/// in the file and through an import; a static guard `Ns.X.is(..)` does not.
+#[test]
+fn a_member_handed_on_by_bind_call_or_apply_escapes_its_namespace() {
+    let (_, graph) = build();
+    for (scope, namespace) in [
+        ("BoundClass", "Bound"),
+        ("CalledClass", "Called"),
+        ("AppliedClass", "Applied"),
+        ("HandedClass", "Handed"),
+    ] {
+        assert!(escaped_in(&graph, scope, namespace), "{namespace}");
+    }
+    assert!(!escaped_in(&graph, "GuardedClass", "Guarded"));
+}
+
+/// A module read whole exposes what it exports: a namespace its barrel
+/// re-exports by name escapes, and one its source keeps to itself does not.
+#[test]
+fn a_barrel_read_whole_exposes_only_the_namespaces_it_re_exports() {
+    let (_, graph) = build();
+    assert!(escaped_in(&graph, "ExposedClass", "Exposed"));
+    assert!(!escaped_in(&graph, "KeptClass", "Kept"));
+}
+
 /// `export { Hidden as Public } from "./m"` exports the namespace of `m`, not
 /// the local namespace of the same name, which this file never exports.
 #[test]

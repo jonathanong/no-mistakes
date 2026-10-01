@@ -31,6 +31,8 @@ fn scan_program_namespaces(collector: &mut ImportCollector, program: &Program<'_
         add_namespace_root(collector, name, exports, enums.contains(name));
         scan_namespace(collector, namespace, "", reachable);
     }
+    collector.namespace.facts.declared.sort();
+    collector.namespace.facts.declared.dedup();
 }
 
 fn top_level_namespace<'p, 'a>(

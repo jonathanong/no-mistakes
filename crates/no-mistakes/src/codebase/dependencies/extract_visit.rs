@@ -55,25 +55,11 @@ impl<'a> Visit<'a> for ImportCollector {
     }
 
     fn visit_property_definition(&mut self, property: &PropertyDefinition<'a>) {
-        walk_decorators_as_invocations(self, &property.decorators);
-        self.visit_property_key(&property.key);
-        if let Some(type_annotation) = &property.type_annotation {
-            self.visit_ts_type_annotation(type_annotation);
-        }
-        if let Some(value) = &property.value {
-            self.visit_expression(value);
-        }
+        visit_property_definition_with_decorators(self, property);
     }
 
     fn visit_accessor_property(&mut self, property: &AccessorProperty<'a>) {
-        walk_decorators_as_invocations(self, &property.decorators);
-        self.visit_property_key(&property.key);
-        if let Some(type_annotation) = &property.type_annotation {
-            self.visit_ts_type_annotation(type_annotation);
-        }
-        if let Some(value) = &property.value {
-            self.visit_expression(value);
-        }
+        visit_accessor_property_with_decorators(self, property);
     }
 
     fn visit_static_block(&mut self, block: &StaticBlock<'a>) {
@@ -221,6 +207,18 @@ impl<'a> Visit<'a> for ImportCollector {
 
     fn visit_ts_type_reference(&mut self, reference: &TSTypeReference<'a>) {
         visit_ts_type_reference_without_name_walk(self, reference);
+    }
+
+    fn visit_ts_type_query(&mut self, query: &oxc_ast::ast::TSTypeQuery<'a>) {
+        self.walk_as_type_names(|collector| walk::walk_ts_type_query(collector, query));
+    }
+
+    fn visit_ts_class_implements(&mut self, implements: &oxc_ast::ast::TSClassImplements<'a>) {
+        self.walk_as_type_names(|collector| walk::walk_ts_class_implements(collector, implements));
+    }
+
+    fn visit_ts_interface_heritage(&mut self, heritage: &oxc_ast::ast::TSInterfaceHeritage<'a>) {
+        self.walk_as_type_names(|collector| walk::walk_ts_interface_heritage(collector, heritage));
     }
 
     fn visit_ts_type_parameter(&mut self, parameter: &TSTypeParameter<'a>) {

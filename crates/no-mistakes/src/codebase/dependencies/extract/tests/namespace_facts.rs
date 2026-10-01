@@ -163,6 +163,92 @@ fn a_namespace_that_is_read_as_a_value_is_recorded() {
     }
 }
 
+/// A value use names the namespace it resolves to: the nearest declared path,
+/// looking outward from the body the use is in. A same-named value that is no
+/// namespace, or a local that shadows the name, is no use of one.
+#[test]
+fn a_value_use_names_the_declared_namespace_it_resolves_to() {
+    for (source, used) in [
+        (
+            "namespace A { export namespace Inner {} }\nconst Inner = {};\nregister(Inner);",
+            vec![],
+        ),
+        (
+            "namespace A { export namespace Inner {} export const x = Inner; }",
+            vec!["A.Inner"],
+        ),
+        (
+            "namespace B { export namespace Inner {} }\nnamespace A { export namespace Inner {} export const x = Inner; }",
+            vec!["A.Inner"],
+        ),
+        (
+            "namespace Inner {}\nnamespace A { export namespace Inner {} export const x = Inner; }",
+            vec!["A.Inner"],
+        ),
+        (
+            "namespace Inner {}\nnamespace A { export const x = Inner; }",
+            vec!["Inner"],
+        ),
+        (
+            "namespace A.B { export const x = B; }\nregister(B);",
+            vec!["A.B"],
+        ),
+        ("namespace N {}\nfunction f(N: unknown) { register(N); }", vec![]),
+        (
+            "namespace N {}\nfunction f() { const N = 1; register(N); }",
+            vec![],
+        ),
+        (
+            "import { Lib } from './lib';\nfunction f(Lib: unknown) { register(Lib); }",
+            vec![],
+        ),
+    ] {
+        let facts = namespaces(source);
+        assert_eq!(uses(&facts), used, "{source}");
+    }
+}
+
+/// `typeof N`, `implements N.I` and `interface X extends N.I` name the
+/// namespace in erased code, and a value use after them still counts.
+#[test]
+fn an_erased_type_name_is_no_use_of_a_namespace() {
+    for source in [
+        "namespace N {}\ntype T = typeof N;",
+        "namespace N {}\ntype T = Array<typeof N.A>;",
+        "namespace N { export interface I {} }\nclass C implements N.I {}",
+        "namespace N { export interface I {} }\ninterface J extends N.I {}",
+        "import { Lib } from './lib';\ntype T = typeof Lib;",
+    ] {
+        assert!(uses(&namespaces(source)).is_empty(), "{source}");
+    }
+    let facts = namespaces("namespace N {}\ntype T = typeof N;\nregister(N);");
+    assert_eq!(uses(&facts), ["N"]);
+}
+
+/// `bind`, `call` and `apply` receive the member they are called on, so a
+/// class they name leaves the graph's sight. A guard, or a receiver that is no
+/// member, hands nothing on.
+#[test]
+fn a_member_handed_on_by_bind_call_or_apply_is_a_value_use() {
+    for (source, used) in [
+        ("namespace N {}\nnew (N.A.bind(null))();", vec!["N"]),
+        ("namespace N {}\nN.A.call(null);", vec!["N"]),
+        ("namespace N {}\nN.A.apply(null, []);", vec!["N"]),
+        ("namespace N {}\nN['A'].bind(null);", vec!["N"]),
+        ("namespace N {}\n(N.A as any).bind(null);", vec!["N"]),
+        (
+            "import { Lib } from './lib';\nLib.A.bind(null);",
+            vec!["Lib"],
+        ),
+        ("namespace N {}\nN.A.is(value);", vec![]),
+        ("namespace N {}\nN.bind(null);", vec![]),
+        ("import { fn } from './m';\nfn.bind(this);", vec![]),
+    ] {
+        let facts = namespaces(source);
+        assert_eq!(uses(&facts), used, "{source}");
+    }
+}
+
 #[test]
 fn constructions_in_a_namespace_body_are_sited_with_the_innermost_path() {
     let facts = namespaces(concat!(

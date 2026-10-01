@@ -347,13 +347,21 @@ not assumed to equal a concrete literal route such as `/user/settings`.
   access, `export default` or `export =`, a declaration merged with a class,
   function, variable, enum, or import of the same name (blocks of one namespace
   share a member table and are not a merge), a missing member or missing
-  intermediate namespace, or a module that exports it and is imported whole,
-  dynamically, or through `require`. A parameter or local that shadows the
-  namespace or its class names that binding and is no use; `import type x =
-require()` is erased and uses nothing; and a sourced `export { X } from "./m"`
+  intermediate namespace, a member handed on through `bind`, `call`, or `apply`
+  (any other method, such as a static guard, only reads the class), or a module
+  that exports it and is imported whole, dynamically, or through `require`. A
+  module read whole exposes only the namespaces it exports: a barrel that
+  re-exports one namespace by name leaves its sibling unescaped, while an
+  `export *` or an export the graph cannot follow takes the whole module. A name is a
+  value use only when it resolves to a declared namespace path or an imported
+  binding, so a parameter or local that shadows the namespace or its class names
+  that binding, and a same-named value elsewhere, are no use. A name written only
+  in an erased type (`typeof X`, `implements X.Marker`, an interface base) is no
+  use either. An erased `import type x = require()` uses nothing, and a sourced
+  `export { X } from "./m"`
   names `m`'s export, not a local namespace. Uses in test files count too. A
   graph built for `extends` alone drops the `Call` edges but still records which
-  namespaces an unfollowable qualified construction escapes. A consumer that
+  namespaces a qualified construction it cannot follow escapes. A consumer that
   needs to know whether a class is built must treat `namespace_escaped` as
   "cannot tell". Mixin and expression bases (`extends mixin(Error)`) are not
   tracked.

@@ -54,6 +54,11 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             // The leaf and the orphan base; the middle of the chain is satisfied.
             "src/hierarchy.ts:11 Grandchild",
             "src/hierarchy.ts:14 OrphanBase",
+            // `bind`, `call` and `apply` hand a class on; a static guard does not.
+            "src/namespace-bound.ts:25 Guarded.GuardedDead",
+            // A constant or a parameter that shares a name is not the namespace.
+            "src/namespace-collision.ts:7 Collide.Inner.CollideDead",
+            "src/namespace-collision.ts:16 Hide.HideDead",
             // Namespace members: reported by qualified name, like any class.
             "src/namespace-construct.ts:23 Sub.Child",
             "src/namespace-consumer-lib.ts:30 Standard.StandardDead",
@@ -63,11 +68,17 @@ fn default_config_reports_exactly_the_dead_error_classes() {
             "src/namespace-lib.ts:40 Renamed.RenamedDead",
             "src/namespace-merged.ts:10 Merged.Second",
             "src/namespace-merged.ts:23 Mix.Inner.NestedPart",
+            // A barrel read whole exposes only what it re-exports.
+            "src/namespace-selective-target.ts:4 Kept.KeptDead",
             // A parameter that shadows the namespace or a class is not a use.
             "src/namespace-shadowed.ts:4 Shadowed.ShadowDead",
             "src/namespace-shadowed.ts:6 Shadowed.InnerShadow",
             // A sourced clause exports the target's namespace, not a local one.
             "src/namespace-sourced-target.ts:5 Unseen.RemoteDead",
+            // `typeof`, `implements` and an interface base are erased types.
+            "src/namespace-type-names.ts:4 Queried.QueriedDead",
+            "src/namespace-type-names.ts:10 Marked.MarkedDead",
+            "src/namespace-type-names.ts:16 Extended.ExtendedDead",
             // `import type X = require()` is erased, so it uses nothing.
             "src/namespace-type-only-target.ts:2 TypeOnly.TypeOnlyError",
             "src/namespaced.ts:14 Errors.DeadNamespacedError",
@@ -187,6 +198,16 @@ fn a_namespace_that_escapes_is_never_reported() {
         "Gap.GapDead",
         // An import and a namespace of one name.
         "Imported.ImportMergedError",
+        // A member handed on by `bind`, `call` or `apply`, in the file or
+        // through an import.
+        "Bound.BoundDead",
+        "Called.CalledDead",
+        "Applied.AppliedDead",
+        "Handed.HandedDead",
+        // A bare name in the body that denotes the nested namespace.
+        "Reach.Inner.ReachDead",
+        // A barrel that re-exports the namespace, read whole.
+        "Exposed.ExposedDead",
         // Another file imports the namespace, and uses it as a value.
         "ViaAlias.ViaAliasDead",
         "ViaArgument.ViaArgumentDead",

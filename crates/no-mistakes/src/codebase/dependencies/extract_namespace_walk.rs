@@ -35,15 +35,6 @@ impl ImportCollector {
             self.namespace.facts.sites.push(site);
         }
     }
-
-    fn note_namespace_value_use(&mut self, identifier: &IdentifierReference<'_>) {
-        let name = identifier.name.as_str();
-        if self.namespace.names.contains(name)
-            && !self.namespace.benign_heads.contains(&identifier.span.start)
-        {
-            self.namespace.value_uses.insert(name.to_string());
-        }
-    }
 }
 
 /// The source offset of the identifier a callee starts from, for exactly the

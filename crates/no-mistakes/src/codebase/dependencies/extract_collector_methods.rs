@@ -1,5 +1,5 @@
 fn visit_call_expression_with_imports(collector: &mut ImportCollector, call: &CallExpression<'_>) {
-    collector.mark_namespace_head(&call.callee);
+    collector.mark_call_namespace_head(&call.callee);
     let require_callee = is_require_resolve_callee(&call.callee)
         .then_some("require.resolve")
         .or_else(|| is_require_callee(&call.callee).then_some("require"));

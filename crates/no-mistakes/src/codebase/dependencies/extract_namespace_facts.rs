@@ -63,5 +63,8 @@ struct NamespaceState {
     stack: Vec<String>,
     /// Source offsets of identifiers that head a position the graph resolves.
     benign_heads: FxHashSet<u32>,
+    /// Declared namespace paths and import names read as a value.
     value_uses: FxHashSet<String>,
+    /// Nesting depth of erased type names (`typeof X`, `implements X.I`).
+    type_depth: u32,
 }
