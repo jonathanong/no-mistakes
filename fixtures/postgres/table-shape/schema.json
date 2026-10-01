@@ -22,24 +22,24 @@
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "order_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "uuid"
         },
         "revised_by_id": {
-          "type": "uuid",
           "nullable": true,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         },
         "changes": {
-          "type": "jsonb",
           "nullable": false,
-          "ordinalPosition": 4
+          "ordinalPosition": 4,
+          "dataType": "jsonb"
         }
       },
       "primaryKey": {
@@ -70,16 +70,18 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "orders": {
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -92,14 +94,14 @@
       "relationKind": "table",
       "columns": {
         "user_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "score": {
-          "type": "smallint",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "smallint"
         }
       },
       "primaryKey": {
@@ -124,14 +126,14 @@
       "relationKind": "table",
       "columns": {
         "user_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "score": {
-          "type": "smallint",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "smallint"
         }
       },
       "primaryKey": {
@@ -156,14 +158,14 @@
       "relationKind": "table",
       "columns": {
         "user_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "score": {
-          "type": "smallint",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "smallint"
         }
       },
       "primaryKey": {
@@ -188,24 +190,24 @@
       "relationKind": "table",
       "columns": {
         "user_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "score": {
-          "type": "smallint",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "smallint"
         },
         "target_table": {
-          "type": "text",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "text"
         },
         "target_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 4
+          "ordinalPosition": 4,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -231,19 +233,19 @@
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "change_type": {
-          "type": "order_change_types",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "order_change_types"
         },
         "changed_by_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -264,26 +266,28 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "invoice_status_changes": {
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "change_type": {
-          "type": "order_change_types",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "order_change_types"
         },
         "changed_by_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -304,26 +308,28 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "payment_status_changes": {
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "change_type": {
-          "type": "order_change_types",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "order_change_types"
         },
         "changed_by_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -344,31 +350,33 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "refund_status_changes": {
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "change_type": {
-          "type": "order_change_types",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "order_change_types"
         },
         "changed_by_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         },
         "changed_at": {
-          "type": "timestamp with time zone",
           "nullable": true,
-          "ordinalPosition": 4
+          "ordinalPosition": 4,
+          "dataType": "timestamp with time zone"
         }
       },
       "primaryKey": {
@@ -389,26 +397,28 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "draft_changes": {
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "change_type": {
-          "type": "order_change_types",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "order_change_types"
         },
         "changed_by_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -417,26 +427,28 @@
         ]
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "split_changes": {
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "change_type": {
-          "type": "order_change_types",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "order_change_types"
         },
         "changed_by_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -467,26 +479,28 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "qualified_changes": {
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "change_type": {
-          "type": "order_change_types",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "order_change_types"
         },
         "changed_by_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -507,41 +521,43 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "email_work_items": {
       "relationKind": "table",
       "columns": {
         "lease_token": {
-          "type": "uuid",
           "nullable": true,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "leased_at": {
-          "type": "timestamp with time zone",
           "nullable": true,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "timestamp with time zone"
         },
         "lease_expires_at": {
-          "type": "timestamp with time zone",
           "nullable": true,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "timestamp with time zone"
         },
         "available_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 4
+          "ordinalPosition": 4,
+          "dataType": "timestamp with time zone"
         },
         "attempt_count": {
-          "type": "integer",
           "nullable": false,
-          "ordinalPosition": 5
+          "ordinalPosition": 5,
+          "dataType": "integer"
         },
         "completed_at": {
-          "type": "timestamp with time zone",
           "nullable": true,
-          "ordinalPosition": 6
+          "ordinalPosition": 6,
+          "dataType": "timestamp with time zone"
         }
       },
       "primaryKey": {
@@ -554,9 +570,9 @@
       "relationKind": "table",
       "columns": {
         "occurred_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "timestamp with time zone"
         }
       },
       "primaryKey": {
@@ -565,21 +581,23 @@
         ]
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "audit_events": {
       "relationKind": "table",
       "columns": {
         "occurred_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "timestamp with time zone"
         },
         "updated_at": {
-          "type": "timestamp with time zone",
           "nullable": true,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "timestamp with time zone"
         }
       },
       "primaryKey": {
@@ -588,26 +606,28 @@
         ]
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "report_export_cursors": {
       "relationKind": "table",
       "columns": {
         "report_type": {
-          "type": "report_types",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "report_types"
         },
         "cursor_report_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "uuid"
         },
         "updated_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "timestamp with time zone"
         }
       },
       "primaryKey": {
@@ -620,19 +640,19 @@
       "relationKind": "table",
       "columns": {
         "is_singleton": {
-          "type": "boolean",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "boolean"
         },
         "cursor_document_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "uuid"
         },
         "updated_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "timestamp with time zone"
         }
       },
       "primaryKey": {
@@ -645,19 +665,19 @@
       "relationKind": "table",
       "columns": {
         "is_singleton": {
-          "type": "boolean",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "boolean"
         },
         "reconciled_through_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "timestamp with time zone"
         },
         "updated_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "timestamp with time zone"
         }
       },
       "primaryKey": {
@@ -670,14 +690,14 @@
       "relationKind": "table",
       "columns": {
         "cursor_name": {
-          "type": "text",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "text"
         },
         "updated_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "timestamp with time zone"
         }
       },
       "primaryKey": {
@@ -690,24 +710,24 @@
       "relationKind": "table",
       "columns": {
         "is_singleton": {
-          "type": "boolean",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "boolean"
         },
         "cursor_document_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "uuid"
         },
         "updated_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "timestamp with time zone"
         },
         "singleton": {
-          "type": "text",
           "nullable": false,
-          "ordinalPosition": 4
+          "ordinalPosition": 4,
+          "dataType": "text"
         }
       },
       "primaryKey": {
@@ -720,14 +740,14 @@
       "relationKind": "table",
       "columns": {
         "is_singleton": {
-          "type": "boolean",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "boolean"
         },
         "updated_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "timestamp with time zone"
         }
       },
       "primaryKey": {
@@ -740,14 +760,14 @@
       "relationKind": "table",
       "columns": {
         "cursor_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "updated_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "timestamp with time zone"
         }
       }
     },
@@ -755,24 +775,24 @@
       "relationKind": "table",
       "columns": {
         "tenant_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "job": {
-          "type": "job_types",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "job_types"
         },
         "cursor_x": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         },
         "updated_at": {
-          "type": "timestamp with time zone",
           "nullable": false,
-          "ordinalPosition": 4
+          "ordinalPosition": 4,
+          "dataType": "timestamp with time zone"
         }
       },
       "primaryKey": {
@@ -786,29 +806,29 @@
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "order_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "uuid"
         },
         "revised_by_id": {
-          "type": "uuid",
           "nullable": true,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         },
         "changes": {
-          "type": "json",
           "nullable": true,
-          "ordinalPosition": 4
+          "ordinalPosition": 4,
+          "dataType": "json"
         },
         "updated_at": {
-          "type": "timestamp with time zone",
           "nullable": true,
-          "ordinalPosition": 5
+          "ordinalPosition": 5,
+          "dataType": "timestamp with time zone"
         }
       },
       "primaryKey": {
@@ -833,24 +853,24 @@
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "order_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "uuid"
         },
         "revised_by_id": {
-          "type": "uuid",
           "nullable": true,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         },
         "changes": {
-          "type": "jsonb",
           "nullable": false,
-          "ordinalPosition": 4
+          "ordinalPosition": 4,
+          "dataType": "jsonb"
         }
       },
       "primaryKey": {
@@ -881,26 +901,28 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "missing_revisions": {
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "order_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "uuid"
         },
         "revised_by_id": {
-          "type": "uuid",
           "nullable": true,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -931,26 +953,28 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "part_revisions": {
       "relationKind": "partitioned table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "order_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "uuid"
         },
         "revised_by_id": {
-          "type": "uuid",
           "nullable": true,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -981,26 +1005,28 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "only_revisions": {
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "revised_by_id": {
-          "type": "uuid",
           "nullable": true,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "uuid"
         },
         "changes": {
-          "type": "jsonb",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "jsonb"
         }
       },
       "primaryKey": {
@@ -1021,16 +1047,18 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "order_history": {
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -1043,9 +1071,9 @@
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         }
       },
       "primaryKey": {
@@ -1058,9 +1086,9 @@
       "relationKind": "table",
       "columns": {
         "note": {
-          "type": "text",
           "nullable": true,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "text"
         }
       }
     },
@@ -1068,24 +1096,24 @@
       "relationKind": "table",
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "order_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "uuid"
         },
         "revised_by_id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "uuid"
         },
         "changes": {
-          "type": "jsonb",
           "nullable": false,
-          "ordinalPosition": 4
+          "ordinalPosition": 4,
+          "dataType": "jsonb"
         }
       },
       "primaryKey": {
@@ -1116,7 +1144,9 @@
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     },
     "plain_revisions": {
@@ -1128,23 +1158,25 @@
       },
       "columns": {
         "id": {
-          "type": "uuid",
           "nullable": false,
-          "ordinalPosition": 1
+          "ordinalPosition": 1,
+          "dataType": "uuid"
         },
         "revised_by_id": {
-          "type": "uuid",
           "nullable": true,
-          "ordinalPosition": 2
+          "ordinalPosition": 2,
+          "dataType": "uuid"
         },
         "changes": {
-          "type": "jsonb",
           "nullable": false,
-          "ordinalPosition": 3
+          "ordinalPosition": 3,
+          "dataType": "jsonb"
         }
       },
       "triggers": {
-        "reject_mutation": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        "reject_mutation": {
+          "definition": "CREATE TRIGGER reject_mutation BEFORE UPDATE OR DELETE ON t FOR EACH ROW EXECUTE FUNCTION fn_reject_mutation()"
+        }
       }
     }
   }

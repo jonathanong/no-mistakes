@@ -4,7 +4,11 @@
     "order_history": {
       "relationKind": "table",
       "columns": {
-        "id": { "type": "uuid", "nullable": false, "ordinalPosition": 1 }
+        "id": {
+          "nullable": false,
+          "ordinalPosition": 1,
+          "dataType": "uuid"
+        }
       }
     }
   }
