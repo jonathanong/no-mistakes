@@ -87,23 +87,27 @@ fn findings_for(
 }
 
 fn covers(trigger: &CatalogTrigger, requirement: &Requirement) -> bool {
-    trigger.matches(
-        &requirement.function,
-        requirement.timing,
-        &requirement.events,
-        requirement.for_each_row,
-    ) && (requirement.allow_column_list
-        || !requirement.events.contains(&TriggerEvent::Update)
-        || trigger.update_columns.is_empty())
+    trigger.when.is_none()
+        && trigger.matches(
+            &requirement.function,
+            requirement.timing,
+            &requirement.events,
+            requirement.for_each_row,
+        )
+        && (requirement.allow_column_list
+            || !requirement.events.contains(&TriggerEvent::Update)
+            || trigger.update_columns.is_empty())
 }
 
 fn column_list_only(trigger: &CatalogTrigger, requirement: &Requirement) -> bool {
-    trigger.matches(
-        &requirement.function,
-        requirement.timing,
-        &requirement.events,
-        requirement.for_each_row,
-    ) && !requirement.allow_column_list
+    trigger.when.is_none()
+        && trigger.matches(
+            &requirement.function,
+            requirement.timing,
+            &requirement.events,
+            requirement.for_each_row,
+        )
+        && !requirement.allow_column_list
         && requirement.events.contains(&TriggerEvent::Update)
         && !trigger.update_columns.is_empty()
 }

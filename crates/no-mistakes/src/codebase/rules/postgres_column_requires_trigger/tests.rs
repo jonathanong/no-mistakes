@@ -77,6 +77,7 @@ fn wrong_timing_and_statement_triggers_are_missing() {
         .count();
     assert!(missing >= 2, "{body:?}");
     let joined = messages(TOUCH).join("\n");
+    assert!(joined.contains("table:conditional_orders:"));
     assert!(joined.contains("table:late_orders:"));
     assert!(joined.contains("table:statement_orders:"));
     assert!(joined.contains("table:import_rows:"));
@@ -125,6 +126,10 @@ fn allow_suppresses_a_table_and_reports_stale_entries() {
 fn function_names_fold_unquoted_identifiers_and_keep_quoted_case() {
     assert_eq!(normalize_function_name("public.Fn_Touch"), "fn_touch");
     assert_eq!(normalize_function_name("public.\"Touch\""), "Touch");
+    assert_eq!(
+        normalize_function_name("public.\"touch.updated\""),
+        "touch.updated"
+    );
 }
 
 #[test]
@@ -153,6 +158,10 @@ fn option_errors_name_the_field() {
         (
             "schemaCatalogPath: schema.json\nrequirements:\n  - column: updated_at\n    function: fn\n    events: [merge]\n",
             "option events: unknown event merge",
+        ),
+        (
+            "schemaCatalogPath: schema.json\nrequirements:\n  - column: updated_at\n    function: fn\n    events: [truncate]\n",
+            "option forEachRow: truncate triggers are FOR EACH STATEMENT",
         ),
         (
             "schemaCatalogPath: schema.json\nallow:\n  - object: table:orders\n    reason: ' '\n",

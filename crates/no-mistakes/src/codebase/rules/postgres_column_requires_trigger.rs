@@ -8,7 +8,10 @@ use serde::Deserialize;
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
+mod name;
 mod scan;
+
+use name::normalize_function_name;
 
 pub const RULE_ID: &str = "postgres-column-requires-trigger";
 
@@ -119,12 +122,17 @@ fn compile_requirement(requirement: &RequirementOptions) -> Result<Requirement> 
     if requirement.function.trim().is_empty() {
         bail!("{RULE_ID} option function: required");
     }
+    let events = parse_events(requirement.events.as_deref())?;
+    let for_each_row = requirement.for_each_row.unwrap_or(true);
+    if for_each_row && events.contains(&TriggerEvent::Truncate) {
+        bail!("{RULE_ID} option forEachRow: truncate triggers are FOR EACH STATEMENT");
+    }
     Ok(Requirement {
         column: requirement.column.clone(),
         function: normalize_function_name(&requirement.function),
         timing: parse_timing(requirement.timing.as_deref().unwrap_or("before"))?,
-        events: parse_events(requirement.events.as_deref())?,
-        for_each_row: requirement.for_each_row.unwrap_or(true),
+        events,
+        for_each_row,
         allow_column_list: requirement.allow_column_list.unwrap_or(false),
     })
 }
@@ -146,19 +154,6 @@ fn parse_events(events: Option<&[String]>) -> Result<Vec<TriggerEvent>> {
         bail!("{RULE_ID} option events: must not be empty");
     }
     events.iter().map(|event| parse_event(event)).collect()
-}
-
-/// Unquoted identifiers fold to lowercase. A quoted last segment keeps its case.
-fn normalize_function_name(name: &str) -> String {
-    let trimmed = name.trim();
-    let last = trimmed.rsplit('.').next().unwrap_or(trimmed).trim();
-    let Some(quoted) = last
-        .strip_prefix('"')
-        .and_then(|rest| rest.strip_suffix('"'))
-    else {
-        return last.to_ascii_lowercase();
-    };
-    quoted.replace("\"\"", "\"")
 }
 
 fn parse_event(raw: &str) -> Result<TriggerEvent> {

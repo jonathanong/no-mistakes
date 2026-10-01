@@ -43,7 +43,10 @@ schema catalog:
 - If a trigger executes `function` and the table has no `column`, that leftover
   trigger is reported too.
 - `BEFORE INSERT OR UPDATE` satisfies `events: [update]`. A schema qualifier on
-  the function is ignored. The function body is not checked.
+  the function is ignored. Periods inside a quoted identifier stay part of the
+  name. The function body is not checked.
+- A trigger with a `WHEN` clause does not count as coverage. `TRUNCATE` is only
+  valid with `forEachRow: false`.
 
 Findings use the object ref `table:<name>`.
 
@@ -57,8 +60,9 @@ of `insert`, `update`, `delete`, or `truncate`. `forEachRow` defaults to
 `true`. `allowColumnList` defaults to `false`. `allow` defaults to `[]`.
 
 An unknown timing or event, an empty required string, a missing
-`schemaCatalogPath`, an allow entry with an empty reason, an invalid object
-ref, or a duplicate allow object fails configuration.
+`schemaCatalogPath`, `truncate` combined with `forEachRow: true`, an allow
+entry with an empty reason, an invalid object ref, or a duplicate allow object
+fails configuration.
 
 ## Valid example
 

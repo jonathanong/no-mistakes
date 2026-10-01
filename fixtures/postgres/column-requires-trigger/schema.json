@@ -141,6 +141,21 @@
         }
       }
     },
+    "conditional_orders": {
+      "relationKind": "table",
+      "columns": {
+        "updated_at": {
+          "nullable": true,
+          "ordinalPosition": 1,
+          "dataType": "timestamp with time zone"
+        }
+      },
+      "triggers": {
+        "trigger_conditional_touch": {
+          "definition": "CREATE TRIGGER trigger_conditional_touch BEFORE UPDATE ON public.conditional_orders FOR EACH ROW WHEN (false) EXECUTE FUNCTION fn_touch_updated_at()"
+        }
+      }
+    },
     "import_rows": {
       "relationKind": "table",
       "columns": {
