@@ -5,6 +5,9 @@ pub(super) fn split_body(definition: &str) -> (String, Option<String>, Option<(u
     if let Some((header, body, span)) = atomic_body(definition) {
         return (header, Some(body), Some(span));
     }
+    if let Some((header, body, span)) = super::function_quote::return_expression(definition) {
+        return (header, Some(body), Some(span));
+    }
     (definition.to_string(), None, None)
 }
 
@@ -66,7 +69,7 @@ fn atomic_body(definition: &str) -> Option<(String, String, (usize, usize))> {
     None
 }
 
-fn skip_as_gap(definition: &str, mut cursor: usize) -> usize {
+pub(super) fn skip_as_gap(definition: &str, mut cursor: usize) -> usize {
     loop {
         while definition
             .as_bytes()
@@ -177,7 +180,7 @@ pub(super) fn skip_quoted(definition: &str, index: usize, quote: char) -> usize 
     definition.len()
 }
 
-fn is_word_at(text: &str, index: usize, word: &str) -> bool {
+pub(super) fn is_word_at(text: &str, index: usize, word: &str) -> bool {
     let Some(slice) = text.get(index..index + word.len()) else {
         return false;
     };

@@ -1,6 +1,7 @@
 pub(super) struct HeaderModes {
     pub(super) null_input: String,
     pub(super) volatility: String,
+    pub(super) security: String,
     pub(super) return_contract: String,
 }
 
@@ -8,6 +9,7 @@ pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> He
     let words = words_outside_literals(&blank_body(definition, span));
     let mut null_input = "called";
     let mut volatility = "volatile";
+    let mut security = "invoker";
     for index in 0..words.len() {
         match words[index].as_str() {
             "strict" => null_input = "strict",
@@ -22,10 +24,16 @@ pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> He
         if phrase_at(&words, index, &["returns", "null", "on", "null", "input"]) {
             null_input = "strict";
         }
+        if phrase_at(&words, index, &["security", "definer"]) {
+            security = "definer";
+        } else if phrase_at(&words, index, &["security", "invoker"]) {
+            security = "invoker";
+        }
     }
     HeaderModes {
         null_input: null_input.to_string(),
         volatility: volatility.to_string(),
+        security: security.to_string(),
         return_contract: return_contract(&words),
     }
 }

@@ -8,6 +8,7 @@ use std::sync::Arc;
 
 mod normalize;
 mod scan;
+mod search_path;
 mod token_class;
 
 pub const RULE_ID: &str = "postgres-duplicate-function-body";

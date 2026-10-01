@@ -395,6 +395,30 @@ fn volatility_return_contract_and_named_arguments_split_copies() {
 }
 
 #[test]
+fn comments_quoted_paths_concat_and_return_expressions() {
+    assert!(
+        messages("schemaCatalogPath: comment-security.json\n").is_empty(),
+        "{}",
+        messages("schemaCatalogPath: comment-security.json\n").join("\n")
+    );
+    let path = messages("schemaCatalogPath: quoted-path.json\n").join("\n");
+    let quoted = path
+        .lines()
+        .find(|line| line.contains("function:fn_quoted_a:"))
+        .unwrap_or("");
+    assert!(quoted.contains("fn_quoted_a_copy"), "{path}");
+    assert!(!quoted.contains("fn_quoted_lower"), "{path}");
+    assert!(
+        messages("schemaCatalogPath: concat.json\n").is_empty(),
+        "{}",
+        messages("schemaCatalogPath: concat.json\n").join("\n")
+    );
+    let returned = messages("schemaCatalogPath: return-expr.json\n").join("\n");
+    assert!(returned.contains("function:fn_ret_a:"), "{returned}");
+    assert!(returned.contains("function:fn_ret_b:"));
+}
+
+#[test]
 fn escape_strings_and_atomic_language_are_compared() {
     let escaped = messages("schemaCatalogPath: escape.json\n").join("\n");
     assert!(escaped.contains("function:fn_escape_a:"), "{escaped}");

@@ -41,7 +41,7 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
             .entry(GroupKey {
                 language,
                 search_path: search_path(&outside),
-                security: security_mode(&outside),
+                security: function.security.clone(),
                 null_input: function.null_input.clone(),
                 volatility: function.volatility.clone(),
                 return_contract: function.return_contract.clone(),
@@ -90,14 +90,6 @@ fn other_names(members: &[String], index: usize) -> Vec<&str> {
     names
 }
 
-fn security_mode(header: &str) -> String {
-    if phrase(header, "security", "definer") {
-        "definer".to_string()
-    } else {
-        "invoker".to_string()
-    }
-}
-
 fn outside_body(definition: &str, span: Option<(usize, usize)>) -> String {
     let Some((start, end)) = span else {
         return definition.to_string();
@@ -110,19 +102,6 @@ fn outside_body(definition: &str, span: Option<(usize, usize)>) -> String {
     text.push(' ');
     text.push_str(&definition[end..]);
     text
-}
-
-fn phrase(header: &str, first: &str, second: &str) -> bool {
-    let mut words = header
-        .split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
-        .filter(|word| !word.is_empty())
-        .map(|word| word.to_ascii_lowercase());
-    while let Some(word) = words.next() {
-        if word == first && words.next().as_deref() == Some(second) {
-            return true;
-        }
-    }
-    false
 }
 
 fn function_kind(returns_trigger: bool, returns_event_trigger: bool) -> &'static str {
@@ -151,11 +130,7 @@ fn search_path(header: &str) -> String {
             end = end.min(index);
         }
     }
-    after[..end]
-        .split_whitespace()
-        .collect::<Vec<_>>()
-        .join(" ")
-        .to_ascii_lowercase()
+    super::search_path::fold(&after[..end])
 }
 
 fn finding_text(count: usize, others: &[&str], kind: &str) -> String {

@@ -1,15 +1,76 @@
 pub(super) fn body_after_as(definition: &str, cursor: usize) -> Option<(String, usize, usize)> {
+    let (body, start, end, next) = one_literal(definition, cursor)?;
+    Some(append_adjacent(definition, body, start, end, next))
+}
+
+pub(super) fn return_expression(definition: &str) -> Option<(String, String, (usize, usize))> {
+    let bytes = definition.as_bytes();
+    let mut index = 0;
+    let mut depth = 0i32;
+    while index < definition.len() {
+        if let Some(next) = super::function_body::skip_noise(definition, index) {
+            index = next;
+            continue;
+        }
+        match bytes.get(index) {
+            Some(b'(') => depth += 1,
+            Some(b')') => depth -= 1,
+            _ => {}
+        }
+        if depth == 0 && super::function_body::is_word_at(definition, index, "return") {
+            let start = index + "return".len();
+            return Some((
+                definition[..index].to_string(),
+                definition[start..].to_string(),
+                (start, definition.len()),
+            ));
+        }
+        index += definition[index..].chars().next()?.len_utf8();
+    }
+    None
+}
+
+fn one_literal(definition: &str, cursor: usize) -> Option<(String, usize, usize, usize)> {
     if let Some((tag, open_end)) = opening_dollar(definition, cursor) {
         let close = format!("${tag}$");
         let relative = definition[open_end..].find(&close)?;
         let end = open_end + relative;
-        return Some((definition[open_end..end].to_string(), open_end, end));
+        return Some((
+            definition[open_end..end].to_string(),
+            open_end,
+            end,
+            end + close.len(),
+        ));
     }
     let (quote_at, escape) = quote_at(definition, cursor)?;
-    if escape {
-        return escape_string_body(definition, quote_at);
+    let (body, start, end) = if escape {
+        escape_string_body(definition, quote_at)?
+    } else {
+        quoted_sql_body(definition, quote_at)?
+    };
+    Some((body, start, end, end + 1))
+}
+
+fn append_adjacent(
+    definition: &str,
+    mut body: String,
+    start: usize,
+    mut end: usize,
+    mut cursor: usize,
+) -> (String, usize, usize) {
+    loop {
+        cursor = super::function_body::skip_as_gap(definition, cursor);
+        let Some((more, _, more_end, next)) = one_literal(definition, cursor) else {
+            break;
+        };
+        if next <= cursor {
+            break;
+        }
+        body.push_str(&more);
+        end = more_end;
+        cursor = next;
     }
-    quoted_sql_body(definition, quote_at)
+    (body, start, end)
 }
 
 fn escape_string_body(definition: &str, quote_at: usize) -> Option<(String, usize, usize)> {
