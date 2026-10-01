@@ -4,9 +4,9 @@
     "deliveries": {
       "relationKind": "table",
       "columns": {
-        "state": { "type": "text", "nullable": false, "ordinalPosition": 1 },
-        "sent_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
-        "failed_at": { "type": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
+        "state": { "dataType": "text", "nullable": false, "ordinalPosition": 1 },
+        "sent_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 2 },
+        "failed_at": { "dataType": "timestamp with time zone", "nullable": true, "ordinalPosition": 3 }
       }
     }
   }
