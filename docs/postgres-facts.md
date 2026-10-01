@@ -217,7 +217,11 @@ sqlparser AST:
   constrained by a top-level AND conjunct that is an equality, comparison,
   `IN`, `= ANY`, or `BETWEEN`; `OR` keeps a column only when every branch
   constrains it. `in_insert_select` marks SELECT facts that belong to
-  `INSERT … SELECT`, including selects nested in that query
+  `INSERT … SELECT`, including selects nested in that query.
+  `not_in_subqueries` records lines of `NOT IN (SELECT …)` and
+  `NOT (… IN (SELECT …))`. `count_existence_checks` records lines where
+  `COUNT(...)` is compared with 0 or 1 to test existence (`postgres-sql-shape-policy`
+  reads both when those shapes are banned).
 - `CREATE TRIGGER` table, function, period, row/statement, and events
 
 Unparseable files set `parse_failed` and count quote-masked `INSERT INTO`

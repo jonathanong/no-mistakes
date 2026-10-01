@@ -1,4 +1,4 @@
-use super::{CompiledOptions, RuleFinding, RULE_ID};
+use super::{BannedShapes, CompiledOptions, RuleFinding, RULE_ID};
 use crate::codebase::check_facts::CheckFactPlan;
 use crate::codebase::postgres::{
     collect_postgres_facts, statements::extract_sql_statement_facts, EmbeddedSqlKind,
@@ -42,6 +42,7 @@ pub(super) fn scan(
                     &rel,
                     call.line.max(1) as usize,
                     "executed SQL is not statically recoverable for shape policy",
+                    "correlated-exists-set-operation",
                 ));
             }
         }
@@ -52,6 +53,7 @@ pub(super) fn scan(
                         &rel,
                         fragment.line.max(1) as usize,
                         "builder SQL is not statically recoverable for shape policy",
+                        "correlated-exists-set-operation",
                     ));
                 }
                 continue;
@@ -65,22 +67,14 @@ pub(super) fn scan(
                     &rel,
                     fragment.line.max(1) as usize,
                     "builder SQL is not statically recoverable for shape policy",
+                    "correlated-exists-set-operation",
                 ));
                 continue;
             }
             for select in &statements.selects {
-                for exists in &select.exists_set_operations {
-                    if exists.correlated {
-                        findings.push(finding(
-                            &rel,
-                            fragment
-                                .line
-                                .saturating_add(exists.line as u32)
-                                .saturating_sub(1) as usize,
-                            "do not wrap a set operation in a correlated EXISTS",
-                        ));
-                    }
-                }
+                findings.extend(select_findings(&rel, select, &opts.shapes, |line| {
+                    fragment.line.saturating_add(line as u32).saturating_sub(1) as usize
+                }));
             }
         }
     }
@@ -91,19 +85,14 @@ pub(super) fn scan(
                 &rel,
                 1,
                 "SQL could not be analyzed for shape policy",
+                "correlated-exists-set-operation",
             ));
             continue;
         }
         for select in &file.selects {
-            for exists in &select.exists_set_operations {
-                if exists.correlated {
-                    findings.push(finding(
-                        &rel,
-                        exists.line.max(1),
-                        "do not wrap a set operation in a correlated EXISTS",
-                    ));
-                }
-            }
+            findings.extend(select_findings(&rel, select, &opts.shapes, |line| {
+                line.max(1)
+            }));
         }
     }
     crate::codebase::rules::sort_findings(&mut findings);
@@ -133,13 +122,55 @@ fn fragment_statement_facts(sql: &str) -> crate::codebase::postgres::SqlStatemen
     extract_sql_statement_facts(&wrapper)
 }
 
-fn finding(file: &str, line: usize, message: &str) -> RuleFinding {
+fn select_findings(
+    file: &str,
+    select: &crate::codebase::postgres::SqlSelectFact,
+    shapes: &BannedShapes,
+    line_at: impl Fn(usize) -> usize,
+) -> Vec<RuleFinding> {
+    let mut findings = Vec::new();
+    if shapes.correlated_exists_set_operation {
+        for exists in &select.exists_set_operations {
+            if exists.correlated {
+                findings.push(finding(
+                    file,
+                    line_at(exists.line),
+                    "do not wrap a set operation in a correlated EXISTS",
+                    "correlated-exists-set-operation",
+                ));
+            }
+        }
+    }
+    if shapes.not_in_subquery {
+        for line in &select.not_in_subqueries {
+            findings.push(finding(
+                file,
+                line_at(*line),
+                "NOT IN (SELECT …) returns no rows when the subquery yields a NULL and cannot become an anti-join; use NOT EXISTS (SELECT 1 FROM … WHERE …)",
+                "not-in-subquery",
+            ));
+        }
+    }
+    if shapes.count_for_existence {
+        for line in &select.count_existence_checks {
+            findings.push(finding(
+                file,
+                line_at(*line),
+                "COUNT(...) compared with 0/1 counts every matching row to test existence; use EXISTS (SELECT 1 FROM … WHERE …)",
+                "count-for-existence",
+            ));
+        }
+    }
+    findings
+}
+
+fn finding(file: &str, line: usize, message: &str, target: &str) -> RuleFinding {
     RuleFinding {
         rule: RULE_ID.to_string(),
         file: file.to_string(),
         line,
         message: format!("{file}:{line}: {message}"),
         import: None,
-        target: Some("correlated-exists-set-operation".to_string()),
+        target: Some(target.to_string()),
     }
 }

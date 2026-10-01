@@ -84,6 +84,30 @@ fn postgres_sql_shape_policy_json_has_rule_id() {
 }
 
 #[test]
+fn postgres_sql_shape_policy_flags_opt_in_shapes() {
+    let root = fixture("postgres-sql-shape-policy", "fail-shapes");
+    let out = check_json(&root);
+    let body = stdout(&out);
+    assert!(!out.status.success(), "{body}");
+    assert!(body.contains("NOT IN (SELECT"), "{body}");
+    assert!(body.contains("COUNT(...) compared with 0/1"), "{body}");
+}
+
+#[test]
+fn postgres_sql_shape_policy_passes_opt_in_shapes() {
+    let root = fixture("postgres-sql-shape-policy", "pass-shapes");
+    let out = check_json(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
+fn postgres_sql_shape_policy_passes_suppressed_shapes() {
+    let root = fixture("postgres-sql-shape-policy", "pass-suppressed-shapes");
+    let out = check_json(&root);
+    assert!(out.status.success(), "exit non-zero: {}", stdout(&out));
+}
+
+#[test]
 fn postgres_idempotent_insert_json_has_rule_id() {
     let root = fixture("postgres-idempotent-insert", "fail");
     let out = check_json(&root);

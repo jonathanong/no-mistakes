@@ -93,6 +93,10 @@ pub struct SqlSelectFact {
     /// True when this SELECT is the query of `INSERT … SELECT` (including nested
     /// selects inside that query).
     pub in_insert_select: bool,
+    /// Lines of `NOT IN (SELECT …)` and `NOT (… IN (SELECT …))`.
+    pub not_in_subqueries: Vec<usize>,
+    /// Lines of `COUNT(...)` compared with 0 or 1 to test existence.
+    pub count_existence_checks: Vec<usize>,
 }
 
 /// One base-table instance and the columns a predicate constrains on it.

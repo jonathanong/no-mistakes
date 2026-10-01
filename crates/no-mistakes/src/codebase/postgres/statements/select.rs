@@ -1,4 +1,10 @@
+mod from;
 mod nested;
+mod shapes;
+
+pub(super) fn join_expr(operator: &sqlparser::ast::JoinOperator) -> Option<&sqlparser::ast::Expr> {
+    from::join_expr(operator)
+}
 
 pub(super) fn walk_expr(
     sql: &str,
@@ -11,9 +17,7 @@ pub(super) fn walk_expr(
 }
 
 use super::SqlSelectFact;
-use sqlparser::ast::{
-    Expr, JoinConstraint, Query, Select, SetExpr, Statement, TableFactor, TableWithJoins,
-};
+use sqlparser::ast::{Query, Select, SetExpr, Statement};
 
 pub(super) fn collect(sql: &str, statement: &Statement, out: &mut Vec<SqlSelectFact>) {
     match statement {
@@ -80,13 +84,19 @@ fn push_select(
     in_insert_select: bool,
     out: &mut Vec<SqlSelectFact>,
 ) {
-    let tables = table_names(&select.from, ctes);
+    let tables = from::table_names(&select.from, ctes);
     let mut exists_set_operations = Vec::new();
     super::exists::collect_from_select(sql, select, &mut exists_set_operations);
-    collect_derived_queries(sql, &select.from, ctes, in_insert_select, out);
+    from::collect_derived_queries(sql, &select.from, ctes, in_insert_select, out);
     nested::collect(sql, select, ctes, in_insert_select, out);
     let relations = super::predicates::select_relations(sql, select, ctes);
-    if tables.is_empty() && exists_set_operations.is_empty() && relations.is_empty() {
+    let shapes = shapes::collect(sql, select);
+    if tables.is_empty()
+        && exists_set_operations.is_empty()
+        && relations.is_empty()
+        && shapes.not_in_subqueries.is_empty()
+        && shapes.count_existence_checks.is_empty()
+    {
         return;
     }
     out.push(SqlSelectFact {
@@ -95,103 +105,13 @@ fn push_select(
             &[tables.first().map(String::as_str).unwrap_or("select")],
         ),
         tables,
-        predicate_sql: predicate_text(select),
+        predicate_sql: from::predicate_text(select),
         exists_set_operations,
         relations,
         in_insert_select,
+        not_in_subqueries: shapes.not_in_subqueries,
+        count_existence_checks: shapes.count_existence_checks,
     });
-}
-
-fn table_names(from: &[TableWithJoins], ctes: &[String]) -> Vec<String> {
-    let mut names = Vec::new();
-    for table in from {
-        push_table(&table.relation, ctes, &mut names);
-        for join in &table.joins {
-            push_table(&join.relation, ctes, &mut names);
-        }
-    }
-    names
-}
-
-fn collect_derived_queries(
-    sql: &str,
-    from: &[TableWithJoins],
-    ctes: &[String],
-    in_insert_select: bool,
-    out: &mut Vec<SqlSelectFact>,
-) {
-    for table in from {
-        collect_derived_factor(sql, &table.relation, ctes, in_insert_select, out);
-        for join in &table.joins {
-            collect_derived_factor(sql, &join.relation, ctes, in_insert_select, out);
-        }
-    }
-}
-
-fn collect_derived_factor(
-    sql: &str,
-    table: &TableFactor,
-    ctes: &[String],
-    in_insert_select: bool,
-    out: &mut Vec<SqlSelectFact>,
-) {
-    match table {
-        TableFactor::Derived { subquery, .. } => {
-            collect_query(sql, subquery, ctes, in_insert_select, out);
-        }
-        TableFactor::NestedJoin {
-            table_with_joins, ..
-        } => collect_derived_queries(
-            sql,
-            std::slice::from_ref(table_with_joins),
-            ctes,
-            in_insert_select,
-            out,
-        ),
-        _ => {}
-    }
-}
-
-fn push_table(table: &TableFactor, ctes: &[String], names: &mut Vec<String>) {
-    match table {
-        TableFactor::Table { name, .. } => {
-            if let Some(table) = super::predicates::base_table(name, ctes) {
-                names.push(table);
-            }
-        }
-        TableFactor::NestedJoin {
-            table_with_joins, ..
-        } => names.extend(table_names(std::slice::from_ref(table_with_joins), ctes)),
-        _ => {}
-    }
-}
-
-fn predicate_text(select: &Select) -> String {
-    let mut parts = Vec::new();
-    if let Some(selection) = &select.selection {
-        parts.push(selection.to_string());
-    }
-    for table in &select.from {
-        for join in &table.joins {
-            if let Some(expr) = join_expr(&join.join_operator) {
-                parts.push(expr.to_string());
-            }
-        }
-    }
-    parts.join(" ")
-}
-
-pub(super) fn join_expr(operator: &sqlparser::ast::JoinOperator) -> Option<&Expr> {
-    match operator {
-        sqlparser::ast::JoinOperator::Join(JoinConstraint::On(expr))
-        | sqlparser::ast::JoinOperator::Inner(JoinConstraint::On(expr))
-        | sqlparser::ast::JoinOperator::Left(JoinConstraint::On(expr))
-        | sqlparser::ast::JoinOperator::LeftOuter(JoinConstraint::On(expr))
-        | sqlparser::ast::JoinOperator::Right(JoinConstraint::On(expr))
-        | sqlparser::ast::JoinOperator::RightOuter(JoinConstraint::On(expr))
-        | sqlparser::ast::JoinOperator::FullOuter(JoinConstraint::On(expr)) => Some(expr),
-        _ => None,
-    }
 }
 
 #[cfg(test)]
