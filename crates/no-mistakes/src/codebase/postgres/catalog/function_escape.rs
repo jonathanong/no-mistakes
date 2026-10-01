@@ -67,6 +67,29 @@ fn hex_exact(chars: &mut std::iter::Peekable<Chars<'_>>, digits: usize) -> Optio
     char::from_u32(u32::from_str_radix(&peeked, 16).ok()?)
 }
 
+pub(super) fn unescape_unicode(inner: &str) -> String {
+    let mut out = String::with_capacity(inner.len());
+    let mut chars = inner.chars().peekable();
+    while let Some(character) = chars.next() {
+        if character != '\\' {
+            out.push(character);
+            continue;
+        }
+        if chars.peek() == Some(&'\\') {
+            chars.next();
+            out.push('\\');
+            continue;
+        }
+        if chars.peek() == Some(&'+') {
+            chars.next();
+            out.push(hex_exact(&mut chars, 6).unwrap_or('+'));
+            continue;
+        }
+        out.push(hex_exact(&mut chars, 4).unwrap_or('\\'));
+    }
+    out
+}
+
 fn octal(chars: &mut std::iter::Peekable<Chars<'_>>, first: char) -> char {
     let mut value = first.to_digit(8).unwrap_or(0);
     for _ in 0..2 {

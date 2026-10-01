@@ -16,7 +16,12 @@ pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> He
     let mut security = "invoker";
     let mut parallel = "unsafe";
     let mut leakproof = "no";
-    for index in 0..clauses.len() {
+    let mut index = 0;
+    while index < clauses.len() {
+        if clauses[index] == "set" {
+            index = super::function_outputs::after_set_clause(&clauses, index);
+            continue;
+        }
         match clauses[index].as_str() {
             "strict" => null_input = "strict",
             "immutable" => volatility = "immutable",
@@ -49,6 +54,7 @@ pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> He
                 "yes"
             };
         }
+        index += 1;
     }
     HeaderModes {
         null_input: null_input.to_string(),
@@ -56,27 +62,29 @@ pub(super) fn header_modes(definition: &str, span: Option<(usize, usize)>) -> He
         security: security.to_string(),
         parallel: parallel.to_string(),
         leakproof: leakproof.to_string(),
-        return_contract: return_contract(&words),
+        return_contract: return_contract(&clauses, &words),
     }
 }
 
-fn return_contract(words: &[String]) -> String {
+fn return_contract(clauses: &[String], words: &[String]) -> String {
     let mut index = 0;
-    while index < words.len() {
-        if words[index] == "returns" {
-            if phrase_at(words, index, &["returns", "null", "on", "null", "input"]) {
+    while index < clauses.len() {
+        if clauses[index] == "returns" {
+            if phrase_at(clauses, index, &["returns", "null", "on", "null", "input"]) {
                 index += 5;
                 continue;
             }
             index += 1;
             let mut contract = Vec::new();
-            while index < words.len() && !ends_return(&words[index]) {
-                if words[index] == "not"
-                    && words.get(index + 1).is_some_and(|word| word == "leakproof")
+            while index < clauses.len() && !ends_return(&clauses[index]) {
+                if clauses[index] == "not"
+                    && clauses
+                        .get(index + 1)
+                        .is_some_and(|word| word == "leakproof")
                 {
                     break;
                 }
-                contract.push(words[index].as_str());
+                contract.push(clauses[index].as_str());
                 index += 1;
             }
             let outputs = super::function_outputs::output_parameters(words);

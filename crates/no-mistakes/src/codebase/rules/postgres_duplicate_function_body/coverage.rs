@@ -5,6 +5,24 @@ use crate::config::v2::{
 };
 use std::path::PathBuf;
 
+fn messages(file: &str) -> String {
+    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../../fixtures/postgres/duplicate-function-body");
+    let mut config = NoMistakesConfig::default();
+    config.rules.push(RuleDef {
+        rule: RULE_ID.to_string(),
+        scope: Some(RuleScope::Repository),
+        options: serde_yaml::from_str(&format!("schemaCatalogPath: {file}")).unwrap(),
+        ..Default::default()
+    });
+    check_with_files(&root, &config, &[root.join(file)])
+        .unwrap()
+        .into_iter()
+        .map(|finding| finding.message)
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
 fn settings(identifiers: bool) -> normalize::Settings {
     normalize::Settings {
         normalize_identifiers: identifiers,
@@ -15,21 +33,7 @@ fn settings(identifiers: bool) -> normalize::Settings {
 
 #[test]
 fn parameter_names_do_not_set_volatility() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/postgres/duplicate-function-body");
-    let mut config = NoMistakesConfig::default();
-    config.rules.push(RuleDef {
-        rule: RULE_ID.to_string(),
-        scope: Some(RuleScope::Repository),
-        options: serde_yaml::from_str("schemaCatalogPath: modes.json").unwrap(),
-        ..Default::default()
-    });
-    let text = check_with_files(&root, &config, &[root.join("modes.json")])
-        .unwrap()
-        .into_iter()
-        .map(|finding| finding.message)
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = messages("modes.json");
     assert!(text.contains("fn_param"), "{text}");
     assert!(text.contains("fn_param_copy"), "{text}");
     assert!(!text.contains("fn_real"), "{text}");
@@ -38,21 +42,7 @@ fn parameter_names_do_not_set_volatility() {
 
 #[test]
 fn unicode_return_types_and_search_paths_stay_distinct() {
-    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("../../fixtures/postgres/duplicate-function-body");
-    let mut config = NoMistakesConfig::default();
-    config.rules.push(RuleDef {
-        rule: RULE_ID.to_string(),
-        scope: Some(RuleScope::Repository),
-        options: serde_yaml::from_str("schemaCatalogPath: unicode.json").unwrap(),
-        ..Default::default()
-    });
-    let text = check_with_files(&root, &config, &[root.join("unicode.json")])
-        .unwrap()
-        .into_iter()
-        .map(|finding| finding.message)
-        .collect::<Vec<_>>()
-        .join("\n");
+    let text = messages("unicode.json");
     assert!(text.contains("fn_alpha"), "{text}");
     assert!(text.contains("fn_alpha_copy"), "{text}");
     assert!(!text.contains("fn_beta"), "{text}");
@@ -78,6 +68,32 @@ fn search_path_stops_at_volatility_and_skips_noise() {
     let unicode = search_path::extract("SET search_path TO café, public");
     assert!(unicode.contains("café"), "{unicode}");
     assert!(unicode.contains("public"), "{unicode}");
+}
+
+#[test]
+fn clause_boundaries_keep_distinct_functions_apart() {
+    let text = messages("boundaries.json");
+    assert!(text.contains("fn_set"), "{text}");
+    assert!(!text.contains("fn_real_strict"), "{text}");
+    assert!(text.contains("fn_text"), "{text}");
+    assert!(!text.contains("fn_int"), "{text}");
+    assert!(text.contains("fn_send"), "{text}");
+    assert!(!text.contains("fn_delete"), "{text}");
+    assert!(text.contains("fn_atomic"), "{text}");
+    assert!(!text.contains("fn_string"), "{text}");
+    assert!(text.contains("fn_u"), "{text}");
+}
+
+#[test]
+fn qualified_raise_calls_stay_calls() {
+    let tokens = normalize::normalized_tokens(
+        "PERFORM public.raise(send_email())",
+        &settings(true),
+        Some("plpgsql"),
+    )
+    .unwrap();
+    assert!(tokens.iter().any(|token| token == "raise"), "{tokens:?}");
+    assert!(!tokens.iter().any(|token| token == "RAISE"), "{tokens:?}");
 }
 
 #[test]

@@ -24,6 +24,52 @@ pub(super) fn after_parameter_list(header: &str) -> &str {
     header
 }
 
+pub(super) fn after_set_clause(words: &[String], index: usize) -> usize {
+    let mut cursor = index + 2;
+    if matches!(words.get(cursor).map(String::as_str), Some("to" | "from")) {
+        cursor += 1;
+    }
+    if cursor < words.len() {
+        cursor += 1;
+    }
+    while cursor < words.len() {
+        if words[cursor] == "," {
+            cursor += 2;
+            continue;
+        }
+        if option_boundary(&words[cursor]) {
+            break;
+        }
+        cursor += 1;
+    }
+    cursor
+}
+
+fn option_boundary(word: &str) -> bool {
+    matches!(
+        word,
+        "language"
+            | "immutable"
+            | "stable"
+            | "volatile"
+            | "leakproof"
+            | "not"
+            | "strict"
+            | "called"
+            | "security"
+            | "cost"
+            | "rows"
+            | "support"
+            | "parallel"
+            | "transform"
+            | "window"
+            | "as"
+            | "begin"
+            | "set"
+            | "returns"
+    )
+}
+
 pub(super) fn output_parameters(words: &[String]) -> String {
     let mut parts = Vec::new();
     let mut index = 0;

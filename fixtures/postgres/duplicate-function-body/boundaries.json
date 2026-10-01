@@ -1,0 +1,47 @@
+{
+  "formatVersion": 2,
+  "functions": {
+    "fn_set()": {
+      "definition": "CREATE FUNCTION fn_set() RETURNS int LANGUAGE sql SET application_name TO strict AS $$ SELECT set_body() $$"
+    },
+    "fn_set_copy()": {
+      "definition": "CREATE FUNCTION fn_set_copy() RETURNS int LANGUAGE sql SET application_name TO strict AS $$ SELECT set_body() $$"
+    },
+    "fn_real_strict()": {
+      "definition": "CREATE FUNCTION fn_real_strict() RETURNS int STRICT LANGUAGE sql AS $$ SELECT set_body() $$"
+    },
+    "fn_text(integer)": {
+      "definition": "CREATE FUNCTION fn_text(n int DEFAULT public.returns(1)) RETURNS text LANGUAGE sql AS $$ SELECT text_body() $$"
+    },
+    "fn_text_copy(integer)": {
+      "definition": "CREATE FUNCTION fn_text_copy(n int DEFAULT public.returns(1)) RETURNS text LANGUAGE sql AS $$ SELECT text_body() $$"
+    },
+    "fn_int(integer)": {
+      "definition": "CREATE FUNCTION fn_int(n int DEFAULT public.returns(1)) RETURNS integer LANGUAGE sql AS $$ SELECT text_body() $$"
+    },
+    "fn_send()": {
+      "definition": "CREATE FUNCTION fn_send() RETURNS void LANGUAGE plpgsql AS $$ PERFORM public.raise(send_email()); $$"
+    },
+    "fn_send_copy()": {
+      "definition": "CREATE FUNCTION fn_send_copy() RETURNS void LANGUAGE plpgsql AS $$ PERFORM public.raise(send_email()); $$"
+    },
+    "fn_delete()": {
+      "definition": "CREATE FUNCTION fn_delete() RETURNS void LANGUAGE plpgsql AS $$ PERFORM public.raise(delete_data()); $$"
+    },
+    "fn_atomic()": {
+      "definition": "CREATE FUNCTION fn_atomic() RETURNS int LANGUAGE sql BEGIN ATOMIC SELECT atomic_body(); END"
+    },
+    "fn_atomic_copy()": {
+      "definition": "CREATE FUNCTION fn_atomic_copy() RETURNS int LANGUAGE sql BEGIN ATOMIC SELECT atomic_body(); END"
+    },
+    "fn_string()": {
+      "definition": "CREATE FUNCTION fn_string() RETURNS int LANGUAGE sql AS $$ SELECT atomic_body() $$"
+    },
+    "fn_u()": {
+      "definition": "CREATE FUNCTION fn_u() RETURNS int LANGUAGE sql AS U&'SELECT \\0031'"
+    },
+    "fn_u_copy()": {
+      "definition": "CREATE FUNCTION fn_u_copy() RETURNS int LANGUAGE sql AS U&'SELECT \\0031'"
+    }
+  }
+}

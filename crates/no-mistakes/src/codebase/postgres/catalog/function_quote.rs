@@ -31,6 +31,9 @@ pub(super) fn return_expression(definition: &str) -> Option<(String, String, (us
 }
 
 fn one_literal(definition: &str, cursor: usize) -> Option<(String, usize, usize, usize)> {
+    if let Some(literal) = unicode_literal(definition, cursor) {
+        return Some(literal);
+    }
     if let Some((tag, open_end)) = opening_dollar(definition, cursor) {
         let close = format!("${tag}$");
         let relative = definition[open_end..].find(&close)?;
@@ -100,6 +103,25 @@ fn escape_string_body(definition: &str, quote_at: usize) -> Option<(String, usiz
         index += len;
     }
     None
+}
+
+fn unicode_literal(definition: &str, cursor: usize) -> Option<(String, usize, usize, usize)> {
+    let rest = definition.get(cursor..)?;
+    let prefix = rest.chars().next()?;
+    if !prefix.eq_ignore_ascii_case(&'u') {
+        return None;
+    }
+    let after = cursor + prefix.len_utf8();
+    if !definition.get(after..)?.starts_with("&'") {
+        return None;
+    }
+    let (raw, start, end) = quoted_sql_body(definition, after + 1)?;
+    Some((
+        super::function_escape::unescape_unicode(&raw),
+        start,
+        end,
+        end + 1,
+    ))
 }
 
 fn quote_at(definition: &str, cursor: usize) -> Option<(usize, bool)> {

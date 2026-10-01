@@ -1,5 +1,19 @@
 use sqlparser::tokenizer::Token;
 
+pub(super) fn raise_statement(tokens: &[Token], index: usize) -> bool {
+    let Some(previous) = index.checked_sub(1).and_then(|prior| tokens.get(prior)) else {
+        return true;
+    };
+    match previous {
+        Token::SemiColon => true,
+        Token::Word(word) => matches!(
+            word.value.to_ascii_uppercase().as_str(),
+            "BEGIN" | "THEN" | "ELSE" | "LOOP" | "ATOMIC"
+        ),
+        _ => false,
+    }
+}
+
 pub(super) fn is_string(token: &Token) -> bool {
     matches!(
         token,

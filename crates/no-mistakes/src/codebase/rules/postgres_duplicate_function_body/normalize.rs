@@ -31,7 +31,11 @@ pub(super) fn normalized_tokens(
     let mut out = Vec::new();
     let mut index = 0;
     while index < tokens.len() {
-        if plpgsql && settings.normalize_raise && is_word(&tokens[index], "raise") {
+        if plpgsql
+            && settings.normalize_raise
+            && is_word(&tokens[index], "raise")
+            && super::token_class::raise_statement(&tokens, index)
+        {
             if bare_raise(&tokens, index) {
                 out.extend(["RAISE".to_string(), ";".to_string()]);
                 index += 2;

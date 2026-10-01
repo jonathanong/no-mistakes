@@ -14,6 +14,7 @@ struct GroupKey {
     leakproof: String,
     return_contract: String,
     kind: &'static str,
+    form: &'static str,
     tokens: Vec<String>,
 }
 
@@ -50,6 +51,7 @@ pub(super) fn scan(compiled: Compiled, catalog: &SchemaCatalog) -> Vec<RuleFindi
                 leakproof: function.leakproof.clone(),
                 return_contract: function.return_contract.clone(),
                 kind,
+                form: body_form(&function.definition, function.body_span),
                 tokens,
             })
             .or_default()
@@ -92,6 +94,26 @@ fn other_names(members: &[String], index: usize) -> Vec<&str> {
         }
     }
     names
+}
+
+fn body_form(definition: &str, span: Option<(usize, usize)>) -> &'static str {
+    let Some((start, _)) = span else {
+        return "string";
+    };
+    let tail = definition.get(..start).unwrap_or("").trim_end();
+    if ends_with_word(tail, "atomic") || ends_with_word(tail, "return") {
+        "parsed"
+    } else {
+        "string"
+    }
+}
+
+fn ends_with_word(text: &str, word: &str) -> bool {
+    let lower = text.to_ascii_lowercase();
+    let Some(rest) = lower.strip_suffix(word) else {
+        return false;
+    };
+    rest.is_empty() || rest.ends_with(char::is_whitespace)
 }
 
 pub(super) fn outside_body(definition: &str, span: Option<(usize, usize)>) -> String {

@@ -404,4 +404,40 @@ fn parameter_names_are_not_modes_and_defensive_clauses_parse() {
         beta.return_contract
     );
     assert_ne!(alpha.return_contract, beta.return_contract);
+    assert_eq!(
+        function_from_definition(
+            "fn_set()",
+            "CREATE FUNCTION fn_set() RETURNS int LANGUAGE sql SET application_name TO strict AS $$ SELECT 1 $$",
+        )
+        .null_input,
+        "called"
+    );
+    let text_return = function_from_definition(
+        "fn_text(integer)",
+        "CREATE FUNCTION fn_text(n int DEFAULT public.returns(1)) RETURNS text LANGUAGE sql AS $$ SELECT 1 $$",
+    );
+    let int_return = function_from_definition(
+        "fn_int(integer)",
+        "CREATE FUNCTION fn_int(n int DEFAULT public.returns(1)) RETURNS integer LANGUAGE sql AS $$ SELECT 1 $$",
+    );
+    assert!(
+        text_return.return_contract.contains("text"),
+        "{}",
+        text_return.return_contract
+    );
+    assert!(
+        int_return.return_contract.contains("integer"),
+        "{}",
+        int_return.return_contract
+    );
+    assert_ne!(text_return.return_contract, int_return.return_contract);
+    assert_eq!(
+        function_from_definition(
+            "fn_u()",
+            "CREATE FUNCTION fn_u() RETURNS int LANGUAGE sql AS U&'SELECT \\0031'",
+        )
+        .body
+        .as_deref(),
+        Some("SELECT 1")
+    );
 }

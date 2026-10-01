@@ -50,7 +50,11 @@ become `ID`, except a word immediately followed by `(` which is kept. SQL
 keywords, `NEW`, `OLD`, words starting with `TG_`, `keepIdentifiers`, and
 operators stay in uppercase where they are words.
 
-The group key is the language plus that token sequence. Every member of a
+The group key is the language, that token sequence, the search path, security,
+parallel mode, null-input behavior, volatility, leakproof, the return contract,
+whether the body is a string or a parsed `BEGIN ATOMIC` / `RETURN` expression,
+and whether the routine is a trigger, an event trigger, or an ordinary
+function. Every member of a
 group of size at least `minClusterSize`, with at least `minTokens` tokens, is
 reported as `function:<snapshot key>`. The text lists the other keys in
 snapshot-key order, at most five, then `and <m> more`, and says the copies
@@ -84,7 +88,10 @@ from the default. `SET search_path TO security, definer` is not `SECURITY
 DEFINER`. `IF NOT EXISTS` does not hide a `BEGIN ATOMIC` body. A dollar-quoted
 default is not a `search_path` clause. `OUT` and `INOUT` parameters stay in
 the return contract. A kept identifier stays quoted when the function quotes it.
-Escape strings decode hex, octal, and Unicode sequences. An escape-string default does not hide the real body. Names before `=>` or `:=` stay distinct. `AS E'...'` is a body, and adjacent string literals are one body.
+A `SET` value is not a function mode, and a `returns` call in a parameter
+default is not the return contract. Escape strings decode hex, octal, and
+Unicode sequences. `AS U&'...'` is a body. A qualified `raise(...)` call stays
+a call. An escape-string default does not hide the real body. Names before `=>` or `:=` stay distinct. `AS E'...'` is a body, and adjacent string literals are one body.
 `LANGUAGE SQL RETURN expression` is a body. `LANGUAGE` after `BEGIN ATOMIC`
 is the function language, not a word in the body. A comment or literal that
 says `SECURITY DEFINER` does not make the function a definer. Quoted
