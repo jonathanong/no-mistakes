@@ -400,3 +400,23 @@ fn a_broken_source_file_is_a_rule_error_naming_the_file() {
         "{error}"
     );
 }
+
+/// A test file's alias of a namespace keeps its classes quiet, so a broken test
+/// file might hold the use that keeps `Errors.Dead` quiet: the rule errors
+/// instead of reporting it.
+#[test]
+fn a_broken_test_file_is_a_rule_error_when_a_namespace_member_would_be_reported() {
+    let root = crate::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../test-cases/rules/unconstructed-error-class/test-escape-parse-failure/fixture",
+        ),
+    );
+    let error = run_check(&root, None, None).unwrap_err().to_string();
+    assert!(
+        error.starts_with(
+            "unconstructed-error-class: cannot prove error classes unconstructed: \
+             `src/__tests__/alias.ts` failed to parse: "
+        ),
+        "{error}"
+    );
+}

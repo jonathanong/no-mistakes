@@ -249,11 +249,11 @@ fn a_broken_non_test_file_stops_the_rule_instead_of_reporting() {
     }
 }
 
-/// Test files never count as construction, so a broken one cannot hide a
-/// construction and does not stop the rule. `src/__tests__/` is a test by
-/// default; `testFiles` classifies the other broken files. `src/broken.d.ts`
-/// is broken too and is no test: a declaration file holds no construction, so
-/// it never stops the rule either.
+/// Test files never count as construction, so while no namespace member would
+/// be reported a broken one cannot hide a construction and does not stop the
+/// rule. `src/__tests__/` is a test by default; `testFiles` classifies the
+/// other broken files. `src/broken.d.ts` is broken too and is no test: a
+/// declaration file holds no construction, so it never stops the rule either.
 #[test]
 fn broken_test_files_do_not_stop_the_rule() {
     let out = check(
@@ -270,6 +270,32 @@ fn broken_test_files_do_not_stop_the_rule() {
             "unconstructed-error-class src/used.ts:2 exported error class `Used` \
              is never constructed or subclassed in non-test source"
         ],
+        "{body}"
+    );
+}
+
+/// A test file's alias of a namespace keeps its classes quiet, so the broken
+/// `src/__tests__/alias.ts` might hold the use that keeps `Errors.Dead` quiet:
+/// the rule stops instead of reporting it.
+#[test]
+fn a_broken_test_file_stops_the_rule_before_it_reports_a_namespace_member() {
+    let root = no_mistakes::codebase::ts_resolver::normalize_path(
+        &PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(
+            "../../test-cases/rules/unconstructed-error-class/test-escape-parse-failure/fixture",
+        ),
+    );
+    let out = check(&root, ".no-mistakes.yml", "human");
+    let body = text(&out);
+    assert_eq!(out.status.code(), Some(1), "{body}");
+    assert!(
+        body.contains(
+            "rules check skipped: unconstructed-error-class: cannot prove error classes \
+             unconstructed: `src/__tests__/alias.ts` failed to parse: "
+        ),
+        "{body}"
+    );
+    assert!(
+        lines_of(&body, "unconstructed-error-class").is_empty(),
         "{body}"
     );
 }

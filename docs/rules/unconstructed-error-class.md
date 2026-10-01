@@ -155,8 +155,10 @@ finding there, never add one.
 
 Fix the file, or, if it really is test-only, classify it as a test file with
 `testFiles`. Test files that fail to parse do not stop the rule, because they
-never count as construction. Declaration files that fail to parse do not stop it
-either: they hold no construction.
+never count as construction, unless the rule would report a namespace member: a
+use of a namespace in a test file keeps its classes quiet, so a test file the
+rule cannot read might hold that use. Declaration files that fail to parse do not
+stop it either: they hold no construction.
 
 ## Options
 
