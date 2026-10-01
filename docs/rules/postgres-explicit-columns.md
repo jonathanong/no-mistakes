@@ -20,7 +20,7 @@ rules:
 
 ## Why and when
 
-`SELECT *` fetches and detoasts every column, including large values the caller
+`SELECT *` fetches every column, including large values the caller
 never reads, and it blocks index-only scans. A column added later is also
 returned to every star caller, which is how sensitive columns leak into API
 responses. Enable this on application queries that should name the columns they
